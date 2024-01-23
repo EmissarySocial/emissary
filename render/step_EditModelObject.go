@@ -2,6 +2,7 @@ package render
 
 import (
 	"io"
+	"strings"
 	"text/template"
 
 	"github.com/benpate/derp"
@@ -29,9 +30,18 @@ func (step StepEditModelObject) Get(renderer Renderer, buffer io.Writer) Pipelin
 		return Halt().WithError(derp.Wrap(err, location, "Error generating form"))
 	}
 
-	optionStrings := make([]string, len(step.Options))
-	for index, option := range step.Options {
-		optionStrings[index] = executeTemplate(option, renderer)
+	optionStrings := make([]string, 0, len(step.Options))
+	for _, option := range step.Options {
+
+		optionString := executeTemplate(option, renderer)
+
+		// Remove "delete" options from new objects.
+		if renderer.object().IsNew() && strings.HasPrefix(optionString, "delete:") {
+			continue
+		}
+
+		// Otherwise, generate the text string for the option.
+		optionStrings = append(optionStrings, optionString)
 	}
 
 	result = WrapForm(renderer.URL(), result, optionStrings...)

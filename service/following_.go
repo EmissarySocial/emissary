@@ -164,6 +164,14 @@ func (service *Following) Save(following *model.Following, note string) error {
 	following.StatusMessage = ""
 	following.ErrorCount = 0
 
+	if following.Behavior == "" {
+		following.Behavior = model.FollowingBehaviorPostsAndReplies
+	}
+
+	if following.RuleAction == "" {
+		following.RuleAction = model.RuleActionLabel
+	}
+
 	// Clean the value before saving
 	if err := service.Schema().Clean(following); err != nil {
 		return derp.Wrap(err, location, "Error cleaning Following", following)

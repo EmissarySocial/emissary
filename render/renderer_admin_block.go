@@ -17,33 +17,33 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// Block is a renderer for the admin/blocks page
+// Rule is a renderer for the admin/rules page
 // It can only be accessed by a Domain Owner
-type Block struct {
-	_block *model.Block
+type Rule struct {
+	_rule *model.Rule
 	Common
 }
 
-// NewBlock returns a fully initialized `Block` renderer.
-func NewBlock(factory Factory, request *http.Request, response http.ResponseWriter, block *model.Block, template model.Template, actionID string) (Block, error) {
+// NewRule returns a fully initialized `Rule` renderer.
+func NewRule(factory Factory, request *http.Request, response http.ResponseWriter, rule *model.Rule, template model.Template, actionID string) (Rule, error) {
 
-	const location = "render.NewBlock"
+	const location = "render.NewRule"
 
 	// Create the underlying Common renderer
 	common, err := NewCommon(factory, request, response, template, actionID)
 
 	if err != nil {
-		return Block{}, derp.Wrap(err, location, "Error creating common renderer")
+		return Rule{}, derp.Wrap(err, location, "Error creating common renderer")
 	}
 
 	// Verify that the user is a Domain Owner
 	if !common._authorization.DomainOwner {
-		return Block{}, derp.NewForbiddenError(location, "Must be domain owner to continue")
+		return Rule{}, derp.NewForbiddenError(location, "Must be domain owner to continue")
 	}
 
-	// Return the Block renderer
-	return Block{
-		_block: block,
+	// Return the Rule renderer
+	return Rule{
+		_rule:  rule,
 		Common: common,
 	}, nil
 }
@@ -53,7 +53,7 @@ func NewBlock(factory Factory, request *http.Request, response http.ResponseWrit
  ******************************************/
 
 // Render generates the string value for this Stream
-func (w Block) Render() (template.HTML, error) {
+func (w Rule) Render() (template.HTML, error) {
 
 	var buffer bytes.Buffer
 
@@ -61,7 +61,7 @@ func (w Block) Render() (template.HTML, error) {
 	status := Pipeline(w.action.Steps).Get(w._factory, &w, &buffer)
 
 	if status.Error != nil {
-		err := derp.Wrap(status.Error, "render.Block.Render", "Error generating HTML")
+		err := derp.Wrap(status.Error, "render.Rule.Render", "Error generating HTML")
 		derp.Report(err)
 		return "", err
 	}
@@ -71,91 +71,91 @@ func (w Block) Render() (template.HTML, error) {
 	return template.HTML(buffer.String()), nil
 }
 
-// View executes a separate view for this Block
-func (w Block) View(actionID string) (template.HTML, error) {
+// View executes a separate view for this Rule
+func (w Rule) View(actionID string) (template.HTML, error) {
 
-	const location = "render.Block.View"
+	const location = "render.Rule.View"
 
-	renderer, err := NewBlock(w._factory, w._request, w._response, w._block, w._template, actionID)
+	renderer, err := NewRule(w._factory, w._request, w._response, w._rule, w._template, actionID)
 
 	if err != nil {
-		return template.HTML(""), derp.Wrap(err, location, "Error creating Block renderer")
+		return template.HTML(""), derp.Wrap(err, location, "Error creating Rule renderer")
 	}
 
 	return renderer.Render()
 }
 
-func (w Block) NavigationID() string {
+func (w Rule) NavigationID() string {
 	return "admin"
 }
 
-func (w Block) Permalink() string {
-	return w.Hostname() + "/admin/blocks/" + w.BlockID()
+func (w Rule) Permalink() string {
+	return w.Hostname() + "/admin/rules/" + w.RuleID()
 }
 
-func (w Block) BasePath() string {
-	return "/admin/blocks/" + w.BlockID()
+func (w Rule) BasePath() string {
+	return "/admin/rules/" + w.RuleID()
 }
 
-func (w Block) Token() string {
-	return "blocks"
+func (w Rule) Token() string {
+	return "rules"
 }
 
-func (w Block) PageTitle() string {
+func (w Rule) PageTitle() string {
 	return "Settings"
 }
 
-func (w Block) object() data.Object {
-	return w._block
+func (w Rule) object() data.Object {
+	return w._rule
 }
 
-func (w Block) objectID() primitive.ObjectID {
-	return w._block.BlockID
+func (w Rule) objectID() primitive.ObjectID {
+	return w._rule.RuleID
 }
 
-func (w Block) objectType() string {
-	return "Block"
+func (w Rule) objectType() string {
+	return "Rule"
 }
 
-func (w Block) schema() schema.Schema {
-	return schema.New(model.BlockSchema())
+func (w Rule) schema() schema.Schema {
+	return schema.New(model.RuleSchema())
 }
 
-func (w Block) service() service.ModelService {
-	return w._factory.Block()
+func (w Rule) service() service.ModelService {
+	return w._factory.Rule()
 }
 
-func (w Block) executeTemplate(writer io.Writer, name string, data any) error {
+func (w Rule) executeTemplate(writer io.Writer, name string, data any) error {
 	return w._template.HTMLTemplate.ExecuteTemplate(writer, name, data)
 }
 
-func (w Block) clone(action string) (Renderer, error) {
-	return NewBlock(w._factory, w._request, w._response, w._block, w._template, action)
+func (w Rule) clone(action string) (Renderer, error) {
+	return NewRule(w._factory, w._request, w._response, w._rule, w._template, action)
 }
 
 /******************************************
  * DATA ACCESSORS
  ******************************************/
 
-func (w Block) BlockID() string {
-	if w._block == nil {
+func (w Rule) RuleID() string {
+	if w._rule == nil {
 		return ""
 	}
-	return w._block.BlockID.Hex()
+	return w._rule.RuleID.Hex()
 }
 
-func (w Block) Label() string {
-	if w._block == nil {
+func (w Rule) Label() string {
+	if w._rule == nil {
 		return ""
 	}
-	return w._block.Label
+	return w._rule.Label
 }
 
 /******************************************
  * QUERY BUILDERS
  ******************************************/
 
-func (w Block) Blocks() *QueryBuilder[model.Block] {
+func (w Rule) Rules() *QueryBuilder[model.Rule] {
 
 	query := builder.NewBuilder().
 		String("type").
@@ -168,12 +168,12 @@ func (w Block) Blocks() *QueryBuilder[model.Block] {
 		exp.Equal("deleteDate", 0),
 	)
 
-	result := NewQueryBuilder[model.Block](w._factory.Block(), criteria)
+	result := NewQueryBuilder[model.Rule](w._factory.Rule(), criteria)
 
 	return &result
 }
 
-func (w Block) ServerWideBlocks() *QueryBuilder[model.Block] {
+func (w Rule) ServerWideRules() *QueryBuilder[model.Rule] {
 
 	query := builder.NewBuilder().
 		String("type").
@@ -186,11 +186,11 @@ func (w Block) ServerWideBlocks() *QueryBuilder[model.Block] {
 		exp.Equal("deleteDate", 0),
 	)
 
-	result := NewQueryBuilder[model.Block](w._factory.Block(), criteria)
+	result := NewQueryBuilder[model.Rule](w._factory.Rule(), criteria)
 
 	return &result
 }
 
-func (w Block) debug() {
-	log.Debug().Interface("object", w.object()).Msg("renderer_admin_block")
+func (w Rule) debug() {
+	log.Debug().Interface("object", w.object()).Msg("renderer_admin_rule")
 }

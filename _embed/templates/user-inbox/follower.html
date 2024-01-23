@@ -6,20 +6,20 @@
 
 <div hx-get="/@me/inbox/follower?url={{$url}}" hx-trigger="refreshSection from:window" hx-swap="outerHTML" hx-push-url="false">
 
-	{{- if ne "" $activityStream.Image.URL -}}
-		<div style="position:absolute; top:0px; left:0px; right:0px; height:160px; background-image:url('{{$activityStream.Image.URL}}'); background-size:cover;"></div>
+	{{- if ne "" $activityStream.Image.Href -}}
+		<div style="position:absolute; top:0px; left:0px; right:0px; height:160px; background-image:url('{{$activityStream.Image.Href}}'); background-size:cover;"></div>
 		<div style="height:160px;"></div>
 	{{- end -}}
 
 	<div class="flex-row">
-		{{- if ne "" $activityStream.Icon.URL -}}
-			<img src="{{$activityStream.Icon.URL}}" class="circle-64">
+		{{- if ne "" $activityStream.Icon.Href -}}
+			<img src="{{$activityStream.Icon.Href}}" class="circle-64">
 		{{- else -}}
 			<div class="circle-64"></div>
 		{{- end -}}
 		<div>
 			<h1 class="margin-none">{{- $activityStream.Name -}}</h1>
-			<div class="text-gray"><a href="{{$activityStream}}" target="_blank">@{{- $activityStream.PreferredUsername -}}</a></div>
+			<div class="text-gray"><a href="{{$activityStream}}" target="_blank">{{- $activityStream.UsernameOrID -}}</a></div>
 		</div>
 
 	</div>

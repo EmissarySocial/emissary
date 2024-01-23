@@ -15,7 +15,7 @@ func Version8(ctx context.Context, session *mongo.Database) error {
 
 	const location = "queries.upgrades.Version8"
 
-	collections := []string{"Attachment", "Block", "Domain", "EncryptionKey", "Folder", "Follower", "Following", "Group", "Inbox", "Mention", "Outbox", "Response", "Stream", "StreamDraft", "User"}
+	collections := []string{"Attachment", "Rule", "Domain", "EncryptionKey", "Folder", "Follower", "Following", "Group", "Inbox", "Mention", "Outbox", "Response", "Stream", "StreamDraft", "User"}
 
 	fmt.Println("... Version 8")
 

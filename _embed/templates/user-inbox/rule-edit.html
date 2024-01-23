@@ -1,0 +1,9 @@
+{{- $type := .Object.Type -}}
+
+{{- if eq "ACTOR" $type -}}
+	{{- .View "rule-edit-actor" -}}
+{{- else if eq "DOMAIN" $type -}}
+	{{- .View "rule-edit-domain" -}}
+{{- else -}}
+	{{- .View "rule-edit-content" -}}
+{{- end -}}

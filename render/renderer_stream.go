@@ -16,9 +16,11 @@ import (
 	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/form"
 	"github.com/benpate/hannibal/streams"
+	"github.com/benpate/rosetta/channel"
 	"github.com/benpate/rosetta/convert"
 	htmlconv "github.com/benpate/rosetta/html"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -58,7 +60,7 @@ func NewStream(factory Factory, request *http.Request, response http.ResponseWri
 		if common._authorization.IsAuthenticated() {
 			return Stream{}, derp.ReportAndReturn(derp.NewForbiddenError(location, "Forbidden"))
 		} else {
-			return Stream{}, derp.ReportAndReturn(derp.NewUnauthorizedError(location, "Anonymous user is not authorized to perform this action", actionID))
+			return Stream{}, derp.ReportAndReturn(derp.NewUnauthorizedError(location, "Anonymous user is not authorized to perform this action", stream.URL, actionID))
 		}
 	}
 
@@ -550,37 +552,88 @@ func (w Stream) Mentions() ([]model.Mention, error) {
 
 func (w Stream) RepliesBefore(dateString string, maxRows int) sliceof.Object[streams.Document] {
 
+	done := make(channel.Done)
+
+	// Get all ActivityStreams that reply to the current Stream
 	activityStreamsService := w._factory.ActivityStreams()
 	maxDate := convert.Int64Default(dateString, math.MaxInt64)
-	result, _ := activityStreamsService.QueryRepliesBeforeDate(w._stream.URL, maxDate, maxRows)
+	replies := activityStreamsService.QueryRepliesBeforeDate(w._stream.URL, maxDate, done)
 
+	// Filter results based on blocks
+	ruleService := w._factory.Rule()
+	ruleFilter := ruleService.Filter(w.AuthenticatedID())
+	filteredResult := ruleFilter.Channel(replies)
+
+	// Limit to `maxRows` records
+	limitedFilter := channel.Limit(maxRows, filteredResult, done)
+	result := channel.Slice(limitedFilter)
+
+	return slice.Reverse(result)
+}
+
+func (w Stream) RepliesAfter(dateString string, maxRows int) sliceof.Object[streams.Document] {
+
+	done := make(channel.Done)
+
+	// Get all ActivityStreams that REPLY TO the current Stream
+	activityStreamsService := w._factory.ActivityStreams()
+	minDate := convert.Int64(dateString)
+	replies := activityStreamsService.QueryRepliesAfterDate(w._stream.URL, minDate, done)
+
+	// Filter results based on blocks
+	ruleService := w._factory.Rule()
+	ruleFilter := ruleService.Filter(w.AuthenticatedID())
+	filteredResult := ruleFilter.Channel(replies)
+
+	// Limit to `maxRows` records
+	limitedFilter := channel.Limit(maxRows, filteredResult, done)
+	result := channel.Slice(limitedFilter)
+
+	// Success
 	return result
 }
 
 func (w Stream) AnnouncesBefore(dateString string, maxRows int) sliceof.Object[streams.Document] {
 
+	done := make(channel.Done)
+
+	// Get all ActivityStreams that ANNOUNCE the current Stream
 	activityStreamsService := w._factory.ActivityStreams()
 	maxDate := convert.Int64Default(dateString, math.MaxInt64)
-	result, _ := activityStreamsService.QueryAnnouncesBeforeDate(w._stream.URL, maxDate, maxRows)
+	announces := activityStreamsService.QueryAnnouncesBeforeDate(w._stream.URL, maxDate, done)
 
+	// Filter results based on blocks
+	ruleService := w._factory.Rule()
+	ruleFilter := ruleService.Filter(w.AuthenticatedID())
+	filteredResult := ruleFilter.Channel(announces)
+
+	// Limit to `maxRows` records
+	limitedFilter := channel.Limit(maxRows, filteredResult, done)
+	result := channel.Slice(limitedFilter)
+
+	// Triumph
 	return result
 }
 
 func (w Stream) LikesBefore(dateString string, maxRows int) sliceof.Object[streams.Document] {
 
+	done := make(channel.Done)
+
+	// Query all ActivityStreams that LIKE the current Stream
 	activityStreamsService := w._factory.ActivityStreams()
 	maxDate := convert.Int64Default(dateString, math.MaxInt64)
-	result, _ := activityStreamsService.QueryLikesBeforeDate(w._stream.URL, maxDate, maxRows)
+	likes := activityStreamsService.QueryLikesBeforeDate(w._stream.URL, maxDate, done)
 
-	return result
-}
+	// Filter results based on blocks
+	ruleService := w._factory.Rule()
+	ruleFilter := ruleService.Filter(w.AuthenticatedID())
+	filteredResult := ruleFilter.Channel(likes)
 
-func (w Stream) RepliesAfter(dateString string, maxRows int) sliceof.Object[streams.Document] {
-	minDate := convert.Int64(dateString)
+	// Limit to `maxRows` records
+	limitedFilter := channel.Limit(maxRows, filteredResult, done)
+	result := channel.Slice(limitedFilter)
 
-	activityStreamsService := w._factory.ActivityStreams()
-	result, _ := activityStreamsService.QueryRepliesAfterDate(w._stream.URL, minDate, maxRows)
-
+	// Celebrate
 	return result
 }
 

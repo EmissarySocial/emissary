@@ -13,7 +13,7 @@ import (
 // https://docs.joinmastodon.org/methods/domain_blocks/
 func GetDomainBlocks(serverFactory *server.Factory) func(model.Authorization, txn.GetDomainBlocks) ([]string, toot.PageInfo, error) {
 
-	const location = "handler.mastodon.DomainBlocks"
+	const location = "handler.mastodon.DomainRules"
 
 	return func(auth model.Authorization, t txn.GetDomainBlocks) ([]string, toot.PageInfo, error) {
 
@@ -25,20 +25,20 @@ func GetDomainBlocks(serverFactory *server.Factory) func(model.Authorization, tx
 		}
 
 		// Query the database
-		blockService := factory.Block()
+		ruleService := factory.Rule()
 		criteria := queryExpression(t)
-		blocks, err := blockService.QueryByTypeDomain(auth.UserID, criteria, option.Fields("trigger"))
+		rules, err := ruleService.QueryByTypeDomain(auth.UserID, criteria, option.Fields("trigger"))
 
 		if err != nil {
 			return []string{}, toot.PageInfo{}, derp.Wrap(err, location, "Error querying database")
 		}
 
 		// Extract *just* the domain trigger...
-		result := slice.Map[model.Block](blocks, func(block model.Block) string {
-			return block.Trigger
+		result := slice.Map[model.Rule](rules, func(rule model.Rule) string {
+			return rule.Trigger
 		})
 
-		return result, getPageInfo(blocks), nil
+		return result, getPageInfo(rules), nil
 	}
 }
 
@@ -55,17 +55,16 @@ func PostDomainBlock(serverFactory *server.Factory) func(model.Authorization, tx
 			return struct{}{}, derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
-		// Create the new "Domain Block"
-		block := model.NewBlock()
-		block.UserID = auth.UserID
-		block.Type = model.BlockTypeDomain
-		block.Trigger = t.Domain
-		block.IsActive = true
+		// Create the new "Domain Rule"
+		rule := model.NewRule()
+		rule.UserID = auth.UserID
+		rule.Type = model.RuleTypeDomain
+		rule.Trigger = t.Domain
 
 		// Save it to the database
-		blockService := factory.Block()
-		if err := blockService.Save(&block, "Created via Mastodon API"); err != nil {
-			return struct{}{}, derp.Wrap(err, location, "Error saving block")
+		ruleService := factory.Rule()
+		if err := ruleService.Save(&rule, "Created via Mastodon API"); err != nil {
+			return struct{}{}, derp.Wrap(err, location, "Error saving rule")
 		}
 
 		return struct{}{}, nil
@@ -74,7 +73,7 @@ func PostDomainBlock(serverFactory *server.Factory) func(model.Authorization, tx
 
 func DeleteDomainBlock(serverFactory *server.Factory) func(model.Authorization, txn.DeleteDomainBlock) (struct{}, error) {
 
-	const location = "handler.mastodon.DeleteDomainBlock"
+	const location = "handler.mastodon.DeleteDomainRule"
 
 	return func(auth model.Authorization, t txn.DeleteDomainBlock) (struct{}, error) {
 
@@ -85,17 +84,17 @@ func DeleteDomainBlock(serverFactory *server.Factory) func(model.Authorization, 
 			return struct{}{}, derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
-		// Try to find the Block in the database
-		blockService := factory.Block()
-		block := model.NewBlock()
+		// Try to find the Rule in the database
+		ruleService := factory.Rule()
+		rule := model.NewRule()
 
-		if err := blockService.LoadByTrigger(auth.UserID, model.BlockTypeDomain, t.Domain, &block); err != nil {
-			return struct{}{}, derp.Wrap(err, location, "Error loading block")
+		if err := ruleService.LoadByTrigger(auth.UserID, model.RuleTypeDomain, t.Domain, &rule); err != nil {
+			return struct{}{}, derp.Wrap(err, location, "Error loading rule")
 		}
 
-		// Delete the Block from the database
-		if err := blockService.Delete(&block, "Deleted via Mastodon API"); err != nil {
-			return struct{}{}, derp.Wrap(err, location, "Error deleting block")
+		// Delete the Rule from the database
+		if err := ruleService.Delete(&rule, "Deleted via Mastodon API"); err != nil {
+			return struct{}{}, derp.Wrap(err, location, "Error deleting rule")
 		}
 
 		return struct{}{}, nil

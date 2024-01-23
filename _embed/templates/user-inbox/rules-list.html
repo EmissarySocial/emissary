@@ -1,0 +1,43 @@
+{{- $search := .QueryParam "search" -}}
+{{- $rules := .Rules.Top12.By "trigger" -}}
+{{- $rules := $rules.Slice -}}
+
+{{- range $rules -}}
+	<div hx-get="/@me/inbox/rule-edit?ruleId={{.RuleID.Hex}}" role="button" class="flex-row width-100-percent">
+		<div class="width-1-6" nowrap>
+			{{- if eq "ACTOR" .Type -}}
+				{{- icon "person"}} Person
+			{{- else if eq "DOMAIN" .Type -}}
+				{{- icon "server"}} Server
+			{{- else -}}
+				{{- icon "hash"}} Keyword
+			{{- end -}}
+		</div>
+		<div class="width-2-6">
+			<div class="ellipsis">
+				{{.Trigger}}
+			</div>
+		</div>
+		<div class="width-2-6" nowrap>
+			{{- if eq "BLOCK" .Action -}}
+				{{icon "block"}} Block
+			{{- else if eq "MUTE" .Action -}}
+				{{icon "mute"}} Mute
+			{{- else -}}
+				{{icon "tag"}} &quot;{{.Label}}&quot;
+			{{- end -}}
+		</div>
+		<div class="width-1-6 align-right" nowrap>
+			{{- if .IsPublic -}}
+				{{icon "visible-fill"}} Public
+			{{- else -}}
+				{{icon "invisible"}} Private
+			{{- end -}}
+		</div>
+	</div>
+{{- end -}}
+
+{{- if eq 12 $rules.Length -}}
+	{{- $last := $rules.Last -}}
+	<div hx-get="/@me/inbox/rules-list?search={{$search}}&trigger=GT:{{$last.Trigger}}" hx-target="this" hx-trigger="revealed" hx-swap="outerHTML" hx-push-url="false"></div>
+{{- end -}}

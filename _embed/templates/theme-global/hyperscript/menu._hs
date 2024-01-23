@@ -1,0 +1,78 @@
+behavior menu(input)
+
+	on load
+		trigger selectFirst
+	end
+
+	on htmx:afterSwap 
+		trigger selectFirst
+	end
+
+	on selectFirst
+		set selectNext to first <[role=menuitem]/> in me
+		if selectNext is not null then
+			add [@aria-selected=true] to selectNext
+		end
+	end
+
+	on focus or mouseover(target)
+		set target to the closest <[role=menuitem]/> to target
+
+		if the target is null then
+			exit
+		end
+		
+		halt the event
+
+		set items to <[role=menuitem]/> in me
+		take [@aria-selected=true] from items for target
+	end
+
+	on keydown[key=='ArrowUp']
+		halt the event
+
+		set selected to the first <[aria-selected=true]/> in me
+		if selected is null then
+			set selectNext to last <[role=menuitem]/> in me
+		else 
+			set menu to the first < .menu /> in me
+			set selectNext to the previous <[role=menuitem] /> from selected within menu with wrapping
+		end
+
+		if input is null then
+			focus() the selectNext
+		end
+
+		set items to <[role=menuitem]/> in me
+		take [@aria-selected=true] from items for selectNext
+	end
+
+	on keydown[key=='ArrowDown']
+		halt the event
+
+		set selected to the first <[aria-selected=true]/> in me
+		if selected is null then
+			set selectNext to first <[role=menuitem]/> in me
+		else 
+			set menu to the first < .menu /> in me
+			set selectNext to the next <[role=menuitem]/> from selected within menu with wrapping
+		end
+
+		if input is null then
+			focus() the selectNext
+		end
+		
+		set items to <[role=menuitem]/> in me
+		take [@aria-selected=true] from items for selectNext
+		
+	end
+
+	on keyup[key=='Enter']
+		halt the event
+		set selected to the first <[aria-selected=true]/> in me
+		if selected is not null then
+			send click to selected
+		end
+	end
+
+end

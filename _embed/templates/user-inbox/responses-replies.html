@@ -23,22 +23,7 @@
 	<hr class="margin-top-sm"/>
 
 	<div id="replies" class="margin-vertical">
-		{{.View "replies"}}
+		{{.View "responses-replies-list"}}
 	</div>
 
-	{{- if .UserCan "embedded-reply" -}}
-		<div class="flex-row">
-			<div>
-				{{- $userImage := .UserImage -}}
-				{{- if eq $userImage "" -}}
-					<div class="circle-48"></div>
-				{{- else -}}
-					<img class="circle-48" src="{{$userImage}}">
-				{{- end -}}
-			</div>
-			<div class="flex-grow-1">
-				{{.View "embedded-reply"}}
-			</div>
-		</div>
-	{{- end -}}
 </div>

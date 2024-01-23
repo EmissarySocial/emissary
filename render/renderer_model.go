@@ -98,7 +98,7 @@ func (w Model) ObjectID() string {
 func (w Model) Label() string {
 	switch object := w._object.(type) {
 
-	case *model.Block:
+	case *model.Rule:
 		return object.Label
 
 	case *model.Folder:
@@ -170,6 +170,16 @@ func (w Model) View(actionID string) (template.HTML, error) {
 
 	// Generate HTML template
 	return subStream.Render()
+}
+
+func (w Model) setState(stateID string) error {
+
+	if setter, ok := w._object.(model.StateSetter); ok {
+		setter.SetState(stateID)
+		return nil
+	}
+
+	return derp.NewInternalError("render.Model.SetState", "Object does not implement model.StateSetter interface", w._object)
 }
 
 func (w Model) clone(action string) (Renderer, error) {

@@ -1,7 +1,7 @@
 {
-	"templateId":"admin-blocks",
+	"templateId":"admin-rules",
 	"templateRole":"admin",
-	"model":"block",
+	"model":"rule",
 	"containedBy":["admin"],
 	"label": "Blocks",
 	"description": "Domain Owners only.  Site Admin",
@@ -9,27 +9,27 @@
 		"index": {"step": "view-html"},
 		"list": {"step": "view-html"},
 		"add": {"steps":[
-			{"step":"as-modal", "background":"/admin/blocks", "steps":[
+			{"step":"as-modal", "background":"/admin/rules", "steps":[
 				{"step": "edit", "form":{
 					"type":"layout-vertical",
 					"label":"Server-Wide Block",
 					"children":[
-						{"type":"select", "path":"type", "label":"Type", "options":{"provider":"block-types"}},
+						{"type":"select", "path":"type", "label":"Type", "options":{"provider":"rule-types"}},
 						{"type":"text", "path":"trigger", "label":"Trigger Text"}
 					]
 				}}
 			]}
 		]},
 		"edit": {"steps":[
-			{"step":"as-modal", "background":"/admin/blocks", "steps":[
+			{"step":"as-modal", "background":"/admin/rules", "steps":[
 				{"step": "edit", "form":{
 					"type":"layout-vertical",
 					"label":"Server-Wide Block",
 					"children":[
-						{"type":"select", "path":"type", "label":"Type", "options":{"provider":"block-types"}},
+						{"type":"select", "path":"type", "label":"Type", "options":{"provider":"rule-types"}},
 						{"type":"text", "path":"trigger", "label":"Trigger Text"}
 					]
-				}, "options":["delete:/admin/blocks/{{.BlockID}}/delete"]}
+				}, "options":["delete:/admin/rules/{{.RuleID}}/delete"]}
 			]}
 		]},
 		"delete": {"step": "delete"}

@@ -17,9 +17,10 @@ func FollowingSchema() schema.Element {
 			"url":             schema.String{Required: true, MaxLength: 1024},
 			"profileUrl":      schema.String{Format: "url", MaxLength: 1024},
 			"imageUrl":        schema.String{Format: "url", MaxLength: 1024},
-			"behavior":        schema.String{MaxLength: 64},
-			"collapseThreads": schema.Boolean{},
-			"isPublic":        schema.Boolean{},
+			"behavior":        schema.String{Enum: []string{FollowingBehaviorPosts, FollowingBehaviorPostsAndReplies}, Default: FollowingBehaviorPostsAndReplies, Required: true},
+			"ruleAction":      schema.String{Enum: []string{FollowingRuleActionIgnore, RuleActionMute, RuleActionLabel, RuleActionBlock}, Default: RuleActionLabel, Required: true},
+			"collapseThreads": schema.Boolean{Default: null.NewBool(true)},
+			"isPublic":        schema.Boolean{Default: null.NewBool(false)},
 			"method":          schema.String{Enum: []string{FollowMethodPoll, FollowMethodWebSub, FollowMethodActivityPub}},
 			"status":          schema.String{Enum: []string{FollowingStatusNew, FollowingStatusLoading, FollowingStatusSuccess, FollowingStatusFailure}},
 			"statusMessage":   schema.String{MaxLength: 1024},
@@ -53,6 +54,9 @@ func (following *Following) GetPointer(name string) (any, bool) {
 
 	case "behavior":
 		return &following.Behavior, true
+
+	case "ruleAction":
+		return &following.RuleAction, true
 
 	case "collapseThreads":
 		return &following.CollapseThreads, true

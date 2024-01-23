@@ -164,8 +164,8 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "server-redirect":
 		return NewServerRedirect(stepInfo)
 
-	case "with-block":
-		return NewWithBlock(stepInfo)
+	case "with-rule":
+		return NewWithRule(stepInfo)
 
 	case "with-children":
 		return NewWithChildren(stepInfo)
@@ -198,6 +198,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 
 	case "edit-connection":
 		return NewEditConnection(stepInfo)
+
+	case "send-email":
+		return NewSendEmail(stepInfo)
 
 	case "websub":
 		return NewWebSub(stepInfo)

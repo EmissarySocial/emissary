@@ -1,0 +1,43 @@
+{{- $search := .QueryParam "search" -}}
+{{- $url := .QueryParam "url" -}}
+{{- $stream := .ActivityStream $url -}}
+{{- $following := .AmFollowing $url -}}
+
+{{- if ne "" $search -}}
+<div class="margin-bottom">
+	<span role="link" class="link" hx-get="/@me/inbox/following-search?search={{$search}}" hx-target="#modal">
+		&larr; Back to Search
+	</span>
+</div>
+{{- end -}}
+
+<div class="flex-row flex-align-start margin-bottom-lg">
+	<div class="margin-top-sm">
+		{{- if $stream.Icon.NotNil -}}
+			<img src="{{$stream.Icon.Href}}" class="circle-64">
+		{{- else -}}
+			<div class="circle-64"></div>
+		{{- end -}}
+	</div>
+
+	<div>
+		<div class="text-xl bold margin-top-sm margin-bottom-none">{{$stream.Name}}</div>
+		<div class="margin-bottom">
+			<a href="{{$stream.ID}}" target="_blank" class="clickable text-plain text-gray" role="link">{{$stream.UsernameOrID}}</a>
+		</div>
+
+		{{- if not $following.IsNew -}}
+			<div class="text-green bold">{{icon "check-badge-fill"}} Following</div>
+		{{- end -}}
+		
+		<div>{{$stream.Summary}}</div>
+	</div>
+</div>
+
+<hr>
+{{- if $following.IsNew -}}
+	{{- .View "following-add-form" -}}
+{{- else -}}
+	<div class="text-lg bold margin-bottom">Edit Settings</div>
+	{{- .View "following-edit-form" -}}
+{{- end -}}

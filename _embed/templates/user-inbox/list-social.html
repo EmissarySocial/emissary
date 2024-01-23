@@ -3,10 +3,28 @@
 {{- $stream := $inboxRenderer.ActivityStream $message.URL -}}
 {{- $attributedTo := $stream.AttributedTo -}}
 
+{{- if eq "NEW-REPLIES" $message.StateID -}}
+	<div class="flex-row">
+		<div class="width-32 margin-right-sm"></div>
+		<div class="bold italics text-green text-sm">
+			{{icon "chat-fill"}} Received New Replies
+		</div>
+	</div>
+{{- else if eq "MUTED" $message.StateID -}}
+	<div class="flex-row">
+		<div class="width-32 margin-right-sm"></div>
+		<div class="bold italics text-gray text-sm">
+			{{icon "mute"}} Notifications Muted
+		</div>
+	</div>
+{{- end -}}
+
 <div class="flex-row">
 	<div class="width-32 margin-right-sm">
 		{{- if $attributedTo.Icon.NotNil -}}
-			<img src="{{$attributedTo.Icon.URL}}" class="circle-32">
+			<img src="{{$attributedTo.Icon.Href}}" class="circle-32">
+		{{- else -}}
+			<div class="circle-32"></div>
 		{{- end -}}
 	</div>
 
@@ -16,16 +34,16 @@
 			<div>
 				<span class="bold black">{{$attributedTo.Name}}</span>
 				<span class="text-light-gray nowrap flex-grow-1">
-					{{- if ne "" $attributedTo.PreferredUsername -}}
 						&middot;
-						@{{$attributedTo.PreferredUsername}}
-					{{- end -}}
+						{{$attributedTo.UsernameOrID}}
 				</span>
 			</div>
 		{{- end -}}
 
 		{{- if ne "" $stream.Name -}}
-			<div class="bold text-black margin-top">{{$stream.Name}}</div>
+			<div>
+				<span class="bold black">{{$stream.Name}}</span>
+			</div>
 		{{- end -}}
 
 		<div>
@@ -38,14 +56,14 @@
 
 		{{- if $stream.Image.NotNil -}}
 			<div class="margin-top" style="position:relative;">
-				<img src="{{$stream.Image.URL}}" loading="lazy" style="width:100%; border-radius:16px; border: solid 1px var(--gray40);"/>
+				<img src="{{$stream.Image.Href}}" loading="lazy" style="width:100%; border-radius:16px; border: solid 1px var(--gray40);"/>
 			</div>
 		{{- end -}}
 
 		<div class="margin-top text-sm text-light-gray">
 
 			{{- $stats := $stream.Statistics -}}
-			{{- $stream.Published | tinyDate }} ago
+			{{- $message.PublishDate | tinyDate }} ago
 
 			{{ if gt $stats.Replies 0 -}}
 				&middot; {{$stats.Replies}} {{pluralize $stats.Replies "Reply" "Replies"}}

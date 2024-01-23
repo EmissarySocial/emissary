@@ -1,0 +1,33 @@
+<h2>{{icon "add"}} Add an Inbox Rule</h2>
+<div>Rules can <b>label</b> or <b>block</b> followers and messages from your inbox</div>
+
+<div script="install menu()">
+	<div role="menu" class="menu flex-column margin-vertical" hx-target="#modal-window" hx-swap="innerHTML" hx-push-url="false">
+
+		<div hx-get="/@me/inbox/rule-edit-actor" class="flex-row" role="menuitem" tabIndex="0">
+			<div class="text-3xl margin-none">{{icon "person"}}</div>
+			<div>
+				<div class="text-lg margin-none">Match a Person</div>
+				<div class="text-light-gray">Filter messages from individual people</div>
+			</div>
+		</div>
+
+		<div hx-get="/@me/inbox/rule-edit-domain" class="flex-row" role="menuitem" tabIndex="0">
+			<div class="text-3xl margin-none">{{icon "server"}}</div>
+			<div>
+				<div class="text-lg margin-none">Match a Website or Server</div>
+				<div class="text-light-gray">Filter messages from an entire server</div>
+			</div>
+		</div>
+
+		<div hx-get="/@me/inbox/rule-edit-content" class="flex-row" role="menuitem" tabIndex="0">
+			<div class="text-3xl margin-none">{{icon "hashtag"}}</div>
+			<div>
+				<div class="text-lg margin-none">Match Tags &amp; Keywords</div>
+				<div class="text-light-gray">Filter messages based on their contents</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<button script="on click send closeModal">Cancel</button>

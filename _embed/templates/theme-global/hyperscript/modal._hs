@@ -20,6 +20,7 @@ behavior Modal
 		wait a tick then
 		add .ready to #modal
 		focus() the first <[tabindex]/> in me
+		send modalReady
 	end
 
 	on closeModal(nextPage) from window	

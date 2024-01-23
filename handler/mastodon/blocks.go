@@ -12,7 +12,7 @@ import (
 // https://docs.joinmastodon.org/methods/blocks/
 func GetBlocks(serverFactory *server.Factory) func(model.Authorization, txn.GetBlocks) ([]object.Account, toot.PageInfo, error) {
 
-	const location = "handler.mastodon.Blocks"
+	const location = "handler.mastodon.Rules"
 
 	return func(auth model.Authorization, t txn.GetBlocks) ([]object.Account, toot.PageInfo, error) {
 
@@ -25,7 +25,7 @@ func GetBlocks(serverFactory *server.Factory) func(model.Authorization, txn.GetB
 
 		// Query the database
 		userService := factory.User()
-		users, err := userService.QueryBlockedUsers(auth.UserID, queryExpression(t))
+		users, err := userService.QueryBlockedActors(auth.UserID, queryExpression(t))
 
 		if err != nil {
 			return []object.Account{}, toot.PageInfo{}, derp.Wrap(err, location, "Error querying database")

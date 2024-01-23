@@ -1,6 +1,5 @@
 .menu {
 	color: var(--black);
-	background-color: var(--gray15);
 	min-width: 160px;
 
 	font-size:calc(var(--rhythm) * 2);
@@ -10,22 +9,18 @@
 	white-space: normal;
 }
 
-.menu > a,
-.menu > [role=link],
-.menu > [role=button] {
+.menu > [role=menuitem] {
 	padding: 4px 8px;
 	border-top: solid 1px var(--gray20);
+	cursor: pointer;
 }
 
-.menu > a:first-child,
-.menu > [role=link]:first-child,
-.menu > [role=button]:first-child {
+.menu > [role=menuitem]:first-child {
 	border-top: none;
 }
 
-.menu > a:hover,
-.menu > [role=link]:hover,
-.menu > [role=button]:hover {
+.menu:not(:has([aria-selected=true])) > [role=menuitem]:hover,
+.menu > [role=menuitem][aria-selected=true] {
 	background-color: var(--button-primary-background-hover);
 	color: var(--button-primary-color-hover);
 }

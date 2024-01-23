@@ -10,21 +10,21 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func SetBlockCount(userCollection data.Collection, blockCollection data.Collection, userID primitive.ObjectID) error {
+func SetRuleCount(userCollection data.Collection, ruleCollection data.Collection, userID primitive.ObjectID) error {
 
-	// Count the blocks for this User
+	// Count the rules for this User
 	criteria := exp.Equal("userId", userID).AndEqual("deleteDate", 0)
-	blocksCount, err := blockCollection.Count(criteria)
+	rulesCount, err := ruleCollection.Count(criteria)
 
 	if err != nil {
-		return derp.Wrap(err, "queries.SetBlocksCount", "Error counting blocks records")
+		return derp.Wrap(err, "queries.SetRulesCount", "Error counting rules records")
 	}
 
 	return RawUpdate(context.TODO(), userCollection,
 		exp.Equal("_id", userID),
 		bson.M{
 			"$set": bson.M{
-				"blockCount": blocksCount,
+				"ruleCount": rulesCount,
 			},
 		},
 	)

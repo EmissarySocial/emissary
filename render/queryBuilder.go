@@ -110,6 +110,11 @@ func (builder QueryBuilder[T]) ByUpdateDate() QueryBuilder[T] {
 	return builder
 }
 
+func (builder QueryBuilder[T]) By(sortField string) QueryBuilder[T] {
+	builder.SortField = sortField
+	return builder
+}
+
 func (builder QueryBuilder[T]) Reverse() QueryBuilder[T] {
 	builder.SortDirection = option.SortDirectionDescending
 	return builder

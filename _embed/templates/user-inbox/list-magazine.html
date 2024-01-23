@@ -3,11 +3,22 @@
 {{- $stream := $inboxRenderer.ActivityStream $message.URL -}}
 
 <div class="margin-bottom">
-	<h2 class="black ellipsis">{{$stream.Name}}</h2>
+
+	{{- if eq "NEW-REPLIES" $message.StateID -}}
+		<div class="bold italics text-green margin-bottom-sm">
+			{{icon "chat-fill"}} Received New Replies
+		</div>
+	{{- else if eq "MUTED" $message.StateID -}}
+		<div class="bold italics text-gray margin-bottom-sm">
+			{{icon "mute"}} Notifications Muted
+		</div>
+	{{- end -}}
+
+	<h2 class="black ellipsis margin-top-none">{{$stream.Name}}</h2>
 
 	{{- if $stream.HasImage -}}
 		<div class="margin-bottom" style="width:100%; max-width:800px;">
-			<img src="{{$stream.Image.URL}}" loading="lazy" style="width:100%; border:solid 1px var(--gray20);"/>
+			<img src="{{$stream.Image.Href}}" loading="lazy" style="width:100%; border:solid 1px var(--gray20); {{if $stream.Image.HasDimensions}}aspect-ratio:{{$stream.Image.AspectRatio}}{{end}}"/>
 		</div>
 	{{- end -}}
 
@@ -29,7 +40,7 @@
 			{{- end -}}
 		</span>
 		<span class="nowrap">
-			{{- $stream.Published | tinyDate -}}
+			&middot; {{ $message.PublishDate | tinyDate -}}
 		</span>
 	</div>
 

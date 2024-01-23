@@ -33,15 +33,15 @@ func (step StepWithFollowing) execute(renderer Renderer, buffer io.Writer, actio
 	// Collect required services and values
 	factory := renderer.factory()
 	followingService := factory.Following()
-	followingToken := renderer.QueryParam("followingId")
+	token := renderer.QueryParam("followingId")
 	following := model.NewFollowing()
 	following.UserID = renderer.AuthenticatedID()
 
 	// If we have a real ID, then try to load the following from the database
-	if (followingToken != "") && (followingToken != "new") {
-		if err := followingService.LoadByToken(renderer.AuthenticatedID(), followingToken, &following); err != nil {
+	if (token != "") && (token != "new") {
+		if err := followingService.LoadByToken(renderer.AuthenticatedID(), token, &following); err != nil {
 			if actionMethod == ActionMethodGet {
-				return Halt().WithError(derp.Wrap(err, location, "Unable to load Following", followingToken))
+				return Halt().WithError(derp.Wrap(err, location, "Unable to load Following", token))
 			}
 			// Fall through for POSTS..  we're just creating a new following.
 		}
@@ -56,7 +56,10 @@ func (step StepWithFollowing) execute(renderer Renderer, buffer io.Writer, actio
 
 	// Execute the POST render pipeline on the child
 	result := Pipeline(step.SubSteps).Execute(factory, subRenderer, buffer, actionMethod)
-	result.Error = derp.Wrap(result.Error, location, "Error executing steps for child")
+
+	if result.Error != nil {
+		return Halt().WithError(derp.Wrap(result.Error, location, "Error executing steps for child"))
+	}
 
 	return UseResult(result)
 }

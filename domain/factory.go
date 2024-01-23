@@ -45,7 +45,7 @@ type Factory struct {
 
 	// services (within this domain/factory)
 	attachmentService    service.Attachment
-	blockService         service.Block
+	ruleService          service.Rule
 	groupService         service.Group
 	domainService        service.Domain
 	emailService         service.DomainEmail
@@ -104,7 +104,7 @@ func NewFactory(domain config.Domain, providers []config.Provider, activityStrea
 
 	// Create empty service pointers.  These will be populated in the Refresh() step.
 	factory.attachmentService = service.NewAttachment()
-	factory.blockService = service.NewBlock()
+	factory.ruleService = service.NewRule()
 	factory.domainService = service.NewDomain()
 	factory.emailService = service.NewDomainEmail(serverEmail)
 	factory.encryptionKeyService = service.NewEncryptionKey()
@@ -180,9 +180,9 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.MediaServer(),
 		)
 
-		// Populate the Block Service
-		factory.blockService.Refresh(
-			factory.collection(CollectionBlock),
+		// Populate the Rule Service
+		factory.ruleService.Refresh(
+			factory.collection(CollectionRule),
 			factory.Outbox(),
 			factory.User(),
 			factory.Queue(),
@@ -217,7 +217,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		factory.followerService.Refresh(
 			factory.collection(CollectionFollower),
 			factory.User(),
-			factory.Block(),
+			factory.Rule(),
 			factory.ActivityStreams(),
 			factory.Queue(),
 			factory.Host(),
@@ -243,7 +243,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		// Populate Inbox Service
 		factory.inboxService.Refresh(
 			factory.collection(CollectionInbox),
-			factory.Block(),
+			factory.Rule(),
 			factory.Folder(),
 			factory.Host(),
 		)
@@ -257,7 +257,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		// Populate Mention Service
 		factory.mentionService.Refresh(
 			factory.collection(CollectionMention),
-			factory.Block(),
+			factory.Rule(),
 			factory.ActivityStreams(),
 			factory.Host(),
 		)
@@ -323,9 +323,9 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.collection(CollectionUser),
 			factory.collection(CollectionFollower),
 			factory.collection(CollectionFollowing),
-			factory.collection(CollectionBlock),
+			factory.collection(CollectionRule),
 			factory.Attachment(),
-			factory.Block(),
+			factory.Rule(),
 			factory.Email(),
 			factory.EncryptionKey(),
 			factory.Folder(),
@@ -432,9 +432,9 @@ func (factory *Factory) Attachment() *service.Attachment {
 	return &factory.attachmentService
 }
 
-// Block returns a fully populated Block service
-func (factory *Factory) Block() *service.Block {
-	return &factory.blockService
+// Rule returns a fully populated Rule service
+func (factory *Factory) Rule() *service.Rule {
+	return &factory.ruleService
 }
 
 // Domain returns a fully populated Domain service
@@ -664,8 +664,8 @@ func (factory *Factory) ModelService(object data.Object) service.ModelService {
 
 	switch object.(type) {
 
-	case *model.Block:
-		return factory.Block()
+	case *model.Rule:
+		return factory.Rule()
 
 	case *model.Folder:
 		return factory.Folder()

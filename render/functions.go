@@ -85,7 +85,7 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 			return template.HTML(icons.Get(name + "-fill"))
 		},
 
-		"iff": func(condition bool, trueValue any, falseValue any) any {
+		"iif": func(condition bool, trueValue any, falseValue any) any {
 			if condition {
 				return trueValue
 			}
@@ -144,6 +144,10 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 			return template.HTML(html.Minimal(value))
 		},
 
+		"attr": func(value string) template.HTMLAttr {
+			return template.HTMLAttr(value)
+		},
+
 		"css": func(value string) template.CSS {
 			return template.CSS(value)
 		},
@@ -157,17 +161,16 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 
 		"isoDate": func(value any) string {
 
-			valueTime := convert.Time(value)
-			emptyTime := time.Time{}
-
-			if valueTime == emptyTime {
-				return ""
+			if valueTime, ok := convert.TimeOk(value, time.Time{}); ok {
+				return valueTime.Format(time.RFC3339)
 			}
 
-			return valueTime.Format(time.RFC3339)
+			return ""
 		},
 
-		"epochDate": convert.EpochDate,
+		"epochDate": func(value any) int64 {
+			return convert.Time(value).Unix()
+		},
 
 		"humanizeTime": func(value any) string {
 			valueTime := convert.Time(value)

@@ -3,7 +3,6 @@
 <div class="fullscreen app" hx-get="{{.URL}}" hx-trigger="refreshPage from:window" hx-target="this" hx-swap="outerHTML" hx-push-url="true">
 	<title>{{.FollowingCount}} Following | {{.DisplayName}}</title>
 	<script src="/.templates/user-inbox/hyperscript" type="text/hyperscript"></script>
-	<link rel="stylesheet" href="/.templates/base-social/stylesheet">
 	<link rel="stylesheet" href="/.templates/user-inbox/stylesheet">
 
 	{{- template "sidebar" $folders -}}
@@ -13,12 +12,34 @@
 		<div role="tablist" class="underlined margin-top margin-bottom" hx-push-url="true">
 			<span role="tab" class="turboclick" aria-selected="true">{{icon "star-fill"}} Following</span>
 			<span role="tab" class="turboclick" hx-get="/@me/inbox/followers">{{icon "person"}} Followers</span>
-			<span role="tab" class="turboclick" hx-get="/@me/inbox/blocks">{{icon "block"}} Blocks</span>
+			<span role="tab" class="turboclick" hx-get="/@me/inbox/rules">{{icon "rule"}} Rules</span>
 		</div>
 
-		{{- template "following-list" . -}}
+		<div>
+			<input
+				type="text" 
+				name="search" 
+				placeholder="Search Following"
+				hx-get="/@me/inbox/following-list"
+				hx-trigger="keyup queue:last delay:100ms"
+				hx-target="#following-list"
+				hx-swap="innerHTML"
+				hx-push-url="false">
+		</div>
+
+		<div class="table margin-top">
+			<div class="link flex-row" role="button" hx-get="/@me/inbox/following-search" hx-push-url="false">
+				<div class="flex-grow-1">
+					{{icon "add"}}
+					Follow a Person or Website
+				</div>
+			</div>
+		</div>
+
+		<div id="following-list" class="table">
+			{{- .View "following-list" -}}
+		</div>
 				
 	</div>
-
 
 </div>

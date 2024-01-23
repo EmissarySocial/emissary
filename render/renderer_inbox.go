@@ -14,8 +14,10 @@ import (
 	"github.com/benpate/exp"
 	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/hannibal/streams"
+	"github.com/benpate/rosetta/channel"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
@@ -101,9 +103,15 @@ func (w Inbox) BasePath() string {
 }
 
 func (w Inbox) Permalink() string {
+
+	if message := w.Message(); !message.IsNew() {
+		return message.URL
+	}
+
 	if url := w._request.URL.Query().Get("url"); url != "" {
 		return url
 	}
+
 	return w.Host() + "/@me/inbox"
 }
 
@@ -178,8 +186,8 @@ func (w Inbox) FollowingCount() int {
 	return w._user.FollowingCount
 }
 
-func (w Inbox) BlockCount() int {
-	return w._user.BlockCount
+func (w Inbox) RuleCount() int {
+	return w._user.RuleCount
 }
 
 func (w Inbox) DisplayName() string {
@@ -200,30 +208,33 @@ func (w Inbox) ImageURL() string {
 
 func (w Inbox) Followers() QueryBuilder[model.FollowerSummary] {
 
+	// Define inbound parameters
 	expressionBuilder := builder.NewBuilder().
-		String("displayName")
+		String("search", builder.WithAlias("actor.name"), builder.WithDefaultOpContains()).
+		String("name", builder.WithAlias("actor.name"))
 
+	// Calculate criteria
 	criteria := exp.And(
 		expressionBuilder.Evaluate(w._request.URL.Query()),
 		exp.Equal("parentId", w.AuthenticatedID()),
 	)
 
-	result := NewQueryBuilder[model.FollowerSummary](w._factory.Follower(), criteria)
-
-	return result
+	// Return the query builder
+	return NewQueryBuilder[model.FollowerSummary](w._factory.Follower(), criteria)
 }
 
-func (w Inbox) Following() ([]model.FollowingSummary, error) {
+func (w Inbox) Following() QueryBuilder[model.FollowingSummary] {
 
-	userID := w.AuthenticatedID()
+	expressionBuilder := builder.NewBuilder().
+		String("search", builder.WithAlias("label"), builder.WithDefaultOpContains()).
+		String("label")
 
-	if userID.IsZero() {
-		return nil, derp.NewUnauthorizedError("render.Inbox.Following", "Must be signed in to view following")
-	}
+	criteria := exp.And(
+		expressionBuilder.Evaluate(w._request.URL.Query()),
+		exp.Equal("userId", w.AuthenticatedID()),
+	)
 
-	followingService := w._factory.Following()
-
-	return followingService.QueryByUser(userID)
+	return NewQueryBuilder[model.FollowingSummary](w._factory.Following(), criteria)
 }
 
 func (w Inbox) FollowingByFolder(token string) ([]model.FollowingSummary, error) {
@@ -262,37 +273,20 @@ func (w Inbox) FollowingByToken(followingToken string) (model.Following, error) 
 	return following, nil
 }
 
-func (w Inbox) Blocks() QueryBuilder[model.Block] {
+func (w Inbox) Rules() QueryBuilder[model.Rule] {
 
-	expressionBuilder := builder.NewBuilder()
+	expressionBuilder := builder.NewBuilder().
+		String("search", builder.WithAlias("trigger"), builder.WithDefaultOpContains()).
+		String("trigger")
 
 	criteria := exp.And(
 		expressionBuilder.Evaluate(w._request.URL.Query()),
 		exp.Equal("userId", w.AuthenticatedID()),
 	)
 
-	result := NewQueryBuilder[model.Block](w._factory.Block(), criteria)
+	result := NewQueryBuilder[model.Rule](w._factory.Rule(), criteria)
 
 	return result
-}
-
-func (w Inbox) BlocksByType(blockType string) QueryBuilder[model.Block] {
-
-	expressionBuilder := builder.NewBuilder()
-
-	criteria := exp.And(
-		expressionBuilder.Evaluate(w._request.URL.Query()),
-		exp.Equal("userId", w.AuthenticatedID()),
-		exp.Equal("type", blockType),
-	)
-
-	result := NewQueryBuilder[model.Block](w._factory.Block(), criteria)
-
-	return result
-}
-
-func (w Inbox) CountBlocks(blockType string) (int, error) {
-	return w._factory.Block().CountByType(w.objectID(), blockType)
 }
 
 // Inbox returns a slice of messages in the current User's inbox
@@ -318,6 +312,7 @@ func (w Inbox) Inbox() (QueryBuilder[model.Message], error) {
 
 	expBuilder := builder.NewBuilder().
 		ObjectID("origin.followingId").
+		ObjectID("followingId", builder.WithAlias("origin.followingId")).
 		Int("rank").
 		Int("readDate").
 		Int("createDate")
@@ -435,6 +430,7 @@ func (w Inbox) Message() model.Message {
 	messageID, err := primitive.ObjectIDFromHex(w._request.URL.Query().Get("messageId"))
 
 	if err != nil {
+		derp.Report(derp.Wrap(err, "render.Inbox.Message", "Invalid message ID", w._request.URL.Query().Get("messageId")))
 		return model.NewMessage()
 	}
 
@@ -443,6 +439,7 @@ func (w Inbox) Message() model.Message {
 	message := model.NewMessage()
 
 	if err := inboxService.LoadByID(w.AuthenticatedID(), messageID, &message); err != nil {
+		derp.Report(derp.Wrap(err, "render.Inbox.Message", "Error loading message", messageID))
 		return model.NewMessage()
 	}
 
@@ -473,57 +470,117 @@ func (w Inbox) Message() model.Message {
 		if len(result) > 0 {
 			message = result[0]
 		}
+
+		// Update the QueryString to reflect the "correct" message
+		w.SetQueryParam("messageId", message.ID())
+		w.SetQueryParam("sibling", "")
 	}
 
 	// Icky side effect to update the URI parameter to use the new Message
 	w.SetQueryParam("messageId", message.MessageID.Hex())
-	w.SetQueryParam("url", message.URL)
-	w.SetQueryParam("folderId", message.FolderID.Hex())
 
-	spew.Dump(w._request.URL.Query())
-	spew.Dump(message)
+	if url := w.QueryParam("url"); url == "" {
+		w.SetQueryParam("url", message.URL)
+	}
+
+	if folderID := w.QueryParam("folderId"); folderID == "" {
+		w.SetQueryParam("folderId", message.FolderID.Hex())
+	}
 
 	// Otherwise, there was some error (likely 404 Not Found) so return the original message instead.
 	return message
 }
 
-func (w Inbox) RepliesBefore(uri string, dateString string, maxRows int) sliceof.Object[streams.Document] {
+func (w Inbox) RepliesBefore(url string, dateString string, maxRows int) sliceof.Object[streams.Document] {
 
-	activityStreamsService := w._factory.ActivityStreams()
+	done := make(channel.Done)
+
+	// Get ActivityStreams that reply to the provided URL
+	activityStreamService := w._factory.ActivityStreams()
 	maxDate := convert.Int64Default(dateString, math.MaxInt)
-	result, _ := activityStreamsService.QueryRepliesBeforeDate(uri, maxDate, maxRows)
+	replies := activityStreamService.QueryRepliesBeforeDate(url, maxDate, done)
 
-	return result
+	// Filter replies based on rules
+	ruleService := w._factory.Rule()
+	ruleFilter := ruleService.Filter(w.AuthenticatedID())
+	filteredReplies := ruleFilter.Channel(replies)
+
+	// Limit to maximum number of replies
+	// limitedReplies := channel.Limit(maxRows, filteredReplies, done)
+	// result := channel.Slice(limitedReplies)
+	result := channel.Slice(filteredReplies)
+
+	// For glory and honor!
+	return slice.Reverse(result)
 }
 
-func (w Inbox) RepliesAfter(uri string, dateString string, maxRows int) sliceof.Object[streams.Document] {
+func (w Inbox) RepliesAfter(url string, dateString string, maxRows int) sliceof.Object[streams.Document] {
+
+	done := make(channel.Done)
+
+	// Get ActivityStreams that reply to the provided URL
+	activityStreamService := w._factory.ActivityStreams()
 	minDate := convert.Int64(dateString)
+	replies := activityStreamService.QueryRepliesAfterDate(url, minDate, done)
 
-	activityStreamsService := w._factory.ActivityStreams()
-	result, _ := activityStreamsService.QueryRepliesAfterDate(uri, minDate, maxRows)
+	// Filter replies based on rules
+	ruleService := w._factory.Rule()
+	ruleFilter := ruleService.Filter(w.AuthenticatedID())
+	filteredReplies := ruleFilter.Channel(replies)
 
+	// Limit to maximum number of replies
+	limitedReplies := channel.Limit(maxRows, filteredReplies, done)
+	result := channel.Slice(limitedReplies)
+
+	// Invictus
 	return result
 }
 
-func (w Inbox) AnnouncesBefore(uri string, dateString string, maxRows int) sliceof.Object[streams.Document] {
+func (w Inbox) AnnouncesBefore(url string, dateString string, maxRows int) sliceof.Object[streams.Document] {
 
-	activityStreamsService := w._factory.ActivityStreams()
+	done := make(channel.Done)
+
+	// Get ActivityStreams that announce the provided URL
+	activityStreamService := w._factory.ActivityStreams()
 	maxDate := convert.Int64Default(dateString, math.MaxInt64)
-	result, _ := activityStreamsService.QueryAnnouncesBeforeDate(uri, maxDate, maxRows)
+	announces := activityStreamService.QueryAnnouncesBeforeDate(url, maxDate, done)
 
-	return result
+	// Filter replies based on rules
+	ruleService := w._factory.Rule()
+	ruleFilter := ruleService.Filter(w.AuthenticatedID())
+	filteredAnnounces := ruleFilter.Channel(announces)
+
+	// Limit to maximum number of replies
+	limitedAnnounces := channel.Limit(maxRows, filteredAnnounces, done)
+	result := channel.Slice(limitedAnnounces)
+
+	// Victory
+	return slice.Reverse(result)
 }
 
-func (w Inbox) LikesBefore(uri string, dateString string, maxRows int) sliceof.Object[streams.Document] {
+func (w Inbox) LikesBefore(url string, dateString string, maxRows int) sliceof.Object[streams.Document] {
 
-	activityStreamsService := w._factory.ActivityStreams()
+	done := make(channel.Done)
+
+	// Get ActivityStreams that announce the provided URL
+	activityStreamService := w._factory.ActivityStreams()
 	maxDate := convert.Int64Default(dateString, math.MaxInt64)
-	result, _ := activityStreamsService.QueryLikesBeforeDate(uri, maxDate, maxRows)
+	announces := activityStreamService.QueryLikesBeforeDate(url, maxDate, done)
 
-	return result
+	// Filter replies based on rules
+	ruleService := w._factory.Rule()
+	ruleFilter := ruleService.Filter(w.AuthenticatedID())
+	filteredLikes := ruleFilter.Channel(announces)
+
+	// Limit to maximum number of replies
+	limitedLikes := channel.Limit(maxRows, filteredLikes, done)
+	result := channel.Slice(limitedLikes)
+
+	// Success
+	return slice.Reverse(result)
 }
 
-func (w Inbox) AmFollowing(uri string) model.Following {
+func (w Inbox) AmFollowing(url string) model.Following {
 
 	// Get following service and new following record
 	followingService := w._factory.Following()
@@ -536,29 +593,33 @@ func (w Inbox) AmFollowing(uri string) model.Following {
 
 	// Retrieve following record. Discard errors
 	// nolint:errcheck
-	_ = followingService.LoadByURL(w._user.UserID, uri, &following)
+	_ = followingService.LoadByURL(w._user.UserID, url, &following)
 
 	// Return the (possibly empty) Following record
 	return following
 }
 
-func (w Inbox) AmBlocking(blockType string, uri string) model.Block {
+// HasRule returns a rule that matches the current user, rule type, and trigger.
+// If no rule is found, then an empty rule is returned.
+func (w Inbox) HasRule(ruleType string, trigger string) model.Rule {
 
 	// Get following service and new following record
-	blockService := w._factory.Block()
-	block := model.NewBlock()
+	ruleService := w._factory.Rule()
+	rule := model.NewRule()
 
 	// Null check
 	if w._user == nil {
-		return block
+		return rule
 	}
 
-	// Retrieve block record. Discard errors
-	// nolint:errcheck
-	_ = blockService.LoadByTrigger(w._user.UserID, blockType, uri, &block)
+	// Retrieve rule record.  "Not Found" is acceptable, but "legitimate" errors are not.
+	// In either case, do not halt the request
+	if err := ruleService.LoadByTrigger(w._user.UserID, ruleType, trigger, &rule); !derp.NilOrNotFound(err) {
+		derp.Report(derp.Wrap(err, "render.Inbox.HasRule", "Error loading rule", ruleType, trigger))
+	}
 
-	// Return the (possibly empty) Block record
-	return block
+	// Return the (possibly empty) Rule record
+	return rule
 }
 
 func (w Inbox) debug() {

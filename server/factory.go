@@ -14,6 +14,7 @@ import (
 	"github.com/EmissarySocial/emissary/tools/ascache"
 	"github.com/EmissarySocial/emissary/tools/ascacherules"
 	"github.com/EmissarySocial/emissary/tools/ascontextmaker"
+	"github.com/EmissarySocial/emissary/tools/asnormalizer"
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/pub"
@@ -558,10 +559,15 @@ func (factory *Factory) RefreshActivityStreams(connection mapof.String) {
 	collection := client.Database(database).Collection("Document")
 
 	// Build a new client stack
-	sherlockClient := sherlock.NewClient(sherlock.WithUserAgent("Emissary Social: https://emissary.social"))
-	cacheRulesClient := ascacherules.New(sherlockClient)
-	contextMakerClient := ascontextmaker.New(cacheRulesClient)
-	cacheClient := ascache.New(contextMakerClient, collection, ascache.WithIgnoreHeaders())
+	sherlockClient := sherlock.NewClient(
+		sherlock.WithUserAgent("Emissary Social: https://emissary.social"),
+	)
+
+	normalizerClient := asnormalizer.New(sherlockClient)       // enforce opinionated data formats
+	contextMakerClient := ascontextmaker.New(normalizerClient) // compute document context (if missing)
+	cacheRulesClient := ascacherules.New(contextMakerClient)   // apply custom caching rules to documents
+
+	cacheClient := ascache.New(cacheRulesClient, collection, ascache.WithIgnoreHeaders()) // cache data in MongoDB
 
 	factory.activityStreamsService.Refresh(cacheClient, mongodb.NewCollection(collection))
 

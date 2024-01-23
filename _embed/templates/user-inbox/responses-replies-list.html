@@ -1,0 +1,114 @@
+{{- $url := .QueryParam "url" -}}
+{{- $messageID := .QueryParam "messageId" -}}
+{{- $folderID := .QueryParam "folderId" -}}
+{{- $followingID := .QueryParam "origin.followingId" -}}
+{{- $publishedDate := .QueryParam "published" -}}
+
+{{- $pageSize := 4 -}}
+{{- $renderer := . -}}
+
+{{- $replies := .RepliesBefore $url $publishedDate $pageSize -}}
+
+{{- if eq $replies.Length $pageSize -}}
+	<div class="margin-bottom" role="button" hx-get="{{.BasePath}}/responses-replies-list?url={{$url}}&published={{$replies.First.Published | epochDate}}" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
+		<span class="button text-xs">Show Older Replies</span>
+	</div>
+{{- end -}}
+
+{{- range $index, $stream := $replies -}}
+
+	{{- $object := $stream.UnwrapActivity -}}
+	{{- $actor := $object.AttributedTo.Load -}}
+
+	<div role="link" class="margin-top-xs">
+
+		<div class="flex-row">
+			<div class="flex-shrink-0" hx-get="/@me/inbox/message?messageId={{$messageID}}&folderID={{$folderID}}&origin.followingId={{$followingID}}&url={{$object.ID}}">
+				{{- if $actor.Icon.IsNil -}}
+					<div class="circle-48"></div>
+				{{- else -}}
+					<img class="circle-48" src="{{$actor.Icon.Href}}">
+				{{- end -}}
+			</div>
+
+			<div class="flex-grow-1" hx-get="/@me/inbox/message?messageId={{$messageID}}&folderID={{$folderID}}&origin.followingId={{$followingID}}&url={{$object.ID}}">
+				{{- if $actor.NotNil -}}
+					<div class="bold">{{$actor.Name}}</div>
+					<div class="text-light-gray">{{$actor.UsernameOrID}}</div>
+				{{- end -}}
+			</div>
+
+			<div class="align-right text-xs nowrap">
+				<span
+					hx-get="/@me/inbox/like-button?url={{$object.ID}}"
+					hx-target="this"
+					hx-trigger="load">
+				</span>
+				
+				{{- if $actor.NotNil -}}
+					{{- if $renderer.IsMe $object.Actor.ID -}}
+						<span class="button" disabled>{{icon "more-horizontal"}}</span>
+					{{- else -}}
+						<span
+							hx-get="/@me/inbox/actor-button?url={{$object.Actor.ID}}&folderId={{$folderID}}"
+							hx-target="this"
+							hx-trigger="load">
+						</span>
+					{{- end -}}
+				{{- end -}}
+				
+			</div>
+
+		</div>
+		
+	</div>
+
+	<div class="flex-row">
+		<div style="width:2px; background-color:var(--gray20); margin-left:23px; margin-right:23px;"></div>
+		<div class="flex-grow-1">
+			<div role="link" hx-get="/@me/inbox/message?messageId={{$messageID}}&folderID={{$folderID}}&origin.followingId={{$followingID}}&url={{$object.ID}}">
+
+				{{- if ne "" $object.Name -}}
+					<div class="bold margin-top">{{$object.Name}}</div>
+				{{- end -}}
+
+				{{- if $object.Image.NotNil -}}
+					<div class="margin-vertical"><img src="{{$object.Image.Href}}" class="width-100-percent"></div>
+				{{- end -}}
+			
+				<div>{{$object.Content | html}}</div>
+			</div>
+			
+			<div class="text-sm text-light-gray">
+				{{ $object.Published | tinyDate}} ago
+				{{- $stats := $stream.Statistics -}}
+
+				{{ if $stats.HasReplies }}
+					&middot; 
+					<span 
+						role="link" 
+						hx-get="/@me/inbox/responses-replies-recursive?url={{$object.ID}}"
+						hx-target="next .recursive-replies"
+						hx-swap="innerHTML">
+						{{$stats.Replies}} {{pluralize $stats.Replies "Reply" "Replies"}}
+					</span>
+				{{ end }}
+
+				{{ if $stats.HasLikes }}
+					&middot; {{$stats.Likes}} {{pluralize $stats.Likes "Like" "Likes"}}
+				{{ end }}
+
+				{{ if $stats.HasAnnounces }}
+					&middot; {{$stats.Announces}} {{pluralize $stats.Announces "Share" "Shares"}}
+				{{ end }}
+
+			</div>
+		</div>
+	</div>
+
+	<div class="flex-row">
+		<div style="width:2px; background-color:var(--gray20); margin-left:23px; margin-right:23px;"></div>
+		<div class="flex-grow-1 recursive-replies margin-vertical"></div>
+	</div>
+
+{{- end -}}

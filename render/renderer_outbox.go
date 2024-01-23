@@ -176,8 +176,8 @@ func (w Outbox) Username() string {
 	return w._user.Username
 }
 
-func (w Outbox) BlockCount() int {
-	return w._user.BlockCount
+func (w Outbox) RuleCount() int {
+	return w._user.RuleCount
 }
 
 func (w Outbox) FollowerCount() int {

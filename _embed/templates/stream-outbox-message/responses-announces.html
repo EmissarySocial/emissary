@@ -1,0 +1,82 @@
+{{- $stream := .ActivityStream .Permalink -}}
+{{- $statistics := $stream.Statistics -}}
+
+{{- $publishedDate := .QueryParam "published" -}}
+{{- $pageSize := 1000 -}}
+{{- $announces := .AnnouncesBefore $publishedDate $pageSize -}}
+
+<div id="responses" hx-target="this" hx-swap="outerHTML" hx-push-url="false" class="margin-top">
+
+	<hr class="margin-bottom-sm"/>
+
+	<div>
+		<span hx-get="{{.BasePath}}/responses-replies?url={{.Permalink}}" role="button" class="margin-right-xs clickable">
+			{{- $statistics.Replies }} {{pluralize $statistics.Replies "Reply" "Replies" -}}
+		</span>
+		&middot;
+		<span hx-get="{{.BasePath}}/responses-likes?url={{.Permalink}}" role="button" class="margin-horizontal-xs clickable">
+			{{- $statistics.Likes }} {{pluralize $statistics.Likes "Like" "Likes" -}}
+		</span>
+		&middot;
+		<span hx-get="{{.BasePath}}/responses-announces?url={{.Permalink}}" role="button" class="margin-horizontal-xs clickable bold">
+			{{- $statistics.Announces }} {{pluralize $statistics.Announces "Share" "Shares" -}}
+		</span>
+	</div>
+
+	<hr class="margin-top-sm"/>
+
+	{{- if lt $announces.Length 6 -}}
+
+		<div class="margin-top">
+
+			{{- range $index, $announce := $announces -}}
+				{{- $icon := $announce.Actor.Icon -}}
+				<div script="on click go to url '{{$announce.Actor.ID}}' in new window" class="flex-row clickable" role="link">
+
+					<div class="margin-right">
+						{{- if $icon.NotNil -}}
+							<img src="{{$icon.Href}}" class="circle-48">
+						{{- else -}}
+							<div class="circle-48"></div>
+						{{- end -}}
+					</div>
+
+					<div>
+						<div class="bold">Liked by {{$announce.Actor.Name}}</div>
+						<div class="text-gray">on {{$announce.Published | shortDate}}</div>
+					</div>
+
+				</div>
+			{{- end -}}
+		</div>
+
+	{{- else -}}
+
+		<div class="margin-top flex-row flex-wrap">
+
+			{{- $size := iif (lt $announces.Length 18) "32" "48" -}}	
+
+			{{- range $index, $announce := $announces -}}
+				{{- $icon := $announce.Actor.Icon -}}
+				<div script="on click go to url '{{$announce.Actor.ID}}' in new window" class="clickable tooltip-container" role="link">
+
+					<div class="tooltip align-left">
+						<div class="bold margin-vertical-xs">Liked by {{$announce.Actor.Name}}</div>
+						<div class="text-gray margin-vertical-xs">on {{$announce.Published | shortDate}}</div>
+					</div>
+
+					<div class="margin-right">
+						{{- if $icon.NotNil -}}
+							<img src="{{$icon.Href}}" class="circle-{{$size}}">
+						{{- else -}}
+							<div class="circle-{{$size}}"></div>
+						{{- end -}}
+					</div>
+				</div>
+			{{- end -}}
+	
+		</div>
+
+	{{- end -}}
+
+</div>

@@ -17,7 +17,7 @@ import (
 // Inbox manages all Inbox records for a User.  This includes Inbox and Outbox
 type Inbox struct {
 	collection    data.Collection
-	blockService  *Block
+	ruleService   *Rule
 	folderService *Folder
 	host          string
 	counter       int
@@ -36,9 +36,9 @@ func NewInbox() Inbox {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Inbox) Refresh(collection data.Collection, blockService *Block, folderService *Folder, host string) {
+func (service *Inbox) Refresh(collection data.Collection, ruleService *Rule, folderService *Folder, host string) {
 	service.collection = collection
-	service.blockService = blockService
+	service.ruleService = ruleService
 	service.folderService = folderService
 	service.host = host
 }
@@ -86,11 +86,6 @@ func (service *Inbox) Save(message *model.Message, note string) error {
 	// Clean the value before saving
 	if err := service.Schema().Clean(message); err != nil {
 		return derp.Wrap(err, "service.Inbox.Save", "Error cleaning Inbox", message)
-	}
-
-	// Apply block filters to this message
-	if err := service.blockService.FilterMessage(message); err != nil {
-		return derp.Wrap(err, "service.Inbox.Save", "Error filtering Inbox", message)
 	}
 
 	// Calculate a (hopefully unique) rank for this message
@@ -346,7 +341,7 @@ func (service *Inbox) MarkReadByDate(userID primitive.ObjectID, rank int64) erro
 
 	message := model.NewMessage()
 	for it.Next(&message) {
-		if err := service.MarkRead(&message, true); err != nil {
+		if err := service.MarkRead(&message); err != nil {
 			return derp.Wrap(err, location, "Error marking message as read")
 		}
 	}
@@ -358,21 +353,92 @@ func (service *Inbox) MarkReadByDate(userID primitive.ObjectID, rank int64) erro
  * Custom Behaviors
  ******************************************/
 
-func (service *Inbox) MarkRead(message *model.Message, read bool) error {
+// MarkRead updates a message to "READ" status and recalculates statistics
+func (service *Inbox) MarkRead(message *model.Message) error {
 
 	const location = "service.Inbox.MarkRead"
 
-	// Update the ReadDate timestamp
-	if read {
-		message.ReadDate = time.Now().UnixMilli()
-	} else {
-		message.ReadDate = math.MaxInt64
+	// Set status to READ.  If the message was not changed, then exit
+	if isUpdated := message.MarkRead(); !isUpdated {
+		return nil
 	}
 
-	// Save the record to the database
-	if err := service.Save(message, "MarkRead"); err != nil {
+	// Save the message
+	if err := service.Save(message, "Update StateID to "+message.StateID); err != nil {
 		return derp.Wrap(err, location, "Error saving message")
 	}
+
+	// Recalculate statistics
+	if err := service.recalculateUnreadCounts(message); err != nil {
+		return derp.Wrap(err, location, "Error recalculating unread counts")
+	}
+
+	// Lo hicimos!
+	return nil
+}
+
+// MarkRead updates a message to "UNREAD" status and recalculates statistics
+func (service *Inbox) MarkUnread(message *model.Message) error {
+
+	const location = "service.Inbox.MarkUnread"
+
+	// Set status to UNREAD.  If the message was not changed, then exit
+	if isUpdated := message.MarkUnread(); !isUpdated {
+		return nil
+	}
+
+	// Save the message
+	if err := service.Save(message, "Update StateID to "+message.StateID); err != nil {
+		return derp.Wrap(err, location, "Error saving message")
+	}
+
+	// Recalculate statistics
+	if err := service.recalculateUnreadCounts(message); err != nil {
+		return derp.Wrap(err, location, "Error recalculating unread counts")
+	}
+
+	// Success
+	return nil
+}
+
+func (service *Inbox) MarkMuted(message *model.Message) error {
+
+	const location = "service.Inbox.MarkMuted"
+
+	// Set status to MUTED.  If the message is unchanged, then exit
+	if isUpdated := message.MarkMuted(); !isUpdated {
+		return nil
+	}
+
+	// Save the message
+	if err := service.Save(message, "Set Status to MUTED"); err != nil {
+		return derp.Wrap(err, location, "Error saving message")
+	}
+
+	return nil
+}
+
+func (service *Inbox) MarkUnmuted(message *model.Message) error {
+
+	const location = "service.Inbox.MarkMuted"
+
+	// Set status to READ (unmuted).  If the message is unchanged, then exit
+	if isUpdated := message.MarkRead(); !isUpdated {
+		return nil
+	}
+
+	// Save the message
+	if err := service.Save(message, "Set Status to MUTED"); err != nil {
+		return derp.Wrap(err, location, "Error saving message")
+	}
+
+	// Success
+	return nil
+}
+
+func (service *Inbox) recalculateUnreadCounts(message *model.Message) error {
+
+	const location = "service.Inbox.recalculateUnreadCounts"
 
 	// Recalculate the "unread" count on the corresponding folder
 	unreadCount, err := service.CountUnreadMessages(message.UserID, message.FolderID)
@@ -387,26 +453,6 @@ func (service *Inbox) MarkRead(message *model.Message, read bool) error {
 	}
 
 	// Lo hicimos! we did it.
-	return nil
-}
-
-func (service *Inbox) SetMuted(userID primitive.ObjectID, uri string, muted bool, message *model.Message) error {
-
-	const location = "service.Inbox.SetMuted"
-
-	// Load the message
-	if err := service.LoadByURL(userID, uri, message); err != nil {
-		return derp.Wrap(err, location, "Error loading message")
-	}
-
-	// Mark as Muted
-	message.Muted = muted
-
-	// Save the message
-	if err := service.Save(message, "SetMuted"); err != nil {
-		return derp.Wrap(err, location, "Error saving message")
-	}
-
 	return nil
 }
 
@@ -427,11 +473,13 @@ func (service *Inbox) CalculateRank(message *model.Message) {
 	// Increment the counter (MOD 1000) so that we have precise ordering of messages
 	service.counter = (service.counter + 1) % 1000
 
-	message.Rank = (time.Now().Unix() * 1000) + int64(service.counter)
+	// message.Rank = (time.Now().Unix() * 1000) + int64(service.counter)
+	message.Rank = (message.PublishDate * 1000) + int64(service.counter)
 }
 
 // CountUnreadMessages counts the number of messages for a user/folder that are marked "unread".
 func (service *Inbox) CountUnreadMessages(userID primitive.ObjectID, folderID primitive.ObjectID) (int, error) {
+
 	criteria := exp.Equal("userId", userID).
 		AndEqual("folderId", folderID).
 		AndEqual("readDate", math.MaxInt64).

@@ -1,0 +1,9 @@
+<h1>{{icon "user"}} Edit {{.DisplayName}}</h1>
+
+<form hx-post="/admin/users/{{.UserID}}/send-welcome" class="text-sm">
+	<button class="htmx-request-hide" type="submit">{{icon "email"}} Resend Email</button>
+	<button class="htmx-request-show" disabled><span class="spin">{{icon "spinner"}}</span> Sending Email</button>
+</form>
+<hr>
+
+{{.View "edit-form"}}

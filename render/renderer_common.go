@@ -315,63 +315,81 @@ func (w Common) UserImage() (string, error) {
  ******************************************/
 
 // SubRenderer creates a new renderer for a child object.  This function works
-// with Block, Folder, Follower, Following, and Stream objects.  It will return
+// with Rule, Folder, Follower, Following, and Stream objects.  It will return
 // an error if the object is not one of those types.
 func (w Common) SubRenderer(object any) (Renderer, error) {
 
+	var result Renderer
+	var err error
+
 	switch typed := object.(type) {
 
-	case model.Block:
-		return NewModel(w._factory, w._request, w._response, &typed, w._template, w.actionID)
+	case model.Rule:
+		result, err = NewModel(w._factory, w._request, w._response, &typed, w._template, w.actionID)
 
 	case model.Folder:
-		return NewModel(w._factory, w._request, w._response, &typed, w._template, w.actionID)
+		result, err = NewModel(w._factory, w._request, w._response, &typed, w._template, w.actionID)
 
 	case model.Follower:
-		return NewModel(w._factory, w._request, w._response, &typed, w._template, w.actionID)
+		result, err = NewModel(w._factory, w._request, w._response, &typed, w._template, w.actionID)
 
 	case model.Following:
-		return NewModel(w._factory, w._request, w._response, &typed, w._template, w.actionID)
+		result, err = NewModel(w._factory, w._request, w._response, &typed, w._template, w.actionID)
 
 	case model.Stream:
-		return NewModel(w._factory, w._request, w._response, &typed, w._template, w.actionID)
+		result, err = NewModel(w._factory, w._request, w._response, &typed, w._template, w.actionID)
 
+	default:
+		result, err = nil, derp.NewInternalError("render.Common.SubRenderer", "Invalid object type", object)
 	}
 
-	return nil, derp.NewInternalError("render.Common.SubRenderer", "Invalid object type", object)
+	if err != nil {
+		err = derp.Wrap(err, "render.Common.SubRenderer", "Error creating sub-renderer for object", object)
+		derp.Report(err)
+	}
+
+	return result, err
 }
 
 // ActivityStream returns an ActivityStream document for the provided URI.  The
 // returned document uses Emissary's custom ActivityStream service, which uses
 // document values and rules from the server's shared cache.
-func (w Common) ActivityStream(uri string) streams.Document {
-	result, err := w._factory.ActivityStreams().Load(uri)
-	derp.Report(err)
+func (w Common) ActivityStream(url string) streams.Document {
+	result, err := w._factory.ActivityStreams().Load(url)
+
+	if err != nil {
+		derp.Report(err)
+	}
+
 	return result
 }
 
+func (w Common) ActivityStreamActors(search string) ([]model.ActorSummary, error) {
+	return w._factory.ActivityStreams().SearchActors(search)
+}
+
 // IsMe returns TRUE if the provided URI is the profileURL of the current user
-func (w Common) IsMe(uri string) bool {
+func (w Common) IsMe(url string) bool {
 	if user, err := w.getUser(); err == nil {
-		return uri == user.ActivityPubURL()
+		return url == user.ActivityPubURL()
 	}
 	return false
 }
 
 // NotMe returns TRUE if the provided URI is NOT the ProfileURL of the current user
-func (w Common) NotMe(uri string) bool {
-	return !w.IsMe(uri)
+func (w Common) NotMe(url string) bool {
+	return !w.IsMe(url)
 }
 
 // IsFollowing returns TRUE if the curren user is following the
 // document at a specific URI (or the actor who created the document)
-func (w Common) GetFollowingID(uri string) string {
+func (w Common) GetFollowingID(url string) string {
 
 	followingService := w._factory.Following()
-	result, err := followingService.GetFollowingID(w.AuthenticatedID(), uri)
+	result, err := followingService.GetFollowingID(w.AuthenticatedID(), url)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "render.Common.GetFollowingID", "Error getting following status", uri))
+		derp.Report(derp.Wrap(err, "render.Common.GetFollowingID", "Error getting following status", url))
 		return ""
 	}
 
@@ -514,8 +532,8 @@ func (w Common) AdminSections() []form.LookupCode {
 			Label: "Users",
 		},
 		{
-			Value: "blocks",
-			Label: "Blocks",
+			Value: "rules",
+			Label: "Rules",
 		},
 	}
 }

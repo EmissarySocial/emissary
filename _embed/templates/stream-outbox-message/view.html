@@ -2,25 +2,18 @@
 {{- $statistics := $stream.Statistics -}}
 {{- $inReplyTo := .InReplyTo -}}
 
-<link rel="alternate" type="application/activity+json" href="/{{.StreamID}}"/>
+<div class="page h-entry" hx-get="{{.Permalink}}" hx-trigger="refreshPage from:window" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
 
-<div class="page h-entry">
+	<link rel="alternate" type="application/activity+json" href="/{{.StreamID}}"/>
 
 	{{- if $inReplyTo.NotNil -}}
 		{{- $attributedTo := $inReplyTo.AttributedTo -}}
 		<div>
-			<a href="{{$inReplyTo.ID}}" class="u-in-reply-to">
-				<div class="text-plain">
-					<span class="text-gray bold">
-						{{icon "reply"}}Replying to {{$attributedTo.Name}} &nbsp;
-					</span>
-				</div>
-				<div class="text-plain text-sm margin-left ellipsis-block" style="max-height:5em;">
-					<span class="text-light-gray">{{$inReplyTo.Content | html}}</span>
-				</div>
-				<div class="text-light-gray text-sm margin-left">
-					(Show Full Post)
-				</div>
+			<a href="{{$inReplyTo.ID}}" class="u-in-reply-to text-plain" tabIndex="0">
+				<span class="text-sm bold">
+					{{icon "reply"}} Replying to {{$attributedTo.Name}} &nbsp;
+				</span>
+				<span class="link text-xs">View Original</span>
 			</a>
 		</div>
 		<hr>
@@ -28,39 +21,37 @@
 
 	<div class="flex-row width-100-percent">
 
-		<div class="margin-right margin-top-sm">
-			<a href="{{.Author.ProfileURL}}" class="text-plain inline-block flex-row turboclick">
-				{{- if eq .Author.ImageURL "" -}}
-					<div class="circle-64"></div>
-				{{- else -}}
-					<img src="{{.Author.ImageURL}}" class="circle-64">
-				{{- end -}}
+		<div class="flex-shrink-0 margin-top-sm">
+		
+			<a href="{{.Author.ProfileURL}}" class="text-plain inline-block turboclick" tabIndex="0">
+				<div class="flex-row">
+					<div class="margin-right">
+						{{- if eq .Author.ImageURL "" -}}
+							<div class="circle-64"></div>
+						{{- else -}}
+							<img src="{{.Author.ImageURL}}" class="circle-64">
+						{{- end -}}
+					</div>
+
+					<div>
+						<div class="p-author text-xl bold margin-vertical-none">{{.Author.Name}}</div>
+						<div class="text-light-gray">
+							<span class="p-username">{{$stream.AttributedTo.UsernameOrID}}</span> &middot;
+							<span class="dt-published" datetime="{{.PublishDate | isoDate}}">{{ .PublishDate | humanizeTime }}</span>
+						</div>
+					</div>
+				</div>
 			</a>
+
 		</div>
+		<div class="flex-grow-1"></div>
 
-		<div class="flex-grow-1">
-		
-			{{- if .UserCan "edit" -}}
-				<div class="float-right">
-					<button hx-get="/{{.StreamID}}/edit" hx-push-url="false" class="text-xs">Edit Post</button>
-				</div>
-			{{- end -}}
-		
-			<div class="margin-top-sm" style="max-width:720px;">
-
-				<div class="p-author text-xl bold margin-vertical-none">
-					<a href="{{.Author.ProfileURL}}" class="text-plain">{{.Author.Name}}</a>
-				</div>
-
-				<div class="text-light-gray">
-					<span class="p-username">@{{$stream.AttributedTo.PreferredUsername}}</span> &middot;
-					<span class="dt-published" datetime="{{.PublishDate | isoDate}}">{{ .PublishDate | humanizeTime }}</span>
-				</div>
-
+		{{- if .UserCan "edit" -}}
+			<div>
+				<button hx-get="/{{.StreamID}}/edit" hx-push-url="false" class="text-xs">Edit Post</button>
 			</div>
-
-		</div>
-
+		{{- end -}}
+		
 	</div>
 
 	<div class="text-lg margin-vertical-lg">

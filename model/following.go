@@ -18,7 +18,8 @@ type Following struct {
 	URL             string             `json:"url"             bson:"url"`             // Human-Facing URL that is being followed.
 	ProfileURL      string             `json:"profileUrl"      bson:"profileUrl"`      // Updated, computer-facing URL that is being followed.
 	ImageURL        string             `json:"imageUrl"        bson:"imageUrl"`        // URL of an image that represents this "following"
-	Behavior        string             `json:"behavior"        bson:"behavior"`        // Behavior determines the types of records to import from this Actor (POSTS+REPLIES+BLOCKS)
+	Behavior        string             `json:"behavior"        bson:"behavior"`        // Behavior determines the types of records to import from this Actor [POSTS+REPLIES]
+	RuleAction      string             `json:"ruleAction"     bson:"ruleAction"`       // RuleAction determines the types of records to rule from this Actor [IGNORE, LABEL, MUTE, BLOCK ]
 	CollapseThreads bool               `json:"collapseThreads" bson:"collapseThreads"` // If TRUE, traverse responses and import the initial post that initiated a thread
 	IsPublic        bool               `json:"isPublic"        bson:"isPublic"`        // If TRUE, this following is visible to the public
 	Links           digit.LinkSet      `json:"links"           bson:"links"`           // List of links can be used to update this following.
@@ -41,6 +42,8 @@ func NewFollowing() Following {
 		FollowingID:     primitive.NewObjectID(),
 		Status:          FollowingStatusNew,
 		Method:          FollowMethodPoll,
+		Behavior:        FollowingBehaviorPostsAndReplies,
+		RuleAction:      RuleActionLabel,
 		Links:           make(digit.LinkSet, 0),
 		CollapseThreads: true, // default behavior is to collapse threads
 		PollDuration:    24,   // default poll interval is 24 hours
@@ -53,7 +56,7 @@ func NewFollowing() Following {
  ******************************************/
 
 // ID returns the primary key of this object
-func (following *Following) ID() string {
+func (following Following) ID() string {
 	return following.FollowingID.Hex()
 }
 
@@ -99,13 +102,13 @@ func (following Following) Toot() object.Relationship {
  * Other Methods
  ******************************************/
 
-func (following *Following) Origin() OriginLink {
+func (following *Following) Origin(originType string) OriginLink {
 	return OriginLink{
 		FollowingID: following.FollowingID,
 		URL:         following.URL,
 		Label:       following.Label,
 		ImageURL:    following.ImageURL,
-		Type:        OriginTypeDirect,
+		Type:        originType,
 	}
 }
 

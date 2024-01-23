@@ -10,9 +10,9 @@
 	
 		<div style="width:90%; max-width:200px; margin:0px auto;">
 			{{- if ne "" .ActivityPubAvatarURL -}}
-				<img class="circle aspect-square u-photo width-100-percent" src="{{.ActivityPubAvatarURL}}" loading="lazy">
+				<img class="circle u-photo width-100-percent" src="{{.ActivityPubAvatarURL}}" loading="lazy">
 			{{- else -}}
-				<div class="circle placeholder-gray" style="width:90%; max-width:200px; margin:0px auto;"></div>
+				<div class="circle" style="width:90%; max-width:200px; margin:0px auto;"></div>
 			{{- end -}}
 		</div>
 	</div>
@@ -72,6 +72,7 @@
 		<div class="bold">Personal Settings</div>
 		<div class="margin-top-xs"><a href="/@me/inbox/following" class="text-plain">{{icon "person"}} {{.FollowingCount}} Following</a></div>
 		<div class="margin-top-xs"><a href="/@me/inbox/followers" class="text-plain">{{icon "person"}} {{.FollowerCount}} {{pluralize .FollowerCount "Follower" "Followers"}}</a></div>
+		<div class="margin-top-xs"><a href="/@me/inbox/rules" class="text-plain">{{icon "rule"}} {{.RuleCount}} {{pluralize .RuleCount "Rule" "Rules"}}</a></div>
 		<div class="margin-top"><button hx-post="/signout" hx-target="body">Sign Out</button></div>
 	{{- end -}}
 

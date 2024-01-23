@@ -7,14 +7,17 @@
 		{{- template "actor-button-follow" $subRenderer -}}
 
 	{{- else -}}
-		{{- $block := .AmBlocking "ACTOR" $url -}}
+		{{- $rule := .HasRule "ACTOR" $url -}}
 
-		{{- if eq "MUTE" $block.Action -}}
-			{{- $subRenderer := .SubRenderer $block -}}
+		{{- if $rule.IsNew -}}
+			{{- template "actor-button-none" . -}}
+
+		{{- else if eq "MUTE" $rule.Action -}}
+			{{- $subRenderer := .SubRenderer $rule -}}
 			{{- template "actor-button-mute" $subRenderer -}}
 
-		{{- else if eq "BLOCK" $block.Action -}}
-			{{- $subRenderer := .SubRenderer $block -}}
+		{{- else if eq "BLOCK" $rule.Action -}}
+			{{- $subRenderer := .SubRenderer $rule -}}
 			{{- template "actor-button-block" $subRenderer -}}
 
 		{{- else -}}

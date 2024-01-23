@@ -24,7 +24,7 @@ func UserSchema() schema.Element {
 			"signupNote":     schema.String{MaxLength: 256},
 			"followerCount":  schema.Integer{},
 			"followingCount": schema.Integer{},
-			"blockCount":     schema.Integer{},
+			"ruleCount":      schema.Integer{},
 			"isPublic":       schema.Boolean{},
 			"isOwner":        schema.Boolean{},
 		},
@@ -57,8 +57,8 @@ func (user *User) GetPointer(name string) (any, bool) {
 	case "followingCount":
 		return &user.FollowingCount, true
 
-	case "blockCount":
-		return &user.BlockCount, true
+	case "ruleCount":
+		return &user.RuleCount, true
 
 	case "displayName":
 		return &user.DisplayName, true

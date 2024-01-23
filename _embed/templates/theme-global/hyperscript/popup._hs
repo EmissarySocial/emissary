@@ -43,6 +43,12 @@ behavior popUp(position)
 		halt the event's bubbling
 	end
 
+	on keyup[key=="Escape"]
+		remove .hovered
+		remove .pinned
+		trigger showOrClose
+	end
+
 	on showOrClose
 
 		if (my classList contains "hovered") or (my classList contains "pinned") then

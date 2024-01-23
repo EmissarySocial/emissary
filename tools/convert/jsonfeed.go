@@ -58,20 +58,13 @@ func StreamToJsonFeed(stream model.Stream) jsonfeed.Item {
 func JsonFeedToActivity(feed jsonfeed.Feed, item jsonfeed.Item) model.Message {
 
 	message := model.NewMessage()
-
-	message.Origin = model.OriginLink{
+	message.URL = item.URL
+	message.PublishDate = item.DatePublished.Unix()
+	message.AddReference(model.OriginLink{
 		Label:    feed.Title,
 		URL:      feed.HomePageURL,
 		ImageURL: feed.Icon,
-	}
-
-	message.URL = item.URL
-	message.Label = item.Title
-	message.Summary = item.Summary
-	message.ImageURL = item.Image
-	message.ContentHTML = JsonFeedToContentHTML(item)
-	message.PublishDate = item.DatePublished.Unix()
-	message.SetAttributedTo(JsonFeedToAuthor(feed, item))
+	})
 
 	return message
 }

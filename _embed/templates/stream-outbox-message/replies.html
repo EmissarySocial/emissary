@@ -16,22 +16,22 @@
 	{{- $object := .UnwrapActivity -}}
 	{{- $actor := $object.AttributedTo.Load -}}
 
-	<div class="flex-row margin-bottom-lg hover-trigger">
+	<div role="link" class="flex-row margin-bottom-lg hover-trigger clickable" script="on click go to url '{{$object.ID}}'">
 
-		<div class="clickable margin-right-sm" script="on click go to url '{{$object.ID}}'">
+		<div class="flex-shrink-0 margin-right">
 			{{- if $actor.Icon.IsNil -}}
 				<div class="circle-48"></div>
 			{{- else -}}
-				<img class="circle-48" src="{{$actor.Icon.URL}}">
+				<img class="circle-48" src="{{$actor.Icon.Href}}">
 			{{- end -}}
 		</div>
 
-		<div class="clickable flex-grow-1" script="on click go to url '{{$object.ID}}'">
+		<div class="flex-grow-1">
 
 			<div class="margin-bottom-xs">
 				{{- if $actor.NotNil -}}
 					<span class="bold margin-right-xs">{{$actor.Name}}</span>
-					<span class="flex-grow-1 text-light-gray">{{ $object.Published | epochDate | tinyDate}} ago</span>
+					<span class="flex-grow-1 text-light-gray">{{ $object.Published | tinyDate}} ago</span>
 				{{- end -}}
 			</div>
 
@@ -40,11 +40,11 @@
 			{{- end -}}
 
 			{{- if $object.Image.NotNil -}}
-				<div class="margin-vertical"><img src="{{$object.Image.URL}}" class="width-100-percent"></div>
+				<div class="margin-vertical"><img src="{{$object.Image.Href}}" class="width-100-percent"></div>
 			{{- end -}}
 		
 			<div>{{$object.Content | html}}</div>
-			<div class="text-xs text-light-gray text-uppercase">
+			<div class="text-sm text-light-gray">
 				{{- if gt $statistics.Replies 0 -}}
 					<span class="margin-right-sm">
 						{{$statistics.Replies}} {{pluralize $statistics.Replies "Reply" "Replies"}}

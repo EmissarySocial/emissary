@@ -11,3 +11,7 @@ type PipelineHalter interface {
 type DocumentLinker interface {
 	DocumentLink() model.DocumentLink
 }
+
+type StateSetter interface {
+	setState(string) error
+}

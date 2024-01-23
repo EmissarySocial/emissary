@@ -12,19 +12,29 @@ const CacheModeReadOnly = "READONLY"
 const CacheModeWriteOnly = "WRITEONLY"
 
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Age
-const headerAge = "Age"
+const HeaderAge = "Age"
 
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Date
-const headerDate = "Date"
+const HeaderDate = "Date"
 
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Expires
-const headerExpires = "Expires"
+const HeaderExpires = "Expires"
 
 // Custom header used by Hannibal to indicate that the response was cached
-const headerHannibalCache = "X-Hannibal-Cache"
+const HeaderHannibalCache = "X-Hannibal-Cache"
 
 // Custom header used by Hannibal to indicate the date that the cached value was saved
-const headerHannibalCacheDate = "X-Hannibal-Cache-Date"
+const HeaderHannibalCacheDate = "X-Hannibal-Cache-Date"
+
+const PropertyRelationType = "relationType"
+
+const PropertyRelationHref = "relationHref"
+
+const PropertyIsActor = "isActor"
+
+const PropertyIsObject = "isObject"
+
+const PropertyIsCollection = "isCollection"
 
 // RelationTypeAnnounce labels a document that is an "Announce" of another
 // document in the cache.  This value mirrors the ActivityStream "Announce" type

@@ -50,7 +50,7 @@ func (client Client) Load(uri string, options ...any) (streams.Document, error) 
 	}
 
 	// Don't need to add context to Actors (only Documents)
-	if result.IsTypeActor() {
+	if result.IsActor() {
 		return result, err
 	}
 

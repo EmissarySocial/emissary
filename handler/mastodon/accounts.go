@@ -288,20 +288,19 @@ func PostAccount_Block(serverFactory *server.Factory) func(model.Authorization, 
 			return object.Relationship{}, derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
-		// Create a new Block record
-		blockService := factory.Block()
-		block := model.NewBlock()
-		block.UserID = auth.UserID
-		block.Type = model.BlockTypeActor
-		block.Trigger = t.ID
-		block.IsActive = true
+		// Create a new Rule record
+		ruleService := factory.Rule()
+		rule := model.NewRule()
+		rule.UserID = auth.UserID
+		rule.Type = model.RuleTypeActor
+		rule.Trigger = t.ID
 
-		if err := blockService.Save(&block, "Created via Mastodon API"); err != nil {
-			return object.Relationship{}, derp.Wrap(err, location, "Error saving block")
+		if err := ruleService.Save(&rule, "Created via Mastodon API"); err != nil {
+			return object.Relationship{}, derp.Wrap(err, location, "Error saving rule")
 		}
 
-		// Return the Block record as a Toot
-		return block.Toot(), nil
+		// Return the Rule record as a Toot
+		return rule.Toot(), nil
 	}
 }
 
@@ -318,21 +317,21 @@ func PostAccount_Unblock(serverFactory *server.Factory) func(model.Authorization
 			return object.Relationship{}, derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
-		// Locate the block record
-		blockService := factory.Block()
-		block := model.NewBlock()
+		// Locate the rule record
+		ruleService := factory.Rule()
+		rule := model.NewRule()
 
-		if err := blockService.LoadByTrigger(auth.UserID, model.BlockTypeActor, t.ID, &block); err != nil {
-			return object.Relationship{}, derp.Wrap(err, location, "Error loading block")
+		if err := ruleService.LoadByTrigger(auth.UserID, model.RuleTypeActor, t.ID, &rule); err != nil {
+			return object.Relationship{}, derp.Wrap(err, location, "Error loading rule")
 		}
 
-		// Delete the block record
-		if err := blockService.Delete(&block, "Deleted by Mastodon API"); err != nil {
-			return object.Relationship{}, derp.Wrap(err, location, "Error deleting block")
+		// Delete the rule record
+		if err := ruleService.Delete(&rule, "Deleted by Mastodon API"); err != nil {
+			return object.Relationship{}, derp.Wrap(err, location, "Error deleting rule")
 		}
 
 		// Return success
-		return block.Toot(), nil
+		return rule.Toot(), nil
 	}
 }
 
@@ -349,20 +348,19 @@ func PostAccount_Mute(serverFactory *server.Factory) func(model.Authorization, t
 			return object.Relationship{}, derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
-		// Create a new Block record
-		blockService := factory.Block()
-		block := model.NewBlock()
-		block.UserID = auth.UserID
-		block.Type = model.BlockTypeActor
-		block.Trigger = t.ID
-		block.IsActive = true
+		// Create a new Rule record
+		ruleService := factory.Rule()
+		rule := model.NewRule()
+		rule.UserID = auth.UserID
+		rule.Type = model.RuleTypeActor
+		rule.Trigger = t.ID
 
-		if err := blockService.Save(&block, "Created via Mastodon API"); err != nil {
-			return object.Relationship{}, derp.Wrap(err, location, "Error saving block")
+		if err := ruleService.Save(&rule, "Created via Mastodon API"); err != nil {
+			return object.Relationship{}, derp.Wrap(err, location, "Error saving rule")
 		}
 
-		// Return the Block record as a Toot
-		return block.Toot(), nil
+		// Return the Rule record as a Toot
+		return rule.Toot(), nil
 	}
 }
 
@@ -379,21 +377,21 @@ func PostAccount_Unmute(serverFactory *server.Factory) func(model.Authorization,
 			return object.Relationship{}, derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
-		// Locate the block record
-		blockService := factory.Block()
-		block := model.NewBlock()
+		// Locate the rule record
+		ruleService := factory.Rule()
+		rule := model.NewRule()
 
-		if err := blockService.LoadByTrigger(auth.UserID, model.BlockTypeActor, t.ID, &block); err != nil {
-			return object.Relationship{}, derp.Wrap(err, location, "Error loading block")
+		if err := ruleService.LoadByTrigger(auth.UserID, model.RuleTypeActor, t.ID, &rule); err != nil {
+			return object.Relationship{}, derp.Wrap(err, location, "Error loading rule")
 		}
 
-		// Delete the block record
-		if err := blockService.Delete(&block, "Deleted by Mastodon API"); err != nil {
-			return object.Relationship{}, derp.Wrap(err, location, "Error deleting block")
+		// Delete the rule record
+		if err := ruleService.Delete(&rule, "Deleted by Mastodon API"); err != nil {
+			return object.Relationship{}, derp.Wrap(err, location, "Error deleting rule")
 		}
 
 		// Return success
-		return block.Toot(), nil
+		return rule.Toot(), nil
 	}
 }
 

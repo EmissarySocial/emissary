@@ -130,6 +130,17 @@
 	animation-timing-function: ease;
 }
 
+
+#modal .layout-title,
+#modal #modal-title {
+    font-weight:calc(var(--weight) + 100);
+    font-size: calc(var(--rhythm) * 4);
+    line-height:calc(var(--rhythm) * 4);
+    margin-top:calc(var(--rhythm) * 1);
+    margin-bottom:calc(var(--rhythm) * 3);
+}
+
+
 /* Alternate colors for dark mode */
 
 @media (prefers-color-scheme: dark) {

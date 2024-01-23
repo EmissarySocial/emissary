@@ -3,9 +3,6 @@ package domain
 // CollectionAttachment is the name of the database collection where Attachments are stored
 const CollectionAttachment = "Attachment"
 
-// CollectionBlock is the name of the database collection where Block records are stored
-const CollectionBlock = "Block"
-
 // CollectionEncryptionKey is the name of the database collection where EncryptionKey records are stored
 const CollectionEncryptionKey = "EncryptionKey"
 
@@ -32,6 +29,9 @@ const CollectionJWT = "JWT"
 
 // CollectionMention is the name of the database collection where Mention records are stored
 const CollectionMention = "Mention"
+
+// CollectionRule is the name of the database collection where Rule records are stored
+const CollectionRule = "Rule"
 
 // CollectionOAuthClient is the name of the database collection where OAuthClients are stored
 const CollectionOAuthClient = "OAuthClient"

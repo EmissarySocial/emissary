@@ -15,9 +15,9 @@
 		<div class="flex-row text-xs">
 
 			<div class="flex-grow-1">
-				<span class="button-group" script="install message(messageId:'{{$message.MessageID.Hex}}')">
-					<button id="previous" hx-get="/@me/inbox/message?messageId={{$message.MessageID.Hex}}&sibling=prev&followingId={{$followingID}}">&laquo; Prev</button>
-					<button id="next" hx-get="/@me/inbox/message?messageId={{$message.MessageID.Hex}}&sibling=next&followingId={{$followingID}}">Next &raquo;</button>
+				<span class="button-group" script="install message(messageId:'{{$message.ID}}')">
+					<button id="previous" hx-get="/@me/inbox/message?messageId={{$message.ID}}&sibling=prev&followingId={{$followingID}}">&laquo; Prev</button>
+					<button id="next" hx-get="/@me/inbox/message?messageId={{$message.ID}}&sibling=next&followingId={{$followingID}}">Next &raquo;</button>
 				</span>
 
 				<span class="button-group">
@@ -27,7 +27,9 @@
 					{{- else -}}
 						<button disabled>Profile</button>
 					{{- end -}}
-					<button hx-get="/@me/following-edit?followingId={{$message.Origin.FollowingID.Hex}}">Edit Source</button>
+					<button hx-get="/@me/inbox/following-edit?followingId={{$message.Origin.FollowingID.Hex}}">Edit Follow Settings</button>
+
+					{{.View "message-mute-button"}}
 				</span>
 			</div>
 
@@ -44,10 +46,10 @@
 </div>
 
 <div id="modal-body">
-	
+
 	{{- if $inReplyTo.NotNil -}}
 		<div class="flex-row margin-bottom">
-			<div role="link" class="italics text-sm link" hx-get="/@me/inbox/message?messageId={{$message.MessageID.Hex}}&folderID={{$folderID}}&origin.followingId={{$followingID}}&url={{$inReplyTo.ID}}">
+			<div role="link" class="italics text-sm link" hx-get="/@me/inbox/message?messageId={{$message.ID}}&folderID={{$folderID}}&origin.followingId={{$followingID}}&url={{$inReplyTo.ID}}">
 				{{icon "reply-fill"}} Replying to {{$inReplyToAttributedTo.Name}}...
 			</div>
 		</div>
@@ -88,16 +90,15 @@
 	{{- end -}}
 
 	{{- if $attributedTo.NotNil -}}
+
 		<div class="flex-row margin-bottom">
 			<a class="flex-grow-1 flex-row flex-align-center text-plain" href="{{$attributedTo.ID}}">
 				{{- if $attributedTo.Icon.NotNil -}}
-					<img src="{{$attributedTo.Icon.URL}}" class="circle-64">
-				{{- else -}}
-					<div class="circle-64"></div>
+					<img src="{{$attributedTo.Icon.Href}}" class="circle-64">
 				{{- end -}}
 				<div>
 					<div class="text-plain text-lg bold margin-vertical-none">{{$attributedTo.Name}}</div>
-					<div class="text-light-gray margin-vertical-none">@{{$attributedTo.PreferredUsername}}</div>
+					<div class="text-light-gray margin-vertical-none">{{$attributedTo.UsernameOrID}}</div>
 				</div>
 			</a>
 
@@ -106,11 +107,13 @@
 	{{- end -}}
 
 	<div class="flex-row">
-		<div class="width-64 flex-shrink-0"></div>
+		{{- if $attributedTo.Icon.NotNil -}}
+			<div class="width-64 flex-shrink-0"></div>
+		{{- end -}}
 		<div class="flex-grow-1">
 					
 			{{- if ne "" $stream.Name -}}
-				<h1 class="margin-vertical-lg"><a href="{{$stream.URL}}" target="_blank" class="text-black">{{$stream.Name}}</a></h1>
+				<h1 class="margin-top-sm margin-bottom-lg"><a href="{{$stream.URLOrID}}" target="_blank" class="text-black">{{$stream.Name}}</a></h1>
 			{{- end -}}
 
 			<div class="content">
@@ -118,7 +121,7 @@
 				{{- $image := $stream.Image -}}
 				{{- if $image.NotNil -}}
 					<div class="margin-bottom">
-						<img src="{{$image.URL}}" style="width:100%; {{- if $image.HasDimensions}} aspect-ratio:{{$image.AspectRatio}};{{end}}"/>
+						<a href="{{$stream.URLOrID}}" target="_blank"><img src="{{$image.URL}}" style="width:100%; border:solid 1px var(--gray20); {{- if $image.HasDimensions}} aspect-ratio:{{$image.AspectRatio}};{{end}}"/></a>
 					</div>
 				{{- end -}}
 
@@ -136,7 +139,7 @@
 				{{.View "like-button"}}
 
 				{{- if .NotMe $attributedTo.ID -}}
-					{{.View "actor-button"}}
+					<div hx-get="/@me/inbox/actor-button?url={{$attributedTo.ID}}" hx-target="this" hx-swap="outerHTML" hx-trigger="modalReady from:window"></div>
 				{{- end -}}
 			</div>
 

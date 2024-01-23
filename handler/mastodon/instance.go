@@ -85,23 +85,23 @@ func GetInstance_DomainBlocks(serverFactory *server.Factory) func(model.Authoriz
 		}
 
 		// Get all Public, Global Blocks
-		blockService := factory.Block()
-		blocks, err := blockService.QueryGlobalDomainBlocks()
+		ruleService := factory.Rule()
+		rules, err := ruleService.QueryDomainBlocks()
 
 		if err != nil {
 			return nil, derp.Wrap(err, location, "Error querying database")
 		}
 
 		// Map the results into a slice of DomainBlocks
-		result := slice.Map(blocks, func(block model.Block) object.DomainBlock {
+		result := slice.Map(rules, func(rule model.Rule) object.DomainBlock {
 
-			digest := sha256.Sum256([]byte(block.Trigger))
+			digest := sha256.Sum256([]byte(rule.Trigger))
 
 			return object.DomainBlock{
-				Domain:   block.Trigger,
+				Domain:   rule.Trigger,
 				Digest:   string(digest[:]),
 				Severity: object.DomainBlockSeveritySuspend,
-				Comment:  block.Comment,
+				Comment:  rule.Summary,
 			}
 		})
 

@@ -1,7 +1,7 @@
 {{- $url := .QueryParam "url" -}}
 {{- $folderID := .QueryParam "folderId" -}}
 {{- $block := .Object -}}
-{{- $class := iff (eq "POST" .Method) "visible" "" -}}
+{{- $class := iif (eq "POST" .Method) "visible" "" -}}
 
 <span script="install popUp(position:'center')" hx-target="this" hx-swap="outerHTML" hx-push-url="false" class="{{$class}}">
 	<button class="popUp-button bold">{{icon "block"}} Blocked</button>
@@ -15,11 +15,11 @@
 			<span class="bold margin-right-sm">Settings:</span>
 		</div>
 
-		<form hx-post="/@me/inbox/actor-button-block-update?blockId={{$block.ID}}&url={{$url}}" hx-trigger="change">
+		<form hx-post="/@me/inbox/actor-button-block-update?ruleId={{$block.ID}}&url={{$url}}" hx-trigger="change">
 			<div class="layout layout-vertical text-sm">
 				<div class="layout-vertical-elements">
 					<div class="layout-vertical-element">
-						<textarea name="comment" placeholder="Add a comment" rows="3">{{$block.Comment}}</textarea>
+						<textarea name="comment" placeholder="Add a comment" rows="3">{{$block.Summary}}</textarea>
 					</div>
 					<div class="layout-vertical-element">
 						<span 
@@ -35,7 +35,7 @@
 		</form>
 
 		<hr>
-		<div class="align-center text-red" hx-post="/@me/inbox/actor-button-unblock?blockId={{$block.ID}}&folderId={{$folderID}}&url={{$url}}" role="button">
+		<div class="align-center text-red" hx-post="/@me/inbox/actor-button-unblock?ruleId={{$block.ID}}&folderId={{$folderID}}&url={{$url}}" role="button">
 			{{icon "cancel"}} Stop Blocking
 		</div>
 	</div>
