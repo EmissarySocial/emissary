@@ -13,11 +13,10 @@ func TestOriginLink(t *testing.T) {
 	s := schema.New(OriginLinkSchema())
 
 	table := []tableTestItem{
+		{"type", "PRIMARY", nil},
 		{"followingId", "123412341234123412341234", nil},
-		{"type", "DIRECT", nil},
 		{"label", "TEST-LABEL", nil},
 		{"url", "https://test.url", nil},
-		{"profileUrl", "https://test.profile.url", nil},
 		{"imageUrl", "https://test.image.url", nil},
 	}
 

@@ -30,7 +30,7 @@ func TestUserSchema(t *testing.T) {
 		{"signupNote", "LetMeInBro", nil},
 		{"followerCount", "1", 1},
 		{"followingCount", "2", 2},
-		{"blockCount", "3", 3},
+		{"ruleCount", "3", 3},
 		{"isPublic", "true", true},
 		{"isOwner", "true", true},
 	}
