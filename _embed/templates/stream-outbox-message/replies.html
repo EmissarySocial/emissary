@@ -16,52 +16,54 @@
 	{{- $object := .UnwrapActivity -}}
 	{{- $actor := $object.AttributedTo.Load -}}
 
-	<div role="link" class="flex-row margin-bottom-lg hover-trigger clickable" script="on click go to url '{{$object.ID}}'">
+	<div role="link" class="flex-row margin-bottom-lg hover-trigger">
 
-		<div class="flex-shrink-0 margin-right">
-			{{- if $actor.Icon.IsNil -}}
-				<div class="circle-48"></div>
-			{{- else -}}
-				<img class="circle-48" src="{{$actor.Icon.Href}}">
-			{{- end -}}
-		</div>
-
-		<div class="flex-grow-1">
-
-			<div class="margin-bottom-xs">
-				{{- if $actor.NotNil -}}
-					<span class="bold margin-right-xs">{{$actor.Name}}</span>
-					<span class="flex-grow-1 text-light-gray">{{ $object.Published | tinyDate}} ago</span>
+		<div class="flex-row flex-grow-1 clickable" script="on click go to url '{{$object.ID}}'">
+			<div class="flex-shrink-0 margin-right">
+				{{- if $actor.Icon.IsNil -}}
+					<div class="circle-48"></div>
+				{{- else -}}
+					<img class="circle-48" src="{{$actor.Icon.Href}}">
 				{{- end -}}
 			</div>
 
-			{{- if ne "" $object.Name -}}
-				<div class="bold">{{$object.Name}}</div>
-			{{- end -}}
+			<div class="flex-grow-1">
 
-			{{- if $object.Image.NotNil -}}
-				<div class="margin-vertical"><img src="{{$object.Image.Href}}" class="width-100-percent"></div>
-			{{- end -}}
-		
-			<div>{{$object.Content | html}}</div>
-			<div class="text-sm text-light-gray">
-				{{- if gt $statistics.Replies 0 -}}
-					<span class="margin-right-sm">
-						{{$statistics.Replies}} {{pluralize $statistics.Replies "Reply" "Replies"}}
-					</span>
+				<div class="margin-bottom-xs">
+					{{- if $actor.NotNil -}}
+						<span class="bold margin-right-xs">{{$actor.Name}}</span>
+						<span class="flex-grow-1 text-light-gray">{{ $object.Published | tinyDate}} ago</span>
+					{{- end -}}
+				</div>
+
+				{{- if ne "" $object.Name -}}
+					<div class="bold">{{$object.Name}}</div>
 				{{- end -}}
 
-				{{- if gt $statistics.Likes 0 -}}
-					<span class="margin-right-sm">
-						{{$statistics.Likes}} {{pluralize $statistics.Likes "Like" "Likes"}}
-					</span>
+				{{- if $object.Image.NotNil -}}
+					<div class="margin-vertical"><img src="{{$object.Image.Href}}" class="width-100-percent"></div>
 				{{- end -}}
+			
+				<div>{{$object.Content | html}}</div>
+				<div class="text-sm text-light-gray">
+					{{- if gt $statistics.Replies 0 -}}
+						<span class="margin-right-sm">
+							{{$statistics.Replies}} {{pluralize $statistics.Replies "Reply" "Replies"}}
+						</span>
+					{{- end -}}
 
-				{{- if gt $statistics.Announces 0 -}}
-					<span class="margin-right-sm">
-						{{$statistics.Announces}} {{pluralize $statistics.Announces "Boost" "Boosts"}}
-					</span>
-				{{- end -}}
+					{{- if gt $statistics.Likes 0 -}}
+						<span class="margin-right-sm">
+							{{$statistics.Likes}} {{pluralize $statistics.Likes "Like" "Likes"}}
+						</span>
+					{{- end -}}
+
+					{{- if gt $statistics.Announces 0 -}}
+						<span class="margin-right-sm">
+							{{$statistics.Announces}} {{pluralize $statistics.Announces "Boost" "Boosts"}}
+						</span>
+					{{- end -}}
+				</div>
 			</div>
 		</div>
 
