@@ -17,7 +17,14 @@
 				<span class="button text-sm">Go to Profile</span>
 			</a>
 		</div>
-		<div class="text-green bold margin-top">{{icon "check-badge-fill"}} Following</div>
+		<div class="text-green bold margin-top">
+			{{icon "check-badge-fill"}} Following
+			{{ if eq "ACTIVITYPUB" $following.Method -}}
+				via ActivityPub
+			{{ else if eq "POLL" $following.Method -}}
+				via RSS/Atom
+			{{- end -}}
+		</div>
 	</div>
 </div>
 
