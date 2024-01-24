@@ -29,6 +29,13 @@ func (client Client) Load(uri string, options ...any) (streams.Document, error) 
 
 	switch {
 
+	// Activity objects are never cached.  This prevents likes,
+	// reposts, and other actions from being cached.
+	case result.IsActivity():
+
+		cacheControl.MaxAge = 0
+		cacheControl.NoStore = true
+
 	// Collections (et al) are cached for up to one minute. This
 	// minimizes traffic on heavy loads, but keeps collections
 	// refreshed in (near) real-time
