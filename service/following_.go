@@ -190,17 +190,15 @@ func (service *Following) Save(following *model.Following, note string) error {
 		following.PollDuration = 24
 	}
 
-	// RULE: Set the Folder Name
-	folder := model.NewFolder()
-	if err := service.folderService.LoadByID(following.UserID, following.FolderID, &folder); err != nil {
-		return derp.Wrap(err, location, "Error loading Folder", following)
-	}
-
-	following.Folder = folder.Label
-
 	// Prevent duplicate following records
 	if err := service.preventDuplicates(following); err != nil {
 		return derp.Wrap(err, location, "Error preventing duplicate", following)
+	}
+
+	// RULE: Set the Folder Name
+	folder := model.NewFolder()
+	if err := service.folderService.LoadByID(following.UserID, following.FolderID, &folder); err == nil {
+		following.Folder = folder.Label
 	}
 
 	// Save the following to the database
