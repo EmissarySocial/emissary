@@ -16,6 +16,7 @@ import (
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
+	"github.com/benpate/sherlock"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -351,11 +352,24 @@ func (w Common) SubRenderer(object any) (Renderer, error) {
 	return result, err
 }
 
-// ActivityStream returns an ActivityStream document for the provided URI.  The
+// ActivityStream returns an ActivityStream document for the provided URL.  The
 // returned document uses Emissary's custom ActivityStream service, which uses
 // document values and rules from the server's shared cache.
 func (w Common) ActivityStream(url string) streams.Document {
 	result, err := w._factory.ActivityStreams().Load(url)
+
+	if err != nil {
+		derp.Report(err)
+	}
+
+	return result
+}
+
+// ActivityStreamActor returns an ActivityStream actor document for the provided URL.  The
+// returned document uses Emissary's custom ActivityStream service, which uses
+// document values and rules from the server's shared cache.
+func (w Common) ActivityStreamActor(url string) streams.Document {
+	result, err := w._factory.ActivityStreams().Load(url, sherlock.AsActor())
 
 	if err != nil {
 		derp.Report(err)
