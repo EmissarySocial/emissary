@@ -67,15 +67,17 @@
 			</div>
 		</div>
 
-		{{- if $renderer.NotMe $object.Actor.ID -}}
-			<div class="text-xs margin-left-md nowrap">
-				<span
-					hx-get="/@me/inbox/actor-button?url={{$object.Actor.ID}}"
-					hx-swap="innerHTML"
-					hx-target="this"
-					hx-push-url="false"
-					hx-trigger="load"></span>
-			</div>
+		{{- if $renderer.IsAuthenticated -}}
+			{{- if $renderer.NotMe $object.Actor.ID -}}
+				<div class="text-xs margin-left-md nowrap">
+					<span
+						hx-get="/@me/inbox/actor-button?url={{$object.Actor.ID}}"
+						hx-swap="innerHTML"
+						hx-target="this"
+						hx-push-url="false"
+						hx-trigger="load"></span>
+				</div>
+			{{- end -}}
 		{{- end -}}
 
 	</div>
