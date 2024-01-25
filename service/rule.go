@@ -369,24 +369,35 @@ func (service *Rule) calcJSONLD(rule *model.Rule) error {
 
 	// Reset JSON-LD for the rule.  We're going to recalculate EVERYTHING.
 	rule.JSONLD = mapof.Any{
-		"id":        user.ActivityPubBlockedURL() + "/" + rule.RuleID.Hex(),
-		"type":      vocab.ActivityTypeBlock,
-		"actor":     user.ActivityPubURL(),
-		"target":    rule.Trigger,
-		"published": rule.PublishDateRCF3339(),
+		vocab.PropertyID:        user.ActivityPubBlockedURL() + "/" + rule.RuleID.Hex(),
+		vocab.PropertyType:      vocab.ActivityTypeBlock,
+		vocab.PropertyActor:     user.ActivityPubURL(),
+		vocab.PropertyPublished: rule.PublishDateRCF3339(),
 	}
 
 	// Create the summary based on the type of Rule
 	switch rule.Type {
 
 	case model.RuleTypeActor:
-		rule.JSONLD["summary"] = user.DisplayName + " blocked the person " + rule.Trigger
+		rule.JSONLD[vocab.PropertyTarget] = mapof.Any{
+			vocab.PropertyType: vocab.ActorTypePerson,
+			vocab.PropertyID:   rule.Trigger,
+		}
+		rule.JSONLD[vocab.PropertySummary] = user.DisplayName + " blocked the person " + rule.Trigger
 
 	case model.RuleTypeDomain:
-		rule.JSONLD["summary"] = user.DisplayName + " blocked the domain " + rule.Trigger
+		rule.JSONLD[vocab.PropertyTarget] = mapof.Any{
+			vocab.PropertyType: vocab.ActorTypeService,
+			vocab.PropertyID:   rule.Trigger,
+		}
+		rule.JSONLD[vocab.PropertySummary] = user.DisplayName + " blocked the domain " + rule.Trigger
 
 	case model.RuleTypeContent:
-		rule.JSONLD["summary"] = user.DisplayName + " blocked the keywords " + rule.Trigger
+		rule.JSONLD[vocab.PropertyTarget] = mapof.Any{
+			vocab.PropertyType: "Keyword",
+			vocab.PropertyID:   rule.Trigger,
+		}
+		rule.JSONLD[vocab.PropertySummary] = user.DisplayName + " blocked the keywords " + rule.Trigger
 
 	default:
 		// This should never happen
