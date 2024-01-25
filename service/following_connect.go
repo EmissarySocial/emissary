@@ -92,13 +92,11 @@ func (service *Following) connect_LoadMessages(following *model.Following, actor
 		// 2. Guarantee that the document has been saved in our cache.
 		// nolint:errcheck -- It's okay to ignore errors because pages may exist
 		// in an RSS feed, but return an error to us right now. (e.g. CAPTCHAs)
-		if following.Method == model.FollowMethodPoll {
-			document, _ = document.Load(sherlock.WithDefaultValue(document.Map()))
-		}
+		result, _ := document.Load(sherlock.WithDefaultValue(document.Map()))
 
 		// Try to save the document to the database.
-		if err := service.SaveMessage(following, document, model.OriginTypePrimary); err != nil {
-			derp.Report(derp.Wrap(err, location, "Error saving document to Inbox", document.Value()))
+		if err := service.SaveMessage(following, result, model.OriginTypePrimary); err != nil {
+			derp.Report(derp.Wrap(err, location, "Error saving document to Inbox", result.Value()))
 		}
 	}
 
