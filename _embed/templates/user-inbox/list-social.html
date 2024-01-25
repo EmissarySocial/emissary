@@ -33,10 +33,12 @@
 		{{- if ne "" $attributedTo.Name -}}
 			<div>
 				<span class="bold black">{{$attributedTo.Name}}</span>
-				<span class="text-light-gray nowrap flex-grow-1">
+				{{- if ne "" $attributedTo.Username -}}
+					<span class="text-light-gray ellipsis">
 						&middot;
-						{{$attributedTo.UsernameOrID}}
-				</span>
+						{{$attributedTo.Username}}
+					</span>
+				{{- end -}}
 			</div>
 		{{- end -}}
 

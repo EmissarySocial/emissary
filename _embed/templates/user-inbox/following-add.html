@@ -1,7 +1,7 @@
 {{- $search := .QueryParam "search" -}}
 {{- $url := .QueryParam "url" -}}
 {{- $folderID := .QueryParam "folderId" -}}
-{{- $stream := .ActivityStream $url -}}
+{{- $stream := .ActivityStreamActor $url -}}
 {{- $following := .AmFollowing $url -}}
 
 {{- if ne "" $search -}}

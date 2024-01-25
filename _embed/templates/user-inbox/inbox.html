@@ -51,7 +51,7 @@
 				{{- else -}}
 					<button hx-get="/@me/inbox/filter?folderId={{$folderID}}&followingId={{$followingID}}" class="selected ellipsis turboclick" style="max-width:160px;">{{icon "filter-fill"}} {{$filter.Label}}</button>
 				{{- end -}}
-				<button hx-get="/@me/inbox/folder-edit?folderId={{$folderID}}" class="turboclick">{{icon "settings"}} Edit Folder</button>
+				<button hx-get="/@me/inbox/folder-edit?folderId={{$folderID}}" class="turboclick">{{icon "settings"}} Folder Settings</button>
 				<button hx-get="/@me/inbox/following-search?folderId={{$folderID}}" class="primary turboclick">{{icon "add"}} Follow</button>
 			</div>
 		</div>
