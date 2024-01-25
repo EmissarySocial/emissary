@@ -82,37 +82,37 @@ func (client *Client) start() {
  * Hannibal HTTP Client Methods
  ******************************************/
 
-func (client *Client) Load(uri string, options ...any) (streams.Document, error) {
+func (client *Client) Load(url string, options ...any) (streams.Document, error) {
 
 	config := NewLoadConfig(options...)
 
 	// If we're not forcing the cache to reload, then try to load from the cache first
 	if client.IsReadable() && config.isCacheAllowed() {
-
 		// Search the cache for the document
 		value := NewValue()
 
-		if err := client.loadByURLs(uri, &value); err == nil {
+		if err := client.loadByURLs(url, &value); err == nil {
 
 			// If we're allowed to write to the cache, then do it.
 			if client.IsWritable() && value.ShouldRevalidate() {
-				go client.revalidate(uri, options...)
+				go client.revalidate(url, options...)
 			}
 
 			return client.asDocument(value), nil
+		} else {
 		}
 	}
 
 	// Pass the request to the inner client
-	result, err := client.innerClient.Load(uri, options...)
+	result, err := client.innerClient.Load(url, options...)
 
 	if err != nil {
-		return result, derp.Wrap(err, "ascache.Client.Load", "Error loading document from inner client", uri)
+		return result, derp.Wrap(err, "ascache.Client.Load", "Error loading document from inner client", url)
 	}
 
 	// Try to save the new value asynchronously
 	if client.IsWritable() {
-		client.save(uri, result)
+		client.save(url, result)
 	}
 
 	return result, nil
@@ -208,13 +208,20 @@ func (client *Client) save(url string, document streams.Document) {
 		return
 	}
 
-	// Add the document.id to the list of URLs (avoiding duplicates)
-	if !value.URLs.Contains(document.ID()) {
-		value.URLs.Append(document.ID())
+	// Add the document.id and url to the list of URLs (avoiding duplicates)
+	for _, item := range []string{document.ID(), url} {
+		if item == "" {
+			continue
+		}
+
+		if value.URLs.Contains(item) {
+			continue
+		}
+
+		value.URLs.Append(item)
 	}
 
 	// Create a new value
-	value.URLs = []string{url}
 	value.Object = document.Map()
 	value.HTTPHeader = document.HTTPHeader()
 	value.HTTPHeader.Set(HeaderHannibalCache, "true")

@@ -40,7 +40,8 @@ func (client *Client) Load(uri string, options ...any) (streams.Document, error)
 func Normalize(document streams.Document) map[string]any {
 
 	switch {
-	// All Actor types (Person, Organization, etc)
+
+	// All Actor types (Person, Organization, Application, etc)
 	case document.IsActor():
 		return Actor(document)
 

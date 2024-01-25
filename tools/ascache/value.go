@@ -30,7 +30,7 @@ type Value struct {
 
 func NewValue() Value {
 	return Value{
-		URLs:       make([]string, 1),
+		URLs:       make([]string, 0, 1),
 		Object:     make(mapof.Any),
 		HTTPHeader: make(http.Header),
 		Statistics: streams.NewStatistics(),
