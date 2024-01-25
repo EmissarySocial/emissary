@@ -1,4 +1,4 @@
-package handler
+package activitypub
 
 import (
 	"net/http"
@@ -11,7 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func ActivityPub_PostInbox(serverFactory *server.Factory) echo.HandlerFunc {
+func PostInbox(serverFactory *server.Factory) echo.HandlerFunc {
 
 	const location = "handler.ActivityPub_PostInbox"
 

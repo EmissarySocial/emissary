@@ -1,4 +1,4 @@
-package handler
+package activitypub
 
 import (
 	"net/http"
@@ -12,7 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func ActivityPub_GetBlockedCollection(serverFactory *server.Factory) echo.HandlerFunc {
+func GetBlockedCollection(serverFactory *server.Factory) echo.HandlerFunc {
 
 	const location = "handler.ActivityPub_GetBlocked"
 
@@ -65,7 +65,7 @@ func ActivityPub_GetBlockedCollection(serverFactory *server.Factory) echo.Handle
 	}
 }
 
-func ActivityPub_GetBlock(serverFactory *server.Factory) echo.HandlerFunc {
+func GetBlock(serverFactory *server.Factory) echo.HandlerFunc {
 
 	const location = "handler.ActivityPub_GetBlock"
 

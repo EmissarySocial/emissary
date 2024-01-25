@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 
+	"github.com/EmissarySocial/emissary/handler/activitypub"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/server"
@@ -125,7 +126,7 @@ func renderOutbox(serverFactory *server.Factory, actionMethod render.ActionMetho
 		}
 
 		if isJSONLDRequest(sterankoContext) {
-			return renderProfileJSONLD(context, factory, &user)
+			return activitypub.RenderProfileJSONLD(context, factory, &user)
 		}
 
 		// Try to load the User's Outbox
@@ -172,22 +173,4 @@ func authenticatedID(context echo.Context) (primitive.ObjectID, error) {
 	}
 
 	return primitive.NilObjectID, derp.NewUnauthorizedError("handler.profileUserID", "User is not authenticated")
-}
-
-func isUserVisible(context *steranko.Context, user *model.User) bool {
-
-	authorization := getAuthorization(context)
-
-	// Domain owners can see everything
-	if authorization.DomainOwner {
-		return true
-	}
-
-	// Signed-in users can see themselves
-	if authorization.UserID == user.UserID {
-		return true
-	}
-
-	// Otherwise, access depends on the user's profile being public
-	return user.IsPublic
 }

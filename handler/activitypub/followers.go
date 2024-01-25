@@ -1,4 +1,4 @@
-package handler
+package activitypub
 
 import (
 	"net/http"
@@ -8,7 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func ActivityPub_GetFollowersCollection(serverFactory *server.Factory) echo.HandlerFunc {
+func GetFollowersCollection(serverFactory *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 		result := streams.NewOrderedCollection()

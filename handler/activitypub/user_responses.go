@@ -1,4 +1,4 @@
-package handler
+package activitypub
 
 import (
 	"net/http"
@@ -11,7 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func ActivityPub_GetUserResponseCollection(serverFactory *server.Factory, responseType string) echo.HandlerFunc {
+func GetUserResponseCollection(serverFactory *server.Factory, responseType string) echo.HandlerFunc {
 
 	const location = "handler.ActivityPub_GetResponseCollection"
 
@@ -65,7 +65,7 @@ func ActivityPub_GetUserResponseCollection(serverFactory *server.Factory, respon
 	}
 }
 
-func ActivityPub_GetUserResponse(serverFactory *server.Factory, responseType string) echo.HandlerFunc {
+func GetUserResponse(serverFactory *server.Factory, responseType string) echo.HandlerFunc {
 
 	const location = "handler.ActivityPub_GetUserResponse"
 

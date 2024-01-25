@@ -1,4 +1,4 @@
-package handler
+package activitypub
 
 import (
 	"net/http"
@@ -11,7 +11,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func renderProfileJSONLD(context echo.Context, factory *domain.Factory, user *model.User) error {
+func RenderProfileJSONLD(context echo.Context, factory *domain.Factory, user *model.User) error {
 
 	const location = "handler.renderProfileJSONLD"
 

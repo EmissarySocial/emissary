@@ -1,4 +1,4 @@
-package handler
+package activitypub
 
 import (
 	"github.com/EmissarySocial/emissary/domain"

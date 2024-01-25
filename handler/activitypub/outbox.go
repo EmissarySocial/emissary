@@ -1,4 +1,4 @@
-package handler
+package activitypub
 
 import (
 	"math"
@@ -11,7 +11,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func ActivityPub_GetOutboxCollection(serverFactory *server.Factory) echo.HandlerFunc {
+func GetOutboxCollection(serverFactory *server.Factory) echo.HandlerFunc {
 
 	const location = "handler.ActivityPub_GetOutboxCollection"
 

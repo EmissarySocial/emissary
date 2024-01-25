@@ -1,4 +1,4 @@
-package handler
+package activitypub
 
 import (
 	"net/http"
@@ -10,7 +10,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func ActivityPub_GetStreamResponseCollection(serverFactory *server.Factory, responseType string) echo.HandlerFunc {
+func GetStreamResponseCollection(serverFactory *server.Factory, responseType string) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
