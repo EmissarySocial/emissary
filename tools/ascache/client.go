@@ -99,7 +99,6 @@ func (client *Client) Load(url string, options ...any) (streams.Document, error)
 			}
 
 			return client.asDocument(value), nil
-		} else {
 		}
 	}
 
