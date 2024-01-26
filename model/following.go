@@ -15,6 +15,7 @@ type Following struct {
 	FolderID        primitive.ObjectID `json:"folderId"        bson:"folderId"`        // ID of the folder to put new messages into
 	Folder          string             `json:"folder"          bson:"folder"`          // Name of the folder to put new messages into
 	Label           string             `json:"label"           bson:"label"`           // Label of this "following" record
+	Notes           string             `json:"notes"         bson:"notes"`             // Notes about this "following" record, entered by the user.
 	URL             string             `json:"url"             bson:"url"`             // Human-Facing URL that is being followed.
 	ProfileURL      string             `json:"profileUrl"      bson:"profileUrl"`      // Updated, computer-facing URL that is being followed.
 	ImageURL        string             `json:"imageUrl"        bson:"imageUrl"`        // URL of an image that represents this "following"

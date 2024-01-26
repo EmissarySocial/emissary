@@ -1,0 +1,44 @@
+{{- $ruleID := .QueryParam "ruleId" -}}
+{{- $rule := .RuleByToken $ruleID -}}
+{{- $following := .FollowingByToken $rule.FollowingID.Hex -}}
+
+<h2>{{icon "cloud"}} Imported Rule</h2>
+
+<table class="table margin-bottom">
+	<tr>
+		<td>Publisher</td>
+		<td class="width-1-1 flex-row">
+			{{- if ne "" $following.ImageURL -}}
+				<img class="circle-32" src="{{$following.ImageURL}}">
+			{{- end -}}
+			<div class="width-100-percent">{{$following.Label}}</div>
+			<div class="text-sm nowrap">
+				<button hx-get="/@me/inbox/following-edit?followingId={{$following.ID}}">Edit Source</button>
+				<a href="{{$following.ProfileURL}}" role="link" class="button" target="_blank">Go to Profile</a>
+			</div>
+		</td>
+	</tr>
+	<tr>
+		<td>Rule</td>
+		<td>
+			<div class="text-sm text-gray">{{$rule.Type}}</div>
+			<div>{{$rule.Trigger}}</div>
+		</td>
+	</tr>
+	<tr>
+		<td>Action</td>
+		<td>{{$rule.Action}}</td>
+	</tr>
+</table>
+
+<div class="margin-bottom">
+	This rule will be updated automatically when {{$following.Label}} publishes changes
+</div>
+<div class="margin-bottom-lg">
+	You can take ownership of this rule, which lets you save your own changes and will prevent the publisher from updating this rule in the future.
+</div>
+
+<div>
+	<button class="primary" hx-get="/@me/inbox/rule-edit?ruleId={{$rule.ID}}">Take Ownership</button>
+	<button script="on click send closeModal">Cancel</button>
+</div>

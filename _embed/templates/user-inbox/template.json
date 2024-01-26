@@ -261,62 +261,54 @@
 			"steps": [
 				{"step":"as-modal", "steps":[
 					{"step":"with-following", "steps":[
-						{"step":"view-html"}
-					]}
-				]}
-			]
-		},
-		"following-edit-form":{
-			"roles":["self"],
-			"steps":[
-				{"step":"with-following", "steps":[
-					{"step":"set-data", "from-url":["folderId"]},
-					{
-						"step":"edit", 
-						"options":[
-							"endpoint:/@me/inbox/following-edit-form?followingId={{.ObjectID}}",
-							"delete:/@me/inbox/following-delete?followingId={{.ObjectID}}", 
-							"delete-label:Stop Following"
-						], 
-						"form":{
-							"type":"layout-vertical",
-							"children": [
-								{
-									"type":"select",
-									"label":"Inbox Folder",
-									"path":"folderId",
-									"description":"Where should messages from this source be placed?",
-									"options":{"provider": "folders"}
-								},
-								{
-									"type":"select", 
-									"label":"Message Types", 
-									"path":"behavior", 
-									"description":"What kinds of posts should be shown in my timeline?",
-									"options":{"provider":"following-behaviors"}
-								},
-								{
-									"type":"select", 
-									"label":"Shared Blocks", 
-									"path":"ruleAction", 
-									"description":"How should blocks from this source be handled?",
-									"options":{"provider":"following-rule-actions"}
-								},
-								{
-									"type":"toggle",
-									"path":"collapseThreads",
-									"default":true,
-									"options":{"true-text":"Group messages into a single thread", "false-text":"Show all messages separately"}
-								},
-								{
-									"type":"toggle",
-									"path":"isPublic",
-									"default":false,
-									"options":{"true-text":"Public: This 'Follow' is visible on my profile", "false-text":"Private: This 'Follow' is hidden from others"}
-								}
-							]
+						{"step":"view-html"},
+						{"step":"set-data", "from-url":["folderId"]},
+						{
+							"step":"edit", 
+							"options":[
+								"delete:/@me/inbox/following-delete?followingId={{.ObjectID}}", 
+								"delete-label:Stop Following"
+							], 
+							"form":{
+								"type":"layout-vertical",
+								"children": [
+									{
+										"type":"select",
+										"label":"Inbox Folder",
+										"path":"folderId",
+										"description":"Where should messages from this source be placed?",
+										"options":{"provider": "folders"}
+									},
+									{
+										"type":"select", 
+										"label":"Message Types", 
+										"path":"behavior", 
+										"description":"What kinds of posts should be shown in my timeline?",
+										"options":{"provider":"following-behaviors"}
+									},
+									{
+										"type":"select", 
+										"label":"Shared Blocks", 
+										"path":"ruleAction", 
+										"description":"How should blocks from this source be handled?",
+										"options":{"provider":"following-rule-actions"}
+									},
+									{
+										"type":"toggle",
+										"path":"collapseThreads",
+										"default":true,
+										"options":{"true-text":"Group messages into a single thread", "false-text":"Show all messages separately"}
+									},
+									{
+										"type":"toggle",
+										"path":"isPublic",
+										"default":false,
+										"options":{"true-text":"Public: This 'Follow' is visible on my profile", "false-text":"Private: This 'Follow' is hidden from others"}
+									}
+								]
+							}
 						}
-					}
+					]}
 				]},
 				{"step":"trigger-event", "event":"closeModal"},
 				{"step":"trigger-event", "event":"refreshPage"}
@@ -440,6 +432,14 @@
 					},
 					{"step":"trigger-event", "event":"refreshPage"},
 					{"step":"trigger-event", "event":"closeModal"}
+				]}
+			]
+		},
+		"rule-edit-remote":{
+			"roles":["self"],
+			"steps":[
+				{"step":"as-modal", "steps":[
+					{"step":"view-html"}
 				]}
 			]
 		},

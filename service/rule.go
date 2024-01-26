@@ -111,7 +111,7 @@ func (service *Rule) Save(rule *model.Rule, note string) error {
 	}
 
 	// RULE: Externally imported rules cannot be re-shared automatically.
-	if rule.IsFromExternalSource() {
+	if rule.OriginRemote() {
 		rule.IsPublic = false
 	}
 
@@ -354,7 +354,7 @@ func (service *Rule) hasDuplicate(rule *model.Rule) bool {
 	}
 
 	// If the new rule was made manually, but the duplicate was imported from a Following...
-	if rule.IsFromLocalSource() && duplicate.IsFromExternalSource() {
+	if rule.OriginUser() && duplicate.OriginRemote() {
 		// Change the RuleID so that we overwrite the duplicate with new information
 		rule.FollowingID = duplicate.FollowingID
 		rule.Journal = duplicate.Journal

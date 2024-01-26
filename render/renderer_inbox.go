@@ -288,6 +288,17 @@ func (w Inbox) Rules() QueryBuilder[model.Rule] {
 	return result
 }
 
+func (w Inbox) RuleByToken(token string) model.Rule {
+	ruleService := w._factory.Rule()
+	rule := model.NewRule()
+
+	if err := ruleService.LoadByToken(w.AuthenticatedID(), token, &rule); err != nil {
+		derp.Report(derp.Wrap(err, "render.Inbox.RuleByToken", "Error loading rule", token))
+	}
+
+	return rule
+}
+
 // Inbox returns a slice of messages in the current User's inbox
 func (w Inbox) Inbox() (QueryBuilder[model.Message], error) {
 

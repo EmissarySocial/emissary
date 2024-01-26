@@ -3,33 +3,58 @@
 {{- $rules := $rules.Slice -}}
 
 {{- range $rules -}}
-	<div hx-get="/@me/inbox/rule-edit?ruleId={{.RuleID.Hex}}" role="button" class="flex-row width-100-percent">
-		<div class="width-1-6" nowrap>
+	{{- $origin := .Origin -}}
+	<div role="button" class="flex-row width-100-percent turboclick origin-{{$origin}}" hx-get="
+		{{- if eq `REMOTE` $origin -}}
+			/@me/inbox/rule-edit-remote?ruleId={{.RuleID.Hex}}
+		{{- else if eq `ADMIN` $origin -}}
+			/@me/inbox/rule-edit-admin?ruleId={{.RuleID.Hex}}
+		{{- else -}}
+			/@me/inbox/rule-edit?ruleId={{.RuleID.Hex}}
+		{{- end -}}">
+
+		<div class="width-2-6 flex-row" nowrap>
+			<div class="text-xl margin-none flex-align-start">
 			{{- if eq "ACTOR" .Type -}}
-				{{- icon "person"}} Person
-			{{- else if eq "DOMAIN" .Type -}}
-				{{- icon "server"}} Server
-			{{- else -}}
-				{{- icon "hash"}} Keyword
-			{{- end -}}
-		</div>
-		<div class="width-2-6">
+					{{- icon "person"}}
+				{{- else if eq "DOMAIN" .Type -}}
+					{{- icon "server"}}
+				{{- else -}}
+					{{- icon "hash"}}
+				{{- end -}}
+			</div>
 			<div class="ellipsis">
-				{{.Trigger}}
+				<div class="bold">
+					{{.Trigger}}
+				</div>
+				<div class="text-gray text-sm">
+				{{- if eq "ACTOR" .Type -}}
+					Person Rule
+				{{- else if eq "DOMAIN" .Type -}}
+					Server Rule
+				{{- else -}}
+					Keyword Rule
+				{{- end -}}
+				</div>
 			</div>
 		</div>
-		<div class="width-2-6" nowrap>
-			{{- if eq "BLOCK" .Action -}}
-				{{icon "block"}} Block
-			{{- else if eq "MUTE" .Action -}}
-				{{icon "mute"}} Mute
-			{{- else -}}
-				{{icon "tag"}} &quot;{{.Label}}&quot;
-			{{- end -}}
+		<div class="width-3-6 nowrap">
+			<div class="bold">
+				{{- if eq "BLOCK" .Action -}}
+					{{icon "block"}} Block
+				{{- else if eq "MUTE" .Action -}}
+					{{icon "mute"}} Mute
+				{{- else -}}
+					{{icon "tag"}} &quot;{{.Label}}&quot;
+				{{- end -}}
+			</div>
+			<div class="text-gray text-sm">{{.Summary}}</div>
 		</div>
-		<div class="width-1-6 align-right" nowrap>
-			{{- if .IsPublic -}}
-				{{icon "visible-fill"}} Public
+		<div class="width-1-6 align-right nowrap">
+			{{- if .OriginRemote -}}
+				{{icon "cloud"}} Imported
+			{{- else if .IsPublic -}}
+				{{icon "visible-fill"}} Published
 			{{- else -}}
 				{{icon "invisible"}} Private
 			{{- end -}}

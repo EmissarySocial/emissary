@@ -17,3 +17,12 @@ const RuleActionMute = "MUTE"
 
 // RuleActionLabel allows inbound messages but labels them with a custom message
 const RuleActionLabel = "LABEL"
+
+// RuleOriginAdmin signifies a Rule that was created by a domain administrator
+const RuleOriginAdmin = "ADMIN"
+
+// RuleOriginRemote signifies a Rule that was imported from a remote actor
+const RuleOriginRemote = "REMOTE"
+
+// RuleOriginUser signifies a Rule that was created by the user
+const RuleOriginUser = "USER"

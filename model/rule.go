@@ -46,10 +46,13 @@ func (rule Rule) ID() string {
 func (rule Rule) Fields() []string {
 	return []string{
 		"_id",
+		"userId",
+		"followingId",
 		"type",
 		"action",
 		"label",
 		"trigger",
+		"summary",
 		"isPublic",
 	}
 }
@@ -106,13 +109,32 @@ func (rule Rule) GetRank() int64 {
 	return rule.CreateDate
 }
 
-// IsFromExternalSource returns TRUE if this Rule was created by a Following record.
-func (rule Rule) IsFromExternalSource() bool {
-	return !rule.IsFromLocalSource()
+// Origin returns a string that identifies the origin of this Rule. (DOMAIN, REMOTE, or USER)
+func (rule Rule) Origin() string {
+
+	if rule.OriginAdmin() {
+		return RuleOriginAdmin
+	}
+
+	if rule.OriginRemote() {
+		return RuleOriginRemote
+	}
+
+	return RuleOriginUser
 }
 
-// IsFromLocalSource returns TRUE if this Rule was created by the User.
-func (rule Rule) IsFromLocalSource() bool {
+// OriginAdmin returns TRUE if this Rule was created by a Domain administrator.
+func (rule Rule) OriginAdmin() bool {
+	return rule.UserID.IsZero()
+}
+
+// OriginRemote returns TRUE if this Rule was created by a Following record.
+func (rule Rule) OriginRemote() bool {
+	return !rule.OriginUser()
+}
+
+// OriginUser returns TRUE if this Rule was created by the User.
+func (rule Rule) OriginUser() bool {
 	return rule.FollowingID.IsZero()
 }
 
