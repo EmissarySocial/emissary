@@ -7,7 +7,7 @@
 <table class="table margin-bottom">
 	<tr>
 		<td>Publisher</td>
-		<td class="width-1-1 flex-row">
+		<td width="100%" class="flex-row">
 			{{- if ne "" $following.ImageURL -}}
 				<img class="circle-32" src="{{$following.ImageURL}}">
 			{{- end -}}
@@ -29,13 +29,18 @@
 		<td>Action</td>
 		<td>{{$rule.Action}}</td>
 	</tr>
+	<tr>
+		<td>Sharing</td>
+		<td>Private. Not shared with my followers</td>
+	</tr>
+	<tr>
+		<td>Updating</td>
+		<td>Automatic (when the publisher makes changes)</td>
+	</tr>	
 </table>
 
-<div class="margin-bottom">
-	This rule will be updated automatically when {{$following.Label}} publishes changes
-</div>
-<div class="margin-bottom-lg">
-	You can take ownership of this rule, which lets you save your own changes and will prevent the publisher from updating this rule in the future.
+<div class="info margin-bottom-lg">
+	Taking ownership of this rule will: 1) let you save your own changes, and 2) prevent the publisher from updating it in the future.
 </div>
 
 <div>
