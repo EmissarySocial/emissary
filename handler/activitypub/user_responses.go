@@ -13,7 +13,7 @@ import (
 
 func GetUserResponseCollection(serverFactory *server.Factory, responseType string) echo.HandlerFunc {
 
-	const location = "handler.ActivityPub_GetResponseCollection"
+	const location = "handler.activitypub.ActivityPub_GetResponseCollection"
 
 	return func(ctx echo.Context) error {
 
@@ -67,7 +67,7 @@ func GetUserResponseCollection(serverFactory *server.Factory, responseType strin
 
 func GetUserResponse(serverFactory *server.Factory, responseType string) echo.HandlerFunc {
 
-	const location = "handler.ActivityPub_GetUserResponse"
+	const location = "handler.activitypub.ActivityPub_GetUserResponse"
 
 	return func(ctx echo.Context) error {
 

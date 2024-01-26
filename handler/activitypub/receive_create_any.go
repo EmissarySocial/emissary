@@ -15,7 +15,7 @@ func init() {
 
 func activityPub_CreateOrUpdate(factory *domain.Factory, user *model.User, activity streams.Document) error {
 
-	const location = "handler.activityPub_CreateOrUpdate"
+	const location = "handler.activitypub.activityPub_CreateOrUpdate"
 
 	// Load the actual document into the ActivityStream cache
 	object := activity.UnwrapActivity()

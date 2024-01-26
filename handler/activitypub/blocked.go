@@ -14,7 +14,7 @@ import (
 
 func GetBlockedCollection(serverFactory *server.Factory) echo.HandlerFunc {
 
-	const location = "handler.ActivityPub_GetBlocked"
+	const location = "handler.activitypub.ActivityPub_GetBlocked"
 
 	return func(ctx echo.Context) error {
 
@@ -67,12 +67,12 @@ func GetBlockedCollection(serverFactory *server.Factory) echo.HandlerFunc {
 
 func GetBlock(serverFactory *server.Factory) echo.HandlerFunc {
 
-	const location = "handler.ActivityPub_GetBlock"
+	const location = "handler.activitypub.ActivityPub_GetBlock"
 
 	return func(ctx echo.Context) error {
 
 		// Collect RuleID from URL
-		ruleID, err := primitive.ObjectIDFromHex(ctx.Param("rule"))
+		ruleID, err := primitive.ObjectIDFromHex(ctx.Param("ruleId"))
 
 		if err != nil {
 			return derp.NewNotFoundError(location, "Invalid Rule ID", err)

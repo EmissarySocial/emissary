@@ -13,7 +13,7 @@ import (
 
 func GetPublicKey(serverFactory *server.Factory) echo.HandlerFunc {
 
-	const location = "handler.ActivityPub_GetPublicKey"
+	const location = "handler.activitypub.ActivityPub_GetPublicKey"
 
 	return func(ctx echo.Context) error {
 

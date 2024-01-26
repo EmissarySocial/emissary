@@ -17,7 +17,7 @@ func init() {
 // receiveResponse handles all Announce, Like, and Dislike activities
 func receiveResponse(factory *domain.Factory, user *model.User, activity streams.Document) error {
 
-	const location = "handler.receiveResponse"
+	const location = "handler.activitypub.receiveResponse"
 
 	// RULE: Verify that the ActivityID exists
 	if activity.ID() == "" {

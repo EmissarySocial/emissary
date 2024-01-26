@@ -13,7 +13,7 @@ import (
 
 func GetOutboxCollection(serverFactory *server.Factory) echo.HandlerFunc {
 
-	const location = "handler.ActivityPub_GetOutboxCollection"
+	const location = "handler.activitypub.ActivityPub_GetOutboxCollection"
 
 	return func(ctx echo.Context) error {
 
