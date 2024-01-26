@@ -25,8 +25,17 @@ const FollowingStatusSuccess = "SUCCESS"
 // FollowingStatusFailure represents a following that has failed to load
 const FollowingStatusFailure = "FAILURE"
 
-// FollowingRuleIgnore declares that Rules published by a followed account should be ignored
+// FollowingRuleActionIgnore declares that Rules published by a followed account should be ignored
 const FollowingRuleActionIgnore = "IGNORE"
+
+// FollowingRuleActionLabel declares that Rules published by a followed account should be labeled with content provided by the followed account.
+const FollowingRuleActionLabel = "LABEL"
+
+// FollowingRuleActionMute declares that Rules published by a followed account should be muted
+const FollowingRuleActionMute = "MUTE"
+
+// FollowingRuleActionBlock declares that Rules published by a followed account should be blocked
+const FollowingRuleActionBlock = "BLOCK"
 
 // FollowingBehaviorPostsAndReplies declares that all messages (both Posts and Replies) should be imported from a followed account
 const FollowingBehaviorPostsAndReplies = "POSTS+REPLIES"

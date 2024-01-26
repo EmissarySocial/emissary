@@ -13,13 +13,13 @@ import (
 type Rule struct {
 	RuleID      primitive.ObjectID `json:"ruleId"      bson:"_id"`         // Unique identifier of this Rule
 	UserID      primitive.ObjectID `json:"userId"      bson:"userId"`      // Unique identifier of the User who owns this Rule
+	FollowingID primitive.ObjectID `json:"followingId" bson:"followingId"` // Unique identifier of the Following record that created this Rule.  If Zero, then this rule was created by the user.
 	Type        string             `json:"type"        bson:"type"`        // Type of Rule (e.g. "ACTOR", "DOMAIN", "CONTENT")
 	Action      string             `json:"action"      bson:"action"`      // Action to take when this rule is triggered (e.g. "BLOCK", "MUTE", "LABEL")
 	Label       string             `json:"label"       bson:"label"`       // Human-friendly label to add to messages
 	Trigger     string             `json:"trigger"     bson:"trigger"`     // Parameter for this rule type)
 	Summary     string             `json:"summary"     bson:"summary"`     // Optional comment describing why this rule exists
 	IsPublic    bool               `json:"isPublic"    bson:"isPublic"`    // If TRUE, this record is visible publicly
-	Origin      OriginLink         `json:"origin"      bson:"origin"`      // Internal or External service where this rule originated (used for subscriptions)
 	PublishDate int64              `json:"publishDate" bson:"publishDate"` // Unix timestamp when this rule was published to followers
 	JSONLD      mapof.Any          `json:"jsonld"      bson:"jsonld"`      // JSON-LD data for this object
 
@@ -29,6 +29,7 @@ type Rule struct {
 func NewRule() Rule {
 	return Rule{
 		RuleID:   primitive.NewObjectID(),
+		Type:     RuleTypeActor,
 		Action:   RuleActionMute,
 		IsPublic: false,
 	}
@@ -100,8 +101,19 @@ func (rule Rule) Toot() object.Relationship {
 	}
 }
 
+// GetRank returns the "Rank" of this object, which is its CreateDate
 func (rule Rule) GetRank() int64 {
 	return rule.CreateDate
+}
+
+// IsFromExternalSource returns TRUE if this Rule was created by a Following record.
+func (rule Rule) IsFromExternalSource() bool {
+	return !rule.IsFromLocalSource()
+}
+
+// IsFromLocalSource returns TRUE if this Rule was created by the User.
+func (rule Rule) IsFromLocalSource() bool {
+	return rule.FollowingID.IsZero()
 }
 
 /******************************************

@@ -10,12 +10,12 @@ func RuleSchema() schema.Element {
 		Properties: schema.ElementMap{
 			"ruleId":      schema.String{Required: true, Format: "objectId"},
 			"userId":      schema.String{Required: true, Format: "objectId"},
+			"followingId": schema.String{Format: "objectId"},
 			"type":        schema.String{Required: true, Enum: []string{RuleTypeDomain, RuleTypeActor, RuleTypeContent}},
 			"action":      schema.String{Required: true, Enum: []string{RuleActionBlock, RuleActionMute, RuleActionLabel}},
 			"label":       schema.String{},
 			"trigger":     schema.String{Required: true},
 			"summary":     schema.String{},
-			"origin":      OriginLinkSchema(),
 			"isPublic":    schema.Boolean{},
 			"publishDate": schema.Integer{BitSize: 64},
 		},
@@ -29,9 +29,6 @@ func RuleSchema() schema.Element {
 func (rule *Rule) GetPointer(name string) (any, bool) {
 
 	switch name {
-
-	case "origin":
-		return &rule.Origin, true
 
 	case "isPublic":
 		return &rule.IsPublic, true
@@ -68,6 +65,9 @@ func (rule *Rule) GetStringOK(name string) (string, bool) {
 	case "userId":
 		return rule.UserID.Hex(), true
 
+	case "followingId":
+		return rule.FollowingID.Hex(), true
+
 	}
 
 	return "", false
@@ -86,6 +86,12 @@ func (rule *Rule) SetString(name string, value string) bool {
 	case "userId":
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
 			rule.UserID = objectID
+			return true
+		}
+
+	case "followingId":
+		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
+			rule.FollowingID = objectID
 			return true
 		}
 	}

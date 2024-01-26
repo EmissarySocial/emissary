@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/benpate/hannibal/streams"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -43,33 +44,12 @@ func (rule RuleSummary) IsAllowed(document *streams.Document) bool {
 // this rule.  (i.e. the document MATCHES the rule)
 func (rule RuleSummary) IsDisallowed(document *streams.Document) bool {
 
-	// Apply content filters here.  If the content matches the filter, then dissallow the document.
+	// Apply content filters here.
 	if rule.Type == RuleTypeContent {
 
-		if strings.Contains(document.Name(), rule.Trigger) {
-			return true
-		}
-
-		if strings.Contains(document.Summary(), rule.Trigger) {
-			return true
-		}
-
-		if strings.Contains(document.Content(), rule.Trigger) {
+		// If the document does not match the content filter, then it is allowed.
+		if !rule.matchesContent(document) {
 			return false
-		}
-
-		for tag := document.Tag(); tag.NotNil(); tag = tag.Next() {
-			if strings.Contains(tag.Name(), rule.Trigger) {
-				return false
-			}
-		}
-
-		// Last, if the document contains a disallowed Object,
-		// then it is disallowed, too.
-		if object := document.Object(); object.NotNil() {
-			if rule.IsDisallowed(&object) {
-				return true
-			}
 		}
 	}
 
@@ -79,7 +59,46 @@ func (rule RuleSummary) IsDisallowed(document *streams.Document) bool {
 	}
 
 	// Label actions add a label to the document, but do not disallow it.
-	// TODO: Add label actions.
+	// TODO: Add label actions here.
+
+	return false
+}
+
+func (rule RuleSummary) matchesContent(document *streams.Document) bool {
+
+	if rule.Type != RuleTypeContent {
+		return false
+	}
+
+	if strings.Contains(document.Name(), rule.Trigger) {
+		spew.Dump("disallowed becuase of name")
+		return true
+	}
+
+	if strings.Contains(document.Summary(), rule.Trigger) {
+		spew.Dump("disallowed becuase of summary")
+		return true
+	}
+
+	if strings.Contains(document.Content(), rule.Trigger) {
+		spew.Dump("disallowed becuase of content")
+		return true
+	}
+
+	for tag := document.Tag(); tag.NotNil(); tag = tag.Next() {
+		if tag.Name() == rule.Trigger {
+			spew.Dump("disallowed becuase of tag", tag.Name())
+			return true
+		}
+	}
+
+	// Last, if the document contains a disallowed Object,
+	// then it is disallowed, too.
+	if object := document.Object(); object.NotNil() {
+		if rule.IsDisallowed(&object) {
+			return true
+		}
+	}
 
 	return false
 }

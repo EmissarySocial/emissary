@@ -105,6 +105,16 @@ func (service *Rule) Save(rule *model.Rule, note string) error {
 		return derp.Wrap(err, "service.Rule.Save", "Error cleaning Rule", rule)
 	}
 
+	// If this is a duplicate rule, then halt
+	if service.hasDuplicate(rule) {
+		return nil
+	}
+
+	// RULE: Externally imported rules cannot be re-shared automatically.
+	if rule.IsFromExternalSource() {
+		rule.IsPublic = false
+	}
+
 	// RULE: Publish changes when the rule is first shared publicly
 	if rule.IsPublic && (rule.PublishDate == 0) {
 		if err := service.publish(rule); err != nil {
@@ -126,8 +136,6 @@ func (service *Rule) Save(rule *model.Rule, note string) error {
 
 	// Recalculate the rule count for this user
 	go service.userService.CalcRuleCount(rule.UserID)
-
-	// TODO: HIGH: Remove matching followers...
 
 	return nil
 }
@@ -236,7 +244,7 @@ func (service *Rule) LoadByToken(userID primitive.ObjectID, token string, rule *
 // LoadByTrigger retrieves a single Rule that maches the provided User, RuleType, and Trigger
 func (service *Rule) LoadByTrigger(userID primitive.ObjectID, ruleType string, trigger string, rule *model.Rule) error {
 
-	criteria := exp.Equal("userId", userID).
+	criteria := service.byUserID(userID).
 		AndEqual("type", ruleType).
 		AndEqual("trigger", trigger)
 
@@ -328,6 +336,36 @@ func (service *Rule) Filter(userID primitive.ObjectID) RuleFilter {
  * Rule Publishing Rules
  ******************************************/
 
+// hasDuplicate returns TRUE if the provided Rule is a duplicate of an existing Rule.
+// IMPORTANT: This method MAY update the provided Rule
+func (service *Rule) hasDuplicate(rule *model.Rule) bool {
+
+	// Search the database for duplicate rules
+	criteria := exp.NotEqual("_id", rule.RuleID).
+		AndEqual("userId", rule.UserID).
+		AndEqual("type", rule.Type).
+		AndEqual("trigger", rule.Trigger)
+
+	duplicate := model.NewRule()
+
+	// If a duplicate is not found, then return FALSE
+	if err := service.Load(criteria, &duplicate); derp.NotFound(err) {
+		return false
+	}
+
+	// If the new rule was made manually, but the duplicate was imported from a Following...
+	if rule.IsFromLocalSource() && duplicate.IsFromExternalSource() {
+		// Change the RuleID so that we overwrite the duplicate with new information
+		rule.FollowingID = duplicate.FollowingID
+		rule.Journal = duplicate.Journal
+		return false
+	}
+
+	// In all other cases, we should NOT SAVE the new record
+	// because it is a duplicate
+	return true
+}
+
 // publish marks the Rule as published, and sends "Create" activities to all ActivityPub followers
 func (service *Rule) publish(rule *model.Rule) error {
 
@@ -379,25 +417,26 @@ func (service *Rule) calcJSONLD(rule *model.Rule) error {
 	switch rule.Type {
 
 	case model.RuleTypeActor:
-		rule.JSONLD[vocab.PropertyTarget] = mapof.Any{
+		rule.JSONLD[vocab.PropertyObject] = mapof.Any{
 			vocab.PropertyType: vocab.ActorTypePerson,
 			vocab.PropertyID:   rule.Trigger,
 		}
 		rule.JSONLD[vocab.PropertySummary] = user.DisplayName + " blocked the person " + rule.Trigger
 
 	case model.RuleTypeDomain:
-		rule.JSONLD[vocab.PropertyTarget] = mapof.Any{
+		rule.JSONLD[vocab.PropertyObject] = mapof.Any{
 			vocab.PropertyType: vocab.ActorTypeService,
 			vocab.PropertyID:   rule.Trigger,
+			vocab.PropertyURL:  rule.Trigger,
 		}
 		rule.JSONLD[vocab.PropertySummary] = user.DisplayName + " blocked the domain " + rule.Trigger
 
 	case model.RuleTypeContent:
-		rule.JSONLD[vocab.PropertyTarget] = mapof.Any{
-			vocab.PropertyType: "Keyword",
-			vocab.PropertyID:   rule.Trigger,
+		rule.JSONLD[vocab.PropertyObject] = mapof.Any{
+			vocab.PropertyType:    vocab.ObjectTypeNote,
+			vocab.PropertyContent: rule.Trigger,
 		}
-		rule.JSONLD[vocab.PropertySummary] = user.DisplayName + " blocked the keywords " + rule.Trigger
+		rule.JSONLD[vocab.PropertySummary] = user.DisplayName + " blocked the content '" + rule.Trigger + "'"
 
 	default:
 		// This should never happen

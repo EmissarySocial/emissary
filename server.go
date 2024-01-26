@@ -270,7 +270,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@:userId/pub/liked", activitypub.GetUserResponseCollection(factory, model.ResponseTypeLike))
 	e.GET("/@:userId/pub/liked/:response", activitypub.GetUserResponse(factory, model.ResponseTypeLike))
 	e.GET("/@:userId/pub/blocked", activitypub.GetBlockedCollection(factory))
-	e.GET("/@:userId/pub/blocked/:block", activitypub.GetBlock(factory))
+	e.GET("/@:userId/pub/blocked/:ruleId", activitypub.GetBlock(factory))
 
 	// Domain Admin Pages
 	e.GET("/admin", handler.GetAdmin(factory), mw.Owner)

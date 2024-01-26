@@ -15,6 +15,7 @@ func TestRuleSchema(t *testing.T) {
 	table := []tableTestItem{
 		{"ruleId", "123456781234567812345678", nil},
 		{"userId", "876543218765432187654321", nil},
+		{"followingId", "876543218765432187654321", nil},
 		{"type", "ACTOR", nil},
 		{"action", "LABEL", nil},
 		{"label", "LABEL", nil},
@@ -22,11 +23,6 @@ func TestRuleSchema(t *testing.T) {
 		{"summary", "COMMENT", nil},
 		{"isPublic", "true", true},
 		{"publishDate", int64(1234567890), nil},
-		{"origin.followingId", "123456781234567812345678", nil},
-		{"origin.type", "LIKE", nil},
-		{"origin.url", "https://example.com", nil},
-		{"origin.label", "LABEL", nil},
-		{"origin.imageUrl", "ICON.URL.HERE", nil},
 	}
 
 	tableTest_Schema(t, &s, &block, table)
