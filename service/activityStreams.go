@@ -18,7 +18,8 @@ import (
 // ActivityStreams implements the Hannibal HTTP client interface, and provides a cache for ActivityStreams documents.
 type ActivityStreams struct {
 	collection  data.Collection
-	innerClient *ascache.Client
+	innerClient streams.Client
+	cacheClient *ascache.Client
 }
 
 /******************************************
@@ -31,8 +32,9 @@ func NewActivityStreams() ActivityStreams {
 }
 
 // Refresh updates the ActivityStreams service with new dependencies
-func (service *ActivityStreams) Refresh(innerClient *ascache.Client, collection data.Collection) {
+func (service *ActivityStreams) Refresh(innerClient streams.Client, cacheClient *ascache.Client, collection data.Collection) {
 	service.innerClient = innerClient
+	service.cacheClient = cacheClient
 	service.collection = collection
 }
 
@@ -70,7 +72,7 @@ func (service *ActivityStreams) Delete(url string) error {
 
 	const location = "service.ActivityStreams.Delete"
 
-	if err := service.innerClient.Delete(url); err != nil {
+	if err := service.cacheClient.Delete(url); err != nil {
 		return derp.Wrap(err, location, "Error deleting document from cache", url)
 	}
 

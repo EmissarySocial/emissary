@@ -14,6 +14,7 @@ import (
 	"github.com/EmissarySocial/emissary/tools/ascache"
 	"github.com/EmissarySocial/emissary/tools/ascacherules"
 	"github.com/EmissarySocial/emissary/tools/ascontextmaker"
+	"github.com/EmissarySocial/emissary/tools/ashash"
 	"github.com/EmissarySocial/emissary/tools/asnormalizer"
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
@@ -568,8 +569,9 @@ func (factory *Factory) RefreshActivityStreams(connection mapof.String) {
 	cacheRulesClient := ascacherules.New(contextMakerClient)   // apply custom caching rules to documents
 
 	cacheClient := ascache.New(cacheRulesClient, collection, ascache.WithIgnoreHeaders()) // cache data in MongoDB
+	hashClient := ashash.New(cacheClient)                                                 // Traverse hash values within documents
 
-	factory.activityStreamsService.Refresh(cacheClient, mongodb.NewCollection(collection))
+	factory.activityStreamsService.Refresh(hashClient, cacheClient, mongodb.NewCollection(collection))
 
 	// This is breaking somehow.  Test thoroughly before re-enabling.
 	// writableCache := ascache.New(contextMakerClient, collection, ascache.WithWriteOnly())
