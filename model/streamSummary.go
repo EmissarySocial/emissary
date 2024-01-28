@@ -49,6 +49,10 @@ func (summary StreamSummary) Fields() []string {
  * Other Data Accessors
  *************************************/
 
+func (summary StreamSummary) ID() string {
+	return summary.ObjectID.Hex()
+}
+
 func (summary StreamSummary) Author() PersonLink {
 	return summary.AttributedTo
 }

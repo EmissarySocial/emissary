@@ -8,26 +8,29 @@
 	{{- range $index, $stream := $outbox -}}
 		{{- $document := $outboxRenderer.ActivityStream $stream.URL -}}
 		<hr>
-		<div class="hover-trigger">
-			<div hx-get="/{{$stream.Token}}" hx-push-url="true" role="link" class="flex-row h-entry margin-bottom">
+		<div class="hover-trigger flex-row">
+			<div hx-get="/{{$stream.Token}}" hx-push-url="true" role="link" class="width-100-percent flex-row h-entry margin-bottom">
 				<div class="flex-shrink-0" style="width:80px;">
 					<img src="{{$stream.AttributedTo.ImageURL}}" class="circle-64" loading="lazy">
 				</div>
-				<div style="flex-grow:1">
-					<div style="max-width:600px;">
-						{{- if ne "" $stream.Label -}}
-							<div class="h-name bold black">{{$stream.Label}}</div>
-						{{- end -}}
-						<div class="h-summary black">{{$stream.ContentHTML | html }}</div>
-						{{- if ne $stream.ImageURL ""}}
-							<div style="margin-top:var(--rhythm);">
-								<img src="{{$stream.ImageURL}}" loading="lazy" style="border:solid 1px var(--gray40); border-radius:16px; max-width:100%; object-fit:contain;">
-							</div>
-						{{- end -}}
-						<div class="text-sm text-light-gray p-published">{{$stream.PublishDate | humanizeTime}}</div>
-					</div>
+				<div class="flex-grow-1" style="max-width:600px;">
+					{{- if ne "" $stream.Label -}}
+						<div class="h-name bold black">{{$stream.Label}}</div>
+					{{- end -}}
+					<div class="h-summary black">{{$stream.ContentHTML | html }}</div>
+					{{- if ne $stream.ImageURL ""}}
+						<div style="margin-top:var(--rhythm);">
+							<img src="{{$stream.ImageURL}}" loading="lazy" style="border:solid 1px var(--gray40); border-radius:16px; max-width:100%; object-fit:contain;">
+						</div>
+					{{- end -}}
+					<div class="text-sm text-light-gray p-published">{{$stream.PublishDate | humanizeTime}}</div>
 				</div>
 			</div>
+			{{- if $outboxRenderer.UserCan "edit" -}}
+				<div class="text-sm">
+					<button hx-get="/{{$stream.ID}}/edit">Edit</button>
+				</div>
+			{{- end -}}
 		</div>
 	{{- end -}}
 
