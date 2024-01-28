@@ -4,7 +4,8 @@ import (
 	"strings"
 
 	"github.com/benpate/hannibal/streams"
-	"github.com/davecgh/go-spew/spew"
+	"github.com/benpate/hannibal/vocab"
+	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -66,28 +67,38 @@ func (rule RuleSummary) IsDisallowed(document *streams.Document) bool {
 
 func (rule RuleSummary) matchesContent(document *streams.Document) bool {
 
+	// RULE: Only applies to Content rules.  All others are not blocked
 	if rule.Type != RuleTypeContent {
 		return false
 	}
 
+	// RULE: Do not block "Block" activities.  Otherwise, they are un-updatable.
+	if document.Type() == vocab.ActivityTypeBlock {
+		return false
+	}
+
+	// RULE: Try to match NAME against the trigger
 	if strings.Contains(document.Name(), rule.Trigger) {
-		spew.Dump("disallowed becuase of name")
+		log.Trace().Msg("disallowed because of name")
 		return true
 	}
 
+	// RULE: Try to match SUMMARY against the trigger
 	if strings.Contains(document.Summary(), rule.Trigger) {
-		spew.Dump("disallowed becuase of summary")
+		log.Trace().Msg("disallowed because of summary")
 		return true
 	}
 
+	// RULE: Try to match CONTENT against the trigger
 	if strings.Contains(document.Content(), rule.Trigger) {
-		spew.Dump("disallowed becuase of content")
+		log.Trace().Msg("disallowed because of content")
 		return true
 	}
 
+	// RULE: Try to match TAGS against the trigger
 	for tag := document.Tag(); tag.NotNil(); tag = tag.Next() {
 		if tag.Name() == rule.Trigger {
-			spew.Dump("disallowed becuase of tag", tag.Name())
+			log.Trace().Msg("disallowed because of tag" + tag.Name())
 			return true
 		}
 	}
@@ -96,6 +107,7 @@ func (rule RuleSummary) matchesContent(document *streams.Document) bool {
 	// then it is disallowed, too.
 	if object := document.Object(); object.NotNil() {
 		if rule.IsDisallowed(&object) {
+			log.Trace().Msg("... disallowed because of object")
 			return true
 		}
 	}

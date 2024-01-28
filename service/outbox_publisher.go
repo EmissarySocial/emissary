@@ -5,6 +5,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
+	"github.com/benpate/hannibal/outbox"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -81,6 +82,25 @@ func (service Outbox) sendNotifications_ActivityPub(userID primitive.ObjectID, a
 
 	// Use the Actor to send the Activity to all recipients
 	actor.Send(activity)
+}
+
+// sendUndo_ActivityPub sends an ActivityPub UNDO to all Followers
+func (service Outbox) sendUndo_ActivityPub(userID primitive.ObjectID, activity mapof.Any) {
+
+	const location = "service.Outbox.sendUndo_ActivityPub"
+
+	// Load the ActivityPub Actor (with Followers)
+	actor, err := service.userService.ActivityPubActor(userID, true)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, location, "Error loading actor", userID))
+		return
+	}
+
+	undoActivity := outbox.MakeUndo(actor.ActorID(), activity)
+
+	// Use the Actor to send the Activity to all recipients
+	actor.Send(undoActivity)
 }
 
 // TODO: HIGH: Thoroughly re-test WebSub notifications.  They've been rebuilt from scratch.

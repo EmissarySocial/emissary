@@ -14,6 +14,7 @@ import (
 	"github.com/benpate/rosetta/iterator"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
+
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -115,17 +116,41 @@ func (service *Rule) Save(rule *model.Rule, note string) error {
 		rule.IsPublic = false
 	}
 
-	// RULE: Publish changes when the rule is first shared publicly
-	if rule.IsPublic && (rule.PublishDate == 0) {
-		if err := service.publish(rule); err != nil {
-			return derp.Wrap(err, "service.Rule.Save", "Error publishing Rule", rule)
-		}
-	}
+	switch rule.IsPublic {
 
-	// RULE: Unpublish changes when the rule is no longer shared publicly
-	if (!rule.IsPublic) && (rule.PublishDate > 0) {
-		if err := service.unpublish(rule, true); err != nil {
-			return derp.Wrap(err, "service.Rule.Save", "Error unpublishing Rule", rule)
+	case true:
+
+		switch rule.PublishDate {
+
+		// "Publish" Rule when it is first shared publicly
+		case 0:
+
+			rule.PublishDate = time.Now().Unix()
+
+			// Generate JSONLD for this rule
+			if err := service.setJSONLD(rule); err != nil {
+				derp.Report(derp.Wrap(err, "service.Rule.Save", "Error setting JSON-LD", rule))
+			} else {
+				go service.publish(*rule)
+			}
+
+		// "Republish" changes when a public Rule is updated
+		default:
+
+			go service.republish(*rule)
+
+			if err := service.setJSONLD(rule); err != nil {
+				derp.Report(derp.Wrap(err, "service.Rule.Save", "Error setting JSON-LD", rule))
+			}
+		}
+
+	case false:
+
+		// RULE: Unpublish Rules when they are no longer shared publicly
+		if rule.PublishDate > 0 {
+
+			go service.unpublish(*rule)
+			rule.PublishDate = 0
 		}
 	}
 
@@ -149,9 +174,7 @@ func (service *Rule) Delete(rule *model.Rule, note string) error {
 	}
 
 	if rule.IsPublic {
-		if err := service.unpublish(rule, false); err != nil {
-			derp.Report(derp.Wrap(err, "service.Rule.Delete", "Error unpublishing Rule", rule))
-		}
+		go service.unpublish(*rule)
 	}
 
 	return nil
@@ -245,6 +268,17 @@ func (service *Rule) LoadByToken(userID primitive.ObjectID, token string, rule *
 func (service *Rule) LoadByTrigger(userID primitive.ObjectID, ruleType string, trigger string, rule *model.Rule) error {
 
 	criteria := service.byUserID(userID).
+		AndEqual("type", ruleType).
+		AndEqual("trigger", trigger)
+
+	return service.Load(criteria, rule)
+}
+
+// LoadByFollowing retrieves a single Rule that maches the provided User, Following, RuleType, and Trigger
+func (service *Rule) LoadByFollowing(userID primitive.ObjectID, followingID primitive.ObjectID, ruleType string, trigger string, rule *model.Rule) error {
+
+	criteria := exp.Equal("userId", userID).
+		AndEqual("followingId", followingID).
 		AndEqual("type", ruleType).
 		AndEqual("trigger", trigger)
 
@@ -367,46 +401,49 @@ func (service *Rule) hasDuplicate(rule *model.Rule) bool {
 }
 
 // publish marks the Rule as published, and sends "Create" activities to all ActivityPub followers
-func (service *Rule) publish(rule *model.Rule) error {
-
-	// Try to update the rule in the database (directly, without invoking any business rules)
-	rule.PublishDate = time.Now().Unix()
-
-	// Generate JSONLD for this rule
-	if err := service.calcJSONLD(rule); err != nil {
-		return derp.Wrap(err, "service.Rule.Save", "Error setting JSON-LD", rule)
-	}
-
-	if err := service.outboxService.Publish(rule.UserID, rule.JSONLD.GetString("id"), rule.JSONLD); err != nil {
-		return derp.Wrap(err, "service.Rule.publish", "Error publishing Rule", rule)
-	}
-
-	return nil
+func (service *Rule) publish(rule model.Rule) {
+	service.outboxService.sendNotifications_ActivityPub(rule.UserID, rule.JSONLD)
 }
 
 // unpublish marks the Rule as unpublished and sends "Undo" activities to all ActivityPub followers
-func (service *Rule) unpublish(rule *model.Rule, saveAfter bool) error {
+func (service *Rule) unpublish(rule model.Rule) {
+	service.outboxService.sendUndo_ActivityPub(rule.UserID, rule.JSONLD)
+}
 
-	// Try to update the rule in the database (directly, without invoking any business rules)
-	rule.PublishDate = 0
-	rule.JSONLD = mapof.NewAny()
+func (service *Rule) republish(rule model.Rule) {
 
-	if err := service.outboxService.UnPublish(rule.UserID, rule.JSONLD.GetString("id"), rule.JSONLD); err != nil {
-		return derp.Wrap(err, "service.Rule.publish", "Error publishing Rule", rule)
+	service.outboxService.sendUndo_ActivityPub(rule.UserID, rule.JSONLD)
+
+	// Generate JSONLD for this rule
+	if err := service.setJSONLD(&rule); err != nil {
+
+		derp.Report(derp.Wrap(err, "service.Rule.Save", "Error setting JSON-LD", rule))
+		return
 	}
 
+	service.publish(rule)
+}
+
+func (service *Rule) setJSONLD(rule *model.Rule) error {
+
+	result, err := service.JSONLD(rule)
+
+	if err != nil {
+		return derp.Wrap(err, "service.Rule.setJSONLD", "Error calculating JSON-LD", rule)
+	}
+
+	rule.JSONLD = result
 	return nil
 }
 
-func (service *Rule) calcJSONLD(rule *model.Rule) error {
-
+func (service *Rule) JSONLD(rule *model.Rule) (mapof.Any, error) {
 	user := model.NewUser()
 	if err := service.userService.LoadByID(rule.UserID, &user); err != nil {
-		return derp.Wrap(err, "service.Rule.Save", "Error loading User", rule)
+		return nil, derp.Wrap(err, "service.Rule.Save", "Error loading User", rule)
 	}
 
 	// Reset JSON-LD for the rule.  We're going to recalculate EVERYTHING.
-	rule.JSONLD = mapof.Any{
+	result := mapof.Any{
 		vocab.PropertyID:        user.ActivityPubBlockedURL() + "/" + rule.RuleID.Hex(),
 		vocab.PropertyType:      vocab.ActivityTypeBlock,
 		vocab.PropertyActor:     user.ActivityPubURL(),
@@ -417,30 +454,30 @@ func (service *Rule) calcJSONLD(rule *model.Rule) error {
 	switch rule.Type {
 
 	case model.RuleTypeActor:
-		rule.JSONLD[vocab.PropertyObject] = mapof.Any{
+		result[vocab.PropertyObject] = mapof.Any{
 			vocab.PropertyType: vocab.ActorTypePerson,
 			vocab.PropertyID:   rule.Trigger,
 		}
-		rule.JSONLD[vocab.PropertySummary] = user.DisplayName + " blocked the person " + rule.Trigger
+		result[vocab.PropertySummary] = user.DisplayName + " blocked the person " + rule.Trigger
 
 	case model.RuleTypeDomain:
-		rule.JSONLD[vocab.PropertyObject] = mapof.Any{
+		result[vocab.PropertyObject] = mapof.Any{
 			vocab.PropertyType: vocab.ActorTypeService,
 			vocab.PropertyID:   rule.Trigger,
 			vocab.PropertyURL:  rule.Trigger,
 		}
-		rule.JSONLD[vocab.PropertySummary] = user.DisplayName + " blocked the domain " + rule.Trigger
+		result[vocab.PropertySummary] = user.DisplayName + " blocked the domain " + rule.Trigger
 
 	case model.RuleTypeContent:
-		rule.JSONLD[vocab.PropertyObject] = mapof.Any{
+		result[vocab.PropertyObject] = mapof.Any{
 			vocab.PropertyType:    vocab.ObjectTypeNote,
 			vocab.PropertyContent: rule.Trigger,
 		}
-		rule.JSONLD[vocab.PropertySummary] = user.DisplayName + " blocked the content '" + rule.Trigger + "'"
+		result[vocab.PropertySummary] = user.DisplayName + " blocked the content '" + rule.Trigger + "'"
 
 	default:
 		// This should never happen
-		return derp.NewInternalError("service.Rule.calcJSONLD", "Unrecognized Rule Type", rule)
+		return nil, derp.NewInternalError("service.Rule.calcJSONLD", "Unrecognized Rule Type", rule)
 	}
 
 	// TODO: need additional grammar for extra fields
@@ -448,7 +485,7 @@ func (service *Rule) calcJSONLD(rule *model.Rule) error {
 	// - comment field to describe WHY the rule was created
 	// - refs to other people who have ALSO ruleed this person/domain/keyword?
 
-	return nil
+	return result, nil
 }
 
 func (service *Rule) byUserID(userID primitive.ObjectID) exp.Expression {
