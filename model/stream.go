@@ -360,8 +360,13 @@ func (stream Stream) GetJSONLD() mapof.Any {
 		result[vocab.PropertyAttributedTo] = stream.AttributedTo.ProfileURL
 	}
 
+	// NOTE: According to Mastodon ActivityPub guide (https://docs.joinmastodon.org/spec/activitypub/)
+	// putting as:public in the To field means that this mesage is public, and "listed"
+	// putting as:public in the Cc field means that this message is public, but "unlisted"
+	// and leaving as:public out entirely means that this message is "private" -- for whatever that's worth...
+
 	if stream.DefaultAllowAnonymous() {
-		result[vocab.PropertyCC] = []string{vocab.NamespaceActivityStreamsPublic}
+		result[vocab.PropertyTo] = []string{vocab.NamespaceActivityStreamsPublic}
 	}
 
 	return result
