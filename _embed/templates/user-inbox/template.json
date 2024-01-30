@@ -650,7 +650,7 @@
 			"roles":["self"],
 			"steps":[
 				{"step":"set-args", "postTo":"/@me/inbox/reply?url={{.Permalink}}"},
-				{"step":"add-stream", "location":"outbox", "roles":"outbox-reply", "as-embed":true, "with-data":{
+				{"step":"add-stream", "style":"inline", "roles":"outbox-reply", "location":"outbox", "with-data":{
 					"inReplyTo":"{{.Permalink}}"
 				}},
 				{"step":"set-header", "name":"hx-retarget", "value":"#responses"},

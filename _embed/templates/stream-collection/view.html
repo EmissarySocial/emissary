@@ -1,4 +1,4 @@
-<div class="page h-entry" hx-get="/{{.StreamID}}" hx-get="/{{.Token}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:window">
+<div class="page h-entry" hx-get="/{{.StreamID}}" hx-target="this" hx-swap="outerHTML" hx-trigger="sse:{{.StreamID}}, refreshPage from:window">
 
 	<link rel="stylesheet" href="/.templates/collection/stylesheet">
 

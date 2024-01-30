@@ -57,6 +57,15 @@
 				]}
 			]
 		},
+		"delete": {
+			"roles":["self"],
+			"steps": [
+				{"step":"delete", "title":"Delete this Post?", "message":"If you continue, this post will be permanently removed from your profile.  There is NO UNDO."},
+				{"step":"unpublish"},
+				{"step":"forward-to", "url":"/@{{.ParentID}}"}
+			]
+		},
+		
 		"responses-replies":{
 			"steps": [
 				{"step":"set-args", "path":"/{{.StreamID}}"},
@@ -86,21 +95,12 @@
 			"roles":["authenticated"],
 			"steps":[
 				{"step":"set-args", "path":"/{{.StreamID}}", "replies":"{{.StreamID}}/reply", "postTo":"/{{.StreamID}}/reply"},
-				{"step":"add-stream", "location":"outbox", "roles":["outbox-reply"], "as-embed":true, "with-data":{
+				{"step":"add-stream", "style":"inline", "roles":["outbox-reply"], "location":"outbox", "with-data":{
 					"inReplyTo":"{{.Permalink}}"
 				}},
 				{"step":"set-header", "name":"hx-retarget", "value":"#responses"},
 				{"step":"set-header", "name":"hx-reswap", "value":"outerHTML"},
 				{"step":"view-html", "method":"post", "file":"responses-replies"}
-			]
-		},
-
-		"delete": {
-			"roles":["self"],
-			"steps": [
-				{"step":"delete", "title":"Delete this Post?", "message":"If you continue, this post will be permanently removed from your profile.  There is NO UNDO."},
-				{"step":"unpublish"},
-				{"step":"forward-to", "url":"/@{{.ParentID}}"}
 			]
 		}
 	}

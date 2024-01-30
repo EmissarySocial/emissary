@@ -6,14 +6,17 @@
 	"description":"Simple Markdown editor",
 	"icon":"markdown",
 	"actions": {
-		"init": {
+		"create": {
+			"roles":["editor","owner"],
 			"steps": [
 				{"step":"set-data", "values": {
 					"label":"New Article (Markdown)", 
 					"content.format":"MARKDOWN", 
 					"content.raw":"# New Article"
 				}},
-				{"step":"set-state", "state":"unpublished"}
+				{"step":"set-state", "state":"unpublished"},
+				{"step":"save"},
+				{"step":"forward-to", "url":"/{{.StreamID}}/edit"}
 			]
 		},
 		"editor": {

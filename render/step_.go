@@ -41,6 +41,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.DeleteAttachments:
 		return StepDeleteAttachments(s)
 
+	case step.Do:
+		return StepDo(s)
+
 	case step.EditConnection:
 		return StepEditConnection(s)
 

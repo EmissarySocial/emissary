@@ -1,4 +1,4 @@
-<div class="page h-item" hx-push-url="true">
+<div class="page h-item" hx-get="/{{.StreamID}}" hx-trigger="refreshPage from:window" hx-target="this" hx-swap="outerHTML" hx-push-url="true">
 
 	<!-- Alternate links for service discovery -->
 	<link rel="alternate" type="application/rss+xml" href="/{{.StreamID}}/rss"/>
@@ -9,20 +9,20 @@
 	{{- if .UserCan "edit" -}}
 		<div id="menu-bar">
 			<div class="left">
-				{{- if .UserCan "new" -}}
-					<button hx-get="/{{.Token}}/new">Add Item</button>
+				{{- if .UserCan "add-child" -}}
+					<button hx-get="/{{.StreamID}}/add-child">Add Item</button>
 				{{- end -}}
 
-				<button hx-get="/{{.Token}}/edit">Edit Folder</button>
+				<button hx-get="/{{.StreamID}}/edit">Edit Folder</button>
 
 				{{- if .UserCan "sharing" -}}
-					<button hx-get="/{{.Token}}/sharing">Sharing</button>
+					<button hx-get="/{{.StreamID}}/sharing">Sharing</button>
 				{{- end -}}
 			</div>
 
 			<div class="right">
 				{{- if .UserCan "delete" -}}
-					<button hx-get="/{{.Token}}/delete" class="text-red">Delete</button>
+					<button hx-get="/{{.StreamID}}/delete" class="text-red">Delete</button>
 				{{- end -}}
 			</div>
 		</div>
@@ -31,28 +31,6 @@
 	<h1 class="p-name">{{.Label}}</h1>
 	{{- if ne "" .Summary -}}
 		<div class="margin-bottom b-summary">{{.Summary}}</div>
-	{{- end -}}
-
-	{{- if eq (.Data "format") "TABLE" -}}
-		<table class="table">
-			<thead>
-				<tr>
-					<th>Name</th>
-					<th>Summary</th>
-					<th>Date</th>
-				</tr>
-			</thead>
-			<tbody script="install sortContainer">
-				{{- range .Children.ByRank.Slice -}}
-					<tr class="draggable h-entry" hx-get="/{{.Token}}" href="/{{.Token}}" role="link">
-						<input type="hidden" name="keys" value="{{.StreamID}}"/>
-						<td>{{icon "file"}} <span class="h-name">{{.Label}}</span></td>
-						<td class="h-summary">{{.Summary}}</td>
-						<td class="dt-published" datetime="{{.PublishDate | isoDate}}"></td>
-					</tr>
-				{{- end -}}
-			</tbody>
-		</table>
 	{{- end -}}
 
 	{{- if eq (.Data "format") "CARDS" -}}
@@ -77,9 +55,7 @@
 
 		</div>
 
-	{{- end -}}
-
-	{{- if eq (.Data "format") "COLUMNS" -}}
+	{{- else if eq (.Data "format") "COLUMNS" -}}
 
 		<div class="pure-g card-group" script="install sortContainer">
 
@@ -98,6 +74,27 @@
 				</article>
 			{{- end -}}
 		</div>
+
+	{{- else -}}
+		<table class="table">
+			<thead>
+				<tr>
+					<th>Name</th>
+					<th>Summary</th>
+					<th>Date</th>
+				</tr>
+			</thead>
+			<tbody script="install sortContainer">
+				{{- range .Children.ByRank.Slice -}}
+					<tr class="draggable h-entry" hx-get="/{{.Token}}" href="/{{.Token}}" role="link">
+						<input type="hidden" name="keys" value="{{.StreamID}}"/>
+						<td>{{icon "file"}} <span class="h-name">{{.Label}}</span></td>
+						<td class="h-summary">{{.Summary}}</td>
+						<td class="dt-published" datetime="{{.PublishDate | isoDate}}"></td>
+					</tr>
+				{{- end -}}
+			</tbody>
+		</table>
 	{{- end -}}
 
 </div>

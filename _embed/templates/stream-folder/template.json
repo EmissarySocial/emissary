@@ -36,49 +36,61 @@
 		}
 	},
 	"actions": {
-		"init": {
+		"create": {
+			"roles":["editor","owner"],
 			"steps":[
-				{"step":"set-data", "values":{"label":"New Folder"}}
+				{"step":"set-data", "values":{
+					"label":"New Folder",
+					"data.format":"TABLE"
+				}},
+				{"step":"save"},
+				{"step":"forward-to", "url":"/{{.StreamID}}"}
 			]
 		},
 		"view": {
-			"roles": ["viewer"],
+			"roles": ["viewer","editor","owner"],
 			"step":"view-html"
 		},
 		"edit": {
 			"roles": ["editor"],
-			"steps":[{
-				"step":"as-modal",
-				"steps": [
-					{
-						"step":"edit",
-						"form": {
-							"type":"layout-vertical",
-							"label":"Edit Folder",
-							"children": [
-								{"type":"text", "label":"Label", "path":"label"},
-								{"type":"textarea", "label":"Summary", "path":"summary"},
-								{"type":"select", "label":"Format", "path":"data.format", "if":{"my value is not 'FOLDER'": {"show":["data.showImages"]}}},
-								{"type":"select", "label":"Show Images", "path":"data.showImages"}
-							]
-						}
-					}, 
-					{"step":"save", "comment":"Updated Folder"}
-				]
-			}]
+			"steps":[
+				{
+					"step":"as-modal",
+					"background":"view",
+					"steps": [
+						{
+							"step":"edit",
+							"form": {
+								"type":"layout-vertical",
+								"label":"Edit Folder",
+								"children": [
+									{"type":"text", "label":"Label", "path":"label"},
+									{"type":"textarea", "label":"Summary", "path":"summary"},
+									{"type":"select", "label":"Format", "path":"data.format", "if":{"my value is not 'FOLDER'": {"show":["data.showImages"]}}},
+									{"type":"select", "label":"Show Images", "path":"data.showImages"}
+								]
+							}
+						}, 
+						{"step":"save", "comment":"Updated Folder"}
+					]
+				},
+				{"step":"refresh-page"}
+			]
 		},
-		"new": {
+		"delete": {
 			"roles": ["editor"],
-			"steps":[{
-				"step":"add-stream",
-				"location":"child",
-				"title":"Add an Item",
-				"comment":"Created by {{.Author}}",
-				"with-stream": [
-					{"step":"save", "comment":"Created by {{.Author}}"},
-					{"step":"forward-to", "url":"/{{.Token}}/edit"}
-				]
-			}]
+			"steps": [
+				{"step":"delete", "title":"Delete this Folder?", "message":"This will permanently delete this folder and all of its contents"},
+				{"step":"forward-to", "url":"/{{.ParentID}}"}
+			]
+		},
+
+		"add-child": {
+			"roles": ["editor"],
+			"steps":[
+				{"step":"add-stream", "location":"child", "title":"Add Item", "comment":"Created by {{.Author.DisplayName}}"},
+				{"step":"refresh-page"}
+			]
 		},
 		"sort":{
 			"roles":["editor"],
@@ -92,12 +104,6 @@
 					{"step":"save", "message":"Sharing updated by {{.Author}}"}
 				]}
 			]
-		},
-		"delete": {
-			"roles": ["editor"],
-			"steps": [{
-				"step":"delete", "title":"Delete this Folder?", "message":"This will permanently delete this folder and all of its contents"
-			}]
 		},
 		"feed": {"roles": ["viewer"], "step":"view-feed"},
 		"websub": {"roles": ["viewer"], "step":"websub"}

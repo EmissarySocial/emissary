@@ -35,6 +35,15 @@
 		}
 	},
 	"actions": {
+		"create": {
+			"roles":["owner", "editor"],
+			"steps": [
+				{"step":"upload-attachments"},
+				{"step":"set-thumbnail", "path":"imageUrl"},
+				{"step":"save", "comment":"Created by {{.Author.DisplayName}}"},
+				{"step":"add-stream", "location":"child", "template":"comment-group"}
+			]
+		},
 		"view": {
 			"cache": true,
 			"steps":[

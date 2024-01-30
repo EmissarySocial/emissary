@@ -6,14 +6,17 @@
 	"description":"HTML Code editor",
 	"icon":"html",
 	"actions": {
-		"init": {
+		"create": {
+			"roles":["editor","owner"],
 			"steps": [
 				{"step":"set-data", "values": {
 					"label":"New Article (HTML Code)", 
 					"content.format":"html", 
 					"content.raw":"<h1>New Article</h1>"
 				}},
-				{"step":"set-state", "state":"unpublished"}
+				{"step":"set-state", "state":"unpublished"},
+				{"step":"save"},
+				{"step":"forward-to", "url":"/{{.StreamID}}/edit"}
 			]
 		},
 		"editor": {

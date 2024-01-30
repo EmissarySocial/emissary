@@ -23,11 +23,19 @@
 		"viewer":{}
 	},
 	"actions": {
+		"create": {
+			"roles":["owner"],
+			"steps":[
+				{"step":"save"},
+				{"step":"forward-to", "url":"/{{.StreamID}}"}
+			]
+		},
 		"view": {"step": "view-html", "roles":["viewer"]},
 		"edit": {
 			"roles": ["owner"],
 			"steps":[{
 				"step": "as-modal",
+				"background":"view",
 				"steps": [
 					{
 						"step": "edit",
@@ -36,7 +44,7 @@
 							"type": "layout-vertical",
 							"children": [
 								{"type": "text", "label": "Label", "path": "label"},
-								{"type": "textarea", "label": "Summary", "path": "description"},
+								{"type": "textarea", "label": "Summary", "path": "summary"},
 								{"type": "text", "label": "URL", "path": "data.url"}
 							]
 						}
@@ -47,12 +55,14 @@
 		},
 		"delete": {
 			"roles": ["owner"],
-			"steps": [{
-				"step":"delete", "title":"Delete this Item?", "message":"This will permanently delete this item from your website."
-			}]
+			"steps": [
+				{"step":"delete", "title":"Delete this Item?", "message":"This will permanently delete this item from your website."},
+				{"step":"forward-to", "url":"{{.ParentID}}/"}
+			]
 		},
+		
 		"sharing": {
-			"roles": ["editor"],
+			"roles": ["owner"],
 			"steps": [
 				{"step":"as-modal", "steps": [
 					{"step": "set-simple-sharing", "roles": ["viewer"], "title":"Who Can See This Folder?", "message": "Select who can view this folder."},

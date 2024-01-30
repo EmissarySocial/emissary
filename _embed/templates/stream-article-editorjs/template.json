@@ -6,14 +6,17 @@
 	"description":"For regular use. Contains text, images, and more.",
 	"icon":"article",
 	"actions": {
-		"init": {
+		"create": {
+			"roles":["editor","owner"],
 			"steps": [
 				{"step":"set-data", "values": {
 					"label":"New Article", 
 					"content.format":"editorjs", 
 					"content.raw":"{}"
 				}},
-				{"step":"set-state", "state":"unpublished"}
+				{"step":"set-state", "state":"unpublished"},
+				{"step":"save"},
+				{"step":"forward-to", "url":"/{{.StreamID}}/edit"}
 			]
 		},
 		"editor": {

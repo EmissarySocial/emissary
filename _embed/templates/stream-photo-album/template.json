@@ -43,22 +43,37 @@
 		}
 	},
 	"actions": {
-		"init": {
+		"create": {
+			"roles":["editor","owner"],
 			"steps": [
-				{"step":"set-data", "values": {
-					"label":"New Photo Album", 
-					"description":"Enter a brief description here. 🌈"
-				}}
+				{
+					"step":"set-data", "values": 
+					{
+						"label":"New Photo Album", 
+						"summary":"Enter a brief description here. 🌈"
+					}
+				},
+				{"step":"save"},
+				{"step":"forward-to", "url":"/{{.StreamID}}/edit"}
 			]
 		},
 		"view": {
 			"roles": ["owner", "editor", "viewer"],
 			"step":"view-html"},
-		"children": {
-			"roles":["owner", "editor", "viewer"],
-			"step":"view-html"},
 		"edit": {
 			"roles": ["owner", "editor"],
+			"step":"view-html"
+		},
+		"delete": {
+			"roles": ["owner", "editor"],
+			"steps": [
+				{"step":"delete", "title":"Delete this Photo Album?", "message":"This will PERMANENTLY DELETE everyting in this album."},
+				{"step":"forward-to", "url":"/{{.ParentID}}"}
+			]
+		},
+
+		"children": {
+			"roles":["owner", "editor", "viewer"],
 			"step":"view-html"
 		},
 		"properties": {
@@ -82,18 +97,8 @@
 		},
 		"attachments": {
 			"roles": ["owner", "editor"],
-			"steps": [{
-				"step":"add-stream",
-				"location":"child",
-				"template":"photograph",
-				"with-stream": [
-					{"step":"upload-attachments"},
-					{"step":"set-thumbnail", "path":"imageUrl"},
-					{"step":"save", "comment":"Created by {{.Author}}"},
-					{"step":"add-stream", "location":"child", "template":"comment-group", "with-stream":[
-						{"step":"save", "comment":"Created by {{.Author}}"}
-					]}
-				]},
+			"steps": [
+				{"step":"add-stream", "location":"child", "template":"photograph"},
 				{"step":"refresh-page"}
 			]
 		},
@@ -104,13 +109,6 @@
 					{"step":"set-simple-sharing", "roles": ["viewer"], "title":"Who Can See This Album?", "message":"Select who can view and comment on these photos."},
 					{"step":"save", "message":"Sharing updated by {{.Author}}"}
 				]}
-			]
-		},
-		"delete": {
-			"roles": ["owner", "editor"],
-			"steps": [
-				{"step":"delete", "title":"Delete this Photo Album?", "message":"This will PERMANENTLY DELETE everyting in this album."},
-				{"step":"forward-to", "url":"/{{.ParentID}}"}
 			]
 		},
 		"feed": {"roles": ["viewer"], "step":"view-feed"},

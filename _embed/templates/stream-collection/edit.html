@@ -1,72 +1,67 @@
-<div hx-get="/{{.StreamID}}" hx-trigger="refreshPage from:window">
+<div class="page" hx-get="/{{.StreamID}}" hx-trigger="refreshPage from:window" hx-swap="outerHTML" hx-target="this">
 
 	<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-	
-	<div class="page h-entry" hx-get="/{{.Token}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:window">
 
-        <div id="menu-bar">
-            <a href="/{{.Token}}">&larr; View</a>
-            <a href="/{{.Token}}/edit" class="bold">Edit</a>
-            <a href="/{{.Token}}/widgets">Widgets</a>
-            <a hx-get="/{{.Token}}/properties">Properties</a>
-        
-            {{- if .UserCan "sharing" -}}
-                <a hx-get="/{{.Token}}/sharing">Sharing</a>
+    <div id="menu-bar">
+        <a href="/{{.Token}}">&larr; View</a>
+        <a href="/{{.Token}}/edit" class="bold">Edit</a>
+        <a href="/{{.Token}}/widgets">Widgets</a>
+        <a hx-get="/{{.Token}}/properties">Properties</a>
+    
+        {{- if .UserCan "sharing" -}}
+            <a hx-get="/{{.Token}}/sharing">Sharing</a>
+        {{- end -}}
+    
+        <div class="right">
+            {{- if .UserCan "delete" -}}
+                <a hx-get="/{{.Token}}/delete" class="text-red">Delete</a>
             {{- end -}}
-        
-            <div class="right">
-                {{- if .UserCan "delete" -}}
-                    <a hx-get="/{{.Token}}/delete" class="text-red">Delete</a>
-                {{- end -}}
-            </div>
         </div>
-                
-		<h1 class="p-name">{{.Label}}</h1>
-				
-		<br>
+    </div>
+            
+    <h1 class="p-name">{{.Label}}</h1>
+            
+    <br>
 
-		<form class="sortable margin-bottom" hx-post="/{{.StreamID}}/edit" hx-swap="none" hx-push-url="false" hx-trigger="end">
-			{{- range .Children.All.ByRank.Slice -}}
-				<div class="draggable">
-					<input type="hidden" name="keys" value="{{.StreamID}}">
-					<div class="float-right">
-						<a href="/{{.Token}}/edit">{{icon "edit"}} Edit</a>
-					</div>
-					{{icon "grip-vertical"}}
-					&nbsp;
-					<span>{{.Label}}</span>
-				</div>
-			{{- end -}}
-		</form>
+    <form class="sortable margin-bottom" hx-post="/{{.StreamID}}/edit" hx-swap="none" hx-push-url="false" hx-trigger="end">
+        {{- range .Children.All.ByRank.Slice -}}
+            <div class="draggable">
+                <input type="hidden" name="keys" value="{{.StreamID}}">
+                <div class="float-right">
+                    <a href="/{{.Token}}/edit">{{icon "edit"}} Edit</a>
+                </div>
+                {{icon "grip-vertical"}}
+                &nbsp;
+                <span>{{.Label}}</span>
+            </div>
+        {{- end -}}
+    </form>
 
-	</div>
+<script>
+    var sortables = document.querySelectorAll(".sortable");
+    for (var node of sortables) {
+        new Sortable(node, {
+            animation: 150,
+            whisperClass: 'draggable-whisper'
+        });
+    }
+</script>
 
+<style>
+    .draggable {
+        padding:10px 20px;
+        border: solid 1px var(--gray10);
+        background-color: var(--gray00);
+        color: var(--gray80);
+        margin-bottom: -1px;
+        cursor: grab;
+    }
 
-    <script>
-        var sortables = document.querySelectorAll(".sortable");
-        for (var node of sortables) {
-            new Sortable(node, {
-                animation: 150,
-                whisperClass: 'draggable-whisper'
-            });
-        }
-    </script>
-
-    <style>
-        .draggable {
-            padding:10px 20px;
-            border: solid 1px var(--gray10);
-            background-color: var(--gray00);
-            color: var(--gray80);
-            margin-bottom: -1px;
-            cursor: grab;
-        }
-
-        .draggable-whisper {
-            background-color: var(--gray50);
-            color:var(--gray50);
-            cursor: grabbing;
-        }
-    </style>
+    .draggable-whisper {
+        background-color: var(--gray50);
+        color:var(--gray50);
+        cursor: grabbing;
+    }
+</style>
 
 </div>

@@ -15,12 +15,12 @@
 		"index": {"step": "view-html"},
 		"view": {"step": "view-html"},
 		"sort": {"step": "sort"},
-		"add": {"steps": [
-			{"step": "add-stream", "location":"top", "with-stream": [
-				{"step": "save", "comment": "Top level stream added by {{.Author}}"},
+		"add": {
+			"steps": [
+				{"step": "add-stream", "location":"top"},
 				{"step": "refresh-page"}
-			]}
-		]},
+			]
+		},
 		"delete": {
 			"steps": [
 				{"step":"delete", "title": "Delete this Stream?", "message": "All items beneath it will also be removed.  There is NO UNDO."},

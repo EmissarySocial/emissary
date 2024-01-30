@@ -152,6 +152,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 
 	// SERVER-SIDE CONTROL LOGIC
 
+	case "do":
+		return NewDo(stepInfo)
+
 	case "halt":
 		return NewHalt(stepInfo)
 

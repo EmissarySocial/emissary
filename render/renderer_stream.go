@@ -799,6 +799,11 @@ func (w Stream) draftRenderer() (Stream, error) {
 	}, nil
 }
 
+func (w Stream) setState(stateID string) error {
+	w._stream.SetState(stateID)
+	return nil
+}
+
 func (w Stream) debug() {
 	log.Debug().Interface("object", w.object()).Msg("renderer_Stream")
 }

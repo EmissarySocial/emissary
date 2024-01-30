@@ -27,5 +27,5 @@ func (step StepForwardTo) Post(renderer Renderer, _ io.Writer) PipelineBehavior 
 		return Halt().WithError(derp.Wrap(err, location, "Error evaluating 'url'"))
 	}
 
-	return Continue().WithEvent("closeModal", "true").WithEvent("refreshPage", nextPage.String())
+	return Continue().WithEvent("closeModal", "true").WithHeader("Hx-Redirect", nextPage.String())
 }

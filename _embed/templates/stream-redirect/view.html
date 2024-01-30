@@ -1,24 +1,34 @@
-{{- if .UserCan "edit" -}}
+<div class="page">
+	{{- if .UserCan "edit" -}}
 
-	{{if eq "" (.Data "url")}}
-		This page has not been configured yet.
-	{{else}}
-		<a href="{{.Data `url`}}">Click to continue to {{.Data "url"}}...</a>
-	{{end}}
+		<div class="margin-vertical bold">Redirecting...</div>
 
-	Administrators can <a hx-get="/{{.StreamID}}/edit">edit content</a>,
-	<a hx-get="{{.StreamID}}/sharing">sharing</a>,
-	or <a hx-get="/{{.StreamID}}/delete" class="text-red">delete</a> this stream.
+		<div class="margin-vertical">
+			{{if eq "" (.Data "url")}}
+				This page has not been configured yet.
+			{{else}}
+				<a href="{{.Data `url`}}">Click to continue to {{.Data "url"}}...</a>
+			{{end}}
+		</div>
 
-{{- else -}}
+		<div class="margin-vertical">
+			Administrators can
+			<a hx-get="/{{.StreamID}}/edit">edit content</a>,
+			<a hx-get="/{{.StreamID}}/sharing">sharing</a>, or 
+			<a hx-get="/{{.StreamID}}/delete" class="text-red">delete</a>
+			this stream.
+		</div>
 
-	{{- if eq "" (.Data "url") -}}
-		This page has not been configured yet.
 	{{- else -}}
-		Redirecting to {{.Data "url"}}...
-		<script type="text/javascript">
-			window.location = "{{- .Data `url` -}}";
-		</script>
-	{{- end -}}
 
-{{- end -}}
+		{{- if eq "" (.Data "url") -}}
+			This page has not been configured yet.
+		{{- else -}}
+			Redirecting to {{.Data "url"}}...
+			<script type="text/javascript">
+				window.location = "{{- .Data `url` -}}";
+			</script>
+		{{- end -}}
+
+	{{- end -}}
+</div>

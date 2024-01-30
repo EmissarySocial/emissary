@@ -50,10 +50,13 @@
 		}
 	},
 	"actions": {
-		"init": {
+		"create": {
+			"roles":["editor","owner"],
 			"steps": [
 				{"step":"set-data", "values": {"label":"New Article (WYSIWYG)"}},
-				{"step":"set-state", "state":"unpublished"}
+				{"step":"set-state", "state":"unpublished"},
+				{"step":"save", "message":"Created by {{.Author.DisplayName}}"},
+				{"step":"forward-to", "url":"/{{.StreamID}}/edit"}
 			]
 		},
 		"view": {
@@ -66,10 +69,6 @@
 				{"step":"view-html"}
 			]
 		},
-		"heading": {
-			"roles": ["viewer", "editor", "owner"],
-			"step":"view-html"
-		},
 		"edit": {
 			"roles": ["owner", "editor"],
 			"steps": [
@@ -77,6 +76,18 @@
 					{"step":"view-html"}
 				]}
 			]
+		},
+		"delete": {
+			"roles": ["owner"],
+			"steps": [
+				{"step":"delete", "title":"Delete '{{.Label}}'?", "message":"All content and comments will be lost.  There is NO UNDO."},
+				{"step":"unpublish"},
+				{"step":"forward-to", "url":"/{{.ParentID}}"}
+			]
+		},
+		"heading": {
+			"roles": ["viewer", "editor", "owner"],
+			"step":"view-html"
 		},
 		"editor":{
 			"roles": ["owner", "editor"],
@@ -202,18 +213,7 @@
 		"add-child":{
 			"roles": ["owner", "editor"],
 			"steps": [
-				{"step":"add-stream", "location":"child", "title":"+ Add a Stream", "with-stream":[
-					{"step":"save"},
-					{"step":"forward-to", "url":"/{{.StreamID}}/edit"}
-				]}
-			]
-		},
-		"delete": {
-			"roles": ["owner"],
-			"steps": [
-				{"step":"delete", "title":"Delete '{{.Label}}'?", "message":"All content and comments will be lost.  There is NO UNDO."},
-				{"step":"unpublish"},
-				{"step":"forward-to", "url":"/{{.ParentID}}"}
+				{"step":"add-stream", "location":"child", "title":"+ Add a Stream"}
 			]
 		}
 	}

@@ -22,7 +22,7 @@ func renderHTML(factory *domain.Factory, ctx echo.Context, renderer render.Rende
 	status := pipeline.Execute(factory, renderer, &partialPage, actionMethod)
 
 	if status.Error != nil {
-		return derp.Wrap(status.Error, location, "Error executing action pipeline", pipeline)
+		return derp.Wrap(status.Error, location, "Error executing action pipeline")
 	}
 
 	// Copy status values into the Response...

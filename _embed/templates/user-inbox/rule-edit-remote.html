@@ -4,7 +4,12 @@
 
 <h2>{{icon "cloud"}} Imported Rule</h2>
 
-<table class="table margin-bottom">
+<div class="info margin-bottom">
+	This imported rule is owned by its original publisher.<br><br>
+	Take ownership (below) to: 1) save your own changes, and 2) prevent the publisher from updating it in the future.
+</div>
+
+<table class="table margin-bottom-lg">
 	<tr>
 		<td>Publisher</td>
 		<td width="100%" class="flex-row">
@@ -38,10 +43,6 @@
 		<td>Automatic (when the publisher makes changes)</td>
 	</tr>	
 </table>
-
-<div class="info margin-bottom-lg">
-	Taking ownership of this rule will: 1) let you save your own changes, and 2) prevent the publisher from updating it in the future.
-</div>
 
 <div>
 	<button class="primary" hx-get="/@me/inbox/rule-edit?ruleId={{$rule.ID}}">Take Ownership</button>

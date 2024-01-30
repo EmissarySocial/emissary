@@ -16,13 +16,12 @@
             <button hx-get="/admin/navigation/add" class="primary">{{icon "add"}}&nbsp;Add a Top-Level Stream</button>
         </div>
 
-
         <form class="sortable margin-bottom" hx-post="/admin/navigation/sort" hx-swap="none" hx-push-url="false" hx-trigger="end">
             {{- range $navigation -}}
                 <div class="draggable">
                     <input type="hidden" name="keys" value="{{.StreamID}}">
                     <div class="float-right">
-                        <a href="/{{.Token}}/edit">{{icon "edit"}} Edit</a>
+                        <a href="/{{.Token}}/edit" class="text-sm button">Edit</a>
                     </div>
                     {{icon "grip-vertical"}}
                     &nbsp;
