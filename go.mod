@@ -4,27 +4,27 @@ go 1.21
 
 require (
 	github.com/PuerkitoBio/goquery v1.8.1
-	github.com/aws/aws-sdk-go v1.50.1
+	github.com/aws/aws-sdk-go v1.50.6
 	github.com/benpate/data v0.28.4
-	github.com/benpate/data-mock v0.28.8
-	github.com/benpate/data-mongo v0.28.7
+	github.com/benpate/data-mock v0.28.9
+	github.com/benpate/data-mongo v0.28.8
 	github.com/benpate/derp v0.30.0
-	github.com/benpate/digit v0.11.3
+	github.com/benpate/digit v0.11.4
 	github.com/benpate/domain v0.2.0
 	github.com/benpate/exp v0.8.3
 	github.com/benpate/exp-builder v0.7.7
-	github.com/benpate/form v0.17.9
-	github.com/benpate/hannibal v0.9.0
+	github.com/benpate/form v0.17.10
+	github.com/benpate/hannibal v0.9.1
 	github.com/benpate/html v0.16.4
 	github.com/benpate/icon v0.4.0
-	github.com/benpate/mediaserver v0.10.13
+	github.com/benpate/mediaserver v0.10.14
 	github.com/benpate/remote v0.13.1
-	github.com/benpate/rosetta v0.19.2
-	github.com/benpate/sherlock v0.6.6
-	github.com/benpate/steranko v0.16.2
-	github.com/benpate/table v0.6.8
+	github.com/benpate/rosetta v0.19.4
+	github.com/benpate/sherlock v0.6.7
+	github.com/benpate/steranko v0.16.3
+	github.com/benpate/table v0.6.9
 	github.com/benpate/toot v0.2.0
-	github.com/benpate/toot-echo v0.2.1
+	github.com/benpate/toot-echo v0.2.2
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/davidscottmills/goeditorjs v1.0.0
 	github.com/dustin/go-humanize v1.0.1
@@ -32,7 +32,7 @@ require (
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/golang-jwt/jwt/v5 v5.2.0
 	github.com/gorilla/feeds v1.1.2
-	github.com/hairyhenderson/go-fsimpl v0.0.0-20240120202519-c01fca5a6925
+	github.com/hairyhenderson/go-fsimpl v0.0.0-20240125004315-1559faacc7ce
 	github.com/karlseguin/ccache/v3 v3.0.5
 	github.com/kr/jsonfeed v0.1.1
 	github.com/labstack/echo/v4 v4.11.4
@@ -40,12 +40,12 @@ require (
 	github.com/microcosm-cc/bluemonday v1.0.26
 	github.com/mmcdole/gofeed v1.2.1
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
-	github.com/relvacode/iso8601 v1.3.0
+	github.com/relvacode/iso8601 v1.4.0
 	github.com/rs/zerolog v1.31.0
 	github.com/spf13/afero v1.11.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.4
-	github.com/tdewolff/minify/v2 v2.20.14
+	github.com/tdewolff/minify/v2 v2.20.16
 	github.com/timewasted/go-accept-headers v0.0.0-20130320203746-c78f304b1b09
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
 	github.com/xhit/go-simple-mail/v2 v2.16.0
@@ -92,7 +92,7 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
-	github.com/klauspost/compress v1.17.4 // indirect
+	github.com/klauspost/compress v1.17.5 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mmcdole/goxpp v1.1.0 // indirect
@@ -108,7 +108,7 @@ require (
 	github.com/sergi/go-diff v1.3.1 // indirect
 	github.com/skeema/knownhosts v1.2.1 // indirect
 	github.com/stretchr/objx v0.5.1 // indirect
-	github.com/tdewolff/parse/v2 v2.7.9 // indirect
+	github.com/tdewolff/parse/v2 v2.7.11 // indirect
 	github.com/toorop/go-dkim v0.0.0-20240103092955-90b7d1423f92 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
