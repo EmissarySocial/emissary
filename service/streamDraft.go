@@ -53,16 +53,20 @@ func (service *StreamDraft) New() model.Stream {
 // Load either: 1) loads a valid draft from the database, or 2) creates a new draft and returns it instead
 func (service *StreamDraft) Load(criteria exp.Expression, result *model.Stream) error {
 
+	const location = "service.StreamDraft.Load"
+
 	// Try to load a draft using the provided criteria
 	if err := service.collection.Load(criteria, result); err == nil {
 		return nil
+	} else {
+		derp.Report(derp.Wrap(err, location, "Error loading StreamDraft"))
 	}
 
 	// Fall through means we could not load a draft (probably 404 not found)
 
 	// Try to locate the original stream
 	if err := service.streamService.Load(criteria, result); err != nil {
-		return derp.Wrap(err, "service.StreamDraft.Load", "Error loading original stream")
+		return derp.Wrap(err, location, "Error loading original stream")
 	}
 
 	// Reset the journal so that this item can be saved in the new collection.
@@ -70,7 +74,7 @@ func (service *StreamDraft) Load(criteria exp.Expression, result *model.Stream) 
 
 	// Save a draft copy of the original stream
 	if err := service.Save(result, "create draft record"); err != nil {
-		return derp.Wrap(err, "service.StreamDraft.Load", "Error saving draft", criteria)
+		return derp.Wrap(err, location, "Error saving draft", criteria)
 	}
 
 	// Return the original stream as a new draft to use.
