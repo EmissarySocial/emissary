@@ -57,7 +57,7 @@ func DefaultConfig() Config {
 		Certificates:        mapof.String{"adapter": "FILE", "location": "./.emissary/certificates"},
 		ActivityPubCache:    mapof.String{},
 		DebugLevel:          "None",
-		HTTPPort:            80,
+		HTTPPort:            8080,
 		HTTPSPort:           443,
 	}
 }
