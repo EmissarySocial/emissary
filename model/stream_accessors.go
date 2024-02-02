@@ -30,7 +30,6 @@ func StreamSchema() schema.Element {
 			"content":       ContentSchema(),
 			"widgets":       WidgetSchema(),
 			"data":          schema.Object{Wildcard: schema.Any{}},
-			"responses":     ResponseSummarySchema(),
 			"publishDate":   schema.Integer{BitSize: 64},
 			"unpublishDate": schema.Integer{BitSize: 64},
 		},
@@ -121,9 +120,6 @@ func (stream *Stream) GetPointer(name string) (any, bool) {
 
 	case "token":
 		return &stream.Token, true
-
-	case "responses":
-		return &stream.Responses, true
 
 	default:
 		return nil, false
