@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/benpate/rosetta/mapof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -14,6 +15,7 @@ type StreamSummary struct {
 	Label          string             `json:"label,omitempty"        bson:"label,omitempty"`        // Label/Title of the document
 	Summary        string             `json:"summary,omitempty"      bson:"summary,omitempty"`      // Brief summary of the document
 	Content        Content            `json:"content,omitempty"      bson:"content,omitempty"`      // Content of the document
+	Data           mapof.Any          `json:"data,omitempty"         bson:"data,omitempty"`         // Additional data that is specific to the Template used to render this Stream
 	ImageURL       string             `json:"imageUrl,omitempty"     bson:"imageUrl,omitempty"`     // URL of the cover image for this document's image
 	AttributedTo   PersonLink         `json:"attributedTo,omitempty" bson:"attributedTo,omitempty"` // List of people who are attributed to this document
 	InReplyTo      string             `json:"inReplyTo,omitempty"    bson:"inReplyTo,omitempty"`    // If this stream is a reply to another stream or web page, then this links to the original document.
@@ -38,7 +40,7 @@ func NewStreamSummary() StreamSummary {
 }
 
 func StreamSummaryFields() []string {
-	return []string{"_id", "parentId", "token", "templateId", "url", "label", "summary", "content", "imageUrl", "attributedTo", "inReplyTo", "publishDate", "rank"}
+	return []string{"_id", "parentId", "token", "templateId", "url", "label", "summary", "content", "data", "imageUrl", "attributedTo", "inReplyTo", "publishDate", "rank"}
 }
 
 func (summary StreamSummary) Fields() []string {
