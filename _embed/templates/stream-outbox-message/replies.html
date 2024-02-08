@@ -44,25 +44,29 @@
 					<div class="margin-vertical"><img src="{{$object.Image.Href}}" class="width-100-percent"></div>
 				{{- end -}}
 			
-				<div>{{$object.Content | html}}</div>
-				<div class="text-sm text-light-gray">
-					{{- if gt $statistics.Replies 0 -}}
-						<span class="margin-right-sm">
-							{{$statistics.Replies}} {{pluralize $statistics.Replies "Reply" "Replies"}}
-						</span>
-					{{- end -}}
+				<div class="margin-bottom">{{$object.Content | html}}</div>
+				<div class="text-sm">
+					<span class="text-light-gray">
+						{{- if gt $statistics.Replies 0 -}}
+							<span class="margin-right-sm">
+								{{$statistics.Replies}} {{pluralize $statistics.Replies "Reply" "Replies"}}
+							</span>
+						{{- end -}}
 
-					{{- if gt $statistics.Likes 0 -}}
-						<span class="margin-right-sm">
-							{{$statistics.Likes}} {{pluralize $statistics.Likes "Like" "Likes"}}
-						</span>
-					{{- end -}}
+						{{- if gt $statistics.Likes 0 -}}
+							<span class="margin-right-sm">
+								{{$statistics.Likes}} {{pluralize $statistics.Likes "Like" "Likes"}}
+							</span>
+						{{- end -}}
 
-					{{- if gt $statistics.Announces 0 -}}
-						<span class="margin-right-sm">
-							{{$statistics.Announces}} {{pluralize $statistics.Announces "Boost" "Boosts"}}
-						</span>
-					{{- end -}}
+						{{- if gt $statistics.Announces 0 -}}
+							<span class="margin-right-sm">
+								{{$statistics.Announces}} {{pluralize $statistics.Announces "Boost" "Boosts"}}
+							</span>
+						{{- end -}}
+					</span>
+
+					{{ template "tags" $object }}
 				</div>
 			</div>
 		</div>
