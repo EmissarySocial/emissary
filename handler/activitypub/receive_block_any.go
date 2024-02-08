@@ -50,6 +50,7 @@ func ruleFromActivity(following *model.Following, activity streams.Document) mod
 	result := model.NewRule()
 	result.UserID = following.UserID
 	result.FollowingID = following.FollowingID
+	result.FollowingLabel = following.Label
 	result.Type = model.RuleTypeActor // default value
 	result.Action = following.RuleAction
 	result.Label = "Blocked by " + activity.Actor().Name()

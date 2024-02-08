@@ -26,3 +26,6 @@ const RuleOriginRemote = "REMOTE"
 
 // RuleOriginUser signifies a Rule that was created by the user
 const RuleOriginUser = "USER"
+
+// TagRelationRule identifies a tag that was created by an internal Emissary rule.
+const TagRelationRule = "--emissary-rule"
