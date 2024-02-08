@@ -20,7 +20,7 @@
 	{{- $object := $stream.UnwrapActivity -}}
 	{{- $actor := $object.AttributedTo.Load -}}
 
-	<div role="link" class="margin-top-xs">
+	<div role="link" class="margin-top">
 
 		<div class="flex-row">
 			<div class="flex-shrink-0" hx-get="/@me/inbox/message?messageId={{$messageID}}&folderID={{$folderID}}&origin.followingId={{$followingID}}&url={{$object.ID}}">
@@ -76,7 +76,8 @@
 					<div class="margin-vertical"><img src="{{$object.Image.Href}}" class="width-100-percent"></div>
 				{{- end -}}
 			
-				<div>{{$object.Content | html}}</div>
+				<div>{{ template "tags" $stream }}</div>
+				<div class="margin-top">{{$object.Content | html}}</div>
 			</div>
 			
 			<div class="text-sm text-light-gray">

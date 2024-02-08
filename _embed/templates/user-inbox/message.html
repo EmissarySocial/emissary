@@ -131,7 +131,9 @@
 					<div>{{- $stream.Summary -}}</div>
 				{{- end -}}
 
-				<div class="text-sm text-light-gray">{{ $stream.Published | shortDate -}}</div>
+				<div class="margin-bottom text-sm text-light-gray">{{ $stream.Published | shortDate -}}</div>
+
+				{{- template "tags" $stream -}}
 
 			</div>
 

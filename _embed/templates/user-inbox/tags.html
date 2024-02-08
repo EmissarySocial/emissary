@@ -1,0 +1,8 @@
+{{- range $tag := .Tag.SliceOfDocuments -}}
+	<a href="{{$tag.Href}}" class="warning tag">
+		{{- if ne ""  $tag.Name -}}
+			{{$tag.Name}}:
+		{{- end -}}
+		{{$tag.Content}}
+	</a>
+{{- end -}}

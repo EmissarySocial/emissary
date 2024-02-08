@@ -339,7 +339,7 @@
 			"roles":["self"],
 			"steps":[
 				{"step":"with-rule", "steps":[
-					{"step":"as-modal", "steps":[
+					{"step":"as-modal", "background":"rules", "steps":[
 						{"step":"view-html"}
 					]}
 				]}
