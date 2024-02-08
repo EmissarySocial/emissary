@@ -33,6 +33,7 @@ func Object(document streams.Document) map[string]any {
 		vocab.PropertySummary:      actual.Summary(),
 		vocab.PropertyContent:      actual.Content(),
 		vocab.PropertyPublished:    first(actual.Published(), time.Now()),
+		vocab.PropertyTag:          Tags(document.Tag()),
 		"x-original":               document.Value(),
 	}
 
