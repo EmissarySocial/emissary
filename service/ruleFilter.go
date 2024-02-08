@@ -15,15 +15,29 @@ type RuleFilter struct {
 	ruleService *Rule
 	userID      primitive.ObjectID
 	cache       map[string][]model.RuleSummary
+
+	allowLabels bool
+	allowMutes  bool
+	allowBlocks bool
 }
 
 // NewRuleFilter returns a fully initialized RuleFilter that is keyed to a specific User.
-func NewRuleFilter(ruleService *Rule, userID primitive.ObjectID) RuleFilter {
-	return RuleFilter{
+func NewRuleFilter(ruleService *Rule, userID primitive.ObjectID, options ...RuleFilterOption) RuleFilter {
+	result := RuleFilter{
 		ruleService: ruleService,
 		userID:      userID,
 		cache:       make(map[string][]model.RuleSummary),
+
+		allowLabels: true,
+		allowMutes:  true,
+		allowBlocks: true,
 	}
+
+	for _, option := range options {
+		option(&result)
+	}
+
+	return result
 }
 
 // Allow returns TRUE if this document is allowed past all User and Domain filters.
@@ -37,7 +51,8 @@ func (filter *RuleFilter) Allow(document *streams.Document) bool {
 	// If we don't have a cached value for this actor, then load it from the database.
 	if filter.cache[actorID] == nil {
 
-		rules, err := filter.ruleService.QueryByActor(filter.userID, actorID)
+		allowedActions := filter.allowedActions()
+		rules, err := filter.ruleService.QueryByActorAndActions(filter.userID, actorID, allowedActions...)
 
 		if err != nil {
 			derp.Report(derp.Wrap(err, "emissary.RuleFilter.FilterOne", "Error loading rules"))
@@ -49,6 +64,7 @@ func (filter *RuleFilter) Allow(document *streams.Document) bool {
 
 	// Verify each rule
 	for _, rule := range filter.cache[actorID] {
+
 		if rule.IsDisallowed(document) {
 			return false
 		}
@@ -92,6 +108,25 @@ func (filter *RuleFilter) Slice(documents []streams.Document) []streams.Document
 		if filter.Allow(&document) {
 			result = append(result, document)
 		}
+	}
+
+	return result
+}
+
+func (filter *RuleFilter) allowedActions() []string {
+
+	result := make([]string, 0, 3)
+
+	if filter.allowLabels {
+		result = append(result, model.RuleActionLabel)
+	}
+
+	if filter.allowMutes {
+		result = append(result, model.RuleActionMute)
+	}
+
+	if filter.allowBlocks {
+		result = append(result, model.RuleActionBlock)
 	}
 
 	return result

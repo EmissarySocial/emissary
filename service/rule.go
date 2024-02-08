@@ -338,6 +338,22 @@ func (service *Rule) QueryByActor(userID primitive.ObjectID, actorID string) ([]
 	return service.QuerySummary(criteria)
 }
 
+// QueryByActorAndActions retrieves a slice of RuleSummaries that match the provided User, Actor, and potential actions
+func (service *Rule) QueryByActorAndActions(userID primitive.ObjectID, actorID string, actions ...string) ([]model.RuleSummary, error) {
+
+	criteria := exp.And(
+		service.byUserID(userID),
+		exp.Or(
+			exp.Equal("type", model.RuleTypeActor).AndEqual("trigger", actorID),
+			exp.Equal("type", model.RuleTypeDomain).AndEqual("trigger", domain.NameOnly(actorID)),
+			exp.Equal("type", model.RuleTypeContent),
+		),
+		exp.In("action", actions),
+	)
+
+	return service.QuerySummary(criteria)
+}
+
 // QueryDomainBlocks returns all external domains blocked by this Instance/Domain.
 func (service *Rule) QueryDomainBlocks() ([]model.Rule, error) {
 
@@ -362,8 +378,8 @@ func (service *Rule) QueryBlockedActors(userID primitive.ObjectID) ([]model.Rule
  * Filters
  ******************************************/
 
-func (service *Rule) Filter(userID primitive.ObjectID) RuleFilter {
-	return NewRuleFilter(service, userID)
+func (service *Rule) Filter(userID primitive.ObjectID, options ...RuleFilterOption) RuleFilter {
+	return NewRuleFilter(service, userID, options...)
 }
 
 /******************************************
