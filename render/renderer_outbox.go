@@ -256,6 +256,23 @@ func (w Outbox) Outbox() QueryBuilder[model.StreamSummary] {
 	criteria := exp.And(
 		expressionBuilder.Evaluate(w._request.URL.Query()),
 		exp.Equal("parentId", w._user.UserID),
+		exp.Equal("inReplyTo", ""),
+	)
+
+	result := NewQueryBuilder[model.StreamSummary](w._factory.Stream(), criteria)
+
+	return result
+}
+
+func (w Outbox) Replies() QueryBuilder[model.StreamSummary] {
+
+	expressionBuilder := builder.NewBuilder().
+		Int("publishDate")
+
+	criteria := exp.And(
+		expressionBuilder.Evaluate(w._request.URL.Query()),
+		exp.Equal("parentId", w._user.UserID),
+		exp.NotEqual("inReplyTo", ""),
 	)
 
 	result := NewQueryBuilder[model.StreamSummary](w._factory.Stream(), criteria)

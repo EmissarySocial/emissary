@@ -1,12 +1,13 @@
 {{- $page := . -}}
 {{- $responses := .Responses.Top12.ByCreateDate.Reverse.Slice -}}
+{{- $isMyself := .IsMyself -}}
 
 {{- if ne 0 (len $responses) -}}
 	{{- $last := $responses.Last -}}
 
 	{{- range $responses -}}
 		{{- $document := $page.ActivityStream .ObjectID -}}
-		{{- $author := $document.AttributedTo.Load -}}
+		{{- $author := $document.AttributedTo -}}
 		<div class="h-entry">
 			<a href="{{.ObjectID}}" class="u-url"></a>
 			<div class="flex-row clickable" role="link" script="on click go to url '{{.ObjectID}}' in new window">
@@ -47,12 +48,20 @@
 			</div>
 			<div class="flex-row">
 				<div class="flex-shrink-0" style="width:80px;"></div>
-				<div class="text-sm text-gray">
-					<span class="p-content">{{.Content}}</span>
-					<span class="p-name bold">{{.EnglishType}}</span> by
-					<span class="p-author">{{$page.DisplayName}}</span>
-					<time datetime="{{.CreateDateSeconds | isoDate }}" class="dt-published">{{.CreateDateSeconds | humanizeTime}}</time>
-					<a href="{{.URL}}" class="u-url"></a>
+				<div class="text-sm">
+					{{- if $isMyself -}}
+						<span class="margin-right-xs" hx-get="/@me/like-button?url={{$document.ID}}" hx-target="this" hx-trigger="load" hx-swap="innerHTML" hx-push-url="false"></span>
+					{{- end -}}
+					<span class="text-gray">
+						{{- if not $isMyself -}}
+							<span class="p-content">{{.Content}}</span>
+							<span class="p-name bold">{{.EnglishType}}</span>
+						{{- end}}
+						by
+						<span class="p-author">{{$page.DisplayName}}</span>
+						<time datetime="{{.CreateDateSeconds | isoDate }}" class="dt-published">{{.CreateDateSeconds | humanizeTime}}</time>
+						<a href="{{.URL}}" class="u-url"></a>
+					</span>
 				</div>
 			</div>
 		</div>

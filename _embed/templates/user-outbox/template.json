@@ -53,11 +53,10 @@
 			]
 		},
 
-		"liked": {
-			"step":"view-html",
-			"file":"responses"
-		},
-		"liked-list": {"step":"view-html", "file":"responses-list"},
+		"replied": {"step":"view-html"},
+		"replied-list": {"step":"view-html"},
+		"liked": {"step":"view-html"},
+		"liked-list": {"step":"view-html"},
 
 		"sidebar": {"step":"view-html"},
 		"edit": {
@@ -127,45 +126,10 @@
 			]
 		},
 
-		"followers": {"step":"view-html", "file":"inbox-followers"},
-		"followers-list": {"step":"view-html", "file":"inbox-followers-list"},
-		"follower-add": {
-			"roles":["self"],
-			"steps":[
-				{"step":"as-modal", "steps":[
-					{"step":"edit", "form": {
-						"type":"layout-vertical",
-						"label":"Add Follower",
-						"children": [
-							{"type":"text", "path":"url", "label":"URL"}
-						]
-					}},
-					{"step":"view-html", "file":"follower"}
-				]}
-			]
-		},
-
 		"follow": {
 			"steps": [
 				{"step":"as-modal", "background":"profile", "steps":[
 					{"step":"view-html", "file":"follow"}
-				]}
-			]
-		},
-
-		"blocks": {
-			"roles":["self"],
-			"step":"view-html", 
-			"file":"inbox-blocks"
-		},
-
-		"announce":{
-			"roles":["self"],
-			"steps":[
-				{"step":"with-response", "steps":[
-					{"step":"set-data", "from-url":["objectId"], "values":{"type":"Announce"}},
-					{"step":"save"},
-					{"step":"view-html", "file":"announce-button", "method":"post"}
 				]}
 			]
 		},

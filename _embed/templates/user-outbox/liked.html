@@ -22,26 +22,13 @@
 	<div class="app-content">
 
 		<div role="tablist" class="underlined">
-			<span role="tab" aria-selected="true">Posts</span>
+			<a role="tab" hx-get="/@{{.UserID}}" class="turboclick">Posts</a>
 			<a role="tab" hx-get="/@{{.UserID}}/replied" class="turboclick">Replies</a>
-			<a role="tab" hx-get="/@{{.UserID}}/liked" class="turboclick">Likes</a>
+			<span role="tab" aria-selected="true">Likes</span>
 		</div>
 
-		{{if .IsMyself -}}
-			<div class="flex-row margin-bottom">
-				<div class="flex-shrink-0" style="width:80px;">
-					<img src="/@{{.UserID}}/avatar" class="circle-64">
-				</div>
-				<div style="flex-grow:1">
-					<div style="max-width:600px;">
-						{{- .View "outbox-add" -}}
-					</div>
-				</div>
-			</div>
-		{{- end -}}
-
-		<div class="h-feed">
-			{{ .View "outbox-list"}}
+		<div>
+			{{.View "liked-list"}}
 		</div>
 	</div>
 </div>

@@ -1,5 +1,5 @@
 {{- $outboxRenderer := . -}}
-{{- $outbox := .Outbox.Top12.ByPublishDate.Reverse.Slice -}}
+{{- $outbox := .Replies.Top12.ByPublishDate.Reverse.Slice -}}
 
 {{- if ne 0 (len $outbox) -}}
 	{{- $last := $outbox.Last -}}
