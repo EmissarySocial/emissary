@@ -37,7 +37,7 @@ type Stream struct {
 	Data            mapof.Any                    `json:"data,omitempty"         bson:"data,omitempty"`         // Set of data to populate into the Template.  This is validated by the JSON-Schema of the Template.
 	AttributedTo    PersonLink                   `json:"attributedTo,omitempty" bson:"attributedTo,omitempty"` // List of people who are attributed to this document
 	Context         string                       `json:"context,omitempty"      bson:"context,omitempty"`      // Context of this document (usually a URL)
-	InReplyTo       string                       `json:"inReplyTo,omitempty"    bson:"inReplyTo,omitempty"`    // If this stream is a reply to another stream or web page, then this links to the original document.
+	InReplyTo       string                       `json:"inReplyTo,omitempty"    bson:"inReplyTo"`              // If this stream is a reply to another stream or web page, then this links to the original document.
 	PublishDate     int64                        `json:"publishDate"            bson:"publishDate"`            // Unix timestamp of the date/time when this document is/was/will be first available on the domain.
 	UnPublishDate   int64                        `json:"unpublishDate"          bson:"unpublishDate"`          // Unix timestemp of the date/time when this document will no longer be available on the domain.
 	journal.Journal `json:"journal" bson:",inline"`
