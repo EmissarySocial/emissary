@@ -12,11 +12,13 @@ import (
 // RuleSummary is a trimmed down subset of the Rule object, which is used when
 // executing rules on a piece of content
 type RuleSummary struct {
-	RuleID   primitive.ObjectID `bson:"_id"`
-	Type     string             `bson:"type"`
-	Action   string             `bson:"action"`
-	Behavior string             `bson:"behavior"`
-	Trigger  string             `bson:"trigger"`
+	RuleID         primitive.ObjectID `bson:"_id"`
+	Type           string             `bson:"type"`
+	Action         string             `bson:"action"`
+	Behavior       string             `bson:"behavior"`
+	Trigger        string             `bson:"trigger"`
+	Label          string             `bson:"label"`
+	FollowingLabel string             `bson:"followingLabel"`
 }
 
 // RuleSummaryFields returns a list of fields that should be queried from the
@@ -28,6 +30,8 @@ func RuleSummaryFields() []string {
 		"action",
 		"behavior",
 		"trigger",
+		"label",
+		"followingLabel",
 	}
 }
 
@@ -60,12 +64,19 @@ func (rule RuleSummary) IsDisallowed(document *streams.Document) bool {
 	}
 
 	// Label actions add a label to the document, but do not disallow it.
-	// TODO: Add label actions here.
+	document.Append(vocab.PropertyTag, map[string]any{
+		vocab.PropertyHref:    "/@me/inbox/rule-edit?ruleId=" + rule.RuleID.Hex(),
+		vocab.PropertyRel:     TagRelationRule,
+		vocab.PropertyName:    rule.FollowingLabel,
+		vocab.PropertyContent: rule.Label,
+	})
 
 	return false
 }
 
 func (rule RuleSummary) matchesContent(document *streams.Document) bool {
+
+	ruleTriggerLowerCase := strings.ToLower(rule.Trigger)
 
 	// RULE: Only applies to Content rules.  All others are not blocked
 	if rule.Type != RuleTypeContent {
@@ -78,26 +89,26 @@ func (rule RuleSummary) matchesContent(document *streams.Document) bool {
 	}
 
 	// RULE: Try to match NAME against the trigger
-	if strings.Contains(document.Name(), rule.Trigger) {
+	if strings.Contains(strings.ToLower(document.Name()), ruleTriggerLowerCase) {
 		log.Trace().Msg("disallowed because of name")
 		return true
 	}
 
 	// RULE: Try to match SUMMARY against the trigger
-	if strings.Contains(document.Summary(), rule.Trigger) {
+	if strings.Contains(strings.ToLower(document.Summary()), ruleTriggerLowerCase) {
 		log.Trace().Msg("disallowed because of summary")
 		return true
 	}
 
 	// RULE: Try to match CONTENT against the trigger
-	if strings.Contains(document.Content(), rule.Trigger) {
+	if strings.Contains(strings.ToLower(document.Content()), ruleTriggerLowerCase) {
 		log.Trace().Msg("disallowed because of content")
 		return true
 	}
 
 	// RULE: Try to match TAGS against the trigger
 	for tag := document.Tag(); tag.NotNil(); tag = tag.Next() {
-		if tag.Name() == rule.Trigger {
+		if strings.ToLower(tag.Name()) == ruleTriggerLowerCase {
 			log.Trace().Msg("disallowed because of tag" + tag.Name())
 			return true
 		}

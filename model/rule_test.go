@@ -16,6 +16,7 @@ func TestRuleSchema(t *testing.T) {
 		{"ruleId", "123456781234567812345678", nil},
 		{"userId", "876543218765432187654321", nil},
 		{"followingId", "876543218765432187654321", nil},
+		{"followingLabel", "Hoo boy", nil},
 		{"type", "ACTOR", nil},
 		{"action", "LABEL", nil},
 		{"label", "LABEL", nil},

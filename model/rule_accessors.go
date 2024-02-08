@@ -8,16 +8,17 @@ import (
 func RuleSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"ruleId":      schema.String{Required: true, Format: "objectId"},
-			"userId":      schema.String{Required: true, Format: "objectId"},
-			"followingId": schema.String{Format: "objectId"},
-			"type":        schema.String{Required: true, Enum: []string{RuleTypeDomain, RuleTypeActor, RuleTypeContent}},
-			"action":      schema.String{Required: true, Enum: []string{RuleActionBlock, RuleActionMute, RuleActionLabel}},
-			"label":       schema.String{},
-			"trigger":     schema.String{Required: true},
-			"summary":     schema.String{},
-			"isPublic":    schema.Boolean{},
-			"publishDate": schema.Integer{BitSize: 64},
+			"ruleId":         schema.String{Required: true, Format: "objectId"},
+			"userId":         schema.String{Required: true, Format: "objectId"},
+			"followingId":    schema.String{Format: "objectId"},
+			"followingLabel": schema.String{},
+			"type":           schema.String{Required: true, Enum: []string{RuleTypeDomain, RuleTypeActor, RuleTypeContent}},
+			"action":         schema.String{Required: true, Enum: []string{RuleActionBlock, RuleActionMute, RuleActionLabel}},
+			"label":          schema.String{},
+			"trigger":        schema.String{Required: true},
+			"summary":        schema.String{},
+			"isPublic":       schema.Boolean{},
+			"publishDate":    schema.Integer{BitSize: 64},
 		},
 	}
 }
@@ -38,6 +39,9 @@ func (rule *Rule) GetPointer(name string) (any, bool) {
 
 	case "type":
 		return &rule.Type, true
+
+	case "followingLabel":
+		return &rule.FollowingLabel, true
 
 	case "action":
 		return &rule.Action, true
