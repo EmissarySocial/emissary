@@ -206,6 +206,29 @@ picture img {
 	color:var(--blue60);
 }
 
+.tag {
+	display:inline-block;
+	color: var(--white);
+	background-color:var(--gray60);
+	border-radius: calc(var(--rhythm) / 2);
+	text-decoration:none;
+	padding:calc(var(--rhythm) / 4) calc(var(--rhythm) / 2);
+	font-size:calc(var(--rhythm) * 1.75);
+	line-height:calc(var(--rhythm) * 2);
+	margin-top:0;
+	margin-bottom:0;
+	margin-right: calc(var(--rhythm) / 2);
+}
+
+.tag.warning {
+	background-color:var(--red50);
+}
+
+.tag:hover,
+.tag.warning:hover {
+	color:var(--white)!important;
+}
+
 
 /******************************************
  * PLACEHOLDER
