@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
 	"github.com/benpate/domain"
 	"github.com/benpate/exp"
@@ -356,12 +357,20 @@ func (w Common) SubRenderer(object any) (Renderer, error) {
 // returned document uses Emissary's custom ActivityStream service, which uses
 // document values and rules from the server's shared cache.
 func (w Common) ActivityStream(url string) streams.Document {
+
+	// Load the document from the Interwebs
 	result, err := w._factory.ActivityStreams().Load(url)
 
 	if err != nil {
 		derp.Report(err)
 	}
 
+	// Search for rules that might add a LABEL to this document.
+	ruleService := w._factory.Rule()
+	filter := ruleService.Filter(w.AuthenticatedID(), service.WithLabelsOnly())
+	filter.Allow(&result)
+
+	// Return the result
 	return result
 }
 
