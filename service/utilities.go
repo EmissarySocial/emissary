@@ -114,7 +114,13 @@ func loadHTMLTemplateFromFilesystem(filesystem fs.FS, t *template.Template, func
 
 	// Create the minifier
 	m := minify.New()
-	m.AddFunc("text/html", html.Minify)
+	minifier := html.Minifier{
+		KeepEndTags:      true,
+		KeepQuotes:       true,
+		KeepDocumentTags: true,
+	}
+
+	m.AddFunc("text/html", minifier.Minify)
 
 	// List all files in the target directory
 	files, err := fs.ReadDir(filesystem, ".")
