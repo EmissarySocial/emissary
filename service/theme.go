@@ -1,7 +1,6 @@
 package service
 
 import (
-	"encoding/json"
 	"html/template"
 	"io/fs"
 	"sort"
@@ -12,6 +11,7 @@ import (
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/slice"
+	"github.com/hjson/hjson-go/v4"
 	"github.com/rs/zerolog/log"
 )
 
@@ -115,7 +115,7 @@ func (service *Theme) Add(themeID string, filesystem fs.FS, definition []byte) e
 	theme := model.NewTheme(themeID, service.funcMap)
 
 	// Try to parse the JSON in the buffer into a Theme object
-	if err := json.Unmarshal(definition, &theme); err != nil {
+	if err := hjson.Unmarshal(definition, &theme); err != nil {
 		return derp.Wrap(err, location, "Unable to parse theme.json file", filesystem)
 	}
 

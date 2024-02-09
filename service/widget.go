@@ -1,7 +1,6 @@
 package service
 
 import (
-	"encoding/json"
 	"html/template"
 	"io/fs"
 	"sort"
@@ -10,6 +9,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
+	"github.com/hjson/hjson-go/v4"
 	"github.com/rs/zerolog/log"
 )
 
@@ -40,7 +40,7 @@ func (service *Widget) Add(widgetID string, filesystem fs.FS, definition []byte)
 	widget := model.NewWidget(widgetID, service.funcMap)
 
 	// Unmarshal the file into the schema.
-	if err := json.Unmarshal(definition, &widget); err != nil {
+	if err := hjson.Unmarshal(definition, &widget); err != nil {
 		return derp.Wrap(err, location, "Error loading Schema", widgetID)
 	}
 

@@ -7,6 +7,7 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/fsnotify/fsnotify"
+	"github.com/hjson/hjson-go/v4"
 	"github.com/rs/zerolog/log"
 )
 
@@ -117,7 +118,7 @@ func (storage FileStorage) load() (Config, error) {
 		return Config{}, derp.Wrap(err, "config.FileStorage.load", "Error reading configuration", derp.WithNotFound())
 	}
 
-	if err := json.Unmarshal(data, &result); err != nil {
+	if err := hjson.Unmarshal(data, &result); err != nil {
 		return Config{}, derp.NewInternalError("config.FileStorage.load", "Error unmarshaling configuration", derp.WithWrappedValue(err))
 	}
 

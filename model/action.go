@@ -1,12 +1,11 @@
 package model
 
 import (
-	"encoding/json"
-
 	"github.com/EmissarySocial/emissary/model/step"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/hjson/hjson-go/v4"
 )
 
 // Action holds the data for actions that can be performed on any Stream from a particular Template.
@@ -85,7 +84,7 @@ func (action *Action) AllowedRoles(stateID string) []string {
 func (action *Action) UnmarshalJSON(data []byte) error {
 	var asMap map[string]any
 
-	if err := json.Unmarshal(data, &asMap); err != nil {
+	if err := hjson.Unmarshal(data, &asMap); err != nil {
 		return derp.Wrap(err, "model.Action.UnmarshalJSON", "Invalid JSON")
 	}
 

@@ -180,23 +180,33 @@ const DefinitionWidget = "WIDGET"
 func findDefinition(filesystem fs.FS) (string, []byte, error) {
 
 	// If this directory contains a "theme.json" file, then it's a theme.
-	if file, err := fs.ReadFile(filesystem, "theme.json"); err == nil {
+	if file, err := readJSON(filesystem, "theme"); err == nil {
 		return DefinitionTheme, file, nil
 	}
 
 	// If this directory contains a "template.json" file, then it's a template.
-	if file, err := fs.ReadFile(filesystem, "template.json"); err == nil {
+	if file, err := readJSON(filesystem, "template"); err == nil {
 		return DefinitionTemplate, file, nil
 	}
 
 	// If this directory contains a "widget.json" file, then it's a widget.
-	if file, err := fs.ReadFile(filesystem, "widget.json"); err == nil {
+	if file, err := readJSON(filesystem, "widget"); err == nil {
 		return DefinitionWidget, file, nil
 	}
 
 	// TODO: LOW: Add DefinitionEmail to this.  Will need a *.json file in the email directory.
 
 	return "", nil, derp.NewInternalError("service.findDefinition", "No definition file found")
+}
+
+// readJSON looks for JSON and HJSON files.
+func readJSON(filesystem fs.FS, filename string) ([]byte, error) {
+
+	if file, err := fs.ReadFile(filesystem, filename+".hjson"); err == nil {
+		return file, nil
+	}
+
+	return fs.ReadFile(filesystem, filename+".json")
 }
 
 // pointerTo returns a pointer to a given value.  This is just

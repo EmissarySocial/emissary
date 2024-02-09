@@ -1,7 +1,6 @@
 package service
 
 import (
-	"encoding/json"
 	"html/template"
 	"io/fs"
 	"sort"
@@ -15,6 +14,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
+	"github.com/hjson/hjson-go/v4"
 	"github.com/rs/zerolog/log"
 )
 
@@ -220,7 +220,7 @@ func (service *Template) Add(templateID string, filesystem fs.FS, definition []b
 	template := model.NewTemplate(templateID, service.funcMap)
 
 	// Unmarshal the file into the schema.
-	if err := json.Unmarshal(definition, &template); err != nil {
+	if err := hjson.Unmarshal(definition, &template); err != nil {
 		return derp.Wrap(err, location, "Error loading Schema", templateID)
 	}
 
