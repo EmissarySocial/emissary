@@ -26,7 +26,9 @@ htmx.defineExtension("preload", {
 			// Called after a successful AJAX request, to mark the
 			// content as loaded (and prevent additional AJAX calls.)
 			var done = function(html) {
-				node.preloadState = "DONE"
+				if (!node.preloadAlways) {
+					node.preloadState = "DONE"
+				}
 
 				if (attr(node, "preload-images") == "true") {
 					document.createElement("div").innerHTML = html // create and populate a node to load linked resources, too.
@@ -46,9 +48,12 @@ htmx.defineExtension("preload", {
 				// in the future
 				var hxGet = node.getAttribute("hx-get") || node.getAttribute("data-hx-get")
 				if (hxGet) {
-					htmx.ajax("GET", hxGet, {handler:function(elt, info) {
-						done(info.xhr.responseText);
-					}});
+					htmx.ajax("GET", hxGet, {
+						source: node,
+						handler:function(elt, info) {
+							done(info.xhr.responseText);
+						}
+					});
 					return;
 				}
 
@@ -81,13 +86,17 @@ htmx.defineExtension("preload", {
 			
 			// Get event name from config.
 			var on = attr(node, "preload") || "mousedown"
+			const always = on.indexOf("always") !== -1
+			if (always) {
+				on = on.replace('always', '').trim()
+			}
 						
 			// FALL THROUGH to here means we need to add an EventListener
 	
 			// Apply the listener to the node
 			node.addEventListener(on, function(evt) {
 				if (node.preloadState === "PAUSE") { // Only add one event listener
-					node.preloadState = "READY"; // Requred for the `load` function to trigger
+					node.preloadState = "READY"; // Required for the `load` function to trigger
 
 					// Special handling for "mouseover" events.  Wait 100ms before triggering load.
 					if (on === "mouseover") {
@@ -121,6 +130,7 @@ htmx.defineExtension("preload", {
 
 			// Mark the node as ready to run.
 			node.preloadState = "PAUSE";
+			node.preloadAlways = always;
 			htmx.trigger(node, "preload:init") // This event can be used to load content immediately.
 		}
 
