@@ -1,4 +1,5 @@
-{{- $origin := .Origin -}}
+{{- $object := .Object -}}
+{{- $origin := $object.Origin -}}
 {{- $done := false -}}
 
 {{- if eq `ADMIN` $origin -}}
@@ -13,7 +14,7 @@
 {{- end -}}
 
 {{- if not $done -}}
-	{{- $type := .Object.Type -}}
+	{{- $type := $object.Type -}}
 
 	{{- if eq "ACTOR" $type -}}
 		{{- .View "rule-edit-actor" -}}

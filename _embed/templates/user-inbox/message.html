@@ -61,25 +61,25 @@
 				{{- if eq "LIKE" $message.Origin.Type -}}
 					{{icon "inbox"}} 
 					In your inbox because
-				<a class="text-gray" href="/me/inbox/folderId={{$message.FolderID}}&origin.followingId={{$message.Origin.FollowingID.Hex}}">{{$message.Origin.Label}}</a> 
+				<a class="text-gray" href="/@me/inbox?folderId={{$message.FolderID.Hex}}&origin.followingId={{$message.Origin.FollowingID.Hex}}">{{$message.Origin.Label}}</a> 
 					{{icon "thumbs-up"}} LIKED this post.
 
 				{{- else if eq	"DISLIKE" $message.Origin.Type -}}
 					{{icon "inbox"}} 
 					In your inbox because
-					<a class="text-gray" href="/@me/inbox/folderId={{$message.FolderID}}&origin.followingId={{$message.Origin.FollowingID.Hex}}">{{$message.Origin.Label}}</a>
+					<a class="text-gray" href="/@me/inbox?folderId={{$message.FolderID.Hex}}&origin.followingId={{$message.Origin.FollowingID.Hex}}">{{$message.Origin.Label}}</a>
 					{{icon "thumbs-down"}} DISLIKED this post.
 		
 				{{- else if eq "ANNOUNCE" $message.Origin.Type -}}
 					{{icon "inbox"}} 
 					In your inbox because
-					<a class="text-gray" href="/@me/inbox/folderId={{$message.FolderID}}&origin.followingId={{$message.Origin.FollowingID.Hex}}">{{$message.Origin.Label}}</a>
+					<a class="text-gray" href="/@me/inbox?folderId={{$message.FolderID.Hex}}&origin.followingId={{$message.Origin.FollowingID.Hex}}">{{$message.Origin.Label}}</a>
 					{{icon "rocket"}} BOOSTED this post.
 		
 				{{- else if eq "REPLY" $message.Origin.Type -}}
 					{{icon "inbox"}} 
 					In your inbox because
-					<a class="text-gray" href="/@me/inbox/folderId={{$message.FolderID}}&origin.followingId={{$message.Origin.FollowingID.Hex}}">{{$message.Origin.Label}}</a>
+					<a class="text-gray" href="/@me/inbox?folderId={{$message.FolderID.Hex}}&origin.followingId={{$message.Origin.FollowingID.Hex}}">{{$message.Origin.Label}}</a>
 					{{icon "reply"}} REPLIED to this post.
 
 				{{- end -}}
