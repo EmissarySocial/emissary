@@ -10,9 +10,9 @@ import (
 
 // SetHeader represents an action-step that can update the custom data stored in a Stream
 type SetHeader struct {
-	On    string
-	Name  string
-	Value *template.Template
+	Method string
+	Name   string
+	Value  *template.Template
 }
 
 // NewSetHeader returns a fully initialized SetHeader object
@@ -25,9 +25,9 @@ func NewSetHeader(stepInfo mapof.Any) (SetHeader, error) {
 	}
 
 	return SetHeader{
-		On:    first.String(stepInfo.GetString("on"), "both"),
-		Name:  stepInfo.GetString("name"),
-		Value: value,
+		Method: first.String(stepInfo.GetString("method"), "both"),
+		Name:   stepInfo.GetString("name"),
+		Value:  value,
 	}, nil
 }
 

@@ -10,13 +10,13 @@ import (
 
 // StepSetHeader represents an action-step that can update the custom data stored in a Stream
 type StepSetHeader struct {
-	On    string
-	Name  string
-	Value *template.Template
+	Method string
+	Name   string
+	Value  *template.Template
 }
 
 func (step StepSetHeader) Get(renderer Renderer, buffer io.Writer) PipelineBehavior {
-	if step.On == "post" {
+	if step.Method == "post" {
 		return nil
 	}
 	return step.setHeader(renderer)
@@ -24,7 +24,7 @@ func (step StepSetHeader) Get(renderer Renderer, buffer io.Writer) PipelineBehav
 
 // Post updates the stream with approved data from the request body.
 func (step StepSetHeader) Post(renderer Renderer, _ io.Writer) PipelineBehavior {
-	if step.On == "get" {
+	if step.Method == "get" {
 		return nil
 	}
 	return step.setHeader(renderer)
