@@ -3,15 +3,7 @@
 {{- $rules := $rules.Slice -}}
 
 {{- range $rules -}}
-	{{- $origin := .Origin -}}
-	<div role="button" class="flex-row width-100-percent turboclick origin-{{$origin}}" hx-get="
-		{{- if eq `REMOTE` $origin -}}
-			/@me/inbox/rule-edit-remote?ruleId={{.RuleID.Hex}}
-		{{- else if eq `ADMIN` $origin -}}
-			/@me/inbox/rule-edit-admin?ruleId={{.RuleID.Hex}}
-		{{- else -}}
-			/@me/inbox/rule-edit?ruleId={{.RuleID.Hex}}
-		{{- end -}}">
+	<div role="button" class="flex-row width-100-percent turboclick origin-{{.Origin}}" hx-get="/@me/inbox/rule-edit?ruleId={{.RuleID.Hex}}">
 
 		<div class="width-2-6 flex-row" nowrap>
 			<div class="text-xl margin-none flex-align-start">

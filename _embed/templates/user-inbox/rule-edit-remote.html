@@ -31,8 +31,8 @@
 		</td>
 	</tr>
 	<tr>
-		<td>Action</td>
-		<td>{{$rule.Action}}</td>
+		<td>Label</td>
+		<td>{{$rule.Label}}</td>
 	</tr>
 	<tr>
 		<td>Sharing</td>
@@ -45,6 +45,6 @@
 </table>
 
 <div>
-	<button class="primary" hx-get="/@me/inbox/rule-edit?ruleId={{$rule.ID}}">Take Ownership</button>
+	<button class="primary" hx-get="/@me/inbox/rule-edit?ruleId={{$rule.ID}}&edit=true">Take Ownership</button>
 	<button script="on click send closeModal">Cancel</button>
 </div>
