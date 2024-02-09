@@ -461,9 +461,20 @@ func (service *Rule) JSONLD(rule *model.Rule) (mapof.Any, error) {
 	// Reset JSON-LD for the rule.  We're going to recalculate EVERYTHING.
 	result := mapof.Any{
 		vocab.PropertyID:        user.ActivityPubBlockedURL() + "/" + rule.RuleID.Hex(),
-		vocab.PropertyType:      vocab.ActivityTypeBlock,
 		vocab.PropertyActor:     user.ActivityPubURL(),
 		vocab.PropertyPublished: rule.PublishDateRCF3339(),
+	}
+
+	switch rule.Action {
+
+	case model.RuleActionBlock:
+		result[vocab.PropertyType] = vocab.ActivityTypeBlock
+
+	case model.RuleActionMute:
+		result[vocab.PropertyType] = vocab.ActivityTypeIgnore
+
+	case model.RuleActionLabel:
+		result[vocab.PropertyType] = vocab.ActivityTypeFlag
 	}
 
 	// Create the summary based on the type of Rule
