@@ -67,6 +67,11 @@ func (service *ActivityStreams) Load(url string, options ...any) (streams.Docume
 	return result, nil
 }
 
+// Put adds a single document to the ActivityStream cache
+func (service *ActivityStreams) Put(document streams.Document) {
+	service.cacheClient.Put(document)
+}
+
 // Delete removes a single document from the database by its URL
 func (service *ActivityStreams) Delete(url string) error {
 
