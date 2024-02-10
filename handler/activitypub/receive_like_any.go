@@ -25,7 +25,7 @@ func receiveResponse(factory *domain.Factory, user *model.User, activity streams
 	}
 
 	// Add the Like/Dislike into the ActivityStream cache
-	activity.LoadLink()
+	factory.ActivityStreams().Put(activity)
 
 	// Add the Liked/Disliked document into the ActivityStream cache
 	document := activity.UnwrapActivity()
