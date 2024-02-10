@@ -3,7 +3,6 @@ package model
 import (
 	"github.com/benpate/data/journal"
 	"github.com/benpate/hannibal/vocab"
-	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/toot/object"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -66,35 +65,14 @@ func (response Response) ActivityPubType() string {
 
 	switch response.Type {
 
-	case ResponseTypeLike:
-		return vocab.ActivityTypeLike
-
 	case ResponseTypeDislike:
 		return vocab.ActivityTypeDislike
 
+	case ResponseTypeLike:
+		return vocab.ActivityTypeAnnounce
+
 	default:
 		return vocab.ActivityTypeAnnounce
-	}
-}
-
-func (response Response) EnglishType() string {
-
-	switch response.Type {
-
-	case ResponseTypeAnnounce:
-		return "Shared"
-
-	case ResponseTypeLike:
-		return "Liked"
-
-	case ResponseTypeDislike:
-		return "Disliked"
-
-	case ResponseTypeMention:
-		return "Mentioned"
-
-	default:
-		return "Responded to"
 	}
 }
 
@@ -105,34 +83,6 @@ func (response Response) IsEqual(other Response) bool {
 		(response.ObjectID == other.ObjectID) &&
 		(response.Type == other.Type) &&
 		(response.Content == other.Content)
-}
-
-// CalcContent sets the content of the response to a default value, if it is not already set.
-func (response *Response) CalcContent() {
-
-	// RULE: If the type is empty, then this is a "DELETE", so make the content is empty too.
-	if response.Type == "" {
-		response.Content = ""
-		return
-	}
-
-	// Otherwise, set default content based on the response type.
-	switch response.Type {
-
-	case ResponseTypeMention:
-		response.Content = "@"
-
-	case ResponseTypeDislike:
-		response.Content = first.String(response.Content, "👎")
-
-	case ResponseTypeLike:
-		response.Content = first.String(response.Content, "👍")
-
-	default:
-		response.Content = first.String(response.Content, "👍")
-	}
-
-	// Nothin to return.
 }
 
 // CreateDateSeconds returns the CreateDate in Unix Epoch seconds (instead of milliseconds)
