@@ -212,9 +212,6 @@ func (service *Response) SetResponse(response *model.Response) error {
 
 	const location = "service.Response.SetResponse"
 
-	// Normalize response content
-	response.CalcContent()
-
 	// Try to load the User who created this Response.  Only authenticated Users can create Response records.
 	user := model.NewUser()
 
