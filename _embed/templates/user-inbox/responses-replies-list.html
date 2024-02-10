@@ -76,7 +76,6 @@
 					<div class="margin-vertical"><img src="{{$object.Image.Href}}" class="width-100-percent"></div>
 				{{- end -}}
 			
-				<div>{{ template "tags" $stream }}</div>
 				<div class="margin-top">{{$object.Content | html}}</div>
 			</div>
 			
@@ -104,6 +103,7 @@
 				{{ end }}
 
 			</div>
+			{{ template "tags" $stream }}
 		</div>
 	</div>
 
