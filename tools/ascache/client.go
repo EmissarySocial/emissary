@@ -177,6 +177,10 @@ func (client *Client) revalidate(url string, options ...any) {
 	}
 }
 
+func (client *Client) Put(document streams.Document) {
+	client.save(document.ID(), document)
+}
+
 // save adds/updates a document in the cache
 func (client *Client) save(url string, document streams.Document) {
 
