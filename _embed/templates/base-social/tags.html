@@ -1,0 +1,9 @@
+{{- range $tag := .Tag.SliceOfDocuments -}}
+	<a href="{{$tag.Href}}" class="{{if eq `--emissary-rule` $tag.Type}}warning {{end}}tag">
+		{{- if ne "" $tag.Name -}}
+			{{$tag.Name}}
+			{{if ne "" $tag.Content}}:{{end}}
+		{{- end -}}
+		{{$tag.Content}}
+	</a>
+{{- end -}}

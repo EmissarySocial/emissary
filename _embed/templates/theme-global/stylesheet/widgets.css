@@ -206,29 +206,29 @@ picture img {
 	color:var(--blue60);
 }
 
-.tag {
-	display:inline-block;
-	color: var(--white);
-	background-color:var(--gray60);
+.tag,
+.tag:hover {
+	background-color: var(--white);
+	border:solid 1px var(--gray60);
 	border-radius: calc(var(--rhythm) / 2);
-	text-decoration:none;
-	padding:calc(var(--rhythm) / 4) calc(var(--rhythm) / 2);
-	font-size:calc(var(--rhythm) * 1.75);
+	color:var(--gray60)!important;
+	display:inline-block;
+	font-size:calc(var(--rhythm) * 1.5);
 	line-height:calc(var(--rhythm) * 2);
 	margin-top:0;
 	margin-bottom:0;
 	margin-right: calc(var(--rhythm) / 2);
+	padding:calc(var(--rhythm) / 2) var(--rhythm);
+	text-decoration:none;
 }
 
-.tag.warning {
-	background-color:var(--red50);
-}
 
-.tag:hover,
+.tag.warning,
 .tag.warning:hover {
+	background-color:var(--red50);
+	border:none;
 	color:var(--white)!important;
 }
-
 
 /******************************************
  * PLACEHOLDER
