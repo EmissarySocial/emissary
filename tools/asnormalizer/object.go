@@ -1,6 +1,7 @@
 package asnormalizer
 
 import (
+	"strings"
 	"time"
 
 	"github.com/benpate/hannibal/streams"
@@ -37,25 +38,20 @@ func Object(document streams.Document) map[string]any {
 		"x-original":               document.Value(),
 	}
 
-	if image := actual.Image(); image.NotNil() {
-		result[vocab.PropertyImage] = Image(image)
+	if attachments := actual.Attachment(); attachments.NotNil() {
 
-		/*
-			TODO: Mastodon images are presented as attachments.  Go figure.
-			} else {
-				for attachment := actual.Attachment(); attachment.NotNil(); attachment = attachment.Tail() {
+		for attachment := attachments; attachment.NotNil(); attachment = attachment.Tail() {
+			if strings.HasPrefix(attachment.MediaType(), "image") {
+				result[vocab.PropertyImage] = AttachmentAsImage(attachment)
+				break
+			}
+		}
 
-					if strings.HasPrefix(attachment.MediaType(), "image/") {
-						result[vocab.PropertyImage] = Image(attachment)
-						break
-					}
-				}
-		*/
+		result[vocab.PropertyAttachment] = Attachment(attachments)
 	}
 
-	// Allow attachments through the filter.
-	if attachments := actual.Attachment(); attachments.NotNil() {
-		result[vocab.PropertyAttachment] = Attachment(attachments)
+	if image := actual.Image(); image.NotNil() {
+		result[vocab.PropertyImage] = Image(image)
 	}
 
 	return result
