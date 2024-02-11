@@ -35,8 +35,6 @@
 
 			{{- if eq "SOCIAL" $folder.Layout -}}
 				{{- template "list-social" (array $inboxRenderer $message) -}}
-			{{- else if eq "CHAT" $folder.Layout -}}
-				{{- template "list-chat" (array $inboxRenderer $message) -}}
 			{{- else if eq "NEWSPAPER" $folder.Layout -}}
 				{{- template "list-newspaper" (array $inboxRenderer $message) -}}
 			{{- else if eq "MAGAZINE" $folder.Layout -}}

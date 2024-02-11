@@ -1,6 +1,7 @@
 {{- $inboxRenderer := index . 0 -}}
 {{- $message := index . 1 -}}
 {{- $stream := $inboxRenderer.ActivityStream $message.URL -}}
+{{- $image := $stream.ImageOrIcon -}}
 {{- $attributedTo := $stream.AttributedTo -}}
 
 {{- if eq "NEW-REPLIES" $message.StateID -}}
@@ -56,9 +57,9 @@
 			{{- end -}}
 		</div>
 
-		{{- if $stream.Image.NotNil -}}
+		{{- if $image.NotNil -}}
 			<div class="margin-top" style="position:relative;">
-				<img src="{{$stream.Image.Href}}" loading="lazy" class="width-1-1" style="border: solid 1px var(--gray40);"/>
+				<img src="{{$image.Href}}" loading="lazy" class="width-100-percent" style="border: solid 1px var(--gray40); {{if $image.HasDimensions}}aspect-ratio:{{$image.AspectRatio}}{{end}}"/>
 			</div>
 		{{- end -}}
 

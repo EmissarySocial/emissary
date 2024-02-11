@@ -1,6 +1,7 @@
 {{- $inboxRenderer := index . 0 -}}
 {{- $message := index . 1 -}}
 {{- $stream := $inboxRenderer.ActivityStream $message.URL -}}
+{{- $image := $stream.ImageOrIcon -}}
 
 <div class="margin-bottom">
 
@@ -16,9 +17,9 @@
 
 	<h2 class="black ellipsis margin-top-none">{{$stream.Name}}</h2>
 
-	{{- if $stream.HasImage -}}
+	{{- if $image.NotNil -}}
 		<div class="margin-bottom" style="width:100%; max-width:800px;">
-			<img src="{{$stream.Image.Href}}" loading="lazy" style="width:100%; border:solid 1px var(--gray20); {{if $stream.Image.HasDimensions}}aspect-ratio:{{$stream.Image.AspectRatio}}{{end}}"/>
+			<img src="{{$image.Href}}" loading="lazy" class="width-100-percent" style="border:solid 1px var(--gray20); {{if $image.HasDimensions}}aspect-ratio:{{$image.AspectRatio}}{{end}}"/>
 		</div>
 	{{- end -}}
 
