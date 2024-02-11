@@ -186,6 +186,18 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 			return tinyDate.FormatDiff(valueTime, time.Now())
 		},
 
+		"hasImage": func(value string) bool {
+			if strings.Contains(value, "<img") {
+				return true
+			}
+
+			if strings.Contains(value, "<picture") {
+				return true
+			}
+
+			return false
+		},
+
 		"shortDate": func(value any) string {
 			valueTime := convert.Time(value)
 			emptyTime := time.Time{}

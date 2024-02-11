@@ -118,11 +118,13 @@
 
 			<div class="content">
 
-				{{- $image := $stream.ImageOrIcon -}}
-				{{- if $image.NotNil -}}
-					<div class="margin-bottom">
-						<a href="{{$stream.URLOrID}}" target="_blank"><img src="{{$image.URL}}" class="width-100-percent" style="border:solid 1px var(--gray20); {{- if $image.HasDimensions}} aspect-ratio:{{$image.AspectRatio}};{{end}}"/></a>
-					</div>
+				{{- if not (hasImage $stream.Content) -}}
+					{{- $image := $stream.ImageOrIcon -}}
+					{{- if $image.NotNil -}}
+						<div class="margin-bottom">
+							<a href="{{$stream.URLOrID}}" target="_blank"><img src="{{$image.URL}}" class="width-100-percent" style="border:solid 1px var(--gray20); {{- if $image.HasDimensions}} aspect-ratio:{{$image.AspectRatio}};{{end}}"/></a>
+						</div>
+					{{- end -}}
 				{{- end -}}
 
 				{{- if $stream.HasContent -}}
