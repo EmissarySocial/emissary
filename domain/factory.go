@@ -178,6 +178,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		factory.attachmentService.Refresh(
 			factory.collection(CollectionAttachment),
 			factory.MediaServer(),
+			factory.Host(),
 		)
 
 		// Populate the Rule Service

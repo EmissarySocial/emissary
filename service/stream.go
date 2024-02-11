@@ -592,7 +592,7 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream) error {
 		return derp.Wrap(err, "service.Stream.Publish", "Error saving stream", stream)
 	}
 
-	object := stream.GetJSONLD()
+	object := service.JSONLD(stream)
 
 	// Create the Activity to send to the User's Outbox
 	activity := mapof.Any{
@@ -641,7 +641,7 @@ func (service *Stream) UnPublish(user *model.User, stream *model.Stream) error {
 		vocab.AtContext:      vocab.ContextTypeActivityStreams,
 		vocab.PropertyType:   vocab.ActivityTypeDelete,
 		vocab.PropertyActor:  user.ActivityPubURL(),
-		vocab.PropertyObject: stream.GetJSONLD(),
+		vocab.PropertyObject: service.JSONLD(stream),
 	}
 
 	// Remove the record from the inbox
@@ -812,6 +812,80 @@ func (service *Stream) CalcContext(stream *model.Stream) {
 
 func (service *Stream) LoadWebFinger(token string) (digit.Resource, error) {
 	return digit.Resource{}, derp.NewBadRequestError("service.Stream.LoadWebFinger", "Not implemented")
+}
+
+/******************************************
+ * ActivityPub API
+ ******************************************/
+
+// JSONLDGetter returns a new JSONLDGetter for the provided stream
+func (service *Stream) JSONLDGetter(stream *model.Stream) model.JSONLDGetter {
+	return NewStreamJSONLDGetter(service, stream)
+}
+
+// GetJSONLD returns a map document that conforms to the ActivityStreams 2.0 spec.
+// This map will still need to be marshalled into JSON
+func (service *Stream) JSONLD(stream *model.Stream) mapof.Any {
+	result := mapof.Any{
+		vocab.PropertyID:        stream.ActivityPubURL(),
+		vocab.PropertyType:      stream.SocialRole,
+		vocab.PropertyURL:       stream.URL,
+		vocab.PropertyPublished: time.Unix(stream.PublishDate, 0).UTC().Format(time.RFC3339),
+		// "likes":     stream.ActivityPubLikesURL(),
+		// "dislikes":  stream.ActivityPubDislikesURL(),
+		// "shares":    stream.ActivityPubSharesURL(),
+	}
+
+	if stream.Label != "" {
+		result[vocab.PropertyName] = stream.Label
+	}
+
+	if stream.Summary != "" {
+		result[vocab.PropertySummary] = stream.Summary
+	}
+
+	if stream.Content.HTML != "" {
+		result[vocab.PropertyContent] = stream.Content.HTML
+	}
+
+	if stream.ImageURL != "" {
+		result[vocab.PropertyImage] = stream.ImageURL
+	}
+
+	if stream.Context != "" {
+		result[vocab.PropertyContext] = stream.Context
+	}
+
+	if stream.InReplyTo != "" {
+		result[vocab.PropertyInReplyTo] = stream.InReplyTo
+	}
+
+	if stream.AttributedTo.NotEmpty() {
+		result[vocab.PropertyActor] = stream.AttributedTo.ProfileURL
+		result[vocab.PropertyAttributedTo] = stream.AttributedTo.ProfileURL
+	}
+
+	// NOTE: According to Mastodon ActivityPub guide (https://docs.joinmastodon.org/spec/activitypub/)
+	// putting as:public in the To field means that this mesage is public, and "listed"
+	// putting as:public in the Cc field means that this message is public, but "unlisted"
+	// and leaving as:public out entirely means that this message is "private" -- for whatever that's worth...
+
+	if stream.DefaultAllowAnonymous() {
+		result[vocab.PropertyTo] = []string{vocab.NamespaceActivityStreamsPublic}
+	}
+
+	// Attachments
+	if attachments, err := service.attachmentService.QueryByObjectID(model.AttachmentTypeStream, stream.StreamID); err == nil {
+
+		attachmentJSON := make([]mapof.Any, 0, len(attachments))
+		for _, attachment := range attachments {
+			attachmentJSON = append(attachmentJSON, attachment.JSONLD())
+		}
+
+		result[vocab.PropertyAttachment] = attachmentJSON
+	}
+
+	return result
 }
 
 /******************************************

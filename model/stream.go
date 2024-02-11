@@ -317,60 +317,6 @@ func (stream Stream) ActivityPubResponses(responseType string) string {
 	return stream.ActivityPubSharesURL()
 }
 
-// GetJSONLD returns a map document that conforms to the ActivityStreams 2.0 spec.
-// This map will still need to be marshalled into JSON
-func (stream Stream) GetJSONLD() mapof.Any {
-	result := mapof.Any{
-		vocab.PropertyID:        stream.ActivityPubURL(),
-		vocab.PropertyType:      stream.SocialRole,
-		vocab.PropertyURL:       stream.URL,
-		vocab.PropertyPublished: time.Unix(stream.PublishDate, 0).UTC().Format(time.RFC3339),
-		// "likes":     stream.ActivityPubLikesURL(),
-		// "dislikes":  stream.ActivityPubDislikesURL(),
-		// "shares":    stream.ActivityPubSharesURL(),
-	}
-
-	if stream.Label != "" {
-		result[vocab.PropertyName] = stream.Label
-	}
-
-	if stream.Summary != "" {
-		result[vocab.PropertySummary] = stream.Summary
-	}
-
-	if stream.Content.HTML != "" {
-		result[vocab.PropertyContent] = stream.Content.HTML
-	}
-
-	if stream.ImageURL != "" {
-		result[vocab.PropertyImage] = stream.ImageURL
-	}
-
-	if stream.Context != "" {
-		result[vocab.PropertyContext] = stream.Context
-	}
-
-	if stream.InReplyTo != "" {
-		result[vocab.PropertyInReplyTo] = stream.InReplyTo
-	}
-
-	if stream.AttributedTo.NotEmpty() {
-		result[vocab.PropertyActor] = stream.AttributedTo.ProfileURL
-		result[vocab.PropertyAttributedTo] = stream.AttributedTo.ProfileURL
-	}
-
-	// NOTE: According to Mastodon ActivityPub guide (https://docs.joinmastodon.org/spec/activitypub/)
-	// putting as:public in the To field means that this mesage is public, and "listed"
-	// putting as:public in the Cc field means that this message is public, but "unlisted"
-	// and leaving as:public out entirely means that this message is "private" -- for whatever that's worth...
-
-	if stream.DefaultAllowAnonymous() {
-		result[vocab.PropertyTo] = []string{vocab.NamespaceActivityStreamsPublic}
-	}
-
-	return result
-}
-
 /******************************************
  * Publishing MetaData
  ******************************************/

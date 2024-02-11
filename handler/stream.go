@@ -52,7 +52,7 @@ func renderStream(factoryManager *server.Factory, actionMethod render.ActionMeth
 		// Try to find the action requested by the user.  This also enforces user permissions...
 		actionID := getActionID(ctx)
 
-		if ok, err := handleJSONLD(ctx, &stream); ok {
+		if ok, err := handleJSONLD(ctx, streamService.JSONLDGetter(&stream)); ok {
 			return derp.Wrap(err, location, "Error rendering JSON-LD")
 		}
 

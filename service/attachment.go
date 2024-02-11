@@ -15,6 +15,7 @@ import (
 type Attachment struct {
 	collection  data.Collection
 	mediaServer mediaserver.MediaServer
+	host        string
 }
 
 // NewAttachment returns a fully populated Attachment service
@@ -27,9 +28,10 @@ func NewAttachment() Attachment {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Attachment) Refresh(collection data.Collection, mediaServer mediaserver.MediaServer) {
+func (service *Attachment) Refresh(collection data.Collection, mediaServer mediaserver.MediaServer, host string) {
 	service.collection = collection
 	service.mediaServer = mediaServer
+	service.host = host
 }
 
 // Close stops any background processes controlled by this service
@@ -80,6 +82,10 @@ func (service *Attachment) Save(attachment *model.Attachment, note string) error
 		return derp.Wrap(err, "service.Attachment.Save", "Error cleaning Attachment", attachment)
 	}
 
+	// Calculate the URL
+	attachment.SetURL(service.host)
+
+	// Save the record to the database
 	if err := service.collection.Save(attachment, note); err != nil {
 		return derp.Wrap(err, "service.Attachment", "Error saving Attachment", attachment, note)
 	}

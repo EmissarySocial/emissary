@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/benpate/data/journal"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/list"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -16,6 +17,7 @@ type Attachment struct {
 	ObjectID     primitive.ObjectID `bson:"objectId"`   // ID of the Stream that owns this Attachment
 	ObjectType   string             `bson:"objectType"` // Type of object that owns this Attachment
 	Original     string             `bson:"original"`   // Original filename uploaded by user
+	URL          string             `bson:"url"`        // URL where the file is stored
 	Rank         int                `bson:"rank"`       // The sort order to display the attachments in.
 	Height       int                `bson:"height"`     // Image height (if applicable)
 	Width        int                `bson:"width"`      // Image width (if applicable)
@@ -45,16 +47,17 @@ func (attachment *Attachment) ID() string {
  * Other Methods
  ******************************************/
 
-func (attachment *Attachment) URL() string {
-	switch attachment.ObjectType {
-	case AttachmentTypeStream:
-		return "/" + attachment.ObjectID.Hex() + "/attachments/" + attachment.AttachmentID.Hex()
+func (attachment *Attachment) CalcURL(host string) string {
 
-	case AttachmentTypeUser:
-		return "/@" + attachment.ObjectID.Hex() + "/pub/avatar/" + attachment.AttachmentID.Hex()
+	if attachment.ObjectType == AttachmentTypeUser {
+		return host + "/@" + attachment.ObjectID.Hex() + "/pub/avatar/" + attachment.AttachmentID.Hex()
 	}
 
-	return ""
+	return host + "/" + attachment.ObjectID.Hex() + "/attachments/" + attachment.AttachmentID.Hex()
+}
+
+func (attachment *Attachment) SetURL(host string) {
+	attachment.URL = attachment.CalcURL(host)
 }
 
 func (attachment *Attachment) DownloadExtension() string {
@@ -94,4 +97,35 @@ func (attachment *Attachment) AspectRatio() string {
 	}
 
 	return strconv.Itoa(attachment.Height / attachment.Width)
+}
+
+func (attachment Attachment) HasDimensions() bool {
+	if attachment.Width == 0 {
+		return false
+	}
+
+	if attachment.Height == 0 {
+		return false
+	}
+
+	return true
+}
+
+func (attachment Attachment) JSONLD() map[string]any {
+
+	result := map[string]any{
+		vocab.PropertyType:      vocab.ObjectTypeImage, // TODO: Expand this to videos, audios, etc.
+		vocab.PropertyMediaType: attachment.DownloadMimeType(),
+		vocab.PropertyURL:       attachment.URL,
+	}
+
+	if attachment.HasDimensions() {
+		result["width"] = attachment.Width
+		result["height"] = attachment.Height
+	}
+
+	// TODO: Alt Text
+	// TODO: Blurhash
+
+	return result
 }

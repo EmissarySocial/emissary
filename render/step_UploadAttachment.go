@@ -83,12 +83,12 @@ func (step StepUploadAttachment) Post(renderer Renderer, buffer io.Writer) Pipel
 			response := mapof.Any{
 				"success": 1,
 				"file": mapof.Any{
-					"url":    renderer.Host() + attachment.URL(),
+					"url":    attachment.CalcURL(renderer.Host()),
 					"height": attachment.Height,
 					"width":  attachment.Width,
 				},
 				"data": mapof.Any{
-					"filePath": renderer.Host() + attachment.URL(),
+					"filePath": attachment.CalcURL(renderer.Host()),
 				},
 			}
 
