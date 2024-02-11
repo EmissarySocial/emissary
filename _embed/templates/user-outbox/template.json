@@ -38,32 +38,32 @@
 	"actions": {
 		"view": {
 			"steps":[
-				{"step":"view-json"},
-				{"step":"set-header", "name":"Link", "value":"<{{.Host}}/@{{.UserID}}>; rel=\"self\", <{{.Host}}/@{{.UserID}}/websub>; rel=\"hub\""},
-				{"step":"view-html", "file":"outbox"}
+				{"do":"view-json"},
+				{"do":"set-header", "name":"Link", "value":"<{{.Host}}/@{{.UserID}}>; rel=\"self\", <{{.Host}}/@{{.UserID}}/websub>; rel=\"hub\""},
+				{"do":"view-html", "file":"outbox"}
 			]
 		},
-		"outbox-list": {"step":"view-html"},
+		"outbox-list": {"do":"view-html"},
 		"outbox-add": {
 			"roles": ["self"],
 			"steps": [
-				{"step":"set-args", "postTo":"/@me/outbox-add?templateId=outbox-message"},
-				{"step":"add-stream", "style":"inline", "roles":["outbox-message"], "location":"outbox"},
-				{"step":"refresh-page"}
+				{"do":"set-args", "postTo":"/@me/outbox-add?templateId=outbox-message"},
+				{"do":"add-stream", "style":"inline", "roles":["outbox-message"], "location":"outbox"},
+				{"do":"refresh-page"}
 			]
 		},
 
-		"replied": {"step":"view-html"},
-		"replied-list": {"step":"view-html"},
-		"liked": {"step":"view-html"},
-		"liked-list": {"step":"view-html"},
+		"replied": {"do":"view-html"},
+		"replied-list": {"do":"view-html"},
+		"liked": {"do":"view-html"},
+		"liked-list": {"do":"view-html"},
 
-		"sidebar": {"step":"view-html"},
+		"sidebar": {"do":"view-html"},
 		"edit": {
 			"roles": ["self"],
 			"steps": [
-				{"step":"as-modal", "steps":[
-					{"step":"edit", "form": {
+				{"do":"as-modal", "steps":[
+					{"do":"edit", "form": {
 						"type":"layout-vertical",
 						"label":"Edit Profile Info",
 						"children": [
@@ -73,68 +73,68 @@
 							{"type":"toggle", "path":"isPublic", "label":"Public?", "options":{"true-text":"Visible to the Public", "false-text":"Hidden from Public Servers"}}
 						]
 					}},
-					{"step":"save", "comment":"Profile updated by me"}
+					{"do":"save", "comment":"Profile updated by me"}
 				]},
-				{"step":"trigger-event", "event":"refreshPage"}
+				{"do":"trigger-event", "event":"refreshPage"}
 			]
 		},
 		"photo": {
 			"roles": ["self"],
 			"steps":[
-				{"step":"as-modal", "steps":[
-					{"step":"view-html", "file":"photo"},
-					{"step":"delete-attachments", "all":true},
-					{"step":"upload-attachments", "maximum":1},
-					{"step":"set-thumbnail", "path":"imageId"},
-					{"step":"save", "comment":"Profile photo updated by me"}
+				{"do":"as-modal", "steps":[
+					{"do":"view-html", "file":"photo"},
+					{"do":"delete-attachments", "all":true},
+					{"do":"upload-attachments", "maximum":1},
+					{"do":"set-thumbnail", "path":"imageId"},
+					{"do":"save", "comment":"Profile photo updated by me"}
 				]},
-				{"step":"reload-page"}
+				{"do":"reload-page"}
 			]
 		},
 		"links": {
 			"roles": ["self"],
 			"steps": [
-				{"step":"as-modal", "steps":[
-					{"step":"view-html"}
+				{"do":"as-modal", "steps":[
+					{"do":"view-html"}
 				]}
 			]
 		},
 		"links-table": {
 			"roles": ["self"],
 			"steps": [
-				{"step":"edit-table", "path":"links", "form": {
+				{"do":"edit-table", "path":"links", "form": {
 					"type":"layout-table",
 					"children": [
 						{"type":"text", "path":"name", "label":"Label"},
 						{"type":"text", "path":"profileUrl", "label":"URL"}
 					]
 				}},
-				{"step":"save", "comment":"Links updated by me"}
+				{"do":"save", "comment":"Links updated by me"}
 			]
 		},
 		"photo-preview": {
 			"roles": ["self"],
-			"step":"view-html"
+			"do":"view-html"
 		},
 		"photo-delete": {
 			"roles":["self"],
 			"steps":[
-				{"step":"delete-attachments", "all":true},
-				{"step":"set-thumbnail", "path":"imageId"},
-				{"step":"save", "comment":"Profile photo deleted by me"},
-				{"step":"reload-page"}
+				{"do":"delete-attachments", "all":true},
+				{"do":"set-thumbnail", "path":"imageId"},
+				{"do":"save", "comment":"Profile photo deleted by me"},
+				{"do":"reload-page"}
 			]
 		},
 
 		"follow": {
 			"steps": [
-				{"step":"as-modal", "background":"profile", "steps":[
-					{"step":"view-html", "file":"follow"}
+				{"do":"as-modal", "background":"profile", "steps":[
+					{"do":"view-html", "file":"follow"}
 				]}
 			]
 		},
 
-		"feed": {"step":"view-feed"},
-		"websub": {"step":"websub"}
+		"feed": {"do":"view-feed"},
+		"websub": {"do":"websub"}
 	}
 }	

@@ -26,19 +26,19 @@
 		"create": {
 			"roles":["owner"],
 			"steps":[
-				{"step":"save"},
-				{"step":"forward-to", "url":"/{{.StreamID}}"}
+				{"do":"save"},
+				{"do":"forward-to", "url":"/{{.StreamID}}"}
 			]
 		},
-		"view": {"step": "view-html", "roles":["viewer"]},
+		"view": {"do": "view-html", "roles":["viewer"]},
 		"edit": {
 			"roles": ["owner"],
 			"steps":[{
-				"step": "as-modal",
+				"do": "as-modal",
 				"background":"view",
 				"steps": [
 					{
-						"step": "edit",
+						"do": "edit",
 						"label": "Edit Redirect",
 						"form": {
 							"type": "layout-vertical",
@@ -49,24 +49,24 @@
 							]
 						}
 					}, 
-					{"step": "save", "comment": "Updated Redirect"}
+					{"do": "save", "comment": "Updated Redirect"}
 				]
 			}]
 		},
 		"delete": {
 			"roles": ["owner"],
 			"steps": [
-				{"step":"delete", "title":"Delete this Item?", "message":"This will permanently delete this item from your website."},
-				{"step":"forward-to", "url":"{{.ParentID}}/"}
+				{"do":"delete", "title":"Delete this Item?", "message":"This will permanently delete this item from your website."},
+				{"do":"forward-to", "url":"{{.ParentID}}/"}
 			]
 		},
 		
 		"sharing": {
 			"roles": ["owner"],
 			"steps": [
-				{"step":"as-modal", "steps": [
-					{"step": "set-simple-sharing", "roles": ["viewer"], "title":"Who Can See This Folder?", "message": "Select who can view this folder."},
-					{"step":"save", "message": "Sharing updated by {{.Author}}"}
+				{"do":"as-modal", "steps": [
+					{"do": "set-simple-sharing", "roles": ["viewer"], "title":"Who Can See This Folder?", "message": "Select who can view this folder."},
+					{"do":"save", "message": "Sharing updated by {{.Author}}"}
 				]}
 			]
 		}

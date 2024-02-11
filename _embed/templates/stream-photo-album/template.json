@@ -47,41 +47,41 @@
 			"roles":["editor","owner"],
 			"steps": [
 				{
-					"step":"set-data", "values": 
+					"do":"set-data", "values": 
 					{
 						"label":"New Photo Album", 
 						"summary":"Enter a brief description here. 🌈"
 					}
 				},
-				{"step":"save"},
-				{"step":"forward-to", "url":"/{{.StreamID}}/edit"}
+				{"do":"save"},
+				{"do":"forward-to", "url":"/{{.StreamID}}/edit"}
 			]
 		},
 		"view": {
 			"roles": ["owner", "editor", "viewer"],
-			"step":"view-html"},
+			"do":"view-html"},
 		"edit": {
 			"roles": ["owner", "editor"],
-			"step":"view-html"
+			"do":"view-html"
 		},
 		"delete": {
 			"roles": ["owner", "editor"],
 			"steps": [
-				{"step":"delete", "title":"Delete this Photo Album?", "message":"This will PERMANENTLY DELETE everyting in this album."},
-				{"step":"forward-to", "url":"/{{.ParentID}}"}
+				{"do":"delete", "title":"Delete this Photo Album?", "message":"This will PERMANENTLY DELETE everyting in this album."},
+				{"do":"forward-to", "url":"/{{.ParentID}}"}
 			]
 		},
 
 		"children": {
 			"roles":["owner", "editor", "viewer"],
-			"step":"view-html"
+			"do":"view-html"
 		},
 		"properties": {
 			"roles": ["owner", "editor"],
 			"steps": [
-				{"step":"as-modal", "steps": [
+				{"do":"as-modal", "steps": [
 					{
-					"step":"edit",
+					"do":"edit",
 					"form": {
 						"type":"layout-vertical",
 						"label":"Edit Photo Album",
@@ -91,27 +91,27 @@
 							{"type":"textarea", "path":"summary", "label":"Summary", "cssClass":"height300"}
 						]
 					}},
-					{"step":"save", "comment":"Updated by {{.Author}}"}
+					{"do":"save", "comment":"Updated by {{.Author}}"}
 				]}
 			]
 		},
 		"attachments": {
 			"roles": ["owner", "editor"],
 			"steps": [
-				{"step":"add-stream", "location":"child", "template":"photograph"},
-				{"step":"refresh-page"}
+				{"do":"add-stream", "location":"child", "template":"photograph"},
+				{"do":"refresh-page"}
 			]
 		},
 		"sharing": {
 			"roles": ["owner", "editor"],
 			"steps": [
-				{"step":"as-modal", "steps": [
-					{"step":"set-simple-sharing", "roles": ["viewer"], "title":"Who Can See This Album?", "message":"Select who can view and comment on these photos."},
-					{"step":"save", "message":"Sharing updated by {{.Author}}"}
+				{"do":"as-modal", "steps": [
+					{"do":"set-simple-sharing", "roles": ["viewer"], "title":"Who Can See This Album?", "message":"Select who can view and comment on these photos."},
+					{"do":"save", "message":"Sharing updated by {{.Author}}"}
 				]}
 			]
 		},
-		"feed": {"roles": ["viewer"], "step":"view-feed"},
-		"websub": {"roles": ["viewer"], "step":"websub"}
+		"feed": {"roles": ["viewer"], "do":"view-feed"},
+		"websub": {"roles": ["viewer"], "do":"websub"}
 	}
 }

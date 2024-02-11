@@ -5,8 +5,8 @@
 		"like-button": {
 			"roles":["authenticated"],
 			"steps":[
-				{"step":"set-response"},
-				{"step":"view-html", "method":"both"}
+				{"do":"set-response"},
+				{"do":"view-html", "method":"both"}
 			]
 		}
 	}

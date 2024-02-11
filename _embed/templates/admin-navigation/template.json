@@ -12,19 +12,19 @@
 		}
 	},
 	"actions": {
-		"index": {"step": "view-html"},
-		"view": {"step": "view-html"},
-		"sort": {"step": "sort"},
+		"index": {"do": "view-html"},
+		"view": {"do": "view-html"},
+		"sort": {"do": "sort"},
 		"add": {
 			"steps": [
-				{"step": "add-stream", "location":"top"},
-				{"step": "refresh-page"}
+				{"do": "add-stream", "location":"top"},
+				{"do": "refresh-page"}
 			]
 		},
 		"delete": {
 			"steps": [
-				{"step":"delete", "title": "Delete this Stream?", "message": "All items beneath it will also be removed.  There is NO UNDO."},
-				{"step": "refresh-page"}
+				{"do":"delete", "title": "Delete this Stream?", "message": "All items beneath it will also be removed.  There is NO UNDO."},
+				{"do": "refresh-page"}
 			]
 		}
 	}

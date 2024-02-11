@@ -13,7 +13,7 @@
 		}}
 	}},
 	"actions": {
-		"index": {"step": "view-html"},
-		"edit": {"step": "edit-connection"}
+		"index": {"do": "view-html"},
+		"edit": {"do": "edit-connection"}
 	}
 }

@@ -12,10 +12,10 @@
 		}
 	},
 	"actions": {
-		"page": {"step":"view-html"},
-		"welcome": {"step": "view-html"},
-		"theme": {"step": "view-html"},
-		"user": {"step": "view-html"},
-		"confirm": {"step": "view-html"}
+		"page": {"do":"view-html"},
+		"welcome": {"do": "view-html"},
+		"theme": {"do": "view-html"},
+		"user": {"do": "view-html"},
+		"confirm": {"do": "view-html"}
 	}
 }

@@ -112,9 +112,9 @@ func (action *Action) UnmarshalMap(data map[string]any) error {
 		return derp.Wrap(err, "model.action.UnmarshalMap", "Error reading steps", stepsInfo)
 	}
 
-	// If no steps configued, then try the "step" alias
+	// If no steps configued, then try the "do" alias
 	if len(action.Steps) == 0 {
-		if name := convert.String(data["step"]); name != "" {
+		if name := convert.String(data["do"]); name != "" {
 			action.Steps, _ = step.NewPipeline([]mapof.Any{data})
 		}
 	}

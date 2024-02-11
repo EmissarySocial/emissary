@@ -21,7 +21,7 @@ func NewSetRenderData(stepInfo mapof.Any) (SetRenderData, error) {
 	}
 
 	for key, value := range stepInfo {
-		if key != "step" {
+		if key != "do" {
 			valueTemplate, err := template.New("value").Parse(convert.String(value))
 
 			if err != nil {

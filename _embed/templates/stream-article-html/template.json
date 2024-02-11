@@ -9,21 +9,21 @@
 		"create": {
 			"roles":["editor","owner"],
 			"steps": [
-				{"step":"set-data", "values": {
+				{"do":"set-data", "values": {
 					"label":"New Article (HTML Code)", 
 					"content.format":"html", 
 					"content.raw":"<h1>New Article</h1>"
 				}},
-				{"step":"set-state", "state":"unpublished"},
-				{"step":"save"},
-				{"step":"forward-to", "url":"/{{.StreamID}}/edit"}
+				{"do":"set-state", "state":"unpublished"},
+				{"do":"save"},
+				{"do":"forward-to", "url":"/{{.StreamID}}/edit"}
 			]
 		},
 		"editor": {
 			"roles": ["owner", "editor"],
 			"steps": [
-				{"step":"with-draft", "steps": [
-					{"step":"edit-content", "file":"editor", "format":"HTML"}
+				{"do":"with-draft", "steps": [
+					{"do":"edit-content", "file":"editor", "format":"HTML"}
 				]}
 			]
 		}

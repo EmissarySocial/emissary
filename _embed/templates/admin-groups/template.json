@@ -6,15 +6,15 @@
 	"label": "Group",
 	"description": "Domain Owners only.  Site Admin",
 	"actions": {
-		"index": {"step": "view-html"},
-		"list": {"step": "view-html"},
+		"index": {"do": "view-html"},
+		"list": {"do": "view-html"},
 		
 		"add": {
 			"steps": [{
-				"step": "as-modal",
+				"do": "as-modal",
 				"steps": [
 				{
-					"step": "add",
+					"do": "add",
 					"type": "group",
 					"form": {
 						"type": "layout-vertical",
@@ -29,10 +29,10 @@
 
 		"edit": {
 			"steps": [{
-				"step": "as-modal",
+				"do": "as-modal",
 				"steps": [
 					{
-						"step": "edit",
+						"do": "edit",
 						"form": {
 							"type": "layout-vertical",
 							"label": "Edit Group",
@@ -43,15 +43,15 @@
 						},
 						"options": ["delete:/admin/groups/{{.GroupID}}/delete"]
 					},
-					{"step": "save","comment": "Updated by {{.Author}}"}
+					{"do": "save","comment": "Updated by {{.Author}}"}
 				]
 			}]
 		},
 
 		"delete": {
 			"steps":[
-				{"step": "delete", "type": "group", "message": "People will be removed from this group, but will not be deleted."},
-				{"step": "refresh-page"}
+				{"do": "delete", "type": "group", "message": "People will be removed from this group, but will not be deleted."},
+				{"do": "refresh-page"}
 			]
 		}
 	}

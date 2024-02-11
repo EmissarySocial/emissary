@@ -15,10 +15,10 @@
 		}}
 	}},
 	"actions": {
-		"index": {"step": "view-html"},
+		"index": {"do": "view-html"},
 		"form": {
 			"steps": [
-				{"step":"edit",
+				{"do":"edit",
 					"form": {
 						"type":"layout-vertical", "children":[
 							{"type":"select", "path":"themeId", "label":"Theme", "options": {"provider":"themes"}},
@@ -27,16 +27,16 @@
 					},
 					"options":["cancel-button:hide", "endpoint:/admin/domain/form"]
 				},
-				{"step": "save"},
-				{"step": "reload-page"}
+				{"do": "save"},
+				{"do": "reload-page"}
 			]
 		},
 		"signup": {
 			"steps": [{
-				"step": "as-modal", 
+				"do": "as-modal", 
 				"steps": [
 					{
-						"step": "edit",
+						"do": "edit",
 						"form": {
 							"type": "layout-vertical",
 							"label": "Custom Signup Form",
@@ -47,7 +47,7 @@
 							]
 						}
 					}, 
-					{"step": "save"}
+					{"do": "save"}
 				]
 			}]
 		}

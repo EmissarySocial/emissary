@@ -21,7 +21,7 @@ func NewSetQueryParam(stepInfo mapof.Any) (SetQueryParam, error) {
 	}
 
 	for key, value := range stepInfo {
-		if key != "step" {
+		if key != "do" {
 			valueTemplate, err := template.New("value").Parse(convert.String(value))
 
 			if err != nil {

@@ -53,10 +53,10 @@
 		"create": {
 			"roles":["editor","owner"],
 			"steps": [
-				{"step":"set-data", "values": {"label":"New Article (WYSIWYG)"}},
-				{"step":"set-state", "state":"unpublished"},
-				{"step":"save", "message":"Created by {{.Author.DisplayName}}"},
-				{"step":"forward-to", "url":"/{{.StreamID}}/edit"}
+				{"do":"set-data", "values": {"label":"New Article (WYSIWYG)"}},
+				{"do":"set-state", "state":"unpublished"},
+				{"do":"save", "message":"Created by {{.Author.DisplayName}}"},
+				{"do":"forward-to", "url":"/{{.StreamID}}/edit"}
 			]
 		},
 		"view": {
@@ -65,86 +65,86 @@
 				"published": ["viewer"]
 			},
 			"steps":[
-				{"step":"view-json"},
-				{"step":"view-html"}
+				{"do":"view-json"},
+				{"do":"view-html"}
 			]
 		},
 		"edit": {
 			"roles": ["owner", "editor"],
 			"steps": [
-				{"step":"with-draft", "steps": [
-					{"step":"view-html"}
+				{"do":"with-draft", "steps": [
+					{"do":"view-html"}
 				]}
 			]
 		},
 		"delete": {
 			"roles": ["owner"],
 			"steps": [
-				{"step":"delete", "title":"Delete '{{.Label}}'?", "message":"All content and comments will be lost.  There is NO UNDO."},
-				{"step":"unpublish"},
-				{"step":"forward-to", "url":"/{{.ParentID}}"}
+				{"do":"delete", "title":"Delete '{{.Label}}'?", "message":"All content and comments will be lost.  There is NO UNDO."},
+				{"do":"unpublish"},
+				{"do":"forward-to", "url":"/{{.ParentID}}"}
 			]
 		},
 		"heading": {
 			"roles": ["viewer", "editor", "owner"],
-			"step":"view-html"
+			"do":"view-html"
 		},
 		"editor":{
 			"roles": ["owner", "editor"],
 			"steps": [
-				{"step":"with-draft", "steps": [
-					{"step":"edit-content", "file":"edit", "format":"EDITORJS"}
+				{"do":"with-draft", "steps": [
+					{"do":"edit-content", "file":"edit", "format":"EDITORJS"}
 				]}
 			]
 		},
 		"widgets": {
 			"roles": ["owner", "editor"],
 			"steps": [
-				{"step":"with-draft", "steps": [
-					{"step":"sort-widgets"},
-					{"step":"save", "message":"Widgets updated by {{.Author}}"},
-					{"step":"view-html", "method":"both"}
+				{"do":"with-draft", "steps": [
+					{"do":"sort-widgets"},
+					{"do":"save", "message":"Widgets updated by {{.Author}}"},
+					{"do":"view-html", "method":"both"}
 				]}
 			]
 		},
 		"widget": {
 			"roles": ["owner", "editor"],
 			"steps": [
-				{"step":"with-draft", "steps": [
-					{"step":"edit-widget", "file":"edit", "format":"EDITORJS"},
-					{"step":"save", "comment":"Widget updated by {{.Author}}"}
+				{"do":"with-draft", "steps": [
+					{"do":"edit-widget", "file":"edit", "format":"EDITORJS"},
+					{"do":"save", "comment":"Widget updated by {{.Author}}"}
 				]}
 			]
 		},
 		"widgets-list": {
 			"roles": ["owner", "editor"],
 			"steps": [
-				{"step":"with-draft", "steps": [
-					{"step":"view-html"}
+				{"do":"with-draft", "steps": [
+					{"do":"view-html"}
 				]}
 			]
 		},
 		"children": {
 			"roles:": ["owner", "editor"],
 			"steps": [
-				{"step":"view-html"},
-				{"step":"sort", "keys":"_id", "values":"rank"}
+				{"do":"view-html"},
+				{"do":"sort", "keys":"_id", "values":"rank"}
 			]
 		},
 		"upload-image": {
 			"roles": ["owner", "editor"],
 			"steps": [
-				{"step":"with-draft", "steps": [
-					{"step":"upload-attachments"}
+				{"do":"with-draft", "steps": [
+					{"do":"upload-attachments"}
 				]}
 			]
 		},
 		"sharing": {
 			"roles": ["owner"],
 			"steps": [
-				{"step":"as-modal", "steps": [
-					{"step":"set-simple-sharing", "roles": ["viewer"], "title":"Who Can See This Article?", "message":"Select who can view and comment on this article."},
-					{"step":"save", "message":"Sharing updated by {{.Author}}"}
+				{"do":"as-modal", "steps": [
+					{"do":"set-simple-sharing", "roles": ["viewer"], "title":"Who Can See This Article?", "message":"Select who can view and comment on this article."},
+					{"do":"save", "message":"Sharing updated by {{.Author}}"}
 				]}
 			]
 		},
@@ -152,49 +152,49 @@
 			"states": ["unpublished"],
 			"roles": ["owner", "editor"],
 			"steps": [
-				{"step":"as-confirmation", "title":"Publish this Stream?", "message":"Viewers will be able to see this stream on your website immediately.", "submit":"Publish"},
-				{"step":"set-state", "state":"published"},
-				{"step":"save", "message":"Published by {{.Author}}"},
-				{"step":"publish", "mentions":["summary","content.html"]},
-				{"step":"refresh-page"}
+				{"do":"as-confirmation", "title":"Publish this Stream?", "message":"Viewers will be able to see this stream on your website immediately.", "submit":"Publish"},
+				{"do":"set-state", "state":"published"},
+				{"do":"save", "message":"Published by {{.Author}}"},
+				{"do":"publish", "mentions":["summary","content.html"]},
+				{"do":"refresh-page"}
 			]
 		},
 		"unpublish": {
 			"states": ["published"],
 			"roles": ["owner", "editor"],
 			"steps": [
-				{"step":"as-confirmation", "title":"Un-Publish this Stream?", "message":"Viewers will no longer be able to see this stream on your website.", "submit":"Un-Publish"},
-				{"step":"set-state", "state":"unpublished"},
-				{"step":"save", "message":"Un-Published by {{.Author}}"},
-				{"step":"unpublish"},
-				{"step":"refresh-page"}
+				{"do":"as-confirmation", "title":"Un-Publish this Stream?", "message":"Viewers will no longer be able to see this stream on your website.", "submit":"Un-Publish"},
+				{"do":"set-state", "state":"unpublished"},
+				{"do":"save", "message":"Un-Published by {{.Author}}"},
+				{"do":"unpublish"},
+				{"do":"refresh-page"}
 			]
 		},
 		"promote-draft": {
 			"roles": ["owner", "editor"],
 			"steps": [
-				{"step":"as-confirmation", "title":"Promote this Draft?", "message":"The live page will be replaced with this content.", "submit":"Promote"},
-				{"step":"promote-draft"},
-				{"step":"publish", "mentions":["summary","content.html"]},
-				{"step":"refresh-page"},
-				{"step":"forward-to", "url":"/{{.Token}}"}
+				{"do":"as-confirmation", "title":"Promote this Draft?", "message":"The live page will be replaced with this content.", "submit":"Promote"},
+				{"do":"promote-draft"},
+				{"do":"publish", "mentions":["summary","content.html"]},
+				{"do":"refresh-page"},
+				{"do":"forward-to", "url":"/{{.Token}}"}
 			]
 		},
 		"discard-draft": {
 			"roles": ["owner", "editor"],
 			"steps": [
-				{"step":"with-draft", "steps":[
-					{"step":"delete", "title":"Discard This Draft?", "message":"The original article will remain unchanged.", "submit":"Discard Draft"}
+				{"do":"with-draft", "steps":[
+					{"do":"delete", "title":"Discard This Draft?", "message":"The original article will remain unchanged.", "submit":"Discard Draft"}
 				]},
-				{"step":"forward-to", "url":"/{{.Token}}"}
+				{"do":"forward-to", "url":"/{{.Token}}"}
 			]
 		},
 		"properties": {
 			"roles": ["editor", "owner"],
 			"steps": [
-				{"step":"with-draft", "steps":[
-					{"step":"as-modal", "steps": [
-						{"step":"edit",
+				{"do":"with-draft", "steps":[
+					{"do":"as-modal", "steps": [
+						{"do":"edit",
 							"form": {
 								"type":"layout-vertical",
 								"label":"Article Properties",
@@ -206,14 +206,14 @@
 							}
 						}]
 					},
-					{"step":"save", "comment":"Properties updated by {{.Author}}"}
+					{"do":"save", "comment":"Properties updated by {{.Author}}"}
 				]
 			}]
 		},
 		"add-child":{
 			"roles": ["owner", "editor"],
 			"steps": [
-				{"step":"add-stream", "location":"child", "title":"+ Add a Stream"}
+				{"do":"add-stream", "location":"child", "title":"+ Add a Stream"}
 			]
 		}
 	}

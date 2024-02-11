@@ -51,38 +51,38 @@
 
 		"inbox": {
 			"roles": ["self"],
-			"step": "view-html"
+			"do": "view-html"
 		},
 		"sidebar": {
 			"roles": ["self"],
-			"step":"view-html",
+			"do":"view-html",
 			"file":"sidebar-remote"
 		},
 		"list": {
 			"roles": ["self"],
 			"steps":[
-				{"step":"view-html"}
+				{"do":"view-html"}
 			]
 		},
 		"list-before": {
 			"roles": ["self"],
-			"step":"view-html"
+			"do":"view-html"
 		},
 		"filter":{
 			"roles":["self"],
 			"steps":[
-				{"step":"as-modal", "steps":[
-					{"step":"view-html"}
+				{"do":"as-modal", "steps":[
+					{"do":"view-html"}
 				]}
 			]
 		},
 		"folder-add": {
 			"roles":["self"],
 			"steps": [
-				{"step":"set-query-param", "folderId":"new"},
-				{"step":"with-folder", "steps": [
-					{"step":"as-modal", "steps": [
-						{"step":"edit", "form": {
+				{"do":"set-query-param", "folderId":"new"},
+				{"do":"with-folder", "steps": [
+					{"do":"as-modal", "steps": [
+						{"do":"edit", "form": {
 							"type":"layout-vertical",
 							"label":"Add a Folder",
 							"children": [
@@ -91,19 +91,19 @@
 								{"type":"select", "path":"layout", "label":"Layout", "options": {"enum":"SOCIAL,NEWSPAPER,MAGAZINE"}}
 							]}
 						},
-						{"step":"save"}
+						{"do":"save"}
 					]},
-					{"step":"trigger-event", "event":"closeModal"},
-					{"step":"trigger-event", "event":"refreshPage"}
+					{"do":"trigger-event", "event":"closeModal"},
+					{"do":"trigger-event", "event":"refreshPage"}
 				]}
 			]
 		},
 		"folder-edit": {
 			"roles":["self"],
 			"steps": [
-				{"step":"with-folder", "steps": [
-					{"step":"as-modal", "steps": [
-						{"step":"edit", "options":["delete:/@me/inbox/folder-delete?folderId={{.ObjectID}}"], "form": {
+				{"do":"with-folder", "steps": [
+					{"do":"as-modal", "steps": [
+						{"do":"edit", "options":["delete:/@me/inbox/folder-delete?folderId={{.ObjectID}}"], "form": {
 							"type":"layout-vertical",
 							"label":"Folder Settings",
 							"children": [
@@ -112,97 +112,97 @@
 								{"type":"select", "path":"layout", "label":"Layout", "options": {"enum":"SOCIAL,NEWSPAPER,MAGAZINE"}}
 							]}
 						},
-						{"step":"save"}
+						{"do":"save"}
 					]},
-					{"step":"trigger-event", "event":"closeModal"},
-					{"step":"trigger-event", "event":"refreshPage"}
+					{"do":"trigger-event", "event":"closeModal"},
+					{"do":"trigger-event", "event":"refreshPage"}
 				]}
 			]
 		},
 		"folder-delete": {
 			"roles":["self"],
 			"steps": [
-				{"step":"with-folder", "steps": [
-					{"step":"delete", "title":"Delete Folder: {{.Label}}?", "message":"Deleting this folder will also remove all inbox items inside it."},
-					{"step":"forward-to", "url":"/@me/inbox"}
+				{"do":"with-folder", "steps": [
+					{"do":"delete", "title":"Delete Folder: {{.Label}}?", "message":"Deleting this folder will also remove all inbox items inside it."},
+					{"do":"forward-to", "url":"/@me/inbox"}
 				]}
 			]
 		},
 		"folder-sort":{
 			"roles":["self"],
 			"steps":[
-				{"step":"with-folder", "steps":[
-					{"step":"sort"}
+				{"do":"with-folder", "steps":[
+					{"do":"sort"}
 				]}
 			]
 		},
 		
-		"followers": {"step":"view-html", "file":"followers"},
-		"followers-list": {"step":"view-html", "file":"followers-list"},
+		"followers": {"do":"view-html", "file":"followers"},
+		"followers-list": {"do":"view-html", "file":"followers-list"},
 		"follower-add": {
 			"roles":["self"],
 			"steps":[
-				{"step":"as-modal", "steps":[
-					{"step":"edit", "form": {
+				{"do":"as-modal", "steps":[
+					{"do":"edit", "form": {
 						"type":"layout-vertical",
 						"label":"Add Follower",
 						"children": [
 							{"type":"text", "path":"url", "label":"URL"}
 						]
 					}},
-					{"step":"view-html", "file":"follower"}
+					{"do":"view-html", "file":"follower"}
 				]}
 			]
 		},
 		"follower":{
 			"roles": ["self"],
 			"steps":[
-				{"step":"as-modal", "steps":[
-					{"step":"view-html", "file":"follower"}
+				{"do":"as-modal", "steps":[
+					{"do":"view-html", "file":"follower"}
 				]}
 			]
 		},
 		"follower-delete":{
 			"roles": ["self"],
 			"steps":[
-				{"step":"with-follower", "steps":[
-					{"step":"delete", "title":"Remove Follower?", "message":"Stop sending updates to '{{.Label}}'?", "button":"Remove"},
-					{"step":"trigger-event", "event":"refreshPage"}
+				{"do":"with-follower", "steps":[
+					{"do":"delete", "title":"Remove Follower?", "message":"Stop sending updates to '{{.Label}}'?", "button":"Remove"},
+					{"do":"trigger-event", "event":"refreshPage"}
 				]}
 			]
 		},
 
-		"following": {"step":"view-html", "file":"following"},
-		"following-list": {"step":"view-html", "file":"following-list"},
+		"following": {"do":"view-html", "file":"following"},
+		"following-list": {"do":"view-html", "file":"following-list"},
 		"following-search": {
 			"roles":["self"],
 			"steps":[
-				{"step":"as-modal", "steps":[
-					{"step":"view-html"}
+				{"do":"as-modal", "steps":[
+					{"do":"view-html"}
 				]}
 			]
 		},
 		"following-search-results": {
 			"roles":["self"],
-			"step":"view-html"
+			"do":"view-html"
 		},
 		"following-add": {
 			"roles":["self"],
 			"steps": [
-				{"step":"as-modal", "steps":[
-					{"step":"view-html"}
+				{"do":"as-modal", "steps":[
+					{"do":"view-html"}
 				]}
 			]
 		},
 		"following-add-form":{
 			"roles":["self"],
 			"steps":[
-				{"step":"with-following", "steps":[
+				{"do":"with-following", "steps":[
 					{
-						"step":"set-data", 
+						"do":"set-data", 
 						"from-url":["url", "folderId"]
 					}, {
-						"step":"edit",
+						"do":"edit",
 						"options":[
 							"endpoint:/@me/inbox/following-add-form?followingId=new",
 							"submit-label:Follow this Source",
@@ -252,19 +252,19 @@
 						}
 					}
 				]},
-				{"step":"trigger-event", "event":"closeModal"},
-				{"step":"trigger-event", "event":"refreshPage"}
+				{"do":"trigger-event", "event":"closeModal"},
+				{"do":"trigger-event", "event":"refreshPage"}
 			]
 		},
 		"following-edit":{
 			"roles":["self"],
 			"steps": [
-				{"step":"as-modal", "steps":[
-					{"step":"with-following", "steps":[
-						{"step":"view-html"},
-						{"step":"set-data", "from-url":["folderId"]},
+				{"do":"as-modal", "steps":[
+					{"do":"with-following", "steps":[
+						{"do":"view-html"},
+						{"do":"set-data", "from-url":["folderId"]},
 						{
-							"step":"edit", 
+							"do":"edit", 
 							"options":[
 								"delete:/@me/inbox/following-delete?followingId={{.ObjectID}}", 
 								"delete-label:Stop Following"
@@ -310,37 +310,37 @@
 						}
 					]}
 				]},
-				{"step":"trigger-event", "event":"closeModal"},
-				{"step":"trigger-event", "event":"refreshPage"}
+				{"do":"trigger-event", "event":"closeModal"},
+				{"do":"trigger-event", "event":"refreshPage"}
 			]
 		},
 		"following-delete":{
 			"roles":["self"],
 			"steps":[
-				{"step":"with-following", "steps":[
-					{"step":"delete", "title":"Stop Following {{.Label}}", "message":"Are you sure you want to delete this follow?"},
-					{"step":"trigger-event", "event":"refreshSection"}
+				{"do":"with-following", "steps":[
+					{"do":"delete", "title":"Stop Following {{.Label}}", "message":"Are you sure you want to delete this follow?"},
+					{"do":"trigger-event", "event":"refreshSection"}
 				]}
 			]
 		},
 
-		"rules":{"roles":["self"], "step":"view-html"},
-		"rules-list": {"roles":["self"], "step":"view-html"},
+		"rules":{"roles":["self"], "do":"view-html"},
+		"rules-list": {"roles":["self"], "do":"view-html"},
 
 		"rule-add":{
 			"roles":["self"],
 			"steps":[
-				{"step":"as-modal", "steps":[
-					{"step":"view-html"}
+				{"do":"as-modal", "steps":[
+					{"do":"view-html"}
 				]}
 			]
 		},
 		"rule-edit":{
 			"roles":["self"],
 			"steps":[
-				{"step":"with-rule", "steps":[
-					{"step":"as-modal", "background":"rules", "steps":[
-						{"step":"view-html"}
+				{"do":"with-rule", "steps":[
+					{"do":"as-modal", "background":"rules", "steps":[
+						{"do":"view-html"}
 					]}
 				]}
 			]
@@ -349,10 +349,10 @@
 		"rule-edit-actor": {
 			"roles":["self"],
 			"steps":[
-				{"step":"with-rule", "steps":[
-					{"step":"view-html"},
+				{"do":"with-rule", "steps":[
+					{"do":"view-html"},
 					{
-						"step":"edit", 
+						"do":"edit", 
 						"options":[
 							"endpoint:/@me/inbox/rule-edit-actor?ruleId={{.ObjectID}}",
 							"delete:/@me/inbox/rule-delete?ruleId={{.ObjectID}}", 
@@ -370,8 +370,8 @@
 							]
 						}
 					},
-					{"step":"trigger-event", "event":"refreshPage"},
-					{"step":"trigger-event", "event":"closeModal"}
+					{"do":"trigger-event", "event":"refreshPage"},
+					{"do":"trigger-event", "event":"closeModal"}
 				]}
 			]
 		},
@@ -379,10 +379,10 @@
 		"rule-edit-domain": {
 			"roles":["self"],
 			"steps":[
-				{"step":"with-rule", "steps":[
-					{"step":"view-html"},
+				{"do":"with-rule", "steps":[
+					{"do":"view-html"},
 					{
-						"step":"edit", 
+						"do":"edit", 
 						"options":[
 							"endpoint:/@me/inbox/rule-edit-actor?ruleId={{.ObjectID}}",
 							"delete:/@me/inbox/rule-delete?ruleId={{.ObjectID}}", 
@@ -400,8 +400,8 @@
 							]
 						}
 					},
-					{"step":"trigger-event", "event":"refreshPage"},
-					{"step":"trigger-event", "event":"closeModal"}
+					{"do":"trigger-event", "event":"refreshPage"},
+					{"do":"trigger-event", "event":"closeModal"}
 				]}
 			]
 		},
@@ -409,10 +409,10 @@
 		"rule-edit-content": {
 			"roles":["self"],
 			"steps":[
-				{"step":"with-rule", "steps":[
-					{"step":"view-html"},
+				{"do":"with-rule", "steps":[
+					{"do":"view-html"},
 					{
-						"step":"edit", 
+						"do":"edit", 
 						"options":[
 							"endpoint:/@me/inbox/rule-edit-actor?ruleId={{.ObjectID}}",
 							"delete:/@me/inbox/rule-delete?ruleId={{.ObjectID}}", 
@@ -430,16 +430,16 @@
 							]
 						}
 					},
-					{"step":"trigger-event", "event":"refreshPage"},
-					{"step":"trigger-event", "event":"closeModal"}
+					{"do":"trigger-event", "event":"refreshPage"},
+					{"do":"trigger-event", "event":"closeModal"}
 				]}
 			]
 		},
 		"rule-edit-remote":{
 			"roles":["self"],
 			"steps":[
-				{"step":"as-modal", "steps":[
-					{"step":"view-html"}
+				{"do":"as-modal", "steps":[
+					{"do":"view-html"}
 				]}
 			]
 		},
@@ -447,9 +447,9 @@
 		"rule-delete": {
 			"roles":["self"],
 			"steps":[
-				{"step":"with-rule", "steps":[
-					{"step":"delete", "title":"Delete Rule?", "message":"Removing this rule will allow blocked messages from this source to be displayed."},
-					{"step":"trigger-event", "event":"refreshPage"}
+				{"do":"with-rule", "steps":[
+					{"do":"delete", "title":"Delete Rule?", "message":"Removing this rule will allow blocked messages from this source to be displayed."},
+					{"do":"trigger-event", "event":"refreshPage"}
 				]}
 			]
 		},
@@ -457,112 +457,112 @@
 		"actor-button": {
 			"roles":["self"],
 			"steps": [
-				{"step":"view-html"},
-				{"step":"set-header", "name":"hx-reswap", "value":"outerHTML"},
-				{"step":"set-header", "name":"hx-push-url", "value":"false"}
+				{"do":"view-html"},
+				{"do":"set-header", "name":"hx-reswap", "value":"outerHTML"},
+				{"do":"set-header", "name":"hx-push-url", "value":"false"}
 			]
 		},
 
 		"actor-button-follow": {
 			"roles":["self"],
 			"steps":[
-				{"step":"with-following", "steps":[
-					{"step":"set-data", "from-url":["folderId", "url"], "values": {"behavior":"POSTS+REPLIES","collapseThreads": "true"}},
-					{"step":"save"},
-					{"step":"trigger-event", "event":"refreshPeers"},
-					{"step":"view-html", "method":"post", "file":"actor-button-follow"}
+				{"do":"with-following", "steps":[
+					{"do":"set-data", "from-url":["folderId", "url"], "values": {"behavior":"POSTS+REPLIES","collapseThreads": "true"}},
+					{"do":"save"},
+					{"do":"trigger-event", "event":"refreshPeers"},
+					{"do":"view-html", "method":"post", "file":"actor-button-follow"}
 				]}
 			]
 		},
 		"actor-button-follow-update": {
 			"roles":["self"],
 			"steps":[
-				{"step":"with-following", "steps":[
-					{"step":"set-data", "from-form":["behavior", "collapseThreads", "isPublic"]},
-					{"step":"save"},
-					{"step":"trigger-event", "event":"refreshPeers"},
-					{"step":"inline-success", "message":"Saved"}
+				{"do":"with-following", "steps":[
+					{"do":"set-data", "from-form":["behavior", "collapseThreads", "isPublic"]},
+					{"do":"save"},
+					{"do":"trigger-event", "event":"refreshPeers"},
+					{"do":"inline-success", "message":"Saved"}
 				]}
 			]
 		},
 		"actor-button-unfollow": {
 			"roles":["self"],
 			"steps":[
-				{"step":"with-following", "steps":[
-					{"step":"delete"}
+				{"do":"with-following", "steps":[
+					{"do":"delete"}
 				]},
-				{"step":"view-html", "method":"post", "file":"actor-button-none"},
-				{"step":"trigger-event", "event":"refreshPeers"},
-				{"step":"remove-event", "event":"closeModal"}
+				{"do":"view-html", "method":"post", "file":"actor-button-none"},
+				{"do":"trigger-event", "event":"refreshPeers"},
+				{"do":"remove-event", "event":"closeModal"}
 			]
 		},
 		"actor-button-mute":{
 			"roles":["self"],
 			"steps":[
-				{"step":"with-rule", "steps":[
-					{"step":"set-data", "values": {"type":"ACTOR", "action": "MUTE", "trigger":"{{.QueryParam `url`}}"}},
-					{"step":"save"},
-					{"step":"trigger-event", "event":"refreshPeers"},
-					{"step":"view-html", "method":"post", "file":"actor-button-mute"}
+				{"do":"with-rule", "steps":[
+					{"do":"set-data", "values": {"type":"ACTOR", "action": "MUTE", "trigger":"{{.QueryParam `url`}}"}},
+					{"do":"save"},
+					{"do":"trigger-event", "event":"refreshPeers"},
+					{"do":"view-html", "method":"post", "file":"actor-button-mute"}
 				]}
 			]
 		},
 		"actor-button-unmute":{
 			"roles":["self"],
 			"steps":[
-				{"step":"with-rule", "steps":[
-					{"step":"delete"}
+				{"do":"with-rule", "steps":[
+					{"do":"delete"}
 				]},
-				{"step":"view-html", "method":"post", "file":"actor-button-none"},
-				{"step":"trigger-event", "event":"refreshPeers"},
-				{"step":"remove-event", "event":"closeModal"}
+				{"do":"view-html", "method":"post", "file":"actor-button-none"},
+				{"do":"trigger-event", "event":"refreshPeers"},
+				{"do":"remove-event", "event":"closeModal"}
 			]
 		},
 		"actor-button-block":{
 			"roles":["self"],
 			"steps":[
-				{"step":"with-rule", "steps":[
-					{"step":"set-data", "values": {"type":"ACTOR", "action": "BLOCK", "trigger": "{{.QueryParam `url`}}"}},
-					{"step":"save"},
-					{"step":"trigger-event", "event":"refreshPeers"},
-					{"step":"view-html", "method":"post", "file":"actor-button-block"}
+				{"do":"with-rule", "steps":[
+					{"do":"set-data", "values": {"type":"ACTOR", "action": "BLOCK", "trigger": "{{.QueryParam `url`}}"}},
+					{"do":"save"},
+					{"do":"trigger-event", "event":"refreshPeers"},
+					{"do":"view-html", "method":"post", "file":"actor-button-block"}
 				]}
 			]
 		},
 		"actor-button-block-update": {
 			"roles":["self"],
 			"steps":[
-				{"step":"with-rule", "steps":[
-					{"step":"set-data", "from-form":["comment", "isPublic"]},
-					{"step":"save"},
-					{"step":"trigger-event", "event":"refreshPeers"},
-					{"step":"inline-success", "message":"Saved"}
+				{"do":"with-rule", "steps":[
+					{"do":"set-data", "from-form":["comment", "isPublic"]},
+					{"do":"save"},
+					{"do":"trigger-event", "event":"refreshPeers"},
+					{"do":"inline-success", "message":"Saved"}
 				]}
 			]
 		},
 		"actor-button-unblock":{
 			"roles":["self"],
 			"steps":[
-				{"step":"with-rule", "steps":[
-					{"step":"delete"}
+				{"do":"with-rule", "steps":[
+					{"do":"delete"}
 				]},
-				{"step":"trigger-event", "event":"refreshPeers"},
-				{"step":"remove-event", "event":"closeModal"},
-				{"step":"view-html", "method":"post", "file":"actor-button-none"}
+				{"do":"trigger-event", "event":"refreshPeers"},
+				{"do":"remove-event", "event":"closeModal"},
+				{"do":"view-html", "method":"post", "file":"actor-button-none"}
 			]
 		},
 
 		"blocks": {
 			"roles":["self"],
-			"step":"view-html", 
+			"do":"view-html", 
 			"file":"blocks"
 		},
 
 		"profile": {
 			"roles":["self"],
 			"steps":[
-				{"step":"as-modal", "steps":[
-					{"step":"view-html"}
+				{"do":"as-modal", "steps":[
+					{"do":"view-html"}
 				]}
 			]
 		},
@@ -570,92 +570,92 @@
 		"message": {
 			"roles":["self"],
 			"steps":[
-				{"step":"as-modal", "options":["class:large"], "steps":[
-					{"step":"view-html"}
+				{"do":"as-modal", "options":["class:large"], "steps":[
+					{"do":"view-html"}
 				]}
 			]
 		},
 		"message-mute-button":{
 			"roles":["self"],
 			"steps":[
-				{"step":"with-message", "steps":[
-					{"step":"view-html"}
+				{"do":"with-message", "steps":[
+					{"do":"view-html"}
 				]}
 			]
 		},
 		"message-mute":{
 			"roles":["self"],
 			"steps":[
-				{"step":"with-message", "steps":[
-					{"step":"set-state", "state":"MUTED"},
-					{"step":"save"},
-					{"step":"view-html", "method":"both", "file":"message-mute-button"}
+				{"do":"with-message", "steps":[
+					{"do":"set-state", "state":"MUTED"},
+					{"do":"save"},
+					{"do":"view-html", "method":"both", "file":"message-mute-button"}
 				]}
 			]
 		},
 		"message-unmute":{
 			"roles":["self"],
 			"steps":[
-				{"step":"with-message", "steps":[
-					{"step":"set-state", "state":"UNMUTED"},
-					{"step":"save"},
-					{"step":"view-html", "method":"both", "file":"message-mute-button"}
+				{"do":"with-message", "steps":[
+					{"do":"set-state", "state":"UNMUTED"},
+					{"do":"save"},
+					{"do":"view-html", "method":"both", "file":"message-mute-button"}
 				]}
 			]
 		},
 		"message-delete": {
 			"roles": ["self"],
 			"steps": [
-				{"step":"with-message", "steps":[
-					{"step":"delete", "title":"Delete Message?", "message":"Are you sure you want to delete this message?"},
-					{"step":"reload-page"}
+				{"do":"with-message", "steps":[
+					{"do":"delete", "title":"Delete Message?", "message":"Are you sure you want to delete this message?"},
+					{"do":"reload-page"}
 				]}
 			]
 		},
 		"message-read":{
 			"roles":["self"],
 			"steps":[
-				{"step":"with-message", "steps":[
-					{"step":"set-state", "state":"READ"},
-					{"step":"save"},
-					{"step":"trigger-event", "event":"refreshSidebar"}
+				{"do":"with-message", "steps":[
+					{"do":"set-state", "state":"READ"},
+					{"do":"save"},
+					{"do":"trigger-event", "event":"refreshSidebar"}
 				]}
 			]
 		},
 
 		"responses-announces":{
 			"steps": [
-				{"step":"view-html"}
+				{"do":"view-html"}
 			]
 		},
 		"responses-likes":{
 			"steps": [
-				{"step":"view-html"}
+				{"do":"view-html"}
 			]
 		},
 		"responses-replies":{
 			"steps": [
-				{"step":"view-html"}
+				{"do":"view-html"}
 			]
 		},
 		"responses-replies-list":{
 			"roles":["self"],
-			"step":"view-html"
+			"do":"view-html"
 		},
 		"responses-replies-recursive":{
 			"roles":["self"],
-			"step":"view-html"
+			"do":"view-html"
 		},
 		"reply":{
 			"roles":["self"],
 			"steps":[
-				{"step":"set-args", "postTo":"/@me/inbox/reply?url={{.Permalink}}"},
-				{"step":"add-stream", "style":"inline", "roles":"outbox-reply", "location":"outbox", "with-data":{
+				{"do":"set-args", "postTo":"/@me/inbox/reply?url={{.Permalink}}"},
+				{"do":"add-stream", "style":"inline", "roles":"outbox-reply", "location":"outbox", "with-data":{
 					"inReplyTo":"{{.Permalink}}"
 				}},
-				{"step":"set-header", "name":"hx-retarget", "value":"#responses"},
-				{"step":"set-header", "name":"hx-reswap", "value":"outerHTML"},
-				{"step":"view-html", "method":"post", "file":"responses-replies"}
+				{"do":"set-header", "name":"hx-retarget", "value":"#responses"},
+				{"do":"set-header", "name":"hx-reswap", "value":"outerHTML"},
+				{"do":"view-html", "method":"post", "file":"responses-replies"}
 			]
 		}
 	}

@@ -19,7 +19,7 @@ type Step interface {
 func New(stepInfo mapof.Any) (Step, error) {
 
 	// Populate the action with the data from
-	switch stepInfo["step"] {
+	switch stepInfo["do"] {
 
 	// STEPS THAT WORK ON ALL MODEL OBJECTS
 
@@ -210,7 +210,7 @@ func New(stepInfo mapof.Any) (Step, error) {
 	}
 
 	// Fall through means we have an unrecognized action
-	return nil, derp.NewInternalError("model.step.New", "Unrecognized step type", stepInfo["step"], stepInfo)
+	return nil, derp.NewInternalError("model.step.New", "Unrecognized step type", stepInfo)
 }
 
 // NewPipeline parses a series of render steps into a new array

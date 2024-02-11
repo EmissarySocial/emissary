@@ -20,20 +20,20 @@
 	"actions": {
 		"create":{
 			"steps": [
-				{"step":"edit-content", "file":"create", "format":"HTML"},
-				{"step":"save"},
-				{"step":"publish"}
+				{"do":"edit-content", "file":"create", "format":"HTML"},
+				{"do":"save"},
+				{"do":"publish"}
 			]
 		},
 		"edit": {
 			"roles":["self"],
 			"steps": [
-				{"step":"as-modal", "steps":[
-					{"step":"set-args", "postTo":"/{{.StreamID}}/edit"},
-					{"step":"edit-content", "file":"edit", "format":"HTML"},
-					{"step":"save"},
-					{"step":"publish"},
-					{"step":"refresh-page"}
+				{"do":"as-modal", "steps":[
+					{"do":"set-args", "postTo":"/{{.StreamID}}/edit"},
+					{"do":"edit-content", "file":"edit", "format":"HTML"},
+					{"do":"save"},
+					{"do":"publish"},
+					{"do":"refresh-page"}
 				]}
 			]
 		}

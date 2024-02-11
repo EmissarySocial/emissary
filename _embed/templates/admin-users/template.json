@@ -6,15 +6,15 @@
 	"label": "User",
 	"description": "Manage all users on this website",
 	"actions": {
-		"index": {"step": "view-html"},
-		"list": {"step": "view-html"},
+		"index": {"do": "view-html"},
+		"list": {"do": "view-html"},
 		
 		"add": {
 			"steps": [{
-				"step": "as-modal",
+				"do": "as-modal",
 				"steps": [
 					{
-						"step": "add",
+						"do": "add",
 						"type": "user",
 						"form": {
 							"type": "layout-vertical",
@@ -28,7 +28,7 @@
 							]
 						}
 					},
-					{"step": "refresh-page"}
+					{"do": "refresh-page"}
 				]
 			}]
 		},
@@ -36,10 +36,10 @@
 		"edit":{
 			"steps":[
 				{
-					"step":"as-modal",
+					"do":"as-modal",
 					"steps":[
-						{"step":"view-html"},
-						{"step": "refresh-page"}
+						{"do":"view-html"},
+						{"do": "refresh-page"}
 					]
 				}				
 			]
@@ -47,7 +47,7 @@
 
 		"edit-form": {
 			"steps": [{
-				"step": "edit",
+				"do": "edit",
 				"type": "user",
 				"form": {
 					"type": "layout-vertical",
@@ -69,14 +69,14 @@
 
 		"send-welcome": {
 			"steps":[
-				{"step":"send-email", "email":"welcome"}
+				{"do":"send-email", "email":"welcome"}
 			]
 		},
 
 		"delete": {
 			"steps":[
-				{"step": "delete", "type": "user"},
-				{"step": "refresh-page"}
+				{"do": "delete", "type": "user"},
+				{"do": "refresh-page"}
 			]
 		}
 	}

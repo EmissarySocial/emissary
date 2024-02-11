@@ -6,11 +6,11 @@
 	"label": "Rules",
 	"description": "Domain Owners only.  Site Admin",
 	"actions": {
-		"index": {"step": "view-html"},
-		"list": {"step": "view-html"},
+		"index": {"do": "view-html"},
+		"list": {"do": "view-html"},
 		"add": {"steps":[
-			{"step":"as-modal", "background":"/admin/rules", "steps":[
-				{"step": "edit", "form":{
+			{"do":"as-modal", "background":"/admin/rules", "steps":[
+				{"do": "edit", "form":{
 					"type":"layout-vertical",
 					"label":"Add Server-Wide Rule",
 					"children":[
@@ -20,11 +20,11 @@
 					]
 				}}
 			]},
-			{"step":"trigger-event", "event":"refreshPage"}
+			{"do":"trigger-event", "event":"refreshPage"}
 		]},
 		"edit": {"steps":[
-			{"step":"as-modal", "background":"/admin/rules", "steps":[
-				{"step": "edit", "form":{
+			{"do":"as-modal", "background":"/admin/rules", "steps":[
+				{"do": "edit", "form":{
 					"type":"layout-vertical",
 					"label":"Edit Server-Wide Rule",
 					"children":[
@@ -34,12 +34,12 @@
 					]
 				}, "options":["delete:/admin/rules/{{.RuleID}}/delete"]}
 			]},
-			{"step":"trigger-event", "event":"refreshPage"}
+			{"do":"trigger-event", "event":"refreshPage"}
 		]},
 		"delete": {
 			"steps":[
-				{"step": "delete"},
-				{"step":"trigger-event", "event":"refreshPage"}
+				{"do": "delete"},
+				{"do":"trigger-event", "event":"refreshPage"}
 			]
 		}
 	}

@@ -39,27 +39,27 @@
 		"create": {
 			"roles":["editor","owner"],
 			"steps":[
-				{"step":"set-data", "values":{
+				{"do":"set-data", "values":{
 					"label":"New Folder",
 					"data.format":"TABLE"
 				}},
-				{"step":"save"},
-				{"step":"forward-to", "url":"/{{.StreamID}}"}
+				{"do":"save"},
+				{"do":"forward-to", "url":"/{{.StreamID}}"}
 			]
 		},
 		"view": {
 			"roles": ["viewer","editor","owner"],
-			"step":"view-html"
+			"do":"view-html"
 		},
 		"edit": {
 			"roles": ["editor"],
 			"steps":[
 				{
-					"step":"as-modal",
+					"do":"as-modal",
 					"background":"view",
 					"steps": [
 						{
-							"step":"edit",
+							"do":"edit",
 							"form": {
 								"type":"layout-vertical",
 								"label":"Edit Folder",
@@ -71,41 +71,41 @@
 								]
 							}
 						}, 
-						{"step":"save", "comment":"Updated Folder"}
+						{"do":"save", "comment":"Updated Folder"}
 					]
 				},
-				{"step":"refresh-page"}
+				{"do":"refresh-page"}
 			]
 		},
 		"delete": {
 			"roles": ["editor"],
 			"steps": [
-				{"step":"delete", "title":"Delete this Folder?", "message":"This will permanently delete this folder and all of its contents"},
-				{"step":"forward-to", "url":"/{{.ParentID}}"}
+				{"do":"delete", "title":"Delete this Folder?", "message":"This will permanently delete this folder and all of its contents"},
+				{"do":"forward-to", "url":"/{{.ParentID}}"}
 			]
 		},
 
 		"add-child": {
 			"roles": ["editor"],
 			"steps":[
-				{"step":"add-stream", "location":"child", "title":"Add Item", "comment":"Created by {{.Author.DisplayName}}"},
-				{"step":"refresh-page"}
+				{"do":"add-stream", "location":"child", "title":"Add Item", "comment":"Created by {{.Author.DisplayName}}"},
+				{"do":"refresh-page"}
 			]
 		},
 		"sort":{
 			"roles":["editor"],
-			"step":"sort"
+			"do":"sort"
 		},
 		"sharing": {
 			"roles": ["editor"],
 			"steps": [
-				{"step":"as-modal", "steps": [
-					{"step":"set-simple-sharing", "roles": ["viewer"], "title":"Sharing Settings", "message":"Select Which People Can See This Folder"},
-					{"step":"save", "message":"Sharing updated by {{.Author}}"}
+				{"do":"as-modal", "steps": [
+					{"do":"set-simple-sharing", "roles": ["viewer"], "title":"Sharing Settings", "message":"Select Which People Can See This Folder"},
+					{"do":"save", "message":"Sharing updated by {{.Author}}"}
 				]}
 			]
 		},
-		"feed": {"roles": ["viewer"], "step":"view-feed"},
-		"websub": {"roles": ["viewer"], "step":"websub"}
+		"feed": {"roles": ["viewer"], "do":"view-feed"},
+		"websub": {"roles": ["viewer"], "do":"websub"}
 	}
 }
