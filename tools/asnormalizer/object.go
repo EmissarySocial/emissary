@@ -30,7 +30,6 @@ func Object(document streams.Document) map[string]any {
 		vocab.PropertyInReplyTo:    actual.InReplyTo().ID(),
 		vocab.PropertyName:         actual.Name(),
 		vocab.PropertyContext:      Context(document),
-		vocab.PropertyImage:        Image(actual.Image()),
 		vocab.PropertySummary:      actual.Summary(),
 		vocab.PropertyContent:      actual.Content(),
 		vocab.PropertyPublished:    first(actual.Published(), time.Now()),
@@ -52,6 +51,10 @@ func Object(document streams.Document) map[string]any {
 
 	if image := actual.Image(); image.NotNil() {
 		result[vocab.PropertyImage] = Image(image)
+	}
+
+	if icon := actual.Icon(); icon.NotNil() {
+		result[vocab.PropertyIcon] = Image(icon)
 	}
 
 	return result

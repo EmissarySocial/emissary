@@ -20,6 +20,8 @@ func Image(image streams.Image) map[string]any {
 // AttachmentAsImage normalizes an Image object
 func AttachmentAsImage(attachment streams.Document) map[string]any {
 
+	attachment = biggestImage(attachment)
+
 	return map[string]any{
 		vocab.PropertyHref:      attachment.URL(),
 		vocab.PropertyHeight:    attachment.Height(),
