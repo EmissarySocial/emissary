@@ -11,12 +11,16 @@ func Attachment(document streams.Document) []map[string]any {
 
 	for attachment := range document.Channel() {
 
-		result = append(result, map[string]any{
-			vocab.PropertyType:    attachment.Type(),
-			vocab.PropertyName:    attachment.Name(),
-			vocab.PropertyContent: first(attachment.Content(), attachment.Get("value").String()),
-			vocab.PropertyURL:     first(attachment.URL(), attachment.Href()),
-		})
+		file := map[string]any{
+			vocab.PropertyType:      attachment.Type(),
+			vocab.PropertyMediaType: attachment.MediaType(),
+			vocab.PropertyURL:       first(attachment.URL(), attachment.Href()),
+			vocab.PropertyHeight:    attachment.Height(),
+			vocab.PropertyWidth:     attachment.Width(),
+			vocab.PropertyContent:   first(attachment.Content(), attachment.Get("value").String()),
+		}
+
+		result = append(result, file)
 	}
 
 	return result

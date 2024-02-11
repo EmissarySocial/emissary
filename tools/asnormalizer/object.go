@@ -53,5 +53,10 @@ func Object(document streams.Document) map[string]any {
 		*/
 	}
 
+	// Allow attachments through the filter.
+	if attachments := actual.Attachment(); attachments.NotNil() {
+		result[vocab.PropertyAttachment] = Attachment(attachments)
+	}
+
 	return result
 }
