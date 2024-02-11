@@ -597,7 +597,7 @@
 			"roles":["self"],
 			"steps":[
 				{"step":"with-message", "steps":[
-					{"step":"set-state", "state":"READ"},
+					{"step":"set-state", "state":"UNMUTED"},
 					{"step":"save"},
 					{"step":"view-html", "method":"both", "file":"message-mute-button"}
 				]}

@@ -12,6 +12,9 @@ const MessageStateRead = "READ"
 // in their inbox.
 const MessageStateMuted = "MUTED"
 
+// MessageStateUnmuted is a magic state that is used to reset a message's MUTE status.
+const MessageStateUnmuted = "UNMUTED"
+
 // MessageStateNewReplies labels a message that has been read by its owner, and is now being
 // re-displayed in their inbox because new replies have been received.
 const MessageStateNewReplies = "NEW-REPLIES"

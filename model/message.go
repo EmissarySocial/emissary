@@ -121,6 +121,9 @@ func (message *Message) SetState(stateID string) {
 	case MessageStateMuted:
 		message.MarkMuted()
 
+	case MessageStateUnmuted:
+		message.MarkUnmuted()
+
 	case MessageStateNewReplies:
 		message.MarkNewReplies()
 	}
@@ -138,6 +141,27 @@ func (message *Message) MarkRead() bool {
 
 	// "MUTED" is like "READ" but even more.  So don't go backwards from "MUTED"
 	if message.StateID == MessageStateMuted {
+		return false
+	}
+
+	// Update the stateID to "READ"
+	message.StateID = MessageStateRead
+
+	// Set the ReadDate if it is not already set
+	if message.ReadDate == math.MaxInt64 {
+		message.ReadDate = time.Now().Unix()
+	}
+
+	return true
+}
+
+// MarkRead sets the stateID of this Message to "READ".
+// If the ReadDate is not already set, then it is set to the current time.
+// This function returns TRUE if the value was changed
+func (message *Message) MarkUnmuted() bool {
+
+	// If the status is anything but "MUTED" then there's nothing to do.
+	if message.StateID != MessageStateMuted {
 		return false
 	}
 
