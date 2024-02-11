@@ -17,9 +17,9 @@ func first[T comparable](values ...T) T {
 // value that has the largest width.
 func biggestImage(document streams.Document) streams.Document {
 
-	var max streams.Document
+	max := document.Head()
 
-	for ; document.NotNil(); document = document.Tail() {
+	for document = document.Tail(); document.NotNil(); document = document.Tail() {
 		if document.Width() > max.Width() {
 			max = document.Head()
 		}
