@@ -118,18 +118,19 @@
 
 			<div class="content">
 
-				{{- $image := $stream.Image -}}
-				{{- if $image.NotNil -}}
-					<div class="margin-bottom">
-						<a href="{{$stream.URLOrID}}" target="_blank"><img src="{{$image.URL}}" style="width:100%; border:solid 1px var(--gray20); {{- if $image.HasDimensions}} aspect-ratio:{{$image.AspectRatio}};{{end}}"/></a>
-					</div>
-				{{- end -}}
-
 				{{- if $stream.HasContent -}}
 					<div>{{- $stream.Content | html -}}</div>
-				{{- else if $stream.HasSummary -}}
+				{{- else -}}
+					{{- $image := $stream.Image -}}
+					{{- if $image.NotNil -}}
+						<div class="margin-bottom">
+							<a href="{{$stream.URLOrID}}" target="_blank"><img src="{{$image.URL}}" style="width:100%; border:solid 1px var(--gray20); {{- if $image.HasDimensions}} aspect-ratio:{{$image.AspectRatio}};{{end}}"/></a>
+						</div>
+					{{- end -}}
 					<div>{{- $stream.Summary -}}</div>
 				{{- end -}}
+
+				{{ template "attachments" $stream.Attachment }}
 
 				<div class="margin-bottom text-sm text-light-gray">{{ $stream.Published | shortDate -}}</div>
 

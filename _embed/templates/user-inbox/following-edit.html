@@ -18,11 +18,10 @@
 			</a>
 		</div>
 		<div class="text-green bold margin-top">
-			{{icon "check-badge-fill"}} Following
 			{{ if eq "ACTIVITYPUB" $following.Method -}}
-				via ActivityPub
+				{{icon "check-badge-fill"}} Following via ActivityPub
 			{{ else if eq "POLL" $following.Method -}}
-				via RSS/Atom
+				{{icon "rss-fill"}} Following via RSS/Atom
 			{{- end -}}
 		</div>
 	</div>

@@ -1,0 +1,12 @@
+{{- if .NotNil -}}
+	{{$slice := .SliceOfDocuments -}}
+	<div class="margin-vertical">
+		{{- range $slice -}}
+			{{- if eq "Video" .Type -}}
+				[Video Player: {{.URL}}]
+			{{- else -}}
+				<img src="{{.URL}}" class="width-100-percent" style="border:solid 1px var(--gray20); aspect-ratio:{{.AspectRatio}};" alt="{{.Content}}"/>
+			{{- end -}}
+		{{- end }}
+	</div>
+{{- end -}}

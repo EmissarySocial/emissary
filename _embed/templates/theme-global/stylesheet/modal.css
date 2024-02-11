@@ -25,6 +25,10 @@
 #modal-underlay {
 	/* underlay takes up the entire viewport. This is only
 	required if you want to click to dismiss the popup */
+
+	-webkit-backdrop-filter: blur(12px);
+	backdrop-filter: blur(12px);
+
 	position: absolute;
 	z-index: -1;
 	top: 0px;
@@ -32,7 +36,7 @@
 	left: 0px;
 	right: 0px;
 	background-color: #444;
-	opacity: 0.9;
+	opacity: 0.8;
 }
 
 #modal-window {
