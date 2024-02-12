@@ -10,7 +10,15 @@
 	position: relative;
 }
 
-/** Extra Small Screens ******/
+/* Responsive Breakpoints *************
+	xs < 568px
+	sm < 768px
+	md < 1024px
+	lg < 1280px
+	xl > 1280px
+*/
+
+/** EXTRA SMALL Screens (phone/vertical) ******/
 @media screen and (max-width:568px) {
 
 	:root{
@@ -38,6 +46,7 @@
 	}
 }
 
+/** SMALL Screens (phone/vertical******/
 @media screen and (min-width:568px) {
 
 	.framed, .page {
@@ -56,10 +65,11 @@
 
 }
 
+/** MEDIUM Screens (tablet/vertical) ******/
 @media screen and (min-width:768px) {
 
 	.framed, .page {
-		width:90%;
+		width:95%;
 	}
 
 	.hide-sm,
@@ -73,10 +83,11 @@
 	}
 }
 
+/** LARGE Screens (tablet/landscape) ******/
 @media screen and (min-width:1024px) {
 
 	.framed, .page {
-		width:85%;
+		width:90%;
 	}
 
 	.hide-md,
@@ -90,10 +101,11 @@
 	}
 }
 
+/** EXTRA LARGE Screens (laptop/desktop) ******/
 @media screen and (min-width:1280px) {
 
 	.framed, .page {
-		width:80%;
+		width:85%;
 		max-width:76em;
 	}
 
