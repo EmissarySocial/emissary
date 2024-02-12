@@ -228,10 +228,6 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 			return url + "?" + extraParams
 		},
 
-		"emojiFavorites": func() []string {
-			return []string{"👍", "👎", "😄", "🎉", "🙏", "🧐", "😕"}
-		},
-
 		"dump": func(values ...any) string {
 			for _, value := range values {
 				spew.Dump(value)
