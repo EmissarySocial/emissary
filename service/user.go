@@ -16,7 +16,6 @@ import (
 	"github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/outbox"
-	"github.com/benpate/rosetta/channel"
 	"github.com/benpate/rosetta/iterator"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/schema"
@@ -538,10 +537,9 @@ func (service *User) ActivityPubActor(userID primitive.ObjectID, withFollowers b
 			return outbox.Actor{}, derp.Wrap(err, location, "Error retrieving followers")
 		}
 
-		// Map the follower channel to only include the ProfileURL
-		followerIDs := channel.Map(followers, func(follower model.Follower) string {
-			return follower.Actor.ProfileURL
-		})
+		// Get a filter to prevent sending to "Blocked" followers
+		ruleFilter := service.ruleService.Filter(userID, WithBlocksOnly())
+		followerIDs := ruleFilter.ChannelSend(followers)
 
 		// Add the channel of follower IDs to the Actor
 		actor.With(outbox.WithFollowers(followerIDs))
@@ -553,7 +551,7 @@ func (service *User) ActivityPubActor(userID primitive.ObjectID, withFollowers b
 // TODO: MEDIUM: this function is wickedly inefficient
 func (service *User) QueryBlockedActors(userID primitive.ObjectID, criteria exp.Expression) ([]model.User, error) {
 
-	const location = "service.User.QueryRuleedUsers"
+	const location = "service.User.QueryBlockedUsers"
 
 	// Query all rules
 	rules, err := service.ruleService.QueryBlockedActors(userID)
