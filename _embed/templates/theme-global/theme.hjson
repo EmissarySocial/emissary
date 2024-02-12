@@ -1,0 +1,18 @@
+{
+	themeId:"global"
+	isVisible:false
+	bundles: {
+		stylesheet: {
+			content-type:"text/css"
+		}
+		javascript: {
+			content-type:"text/javascript"
+		}
+		hyperscript: {
+			content-type:"text/hyperscript"
+		}
+		registration: {
+			content-type:"text/hyperscript"
+		}
+	}
+}

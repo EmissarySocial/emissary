@@ -1,0 +1,5 @@
+{
+	widgetId:"byline"
+	label:"Byline"
+	description:"Displays author and publishing information"
+}

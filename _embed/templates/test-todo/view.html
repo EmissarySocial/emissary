@@ -1,0 +1,36 @@
+{{- $renderer := . -}}
+{{- $children := .Children.ByRank.Slice -}}
+
+<div class="page" hx-get="/{{.StreamID}}" hx-trigger="refreshPage from:window" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
+
+	<div id="menu-bar">
+		<div class="left">
+			<a hx-get="/{{.StreamID}}/edit">Edit List</a>
+		</div>
+		<div class="right">
+			<a hx-get="/{{.StreamID}}/delete" class="text-red">Delete</a>
+		</div>
+	</div>
+
+	<h1 class="flex-grow-1">To Do List</h1>
+
+	<table class="table">
+		<tr hx-get="/{{.StreamID}}/add" role="button"><td colspan="3">
+			<span class="link">{{icon "add"}} Add Task</span>
+		</td></tr>
+		{{- range $children -}}
+			<tr role="button">
+				<td hx-get="/{{.StreamID}}/view">
+					{{- if .Data.GetBool "complete" -}}
+						{{icon "check-circle-fill"}}
+					{{- else -}}
+						{{icon "circle"}}
+					{{- end }}
+				{{.Label}}</td>
+				<td hx-get="/{{.StreamID}}/view"><div class="text-gray text-sm ellipsis">{{.Summary}}</div></</td>
+				<td class="align-right"><button class="text-sm" hx-get="/{{.StreamID}}/discuss">Discussion</button></td>
+			</tr>
+		{{- end -}}
+	</table>
+
+</div>

@@ -1,0 +1,13 @@
+{
+	templateId:"base-social"
+	actions:{
+
+		like-button: {
+			roles:["authenticated"]
+			steps:[
+				{do:"set-response"}
+				{do:"view-html", "method":"both"}
+			]
+		}
+	}
+}

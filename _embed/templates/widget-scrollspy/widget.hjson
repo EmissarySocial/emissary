@@ -1,0 +1,10 @@
+{
+	widgetId:"scrollspy"
+	label:"Scrollspy"
+	description:"Adds an intra-page navigation menu to this stream"
+	bundles:{
+		hyperscript:{
+			content-type:"text/hyperscript"
+		}
+	}
+}

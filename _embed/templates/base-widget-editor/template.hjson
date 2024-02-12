@@ -1,0 +1,15 @@
+{
+	templateId:"base-widget-editor"
+	model:"Stream"
+	label:"Widget Editor (BASE TEMPLATE)"
+	description:"Base Template to be used by other templates to edit widget locations"
+	widget-locations: ["LEFT", "TOP", "RIGHT", "BOTTOM"]
+	bundles: {
+		stylesheet: {
+			content-type:"text/css"
+		}
+		hyperscript: {
+			content-type:"text/hyperscript"
+		}
+	}
+}

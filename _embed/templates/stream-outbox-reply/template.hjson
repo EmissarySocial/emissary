@@ -1,0 +1,41 @@
+{
+	templateId:"outbox-reply"
+	templateRole:"outbox-reply"
+	socialRole:"Note"
+	extends:["outbox-message"]
+	model:"stream"
+	icon:"message"
+	label:"Reply"
+	description:"Reply to a post"
+	sort: 0
+	containedBy: ["outbox"]
+	schema: {
+		type:"object"
+		properties: {
+			summary: {type:"string", format:"html"}
+			imageUrl: {type:"string", format:"url"}
+			inReplyTo: {type:"string", format:"url"}
+		}
+	}
+	actions: {
+		create:{
+			steps: [
+				{do:"edit-content", file:"create", format:"HTML"}
+				{do:"save"}
+				{do:"publish"}
+			]
+		}
+		edit: {
+			roles:["self"]
+			steps: [
+				{do:"as-modal", steps:[
+					{do:"set-args", postTo:"/{{.StreamID}}/edit"}
+					{do:"edit-content", file:"edit", format:"HTML"}
+					{do:"save"}
+					{do:"publish"}
+					{do:"refresh-page"}
+				]}
+			]
+		}
+	}
+}

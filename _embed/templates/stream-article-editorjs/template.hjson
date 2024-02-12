@@ -1,0 +1,34 @@
+{
+	templateId:"article-editorjs"
+	extends: ["base-article"]
+	containedBy: ["top", "folder", "article"]
+	label:"Article (WYSIWYG)"
+	description:"For regular use. Contains text, images, and more."
+	icon:"article"
+	actions: {
+		create: {
+			roles:["editor","owner"]
+			steps: [
+				{
+					do:"set-data", 
+					values: {
+						label:"New Article"
+						content-format:"editorjs"
+						content-raw:"{}"
+					}
+				}
+				{do:"set-state", state:"unpublished"}
+				{do:"save"}
+				{do:"forward-to", url:"/{{.StreamID}}/edit"}
+			]
+		}
+		editor: {
+			roles: ["owner", "editor"]
+			steps: [
+				{do:"with-draft", steps: [
+					{do:"edit-content", file:"editor", format:"EDITORJS"}
+				]}
+			]
+		}
+	}
+}

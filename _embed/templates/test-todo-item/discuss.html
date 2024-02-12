@@ -1,0 +1,23 @@
+{{- $replies :=  .RepliesAfter "0" 1000}}
+
+<h1>Discussion Here</h1>
+
+<table class="table margin-bottom">
+	{{- range $replies -}}
+		{{- $attributedTo := .AttributedTo -}}
+		<tr>
+			<td>
+				<img src="{{$attributedTo.Icon.Href}}" class="circle-48">
+			</td>
+			<td class="width-100-percent">
+				<div>
+					<span class="bold">{{$attributedTo.Name}}</span>
+					<span class="text-light-gray">{{$attributedTo.Username}}</span>
+				</div>
+				{{.Content}}
+			</td>
+		</tr>
+	{{- end -}}
+</table>
+
+<button script="on click send closeModal">Close Window</button>

@@ -1,0 +1,74 @@
+{
+	templateId: "test-todo-item"
+	templateRole: "todo-item"
+	socialRole: "Note"
+	model: "Stream"
+	containedBy: ["todo"]
+	label: "To Do Item"
+	description: "A single item in a to-do list"
+	icon: "check-badge"
+	schema: {
+		type: "object"
+		properties: {
+			label: {type: "string", maxlength: 64}
+			summary: {type: "string", maxlength: 256}
+			data: {type: "object", properties: {
+				dueDate: {type: "string", format: "date"}
+				complete: {type: "boolean"}
+			}}
+		}
+	}
+	actions: {
+		create: {
+			steps: [
+				{do: "as-modal", "steps": [
+					{do: "edit", "form": {
+						type: "layout-vertical"
+						label: "Add Task"
+						children: [
+							{type: "text", label: "Name", path: "label"}
+							{type: "textarea", label: "Details", path: "summary"}
+							{type: "text", label: "Due Date", path: "data.dueDate"}
+						]
+					}}
+					{do: "save"}
+				]}
+			]
+		}
+		view: {
+			steps: [
+				{do: "as-modal", "steps": [
+					{
+						do: "edit", 
+						options: ["delete: /{{.StreamID}}/delete"]
+						form: {
+							type: "layout-vertical"
+							label: "Edit Task"
+							children: [
+								{type: "text", label: "Name", path: "label"}
+								{type: "textarea", label: "Details", path: "summary"}
+								{type: "text", label: "Due Date", path: "data.dueDate"}
+								{type: "toggle", label: "Complate", path: "data.complete"}
+							]
+						}
+					}
+					{do: "publish", "file":"activitystream.json"}
+				]}
+				{do: "trigger-event", "event": "refreshPage"}
+			]
+		}
+		edit: {do: "do", "action": "view"}
+		delete: {"steps": [
+			{do: "delete", "title": "Delete Task?"}
+			{do: "trigger-event", "event": "refreshPage"}
+		]}
+
+		discuss: {
+			steps: [
+				{do: "as-modal", "steps": [
+					{do: "view-html"}
+				]}
+			]
+		}
+	}
+}

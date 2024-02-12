@@ -1,0 +1,220 @@
+{
+	templateId:"base-article"
+	templateRole:"article"
+	socialRole:"Article"
+	model:"Stream"
+	extends:["base-widget-editor"]
+	label:"Article (BASE TEMPLATE)"
+	description:"Base Template, extended by article-editorjs and article-markdown"
+	widgetlocations: ["LEFT", "TOP", "RIGHT", "BOTTOM"]
+	bundles: {
+		stylesheet: {
+			content-type:"text/css"
+		}
+	}
+	schema: {
+		type:"object"
+		properties: {
+			token: {type:"string", required:true}
+			label: {type:"string"}
+			summary: {type:"string"}
+			content:{type:"object", properties: {
+				format: {type:"string"}
+				raw: {type:"string"}
+				html: {type:"string", format:"html"}
+			}}
+		}
+	}
+	states: {
+		unpublished: {
+			label:"Default State"
+			description:"Visible only to Authors and Owners"
+		}
+		published: {
+			label:"Published"
+			description:"Visible to all people with permissions"
+		}
+	}
+	roles: {
+		owner: {
+			label:"Domain Owner"
+			decription:"Full control over this stream."
+		}, 
+		editor: {
+			label:"Editor"
+			description:"Can make changes to this article."
+		}
+		viewer: {
+			label:"Viewer"
+			description:"Can read and comment on this article."
+		}
+	}
+	actions: {
+		create: {
+			roles:["editor","owner"]
+			steps: [
+				{do:"set-data", values: {label:"New Article (WYSIWYG)"}}
+				{do:"set-state", state:"unpublished"}
+				{do:"save", message:"Created by {{.Author.DisplayName}}"}
+				{do:"forward-to", url:"/{{.StreamID}}/edit"}
+			]
+		}
+		view: {
+			roles: ["editor", "owner"]
+			stateRoles: {
+				published: ["viewer"]
+			}
+			steps:[
+				{do:"view-json"}
+				{do:"view-html"}
+			]
+		}
+		edit: {
+			roles: ["owner", "editor"]
+			steps: [
+				{do:"with-draft", steps: [
+					{do:"view-html"}
+				]}
+			]
+		}
+		delete: {
+			roles: ["owner"]
+			steps: [
+				{do:"delete", title:"Delete '{{.Label}}'?", message:"All content and comments will be lost.  There is NO UNDO."}
+				{do:"unpublish"}
+				{do:"forward-to", url:"/{{.ParentID}}"}
+			]
+		}
+		heading: {
+			roles: ["viewer", "editor", "owner"]
+			do: "view-html"
+		}
+		editor:{
+			roles: ["owner", "editor"]
+			steps: [
+				{do:"with-draft", steps: [
+					{do:"edit-content", file:"edit", format:"EDITORJS"}
+				]}
+			]
+		}
+		widgets: {
+			roles: ["owner", "editor"]
+			steps: [
+				{do:"with-draft", steps: [
+					{do:"sort-widgets"}
+					{do:"save", message:"Widgets updated by {{.Author}}"}
+					{do:"view-html", method:"both"}
+				]}
+			]
+		}
+		widget: {
+			roles: ["owner", "editor"]
+			steps: [
+				{do:"with-draft", steps: [
+					{do:"edit-widget", file:"edit", format:"EDITORJS"}
+					{do:"save", comment:"Widget updated by {{.Author}}"}
+				]}
+			]
+		}
+		widgetslist: {
+			roles: ["owner", "editor"]
+			steps: [
+				{do:"with-draft", steps: [
+					{do:"view-html"}
+				]}
+			]
+		}
+		children: {
+			roles: ["owner", "editor"]
+			steps: [
+				{do:"view-html"}
+				{do:"sort", keys:"_id", values:"rank"}
+			]
+		}
+		uploadimage: {
+			roles: ["owner", "editor"]
+			steps: [
+				{do:"with-draft", steps: [
+					{do:"upload-attachments"}
+				]}
+			]
+		}
+		sharing: {
+			roles: ["owner"]
+			steps: [
+				{do:"as-modal", steps: [
+					{do:"set-simple-sharing", roles: ["viewer"], title:"Who Can See This Article?", message:"Select who can view and comment on this article."}
+					{do:"save", message:"Sharing updated by {{.Author}}"}
+				]}
+			]
+		}
+		publish: {
+			states: ["unpublished"]
+			roles: ["owner", "editor"]
+			steps: [
+				{do:"as-confirmation", title:"Publish this Stream?", message:"Viewers will be able to see this stream on your website immediately.", submit:"Publish"}
+				{do:"set-state", state:"published"}
+				{do:"save", message:"Published by {{.Author}}"}
+				{do:"publish", mentions:["summary","content.html"]}
+				{do:"refresh-page"}
+			]
+		}
+		unpublish: {
+			states: ["published"]
+			roles: ["owner", "editor"]
+			steps: [
+				{do:"as-confirmation", title:"Un-Publish this Stream?", message:"Viewers will no longer be able to see this stream on your website.", submit:"Un-Publish"}
+				{do:"set-state", state:"unpublished"}
+				{do:"save", message:"Un-Published by {{.Author}}"}
+				{do:"unpublish"}
+				{do:"refresh-page"}
+			]
+		}
+		promotedraft: {
+			roles: ["owner", "editor"]
+			steps: [
+				{do:"as-confirmation", title:"Promote this Draft?", message:"The live page will be replaced with this content.", submit:"Promote"}
+				{do:"promote-draft"}
+				{do:"publish", mentions:["summary","content.html"]}
+				{do:"refresh-page"}
+				{do:"forward-to", url:"/{{.Token}}"}
+			]
+		}
+		discarddraft: {
+			roles: ["owner", "editor"]
+			steps: [
+				{do:"with-draft", steps:[
+					{do:"delete", title:"Discard This Draft?", message:"The original article will remain unchanged.", submit:"Discard Draft"}
+				]}
+				{do:"forward-to", url:"/{{.Token}}"}
+			]
+		}
+		properties: {
+			roles: ["editor", "owner"]
+			steps: [
+				{do:"with-draft", steps:[
+					{do:"as-modal", steps: [
+						{do:"edit"
+							form: {
+								type:"layout-vertical"
+								label:"Article Properties"
+								children: [
+									{type:"text", path:"token", label:"Token/Slug"}
+									{type:"text", path:"label", label:"Label"}
+									{type:"textarea", path:"summary", label:"Summary"}
+								]
+							}
+						}]
+					}
+					{do:"save", comment:"Properties updated by {{.Author}}"}
+				]
+			}]
+		}
+		addchild:{
+			roles: ["owner", "editor"]
+			steps: [
+				{do:"add-stream", location:"child", title:"+ Add a Stream"}
+			]
+		}
+	}
+}

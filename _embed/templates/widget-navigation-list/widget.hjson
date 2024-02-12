@@ -1,0 +1,23 @@
+{
+	widgetId:"navigation-list"
+	label:"Navigation List"
+	description:"Displays a two-tiered list containing this stream's parent, this stream's siblings, and a sub-menu containing this stream's children."
+	schema:{
+		type:"object"
+		properties:{
+			parents:{type:"string", enum:["All", "Parent Only"], default:"Parent Only"}
+			siblings:{type:"string", enum:["All", "Self Only"], default:"All"}
+			children:{type:"string", enum:["All"], default:""}
+		}
+	}
+	form:{
+		type:"layout-vertical"
+		label:"Edit Navigation Widget"
+		description:"Choose which items to display in the navigation widget."
+		children:[
+			{type:"select", path:"parents", label:"Parent"}
+			{type:"select", path:"siblings", label:"Siblings"}
+			{type:"select", path:"children", label:"Children"}
+		]
+	}
+}
