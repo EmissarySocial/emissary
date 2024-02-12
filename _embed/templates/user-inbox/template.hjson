@@ -582,7 +582,7 @@
 		message: {
 			roles:["self"]
 			steps:[
-				{do:"as-modal", options:[clas:large"], steps:[
+				{do:"as-modal", options:["class:large"], steps:[
 					{do:"view-html"}
 				]}
 			]
