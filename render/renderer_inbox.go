@@ -66,9 +66,7 @@ func (w Inbox) Render() (template.HTML, error) {
 	status := Pipeline(w.action.Steps).Get(w._factory, &w, &buffer)
 
 	if status.Error != nil {
-		err := derp.Wrap(status.Error, "render.Inbox.Render", "Error generating HTML", w._request.URL.String())
-		derp.Report(err)
-		return "", err
+		return "", derp.ReportAndReturn(derp.Wrap(status.Error, "render.Inbox.Render", "Error generating HTML", w._request.URL.String()))
 	}
 
 	// Success!
@@ -82,7 +80,7 @@ func (w Inbox) View(actionID string) (template.HTML, error) {
 	renderer, err := NewInbox(w._factory, w._request, w._response, w._user, actionID)
 
 	if err != nil {
-		return template.HTML(""), derp.Wrap(err, "render.Inbox.View", "Error creating Inbox renderer")
+		return template.HTML(""), derp.ReportAndReturn(derp.Wrap(err, "render.Inbox.View", "Error creating Inbox renderer"))
 	}
 
 	return renderer.Render()
