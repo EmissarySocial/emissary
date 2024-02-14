@@ -194,16 +194,18 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	// Middleware for standard pages
 	e.Use(mw.Domain(factory))
 	e.Use(steranko.Middleware(factory))
+	e.Use(middleware.CORS())
 
 	// TODO: MEDIUM: Add other Well-Known API calls?
 	// https://en.wikipedia.org/wiki/List_of_/.well-known/_services_offered_by_webservers
 
 	e.GET("/favicon.ico", handler.GetFavicon(factory))
-	e.GET("/.well-known/change-password", handler.TBD)
-	e.GET("/.well-known/host-meta", handler.TBD)
+	e.GET("/.well-known/change-password", handler.GetChangePassword(factory))
+	e.GET("/.well-known/host-meta", handler.GetHostMeta(factory))
+	e.GET("/.well-known/host-meta.json", handler.GetHostMetaJSON(factory))
 	e.GET("/.well-known/nodeinfo", handler.GetNodeInfo(factory))
-	e.GET("/.well-known/nodeinfo/2.0", handler.GetNodeInfo20(factory))
-	e.GET("/.well-known/nodeinfo/2.1", handler.GetNodeInfo21(factory))
+	e.GET("/nodeinfo/2.0", handler.GetNodeInfo20(factory))
+	e.GET("/nodeinfo/2.1", handler.GetNodeInfo21(factory))
 	e.GET("/.well-known/oembed", handler.GetOEmbed(factory))
 	e.GET("/.well-known/webfinger", handler.GetWebfinger(factory))
 
