@@ -204,7 +204,7 @@ func (service *Inbox) Schema() schema.Schema {
  ******************************************/
 
 func (service *Inbox) QueryByUserID(userID primitive.ObjectID, criteria exp.Expression, options ...option.Option) ([]model.Message, error) {
-	criteria = exp.Equal("userId", userID).And(criteria)
+	criteria = criteria.AndEqual("userId", userID)
 	return service.Query(criteria, options...)
 }
 
