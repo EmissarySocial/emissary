@@ -34,26 +34,18 @@ func Authorizer(serverFactory *server.Factory) toot.Authorizer[model.Authorizati
 			return model.Authorization{}, derp.Wrap(err, location, "Invalid JWT token")
 		}
 
-		// Extract the Authorization from the JWT Token
-		result := token.Claims.(model.Authorization)
-
 		// Validate the token
 		if !token.Valid {
-			return result, derp.NewForbiddenError(location, "Invalid token: Invalid JWT")
+			return model.Authorization{}, derp.NewForbiddenError(location, "Invalid token: Invalid JWT")
 		}
 
-		// Confirm that the UserID is present
-		if result.UserID.IsZero() {
-			return model.Authorization{}, derp.NewForbiddenError(location, "Invalid token: missing UserID")
-		}
+		authorization, ok := token.Claims.(*model.Authorization)
 
-		// Confirm that the ClientID is not empty.  This confirms
-		// we have an OAuth token, not a user token.
-		if result.ClientID.IsZero() {
-			return result, derp.NewForbiddenError(location, "Token must be an OAuth token, not a user token")
+		if !ok {
+			return model.Authorization{}, derp.NewForbiddenError(location, "Invalid token: Invalid Claims", token)
 		}
 
 		// Return the token to the caller.
-		return result, nil
+		return *authorization, nil
 	}
 }

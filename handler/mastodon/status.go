@@ -24,28 +24,45 @@ func PostStatus(serverFactory *server.Factory) func(model.Authorization, txn.Pos
 			return object.Status{}, derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
+		// Load the user from the database
+		userSerivce := factory.User()
+		user := model.NewUser()
+
+		if err := userSerivce.LoadByID(authorization.UserID, &user); err != nil {
+			return object.Status{}, derp.Wrap(err, location, "Error loading user")
+		}
+
 		// Create the stream for the new mastodon "Status"
 		stream := model.NewStream()
+		stream.TemplateID = "outbox-message" // TODO: This should not be hard-coded. Is there some way to look this up?
 		stream.ParentID = authorization.UserID
+		stream.AttributedTo = user.PersonLink()
 		stream.SocialRole = vocab.ObjectTypeNote
 		stream.InReplyTo = transaction.InReplyToID
 		stream.Label = transaction.SpoilerText
-		stream.Content.Format = model.ContentFormatHTML
-		stream.Content.Raw = transaction.Status
 
 		if scheduledAt, err := iso8601.ParseString(transaction.ScheduledAt); err == nil {
 			stream.PublishDate = scheduledAt.Unix()
 		}
 
+		// Add the content into the stream
+		contentService := factory.Content()
+		stream.Content = contentService.New(model.ContentFormatHTML, transaction.Status)
+
 		// Verify user permissions
 		streamService := factory.Stream()
 		if err := streamService.UserCan(&authorization, &stream, "create"); err != nil {
-			return object.Status{}, derp.NewForbiddenError(location, "User is not authorized to delete this stream")
+			return object.Status{}, derp.NewForbiddenError(location, "User is not authorized to create this stream", stream, authorization)
 		}
 
 		// Save the stream
 		if err := streamService.Save(&stream, "Created via Mastodon API"); err != nil {
 			return object.Status{}, derp.Wrap(err, location, "Error saving stream")
+		}
+
+		// Publish the Stream to the User's outbox
+		if err := streamService.Publish(&user, &stream); err != nil {
+			return object.Status{}, derp.Wrap(err, location, "Error publishing stream")
 		}
 
 		return stream.Toot(), nil

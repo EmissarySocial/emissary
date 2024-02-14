@@ -97,6 +97,7 @@ func Mastodon(serverFactory *server.Factory) toot.API[model.Authorization] {
 		PostFilter_Status:    mastodon.PostFilter_Status(serverFactory),
 		GetFilter_Status:     mastodon.GetFilter_Status(serverFactory),
 		DeleteFilter_Status:  mastodon.DeleteFilter_Status(serverFactory),
+		GetFilters_V1:        mastodon.GetFilters_V1(serverFactory),
 		GetFilter_V1:         mastodon.GetFilter_V1(serverFactory),
 		PostFilter_V1:        mastodon.PostFilter_V1(serverFactory),
 		PutFilter_V1:         mastodon.PutFilter_V1(serverFactory),

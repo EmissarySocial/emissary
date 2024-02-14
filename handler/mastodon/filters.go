@@ -4,6 +4,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
+	"github.com/benpate/toot"
 	"github.com/benpate/toot/object"
 	"github.com/benpate/toot/txn"
 )
@@ -104,6 +105,13 @@ func DeleteFilter_Status(serverFactory *server.Factory) func(model.Authorization
 
 	return func(model.Authorization, txn.DeleteFilter_Status) (struct{}, error) {
 		return struct{}{}, derp.NewInternalError("handler.mastodon.DeleteFilter_Status", "Not Implemented")
+	}
+}
+
+func GetFilters_V1(serverFactory *server.Factory) func(model.Authorization, txn.GetFilters_V1) ([]object.Filter, toot.PageInfo, error) {
+
+	return func(model.Authorization, txn.GetFilters_V1) ([]object.Filter, toot.PageInfo, error) {
+		return []object.Filter{}, toot.PageInfo{}, nil
 	}
 }
 
