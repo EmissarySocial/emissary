@@ -49,16 +49,22 @@ func PostSignIn(serverFactory *server.Factory) echo.HandlerFunc {
 			return derp.NewInternalError("handler.PostSignIn", "Invalid Domain.")
 		}
 
+		// Try to sign in using Steranko
 		s := factory.Steranko()
-
 		if err := s.SignIn(ctx); err != nil {
 			ctx.Response().Header().Add("HX-Trigger", "SigninError")
 			return ctx.HTML(derp.ErrorCode(err), derp.Message(err))
 		}
 
-		ctx.Response().Header().Add("HX-Trigger", "SigninSuccess")
+		// If there is a "next" parameter, then redirect to that URL.
+		if next := ctx.QueryParam("next"); next != "" {
+			ctx.Response().Header().Add("Hx-Redirect", next)
+			return ctx.NoContent(http.StatusNoContent)
+		}
 
-		return ctx.NoContent(200)
+		// Return a success message (and redirect on the client)
+		ctx.Response().Header().Add("Hx-Trigger", "SigninSuccess")
+		return ctx.NoContent(http.StatusNoContent)
 	}
 }
 

@@ -14,6 +14,7 @@ func OAuthUserTokenSchema() schema.Element {
 			"token":            schema.String{},
 			"clientSecret":     schema.String{},
 			"scopes":           schema.Array{Items: schema.String{}},
+			"apiUser":          schema.Boolean{},
 		},
 	}
 }
@@ -26,6 +27,9 @@ func (userToken *OAuthUserToken) GetPointer(name string) (any, bool) {
 
 	case "scopes":
 		return &userToken.Scopes, true
+
+	case "apiUser":
+		return &userToken.APIUser, true
 	}
 
 	return nil, false

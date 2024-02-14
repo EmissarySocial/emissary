@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"html/template"
 	"math"
+	"net/url"
 	"strings"
 	"time"
 
@@ -226,6 +227,10 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 				return url + "&" + extraParams
 			}
 			return url + "?" + extraParams
+		},
+
+		"queryEscape": func(value string) string {
+			return url.QueryEscape(value)
 		},
 
 		"dump": func(values ...any) string {

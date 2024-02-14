@@ -13,6 +13,7 @@ type Authorization struct {
 	GroupIDs    []primitive.ObjectID `json:"G"`           // IDs for all server-level groups that the User belongs to
 	ClientID    primitive.ObjectID   `json:"C,omitempty"` // Unique identifier of the OAuth Application/Client
 	DomainOwner bool                 `json:"O,omitempty"` // If TRUE, then this user is an owner of this domain
+	APIUser     bool                 `json:"A,omitempty"` // If TRUE, then this user is an API user
 	Scope       string               `json:"S,omitempty"` // OAuth Scopes that this user has access to
 
 	jwt.RegisteredClaims // By embedding the "RegisteredClaims" object, this record can support standard behaviors, like token expiration, etc.

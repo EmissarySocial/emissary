@@ -178,6 +178,7 @@ func (service *OAuthUserToken) CreateFromUser(user *model.User, clientID primiti
 	authorization.GroupIDs = user.GroupIDs
 	authorization.ClientID = client.ClientID
 	authorization.Scope = scope
+	authorization.APIUser = true
 
 	// Mock a transaction
 	txn := model.NewOAuthAuthorizationRequest()
@@ -222,6 +223,7 @@ func (service *OAuthUserToken) Create(client model.OAuthClient, authorization mo
 	result.UserID = authorization.UserID
 	result.Scopes = transaction.Scopes()
 	result.Token = token
+	result.APIUser = true
 
 	// Save the result to the database
 	if err := service.Save(&result, "Create"); err != nil {
@@ -241,9 +243,9 @@ func (service *OAuthUserToken) JWT(userID primitive.ObjectID, scopes string) (st
 
 	// Collect claims
 	claims := jwt.MapClaims{
-		"api":     true,
-		"userId":  userID,
-		"scopes:": scopes,
+		"A": true,   // apiUser
+		"U": userID, // UserID
+		"S": scopes, // Scopes
 	}
 
 	// Create the token

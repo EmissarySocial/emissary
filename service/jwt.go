@@ -3,6 +3,7 @@ package service
 import (
 	"crypto/aes"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -100,12 +101,22 @@ func (service *JWT) FindJWTKey(token *jwt.Token) (any, error) {
 // Parse retrieves a JWT token from the request, and parses it into a JWT token.
 // This method is a part of the steranko.KeyService interface.
 func (service *JWT) Parse(request *http.Request) (*jwt.Token, error) {
-	return service.ParseString(request.Header.Get("Authorization"))
+	authorization := request.Header.Get("Authorization")
+	authorization = strings.TrimPrefix(authorization, "Bearer ")
+	return service.ParseString(authorization)
 }
 
 func (service *JWT) ParseString(tokenString string) (*jwt.Token, error) {
-	// TODO: CRITICAL: Add WithValidateMthods() to this call.
-	return jwt.Parse(tokenString, service.FindJWTKey, jwt.WithValidMethods([]string{"HS256", "HS384", "HS512"}))
+
+	claims := model.NewAuthorization()
+
+	result, err := jwt.ParseWithClaims(tokenString, &claims, service.FindJWTKey, jwt.WithValidMethods([]string{"HS256", "HS384", "HS512"}))
+
+	if err != nil {
+		return nil, derp.ReportAndReturn(derp.Wrap(err, "service.JWT.Parse", "Error parsing JWT token"))
+	}
+
+	return result, nil
 }
 
 /******************************************
