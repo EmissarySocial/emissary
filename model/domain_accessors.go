@@ -8,11 +8,12 @@ import (
 func DomainSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"domainId":   schema.String{Format: "objectId", Required: true},
-			"themeId":    schema.String{MaxLength: 100, Required: true},
-			"label":      schema.String{MinLength: 1, MaxLength: 100, Required: true},
-			"forward":    schema.String{Format: "url", Required: false},
-			"signupForm": SignupFormSchema(),
+			"domainId":    schema.String{Format: "objectId", Required: true},
+			"themeId":     schema.String{MaxLength: 128, Required: true},
+			"label":       schema.String{MinLength: 1, MaxLength: 128, Required: true},
+			"description": schema.String{MinLength: 1, MaxLength: 1024, Required: false},
+			"forward":     schema.String{Format: "url", Required: false},
+			"signupForm":  SignupFormSchema(),
 		},
 	}
 }
@@ -33,6 +34,9 @@ func (domain *Domain) GetPointer(name string) (any, bool) {
 
 	case "label":
 		return &domain.Label, true
+
+	case "description":
+		return &domain.Description, true
 
 	case "forward":
 		return &domain.Forward, true

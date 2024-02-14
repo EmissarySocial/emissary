@@ -11,6 +11,7 @@ import (
 type Domain struct {
 	DomainID        primitive.ObjectID `bson:"_id"`             // This is the internal ID for the domain.  It should not be available via the web service.
 	Label           string             `bson:"label"`           // Human-friendly name displayed at the top of this domain
+	Description     string             `bson:"description"`     // Human-friendly description of this domain
 	ThemeID         string             `bson:"themeId"`         // ID of the theme to use for this domain
 	Forward         string             `bson:"forward"`         // If present, then all requests for this domain should be forwarded to the designated new domain.
 	Clients         set.Map[Client]    `bson:"clients"`         // External connections (e.g. Facebook, Twitter, etc.)

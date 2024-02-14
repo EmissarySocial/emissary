@@ -15,6 +15,7 @@ func TestDomainSchema(t *testing.T) {
 		{"domainId", "123456781234567812345678", nil},
 		{"themeId", "123456516253413243716253", nil},
 		{"label", "LABEL", nil},
+		{"description", "DESCRIPTION", nil},
 		{"forward", "https://other.site", nil},
 		{"signupForm.title", "SIGNUP TITLE", nil},
 		{"signupForm.message", "SIGNUP MESSAGE", nil},

@@ -23,6 +23,7 @@
 						type:"layout-vertical", children:[
 							{type:"select", path:"themeId", label:"Theme", options: {provider:"themes"}}
 							{type:"text", path:"label", label:"Label"}
+							{type:"textarea", path:"description", label:"Description"}
 						]
 					}
 					options: ["cancelbutto:hide", "endpoint:/admin/domain/form"]
