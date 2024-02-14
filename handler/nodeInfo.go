@@ -23,11 +23,11 @@ func GetNodeInfo(serverFactory *server.Factory) echo.HandlerFunc {
 			"links": []map[string]any{
 				{
 					"rel":  "http://nodeinfo.diaspora.software/ns/schema/2.0",
-					"href": server + "/.well-known/nodeinfo/2.0",
+					"href": server + "/nodeinfo/2.0",
 				},
 				{
 					"rel":  "http://nodeinfo.diaspora.software/ns/schema/2.1",
-					"href": server + "/.well-known/nodeinfo/2.1",
+					"href": server + "/nodeinfo/2.1",
 				},
 			},
 		}
@@ -78,7 +78,10 @@ func GetNodeInfo20(serverFactory *server.Factory) echo.HandlerFunc {
 				"localPosts":    0,
 				"localComments": 0,
 			},
-			"metadata": map[string]any{},
+			"metadata": map[string]any{
+				"nodeName":        domain.Label,
+				"nodeDescription": domain.Description,
+			},
 		}
 
 		return ctx.JSON(http.StatusOK, result)
@@ -129,7 +132,10 @@ func GetNodeInfo21(serverFactory *server.Factory) echo.HandlerFunc {
 				"localPosts":    0,
 				"localComments": 0,
 			},
-			"metadata": map[string]any{},
+			"metadata": map[string]any{
+				"nodeName":        domain.Label,
+				"nodeDescription": domain.Description,
+			},
 		}
 
 		return ctx.JSON(http.StatusOK, result)
