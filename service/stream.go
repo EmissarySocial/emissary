@@ -32,6 +32,7 @@ type Stream struct {
 	outboxService         *Outbox
 	attachmentService     *Attachment
 	activityStreamService *ActivityStreams
+	contentService        *Content
 	host                  string
 	streamUpdateChannel   chan<- model.Stream
 }
@@ -46,13 +47,14 @@ func NewStream() Stream {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Stream) Refresh(collection data.Collection, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, activityStreamService *ActivityStreams, host string, streamUpdateChannel chan model.Stream) {
+func (service *Stream) Refresh(collection data.Collection, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, activityStreamService *ActivityStreams, contentService *Content, host string, streamUpdateChannel chan model.Stream) {
 	service.collection = collection
 	service.templateService = templateService
 	service.draftService = draftService
 	service.outboxService = outboxService
 	service.attachmentService = attachmentService
 	service.activityStreamService = activityStreamService
+	service.contentService = contentService
 
 	service.host = host
 	service.streamUpdateChannel = streamUpdateChannel
@@ -137,6 +139,9 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 	defaultTemplate := template.Default()
 	defaultRoles := defaultTemplate.AllowedRoles(stream.StateID)
 	stream.DefaultAllow = stream.PermissionGroups(defaultRoles...)
+
+	// Generate HTML content
+	service.contentService.Format(&stream.Content)
 
 	// RULE: Calculate rank
 	if stream.Rank == 0 {

@@ -25,21 +25,31 @@ func NewContent(editorJS *goeditorjs.HTMLEngine) Content {
 
 func (service *Content) New(format string, raw string) model.Content {
 
-	var err error
-	var resultHTML string
+	result := model.NewContent()
+	result.Format = format
+	result.Raw = raw
+
+	service.Format(&result)
+	return result
+}
+
+func (service *Content) Format(content *model.Content) {
+
+	const location = "service.Content.Format"
 
 	// Convert raw formats into HTML
-	switch format {
-
-	case model.ContentFormatEditorJS:
-		resultHTML, err = service.editorJS.GenerateHTML(raw)
-
-		if err != nil {
-			derp.Report(err)
-		}
+	switch content.Format {
 
 	case model.ContentFormatHTML:
-		resultHTML = raw
+		content.HTML = content.Raw
+
+	case model.ContentFormatEditorJS:
+		resultHTML, err := service.editorJS.GenerateHTML(content.Raw)
+
+		if err != nil {
+			derp.Report(derp.Wrap(err, location, "Error converting EditorJS to HTML"))
+		}
+		content.HTML = resultHTML
 
 	case model.ContentFormatMarkdown:
 
@@ -62,24 +72,21 @@ func (service *Content) New(format string, raw string) model.Content {
 			),
 		)
 
-		if err := md.Convert([]byte(raw), &buffer); err != nil {
-			derp.Report(err)
+		if err := md.Convert([]byte(content.Raw), &buffer); err != nil {
+			derp.Report(derp.Wrap(err, location, "Error converting Markdown to HTML"))
 		}
-		resultHTML = buffer.String()
+
+		content.HTML = buffer.String()
+
+	default:
+		content.HTML = ""
 	}
 
 	// Sanitize all HTML, no matter what source format
 	policy := bluemonday.UGCPolicy()
 	policy.AllowStyling()
 
-	resultHTML = policy.Sanitize(resultHTML)
-
-	// Create the result object
-	return model.Content{
-		Format: format,
-		Raw:    raw,
-		HTML:   resultHTML,
-	}
+	content.HTML = policy.Sanitize(content.HTML)
 }
 
 func (service *Content) NewByExtension(extension string, raw string) model.Content {

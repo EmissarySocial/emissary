@@ -52,21 +52,21 @@ type Renderer interface {
 	GetContent() template.HTML
 	SetContent(string)
 
-	factory() Factory                    // The service factory
-	request() *http.Request              // The original http.Request that we are responding to
-	response() http.ResponseWriter       // The original http.ResponseWriter that we are responding to
-	authorization() model.Authorization  // The user's authorization data from the context
-	service() service.ModelService       // The abstracted ModelService the backs this Renderer
-	templateRole() string                // Returns the role that the current template plays in the system. Used for choosing child template.
-	template() model.Template            // The template used for this renderer (if any)
-	objectType() string                  // The type of object being rendered
-	schema() schema.Schema               // Schema to use to validate this Object
-	object() data.Object                 // Model Object being rendered
-	objectID() primitive.ObjectID        // MongoDB ObjectID of the Object being rendered
-	getUser() (model.User, error)        // Retrieves the currently-logged-in user
-	lookupProvider() form.LookupProvider // Retrieves the LookupProvider for this user
-	debug()                              // Outputs debug information to the console
-	clone(string) (Renderer, error)      // Creates a new Renderer with the same type and object, but a different action
+	factory() Factory                      // The service factory
+	request() *http.Request                // The original http.Request that we are responding to
+	response() http.ResponseWriter         // The original http.ResponseWriter that we are responding to
+	authorization() model.Authorization    // The user's authorization data from the context
+	service() service.ModelService         // The abstracted ModelService the backs this Renderer
+	templateRole() string                  // Returns the role that the current template plays in the system. Used for choosing child template.
+	template() model.Template              // The template used for this renderer (if any)
+	objectType() string                    // The type of object being rendered
+	schema() schema.Schema                 // Schema to use to validate this Object
+	object() data.Object                   // Model Object being rendered
+	objectID() primitive.ObjectID          // MongoDB ObjectID of the Object being rendered
+	getUser() (model.User, error)          // Retrieves the currently-logged-in user
+	lookupProvider() form.LookupProvider   // Retrieves the LookupProvider for this user
+	debug()                                // Outputs debug information to the console
+	clone(action string) (Renderer, error) // Creates a new Renderer with the same type and object, but a different action
 
 	executeTemplate(io.Writer, string, any) error // The HTML template used by this Renderer
 }

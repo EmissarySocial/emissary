@@ -11,6 +11,10 @@ type Content struct {
 	HTML   string `json:"html"   bson:"html"`
 }
 
+func NewContent() Content {
+	return Content{}
+}
+
 // NewHTMLContent creates a new HTML Content object with the specified HTML value
 func NewHTMLContent(value string) Content {
 	return Content{
