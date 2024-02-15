@@ -13,8 +13,8 @@
 					do:"set-data", 
 					values: {
 						label:"New Article"
-						content-format:"editorjs"
-						content-raw:"{}"
+						content.format:"editorjs"
+						content.raw:"{}"
 					}
 				}
 				{do:"set-state", state:"unpublished"}

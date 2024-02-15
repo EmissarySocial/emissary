@@ -13,8 +13,8 @@
 					do:"set-data"
 					values: {
 						label:"New Article (HTML Code)"
-						content-format:"html"
-						content-raw:"<h1>New Article</h1>"
+						content.format:"html"
+						content.raw:"<h1>New Article</h1>"
 					}
 				}
 				{do:"set-state", state:"unpublished"}

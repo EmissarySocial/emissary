@@ -1,15 +1,15 @@
 {
-	templateId:"folder"
-	templateRole:"folder"
-	model:"stream"
+	templateId: folder
+	templateRole: folder
+	model: stream
 	containedBy: ["top", "folder"]
-	label:"Folder"
-	description:"Folders can contain all other streams"
-	icon:"folder"
-	childSortType:"label"
-	childSortOrder:"ASC"
+	label: Folder
+	description: Folders can contain all other streams
+	icon: folder
+	childSortType: label
+	childSortOrder: ASC
 	schema: {
-		type:"object"
+		type: object
 		properties: {
 			label: {type:"string"}
 			summary: {type:"string"}
@@ -21,28 +21,31 @@
 	}
 	states: {
 		default: {
-			label:"Default"
-			description:"Folders only have one state"
+			label: Default
+			description: Folders only have one state
 		}
 	}
 	roles: {
 		editor: {
-			label:"Editor"
-			description:"Editors can manage all content in this folder"
+			label: Editor
+			description: Editors can manage all content in this folder
 		}
 		viewer: {
-			label:"Viewer"
-			description:"Viewers can access folder contents, but can not add new items"
+			label: Viewer
+			description: Viewers can access folder contents, but can not add new items
 		}
 	}
 	actions: {
 		create: {
 			roles:["editor","owner"]
 			steps:[
-				{do:"set-data", values:{
+				{
+					do:"set-data", 
+					values:{
 					label:"New Folder"
 					data.format:"TABLE"
-				}}
+					}
+				}
 				{do:"save"}
 				{do:"forward-to", url:"/{{.StreamID}}"}
 			]

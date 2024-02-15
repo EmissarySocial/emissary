@@ -116,7 +116,7 @@
 				]}
 			]
 		}
-		widgetslist: {
+		widgets-list: {
 			roles: ["owner", "editor"]
 			steps: [
 				{do:"with-draft", steps: [
@@ -131,7 +131,7 @@
 				{do:"sort", keys:"_id", values:"rank"}
 			]
 		}
-		uploadimage: {
+		upload-image: {
 			roles: ["owner", "editor"]
 			steps: [
 				{do:"with-draft", steps: [
@@ -170,7 +170,7 @@
 				{do:"refresh-page"}
 			]
 		}
-		promotedraft: {
+		promote-draft: {
 			roles: ["owner", "editor"]
 			steps: [
 				{do:"as-confirmation", title:"Promote this Draft?", message:"The live page will be replaced with this content.", submit:"Promote"}
@@ -180,7 +180,7 @@
 				{do:"forward-to", url:"/{{.Token}}"}
 			]
 		}
-		discarddraft: {
+		discard-draft: {
 			roles: ["owner", "editor"]
 			steps: [
 				{do:"with-draft", steps:[
@@ -210,7 +210,7 @@
 				]
 			}]
 		}
-		addchild:{
+		add-child:{
 			roles: ["owner", "editor"]
 			steps: [
 				{do:"add-stream", location:"child", title:"+ Add a Stream"}
