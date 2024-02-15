@@ -48,7 +48,7 @@ func (step StepAsModal) Get(renderer Renderer, buffer io.Writer) PipelineBehavio
 
 	// Otherwise, we can render the modal on a page background... IF we have a background view defined.
 	if step.Background == "" {
-		return Halt().WithError(derp.NewBadRequestError(location, "render.StepAsModal.Get", "Cannot open this route directly."))
+		return Halt().WithError(derp.NewBadRequestError(location, "Cannot open this route directly."))
 	}
 
 	// Full pages render the entire page, including the modal window
@@ -58,11 +58,27 @@ func (step StepAsModal) Get(renderer Renderer, buffer io.Writer) PipelineBehavio
 		return Halt().WithError(derp.Wrap(err, location, "Error creating fullPageRenderer"))
 	}
 
-	htmlTemplate := renderer.factory().Domain().Theme().HTMLTemplate
+	// Execute the action pipeline
+	var partialPage bytes.Buffer
+	factory := fullPageRenderer.factory()
+	pipeline := Pipeline(fullPageRenderer.Action().Steps)
+
+	status := pipeline.Execute(factory, fullPageRenderer, &partialPage, ActionMethodGet)
+
+	if status.Error != nil {
+		return Halt().WithError(derp.Wrap(status.Error, location, "Error executing action pipeline on fullPageRenderer"))
+	}
+
+	// Copy status values into the Response...
+	status.Apply(fullPageRenderer.response())
+
+	// Full Page requests require the theme service to wrap the rendered content
 	var fullPage bytes.Buffer
+	htmlTemplate := factory.Domain().Theme().HTMLTemplate
+	fullPageRenderer.SetContent(partialPage.String())
 
 	if err := htmlTemplate.ExecuteTemplate(&fullPage, "page", fullPageRenderer); err != nil {
-		return Halt().WithError(derp.Wrap(err, "render.StepAsModal.Get", "Error executing template"))
+		return Halt().WithError(derp.Wrap(err, location, "Error executing template"))
 	}
 
 	// Insert the modal into the page
