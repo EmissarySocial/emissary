@@ -597,6 +597,9 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream) error {
 		return derp.Wrap(err, "service.Stream.Publish", "Error saving stream", stream)
 	}
 
+	// Attempt to pre-load the ActivityStream cache.  We don't care about the result.
+	_, _ = service.activityStreamService.Load(stream.ActivityPubURL())
+
 	object := service.JSONLD(stream)
 
 	// Create the Activity to send to the User's Outbox
@@ -622,9 +625,6 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream) error {
 	if err := service.outboxService.Publish(user.UserID, stream.URL, activity); err != nil {
 		return derp.Wrap(err, "service.Stream.Publish", "Error publishing activity", activity)
 	}
-
-	// Attempt to pre-load the ActivityStream cache.  We don't care about the result.
-	_, _ = service.activityStreamService.Load(stream.ActivityPubURL())
 
 	// Done.
 	return nil

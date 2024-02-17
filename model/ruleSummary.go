@@ -1,6 +1,7 @@
 package model
 
 import (
+	"net/url"
 	"strings"
 
 	"github.com/benpate/hannibal/streams"
@@ -49,8 +50,22 @@ func (rule RuleSummary) IsAllowed(document *streams.Document) bool {
 // this rule.  (i.e. the document MATCHES the rule)
 func (rule RuleSummary) IsDisallowed(document *streams.Document) bool {
 
-	// Apply content filters here.
-	if rule.Type == RuleTypeContent {
+	switch rule.Type {
+
+	case RuleTypeActor:
+
+		if document.Actor().ID() != rule.Trigger {
+			return false
+		}
+
+	case RuleTypeDomain:
+		if domain, err := url.Parse(document.Actor().ID()); err == nil {
+			if !strings.HasSuffix(domain.Hostname(), rule.Trigger) {
+				return false
+			}
+		}
+
+	case RuleTypeContent:
 
 		// If the document does not match the content filter, then it is allowed.
 		if !rule.matchesContent(document) {
@@ -70,6 +85,22 @@ func (rule RuleSummary) IsDisallowed(document *streams.Document) bool {
 		vocab.PropertyName:    rule.FollowingLabel,
 		vocab.PropertyContent: rule.Label,
 	})
+
+	return false
+}
+
+func (rule RuleSummary) IsDisallowSend(recipient string) bool {
+
+	switch rule.Type {
+
+	case RuleTypeActor:
+		return recipient == rule.Trigger
+
+	case RuleTypeDomain:
+		if domain, err := url.Parse(recipient); err == nil {
+			return strings.HasSuffix(domain.Hostname(), rule.Trigger)
+		}
+	}
 
 	return false
 }
