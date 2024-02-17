@@ -2,7 +2,7 @@
 {{- $following := .Following.Top12.ByLabel.Slice -}}
 
 {{- range $following -}}
-	<div hx-get="/@me/inbox?folderId={{.FolderID.Hex}}&origin.followingId={{.FollowingID.Hex}}" hx-swap="innerHTML show:window:top" hx-push-url="true" class="flex-row flex-align-center" role="button" tabIndex="0">
+	<div hx-get="/@me/inbox?folderId={{.FolderID.Hex}}&origin.followingId={{.FollowingID.Hex}}" hx-swap="outerHTML show:window:top" hx-push-url="true" class="flex-row flex-align-center" role="button" tabIndex="0">
 
 		<div class="flex-row flex-grow-1">
 

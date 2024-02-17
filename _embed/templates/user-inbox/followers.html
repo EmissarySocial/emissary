@@ -1,6 +1,6 @@
 {{- $folders := .Folders -}}
 
-<div class="fullscreen app" hx-get="{{.URL}}" hx-trigger="refreshPage from:window" hx-target="this" hx-swap="outerHTML">
+<div class="page app flex-row" xclass="fullscreen app"  hx-get="{{.URL}}" hx-trigger="refreshPage from:window" hx-target="this" hx-swap="outerHTML">
 	<title>{{.FollowerCount}} {{pluralize .FollowerCount "Follower" "Followers"}} | {{.DisplayName}}</title>
 	<link rel="stylesheet" href="/.templates/user-inbox/stylesheet">
 
