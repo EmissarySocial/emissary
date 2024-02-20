@@ -1,7 +1,6 @@
-package activitypub
+package activitypub_user
 
 import (
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
@@ -20,7 +19,7 @@ func init() {
 }
 
 // undoResponse handles the Undo/Delete actions on Like/Dislike/Announce records
-func undoResponse(factory *domain.Factory, user *model.User, activity streams.Document) error {
+func undoResponse(context Context, activity streams.Document) error {
 
 	// Try to parse the original Activity from the JSON-LD
 	originalActivity, err := activity.Object().Load() // The Object is the original Like/Dislike/Announce activity
@@ -29,7 +28,7 @@ func undoResponse(factory *domain.Factory, user *model.User, activity streams.Do
 		return derp.Wrap(err, "handler.undoResponse", "Error loading originalActivity")
 	}
 
-	responseService := factory.Response()
+	responseService := context.factory.Response()
 	response := model.NewResponse()
 
 	// Try to load the Response that matches the original activity

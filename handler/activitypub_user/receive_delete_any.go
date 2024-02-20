@@ -1,7 +1,6 @@
-package activitypub
+package activitypub_user
 
 import (
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
@@ -9,7 +8,7 @@ import (
 )
 
 func init() {
-	inboxRouter.Add(vocab.ActivityTypeDelete, vocab.Any, func(factory *domain.Factory, user *model.User, document streams.Document) error {
+	inboxRouter.Add(vocab.ActivityTypeDelete, vocab.Any, func(context Context, document streams.Document) error {
 
 		object := document.Object()
 
@@ -23,24 +22,24 @@ func init() {
 			return nil
 		}
 
-		inboxService := factory.Inbox()
+		inboxService := context.factory.Inbox()
 		message := model.NewMessage()
 
 		// Look for the original message that's being deleted
-		if err := inboxService.LoadByURL(user.UserID, object.ID(), &message); err != nil {
+		if err := inboxService.LoadByURL(context.user.UserID, object.ID(), &message); err != nil {
 
 			if derp.NotFound(err) {
 				return nil
 			}
 
-			return derp.Wrap(err, "handler.activitypub_receive_delete", "Error loading message", user.UserID, object.ID())
+			return derp.Wrap(err, "handler.activitypub_receive_delete", "Error loading message", context.user.UserID, object.ID())
 		}
 
 		// TODO: HIGH: Validate that the document.Actor is the same as the message.Origin
 
 		// Delete the original messag
 		if err := inboxService.Delete(&message, "Deleted via ActivityPub"); err != nil {
-			return derp.Wrap(err, "handler.activitypub_receive_delete", "Error deleting message", user.UserID, object.ID())
+			return derp.Wrap(err, "handler.activitypub_receive_delete", "Error deleting message", context.user.UserID, object.ID())
 		}
 
 		// Who let the dogs out?

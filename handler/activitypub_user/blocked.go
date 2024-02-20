@@ -1,8 +1,9 @@
-package activitypub
+package activitypub_user
 
 import (
 	"net/http"
 
+	"github.com/EmissarySocial/emissary/handler/activitypub"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/data/option"
@@ -44,7 +45,7 @@ func GetBlockedCollection(serverFactory *server.Factory) echo.HandlerFunc {
 		if publishDateString == "" {
 
 			ctx.Response().Header().Set("Content-Type", "application/activity+json")
-			result := activityPub_Collection(user.ActivityPubBlockedURL())
+			result := activitypub.Collection(user.ActivityPubBlockedURL())
 			return ctx.JSON(200, result)
 		}
 
@@ -60,7 +61,7 @@ func GetBlockedCollection(serverFactory *server.Factory) echo.HandlerFunc {
 
 		// Return results to the client.
 		ctx.Response().Header().Set("Content-Type", "application/activity+json")
-		results := activityPub_CollectionPage(user.ActivityPubBlockedURL(), pageSize, rules)
+		results := activitypub.CollectionPage(user.ActivityPubBlockedURL(), pageSize, rules)
 		return ctx.JSON(200, results)
 	}
 }

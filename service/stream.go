@@ -16,6 +16,7 @@ import (
 	"github.com/benpate/digit"
 	"github.com/benpate/domain"
 	"github.com/benpate/exp"
+	"github.com/benpate/hannibal/outbox"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
@@ -33,6 +34,9 @@ type Stream struct {
 	attachmentService     *Attachment
 	activityStreamService *ActivityStreams
 	contentService        *Content
+	keyService            *EncryptionKey
+	followerService       *Follower
+	ruleService           *Rule
 	host                  string
 	streamUpdateChannel   chan<- model.Stream
 }
@@ -47,7 +51,7 @@ func NewStream() Stream {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Stream) Refresh(collection data.Collection, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, activityStreamService *ActivityStreams, contentService *Content, host string, streamUpdateChannel chan model.Stream) {
+func (service *Stream) Refresh(collection data.Collection, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, activityStreamService *ActivityStreams, contentService *Content, keyService *EncryptionKey, followerService *Follower, ruleService *Rule, host string, streamUpdateChannel chan model.Stream) {
 	service.collection = collection
 	service.templateService = templateService
 	service.draftService = draftService
@@ -55,6 +59,9 @@ func (service *Stream) Refresh(collection data.Collection, templateService *Temp
 	service.attachmentService = attachmentService
 	service.activityStreamService = activityStreamService
 	service.contentService = contentService
+	service.keyService = keyService
+	service.followerService = followerService
+	service.ruleService = ruleService
 
 	service.host = host
 	service.streamUpdateChannel = streamUpdateChannel
@@ -370,6 +377,18 @@ func (service *Stream) LoadByURL(streamURL string, result *model.Stream) error {
 	}
 
 	return service.LoadByToken(token, result)
+}
+
+// QueryByParentAndDate returns a slice of Streams that are DIRECT CHILDREN of the provided StreamID
+func (service *Stream) QueryByParentAndDate(streamID primitive.ObjectID, publishedDate int64, pageSize int) ([]model.Stream, error) {
+	criteria := exp.Equal("parentId", streamID).AndLessThan("publishDate", publishedDate)
+	return service.Query(criteria, option.SortDesc("publishDate"), option.MaxRows(int64(pageSize)))
+}
+
+// QueryByParentAndDate returns a slice of Streams that are ANY DEPTH below the provided StreamID
+func (service *Stream) QueryByAncestorAndDate(streamID primitive.ObjectID, publishedDate int64, pageSize int) ([]model.Stream, error) {
+	criteria := exp.Equal("parentIds", streamID).AndLessThan("publishDate", publishedDate)
+	return service.Query(criteria, option.SortDesc("publishDate"), option.MaxRows(int64(pageSize)))
 }
 
 func (service *Stream) ParsePath(uri *url.URL) (string, string, error) {
@@ -824,7 +843,7 @@ func (service *Stream) LoadWebFinger(token string) (digit.Resource, error) {
  ******************************************/
 
 // JSONLDGetter returns a new JSONLDGetter for the provided stream
-func (service *Stream) JSONLDGetter(stream *model.Stream) model.JSONLDGetter {
+func (service *Stream) JSONLDGetter(stream *model.Stream) StreamJSONLDGetter {
 	return NewStreamJSONLDGetter(service, stream)
 }
 
@@ -891,6 +910,77 @@ func (service *Stream) JSONLD(stream *model.Stream) mapof.Any {
 	}
 
 	return result
+}
+
+// ParseURL validates that a URL matches the current server, and then extracts the streamID from it.
+func (service *Stream) ParseURL(streamURL string) (primitive.ObjectID, error) {
+
+	const location = "service.Stream.ParseURL"
+
+	parsedURL, err := url.Parse(streamURL)
+
+	if err != nil {
+		return primitive.NilObjectID, derp.Wrap(err, location, "Invalid URL", streamURL)
+	}
+
+	// Get the first part of the path (which is the stream ID or token)
+	path := strings.TrimPrefix(parsedURL.Path, "/")
+	path, _, _ = strings.Cut(path, "/")
+
+	// If the value looks like an ObjectID, then return it
+	if streamID, err := primitive.ObjectIDFromHex(path); err == nil {
+		return streamID, nil
+	}
+
+	// Otherwise, try to load the stream by Token
+	stream := model.NewStream()
+	if err := service.LoadByToken(path, &stream); err != nil {
+		return primitive.NilObjectID, derp.Wrap(err, location, "Invalid Token", path)
+	}
+
+	return stream.StreamID, nil
+}
+
+// ActivityPubActor returns a hannibal Actor for the provided stream.
+func (service *Stream) ActivityPubActor(stream *model.Stream, withFollowers bool) (outbox.Actor, error) {
+
+	const location = "service.Following.ActivityPubActor"
+
+	// Try to load the user's keys from the database
+	encryptionKey := model.NewEncryptionKey()
+	if err := service.keyService.LoadByID(stream.StreamID, &encryptionKey); err != nil {
+		return outbox.Actor{}, derp.Wrap(err, location, "Error loading encryption key", stream.StreamID)
+	}
+
+	// Extract the Private Key from the Encryption Key
+	privateKey, err := service.keyService.GetPrivateKey(&encryptionKey)
+
+	if err != nil {
+		return outbox.Actor{}, derp.Wrap(err, location, "Error extracting private key", encryptionKey)
+	}
+
+	// Return the ActivityPub Actor
+	actor := outbox.NewActor(stream.ActivityPubURL(), privateKey)
+
+	// Populate the Actor's ActivityPub Followers, if requested
+	if withFollowers {
+
+		// Get a channel of all Followers
+		followers, err := service.followerService.ActivityPubFollowersChannel(stream.StreamID)
+
+		if err != nil {
+			return outbox.Actor{}, derp.Wrap(err, location, "Error retrieving followers")
+		}
+
+		// Get a filter to prevent sending to "Blocked" followers
+		ruleFilter := service.ruleService.Filter(primitive.NilObjectID, WithBlocksOnly())
+		followerIDs := ruleFilter.ChannelSend(followers)
+
+		// Add the channel of follower IDs to the Actor
+		actor.With(outbox.WithFollowers(followerIDs))
+	}
+
+	return actor, nil
 }
 
 /******************************************

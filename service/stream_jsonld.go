@@ -10,8 +10,8 @@ type StreamJSONLDGetter struct {
 	stream        *model.Stream
 }
 
-func NewStreamJSONLDGetter(streamService *Stream, stream *model.Stream) *StreamJSONLDGetter {
-	return &StreamJSONLDGetter{
+func NewStreamJSONLDGetter(streamService *Stream, stream *model.Stream) StreamJSONLDGetter {
+	return StreamJSONLDGetter{
 		streamService: streamService,
 		stream:        stream,
 	}

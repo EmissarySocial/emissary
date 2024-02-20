@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 
+	"github.com/EmissarySocial/emissary/handler/activitypub_stream"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/server"
@@ -11,16 +12,26 @@ import (
 )
 
 // GetStream handles GET requests
-func GetStream(factoryManager *server.Factory) echo.HandlerFunc {
-	return renderStream(factoryManager, render.ActionMethodGet)
+func GetStream(serverFactory *server.Factory) echo.HandlerFunc {
+
+	return func(ctx echo.Context) error {
+
+		// Special case for JSON-LD requests.
+		if isJSONLDRequest(ctx) {
+			return activitypub_stream.GetActor(serverFactory)(ctx)
+		}
+
+		// Otherwise, just render the stream normally
+		return renderStream(serverFactory, render.ActionMethodGet)(ctx)
+	}
 }
 
-func PostStream(factoryManager *server.Factory) echo.HandlerFunc {
-	return renderStream(factoryManager, render.ActionMethodPost)
+func PostStream(serverFactory *server.Factory) echo.HandlerFunc {
+	return renderStream(serverFactory, render.ActionMethodPost)
 }
 
 // renderStream is the common Stream handler for both GET and POST requests
-func renderStream(factoryManager *server.Factory, actionMethod render.ActionMethod) echo.HandlerFunc {
+func renderStream(serverFactory *server.Factory, actionMethod render.ActionMethod) echo.HandlerFunc {
 
 	const location = "handler.renderStream"
 
@@ -29,7 +40,7 @@ func renderStream(factoryManager *server.Factory, actionMethod render.ActionMeth
 		stream := model.NewStream()
 
 		// Try to get the factory
-		factory, err := factoryManager.ByContext(ctx)
+		factory, err := serverFactory.ByContext(ctx)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Unrecognized Domain")

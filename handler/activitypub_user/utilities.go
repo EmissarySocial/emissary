@@ -1,4 +1,4 @@
-package activitypub
+package activitypub_user
 
 import (
 	"github.com/EmissarySocial/emissary/model"

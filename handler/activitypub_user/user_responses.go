@@ -1,8 +1,9 @@
-package activitypub
+package activitypub_user
 
 import (
 	"net/http"
 
+	"github.com/EmissarySocial/emissary/handler/activitypub"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
@@ -11,7 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func GetUserResponseCollection(serverFactory *server.Factory, responseType string) echo.HandlerFunc {
+func GetResponseCollection(serverFactory *server.Factory, responseType string) echo.HandlerFunc {
 
 	const location = "handler.activitypub.ActivityPub_GetResponseCollection"
 
@@ -42,7 +43,7 @@ func GetUserResponseCollection(serverFactory *server.Factory, responseType strin
 
 		if publishDateString == "" {
 			ctx.Response().Header().Set("Content-Type", "application/activity+json")
-			result := activityPub_Collection(user.ActivityPubLikedURL())
+			result := activitypub.Collection(user.ActivityPubLikedURL())
 			return ctx.JSON(http.StatusOK, result)
 		}
 
@@ -60,12 +61,12 @@ func GetUserResponseCollection(serverFactory *server.Factory, responseType strin
 
 		// Return results as an OrderedCollectionPage
 		ctx.Response().Header().Set("Content-Type", "application/activity+json")
-		result := activityPub_CollectionPage(user.ActivityPubLikedURL(), pageSize, responses)
+		result := activitypub.CollectionPage(user.ActivityPubLikedURL(), pageSize, responses)
 		return ctx.JSON(http.StatusOK, result)
 	}
 }
 
-func GetUserResponse(serverFactory *server.Factory, responseType string) echo.HandlerFunc {
+func GetResponse(serverFactory *server.Factory, responseType string) echo.HandlerFunc {
 
 	const location = "handler.activitypub.ActivityPub_GetUserResponse"
 

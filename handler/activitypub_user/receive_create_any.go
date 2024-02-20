@@ -1,7 +1,6 @@
-package activitypub
+package activitypub_user
 
 import (
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
@@ -13,7 +12,7 @@ func init() {
 	inboxRouter.Add(vocab.ActivityTypeUpdate, vocab.Any, activityPub_CreateOrUpdate)
 }
 
-func activityPub_CreateOrUpdate(factory *domain.Factory, user *model.User, activity streams.Document) error {
+func activityPub_CreateOrUpdate(context Context, activity streams.Document) error {
 
 	const location = "handler.activitypub.activityPub_CreateOrUpdate"
 
@@ -39,16 +38,16 @@ func activityPub_CreateOrUpdate(factory *domain.Factory, user *model.User, activ
 	}
 
 	// Verify that this message comes from a valid "Following" object.
-	followingService := factory.Following()
+	followingService := context.factory.Following()
 	following := model.NewFollowing()
 
-	if err := followingService.LoadByURL(user.UserID, activity.Actor().ID(), &following); err != nil {
+	if err := followingService.LoadByURL(context.user.UserID, activity.Actor().ID(), &following); err != nil {
 		return nil
 	}
 
 	// Try to save the message to the database (with de-duplication)
 	if err := followingService.SaveMessage(&following, object, model.OriginTypePrimary); err != nil {
-		return derp.Wrap(err, "handler.activitypub_receive_create", "Error saving message", user.UserID, object.Value())
+		return derp.Wrap(err, "handler.activitypub_receive_create", "Error saving message", context.user.UserID, object.Value())
 	}
 
 	// Success!!

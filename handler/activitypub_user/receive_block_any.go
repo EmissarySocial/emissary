@@ -1,7 +1,6 @@
-package activitypub
+package activitypub_user
 
 import (
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
@@ -13,16 +12,16 @@ func init() {
 	inboxRouter.Add(vocab.ActivityTypeBlock, vocab.Any, createBlock)
 }
 
-func createBlock(factory *domain.Factory, user *model.User, activity streams.Document) error {
+func createBlock(context Context, activity streams.Document) error {
 
 	const location = "handler.activitypub.receiveBlock"
 
 	// Verify that this message comes from a valid "Following" object.
-	followingService := factory.Following()
+	followingService := context.factory.Following()
 	following := model.NewFollowing()
 
 	// If the "Following" record cannot be found, then halt
-	if err := followingService.LoadByURL(user.UserID, activity.Actor().ID(), &following); err != nil {
+	if err := followingService.LoadByURL(context.user.UserID, activity.Actor().ID(), &following); err != nil {
 		return nil
 	}
 
@@ -35,7 +34,7 @@ func createBlock(factory *domain.Factory, user *model.User, activity streams.Doc
 	rule := ruleFromActivity(&following, activity)
 
 	// Try to save the new rule to the database (with de-duplication)
-	if err := factory.Rule().Save(&rule, "Received via ActivityPub"); err != nil {
+	if err := context.factory.Rule().Save(&rule, "Received via ActivityPub"); err != nil {
 		return derp.Wrap(err, location, "Error saving rule", activity.Value(), rule)
 	}
 

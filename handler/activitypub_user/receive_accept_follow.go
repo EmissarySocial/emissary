@@ -1,7 +1,6 @@
-package activitypub
+package activitypub_user
 
 import (
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
@@ -14,9 +13,9 @@ func init() {
 
 	// This funciton handles ActivityPub "Accept/Follow" activities, meaning that
 	// it is called with a remote server accepts our follow request.
-	inboxRouter.Add(vocab.ActivityTypeAccept, vocab.ActivityTypeFollow, func(factory *domain.Factory, user *model.User, activity streams.Document) error {
+	inboxRouter.Add(vocab.ActivityTypeAccept, vocab.ActivityTypeFollow, func(context Context, activity streams.Document) error {
 
-		followingService := factory.Following()
+		followingService := context.factory.Following()
 
 		// Parse the Object.ID of the activity, which should be our original "Follow" activity
 		userID, followingID, err := service.ParseProfileURL_AsFollowing(activity.Object().ID())

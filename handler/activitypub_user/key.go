@@ -1,4 +1,4 @@
-package activitypub
+package activitypub_user
 
 import (
 	"net/http"

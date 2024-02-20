@@ -254,7 +254,7 @@ func (user *User) ActivityPubLikedURL() string {
 }
 
 func (user *User) ActivityPubPublicKeyURL() string {
-	return user.ProfileURL + "#main-key" // was "/pub/key"
+	return user.ProfileURL + "#main-key"
 }
 
 func (user *User) JSONFeedURL() string {

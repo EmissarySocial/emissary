@@ -19,7 +19,8 @@ import (
 
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/handler"
-	"github.com/EmissarySocial/emissary/handler/activitypub"
+	ap_stream "github.com/EmissarySocial/emissary/handler/activitypub_stream"
+	ap_user "github.com/EmissarySocial/emissary/handler/activitypub_user"
 	mw "github.com/EmissarySocial/emissary/middleware"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
@@ -245,7 +246,6 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/:stream/attachments/:attachment", handler.GetAttachment(factory)) // TODO: LOW: Can Stream Attachments be moved into a custom render step?
 	e.GET("/:stream/sse", handler.ServerSentEvent(factory))                   // TODO: LOW: Can SSE be moved into a custom render step?
 	e.GET("/:stream/qrcode", handler.GetQRCode(factory))                      // TODO: LOW: Can QR Codes be moved into a custom render step?
-	e.GET("/:stream/pub/likes", activitypub.GetStreamResponseCollection(factory, model.ResponseTypeLike))
 
 	// Profile Pages
 	// NOTE: these are rewritten from /@:userId by the rewrite middleware
@@ -262,17 +262,23 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@me/inbox/:action", handler.GetInbox(factory))
 	e.POST("/@me/inbox/:action", handler.PostInbox(factory))
 
-	// ActivityPub Routes
+	// ActivityPub Routes for Users
 	e.GET("/@:userId/pub", handler.GetOutbox(factory))
-	e.POST("/@:userId/pub/inbox", activitypub.PostInbox(factory))
-	e.GET("/@:userId/pub/outbox", activitypub.GetOutboxCollection(factory))
-	e.GET("/@:userId/pub/followers", activitypub.GetFollowersCollection(factory))
-	e.GET("/@:userId/pub/following", activitypub.GetFollowingCollection(factory))
-	e.GET("/@:userId/pub/following/:followingId", activitypub.GetFollowingRecord(factory))
-	e.GET("/@:userId/pub/liked", activitypub.GetUserResponseCollection(factory, model.ResponseTypeLike))
-	e.GET("/@:userId/pub/liked/:response", activitypub.GetUserResponse(factory, model.ResponseTypeLike))
-	e.GET("/@:userId/pub/blocked", activitypub.GetBlockedCollection(factory))
-	e.GET("/@:userId/pub/blocked/:ruleId", activitypub.GetBlock(factory))
+	e.POST("/@:userId/pub/inbox", ap_user.PostInbox(factory))
+	e.GET("/@:userId/pub/outbox", ap_user.GetOutboxCollection(factory))
+	e.GET("/@:userId/pub/followers", ap_user.GetFollowersCollection(factory))
+	e.GET("/@:userId/pub/following", ap_user.GetFollowingCollection(factory))
+	e.GET("/@:userId/pub/following/:followingId", ap_user.GetFollowingRecord(factory))
+	e.GET("/@:userId/pub/liked", ap_user.GetResponseCollection(factory, model.ResponseTypeLike))
+	e.GET("/@:userId/pub/liked/:response", ap_user.GetResponse(factory, model.ResponseTypeLike))
+	e.GET("/@:userId/pub/blocked", ap_user.GetBlockedCollection(factory))
+	e.GET("/@:userId/pub/blocked/:ruleId", ap_user.GetBlock(factory))
+
+	// ActivityPub Routes for Streams
+	e.GET("/:stream/pub", ap_stream.GetActor(factory))
+	e.POST("/:stream/pub/inbox", ap_stream.PostInbox(factory))
+	e.GET("/:stream/pub/outbox", ap_stream.GetOutboxCollection(factory))
+	e.GET("/:stream/pub/followers", ap_stream.GetFollowersCollection(factory))
 
 	// Domain Admin Pages
 	e.GET("/admin", handler.GetAdmin(factory), mw.Owner)

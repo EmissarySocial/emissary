@@ -1,7 +1,6 @@
-package activitypub
+package activitypub_user
 
 import (
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
@@ -15,7 +14,7 @@ func init() {
 }
 
 // receiveResponse handles all Announce, Like, and Dislike activities
-func receiveResponse(factory *domain.Factory, user *model.User, activity streams.Document) error {
+func receiveResponse(context Context, activity streams.Document) error {
 
 	const location = "handler.activitypub.receiveResponse"
 
@@ -25,7 +24,7 @@ func receiveResponse(factory *domain.Factory, user *model.User, activity streams
 	}
 
 	// Add the Like/Dislike into the ActivityStream cache
-	factory.ActivityStreams().Put(activity)
+	context.factory.ActivityStreams().Put(activity)
 
 	// Add the Liked/Disliked document into the ActivityStream cache
 	document := activity.UnwrapActivity()
@@ -36,11 +35,11 @@ func receiveResponse(factory *domain.Factory, user *model.User, activity streams
 	}
 
 	// Verify that this message comes from a valid "Following" object.
-	followingService := factory.Following()
+	followingService := context.factory.Following()
 	following := model.NewFollowing()
 
 	// If the "Following" record cannot be found, then do not add a message
-	if err := followingService.LoadByURL(user.UserID, activity.Actor().ID(), &following); err != nil {
+	if err := followingService.LoadByURL(context.user.UserID, activity.Actor().ID(), &following); err != nil {
 		return nil
 	}
 
@@ -49,7 +48,7 @@ func receiveResponse(factory *domain.Factory, user *model.User, activity streams
 
 	// Try to save the message to the database (with de-duplication)
 	if err := followingService.SaveMessage(&following, document, originType); err != nil {
-		return derp.Wrap(err, "handler.activitypub_receive_create", "Error saving message", user.UserID, document.Object().ID())
+		return derp.Wrap(err, "handler.activitypub_receive_create", "Error saving message", context.user.UserID, document.Object().ID())
 	}
 
 	// Success.

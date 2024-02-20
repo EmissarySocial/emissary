@@ -9,7 +9,7 @@ import (
 	"github.com/benpate/rosetta/list"
 )
 
-func activityPub_Collection(collectionURL string) streams.OrderedCollection {
+func Collection(collectionURL string) streams.OrderedCollection {
 
 	collectionURL = list.First(collectionURL, '?')
 
@@ -25,7 +25,7 @@ func activityPub_Collection(collectionURL string) streams.OrderedCollection {
 	return result
 }
 
-func activityPub_CollectionPage[T model.JSONLDGetter](partOf string, pageSize int, values []T) streams.OrderedCollectionPage {
+func CollectionPage[T model.JSONLDGetter](partOf string, pageSize int, values []T) streams.OrderedCollectionPage {
 
 	// Generate the Page record
 	result := streams.NewOrderedCollectionPage()

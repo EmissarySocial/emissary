@@ -1,7 +1,6 @@
-package activitypub
+package activitypub_user
 
 import (
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
@@ -9,16 +8,16 @@ import (
 )
 
 func init() {
-	inboxRouter.Add(vocab.ActivityTypeUndo, vocab.ActivityTypeBlock, func(factory *domain.Factory, user *model.User, activity streams.Document) error {
+	inboxRouter.Add(vocab.ActivityTypeUndo, vocab.ActivityTypeBlock, func(context Context, activity streams.Document) error {
 
 		const location = "handler.activitypub.receiveBlock"
 
 		// Verify that this message comes from a valid "Following" object.
-		followingService := factory.Following()
+		followingService := context.factory.Following()
 		following := model.NewFollowing()
 
 		// If the "Following" record cannot be found, then halt
-		if err := followingService.LoadByURL(user.UserID, activity.Actor().ID(), &following); err != nil {
+		if err := followingService.LoadByURL(context.user.UserID, activity.Actor().ID(), &following); err != nil {
 			return nil
 		}
 
@@ -28,10 +27,10 @@ func init() {
 		}
 
 		// Try to find a Rule that matches this Activity
-		ruleService := factory.Rule()
+		ruleService := context.factory.Rule()
 		rule := ruleFromActivity(&following, activity.Object())
 
-		if err := ruleService.LoadByFollowing(user.UserID, following.FollowingID, rule.Type, rule.Trigger, &rule); err != nil {
+		if err := ruleService.LoadByFollowing(context.user.UserID, following.FollowingID, rule.Type, rule.Trigger, &rule); err != nil {
 			if derp.NotFound(err) {
 				return nil
 			}

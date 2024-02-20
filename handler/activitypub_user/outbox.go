@@ -1,9 +1,10 @@
-package activitypub
+package activitypub_user
 
 import (
 	"math"
 	"net/http"
 
+	"github.com/EmissarySocial/emissary/handler/activitypub"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
@@ -42,7 +43,7 @@ func GetOutboxCollection(serverFactory *server.Factory) echo.HandlerFunc {
 
 		if publishDateString == "" {
 			ctx.Response().Header().Set("Content-Type", "application/activity+json")
-			result := activityPub_Collection(user.ActivityPubOutboxURL())
+			result := activitypub.Collection(user.ActivityPubOutboxURL())
 			return ctx.JSON(http.StatusOK, result)
 		}
 
@@ -60,7 +61,7 @@ func GetOutboxCollection(serverFactory *server.Factory) echo.HandlerFunc {
 
 		// Return results as an OrderedCollectionPage
 		ctx.Response().Header().Set("Content-Type", "application/activity+json")
-		result := activityPub_CollectionPage(user.ActivityPubOutboxURL(), pageSize, messages)
+		result := activitypub.CollectionPage(user.ActivityPubOutboxURL(), pageSize, messages)
 		return ctx.JSON(http.StatusOK, result)
 	}
 }

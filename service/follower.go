@@ -253,6 +253,13 @@ func (service *Follower) WebSubFollowersChannel(userID primitive.ObjectID) (<-ch
 	)
 }
 
+// IsActivityPubFollower searches
+func (service *Follower) IsActivityPubFollower(streamID primitive.ObjectID, followerURL string) bool {
+	result := model.NewFollower()
+	err := service.LoadByActivityPubFollower(streamID, followerURL, &result)
+	return err == nil
+}
+
 /*/ FollowerChannels returns two channels, one for ActivityPub followers and one for WebSub followers
 func (service *Follower) FollowerChannels(parentID primitive.ObjectID) (<-chan model.Follower, <-chan model.Follower) {
 
@@ -342,19 +349,19 @@ func (service *Follower) ListActivityPub(parentID primitive.ObjectID, options ..
 	return service.List(criteria, options...)
 }
 
-func (service *Follower) NewActivityPubFollower(user *model.User, actor streams.Document, follower *model.Follower) error {
+func (service *Follower) NewActivityPubFollower(parentType string, parentID primitive.ObjectID, actor streams.Document, follower *model.Follower) error {
 
 	// Try to find an existing follower record
-	if err := service.LoadByActor(user.UserID, actor.ID(), follower); err != nil {
+	if err := service.LoadByActor(parentID, actor.ID(), follower); err != nil {
 		if !derp.NotFound(err) {
 			return derp.Wrap(err, "handler.activityPub_HandleRequest_Follow", "Error loading existing follower", actor)
 		}
 	}
 
 	// Set/Update follower data from the activity
-	follower.Type = model.FollowerTypeUser
 	follower.Method = model.FollowMethodActivityPub
-	follower.ParentID = user.UserID
+	follower.Type = parentType
+	follower.ParentID = parentID
 
 	follower.Actor = model.PersonLink{
 		ProfileURL:   actor.ID(),

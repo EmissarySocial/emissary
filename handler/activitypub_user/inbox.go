@@ -1,4 +1,4 @@
-package activitypub
+package activitypub_user
 
 import (
 	"net/http"
@@ -49,8 +49,14 @@ func PostInbox(serverFactory *server.Factory) echo.HandlerFunc {
 			return derp.Wrap(err, location, "Error parsing ActivityPub request")
 		}
 
+		// Create a new Context
+		context := Context{
+			factory: factory,
+			user:    &user,
+		}
+
 		// Handle the ActivityPub request
-		if err := inboxRouter.Handle(factory, &user, activity); err != nil {
+		if err := inboxRouter.Handle(context, activity); err != nil {
 			return derp.Wrap(err, location, "Error handling ActivityPub request")
 		}
 

@@ -37,6 +37,7 @@ type Template struct {
 	Bundles            mapof.Object[Bundle] `json:"bundles"            bson:"bundles"`            // Additional resources (JS, HS, CSS) reqired tp remder this Template.
 	Resources          fs.FS                `json:"-"                  bson:"-"`                  // File system containing the template resources
 	DefaultAction      string               `json:"defaultAction"      bson:"defaultAction"`      // Name of the action to be used when none is provided.  Also serves as the permissions for viewing a Stream.  If this is empty, it is assumed to be "view"
+	Actor              Actor                `json:"actor"             bson:"actor"`               // ActivityPub Actor operated on behalf of this Template/Stream
 }
 
 // NewTemplate creates a new, fully initialized Template object

@@ -310,6 +310,9 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.Attachment(),
 			factory.ActivityStreams(),
 			factory.Content(),
+			factory.EncryptionKey(),
+			factory.Follower(),
+			factory.Rule(),
 			factory.Host(),
 			factory.StreamUpdateChannel(),
 		)

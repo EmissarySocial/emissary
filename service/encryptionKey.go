@@ -90,10 +90,10 @@ func (service *EncryptionKey) Delete(encryptionKey *model.EncryptionKey, note st
 
 // LoadByID tries to load the EncryptionKey from the database.  If no key
 // exists for the designated user, then a new one is generated.
-func (service *EncryptionKey) LoadByID(userID primitive.ObjectID, encryptionKey *model.EncryptionKey) error {
+func (service *EncryptionKey) LoadByID(parentID primitive.ObjectID, encryptionKey *model.EncryptionKey) error {
 
 	// Try to load the encryption key from the database
-	err := service.Load(exp.Equal("userId", userID), encryptionKey)
+	err := service.Load(exp.Equal("userId", parentID), encryptionKey)
 
 	// If there is no error, then return in success
 	if err == nil {
@@ -102,17 +102,17 @@ func (service *EncryptionKey) LoadByID(userID primitive.ObjectID, encryptionKey 
 
 	// "Not Found" means we should create a new encryption key
 	if derp.NotFound(err) {
-		if newKey, err := service.Create(userID); err == nil {
+		if newKey, err := service.Create(parentID); err == nil {
 			*encryptionKey = newKey
 		} else {
-			return derp.Wrap(err, "service.EncryptionKey.LoadByID", "Error creating new EncryptionKey", userID)
+			return derp.Wrap(err, "service.EncryptionKey.LoadByID", "Error creating new EncryptionKey", parentID)
 		}
 
 		return nil
 	}
 
 	// Otherwise, it's a legitimate error, so return it.
-	return derp.Wrap(err, "service.EncryptionKey.LoadByID", "Error loading EncryptionKey", userID)
+	return derp.Wrap(err, "service.EncryptionKey.LoadByID", "Error loading EncryptionKey", parentID)
 }
 
 /******************************************

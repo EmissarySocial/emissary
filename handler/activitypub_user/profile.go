@@ -1,4 +1,4 @@
-package activitypub
+package activitypub_user
 
 import (
 	"net/http"
@@ -23,16 +23,14 @@ func RenderProfileJSONLD(context echo.Context, factory *domain.Factory, user *mo
 		return derp.Wrap(err, location, "Error loading encryption key for user", user.UserID)
 	}
 
-	// Return the key as JSON-LD
-	keyJSON := mapof.Any{
-		"id":           user.ActivityPubURL() + "#main-key",
-		"type":         "Key",
-		"owner":        user.ActivityPubURL(),
-		"publicKeyPem": key.PublicPEM,
-	}
-
+	// Combine the Profile and the EncryptionKey
 	userJSON := user.GetJSONLD()
-	userJSON["publicKey"] = keyJSON
+	userJSON[vocab.PropertyPublicKey] = mapof.Any{
+		vocab.PropertyID:   user.ActivityPubURL() + "#main-key",
+		vocab.PropertyType: "Key",
+		"owner":            user.ActivityPubURL(),
+		"publicKeyPem":     key.PublicPEM,
+	}
 
 	// Return the user's profile in JSON-LD format
 	context.Response().Header().Set(vocab.ContentType, vocab.ContentTypeActivityPub)

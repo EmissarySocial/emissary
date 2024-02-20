@@ -1,8 +1,9 @@
-package activitypub
+package activitypub_stream
 
 import (
 	"net/http"
 
+	"github.com/EmissarySocial/emissary/handler/activitypub"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
@@ -10,7 +11,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func GetStreamResponseCollection(serverFactory *server.Factory, responseType string) echo.HandlerFunc {
+func GetResponseCollection(serverFactory *server.Factory, responseType string) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
@@ -45,7 +46,7 @@ func GetStreamResponseCollection(serverFactory *server.Factory, responseType str
 		if publishDateString == "" {
 			if publishDateString == "" {
 				ctx.Response().Header().Set("Content-Type", "application/activity+json")
-				result := activityPub_Collection(baseRequestURL)
+				result := activitypub.Collection(baseRequestURL)
 				return ctx.JSON(http.StatusOK, result)
 			}
 		}
@@ -65,7 +66,7 @@ func GetStreamResponseCollection(serverFactory *server.Factory, responseType str
 		// Return a JSON-LD document
 		ctx.Response().Header().Set("Content-Type", model.MimeTypeActivityPub)
 
-		result := activityPub_CollectionPage[model.Response](
+		result := activitypub.CollectionPage[model.Response](
 			baseRequestURL,
 			pageSize,
 			responses,
