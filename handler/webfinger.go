@@ -2,7 +2,6 @@ package handler
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
@@ -19,9 +18,6 @@ func GetWebfinger(fm *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
-		var resource digit.Resource
-		var err error
-
 		// Validate Domain and Get Factory Object
 		factory, err := fm.ByContext(ctx)
 
@@ -31,25 +27,27 @@ func GetWebfinger(fm *server.Factory) echo.HandlerFunc {
 
 		resourceID := ctx.QueryParam("resource")
 
-		// Handle User Requests
-		if strings.Contains(resourceID, "@") {
-			userService := factory.User()
-			resource, err = userService.LoadWebFinger(resourceID)
-		} else {
-			streamService := factory.User()
-			resource, err = streamService.LoadWebFinger(resourceID)
+		// Look for Users first
+		if resource, err := factory.User().LoadWebFinger(resourceID); err == nil {
+			return writeResource(ctx, resource)
 		}
 
-		// Handle Errors
-		if err != nil {
-			return derp.NewBadRequestError(location, "Invalid Resource", resourceID)
+		// Next, look for Streams (that are ActivityPub actors)
+		if resource, err := factory.Stream().LoadWebFinger(resourceID); err == nil {
+			return writeResource(ctx, resource)
 		}
 
-		// If relation is specified, then limit links to that type only
-		resource.FilterLinks(ctx.QueryParam("rel"))
-		ctx.Response().Header().Set("Content-Type", model.MimeTypeJSONResourceDescriptor)
-
-		// Return the Response as a JSON object
-		return ctx.JSON(http.StatusOK, resource)
+		// Otherwise, break unceremoniously
+		return derp.NewBadRequestError(location, "Invalid Resource", resourceID)
 	}
+}
+
+func writeResource(ctx echo.Context, resource digit.Resource) error {
+
+	// If relation is specified, then limit links to that type only
+	resource.FilterLinks(ctx.QueryParam("rel"))
+	ctx.Response().Header().Set("Content-Type", model.MimeTypeJSONResourceDescriptor)
+
+	// Return the Response as a JSON object
+	return ctx.JSON(http.StatusOK, resource)
 }
