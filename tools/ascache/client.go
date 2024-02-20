@@ -205,6 +205,7 @@ func (client *Client) save(url string, document streams.Document) {
 	// There may be multiple URLs that point to the same document, so we're
 	// doing this check HERE using the object.id field.
 	value := NewValue()
+	value.URLs.Append(url)
 
 	if err := client.loadByID(document.ID(), &value); !derp.NilOrNotFound(err) {
 		derp.Report(derp.Wrap(err, location, "Error searching for duplicate document in cache", document))
