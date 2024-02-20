@@ -362,7 +362,7 @@ func (w Common) ActivityStream(url string) streams.Document {
 	result, err := w._factory.ActivityStreams().Load(url)
 
 	if err != nil {
-		derp.Report(err)
+		derp.Report(derp.Wrap(err, "render.Common.ActivityStream", "Error loading ActivityStream"))
 	}
 
 	// Search for rules that might add a LABEL to this document.
