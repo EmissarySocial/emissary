@@ -34,6 +34,7 @@ type Stream struct {
 	ImageURL        string                       `json:"imageUrl,omitempty"     bson:"imageUrl,omitempty"`     // URL of the cover image for this document's image
 	Content         Content                      `json:"content,omitempty"      bson:"content,omitempty"`      // Body content object for this Stream.
 	Widgets         set.Slice[StreamWidget]      `json:"widgets,omitempty"      bson:"widgets,omitempty"`      // Additional widgets to include when rendering this Stream.
+	Tags            sliceof.Object[Tag]          `json:"tags,omitempty"         bson:"tags,omitempty"`         // List of tags that are associated with this document
 	Data            mapof.Any                    `json:"data,omitempty"         bson:"data,omitempty"`         // Set of data to populate into the Template.  This is validated by the JSON-Schema of the Template.
 	AttributedTo    PersonLink                   `json:"attributedTo,omitempty" bson:"attributedTo,omitempty"` // List of people who are attributed to this document
 	Context         string                       `json:"context,omitempty"      bson:"context,omitempty"`      // Context of this document (usually a URL)
@@ -57,6 +58,7 @@ func NewStream() Stream {
 		Permissions:   NewStreamPermissions(),
 		Widgets:       NewStreamWidgets(),
 		Data:          mapof.NewAny(),
+		Tags:          sliceof.NewObject[Tag](),
 		PublishDate:   math.MaxInt64,
 		UnPublishDate: math.MaxInt64,
 	}
