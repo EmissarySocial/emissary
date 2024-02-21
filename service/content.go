@@ -2,6 +2,8 @@ package service
 
 import (
 	"bytes"
+	"regexp"
+	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
@@ -106,5 +108,28 @@ func (service *Content) FormatByExtension(extension string) string {
 
 	default:
 		return model.ContentFormatHTML
+	}
+}
+
+func (service *Content) ApplyLinks(content *model.Content) {
+
+	x := regexp.MustCompile(`https?://[^\s]+`)
+
+	newHTML := x.ReplaceAllStringFunc(content.HTML, func(input string) string {
+		return `<a href="` + string(input) + `" target="_blank">` + string(input) + `</a>`
+	})
+
+	content.HTML = string(newHTML)
+}
+
+func (service *Content) ApplyTags(content *model.Content, tags []model.Tag) {
+
+	// Last, apply tags back into the Content as links
+	for _, tag := range tags {
+		if tag.Href == "" {
+			continue
+		}
+
+		content.HTML = strings.ReplaceAll(content.HTML, tag.Name, `<a href="`+tag.Href+`" target="_blank">`+tag.Name+`</a>`)
 	}
 }

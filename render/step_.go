@@ -74,6 +74,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.InlineSuccess:
 		return StepInlineSuccess(s)
 
+	case step.ProcessContent:
+		return StepProcessContent(s)
+
 	case step.Publish:
 		return StepPublish(s)
 

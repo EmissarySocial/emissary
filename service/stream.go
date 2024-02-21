@@ -18,9 +18,13 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/outbox"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/html"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/sliceof"
+	"github.com/benpate/sherlock"
+	"github.com/gernest/mention"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -830,6 +834,46 @@ func (service *Stream) CalcContext(stream *model.Stream) {
 	stream.Context = stream.InReplyTo
 }
 
+func (service *Stream) CalcTags(stream *model.Stream) {
+
+	stream.Tags = make(sliceof.Object[model.Tag], 0)
+
+	plainText := html.RemoveTags(stream.Content.HTML)
+	plainText = html.RemoveSpecialCharacters(plainText)
+
+	// Add all @mentions into the Tags map
+	mentions := mention.GetTags('@', plainText)
+
+	for _, value := range mentions {
+
+		tag := model.NewTag()
+		tag.Type = vocab.LinkTypeMention
+		tag.Name = string(value.Char) + value.Tag
+		tag.Name = strings.TrimSuffix(tag.Name, ".")
+		tag.Name = strings.TrimSuffix(tag.Name, ",")
+
+		if actor, err := service.activityStreamService.Load(tag.Name, sherlock.AsActor()); err == nil {
+			tag.Href = actor.ID()
+		}
+
+		stream.Tags = append(stream.Tags, tag)
+	}
+
+	// Add all @mentions into the Tags map
+	hashtags := mention.GetTags('#', plainText)
+
+	for _, value := range hashtags {
+
+		tag := model.NewTag()
+		tag.Type = "Hastag" // TODO: This constant should be defined by Hannibal
+		tag.Name = string(value.Char) + value.Tag
+		tag.Name = strings.TrimSuffix(tag.Name, ".")
+		tag.Name = strings.TrimSuffix(tag.Name, ",")
+
+		stream.Tags = append(stream.Tags, tag)
+	}
+}
+
 /******************************************
  * WebFinger Behavior
  ******************************************/
@@ -936,6 +980,10 @@ func (service *Stream) JSONLD(stream *model.Stream) mapof.Any {
 	if stream.AttributedTo.NotEmpty() {
 		result[vocab.PropertyActor] = stream.AttributedTo.ProfileURL
 		result[vocab.PropertyAttributedTo] = stream.AttributedTo.ProfileURL
+	}
+
+	if len(stream.Tags) > 0 {
+		result[vocab.PropertyTag] = stream.Tags
 	}
 
 	// NOTE: According to Mastodon ActivityPub guide (https://docs.joinmastodon.org/spec/activitypub/)
