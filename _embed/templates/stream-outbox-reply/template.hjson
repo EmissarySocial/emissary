@@ -21,6 +21,7 @@
 		create:{
 			steps: [
 				{do:"edit-content", file:"create", format:"HTML"}
+				{do:"process-content"}
 				{do:"save"}
 				{do:"publish"}
 			]
@@ -31,6 +32,7 @@
 				{do:"as-modal", steps:[
 					{do:"set-args", postTo:"/{{.StreamID}}/edit"}
 					{do:"edit-content", file:"edit", format:"HTML"}
+					{do:"process-content"}
 					{do:"save"}
 					{do:"publish"}
 					{do:"refresh-page"}
