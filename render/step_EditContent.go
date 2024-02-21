@@ -59,14 +59,9 @@ func (step StepEditContent) Post(renderer Renderer, _ io.Writer) PipelineBehavio
 		rawContent, _ = body.GetStringOK("content")
 	}
 
-	// Create a new Content object from the request body
-	factory := renderer.factory()
-	contentService := factory.Content()
-	content := contentService.New(step.Format, rawContent)
-
-	// Put the content into the stream
-	stream := renderer.object().(*model.Stream)
-	stream.Content = content
+	// Set the new Content value in the Stream
+	contentService := renderer.factory().Content()
+	stream.Content = contentService.New(step.Format, rawContent)
 
 	// Try to save the object back to the database
 	if err := renderer.service().ObjectSave(stream, "Content edited"); err != nil {
