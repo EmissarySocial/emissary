@@ -10,7 +10,7 @@ import (
 type Context struct {
 	factory *domain.Factory
 	stream  *model.Stream
-	actor   *model.Actor
+	actor   *model.StreamActor
 }
 
 // streamRouter defines the package-level router for stream/ActivityPub requests

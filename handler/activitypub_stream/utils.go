@@ -11,14 +11,14 @@ import (
 
 // getActor wraps all of the monotonous code of loading a factory, templateService, streamService, along with the Template, Stream, and Actor
 // from the Request context.
-func getActor(serverFactory *server.Factory, ctx echo.Context) (*domain.Factory, *service.Template, *service.Stream, model.Template, model.Stream, model.Actor, error) {
+func getActor(serverFactory *server.Factory, ctx echo.Context) (*domain.Factory, *service.Template, *service.Stream, model.Template, model.Stream, model.StreamActor, error) {
 
 	const location = "activitypub_stream.getActor"
 
 	factory, err := serverFactory.ByContext(ctx)
 
 	if err != nil {
-		return nil, nil, nil, model.Template{}, model.Stream{}, model.Actor{}, derp.Wrap(err, location, "Unrecognized Domain")
+		return nil, nil, nil, model.Template{}, model.Stream{}, model.StreamActor{}, derp.Wrap(err, location, "Unrecognized Domain")
 	}
 
 	// Try to load the Stream
@@ -26,14 +26,14 @@ func getActor(serverFactory *server.Factory, ctx echo.Context) (*domain.Factory,
 	stream := model.NewStream()
 	token := ctx.Param("stream")
 	if err := streamService.LoadByToken(token, &stream); err != nil {
-		return nil, nil, nil, model.Template{}, model.Stream{}, model.Actor{}, derp.Wrap(err, location, "Error loading stream", token)
+		return nil, nil, nil, model.Template{}, model.Stream{}, model.StreamActor{}, derp.Wrap(err, location, "Error loading stream", token)
 	}
 
 	// Try to load the Stream's Template
 	templateService := factory.Template()
 	template, err := templateService.Load(stream.TemplateID)
 	if err != nil {
-		return nil, nil, nil, model.Template{}, model.Stream{}, model.Actor{}, derp.Wrap(err, location, "Invalid Template", stream.TemplateID)
+		return nil, nil, nil, model.Template{}, model.Stream{}, model.StreamActor{}, derp.Wrap(err, location, "Invalid Template", stream.TemplateID)
 	}
 
 	// Validate the Actor for this request
