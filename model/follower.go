@@ -2,6 +2,7 @@ package model
 
 import (
 	"github.com/benpate/data/journal"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -58,4 +59,12 @@ func (follower Follower) Roles(authorization *Authorization) []string {
 
 	// Intentionally NOT allowing MagicRoleAnonymous, MagicRoleAuthenticated, or MagicRoleOwner
 	return []string{}
+}
+
+func (follower Follower) GetJSONLD() mapof.Any {
+
+	return mapof.Any{
+		vocab.PropertyID:   follower.Actor.ProfileURL,
+		vocab.PropertyName: follower.Actor.Name,
+	}
 }

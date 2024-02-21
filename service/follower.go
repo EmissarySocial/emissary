@@ -260,6 +260,16 @@ func (service *Follower) IsActivityPubFollower(streamID primitive.ObjectID, foll
 	return err == nil
 }
 
+func (service *Follower) QueryByParentAndDate(parentType string, parentID primitive.ObjectID, method string, maxCreateDate int64, pageSize int) ([]model.Follower, error) {
+
+	criteria := exp.Equal("type", parentType).
+		AndEqual("parentId", parentID).
+		AndEqual("method", method).
+		AndLessThan("createDate", maxCreateDate)
+
+	return service.Query(criteria, option.SortDesc("createDate"), option.MaxRows(int64(pageSize)))
+}
+
 /*/ FollowerChannels returns two channels, one for ActivityPub followers and one for WebSub followers
 func (service *Follower) FollowerChannels(parentID primitive.ObjectID) (<-chan model.Follower, <-chan model.Follower) {
 

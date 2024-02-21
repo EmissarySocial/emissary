@@ -286,6 +286,18 @@ func (stream Stream) ActivityPubURL() string {
 	return stream.URL
 }
 
+func (stream *Stream) ActivityPubInboxURL() string {
+	return stream.URL + "/pub/inbox"
+}
+
+func (stream *Stream) ActivityPubOutboxURL() string {
+	return stream.URL + "/pub/outbox"
+}
+
+func (stream *Stream) ActivityPubFollowersURL() string {
+	return stream.URL + "/pub/followers"
+}
+
 func (stream Stream) ActivityPubType() string {
 	return stream.SocialRole
 }
