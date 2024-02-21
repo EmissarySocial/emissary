@@ -13,8 +13,8 @@ func init() {
 	streamRouter.Add(vocab.ActivityTypeFollow, vocab.Any, func(context Context, activity streams.Document) error {
 
 		// Validate that the receiving Stream matches the Actor ID in the Activity
-		if context.stream.ActivityPubID() != activity.Object().ID() {
-			return derp.NewInternalError("handler.activityPub_HandleRequest_Follow", "Invalid User ID", context.stream.ActivityPubID(), activity.Object().ID())
+		if context.stream.ActivityPubURL() != activity.Object().ID() {
+			return derp.NewInternalError("handler.activityPub_HandleRequest_Follow", "Invalid User ID", context.stream.ActivityPubURL(), activity.Object().ID())
 		}
 
 		// Apply rules to filter out unwanted follow activities
