@@ -28,7 +28,7 @@ func (service *Following) connect_ActivityPub(following *model.Following, remote
 
 	// Try to send the ActivityPub follow request
 	followingURL := service.ActivityPubID(following)
-	log.Debug().Str("loc", location).Msg("Sending ActivityPub Follow request to: " + followingURL)
+	log.Debug().Str("loc", location).Msg("Sending ActivityPub Follow request to: " + remoteActor.ID())
 	localActor.SendFollow(followingURL, remoteActor.ID())
 
 	// Success!
