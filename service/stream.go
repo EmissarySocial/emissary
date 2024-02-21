@@ -151,9 +151,6 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 	defaultRoles := defaultTemplate.AllowedRoles(stream.StateID)
 	stream.DefaultAllow = stream.PermissionGroups(defaultRoles...)
 
-	// Generate HTML content
-	service.contentService.Format(&stream.Content)
-
 	// RULE: Calculate rank
 	if stream.Rank == 0 {
 		maxRank, err := service.MaxRank(stream.ParentID)
