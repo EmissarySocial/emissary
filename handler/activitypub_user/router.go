@@ -6,7 +6,7 @@ import (
 	"github.com/benpate/hannibal/pub"
 )
 
-var inboxRouter pub.Router[Context]
+var inboxRouter pub.Router[Context] = pub.NewRouter[Context]()
 
 type Context struct {
 	factory *domain.Factory

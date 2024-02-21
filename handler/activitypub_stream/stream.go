@@ -11,17 +11,24 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func GetActor(serverFactory *server.Factory) echo.HandlerFunc {
+func GetJSONLD(serverFactory *server.Factory) echo.HandlerFunc {
 
 	const location = "activitypub_stream.GetActor"
 
 	return func(ctx echo.Context) error {
 
 		// Load all of the necessary object from the request
-		factory, _, _, _, stream, actor, err := getActor(serverFactory, ctx)
+		factory, _, streamService, _, stream, actor, err := getActor(serverFactory, ctx)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Invalid Request")
+		}
+
+		// If this Stream is not an Actor, then just return a standard JSON-LD response.
+		if actor.IsNil() {
+			jsonld := streamService.JSONLD(&stream)
+			ctx.Response().Header().Set("Content-Type", vocab.ContentTypeActivityPub)
+			return ctx.JSON(http.StatusOK, jsonld)
 		}
 
 		// Try to locate the domain

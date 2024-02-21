@@ -38,9 +38,5 @@ func getActor(serverFactory *server.Factory, ctx echo.Context) (*domain.Factory,
 
 	// Validate the Actor for this request
 	actor := template.Actor
-	if actor.IsNil() {
-		return nil, nil, nil, model.Template{}, model.Stream{}, model.Actor{}, derp.NewNotFoundError(location, "Actor not found", stream)
-	}
-
 	return factory, templateService, streamService, template, stream, actor, nil
 }

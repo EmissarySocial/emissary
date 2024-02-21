@@ -11,14 +11,15 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// GetStream handles GET requests
+// GetStream handles GET requests with the default action.
+// This handler also responds to JSON-LD requests
 func GetStream(serverFactory *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
 		// Special case for JSON-LD requests.
 		if isJSONLDRequest(ctx) {
-			return activitypub_stream.GetActor(serverFactory)(ctx)
+			return activitypub_stream.GetJSONLD(serverFactory)(ctx)
 		}
 
 		// Otherwise, just render the stream normally
@@ -26,7 +27,13 @@ func GetStream(serverFactory *server.Factory) echo.HandlerFunc {
 	}
 }
 
-func PostStream(serverFactory *server.Factory) echo.HandlerFunc {
+// GetStreamWithAction handles GET requests with a specified action
+func GetStreamWithAction(serverFactory *server.Factory) echo.HandlerFunc {
+	return renderStream(serverFactory, render.ActionMethodGet)
+}
+
+// PostStreamWithAction handles POST requests with a specified action
+func PostStreamWithAction(serverFactory *server.Factory) echo.HandlerFunc {
 	return renderStream(serverFactory, render.ActionMethodPost)
 }
 

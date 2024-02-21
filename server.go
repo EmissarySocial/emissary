@@ -238,9 +238,9 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	// STREAM PAGES
 	e.GET("/", handler.GetStream(factory))
 	e.GET("/:stream", handler.GetStream(factory))
-	e.GET("/:stream/:action", handler.GetStream(factory))
-	e.POST("/:stream/:action", handler.PostStream(factory))
-	e.DELETE("/:stream", handler.PostStream(factory))
+	e.GET("/:stream/:action", handler.GetStreamWithAction(factory))
+	e.POST("/:stream/:action", handler.PostStreamWithAction(factory))
+	e.DELETE("/:stream", handler.PostStreamWithAction(factory))
 
 	// Hard-coded routes for additional stream services
 	e.GET("/:stream/attachments/:attachment", handler.GetAttachment(factory)) // TODO: LOW: Can Stream Attachments be moved into a custom render step?
@@ -275,7 +275,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@:userId/pub/blocked/:ruleId", ap_user.GetBlock(factory))
 
 	// ActivityPub Routes for Streams
-	e.GET("/:stream/pub", ap_stream.GetActor(factory))
+	e.GET("/:stream/pub", ap_stream.GetJSONLD(factory))
 	e.POST("/:stream/pub/inbox", ap_stream.PostInbox(factory))
 	e.GET("/:stream/pub/outbox", ap_stream.GetOutboxCollection(factory))
 	e.GET("/:stream/pub/followers", ap_stream.GetFollowersCollection(factory))

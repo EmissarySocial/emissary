@@ -21,10 +21,14 @@ func GetOutboxCollection(serverFactory *server.Factory) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 
 		// Load all of the necessary object from the request
-		_, _, streamService, _, stream, _, err := getActor(serverFactory, ctx)
+		_, _, streamService, _, stream, actor, err := getActor(serverFactory, ctx)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Invalid Request")
+		}
+
+		if actor.IsNil() {
+			return derp.NewNotFoundError(location, "Actor not found")
 		}
 
 		// If the request is for the collection itself, then return a summary and the URL of the first page

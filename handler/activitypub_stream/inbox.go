@@ -22,6 +22,10 @@ func PostInbox(serverFactory *server.Factory) echo.HandlerFunc {
 			return derp.Wrap(err, location, "Invalid Request")
 		}
 
+		if actor.IsNil() {
+			return derp.NewNotFoundError(location, "Actor not found")
+		}
+
 		// Retrieve the activity from the request body
 		activity, err := pub.ReceiveInboxRequest(ctx.Request(), factory.ActivityStreams())
 
