@@ -4,7 +4,6 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/vocab"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 )
 
@@ -39,7 +38,6 @@ func (filter *RuleFilter) AllowSend(actorID string) bool {
 		}
 
 		filter.cache[actorID] = rules
-		spew.Dump("Found Rules:", rules)
 	}
 
 	for _, rule := range filter.cache[actorID] {
@@ -55,17 +53,12 @@ func (filter *RuleFilter) AllowSend(actorID string) bool {
 func (filter *RuleFilter) ChannelSend(ch <-chan model.Follower) <-chan string {
 
 	result := make(chan string)
-	spew.Dump("ChannelSend ======================")
 	go func() {
 		defer close(result)
 
 		for follower := range ch {
-			spew.Dump(follower)
 			if filter.AllowSend(follower.Actor.ProfileURL) {
-				spew.Dump("allowed")
 				result <- follower.Actor.ProfileURL
-			} else {
-				spew.Dump("not allowed")
 			}
 		}
 	}()
