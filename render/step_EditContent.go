@@ -28,6 +28,13 @@ func (step StepEditContent) Post(renderer Renderer, _ io.Writer) PipelineBehavio
 
 	var rawContent string
 
+	// Require that we're working with a Stream
+	stream, ok := renderer.object().(*model.Stream)
+
+	if !ok {
+		return Halt().WithError(derp.NewInternalError("render.StepEditContent.Post", "step: EditContent can only be used on a Stream"))
+	}
+
 	// Try to read the content from the request body
 	switch step.Format {
 
