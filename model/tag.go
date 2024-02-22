@@ -1,5 +1,7 @@
 package model
 
+import "github.com/benpate/rosetta/mapof"
+
 type Tag struct {
 	Type string `json:"type"` // Type of Tag (e.g. "Hashtag", "Mention")
 	Name string `json:"name"` // Value to display (e.g. "#hashtag", "@mention")
@@ -8,4 +10,16 @@ type Tag struct {
 
 func NewTag() Tag {
 	return Tag{}
+}
+
+func (tag Tag) JSONLD() mapof.Any {
+	return TagAsJSONLD(tag)
+}
+
+func TagAsJSONLD(tag Tag) mapof.Any {
+	return mapof.Any{
+		"type": tag.Type,
+		"name": tag.Name,
+		"href": tag.Href,
+	}
 }

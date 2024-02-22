@@ -22,6 +22,7 @@ import (
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/sherlock"
 	"github.com/gernest/mention"
@@ -980,7 +981,7 @@ func (service *Stream) JSONLD(stream *model.Stream) mapof.Any {
 	}
 
 	if len(stream.Tags) > 0 {
-		result[vocab.PropertyTag] = stream.Tags
+		result[vocab.PropertyTag] = slice.Map(stream.Tags, model.TagAsJSONLD)
 	}
 
 	// NOTE: According to Mastodon ActivityPub guide (https://docs.joinmastodon.org/spec/activitypub/)
