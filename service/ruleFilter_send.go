@@ -42,6 +42,7 @@ func (filter *RuleFilter) AllowSend(actorID string) bool {
 
 	for _, rule := range filter.cache[actorID] {
 		if rule.IsDisallowSend(actorID) {
+			log.Trace().Str("loc", location).Str("to", actorID).Msg("Disallowed by Rule")
 			return false
 		}
 	}
@@ -58,7 +59,10 @@ func (filter *RuleFilter) ChannelSend(ch <-chan model.Follower) <-chan string {
 
 		for follower := range ch {
 			if filter.AllowSend(follower.Actor.ProfileURL) {
+				log.Trace().Str("loc", "service.RuleFilter.ChannelSend").Str("actorID", follower.Actor.ProfileURL).Msg("Allowed")
 				result <- follower.Actor.ProfileURL
+			} else {
+				log.Trace().Str("loc", "service.RuleFilter.ChannelSend").Str("actorID", follower.Actor.ProfileURL).Msg("Blocked")
 			}
 		}
 	}()
