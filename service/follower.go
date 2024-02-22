@@ -233,11 +233,11 @@ func (service *Follower) ListByParent(parentID primitive.ObjectID, options ...op
 
 // ActivityPubFollowersChannel returns a channel containing all of the Followers of specific parentID
 // who use ActivityPub for updates
-func (service *Follower) ActivityPubFollowersChannel(userID primitive.ObjectID) (<-chan model.Follower, error) {
+func (service *Follower) ActivityPubFollowersChannel(parentType string, parentID primitive.ObjectID) (<-chan model.Follower, error) {
 
 	return service.Channel(
-		exp.Equal("parentId", userID).
-			AndEqual("type", model.FollowerTypeUser).
+		exp.Equal("parentId", parentID).
+			AndEqual("type", parentType).
 			AndEqual("method", model.FollowMethodActivityPub),
 	)
 }

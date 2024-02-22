@@ -1060,7 +1060,7 @@ func (service *Stream) ActivityPubActor(stream *model.Stream, withFollowers bool
 	if withFollowers {
 
 		// Get a channel of all Followers
-		followers, err := service.followerService.ActivityPubFollowersChannel(stream.StreamID)
+		followers, err := service.followerService.ActivityPubFollowersChannel(model.FollowerTypeStream, stream.StreamID)
 
 		if err != nil {
 			return outbox.Actor{}, derp.Wrap(err, location, "Error retrieving followers")
