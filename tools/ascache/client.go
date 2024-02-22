@@ -106,6 +106,14 @@ func (client *Client) Load(url string, options ...any) (streams.Document, error)
 	result, err := client.innerClient.Load(url, options...)
 
 	if err != nil {
+
+		// If the original document is gone, and we're forcing a reload, then remove the value from the cache
+		if derp.NotFound(err) && config.forceReload {
+			if err := client.Delete(url); err != nil {
+				return result, derp.Wrap(err, "ascache.Client.Load", "Error purging document from the cache", url)
+			}
+		}
+
 		return result, derp.Wrap(err, "ascache.Client.Load", "Error loading document from inner client", url)
 	}
 
