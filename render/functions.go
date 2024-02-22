@@ -180,8 +180,7 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 
 		"tinyDate": func(value any) string {
 			valueTime := convert.Time(value)
-			emptyTime := time.Time{}
-			if valueTime == emptyTime {
+			if valueTime.IsZero() {
 				return ""
 			}
 			return tinyDate.FormatDiff(valueTime, time.Now())
@@ -201,8 +200,7 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 
 		"shortDate": func(value any) string {
 			valueTime := convert.Time(value)
-			emptyTime := time.Time{}
-			if valueTime == emptyTime {
+			if valueTime.IsZero() {
 				return ""
 			}
 			return valueTime.Format("Jan 2, 2006")
@@ -210,8 +208,7 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 
 		"longDate": func(value any) string {
 			valueTime := convert.Time(value)
-			emptyTime := time.Time{}
-			if valueTime == emptyTime {
+			if valueTime.IsZero() {
 				return ""
 			}
 			return valueTime.Format("Monday, January 2, 2006")
@@ -219,6 +216,10 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 
 		"shortTime": func(value any) string {
 			valueTime := convert.Time(value)
+
+			if valueTime.IsZero() {
+				return ""
+			}
 			return valueTime.Format("3:04:05 PM")
 		},
 
