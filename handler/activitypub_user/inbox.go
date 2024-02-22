@@ -6,7 +6,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
-	"github.com/benpate/hannibal/pub"
+	"github.com/benpate/hannibal/inbox"
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -43,7 +43,7 @@ func PostInbox(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		// Retrieve the activity from the request body
-		activity, err := pub.ReceiveInboxRequest(ctx.Request(), factory.ActivityStreams())
+		activity, err := inbox.ReceiveRequest(ctx.Request(), factory.ActivityStreams())
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error parsing ActivityPub request")
