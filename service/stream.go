@@ -835,9 +835,7 @@ func (service *Stream) CalcContext(stream *model.Stream) {
 func (service *Stream) CalcTags(stream *model.Stream) {
 
 	stream.Tags = make(sliceof.Object[model.Tag], 0)
-
-	plainText := html.RemoveTags(stream.Content.HTML)
-	plainText = html.RemoveSpecialCharacters(plainText)
+	plainText := html.ToSearchText(stream.Content.HTML)
 
 	// Add all @mentions into the Tags map
 	mentions := mention.GetTags('@', plainText)

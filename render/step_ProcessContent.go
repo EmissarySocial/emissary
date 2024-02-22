@@ -38,7 +38,7 @@ func (step StepProcessContent) Post(renderer Renderer, buffer io.Writer) Pipelin
 	stream := streamRenderer._stream
 
 	if step.RemoveHTML {
-		stream.Content.HTML = html.RemoveTags(stream.Content.HTML)
+		stream.Content.HTML = html.RemoveAnchors(stream.Content.HTML)
 	}
 
 	if step.AddLinks {
