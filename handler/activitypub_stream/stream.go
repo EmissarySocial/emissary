@@ -13,7 +13,7 @@ import (
 
 func GetJSONLD(serverFactory *server.Factory) echo.HandlerFunc {
 
-	const location = "activitypub_stream.GetActor"
+	const location = "activitypub_stream.GetJSONLD"
 
 	return func(ctx echo.Context) error {
 

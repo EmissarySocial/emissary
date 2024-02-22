@@ -15,7 +15,7 @@ func GetResponseCollection(serverFactory *server.Factory, responseType string) e
 
 	return func(ctx echo.Context) error {
 
-		const location = "handler.activitypub.handleResponseCollection"
+		const location = "handler.activitypub_stream.GetResponseCollection"
 
 		// Verify the domain name
 		factory, err := serverFactory.ByContext(ctx)
