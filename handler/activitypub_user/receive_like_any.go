@@ -1,6 +1,8 @@
 package activitypub_user
 
 import (
+	"crypto/sha256"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
@@ -8,67 +10,72 @@ import (
 )
 
 func init() {
-	inboxRouter.Add(vocab.ActivityTypeAnnounce, vocab.Any, receiveResponse)
-	inboxRouter.Add(vocab.ActivityTypeLike, vocab.Any, receiveResponse)
-	inboxRouter.Add(vocab.ActivityTypeDislike, vocab.Any, receiveResponse)
+	inboxRouter.Add(vocab.ActivityTypeAnnounce, vocab.Any, receiveLikeOrAnnounce)
+	inboxRouter.Add(vocab.ActivityTypeLike, vocab.Any, receiveLikeOrAnnounce)
+	inboxRouter.Add(vocab.ActivityTypeDislike, vocab.Any, receiveLikeOrAnnounce)
 }
 
-// receiveResponse handles all Announce, Like, and Dislike activities
-func receiveResponse(context Context, activity streams.Document) error {
+// receiveLikeOrAnnounce handles all Like Dislike activities
+func receiveLikeOrAnnounce(context Context, activity streams.Document) error {
 
-	const location = "handler.activitypub.receiveResponse"
+	const location = "handler.activitypub_user.receiveLikeOrAnnounce"
 
-	// RULE: Verify that the ActivityID exists
-	if activity.ID() == "" {
-		return derp.NewBadRequestError(location, activity.Type()+" activities must have an ID")
+	// Add then Shared/Liked Object into the ActivityStream cache
+	if err := inboxRouter.Handle(context, activity.Object()); err != nil {
+		return derp.Wrap(err, location, "Error processing activity Object", activity.Object().ID())
 	}
 
-	// Add the Like/Dislike into the ActivityStream cache
+	// RULE: If the Activity does not have an ID, then make a new "fake" one.
+	if activity.ID() == "" {
+		activity.SetProperty(vocab.PropertyID, fakeActivityID(activity))
+	}
+
+	// Add the Announce/Like/Dislike into the ActivityStream cache
 	context.factory.ActivityStreams().Put(activity)
 
-	// Add the Liked/Disliked document into the ActivityStream cache
-	document := activity.UnwrapActivity()
-	document, err := document.Load()
-
-	if err != nil {
-		return derp.Wrap(err, location, "Error loading document from ActivityStreams", document.Value())
-	}
-
-	// Verify that this message comes from a valid "Following" object.
-	followingService := context.factory.Following()
-	following := model.NewFollowing()
-
-	// If the "Following" record cannot be found, then do not add a message
-	if err := followingService.LoadByURL(context.user.UserID, activity.Actor().ID(), &following); err != nil {
-		return nil
-	}
-
-	// Calculate the origin type (ANNOUNCE, LIKE, or DISLIKE)
-	originType := getOriginType(activity.Type())
-
-	// Try to save the message to the database (with de-duplication)
-	if err := followingService.SaveMessage(&following, document, originType); err != nil {
-		return derp.Wrap(err, "handler.activitypub_receive_create", "Error saving message", context.user.UserID, document.Object().ID())
+	// Add the activity into the User's Inbox
+	if err := saveMessage(context, activity, activity.Actor().ID(), getOriginType(activity.Type())); err != nil {
+		return derp.Wrap(err, location, "Error saving message", context.user.UserID, activity.Value())
 	}
 
 	// Success.
 	return nil
 }
 
-// getOriginType translates from ActivityStreams.Type => model.OriginType constants
-func getOriginType(activityType string) string {
+// saveMessage saves a message into the User's inbox
+func saveMessage(context Context, activity streams.Document, actorID string, originType string) error {
 
-	switch activityType {
+	const location = "handler.activitypub_user.saveMessage"
 
-	case vocab.ActivityTypeAnnounce:
-		return model.OriginTypeAnnounce
+	// Verify that this message comes from a valid "Following" object.
+	followingService := context.factory.Following()
+	following := model.NewFollowing()
 
-	case vocab.ActivityTypeLike:
-		return model.OriginTypeLike
+	// If the "Following" record cannot be found, then do not add a message
+	if err := followingService.LoadByURL(context.user.UserID, actorID, &following); err != nil {
 
-	case vocab.ActivityTypeDislike:
-		return model.OriginTypeDislike
+		if derp.NotFound(err) {
+			return nil
+		}
+
+		return derp.Wrap(err, location, "Error loading Following record", context.user.UserID, actorID)
 	}
 
-	return model.OriginTypePrimary
+	// Try to save the message to the database (with de-duplication)
+	if err := followingService.SaveMessage(&following, activity, originType); err != nil {
+		return derp.Wrap(err, location, "Error saving message", context.user.UserID, activity.Value())
+	}
+
+	// Success.
+	return nil
+
+}
+
+// fakeActivityID generates a unique ID for a stream document based on
+// the hashed contents of the document.
+func fakeActivityID(activity streams.Document) string {
+	plainText := activity.Type() + " " + activity.Object().ID() + " " + activity.Actor().ID()
+	hasher := sha256.New()
+	hasher.Write([]byte(plainText))
+	return "sha256-" + string(hasher.Sum(nil))
 }

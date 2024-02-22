@@ -9,12 +9,12 @@ import (
 )
 
 func init() {
-	inboxRouter.Add(vocab.ActivityTypeBlock, vocab.Any, createBlock)
+	inboxRouter.Add(vocab.ActivityTypeBlock, vocab.Any, receive_BlockAny)
 }
 
-func createBlock(context Context, activity streams.Document) error {
+func receive_BlockAny(context Context, activity streams.Document) error {
 
-	const location = "handler.activitypub.receiveBlock"
+	const location = "handler.activitypub_user.receive_BlockAny"
 
 	// Verify that this message comes from a valid "Following" object.
 	followingService := context.factory.Following()

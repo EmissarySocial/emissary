@@ -2,6 +2,7 @@ package activitypub_user
 
 import (
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/steranko"
 )
 
@@ -16,6 +17,24 @@ func getAuthorization(ctx *steranko.Context) model.Authorization {
 	}
 
 	return model.NewAuthorization()
+}
+
+// getOriginType translates from ActivityStreams.Type => model.OriginType constants
+func getOriginType(activityType string) string {
+
+	switch activityType {
+
+	case vocab.ActivityTypeAnnounce:
+		return model.OriginTypeAnnounce
+
+	case vocab.ActivityTypeLike:
+		return model.OriginTypeLike
+
+	case vocab.ActivityTypeDislike:
+		return model.OriginTypeDislike
+	}
+
+	return model.OriginTypePrimary
 }
 
 func isUserVisible(context *steranko.Context, user *model.User) bool {

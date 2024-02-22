@@ -8,13 +8,13 @@ import (
 )
 
 func init() {
-	inboxRouter.Add(vocab.ActivityTypeCreate, vocab.Any, activityPub_CreateOrUpdate)
-	inboxRouter.Add(vocab.ActivityTypeUpdate, vocab.Any, activityPub_CreateOrUpdate)
+	inboxRouter.Add(vocab.ActivityTypeCreate, vocab.Any, receive_CreateOrUpdate)
+	inboxRouter.Add(vocab.ActivityTypeUpdate, vocab.Any, receive_CreateOrUpdate)
 }
 
-func activityPub_CreateOrUpdate(context Context, activity streams.Document) error {
+func receive_CreateOrUpdate(context Context, activity streams.Document) error {
 
-	const location = "handler.activitypub.activityPub_CreateOrUpdate"
+	const location = "handler.activitypub_user.receive_CreateOrUpdate"
 
 	// Load the actual document into the ActivityStream cache
 	object := activity.UnwrapActivity()
@@ -24,30 +24,18 @@ func activityPub_CreateOrUpdate(context Context, activity streams.Document) erro
 
 	case vocab.ObjectTypeRelationship,
 		vocab.ObjectTypeProfile,
-		vocab.ObjectTypePlace,
-		vocab.ObjectTypeEvent,
 		vocab.ObjectTypeTombstone:
 		return nil
 	}
 
 	// Guarantee that we can load the object from the Interwebs.
-	object, err := object.Load()
-
-	if err != nil {
+	if _, err := object.Load(); err != nil {
 		return derp.Wrap(err, location, "Error loading activity.Object")
 	}
 
-	// Verify that this message comes from a valid "Following" object.
-	followingService := context.factory.Following()
-	following := model.NewFollowing()
-
-	if err := followingService.LoadByURL(context.user.UserID, activity.Actor().ID(), &following); err != nil {
-		return nil
-	}
-
-	// Try to save the message to the database (with de-duplication)
-	if err := followingService.SaveMessage(&following, object, model.OriginTypePrimary); err != nil {
-		return derp.Wrap(err, "handler.activitypub_receive_create", "Error saving message", context.user.UserID, object.Value())
+	// Try to add a message to the User's inbox
+	if err := saveMessage(context, activity, activity.Actor().ID(), model.OriginTypePrimary); err != nil {
+		return derp.Wrap(err, location, "Error saving message", context.user.UserID, activity.Value())
 	}
 
 	// Success!!

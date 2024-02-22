@@ -25,7 +25,7 @@ func init() {
 			return derp.NewInternalError("handler.activityPub_HandleRequest_Follow", "Invalid User ID", userID, context.user.UserID)
 		}
 
-		// Apply rules to filter out unwanted follow activities
+		// RULE: Do not allow new "Follows" of any blocked Actors
 		ruleFilter := context.factory.Rule().Filter(context.user.UserID, service.WithBlocksOnly())
 		if ruleFilter.Disallow(&activity) {
 			return derp.NewForbiddenError("handler.activityPub_HandleRequest_Follow", "Blocked by rule", activity.Object().ID())
