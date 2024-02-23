@@ -5,6 +5,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/rs/zerolog/log"
 )
 
 func init() {
@@ -15,6 +16,8 @@ func init() {
 func receive_CreateOrUpdate(context Context, activity streams.Document) error {
 
 	const location = "handler.activitypub_user.receive_CreateOrUpdate"
+
+	log.Debug().Str("activity", activity.ID()).Msg("User Inbox: Received new Activity")
 
 	// Load the actual document into the ActivityStream cache
 	object := activity.UnwrapActivity()

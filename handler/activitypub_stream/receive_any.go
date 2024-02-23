@@ -12,10 +12,10 @@ import (
 
 func init() {
 	fmt.Println("Initializing BoostAny")
-	streamRouter.Add(vocab.ActivityTypeUpdate, vocab.Any, BoostAny)
 	streamRouter.Add(vocab.ActivityTypeCreate, vocab.Any, BoostAny)
-	streamRouter.Add(vocab.ActivityTypeDelete, vocab.Any, BoostAny)
+	streamRouter.Add(vocab.ActivityTypeUpdate, vocab.Any, BoostAny)
 	streamRouter.Add(vocab.ActivityTypeUndo, vocab.Any, BoostAny)
+	streamRouter.Add(vocab.ActivityTypeDelete, vocab.Any, BoostAny)
 
 	streamRouter.Add(vocab.ActivityTypeAnnounce, vocab.Any, BoostAny)
 	streamRouter.Add(vocab.ActivityTypeLike, vocab.Any, BoostAny)
@@ -26,7 +26,7 @@ func BoostAny(context Context, activity streams.Document) error {
 
 	const location = "activitypub_stream.inboxRouter.BoostAny"
 
-	log.Debug().Str("loc", location).Msg("Stream Actor: Received new Activity to boost: activityID=" + activity.ID())
+	log.Debug().Str("activity", activity.ID()).Msg("Stream Inbox: Received new Activity")
 
 	// RULE: Require  "boost-inbox" setting
 	if !context.actor.BoostInbox {
@@ -68,6 +68,7 @@ func BoostAny(context Context, activity streams.Document) error {
 	announceID := context.stream.ActivityPubAnnouncedURL() + "/" + activitypub.FakeActivityID(activity)
 
 	// Send the Announce to all of our followers
+	log.Debug().Msg("Announcing document to followers")
 	activityPubActor.SendAnnounce(announceID, activity)
 	return nil
 }
