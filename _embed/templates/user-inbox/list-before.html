@@ -1,6 +1,6 @@
 {{- $inbox := .Inbox.Top12.ByCreateDate.Reverse.Slice.Reverse -}}
 
-{{- if gt (len  $inbox) 0 -}}
+{{- if gt (len $inbox) 0 -}}
 
 	{{- $firstMessage := $inbox.First -}}
 	{{- $folders := .FoldersWithSelection}}
@@ -11,16 +11,18 @@
 	{{- $layout := $folder.Layout | lowerCase -}}
 	{{- $inboxRenderer := . -}}
 
-	<div 
-		hx-get="/@me/inbox/list-before?folderId={{$folderID}}&origin.followingId={{$internalID}}&readDate=LT:{{$firstMessage.ReadDate}}"
-		hx-target="this"
-		hx-swap="outerHTML"
-		hx-push-url="false"
-		role="button"
-		class="turboclick margin-bottom">
-		<button class="text-xs">&uarr; Older than {{ $firstMessage.ReadDate | longDate}}</button>
-		<div style="border-top:solid 3px var(--gray30);"></div>
-	</div>
+	{{- if eq 12 (len $inbox) -}}
+		<div 
+			hx-get="/@me/inbox/list-before?folderId={{$folderID}}&origin.followingId={{$internalID}}&readDate=LT:{{$firstMessage.ReadDate}}"
+			hx-target="this"
+			hx-swap="outerHTML"
+			hx-push-url="false"
+			role="button"
+			class="turboclick margin-bottom">
+			<button class="text-xs">&uarr; Older than {{ $firstMessage.ReadDate | longDate}}</button>
+			<div style="border-top:solid 3px var(--gray30);"></div>
+		</div>
+	{{- end -}}
 
 	{{- range $index, $message := $inbox -}}
 
