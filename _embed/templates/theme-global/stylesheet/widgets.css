@@ -206,12 +206,10 @@ picture img {
 	color:var(--blue60);
 }
 
-.tag,
-.tag:hover {
-	background-color: var(--white);
-	border:solid 1px var(--gray60);
+.tag {
+	background-color: var(--gray10);
 	border-radius: calc(var(--rhythm) / 2);
-	color:var(--gray60)!important;
+	color:var(--gray90)!important;
 	display:inline-block;
 	font-size:calc(var(--rhythm) * 1.5);
 	line-height:calc(var(--rhythm) * 2);
@@ -222,6 +220,10 @@ picture img {
 	text-decoration:none;
 }
 
+.tag:hover {
+	background-color:var(--gray30);
+	color:var(--black)!important;
+}
 
 .tag.warning,
 .tag.warning:hover {
