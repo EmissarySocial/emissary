@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -21,7 +22,7 @@ func MessageSchema() schema.Element {
 			"imageUrl":    schema.String{Format: "url"},
 			"inReplyTo":   schema.String{Format: "url"},
 			"contentHtml": schema.String{Format: "html"},
-			"myResponse":  schema.String{Enum: []string{ResponseTypeLike, ResponseTypeDislike, ResponseTypeRepost}},
+			"myResponse":  schema.String{Enum: []string{vocab.ActivityTypeAnnounce, vocab.ActivityTypeLike, vocab.ActivityTypeDislike}},
 			"stateId":     schema.String{Enum: []string{MessageStateUnread, MessageStateRead, MessageStateMuted, MessageStateNewReplies}},
 			"publishDate": schema.Integer{BitSize: 64},
 			"readDate":    schema.Integer{BitSize: 64},

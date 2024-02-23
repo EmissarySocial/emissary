@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -11,10 +12,9 @@ func ResponseSchema() schema.Element {
 		Properties: schema.ElementMap{
 			"responseId": schema.String{Format: "objectId"},
 			"userId":     schema.String{Format: "objectId"},
-			"actorId":    schema.String{Format: "url"},
-			"objectId":   schema.String{Format: "url"},
-			"type":       schema.String{MaxLength: 128},
-			"summary":    schema.String{MaxLength: 256},
+			"actor":      schema.String{Format: "url"},
+			"object":     schema.String{Format: "url"},
+			"type":       schema.String{MaxLength: 128, Enum: []string{vocab.ActivityTypeAnnounce, vocab.ActivityTypeLike, vocab.ActivityTypeDislike}},
 			"content":    schema.String{MaxLength: 256},
 		},
 	}
@@ -24,17 +24,14 @@ func (response *Response) GetPointer(name string) (any, bool) {
 
 	switch name {
 
-	case "actorId":
-		return &response.ActorID, true
+	case "actor":
+		return &response.Actor, true
 
-	case "objectId":
-		return &response.ObjectID, true
+	case "object":
+		return &response.Object, true
 
 	case "type":
 		return &response.Type, true
-
-	case "summary":
-		return &response.Summary, true
 
 	case "content":
 		return &response.Content, true

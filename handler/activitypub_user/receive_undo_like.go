@@ -1,7 +1,6 @@
 package activitypub_user
 
 import (
-	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
@@ -21,37 +20,30 @@ func init() {
 // undoResponse handles the Undo/Delete actions on Like/Dislike/Announce records
 func undoResponse(context Context, activity streams.Document) error {
 
+	const location = "handler.activitypub_user.undoResponse"
+
 	// Try to parse the original Activity from the JSON-LD
 	originalActivity, err := activity.Object().Load() // The Object is the original Like/Dislike/Announce activity
 
 	if err != nil {
-		return derp.Wrap(err, "handler.undoResponse", "Error loading originalActivity")
-	}
-
-	responseService := context.factory.Response()
-	response := model.NewResponse()
-
-	// Try to load the Response that matches the original activity
-	if err := responseService.LoadByActorAndObject(originalActivity.Actor().ID(), originalActivity.Object().ID(), &response); err != nil {
-		return derp.Wrap(err, "handler.undoResponse", "Error loading Response")
+		return derp.Wrap(err, location, "Error loading originalActivity")
 	}
 
 	// RULE: ActivityPub type must match the received activity
-	if activity.Actor().ID() != response.ActorID {
-		return derp.NewUnauthorizedError("handler.undoResponse", "Actor does not match")
+	if activity.Actor().ID() != originalActivity.Actor().ID() {
+		return derp.NewUnauthorizedError(location, "Actor undoing this activity must be the same as the original activity")
 	}
 
-	// RULE: ActivityPub type must match the received activity
-	if response.ActivityPubType() != originalActivity.Type() {
-		return derp.NewBadRequestError("handler.undoResponse", "ActivityPub type does not match")
+	// Get/Generate the ID of the original activity
+	originalActivityID := originalActivity.ID()
+
+	if originalActivityID == "" {
+		originalActivityID = fakeResponseID(originalActivity)
 	}
 
-	// Try to remove the Response from the database. (This will NOT send updates to other servers)
-	if err := responseService.Delete(&response, "Undo via ActivityPub"); err != nil {
-		if derp.NotFound(err) {
-			return nil
-		}
-		return derp.Wrap(err, "handler.undoResponse", "Error deleting Response")
+	// Remove the original activity from the database.
+	if err := context.factory.ActivityStreams().Delete(originalActivityID); err != nil {
+		return derp.Wrap(err, location, "Error deleting original activity", originalActivity)
 	}
 
 	return nil

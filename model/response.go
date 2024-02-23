@@ -12,11 +12,10 @@ import (
 // Object may be a local stream or an inbox message.
 type Response struct {
 	ResponseID primitive.ObjectID `json:"responseId" bson:"_id"`               // Unique identifier for this Response
-	UserID     primitive.ObjectID `json:"userId"     bson:"userId"`            // ID of the INTERNAL user who made this response (Zero for external users)
-	URL        string             `json:"url"        bson:"url"`               // URL of this Response document
-	ActorID    string             `json:"actorId"    bson:"actorId"`           // URL of the Actor who made the response
-	ObjectID   string             `json:"objectId"   bson:"objectId"`          // URL of the Object that the actor responded to
-	Type       string             `json:"type"       bson:"type"`              // Type of Response (e.g. "like", "dislike", "favorite", "bookmark", "share", "reply", "repost", "follow", "subscribe", "tag", "flag", "comment", "mention", "react", "rsvpYes", "rsvpNo", "rsvpMaybe", "review")
+	UserID     primitive.ObjectID `json:"userId"     bson:"userId"`            // ID of the User who made this response
+	Actor      string             `json:"actor"      bson:"actor"`             // ActivityPubURL of the User who made the response
+	Object     string             `json:"object"     bson:"object"`            // ActivityPubURL of the Object that the actor responded to
+	Type       string             `json:"type"       bson:"type"`              // Type of Response (e.g. "Announce", "Bookmark", "Like", "Dislike", etc...)
 	Summary    string             `json:"summary"    bson:"summary,omitempty"` // Summary of the response (e.g. "I liked this post because...")
 	Content    string             `json:"content"    bson:"content,omitempty"` // Custom value assigned to the response (emoji, vote, etc.)
 
@@ -49,38 +48,46 @@ func (response Response) Fields() []string {
 
 // GetJSONLD returns the JSON-LD representation of this Response
 func (response Response) GetJSONLD() mapof.Any {
-	return mapof.Any{
-		"@context": vocab.ContextTypeActivityStreams,
-		"id":       response.URL,
-		"type":     response.ActivityPubType(),
-		"actor":    response.ActorID,
-		"object":   response.ObjectID,
-		"summary":  response.Summary,
-		"content":  response.Content,
+
+	result := mapof.Any{
+		vocab.AtContext:      vocab.ContextTypeActivityStreams,
+		vocab.PropertyID:     response.ActivityPubURL(),
+		vocab.PropertyType:   response.Type,
+		vocab.PropertyActor:  response.Actor,
+		vocab.PropertyObject: response.Object,
 	}
+
+	if response.Summary != "" {
+		result[vocab.PropertySummary] = response.Summary
+	}
+
+	if response.Content != "" {
+		result[vocab.PropertyContent] = response.Content
+	}
+
+	return result
 }
 
-// ActivityPubType converts a ResponseType into an ActivityStreams vocabulary type
-func (response Response) ActivityPubType() string {
+func (response Response) ActivityPubURL() string {
 
 	switch response.Type {
 
-	case ResponseTypeDislike:
-		return vocab.ActivityTypeDislike
+	case vocab.ActivityTypeDislike:
+		return response.Actor + "/pub/disliked/" + response.ResponseID.Hex()
 
-	case ResponseTypeLike:
-		return vocab.ActivityTypeAnnounce
+	case vocab.ActivityTypeLike:
+		return response.Actor + "/pub/liked/" + response.ResponseID.Hex()
 
+	// Default: vocab.ActivityTypeAnnounce
 	default:
-		return vocab.ActivityTypeAnnounce
+		return response.Actor + "/pub/announced/" + response.ResponseID.Hex()
 	}
 }
 
 // IsEqual returns TRUE if two responses match urls, actors, objects, types, and values
 func (response Response) IsEqual(other Response) bool {
-	return (response.URL == other.URL) &&
-		(response.ActorID == other.ActorID) &&
-		(response.ObjectID == other.ObjectID) &&
+	return (response.Actor == other.Actor) &&
+		(response.Object == other.Object) &&
 		(response.Type == other.Type) &&
 		(response.Content == other.Content)
 }
@@ -141,10 +148,10 @@ func (response Response) Roles(authorization *Authorization) []string {
 func (response Response) Toot() object.Status {
 
 	return object.Status{
-		ID:  response.URL,
-		URI: response.URL,
+		ID:  response.ActivityPubURL(),
+		URI: response.ActivityPubURL(),
 		Account: object.Account{
-			ID: response.ActorID,
+			ID: response.Actor,
 		},
 	}
 }

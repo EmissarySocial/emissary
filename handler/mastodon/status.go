@@ -182,6 +182,13 @@ func PostStatus_Favourite(serverFactory *server.Factory) func(model.Authorizatio
 			return object.Status{}, derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
+		// Load the User
+		userService := factory.User()
+		user := model.NewUser()
+		if err := userService.LoadByID(auth.UserID, &user); err != nil {
+			return object.Status{}, derp.Wrap(err, location, "Error loading user")
+		}
+
 		// Load the inbox idem being favorited
 		inboxService := factory.Inbox()
 		message := model.NewMessage()
@@ -195,9 +202,9 @@ func PostStatus_Favourite(serverFactory *server.Factory) func(model.Authorizatio
 		response := model.NewResponse()
 		response.UserID = auth.UserID
 		response.Content = "👍"
-		response.ObjectID = message.URL
-		response.Type = model.ResponseTypeLike
-		if err := responseService.SetResponse(&response); err != nil {
+		response.Object = message.URL
+		response.Type = vocab.ActivityTypeLike
+		if err := responseService.Save(&response, "Created via Mastodon API"); err != nil {
 			return object.Status{}, derp.Wrap(err, location, "Error saving response")
 		}
 
@@ -219,19 +226,11 @@ func PostStatus_Unfavourite(serverFactory *server.Factory) func(model.Authorizat
 			return object.Status{}, derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
-		// Load the inbox idem being favorited
-		inboxService := factory.Inbox()
-		message := model.NewMessage()
-
-		if err := inboxService.LoadByURL(auth.UserID, t.ID, &message); err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Error loading message")
-		}
-
 		// Search for the Response in the database
 		responseService := factory.Response()
 		response := model.NewResponse()
 
-		if err := responseService.LoadByUserAndObject(auth.UserID, message.URL, &response); err != nil {
+		if err := responseService.LoadByUserAndObject(auth.UserID, t.ID, vocab.ActivityTypeLike, &response); err != nil {
 
 			// If the response doesn't exist
 			if derp.NotFound(err) {

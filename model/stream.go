@@ -319,12 +319,13 @@ func (stream Stream) ActivityPubRepliesURL() string {
 }
 
 func (stream Stream) ActivityPubResponses(responseType string) string {
+
 	switch responseType {
 
-	case ResponseTypeLike:
+	case vocab.ActivityTypeLike:
 		return stream.ActivityPubLikesURL()
 
-	case ResponseTypeDislike:
+	case vocab.ActivityTypeDislike:
 		return stream.ActivityPubDislikesURL()
 	}
 

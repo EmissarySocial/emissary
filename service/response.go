@@ -79,11 +79,6 @@ func (service *Response) Save(response *model.Response, note string) error {
 		return derp.Wrap(err, location, "Error cleaning Response", response)
 	}
 
-	// Populate the URL of this response
-	if !response.UserID.IsZero() {
-		response.URL = service.host + "/@" + response.UserID.Hex() + "/pub/liked/" + response.ResponseID.Hex()
-	}
-
 	// Save the value to the database
 	if err := service.collection.Save(response, note); err != nil {
 		return derp.Wrap(err, location, "Error saving Response", response, note)
@@ -92,7 +87,7 @@ func (service *Response) Save(response *model.Response, note string) error {
 	return nil
 }
 
-// Delete removes an Response from the database (virtual delete)
+// Delete removes an Response from the database (hard delete)
 func (service *Response) Delete(response *model.Response, note string) error {
 
 	const location = "service.Response.Delete"
@@ -190,12 +185,30 @@ func (service *Response) LoadByID(responseID primitive.ObjectID, response *model
 	return service.Load(exp.Equal("_id", responseID), response)
 }
 
-func (service *Response) LoadByUserAndObject(userID primitive.ObjectID, objectID string, response *model.Response) error {
-	return service.Load(exp.Equal("userId", userID).AndEqual("objectId", objectID), response)
+func (service *Response) QueryByUserAndObject(userID primitive.ObjectID, object string, options ...option.Option) ([]model.Response, error) {
+
+	criteria := exp.Equal("userId", userID).
+		AndEqual("object", object)
+
+	return service.Query(criteria, options...)
 }
 
-func (service *Response) LoadByActorAndObject(actorID string, objectID string, response *model.Response) error {
-	return service.Load(exp.Equal("actorId", actorID).AndEqual("objectId", objectID), response)
+func (service *Response) LoadByUserAndObject(userID primitive.ObjectID, object string, responseType string, response *model.Response) error {
+
+	criteria := exp.Equal("userId", userID).
+		AndEqual("object", object).
+		AndEqual("type", responseType)
+
+	return service.Load(criteria, response)
+}
+
+func (service *Response) LoadByActorAndObject(actor string, object string, responseType string, response *model.Response) error {
+
+	criteria := exp.Equal("actor", actor).
+		AndEqual("object", object).
+		AndEqual("type", responseType)
+
+	return service.Load(criteria, response)
 }
 
 func (service *Response) CountByContent(objectID string) (mapof.Int, error) {
@@ -208,64 +221,67 @@ func (service *Response) CountByContent(objectID string) (mapof.Int, error) {
 
 // SetResponse is the preferred way of creating/updating a Response.  It includes the business
 // logic to search for an existing response, and delete it if one exists already (publishing UNDO actions in the process).
-func (service *Response) SetResponse(response *model.Response) error {
+func (service *Response) SetResponse(user *model.User, url string, responseType string, content string) error {
 
 	const location = "service.Response.SetResponse"
 
-	// Try to load the User who created this Response.  Only authenticated Users can create Response records.
-	user := model.NewUser()
-
-	if err := service.userService.LoadByProfileURL(response.ActorID, &user); err != nil {
-		return derp.Wrap(err, location, "Error loading user", response.ActorID)
+	// Remove pre-existing response of this same type (if exists)
+	if err := service.UnsetResponse(user, url, responseType); err != nil {
+		return derp.Wrap(err, location, "Error removing previous response", user.UserID, url, responseType)
 	}
 
-	// RULE: Set the Response URL using the User's "liked" collection.
-	response.URL = user.ActivityPubLikedURL() + "/" + response.ResponseID.Hex()
-
-	// Search for a previous Response from this User
-	oldResponse := model.NewResponse()
-
-	if err := service.LoadByActorAndObject(response.ActorID, response.ObjectID, &oldResponse); !derp.NilOrNotFound(err) {
-		return derp.Wrap(err, location, "Error loading original response", oldResponse)
-	}
-
-	// If the database had a previous Response, then delete it.
-	if oldResponse.NotEmpty() {
-
-		// ... except if the new Response is the same as the old Response.
-		// If there was no change, then there's nothing else to do.
-		if response.IsEqual(oldResponse) {
-			return nil
-		}
-
-		// Otherwise, delete the old Response
-		if err := service.Delete(&oldResponse, ""); err != nil {
-			return derp.Wrap(err, location, "Error deleting old response", oldResponse)
-		}
-
-		// Unpublish from the Outbox, and send the "Undo" activity to followers
-		undoActivity := outbox.MakeUndo(user.ActivityPubURL(), response.GetJSONLD())
-
-		if err := service.outboxService.UnPublish(user.UserID, oldResponse.URL, undoActivity); err != nil {
-			derp.Report(derp.Wrap(err, location, "Error publishing Response", oldResponse))
-		}
-	}
-
-	// RULE: If the "new" response is empty, then this is a DELETE-ONLY operation. Do not create a new response.
-	if response.IsEmpty() {
-		return nil
-	}
+	// Create a new Response object
+	response := model.NewResponse()
+	response.UserID = user.UserID
+	response.Actor = user.ActivityPubURL()
+	response.Object = url
+	response.Type = responseType
+	response.Content = content
 
 	// Save the Response to the database (response service will automatically publish to ActivityPub and beyond)
-	if err := service.Save(response, ""); err != nil {
+	if err := service.Save(&response, ""); err != nil {
 		return derp.Wrap(err, location, "Error saving response", response)
 	}
 
 	// Publish the new Response to the Outbox, sending "Like" notifications to all followers.
-	if err := service.outboxService.Publish(user.UserID, response.URL, response.GetJSONLD()); err != nil {
+	if err := service.outboxService.Publish(user.UserID, response.ActivityPubURL(), response.GetJSONLD()); err != nil {
 		derp.Report(derp.Wrap(err, location, "Error publishing Response", response))
 	}
 
 	// Oye cómo va!
+	return nil
+}
+
+// UnsetReponse removes a reponse based on the User, URL, and Response Type
+func (service *Response) UnsetResponse(user *model.User, url string, responseType string) error {
+
+	const location = "service.Response.UnsetResponse"
+
+	// Search for a previous Response from this User
+	oldResponse := model.NewResponse()
+
+	if err := service.LoadByUserAndObject(user.UserID, url, responseType, &oldResponse); err != nil {
+
+		// If there is no matching response, then there's nothing to delete
+		if derp.NotFound(err) {
+			return nil
+		}
+
+		return derp.Wrap(err, location, "Error loading original response", user.UserID, url, responseType)
+	}
+
+	// Otherwise, delete the old Response
+	if err := service.Delete(&oldResponse, ""); err != nil {
+		return derp.Wrap(err, location, "Error deleting old response", oldResponse)
+	}
+
+	// Unpublish from the Outbox, and send the "Undo" activity to followers
+	undoActivity := outbox.MakeUndo(user.ActivityPubURL(), oldResponse.GetJSONLD())
+
+	if err := service.outboxService.UnPublish(user.UserID, oldResponse.ActivityPubURL(), undoActivity); err != nil {
+		derp.Report(derp.Wrap(err, location, "Error publishing Response", oldResponse))
+	}
+
+	// Success!!
 	return nil
 }

@@ -3,6 +3,7 @@ package model
 import (
 	"testing"
 
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/schema"
 )
 
@@ -22,7 +23,7 @@ func TestMessageSchema(t *testing.T) {
 		{"publishDate", "123", int64(123)},
 		{"readDate", 456, int64(456)},
 		{"rank", "123", int64(123)},
-		{"myResponse", ResponseTypeLike, nil},
+		{"myResponse", vocab.ActivityTypeLike, nil},
 	}
 
 	tableTest_Schema(t, &s, &activity, table)

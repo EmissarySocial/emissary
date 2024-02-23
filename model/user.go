@@ -237,10 +237,6 @@ func (user *User) ActivityPubInboxURL() string {
 	return user.ProfileURL + "/pub/inbox"
 }
 
-func (user *User) ActivityPubOutboxURL() string {
-	return user.ProfileURL + "/pub/outbox"
-}
-
 func (user *User) ActivityPubFollowersURL() string {
 	return user.ProfileURL + "/pub/followers"
 }
@@ -251,6 +247,10 @@ func (user *User) ActivityPubFollowingURL() string {
 
 func (user *User) ActivityPubLikedURL() string {
 	return user.ProfileURL + "/pub/liked"
+}
+
+func (user *User) ActivityPubOutboxURL() string {
+	return user.ProfileURL + "/pub/outbox"
 }
 
 func (user *User) ActivityPubPublicKeyURL() string {

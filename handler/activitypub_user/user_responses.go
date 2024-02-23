@@ -107,7 +107,7 @@ func GetResponse(serverFactory *server.Factory, responseType string) echo.Handle
 			return derp.Wrap(err, location, "Error loading response")
 		}
 
-		if response.ActorID != user.ProfileURL {
+		if response.Actor != user.ProfileURL {
 			return derp.NewNotFoundError(location, "Response not found", "ActorID does not match")
 		}
 

@@ -27,7 +27,7 @@ func receiveLikeOrAnnounce(context Context, activity streams.Document) error {
 
 	// RULE: If the Activity does not have an ID, then make a new "fake" one.
 	if activity.ID() == "" {
-		activity.SetProperty(vocab.PropertyID, fakeActivityID(activity))
+		activity.SetProperty(vocab.PropertyID, fakeResponseID(activity))
 	}
 
 	// Add the Announce/Like/Dislike into the ActivityStream cache
@@ -71,9 +71,9 @@ func saveMessage(context Context, activity streams.Document, actorID string, ori
 
 }
 
-// fakeActivityID generates a unique ID for a stream document based on
+// fakeResponseID generates a unique ID for a stream document based on
 // the hashed contents of the document.
-func fakeActivityID(activity streams.Document) string {
+func fakeResponseID(activity streams.Document) string {
 	plainText := activity.Type() + " " + activity.Object().ID() + " " + activity.Actor().ID()
 	hasher := sha256.New()
 	hasher.Write([]byte(plainText))

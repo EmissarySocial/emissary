@@ -12,9 +12,10 @@ import (
 
 func init() {
 	fmt.Println("Initializing BoostAny")
-	streamRouter.Add(vocab.ActivityTypeCreate, vocab.Any, BoostAny)
 	streamRouter.Add(vocab.ActivityTypeUpdate, vocab.Any, BoostAny)
+	streamRouter.Add(vocab.ActivityTypeCreate, vocab.Any, BoostAny)
 	streamRouter.Add(vocab.ActivityTypeDelete, vocab.Any, BoostAny)
+	streamRouter.Add(vocab.ActivityTypeUndo, vocab.Any, BoostAny)
 
 	streamRouter.Add(vocab.ActivityTypeAnnounce, vocab.Any, BoostAny)
 	streamRouter.Add(vocab.ActivityTypeLike, vocab.Any, BoostAny)

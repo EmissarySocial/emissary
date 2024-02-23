@@ -203,7 +203,9 @@ func (service Icons) Get(name string) string {
 	case "server-fill":
 		return service.get("hdd-stack-fill")
 	case "share":
-		return service.get("box-arrow-up")
+		return service.get("arrow-up-right-square")
+	case "share-fill":
+		return service.get("arrow-up-right-square-fill")
 	case "shield":
 		return service.get("shield")
 	case "shield-fill":

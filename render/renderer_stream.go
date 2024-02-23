@@ -521,35 +521,13 @@ func (w Stream) getFirstStream(criteria exp.Expression, sortOption option.Option
 	return Stream{}
 }
 
-func (w Stream) Responses() template.HTML {
-
-	var buffer bytes.Buffer
-	renderer := w.ResponsesRenderer()
-
-	// Execute the "responses" template
-	if err := w._template.HTMLTemplate.ExecuteTemplate(&buffer, "responses", renderer); err != nil {
-		derp.Report(derp.Wrap(err, "render.Inbox.Responses", "Error rendering responses"))
-	}
-
-	// Celebrate with Triumph.
-	return template.HTML(buffer.String())
-}
-
-func (w Stream) ResponsesRenderer() Responses {
-
-	// Collect values for Responses renderer
-	userID := w.authorization().UserID
-	internalURL := "/" + w._stream.StreamID.Hex()
-	responseService := w.factory().Response()
-
-	return NewResponses(userID, internalURL, w._stream.URL, responseService)
-}
-
+// Mentions returns a slice of all Mentions for this Stream
 func (w Stream) Mentions() ([]model.Mention, error) {
 	mentionService := w.factory().Mention()
 	return mentionService.QueryByObjectID(w._stream.StreamID)
 }
 
+// RepliesBefore returns a slice of all ActivityStreams before the specified date
 func (w Stream) RepliesBefore(dateString string, maxRows int) sliceof.Object[streams.Document] {
 
 	done := make(channel.Done)

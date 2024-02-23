@@ -22,10 +22,10 @@ import (
 	ap_stream "github.com/EmissarySocial/emissary/handler/activitypub_stream"
 	ap_user "github.com/EmissarySocial/emissary/handler/activitypub_user"
 	mw "github.com/EmissarySocial/emissary/middleware"
-	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/domain"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/steranko"
 	toot "github.com/benpate/toot-echo"
@@ -63,7 +63,7 @@ func main() {
 	spew.Config.Indent = " "
 
 	// Logging Configuration
-	zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	zerolog.SetGlobalLevel(zerolog.TraceLevel)
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	log.Logger = log.Output(zerolog.ConsoleWriter{
 		Out:        os.Stderr,
@@ -269,8 +269,12 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@:userId/pub/followers", ap_user.GetFollowersCollection(factory))
 	e.GET("/@:userId/pub/following", ap_user.GetFollowingCollection(factory))
 	e.GET("/@:userId/pub/following/:followingId", ap_user.GetFollowingRecord(factory))
-	e.GET("/@:userId/pub/liked", ap_user.GetResponseCollection(factory, model.ResponseTypeLike))
-	e.GET("/@:userId/pub/liked/:response", ap_user.GetResponse(factory, model.ResponseTypeLike))
+	e.GET("/@:userId/pub/shared", ap_user.GetResponseCollection(factory, vocab.ActivityTypeAnnounce))
+	e.GET("/@:userId/pub/shared/:response", ap_user.GetResponse(factory, vocab.ActivityTypeAnnounce))
+	e.GET("/@:userId/pub/liked", ap_user.GetResponseCollection(factory, vocab.ActivityTypeLike))
+	e.GET("/@:userId/pub/liked/:response", ap_user.GetResponse(factory, vocab.ActivityTypeLike))
+	e.GET("/@:userId/pub/disliked", ap_user.GetResponseCollection(factory, vocab.ActivityTypeDislike))
+	e.GET("/@:userId/pub/disliked/:response", ap_user.GetResponse(factory, vocab.ActivityTypeDislike))
 	e.GET("/@:userId/pub/blocked", ap_user.GetBlockedCollection(factory))
 	e.GET("/@:userId/pub/blocked/:ruleId", ap_user.GetBlock(factory))
 
