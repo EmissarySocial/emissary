@@ -1,6 +1,7 @@
 package activitypub_user
 
 import (
+	"github.com/EmissarySocial/emissary/handler/activitypub"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
@@ -26,7 +27,7 @@ func undoResponse(context Context, activity streams.Document) error {
 	originalActivity, err := activity.Object().Load() // The Object is the original Like/Dislike/Announce activity
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error loading originalActivity")
+		return nil
 	}
 
 	// RULE: ActivityPub type must match the received activity
@@ -38,7 +39,7 @@ func undoResponse(context Context, activity streams.Document) error {
 	originalActivityID := originalActivity.ID()
 
 	if originalActivityID == "" {
-		originalActivityID = fakeResponseID(originalActivity)
+		originalActivityID = activitypub.FakeActivityID(originalActivity)
 	}
 
 	// Remove the original activity from the database.

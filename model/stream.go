@@ -298,6 +298,10 @@ func (stream *Stream) ActivityPubFollowersURL() string {
 	return stream.URL + "/pub/followers"
 }
 
+func (stream *Stream) ActivityPubAnnouncedURL() string {
+	return stream.URL + "/pub/announced"
+}
+
 func (stream Stream) ActivityPubType() string {
 	return stream.SocialRole
 }

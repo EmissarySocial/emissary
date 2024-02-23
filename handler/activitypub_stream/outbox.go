@@ -24,7 +24,7 @@ func GetOutboxCollection(serverFactory *server.Factory) echo.HandlerFunc {
 		_, _, streamService, _, stream, actor, err := getActor(serverFactory, ctx)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Invalid Request")
+			return derp.Wrap(err, location, "Request Not Accepted")
 		}
 
 		if actor.IsNil() {

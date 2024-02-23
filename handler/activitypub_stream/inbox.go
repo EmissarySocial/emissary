@@ -19,7 +19,7 @@ func PostInbox(serverFactory *server.Factory) echo.HandlerFunc {
 		factory, _, _, _, stream, actor, err := getActor(serverFactory, ctx)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Invalid Request")
+			return derp.Wrap(err, location, "Request Not Accepted")
 		}
 
 		if actor.IsNil() {

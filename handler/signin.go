@@ -71,18 +71,20 @@ func PostSignIn(serverFactory *server.Factory) echo.HandlerFunc {
 // PostSignOut generates an echo.HandlerFunc that handles POST /signout requests
 func PostSignOut(serverFactory *server.Factory) echo.HandlerFunc {
 
+	const location = "handler.PostSignOut"
+
 	return func(ctx echo.Context) error {
 
 		factory, err := serverFactory.ByContext(ctx)
 
 		if err != nil {
-			return derp.NewInternalError("handler.PostSignOut", "Invalid Request.  Please try again later.")
+			return derp.Wrap(err, location, "Invalid Domain", derp.WithCode(http.StatusBadRequest))
 		}
 
 		s := factory.Steranko()
 
 		if err := s.SignOut(ctx); err != nil {
-			return derp.Wrap(err, "handler.PostSignOut", "Error Signing Out")
+			return derp.Wrap(err, location, "Error Signing Out")
 		}
 
 		// Forward the user back to the home page of the website.

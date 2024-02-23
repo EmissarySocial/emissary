@@ -3,11 +3,11 @@ package activitypub_stream
 import (
 	"fmt"
 
+	"github.com/EmissarySocial/emissary/handler/activitypub"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/rs/zerolog/log"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func init() {
@@ -49,6 +49,11 @@ func BoostAny(context Context, activity streams.Document) error {
 		object := activity.Object()
 		activityStreamService.Put(object)
 
+	case vocab.ActivityTypeAnnounce:
+		object := activity.Object()
+		activityStreamService.Put(object)
+		activityStreamService.Put(activity)
+
 	default:
 		activityStreamService.Put(activity)
 	}
@@ -60,7 +65,7 @@ func BoostAny(context Context, activity streams.Document) error {
 		return derp.Wrap(err, "handler.activityPub_HandleRequest_Follow", "Error loading actor", context.stream)
 	}
 
-	announceID := context.stream.ActivityPubSharesURL() + "/" + primitive.NewObjectID().Hex()
+	announceID := context.stream.ActivityPubAnnouncedURL() + "/" + activitypub.FakeActivityID(activity)
 
 	// Send the Announce to all of our followers
 	activityPubActor.SendAnnounce(announceID, activity)

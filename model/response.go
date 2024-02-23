@@ -1,6 +1,9 @@
 package model
 
 import (
+	"net/http"
+	"time"
+
 	"github.com/benpate/data/journal"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
@@ -50,11 +53,12 @@ func (response Response) Fields() []string {
 func (response Response) GetJSONLD() mapof.Any {
 
 	result := mapof.Any{
-		vocab.AtContext:      vocab.ContextTypeActivityStreams,
-		vocab.PropertyID:     response.ActivityPubURL(),
-		vocab.PropertyType:   response.Type,
-		vocab.PropertyActor:  response.Actor,
-		vocab.PropertyObject: response.Object,
+		vocab.AtContext:         vocab.ContextTypeActivityStreams,
+		vocab.PropertyID:        response.ActivityPubURL(),
+		vocab.PropertyType:      response.Type,
+		vocab.PropertyActor:     response.Actor,
+		vocab.PropertyObject:    response.Object,
+		vocab.PropertyPublished: response.ActivityPubCreateDate(),
 	}
 
 	if response.Summary != "" {
@@ -90,6 +94,10 @@ func (response Response) IsEqual(other Response) bool {
 		(response.Object == other.Object) &&
 		(response.Type == other.Type) &&
 		(response.Content == other.Content)
+}
+
+func (response Response) ActivityPubCreateDate() string {
+	return time.Unix(response.CreateDate, 0).UTC().Format(http.TimeFormat)
 }
 
 // CreateDateSeconds returns the CreateDate in Unix Epoch seconds (instead of milliseconds)

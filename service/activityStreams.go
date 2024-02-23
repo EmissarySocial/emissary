@@ -12,6 +12,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/streams"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/sherlock"
 )
 
@@ -227,11 +228,11 @@ func (service *ActivityStreams) QueryRepliesAfterDate(inReplyTo string, minDate 
 }
 
 func (service *ActivityStreams) QueryAnnouncesBeforeDate(relationHref string, maxDate int64, done <-chan struct{}) <-chan streams.Document {
-	return service.queryByRelation("Announce", relationHref, "before", maxDate, done)
+	return service.queryByRelation(vocab.ActivityTypeAnnounce, relationHref, "before", maxDate, done)
 }
 
 func (service *ActivityStreams) QueryLikesBeforeDate(relationHref string, maxDate int64, done <-chan struct{}) <-chan streams.Document {
-	return service.queryByRelation("Like", relationHref, "before", maxDate, done)
+	return service.queryByRelation(vocab.ActivityTypeLike, relationHref, "before", maxDate, done)
 }
 
 /******************************************

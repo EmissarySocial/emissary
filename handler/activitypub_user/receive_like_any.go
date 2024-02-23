@@ -1,8 +1,7 @@
 package activitypub_user
 
 import (
-	"crypto/sha256"
-
+	"github.com/EmissarySocial/emissary/handler/activitypub"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
@@ -21,13 +20,13 @@ func receiveLikeOrAnnounce(context Context, activity streams.Document) error {
 	const location = "handler.activitypub_user.receiveLikeOrAnnounce"
 
 	// Add then Shared/Liked Object into the ActivityStream cache
-	if err := inboxRouter.Handle(context, activity.Object()); err != nil {
+	if err := inboxRouter.Handle(context, activity.Object().LoadLink()); err != nil {
 		return derp.Wrap(err, location, "Error processing activity Object", activity.Object().ID())
 	}
 
 	// RULE: If the Activity does not have an ID, then make a new "fake" one.
 	if activity.ID() == "" {
-		activity.SetProperty(vocab.PropertyID, fakeResponseID(activity))
+		activity.SetProperty(vocab.PropertyID, activitypub.FakeActivityID(activity))
 	}
 
 	// Add the Announce/Like/Dislike into the ActivityStream cache
@@ -69,13 +68,4 @@ func saveMessage(context Context, activity streams.Document, actorID string, ori
 	// Success.
 	return nil
 
-}
-
-// fakeResponseID generates a unique ID for a stream document based on
-// the hashed contents of the document.
-func fakeResponseID(activity streams.Document) string {
-	plainText := activity.Type() + " " + activity.Object().ID() + " " + activity.Actor().ID()
-	hasher := sha256.New()
-	hasher.Write([]byte(plainText))
-	return "sha256-" + string(hasher.Sum(nil))
 }

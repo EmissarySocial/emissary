@@ -21,7 +21,7 @@ func GetJSONLD(serverFactory *server.Factory) echo.HandlerFunc {
 		factory, _, streamService, _, stream, actor, err := getActor(serverFactory, ctx)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Invalid Request")
+			return derp.Wrap(err, location, "Request Not Accepted")
 		}
 
 		// If this Stream is not an Actor, then just return a standard JSON-LD response.
