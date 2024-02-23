@@ -63,7 +63,7 @@ func main() {
 	spew.Config.Indent = " "
 
 	// Logging Configuration
-	zerolog.SetGlobalLevel(zerolog.TraceLevel)
+	zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	log.Logger = log.Output(zerolog.ConsoleWriter{
 		Out:        os.Stderr,
@@ -458,8 +458,9 @@ func errorHandler(err error, ctx echo.Context) {
 	}
 
 	// On localhost, allow developers to see full error dump.
-	if true || domain.IsLocalhost(ctx.Request().Host) {
+	if domain.IsLocalhost(ctx.Request().Host) {
 		ctx.JSONPretty(errorCode, err, "  ")
+		derp.Report(err)
 		return
 	}
 
