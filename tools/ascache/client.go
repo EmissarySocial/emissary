@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/streams"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -248,7 +249,7 @@ func (client *Client) save(url string, document streams.Document) {
 	value.calcDocumentType(document)
 
 	// Try to upsert the document into the cache
-	filter := bson.M{"object.id": value.Object.GetString("id")}
+	filter := bson.M{"urls": value.Object.GetString(vocab.PropertyID)}
 	update := bson.M{"$set": value}
 	queryOptions := options.Update().SetUpsert(true)
 
