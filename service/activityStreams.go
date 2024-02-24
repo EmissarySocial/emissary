@@ -182,6 +182,10 @@ func (service *ActivityStreams) queryByRelation(relationType string, relationHre
 
 }
 
+func (service *ActivityStreams) NewDocument(document map[string]any) streams.Document {
+	return streams.NewDocument(document, streams.WithClient(service))
+}
+
 func (service *ActivityStreams) SearchActors(queryString string) ([]model.ActorSummary, error) {
 
 	const location = "service.ActivityStreams.SearchActors"
