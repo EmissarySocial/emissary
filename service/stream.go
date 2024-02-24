@@ -519,15 +519,6 @@ func (service *Stream) MaxRank(parentID primitive.ObjectID) (int, error) {
 }
 
 /******************************************
- * Outbox Queries (may move to separate service later)
- ******************************************/
-
-func (service *Stream) Outbox(ownerID primitive.ObjectID, criteria exp.Expression, options ...option.Option) ([]model.StreamSummary, error) {
-	criteria = criteria.AndEqual("ownerId", ownerID)
-	return service.QuerySummary(criteria, options...)
-}
-
-/******************************************
  * Custom Actions
  ******************************************/
 
