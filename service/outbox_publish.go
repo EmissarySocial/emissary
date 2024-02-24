@@ -109,7 +109,7 @@ func (service Outbox) sendNotifications_WebSub(userID primitive.ObjectID, activi
 	const location = "service.Outbox.sendNotifications_WebSub"
 
 	// Get this User's Followers from the database
-	followers, err := service.followerService.WebSubFollowersChannel(userID)
+	followers, err := service.followerService.WebSubFollowersChannel(model.FollowerTypeUser, userID)
 
 	if err != nil {
 		derp.Report(derp.Wrap(err, location, "Error loading Followers", userID))
