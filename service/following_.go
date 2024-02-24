@@ -27,7 +27,7 @@ type Following struct {
 	inboxService    *Inbox
 	folderService   *Folder
 	keyService      *EncryptionKey
-	activityStreams *ActivityStreams
+	activityService *ActivityStream
 	host            string
 	closed          chan bool
 }
@@ -42,14 +42,14 @@ func NewFollowing() Following {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Following) Refresh(collection data.Collection, streamService *Stream, userService *User, inboxService *Inbox, folderService *Folder, keyService *EncryptionKey, activityStreams *ActivityStreams, host string) {
+func (service *Following) Refresh(collection data.Collection, streamService *Stream, userService *User, inboxService *Inbox, folderService *Folder, keyService *EncryptionKey, activityService *ActivityStream, host string) {
 	service.collection = collection
 	service.streamService = streamService
 	service.userService = userService
 	service.inboxService = inboxService
 	service.folderService = folderService
 	service.keyService = keyService
-	service.activityStreams = activityStreams
+	service.activityService = activityService
 	service.host = host
 }
 
@@ -415,7 +415,7 @@ func (service *Following) GetFollowingID(userID primitive.ObjectID, uri string) 
 	const location = "service.Following.IsFollowing"
 
 	// Load the ActivityStream document
-	document, err := service.activityStreams.Load(uri)
+	document, err := service.activityService.Load(uri)
 
 	if err != nil {
 		return "", derp.Wrap(err, location, "Error loading ActivityStream document", uri)

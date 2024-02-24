@@ -43,7 +43,7 @@ func undoResponse(context Context, activity streams.Document) error {
 	}
 
 	// Remove the original activity from the database.
-	if err := context.factory.ActivityStreams().Delete(originalActivityID); err != nil {
+	if err := context.factory.ActivityStream().Delete(originalActivityID); err != nil {
 		return derp.Wrap(err, location, "Error deleting original activity", originalActivity)
 	}
 

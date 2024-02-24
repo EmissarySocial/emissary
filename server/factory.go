@@ -41,15 +41,15 @@ type Factory struct {
 	mutex   sync.RWMutex
 
 	// Server-level services
-	themeService           service.Theme
-	templateService        service.Template
-	widgetService          service.Widget
-	contentService         service.Content
-	providerService        service.Provider
-	emailService           service.ServerEmail
-	taskQueue              queue.Queue
-	activityStreamsService service.ActivityStreams
-	embeddedFiles          embed.FS
+	themeService    service.Theme
+	templateService service.Template
+	widgetService   service.Widget
+	contentService  service.Content
+	providerService service.Provider
+	emailService    service.ServerEmail
+	taskQueue       queue.Queue
+	activityService service.ActivityStream
+	embeddedFiles   embed.FS
 
 	activityStreamCache *mongo.Client
 	attachmentOriginals afero.Fs
@@ -103,7 +103,7 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 		sliceof.NewObject[mapof.String](),
 	)
 
-	factory.activityStreamsService = service.NewActivityStreams()
+	factory.activityService = service.NewActivityStream()
 
 	go factory.start()
 
@@ -144,7 +144,7 @@ func (factory *Factory) start() {
 		factory.templateService.Refresh(config.Templates)
 		factory.emailService.Refresh(config.Emails)
 		factory.providerService.Refresh(config.Providers)
-		factory.RefreshActivityStreams(config.ActivityPubCache)
+		factory.RefreshActivityService(config.ActivityPubCache)
 
 		// Insert/Update a factory for each domain in the configuration
 		for _, domainConfig := range config.Domains {
@@ -196,7 +196,7 @@ func (factory *Factory) refreshDomain(config config.Config, domainConfig config.
 	newDomain, err := domain.NewFactory(
 		domainConfig,
 		config.Providers,
-		&factory.activityStreamsService,
+		&factory.activityService,
 		&factory.emailService,
 		&factory.themeService,
 		&factory.templateService,
@@ -524,14 +524,14 @@ func (factory *Factory) Steranko(ctx echo.Context) (*steranko.Steranko, error) {
 	return result.Steranko(), nil
 }
 
-func (factory *Factory) RefreshActivityStreams(connection mapof.String) {
+func (factory *Factory) RefreshActivityService(connection mapof.String) {
 
 	// If there is already a cache connection in place,
 	// then close it before we open a new one
 	if factory.activityStreamCache != nil {
 		go func(client *mongo.Client) {
 			if err := client.Disconnect(context.Background()); err != nil {
-				derp.Report(derp.Wrap(err, "server.Factory.RefreshActivityStreams", "Unable to disconnect from database"))
+				derp.Report(derp.Wrap(err, "server.Factory.RefreshActivityService", "Unable to disconnect from database"))
 			}
 		}(factory.activityStreamCache)
 	}
@@ -540,7 +540,7 @@ func (factory *Factory) RefreshActivityStreams(connection mapof.String) {
 	uri := connection.GetString("connectString")
 	database := connection.GetString("database")
 
-	// ActivityStreams cache is not configured.
+	// ActivityStream cache is not configured.
 	if uri == "" || database == "" {
 		return
 	}
@@ -549,7 +549,7 @@ func (factory *Factory) RefreshActivityStreams(connection mapof.String) {
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(uri))
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "server.Factory.RefreshActivityStreams", "Unable to connect to database", uri))
+		derp.Report(derp.Wrap(err, "server.Factory.RefreshActivityService", "Unable to connect to database", uri))
 		return
 	}
 
@@ -567,11 +567,11 @@ func (factory *Factory) RefreshActivityStreams(connection mapof.String) {
 	cacheClient := ascache.New(cacheRulesClient, collection, ascache.WithIgnoreHeaders()) // cache data in MongoDB
 	hashClient := ashash.New(cacheClient)                                                 // Traverse hash values within documents
 
-	factory.activityStreamsService.Refresh(hashClient, cacheClient, mongodb.NewCollection(collection))
+	factory.activityService.Refresh(hashClient, cacheClient, mongodb.NewCollection(collection))
 
 	// This is breaking somehow.  Test thoroughly before re-enabling.
 	// writableCache := ascache.New(contextMakerClient, collection, ascache.WithWriteOnly())
 	// crawlerClient := ascrawler.New(writableCache, ascrawler.WithMaxDepth(4))
 	// readOnlyCache := ascache.New(crawlerClient, collection, ascache.WithReadOnly())
-	// factory.activityStreamsService.Refresh(readOnlyCache, mongodb.NewCollection(collection))
+	// factory.activityService.Refresh(readOnlyCache, mongodb.NewCollection(collection))
 }

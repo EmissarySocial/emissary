@@ -2,7 +2,7 @@ package model
 
 import "github.com/benpate/domain"
 
-// ActorSummary is a record returned by the ActivityStreams directory
+// ActorSummary is a record returned by the ActivityStream directory
 type ActorSummary struct {
 	ID       string `bson:"id"`
 	Type     string `bson:"type"`

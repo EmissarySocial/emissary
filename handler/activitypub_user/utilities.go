@@ -19,7 +19,7 @@ func getAuthorization(ctx *steranko.Context) model.Authorization {
 	return model.NewAuthorization()
 }
 
-// getOriginType translates from ActivityStreams.Type => model.OriginType constants
+// getOriginType translates from ActivityStream.Type => model.OriginType constants
 func getOriginType(activityType string) string {
 
 	switch activityType {

@@ -85,7 +85,7 @@ func (rule Rule) Roles(authorization *Authorization) []string {
 }
 
 /******************************************
- * ActivityStreams Methods
+ * ActivityStream Methods
  ******************************************/
 
 // GetJSONLD returns a map document that conforms to the ActivityStreams 2.0 spec.

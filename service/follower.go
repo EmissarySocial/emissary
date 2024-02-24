@@ -19,12 +19,12 @@ import (
 // Follower defines a service that tracks the (possibly external) accounts that are followers of an internal User
 
 type Follower struct {
-	collection             data.Collection
-	userService            *User
-	ruleService            *Rule
-	activityStreamsService *ActivityStreams
-	queue                  queue.Queue
-	host                   string
+	collection      data.Collection
+	userService     *User
+	ruleService     *Rule
+	activityService *ActivityStream
+	queue           queue.Queue
+	host            string
 }
 
 // NewFollower returns a fully initialized Follower service
@@ -37,11 +37,11 @@ func NewFollower() Follower {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Follower) Refresh(collection data.Collection, userService *User, ruleService *Rule, activityStreamsService *ActivityStreams, queue queue.Queue, host string) {
+func (service *Follower) Refresh(collection data.Collection, userService *User, ruleService *Rule, activityService *ActivityStream, queue queue.Queue, host string) {
 	service.collection = collection
 	service.userService = userService
 	service.ruleService = ruleService
-	service.activityStreamsService = activityStreamsService
+	service.activityService = activityService
 	service.queue = queue
 	service.host = host
 }
@@ -408,7 +408,7 @@ func (service *Follower) LoadByActivityPubFollower(parentID primitive.ObjectID, 
 	return service.Load(criteria, follower)
 }
 
-// RemoteActor returns the ActivityStreams document for a remote Actor for a specific Follower
+// RemoteActor returns the ActivityStream document for a remote Actor for a specific Follower
 func (service *Follower) RemoteActor(follower *model.Follower) (streams.Document, error) {
 
 	// RULE: Guarantee that the Follower is using ActivityPub for updates
@@ -417,7 +417,7 @@ func (service *Follower) RemoteActor(follower *model.Follower) (streams.Document
 	}
 
 	// Return the remote Actor's profile document
-	return service.activityStreamsService.Load(follower.Actor.ProfileURL, sherlock.AsActor())
+	return service.activityService.Load(follower.Actor.ProfileURL, sherlock.AsActor())
 }
 
 /******************************************

@@ -30,7 +30,7 @@ func receiveLikeOrAnnounce(context Context, activity streams.Document) error {
 	}
 
 	// Add the Announce/Like/Dislike into the ActivityStream cache
-	context.factory.ActivityStreams().Put(activity)
+	context.factory.ActivityStream().Put(activity)
 
 	// Add the activity into the User's Inbox
 	if err := saveMessage(context, activity, activity.Actor().ID(), getOriginType(activity.Type())); err != nil {

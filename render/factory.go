@@ -21,7 +21,7 @@ type ServerFactory interface {
 // Factory is used to locate all necessary services
 type Factory interface {
 	// Model Services
-	ActivityStreams() *service.ActivityStreams
+	ActivityStream() *service.ActivityStream
 	Attachment() *service.Attachment
 	Rule() *service.Rule
 	Folder() *service.Folder

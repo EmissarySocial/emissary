@@ -465,7 +465,7 @@ func GetAccount_Lookup(serverFactory *server.Factory) func(model.Authorization, 
 		}
 
 		// Load the Account as an ActivityStream
-		activityStreamsService := factory.ActivityStreams()
+		activityStreamsService := factory.ActivityStream()
 		document, err := activityStreamsService.Load(t.Acct)
 
 		if err != nil {

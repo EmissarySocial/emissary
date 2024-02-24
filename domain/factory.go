@@ -31,13 +31,13 @@ type Factory struct {
 	providers []config.Provider
 
 	// services (from server)
-	themeService           *service.Theme
-	templateService        *service.Template
-	widgetService          *service.Widget
-	contentService         *service.Content
-	providerService        *service.Provider
-	taskQueue              queue.Queue
-	activityStreamsService *service.ActivityStreams
+	themeService    *service.Theme
+	templateService *service.Template
+	widgetService   *service.Widget
+	contentService  *service.Content
+	providerService *service.Provider
+	taskQueue       queue.Queue
+	activityService *service.ActivityStream
 
 	// Upload Directories (from server)
 	attachmentOriginals afero.Fs
@@ -72,19 +72,19 @@ type Factory struct {
 }
 
 // NewFactory creates a new factory tied to a MongoDB database
-func NewFactory(domain config.Domain, providers []config.Provider, activityStreamsService *service.ActivityStreams, serverEmail *service.ServerEmail, themeService *service.Theme, templateService *service.Template, widgetService *service.Widget, contentService *service.Content, providerService *service.Provider, taskQueue queue.Queue, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
+func NewFactory(domain config.Domain, providers []config.Provider, activityService *service.ActivityStream, serverEmail *service.ServerEmail, themeService *service.Theme, templateService *service.Template, widgetService *service.Widget, contentService *service.Content, providerService *service.Provider, taskQueue queue.Queue, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
 
 	log.Debug().Msg("Starting domain: " + domain.Hostname)
 
 	// Base Factory object
 	factory := Factory{
-		themeService:           themeService,
-		templateService:        templateService,
-		widgetService:          widgetService,
-		contentService:         contentService,
-		providerService:        providerService,
-		taskQueue:              taskQueue,
-		activityStreamsService: activityStreamsService,
+		themeService:    themeService,
+		templateService: templateService,
+		widgetService:   widgetService,
+		contentService:  contentService,
+		providerService: providerService,
+		taskQueue:       taskQueue,
+		activityService: activityService,
 
 		attachmentOriginals: attachmentOriginals,
 		attachmentCache:     attachmentCache,
@@ -219,7 +219,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.collection(CollectionFollower),
 			factory.User(),
 			factory.Rule(),
-			factory.ActivityStreams(),
+			factory.ActivityStream(),
 			factory.Queue(),
 			factory.Host(),
 		)
@@ -232,7 +232,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.Inbox(),
 			factory.Folder(),
 			factory.EncryptionKey(),
-			factory.ActivityStreams(),
+			factory.ActivityStream(),
 			factory.Host(),
 		)
 
@@ -259,7 +259,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		factory.mentionService.Refresh(
 			factory.collection(CollectionMention),
 			factory.Rule(),
-			factory.ActivityStreams(),
+			factory.ActivityStream(),
 			factory.Host(),
 		)
 
@@ -282,7 +282,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		factory.outboxService.Refresh(
 			factory.collection(CollectionOutbox),
 			factory.Stream(),
-			factory.ActivityStreams(),
+			factory.ActivityStream(),
 			factory.Follower(),
 			factory.User(),
 			factory.Queue(),
@@ -308,7 +308,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.StreamDraft(),
 			factory.Outbox(),
 			factory.Attachment(),
-			factory.ActivityStreams(),
+			factory.ActivityStream(),
 			factory.Content(),
 			factory.EncryptionKey(),
 			factory.Follower(),
@@ -428,8 +428,8 @@ func (factory *Factory) Model(name string) (service.ModelService, error) {
 	return nil, derp.NewInternalError("domain.Factory.Model", "Unknown model", name)
 }
 
-func (factory *Factory) ActivityStreams() *service.ActivityStreams {
-	return factory.activityStreamsService
+func (factory *Factory) ActivityStream() *service.ActivityStream {
+	return factory.activityService
 }
 
 // Attachment returns a fully populated Attachment service

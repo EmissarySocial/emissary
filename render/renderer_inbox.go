@@ -503,10 +503,10 @@ func (w Inbox) RepliesBefore(url string, dateString string, maxRows int) sliceof
 
 	done := make(channel.Done)
 
-	// Get ActivityStreams that reply to the provided URL
-	activityStreamService := w._factory.ActivityStreams()
+	// Get all ActivityStreams that reply to the provided URL
+	activityService := w._factory.ActivityStream()
 	maxDate := convert.Int64Default(dateString, math.MaxInt)
-	replies := activityStreamService.QueryRepliesBeforeDate(url, maxDate, done)
+	replies := activityService.QueryRepliesBeforeDate(url, maxDate, done)
 
 	// Filter replies based on rules
 	ruleService := w._factory.Rule()
@@ -526,10 +526,10 @@ func (w Inbox) RepliesAfter(url string, dateString string, maxRows int) sliceof.
 
 	done := make(channel.Done)
 
-	// Get ActivityStreams that reply to the provided URL
-	activityStreamService := w._factory.ActivityStreams()
+	// Get all ActivityStreams that reply to the provided URL
+	activityService := w._factory.ActivityStream()
 	minDate := convert.Int64(dateString)
-	replies := activityStreamService.QueryRepliesAfterDate(url, minDate, done)
+	replies := activityService.QueryRepliesAfterDate(url, minDate, done)
 
 	// Filter replies based on rules
 	ruleService := w._factory.Rule()
@@ -548,10 +548,10 @@ func (w Inbox) AnnouncesBefore(url string, dateString string, maxRows int) slice
 
 	done := make(channel.Done)
 
-	// Get ActivityStreams that announce the provided URL
-	activityStreamService := w._factory.ActivityStreams()
+	// Get all ActivityStreams that announce the provided URL
+	activityService := w._factory.ActivityStream()
 	maxDate := convert.Int64Default(dateString, math.MaxInt64)
-	announces := activityStreamService.QueryAnnouncesBeforeDate(url, maxDate, done)
+	announces := activityService.QueryAnnouncesBeforeDate(url, maxDate, done)
 
 	// Filter replies based on rules
 	ruleService := w._factory.Rule()
@@ -570,10 +570,10 @@ func (w Inbox) LikesBefore(url string, dateString string, maxRows int) sliceof.O
 
 	done := make(channel.Done)
 
-	// Get ActivityStreams that announce the provided URL
-	activityStreamService := w._factory.ActivityStreams()
+	// Get all ActivityStreams that announce the provided URL
+	activityService := w._factory.ActivityStream()
 	maxDate := convert.Int64Default(dateString, math.MaxInt64)
-	announces := activityStreamService.QueryLikesBeforeDate(url, maxDate, done)
+	announces := activityService.QueryLikesBeforeDate(url, maxDate, done)
 
 	// Filter replies based on rules
 	ruleService := w._factory.Rule()

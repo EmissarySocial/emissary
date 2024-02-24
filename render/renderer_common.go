@@ -359,7 +359,7 @@ func (w Common) SubRenderer(object any) (Renderer, error) {
 func (w Common) ActivityStream(url string) streams.Document {
 
 	// Load the document from the Interwebs
-	result, err := w._factory.ActivityStreams().Load(url)
+	result, err := w._factory.ActivityStream().Load(url)
 
 	if err != nil {
 		derp.Report(derp.Wrap(err, "render.Common.ActivityStream", "Error loading ActivityStream"))
@@ -378,7 +378,7 @@ func (w Common) ActivityStream(url string) streams.Document {
 // returned document uses Emissary's custom ActivityStream service, which uses
 // document values and rules from the server's shared cache.
 func (w Common) ActivityStreamActor(url string) streams.Document {
-	result, err := w._factory.ActivityStreams().Load(url, sherlock.AsActor())
+	result, err := w._factory.ActivityStream().Load(url, sherlock.AsActor())
 
 	if err != nil {
 		derp.Report(err)
@@ -388,7 +388,7 @@ func (w Common) ActivityStreamActor(url string) streams.Document {
 }
 
 func (w Common) ActivityStreamActors(search string) ([]model.ActorSummary, error) {
-	return w._factory.ActivityStreams().SearchActors(search)
+	return w._factory.ActivityStream().SearchActors(search)
 }
 
 // IsMe returns TRUE if the provided URI is the profileURL of the current user
@@ -484,7 +484,7 @@ func (w *Common) getDomain() (model.Domain, error) {
 }
 
 /******************************************
- * Global Queries
+ * Common Queries
  ******************************************/
 
 // Navigation returns an array of Streams that have a Zero ParentID
@@ -495,10 +495,6 @@ func (w Common) Navigation() (sliceof.Object[model.StreamSummary], error) {
 	result, err := builder.Top60().ByRank().Slice()
 	return result, err
 }
-
-/******************************************
- * Common ActivityStreams Queries
- ******************************************/
 
 func (w Common) GetResponseID(responseType string, url string) string {
 

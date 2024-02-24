@@ -37,7 +37,7 @@ import (
 type Mention struct {
 	collection      data.Collection
 	ruleService     *Rule
-	activityStreams *ActivityStreams
+	activityService *ActivityStream
 	host            string
 }
 
@@ -51,10 +51,10 @@ func NewMention() Mention {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Mention) Refresh(collection data.Collection, ruleService *Rule, activityStreams *ActivityStreams, host string) {
+func (service *Mention) Refresh(collection data.Collection, ruleService *Rule, activityService *ActivityStream, host string) {
 	service.collection = collection
 	service.ruleService = ruleService
-	service.activityStreams = activityStreams
+	service.activityService = activityService
 	service.host = host
 }
 
@@ -390,7 +390,7 @@ func (service *Mention) GetPageInfo(body *bytes.Buffer, originURL string, mentio
 	const location = "service.Mention.GetPageInfo"
 
 	// Inspect the source document for metadata (microformats, opengraph, etc.)
-	document, err := service.activityStreams.Load(originURL, sherlock.AsDocument())
+	document, err := service.activityService.Load(originURL, sherlock.AsDocument())
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error retrieving page", originURL)

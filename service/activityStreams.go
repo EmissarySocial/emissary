@@ -16,8 +16,8 @@ import (
 	"github.com/benpate/sherlock"
 )
 
-// ActivityStreams implements the Hannibal HTTP client interface, and provides a cache for ActivityStreams documents.
-type ActivityStreams struct {
+// ActivityStream implements the Hannibal HTTP client interface, and provides a cache for ActivityStream documents.
+type ActivityStream struct {
 	collection  data.Collection
 	innerClient streams.Client
 	cacheClient *ascache.Client
@@ -27,13 +27,13 @@ type ActivityStreams struct {
  * Lifecycle Methods
  ******************************************/
 
-// NewActivityStreams creates a new ActivityStreams service
-func NewActivityStreams() ActivityStreams {
-	return ActivityStreams{}
+// NewActivityStream creates a new ActivityStream service
+func NewActivityStream() ActivityStream {
+	return ActivityStream{}
 }
 
-// Refresh updates the ActivityStreams service with new dependencies
-func (service *ActivityStreams) Refresh(innerClient streams.Client, cacheClient *ascache.Client, collection data.Collection) {
+// Refresh updates the ActivityStream service with new dependencies
+func (service *ActivityStream) Refresh(innerClient streams.Client, cacheClient *ascache.Client, collection data.Collection) {
 	service.innerClient = innerClient
 	service.cacheClient = cacheClient
 	service.collection = collection
@@ -44,9 +44,9 @@ func (service *ActivityStreams) Refresh(innerClient streams.Client, cacheClient 
  ******************************************/
 
 // Load implements the Hannibal `Client` interface, and returns a streams.Document from the cache.
-func (service *ActivityStreams) Load(url string, options ...any) (streams.Document, error) {
+func (service *ActivityStream) Load(url string, options ...any) (streams.Document, error) {
 
-	const location = "service.ActivityStreams.Load"
+	const location = "service.ActivityStream.Load"
 
 	if url == "" {
 		return streams.NilDocument(), derp.NewNotFoundError(location, "Empty URL", url)
@@ -69,14 +69,14 @@ func (service *ActivityStreams) Load(url string, options ...any) (streams.Docume
 }
 
 // Put adds a single document to the ActivityStream cache
-func (service *ActivityStreams) Put(document streams.Document) {
+func (service *ActivityStream) Put(document streams.Document) {
 	service.cacheClient.Put(document)
 }
 
 // Delete removes a single document from the database by its URL
-func (service *ActivityStreams) Delete(url string) error {
+func (service *ActivityStream) Delete(url string) error {
 
-	const location = "service.ActivityStreams.Delete"
+	const location = "service.ActivityStream.Delete"
 
 	if err := service.cacheClient.Delete(url); err != nil {
 		return derp.Wrap(err, location, "Error deleting document from cache", url)
@@ -90,17 +90,17 @@ func (service *ActivityStreams) Delete(url string) error {
  ******************************************/
 
 // PurgeCache removes all expired documents from the cache
-func (service *ActivityStreams) PurgeCache() error {
+func (service *ActivityStream) PurgeCache() error {
 
 	// NPE Check
 	if service.collection == nil {
-		return derp.NewInternalError("service.ActivityStreams.PurgeCache", "Document Collection not initialized")
+		return derp.NewInternalError("service.ActivityStream.PurgeCache", "Document Collection not initialized")
 	}
 
 	// Purge all expired Documents
 	criteria := exp.LessThan("expires", time.Now().Unix())
 	if err := service.collection.HardDelete(criteria); err != nil {
-		return derp.Wrap(err, "service.ActivityStreams.PurgeCache", "Error purging documents")
+		return derp.Wrap(err, "service.ActivityStream.PurgeCache", "Error purging documents")
 	}
 
 	return nil
@@ -111,9 +111,9 @@ func (service *ActivityStreams) PurgeCache() error {
  ******************************************/
 
 // QueryRepliesBeforeDate returns a slice of streams.Document values that are replies to the specified document, and were published before the specified date.
-func (service *ActivityStreams) queryByRelation(relationType string, relationHref string, cutType string, cutDate int64, done <-chan struct{}) <-chan streams.Document {
+func (service *ActivityStream) queryByRelation(relationType string, relationHref string, cutType string, cutDate int64, done <-chan struct{}) <-chan streams.Document {
 
-	const location = "service.ActivityStreams.QueryRelated"
+	const location = "service.ActivityStream.QueryRelated"
 
 	result := make(chan streams.Document)
 
@@ -182,13 +182,13 @@ func (service *ActivityStreams) queryByRelation(relationType string, relationHre
 
 }
 
-func (service *ActivityStreams) NewDocument(document map[string]any) streams.Document {
+func (service *ActivityStream) NewDocument(document map[string]any) streams.Document {
 	return streams.NewDocument(document, streams.WithClient(service))
 }
 
-func (service *ActivityStreams) SearchActors(queryString string) ([]model.ActorSummary, error) {
+func (service *ActivityStream) SearchActors(queryString string) ([]model.ActorSummary, error) {
 
-	const location = "service.ActivityStreams.SearchActors"
+	const location = "service.ActivityStream.SearchActors"
 
 	// If we think this is an address we can work with (because sherlock says so)
 	// the try to retrieve it directly.
@@ -222,20 +222,20 @@ func (service *ActivityStreams) SearchActors(queryString string) ([]model.ActorS
 }
 
 // QueryRepliesBeforeDate returns a slice of streams.Document values that are replies to the specified document, and were published before the specified date.
-func (service *ActivityStreams) QueryRepliesBeforeDate(inReplyTo string, maxDate int64, done <-chan struct{}) <-chan streams.Document {
+func (service *ActivityStream) QueryRepliesBeforeDate(inReplyTo string, maxDate int64, done <-chan struct{}) <-chan streams.Document {
 	return service.queryByRelation("Reply", inReplyTo, "before", maxDate, done)
 }
 
 // QueryRepliesAfterDate returns a slice of streams.Document values that are replies to the specified document, and were published after the specified date.
-func (service *ActivityStreams) QueryRepliesAfterDate(inReplyTo string, minDate int64, done <-chan struct{}) <-chan streams.Document {
+func (service *ActivityStream) QueryRepliesAfterDate(inReplyTo string, minDate int64, done <-chan struct{}) <-chan streams.Document {
 	return service.queryByRelation("Reply", inReplyTo, "after", minDate, done)
 }
 
-func (service *ActivityStreams) QueryAnnouncesBeforeDate(relationHref string, maxDate int64, done <-chan struct{}) <-chan streams.Document {
+func (service *ActivityStream) QueryAnnouncesBeforeDate(relationHref string, maxDate int64, done <-chan struct{}) <-chan streams.Document {
 	return service.queryByRelation(vocab.ActivityTypeAnnounce, relationHref, "before", maxDate, done)
 }
 
-func (service *ActivityStreams) QueryLikesBeforeDate(relationHref string, maxDate int64, done <-chan struct{}) <-chan streams.Document {
+func (service *ActivityStream) QueryLikesBeforeDate(relationHref string, maxDate int64, done <-chan struct{}) <-chan streams.Document {
 	return service.queryByRelation(vocab.ActivityTypeLike, relationHref, "before", maxDate, done)
 }
 
@@ -244,9 +244,9 @@ func (service *ActivityStreams) QueryLikesBeforeDate(relationHref string, maxDat
  ******************************************/
 
 // iterator reads from the database and returns a data.Iterator with the result values.
-func (service *ActivityStreams) documentIterator(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+func (service *ActivityStream) documentIterator(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 
-	const location = "service.ActivityStreams.documentIterator"
+	const location = "service.ActivityStream.documentIterator"
 
 	// NPE Check
 	if service.collection == nil {

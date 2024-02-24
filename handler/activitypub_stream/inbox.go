@@ -28,7 +28,7 @@ func PostInbox(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		// Retrieve the activity from the request body
-		activity, err := inbox.ReceiveRequest(ctx.Request(), factory.ActivityStreams())
+		activity, err := inbox.ReceiveRequest(ctx.Request(), factory.ActivityStream())
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error parsing ActivityPub request")

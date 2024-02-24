@@ -38,7 +38,7 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream) error {
 	}
 
 	// Attempt to pre-load the ActivityStream cache.  We don't care about the result.
-	_, _ = service.activityStreamService.Load(stream.ActivityPubURL())
+	_, _ = service.activityService.Load(stream.ActivityPubURL())
 
 	object := service.JSONLD(stream)
 

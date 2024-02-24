@@ -21,7 +21,7 @@ func PostInbox(serverFactory *server.Factory) echo.HandlerFunc {
 		factory, err := serverFactory.ByContext(ctx)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error creating ActivityStreamsHandler")
+			return derp.Wrap(err, location, "Invalid Domain")
 		}
 
 		// Try to load the User who owns this inbox
@@ -43,7 +43,7 @@ func PostInbox(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		// Retrieve the activity from the request body
-		activity, err := inbox.ReceiveRequest(ctx.Request(), factory.ActivityStreams())
+		activity, err := inbox.ReceiveRequest(ctx.Request(), factory.ActivityStream())
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error parsing ActivityPub request")

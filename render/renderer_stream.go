@@ -293,7 +293,7 @@ func (w Stream) IsReply() bool {
 	return (w._stream.InReplyTo != "")
 }
 
-// InReplyTo returns an ActivityStreams reference to the URL that this stream replies to
+// InReplyTo returns an ActivityStream reference to the URL that this stream replies to
 func (w Stream) InReplyTo() streams.Document {
 	return w.ActivityStream(w._stream.InReplyTo)
 }
@@ -533,7 +533,7 @@ func (w Stream) RepliesBefore(dateString string, maxRows int) sliceof.Object[str
 	done := make(channel.Done)
 
 	// Get all ActivityStreams that reply to the current Stream
-	activityStreamsService := w._factory.ActivityStreams()
+	activityStreamsService := w._factory.ActivityStream()
 	maxDate := convert.Int64Default(dateString, math.MaxInt64)
 	replies := activityStreamsService.QueryRepliesBeforeDate(w._stream.URL, maxDate, done)
 
@@ -554,7 +554,7 @@ func (w Stream) RepliesAfter(dateString string, maxRows int) sliceof.Object[stre
 	done := make(channel.Done)
 
 	// Get all ActivityStreams that REPLY TO the current Stream
-	activityStreamsService := w._factory.ActivityStreams()
+	activityStreamsService := w._factory.ActivityStream()
 	minDate := convert.Int64(dateString)
 	replies := activityStreamsService.QueryRepliesAfterDate(w._stream.URL, minDate, done)
 
@@ -576,7 +576,7 @@ func (w Stream) AnnouncesBefore(dateString string, maxRows int) sliceof.Object[s
 	done := make(channel.Done)
 
 	// Get all ActivityStreams that ANNOUNCE the current Stream
-	activityStreamsService := w._factory.ActivityStreams()
+	activityStreamsService := w._factory.ActivityStream()
 	maxDate := convert.Int64Default(dateString, math.MaxInt64)
 	announces := activityStreamsService.QueryAnnouncesBeforeDate(w._stream.URL, maxDate, done)
 
@@ -598,7 +598,7 @@ func (w Stream) LikesBefore(dateString string, maxRows int) sliceof.Object[strea
 	done := make(channel.Done)
 
 	// Query all ActivityStreams that LIKE the current Stream
-	activityStreamsService := w._factory.ActivityStreams()
+	activityStreamsService := w._factory.ActivityStream()
 	maxDate := convert.Int64Default(dateString, math.MaxInt64)
 	likes := activityStreamsService.QueryLikesBeforeDate(w._stream.URL, maxDate, done)
 

@@ -279,7 +279,7 @@ func (stream *Stream) SimplePermissionModel() mapof.Any {
 }
 
 /******************************************
- * ActivityStreams Methods
+ * ActivityStream Methods
  ******************************************/
 
 func (stream Stream) ActivityPubURL() string {

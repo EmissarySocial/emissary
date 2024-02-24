@@ -41,21 +41,21 @@ func BoostAny(context Context, activity streams.Document) error {
 	}
 
 	// Save the activity into the cache
-	activityStreamService := context.factory.ActivityStreams()
+	activityService := context.factory.ActivityStream()
 
 	switch activity.Type() {
 
 	case vocab.ActivityTypeCreate, vocab.ActivityTypeUpdate, vocab.ActivityTypeDelete:
 		object := activity.Object()
-		activityStreamService.Put(object)
+		activityService.Put(object)
 
 	case vocab.ActivityTypeAnnounce:
 		object := activity.Object()
-		activityStreamService.Put(object)
-		activityStreamService.Put(activity)
+		activityService.Put(object)
+		activityService.Put(activity)
 
 	default:
-		activityStreamService.Put(activity)
+		activityService.Put(activity)
 	}
 
 	// Try to load the Actor for this user

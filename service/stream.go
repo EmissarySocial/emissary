@@ -26,18 +26,18 @@ import (
 
 // Stream manages all interactions with the Stream collection
 type Stream struct {
-	collection            data.Collection
-	templateService       *Template
-	draftService          *StreamDraft
-	outboxService         *Outbox
-	attachmentService     *Attachment
-	activityStreamService *ActivityStreams
-	contentService        *Content
-	keyService            *EncryptionKey
-	followerService       *Follower
-	ruleService           *Rule
-	host                  string
-	streamUpdateChannel   chan<- model.Stream
+	collection          data.Collection
+	templateService     *Template
+	draftService        *StreamDraft
+	outboxService       *Outbox
+	attachmentService   *Attachment
+	activityService     *ActivityStream
+	contentService      *Content
+	keyService          *EncryptionKey
+	followerService     *Follower
+	ruleService         *Rule
+	host                string
+	streamUpdateChannel chan<- model.Stream
 }
 
 // NewStream returns a fully populated Stream service.
@@ -50,13 +50,13 @@ func NewStream() Stream {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Stream) Refresh(collection data.Collection, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, activityStreamService *ActivityStreams, contentService *Content, keyService *EncryptionKey, followerService *Follower, ruleService *Rule, host string, streamUpdateChannel chan model.Stream) {
+func (service *Stream) Refresh(collection data.Collection, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, activityService *ActivityStream, contentService *Content, keyService *EncryptionKey, followerService *Follower, ruleService *Rule, host string, streamUpdateChannel chan model.Stream) {
 	service.collection = collection
 	service.templateService = templateService
 	service.draftService = draftService
 	service.outboxService = outboxService
 	service.attachmentService = attachmentService
-	service.activityStreamService = activityStreamService
+	service.activityService = activityService
 	service.contentService = contentService
 	service.keyService = keyService
 	service.followerService = followerService
@@ -745,10 +745,10 @@ func (service *Stream) CalcContext(stream *model.Stream) {
 		return
 	}
 
-	// Load the "InReplyTo" document from the ActivityStreams and use its
+	// Load the "InReplyTo" document from the ActivityStream and use its
 	// context.  Note: this should have been calculated already via the
 	// ascontextmaker client.
-	document, _ := service.activityStreamService.Load(stream.InReplyTo)
+	document, _ := service.activityService.Load(stream.InReplyTo)
 
 	if context := document.Context(); context != "" {
 		stream.Context = document.Context()
@@ -775,7 +775,7 @@ func (service *Stream) CalcTags(stream *model.Stream) {
 		tag.Name = strings.TrimSuffix(tag.Name, ".")
 		tag.Name = strings.TrimSuffix(tag.Name, ",")
 
-		if actor, err := service.activityStreamService.Load(tag.Name, sherlock.AsActor()); err == nil {
+		if actor, err := service.activityService.Load(tag.Name, sherlock.AsActor()); err == nil {
 			tag.Href = actor.ID()
 		}
 

@@ -14,14 +14,14 @@ import (
 
 // Outbox manages all Outbox records for a User.  This includes Outbox and Outbox
 type Outbox struct {
-	collection             data.Collection
-	activityStreamsService *ActivityStreams
-	streamService          *Stream
-	followerService        *Follower
-	userService            *User
-	counter                int
-	lock                   *sync.Mutex
-	queue                  queue.Queue
+	collection      data.Collection
+	activityService *ActivityStream
+	streamService   *Stream
+	followerService *Follower
+	userService     *User
+	counter         int
+	lock            *sync.Mutex
+	queue           queue.Queue
 }
 
 // NewOutbox returns a fully populated Outbox service
@@ -36,10 +36,10 @@ func NewOutbox() Outbox {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Outbox) Refresh(collection data.Collection, streamService *Stream, activityStreamsService *ActivityStreams, followerService *Follower, userService *User, queue queue.Queue) {
+func (service *Outbox) Refresh(collection data.Collection, streamService *Stream, activityService *ActivityStream, followerService *Follower, userService *User, queue queue.Queue) {
 	service.collection = collection
 	service.streamService = streamService
-	service.activityStreamsService = activityStreamsService
+	service.activityService = activityService
 	service.followerService = followerService
 	service.userService = userService
 	service.queue = queue
@@ -98,7 +98,7 @@ func (service *Outbox) Save(outboxMessage *model.OutboxMessage, note string) err
 
 	// If this message has a valid URL, then try cache it into the activitystream service.
 	// nolint:errcheck
-	go service.activityStreamsService.Load(outboxMessage.URL)
+	go service.activityService.Load(outboxMessage.URL)
 
 	return nil
 }
@@ -116,7 +116,7 @@ func (service *Outbox) Delete(outboxMessage *model.OutboxMessage, note string) e
 	}
 
 	// Delete the document from the cache
-	if err := service.activityStreamsService.Delete(outboxMessage.URL); err != nil {
+	if err := service.activityService.Delete(outboxMessage.URL); err != nil {
 		return derp.Wrap(err, location, "Error deleting ActivityStream", outboxMessage, note)
 	}
 
