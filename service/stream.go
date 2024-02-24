@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"math"
 	"net/url"
 	"strings"
 	"time"
@@ -13,20 +12,15 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
-	"github.com/benpate/digit"
 	"github.com/benpate/domain"
 	"github.com/benpate/exp"
-	"github.com/benpate/hannibal/outbox"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/html"
 	"github.com/benpate/rosetta/list"
-	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
-	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/sherlock"
 	"github.com/gernest/mention"
-	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -70,6 +64,67 @@ func (service *Stream) Refresh(collection data.Collection, templateService *Temp
 
 	service.host = host
 	service.streamUpdateChannel = streamUpdateChannel
+}
+
+func (service *Stream) Startup(theme *model.Theme) error {
+
+	// Try to count the number of streams currently in the database
+	count, err := service.Count(exp.All())
+
+	if err != nil {
+		return derp.Wrap(err, "service.Theme.Startup", "Unable to count streams")
+	}
+
+	// If the database is not empty, then do not add more...
+	if count > 0 {
+		return nil
+	}
+
+	streamSchema := service.Schema()
+
+	for _, data := range theme.StartupStreams {
+
+		// Create a new Stream
+		stream := model.NewStream()
+		if err := streamSchema.SetAll(&stream, data); err != nil {
+			derp.Report(derp.Wrap(err, "service.Theme.Startup", "Unable to set stream data", data))
+			continue
+		}
+
+		// If we have default content, then add that too.
+		if content, ok := data["content"].(model.Content); ok {
+			stream.Content = content
+		}
+
+		// Validate with the general-purpose Stream schema
+		if err := streamSchema.Validate(&stream); err != nil {
+			derp.Report(derp.Wrap(err, "service.Theme.Startup", "Invalid stream data"))
+			continue
+		}
+
+		// Get/Validate the template for the new stream
+		templateID := data.GetString("templateId")
+		template, err := service.templateService.Load(templateID)
+
+		if err != nil {
+			derp.Report(derp.Wrap(err, "service.Theme.Startup", "Unable to load template", templateID))
+			continue
+		}
+
+		// Validate with the specific Template schema
+		if err := template.Schema.Validate(&stream); err != nil {
+			derp.Report(derp.Wrap(err, "service.Theme.Startup", "Invalid stream data"))
+			continue
+		}
+
+		// Save the new Stream to the database
+		if err := service.Save(&stream, "Created by Startup"); err != nil {
+			derp.Report(derp.Wrap(err, "service.Theme.Startup", "Unable to save stream", stream))
+			continue
+		}
+	}
+
+	return nil
 }
 
 // Close stops any background processes controlled by this service
@@ -314,7 +369,6 @@ func (service *Stream) ObjectUserCan(object data.Object, authorization model.Aut
 }
 
 func (service *Stream) Schema() schema.Schema {
-	// TODO: HIGH: Implement
 	result := schema.New(model.StreamSchema())
 	result.ID = "https://emissary.social/schemas/stream"
 	return result
@@ -340,6 +394,18 @@ func (service *Stream) ListByParent(parentID primitive.ObjectID) (data.Iterator,
 // ListByTemplate returns all `Streams` that use a particular `Template`
 func (service *Stream) ListByTemplate(template string) (data.Iterator, error) {
 	return service.List(exp.Equal("templateId", template))
+}
+
+// QueryByParentAndDate returns a slice of Streams that are DIRECT CHILDREN of the provided StreamID
+func (service *Stream) QueryByParentAndDate(streamID primitive.ObjectID, publishedDate int64, pageSize int) ([]model.Stream, error) {
+	criteria := exp.Equal("parentId", streamID).AndLessThan("publishDate", publishedDate)
+	return service.Query(criteria, option.SortDesc("publishDate"), option.MaxRows(int64(pageSize)))
+}
+
+// QueryByParentAndDate returns a slice of Streams that are ANY DEPTH below the provided StreamID
+func (service *Stream) QueryByAncestorAndDate(streamID primitive.ObjectID, publishedDate int64, pageSize int) ([]model.Stream, error) {
+	criteria := exp.Equal("parentIds", streamID).AndLessThan("publishDate", publishedDate)
+	return service.Query(criteria, option.SortDesc("publishDate"), option.MaxRows(int64(pageSize)))
 }
 
 // LoadByToken returns a single `Stream` that matches a particular `Token`
@@ -379,42 +445,6 @@ func (service *Stream) LoadByURL(streamURL string, result *model.Stream) error {
 	}
 
 	return service.LoadByToken(token, result)
-}
-
-// QueryByParentAndDate returns a slice of Streams that are DIRECT CHILDREN of the provided StreamID
-func (service *Stream) QueryByParentAndDate(streamID primitive.ObjectID, publishedDate int64, pageSize int) ([]model.Stream, error) {
-	criteria := exp.Equal("parentId", streamID).AndLessThan("publishDate", publishedDate)
-	return service.Query(criteria, option.SortDesc("publishDate"), option.MaxRows(int64(pageSize)))
-}
-
-// QueryByParentAndDate returns a slice of Streams that are ANY DEPTH below the provided StreamID
-func (service *Stream) QueryByAncestorAndDate(streamID primitive.ObjectID, publishedDate int64, pageSize int) ([]model.Stream, error) {
-	criteria := exp.Equal("parentIds", streamID).AndLessThan("publishDate", publishedDate)
-	return service.Query(criteria, option.SortDesc("publishDate"), option.MaxRows(int64(pageSize)))
-}
-
-func (service *Stream) ParsePath(uri *url.URL) (string, string, error) {
-
-	// Verify the URL matches this service
-	if domain.AddProtocol(uri.Host) != service.host {
-		return "", "", derp.NewBadRequestError("service.Stream.LoadByURL", "Hostname must match this server", uri.String())
-	}
-
-	// Load the Stream using the token
-	path := list.BySlash(strings.TrimPrefix(uri.Path, "/"))
-	token, path := path.Split()
-
-	if token == "" {
-		token = "home"
-	}
-
-	actionID := path.Head()
-
-	if actionID == "" {
-		actionID = "view"
-	}
-
-	return token, actionID, nil
 }
 
 // LoadParent returns the Stream that is the parent of the provided Stream
@@ -522,154 +552,6 @@ func (service *Stream) MaxRank(parentID primitive.ObjectID) (int, error) {
  * Custom Actions
  ******************************************/
 
-func (service *Stream) Startup(theme *model.Theme) error {
-
-	// Try to count the number of streams currently in the database
-	count, err := service.Count(exp.All())
-
-	if err != nil {
-		return derp.Wrap(err, "service.Theme.Startup", "Unable to count streams")
-	}
-
-	// If the database is not empty, then do not add more...
-	if count > 0 {
-		return nil
-	}
-
-	streamSchema := service.Schema()
-
-	for _, data := range theme.StartupStreams {
-
-		// Create a new Stream
-		stream := model.NewStream()
-		if err := streamSchema.SetAll(&stream, data); err != nil {
-			derp.Report(derp.Wrap(err, "service.Theme.Startup", "Unable to set stream data", data))
-			continue
-		}
-
-		// If we have default content, then add that too.
-		if content, ok := data["content"].(model.Content); ok {
-			stream.Content = content
-		}
-
-		// Validate with the general-purpose Stream schema
-		if err := streamSchema.Validate(&stream); err != nil {
-			derp.Report(derp.Wrap(err, "service.Theme.Startup", "Invalid stream data"))
-			continue
-		}
-
-		// Get/Validate the template for the new stream
-		templateID := data.GetString("templateId")
-		template, err := service.templateService.Load(templateID)
-
-		if err != nil {
-			derp.Report(derp.Wrap(err, "service.Theme.Startup", "Unable to load template", templateID))
-			continue
-		}
-
-		// Validate with the specific Template schema
-		if err := template.Schema.Validate(&stream); err != nil {
-			derp.Report(derp.Wrap(err, "service.Theme.Startup", "Invalid stream data"))
-			continue
-		}
-
-		// Save the new Stream to the database
-		if err := service.Save(&stream, "Created by Startup"); err != nil {
-			derp.Report(derp.Wrap(err, "service.Theme.Startup", "Unable to save stream", stream))
-			continue
-		}
-	}
-
-	return nil
-}
-
-// Publish marks this stream as "published"
-func (service *Stream) Publish(user *model.User, stream *model.Stream) error {
-
-	activityType := vocab.ActivityTypeCreate
-
-	if stream.IsPublished() {
-		activityType = vocab.ActivityTypeUpdate
-	}
-
-	// RULE: IF this stream is not yet published, then set the publish date
-	if stream.PublishDate > time.Now().Unix() {
-		stream.PublishDate = time.Now().Unix()
-	}
-
-	// RULE: Move unpublish date all the way to the end of time.
-	// TODO: LOW: May want to set automatic unpublish dates later...
-	stream.UnPublishDate = math.MaxInt64
-
-	// RULE: Set Author to the currently logged in user.
-	stream.SetAttributedTo(user.PersonLink())
-
-	// Re-save the Stream with the updated values.
-	if err := service.Save(stream, "Publishing"); err != nil {
-		return derp.Wrap(err, "service.Stream.Publish", "Error saving stream", stream)
-	}
-
-	// Attempt to pre-load the ActivityStream cache.  We don't care about the result.
-	_, _ = service.activityStreamService.Load(stream.ActivityPubURL())
-
-	object := service.JSONLD(stream)
-
-	// Create the Activity to send to the User's Outbox
-	activity := mapof.Any{
-		vocab.AtContext:         vocab.ContextTypeActivityStreams,
-		vocab.PropertyID:        stream.ActivityPubURL(),
-		vocab.PropertyType:      activityType,
-		vocab.PropertyActor:     user.ActivityPubURL(),
-		vocab.PropertyObject:    object,
-		vocab.PropertyPublished: time.Now().UTC().Format(time.RFC3339),
-	}
-
-	if to, ok := object[vocab.PropertyTo]; ok {
-		activity[vocab.PropertyTo] = to
-	}
-
-	if cc, ok := object[vocab.PropertyCC]; ok {
-		activity[vocab.PropertyCC] = cc
-	}
-
-	// Try to publish via the outbox service
-	log.Trace().Msg("Publishing stream: " + stream.URL)
-	if err := service.outboxService.Publish(user.UserID, stream.URL, activity); err != nil {
-		return derp.Wrap(err, "service.Stream.Publish", "Error publishing activity", activity)
-	}
-
-	// Done.
-	return nil
-}
-
-// UnPublish marks this stream as "published"
-func (service *Stream) UnPublish(user *model.User, stream *model.Stream) error {
-
-	// RULE: Move unpublish date all the way to the end of time.
-	stream.UnPublishDate = time.Now().Unix()
-
-	// Re-save the Stream with the updated values.
-	if err := service.Save(stream, "Publish"); err != nil {
-		return derp.Wrap(err, "service.Stream.UnPublish", "Error saving stream", stream)
-	}
-
-	// Create the Activity to send to the User's Outbox
-	activity := mapof.Any{
-		vocab.AtContext:      vocab.ContextTypeActivityStreams,
-		vocab.PropertyType:   vocab.ActivityTypeDelete,
-		vocab.PropertyActor:  user.ActivityPubURL(),
-		vocab.PropertyObject: service.JSONLD(stream),
-	}
-
-	// Remove the record from the inbox
-	if err := service.outboxService.UnPublish(user.UserID, stream.URL, activity); err != nil {
-		return derp.Wrap(err, "service.Stream.UnPublish", "Error removing from outbox", stream)
-	}
-
-	// Done.
-	return nil
-}
-
 func (service *Stream) DeleteByParent(parentID primitive.ObjectID, note string) error {
 	return service.DeleteMany(exp.Equal("parentId", parentID), note)
 }
@@ -727,6 +609,60 @@ func (service *Stream) PurgeDeleted(ancestorID primitive.ObjectID) error {
 	}
 
 	return nil
+}
+
+// ParsePathextracts the Stream token and actionID from a URL
+func (service *Stream) ParsePath(uri *url.URL) (string, string, error) {
+
+	// Verify the URL matches this service
+	if domain.AddProtocol(uri.Host) != service.host {
+		return "", "", derp.NewBadRequestError("service.Stream.LoadByURL", "Hostname must match this server", uri.String())
+	}
+
+	// Load the Stream using the token
+	path := list.BySlash(strings.TrimPrefix(uri.Path, "/"))
+	token, path := path.Split()
+
+	if token == "" {
+		token = "home"
+	}
+
+	actionID := path.Head()
+
+	if actionID == "" {
+		actionID = "view"
+	}
+
+	return token, actionID, nil
+}
+
+// ParseURL validates that a URL matches the current server, and then extracts the streamID from it.
+func (service *Stream) ParseURL(streamURL string) (primitive.ObjectID, error) {
+
+	const location = "service.Stream.ParseURL"
+
+	parsedURL, err := url.Parse(streamURL)
+
+	if err != nil {
+		return primitive.NilObjectID, derp.Wrap(err, location, "Invalid URL", streamURL)
+	}
+
+	// Get the first part of the path (which is the stream ID or token)
+	path := strings.TrimPrefix(parsedURL.Path, "/")
+	path, _, _ = strings.Cut(path, "/")
+
+	// If the value looks like an ObjectID, then return it
+	if streamID, err := primitive.ObjectIDFromHex(path); err == nil {
+		return streamID, nil
+	}
+
+	// Otherwise, try to load the stream by Token
+	stream := model.NewStream()
+	if err := service.LoadByToken(path, &stream); err != nil {
+		return primitive.NilObjectID, derp.Wrap(err, location, "Invalid Token", path)
+	}
+
+	return stream.StreamID, nil
 }
 
 // CalcParentIDs scans the parent chain of a stream and generates a "breadcrumbs" slice
@@ -859,222 +795,4 @@ func (service *Stream) CalcTags(stream *model.Stream) {
 
 		stream.Tags = append(stream.Tags, tag)
 	}
-}
-
-/******************************************
- * WebFinger Behavior
- ******************************************/
-
-func (service *Stream) LoadWebFinger(token string) (digit.Resource, error) {
-	const location = "service.User.LoadWebFinger"
-
-	switch {
-
-	case domain.HasProtocol(token):
-		token = list.Last(token, '@')
-		token = list.First(token, '/')
-
-	case strings.HasPrefix(token, "acct:"):
-		// Trim prefixes "acct:" and "@"
-		token = strings.TrimPrefix(token, "acct:")
-		token = strings.TrimPrefix(token, "@")
-
-		// Trim @domain.name suffix if present
-		token = strings.TrimSuffix(token, "@"+domain.NameOnly(service.host))
-
-		// Trim path suffix if present
-		token = list.First(token, '/')
-
-	default:
-		return digit.Resource{}, derp.NewBadRequestError(location, "Invalid token", token)
-	}
-
-	// Try to load the user from the database
-	stream := model.NewStream()
-	if err := service.LoadByToken(token, &stream); err != nil {
-		return digit.Resource{}, derp.Wrap(err, location, "Error loading Stream", token)
-	}
-
-	// Verify Template and Actor
-	template, err := service.templateService.Load(stream.TemplateID)
-
-	if err != nil {
-		return digit.Resource{}, derp.Wrap(err, location, "Invalid Template", stream.TemplateID)
-	}
-
-	if template.Actor.IsNil() {
-		return digit.Resource{}, derp.NewBadRequestError(location, "Stream Template does not define an Actor", stream.TemplateID)
-	}
-
-	// Make a WebFinger resource for this user.
-	result := digit.NewResource("acct:"+token+"@"+domain.NameOnly(service.host)).
-		Alias(stream.URL).
-		Link(digit.RelationTypeSelf, model.MimeTypeActivityPub, stream.ActivityPubURL()).
-		// Link(digit.RelationTypeHub, model.MimeTypeJSONFeed, stream.JSONFeedURL()).
-		Link(digit.RelationTypeProfile, model.MimeTypeHTML, stream.URL) //.
-		// Link(digit.RelationTypeAvatar, model.MimeTypeImage, stream.ActivityPubAvatarURL()).
-		// Link(digit.RelationTypeSubscribeRequest, "", service.RemoteFollowURL())
-
-	return result, nil
-}
-
-/******************************************
- * ActivityPub API
- ******************************************/
-
-// JSONLDGetter returns a new JSONLDGetter for the provided stream
-func (service *Stream) JSONLDGetter(stream *model.Stream) StreamJSONLDGetter {
-	return NewStreamJSONLDGetter(service, stream)
-}
-
-// GetJSONLD returns a map document that conforms to the ActivityStreams 2.0 spec.
-// This map will still need to be marshalled into JSON
-func (service *Stream) JSONLD(stream *model.Stream) mapof.Any {
-	result := mapof.Any{
-		vocab.PropertyID:        stream.ActivityPubURL(),
-		vocab.PropertyType:      stream.SocialRole,
-		vocab.PropertyURL:       stream.URL,
-		vocab.PropertyPublished: time.Unix(stream.PublishDate, 0).UTC().Format(time.RFC3339),
-		// "likes":     stream.ActivityPubLikesURL(),
-		// "dislikes":  stream.ActivityPubDislikesURL(),
-		// "shares":    stream.ActivityPubSharesURL(),
-	}
-
-	if stream.Label != "" {
-		result[vocab.PropertyName] = stream.Label
-	}
-
-	if stream.Summary != "" {
-		result[vocab.PropertySummary] = stream.Summary
-	}
-
-	if stream.Content.HTML != "" {
-		result[vocab.PropertyContent] = stream.Content.HTML
-	}
-
-	if stream.ImageURL != "" {
-		result[vocab.PropertyImage] = stream.ImageURL
-	}
-
-	if stream.Context != "" {
-		result[vocab.PropertyContext] = stream.Context
-	}
-
-	if stream.InReplyTo != "" {
-		result[vocab.PropertyInReplyTo] = stream.InReplyTo
-	}
-
-	if stream.AttributedTo.NotEmpty() {
-		result[vocab.PropertyActor] = stream.AttributedTo.ProfileURL
-		result[vocab.PropertyAttributedTo] = stream.AttributedTo.ProfileURL
-	}
-
-	if len(stream.Tags) > 0 {
-		result[vocab.PropertyTag] = slice.Map(stream.Tags, model.TagAsJSONLD)
-	}
-
-	// NOTE: According to Mastodon ActivityPub guide (https://docs.joinmastodon.org/spec/activitypub/)
-	// putting as:public in the To field means that this mesage is public, and "listed"
-	// putting as:public in the Cc field means that this message is public, but "unlisted"
-	// and leaving as:public out entirely means that this message is "private" -- for whatever that's worth...
-
-	if stream.DefaultAllowAnonymous() {
-		result[vocab.PropertyTo] = []string{vocab.NamespaceActivityStreamsPublic}
-	}
-
-	// Attachments
-	if attachments, err := service.attachmentService.QueryByObjectID(model.AttachmentTypeStream, stream.StreamID); err == nil {
-
-		attachmentJSON := make([]mapof.Any, 0, len(attachments))
-		for _, attachment := range attachments {
-			attachmentJSON = append(attachmentJSON, attachment.JSONLD())
-		}
-
-		result[vocab.PropertyAttachment] = attachmentJSON
-	}
-
-	return result
-}
-
-// ParseURL validates that a URL matches the current server, and then extracts the streamID from it.
-func (service *Stream) ParseURL(streamURL string) (primitive.ObjectID, error) {
-
-	const location = "service.Stream.ParseURL"
-
-	parsedURL, err := url.Parse(streamURL)
-
-	if err != nil {
-		return primitive.NilObjectID, derp.Wrap(err, location, "Invalid URL", streamURL)
-	}
-
-	// Get the first part of the path (which is the stream ID or token)
-	path := strings.TrimPrefix(parsedURL.Path, "/")
-	path, _, _ = strings.Cut(path, "/")
-
-	// If the value looks like an ObjectID, then return it
-	if streamID, err := primitive.ObjectIDFromHex(path); err == nil {
-		return streamID, nil
-	}
-
-	// Otherwise, try to load the stream by Token
-	stream := model.NewStream()
-	if err := service.LoadByToken(path, &stream); err != nil {
-		return primitive.NilObjectID, derp.Wrap(err, location, "Invalid Token", path)
-	}
-
-	return stream.StreamID, nil
-}
-
-// ActivityPubActor returns a hannibal Actor for the provided stream.
-func (service *Stream) ActivityPubActor(stream *model.Stream, withFollowers bool) (outbox.Actor, error) {
-
-	const location = "service.Following.ActivityPubActor"
-
-	// Try to load the user's keys from the database
-	encryptionKey := model.NewEncryptionKey()
-	if err := service.keyService.LoadByID(stream.StreamID, &encryptionKey); err != nil {
-		return outbox.Actor{}, derp.Wrap(err, location, "Error loading encryption key", stream.StreamID)
-	}
-
-	// Extract the Private Key from the Encryption Key
-	privateKey, err := service.keyService.GetPrivateKey(&encryptionKey)
-
-	if err != nil {
-		return outbox.Actor{}, derp.Wrap(err, location, "Error extracting private key", encryptionKey)
-	}
-
-	// Return the ActivityPub Actor
-	actor := outbox.NewActor(stream.ActivityPubURL(), privateKey)
-
-	// Populate the Actor's ActivityPub Followers, if requested
-	if withFollowers {
-
-		// Get a channel of all Followers
-		followers, err := service.followerService.ActivityPubFollowersChannel(model.FollowerTypeStream, stream.StreamID)
-
-		if err != nil {
-			return outbox.Actor{}, derp.Wrap(err, location, "Error retrieving followers")
-		}
-
-		// Get a filter to prevent sending to "Blocked" followers
-		ruleFilter := service.ruleService.Filter(primitive.NilObjectID, WithBlocksOnly())
-		followerIDs := ruleFilter.ChannelSend(followers)
-
-		// Add the channel of follower IDs to the Actor
-		actor.With(outbox.WithFollowers(followerIDs))
-	}
-
-	return actor, nil
-}
-
-/******************************************
- * Mastodon API
- ******************************************/
-
-func (service *Stream) QueryByUser(userID primitive.ObjectID, criteria exp.Expression, options ...option.Option) ([]model.Stream, error) {
-
-	criteria = criteria.AndEqual("ownerId", userID)
-	options = append(options, option.SortDesc("createDate"))
-
-	return service.Query(criteria, options...)
 }
