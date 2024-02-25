@@ -5,11 +5,11 @@ import (
 	"text/template"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/html"
 	"github.com/benpate/rosetta/schema"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type StepAddStream struct {
@@ -97,17 +97,14 @@ func (step StepAddStream) getInline(renderer Renderer, buffer io.Writer) error {
 	// Get prerequisites
 	factory := renderer.factory()
 	templateService := factory.Template()
-	parentRole := step.parentRole(renderer)
-
-	// Query all eligible templates
-	templates := templateService.ListByContainerLimited(parentRole, step.TemplateRoles)
-
-	if len(templates) == 0 {
-		return derp.NewBadRequestError(location, "No child templates available for this Role", renderer.templateRole())
-	}
+	containedByRole := step.parentRole(renderer)
 
 	// Find the "selected" template
-	templateID := step.getBestTemplate(templates, renderer.QueryParam("templateId"))
+	optionTemplates, newTemplate, err := step.getBestTemplate(templateService, containedByRole, renderer.QueryParam("templateId"))
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error getting best template")
+	}
 
 	iconService := renderer.factory().Icons()
 
@@ -118,21 +115,21 @@ func (step StepAddStream) getInline(renderer Renderer, buffer io.Writer) error {
 	b := html.New()
 	b.Div().Data("hx-target", "this").Data("hx-swap", "outerHTML").Data("hx-push-url", "false").EndBracket()
 
-	if len(templates) > 1 {
+	if len(optionTemplates) > 1 {
 		b.Div()
-		for _, template := range templates {
+		for _, optionTemplate := range optionTemplates {
 
-			b.A("").Data("hx-get", path+"?templateId="+template.Value).Class("align-center", "inline-block", "margin-right-md").EndBracket()
+			b.A("").Data("hx-get", path+"?templateId="+optionTemplate.Value).Class("align-center", "inline-block", "margin-right-md").EndBracket()
 
 			b.Div().Class("text-lg", "margin-vertical-none").EndBracket()
-			if templateID == template.Value {
-				iconService.Write(template.Icon+"-fill", b)
+			if newTemplate.TemplateID == optionTemplate.Value {
+				iconService.Write(optionTemplate.Icon+"-fill", b)
 			} else {
-				iconService.Write(template.Icon, b)
+				iconService.Write(optionTemplate.Icon, b)
 			}
 			b.Close() // DIV
 
-			b.Div().Class("margin-vertical-none", "text-sm").InnerText(template.Label).Close()
+			b.Div().Class("margin-vertical-none", "text-sm").InnerText(optionTemplate.Label).Close()
 
 			b.Close() // A
 
@@ -145,14 +142,10 @@ func (step StepAddStream) getInline(renderer Renderer, buffer io.Writer) error {
 
 	// Create a new child stream
 	streamService := factory.Stream()
-	child, template, err := streamService.New(renderer.NavigationID(), renderer.objectID(), templateID)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Error creating new child stream")
-	}
+	child := streamService.New()
 
 	// Create a new child renderer
-	childRenderer, err := NewStream(factory, renderer.request(), renderer.response(), template, &child, "create")
+	childRenderer, err := NewStream(factory, renderer.request(), renderer.response(), newTemplate, &child, "create")
 	childRenderer.setArguments(renderer.getArguments())
 
 	if err != nil {
@@ -186,32 +179,21 @@ func (step StepAddStream) Post(renderer Renderer, buffer io.Writer) PipelineBeha
 	// Collect prerequisites
 	factory := renderer.factory()
 	templateService := factory.Template()
-	parentRole := step.parentRole(renderer)
-
-	// Query all eligible Templates
-	templates := templateService.ListByContainerLimited(parentRole, step.TemplateRoles)
-
-	if len(templates) == 0 {
-		return Halt().WithError(derp.NewBadRequestError(location, "No child templates available for this Role", renderer.templateRole()))
-	}
+	containedByRole := step.parentRole(renderer)
 
 	// Identify the Template to used for the new Stream
-	templateID := step.getBestTemplate(templates, renderer.QueryParam("templateId"))
+	_, template, err := step.getBestTemplate(templateService, containedByRole, renderer.QueryParam("templateId"))
 
-	if templateID == "" {
-		return Halt().WithError(derp.NewBadRequestError(location, "Invalid Template. Check template roles and 'containedBy' values."))
+	if err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Invalid Template. Check template roles and 'containedBy' values."))
 	}
 
 	// Create the new Stream
 	streamService := factory.Stream()
-	newStream, newTemplate, err := streamService.New("", primitive.NilObjectID, templateID)
-
-	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error creating new stream", templateID))
-	}
+	newStream := streamService.New()
 
 	// Validate and set the location for the new Stream
-	if err := step.setLocation(renderer, &newTemplate, &newStream); err != nil {
+	if err := step.setLocation(renderer, &template, &newStream); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error getting location for new stream"))
 	}
 
@@ -226,7 +208,7 @@ func (step StepAddStream) Post(renderer Renderer, buffer io.Writer) PipelineBeha
 	}
 
 	// Create a renderer for the new Stream
-	newRenderer, err := NewStream(factory, renderer.request(), renderer.response(), newTemplate, &newStream, "create")
+	newRenderer, err := NewStream(factory, renderer.request(), renderer.response(), template, &newStream, "create")
 	newRenderer.setArguments(renderer.getArguments())
 
 	if err != nil {
@@ -254,37 +236,25 @@ func (step StepAddStream) setLocation(renderer Renderer, template *model.Templat
 
 	const location = "render.StepAddStream.setLocation"
 
+	streamService := renderer.factory().Stream()
+
 	switch step.Location {
 
 	// Special case for streams in User's Outbox
 	case "outbox":
+
 		userID := renderer.AuthenticatedID()
-
-		if userID.IsZero() {
-			return derp.NewUnauthorizedError(location, "Cannot add to outbox because user is not authenticated")
+		if err := streamService.SetLocationOutbox(template, newStream, userID); err != nil {
+			return derp.Wrap(err, location, "Error setting location for outbox")
 		}
-
-		if !template.CanBeContainedBy("outbox") {
-			return derp.NewBadRequestError(location, "Template cannot be placed in the outbox", template.TemplateID)
-		}
-
-		newStream.NavigationID = "profile"
-		newStream.ParentID = userID
-		newStream.ParentIDs = []primitive.ObjectID{}
-
 		return nil
 
 	// Special case for "Top-Level" Navigation
 	case "top":
 
-		if !template.CanBeContainedBy("top") {
-			return derp.NewBadRequestError(location, "Template cannot be placed in the top navigation", template.TemplateID)
+		if err := streamService.SetLocationTop(template, newStream); err != nil {
+			return derp.Wrap(err, location, "Error setting location for top")
 		}
-
-		newStream.NavigationID = newStream.StreamID.Hex()
-		newStream.ParentID = primitive.NilObjectID
-		newStream.ParentIDs = []primitive.ObjectID{}
-
 		return nil
 
 	// Default to "Child" streams
@@ -297,24 +267,10 @@ func (step StepAddStream) setLocation(renderer Renderer, template *model.Templat
 			return derp.NewForbiddenError(location, "Cannot add child stream to non-stream renderer")
 		}
 
-		// Look up the TemplateRole for the current Stream
 		parent := streamRenderer._stream
-		parentTemplate, err := renderer.factory().Template().Load(parent.TemplateID)
-
-		if err != nil {
-			return derp.Wrap(err, location, "Error loading parent template")
+		if err := streamService.SetLocationChild(template, newStream, parent); err != nil {
+			return derp.Wrap(err, step.Location, "Error setting location for child")
 		}
-
-		// Guarantee that the selected Template can be contained by the parent Template
-		if !template.CanBeContainedBy(parentTemplate.TemplateRole) {
-			return derp.NewBadRequestError(location, "Child cannot be placed in this parent template", parentTemplate.TemplateRole, template.TemplateID)
-		}
-
-		// Set values and exit
-		newStream.NavigationID = parent.NavigationID
-		newStream.ParentID = parent.StreamID
-		newStream.ParentIDs = append(parent.ParentIDs, parent.StreamID)
-
 		return nil
 	}
 }
@@ -337,28 +293,47 @@ func (step StepAddStream) setStreamData(renderer Renderer, stream *model.Stream)
 	return nil
 }
 
-// getBastTemplate applies several rules to determine which template to use for the new stream
-func (step StepAddStream) getBestTemplate(eligible []form.LookupCode, templateID string) string {
+// getBastTemplate applies several rules to determine which template can be used for a new Stream.
+// It returns a slice of eligible Templates (as form.LookupCodes), and the selected Template.
+func (step StepAddStream) getBestTemplate(templateService *service.Template, containedByRole string, selectedTemplateID string) ([]form.LookupCode, model.Template, error) {
+
+	const location = "render.StepAddStream.getBestTemplate"
+
+	// Query all eligible Templates
+	eligible := templateService.ListByContainerLimited(containedByRole, step.TemplateRoles)
 
 	// If NO Templates are eligible, then return empty string
 	if len(eligible) == 0 {
-		return ""
+		return []form.LookupCode{}, model.Template{}, derp.NewInternalError(location, "No eligible Templates provided")
 	}
 
 	// If the Step already has a Template defined, then this overrides the passed-in value
 	if step.TemplateID != "" {
-		templateID = step.TemplateID
+		for _, eligibleTemplate := range eligible {
+			if eligibleTemplate.Value == step.TemplateID {
+				if template, err := templateService.Load(step.TemplateID); err != nil {
+					return []form.LookupCode{}, model.Template{}, derp.Wrap(err, location, "Error loading Template defined in Step", step.TemplateID)
+				} else {
+					return eligible, template, nil
+				}
+			}
+		}
+		return []form.LookupCode{}, model.Template{}, derp.NewInternalError(location, "Template '"+step.TemplateID+"' (defined in this Step) cannot be placed within '"+containedByRole+"'")
 	}
 
 	// Search eligible templates for the selected TemplateID, returning when found
 	for _, template := range eligible {
-		if template.Value == templateID {
-			return templateID
+		if template.Value == selectedTemplateID {
+			if template, err := templateService.Load(step.TemplateID); err != nil {
+				return []form.LookupCode{}, model.Template{}, derp.Wrap(err, location, "Error loading Template selected by User", step.TemplateID)
+			} else {
+				return eligible, template, nil
+			}
 		}
 	}
 
-	// If not found, then return the first eligible template
-	return eligible[0].Value
+	// None found. Return error
+	return []form.LookupCode{}, model.Template{}, derp.NewInternalError(location, "No eligible Templates match the selected Template", selectedTemplateID)
 }
 
 func (step StepAddStream) parentRole(renderer Renderer) string {

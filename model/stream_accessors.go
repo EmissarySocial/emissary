@@ -9,30 +9,31 @@ import (
 func StreamSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"streamId":      schema.String{Format: "objectId"},
-			"parentId":      schema.String{Format: "objectId"},
-			"parentIds":     schema.Array{Items: schema.String{Format: "objectId"}},
-			"rank":          schema.Integer{Minimum: null.NewInt64(0)},
-			"token":         schema.String{Format: "token", MaxLength: 128},
-			"navigationId":  schema.String{Format: "objectId"},
-			"templateId":    schema.String{MaxLength: 128},
-			"socialRole":    schema.String{MaxLength: 128},
-			"stateId":       schema.String{MaxLength: 128},
-			"permissions":   PermissionSchema(),
-			"defaultAllow":  schema.Array{Items: schema.String{Format: "objectId"}},
-			"url":           schema.String{Format: "url"},
-			"label":         schema.String{MaxLength: 128},
-			"summary":       schema.String{MaxLength: 2048},
-			"imageUrl":      schema.String{Format: "url"},
-			"attributedTo":  PersonLinkSchema(),
-			"context":       schema.String{Format: "url"},
-			"inReplyTo":     schema.String{Format: "url"},
-			"content":       ContentSchema(),
-			"widgets":       WidgetSchema(),
-			"tags":          schema.Object{Wildcard: schema.String{}},
-			"data":          schema.Object{Wildcard: schema.Any{}},
-			"publishDate":   schema.Integer{BitSize: 64},
-			"unpublishDate": schema.Integer{BitSize: 64},
+			"streamId":         schema.String{Format: "objectId"},
+			"parentId":         schema.String{Format: "objectId"},
+			"parentIds":        schema.Array{Items: schema.String{Format: "objectId"}},
+			"rank":             schema.Integer{Minimum: null.NewInt64(0)},
+			"token":            schema.String{Format: "token", MaxLength: 128},
+			"navigationId":     schema.String{Format: "objectId"},
+			"templateId":       schema.String{MaxLength: 128},
+			"parentTemplateId": schema.String{MaxLength: 128},
+			"socialRole":       schema.String{MaxLength: 128},
+			"stateId":          schema.String{MaxLength: 128},
+			"permissions":      PermissionSchema(),
+			"defaultAllow":     schema.Array{Items: schema.String{Format: "objectId"}},
+			"url":              schema.String{Format: "url"},
+			"label":            schema.String{MaxLength: 128},
+			"summary":          schema.String{MaxLength: 2048},
+			"imageUrl":         schema.String{Format: "url"},
+			"attributedTo":     PersonLinkSchema(),
+			"context":          schema.String{Format: "url"},
+			"inReplyTo":        schema.String{Format: "url"},
+			"content":          ContentSchema(),
+			"widgets":          WidgetSchema(),
+			"tags":             schema.Object{Wildcard: schema.String{}},
+			"data":             schema.Object{Wildcard: schema.Any{}},
+			"publishDate":      schema.Integer{BitSize: 64},
+			"unpublishDate":    schema.Integer{BitSize: 64},
 		},
 	}
 }
@@ -120,6 +121,9 @@ func (stream *Stream) GetPointer(name string) (any, bool) {
 		return &stream.StateID, true
 
 	case "templateId":
+		return &stream.TemplateID, true
+
+	case "parentTemplateId":
 		return &stream.TemplateID, true
 
 	case "token":

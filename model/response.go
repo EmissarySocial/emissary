@@ -1,10 +1,10 @@
 package model
 
 import (
-	"net/http"
 	"time"
 
 	"github.com/benpate/data/journal"
+	"github.com/benpate/hannibal"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/toot/object"
@@ -97,7 +97,7 @@ func (response Response) IsEqual(other Response) bool {
 }
 
 func (response Response) ActivityPubCreateDate() string {
-	return time.Unix(response.CreateDate, 0).UTC().Format(http.TimeFormat)
+	return hannibal.TimeFormat(time.Unix(response.CreateDate, 0))
 }
 
 // CreateDateSeconds returns the CreateDate in Unix Epoch seconds (instead of milliseconds)

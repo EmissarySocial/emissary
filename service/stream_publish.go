@@ -6,6 +6,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
+	"github.com/benpate/hannibal"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/rs/zerolog/log"
@@ -45,11 +46,10 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream) error {
 	// Create the Activity to send to the User's Outbox
 	activity := mapof.Any{
 		vocab.AtContext:         vocab.ContextTypeActivityStreams,
-		vocab.PropertyID:        stream.ActivityPubURL(),
 		vocab.PropertyType:      activityType,
 		vocab.PropertyActor:     user.ActivityPubURL(),
 		vocab.PropertyObject:    object,
-		vocab.PropertyPublished: time.Now().UTC().Format(time.RFC3339),
+		vocab.PropertyPublished: hannibal.TimeFormat(time.Now()),
 	}
 
 	if to, ok := object[vocab.PropertyTo]; ok {
@@ -61,7 +61,7 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream) error {
 	}
 
 	// Try to publish via the outbox service
-	log.Trace().Msg("Publishing stream: " + stream.URL)
+	log.Trace().Msg("Publishing stream to outbox: " + stream.URL)
 	if err := service.outboxService.Publish(user.UserID, stream.URL, activity); err != nil {
 		return derp.Wrap(err, "service.Stream.Publish", "Error publishing activity", activity)
 	}
@@ -83,10 +83,11 @@ func (service *Stream) UnPublish(user *model.User, stream *model.Stream) error {
 
 	// Create the Activity to send to the User's Outbox
 	activity := mapof.Any{
-		vocab.AtContext:      vocab.ContextTypeActivityStreams,
-		vocab.PropertyType:   vocab.ActivityTypeDelete,
-		vocab.PropertyActor:  user.ActivityPubURL(),
-		vocab.PropertyObject: service.JSONLD(stream),
+		vocab.AtContext:         vocab.ContextTypeActivityStreams,
+		vocab.PropertyType:      vocab.ActivityTypeDelete,
+		vocab.PropertyActor:     user.ActivityPubURL(),
+		vocab.PropertyObject:    service.JSONLD(stream),
+		vocab.PropertyPublished: hannibal.TimeFormat(time.Now()),
 	}
 
 	// Remove the record from the inbox

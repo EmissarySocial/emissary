@@ -133,29 +133,16 @@ func (service *Stream) Close() {
 }
 
 /******************************************
- * Common Data Methods
+ * Common Methods
  ******************************************/
 
-// New returns a new stream that uses the named template.
-func (service *Stream) New(navigationID string, parentID primitive.ObjectID, templateID string) (model.Stream, model.Template, error) {
-
-	const location = "service.Stream.New"
-
-	template, err := service.templateService.Load(templateID)
-
-	if err != nil {
-		return model.Stream{}, template, derp.Wrap(err, location, "Invalid template", templateID)
-	}
-
+// New returns a new Stream that uses the named template.
+func (service *Stream) New() model.Stream {
 	result := model.NewStream()
-	result.TemplateID = templateID
-	result.NavigationID = navigationID
-	result.ParentID = parentID
-	result.URL = service.host + "/" + result.StreamID.Hex()
-
+	result.URL = service.host + "/" + result.Token
 	// TODO: HIGH: Use stream Template schema to set default values in the new stream.
 
-	return result, template, nil
+	return result
 }
 
 // Query returns an slice containing all of the Streams that match the provided criteria
@@ -546,6 +533,79 @@ func (service *Stream) Count(criteria exp.Expression) (int64, error) {
 // MaxRank returns the maximum rank of all children of a stream
 func (service *Stream) MaxRank(parentID primitive.ObjectID) (int, error) {
 	return queries.MaxRank(context.TODO(), service.collection, parentID)
+}
+
+/******************************************
+ * Initialization Actions
+ ******************************************/
+
+// SetLocationTop sets a Stream to be a top-level navigation item
+func (service *Stream) SetLocationTop(template *model.Template, stream *model.Stream) error {
+
+	// RULE: Template must be allowed in the Top
+	if !template.CanBeContainedBy("top") {
+		return derp.NewBadRequestError("service.Stream.SetLocationTop", "Template cannot be contained by 'top'", template)
+	}
+
+	// Set values in the Stream
+	stream.TemplateID = template.TemplateID
+	stream.NavigationID = stream.StreamID.Hex()
+	stream.ParentID = primitive.NilObjectID
+	stream.ParentIDs = make([]primitive.ObjectID, 0)
+	stream.ParentTemplateID = ""
+	return nil
+}
+
+// SetLocationInbox sets a Stream's location to be a User's outbox
+func (service *Stream) SetLocationOutbox(template *model.Template, stream *model.Stream, userID primitive.ObjectID) error {
+
+	const location = "service.Stream.SetLocationOutbox"
+
+	// RULE: Valid User is Required
+	if userID.IsZero() {
+		return derp.NewUnauthorizedError(location, "User ID is required")
+	}
+
+	// RULE: Template must be allowed in the Outbox
+	if !template.CanBeContainedBy("outbox") {
+		return derp.NewBadRequestError(location, "Template cannot be contained by 'outbox'", template)
+	}
+
+	// Set values in the Stream
+	stream.TemplateID = template.TemplateID
+	stream.NavigationID = "profile"
+	stream.ParentID = userID
+	stream.ParentIDs = []primitive.ObjectID{}
+	stream.ParentTemplateID = ""
+
+	return nil
+}
+
+// SetLocationChild sets a Stream to be a child of another Stream
+func (service *Stream) SetLocationChild(template *model.Template, stream *model.Stream, parent *model.Stream) error {
+
+	const location = "service.Stream.SetLocationChild"
+
+	// Get the Parent Template
+	parentTemplate, err := service.templateService.Load(parent.TemplateID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Invalid Parent Template", parent)
+	}
+
+	// RULE: Template must be allowed in the Parent
+	if !template.CanBeContainedBy(parentTemplate.TemplateRole) {
+		return derp.NewBadRequestError(location, "Template cannot be contained by parent", template, parent)
+	}
+
+	// Set values in the Stream
+	stream.TemplateID = template.TemplateID
+	stream.NavigationID = parent.NavigationID
+	stream.ParentID = parent.StreamID
+	stream.ParentIDs = append(parent.ParentIDs, parent.StreamID)
+	stream.ParentTemplateID = parent.TemplateID
+
+	return nil
 }
 
 /******************************************

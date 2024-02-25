@@ -34,7 +34,7 @@ type Stream struct {
 }
 
 /******************************************
- * CONSTRUCTORS
+ * Stream Renderer Constructors
  ******************************************/
 
 // NewStream creates a new object that can generate HTML for a specific stream/view

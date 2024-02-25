@@ -1,7 +1,7 @@
 {
 	templateId:"admin-navigation"
 	templateRole:"admin"
-	model:"stream"
+	model:"Stream"
 	containedBy:["admin"]
 	label: "Top Level"
 	description: "Manages list of top-level items. (Site Admins Only)"
