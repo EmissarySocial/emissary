@@ -18,7 +18,7 @@ type Domain struct {
 	ThemeData       mapof.Any          `bson:"themeData"`       // Custom data stored in this domain
 	SignupForm      SignupForm         `bson:"signupForm"`      // Valid signup forms to make new accounts.
 	DatabaseVersion uint               `bson:"databaseVersion"` // Version of the database schema
-	journal.Journal `bson:",inline"`
+	journal.Journal `json:"-" bson:",inline"`
 }
 
 // NewDomain returns a fully initialized Domain object

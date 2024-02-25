@@ -16,7 +16,7 @@ type EncryptionKey struct {
 	PublicPEM       string             `json:"publicPEM"       bson:"publicPEM"`
 	PrivatePEM      string             `json:"privatePEM"      bson:"privatePEM"`
 
-	journal.Journal `json:"journal" bson:",inline"`
+	journal.Journal `json:"-" bson:",inline"`
 }
 
 func NewEncryptionKey() EncryptionKey {

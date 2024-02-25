@@ -17,7 +17,7 @@ type Follower struct {
 	Data       mapof.Any          `json:"data"       bson:"data"`       // Additional data about this Follower that depends on the follow method
 	ExpireDate int64              `json:"expireDate" bson:"expireDate"` // Unix timestamp (in seconds) when this follower will be automatically purged.
 
-	journal.Journal `json:"journal" bson:",inline"`
+	journal.Journal `json:"-" bson:",inline"`
 }
 
 func NewFollower() Follower {

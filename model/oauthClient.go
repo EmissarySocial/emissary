@@ -15,7 +15,7 @@ type OAuthClient struct {
 	RedirectURIs []string           `json:"redirectUris"  bson:"redirectUris"`
 	Scopes       sliceof.String     `json:"scopes"        bson:"scopes"`
 
-	journal.Journal `bson:"journal,inline"`
+	journal.Journal `json:"-" bson:",inline"`
 }
 
 func NewOAuthClient() OAuthClient {

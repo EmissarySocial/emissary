@@ -15,7 +15,7 @@ type Mention struct {
 	Origin    OriginLink         `json:"origin"    bson:"origin"`   // Origin information of the site that mentions this object
 	Author    PersonLink         `json:"author"    bson:"author"`   // Author information of the person who mentioned this object
 
-	journal.Journal `json:"journal" bson:",inline"`
+	journal.Journal `json:"-" bson:",inline"`
 }
 
 // NewMention returns a fully initialized Mention object

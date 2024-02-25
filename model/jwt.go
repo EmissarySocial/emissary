@@ -13,7 +13,7 @@ type JWTKey struct {
 	Plaintext      []byte             `bson:"-"`
 	EncryptedValue []byte             `bson:"encryptedValue"`
 
-	journal.Journal
+	journal.Journal `json:"-" bson:",inline"`
 }
 
 func NewJWTKey() JWTKey {

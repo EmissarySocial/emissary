@@ -20,7 +20,7 @@ type OAuthUserToken struct {
 	APIUser          bool               `json:"A" bson:"apiUser"`
 	Scopes           sliceof.String     `json:"S" bson:"scopes"`
 
-	journal.Journal `bson:"journal,inline"`
+	journal.Journal `json:"-" bson:",inline"`
 }
 
 func NewOAuthUserToken() OAuthUserToken {

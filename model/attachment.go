@@ -22,7 +22,7 @@ type Attachment struct {
 	Height       int                `bson:"height"`     // Image height (if applicable)
 	Width        int                `bson:"width"`      // Image width (if applicable)
 
-	journal.Journal `bson:",inline"` // Journal entry for fetch compatability
+	journal.Journal `json:"-" bson:",inline"` // Journal entry for fetch compatability
 }
 
 // NewAttachment returns a fully initialized Attachment object.
