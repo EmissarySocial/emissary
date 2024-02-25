@@ -8,10 +8,11 @@ import (
 // OutboxMessage represents a single item in a User's inbox or outbox.  It is loosely modelled on the OutboxMessageStreams
 // standard, and can be converted into a strict go-fed streams.Type object.
 type OutboxMessage struct {
-	OutboxMessageID primitive.ObjectID `json:"messageId" bson:"_id"`           // Unique ID of the OutboxMessage
-	UserID          primitive.ObjectID `json:"userId"    bson:"userId"`        // Unique ID of the User who owns this OutboxMessage (in their inbox or outbox)
-	URL             string             `json:"url"       bson:"url,omitempty"` // URI of the object (if applicable)
-	Rank            int64              `json:"rank"      bson:"rank"`          // Rank of the object (if applicable)
+	OutboxMessageID primitive.ObjectID `json:"messageId"  bson:"_id"`        // Unique ID of the OutboxMessage
+	ParentType      string             `json:"parentType" bson:"parentType"` // Type of the parent object (User or Stream)
+	ParentID        primitive.ObjectID `json:"parentId"   bson:"parentId"`   // Unique ID of the User who owns this OutboxMessage (in their inbox or outbox)
+	ActivityType    string             `json:"type"       bson:"type"`       // Type of the activity (Create, Follow, Like, Block, etc.)
+	URL             string             `json:"url"        bson:"url"`        // URL of the object (if applicable)
 
 	journal.Journal `json:"-" bson:",inline"`
 }

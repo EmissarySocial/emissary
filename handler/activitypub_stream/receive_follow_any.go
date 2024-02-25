@@ -38,7 +38,7 @@ func init() {
 		}
 
 		// Send an "Accept" message to the Requester
-		actor, err := context.factory.Stream().ActivityPubActor(context.stream, false)
+		actor, err := context.factory.Stream().ActivityPubActor(context.stream.StreamID, false)
 
 		if err != nil {
 			return derp.Wrap(err, "handler.activityPub_HandleRequest_Follow", "Error loading actor", context.stream)

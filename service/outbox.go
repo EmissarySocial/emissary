@@ -18,8 +18,8 @@ type Outbox struct {
 	activityService *ActivityStream
 	streamService   *Stream
 	followerService *Follower
+	templateService *Template
 	userService     *User
-	counter         int
 	lock            *sync.Mutex
 	queue           queue.Queue
 }
@@ -36,11 +36,12 @@ func NewOutbox() Outbox {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Outbox) Refresh(collection data.Collection, streamService *Stream, activityService *ActivityStream, followerService *Follower, userService *User, queue queue.Queue) {
+func (service *Outbox) Refresh(collection data.Collection, streamService *Stream, activityService *ActivityStream, followerService *Follower, templateService *Template, userService *User, queue queue.Queue) {
 	service.collection = collection
 	service.streamService = streamService
 	service.activityService = activityService
 	service.followerService = followerService
+	service.templateService = templateService
 	service.userService = userService
 	service.queue = queue
 }
@@ -86,11 +87,6 @@ func (service *Outbox) Save(outboxMessage *model.OutboxMessage, note string) err
 
 	const location = "service.Outbox.Save"
 
-	// Calculate the rank for this outboxMessage, using the number of outboxMessages with an identical PublishDate
-	if err := service.CalculateRank(outboxMessage); err != nil {
-		return derp.Wrap(err, location, "Error calculating rank", outboxMessage)
-	}
-
 	// Save the value to the database
 	if err := service.collection.Save(outboxMessage, note); err != nil {
 		return derp.Wrap(err, location, "Error saving Outbox", outboxMessage, note)
@@ -127,33 +123,37 @@ func (service *Outbox) Delete(outboxMessage *model.OutboxMessage, note string) e
  * Custom Query Methods
  ******************************************/
 
-func (service *Outbox) LoadOrCreate(userID primitive.ObjectID, url string) (model.OutboxMessage, error) {
+func (service *Outbox) LoadOrCreate(parentType string, parentID primitive.ObjectID, url string) (model.OutboxMessage, error) {
 
 	result := model.NewOutboxMessage()
 
-	err := service.LoadByURL(userID, url, &result)
+	err := service.LoadByURL(parentType, parentID, url, &result)
 
 	if err == nil {
 		return result, nil
 	}
 
 	if derp.NotFound(err) {
-		result.UserID = userID
+		result.ParentID = parentID
 		result.URL = url
 		return result, nil
 	}
 
-	return result, derp.Wrap(err, "service.Outbox.LoadOrCreate", "Error loading Outbox", userID, url)
+	return result, derp.Wrap(err, "service.Outbox.LoadOrCreate", "Error loading Outbox", parentID, url)
 }
 
-func (service *Outbox) QueryByUserID(userID primitive.ObjectID, criteria exp.Expression, options ...option.Option) ([]model.OutboxMessage, error) {
-	criteria = exp.Equal("userId", userID).And(criteria)
+func (service *Outbox) QueryByParentID(parentType string, parentID primitive.ObjectID, criteria exp.Expression, options ...option.Option) ([]model.OutboxMessage, error) {
+	criteria = exp.Equal("parentType", parentType).
+		AndEqual("parentId", parentID).
+		And(criteria)
+
 	return service.Query(criteria, options...)
 }
 
-func (service *Outbox) QueryByUserAndDate(userID primitive.ObjectID, maxDate int64, maxRows int) ([]model.OutboxMessageSummary, error) {
+func (service *Outbox) QueryByUserAndDate(parentType string, parentID primitive.ObjectID, maxDate int64, maxRows int) ([]model.OutboxMessageSummary, error) {
 
-	criteria := exp.Equal("userId", userID).
+	criteria := exp.Equal("parentType", parentType).
+		AndEqual("parentId", parentID).
 		And(exp.LessThan("createDate", maxDate))
 
 	options := []option.Option{
@@ -165,36 +165,37 @@ func (service *Outbox) QueryByUserAndDate(userID primitive.ObjectID, maxDate int
 	result := make([]model.OutboxMessageSummary, 0, maxRows)
 
 	if err := service.collection.Query(&result, criteria, options...); err != nil {
-		return nil, derp.Wrap(err, "service.Outbox.QueryByUserAndDate", "Error querying outbox", userID, maxDate)
+		return nil, derp.Wrap(err, "service.Outbox.QueryByUserAndDate", "Error querying outbox", parentID, maxDate)
 	}
 
 	return result, nil
 }
 
-func (service *Outbox) LoadByURL(userID primitive.ObjectID, url string, result *model.OutboxMessage) error {
-	criteria := exp.Equal("userId", userID).
+func (service *Outbox) LoadByURL(parentType string, parentID primitive.ObjectID, url string, result *model.OutboxMessage) error {
+
+	criteria := exp.Equal("parentType", parentType).
+		AndEqual("parentId", parentID).
 		AndEqual("url", url)
 
 	return service.Load(criteria, result)
 }
 
-/******************************************
- * Custom Behaviors
- ******************************************/
+func (service *Outbox) DeleteByURL(parentType string, parentID primitive.ObjectID, url string) error {
 
-func (service *Outbox) CalculateRank(outboxMessage *model.OutboxMessage) error {
+	const location = "service.Outbox.DeleteByURL"
 
-	counter := service.getNextCounter()
+	criteria := exp.Equal("parentType", parentType).
+		AndEqual("parentId", parentID).
+		AndEqual("url", url)
 
-	outboxMessage.Rank = (outboxMessage.CreateDate * 1000) + counter
+	if err := service.collection.HardDelete(criteria); err != nil {
+		return derp.Wrap(err, location, "Error deleting Outbox Message", url)
+	}
+
+	// Delete the document from the cache
+	if err := service.activityService.Delete(url); err != nil {
+		return derp.Wrap(err, location, "Error deleting ActivityStream", url)
+	}
+
 	return nil
-}
-
-// getNextCounter safely increments the service counter (MOD 1000)
-func (service *Outbox) getNextCounter() int64 {
-	service.lock.Lock()
-	defer service.lock.Unlock()
-
-	service.counter = (service.counter + 1) % 1000
-	return int64(service.counter)
 }

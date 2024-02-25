@@ -247,3 +247,12 @@ func must[T any](value T, err error) T {
 
 	return value
 }
+
+// iif is a simple inline-if function.  You should probably never
+// do something like this.  But fuck it.
+func iif(condition bool, trueValue, falseValue string) string {
+	if condition {
+		return trueValue
+	}
+	return falseValue
+}

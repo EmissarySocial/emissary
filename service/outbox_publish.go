@@ -16,103 +16,84 @@ import (
  * Publish/Unpublish Methods
  ******************************************/
 
-// Publish adds/updates an OutboxMessage in the Outbox, and sends notifications to all followers
-func (service Outbox) Publish(userID primitive.ObjectID, url string, activity mapof.Any) error {
+// Publish adds an OutboxMessage to the Actor's Outbox and sends notifications to all Followers.
+func (service *Outbox) Publish(actor *outbox.Actor, parentType string, parentID primitive.ObjectID, activity mapof.Any) error {
 
-	// Write a new OutboxMessage to the database
-	outboxMessage := model.NewOutboxMessage()
-	outboxMessage.UserID = userID
-	outboxMessage.URL = url
+	const location = "service.Outbox.Publish"
 
-	if err := service.Save(&outboxMessage, "Updated"); err != nil {
-		return derp.Wrap(err, "service.Outbox.NewPublish", "Error saving outbox message", outboxMessage)
+	// If we have anything BUT an "Update" activity, then write it to the Actor's Outbox
+	if activity.GetString(vocab.PropertyType) != vocab.ActivityTypeUpdate {
+
+		// Write a new OutboxMessage to the database
+		outboxMessage := model.NewOutboxMessage()
+		outboxMessage.ParentType = parentType
+		outboxMessage.ParentID = parentID
+		outboxMessage.URL = activity.GetString(vocab.PropertyID)
+		outboxMessage.ActivityType = activity.GetString(vocab.PropertyType)
+
+		if err := service.Save(&outboxMessage, "Publishing"); err != nil {
+			return derp.Wrap(err, location, "Error saving outbox message", outboxMessage)
+		}
 	}
 
-	// Send notifications to followers on all push channels
-	go service.sendNotifications_ActivityPub(userID, activity)
-	go service.sendNotifications_WebSub(userID, activity)
+	// Send notifications to all Followers
+	go service.sendNotifications_ActivityPub(actor, activity)
+	go service.sendNotifications_WebSub(parentType, parentID, activity)
 	go service.sendNotifications_WebMention(activity)
 
 	// Success!!
 	return nil
 }
 
-// UnPublish deletes an OutboxMessage from the Outbox, and sends notifications to all followers
-func (service Outbox) UnPublish(userID primitive.ObjectID, url string, activity mapof.Any) error {
+// UnPublish deletes an OutboxMessage from the Outbox, and sends notifications to all Followers
+func (service *Outbox) UnPublish(actor *outbox.Actor, parentType string, parentID primitive.ObjectID, url string) error {
 
-	const location = "service.Outbox.Unpublish"
-
-	// Try to load the existing outbox message
-	outboxMessage := model.NewOutboxMessage()
-	if err := service.LoadByURL(userID, url, &outboxMessage); err != nil {
-		if derp.NotFound(err) {
-			return nil
-		}
-		return derp.Wrap(err, location, "Error loading outbox message", userID, url)
+	// Load the Outbox Message
+	message := model.NewOutboxMessage()
+	if err := service.LoadByURL(parentType, parentID, url, &message); err != nil {
+		return derp.Wrap(err, "service.Outbox.UnPublish", "Error deleting outbox message", url)
 	}
 
-	// Fall through means we have a valid outboxMessage to unpublish.
-	if err := service.Delete(&outboxMessage, "Un-Publishing"); err != nil {
-		return derp.Wrap(err, location, "Error deleting outbox message", outboxMessage)
+	// Delete the Message from the Outbox
+	if err := service.Delete(&message, "Un-Publishing"); err != nil {
+		return derp.Wrap(err, "service.Outbox.UnPublish", "Error deleting outbox message", message)
 	}
 
-	// Send notifications to ActivityPub followers (WebSub does not have an Undo)
-	go service.sendNotifications_ActivityPub(userID, activity)
+	// Make a streams.Document from the URL
+	document := service.activityService.NewDocument(mapof.Any{
+		vocab.PropertyID: url,
+	})
 
-	// Hey-oh!
+	// If the Message was a "Create" activity, then send a "Delete" activity to all followers
+	if message.ActivityType == vocab.ActivityTypeCreate {
+		go actor.SendDelete(document)
+		return nil
+	}
+
+	// Otherwise, send an "Undo" activity to all followers
+	go actor.SendUndo(document)
 	return nil
 }
 
 /******************************************
- * Internal Publishing Methods
+ * Notification Protocols
  ******************************************/
 
 // sendNotifications_ActivityPub sends ActivityPub updates to all Followers
-func (service Outbox) sendNotifications_ActivityPub(userID primitive.ObjectID, activity mapof.Any) {
-
-	const location = "service.Outbox.sendNotifications_ActivityPub"
-
-	// Load the ActivityPub Actor (with Followers)
-	actor, err := service.userService.ActivityPubActor(userID, true)
-
-	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Error loading actor", userID))
-		return
-	}
-
-	// Use the Actor to send the Activity to all recipients
+func (service Outbox) sendNotifications_ActivityPub(actor *outbox.Actor, activity mapof.Any) {
 	actor.Send(activity)
 }
 
-// sendUndo_ActivityPub sends an ActivityPub UNDO to all Followers
-func (service Outbox) sendUndo_ActivityPub(userID primitive.ObjectID, activity mapof.Any) {
-
-	const location = "service.Outbox.sendUndo_ActivityPub"
-
-	// Load the ActivityPub Actor (with Followers)
-	actor, err := service.userService.ActivityPubActor(userID, true)
-
-	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Error loading actor", userID))
-		return
-	}
-
-	undoActivity := outbox.MakeUndo(actor.ActorID(), activity)
-
-	// Use the Actor to send the Activity to all recipients
-	actor.Send(undoActivity)
-}
-
 // TODO: HIGH: Thoroughly re-test WebSub notifications.  They've been rebuilt from scratch.
-func (service Outbox) sendNotifications_WebSub(userID primitive.ObjectID, activity mapof.Any) {
+func (service Outbox) sendNotifications_WebSub(parentType string, parentID primitive.ObjectID, activity mapof.Any) {
 
 	const location = "service.Outbox.sendNotifications_WebSub"
 
 	// Get this User's Followers from the database
-	followers, err := service.followerService.WebSubFollowersChannel(model.FollowerTypeUser, userID)
+	followers, err := service.followerService.WebSubFollowersChannel(parentType, parentID)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Error loading Followers", userID))
+		derp.Report(derp.Wrap(err, location, "Error loading Followers", parentType, parentID))
 	}
 
 	// Queue up all ActivityPub messages to be sent
@@ -124,7 +105,7 @@ func (service Outbox) sendNotifications_WebSub(userID primitive.ObjectID, activi
 // sendNotifications_WebMention sends WebMention updates to external websites that are
 // mentioned in this stream.  This is here (and not in the outbox service)
 // because we need to render the content in order to discover outbound links.
-func (service Outbox) sendNotifications_WebMention(activity mapof.Any) {
+func (service *Outbox) sendNotifications_WebMention(activity mapof.Any) {
 
 	// Locate the object ID for this acticity
 	object := activity.GetMap(vocab.PropertyObject)
@@ -150,3 +131,11 @@ func (service Outbox) sendNotifications_WebMention(activity mapof.Any) {
 		service.queue.Push(NewTaskSendWebMention(id, link))
 	}
 }
+
+/*
+// sendUndo_ActivityPub sends an ActivityPub UNDO to all Followers
+func (service Outbox) sendUndo_ActivityPub(actor *outbox.Actor, activity mapof.Any) {
+	undoActivity := outbox.MakeUndo(actor.ActorID(), activity)
+	actor.Send(undoActivity)
+}
+*/

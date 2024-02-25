@@ -6,9 +6,11 @@ import (
 	"github.com/EmissarySocial/emissary/handler/activitypub"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
+	"github.com/benpate/rosetta/slice"
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -59,9 +61,14 @@ func GetBlockedCollection(serverFactory *server.Factory) echo.HandlerFunc {
 			return derp.Wrap(err, location, "Error loading rules")
 		}
 
+		// Convert the slice of rules into JSONLDGetters
+		jsonldGetters := slice.Map(rules, func(rule model.Rule) service.RuleJSONLDGetter {
+			return ruleService.JSONLDGetter(rule)
+		})
+
 		// Return results to the client.
 		ctx.Response().Header().Set("Content-Type", "application/activity+json")
-		results := activitypub.CollectionPage(user.ActivityPubBlockedURL(), pageSize, rules)
+		results := activitypub.CollectionPage(user.ActivityPubBlockedURL(), pageSize, jsonldGetters)
 		return ctx.JSON(200, results)
 	}
 }
@@ -109,6 +116,6 @@ func GetBlock(serverFactory *server.Factory) echo.HandlerFunc {
 
 		// Return the rule as JSON-LD
 		ctx.Response().Header().Set("Content-Type", "application/activity+json")
-		return ctx.JSON(http.StatusOK, rule.GetJSONLD())
+		return ctx.JSON(http.StatusOK, ruleService.JSONLD(rule))
 	}
 }

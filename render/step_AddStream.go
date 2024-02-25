@@ -311,11 +311,7 @@ func (step StepAddStream) getBestTemplate(templateService *service.Template, con
 	if step.TemplateID != "" {
 		for _, eligibleTemplate := range eligible {
 			if eligibleTemplate.Value == step.TemplateID {
-				if template, err := templateService.Load(step.TemplateID); err != nil {
-					return []form.LookupCode{}, model.Template{}, derp.Wrap(err, location, "Error loading Template defined in Step", step.TemplateID)
-				} else {
-					return eligible, template, nil
-				}
+				return step.getBestTemplate_result(templateService, eligible, step.TemplateID)
 			}
 		}
 		return []form.LookupCode{}, model.Template{}, derp.NewInternalError(location, "Template '"+step.TemplateID+"' (defined in this Step) cannot be placed within '"+containedByRole+"'")
@@ -324,16 +320,26 @@ func (step StepAddStream) getBestTemplate(templateService *service.Template, con
 	// Search eligible templates for the selected TemplateID, returning when found
 	for _, template := range eligible {
 		if template.Value == selectedTemplateID {
-			if template, err := templateService.Load(step.TemplateID); err != nil {
-				return []form.LookupCode{}, model.Template{}, derp.Wrap(err, location, "Error loading Template selected by User", step.TemplateID)
-			} else {
-				return eligible, template, nil
-			}
+			return step.getBestTemplate_result(templateService, eligible, selectedTemplateID)
 		}
 	}
 
-	// None found. Return error
-	return []form.LookupCode{}, model.Template{}, derp.NewInternalError(location, "No eligible Templates match the selected Template", selectedTemplateID)
+	// None found. Use the first "eligible" template"
+	return step.getBestTemplate_result(templateService, eligible, eligible[0].Value)
+}
+
+// getBestTemplate_result finishes the job of getBestTemplate by loading the selected Template from the memory-cache
+func (step StepAddStream) getBestTemplate_result(templateService *service.Template, eligible []form.LookupCode, templateID string) ([]form.LookupCode, model.Template, error) {
+
+	const location = "render.StepAddStream.getBestTemplate_result"
+
+	template, err := templateService.Load(templateID)
+
+	if err != nil {
+		return []form.LookupCode{}, model.Template{}, derp.Wrap(err, location, "Error loading Template selected by User", eligible, templateID)
+	}
+
+	return eligible, template, nil
 }
 
 func (step StepAddStream) parentRole(renderer Renderer) string {

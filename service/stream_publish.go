@@ -10,15 +10,26 @@ import (
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/rs/zerolog/log"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
+/******************************************
+ * Publish Methods
+ ******************************************/
 
 // Publish marks this stream as "published"
 func (service *Stream) Publish(user *model.User, stream *model.Stream) error {
 
-	activityType := vocab.ActivityTypeCreate
+	const location = "service.Stream.Publish"
 
-	if stream.IsPublished() {
-		activityType = vocab.ActivityTypeUpdate
+	// RULE: User must be a valid User
+	if user.IsNew() {
+		return derp.NewForbiddenError(location, "User is not valid", user)
+	}
+
+	// RULE: Stream must be a valid Stream
+	if stream.IsNew() {
+		return derp.NewBadRequestError(location, "Stream is not valid", stream)
 	}
 
 	// RULE: IF this stream is not yet published, then set the publish date
@@ -35,15 +46,20 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream) error {
 
 	// Re-save the Stream with the updated values.
 	if err := service.Save(stream, "Publishing"); err != nil {
-		return derp.Wrap(err, "service.Stream.Publish", "Error saving stream", stream)
+		return derp.Wrap(err, location, "Error saving stream", stream)
 	}
 
-	// Attempt to pre-load the ActivityStream cache.  We don't care about the result.
-	_, _ = service.activityService.Load(stream.ActivityPubURL())
-
+	// Create the Activity to send to the User's Outbox
 	object := service.JSONLD(stream)
 
-	// Create the Activity to send to the User's Outbox
+	// Save the object to the ActivityStream cache
+	service.activityService.Put(
+		service.activityService.NewDocument(object),
+	)
+
+	// Create the Activity to send to Followers
+	activityType := iif(stream.IsPublished(), vocab.ActivityTypeUpdate, vocab.ActivityTypeCreate)
+
 	activity := mapof.Any{
 		vocab.AtContext:         vocab.ContextTypeActivityStreams,
 		vocab.PropertyType:      activityType,
@@ -60,15 +76,83 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream) error {
 		activity[vocab.PropertyCC] = cc
 	}
 
-	// Try to publish via the outbox service
-	log.Trace().Msg("Publishing stream to outbox: " + stream.URL)
-	if err := service.outboxService.Publish(user.UserID, stream.URL, activity); err != nil {
-		return derp.Wrap(err, "service.Stream.Publish", "Error publishing activity", activity)
+	// Publish to the User's outbox
+	if err := service.publish_User(user, activity); err != nil {
+		return derp.Wrap(err, location, "Error publishing to User's outbox")
+	}
+
+	// Publish to the parent Stream's outbox
+	if err := service.publish_Stream(stream, activity); err != nil {
+		return derp.Wrap(err, location, "Error publishing to parent Stream's outbox")
+	}
+
+	return nil
+}
+
+// publish_User publishes this stream to the User's outbox
+func (service *Stream) publish_User(user *model.User, activity mapof.Any) error {
+
+	const location = "service.Stream.publish_User"
+
+	// Load the Actor for this User
+	actor, err := service.userService.ActivityPubActor(user.UserID, true)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error loading actor", user.UserID)
+	}
+
+	// Try to publish via sendNotifications
+	log.Trace().Str("id", activity.GetString(vocab.PropertyID)).Msg("Publishing to User's outbox")
+	if err := service.outboxService.Publish(&actor, model.FollowerTypeUser, user.UserID, activity); err != nil {
+		return derp.Wrap(err, location, "Error publishing activity", activity)
 	}
 
 	// Done.
 	return nil
 }
+
+// publish_Stream publishes this Stream to the parent Stream's outbox
+func (service *Stream) publish_Stream(stream *model.Stream, activity mapof.Any) error {
+
+	const location = "service.Stream.publish_Stream"
+
+	// RULE: If the Stream does not have a parent template (i.e. Outbox or Top-Level Stream), then NOOP
+	if stream.ParentTemplateID == "" {
+		return nil
+	}
+
+	// Get the parent Template
+	parentTemplate, err := service.templateService.Load(stream.ParentTemplateID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error loading parent template", stream.ParentTemplateID)
+	}
+
+	// RULE: If the parent Actor is not set to boost children, then NOOP
+	if !parentTemplate.Actor.BoostChildren {
+		return nil
+	}
+
+	// Load the Actor for the parent Stream
+	actor, err := service.ActivityPubActor(stream.ParentID, true)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error loading parent actor")
+	}
+
+	// Try to publish via sendNotifications
+	log.Trace().Str("id", stream.URL).Msg("Publishing to parent Stream's outbox")
+	if err := service.outboxService.Publish(&actor, model.FollowerTypeStream, stream.StreamID, activity); err != nil {
+		return derp.Wrap(err, location, "Error publishing activity", activity)
+	}
+
+	// Done.
+	return nil
+}
+
+/******************************************
+ * UnPublish Methods
+ ******************************************/
 
 // UnPublish marks this stream as "published"
 func (service *Stream) UnPublish(user *model.User, stream *model.Stream) error {
@@ -77,22 +161,79 @@ func (service *Stream) UnPublish(user *model.User, stream *model.Stream) error {
 	stream.UnPublishDate = time.Now().Unix()
 
 	// Re-save the Stream with the updated values.
-	if err := service.Save(stream, "Publish"); err != nil {
+	if err := service.Save(stream, "UnPublish"); err != nil {
 		return derp.Wrap(err, "service.Stream.UnPublish", "Error saving stream", stream)
 	}
 
-	// Create the Activity to send to the User's Outbox
-	activity := mapof.Any{
-		vocab.AtContext:         vocab.ContextTypeActivityStreams,
-		vocab.PropertyType:      vocab.ActivityTypeDelete,
-		vocab.PropertyActor:     user.ActivityPubURL(),
-		vocab.PropertyObject:    service.JSONLD(stream),
-		vocab.PropertyPublished: hannibal.TimeFormat(time.Now()),
+	// Send "Undo" activities to all User followers.
+	if err := service.unpublish_User(user.UserID, stream.URL); err != nil {
+		return derp.Wrap(err, "service.Stream.UnPublish", "Error unpublishing from User's outbox", stream)
 	}
 
-	// Remove the record from the inbox
-	if err := service.outboxService.UnPublish(user.UserID, stream.URL, activity); err != nil {
-		return derp.Wrap(err, "service.Stream.UnPublish", "Error removing from outbox", stream)
+	// Send "Undo" activities to all Stream followers.
+	if err := service.unpublish_Stream(stream); err != nil {
+		return derp.Wrap(err, "service.Stream.UnPublish", "Error unpublishing from User's outbox", stream)
+	}
+
+	// Done.
+	return nil
+}
+
+// publish_User publishes this stream to the User's outbox
+func (service *Stream) unpublish_User(userID primitive.ObjectID, url string) error {
+
+	const location = "service.Stream.publish_User"
+
+	// Load the Actor for this User
+	actor, err := service.userService.ActivityPubActor(userID, true)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error loading actor", userID)
+	}
+
+	// Try to publish via sendNotifications
+	log.Trace().Str("id", url).Msg("UnPublishing from User's outbox")
+	if err := service.outboxService.UnPublish(&actor, model.FollowerTypeUser, userID, url); err != nil {
+		return derp.Wrap(err, location, "Error un-publishing activity", url)
+	}
+
+	// Done.
+	return nil
+}
+
+// publish_Stream publishes this Stream to the parent Stream's outbox
+func (service *Stream) unpublish_Stream(stream *model.Stream) error {
+
+	const location = "service.Stream.unpublish_Stream"
+
+	// RULE: If the Stream does not have a parent template (i.e. Outbox or Top-Level Stream), then NOOP
+	if stream.ParentTemplateID == "" {
+		return nil
+	}
+
+	// Get the parent Template
+	parentTemplate, err := service.templateService.Load(stream.ParentTemplateID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error loading parent template", stream.ParentTemplateID)
+	}
+
+	// RULE: If the parent Actor is not set to boost children, then NOOP
+	if !parentTemplate.Actor.BoostChildren {
+		return nil
+	}
+
+	// Load the Actor for the parent Stream
+	actor, err := service.ActivityPubActor(stream.ParentID, true)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error loading parent actor")
+	}
+
+	// Try to publish via sendNotifications
+	log.Trace().Str("id", stream.URL).Msg("UnPublishing from parent Stream's outbox")
+	if err := service.outboxService.UnPublish(&actor, model.FollowerTypeStream, stream.StreamID, stream.ActivityPubURL()); err != nil {
+		return derp.Wrap(err, location, "Error publishing activity", stream)
 	}
 
 	// Done.

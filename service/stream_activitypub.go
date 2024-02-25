@@ -90,15 +90,19 @@ func (service *Stream) JSONLD(stream *model.Stream) mapof.Any {
 	return result
 }
 
+func (service *Stream) ActivityPubURL(streamID primitive.ObjectID) string {
+	return service.host + "/" + streamID.Hex()
+}
+
 // ActivityPubActor returns a hannibal Actor for the provided stream.
-func (service *Stream) ActivityPubActor(stream *model.Stream, withFollowers bool) (outbox.Actor, error) {
+func (service *Stream) ActivityPubActor(streamID primitive.ObjectID, withFollowers bool) (outbox.Actor, error) {
 
 	const location = "service.Following.ActivityPubActor"
 
 	// Try to load the user's keys from the database
 	encryptionKey := model.NewEncryptionKey()
-	if err := service.keyService.LoadByID(stream.StreamID, &encryptionKey); err != nil {
-		return outbox.Actor{}, derp.Wrap(err, location, "Error loading encryption key", stream.StreamID)
+	if err := service.keyService.LoadByID(streamID, &encryptionKey); err != nil {
+		return outbox.Actor{}, derp.Wrap(err, location, "Error loading encryption key", streamID)
 	}
 
 	// Extract the Private Key from the Encryption Key
@@ -109,13 +113,13 @@ func (service *Stream) ActivityPubActor(stream *model.Stream, withFollowers bool
 	}
 
 	// Return the ActivityPub Actor
-	actor := outbox.NewActor(stream.ActivityPubURL(), privateKey)
+	actor := outbox.NewActor(service.ActivityPubURL(streamID), privateKey)
 
 	// Populate the Actor's ActivityPub Followers, if requested
 	if withFollowers {
 
 		// Get a channel of all Followers
-		followers, err := service.followerService.ActivityPubFollowersChannel(model.FollowerTypeStream, stream.StreamID)
+		followers, err := service.followerService.ActivityPubFollowersChannel(model.FollowerTypeStream, streamID)
 
 		if err != nil {
 			return outbox.Actor{}, derp.Wrap(err, location, "Error retrieving followers")

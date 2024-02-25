@@ -10,9 +10,7 @@ import (
 	"github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/queue"
-	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/iterator"
-	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -126,22 +124,11 @@ func (service *Rule) Save(rule *model.Rule, note string) error {
 		case 0:
 
 			rule.PublishDate = time.Now().Unix()
-
-			// Generate JSONLD for this rule
-			if err := service.setJSONLD(rule); err != nil {
-				derp.Report(derp.Wrap(err, "service.Rule.Save", "Error setting JSON-LD", rule))
-			} else {
-				go service.publish(*rule)
-			}
+			go derp.Report(service.publish(*rule))
 
 		// "Republish" changes when a public Rule is updated
 		default:
-
-			go service.republish(*rule)
-
-			if err := service.setJSONLD(rule); err != nil {
-				derp.Report(derp.Wrap(err, "service.Rule.Save", "Error setting JSON-LD", rule))
-			}
+			go derp.Report(service.republish(*rule))
 		}
 
 	case false:
@@ -149,7 +136,7 @@ func (service *Rule) Save(rule *model.Rule, note string) error {
 		// RULE: Unpublish Rules when they are no longer shared publicly
 		if rule.PublishDate > 0 {
 
-			go service.unpublish(*rule)
+			go derp.Report(service.unpublish(*rule))
 			rule.PublishDate = 0
 		}
 	}
@@ -174,7 +161,7 @@ func (service *Rule) Delete(rule *model.Rule, note string) error {
 	}
 
 	if rule.IsPublic {
-		go service.unpublish(*rule)
+		go derp.Report(service.unpublish(*rule))
 	}
 
 	return nil
@@ -375,7 +362,7 @@ func (service *Rule) QueryBlockedActors(userID primitive.ObjectID) ([]model.Rule
 }
 
 /******************************************
- * Filters
+ * Rule Filters
  ******************************************/
 
 func (service *Rule) Filter(userID primitive.ObjectID, options ...RuleFilterOption) RuleFilter {
@@ -383,7 +370,7 @@ func (service *Rule) Filter(userID primitive.ObjectID, options ...RuleFilterOpti
 }
 
 /******************************************
- * Rule Publishing Rules
+ * Misc Helpers
  ******************************************/
 
 // hasDuplicate returns TRUE if the provided Rule is a duplicate of an existing Rule.
@@ -416,105 +403,9 @@ func (service *Rule) hasDuplicate(rule *model.Rule) bool {
 	return true
 }
 
-// publish marks the Rule as published, and sends "Create" activities to all ActivityPub followers
-func (service *Rule) publish(rule model.Rule) {
-	service.outboxService.sendNotifications_ActivityPub(rule.UserID, rule.JSONLD)
-}
-
-// unpublish marks the Rule as unpublished and sends "Undo" activities to all ActivityPub followers
-func (service *Rule) unpublish(rule model.Rule) {
-	service.outboxService.sendUndo_ActivityPub(rule.UserID, rule.JSONLD)
-}
-
-func (service *Rule) republish(rule model.Rule) {
-
-	service.outboxService.sendUndo_ActivityPub(rule.UserID, rule.JSONLD)
-
-	// Generate JSONLD for this rule
-	if err := service.setJSONLD(&rule); err != nil {
-
-		derp.Report(derp.Wrap(err, "service.Rule.Save", "Error setting JSON-LD", rule))
-		return
-	}
-
-	service.publish(rule)
-}
-
-func (service *Rule) setJSONLD(rule *model.Rule) error {
-
-	result, err := service.JSONLD(rule)
-
-	if err != nil {
-		return derp.Wrap(err, "service.Rule.setJSONLD", "Error calculating JSON-LD", rule)
-	}
-
-	rule.JSONLD = result
-	return nil
-}
-
-func (service *Rule) JSONLD(rule *model.Rule) (mapof.Any, error) {
-	user := model.NewUser()
-	if err := service.userService.LoadByID(rule.UserID, &user); err != nil {
-		return nil, derp.Wrap(err, "service.Rule.Save", "Error loading User", rule)
-	}
-
-	// Reset JSON-LD for the rule.  We're going to recalculate EVERYTHING.
-	result := mapof.Any{
-		vocab.PropertyID:        user.ActivityPubBlockedURL() + "/" + rule.RuleID.Hex(),
-		vocab.PropertyActor:     user.ActivityPubURL(),
-		vocab.PropertyPublished: rule.PublishDateRCF3339(),
-	}
-
-	switch rule.Action {
-
-	case model.RuleActionBlock:
-		result[vocab.PropertyType] = vocab.ActivityTypeBlock
-
-	case model.RuleActionMute:
-		result[vocab.PropertyType] = vocab.ActivityTypeIgnore
-
-	case model.RuleActionLabel:
-		result[vocab.PropertyType] = vocab.ActivityTypeFlag
-	}
-
-	// Create the summary based on the type of Rule
-	switch rule.Type {
-
-	case model.RuleTypeActor:
-		result[vocab.PropertyObject] = mapof.Any{
-			vocab.PropertyType: vocab.ActorTypePerson,
-			vocab.PropertyID:   rule.Trigger,
-		}
-		result[vocab.PropertySummary] = user.DisplayName + " blocked the person " + rule.Trigger
-
-	case model.RuleTypeDomain:
-		result[vocab.PropertyObject] = mapof.Any{
-			vocab.PropertyType: vocab.ActorTypeService,
-			vocab.PropertyID:   rule.Trigger,
-			vocab.PropertyURL:  rule.Trigger,
-		}
-		result[vocab.PropertySummary] = user.DisplayName + " blocked the domain " + rule.Trigger
-
-	case model.RuleTypeContent:
-		result[vocab.PropertyObject] = mapof.Any{
-			vocab.PropertyType:    vocab.ObjectTypeNote,
-			vocab.PropertyContent: rule.Trigger,
-		}
-		result[vocab.PropertySummary] = user.DisplayName + " blocked the content '" + rule.Trigger + "'"
-
-	default:
-		// This should never happen
-		return nil, derp.NewInternalError("service.Rule.calcJSONLD", "Unrecognized Rule Type", rule)
-	}
-
-	// TODO: need additional grammar for extra fields
-	// - selectbox field to describe WHY the rule was created
-	// - comment field to describe WHY the rule was created
-	// - refs to other people who have ALSO ruleed this person/domain/keyword?
-
-	return result, nil
-}
-
+// byUserID generates a criteria expression that searches for:
+// 1) Rules that belong to the provided User
+// 2) Rules that belong to no User (i.e. public rules)
 func (service *Rule) byUserID(userID primitive.ObjectID) exp.Expression {
 	return exp.Equal("userId", userID).Or(exp.Equal("userId", primitive.NilObjectID))
 }

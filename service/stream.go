@@ -36,6 +36,7 @@ type Stream struct {
 	keyService          *EncryptionKey
 	followerService     *Follower
 	ruleService         *Rule
+	userService         *User
 	host                string
 	streamUpdateChannel chan<- model.Stream
 }
@@ -50,7 +51,7 @@ func NewStream() Stream {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Stream) Refresh(collection data.Collection, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, activityService *ActivityStream, contentService *Content, keyService *EncryptionKey, followerService *Follower, ruleService *Rule, host string, streamUpdateChannel chan model.Stream) {
+func (service *Stream) Refresh(collection data.Collection, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, activityService *ActivityStream, contentService *Content, keyService *EncryptionKey, followerService *Follower, ruleService *Rule, userService *User, host string, streamUpdateChannel chan model.Stream) {
 	service.collection = collection
 	service.templateService = templateService
 	service.draftService = draftService
@@ -61,6 +62,7 @@ func (service *Stream) Refresh(collection data.Collection, templateService *Temp
 	service.keyService = keyService
 	service.followerService = followerService
 	service.ruleService = ruleService
+	service.userService = userService
 
 	service.host = host
 	service.streamUpdateChannel = streamUpdateChannel

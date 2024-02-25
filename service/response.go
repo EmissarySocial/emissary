@@ -7,7 +7,6 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/benpate/hannibal/outbox"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -239,12 +238,19 @@ func (service *Response) SetResponse(user *model.User, url string, responseType 
 	response.Content = content
 
 	// Save the Response to the database (response service will automatically publish to ActivityPub and beyond)
-	if err := service.Save(&response, ""); err != nil {
+	if err := service.Save(&response, "Set Response"); err != nil {
 		return derp.Wrap(err, location, "Error saving response", response)
 	}
 
+	// Get an ActivityPub actor for the User
+	actor, err := service.userService.ActivityPubActor(user.UserID, true)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error loading ActivityPub Actor", user.UserID)
+	}
+
 	// Publish the new Response to the Outbox, sending "Like" notifications to all followers.
-	if err := service.outboxService.Publish(user.UserID, response.ActivityPubURL(), response.GetJSONLD()); err != nil {
+	if err := service.outboxService.Publish(&actor, model.FollowerTypeUser, user.UserID, response.GetJSONLD()); err != nil {
 		derp.Report(derp.Wrap(err, location, "Error publishing Response", response))
 	}
 
@@ -275,10 +281,15 @@ func (service *Response) UnsetResponse(user *model.User, url string, responseTyp
 		return derp.Wrap(err, location, "Error deleting old response", oldResponse)
 	}
 
-	// Unpublish from the Outbox, and send the "Undo" activity to followers
-	undoActivity := outbox.MakeUndo(user.ActivityPubURL(), oldResponse.GetJSONLD())
+	// Get an ActivityPub actor for the User
+	actor, err := service.userService.ActivityPubActor(user.UserID, true)
 
-	if err := service.outboxService.UnPublish(user.UserID, oldResponse.ActivityPubURL(), undoActivity); err != nil {
+	if err != nil {
+		return derp.Wrap(err, location, "Error loading ActivityPub Actor", user.UserID)
+	}
+
+	// Unpublish from the Outbox, and send the "Undo" activity to followers
+	if err := service.outboxService.UnPublish(&actor, model.FollowerTypeUser, user.UserID, oldResponse.ActivityPubURL()); err != nil {
 		derp.Report(derp.Wrap(err, location, "Error publishing Response", oldResponse))
 	}
 

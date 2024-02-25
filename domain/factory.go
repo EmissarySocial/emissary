@@ -284,6 +284,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.Stream(),
 			factory.ActivityStream(),
 			factory.Follower(),
+			factory.Template(),
 			factory.User(),
 			factory.Queue(),
 		)
@@ -313,6 +314,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.EncryptionKey(),
 			factory.Follower(),
 			factory.Rule(),
+			factory.User(),
 			factory.Host(),
 			factory.StreamUpdateChannel(),
 		)

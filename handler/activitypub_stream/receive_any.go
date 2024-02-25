@@ -59,7 +59,7 @@ func BoostAny(context Context, activity streams.Document) error {
 	}
 
 	// Try to load the Actor for this user
-	activityPubActor, err := context.factory.Stream().ActivityPubActor(context.stream, true)
+	activityPubActor, err := context.factory.Stream().ActivityPubActor(context.stream.StreamID, true)
 
 	if err != nil {
 		return derp.Wrap(err, "handler.activityPub_HandleRequest_Follow", "Error loading actor", context.stream)

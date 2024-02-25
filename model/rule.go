@@ -1,10 +1,7 @@
 package model
 
 import (
-	"time"
-
 	"github.com/benpate/data/journal"
-	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/toot/object"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -22,7 +19,6 @@ type Rule struct {
 	Summary        string             `json:"summary"        bson:"summary"`        // Optional comment describing why this rule exists
 	IsPublic       bool               `json:"isPublic"       bson:"isPublic"`       // If TRUE, this record is visible publicly
 	PublishDate    int64              `json:"publishDate"    bson:"publishDate"`    // Unix timestamp when this rule was published to followers
-	JSONLD         mapof.Any          `json:"jsonld"         bson:"jsonld"`         // JSON-LD data for this object
 
 	journal.Journal `json:"-" bson:",inline"`
 }
@@ -85,16 +81,6 @@ func (rule Rule) Roles(authorization *Authorization) []string {
 }
 
 /******************************************
- * ActivityStream Methods
- ******************************************/
-
-// GetJSONLD returns a map document that conforms to the ActivityStreams 2.0 spec.
-// This map will still need to be marshalled into JSON
-func (rule Rule) GetJSONLD() mapof.Any {
-	return rule.JSONLD
-}
-
-/******************************************
  * Mastodon API Methods
  ******************************************/
 
@@ -137,12 +123,4 @@ func (rule Rule) OriginRemote() bool {
 // OriginUser returns TRUE if this Rule was created by the User.
 func (rule Rule) OriginUser() bool {
 	return rule.FollowingID.IsZero()
-}
-
-/******************************************
- * Other Data Accessors
- ******************************************/
-
-func (rule Rule) PublishDateRCF3339() string {
-	return time.Unix(rule.PublishDate, 0).Format(time.RFC3339)
 }
