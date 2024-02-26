@@ -74,7 +74,7 @@ type Factory struct {
 // NewFactory creates a new factory tied to a MongoDB database
 func NewFactory(domain config.Domain, providers []config.Provider, activityService *service.ActivityStream, serverEmail *service.ServerEmail, themeService *service.Theme, templateService *service.Template, widgetService *service.Widget, contentService *service.Content, providerService *service.Provider, taskQueue queue.Queue, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
 
-	log.Debug().Msg("Starting domain: " + domain.Hostname)
+	log.Info().Msg("Starting domain: " + domain.Hostname)
 
 	// Base Factory object
 	factory := Factory{
