@@ -32,10 +32,12 @@
 						]
 					}}
 					{do: "save"}
+					{do: "publish"}
 				]}
 			]
 		}
-		view: {
+		view: {do: "do", "action": "edit"}
+		edit: {
 			steps: [
 				{do: "as-modal", "steps": [
 					{
@@ -57,9 +59,9 @@
 				{do: "trigger-event", "event": "refreshPage"}
 			]
 		}
-		edit: {do: "do", "action": "view"}
 		delete: {"steps": [
 			{do: "delete", "title": "Delete Task?"}
+			{do: "unpublish"}
 			{do: "trigger-event", "event": "refreshPage"}
 		]}
 
