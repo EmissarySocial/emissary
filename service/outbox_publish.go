@@ -51,7 +51,10 @@ func (service *Outbox) UnPublish(actor *outbox.Actor, parentType string, parentI
 	// Load the Outbox Message
 	message := model.NewOutboxMessage()
 	if err := service.LoadByURL(parentType, parentID, url, &message); err != nil {
-		return derp.Wrap(err, "service.Outbox.UnPublish", "Error deleting outbox message", url)
+		if derp.NotFound(err) {
+			return nil
+		}
+		return derp.Wrap(err, "service.Outbox.UnPublish", "Error loading outbox message", url)
 	}
 
 	// Delete the Message from the Outbox

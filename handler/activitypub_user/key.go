@@ -48,7 +48,7 @@ func GetPublicKey(serverFactory *server.Factory) echo.HandlerFunc {
 		keyService := factory.EncryptionKey()
 		key := model.NewEncryptionKey()
 
-		if err := keyService.LoadByID(userID, &key); err != nil {
+		if err := keyService.LoadByParentID(model.EncryptionKeyTypeUser, userID, &key); err != nil {
 			return derp.Wrap(err, location, "Error loading encryption key for user", userID)
 		}
 

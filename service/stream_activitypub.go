@@ -94,14 +94,15 @@ func (service *Stream) ActivityPubURL(streamID primitive.ObjectID) string {
 	return service.host + "/" + streamID.Hex()
 }
 
-// ActivityPubActor returns a hannibal Actor for the provided stream.
+// ActivityPubActor returns an ActivityPub Actor object ** WHICH INCLUDES ENCRYPTION KEYS **
+// for the provided Stream.
 func (service *Stream) ActivityPubActor(streamID primitive.ObjectID, withFollowers bool) (outbox.Actor, error) {
 
-	const location = "service.Following.ActivityPubActor"
+	const location = "service.Stream.ActivityPubActor"
 
 	// Try to load the user's keys from the database
 	encryptionKey := model.NewEncryptionKey()
-	if err := service.keyService.LoadByID(streamID, &encryptionKey); err != nil {
+	if err := service.keyService.LoadByParentID(model.EncryptionKeyTypeStream, streamID, &encryptionKey); err != nil {
 		return outbox.Actor{}, derp.Wrap(err, location, "Error loading encryption key", streamID)
 	}
 

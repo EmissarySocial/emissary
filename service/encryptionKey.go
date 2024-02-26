@@ -90,10 +90,10 @@ func (service *EncryptionKey) Delete(encryptionKey *model.EncryptionKey, note st
 
 // LoadByID tries to load the EncryptionKey from the database.  If no key
 // exists for the designated user, then a new one is generated.
-func (service *EncryptionKey) LoadByID(parentID primitive.ObjectID, encryptionKey *model.EncryptionKey) error {
+func (service *EncryptionKey) LoadByParentID(parentType string, parentID primitive.ObjectID, encryptionKey *model.EncryptionKey) error {
 
 	// Try to load the encryption key from the database
-	err := service.Load(exp.Equal("userId", parentID), encryptionKey)
+	err := service.Load(exp.Equal("parentType", parentType).AndEqual("parentId", parentID), encryptionKey)
 
 	// If there is no error, then return in success
 	if err == nil {
@@ -102,7 +102,7 @@ func (service *EncryptionKey) LoadByID(parentID primitive.ObjectID, encryptionKe
 
 	// "Not Found" means we should create a new encryption key
 	if derp.NotFound(err) {
-		if newKey, err := service.Create(parentID); err == nil {
+		if newKey, err := service.Create(parentType, parentID); err == nil {
 			*encryptionKey = newKey
 		} else {
 			return derp.Wrap(err, "service.EncryptionKey.LoadByID", "Error creating new EncryptionKey", parentID)
@@ -119,25 +119,26 @@ func (service *EncryptionKey) LoadByID(parentID primitive.ObjectID, encryptionKe
  * Custom Actions
  ******************************************/
 
-func (service *EncryptionKey) Create(userID primitive.ObjectID) (model.EncryptionKey, error) {
+func (service *EncryptionKey) Create(parentType string, parentID primitive.ObjectID) (model.EncryptionKey, error) {
 
 	// Create new model object
 	encryptionKey := model.NewEncryptionKey()
-	encryptionKey.UserID = userID
+	encryptionKey.ParentType = parentType
+	encryptionKey.ParentID = parentID
 	encryptionKey.Encoding = model.EncryptionKeyEncodingPlaintext // TODO: MEDIUM: add key encryption encoding
 
 	// Create an actual encryption key
 	privateKey, err := rsa.GenerateKey(rand.Reader, encryptionKeyBits)
 
 	if err != nil {
-		return model.EncryptionKey{}, derp.Wrap(err, "model.CreateEncryptionKey", "Error generating RSA key", userID)
+		return model.EncryptionKey{}, derp.Wrap(err, "model.CreateEncryptionKey", "Error generating RSA key", parentType, parentID)
 	}
 
 	encryptionKey.PrivatePEM = sigs.EncodePrivatePEM(privateKey)
 	encryptionKey.PublicPEM = sigs.EncodePublicPEM(privateKey)
 
 	if err := service.Save(&encryptionKey, "Created"); err != nil {
-		return model.EncryptionKey{}, derp.Wrap(err, "model.CreateEncryptionKey", "Error saving new EncryptionKey", userID)
+		return model.EncryptionKey{}, derp.Wrap(err, "model.CreateEncryptionKey", "Error saving new EncryptionKey", parentType, parentID)
 	}
 
 	return encryptionKey, nil
@@ -201,10 +202,15 @@ func (service *EncryptionKey) Verify(message []byte, signature []byte, encryptio
 
 // OwnerID returns the publicly accessible URL of the Actor who owns this EncryptionKey
 func (service *EncryptionKey) OwnerID(encryptionKey *model.EncryptionKey) string {
-	return service.host + "/@" + encryptionKey.UserID.Hex()
+
+	if encryptionKey.ParentType == model.EncryptionKeyTypeUser {
+		return service.host + "/@" + encryptionKey.ParentID.Hex()
+	}
+
+	return service.host + "/" + encryptionKey.ParentID.Hex()
 }
 
 // KeyID returns the publicly accessible URL of this EncryptionKey
 func (service *EncryptionKey) KeyID(encryptionKey *model.EncryptionKey) string {
-	return service.OwnerID(encryptionKey) + "#main-key" // was "/pub/key"
+	return service.OwnerID(encryptionKey) + "#main-key"
 }

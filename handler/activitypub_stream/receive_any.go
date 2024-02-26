@@ -1,8 +1,6 @@
 package activitypub_stream
 
 import (
-	"fmt"
-
 	"github.com/EmissarySocial/emissary/handler/activitypub"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
@@ -11,7 +9,6 @@ import (
 )
 
 func init() {
-	fmt.Println("Initializing BoostAny")
 	streamRouter.Add(vocab.ActivityTypeCreate, vocab.Any, BoostAny)
 	streamRouter.Add(vocab.ActivityTypeUpdate, vocab.Any, BoostAny)
 	streamRouter.Add(vocab.ActivityTypeUndo, vocab.Any, BoostAny)

@@ -10,8 +10,8 @@ const EncryptionKeyEncodingPlaintext = "plaintext"
 
 type EncryptionKey struct {
 	EncryptionKeyID primitive.ObjectID `json:"encryptionKeyId" bson:"_id"`
-	UserID          primitive.ObjectID `json:"userId"          bson:"userId"`
-	Type            string             `json:"type"            bson:"type"`
+	ParentType      string             `json:"parentType"      bson:"parentType"`
+	ParentID        primitive.ObjectID `json:"parentId"        bson:"parentId"`
 	Encoding        string             `json:"encoding"        bson:"encoding"`
 	PublicPEM       string             `json:"publicPEM"       bson:"publicPEM"`
 	PrivatePEM      string             `json:"privatePEM"      bson:"privatePEM"`
@@ -29,8 +29,8 @@ func EncryptionKeySchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
 			"encryptionKeyId": schema.String{Format: "objectId", Required: true},
-			"userId":          schema.String{Format: "objectId", Required: true},
-			"type":            schema.String{Required: true},
+			"parentId":        schema.String{Format: "objectId", Required: true},
+			"parentType":      schema.String{Required: true},
 			"encoding":        schema.String{Required: true},
 			"publicPEM":       schema.String{Required: true},
 			"privatePEM":      schema.String{Required: true},

@@ -34,7 +34,7 @@ func PostInbox(serverFactory *server.Factory) echo.HandlerFunc {
 			return derp.Wrap(err, location, "Error parsing ActivityPub request")
 		}
 
-		log.Debug().Str("loc", location).Msg("Stream Inbox: Received new Activity: activityID=" + activity.ID())
+		log.Info().Str("host", factory.Host()).Str("activity", activity.ID()).Msg("Stream Inbox: Received new activity")
 
 		// Create a new request context for the ActivityPub router
 		context := Context{

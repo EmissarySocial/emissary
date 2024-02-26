@@ -31,13 +31,17 @@ func (actor StreamActor) JSONLD(stream *Stream) mapof.Any {
 	}
 
 	result := mapof.Any{
-		vocab.AtContext:       vocab.ContextTypeActivityStreams,
-		vocab.PropertyType:    actor.SocialRole,
-		vocab.PropertyID:      stream.ActivityPubURL(),
-		vocab.PropertyName:    stream.Label,
-		vocab.PropertySummary: stream.Summary,
-		vocab.PropertyInbox:   stream.ActivityPubInboxURL(),
-		vocab.PropertyOutbox:  stream.ActivityPubOutboxURL(),
+		vocab.AtContext:                 vocab.ContextTypeActivityStreams,
+		vocab.PropertyType:              actor.SocialRole,
+		vocab.PropertyID:                stream.ActivityPubURL(),
+		vocab.PropertyInbox:             stream.ActivityPubInboxURL(),
+		vocab.PropertyOutbox:            stream.ActivityPubOutboxURL(),
+		vocab.PropertyName:              stream.Label,
+		vocab.PropertyPreferredUsername: stream.Token,
+	}
+
+	if stream.Summary != "" {
+		result[vocab.PropertySummary] = stream.Summary
 	}
 
 	if actor.PublishFollowers {

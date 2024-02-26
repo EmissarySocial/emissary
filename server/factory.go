@@ -119,7 +119,7 @@ func (factory *Factory) start() {
 	// Read configuration files from the channel
 	for config := range factory.storage.Subscribe() {
 
-		log.Debug().Msg("Factory: received new configuration...")
+		log.Info().Msg("Factory: received new configuration...")
 
 		if attachmentOriginals, err := filesystemService.GetAfero(config.AttachmentOriginals); err == nil {
 			factory.attachmentOriginals = attachmentOriginals

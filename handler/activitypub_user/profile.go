@@ -19,7 +19,7 @@ func RenderProfileJSONLD(context echo.Context, factory *domain.Factory, user *mo
 	keyService := factory.EncryptionKey()
 	key := model.NewEncryptionKey()
 
-	if err := keyService.LoadByID(user.UserID, &key); err != nil {
+	if err := keyService.LoadByParentID(model.EncryptionKeyTypeUser, user.UserID, &key); err != nil {
 		return derp.Wrap(err, location, "Error loading encryption key for user", user.UserID)
 	}
 

@@ -35,7 +35,7 @@ func GetJSONLD(serverFactory *server.Factory) echo.HandlerFunc {
 		// Try to load the Encryption Key for this Actor
 		keyService := factory.EncryptionKey()
 		key := model.NewEncryptionKey()
-		if err := keyService.LoadByID(stream.StreamID, &key); err != nil {
+		if err := keyService.LoadByParentID(model.EncryptionKeyTypeStream, stream.StreamID, &key); err != nil {
 			return derp.Wrap(err, location, "Error loading Public Key", stream.StreamID)
 		}
 

@@ -63,7 +63,7 @@ func main() {
 	spew.Config.Indent = " "
 
 	// Logging Configuration
-	zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	log.Logger = log.Output(zerolog.ConsoleWriter{
 		Out:        os.Stderr,

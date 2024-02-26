@@ -140,9 +140,17 @@ func (service *Stream) publish_Stream(stream *model.Stream, activity mapof.Any) 
 		return derp.Wrap(err, location, "Error loading parent actor")
 	}
 
+	// Make a new "Announce/Boost" activity so that our encryption keys are correct.
+	boostActivity := mapof.Any{
+		vocab.AtContext:      vocab.ContextTypeActivityStreams,
+		vocab.PropertyType:   vocab.ActivityTypeAnnounce,
+		vocab.PropertyActor:  service.ActivityPubURL(stream.ParentID),
+		vocab.PropertyObject: activity,
+	}
+
 	// Try to publish via sendNotifications
 	log.Trace().Str("id", stream.URL).Msg("Publishing to parent Stream's outbox")
-	if err := service.outboxService.Publish(&actor, model.FollowerTypeStream, stream.StreamID, activity); err != nil {
+	if err := service.outboxService.Publish(&actor, model.FollowerTypeStream, stream.ParentID, boostActivity); err != nil {
 		return derp.Wrap(err, location, "Error publishing activity", activity)
 	}
 
@@ -157,22 +165,24 @@ func (service *Stream) publish_Stream(stream *model.Stream, activity mapof.Any) 
 // UnPublish marks this stream as "published"
 func (service *Stream) UnPublish(user *model.User, stream *model.Stream) error {
 
+	const location = "service.Stream.UnPublish"
+
 	// RULE: Move unpublish date all the way to the end of time.
 	stream.UnPublishDate = time.Now().Unix()
 
 	// Re-save the Stream with the updated values.
 	if err := service.Save(stream, "UnPublish"); err != nil {
-		return derp.Wrap(err, "service.Stream.UnPublish", "Error saving stream", stream)
+		return derp.Wrap(err, location, "Error saving stream", stream)
 	}
 
 	// Send "Undo" activities to all User followers.
 	if err := service.unpublish_User(user.UserID, stream.URL); err != nil {
-		return derp.Wrap(err, "service.Stream.UnPublish", "Error unpublishing from User's outbox", stream)
+		return derp.Wrap(err, location, "Error unpublishing from User's outbox", stream)
 	}
 
 	// Send "Undo" activities to all Stream followers.
 	if err := service.unpublish_Stream(stream); err != nil {
-		return derp.Wrap(err, "service.Stream.UnPublish", "Error unpublishing from User's outbox", stream)
+		return derp.Wrap(err, location, "Error unpublishing from User's outbox", stream)
 	}
 
 	// Done.
@@ -182,7 +192,7 @@ func (service *Stream) UnPublish(user *model.User, stream *model.Stream) error {
 // publish_User publishes this stream to the User's outbox
 func (service *Stream) unpublish_User(userID primitive.ObjectID, url string) error {
 
-	const location = "service.Stream.publish_User"
+	const location = "service.Stream.unpublish_User"
 
 	// Load the Actor for this User
 	actor, err := service.userService.ActivityPubActor(userID, true)
@@ -232,7 +242,7 @@ func (service *Stream) unpublish_Stream(stream *model.Stream) error {
 
 	// Try to publish via sendNotifications
 	log.Trace().Str("id", stream.URL).Msg("UnPublishing from parent Stream's outbox")
-	if err := service.outboxService.UnPublish(&actor, model.FollowerTypeStream, stream.StreamID, stream.ActivityPubURL()); err != nil {
+	if err := service.outboxService.UnPublish(&actor, model.FollowerTypeStream, stream.ParentID, stream.ActivityPubURL()); err != nil {
 		return derp.Wrap(err, location, "Error publishing activity", stream)
 	}
 
