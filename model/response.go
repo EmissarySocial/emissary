@@ -42,7 +42,7 @@ func (response Response) ID() string {
 }
 
 func (response Response) Fields() []string {
-	return []string{"responseId", "url", "objectId", "type", "content", "createDate"}
+	return []string{"responseId", "url", "object", "type", "content", "createDate"}
 }
 
 /******************************************

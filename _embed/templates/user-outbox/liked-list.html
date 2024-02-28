@@ -6,11 +6,11 @@
 	{{- $last := $responses.Last -}}
 
 	{{- range $responses -}}
-		{{- $document := $page.ActivityStream .ObjectID -}}
+		{{- $document := $page.ActivityStream .Object -}}
 		{{- $author := $document.AttributedTo -}}
 		<div class="h-entry">
-			<a href="{{.ObjectID}}" class="u-url"></a>
-			<div class="flex-row clickable" role="link" script="on click go to url '{{.ObjectID}}' in new window">
+			<a href="{{.Object}}" class="u-url"></a>
+			<div class="flex-row clickable" role="link" script="on click go to url '{{.Object}}'">
 				<div class="flex-shrink-0" style="width:80px;">
 					{{- if $author.NotNil -}}
 						{{- if ne "" $author.Icon.Href -}}
@@ -49,9 +49,9 @@
 			<div class="flex-row">
 				<div class="flex-shrink-0" style="width:80px;"></div>
 				<div class="text-sm">
-					{{- if $isMyself -}}
+					<!--{{- if $isMyself -}}
 						<span class="margin-right-xs" hx-get="/@me/like-button?url={{$document.ID}}" hx-target="this" hx-trigger="load" hx-swap="innerHTML" hx-push-url="false"></span>
-					{{- end -}}
+					{{- end -}}-->
 					<span class="text-gray">
 						{{- if not $isMyself -}}
 							<span class="p-content">{{.Content}}</span>
@@ -60,7 +60,6 @@
 						by
 						<span class="p-author">{{$page.DisplayName}}</span>
 						<time datetime="{{.CreateDateSeconds | isoDate }}" class="dt-published">{{.CreateDateSeconds | humanizeTime}}</time>
-						<a href="{{.URL}}" class="u-url"></a>
 					</span>
 				</div>
 			</div>
