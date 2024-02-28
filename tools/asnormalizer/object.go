@@ -20,6 +20,8 @@ func Object(document streams.Document) map[string]any {
 		return nil
 	}
 
+	actual = unwrapEmptyPages(actual)
+
 	actorID := first(actual.Actor().ID(), document.Actor().ID())
 
 	result := map[string]any{
@@ -58,4 +60,27 @@ func Object(document streams.Document) map[string]any {
 	}
 
 	return result
+}
+
+func unwrapEmptyPages(activity streams.Document) streams.Document {
+
+	if activity.Type() != vocab.ObjectTypePage {
+		return activity
+	}
+
+	if activity.Content() != "" {
+		return activity
+	}
+
+	object := activity.Object()
+
+	if object.IsNil() {
+		return activity
+	}
+
+	if object.Type() != vocab.ObjectTypeNote {
+		return activity
+	}
+
+	return object
 }
