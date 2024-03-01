@@ -433,7 +433,6 @@ func gracefulShutdown(e *echo.Echo) {
 }
 
 // errorHandler is a custom error handler that returns a JSON error message to the client
-// nolint:errcheck
 func errorHandler(err error, ctx echo.Context) {
 
 	// Special handling of permisssion errors
