@@ -42,7 +42,7 @@ func (service *Following) Connect(following model.Following) error {
 	actor, err := service.activityService.Load(following.URL, sherlock.AsActor())
 
 	if err != nil {
-		if innerError := service.SetStatusFailure(&following, err.Error()); err != nil {
+		if innerError := service.SetStatusFailure(&following, err.Error()); innerError != nil {
 			return derp.Wrap(innerError, location, "Error updating following status", following)
 		}
 		return err

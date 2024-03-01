@@ -38,7 +38,7 @@ func (service *Outbox) Publish(actor *outbox.Actor, parentType string, parentID 
 
 	// Send notifications to all Followers
 	go service.sendNotifications_ActivityPub(actor, activity)
-	go service.sendNotifications_WebSub(parentType, parentID, activity)
+	go service.sendNotifications_WebSub(parentType, parentID)
 	go service.sendNotifications_WebMention(activity)
 
 	// Success!!
@@ -88,7 +88,7 @@ func (service Outbox) sendNotifications_ActivityPub(actor *outbox.Actor, activit
 }
 
 // TODO: HIGH: Thoroughly re-test WebSub notifications.  They've been rebuilt from scratch.
-func (service Outbox) sendNotifications_WebSub(parentType string, parentID primitive.ObjectID, activity mapof.Any) {
+func (service Outbox) sendNotifications_WebSub(parentType string, parentID primitive.ObjectID) {
 
 	const location = "service.Outbox.sendNotifications_WebSub"
 
