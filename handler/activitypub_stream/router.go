@@ -14,4 +14,4 @@ type Context struct {
 }
 
 // streamRouter defines the package-level router for stream/ActivityPub requests
-var streamRouter inbox.Router[Context] = inbox.NewRouter[Context](inbox.WithNoDebug())
+var streamRouter inbox.Router[Context] = inbox.NewRouter[Context]()

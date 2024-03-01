@@ -6,7 +6,7 @@ import (
 	"github.com/benpate/hannibal/inbox"
 )
 
-var inboxRouter inbox.Router[Context] = inbox.NewRouter[Context](inbox.WithNoDebug())
+var inboxRouter inbox.Router[Context] = inbox.NewRouter[Context]()
 
 type Context struct {
 	factory *domain.Factory
