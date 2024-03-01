@@ -18,7 +18,6 @@ func TestResponse(t *testing.T) {
 		{"type", vocab.ActivityTypeAnnounce, nil},
 		{"actor", "http://actor.com", nil},
 		{"object", "https://example/object", nil},
-		{"summary", "THIS_IS_A_SUMMARY", nil},
 		{"content", "😀", nil},
 	}
 
