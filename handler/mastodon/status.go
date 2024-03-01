@@ -385,9 +385,7 @@ func PutStatus(serverFactory *server.Factory) func(model.Authorization, txn.PutS
 
 		// Validate authorization
 		if err := streamService.UserCan(&auth, &stream, "edit"); err != nil {
-			err = derp.Wrap(err, location, "User is not authorized to edit this stream")
-			derp.SetErrorCode(err, derp.CodeForbiddenError)
-			return object.Status{}, err
+			return object.Status{}, derp.Wrap(err, location, "User is not authorized to edit this stream", derp.WithForbidden())
 		}
 
 		// Edit stream values
