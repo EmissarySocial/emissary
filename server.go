@@ -448,21 +448,21 @@ func errorHandler(err error, ctx echo.Context) {
 
 		if currentPath := uri.Path; currentPath != "/signin" {
 			nextPage := uri.String()
-			ctx.Redirect(http.StatusTemporaryRedirect, "/signin?next="+url.QueryEscape(nextPage))
+			_ = ctx.Redirect(http.StatusTemporaryRedirect, "/signin?next="+url.QueryEscape(nextPage))
 			return
 		}
 
-		ctx.String(errorCode, derp.Message(err))
+		_ = ctx.String(errorCode, derp.Message(err))
 		return
 	}
 
 	// On localhost, allow developers to see full error dump.
 	if domain.IsLocalhost(ctx.Request().Host) {
-		ctx.JSONPretty(errorCode, err, "  ")
+		_ = ctx.JSONPretty(errorCode, err, "  ")
 		derp.Report(err)
 		return
 	}
 
 	// Fall through to general error handler
-	ctx.String(derp.ErrorCode(err), derp.Message(err))
+	_ = ctx.String(derp.ErrorCode(err), derp.Message(err))
 }
