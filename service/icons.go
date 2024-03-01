@@ -355,6 +355,7 @@ func (service Icons) get(name string) string {
 }
 
 func (service Icons) Write(name string, writer io.Writer) {
-	// nolint:errcheck // Okay to ignore write error
+	// Okay to ignore write error
+	// nolint:errcheck
 	writer.Write([]byte(service.Get(name)))
 }

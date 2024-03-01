@@ -90,8 +90,9 @@ func (service *Following) connect_LoadMessages(following *model.Following, actor
 		// RULE: For RSS feeds, push this document down the stack once more, to:
 		// 1. Retrieve any extra data missing from an RSS feed
 		// 2. Guarantee that the document has been saved in our cache.
-		// nolint:errcheck -- It's okay to ignore errors because pages may exist
+		// It's okay to ignore errors because pages may exist
 		// in an RSS feed, but return an error to us right now. (e.g. CAPTCHAs)
+		// nolint:errcheck
 		result, _ := document.Load(sherlock.WithDefaultValue(document.Map()))
 
 		// Try to save the document to the database.
