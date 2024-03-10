@@ -384,6 +384,7 @@ func (w Stream) ListAllWidgets() []form.LookupCode {
 	return widgetService.List()
 }
 
+// ListWidgetsByLocation returns a list of all the widgets in the specified location
 func (w Stream) ListWidgetsByLocation(location string) []model.StreamWidget {
 
 	result := w._stream.WidgetsByLocation(location)
@@ -402,7 +403,7 @@ func (w Stream) ListWidgetsByLocation(location string) []model.StreamWidget {
 	return result
 }
 
-// RenderWidgets reutrns HTML for all the widgets in the specified location
+// Widgets returns HTML for all the widgets in the specified location
 func (w Stream) Widgets(location string) (template.HTML, error) {
 
 	list := w.ListWidgetsByLocation(location)
