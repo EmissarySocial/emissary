@@ -39,16 +39,31 @@
 					do:"as-modal"
 					steps:[
 						{do:"view-html"}
-						{do: "refresh-page"}
+						{
+							do: "edit"
+							form: {
+								type: "layout-vertical"
+								children: [
+									{type: "text", label: "Full Name", path: "displayName"}
+									{type: "text", label: "Email Address", path: "emailAddress"}
+									{type: "text", label: "Username", path: "username"}
+									{type: "toggle", label: "Public?", path: "isPublic"}
+									{type: "multiselect", label: "Group(s)", path: "groupIds", options:{provider: "groups", sort:false}}
+								]
+							}
+							options: [
+								"delete:/admin/users/{{.UserID}}/delete"
+							]
+						},
+						{do:"refresh-page"}
 					]
 				}
 			]
 		}
 
-		editform: {
+		edit-form: {
 			steps: [{
 				do: "edit"
-				type: "user"
 				form: {
 					type: "layout-vertical"
 					description: ""
@@ -67,7 +82,7 @@
 			}]
 		}
 
-		sendwelcome: {
+		send-welcome: {
 			steps:[
 				{do:"send-email", email:"welcome"}
 			]
