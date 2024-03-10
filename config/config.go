@@ -30,7 +30,7 @@ type Config struct {
 	AdminEmail          string                       `json:"adminEmail"`          // Email address of the administrator
 	HTTPPort            int                          `json:"httpPort"`            // Port to listen on for HTTP requests
 	HTTPSPort           int                          `json:"httpsPort"`           // Port to listen on for HTTPS requests
-	DebugLevel          string                       `json:"debugLevel"`          // Amount of debugging information to log for the server (None, Terse, Verbose)
+	DebugLevel          string                       `json:"debugLevel"`          // Amount of debugging information to log for the server, using zerolog levels (Trace, Debug, Info, Error, None)
 	Source              string                       `json:"-"`                   // READONLY: Where did the initial config location come from?  (Command Line, Environment Variable, Default)
 	Location            string                       `json:"-"`                   // READONLY: Location where this config file is read from/to.  Not a part of the configuration itself.
 	MongoID             primitive.ObjectID           `json:"-" bson:"_id"`        // Used as unique key for MongoDB

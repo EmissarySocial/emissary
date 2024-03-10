@@ -27,6 +27,7 @@ import (
 	"github.com/benpate/steranko"
 	"github.com/davidscottmills/goeditorjs"
 	"github.com/labstack/echo/v4"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -163,6 +164,25 @@ func (factory *Factory) start() {
 				delete(factory.domains, domainID)
 			}
 			factory.mutex.Unlock()
+		}
+
+		// Set logging level from the configuration file
+		switch factory.config.DebugLevel {
+
+		case "Trace":
+			zerolog.SetGlobalLevel(zerolog.TraceLevel)
+		case "Debug":
+			zerolog.SetGlobalLevel(zerolog.DebugLevel)
+		case "Info":
+			zerolog.SetGlobalLevel(zerolog.InfoLevel)
+		case "Error":
+			zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+		case "Fatal":
+			zerolog.SetGlobalLevel(zerolog.FatalLevel)
+		case "Panic":
+			zerolog.SetGlobalLevel(zerolog.PanicLevel)
+		default:
+			zerolog.SetGlobalLevel(zerolog.Disabled)
 		}
 
 		factory.refreshed <- true
