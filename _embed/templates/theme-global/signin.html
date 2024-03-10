@@ -10,8 +10,8 @@
 	<main style="display:flex; height:clamp(400px, 100vh, 1000px); justify-content: center; align-items: center;">
 
 		<div class="card" style="width:clamp(540px, 50%, 720px); margin:auto; padding:16px 32px; line-height:150%;">
-
-			<form hx-post="/signin{{if ne `` .next}}?next={{queryEscape .next}}{{end}}" hx-target="#message">
+			
+			<form hx-post="/signin" hx-target="#message">
 
 				<div class="layout-vertical margin-bottom">
 

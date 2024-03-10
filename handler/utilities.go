@@ -73,10 +73,7 @@ func isOwner(claims jwt.Claims, err error) bool {
 func cleanQueryParams(values url.Values) mapof.String {
 	result := make(mapof.String, len(values))
 	for key, value := range values {
-
-		if len(value) == 0 {
-			result[key] = ""
-		} else {
+		if len(value) > 0 {
 			result[key] = value[0]
 		}
 	}
