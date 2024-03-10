@@ -20,7 +20,7 @@ func Schema() schema.Schema {
 				"attachmentOriginals": WritableFolderSchema(),
 				"attachmentCache":     WritableFolderSchema(),
 				"certificates":        WritableFolderSchema(),
-				"debugLevel":          schema.String{Enum: []string{"None", "Terse", "Verbose"}, Default: "None"},
+				"debugLevel":          schema.String{Enum: []string{"None", "Trace", "Debug", "Info", "Error"}, Default: "None"},
 				"adminEmail":          schema.String{Format: "email"},
 				"httpPort":            schema.Integer{Maximum: null.NewInt64(65535), Default: null.NewInt64(80)},
 				"httpsPort":           schema.Integer{Maximum: null.NewInt64(65535), Default: null.NewInt64(443)},
