@@ -7,8 +7,10 @@ import (
 
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/channel"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/fsnotify/fsnotify"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -164,18 +166,23 @@ func (filesystem *Filesystem) GetAferos(folders ...mapof.String) []afero.Fs {
  ******************************************/
 
 // Watch listens to changes to this filesystem with implementation-specific adapters.  Currently only supports file:// URIs
-func (filesystem *Filesystem) Watch(folder mapof.String, changed chan<- bool) error {
+func (filesystem *Filesystem) Watch(folder mapof.String, changes chan<- bool, done <-chan channel.Done) error {
 
+	// If we CAN watch this adapter, then do it.
 	if folder["adapter"] == config.FolderAdapterFile {
-		return filesystem.watchOS(folder["location"], changed)
+		if err := filesystem.watchOS(folder["location"], changes, done); err != nil {
+			return derp.Wrap(err, "service.Filesystem.Watch", "Error watching filesystem", folder)
+		}
+		return nil
 	}
 
 	// Otherwise, this adapter doesn't support watching so just exit silently
+	log.Debug().Str("adapter", folder["adapter"]).Msg("service.Filesystem.Watch: Adapter does not support watching")
 	return nil
 }
 
 // watchOS watches a folder on the local filesystem for changes
-func (filesystem *Filesystem) watchOS(uri string, changed chan<- bool) error {
+func (filesystem *Filesystem) watchOS(uri string, changes chan<- bool, done <-chan channel.Done) error {
 
 	// Get all entries in the directory
 	entries, err := os.ReadDir(uri)
@@ -199,7 +206,7 @@ func (filesystem *Filesystem) watchOS(uri string, changed chan<- bool) error {
 	// Watch all sub-directories
 	for _, entry := range entries {
 		if entry.IsDir() {
-			if err := filesystem.watchOS(uri+"/"+entry.Name(), changed); err != nil {
+			if err := filesystem.watchOS(uri+"/"+entry.Name(), changes, done); err != nil {
 				derp.Report(derp.Wrap(err, "service.Filesystem.watchFile", "Error watching sub-directory", uri+"/"+entry.Name()))
 			}
 		}
@@ -210,11 +217,16 @@ func (filesystem *Filesystem) watchOS(uri string, changed chan<- bool) error {
 
 		for {
 			select {
+
 			case <-watcher.Events:
-				changed <- true
+				changes <- true
 
 			case err := <-watcher.Errors:
 				derp.Report(derp.Wrap(err, "service.Filesystem.watchFile", "Error watching directory", uri))
+
+			case <-done:
+				watcher.Close()
+				return
 			}
 		}
 	}()

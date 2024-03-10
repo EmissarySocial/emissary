@@ -11,6 +11,7 @@ import (
 	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
+	"github.com/benpate/rosetta/channel"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
@@ -28,7 +29,7 @@ type Template struct {
 	widgetService     *Widget                      // Widget Service
 	funcMap           template.FuncMap             // Map of functions to use in golang templates
 	mutex             sync.RWMutex                 // Mutext that locks access to the templates structure
-	changed           chan bool                    // Channel that is used to signal that a template has changed
+	refresh           chan channel.Done            // Channel that is used to signal that the template service should refresh
 }
 
 // NewTemplate returns a fully initialized Template service.
@@ -42,7 +43,7 @@ func NewTemplate(filesystemService Filesystem, themeService *Theme, widgetServic
 		themeService:      themeService,
 		widgetService:     widgetService,
 		funcMap:           funcMap,
-		changed:           make(chan bool),
+		refresh:           make(chan channel.Done),
 	}
 
 	service.Refresh(locations)
@@ -55,6 +56,10 @@ func NewTemplate(filesystemService Filesystem, themeService *Theme, widgetServic
  ******************************************/
 
 func (service *Template) Refresh(locations sliceof.Object[mapof.String]) {
+
+	// Reset the "Refresh" channel
+	close(service.refresh)
+	service.refresh = make(chan channel.Done)
 
 	// RULE: If the Filesystem is empty, then don't try to load
 	if len(locations) == 0 {
@@ -87,18 +92,28 @@ func (service *Template) Refresh(locations sliceof.Object[mapof.String]) {
 // "Updates" channel for news that a template has been updated.
 func (service *Template) watch() {
 
+	changes := make(chan bool)
+	defer close(changes)
+
 	// Start new watchers.
 	for _, folder := range service.locations {
 
-		if err := service.filesystemService.Watch(folder, service.changed); err != nil {
+		if err := service.filesystemService.Watch(folder, changes, service.refresh); err != nil {
 			derp.Report(derp.Wrap(err, "service.template.Watch", "Error watching filesystem", folder))
 		}
 	}
 
 	// All Watchers Started.  Now Listen for Changes
-	for range service.changed {
-		if err := service.loadTemplates(); err != nil {
-			derp.Report(derp.Wrap(err, "service.template.Watch", "Error loading templates from filesystem"))
+	for {
+		select {
+
+		case <-changes:
+			if err := service.loadTemplates(); err != nil {
+				derp.Report(derp.Wrap(err, "service.template.Watch", "Error loading templates from filesystem"))
+			}
+
+		case <-service.refresh:
+			return
 		}
 	}
 }

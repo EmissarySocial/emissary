@@ -125,13 +125,13 @@ func (factory *Factory) start() {
 		if attachmentOriginals, err := filesystemService.GetAfero(config.AttachmentOriginals); err == nil {
 			factory.attachmentOriginals = attachmentOriginals
 		} else {
-			derp.Report(derp.Wrap(err, "server.Factory.start", "Error getting attachment original directory", config.AttachmentOriginals))
+			derp.Report(derp.Wrap(err, "server.Factory.start", "Error getting attachment original directory", config))
 		}
 
 		if attachmentCache, err := filesystemService.GetAfero(config.AttachmentCache); err == nil {
 			factory.attachmentCache = attachmentCache
 		} else {
-			derp.Report(derp.Wrap(err, "server.Factory.start", "Error getting attachment cache directory", config.AttachmentCache))
+			derp.Report(derp.Wrap(err, "server.Factory.start", "Error getting attachment cache directory", config))
 		}
 
 		factory.config = config

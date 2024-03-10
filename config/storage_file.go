@@ -82,6 +82,8 @@ func NewFileStorage(args *CommandLineArgs) FileStorage {
 			panic(err)
 		}
 
+		defer watcher.Close()
+
 		if err := watcher.Add(storage.location); err != nil {
 			derp.Report(derp.Wrap(err, "Unable to watch for changes to configuration: ", fileLocation))
 			return
@@ -89,6 +91,9 @@ func NewFileStorage(args *CommandLineArgs) FileStorage {
 
 		for range watcher.Events {
 			if config, err := storage.load(); err == nil {
+				if config.IsEmpty() {
+					continue
+				}
 				storage.updateChannel <- config
 			} else {
 				derp.Report(derp.Wrap(err, "config.FileStorage", "Error loading the updated config from ", fileLocation))

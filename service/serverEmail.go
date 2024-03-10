@@ -7,6 +7,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/channel"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/rs/zerolog/log"
@@ -20,7 +21,7 @@ type ServerEmail struct {
 	locations         []mapof.String
 	templates         *template.Template
 
-	changed chan bool
+	refresh chan channel.Done
 }
 
 func NewServerEmail(filesystemService Filesystem, funcMap template.FuncMap, locations []mapof.String) ServerEmail {
@@ -28,7 +29,7 @@ func NewServerEmail(filesystemService Filesystem, funcMap template.FuncMap, loca
 	service := ServerEmail{
 		filesystemService: filesystemService,
 		funcMap:           funcMap,
-		changed:           make(chan bool),
+		refresh:           make(chan channel.Done),
 	}
 
 	service.Refresh(locations)
@@ -41,6 +42,10 @@ func NewServerEmail(filesystemService Filesystem, funcMap template.FuncMap, loca
  ******************************************/
 
 func (service *ServerEmail) Refresh(locations sliceof.Object[mapof.String]) {
+
+	// Reset the "refresh" channel
+	close(service.refresh)
+	service.refresh = make(chan channel.Done)
 
 	// RULE: If the Filesystem is empty, then don't try to load
 	if len(locations) == 0 {
@@ -70,17 +75,26 @@ func (service *ServerEmail) Refresh(locations sliceof.Object[mapof.String]) {
 // "Updates" channel for news that a template has been updated.
 func (service *ServerEmail) watch() {
 
+	changes := make(chan bool)
+	defer close(changes)
+
 	// Start new watchers.
 	for _, folder := range service.locations {
 
-		if err := service.filesystemService.Watch(folder, service.changed); err != nil {
+		if err := service.filesystemService.Watch(folder, changes, service.refresh); err != nil {
 			derp.Report(derp.Wrap(err, "service.Layout.Watch", "Error watching filesystem", folder))
 		}
 	}
 
 	// All Watchers Started.  Now Listen for Changes
-	for range service.changed {
-		service.loadTemplates()
+	for {
+		select {
+		case <-changes:
+			service.loadTemplates()
+		case <-service.refresh:
+			return
+		}
+
 	}
 }
 
