@@ -23,13 +23,13 @@
 					<div class="bold"><a href="/@me/inbox?folderId={{$folderID}}" hx-get="/@me/inbox?folderId={{$folderID}}">{{icon $folder.Icon}} {{$folder.Label}}</a></div>
 					<div class="flex-row margin-vertical">
 						{{- if ne "" $following.ImageURL -}}
-							<div class="margin-right-sm">
+							<div class="margin-top-xs">
 								<img src="{{$following.ImageURL}}" class="circle-48">
 							</div>
 						{{- end -}}
 
 						<div>
-							<h1 class="margin-bottom-sm ellipsis">
+							<h1 class="margin-top-none margin-bottom-sm ellipsis">
 								{{$following.Label}}
 							</h1>
 							<div class="margin-none">
