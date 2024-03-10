@@ -101,6 +101,10 @@ func NewMongoStorage(args *CommandLineArgs) MongoStorage {
 				derp.Report(derp.Wrap(err, "config.MongoStorage", "Error loading updated config from MongoDB"))
 			}
 		}
+
+		if err := cs.Err(); err != nil {
+			derp.Report(derp.Wrap(err, "service.Watcher", "Error watching Mongodb Change Stream"))
+		}
 	}()
 
 	return storage
