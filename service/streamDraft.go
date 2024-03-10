@@ -58,7 +58,7 @@ func (service *StreamDraft) Load(criteria exp.Expression, result *model.Stream) 
 	// Try to load a draft using the provided criteria
 	if err := service.collection.Load(criteria, result); err == nil {
 		return nil
-	} else {
+	} else if !derp.NotFound(err) {
 		derp.Report(derp.Wrap(err, location, "Error loading StreamDraft"))
 	}
 
