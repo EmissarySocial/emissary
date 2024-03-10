@@ -32,9 +32,7 @@
 	</div>
 		
 	<article>
-		<form hx-post="/{{.StreamID}}/widgets" hx-trigger="change, save" hx-swap="none" id="markdownForm">
-			{{.WidgetEditor}}
-		</form>
+		{{- template "widgets-list" . -}}
 	</article>
 	
 </div>

@@ -1,44 +1,53 @@
 {
-	templateId:"collection",
-	templateRole:"collection",
-	model:"Stream",
-	extends:["base-widget-editor"],
-	containedBy: ["top", "folder", "article"],
-	label:"Collection",
-	description:"Collection helps you to organize large pages of content.  It embeds the 'view' content for each of its children in order.",
-	icon:"collection",
-	widget-locations:["LEFT", "TOP", "BOTTOM", "RIGHT"],
+	templateId:collection
+	templateRole:collection
+	model:Stream
+	extends:["base-widget-editor"]
+	containedBy: ["top", "folder", "article"]
+	label:Collection
+	description:Collection helps you to organize large pages of content.  It embeds the 'view' content for each of its children in order.
+	icon:collection
+	widget-locations:["LEFT", "TOP", "BOTTOM", "RIGHT"]
 	bundles:{
 		stylesheet: {
-			content-type:"text/css"
+			content-type:text/css"
 		}
-	},
+	}
 	schema: {
-		type:"object",
+		type:object
 		properties: {
-			token: {type:"string", required:true},
-			label: {type:"string"},
-			summary: {type:"string"},
-			data: {type:"object", properties: {showSidebar: {type:"boolean", default:"true"}}}
+			token: {type:"string", required:true}
+			label: {type:"string"}
+			summary: {type:"string"}
+			data: {
+				type:object
+				properties: {
+					showSidebar:
+					{
+						type:boolean
+						default:true
+					}
+				}
+			}
 		}
-	},
+	}
 	roles: {
 		owner: {
-			label:"Domain Owner",
+			label:"Domain Owner"
 			decription:"Full control over this stream."
-			}, 
+			} 
 		editor: {
-			label:"Editor",
+			label:"Editor"
 			description:"Can make changes to this article."
-		},
+		}
 		viewer: {
-			label:"Viewer",
+			label:"Viewer"
 			description:"Can read and comment on this article."
 		}
-	},
+	}
 	actions: {
 		create: {
-			roles:["editor","owner"],
+			roles:["editor","owner"]
 			steps: [
 				{
 					do:"set-data", 
@@ -46,68 +55,83 @@
 						label:"New Collection", 
 						data.showSidebar:"true"
 					}
-				},
-				{do:"save"},
+				}
+				{do:"save"}
 				{do:"forward-to", url:"/{{.StreamID}}/edit"}
 			]
-		},
+		}
 		view: {
-			roles: ["viewer", "editor", "owner"],
+			roles: ["viewer", "editor", "owner"]
 			steps:[
-				{do:"view-json"},
+				{do:"view-json"}
 				{do:"view-html"}
 			]
-		},
+		}
 		edit: {
-			roles: ["owner", "editor"],
+			roles: ["owner", "editor"]
 			steps: [
-				{do:"view-html"},
+				{do:"view-html"}
 				{do:"sort"}
 			]
-		},
-		delete: {
-			roles: ["owner"],
+		}
+		widgets: {
+			roles: ["owner", "editor"]
 			steps: [
-				{do:"delete", title:"Delete this Collection?", message:"All content and comments will be lost.  There is NO UNDO."},
+				{do:"sort-widgets"}
+				{do:"save", message:"Widgets updated by {{.Author}}"}
+				{do:"view-html", method:"both"}
+			]
+		}
+		widget: {
+			roles: ["owner", "editor"]
+			steps: [
+				{do:"edit-widget"}
+				{do:"save", comment:"Widget updated by {{.Author}}"}
+			]
+		}
+		delete: {
+			roles: ["owner"]
+			steps: [
+				{do:"delete", title:"Delete this Collection?", message:"All content and comments will be lost.  There is NO UNDO."}
 				{do:"forward-to", url:"/{{.ParentID}}"}
 			]
-		},
+		}
 		
 		heading: {
 			do:"view-html"
-		},
+		}
 		add-child:{
-			roles: ["owner", "editor"],
+			roles: ["owner", "editor"]
 			steps: [
 				{do:"add-stream",location:"child", title:"Add Item to Collection"}
 			]
-		},
+		}
 		sharing: {
-			roles: ["owner"],
+			roles: ["owner"]
 			steps: [
 				{do:"as-modal", steps: [
-					{do:"set-simple-sharing", roles: ["viewer"], title:"Who Can See This Article?", message:"Select who can view and comment on this article."},
+					{do:"set-simple-sharing", roles: ["viewer"], title:"Who Can See This Article?", message:"Select who can view and comment on this article."}
 					{do:"save", message:"Sharing updated by {{.Author}}"}
 				]}
 			]
-		},
+		}
 		properties: {
-			roles: ["editor", "owner"],
+			roles: ["editor", "owner"]
 			steps: [
 				{do:"as-modal", steps: [
-					{do:"edit",
+					{do:"edit"
 						form: {
-							type:"layout-vertical",
-							label:"Edit Properties",
+							type:"layout-vertical"
+							label:"Edit Properties"
 							children: [
-								{type:"text", path:"token", label:"Token/Slug"},
-								{type:"text", path:"label", label:"Label"},
-								{type:"textarea", path:"summary", label:"Summary"},
+								{type:"text", path:"token", label:"Token/Slug"}
+								{type:"text", path:"label", label:"Label"}
+								{type:"textarea", path:"summary", label:"Summary"}
 								{type:"toggle", path:"data.showSidebar", label:"", options:{true-text:"Sidebar is Visible", false-text:"Sidebar is Hidden"}}
 							]
 						}
 					}]
-				},
+				}
 				{do:"save", comment:"Properties updated by {{.Author}}"}
 			]
 		}
