@@ -29,17 +29,74 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "add-stream":
 		return NewAddStream(stepInfo)
 
-	case "edit":
-		return NewEditModelObject(stepInfo)
+	case "as-confirmation":
+		return NewAsConfirmation(stepInfo)
 
-	case "edit-table":
-		return NewTableEditor(stepInfo)
+	case "as-modal":
+		return NewAsModal(stepInfo)
+
+	case "as-tooltip":
+		return NewAsTooltip(stepInfo)
 
 	case "delete":
 		return NewDelete(stepInfo)
 
+	case "delete-attachments":
+		return NewDeleteAttachments(stepInfo)
+
+	case "do":
+		return NewDo(stepInfo)
+
+	case "edit":
+		return NewEditModelObject(stepInfo)
+
+	case "edit-connection":
+		return NewEditConnection(stepInfo)
+
+	case "edit-content":
+		return NewEditContent(stepInfo)
+
+	case "edit-properties":
+		return NewEditProperties(stepInfo)
+
+	case "edit-table":
+		return NewTableEditor(stepInfo)
+
+	case "edit-widget":
+		return NewEditWidget(stepInfo)
+
+	case "forward-to":
+		return NewForwardTo(stepInfo)
+
+	case "halt":
+		return NewHalt(stepInfo)
+
+	case "if":
+		return NewIfCondition(stepInfo)
+
+	case "inline-error":
+		return NewInlineError(stepInfo)
+
+	case "inline-success":
+		return NewInlineSuccess(stepInfo)
+
+	case "redirect-to":
+		return NewRedirectTo(stepInfo)
+
+	case "refresh-page":
+		return NewRefreshPage(stepInfo)
+
+	case "reload-page":
+		return NewReloadPage(stepInfo)
+
+	case "remove-event":
+		return NewRemoveEvent(stepInfo)
+
 	case "save":
 		return NewSave(stepInfo)
+
+	case "server-redirect":
+		return NewServerRedirect(stepInfo)
 
 	case "set-data":
 		return NewSetData(stepInfo)
@@ -74,104 +131,41 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "view-json":
 		return NewViewJSONLD(stepInfo)
 
-	// STREAM-SPECIFIC STEPS
-
-	case "edit-content":
-		return NewEditContent(stepInfo)
-
-	case "edit-properties":
-		return NewEditProperties(stepInfo)
-
-	case "edit-widget":
-		return NewEditWidget(stepInfo)
-
 	case "process-content":
 		return NewProcessContent(stepInfo)
-
-	case "sort-widgets":
-		return NewSortWidgets(stepInfo)
-
-	case "view-feed":
-		return NewViewFeed(stepInfo)
-
-	// SOCIAL / ACTIVITYPUB STEPS
-
-	case "publish":
-		return NewPublish(stepInfo)
-
-	case "unpublish":
-		return NewUnPublish(stepInfo)
-
-	// DRAFTS
 
 	case "promote-draft":
 		return NewStreamPromoteDraft(stepInfo)
 
-	case "with-draft":
-		return NewWithDraft(stepInfo)
+	case "publish":
+		return NewPublish(stepInfo)
 
-	// ATTACHMENTS
-
-	case "delete-attachments":
-		return NewDeleteAttachments(stepInfo)
-
-	case "upload-attachments":
-		return NewUploadAttachment(stepInfo)
+	case "send-email":
+		return NewSendEmail(stepInfo)
 
 	case "sort-attachments":
 		return NewSortAttachments(stepInfo)
 
-	// CLIENT-SIDE CONTROLS
-
-	case "as-modal":
-		return NewAsModal(stepInfo)
-
-	case "as-tooltip":
-		return NewAsTooltip(stepInfo)
-
-	case "as-confirmation":
-		return NewAsConfirmation(stepInfo)
-
-	case "forward-to":
-		return NewForwardTo(stepInfo)
-
-	case "inline-error":
-		return NewInlineError(stepInfo)
-
-	case "inline-success":
-		return NewInlineSuccess(stepInfo)
-
-	case "refresh-page":
-		return NewRefreshPage(stepInfo)
-
-	case "reload-page":
-		return NewReloadPage(stepInfo)
-
-	case "remove-event":
-		return NewRemoveEvent(stepInfo)
+	case "sort-widgets":
+		return NewSortWidgets(stepInfo)
 
 	case "trigger-event":
 		return NewTriggerEvent(stepInfo)
 
-	// SERVER-SIDE CONTROL LOGIC
+	case "unpublish":
+		return NewUnPublish(stepInfo)
 
-	case "do":
-		return NewDo(stepInfo)
+	case "upload-attachments":
+		return NewUploadAttachment(stepInfo)
 
-	case "halt":
-		return NewHalt(stepInfo)
+	case "view-feed":
+		return NewViewFeed(stepInfo)
 
-	case "if":
-		return NewIfCondition(stepInfo)
+	case "websub":
+		return NewWebSub(stepInfo)
 
-	case "redirect-to":
-		return NewRedirectTo(stepInfo)
-
-	case "server-redirect":
-		return NewServerRedirect(stepInfo)
-
-	case "with-rule":
-		return NewWithRule(stepInfo)
+	case "with-draft":
+		return NewWithDraft(stepInfo)
 
 	case "with-children":
 		return NewWithChildren(stepInfo)
@@ -200,16 +194,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "with-response":
 		return NewWithResponse(stepInfo)
 
-	// EXTERNAL CONNECTIONS
+	case "with-rule":
+		return NewWithRule(stepInfo)
 
-	case "edit-connection":
-		return NewEditConnection(stepInfo)
-
-	case "send-email":
-		return NewSendEmail(stepInfo)
-
-	case "websub":
-		return NewWebSub(stepInfo)
 	}
 
 	// Fall through means we have an unrecognized action
