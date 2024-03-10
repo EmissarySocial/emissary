@@ -29,7 +29,6 @@ type Template struct {
 	funcMap           template.FuncMap             // Map of functions to use in golang templates
 	mutex             sync.RWMutex                 // Mutext that locks access to the templates structure
 	changed           chan bool                    // Channel that is used to signal that a template has changed
-	closed            chan bool                    // Channel to notify the watcher to close/reset
 }
 
 // NewTemplate returns a fully initialized Template service.
@@ -44,7 +43,6 @@ func NewTemplate(filesystemService Filesystem, themeService *Theme, widgetServic
 		widgetService:     widgetService,
 		funcMap:           funcMap,
 		changed:           make(chan bool),
-		closed:            make(chan bool),
 	}
 
 	service.Refresh(locations)
@@ -89,32 +87,18 @@ func (service *Template) Refresh(locations sliceof.Object[mapof.String]) {
 // "Updates" channel for news that a template has been updated.
 func (service *Template) watch() {
 
-	// abort the existing watcher
-	close(service.closed)
-
-	// open a new channel for the next watcher
-	service.closed = make(chan bool)
-
 	// Start new watchers.
 	for _, folder := range service.locations {
 
-		if err := service.filesystemService.Watch(folder, service.changed, service.closed); err != nil {
+		if err := service.filesystemService.Watch(folder, service.changed); err != nil {
 			derp.Report(derp.Wrap(err, "service.template.Watch", "Error watching filesystem", folder))
 		}
 	}
 
 	// All Watchers Started.  Now Listen for Changes
-	for {
-
-		select {
-
-		case <-service.changed:
-			if err := service.loadTemplates(); err != nil {
-				derp.Report(derp.Wrap(err, "service.template.Watch", "Error loading templates from filesystem"))
-			}
-
-		case <-service.closed:
-			return
+	for range service.changed {
+		if err := service.loadTemplates(); err != nil {
+			derp.Report(derp.Wrap(err, "service.template.Watch", "Error loading templates from filesystem"))
 		}
 	}
 }

@@ -21,7 +21,6 @@ type ServerEmail struct {
 	templates         *template.Template
 
 	changed chan bool
-	closed  chan bool
 }
 
 func NewServerEmail(filesystemService Filesystem, funcMap template.FuncMap, locations []mapof.String) ServerEmail {
@@ -30,7 +29,6 @@ func NewServerEmail(filesystemService Filesystem, funcMap template.FuncMap, loca
 		filesystemService: filesystemService,
 		funcMap:           funcMap,
 		changed:           make(chan bool),
-		closed:            make(chan bool),
 	}
 
 	service.Refresh(locations)
@@ -72,31 +70,17 @@ func (service *ServerEmail) Refresh(locations sliceof.Object[mapof.String]) {
 // "Updates" channel for news that a template has been updated.
 func (service *ServerEmail) watch() {
 
-	// abort the existing watcher
-	close(service.closed)
-
-	// open a new channel for the next watcher
-	service.closed = make(chan bool)
-
 	// Start new watchers.
 	for _, folder := range service.locations {
 
-		if err := service.filesystemService.Watch(folder, service.changed, service.closed); err != nil {
+		if err := service.filesystemService.Watch(folder, service.changed); err != nil {
 			derp.Report(derp.Wrap(err, "service.Layout.Watch", "Error watching filesystem", folder))
 		}
 	}
 
 	// All Watchers Started.  Now Listen for Changes
-	for {
-
-		select {
-
-		case <-service.changed:
-			service.loadTemplates()
-
-		case <-service.closed:
-			return
-		}
+	for range service.changed {
+		service.loadTemplates()
 	}
 }
 

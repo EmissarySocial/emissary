@@ -164,10 +164,10 @@ func (filesystem *Filesystem) GetAferos(folders ...mapof.String) []afero.Fs {
  ******************************************/
 
 // Watch listens to changes to this filesystem with implementation-specific adapters.  Currently only supports file:// URIs
-func (filesystem *Filesystem) Watch(folder mapof.String, changed chan<- bool, closed <-chan bool) error {
+func (filesystem *Filesystem) Watch(folder mapof.String, changed chan<- bool) error {
 
 	if folder["adapter"] == config.FolderAdapterFile {
-		return filesystem.watchOS(folder["location"], changed, closed)
+		return filesystem.watchOS(folder["location"], changed)
 	}
 
 	// Otherwise, this adapter doesn't support watching so just exit silently
@@ -175,7 +175,7 @@ func (filesystem *Filesystem) Watch(folder mapof.String, changed chan<- bool, cl
 }
 
 // watchOS watches a folder on the local filesystem for changes
-func (filesystem *Filesystem) watchOS(uri string, changed chan<- bool, closed <-chan bool) error {
+func (filesystem *Filesystem) watchOS(uri string, changed chan<- bool) error {
 
 	// Get all entries in the directory
 	entries, err := os.ReadDir(uri)
@@ -199,12 +199,15 @@ func (filesystem *Filesystem) watchOS(uri string, changed chan<- bool, closed <-
 	// Watch all sub-directories
 	for _, entry := range entries {
 		if entry.IsDir() {
-			derp.Report(filesystem.watchOS(uri+"/"+entry.Name(), changed, closed))
+			if err := filesystem.watchOS(uri+"/"+entry.Name(), changed); err != nil {
+				derp.Report(derp.Wrap(err, "service.Filesystem.watchFile", "Error watching sub-directory", uri+"/"+entry.Name()))
+			}
 		}
 	}
 
 	// Background: listen for changes and pass them to the "changed" channel
 	go func() {
+
 		for {
 			select {
 			case <-watcher.Events:
@@ -212,10 +215,6 @@ func (filesystem *Filesystem) watchOS(uri string, changed chan<- bool, closed <-
 
 			case err := <-watcher.Errors:
 				derp.Report(derp.Wrap(err, "service.Filesystem.watchFile", "Error watching directory", uri))
-
-			case <-closed:
-				close(changed)
-				return
 			}
 		}
 	}()
