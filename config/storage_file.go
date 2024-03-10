@@ -89,16 +89,23 @@ func NewFileStorage(args *CommandLineArgs) FileStorage {
 			return
 		}
 
-		for range watcher.Events {
-			if config, err := storage.load(); err == nil {
-				if config.IsEmpty() {
-					continue
+		for {
+			select {
+			case <-watcher.Events:
+				if config, err := storage.load(); err == nil {
+					if config.IsEmpty() {
+						continue
+					}
+					storage.updateChannel <- config
+				} else {
+					derp.Report(derp.Wrap(err, "config.FileStorage", "Error loading the updated config from ", fileLocation))
 				}
-				storage.updateChannel <- config
-			} else {
-				derp.Report(derp.Wrap(err, "config.FileStorage", "Error loading the updated config from ", fileLocation))
+
+			case err := <-watcher.Errors:
+				derp.Report(derp.Wrap(err, "config.FileStorage", "Error watching for changes to ", fileLocation))
 			}
 		}
+
 	}()
 
 	// Listen for updates and post them to the update channel
