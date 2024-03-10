@@ -1,6 +1,6 @@
 {
 	templateId:"article-editorjs"
-	extends: ["base-article"]
+	extends: ["article-base"]
 	containedBy: ["top", "folder", "article"]
 	label:"Article (WYSIWYG)"
 	description:"For regular use. Contains text, images, and more."
