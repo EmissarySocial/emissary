@@ -20,7 +20,7 @@ require (
 	github.com/benpate/mediaserver v0.10.16
 	github.com/benpate/remote v0.15.0
 	github.com/benpate/rosetta v0.20.0
-	github.com/benpate/sherlock v0.7.0
+	github.com/benpate/sherlock v0.7.1
 	github.com/benpate/steranko v0.16.4
 	github.com/benpate/table v0.6.10
 	github.com/benpate/toot v0.3.0
@@ -109,7 +109,6 @@ require (
 	github.com/rwcarlsen/goexif v0.0.0-20190401172101-9e8deecbddbd // indirect
 	github.com/sergi/go-diff v1.3.1 // indirect
 	github.com/skeema/knownhosts v1.2.1 // indirect
-	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/tdewolff/parse/v2 v2.7.12 // indirect
 	github.com/toorop/go-dkim v0.0.0-20240103092955-90b7d1423f92 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
