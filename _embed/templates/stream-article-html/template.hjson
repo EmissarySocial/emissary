@@ -1,6 +1,6 @@
 {
 	templateId:"article-html"
-	extends:["base-article"]
+	extends:["article-base"]
 	containedBy: ["top", "folder", "article"]
 	label:"Article (HTML Code)"
 	description:"HTML Code editor"
