@@ -53,9 +53,6 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.EditModelObject:
 		return StepEditModelObject(s)
 
-	case step.EditProperties:
-		return StepEditProperties(s)
-
 	case step.EditWidget:
 		return StepEditWidget(s)
 
