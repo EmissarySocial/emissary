@@ -103,7 +103,7 @@
 		add-child:{
 			roles: ["owner", "editor"]
 			steps: [
-				{do:"add-stream",location:"child", title:"Add Item to Collection"}
+				{do:"add-stream", location:"child", title:"Add Item to Collection"}
 			]
 		}
 		sharing: {

@@ -28,7 +28,7 @@
             <div class="draggable">
                 <input type="hidden" name="keys" value="{{.StreamID}}">
                 <div class="float-right">
-                    <a href="/{{.Token}}/edit">{{icon "edit"}} Edit</a>
+                    <a hx-get="/{{.StreamID}}/edit">{{icon "edit"}} Edit</a>
                 </div>
                 {{icon "grip-vertical"}}
                 &nbsp;
@@ -36,6 +36,11 @@
             </div>
         {{- end -}}
     </form>
+
+       <button hx-get="/{{.StreamID}}/add-child">
+        {{- icon "plus"}} Add an Item
+    </button>
+
 
 <script>
     var sortables = document.querySelectorAll(".sortable");

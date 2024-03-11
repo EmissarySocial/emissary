@@ -5,7 +5,6 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -53,27 +52,15 @@ func (step StepSort) Post(renderer Renderer, _ io.Writer) PipelineBehavior {
 			return Halt().WithError(derp.Wrap(err, "render.StepSort.Post", "Error loading object with criteria: ", criteria))
 		}
 
-		// If the rank for this object has not changed, then don't waste time saving it again.
-		if getter, ok := object.(schema.IntGetter); ok {
-			if value, ok := getter.GetIntOK(step.Values); ok {
-				if value == newRank {
-					continue
-				}
-			}
-		}
-
-		// Update the object
-		if setter, ok := object.(schema.IntSetter); ok {
-			if ok := setter.SetInt(step.Values, newRank); !ok {
-				return Halt().WithError(derp.Wrap(err, "render.StepSort.Post", "Error updating field: ", objectID, step.Values, newRank))
-			}
+		// Use the object schema to set the new sort rank
+		if err := renderer.schema().Set(object, "rank", newRank); err != nil {
+			return Halt().WithError(derp.Wrap(err, "render.StepSort.Post", "Error setting new rank", objectID, step.Values, newRank))
 		}
 
 		// Try to save back to the database
 		if err := renderer.service().ObjectSave(object, step.Message); err != nil {
 			return Halt().WithError(derp.Wrap(err, "render.StepSort.Post", "Error saving record tot he database", object))
 		}
-
 	}
 
 	// Done. Do not swap on the client side.  We don't want to reload the entire page.
