@@ -1,20 +1,20 @@
-<div class="page" hx-get="/{{.StreamID}}" hx-trigger="refreshPage from:window" hx-swap="outerHTML" hx-target="this">
+<div class="page" hx-get="/{{.StreamID}}/edit" hx-trigger="refreshPage from:window" hx-swap="outerHTML" hx-target="this">
 
 	<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 
     <div id="menu-bar">
         <a href="/{{.Token}}">&larr; View</a>
-        <a href="/{{.Token}}/edit" class="bold">Edit</a>
-        <a href="/{{.Token}}/widgets">Widgets</a>
-        <a hx-get="/{{.Token}}/properties">Properties</a>
+        <a href="/{{.StreamID}}/edit" class="bold">Edit</a>
+        <a href="/{{.StreamID}}/widgets">Widgets</a>
+        <a hx-get="/{{.StreamID}}/properties">Properties</a>
     
         {{- if .UserCan "sharing" -}}
-            <a hx-get="/{{.Token}}/sharing">Sharing</a>
+            <a hx-get="/{{.StreamID}}/sharing">Sharing</a>
         {{- end -}}
     
         <div class="right">
             {{- if .UserCan "delete" -}}
-                <a hx-get="/{{.Token}}/delete" class="text-red">Delete</a>
+                <a hx-get="/{{.StreamID}}/delete" class="text-red">Delete</a>
             {{- end -}}
         </div>
     </div>
