@@ -51,7 +51,7 @@ func WrapModal(response http.ResponseWriter, content string, options ...string) 
 	header := response.Header()
 	header.Set("HX-Retarget", "aside")
 	header.Set("HX-Reswap", "innerHTML")
-	header.Set("HX-Push", "false")
+	header.Set("HX-Push-Url", "false")
 
 	optionMap := parseOptions(options...)
 
@@ -87,7 +87,7 @@ func WrapTooltip(response http.ResponseWriter, content string) string {
 	// These headers make it a modal
 	header := response.Header()
 	header.Set("HX-Reswap", "beforeend")
-	header.Set("HX-Push", "false")
+	header.Set("HX-Push-Url", "false")
 
 	b := html.New()
 

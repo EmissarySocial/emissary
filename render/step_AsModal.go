@@ -40,7 +40,9 @@ func (step StepAsModal) Get(renderer Renderer, buffer io.Writer) PipelineBehavio
 			AsFullPage()
 
 		if step.Background == "" {
-			result = result.WithHeader("HX-Push", "false")
+			result = result.WithHeader("HX-Push-Url", "false")
+		} else {
+			result = result.WithHeader("HX-Push-Url", "true")
 		}
 
 		return result
