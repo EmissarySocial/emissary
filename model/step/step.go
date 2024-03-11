@@ -44,9 +44,6 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "delete-attachments":
 		return NewDeleteAttachments(stepInfo)
 
-	case "do":
-		return NewDo(stepInfo)
-
 	case "edit":
 		return NewEditModelObject(stepInfo)
 
@@ -73,6 +70,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 
 	case "if":
 		return NewIfCondition(stepInfo)
+
+	case "include":
+		return NewDo(stepInfo)
 
 	case "inline-error":
 		return NewInlineError(stepInfo)
