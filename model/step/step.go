@@ -77,6 +77,15 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "inline-success":
 		return NewInlineSuccess(stepInfo)
 
+	case "process-content":
+		return NewProcessContent(stepInfo)
+
+	case "promote-draft":
+		return NewStreamPromoteDraft(stepInfo)
+
+	case "publish":
+		return NewPublish(stepInfo)
+
 	case "redirect-to":
 		return NewRedirectTo(stepInfo)
 
@@ -92,8 +101,14 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "save":
 		return NewSave(stepInfo)
 
-	case "server-redirect":
-		return NewServerRedirect(stepInfo)
+	case "send-email":
+		return NewSendEmail(stepInfo)
+
+	// case "server-redirect":
+	//	return NewServerRedirect(stepInfo)
+
+	case "set-args":
+		return NewSetRenderData(stepInfo)
 
 	case "set-data":
 		return NewSetData(stepInfo)
@@ -101,17 +116,11 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "set-header":
 		return NewSetHeader(stepInfo)
 
-	case "set-args":
-		return NewSetRenderData(stepInfo)
-
 	case "set-response":
 		return NewSetResponse(stepInfo)
 
 	case "set-query-param":
 		return NewSetQueryParam(stepInfo)
-
-	case "set-thumbnail":
-		return NewSetThumbnail(stepInfo)
 
 	case "set-simple-sharing":
 		return NewSetSimpleSharing(stepInfo)
@@ -119,26 +128,11 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "set-state":
 		return NewSetState(stepInfo)
 
+	case "set-thumbnail":
+		return NewSetThumbnail(stepInfo)
+
 	case "sort":
 		return NewSort(stepInfo)
-
-	case "view-html":
-		return NewViewHTML(stepInfo)
-
-	case "view-json":
-		return NewViewJSONLD(stepInfo)
-
-	case "process-content":
-		return NewProcessContent(stepInfo)
-
-	case "promote-draft":
-		return NewStreamPromoteDraft(stepInfo)
-
-	case "publish":
-		return NewPublish(stepInfo)
-
-	case "send-email":
-		return NewSendEmail(stepInfo)
 
 	case "sort-attachments":
 		return NewSortAttachments(stepInfo)
@@ -158,14 +152,20 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "view-feed":
 		return NewViewFeed(stepInfo)
 
+	case "view-html":
+		return NewViewHTML(stepInfo)
+
+	case "view-json":
+		return NewViewJSONLD(stepInfo)
+
 	case "websub":
 		return NewWebSub(stepInfo)
 
-	case "with-draft":
-		return NewWithDraft(stepInfo)
-
 	case "with-children":
 		return NewWithChildren(stepInfo)
+
+	case "with-draft":
+		return NewWithDraft(stepInfo)
 
 	case "with-folder":
 		return NewWithFolder(stepInfo)
@@ -182,18 +182,17 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "with-next-sibling":
 		return NewWithNextSibling(stepInfo)
 
-	case "with-prev-sibling":
-		return NewWithPrevSibling(stepInfo)
-
 	case "with-parent":
 		return NewWithParent(stepInfo)
+
+	case "with-prev-sibling":
+		return NewWithPrevSibling(stepInfo)
 
 	case "with-response":
 		return NewWithResponse(stepInfo)
 
 	case "with-rule":
 		return NewWithRule(stepInfo)
-
 	}
 
 	// Fall through means we have an unrecognized action

@@ -158,9 +158,6 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.WebSub:
 		return StepWebSub(s)
 
-	case step.WithRule:
-		return StepWithRule(s)
-
 	case step.WithChildren:
 		return StepWithChildren(s)
 
@@ -190,6 +187,10 @@ func ExecutableStep(stepInfo step.Step) Step {
 
 	case step.WithResponse:
 		return StepWithResponse(s)
+
+	case step.WithRule:
+		return StepWithRule(s)
+
 	}
 
 	return StepError{Original: stepInfo}
