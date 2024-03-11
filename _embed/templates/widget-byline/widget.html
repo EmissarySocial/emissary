@@ -17,5 +17,5 @@
 	</div>
 	
 	Published
-	<time class="dt-published" datetime="{{.PublishDateRFC3339}}">{{.PublishDateUnix.Format "Jan 2, 2006"}}</time>
+	<time class="dt-published" datetime="{{.PublishDate | isoDate}}">{{.PublishDate | shortDate}}</time>
 </div>

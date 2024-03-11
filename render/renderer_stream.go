@@ -5,7 +5,6 @@ import (
 	"html/template"
 	"math"
 	"net/http"
-	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
@@ -325,14 +324,6 @@ func (w Stream) PublishDate() int64 {
 	}
 
 	return w._stream.CreateDate
-}
-
-func (w Stream) PublishDateUnix() time.Time {
-	return time.Unix(w.PublishDate(), 0)
-}
-
-func (w Stream) PublishDateRFC3339() string {
-	return w.PublishDateUnix().Format(time.RFC3339)
 }
 
 // UpdateDate returns the UpdateDate of the stream being rendered
