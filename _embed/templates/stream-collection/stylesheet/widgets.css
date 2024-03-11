@@ -10,8 +10,9 @@
 	flex-grow:1;
 }
 
+
 .widgets {
-	padding:16px;
+	padding:0px;
 }
 
 .widgets.TOP {
@@ -19,17 +20,23 @@
 }
 
 .widgets.LEFT {
-	width:25%;
-	max-width:300px;
-	margin-right:16px;
+	width:20%;
+	min-width:160px;
+	max-width:320px;
+	padding-right:24px;
+	margin-right:24px;
+	border-right: solid 1px var(--gray20);
 	flex-grow:0;
 	flex-shrink:0;
 }
 
 .widgets.RIGHT {
-	width:25%;
-	max-width:300px;
-	margin-left:16px;
+	width:20%;
+	min-width:160px;
+	max-width:240px;
+	padding-left:24px;
+	margin-left:24px;
+	border-left: solid 1px var(--gray20);
 	flex-grow:0;
 	flex-shrink:0;
 }
