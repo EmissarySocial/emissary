@@ -5,10 +5,10 @@ import (
 	"html/template"
 	"net/http"
 
+	"github.com/EmissarySocial/emissary/build"
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
@@ -33,11 +33,11 @@ func SetupDomainUsersGet(serverFactory *server.Factory, templates *template.Temp
 		modal, err := displayDomainUsersModal(domainConfig, factory, templates)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error rendering modal")
+			return derp.Wrap(err, location, "Error building modal")
 		}
 
 		// Wrap it as a modal
-		return ctx.HTML(http.StatusOK, render.WrapModal(ctx.Response(), modal, "class:large"))
+		return ctx.HTML(http.StatusOK, build.WrapModal(ctx.Response(), modal, "class:large"))
 	}
 }
 
@@ -81,7 +81,7 @@ func SetupDomainUserPost(serverFactory *server.Factory, templates *template.Temp
 		modal, err := displayDomainUsersModal(domainConfig, factory, templates)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error rendering modal")
+			return derp.Wrap(err, location, "Error building modal")
 		}
 
 		return ctx.HTML(http.StatusOK, modal)
@@ -151,7 +151,7 @@ func SetupDomainUserDelete(serverFactory *server.Factory, templates *template.Te
 		modal, err := displayDomainUsersModal(domainConfig, factory, templates)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error rendering modal")
+			return derp.Wrap(err, location, "Error building modal")
 		}
 
 		return ctx.HTML(http.StatusOK, modal)

@@ -2,7 +2,7 @@ package step
 
 import "github.com/benpate/rosetta/mapof"
 
-// UploadAttachment represents an action that can upload attachments.  It can only be used on a StreamRenderer
+// UploadAttachment represents an action that can upload attachments.  It can only be used on a StreamBuilder
 type UploadAttachment struct {
 	Maximum int
 }
@@ -14,5 +14,5 @@ func NewUploadAttachment(stepInfo mapof.Any) (UploadAttachment, error) {
 	}, nil
 }
 
-// AmStep is here only to verify that this struct is a render pipeline step
+// AmStep is here only to verify that this struct is a build pipeline step
 func (step UploadAttachment) AmStep() {}

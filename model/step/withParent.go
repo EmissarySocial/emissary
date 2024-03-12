@@ -14,7 +14,7 @@ type WithParent struct {
 // NewWithParent returns a fully initialized WithParent object
 func NewWithParent(stepInfo mapof.Any) (WithParent, error) {
 
-	const location = "render.NewWithParent"
+	const location = "build.NewWithParent"
 
 	subSteps, err := NewPipeline(convert.SliceOfMap(stepInfo["steps"]))
 
@@ -27,5 +27,5 @@ func NewWithParent(stepInfo mapof.Any) (WithParent, error) {
 	}, nil
 }
 
-// AmStep is here only to verify that this struct is a render pipeline step
+// AmStep is here only to verify that this struct is a build pipeline step
 func (step WithParent) AmStep() {}

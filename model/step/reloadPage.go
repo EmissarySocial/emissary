@@ -10,5 +10,5 @@ func NewReloadPage(stepInfo mapof.Any) (ReloadPage, error) {
 	return ReloadPage{}, nil
 }
 
-// AmStep is here only to verify that this struct is a render pipeline step
+// AmStep is here only to verify that this struct is a build pipeline step
 func (step ReloadPage) AmStep() {}

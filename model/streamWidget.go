@@ -12,7 +12,7 @@ type StreamWidget struct {
 	Label          string             `json:"label"          bson:"label"`
 	Data           mapof.Any          `json:"data"           bson:"data"`
 
-	// These values are not stored in the database, but injected during rendering
+	// These values are not stored in the database, but injected during building
 	Stream *Stream `json:"-" bson:"-"`
 	Widget Widget  `json:"-" bson:"-"`
 }

@@ -1,9 +1,9 @@
 package handler
 
 import (
+	"github.com/EmissarySocial/emissary/build"
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/first"
@@ -14,17 +14,17 @@ import (
 
 // GetAdmin handles GET requests
 func GetAdmin(factoryManager *server.Factory) echo.HandlerFunc {
-	return renderAdmin(factoryManager, render.ActionMethodGet)
+	return buildAdmin(factoryManager, build.ActionMethodGet)
 }
 
 // PostAdmin handles POST/DELETE requests
 func PostAdmin(factoryManager *server.Factory) echo.HandlerFunc {
-	return renderAdmin(factoryManager, render.ActionMethodPost)
+	return buildAdmin(factoryManager, build.ActionMethodPost)
 }
 
-func renderAdmin(factoryManager *server.Factory, actionMethod render.ActionMethod) echo.HandlerFunc {
+func buildAdmin(factoryManager *server.Factory, actionMethod build.ActionMethod) echo.HandlerFunc {
 
-	const location = "handler.adminRenderer"
+	const location = "handler.adminBuilder"
 
 	return func(ctx echo.Context) error {
 
@@ -43,7 +43,7 @@ func renderAdmin(factoryManager *server.Factory, actionMethod render.ActionMetho
 		}
 
 		// Parse admin parameters
-		templateID, actionID, objectID := renderAdmin_ParsePath(ctx)
+		templateID, actionID, objectID := buildAdmin_ParsePath(ctx)
 
 		// Try to load the Template
 		templateService := factory.Template()
@@ -53,19 +53,19 @@ func renderAdmin(factoryManager *server.Factory, actionMethod render.ActionMetho
 			return err
 		}
 
-		// Locate and populate the renderer
-		renderer, err := renderAdmin_GetRenderer(factory, sterankoContext, template, actionID, objectID)
+		// Locate and populate the builder
+		builder, err := buildAdmin_GetBuilder(factory, sterankoContext, template, actionID, objectID)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error generating renderer")
+			return derp.Wrap(err, location, "Error generating builder")
 		}
 
 		// Success!!
-		return renderHTML(factory, sterankoContext, renderer, actionMethod)
+		return buildHTML(factory, sterankoContext, builder, actionMethod)
 	}
 }
 
-func renderAdmin_ParsePath(ctx echo.Context) (string, string, primitive.ObjectID) {
+func buildAdmin_ParsePath(ctx echo.Context) (string, string, primitive.ObjectID) {
 
 	// First parameter is always the templateID
 	templateID := first.String(ctx.Param("param1"), "domain")
@@ -82,11 +82,11 @@ func renderAdmin_ParsePath(ctx echo.Context) (string, string, primitive.ObjectID
 	return templateID, actionID, primitive.NilObjectID
 }
 
-func renderAdmin_GetRenderer(factory *domain.Factory, ctx *steranko.Context, template model.Template, actionID string, objectID primitive.ObjectID) (render.Renderer, error) {
+func buildAdmin_GetBuilder(factory *domain.Factory, ctx *steranko.Context, template model.Template, actionID string, objectID primitive.ObjectID) (build.Builder, error) {
 
-	const location = "handler.renderAdmin_GetRenderer"
+	const location = "handler.buildAdmin_GetBuilder"
 
-	// Create the correct renderer for this controller
+	// Create the correct builder for this controller
 	switch template.Model {
 
 	case "rule":
@@ -101,10 +101,10 @@ func renderAdmin_GetRenderer(factory *domain.Factory, ctx *steranko.Context, tem
 			}
 		}
 
-		return render.NewRule(factory, ctx.Request(), ctx.Response(), &rule, template, actionID)
+		return build.NewRule(factory, ctx.Request(), ctx.Response(), &rule, template, actionID)
 
 	case "domain":
-		return render.NewDomain(factory, ctx.Request(), ctx.Response(), template, actionID)
+		return build.NewDomain(factory, ctx.Request(), ctx.Response(), template, actionID)
 
 	case "group":
 		group := model.NewGroup()
@@ -116,7 +116,7 @@ func renderAdmin_GetRenderer(factory *domain.Factory, ctx *steranko.Context, tem
 			}
 		}
 
-		return render.NewGroup(factory, ctx.Request(), ctx.Response(), template, &group, actionID)
+		return build.NewGroup(factory, ctx.Request(), ctx.Response(), template, &group, actionID)
 
 	case "stream":
 		stream := model.NewStream()
@@ -128,7 +128,7 @@ func renderAdmin_GetRenderer(factory *domain.Factory, ctx *steranko.Context, tem
 			}
 		}
 
-		return render.NewNavigation(factory, ctx.Request(), ctx.Response(), template, &stream, actionID)
+		return build.NewNavigation(factory, ctx.Request(), ctx.Response(), template, &stream, actionID)
 
 	case "user":
 		user := model.NewUser()
@@ -140,7 +140,7 @@ func renderAdmin_GetRenderer(factory *domain.Factory, ctx *steranko.Context, tem
 			}
 		}
 
-		return render.NewUser(factory, ctx.Request(), ctx.Response(), template, &user, actionID)
+		return build.NewUser(factory, ctx.Request(), ctx.Response(), template, &user, actionID)
 
 	default:
 		return nil, derp.NewNotFoundError(location, "Template MODEL must be one of: 'rule', 'domain', 'group', 'stream', or 'user'", template.Model)

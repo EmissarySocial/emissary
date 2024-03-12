@@ -2,7 +2,7 @@ package step
 
 import "github.com/benpate/rosetta/mapof"
 
-// ViewFeed represents an action-step that can render a Stream into HTML
+// ViewFeed represents an action-step that can build a Stream into HTML
 type ViewFeed struct {
 }
 
@@ -12,5 +12,5 @@ func NewViewFeed(stepInfo mapof.Any) (ViewFeed, error) {
 	return ViewFeed{}, nil
 }
 
-// AmStep is here only to verify that this struct is a render pipeline step
+// AmStep is here only to verify that this struct is a build pipeline step
 func (step ViewFeed) AmStep() {}

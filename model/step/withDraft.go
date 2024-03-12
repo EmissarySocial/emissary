@@ -14,7 +14,7 @@ type WithDraft struct {
 // NewWithDraft returns a fully initialized WithDraft object
 func NewWithDraft(stepInfo mapof.Any) (WithDraft, error) {
 
-	const location = "render.NewWithDraft"
+	const location = "build.NewWithDraft"
 
 	subSteps, err := NewPipeline(convert.SliceOfMap(stepInfo["steps"]))
 
@@ -27,5 +27,5 @@ func NewWithDraft(stepInfo mapof.Any) (WithDraft, error) {
 	}, nil
 }
 
-// AmStep is here only to verify that this struct is a render pipeline step
+// AmStep is here only to verify that this struct is a build pipeline step
 func (step WithDraft) AmStep() {}

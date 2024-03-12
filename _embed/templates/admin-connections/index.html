@@ -11,9 +11,9 @@
 
 	<div class="pure-g">
 
-		{{- $renderer := . -}}
+		{{- $builder := . -}}
 		{{- range .Providers -}}
-			{{ $client := $renderer.Client .Value }}
+			{{ $client := $builder.Client .Value }}
 			{{- if eq .Group "OAUTH" -}}
 				<div class="pure-u-1 pure-u-md-1-2 pure-u-lg-1-3 pure-u-xl-1-4">
 					<div class="card align-center">

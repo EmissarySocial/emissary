@@ -55,5 +55,5 @@ func NewAddStream(stepInfo mapof.Any) (AddStream, error) {
 	return result, nil
 }
 
-// AmStep is here to verify that this struct is a render pipeline step
+// AmStep is here to verify that this struct is a build pipeline step
 func (step AddStream) AmStep() {}

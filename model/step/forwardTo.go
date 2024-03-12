@@ -28,5 +28,5 @@ func NewForwardTo(stepInfo mapof.Any) (ForwardTo, error) {
 	}, nil
 }
 
-// AmStep is here only to verify that this struct is a render pipeline step
+// AmStep is here only to verify that this struct is a build pipeline step
 func (step ForwardTo) AmStep() {}

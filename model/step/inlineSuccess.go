@@ -25,5 +25,5 @@ func NewInlineSuccess(stepInfo mapof.Any) (InlineSuccess, error) {
 	}, nil
 }
 
-// AmStep is here only to verify that this struct is a render pipeline step
+// AmStep is here only to verify that this struct is a build pipeline step
 func (step InlineSuccess) AmStep() {}

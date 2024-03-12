@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/EmissarySocial/emissary/build"
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
@@ -35,17 +35,17 @@ func GetOAuthAuthorization(serverFactory *server.Factory) echo.HandlerFunc {
 			return derp.NewInternalError(location, "Invalid Domain.")
 		}
 
-		// Load the OAuth Renderer
-		renderer, err := render.NewOAuthAuthorization(factory, transaction)
+		// Load the OAuth Builder
+		builder, err := build.NewOAuthAuthorization(factory, transaction)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error Generating Renderer")
+			return derp.Wrap(err, location, "Error Generating Builder")
 		}
 
 		// Render the template
 		template := factory.Domain().Theme().HTMLTemplate
 
-		if err := template.ExecuteTemplate(ctx.Response(), "oauth", renderer); err != nil {
+		if err := template.ExecuteTemplate(ctx.Response(), "oauth", builder); err != nil {
 			return derp.Wrap(err, location, "Error executing template")
 		}
 

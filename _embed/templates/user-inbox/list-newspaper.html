@@ -1,6 +1,6 @@
-{{- $inboxRenderer := index . 0 -}}
+{{- $inboxBuilder := index . 0 -}}
 {{- $message := index . 1 -}}
-{{- $stream := $inboxRenderer.ActivityStream $message.URL -}}
+{{- $stream := $inboxBuilder.ActivityStream $message.URL -}}
 {{- $image := $stream.IconOrImage -}}
 <div class="flex-row margin-bottom" style="justify-content:space-between;" hx-push-url="true">
 

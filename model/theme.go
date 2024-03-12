@@ -10,7 +10,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// Theme represents an HTML template used for rendering all hard-coded application elements (but not dynamic streams)
+// Theme represents an HTML template used for building all hard-coded application elements (but not dynamic streams)
 type Theme struct {
 	ThemeID        string                  `json:"themeID"        bson:"themeID"`        // Internal name/token other objects (like streams) will use to reference this Theme.
 	Extends        []string                `json:"extends" bson:"extends"`               // List of other themes that this theme extends

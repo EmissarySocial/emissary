@@ -27,5 +27,5 @@ func NewWithFollower(stepInfo mapof.Any) (WithFollower, error) {
 	}, nil
 }
 
-// AmStep is here only to verify that this struct is a render pipeline step
+// AmStep is here only to verify that this struct is a build pipeline step
 func (step WithFollower) AmStep() {}

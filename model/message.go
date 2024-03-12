@@ -106,7 +106,7 @@ func (message Message) NotRead() bool {
 // SetState implements the model.StateSetter interface, and
 // updates the message.StateID by wrapping the MarkXXX() methods.
 // This method is primarily used by HTML templates in the
-// render pipeline.  Services and handlers written in Go should
+// build pipeline.  Services and handlers written in Go should
 // probably use MarkRead(), MarkUnread(), etc. directly.
 func (message *Message) SetState(stateID string) {
 

@@ -1,4 +1,4 @@
-<!-- Arguments collected from renderer data -->
+<!-- Arguments collected from builder data -->
 {{- $postTo := .GetString "postTo" | addQueryParams "templateId=outbox-reply" -}}
 
 <form id="outbox-message" hx-post="{{$postTo}}" hx-push-url="false" hx-indicator="#outbox-message" data-script="

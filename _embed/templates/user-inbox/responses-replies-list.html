@@ -5,7 +5,7 @@
 {{- $publishedDate := .QueryParam "published" -}}
 
 {{- $pageSize := 4 -}}
-{{- $renderer := . -}}
+{{- $builder := . -}}
 
 {{- $replies := .RepliesBefore $url $publishedDate $pageSize -}}
 
@@ -46,7 +46,7 @@
 				</span>
 				
 				{{- if $actor.NotNil -}}
-					{{- if $renderer.IsMe $object.Actor.ID -}}
+					{{- if $builder.IsMe $object.Actor.ID -}}
 						<span class="button" disabled>{{icon "more-horizontal"}}</span>
 					{{- else -}}
 						<span

@@ -2,7 +2,7 @@ package step
 
 import "github.com/benpate/rosetta/mapof"
 
-// DeleteAttachments represents an action that can upload attachments.  It can only be used on a StreamRenderer
+// DeleteAttachments represents an action that can upload attachments.  It can only be used on a StreamBuilder
 type DeleteAttachments struct {
 	All bool
 }
@@ -14,5 +14,5 @@ func NewDeleteAttachments(stepInfo mapof.Any) (DeleteAttachments, error) {
 	}, nil
 }
 
-// AmStep is here only to verify that this struct is a render pipeline step
+// AmStep is here only to verify that this struct is a build pipeline step
 func (step DeleteAttachments) AmStep() {}

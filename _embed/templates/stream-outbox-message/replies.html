@@ -1,7 +1,7 @@
 {{- $publishedDate := .QueryParam "published" -}}
 {{- $pageSize := 12 -}}
 
-{{- $renderer := . -}}
+{{- $builder := . -}}
 {{- $replies := .RepliesBefore $publishedDate $pageSize -}}
 
 {{- if eq $replies.Length $pageSize -}}
@@ -71,8 +71,8 @@
 			</div>
 		</div>
 
-		{{- if $renderer.IsAuthenticated -}}
-			{{- if $renderer.NotMe $object.Actor.ID -}}
+		{{- if $builder.IsAuthenticated -}}
+			{{- if $builder.NotMe $object.Actor.ID -}}
 				<div class="text-xs margin-left-md nowrap">
 					<span
 						hx-get="/@me/inbox/actor-button?url={{$object.Actor.ID}}"

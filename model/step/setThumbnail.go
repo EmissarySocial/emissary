@@ -13,5 +13,5 @@ func NewSetThumbnail(stepInfo mapof.Any) (SetThumbnail, error) {
 	}, nil
 }
 
-// AmStep is here only to verify that this struct is a render pipeline step
+// AmStep is here only to verify that this struct is a build pipeline step
 func (step SetThumbnail) AmStep() {}

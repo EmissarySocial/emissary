@@ -107,7 +107,7 @@ func (service Outbox) sendNotifications_WebSub(parentType string, parentID primi
 
 // sendNotifications_WebMention sends WebMention updates to external websites that are
 // mentioned in this stream.  This is here (and not in the outbox service)
-// because we need to render the content in order to discover outbound links.
+// because we need to build the content in order to discover outbound links.
 func (service *Outbox) sendNotifications_WebMention(activity mapof.Any) {
 
 	// Locate the object ID for this acticity

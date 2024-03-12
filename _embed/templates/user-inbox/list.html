@@ -28,7 +28,7 @@
 
 {{- if gt (len  $inbox) 0 -}}
 
-	{{- $inboxRenderer := . -}}
+	{{- $inboxBuilder := . -}}
 	{{- range $index, $message := $inbox -}}
 
 		<div 
@@ -42,13 +42,13 @@
 			script="install listItem(messageId:'{{.MessageID.Hex}}')">
 
 			{{- if eq "SOCIAL" $folder.Layout -}}
-				{{- template "list-social" (array $inboxRenderer $message) -}}
+				{{- template "list-social" (array $inboxBuilder $message) -}}
 			{{- else if eq "NEWSPAPER" $folder.Layout -}}
-				{{- template "list-newspaper" (array $inboxRenderer $message) -}}
+				{{- template "list-newspaper" (array $inboxBuilder $message) -}}
 			{{- else if eq "MAGAZINE" $folder.Layout -}}
-				{{- template "list-magazine" (array $inboxRenderer $message) -}}
+				{{- template "list-magazine" (array $inboxBuilder $message) -}}
 			{{- else -}}
-				{{- template "list-social" (array $inboxRenderer $message) -}}
+				{{- template "list-social" (array $inboxBuilder $message) -}}
 			{{- end -}}
 			
 		</div>

@@ -5,7 +5,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// ViewHTML represents an action-step that can render a Stream into HTML
+// ViewHTML represents an action-step that can build a Stream into HTML
 type ViewHTML struct {
 	File   string
 	Method string
@@ -20,5 +20,5 @@ func NewViewHTML(stepInfo mapof.Any) (ViewHTML, error) {
 	}, nil
 }
 
-// AmStep is here only to verify that this struct is a render pipeline step
+// AmStep is here only to verify that this struct is a build pipeline step
 func (step ViewHTML) AmStep() {}

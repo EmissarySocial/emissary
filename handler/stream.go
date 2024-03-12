@@ -3,9 +3,9 @@ package handler
 import (
 	"net/http"
 
+	"github.com/EmissarySocial/emissary/build"
 	"github.com/EmissarySocial/emissary/handler/activitypub_stream"
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/labstack/echo/v4"
@@ -22,25 +22,25 @@ func GetStream(serverFactory *server.Factory) echo.HandlerFunc {
 			return activitypub_stream.GetJSONLD(serverFactory)(ctx)
 		}
 
-		// Otherwise, just render the stream normally
-		return renderStream(serverFactory, render.ActionMethodGet)(ctx)
+		// Otherwise, just build the stream normally
+		return buildStream(serverFactory, build.ActionMethodGet)(ctx)
 	}
 }
 
 // GetStreamWithAction handles GET requests with a specified action
 func GetStreamWithAction(serverFactory *server.Factory) echo.HandlerFunc {
-	return renderStream(serverFactory, render.ActionMethodGet)
+	return buildStream(serverFactory, build.ActionMethodGet)
 }
 
 // PostStreamWithAction handles POST requests with a specified action
 func PostStreamWithAction(serverFactory *server.Factory) echo.HandlerFunc {
-	return renderStream(serverFactory, render.ActionMethodPost)
+	return buildStream(serverFactory, build.ActionMethodPost)
 }
 
-// renderStream is the common Stream handler for both GET and POST requests
-func renderStream(serverFactory *server.Factory, actionMethod render.ActionMethod) echo.HandlerFunc {
+// buildStream is the common Stream handler for both GET and POST requests
+func buildStream(serverFactory *server.Factory, actionMethod build.ActionMethod) echo.HandlerFunc {
 
-	const location = "handler.renderStream"
+	const location = "handler.buildStream"
 
 	return func(ctx echo.Context) error {
 
@@ -71,23 +71,23 @@ func renderStream(serverFactory *server.Factory, actionMethod render.ActionMetho
 		actionID := getActionID(ctx)
 
 		if ok, err := handleJSONLD(ctx, streamService.JSONLDGetter(&stream)); ok {
-			return derp.Wrap(err, location, "Error rendering JSON-LD")
+			return derp.Wrap(err, location, "Error building JSON-LD")
 		}
 
-		renderer, err := render.NewStreamWithoutTemplate(factory, ctx.Request(), ctx.Response(), &stream, actionID)
+		builder, err := build.NewStreamWithoutTemplate(factory, ctx.Request(), ctx.Response(), &stream, actionID)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error creating Renderer")
+			return derp.Wrap(err, location, "Error creating Builder")
 		}
 
 		// Add webmention link header per:
 		// https://www.w3.org/TR/webmention/#sender-discovers-receiver-webmention-endpoint
-		if actionMethod == render.ActionMethodGet {
+		if actionMethod == build.ActionMethodGet {
 			ctx.Response().Header().Set("Link", "/.webmention; rel=\"webmention\"")
 		}
 
-		if err := renderHTML(factory, ctx, &renderer, actionMethod); err != nil {
-			return derp.Wrap(err, location, "Error rendering page")
+		if err := buildHTML(factory, ctx, &builder, actionMethod); err != nil {
+			return derp.Wrap(err, location, "Error building page")
 		}
 
 		return nil

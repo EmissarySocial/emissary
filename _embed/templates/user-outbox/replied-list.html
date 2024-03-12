@@ -1,4 +1,4 @@
-{{- $outboxRenderer := . -}}
+{{- $outboxBuilder := . -}}
 {{- $outbox := .Replies.Top12.ByPublishDate.Reverse.Slice -}}
 
 {{- if ne 0 (len $outbox) -}}
@@ -6,7 +6,7 @@
 	{{- $isMyself := .IsMyself -}}
 
 	{{- range $index, $stream := $outbox -}}
-		{{- $document := $outboxRenderer.ActivityStream $stream.URL -}}
+		{{- $document := $outboxBuilder.ActivityStream $stream.URL -}}
 		<hr>
 		<div class="hover-trigger flex-row">
 			<div script="on click go to url '/{{$stream.ID}}'" role="link" class="flex-grow-1 flex-row h-entry margin-bottom turboclick">
@@ -26,7 +26,7 @@
 					<div class="text-sm text-light-gray p-published">{{$stream.PublishDate | humanizeTime}}</div>
 				</div>
 			</div>
-			{{- if $outboxRenderer.UserCan "edit" -}}
+			{{- if $outboxBuilder.UserCan "edit" -}}
 				<div class="text-sm">
 					<button hx-get="/{{$stream.ID}}/edit">Edit</button>
 				</div>
@@ -34,7 +34,7 @@
 		</div>
 	{{- end -}}
 
-	<div hx-get="{{$outboxRenderer.ProfileURL}}/outbox-list?publishDate=LT:{{$last.PublishDate}}" hx-push-url="false" hx-trigger="intersect once" hx-target="this" hx-swap="outerHTML">
+	<div hx-get="{{$outboxBuilder.ProfileURL}}/outbox-list?publishDate=LT:{{$last.PublishDate}}" hx-push-url="false" hx-trigger="intersect once" hx-target="this" hx-swap="outerHTML">
 		Loading recent posts...
 	</div>
 

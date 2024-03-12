@@ -1,5 +1,5 @@
-// Package Step encapsulates the DATA required for each pipeline step in the renderer.
-// This package does not contain any rendering functions (that's in /render) but these
+// Package Step encapsulates the DATA required for each pipeline step in the builder.
+// This package does not contain any building functions (that's in /build) but these
 // objects know how to parse and "compile" raw data into the arguments required to execute
 // each step.
 package step
@@ -199,7 +199,7 @@ func New(stepInfo mapof.Any) (Step, error) {
 	return nil, derp.NewInternalError("model.step.New", "Unrecognized step type", stepInfo)
 }
 
-// NewPipeline parses a series of render steps into a new array
+// NewPipeline parses a series of build steps into a new array
 func NewPipeline[T ~map[string]any](stepInfo []T) ([]Step, error) {
 
 	const location = "model.step.NewPipeline"

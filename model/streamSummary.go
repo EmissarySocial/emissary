@@ -10,12 +10,12 @@ type StreamSummary struct {
 	ObjectID       primitive.ObjectID `json:"streamId"               bson:"_id"`                    // Unique identifier of this Stream.  (NOT USED PUBLICLY)
 	ParentObjectID primitive.ObjectID `json:"parentId"               bson:"parentId"`               // Unique identifier of the "parent" stream. (NOT USED PUBLICLY)
 	Token          string             `json:"token"                  bson:"token"`                  // Unique value that identifies this element in the URL
-	TemplateID     string             `json:"templateId"             bson:"templateId"`             // Unique identifier (name) of the Template to use when rendering this Stream in HTML.
+	TemplateID     string             `json:"templateId"             bson:"templateId"`             // Unique identifier (name) of the Template to use when building this Stream in HTML.
 	URL            string             `json:"url,omitempty"          bson:"url,omitempty"`          // URL of the original document
 	Label          string             `json:"label,omitempty"        bson:"label,omitempty"`        // Label/Title of the document
 	Summary        string             `json:"summary,omitempty"      bson:"summary,omitempty"`      // Brief summary of the document
 	Content        Content            `json:"content,omitempty"      bson:"content,omitempty"`      // Content of the document
-	Data           mapof.Any          `json:"data,omitempty"         bson:"data,omitempty"`         // Additional data that is specific to the Template used to render this Stream
+	Data           mapof.Any          `json:"data,omitempty"         bson:"data,omitempty"`         // Additional data that is specific to the Template used to build this Stream
 	ImageURL       string             `json:"imageUrl,omitempty"     bson:"imageUrl,omitempty"`     // URL of the cover image for this document's image
 	AttributedTo   PersonLink         `json:"attributedTo,omitempty" bson:"attributedTo,omitempty"` // List of people who are attributed to this document
 	InReplyTo      string             `json:"inReplyTo,omitempty"    bson:"inReplyTo,omitempty"`    // If this stream is a reply to another stream or web page, then this links to the original document.

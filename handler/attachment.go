@@ -3,8 +3,8 @@ package handler
 import (
 	"net/http"
 
+	"github.com/EmissarySocial/emissary/build"
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/list"
@@ -61,8 +61,8 @@ func GetAttachment(factoryManager *server.Factory) echo.HandlerFunc {
 		}
 
 		// Try to find the action requested by the user.  This also enforces user permissions...
-		if _, err := render.NewStreamWithoutTemplate(factory, ctx.Request(), ctx.Response(), &stream, "view"); err != nil {
-			return derp.Wrap(err, location, "Cannot create renderer")
+		if _, err := build.NewStreamWithoutTemplate(factory, ctx.Request(), ctx.Response(), &stream, "view"); err != nil {
+			return derp.Wrap(err, location, "Cannot create builder")
 		}
 
 		// Retrieve the file from the mediaserver

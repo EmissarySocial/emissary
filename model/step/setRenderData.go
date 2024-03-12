@@ -8,7 +8,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// SetRenderData represents an action-step that can update the custom data stored in a renderer
+// SetRenderData represents an action-step that can update the custom data stored in a builder
 type SetRenderData struct {
 	Values map[string]*template.Template // values to set directly into the object
 }
@@ -34,5 +34,5 @@ func NewSetRenderData(stepInfo mapof.Any) (SetRenderData, error) {
 	return result, nil
 }
 
-// AmStep is here only to verify that this struct is a render pipeline step
+// AmStep is here only to verify that this struct is a build pipeline step
 func (step SetRenderData) AmStep() {}

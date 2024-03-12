@@ -162,7 +162,7 @@ func GetResetCode(serverFactory *server.Factory) echo.HandlerFunc {
 			return derp.Wrap(err, "handler.GetResetCode", "Error loading user")
 		}
 
-		// Try to render the HTML response
+		// Try to build the HTML response
 		template := factory.Domain().Theme().HTMLTemplate
 
 		object := mapof.Any{

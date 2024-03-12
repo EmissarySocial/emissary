@@ -1,8 +1,8 @@
 package handler
 
 import (
+	"github.com/EmissarySocial/emissary/build"
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/first"
@@ -12,18 +12,18 @@ import (
 
 // GetInbox handles GET requests
 func GetInbox(serverFactory *server.Factory) echo.HandlerFunc {
-	return renderInbox(serverFactory, render.ActionMethodGet)
+	return buildInbox(serverFactory, build.ActionMethodGet)
 }
 
 // PostInbox handles POST/DELETE requests
 func PostInbox(serverFactory *server.Factory) echo.HandlerFunc {
-	return renderInbox(serverFactory, render.ActionMethodPost)
+	return buildInbox(serverFactory, build.ActionMethodPost)
 }
 
-// renderInbox is the common Inbox handler for both GET and POST requests
-func renderInbox(serverFactory *server.Factory, actionMethod render.ActionMethod) echo.HandlerFunc {
+// buildInbox is the common Inbox handler for both GET and POST requests
+func buildInbox(serverFactory *server.Factory, actionMethod build.ActionMethod) echo.HandlerFunc {
 
-	const location = "handler.renderInbox"
+	const location = "handler.buildInbox"
 
 	return func(context echo.Context) error {
 
@@ -55,16 +55,16 @@ func renderInbox(serverFactory *server.Factory, actionMethod render.ActionMethod
 		actionID := first.String(context.Param("action"), "inbox")
 
 		if ok, err := handleJSONLD(context, &user); ok {
-			return derp.Wrap(err, location, "Error rendering JSON-LD")
+			return derp.Wrap(err, location, "Error building JSON-LD")
 		}
 
-		renderer, err := render.NewInbox(factory, context.Request(), context.Response(), &user, actionID)
+		builder, err := build.NewInbox(factory, context.Request(), context.Response(), &user, actionID)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error creating renderer")
+			return derp.Wrap(err, location, "Error creating builder")
 		}
 
-		// Forward to the standard page renderer to complete the job
-		return renderHTML(factory, sterankoContext, renderer, actionMethod)
+		// Forward to the standard page builder to complete the job
+		return buildHTML(factory, sterankoContext, builder, actionMethod)
 	}
 }

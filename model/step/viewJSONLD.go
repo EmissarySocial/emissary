@@ -5,7 +5,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// ViewJSONLD represents an action-step that can render a Stream into HTML
+// ViewJSONLD represents an action-step that can build a Stream into HTML
 type ViewJSONLD struct {
 	Method string
 }
@@ -18,5 +18,5 @@ func NewViewJSONLD(stepInfo mapof.Any) (ViewJSONLD, error) {
 	}, nil
 }
 
-// AmStep is here only to verify that this struct is a render pipeline step
+// AmStep is here only to verify that this struct is a build pipeline step
 func (step ViewJSONLD) AmStep() {}

@@ -27,5 +27,5 @@ func NewTableEditor(stepInfo mapof.Any) (TableEditor, error) {
 	}, nil
 }
 
-// AmStep is here to verify that this struct is a render pipeline step
+// AmStep is here to verify that this struct is a build pipeline step
 func (step TableEditor) AmStep() {}

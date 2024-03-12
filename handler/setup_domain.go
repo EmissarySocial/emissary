@@ -4,9 +4,9 @@ import (
 	_ "embed"
 	"net/http"
 
+	"github.com/EmissarySocial/emissary/build"
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/render"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
@@ -45,7 +45,7 @@ func SetupDomainGet(factory *server.Factory) echo.HandlerFunc {
 			return derp.Wrap(err, "handler.SetupDomainGet", "Error generating form")
 		}
 
-		result := render.WrapModalForm(ctx.Response(), "/domains/"+domain.DomainID, formHTML)
+		result := build.WrapModalForm(ctx.Response(), "/domains/"+domain.DomainID, formHTML)
 
 		return ctx.HTML(200, result)
 	}
@@ -64,24 +64,24 @@ func SetupDomainPost(factory *server.Factory) echo.HandlerFunc {
 		input := mapof.Any{}
 
 		if err := (&echo.DefaultBinder{}).BindBody(ctx, &input); err != nil {
-			return render.WrapInlineError(ctx.Response(), derp.Wrap(err, "handler.SetupDomainPost", "Error binding form input"))
+			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, "handler.SetupDomainPost", "Error binding form input"))
 		}
 
 		s := schema.New(config.DomainSchema())
 
 		if err := s.SetAll(&domain, input); err != nil {
-			return render.WrapInlineError(ctx.Response(), derp.Wrap(err, "handler.SetupDomainPost", "Error setting config values"))
+			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, "handler.SetupDomainPost", "Error setting config values"))
 		}
 
 		if err := s.Validate(&domain); err != nil {
-			return render.WrapInlineError(ctx.Response(), derp.Wrap(err, "handler.SetupDomainPost", "Error validating config values"))
+			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, "handler.SetupDomainPost", "Error validating config values"))
 		}
 
 		if err := factory.PutDomain(domain); err != nil {
-			return render.WrapInlineError(ctx.Response(), derp.Wrap(err, "handler.SetupDomainPost", "Error saving domain"))
+			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, "handler.SetupDomainPost", "Error saving domain"))
 		}
 
-		render.CloseModal(ctx)
+		build.CloseModal(ctx)
 		return ctx.NoContent(http.StatusOK)
 	}
 }
@@ -99,7 +99,7 @@ func SetupDomainDelete(factory *server.Factory) echo.HandlerFunc {
 		}
 
 		// Close the modal and return OK
-		render.RefreshPage(ctx)
+		build.RefreshPage(ctx)
 		return ctx.NoContent(http.StatusOK)
 	}
 }

@@ -3,7 +3,7 @@ package handler
 import (
 	"net/http"
 
-	"github.com/EmissarySocial/emissary/render"
+	"github.com/EmissarySocial/emissary/build"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/first"
@@ -32,7 +32,7 @@ func GetStartup(serverFactory *server.Factory) echo.HandlerFunc {
 			return derp.NewUnauthorizedError(location, "Unauthorized")
 		}
 
-		// Collect parameters to render
+		// Collect parameters to build
 		templateService := factory.Template()
 		template, err := templateService.LoadAdmin("startup")
 
@@ -42,18 +42,18 @@ func GetStartup(serverFactory *server.Factory) echo.HandlerFunc {
 
 		actionID := first.String(ctx.Param("action"), "page")
 
-		// Get a Renderer for this page (also authenticates admin permissions)
-		renderer, err := render.NewDomain(factory, ctx.Request(), ctx.Response(), template, actionID)
+		// Get a Builder for this page (also authenticates admin permissions)
+		builder, err := build.NewDomain(factory, ctx.Request(), ctx.Response(), template, actionID)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error creating renderer")
+			return derp.Wrap(err, location, "Error creating builder")
 		}
 
 		// Render the HTML page.
-		result, err := renderer.Render()
+		result, err := builder.Render()
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error rendering page")
+			return derp.Wrap(err, location, "Error building page")
 		}
 
 		// Return the HTML page to the browser

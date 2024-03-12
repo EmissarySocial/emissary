@@ -12,7 +12,7 @@ import (
 	"github.com/benpate/rosetta/sliceof"
 )
 
-// Template represents an HTML template used for rendering Streams
+// Template represents an HTML template used for building Streams
 type Template struct {
 	TemplateID         string               `json:"templateId"         bson:"templateId"`         // Internal name/token other objects (like streams) will use to reference this Template.
 	URL                string               `json:"url"                bson:"url"`                // URL where this template is published
