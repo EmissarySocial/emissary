@@ -7,7 +7,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/EmissarySocial/emissary/build"
+	"github.com/EmissarySocial/emissary/builder"
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/service"
@@ -498,7 +498,7 @@ func (factory *Factory) Widget() *service.Widget {
 
 // FuncMap returns the global funcMap (used by all templates)
 func (factory *Factory) FuncMap() template.FuncMap {
-	return build.FuncMap(factory.Icons())
+	return builder.FuncMap(factory.Icons())
 }
 
 // Icons returns the global icon collection

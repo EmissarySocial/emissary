@@ -3,7 +3,7 @@ package handler
 import (
 	"net/http"
 
-	"github.com/EmissarySocial/emissary/build"
+	"github.com/EmissarySocial/emissary/builder"
 	activitypub "github.com/EmissarySocial/emissary/handler/activitypub_user"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
@@ -17,12 +17,12 @@ import (
 
 // GetOutbox handles GET requests
 func GetOutbox(serverFactory *server.Factory) echo.HandlerFunc {
-	return buildOutbox(serverFactory, build.ActionMethodGet)
+	return buildOutbox(serverFactory, builder.ActionMethodGet)
 }
 
 // PostOutbox handles POST/DELETE requests
 func PostOutbox(serverFactory *server.Factory) echo.HandlerFunc {
-	return buildOutbox(serverFactory, build.ActionMethodPost)
+	return buildOutbox(serverFactory, builder.ActionMethodPost)
 }
 
 func GetProfileAvatar(serverFactory *server.Factory) echo.HandlerFunc {
@@ -90,7 +90,7 @@ func GetProfileAvatar(serverFactory *server.Factory) echo.HandlerFunc {
 }
 
 // buildOutbox is the common Outbox handler for both GET and POST requests
-func buildOutbox(serverFactory *server.Factory, actionMethod build.ActionMethod) echo.HandlerFunc {
+func buildOutbox(serverFactory *server.Factory, actionMethod builder.ActionMethod) echo.HandlerFunc {
 
 	const location = "handler.buildOutbox"
 
@@ -136,7 +136,7 @@ func buildOutbox(serverFactory *server.Factory, actionMethod build.ActionMethod)
 			return derp.Wrap(err, location, "Error building JSON-LD")
 		}
 
-		builder, err := build.NewOutbox(factory, context.Request(), context.Response(), &user, actionID)
+		builder, err := builder.NewOutbox(factory, context.Request(), context.Response(), &user, actionID)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error creating builder")

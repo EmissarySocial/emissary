@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/EmissarySocial/emissary/build"
+	"github.com/EmissarySocial/emissary/builder"
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
@@ -197,7 +197,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.Theme(),
 			factory.User(),
 			factory.Provider(),
-			build.FuncMap(factory.Icons()),
+			builder.FuncMap(factory.Icons()),
 		)
 
 		// Populate EncryptionKey Service

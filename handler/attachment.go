@@ -3,7 +3,7 @@ package handler
 import (
 	"net/http"
 
-	"github.com/EmissarySocial/emissary/build"
+	"github.com/EmissarySocial/emissary/builder"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
@@ -61,7 +61,7 @@ func GetAttachment(factoryManager *server.Factory) echo.HandlerFunc {
 		}
 
 		// Try to find the action requested by the user.  This also enforces user permissions...
-		if _, err := build.NewStreamWithoutTemplate(factory, ctx.Request(), ctx.Response(), &stream, "view"); err != nil {
+		if _, err := builder.NewStreamWithoutTemplate(factory, ctx.Request(), ctx.Response(), &stream, "view"); err != nil {
 			return derp.Wrap(err, location, "Cannot create builder")
 		}
 

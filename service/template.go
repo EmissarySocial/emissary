@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"sort"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -148,6 +149,12 @@ func (service *Template) loadTemplates() error {
 			}
 
 			directoryName := directory.Name()
+
+			// Skip "hidden" directories
+			if strings.HasPrefix(directoryName, ".") {
+				continue
+			}
+
 			subdirectory, err := fs.Sub(filesystem, directoryName)
 
 			if err != nil {
@@ -158,7 +165,7 @@ func (service *Template) loadTemplates() error {
 			definitionType, file, err := findDefinition(subdirectory)
 
 			if err != nil {
-				derp.Report(derp.Wrap(err, "service.Template.loadTemplates", "Invalid definition", location))
+				derp.Report(derp.Wrap(err, "service.Template.loadTemplates", "Invalid definition", location, directoryName))
 				continue
 			}
 
@@ -182,7 +189,7 @@ func (service *Template) loadTemplates() error {
 				}
 
 			default:
-				derp.Report(derp.NewInternalError("service.Template.loadTemplates", "Invalid definition", location))
+				derp.Report(derp.NewInternalError("service.Template.loadTemplates", "Unrecognized definition type", location, definitionType))
 			}
 		}
 	}

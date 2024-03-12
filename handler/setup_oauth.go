@@ -4,7 +4,7 @@ import (
 	"html/template"
 	"net/http"
 
-	"github.com/EmissarySocial/emissary/build"
+	"github.com/EmissarySocial/emissary/builder"
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/EmissarySocial/emissary/tools/dataset"
@@ -51,7 +51,7 @@ func SetupOAuthGet(factory *server.Factory, templates *template.Template) echo.H
 		}
 
 		// Wrap the form in a modal dialog
-		result := build.WrapModalForm(ctx.Response(), "/oauth/"+oAuthProviderID, formHTML)
+		result := builder.WrapModalForm(ctx.Response(), "/oauth/"+oAuthProviderID, formHTML)
 
 		return ctx.HTML(200, result)
 	}
@@ -104,7 +104,7 @@ func SetupOAuthPost(factory *server.Factory, templates *template.Template) echo.
 		}
 
 		// Success!
-		build.CloseModal(ctx)
+		builder.CloseModal(ctx)
 		return ctx.NoContent(http.StatusOK)
 	}
 }

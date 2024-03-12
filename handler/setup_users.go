@@ -5,7 +5,7 @@ import (
 	"html/template"
 	"net/http"
 
-	"github.com/EmissarySocial/emissary/build"
+	"github.com/EmissarySocial/emissary/builder"
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
@@ -37,7 +37,7 @@ func SetupDomainUsersGet(serverFactory *server.Factory, templates *template.Temp
 		}
 
 		// Wrap it as a modal
-		return ctx.HTML(http.StatusOK, build.WrapModal(ctx.Response(), modal, "class:large"))
+		return ctx.HTML(http.StatusOK, builder.WrapModal(ctx.Response(), modal, "class:large"))
 	}
 }
 
