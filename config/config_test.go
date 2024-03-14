@@ -73,7 +73,7 @@ func TestConfig(t *testing.T) {
 		{"attachmentCache.path", "PATH...", nil},
 
 		{"adminEmail", "ADMIN@EMAIL.COM", nil},
-		{"debugLevel", "Verbose", nil},
+		{"debugLevel", "Trace", nil},
 		{"httpPort", "8080", 8080},
 		{"httpsPort", "8443", 8443},
 		{"activityPubCache.connectString", "ACTIVITY_PUB_CACHE", nil},
