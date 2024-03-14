@@ -95,7 +95,7 @@ func TestS3URI(t *testing.T) {
 
 	result, err = s3u.ParseString("https://google.com") //) // invalid S3 endpoint
 	require.Error(t, err)
-	require.NotNil(t, result)
+	require.Nil(t, result)
 	// t.Log(result)
 
 	result, err = s3u.ParseString("https://test123.s3.amazonaws.com/key456?versionId=123456&x=1&y=2&y=3;z")
@@ -144,6 +144,6 @@ func TestS3URI(t *testing.T) {
 
 	result, err = ParseString("ftp://google.com/")
 	require.Error(t, err)
-	require.NotNil(t, result)
+	require.Nil(t, result)
 	// t.Log(result)
 }
