@@ -2,7 +2,7 @@
 	templateId:"article-base"
 	templateRole:"article"
 	socialRole:"Article"
-	model:"Stream"
+	model:"stream"
 	extends:["base-widget-editor"]
 	label:"Article (BASE TEMPLATE)"
 	description:"Base Template, extended by article-editorjs and article-markdown"
