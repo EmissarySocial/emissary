@@ -105,7 +105,7 @@ func (step StepUploadAttachment) Post(builder Builder, buffer io.Writer) Pipelin
 			}
 
 			// Tell the client that we're done.
-			return Halt().WithContentType("application/json")
+			return Halt().AsFullPage().WithContentType("application/json")
 		}
 
 		// If we have reached the maximum configured number of attachments,
