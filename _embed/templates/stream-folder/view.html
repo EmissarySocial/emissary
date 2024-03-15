@@ -57,7 +57,7 @@
 
 	{{- else if eq (.Data "format") "COLUMNS" -}}
 
-		<div class="pure-g card-group" script="install sortContainer">
+		<div class="pure-g" script="install sortContainer">
 
 			{{- range .Children.ByRank.Slice -}}
 				<article class="draggable pure-u-1 pure-u-sm-1-2 pure-u-lg-1-3 pure-u-xl-1-4 h-entry" hx-get="/{{.Token}}" href="/{{.Token}}">
