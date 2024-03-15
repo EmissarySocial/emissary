@@ -47,7 +47,7 @@ require (
 	github.com/spf13/afero v1.11.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.9.0
-	github.com/tdewolff/minify/v2 v2.20.18
+	github.com/tdewolff/minify/v2 v2.20.19
 	github.com/timewasted/go-accept-headers v0.0.0-20130320203746-c78f304b1b09
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
 	github.com/xhit/go-simple-mail/v2 v2.16.0
