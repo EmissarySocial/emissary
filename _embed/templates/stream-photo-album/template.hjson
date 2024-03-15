@@ -37,11 +37,6 @@
 			description:"Can read this article, but cannot make changes"
 		}
 	}
-	bundles:{
-		stylesheet:{
-			content-type:"text/css"
-		}
-	}
 	actions: {
 		create: {
 			roles:["editor","owner"]
