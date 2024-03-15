@@ -36,11 +36,13 @@
 				</div>
 
 				<div>
-					<button id="submitButton" type="submit" class="primary">
-						<span class="htmx-request-show">
-							{{icon "loading"}} Signing In
-						</span>
-						<span class="htmx-request-hide">Sign In</span>
+
+					<button class="htmx-request-show primary" disabled>
+						<span class="spin">{{icon "loading"}}</span> Signing In
+					</button>
+
+					<button id="submitButton" type="submit" class="primary htmx-request-hide">
+						Sign In
 					</button>
 
 					<span id="message" class="red" hidden></span>
