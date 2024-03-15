@@ -9,39 +9,35 @@
 		{{- end -}}
 	</div>
 
-	<div class="pure-g">
+	<div class="columns-4">
 
 		{{- $builder := . -}}
 		{{- range .Providers -}}
 			{{ $client := $builder.Client .Value }}
 			{{- if eq .Group "OAUTH" -}}
-				<div class="pure-u-1 pure-u-md-1-2 pure-u-lg-1-3 pure-u-xl-1-4">
-					<div class="card align-center">
-						<div class="text-3xl">{{icon .Icon}}</div>
-						<div class="margin-bottom text-lg bold">{{.Label}}</div>
-						<div class="margin-bottom">
-							{{- if $client.Active -}}
-								<a class="button success" hx-get="/admin/connections/edit/provider={{.Value}}">{{icon "check"}} Enabled</a>
-							{{- else -}}
-								<a class="button" href="/oauth/clients/{{.Value}}">Connect</a>
-							{{- end -}}
-						</div>
+				<div class="card align-center">
+					<div class="text-3xl">{{icon .Icon}}</div>
+					<div class="margin-bottom text-lg bold">{{.Label}}</div>
+					<div class="margin-bottom">
+						{{- if $client.Active -}}
+							<a class="button success" hx-get="/admin/connections/edit/provider={{.Value}}">{{icon "check"}} Enabled</a>
+						{{- else -}}
+							<a class="button" href="/oauth/clients/{{.Value}}">Connect</a>
+						{{- end -}}
 					</div>
 				</div>
 			{{- end -}}
 
 			{{- if eq .Group "MANUAL" -}}
-				<div class="pure-u-1 pure-u-md-1-2 pure-u-lg-1-3 pure-u-xl-1-4">
-					<div class="card align-center">
-						<div class="text-3xl">{{icon .Icon}}</div>
-						<div class="margin-bottom text-lg bold">{{.Label}}</div>
-						<div class="margin-bottom">
-							{{- if $client.Active -}}
-								<a class="button success" hx-get="/admin/connections/edit?provider={{.Value}}">{{icon "check"}} Enabled</a>
-							{{- else -}}
-								<a class="button" hx-get="/admin/connections/edit?provider={{.Value}}">Connect</a>
-							{{- end -}}
-						</div>
+				<div class="card align-center">
+					<div class="text-3xl">{{icon .Icon}}</div>
+					<div class="margin-bottom text-lg bold">{{.Label}}</div>
+					<div class="margin-bottom">
+						{{- if $client.Active -}}
+							<a class="button success" hx-get="/admin/connections/edit?provider={{.Value}}">{{icon "check"}} Enabled</a>
+						{{- else -}}
+							<a class="button" hx-get="/admin/connections/edit?provider={{.Value}}">Connect</a>
+						{{- end -}}
 					</div>
 				</div>
 			{{- end -}}
