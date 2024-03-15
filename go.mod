@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/PuerkitoBio/goquery v1.9.1
-	github.com/aws/aws-sdk-go v1.50.35
+	github.com/aws/aws-sdk-go v1.51.0
 	github.com/benpate/data v0.28.4
 	github.com/benpate/data-mock v0.28.10
 	github.com/benpate/data-mongo v0.28.9
