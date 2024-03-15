@@ -2,15 +2,6 @@
  * Card Widget Classes
  ****************************/
 
-.card-group {
-	margin-right: -1px;
-}
-
-.card-group .card {
-	margin-right: 1px;
-	margin-bottom:1px;
-}
-
 .card {
 	-border: solid 1px var(--gray10);
 	border-radius:2px;
