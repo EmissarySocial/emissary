@@ -3,7 +3,6 @@
 	templateRole:"article"
 	socialRole:"Article"
 	model:"stream"
-	containedBy: ["top", "homepage", "folder", "article"]
 	extends:["base-widget-editor"]
 	label:"Article (BASE TEMPLATE)"
 	description:"Base Template, extended by article-editorjs and article-markdown"

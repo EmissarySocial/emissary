@@ -1,6 +1,7 @@
 {
 	templateId:"article-markdown"
 	extends:["article-base"]
+	containedBy: ["top", "home", "folder", "article"]
 	label:"Article (Markdown)"
 	description:"Simple Markdown editor"
 	icon:"markdown"

@@ -1,6 +1,7 @@
 {
 	templateId:"article-editorjs"
 	extends: ["article-base"]
+	containedBy: ["top", "home", "folder", "article"]
 	label:"Article (WYSIWYG)"
 	description:"For regular use. Contains text, images, and more."
 	icon:"article"
