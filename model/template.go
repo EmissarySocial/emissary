@@ -124,6 +124,11 @@ func (template *Template) Inherit(parent *Template) {
 		template.SocialRole = parent.SocialRole
 	}
 
+	// Inherit ContainedBy (if not already defined)
+	if len(template.ContainedBy) == 0 {
+		template.ContainedBy = parent.ContainedBy
+	}
+
 	// Inherit Model (if not already defined)
 	if template.Model == "" {
 		template.Model = parent.Model
