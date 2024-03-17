@@ -65,7 +65,7 @@
  * PICTURE/PHOTO FORMATTING
  ******************************************/
 
- picture {
+ picture.picture {
 	display: block;
 	background-color: var(--gray20);
 	margin:0px;
@@ -73,7 +73,7 @@
 	border:0px;
 }
 
-picture img {
+picture.picture img {
 	display:block;
 	margin:0px;
 	padding:0px;
@@ -83,7 +83,7 @@ picture img {
 
 @media screen and (max-width:568px) {
 
-	picture {
+	picture.picture {
 		margin-left: -10px;
 		margin-right: -10px;
 		margin-bottom: 20px;
