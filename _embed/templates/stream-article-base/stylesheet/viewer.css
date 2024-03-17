@@ -1,3 +1,7 @@
+.widgets {
+	margin-bottom:24px;
+}
+
 /** MEDIUM Screens (tablet/vertical) ******/
 @media screen and (min-width:768px) {
 
@@ -46,5 +50,4 @@
 	.widgets.BOTTOM {
 		margin-top:16px;
 	}
-
 }

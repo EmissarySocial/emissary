@@ -396,6 +396,20 @@ func (stream *Stream) HasParent() bool {
 	return !stream.ParentID.IsZero()
 }
 
+// HasGrandparent returns TRUE if this Stream has a GrandparentID
+func (stream *Stream) HasGrandparent() bool {
+	return len(stream.ParentIDs) > 1
+}
+
+// GrandParentID returns the ID of the parent of the parent of this Stream (if it exists)
+func (stream *Stream) GrandparentID() primitive.ObjectID {
+	if parentIDsLength := len(stream.ParentIDs); parentIDsLength > 1 {
+		return stream.ParentIDs[parentIDsLength-2]
+	}
+
+	return primitive.NilObjectID
+}
+
 // SetAttributedTo sets the list of people that this Stream is attributed to
 func (stream *Stream) SetAttributedTo(person PersonLink) {
 	stream.AttributedTo = person

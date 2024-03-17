@@ -1,0 +1,52 @@
+{{- $root := . -}}
+{{- $configGrandparents := .Widget.Data.GetString "grandparents" -}}
+
+{{- if eq $configGrandparents "All" -}}
+
+	{{- $parentBuilder := .Parent "view" -}}
+	{{- $ancestors := $parentBuilder.Ancestors.Slice -}}
+	{{- $grandparentID := $parentBuilder.ParentID -}}
+	{{- $streamID := $parentBuilder.StreamID -}}
+
+	{{- range $index, $ancestor := $ancestors -}}
+
+		{{- if eq $grandparentID $ancestor.StreamID -}}
+
+			<div class="ellipsis"><a href="/{{$ancestor.Token}}" hx-get="/{{$ancestor.Token}}" class="turboclick">{{$ancestor.Label}}</a></div>
+
+			{{- if not ($root.Widget.Data.IsZeroValue "parents")  -}}
+				<div style="padding-left:8px; font-size:0.9em;">{{- template "parents" $root -}}</div>
+			{{- else if not ($root.Widget.Data.IsZeroValue "siblings")  -}}
+				<div style="padding-left:8px; font-size:0.9em;">{{- template "siblings" $root -}}</div>
+			{{- else if not ($root.Widget.Data.IsZeroValue "children") -}}
+				<div style="padding-left:8px; font-size:0.9em;">{{- template "children" $root -}}</div>
+			{{- end -}}
+			
+		{{- else -}}
+			<div class="ellipsis"><a href="/{{$ancestor.Token}}" hx-get="/{{$ancestor.Token}}" class="turboclick">{{$ancestor.Label}}</a></div>
+		{{- end -}}
+
+	{{- end -}}
+
+{{- else -}} 
+
+	{{- if eq $configGrandparents "Grandparent Only" -}}
+
+		{{- if .HasGrandparent -}}
+			{{- $grandparent := .Grandparent "view" -}}
+			<div class="ellipsis">
+				<a href="/{{$grandparent.Token}}" hx-get="/{{$grandparent.Token}}" class="turboclick">{{- $grandparent.Label -}}</a>
+			</div>
+		{{- end -}}
+
+	{{- end -}}
+
+	{{- if not (.Widget.Data.IsZeroValue "parents") -}}
+		<div style="padding-left:8px; font-size:0.9em;">{{- template "parents" $root -}}</div>
+	{{- else if not (.Widget.Data.IsZeroValue "siblings") -}}
+		<div style="padding-left:8px; font-size:0.9em;">{{- template "siblings" $root -}}</div>
+	{{- else if not (.Widget.Data.IsZeroValue "children") -}}
+		<div style="padding-left:8px; font-size:0.9em;">{{- template "children" $root -}}</div>
+	{{- end -}}
+
+{{- end -}}

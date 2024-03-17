@@ -200,12 +200,12 @@ func (w Stream) View(actionID string) (template.HTML, error) {
  * STREAM DATA
  ******************************************/
 
-// StreamID returns the unique ID for the stream being builded
+// StreamID returns the unique ID for the stream being built
 func (w Stream) StreamID() string {
 	return w._stream.StreamID.Hex()
 }
 
-// StreamID returns the unique ID for the stream being builded
+// StreamID returns the unique ID for the stream being built
 func (w Stream) ParentID() string {
 	return w._stream.ParentID.Hex()
 }
@@ -218,12 +218,12 @@ func (w Stream) NavigationID() string {
 	return w._stream.NavigationID
 }
 
-// PageTitle returns the Label for the stream being builded
+// PageTitle returns the Label for the stream being built
 func (w Stream) PageTitle() string {
 	return w._stream.Label
 }
 
-// StateID returns the current state of the stream being builded
+// StateID returns the current state of the stream being built
 func (w Stream) StateID() string {
 	return w._stream.StateID
 }
@@ -233,7 +233,7 @@ func (w Stream) TemplateID() string {
 	return w._stream.TemplateID
 }
 
-// Token returns the unique URL token for the stream being builded
+// Token returns the unique URL token for the stream being built
 func (w Stream) Token() string {
 	return w._stream.Token
 }
@@ -243,17 +243,17 @@ func (w Stream) Document() model.DocumentLink {
 	return w._stream.DocumentLink()
 }
 
-// Label returns the Label for the stream being builded
+// Label returns the Label for the stream being built
 func (w Stream) Label() string {
 	return w._stream.Label
 }
 
-// Summary returns the description of the stream being builded
+// Summary returns the description of the stream being built
 func (w Stream) Summary() string {
 	return w._stream.Summary
 }
 
-// SummaryHTML returns the description of the stream being builded
+// SummaryHTML returns the description of the stream being built
 func (w Stream) SummaryHTML() template.HTML {
 	return template.HTML(w._stream.Summary)
 }
@@ -263,7 +263,7 @@ func (w Stream) ShortSummary() string {
 	return htmlconv.Summary(w._stream.Summary)
 }
 
-// ImageURL returns the thumbnail image URL of the stream being builded
+// ImageURL returns the thumbnail image URL of the stream being built
 func (w Stream) ImageURL() string {
 	return w._stream.ImageURL
 }
@@ -311,12 +311,12 @@ func (w Stream) ContentRaw() string {
 	return w._stream.Content.Raw
 }
 
-// CreateDate returns the CreateDate of the stream being builded
+// CreateDate returns the CreateDate of the stream being built
 func (w Stream) CreateDate() int64 {
 	return w._stream.CreateDate
 }
 
-// PublishDate returns the PublishDate of the stream being builded
+// PublishDate returns the PublishDate of the stream being built
 func (w Stream) PublishDate() int64 {
 
 	if w._stream.PublishDate > 0 {
@@ -326,22 +326,27 @@ func (w Stream) PublishDate() int64 {
 	return w._stream.CreateDate
 }
 
-// UpdateDate returns the UpdateDate of the stream being builded
+// UpdateDate returns the UpdateDate of the stream being built
 func (w Stream) UpdateDate() int64 {
 	return w._stream.UpdateDate
 }
 
-// Rank returns the Rank of the stream being builded
+// Rank returns the Rank of the stream being built
 func (w Stream) Rank() int {
 	return w._stream.Rank
 }
 
-// Data returns the custom data map of the stream being builded
+// Data returns the custom data map of the stream being built
 func (w Stream) Data(value string) any {
 	return w._stream.Data[value]
 }
 
-// HasParent returns TRUE if the stream being builded has a parend objec
+// HasGrandparent returns TRUE if the stream
+func (w Stream) HasGrandparent() bool {
+	return w._stream.HasGrandparent()
+}
+
+// HasParent returns TRUE if the stream being built has a parent object
 func (w Stream) HasParent() bool {
 	return w._stream.HasParent()
 }
@@ -423,6 +428,20 @@ func (w Stream) Widgets(location string) (template.HTML, error) {
 /******************************************
  * Related Streams
  ******************************************/
+
+// Grandparent returns a Stream renderer containing the parent of the parent of the current stream
+func (w Stream) Grandparent(actionID string) (Stream, error) {
+
+	const location = "builder.Stream.Grandparent"
+
+	parent, err := w.Parent(actionID)
+
+	if err != nil {
+		return Stream{}, derp.Wrap(err, location, "Error loading Parent")
+	}
+
+	return parent.Parent(actionID)
+}
 
 // Parent returns a Stream containing the parent of the current stream
 func (w Stream) Parent(actionID string) (Stream, error) {

@@ -74,7 +74,7 @@ func (step StepAsModal) Get(builder Builder, buffer io.Writer) PipelineBehavior 
 	// Copy status values into the Response...
 	status.Apply(fullPageBuilder.response())
 
-	// Full Page requests require the theme service to wrap the builded content
+	// Full Page requests require the theme service to wrap the built content
 	var fullPage bytes.Buffer
 	htmlTemplate := factory.Domain().Theme().HTMLTemplate
 	fullPageBuilder.SetContent(partialPage.String())

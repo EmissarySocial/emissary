@@ -5,6 +5,7 @@
 	schema:{
 		type:"object"
 		properties:{
+			grandparents:{type:"string", enum:["All", "Grandparent Only"], default:"Grandparent Only"}
 			parents:{type:"string", enum:["All", "Parent Only"], default:"Parent Only"}
 			siblings:{type:"string", enum:["All", "Self Only"], default:"All"}
 			children:{type:"string", enum:["All"], default:""}
@@ -15,6 +16,7 @@
 		label:"Edit Navigation Widget"
 		description:"Choose which items to display in the navigation widget."
 		children:[
+			{type:"select", path:"grandparents", label:"Grandparents"}
 			{type:"select", path:"parents", label:"Parent"}
 			{type:"select", path:"siblings", label:"Siblings"}
 			{type:"select", path:"children", label:"Children"}

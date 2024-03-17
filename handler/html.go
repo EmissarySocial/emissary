@@ -33,7 +33,7 @@ func buildHTML(factory *domain.Factory, ctx echo.Context, b builder.Builder, act
 		return ctx.HTML(status.GetStatusCode(), partialPage.String())
 	}
 
-	// Full Page requests require the theme service to wrap the builded content
+	// Full Page requests require the theme service to wrap the built content
 	htmlTemplate := factory.Domain().Theme().HTMLTemplate
 	b.SetContent(partialPage.String())
 	var fullPage bytes.Buffer
