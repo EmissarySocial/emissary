@@ -3,9 +3,9 @@
 {{- if gt (len $breadcrumbs) 0 -}}
 	<div class="breadcrumbs text-sm">
 		{{range .Breadcrumbs}}
-			<a href="/{{.StreamID}}" class="turboclick text-gray">{{.Label}}</a>
+			<a href="/{{.Token}}" class="turboclick text-gray">{{.Label}}</a>
 			&bull;
 		{{end}}
-		<a href="/{{.StreamID}}" class="turboclick text-gray">{{.Label}}</a>
+		<a href="/{{.Token}}" class="turboclick text-gray">{{.Label}}</a>
 	</div>
 {{- end -}}
