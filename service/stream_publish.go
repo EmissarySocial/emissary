@@ -22,11 +22,6 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream) error {
 
 	const location = "service.Stream.Publish"
 
-	// RULE: User must be a valid User
-	if user.IsNew() {
-		return derp.NewForbiddenError(location, "User is not valid", user)
-	}
-
 	// RULE: Stream must be a valid Stream
 	if stream.IsNew() {
 		return derp.NewBadRequestError(location, "Stream is not valid", stream)
@@ -93,6 +88,11 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream) error {
 func (service *Stream) publish_User(user *model.User, activity mapof.Any) error {
 
 	const location = "service.Stream.publish_User"
+
+	// Do not take actions on an empty user
+	if user.IsNew() {
+		return nil
+	}
 
 	// Load the Actor for this User
 	actor, err := service.userService.ActivityPubActor(user.UserID, true)
@@ -176,8 +176,10 @@ func (service *Stream) UnPublish(user *model.User, stream *model.Stream) error {
 	}
 
 	// Send "Undo" activities to all User followers.
-	if err := service.unpublish_User(user.UserID, stream.URL); err != nil {
-		return derp.Wrap(err, location, "Error unpublishing from User's outbox", stream)
+	if !user.IsNew() {
+		if err := service.unpublish_User(user.UserID, stream.URL); err != nil {
+			return derp.Wrap(err, location, "Error unpublishing from User's outbox", stream)
+		}
 	}
 
 	// Send "Undo" activities to all Stream followers.
