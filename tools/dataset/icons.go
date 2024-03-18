@@ -82,6 +82,10 @@ func Icons() []form.LookupCode {
 			Label: "Lock",
 		},
 		{
+			Value: "rss",
+			Label: "RSS",
+		},
+		{
 			Value: "shield",
 			Label: "Shield",
 		},
