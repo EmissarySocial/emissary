@@ -447,7 +447,7 @@ func errorHandler(err error, ctx echo.Context) {
 
 		if currentPath := uri.Path; currentPath != "/signin" {
 			nextPage := uri.String()
-			_ = ctx.Redirect(http.StatusTemporaryRedirect, "/signin?next="+url.QueryEscape(nextPage))
+			_ = ctx.Redirect(http.StatusSeeOther, "/signin?next="+url.QueryEscape(nextPage))
 			return
 		}
 
