@@ -41,8 +41,6 @@ func (step StepAsModal) Get(builder Builder, buffer io.Writer) PipelineBehavior 
 
 		if step.Background == "" {
 			result = result.WithHeader("HX-Push-Url", "false")
-		} else {
-			result = result.WithHeader("HX-Push-Url", "true")
 		}
 
 		return result
