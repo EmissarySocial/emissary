@@ -35,7 +35,7 @@ func (step StepWithFollower) execute(builder Builder, buffer io.Writer, actionMe
 	followerService := factory.Follower()
 	followerToken := builder.QueryParam("followerId")
 	follower := model.NewFollower()
-	follower.ParentID = builder.AuthenticatedID()
+	follower.ParentID = builder.AuthenticatedID() // TODO: Make this generic enough to work with Content Actors...
 
 	// Try to load the Follower record (unless we're creating a NEW record)
 	if (followerToken != "") && (followerToken != "new") {

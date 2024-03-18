@@ -10,6 +10,7 @@ import (
 	"github.com/timewasted/go-accept-headers"
 )
 
+// isJSONLDRequest returns TRUE if the request's "Accept" header is an ActivityPub content type.
 func isJSONLDRequest(context echo.Context) bool {
 
 	acceptHeader := context.Request().Header.Get("Accept")
