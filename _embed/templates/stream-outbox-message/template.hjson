@@ -64,7 +64,7 @@
 			steps: [
 				{do:"delete", title:"Delete this Post?", message:"If you continue, this post will be permanently removed from your profile.  There is NO UNDO."}
 				{do:"unpublish"}
-				{do:"forward-to", url:"/@{{.ParentID}}"}
+				{do:"refresh-page"}
 			]
 		}
 		
