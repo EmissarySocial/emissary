@@ -70,10 +70,6 @@ func buildStream(serverFactory *server.Factory, actionMethod builder.ActionMetho
 		// Try to find the action requested by the user.  This also enforces user permissions...
 		actionID := getActionID(ctx)
 
-		if ok, err := handleJSONLD(ctx, streamService.JSONLDGetter(&stream)); ok {
-			return derp.Wrap(err, location, "Error building JSON-LD")
-		}
-
 		b, err := builder.NewStreamWithoutTemplate(factory, ctx.Request(), ctx.Response(), &stream, actionID)
 
 		if err != nil {
