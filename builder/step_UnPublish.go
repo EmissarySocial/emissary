@@ -21,11 +21,6 @@ func (step StepUnPublish) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
 	const location = "build.StepUnPublish.Post"
 
-	// Require that the user is signed in to perform this action
-	if !builder.IsAuthenticated() {
-		return Halt().WithError(derp.NewUnauthorizedError(location, "User is not authenticated", nil))
-	}
-
 	streamBuilder := builder.(*Stream)
 	factory := streamBuilder.factory()
 
@@ -33,8 +28,10 @@ func (step StepUnPublish) Post(builder Builder, _ io.Writer) PipelineBehavior {
 	userService := factory.User()
 	user := model.NewUser()
 
-	if err := userService.LoadByID(streamBuilder.AuthenticatedID(), &user); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error loading user", streamBuilder.AuthenticatedID()))
+	if builder.IsAuthenticated() {
+		if err := userService.LoadByID(streamBuilder.AuthenticatedID(), &user); err != nil {
+			return Halt().WithError(derp.Wrap(err, location, "Error loading user", streamBuilder.AuthenticatedID()))
+		}
 	}
 
 	// Try to Publish the Stream to ActivityPub
