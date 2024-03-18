@@ -41,6 +41,8 @@
 					</span>
 				{{- end -}}
 			</div>
+		{{- else -}}
+			<div class="bold black">{{ $message.Origin.Label }} </div>
 		{{- end -}}
 
 		{{- if ne "" $stream.Name -}}
