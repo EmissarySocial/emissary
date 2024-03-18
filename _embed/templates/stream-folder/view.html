@@ -28,7 +28,7 @@
 		</div>
 	{{- end -}}
 
-	<h1 class="p-name">{{.Label}}</h1>
+	<h1 class="margin-top-none p-name">{{.Label}}</h1>
 	{{- if ne "" .Summary -}}
 		<div class="margin-bottom b-summary">{{.Summary}}</div>
 	{{- end -}}
@@ -88,7 +88,7 @@
 				{{- range .Children.ByRank.Slice -}}
 					<tr class="draggable h-entry" hx-get="/{{.Token}}" href="/{{.Token}}" role="link">
 						<input type="hidden" name="keys" value="{{.StreamID}}"/>
-						<td>{{icon "file"}} <span class="h-name">{{.Label}}</span></td>
+						<td nowrap>{{icon "file"}} <span class="h-name">{{.Label}}</span></td>
 						<td class="h-summary">{{.Summary}}</td>
 						<td class="dt-published" datetime="{{.PublishDate | isoDate}}"></td>
 					</tr>

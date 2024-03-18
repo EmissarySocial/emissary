@@ -52,6 +52,7 @@
 					}
 				}
 				{do:"save"}
+				{do:"publish"}
 				{do:"forward-to", url:"/{{.StreamID}}"}
 			]
 		}
@@ -80,6 +81,7 @@
 							}
 						}, 
 						{do:"save", comment:"Updated Folder"}
+						{do:"publish"}
 					]
 				}
 				{do:"refresh-page"}
@@ -88,6 +90,7 @@
 		delete: {
 			roles: ["editor"]
 			steps: [
+				{do:"unpublish"}
 				{do:"delete", title:"Delete this Folder?", message:"This will permanently delete this folder and all of its contents"}
 				{do:"forward-to", url:"/{{.ParentID}}"}
 			]
