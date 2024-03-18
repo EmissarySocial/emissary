@@ -230,34 +230,66 @@ func (user *User) ActivityPubURL() string {
 }
 
 func (user *User) ActivityPubBlockedURL() string {
+	if user.ProfileURL == "" {
+		return ""
+	}
+
 	return user.ProfileURL + "/pub/blocked"
 }
 
 func (user *User) ActivityPubInboxURL() string {
+	if user.ProfileURL == "" {
+		return ""
+	}
+
 	return user.ProfileURL + "/pub/inbox"
 }
 
 func (user *User) ActivityPubFollowersURL() string {
+	if user.ProfileURL == "" {
+		return ""
+	}
+
 	return user.ProfileURL + "/pub/followers"
 }
 
 func (user *User) ActivityPubFollowingURL() string {
+	if user.ProfileURL == "" {
+		return ""
+	}
+
 	return user.ProfileURL + "/pub/following"
 }
 
 func (user *User) ActivityPubLikedURL() string {
+	if user.ProfileURL == "" {
+		return ""
+	}
+
 	return user.ProfileURL + "/pub/liked"
 }
 
 func (user *User) ActivityPubOutboxURL() string {
+	if user.ProfileURL == "" {
+		return ""
+	}
+
 	return user.ProfileURL + "/pub/outbox"
 }
 
 func (user *User) ActivityPubPublicKeyURL() string {
+	if user.ProfileURL == "" {
+		return ""
+	}
+
 	return user.ProfileURL + "#main-key"
 }
 
 func (user *User) JSONFeedURL() string {
+	if user.ProfileURL == "" {
+		return ""
+	}
+
 	return user.ProfileURL + "/feed?type=json"
 }
 
