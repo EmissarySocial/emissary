@@ -688,7 +688,7 @@ func (w Stream) makeStreamQueryBuilder(criteria exp.Expression) QueryBuilder[mod
 }
 
 /******************************************
- * ATTACHMENTS
+ * Attachments
  ******************************************/
 
 // Reference to the first file attached to this stream
@@ -702,28 +702,12 @@ func (w Stream) Attachments() ([]model.Attachment, error) {
 }
 
 /******************************************
- * SUBSCRIPTIONS
+ * Content Actors
  ******************************************/
 
-func (w Stream) Following() ([]model.Following, error) {
-
-	result := []model.Following{}
-	followingService := w.factory().Following()
-
-	iterator, err := followingService.ListByUserID(w.AuthenticatedID())
-
-	if err != nil {
-		return result, derp.Wrap(err, "builder.Stream.Following", "Error listing following")
-	}
-
-	following := model.NewFollowing()
-
-	for iterator.Next(&following) {
-		result = append(result, following)
-		following = model.NewFollowing()
-	}
-
-	return result, nil
+func (w Stream) Followers() ([]model.Follower, error) {
+	followerService := w.factory().Follower()
+	return followerService.QueryByParent(model.FollowerTypeStream, w._stream.StreamID)
 }
 
 /******************************************

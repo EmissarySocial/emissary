@@ -231,6 +231,11 @@ func (service *Follower) ListByParent(parentID primitive.ObjectID, options ...op
 	return service.List(criteria, options...)
 }
 
+func (service *Follower) QueryByParent(parentType string, parentID primitive.ObjectID, options ...option.Option) ([]model.Follower, error) {
+	criteria := exp.Equal("type", parentType).AndEqual("parentId", parentID)
+	return service.Query(criteria, options...)
+}
+
 // FollowersChannel returns a channel containing all of the Followers of specific parentID
 func (service *Follower) FollowersChannel(parentType string, parentID primitive.ObjectID) (<-chan model.Follower, error) {
 
