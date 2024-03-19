@@ -7,7 +7,6 @@ import (
 	"github.com/EmissarySocial/emissary/builder"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
-	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
 	"github.com/benpate/html"
 	"github.com/benpate/steranko"
@@ -112,7 +111,7 @@ func PostOAuthAuthorization(serverFactory *server.Factory) echo.HandlerFunc {
 			return postOAuthAuthorization_code(ctx, userToken, transaction)
 
 		case "token":
-			return postOAuthAuthorization_token(ctx, userTokenService, userToken, transaction)
+			return postOAuthAuthorization_token(ctx, userToken, transaction)
 		}
 
 		return derp.NewBadRequestError(location, "Invalid response type", transaction.ResponseType)
@@ -149,7 +148,7 @@ func postOAuthAuthorization_code(ctx echo.Context, userToken model.OAuthUserToke
 }
 
 // postOAuthAuthorization_code handles `token` grant types used by the client-side authentication flow
-func postOAuthAuthorization_token(ctx echo.Context, userTokenService *service.OAuthUserToken, userToken model.OAuthUserToken, transaction model.OAuthAuthorizationRequest) error {
+func postOAuthAuthorization_token(ctx echo.Context, userToken model.OAuthUserToken, transaction model.OAuthAuthorizationRequest) error {
 
 	const location = "handler.postOAuthAuthorization_token"
 
