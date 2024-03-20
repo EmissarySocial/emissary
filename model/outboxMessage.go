@@ -2,6 +2,8 @@ package model
 
 import (
 	"github.com/benpate/data/journal"
+	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/mapof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -30,6 +32,20 @@ func OutboxMessageFields() []string {
 
 func (summary OutboxMessage) Fields() []string {
 	return OutboxMessageFields()
+}
+
+/******************************************
+ * JSONLDGetter Interface
+ ******************************************/
+
+func (message OutboxMessage) GetJSONLD() mapof.Any {
+	return mapof.Any{
+		vocab.PropertyID: message.URL,
+	}
+}
+
+func (message OutboxMessage) Created() int64 {
+	return message.Journal.CreateDate
 }
 
 /******************************************

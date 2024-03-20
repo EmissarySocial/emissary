@@ -10,8 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// Message represents a single item in a User's inbox or outbox.  It is loosely modelled on the MessageStreams
-// standard, and can be converted into a strict go-fed streams.Type object.
+// Message represents a single item in a User's inbox.
 type Message struct {
 	MessageID   primitive.ObjectID         `json:"messageId"    bson:"_id"`                   // Unique ID of the Message
 	UserID      primitive.ObjectID         `json:"userId"       bson:"userId"`                // Unique ID of the User who owns this Message

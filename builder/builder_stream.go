@@ -626,6 +626,25 @@ func (w Stream) LikesBefore(dateString string, maxRows int) sliceof.Object[strea
 	return result
 }
 
+// Outbox returns a QueryBuilder for the current Stream's outbox
+func (w Stream) Outbox() (QueryBuilder[model.OutboxMessage], error) {
+
+	queryString := w._request.URL.Query()
+
+	expBuilder := builder.NewBuilder().
+		Int("rank").
+		Int("createDate")
+
+	criteria := exp.And(
+		exp.Equal("parentType", model.FollowerTypeStream),
+		exp.Equal("parentId", w._stream.StreamID),
+		exp.Equal("deleteDate", 0),
+		expBuilder.Evaluate(queryString),
+	)
+
+	return NewQueryBuilder[model.OutboxMessage](w._factory.Outbox(), criteria), nil
+}
+
 /******************************************
  * RELATED RESULTSETS
  ******************************************/

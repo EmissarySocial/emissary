@@ -9,6 +9,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/queue"
+	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -120,6 +121,69 @@ func (service *Outbox) Delete(outboxMessage *model.OutboxMessage, note string) e
 }
 
 /******************************************
+ * Generic Data Methods
+ ******************************************/
+
+// ObjectType returns the type of object that this service manages
+func (service *Outbox) ObjectType() string {
+	return "OutboxMessage"
+}
+
+// New returns a fully initialized model.OutboxMessage as a data.Object.
+func (service *Outbox) ObjectNew() data.Object {
+	result := model.NewOutboxMessage()
+	return &result
+}
+
+func (service *Outbox) ObjectID(object data.Object) primitive.ObjectID {
+
+	if message, ok := object.(*model.OutboxMessage); ok {
+		return message.OutboxMessageID
+	}
+
+	return primitive.NilObjectID
+}
+
+func (service *Outbox) ObjectQuery(result any, criteria exp.Expression, options ...option.Option) error {
+	return service.collection.Query(result, notDeleted(criteria), options...)
+}
+
+func (service *Outbox) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+	return service.List(criteria, options...)
+}
+
+func (service *Outbox) ObjectLoad(criteria exp.Expression) (data.Object, error) {
+	result := model.NewOutboxMessage()
+	err := service.Load(criteria, &result)
+	return &result, err
+}
+
+func (service *Outbox) ObjectSave(object data.Object, note string) error {
+
+	if message, ok := object.(*model.OutboxMessage); ok {
+		return service.Save(message, note)
+	}
+	return derp.NewInternalError("service.Outbox.ObjectSave", "Invalid object type", object)
+}
+
+func (service *Outbox) ObjectDelete(object data.Object, note string) error {
+	if message, ok := object.(*model.OutboxMessage); ok {
+		return service.Delete(message, note)
+	}
+	return derp.NewInternalError("service.Outbox.ObjectDelete", "Invalid object type", object)
+}
+
+func (service *Outbox) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
+	return derp.NewUnauthorizedError("service.OutboxMessage", "Not Authorized")
+}
+
+func (service *Outbox) Schema() schema.Schema {
+	result := schema.New(model.OutboxMessageSchema())
+	result.ID = "https://emissary.social/schemas/stream"
+	return result
+}
+
+/******************************************
  * Custom Query Methods
  ******************************************/
 
@@ -142,6 +206,13 @@ func (service *Outbox) LoadOrCreate(parentType string, parentID primitive.Object
 	return result, derp.Wrap(err, "service.Outbox.LoadOrCreate", "Error loading Outbox", parentID, url)
 }
 
+func (service *Outbox) ListByParentID(parentType string, parentID primitive.ObjectID) (data.Iterator, error) {
+	criteria := exp.Equal("parentType", parentType).
+		AndEqual("parentId", parentID)
+
+	return service.List(criteria)
+}
+
 func (service *Outbox) QueryByParentID(parentType string, parentID primitive.ObjectID, criteria exp.Expression, options ...option.Option) ([]model.OutboxMessage, error) {
 	criteria = exp.Equal("parentType", parentType).
 		AndEqual("parentId", parentID).
@@ -150,7 +221,7 @@ func (service *Outbox) QueryByParentID(parentType string, parentID primitive.Obj
 	return service.Query(criteria, options...)
 }
 
-func (service *Outbox) QueryByUserAndDate(parentType string, parentID primitive.ObjectID, maxDate int64, maxRows int) ([]model.OutboxMessageSummary, error) {
+func (service *Outbox) QueryByParentAndDate(parentType string, parentID primitive.ObjectID, maxDate int64, maxRows int) ([]model.OutboxMessageSummary, error) {
 
 	criteria := exp.Equal("parentType", parentType).
 		AndEqual("parentId", parentID).
@@ -178,6 +249,28 @@ func (service *Outbox) LoadByURL(parentType string, parentID primitive.ObjectID,
 		AndEqual("url", url)
 
 	return service.Load(criteria, result)
+}
+
+func (service *Outbox) DeleteByParentID(parentType string, parentID primitive.ObjectID) error {
+
+	const location = "service.Outbox.DeleteByParent"
+
+	// Get all messages in this Outbox
+	it, err := service.ListByParentID(parentType, parentID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error querying Outbox Messages", parentType, parentID)
+	}
+
+	message := model.NewOutboxMessage()
+	for it.Next(&message) {
+		if err := service.Delete(&message, "Deleted"); err != nil {
+			derp.Report(derp.Wrap(err, location, "Error deleting Outbox Message", message))
+		}
+		message = model.NewOutboxMessage()
+	}
+
+	return nil
 }
 
 func (service *Outbox) DeleteByURL(parentType string, parentID primitive.ObjectID, url string) error {

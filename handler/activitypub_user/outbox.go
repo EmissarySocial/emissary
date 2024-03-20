@@ -53,7 +53,7 @@ func GetOutboxCollection(serverFactory *server.Factory) echo.HandlerFunc {
 		pageSize := 60
 
 		// Retrieve a page of messages from the database
-		messages, err := outboxService.QueryByUserAndDate(model.FollowerTypeUser, user.UserID, publishedDate, pageSize)
+		messages, err := outboxService.QueryByParentAndDate(model.FollowerTypeUser, user.UserID, publishedDate, pageSize)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error loading outbox messages")

@@ -273,6 +273,12 @@ func (service *Stream) Delete(stream *model.Stream, note string) error {
 		if err := service.draftService.Delete(stream, note); err != nil {
 			derp.Report(derp.Wrap(err, "service.Stream.Delete", "Error deleting drafts", stream, note))
 		}
+
+		// RULE: Delete Outbox Messages
+		if err := service.outboxService.DeleteByParentID(model.FollowerTypeStream, stream.StreamID); err != nil {
+			derp.Report(derp.Wrap(err, "service.Stream.Delete", "Error deleting outbox messages", stream, note))
+		}
+
 	}()
 
 	// Bueno!!

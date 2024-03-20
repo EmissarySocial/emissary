@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/hannibal/outbox"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"willnorris.com/go/webmention"
 )
@@ -52,12 +53,13 @@ func (service *Outbox) UnPublish(actor *outbox.Actor, parentType string, parentI
 	message := model.NewOutboxMessage()
 	if err := service.LoadByURL(parentType, parentID, url, &message); err != nil {
 		if derp.NotFound(err) {
+			log.Debug().Str("type", parentType).Str("parent", parentID.Hex()).Str("url", url).Msg("Outbox Message not found")
 			return nil
 		}
 		return derp.Wrap(err, "service.Outbox.UnPublish", "Error loading outbox message", url)
 	}
 
-	// Delete the Message from the Outbox
+	// Delete the Message from the User's Outbox
 	if err := service.Delete(&message, "Un-Publishing"); err != nil {
 		return derp.Wrap(err, "service.Outbox.UnPublish", "Error deleting outbox message", message)
 	}
@@ -69,11 +71,13 @@ func (service *Outbox) UnPublish(actor *outbox.Actor, parentType string, parentI
 
 	// If the Message was a "Create" activity, then send a "Delete" activity to all followers
 	if message.ActivityType == vocab.ActivityTypeCreate {
+		log.Debug().Str("id", url).Msg("Sending Delete Activity")
 		go actor.SendDelete(document)
 		return nil
 	}
 
 	// Otherwise, send an "Undo" activity to all followers
+	log.Debug().Str("id", url).Msg("Sending Undo Activity")
 	go actor.SendUndo(document)
 	return nil
 }

@@ -48,8 +48,8 @@ const CollectionStream = "Stream"
 // CollectionStreamDraft is the name of the database collection where draft changes to streams are stored
 const CollectionStreamDraft = "StreamDraft"
 
-// CollectionStreamResponse is the name of the database collection where users' StreamResponse records are stored
-const CollectionStreamResponse = "StreamResponse"
+// CollectionStreamOutbox is the name of the database collection where users' StreamMessage records are stored
+const CollectionStreamOutbox = "StreamOutbox"
 
 // CollectionResponse is the name of the database collection where Responses are stored
 const CollectionResponse = "Response"

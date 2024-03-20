@@ -297,7 +297,7 @@ func (w Inbox) RuleByToken(token string) model.Rule {
 	return rule
 }
 
-// Inbox returns a slice of messages in the current User's inbox
+// Inbox returns a QueryBuilder for current User's inbox
 func (w Inbox) Inbox() (QueryBuilder[model.Message], error) {
 
 	userID := w.AuthenticatedID()
