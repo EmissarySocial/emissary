@@ -1,0 +1,28 @@
+version: '3.8'
+services:
+  emissary:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mongodb
+      - smtp
+  mongodb:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile-mongodb
+    # image: "mongo:latest"
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodata:/data/db
+  smtp:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile-smtpLogger
+    ports:
+        - "8025:8025"
+volumes:
+  mongodata:

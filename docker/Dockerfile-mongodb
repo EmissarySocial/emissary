@@ -1,0 +1,5 @@
+FROM mongo:latest
+ADD ./docker/dev-db.tar.gz /data/dump/
+COPY ./docker/mongo-restore.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/mongo-restore.sh
+ENTRYPOINT ["mongo-restore.sh"]
