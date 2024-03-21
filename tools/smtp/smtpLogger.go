@@ -40,15 +40,29 @@ func handleConnection(conn net.Conn) {
 
 	scanner := bufio.NewScanner(conn)
 	dataMode := false
+
+	// string that will be used to accumulate data lines
+	var data string;
+
 	for scanner.Scan() {
 		line := scanner.Text()
 		if dataMode {
+			// technically we need to wait for <CR><LF>.<CR><LF> to end the data
+			// but we'll just look for a line with a single period for now.
 			if line == "." {
+				// end of email data
+				log.Println("\n\n" + data)
 				dataMode = false
 				log.Println(">>>> EMAIL END <<<<")
 				fmt.Fprintf(conn, "250 2.0.0 Ok: queued\r\n")
 			} else {
-				log.Println(line)
+				// accumulate line if it ends with =, remove the = and append the next line
+				// until the line does not end with =
+				if strings.HasSuffix(line, "=") {
+					data += strings.TrimSuffix(line, "=")
+				} else {
+					data += line + "\n"
+				}
 			}
 		} else {
 			// log.Println(line)
@@ -60,10 +74,6 @@ func handleConnection(conn net.Conn) {
 				fmt.Fprintf(conn, "250-Hello\r\n")
 				fmt.Fprintf(conn, "250-SIZE 52428800\r\n")
 				fmt.Fprintf(conn, "250-8BITMIME\r\n")
-				fmt.Fprintf(conn, "250-STARTTLS\r\n")
-				fmt.Fprintf(conn, "250-ENHANCEDSTATUSCODES\r\n")
-				fmt.Fprintf(conn, "250-PIPELINING\r\n")
-				fmt.Fprintf(conn, "250-CHUNKING\r\n")
 				fmt.Fprintf(conn, "250 SMTPUTF8\r\n")
 			case strings.HasPrefix(upperLine, "MAIL FROM:"):
 				fmt.Fprintf(conn, "250 2.1.0 Ok\r\n")
