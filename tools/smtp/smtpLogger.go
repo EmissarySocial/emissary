@@ -42,7 +42,7 @@ func handleConnection(conn net.Conn) {
 	dataMode := false
 
 	// string that will be used to accumulate data lines
-	var data string;
+	var data string
 
 	for scanner.Scan() {
 		line := scanner.Text()
