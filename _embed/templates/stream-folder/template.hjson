@@ -35,11 +35,6 @@
 			description: Viewers can access folder contents, but can not add new items
 		}
 	}
-	actor: {
-		social-role: Application
-		rss: true
-		boost-children: true
-	}
 	actions: {
 		create: {
 			roles:["editor","owner"]
@@ -73,6 +68,7 @@
 								type:"layout-vertical"
 								label:"Edit Folder"
 								children: [
+									{type:"text", label:"Token", path:"token"}
 									{type:"text", label:"Label", path:"label"}
 									{type:"textarea", label:"Summary", path:"summary"}
 									{type:"select", label:"Format", path:"data.format", if:{"my value is not 'FOLDER'": {show:["data.showImages"]}}}
