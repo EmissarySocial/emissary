@@ -6,42 +6,48 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/rs/zerolog/log"
 )
 
 func init() {
-	streamRouter.Add(vocab.ActivityTypeDelete, vocab.Any, func(context Context, activity streams.Document) error {
+	streamRouter.Add(vocab.ActivityTypeDelete, vocab.Any, DeleteAny)
+	streamRouter.Add(vocab.ActivityTypeUndo, vocab.Any, DeleteAny)
+}
 
-		const location = "handler.activityPub_stream.DeleteAny"
+func DeleteAny(context Context, activity streams.Document) error {
 
-		// Try to find the message in the cache
-		outboxService := context.factory.Outbox()
-		message := model.NewOutboxMessage()
-		objectID := activity.Object().ID()
+	const location = "handler.activityPub_stream.DeleteAny"
+	log.Trace().Str("activityType", activity.Type()).Msg(location)
 
-		if err := outboxService.LoadByURL(model.FollowerTypeStream, context.stream.StreamID, objectID, &message); err != nil {
-			if derp.NotFound(err) {
-				return nil
-			}
-			return derp.Wrap(err, location, "Error loading message", objectID)
+	// Try to find the message in the cache
+	outboxService := context.factory.Outbox()
+	message := model.NewOutboxMessage()
+	objectID := activity.Object().ID()
+
+	if err := outboxService.LoadByURL(model.FollowerTypeStream, context.stream.StreamID, objectID, &message); err != nil {
+		if derp.NotFound(err) {
+			log.Trace().Str("url", objectID).Msg("Not Found")
+			return nil
 		}
+		return derp.Wrap(err, location, "Error loading message", objectID)
+	}
 
-		// If Found, delete the message
-		if err := outboxService.Delete(&message, "Removed via ActivityPub"); err != nil {
-			return derp.Wrap(err, location, "Error deleting message", message)
-		}
+	// If Found, delete the message
+	if err := outboxService.Delete(&message, "Removed via ActivityPub"); err != nil {
+		return derp.Wrap(err, location, "Error deleting message", message)
+	}
 
-		// Try to load the Actor for this user
-		actor, err := context.ActivityPubActor(true)
+	// Try to load the Actor for this user
+	actor, err := context.ActivityPubActor(true)
 
-		if err != nil {
-			return derp.Wrap(err, "handler.activityPub_HandleRequest_Follow", "Error loading actor", context.stream)
-		}
+	if err != nil {
+		return derp.Wrap(err, "handler.activityPub_HandleRequest_Follow", "Error loading actor", context.stream)
+	}
 
-		// Announce the deleted object
-		announceID := activitypub.FakeActivityID(activity)
-		actor.SendAnnounce(announceID, activity)
+	// Announce the deleted object
+	announceID := activitypub.FakeActivityID(activity)
+	actor.SendAnnounce(announceID, activity)
 
-		// Voila!
-		return nil
-	})
+	// Voila!
+	return nil
 }

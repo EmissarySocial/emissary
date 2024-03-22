@@ -23,17 +23,21 @@ func (service *Outbox) Publish(actor *outbox.Actor, parentType string, parentID 
 	const location = "service.Outbox.Publish"
 
 	// If we have anything BUT an "Update" activity, then write it to the Actor's Outbox
-	if activity.GetString(vocab.PropertyType) != vocab.ActivityTypeUpdate {
+	if activity.GetString(vocab.PropertyType) == vocab.ActivityTypeCreate {
 
-		// Write a new OutboxMessage to the database
-		outboxMessage := model.NewOutboxMessage()
-		outboxMessage.ParentType = parentType
-		outboxMessage.ParentID = parentID
-		outboxMessage.URL = activity.GetString(vocab.PropertyID)
-		outboxMessage.ActivityType = activity.GetString(vocab.PropertyType)
+		if object, ok := activity[vocab.PropertyObject].(mapof.Any); ok {
 
-		if err := service.Save(&outboxMessage, "Publishing"); err != nil {
-			return derp.Wrap(err, location, "Error saving outbox message", outboxMessage)
+			// Write a new OutboxMessage to the database
+			outboxMessage := model.NewOutboxMessage()
+			outboxMessage.ParentType = parentType
+			outboxMessage.ParentID = parentID
+			outboxMessage.URL = object.GetString(vocab.PropertyID)
+			outboxMessage.ActivityType = object.GetString(vocab.PropertyType)
+
+			if err := service.Save(&outboxMessage, "Publishing"); err != nil {
+				return derp.Wrap(err, location, "Error saving outbox message", outboxMessage)
+			}
+			log.Trace().Str("id", outboxMessage.URL).Msg("Outbox Message saved")
 		}
 	}
 

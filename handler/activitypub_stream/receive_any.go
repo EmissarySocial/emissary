@@ -76,6 +76,7 @@ func announce(context Context, activity streams.Document) error {
 	message := model.NewOutboxMessage()
 	message.ParentID = context.stream.StreamID
 	message.ParentType = model.FollowerTypeStream
+	message.ActivityType = activity.Type()
 	message.URL = activity.ID()
 
 	// Try to save the message to the content Actor's outbox
