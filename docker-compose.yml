@@ -6,14 +6,26 @@ services:
       dockerfile: ./docker/Dockerfile
     ports:
       - "8080:8080"
+    command: ["./emissary", "--config", "file:///data/config/config.json"]
     depends_on:
       - mongodb
       - smtp
-  mongodb:
+    volumes:
+      - configdata:/data/config
+  setup:
     build:
       context: .
-      dockerfile: ./docker/Dockerfile-mongodb
-    # image: "mongo:latest"
+      dockerfile: ./docker/Dockerfile
+    ports:
+      - "8888:8888"
+    command: ["./emissary", "--config", "file:///data/config/config.json", "--port", "8888", "--setup"]
+    depends_on:
+      - mongodb
+      - smtp
+    volumes:
+      - configdata:/data/config
+  mongodb:
+    image: "mongo:latest"
     ports:
       - "27017:27017"
     volumes:
@@ -26,3 +38,4 @@ services:
         - "8025:8025"
 volumes:
   mongodata:
+  configdata:
