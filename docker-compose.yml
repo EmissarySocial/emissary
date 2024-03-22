@@ -8,7 +8,7 @@ services:
       - "8080:8080"
     environment:
       - EMISSARY_CONFIG=file:///data/config/config.json
-    command: ["./wait-entrypoint.sh"]
+      - WAIT_FOR_CONFIG=1
     depends_on:
       - mongodb
       - smtp
@@ -22,7 +22,7 @@ services:
       - "8888:8888"
     environment:
       - EMISSARY_CONFIG=file:///data/config/config.json
-    command: ["./emissary", "--port", "8888", "--setup"]
+    command: ["--setup", "--port", "8888"]
     depends_on:
       - mongodb
       - smtp
