@@ -6,7 +6,9 @@ services:
       dockerfile: ./docker/Dockerfile
     ports:
       - "8080:8080"
-    command: ["./config-entrypoint.sh", "--config", "file:///data/config/config.json"]
+    environment:
+      - EMISSARY_CONFIG=file:///data/config/config.json
+    command: ["./wait-entrypoint.sh"]
     depends_on:
       - mongodb
       - smtp
@@ -18,7 +20,9 @@ services:
       dockerfile: ./docker/Dockerfile
     ports:
       - "8888:8888"
-    command: ["./emissary", "--config", "file:///data/config/config.json", "--port", "8888", "--setup"]
+    environment:
+      - EMISSARY_CONFIG=file:///data/config/config.json
+    command: ["./emissary", "--port", "8888", "--setup"]
     depends_on:
       - mongodb
       - smtp

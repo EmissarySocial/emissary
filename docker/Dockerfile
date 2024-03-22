@@ -22,7 +22,7 @@ WORKDIR /app
 
 # Copy the Pre-built binary file from the previous stage
 COPY --from=builder /app/emissary .
-COPY --from=builder /app/docker/config-entrypoint.sh .
+COPY --from=builder /app/docker/wait-entrypoint.sh .
 
 # Command to run the executable
-CMD ["./emissary"]
+CMD ["./entrypoint.sh"]
