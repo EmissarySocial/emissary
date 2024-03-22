@@ -6,7 +6,7 @@ services:
       dockerfile: ./docker/Dockerfile
     ports:
       - "8080:8080"
-    command: ["./emissary", "--config", "file:///data/config/config.json"]
+    command: ["./config-entrypoint.sh", "--config", "file:///data/config/config.json"]
     depends_on:
       - mongodb
       - smtp

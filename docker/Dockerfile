@@ -1,4 +1,4 @@
-FROM golang:1.21
+FROM golang:1.21-bookworm as builder
 
 # Set the Current Working Directory inside the container
 WORKDIR /app
@@ -14,6 +14,15 @@ COPY . .
 
 # Build the Go app
 RUN go build -o emissary server.go
+
+# Start a new stage from scratch
+FROM debian:bookworm-slim
+
+WORKDIR /app
+
+# Copy the Pre-built binary file from the previous stage
+COPY --from=builder /app/emissary .
+COPY --from=builder /app/docker/config-entrypoint.sh .
 
 # Command to run the executable
 CMD ["./emissary"]
