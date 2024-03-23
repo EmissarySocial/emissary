@@ -1,7 +1,8 @@
 <div class="align-center" style="width:95%;">
 	<div class="align-center" style="width:50%; margin:24px auto;">
 		<div class="margin-bottom">
-			<img src="/.themes/global/resources/emissary/Emissary-Icon-1024.png" style="height:128px;">
+			<img src="/.themes/global/resources/emissary/Emissary-Icon-Black.svg" class="dark-mode-hide width-128">
+			<img src="/.themes/global/resources/emissary/Emissary-Icon-White.svg" class="dark-mode-show width-128">
 		</div>
 		<h1>Let's Start Up Your Emissary</h1>
 		<div>Choose the theme for the kind of server you're making.</div>
@@ -9,7 +10,6 @@
 	</div>
 	<hr>
 	<div class="x-grid">
-
 		{{ range .Themes }}
 			<div hx-get="/startup/theme?themeId={{.ThemeID}}" class="x-grid-item x-card clickable">
 				<img src="/.themes/{{.ThemeID}}/resources/startup/icon.png" class="x-card-photo">
@@ -17,7 +17,6 @@
 				<div class="x-card-text">{{.Description}}</div>
 			</div>
 		{{ end }}
-
 	</div>
 	<hr>
 	
