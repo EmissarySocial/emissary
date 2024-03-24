@@ -73,6 +73,7 @@
 		<div class="margin-top-xs"><a href="/@me/inbox/following" class="text-plain">{{icon "person"}} {{.FollowingCount}} Following</a></div>
 		<div class="margin-top-xs"><a href="/@me/inbox/followers" class="text-plain">{{icon "person"}} {{.FollowerCount}} {{pluralize .FollowerCount "Follower" "Followers"}}</a></div>
 		<div class="margin-top-xs"><a href="/@me/inbox/rules" class="text-plain">{{icon "rule"}} {{.RuleCount}} {{pluralize .RuleCount "Rule" "Rules"}}</a></div>
+		<div class="margin-top-xs"><a hx-get="/@me/edit-template" class="text-plain">{{icon "template"}} Template</a></div>
 		<div class="margin-top"><button hx-post="/signout" hx-target="body">Sign Out</button></div>
 	{{- end -}}
 

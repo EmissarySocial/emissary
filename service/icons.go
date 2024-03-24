@@ -214,6 +214,8 @@ func (service Icons) Get(name string) string {
 		return service.get("star")
 	case "star-fill":
 		return service.get("star-fill")
+	case "template":
+		return service.get("layout-text-sidebar-reverse")
 	case "thumbs-down":
 		return service.get("hand-thumbs-down")
 	case "thumbs-down-fill":
