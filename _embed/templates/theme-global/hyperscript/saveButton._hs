@@ -1,0 +1,26 @@
+behavior SaveButton
+
+	init 
+		if :message is not nil then exit end
+
+		set :message to my innerHTML
+		set my *width to my offsetWidth px
+		set my *overflow-x to hidden
+
+		if my.classList.contains("success")
+			set my innerHTML to `<i class="bi bi-check"></i> Saved`
+			set my *color to my *computed-color
+			set my *background-color to my *computed-background-color
+			remove .success
+			wait 1.5s
+	
+			async transition my *backgroundColor to "" over 1s
+			transition my *color to "" over 1s
+		end
+
+		set my innerHTML to `
+			<span class="htmx-request-hide">${:message}</span>
+			<span class="htmx-request-show"><span class="spin"><i class="bi bi-arrow-clockwise"></i></span> Saving&hellip;</span>
+		`
+	end
+end
