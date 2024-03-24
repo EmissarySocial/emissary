@@ -34,7 +34,7 @@ func NewInbox(factory Factory, request *http.Request, response http.ResponseWrit
 
 	// Load the Template
 	templateService := factory.Template()
-	template, err := templateService.Load("user-inbox") // TODO: Users should get to select their inbox template
+	template, err := templateService.Load(user.InboxTemplate) // TODO: Users should get to select their inbox template
 
 	if err != nil {
 		return Inbox{}, derp.Wrap(err, "build.NewInbox", "Error loading template")

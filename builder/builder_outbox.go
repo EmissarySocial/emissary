@@ -27,7 +27,7 @@ func NewOutbox(factory Factory, request *http.Request, response http.ResponseWri
 
 	// Load the Template
 	templateService := factory.Template()
-	template, err := templateService.Load("user-outbox") // Users should get to choose their own outbox template
+	template, err := templateService.Load(user.OutboxTemplate) // Users should get to choose their own outbox template
 
 	if err != nil {
 		return Outbox{}, derp.Wrap(err, "build.NewOutbox", "Error loading template")
