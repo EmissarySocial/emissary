@@ -56,6 +56,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "edit-table":
 		return NewTableEditor(stepInfo)
 
+	case "edit-template":
+		return NewEditTemplate(stepInfo)
+
 	case "edit-widget":
 		return NewEditWidget(stepInfo)
 
@@ -116,17 +119,21 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "set-header":
 		return NewSetHeader(stepInfo)
 
-	case "set-response":
-		return NewSetResponse(stepInfo)
-
 	case "set-query-param":
 		return NewSetQueryParam(stepInfo)
+
+	case "set-response":
+		return NewSetResponse(stepInfo)
 
 	case "set-simple-sharing":
 		return NewSetSimpleSharing(stepInfo)
 
 	case "set-state":
 		return NewSetState(stepInfo)
+
+	// disabled because we may not actually need this step
+	// case "set-template":
+	//	return NewSetTemplate(stepInfo)
 
 	case "set-thumbnail":
 		return NewSetThumbnail(stepInfo)

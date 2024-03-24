@@ -53,6 +53,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.EditModelObject:
 		return StepEditModelObject(s)
 
+	case step.EditTemplate:
+		return StepEditTemplate(s)
+
 	case step.EditWidget:
 		return StepEditWidget(s)
 
@@ -112,6 +115,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 
 	case step.SetRenderData:
 		return StepSetRenderData(s)
+
+	case step.SetTemplate:
+		return StepSetTemplate(s)
 
 	case step.SetSimpleSharing:
 		return StepSetSimpleSharing(s)
