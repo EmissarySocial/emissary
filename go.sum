@@ -63,8 +63,8 @@ github.com/benpate/rosetta v0.20.0 h1:V1lIFcrpyeHUQAW5xe8EgvZ94q5OEE9LPCwIXVleEe
 github.com/benpate/rosetta v0.20.0/go.mod h1:2fBUrF22amsYFiyKniTo/Q0N4lbEN7THkJSKxZDFBfE=
 github.com/benpate/sherlock v0.7.1 h1:q9oHuqKHfh9TEk+KU2xBQ/IlwXKYKzVFndnU8p4urww=
 github.com/benpate/sherlock v0.7.1/go.mod h1:md18HlqIoSex5+Bb22Xj6sGjUbW0bO3DDlxTxAe/j8Y=
-github.com/benpate/steranko v0.16.4 h1:Jz6mGW74ffmdcB7qaYx0V1/V+4CHvk1RH25tbl5dMp4=
-github.com/benpate/steranko v0.16.4/go.mod h1:UGSsjkbr0rITdX4Lp9QXKDgTjqZvMAXeO5Sepy1OH/4=
+github.com/benpate/steranko v0.17.0 h1://74gr0mycHnQHQ/d4QjJgIv1QnqoxZjaLLUbVH3xHM=
+github.com/benpate/steranko v0.17.0/go.mod h1:UGSsjkbr0rITdX4Lp9QXKDgTjqZvMAXeO5Sepy1OH/4=
 github.com/benpate/table v0.6.10 h1:E+Ak7HrPmZNBcbliMPkhvDNolUCV4JV6N6OQ1XFdKzc=
 github.com/benpate/table v0.6.10/go.mod h1:FDGjDOFEELUObR0btcefA4oR15O7Sx41YmVbIaBSEgo=
 github.com/benpate/toot v0.3.0 h1:Nv64oUTJo9yNQnrWVdEQRIBWi/exvwOUYo4PBdjJg9w=
