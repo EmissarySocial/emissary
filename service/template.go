@@ -322,6 +322,16 @@ func (service *Template) Load(templateID string) (model.Template, error) {
  * Custom Queries
  ******************************************/
 
+// ListByTemplateRole returns all model.Templates that match the provided "TemplateRole" value
+func (service *Template) ListByTemplateRole(templateRole string) []form.LookupCode {
+
+	filter := func(t *model.Template) bool {
+		return t.TemplateRole == templateRole
+	}
+
+	return service.List(filter)
+}
+
 // ListByContainer returns all model.Templates that match the provided "containedByRole" value
 func (service *Template) ListByContainer(containedByRole string) []form.LookupCode {
 
