@@ -230,6 +230,7 @@ button,
 	border:none;
 	color: var(--gray90);
 	user-select:none;
+	text-align:left;
 	-moz-user-select: none;
 	-webkit-user-select: none;
 }
@@ -255,30 +256,30 @@ button:focus,
 .button:hover,
 .button:focus {
 	background-color: var(--gray30);
-	color:var(--black)!important;
+	color:var(--black);
 }
 
-.text-red button:hover,
-.text-red [role=button]:hover,
-button.text-read:hover,
-[role=button].text-red:hover {
-	color:var(--white)!important;
-    background-color:var(--red60)!important;
+button.text-red:hover,
+button.text-red:focus,
+.button.text-red:hover,
+.button.text-red:focus {
+	color:var(--white);
+    background-color:var(--red60);
 	border-radius:4px;
 }
 
 button.primary,
 .button.primary {
-	background-color: var(--button-primary-background)!important;
-	color: var(--button-primary-color)!important;
+	background-color: var(--button-primary-background);
+	color: var(--button-primary-color);
 }
 
 button.primary:hover,
 button.primary:focus,
 .button.primary:hover,
 .button.primary:focus {
-	background-color: var(--button-primary-background-hover)!important;
-	color: var(--button-primary-color-hover)!important;
+	background-color: var(--button-primary-background-hover);
+	color: var(--button-primary-color-hover);
 }
 
 button.selected,
@@ -288,37 +289,45 @@ button.selected,
 }
 
 button.selected:hover,
-.button.selected:hover {
+.button.selected:hover,
+button.selected:focus,
+.button.selected:focus {
 	background-color: var(--gray50);
-	color: var(--white)!important;
+	color: var(--white);
 }
 
 button.warning,
 .button.warning {
-	background-color:var(--red70)!important;
-	color: white!important;
+	background-color:var(--red70);
+	color: white;
 }
 
 button.warning:hover,
 button.warning:focus,
 .button.warning:hover,
 .button.warning:focus {
-	background-color:var(--red60)!important;
-	color: white!important;
+	background-color:var(--red60);
+	color: white;
 }
 
 button.success,
-.button.success {
-	background-color:var(--green70)!important;
-	color: white!important;
+button.primary.success,
+.button.success,
+.button.primary.succes {
+	background-color:var(--green70);
+	color: white;
 }
 
 button.success:hover,
 button.success:focus,
 .button.success:hover,
-.button.success:focus {
-	background-color:var(--green60)!important;
-	color: white!important;
+.button.success:focus,
+button.primary.success:hover,
+button.primary.success:focus,
+.button.primary.success:hover,
+.button.primary.success:focus {
+	background-color:var(--green60);
+	color: white;
 }
 
 input[disabled],
@@ -327,8 +336,8 @@ button[disabled],
 input[disabled]:hover,
 button[disabled]:hover,
 .button[disabled]:hover {
-	background-color:var(--gray10)!important;
-	color: var(--gray50)!important;
+	background-color:var(--gray10);
+	color: var(--gray50);
 	cursor: not-allowed;
 }
 

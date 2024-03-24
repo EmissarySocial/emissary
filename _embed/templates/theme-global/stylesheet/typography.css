@@ -155,7 +155,7 @@ input.text-md {
 .text-gray-90, .gray90 {color:var(--gray90);}
 
 .text-black {
-    color:var(--black)!important;
+    color:var(--black);
     text-decoration:none;
 }
 
@@ -168,29 +168,30 @@ input.text-md {
 }
 
 .text-green {
-    color:var(--green70)!important;
+    color:var(--green70);
     text-decoration:none;
 }
 
 a:hover .text-green,
 a.text-green:hover {
-    color:var(--green80)!important;
+    color:var(--green80);
 }
 
 .text-red {
-    color:var(--red60)!important;
+    color:var(--red60);
     text-decoration:none;
 }
 
 a:hover .text-red,
 a.text-red:hover {
-    color:var(--red50)!important;
+    color:var(--red50);
 }
 
 
 /******************************************
  * Text Decoration
  ******************************************/
+
 .text-plain {
     color:var(--text-color)!important;
     text-decoration:none;
