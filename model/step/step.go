@@ -131,10 +131,6 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "set-state":
 		return NewSetState(stepInfo)
 
-	// disabled because we may not actually need this step
-	// case "set-template":
-	//	return NewSetTemplate(stepInfo)
-
 	case "set-thumbnail":
 		return NewSetThumbnail(stepInfo)
 
