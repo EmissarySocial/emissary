@@ -33,7 +33,7 @@
 
 		{{- if ne "" $attributedTo.Name -}}
 			<div>
-				<span class="bold black">{{$attributedTo.Name}}</span>
+				<span class="bold text-black">{{$attributedTo.Name}}</span>
 				{{- if ne "" $attributedTo.Username -}}
 					<span class="text-light-gray ellipsis">
 						&middot;
@@ -42,12 +42,12 @@
 				{{- end -}}
 			</div>
 		{{- else -}}
-			<div class="bold black">{{ $message.Origin.Label }} </div>
+			<div class="bold text-black">{{ $message.Origin.Label }} </div>
 		{{- end -}}
 
 		{{- if ne "" $stream.Name -}}
 			<div>
-				<span class="bold black">{{$stream.Name}}</span>
+				<span class="bold text-black">{{$stream.Name}}</span>
 			</div>
 		{{- end -}}
 

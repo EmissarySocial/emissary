@@ -17,7 +17,7 @@
 			<div class="width-3-5">
 				{{- if ne "" .Label -}}
 					<div class="ellipsis-block" style="max-height:3em;">
-						<div class="black bold">{{- .Label -}}</div>
+						<div class="text-black bold">{{- .Label -}}</div>
 						<div class="text-sm text-light-gray">{{- .URL -}}</div>
 					</div>
 				{{- else -}}
@@ -27,16 +27,16 @@
 				{{- end -}}
 			</div>
 			<div class="width-2-5">
-				<div><a hx-get="/@me/inbox/inbox?folderId={{.FolderID.Hex}}" class="black bold" script="on click halt the event">{{.Folder}}</a></div>
+				<div><a hx-get="/@me/inbox/inbox?folderId={{.FolderID.Hex}}" class="text-black bold" script="on click halt the event">{{.Folder}}</a></div>
 				<div class="text-sm text-light-gray margin-none">
 					{{ if eq "SUCCESS" .Status -}}
 						{{ icon .Icon }} 
 						{{.Method}}
 						{{ .LastPolled | tinyDate }}
 					{{- else if eq "ERROR" .Status -}}
-						<span class="red">{{.Status}}</span>
+						<span class="text-red">{{.Status}}</span>
 					{{- else -}}
-						<span class="green">{{.Status}}</span>
+						<span class="text-green">{{.Status}}</span>
 					{{- end -}}
 				</div>
 			</div>

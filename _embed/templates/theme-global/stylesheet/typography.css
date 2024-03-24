@@ -154,10 +154,6 @@ input.text-md {
 .text-gray-80, .gray80 {color:var(--gray80);}
 .text-gray-90, .gray90 {color:var(--gray90);}
 
-.text-black, .black {color:var(--black);}
-.text-red, .red {color:var(--red60);}
-.text-green, .green {color:var(--green70);}
-
 .text-black {
     color:var(--black)!important;
     text-decoration:none;
@@ -195,7 +191,6 @@ a.text-red:hover {
 /******************************************
  * Text Decoration
  ******************************************/
-
 .text-plain {
     color:var(--text-color)!important;
     text-decoration:none;
