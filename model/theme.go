@@ -25,6 +25,8 @@ type Theme struct {
 	StartupStreams []mapof.Any             `json:"startupStreams" bson:"startupStreams"` // Dataset of Streams to initialize when this theme is first chosen.
 	StartupGroups  []mapof.Any             `json:"startupGroups"  bson:"startupGroups"`  // Dataset of Groups to initialize when this theme is first chosen.
 	DefaultFolders []mapof.Any             `json:"defaultFolders" bson:"defaultFolders"` // Dataset of Folders to initialize when a User is added using this Theme.
+	DefaultInbox   string                  `json:"defaultInbox"   bson:"defaultInbox"`   // Default Inbox Template for Users created underneath this theme
+	DefaultOutbox  string                  `json:"defaultOutbox"  bson:"defaultOutbox"`  // Default Outbox Template for Users created underneath this theme
 	IsVisible      bool                    `json:"isVisible"      bson:"isVisible"`      // Is this theme visible to the site owners?
 }
 
@@ -39,6 +41,8 @@ func NewTheme(templateID string, funcMap template.FuncMap) Theme {
 		StartupGroups:  make([]mapof.Any, 0),
 		DefaultFolders: make([]mapof.Any, 0),
 		HTMLTemplate:   template.New("").Funcs(funcMap),
+		DefaultInbox:   "user-inbox",
+		DefaultOutbox:  "user-outbox",
 	}
 }
 

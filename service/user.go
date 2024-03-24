@@ -31,6 +31,7 @@ type User struct {
 	ruleService       *Rule
 	emailService      *DomainEmail
 	keyService        *EncryptionKey
+	domainService     *Domain
 	folderService     *Folder
 	followerService   *Follower
 	streamService     *Stream
@@ -47,18 +48,19 @@ func NewUser() User {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *User) Refresh(userCollection data.Collection, followerCollection data.Collection, followingCollection data.Collection, ruleCollection data.Collection, attachmentService *Attachment, ruleService *Rule, emailService *DomainEmail, keyService *EncryptionKey, folderService *Folder, followerService *Follower, streamService *Stream, host string) {
+func (service *User) Refresh(userCollection data.Collection, followerCollection data.Collection, followingCollection data.Collection, ruleCollection data.Collection, attachmentService *Attachment, domainService *Domain, emailService *DomainEmail, folderService *Folder, followerService *Follower, keyService *EncryptionKey, ruleService *Rule, streamService *Stream, host string) {
 	service.collection = userCollection
 	service.followers = followerCollection
 	service.following = followingCollection
 	service.rules = ruleCollection
 
 	service.attachmentService = attachmentService
-	service.ruleService = ruleService
+	service.domainService = domainService
 	service.emailService = emailService
-	service.keyService = keyService
 	service.folderService = folderService
 	service.followerService = followerService
+	service.keyService = keyService
+	service.ruleService = ruleService
 	service.streamService = streamService
 
 	service.host = host
@@ -101,6 +103,15 @@ func (service *User) Save(user *model.User, note string) error {
 
 	isNew := user.IsNew()
 
+	// Special steps to tak on initial creation
+	if isNew {
+
+		// RULE: Set default inbox/outbox values based on the Theme
+		inboxTemplate, outboxTemplate := service.domainService.UserDefaults()
+		user.InboxTemplate = inboxTemplate
+		user.OutboxTemplate = outboxTemplate
+	}
+
 	// RULE: Set ProfileURL to the hostname + the username
 	user.ProfileURL = service.host + "/@" + user.UserID.Hex()
 
@@ -115,7 +126,7 @@ func (service *User) Save(user *model.User, note string) error {
 	}
 
 	// Clean the value before saving
-	if err := service.Schema().Clean(user); err != nil {
+	if err := service.Schema().Clean(&user); err != nil {
 		return derp.Wrap(err, location, "Error cleaning User", user)
 	}
 
