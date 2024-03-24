@@ -30,7 +30,7 @@ type User struct {
 	SignupNote     string                     `json:"signupNote"      bson:"signupNote,omitempty"` // Note that was included when this user signed up.
 	FollowerCount  int                        `json:"followerCount"   bson:"followerCount"`        // Number of followers for this user
 	FollowingCount int                        `json:"followingCount"  bson:"followingCount"`       // Number of users that this user is following
-	RuleCount      int                        `json:"ruleCount"      bson:"ruleCount"`             // Number of users that this user is following
+	RuleCount      int                        `json:"ruleCount"       bson:"ruleCount"`            // Number of users that this user is following
 	IsOwner        bool                       `json:"isOwner"         bson:"isOwner"`              // If TRUE, then this user is a website owner with FULL privileges.
 	IsPublic       bool                       `json:"isPublic"        bson:"isPublic"`             // If TRUE, then this user's profile is publicly available
 	PasswordReset  PasswordReset              `                       bson:"passwordReset"`        // Most recent password reset information.
