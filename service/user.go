@@ -97,6 +97,8 @@ func (service *User) Load(criteria exp.Expression, result *model.User) error {
 // Save adds/updates an User in the database
 func (service *User) Save(user *model.User, note string) error {
 
+	const location = "service.User.Save"
+
 	isNew := user.IsNew()
 
 	// RULE: Set ProfileURL to the hostname + the username
@@ -107,14 +109,19 @@ func (service *User) Save(user *model.User, note string) error {
 		user.PasswordReset.AuthCode = ""
 	}
 
+	// Validate the value before saving
+	if err := service.Schema().Validate(user); err != nil {
+		return derp.Wrap(err, location, "Invalid User Data", user)
+	}
+
 	// Clean the value before saving
 	if err := service.Schema().Clean(user); err != nil {
-		return derp.Wrap(err, "service.User.Save", "Error cleaning User", user)
+		return derp.Wrap(err, location, "Error cleaning User", user)
 	}
 
 	// Try to save the User record to the database
 	if err := service.collection.Save(user, note); err != nil {
-		return derp.Wrap(err, "service.User.Save", "Error saving User", user, note)
+		return derp.Wrap(err, location, "Error saving User", user, note)
 	}
 
 	// RULE: Take these actions when setting up a new user
@@ -122,12 +129,12 @@ func (service *User) Save(user *model.User, note string) error {
 
 		// RULE: Create a new encryption key for this user
 		if _, err := service.keyService.Create(model.EncryptionKeyTypeUser, user.UserID); err != nil {
-			return derp.Wrap(err, "service.User.Save", "Error creating encryption key for User", user, note)
+			return derp.Wrap(err, location, "Error creating encryption key for User", user, note)
 		}
 
 		// RULE: Create default folders for this user
 		if err := service.folderService.CreateDefaultFolders(user.UserID); err != nil {
-			return derp.Wrap(err, "service.User.Save", "Error creating default folders for User", user, note)
+			return derp.Wrap(err, location, "Error creating default folders for User", user, note)
 		}
 	}
 
