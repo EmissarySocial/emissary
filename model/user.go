@@ -21,13 +21,15 @@ type User struct {
 	DisplayName    string                     `json:"displayName"     bson:"displayName"`          // Name to be displayed for this user
 	StatusMessage  string                     `json:"statusMessage"   bson:"statusMessage"`        // Status summary for this user
 	Location       string                     `json:"location"        bson:"location"`             // Human-friendly description of this user's physical location.
-	Links          sliceof.Object[PersonLink] `json:"links"           bson:"links"`                // Slice of links to profiles on other web services.
 	ProfileURL     string                     `json:"profileUrl"      bson:"profileUrl"`           // Fully Qualified profile URL for this user (including domain name)
 	EmailAddress   string                     `json:"emailAddress"    bson:"emailAddress"`         // Email address for this user
 	Username       string                     `json:"username"        bson:"username"`             // This is the primary public identifier for the user.
 	Password       string                     `json:"-"               bson:"password"`             // This password should be encrypted with BCrypt.
 	Locale         string                     `json:"locale"          bson:"locale"`               // Language code for this user's preferred language.
 	SignupNote     string                     `json:"signupNote"      bson:"signupNote,omitempty"` // Note that was included when this user signed up.
+	InboxTemplate  string                     `json:"inboxTemplate"   bson:"inboxTemplate"`        // Template for the user's inbox
+	OutboxTemplate string                     `json:"outboxTemplate"  bson:"outboxTemplate"`       // Template for the user's outbox
+	Links          sliceof.Object[PersonLink] `json:"links"           bson:"links"`                // Slice of links to profiles on other web services.
 	FollowerCount  int                        `json:"followerCount"   bson:"followerCount"`        // Number of followers for this user
 	FollowingCount int                        `json:"followingCount"  bson:"followingCount"`       // Number of users that this user is following
 	RuleCount      int                        `json:"ruleCount"       bson:"ruleCount"`            // Number of users that this user is following

@@ -22,6 +22,8 @@ func UserSchema() schema.Element {
 			"username":       schema.String{MaxLength: 32, Required: true},
 			"locale":         schema.String{},
 			"signupNote":     schema.String{MaxLength: 256},
+			"inboxTemplate":  schema.String{MaxLength: 128},
+			"outboxTemplate": schema.String{MaxLength: 128},
 			"followerCount":  schema.Integer{},
 			"followingCount": schema.Integer{},
 			"ruleCount":      schema.Integer{},
@@ -83,6 +85,12 @@ func (user *User) GetPointer(name string) (any, bool) {
 
 	case "profileUrl":
 		return &user.ProfileURL, true
+
+	case "inboxTemplate":
+		return &user.InboxTemplate, true
+
+	case "outboxTemplate":
+		return &user.OutboxTemplate, true
 
 	default:
 		return nil, false

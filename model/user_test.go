@@ -33,6 +33,8 @@ func TestUserSchema(t *testing.T) {
 		{"ruleCount", "3", 3},
 		{"isPublic", "true", true},
 		{"isOwner", "true", true},
+		{"inboxTemplate", "INBOX", nil},
+		{"outboxTemplate", "OUTBOX", nil},
 	}
 
 	tableTest_Schema(t, &s, &user, tests)
