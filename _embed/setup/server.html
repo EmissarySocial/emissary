@@ -1,10 +1,15 @@
+{{template "_header.html" "index"}}
 {{template "_navigation.html" "server"}}
 
 <main>
 	<div class="framed page">
-		<h1>Server Settings</h1>
+		<h1>
+			<img src="/.themes/global/resources/emissary/Emissary-Icon-Black.svg" class="dark-mode-hide" style="height:1em;">
+			<img src="/.themes/global/resources/emissary/Emissary-Icon-White.svg" class="dark-mode-show" style="height:1em;">
+			Server Settings
+		</h1>
 
-		<p>Manage locations of critical system files. For help, visit the <a href="https://emissary.dev/packages" target="_blank">developer documentation</a>.</p>
+		<p>Manage locations of critical system files. <a href="https://emissary.dev/packages" target="_blank">View Help Docs</a>.</p>
 
 		<form hx-post="/server">
 
@@ -21,3 +26,5 @@
 		</form>
 	</div>
 </main>
+
+{{template "_footer.html" "index"}}

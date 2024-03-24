@@ -1,3 +1,4 @@
+{{template "_header.html" "index"}}
 {{template "_navigation.html" "index"}}
 
 <main>
@@ -5,9 +6,10 @@
 
 		<div style="width:clamp(400px, 50%, 800px); margin:40px auto;">
 
-			<div class="align-center margin-bottom">
-				<img src="/.themes/global/resources/emissary/Emissary-Icon-1024.png" style="width:128px;">
-				<h1>Welcome To Emissary</h1>
+			<div class="align-center margin-bottom-lg">
+				<img src="/.themes/global/resources/emissary/Emissary-Icon-Black.svg" class="dark-mode-hide width-128">
+				<img src="/.themes/global/resources/emissary/Emissary-Icon-White.svg" class="dark-mode-show width-128">
+				<h1 class="margin-top">Welcome To Emissary</h1>
 			</div>
 	
 			<div class="margin-bottom">
@@ -30,3 +32,5 @@
 		</div>
 	</div>
 </main>
+
+{{template "_footer.html" "index"}}

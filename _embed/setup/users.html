@@ -1,49 +1,58 @@
-{{$domainID := .DomainID}}
+{{- $domainID := .DomainID -}}
 
-<div id="userAccountModal">
-	<h2>{{.Domain}}: Admin Accounts</h2>
+<div id="modal" script="install Modal">
+	<div id="modal-underlay"></div>
+	<div id="modal-window" class="large">
 
-	<form hx-post="/domains/{{$domainID}}/users" hx-push-url="false" hx-target="#userAccountModal" hx-swap="outerHTML">
+		<div class="bold">Edit Domain Owners</div>
+		<div class="modal-title">{{icon "server"}} {{.Domain}}</h1>
 
-		<table class="table">
+		<form hx-post="/domains/{{$domainID}}/users" hx-push-url="false" hx-target="#modal" hx-swap="outerHTML">
 
-			<thead>
+			<table class="table">
+
+				<thead>
+					<tr>
+						<td class="text-lg">{{icon "person"}}</td>
+						<td>Full Name</td>
+						<td>Email</td>
+						<td>Username</td>
+						<td>&nbsp;</td>
+					</tr>
+				</thead>
+
+				{{- range .Users -}}
+					<tr>
+						<td class="text-lg">{{icon "person"}}</td>
+						<td>{{.DisplayName}}</td>
+						<td>{{.EmailAddress}}</td>
+						<td>{{.Username}}</td>
+						<td nowrap>
+							<button type="button" hx-post="/domains/{{$domainID}}/users/{{.UserID.Hex}}/invite" hx-swap="none" title="Resend Welcome Email">
+								<span class="htmx-request-hide">{{icon "loading"}}</span>
+								<span class="htmx-request-show spin">{{icon "loading"}}</span>
+							</button>
+							<button type="button" class="text-red" hx-delete="/domains/{{$domainID}}/users/{{.UserID.Hex}}" hx-confirm="Are you sure you want to DELETE this user?  There is NO UNDO." title="Delete Domain Owner">{{icon "delete"}}</button>
+						</td>
+					</tr>
+				{{- end -}}
+
 				<tr>
-					<td class="text-lg">{{icon "person"}}</td>
-					<td>Full Name</td>
-					<td>Email</td>
-					<td>Username</td>
-					<td>&nbsp;</td>
+					<td class="text-lg">{{icon "add"}}</td>
+					<td><input type="text" name="displayName" placeholder="Full Name" tabIndex="0" autocomplete="off"></td>
+					<td><input type="text" name="emailAddress" placeholder="Email" tabIndex="0" autocomplete="off"></td>
+					<td><input type="text" name="username" placeholder="Username" tabIndex="0" autocomplete="off"></td>
+					<td nowrap><button type="submit" script="install SaveButton">{{icon "email"}} Invite</button></td>
 				</tr>
-			</thead>
 
-			{{- range .Users -}}
-				<tr>
-					<td class="text-lg">{{icon "person"}}</td>
-					<td>{{.DisplayName}}</td>
-					<td>{{.EmailAddress}}</td>
-					<td>{{.Username}}</td>
-					<td nowrap>
-						<button type="button" hx-post="/domains/{{$domainID}}/users/{{.UserID.Hex}}/invite" hx-swap="none">
-							<span class="htmx-request-hide">{{icon "loading"}}</span>
-							<span class="htmx-request-show spin">{{icon "loading"}}</span>
-						</button>
-						<button type="button" class="text-red" hx-delete="/domains/{{$domainID}}/users/{{.UserID.Hex}}" hx-confirm="Are you sure you want to DELETE this user?  There is NO UNDO.">{{icon "delete"}}</button>
-					</td>
-				</tr>
-			{{- end -}}
+			</table>
 
-			<tr>
-				<td class="text-lg">{{icon "add"}}</td>
-				<td><input type="text" name="displayName" placeholder="Full Name" tabIndex="0" autocomplete="off"></td>
-				<td><input type="text" name="emailAddress" placeholder="Email" tabIndex="0" autocomplete="off"></td>
-				<td><input type="text" name="username" placeholder="Username" tabIndex="0" autocomplete="off"></td>
-				<td nowrap><button type="submit">{{icon "email"}} Invite</button></td>
-			</tr>
+		</form>
 
-		</table>
+		<div class="text-sm text-gray margin-bottom">
+			Passwords are automatically generated on live domains
+		</div>
 
-	</form>
-
-	<button data-script="on click send closeModal">Close Window</button>
+		<button data-script="on click send closeModal">Close Window</button>
+	</div>
 </div>

@@ -1,0 +1,68 @@
+{{- $domainID := .DomainID -}}
+{{- $updatedID := .UpdatedID -}}
+
+<div id="modal" script="install Modal">
+	<div id="modal-underlay"></div>
+	<div id="modal-window" class="large">
+
+		<div class="bold">Edit Domain Owners</div>
+		<div id="modal-title">{{icon "server"}} {{.Domain}}</div>
+
+		{{- range .Users -}}
+			<form id="form-{{.UserID.Hex}}" hx-post="/domains/{{$domainID}}/users?userId={{.UserID.Hex}}" hx-indicator="#row-{{.UserID.Hex}}"></form>
+		{{- end -}}
+		<form id="form-NewUser" hx-post="/domains/{{$domainID}}/users" hx-indicator="#row-NewUser"></form>
+
+		<table class="table">
+
+			<thead>
+				<tr>
+					<td class="text-lg">{{icon "person"}}</td>
+					<td>Full Name</td>
+					<td>Email</td>
+					<td>Username</td>
+					<td>Password</td>
+					<td>&nbsp;</td>
+				</tr>
+			</thead>
+
+			{{- range .Users -}}
+
+				{{- $class := "" -}}
+				{{- if eq $updatedID .UserID.Hex -}}
+					{{- $class = "success" -}}
+				{{- end -}}
+
+				<tr id="row-{{.UserID.Hex}}">
+					<td class="text-lg">{{icon "person"}}</td>
+					<td><input form="form-{{.UserID.Hex}}" type="text" name="displayName" tabIndex="0" autocomplete="off" value="{{.DisplayName}}"></td>
+					<td><input form="form-{{.UserID.Hex}}" type="text" name="emailAddress" tabIndex="0" autocomplete="off" value="{{.EmailAddress}}"></td>
+					<td><input form="form-{{.UserID.Hex}}" type="text" name="username" tabIndex="0" autocomplete="off" value="{{.Username}}"></td>
+					<td><input form="form-{{.UserID.Hex}}" type="text" name="password" tabIndex="0" autocomplete="off" value="" placeholder="****************"></td>
+					<td nowrap>
+						<button form="form-{{.UserID.Hex}}" type="submit" class="{{$class}}" script="install SaveButton">Save Changes</button>
+						<button type="button" class="text-red" hx-delete="/domains/{{$domainID}}/users/{{.UserID.Hex}}" hx-confirm="Are you sure you want to DELETE this user?  There is NO UNDO." title="Delete Domain Owner">{{icon "delete"}}</button>
+					</td>
+				</tr>
+			{{- end -}}
+
+			<tr id="row-NewUser">
+				<td class="text-lg">{{icon "add"}}</td>
+				<td><input form="form-NewUser" type="text" name="displayName" placeholder="Full Name" tabIndex="0" autocomplete="off"></td>
+				<td><input form="form-NewUser" type="text" name="emailAddress" placeholder="Email" tabIndex="0" autocomplete="off"></td>
+				<td><input form="form-NewUser" type="text" name="username" placeholder="Username" tabIndex="0" autocomplete="off"></td>
+				<td><input form="form-NewUser" type="text" name="password" placeholder="Password" tabIndex="0" autocomplete="off"></td>
+				<td nowrap>
+					<button form="form-NewUser" type="submit" script="install SaveButton">Add Owner</button>
+				</td>
+			</tr>
+
+		</table>
+
+		<div class="text-sm text-gray margin-vertical">
+			Passwords are writeable on local domains only
+		</div>
+
+		<button data-script="on click send closeModal">Close Window</button>
+	</div>
+</div>
