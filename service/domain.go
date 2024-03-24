@@ -29,6 +29,7 @@ type Domain struct {
 	providerService *Provider
 	funcMap         template.FuncMap
 	domain          model.Domain
+	hostname        string // domain-only name (no protocol)
 	ready           bool
 }
 
@@ -42,7 +43,7 @@ func NewDomain() Domain {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Domain) Refresh(collection data.Collection, configuration config.Domain, themeService *Theme, userService *User, providerService *Provider, funcMap template.FuncMap) {
+func (service *Domain) Refresh(collection data.Collection, configuration config.Domain, themeService *Theme, userService *User, providerService *Provider, funcMap template.FuncMap, hostname string) {
 
 	service.collection = collection
 	service.configuration = configuration
@@ -50,6 +51,7 @@ func (service *Domain) Refresh(collection data.Collection, configuration config.
 	service.userService = userService
 	service.providerService = providerService
 	service.funcMap = funcMap
+	service.hostname = hostname
 
 	service.domain = model.NewDomain()
 
@@ -281,6 +283,12 @@ func (service *Domain) OAuthProvider(providerID string) (providers.OAuthProvider
 	}
 
 	return nil, false
+}
+
+// IsLocalhost returns TRUE if the current domain is a local domain
+// (localhost, 127.0.0.1, *.local, etc.)
+func (service *Domain) IsLocalhost() bool {
+	return domain.IsLocalhost(service.hostname)
 }
 
 /******************************************

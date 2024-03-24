@@ -198,6 +198,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.User(),
 			factory.Provider(),
 			builder.FuncMap(factory.Icons()),
+			factory.Hostname(),
 		)
 
 		// Populate EncryptionKey Service
@@ -387,14 +388,19 @@ func (factory *Factory) ID() string {
 	return factory.config.Hostname
 }
 
-// Host returns the domain name AND protocol (probably HTTPS) => "https://example.com")
+// Host returns the domain name AND protocol (probably HTTPS) => e.g. "https://example.com"
 func (factory *Factory) Host() string {
 	return domain.Protocol(factory.config.Hostname) + factory.config.Hostname
 }
 
-// Hostname returns the domain name (without anything else) that this factory is responsible for
+// Hostname returns the domain name only (without a protocol) => e.g. "example.com
 func (factory *Factory) Hostname() string {
 	return factory.config.Hostname
+}
+
+// IsLocalhost returns TRUE if this is a local domain (localhost, *.local, etc)
+func (factory *Factory) IsLocalhost() bool {
+	return domain.IsLocalhost(factory.Hostname())
 }
 
 func (factory *Factory) Config() config.Domain {
