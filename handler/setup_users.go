@@ -5,7 +5,6 @@ import (
 	"html/template"
 	"net/http"
 
-	"github.com/EmissarySocial/emissary/builder"
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
@@ -13,6 +12,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/labstack/echo/v4"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func SetupDomainUsersGet(serverFactory *server.Factory, templates *template.Template) echo.HandlerFunc {
@@ -30,14 +30,7 @@ func SetupDomainUsersGet(serverFactory *server.Factory, templates *template.Temp
 		}
 
 		// Display the modal's inner content
-		modal, err := displayDomainUsersModal(domainConfig, factory, templates)
-
-		if err != nil {
-			return derp.Wrap(err, location, "Error building modal")
-		}
-
-		// Wrap it as a modal
-		return ctx.HTML(http.StatusOK, builder.WrapModal(ctx.Response(), modal, "class:large"))
+		return displayDomainUsersModal(ctx, domainConfig, factory, templates)
 	}
 }
 
@@ -63,8 +56,30 @@ func SetupDomainUserPost(serverFactory *server.Factory, templates *template.Temp
 		}
 
 		// Populate the new user record
+		userService := factory.User()
 		user := model.NewUser()
 
+		// Special rules for local domains
+		if factory.IsLocalhost() {
+
+			// Allow admins to UPDATE domain owners (if "userId" is provided)
+			if userID, err := primitive.ObjectIDFromHex(ctx.QueryParam("userId")); err == nil {
+
+				if err := userService.LoadByID(userID, &user); err != nil {
+					return derp.Wrap(err, location, "Error loading user")
+				}
+			}
+
+			// Allow admins to set passwords
+			if password := data.GetString("password"); password != "" {
+				sterankoService := factory.Steranko()
+				if err := sterankoService.SetPassword(&user, password); err != nil {
+					return derp.Wrap(err, location, "Error setting password")
+				}
+			}
+		}
+
+		// Populate the User record with the new data
 		user.DisplayName = data.GetString("displayName")
 		user.Username = data.GetString("username")
 		user.EmailAddress = data.GetString("emailAddress")
@@ -72,19 +87,15 @@ func SetupDomainUserPost(serverFactory *server.Factory, templates *template.Temp
 		user.IsPublic = true
 
 		// Try to save the new user record
-		userService := factory.User()
 		if err := userService.Save(&user, "Created by Server Admin"); err != nil {
 			return derp.Wrap(err, location, "Error saving user")
 		}
 
+		// Set the query parameter to display the updated user
+		ctx.QueryParams().Set("userId", user.UserID.Hex())
+
 		// Display the modal's NEW inner contents
-		modal, err := displayDomainUsersModal(domainConfig, factory, templates)
-
-		if err != nil {
-			return derp.Wrap(err, location, "Error building modal")
-		}
-
-		return ctx.HTML(http.StatusOK, modal)
+		return displayDomainUsersModal(ctx, domainConfig, factory, templates)
 	}
 }
 
@@ -148,33 +159,43 @@ func SetupDomainUserDelete(serverFactory *server.Factory, templates *template.Te
 		}
 
 		// Display the modal's NEW inner contents
-		modal, err := displayDomainUsersModal(domainConfig, factory, templates)
-
-		if err != nil {
-			return derp.Wrap(err, location, "Error building modal")
-		}
-
-		return ctx.HTML(http.StatusOK, modal)
+		return displayDomainUsersModal(ctx, domainConfig, factory, templates)
 	}
 }
 
-func displayDomainUsersModal(domainConfig config.Domain, factory *domain.Factory, templates *template.Template) (string, error) {
+func displayDomainUsersModal(ctx echo.Context, domainConfig config.Domain, factory *domain.Factory, templates *template.Template) error {
 
 	const location = "handler.displayDomainUsersModal"
 
+	// Populate the data value
 	userService := factory.User()
 
 	data := mapof.Any{
-		"DomainID": domainConfig.DomainID,
-		"Domain":   domainConfig.Label,
-		"Users":    userService.ListOwnersAsSlice(),
+		"DomainID":  domainConfig.DomainID,
+		"Domain":    domainConfig.Label,
+		"Users":     userService.ListOwnersAsSlice(),
+		"UpdatedID": ctx.QueryParam("userId"),
 	}
 
+	// Pick the template based on the current Domain
+	filename := "users.html"
+
+	if factory.IsLocalhost() {
+		filename = "users-local.html"
+	}
+
+	// Build the modal dialog body
 	var buffer bytes.Buffer
-
-	if err := templates.ExecuteTemplate(&buffer, "users.html", data); err != nil {
-		return "", derp.Wrap(err, location, "Error executing template")
+	if err := templates.ExecuteTemplate(&buffer, filename, data); err != nil {
+		return derp.Wrap(err, location, "Error executing template")
 	}
 
-	return buffer.String(), nil
+	// Set Headers to display modal dialog
+	header := ctx.Response().Header()
+	header.Set("Hx-Push-Url", "false")
+	header.Set("Hx-Reswap", "innerHTML")
+	header.Set("Hx-Retarget", "aside")
+
+	// Return the HTML content to the caller
+	return ctx.HTML(http.StatusOK, buffer.String())
 }
