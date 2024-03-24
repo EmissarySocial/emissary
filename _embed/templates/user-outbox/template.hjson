@@ -78,6 +78,20 @@
 				{do:"trigger-event", event:"refreshPage"}
 			]
 		}
+
+		edit-template: {
+			roles:["self"]
+			steps:[{
+				do:"as-modal"
+				steps:[
+					{do:"edit-template", title:"Choose Profile Template", inboxTemplate:true, outboxTemplate:true}
+					{do:"save"}
+					{do:"refresh-page"}
+				],
+				background:"view"
+			}]
+		}
+
 		photo: {
 			roles: ["self"]
 			steps:[
