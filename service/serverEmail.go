@@ -126,6 +126,11 @@ func (service *ServerEmail) Send(smtpConnection config.SMTPConnection, templateN
 
 	const location = "service.ServerEmail.Send"
 
+	// If the SMTP Connection is empty, then don't try to send an email
+	if smtpConnection.IsNil() {
+		return nil
+	}
+
 	// Build the email body
 	var buffer bytes.Buffer
 	if err := service.templates.ExecuteTemplate(&buffer, templateName, data); err != nil {
