@@ -16,6 +16,11 @@ func NewSMTPConnection() SMTPConnection {
 	return SMTPConnection{}
 }
 
+// IsNil returns TRUE if the SMTPConnection is not populated with any information
+func (smtp SMTPConnection) IsNil() bool {
+	return smtp.Hostname == ""
+}
+
 // Validate confirms that the SMTPConnection matches ths SMTPConnectionSchema
 func (smtp SMTPConnection) Validate() error {
 	schema := SMTPConnectionSchema()
