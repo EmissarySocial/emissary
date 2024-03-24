@@ -62,15 +62,20 @@ behavior Modal
 	end
 
 	on keydown[key=="Tab"]
-		set focusedElement to the first <:focus/>
+		set focusedElement to the document's activeElement
 
-		if event.shiftKey
-			focus() the previous <[tabindex]/> from focusedElement within me with wrapping
-		else
-			focus() the next <[tabindex]/> from focusedElement within me with wrapping
+		if event.shiftKey then
+
+			if focusedElement is the first <[tabindex]/> in me then
+				focus() the last <[tabindex]/> in me
+				halt the event
+			end
+			
+		else if focusedElement is the last <[tabindex]/> in me then
+			focus() the first <[tabindex]/> in me
+			halt the event
 		end
-
-		halt the event
+		
 	end
 
 	on htmx:beforeSwap from window
