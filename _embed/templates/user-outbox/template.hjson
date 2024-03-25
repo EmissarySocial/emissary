@@ -1,38 +1,32 @@
 {
-	templateId:"user-outbox"
-	templateRole:"user-outbox"
-	model:"outbox"
-	label:"User Outbox"
-	description:"Profile displays everything about a user, including their inbox and outbox information"
-	icon:"inbox"
+	templateId:user-outbox
+	templateRole:user-outbox
+	model:outbox
+	label:User Outbox
+	description:Profile displays everything about a user, including their inbox and outbox information
+	icon:inbox
 	extends:["base-social"]
 	containedBy: []
 	schema: {
-		title:"User Profile"
-		type:"object"
+		title:User Profile
+		type:object
 		properties: {
 			feeds: {
-				description:"Array of additional links to render on the profile page"
-				type:"array"
+				description:Array of additional links to render on the profile page
+				type:array
 				items: {
-					type:"object"
+					type:object
 					properties: {
-						url: {
-							type:"string"
-						}
-						name: {
-							type:"string"
-						}
+						url: {type:"string"}
+						name: {type:"string"}
 					}
 				}
 			}
 		}
 	}
-	states: {}
-	roles: {}
 	bundles: {
 		stylesheet: {
-			content-type:"text/css"
+			content-type:text/css
 		}
 	}
 	actions: {
