@@ -11,7 +11,7 @@ func SMTPConnectionSchema() schema.Element {
 			"hostname": schema.String{MaxLength: 255},
 			"username": schema.String{MaxLength: 255},
 			"password": schema.String{MaxLength: 255},
-			"port":     schema.Integer{Minimum: null.NewInt64(1), Maximum: null.NewInt64(65535)},
+			"port":     schema.Integer{Minimum: null.NewInt64(0), Maximum: null.NewInt64(65535), Required: false},
 			"tls":      schema.Boolean{},
 		},
 	}

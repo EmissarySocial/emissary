@@ -19,20 +19,18 @@ import (
 func SetupDomainGet(factory *server.Factory) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 
-		var header string
-
 		domainID := ctx.Param("domain")
-
-		if domainID == "new" {
-			header = "Add a Domain"
-		} else {
-			header = "Edit a Domain"
-		}
 
 		domain, err := factory.DomainByID(domainID)
 
 		if err != nil {
 			return derp.Wrap(err, "handler.SetupDomainGet", "Error loading configuration")
+		}
+
+		header := "Edit Domain"
+
+		if domainID == "new" {
+			header = "Add a Domain"
 		}
 
 		domainEditForm := setupDomainForm(header)
@@ -180,31 +178,6 @@ func setupDomainForm(header string) form.Element {
 				Description: "32 Random Characters",
 			}},
 		}, {
-			Label: "SMTP Setup",
-			Type:  "layout-vertical",
-			Children: []form.Element{{
-				Type:  "text",
-				Path:  "smtp.hostname",
-				Label: "Hostname",
-			}, {
-				Type:  "text",
-				Path:  "smtp.username",
-				Label: "Username",
-			}, {
-				Type:  "text",
-				Path:  "smtp.password",
-				Label: "Password",
-			}, {
-				Type:  "text",
-				Path:  "smtp.port",
-				Label: "Port",
-			}, {
-				Type:  "toggle",
-				Path:  "smtp.tls",
-				Label: "Use TLS?",
-			},
-			},
-		}, {
 			Label: "Account Owner",
 			Type:  "layout-vertical",
 			Children: []form.Element{
@@ -239,6 +212,30 @@ func setupDomainForm(header string) form.Element {
 					},
 				},
 			},
+		}, {
+			Label: "SMTP Setup",
+			Type:  "layout-vertical",
+			Children: []form.Element{{
+				Type:  "text",
+				Path:  "smtp.hostname",
+				Label: "Hostname",
+			}, {
+				Type:  "text",
+				Path:  "smtp.username",
+				Label: "Username",
+			}, {
+				Type:  "text",
+				Path:  "smtp.password",
+				Label: "Password",
+			}, {
+				Type:  "text",
+				Path:  "smtp.port",
+				Label: "Port",
+			}, {
+				Type:  "toggle",
+				Path:  "smtp.tls",
+				Label: "Use TLS?",
+			}},
 		}},
 	}
 }

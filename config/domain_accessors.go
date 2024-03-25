@@ -14,8 +14,8 @@ func DomainSchema() schema.Element {
 		Properties: schema.ElementMap{
 			"label":            schema.String{MaxLength: 100, Required: true},
 			"hostname":         schema.String{MaxLength: 255, Required: true},
-			"connectString":    schema.String{MaxLength: 1000},
-			"databaseName":     schema.String{Pattern: `[a-zA-Z0-9-_]+`},
+			"connectString":    schema.String{MaxLength: 1000, Required: true},
+			"databaseName":     schema.String{Pattern: `[a-zA-Z0-9-_]+`, Required: true},
 			"smtp":             SMTPConnectionSchema(),
 			"owner":            OwnerSchema(),
 			"keyEncryptingKey": schema.String{MinLength: 32, MaxLength: 32, Default: keyEncryptingKey},
