@@ -18,7 +18,7 @@ func (step StepInlineError) Get(builder Builder, buffer io.Writer) PipelineBehav
 func (step StepInlineError) Post(builder Builder, buffer io.Writer) PipelineBehavior {
 	result := executeTemplate(step.Message, builder)
 
-	if _, err := buffer.Write([]byte(`<span class="red">` + result + `</span>`)); err != nil {
+	if _, err := buffer.Write([]byte(`<span class="text-red">` + result + `</span>`)); err != nil {
 		return Halt().WithError(err)
 	}
 

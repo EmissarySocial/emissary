@@ -38,7 +38,7 @@ func WrapInlineError(response http.ResponseWriter, err error) error {
 	response.Header().Set("HX-Retarget", "#htmx-response-message")
 	response.WriteHeader(http.StatusOK)
 
-	if _, writeError := response.Write([]byte(`<span class="red">` + derp.Message(err) + `</span>`)); writeError != nil {
+	if _, writeError := response.Write([]byte(`<span class="text-red">` + derp.Message(err) + `</span>`)); writeError != nil {
 		return derp.Wrap(writeError, "build.WrapInlineError", "Error writing response", err)
 	}
 
