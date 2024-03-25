@@ -35,9 +35,7 @@ services:
     volumes:
       - mongodata:/data/db
   smtp:
-    build:
-      context: .
-      dockerfile: ./docker/Dockerfile-smtpLogger
+    image: ghcr.io/literalgarage/smtp-logger:latest
     ports:
         - "8025:8025"
 volumes:
