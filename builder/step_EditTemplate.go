@@ -61,6 +61,7 @@ func (step StepEditTemplate) Post(builder Builder, _ io.Writer) PipelineBehavior
 	const location = "build.StepEditTemplate.Post"
 
 	schema := builder.schema()
+	object := builder.object()
 
 	// Collect inputs from the form
 	transaction := make(map[string]string)
@@ -76,17 +77,9 @@ func (step StepEditTemplate) Post(builder Builder, _ io.Writer) PipelineBehavior
 		newTemplateID := transaction[path]
 
 		// Scan all allowed records
-		for _, allowed := range step.listTemplates(builder, path) {
-
-			// If the new value is allowed...
-			if allowed.Value == newTemplateID {
-
-				// Update the record
-				if err := schema.Set(builder.object, path, newTemplateID); err != nil {
-					return Halt().WithError(derp.Wrap(err, location, "Error setting template", path))
-				}
-
-				break
+		if step.isTemplateAllowed(builder, path, newTemplateID) {
+			if err := schema.Set(object, path, newTemplateID); err != nil {
+				return Halt().WithError(derp.Wrap(err, location, "Error setting template", path))
 			}
 		}
 	}
@@ -110,6 +103,19 @@ func (step StepEditTemplate) fieldLabel(value string) string {
 	}
 
 	return ""
+}
+
+func (step StepEditTemplate) isTemplateAllowed(builder Builder, path string, templateID string) bool {
+
+	allowedTemplates := step.listTemplates(builder, path)
+
+	for _, allowedTemplate := range allowedTemplates {
+		if allowedTemplate.Value == templateID {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (step StepEditTemplate) listTemplates(builder Builder, path string) []form.LookupCode {
