@@ -7,9 +7,9 @@ import (
 func OwnerSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"displayName":    schema.String{MaxLength: 100, Required: true},
-			"username":       schema.String{MaxLength: 255, Required: true},
-			"emailAddress":   schema.String{MaxLength: 255, Format: "email", Required: true},
+			"displayName":    schema.String{MaxLength: 100},
+			"username":       schema.String{MaxLength: 255},
+			"emailAddress":   schema.String{MaxLength: 255, Format: "email"},
 			"phoneNumber":    schema.String{MaxLength: 20},
 			"mailingAddress": schema.String{MaxLength: 1000},
 		},

@@ -366,6 +366,11 @@ func (service *User) CalcRuleCount(userID primitive.ObjectID) {
 
 func (service *User) SetOwner(owner config.Owner) error {
 
+	// If there is no owner data, then do not create/update an owner record.
+	if owner.IsEmpty() {
+		return nil
+	}
+
 	// Try to read the owner from the database
 	users, err := service.ListUsernameOrOwner(owner.Username)
 

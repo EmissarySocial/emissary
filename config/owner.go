@@ -11,3 +11,7 @@ type Owner struct {
 func NewOwner() Owner {
 	return Owner{}
 }
+
+func (owner Owner) IsEmpty() bool {
+	return owner.Username == ""
+}
