@@ -29,6 +29,7 @@ func UserSchema() schema.Element {
 			"ruleCount":      schema.Integer{},
 			"isPublic":       schema.Boolean{},
 			"isOwner":        schema.Boolean{},
+			"data":           schema.Object{Wildcard: schema.String{}},
 		},
 	}
 }
@@ -91,6 +92,9 @@ func (user *User) GetPointer(name string) (any, bool) {
 
 	case "outboxTemplate":
 		return &user.OutboxTemplate, true
+
+	case "data":
+		return &user.Data, true
 
 	default:
 		return nil, false

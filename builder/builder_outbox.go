@@ -212,6 +212,10 @@ func (w Outbox) Links() []model.PersonLink {
 	return w._user.Links
 }
 
+func (w Outbox) Data(path string) any {
+	return w._user.Data[path]
+}
+
 func (w Outbox) ActivityPubURL() string {
 	return w._user.ActivityPubURL()
 }
