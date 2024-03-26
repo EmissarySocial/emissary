@@ -2,6 +2,7 @@ package config
 
 import (
 	"github.com/EmissarySocial/emissary/tools/random"
+	"github.com/benpate/domain"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -31,6 +32,11 @@ func NewDomain() Domain {
 }
 
 // ID returns the domain ID.
-func (domain Domain) ID() string {
-	return domain.DomainID
+func (d Domain) ID() string {
+	return d.DomainID
+}
+
+// IsLocalhost returns TRUE if this domain is a localhost domain.
+func (d Domain) IsLocalhost() bool {
+	return domain.IsLocalhost(d.Hostname)
 }
