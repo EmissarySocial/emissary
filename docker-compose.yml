@@ -1,0 +1,43 @@
+version: '3.8'
+services:
+  emissary:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - EMISSARY_CONFIG=file:///data/config/config.json
+      - WAIT_FOR_CONFIG=1
+    depends_on:
+      - mongodb
+      - smtp
+    volumes:
+      - configdata:/data/config
+  setup:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile
+    ports:
+      - "8888:8888"
+    environment:
+      - EMISSARY_CONFIG=file:///data/config/config.json
+    command: ["--setup", "--port", "8888"]
+    depends_on:
+      - mongodb
+      - smtp
+    volumes:
+      - configdata:/data/config
+  mongodb:
+    image: "mongo:latest"
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodata:/data/db
+  smtp:
+    image: ghcr.io/literalgarage/smtp-logger:latest
+    ports:
+        - "8025:8025"
+volumes:
+  mongodata:
+  configdata:
