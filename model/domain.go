@@ -17,6 +17,8 @@ type Domain struct {
 	Clients         set.Map[Client]    `bson:"clients"`         // External connections (e.g. Facebook, Twitter, etc.)
 	ThemeData       mapof.Any          `bson:"themeData"`       // Custom data stored in this domain
 	SignupForm      SignupForm         `bson:"signupForm"`      // Valid signup forms to make new accounts.
+	ColorMode       string             `bson:"colorMode"`       // Color mode for this domain (e.g. "LIGHT", "DARK", or "AUTO")
+	Data            mapof.String       `bson:"data"`            // Custom data stored in this domain
 	DatabaseVersion uint               `bson:"databaseVersion"` // Version of the database schema
 	journal.Journal `json:"-" bson:",inline"`
 }
@@ -26,6 +28,8 @@ func NewDomain() Domain {
 	return Domain{
 		Clients:   set.NewMap[Client](),
 		ThemeData: mapof.NewAny(),
+		ColorMode: DomainColorModeAuto,
+		Data:      mapof.NewString(),
 	}
 }
 

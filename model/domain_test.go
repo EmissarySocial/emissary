@@ -21,6 +21,9 @@ func TestDomainSchema(t *testing.T) {
 		{"signupForm.message", "SIGNUP MESSAGE", nil},
 		{"signupForm.groupId", "123456781234567812345678", nil},
 		{"signupForm.active", "true", true},
+		{"data.custom", "CUSTOM", nil},
+		{"data.value", "VALUE", nil},
+		{"colorMode", "LIGHT", nil},
 	}
 
 	tableTest_Schema(t, &s, &domain, table)

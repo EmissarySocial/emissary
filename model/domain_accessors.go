@@ -13,6 +13,8 @@ func DomainSchema() schema.Element {
 			"label":       schema.String{MinLength: 1, MaxLength: 128, Required: true},
 			"description": schema.String{MinLength: 1, MaxLength: 1024, Required: false},
 			"forward":     schema.String{Format: "url", Required: false},
+			"data":        schema.Object{Wildcard: schema.String{}},
+			"colorMode":   schema.String{Enum: []string{DomainColorModeAuto, DomainColorModeLight, DomainColorModeDark}, Required: true},
 			"signupForm":  SignupFormSchema(),
 		},
 	}
@@ -40,6 +42,12 @@ func (domain *Domain) GetPointer(name string) (any, bool) {
 
 	case "forward":
 		return &domain.Forward, true
+
+	case "colorMode":
+		return &domain.ColorMode, true
+
+	case "data":
+		return &domain.Data, true
 	}
 
 	return nil, false
