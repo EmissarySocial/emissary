@@ -233,6 +233,7 @@ button,
 	text-align:left;
 	-moz-user-select: none;
 	-webkit-user-select: none;
+	white-space:nowrap;
 }
 
 .text-sm button,

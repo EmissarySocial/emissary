@@ -1,27 +1,27 @@
 {
-	templateId:"user-inbox"
-	templateRole:"user-inbox"
-	model:"inbox"
-	label:"User Inbox"
-	description:"Inbox displays all incoming messages for the signed-in user"
-	icon:"inbox"
-	extends:["base-social", "base-block-editor"]
+	templateId: user-inbox
+	templateRole: user-inbox
+	model: inbox
+	label: Default Inbox
+	description: A simple inbox with a sidebar for folders and several feed layouts
+	icon: inbox
+	extends: ["base-social", "base-block-editor"]
 	containedBy: []
 	schema: {
-		title:"User Profile"
-		type:"object"
+		title: User Profile
+		type: object
 		properties: {
 			feeds: {
-				description:"Array of people to render on the page"
-				type:"array"
+				description: Array of people to render on the page
+				type: array
 				items: {
-					type:"object"
+					type: object
 					properties: {
 						url: {
-							type:"string"
+							type: string
 						}
 						name: {
-							type:"string"
+							type: string
 						}
 					}
 				}
@@ -30,21 +30,21 @@
 	}
 	states: {
 		default: {
-			label:"Inbox only has default state"
+			label: Inbox only has default state
 		}
 	}
 	roles: {
 		owner: {
-			label:"Inbox Owner"
-			decription:"Full control"
+			label: Inbox Owner
+			decription: Full control
 		}
 	}
 	bundles: {
 		stylesheet: {
-			content-type:"text/css"
+			content-type: text/css
 		}
-		hyperscript:{
-			content-type:"text/hyperscript"
+		hyperscript: {
+			content-type: text/hyperscript
 		}
 	}
 	actions: {
@@ -55,61 +55,61 @@
 		}
 		sidebar: {
 			roles: ["self"]
-			do:"view-html"
-			file:"sidebar-remote"
+			do: "view-html"
+			file: "sidebar-remote"
 		}
 		list: {
 			roles: ["self"]
-			steps:[
-				{do:"view-html"}
+			steps: [
+				{do: "view-html"}
 			]
 		}
 		list-before: {
 			roles: ["self"]
-			do:"view-html"
+			do: "view-html"
 		}
-		filter:{
-			roles:["self"]
-			steps:[
-				{do:"as-modal", steps:[
-					{do:"view-html"}
+		filter: {
+			roles: ["self"]
+			steps: [
+				{do: "as-modal", steps: [
+					{do: "view-html"}
 				]}
 			]
 		}
 		folder-add: {
-			roles:["self"]
+			roles: ["self"]
 			steps: [
-				{do:"set-query-param", folderId:"new"}
-				{do:"with-folder", steps: [
-					{do:"as-modal", steps: [
-						{do:"edit", form: {
-							type:"layout-vertical"
-							label:"Add a Folder"
+				{do: "set-query-param", folderId: "new"}
+				{do: "with-folder", steps: [
+					{do: "as-modal", steps: [
+						{do: "edit", form: {
+							type: layout-vertical
+							label: Add a Folder
 							children: [
-								{type:"text", path:"label", label:"Name"}
-								{type:"select", path:"icon", label:"Icon", options:{provider:"folder-icons"}}
-								{type:"select", path:"layout", label:"Layout", options: {enum:"SOCIAL,NEWSPAPER,MAGAZINE"}}
+								{type: "text", path: "label", label: "Name"}
+								{type: "select", path: "icon", label: "Icon", options: {provider: "folder-icons"}}
+								{type: "select", path: "layout", label: "Layout", options: {enum: "SOCIAL,NEWSPAPER,MAGAZINE"}}
 							]}
 						}
-						{do:"save"}
+						{do: "save"}
 					]}
-					{do:"trigger-event", event:"closeModal"}
-					{do:"trigger-event", event:"refreshPage"}
+					{do: "trigger-event", event: "closeModal"}
+					{do: "trigger-event", event: "refreshPage"}
 				]}
 			]
 		}
 		folder-edit: {
-			roles:["self"]
+			roles: ["self"]
 			steps: [
-				{do:"with-folder", steps: [
-					{do:"as-modal", steps: [
-						{do:"edit", options:["delete:/@me/inbox/folder-delete?folderId={{.ObjectID}}"], form: {
-							type:"layout-vertical"
-							label:"Folder Settings"
-							children: [
+				{do: "with-folder", steps: [
+					{do: "as-modal", steps: [
+						{do:"edit", options:["delete:/@me/inbox/folder-delete?folderId={{.ObjectID}}"], form:{
+							type: layout-vertical
+							label: Folder Settings
+							children:[
 								{type:"text", path:"label", label:"Name"}
 								{type:"select", path:"icon", label:"Icon", options:{provider:"folder-icons"}}
-								{type:"select", path:"layout", label:"Layout", options: {enum:"SOCIAL,NEWSPAPER,MAGAZINE"}}
+								{type:"select", path:"layout", label:"Layout", options:{enum:"SOCIAL,NEWSPAPER,MAGAZINE"}}
 							]}
 						}
 						{do:"save"}
@@ -119,11 +119,11 @@
 				]}
 			]
 		}
-		folder-delete: {
+		folder-delete:{
 			roles:["self"]
-			steps: [
+			steps:[
 				{do:"with-folder", steps: [
-					{do:"delete", title:"DeleteFolde: {{.Label}}?", message:"Deleting this folder will also remove all inbox items inside it."}
+					{do:"delete", title:"Delete Folder: {{.Label}}?", message:"Deleting this folder will also remove all inbox items inside it."}
 					{do:"forward-to", url:"/@me/inbox"}
 				]}
 			]

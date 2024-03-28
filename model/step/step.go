@@ -77,6 +77,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "inline-error":
 		return NewInlineError(stepInfo)
 
+	case "inline-save-button":
+		return NewInlineSaveButton(stepInfo)
+
 	case "inline-success":
 		return NewInlineSuccess(stepInfo)
 
