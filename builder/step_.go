@@ -71,6 +71,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.InlineError:
 		return StepInlineError(s)
 
+	case step.InlineSaveButton:
+		return StepInlineSaveButton(s)
+
 	case step.InlineSuccess:
 		return StepInlineSuccess(s)
 
