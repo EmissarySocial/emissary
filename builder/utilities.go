@@ -125,7 +125,7 @@ func WrapForm(endpoint string, content string, options ...string) string {
 	b.Div()
 
 	submitLabel := first.String(optionMap.GetString("submit-label"), "Save Changes")
-	savingLabel := first.String(optionMap.GetString("saving-label"), "Saving...")
+	//savingLabel := first.String(optionMap.GetString("saving-label"), "Saving...")
 	deleteLabel := first.String(optionMap.GetString("delete-label"), "Delete")
 
 	if deleteURL := optionMap.GetString("delete"); deleteURL != "" {
@@ -133,8 +133,10 @@ func WrapForm(endpoint string, content string, options ...string) string {
 		b.Space()
 	}
 
-	b.Button().Type("submit").Class("htmx-request-hide primary").InnerText(submitLabel).Close()
-	b.Button().Type("button").Class("htmx-request-show primary").Attr("disabled", "true").InnerText(savingLabel).Close()
+	b.Button().Type("submit").ID("inline-save-button").Class("primary").Script("install SaveButton").InnerText(submitLabel).Close()
+
+	//	b.Button().Type("submit").Class("htmx-request-hide primary").InnerText(submitLabel).Close()
+	//	b.Button().Type("button").Class("htmx-request-show primary").Attr("disabled", "true").InnerText(savingLabel).Close()
 
 	if cancelButton := optionMap.GetString("cancel-button"); cancelButton != "hide" {
 		cancelLabel := first.String(optionMap.GetString("cancel-label"), "Cancel")
