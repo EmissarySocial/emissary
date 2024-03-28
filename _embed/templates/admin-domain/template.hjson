@@ -26,10 +26,10 @@
 							{type:"textarea", path:"description", label:"Description"}
 						]
 					}
-					options: ["cancelbutto:hide", "endpoint:/admin/domain/form"]
+					options: ["inlineSaveButton:true", "cancelButton:hide", "endpoint:/admin/domain/form"]
 				}
 				{do: "save"}
-				{do: "reload-page"}
+				{do: "inline-save-button"}
 			]
 		}
 		signup: {
@@ -44,7 +44,7 @@
 							children: [
 								{type: "text", path:"signupForm.title", label: "Title", description: "Large text is displayed at the top of the signup page."}
 								{type: "textarea", path:"signupForm.message", label:"Message", description: "A rule of regular text displayed below the title.", cssClass:"height100"}
-								{type: "toggle", path: "signupForm.active", options:{truetext:"Activate Form", falsetext: "Activate Form"}}
+								{type: "toggle", path: "signupForm.active", options:{true-text:"Activate Form", false-text: "Activate Form"}}
 							]
 						}
 					}, 
