@@ -13,7 +13,7 @@ require (
 	github.com/benpate/domain v0.2.1
 	github.com/benpate/exp v0.8.3
 	github.com/benpate/exp-builder v0.8.0
-	github.com/benpate/form v0.17.11
+	github.com/benpate/form v0.17.12
 	github.com/benpate/hannibal v0.10.0
 	github.com/benpate/html v0.16.4
 	github.com/benpate/icon v0.4.0
@@ -22,7 +22,7 @@ require (
 	github.com/benpate/rosetta v0.20.0
 	github.com/benpate/sherlock v0.7.1
 	github.com/benpate/steranko v0.17.0
-	github.com/benpate/table v0.6.10
+	github.com/benpate/table v0.6.11
 	github.com/benpate/toot v0.3.0
 	github.com/benpate/toot-echo v0.2.3
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
