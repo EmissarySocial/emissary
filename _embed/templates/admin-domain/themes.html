@@ -1,0 +1,30 @@
+{{- $themeID := .ThemeID -}}
+{{- $themes := .Themes -}}
+
+<h1>Select a Theme</h1>
+
+<div class="flex-row" script="install TabContainer">
+	<div role="tablist" class="vertical width-1-5">
+		{{- range $themes -}}
+			{{- if eq .ThemeID $themeID -}}
+				<div role="tab" aria-controls="theme-{{.ThemeID}}" aria-selected="true">{{.Label}}</div>
+			{{- else -}}
+				<div role="tab" aria-controls="theme-{{.ThemeID}}">{{.Label}}</div>
+			{{- end -}}
+		{{- end -}}
+	</div>
+	<div class="width-4-5">
+		{{- range $themes -}}
+			<div id="theme-{{.ThemeID}}" role="tabpanel">
+				<div class="text-lg bold margin-none">{{.Label}}</div>
+				<div class="text-gray margin-bottom">{{.Description}}</div>
+				<img src="/.themes/{{.ThemeID}}/resources/startup/splash.png" class="width-100-percent margin-bottom">
+
+				<div>
+					<button class="primary" hx-post="/admin/domain/themes" hx-vals='{"themeId":"{{.ThemeID}}"}'>Select Theme</button>
+					<button script="on click trigger closeModal">Cancel</button> 
+				</div>
+			</div>
+		{{- end -}}
+	</div>
+</div>

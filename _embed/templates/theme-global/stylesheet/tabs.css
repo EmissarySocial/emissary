@@ -155,3 +155,66 @@
     color:var(--white);
     font-weight:500;
 }
+
+
+/******************************************
+ * Vertical Tabs
+ ******************************************/
+
+
+[role="tablist"].vertical {
+    border:none;
+    border-right:solid 1px var(--gray40);
+    margin-bottom:none;
+    margin-right:calc( var(--rhythm) * 2);
+    line-height:normal;
+}
+
+[role="tablist"].vertical > [role="tab"] {
+    cursor:pointer;
+    display:block;
+    padding-top:var(--rhythm);
+    padding-bottom:var(--rhythm);
+    padding-left:0px;
+    padding-right:calc( var(--rhythm) * 2);
+    margin:0px;
+    margin-right:var(--rhythm);
+    background-color:transparent;
+    border:none;
+    border-radius:0px;
+    border-bottom: solid 1px var(--gray20);
+    color:var(--link-color);
+    font-family:inherit;
+    font-size:0.9rem;
+    text-decoration:none;
+}
+
+[role="tablist"].vertical > [role="tab"]:first-child,
+[role="tablist"].vertical > [role="tab"]:hover:not([disabled]):first-child,
+[role="tablist"].vertical > [role="tab"]:focus:not([disabled]):first-child {
+    border-top: solid 1px var(--gray20);
+}
+
+[role="tablist"].vertical > [role="tab"]:hover:not([disabled]),
+[role="tablist"].vertical > [role="tab"]:focus:not([disabled]) {
+    background-color:transparent;
+    border:none;
+    border-bottom: solid 1px var(--gray20);
+    color:var(--link-color);
+}
+
+[role="tablist"].vertical > [role="tab"][disabled] {
+    background-color:transparent;
+    opacity:0.5;
+    cursor:not-allowed;
+}
+
+[role="tablist"].vertical > [role="tab"][aria-selected="true"]:not([disabled]),
+[role="tablist"].vertical > [role="tab"][aria-selected="true"]:not([disabled]):hover,
+[role="tablist"].vertical > [role="tab"].selected:not([disabled]), 
+[role="tablist"].vertical > [role="tab"].selected:not([disabled]):hover {
+    border-bottom: solid 1px var(--gray20);
+    background-color:transparent;
+    color:var(--textColor);
+    font-weight:bold;
+}

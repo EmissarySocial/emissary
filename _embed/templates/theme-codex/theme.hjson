@@ -6,6 +6,22 @@
 	label: "Codex"
 	description: "Side-Nav designed for your Magnum Opus"
 	rank: 10
+	schema: {
+		type: "object", 
+		properties: {
+			label: {type:"string", maxLength:100, required: true}
+			description: {type:"string", maxLength:100}
+			themeId: {type:"string", maxLength: 100}
+		}
+	}
+	form: {
+		type: layout-vertical
+		children: [
+			{type: "text", label: "Label", path: "label", description: "Title of this website and domain."}
+			{type: "textarea", label: "Description", path: "description"}
+		]
+	}
+
 	bundles: {
 		stylesheet: {
 			content-type:"text/css"

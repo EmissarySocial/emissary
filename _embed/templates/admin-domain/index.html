@@ -1,3 +1,5 @@
+{{- $theme := .Theme .ThemeID -}}
+
 <div class="page" hx-get="/admin/domain/index" hx-trigger="refreshPage from:window">
 
 	<script src="/.themes/global/resources/sortable-1.15.0/Sortable.min.js"></script>
@@ -9,6 +11,8 @@
 		{{- end -}}
 	</div>
 
-	{{.View "form"}}
 
-</div>
+	<div class="margin-bottom">
+		<span class="bold">Theme: {{$theme.Label}}</span> 
+		<span class="button text-xs" hx-get="/admin/domain/themes">Select a Theme</span>
+	</div>

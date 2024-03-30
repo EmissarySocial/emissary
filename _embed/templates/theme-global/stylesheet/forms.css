@@ -1,6 +1,6 @@
 /* Input Elements */
 
-input:not([type=submit], [type=checkbox], [type=radio]), textarea, select, .input, [role=input] {
+input:not([type=submit], [type=checkbox], [type=radio], [type=color]), textarea, select, .input, [role=input] {
 	border: solid 1px var(--input-border);
 	background-color: var(--input-background);
 	color: var(--input-color);

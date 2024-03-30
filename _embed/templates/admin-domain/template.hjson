@@ -15,22 +15,24 @@
 		}}
 	}}
 	actions: {
-		index: {do: "view-html"}
-		form: {
+		index: {
 			steps: [
-				{do:"edit"
-					form: {
-						type:"layout-vertical", children:[
-							{type:"select", path:"themeId", label:"Theme", options: {provider:"themes"}}
-							{type:"text", path:"label", label:"Label"}
-							{type:"textarea", path:"description", label:"Description"}
-						]
-					}
-					options: ["inlineSaveButton:true", "cancelButton:hide", "endpoint:/admin/domain/form"]
-				}
+				{do:"view-html"}
+				{do:"edit", options: ["cancel-button:hide"]}
 				{do: "save"}
 				{do: "inline-save-button"}
 			]
+		}
+		themes: {
+			steps: [{
+				do: as-modal
+				steps: [
+					{do: "view-html"}
+					{do: "set-data", from-form:["themeId"]}
+					{do: "save"}
+					{do: "reload-page"}
+				]
+			}]
 		}
 		signup: {
 			steps: [{
