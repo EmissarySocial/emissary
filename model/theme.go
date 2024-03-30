@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/schema"
 )
 
 // Theme represents an HTML template used for building all hard-coded application elements (but not dynamic streams)
@@ -27,6 +28,9 @@ type Theme struct {
 	DefaultFolders []mapof.Any             `json:"defaultFolders" bson:"defaultFolders"` // Dataset of Folders to initialize when a User is added using this Theme.
 	DefaultInbox   string                  `json:"defaultInbox"   bson:"defaultInbox"`   // Default Inbox Template for Users created underneath this theme
 	DefaultOutbox  string                  `json:"defaultOutbox"  bson:"defaultOutbox"`  // Default Outbox Template for Users created underneath this theme
+	Form           form.Element            `json:"form"           bson:"form"`           // Form used to edit custom data
+	Schema         schema.Schema           `json:"schema"         bson:"schema"`         // Schema used to validate custom data
+	Data           mapof.String            `json:"data"           bson:"data"`           // Custom data for this theme
 	IsVisible      bool                    `json:"isVisible"      bson:"isVisible"`      // Is this theme visible to the site owners?
 }
 
@@ -43,6 +47,9 @@ func NewTheme(templateID string, funcMap template.FuncMap) Theme {
 		HTMLTemplate:   template.New("").Funcs(funcMap),
 		DefaultInbox:   "user-inbox",
 		DefaultOutbox:  "user-outbox",
+		Form:           form.NewElement(),
+		Schema:         schema.Schema{},
+		Data:           mapof.NewString(),
 	}
 }
 

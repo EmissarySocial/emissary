@@ -140,8 +140,18 @@ func (service *Domain) GetPointer() *model.Domain {
 // Save updates the value of this domain in the database (and in-memory cache)
 func (service *Domain) Save(domain model.Domain, note string) error {
 
+	// Validate the value before saving
+	if err := model.DomainSchema().Validate(&domain); err != nil {
+		return derp.Wrap(err, "service.Domain.Save", "Error validating Domain with standard Domain schema", domain)
+	}
+
+	// Validate the value before saving
+	if err := service.Schema().Validate(&domain); err != nil {
+		return derp.Wrap(err, "service.Domain.Save", "Error validating Domain with custom schema from Theme", domain)
+	}
+
 	// Clean the value before saving
-	if err := service.Schema().Clean(domain); err != nil {
+	if err := service.Schema().Clean(&domain); err != nil {
 		return derp.Wrap(err, "service.Domain.Save", "Error cleaning Domain", domain)
 	}
 

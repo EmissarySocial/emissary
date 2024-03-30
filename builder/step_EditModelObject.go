@@ -24,7 +24,7 @@ func (step StepEditModelObject) Get(builder Builder, buffer io.Writer) PipelineB
 	schema := builder.schema()
 
 	// Try to build the Form HTML
-	result, err := form.Editor(schema, step.Form, builder.object(), builder.lookupProvider())
+	result, err := form.Editor(schema, step.getForm(builder), builder.object(), builder.lookupProvider())
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error generating form"))
@@ -65,7 +65,7 @@ func (step StepEditModelObject) Post(builder Builder, _ io.Writer) PipelineBehav
 	}
 
 	// Appy request body to the object (limited and validated by the form schema)
-	stepForm := form.New(builder.schema(), step.Form)
+	stepForm := form.New(builder.schema(), step.getForm(builder))
 	object := builder.object()
 
 	if err := stepForm.SetAll(object, body, builder.lookupProvider()); err != nil {
@@ -79,4 +79,18 @@ func (step StepEditModelObject) Post(builder Builder, _ io.Writer) PipelineBehav
 
 	// Success!
 	return nil
+}
+
+func (step StepEditModelObject) getForm(builder Builder) form.Element {
+
+	// If the step does not contain a form...
+	if step.Form.IsEmpty() {
+		// ...see if we can get the baked-in PropertyForm from the builder
+		// (only the Domain builder, for now)
+		if getter, ok := builder.(PropertyFormGetter); ok {
+			return getter.PropertyForm()
+		}
+	}
+
+	return step.Form
 }

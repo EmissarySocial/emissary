@@ -1,6 +1,9 @@
 package builder
 
-import "github.com/EmissarySocial/emissary/model"
+import (
+	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/form"
+)
 
 type PipelineHalter interface {
 
@@ -14,4 +17,8 @@ type DocumentLinker interface {
 
 type StateSetter interface {
 	setState(string) error
+}
+
+type PropertyFormGetter interface {
+	PropertyForm() form.Element
 }

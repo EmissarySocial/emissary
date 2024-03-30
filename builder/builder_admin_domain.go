@@ -117,8 +117,8 @@ func (w Domain) objectType() string {
 }
 
 func (w Domain) schema() schema.Schema {
-	return schema.New(model.DomainSchema())
-	// return w._template.Schema
+	theme := w.Theme(w.ThemeID())
+	return theme.Schema
 }
 
 func (w Domain) service() service.ModelService {
@@ -169,6 +169,12 @@ func (w Domain) Theme(themeID string) model.Theme {
 // SignupForm returns the SignupForm associated with this Domain.
 func (w Domain) SignupForm() model.SignupForm {
 	return w._domain.SignupForm
+}
+
+// PropertyForm returns the custom property form for this Domain,
+// defined by the Theme that it uses.
+func (w Domain) PropertyForm() form.Element {
+	return w.Theme(w.ThemeID()).Form
 }
 
 /******************************************

@@ -17,11 +17,18 @@ type EditModelObject struct {
 // NewEditModelObject returns a fully initialized EditModelObject record
 func NewEditModelObject(stepInfo mapof.Any) (EditModelObject, error) {
 
-	// Parse the form definition
-	f, err := form.Parse(stepInfo.GetAny("form"))
+	formElement := form.NewElement()
 
-	if err != nil {
-		return EditModelObject{}, derp.Wrap(err, "model.step.NewEditModelObject", "Invalid 'form'", stepInfo)
+	if formObject := stepInfo.GetAny("form"); formObject != nil {
+
+		var err error
+
+		// Parse the form definition
+		formElement, err = form.Parse(stepInfo.GetAny("form"))
+
+		if err != nil {
+			return EditModelObject{}, derp.Wrap(err, "model.step.NewEditModelObject", "Invalid 'form'", stepInfo)
+		}
 	}
 
 	// Parse options
@@ -39,7 +46,7 @@ func NewEditModelObject(stepInfo mapof.Any) (EditModelObject, error) {
 	}
 
 	return EditModelObject{
-		Form:    f,
+		Form:    formElement,
 		Options: optionTemplates,
 	}, nil
 }
