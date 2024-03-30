@@ -42,7 +42,7 @@ There's a lot of work to do.  Check out the [project status page](https://emissa
 
 ## Tech Stack
 
-Emissary is intended to be as easy to run and as scalable as possible.  Therefore, it is built on solid open-source foundations.
+Emissary is intended to be as easy to run and as scalable as possible.  It runs with a minimal set of dependencies, so you should be able to [install and run an Emissary server](https://emissary.dev/installation) in between lunch and tea time.
 
 * [Go](https://go.dev)
 * [Mongodb](https://mongodb.org)
