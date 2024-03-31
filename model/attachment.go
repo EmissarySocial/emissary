@@ -13,14 +13,18 @@ import (
 
 // Attachment represents a file that has been uploaded to the software
 type Attachment struct {
-	AttachmentID primitive.ObjectID `bson:"_id"`        // ID of this Attachment
-	ObjectID     primitive.ObjectID `bson:"objectId"`   // ID of the Stream that owns this Attachment
-	ObjectType   string             `bson:"objectType"` // Type of object that owns this Attachment
-	Original     string             `bson:"original"`   // Original filename uploaded by user
-	URL          string             `bson:"url"`        // URL where the file is stored
-	Rank         int                `bson:"rank"`       // The sort order to display the attachments in.
-	Height       int                `bson:"height"`     // Image height (if applicable)
-	Width        int                `bson:"width"`      // Image width (if applicable)
+	AttachmentID primitive.ObjectID `bson:"_id"`         // ID of this Attachment
+	ObjectID     primitive.ObjectID `bson:"objectId"`    // ID of the Stream that owns this Attachment
+	ObjectType   string             `bson:"objectType"`  // Type of object that owns this Attachment
+	Original     string             `bson:"original"`    // Original filename uploaded by user
+	MediaType    string             `bson:"mediaType"`   // MIME type of the file
+	Category     string             `bson:"category"`    // Category of the file (defined by the Template)
+	Label        string             `bson:"label"`       // User-defined label for the attachment
+	Description  string             `bson:"description"` // User-defined description for the attachment
+	URL          string             `bson:"url"`         // URL where the file is stored
+	Rank         int                `bson:"rank"`        // The sort order to display the attachments in.
+	Height       int                `bson:"height"`      // Image height (if applicable)
+	Width        int                `bson:"width"`       // Image width (if applicable)
 
 	journal.Journal `json:"-" bson:",inline"` // Journal entry for fetch compatability
 }
@@ -49,7 +53,7 @@ func (attachment *Attachment) ID() string {
 
 func (attachment *Attachment) CalcURL(host string) string {
 
-	if attachment.ObjectType == AttachmentTypeUser {
+	if attachment.ObjectType == AttachmentObjectTypeUser {
 		return host + "/@" + attachment.ObjectID.Hex() + "/pub/avatar/" + attachment.AttachmentID.Hex()
 	}
 
