@@ -16,6 +16,10 @@ func (service Icons) Get(name string) string {
 		return service.get("plus-circle")
 	case "add-emoji":
 		return service.get("emoji-smile")
+	case "album":
+		return service.get("cassette")
+	case "album-fill":
+		return service.get("cassette-fill")
 	case "archive":
 		return service.get("archive")
 	case "archive-fill":
@@ -168,6 +172,8 @@ func (service Icons) Get(name string) string {
 		return service.get("mic-mute-fill")
 	case "newspaper":
 		return service.get("newspaper")
+	case "pause":
+		return service.get("pause")
 	case "person":
 		return service.get("person")
 	case "person-fill":
@@ -176,6 +182,8 @@ func (service Icons) Get(name string) string {
 		return service.get("people")
 	case "people-fill":
 		return service.get("people-fill")
+	case "play":
+		return service.get("play")
 	case "reply":
 		return service.get("reply")
 	case "reply-fill":
