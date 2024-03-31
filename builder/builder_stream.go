@@ -717,12 +717,12 @@ func (w Stream) makeStreamQueryBuilder(criteria exp.Expression) QueryBuilder[mod
 
 // Reference to the first file attached to this stream
 func (w Stream) Attachment() (model.Attachment, error) {
-	return w.factory().Attachment().LoadFirstByObjectID(model.AttachmentTypeStream, w._stream.StreamID)
+	return w.factory().Attachment().LoadFirstByObjectID(model.AttachmentObjectTypeStream, w._stream.StreamID)
 }
 
 // Attachments lists all attachments for this stream.
 func (w Stream) Attachments() ([]model.Attachment, error) {
-	return w.factory().Attachment().QueryByObjectID(model.AttachmentTypeStream, w._stream.StreamID)
+	return w.factory().Attachment().QueryByObjectID(model.AttachmentObjectTypeStream, w._stream.StreamID)
 }
 
 /******************************************

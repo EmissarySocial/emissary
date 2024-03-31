@@ -266,7 +266,7 @@ func (service *Stream) Delete(stream *model.Stream, note string) error {
 		}
 
 		// RULE: Delete all related Attachments
-		if err := service.attachmentService.DeleteAll(model.AttachmentTypeStream, stream.StreamID, note); err != nil {
+		if err := service.attachmentService.DeleteAll(model.AttachmentObjectTypeStream, stream.StreamID, note); err != nil {
 			derp.Report(derp.Wrap(err, "service.Stream.Delete", "Error deleting attachments", stream, note))
 		}
 
@@ -531,7 +531,7 @@ func (service *Stream) LoadLastSibling(parentID primitive.ObjectID, result *mode
 }
 
 func (service *Stream) LoadFirstAttachment(streamID primitive.ObjectID) (model.Attachment, error) {
-	return service.attachmentService.LoadFirstByObjectID(model.AttachmentTypeStream, streamID)
+	return service.attachmentService.LoadFirstByObjectID(model.AttachmentObjectTypeStream, streamID)
 }
 
 // Count returns the number of (non-deleted) records in the Stream collection

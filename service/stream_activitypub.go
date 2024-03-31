@@ -77,7 +77,7 @@ func (service *Stream) JSONLD(stream *model.Stream) mapof.Any {
 	}
 
 	// Attachments
-	if attachments, err := service.attachmentService.QueryByObjectID(model.AttachmentTypeStream, stream.StreamID); err == nil {
+	if attachments, err := service.attachmentService.QueryByObjectID(model.AttachmentObjectTypeStream, stream.StreamID); err == nil {
 
 		attachmentJSON := make([]mapof.Any, 0, len(attachments))
 		for _, attachment := range attachments {

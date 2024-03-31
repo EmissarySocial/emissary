@@ -428,7 +428,7 @@ func (service *User) DeleteAvatar(user *model.User, note string) error {
 	}
 
 	// Delete the existing Avatar file
-	if err := service.attachmentService.DeleteByID(model.AttachmentTypeUser, user.UserID, user.ImageID, note); err != nil {
+	if err := service.attachmentService.DeleteByID(model.AttachmentObjectTypeUser, user.UserID, user.ImageID, note); err != nil {
 		return derp.Wrap(err, "service.User.DeleteAvatar", "Error deleting avatar", user)
 	}
 
