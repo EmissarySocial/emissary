@@ -80,6 +80,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.ProcessContent:
 		return StepProcessContent(s)
 
+	case step.ProcessTags:
+		return StepProcessTags(s)
+
 	case step.Publish:
 		return StepPublish(s)
 

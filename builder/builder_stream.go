@@ -268,6 +268,11 @@ func (w Stream) ImageURL() string {
 	return w._stream.ImageURL
 }
 
+// Tags returns all tags (mentions, hashtags, etc) for the stream being built
+func (w Stream) Tags() []model.Tag {
+	return w._stream.Tags
+}
+
 // Permalink returns a complete URL for this stream
 func (w Stream) Permalink() string {
 	return w._stream.Permalink()

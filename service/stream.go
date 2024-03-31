@@ -15,6 +15,7 @@ import (
 	"github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/html"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/schema"
@@ -828,39 +829,58 @@ func (service *Stream) CalcContext(stream *model.Stream) {
 }
 
 func (service *Stream) CalcTags(stream *model.Stream) {
+	service.CalcTagsFromPaths(stream, "content.html")
+}
 
+func (service *Stream) CalcTagsFromPaths(stream *model.Stream, paths ...string) {
+
+	schema := service.Schema()
 	stream.Tags = make(sliceof.Object[model.Tag], 0)
-	plainText := html.ToSearchText(stream.Content.HTML)
 
-	// Add all @mentions into the Tags map
-	mentions := mention.GetTags('@', plainText)
+	baseURL := service.host + "/tags/"
 
-	for _, value := range mentions {
+	for _, path := range paths {
 
-		tag := model.NewTag()
-		tag.Type = vocab.LinkTypeMention
-		tag.Name = string(value.Char) + value.Tag
-		tag.Name = strings.TrimSuffix(tag.Name, ".")
-		tag.Name = strings.TrimSuffix(tag.Name, ",")
+		value, err := schema.Get(stream, path)
 
-		if actor, err := service.activityService.Load(tag.Name, sherlock.AsActor()); err == nil {
-			tag.Href = actor.ID()
+		if err != nil {
+			derp.Report(derp.Wrap(err, "service.Stream.CalcTags", "Error getting value from path", path))
+			continue
 		}
 
-		stream.Tags = append(stream.Tags, tag)
-	}
+		plainText := html.ToSearchText(convert.String(value))
 
-	// Add all @mentions into the Tags map
-	hashtags := mention.GetTags('#', plainText)
+		// Add all @mentions into the Tags map
+		mentions := mention.GetTags('@', plainText)
 
-	for _, value := range hashtags {
+		for _, value := range mentions {
 
-		tag := model.NewTag()
-		tag.Type = "Hastag" // TODO: This constant should be defined by Hannibal
-		tag.Name = string(value.Char) + value.Tag
-		tag.Name = strings.TrimSuffix(tag.Name, ".")
-		tag.Name = strings.TrimSuffix(tag.Name, ",")
+			tag := model.NewTag()
+			tag.Type = vocab.LinkTypeMention
+			tag.Name = string(value.Char) + value.Tag
+			tag.Name = strings.TrimSuffix(tag.Name, ".")
+			tag.Name = strings.TrimSuffix(tag.Name, ",")
 
-		stream.Tags = append(stream.Tags, tag)
+			if actor, err := service.activityService.Load(tag.Name, sherlock.AsActor()); err == nil {
+				tag.Href = actor.ID()
+			}
+
+			stream.Tags = append(stream.Tags, tag)
+		}
+
+		// Add all @mentions into the Tags map
+		hashtags := mention.GetTags('#', plainText)
+
+		for _, value := range hashtags {
+
+			tag := model.NewTag()
+			tag.Type = "Hashtag" // TODO: This constant should be defined by Hannibal
+			tag.Name = string(value.Char) + value.Tag
+			tag.Name = strings.TrimSuffix(tag.Name, ".")
+			tag.Name = strings.TrimSuffix(tag.Name, ",")
+			tag.Href = baseURL + strings.TrimPrefix(tag.Name, "#")
+
+			stream.Tags = append(stream.Tags, tag)
+		}
 	}
 }

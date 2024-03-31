@@ -86,6 +86,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "process-content":
 		return NewProcessContent(stepInfo)
 
+	case "process-tags":
+		return NewProcessTags(stepInfo)
+
 	case "promote-draft":
 		return NewStreamPromoteDraft(stepInfo)
 
