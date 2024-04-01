@@ -1,0 +1,108 @@
+/******************************************
+ * Geometry
+ * CSS styles that calculate various 
+ * geometric shapes and sizes.
+ ******************************************/
+
+ /******************************************
+ * Aspect Ratios
+ ******************************************/
+
+.aspect-square,
+.aspect-1-1 {
+	aspect-ratio:1;
+}
+
+.aspect-2-3 {
+	aspect-ratio:2/3;
+	overflow-y:hidden;
+}
+
+.aspect-4-3 {
+	aspect-ratio:4/3;
+}
+
+.aspect-16-9 {
+	aspect-ratio:16/9;
+}
+
+/******************************************
+ * Squares
+ ******************************************/
+
+.square {
+    aspect-ratio:1;
+}
+
+.square-24 {
+    height:24px;
+    width:24px;
+}
+
+.square-32 {
+    height:32px;
+    width:32px;
+}
+
+.square-48 {
+    height:48px;
+    width:48px;
+}
+
+.square-64 {
+    height:64px;
+    width:64px;
+}
+
+/******************************************
+ * Circles
+ ******************************************/
+
+ .circle {
+	border-radius:50%;
+	aspect-ratio: 1;
+	background-color:var(--gray30);
+}
+
+.circle-24 {
+	height:24px;
+	width:24px;
+	border-radius:12px;
+	background-color:var(--gray30);
+}
+
+.circle-32 {
+    height:32px;
+    width:32px;
+    border-radius:16px;
+	background-color:var(--gray30);
+}
+
+.circle-48 {
+    height:48px;
+    width:48px;
+    border-radius:24px;
+	background-color:var(--gray30);
+}
+
+.circle-64 {
+    height:64px;
+    width:64px;
+    border-radius:32px;
+	background-color:var(--gray30);
+}
+
+/******************************************
+ * Lines
+ ******************************************/
+
+ hr {
+    border-top:1px solid var(--gray20);
+    border-bottom:none;
+    border-left:none;
+    border-right:none;
+    height:0px;
+    margin-top:calc(var(--rhythm) * 3);
+    margin-bottom:calc(var(--rhythm) * 3);
+}
+

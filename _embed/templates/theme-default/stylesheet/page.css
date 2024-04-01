@@ -2,82 +2,64 @@
  * Page
  ******************************************/
 
+/* All Screens */
 .page {
-    background-color: var(--page-background);
-    padding: 16px 24px;
     position:relative;
 	line-height:150%;
-	margin-top:24px;
-	margin-bottom: 64px;
-	border: solid 1px var(--page-border);
-}
-
-/******************************************
- * Menu Bar
- ******************************************/
-
- #menu-bar {
-	border-bottom: solid 1px var(--gray20);
-	margin-top:-8px;
-	margin-bottom: 32px;
-	padding: 4px 0px 12px 0px;
-	line-height: 100%;
-	display:flex;
-	flex-direction: row;
-	flex-wrap:nowrap;
-	overflow-x: auto;
-}
-
-#menu-bar div {
-	white-space: nowrap;
-	flex-grow: 1;
-}
-
-#menu-bar div.left {
-	text-align: left;
-}
-
-#menu-bar div.center {
-	text-align: center;
-}
-
-#menu-bar div.right {
-	text-align: right;
-}
-
-#menu-bar a,
-#menu-bar button {
-	display: inline-block;
-	padding: 8px 12px;
-	border-radius: 4px;
-	color: var(--gray90);
-	background-color:inherit;
+	border: none;
+	padding: var(--rhythm);
+	font-weight:400;
+	width:100%;
 	margin:0px;
-	font-size:14px;
+    background-color: var(--page-background);
 }
 
-#menu-bar a:hover,
-#menu-bar a:focus,
-#menu-bar button:hover,
-#menu-bar button:focus {
-	background-color: var(--gray10);
-	color: var(--gray90);
+.framed {
+	position: relative;
+	width:100%;
+	margin:0px;
 }
 
-#menu-bar a.selected,
-#menu-bar a.selected:hover,
-#menu-bar a.selected:focus,
-#menu-bar button.selected,
-#menu-bar button.selected:hover,
-#menu-bar button.selected:hover {
-	background-color: var(--gray20);
-	color: var(--black);
+@media screen and (min-width:568px) {
 }
 
-/******************************************
- * Breadcrumbs
- ******************************************/
+/** MEDIUM Screens (tablet/vertical) ******/
+@media screen and (min-width:768px) {
 
- #breadcrumbs {
-	margin-bottom:20px;
+	.page {
+		width:90%;
+		margin-top:24px;
+		margin-bottom: 64px;
+		border: solid 1px var(--page-border);
+		padding: calc(var(--rhythm) * 1.5);
+	}
+
+	.framed {
+		width:90%;
+	}
+}
+
+/** LARGE Screens (tablet/horizontal) ******/
+@media screen and (min-width:1024px) {
+	.page {
+		padding: calc(var(--rhythm) * 2);
+		width:84%;
+	}
+
+	.framed {
+		width:84%;
+	}
+}
+
+/** EXTRA LARGE Screens (laptop/desktop) ******/
+@media screen and (min-width:1280px) {
+	.page {
+		width:80%;
+		max-width:1200px;
+	}
+
+	.framed {
+		width:80%;
+		max-width:1200px;
+	}
 }
