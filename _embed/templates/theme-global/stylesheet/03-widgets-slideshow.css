@@ -1,0 +1,41 @@
+/****************************************** 
+ * SLIDER CONTROLS
+ ******************************************/
+
+.slideshow {
+	display:flex;
+	flex-direction:row;
+	overflow-x: auto;
+	overflow-y: hidden;
+	scroll-snap-type: x mandatory;
+	-webkit-overflow-scrolling: touch;
+	scroll-behavior: smooth;
+	width:100%;
+}
+
+.slideshow::-webkit-scrollbar {
+	display:none;
+}
+
+.slideshow::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.slideshow > picture {
+	scroll-snap-align:center;
+	height:100%;
+	width:90%;
+	max-width:90%;
+	flex:none;
+	overflow-y:hidden;
+	overflow-x:hidden;
+	background-color:var(--gray10);
+	text-align:center;
+	margin-right:5px;
+}
+
+.slideshow > picture > img {
+	display:block;
+	width:100%;
+}
+

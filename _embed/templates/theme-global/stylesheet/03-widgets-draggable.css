@@ -1,0 +1,12 @@
+/****************************************** 
+ * DRAG AND DROP
+ ******************************************/
+
+.draggable {
+	cursor: grab;
+}
+
+.draggable-whisper {
+	cursor: grabbing;
+	opacity:0.1;
+}

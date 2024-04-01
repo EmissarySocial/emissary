@@ -109,8 +109,8 @@ input.text-lg {
     font-weight:calc(var(--weight) - 100);
 }
 
-.text-md,
 p,
+.text-md,
 .text-md input,
 input.text-md {
     font-size:calc(var(--rhythm) * 2);
@@ -138,7 +138,7 @@ input.text-md {
  * Text Colors
  ******************************************/
 
- .text-white, .text-gray-00, .gray00 .white {color:var(--white);}
+.text-white, .text-gray-00, .gray00 .white {color:var(--white);}
 .text-gray-01, .gray01 {color:var(--gray01);}
 .text-gray-02, .gray02 {color:var(--gray02);}
 .text-gray-03, .gray03 {color:var(--gray03);}
@@ -234,48 +234,6 @@ code.inline {
     display:inline;
 }
 
-
-/******************************************
- * Text Alignment
- ******************************************/
-
- .align-left {
-    text-align:left;
-}
-
-.align-center {
-    text-align:center;
-}
-
-.align-right {
-    text-align:right;
-}
-
-.valign-top {
-    vertical-align:top;
-}
-
-.valign-middle {
-    vertical-align:middle;
-}
-
-.valign-bottom {
-    vertical-align:bottom
-}
-
-.float-right {
-    float:right;
-}
-
-.float-left {
-    float:left;
-}
-
-.float-clear {
-    float:unset;
-}
-
-
 .nowrap {
     white-space: nowrap;
 }
@@ -328,22 +286,4 @@ p:last-child {
 .ellipsis-block {
     text-overflow:ellipsis; 
     overflow:hidden; 
-}
-
-
-/******************************************
- * Display Styles
- ******************************************/
-
- .block {
-    display:block;
-    width:100%;
-}
-
-.inline-block {
-	display:inline-block;
-}
-
-.inline {
-	display:inline;
 }

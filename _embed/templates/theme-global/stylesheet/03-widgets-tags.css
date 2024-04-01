@@ -1,0 +1,45 @@
+/******************************************
+ * Tag Widgets
+ ******************************************/
+
+ .info {
+	display:block;
+	border:solid 1px var(--blue20);
+	border-radius:10px;
+	background-color:var(--blue10);
+	color:var(--gray90);
+	padding:15px 15px;
+	margin-bottom:40px;
+}
+
+.info > .info-marker {
+	float:left;
+	margin-right:15px;
+	color:var(--blue60);
+}
+
+.tag {
+	background-color: var(--gray10);
+	border-radius: calc(var(--rhythm) / 2);
+	color:var(--gray90)!important;
+	display:inline-block;
+	font-size:calc(var(--rhythm) * 1.5);
+	line-height:calc(var(--rhythm) * 2);
+	margin-top:0;
+	margin-bottom:0;
+	margin-right: calc(var(--rhythm) / 2);
+	padding:calc(var(--rhythm) / 2) var(--rhythm);
+	text-decoration:none;
+}
+
+.tag:hover {
+	background-color:var(--gray30);
+	color:var(--black)!important;
+}
+
+.tag.warning,
+.tag.warning:hover {
+	background-color:var(--red50);
+	border:none;
+	color:var(--white)!important;
+}

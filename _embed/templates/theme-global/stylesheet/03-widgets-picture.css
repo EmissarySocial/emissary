@@ -1,0 +1,30 @@
+/******************************************
+ * PICTURE/PHOTO FORMATTING
+ ******************************************/
+
+ picture.picture {
+	display: block;
+	background-color: var(--gray20);
+	margin:0px;
+	padding:0px;
+	border:0px;
+}
+
+picture.picture img {
+	display:block;
+	margin:0px;
+	padding:0px;
+	border:0px;
+	width:100%;
+}
+
+@media screen and (max-width:568px) {
+
+	picture.picture {
+		margin-left: -10px;
+		margin-right: -10px;
+		margin-bottom: 20px;
+	}
+
+}
+

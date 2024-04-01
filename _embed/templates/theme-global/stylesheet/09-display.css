@@ -6,6 +6,33 @@
 	display:none;
 }
 
+
+/******************************************
+ * Hover Show/Hide
+ ******************************************/
+
+ @media(hover: hover) {
+    .hover-reveal {
+        opacity:0;
+    }
+
+	.hover-hide {
+		opacity:1;
+	}
+
+    .hover-reveal:focus {
+        opacity:1;
+    }
+
+    .hover-trigger:hover .hover-reveal {
+        opacity:1;
+    }
+
+	.hover-trigger:hover .hover-hide {
+		opacity:0;
+	}
+}
+
 .framed {
 	position: relative;
 }
