@@ -309,9 +309,9 @@ func (step StepAddStream) getBestTemplate(templateService *service.Template, con
 
 	// If the Step already has a Template defined, then this overrides the passed-in value
 	if step.TemplateID != "" {
-		for _, eligibleTemplate := range eligible {
+		for index, eligibleTemplate := range eligible {
 			if eligibleTemplate.Value == step.TemplateID {
-				return step.getBestTemplate_result(templateService, eligible, step.TemplateID)
+				return step.getBestTemplate_result(templateService, eligible[index:index+1], step.TemplateID)
 			}
 		}
 		return []form.LookupCode{}, model.Template{}, derp.NewInternalError(location, "Template '"+step.TemplateID+"' (defined in this Step) cannot be placed within '"+containedByRole+"'")
