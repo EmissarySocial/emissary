@@ -222,8 +222,8 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 		return derp.Wrap(err, "service.Stream.Save", "Error cleaning Stream using TemplateSchema", stream)
 	}
 
-	// RULE: If this stream does not have ParentIDs, then calculate them now.
-	if len(stream.ParentIDs) == 0 {
+	// RULE: If this stream is not a profile stream and does not have ParentIDs, then calculate them now.
+	if (stream.NavigationID != "profile") && (len(stream.ParentIDs) == 0) {
 		if err := service.CalcParentIDs(stream); err != nil {
 			return derp.Wrap(err, location, "Error calculating parent IDs", stream)
 		}
