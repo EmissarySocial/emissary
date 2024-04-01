@@ -12,6 +12,12 @@
 .flex-align-end {align-items:flex-end}
 .flex-align-center {align-items:center}
 .flex-align-stretch {align-items:stretch}
+.flex-align-content-start {align-content:flex-start}
+.flex-align-content-end {align-content:flex-end}
+.flex-align-content-center {align-content:center}
+.flex-align-content-stretch {align-content:stretch}
+.flex-align-space-between {align-content:space-between}
+.flex-align-space-around {align-content:space-around}
 .flex-align-self-start {align-self:flex-start}
 .flex-align-self-end {align-self:flex-end}
 .flex-align-self-center {align-self:center}
@@ -46,6 +52,12 @@
 	.flex-align-end-sm {align-items:flex-end}
 	.flex-align-center-sm {align-items:center}
 	.flex-align-stretch-sm {align-items:stretch}
+	.flex-align-content-start-sm {align-content:flex-start}
+	.flex-align-content-end-sm {align-content:flex-end}
+	.flex-align-content-center-sm {align-content:center}
+	.flex-align-content-stretch-sm {align-content:stretch}
+	.flex-align-space-between-sm {align-content:space-between}
+	.flex-align-space-around-sm {align-content:space-around}
 	.flex-align-self-start-sm {align-self:flex-start}
 	.flex-align-self-end-sm {align-self:flex-end}
 	.flex-align-self-center-sm {align-self:center}
@@ -81,6 +93,12 @@
 	.flex-align-end-md {align-items:flex-end}
 	.flex-align-center-md {align-items:center}
 	.flex-align-stretch-md {align-items:stretch}
+	.flex-align-content-start-md {align-content:flex-start}
+	.flex-align-content-end-md {align-content:flex-end}
+	.flex-align-content-center-md {align-content:center}
+	.flex-align-content-stretch-md {align-content:stretch}
+	.flex-align-space-between-md {align-content:space-between}
+	.flex-align-space-around-md {align-content:space-around}
 	.flex-align-self-start-md {align-self:flex-start}
 	.flex-align-self-end-md {align-self:flex-end}
 	.flex-align-self-center-md {align-self:center}
@@ -116,6 +134,12 @@
 	.flex-align-end-lg {align-items:flex-end}
 	.flex-align-center-lg {align-items:center}
 	.flex-align-stretch-lg {align-items:stretch}
+	.flex-align-content-start-lg {align-content:flex-start}
+	.flex-align-content-end-lg {align-content:flex-end}
+	.flex-align-content-center-lg {align-content:center}
+	.flex-align-content-stretch-lg {align-content:stretch}
+	.flex-align-space-between-lg {align-content:space-between}
+	.flex-align-space-around-lg {align-content:space-around}
 	.flex-align-self-start-lg {align-self:flex-start}
 	.flex-align-self-end-lg {align-self:flex-end}
 	.flex-align-self-center-lg {align-self:center}

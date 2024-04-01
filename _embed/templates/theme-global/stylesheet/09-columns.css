@@ -12,7 +12,7 @@
 	flex-direction: row;
 	align-items: stretch;
 	align-content: flex-start;
-	justify-content: space-between;
+	justify-content: flex-start;
 	gap: var(--gap);
 }
 
@@ -86,7 +86,7 @@
 	}
 
 	.columns-4 {
-		--cols: 2;
+		--cols: 3;
 		--gap: 12px;
 	}
 
