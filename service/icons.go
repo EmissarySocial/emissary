@@ -96,6 +96,10 @@ func (service Icons) Get(name string) string {
 		return service.get("envelope")
 	case "email-fill":
 		return service.get("envelope-fill")
+	case "explicit":
+		return service.get("explicit")
+	case "explicit-fill":
+		return service.get("explicit-fill")
 	case "file":
 		return service.get("file-earmark")
 	case "file-fill":
