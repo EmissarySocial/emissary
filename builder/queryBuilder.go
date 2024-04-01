@@ -60,6 +60,31 @@ func (builder QueryBuilder[T]) Top120() QueryBuilder[T] {
 	return builder
 }
 
+func (builder QueryBuilder[T]) Top150() QueryBuilder[T] {
+	builder.MaxRows = 150
+	return builder
+}
+
+func (builder QueryBuilder[T]) Top200() QueryBuilder[T] {
+	builder.MaxRows = 200
+	return builder
+}
+
+func (builder QueryBuilder[T]) Top300() QueryBuilder[T] {
+	builder.MaxRows = 300
+	return builder
+}
+
+func (builder QueryBuilder[T]) Top400() QueryBuilder[T] {
+	builder.MaxRows = 400
+	return builder
+}
+
+func (builder QueryBuilder[T]) Top500() QueryBuilder[T] {
+	builder.MaxRows = 500
+	return builder
+}
+
 func (builder QueryBuilder[T]) Top600() QueryBuilder[T] {
 	builder.MaxRows = 600
 	return builder
@@ -67,6 +92,11 @@ func (builder QueryBuilder[T]) Top600() QueryBuilder[T] {
 
 func (builder QueryBuilder[T]) All() QueryBuilder[T] {
 	builder.MaxRows = 0
+	return builder
+}
+
+func (builder QueryBuilder[T]) Where(field string, value any) QueryBuilder[T] {
+	builder.Criteria = builder.Criteria.AndEqual(field, value)
 	return builder
 }
 
