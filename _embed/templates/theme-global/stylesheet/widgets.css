@@ -210,6 +210,10 @@ picture.picture img {
         opacity:0;
     }
 
+	.hover-hide {
+		opacity:1;
+	}
+
     .hover-reveal:focus {
         opacity:1;
     }
@@ -217,4 +221,8 @@ picture.picture img {
     .hover-trigger:hover .hover-reveal {
         opacity:1;
     }
+
+	.hover-trigger:hover .hover-hide {
+		opacity:0;
+	}
 }
