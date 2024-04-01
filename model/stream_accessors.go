@@ -14,7 +14,7 @@ func StreamSchema() schema.Element {
 			"parentIds":        schema.Array{Items: schema.String{Format: "objectId"}},
 			"rank":             schema.Integer{Minimum: null.NewInt64(0)},
 			"token":            schema.String{Format: "token", MaxLength: 128},
-			"navigationId":     schema.String{Format: "objectId"},
+			"navigationId":     schema.String{},
 			"templateId":       schema.String{MaxLength: 128},
 			"parentTemplateId": schema.String{MaxLength: 128},
 			"socialRole":       schema.String{MaxLength: 128},
