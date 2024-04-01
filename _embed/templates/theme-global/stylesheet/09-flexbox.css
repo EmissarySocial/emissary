@@ -1,13 +1,15 @@
 /* All Screens */
 
-.flex-row {
+.flex-row, .flex-row-reverse {
 	display:flex;
 	flex-direction:row;
 	align-items:stretch;
 	gap:var(--rhythm);
 }
 
+.flex-row-reverse {flex-direction:row-reverse;}
 .flex-column {display:flex; flex-direction:column;}
+.flex-column-reverse {display:flex; flex-direction:column-reverse;}
 .flex-align-start {align-items:flex-start}
 .flex-align-end {align-items:flex-end}
 .flex-align-center {align-items:center}
@@ -40,14 +42,16 @@
 /* Small Screens */
 @media screen and (min-width: 568px) {
 
-	.flex-row-sm {
+	.flex-row-sm, .flex-row-reverse-sm {
 		display:flex; 
 		flex-direction:row; 
 		align-items:stretch; 
 		gap:var(--rhythm);
 	}
 
+	.flex-row-reverse-sm {flex-direction:row-reverse}
 	.flex-column-sm {display:flex; flex-direction:column}
+	.flex-column-reverse-sm {display:flex; flex-direction:column-reverse}
 	.flex-align-start-sm {align-items:flex-start}
 	.flex-align-end-sm {align-items:flex-end}
 	.flex-align-center-sm {align-items:center}
@@ -81,14 +85,16 @@
 /* Medium Screens */
 @media screen and (min-width: 768px) {
 
-	.flex-row-md {
+	.flex-row-md, .flex-row-reverse-md {
 		display:flex; 
 		flex-direction:row; 
 		align-items:stretch; 
 		gap:var(--rhythm);
 	}
 
+	.flex-row-reverse-md {flex-direction:row-reverse}
 	.flex-column-md {display:flex; flex-direction:column}
+	.flex-column-reverse-md {display:flex; flex-direction:column-reverse}
 	.flex-align-start-md {align-items:flex-start}
 	.flex-align-end-md {align-items:flex-end}
 	.flex-align-center-md {align-items:center}
@@ -122,14 +128,16 @@
 /* Large Screens */
 @media screen and (min-width: 1024px) {
 
-	.flex-row-lg {
+	.flex-row-lg, .flex-row-reverse-lg {
 		display:flex; 
 		flex-direction:row; 
 		align-items:stretch; 
 		gap:var(--rhythm);
 	}
 
+	.flex-row-reverse-lg {flex-direction:row-reverse}
 	.flex-column-lg {display:flex; flex-direction:column}
+	.flex-column-reverse-lg {display:flex; flex-direction:column-reverse}
 	.flex-align-start-lg {align-items:flex-start}
 	.flex-align-end-lg {align-items:flex-end}
 	.flex-align-center-lg {align-items:center}

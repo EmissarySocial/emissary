@@ -24,7 +24,7 @@
 @media screen and (min-width:568px) {
 	:root{--rhythm: 9px}
 
-	.show-sm {display:inherit}
+	.show-sm {display:initial}
 	.hide-sm {display:none}
 	
     .block-sm {display:block}
@@ -48,7 +48,7 @@
 @media screen and (min-width:768px) {
 	:root{--rhythm: 8px}
 
-	.show-md {display:inherit}
+	.show-md {display:initial}
 	.hide-md {display:none}
 	
     .block-md {display:block}
@@ -70,7 +70,7 @@
 
 /* Large Screens (desktop) */
 @media screen and (min-width:1024px) {
-	.show-lg {display:inherit}
+	.show-lg {display:initial}
 	.hide-lg {display:none}
 	
     .block-lg {display:block}
