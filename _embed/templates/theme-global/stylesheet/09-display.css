@@ -24,68 +24,68 @@
 @media screen and (min-width:568px) {
 	:root{--rhythm: 9px}
 
-	.show-sm {display:initial}
-	.hide-sm {display:none}
+	.sm\:show {display:initial}
+	.sm\:hide {display:none}
 	
-    .block-sm {display:block}
-	.inline-block-sm {display:inline-block}
-	.inline-sm {display:inline}
+    .sm\:block {display:block}
+	.sm\:inline-block {display:inline-block}
+	.sm\:inline {display:inline}
 
-    .align-left-sm {text-align:left}
-    .align-center-sm {text-align:center}
-    .align-right-sm {text-align:right}
+    .sm\:align-left {text-align:left}
+    .sm\:align-center {text-align:center}
+    .sm\:align-right {text-align:right}
     
-    .valign-top-sm {vertical-align:top}
-    .valign-middle-sm {vertical-align:middle}
-    .valign-bottom-sm {vertical-align:bottom}
+    .sm\:valign-top {vertical-align:top}
+    .sm\:valign-middle {vertical-align:middle}
+    .sm\:valign-bottom {vertical-align:bottom}
     
-    .float-right-sm {float:right}
-    .float-left-sm {float:left}
-    .float-clear-sm {float:unset}
+    .sm\:float-right {float:right}
+    .sm\:float-left {float:left}
+    .sm\:float-clear {float:unset}
 }
 
 /* Medium Screens (tablet) */
 @media screen and (min-width:768px) {
 	:root{--rhythm: 8px}
 
-	.show-md {display:initial}
-	.hide-md {display:none}
+	.md\:show {display:initial}
+	.md\:hide {display:none}
 	
-    .block-md {display:block}
-	.inline-block-md {display:inline-block}
-	.inline-md {display:inline}
+    .md\:block {display:block}
+	.md\:inline-block {display:inline-block}
+	.md\:inline {display:inline}
     
-    .align-left-md {text-align:left}
-    .align-center-md {text-align:center}
-    .align-right-md {text-align:right}
+    .md\:align-left {text-align:left}
+    .md\:align-center {text-align:center}
+    .md\:align-right {text-align:right}
     
-    .valign-top-md {vertical-align:top}
-    .valign-middle-md {vertical-align:middle}
-    .valign-bottom-md {vertical-align:bottom}
+    .md\:valign-top {vertical-align:top}
+    .md\:valign-middle {vertical-align:middle}
+    .md\:valign-bottom {vertical-align:bottom}
     
-    .float-right-md {float:right}
-    .float-left-md {float:left}
-    .float-clear-md {float:unset}
+    .md\:float-right {float:right}
+    .md\:float-left {float:left}
+    .md\:float-clear {float:unset}
 }
 
 /* Large Screens (desktop) */
 @media screen and (min-width:1024px) {
-	.show-lg {display:initial}
-	.hide-lg {display:none}
+	.lg\:show {display:initial}
+	.lg\:hide {display:none}
 	
-    .block-lg {display:block}
-	.inline-block-lg {display:inline-block}
-	.inline-lg {display:inline}
+    .lg\:block {display:block}
+	.lg\:inline-block {display:inline-block}
+	.lg\:inline {display:inline}
     
-    .align-left-lg {text-align:left}
-    .align-center-lg {text-align:center}
-    .align-right-lg {text-align:right}
+    .lg\:align-left {text-align:left}
+    .lg\:align-center {text-align:center}
+    .lg\:align-right {text-align:right}
     
-    .valign-top-lg {vertical-align:top}
-    .valign-middle-lg {vertical-align:middle}
-    .valign-bottom-lg {vertical-align:bottom}
+    .lg\:valign-top {vertical-align:top}
+    .lg\:valign-middle {vertical-align:middle}
+    .lg\:valign-bottom {vertical-align:bottom}
     
-    .float-right-lg {float:right}
-    .float-left-lg {float:left}
-    .float-clear-lg {float:unset}
+    .lg\:float-right {float:right}
+    .lg\:float-left {float:left}
+    .lg\:float-clear {float:unset}
 }

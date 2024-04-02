@@ -134,48 +134,48 @@
 
 /* Small Screens (phones) */
 @media screen and (min-width: 568px) {
-	.width-auto-sm {width:auto}
-	.width-24-sm {width:24px}
-	.width-32-sm {width:32px}
-	.width-48-sm {width:48px}
-	.width-64-sm {width:64px}
-	.width-128-sm {width:128px}
-	.width-240-sm {width:240px}
-	.width-256-sm {width:256px}
-	.width-320-sm {width:320px}
-	.width-480-sm {width:480px}
-	.width-512-sm {width:512px}
-	.width-640-sm {width:640px}
+	.sm\:width-auto {width:auto}
+	.sm\:width-24 {width:24px}
+	.sm\:width-32 {width:32px}
+	.sm\:width-48 {width:48px}
+	.sm\:width-64 {width:64px}
+	.sm\:width-128 {width:128px}
+	.sm\:width-240 {width:240px}
+	.sm\:width-256 {width:256px}
+	.sm\:width-320 {width:320px}
+	.sm\:width-480 {width:480px}
+	.sm\:width-512 {width:512px}
+	.sm\:width-640 {width:640px}
 }
 
 /* Medium Screens (tablets) */
 @media screen and (min-width: 768px) {
-	.width-auto-md {width:auto}
-	.width-24-md {width:24px}
-	.width-32-md {width:32px}
-	.width-48-md {width:48px}
-	.width-64-md {width:64px}
-	.width-128-md {width:128px}
-	.width-240-md {width:240px}
-	.width-256-md {width:256px}
-	.width-320-md {width:320px}
-	.width-480-md {width:480px}
-	.width-512-md {width:512px}
-	.width-640-md {width:640px}
+	.md\:width-auto {width:auto}
+	.md\:width-24 {width:24px}
+	.md\:width-32 {width:32px}
+	.md\:width-48 {width:48px}
+	.md\:width-64 {width:64px}
+	.md\:width-128 {width:128px}
+	.md\:width-240 {width:240px}
+	.md\:width-256 {width:256px}
+	.md\:width-320 {width:320px}
+	.md\:width-480 {width:480px}
+	.md\:width-512 {width:512px}
+	.md\:width-640 {width:640px}
 }
 
 /* Large Screens (desktops) */
 @media screen and (min-width: 1024px) {
-	.width-auto-lg {width:auto}
-	.width-24-lg {width:24px}
-	.width-32-lg {width:32px}
-	.width-48-lg {width:48px}
-	.width-64-lg {width:64px}
-	.width-128-lg {width:128px}
-	.width-240-lg {width:240px}
-	.width-256-lg {width:256px}
-	.width-320-lg {width:320px}
-	.width-480-lg {width:480px}
-	.width-512-lg {width:512px}
-	.width-640-lg {width:640px}
+	.lg\:width-auto {width:auto}
+	.lg\:width-24 {width:24px}
+	.lg\:width-32 {width:32px}
+	.lg\:width-48 {width:48px}
+	.lg\:width-64 {width:64px}
+	.lg\:width-128 {width:128px}
+	.lg\:width-240 {width:240px}
+	.lg\:width-256 {width:256px}
+	.lg\:width-320 {width:320px}
+	.lg\:width-480 {width:480px}
+	.lg\:width-512 {width:512px}
+	.lg\:width-640 {width:640px}
 }

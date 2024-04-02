@@ -25,12 +25,12 @@
 					<td hx-get="/domains/{{.DomainID}}" role="button" nowrap>
 						{{icon "server"}} {{ .Label }}
 					</td>
-					<td hx-get="/domains/{{.DomainID}}" role="button"><div class="hide-md">{{.Hostname}}</div></td>
+					<td hx-get="/domains/{{.DomainID}}" role="button"><div class="md:hide">{{.Hostname}}</div></td>
 					<td class="align-right" nowrap>
-						<button hx-get="/domains/{{.DomainID}}">Edit <span class="hide-sm">Domain</span></button>
-						<button hx-get="/domains/{{.DomainID}}/users"><span class="hide-sm">Edit</span> Owners</button>
+						<button hx-get="/domains/{{.DomainID}}">Edit <span class="sm:hide">Domain</span></button>
+						<button hx-get="/domains/{{.DomainID}}/users"><span class="sm:hide">Edit</span> Owners</button>
 						<span style="min-width:20px">&nbsp;&nbsp;</span>
-						<button class="text-red" hx-delete="/domains/{{.DomainID}}" hx-confirm="Are you sure you want to DELETE this domain?  There is NO UNDO.">{{icon "delete"}} <span class="hide-sm">Delete</span></button>
+						<button class="text-red" hx-delete="/domains/{{.DomainID}}" hx-confirm="Are you sure you want to DELETE this domain?  There is NO UNDO.">{{icon "delete"}} <span class="sm:hide">Delete</span></button>
 					</td>
 				</tr>
 			{{- end -}}
