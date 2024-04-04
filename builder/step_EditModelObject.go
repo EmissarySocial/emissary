@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/rs/zerolog/log"
 )
 
 // StepEditModelObject is an action that can add new sub-streams to the domain.
@@ -56,6 +57,8 @@ func (step StepEditModelObject) Get(builder Builder, buffer io.Writer) PipelineB
 func (step StepEditModelObject) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
 	const location = "build.StepEditModelObject.Post"
+
+	log.Debug().Msg(location)
 
 	// Get the request body
 	body := mapof.NewAny()
