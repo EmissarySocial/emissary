@@ -114,6 +114,7 @@ func WrapForm(endpoint string, content string, options ...string) string {
 		Attr("hx-post", endpoint).
 		Attr("hx-swap", "none").
 		Attr("hx-push-url", "false").
+		Attr("hx-encoding", optionMap.GetString("encoding")).
 		Script("init send checkFormRules(changed:me as Values)").
 		EndBracket()
 

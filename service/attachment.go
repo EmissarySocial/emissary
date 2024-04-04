@@ -118,11 +118,26 @@ func (service *Attachment) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
+// QueryByObjectID returns all Attachments that match the provided object (type and ID)
 func (service *Attachment) QueryByObjectID(objectType string, objectID primitive.ObjectID) ([]model.Attachment, error) {
 	return service.Query(
 		exp.Equal("objectType", objectType).
 			AndEqual("objectId", objectID),
 		option.SortAsc("rank"))
+}
+
+// QueryByCategory returns all Attachments that match the provided object (type and ID).  If the "category"
+// parameter is provided, then only Attachments with that category will be returned.
+func (service *Attachment) QueryByCategory(objectType string, objectID primitive.ObjectID, category string) ([]model.Attachment, error) {
+
+	criteria := exp.Equal("objectType", objectType).
+		AndEqual("objectId", objectID)
+
+	if category != "" {
+		criteria = criteria.AndEqual("category", category)
+	}
+
+	return service.Query(criteria, option.SortAsc("rank"))
 }
 
 func (service *Attachment) LoadFirstByObjectID(objectType string, objectID primitive.ObjectID) (model.Attachment, error) {
@@ -188,6 +203,65 @@ func (service *Attachment) DeleteAll(objectType string, objectID primitive.Objec
 
 		if err := service.Delete(&attachment, note); err != nil {
 			derp.Report(derp.Wrap(err, "service.Attachment.DeleteByStream", "Error deleting child stream", attachment))
+		}
+	}
+
+	return nil
+}
+
+/******************************************
+ * Custom Behaviors
+ ******************************************/
+
+// MakeRoom removes attachments (by object and category) that exceed the provided maximum.
+func (service *Attachment) MakeRoom(objectType string, objectID primitive.ObjectID, category string, action string, maximum int, addCount int) error {
+
+	const location = "service.Attachment.MakeRoom"
+
+	// If the maximum is zero, then there's no limit to the number of attachments.
+	if maximum == 0 {
+		return nil
+	}
+
+	// Find the existing Attachments
+	attachments, err := service.QueryByCategory(objectType, objectID, category)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error finding existing attachments", objectType, objectID)
+	}
+
+	currentCount := len(attachments)
+
+	// If there are no Attachments, then there's no "room" to make.
+	if currentCount == 0 {
+		return nil
+	}
+
+	// Let's figure out how many attachments to delete from the front of the results.
+	var removeCount int
+
+	switch action {
+
+	// If "replace" then remove ALL existing attachments
+	case "replace":
+		removeCount = currentCount
+
+	// Default case is "append".  Only remove the attachments that overflow the maximum
+	default:
+		removeCount = currentCount + addCount - maximum
+	}
+
+	// If there's nothing to do, then there's nothing to do.
+	if removeCount <= 0 {
+		return nil
+	}
+
+	// Delete overflowing attachments (starting with the beginning of the result slice)
+	for index := 0; index < removeCount; index++ {
+		attachment := attachments[index]
+
+		if err := service.Delete(&attachment, "Deleted"); err != nil {
+			return derp.Wrap(err, location, "Error removing attachment")
 		}
 	}
 
