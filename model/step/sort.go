@@ -1,7 +1,6 @@
 package step
 
 import (
-	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/mapof"
 )
 
@@ -15,8 +14,8 @@ type Sort struct {
 func NewSort(stepInfo mapof.Any) (Sort, error) {
 
 	return Sort{
-		Keys:    first.String(stepInfo.GetString("keys"), "_id"),
-		Values:  first.String(stepInfo.GetString("values"), "rank"),
+		Keys:    first(stepInfo.GetString("keys"), "_id"),
+		Values:  first(stepInfo.GetString("values"), "rank"),
 		Message: stepInfo.GetString("message"),
 	}, nil
 }

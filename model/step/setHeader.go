@@ -4,7 +4,6 @@ import (
 	"text/template"
 
 	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/mapof"
 )
 
@@ -25,7 +24,7 @@ func NewSetHeader(stepInfo mapof.Any) (SetHeader, error) {
 	}
 
 	return SetHeader{
-		Method: first.String(stepInfo.GetString("method"), "both"),
+		Method: first(stepInfo.GetString("method"), "both"),
 		Name:   stepInfo.GetString("name"),
 		Value:  value,
 	}, nil

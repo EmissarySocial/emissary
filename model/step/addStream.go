@@ -5,7 +5,6 @@ import (
 
 	"github.com/EmissarySocial/emissary/tools/val"
 	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/mapof"
 )
 
@@ -44,8 +43,8 @@ func NewAddStream(stepInfo mapof.Any) (AddStream, error) {
 
 	// Create the step
 	result := AddStream{
-		Style:         first.String(stepInfo.GetString("style"), "chooser"),
-		Title:         first.String(stepInfo.GetString("title"), "Add a Stream"),
+		Style:         first(stepInfo.GetString("style"), "chooser"),
+		Title:         first(stepInfo.GetString("title"), "Add a Stream"),
 		Location:      val.Enum(stepInfo.GetString("location"), "top", "child", "outbox"),
 		TemplateID:    stepInfo.GetString("template"),
 		TemplateRoles: stepInfo.GetSliceOfString("roles"),

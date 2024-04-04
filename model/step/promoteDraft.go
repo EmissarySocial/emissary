@@ -1,7 +1,6 @@
 package step
 
 import (
-	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/mapof"
 )
 
@@ -12,7 +11,7 @@ type StreamPromoteDraft struct {
 
 func NewStreamPromoteDraft(stepInfo mapof.Any) (StreamPromoteDraft, error) {
 	return StreamPromoteDraft{
-		StateID: first.String(stepInfo.GetString("state"), "published"),
+		StateID: first(stepInfo.GetString("state"), "published"),
 	}, nil
 }
 

@@ -1,7 +1,6 @@
 package step
 
 import (
-	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/mapof"
 )
 
@@ -16,7 +15,7 @@ func NewViewHTML(stepInfo mapof.Any) (ViewHTML, error) {
 
 	return ViewHTML{
 		File:   stepInfo.GetString("file"),
-		Method: first.String(stepInfo.GetString("method"), "get"),
+		Method: first(stepInfo.GetString("method"), "get"),
 	}, nil
 }
 

@@ -1,7 +1,6 @@
 package step
 
 import (
-	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/mapof"
 )
 
@@ -15,7 +14,7 @@ type ServerRedirect struct {
 func NewServerRedirect(stepInfo mapof.Any) (ServerRedirect, error) {
 
 	return ServerRedirect{
-		On:     first.String(stepInfo.GetString("on"), "post"),
+		On:     first(stepInfo.GetString("on"), "post"),
 		Action: stepInfo.GetString("action"),
 	}, nil
 }

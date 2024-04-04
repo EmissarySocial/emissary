@@ -1,7 +1,6 @@
 package step
 
 import (
-	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/mapof"
 )
 
@@ -14,8 +13,8 @@ type EditContent struct {
 func NewEditContent(stepInfo mapof.Any) (EditContent, error) {
 
 	return EditContent{
-		Filename: first.String(stepInfo.GetString("file"), stepInfo.GetString("actionId")),
-		Format:   first.String(stepInfo.GetString("format"), "editorjs"),
+		Filename: first(stepInfo.GetString("file"), stepInfo.GetString("actionId")),
+		Format:   first(stepInfo.GetString("format"), "editorjs"),
 	}, nil
 }
 

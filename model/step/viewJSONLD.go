@@ -1,7 +1,6 @@
 package step
 
 import (
-	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/mapof"
 )
 
@@ -14,7 +13,7 @@ type ViewJSONLD struct {
 func NewViewJSONLD(stepInfo mapof.Any) (ViewJSONLD, error) {
 
 	return ViewJSONLD{
-		Method: first.String(stepInfo.GetString("method"), "get"),
+		Method: first(stepInfo.GetString("method"), "get"),
 	}, nil
 }
 

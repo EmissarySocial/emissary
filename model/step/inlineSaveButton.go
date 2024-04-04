@@ -4,7 +4,6 @@ import (
 	"text/template"
 
 	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/mapof"
 )
 
@@ -18,7 +17,7 @@ type InlineSaveButton struct {
 func NewInlineSaveButton(stepInfo mapof.Any) (InlineSaveButton, error) {
 
 	// Get the ID.  Default is "inline-save-button"
-	id := first.String(stepInfo.GetString("id"), "inline-save-button")
+	id := first(stepInfo.GetString("id"), "inline-save-button")
 	idTemplate, err := template.New("").Funcs(FuncMap()).Parse(id)
 
 	if err != nil {
@@ -26,7 +25,7 @@ func NewInlineSaveButton(stepInfo mapof.Any) (InlineSaveButton, error) {
 	}
 
 	// Get the Label.  Default is "Save Changes"
-	label := first.String(stepInfo.GetString("label"), "Save Changes")
+	label := first(stepInfo.GetString("label"), "Save Changes")
 	labelTemplate, err := template.New("").Funcs(FuncMap()).Parse(label)
 
 	if err != nil {
@@ -35,7 +34,7 @@ func NewInlineSaveButton(stepInfo mapof.Any) (InlineSaveButton, error) {
 
 	return InlineSaveButton{
 		ID:    idTemplate,
-		Class: first.String(stepInfo.GetString("class"), "primary"),
+		Class: first(stepInfo.GetString("class"), "primary"),
 		Label: labelTemplate,
 	}, nil
 }

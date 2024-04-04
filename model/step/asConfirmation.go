@@ -1,7 +1,6 @@
 package step
 
 import (
-	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/mapof"
 )
 
@@ -18,7 +17,7 @@ func NewAsConfirmation(stepInfo mapof.Any) (AsConfirmation, error) {
 	return AsConfirmation{
 		Title:   stepInfo.GetString("title"),
 		Message: stepInfo.GetString("message"),
-		Submit:  first.String(stepInfo.GetString("submit"), "Continue"),
+		Submit:  first(stepInfo.GetString("submit"), "Continue"),
 	}, nil
 }
 

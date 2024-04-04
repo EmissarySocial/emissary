@@ -1,7 +1,6 @@
 package step
 
 import (
-	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/mapof"
 )
 
@@ -15,8 +14,8 @@ type SortAttachments struct {
 func NewSortAttachments(stepInfo mapof.Any) (SortAttachments, error) {
 
 	return SortAttachments{
-		Keys:    first.String(stepInfo.GetString("keys"), "_id"),
-		Values:  first.String(stepInfo.GetString("values"), "rank"),
+		Keys:    first(stepInfo.GetString("keys"), "_id"),
+		Values:  first(stepInfo.GetString("values"), "rank"),
 		Message: stepInfo.GetString("message"),
 	}, nil
 }
