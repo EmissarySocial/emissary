@@ -152,8 +152,8 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.UnPublish:
 		return StepUnPublish(s)
 
-	case step.UploadAttachment:
-		return StepUploadAttachment(s)
+	case step.UploadAttachments:
+		return StepUploadAttachments(s)
 
 	case step.ViewFeed:
 		return StepViewFeed(s)

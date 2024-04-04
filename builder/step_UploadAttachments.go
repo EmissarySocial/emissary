@@ -10,8 +10,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// StepUploadAttachment represents an action that can upload attachments.  It can only be used on a StreamBuilder
-type StepUploadAttachment struct {
+// StepUploadAttachments represents an action that can upload attachments.  It can only be used on a StreamBuilder
+type StepUploadAttachments struct {
 	Action         string // Action to perform when uploading the attachment ("append" or "replace")
 	Fieldname      string // Name of the form field that contains the file data (Default: "file")
 	AttachmentPath string // Path name to store the AttachmentID
@@ -23,13 +23,13 @@ type StepUploadAttachment struct {
 	JSONResult     bool   // If TRUE, return a JSON structure with result data. This forces Maximum=1
 }
 
-func (step StepUploadAttachment) Get(builder Builder, _ io.Writer) PipelineBehavior {
+func (step StepUploadAttachments) Get(builder Builder, _ io.Writer) PipelineBehavior {
 	return nil
 }
 
-func (step StepUploadAttachment) Post(builder Builder, buffer io.Writer) PipelineBehavior {
+func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) PipelineBehavior {
 
-	const location = "handler.StepUploadAttachment.Post"
+	const location = "handler.StepUploadAttachments.Post"
 
 	log.Debug().Msg(location)
 

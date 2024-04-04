@@ -4,8 +4,8 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// UploadAttachment represents an action that can upload attachments.  It can only be used on a StreamBuilder
-type UploadAttachment struct {
+// UploadAttachments represents an action that can upload attachments.  It can only be used on a StreamBuilder
+type UploadAttachments struct {
 	Action         string // Action to perform when uploading the attachment ("append" or "replace")
 	Fieldname      string // Name of the form field that contains the file data (Default: "file")
 	AttachmentPath string // Path name to store the AttachmentID
@@ -17,8 +17,8 @@ type UploadAttachment struct {
 	JSONResult     bool   // If TRUE, return a JSON structure with result data. This forces Maximum=1
 }
 
-// NewUploadAttachment returns a fully parsed UploadAttachment object
-func NewUploadAttachment(stepInfo mapof.Any) (UploadAttachment, error) {
+// NewUploadAttachments returns a fully parsed UploadAttachments object
+func NewUploadAttachments(stepInfo mapof.Any) (UploadAttachments, error) {
 
 	// Default behavior is "append".  Only other option is "replace"
 	action := stepInfo.GetString("action")
@@ -27,7 +27,7 @@ func NewUploadAttachment(stepInfo mapof.Any) (UploadAttachment, error) {
 		action = "append"
 	}
 
-	return UploadAttachment{
+	return UploadAttachments{
 		Action:         action,
 		Fieldname:      first(stepInfo.GetString("fieldname"), "form"),
 		AttachmentPath: stepInfo.GetString("attachment-path"),
@@ -41,4 +41,4 @@ func NewUploadAttachment(stepInfo mapof.Any) (UploadAttachment, error) {
 }
 
 // AmStep is here only to verify that this struct is a build pipeline step
-func (step UploadAttachment) AmStep() {}
+func (step UploadAttachments) AmStep() {}
