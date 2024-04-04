@@ -38,8 +38,7 @@
 		create: {
 			roles:["owner", "editor"]
 			steps: [
-				{do:"upload-attachments"}
-				{do:"set-thumbnail", path:"imageUrl"}
+				{do:"upload-attachments", category:"image", accept-type:"image/*", maximum:1, download-path:"imageUrl"}
 				{do:"save", comment:"Created by {{.Author.DisplayName}}"}
 				{do:"add-stream", location:"child", template:"comment-group"}
 			]
