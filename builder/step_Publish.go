@@ -8,7 +8,9 @@ import (
 )
 
 // StepPublish represents an action-step that can update a stream's PublishDate with the current time.
-type StepPublish struct{}
+type StepPublish struct {
+	Outbox bool
+}
 
 func (step StepPublish) Get(builder Builder, _ io.Writer) PipelineBehavior {
 	return nil
@@ -35,7 +37,7 @@ func (step StepPublish) Post(builder Builder, _ io.Writer) PipelineBehavior {
 	// Try to Publish the Stream to ActivityPub
 	streamService := factory.Stream()
 
-	if err := streamService.Publish(&user, streamBuilder._stream); err != nil {
+	if err := streamService.Publish(&user, streamBuilder._stream, step.Outbox); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error publishing stream", streamBuilder._stream))
 	}
 

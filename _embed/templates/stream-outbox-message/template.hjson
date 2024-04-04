@@ -36,7 +36,7 @@
 				{do:"save"}
 				{do:"upload-attachments"}
 				{do:"set-thumbnail", path:"imageUrl"}
-				{do:"publish"}
+				{do:"publish", outbox:true}
 			]
 		}
 		view: {
@@ -54,7 +54,7 @@
 					{do:"edit-content", file:"edit", format:"HTML"}
 					{do:"process-content"}
 					{do:"save"}
-					{do:"publish"}
+					{do:"publish", outbox:true}
 					{do:"refresh-page"}
 				]}
 			]
@@ -63,7 +63,7 @@
 			roles:["self"]
 			steps: [
 				{do:"delete", title:"Delete this Post?", message:"If you continue, this post will be permanently removed from your profile.  There is NO UNDO."}
-				{do:"unpublish"}
+				{do:"unpublish", outbox:true}
 				{do:"refresh-page"}
 			]
 		}

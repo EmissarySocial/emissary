@@ -18,7 +18,7 @@ import (
  ******************************************/
 
 // Publish marks this stream as "published"
-func (service *Stream) Publish(user *model.User, stream *model.Stream) error {
+func (service *Stream) Publish(user *model.User, stream *model.Stream, outbox bool) error {
 
 	const location = "service.Stream.Publish"
 
@@ -43,6 +43,13 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream) error {
 	if err := service.Save(stream, "Publishing"); err != nil {
 		return derp.Wrap(err, location, "Error saving stream", stream)
 	}
+
+	// If we're NOT publishing to the outbox, then we're done.
+	if !outbox {
+		return nil
+	}
+
+	// PUBLISH TO THE OUTBOX...
 
 	// Create the Activity to send to the User's Outbox
 	object := service.JSONLD(stream)
@@ -163,7 +170,7 @@ func (service *Stream) publish_Stream(stream *model.Stream, activity mapof.Any) 
  ******************************************/
 
 // UnPublish marks this stream as "published"
-func (service *Stream) UnPublish(user *model.User, stream *model.Stream) error {
+func (service *Stream) UnPublish(user *model.User, stream *model.Stream, outbox bool) error {
 
 	const location = "service.Stream.UnPublish"
 
@@ -174,6 +181,13 @@ func (service *Stream) UnPublish(user *model.User, stream *model.Stream) error {
 	if err := service.Save(stream, "UnPublish"); err != nil {
 		return derp.Wrap(err, location, "Error saving stream", stream)
 	}
+
+	// If we're not publishing to the outbox, then we're done
+	if !outbox {
+		return nil
+	}
+
+	// UN-PUBLISH FROM THE OUTBOX...
 
 	// Send "Undo" activities to all User followers.
 	if !user.IsNew() {

@@ -4,13 +4,13 @@ import "github.com/benpate/rosetta/mapof"
 
 // UnPublish represents an action-step that can update a stream's UnPublishDate with the current time.
 type UnPublish struct {
-	Role string
+	Outbox bool
 }
 
 // NewUnPublish returns a fully initialized UnPublish object
 func NewUnPublish(stepInfo mapof.Any) (UnPublish, error) {
 	return UnPublish{
-		Role: stepInfo.GetString("role"),
+		Outbox: stepInfo.GetBool("outbox"),
 	}, nil
 }
 

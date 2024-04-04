@@ -23,7 +23,7 @@
 				{do:"edit-content", file:"create", format:"HTML"}
 				{do:"process-content"}
 				{do:"save"}
-				{do:"publish"}
+				{do:"publish", outbox:true}
 			]
 		}
 		edit: {
@@ -34,7 +34,7 @@
 					{do:"edit-content", file:"edit", format:"HTML"}
 					{do:"process-content"}
 					{do:"save"}
-					{do:"publish"}
+					{do:"publish", outbox:true}
 					{do:"refresh-page"}
 				]}
 			]

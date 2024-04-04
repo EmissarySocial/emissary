@@ -61,7 +61,7 @@ func PostStatus(serverFactory *server.Factory) func(model.Authorization, txn.Pos
 		}
 
 		// Publish the Stream to the User's outbox
-		if err := streamService.Publish(&user, &stream); err != nil {
+		if err := streamService.Publish(&user, &stream, true); err != nil {
 			return object.Status{}, derp.Wrap(err, location, "Error publishing stream")
 		}
 
