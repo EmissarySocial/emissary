@@ -17,7 +17,7 @@ import (
 type User struct {
 	UserID          primitive.ObjectID         `json:"userId"          bson:"_id"`                  // Unique identifier for this user.
 	GroupIDs        id.Slice                   `json:"groupIds"        bson:"groupIds"`             // Slice of IDs for the groups that this user belongs to.
-	ImageID         primitive.ObjectID         `json:"imageId"         bson:"imageId"`              // AttachmentID of this user's avatar image.
+	IconID          primitive.ObjectID         `json:"iconId"          bson:"iconId"`               // AttachmentID of this user's avatar/icon image.
 	DisplayName     string                     `json:"displayName"     bson:"displayName"`          // Name to be displayed for this user
 	StatusMessage   string                     `json:"statusMessage"   bson:"statusMessage"`        // Status summary for this user
 	Location        string                     `json:"location"        bson:"location"`             // Human-friendly description of this user's physical location.
@@ -70,7 +70,7 @@ func (user User) PersonLink() PersonLink {
 		ProfileURL:   user.ProfileURL,
 		InboxURL:     user.ActivityPubInboxURL(),
 		EmailAddress: user.EmailAddress,
-		ImageURL:     user.ActivityPubAvatarURL(),
+		IconURL:      user.ActivityPubIconURL(),
 	}
 }
 
@@ -81,7 +81,7 @@ func (user User) Summary() UserSummary {
 		DisplayName:  user.DisplayName,
 		Username:     user.Username,
 		EmailAddress: user.EmailAddress,
-		ImageURL:     user.ActivityPubAvatarURL(),
+		IconURL:      user.ActivityPubIconURL(),
 		ProfileURL:   user.ProfileURL,
 	}
 }
@@ -195,7 +195,7 @@ func (user User) GetJSONLD() mapof.Any {
 		vocab.PropertyName:              user.DisplayName,
 		vocab.PropertyPreferredUsername: user.Username,
 		vocab.PropertySummary:           user.StatusMessage,
-		vocab.PropertyIcon:              user.ActivityPubAvatarURL(),
+		vocab.PropertyIcon:              user.ActivityPubIconURL(),
 		vocab.PropertyInbox:             user.ActivityPubInboxURL(),
 		vocab.PropertyOutbox:            user.ActivityPubOutboxURL(),
 		vocab.PropertyFollowing:         user.ActivityPubFollowingURL(),
@@ -206,7 +206,7 @@ func (user User) GetJSONLD() mapof.Any {
 	}
 
 	// Conditionally add the Avatar URL
-	if avatarURL := user.ActivityPubAvatarURL(); avatarURL != "" {
+	if avatarURL := user.ActivityPubIconURL(); avatarURL != "" {
 		result["icon"] = mapof.Any{
 			vocab.PropertyType: vocab.ObjectTypeImage,
 			vocab.PropertyURL:  avatarURL,
@@ -220,9 +220,9 @@ func (user *User) GetProfileURL() string {
 	return user.ProfileURL
 }
 
-func (user *User) ActivityPubAvatarURL() string {
+func (user *User) ActivityPubIconURL() string {
 
-	if user.ImageID.IsZero() {
+	if user.IconID.IsZero() {
 		return ""
 	}
 	return user.ProfileURL + "/avatar"
@@ -307,7 +307,7 @@ func (user User) Toot() object.Account {
 		// Acct: user.WebFingerAccount,
 		DisplayName:  user.DisplayName,
 		Note:         user.StatusMessage,
-		Avatar:       user.ActivityPubAvatarURL(),
+		Avatar:       user.ActivityPubIconURL(),
 		Discoverable: user.IsPublic,
 		CreatedAt:    time.Unix(user.CreateDate, 0).Format(time.RFC3339),
 	}

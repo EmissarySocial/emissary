@@ -13,7 +13,7 @@ func ActivityPubAttributedTo(document streams.Document) model.PersonLink {
 			return model.PersonLink{
 				Name:       person.Name(),
 				ProfileURL: person.ID(),
-				ImageURL:   person.IconOrImage().URL(),
+				IconURL:    person.IconOrImage().URL(),
 			}
 		}
 	}

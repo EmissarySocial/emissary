@@ -61,14 +61,14 @@ func GetProfileAvatar(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		// Check ETags for the user's avatar
-		if matchHeader := ctx.Request().Header.Get("If-None-Match"); matchHeader == user.ImageID.Hex() {
+		if matchHeader := ctx.Request().Header.Get("If-None-Match"); matchHeader == user.IconID.Hex() {
 			return ctx.NoContent(http.StatusNotModified)
 		}
 
 		// Retrieve the file from the mediaserver
 		ms := factory.MediaServer()
 		filespec := mediaserver.FileSpec{
-			Filename:  user.ImageID.Hex(),
+			Filename:  user.IconID.Hex(),
 			Extension: ".webp",
 			MimeType:  "image/webp",
 			Height:    300,
@@ -78,7 +78,7 @@ func GetProfileAvatar(serverFactory *server.Factory) echo.HandlerFunc {
 		header := ctx.Response().Header()
 
 		header.Set("Mime-Type", "image/webp")
-		header.Set("ETag", user.ImageID.Hex())
+		header.Set("ETag", user.IconID.Hex())
 		header.Set("Cache-Control", "public, max-age=86400") // Store in public caches for 1 day
 
 		if err := ms.Get(filespec, ctx.Response().Writer); err != nil {

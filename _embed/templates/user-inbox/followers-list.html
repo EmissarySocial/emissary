@@ -6,10 +6,10 @@
 	{{- $actor := .Actor -}}
 	<div class="flex-row" role="button">
 		<div hx-get="/@me/inbox/follower?followerId={{.FollowerID.Hex}}&amp;url={{.Actor.ProfileURL}}" class="margin-right-sm">
-			{{- if eq "" .Actor.ImageURL -}}
+			{{- if eq "" .Actor.IconURL -}}
 				<div class="circle-48"></div>
 			{{- else -}}
-				<img src="{{.Actor.ImageURL}}" class="circle-48">
+				<img src="{{.Actor.IconURL}}" class="circle-48">
 			{{- end -}}
 		</div>
 		<div hx-get="/@me/inbox/follower?followerId={{.FollowerID.Hex}}&amp;url={{.Actor.ProfileURL}}" class="width-100-percent">

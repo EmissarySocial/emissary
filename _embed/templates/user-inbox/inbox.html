@@ -22,9 +22,9 @@
 				<div class="flex-grow-1 margin-top-sm">
 					<div class="bold"><a href="/@me/inbox?folderId={{$folderID}}" hx-get="/@me/inbox?folderId={{$folderID}}">{{icon $folder.Icon}} {{$folder.Label}}</a></div>
 					<div class="flex-row margin-vertical">
-						{{- if ne "" $following.ImageURL -}}
+						{{- if ne "" $following.IconURL -}}
 							<div class="margin-top-xs">
-								<img src="{{$following.ImageURL}}" class="circle-48">
+								<img src="{{$following.IconURL}}" class="circle-48">
 							</div>
 						{{- end -}}
 

@@ -201,7 +201,7 @@ func (service *StreamDraft) Promote(streamID primitive.ObjectID, stateID string)
 	stream.Token = draft.Token
 	stream.Label = draft.Label
 	stream.Summary = draft.Summary
-	stream.ImageURL = draft.ImageURL
+	stream.IconURL = draft.IconURL
 	stream.Widgets = draft.Widgets
 	stream.Content = draft.Content
 	stream.Data = draft.Data

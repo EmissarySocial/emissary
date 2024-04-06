@@ -18,7 +18,7 @@ func TestFollowingSchema(t *testing.T) {
 		{"label", "LABEL", nil},
 		{"url", "http://url.url", nil},
 		{"profileUrl", "https://other.url", nil},
-		{"imageUrl", "https://other.url/image.png", nil},
+		{"iconUrl", "https://other.url/image.png", nil},
 		{"behavior", "POSTS+REPLIES", nil},
 		{"ruleAction", RuleActionMute, nil},
 		{"collapseThreads", "false", false},

@@ -13,7 +13,7 @@
 		type:"object"
 		properties: {
 			summary: {type:"string", format:"html"}
-			imageUrl: {type:"string", format:"url"}
+			iconUrl: {type:"string", format:"url"}
 			inReplyTo: {type:"string", format:"url"}
 		}
 	}

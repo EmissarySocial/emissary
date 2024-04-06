@@ -19,11 +19,11 @@ func TestMention(t *testing.T) {
 		{"origin.type", "LIKE", nil},
 		{"origin.label", "LABEL", nil},
 		{"origin.url", "https://source.url", nil},
-		{"origin.imageUrl", "http://entry.photo.url/", nil},
+		{"origin.iconUrl", "http://entry.photo.url/", nil},
 		{"author.name", "AUTHOR NAME", nil},
 		{"author.emailAddress", "AUTHOR@EMAIL.COM", nil},
 		{"author.profileUrl", "AUTHOR WEBSITE", nil},
-		{"author.imageUrl", "AUTHOR PHOTO", nil},
+		{"author.iconUrl", "AUTHOR PHOTO", nil},
 	}
 
 	tableTest_Schema(t, &s, &mention, table)

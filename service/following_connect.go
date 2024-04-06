@@ -51,7 +51,7 @@ func (service *Following) Connect(following model.Following) error {
 	// Set values in the Following record...
 	following.Label = actor.Name()
 	following.ProfileURL = actor.ID()
-	following.ImageURL = actor.IconOrImage().URL()
+	following.IconURL = actor.IconOrImage().URL()
 
 	// ...and mark the status as "Success"
 	if err := service.SetStatusSuccess(&following); err != nil {

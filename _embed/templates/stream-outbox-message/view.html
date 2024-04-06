@@ -26,10 +26,10 @@
 			<a href="{{.Author.ProfileURL}}" class="text-plain inline-block turboclick" tabIndex="0">
 				<div class="flex-row">
 					<div class="margin-right">
-						{{- if eq .Author.ImageURL "" -}}
+						{{- if eq .Author.IconURL "" -}}
 							<div class="circle-64"></div>
 						{{- else -}}
-							<img src="{{.Author.ImageURL}}" class="circle-64">
+							<img src="{{.Author.IconURL}}" class="circle-64">
 						{{- end -}}
 					</div>
 
@@ -56,9 +56,9 @@
 		{{.ContentHTML}}
 	</div>
 
-	{{- if ne .ImageURL "" -}}
+	{{- if ne .IconURL "" -}}
 		<div class="margin-vertical">
-			<img src="{{.ImageURL}}?width=600" class="u-photo width-100-percent">
+			<img src="{{.IconURL}}?width=600" class="u-photo width-100-percent">
 		</div>
 	{{- end -}}
 

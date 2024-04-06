@@ -9,8 +9,8 @@
 		{{- end -}}
 	
 		<div style="width:90%; max-width:200px; margin:0px auto;">
-			{{- if ne "" .ActivityPubAvatarURL -}}
-				<img class="circle u-photo width-100-percent" src="{{.ActivityPubAvatarURL}}" loading="lazy">
+			{{- if ne "" .ActivityPubIconURL -}}
+				<img class="circle u-photo width-100-percent" src="{{.ActivityPubIconURL}}" loading="lazy">
 			{{- else -}}
 				<div class="circle" style="width:90%; max-width:200px; margin:0px auto;"></div>
 			{{- end -}}

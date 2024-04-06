@@ -46,8 +46,8 @@ func (service *Stream) JSONLD(stream *model.Stream) mapof.Any {
 		result[vocab.PropertyContent] = stream.Content.HTML
 	}
 
-	if stream.ImageURL != "" {
-		result[vocab.PropertyImage] = stream.ImageURL
+	if stream.IconURL != "" {
+		result[vocab.PropertyIcon] = stream.IconURL
 	}
 
 	if stream.Context != "" {

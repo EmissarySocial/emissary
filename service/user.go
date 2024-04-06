@@ -423,17 +423,17 @@ func (service *User) SetOwner(owner config.Owner) error {
 func (service *User) DeleteAvatar(user *model.User, note string) error {
 
 	// If there is no image, then there's nothing more to do.
-	if user.ImageID.IsZero() {
+	if user.IconID.IsZero() {
 		return nil
 	}
 
 	// Delete the existing Avatar file
-	if err := service.attachmentService.DeleteByID(model.AttachmentObjectTypeUser, user.UserID, user.ImageID, note); err != nil {
+	if err := service.attachmentService.DeleteByID(model.AttachmentObjectTypeUser, user.UserID, user.IconID, note); err != nil {
 		return derp.Wrap(err, "service.User.DeleteAvatar", "Error deleting avatar", user)
 	}
 
 	// Clear the reference in the User object
-	user.ImageID = primitive.NilObjectID
+	user.IconID = primitive.NilObjectID
 	if err := service.Save(user, note); err != nil {
 		return derp.Wrap(err, "service.User.DeleteAvatar", "Error saving user", user)
 	}
@@ -533,7 +533,7 @@ func (service *User) LoadWebFinger(username string) (digit.Resource, error) {
 		Link(digit.RelationTypeSelf, model.MimeTypeActivityPub, user.ActivityPubURL()).
 		Link(digit.RelationTypeHub, model.MimeTypeJSONFeed, user.JSONFeedURL()).
 		Link(digit.RelationTypeProfile, model.MimeTypeHTML, user.GetProfileURL()).
-		Link(digit.RelationTypeAvatar, model.MimeTypeImage, user.ActivityPubAvatarURL()).
+		Link(digit.RelationTypeAvatar, model.MimeTypeImage, user.ActivityPubIconURL()).
 		Link(digit.RelationTypeSubscribeRequest, "", service.RemoteFollowURL())
 
 	return result, nil

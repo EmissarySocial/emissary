@@ -200,8 +200,8 @@ func (w Outbox) ProfileURL() string {
 	return w._user.ProfileURL
 }
 
-func (w Outbox) ImageURL() string {
-	return w._user.ActivityPubAvatarURL()
+func (w Outbox) IconURL() string {
+	return w._user.ActivityPubIconURL()
 }
 
 func (w Outbox) Location() string {
@@ -220,8 +220,8 @@ func (w Outbox) ActivityPubURL() string {
 	return w._user.ActivityPubURL()
 }
 
-func (w Outbox) ActivityPubAvatarURL() string {
-	return w._user.ActivityPubAvatarURL()
+func (w Outbox) ActivityPubIconURL() string {
+	return w._user.ActivityPubIconURL()
 }
 
 func (w Outbox) ActivityPubInboxURL() string {

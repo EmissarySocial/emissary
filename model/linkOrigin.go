@@ -11,7 +11,7 @@ type OriginLink struct {
 	FollowingID primitive.ObjectID `json:"followingId" bson:"followingId,omitempty"` // Unique ID of a document in this database
 	Label       string             `json:"label"       bson:"label,omitempty"`       // Human-friendly label of the origin
 	URL         string             `json:"url"         bson:"url,omitempty"`         // Public URL of the origin
-	ImageURL    string             `json:"imageUrl"    bson:"imageUrl,omitempty"`    // URL of the cover image for this document's image
+	IconURL     string             `json:"iconUrl"     bson:"iconUrl,omitempty"`     // URL of the a avatar/icon image for this origin
 }
 
 // NewOriginLink returns a fully initialized OriginLink

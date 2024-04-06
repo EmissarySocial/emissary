@@ -11,16 +11,16 @@
 		<div class="hover-trigger flex-row">
 			<div script="on click go to url '/{{$stream.ID}}'" role="link" class="flex-grow-1 flex-row h-entry margin-bottom turboclick">
 				<div class="flex-shrink-0" style="width:80px;">
-					<img src="{{$stream.AttributedTo.ImageURL}}" class="circle-64" loading="lazy">
+					<img src="{{$stream.AttributedTo.IconURL}}" class="circle-64" loading="lazy">
 				</div>
 				<div class="flex-grow-1" style="max-width:600px;">
 					{{- if ne "" $stream.Label -}}
 						<div class="h-name bold text-black">{{$stream.Label}}</div>
 					{{- end -}}
 					<div class="h-summary text-black">{{$stream.ContentHTML | html }}</div>
-					{{- if ne $stream.ImageURL ""}}
+					{{- if ne $stream.IconURL ""}}
 						<div style="margin-top:var(--rhythm);">
-							<img src="{{$stream.ImageURL}}" loading="lazy" style="border:solid 1px var(--gray40); border-radius:16px; max-width:100%; object-fit:contain;">
+							<img src="{{$stream.IconURL}}" loading="lazy" style="border:solid 1px var(--gray40); border-radius:16px; max-width:100%; object-fit:contain;">
 						</div>
 					{{- end -}}
 					<div class="text-sm text-light-gray p-published">{{$stream.PublishDate | humanizeTime}}</div>

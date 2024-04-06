@@ -3,8 +3,8 @@
 <div class="widget flex-row margin-bottom">
 	
 	<div class="h-card flex-row">
-		{{- if ne "" $author.ImageURL -}}
-			<img src="{{$author.ImageURL}}" class="circle u-photo" loading="lazy" style="height:2em; width:2em;">
+		{{- if ne "" $author.IconURL -}}
+			<img src="{{$author.IconURL}}" class="circle u-photo" loading="lazy" style="height:2em; width:2em;">
 		{{- end -}}
 
 		{{- if ne "" $author.Name -}}

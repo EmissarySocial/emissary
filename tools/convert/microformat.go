@@ -35,7 +35,7 @@ func MicroformatToAuthor(entry *microformats.Microformat) model.PersonLink {
 
 	author.Name = MicroformatPropertyToString(entry, "name")
 	author.ProfileURL = MicroformatPropertyToString(entry, "url")
-	author.ImageURL = MicroformatPropertyToString(entry, "photo", "logo")
+	author.IconURL = MicroformatPropertyToString(entry, "photo", "logo")
 	author.EmailAddress = MicroformatPropertyToString(entry, "email")
 
 	return author

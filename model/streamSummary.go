@@ -16,7 +16,7 @@ type StreamSummary struct {
 	Summary        string             `json:"summary,omitempty"      bson:"summary,omitempty"`      // Brief summary of the document
 	Content        Content            `json:"content,omitempty"      bson:"content,omitempty"`      // Content of the document
 	Data           mapof.Any          `json:"data,omitempty"         bson:"data,omitempty"`         // Additional data that is specific to the Template used to build this Stream
-	ImageURL       string             `json:"imageUrl,omitempty"     bson:"imageUrl,omitempty"`     // URL of the cover image for this document's image
+	IconURL        string             `json:"iconUrl,omitempty"      bson:"iconUrl,omitempty"`      // URL of the icon image for this document
 	AttributedTo   PersonLink         `json:"attributedTo,omitempty" bson:"attributedTo,omitempty"` // List of people who are attributed to this document
 	InReplyTo      string             `json:"inReplyTo,omitempty"    bson:"inReplyTo,omitempty"`    // If this stream is a reply to another stream or web page, then this links to the original document.
 	PublishDate    int64              `json:"publishDate"            bson:"publishDate"`            // Date when this stream was published
@@ -40,7 +40,7 @@ func NewStreamSummary() StreamSummary {
 }
 
 func StreamSummaryFields() []string {
-	return []string{"_id", "parentId", "token", "templateId", "url", "label", "summary", "content", "data", "imageUrl", "attributedTo", "inReplyTo", "publishDate", "rank"}
+	return []string{"_id", "parentId", "token", "templateId", "url", "label", "summary", "content", "data", "iconUrl", "attributedTo", "inReplyTo", "publishDate", "rank"}
 }
 
 func (summary StreamSummary) Fields() []string {

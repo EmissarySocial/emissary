@@ -6,10 +6,10 @@
 		{{- range .Mentions -}}
 			<div class="flex-row" script="on click go to url '{{.Origin.URL}}' in new window" role="link">
 				<div style="width:24px;">
-					{{- if ne "" .Author.ImageURL -}}
-						<img src="{{.Author.ImageURL}}" class="circle" style="height:24px; width:24px;">
-					{{- else if ne "" .Origin.ImageURL -}}
-						<img src="{{.Origin.ImageURL}}" class="circle" style="height:24px; width:24px;">
+					{{- if ne "" .Author.IconURL -}}
+						<img src="{{.Author.IconURL}}" class="circle" style="height:24px; width:24px;">
+					{{- else if ne "" .Origin.IconURL -}}
+						<img src="{{.Origin.IconURL}}" class="circle" style="height:24px; width:24px;">
 					{{- end -}}
 				</div>
 				<div class="ellipsis">

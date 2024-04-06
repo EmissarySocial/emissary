@@ -12,7 +12,7 @@ func UserSchema() schema.Element {
 		Properties: schema.ElementMap{
 			"userId":         schema.String{Format: "objectId"},
 			"groupIds":       id.SliceSchema(),
-			"imageId":        schema.String{Format: "objectId"},
+			"iconId":         schema.String{Format: "objectId"},
 			"displayName":    schema.String{MaxLength: 64, Required: true},
 			"statusMessage":  schema.String{MaxLength: 128},
 			"location":       schema.String{MaxLength: 64},
@@ -107,8 +107,8 @@ func (user *User) GetStringOK(name string) (string, bool) {
 	case "userId":
 		return user.UserID.Hex(), true
 
-	case "imageId":
-		return user.ImageID.Hex(), true
+	case "iconId":
+		return user.IconID.Hex(), true
 
 	default:
 		return "", false
@@ -125,9 +125,9 @@ func (user *User) SetString(name string, value string) bool {
 			return true
 		}
 
-	case "imageId":
+	case "iconId":
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
-			user.ImageID = objectID
+			user.IconID = objectID
 			return true
 		}
 

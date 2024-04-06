@@ -49,7 +49,7 @@ func receive_AcceptFollow(context Context, activity streams.Document) error {
 
 	// Upgrade the "Following" record to ActivityPub
 	following.Label = remoteActor.Name()
-	following.ImageURL = first.String(remoteActor.IconOrImage().URL(), following.ImageURL)
+	following.IconURL = first.String(remoteActor.IconOrImage().URL(), following.IconURL)
 	following.Method = model.FollowMethodActivityPub
 	following.Secret = ""
 	following.PollDuration = 30

@@ -8,7 +8,7 @@ type UserSummary struct {
 	DisplayName  string             `bson:"displayName"`
 	EmailAddress string             `bson:"emailAddress"`
 	Username     string             `bson:"username"`
-	ImageURL     string             `bson:"imageUrl"`
+	IconURL      string             `bson:"iconUrl"`
 	ProfileURL   string             `bson:"profileUrl"`
 }
 
@@ -18,13 +18,13 @@ func NewUserSummary() UserSummary {
 		DisplayName:  "",
 		EmailAddress: "",
 		Username:     "",
-		ImageURL:     "",
+		IconURL:      "",
 		ProfileURL:   "",
 	}
 }
 
 func UserSummaryFields() []string {
-	return []string{"_id", "displayName", "emailAddress", "username", "imageUrl", "profileUrl"}
+	return []string{"_id", "displayName", "emailAddress", "username", "iconUrl", "profileUrl"}
 }
 
 func (userSummary UserSummary) Fields() []string {

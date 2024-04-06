@@ -62,7 +62,7 @@ func (rss RSS) Item(stream model.Stream) *feeds.JSONItem {
 		ExternalUrl:   stream.Permalink(),
 		Title:         stream.Label,
 		Summary:       stream.Summary,
-		Image:         stream.ImageURL,
+		Image:         stream.IconURL,
 		PublishedDate: &publishDate,
 		ModifiedDate:  &modifiedDate,
 	}
@@ -71,7 +71,7 @@ func (rss RSS) Item(stream model.Stream) *feeds.JSONItem {
 		result.Author = &feeds.JSONAuthor{
 			Name:   stream.AttributedTo.Name,
 			Url:    stream.AttributedTo.ProfileURL,
-			Avatar: stream.AttributedTo.ImageURL,
+			Avatar: stream.AttributedTo.IconURL,
 		}
 	}
 

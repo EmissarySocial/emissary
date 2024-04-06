@@ -15,10 +15,10 @@ type Following struct {
 	FolderID        primitive.ObjectID `json:"folderId"        bson:"folderId"`        // ID of the folder to put new messages into
 	Folder          string             `json:"folder"          bson:"folder"`          // Name of the folder to put new messages into
 	Label           string             `json:"label"           bson:"label"`           // Label of this "following" record
-	Notes           string             `json:"notes"         bson:"notes"`             // Notes about this "following" record, entered by the user.
+	Notes           string             `json:"notes"           bson:"notes"`           // Notes about this "following" record, entered by the user.
 	URL             string             `json:"url"             bson:"url"`             // Human-Facing URL that is being followed.
 	ProfileURL      string             `json:"profileUrl"      bson:"profileUrl"`      // Updated, computer-facing URL that is being followed.
-	ImageURL        string             `json:"imageUrl"        bson:"imageUrl"`        // URL of an image that represents this "following"
+	IconURL         string             `json:"iconUrl"         bson:"iconUrl"`         // URL of an the avatar/icon image that represents this "following"
 	Behavior        string             `json:"behavior"        bson:"behavior"`        // Behavior determines the types of records to import from this Actor [POSTS+REPLIES]
 	RuleAction      string             `json:"ruleAction"      bson:"ruleAction"`      // RuleAction determines the types of records to rule from this Actor [IGNORE, LABEL, MUTE, BLOCK ]
 	CollapseThreads bool               `json:"collapseThreads" bson:"collapseThreads"` // If TRUE, traverse responses and import the initial post that initiated a thread
@@ -108,7 +108,7 @@ func (following *Following) Origin(originType string) OriginLink {
 		FollowingID: following.FollowingID,
 		URL:         following.URL,
 		Label:       following.Label,
-		ImageURL:    following.ImageURL,
+		IconURL:     following.IconURL,
 		Type:        originType,
 	}
 }

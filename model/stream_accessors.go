@@ -24,7 +24,7 @@ func StreamSchema() schema.Element {
 			"url":              schema.String{Format: "url"},
 			"label":            schema.String{MaxLength: 128},
 			"summary":          schema.String{MaxLength: 2048},
-			"imageUrl":         schema.String{Format: "url"},
+			"iconUrl":          schema.String{Format: "url"},
 			"attributedTo":     PersonLinkSchema(),
 			"context":          schema.String{Format: "url"},
 			"inReplyTo":        schema.String{Format: "url"},
@@ -81,8 +81,8 @@ func (stream *Stream) GetPointer(name string) (any, bool) {
 	case "summary":
 		return &stream.Summary, true
 
-	case "imageUrl":
-		return &stream.ImageURL, true
+	case "iconUrl":
+		return &stream.IconURL, true
 
 	case "content":
 		return &stream.Content, true

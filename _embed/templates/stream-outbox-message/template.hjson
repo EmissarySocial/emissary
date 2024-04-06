@@ -13,7 +13,7 @@
 		type:"object"
 		properties: {
 			summary: {type:"string", format:"html"}
-			imageUrl: {type:"string", format:"url"}
+			iconUrl: {type:"string", format:"url"}
 		}
 	}
 	states: {
@@ -35,7 +35,7 @@
 				{do:"process-content"}
 				{do:"save"}
 				{do:"upload-attachments"}
-				{do:"set-thumbnail", path:"imageUrl"}
+				{do:"set-thumbnail", path:"iconUrl"}
 				{do:"publish", outbox:true}
 			]
 		}

@@ -263,9 +263,9 @@ func (w Stream) ShortSummary() string {
 	return htmlconv.Summary(w._stream.Summary)
 }
 
-// ImageURL returns the thumbnail image URL of the stream being built
-func (w Stream) ImageURL() string {
-	return w._stream.ImageURL
+// IconURL returns the thumbnail image URL of the stream being built
+func (w Stream) IconURL() string {
+	return w._stream.IconURL
 }
 
 // Tags returns all tags (mentions, hashtags, etc) for the stream being built

@@ -309,7 +309,7 @@ func (w Common) UserImage() (string, error) {
 		return "", derp.Wrap(err, "build.Stream.UserAvatar", "Error loading User")
 	}
 
-	return user.ActivityPubAvatarURL(), nil
+	return user.ActivityPubIconURL(), nil
 }
 
 /******************************************

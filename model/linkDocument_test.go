@@ -16,7 +16,7 @@ func TestDocumentLink(t *testing.T) {
 		{"url", "https://test.url", nil},
 		{"label", "TEST-LABEL", nil},
 		{"summary", "TEST-SUMMARY", nil},
-		{"imageUrl", "https://test.image.url", nil},
+		{"iconUrl", "https://test.image.url", nil},
 		{"attributedTo.name", "TEST-AUTHOR-NAME", nil},
 		{"attributedTo.profileUrl", "https://test.author.url", nil},
 	}

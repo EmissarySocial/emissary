@@ -61,7 +61,7 @@ func (service *Stream) LoadWebFinger(token string) (digit.Resource, error) {
 		Link(digit.RelationTypeSelf, model.MimeTypeActivityPub, stream.ActivityPubURL()).
 		// Link(digit.RelationTypeHub, model.MimeTypeJSONFeed, stream.JSONFeedURL()).
 		Link(digit.RelationTypeProfile, model.MimeTypeHTML, stream.URL) //.
-		// Link(digit.RelationTypeAvatar, model.MimeTypeImage, stream.ActivityPubAvatarURL()).
+		// Link(digit.RelationTypeAvatar, model.MimeTypeImage, stream.ActivityPubIconURL()).
 		// Link(digit.RelationTypeSubscribeRequest, "", service.RemoteFollowURL())
 
 	return result, nil

@@ -32,7 +32,7 @@ type Stream struct {
 	Token            string                       `json:"token,omitempty"        bson:"token,omitempty"`        // Unique value that identifies this element in the URL
 	Label            string                       `json:"label,omitempty"        bson:"label,omitempty"`        // Label/Title of the document
 	Summary          string                       `json:"summary,omitempty"      bson:"summary,omitempty"`      // Brief summary of the document
-	ImageURL         string                       `json:"imageUrl,omitempty"     bson:"imageUrl,omitempty"`     // URL of the cover image for this document's image
+	IconURL          string                       `json:"iconUrl,omitempty"      bson:"iconUrl,omitempty"`      // URL of this document's icon/thumbnail image
 	Content          Content                      `json:"content,omitempty"      bson:"content,omitempty"`      // Body content object for this Stream.
 	Widgets          set.Slice[StreamWidget]      `json:"widgets,omitempty"      bson:"widgets,omitempty"`      // Additional widgets to include when building this Stream.
 	Tags             sliceof.Object[Tag]          `json:"tags,omitempty"         bson:"tags,omitempty"`         // List of tags that are associated with this document

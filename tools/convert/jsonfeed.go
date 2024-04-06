@@ -36,7 +36,7 @@ func StreamToJsonFeed(stream model.Stream) jsonfeed.Item {
 		Title:         stream.Label,
 		ContentHTML:   first.String(stream.Content.HTML, " "),
 		Summary:       stream.Summary,
-		Image:         stream.ImageURL,
+		Image:         stream.IconURL,
 		DatePublished: time.Unix(stream.PublishDate, 0),
 		DateModified:  time.Unix(stream.UpdateDate, 0),
 	}
@@ -46,7 +46,7 @@ func StreamToJsonFeed(stream model.Stream) jsonfeed.Item {
 		result.Author = &jsonfeed.Author{
 			Name:   stream.AttributedTo.Name,
 			URL:    stream.AttributedTo.ProfileURL,
-			Avatar: stream.AttributedTo.ImageURL,
+			Avatar: stream.AttributedTo.IconURL,
 		}
 	}
 
@@ -61,9 +61,9 @@ func JsonFeedToActivity(feed jsonfeed.Feed, item jsonfeed.Item) model.Message {
 	message.URL = item.URL
 	message.PublishDate = item.DatePublished.Unix()
 	message.AddReference(model.OriginLink{
-		Label:    feed.Title,
-		URL:      feed.HomePageURL,
-		ImageURL: feed.Icon,
+		Label:   feed.Title,
+		URL:     feed.HomePageURL,
+		IconURL: feed.Icon,
 	})
 
 	return message
@@ -76,13 +76,13 @@ func JsonFeedToAuthor(feed jsonfeed.Feed, item jsonfeed.Item) model.PersonLink {
 	if feed.Author != nil {
 		result.Name = feed.Author.Name
 		result.ProfileURL = feed.Author.URL
-		result.ImageURL = feed.Author.Avatar
+		result.IconURL = feed.Author.Avatar
 	}
 
 	if item.Author != nil {
 		result.Name = first.String(item.Author.Name, result.Name)
 		result.ProfileURL = first.String(item.Author.URL, result.ProfileURL)
-		result.ImageURL = first.String(item.Author.Avatar, result.ImageURL)
+		result.IconURL = first.String(item.Author.Avatar, result.IconURL)
 	}
 
 	return result

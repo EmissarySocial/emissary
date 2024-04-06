@@ -25,8 +25,8 @@ func RSSToActivity(feed *gofeed.Feed, rssItem *gofeed.Item) mapof.Any {
 		result[vocab.PropertySummary] = summary
 	}
 
-	if imageURL := rssImageURL(feed, rssItem); imageURL != "" {
-		result[vocab.PropertyImage] = imageURL
+	if iconURL := rssIconURL(feed, rssItem); iconURL != "" {
+		result[vocab.PropertyImage] = iconURL
 	}
 
 	if contentHTML := rssContent(rssItem.Content); contentHTML != "" {
@@ -72,16 +72,16 @@ func rssAuthor(feed *gofeed.Feed, rssItem *gofeed.Item) model.PersonLink {
 
 	// Look in the feed.Image object for an author image
 	if feed.Image != nil {
-		result.ImageURL = feed.Image.URL
+		result.IconURL = feed.Image.URL
 	}
 
 	// If we STILL don't have an author image, then try the "webfeeds" extension...
-	if result.ImageURL == "" {
+	if result.IconURL == "" {
 		if webfeeds, ok := feed.Extensions["webfeeds"]; ok {
 			if icon, ok := webfeeds["icon"]; ok {
 				for _, element := range icon {
 					if element.Name == "icon" {
-						result.ImageURL = element.Value
+						result.IconURL = element.Value
 						break
 					}
 				}
@@ -92,8 +92,8 @@ func rssAuthor(feed *gofeed.Feed, rssItem *gofeed.Item) model.PersonLink {
 	return result
 }
 
-// rssImageURL returns the URL of the first image in the item's enclosure list.
-func rssImageURL(rssFeed *gofeed.Feed, rssItem *gofeed.Item) string {
+// rssIconURL returns the URL of the first image in the item's enclosure list.
+func rssIconURL(_ *gofeed.Feed, rssItem *gofeed.Item) string {
 
 	if rssItem == nil {
 		return ""

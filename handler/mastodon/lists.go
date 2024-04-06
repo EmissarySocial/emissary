@@ -219,7 +219,7 @@ func GetList_Accounts(serverFactory *server.Factory) func(model.Authorization, t
 			return object.Account{
 				ID:     following.FollowingID.Hex(),
 				URL:    following.URL,
-				Avatar: following.ImageURL,
+				Avatar: following.IconURL,
 			}
 		})
 

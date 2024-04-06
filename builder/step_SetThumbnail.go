@@ -38,7 +38,7 @@ func (step StepSetThumbnail) Post(builder Builder, _ io.Writer) PipelineBehavior
 	for _, attachment := range attachments {
 		if attachment.MimeCategory() == "image" {
 
-			// Special case for User objects (this should always be "imageId")
+			// Special case for User objects (this should always be "iconId")
 			if objectType == "User" {
 				if err := schema.Set(object, step.Path, attachment.AttachmentID.Hex()); err != nil {
 					return Halt().WithError(derp.NewInternalError("build.StepSetThumbnail.Post", "Invalid path for non-user object (A)", step.Path))
@@ -47,10 +47,10 @@ func (step StepSetThumbnail) Post(builder Builder, _ io.Writer) PipelineBehavior
 			}
 
 			// Standard path for all other records
-			imageURL := builder.Permalink()
-			imageURL = imageURL + "/attachments/" + attachment.AttachmentID.Hex()
+			iconURL := builder.Permalink()
+			iconURL = iconURL + "/attachments/" + attachment.AttachmentID.Hex()
 
-			if err := schema.Set(object, step.Path, imageURL); err != nil {
+			if err := schema.Set(object, step.Path, iconURL); err != nil {
 				return Halt().WithError(derp.NewInternalError("build.StepSetThumbnail.Post", "Invalid path for non-user object (B)", step.Path))
 			}
 			return nil

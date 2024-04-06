@@ -114,8 +114,6 @@ func PatchAccount_UpdateCredentials(serverFactory *server.Factory) func(model.Au
 		// Update the User's information
 		user.DisplayName = t.DisplayName
 		user.Note = t.Note
-		// user.ImageURL = t.ImageURL // TODO: Medium: This is not available because of Emissary's attachments
-		// user.Header = t.Header // TODO: Low: This is not available because Emissary doesn't use banner images (yet)
 		user.IsPublic = t.Discoverable
 
 		if err := userService.Save(&user, "Updated via Mastodon API"); err != nil {

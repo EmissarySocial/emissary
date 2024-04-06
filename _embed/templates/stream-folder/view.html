@@ -41,10 +41,10 @@
 				<article class="h-entry">
 					<div class="draggable clickable card padded" hx-get="/{{.Token}}" href="/{{.Token}}">
 						<input type="hidden" name="keys" value="{{.StreamID}}"/>
-						{{- if ne .ImageURL "" -}}
+						{{- if ne .IconURL "" -}}
 							<picture loading="lazy" class="picture aspect-4-3">
-								<source type="image/webp" srcset="/{{.StreamID}}/attachments/{{.ImageURL}}.webp?width=400&height=300"/>
-								<img class="u-photo" src="/{{.StreamID}}/attachments/{{.ImageURL}}.jpg?width=400&height=300"/>
+								<source type="image/webp" srcset="/{{.StreamID}}/attachments/{{.IconURL}}.webp?width=400&height=300"/>
+								<img class="u-photo" src="/{{.StreamID}}/attachments/{{.IconURL}}.jpg?width=400&height=300"/>
 							</picture>
 						{{- end -}}
 						<h3 role="link p-name">{{.Label}}</h3>
@@ -63,10 +63,10 @@
 				<article class="draggable h-entry" hx-get="/{{.Token}}" href="/{{.Token}}">
 					<input type="hidden" name="keys" value="{{.StreamID}}"/>
 					<div class="card" role="link">
-						{{- if ne .ImageURL "" -}}
+						{{- if ne .IconURL "" -}}
 						<picture loading="lazy" class="picture aspect-4-3">
-							<source type="image/webp" srcset="/{{.StreamID}}/attachments/{{.ImageURL}}.webp?width=400&height=300"/>
-							<img class="u-photo" src="/{{.StreamID}}/attachments/{{.ImageURL}}.jpg?width=400&height=300"/>
+							<source type="image/webp" srcset="/{{.StreamID}}/attachments/{{.IconURL}}.webp?width=400&height=300"/>
+							<img class="u-photo" src="/{{.StreamID}}/attachments/{{.IconURL}}.jpg?width=400&height=300"/>
 						</picture>
 						{{- end -}}
 						<div class="text text-lg align-center p-name">{{.Label}}</div>

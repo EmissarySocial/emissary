@@ -17,7 +17,7 @@ func TestPersonLink(t *testing.T) {
 		{"profileUrl", "https://john.connor.mil", nil},
 		{"inboxUrl", "https://john.connor.mil/inbox", nil},
 		{"emailAddress", "john.connor@mil", nil},
-		{"imageUrl", "https://john.connor.mil/image", nil},
+		{"iconUrl", "https://john.connor.mil/image", nil},
 	}
 
 	tableTest_Schema(t, &s, &response, tests)

@@ -91,7 +91,7 @@
 			steps:[
 				{do:"as-modal", steps:[
 					{do:"view-html", file:"photo"}
-					{do:"upload-attachments", category:"image", attachment-path:"imageId", accept-type:"image/*",  maximum:1}
+					{do:"upload-attachments", category:"image", attachment-path:"iconId", accept-type:"image/*",  maximum:1}
 					{do:"save", comment:"Profile photo updated by me"}
 				]}
 				{do:"reload-page"}
@@ -126,7 +126,7 @@
 			roles:["self"]
 			steps:[
 				{do:"delete-attachments", all:true}
-				{do:"set-thumbnail", path:"imageId"}
+				{do:"set-thumbnail", path:"iconId"}
 				{do:"save", comment:"Profile photo deleted by me"}
 				{do:"reload-page"}
 			]

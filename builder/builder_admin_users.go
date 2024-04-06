@@ -164,11 +164,11 @@ func (w User) DisplayName() string {
 	return w._user.DisplayName
 }
 
-func (w User) ImageURL() string {
+func (w User) IconURL() string {
 	if w._user == nil {
 		return ""
 	}
-	return w._user.ActivityPubAvatarURL()
+	return w._user.ActivityPubIconURL()
 }
 
 /******************************************

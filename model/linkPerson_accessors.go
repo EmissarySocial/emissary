@@ -13,7 +13,7 @@ func PersonLinkSchema() schema.Element {
 			"name":         schema.String{MaxLength: 128},
 			"profileUrl":   schema.String{Format: "url", MaxLength: 1024},
 			"inboxUrl":     schema.String{Format: "url", MaxLength: 1024},
-			"imageUrl":     schema.String{Format: "url", MaxLength: 1024},
+			"iconUrl":      schema.String{Format: "url", MaxLength: 1024},
 			"emailAddress": schema.String{Format: "email", MaxLength: 128},
 		},
 	}
@@ -38,8 +38,8 @@ func (link *PersonLink) GetPointer(name string) (any, bool) {
 	case "emailAddress":
 		return &link.EmailAddress, true
 
-	case "imageUrl":
-		return &link.ImageURL, true
+	case "iconUrl":
+		return &link.IconURL, true
 
 	}
 

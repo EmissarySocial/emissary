@@ -23,8 +23,8 @@ type Message struct {
 	InReplyTo   string                     `json:"inReplyTo"    bson:"inReplyTo,omitempty"`   // URL this message is in reply to
 	MyResponse  string                     `json:"myResponse"   bson:"myResponse,omitempty"`  // If the owner of this message has responded, then this field contains the responseType (Like, Dislike, Repost)
 	StateID     string                     `json:"stateId"      bson:"stateId"`               // StateID of this message (UNREAD,READ,MUTED,NEW-REPLIES)
-	ReadDate    int64                      `json:"readDate"     bson:"readDate"`              // Unix timestamp of the date/time when this Message was read.  If unread, this is MaxInt64.
 	PublishDate int64                      `json:"publishDate"  bson:"publishDate,omitempty"` // Unix timestamp of the date/time when this Message was published
+	ReadDate    int64                      `json:"readDate"     bson:"readDate"`              // Unix timestamp of the date/time when this Message was read.  If unread, this is MaxInt64.
 	Rank        int64                      `json:"rank"         bson:"rank"`                  // Sort rank for this message (publishDate * 1000 + sequence number)
 
 	journal.Journal `json:"-" bson:",inline"`

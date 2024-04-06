@@ -195,8 +195,8 @@ func (w Inbox) ProfileURL() string {
 	return w._user.ProfileURL
 }
 
-func (w Inbox) ImageURL() string {
-	return w._user.ActivityPubAvatarURL()
+func (w Inbox) IconURL() string {
+	return w._user.ActivityPubIconURL()
 }
 
 /******************************************

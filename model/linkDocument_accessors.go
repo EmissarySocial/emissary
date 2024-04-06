@@ -12,7 +12,7 @@ func DocumentLinkSchema() schema.Element {
 			"url":          schema.String{Format: "url"},
 			"label":        schema.String{MaxLength: 128},
 			"summary":      schema.String{Format: "html"},
-			"imageUrl":     schema.String{Format: "url"},
+			"iconUrl":      schema.String{Format: "url"},
 			"attributedTo": PersonLinkSchema(),
 		},
 	}
@@ -35,8 +35,8 @@ func (doc *DocumentLink) GetPointer(name string) (any, bool) {
 	case "summary":
 		return &doc.Summary, true
 
-	case "imageUrl":
-		return &doc.ImageURL, true
+	case "iconUrl":
+		return &doc.IconURL, true
 
 	case "attributedTo":
 		return &doc.AttributedTo, true

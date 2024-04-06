@@ -404,7 +404,7 @@ func (service *Mention) GetPageInfo(body *bytes.Buffer, originURL string, mentio
 		mention.Author.Name = attributedTo.Name()
 		mention.Author.ProfileURL = attributedTo.URL()
 		mention.Author.EmailAddress = ""
-		mention.Author.ImageURL = attributedTo.Icon().URL()
+		mention.Author.IconURL = attributedTo.Icon().URL()
 	}
 
 	// No errors

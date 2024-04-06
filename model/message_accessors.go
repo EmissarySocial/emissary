@@ -12,16 +12,13 @@ func MessageSchema() schema.Element {
 		Properties: schema.ElementMap{
 			"messageId":   schema.String{Format: "objectId"},
 			"userId":      schema.String{Format: "objectId"},
+			"followingId": schema.String{Format: "objectId"},
 			"folderId":    schema.String{Format: "objectId"},
 			"socialRole":  schema.String{MaxLength: 64},
 			"origin":      OriginLinkSchema(),
 			"references":  schema.Array{Items: OriginLinkSchema()},
 			"url":         schema.String{Format: "url"},
-			"label":       schema.String{MaxLength: 128},
-			"summary":     schema.String{MaxLength: 1024},
-			"imageUrl":    schema.String{Format: "url"},
 			"inReplyTo":   schema.String{Format: "url"},
-			"contentHtml": schema.String{Format: "html"},
 			"myResponse":  schema.String{Enum: []string{vocab.ActivityTypeAnnounce, vocab.ActivityTypeLike, vocab.ActivityTypeDislike}},
 			"stateId":     schema.String{Enum: []string{MessageStateUnread, MessageStateRead, MessageStateMuted, MessageStateNewReplies}},
 			"publishDate": schema.Integer{BitSize: 64},
@@ -83,6 +80,9 @@ func (message *Message) GetStringOK(name string) (string, bool) {
 	case "userId":
 		return message.UserID.Hex(), true
 
+	case "followingId":
+		return message.FollowingID.Hex(), true
+
 	case "folderId":
 		return message.FolderID.Hex(), true
 
@@ -108,6 +108,12 @@ func (message *Message) SetString(name string, value string) bool {
 	case "userId":
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
 			message.UserID = objectID
+			return true
+		}
+
+	case "followingId":
+		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
+			message.FollowingID = objectID
 			return true
 		}
 
