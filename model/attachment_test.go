@@ -22,9 +22,11 @@ func TestAttachmentSchema(t *testing.T) {
 		{"label", "LABEL", nil},
 		{"description", "DESCRIPTION", nil},
 		{"url", "http://example.com", nil},
-		{"rank", "1", 1},
+		{"status", "READY", nil},
 		{"height", "100", 100},
 		{"width", "200", 200},
+		{"duration", "100", 100},
+		{"rank", "1", 1},
 	}
 
 	tableTest_Schema(t, &s, &attachment, table)

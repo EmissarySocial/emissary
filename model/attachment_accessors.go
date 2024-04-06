@@ -17,9 +17,11 @@ func AttachmentSchema() schema.Element {
 			"description":  schema.String{},
 			"url":          schema.String{Format: "url"},
 			"original":     schema.String{},
-			"rank":         schema.Integer{},
+			"status":       schema.String{Enum: []string{AttachmentStatusReady, AttachmentStatusWorking}},
 			"height":       schema.Integer{},
 			"width":        schema.Integer{},
+			"duration":     schema.Integer{},
+			"rank":         schema.Integer{},
 		},
 	}
 }
@@ -53,6 +55,9 @@ func (attachment *Attachment) GetPointer(name string) (any, bool) {
 	case "original":
 		return &attachment.Original, true
 
+	case "status":
+		return &attachment.Status, true
+
 	case "rank":
 		return &attachment.Rank, true
 
@@ -61,6 +66,9 @@ func (attachment *Attachment) GetPointer(name string) (any, bool) {
 
 	case "width":
 		return &attachment.Width, true
+
+	case "duration":
+		return &attachment.Duration, true
 	}
 
 	return "", false

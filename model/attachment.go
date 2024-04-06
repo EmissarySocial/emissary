@@ -22,9 +22,11 @@ type Attachment struct {
 	Label        string             `bson:"label"`       // User-defined label for the attachment
 	Description  string             `bson:"description"` // User-defined description for the attachment
 	URL          string             `bson:"url"`         // URL where the file is stored
+	Status       string             `bson:"status"`      // Status of the attachment (READY, WORKING)
+	Height       int                `bson:"height"`      // Height of the media file (if applicable)
+	Width        int                `bson:"width"`       // Width of the media file (if applicable)
+	Duration     int                `bbson:"duration"`   // Duration of the media file (if applicable)
 	Rank         int                `bson:"rank"`        // The sort order to display the attachments in.
-	Height       int                `bson:"height"`      // Image height (if applicable)
-	Width        int                `bson:"width"`       // Image width (if applicable)
 
 	journal.Journal `json:"-" bson:",inline"` // Journal entry for fetch compatability
 }

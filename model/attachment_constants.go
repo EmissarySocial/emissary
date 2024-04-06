@@ -20,3 +20,11 @@ const AttachmentMediaTypeVideo = "video"
 
 // AttachmentMediaTypeOther represents an attachment that is any type
 const AttachmentMediaTypeAny = "any"
+
+// AttachmentStatusReady represents an attachment that has been transcoded
+// (if necessary) and is ready to download or stream
+const AttachmentStatusReady = "READY"
+
+// AttachmentStatusWorking represents an attachment that is currently
+// being processed and cannot be downloaded yet.
+const AttachmentStatusWorking = "WORKING"
