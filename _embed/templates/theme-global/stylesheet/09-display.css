@@ -1,8 +1,11 @@
 /* All Screens */
 :root{--rhythm: 10px}
 
-.show {display:inherit}
+.show {display:initial}
 .hide {display:none}
+
+.visible {opacity:initial}
+.invisible {opacity:0}
 
 .block {display:block}
 .inline-block {display:inline-block}

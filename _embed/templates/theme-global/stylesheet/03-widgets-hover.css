@@ -3,9 +3,19 @@
  ******************************************/
 
  @media(hover: hover) {
-    .hover-reveal {opacity:0;  }
-	.hover-hide {opacity:1}
-    .hover-reveal:focus {opacity:1;  }
-    .hover-trigger:hover .hover-reveal {opacity:1;  }
-	.hover-trigger:hover .hover-hide {opacity:0}
+	.hover-hide,
+    .hover-show:focus,
+    .hover-trigger:hover .hover-show {display:initial}
+
+    .hover-show,
+    .hover-hide:focus,
+	.hover-trigger:hover .hover-hide {display:none}
+
+    .hover-invisible,
+    .hover-visible:focus,
+    .hover-trigger:hover .hover-visible {opacity:1}
+
+    .hover-visible,
+    .hover-invisible:focus,
+    .hover-trigger:hover .hover-invisible {opacity:0}
 }
