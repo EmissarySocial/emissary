@@ -178,6 +178,8 @@ func (service Icons) Get(name string) string {
 		return service.get("newspaper")
 	case "pause":
 		return service.get("pause")
+	case "pause-fill":
+		return service.get("pause-fill")
 	case "person":
 		return service.get("person")
 	case "person-fill":
@@ -188,6 +190,8 @@ func (service Icons) Get(name string) string {
 		return service.get("people-fill")
 	case "play":
 		return service.get("play")
+	case "play-fill":
+		return service.get("play-fill")
 	case "reply":
 		return service.get("reply")
 	case "reply-fill":
@@ -222,6 +226,14 @@ func (service Icons) Get(name string) string {
 		return service.get("shield")
 	case "shield-fill":
 		return service.get("shield-fill")
+	case "skip-backward":
+		return service.get("skip-backward")
+	case "skip-backward-fill":
+		return service.get("skip-backward-fill")
+	case "skip-forward":
+		return service.get("skip-forward")
+	case "skip-forward-fill":
+		return service.get("skip-forward-fill")
 	case "star":
 		return service.get("star")
 	case "star-fill":
