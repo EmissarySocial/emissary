@@ -99,6 +99,4 @@ func Version14(ctx context.Context, session *mongo.Database) error {
 
 		return nil
 	})
-
-	return nil
 }
