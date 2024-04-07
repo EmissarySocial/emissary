@@ -4,7 +4,7 @@ go 1.22.1
 
 require (
 	github.com/PuerkitoBio/goquery v1.9.1
-	github.com/aws/aws-sdk-go v1.51.15
+	github.com/aws/aws-sdk-go v1.51.16
 	github.com/benpate/data v0.28.4
 	github.com/benpate/data-mock v0.28.10
 	github.com/benpate/data-mongo v0.28.9
@@ -13,16 +13,16 @@ require (
 	github.com/benpate/domain v0.2.1
 	github.com/benpate/exp v0.8.3
 	github.com/benpate/exp-builder v0.8.0
-	github.com/benpate/form v0.18.0
+	github.com/benpate/form v0.20.1
 	github.com/benpate/hannibal v0.10.0
-	github.com/benpate/html v0.16.4
+	github.com/benpate/html v0.16.5
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.10.16
 	github.com/benpate/remote v0.15.0
 	github.com/benpate/rosetta v0.20.0
 	github.com/benpate/sherlock v0.7.1
 	github.com/benpate/steranko v0.17.0
-	github.com/benpate/table v0.6.12
+	github.com/benpate/table v0.6.14
 	github.com/benpate/toot v0.3.0
 	github.com/benpate/toot-echo v0.2.3
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
