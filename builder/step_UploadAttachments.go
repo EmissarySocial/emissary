@@ -48,13 +48,6 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 		return Continue()
 	}
 
-	/*/ Auto-detect EditorJS
-	if len(files) == 0 {
-		files = form.File["image"]
-		isEditorJS = true
-		step.Maximum = 1
-	}*/
-
 	factory := builder.factory()
 	attachmentService := factory.Attachment()
 
