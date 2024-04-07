@@ -25,6 +25,7 @@ import (
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/domain"
+	"github.com/benpate/form/widget"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/steranko"
@@ -69,6 +70,9 @@ func main() {
 		NoColor:    true,
 		TimeFormat: "",
 	})
+
+	// Configure form library
+	widget.UseAll()
 
 	// Locate the configuration file and populate the server factory
 	commandLineArgs := config.GetCommandLineArgs()
