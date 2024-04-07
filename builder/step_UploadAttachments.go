@@ -68,10 +68,8 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 	}
 
 	// Number of files must be less or equal to the maximum
-	if step.Maximum > 0 {
-		if len(files) > step.Maximum {
-			files = files[:step.Maximum]
-		}
+	if len(files) > step.Maximum {
+		files = files[:step.Maximum]
 	}
 
 	// Make room for new attachments

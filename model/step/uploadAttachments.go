@@ -34,7 +34,7 @@ func NewUploadAttachments(stepInfo mapof.Any) (UploadAttachments, error) {
 		DownloadPath:   stepInfo.GetString("download-path"),
 		FilenamePath:   stepInfo.GetString("filename-path"),
 		AcceptType:     stepInfo.GetString("accept-type"),
-		Maximum:        max(stepInfo.GetInt("maximum"), 0),
+		Maximum:        max(stepInfo.GetInt("maximum"), 1),
 		Category:       stepInfo.GetString("category"),
 		JSONResult:     stepInfo.GetBool("json-result"),
 	}, nil
