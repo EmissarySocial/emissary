@@ -25,7 +25,30 @@ func PostOutbox(serverFactory *server.Factory) echo.HandlerFunc {
 	return buildOutbox(serverFactory, builder.ActionMethodPost)
 }
 
-func GetProfileAvatar(serverFactory *server.Factory) echo.HandlerFunc {
+func GetProfileIcon(serverFactory *server.Factory) echo.HandlerFunc {
+
+	filespec := mediaserver.FileSpec{
+		Extension: ".webp",
+		MimeType:  "image/webp",
+		Height:    300,
+		Width:     300,
+	}
+
+	return getProfileAttachment(serverFactory, "iconId", filespec)
+}
+
+func GetProfileImage(serverFactory *server.Factory) echo.HandlerFunc {
+
+	filespec := mediaserver.FileSpec{
+		Extension: ".webp",
+		MimeType:  "image/webp",
+		Width:     2400,
+	}
+
+	return getProfileAttachment(serverFactory, "imageId", filespec)
+}
+
+func getProfileAttachment(serverFactory *server.Factory, field string, filespec mediaserver.FileSpec) echo.HandlerFunc {
 
 	const location = "handler.GetProfileAvatar"
 
@@ -60,25 +83,26 @@ func GetProfileAvatar(serverFactory *server.Factory) echo.HandlerFunc {
 			return derp.NewNotFoundError("handler.GetProfileAvatar", "User not found")
 		}
 
-		// Check ETags for the user's avatar
-		if matchHeader := ctx.Request().Header.Get("If-None-Match"); matchHeader == user.IconID.Hex() {
+		// Get the icon/image value from the User
+		fieldValue, ok := user.GetStringOK(field)
+		filespec.Filename = fieldValue
+
+		if !ok {
+			return derp.New(derp.CodeInternalError, location, "Invalid attachment field.  This should never happen", field)
+		}
+
+		// Check ETags for the User's avatar
+		if matchHeader := ctx.Request().Header.Get("If-None-Match"); matchHeader == fieldValue {
 			return ctx.NoContent(http.StatusNotModified)
 		}
 
 		// Retrieve the file from the mediaserver
 		ms := factory.MediaServer()
-		filespec := mediaserver.FileSpec{
-			Filename:  user.IconID.Hex(),
-			Extension: ".webp",
-			MimeType:  "image/webp",
-			Height:    300,
-			Width:     300,
-		}
 
 		header := ctx.Response().Header()
 
 		header.Set("Mime-Type", "image/webp")
-		header.Set("ETag", user.IconID.Hex())
+		header.Set("ETag", fieldValue)
 		header.Set("Cache-Control", "public, max-age=86400") // Store in public caches for 1 day
 
 		if err := ms.Get(filespec, ctx.Response().Writer); err != nil {

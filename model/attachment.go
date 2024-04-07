@@ -56,7 +56,7 @@ func (attachment *Attachment) ID() string {
 func (attachment *Attachment) CalcURL(host string) string {
 
 	if attachment.ObjectType == AttachmentObjectTypeUser {
-		return host + "/@" + attachment.ObjectID.Hex() + "/pub/avatar/" + attachment.AttachmentID.Hex()
+		return host + "/@" + attachment.ObjectID.Hex() + "/pub/icon/" + attachment.AttachmentID.Hex()
 	}
 
 	return host + "/" + attachment.ObjectID.Hex() + "/attachments/" + attachment.AttachmentID.Hex()

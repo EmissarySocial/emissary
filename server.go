@@ -253,7 +253,8 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/@:userId", handler.PostOutbox(factory))
 	e.GET("/@:userId/:action", handler.GetOutbox(factory))
 	e.POST("/@:userId/:action", handler.PostOutbox(factory))
-	e.GET("/@:userId/avatar", handler.GetProfileAvatar(factory))
+	e.GET("/@:userId/icon", handler.GetProfileIcon(factory))
+	e.GET("/@:userId/image", handler.GetProfileImage(factory))
 
 	// Profile Pages for "me" only routes
 	e.GET("/@me/inbox", handler.GetInbox(factory))
