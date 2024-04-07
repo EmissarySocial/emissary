@@ -36,7 +36,7 @@ func (step StepAddModelObject) Get(builder Builder, buffer io.Writer) PipelineBe
 		return Halt().WithError(derp.Wrap(err, "build.StepAddModelObject.Get", "Error generating form"))
 	}
 
-	formHTML = WrapForm(builder.URL(), formHTML)
+	formHTML = WrapForm(builder.URL(), step.Form.Encoding(), formHTML)
 
 	// Wrap formHTML as a modal dialog
 	// nolint:errcheck

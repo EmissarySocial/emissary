@@ -25,7 +25,8 @@ func (step StepEditModelObject) Get(builder Builder, buffer io.Writer) PipelineB
 	schema := builder.schema()
 
 	// Try to build the Form HTML
-	result, err := form.Editor(schema, step.getForm(builder), builder.object(), builder.lookupProvider())
+	element := step.getForm(builder)
+	result, err := form.Editor(schema, element, builder.object(), builder.lookupProvider())
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error generating form"))
@@ -45,7 +46,7 @@ func (step StepEditModelObject) Get(builder Builder, buffer io.Writer) PipelineB
 		optionStrings = append(optionStrings, optionString)
 	}
 
-	result = WrapForm(builder.URL(), result, optionStrings...)
+	result = WrapForm(builder.URL(), result, element.Encoding(), optionStrings...)
 
 	// nolint:errcheck
 	io.WriteString(buffer, result)

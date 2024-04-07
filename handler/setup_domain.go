@@ -43,7 +43,7 @@ func SetupDomainGet(factory *server.Factory) echo.HandlerFunc {
 			return derp.Wrap(err, "handler.SetupDomainGet", "Error generating form")
 		}
 
-		result := builder.WrapModalForm(ctx.Response(), "/domains/"+domain.DomainID, formHTML)
+		result := builder.WrapModalForm(ctx.Response(), "/domains/"+domain.DomainID, domainEditForm.Encoding(), formHTML)
 
 		return ctx.HTML(200, result)
 	}

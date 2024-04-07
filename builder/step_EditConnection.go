@@ -43,7 +43,7 @@ func (step StepEditConnection) Get(builder Builder, buffer io.Writer) PipelineBe
 	}
 
 	// Wrap the form as a ModalForm and return
-	formHTML = WrapModalForm(builder.response(), builder.URL(), formHTML)
+	formHTML = WrapModalForm(builder.response(), builder.URL(), form.Encoding(), formHTML)
 
 	// nolint:errcheck
 	buffer.Write([]byte(formHTML))

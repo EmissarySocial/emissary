@@ -81,7 +81,7 @@ func SetupServerGet(factory *server.Factory) echo.HandlerFunc {
 		}
 
 		// Return the form
-		return ctx.HTML(http.StatusOK, builder.WrapForm(uri, result, "cancel-button:hide"))
+		return ctx.HTML(http.StatusOK, builder.WrapForm(uri, result, element.Encoding(), "cancel-button:hide"))
 	}
 }
 

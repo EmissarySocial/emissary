@@ -51,7 +51,7 @@ func SetupOAuthGet(factory *server.Factory, templates *template.Template) echo.H
 		}
 
 		// Wrap the form in a modal dialog
-		result := builder.WrapModalForm(ctx.Response(), "/oauth/"+oAuthProviderID, formHTML)
+		result := builder.WrapModalForm(ctx.Response(), "/oauth/"+oAuthProviderID, editForm.Encoding(), formHTML)
 
 		return ctx.HTML(200, result)
 	}

@@ -98,7 +98,7 @@ func WrapTooltip(response http.ResponseWriter, content string) string {
 	return b.String()
 }
 
-func WrapForm(endpoint string, content string, options ...string) string {
+func WrapForm(endpoint string, content string, encoding string, options ...string) string {
 
 	optionMap := parseOptions(options...)
 
@@ -114,7 +114,7 @@ func WrapForm(endpoint string, content string, options ...string) string {
 		Attr("hx-post", endpoint).
 		Attr("hx-swap", "none").
 		Attr("hx-push-url", "false").
-		Attr("hx-encoding", optionMap.GetString("encoding")).
+		Attr("hx-encoding", encoding).
 		Script("init send checkFormRules(changed:me as Values)").
 		EndBracket()
 
@@ -154,8 +154,8 @@ func WrapForm(endpoint string, content string, options ...string) string {
 	return b.String()
 }
 
-func WrapModalForm(response http.ResponseWriter, endpoint string, content string, options ...string) string {
-	return WrapModal(response, WrapForm(endpoint, content, options...), options...)
+func WrapModalForm(response http.ResponseWriter, endpoint string, content string, encoding string, options ...string) string {
+	return WrapModal(response, WrapForm(endpoint, content, encoding, options...), options...)
 }
 
 // CloseModal sets Response header to close a modal on the client and optionally forward to a new location.
