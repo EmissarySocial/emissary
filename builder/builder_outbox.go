@@ -204,6 +204,10 @@ func (w Outbox) IconURL() string {
 	return w._user.ActivityPubIconURL()
 }
 
+func (w Outbox) ImageURL() string {
+	return w._user.ActivityPubImageURL()
+}
+
 func (w Outbox) Location() string {
 	return w._user.Location
 }

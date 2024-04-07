@@ -18,6 +18,7 @@ type User struct {
 	UserID          primitive.ObjectID         `json:"userId"          bson:"_id"`                  // Unique identifier for this user.
 	GroupIDs        id.Slice                   `json:"groupIds"        bson:"groupIds"`             // Slice of IDs for the groups that this user belongs to.
 	IconID          primitive.ObjectID         `json:"iconId"          bson:"iconId"`               // AttachmentID of this user's avatar/icon image.
+	ImageID         primitive.ObjectID         `json:"imageId"         bson:"imageId"`              // AttachmentID of this user's banner image.
 	DisplayName     string                     `json:"displayName"     bson:"displayName"`          // Name to be displayed for this user
 	StatusMessage   string                     `json:"statusMessage"   bson:"statusMessage"`        // Status summary for this user
 	Location        string                     `json:"location"        bson:"location"`             // Human-friendly description of this user's physical location.
@@ -189,13 +190,14 @@ func (user User) GetJSONLD() mapof.Any {
 
 	result := mapof.Any{
 		vocab.AtContext:                 sliceof.String{"https://www.w3.org/ns/activitystreams", "https://w3id.org/security/v1"},
-		vocab.PropertyID:                user.GetProfileURL(),
+		vocab.PropertyID:                user.ActivityPubURL(),
 		vocab.PropertyType:              vocab.ActorTypePerson,
 		vocab.PropertyURL:               user.ProfileURL,
 		vocab.PropertyName:              user.DisplayName,
 		vocab.PropertyPreferredUsername: user.Username,
 		vocab.PropertySummary:           user.StatusMessage,
 		vocab.PropertyIcon:              user.ActivityPubIconURL(),
+		vocab.PropertyImage:             user.ActivityPubImageURL(),
 		vocab.PropertyInbox:             user.ActivityPubInboxURL(),
 		vocab.PropertyOutbox:            user.ActivityPubOutboxURL(),
 		vocab.PropertyFollowing:         user.ActivityPubFollowingURL(),
@@ -216,7 +218,7 @@ func (user User) GetJSONLD() mapof.Any {
 	return result
 }
 
-func (user *User) GetProfileURL() string {
+func (user *User) ActivityPubURL() string {
 	return user.ProfileURL
 }
 
@@ -225,11 +227,15 @@ func (user *User) ActivityPubIconURL() string {
 	if user.IconID.IsZero() {
 		return ""
 	}
-	return user.ProfileURL + "/avatar"
+	return user.ProfileURL + "/icon"
 }
 
-func (user *User) ActivityPubURL() string {
-	return user.ProfileURL
+func (user *User) ActivityPubImageURL() string {
+
+	if user.ImageID.IsZero() {
+		return ""
+	}
+	return user.ProfileURL + "/image"
 }
 
 func (user *User) ActivityPubBlockedURL() string {
@@ -308,6 +314,7 @@ func (user User) Toot() object.Account {
 		DisplayName:  user.DisplayName,
 		Note:         user.StatusMessage,
 		Avatar:       user.ActivityPubIconURL(),
+		Header:       user.ActivityPubImageURL(),
 		Discoverable: user.IsPublic,
 		CreatedAt:    time.Unix(user.CreateDate, 0).Format(time.RFC3339),
 	}

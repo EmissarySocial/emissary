@@ -13,6 +13,9 @@ func UserSchema() schema.Element {
 			"userId":         schema.String{Format: "objectId"},
 			"groupIds":       id.SliceSchema(),
 			"iconId":         schema.String{Format: "objectId"},
+			"imageId":        schema.String{Format: "objectId"},
+			"iconUrl":        schema.String{Format: "url"}, // This is my first attempt at a "virtual field"
+			"imageUrl":       schema.String{Format: "url"}, // This is my first attempt at a "virtual field"
 			"displayName":    schema.String{MaxLength: 64, Required: true},
 			"statusMessage":  schema.String{MaxLength: 128},
 			"location":       schema.String{MaxLength: 64},
@@ -110,6 +113,15 @@ func (user *User) GetStringOK(name string) (string, bool) {
 	case "iconId":
 		return user.IconID.Hex(), true
 
+	case "imageId":
+		return user.ImageID.Hex(), true
+
+	case "iconUrl":
+		return user.ActivityPubIconURL(), true
+
+	case "imageUrl":
+		return user.ActivityPubImageURL(), true
+
 	default:
 		return "", false
 	}
@@ -130,6 +142,18 @@ func (user *User) SetString(name string, value string) bool {
 			user.IconID = objectID
 			return true
 		}
+
+	case "imageId":
+		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
+			user.ImageID = objectID
+			return true
+		}
+
+	case "iconUrl":
+		return true // Fail silently, but do not set iconUrl from this string
+
+	case "imageUrl":
+		return true // Fail silently, but do not set imageUrl from this string
 
 	}
 

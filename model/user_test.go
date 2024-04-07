@@ -18,6 +18,7 @@ func TestUserSchema(t *testing.T) {
 		{"groupIds.1", "000000000000000000000003", nil},
 		{"groupIds.2", "000000000000000000000004", nil},
 		{"iconId", "000000000000000000000005", nil},
+		{"imageId", "000000000000000000000006", nil},
 		{"displayName", "USER", nil},
 		{"statusMessage", "STATUS", nil},
 		{"location", "LOCATION", nil},
