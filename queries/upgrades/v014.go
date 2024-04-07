@@ -74,11 +74,11 @@ func Version14(ctx context.Context, session *mongo.Database) error {
 				delete(record, "imageUrl")
 			}
 
-			if author := record.GetMap("author"); author.NotEmpty() {
-				if authorImageURL, ok := author["imageUrl"]; ok {
-					author["iconUrl"] = authorImageURL
-					delete(author, "imageUrl")
-					record["author"] = author
+			if attributedTo := record.GetMap("attributedTo"); attributedTo.NotEmpty() {
+				if attributedToImageURL, ok := attributedTo["imageUrl"]; ok {
+					attributedTo["iconUrl"] = attributedToImageURL
+					delete(attributedTo, "imageUrl")
+					record["attributedTo"] = attributedTo
 				}
 			}
 
