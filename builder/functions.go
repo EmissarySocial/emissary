@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/benpate/color"
 	"github.com/benpate/hannibal/collections"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/channel"
@@ -133,6 +134,13 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 			return template.HTML(result)
 		},
 
+		"domainOnly": func(value string) string {
+			result := strings.TrimPrefix(value, "http://")
+			result = strings.TrimPrefix(result, "https://")
+			result, _, _ = strings.Cut(result, "/")
+			return result
+		},
+
 		"textOnly": html.RemoveTags,
 
 		"summary": html.Summary,
@@ -239,6 +247,10 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 				spew.Dump(value)
 			}
 			return ""
+		},
+
+		"parseColor": func(value string) color.Color {
+			return color.Parse(value)
 		},
 
 		"collection": func(max int, collection streams.Document) ([]streams.Document, error) {
