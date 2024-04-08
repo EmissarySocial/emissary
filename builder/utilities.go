@@ -126,27 +126,29 @@ func WrapForm(endpoint string, content string, encoding string, options ...strin
 	b.Div()
 
 	submitLabel := first.String(optionMap.GetString("submit-label"), "Save Changes")
-	//savingLabel := first.String(optionMap.GetString("saving-label"), "Saving...")
-	deleteLabel := first.String(optionMap.GetString("delete-label"), "Delete")
+
+	b.Div().Class("flex-row")
+	b.Div().Class("flex-grow")
+	{
+		b.Button().Type("submit").ID("inline-save-button").Class("primary").Script("install SaveButton").InnerText(submitLabel).Close()
+
+		if cancelButton := optionMap.GetString("cancel-button"); cancelButton != "hide" {
+			cancelLabel := first.String(optionMap.GetString("cancel-label"), "Cancel")
+			b.Space()
+			b.Button().Type("button").Script("on click trigger closeModal").InnerText(cancelLabel).Close()
+			b.Space()
+		}
+
+		b.Span().ID("htmx-response-message").Close()
+	}
+	b.Close()
 
 	if deleteURL := optionMap.GetString("delete"); deleteURL != "" {
-		b.Span().Class("float-right", "text-red").Role("button").Attr("hx-get", deleteURL).Attr("hx-push-url", "false").InnerText(deleteLabel).Close()
-		b.Space()
+		deleteLabel := first.String(optionMap.GetString("delete-label"), "Delete")
+		b.Div()
+		b.Span().Class("text-red").Role("button").Attr("hx-get", deleteURL).Attr("hx-push-url", "false").InnerText(deleteLabel).Close()
+		b.Close()
 	}
-
-	b.Button().Type("submit").ID("inline-save-button").Class("primary").Script("install SaveButton").InnerText(submitLabel).Close()
-
-	//	b.Button().Type("submit").Class("htmx-request-hide primary").InnerText(submitLabel).Close()
-	//	b.Button().Type("button").Class("htmx-request-show primary").Attr("disabled", "true").InnerText(savingLabel).Close()
-
-	if cancelButton := optionMap.GetString("cancel-button"); cancelButton != "hide" {
-		cancelLabel := first.String(optionMap.GetString("cancel-label"), "Cancel")
-		b.Space()
-		b.Button().Type("button").Script("on click trigger closeModal").InnerText(cancelLabel).Close()
-		b.Space()
-	}
-
-	b.Span().ID("htmx-response-message").Close()
 
 	// Done
 	b.CloseAll()
