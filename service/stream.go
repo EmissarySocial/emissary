@@ -844,8 +844,7 @@ func (service *Stream) CalcTagsFromPaths(stream *model.Stream, paths ...string) 
 		value, err := schema.Get(stream, path)
 
 		if err != nil {
-			derp.Report(derp.Wrap(err, "service.Stream.CalcTags", "Error getting value from path", path))
-			continue
+			continue // Fail silently because "probably" this value just hasn't been set.
 		}
 
 		plainText := html.ToSearchText(convert.String(value))
