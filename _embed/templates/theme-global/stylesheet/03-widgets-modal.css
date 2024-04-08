@@ -42,13 +42,14 @@
 
 	/* Scrolling behavior */
 	display:flow-root;
+	overflow-y: scroll;
 
 	/* Display properties for visible dialog */
 	position:relative;
 	border: solid 1px var(--gray40);
 	border-radius: 8px;
 	box-shadow: 0px 0px 20px 0px rgba(0,0,0,0.3);
-	background-color: var(--white);
+	background-color: var(--page-background);
 	padding: calc(var(--rhythm) * 2);
 	line-height: 150%;
 	transform:scale(0.8);

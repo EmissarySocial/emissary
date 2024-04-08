@@ -16,11 +16,11 @@
     padding-left:calc( var(--rhythm) * 2);
     padding-right:calc( var(--rhythm) * 2);
     margin:0px 2px -1px 0px;
-    background-color:var(--gray05);
+    background-color:var(--gray10);
     border:solid 1px var(--gray30);
     border-bottom:solid 1px var(--gray40);
     border-radius:4px 4px 0px 0px; 
-    color:var(--gray50);
+    color:var(--gray70);
     font-family:inherit;
     font-size:0.9rem;
     text-decoration:none;
@@ -31,7 +31,7 @@
     background-color:var(--gray10);
     border-color:var(--gray40);
     border-bottom:solid 1px var(--gray40);
-    color:var(--gray50);
+    color:var(--gray80);
 }
 
 [role="tablist"] > [role="tab"][disabled] {
@@ -45,8 +45,8 @@
 [role="tablist"] > [role="tab"].selected:not([disabled]), 
 [role="tablist"] > [role="tab"].selected:not([disabled]):hover {
     border-color:var(--gray40);
-    border-bottom:solid 1px white;
-    background-color:white;
+    border-bottom:solid 1px var(--white);
+    background-color:var(--white);
     color:var(--gray100);
 }
 

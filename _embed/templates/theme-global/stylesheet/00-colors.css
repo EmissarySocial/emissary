@@ -113,6 +113,7 @@
 		--input-border-invalid: var(--red60);
 		--input-background-invalid: var(--red80);
 		--input-color-invalid: var(--red50);
+		--text-color: var(--gray80);
 		--link-color:var(--blue30);
 		--link-color-hover: var(--blue20);
 
