@@ -256,7 +256,7 @@ button:hover,
 button:focus,
 .button:hover,
 .button:focus {
-	background-color: var(--gray30);
+	background-color: var(--gray20);
 	color:var(--black);
 }
 
