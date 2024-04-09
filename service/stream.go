@@ -365,9 +365,7 @@ func (service *Stream) ObjectUserCan(object data.Object, authorization model.Aut
 }
 
 func (service *Stream) Schema() schema.Schema {
-	result := schema.New(model.StreamSchema())
-	result.ID = "https://emissary.social/schemas/stream"
-	return result
+	return schema.New(model.StreamSchema())
 }
 
 /******************************************

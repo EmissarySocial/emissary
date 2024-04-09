@@ -182,8 +182,7 @@ func (service *StreamDraft) ObjectUserCan(object data.Object, authorization mode
 }
 
 func (service *StreamDraft) Schema() schema.Schema {
-	// TODO: HIGH: Implement this
-	return schema.New(nil)
+	return schema.New(model.StreamSchema())
 }
 
 /******************************************
