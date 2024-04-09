@@ -13,7 +13,7 @@
 					do:"set-data", 
 					values: {
 						label:"New Article"
-						content.format:"editorjs"
+						content.format:"EDITORJS"
 						content.raw:"{}"
 					}
 				}

@@ -13,7 +13,7 @@
 					do:"set-data"
 					values: {
 						label:"New Article (HTML Code)"
-						content.format:"html"
+						content.format:"HTML"
 						content.raw:"<h1>New Article</h1>"
 					}
 				}
