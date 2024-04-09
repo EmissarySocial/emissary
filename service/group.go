@@ -62,9 +62,9 @@ func (service *Group) Load(criteria exp.Expression, result *model.Group) error {
 // Save adds/updates an Group in the database
 func (service *Group) Save(group *model.Group, note string) error {
 
-	// Clean the value before saving
-	if err := service.Schema().Clean(group); err != nil {
-		return derp.Wrap(err, "service.Group.Save", "Error cleaning Group", group)
+	// Validate the value before saving
+	if err := service.Schema().Validate(group); err != nil {
+		return derp.Wrap(err, "service.Group.Save", "Error validating Group", group)
 	}
 
 	// Save the value to the database

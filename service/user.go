@@ -125,11 +125,6 @@ func (service *User) Save(user *model.User, note string) error {
 		return derp.Wrap(err, location, "Invalid User Data", user)
 	}
 
-	// Clean the value before saving
-	if err := service.Schema().Clean(&user); err != nil {
-		return derp.Wrap(err, location, "Error cleaning User", user)
-	}
-
 	// Try to save the User record to the database
 	if err := service.collection.Save(user, note); err != nil {
 		return derp.Wrap(err, location, "Error saving User", user, note)

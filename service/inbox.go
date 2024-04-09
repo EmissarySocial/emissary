@@ -83,9 +83,9 @@ func (service *Inbox) Load(criteria exp.Expression, result *model.Message) error
 // Save adds/updates an Inbox in the database
 func (service *Inbox) Save(message *model.Message, note string) error {
 
-	// Clean the value before saving
-	if err := service.Schema().Clean(message); err != nil {
-		return derp.Wrap(err, "service.Inbox.Save", "Error cleaning Inbox", message)
+	// Validate the value before saving
+	if err := service.Schema().Validate(message); err != nil {
+		return derp.Wrap(err, "service.Inbox.Save", "Error validating Inbox", message)
 	}
 
 	// Calculate a (hopefully unique) rank for this message

@@ -92,9 +92,9 @@ func (service *Mention) Load(criteria exp.Expression, mention *model.Mention) er
 // Save adds/updates an Mention in the database
 func (service *Mention) Save(mention *model.Mention, note string) error {
 
-	// Clean the value before saving
-	if err := service.Schema().Clean(mention); err != nil {
-		return derp.Wrap(err, "service.Mention.Save", "Error cleaning Mention", mention)
+	// Validate the value before saving
+	if err := service.Schema().Validate(mention); err != nil {
+		return derp.Wrap(err, "service.Mention.Save", "Error validating Mention", mention)
 	}
 
 	// Save the value to the database

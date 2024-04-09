@@ -91,9 +91,9 @@ func (service *Follower) Load(criteria exp.Expression, follower *model.Follower)
 // Save adds/updates an Follower in the database
 func (service *Follower) Save(follower *model.Follower, note string) error {
 
-	// Clean the value before saving
-	if err := service.Schema().Clean(follower); err != nil {
-		return derp.Wrap(err, "service.Follower.Save", "Error cleaning Follower", follower)
+	// Validate the value before saving
+	if err := service.Schema().Validate(follower); err != nil {
+		return derp.Wrap(err, "service.Follower.Save", "Error validating Follower", follower)
 	}
 
 	// Save the follower to the database

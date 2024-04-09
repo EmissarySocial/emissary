@@ -72,9 +72,9 @@ func (service *OAuthUserToken) Save(application *model.OAuthUserToken, note stri
 
 	const location = "service.OAuthUserToken"
 
-	// Clean the value (using the global application schema) before saving
-	if err := service.Schema().Clean(application); err != nil {
-		return derp.Wrap(err, "service.OAuthUserToken.Save", "Error cleaning OAuthUserToken using OAuthUserTokenSchema", application)
+	// Validate the value (using the global application schema) before saving
+	if err := service.Schema().Validate(application); err != nil {
+		return derp.Wrap(err, "service.OAuthUserToken.Save", "Error validating OAuthUserToken using OAuthUserTokenSchema", application)
 	}
 
 	// Try to save the OAuthUserToken to the database

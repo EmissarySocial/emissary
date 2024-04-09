@@ -212,14 +212,14 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 		stream.Token = stream.StreamID.Hex()
 	}
 
-	// Clean the value (using the global stream schema) before saving
-	if err := service.Schema().Clean(stream); err != nil {
-		return derp.Wrap(err, "service.Stream.Save", "Error cleaning Stream using StreamSchema", stream)
+	// Validate the value (using the global stream schema) before saving
+	if err := service.Schema().Validate(stream); err != nil {
+		return derp.Wrap(err, "service.Stream.Save", "Error validating Stream using StreamSchema", stream)
 	}
 
-	// Clean the value (using the template-specific schema) before saving
-	if err := template.Schema.Clean(stream); err != nil {
-		return derp.Wrap(err, "service.Stream.Save", "Error cleaning Stream using TemplateSchema", stream)
+	// Validate the value (using the template-specific schema) before saving
+	if err := template.Schema.Validate(stream); err != nil {
+		return derp.Wrap(err, "service.Stream.Save", "Error validating Stream using TemplateSchema", stream)
 	}
 
 	// RULE: If this stream is not a profile stream and does not have ParentIDs, then calculate them now.

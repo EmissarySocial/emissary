@@ -70,9 +70,9 @@ func (service *OAuthClient) Save(app *model.OAuthClient, note string) error {
 
 	const location = "service.OAuthClient.Save"
 
-	// Clean the value (using the global OAuthClient schema) before saving
-	if err := service.Schema().Clean(app); err != nil {
-		return derp.Wrap(err, location, "Error cleaning OAuthClient using OAuthClientSchema", app)
+	// Validate the value (using the global OAuthClient schema) before saving
+	if err := service.Schema().Validate(app); err != nil {
+		return derp.Wrap(err, location, "Error validating OAuthClient using OAuthClientSchema", app)
 	}
 
 	// If this is a new record, generate client secret

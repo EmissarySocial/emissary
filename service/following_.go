@@ -172,9 +172,9 @@ func (service *Following) Save(following *model.Following, note string) error {
 		following.RuleAction = model.RuleActionLabel
 	}
 
-	// Clean the value before saving
-	if err := service.Schema().Clean(following); err != nil {
-		return derp.Wrap(err, location, "Error cleaning Following", following)
+	// Validate the value before saving
+	if err := service.Schema().Validate(following); err != nil {
+		return derp.Wrap(err, location, "Error validating Following", following)
 	}
 
 	// RULE: Update Polling duration based on the transmission method

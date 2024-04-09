@@ -99,9 +99,9 @@ func (service *Rule) Load(criteria exp.Expression, rule *model.Rule) error {
 // Save adds/updates an Rule in the database
 func (service *Rule) Save(rule *model.Rule, note string) error {
 
-	// Clean the value before saving
-	if err := service.Schema().Clean(rule); err != nil {
-		return derp.Wrap(err, "service.Rule.Save", "Error cleaning Rule", rule)
+	// Validate the value before saving
+	if err := service.Schema().Validate(rule); err != nil {
+		return derp.Wrap(err, "service.Rule.Save", "Error validating Rule", rule)
 	}
 
 	// If this is a duplicate rule, then halt

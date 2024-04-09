@@ -23,10 +23,6 @@ type StreamSummary struct {
 	Rank           int                `json:"rank"                   bson:"rank"`                   // If Template uses a custom sort order, then this is the value used to determine the position of this Stream.
 }
 
-// TODO: MEDIUM: Lots of cleanup needed here.  InReplyTo should be migrated -> ReplyTo.
-// TODO: MEDIUM: Is Origin even needed anymore, now that the Activity object will live in inboxes/outboxes?
-// TODO: MEDIUM: Built-in fields should be migrated to a DocumentLink structure.
-
 // NewStream returns a fully initialized Stream object.
 func NewStreamSummary() StreamSummary {
 

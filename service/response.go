@@ -73,9 +73,9 @@ func (service *Response) Save(response *model.Response, note string) error {
 
 	const location = "service.Response.Save"
 
-	// Validate/Clean the value before saving
-	if err := service.Schema().Clean(response); err != nil {
-		return derp.Wrap(err, location, "Error cleaning Response", response)
+	// Validate the value before saving
+	if err := service.Schema().Validate(response); err != nil {
+		return derp.Wrap(err, location, "Error validating Response", response)
 	}
 
 	// Save the value to the database

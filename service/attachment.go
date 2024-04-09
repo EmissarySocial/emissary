@@ -77,9 +77,9 @@ func (service *Attachment) Load(criteria exp.Expression, result *model.Attachmen
 // Save adds/updates an Attachment in the database
 func (service *Attachment) Save(attachment *model.Attachment, note string) error {
 
-	// Clean the value before saving
-	if err := service.Schema().Clean(attachment); err != nil {
-		return derp.Wrap(err, "service.Attachment.Save", "Error cleaning Attachment", attachment)
+	// Validate the value before saving
+	if err := service.Schema().Validate(attachment); err != nil {
+		return derp.Wrap(err, "service.Attachment.Save", "Error validating Attachment", attachment)
 	}
 
 	// Calculate the URL
