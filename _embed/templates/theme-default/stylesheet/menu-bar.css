@@ -71,6 +71,11 @@
 	color: var(--black);
 }
 
+#menu-bar a.text-red,
+#menu-bar button.text-red {
+	color: var(--red60);
+}
+
 /******************************************
  * Breadcrumbs
  ******************************************/
