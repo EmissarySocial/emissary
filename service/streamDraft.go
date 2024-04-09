@@ -13,8 +13,9 @@ import (
 
 // StreamDraft manages all interactions with the StreamDraft collection
 type StreamDraft struct {
-	collection    data.Collection
-	streamService *Stream
+	collection      data.Collection
+	templateService *Template
+	streamService   *Stream
 }
 
 // NewStreamDraft returns a fully populated StreamDraft service.
@@ -27,8 +28,9 @@ func NewStreamDraft() StreamDraft {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *StreamDraft) Refresh(collection data.Collection, streamService *Stream) {
+func (service *StreamDraft) Refresh(collection data.Collection, templateService *Template, streamService *Stream) {
 	service.collection = collection
+	service.templateService = templateService
 	service.streamService = streamService
 }
 
@@ -84,10 +86,27 @@ func (service *StreamDraft) Load(criteria exp.Expression, result *model.Stream) 
 // save adds/updates an StreamDraft in the database
 func (service *StreamDraft) Save(draft *model.Stream, note string) error {
 
-	// TODO: HIGH: Use schema to clean the model object before saving
+	const location = "service.StreamDraft.Save"
+
+	// Get the Template used by this StreamDraft
+	template, err := service.templateService.Load(draft.TemplateID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Invalid Template", draft.TemplateID)
+	}
+
+	// Validate the value (using the global stream schema) before saving
+	if err := service.Schema().Validate(draft); err != nil {
+		return derp.Wrap(err, location, "Error validating Stream using StreamSchema", draft)
+	}
+
+	// Validate the value (using the template-specific schema) before saving
+	if err := template.Schema.Validate(draft); err != nil {
+		return derp.Wrap(err, location, "Error validating Stream using TemplateSchema", draft)
+	}
 
 	if err := service.collection.Save(draft, note); err != nil {
-		return derp.Wrap(err, "service.StreamDraft.Save", "Error saving draft", draft, note)
+		return derp.Wrap(err, location, "Error saving draft", draft, note)
 	}
 
 	return nil

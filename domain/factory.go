@@ -323,6 +323,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		// Populate StreamDraft Service
 		factory.streamDraftService.Refresh(
 			factory.collection(CollectionStreamDraft),
+			factory.Template(),
 			factory.Stream(),
 		)
 
