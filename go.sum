@@ -23,10 +23,12 @@ github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be/go.mod h1:ySMOLuW
 github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5 h1:0CwZNZbxp69SHPdPJAN/hZIm0C4OItdklCFmMRWYpio=
 github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5/go.mod h1:wHh0iHkYZB8zMSxRWpUBQtwG5a7fFgvEO+odwuTv2gs=
 github.com/aws/aws-sdk-go v1.42.9/go.mod h1:585smgzpB/KqRA+K3y/NL/oYRqQvpNJYvLm+LY1U59Q=
-github.com/aws/aws-sdk-go v1.51.16 h1:vnWKK8KjbftEkuPX8bRj3WHsLy1uhotn0eXptpvrxJI=
-github.com/aws/aws-sdk-go v1.51.16/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
+github.com/aws/aws-sdk-go v1.51.18 h1:JKrk49ZlBTyKa4+droU7U/hk0QG84v91xaA58O0LPdo=
+github.com/aws/aws-sdk-go v1.51.18/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
 github.com/aymerick/douceur v0.2.0 h1:Mv+mAeH1Q+n9Fr+oyamOlAkUNPWPlA8PPGR0QAaYuPk=
 github.com/aymerick/douceur v0.2.0/go.mod h1:wlT5vV2O3h55X9m7iVYN0TBM0NH/MmbLnd30/FjWUq4=
+github.com/benpate/color v0.0.0-20240409003552-c14fa5d98466 h1:phTpHqCbZE9QC4G5SPQozhhRRZYgkF65p2HR+N5NsW8=
+github.com/benpate/color v0.0.0-20240409003552-c14fa5d98466/go.mod h1:Km/PvPrT0Y68RQ8mtwJqbyPF63ANyJx/gXJNu3YuraA=
 github.com/benpate/data v0.28.4 h1:tVQXgwSwR07XCUEl69ciuPXlnauINKm9htLw4t4I9WQ=
 github.com/benpate/data v0.28.4/go.mod h1:ZAggBef7wHo8UdbBeloaLayxePpVDR3nQwuyd3Y0iCM=
 github.com/benpate/data-mock v0.28.10 h1:npc74q4+9+2hoOHQ1pmPm/H/D49xF6xopu8AxJxbZRw=
