@@ -17,8 +17,10 @@ type StepEditContent struct {
 
 func (step StepEditContent) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 
-	if err := builder.executeTemplate(buffer, step.Filename, builder); err != nil {
-		return Halt().WithError(derp.Wrap(err, "build.StepEditContent.Get", "Error executing template"))
+	if step.Filename != "" {
+		if err := builder.executeTemplate(buffer, step.Filename, builder); err != nil {
+			return Halt().WithError(derp.Wrap(err, "build.StepEditContent.Get", "Error executing template"))
+		}
 	}
 
 	return nil
