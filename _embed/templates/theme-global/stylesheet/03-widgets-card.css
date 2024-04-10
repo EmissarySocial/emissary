@@ -3,7 +3,7 @@
  ******************************************/
 
 .card {
-	-border: solid 1px var(--gray10);
+	display: block;
 	border-radius:2px;
 	border-right-width:2px;
 	border-bottom-width:2px; ;
