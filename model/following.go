@@ -42,7 +42,7 @@ func NewFollowing() Following {
 	return Following{
 		FollowingID:     primitive.NewObjectID(),
 		Status:          FollowingStatusNew,
-		Method:          FollowMethodPoll,
+		Method:          FollowingMethodPoll,
 		Behavior:        FollowingBehaviorPostsAndReplies,
 		RuleAction:      RuleActionLabel,
 		Links:           make(digit.LinkSet, 0),

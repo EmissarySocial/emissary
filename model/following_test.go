@@ -23,7 +23,7 @@ func TestFollowingSchema(t *testing.T) {
 		{"ruleAction", RuleActionMute, nil},
 		{"collapseThreads", "false", false},
 		{"isPublic", "true", true},
-		{"method", FollowMethodActivityPub, nil},
+		{"method", FollowingMethodActivityPub, nil},
 		{"status", FollowingStatusSuccess, nil},
 		{"statusMessage", "STATUS-MESSAGE", nil},
 		{"lastPolled", "123", int64(123)},

@@ -43,7 +43,7 @@ func GetFollowersCollection(serverFactory *server.Factory) echo.HandlerFunc {
 
 		// Retrieve a page of messages from the database
 		followerService := factory.Follower()
-		followers, err := followerService.QueryByParentAndDate(model.FollowerTypeStream, stream.StreamID, model.FollowMethodActivityPub, publishedDate, pageSize)
+		followers, err := followerService.QueryByParentAndDate(model.FollowerTypeStream, stream.StreamID, model.FollowerMethodActivityPub, publishedDate, pageSize)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error querying followers")

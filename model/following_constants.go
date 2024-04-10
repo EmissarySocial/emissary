@@ -1,17 +1,15 @@
 package model
 
-// FollowMethodActivityPub represents the ActivityPub subscription
+// FollowingMethodActivityPub represents the ActivityPub subscription
 // https://www.w3.org/TR/activitypub/
-const FollowMethodActivityPub = "ACTIVITYPUB"
+const FollowingMethodActivityPub = "ACTIVITYPUB"
 
-// FollowMethodPoll represents a subscription that must be polled for updates
-const FollowMethodPoll = "POLL"
+// FollowingMethodPoll represents a subscription that must be polled for updates
+const FollowingMethodPoll = "POLL"
 
-// FollowMethodWebSub represents a WebSub subscription
+// FollowingMethodWebSub represents a WebSub subscription
 // https://websub.rocks
-const FollowMethodWebSub = "WEBSUB"
-
-const FollowMethodRssCloud = "RSSCLOUD"
+const FollowingMethodWebSub = "WEBSUB"
 
 // FollowingStatusNew represents a new following that has not yet been polled
 const FollowingStatusNew = "NEW"

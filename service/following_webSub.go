@@ -19,7 +19,7 @@ func (service *Following) connect_WebSub(following *model.Following, hub string)
 	self := following.GetLink("rel", model.LinkRelationSelf)
 
 	// Update values in the following object
-	following.Method = model.FollowMethodWebSub
+	following.Method = model.FollowingMethodWebSub
 	following.URL = first.String(self.Href, following.URL)
 	following.Secret = random.String(32)
 	following.PollDuration = 30

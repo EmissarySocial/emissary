@@ -159,7 +159,7 @@ func (service *Following) Save(following *model.Following, note string) error {
 	// TODO: LOW: Add duplicate checks to this function?
 
 	// RULE: Reset status and error counts when saving
-	following.Method = model.FollowMethodPoll
+	following.Method = model.FollowingMethodPoll
 	following.Status = model.FollowingStatusNew
 	following.StatusMessage = ""
 	following.ErrorCount = 0
@@ -180,10 +180,10 @@ func (service *Following) Save(following *model.Following, note string) error {
 	// RULE: Update Polling duration based on the transmission method
 	switch following.Method {
 
-	case model.FollowMethodActivityPub:
+	case model.FollowingMethodActivityPub:
 		following.PollDuration = 24 * 7 * 30 // retry ActivityPub connections every 30 days
 
-	case model.FollowMethodWebSub:
+	case model.FollowingMethodWebSub:
 		following.PollDuration = 24 * 7 // retry WebSub connections every 7 days
 
 	default:
@@ -314,7 +314,7 @@ func (service *Following) Schema() schema.Schema {
 
 func (service *Following) ListActivityPub(userID primitive.ObjectID, options ...option.Option) (data.Iterator, error) {
 	criteria := exp.Equal("userId", userID).
-		AndEqual("method", model.FollowMethodActivityPub)
+		AndEqual("method", model.FollowingMethodActivityPub)
 
 	return service.List(criteria, options...)
 }
@@ -354,7 +354,7 @@ func (service *Following) QueryByFolderAndExp(userID primitive.ObjectID, folderI
 // ListPollable returns an iterator of all following that are ready to be polled
 func (service *Following) ListPollable() (data.Iterator, error) {
 	criteria := exp.LessThan("nextPoll", time.Now().Unix()).
-		AndNotEqual("method", model.FollowMethodActivityPub) // Don't poll ActivityPub
+		AndNotEqual("method", model.FollowingMethodActivityPub) // Don't poll ActivityPub
 
 	return service.List(criteria, option.SortAsc("lastPolled"))
 }

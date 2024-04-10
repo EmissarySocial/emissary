@@ -12,7 +12,7 @@ func FollowerSchema() schema.Element {
 			"followerId": schema.String{Format: "objectId"},
 			"parentId":   schema.String{Format: "objectId"},
 			"type":       schema.String{Enum: []string{FollowerTypeStream, FollowerTypeUser}},
-			"method":     schema.String{Enum: []string{FollowMethodPoll, FollowMethodWebSub, FollowMethodActivityPub}},
+			"method":     schema.String{Enum: []string{FollowerMethodActivityPub, FollowerMethodEmail, FollowerMethodWebSub}},
 			"format":     schema.String{Enum: []string{MimeTypeActivityPub, MimeTypeAtom, MimeTypeHTML, MimeTypeJSONFeed, MimeTypeRSS, MimeTypeXML}},
 			"actor":      PersonLinkSchema(),
 			"data":       schema.Object{Wildcard: schema.String{MaxLength: 256}},

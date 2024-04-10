@@ -251,7 +251,7 @@ func (service *Follower) ActivityPubFollowersChannel(parentType string, parentID
 	return service.Channel(
 		exp.Equal("parentId", parentID).
 			AndEqual("type", parentType).
-			AndEqual("method", model.FollowMethodActivityPub),
+			AndEqual("method", model.FollowerMethodActivityPub),
 	)
 }
 
@@ -262,7 +262,7 @@ func (service *Follower) WebSubFollowersChannel(parentType string, parentID prim
 	return service.Channel(
 		exp.Equal("parentId", parentID).
 			AndEqual("type", parentType).
-			AndEqual("method", model.FollowMethodWebSub),
+			AndEqual("method", model.FollowerMethodWebSub),
 	)
 }
 
@@ -283,40 +283,6 @@ func (service *Follower) QueryByParentAndDate(parentType string, parentID primit
 	return service.Query(criteria, option.SortDesc("createDate"), option.MaxRows(int64(pageSize)))
 }
 
-/*/ FollowerChannels returns two channels, one for ActivityPub followers and one for WebSub followers
-func (service *Follower) FollowerChannels(parentID primitive.ObjectID) (<-chan model.Follower, <-chan model.Follower) {
-
-	activityPubChannel := make(chan model.Follower, 2)
-	webSubChannel := make(chan model.Follower, 2)
-
-	go func() {
-
-		defer close(activityPubChannel)
-		defer close(webSubChannel)
-
-		it, err := service.ListByParent(parentID)
-
-		if err != nil {
-			derp.Report(err)
-			return
-		}
-
-		item := model.NewFollower()
-		for it.Next(&item) {
-			switch item.Method {
-			case model.FollowMethodActivityPub:
-				activityPubChannel <- item
-
-			case model.FollowMethodWebSub:
-				webSubChannel <- item
-			}
-			item = model.NewFollower()
-		}
-	}()
-
-	return activityPubChannel, webSubChannel
-}*/
-
 /******************************************
  * WebSub Queries
  ******************************************/
@@ -327,7 +293,7 @@ func (service *Follower) LoadByWebSub(objectType string, parentID primitive.Obje
 	criteria := exp.
 		Equal("type", objectType).
 		AndEqual("parentId", parentID).
-		AndEqual("method", model.FollowMethodWebSub).
+		AndEqual("method", model.FollowerMethodWebSub).
 		AndEqual("actor.inboxUrl", callback)
 
 	return service.Load(criteria, result)
@@ -349,7 +315,7 @@ func (service *Follower) LoadOrCreateByWebSub(objectType string, parentID primit
 	if derp.NotFound(err) {
 		result.ParentID = parentID
 		result.Type = objectType
-		result.Method = model.FollowMethodWebSub
+		result.Method = model.FollowerMethodWebSub
 		result.Actor.InboxURL = callback
 		return result, nil
 	}
@@ -367,7 +333,7 @@ func (service *Follower) ListActivityPub(parentID primitive.ObjectID, options ..
 
 	criteria := exp.
 		Equal("parentId", parentID).
-		AndEqual("method", model.FollowMethodActivityPub)
+		AndEqual("method", model.FollowerMethodActivityPub)
 
 	return service.List(criteria, options...)
 }
@@ -382,7 +348,7 @@ func (service *Follower) NewActivityPubFollower(parentType string, parentID prim
 	}
 
 	// Set/Update follower data from the activity
-	follower.Method = model.FollowMethodActivityPub
+	follower.Method = model.FollowerMethodActivityPub
 	follower.Type = parentType
 	follower.ParentID = parentID
 
@@ -407,7 +373,7 @@ func (service *Follower) LoadByActivityPubFollower(parentID primitive.ObjectID, 
 
 	criteria := exp.
 		Equal("parentId", parentID).
-		AndEqual("method", model.FollowMethodActivityPub).
+		AndEqual("method", model.FollowerMethodActivityPub).
 		AndEqual("actor.profileUrl", followerURL)
 
 	return service.Load(criteria, follower)
@@ -417,7 +383,7 @@ func (service *Follower) LoadByActivityPubFollower(parentID primitive.ObjectID, 
 func (service *Follower) RemoteActor(follower *model.Follower) (streams.Document, error) {
 
 	// RULE: Guarantee that the Follower is using ActivityPub for updates
-	if follower.Method != model.FollowMethodActivityPub {
+	if follower.Method != model.FollowerMethodActivityPub {
 		return streams.NilDocument(), derp.NewInternalError("service.Follower.RemoteActor", "Follower must use ActivityPub method", follower)
 	}
 

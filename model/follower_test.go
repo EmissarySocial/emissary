@@ -15,7 +15,7 @@ func TestFollowerSchema(t *testing.T) {
 		{"followerId", "123456781234567812345678", nil},
 		{"parentId", "876543218765432187654321", nil},
 		{"type", FollowerTypeUser, nil},
-		{"method", FollowMethodActivityPub, nil},
+		{"method", FollowerMethodActivityPub, nil},
 		{"format", MimeTypeActivityPub, nil},
 		{"actor.name", "ACTOR NAME", nil},
 		{"data.first", "DATA FIRST", nil},

@@ -69,7 +69,7 @@ func GetWebSubClient(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		// RULE: Require that this Following uses WebSub
-		if following.Method != model.FollowMethodWebSub {
+		if following.Method != model.FollowingMethodWebSub {
 			return derp.NewBadRequestError(location, "Not a WebSub follow", following, transaction)
 		}
 
@@ -79,7 +79,7 @@ func GetWebSubClient(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		// RULE: Force another poll in half the time of this lease
-		following.Method = model.FollowMethodWebSub
+		following.Method = model.FollowingMethodWebSub
 		following.PollDuration = int(transaction.Lease / 60 / 60 / 2) // poll again in half the lease duration
 
 		// Update the record status and save.
@@ -135,7 +135,7 @@ func PostWebSubClient(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		// Validate the request (B)
-		if following.Method != model.FollowMethodWebSub {
+		if following.Method != model.FollowingMethodWebSub {
 			return derp.NewBadRequestError(location, "Not a WebSub follow", following)
 		}
 

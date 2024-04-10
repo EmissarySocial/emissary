@@ -26,11 +26,11 @@ func (summary FollowerSummary) Fields() []string {
 
 func (summary FollowerSummary) MethodIcon() string {
 	switch summary.Method {
-	case FollowMethodPoll:
-		return "rss"
-	case FollowMethodWebSub:
+	case FollowerMethodEmail:
+		return "email"
+	case FollowerMethodWebSub:
 		return "websub"
-	case FollowMethodActivityPub:
+	case FollowerMethodActivityPub:
 		return "activitypub"
 	}
 

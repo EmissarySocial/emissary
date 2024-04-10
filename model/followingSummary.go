@@ -30,11 +30,11 @@ func (summary FollowingSummary) Icon() string {
 	var icon string
 
 	switch summary.Method {
-	case FollowMethodActivityPub:
+	case FollowingMethodActivityPub:
 		icon = "activitypub"
-	case FollowMethodPoll:
+	case FollowingMethodPoll:
 		icon = "rss"
-	case FollowMethodWebSub:
+	case FollowingMethodWebSub:
 		icon = "websub"
 	}
 
