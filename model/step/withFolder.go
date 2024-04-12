@@ -6,7 +6,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// WithFolder represents an action-step that can update the data.DataMap custom data stored in a Stream
+// WithFolder is an action-step that returns a new Folder Builder
 type WithFolder struct {
 	SubSteps []Step
 }

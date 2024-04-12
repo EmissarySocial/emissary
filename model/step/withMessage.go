@@ -6,7 +6,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// WithMessage represents an action-step that can update the data.DataMap custom data stored in a Stream
+// WithMessage is an action-step that returns a new Message Builder
 type WithMessage struct {
 	SubSteps []Step
 }

@@ -6,7 +6,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// WithChildren represents an action-step that can update the data.DataMap custom data stored in a Stream
+// WithChildren is an action-step executes a list of sub-steps on every child of the current Stream
 type WithChildren struct {
 	SubSteps []Step
 }

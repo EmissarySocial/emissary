@@ -6,7 +6,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// WithResponse represents an action-step that can update the data.DataMap custom data stored in a Stream
+// WithResponse is an action-step that returns a new Response Builder
 type WithResponse struct {
 	SubSteps []Step
 }

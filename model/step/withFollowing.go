@@ -6,7 +6,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// WithFollowing represents an action-step that can update the data.DataMap custom data stored in a Stream
+// WithFollowing is an action-step that returns a new Following builder
 type WithFollowing struct {
 	SubSteps []Step
 }

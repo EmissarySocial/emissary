@@ -6,7 +6,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// WithRule represents an action-step that can update the data.DataMap custom data stored in a Stream
+// WithRule is an action-step that returns a new Rule Builder
 type WithRule struct {
 	SubSteps []Step
 }

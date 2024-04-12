@@ -6,7 +6,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// WithNextSibling represents an action-step that can update the data.DataMap custom data stored in a Stream
+// WithNextSibling is an action-step that returns a new Stream Builder keyed to the next sibling of the current Stream
 type WithNextSibling struct {
 	SubSteps []Step
 }

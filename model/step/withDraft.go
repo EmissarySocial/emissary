@@ -6,7 +6,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// WithDraft represents an action-step that can update the data.DataMap custom data stored in a Stream
+// WithDraft is an action-step that returns a new StreamDraft Builder
 type WithDraft struct {
 	SubSteps []Step
 }
