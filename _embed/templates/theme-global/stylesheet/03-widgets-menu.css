@@ -10,7 +10,7 @@
 }
 
 .menu > [role=menuitem] {
-	padding: 4px 8px;
+	padding: calc(var(--rhythm) / 2) var(--rhythm);
 	border-top: solid 1px var(--gray20);
 	cursor: pointer;
 }

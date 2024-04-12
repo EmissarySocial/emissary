@@ -18,4 +18,6 @@
     .hover-visible,
     .hover-invisible:focus,
     .hover-trigger:hover .hover-invisible {opacity:0}
+
+    .hover-underline:hover {text-decoration:underline}
 }
