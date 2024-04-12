@@ -1,0 +1,32 @@
+behavior blockselect(link)
+
+	init
+		set my *cursor to "pointer"
+	end
+
+	on click
+	
+		if event.target.hasAttribute("href") then
+			exit
+		end
+
+		if event.target.hasAttribute("hx-get") then
+			exit
+		end
+		
+		if event.target.hasAttribute("hx-post") then
+			exit
+		end
+
+		if window.getSelection().toString() is not "" then
+			exit
+		end
+
+		if link is null then
+			set link to the first <[href],[hx-get],[hx-post]/> in me
+		end
+
+		send click to the link
+
+	end
+end
