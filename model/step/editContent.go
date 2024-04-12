@@ -7,8 +7,9 @@ import (
 
 // EditContent represents an action-step that can edit/update Container in a streamDraft.
 type EditContent struct {
-	Filename string
-	Format   string
+	Filename  string
+	Fieldname string
+	Format    string
 }
 
 func NewEditContent(stepInfo mapof.Any) (EditContent, error) {
@@ -20,8 +21,9 @@ func NewEditContent(stepInfo mapof.Any) (EditContent, error) {
 
 	// Create the new "edit-content" step
 	return EditContent{
-		Filename: first(stepInfo.GetString("file"), stepInfo.GetString("actionId")),
-		Format:   first(stepInfo.GetString("format"), "editorjs"),
+		Filename:  first(stepInfo.GetString("file"), stepInfo.GetString("actionId")),
+		Fieldname: first(stepInfo.GetString("field"), "content"),
+		Format:    first(stepInfo.GetString("format"), "editorjs"),
 	}, nil
 }
 

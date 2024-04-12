@@ -11,8 +11,9 @@ import (
 
 // StepEditContent represents an action-step that can edit/update Container in a streamDraft.
 type StepEditContent struct {
-	Filename string
-	Format   string
+	Filename  string
+	Fieldname string
+	Format    string
 }
 
 func (step StepEditContent) Get(builder Builder, buffer io.Writer) PipelineBehavior {
@@ -58,7 +59,7 @@ func (step StepEditContent) Post(builder Builder, _ io.Writer) PipelineBehavior 
 			return Halt().WithError(derp.Wrap(err, "build.StepEditContent.Post", "Error parsing request data"))
 		}
 
-		rawContent, _ = body.GetStringOK("content")
+		rawContent = body.GetString(step.Fieldname)
 	}
 
 	// Set the new Content value in the Stream
