@@ -6,6 +6,7 @@ import (
 
 // Sort represents an action-step that can update multiple records at once
 type Sort struct {
+	Model   string
 	Keys    string
 	Values  string
 	Message string
@@ -14,6 +15,7 @@ type Sort struct {
 func NewSort(stepInfo mapof.Any) (Sort, error) {
 
 	return Sort{
+		Model:   stepInfo.GetString("model"),
 		Keys:    first(stepInfo.GetString("keys"), "_id"),
 		Values:  first(stepInfo.GetString("values"), "rank"),
 		Message: stepInfo.GetString("message"),
