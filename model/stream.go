@@ -21,6 +21,7 @@ type Stream struct {
 	ParentID         primitive.ObjectID           `json:"parentId"               bson:"parentId"`               // Unique identifier of the "parent" stream.
 	ParentIDs        id.Slice                     `json:"parentIds"              bson:"parentIds"`              // List of all parent IDs, including the current parent.  This is used to generate "breadcrumbs" for the Stream.
 	Rank             int                          `json:"rank"                   bson:"rank"`                   // If Template uses a custom sort order, then this is the value used to determine the position of this Stream.
+	RankAlt          int                          `json:"rankAlt"                bson:"rankAlt"`                // Alternate sort criteria
 	NavigationID     string                       `json:"navigationId"           bson:"navigationId"`           // Unique identifier of the "top-level" Stream that this record falls within.
 	TemplateID       string                       `json:"templateId"             bson:"templateId"`             // Unique identifier (name) of the Template to use when building this Stream in HTML.
 	ParentTemplateID string                       `json:"parentTemplateId"       bson:"parentTemplateId"`       // Unique identifier (name) of the parent's Template.

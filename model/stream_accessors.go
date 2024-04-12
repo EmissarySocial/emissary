@@ -13,6 +13,7 @@ func StreamSchema() schema.Element {
 			"parentId":         schema.String{Format: "objectId"},
 			"parentIds":        schema.Array{Items: schema.String{Format: "objectId"}},
 			"rank":             schema.Integer{Minimum: null.NewInt64(0)},
+			"rankAlt":          schema.Integer{Minimum: null.NewInt64(0)},
 			"token":            schema.String{Format: "token", MaxLength: 128},
 			"navigationId":     schema.String{},
 			"templateId":       schema.String{MaxLength: 128},
@@ -104,6 +105,9 @@ func (stream *Stream) GetPointer(name string) (any, bool) {
 
 	case "rank":
 		return &stream.Rank, true
+
+	case "rankAlt":
+		return &stream.RankAlt, true
 
 	case "publishDate":
 		return &stream.PublishDate, true
