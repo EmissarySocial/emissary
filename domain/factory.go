@@ -421,6 +421,9 @@ func (factory *Factory) Model(name string) (service.ModelService, error) {
 
 	switch strings.ToLower(name) {
 
+	case "activity":
+		return factory.Inbox(), nil
+
 	case "folder":
 		return factory.Folder(), nil
 
@@ -430,8 +433,11 @@ func (factory *Factory) Model(name string) (service.ModelService, error) {
 	case "following":
 		return factory.Following(), nil
 
-	case "activity":
-		return factory.Inbox(), nil
+	case "stream":
+		return factory.Stream(), nil
+
+	case "user":
+		return factory.User(), nil
 
 	}
 
