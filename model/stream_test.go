@@ -20,6 +20,7 @@ func TestStreamSchema(t *testing.T) {
 		{"parentIds.2", "000000000000000000000004", nil},
 		{"parentIds.3", "000000000000000000000005", nil},
 		{"rank", "1234", 1234},
+		{"rankAlt", "4321", 4321},
 		{"token", "TOKEN", nil},
 		{"navigationId", "000000000000000000000006", nil},
 		{"templateId", "TEMPLATE", nil},
