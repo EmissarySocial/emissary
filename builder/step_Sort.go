@@ -69,7 +69,7 @@ func (step StepSort) Post(builder Builder, _ io.Writer) PipelineBehavior {
 		}
 
 		// Use the object schema to set the new sort rank
-		if err := modelService.Schema().Set(object, "rank", newRank); err != nil {
+		if err := modelService.Schema().Set(object, step.Values, newRank); err != nil {
 			return Halt().WithError(derp.Wrap(err, "build.StepSort.Post", "Error setting new rank", objectID, step.Values, newRank))
 		}
 
