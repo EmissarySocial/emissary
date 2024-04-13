@@ -130,6 +130,11 @@ func (builder QueryBuilder[T]) ByRank() QueryBuilder[T] {
 	return builder
 }
 
+func (builder QueryBuilder[T]) ByRankAlt() QueryBuilder[T] {
+	builder.SortField = "rankAlt"
+	return builder
+}
+
 func (builder QueryBuilder[T]) ByReadDate() QueryBuilder[T] {
 	builder.SortField = "readDate"
 	return builder
