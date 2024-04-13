@@ -39,7 +39,7 @@
 
 			{{- range .Children.ByRank.Slice -}}
 				<article class="h-entry">
-					<div class="draggable clickable card padded" hx-get="/{{.Token}}" href="/{{.Token}}">
+					<div class="draggable clickable card padding-sm" hx-get="/{{.Token}}" href="/{{.Token}}">
 						<input type="hidden" name="keys" value="{{.StreamID}}"/>
 						{{- if ne .IconURL "" -}}
 							<picture loading="lazy" class="picture aspect-4-3">
