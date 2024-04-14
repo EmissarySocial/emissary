@@ -1,0 +1,36 @@
+<div class="flex-row" style="align-items:center;">
+	<img src="{{.IconURL}}" class="circle-64">
+	<div>
+		<h1 style="margin-bottom:0px">Follow {{.DisplayName}}</h1>
+		<div class="text-gray">{{.ProfileURL}}</div>
+	</div>
+</div>
+
+<hr>
+
+<h3>Enter Your Email Address</h3>
+
+<form action="/.follow/email" method="post">
+
+	<input type="hidden" name="type", value="User">
+	<input type="hidden" name="parentId" value="{{.UserID}}">
+
+	<div class="layout layout-vertical">
+		<div class="layout-vertical-elements">
+			<div class="layout-vertical-element">
+				<label>Full Name</label>
+				<input type="text" name="name" required autofocus autocomplete="name">
+			</div>
+			<div class="layout-vertical-element">
+				<label>Email Address</label>
+				<input type="email" name="emailAddress" required autocomplete="email">
+			</div>
+		</div>
+	</div>
+
+	<div>
+		<button type="submit" class="primary">Follow via Email</button>
+		<button script="on click trigger closeModal">Cancel</button>
+	</div>
+
+</form>

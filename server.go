@@ -208,10 +208,10 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.well-known/host-meta", handler.GetHostMeta(factory))
 	e.GET("/.well-known/host-meta.json", handler.GetHostMetaJSON(factory))
 	e.GET("/.well-known/nodeinfo", handler.GetNodeInfo(factory))
-	e.GET("/nodeinfo/2.0", handler.GetNodeInfo20(factory))
-	e.GET("/nodeinfo/2.1", handler.GetNodeInfo21(factory))
 	e.GET("/.well-known/oembed", handler.GetOEmbed(factory))
 	e.GET("/.well-known/webfinger", handler.GetWebfinger(factory))
+	e.GET("/nodeinfo/2.0", handler.GetNodeInfo20(factory))
+	e.GET("/nodeinfo/2.1", handler.GetNodeInfo21(factory))
 
 	// Built-In Service  Routes
 	e.GET("/.themes/:themeId/:bundleId", handler.GetThemeBundle(factory))
@@ -221,6 +221,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.widgets/:widgetId/:bundleId", handler.GetWidgetBundle(factory))
 	e.GET("/.widgets/:widgetId//resources/:filename", handler.GetWidgetResource(factory))
 	e.GET("/.giphy", handler.GetGiphyWidget(factory))
+	e.POST("/.follow/email", handler.PostFollowEmail(factory))
 	e.POST("/.ostatus/discover", handler.PostOStatusDiscover(factory))
 	e.GET("/.ostatus/tunnel", handler.GetFollowingTunnel)
 	e.POST("/.webmention", handler.PostWebMention(factory))

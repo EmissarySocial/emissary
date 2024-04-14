@@ -135,10 +135,34 @@
 		follow: {
 			steps: [
 				{do:"as-modal", background:"profile", steps:[
-					{do:"view-html", file:"follow"}
+					{do:"view-html"}
 				]}
 			]
 		}
+
+		follow-activitypub: {
+			steps: [
+				{do:"as-modal", background:"profile", steps:[
+					{do:"view-html"}
+				]}
+			]
+		}
+
+		follow-email: {
+			steps: [
+				{do:"as-modal", background:"profile", steps:[
+					{do:"view-html"}
+				]}
+			]
+		}
+
+		follow-email-sent: {
+			steps: [
+				{do:"view-html"}
+			]
+		}
+
+		follow-email-confirm: {do:"view-html"}
 
 		feed: {do:"view-feed"}
 		websub: {do:"websub"}
