@@ -5,6 +5,7 @@ go 1.22.1
 require (
 	github.com/PuerkitoBio/goquery v1.9.1
 	github.com/aws/aws-sdk-go v1.51.16
+	github.com/benpate/color v0.0.0-20240409003552-c14fa5d98466
 	github.com/benpate/data v0.28.4
 	github.com/benpate/data-mock v0.28.10
 	github.com/benpate/data-mongo v0.28.9
@@ -37,7 +38,7 @@ require (
 	github.com/hjson/hjson-go/v4 v4.4.0
 	github.com/karlseguin/ccache/v3 v3.0.5
 	github.com/kr/jsonfeed v0.1.1
-	github.com/labstack/echo/v4 v4.11.4
+	github.com/labstack/echo/v4 v4.12.0
 	github.com/labstack/gommon v0.4.2
 	github.com/microcosm-cc/bluemonday v1.0.26
 	github.com/mmcdole/gofeed v1.3.0
