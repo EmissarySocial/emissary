@@ -11,14 +11,30 @@ import (
 // StepSave represents an action-step that can save changes to any object
 type StepSave struct {
 	Comment *template.Template
+	Method  string
 }
 
 func (step StepSave) Get(builder Builder, _ io.Writer) PipelineBehavior {
+
+	if (step.Method == "get") || (step.Method == "both") {
+		return step.do(builder)
+	}
+
 	return nil
 }
 
 // Post saves the object to the database
 func (step StepSave) Post(builder Builder, _ io.Writer) PipelineBehavior {
+
+	if (step.Method == "post") || (step.Method == "both") {
+		return step.do(builder)
+	}
+
+	return nil
+}
+
+// Post saves the object to the database
+func (step StepSave) do(builder Builder) PipelineBehavior {
 
 	const location = "build.StepSave.Post"
 
