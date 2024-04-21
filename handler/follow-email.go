@@ -5,14 +5,15 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
+	"github.com/EmissarySocial/emissary/tools/random"
 	"github.com/benpate/derp"
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func PostFollowEmail(serverFactory *server.Factory) echo.HandlerFunc {
+func PostEmailFollower(serverFactory *server.Factory) echo.HandlerFunc {
 
-	const location = "handler.PostFollowEmail"
+	const location = "handler.PostEmailFollower"
 
 	return func(ctx echo.Context) error {
 
@@ -28,6 +29,14 @@ func PostFollowEmail(serverFactory *server.Factory) echo.HandlerFunc {
 			return derp.Wrap(err, location, "Unable to bind input")
 		}
 
+		// Generate follower secret (doing this first because it shouldn't fail,
+		// but if it does, we want to fail here before we hit the database)
+		secret, err := random.GenerateString(64)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Error generating secret")
+		}
+
 		// Get the domain
 		factory, err := serverFactory.ByContext(ctx)
 
@@ -36,19 +45,36 @@ func PostFollowEmail(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		// Create the new "Follower" record.
-		follower := model.NewFollower()
-		follower.StateID = model.FollowerStatePending
-		follower.Type = transaction.Type
+		// Save the follower
+		followerService := factory.Follower()
+		follower, err := followerService.LoadOrCreate(transaction.ParentID, transaction.Email)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Error saving follower")
+		}
+
+		follower.ParentType = transaction.Type
 		follower.ParentID = transaction.ParentID
 		follower.Method = model.FollowerMethodEmail
 		follower.Format = model.MimeTypeHTML
+		follower.Actor.ProfileURL = transaction.Email
 		follower.Actor.EmailAddress = transaction.Email
 		follower.Actor.Name = transaction.Name
+		follower.Data.SetString("secret", secret)
 
-		// Save the follower
-		followerService := factory.Follower()
-		if err := followerService.Save(&follower, "Added follower via email"); err != nil {
+		// Only reset the status if this is a new follower.  Otherwise,
+		// this subscription may already be "ACTIVE" and we don't want to
+		// roll back if we don't have to.
+		if follower.IsNew() {
+			follower.StateID = model.FollowerStatePending
+		}
+
+		if err := followerService.Save(&follower, "Email Follower signup"); err != nil {
 			return derp.Wrap(err, location, "Error saving follower")
+		}
+
+		if err := followerService.SendFollowConfirmation(&follower); err != nil {
+			return derp.Wrap(err, location, "Error sending confirmation email")
 		}
 
 		// Forward the user to the confirmation page

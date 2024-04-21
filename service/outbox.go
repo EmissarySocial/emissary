@@ -21,6 +21,7 @@ type Outbox struct {
 	followerService *Follower
 	templateService *Template
 	userService     *User
+	domainEmail     *DomainEmail
 	lock            *sync.Mutex
 	queue           queue.Queue
 }
@@ -37,13 +38,14 @@ func NewOutbox() Outbox {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Outbox) Refresh(collection data.Collection, streamService *Stream, activityService *ActivityStream, followerService *Follower, templateService *Template, userService *User, queue queue.Queue) {
+func (service *Outbox) Refresh(collection data.Collection, streamService *Stream, activityService *ActivityStream, followerService *Follower, templateService *Template, userService *User, domainEmail *DomainEmail, queue queue.Queue) {
 	service.collection = collection
 	service.streamService = streamService
 	service.activityService = activityService
 	service.followerService = followerService
 	service.templateService = templateService
 	service.userService = userService
+	service.domainEmail = domainEmail
 	service.queue = queue
 }
 
