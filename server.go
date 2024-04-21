@@ -221,7 +221,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.widgets/:widgetId/:bundleId", handler.GetWidgetBundle(factory))
 	e.GET("/.widgets/:widgetId//resources/:filename", handler.GetWidgetResource(factory))
 	e.GET("/.giphy", handler.GetGiphyWidget(factory))
-	e.POST("/.follow/email", handler.PostFollowEmail(factory))
+	e.POST("/.follower/new", handler.PostEmailFollower(factory))
 	e.POST("/.ostatus/discover", handler.PostOStatusDiscover(factory))
 	e.GET("/.ostatus/tunnel", handler.GetFollowingTunnel)
 	e.POST("/.webmention", handler.PostWebMention(factory))

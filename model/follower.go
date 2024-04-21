@@ -54,13 +54,16 @@ func (follower Follower) State() string {
 // are not returned.
 func (follower Follower) Roles(authorization *Authorization) []string {
 
-	// Folders are private, so only MagicRoleMyself is allowed
+	/* Removing this because we're authenticating access to Followers higher up the stack.
+
+	// Followers are private, so only MagicRoleMyself is allowed
 	if authorization.UserID == follower.ParentID {
 		return []string{MagicRoleMyself}
 	}
+	*/
 
 	// Intentionally NOT allowing MagicRoleAnonymous, MagicRoleAuthenticated, or MagicRoleOwner
-	return []string{}
+	return []string{MagicRoleAnonymous}
 }
 
 func (follower Follower) GetJSONLD() mapof.Any {
@@ -69,4 +72,29 @@ func (follower Follower) GetJSONLD() mapof.Any {
 		vocab.PropertyID:   follower.Actor.ProfileURL,
 		vocab.PropertyName: follower.Actor.Name,
 	}
+}
+
+/******************************************
+ * Other Calculations
+ ******************************************/
+
+// ParentURL returns the URL of the parent object that this Follower is following.
+func (follower Follower) ParentURL(host string) string {
+
+	if follower.ParentType == FollowerTypeUser {
+		return host + "/@" + follower.ParentID.Hex()
+	}
+
+	return host + "/" + follower.ParentID.Hex()
+}
+
+// UnsubscribeLink returns a URL where an Email Follower can unsubscribe.
+// It returns an empty string for all other follower types (ActivityPub, WebSub, etc.)
+func (follower Follower) UnsubscribeLink(host string) string {
+
+	if follower.Method == FollowerMethodEmail {
+		return host + "/.follower/delete?id=" + follower.FollowerID.Hex() + "&secret=" + follower.Data.GetString("secret")
+	}
+
+	return ""
 }
