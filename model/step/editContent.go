@@ -15,7 +15,7 @@ type EditContent struct {
 func NewEditContent(stepInfo mapof.Any) (EditContent, error) {
 
 	// Validate the step configuration
-	if err := EdiContentSchema().Validate(stepInfo); err != nil {
+	if err := StepEditContentSchema().Validate(stepInfo); err != nil {
 		return EditContent{}, err
 	}
 
@@ -27,8 +27,8 @@ func NewEditContent(stepInfo mapof.Any) (EditContent, error) {
 	}, nil
 }
 
-// EditContentSchema returns a validating schema for the EditContent step
-func EdiContentSchema() schema.Element {
+// StepEditContentSchema returns a validating schema for the EditContent step
+func StepEditContentSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
 			"filename": schema.String{},
