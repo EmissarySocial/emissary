@@ -22,26 +22,13 @@ func SetupPageGet(factory *server.Factory, templates *template.Template, templat
 	return func(ctx echo.Context) error {
 
 		config := factory.Config()
-		useWrapper := (ctx.Request().Header.Get("HX-Request") != "true")
 
 		header := ctx.Response().Header()
 		header.Set("Content-Type", model.MimeTypeHTML)
 		header.Set("Cache-Control", "no-cache")
 
-		if useWrapper {
-			if err := templates.ExecuteTemplate(ctx.Response().Writer, "_header.html", config); err != nil {
-				derp.Report(builder.WrapInlineError(ctx.Response(), derp.Wrap(err, "setup.getIndex", "Error building index page")))
-			}
-		}
-
 		if err := templates.ExecuteTemplate(ctx.Response().Writer, templateID, config); err != nil {
 			derp.Report(builder.WrapInlineError(ctx.Response(), derp.Wrap(err, "setup.getIndex", "Error building index page")))
-		}
-
-		if useWrapper {
-			if err := templates.ExecuteTemplate(ctx.Response().Writer, "_footer.html", config); err != nil {
-				derp.Report(builder.WrapInlineError(ctx.Response(), derp.Wrap(err, "setup.getIndex", "Error building index page")))
-			}
 		}
 
 		return nil
