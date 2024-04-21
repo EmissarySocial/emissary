@@ -93,7 +93,7 @@ func (follower Follower) ParentURL(host string) string {
 func (follower Follower) UnsubscribeLink(host string) string {
 
 	if follower.Method == FollowerMethodEmail {
-		return host + "/.follower/delete?id=" + follower.FollowerID.Hex() + "&secret=" + follower.Data.GetString("secret")
+		return follower.ParentURL(host) + "/follower-unsubscribe?followerId=" + follower.FollowerID.Hex() + "&secret=" + follower.Data.GetString("secret")
 	}
 
 	return ""
