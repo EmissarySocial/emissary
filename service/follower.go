@@ -314,7 +314,7 @@ func (service *Follower) LoadOrCreateByWebSub(objectType string, parentID primit
 	// If NOT EXISTS, then create a new one
 	if derp.NotFound(err) {
 		result.ParentID = parentID
-		result.Type = objectType
+		result.ParentType = objectType
 		result.Method = model.FollowerMethodWebSub
 		result.Actor.InboxURL = callback
 		return result, nil
