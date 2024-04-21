@@ -20,8 +20,33 @@ type StepSetData struct {
 
 func (step StepSetData) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 
+	const location = "build.StepSetData.Get"
+
 	if err := step.setURLPaths(builder); err != nil {
 		return Halt().WithError(derp.Wrap(err, "build.StepSetData.Get", "Error setting data from URL"))
+	}
+
+	object := builder.object()
+	schema := builder.schema()
+
+	// Put values from template.json into the stream
+	for key, value := range step.Values {
+		valueString := executeTemplate(value, builder)
+		if err := schema.Set(object, key, valueString); err != nil {
+			result := derp.Wrap(err, location, "Error setting value from template.json", key, derp.WithCode(http.StatusBadRequest))
+			return Halt().WithError(result)
+		}
+	}
+
+	// Set default values (only if no value already exists)
+	for name, value := range step.Defaults {
+		currentValue, _ := schema.Get(builder, name)
+		if compare.IsZero(currentValue) {
+			if err := schema.Set(object, name, value); err != nil {
+				result := derp.Wrap(err, location, "Error setting default value", name, value, derp.WithCode(http.StatusBadRequest))
+				return Halt().WithError(result)
+			}
+		}
 	}
 
 	return nil
