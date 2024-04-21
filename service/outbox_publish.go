@@ -45,6 +45,7 @@ func (service *Outbox) Publish(actor *outbox.Actor, parentType string, parentID 
 	go service.sendNotifications_ActivityPub(actor, activity)
 	go service.sendNotifications_WebSub(parentType, parentID)
 	go service.sendNotifications_WebMention(activity)
+	go service.sendNotifications_Email(parentType, parentID, activity)
 
 	// Success!!
 	return nil
@@ -143,10 +144,19 @@ func (service *Outbox) sendNotifications_WebMention(activity mapof.Any) {
 	}
 }
 
-/*
-// sendUndo_ActivityPub sends an ActivityPub UNDO to all Followers
-func (service Outbox) sendUndo_ActivityPub(actor *outbox.Actor, activity mapof.Any) {
-	undoActivity := outbox.MakeUndo(actor.ActorID(), activity)
-	actor.Send(undoActivity)
+// sendNotifications_Email sends email notifications to all "email" Followers
+func (service *Outbox) sendNotifications_Email(parentType string, parentID primitive.ObjectID, activity mapof.Any) {
+
+	followers, err := service.followerService.EmailFollowersChannel(parentType, parentID)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, "service.Outbox.sendNotifications_Email", "Error loading Followers", parentType, parentID))
+		return
+	}
+
+	for follower := range followers {
+		if err := service.domainEmail.SendFollowerActivity(follower, activity); err != nil {
+			derp.Report(derp.Wrap(err, "service.Outbox.sendNotifications_Email", "Error sending email", follower))
+		}
+	}
 }
-*/
