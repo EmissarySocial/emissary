@@ -8,16 +8,22 @@
 
 <hr>
 
-<button hx-get="/@{{.UserID}}/follow-activitypub" class="text-lg flex-row width-100-percent">
-	<span>{{icon "activitypub"}}</span>
-	<span class="flex-grow">On the Fediverse (via ActivityPub)</span>
-	<span>{{icon "chevron-right"}}</span>
+<button hx-get="/@{{.UserID}}/follow-activitypub" class="flex-row width-100-percent">
+	<div class="text-3xl margin-none">{{icon "activitypub"}}</div>
+	<div class="flex-grow">
+		<div class="text-lg margin-none">My Fediverse Account</div>
+		<div class="text-sm text-gray">Updates in your ActivityPub inbox (better)</div>
+	</div>
+	<div class="text-lg">{{icon "chevron-right"}}</div>
 </button>
 
 <button hx-get="/@{{.UserID}}/follow-email" class="text-lg flex-row width-100-percent">
-	<span>{{icon "email"}}</span>
-	<span class="flex-grow">With My Email Account</span>
-	<span>{{icon "chevron-right"}}</span>
+	<div class="text-3xl margin-none">{{icon "email"}}</div>
+	<div class="flex-grow">
+		<div class="text-lg margin-none">My Email Account</div>
+		<div class="text-sm text-gray">Updates in your email inbox</div>
+	</div>
+	<div class="text-lg">{{icon "chevron-right"}}</div>
 </button>
 
 <hr>

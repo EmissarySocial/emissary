@@ -1,0 +1,9 @@
+{{- $follower := .Object -}}
+{{- $parentURL := $follower.ParentURL .Host}}
+<div class="page">
+
+	<h1>{{icon "email"}} Your Email Subscription Is Active</h1>
+	<p>Updates will be sent to your email inbox.  You can unsubscribe any time using links in the emails you receive.</p>
+	
+	<a href="{{$parentURL}}" class="button">Return to Profile Page</a>
+</div>

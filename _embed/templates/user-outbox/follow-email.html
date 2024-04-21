@@ -10,7 +10,7 @@
 
 <h3>Enter Your Email Address</h3>
 
-<form action="/.follow/email" method="post">
+<form action="/.follower/new" method="post">
 
 	<input type="hidden" name="type", value="User">
 	<input type="hidden" name="parentId" value="{{.UserID}}">
@@ -23,7 +23,7 @@
 			</div>
 			<div class="layout-vertical-element">
 				<label>Email Address</label>
-				<input type="email" name="emailAddress" required autocomplete="email">
+				<input type="email" name="email" required autocomplete="email">
 			</div>
 		</div>
 	</div>

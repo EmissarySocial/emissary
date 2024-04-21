@@ -2,6 +2,12 @@
 	templateId:"base-social"
 	actions:{
 
+		follow-button: {
+			steps: [
+				{do:"view-html"}
+			]
+		}
+
 		like-button: {
 			roles:["authenticated"]
 			steps:[

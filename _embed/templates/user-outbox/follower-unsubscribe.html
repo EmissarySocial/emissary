@@ -1,0 +1,10 @@
+<div class="page">
+
+	<h1>Do you want to unsubscribe from this email?</h1>
+
+	<div id="htmx-response-message">
+		<button hx-post="{{.URL}}" class="primary">Unsubscribe</button>
+		<button hx-get="/@{{.Object.ParentID.Hex}}">Cancel</button>
+	</div>
+
+</div>
