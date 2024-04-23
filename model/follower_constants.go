@@ -19,3 +19,11 @@ const FollowerMethodEmail = "EMAIL"
 // receives real-time updates via WebSub
 // https://websub.rocks
 const FollowerMethodWebSub = "WEBSUB"
+
+// FollowerStateActive represents an active Follower who is currently
+// receiving updates from the Stream
+const FollowerStateActive = "ACTIVE"
+
+// FollowerStatePending represents an inactive Follower who has yet
+// to confirm their subscription status (e.g. via email confirmation)
+const FollowerStatePending = "PENDING"

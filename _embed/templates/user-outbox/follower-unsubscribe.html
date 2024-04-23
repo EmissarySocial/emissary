@@ -1,0 +1,25 @@
+{{- $follower := .Object -}}
+{{- $parentURL := $follower.ParentURL .Host -}}
+{{- $actor := .ActivityStream $parentURL -}}
+
+<div class="page">
+
+	<h1>{{icon "email"}} Unsubscribe from {{$actor.Name}}?</h1>
+
+	<div class="flex-row flex-align-center margin-vertical-lg">
+		<img src="{{$actor.Icon.Href}}" class="circle-64">
+		<div>
+			<div class="margin-none text-lg bold">{{$actor.Name}}</div>
+			<div class="margin-none text-gray">Receiving updates via email</div>
+		</div>
+	</div>
+
+	<div class="margin-vertical">You're currently receiving email updates whenever <b>{{$actor.Name}}</b> posts.</div>
+	<div class="margin-bottom-xl">Do you want to keep receiving updates, or cancel your email subscription?</div>
+
+	<div id="htmx-response-message">
+		<button hx-post="{{.URL}}" class="primary">Cancel Email Subscription</button>
+		<a class="button" href="/@{{.Object.ParentID.Hex}}">Keep Receiving Updates</a>
+	</div>
+
+</div>

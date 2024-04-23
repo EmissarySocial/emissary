@@ -1,0 +1,31 @@
+{{- template "follow-heading" . -}}
+
+<h3>Sign Up for Email Updates</h3>
+<div class="margin-bottom">
+	Enter your name and email below, to receive updates from <b>{{.DisplayName}}</b> in your email inbox.
+</div>
+
+<form action="/.follower/new" method="post">
+
+	<input type="hidden" name="type", value="User">
+	<input type="hidden" name="parentId" value="{{.UserID}}">
+
+	<div class="layout layout-vertical">
+		<div class="layout-vertical-elements">
+			<div class="layout-vertical-element">
+				<label>Full Name</label>
+				<input type="text" name="name" required autofocus autocomplete="name">
+			</div>
+			<div class="layout-vertical-element">
+				<label>Email Address</label>
+				<input type="email" name="email" required autocomplete="email">
+			</div>
+		</div>
+	</div>
+
+	<div>
+		<button type="submit" class="primary">Follow via Email</button>
+		<button script="on click trigger closeModal">Cancel</button>
+	</div>
+
+</form>

@@ -219,7 +219,9 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		factory.followerService.Refresh(
 			factory.collection(CollectionFollower),
 			factory.User(),
+			factory.Stream(),
 			factory.Rule(),
+			factory.Email(),
 			factory.ActivityStream(),
 			factory.Queue(),
 			factory.Host(),
@@ -287,6 +289,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.Follower(),
 			factory.Template(),
 			factory.User(),
+			factory.Email(),
 			factory.Queue(),
 		)
 

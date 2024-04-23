@@ -14,6 +14,7 @@ func FollowerSchema() schema.Element {
 			"type":       schema.String{Enum: []string{FollowerTypeStream, FollowerTypeUser}},
 			"method":     schema.String{Enum: []string{FollowerMethodActivityPub, FollowerMethodEmail, FollowerMethodWebSub}},
 			"format":     schema.String{Enum: []string{MimeTypeActivityPub, MimeTypeAtom, MimeTypeHTML, MimeTypeJSONFeed, MimeTypeRSS, MimeTypeXML}},
+			"stateId":    schema.String{Enum: []string{FollowerStateActive, FollowerStatePending}},
 			"actor":      PersonLinkSchema(),
 			"data":       schema.Object{Wildcard: schema.String{MaxLength: 256}},
 			"expireDate": schema.Integer{BitSize: 64},
@@ -39,13 +40,16 @@ func (follower *Follower) GetPointer(name string) (any, bool) {
 		return &follower.ExpireDate, true
 
 	case "type":
-		return &follower.Type, true
+		return &follower.ParentType, true
 
 	case "method":
 		return &follower.Method, true
 
 	case "format":
 		return &follower.Format, true
+
+	case "stateId":
+		return &follower.StateID, true
 	}
 
 	return nil, false

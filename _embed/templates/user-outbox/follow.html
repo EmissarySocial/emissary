@@ -1,47 +1,23 @@
-<div class="flex-row" style="align-items:center;">
-	<img src="{{.IconURL}}" class="circle-64">
-	<div>
-		<h1 style="margin-bottom:0px">Follow {{.DisplayName}}</h1>
-		<div class="text-gray">{{.ProfileURL}}</div>
+{{- template "follow-heading" . -}}
+
+<button hx-get="/@{{.UserID}}/follow-activitypub" class="flex-row width-100-percent">
+	<div class="text-3xl margin-none margin-right-sm">{{icon "activitypub"}}</div>
+	<div class="flex-grow">
+		<div class="text-lg margin-none">My Fediverse Account</div>
+		<div class="text-sm text-gray">Updates in your ActivityPub inbox (better)</div>
 	</div>
-</div>
+	<div class="text-lg">{{icon "chevron-right"}}</div>
+</button>
+
+<button hx-get="/@{{.UserID}}/follow-email" class="text-lg flex-row width-100-percent">
+	<div class="text-3xl margin-none margin-right-sm">{{icon "email"}}</div>
+	<div class="flex-grow">
+		<div class="text-lg margin-none">My Email Account</div>
+		<div class="text-sm text-gray">Updates in your email inbox</div>
+	</div>
+	<div class="text-lg">{{icon "chevron-right"}}</div>
+</button>
 
 <hr>
 
-<h3>Have an Account?</h3>
-
-<div class="margin-bottom">
-	Enter your Emissary address (or other Fediverse address) to get automatic updates on your social timeline.
-</div>
-
-<form hx-post="/.ostatus/discover" hx-target="#htmx-response-message" hx-swap="innerHTML" class="margin-bottom">
-	<div class="flex-row" style="margin-bottom:4px;">
-		<input type="hidden" name="localAccount" value="{{.ProfileURL}}"/>
-		<input type="text" name="remoteAccount" placeholder="https://yoursite.social/@yourname" autofocus autocomplete="url"/>
-		<button class="primary nowrap">Follow on<br>my site</button>
-	</div>
-	<div id="htmx-response-message" class="text-red">&nbsp;</div>
-</form>
-
-<div>
-	<h3>Need an Account?</h3>
-
-	Emissary is a private social app that you own.  Post updates to friends and family anywhere on the 
-	Fediverse or IndieWeb and say goodbye to ads and tracking.
-	<br><br>
-
-	{{- if .DomainHasSignupForm -}}
-		<a href="/register" class="primary button">Sign Up Now</a>
-		<a href="https://emissary.social/hosting" class="button">Find Another Host</a>
-		<button script="on click trigger closeModal">Cancel</button>
-		
-	{{- else -}}
-		Signups on this site are closed, but you can follow {{.DisplayName}} from any other 
-		Fediverse app. Click below for a list of trustworthy providers.<br>
-		<br>
-		<a href="https://emissary.social/hosting" class="primary button" target="_blank">Find a Fediverse Host</a>
-			<button script="on click trigger closeModal">Cancel</button>
-	{{- end -}}
-</div>
-
-
+<button script="on click trigger closeModal">Close Window</button>

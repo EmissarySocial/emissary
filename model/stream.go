@@ -415,3 +415,13 @@ func (stream *Stream) GrandparentID() primitive.ObjectID {
 func (stream *Stream) SetAttributedTo(person PersonLink) {
 	stream.AttributedTo = person
 }
+
+// ActorLink returns a PersonLink object that represents this Stream as an ActivityPub "actor"
+func (stream *Stream) ActorLink() PersonLink {
+
+	return PersonLink{
+		Name:       stream.Label,
+		ProfileURL: stream.URL,
+		IconURL:    stream.IconURL,
+	}
+}

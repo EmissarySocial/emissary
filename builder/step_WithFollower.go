@@ -5,7 +5,9 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/model/step"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // StepWithFollower represents an action-step that can update the data.DataMap custom data stored in a Stream
@@ -26,23 +28,26 @@ func (step StepWithFollower) execute(builder Builder, buffer io.Writer, actionMe
 
 	const location = "build.StepWithFollower.execute"
 
-	if !builder.IsAuthenticated() {
-		return Halt().WithError(derp.NewUnauthorizedError(location, "Anonymous user is not authorized to perform this action"))
-	}
-
 	// Collect required services and values
 	factory := builder.factory()
 	followerService := factory.Follower()
-	followerToken := builder.QueryParam("followerId")
+	token := builder.QueryParam("followerId")
 	follower := model.NewFollower()
 	follower.ParentID = builder.AuthenticatedID() // TODO: Make this generic enough to work with Content Actors...
 
-	// Try to load the Follower record (unless we're creating a NEW record)
-	if (followerToken != "") && (followerToken != "new") {
-		if err := followerService.LoadByToken(builder.AuthenticatedID(), followerToken, &follower); err != nil {
-			if actionMethod == ActionMethodGet {
-				return Halt().WithError(derp.Wrap(err, location, "Unable to load Follower via ID", followerToken))
-			}
+	// Only authenticated users can create new Follower records
+	if (token == "") || (token == "new") {
+
+		if !builder.IsAuthenticated() {
+			return Halt().WithError(derp.NewForbiddenError(location, "Anonymous user is not authorized to perform this action"))
+		}
+
+	} else {
+
+		// Existing Follower records can be looked up if authenticated, or with a secret.
+		secret := builder.QueryParam("secret")
+		if err := step.load(followerService, token, builder.AuthenticatedID(), secret, &follower); err != nil {
+			return Halt().WithError(derp.Wrap(err, location, "Unable to load Follower via ID", token))
 		}
 	}
 
@@ -58,4 +63,30 @@ func (step StepWithFollower) execute(builder Builder, buffer io.Writer, actionMe
 	result.Error = derp.Wrap(result.Error, location, "Error executing steps for child")
 
 	return UseResult(result)
+}
+
+func (step StepWithFollower) load(followerService *service.Follower, token string, authenticatedID primitive.ObjectID, secret string, follower *model.Follower) error {
+
+	const location = "build.StepWithFollower.load"
+
+	// If a secret is present, then use it to load the Follower record
+	if secret != "" {
+
+		followerID, err := primitive.ObjectIDFromHex(token)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Invalid follower ID", token)
+		}
+
+		return followerService.LoadBySecret(followerID, secret, follower)
+	}
+
+	// If the user is Authenticated, then use their Authentication to load the Follower record.
+	if !authenticatedID.IsZero() {
+		return followerService.LoadByToken(authenticatedID, token, follower)
+	}
+
+	// Nope.  Not happening.
+	return derp.NewForbiddenError(location, "Anonymous user is not authorized to perform this action")
+
 }

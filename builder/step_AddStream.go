@@ -144,6 +144,10 @@ func (step StepAddStream) getInline(builder Builder, buffer io.Writer) error {
 	streamService := factory.Stream()
 	child := streamService.New()
 
+	if user, err := builder.getUser(); err == nil {
+		child.SetAttributedTo(user.PersonLink())
+	}
+
 	// Create a new child builder
 	childBuilder, err := NewStream(factory, builder.request(), builder.response(), newTemplate, &child, "create")
 	childBuilder.setArguments(builder.getArguments())
@@ -192,6 +196,11 @@ func (step StepAddStream) Post(builder Builder, buffer io.Writer) PipelineBehavi
 	streamService := factory.Stream()
 	newStream := streamService.New()
 
+	// Assign the current user as the author (with silent failure, but why would it do that?)
+	if user, err := builder.getUser(); err == nil {
+		newStream.SetAttributedTo(user.PersonLink())
+	}
+
 	// Validate and set the location for the new Stream
 	if err := step.setLocation(builder, &template, &newStream); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error getting location for new stream"))
@@ -200,11 +209,6 @@ func (step StepAddStream) Post(builder Builder, buffer io.Writer) PipelineBehavi
 	// Apply custom stream data from the "with-data" map
 	if err := step.setStreamData(builder, &newStream); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error setting stream data"))
-	}
-
-	// Assign the current user as the author (with silent failure)
-	if user, err := builder.getUser(); err == nil {
-		newStream.SetAttributedTo(user.PersonLink())
 	}
 
 	// Create a builder for the new Stream
@@ -275,6 +279,7 @@ func (step StepAddStream) setLocation(builder Builder, template *model.Template,
 	}
 }
 
+// setStreamData applies the "with-data" map to the newly created stream
 func (step StepAddStream) setStreamData(builder Builder, stream *model.Stream) error {
 
 	if len(step.WithData) == 0 {

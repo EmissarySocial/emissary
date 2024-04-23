@@ -135,7 +135,45 @@
 		follow: {
 			steps: [
 				{do:"as-modal", background:"profile", steps:[
-					{do:"view-html", file:"follow"}
+					{do:"view-html"}
+				]}
+			]
+		}
+
+		follow-activitypub: {
+			steps: [
+				{do:"as-modal", background:"profile", steps:[
+					{do:"view-html"}
+				]}
+			]
+		}
+
+		follow-email: {
+			steps: [
+				{do:"as-modal", background:"profile", steps:[
+					{do:"view-html"}
+				]}
+			]
+		}
+
+		follow-email-sent: {do:"view-html"}
+
+		follower-confirm: {
+			steps:[
+				{do:"with-follower", steps:[
+					{do:"set-data", values:{"stateId":"ACTIVE"}}
+					{do:"save", method:"get", comment:"Email confirmed by user"}
+					{do:"view-html"}
+				]}
+			]
+		}
+
+		follower-unsubscribe: {
+			steps: [
+				{do:"with-follower", steps:[
+					{do:"view-html", file:"follower-unsubscribe"}
+					{do:"delete", method:"post", comment:"Unsubscribed from email notifications"}
+					{do:"inline-success", message:"Done.  You have been unsubscribed from email notifications."}
 				]}
 			]
 		}

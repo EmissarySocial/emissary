@@ -14,7 +14,7 @@
 				do: "as-modal"
 				steps: [
 					{
-						do: "add"
+						do: "edit"
 						type: "user"
 						form: {
 							type: "layout-vertical"

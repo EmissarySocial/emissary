@@ -17,6 +17,7 @@ func TestFollowerSchema(t *testing.T) {
 		{"type", FollowerTypeUser, nil},
 		{"method", FollowerMethodActivityPub, nil},
 		{"format", MimeTypeActivityPub, nil},
+		{"stateId", FollowerStateActive, nil},
 		{"actor.name", "ACTOR NAME", nil},
 		{"data.first", "DATA FIRST", nil},
 		{"expireDate", "1234", int64(1234)},

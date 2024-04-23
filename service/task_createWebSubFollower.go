@@ -77,6 +77,7 @@ func (task TaskCreateWebSubFollower) subscribe() error {
 	}
 
 	// Set additional properties that are not handled by LoadOrCreateByWebSub
+	follower.StateID = model.FollowerStateActive
 	follower.Format = task.format
 	follower.ExpireDate = time.Now().Add(time.Second * time.Duration(task.leaseSeconds)).Unix()
 	follower.Data = mapof.Any{

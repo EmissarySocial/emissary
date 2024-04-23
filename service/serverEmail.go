@@ -89,12 +89,13 @@ func (service *ServerEmail) watch() {
 	// All Watchers Started.  Now Listen for Changes
 	for {
 		select {
+
 		case <-changes:
 			service.loadTemplates()
+
 		case <-service.refresh:
 			return
 		}
-
 	}
 }
 
@@ -122,14 +123,17 @@ func (service *ServerEmail) loadTemplates() {
 	service.templates = templates
 }
 
-func (service *ServerEmail) Send(smtpConnection config.SMTPConnection, templateName string, from string, to []string, subject string, data any) error {
+func (service *ServerEmail) Send(smtpConnection config.SMTPConnection, message *mail.Email, templateName string, data any) error {
 
 	const location = "service.ServerEmail.Send"
 
 	// If the SMTP Connection is empty, then don't try to send an email
 	if smtpConnection.IsNil() {
+		log.Debug().Msg("ServerEmail.Send: SMTP Connection is empty.  Skipping email.")
 		return nil
 	}
+
+	log.Trace().Str("template", templateName).Msg("ServerEmail.Send: sending email")
 
 	// Build the email body
 	var buffer bytes.Buffer
@@ -138,11 +142,7 @@ func (service *ServerEmail) Send(smtpConnection config.SMTPConnection, templateN
 	}
 
 	// Build the email message
-	message := mail.NewMSG()
-	message.SetFrom(from).
-		AddTo(to...).
-		SetSubject(subject).
-		SetBody(mail.TextHTML, buffer.String())
+	message.SetBody(mail.TextHTML, buffer.String())
 
 	// Try to connect to the server
 	server, ok := smtpConnection.Server()
@@ -154,12 +154,12 @@ func (service *ServerEmail) Send(smtpConnection config.SMTPConnection, templateN
 	client, err := server.Connect()
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error connecting to SMTP server", templateName, from, to, subject, data, smtpConnection.Hostname, smtpConnection.Username, strings.Repeat("*", len(smtpConnection.Password)), smtpConnection.Port, smtpConnection.TLS)
+		return derp.Wrap(err, location, "Error connecting to SMTP server", templateName, data, smtpConnection.Hostname, smtpConnection.Username, strings.Repeat("*", len(smtpConnection.Password)), smtpConnection.Port, smtpConnection.TLS)
 	}
 
 	// Try to send the email
 	if err := message.Send(client); err != nil {
-		return derp.Wrap(err, location, "Error sending email", templateName, from, to, subject, data)
+		return derp.Wrap(err, location, "Error sending email", templateName, data)
 	}
 
 	return nil

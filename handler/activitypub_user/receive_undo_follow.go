@@ -44,7 +44,7 @@ func undoFollow(context Context, activity streams.Document) error {
 		return derp.Wrap(err, location, "Invalid User URL", userURL)
 	}
 
-	if err := followerService.LoadByActivityPubFollower(userID, actorURL, &follower); err != nil {
+	if err := followerService.LoadByActivityPubFollower(model.FollowerTypeUser, userID, actorURL, &follower); err != nil {
 
 		if derp.NotFound(err) {
 			return nil

@@ -13,6 +13,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/sherlock"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -22,6 +23,8 @@ type Follower struct {
 	collection      data.Collection
 	userService     *User
 	ruleService     *Rule
+	streamService   *Stream
+	domainEmail     *DomainEmail
 	activityService *ActivityStream
 	queue           queue.Queue
 	host            string
@@ -37,10 +40,12 @@ func NewFollower() Follower {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Follower) Refresh(collection data.Collection, userService *User, ruleService *Rule, activityService *ActivityStream, queue queue.Queue, host string) {
+func (service *Follower) Refresh(collection data.Collection, userService *User, streamService *Stream, ruleService *Rule, domainEmail *DomainEmail, activityService *ActivityStream, queue queue.Queue, host string) {
 	service.collection = collection
 	service.userService = userService
+	service.streamService = streamService
 	service.ruleService = ruleService
+	service.domainEmail = domainEmail
 	service.activityService = activityService
 	service.queue = queue
 	service.host = host
@@ -218,6 +223,32 @@ func (service *Follower) LoadByToken(parentID primitive.ObjectID, token string, 
 	return service.Load(criteria, follower)
 }
 
+// LoadBySecret loads a follower based on the FollowerID.  It confirms that the secret value matches
+func (service *Follower) LoadBySecret(followerID primitive.ObjectID, secret string, follower *model.Follower) error {
+
+	const location = "service.Follower.LoadBySecret"
+
+	// RULE: The secret must not be empty.
+	if secret == "" {
+		return derp.NewForbiddenError(location, "Secret cannot be empty", followerID)
+	}
+
+	// Load the Follower using the FollowerID
+	criteria := exp.Equal("_id", followerID)
+	if err := service.Load(criteria, follower); err != nil {
+		return derp.Wrap(err, location, "Error loading follower", followerID)
+	}
+
+	// Verify that the secret matches
+	spew.Dump(follower)
+	if follower.Data.GetString("secret") != secret {
+		return derp.NewForbiddenError(location, "Invalid secret", followerID)
+	}
+
+	// Success
+	return nil
+}
+
 // LoadByActor retrieves an Follower from the database by parentID and actorID
 func (service *Follower) LoadByActor(parentID primitive.ObjectID, actorID string, follower *model.Follower) error {
 
@@ -255,24 +286,6 @@ func (service *Follower) ActivityPubFollowersChannel(parentType string, parentID
 	)
 }
 
-// WebSubFollowersChannel returns a channel containing all of the Followers of specific parentID
-// who use WebSub for updates
-func (service *Follower) WebSubFollowersChannel(parentType string, parentID primitive.ObjectID) (<-chan model.Follower, error) {
-
-	return service.Channel(
-		exp.Equal("parentId", parentID).
-			AndEqual("type", parentType).
-			AndEqual("method", model.FollowerMethodWebSub),
-	)
-}
-
-// IsActivityPubFollower searches
-func (service *Follower) IsActivityPubFollower(streamID primitive.ObjectID, followerURL string) bool {
-	result := model.NewFollower()
-	err := service.LoadByActivityPubFollower(streamID, followerURL, &result)
-	return err == nil
-}
-
 func (service *Follower) QueryByParentAndDate(parentType string, parentID primitive.ObjectID, method string, maxCreateDate int64, pageSize int) ([]model.Follower, error) {
 
 	criteria := exp.Equal("type", parentType).
@@ -286,6 +299,17 @@ func (service *Follower) QueryByParentAndDate(parentType string, parentID primit
 /******************************************
  * WebSub Queries
  ******************************************/
+
+// WebSubFollowersChannel returns a channel containing all of the Followers of specific parentID
+// who use WebSub for updates
+func (service *Follower) WebSubFollowersChannel(parentType string, parentID primitive.ObjectID) (<-chan model.Follower, error) {
+
+	return service.Channel(
+		exp.Equal("parentId", parentID).
+			AndEqual("type", parentType).
+			AndEqual("method", model.FollowerMethodWebSub),
+	)
+}
 
 // LoadByWebSub retrieves a follower based on the parentID and callback
 func (service *Follower) LoadByWebSub(objectType string, parentID primitive.ObjectID, callback string, result *model.Follower) error {
@@ -314,7 +338,7 @@ func (service *Follower) LoadOrCreateByWebSub(objectType string, parentID primit
 	// If NOT EXISTS, then create a new one
 	if derp.NotFound(err) {
 		result.ParentID = parentID
-		result.Type = objectType
+		result.ParentType = objectType
 		result.Method = model.FollowerMethodWebSub
 		result.Actor.InboxURL = callback
 		return result, nil
@@ -324,9 +348,43 @@ func (service *Follower) LoadOrCreateByWebSub(objectType string, parentID primit
 	return result, derp.Wrap(err, "service.Follower.LoadByWebSub", "Error loading follower", parentID, callback)
 }
 
+func (service *Follower) LoadParentActor(follower *model.Follower) (model.PersonLink, error) {
+
+	switch follower.ParentType {
+
+	case model.FollowerTypeUser:
+
+		user := model.NewUser()
+		if err := service.userService.LoadByID(follower.ParentID, &user); err != nil {
+			return model.PersonLink{}, derp.Wrap(err, "service.Follower.LoadParentActor", "Error loading parent user", follower)
+		}
+
+		return user.PersonLink(), nil
+
+	case model.FollowerTypeStream:
+
+		stream := model.NewStream()
+		if err := service.streamService.LoadByID(follower.ParentID, &stream); err != nil {
+			return model.PersonLink{}, derp.Wrap(err, "service.Follower.LoadParentActor", "Error loading parent stream", follower)
+		}
+
+		return stream.ActorLink(), nil
+
+	}
+
+	return model.PersonLink{}, derp.NewInternalError("service.Follower.LoadParentActor", "Invalid parentType", follower)
+}
+
 /******************************************
  * ActivityPub Queries
  ******************************************/
+
+// IsActivityPubFollower searches
+func (service *Follower) IsActivityPubFollower(parentType string, parentID primitive.ObjectID, followerURL string) bool {
+	result := model.NewFollower()
+	err := service.LoadByActivityPubFollower(parentType, parentID, followerURL, &result)
+	return err == nil
+}
 
 // ListActivityPub returns an iterator containing all of the Followers of specific parentID
 func (service *Follower) ListActivityPub(parentID primitive.ObjectID, options ...option.Option) (data.Iterator, error) {
@@ -349,8 +407,9 @@ func (service *Follower) NewActivityPubFollower(parentType string, parentID prim
 
 	// Set/Update follower data from the activity
 	follower.Method = model.FollowerMethodActivityPub
-	follower.Type = parentType
+	follower.ParentType = parentType
 	follower.ParentID = parentID
+	follower.StateID = model.FollowerStateActive
 
 	follower.Actor = model.PersonLink{
 		ProfileURL:   actor.ID(),
@@ -369,10 +428,11 @@ func (service *Follower) NewActivityPubFollower(parentType string, parentID prim
 	return nil
 }
 
-func (service *Follower) LoadByActivityPubFollower(parentID primitive.ObjectID, followerURL string, follower *model.Follower) error {
+func (service *Follower) LoadByActivityPubFollower(parentType string, parentID primitive.ObjectID, followerURL string, follower *model.Follower) error {
 
 	criteria := exp.
-		Equal("parentId", parentID).
+		Equal("type", parentType).
+		AndEqual("parentId", parentID).
 		AndEqual("method", model.FollowerMethodActivityPub).
 		AndEqual("actor.profileUrl", followerURL)
 
@@ -415,5 +475,52 @@ func (service *Follower) AsJSONLD(follower *model.Follower) mapof.Any {
 }
 
 /******************************************
- * Custom Actions
+ * Email Queries
  ******************************************/
+
+func (service *Follower) EmailFollowersChannel(parentType string, parentID primitive.ObjectID) (<-chan model.Follower, error) {
+
+	return service.Channel(
+		exp.Equal("parentId", parentID).
+			AndEqual("type", parentType).
+			AndEqual("method", model.FollowerMethodEmail).
+			AndEqual("stateId", model.FollowerStateActive),
+	)
+}
+
+func (service *Follower) LoadPendingEmailFollower(followerID primitive.ObjectID, secret string, follower *model.Follower) error {
+
+	criteria := exp.
+		Equal("_id", followerID).
+		AndEqual("method", model.FollowerMethodEmail).
+		AndEqual("stateId", model.FollowerStatePending).
+		AndEqual("data.secret", secret)
+
+	return service.Load(criteria, follower)
+}
+
+/******************************************
+ * Email Methods
+ ******************************************/
+
+// SendFollowConfirmation sends an email to an email-type follower with a link to confirm their subscription.
+// Subscriptions are not "ACTIVE" until confirmed.
+func (service *Follower) SendFollowConfirmation(follower *model.Follower) error {
+
+	// RULE: This method only applies to EMAIL-type Followers
+	if follower.Method != model.FollowerMethodEmail {
+		return derp.NewInternalError("service.Follower.SendFollowConfirmation", "Follower must use Email method", follower)
+	}
+
+	actor, err := service.LoadParentActor(follower)
+
+	if err != nil {
+		return derp.Wrap(err, "service.Follower.SendFollowConfirmation", "Error loading parent actor", follower)
+	}
+
+	if err := service.domainEmail.SendFollowerConfirmation(actor, follower); err != nil {
+		return derp.Wrap(err, "service.Follower.SendFollowConfirmation", "Error sending follow confirmation email", follower)
+	}
+
+	return nil
+}

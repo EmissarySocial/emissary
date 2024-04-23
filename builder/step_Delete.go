@@ -13,10 +13,15 @@ type StepDelete struct {
 	Title   *template.Template
 	Message *template.Template
 	Submit  string
+	Method  string
 }
 
 // Get displays a customizable confirmation form for the delete
 func (step StepDelete) Get(builder Builder, buffer io.Writer) PipelineBehavior {
+
+	if step.Method == "post" {
+		return Continue()
+	}
 
 	b := html.New()
 
@@ -43,6 +48,10 @@ func (step StepDelete) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 
 // Post removes the object from the database (likely using a soft-delete, though)
 func (step StepDelete) Post(builder Builder, _ io.Writer) PipelineBehavior {
+
+	if step.Method == "get" {
+		return Continue()
+	}
 
 	// Delete the object via the model service.
 	if err := builder.service().ObjectDelete(builder.object(), "Deleted"); err != nil {
