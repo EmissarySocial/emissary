@@ -34,7 +34,7 @@ require (
 	github.com/gernest/mention v2.0.0+incompatible
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/gorilla/feeds v1.1.2
-	github.com/hairyhenderson/go-fsimpl v0.0.0-20240326174631-a2ef76d0ccbc
+	github.com/hairyhenderson/go-fsimpl v0.1.0
 	github.com/hjson/hjson-go/v4 v4.4.0
 	github.com/karlseguin/ccache/v3 v3.0.5
 	github.com/kr/jsonfeed v0.1.1
