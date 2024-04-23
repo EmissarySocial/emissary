@@ -4,7 +4,8 @@ go 1.22.1
 
 require (
 	github.com/PuerkitoBio/goquery v1.9.1
-	github.com/aws/aws-sdk-go v1.51.16
+	github.com/aws/aws-sdk-go v1.51.26
+	github.com/benpate/color v0.1.0
 	github.com/benpate/data v0.28.4
 	github.com/benpate/data-mock v0.28.10
 	github.com/benpate/data-mongo v0.28.9
@@ -13,13 +14,13 @@ require (
 	github.com/benpate/domain v0.2.1
 	github.com/benpate/exp v0.8.3
 	github.com/benpate/exp-builder v0.8.0
-	github.com/benpate/form v0.20.1
+	github.com/benpate/form v0.21.0
 	github.com/benpate/hannibal v0.10.0
 	github.com/benpate/html v0.16.5
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.10.16
 	github.com/benpate/remote v0.15.0
-	github.com/benpate/rosetta v0.20.0
+	github.com/benpate/rosetta v0.21.0
 	github.com/benpate/sherlock v0.7.1
 	github.com/benpate/steranko v0.17.0
 	github.com/benpate/table v0.6.14
@@ -33,11 +34,11 @@ require (
 	github.com/gernest/mention v2.0.0+incompatible
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/gorilla/feeds v1.1.2
-	github.com/hairyhenderson/go-fsimpl v0.0.0-20240326174631-a2ef76d0ccbc
+	github.com/hairyhenderson/go-fsimpl v0.1.0
 	github.com/hjson/hjson-go/v4 v4.4.0
 	github.com/karlseguin/ccache/v3 v3.0.5
 	github.com/kr/jsonfeed v0.1.1
-	github.com/labstack/echo/v4 v4.11.4
+	github.com/labstack/echo/v4 v4.12.0
 	github.com/labstack/gommon v0.4.2
 	github.com/microcosm-cc/bluemonday v1.0.26
 	github.com/mmcdole/gofeed v1.3.0
@@ -51,13 +52,13 @@ require (
 	github.com/timewasted/go-accept-headers v0.0.0-20130320203746-c78f304b1b09
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
 	github.com/xhit/go-simple-mail/v2 v2.16.0
-	github.com/yeqown/go-qrcode/v2 v2.2.2
+	github.com/yeqown/go-qrcode/v2 v2.2.3
 	github.com/yeqown/go-qrcode/writer/standard v1.2.3
 	github.com/yuin/goldmark v1.7.1
 	github.com/yuin/goldmark-highlighting/v2 v2.0.0-20230729083705-37449abec8cc
-	go.mongodb.org/mongo-driver v1.14.0
+	go.mongodb.org/mongo-driver v1.15.0
 	golang.org/x/crypto v0.22.0
-	golang.org/x/exp v0.0.0-20240404231335-c0f41cb1a7a0
+	golang.org/x/exp v0.0.0-20240416160154-fe59bbe5cc7f
 	golang.org/x/oauth2 v0.19.0
 	willnorris.com/go/microformats v1.2.0
 	willnorris.com/go/webmention v0.0.0-20220108183051-4a23794272f0
@@ -65,7 +66,7 @@ require (
 
 require (
 	dario.cat/mergo v1.0.0 // indirect
-	github.com/Microsoft/go-winio v0.6.1 // indirect
+	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/ProtonMail/go-crypto v1.0.0 // indirect
 	github.com/alecthomas/chroma/v2 v2.13.0 // indirect
 	github.com/andybalholm/cascadia v1.3.2 // indirect
@@ -93,7 +94,7 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
-	github.com/klauspost/compress v1.17.7 // indirect
+	github.com/klauspost/compress v1.17.8 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mmcdole/goxpp v1.1.1 // indirect
@@ -119,13 +120,11 @@ require (
 	github.com/yeqown/reedsolomon v1.0.0 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
 	golang.org/x/image v0.15.0 // indirect
-	golang.org/x/mod v0.17.0 // indirect
 	golang.org/x/net v0.24.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/sys v0.19.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
-	golang.org/x/tools v0.20.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
