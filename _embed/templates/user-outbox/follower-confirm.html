@@ -1,9 +1,25 @@
 {{- $follower := .Object -}}
-{{- $parentURL := $follower.ParentURL .Host}}
+{{- $secret := $follower.Data.GetString "secret" -}}
+{{- $parentURL := $follower.ParentURL .Host -}}
+{{- $actor := .ActivityStream $parentURL -}}
+
 <div class="page">
 
-	<h1>{{icon "email"}} Your Email Subscription Is Active</h1>
-	<p>Updates will be sent to your email inbox.  You can unsubscribe any time using links in the emails you receive.</p>
+	<h1 class="margin-bottom-xl">{{icon "thumbs-up"}} Your Email Subscription is Confirmed</h1>
+
+	<div class="flex-row flex-align-center margin-bottom-xl">
+		<img src="{{$actor.Icon.Href}}" class="circle-64">
+		<div>
+			<div class="margin-none text-lg bold">{{$actor.Name}}</div>
+			<div class="margin-none text-gray">Receiving updates via email</div>
+		</div>
+	</div>
+
+	<p>Updates will be sent to your email inbox whenever <b>{{$actor.Name}}</b> posts.</p>
+	<p>You can <a href="{{$parentURL}}/follower-unsubscribe?followerId={{$follower.FollowerID.Hex}}&secret={{$secret}}">unsubscribe any time</a> using links in the emails you receive.</p>
 	
-	<a href="{{$parentURL}}" class="button">Return to Profile Page</a>
+	<div class="margin-vertical-xl">
+		<a href="{{$parentURL}}" class="button primary">Continue to Profile Page {{icon "arrow-right"}}</a>
+	</div>
+
 </div>

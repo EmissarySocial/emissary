@@ -1,14 +1,9 @@
-<div class="flex-row" style="align-items:center;">
-	<img src="{{.IconURL}}" class="circle-64">
-	<div>
-		<h1 style="margin-bottom:0px">Follow {{.DisplayName}}</h1>
-		<div class="text-gray">{{.ProfileURL}}</div>
-	</div>
+{{- template "follow-heading" . -}}
+
+<h3>Sign Up for Email Updates</h3>
+<div class="margin-bottom">
+	Enter your name and email below, to receive updates from <b>{{.DisplayName}}</b> in your email inbox.
 </div>
-
-<hr>
-
-<h3>Enter Your Email Address</h3>
 
 <form action="/.follower/new" method="post">
 
