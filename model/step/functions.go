@@ -1,19 +1,11 @@
 package step
 
 import (
-	"text/template"
-	"time"
+	"html/template"
 
-	"github.com/benpate/rosetta/convert"
+	"github.com/EmissarySocial/emissary/tools/templates"
 )
 
 func FuncMap() template.FuncMap {
-
-	return map[string]any{
-		"now": time.Now,
-		"shortTime": func(value any) string {
-			valueTime := convert.Time(value)
-			return valueTime.Format("3:04:05 PM")
-		},
-	}
+	return templates.FuncMap(nil)
 }

@@ -10,7 +10,6 @@ import (
 	"github.com/benpate/rosetta/channel"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 
 	mail "github.com/xhit/go-simple-mail/v2"
@@ -90,12 +89,13 @@ func (service *ServerEmail) watch() {
 	// All Watchers Started.  Now Listen for Changes
 	for {
 		select {
+
 		case <-changes:
 			service.loadTemplates()
+
 		case <-service.refresh:
 			return
 		}
-
 	}
 }
 
@@ -126,8 +126,6 @@ func (service *ServerEmail) loadTemplates() {
 func (service *ServerEmail) Send(smtpConnection config.SMTPConnection, message *mail.Email, templateName string, data any) error {
 
 	const location = "service.ServerEmail.Send"
-
-	spew.Dump("serverEmail.Send", data)
 
 	// If the SMTP Connection is empty, then don't try to send an email
 	if smtpConnection.IsNil() {
