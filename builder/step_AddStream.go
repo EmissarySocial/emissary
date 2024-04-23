@@ -211,11 +211,6 @@ func (step StepAddStream) Post(builder Builder, buffer io.Writer) PipelineBehavi
 		return Halt().WithError(derp.Wrap(err, location, "Error setting stream data"))
 	}
 
-	// Apply roles to the new Stream
-	if err := step.setRoles(builder, &newStream); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error setting roles"))
-	}
-
 	// Create a builder for the new Stream
 	newBuilder, err := NewStream(factory, builder.request(), builder.response(), template, &newStream, "create")
 	newBuilder.setArguments(builder.getArguments())
@@ -300,40 +295,6 @@ func (step StepAddStream) setStreamData(builder Builder, stream *model.Stream) e
 		}
 	}
 
-	return nil
-}
-
-// setRoles applies Roles to the newly created stream
-func (step StepAddStream) setRoles(builder Builder, stream *model.Stream) error {
-
-	/*
-		// Certain behaviors are only available to Stream builders
-		if streamBuilder, ok := builder.(Stream); ok {
-
-			parentStream := streamBuilder._stream
-
-			if step.CopyParentRoles {
-				stream.Permissions = parentStream.Permissions
-			}
-
-			for member, roles := range step.Roles {
-
-			}
-		}
-
-		// Certain behaviors are only available to User builders
-		if userBuilder, ok := builder.(User); ok {
-
-			user := userBuilder._user
-
-			for member, roles := range step.Roles {
-
-				switch member {
-				case model.MagicRoleMyself:
-				}
-			}
-		}
-	*/
 	return nil
 }
 
