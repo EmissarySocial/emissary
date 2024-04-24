@@ -50,7 +50,7 @@ func GetProfileImage(serverFactory *server.Factory) echo.HandlerFunc {
 
 func getProfileAttachment(serverFactory *server.Factory, field string, filespec mediaserver.FileSpec) echo.HandlerFunc {
 
-	const location = "handler.GetProfileAvatar"
+	const location = "handler.outbox.getProfileAttachment"
 
 	return func(ctx echo.Context) error {
 
@@ -80,7 +80,7 @@ func getProfileAttachment(serverFactory *server.Factory, field string, filespec 
 		}
 
 		if !isUserVisible(sterankoContext, &user) {
-			return derp.NewNotFoundError("handler.GetProfileAvatar", "User not found")
+			return derp.NewNotFoundError(location, "User not found")
 		}
 
 		// Get the icon/image value from the User
