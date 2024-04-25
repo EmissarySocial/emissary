@@ -126,7 +126,7 @@
 			roles:["self"]
 			steps:[
 				{do:"delete-attachments", all:true}
-				{do:"set-thumbnail", path:"iconId"}
+				{do:"set-data", values:{iconId:""}}
 				{do:"save", comment:"Profile photo deleted by me"}
 				{do:"reload-page"}
 			]

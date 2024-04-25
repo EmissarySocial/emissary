@@ -30,7 +30,11 @@
 		{{if .IsMyself -}}
 			<div class="flex-row margin-bottom">
 				<div class="flex-shrink-0" style="width:80px;">
-					<img src="/@{{.UserID}}/icon" class="circle-64">
+					{{- if eq "" .IconURL -}}
+						<div class="circle-64"></div>
+					{{- else -}}
+						<img src="/@{{.UserID}}/icon" class="circle-64">
+					{{- end -}}
 				</div>
 				<div style="flex-grow:1">
 					<div style="max-width:600px;">
