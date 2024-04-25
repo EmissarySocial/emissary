@@ -138,12 +138,24 @@ func (user *User) SetString(name string, value string) bool {
 		}
 
 	case "iconId":
+
+		if value == "" {
+			user.IconID = primitive.NilObjectID
+			return true
+		}
+
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
 			user.IconID = objectID
 			return true
 		}
 
 	case "imageId":
+
+		if value == "" {
+			user.IconID = primitive.NilObjectID
+			return true
+		}
+
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
 			user.ImageID = objectID
 			return true
