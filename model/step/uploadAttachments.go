@@ -29,7 +29,7 @@ func NewUploadAttachments(stepInfo mapof.Any) (UploadAttachments, error) {
 
 	return UploadAttachments{
 		Action:         action,
-		Fieldname:      first(stepInfo.GetString("fieldname"), "form"),
+		Fieldname:      first(stepInfo.GetString("fieldname"), "file"),
 		AttachmentPath: stepInfo.GetString("attachment-path"),
 		DownloadPath:   stepInfo.GetString("download-path"),
 		FilenamePath:   stepInfo.GetString("filename-path"),
