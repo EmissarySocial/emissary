@@ -26,7 +26,9 @@ behavior blockselect(link)
 			set link to the first <[href],[hx-get],[hx-post]/> in me
 		end
 
-		send click to the link
+		if link is not null then
+			send click to the link
+		end
 
 	end
 end
