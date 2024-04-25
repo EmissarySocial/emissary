@@ -42,7 +42,7 @@
 
 	/* Scrolling behavior */
 	display:flow-root;
-	overflow-y: scroll;
+	overflow-y: auto;
 
 	/* Display properties for visible dialog */
 	position:relative;
