@@ -127,7 +127,7 @@
 			roles: ["owner", "editor"]
 			steps: [
 				{do:"with-draft", steps: [
-					{do:"upload-attachments", accept-type:"image/*", category:"image"}
+					{do:"upload-attachments", category:"image", accept-type:"image/*"}
 				]}
 			]
 		}
