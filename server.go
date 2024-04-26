@@ -334,7 +334,7 @@ func openLocalhostBrowser(factory *server.Factory, options ...config.Option) {
 		time.Sleep(500 * time.Millisecond)
 
 		if err := browser.OpenURL("http://localhost" + portString + "/"); err != nil {
-			derp.Report(derp.Wrap(err, "server.openLocalhostBrowser", "OS Error opening browser window"))
+			log.Debug().Err(err).Msg("Unable to open setup tool browser window. Visit http://localhost" + portString + "/ in your web browser to edit Emissary settings")
 		}
 
 	} else {
