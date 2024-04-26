@@ -45,6 +45,8 @@ func NewDomain() Domain {
 // Refresh updates any stateful data that is cached inside this service.
 func (service *Domain) Refresh(collection data.Collection, configuration config.Domain, themeService *Theme, userService *User, providerService *Provider, funcMap template.FuncMap, hostname string) {
 
+	const location = "service.Domain.Refresh"
+
 	service.collection = collection
 	service.configuration = configuration
 	service.themeService = themeService
@@ -56,12 +58,12 @@ func (service *Domain) Refresh(collection data.Collection, configuration config.
 	service.domain = model.NewDomain()
 
 	if _, err := service.LoadOrCreateDomain(); err != nil {
-		derp.Report(derp.Wrap(err, "service.Domain.Refresh", "Domain Not Ready: Error loading domain record"))
+		derp.Report(derp.Wrap(err, location, "Domain Not Ready: Error loading domain record"))
 		return
 	}
 
 	if err := queries.UpgradeMongoDB(configuration.ConnectString, configuration.DatabaseName, &service.domain); err != nil {
-		derp.Report(derp.Wrap(err, "service.Domain.Refresh", "Domain Not Ready: Error upgrading domain record"))
+		derp.Report(derp.Wrap(err, location, "Domain Not Ready: Error upgrading domain record"))
 		return
 	}
 
@@ -86,7 +88,7 @@ func (service *Domain) LoadDomain() (model.Domain, error) {
 
 	// Try to load the domain from the database
 	if err := service.collection.Load(exp.All(), &service.domain); err != nil {
-		return service.domain, derp.Wrap(err, "service.Domain.Refresh", "Domain Not Ready: Error loading domain record")
+		return service.domain, derp.Wrap(err, "service.Domain.LoadDomain", "Domain Not Ready: Error loading domain record")
 	}
 
 	// Success.
@@ -96,6 +98,8 @@ func (service *Domain) LoadDomain() (model.Domain, error) {
 // LoadOrCreate domain guarantees that a domain record exists in the database.
 // It returns A COPY of the service domain.
 func (service *Domain) LoadOrCreateDomain() (model.Domain, error) {
+
+	const location = "service.Domain.LoadOrCreateDomain"
 
 	// If the domain has already been loaded, then just return it.
 	if service.domain.NotEmpty() {
@@ -114,14 +118,14 @@ func (service *Domain) LoadOrCreateDomain() (model.Domain, error) {
 	if derp.NotFound(err) {
 
 		if err := service.Save(service.domain, "Created Domain Record"); err != nil {
-			return service.domain, derp.Wrap(err, "service.Domain.Refresh", "Error creating new domain record")
+			return service.domain, derp.Wrap(err, location, "Error creating new domain record")
 		}
 
 		return service.domain, nil
 	}
 
 	// Ouch.  This is really bad.  Return the error.
-	return service.domain, derp.Wrap(err, "service.Domain.Refresh", "Domain Not Ready: Error loading domain record")
+	return service.domain, derp.Wrap(err, location, "Domain Not Ready: Error loading domain record")
 }
 
 /******************************************
