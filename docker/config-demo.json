@@ -1,0 +1,59 @@
+{
+    "domains": [
+        {
+            "domainId": "66035ca755847621dc21a5b0",
+            "label": "localhost",
+            "hostname": "localhost",
+            "connectString": "mongodb://mongodb",
+            "databaseName": "emissary-localhost",
+            "smtp": {
+                "hostname": "",
+                "username": "",
+                "password": "",
+                "port": 0,
+                "tls": false
+            },
+            "owner": {
+                "displayName": "",
+                "username": "",
+                "emailAddress": "",
+                "phoneNumber": "",
+                "mailingAddress": ""
+            },
+            "keyEncryptingKey": "abcdefghijklmnopqrstuvwxyz123456"
+        }
+    ],
+    "providers": null,
+    "templates": [
+        {
+            "adapter": "EMBED",
+            "location": "templates"
+        }
+    ],
+    "emails": [
+        {
+            "adapter": "EMBED",
+            "location": "emails"
+        }
+    ],
+    "attachmentOriginals": {
+        "adapter": "FILE",
+        "location": "/data/uploads/originals"
+    },
+    "attachmentCache": {
+        "adapter": "FILE",
+        "location": "/data/uploads/cache"
+    },
+    "certificates": {
+        "adapter": "FILE",
+        "location": "/data/uploads/certificates"
+    },
+    "activityPubCache": {
+        "connectString": "mongodb://mongodb",
+        "database": "activitystream"
+    },
+    "adminEmail": "",
+    "httpPort": 8080,
+    "httpsPort": 0,
+    "debugLevel": "Trace"
+}
