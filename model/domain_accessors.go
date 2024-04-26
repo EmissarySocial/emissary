@@ -8,13 +8,13 @@ import (
 func DomainSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"domainId":    schema.String{Format: "objectId", Required: true},
-			"themeId":     schema.String{MaxLength: 128, Required: true},
-			"label":       schema.String{MinLength: 1, MaxLength: 128, Required: true},
-			"description": schema.String{MinLength: 1, MaxLength: 1024, Required: false},
+			"domainId":    schema.String{Format: "objectId"},
+			"themeId":     schema.String{MaxLength: 128},
+			"label":       schema.String{MaxLength: 128},
+			"description": schema.String{MaxLength: 1024},
 			"forward":     schema.String{Format: "url", Required: false},
 			"data":        schema.Object{Wildcard: schema.String{}},
-			"colorMode":   schema.String{Enum: []string{DomainColorModeAuto, DomainColorModeLight, DomainColorModeDark}, Required: true},
+			"colorMode":   schema.String{Enum: []string{DomainColorModeAuto, DomainColorModeLight, DomainColorModeDark}},
 			"signupForm":  SignupFormSchema(),
 		},
 	}
