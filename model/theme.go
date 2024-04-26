@@ -39,12 +39,13 @@ func NewTheme(templateID string, funcMap template.FuncMap) Theme {
 
 	return Theme{
 		ThemeID:        templateID,
+		Extends:        make([]string, 0),
+		HTMLTemplate:   template.New("").Funcs(funcMap),
 		Bundles:        mapof.NewObject[Bundle](),
 		Datasets:       mapof.NewObject[mapof.Any](),
 		StartupStreams: make([]mapof.Any, 0),
 		StartupGroups:  make([]mapof.Any, 0),
 		DefaultFolders: make([]mapof.Any, 0),
-		HTMLTemplate:   template.New("").Funcs(funcMap),
 		DefaultInbox:   "user-inbox",
 		DefaultOutbox:  "user-outbox",
 		Form:           form.NewElement(),
