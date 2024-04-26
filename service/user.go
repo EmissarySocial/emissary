@@ -103,7 +103,7 @@ func (service *User) Save(user *model.User, note string) error {
 
 	isNew := user.IsNew()
 
-	// Special steps to tak on initial creation
+	// Special steps to take on initial creation
 	if isNew {
 
 		// RULE: Set default inbox/outbox values based on the Theme
