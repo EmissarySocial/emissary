@@ -13,7 +13,6 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/sherlock"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -240,7 +239,6 @@ func (service *Follower) LoadBySecret(followerID primitive.ObjectID, secret stri
 	}
 
 	// Verify that the secret matches
-	spew.Dump(follower)
 	if follower.Data.GetString("secret") != secret {
 		return derp.NewForbiddenError(location, "Invalid secret", followerID)
 	}
