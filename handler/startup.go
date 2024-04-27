@@ -92,7 +92,7 @@ func PostStartup(serverFactory *server.Factory) echo.HandlerFunc {
 
 		// Load/Initialize the Domain value
 		domainService := factory.Domain()
-		domain, err := domainService.LoadOrCreateDomain()
+		domain, err := domainService.LoadDomain()
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error loading domain")

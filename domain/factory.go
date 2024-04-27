@@ -123,13 +123,13 @@ func NewFactory(domain config.Domain, providers []config.Provider, activityServi
 	factory.streamDraftService = service.NewStreamDraft()
 	factory.userService = service.NewUser()
 
-	// Start() is okay here because it will check for nil configuration before polling.
-	go factory.followingService.Start()
-
 	// Refresh the configuration with values that (may) change during the lifetime of the factory
 	if err := factory.Refresh(domain, providers, attachmentOriginals, attachmentCache); err != nil {
 		return nil, derp.Wrap(err, "domain.NewFactory", "Error creating factory", domain)
 	}
+
+	// Start() is okay here because it will check for nil configuration before polling.
+	go factory.followingService.Start()
 
 	// Success!
 	return &factory, nil
@@ -360,6 +360,10 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 	factory.emailService.Refresh(
 		domain,
 	)
+
+	if err := factory.domainService.Start(); err != nil {
+		return derp.Wrap(err, "domain.NewFactory", "Error starting domain service", domain)
+	}
 
 	factory.config = domain
 	factory.providers = providers

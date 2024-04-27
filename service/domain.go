@@ -16,6 +16,7 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
+	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/oauth2"
 )
@@ -35,7 +36,9 @@ type Domain struct {
 
 // NewDomain returns a fully initialized Domain service
 func NewDomain() Domain {
-	return Domain{}
+	return Domain{
+		domain: model.NewDomain(),
+	}
 }
 
 /******************************************
@@ -45,8 +48,6 @@ func NewDomain() Domain {
 // Refresh updates any stateful data that is cached inside this service.
 func (service *Domain) Refresh(collection data.Collection, configuration config.Domain, themeService *Theme, userService *User, providerService *Provider, funcMap template.FuncMap, hostname string) {
 
-	const location = "service.Domain.Refresh"
-
 	service.collection = collection
 	service.configuration = configuration
 	service.themeService = themeService
@@ -55,19 +56,41 @@ func (service *Domain) Refresh(collection data.Collection, configuration config.
 	service.funcMap = funcMap
 	service.hostname = hostname
 
-	service.domain = model.NewDomain()
-
-	if _, err := service.LoadOrCreateDomain(); err != nil {
-		derp.Report(derp.Wrap(err, location, "Domain Not Ready: Error loading domain record"))
-		return
-	}
-
-	if err := queries.UpgradeMongoDB(configuration.ConnectString, configuration.DatabaseName, &service.domain); err != nil {
-		derp.Report(derp.Wrap(err, location, "Domain Not Ready: Error upgrading domain record"))
-		return
-	}
-
 	service.ready = true
+}
+
+// Init domain guarantees that a domain record exists in the database.
+// It returns A COPY of the service domain.
+func (service *Domain) Start() error {
+
+	const location = "service.Domain.LoadOrCreateDomain"
+
+	if err := queries.UpgradeMongoDB(service.configuration.ConnectString, service.configuration.DatabaseName, &service.domain); err != nil {
+		return derp.Wrap(err, location, "Domain Not Ready: Error upgrading domain record")
+	}
+
+	// Try to load the domain from the database
+	err := service.collection.Load(exp.All(), &service.domain)
+
+	// If loaded the domain successfully, then return
+	if err == nil {
+		return nil
+	}
+
+	// If "Not Found" then initialize and return
+	if derp.NotFound(err) {
+
+		service.domain.Label = service.configuration.Label
+
+		if err := service.Save(service.domain, "Created Domain Record"); err != nil {
+			return derp.Wrap(err, location, "Error creating new domain record")
+		}
+
+		return nil
+	}
+
+	// Ouch.  This is really bad.  Return the error.
+	return derp.Wrap(err, location, "Domain Not Ready: Error loading domain record")
 }
 
 // Close stops the following service watcher
@@ -95,41 +118,6 @@ func (service *Domain) LoadDomain() (model.Domain, error) {
 	return service.domain, nil
 }
 
-// LoadOrCreate domain guarantees that a domain record exists in the database.
-// It returns A COPY of the service domain.
-func (service *Domain) LoadOrCreateDomain() (model.Domain, error) {
-
-	const location = "service.Domain.LoadOrCreateDomain"
-
-	// If the domain has already been loaded, then just return it.
-	if service.domain.NotEmpty() {
-		return service.domain, nil
-	}
-
-	// Try to load the domain from the database
-	err := service.collection.Load(exp.All(), &service.domain)
-
-	// If loaded the domain successfully, then return
-	if err == nil {
-		return service.domain, nil
-	}
-
-	// If "Not Found" then initialize and return
-	if derp.NotFound(err) {
-
-		service.domain.Label = service.configuration.Label
-
-		if err := service.Save(service.domain, "Created Domain Record"); err != nil {
-			return service.domain, derp.Wrap(err, location, "Error creating new domain record")
-		}
-
-		return service.domain, nil
-	}
-
-	// Ouch.  This is really bad.  Return the error.
-	return service.domain, derp.Wrap(err, location, "Domain Not Ready: Error loading domain record")
-}
-
 /******************************************
  * Common Data Methods
  ******************************************/
@@ -145,6 +133,8 @@ func (service *Domain) GetPointer() *model.Domain {
 
 // Save updates the value of this domain in the database (and in-memory cache)
 func (service *Domain) Save(domain model.Domain, note string) error {
+
+	firstSave := domain.IsNew()
 
 	// Validate the value using the default domain schema
 	if err := model.DomainSchema().Validate(&domain); err != nil {
@@ -163,6 +153,29 @@ func (service *Domain) Save(domain model.Domain, note string) error {
 
 	// Update the in-memory cache
 	service.domain = domain
+
+	// If this is the first time saving a local domain, create an initial admin user.
+	if firstSave && service.IsLocalhost() {
+
+		go func() {
+			log.Trace().Msg("Creating admin user for local host")
+
+			admin := model.NewUser()
+			admin.DisplayName = "Admin"
+			admin.Username = "admin"
+			admin.EmailAddress = "admin@localhost"
+			admin.SetPassword("admin")
+			admin.IsOwner = true
+			admin.IsPublic = true
+
+			if err := service.userService.Save(&admin, "Create admin user for local host"); err != nil {
+				derp.Report(derp.Wrap(err, "service.Domain.Save", "Error creating admin user for local host"))
+				return
+			}
+
+			log.Trace().Msg("Added admin user for local host")
+		}()
+	}
 
 	return nil
 }

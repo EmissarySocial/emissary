@@ -113,7 +113,7 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 
 func (factory *Factory) start() {
 
-	log.Debug().Msg("Factory: waiting for configuration file...")
+	log.Debug().Msg("Factory: waiting for configuration...")
 
 	filesystemService := factory.Filesystem()
 
@@ -453,7 +453,7 @@ func (factory *Factory) ByDomainName(name string) (*domain.Factory, error) {
 		return domain, nil
 	}
 
-	return nil, derp.NewNotFoundError("server.Factory.ByDomainName", "Unrecognized domain name", name)
+	return nil, derp.NewNotFoundError("server.Factory.ByDomainName", "Unrecognized domain name", name, factory.config)
 }
 
 // NormalizeHostname removes some inconsistencies in host names, including a leading "www", if present

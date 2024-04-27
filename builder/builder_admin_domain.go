@@ -54,7 +54,7 @@ func NewDomain(factory Factory, request *http.Request, response http.ResponseWri
 
 	// Find/Create new database record for the domain.
 	domainService := factory.Domain()
-	if _, err := domainService.LoadOrCreateDomain(); err != nil {
+	if _, err := domainService.LoadDomain(); err != nil {
 		return Domain{}, derp.Wrap(err, location, "Error creating a new Domain")
 	}
 
