@@ -55,5 +55,6 @@
     "adminEmail": "",
     "httpPort": 8080,
     "httpsPort": 0,
-    "debugLevel": "Trace"
+    "debugLevel": "Debug",
+    "createOwner": true
 }

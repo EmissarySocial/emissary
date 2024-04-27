@@ -1,23 +1,37 @@
-version: '3.8'
+# This docker-compose file starts up a Emissary server where you
+# can "kick the tires" and see how it works. You should probably 
+# not use this in production.
+# 
+# It defaults to serving one domain "localhost" on port 8080.
+name: emissary_demo
+
 services:
-  emissary:
+
+  # This is the Emissary server that runs a single "localhost" domain on port 8080.
+  # It runs on http://localhost:8080
+  server:
+    container_name: emissary_demo_server
     build:
       context: .
-      dockerfile: ./docker/Dockerfile
+      dockerfile: ./docker/demo-dockerfile
     ports:
       - "8080:8080"
     environment:
       - EMISSARY_CONFIG=file:///data/config/config.json
-      - WAIT_FOR_CONFIG=1
     depends_on:
       - mongodb
-      - smtp
     volumes:
-      - configdata:/data/config
+      - config:/data/config
+      - uploads:/data/uploads
+
+  # The setup tool creates/modifies the server configuration,
+  # although you probably won't have to use it much for this demo.
+  # It runs on http://localhost:8888
   setup:
+    container_name: emissary_demo_setup
     build:
       context: .
-      dockerfile: ./docker/Dockerfile
+      dockerfile: ./docker/demo-dockerfile
     ports:
       - "8888:8888"
     environment:
@@ -25,19 +39,20 @@ services:
     command: ["--setup", "--port", "8888"]
     depends_on:
       - mongodb
-      - smtp
     volumes:
-      - configdata:/data/config
+      - config:/data/config
+
+  # This mongo database stores data for the Emissary site.
+  # You can connect to it using any MongoDB client.
   mongodb:
+    container_name: emissary_demo_database
     image: "mongo:latest"
     ports:
       - "27017:27017"
     volumes:
-      - mongodata:/data/db
-  smtp:
-    image: ghcr.io/literalgarage/smtp-logger:latest
-    ports:
-        - "8025:8025"
+      - mongo:/data/db
+
 volumes:
-  mongodata:
-  configdata:
+  config:
+  mongo:
+  uploads:

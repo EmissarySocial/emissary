@@ -16,6 +16,7 @@ type Domain struct {
 	SMTPConnection   SMTPConnection `json:"smtp"             bson:"smtp"`             // Information for connecting to an SMTP server to send email on behalf of the domain.
 	Owner            Owner          `json:"owner"            bson:"owner"`            // Information about the owner of this domain
 	KeyEncryptingKey string         `json:"keyEncryptingKey" bson:"keyEncryptingKey"` // Key used to encrypt/decrypt JWT keys stored in the database
+	CreateOwner      bool           `json:"createOwner"      bson:"createOwner"`      // TRUE if the owner should be created when the domain is created
 }
 
 // NewDomain returns a fully initialized Domain object.

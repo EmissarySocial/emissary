@@ -155,26 +155,23 @@ func (service *Domain) Save(domain model.Domain, note string) error {
 	service.domain = domain
 
 	// If this is the first time saving a local domain, create an initial admin user.
-	if firstSave && service.IsLocalhost() {
+	if firstSave && service.configuration.CreateOwner && service.IsLocalhost() {
 
-		go func() {
-			log.Trace().Msg("Creating admin user for local host")
+		log.Trace().Msg("Creating admin user for local host")
 
-			admin := model.NewUser()
-			admin.DisplayName = "Admin"
-			admin.Username = "admin"
-			admin.EmailAddress = "admin@localhost"
-			admin.SetPassword("admin")
-			admin.IsOwner = true
-			admin.IsPublic = true
+		admin := model.NewUser()
+		admin.DisplayName = "Admin"
+		admin.Username = "admin"
+		admin.EmailAddress = "admin@localhost"
+		admin.SetPassword("admin")
+		admin.IsOwner = true
+		admin.IsPublic = true
 
-			if err := service.userService.Save(&admin, "Create admin user for local host"); err != nil {
-				derp.Report(derp.Wrap(err, "service.Domain.Save", "Error creating admin user for local host"))
-				return
-			}
+		if err := service.userService.Save(&admin, "Create admin user for local host"); err != nil {
+			return derp.Wrap(err, "service.Domain.Save", "Error creating admin user for local host")
+		}
 
-			log.Trace().Msg("Added admin user for local host")
-		}()
+		log.Trace().Msg("Added admin user for local host")
 	}
 
 	return nil

@@ -1,4 +1,4 @@
-FROM golang:1.21-bookworm as builder
+FROM golang:1.22.2-bookworm as builder
 
 # Set the Current Working Directory inside the container
 WORKDIR /app
@@ -18,11 +18,15 @@ RUN go build -o emissary server.go
 # Start a new stage from scratch
 FROM debian:bookworm-slim
 
+# Install ffmpeg
+# This is required for audio/video transcoding
+RUN apt-get update -y
+RUN apt-get install -y ffmpeg
+
 WORKDIR /app
 
 # Copy the Pre-built binary file from the previous stage
 COPY --from=builder /app/emissary .
-COPY --from=builder /app/docker/entrypoint.sh .
 
 # Entrypoint script
-ENTRYPOINT [ "/app/entrypoint.sh" ]
+ENTRYPOINT [ "/app/emissary" ]

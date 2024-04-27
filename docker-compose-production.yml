@@ -1,0 +1,19 @@
+# This docker-compose file starts up a Emissary server for
+# production use. This file assumes:
+# 1) you will configure Emissary using a mongodb database.
+# 2) the mongo database exists outside of this Docker config.
+# 3) you have configured ENVIRONMENT VARIABLES to point to it.
+#
+# After installing this server, you will need to run the
+# setup tool from another location to configure the server's
+# settings and domains
+
+name: emissary_prod
+services:
+  emissary:
+    build:
+      context: .
+      dockerfile: ./docker/prod-dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
