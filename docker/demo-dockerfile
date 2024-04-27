@@ -27,7 +27,7 @@ WORKDIR /app
 
 # Copy the Pre-built binary file from the previous stage
 COPY --from=builder /app/emissary .
-COPY --from=builder /app/docker/config-demo.json /data/config/demo.json
+COPY --from=builder /app/docker/demo-config.json /data/config/config.json
 
 # Entrypoint script
 ENTRYPOINT [ "/app/emissary" ]
