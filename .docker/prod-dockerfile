@@ -1,3 +1,11 @@
+# This is a standard Dockerfile for building a Go app.
+# It is a multi-stage build: the first stage compiles the Go source into a binary, and
+# the second stage copies only the binary into an bookwork base.
+
+#################
+# -- Stage 1 -- #
+# Compile the app.
+
 FROM golang:1.22.2-bookworm as builder
 
 # Set the Current Working Directory inside the container
@@ -15,7 +23,9 @@ COPY . .
 # Build the Go app
 RUN go build -o emissary server.go
 
-# Start a new stage from scratch
+#################
+# -- Stage 2 -- #
+# Create the final environment with the compiled binary.
 FROM debian:bookworm-slim
 
 # Install ffmpeg
