@@ -13,7 +13,7 @@ services:
   emissary:
     build:
       context: .
-      dockerfile: ./docker/prod-dockerfile
+      dockerfile: ./.docker/prod-dockerfile
     ports:
       - "80:80"
       - "443:443"
