@@ -1,0 +1,13 @@
+spec:
+  name: sample-golang
+  services:
+  - name: emissary_server
+    git:
+      branch: main
+      repo_clone_url: https://github.com/EmissarySocial/emissary.git
+    dockerfile_path: ".docker/prod-dockerfile"
+    envs:
+    - key: EMISSARY_CONFIG
+      value: "mongodb://<mongodb-connection-string>"
+      type: SECRET
+  
