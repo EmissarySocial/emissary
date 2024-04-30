@@ -1,7 +1,7 @@
 spec:
-  name: sample-golang
+  name: emissary
   services:
-  - name: emissary_server
+  - name: server
     git:
       branch: main
       repo_clone_url: https://github.com/EmissarySocial/emissary.git
