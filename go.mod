@@ -3,7 +3,7 @@ module github.com/EmissarySocial/emissary
 go 1.22.2
 
 require (
-	github.com/PuerkitoBio/goquery v1.9.1
+	github.com/PuerkitoBio/goquery v1.9.2
 	github.com/aws/aws-sdk-go v1.51.28
 	github.com/benpate/color v0.1.0
 	github.com/benpate/data v0.28.4
