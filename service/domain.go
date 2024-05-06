@@ -65,32 +65,28 @@ func (service *Domain) Start() error {
 
 	const location = "service.Domain.LoadOrCreateDomain"
 
-	if err := queries.UpgradeMongoDB(service.configuration.ConnectString, service.configuration.DatabaseName, &service.domain); err != nil {
-		return derp.Wrap(err, location, "Domain Not Ready: Error upgrading domain record")
-	}
-
 	// Try to load the domain from the database
-	err := service.collection.Load(exp.All(), &service.domain)
+	if err := service.collection.Load(exp.All(), &service.domain); err != nil {
 
-	// If loaded the domain successfully, then return
-	if err == nil {
-		return nil
-	}
+		// If it's a "real" error, then we can't continue.
+		if !derp.NotFound(err) {
+			return derp.Wrap(err, location, "Error loading domain record")
+		}
 
-	// If "Not Found" then initialize and return
-	if derp.NotFound(err) {
-
+		// If "Not Found", then this is the first run.  Create a new domain record.
 		service.domain.Label = service.configuration.Label
 
 		if err := service.Save(service.domain, "Created Domain Record"); err != nil {
 			return derp.Wrap(err, location, "Error creating new domain record")
 		}
-
-		return nil
 	}
 
-	// Ouch.  This is really bad.  Return the error.
-	return derp.Wrap(err, location, "Domain Not Ready: Error loading domain record")
+	// Once we have the domain loaded, try to upgrade the database
+	if err := queries.UpgradeMongoDB(service.configuration.ConnectString, service.configuration.DatabaseName, &service.domain); err != nil {
+		return derp.Wrap(err, location, "Domain Not Ready: Error upgrading domain record")
+	}
+
+	return nil
 }
 
 // Close stops the following service watcher
