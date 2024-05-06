@@ -61,6 +61,7 @@ func TestStreamSchema(t *testing.T) {
 
 		{"publishDate", 12345678, int64(12345678)},
 		{"unpublishDate", 123456789, int64(123456789)},
+		{"isFeatured", true, nil},
 	}
 
 	tableTest_Schema(t, &s, &stream, tests)

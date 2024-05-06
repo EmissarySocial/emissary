@@ -21,6 +21,7 @@ type StreamSummary struct {
 	InReplyTo      string             `json:"inReplyTo,omitempty"    bson:"inReplyTo,omitempty"`    // If this stream is a reply to another stream or web page, then this links to the original document.
 	PublishDate    int64              `json:"publishDate"            bson:"publishDate"`            // Date when this stream was published
 	Rank           int                `json:"rank"                   bson:"rank"`                   // If Template uses a custom sort order, then this is the value used to determine the position of this Stream.
+	IsFeatured     bool               `json:"isFeatured"             bson:"isFeatured"`             // If this Stream is "featured" then it will be displayed in a special location on the page.
 }
 
 // NewStream returns a fully initialized Stream object.
@@ -36,7 +37,7 @@ func NewStreamSummary() StreamSummary {
 }
 
 func StreamSummaryFields() []string {
-	return []string{"_id", "parentId", "token", "templateId", "url", "label", "summary", "content", "data", "iconUrl", "attributedTo", "inReplyTo", "publishDate", "rank"}
+	return []string{"_id", "parentId", "token", "templateId", "url", "label", "summary", "content", "data", "iconUrl", "attributedTo", "inReplyTo", "publishDate", "rank", "isFeatured"}
 }
 
 func (summary StreamSummary) Fields() []string {

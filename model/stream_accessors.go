@@ -35,6 +35,7 @@ func StreamSchema() schema.Element {
 			"data":             schema.Object{Wildcard: schema.Any{}},
 			"publishDate":      schema.Integer{BitSize: 64},
 			"unpublishDate":    schema.Integer{BitSize: 64},
+			"isFeatured":       schema.Boolean{},
 		},
 	}
 }
@@ -132,6 +133,9 @@ func (stream *Stream) GetPointer(name string) (any, bool) {
 
 	case "token":
 		return &stream.Token, true
+
+	case "isFeatured":
+		return &stream.IsFeatured, true
 
 	default:
 		return nil, false
