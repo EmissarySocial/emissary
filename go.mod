@@ -18,7 +18,7 @@ require (
 	github.com/benpate/hannibal v0.10.0
 	github.com/benpate/html v0.16.5
 	github.com/benpate/icon v0.4.0
-	github.com/benpate/mediaserver v0.10.16
+	github.com/benpate/mediaserver v0.11.1
 	github.com/benpate/remote v0.15.0
 	github.com/benpate/rosetta v0.21.0
 	github.com/benpate/sherlock v0.7.1
@@ -71,12 +71,9 @@ require (
 	github.com/alecthomas/chroma/v2 v2.13.0 // indirect
 	github.com/andybalholm/cascadia v1.3.2 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
-	github.com/benpate/exiffix v0.1.0 // indirect
 	github.com/benpate/re v0.2.3 // indirect
-	github.com/chai2010/webp v1.1.1 // indirect
 	github.com/cloudflare/circl v1.3.8 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.4 // indirect
-	github.com/disintegration/imaging v1.6.2 // indirect
 	github.com/dlclark/regexp2 v1.11.0 // indirect
 	github.com/dyatlov/go-opengraph/opengraph v0.0.0-20220524092352-606d7b1e5f8a // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
@@ -101,12 +98,9 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/montanaflynn/stats v0.7.1 // indirect
-	github.com/muesli/smartcrop v0.3.0 // indirect
-	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646 // indirect
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/rwcarlsen/goexif v0.0.0-20190401172101-9e8deecbddbd // indirect
 	github.com/sergi/go-diff v1.3.2-0.20230802210424-5b0b94c5c0d3 // indirect
 	github.com/skeema/knownhosts v1.2.2 // indirect
 	github.com/tdewolff/parse/v2 v2.7.13 // indirect
@@ -122,8 +116,8 @@ require (
 	golang.org/x/image v0.15.0 // indirect
 	golang.org/x/net v0.24.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
-	golang.org/x/sys v0.19.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
+	golang.org/x/sys v0.20.0 // indirect
+	golang.org/x/text v0.15.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
