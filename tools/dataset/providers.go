@@ -8,18 +8,26 @@ func Providers() []form.LookupCode {
 
 	return []form.LookupCode{
 		{
-			Value:       "FACEBOOK",
-			Label:       "Facebook",
-			Icon:        "facebook",
-			Description: "TBD",
-			Group:       "OAUTH",
-		},
-		{
 			Value:       "GIPHY",
 			Label:       "Giphy",
 			Icon:        "film",
 			Description: "TBD",
 			Group:       "MANUAL",
+		},
+		{
+			Value:       "STRIPE",
+			Label:       "Stripe",
+			Icon:        "stripe",
+			Description: "To migrate from original API key",
+			Group:       "MANUAL",
+		},
+		/* REMOVED FOR NOW
+		{
+			Value:       "FACEBOOK",
+			Label:       "Facebook",
+			Icon:        "facebook",
+			Description: "TBD",
+			Group:       "OAUTH",
 		},
 		{
 			Value:       "INSTAGRAM",
@@ -35,14 +43,6 @@ func Providers() []form.LookupCode {
 			Description: "TBD",
 			Group:       "OAUTH",
 		},
-		{
-			Value:       "STRIPE",
-			Label:       "Stripe",
-			Icon:        "stripe",
-			Description: "To migrate from original API key",
-			Group:       "MANUAL",
-		},
-		/* REMOVED FOR NOW
 		{
 			Value:       "TWITTER",
 			Label:       "Twitter",
