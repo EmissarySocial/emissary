@@ -63,7 +63,7 @@ func (service *Domain) Refresh(collection data.Collection, configuration config.
 // It returns A COPY of the service domain.
 func (service *Domain) Start() error {
 
-	const location = "service.Domain.LoadOrCreateDomain"
+	const location = "service.Domain.Start"
 
 	// Try to load the domain from the database
 	if err := service.collection.Load(exp.All(), &service.domain); err != nil {
@@ -246,31 +246,6 @@ func (service *Domain) UserDefaults() (string, string) {
 // HasSignupForm returns TRUE if this domain allows new users to sign up.
 func (service *Domain) HasSignupForm() bool {
 	return service.domain.HasSignupForm()
-}
-
-// ActiveClients returns all active Clients for this domain
-func (service *Domain) ActiveClients() []model.Client {
-
-	// List all clients, filtering by "active" ones.
-	result := make([]model.Client, 0, len(service.domain.Clients))
-
-	for _, client := range service.domain.Clients {
-		if client.Active {
-			result = append(result, client)
-		}
-	}
-
-	// Success
-	return result
-}
-
-func (service *Domain) Client(providerID string) model.Client {
-
-	if client, ok := service.domain.Clients[providerID]; ok {
-		return client
-	}
-
-	return model.NewClient(providerID)
 }
 
 // Provider returns the external Provider that matches the given providerID

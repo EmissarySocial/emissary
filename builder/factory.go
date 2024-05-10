@@ -24,7 +24,7 @@ type Factory interface {
 	Model(string) (service.ModelService, error)
 	ActivityStream() *service.ActivityStream
 	Attachment() *service.Attachment
-	Rule() *service.Rule
+	Connection() *service.Connection
 	Folder() *service.Folder
 	Following() *service.Following
 	Follower() *service.Follower
@@ -34,6 +34,7 @@ type Factory interface {
 	Outbox() *service.Outbox
 	Provider() *service.Provider
 	Response() *service.Response
+	Rule() *service.Rule
 	Stream() *service.Stream
 	StreamDraft() *service.StreamDraft
 	Template() *service.Template

@@ -3,11 +3,14 @@ package domain
 // CollectionAttachment is the name of the database collection where Attachments are stored
 const CollectionAttachment = "Attachment"
 
-// CollectionEncryptionKey is the name of the database collection where EncryptionKey records are stored
-const CollectionEncryptionKey = "EncryptionKey"
+// CollectionConnection is the name of the database collection where Connection records are stored
+const CollectionConnection = "Connection"
 
 // CollectionGroup is the name of the database collection where the singleton Domain record is stored
 const CollectionDomain = "Domain"
+
+// CollectionEncryptionKey is the name of the database collection where EncryptionKey records are stored
+const CollectionEncryptionKey = "EncryptionKey"
 
 // CollectionFolder is the name of the database collection where Folder records are stored
 const CollectionFolder = "Folder"

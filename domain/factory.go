@@ -45,14 +45,14 @@ type Factory struct {
 
 	// services (within this domain/factory)
 	attachmentService    service.Attachment
-	ruleService          service.Rule
-	groupService         service.Group
+	connectionService    service.Connection
 	domainService        service.Domain
 	emailService         service.DomainEmail
 	encryptionKeyService service.EncryptionKey
 	folderService        service.Folder
 	followerService      service.Follower
 	followingService     service.Following
+	groupService         service.Group
 	inboxService         service.Inbox
 	jwtService           service.JWT
 	mentionService       service.Mention
@@ -60,6 +60,7 @@ type Factory struct {
 	oauthUserToken       service.OAuthUserToken
 	outboxService        service.Outbox
 	responseService      service.Response
+	ruleService          service.Rule
 	streamService        service.Stream
 	streamDraftService   service.StreamDraft
 	realtimeBroker       RealtimeBroker
@@ -104,7 +105,7 @@ func NewFactory(domain config.Domain, providers []config.Provider, activityServi
 
 	// Create empty service pointers.  These will be populated in the Refresh() step.
 	factory.attachmentService = service.NewAttachment()
-	factory.ruleService = service.NewRule()
+	factory.connectionService = service.NewConnection()
 	factory.domainService = service.NewDomain()
 	factory.emailService = service.NewDomainEmail(serverEmail)
 	factory.encryptionKeyService = service.NewEncryptionKey()
@@ -112,13 +113,14 @@ func NewFactory(domain config.Domain, providers []config.Provider, activityServi
 	factory.followerService = service.NewFollower()
 	factory.followingService = service.NewFollowing()
 	factory.groupService = service.NewGroup()
-	factory.mentionService = service.NewMention()
 	factory.inboxService = service.NewInbox()
 	factory.jwtService = service.NewJWT()
+	factory.mentionService = service.NewMention()
 	factory.oauthClient = service.NewOAuthClient()
 	factory.oauthUserToken = service.NewOAuthUserToken()
 	factory.outboxService = service.NewOutbox()
 	factory.responseService = service.NewResponse()
+	factory.ruleService = service.NewRule()
 	factory.streamService = service.NewStream()
 	factory.streamDraftService = service.NewStreamDraft()
 	factory.userService = service.NewUser()
@@ -181,13 +183,8 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.Host(),
 		)
 
-		// Populate the Rule Service
-		factory.ruleService.Refresh(
-			factory.collection(CollectionRule),
-			factory.Outbox(),
-			factory.User(),
-			factory.Queue(),
-			factory.Host(),
+		factory.connectionService.Refresh(
+			factory.collection(CollectionConnection),
 		)
 
 		// Populate Domain Service
@@ -303,6 +300,15 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.collection(CollectionResponse),
 			factory.User(),
 			factory.Outbox(),
+			factory.Host(),
+		)
+
+		// Populate the Rule Service
+		factory.ruleService.Refresh(
+			factory.collection(CollectionRule),
+			factory.Outbox(),
+			factory.User(),
+			factory.Queue(),
 			factory.Host(),
 		)
 
@@ -468,6 +474,11 @@ func (factory *Factory) Rule() *service.Rule {
 // Domain returns a fully populated Domain service
 func (factory *Factory) Domain() *service.Domain {
 	return &factory.domainService
+}
+
+// Connection returns a fully populated Connection service
+func (factory *Factory) Connection() *service.Connection {
+	return &factory.connectionService
 }
 
 // EncryptionKey returns a fully populated EncryptionKey service
