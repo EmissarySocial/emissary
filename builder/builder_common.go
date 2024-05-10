@@ -558,12 +558,6 @@ func (w Common) AdminSections() []form.LookupCode {
 			Value: "navigation",
 			Label: "Navigation",
 		},
-		/* REMOVING EXTERNAL CONNECTIONS UNTIL THEY'RE NEEDED
-		{
-			Value: "connections",
-			Label: "Services",
-		},
-		*/
 		{
 			Value: "groups",
 			Label: "Groups",
@@ -575,6 +569,10 @@ func (w Common) AdminSections() []form.LookupCode {
 		{
 			Value: "rules",
 			Label: "Rules",
+		},
+		{
+			Value: "connections",
+			Label: "Connections",
 		},
 	}
 }
