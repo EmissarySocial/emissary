@@ -15,7 +15,7 @@
 		{{- range .Providers -}}
 			{{ $client := $builder.Client .Value }}
 			{{- if eq .Group "OAUTH" -}}
-				<div class="card align-center">
+				<div class="card align-center" script="install blockselect()">
 					<div class="text-3xl">{{icon .Icon}}</div>
 					<div class="margin-bottom text-lg bold">{{.Label}}</div>
 					<div class="margin-bottom">
@@ -26,10 +26,8 @@
 						{{- end -}}
 					</div>
 				</div>
-			{{- end -}}
-
-			{{- if eq .Group "MANUAL" -}}
-				<div class="card align-center">
+			{{- else if eq .Group "MANUAL" -}}
+				<div class="card align-center" script="install blockselect()">
 					<div class="text-3xl">{{icon .Icon}}</div>
 					<div class="margin-bottom text-lg bold">{{.Label}}</div>
 					<div class="margin-bottom">
