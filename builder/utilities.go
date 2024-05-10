@@ -130,12 +130,12 @@ func WrapForm(endpoint string, content string, encoding string, options ...strin
 	b.Div().Class("flex-row")
 	b.Div().Class("flex-grow")
 	{
-		b.Button().Type("submit").ID("inline-save-button").Class("primary").Script("install SaveButton").InnerText(submitLabel).Close()
+		b.Button().Type("submit").ID("inline-save-button").Class("primary").TabIndex("0").Script("install SaveButton").InnerText(submitLabel).Close()
 
 		if cancelButton := optionMap.GetString("cancel-button"); cancelButton != "hide" {
 			cancelLabel := first.String(optionMap.GetString("cancel-label"), "Cancel")
 			b.Space()
-			b.Button().Type("button").Script("on click trigger closeModal").InnerText(cancelLabel).Close()
+			b.Button().Type("button").Script("on click trigger closeModal").TabIndex("0").InnerText(cancelLabel).Close()
 			b.Space()
 		}
 
