@@ -23,15 +23,16 @@ import (
 
 // Domain service manages all access to the singleton model.Domain in the database
 type Domain struct {
-	collection      data.Collection
-	configuration   config.Domain
-	themeService    *Theme
-	userService     *User
-	providerService *Provider
-	funcMap         template.FuncMap
-	domain          model.Domain
-	hostname        string // domain-only name (no protocol)
-	ready           bool
+	collection        data.Collection
+	configuration     config.Domain
+	connectionService *Connection
+	providerService   *Provider
+	themeService      *Theme
+	userService       *User
+	funcMap           template.FuncMap
+	domain            model.Domain
+	hostname          string // domain-only name (no protocol)
+	ready             bool
 }
 
 // NewDomain returns a fully initialized Domain service
@@ -46,13 +47,14 @@ func NewDomain() Domain {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Domain) Refresh(collection data.Collection, configuration config.Domain, themeService *Theme, userService *User, providerService *Provider, funcMap template.FuncMap, hostname string) {
+func (service *Domain) Refresh(collection data.Collection, configuration config.Domain, connectionService *Connection, providerService *Provider, themeService *Theme, userService *User, funcMap template.FuncMap, hostname string) {
 
 	service.collection = collection
 	service.configuration = configuration
+	service.connectionService = connectionService
+	service.providerService = providerService
 	service.themeService = themeService
 	service.userService = userService
-	service.providerService = providerService
 	service.funcMap = funcMap
 	service.hostname = hostname
 
@@ -300,10 +302,10 @@ func (service *Domain) OAuthCodeURL(providerID string) (string, error) {
 	}
 
 	// Set a new "state" for this provider
-	client, err := service.NewOAuthClient(providerID)
+	connection, err := service.NewOAuthClient(providerID)
 
 	if err != nil {
-		return "", derp.Wrap(err, "service.Domain.OAuthCodeURL", "Error generating new OAuth client")
+		return "", derp.Wrap(err, "service.Domain.OAuthCodeURL", "Error generating new OAuth connection")
 	}
 
 	// Generate and return the AuthCodeURL
@@ -311,14 +313,14 @@ func (service *Domain) OAuthCodeURL(providerID string) (string, error) {
 
 	config.RedirectURL = service.OAuthClientCallbackURL(providerID)
 	/* TODO: MEDIUM: add hash value for challenge_method...
-	codeChallengeBytes := sha256.Sum256([]byte(client.GetStringOK("code_challenge")))
+	codeChallengeBytes := sha256.Sum256([]byte(connection.GetStringOK("code_challenge")))
 	codeChallenge := oauth2.SetAuthURLParam("code_challenge", random.Base64URLEncode(codeChallengeBytes[:]))
 	codeChallengeMethod := oauth2.SetAuthURLParam("code_challenge_method", "S256")
 	*/
 
-	codeChallenge := oauth2.SetAuthURLParam("code_challenge", client.Data.GetString("code_challenge"))
+	codeChallenge := oauth2.SetAuthURLParam("code_challenge", connection.Data.GetString("code_challenge"))
 	codeChallengeMethod := oauth2.SetAuthURLParam("code_challenge_method", "plain")
-	authCodeURL := config.AuthCodeURL(client.Data.GetString("state"), codeChallenge, codeChallengeMethod)
+	authCodeURL := config.AuthCodeURL(connection.Data.GetString("state"), codeChallenge, codeChallengeMethod)
 
 	return authCodeURL, nil
 }
@@ -335,15 +337,15 @@ func (service *Domain) OAuthExchange(providerID string, state string, code strin
 		return derp.NewBadRequestError(location, "Unknown OAuth Provider", providerID)
 	}
 
-	// The client must already be set up for this exchange to work.
-	client, ok := service.domain.Clients.Get(providerID)
+	// The connection must already be set up for this exchange to work.
+	connection, err := service.connectionService.LoadOrCreateByProvider(providerID)
 
-	if !ok {
+	if err != nil {
 		return derp.NewBadRequestError(location, "Unknown OAuth Provider", providerID)
 	}
 
 	// Validate the state across requests
-	if newState, _ := client.Data.GetStringOK("state"); newState != state {
+	if newState, _ := connection.Data.GetStringOK("state"); newState != state {
 		return derp.NewBadRequestError(location, "Invalid OAuth State", state)
 	}
 
@@ -351,20 +353,19 @@ func (service *Domain) OAuthExchange(providerID string, state string, code strin
 	config := provider.OAuthConfig()
 
 	token, err := config.Exchange(context.Background(), code,
-		oauth2.SetAuthURLParam("code_verifier", client.Data.GetString("code_challenge")),
+		oauth2.SetAuthURLParam("code_verifier", connection.Data.GetString("code_challenge")),
 		oauth2.SetAuthURLParam("redirect_uri", service.OAuthClientCallbackURL(providerID)))
 
 	if err != nil {
 		return derp.NewInternalError(location, "Error exchanging OAuth code for token", err.Error())
 	}
 
-	// Try to update the client with the new token
-	client.Token = token
-	client.Data = mapof.NewAny()
-	client.Active = true
-	service.domain.SetClient(client)
+	// Try to update the connection with the new token
+	connection.Token = token
+	connection.Data = mapof.NewString()
+	connection.Active = true
 
-	if service.Save(service.domain, "OAuth Exchange") != nil {
+	if service.connectionService.Save(&connection, "OAuth Exchange") != nil {
 		return derp.NewInternalError(location, "Error saving domain")
 	}
 
@@ -374,72 +375,64 @@ func (service *Domain) OAuthExchange(providerID string, state string, code strin
 
 // OAuthClientCallbackURL returns the specific callback URL to use for this host and provider.
 func (service *Domain) OAuthClientCallbackURL(providerID string) string {
-	return domain.Protocol(service.configuration.Hostname) + service.configuration.Hostname + "/oauth/clients/" + providerID + "/callback"
+	return domain.Protocol(service.configuration.Hostname) + service.configuration.Hostname + "/oauth/connections/" + providerID + "/callback"
 }
 
 // NewOAuthState generates and returns a new OAuth state for the specified provider
-func (service *Domain) NewOAuthClient(providerID string) (model.Client, error) {
+func (service *Domain) NewOAuthClient(providerID string) (model.Connection, error) {
 
 	const location = "service.Domain.NewOAuthState"
 
-	// Find or Create a client for this provider
-	client, _ := service.domain.GetClient(providerID)
+	// Find or Create a connection for this provider
+	connection, _ := service.connectionService.LoadOrCreateByProvider(providerID)
 
 	// Try to generate a new state
 	newState, err := random.GenerateString(32)
 
 	if err != nil {
-		return model.Client{}, derp.Wrap(err, location, "Error generating random string")
+		return model.Connection{}, derp.Wrap(err, location, "Error generating random string")
 	}
 
 	codeChallenge, err := random.GenerateString(64)
 
 	if err != nil {
-		return model.Client{}, derp.Wrap(err, location, "Error generating random string")
+		return model.Connection{}, derp.Wrap(err, location, "Error generating random string")
 	}
 
-	// Assign the state to the client and put into the domain
-	client.Data["state"] = newState
-	client.Data["code_challenge"] = codeChallenge
-	service.domain.SetClient(client)
+	// Assign the state to the connection and put into the domain
+	connection.Data["state"] = newState
+	connection.Data["code_challenge"] = codeChallenge
 
 	// Save the domain
-	if err := service.Save(service.domain, "New OAuth State"); err != nil {
-		return model.Client{}, derp.Wrap(err, location, "Error saving domain")
+	if err := service.connectionService.Save(&connection, "New OAuth State"); err != nil {
+		return model.Connection{}, derp.Wrap(err, location, "Error saving domain")
 	}
 
-	return client, nil
-}
-
-// ReadOAuthState returns the OAuth state for the specified provider WITHOUT changing the current value.
-// THIS SHOULD NOT BE USED TO ACCESS OAUTH TOKENS because they may be expired.  Use GetOAuthToken for that.
-func (service *Domain) ReadOAuthClient(providerID string) (model.Client, bool) {
-	return service.domain.GetClient(providerID)
+	return connection, nil
 }
 
 // GetAuthToken retrieves the OAuth token for the specified provider.  If the token has expired
 // then it is refreshed (and saved) automatically before returning.
-func (service *Domain) GetOAuthToken(providerID string) (model.Client, *oauth2.Token, error) {
+func (service *Domain) GetOAuthToken(providerID string) (model.Connection, *oauth2.Token, error) {
 
 	// Get the provider for this OAuth provider
 	provider, ok := service.OAuthProvider(providerID)
 
 	if !ok {
-		return model.Client{}, nil, derp.NewBadRequestError("service.Domain.GetOAuthToken", "Unknown OAuth Provider", providerID)
+		return model.Connection{}, nil, derp.NewBadRequestError("service.Domain.GetOAuthToken", "Unknown OAuth Provider", providerID)
 	}
 
-	// Try to load the Domain and Client data
-	client, ok := service.ReadOAuthClient(providerID)
-
-	if !ok {
-		return model.Client{}, nil, derp.NewBadRequestError("service.Domain.GetOAuthToken", "Error reading OAuth client")
+	// Try to load the Connection config
+	connection := model.NewConnection()
+	if err := service.connectionService.LoadByProvider(providerID, &connection); err != nil {
+		return model.Connection{}, nil, derp.NewBadRequestError("service.Domain.GetOAuthToken", "Error reading OAuth connection")
 	}
 
-	// Retrieve the Token from the client
-	token := client.Token
+	// Retrieve the Token from the connection
+	token := connection.Token
 
 	if token == nil {
-		return model.Client{}, token, derp.NewBadRequestError("service.Domain.GetOAuthToken", "No OAuth token found for provider", providerID)
+		return model.Connection{}, token, derp.NewBadRequestError("service.Domain.GetOAuthToken", "No OAuth token found for provider", providerID)
 	}
 
 	// Use TokenSource to update tokens when they expire.
@@ -449,18 +442,17 @@ func (service *Domain) GetOAuthToken(providerID string) (model.Client, *oauth2.T
 	newToken, err := source.Token()
 
 	if err != nil {
-		return model.Client{}, token, derp.Wrap(err, "service.Domain.GetOAuthToken", "Error refreshing OAuth token")
+		return model.Connection{}, token, derp.Wrap(err, "service.Domain.GetOAuthToken", "Error refreshing OAuth token")
 	}
 
 	// If the token has changed, save it
 	if token.AccessToken != newToken.AccessToken {
-		client.Token = newToken
-		service.domain.SetClient(client)
-		if err := service.Save(service.domain, "Refresh OAuth Token"); err != nil {
-			return model.Client{}, token, derp.Wrap(err, "service.Domain.GetOAuthToken", "Error saving refreshed Token")
+		connection.Token = newToken
+		if err := service.connectionService.Save(&connection, "Refresh OAuth Token"); err != nil {
+			return model.Connection{}, token, derp.Wrap(err, "service.Domain.GetOAuthToken", "Error saving refreshed Token")
 		}
 	}
 
 	// Success!
-	return client, newToken, nil
+	return connection, newToken, nil
 }

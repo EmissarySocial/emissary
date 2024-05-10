@@ -11,11 +11,12 @@ import (
 // other connection information like a username or password.  It may also represent a connection that is still being formed,
 // for instance, storing the intermediate state of an OAuth2 connection that has not yet completed the three-legged handshake.
 type Connection struct {
-	ConnectionID primitive.ObjectID `bson:"_id"`      // Unique ID for this connection
-	ProviderID   string             `bson:"provider"` // ID of the provider that this credential accesses
-	Data         mapof.Any          `bson:"data"`     // Unique data for this credential
-	Token        *oauth2.Token      `bson:"token"`    // OAuth2 Token (if necessary)
-	Active       bool               `bson:"active"`   // Is this credential active?
+	ConnectionID primitive.ObjectID `bson:"_id"`        // Unique ID for this connection
+	ProviderID   string             `bson:"providerId"` // ID of the provider that this credential accesses
+	Type         string             `bson:"type"`       // Type of connection (e.g. "payment")
+	Data         mapof.String       `bson:"data"`       // Unique data for this credential
+	Token        *oauth2.Token      `bson:"token"`      // OAuth2 Token (if necessary)
+	Active       bool               `bson:"active"`     // Is this credential active?
 
 	journal.Journal `bson:",inline"`
 }
@@ -24,11 +25,11 @@ type Connection struct {
 func NewConnection() Connection {
 	return Connection{
 		ConnectionID: primitive.NewObjectID(),
-		Data:         mapof.NewAny(),
+		Data:         mapof.NewString(),
 	}
 }
 
 // ID implements the set.Value interface
 func (connection Connection) ID() string {
-	return connection.ProviderID
+	return connection.ConnectionID.Hex()
 }

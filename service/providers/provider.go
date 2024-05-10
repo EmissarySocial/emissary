@@ -9,11 +9,8 @@ import (
 type Provider interface {
 
 	// Lifecycle Methods
-	AfterConnect(factory Factory, client *model.Client) error
-	AfterUpdate(factory Factory, client *model.Client) error
-
-	// Provider Methods
-	PollStreams(client *model.Client) <-chan model.Stream
+	AfterConnect(factory Factory, client *model.Connection) error
+	AfterUpdate(factory Factory, client *model.Connection) error
 }
 
 type OAuthProvider interface {

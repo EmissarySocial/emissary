@@ -8,11 +8,11 @@ type Null struct{}
  * Lifecycle Methods
  ******************************************/
 
-func (adapter Null) AfterConnect(factory Factory, client *model.Client) error {
+func (adapter Null) AfterConnect(factory Factory, client *model.Connection) error {
 	return nil
 }
 
-func (adapter Null) AfterUpdate(factory Factory, client *model.Client) error {
+func (adapter Null) AfterUpdate(factory Factory, client *model.Connection) error {
 	return nil
 
 }
@@ -21,6 +21,6 @@ func (adapter Null) AfterUpdate(factory Factory, client *model.Client) error {
  * Adapter Methods
  ******************************************/
 
-func (adapter Null) PollStreams(client *model.Client) <-chan model.Stream {
+func (adapter Null) PollStreams(client *model.Connection) <-chan model.Stream {
 	return nil
 }

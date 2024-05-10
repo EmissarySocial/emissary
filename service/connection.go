@@ -6,7 +6,9 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -148,6 +150,34 @@ func (service *Connection) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
+func (service *Connection) QueryAll(options ...option.Option) ([]model.Connection, error) {
+	return service.Query(exp.All(), options...)
+}
+
+func (service *Connection) AllAsMap() mapof.Object[model.Connection] {
+	result := make(mapof.Object[model.Connection])
+
+	if query, err := service.QueryAll(); err == nil {
+		for _, connection := range query {
+			result[connection.ProviderID] = connection
+		}
+	}
+
+	return result
+}
+
+// LoadByProvider loads a Connection that matches the given provider.
+func (service *Connection) LoadByProvider(providerID string, connection *model.Connection) error {
+
+	criteria := exp.Equal("providerId", providerID)
+
+	if err := service.Load(criteria, connection); err != nil {
+		return derp.Wrap(err, "service.Connection.LoadByProvider", "Error loading Connection", providerID)
+	}
+
+	return nil
+}
+
 // LoadOrCreateByProvider loads a Connection that matches the given provider.  If no Connection is found, a new one is created.
 func (service *Connection) LoadOrCreateByProvider(providerID string) (model.Connection, error) {
 
@@ -156,6 +186,7 @@ func (service *Connection) LoadOrCreateByProvider(providerID string) (model.Conn
 	criteria := exp.Equal("providerId", providerID)
 
 	err := service.Load(criteria, &result)
+	spew.Dump(criteria, result, err)
 
 	if err == nil {
 		return result, nil

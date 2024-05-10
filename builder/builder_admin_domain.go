@@ -15,6 +15,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/list"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
 	"github.com/rs/zerolog/log"
@@ -192,6 +193,7 @@ func (w Domain) Themes() []model.Theme {
 	return result
 }
 
+// Providers lists all available external services that can be connected to this domain
 func (w Domain) Providers() []form.LookupCode {
 
 	providers := w._factory.Providers()
@@ -206,19 +208,16 @@ func (w Domain) Providers() []form.LookupCode {
 	})
 }
 
-func (w Domain) Client(providerID string) model.Client {
-
-	if connection, ok := w._domain.Clients.Get(providerID); ok {
-		return connection
-	}
-
-	return model.NewClient(providerID)
+// Connection loads an external service connection from the database
+func (w Domain) AllConnections() mapof.Object[model.Connection] {
+	return w.factory().Connection().AllAsMap()
 }
 
 func (w Domain) Provider(providerID string) providers.Provider {
 	result, _ := w._provider.GetProvider(providerID)
 	return result
 }
+
 func (w Domain) debug() {
 	log.Debug().Interface("object", w.object()).Msg("builder_admin_domain")
 }

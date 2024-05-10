@@ -98,7 +98,6 @@ func (service *Template) watch() {
 
 	// Start new watchers.
 	for _, folder := range service.locations {
-
 		if err := service.filesystemService.Watch(folder, changes, service.refresh); err != nil {
 			derp.Report(derp.Wrap(err, "service.template.Watch", "Error watching filesystem", folder))
 		}

@@ -191,9 +191,10 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		factory.domainService.Refresh(
 			factory.collection(CollectionDomain),
 			domain,
+			factory.Connection(),
+			factory.Provider(),
 			factory.Theme(),
 			factory.User(),
-			factory.Provider(),
 			builder.FuncMap(factory.Icons()),
 			factory.Hostname(),
 		)

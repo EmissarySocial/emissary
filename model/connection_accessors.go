@@ -10,6 +10,7 @@ func ConnectionSchema() schema.Element {
 		Properties: schema.ElementMap{
 			"connectionId": schema.String{Format: "objectId"},
 			"providerId":   schema.String{Enum: []string{ConnectionProviderStripe, ConnectionProviderGiphy}},
+			"type":         schema.String{Enum: []string{ConnectionTypePayment}},
 			"data":         schema.Object{Wildcard: schema.Any{}},
 			"active":       schema.Boolean{},
 		},
@@ -26,6 +27,9 @@ func (connection *Connection) GetPointer(name string) (any, bool) {
 
 	case "providerId":
 		return &connection.ProviderID, true
+
+	case "type":
+		return &connection.Type, true
 
 	case "data":
 		return &connection.Data, true

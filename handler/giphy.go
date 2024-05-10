@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/EmissarySocial/emissary/service/providers"
 	"github.com/benpate/derp"
@@ -32,11 +33,11 @@ func GetGiphyWidget(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		// Get the Giphy Provider and API Key
-		domain := factory.Domain().Get()
-		giphy, ok := domain.Clients.Get(providers.ProviderTypeGiphy)
+		connectionService := factory.Connection()
+		giphy := model.NewConnection()
 
-		if !ok {
-			return derp.NewBadRequestError("handler.GetGiphyImages", "Giphy is not configured for this domain")
+		if err := connectionService.LoadByProvider(providers.ProviderTypeGiphy, &giphy); err != nil {
+			return derp.Wrap(err, "handler.GetGiphyImages", "Giphy is not configured for this domain")
 		}
 
 		apiKey := giphy.Data.GetString(providers.Giphy_APIKey)
