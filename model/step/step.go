@@ -15,6 +15,18 @@ type Step interface {
 	AmStep()
 }
 
+// TypeRequirer interface wraps the "RequireType" method, which specifies that a step can ONLY
+// be used with a specific type of builder (like: "template", "registration", "widget", "email", etc.)
+type TypeRequirer interface {
+	RequireType() string
+}
+
+// ModelRequirer interface wraps the "RequireModel" method, which specifies that a step can ONLY
+// be used with a specific type of model object. (like: "stream", "follower", "following", etc.)
+type ModelRequirer interface {
+	RequireModel() string
+}
+
 // New uses an Step object to create a new action
 func New(stepInfo mapof.Any) (Step, error) {
 
@@ -52,6 +64,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 
 	case "edit-content":
 		return NewEditContent(stepInfo)
+
+	case "edit-registration":
+		return NewEditRegistration(stepInfo)
 
 	case "edit-table":
 		return NewTableEditor(stepInfo)

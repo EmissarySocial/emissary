@@ -22,34 +22,36 @@ import (
 
 // Template service manages all of the templates in the system, and merges them with data to form fully populated HTML pages.
 type Template struct {
-	templates         set.Map[model.Template]      // map of all templates available within this domain
-	templatePrep      set.Map[model.Template]      // temporary map of templates that are being prepared
-	locations         sliceof.Object[mapof.String] // Configuration for template directory
-	filesystemService Filesystem                   // Filesystem service
-	themeService      *Theme                       // Theme Service
-	widgetService     *Widget                      // Widget Service
-	funcMap           template.FuncMap             // Map of functions to use in golang templates
-	mutex             sync.RWMutex                 // Mutext that locks access to the templates structure
-	refresh           chan channel.Done            // Channel that is used to signal that the template service should refresh
+	templates           set.Map[model.Template]      // map of all templates available within this domain
+	templatePrep        set.Map[model.Template]      // temporary map of templates that are being prepared
+	locations           sliceof.Object[mapof.String] // Configuration for template directory
+	filesystemService   Filesystem                   // Filesystem service
+	registrationService *Registration                // Registration Service
+	themeService        *Theme                       // Theme Service
+	widgetService       *Widget                      // Widget Service
+	funcMap             template.FuncMap             // Map of functions to use in golang templates
+	mutex               sync.RWMutex                 // Mutext that locks access to the templates structure
+	refresh             chan channel.Done            // Channel that is used to signal that the template service should refresh
 }
 
 // NewTemplate returns a fully initialized Template service.
-func NewTemplate(filesystemService Filesystem, themeService *Theme, widgetService *Widget, funcMap template.FuncMap, locations []mapof.String) *Template {
+func NewTemplate(filesystemService Filesystem, registrationService *Registration, themeService *Theme, widgetService *Widget, funcMap template.FuncMap, locations []mapof.String) *Template {
 
-	service := Template{
-		templates:         make(set.Map[model.Template]),
-		templatePrep:      make(set.Map[model.Template]),
-		locations:         make(sliceof.Object[mapof.String], 0),
-		filesystemService: filesystemService,
-		themeService:      themeService,
-		widgetService:     widgetService,
-		funcMap:           funcMap,
-		refresh:           make(chan channel.Done),
+	service := &Template{
+		templates:           make(set.Map[model.Template]),
+		templatePrep:        make(set.Map[model.Template]),
+		locations:           make(sliceof.Object[mapof.String], 0),
+		filesystemService:   filesystemService,
+		registrationService: registrationService,
+		themeService:        themeService,
+		widgetService:       widgetService,
+		funcMap:             funcMap,
+		refresh:             make(chan channel.Done),
 	}
 
 	service.Refresh(locations)
 
-	return &service
+	return service
 }
 
 /******************************************
@@ -187,6 +189,11 @@ func (service *Template) loadTemplates() error {
 					derp.Report(derp.Wrap(err, "service.Template.loadTemplates", "Error adding template"))
 				}
 
+			case DefinitionRegistration:
+				if err := service.registrationService.Add(directoryName, subdirectory, file); err != nil {
+					derp.Report(derp.Wrap(err, "service.Template.loadTemplates", "Error adding registration"))
+				}
+
 			default:
 				derp.Report(derp.NewInternalError("service.Template.loadTemplates", "Unrecognized definition type", location, definitionType))
 			}
@@ -229,8 +236,10 @@ func (service *Template) Add(templateID string, filesystem fs.FS, definition []b
 		return derp.Wrap(err, location, "Error loading Schema", templateID)
 	}
 
-	// All template schemas also inherit from the main stream schema
-	template.Schema.Inherit(schema.New(model.StreamSchema()))
+	// All template schemas (except kludged registrations) also inherit from the main stream schema
+	if template.TemplateRole != "registration" {
+		template.Schema.Inherit(schema.New(model.StreamSchema()))
+	}
 
 	// Load all HTML templates from the filesystem
 	if err := loadHTMLTemplateFromFilesystem(filesystem, template.HTMLTemplate, service.funcMap); err != nil {
@@ -278,6 +287,10 @@ func (service *Template) calculateInheritance(template model.Template) model.Tem
 func (service *Template) List(filter func(*model.Template) bool) []form.LookupCode {
 
 	result := []form.LookupCode{}
+
+	if filter == nil {
+		filter = func(_ *model.Template) bool { return true }
+	}
 
 	for _, template := range service.templates {
 		if filter(&template) {
@@ -383,43 +396,4 @@ func (service *Template) LoadAdmin(templateID string) (model.Template, error) {
 
 	// Success!
 	return template, nil
-}
-
-/******************************************
- * Other Data Access Methods
- ******************************************/
-
-// State returns the detailed State information associated with this Stream
-func (service *Template) State(templateID string, stateID string) (model.State, error) {
-
-	// Try to find the Template used by this Stream
-	template, err := service.Load(templateID)
-
-	if err != nil {
-		return model.State{}, derp.Wrap(err, "service.Template.State", "Invalid Template", templateID)
-	}
-
-	// Try to find the state data for the state that the stream is in
-	state, ok := template.State(stateID)
-
-	if !ok {
-		return state, derp.NewInternalError("service.Template.State", "Invalid state", templateID, stateID)
-	}
-
-	// Success!
-	return state, nil
-}
-
-// Schema returns the Schema associated with this Stream
-func (service *Template) Schema(templateID string) (schema.Schema, error) {
-
-	// Try to locate the Template used by this Stream
-	template, err := service.Load(templateID)
-
-	if err != nil {
-		return schema.Schema{}, derp.Wrap(err, "service.Template.Action", "Invalid Template", templateID)
-	}
-
-	// Return the Schema defined in this template.
-	return template.Schema, nil
 }

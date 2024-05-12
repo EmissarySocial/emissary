@@ -176,6 +176,8 @@ func (service Icons) Get(name string) string {
 		return service.get("mic-mute-fill")
 	case "newspaper":
 		return service.get("newspaper")
+	case "none":
+		return service.get("ban")
 	case "pause":
 		return service.get("pause")
 	case "pause-fill":

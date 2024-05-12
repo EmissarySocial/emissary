@@ -107,9 +107,9 @@ func (service *User) Save(user *model.User, note string) error {
 	if isNew {
 
 		// RULE: Set default inbox/outbox values based on the Theme
-		inboxTemplate, outboxTemplate := service.domainService.UserDefaults()
-		user.InboxTemplate = inboxTemplate
-		user.OutboxTemplate = outboxTemplate
+		theme := service.domainService.Theme()
+		user.InboxTemplate = theme.DefaultInbox
+		user.OutboxTemplate = theme.DefaultOutbox
 	}
 
 	// RULE: Set ProfileURL to the hostname + the username

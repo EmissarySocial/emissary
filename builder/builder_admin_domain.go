@@ -126,10 +126,6 @@ func (w Domain) service() service.ModelService {
 	return w._factory.Domain()
 }
 
-func (w Domain) domainService() *service.Domain {
-	return w._factory.Domain()
-}
-
 func (w Domain) executeTemplate(wr io.Writer, name string, data any) error {
 	return w._template.HTMLTemplate.ExecuteTemplate(wr, name, data)
 }
@@ -179,7 +175,28 @@ func (w Domain) PropertyForm() form.Element {
 }
 
 /******************************************
- * OTHER METHODS
+ * Registration Methods
+ ******************************************/
+
+// RegistrationTemplates returns all available signup templates
+func (w Domain) RegistrationTemplates() []form.LookupCode {
+	return w._factory.Registration().List()
+}
+
+// RegistrationTemplate returns the signup template selected for this domain
+func (w Domain) RegistrationTemplate() model.Registration {
+
+	if templateID := w.QueryParam("templateId"); templateID != "" {
+		if template, err := w._factory.Registration().Load(templateID); err == nil {
+			return template
+		}
+	}
+
+	return model.NewRegistration("", nil)
+}
+
+/******************************************
+ * Other Methods
  ******************************************/
 
 func (w Domain) Themes() []model.Theme {

@@ -173,6 +173,9 @@ func loadHTMLTemplateFromFilesystem(filesystem fs.FS, t *template.Template, func
 // DefinitionEmail marks a filesystem that contains an Email definition.
 const DefinitionEmail = "EMAIL"
 
+// DefinitionRegistration marks a filesystem that contains a Registration process definition
+const DefinitionRegistration = "REGISTRATION"
+
 // DefinitionEmail marks a filesystem that contains a stream Template definition.
 const DefinitionTemplate = "TEMPLATE"
 
@@ -198,6 +201,11 @@ func findDefinition(filesystem fs.FS) (string, []byte, error) {
 	// If this directory contains a "widget.json" file, then it's a widget.
 	if file, err := readJSON(filesystem, "widget"); err == nil {
 		return DefinitionWidget, file, nil
+	}
+
+	// If this directory contains a "register.json" file, then it's a registration form.
+	if file, err := readJSON(filesystem, "registration"); err == nil {
+		return DefinitionRegistration, file, nil
 	}
 
 	// TODO: LOW: Add DefinitionEmail to this.  Will need a *.json file in the email directory.

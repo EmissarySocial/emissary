@@ -31,13 +31,14 @@ type Factory struct {
 	providers []config.Provider
 
 	// services (from server)
-	themeService    *service.Theme
-	templateService *service.Template
-	widgetService   *service.Widget
-	contentService  *service.Content
-	providerService *service.Provider
-	taskQueue       queue.Queue
-	activityService *service.ActivityStream
+	registrationService *service.Registration
+	themeService        *service.Theme
+	templateService     *service.Template
+	widgetService       *service.Widget
+	contentService      *service.Content
+	providerService     *service.Provider
+	taskQueue           queue.Queue
+	activityService     *service.ActivityStream
 
 	// Upload Directories (from server)
 	attachmentOriginals afero.Fs
@@ -73,19 +74,20 @@ type Factory struct {
 }
 
 // NewFactory creates a new factory tied to a MongoDB database
-func NewFactory(domain config.Domain, providers []config.Provider, activityService *service.ActivityStream, serverEmail *service.ServerEmail, themeService *service.Theme, templateService *service.Template, widgetService *service.Widget, contentService *service.Content, providerService *service.Provider, taskQueue queue.Queue, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
+func NewFactory(domain config.Domain, providers []config.Provider, activityService *service.ActivityStream, registrationService *service.Registration, serverEmail *service.ServerEmail, themeService *service.Theme, templateService *service.Template, widgetService *service.Widget, contentService *service.Content, providerService *service.Provider, taskQueue queue.Queue, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
 
 	log.Info().Msg("Starting domain: " + domain.Hostname)
 
 	// Base Factory object
 	factory := Factory{
-		themeService:    themeService,
-		templateService: templateService,
-		widgetService:   widgetService,
-		contentService:  contentService,
-		providerService: providerService,
-		taskQueue:       taskQueue,
-		activityService: activityService,
+		registrationService: registrationService,
+		themeService:        themeService,
+		templateService:     templateService,
+		widgetService:       widgetService,
+		contentService:      contentService,
+		providerService:     providerService,
+		taskQueue:           taskQueue,
+		activityService:     activityService,
 
 		attachmentOriginals: attachmentOriginals,
 		attachmentCache:     attachmentCache,
@@ -297,6 +299,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.Queue(),
 		)
 
+		// Populate the Response Service
 		factory.responseService.Refresh(
 			factory.collection(CollectionResponse),
 			factory.User(),
@@ -626,6 +629,7 @@ func (factory *Factory) Content() *service.Content {
 	return factory.contentService
 }
 
+// Email returns the Domain Email service, which sends email on behalf of the domain
 func (factory *Factory) Email() *service.DomainEmail {
 	return &factory.emailService
 }
@@ -641,6 +645,8 @@ func (factory *Factory) Icons() icon.Provider {
 	return service.Icons{}
 }
 
+// Locator returns the locator service, which locates records based on their URLs
+// This should probably be deprecated.
 func (factory *Factory) Locator() service.Locator {
 	return service.NewLocator(
 		factory.User(),
@@ -652,6 +658,11 @@ func (factory *Factory) Locator() service.Locator {
 // Queue returns the Queue service, which manages background jobs
 func (factory *Factory) Queue() queue.Queue {
 	return factory.taskQueue
+}
+
+// Registration returns the Registration service, which managaes new user registrations
+func (factory *Factory) Registration() *service.Registration {
+	return factory.registrationService
 }
 
 // Steranko returns a fully populated Steranko adapter for the User service.
@@ -666,7 +677,7 @@ func (factory *Factory) Steranko() *steranko.Steranko {
 
 // LookupProvider returns a fully populated LookupProvider service
 func (factory *Factory) LookupProvider(userID primitive.ObjectID) form.LookupProvider {
-	return service.NewLookupProvider(factory.Theme(), factory.Group(), factory.Folder(), userID)
+	return service.NewLookupProvider(factory.Folder(), factory.Group(), factory.Registration(), factory.Theme(), userID)
 }
 
 /******************************************

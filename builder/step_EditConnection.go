@@ -6,7 +6,6 @@ import (
 	"github.com/EmissarySocial/emissary/service/providers"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/davecgh/go-spew/spew"
 )
 
 type StepEditConnection struct{}
@@ -25,8 +24,6 @@ func (step StepEditConnection) Get(builder Builder, buffer io.Writer) PipelineBe
 	adapter := domainBuilder.Provider(providerID)
 
 	connection, err := connectionService.LoadOrCreateByProvider(providerID)
-
-	spew.Dump(providerID, adapter, connection, err)
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error loading connection", providerID))

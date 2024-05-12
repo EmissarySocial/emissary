@@ -195,6 +195,20 @@ func (w User) Users() *QueryBuilder[model.UserSummary] {
  * ADDITIONAL DATA
  ******************************************/
 
+// Registration returns the signup template selected for this domain
+func (w User) Registration() model.Registration {
+
+	domain := w._factory.Domain().Get()
+
+	if domain.SignupID != "" {
+		if template, err := w._factory.Registration().Load(domain.SignupID); err == nil {
+			return template
+		}
+	}
+
+	return model.NewRegistration("", nil)
+}
+
 // AssignedGroups lists all groups to which the current user is assigned.
 func (w User) AssignedGroups() ([]model.Group, error) {
 	groupService := w.factory().Group()

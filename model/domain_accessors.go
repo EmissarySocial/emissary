@@ -10,6 +10,10 @@ func DomainSchema() schema.Element {
 		Properties: schema.ElementMap{
 			"domainId":    schema.String{Format: "objectId"},
 			"themeId":     schema.String{MaxLength: 128},
+			"signupId":    schema.String{MaxLength: 128},
+			"inboxId":     schema.String{MaxLength: 128},
+			"outboxId":    schema.String{MaxLength: 128},
+			"signupData":  schema.Object{Wildcard: schema.String{}},
 			"label":       schema.String{MaxLength: 128},
 			"description": schema.String{MaxLength: 1024},
 			"forward":     schema.String{Format: "url", Required: false},
@@ -28,8 +32,20 @@ func (domain *Domain) GetPointer(name string) (any, bool) {
 
 	switch name {
 
+	case "signupId":
+		return &domain.SignupID, true
+
+	case "inboxId":
+		return &domain.InboxID, true
+
+	case "outboxId":
+		return &domain.OutboxID, true
+
 	case "signupForm":
 		return &domain.SignupForm, true
+
+	case "signupData":
+		return &domain.SignupData, true
 
 	case "themeId":
 		return &domain.ThemeID, true

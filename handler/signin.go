@@ -27,6 +27,7 @@ func GetSignIn(serverFactory *server.Factory) echo.HandlerFunc {
 
 		// Get a clean version of the URL query parameters
 		queryString := cleanQueryParams(ctx.QueryParams())
+		queryString["HasRegistrationForm"] = factory.Domain().HasRegistrationForm()
 
 		// Render the template
 		if err := template.ExecuteTemplate(ctx.Response(), "signin", queryString); err != nil {

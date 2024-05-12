@@ -1,0 +1,20 @@
+{
+	registrationId:register-stripe
+	label:Register with Stripe
+	icon:credit-card
+	description:Stripe registration allows users to sign up via Stripe
+	schema: {
+		type:object
+		properties: {
+			stripe_product: {type:"string"}
+			groupId: {type:"string", format:"objectId"}
+		}
+	}
+	form: {
+		type: "layout-vertical",
+		children: [
+			{type:"text", path:"stripe_product", label:"Product ID", description:"Unique identifier for the product (provided by Stripe)"},
+			{type:"select", path:"groupId", label:"Group", description:"New users will be added to this group", options:{provider:"groups"}},
+		]
+	}
+}	

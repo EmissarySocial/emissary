@@ -33,6 +33,7 @@ type Factory interface {
 	Mention() *service.Mention
 	Outbox() *service.Outbox
 	Provider() *service.Provider
+	Registration() *service.Registration
 	Response() *service.Response
 	Rule() *service.Rule
 	Stream() *service.Stream

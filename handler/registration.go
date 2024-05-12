@@ -1,10 +1,10 @@
 package handler
 
 import (
-	"bytes"
 	"encoding/json"
 	"net/http"
 
+	"github.com/EmissarySocial/emissary/builder"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
@@ -27,20 +27,31 @@ func GetRegister(factoryManager *server.Factory) echo.HandlerFunc {
 		}
 
 		// If the signup form is not active, then this is a "not found" error
-		if !domain.HasSignupForm() {
+		if !domain.HasRegistrationForm() {
 			return ctx.NoContent(http.StatusNotFound)
 		}
 
-		// Find and execute the template
-		var buffer bytes.Buffer
-		template := factory.Domain().Theme().HTMLTemplate
+		// Retrieve the signup template
+		registrationService := factory.Registration()
+		registration, err := registrationService.Load(domain.SignupID)
 
-		if err := template.ExecuteTemplate(&buffer, "register", domain); err != nil {
-			return derp.Wrap(err, location, "Error executing template")
+		if err != nil {
+			return derp.Wrap(err, location, "Error loading signup template")
 		}
 
-		// Write the result to the response.
-		return ctx.HTML(200, buffer.String())
+		actionID := getActionID(ctx)
+
+		b, err := builder.NewRegistration(factory, ctx.Request(), ctx.Response(), registration, actionID)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Error creating Builder")
+		}
+
+		if err := buildHTML(factory, ctx, b, builder.ActionMethodGet); err != nil {
+			return derp.Wrap(err, location, "Error building HTML")
+		}
+
+		return nil
 	}
 }
 
@@ -59,7 +70,7 @@ func PostRegister(factoryManager *server.Factory) echo.HandlerFunc {
 		}
 
 		// If the signup form is not active, then this is a "not found" error
-		if !domain.HasSignupForm() {
+		if !domain.HasRegistrationForm() {
 			return ctx.NoContent(http.StatusNotFound)
 		}
 

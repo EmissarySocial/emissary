@@ -260,11 +260,11 @@ func (w Common) DomainLabel() (string, error) {
 	}
 }
 
-func (w Common) DomainHasSignupForm() (bool, error) {
+func (w Common) DomainHasRegistrationForm() (bool, error) {
 	if domain, err := w.getDomain(); err != nil {
 		return false, err
 	} else {
-		return domain.HasSignupForm(), nil
+		return domain.HasRegistrationForm(), nil
 	}
 }
 

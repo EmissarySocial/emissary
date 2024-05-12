@@ -1,3 +1,4 @@
+{{- $registration := .Registration -}}
 <div class="page" hx-get="/admin/users/index" hx-trigger="refreshPage from:window">
    
     <script src="/.themes/global/resources/sortable-1.15.0/Sortable.min.js"></script>
@@ -10,25 +11,17 @@
 	</div>
 
 	<div class="margin-bottom">
-		<h3>Allow New Signups?</h3>
- 
-		<span role="link" hx-get="/admin/domain/signup">
-			{{- if .SignupForm.Active -}}
-				<div class="toggle-container" value="true">
-					<span class="toggle"><span class="marker"></span></span>
-					<label>YES.  New people CAN make new accounts.</label>
-				</div>
+		<h3>New User Signups?</h3>
+		<div script="install blockselect()">
+			{{ if $registration.IsZero -}}
+				{{icon "none" }} Signups Not Allowed
 			{{- else -}}
-			<div class="toggle-container" value="false">
-				<span class="toggle"><span class="marker"></span></span>
-				<label>NO. New people CAN NOT make new accounts.</label>
-			</div>
-			{{- end -}}
-		</span>
-
+				{{- icon $registration.Icon}} {{ $registration.Label -}}
+			{{- end}}
+			<button class="text-xs" hx-get="/admin/domain/signup?registrationId={{$registration.RegistrationID}}">Edit</button>
+		</div>
 	</div>
 
-	<br>
 	<h3>Current User Accounts</h3>
 	<table id="users" class="table">
 		<tr role="link" hx-get="/admin/users/add"><td class="link" colspan="2">

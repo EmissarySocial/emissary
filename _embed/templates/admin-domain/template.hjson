@@ -17,8 +17,8 @@
 	actions: {
 		index: {
 			steps: [
-				{do:"view-html"}
-				{do:"edit", options: ["cancel-button:hide"]}
+				{do: "view-html"}
+				{do: "edit", options: ["cancel-button:hide"]}
 				{do: "save"}
 				{do: "inline-save-button"}
 			]
@@ -34,7 +34,16 @@
 				]
 			}]
 		}
+
 		signup: {
+			steps: [
+				{do: "edit-registration"}
+				{do: "save"}
+				{do: "trigger-event", event: "refreshPage"}
+			]
+		}
+
+		signup-old: {
 			steps: [{
 				do: "as-modal", 
 				steps: [

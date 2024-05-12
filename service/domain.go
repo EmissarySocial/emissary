@@ -239,15 +239,9 @@ func (service *Domain) Theme() model.Theme {
 	return service.themeService.GetTheme(service.domain.ThemeID)
 }
 
-// UserDefaults returns the default Inbox and Outbox for this domain
-func (service *Domain) UserDefaults() (string, string) {
-	theme := service.Theme()
-	return theme.DefaultInbox, theme.DefaultOutbox
-}
-
-// HasSignupForm returns TRUE if this domain allows new users to sign up.
-func (service *Domain) HasSignupForm() bool {
-	return service.domain.HasSignupForm()
+// HasRegistrationForm returns TRUE if this domain allows new users to sign up.
+func (service *Domain) HasRegistrationForm() bool {
+	return service.domain.HasRegistrationForm()
 }
 
 // Provider returns the external Provider that matches the given providerID

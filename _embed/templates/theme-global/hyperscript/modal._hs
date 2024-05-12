@@ -19,7 +19,13 @@ behavior Modal
 
 		wait a tick then
 		add .ready to #modal
-		focus() the first <[tabindex]/> in me
+
+		set firstElement to the first <[tabindex]/> in me
+
+		if firstElement is not null then 
+			focus() the firstElement
+		end
+		
 		send modalReady
 	end
 
