@@ -8,18 +8,20 @@ import (
 )
 
 type LookupProvider struct {
-	themeService  *Theme
-	groupService  *Group
-	folderService *Folder
-	userID        primitive.ObjectID
+	folderService       *Folder
+	groupService        *Group
+	registrationService *Registration
+	themeService        *Theme
+	userID              primitive.ObjectID
 }
 
-func NewLookupProvider(themeService *Theme, groupService *Group, folderService *Folder, userID primitive.ObjectID) LookupProvider {
+func NewLookupProvider(folderService *Folder, groupService *Group, registrationService *Registration, themeService *Theme, userID primitive.ObjectID) LookupProvider {
 	return LookupProvider{
-		themeService:  themeService,
-		groupService:  groupService,
-		folderService: folderService,
-		userID:        userID,
+		themeService:        themeService,
+		registrationService: registrationService,
+		groupService:        groupService,
+		folderService:       folderService,
+		userID:              userID,
 	}
 }
 
@@ -88,6 +90,9 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 
 	case "themes":
 		return NewThemeLookupProvider(service.themeService)
+
+	case "signup-templates":
+		return form.ReadOnlyLookupGroup(service.registrationService.List())
 
 	default:
 		return form.NewReadOnlyLookupGroup()
