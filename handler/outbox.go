@@ -3,7 +3,7 @@ package handler
 import (
 	"net/http"
 
-	"github.com/EmissarySocial/emissary/builder"
+	"github.com/EmissarySocial/emissary/build"
 	activitypub "github.com/EmissarySocial/emissary/handler/activitypub_user"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
@@ -17,12 +17,12 @@ import (
 
 // GetOutbox handles GET requests
 func GetOutbox(serverFactory *server.Factory) echo.HandlerFunc {
-	return buildOutbox(serverFactory, builder.ActionMethodGet)
+	return buildOutbox(serverFactory, build.ActionMethodGet)
 }
 
 // PostOutbox handles POST/DELETE requests
 func PostOutbox(serverFactory *server.Factory) echo.HandlerFunc {
-	return buildOutbox(serverFactory, builder.ActionMethodPost)
+	return buildOutbox(serverFactory, build.ActionMethodPost)
 }
 
 func GetProfileIcon(serverFactory *server.Factory) echo.HandlerFunc {
@@ -114,7 +114,7 @@ func getProfileAttachment(serverFactory *server.Factory, field string, filespec 
 }
 
 // buildOutbox is the common Outbox handler for both GET and POST requests
-func buildOutbox(serverFactory *server.Factory, actionMethod builder.ActionMethod) echo.HandlerFunc {
+func buildOutbox(serverFactory *server.Factory, actionMethod build.ActionMethod) echo.HandlerFunc {
 
 	const location = "handler.buildOutbox"
 
@@ -160,14 +160,14 @@ func buildOutbox(serverFactory *server.Factory, actionMethod builder.ActionMetho
 			return derp.Wrap(err, location, "Error building JSON-LD")
 		}
 
-		builder, err := builder.NewOutbox(factory, context.Request(), context.Response(), &user, actionID)
+		builder, err := build.NewOutbox(factory, context.Request(), context.Response(), &user, actionID)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error creating builder")
 		}
 
 		// Forward to the standard page builder to complete the job
-		return buildHTML(factory, sterankoContext, builder, actionMethod)
+		return build.AsHTML(factory, sterankoContext, builder, actionMethod)
 	}
 }
 

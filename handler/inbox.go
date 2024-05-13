@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"github.com/EmissarySocial/emissary/builder"
+	"github.com/EmissarySocial/emissary/build"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
@@ -12,16 +12,16 @@ import (
 
 // GetInbox handles GET requests
 func GetInbox(serverFactory *server.Factory) echo.HandlerFunc {
-	return buildInbox(serverFactory, builder.ActionMethodGet)
+	return buildInbox(serverFactory, build.ActionMethodGet)
 }
 
 // PostInbox handles POST/DELETE requests
 func PostInbox(serverFactory *server.Factory) echo.HandlerFunc {
-	return buildInbox(serverFactory, builder.ActionMethodPost)
+	return buildInbox(serverFactory, build.ActionMethodPost)
 }
 
 // buildInbox is the common Inbox handler for both GET and POST requests
-func buildInbox(serverFactory *server.Factory, actionMethod builder.ActionMethod) echo.HandlerFunc {
+func buildInbox(serverFactory *server.Factory, actionMethod build.ActionMethod) echo.HandlerFunc {
 
 	const location = "handler.buildInbox"
 
@@ -58,13 +58,13 @@ func buildInbox(serverFactory *server.Factory, actionMethod builder.ActionMethod
 			return derp.Wrap(err, location, "Error building JSON-LD")
 		}
 
-		builder, err := builder.NewInbox(factory, context.Request(), context.Response(), &user, actionID)
+		builder, err := build.NewInbox(factory, context.Request(), context.Response(), &user, actionID)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error creating builder")
 		}
 
 		// Forward to the standard page builder to complete the job
-		return buildHTML(factory, sterankoContext, builder, actionMethod)
+		return build.AsHTML(factory, sterankoContext, builder, actionMethod)
 	}
 }

@@ -3,7 +3,7 @@ package handler
 import (
 	"net/http"
 
-	"github.com/EmissarySocial/emissary/builder"
+	"github.com/EmissarySocial/emissary/build"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/first"
@@ -43,7 +43,7 @@ func GetStartup(serverFactory *server.Factory) echo.HandlerFunc {
 		actionID := first.String(ctx.Param("action"), "page")
 
 		// Get a Builder for this page (also authenticates admin permissions)
-		builder, err := builder.NewDomain(factory, ctx.Request(), ctx.Response(), template, actionID)
+		builder, err := build.NewDomain(factory, ctx.Request(), ctx.Response(), template, actionID)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error creating builder")

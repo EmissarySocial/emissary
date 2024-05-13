@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"github.com/EmissarySocial/emissary/builder"
+	"github.com/EmissarySocial/emissary/build"
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
@@ -14,15 +14,15 @@ import (
 
 // GetAdmin handles GET requests
 func GetAdmin(factoryManager *server.Factory) echo.HandlerFunc {
-	return buildAdmin(factoryManager, builder.ActionMethodGet)
+	return buildAdmin(factoryManager, build.ActionMethodGet)
 }
 
 // PostAdmin handles POST/DELETE requests
 func PostAdmin(factoryManager *server.Factory) echo.HandlerFunc {
-	return buildAdmin(factoryManager, builder.ActionMethodPost)
+	return buildAdmin(factoryManager, build.ActionMethodPost)
 }
 
-func buildAdmin(factoryManager *server.Factory, actionMethod builder.ActionMethod) echo.HandlerFunc {
+func buildAdmin(factoryManager *server.Factory, actionMethod build.ActionMethod) echo.HandlerFunc {
 
 	const location = "handler.adminBuilder"
 
@@ -61,7 +61,7 @@ func buildAdmin(factoryManager *server.Factory, actionMethod builder.ActionMetho
 		}
 
 		// Success!!
-		return buildHTML(factory, sterankoContext, builder, actionMethod)
+		return build.AsHTML(factory, sterankoContext, builder, actionMethod)
 	}
 }
 
@@ -82,7 +82,7 @@ func buildAdmin_ParsePath(ctx echo.Context) (string, string, primitive.ObjectID)
 	return templateID, actionID, primitive.NilObjectID
 }
 
-func buildAdmin_GetBuilder(factory *domain.Factory, ctx *steranko.Context, template model.Template, actionID string, objectID primitive.ObjectID) (builder.Builder, error) {
+func buildAdmin_GetBuilder(factory *domain.Factory, ctx *steranko.Context, template model.Template, actionID string, objectID primitive.ObjectID) (build.Builder, error) {
 
 	const location = "handler.buildAdmin_GetBuilder"
 
@@ -101,10 +101,10 @@ func buildAdmin_GetBuilder(factory *domain.Factory, ctx *steranko.Context, templ
 			}
 		}
 
-		return builder.NewRule(factory, ctx.Request(), ctx.Response(), &rule, template, actionID)
+		return build.NewRule(factory, ctx.Request(), ctx.Response(), &rule, template, actionID)
 
 	case "domain":
-		return builder.NewDomain(factory, ctx.Request(), ctx.Response(), template, actionID)
+		return build.NewDomain(factory, ctx.Request(), ctx.Response(), template, actionID)
 
 	case "group":
 		group := model.NewGroup()
@@ -116,7 +116,7 @@ func buildAdmin_GetBuilder(factory *domain.Factory, ctx *steranko.Context, templ
 			}
 		}
 
-		return builder.NewGroup(factory, ctx.Request(), ctx.Response(), template, &group, actionID)
+		return build.NewGroup(factory, ctx.Request(), ctx.Response(), template, &group, actionID)
 
 	case "stream":
 		stream := model.NewStream()
@@ -128,7 +128,7 @@ func buildAdmin_GetBuilder(factory *domain.Factory, ctx *steranko.Context, templ
 			}
 		}
 
-		return builder.NewNavigation(factory, ctx.Request(), ctx.Response(), template, &stream, actionID)
+		return build.NewNavigation(factory, ctx.Request(), ctx.Response(), template, &stream, actionID)
 
 	case "user":
 		user := model.NewUser()
@@ -140,7 +140,7 @@ func buildAdmin_GetBuilder(factory *domain.Factory, ctx *steranko.Context, templ
 			}
 		}
 
-		return builder.NewUser(factory, ctx.Request(), ctx.Response(), template, &user, actionID)
+		return build.NewUser(factory, ctx.Request(), ctx.Response(), template, &user, actionID)
 
 	default:
 		return nil, derp.NewNotFoundError(location, "Template MODEL must be one of: 'rule', 'domain', 'group', 'stream', or 'user'", template.Model)

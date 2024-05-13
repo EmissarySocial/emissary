@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/EmissarySocial/emissary/builder"
+	"github.com/EmissarySocial/emissary/build"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
@@ -41,13 +41,13 @@ func GetRegister(factoryManager *server.Factory) echo.HandlerFunc {
 
 		actionID := getActionID(ctx)
 
-		b, err := builder.NewRegistration(factory, ctx.Request(), ctx.Response(), registration, actionID)
+		b, err := build.NewRegistration(factory, ctx.Request(), ctx.Response(), registration, actionID)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error creating Builder")
 		}
 
-		if err := buildHTML(factory, ctx, b, builder.ActionMethodGet); err != nil {
+		if err := build.AsHTML(factory, ctx, b, build.ActionMethodGet); err != nil {
 			return derp.Wrap(err, location, "Error building HTML")
 		}
 

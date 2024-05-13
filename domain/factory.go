@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/EmissarySocial/emissary/builder"
+	"github.com/EmissarySocial/emissary/build"
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
@@ -197,7 +197,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.Provider(),
 			factory.Theme(),
 			factory.User(),
-			builder.FuncMap(factory.Icons()),
+			build.FuncMap(factory.Icons()),
 			factory.Hostname(),
 		)
 
