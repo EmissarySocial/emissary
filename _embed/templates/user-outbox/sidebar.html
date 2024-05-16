@@ -26,7 +26,7 @@
 		<div class="text-sm gray50 ellipsis">@{{.Username}}@{{.Hostname}}</div>
 		{{- if not .Myself -}}
 			<div class="margin-top">
-				<button type="button" class="primary width-100-percent" hx-get="/@{{.UserID}}/follow">{{icon "add-circle"}} Follow {{.DisplayName}}</button>
+				<button type="button" class="primary width-100-percent ellipsis" hx-get="/@{{.UserID}}/follow">{{icon "add-circle"}} Follow {{.DisplayName}}</button>
 			</div>
 		{{- end -}}
 
