@@ -14,6 +14,7 @@ func Providers() []form.LookupCode {
 			Description: "TBD",
 			Group:       "MANUAL",
 		},
+		/* REMOVED FOR NOW
 		{
 			Value:       "STRIPE",
 			Label:       "Stripe",
@@ -21,7 +22,6 @@ func Providers() []form.LookupCode {
 			Description: "To migrate from original API key",
 			Group:       "MANUAL",
 		},
-		/* REMOVED FOR NOW
 		{
 			Value:       "FACEBOOK",
 			Label:       "Facebook",
