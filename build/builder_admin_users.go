@@ -137,6 +137,10 @@ func (w User) UserID() string {
 	return w._user.UserID.Hex()
 }
 
+func (w User) ProfileURL() string {
+	return w._user.ProfileURL
+}
+
 func (w User) Label() string {
 	if w._user == nil {
 		return ""
