@@ -8,18 +8,17 @@ import (
 func DomainSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"domainId":    schema.String{Format: "objectId"},
-			"themeId":     schema.String{MaxLength: 128},
-			"signupId":    schema.String{MaxLength: 128},
-			"inboxId":     schema.String{MaxLength: 128},
-			"outboxId":    schema.String{MaxLength: 128},
-			"signupData":  schema.Object{Wildcard: schema.String{}},
-			"label":       schema.String{MaxLength: 128},
-			"description": schema.String{MaxLength: 1024},
-			"forward":     schema.String{Format: "url", Required: false},
-			"data":        schema.Object{Wildcard: schema.String{}},
-			"colorMode":   schema.String{Enum: []string{DomainColorModeAuto, DomainColorModeLight, DomainColorModeDark}},
-			"signupForm":  SignupFormSchema(),
+			"domainId":         schema.String{Format: "objectId"},
+			"themeId":          schema.String{MaxLength: 128},
+			"registrationId":   schema.String{MaxLength: 128},
+			"inboxId":          schema.String{MaxLength: 128},
+			"outboxId":         schema.String{MaxLength: 128},
+			"registrationData": schema.Object{Wildcard: schema.String{}},
+			"label":            schema.String{MaxLength: 128},
+			"description":      schema.String{MaxLength: 1024},
+			"forward":          schema.String{Format: "url", Required: false},
+			"data":             schema.Object{Wildcard: schema.String{}},
+			"colorMode":        schema.String{Enum: []string{DomainColorModeAuto, DomainColorModeLight, DomainColorModeDark}},
 		},
 	}
 }
@@ -32,8 +31,8 @@ func (domain *Domain) GetPointer(name string) (any, bool) {
 
 	switch name {
 
-	case "signupId":
-		return &domain.SignupID, true
+	case "registrationId":
+		return &domain.RegistrationID, true
 
 	case "inboxId":
 		return &domain.InboxID, true
@@ -41,11 +40,8 @@ func (domain *Domain) GetPointer(name string) (any, bool) {
 	case "outboxId":
 		return &domain.OutboxID, true
 
-	case "signupForm":
-		return &domain.SignupForm, true
-
-	case "signupData":
-		return &domain.SignupData, true
+	case "registrationData":
+		return &domain.RegistrationData, true
 
 	case "themeId":
 		return &domain.ThemeID, true

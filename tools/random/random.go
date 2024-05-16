@@ -6,6 +6,7 @@ package random
 import (
 	"crypto/rand"
 	"encoding/base64"
+	mathrand "math/rand"
 	"strings"
 
 	"github.com/benpate/derp"
@@ -47,6 +48,10 @@ func GenerateString(s int) (string, error) {
 	str := Base64URLEncode(b)
 	str = string(str[0:s])
 	return str, nil
+}
+
+func GenerateInt(low int, high int) int {
+	return low + mathrand.Intn(high-low)
 }
 
 // Base64URLEncode base64 encodes the given bytes in a URL-safe way

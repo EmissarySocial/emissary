@@ -21,6 +21,7 @@ import (
 	"github.com/EmissarySocial/emissary/handler"
 	ap_stream "github.com/EmissarySocial/emissary/handler/activitypub_stream"
 	ap_user "github.com/EmissarySocial/emissary/handler/activitypub_user"
+	"github.com/EmissarySocial/emissary/handler/stripe"
 	mw "github.com/EmissarySocial/emissary/middleware"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
@@ -224,6 +225,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/.follower/new", handler.PostEmailFollower(factory))
 	e.POST("/.ostatus/discover", handler.PostOStatusDiscover(factory))
 	e.GET("/.ostatus/tunnel", handler.GetFollowingTunnel)
+	e.POST("/.stripe", stripe.PostWebhook(factory))
 	e.POST("/.webmention", handler.PostWebMention(factory))
 	e.GET("/.websub/:userId/:followingId", handler.GetWebSubClient(factory))
 	e.POST("/.websub/:userId/:followingId", handler.PostWebSubClient(factory))

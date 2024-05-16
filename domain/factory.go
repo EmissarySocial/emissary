@@ -195,6 +195,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			domain,
 			factory.Connection(),
 			factory.Provider(),
+			factory.Registration(),
 			factory.Theme(),
 			factory.User(),
 			build.FuncMap(factory.Icons()),

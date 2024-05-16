@@ -9,6 +9,7 @@ func GroupSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
 			"groupId": schema.String{Format: "objectId"},
+			"token":   schema.String{MaxLength: 64, Required: true},
 			"label":   schema.String{MaxLength: 64, Required: true},
 		},
 	}
@@ -24,6 +25,9 @@ func (group *Group) GetStringOK(name string) (string, bool) {
 
 	case "groupId":
 		return group.GroupID.Hex(), true
+
+	case "token":
+		return group.Token, true
 
 	case "label":
 		return group.Label, true
@@ -45,6 +49,10 @@ func (group *Group) SetString(name string, value string) bool {
 			group.GroupID = objectID
 			return true
 		}
+
+	case "token":
+		group.Token = value
+		return true
 
 	case "label":
 		group.Label = value

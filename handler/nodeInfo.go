@@ -68,7 +68,7 @@ func GetNodeInfo20(serverFactory *server.Factory) echo.HandlerFunc {
 				"inbound":  []string{"atom1.0", "rss2.0"},
 				"outbound": []string{"atom1.0", "rss2.0"},
 			},
-			"openRegistrations": domain.SignupForm.Active,
+			"openRegistrations": domain.HasRegistrationForm(),
 			"usage": map[string]any{
 				"users": map[string]any{
 					"total":          0,
@@ -122,7 +122,7 @@ func GetNodeInfo21(serverFactory *server.Factory) echo.HandlerFunc {
 				"inbound":  []string{"atom1.0", "rss2.0"},
 				"outbound": []string{"atom1.0", "rss2.0"},
 			},
-			"openRegistrations": domain.SignupForm.Active,
+			"openRegistrations": domain.HasRegistrationForm(),
 			"usage": map[string]any{
 				"users": map[string]any{
 					"total":          0,

@@ -128,9 +128,6 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "send-email":
 		return NewSendEmail(stepInfo)
 
-	// case "server-redirect":
-	//	return NewServerRedirect(stepInfo)
-
 	case "set-args":
 		return NewSetRenderData(stepInfo)
 

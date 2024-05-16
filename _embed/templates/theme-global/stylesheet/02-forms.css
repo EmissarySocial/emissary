@@ -177,8 +177,8 @@ input[type=radio] {
 	vertical-align: middle;
 	display:inline-block;
 	margin-right:0.5em;
-	height:1em;
-	width:1em;
+	height:2em;
+	width:2em;
 }
 
 .multiselect > .options > label > div {

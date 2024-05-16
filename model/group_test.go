@@ -13,6 +13,7 @@ func TestGroupSchema(t *testing.T) {
 
 	table := []tableTestItem{
 		{"groupId", "5e5e5e5e5e5e5e5e5e5e5e5e", nil},
+		{"token", "professional", nil},
 		{"label", "LABEL", nil},
 	}
 

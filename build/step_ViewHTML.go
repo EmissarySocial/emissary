@@ -10,8 +10,9 @@ import (
 
 // StepViewHTML represents an action-step that can build a Stream into HTML
 type StepViewHTML struct {
-	File   string
-	Method string
+	File       string
+	Method     string
+	AsFullPage bool
 }
 
 // Get builds the Stream HTML to the context
@@ -78,14 +79,20 @@ func (step StepViewHTML) execute(builder Builder, buffer io.Writer) PipelineBeha
 	}
 
 	// TODO: MEDIUM: Re-implement caching.  Will need to automatically compute the "Vary" header.
+	result := Continue()
 
 	// If we have a valid object, then try to set ETag headers.
 	if object := builder.object(); compare.NotNil(object) {
-		return Continue().
+		result = result.
 			WithHeader("Last-Modified", time.UnixMilli(object.Updated()).Format(time.RFC3339)).
 			WithHeader("ETag", object.ETag())
 	}
 
+	// If "as-full-page" was specified, then include that in the result
+	if step.AsFullPage {
+		result = result.AsFullPage()
+	}
+
 	// Otherwise, just continue without headers.
-	return Continue()
+	return result
 }

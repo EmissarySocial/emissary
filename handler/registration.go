@@ -33,7 +33,7 @@ func GetRegister(factoryManager *server.Factory) echo.HandlerFunc {
 
 		// Retrieve the signup template
 		registrationService := factory.Registration()
-		registration, err := registrationService.Load(domain.SignupID)
+		registration, err := registrationService.Load(domain.RegistrationID)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error loading signup template")
@@ -110,12 +110,18 @@ func PostRegister(factoryManager *server.Factory) echo.HandlerFunc {
 			return ctx.NoContent(http.StatusOK)
 		}
 
-		// Try to save the new user record
+		// Populate the new user record
 		user.DisplayName = transaction.DisplayName
-		user.GroupIDs = []primitive.ObjectID{domain.SignupForm.GroupID}
 		user.SetUsername(transaction.Username)
 		user.SetPassword(transaction.Password)
 
+		if token := domain.RegistrationData.GetString("groupId"); token != "" {
+			if groupID, err := primitive.ObjectIDFromHex(token); err == nil {
+				user.AddGroup(groupID)
+			}
+		}
+
+		// Try to save the new user record
 		if err := userService.Save(&user, "Created by signup form"); err != nil {
 			return derp.Wrap(err, location, "Error saving new user record")
 		}

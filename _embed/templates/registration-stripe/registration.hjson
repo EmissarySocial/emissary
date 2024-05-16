@@ -6,15 +6,24 @@
 	schema: {
 		type:object
 		properties: {
-			stripe_product: {type:"string"}
-			groupId: {type:"string", format:"objectId"}
+			stripe_restricted_key: {type:"string", format:"regex", pattern:"^rk_(prod|test)_\\w+$", required:true}
+			stripe_publishable_key: {type:"string", format:"regex", pattern:"^pk_(prod|test)_\\w{24}$", required:true}
+			stripe_webhook_secret: {type:"string", format:"regex", pattern:"^whsec_\\w+$", required:true}
+			stripe_pricing_table: {type:"string", format:"regex", pattern:"^prctbl_\\w{24}$", required:true}
 		}
 	}
 	form: {
 		type: "layout-vertical",
 		children: [
-			{type:"text", path:"stripe_product", label:"Product ID", description:"Unique identifier for the product (provided by Stripe)"},
-			{type:"select", path:"groupId", label:"Group", description:"New users will be added to this group", options:{provider:"groups"}},
+			{type:"label", description:'Copy the following configuration values from your Stripe Dashboard.<br><a href="https://emissary.dev/stripe" target="_blank">Learn More &rarr;</a>'}
+			{type:"text", path:"stripe_restricted_key", label:"Restricted Key", description:"Find in: Developers > API Keys.", options:{placeholder:"rk_prod_xxxxxxxxxx"}},
+			{type:"text", path:"stripe_publishable_key", label:"Publishable Key", description:"Find in: Developers > API Keys.", options:{placeholder:"pk_prod_xxxxxxxxxxxxxxxxxxxxxxxx"}},
+			{type:"text", path:"stripe_webhook_secret", label:"Webhook Secret", description:"Find in: Devlopers > Webhooks.", options:{placeholder:"whsec_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}},
+			{type:"text", path:"stripe_pricing_table", label:"Pricing Table Identifier", description:"Find in: Product Catalog > Pricing Tables.", options:{placeholder:"prctbl_xxxxxxxxxxxxxxxxxxxxxxxx"}},
 		]
 	}
-}	
+	actions: {
+		view: {do:"view-html", as-full-page:true}
+		confirm: {do:"view-html", as-full-page:true}
+	}
+}

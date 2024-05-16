@@ -1,8 +1,8 @@
 {
 	registrationId:register-simple
-	label:Simple/Free Registration
+	label:Free Registration
 	icon:user
-	description:SimpleFree Signup collects a user's name and email address and sends a confirmation email.
+	description:Free Registration collects a user's name and email address and sends a confirmation email.
 	schema: {
 		type:object
 		properties: {
@@ -20,6 +20,10 @@
 		]
 	}
 	actions: {
-		view: {do:"view-html"}
+		view: {
+			steps:[
+				{do:"view-html", as-full-page:true}
+			]
+		}	
 	}
 }	

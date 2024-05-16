@@ -71,7 +71,7 @@ func (step StepEditRegistration) Get(builder Builder, buffer io.Writer) Pipeline
 		userID := builder.authorization().UserID
 		lookupProvider := factory.LookupProvider(userID)
 
-		if err := registration.Form.Edit(&registration.Schema, lookupProvider, domainBuilder._domain.SignupData, form); err != nil {
+		if err := registration.Form.Edit(&registration.Schema, lookupProvider, domainBuilder._domain.RegistrationData, form); err != nil {
 			return Halt().WithError(derp.Wrap(err, "builder.StepEditRegistration", "Error building registration form"))
 		}
 
@@ -106,8 +106,8 @@ func (step StepEditRegistration) Post(builder Builder, _ io.Writer) PipelineBeha
 
 	// If the registrationID is empty, then we are disabling signups
 	if registrationID == "" {
-		domainBuilder._domain.SignupID = ""
-		domainBuilder._domain.SignupData = mapof.NewString()
+		domainBuilder._domain.RegistrationID = ""
+		domainBuilder._domain.RegistrationData = mapof.NewString()
 		return Continue().WithEvent("closeModal", "true")
 	}
 
@@ -131,11 +131,11 @@ func (step StepEditRegistration) Post(builder Builder, _ io.Writer) PipelineBeha
 	}
 
 	// Apply the new values to the domain object
-	domainBuilder._domain.SignupID = registrationID
-	domainBuilder._domain.SignupData = data
+	domainBuilder._domain.RegistrationID = registrationID
+	domainBuilder._domain.RegistrationData = data
 
-	spew.Dump(domainBuilder._domain.SignupID)
-	spew.Dump(domainBuilder._domain.SignupData)
+	spew.Dump(domainBuilder._domain.RegistrationID)
+	spew.Dump(domainBuilder._domain.RegistrationData)
 
 	// Success. (close the modal)
 	return Continue().WithEvent("closeModal", "true")

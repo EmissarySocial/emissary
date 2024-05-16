@@ -23,16 +23,17 @@ import (
 
 // Domain service manages all access to the singleton model.Domain in the database
 type Domain struct {
-	collection        data.Collection
-	configuration     config.Domain
-	connectionService *Connection
-	providerService   *Provider
-	themeService      *Theme
-	userService       *User
-	funcMap           template.FuncMap
-	domain            model.Domain
-	hostname          string // domain-only name (no protocol)
-	ready             bool
+	collection          data.Collection
+	configuration       config.Domain
+	connectionService   *Connection
+	providerService     *Provider
+	registrationService *Registration
+	themeService        *Theme
+	userService         *User
+	funcMap             template.FuncMap
+	domain              model.Domain
+	hostname            string // domain-only name (no protocol)
+	ready               bool
 }
 
 // NewDomain returns a fully initialized Domain service
@@ -47,12 +48,13 @@ func NewDomain() Domain {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Domain) Refresh(collection data.Collection, configuration config.Domain, connectionService *Connection, providerService *Provider, themeService *Theme, userService *User, funcMap template.FuncMap, hostname string) {
+func (service *Domain) Refresh(collection data.Collection, configuration config.Domain, connectionService *Connection, providerService *Provider, registrationService *Registration, themeService *Theme, userService *User, funcMap template.FuncMap, hostname string) {
 
 	service.collection = collection
 	service.configuration = configuration
 	service.connectionService = connectionService
 	service.providerService = providerService
+	service.registrationService = registrationService
 	service.themeService = themeService
 	service.userService = userService
 	service.funcMap = funcMap
@@ -242,6 +244,17 @@ func (service *Domain) Theme() model.Theme {
 // HasRegistrationForm returns TRUE if this domain allows new users to sign up.
 func (service *Domain) HasRegistrationForm() bool {
 	return service.domain.HasRegistrationForm()
+}
+
+func (service *Domain) LoadRegistration() model.Registration {
+
+	if registrationID := service.domain.RegistrationID; registrationID != "" {
+		if registration, err := service.registrationService.Load(registrationID); err == nil {
+			return registration
+		}
+	}
+
+	return model.NewRegistration("", nil)
 }
 
 // Provider returns the external Provider that matches the given providerID

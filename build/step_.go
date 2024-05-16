@@ -107,9 +107,6 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.SendEmail:
 		return StepSendEmail(s)
 
-	case step.ServerRedirect:
-		return StepServerRedirect(s)
-
 	case step.SetData:
 		return StepSetData(s)
 

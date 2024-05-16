@@ -26,6 +26,7 @@ import (
 type Registration struct {
 	_actionID     string
 	_action       model.Action
+	_domain       model.Domain
 	_provider     *service.Provider
 	_registration model.Registration
 	_user         model.User
@@ -48,6 +49,7 @@ func NewRegistration(factory Factory, request *http.Request, response http.Respo
 	result := Registration{
 		_actionID:     actionID,
 		_action:       action,
+		_domain:       factory.Domain().Get(),
 		_provider:     factory.Provider(),
 		_registration: registration,
 		_user:         model.NewUser(),
@@ -152,6 +154,9 @@ func (w Registration) PageTitle() string {
 	return "Register"
 }
 
+func (w Registration) Data(key string) string {
+	return w._domain.RegistrationData[key]
+}
 func (w Registration) clone(action string) (Builder, error) {
 	return NewRegistration(w._factory, w._request, w._response, w._registration, action)
 }
@@ -163,7 +168,7 @@ func (w Registration) clone(action string) (Builder, error) {
 // Template returns the registration template selected for this domain
 func (w Registration) Template() model.Registration {
 	domain := w._factory.Domain().Get()
-	registration, _ := w._factory.Registration().Load(domain.SignupID)
+	registration, _ := w._factory.Registration().Load(domain.RegistrationID)
 	return registration
 }
 

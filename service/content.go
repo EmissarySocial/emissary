@@ -88,6 +88,14 @@ func (service *Content) Format(content *model.Content) {
 	policy := bluemonday.UGCPolicy()
 	policy.AllowStyling()
 
+	policy.AllowElements("iframe")
+	policy.AllowAttrs("width").Matching(bluemonday.NumberOrPercent).OnElements("iframe")
+	policy.AllowAttrs("height").Matching(bluemonday.NumberOrPercent).OnElements("iframe")
+	policy.AllowAttrs("src").OnElements("iframe")
+	policy.AllowAttrs("frameborder").Matching(bluemonday.Number).OnElements("iframe")
+	policy.AllowAttrs("allow").Matching(regexp.MustCompile(`[a-z; -]*`)).OnElements("iframe")
+	policy.AllowAttrs("allowfullscreen").OnElements("iframe")
+
 	content.HTML = policy.Sanitize(content.HTML)
 }
 

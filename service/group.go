@@ -194,7 +194,7 @@ func (service *Group) ListByIDs(groupIDs ...primitive.ObjectID) ([]model.Group, 
 	return result, nil
 }
 
-// LoadByGroupname loads a single Group object that matches the provided token
+// LoadByToken loads a single Group object that matches the provided token
 func (service *Group) LoadByToken(token string, result *model.Group) error {
 
 	// If the token *looks* like an ObjectID then try that first.  If it works, then return in triumph

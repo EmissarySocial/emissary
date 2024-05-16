@@ -20,10 +20,13 @@
 						type: "layout-vertical"
 						label: "Add a Group"
 						children: [
-							{type: "text", label: "Label", path: "label"}
+							{type: "text", label: "Label", path: "label", description:"Human readable name for the group"}
+							{type: "text", label: "Token", path: "token", description:"(Optional) identifier used by automated APIs"}
 						]
 					}
-				}]
+				}
+				{do: "refresh-page"}
+				]
 			}]
 		}
 
@@ -31,19 +34,20 @@
 			steps: [{
 				do: "as-modal"
 				steps: [
+					{do:"view-html"}
 					{
 						do: "edit"
 						form: {
 							type: "layout-vertical"
-							label: "Edit Group"
-							description: ""
 							children: [
-								{type: "text", label: "Label", path: "label"}
+								{type: "text", label: "Label", path: "label", description:"Human readable name for the group"}
+								{type: "text", label: "Token", path: "token", description:"(optional) identifier used by automated APIs"}
 							]
 						}
 						options: ["delete:/admin/groups/{{.GroupID}}/delete"]
 					}
-					{do: "save",comment: "Updated by {{.Author}}"}
+					{do: "save"}
+					{do: "refresh-page"}
 				]
 			}]
 		}

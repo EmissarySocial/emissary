@@ -2,18 +2,21 @@ package service
 
 import (
 	"context"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/queries"
+	"github.com/EmissarySocial/emissary/tools/random"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
 	"github.com/benpate/domain"
 	"github.com/benpate/exp"
+	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/iterator"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/schema"
@@ -110,6 +113,23 @@ func (service *User) Save(user *model.User, note string) error {
 		theme := service.domainService.Theme()
 		user.InboxTemplate = theme.DefaultInbox
 		user.OutboxTemplate = theme.DefaultOutbox
+
+		// Rule: IF the display name is empty, then try the username and email address
+		if user.DisplayName == "" {
+
+			if user.Username != "" {
+				user.DisplayName = user.Username
+			} else if user.EmailAddress != "" {
+				user.DisplayName = strings.Split(user.EmailAddress, "@")[0]
+			} else {
+				user.DisplayName = "New User"
+			}
+		}
+
+		// Try to automatically generate a username (if none exists)
+		if err := service.CalcUsername(user); err != nil {
+			return derp.Wrap(err, location, "Error calculating username", user)
+		}
 	}
 
 	// RULE: Set ProfileURL to the hostname + the username
@@ -261,6 +281,13 @@ func (service *User) LoadByID(userID primitive.ObjectID, result *model.User) err
 	return service.Load(criteria, result)
 }
 
+// LoadByMapID loads a single model.User object that matches the provided mapID key/value
+func (service *User) LoadByMapID(key string, value string, result *model.User) error {
+	criteria := exp.Equal("mapIds."+key, value)
+	return service.Load(criteria, result)
+}
+
+// LoadByProfileURL loads a single model.User object that matches the provided profile URL
 func (service *User) LoadByProfileURL(profileUrl string, result *model.User) error {
 	criteria := exp.Equal("profileUrl", profileUrl)
 	return service.Load(criteria, result)
@@ -272,9 +299,17 @@ func (service *User) LoadByUsername(username string, result *model.User) error {
 	return service.Load(criteria, result)
 }
 
-// LoadByUsernameOrEmail loads a single model.User object that matches the provided username
+// LoadByUsernameOrEmail loads a single model.User object that matches the provided username or email address
 func (service *User) LoadByUsernameOrEmail(usernameOrEmail string, result *model.User) error {
 	criteria := exp.Equal("username", usernameOrEmail).OrEqual("emailAddress", usernameOrEmail)
+	err := service.Load(criteria, result)
+
+	return err
+}
+
+// LoadByEmail loads a single model.User object that matches the provided email address
+func (service *User) LoadByEmail(email string, result *model.User) error {
+	criteria := exp.Equal("emailAddress", email)
 	err := service.Load(criteria, result)
 
 	return err
@@ -340,6 +375,48 @@ func (service *User) QueryBlockedActors(userID primitive.ObjectID, criteria exp.
 /******************************************
  * Custom Actions
  ******************************************/
+
+func (service *User) CalcUsername(user *model.User) error {
+
+	// Calculate the new base username
+	base := first.String(user.Username, user.DisplayName, user.EmailAddress, user.UserID.Hex())
+	base = strings.ToLower(base)
+	base = strings.ReplaceAll(base, " ", "")
+	base = strings.ReplaceAll(base, ".", "")
+	base, _, _ = strings.Cut(base, "@")
+
+	// Try to use the preferred username with no slug
+	if !service.usernameExists(user.UserID, base) {
+		user.Username = base
+		return nil
+	}
+
+	// Otherwise, try slug values until we find a unique username (max 32)
+	for i := 1; i < 32; i++ {
+		slug := random.GenerateInt(1000, 9999)
+		username := base + strconv.Itoa(slug)
+
+		if !service.usernameExists(user.UserID, username) {
+			user.Username = username
+			return nil
+		}
+	}
+
+	// Okay, this sucks, but we need to call it here.  Return error.
+	return derp.NewInternalError("service.User.CalcUsername", "Unable to generate a unique username", user)
+}
+
+// usernameExists returns TRUE if the provided username is already in use by another user
+func (service *User) usernameExists(userID primitive.ObjectID, username string) bool {
+	user := model.NewUser()
+	criteria := exp.Equal("username", username).AndNotEqual("_id", userID)
+
+	// Try to find a User with the same username and a different ID
+	err := service.Load(criteria, &user)
+
+	// If found, return TRUE.  If NOT found, return FALSE.
+	return err == nil
+}
 
 func (service *User) CalcFollowerCount(userID primitive.ObjectID) {
 	if err := queries.SetFollowersCount(service.collection, service.followers, userID); err != nil {

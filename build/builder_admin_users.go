@@ -127,14 +127,6 @@ func (w User) clone(action string) (Builder, error) {
 }
 
 /******************************************
- * Domain Data
- ******************************************/
-
-func (w User) SignupForm() model.SignupForm {
-	return w._factory.Domain().Get().SignupForm
-}
-
-/******************************************
  * User Data
  ******************************************/
 
@@ -166,6 +158,10 @@ func (w User) IconURL() string {
 	return w._user.ActivityPubIconURL()
 }
 
+func (w User) MapIDs() map[string]string {
+	return w._user.MapIDs
+}
+
 /******************************************
  * Query Builders
  ******************************************/
@@ -195,8 +191,8 @@ func (w User) Registration() model.Registration {
 
 	domain := w._factory.Domain().Get()
 
-	if domain.SignupID != "" {
-		if template, err := w._factory.Registration().Load(domain.SignupID); err == nil {
+	if domain.RegistrationID != "" {
+		if template, err := w._factory.Registration().Load(domain.RegistrationID); err == nil {
 			return template
 		}
 	}

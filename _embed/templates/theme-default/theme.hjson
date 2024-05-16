@@ -12,7 +12,7 @@
 			label: {type:"string", maxLength:100, required: true}
 			description: {type:"string", maxLength:100}
 			themeId: {type:"string", maxLength: 100}
-			signupId: {type:"string", maxLength: 100}
+			registrationId: {type:"string", maxLength: 100}
 		}
 	}
 	form: {

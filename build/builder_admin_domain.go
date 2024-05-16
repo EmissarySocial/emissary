@@ -159,11 +159,6 @@ func (w Domain) Theme(themeID string) model.Theme {
 	return themeService.GetTheme(themeID)
 }
 
-// SignupForm returns the SignupForm associated with this Domain.
-func (w Domain) SignupForm() model.SignupForm {
-	return w._domain.SignupForm
-}
-
 // PropertyForm returns the custom property form for this Domain,
 // defined by the Theme that it uses.
 func (w Domain) PropertyForm() form.Element {
