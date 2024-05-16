@@ -47,7 +47,7 @@ func PostWebhook(serverFactory *server.Factory) echo.HandlerFunc {
 			return derp.ReportAndReturn(derp.NewNotFoundError(location, "Stripe Webhook not defined (no registration form)"))
 		}
 
-		// Collect Registration Settings
+		// Collect Registration Metadata
 		secret := domain.RegistrationData.GetString("stripe_webhook_secret")
 		if secret == "" {
 			return derp.ReportAndReturn(derp.NewInternalError(location, "Stripe Webhook Secret not defined"))
@@ -142,6 +142,9 @@ func finishWebhook(factory *domain.Factory, restrictedKey string, event stripe.E
 		// Remove the user from the designated groups
 		removeGroups(factory, &user, price.Product, "remove_groups")
 
+		// Set the user to "public" (if indicated by the Product metadata)
+		setPublic(&user, price.Product, true)
+
 	// Otherwise, CANCEL the user's subscription
 	default:
 
@@ -152,6 +155,9 @@ func finishWebhook(factory *domain.Factory, restrictedKey string, event stripe.E
 
 		// Since this subscription is no longer active, remove the user from the designated groups
 		removeGroups(factory, &user, price.Product, "add_groups")
+
+		// Set the user to "private" (if indicated by the Product metadata)
+		setPublic(&user, price.Product, false)
 	}
 
 	// Save the new User to the database.  Yay!
@@ -204,6 +210,22 @@ func removeGroups(factory *domain.Factory, user *model.User, product *stripe.Pro
 		if err := groupService.LoadByToken(groupToken, &group); err == nil {
 			user.RemoveGroup(group.GroupID)
 		}
+	}
+}
+
+// setPublic sets the User's "IsPublic" flag to the specified value (if indicated by the Product metadata)
+func setPublic(user *model.User, product *stripe.Product, value bool) {
+
+	if user == nil {
+		return
+	}
+
+	if product == nil {
+		return
+	}
+
+	if setPublic := product.Metadata["set_public"]; setPublic == "true" {
+		user.IsPublic = value
 	}
 }
 
