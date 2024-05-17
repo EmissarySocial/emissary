@@ -9,7 +9,7 @@ func GroupSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
 			"groupId": schema.String{Format: "objectId"},
-			"token":   schema.String{MaxLength: 64, Required: true},
+			"token":   schema.String{MaxLength: 64},
 			"label":   schema.String{MaxLength: 64, Required: true},
 		},
 	}
