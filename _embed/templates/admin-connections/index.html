@@ -12,36 +12,25 @@
 	<div class="columns-4">
 
 		{{- $builder := . -}}
-		{{- range .Providers -}}
-			{{ $client := $builder.Client .Value }}
-			{{- if eq .Group "OAUTH" -}}
-				<div class="card align-center">
-					<div class="text-3xl">{{icon .Icon}}</div>
-					<div class="margin-bottom text-lg bold">{{.Label}}</div>
-					<div class="margin-bottom">
-						{{- if $client.Active -}}
-							<a class="button success" hx-get="/admin/connections/edit/provider={{.Value}}">{{icon "check"}} Enabled</a>
-						{{- else -}}
-							<a class="button" href="/oauth/clients/{{.Value}}">Connect</a>
-						{{- end -}}
-					</div>
-				</div>
-			{{- end -}}
+		{{- $connections := $builder.AllConnections -}}
 
-			{{- if eq .Group "MANUAL" -}}
-				<div class="card align-center">
+		{{- range .Providers -}}
+			{{ $connection := index $connections .Value }}
+				<div class="card align-center" script="install blockselect()">
 					<div class="text-3xl">{{icon .Icon}}</div>
 					<div class="margin-bottom text-lg bold">{{.Label}}</div>
 					<div class="margin-bottom">
-						{{- if $client.Active -}}
-							<a class="button success" hx-get="/admin/connections/edit?provider={{.Value}}">{{icon "check"}} Enabled</a>
-						{{- else -}}
-							<a class="button" hx-get="/admin/connections/edit?provider={{.Value}}">Connect</a>
+						{{- if $connection.Active -}}
+							<a class="button success" hx-get="/admin/connections/edit?providerId={{.Value}}">{{icon "check"}} Enabled</a>
+						{{- else if eq .Group "OAUTH" -}}
+							<a class="button" href="/oauth/clients/{{.Value}}">Connect</a>
+						{{- else if eq .Group "MANUAL" -}}
+							<a class="button" hx-get="/admin/connections/edit?providerId={{.Value}}">Connect</a>
 						{{- end -}}
 					</div>
 				</div>
-			{{- end -}}
 		{{- end -}}
 
 	</div>
+	
 </div>

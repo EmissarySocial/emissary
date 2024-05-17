@@ -38,20 +38,11 @@ func (service *Provider) GetProvider(providerID string) (providers.Provider, boo
 	switch providerID {
 
 	case providers.ProviderTypeGiphy:
-		return service.GetGiphyProvider(), true
+		return providers.NewGiphy(), true
+
+	case providers.ProviderTypeStripe:
+		return providers.NewStripe(), true
 	}
 
 	return providers.Null{}, false
 }
-
-func (service *Provider) GetGiphyProvider() providers.Giphy {
-	return providers.NewGiphy()
-}
-
-/* REMOVED FOR NOW
-// GetTwitterProvider returns a populated Twitter adapter
-func (service *Provider) GetTwitterProvider() providers.Twitter {
-	config, _ := service.config.Get(providers.ProviderTypeTwitter)
-	return providers.NewTwitter(config)
-}
-*/

@@ -70,8 +70,8 @@ func isOwner(claims jwt.Claims, err error) bool {
 
 // cleanQueryParams returns a "clean" version of a url.Values structure.
 // It truncates all slices into a single string.
-func cleanQueryParams(values url.Values) mapof.String {
-	result := make(mapof.String, len(values))
+func cleanQueryParams(values url.Values) mapof.Any {
+	result := make(mapof.Any, len(values))
 	for key, value := range values {
 		if len(value) > 0 {
 			result[key] = value[0]

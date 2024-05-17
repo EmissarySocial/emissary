@@ -1,0 +1,29 @@
+{
+	registrationId:register-simple
+	label:Free Registration
+	icon:user
+	description:Free Registration collects a user's name and email address and sends a confirmation email.
+	schema: {
+		type:object
+		properties: {
+			title: {type:"string"}
+			description: {type:"string"}
+			groupId: {type:"string", format:"objectId"}
+		}
+	}
+	form: {
+		type: "layout-vertical",
+		children: [
+			{type:"text", path:"title", label:"Title", description:"Displayed at the top of the registration form"},
+			{type:"textarea", path:"description", label:"Description", description:"Longer text above the registration form"},
+			{type:"select", path:"groupId", label:"Group", description:"New users will be added to this group", options:{provider:"groups"}},
+		]
+	}
+	actions: {
+		view: {
+			steps:[
+				{do:"view-html", as-full-page:true}
+			]
+		}	
+	}
+}	

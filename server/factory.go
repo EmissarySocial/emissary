@@ -7,7 +7,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/EmissarySocial/emissary/builder"
+	"github.com/EmissarySocial/emissary/build"
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/service"
@@ -42,15 +42,16 @@ type Factory struct {
 	mutex   sync.RWMutex
 
 	// Server-level services
-	themeService    service.Theme
-	templateService service.Template
-	widgetService   service.Widget
-	contentService  service.Content
-	providerService service.Provider
-	emailService    service.ServerEmail
-	taskQueue       queue.Queue
-	activityService service.ActivityStream
-	embeddedFiles   embed.FS
+	registrationService service.Registration
+	themeService        service.Theme
+	templateService     service.Template
+	widgetService       service.Widget
+	contentService      service.Content
+	providerService     service.Provider
+	emailService        service.ServerEmail
+	taskQueue           queue.Queue
+	activityService     service.ActivityStream
+	embeddedFiles       embed.FS
 
 	activityStreamCache *mongo.Client
 	attachmentOriginals afero.Fs
@@ -74,21 +75,25 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 		refreshed:     make(chan bool, 1),
 	}
 
+	// Global Registration Service
+	factory.registrationService = service.NewRegistration(factory.FuncMap())
+
 	// Global Theme service
-	factory.themeService = *service.NewTheme(
+	factory.themeService = service.NewTheme(
 		factory.Template(),
 		factory.Content(),
 		factory.FuncMap(),
 	)
 
 	// Global Widget Service
-	factory.widgetService = *service.NewWidget(
+	factory.widgetService = service.NewWidget(
 		factory.FuncMap(),
 	)
 
 	// Global Template Service
 	factory.templateService = *service.NewTemplate(
 		factory.Filesystem(),
+		factory.Registration(),
 		factory.Theme(),
 		factory.Widget(),
 		factory.FuncMap(),
@@ -217,6 +222,7 @@ func (factory *Factory) refreshDomain(config config.Config, domainConfig config.
 		domainConfig,
 		config.Providers,
 		&factory.activityService,
+		&factory.registrationService,
 		&factory.emailService,
 		&factory.themeService,
 		&factory.templateService,
@@ -481,6 +487,11 @@ func (factory *Factory) Content() *service.Content {
 	return &factory.contentService
 }
 
+// Registration returns the global template service
+func (factory *Factory) Registration() *service.Registration {
+	return &factory.registrationService
+}
+
 // Template returns the global template service
 func (factory *Factory) Template() *service.Template {
 	return &factory.templateService
@@ -498,7 +509,7 @@ func (factory *Factory) Widget() *service.Widget {
 
 // FuncMap returns the global funcMap (used by all templates)
 func (factory *Factory) FuncMap() template.FuncMap {
-	return builder.FuncMap(factory.Icons())
+	return build.FuncMap(factory.Icons())
 }
 
 // Icons returns the global icon collection

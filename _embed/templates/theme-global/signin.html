@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Signin - Emissary</title>
+	<title>Signin</title>
 	{{- template "includes-head" . -}}
 </head>
 
@@ -51,10 +51,10 @@
 
 					<a href="/signin/reset">Forgot Password?</a>
 
-					{{- if .HasSignupForm -}}
-						<div class="margin-top">
+					{{- if .HasRegistrationForm -}}
+						<div class="margin-top-xl">
 							Don't have a profile? 
-							<a href="/register">Register Now</a>
+							<a href="/register">Register Now &rarr;</a>
 						</div>
 					{{- end -}}
 

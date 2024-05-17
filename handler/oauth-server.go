@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/EmissarySocial/emissary/builder"
+	"github.com/EmissarySocial/emissary/build"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
@@ -35,7 +35,7 @@ func GetOAuthAuthorization(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		// Load the OAuth Builder
-		builder, err := builder.NewOAuthAuthorization(factory, transaction)
+		builder, err := build.NewOAuthAuthorization(factory, transaction)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error Generating Builder")

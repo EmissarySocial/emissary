@@ -11,6 +11,7 @@ func UserSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
 			"userId":         schema.String{Format: "objectId"},
+			"mapIds":         schema.Object{Wildcard: schema.String{}},
 			"groupIds":       id.SliceSchema(),
 			"iconId":         schema.String{Format: "objectId"},
 			"imageId":        schema.String{Format: "objectId"},
@@ -47,6 +48,9 @@ func (user *User) GetPointer(name string) (any, bool) {
 
 	case "groupIds":
 		return &user.GroupIDs, true
+
+	case "mapIds":
+		return &user.MapIDs, true
 
 	case "links":
 		return &user.Links, true

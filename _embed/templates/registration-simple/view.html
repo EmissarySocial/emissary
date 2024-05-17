@@ -1,0 +1,141 @@
+{{- $message := .QueryParam "message" -}}
+
+<!DOCTYPE html>
+<html>
+<head>
+	<title>{{first (.Data "title") "Register"}}</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="generator" content="https://emissary.social">
+	<link rel="stylesheet" href="/.themes/global/resources/bootstrap-icons-1.11.3/font/bootstrap-icons.css" rel="preload">
+	<link rel="stylesheet" href="/.themes/global/stylesheet" rel="preload">
+</head>
+
+<body hx-target="main" hx-swap="innerHTML" hx-push-url="false">
+
+	<main style="display:flex; height:clamp(400px, 100vh, 1000px); justify-content: center; align-items: center;">
+
+		<div class="card" style="width:clamp(540px, 50%, 720px); margin:auto; padding:16px 32px; line-height:150%;">
+			
+			<form hx-post="/signin" hx-target="#message">
+
+				<div class="layout-vertical margin-bottom">
+
+					<div class="layout-title">{{.Data "title"}}</div>
+					<div class="margin-bottom-xl">{{.Data "description"}}</div>
+
+					{{- if ne "" $message -}}
+						<div class="margin-bottom">{{$message}}</div>
+					{{- end -}}
+
+					<div class="layout-vertical-elements">
+						<div class="layout-vertical-element">
+							<label for="displayName">Your Name</label>
+							<input type="text" name="displayName" id="displayName" required="true" maxlength="50" autocomplete="name">
+							<div role="note" class="text-sm gray40">Displayed on your profile page.</div>
+						</div>
+					</div>
+
+					<div class="layout-vertical-elements">
+						<div class="layout-vertical-element">
+							<label for="emailAddress">Email Address</label>
+							<input type="email" name="emailAddress" id="emailAddress" required="true" maxlength="50" autocomplete="email">
+							<div role="note" class="text-sm gray40">An email address where you can receive messages. Hidden from others.</div>
+						</div>
+					</div>
+
+					<div class="layout-vertical-elements">
+						<div class="layout-vertical-element">
+							<label for="username">Username</label>
+							<input type="text" name="username" id="username" required="true" maxlength="50" autocomplete="username">
+							<div role="note" class="text-sm gray40">Displayed on your profile page. How others will reach you.</div>
+						</div>
+					</div>
+
+					<div class="layout-vertical-element">
+						<label for="password">Password</label>
+						<input type="password" name="password" id="password" required="true" minlength="12" maxlength="100" autocomplete="new-password">
+						<div role="note" class="text-sm gray40">12 or more characters.  Don't reuse passwords.</div>
+					</div>
+
+				</div>
+
+				<div>
+
+					<button class="htmx-request-show primary" disabled>
+						<span class="spin">{{icon "loading"}}</span> Registering
+					</button>
+
+					<button id="submitButton" type="submit" class="primary htmx-request-hide">
+						Register Now
+					</button>
+
+					<span id="message" class="text-red" hidden></span>
+
+					<div class="margin-top-xl">
+						Already have a profile?
+						<a href="/signin">Sign In &rarr;</a>
+					</div>
+
+				</div>
+
+			</form>
+
+		</div>
+
+	</main>
+	
+	<script type="text/hyperscript" src="/.themes/global/hyperscript"></script>
+	<script type="text/javascript" src="/.themes/global/resources/htmx/htmx.min.js" rel="preload"></script>
+	<script type="text/javascript" src="/.themes/global/resources/hyperscript/_hyperscript.min.js" rel="preload"></script>
+	<script type="text/javascript" src="/.themes/global/javascript"></script>
+
+</body>
+</html>
+
+<!--
+<div class="card padding-sm">
+
+	<form hx-post="/register" hx-swap="none" hx-push-url="false" class="pure-form pure-form-stacked">
+
+		<h1>{{.Data "title"}}</h1>
+
+		{{- if ne "" $message -}}
+			<div class="margin-bottom">{{$message}}</div>
+		{{- end -}}
+
+		<fieldset script="install eventValidator(name:'displayName')">
+			<label for="username">Your Name</label>
+			<input type="text" name="displayName" id="displayName" required="true" minlength="4" maxlength="40" autofocus autocomplete="off">
+			<div role="note" class="hint text-sm gray40">How others will see you.</div>
+		</fieldset>
+
+		<fieldset script="install eventValidator(name:'username')">
+			<label for="username">Username</label>
+			<input type="text" name="username" id="username" required="true" minlength="4" maxlength="40" autocomplete="off">
+			<div role="note" class="message text-sm gray40">How you'll sign in.  Must be unique.</div>
+		</fieldset>
+
+		<fieldset class="margin-bottom" script="install eventValidator(name:'password')">
+			<label for="password">Password</label>
+			<input type="password" name="password" id="password" required="true" minlength="12" maxlength="100" autocomplete="off">
+			<div role="note" class="text-sm gray40">12 or more characters.  Don't reuse passwords.</div>
+		</fieldset>
+
+		<div class="margin-top">
+			<button id="submitButton" type="submit" class="primary">
+				<span class="htmx-request-show">
+					{{icon "loading"}} Creating Your Profile...
+				</span>
+				<span class="htmx-request-hide">Register</span>
+			</button>
+		</div>
+
+		<div class="margin-top">
+			Already have a profile?
+			<a href="/signin">Sign In</a>
+		</div>
+
+	</form>
+</div>
+-->

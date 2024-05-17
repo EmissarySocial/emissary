@@ -29,9 +29,9 @@ type Theme struct {
 }
 
 // NewTheme returns a fully initialized Theme service.
-func NewTheme(templateService *Template, contentService *Content, funcMap template.FuncMap) *Theme {
+func NewTheme(templateService *Template, contentService *Content, funcMap template.FuncMap) Theme {
 
-	service := Theme{
+	return Theme{
 		templateService: templateService,
 		contentService:  contentService,
 		funcMap:         funcMap,
@@ -40,8 +40,6 @@ func NewTheme(templateService *Template, contentService *Content, funcMap templa
 		changed:         make(chan bool),
 		closed:          make(chan bool),
 	}
-
-	return &service
 }
 
 /******************************************

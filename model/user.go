@@ -16,6 +16,7 @@ import (
 // User represents a person or machine account that can own pages and sections.
 type User struct {
 	UserID          primitive.ObjectID         `json:"userId"          bson:"_id"`                  // Unique identifier for this user.
+	MapIDs          mapof.String               `json:"mapIds"          bson:"mapIds"`               // Map of IDs for this user on other web services.
 	GroupIDs        id.Slice                   `json:"groupIds"        bson:"groupIds"`             // Slice of IDs for the groups that this user belongs to.
 	IconID          primitive.ObjectID         `json:"iconId"          bson:"iconId"`               // AttachmentID of this user's avatar/icon image.
 	ImageID         primitive.ObjectID         `json:"imageId"         bson:"imageId"`              // AttachmentID of this user's banner image.
@@ -45,8 +46,9 @@ type User struct {
 func NewUser() User {
 	return User{
 		UserID:   primitive.NewObjectID(),
+		MapIDs:   mapof.NewString(),
 		GroupIDs: make([]primitive.ObjectID, 0),
-		Links:    make([]PersonLink, 0),
+		Links:    sliceof.NewObject[PersonLink](),
 		Data:     mapof.NewString(),
 	}
 }
@@ -82,7 +84,7 @@ func (user User) Summary() UserSummary {
 		DisplayName:  user.DisplayName,
 		Username:     user.Username,
 		EmailAddress: user.EmailAddress,
-		IconURL:      user.ActivityPubIconURL(),
+		IconID:       user.IconID,
 		ProfileURL:   user.ProfileURL,
 	}
 }
@@ -92,6 +94,33 @@ func (user User) Summary() UserSummary {
 // of this record is returned.
 func (user User) Copy() User {
 	return user
+}
+
+/******************************************
+ * Group Interface
+ ******************************************/
+
+// AddGroup adds a new group to this user's list of groups, avoiding duplicates
+func (user *User) AddGroup(groupID primitive.ObjectID) {
+
+	for _, existingID := range user.GroupIDs {
+		if existingID == groupID {
+			return
+		}
+	}
+
+	user.GroupIDs = append(user.GroupIDs, groupID)
+}
+
+// RemoveGroup removes a group from this user's list of groups
+func (user *User) RemoveGroup(groupID primitive.ObjectID) {
+
+	for index, existingID := range user.GroupIDs {
+		if existingID == groupID {
+			user.GroupIDs = append(user.GroupIDs[:index], user.GroupIDs[index+1:]...)
+			return
+		}
+	}
 }
 
 /******************************************

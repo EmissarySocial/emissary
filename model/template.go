@@ -37,7 +37,7 @@ type Template struct {
 	Bundles            mapof.Object[Bundle] `json:"bundles"            bson:"bundles"`            // Additional resources (JS, HS, CSS) reqired tp remder this Template.
 	Resources          fs.FS                `json:"-"                  bson:"-"`                  // File system containing the template resources
 	DefaultAction      string               `json:"defaultAction"      bson:"defaultAction"`      // Name of the action to be used when none is provided.  Also serves as the permissions for viewing a Stream.  If this is empty, it is assumed to be "view"
-	Actor              StreamActor          `json:"actor"             bson:"actor"`               // ActivityPub Actor operated on behalf of this Template/Stream
+	Actor              StreamActor          `json:"actor"              bson:"actor"`              // ActivityPub Actor operated on behalf of this Template/Stream
 }
 
 // NewTemplate creates a new, fully initialized Template object
@@ -61,6 +61,18 @@ func NewTemplate(templateID string, funcMap template.FuncMap) Template {
 // ID implements the set.Value interface
 func (template Template) ID() string {
 	return template.TemplateID
+}
+
+func (template Template) IsZero() bool {
+	if template.TemplateID != "" {
+		return false
+	} else if template.TemplateRole != "" {
+		return false
+	} else if len(template.Actions) > 0 {
+		return false
+	}
+
+	return true
 }
 
 // CanBeContainedBy returns TRUE if this Streams using this Template can be nested inside of

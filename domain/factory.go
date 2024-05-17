@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/EmissarySocial/emissary/builder"
+	"github.com/EmissarySocial/emissary/build"
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
@@ -31,13 +31,14 @@ type Factory struct {
 	providers []config.Provider
 
 	// services (from server)
-	themeService    *service.Theme
-	templateService *service.Template
-	widgetService   *service.Widget
-	contentService  *service.Content
-	providerService *service.Provider
-	taskQueue       queue.Queue
-	activityService *service.ActivityStream
+	registrationService *service.Registration
+	themeService        *service.Theme
+	templateService     *service.Template
+	widgetService       *service.Widget
+	contentService      *service.Content
+	providerService     *service.Provider
+	taskQueue           queue.Queue
+	activityService     *service.ActivityStream
 
 	// Upload Directories (from server)
 	attachmentOriginals afero.Fs
@@ -45,14 +46,14 @@ type Factory struct {
 
 	// services (within this domain/factory)
 	attachmentService    service.Attachment
-	ruleService          service.Rule
-	groupService         service.Group
+	connectionService    service.Connection
 	domainService        service.Domain
 	emailService         service.DomainEmail
 	encryptionKeyService service.EncryptionKey
 	folderService        service.Folder
 	followerService      service.Follower
 	followingService     service.Following
+	groupService         service.Group
 	inboxService         service.Inbox
 	jwtService           service.JWT
 	mentionService       service.Mention
@@ -60,6 +61,7 @@ type Factory struct {
 	oauthUserToken       service.OAuthUserToken
 	outboxService        service.Outbox
 	responseService      service.Response
+	ruleService          service.Rule
 	streamService        service.Stream
 	streamDraftService   service.StreamDraft
 	realtimeBroker       RealtimeBroker
@@ -72,19 +74,20 @@ type Factory struct {
 }
 
 // NewFactory creates a new factory tied to a MongoDB database
-func NewFactory(domain config.Domain, providers []config.Provider, activityService *service.ActivityStream, serverEmail *service.ServerEmail, themeService *service.Theme, templateService *service.Template, widgetService *service.Widget, contentService *service.Content, providerService *service.Provider, taskQueue queue.Queue, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
+func NewFactory(domain config.Domain, providers []config.Provider, activityService *service.ActivityStream, registrationService *service.Registration, serverEmail *service.ServerEmail, themeService *service.Theme, templateService *service.Template, widgetService *service.Widget, contentService *service.Content, providerService *service.Provider, taskQueue queue.Queue, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
 
 	log.Info().Msg("Starting domain: " + domain.Hostname)
 
 	// Base Factory object
 	factory := Factory{
-		themeService:    themeService,
-		templateService: templateService,
-		widgetService:   widgetService,
-		contentService:  contentService,
-		providerService: providerService,
-		taskQueue:       taskQueue,
-		activityService: activityService,
+		registrationService: registrationService,
+		themeService:        themeService,
+		templateService:     templateService,
+		widgetService:       widgetService,
+		contentService:      contentService,
+		providerService:     providerService,
+		taskQueue:           taskQueue,
+		activityService:     activityService,
 
 		attachmentOriginals: attachmentOriginals,
 		attachmentCache:     attachmentCache,
@@ -104,7 +107,7 @@ func NewFactory(domain config.Domain, providers []config.Provider, activityServi
 
 	// Create empty service pointers.  These will be populated in the Refresh() step.
 	factory.attachmentService = service.NewAttachment()
-	factory.ruleService = service.NewRule()
+	factory.connectionService = service.NewConnection()
 	factory.domainService = service.NewDomain()
 	factory.emailService = service.NewDomainEmail(serverEmail)
 	factory.encryptionKeyService = service.NewEncryptionKey()
@@ -112,13 +115,14 @@ func NewFactory(domain config.Domain, providers []config.Provider, activityServi
 	factory.followerService = service.NewFollower()
 	factory.followingService = service.NewFollowing()
 	factory.groupService = service.NewGroup()
-	factory.mentionService = service.NewMention()
 	factory.inboxService = service.NewInbox()
 	factory.jwtService = service.NewJWT()
+	factory.mentionService = service.NewMention()
 	factory.oauthClient = service.NewOAuthClient()
 	factory.oauthUserToken = service.NewOAuthUserToken()
 	factory.outboxService = service.NewOutbox()
 	factory.responseService = service.NewResponse()
+	factory.ruleService = service.NewRule()
 	factory.streamService = service.NewStream()
 	factory.streamDraftService = service.NewStreamDraft()
 	factory.userService = service.NewUser()
@@ -181,23 +185,20 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.Host(),
 		)
 
-		// Populate the Rule Service
-		factory.ruleService.Refresh(
-			factory.collection(CollectionRule),
-			factory.Outbox(),
-			factory.User(),
-			factory.Queue(),
-			factory.Host(),
+		factory.connectionService.Refresh(
+			factory.collection(CollectionConnection),
 		)
 
 		// Populate Domain Service
 		factory.domainService.Refresh(
 			factory.collection(CollectionDomain),
 			domain,
+			factory.Connection(),
+			factory.Provider(),
+			factory.Registration(),
 			factory.Theme(),
 			factory.User(),
-			factory.Provider(),
-			builder.FuncMap(factory.Icons()),
+			build.FuncMap(factory.Icons()),
 			factory.Hostname(),
 		)
 
@@ -299,10 +300,20 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.Queue(),
 		)
 
+		// Populate the Response Service
 		factory.responseService.Refresh(
 			factory.collection(CollectionResponse),
 			factory.User(),
 			factory.Outbox(),
+			factory.Host(),
+		)
+
+		// Populate the Rule Service
+		factory.ruleService.Refresh(
+			factory.collection(CollectionRule),
+			factory.Outbox(),
+			factory.User(),
+			factory.Queue(),
 			factory.Host(),
 		)
 
@@ -470,6 +481,11 @@ func (factory *Factory) Domain() *service.Domain {
 	return &factory.domainService
 }
 
+// Connection returns a fully populated Connection service
+func (factory *Factory) Connection() *service.Connection {
+	return &factory.connectionService
+}
+
 // EncryptionKey returns a fully populated EncryptionKey service
 func (factory *Factory) EncryptionKey() *service.EncryptionKey {
 	return &factory.encryptionKeyService
@@ -614,6 +630,7 @@ func (factory *Factory) Content() *service.Content {
 	return factory.contentService
 }
 
+// Email returns the Domain Email service, which sends email on behalf of the domain
 func (factory *Factory) Email() *service.DomainEmail {
 	return &factory.emailService
 }
@@ -629,6 +646,8 @@ func (factory *Factory) Icons() icon.Provider {
 	return service.Icons{}
 }
 
+// Locator returns the locator service, which locates records based on their URLs
+// This should probably be deprecated.
 func (factory *Factory) Locator() service.Locator {
 	return service.NewLocator(
 		factory.User(),
@@ -640,6 +659,11 @@ func (factory *Factory) Locator() service.Locator {
 // Queue returns the Queue service, which manages background jobs
 func (factory *Factory) Queue() queue.Queue {
 	return factory.taskQueue
+}
+
+// Registration returns the Registration service, which managaes new user registrations
+func (factory *Factory) Registration() *service.Registration {
+	return factory.registrationService
 }
 
 // Steranko returns a fully populated Steranko adapter for the User service.
@@ -654,7 +678,7 @@ func (factory *Factory) Steranko() *steranko.Steranko {
 
 // LookupProvider returns a fully populated LookupProvider service
 func (factory *Factory) LookupProvider(userID primitive.ObjectID) form.LookupProvider {
-	return service.NewLookupProvider(factory.Theme(), factory.Group(), factory.Folder(), userID)
+	return service.NewLookupProvider(factory.Folder(), factory.Group(), factory.Registration(), factory.Theme(), userID)
 }
 
 /******************************************

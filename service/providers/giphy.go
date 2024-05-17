@@ -60,19 +60,11 @@ func (adapter Giphy) ManualConfig() form.Form {
  ******************************************/
 
 // AfterCoonnect applies any extra changes to the database after this Adapter is activated.
-func (adapter Giphy) AfterConnect(factory Factory, client *model.Client) error {
+func (adapter Giphy) AfterConnect(factory Factory, client *model.Connection) error {
 	return nil
 }
 
 // AfterUpdate is called after a user has successfully updated their Twitter connection
-func (adapter Giphy) AfterUpdate(factory Factory, client *model.Client) error {
-	return nil
-}
-
-/******************************************
- * Adapter Methods
- ******************************************/
-
-func (adapter Giphy) PollStreams(client *model.Client) <-chan model.Stream {
+func (adapter Giphy) AfterUpdate(factory Factory, client *model.Connection) error {
 	return nil
 }

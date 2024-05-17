@@ -7,8 +7,9 @@ import (
 )
 
 type Group struct {
-	GroupID primitive.ObjectID `json:"groupId" bson:"_id"`
-	Label   string             `json:"label"   bson:"label"`
+	GroupID primitive.ObjectID `json:"groupId" bson:"_id"`   // Unique identifier assigned by the database
+	Token   string             `json:"token"   bson:"token"` // Uniqe token chosen by the administrator
+	Label   string             `json:"label"   bson:"label"` // Human-readable label for this group.
 
 	journal.Journal `json:"-" bson:",inline"`
 }

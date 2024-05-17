@@ -3,7 +3,6 @@ List of dependencies.  Promote/tag all large updates from the bottom up:
 NO DEPENDENTS
 
 - toot-echo
-- html
 - sherlock
 - data-mongo
 - table
@@ -18,6 +17,7 @@ FEW DEPENDENTS
 - hannibal
 - domain
 - form
+- html
 - oembed
 - re
 

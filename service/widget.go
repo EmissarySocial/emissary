@@ -22,8 +22,8 @@ type Widget struct {
 }
 
 // NewWidget returns a fully initialized Widget service.
-func NewWidget(funcMap template.FuncMap) *Widget {
-	return &Widget{
+func NewWidget(funcMap template.FuncMap) Widget {
+	return Widget{
 		widgets: make(map[string]model.Widget),
 		mutex:   sync.RWMutex{},
 		funcMap: funcMap,

@@ -3,7 +3,7 @@ package handler
 import (
 	"net/http"
 
-	"github.com/EmissarySocial/emissary/builder"
+	"github.com/EmissarySocial/emissary/build"
 	"github.com/EmissarySocial/emissary/handler/activitypub_stream"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
@@ -23,22 +23,22 @@ func GetStream(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		// Otherwise, just build the stream normally
-		return buildStream(serverFactory, builder.ActionMethodGet)(ctx)
+		return buildStream(serverFactory, build.ActionMethodGet)(ctx)
 	}
 }
 
 // GetStreamWithAction handles GET requests with a specified action
 func GetStreamWithAction(serverFactory *server.Factory) echo.HandlerFunc {
-	return buildStream(serverFactory, builder.ActionMethodGet)
+	return buildStream(serverFactory, build.ActionMethodGet)
 }
 
 // PostStreamWithAction handles POST requests with a specified action
 func PostStreamWithAction(serverFactory *server.Factory) echo.HandlerFunc {
-	return buildStream(serverFactory, builder.ActionMethodPost)
+	return buildStream(serverFactory, build.ActionMethodPost)
 }
 
 // buildStream is the common Stream handler for both GET and POST requests
-func buildStream(serverFactory *server.Factory, actionMethod builder.ActionMethod) echo.HandlerFunc {
+func buildStream(serverFactory *server.Factory, actionMethod build.ActionMethod) echo.HandlerFunc {
 
 	const location = "handler.buildStream"
 
@@ -70,7 +70,7 @@ func buildStream(serverFactory *server.Factory, actionMethod builder.ActionMetho
 		// Try to find the action requested by the user.  This also enforces user permissions...
 		actionID := getActionID(ctx)
 
-		b, err := builder.NewStreamWithoutTemplate(factory, ctx.Request(), ctx.Response(), &stream, actionID)
+		b, err := build.NewStreamWithoutTemplate(factory, ctx.Request(), ctx.Response(), &stream, actionID)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error creating Builder")
@@ -78,11 +78,11 @@ func buildStream(serverFactory *server.Factory, actionMethod builder.ActionMetho
 
 		// Add webmention link header per:
 		// https://www.w3.org/TR/webmention/#sender-discovers-receiver-webmention-endpoint
-		if actionMethod == builder.ActionMethodGet {
+		if actionMethod == build.ActionMethodGet {
 			ctx.Response().Header().Set("Link", "/.webmention; rel=\"webmention\"")
 		}
 
-		if err := buildHTML(factory, ctx, &b, actionMethod); err != nil {
+		if err := build.AsHTML(factory, ctx, &b, actionMethod); err != nil {
 			return derp.Wrap(err, location, "Error building page")
 		}
 
