@@ -83,6 +83,26 @@ func (service *Domain) Start() error {
 		if err := service.Save(service.domain, "Created Domain Record"); err != nil {
 			return derp.Wrap(err, location, "Error creating new domain record")
 		}
+
+		// If this is a localhost server with "createOwner" set, then create a new owner
+		if service.configuration.CreateOwner && service.IsLocalhost() {
+
+			log.Trace().Msg("Creating admin user for local host")
+
+			admin := model.NewUser()
+			admin.DisplayName = "Admin"
+			admin.Username = "admin"
+			admin.EmailAddress = "admin@localhost"
+			admin.SetPassword("admin")
+			admin.IsOwner = true
+			admin.IsPublic = true
+
+			if err := service.userService.Save(&admin, "Create admin user for local host"); err != nil {
+				return derp.Wrap(err, "service.Domain.Save", "Error creating admin user for local host")
+			}
+
+			log.Trace().Msg("Added admin user for local host")
+		}
 	}
 
 	// Once we have the domain loaded, try to upgrade the database
@@ -134,8 +154,6 @@ func (service *Domain) GetPointer() *model.Domain {
 // Save updates the value of this domain in the database (and in-memory cache)
 func (service *Domain) Save(domain model.Domain, note string) error {
 
-	firstSave := domain.IsNew()
-
 	// Validate the value using the default domain schema
 	if err := model.DomainSchema().Validate(&domain); err != nil {
 		return derp.Wrap(err, "service.Domain.Save", "Error validating Domain with standard Domain schema", domain)
@@ -153,26 +171,6 @@ func (service *Domain) Save(domain model.Domain, note string) error {
 
 	// Update the in-memory cache
 	service.domain = domain
-
-	// If this is the first time saving a local domain, create an initial admin user.
-	if firstSave && service.configuration.CreateOwner && service.IsLocalhost() {
-
-		log.Trace().Msg("Creating admin user for local host")
-
-		admin := model.NewUser()
-		admin.DisplayName = "Admin"
-		admin.Username = "admin"
-		admin.EmailAddress = "admin@localhost"
-		admin.SetPassword("admin")
-		admin.IsOwner = true
-		admin.IsPublic = true
-
-		if err := service.userService.Save(&admin, "Create admin user for local host"); err != nil {
-			return derp.Wrap(err, "service.Domain.Save", "Error creating admin user for local host")
-		}
-
-		log.Trace().Msg("Added admin user for local host")
-	}
 
 	return nil
 }
