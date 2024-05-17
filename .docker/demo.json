@@ -13,9 +13,10 @@
                 "port": 0,
                 "tls": false
             },
+            "createOwner": true,
             "owner": {
-                "displayName": "",
-                "username": "",
+                "displayName": "Demo Admin",
+                "username": "admin ",
                 "emailAddress": "",
                 "phoneNumber": "",
                 "mailingAddress": ""
@@ -55,6 +56,5 @@
     "adminEmail": "",
     "httpPort": 8080,
     "httpsPort": 0,
-    "debugLevel": "Debug",
-    "createOwner": true
+    "debugLevel": "Debug"
 }

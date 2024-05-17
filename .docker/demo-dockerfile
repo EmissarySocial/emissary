@@ -1,4 +1,4 @@
-FROM golang:1.22.2-bookworm as builder
+FROM golang:1.22.3-bookworm as builder
 
 # Set the Current Working Directory inside the container
 WORKDIR /app
@@ -27,7 +27,7 @@ WORKDIR /app
 
 # Copy the Pre-built binary file from the previous stage
 COPY --from=builder /app/emissary .
-COPY --from=builder /app/docker/demo.json /data/config/config.json
+COPY --from=builder /app/.docker/demo.json /data/config/config.json
 
 # Entrypoint script
 ENTRYPOINT [ "/app/emissary" ]
