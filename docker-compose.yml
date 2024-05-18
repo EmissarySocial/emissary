@@ -39,6 +39,7 @@ services:
     command: ["--setup", "--port", "8888"]
     depends_on:
       - mongodb
+      - server
     volumes:
       - config:/data/config
 
