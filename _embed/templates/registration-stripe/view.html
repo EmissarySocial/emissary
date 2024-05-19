@@ -18,8 +18,8 @@
 
 				<script async src="https://js.stripe.com/v3/pricing-table.js"></script>
 				<stripe-pricing-table
-					pricing-table-id="{{.Data `pricingTableId`}}"
-					publishable-key="{{.Data `publishableKey`}}">
+					pricing-table-id="{{.Data `stripe_pricing_table`}}"
+					publishable-key="{{.Data `stripe_publishable_key`}}">
 				</stripe-pricing-table>
 
 				<div class="margin-top-xl">
