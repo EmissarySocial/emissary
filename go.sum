@@ -230,8 +230,8 @@ github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsTg=
 github.com/stretchr/testify v1.9.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
-github.com/stripe/stripe-go/v78 v78.7.0 h1:TdTkzBn0wB0ntgOI74YHpvsNyHPBijX83n4ljsjXh6o=
-github.com/stripe/stripe-go/v78 v78.7.0/go.mod h1:GjncxVLUc1xoIOidFqVwq+y3pYiG7JLVWiVQxTsLrvQ=
+github.com/stripe/stripe-go/v78 v78.8.0 h1:2/bLAbJyrH9dE4OsL1uCFhVEW8jS1dTV3fEkK3G0vvs=
+github.com/stripe/stripe-go/v78 v78.8.0/go.mod h1:GjncxVLUc1xoIOidFqVwq+y3pYiG7JLVWiVQxTsLrvQ=
 github.com/tdewolff/minify/v2 v2.20.23 h1:wGzCb9JOSHZ+NyNEsNFeJs7OgS18LHGAd0VgQb7/G9A=
 github.com/tdewolff/minify/v2 v2.20.23/go.mod h1:1TJni7+mATKu24cBQQpgwakrYRD27uC1/rdJOgdv8ns=
 github.com/tdewolff/parse/v2 v2.7.14 h1:100KJ+QAO3PpMb3uUjzEU/NpmCdbBYz6KPmCIAfWpR8=
