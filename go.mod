@@ -4,7 +4,7 @@ go 1.22.3
 
 require (
 	github.com/PuerkitoBio/goquery v1.9.2
-	github.com/aws/aws-sdk-go v1.53.4
+	github.com/aws/aws-sdk-go v1.53.16
 	github.com/benpate/color v0.1.0
 	github.com/benpate/data v0.28.4
 	github.com/benpate/data-mock v0.28.10
