@@ -263,8 +263,8 @@ github.com/xhit/go-simple-mail/v2 v2.16.0 h1:ouGy/Ww4kuaqu2E2UrDw7SvLaziWTB60ICL
 github.com/xhit/go-simple-mail/v2 v2.16.0/go.mod h1:b7P5ygho6SYE+VIqpxA6QkYfv4teeyG4MKqB3utRu98=
 github.com/yeqown/go-qrcode/v2 v2.2.4 h1:cXdYlrhzHzVAnJHiwr/T6lAUmS9MtEStjEZBjArrvnc=
 github.com/yeqown/go-qrcode/v2 v2.2.4/go.mod h1:uHpt9CM0V1HeXLz+Wg5MN50/sI/fQhfkZlOM+cOTHxw=
-github.com/yeqown/go-qrcode/writer/standard v1.2.3 h1:3v9jE7MaxKHIC6+/9aZIfzC8OIAZRQT+FNiKEQxD65w=
-github.com/yeqown/go-qrcode/writer/standard v1.2.3/go.mod h1:H8nLSGYUWBpNyBPjDcJzAanMzYBBYMFtrU2lwoSRn+k=
+github.com/yeqown/go-qrcode/writer/standard v1.2.4 h1:41e/aLr1AMVWlug6oUMkDg2r0+dv5ofB7UaTkekKZBc=
+github.com/yeqown/go-qrcode/writer/standard v1.2.4/go.mod h1:H8nLSGYUWBpNyBPjDcJzAanMzYBBYMFtrU2lwoSRn+k=
 github.com/yeqown/reedsolomon v1.0.0 h1:x1h/Ej/uJnNu8jaX7GLHBWmZKCAWjEJTetkqaabr4B0=
 github.com/yeqown/reedsolomon v1.0.0/go.mod h1:P76zpcn2TCuL0ul1Fso373qHRc69LKwAw/Iy6g1WiiM=
 github.com/youmark/pkcs8 v0.0.0-20240424034433-3c2c7870ae76 h1:tBiBTKHnIjovYoLX/TPkcf+OjqqKGQrPtGT3Foz+Pgo=
