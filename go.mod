@@ -40,6 +40,7 @@ require (
 	github.com/kr/jsonfeed v0.1.1
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/labstack/gommon v0.4.2
+	github.com/maypok86/otter v1.2.0
 	github.com/microcosm-cc/bluemonday v1.0.26
 	github.com/mmcdole/gofeed v1.3.0
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
@@ -65,7 +66,7 @@ require (
 	willnorris.com/go/webmention v0.0.0-20220108183051-4a23794272f0
 )
 
-require github.com/benpate/re v0.2.3 // indirect
+require github.com/benpate/re v0.2.3
 
 require (
 	dario.cat/mergo v1.0.0 // indirect
@@ -77,9 +78,11 @@ require (
 	github.com/cloudflare/circl v1.3.8 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.5 // indirect
 	github.com/dlclark/regexp2 v1.11.0 // indirect
+	github.com/dolthub/maphash v0.1.0 // indirect
 	github.com/dyatlov/go-opengraph/opengraph v0.0.0-20220524092352-606d7b1e5f8a // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/fogleman/gg v1.3.0 // indirect
+	github.com/gammazero/deque v0.2.1 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.5.0 // indirect
 	github.com/go-git/go-git/v5 v5.12.0 // indirect
