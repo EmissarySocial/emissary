@@ -16,7 +16,7 @@ func TestConnection(t *testing.T) {
 		{"connectionId", "123456781234567812345678", nil},
 		{"providerId", "GIPHY", nil},
 		{"type", "PAYMENT", nil},
-		{"data.random", "Any ValueGIPHY", nil},
+		{"data.random", "Any Value", nil},
 		{"active", "true", true},
 	}
 
