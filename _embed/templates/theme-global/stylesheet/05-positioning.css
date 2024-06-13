@@ -49,3 +49,12 @@
 	bottom:var(--rhythm);
 	right:var(--rhythm);
 }
+
+.pos-absolute-four-corners {
+	-webkit-position:absolute;
+	position:absolute;
+	top:0px;
+	right:0px;
+	bottom:0px;
+	left:0px;
+}

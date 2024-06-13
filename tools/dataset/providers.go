@@ -11,7 +11,14 @@ func Providers() []form.LookupCode {
 			Value:       "GIPHY",
 			Label:       "Giphy",
 			Icon:        "film",
-			Description: "TBD",
+			Description: "Embeddable GIF Images",
+			Group:       "MANUAL",
+		},
+		{
+			Value:       "UNSPLASH",
+			Label:       "Unsplash",
+			Icon:        "picture",
+			Description: "Embeddable Photographs",
 			Group:       "MANUAL",
 		},
 		/* REMOVED FOR NOW

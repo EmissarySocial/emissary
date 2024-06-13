@@ -11,17 +11,17 @@ import (
 type Header struct {
 	MaxAge               int64 `bson:"maxAge,omitempty"`               // indicates that the response remains fresh until N seconds after the response is generated.
 	SMaxAge              int64 `bson:"sMaxAge,omitempty"`              // indicates how long the response remains fresh in a shared cache.
-	NoCache              bool  `bson:"noCache,omitempty"`              //  indicates that the response can be stored in caches, but the response must be validated with the origin server before each reuse.
+	NoCache              bool  `bson:"noCache,omitempty"`              // indicates that the response can be stored in caches, but the response must be validated with the origin server before each reuse.
 	NoStore              bool  `bson:"noStore,omitempty"`              // indicates that any caches of any kind (private or shared) should not store this response.
 	NoTransform          bool  `bson:"noTransform,omitempty"`          // indicates that any intermediary (regardless of whether it implements a cache) shouldn't transform the response contents.
 	MustRevalidate       bool  `bson:"mustRevalidate,omitempty"`       // indicates that the response can be stored in caches and can be reused while fresh. If the response becomes stale, it must be validated with the origin server before reuse.
 	ProxyRevalidate      bool  `bson:"proxyRevalidate,omitempty"`      // The proxy-revalidate response directive is the equivalent of must-revalidate, but specifically for shared caches only.
-	MustUnderstand       bool  `bson:"mustUnderstand,omitempty"`       //  indicates that a cache should store the response only if it understands the requirements for caching based on status code.
-	Private              bool  `bson:"private,omitempty"`              //  indicates that the response can be stored only in a private cache (e.g. local caches in browsers).
-	Public               bool  `bson:"public,omitempty"`               //  indicates that the response can be stored in a shared cache.
+	MustUnderstand       bool  `bson:"mustUnderstand,omitempty"`       // indicates that a cache should store the response only if it understands the requirements for caching based on status code.
+	Private              bool  `bson:"private,omitempty"`              // indicates that the response can be stored only in a private cache (e.g. local caches in browsers).
+	Public               bool  `bson:"public,omitempty"`               // indicates that the response can be stored in a shared cache.
 	Immutable            bool  `bson:"immutable,omitempty"`            // indicates that the response will not be updated while it's fresh.
-	StaleWhileRevalidate int64 `bson:"staleWhileRevalidate,omitempty"` //  indicates that the cache could reuse a stale response while it revalidates it to a cache.
-	StaleIfError         int64 `bson:"staleIfError,omitempty"`         //  indicates that the cache can reuse a stale response when an upstream server generates an error
+	StaleWhileRevalidate int64 `bson:"staleWhileRevalidate,omitempty"` // indicates that the cache could reuse a stale response while it revalidates it to a cache.
+	StaleIfError         int64 `bson:"staleIfError,omitempty"`         // indicates that the cache can reuse a stale response when an upstream server generates an error
 
 	asPublicCache bool // Treats this header as if being parsed by a public cache.
 }

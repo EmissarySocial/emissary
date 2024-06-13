@@ -22,6 +22,7 @@ import (
 	ap_stream "github.com/EmissarySocial/emissary/handler/activitypub_stream"
 	ap_user "github.com/EmissarySocial/emissary/handler/activitypub_user"
 	"github.com/EmissarySocial/emissary/handler/stripe"
+	"github.com/EmissarySocial/emissary/handler/unsplash"
 	mw "github.com/EmissarySocial/emissary/middleware"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
@@ -215,20 +216,22 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/nodeinfo/2.1", handler.GetNodeInfo21(factory))
 
 	// Built-In Service  Routes
+	e.POST("/.follower/new", handler.PostEmailFollower(factory))
+	e.GET("/.giphy", handler.GetGiphyWidget(factory))
+	e.POST("/.ostatus/discover", handler.PostOStatusDiscover(factory))
+	e.GET("/.ostatus/tunnel", handler.GetFollowingTunnel)
+	e.POST("/.stripe", stripe.PostWebhook(factory))
 	e.GET("/.themes/:themeId/:bundleId", handler.GetThemeBundle(factory))
 	e.GET("/.themes/:themeId/resources/:filename", handler.GetThemeResource(factory))
 	e.GET("/.templates/:templateId/:bundleId", handler.GetTemplateBundle(factory))
 	e.GET("/.templates/:templateId/resources/:filename", handler.GetTemplateResource(factory))
-	e.GET("/.widgets/:widgetId/:bundleId", handler.GetWidgetBundle(factory))
-	e.GET("/.widgets/:widgetId//resources/:filename", handler.GetWidgetResource(factory))
-	e.GET("/.giphy", handler.GetGiphyWidget(factory))
-	e.POST("/.follower/new", handler.PostEmailFollower(factory))
-	e.POST("/.ostatus/discover", handler.PostOStatusDiscover(factory))
-	e.GET("/.ostatus/tunnel", handler.GetFollowingTunnel)
-	e.POST("/.stripe", stripe.PostWebhook(factory))
+	e.GET("/.unsplash/photos/:photo", unsplash.GetPhoto(factory))
+	e.GET("/.unsplash/collections/:collection/random", unsplash.GetCollectionRandom(factory))
 	e.POST("/.webmention", handler.PostWebMention(factory))
 	e.GET("/.websub/:userId/:followingId", handler.GetWebSubClient(factory))
 	e.POST("/.websub/:userId/:followingId", handler.PostWebSubClient(factory))
+	e.GET("/.widgets/:widgetId/:bundleId", handler.GetWidgetBundle(factory))
+	e.GET("/.widgets/:widgetId//resources/:filename", handler.GetWidgetResource(factory))
 
 	// Authentication Pages
 	e.GET("/signin", handler.GetSignIn(factory))
