@@ -4,7 +4,7 @@ go 1.22.3
 
 require (
 	github.com/PuerkitoBio/goquery v1.9.2
-	github.com/aws/aws-sdk-go v1.53.21
+	github.com/aws/aws-sdk-go v1.54.2
 	github.com/benpate/color v0.1.0
 	github.com/benpate/data v0.28.4
 	github.com/benpate/data-mock v0.28.10
@@ -34,7 +34,7 @@ require (
 	github.com/gernest/mention v2.0.0+incompatible
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/gorilla/feeds v1.1.2
-	github.com/hairyhenderson/go-fsimpl v0.1.2
+	github.com/hairyhenderson/go-fsimpl v0.1.3
 	github.com/hjson/hjson-go/v4 v4.4.0
 	github.com/karlseguin/ccache/v3 v3.0.5
 	github.com/kr/jsonfeed v0.1.1
@@ -82,13 +82,13 @@ require (
 	github.com/fogleman/gg v1.3.0 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.5.0 // indirect
-	github.com/go-git/go-git/v5 v5.12.0 // indirect
 	github.com/go-test/deep v1.1.0 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/gorilla/css v1.0.1 // indirect
+	github.com/hairyhenderson/go-git/v5 v5.12.1-0.20240530140403-1b868a7b8a3c // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
@@ -116,7 +116,7 @@ require (
 	github.com/yeqown/reedsolomon v1.0.0 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240424034433-3c2c7870ae76 // indirect
 	golang.org/x/image v0.16.0 // indirect
-	golang.org/x/net v0.25.0 // indirect
+	golang.org/x/net v0.26.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/sys v0.21.0 // indirect
 	golang.org/x/text v0.16.0 // indirect
