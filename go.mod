@@ -4,10 +4,10 @@ go 1.22.3
 
 require (
 	github.com/PuerkitoBio/goquery v1.9.2
-	github.com/aws/aws-sdk-go v1.53.4
+	github.com/aws/aws-sdk-go v1.53.21
 	github.com/benpate/color v0.1.0
 	github.com/benpate/data v0.28.4
-	github.com/benpate/data-mock v0.28.10
+	github.com/benpate/data-mock v0.28.11
 	github.com/benpate/data-mongo v0.28.10
 	github.com/benpate/derp v0.31.0
 	github.com/benpate/digit v0.12.1
@@ -35,7 +35,7 @@ require (
 	github.com/gernest/mention v2.0.0+incompatible
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/gorilla/feeds v1.1.2
-	github.com/hairyhenderson/go-fsimpl v0.1.1
+	github.com/hairyhenderson/go-fsimpl v0.1.2
 	github.com/hjson/hjson-go/v4 v4.4.0
 	github.com/karlseguin/ccache/v3 v3.0.5
 	github.com/kr/jsonfeed v0.1.1
@@ -46,23 +46,23 @@ require (
 	github.com/mmcdole/gofeed v1.3.0
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/relvacode/iso8601 v1.4.0
-	github.com/rs/zerolog v1.32.0
+	github.com/rs/zerolog v1.33.0
 	github.com/spf13/afero v1.11.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.9.0
-	github.com/stripe/stripe-go/v78 v78.7.0
+	github.com/stripe/stripe-go/v78 v78.10.0
 	github.com/tdewolff/minify/v2 v2.20.23
 	github.com/timewasted/go-accept-headers v0.0.0-20130320203746-c78f304b1b09
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
 	github.com/xhit/go-simple-mail/v2 v2.16.0
 	github.com/yeqown/go-qrcode/v2 v2.2.4
-	github.com/yeqown/go-qrcode/writer/standard v1.2.3
+	github.com/yeqown/go-qrcode/writer/standard v1.2.4
 	github.com/yuin/goldmark v1.7.1
 	github.com/yuin/goldmark-highlighting/v2 v2.0.0-20230729083705-37449abec8cc
-	go.mongodb.org/mongo-driver v1.15.0
+	go.mongodb.org/mongo-driver v1.15.1
 	golang.org/x/crypto v0.24.0
 	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842
-	golang.org/x/oauth2 v0.20.0
+	golang.org/x/oauth2 v0.21.0
 	willnorris.com/go/microformats v1.2.0
 	willnorris.com/go/webmention v0.0.0-20220108183051-4a23794272f0
 )
@@ -95,7 +95,7 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
-	github.com/klauspost/compress v1.17.8 // indirect
+	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mmcdole/goxpp v1.1.1 // indirect
