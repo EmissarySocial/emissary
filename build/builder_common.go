@@ -500,11 +500,9 @@ func (w Common) AdminSections() []form.LookupCode {
 			Value: "rules",
 			Label: "Rules",
 		},
-		/* REMOVED FOR NOW
 		{
 			Value: "connections",
 			Label: "Connections",
 		},
-		*/
 	}
 }

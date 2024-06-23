@@ -26,6 +26,8 @@ func TestDomainSchema(t *testing.T) {
 		{"data.custom", "CUSTOM", nil},
 		{"data.value", "VALUE", nil},
 		{"colorMode", "LIGHT", nil},
+		{"registrationData.custom", "CUSTOM", nil},
+		{"registrationData.value", "VALUE", nil},
 	}
 
 	tableTest_Schema(t, &s, &domain, table)

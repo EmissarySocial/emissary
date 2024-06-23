@@ -10,7 +10,7 @@ import (
 )
 
 // mastodon_Authorizer generates a toot.Authorizer for this serverFactory.  This
-// function validates the "Autorization" header, parses its JWT token, and returns a
+// function validates the "Authorization" header, parses its JWT token, and returns a
 // model.Authorization object when successful.  This function also verifies that the
 // JWT token was created for a particular OAuth client and is not a regular User token
 func Authorizer(serverFactory *server.Factory) toot.Authorizer[model.Authorization] {

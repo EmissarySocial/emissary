@@ -8,6 +8,7 @@ import (
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/httpcache"
 	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/data"
 	mongodb "github.com/benpate/data-mongo"
@@ -39,6 +40,7 @@ type Factory struct {
 	providerService     *service.Provider
 	taskQueue           queue.Queue
 	activityService     *service.ActivityStream
+	httpCache           *httpcache.HTTPCache
 
 	// Upload Directories (from server)
 	attachmentOriginals afero.Fs
@@ -74,7 +76,7 @@ type Factory struct {
 }
 
 // NewFactory creates a new factory tied to a MongoDB database
-func NewFactory(domain config.Domain, providers []config.Provider, activityService *service.ActivityStream, registrationService *service.Registration, serverEmail *service.ServerEmail, themeService *service.Theme, templateService *service.Template, widgetService *service.Widget, contentService *service.Content, providerService *service.Provider, taskQueue queue.Queue, attachmentOriginals afero.Fs, attachmentCache afero.Fs) (*Factory, error) {
+func NewFactory(domain config.Domain, providers []config.Provider, activityService *service.ActivityStream, registrationService *service.Registration, serverEmail *service.ServerEmail, themeService *service.Theme, templateService *service.Template, widgetService *service.Widget, contentService *service.Content, providerService *service.Provider, taskQueue queue.Queue, attachmentOriginals afero.Fs, attachmentCache afero.Fs, httpCache *httpcache.HTTPCache) (*Factory, error) {
 
 	log.Info().Msg("Starting domain: " + domain.Hostname)
 
@@ -89,6 +91,7 @@ func NewFactory(domain config.Domain, providers []config.Provider, activityServi
 		taskQueue:           taskQueue,
 		activityService:     activityService,
 
+		httpCache:           httpCache,
 		attachmentOriginals: attachmentOriginals,
 		attachmentCache:     attachmentCache,
 		streamUpdateChannel: make(chan model.Stream),
@@ -654,6 +657,10 @@ func (factory *Factory) Locator() service.Locator {
 		factory.Stream(),
 		factory.Hostname(),
 	)
+}
+
+func (factory *Factory) HTTPCache() *httpcache.HTTPCache {
+	return factory.httpCache
 }
 
 // Queue returns the Queue service, which manages background jobs

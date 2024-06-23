@@ -18,7 +18,6 @@ FEW DEPENDENTS
 - domain
 - form
 - html
-- oembed
 - re
 
 SOME DEPENDENTS

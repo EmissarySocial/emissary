@@ -42,6 +42,9 @@ func (service *Provider) GetProvider(providerID string) (providers.Provider, boo
 
 	case providers.ProviderTypeStripe:
 		return providers.NewStripe(), true
+
+	case providers.ProviderTypeUnsplash:
+		return providers.NewUnsplash(), true
 	}
 
 	return providers.Null{}, false

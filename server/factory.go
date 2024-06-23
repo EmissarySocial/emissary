@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/EmissarySocial/emissary/build"
 	"github.com/EmissarySocial/emissary/config"
@@ -16,6 +17,7 @@ import (
 	"github.com/EmissarySocial/emissary/tools/ascontextmaker"
 	"github.com/EmissarySocial/emissary/tools/ashash"
 	"github.com/EmissarySocial/emissary/tools/asnormalizer"
+	"github.com/EmissarySocial/emissary/tools/httpcache"
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/queue"
@@ -27,6 +29,7 @@ import (
 	"github.com/benpate/steranko"
 	"github.com/davidscottmills/goeditorjs"
 	"github.com/labstack/echo/v4"
+	"github.com/maypok86/otter"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
@@ -58,6 +61,7 @@ type Factory struct {
 	attachmentCache     afero.Fs
 
 	domains   map[string]*domain.Factory
+	httpCache httpcache.HTTPCache
 	refreshed chan bool
 }
 
@@ -74,6 +78,13 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 		taskQueue:     queue.NewSimpleQueue(128, 16),
 		refreshed:     make(chan bool, 1),
 	}
+
+	// Build the in-memory cache
+	otterCache, _ := otter.MustBuilder[string, string](1000).
+		WithVariableTTL().
+		Build()
+
+	factory.httpCache = httpcache.NewOtterCache(otterCache, httpcache.WithTTL(1*time.Minute))
 
 	// Global Registration Service
 	factory.registrationService = service.NewRegistration(factory.FuncMap())
@@ -232,6 +243,7 @@ func (factory *Factory) refreshDomain(config config.Config, domainConfig config.
 		factory.taskQueue,
 		factory.attachmentOriginals,
 		factory.attachmentCache,
+		&factory.httpCache,
 	)
 
 	if err != nil {
@@ -605,4 +617,8 @@ func (factory *Factory) RefreshActivityService(connection mapof.String) {
 	// crawlerClient := ascrawler.New(writableCache, ascrawler.WithMaxDepth(4))
 	// readOnlyCache := ascache.New(crawlerClient, collection, ascache.WithReadOnly())
 	// factory.activityService.Refresh(readOnlyCache, mongodb.NewCollection(collection))
+}
+
+func (factory *Factory) HTTPCache() *httpcache.HTTPCache {
+	return &factory.httpCache
 }

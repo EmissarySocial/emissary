@@ -13,12 +13,12 @@ func DomainSchema() schema.Element {
 			"registrationId":   schema.String{MaxLength: 128},
 			"inboxId":          schema.String{MaxLength: 128},
 			"outboxId":         schema.String{MaxLength: 128},
-			"registrationData": schema.Object{Wildcard: schema.String{}},
 			"label":            schema.String{MaxLength: 128},
 			"description":      schema.String{MaxLength: 1024},
 			"forward":          schema.String{Format: "url", Required: false},
 			"data":             schema.Object{Wildcard: schema.String{}},
 			"colorMode":        schema.String{Enum: []string{DomainColorModeAuto, DomainColorModeLight, DomainColorModeDark}},
+			"registrationData": schema.Object{Wildcard: schema.String{}},
 		},
 	}
 }
