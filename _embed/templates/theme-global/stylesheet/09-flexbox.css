@@ -24,12 +24,12 @@
 .flex-align-self-end {align-self:flex-end}
 .flex-align-self-center {align-self:center}
 .flex-align-self-stretch {align-self:stretch}
-.flex-justify-start {justify-content: flex-start safe}
-.flex-justify-end {justify-content: flex-end safe}
-.flex-justify-center {justify-content: center safe}
-.flex-justify-between {justify-content: space-between safe}
-.flex-justify-around {justify-content: space-around safe}
-.flex-justify-evenly {justify-content: space-evenly safe}
+.flex-justify-start {justify-content: flex-start}
+.flex-justify-end {justify-content: flex-end}
+.flex-justify-center {justify-content: center}
+.flex-justify-between {justify-content: space-between}
+.flex-justify-around {justify-content: space-around}
+.flex-justify-evenly {justify-content: space-evenly}
 .flex-shrink-0 {flex-shrink: 0}
 .flex-shrink, .flex-shrink-1 {flex-shrink: 1}
 .flex-shrink-2 {flex-shrink: 2}
@@ -67,12 +67,12 @@
 	.sm\:flex-align-self-end {align-self:flex-end}
 	.sm\:flex-align-self-center {align-self:center}
 	.sm\:flex-align-self-stretch {align-self:stretch}
-	.sm\:flex-justify-start {justify-content: flex-start safe}
-	.sm\:flex-justify-end {justify-content: flex-end safe}
-	.sm\:flex-justify-center {justify-content: center safe}
-	.sm\:flex-justify-between {justify-content: space-between safe}
-	.sm\:flex-justify-around {justify-content: space-around safe}
-	.sm\:flex-justify-evenly {justify-content: space-evenly safe}
+	.sm\:flex-justify-start {justify-content: flex-start}
+	.sm\:flex-justify-end {justify-content: flex-end}
+	.sm\:flex-justify-center {justify-content: center}
+	.sm\:flex-justify-between {justify-content: space-between}
+	.sm\:flex-justify-around {justify-content: space-around}
+	.sm\:flex-justify-evenly {justify-content: space-evenly}
 	.sm\:flex-shrink-0 {flex-shrink: 0}
 	.sm\:flex-shrink, .flex-shrink-1 {flex-shrink: 1}
 	.sm\:flex-shrink-2 {flex-shrink: 2}
@@ -111,12 +111,12 @@
 	.md\:flex-align-self-end {align-self:flex-end}
 	.md\:flex-align-self-center {align-self:center}
 	.md\:flex-align-self-stretch {align-self:stretch}
-	.md\:flex-justify-start {justify-content: flex-start safe}
-	.md\:flex-justify-end {justify-content: flex-end safe}
-	.md\:flex-justify-center {justify-content: center safe}
-	.md\:flex-justify-between {justify-content: space-between safe}
-	.md\:flex-justify-around {justify-content: space-around safe}
-	.md\:flex-justify-evenly {justify-content: space-evenly safe}
+	.md\:flex-justify-start {justify-content: flex-start}
+	.md\:flex-justify-end {justify-content: flex-end}
+	.md\:flex-justify-center {justify-content: center}
+	.md\:flex-justify-between {justify-content: space-between}
+	.md\:flex-justify-around {justify-content: space-around}
+	.md\:flex-justify-evenly {justify-content: space-evenly}
 	.md\:flex-shrink-0 {flex-shrink: 0}
 	.md\:flex-shrink, .flex-shrink-1 {flex-shrink: 1}
 	.md\:flex-shrink-2 {flex-shrink: 2}
@@ -155,12 +155,12 @@
 	.lg\:flex-align-self-end {align-self:flex-end}
 	.lg\:flex-align-self-center {align-self:center}
 	.lg\:flex-align-self-stretch {align-self:stretch}
-	.lg\:flex-justify-start {justify-content: flex-start safe}
-	.lg\:flex-justify-end {justify-content: flex-end safe}
-	.lg\:flex-justify-center {justify-content: center safe}
-	.lg\:flex-justify-between {justify-content: space-between safe}
-	.lg\:flex-justify-around {justify-content: space-around safe}
-	.lg\:flex-justify-evenly {justify-content: space-evenly safe}
+	.lg\:flex-justify-start {justify-content: flex-start}
+	.lg\:flex-justify-end {justify-content: flex-end}
+	.lg\:flex-justify-center {justify-content: center}
+	.lg\:flex-justify-between {justify-content: space-between}
+	.lg\:flex-justify-around {justify-content: space-around}
+	.lg\:flex-justify-evenly {justify-content: space-evenly}
 	.lg\:flex-shrink-0 {flex-shrink: 0}
 	.lg\:flex-shrink, .flex-shrink-1 {flex-shrink: 1}
 	.lg\:flex-shrink-2 {flex-shrink: 2}
