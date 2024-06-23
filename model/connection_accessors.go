@@ -11,7 +11,7 @@ func ConnectionSchema() schema.Element {
 			"connectionId": schema.String{Format: "objectId"},
 			"providerId":   schema.String{Enum: []string{ConnectionProviderStripe, ConnectionProviderGiphy}},
 			"type":         schema.String{Enum: []string{ConnectionTypePayment}},
-			"data":         schema.Object{Wildcard: schema.Any{}},
+			"data":         schema.Object{Wildcard: schema.String{}},
 			"active":       schema.Boolean{},
 		},
 	}
