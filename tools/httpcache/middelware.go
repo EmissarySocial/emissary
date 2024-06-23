@@ -1,7 +1,7 @@
 package httpcache
 
-import "github.com/labstack/echo/v4"
-
+// TODO: Implement an echo middleware that uses the HTTP cache
+/*
 type Middleware struct {
 	cache HTTPCache
 }
@@ -12,3 +12,4 @@ func (middleware *Middleware) Middleware(next echo.HandlerFunc) echo.HandlerFunc
 		return nil
 	}
 }
+*/

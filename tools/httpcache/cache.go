@@ -9,8 +9,6 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/tools/cacheheader"
-	"github.com/davecgh/go-spew/spew"
-	"github.com/maypok86/otter"
 	"github.com/rs/zerolog/log"
 )
 
@@ -50,8 +48,7 @@ func (cache *HTTPCache) setResponse(request *http.Request, response *http.Respon
 
 	log.Trace().Str("url", cacheKey).Str("metadata", metadata.Encode()).Msg("Setting Response")
 
-	success1 := cache.Set(cacheKey, metadata.Encode(), ttl)
-	spew.Dump(success1)
+	cache.Set(cacheKey, metadata.Encode(), ttl)
 
 	// Write the response into a buffer
 	var buffer bytes.Buffer
@@ -62,13 +59,7 @@ func (cache *HTTPCache) setResponse(request *http.Request, response *http.Respon
 
 	// Save the actual response into the cache
 	cacheKey = address + headSeparator + cache.getVariesValues(request, metadata)
-
-	spew.Dump("SETTING DATA ---", cacheKey, buffer.String(), ttl)
-	success2 := cache.Set(cacheKey, buffer.String(), ttl)
-
-	spew.Dump(success2, "----------")
-	cache.Debug()
-	spew.Dump("response set.")
+	cache.Set(cacheKey, buffer.String(), ttl)
 }
 
 // getResponse retrieves a cached response for the given request.  If no response
@@ -174,24 +165,4 @@ func (cache *HTTPCache) getMetadata(address string) (url.Values, bool) {
 	}
 
 	return nil, false
-}
-
-/******************************************
- * Debugging
- ******************************************/
-
-func (cache *HTTPCache) Debug() {
-
-	if otter, ok := cache.Adapter.(otter.CacheWithVariableTTL[string, string]); ok {
-
-		spew.Dump("HTTPCache: Dumping cache")
-		otter.Range(func(key string, value string) bool {
-			spew.Dump("-------------", key, value)
-			return true
-		})
-
-		return
-	}
-
-	spew.Dump("HTTPCache: Unable to dump cache", cache.Adapter)
 }

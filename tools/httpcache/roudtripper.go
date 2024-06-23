@@ -2,6 +2,7 @@ package httpcache
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/benpate/derp"
 	"github.com/benpate/re"
@@ -13,34 +14,48 @@ import (
 // https://lanre.wtf/blog/2017/07/24/roundtripper-go
 // https://pkg.go.dev/net/http#RoundTripper
 type RoundTripper struct {
-	client *http.Client
-	cache  *HTTPCache
+	cache  *HTTPCache   // cache to use before/after HTTP requests
+	client *http.Client // inner HTTP client to use for HTTP requests
 }
 
 // NewHTTPClient returns a fully initialized http.Client that uses the provided cache
 // to store responses.  It uses the default http.Client as a base, and replaces the
 // transport with a new, caching RoundTripper.
-func NewHTTPClient(client *http.Client, cache *HTTPCache) *http.Client {
-
-	roundTripper := NewRoundTripper(client, cache)
-
+func NewHTTPClient(cache *HTTPCache) *http.Client {
 	return &http.Client{
-		Timeout:       client.Timeout,
-		CheckRedirect: client.CheckRedirect,
-		Jar:           client.Jar,
-		Transport:     roundTripper,
+		Transport: NewRoundTripper(cache),
 	}
 }
 
 // NewRoundTripper returns a fully initialized RoundTripper
-func NewRoundTripper(client *http.Client, cache *HTTPCache) RoundTripper {
+func NewRoundTripper(cache *HTTPCache) RoundTripper {
+
 	return RoundTripper{
-		client: client,
-		cache:  cache,
+		cache: cache,
+		client: &http.Client{
+			Timeout: 10 * time.Second,
+		},
 	}
 }
 
+// SetCache replaces the existing cache with a new one
+func (roundTripper *RoundTripper) SetCache(cache *HTTPCache) {
+	roundTripper.cache = cache
+}
+
+// SetClient replaces the default http.Client with a custom client
+func (roundTripper *RoundTripper) SetClient(client *http.Client) {
+	roundTripper.client = client
+}
+
+// RoundTrip implements the http.RoundTripper interface, which replaces the http.Client's default
+// behavior with a caching mechanism.
 func (roundTripper RoundTripper) RoundTrip(request *http.Request) (*http.Response, error) {
+
+	// If this is not a GET request, then skip the cache altogether
+	if request.Method != http.MethodGet {
+		return roundTripper.client.Do(request)
+	}
 
 	// Check the cache for a response
 	response, ok := roundTripper.cache.getResponse(request)
