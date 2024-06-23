@@ -20,13 +20,11 @@ func TestDomainSchema(t *testing.T) {
 		{"label", "LABEL", nil},
 		{"description", "DESCRIPTION", nil},
 		{"forward", "https://other.site", nil},
-		{"signupForm.title", "SIGNUP TITLE", nil},
-		{"signupForm.message", "SIGNUP MESSAGE", nil},
-		{"signupForm.groupId", "123456781234567812345678", nil},
-		{"signupForm.active", "true", true},
 		{"data.custom", "CUSTOM", nil},
 		{"data.value", "VALUE", nil},
 		{"colorMode", "LIGHT", nil},
+		{"registrationData.custom", "CUSTOM", nil},
+		{"registrationData.value", "VALUE", nil},
 	}
 
 	tableTest_Schema(t, &s, &domain, table)
