@@ -7,7 +7,7 @@
 	<span>Edit {{.DisplayName}}</span>
 </h1>
 
-<div class="text-sm">
+<div class="text-sm margin-bottom">
 	<a href="{{.ProfileURL}}" class="button">{{icon "user"}} View Profile</a>
 
 	{{- $stripeID := index .MapIDs "STRIPE" -}}
@@ -20,4 +20,3 @@
 		<button class="htmx-request-show" disabled><span class="spin">{{icon "loading"}}</span> Sending Email</button>
 	</form>
 </div>
-<hr>

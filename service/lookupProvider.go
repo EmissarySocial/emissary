@@ -11,13 +11,15 @@ type LookupProvider struct {
 	folderService       *Folder
 	groupService        *Group
 	registrationService *Registration
+	templateService     *Template
 	themeService        *Theme
 	userID              primitive.ObjectID
 }
 
-func NewLookupProvider(folderService *Folder, groupService *Group, registrationService *Registration, themeService *Theme, userID primitive.ObjectID) LookupProvider {
+func NewLookupProvider(folderService *Folder, groupService *Group, registrationService *Registration, templateService *Template, themeService *Theme, userID primitive.ObjectID) LookupProvider {
 	return LookupProvider{
 		themeService:        themeService,
+		templateService:     templateService,
 		registrationService: registrationService,
 		groupService:        groupService,
 		folderService:       folderService,
@@ -65,6 +67,12 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 
 	case "groups":
 		return NewGroupLookupProvider(service.groupService)
+
+	case "inbox-templates":
+		return form.ReadOnlyLookupGroup(service.templateService.ListByTemplateRole("user-inbox"))
+
+	case "outbox-templates":
+		return form.ReadOnlyLookupGroup(service.templateService.ListByTemplateRole("user-outbox"))
 
 	case "reaction-icons":
 		return form.NewReadOnlyLookupGroup(

@@ -63,6 +63,14 @@
 									}
 									{
 										type: layout-vertical
+										label: Settings
+										children: [
+											{type: "select", path: "inboxTemplate", label:"Inbox", options:{provider: "inbox-templates", sort:false}}
+											{type: "select", path: "outboxTemplate", label:"Outbox (Profile)", options:{provider: "outbox-templates", sort:false}}
+										]
+									}
+									{
+										type: layout-vertical
 										label: Owner
 										children: [
 											{type: "toggle", path: "isOwner", options: {true-text: "Grant this user full control over this domain.", false-text: "Grant this user full control over this domain."}}
