@@ -11,6 +11,7 @@
 .aspect-square,
 .aspect-1-1 {
 	aspect-ratio:1;
+    overflow-y:hidden;
 }
 
 .aspect-2-3 {
@@ -20,10 +21,12 @@
 
 .aspect-4-3 {
 	aspect-ratio:4/3;
+    overflow-y:hidden;
 }
 
 .aspect-16-9 {
 	aspect-ratio:16/9;
+    overflow-y:hidden;
 }
 
 /******************************************
@@ -104,5 +107,29 @@
     height:0px;
     margin-top:calc(var(--rhythm) * 3);
     margin-bottom:calc(var(--rhythm) * 3);
+}
+
+/* Small Screens */
+@media screen and (min-width: 568px) {
+.sm\:aspect-square, .sm\:aspect-1-1 {aspect-ratio:1; overflow-y:hidden;}
+.sm\:aspect-2-3 {aspect-ratio:2/3; overflow-y:hidden;}
+.sm\:aspect-4-3 {aspect-ratio:4/3; overflow-y:hidden;}
+.sm\:aspect-16-9 {aspect-ratio:16/9; overflow-y:hidden;}
+}
+
+/* Medium Screens */
+@media screen and (min-width: 768px) {
+.md\:aspect-square, .md\:aspect-1-1 {aspect-ratio:1; overflow-y:hidden;}
+.md\:aspect-2-3 {aspect-ratio:2/3; overflow-y:hidden;}
+.md\:aspect-4-3 {aspect-ratio:4/3; overflow-y:hidden;}
+.md\:aspect-16-9 {aspect-ratio:16/9; overflow-y:hidden;}
+}
+
+/* Large Screens */
+@media screen and (min-width: 1024px) {
+.lg\:aspect-square, .lg\:aspect-1-1 {aspect-ratio:1; overflow-y:hidden;}
+.lg\:aspect-2-3 {aspect-ratio:2/3; overflow-y:hidden;}
+.lg\:aspect-4-3 {aspect-ratio:4/3; overflow-y:hidden;}
+.lg\:aspect-16-9 {aspect-ratio:16/9; overflow-y:hidden;}
 }
 
