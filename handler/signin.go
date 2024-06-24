@@ -84,12 +84,13 @@ func PostSignOut(serverFactory *server.Factory) echo.HandlerFunc {
 
 		s := factory.Steranko()
 
-		if err := s.SignOut(ctx); err != nil {
-			return derp.Wrap(err, location, "Error Signing Out")
+		if hasBackupProfile := s.SignOut(ctx); hasBackupProfile {
+			ctx.Response().Header().Add("HX-Redirect", "/admin/users")
+		} else {
+			ctx.Response().Header().Add("HX-Redirect", "/")
 		}
 
 		// Forward the user back to the home page of the website.
-		ctx.Response().Header().Add("HX-Redirect", "/")
 		return ctx.NoContent(http.StatusNoContent)
 	}
 }

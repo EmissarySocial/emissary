@@ -3,19 +3,23 @@
 
     <tbody hx-trigger="revealed" hx-get="/admin/users/list?groupId=&amp;displayName=gt:{{ $users.Last.DisplayName }}" hx-target="#users" hx-swap="beforeend" hx-push-url="false">
         {{- range $index, $user := $users -}}
-                <tr class="clickable">
-                    <td role="link" hx-get="/admin/users/{{$user.UserID.Hex}}/edit" class="flex-row width-100-percent" style="width:100%">
-                        {{- $iconURL := $user.IconURL -}}
-                        {{- if ne "" $iconURL -}}
-                            <img src="{{$iconURL}}" class="circle-32">
-                        {{- else -}}
-                            <span class="circle-32"></span>
-                        {{- end }} 
-                        <span>{{$user.DisplayName}}</span>
-                    </td>
-                    <td nowrap class="text-xs" style="width:100px; text-align:right;"><a href="/@{{$user.UserID.Hex}}" class="button">View Profile</a></td>
-                </tr>
-            </div>
+            <tr class="clickable">
+                <td role="link" hx-get="/admin/users/{{$user.UserID.Hex}}/edit" class="flex-row width-100-percent">
+                    {{- $iconURL := $user.IconURL -}}
+                    {{- if ne "" $iconURL -}}
+                        <img src="{{$iconURL}}" class="circle-32">
+                    {{- else -}}
+                        <span class="circle-32"></span>
+                    {{- end }} 
+                    <span>{{$user.DisplayName}}</span>
+                </td>
+                <td nowrap class="text-xs width-128 text-align-right">
+                    <a href="/@{{$user.UserID.Hex}}" class="button">View Profile</a>
+                    <form action="/.masquerade?userId={{.UserID.Hex}}" method="post" class="inline-block">
+                        <button type="submit">{{icon "user-secret"}} Sign In &rarr;</button>
+                    </form>
+                </td>
+            </tr>
         {{- end -}}
     </tbody>
 

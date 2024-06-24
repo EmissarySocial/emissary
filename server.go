@@ -243,6 +243,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/signin/reset", handler.PostResetPassword(factory))
 	e.GET("/signin/reset-code", handler.GetResetCode(factory))
 	e.POST("/signin/reset-code", handler.PostResetCode(factory))
+	e.POST("/.masquerade", handler.PostMasquerade(factory), mw.Owner)
 
 	// STREAM PAGES
 	e.GET("/", handler.GetStream(factory))
