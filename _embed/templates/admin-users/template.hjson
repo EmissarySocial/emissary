@@ -51,6 +51,8 @@
 											{type: "text", label: "Full Name", path: "displayName"}
 											{type: "text", label: "Username", path: "username"}
 											{type: "text", label: "Email Address", path: "emailAddress"}
+											{type: "select", path: "inboxTemplate", label:"Inbox", options:{provider: "inbox-templates", sort:false}}
+											{type: "select", path: "outboxTemplate", label:"Outbox (Profile)", options:{provider: "outbox-templates", sort:false}}
 											{type: "toggle", path: "isPublic", options: {true-text: "Show Profile Publicly", false-text: "Show Profile Publicly"}}
 										]
 									}
@@ -59,14 +61,6 @@
 										label: Groups
 										children: [
 											{type: "multiselect", path: "groupIds", description:"Select one or more groups to grant privileges to this user", options:{provider: "groups", sort:false}}
-										]
-									}
-									{
-										type: layout-vertical
-										label: Settings
-										children: [
-											{type: "select", path: "inboxTemplate", label:"Inbox", options:{provider: "inbox-templates", sort:false}}
-											{type: "select", path: "outboxTemplate", label:"Outbox (Profile)", options:{provider: "outbox-templates", sort:false}}
 										]
 									}
 									{
