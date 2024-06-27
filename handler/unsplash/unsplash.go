@@ -233,6 +233,9 @@ func displayPhoto(ctx echo.Context, applicationName string, photo mapof.Any) err
 		Style("height:"+height, "width:"+width, "object-fit:cover", "object-position:center center").
 		EndBracket()
 
+	b.Source().SrcSet(photo.GetString("regular")).Media("(max-width:1080)").Close()
+	b.Source().SrcSet(photo.GetString("small")).Media("(max-width:400px)").Close()
+
 	b.Img(urls.GetString("regular")).
 		Attr("alt", photo.GetString("description")).
 		Style("height:"+height, "width:"+width, "object-fit:cover", "object-position:center center").
