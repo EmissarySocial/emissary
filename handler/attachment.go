@@ -81,7 +81,7 @@ func GetAttachment(factoryManager *server.Factory) echo.HandlerFunc {
 		}
 
 		if err := ms.Get(filespec, ctx.Response().Writer); err != nil {
-			return derp.Wrap(err, location, "Error accessing attachment file")
+			return derp.ReportAndReturn(derp.Wrap(err, location, "Error accessing attachment file"))
 		}
 
 		return nil
