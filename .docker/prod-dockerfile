@@ -31,6 +31,7 @@ FROM debian:bookworm-slim
 # Install ffmpeg
 # This is required for audio/video transcoding
 RUN apt-get update -y
+RUN apt-get upgrade -y
 RUN apt-get install -y ffmpeg
 
 WORKDIR /app
