@@ -4,6 +4,7 @@ import (
 	"context"
 	"embed"
 	"html/template"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -20,6 +21,7 @@ import (
 	"github.com/EmissarySocial/emissary/tools/httpcache"
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
+	domaintools "github.com/benpate/domain"
 	"github.com/benpate/hannibal/queue"
 	"github.com/benpate/icon"
 	"github.com/benpate/rosetta/list"
@@ -231,6 +233,7 @@ func (factory *Factory) refreshDomain(config config.Config, domainConfig config.
 	// Fall through means that the domain does not exist, so we need to create it
 	newDomain, err := domain.NewFactory(
 		domainConfig,
+		factory.port(domainConfig),
 		config.Providers,
 		&factory.activityService,
 		&factory.registrationService,
@@ -621,4 +624,19 @@ func (factory *Factory) RefreshActivityService(connection mapof.String) {
 
 func (factory *Factory) HTTPCache() *httpcache.HTTPCache {
 	return &factory.httpCache
+}
+
+func (factory *Factory) port(domainConfig config.Domain) string {
+
+	if domaintools.IsLocalhost(domainConfig.Hostname) {
+		if factory.config.HTTPPort != 80 {
+			return ":" + strconv.Itoa(factory.config.HTTPPort)
+		}
+	} else {
+		if factory.config.HTTPSPort != 443 {
+			return ":" + strconv.Itoa(factory.config.HTTPSPort)
+		}
+	}
+
+	return ""
 }

@@ -29,6 +29,7 @@ import (
 type Factory struct {
 	Session   data.Session
 	config    config.Domain
+	port      string
 	providers []config.Provider
 
 	// services (from server)
@@ -76,7 +77,7 @@ type Factory struct {
 }
 
 // NewFactory creates a new factory tied to a MongoDB database
-func NewFactory(domain config.Domain, providers []config.Provider, activityService *service.ActivityStream, registrationService *service.Registration, serverEmail *service.ServerEmail, themeService *service.Theme, templateService *service.Template, widgetService *service.Widget, contentService *service.Content, providerService *service.Provider, taskQueue queue.Queue, attachmentOriginals afero.Fs, attachmentCache afero.Fs, httpCache *httpcache.HTTPCache) (*Factory, error) {
+func NewFactory(domain config.Domain, port string, providers []config.Provider, activityService *service.ActivityStream, registrationService *service.Registration, serverEmail *service.ServerEmail, themeService *service.Theme, templateService *service.Template, widgetService *service.Widget, contentService *service.Content, providerService *service.Provider, taskQueue queue.Queue, attachmentOriginals afero.Fs, attachmentCache afero.Fs, httpCache *httpcache.HTTPCache) (*Factory, error) {
 
 	log.Info().Msg("Starting domain: " + domain.Hostname)
 
@@ -95,6 +96,7 @@ func NewFactory(domain config.Domain, providers []config.Provider, activityServi
 		attachmentOriginals: attachmentOriginals,
 		attachmentCache:     attachmentCache,
 		streamUpdateChannel: make(chan model.Stream),
+		port:                port,
 	}
 
 	factory.config.Hostname = domain.Hostname
@@ -413,7 +415,7 @@ func (factory *Factory) ID() string {
 
 // Host returns the domain name AND protocol (probably HTTPS) => e.g. "https://example.com"
 func (factory *Factory) Host() string {
-	return domain.Protocol(factory.config.Hostname) + factory.config.Hostname
+	return domain.Protocol(factory.config.Hostname) + factory.config.Hostname + factory.port
 }
 
 // Hostname returns the domain name only (without a protocol) => e.g. "example.com
