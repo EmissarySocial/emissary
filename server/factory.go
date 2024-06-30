@@ -628,21 +628,17 @@ func (factory *Factory) HTTPCache() *httpcache.HTTPCache {
 
 func (factory *Factory) port(domainConfig config.Domain) string {
 
-	// Special case for localhost - use the HTTP port
-	if domaintools.IsLocalhost(domainConfig.Hostname) {
-		switch factory.config.HTTPPort {
-		case 0, 80:
-			return ""
-		default:
-			return ":" + strconv.Itoa(factory.config.HTTPPort)
-		}
+	// If not localhost, then use standard ports and assume the
+	// hosting environment will handle the port forwarding
+	if !domaintools.IsLocalhost(domainConfig.Hostname) {
+		return ""
 	}
 
-	// All "public" domains default to HTTPS port
-	switch factory.config.HTTPSPort {
-	case 0, 443:
+	// If using localhosts, then return the port number if it's not 80
+	switch factory.config.HTTPPort {
+	case 0, 80:
 		return ""
 	default:
-		return ":" + strconv.Itoa(factory.config.HTTPSPort)
+		return ":" + strconv.Itoa(factory.config.HTTPPort)
 	}
 }
