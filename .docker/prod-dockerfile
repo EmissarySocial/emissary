@@ -26,13 +26,13 @@ RUN go build -o emissary server.go
 #################
 # -- Stage 2 -- #
 # Create the final environment with the compiled binary.
-FROM debian:bookworm-slim
+FROM linuxserver/ffmpeg
 
 # Install ffmpeg
 # This is required for audio/video transcoding
-RUN apt-get update -y
-RUN apt-get upgrade -y
-RUN apt-get install -y ffmpeg
+# RUN apt update -y
+# RUN apt upgrade -y
+# RUN apt install -y ffmpeg
 
 WORKDIR /app
 
