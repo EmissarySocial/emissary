@@ -16,12 +16,7 @@ COPY . .
 RUN go build -o emissary server.go
 
 # Start a new stage from scratch
-FROM debian:bookworm-slim
-
-# Install ffmpeg
-# This is required for audio/video transcoding
-RUN apt-get update -y
-RUN apt-get install -y ffmpeg
+FROM cgr.dev/chainguard/ffmpeg:latest
 
 WORKDIR /app
 
