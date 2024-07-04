@@ -74,7 +74,7 @@ func (step StepViewFeed) Get(builder Builder, buffer io.Writer) PipelineBehavior
 
 		// nolint:errcheck
 		buffer.Write([]byte(xml))
-		return Halt().WithContentType(mimeType)
+		return Halt().AsFullPage().WithContentType(mimeType)
 	}
 }
 
@@ -135,5 +135,5 @@ func (step StepViewFeed) asJSONFeed(builder Builder, buffer io.Writer, children 
 	buffer.Write(bytes)
 
 	// Set ContentType
-	return Halt().WithContentType(model.MimeTypeJSONFeed)
+	return Halt().AsFullPage().WithContentType(model.MimeTypeJSONFeed)
 }
