@@ -4,15 +4,16 @@
 
 .card {
 	display: block;
-	border-radius:2px;
-	border-right-width:2px;
-	border-bottom-width:2px; ;
+	border: solid 1px var(--gray40);
 	background-color: var(--gray00);
 	position:relative;
 	text-overflow: ellipsis;
-	box-shadow: 0 3px 6px 0 rgba(0,0,0,0.2);
 	margin:0px;
 	/* transition: 0.3s; */
+}
+
+.card-dashed {
+	border:dashed 1px var(--gray40);
 }
 
 /*

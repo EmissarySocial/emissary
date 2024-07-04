@@ -11,22 +11,47 @@
 		
 		add: {
 			steps: [{
-				do: "as-modal"
+				do: as-modal
 				steps: [
 					{
-						do: "edit"
-						type: "user"
+						do: edit
+						type: user
 						form: {
-							type: "layout-vertical"
-							label: "Add a Person"
+							label: Add a Person
+							type: layout-tabs
 							children: [
-								{type: "text", label: "Full Name", path: "displayName"}
-								{type: "text", label: "Username", path: "username"}
-								{type: "text", label: "Email Address", path: "emailAddress"}
-								{type: "select", path: "inboxTemplate", label:"Inbox", options:{provider: "inbox-templates", sort:false}}
-								{type: "select", path: "outboxTemplate", label:"Outbox (Profile)", options:{provider: "outbox-templates", sort:false}}
-								{type: "toggle", label: "Public?", path: "isPublic"}
-								{type: "multiselect", label: "Group(s)", path: "groupIds", options:{provider:"groups", sort:false}}
+								{
+									label: General
+									type: layout-vertical
+									children: [
+										{type: "text", label: "Full Name", path: "displayName"}
+										{type: "text", label: "Username", path: "username"}
+										{type: "text", label: "Email Address", path: "emailAddress"}
+										{type: "toggle", path: "isPublic", options: {true-text: "Show Profile Publicly", false-text: "Show Profile Publicly"}}
+									]
+								},
+								{
+									label: Profile
+									type: layout-vertical
+									children: [
+										{type: "select", path: "inboxTemplate", label:"Inbox", options:{provider: "inbox-templates", sort:false}}
+										{type: "select", path: "outboxTemplate", label:"Outbox (Profile)", options:{provider: "outbox-templates", sort:false}}
+									]
+								},
+								{
+									label: Groups
+									type: layout-vertical
+									children: [
+										{type: "multiselect", label: "Group(s)", path: "groupIds", options:{provider:"groups", sort:false}}
+									]
+								},
+								{
+									type: layout-vertical
+									label: Owner
+									children: [
+										{type: "toggle", path: "isOwner", options: {true-text: "Grant this user full control over this domain.", false-text: "Grant this user full control over this domain."}}
+									]
+								}
 							]
 						}
 					}
@@ -53,18 +78,24 @@
 											{type: "text", label: "Full Name", path: "displayName"}
 											{type: "text", label: "Username", path: "username"}
 											{type: "text", label: "Email Address", path: "emailAddress"}
-											{type: "select", path: "inboxTemplate", label:"Inbox", options:{provider: "inbox-templates", sort:false}}
-											{type: "select", path: "outboxTemplate", label:"Outbox (Profile)", options:{provider: "outbox-templates", sort:false}}
 											{type: "toggle", path: "isPublic", options: {true-text: "Show Profile Publicly", false-text: "Show Profile Publicly"}}
 										]
-									}
+									},
+									{
+										label: Profile
+										type: layout-vertical
+										children: [
+											{type: "select", path: "inboxTemplate", label:"Inbox", options:{provider: "inbox-templates", sort:false}}
+											{type: "select", path: "outboxTemplate", label:"Outbox (Profile)", options:{provider: "outbox-templates", sort:false}}
+										]
+									},
 									{
 										type: layout-vertical
 										label: Groups
 										children: [
 											{type: "multiselect", path: "groupIds", description:"Select one or more groups to grant privileges to this user", options:{provider: "groups", sort:false}}
 										]
-									}
+									},
 									{
 										type: layout-vertical
 										label: Owner

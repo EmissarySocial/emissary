@@ -1,0 +1,9 @@
+behavior sortContainer
+
+	on load 
+		wait 0.5s
+		if Sortable is not null then 
+			make a Sortable from me, {animation:150, whisperClass:'draggable-whisper'}
+		end
+	end
+end
