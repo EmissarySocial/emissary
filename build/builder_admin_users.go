@@ -26,7 +26,7 @@ type User struct {
 // NewUser returns a fully initialized `User` builder.
 func NewUser(factory Factory, request *http.Request, response http.ResponseWriter, template model.Template, user *model.User, actionID string) (User, error) {
 
-	const location = "build.NewGroup"
+	const location = "build.NewUser"
 
 	// Create the underlying Common builder
 	common, err := NewCommonWithTemplate(factory, request, response, template, actionID)
