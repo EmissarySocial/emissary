@@ -56,6 +56,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "delete-attachments":
 		return NewDeleteAttachments(stepInfo)
 
+	case "dump":
+		return NewDump(stepInfo)
+
 	case "edit":
 		return NewEditModelObject(stepInfo)
 
