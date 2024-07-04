@@ -164,10 +164,17 @@ func (builder QueryBuilder[T]) Reverse() QueryBuilder[T] {
  * ACTIONS
  ********************************/
 
+// Slice returns the results of the query as a slice of objects
 func (builder QueryBuilder[T]) Slice() (sliceof.Object[T], error) {
 	result := make([]T, 0)
 	err := builder.service.ObjectQuery(&result, builder.Criteria, builder.makeOptions()...)
 	return result, err
+}
+
+// Count returns the number of records that match the query criteria
+func (builder QueryBuilder[T]) Count() (int64, error) {
+	return builder.service.Count(builder.Criteria)
+
 }
 
 /********************************
