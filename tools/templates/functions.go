@@ -1,6 +1,7 @@
 package templates
 
 import (
+	"bytes"
 	"encoding/json"
 	"html/template"
 	"math"
@@ -9,12 +10,15 @@ import (
 	"time"
 
 	"github.com/benpate/color"
+	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/collections"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/channel"
 	"github.com/benpate/rosetta/compare"
 	"github.com/benpate/rosetta/html"
 	"github.com/davecgh/go-spew/spew"
+	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/extension"
 
 	"github.com/EmissarySocial/emissary/tools/tinyDate"
 	"github.com/benpate/icon"
@@ -150,6 +154,28 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 
 		"html": func(value string) template.HTML {
 			return template.HTML(value)
+		},
+
+		"markdown": func(value string) template.HTML {
+
+			// https://github.com/yuin/goldmark#built-in-extensions
+			var buffer bytes.Buffer
+
+			md := goldmark.New(
+				goldmark.WithExtensions(
+					extension.Table,
+					extension.Linkify,
+					extension.Typographer,
+					extension.DefinitionList,
+				),
+				goldmark.WithRendererOptions(),
+			)
+
+			if err := md.Convert([]byte(value), &buffer); err != nil {
+				derp.Report(derp.Wrap(err, "tools.templates.functions.markdown", "Error converting Markdown to HTML"))
+			}
+
+			return template.HTML(buffer.String())
 		},
 
 		"htmlMinimal": func(value string) template.HTML {
