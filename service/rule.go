@@ -53,6 +53,10 @@ func (service *Rule) Close() {
  * Common Data Methods
  ******************************************/
 
+func (service *Rule) Count(criteria exp.Expression) (int64, error) {
+	return service.collection.Count(criteria)
+}
+
 // Query returns an slice of allthe Rules that match the provided criteria
 func (service *Rule) Query(criteria exp.Expression, options ...option.Option) ([]model.Rule, error) {
 	result := make([]model.Rule, 0)

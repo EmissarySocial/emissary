@@ -45,6 +45,11 @@ func (service *OAuthUserToken) Close() {
  * Common Data Methods
  ******************************************/
 
+// Count returns the number of records that match the provided criteria
+func (service *OAuthUserToken) Count(criteria exp.Expression) (int64, error) {
+	return service.collection.Count(criteria)
+}
+
 // Query returns an slice containing all of the OAuthUserTokens that match the provided criteria
 func (service *OAuthUserToken) Query(criteria exp.Expression, options ...option.Option) ([]model.OAuthUserToken, error) {
 	result := make([]model.OAuthUserToken, 0)

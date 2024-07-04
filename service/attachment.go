@@ -48,6 +48,11 @@ func (service *Attachment) New() model.Attachment {
 	return model.NewAttachment("", primitive.NilObjectID)
 }
 
+// Count returns the number of records that match the provided criteria
+func (service *Attachment) Count(criteria exp.Expression) (int64, error) {
+	return service.collection.Count(criteria)
+}
+
 // List returns an iterator containing all of the Attachments who match the provided criteria
 func (service *Attachment) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.collection.Iterator(notDeleted(criteria), options...)

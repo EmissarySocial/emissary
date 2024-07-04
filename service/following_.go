@@ -129,6 +129,11 @@ func (service *Following) New() model.Following {
 	return model.NewFollowing()
 }
 
+// Count returns the number of records that match the provided criteria
+func (service *Following) Count(criteria exp.Expression) (int64, error) {
+	return service.collection.Count(criteria)
+}
+
 // Query returns an iterator containing all of the Following who match the provided criteria
 func (service *Following) Query(criteria exp.Expression, options ...option.Option) ([]model.Following, error) {
 	result := make([]model.Following, 0)

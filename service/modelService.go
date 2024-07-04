@@ -20,5 +20,6 @@ type ModelService interface {
 	ObjectSave(data.Object, string) error
 	ObjectDelete(data.Object, string) error
 	ObjectUserCan(data.Object, model.Authorization, string) error
+	Count(exp.Expression) (int64, error)
 	Schema() schema.Schema
 }

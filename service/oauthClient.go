@@ -43,6 +43,11 @@ func (service *OAuthClient) Close() {
  * Common Data Methods
  ******************************************/
 
+// Count returns the number of records that match the provided criteria
+func (service *OAuthClient) Count(criteria exp.Expression) (int64, error) {
+	return service.collection.Count(criteria)
+}
+
 // Query returns an slice containing all of the OAuthClients that match the provided criteria
 func (service *OAuthClient) Query(criteria exp.Expression, options ...option.Option) ([]model.OAuthClient, error) {
 	result := make([]model.OAuthClient, 0)

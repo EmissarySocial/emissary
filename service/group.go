@@ -39,6 +39,11 @@ func (service *Group) Close() {
  * Common Data Methods
  ******************************************/
 
+// Count returns the number of records that match the provided criteria
+func (service *Group) Count(criteria exp.Expression) (int64, error) {
+	return service.collection.Count(criteria)
+}
+
 func (service *Group) Query(criteria exp.Expression, options ...option.Option) ([]model.Group, error) {
 	result := make([]model.Group, 0)
 	err := service.collection.Query(&result, notDeleted(criteria), options...)
@@ -231,11 +236,6 @@ func (service *Group) ListAsOptions() []form.LookupCode {
 	}
 
 	return result
-}
-
-// Count returns the number of (non-deleted) records in the User collection
-func (service *Group) Count(criteria exp.Expression) (int64, error) {
-	return service.collection.Count(notDeleted(criteria))
 }
 
 /******************************************

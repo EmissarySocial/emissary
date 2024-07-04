@@ -179,6 +179,11 @@ func (service *Domain) Save(domain model.Domain, note string) error {
  * Generic Data Methods
  ******************************************/
 
+// Count returns the number of records that match the provided criteria
+func (service *Domain) Count(criteria exp.Expression) (int64, error) {
+	return service.collection.Count(criteria)
+}
+
 // ObjectType returns the type of object that this service manages
 func (service *Domain) ObjectType() string {
 	return "Domain"

@@ -67,6 +67,11 @@ func (service *Mention) Close() {
  * Common Data Methods
  ******************************************/
 
+// Count returns the number of records that match the provided criteria
+func (service *Mention) Count(criteria exp.Expression) (int64, error) {
+	return service.collection.Count(criteria)
+}
+
 // Query returns a slice containing all of the Mentions that match the provided criteria
 func (service *Mention) Query(criteria exp.Expression, options ...option.Option) ([]model.Mention, error) {
 	result := make([]model.Mention, 0)

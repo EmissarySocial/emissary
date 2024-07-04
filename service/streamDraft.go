@@ -52,6 +52,11 @@ func (service *StreamDraft) New() model.Stream {
 	return model.NewStream()
 }
 
+// Count returns the number of records that match the provided criteria
+func (service *StreamDraft) Count(criteria exp.Expression) (int64, error) {
+	return service.collection.Count(criteria)
+}
+
 // Load either: 1) loads a valid draft from the database, or 2) creates a new draft and returns it instead
 func (service *StreamDraft) Load(criteria exp.Expression, result *model.Stream) error {
 

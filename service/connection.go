@@ -40,6 +40,11 @@ func (service *Connection) Close() {
  * Common Data Methods
  ******************************************/
 
+// Count returns the number of records that match the provided criteria
+func (service *Connection) Count(criteria exp.Expression) (int64, error) {
+	return service.collection.Count(criteria)
+}
+
 func (service *Connection) Query(criteria exp.Expression, options ...option.Option) ([]model.Connection, error) {
 	result := make([]model.Connection, 0)
 	err := service.collection.Query(&result, notDeleted(criteria), options...)

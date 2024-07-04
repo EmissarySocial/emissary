@@ -148,6 +148,11 @@ func (service *Stream) New() model.Stream {
 	return result
 }
 
+// Count returns the number of records that match the provided criteria
+func (service *Stream) Count(criteria exp.Expression) (int64, error) {
+	return service.collection.Count(criteria)
+}
+
 // Query returns an slice containing all of the Streams that match the provided criteria
 func (service *Stream) Query(criteria exp.Expression, options ...option.Option) ([]model.Stream, error) {
 	result := make([]model.Stream, 0)
@@ -530,11 +535,6 @@ func (service *Stream) LoadLastSibling(parentID primitive.ObjectID, result *mode
 
 func (service *Stream) LoadFirstAttachment(streamID primitive.ObjectID) (model.Attachment, error) {
 	return service.attachmentService.LoadFirstByObjectID(model.AttachmentObjectTypeStream, streamID)
-}
-
-// Count returns the number of (non-deleted) records in the Stream collection
-func (service *Stream) Count(criteria exp.Expression) (int64, error) {
-	return service.collection.Count(notDeleted(criteria))
 }
 
 // MaxRank returns the maximum rank of all children of a stream

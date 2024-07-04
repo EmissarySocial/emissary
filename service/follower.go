@@ -65,6 +65,11 @@ func (service *Follower) Query(criteria exp.Expression, options ...option.Option
 	return result, err
 }
 
+// Count returns the number of records that match the provided criteria
+func (service *Follower) Count(criteria exp.Expression) (int64, error) {
+	return service.collection.Count(criteria)
+}
+
 // List returns an iterator containing all of the Followers who match the provided criteria
 func (service *Follower) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.collection.Iterator(notDeleted(criteria), options...)

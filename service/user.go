@@ -1,7 +1,6 @@
 package service
 
 import (
-	"context"
 	"strconv"
 	"strings"
 	"time"
@@ -77,6 +76,10 @@ func (service *User) Close() {
 /******************************************
  * Common Data Methods
  ******************************************/
+
+func (service User) Count(criteria exp.Expression) (int64, error) {
+	return service.collection.Count(criteria)
+}
 
 // List returns an iterator containing all of the Users who match the provided criteria
 func (service *User) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
@@ -343,11 +346,6 @@ func (service *User) LoadByResetCode(userID string, code string, user *model.Use
 
 	// No Error means success
 	return nil
-}
-
-// Count returns the number of (non-deleted) records in the User collection
-func (service *User) Count(ctx context.Context, criteria exp.Expression) (int64, error) {
-	return service.collection.Count(notDeleted(criteria))
 }
 
 // TODO: MEDIUM: this function is wickedly inefficient

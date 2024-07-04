@@ -57,6 +57,11 @@ func (service *Inbox) New() model.Message {
 	return model.NewMessage()
 }
 
+// Count returns the number of records that match the provided criteria
+func (service *Inbox) Count(criteria exp.Expression) (int64, error) {
+	return service.collection.Count(criteria)
+}
+
 // Query returns a slice containing all of the Activities that match the provided criteria
 func (service *Inbox) Query(criteria exp.Expression, options ...option.Option) ([]model.Message, error) {
 	result := []model.Message{}

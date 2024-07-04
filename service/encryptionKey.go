@@ -48,6 +48,11 @@ func (service *EncryptionKey) Close() {
  * Common Data Methods
  ******************************************/
 
+// Count returns the number of records that match the provided criteria
+func (service *EncryptionKey) Count(criteria exp.Expression) (int64, error) {
+	return service.collection.Count(criteria)
+}
+
 // List returns an iterator containing all of the EncryptionKeys who match the provided criteria
 func (service *EncryptionKey) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.collection.Iterator(notDeleted(criteria), options...)

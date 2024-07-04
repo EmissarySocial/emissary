@@ -46,6 +46,11 @@ func (service *Response) Close() {
  * Common Data Methods
  ******************************************/
 
+// Count returns the number of Responses that match the provided criteria
+func (service *Response) Count(criteria exp.Expression) (int64, error) {
+	return service.collection.Count(notDeleted(criteria))
+}
+
 // Query returns a slice containing all of the Responses that match the provided criteria
 func (service *Response) Query(criteria exp.Expression, options ...option.Option) ([]model.Response, error) {
 	result := make([]model.Response, 0)
