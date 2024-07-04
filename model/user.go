@@ -29,17 +29,21 @@ type User struct {
 	Password        string                     `json:"-"               bson:"password"`             // This password should be encrypted with BCrypt.
 	Locale          string                     `json:"locale"          bson:"locale"`               // Language code for this user's preferred language.
 	SignupNote      string                     `json:"signupNote"      bson:"signupNote,omitempty"` // Note that was included when this user signed up.
+	StateID         string                     `json:"stateId"         bson:"stateId"`              // State ID for this user
 	InboxTemplate   string                     `json:"inboxTemplate"   bson:"inboxTemplate"`        // Template for the user's inbox
 	OutboxTemplate  string                     `json:"outboxTemplate"  bson:"outboxTemplate"`       // Template for the user's outbox
 	Links           sliceof.Object[PersonLink] `json:"links"           bson:"links"`                // Slice of links to profiles on other web services.
-	FollowerCount   int                        `json:"followerCount"   bson:"followerCount"`        // Number of followers for this user
-	FollowingCount  int                        `json:"followingCount"  bson:"followingCount"`       // Number of users that this user is following
-	RuleCount       int                        `json:"ruleCount"       bson:"ruleCount"`            // Number of users that this user is following
-	IsOwner         bool                       `json:"isOwner"         bson:"isOwner"`              // If TRUE, then this user is a website owner with FULL privileges.
-	IsPublic        bool                       `json:"isPublic"        bson:"isPublic"`             // If TRUE, then this user's profile is publicly available
 	PasswordReset   PasswordReset              `json:"-"               bson:"passwordReset"`        // Most recent password reset information.
 	Data            mapof.String               `json:"data"            bson:"data"`                 // Custom profile data that can be stored with this User.
 	journal.Journal `json:"-" bson:",inline"`
+
+	FollowerCount  int  `json:"followerCount"   bson:"followerCount"`  // Number of followers for this user
+	FollowingCount int  `json:"followingCount"  bson:"followingCount"` // Number of actors that this user is following
+	RuleCount      int  `json:"ruleCount"       bson:"ruleCount"`      // Number of rules (blocks) that this user has implemented
+	IsOwner        bool `json:"isOwner"         bson:"isOwner"`        // If TRUE, then this user is a website owner with FULL privileges.
+	IsPublic       bool `json:"isPublic"        bson:"isPublic"`       // If TRUE, then this user's profile is publicly visible
+	IsDiscoverable bool `json:"isDiscoverable"  bson:"isDiscoverable"` // If TRUE, then this user's profile can be discovered by other users.
+	IsIndexable    bool `json:"isIndexable"     bson:"isIndexable"`    // If TRUE, then this user's profile can be indexed by search engines.
 }
 
 // NewUser returns a fully initialized User object.
@@ -170,7 +174,7 @@ func (user *User) Claims() jwt.Claims {
 // State returns the current state of this object.
 // For users, there is no state, so it returns ""
 func (user *User) State() string {
-	return ""
+	return user.StateID
 }
 
 // Roles returns a list of all roles that match the provided authorization
@@ -209,6 +213,14 @@ func (user *User) Roles(authorization *Authorization) []string {
 	// TODO: LOW: Add special roles for follower/following?
 
 	return result
+}
+
+/******************************************
+ * StateSetter Methods
+ ******************************************/
+
+func (user *User) SetState(stateID string) {
+	user.StateID = stateID
 }
 
 /******************************************

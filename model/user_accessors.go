@@ -26,6 +26,7 @@ func UserSchema() schema.Element {
 			"username":       schema.String{MaxLength: 32, Required: true},
 			"locale":         schema.String{},
 			"signupNote":     schema.String{MaxLength: 256},
+			"stateId":        schema.String{},
 			"inboxTemplate":  schema.String{MaxLength: 128},
 			"outboxTemplate": schema.String{MaxLength: 128},
 			"followerCount":  schema.Integer{},
@@ -33,6 +34,8 @@ func UserSchema() schema.Element {
 			"ruleCount":      schema.Integer{},
 			"isPublic":       schema.Boolean{},
 			"isOwner":        schema.Boolean{},
+			"isDiscoverable": schema.Boolean{},
+			"isIndexable":    schema.Boolean{},
 			"data":           schema.Object{Wildcard: schema.String{}},
 		},
 	}
@@ -61,6 +64,12 @@ func (user *User) GetPointer(name string) (any, bool) {
 	case "isPublic":
 		return &user.IsPublic, true
 
+	case "isDiscoverable":
+		return &user.IsDiscoverable, true
+
+	case "isIndexable":
+		return &user.IsIndexable, true
+
 	case "followerCount":
 		return &user.FollowerCount, true
 
@@ -72,6 +81,9 @@ func (user *User) GetPointer(name string) (any, bool) {
 
 	case "displayName":
 		return &user.DisplayName, true
+
+	case "stateId":
+		return &user.StateID, true
 
 	case "statusMessage":
 		return &user.StatusMessage, true

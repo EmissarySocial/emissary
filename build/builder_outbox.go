@@ -194,6 +194,10 @@ func (w Outbox) DisplayName() string {
 	return w._user.DisplayName
 }
 
+func (w Outbox) StateID() string {
+	return w._user.StateID
+}
+
 func (w Outbox) StatusMessage() string {
 	return w._user.StatusMessage
 }
@@ -303,6 +307,11 @@ func (w Outbox) Responses() QueryBuilder[model.Response] {
 	result := NewQueryBuilder[model.Response](w._factory.Response(), criteria)
 
 	return result
+}
+
+func (w Outbox) setState(stateID string) error {
+	w._user.SetState(stateID)
+	return nil
 }
 
 func (w Outbox) debug() {
