@@ -1,0 +1,101 @@
+behavior colorpicker
+
+	init
+		set :path to my @data-path	
+		set value to my @value
+
+		if value is null
+			set value to ""
+		end
+
+		set pattern to "^#[0-9a-fA-F]{6}$"
+		put `<input id="colorpicker-input-${:path}" type="text" value="${value}" script="on focus trigger selectText end on keyup trigger setColor" style="width:6em" minlength="7" maxlength="7" pattern="${pattern}">` into me
+		put `&nbsp;` at the end of me
+		put `<input id="colorpicker-picker-${:path}" type="color" script="on input trigger pickColor" style="position:absolute; visibility:hidden;">` at the end of me
+		put `<button type="button" id="colorpicker-button-${:path}" script="on click trigger togglePicker"><i class="bi bi-palette"></i></button>` at the end of me
+
+		set myInputID to `colorpicker-input-${:path}`
+		set myButtonID to `colorpicker-button-${:path}`
+		set myPickerID to `colorpicker-picker-${:path}`
+
+		set :input to #{myInputID}
+		set :button to #{myButtonID}
+		set :picker to #{myPickerID}
+
+		trigger setColor
+	end
+
+	on selectText
+		wait a tick
+		call the :input's focus()
+		call the :input's select()
+	end
+
+	on togglePicker
+		log :picker
+		call the :picker's showPicker()
+	end
+
+	on pickColor
+		set the :input's value to the :picker's value
+		trigger setColor
+	end
+
+	on setColor 
+
+		if :input.value is not "" then
+
+			if :input.value.charAt(0) is not "\#" then 
+				set the :input.value to "\#" + :input.value
+			end
+
+			set color to ColorValue(:input.value)
+
+			if color is not "" then 
+				set the :input's *backgroundColor to color
+				set the :input's *color to textColor(color)
+				exit
+			end
+		
+		end
+
+		set the :input's *backgroundColor to ""
+		set the :input's *color to ""
+	end
+
+end
+
+def ColorValue(value)
+
+	if value is nil then
+		return ""
+	end
+
+	if value is "" then
+		return ""
+	end
+
+	make a RegExp from "^\#[0-9a-f]{6}$", "i" called colorPattern
+
+	if not colorPattern.test(value) then
+		return ""
+	end
+
+	return value
+end
+
+def textColor(color)
+	set colorNumber to parseInt("0x" + color.substring(1))
+	
+	set blue to colorNumber mod 256
+	set colorNumber to Math.floor(colorNumber / 256)
+	set green to colorNumber mod 256
+	set red to Math.floor(colorNumber / 256)
+	set average to (red + blue + green) / 3
+
+	if average > 127 then 
+		return "#000000"
+	end
+
+	return "#ffffff"
+end
