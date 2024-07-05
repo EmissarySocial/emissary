@@ -2,7 +2,7 @@ behavior colorpicker
 
 	init
 		set :path to my @data-path	
-		set value to my @value
+		set value to my @data-value
 
 		if value is null
 			set value to ""
