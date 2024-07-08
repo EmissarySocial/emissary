@@ -5,7 +5,6 @@ behavior blockselect(link)
 	end
 
 	on click
-	
 		if event.target.hasAttribute("href") then
 			exit
 		end
@@ -17,17 +16,17 @@ behavior blockselect(link)
 		if event.target.hasAttribute("hx-post") then
 			exit
 		end
-
+		
 		if window.getSelection().toString() is not "" then
 			exit
 		end
 
 		if link is null then
-			set link to the first <[href],[hx-get],[hx-post]/> in me
+			set link to the first <[href],[hx-get]/> in me
 		end
 
 		if link is not null then
-			send click to the link
+			click() the link
 		end
 
 	end
