@@ -16,7 +16,6 @@ import (
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 )
 
@@ -192,8 +191,6 @@ func displayPhoto(ctx echo.Context, applicationName string, photo mapof.Any) err
 	b.Close()
 	b.Div().Class("pos-absolute-bottom-right padding-xs text-xs").Style("background-color:"+photoColor, "color:"+textColor).InnerHTML(credits).Close()
 	b.Close()
-
-	spew.Dump(photo)
 
 	return ctx.HTML(200, b.String())
 }
