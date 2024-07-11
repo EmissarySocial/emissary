@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/rosetta/schema"
+	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -223,6 +224,8 @@ func (service *Attachment) MakeRoom(objectType string, objectID primitive.Object
 
 	const location = "service.Attachment.MakeRoom"
 
+	log.Trace().Str("objectType", objectType).Str("objectID", objectID.Hex()).Str("category", category).Int("maximum", maximum).Int("addCount", addCount).Msg("MakeRoom")
+
 	// If the maximum is zero, then there's no limit to the number of attachments.
 	if maximum == 0 {
 		return nil
@@ -265,6 +268,7 @@ func (service *Attachment) MakeRoom(objectType string, objectID primitive.Object
 	for index := 0; index < removeCount; index++ {
 		attachment := attachments[index]
 
+		log.Trace().Str("attachmentID", attachment.AttachmentID.Hex()).Msg("Removing attachment")
 		if err := service.Delete(&attachment, "Deleted"); err != nil {
 			return derp.Wrap(err, location, "Error removing attachment")
 		}

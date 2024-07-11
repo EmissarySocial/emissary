@@ -11,6 +11,7 @@ import (
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/rosetta/first"
 	"github.com/benpate/steranko"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -85,11 +86,13 @@ func getProfileAttachment(serverFactory *server.Factory, field string, filespec 
 
 		// Get the icon/image value from the User
 		fieldValue, ok := user.GetStringOK(field)
-		filespec.Filename = fieldValue
 
 		if !ok {
 			return derp.New(derp.CodeInternalError, location, "Invalid attachment field.  This should never happen", field)
 		}
+
+		filespec.Filename = fieldValue
+		spew.Dump(filespec)
 
 		// Check ETags for the User's avatar
 		if matchHeader := ctx.Request().Header.Get("If-None-Match"); matchHeader == fieldValue {
