@@ -23,7 +23,7 @@ require (
 	github.com/benpate/remote v0.16.0
 	github.com/benpate/rosetta v0.21.2
 	github.com/benpate/sherlock v0.7.2
-	github.com/benpate/steranko v0.17.2
+	github.com/benpate/steranko v0.19.0
 	github.com/benpate/table v0.6.17
 	github.com/benpate/toot v0.3.0
 	github.com/benpate/toot-echo v0.2.4
