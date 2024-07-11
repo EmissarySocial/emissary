@@ -257,7 +257,12 @@ func (service *OAuthUserToken) JWT(userID primitive.ObjectID, scopes string) (st
 	result := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	// Sign the token
-	keyName, keyValue := service.jwtService.NewJWTKey()
+	keyName, keyValue, err := service.jwtService.NewJWTKey()
+
+	if err != nil {
+		return "", derp.Wrap(err, "service.OAuthUserToken.JWT", "Error creating new JWT key")
+	}
+
 	result.Header["kid"] = keyName
 
 	token, err := result.SignedString(keyValue)

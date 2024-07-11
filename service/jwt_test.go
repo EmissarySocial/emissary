@@ -6,9 +6,17 @@ import (
 	"time"
 
 	mockdb "github.com/benpate/data-mock"
+	"github.com/benpate/steranko"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/require"
 )
+
+func TestJWTKeyServiceInterface(t *testing.T) {
+	var service steranko.KeyService
+	jwtService := NewJWT()
+	service = &jwtService
+	require.NotNil(t, service)
+}
 
 func TestJWT(t *testing.T) {
 
@@ -22,12 +30,14 @@ func TestJWT(t *testing.T) {
 	service.Refresh(collection, []byte("0123456789ABCDEF0123456789ABCDEF"))
 
 	// Create Key1
-	name1, value1 := service.NewJWTKey()
+	name1, value1, err := service.NewJWTKey()
+	require.Nil(t, err)
 	require.Equal(t, time.Now().Format("20060102"), name1)
 	require.NotNil(t, value1)
 
 	// Create Key2
-	name2, value2 := service.NewJWTKey()
+	name2, value2, err := service.NewJWTKey()
+	require.Nil(t, err)
 	require.Equal(t, time.Now().Format("20060102"), name2)
 	require.NotNil(t, value2)
 
@@ -60,7 +70,8 @@ func TestJWTResetCache(t *testing.T) {
 	service.Refresh(collection, []byte("0123456789ABCDEF0123456789ABCDEF"))
 
 	// Create Key1
-	name1, value1 := service.NewJWTKey()
+	name1, value1, err := service.NewJWTKey()
+	require.Nil(t, err)
 	require.Equal(t, time.Now().Format("20060102"), name1)
 	require.NotNil(t, value1)
 
@@ -69,7 +80,8 @@ func TestJWTResetCache(t *testing.T) {
 	service.cache.Clear()
 
 	// Create Key2
-	name2, value2 := service.NewJWTKey()
+	name2, value2, err := service.NewJWTKey()
+	require.Nil(t, err)
 	require.Equal(t, time.Now().Format("20060102"), name2)
 	require.NotNil(t, value2)
 

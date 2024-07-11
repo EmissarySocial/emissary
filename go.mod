@@ -4,7 +4,7 @@ go 1.22.4
 
 require (
 	github.com/PuerkitoBio/goquery v1.9.2
-	github.com/aws/aws-sdk-go v1.54.14
+	github.com/aws/aws-sdk-go v1.54.18
 	github.com/benpate/color v0.1.0
 	github.com/benpate/data v0.28.4
 	github.com/benpate/data-mock v0.28.11
@@ -23,7 +23,7 @@ require (
 	github.com/benpate/remote v0.16.0
 	github.com/benpate/rosetta v0.21.2
 	github.com/benpate/sherlock v0.7.2
-	github.com/benpate/steranko v0.18.0
+	github.com/benpate/steranko v0.19.0
 	github.com/benpate/table v0.6.17
 	github.com/benpate/toot v0.3.0
 	github.com/benpate/toot-echo v0.2.4
@@ -35,14 +35,14 @@ require (
 	github.com/gernest/mention v2.0.0+incompatible
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/gorilla/feeds v1.2.0
-	github.com/hairyhenderson/go-fsimpl v0.1.6
+	github.com/hairyhenderson/go-fsimpl v0.1.7
 	github.com/hjson/hjson-go/v4 v4.4.0
 	github.com/karlseguin/ccache/v3 v3.0.5
 	github.com/kr/jsonfeed v0.1.1
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/labstack/gommon v0.4.2
 	github.com/maypok86/otter v1.2.1
-	github.com/microcosm-cc/bluemonday v1.0.26
+	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/mmcdole/gofeed v1.3.0
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/relvacode/iso8601 v1.4.0
@@ -51,7 +51,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.9.0
 	github.com/stripe/stripe-go/v78 v78.12.0
-	github.com/tdewolff/minify/v2 v2.20.35
+	github.com/tdewolff/minify/v2 v2.20.37
 	github.com/timewasted/go-accept-headers v0.0.0-20130320203746-c78f304b1b09
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
 	github.com/xhit/go-simple-mail/v2 v2.16.0
@@ -60,8 +60,8 @@ require (
 	github.com/yuin/goldmark v1.7.4
 	github.com/yuin/goldmark-highlighting/v2 v2.0.0-20230729083705-37449abec8cc
 	go.mongodb.org/mongo-driver v1.16.0
-	golang.org/x/crypto v0.24.0
-	golang.org/x/exp v0.0.0-20240613232115-7f521ea00fb8
+	golang.org/x/crypto v0.25.0
+	golang.org/x/exp v0.0.0-20240707233637-46b078467d37
 	golang.org/x/oauth2 v0.21.0
 	willnorris.com/go/microformats v1.2.0
 	willnorris.com/go/webmention v0.0.0-20220108183051-4a23794272f0
@@ -76,7 +76,7 @@ require (
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/cloudflare/circl v1.3.9 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.5 // indirect
-	github.com/dlclark/regexp2 v1.11.0 // indirect
+	github.com/dlclark/regexp2 v1.11.1 // indirect
 	github.com/dolthub/maphash v0.1.0 // indirect
 	github.com/dyatlov/go-opengraph/opengraph v0.0.0-20220524092352-606d7b1e5f8a // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
@@ -118,9 +118,9 @@ require (
 	github.com/yeqown/reedsolomon v1.0.0 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240424034433-3c2c7870ae76 // indirect
 	golang.org/x/image v0.18.0 // indirect
-	golang.org/x/net v0.26.0 // indirect
+	golang.org/x/net v0.27.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
-	golang.org/x/sys v0.21.0 // indirect
+	golang.org/x/sys v0.22.0 // indirect
 	golang.org/x/text v0.16.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect

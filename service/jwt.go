@@ -52,7 +52,7 @@ func (service *JWT) Close() {
 
 // NewJWTKey returns a a new JWT Key to the caller.
 // This method is a part of the steranko.KeyService interface.
-func (service *JWT) NewJWTKey() (string, any) {
+func (service *JWT) NewJWTKey() (string, any, error) {
 
 	const location = "service.JWT.NewJWTKey"
 
@@ -61,25 +61,24 @@ func (service *JWT) NewJWTKey() (string, any) {
 
 	// If the key exists in the cache or database, then return it
 	if result, err := service.load(keyName); err == nil {
-		return keyName, result
+		return keyName, result, nil
 	}
 
 	// If not found, then we will make a new key
 	jwtKey, err := service.newJWTKey(keyName)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Failed Generating Key"))
-		return "failed-generating-key", must(random.GenerateBytes(128))
+		return "", must(random.GenerateBytes(128)), derp.Wrap(err, location, "Failed Generating Key")
 	}
 
 	// Save the new key to the database
 	if err := service.save(&jwtKey); err != nil {
-		derp.Report(derp.Wrap(err, location, "Failed Saving Key"))
-		return "failed-saving-key", must(random.GenerateBytes(128))
+
+		return "", must(random.GenerateBytes(128)), derp.Wrap(err, location, "Failed Saving Key")
 	}
 
 	// Return the new key to the caller
-	return keyName, jwtKey.Plaintext
+	return keyName, jwtKey.Plaintext, nil
 }
 
 // FindJWTKey retrieves a key from the cache or database, and returns it to the caller.
@@ -150,7 +149,9 @@ func (service *JWT) load(keyName string) ([]byte, error) {
 
 	// If the item exists in the cache, then we're done.
 	if item := service.cache.Get(keyName); item != nil {
-		return item.Value(), nil
+		if !item.Expired() {
+			return item.Value(), nil
+		}
 	}
 
 	// Try to load the key from the database
@@ -167,7 +168,7 @@ func (service *JWT) load(keyName string) ([]byte, error) {
 	}
 
 	// Save the plaintext in the memory cache
-	go service.cache.Set(keyName, jwtKey.Plaintext, 24*time.Hour)
+	service.cache.Set(keyName, jwtKey.Plaintext, 24*time.Hour)
 
 	// Return the plaintext to the rest of the application
 	return jwtKey.Plaintext, nil
@@ -183,7 +184,7 @@ func (service *JWT) save(jwtKey *model.JWTKey) error {
 	}
 
 	// Apply the item back into the cache
-	go service.cache.Set(jwtKey.KeyName, jwtKey.Plaintext, 24*time.Hour)
+	service.cache.Set(jwtKey.KeyName, jwtKey.Plaintext, 24*time.Hour)
 
 	// Save the key to the database
 	if err := service.collection.Save(jwtKey, ""); err != nil {
