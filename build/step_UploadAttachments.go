@@ -7,7 +7,6 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 )
 
@@ -31,9 +30,6 @@ func (step StepUploadAttachments) Get(builder Builder, _ io.Writer) PipelineBeha
 func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) PipelineBehavior {
 
 	const location = "handler.StepUploadAttachments.Post"
-
-	log.Debug().Msg(location)
-	spew.Dump(step)
 
 	// Read the multipart form from the request
 	form, err := multipartForm(builder.request())

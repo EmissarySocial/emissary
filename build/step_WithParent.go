@@ -6,7 +6,6 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/model/step"
 	"github.com/benpate/derp"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 )
 
@@ -80,9 +79,6 @@ func (step StepWithParent) postUser(streamBuilder *Stream, buffer io.Writer) Pip
 	// Execute the POST build pipeline on the parent
 	result := Pipeline(step.SubSteps).Post(factory, &outbox, buffer)
 	result.Error = derp.ReportAndReturn(derp.Wrap(result.Error, location, "Error executing steps for parent"))
-
-	log.Trace().Msg("step.WithParent.postUser: success")
-	spew.Dump(user)
 
 	return UseResult(result)
 }

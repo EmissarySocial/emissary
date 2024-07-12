@@ -6,7 +6,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/html"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/davecgh/go-spew/spew"
 )
 
 // StepEditRegistration represents an action-step that can update the data.DataMap custom data stored in a Stream
@@ -133,9 +132,6 @@ func (step StepEditRegistration) Post(builder Builder, _ io.Writer) PipelineBeha
 	// Apply the new values to the domain object
 	domainBuilder._domain.RegistrationID = registrationID
 	domainBuilder._domain.RegistrationData = data
-
-	spew.Dump(domainBuilder._domain.RegistrationID)
-	spew.Dump(domainBuilder._domain.RegistrationData)
 
 	// Success. (close the modal)
 	return Continue().WithEvent("closeModal", "true")

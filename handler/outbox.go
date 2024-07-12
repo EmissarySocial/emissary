@@ -11,7 +11,6 @@ import (
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/rosetta/first"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -92,7 +91,6 @@ func getProfileAttachment(serverFactory *server.Factory, field string, filespec 
 		}
 
 		filespec.Filename = fieldValue
-		spew.Dump(filespec)
 
 		// Check ETags for the User's avatar
 		if matchHeader := ctx.Request().Header.Get("If-None-Match"); matchHeader == fieldValue {
