@@ -5,7 +5,7 @@
 	{{- template "includes-head" . -}}
 </head>
 
-<body hx-target="main" hx-swap="innerHTML" hx-push-url="false">
+<body hx-target="main" hx-swap="innerHTML" hx-push-url="false" hx-ext="a11y">
 
 	<main style="display:flex; height:clamp(400px, 100vh, 1000px); justify-content: center; align-items: center;">
 
@@ -41,7 +41,7 @@
 						<span class="spin">{{icon "loading"}}</span> Signing In
 					</button>
 
-					<button id="submitButton" type="submit" class="primary htmx-request-hide">
+					<button id="submitButton" type="submit" class="primary htmx-request-hide" tabIndex="0">
 						Sign In
 					</button>
 

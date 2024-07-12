@@ -22,8 +22,20 @@
 				return;
 			}
 
+			var element = event.target
+
+			if (event.detail != null) {
+				if (event.detail.elt != null) {
+					element = event.detail.elt
+				}
+			}
+
+			if (element == null) {
+				return
+			}
+
 			// Special rules for links and buttons
-			event.target.querySelectorAll("a,button,[role=link],[role=button],[role=tab]").forEach(function(/** @type {HTMLElement} */ node) {
+			element.querySelectorAll("a,button,[role=link],[role=button],[role=tab]").forEach(function(/** @type {HTMLElement} */ node) {
 				
 				// If tabIndex is not already set, then default it to 0
 				if (node.attributes["tabIndex"] == undefined) {
@@ -41,7 +53,7 @@
 			})
 
 			// Scan for hx-target attributes and add `aria-live="polite"` to any targeted elements
-			event.target.querySelectorAll("[hx-target],[data-hx-target]").forEach(function(/** @type {HTMLElement} */ node) {
+			element.querySelectorAll("[hx-target],[data-hx-target]").forEach(function(/** @type {HTMLElement} */ node) {
 				var target = api.getTarget(node)
 				if (target.attributes["aria-live"] == undefined) {
 					target.setAttribute("aria-live", "polite")
