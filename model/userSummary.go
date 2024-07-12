@@ -35,5 +35,5 @@ func (userSummary UserSummary) IconURL() string {
 	if userSummary.IconID.IsZero() {
 		return ""
 	}
-	return "/@" + userSummary.UserID.Hex() + "/icon"
+	return "/@" + userSummary.UserID.Hex() + "/attachments/" + userSummary.IconID.Hex()
 }

@@ -1,19 +1,19 @@
 <h1>Upload Your Profile Photo</h1>
 
-<div script="install DropToUpload(url:'/@me/photo', success:'/@me')" class="uploader">
+<div script="install DropToUpload(url:'/@me/icon-edit', success:'/@me')" class="uploader">
 
-	<form hx-post="/@me/photo" hx-encoding="multipart/form-data" hx-trigger="change" hx-swap="none" class="margin-bottom">
+	<form hx-post="/@me/icon-edit" hx-encoding="multipart/form-data" hx-trigger="change" hx-swap="none" class="margin-bottom">
 		<input type="file" id="manual-upload" name="file" style="position:absolute; top:0px; left:0px; height:0.1px; width:0.1px; overflow:hidden; opacity:0;"/>
 	</form>
 
-	<div hx-get="/@me/photo-preview" hx-trigger="load, attachments-updated from:body" hx-target="this" hx-swap="innerHTML" hx-push-url="false" class="margin-bottom"></div>
+	<div hx-get="/@me/icon-preview" hx-trigger="load, attachments-updated from:body" hx-target="this" hx-swap="innerHTML" hx-push-url="false" class="margin-bottom"></div>
 	Drag an image file here to upload, or click to <label for="manual-upload" class="link" tabIndex="0">choose a file</label> from your device.
 	Size: 200x200 pixels, Formats: PNG, JPG, or WebP. 
 </div>
 
 <div class="margin-top">
 	<div class="float-right">
-		<a hx-post="/@me/photo-delete" hx-confirm="Are you sure you want to DELETE your profile photo?" class="text-red">Delete Photo</a>
+		<a hx-post="/@me/icon-delete" hx-confirm="Are you sure you want to DELETE your profile photo?" class="text-red">Delete Photo</a>
 	</div>
 	<button script="on click send closeModal">Close Window</button>
 </div>

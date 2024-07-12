@@ -268,7 +268,7 @@ func (user *User) ActivityPubIconURL() string {
 	if user.IconID.IsZero() {
 		return ""
 	}
-	return user.ProfileURL + "/icon"
+	return user.ProfileURL + "/attachments/" + user.IconID.Hex()
 }
 
 func (user *User) ActivityPubImageURL() string {
@@ -276,7 +276,7 @@ func (user *User) ActivityPubImageURL() string {
 	if user.ImageID.IsZero() {
 		return ""
 	}
-	return user.ProfileURL + "/image"
+	return user.ProfileURL + "/attachments/" + user.ImageID.Hex()
 }
 
 func (user *User) ActivityPubBlockedURL() string {

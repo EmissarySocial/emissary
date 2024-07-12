@@ -11,7 +11,6 @@ func AttachmentSchema() schema.Element {
 			"attachmentId": schema.String{Format: "objectId"},
 			"objectId":     schema.String{Format: "objectId"},
 			"objectType":   schema.String{Enum: []string{AttachmentObjectTypeStream, AttachmentObjectTypeUser}},
-			"mediaType":    schema.String{Enum: []string{AttachmentMediaTypeAny, AttachmentMediaTypeAudio, AttachmentMediaTypeDocument, AttachmentMediaTypeImage, AttachmentMediaTypeVideo}},
 			"category":     schema.String{},
 			"label":        schema.String{},
 			"description":  schema.String{},
@@ -22,6 +21,8 @@ func AttachmentSchema() schema.Element {
 			"width":        schema.Integer{},
 			"duration":     schema.Integer{},
 			"rank":         schema.Integer{},
+
+			"rules": AttachmentRulesSchema(),
 		},
 	}
 }
@@ -36,9 +37,6 @@ func (attachment *Attachment) GetPointer(name string) (any, bool) {
 
 	case "objectType":
 		return &attachment.ObjectType, true
-
-	case "mediaType":
-		return &attachment.MediaType, true
 
 	case "category":
 		return &attachment.Category, true
@@ -69,6 +67,9 @@ func (attachment *Attachment) GetPointer(name string) (any, bool) {
 
 	case "duration":
 		return &attachment.Duration, true
+
+	case "rules":
+		return &attachment.Rules, true
 	}
 
 	return "", false

@@ -33,7 +33,7 @@
 					{{- if eq "" .IconURL -}}
 						<div class="circle-64"></div>
 					{{- else -}}
-						<img src="/@{{.UserID}}/icon" class="circle-64">
+						<img src="{{.ActivityPubIconURL}}" class="circle-64">
 					{{- end -}}
 				</div>
 				<div style="flex-grow:1">

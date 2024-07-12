@@ -15,6 +15,10 @@ type UploadAttachments struct {
 	Category       string // Category to apply to the Attachment
 	Maximum        int    // Maximum number of uploads to allow (Default: 1)
 	JSONResult     bool   // If TRUE, return a JSON structure with result data. This forces Maximum=1
+
+	RuleHeight int      // Fixed height for all downloads
+	RuleWidth  int      // Fixed width for all downloads
+	RuleTypes  []string // Allowed extensions.  The first value is used as the default.
 }
 
 // NewUploadAttachments returns a fully parsed UploadAttachments object
@@ -27,6 +31,8 @@ func NewUploadAttachments(stepInfo mapof.Any) (UploadAttachments, error) {
 		action = "append"
 	}
 
+	rules := stepInfo.GetMap("rules")
+
 	return UploadAttachments{
 		Action:         action,
 		Fieldname:      first(stepInfo.GetString("fieldname"), "file"),
@@ -37,6 +43,10 @@ func NewUploadAttachments(stepInfo mapof.Any) (UploadAttachments, error) {
 		Maximum:        max(stepInfo.GetInt("maximum"), 1),
 		Category:       stepInfo.GetString("category"),
 		JSONResult:     stepInfo.GetBool("json-result"),
+
+		RuleHeight: rules.GetInt("height"),
+		RuleWidth:  rules.GetInt("width"),
+		RuleTypes:  rules.GetSliceOfString("types"),
 	}, nil
 }
 

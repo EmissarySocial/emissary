@@ -21,6 +21,10 @@ type StepUploadAttachments struct {
 	Category       string // Category to apply to the Attachment
 	Maximum        int    // Maximum number of uploads to allow (Default: 1)
 	JSONResult     bool   // If TRUE, return a JSON structure with result data. This forces Maximum=1
+
+	RuleHeight int      // Fixed height for all downloads
+	RuleWidth  int      // Fixed width for all downloads
+	RuleTypes  []string // Allowed extensions.  The first value is used as the default.
 }
 
 func (step StepUploadAttachments) Get(builder Builder, _ io.Writer) PipelineBehavior {
@@ -96,6 +100,9 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 		// Update original dimensions
 		attachment.Width = width
 		attachment.Height = height
+
+		// Apply rules to Attachment
+		attachment.SetRules(step.RuleWidth, step.RuleHeight, step.RuleTypes)
 
 		// Try to save the Attachment
 		if err := attachmentService.Save(&attachment, "Uploaded file: "+fileHeader.Filename); err != nil {

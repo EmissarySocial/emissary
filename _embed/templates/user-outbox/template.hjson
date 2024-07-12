@@ -86,17 +86,6 @@
 			}]
 		}
 
-		photo: {
-			roles: ["self"]
-			steps:[
-				{do:"as-modal", steps:[
-					{do:"view-html", file:"photo"}
-					{do:"upload-attachments", category:"image", attachment-path:"iconId", accept-type:"image/*",  maximum:1}
-					{do:"save", comment:"Profile photo updated by me"}
-				]}
-				{do:"reload-page"}
-			]
-		}
 		links: {
 			roles: ["self"]
 			steps: [
@@ -118,15 +107,37 @@
 				{do:"save", comment:"Links updated by me"}
 			]
 		}
-		photo-preview: {
+
+		icon-edit: {
+			roles: ["self"]
+			steps:[
+				{do:"as-modal", steps:[
+					{do:"view-html"}
+					{do:"upload-attachments", category:"image", attachment-path:"iconId", accept-type:"image/*",  maximum:1, rules:{width:400, height:400}}
+					{do:"save", comment:"Profile photo updated by me"}
+				]}
+				{do:"reload-page"}
+			]
+		}
+
+		icon-preview: {
 			roles: ["self"]
 			do:"view-html"
 		}
-		photo-delete: {
+
+		icon-delete: {
 			roles:["self"]
 			steps:[
-				{do:"delete-attachments", all:true}
-				{do:"set-data", values:{iconId:""}}
+				{do:"delete-attachments", field:"iconId"}
+				{do:"save", comment:"Profile photo deleted by me"}
+				{do:"reload-page"}
+			]
+		}
+
+		banner-delete: {
+			roles:["self"]
+			steps:[
+				{do:"delete-attachments", field:"imageId"}
 				{do:"save", comment:"Profile photo deleted by me"}
 				{do:"reload-page"}
 			]

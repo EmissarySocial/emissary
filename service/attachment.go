@@ -196,15 +196,22 @@ func (service *Attachment) DeleteByID(objectType string, objectID primitive.Obje
 	return nil
 }
 
-// DeleteByStream removes all attachments from the provided stream (virtual delete)
-func (service *Attachment) DeleteAll(objectType string, objectID primitive.ObjectID, note string) error {
+// DeleteByCriteria removes all attachments from the provided object/type within a criteria expression (virtual delete)
+func (service *Attachment) DeleteByCriteria(objectType string, objectID primitive.ObjectID, criteria exp.Expression, note string) error {
 
-	attachments, err := service.QueryByObjectID(objectType, objectID)
+	// Append the object/type criteria to the provided criteria
+	criteria = criteria.
+		AndEqual("objectType", objectType).
+		AndEqual("objectId", objectID)
+
+	// Query for all attachments that match the criteria
+	attachments, err := service.Query(criteria)
 
 	if err != nil {
 		return derp.Wrap(err, "service.Attachment.DeleteByStream", "Error listing attachments", objectID)
 	}
 
+	// Delete each attachment individually
 	for _, attachment := range attachments {
 
 		if err := service.Delete(&attachment, note); err != nil {
@@ -212,7 +219,13 @@ func (service *Attachment) DeleteAll(objectType string, objectID primitive.Objec
 		}
 	}
 
+	// Bravo!!
 	return nil
+}
+
+// DeleteAll removes all attachments from the provided object/type (virtual delete)
+func (service *Attachment) DeleteAll(objectType string, objectID primitive.ObjectID, note string) error {
+	return service.DeleteByCriteria(objectType, objectID, exp.All(), note)
 }
 
 /******************************************

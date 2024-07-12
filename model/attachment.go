@@ -2,11 +2,13 @@ package model
 
 import (
 	"mime"
+	"net/url"
 	"strconv"
 	"strings"
 
 	"github.com/benpate/data/journal"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/mediaserver"
 	"github.com/benpate/rosetta/list"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -17,12 +19,12 @@ type Attachment struct {
 	ObjectID     primitive.ObjectID `bson:"objectId"`    // ID of the Stream that owns this Attachment
 	ObjectType   string             `bson:"objectType"`  // Type of object that owns this Attachment
 	Original     string             `bson:"original"`    // Original filename uploaded by user
-	MediaType    string             `bson:"mediaType"`   // MIME type of the file
 	Category     string             `bson:"category"`    // Category of the file (defined by the Template)
 	Label        string             `bson:"label"`       // User-defined label for the attachment
 	Description  string             `bson:"description"` // User-defined description for the attachment
 	URL          string             `bson:"url"`         // URL where the file is stored
 	Status       string             `bson:"status"`      // Status of the attachment (READY, WORKING)
+	Rules        AttachmentRules    `bson:"rules"`       // Rules for downloading this attachment
 	Height       int                `bson:"height"`      // Height of the media file (if applicable)
 	Width        int                `bson:"width"`       // Width of the media file (if applicable)
 	Duration     int                `bbson:"duration"`   // Duration of the media file (if applicable)
@@ -37,6 +39,7 @@ func NewAttachment(objectType string, objectID primitive.ObjectID) Attachment {
 		AttachmentID: primitive.NewObjectID(),
 		ObjectType:   objectType,
 		ObjectID:     objectID,
+		Rules:        NewAttachmentRules(),
 	}
 }
 
@@ -56,7 +59,7 @@ func (attachment *Attachment) ID() string {
 func (attachment *Attachment) CalcURL(host string) string {
 
 	if attachment.ObjectType == AttachmentObjectTypeUser {
-		return host + "/@" + attachment.ObjectID.Hex() + "/pub/icon/" + attachment.AttachmentID.Hex()
+		return host + "/@" + attachment.ObjectID.Hex() + "/attachments/" + attachment.AttachmentID.Hex()
 	}
 
 	return host + "/" + attachment.ObjectID.Hex() + "/attachments/" + attachment.AttachmentID.Hex()
@@ -117,12 +120,23 @@ func (attachment Attachment) HasDimensions() bool {
 	return true
 }
 
+func (attachment *Attachment) SetRules(width int, height int, extensions []string) {
+	attachment.Rules.Extensions = extensions
+	attachment.Rules.Width = width
+	attachment.Rules.Height = height
+}
+
+func (attachment Attachment) FileSpec(address *url.URL) mediaserver.FileSpec {
+	return attachment.Rules.FileSpec(address, attachment.MimeCategory())
+}
+
 func (attachment Attachment) JSONLD() map[string]any {
 
 	result := map[string]any{
 		vocab.PropertyType:      vocab.ObjectTypeImage, // TODO: Expand this to videos, audios, etc.
 		vocab.PropertyMediaType: attachment.DownloadMimeType(),
 		vocab.PropertyURL:       attachment.URL,
+		vocab.PropertySummary:   attachment.Description,
 	}
 
 	if attachment.HasDimensions() {
@@ -130,7 +144,6 @@ func (attachment Attachment) JSONLD() map[string]any {
 		result["height"] = attachment.Height
 	}
 
-	// TODO: Alt Text
 	// TODO: Blurhash
 
 	return result
