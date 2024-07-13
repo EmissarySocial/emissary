@@ -168,7 +168,7 @@ func (user *User) SetString(name string, value string) bool {
 	case "imageId":
 
 		if value == "" {
-			user.IconID = primitive.NilObjectID
+			user.ImageID = primitive.NilObjectID
 			return true
 		}
 
