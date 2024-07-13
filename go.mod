@@ -4,7 +4,7 @@ go 1.22.4
 
 require (
 	github.com/PuerkitoBio/goquery v1.9.2
-	github.com/aws/aws-sdk-go v1.54.18
+	github.com/aws/aws-sdk-go v1.54.19
 	github.com/benpate/color v0.1.0
 	github.com/benpate/data v0.28.4
 	github.com/benpate/data-mock v0.28.11
@@ -14,7 +14,7 @@ require (
 	github.com/benpate/domain v0.2.2
 	github.com/benpate/exp v0.8.3
 	github.com/benpate/exp-builder v0.8.1
-	github.com/benpate/form v0.22.4
+	github.com/benpate/form v0.22.5
 	github.com/benpate/hannibal v0.10.2
 	github.com/benpate/html v0.16.11
 	github.com/benpate/icon v0.4.0
@@ -75,8 +75,8 @@ require (
 	github.com/andybalholm/cascadia v1.3.2 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/cloudflare/circl v1.3.9 // indirect
-	github.com/cyphar/filepath-securejoin v0.2.5 // indirect
-	github.com/dlclark/regexp2 v1.11.1 // indirect
+	github.com/cyphar/filepath-securejoin v0.3.0 // indirect
+	github.com/dlclark/regexp2 v1.11.2 // indirect
 	github.com/dolthub/maphash v0.1.0 // indirect
 	github.com/dyatlov/go-opengraph/opengraph v0.0.0-20220524092352-606d7b1e5f8a // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect

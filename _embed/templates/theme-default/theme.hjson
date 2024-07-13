@@ -26,15 +26,6 @@
 		stylesheet: {
 			content-type:"text/css"
 		}
-		javascript: {
-			content-type:"text/javascript"
-		}
-		hyperscript: {
-			content-type:"text/hyperscript"
-		}
-		registration: {
-			content-type:"text/hyperscript"
-		}
 	}
 	startupStreams: [
 		{templateId:"article-editorjs", token:"home", label:"Welcome!", rank:1}

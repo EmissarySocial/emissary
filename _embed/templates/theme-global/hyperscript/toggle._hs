@@ -1,7 +1,11 @@
 behavior toggle
 
+    -- Resource for making inclusive toggle buttons
+    -- https://www.smashingmagazine.com/2017/09/building-inclusive-toggle-buttons/
+
     init
         add .toggle-container to me
+        add [@role=button] to me
         add [@tabIndex=0] to me
 
         tell .toggle in me
@@ -49,10 +53,12 @@ behavior toggle
         if my @value == "true" then
             set hidden's @value to "true"
             set text to my [@true-text]
+            set my [@aria-pressed]  to "true"
             
         else 
             set hidden's @value to "false"
             set text to my [@false-text]
+            set my [@aria-pressed]  to "false"
         end
 
 		if my [@text] is not null then

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>{{.DomainLabel}} | {{.PageTitle}}</title>
+	<title>{{.DomainLabel}} - {{.PageTitle}}</title>
 	<link rel="webmention" href="/.webmention"/>
 	{{ template "includes-head" .}}
 </head>
@@ -18,15 +18,15 @@
 				{{- end -}}
 				{{- if .IsAuthenticated -}}
 					{{- if eq $topID "outbox" -}}
-						<a href="/@me" class="selected turboclick">{{icon "person-fill"}} Profile</a>
+						<a href="/@me" class="selected turboclick" id="profile">{{icon "person-fill"}} Profile</a>
 					{{- else -}}
-						<a href="/@me" class="turboclick">{{icon "person"}} Profile</a>
+						<a href="/@me" class="turboclick" id="profile">{{icon "person"}} Profile</a>
 					{{- end -}}
 
 					{{- if eq $topID "inbox" -}}
-						<a href="/@me/inbox" class="selected turboclick">{{icon "inbox-fill"}} Inbox</a>
+						<a href="/@me/inbox" class="selected turboclick" id="inbox">{{icon "inbox-fill"}} Inbox</a>
 					{{- else -}}
-						<a href="/@me/inbox" class="turboclick">{{icon "inbox"}} Inbox</a>
+						<a href="/@me/inbox" class="turboclick" id="inbox">{{icon "inbox"}} Inbox</a>
 					{{- end -}}
 
 				{{- end -}}
@@ -35,9 +35,9 @@
 				{{- if .IsAuthenticated -}}
 					{{- if .IsOwner -}}
 						{{- if eq $topID "admin" -}}
-							<a href="/admin/domain" class="selected turboclick">{{icon "settings-fill"}} Server</a>
+							<a href="/admin/domain" class="selected turboclick" id="server">{{icon "settings-fill"}} Server</a>
 						{{- else -}}
-							<a href="/admin/domain" class="turboclick">{{icon "settings"}} Server</a>
+							<a href="/admin/domain" class="turboclick" id="server">{{icon "settings"}} Server</a>
 						{{- end -}}
 					{{- end -}}
 				{{- else -}}

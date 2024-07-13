@@ -9,10 +9,12 @@ behavior colorpicker
 		end
 
 		set pattern to "^#[0-9a-fA-F]{6}$"
-		put `<input id="colorpicker-input-${:path}" type="text" name="${:path}" value="${value}" script="on focus trigger selectText end on keyup trigger setColor" style="width:6em" minlength="7" maxlength="7" pattern="${pattern}">` into me
+		set label to my @data-label
+
+		put `<input id="colorpicker-input-${:path}" type="text" name="${:path}" value="${value}" aria-label="${label}" aria-description="Type a hex color or use the color picker button" style="width:6em" minlength="7" maxlength="7" pattern="${pattern}" script="on focus trigger selectText end on keyup trigger setColor">` into me
 		put `&nbsp;` at the end of me
 		put `<input id="colorpicker-picker-${:path}" type="color" script="on input trigger pickColor" style="position:absolute; visibility:hidden;">` at the end of me
-		put `<button type="button" id="colorpicker-button-${:path}" script="on click trigger togglePicker"><i class="bi bi-palette"></i></button>` at the end of me
+		put `<button type="button" aria-label="Color picker button for ${label}" id="colorpicker-button-${:path}" script="on click trigger togglePicker"><i class="bi bi-palette"></i></button>` at the end of me
 
 		set myInputID to `colorpicker-input-${:path}`
 		set myButtonID to `colorpicker-button-${:path}`
