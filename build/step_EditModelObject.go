@@ -8,7 +8,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/rs/zerolog/log"
 )
 
 // StepEditModelObject is an action that can add new sub-streams to the domain.
@@ -59,8 +58,6 @@ func (step StepEditModelObject) Post(builder Builder, _ io.Writer) PipelineBehav
 
 	const location = "build.StepEditModelObject.Post"
 
-	log.Debug().Msg(location)
-
 	// Get the request body
 	body := mapof.NewAny()
 
@@ -87,14 +84,42 @@ func (step StepEditModelObject) Post(builder Builder, _ io.Writer) PipelineBehav
 
 func (step StepEditModelObject) getForm(builder Builder) form.Element {
 
+	form := step.Form
+
 	// If the step does not contain a form...
-	if step.Form.IsEmpty() {
+	if form.IsEmpty() {
 		// ...see if we can get the baked-in PropertyForm from the builder
 		// (only the Domain builder, for now)
 		if getter, ok := builder.(PropertyFormGetter); ok {
-			return getter.PropertyForm()
+			form = getter.PropertyForm()
 		}
 	}
 
-	return step.Form
+	// replace all template values in the form (and its children)
+	result := step.executeOptionTemplates(builder, form)
+
+	return result
+}
+
+func (step StepEditModelObject) executeOptionTemplates(builder Builder, element form.Element) form.Element {
+
+	// Recursively scan all child elements
+	for index, child := range element.Children {
+		element.Children[index] = step.executeOptionTemplates(builder, child)
+	}
+
+	// Scan all options in this element
+	for key, value := range element.Options {
+		switch typed := value.(type) {
+		case string:
+			if strings.Contains(typed, "{{") {
+				if template, err := template.New("option").Parse(typed); err == nil {
+					element.Options[key] = executeTemplate(template, builder)
+				}
+			}
+		}
+	}
+
+	// Return the modified element
+	return element
 }
