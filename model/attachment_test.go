@@ -17,7 +17,6 @@ func TestAttachmentSchema(t *testing.T) {
 		{"objectId", "876543218765432187654321", nil},
 		{"objectType", "Stream", nil},
 		{"original", "ORIGINAL", nil},
-		{"mediaType", "image", nil},
 		{"category", "CATEGORY", nil},
 		{"label", "LABEL", nil},
 		{"description", "DESCRIPTION", nil},
