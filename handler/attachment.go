@@ -8,7 +8,6 @@ import (
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/list"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -131,7 +130,6 @@ func GetUserAttachment(factoryManager *server.Factory) echo.HandlerFunc {
 		// Retrieve the file from the mediaserver
 		ms := factory.MediaServer()
 		filespec := attachment.FileSpec(ctx.Request().URL)
-		spew.Dump(filespec)
 
 		header := ctx.Response().Header()
 		header.Set("Mime-Type", filespec.MimeType)

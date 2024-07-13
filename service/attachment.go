@@ -213,7 +213,6 @@ func (service *Attachment) DeleteByCriteria(objectType string, objectID primitiv
 
 	// Delete each attachment individually
 	for _, attachment := range attachments {
-
 		if err := service.Delete(&attachment, note); err != nil {
 			derp.Report(derp.Wrap(err, "service.Attachment.DeleteByStream", "Error deleting child stream", attachment))
 		}

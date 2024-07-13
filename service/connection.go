@@ -8,7 +8,6 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -191,8 +190,6 @@ func (service *Connection) LoadOrCreateByProvider(providerID string) (model.Conn
 	criteria := exp.Equal("providerId", providerID)
 
 	err := service.Load(criteria, &result)
-	spew.Dump(criteria, result, err)
-
 	if err == nil {
 		return result, nil
 	}
