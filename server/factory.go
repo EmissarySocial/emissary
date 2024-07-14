@@ -24,6 +24,7 @@ import (
 	domaintools "github.com/benpate/domain"
 	"github.com/benpate/hannibal/queue"
 	"github.com/benpate/icon"
+	"github.com/benpate/rosetta/channel"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
@@ -45,6 +46,7 @@ type Factory struct {
 	storage config.Storage
 	config  config.Config
 	mutex   sync.RWMutex
+	ready   chan struct{}
 
 	// Server-level services
 	registrationService service.Registration
@@ -64,7 +66,6 @@ type Factory struct {
 
 	domains   map[string]*domain.Factory
 	httpCache httpcache.HTTPCache
-	refreshed chan bool
 }
 
 // NewFactory uses the provided configuration data to generate a new Factory
@@ -78,7 +79,7 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 		domains:       make(map[string]*domain.Factory),
 		embeddedFiles: embeddedFiles,
 		taskQueue:     queue.NewSimpleQueue(128, 16),
-		refreshed:     make(chan bool, 1),
+		ready:         make(chan struct{}),
 	}
 
 	// Build the in-memory cache
@@ -203,13 +204,18 @@ func (factory *Factory) start() {
 			zerolog.SetGlobalLevel(zerolog.Disabled)
 		}
 
-		factory.refreshed <- true
+		// If the "ready" channel is still open, then close it,
+		// which will unblock any waiting processes
+		if !channel.Closed(factory.ready) {
+			close(factory.ready)
+		}
 	}
 }
 
-// Refreshed returns the channel that is notified whenever the configuration is refreshed
-func (factory *Factory) Refreshed() <-chan bool {
-	return factory.refreshed
+// Ready returns a channel that is held open while the Factory is still initializing
+// and is closed (unblocking waiting processes) once the Factory is ready to use
+func (factory *Factory) Ready() <-chan struct{} {
+	return factory.ready
 }
 
 // refreshDomain attempts to refresh an existing domain, or creates a new one if it doesn't exist

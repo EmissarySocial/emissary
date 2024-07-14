@@ -83,7 +83,7 @@ func main() {
 	factory := server.NewFactory(configStorage, embeddedFiles)
 
 	// Wait for the first time the configuration is loaded
-	<-factory.Refreshed()
+	<-factory.Ready()
 
 	// Start and configure the Web server
 	e := echo.New()
@@ -129,19 +129,9 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 
-loop:
-	for {
-		select {
-
-		// Collect configuration refresh events (probably don't need to do anything, though)
-		case <-factory.Refreshed():
-
-		// If we get a SIGINT, then shutdown gracefully
-		case <-quit:
-			gracefulShutdown(e)
-			break loop
-		}
-	}
+	// Wait for the "quit" signal from the OS, then shut down
+	<-quit
+	gracefulShutdown(e)
 }
 
 /******************************************
