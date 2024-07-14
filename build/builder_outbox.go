@@ -12,6 +12,7 @@ import (
 	"github.com/benpate/exp"
 	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -218,7 +219,7 @@ func (w Outbox) Location() string {
 	return w._user.Location
 }
 
-func (w Outbox) Links() []model.PersonLink {
+func (w Outbox) Links() sliceof.Object[model.PersonLink] {
 	return w._user.Links
 }
 
