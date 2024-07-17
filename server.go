@@ -82,9 +82,6 @@ func main() {
 
 	factory := server.NewFactory(configStorage, embeddedFiles)
 
-	// Wait for the first time the configuration is loaded
-	<-factory.Ready()
-
 	// Start and configure the Web server
 	e := echo.New()
 	e.Logger.SetLevel(gommonlog.OFF)
@@ -99,6 +96,9 @@ func main() {
 	// TODO: LOW: Implement Timeout - https://echo.labstack.com/docs/middleware/timeout
 	// TODO: LOW: Implement GZip - https://echo.labstack.com/docs/middleware/gzip
 	e.Use(middleware.Recover())
+
+	// Wait for the first time the configuration is loaded
+	<-factory.Ready()
 
 	if commandLineArgs.Setup {
 
