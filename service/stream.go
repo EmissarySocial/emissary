@@ -39,7 +39,7 @@ type Stream struct {
 	ruleService         *Rule
 	userService         *User
 	host                string
-	streamUpdateChannel chan<- model.Stream
+	streamUpdateChannel chan<- primitive.ObjectID
 }
 
 // NewStream returns a fully populated Stream service.
@@ -52,7 +52,7 @@ func NewStream() Stream {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Stream) Refresh(collection data.Collection, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, activityService *ActivityStream, contentService *Content, keyService *EncryptionKey, followerService *Follower, ruleService *Rule, userService *User, host string, streamUpdateChannel chan model.Stream) {
+func (service *Stream) Refresh(collection data.Collection, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, activityService *ActivityStream, contentService *Content, keyService *EncryptionKey, followerService *Follower, ruleService *Rule, userService *User, host string, streamUpdateChannel chan primitive.ObjectID) {
 	service.collection = collection
 	service.templateService = templateService
 	service.draftService = draftService
@@ -244,7 +244,8 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 
 	// NON-BLOCKING: Notify other processes on this server that the stream has been updated
 	go func() {
-		service.streamUpdateChannel <- *stream
+		// service.streamUpdateChannel <- stream.StreamID
+		service.streamUpdateChannel <- stream.ParentID
 	}()
 
 	// One milisecond delay prevents overlapping stream.CreateDates.  Deal with it.
@@ -284,6 +285,9 @@ func (service *Stream) Delete(stream *model.Stream, note string) error {
 		if err := service.outboxService.DeleteByParentID(model.FollowerTypeStream, stream.StreamID); err != nil {
 			derp.Report(derp.Wrap(err, "service.Stream.Delete", "Error deleting outbox messages", stream, note))
 		}
+
+		// NON-BLOCKING: Notify other processes on this server that the stream has been updated
+		service.streamUpdateChannel <- stream.ParentID
 
 	}()
 

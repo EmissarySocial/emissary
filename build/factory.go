@@ -2,7 +2,6 @@ package build
 
 import (
 	"github.com/EmissarySocial/emissary/config"
-	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/data"
@@ -60,5 +59,5 @@ type Factory interface {
 	Providers() set.Slice[config.Provider]
 	Queue() queue.Queue
 	Steranko() *steranko.Steranko
-	StreamUpdateChannel() chan model.Stream
+	StreamUpdateChannel() chan primitive.ObjectID
 }

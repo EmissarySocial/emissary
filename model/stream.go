@@ -43,7 +43,7 @@ type Stream struct {
 	InReplyTo        string                       `json:"inReplyTo"              bson:"inReplyTo"`              // If this stream is a reply to another stream or web page, then this links to the original document.
 	PublishDate      int64                        `json:"publishDate"            bson:"publishDate"`            // Unix timestamp of the date/time when this document is/was/will be first available on the domain.
 	UnPublishDate    int64                        `json:"unpublishDate"          bson:"unpublishDate"`          // Unix timestemp of the date/time when this document will no longer be available on the domain.
-	IsFeatured       bool                         `json:"isFeatured"             bson:"isFeatured,omitempty"`   // TRUE if this Stream is featured by its parent container.
+	IsFeatured       bool                         `json:"isFeatured"             bson:"isFeatured"`             // TRUE if this Stream is featured by its parent container.
 	journal.Journal  `bson:",inline"`
 }
 

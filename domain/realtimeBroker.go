@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/hannibal/queue"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -27,7 +26,7 @@ type RealtimeBroker struct {
 	streams map[primitive.ObjectID]map[primitive.ObjectID]*RealtimeClient
 
 	// Channel that streams are pushed into when they change.
-	streamUpdates chan model.Stream
+	streamUpdates chan primitive.ObjectID
 
 	// Channel into which new clients can be pushed
 	AddClient chan *RealtimeClient
@@ -40,7 +39,7 @@ type RealtimeBroker struct {
 }
 
 // NewRealtimeBroker generates a new stream broker
-func NewRealtimeBroker(factory *Factory, updates chan model.Stream) RealtimeBroker {
+func NewRealtimeBroker(factory *Factory, updates chan primitive.ObjectID) RealtimeBroker {
 
 	result := RealtimeBroker{
 		clients:       make(map[primitive.ObjectID]*RealtimeClient),
@@ -111,15 +110,14 @@ func (b *RealtimeBroker) listen() {
 
 			// log.Println("Removed client")
 
-		case stream := <-b.streamUpdates:
+		case streamID := <-b.streamUpdates:
 
 			// Send an update to every client that has subscribed to this stream
-			go b.notifySSE(stream.StreamID)
-
-			// Try to send updates to every client that has subscribed to this stream's parent
-			if stream.HasParent() {
-				go b.notifySSE(stream.ParentID)
+			if streamID.IsZero() {
+				continue
 			}
+
+			go b.notifySSE(streamID)
 
 		case <-b.close:
 			return

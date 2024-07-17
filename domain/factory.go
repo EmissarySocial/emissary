@@ -71,7 +71,7 @@ type Factory struct {
 	userService          service.User
 
 	// real-time watchers
-	streamUpdateChannel chan model.Stream
+	streamUpdateChannel chan primitive.ObjectID
 
 	MarkForDeletion bool
 }
@@ -95,7 +95,7 @@ func NewFactory(domain config.Domain, port string, providers []config.Provider, 
 		httpCache:           httpCache,
 		attachmentOriginals: attachmentOriginals,
 		attachmentCache:     attachmentCache,
-		streamUpdateChannel: make(chan model.Stream),
+		streamUpdateChannel: make(chan primitive.ObjectID, 1000),
 		port:                port,
 	}
 
@@ -590,7 +590,7 @@ func (factory *Factory) RealtimeBroker() *RealtimeBroker {
 }
 
 // StreamUpdateChannel initializes a background watcher and returns a channel containing any streams that have changed.
-func (factory *Factory) StreamUpdateChannel() chan model.Stream {
+func (factory *Factory) StreamUpdateChannel() chan primitive.ObjectID {
 	return factory.streamUpdateChannel
 }
 

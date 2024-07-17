@@ -5,11 +5,12 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // WatchStreams initiates a mongodb change stream to on every updates to Stream data objects
-func WatchStreams(collection *mongo.Collection, result chan<- model.Stream) {
+func WatchStreams(collection *mongo.Collection, result chan<- primitive.ObjectID) {
 
 	ctx := context.Background()
 
@@ -36,6 +37,7 @@ func WatchStreams(collection *mongo.Collection, result chan<- model.Stream) {
 			continue
 		}
 
-		result <- event.Stream
+		result <- event.Stream.StreamID
+		result <- event.Stream.ParentID
 	}
 }

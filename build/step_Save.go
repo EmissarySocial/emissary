@@ -20,7 +20,7 @@ func (step StepSave) Get(builder Builder, _ io.Writer) PipelineBehavior {
 		return step.do(builder)
 	}
 
-	return nil
+	return Continue()
 }
 
 // Post saves the object to the database
@@ -30,7 +30,7 @@ func (step StepSave) Post(builder Builder, _ io.Writer) PipelineBehavior {
 		return step.do(builder)
 	}
 
-	return nil
+	return Continue()
 }
 
 // Post saves the object to the database
@@ -53,5 +53,5 @@ func (step StepSave) do(builder Builder) PipelineBehavior {
 		return Halt().WithError(derp.Wrap(err, location, "Error saving model object"))
 	}
 
-	return nil
+	return Continue()
 }
