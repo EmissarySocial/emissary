@@ -68,8 +68,8 @@
 						return
 					}
 
-					event.target.tabIndex = "-1"
-					event.target.focus()
+					// event.target.tabIndex = "-1"
+					// event.target.focus()
 					break;
 			}
 		}
