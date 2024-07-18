@@ -74,6 +74,15 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 			return convert.Int64(a) / convert.Int64(b)
 		},
 
+		"or": func(values ...bool) bool {
+			for _, value := range values {
+				if value {
+					return true
+				}
+			}
+			return false
+		},
+
 		"first": func(values ...any) any {
 			for _, value := range values {
 				if compare.NotZero(value) {
