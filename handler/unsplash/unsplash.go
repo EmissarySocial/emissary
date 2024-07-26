@@ -36,7 +36,7 @@ func GetPhoto(serverFactory *server.Factory) echo.HandlerFunc {
 		unsplash := model.NewConnection()
 
 		if err := connectionService.LoadByProvider(providers.ProviderTypeUnsplash, &unsplash); err != nil {
-			return derp.Wrap(err, "handler.GetGiphyImages", "Giphy is not configured for this domain")
+			return derp.Wrap(err, location, "Giphy is not configured for this domain")
 		}
 
 		applicationName := unsplash.Data.GetString("applicationName")
@@ -71,7 +71,7 @@ func GetPhoto(serverFactory *server.Factory) echo.HandlerFunc {
 			Result(&photo)
 
 		if err := txn.Send(); err != nil {
-			return derp.Wrap(err, "handler.unsplash.apiRequest", "Error sending request to Unsplash API")
+			return derp.Wrap(err, location, "Error sending request to Unsplash API")
 		}
 
 		// If this is a JSON request, then return nicely formatted JSON
@@ -101,7 +101,7 @@ func GetCollectionRandom(serverFactory *server.Factory) echo.HandlerFunc {
 		unsplash := model.NewConnection()
 
 		if err := connectionService.LoadByProvider(providers.ProviderTypeUnsplash, &unsplash); err != nil {
-			return derp.Wrap(err, "handler.GetGiphyImages", "Giphy is not configured for this domain")
+			return derp.Wrap(err, "handler.unsplash.GetCollectionRandom", "Giphy is not configured for this domain")
 		}
 
 		applicationName := unsplash.Data.GetString("applicationName")
