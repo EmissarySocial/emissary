@@ -13,24 +13,19 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/convert"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/karlseguin/ccache/v3"
+	"github.com/maypok86/otter"
 )
 
 // JWT is a service that generates and validates JWT keys.
 type JWT struct {
-	collection       data.Collection       // Database collection where JWT keys are stored
-	cache            *ccache.Cache[[]byte] // In-Memory cache for frequently used keys
-	keyEncryptingKey []byte                // "Key Encrypting Key" used to encode/decode JWT keys that are stored in the collection
+	collection       data.Collection             // Database collection where JWT keys are stored
+	cache            otter.Cache[string, []byte] // In-Memory cache for frequently used keys
+	hasCache         bool                        // Flag to indicate if the cache is enabled
+	keyEncryptingKey []byte                      // "Key Encrypting Key" used to encode/decode JWT keys that are stored in the collection
 }
 
 func NewJWT() JWT {
-
-	cache := ccache.New[[]byte](ccache.Configure[[]byte]())
-	cache.SetMaxSize(1024)
-
-	return JWT{
-		cache: cache,
-	}
+	return JWT{}
 }
 
 /******************************************
@@ -40,10 +35,21 @@ func NewJWT() JWT {
 func (service *JWT) Refresh(collection data.Collection, keyEncryptingKey []byte) {
 	service.collection = collection
 	service.keyEncryptingKey = keyEncryptingKey
+
+	builder := otter.MustBuilder[string, []byte](32).
+		WithTTL(24 * time.Hour)
+
+	if cache, err := builder.Build(); err == nil {
+		service.cache = cache
+		service.hasCache = true
+	} else {
+		derp.Report(derp.Wrap(err, "service.JWT.Refresh", "Error creating cache"))
+		service.hasCache = false
+	}
 }
 
 func (service *JWT) Close() {
-	service.cache.Stop()
+	service.cache.Close()
 }
 
 /******************************************
@@ -147,10 +153,9 @@ func (service *JWT) newJWTKey(keyName string) (model.JWTKey, error) {
 // error is returned.
 func (service *JWT) load(keyName string) ([]byte, error) {
 
-	// If the item exists in the cache, then we're done.
-	if item := service.cache.Get(keyName); item != nil {
-		if !item.Expired() {
-			return item.Value(), nil
+	if service.hasCache {
+		if plaintext, exists := service.cache.Get(keyName); exists {
+			return plaintext, nil
 		}
 	}
 
@@ -168,7 +173,9 @@ func (service *JWT) load(keyName string) ([]byte, error) {
 	}
 
 	// Save the plaintext in the memory cache
-	service.cache.Set(keyName, jwtKey.Plaintext, 24*time.Hour)
+	if service.hasCache {
+		service.cache.Set(keyName, jwtKey.Plaintext)
+	}
 
 	// Return the plaintext to the rest of the application
 	return jwtKey.Plaintext, nil
@@ -183,12 +190,14 @@ func (service *JWT) save(jwtKey *model.JWTKey) error {
 		return derp.Wrap(err, "service.JWT.save", "Error encrypting JWT Key")
 	}
 
-	// Apply the item back into the cache
-	service.cache.Set(jwtKey.KeyName, jwtKey.Plaintext, 24*time.Hour)
-
 	// Save the key to the database
 	if err := service.collection.Save(jwtKey, ""); err != nil {
 		return derp.Wrap(err, "service.JWT.save", "Error saving JWT Key")
+	}
+
+	// Apply the item back into the cache
+	if service.hasCache {
+		service.cache.Set(jwtKey.KeyName, jwtKey.Plaintext)
 	}
 
 	return nil
