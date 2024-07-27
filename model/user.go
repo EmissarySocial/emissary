@@ -230,13 +230,15 @@ func (user *User) SetState(stateID string) {
 func (user User) GetJSONLD() mapof.Any {
 
 	result := mapof.Any{
-		vocab.AtContext:                 sliceof.String{"https://www.w3.org/ns/activitystreams", "https://w3id.org/security/v1"},
+		vocab.AtContext:                 sliceof.Any{vocab.ContextTypeActivityStreams, vocab.ContextTypeSecurity, vocab.ContextTypeToot},
 		vocab.PropertyID:                user.ActivityPubURL(),
 		vocab.PropertyType:              vocab.ActorTypePerson,
 		vocab.PropertyURL:               user.ProfileURL,
 		vocab.PropertyName:              user.DisplayName,
 		vocab.PropertyPreferredUsername: user.Username,
 		vocab.PropertySummary:           user.StatusMessage,
+		vocab.PropertyTootDiscoverable:  user.IsDiscoverable,
+		vocab.PropertyTootIndexable:     user.IsIndexable,
 		vocab.PropertyIcon:              user.ActivityPubIconURL(),
 		vocab.PropertyImage:             user.ActivityPubImageURL(),
 		vocab.PropertyInbox:             user.ActivityPubInboxURL(),
