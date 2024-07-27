@@ -12,10 +12,8 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/convert"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/maypok86/otter"
-	"github.com/rs/zerolog/log"
 )
 
 // JWT is a service that generates and validates JWT keys.
@@ -69,11 +67,8 @@ func (service *JWT) NewJWTKey() (string, any, error) {
 
 	// If the key exists in the cache or database, then return it
 	if result, err := service.load(keyName); err == nil {
-		log.Trace().Str("keyName", keyName).Msg("JWT Key Found")
 		return keyName, result, nil
 	}
-
-	log.Trace().Str("keyName", keyName).Msg("JWT Key NOT FOUND... Looking in Database")
 
 	// If not found, then we will make a new key
 	jwtKey, err := service.newJWTKey(keyName)
@@ -159,13 +154,9 @@ func (service *JWT) load(keyName string) ([]byte, error) {
 
 	if service.hasCache {
 		if plaintext, exists := service.cache.Get(keyName); exists {
-			log.Trace().Str("keyName", keyName).Msg("JWT Key Cache Hit")
-			spew.Dump(plaintext)
 			return plaintext, nil
 		}
 	}
-
-	log.Trace().Msg("JWT Key Cache Miss")
 
 	// Try to load the key from the database
 	criteria := exp.Equal("keyName", keyName)
@@ -182,8 +173,6 @@ func (service *JWT) load(keyName string) ([]byte, error) {
 
 	// Save the plaintext in the memory cache
 	if service.hasCache {
-		log.Trace().Str("keyName", keyName).Msg("JWT Key Cache Set (load)")
-		spew.Dump(jwtKey)
 		service.cache.Set(keyName, jwtKey.Plaintext)
 	}
 
@@ -207,8 +196,6 @@ func (service *JWT) save(jwtKey *model.JWTKey) error {
 
 	// Apply the item back into the cache
 	if service.hasCache {
-		log.Trace().Str("keyName", jwtKey.KeyName).Msg("JWT Key Cache Set (save)")
-		spew.Dump(jwtKey)
 		service.cache.Set(jwtKey.KeyName, jwtKey.Plaintext)
 	}
 
