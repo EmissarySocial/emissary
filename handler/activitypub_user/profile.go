@@ -26,10 +26,10 @@ func RenderProfileJSONLD(context echo.Context, factory *domain.Factory, user *mo
 	// Combine the Profile and the EncryptionKey
 	userJSON := user.GetJSONLD()
 	userJSON[vocab.PropertyPublicKey] = mapof.Any{
-		vocab.PropertyID:   user.ActivityPubURL() + "#main-key",
-		vocab.PropertyType: "Key",
-		"owner":            user.ActivityPubURL(),
-		"publicKeyPem":     key.PublicPEM,
+		vocab.PropertyID:           user.ActivityPubPublicKeyURL(),
+		vocab.PropertyType:         vocab.ObjectTypeKey,
+		vocab.PropertyOwner:        user.ActivityPubURL(),
+		vocab.PropertyPublicKeyPEM: key.PublicPEM,
 	}
 
 	// Return the user's profile in JSON-LD format

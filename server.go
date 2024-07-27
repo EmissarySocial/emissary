@@ -249,7 +249,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 
 	// Profile Pages
 	// NOTE: these are rewritten from /@:userId by the rewrite middleware
-	e.GET("/@", handler.TBD)
+	e.GET("/@", handler.GetDomainActor(factory))
 	e.GET("/@:userId", handler.GetOutbox(factory))
 	e.POST("/@:userId", handler.PostOutbox(factory))
 	e.GET("/@:userId/:action", handler.GetOutbox(factory))

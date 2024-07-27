@@ -21,6 +21,7 @@ type Domain struct {
 	ColorMode        string             `bson:"colorMode"`        // Color mode for this domain (e.g. "LIGHT", "DARK", or "AUTO")
 	Data             mapof.String       `bson:"data"`             // Custom data stored in this domain
 	DatabaseVersion  uint               `bson:"databaseVersion"`  // Version of the database schema
+	PrivateKey       string             `bson:"privateKey"`       // Private key for this domain
 	journal.Journal  `json:"-" bson:",inline"`
 }
 

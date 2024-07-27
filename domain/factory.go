@@ -23,6 +23,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // Factory knows how to create an populate all services
@@ -33,21 +34,22 @@ type Factory struct {
 	providers []config.Provider
 
 	// services (from server)
-	registrationService *service.Registration
-	themeService        *service.Theme
-	templateService     *service.Template
-	widgetService       *service.Widget
+	activityCache       *mongo.Collection
 	contentService      *service.Content
-	providerService     *service.Provider
-	taskQueue           queue.Queue
-	activityService     *service.ActivityStream
 	httpCache           *httpcache.HTTPCache
+	providerService     *service.Provider
+	registrationService *service.Registration
+	taskQueue           queue.Queue
+	templateService     *service.Template
+	themeService        *service.Theme
+	widgetService       *service.Widget
 
 	// Upload Directories (from server)
 	attachmentOriginals afero.Fs
 	attachmentCache     afero.Fs
 
 	// services (within this domain/factory)
+	activityService      service.ActivityStream
 	attachmentService    service.Attachment
 	connectionService    service.Connection
 	domainService        service.Domain
@@ -77,12 +79,13 @@ type Factory struct {
 }
 
 // NewFactory creates a new factory tied to a MongoDB database
-func NewFactory(domain config.Domain, port string, providers []config.Provider, activityService *service.ActivityStream, registrationService *service.Registration, serverEmail *service.ServerEmail, themeService *service.Theme, templateService *service.Template, widgetService *service.Widget, contentService *service.Content, providerService *service.Provider, taskQueue queue.Queue, attachmentOriginals afero.Fs, attachmentCache afero.Fs, httpCache *httpcache.HTTPCache) (*Factory, error) {
+func NewFactory(domain config.Domain, port string, providers []config.Provider, activityCache *mongo.Collection, registrationService *service.Registration, serverEmail *service.ServerEmail, themeService *service.Theme, templateService *service.Template, widgetService *service.Widget, contentService *service.Content, providerService *service.Provider, taskQueue queue.Queue, attachmentOriginals afero.Fs, attachmentCache afero.Fs, httpCache *httpcache.HTTPCache) (*Factory, error) {
 
 	log.Info().Msg("Starting domain: " + domain.Hostname)
 
 	// Base Factory object
 	factory := Factory{
+		activityCache:       activityCache,
 		registrationService: registrationService,
 		themeService:        themeService,
 		templateService:     templateService,
@@ -90,7 +93,6 @@ func NewFactory(domain config.Domain, port string, providers []config.Provider, 
 		contentService:      contentService,
 		providerService:     providerService,
 		taskQueue:           taskQueue,
-		activityService:     activityService,
 
 		httpCache:           httpCache,
 		attachmentOriginals: attachmentOriginals,
@@ -111,6 +113,7 @@ func NewFactory(domain config.Domain, port string, providers []config.Provider, 
 	factory.realtimeBroker = NewRealtimeBroker(&factory, factory.StreamUpdateChannel())
 
 	// Create empty service pointers.  These will be populated in the Refresh() step.
+	factory.activityService = service.NewActivityStream()
 	factory.attachmentService = service.NewAttachment()
 	factory.connectionService = service.NewConnection()
 	factory.domainService = service.NewDomain()
@@ -182,6 +185,13 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		factory.Session = session
 
 		// REFRESH CACHED SERVICES
+
+		// Populate Activity Stream Service
+		factory.activityService.Refresh(
+			factory.Domain(),
+			factory.activityCache,
+			factory.Hostname(),
+		)
 
 		// Populate Attachment Service
 		factory.attachmentService.Refresh(
@@ -468,7 +478,7 @@ func (factory *Factory) Model(name string) (service.ModelService, error) {
 }
 
 func (factory *Factory) ActivityStream() *service.ActivityStream {
-	return factory.activityService
+	return &factory.activityService
 }
 
 // Attachment returns a fully populated Attachment service

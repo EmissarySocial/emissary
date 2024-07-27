@@ -7,20 +7,28 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/queries"
 	"github.com/EmissarySocial/emissary/tools/ascache"
+	"github.com/EmissarySocial/emissary/tools/ascacherules"
+	"github.com/EmissarySocial/emissary/tools/ascontextmaker"
+	"github.com/EmissarySocial/emissary/tools/ashash"
+	"github.com/EmissarySocial/emissary/tools/asnormalizer"
 	"github.com/benpate/data"
+	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/sherlock"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // ActivityStream implements the Hannibal HTTP client interface, and provides a cache for ActivityStream documents.
 type ActivityStream struct {
-	collection  data.Collection
-	innerClient streams.Client
-	cacheClient *ascache.Client
+	domainService *Domain
+	collection    *mongo.Collection
+	innerClient   streams.Client
+	cacheClient   *ascache.Client
+	hostname      string
 }
 
 /******************************************
@@ -33,10 +41,74 @@ func NewActivityStream() ActivityStream {
 }
 
 // Refresh updates the ActivityStream service with new dependencies
-func (service *ActivityStream) Refresh(innerClient streams.Client, cacheClient *ascache.Client, collection data.Collection) {
-	service.innerClient = innerClient
-	service.cacheClient = cacheClient
+func (service *ActivityStream) Refresh(domainService *Domain, collection *mongo.Collection, hostname string) {
+	service.domainService = domainService
 	service.collection = collection
+	service.hostname = hostname
+	service.innerClient = nil
+	service.cacheClient = nil
+}
+
+func (service *ActivityStream) initClients() {
+
+	// Build a new client stack
+	sherlockClient := sherlock.NewClient(
+		sherlock.WithUserAgent("Emissary.social (" + service.hostname + ")"),
+	)
+
+	// Try to attach a private key to this client
+	if privateKey, err := service.domainService.PrivateKey(); err == nil {
+		publicKeyID := service.domainService.PublicKeyID()
+		sherlockClient.WithOptions(
+			sherlock.WithActor(publicKeyID, privateKey),
+		)
+
+	} else {
+		derp.Report(derp.Wrap(err, "service.ActivityStream.client", "Error loading private key"))
+	}
+
+	// enforce opinionated data formats
+	normalizerClient := asnormalizer.New(sherlockClient)
+
+	// compute document context (if missing)
+	contextMakerClient := ascontextmaker.New(normalizerClient)
+
+	// apply custom caching rules to documents
+	cacheRulesClient := ascacherules.New(contextMakerClient)
+
+	// cache data in MongoDB
+	cacheClient := ascache.New(cacheRulesClient, service.collection, ascache.WithIgnoreHeaders())
+
+	// Traverse hash values within documents
+	hashClient := ashash.New(cacheClient)
+
+	// Save references to the final (hash) client and the cache client to the service.
+	service.innerClient = hashClient
+	service.cacheClient = cacheClient
+
+	// This is breaking somehow.  Test thoroughly before re-enabling.
+	// writableCache := ascache.New(contextMakerClient, collection, ascache.WithWriteOnly())
+	// crawlerClient := ascrawler.New(writableCache, ascrawler.WithMaxDepth(4))
+	// readOnlyCache := ascache.New(crawlerClient, collection, ascache.WithReadOnly())
+	// factory.activityService.Refresh(readOnlyCache, mongodb.NewCollection(collection))
+}
+
+func (service *ActivityStream) Client() streams.Client {
+
+	if service.innerClient == nil {
+		service.initClients()
+	}
+
+	return service.innerClient
+}
+
+func (service *ActivityStream) CacheClient() *ascache.Client {
+
+	if service.cacheClient == nil {
+		service.initClients()
+	}
+
+	return service.cacheClient
 }
 
 /******************************************
@@ -53,12 +125,10 @@ func (service *ActivityStream) Load(url string, options ...any) (streams.Documen
 	}
 
 	// NPE Check
-	if service.innerClient == nil {
-		return streams.Document{}, derp.NewInternalError(location, "Client not initialized")
-	}
+	client := service.Client()
 
 	// Forward request to inner client
-	result, err := service.innerClient.Load(url, options...)
+	result, err := client.Load(url, options...)
 
 	if err != nil {
 		return streams.NilDocument(), derp.Wrap(err, location, "Error loading document from inner client", url)
@@ -70,7 +140,7 @@ func (service *ActivityStream) Load(url string, options ...any) (streams.Documen
 
 // Put adds a single document to the ActivityStream cache
 func (service *ActivityStream) Put(document streams.Document) {
-	service.cacheClient.Put(document)
+	service.CacheClient().Put(document)
 }
 
 // Delete removes a single document from the database by its URL
@@ -78,7 +148,7 @@ func (service *ActivityStream) Delete(url string) error {
 
 	const location = "service.ActivityStream.Delete"
 
-	if err := service.cacheClient.Delete(url); err != nil {
+	if err := service.CacheClient().Delete(url); err != nil {
 		return derp.Wrap(err, location, "Error deleting document from cache", url)
 	}
 
@@ -99,7 +169,8 @@ func (service *ActivityStream) PurgeCache() error {
 
 	// Purge all expired Documents
 	criteria := exp.LessThan("expires", time.Now().Unix())
-	if err := service.collection.HardDelete(criteria); err != nil {
+	collection := mongodb.NewCollection(service.collection)
+	if err := collection.HardDelete(criteria); err != nil {
 		return derp.Wrap(err, "service.ActivityStream.PurgeCache", "Error purging documents")
 	}
 
@@ -171,11 +242,6 @@ func (service *ActivityStream) queryByRelation(relationType string, relationHref
 
 			value = ascache.NewValue()
 		}
-
-		// Return the results as a streams.Document / collection
-		// if cutType == "before" {
-		//	documents = slice.Reverse(documents)
-		// }
 	}()
 
 	return result
@@ -212,7 +278,8 @@ func (service *ActivityStream) SearchActors(queryString string) ([]model.ActorSu
 	}
 
 	// Fall through means that we can't find a perfect match, so fall back to a full-text search
-	result, err := queries.SearchActivityStreamActors(context.TODO(), service.collection, queryString)
+	collection := mongodb.NewCollection(service.collection)
+	result, err := queries.SearchActivityStreamActors(context.TODO(), collection, queryString)
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Error querying database")
@@ -254,5 +321,6 @@ func (service *ActivityStream) documentIterator(criteria exp.Expression, options
 	}
 
 	// Forward request to collection
-	return service.collection.Iterator(criteria, options...)
+	collection := mongodb.NewCollection(service.collection)
+	return collection.Iterator(criteria, options...)
 }

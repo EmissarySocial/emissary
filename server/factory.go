@@ -13,13 +13,7 @@ import (
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/service"
-	"github.com/EmissarySocial/emissary/tools/ascache"
-	"github.com/EmissarySocial/emissary/tools/ascacherules"
-	"github.com/EmissarySocial/emissary/tools/ascontextmaker"
-	"github.com/EmissarySocial/emissary/tools/ashash"
-	"github.com/EmissarySocial/emissary/tools/asnormalizer"
 	"github.com/EmissarySocial/emissary/tools/httpcache"
-	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
 	domaintools "github.com/benpate/domain"
 	"github.com/benpate/hannibal/queue"
@@ -28,7 +22,6 @@ import (
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
-	"github.com/benpate/sherlock"
 	"github.com/benpate/steranko"
 	"github.com/davidscottmills/goeditorjs"
 	"github.com/labstack/echo/v4"
@@ -57,10 +50,9 @@ type Factory struct {
 	providerService     service.Provider
 	emailService        service.ServerEmail
 	taskQueue           queue.Queue
-	activityService     service.ActivityStream
 	embeddedFiles       embed.FS
 
-	activityStreamCache *mongo.Client
+	activityCache       *mongo.Collection
 	attachmentOriginals afero.Fs
 	attachmentCache     afero.Fs
 
@@ -123,8 +115,6 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 		sliceof.NewObject[mapof.String](),
 	)
 
-	factory.activityService = service.NewActivityStream()
-
 	go factory.start()
 
 	return &factory
@@ -164,7 +154,7 @@ func (factory *Factory) start() {
 		factory.templateService.Refresh(config.Templates)
 		factory.emailService.Refresh(config.Emails)
 		factory.providerService.Refresh(config.Providers)
-		factory.RefreshActivityService(config.ActivityPubCache)
+		factory.refreshActivityCache(config.ActivityPubCache)
 
 		// Insert/Update a factory for each domain in the configuration
 		for _, domainConfig := range config.Domains {
@@ -241,7 +231,7 @@ func (factory *Factory) refreshDomain(config config.Config, domainConfig config.
 		domainConfig,
 		factory.port(domainConfig),
 		config.Providers,
-		&factory.activityService,
+		factory.activityCache,
 		&factory.registrationService,
 		&factory.emailService,
 		&factory.themeService,
@@ -265,12 +255,42 @@ func (factory *Factory) refreshDomain(config config.Config, domainConfig config.
 	return nil
 }
 
+// refreshActivityCache updates the connection to the ActivityStream cache
+func (factory *Factory) refreshActivityCache(connection mapof.String) error {
+
+	// Collect arguments from the connection config
+	uri := connection.GetString("connectString")
+	database := connection.GetString("database")
+
+	// ActivityStream cache is not configured.
+	if uri == "" || database == "" {
+		return derp.NewInternalError("server.Factory.RefreshActivityService", "ActivityStream cache is not configured")
+	}
+
+	// Try to connect to the cache database
+	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(uri))
+
+	if err != nil {
+		return derp.Wrap(err, "server.Factory.RefreshActivityService", "Unable to connect to database", uri)
+	}
+
+	// If there is already a cache connection in place,
+	// then close it before we open a new one
+	if factory.activityCache != nil {
+		factory.activityCache.Database().Client().Disconnect(context.Background())
+	}
+
+	// Save the new connection
+	factory.activityCache = client.Database(database).Collection("Document")
+	return nil
+}
+
 /****************************
  * Server Config Methods
  ****************************/
 
 func (factory *Factory) Version() string {
-	return "0.1.0"
+	return "0.4.0"
 }
 
 // Config returns the current configuration for the Factory
@@ -574,58 +594,6 @@ func (factory *Factory) Steranko(ctx echo.Context) (*steranko.Steranko, error) {
 	}
 
 	return result.Steranko(), nil
-}
-
-func (factory *Factory) RefreshActivityService(connection mapof.String) {
-
-	// If there is already a cache connection in place,
-	// then close it before we open a new one
-	if factory.activityStreamCache != nil {
-		go func(client *mongo.Client) {
-			if err := client.Disconnect(context.Background()); err != nil {
-				derp.Report(derp.Wrap(err, "server.Factory.RefreshActivityService", "Unable to disconnect from database"))
-			}
-		}(factory.activityStreamCache)
-	}
-
-	// Collect arguments from the connection config
-	uri := connection.GetString("connectString")
-	database := connection.GetString("database")
-
-	// ActivityStream cache is not configured.
-	if uri == "" || database == "" {
-		return
-	}
-
-	// Try to connect to the cache database
-	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(uri))
-
-	if err != nil {
-		derp.Report(derp.Wrap(err, "server.Factory.RefreshActivityService", "Unable to connect to database", uri))
-		return
-	}
-
-	collection := client.Database(database).Collection("Document")
-
-	// Build a new client stack
-	sherlockClient := sherlock.NewClient(
-		sherlock.WithUserAgent("Emissary Social: https://emissary.social"),
-	)
-
-	normalizerClient := asnormalizer.New(sherlockClient)       // enforce opinionated data formats
-	contextMakerClient := ascontextmaker.New(normalizerClient) // compute document context (if missing)
-	cacheRulesClient := ascacherules.New(contextMakerClient)   // apply custom caching rules to documents
-
-	cacheClient := ascache.New(cacheRulesClient, collection, ascache.WithIgnoreHeaders()) // cache data in MongoDB
-	hashClient := ashash.New(cacheClient)                                                 // Traverse hash values within documents
-
-	factory.activityService.Refresh(hashClient, cacheClient, mongodb.NewCollection(collection))
-
-	// This is breaking somehow.  Test thoroughly before re-enabling.
-	// writableCache := ascache.New(contextMakerClient, collection, ascache.WithWriteOnly())
-	// crawlerClient := ascrawler.New(writableCache, ascrawler.WithMaxDepth(4))
-	// readOnlyCache := ascache.New(crawlerClient, collection, ascache.WithReadOnly())
-	// factory.activityService.Refresh(readOnlyCache, mongodb.NewCollection(collection))
 }
 
 func (factory *Factory) HTTPCache() *httpcache.HTTPCache {
