@@ -234,6 +234,7 @@ button,
 	-moz-user-select: none;
 	-webkit-user-select: none;
 	white-space:nowrap;
+	position:relative;
 }
 
 .text-sm button,
@@ -388,6 +389,15 @@ button.button-invisible {
 	border-bottom-right-radius:5px;
 }
 
+
+.button-progress {
+	position:absolute;
+	top:0px;
+	left:0px;
+	bottom:0px;
+	width:0%;
+	background-color: rgba(25,25,25,0.1);
+}
 
 /******************************************
  * Form Layouts

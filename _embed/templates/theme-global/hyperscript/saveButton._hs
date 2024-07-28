@@ -19,8 +19,35 @@ behavior SaveButton
 		end
 
 		set my innerHTML to `
+			<span class="button-progress"></span>
 			<span class="htmx-request-hide">${:message}</span>
 			<span class="htmx-request-show"><span class="spin"><i class="bi bi-arrow-clockwise"></i></span> Saving&hellip;</span>
 		`
+	end
+
+	on htmx:xhr:loadstart from the closest <form/>
+		add @disabled to me
+	end
+
+	on htmx:xhr:loadend from the closest <form/>
+		remove @disabled from me
+	end
+
+	on htmx:xhr:progress from the closest <form/>
+		log event
+
+		if event.detail.lengthComputable is not true then
+			exit
+		end
+
+		set progressButton to the first <.button-progress /> in me
+
+		if progressButton is null then
+			exit
+		end
+
+		log progressButton
+		set percentComplete to Math.round((event.detail.loaded / event.detail.total) * 100)
+		set the progressButton's *width to percentComplete + "%"
 	end
 end
