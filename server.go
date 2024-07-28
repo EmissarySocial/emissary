@@ -456,10 +456,12 @@ func errorHandler(err error, ctx echo.Context) {
 		return
 	}
 
+	// Write the error to the console (on production and local domains)
+	derp.Report(err)
+
 	// On localhost, allow developers to see full error dump.
 	if domain.IsLocalhost(ctx.Request().Host) {
 		_ = ctx.JSONPretty(errorCode, err, "  ")
-		derp.Report(err)
 		return
 	}
 
