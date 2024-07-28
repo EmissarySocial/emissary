@@ -42,9 +42,12 @@ func (service *DomainEmail) Refresh(configuration config.Domain) {
 // returns an error so that it CAN NOT be run asynchronously.
 func (service *DomainEmail) SendWelcome(user *model.User) error {
 
+	fromAddress := service.owner.DisplayName + " <" + service.owner.EmailAddress + ">"
+
 	// Build the email message
 	message := mail.NewMSG().
 		SetSubject("Welcome to Emissary").
+		SetFrom(fromAddress).
 		SetSender(service.owner.EmailAddress).
 		AddTo(user.EmailAddress)
 
