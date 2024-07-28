@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -11,5 +12,6 @@ import (
 func Version16(ctx context.Context, session *mongo.Database) error {
 
 	fmt.Println("... Version 16")
+	session.Collection("JWT").DeleteMany(ctx, bson.M{})
 	return nil
 }

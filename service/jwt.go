@@ -1,7 +1,7 @@
 package service
 
 import (
-	"crypto/aes"
+	"encoding/hex"
 	"net/http"
 	"strings"
 	"time"
@@ -33,6 +33,7 @@ func NewJWT() JWT {
  ******************************************/
 
 func (service *JWT) Refresh(collection data.Collection, keyEncryptingKey []byte) {
+
 	service.collection = collection
 	service.keyEncryptingKey = keyEncryptingKey
 
@@ -56,46 +57,45 @@ func (service *JWT) Close() {
  * sternako.KeyService Methods
  ******************************************/
 
-// NewJWTKey returns a a new JWT Key to the caller.
+// GetCurrentKey returns a the currently in-use encryption key.
 // This method is a part of the steranko.KeyService interface.
-func (service *JWT) NewJWTKey() (string, any, error) {
+func (service *JWT) GetCurrentKey() (string, any, error) {
 
-	const location = "service.JWT.NewJWTKey"
+	const location = "service.JWT.GetCurrentKey"
 
 	// New keys are generated for each day
 	keyName := time.Now().Format("20060102")
 
 	// If the key exists in the cache or database, then return it
-	if result, err := service.load(keyName); err == nil {
-		return keyName, result, nil
+	if plaintext, err := service.load(keyName); err == nil {
+		return keyName, plaintext, nil
 	}
 
 	// If not found, then we will make a new key
-	jwtKey, err := service.newJWTKey(keyName)
+	plaintext, err := service.create(keyName)
 
 	if err != nil {
-		return "", must(random.GenerateBytes(128)), derp.Wrap(err, location, "Failed Generating Key")
-	}
-
-	// Save the new key to the database
-	if err := service.save(&jwtKey); err != nil {
-		return "", must(random.GenerateBytes(128)), derp.Wrap(err, location, "Failed Saving Key")
+		return "", nil, derp.Wrap(err, location, "Failed Generating Key")
 	}
 
 	// Return the new key to the caller
-	return keyName, jwtKey.Plaintext, nil
+	return keyName, plaintext, nil
 }
 
-// FindJWTKey retrieves a key from the cache or database, and returns it to the caller.
+// FindKey returns the key named in the token.  It uses
+// a cache to store frequently used keys, and a database for
+// persistent storage.
 // This method is a part of the steranko.KeyService interface.
-func (service *JWT) FindJWTKey(token *jwt.Token) (any, error) {
+func (service *JWT) FindKey(token *jwt.Token) (any, error) {
+
+	const location = "service.JWT.FindKey"
 
 	// Load the key from the cache/database
 	keyName := convert.String(token.Header["kid"])
 	plaintext, err := service.load(keyName)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.JWT.FindJWTKey", "Error loading JWT Key", keyName)
+		return nil, derp.Wrap(err, location, "Error loading JWT Key", keyName)
 	}
 
 	// Return the key plaintext
@@ -112,12 +112,14 @@ func (service *JWT) Parse(request *http.Request) (*jwt.Token, error) {
 
 func (service *JWT) ParseString(tokenString string) (*jwt.Token, error) {
 
+	const location = "service.JWT.ParseString"
+
 	claims := model.NewAuthorization()
 
-	result, err := jwt.ParseWithClaims(tokenString, &claims, service.FindJWTKey, jwt.WithValidMethods([]string{"HS256", "HS384", "HS512"}))
+	result, err := jwt.ParseWithClaims(tokenString, &claims, service.FindKey, jwt.WithValidMethods([]string{"HS256", "HS384", "HS512"}))
 
 	if err != nil {
-		return nil, derp.ReportAndReturn(derp.Wrap(err, "service.JWT.Parse", "Error parsing JWT token"))
+		return nil, derp.Wrap(err, location, "Error parsing JWT token")
 	}
 
 	return result, nil
@@ -127,24 +129,42 @@ func (service *JWT) ParseString(tokenString string) (*jwt.Token, error) {
  * Database Methods
  ******************************************/
 
-// newJWT creates a new plaintext jwt key
-func (service *JWT) newJWTKey(keyName string) (model.JWTKey, error) {
+// create creates a new plaintext jwt key
+func (service *JWT) create(keyName string) ([]byte, error) {
 
-	const location = "service.JWT.newJWTKey"
-
-	result := model.NewJWTKey()
+	const location = "service.JWT.create"
 
 	// Generate Key Plaintext
 	plaintext, err := random.GenerateBytes(128)
 
 	if err != nil {
-		return model.JWTKey{}, derp.Wrap(err, location, "Error generating plaintext")
+		return []byte{}, derp.Wrap(err, location, "Error generating plaintext")
+	}
+
+	// Get encrypted value of the key
+	encrypted, err := service.encrypt(plaintext)
+
+	if err != nil {
+		return []byte{}, derp.Wrap(err, location, "Error encrypting JWT Key")
 	}
 
 	// Set the plaintext value of the key
-	result.KeyName = keyName
-	result.Plaintext = plaintext
-	return result, nil
+	record := model.NewJWTKey()
+	record.Algorithm = "PLAINTEXT"
+	record.KeyName = keyName
+	record.Encrypted = hex.EncodeToString(encrypted)
+
+	// Apply the item back into the cache
+	if service.hasCache {
+		service.cache.Set(keyName, plaintext)
+	}
+
+	// Save the key to the database
+	if err := service.collection.Save(&record, "New key created"); err != nil {
+		return []byte{}, derp.Wrap(err, location, "Error saving JWT Key")
+	}
+
+	return plaintext, nil
 }
 
 // load retrieves a key from the cache or database.  Automatically
@@ -152,6 +172,9 @@ func (service *JWT) newJWTKey(keyName string) (model.JWTKey, error) {
 // error is returned.
 func (service *JWT) load(keyName string) ([]byte, error) {
 
+	const location = "service.JWT.load"
+
+	// If the key is in the cache, then return it
 	if service.hasCache {
 		if plaintext, exists := service.cache.Get(keyName); exists {
 			return plaintext, nil
@@ -163,78 +186,81 @@ func (service *JWT) load(keyName string) ([]byte, error) {
 	jwtKey := model.NewJWTKey()
 
 	if err := service.collection.Load(criteria, &jwtKey); err != nil {
-		return nil, derp.ReportAndReturn(derp.Wrap(err, "service.JWT.load", "Error loading JWT Key"))
+		return []byte{}, derp.Wrap(err, location, "Error loading JWT Key")
 	}
 
-	// Decrypt the key in memory
-	if err := service.decrypt(&jwtKey); err != nil {
-		return nil, derp.ReportAndReturn(derp.Wrap(err, "service.JWT.load", "Error decrypting JWT Key"))
+	// Decode Base64 text into a slice of bytes
+	encrypted, err := hex.DecodeString(jwtKey.Encrypted)
+
+	if err != nil {
+		return []byte{}, derp.Wrap(err, location, "Error decoding base64 key")
+	}
+
+	// Decrypt the encrypted value into a usable plaintext
+	plaintext, err := service.decrypt(encrypted)
+
+	if err != nil {
+		return []byte{}, derp.Wrap(err, location, "Error decrypting JWT Key")
 	}
 
 	// Save the plaintext in the memory cache
 	if service.hasCache {
-		service.cache.Set(keyName, jwtKey.Plaintext)
+		service.cache.Set(keyName, plaintext)
 	}
 
 	// Return the plaintext to the rest of the application
-	return jwtKey.Plaintext, nil
-}
-
-// save stores a key in the cache and database, automatically
-// encrypting its plaintext value.
-func (service *JWT) save(jwtKey *model.JWTKey) error {
-
-	// Encrypt the key in memory
-	if err := service.encrypt(jwtKey); err != nil {
-		return derp.Wrap(err, "service.JWT.save", "Error encrypting JWT Key")
-	}
-
-	// Save the key to the database
-	if err := service.collection.Save(jwtKey, ""); err != nil {
-		return derp.Wrap(err, "service.JWT.save", "Error saving JWT Key")
-	}
-
-	// Apply the item back into the cache
-	if service.hasCache {
-		service.cache.Set(jwtKey.KeyName, jwtKey.Plaintext)
-	}
-
-	return nil
+	return plaintext, nil
 }
 
 /******************************************
  * Encryption Methods
  ******************************************/
 
-// encrypt encrypts the plaintext field of the JWTKey
-// and stores the result in the encryptedValue field.
-func (service *JWT) encrypt(jwtKey *model.JWTKey) error {
+// encrypt uses the service's KEK to encrypt the plaintext into an encrypted value.
+func (service *JWT) encrypt(plaintext []byte) ([]byte, error) {
 
-	// Create an AES cipher
-	cipher, err := aes.NewCipher(service.keyEncryptingKey)
+	return plaintext, nil
 
-	if err != nil {
-		return derp.Wrap(err, "service.JWT.encrypt", "Error creating AES cipher")
-	}
+	// The following commented code does not work because the AES algorithm
+	// only works with fixed-size blocks, so encrypted data was being truncated
+	// at the first block boundary. Instead,  need to use a GCM mode as described in:
+	// https://stackoverflow.com/questions/75064248/golang-aes-decryption-is-not-returning-same-text
+	/*
+		const location = "service.JWT.encrypt"
 
-	// Encrypt the plaintext
-	cipher.Encrypt(jwtKey.EncryptedValue, jwtKey.Plaintext)
-	jwtKey.Algorithm = "AES"
-	return nil
+		// Create an AES cipher
+		cipher, err := aes.NewCipher(service.keyEncryptingKey)
+
+		if err != nil {
+			return []byte{}, derp.Wrap(err, location, "Error creating AES cipher")
+		}
+
+		// Encrypt the plaintext
+		result := make([]byte, 128)
+		cipher.Encrypt(result, plaintext)
+
+		return result, nil
+	*/
 }
 
-// decrypt decrypts the encryptedValue field of the JWTKey
-// and stores the result in the plaintext field.
-func (service *JWT) decrypt(jwtKey *model.JWTKey) error {
+// decrypt uses the service's KEK to decrypt an encrypted value into plaintext
+func (service *JWT) decrypt(encrypted []byte) ([]byte, error) {
 
-	// Create an AES cipher
-	cipher, err := aes.NewCipher(service.keyEncryptingKey)
+	return encrypted, nil
+	/*
+		const location = "service.JWT.decrypt"
 
-	if err != nil {
-		return derp.Wrap(err, "service.JWT.decrypt", "Error creating AES cipher")
-	}
+		// Create an AES cipher
+		cipher, err := aes.NewCipher(service.keyEncryptingKey)
 
-	// Decrypt the key in memory
-	cipher.Decrypt(jwtKey.Plaintext, jwtKey.EncryptedValue)
-	return nil
+		if err != nil {
+			return []byte{}, derp.Wrap(err, location, "Error creating AES cipher")
+		}
+
+		// Decrypt the key in memory
+		result := make([]byte, 128)
+		cipher.Decrypt(result, encrypted)
+
+		return result, nil
+	*/
 }

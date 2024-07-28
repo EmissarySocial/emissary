@@ -34,6 +34,7 @@ func UpgradeMongoDB(connectionString string, databaseName string, domain *model.
 		upgrades.Version13,
 		upgrades.Version14,
 		upgrades.Version15,
+		upgrades.Version16,
 	}
 
 	// If we're already at the target database version or higher, then skip any other work

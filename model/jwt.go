@@ -7,24 +7,25 @@ import (
 
 // JWTKey represents
 type JWTKey struct {
-	JWTKeyID       primitive.ObjectID `bson:"_id"`
-	KeyName        string             `bson:"keyName"`
-	Algorithm      string             `bson:"algorithm"`
-	Plaintext      []byte             `bson:"-"`
-	EncryptedValue []byte             `bson:"encryptedValue"`
+	JWTKeyID  primitive.ObjectID `bson:"_id"`       // Unique identifier for this key (used by MongoDB)
+	KeyName   string             `bson:"keyName"`   // Name of this key (used by the application)
+	Algorithm string             `bson:"algorithm"` // Algorithm used to generate this key (AES)
+	Encrypted string             `bson:"encrypted"` // Encrypted value
 
 	journal.Journal `json:"-" bson:",inline"`
 }
 
+// NewJWTKey returns a fully initialized JWTKey object
 func NewJWTKey() JWTKey {
 
 	return JWTKey{
-		JWTKeyID:       primitive.NewObjectID(),
-		Plaintext:      make([]byte, 128),
-		EncryptedValue: make([]byte, 128),
+		JWTKeyID: primitive.NewObjectID(),
 	}
 }
 
+// ID implements the data.Object interface, and
+//
+//	returns the unique identifier for this key
 func (key JWTKey) ID() string {
 	return key.JWTKeyID.Hex()
 }
