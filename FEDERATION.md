@@ -28,7 +28,7 @@ Emissary supports but does not require [WebFinger protocol](https://webfinger.ne
 
 ## RSS and Extensions
 
-Emissary can read and write feeds in [RSS 2.0](https://en.wikipedia.org/wiki/RSS), [Atom](https://en.wikipedia.org/wiki/Atom_(web_standard\)), and [JSONFeed](https://www.jsonfeed.org) formats.  The specific format is auto-negotiated, preferring: JSONFeed, then Atom, then RSS.
+Emissary can read and write feeds in [RSS 2.0](https://en.wikipedia.org/wiki/RSS), [Atom](https://en.wikipedia.org/wiki/Atom_(web_standard)), and [JSONFeed](https://www.jsonfeed.org) formats.  The specific format is auto-negotiated, preferring: JSONFeed, then Atom, then RSS.
 
 **Creating Feeds:** The `view-feed` step adds an RSS feed to any Stream, listing its children 
 
