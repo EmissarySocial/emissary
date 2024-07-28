@@ -230,7 +230,7 @@ func executeTemplate(template TemplateLike, data any) string {
 // AsHTML collects the logic to build complete vs. partial HTML pages.
 func AsHTML(factory Factory, ctx echo.Context, b Builder, actionMethod ActionMethod) error {
 
-	const location = "handler.buildHTML"
+	const location = "build.AsHTML"
 	var partialPage bytes.Buffer
 
 	// Execute the action pipeline

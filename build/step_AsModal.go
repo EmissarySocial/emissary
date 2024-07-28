@@ -66,7 +66,7 @@ func (step StepAsModal) Get(builder Builder, buffer io.Writer) PipelineBehavior 
 	status := pipeline.Execute(factory, fullPageBuilder, &partialPage, ActionMethodGet)
 
 	if status.Error != nil {
-		return Halt().WithError(derp.Wrap(status.Error, location, "Error executing action pipeline on fullPageBuilder"))
+		return Halt().WithError(derp.Wrap(status.Error, location, "Error building modal with fullPageBuilder"))
 	}
 
 	// Copy status values into the Response...
