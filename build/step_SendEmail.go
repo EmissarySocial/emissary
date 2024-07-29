@@ -17,31 +17,31 @@ func (step StepSendEmail) Get(_ Builder, _ io.Writer) PipelineBehavior {
 
 // Post saves the object to the database
 func (step StepSendEmail) Post(builder Builder, _ io.Writer) PipelineBehavior {
-	factory := builder.factory()
-	emailService := factory.Email()
 
+	// Confirm that we have a User builder object
 	userBuilder, ok := builder.(User)
 
 	if !ok {
 		return Halt().WithError(derp.NewInternalError("build.StepSendEmail.Post", "Invalid Builder", "Builder must be Admin/User"))
 	}
 
+	// Collect required services
+	factory := builder.factory()
+	userService := factory.User()
+
+	// Send the designated email
 	switch step.Email {
 
 	case "welcome":
-
-		if err := emailService.SendWelcome(userBuilder._user); err != nil {
-			return Halt().WithError(err)
-		}
+		userService.SendWelcomeEmail(userBuilder._user)
 
 	case "password-reset":
-		if err := emailService.SendPasswordReset(userBuilder._user); err != nil {
-			return Halt().WithError(err)
-		}
+		userService.SendPasswordResetEmail(userBuilder._user)
 
 	default:
 		return Halt().WithError(derp.NewInternalError("build.StepSendEmail.Post", "Invalid email name", "Name must be 'welcome' or 'password-reset'"))
 	}
 
+	// Banana
 	return nil
 }

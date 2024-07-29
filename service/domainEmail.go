@@ -46,9 +46,9 @@ func (service *DomainEmail) SendWelcome(user *model.User) error {
 
 	// Build the email message
 	message := mail.NewMSG().
-		SetSubject("Welcome to Emissary").
+		SetSubject("Welcome to " + service.label).
 		SetFrom(fromAddress).
-		SetSender(service.owner.EmailAddress).
+		// SetSender(service.owner.EmailAddress). // Don't need this if we're using 'From' header
 		AddTo(user.EmailAddress)
 
 	// Send the welcome email

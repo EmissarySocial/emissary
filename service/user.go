@@ -515,21 +515,6 @@ func (service *User) DeleteAvatar(user *model.User, note string) error {
  * Email Methods
  ******************************************/
 
-// MakeNewPasswordResetCode generates a new password reset code for the provided user.
-func (service *User) MakeNewPasswordResetCode(user *model.User) error {
-
-	// Create a new password reset code for this user
-	user.PasswordReset = model.NewPasswordReset(24 * time.Hour)
-
-	// Try to save the user with the new password reset code.
-	if err := service.Save(user, "Create Password Reset Code"); err != nil {
-
-		return derp.Wrap(err, "service.User.MakeNewPasswordResetCode", "Error saving user", user)
-	}
-
-	return nil
-}
-
 // SendWelcomeEmail generates a new password reset code and sends a welcome email to a new user.
 // If there is a problem sending the email, then the new code is not saved.
 func (service *User) SendWelcomeEmail(user *model.User) {
@@ -560,6 +545,20 @@ func (service *User) SendPasswordResetEmail(user *model.User) {
 		derp.Report(derp.Wrap(err, "service.User.SendPasswordResetEmail", "Error sending password reset", user))
 		return
 	}
+}
+
+// MakeNewPasswordResetCode generates a new password reset code for the provided user.
+func (service *User) MakeNewPasswordResetCode(user *model.User) error {
+
+	// Create a new password reset code for this user
+	user.PasswordReset = model.NewPasswordReset(24 * time.Hour)
+
+	// Try to save the user with the new password reset code.
+	if err := service.Save(user, "Create Password Reset Code"); err != nil {
+		return derp.Wrap(err, "service.User.MakeNewPasswordResetCode", "Error saving user", user)
+	}
+
+	return nil
 }
 
 /******************************************
