@@ -223,6 +223,9 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.widgets/:widgetId/:bundleId", handler.GetWidgetBundle(factory))
 	e.GET("/.widgets/:widgetId//resources/:filename", handler.GetWidgetResource(factory))
 
+	e.GET("/apple-touch-icon.png", handler.NotFound)
+	e.GET("/apple-touch-icon-precomposed.png", handler.NotFound)
+
 	// Authentication Pages
 	e.GET("/signin", handler.GetSignIn(factory))
 	e.POST("/signin", handler.PostSignIn(factory))
@@ -441,6 +444,10 @@ func errorHandler(err error, ctx echo.Context) {
 	errorCode := derp.ErrorCode(err)
 
 	switch errorCode {
+
+	case http.StatusNotFound:
+		_ = ctx.String(derp.ErrorCode(err), derp.Message(err))
+		return
 
 	case http.StatusUnauthorized:
 
