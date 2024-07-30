@@ -28,6 +28,7 @@ func GetSignIn(serverFactory *server.Factory) echo.HandlerFunc {
 		// Get a clean version of the URL query parameters
 		queryString := cleanQueryParams(ctx.QueryParams())
 		queryString["HasRegistrationForm"] = factory.Domain().HasRegistrationForm()
+		queryString["DomainName"] = factory.Domain().Get().Label
 
 		// Render the template
 		if err := template.ExecuteTemplate(ctx.Response(), "signin", queryString); err != nil {
@@ -168,7 +169,9 @@ func GetResetCode(serverFactory *server.Factory) echo.HandlerFunc {
 		template := factory.Domain().Theme().HTMLTemplate
 
 		object := mapof.Any{
+			"domainName":  factory.Domain().Get().Label,
 			"userId":      userID,
+			"username":    user.Username,
 			"displayName": user.DisplayName,
 			"code":        resetCode,
 		}
@@ -226,6 +229,6 @@ func PostResetCode(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		// Forward to the sign-in page with a success message
-		return ctx.Redirect(http.StatusSeeOther, "/signin?message=password-reset")
+		return ctx.Redirect(http.StatusSeeOther, "/signin?message=password-reset&Username="+user.Username)
 	}
 }

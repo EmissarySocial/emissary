@@ -22,7 +22,6 @@ type Config struct {
 	Domains             set.Slice[Domain]            `json:"domains"`             // Slice of one or more domain configurations
 	Providers           set.Slice[Provider]          `json:"providers"`           // Slice of one or more OAuth client configurations
 	Templates           sliceof.Object[mapof.String] `json:"templates"`           // Folders containing all stream templates
-	Emails              sliceof.Object[mapof.String] `json:"emails"`              // Folders containing email templates
 	AttachmentOriginals mapof.String                 `json:"attachmentOriginals"` // Folder where original attachments will be stored
 	AttachmentCache     mapof.String                 `json:"attachmentCache"`     // Folder (possibly memory cache) where cached versions of attachmented files will be stored.
 	Certificates        mapof.String                 `json:"certificates"`        // Folder containing the SSL certificate cache for Let's Encrypt AutoSSL
@@ -51,7 +50,6 @@ func DefaultConfig() Config {
 
 		// File Locations
 		Templates:           sliceof.Object[mapof.String]{mapof.String{"adapter": "EMBED", "location": "templates"}},
-		Emails:              sliceof.Object[mapof.String]{mapof.String{"adapter": "EMBED", "location": "emails"}},
 		AttachmentOriginals: mapof.String{"adapter": "FILE", "location": "./.emissary/attachments"},
 		AttachmentCache:     mapof.String{"adapter": "FILE", "location": "./.emissary/cache"},
 		Certificates:        mapof.String{"adapter": "FILE", "location": "./.emissary/certificates"},

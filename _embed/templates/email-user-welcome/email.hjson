@@ -1,0 +1,7 @@
+{
+    emailId: user-welcome
+    emailRole: user-welcome
+    model: User
+    to: "{{.Email}}"
+    subject: Welcome to {{.Domain_Name}}
+}

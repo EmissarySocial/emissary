@@ -1,42 +1,50 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Password Reset</title>
+	<title>Choose Your Password &middot; {{.domainName}}</title>
 	{{template "includes-head" .}}
 </head>
 <body>
 
-	<main>
-		<div class="framed">
-			<div class="pure-g">
-				<div class="pure-u-0 pure-u-sm-1-12 pure-u-md-1-8 pure-u-lg-1-6 pure-u-xl-1-4"></div>
-				<div class="pure-u-1 pure-u-sm-5-6 pure-u-md-3-4 pure-u-lg-2-3 pure-u-xl-1-2">
-					<div class="card padding-sm">
-						<h1>Password Reset</h1>
-						<p>Enter your new password below.</p>
-						<form method="post" action="/signin/reset-code">
-							<input type="hidden" name="userId" value="{{.userId}}">
-							<input type="hidden" name="code" value="{{.code}}">
+	<main class="flex-justify-center flex-align-center" style="display:flex; height:clamp(400px, 100vh, 1000px);">
 
-							<div class="layout-vertical">
-								<div class="layout-vertical-elements">
-									<div class="layout-vertical-element flex-grow-1">
-										<input type="password" name="password" placeholder="New Password">
-									</div>
-									<div class="layout-vertical-element">
-										<input type="password" name="password2" placeholder="Confirm Password">
-									</div>
-								</div>
-							</div>
-							<button type="submit" class="primary">Reset Password</button>
-							<button type="button" class="button" script="on click go to url /signin">Cancel</button>
-						</form>
+		<div class="card" style="width:clamp(540px, 50%, 720px); margin:auto; padding:16px 32px; line-height:150%;">
+
+			<div class="bold text-gray text-lg margin-vertical-none">{{.domainName}}</div>
+			<h1 class="margin-top-none">{{icon "key"}} Choose Your New Password</h1>
+			<p>Hello, <b>{{.username}}</b>. Enter your new password below.</p>
+
+			<form method="post" action="/signin/reset-code" onsubmit="return validateReset(this)">
+				<input type="hidden" name="userId" value="{{.userId}}">
+				<input type="hidden" name="code" value="{{.code}}">
+
+				<div class="layout-vertical">
+					<div class="layout-vertical-elements">
+						<div class="layout-vertical-element flex-grow-1">
+							<input type="password" name="password" placeholder="New Password" autofocus required>
+						</div>
+						<div class="layout-vertical-element">
+							<input type="password" name="password2" placeholder="Confirm Password" required>
+						</div>
 					</div>
 				</div>
-			</div>
+				<button type="submit" class="primary">Reset Password</button>
+				<button type="button" class="button" script="on click go to url /signin">Cancel</button>
+			</form>
 		</div>
 	</main>
 	
+	<script>
+		function validateReset(form) {
+			if (form.password.value !== form.password2.value) {
+				alert("Passwords must match. Please check your entries");
+				return false;
+			}
+			return true
+		}
+	</script>
+
+
 	{{template "includes-foot" .}}
 </body>
 </html>

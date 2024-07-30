@@ -27,6 +27,7 @@ type Template struct {
 	locations           sliceof.Object[mapof.String] // Configuration for template directory
 	filesystemService   Filesystem                   // Filesystem service
 	registrationService *Registration                // Registration Service
+	emailService        *ServerEmail                 // Email Service
 	themeService        *Theme                       // Theme Service
 	widgetService       *Widget                      // Widget Service
 	funcMap             template.FuncMap             // Map of functions to use in golang templates
@@ -35,7 +36,7 @@ type Template struct {
 }
 
 // NewTemplate returns a fully initialized Template service.
-func NewTemplate(filesystemService Filesystem, registrationService *Registration, themeService *Theme, widgetService *Widget, funcMap template.FuncMap, locations []mapof.String) *Template {
+func NewTemplate(filesystemService Filesystem, registrationService *Registration, emailService *ServerEmail, themeService *Theme, widgetService *Widget, funcMap template.FuncMap, locations []mapof.String) *Template {
 
 	service := &Template{
 		templates:           make(set.Map[model.Template]),
@@ -43,6 +44,7 @@ func NewTemplate(filesystemService Filesystem, registrationService *Registration
 		locations:           make(sliceof.Object[mapof.String], 0),
 		filesystemService:   filesystemService,
 		registrationService: registrationService,
+		emailService:        emailService,
 		themeService:        themeService,
 		widgetService:       widgetService,
 		funcMap:             funcMap,
@@ -173,15 +175,14 @@ func (service *Template) loadTemplates() error {
 			switch definitionType {
 
 			// TODO: LOW: Add DefinitionEmail to this.  Will need a *.json file in the email directory.
+			case DefinitionEmail:
+				if err := service.emailService.Add(subdirectory, file); err != nil {
+					derp.Report(derp.Wrap(err, "service.Template.loadTemplates", "Error adding theme"))
+				}
 
 			case DefinitionTheme:
 				if err := service.themeService.Add(directoryName, subdirectory, file); err != nil {
 					derp.Report(derp.Wrap(err, "service.Template.loadTemplates", "Error adding theme"))
-				}
-
-			case DefinitionWidget:
-				if err := service.widgetService.Add(directoryName, subdirectory, file); err != nil {
-					derp.Report(derp.Wrap(err, "service.Template.loadTemplates", "Error adding widget"))
 				}
 
 			case DefinitionTemplate:
@@ -192,6 +193,11 @@ func (service *Template) loadTemplates() error {
 			case DefinitionRegistration:
 				if err := service.registrationService.Add(directoryName, subdirectory, file); err != nil {
 					derp.Report(derp.Wrap(err, "service.Template.loadTemplates", "Error adding registration"))
+				}
+
+			case DefinitionWidget:
+				if err := service.widgetService.Add(directoryName, subdirectory, file); err != nil {
+					derp.Report(derp.Wrap(err, "service.Template.loadTemplates", "Error adding widget"))
 				}
 
 			default:

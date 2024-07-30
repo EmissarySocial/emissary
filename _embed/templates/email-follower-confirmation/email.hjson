@@ -1,0 +1,7 @@
+{
+    emailId: follower-confirmation
+    emailRole: follower-confirmation
+    model: Follower
+    to: "{{.Email}}"
+    subject: Confirm Email Updates from {{.Name}}
+}

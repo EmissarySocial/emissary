@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Signin</title>
+	<title>Sign In &middot; {{.DomainName}}</title>
 	{{- template "includes-head" . -}}
 </head>
 
 <body hx-target="main" hx-swap="innerHTML" hx-push-url="false" hx-ext="a11y">
 
-	<main style="display:flex; height:clamp(400px, 100vh, 1000px); justify-content: center; align-items: center;">
+	<main class="flex-justify-center flex-align-center" style="display:flex; height:clamp(400px, 100vh, 1000px);">
 
 		<div class="card" style="width:clamp(540px, 50%, 720px); margin:auto; padding:16px 32px; line-height:150%;">
 			
@@ -15,22 +15,26 @@
 
 				<div class="layout-vertical margin-bottom">
 
-					<div class="layout-title">Sign In:</div>
+					{{- if eq .message "password-reset" -}}
+						<div class="alert-green"><b>Success</b> {{icon "thumbs-up-fill"}} Your password has been updated. To continue, please sign in with your new password below.</div>
+						<div script="on load focus() the #password"></div>
+					{{- else -}}
+						<div script="on load focus() the #username"></div>
+					{{- end -}}
 
-					{{ if eq .message "password-reset" }}
-						<div class="layout-description">Your password has been reset.  Please enter it below to log in.</div>
-					{{ end }}
+					<div class="bold text-gray text-lg margin-vertical-none">{{.DomainName}}</div>
+					<h1 class="margin-top-none">{{icon "shield-lock"}} Sign In</h1>
 
 					<div class="layout-vertical-elements">
 						<div class="layout-vertical-element">
-							<label for="username">Username</label>
-							<input type="text" name="username" id="username" required="true" maxlength="50">
+							<label for="username">Username / Email</label>
+							<input type="text" name="username" id="username" required="true" value="{{.Username}}" maxlength="50" autofocus autocomplete="username">
 						</div>
 					</div>
 
 					<div class="layout-vertical-element">
 						<label for="password">Password</label>
-						<input type="password" name="password" id="password" required="true" maxlength="100">
+						<input type="password" name="password" id="password" required="true" maxlength="100" autocomplete="current-password">
 					</div>
 
 				</div>

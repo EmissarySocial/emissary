@@ -4,8 +4,9 @@
 
 .card {
 	display: block;
-	border: solid 1px var(--gray40);
+	border: solid 1px var(--gray30);
 	background-color: var(--gray00);
+	border-radius:4px;
 	position:relative;
 	text-overflow: ellipsis;
 	margin:0px;

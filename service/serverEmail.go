@@ -3,13 +3,15 @@ package service
 import (
 	"bytes"
 	"html/template"
+	"io/fs"
 	"strings"
 
 	"github.com/EmissarySocial/emissary/config"
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/channel"
+	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/benpate/rosetta/sliceof"
+	"github.com/hjson/hjson-go/v4"
 	"github.com/rs/zerolog/log"
 
 	mail "github.com/xhit/go-simple-mail/v2"
@@ -18,10 +20,7 @@ import (
 type ServerEmail struct {
 	filesystemService Filesystem
 	funcMap           template.FuncMap
-	locations         []mapof.String
-	templates         *template.Template
-
-	refresh chan channel.Done
+	emails            map[string]model.Email
 }
 
 func NewServerEmail(filesystemService Filesystem, funcMap template.FuncMap, locations []mapof.String) ServerEmail {
@@ -29,10 +28,10 @@ func NewServerEmail(filesystemService Filesystem, funcMap template.FuncMap, loca
 	service := ServerEmail{
 		filesystemService: filesystemService,
 		funcMap:           funcMap,
-		refresh:           make(chan channel.Done),
+		emails:            make(map[string]model.Email),
 	}
 
-	service.Refresh(locations)
+	service.Refresh()
 
 	return service
 }
@@ -41,108 +40,111 @@ func NewServerEmail(filesystemService Filesystem, funcMap template.FuncMap, loca
  * Lifecycle Methods
  ******************************************/
 
-func (service *ServerEmail) Refresh(locations sliceof.Object[mapof.String]) {
+func (service *ServerEmail) Refresh() {
 
-	// Reset the "refresh" channel
-	close(service.refresh)
-	service.refresh = make(chan channel.Done)
-
-	// RULE: If the Filesystem is empty, then don't try to load
-	if len(locations) == 0 {
-		return
-	}
-
-	// RULE: If nothing has changed since the last time we refreshed, then we're done.
-	if slicesAreEqual(locations, service.locations) {
-		return
-	}
-
-	// Add configuration to the service
-	service.locations = locations
-
-	// Load all templates from the filesystem
-	service.loadTemplates()
-
-	// Try to watch the template directory for changes
-	go service.watch()
+	// Reset all emails (to be reloaced by the Template service)
+	service.emails = make(map[string]model.Email)
 }
 
 /******************************************
- * REAL-TIME UPDATES
+ * Real-Time Updates
  ******************************************/
 
-// watch must be run as a goroutine, and constantly monitors the
-// "Updates" channel for news that a template has been updated.
-func (service *ServerEmail) watch() {
+func (service *ServerEmail) Add(filesystem fs.FS, definition []byte) error {
 
-	changes := make(chan bool)
-	defer close(changes)
+	const location = "service.ServerEmail.Add"
 
-	// Start new watchers.
-	for _, folder := range service.locations {
+	// Unmarshal the file into the schema.
+	temp := mapof.NewAny()
+	if err := hjson.Unmarshal(definition, &temp); err != nil {
+		return derp.Wrap(err, location, "Error loading Schema")
+	}
 
-		if err := service.filesystemService.Watch(folder, changes, service.refresh); err != nil {
-			derp.Report(derp.Wrap(err, "service.Layout.Watch", "Error watching filesystem", folder))
+	email := model.NewEmail(temp.GetString("emailId"), service.funcMap)
+	log.Trace().Msg("Email Service: adding " + email.EmailID)
+
+	// Read simple properties
+	email.EmailRole = temp.GetString("emailRole")
+	email.Model = temp.GetString("model")
+
+	// Read "to"  template
+	if toTemplate, err := email.To.Parse(temp.GetString("to")); err == nil {
+		email.To = toTemplate
+	} else {
+		return derp.ReportAndReturn(derp.Wrap(err, location, "Error parsing 'to' template", email.EmailID))
+	}
+
+	// Read "subject" template
+	if subjectTemplate, err := email.Subject.Parse(temp.GetString("subject")); err == nil {
+		email.Subject = subjectTemplate
+	} else {
+		return derp.ReportAndReturn(derp.Wrap(err, location, "Error parsing 'subject' template", email.EmailID))
+	}
+
+	// Read "headers" templates
+	for name, value := range temp.GetMap("headers") {
+		if headerTemplate, err := email.Headers.New(name).Parse(convert.String(value)); err == nil {
+			email.Headers = headerTemplate
+		} else {
+			return derp.Wrap(err, location, "Error parsing 'headers' template", email.EmailID, name)
 		}
 	}
 
-	// All Watchers Started.  Now Listen for Changes
-	for {
-		select {
+	// Read "body" template
+	content, err := fs.ReadFile(filesystem, "body.html")
 
-		case <-changes:
-			service.loadTemplates()
-
-		case <-service.refresh:
-			return
-		}
+	if err != nil {
+		return derp.Wrap(err, "service.loadHTMLTemplateFromFilesystem", "Cannot read body.html file")
 	}
+
+	if bodyTemplate, err := email.Body.Parse(string(content)); err == nil {
+		email.Body = bodyTemplate
+	} else {
+		return derp.Wrap(err, "service.loadHTMLTemplateFromFilesystem", "Unable to parse template HTML")
+	}
+
+	// Keep a pointer to the filesystem resources (if present)
+	if resources, err := fs.Sub(filesystem, "resources"); err == nil {
+		email.Resources = resources
+	}
+
+	// Add the email into the prep library
+	service.emails[email.EmailID] = email
+
+	// Banana
+	return nil
 }
 
-func (service *ServerEmail) loadTemplates() {
+/******************************************
+ * Send Emails API
+ ******************************************/
 
-	templates := template.New("")
-
-	for _, location := range service.locations {
-
-		log.Trace().Msg("Server Email Service: adding email: " + location["location"])
-
-		filesystem, err := service.filesystemService.GetFS(location)
-
-		if err != nil {
-			derp.Report(err)
-		}
-
-		if err := loadHTMLTemplateFromFilesystem(filesystem, templates, service.funcMap); err != nil {
-			derp.Report(err)
-		}
-
-	}
-
-	// If we got this far, then we're good to go!
-	service.templates = templates
-}
-
-func (service *ServerEmail) Send(smtpConnection config.SMTPConnection, message *mail.Email, templateName string, data any) error {
+func (service *ServerEmail) Send(smtpConnection config.SMTPConnection, owner config.Owner, emailID string, model string, data mapof.Any) error {
 
 	const location = "service.ServerEmail.Send"
 
+	// Find the email in the library
+	email, exists := service.emails[emailID]
+
+	if !exists {
+		return derp.NewBadRequestError(location, "Email is not defined", emailID)
+	}
+
+	// "Model" must be set
+	if model == "" {
+		return derp.NewBadRequestError(location, "Model is required", emailID)
+	}
+
+	// Require that the email is defined for the correct model
+	if email.Model != model {
+		return derp.NewBadRequestError(location, "Email is not defined for this model", emailID, model)
+	}
+
 	// If the SMTP Connection is empty, then don't try to send an email
 	if smtpConnection.IsNil() {
-		log.Debug().Msg("ServerEmail.Send: SMTP Connection is empty.  Skipping email.")
+		log.Debug().Str("location", location).Msg("Skipping email because the SMTP Connection is empty.")
 		return nil
 	}
-
-	log.Trace().Str("template", templateName).Msg("ServerEmail.Send: sending email")
-
-	// Build the email body
-	var buffer bytes.Buffer
-	if err := service.templates.ExecuteTemplate(&buffer, templateName, data); err != nil {
-		return derp.Wrap(err, location, "Error executing template", templateName, data)
-	}
-
-	// Build the email message
-	message.SetBody(mail.TextHTML, buffer.String())
 
 	// Try to connect to the server
 	server, ok := smtpConnection.Server()
@@ -154,12 +156,39 @@ func (service *ServerEmail) Send(smtpConnection config.SMTPConnection, message *
 	client, err := server.Connect()
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error connecting to SMTP server", templateName, data, smtpConnection.Hostname, smtpConnection.Username, strings.Repeat("*", len(smtpConnection.Password)), smtpConnection.Port, smtpConnection.TLS)
+		return derp.Wrap(err, location, "Error connecting to SMTP server", emailID, data, smtpConnection.Hostname, smtpConnection.Username, strings.Repeat("*", len(smtpConnection.Password)), smtpConnection.Port, smtpConnection.TLS)
 	}
+
+	message := mail.NewMSG()
+	message.SetFrom(owner.DisplayName + " <" + owner.EmailAddress + ">")
+
+	// Generate the "to" address
+	buffer := bytes.Buffer{}
+	if err := email.To.Execute(&buffer, data); err != nil {
+		return derp.Wrap(err, location, "Error executing 'to' template", emailID, data)
+	}
+	message.AddTo(buffer.String())
+	buffer.Reset()
+
+	// Generate the "subject" line
+	if err := email.Subject.Execute(&buffer, data); err != nil {
+		return derp.Wrap(err, location, "Error executing 'subject' template", emailID, data)
+	}
+
+	message.SetSubject(buffer.String())
+	buffer.Reset()
+
+	// Generate the email body
+	if err := email.Body.Execute(&buffer, data); err != nil {
+		return derp.Wrap(err, location, "Error executing template", emailID, data)
+	}
+
+	message.SetBody(mail.TextHTML, buffer.String())
+	buffer.Reset()
 
 	// Try to send the email
 	if err := message.Send(client); err != nil {
-		return derp.Wrap(err, location, "Error sending email", templateName, data)
+		return derp.Wrap(err, location, "Error sending email", emailID, data)
 	}
 
 	return nil

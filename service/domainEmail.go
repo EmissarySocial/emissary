@@ -6,7 +6,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/domain"
 	"github.com/benpate/rosetta/mapof"
-	mail "github.com/xhit/go-simple-mail/v2"
 )
 
 type DomainEmail struct {
@@ -42,32 +41,25 @@ func (service *DomainEmail) Refresh(configuration config.Domain) {
 // returns an error so that it CAN NOT be run asynchronously.
 func (service *DomainEmail) SendWelcome(user *model.User) error {
 
-	fromAddress := service.owner.DisplayName + " <" + service.owner.EmailAddress + ">"
-
-	// Build the email message
-	message := mail.NewMSG().
-		SetSubject("Welcome to " + service.label).
-		SetFrom(fromAddress).
-		// SetSender(service.owner.EmailAddress). // Don't need this if we're using 'From' header
-		AddTo(user.EmailAddress)
-
 	// Send the welcome email
 	err := service.serverEmail.Send(
 		service.smtp,
-		message,
+		service.owner,
 		"user-welcome",
+		"User",
 		mapof.Any{
 			// User info available to the template
-			"UserID":      user.UserID.Hex(),
-			"Username":    user.Username,
-			"DisplayName": user.DisplayName,
-			"ResetCode":   user.PasswordReset.AuthCode,
-			"ExpireDate":  user.PasswordReset.ExpireDate,
+			"UserID":     user.UserID.Hex(),
+			"Username":   user.Username,
+			"Name":       user.DisplayName,
+			"Email":      user.EmailAddress,
+			"ResetCode":  user.PasswordReset.AuthCode,
+			"ExpireDate": user.PasswordReset.ExpireDate,
 
 			// Domain info available to the template
-			"Owner": service.owner,
-			"Host":  service.host(),
-			"Label": service.label,
+			"Domain_Owner": service.owner,
+			"Domain_URL":   service.host(),
+			"Domain_Name":  service.label,
 		},
 	)
 
@@ -82,29 +74,25 @@ func (service *DomainEmail) SendWelcome(user *model.User) error {
 // swallows errors so that it can be run asynchronously.
 func (service *DomainEmail) SendPasswordReset(user *model.User) error {
 
-	// Build the email message
-	message := mail.NewMSG().
-		SetSubject("Password Reset from " + service.host()).
-		SetSender(service.owner.EmailAddress).
-		AddTo(user.EmailAddress)
-
 	// Send the password reset email
 	err := service.serverEmail.Send(
 		service.smtp,
-		message,
+		service.owner,
 		"user-password-reset",
+		"User",
 		mapof.Any{
 			// User info available to the template
-			"UserID":      user.UserID.Hex(),
-			"Username":    user.Username,
-			"DisplayName": user.DisplayName,
-			"ResetCode":   user.PasswordReset.AuthCode,
-			"ExpireDate":  user.PasswordReset.ExpireDate,
+			"UserID":     user.UserID.Hex(),
+			"Username":   user.Username,
+			"Name":       user.DisplayName,
+			"Email":      user.EmailAddress,
+			"ResetCode":  user.PasswordReset.AuthCode,
+			"ExpireDate": user.PasswordReset.ExpireDate,
 
 			// Domain info available to the template
-			"Owner": service.owner,
-			"Host":  service.host(),
-			"Label": service.label,
+			"Domain_Owner": service.owner,
+			"Domain_URL":   service.host(),
+			"Domain_Name":  service.label,
 		},
 	)
 
@@ -117,31 +105,26 @@ func (service *DomainEmail) SendPasswordReset(user *model.User) error {
 
 func (service *DomainEmail) SendFollowerConfirmation(actor model.PersonLink, follower *model.Follower) error {
 
-	// Build the email message
-	message := mail.NewMSG().
-		SetSubject("Please Confirm Email Updates from " + actor.Name).
-		SetSender(service.owner.EmailAddress).
-		AddTo(follower.Actor.EmailAddress)
-
 	// Send the confirmation email
 	err := service.serverEmail.Send(
 		service.smtp,
-		message,
+		service.owner,
 		"follower-confirmation",
+		"Follower",
 		mapof.Any{
 			// Parent info available to the template
 			"Actor": actor,
 
 			// Follower info available to the template
 			"FollowerID": follower.FollowerID.Hex(),
-			"Email":      follower.Actor.EmailAddress,
 			"Name":       follower.Actor.Name,
+			"Email":      follower.Actor.EmailAddress,
 			"Secret":     follower.Data.GetString("secret"),
 
 			// Domain info available to the template
-			"Owner": service.owner,
-			"Host":  service.host(),
-			"Label": service.label,
+			"Domain_Owner": service.owner,
+			"Domain_URL":   service.host(),
+			"Domain_Name":  service.label,
 		},
 	)
 
@@ -154,20 +137,14 @@ func (service *DomainEmail) SendFollowerConfirmation(actor model.PersonLink, fol
 
 func (service *DomainEmail) SendFollowerActivity(follower model.Follower, activity mapof.Any) error {
 
-	// Build the email message
-	message := mail.NewMSG().
-		SetSubject("New Activity from "+activity.GetString("actor.name")).
-		SetSender(service.owner.EmailAddress).
-		AddTo(follower.Actor.EmailAddress).
-		AddHeader("List-Unsubscribe", follower.UnsubscribeLink(service.host()))
-
 	host := service.host()
 
 	// Send the activity email
 	err := service.serverEmail.Send(
 		service.smtp,
-		message,
+		service.owner,
 		"follower-activity",
+		"Follower",
 		mapof.Any{
 
 			// Parent info available to the template
@@ -175,17 +152,18 @@ func (service *DomainEmail) SendFollowerActivity(follower model.Follower, activi
 
 			// Follower info available to the template
 			"FollowerID": follower.FollowerID.Hex(),
-			"Email":      follower.Actor.EmailAddress,
 			"Name":       follower.Actor.Name,
+			"Email":      follower.Actor.EmailAddress,
 			"Secret":     follower.Data.GetString("secret"),
 
 			// Activity info available to the template
 			"Activity": activity,
 
 			// Domain info available to the template
-			"Owner": service.owner,
-			"Host":  host,
-			"Label": service.label,
+			"Domain_Owner": service.owner,
+			"Domain_URL":   host,
+			"Domain_Name":  service.label,
+			"Unsubscribe":  follower.UnsubscribeLink(service.host()),
 		},
 	)
 

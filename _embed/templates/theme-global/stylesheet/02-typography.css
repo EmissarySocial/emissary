@@ -212,6 +212,8 @@ a.text-red:hover {
 .text-capitalize {
     text-transform: capitalize;
 }
+
+
 /******************************************
  * Text Modifiers - Code
  ******************************************/
@@ -241,6 +243,7 @@ code.inline {
 .wrap {
     white-space: normal;
 }
+
 
 /******************************************
  * Links and Anchors

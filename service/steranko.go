@@ -36,7 +36,7 @@ func (service SterankoUserService) Load(username string, result steranko.User) e
 		return derp.NewInternalError("service.SterankoUserService.Load", "Invalid result provided.  This should never happen")
 	}
 
-	if err := service.userService.LoadByUsername(username, user); err != nil {
+	if err := service.userService.LoadByUsernameOrEmail(username, user); err != nil {
 		return derp.Wrap(err, "service.SterankoUserService.Load", "Error loading user")
 	}
 

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <!--
+    {{- $object := .Activity.object -}}
+    {{- $title := $object.name -}}
+    {{- $content := $object.content -}}    
+    -->
+
+    <style>
+        a {color: #ff5522;}
+
+        @media (prefers-color-scheme: dark) {
+            a { color: #ca4319; }
+            body {
+                background-color:#000!important;
+                color:#CCC!important;
+            }
+            .email-content {
+                background-color:#222!important;
+                color: #DDD!important;
+            }
+        }        
+    </style>
+</head>
+<body style="padding:0px; margin:0px; background-color:lightgray;">
+    <div style="
+        height:100%;
+        width:100%;
+        font-size:14px;
+        font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">
+
+        <table class="email-content" role="presentation" border="0" cellpadding="0" cellspacing="0" style="
+            border-collapse:collapse;
+            width:90%;
+            max-width:800px;
+            margin:0px auto;
+            background-color:white;">
+            
+            <tr><td style="
+                padding:27px;
+                font-size:18px;
+                line-height:1.5em;">
+            
+                <p style="margin-top:0px;"><b><a href="{{.URL}}">{{$title}}</a></b></p>
+                <table cellpadding="0" cellspacing="0" style="border-collapse:collapse; margin-bottom:27px;">
+                    <tr><td style="vertical-align:middle;">
+                        <img src="{{.Actor.ImageURL}}" style="display:block; height:2em; width:2em; border-radius:1em; border:solid 1px black; margin:0px 8px 0px 0px;">
+                    </td><td style="line-height:2em;">
+                        {{.Actor.Name}}
+                    </td></tr>
+                </table>
+                <p>{{$content | html}}</p>
+
+                <p>
+                    <a href="{{.URL}}" style="
+                        display:inline-block;
+                        font-size:12px;
+                        padding:6px 12px;
+                        background-color:#ff5522;
+                        color:white;
+                        border-radius:6px;
+                        text-decoration:none;
+                        ">Read More &rarr;</a>
+                </p>
+
+            </td></tr>
+        </table>
+
+        <p style="text-align:center">
+            Sent by via <b>{{.Domain_Name}}</b> based on your email subscription.
+        </p>
+        <p style="text-align:center">
+            Click here to <b><a href="{{.Unsubscribe}}">unsubscribe from these messages</a></b>.
+        </p>
+
+    </div>
+
+</body>
+</html>

@@ -144,6 +144,10 @@ func (service Icons) Get(name string) string {
 		return service.get("eye-slash-fill")
 	case "journal":
 		return service.get("journal")
+	case "key":
+		return service.get("key")
+	case "key-fill":
+		return service.get("key-fill")
 	case "link":
 		return service.get("link-45deg")
 	case "link-outbound":
@@ -228,6 +232,8 @@ func (service Icons) Get(name string) string {
 		return service.get("shield")
 	case "shield-fill":
 		return service.get("shield-fill")
+	case "shield-lock":
+		return service.get("shield-lock")
 	case "skip-backward":
 		return service.get("skip-backward")
 	case "skip-backward-fill":

@@ -100,6 +100,7 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 	factory.templateService = *service.NewTemplate(
 		factory.Filesystem(),
 		factory.Registration(),
+		factory.Email(),
 		factory.Theme(),
 		factory.Widget(),
 		factory.FuncMap(),
@@ -151,8 +152,8 @@ func (factory *Factory) start() {
 		}
 
 		// Refresh cached values in global services
+		factory.emailService.Refresh()
 		factory.templateService.Refresh(config.Templates)
-		factory.emailService.Refresh(config.Emails)
 		factory.providerService.Refresh(config.Providers)
 		factory.refreshActivityCache(config.ActivityPubCache)
 

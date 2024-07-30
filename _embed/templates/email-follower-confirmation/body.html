@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+    <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="border-collapse:collapse;"><tr><td style="
+        font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; 
+        font-size:18px;
+        opacity:0.9;
+        max-width:600px;
+        line-height:1.5em;">
+    
+        <!-- This email uses the FOLLOWER object.  It is sent to people who request to be email followers  -->
+        <p>Hello {{.Name}},</p>
+        <p>We received your request to receive email updates from <a href="{{.Actor.ProfileURL}}">{{.Actor.Name}}</a> whenever they post to <b>{{.Domain_Name}}</b>.</p>
+        <p>Please confirm that you would like to receive these updates by clicking the button below. We cannot send you updates until you complete this step.</p>
+        <p>If you did not make this request, you can safely ignore this message and your email will not be added to the list.</p>
+        
+        <div style="padding:18px; background-color:#eee;">
+
+            <div style="font-weight:700; opacity:0.5; margin-bottom:9px;">Subscribe to:</div>
+
+            <table cellpadding="0" cellspacing="0" style="border-collapse:collapse; margin-bottom:27px;">
+                <tr><td style="vertical-align:middle;">
+                    <img src="{{.Actor.ImageURL}}" style="display:block; height:2em; width:2em; border-radius:1em; border:solid 1px black; margin:0px 8px 0px 0px;">
+                </td><td style="line-height:2em;">
+                    {{.Actor.Name}}
+                </td></tr>
+            </table>
+
+        <a href="{{.Actor.ProfileURL}}/follower-confirm?followerId={{.FollowerID}}&secret={{.Secret}}" style="
+            display:inline-block;
+            padding:9px 18px;
+            background-color:#ff5522;
+            color:white;
+            border-radius:6px;
+            text-decoration:none;
+            ">Confirm My Subscription &rarr;</a>
+        </div>
+
+    </td></tr></table>
+
+</body>
+</html>
+

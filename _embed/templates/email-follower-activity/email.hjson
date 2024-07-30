@@ -1,0 +1,10 @@
+{
+    emailId: follower-activity
+    emailRole: follower-activity
+    model: Follower
+    subject: New Activity From {{.Name}}
+    to: "{{.Email}}"
+    headers: {
+        "List-Unsubscribe": "{{.Unsubscribe}}"
+    }
+}

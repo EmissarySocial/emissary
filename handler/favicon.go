@@ -6,6 +6,11 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// NotFound returns the default favicon for this server
+func NotFound(ctx echo.Context) error {
+	return derp.NewNotFoundError("", "")
+}
+
 // GetFavicon returns the default favicon for this server
 func GetFavicon(factoryManager *server.Factory) echo.HandlerFunc {
 

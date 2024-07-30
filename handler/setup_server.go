@@ -164,15 +164,6 @@ func getSetupForm(name string) (form.Element, bool, error) {
 			},
 		}, true, nil
 
-	case "emails":
-		return form.Element{
-			Type: "layout-vertical",
-			Children: []form.Element{
-				{Type: "select", Label: "Adapter", Path: "adapter"},
-				{Type: "text", Label: "Location", Path: "location", Options: mapof.Any{"column-width": "100%"}},
-			},
-		}, true, nil
-
 	case "attachments":
 		return form.Element{
 			Type:        "layout-group",

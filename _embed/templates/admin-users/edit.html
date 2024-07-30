@@ -16,8 +16,8 @@
 	{{- end -}}
 
 	<form hx-post="/admin/users/{{.UserID}}/send-welcome" class="inline-block">
-		<button class="htmx-request-hide" type="submit">{{icon "email"}} Resend Email</button>
-		<button class="htmx-request-show" disabled><span class="spin">{{icon "loading"}}</span> Sending Email</button>
+		<button class="htmx-request-hide" type="submit">{{icon "email"}} Resend Welcome</button>
+		<button class="htmx-request-show" disabled><span class="spin">{{icon "loading"}}</span> Sending Welcome</button>
 	</form>
 
 	<form action="/.masquerade?userId={{.UserID}}" method="post" class="inline-block">

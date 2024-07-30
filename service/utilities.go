@@ -208,6 +208,11 @@ func findDefinition(filesystem fs.FS) (string, []byte, error) {
 		return DefinitionRegistration, file, nil
 	}
 
+	// If this directory contains an "email.json" file, then it's an email.
+	if file, err := readJSON(filesystem, "email"); err == nil {
+		return DefinitionEmail, file, nil
+	}
+
 	// TODO: LOW: Add DefinitionEmail to this.  Will need a *.json file in the email directory.
 
 	return "", nil, derp.NewInternalError("service.findDefinition", "No definition file found")
@@ -248,6 +253,8 @@ func slicesAreEqual(value1 []mapof.String, value2 []mapof.String) bool {
 // must strips out an error from a multi-result function call.
 // This should be used sparingly because, while it does REPORT
 // the error, it does not return it to the caller.
+//
+//lint:ignore U1000 This function is used in other packages.
 func must[T any](value T, err error) T {
 	if err != nil {
 		derp.Report(err)
