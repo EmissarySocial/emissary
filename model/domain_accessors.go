@@ -9,6 +9,8 @@ func DomainSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
 			"domainId":         schema.String{Format: "objectId"},
+			"iconId":           schema.String{Format: "objectId"},
+			"iconUrl":          schema.String{Format: "url"}, // virtual field
 			"themeId":          schema.String{MaxLength: 128},
 			"registrationId":   schema.String{MaxLength: 128},
 			"inboxId":          schema.String{MaxLength: 128},
@@ -71,6 +73,12 @@ func (domain Domain) GetStringOK(name string) (string, bool) {
 
 	case "domainId":
 		return domain.DomainID.Hex(), true
+
+	case "iconId":
+		return domain.IconID.Hex(), true
+
+	case "iconUrl":
+		return domain.IconURL(), true
 	}
 
 	return "", false
@@ -89,6 +97,15 @@ func (domain *Domain) SetString(name string, value string) bool {
 			domain.DomainID = objectID
 			return true
 		}
+
+	case "iconId":
+		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
+			domain.IconID = objectID
+			return true
+		}
+
+	case "iconUrl":
+		return true
 	}
 
 	return false

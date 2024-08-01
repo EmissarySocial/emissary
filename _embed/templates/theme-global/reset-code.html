@@ -10,8 +10,16 @@
 
 		<div class="card" style="width:clamp(540px, 50%, 720px); margin:auto; padding:16px 32px; line-height:150%;">
 
-			<div class="bold text-gray text-lg margin-vertical-none">{{.domainName}}</div>
-			<h1 class="margin-top-none">{{icon "key"}} Choose Your New Password</h1>
+			{{- if ne "" .domainIcon -}}
+				<div style="margin-bottom:32px; text-align: center;">
+					<img src="{{.domainIcon}}" style="width:40%; margin:0px auto; display:block;">
+				</div>
+				<h2>Choose Your New Password</h2>
+			{{- else -}}
+				<div class="bold text-gray text-lg margin-vertical-none">{{.domainName}}</div>
+				<h1 class="margin-top-none">{{icon "key"}} Choose Your New Password</h1>
+			{{- end -}}
+
 			<p>Hello, <b>{{.username}}</b>. Enter your new password below.</p>
 
 			<form method="post" action="/signin/reset-code" onsubmit="return validateReset(this)">

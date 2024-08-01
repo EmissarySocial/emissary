@@ -19,8 +19,10 @@
 			steps: [
 				{do: "view-html"}
 				{do: "edit", options: ["cancel-button:hide"]}
+				{do: "upload-attachments", fieldname:"iconUrl", attachment-path:"iconId", maximum:1, accept-type:"image/*", rules:{types:["webp"]}}
 				{do: "save"}
 				{do: "inline-save-button"}
+				{do: "reload-page"}
 			]
 		}
 		themes: {

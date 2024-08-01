@@ -10,7 +10,12 @@
         max-width:600px;
         line-height:1.5em;">
     
-        <!-- This email uses the FOLLOWER object.  It is sent to people who request to be email followers  -->
+        {{- if ne "" .Domain_Icon -}}
+            <div style="margin-bottom:32px;">
+                <img src="{{.Domain_Icon}}" style="width:40%;">
+            </div>
+        {{- end -}}
+
         <p>Hello {{.Name}},</p>
         <p>We received your request to receive email updates from <a href="{{.Actor.ProfileURL}}">{{.Actor.Name}}</a> whenever they post to <b>{{.Domain_Name}}</b>.</p>
         <p>Please confirm that you would like to receive these updates by clicking the button below. We cannot send you updates until you complete this step.</p>

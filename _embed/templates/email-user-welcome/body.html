@@ -9,6 +9,12 @@
         opacity:0.9;
         max-width:600px;
         line-height:1.5em;">
+
+    {{- if ne "" .Domain_Icon -}}
+        <div style="margin-bottom:32px;">
+            <img src="{{.Domain_Icon}}" style="width:40%;">
+        </div>
+    {{- end -}}
     
     <p>Congratulations, {{.Name}}!</p>
     

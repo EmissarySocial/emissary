@@ -9,6 +9,7 @@ import (
 // Domain represents an account or node on this server.
 type Domain struct {
 	DomainID         primitive.ObjectID `bson:"_id"`              // This is the internal ID for the domain.  It should not be available via the web service.
+	IconID           primitive.ObjectID `bson:"iconId"`           // ID of the logo to use for this domain
 	Label            string             `bson:"label"`            // Human-friendly name displayed at the top of this domain
 	Description      string             `bson:"description"`      // Human-friendly description of this domain
 	ThemeID          string             `bson:"themeId"`          // ID of the theme to use for this domain
@@ -58,4 +59,13 @@ func (domain Domain) NotEmpty() bool {
 // HasRegistrationForm returns TRUE if this domain includes a valid signup form.
 func (domain *Domain) HasRegistrationForm() bool {
 	return domain.RegistrationID != ""
+}
+
+func (domain *Domain) IconURL() string {
+
+	if domain.IconID.IsZero() {
+		return ""
+	}
+
+	return "/.domain/attachments/" + domain.IconID.Hex()
 }

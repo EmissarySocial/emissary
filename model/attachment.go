@@ -58,11 +58,17 @@ func (attachment *Attachment) ID() string {
 
 func (attachment *Attachment) CalcURL(host string) string {
 
-	if attachment.ObjectType == AttachmentObjectTypeUser {
-		return host + "/@" + attachment.ObjectID.Hex() + "/attachments/" + attachment.AttachmentID.Hex()
-	}
+	switch attachment.ObjectType {
 
-	return host + "/" + attachment.ObjectID.Hex() + "/attachments/" + attachment.AttachmentID.Hex()
+	case AttachmentObjectTypeUser:
+		return host + "/@" + attachment.ObjectID.Hex() + "/attachments/" + attachment.AttachmentID.Hex()
+
+	case AttachmentObjectTypeDomain:
+		return host + "/.domain/attachments/" + attachment.AttachmentID.Hex()
+
+	default:
+		return host + "/" + attachment.ObjectID.Hex() + "/attachments/" + attachment.AttachmentID.Hex()
+	}
 }
 
 func (attachment *Attachment) SetURL(host string) {

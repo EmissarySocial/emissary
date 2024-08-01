@@ -238,7 +238,10 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/signin/reset-code", handler.PostResetCode(factory))
 	e.POST("/.masquerade", handler.PostMasquerade(factory), mw.Owner)
 
-	// STREAM PAGES
+	// Domain Pages
+	e.GET("/.domain/attachments/:attachmentId", handler.GetDomainAttachment(factory))
+
+	// Stream Pages
 	e.GET("/", handler.GetStream(factory))
 	e.GET("/:stream", handler.GetStream(factory))
 	e.GET("/:stream/:action", handler.GetStreamWithAction(factory))
@@ -246,9 +249,9 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.DELETE("/:stream", handler.PostStreamWithAction(factory))
 
 	// Hard-coded routes for additional stream services
-	e.GET("/:stream/attachments/:attachment", handler.GetAttachment(factory)) // TODO: LOW: Can Stream Attachments be moved into a custom build step?
-	e.GET("/:stream/sse", handler.ServerSentEvent(factory))                   // TODO: LOW: Can SSE be moved into a custom build step?
-	e.GET("/:stream/qrcode", handler.GetQRCode(factory))                      // TODO: LOW: Can QR Codes be moved into a custom build step?
+	e.GET("/:stream/attachments/:attachmentId", handler.GetStreamAttachment(factory)) // TODO: LOW: Can Stream Attachments be moved into a custom build step?
+	e.GET("/:stream/sse", handler.ServerSentEvent(factory))                           // TODO: LOW: Can SSE be moved into a custom build step?
+	e.GET("/:stream/qrcode", handler.GetQRCode(factory))                              // TODO: LOW: Can QR Codes be moved into a custom build step?
 
 	// Profile Pages
 	// NOTE: these are rewritten from /@:userId by the rewrite middleware

@@ -385,6 +385,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 	// This is separate because it may change separately from the DNS
 	factory.emailService.Refresh(
 		domain,
+		factory.Domain(),
 	)
 
 	if err := factory.domainService.Start(); err != nil {

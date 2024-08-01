@@ -10,21 +10,29 @@
         max-width:630px;
         line-height:1.5em;">
     
-    <p>Hello {{.Name}},</p>
-    
-    <p>We just received a request to your password on <b>{{.Domain_Name}}</b>.</p>
-    <p>If you did not make this request, then you can safely ignore this email and no other actions will be taken.</p>
-    <p>To complete this request, please click the button below and you'll be linked back to {{.Domain_Name}} where you can choose a new password.</p>
-    
-    <p><a href="{{.Domain_URL}}/signin/reset-code?userId={{.UserID}}&code={{.ResetCode}}" style="
-        display:inline-block;
-        padding:9px 18px;
-        background-color:#ff5522;
-        color:white;
-        border-radius:6px;
-        text-decoration:none;
-        ">Reset My Password &rarr;</a></p>
-    </td></tr></table>
+        {{- if ne "" .Domain_Icon -}}
+            <div style="margin-bottom:32px;">
+                <img src="{{.Domain_Icon}}" style="width:40%;">
+            </div>
+        {{- end -}}
+
+        <p>Hello {{.Name}},</p>
+        
+        <p>We just received a request to your password on <b>{{.Domain_Name}}</b>.</p>
+        <p>If you did not make this request, then you can safely ignore this email and no other actions will be taken.</p>
+        <p>To complete this request, please click the button below and you'll be linked back to {{.Domain_Name}} where you can choose a new password.</p>
+        
+        <p><a href="{{.Domain_URL}}/signin/reset-code?userId={{.UserID}}&code={{.ResetCode}}" style="
+            display:inline-block;
+            padding:9px 18px;
+            background-color:#ff5522;
+            color:white;
+            border-radius:6px;
+            text-decoration:none;
+            ">Reset My Password &rarr;</a>
+        </p>
+
+</td></tr></table>
 
 </body>
 </html>

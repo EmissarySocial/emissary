@@ -1,5 +1,8 @@
 package model
 
+// AttachmentObjectTypeDomain represents an attachment that is owned by a Domain
+const AttachmentObjectTypeDomain = "Domain"
+
 // AttachmentObjectTypeStream represents an attachment that is owned by a Stream
 const AttachmentObjectTypeStream = "Stream"
 

@@ -12,7 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func GetAttachment(factoryManager *server.Factory) echo.HandlerFunc {
+func GetStreamAttachment(factoryManager *server.Factory) echo.HandlerFunc {
 
 	const location = "handler.GetAttachment"
 
@@ -40,7 +40,7 @@ func GetAttachment(factoryManager *server.Factory) echo.HandlerFunc {
 		// Load the attachment in order to verify that it is valid for this stream
 		// TODO: LOW: This might be more efficient as a single query...
 		attachmentService := factory.Attachment()
-		attachmentIDString := list.Dot(ctx.Param("attachment")).First()
+		attachmentIDString := list.Dot(ctx.Param("attachmentId")).First()
 		attachmentID, err := primitive.ObjectIDFromHex(attachmentIDString)
 
 		if err != nil {
@@ -78,6 +78,58 @@ func GetAttachment(factoryManager *server.Factory) echo.HandlerFunc {
 		} else {
 			header.Set("Cache-Control", "private") // Store only in private caches for 1 day
 		}
+
+		if err := ms.Get(filespec, ctx.Response().Writer); err != nil {
+			return derp.ReportAndReturn(derp.Wrap(err, location, "Error accessing attachment file"))
+		}
+
+		return nil
+	}
+}
+
+func GetDomainAttachment(factoryManager *server.Factory) echo.HandlerFunc {
+
+	const location = "handler.GetDomainAttachment"
+
+	return func(ctx echo.Context) error {
+
+		// Check ETags to see if the browser already has a copy of this
+		if matchHeader := ctx.Request().Header.Get("If-None-Match"); matchHeader == "1" {
+			return ctx.NoContent(http.StatusNotModified)
+		}
+
+		// Get factory from the request
+		factory, err := factoryManager.ByContext(ctx)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Cannot load Domain")
+		}
+
+		domain := factory.Domain().Get()
+
+		// Load the attachment in order to verify that it is valid for this stream
+		// TODO: LOW: This might be more efficient as a single query...
+		attachmentService := factory.Attachment()
+		attachmentIDString := list.Dot(ctx.Param("attachmentId")).First()
+		attachmentID, err := primitive.ObjectIDFromHex(attachmentIDString)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Invalid attachmentID", attachmentIDString)
+		}
+
+		attachment := model.NewAttachment(model.AttachmentObjectTypeDomain, domain.DomainID)
+		if err := attachmentService.LoadByID(model.AttachmentObjectTypeDomain, domain.DomainID, attachmentID, &attachment); err != nil {
+			return derp.Wrap(err, location, "Error loading attachment")
+		}
+
+		// Retrieve the file from the mediaserver
+		ms := factory.MediaServer()
+		filespec := attachment.FileSpec(ctx.Request().URL)
+
+		header := ctx.Response().Header()
+		header.Set("Mime-Type", filespec.MimeType)
+		header.Set("ETag", "1")
+		header.Set("Cache-Control", "public, max-age=86400") // Store in public caches for 1 day
 
 		if err := ms.Get(filespec, ctx.Response().Writer); err != nil {
 			return derp.ReportAndReturn(derp.Wrap(err, location, "Error accessing attachment file"))

@@ -43,7 +43,13 @@
                 font-size:18px;
                 line-height:1.5em;">
             
-                <p style="margin-top:0px;"><b><a href="{{.URL}}">{{$title}}</a></b></p>
+            {{- if ne "" .Domain_Icon -}}
+                <div style="margin-bottom:32px; text-align: center;">
+                    <img src="{{.Domain_Icon}}" style="width:30%; margin:0px auto; display:block;">
+                </div>
+            {{- end -}}
+
+            <p style="margin-top:0px;"><b><a href="{{.URL}}">{{$title}}</a></b></p>
                 <table cellpadding="0" cellspacing="0" style="border-collapse:collapse; margin-bottom:27px;">
                     <tr><td style="vertical-align:middle;">
                         <img src="{{.Actor.ImageURL}}" style="display:block; height:2em; width:2em; border-radius:1em; border:solid 1px black; margin:0px 8px 0px 0px;">

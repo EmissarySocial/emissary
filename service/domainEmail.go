@@ -9,11 +9,12 @@ import (
 )
 
 type DomainEmail struct {
-	serverEmail *ServerEmail
-	smtp        config.SMTPConnection
-	owner       config.Owner
-	label       string
-	hostname    string
+	serverEmail   *ServerEmail
+	domainService *Domain
+	smtp          config.SMTPConnection
+	owner         config.Owner
+	label         string
+	hostname      string
 }
 
 func NewDomainEmail(serverEmail *ServerEmail) DomainEmail {
@@ -26,7 +27,8 @@ func NewDomainEmail(serverEmail *ServerEmail) DomainEmail {
  * Lifecycle Methods
  ******************************************/
 
-func (service *DomainEmail) Refresh(configuration config.Domain) {
+func (service *DomainEmail) Refresh(configuration config.Domain, domainService *Domain) {
+	service.domainService = domainService
 	service.smtp = configuration.SMTPConnection
 	service.owner = configuration.Owner
 	service.label = configuration.Label
@@ -40,6 +42,8 @@ func (service *DomainEmail) Refresh(configuration config.Domain) {
 // SendWelcome sends a welcome email to the user.  This method
 // returns an error so that it CAN NOT be run asynchronously.
 func (service *DomainEmail) SendWelcome(user *model.User) error {
+
+	domain := service.domainService.Get()
 
 	// Send the welcome email
 	err := service.serverEmail.Send(
@@ -59,7 +63,8 @@ func (service *DomainEmail) SendWelcome(user *model.User) error {
 			// Domain info available to the template
 			"Domain_Owner": service.owner,
 			"Domain_URL":   service.host(),
-			"Domain_Name":  service.label,
+			"Domain_Name":  domain.Label,
+			"Domain_Icon":  service.host() + domain.IconURL(),
 		},
 	)
 
@@ -73,6 +78,8 @@ func (service *DomainEmail) SendWelcome(user *model.User) error {
 // SendPasswordReset sends a passowrd reset email to the user.  This method
 // swallows errors so that it can be run asynchronously.
 func (service *DomainEmail) SendPasswordReset(user *model.User) error {
+
+	domain := service.domainService.Get()
 
 	// Send the password reset email
 	err := service.serverEmail.Send(
@@ -92,7 +99,8 @@ func (service *DomainEmail) SendPasswordReset(user *model.User) error {
 			// Domain info available to the template
 			"Domain_Owner": service.owner,
 			"Domain_URL":   service.host(),
-			"Domain_Name":  service.label,
+			"Domain_Name":  domain.Label,
+			"Domain_Icon":  service.host() + domain.IconURL(),
 		},
 	)
 
@@ -104,6 +112,8 @@ func (service *DomainEmail) SendPasswordReset(user *model.User) error {
 }
 
 func (service *DomainEmail) SendFollowerConfirmation(actor model.PersonLink, follower *model.Follower) error {
+
+	domain := service.domainService.Get()
 
 	// Send the confirmation email
 	err := service.serverEmail.Send(
@@ -124,7 +134,8 @@ func (service *DomainEmail) SendFollowerConfirmation(actor model.PersonLink, fol
 			// Domain info available to the template
 			"Domain_Owner": service.owner,
 			"Domain_URL":   service.host(),
-			"Domain_Name":  service.label,
+			"Domain_Name":  domain.Label,
+			"Domain_Icon":  service.host() + domain.IconURL(),
 		},
 	)
 
@@ -138,6 +149,8 @@ func (service *DomainEmail) SendFollowerConfirmation(actor model.PersonLink, fol
 func (service *DomainEmail) SendFollowerActivity(follower model.Follower, activity mapof.Any) error {
 
 	host := service.host()
+
+	domain := service.domainService.Get()
 
 	// Send the activity email
 	err := service.serverEmail.Send(
@@ -162,7 +175,8 @@ func (service *DomainEmail) SendFollowerActivity(follower model.Follower, activi
 			// Domain info available to the template
 			"Domain_Owner": service.owner,
 			"Domain_URL":   host,
-			"Domain_Name":  service.label,
+			"Domain_Name":  domain.Label,
+			"Domain_Icon":  service.host() + domain.IconURL(),
 			"Unsubscribe":  follower.UnsubscribeLink(service.host()),
 		},
 	)
