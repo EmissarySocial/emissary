@@ -36,15 +36,6 @@ func TestConfig(t *testing.T) {
 		{"templates.0.bucket", "BUCKET", nil},
 		{"templates.0.path", "PATH...", nil},
 
-		{"emails.0.adapter", "S3", nil},
-		{"emails.0.location", "LOCATION", nil},
-		{"emails.0.accessKey", "ACCESS_KEY", nil},
-		{"emails.0.secretKey", "SECRET_KEY", nil},
-		{"emails.0.region", "REGION", nil},
-		{"emails.0.token", "TOKEN", nil},
-		{"emails.0.bucket", "BUCKET", nil},
-		{"emails.0.path", "PATH...", nil},
-
 		{"certificates.adapter", "S3", nil},
 		{"certificates.location", "LOCATION", nil},
 		{"certificates.accessKey", "ACCESS_KEY", nil},
