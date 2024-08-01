@@ -112,10 +112,16 @@ func (service *User) Save(user *model.User, note string) error {
 	// Special steps to take on initial creation
 	if isNew {
 
-		// RULE: Set default inbox/outbox values based on the Theme
+		// RULE: Set DEFAULT inbox/outbox values based on the Theme
 		theme := service.domainService.Theme()
-		user.InboxTemplate = theme.DefaultInbox
-		user.OutboxTemplate = theme.DefaultOutbox
+
+		if user.InboxTemplate == "" {
+			user.InboxTemplate = theme.DefaultInbox
+		}
+
+		if user.OutboxTemplate == "" {
+			user.OutboxTemplate = theme.DefaultOutbox
+		}
 
 		// Rule: IF the display name is empty, then try the username and email address
 		if user.DisplayName == "" {
