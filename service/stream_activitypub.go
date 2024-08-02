@@ -76,15 +76,46 @@ func (service *Stream) JSONLD(stream *model.Stream) mapof.Any {
 		result[vocab.PropertyTo] = []string{vocab.NamespaceActivityStreamsPublic}
 	}
 
-	// Attachments
-	if attachments, err := service.attachmentService.QueryByObjectID(model.AttachmentObjectTypeStream, stream.StreamID); err == nil {
+	// Custom behaviors for different stream types
+	switch stream.SocialRole {
 
-		attachmentJSON := make([]mapof.Any, 0, len(attachments))
-		for _, attachment := range attachments {
-			attachmentJSON = append(attachmentJSON, attachment.JSONLD())
+	case vocab.ObjectTypeAudio:
+
+		// Size (in bytes)
+		// Bitrate
+		// Duration
+		// Library (custom Funkwhale type)
+
+		if attachments, err := service.attachmentService.QueryByCategory(model.AttachmentObjectTypeStream, stream.StreamID, vocab.ObjectTypeAudio); err == nil {
+			link := make([]mapof.Any, 0, len(attachments))
+
+			for _, attachment := range attachments {
+				link = append(link, mapof.Any{
+					vocab.PropertyType:      vocab.CoreTypeLink,
+					vocab.PropertyHref:      stream.ActivityPubURL() + "/attachments/" + attachment.AttachmentID.Hex() + ".mpg",
+					vocab.PropertyMediaType: "audio/mpeg",
+				})
+			}
+
+			switch len(link) {
+			case 0: // Do nothing
+			case 1:
+				result[vocab.PropertyURL] = link[0]
+			default:
+				result[vocab.PropertyURL] = link
+			}
 		}
 
-		result[vocab.PropertyAttachment] = attachmentJSON
+	default:
+		if attachments, err := service.attachmentService.QueryByObjectID(model.AttachmentObjectTypeStream, stream.StreamID); err == nil {
+
+			attachmentJSON := make([]mapof.Any, 0, len(attachments))
+			for _, attachment := range attachments {
+				attachmentJSON = append(attachmentJSON, attachment.JSONLD())
+			}
+
+			result[vocab.PropertyAttachment] = attachmentJSON
+		}
 	}
 
 	return result
