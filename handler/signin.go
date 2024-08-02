@@ -68,7 +68,8 @@ func PostSignIn(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		// Return a success message (and redirect on the client)
-		ctx.Response().Header().Add("Hx-Trigger", "SigninSuccess")
+		// ctx.Response().Header().Add("Hx-Trigger", "SigninSuccess")
+		ctx.Response().Header().Add("Hx-Redirect", "/@me")
 		return ctx.NoContent(http.StatusNoContent)
 	}
 }
