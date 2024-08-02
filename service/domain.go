@@ -137,6 +137,10 @@ func (service *Domain) LoadDomain() (model.Domain, error) {
 		return service.domain, derp.Wrap(err, "service.Domain.LoadDomain", "Domain Not Ready: Error loading domain record")
 	}
 
+	// Attach the hostname to the domain
+	// (in the future, this should probably be kept in the DB)
+	service.domain.Hostname = service.hostname
+
 	// Success.
 	return service.domain, nil
 }

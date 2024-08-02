@@ -2,6 +2,7 @@ package model
 
 import (
 	"github.com/benpate/data/journal"
+	domainlib "github.com/benpate/domain"
 	"github.com/benpate/rosetta/mapof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -10,6 +11,7 @@ import (
 type Domain struct {
 	DomainID         primitive.ObjectID `bson:"_id"`              // This is the internal ID for the domain.  It should not be available via the web service.
 	IconID           primitive.ObjectID `bson:"iconId"`           // ID of the logo to use for this domain
+	Hostname         string             `bson:"hostname"`         // Hostname of this domain (e.g. "example.com")
 	Label            string             `bson:"label"`            // Human-friendly name displayed at the top of this domain
 	Description      string             `bson:"description"`      // Human-friendly description of this domain
 	ThemeID          string             `bson:"themeId"`          // ID of the theme to use for this domain
@@ -61,11 +63,15 @@ func (domain *Domain) HasRegistrationForm() bool {
 	return domain.RegistrationID != ""
 }
 
+func (domain *Domain) Host() string {
+	return domainlib.Protocol(domain.Hostname) + domain.Hostname
+}
+
 func (domain *Domain) IconURL() string {
 
 	if domain.IconID.IsZero() {
 		return ""
 	}
 
-	return "/.domain/attachments/" + domain.IconID.Hex()
+	return domain.Host() + "/.domain/attachments/" + domain.IconID.Hex()
 }

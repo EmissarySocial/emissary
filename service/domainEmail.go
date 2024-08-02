@@ -4,7 +4,6 @@ import (
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
-	"github.com/benpate/domain"
 	"github.com/benpate/rosetta/mapof"
 )
 
@@ -62,9 +61,9 @@ func (service *DomainEmail) SendWelcome(user *model.User) error {
 
 			// Domain info available to the template
 			"Domain_Owner": service.owner,
-			"Domain_URL":   service.host(),
+			"Domain_URL":   domain.Host(),
 			"Domain_Name":  domain.Label,
-			"Domain_Icon":  service.host() + domain.IconURL(),
+			"Domain_Icon":  domain.IconURL(),
 		},
 	)
 
@@ -98,9 +97,9 @@ func (service *DomainEmail) SendPasswordReset(user *model.User) error {
 
 			// Domain info available to the template
 			"Domain_Owner": service.owner,
-			"Domain_URL":   service.host(),
+			"Domain_URL":   domain.Host(),
 			"Domain_Name":  domain.Label,
-			"Domain_Icon":  service.host() + domain.IconURL(),
+			"Domain_Icon":  domain.IconURL(),
 		},
 	)
 
@@ -133,9 +132,9 @@ func (service *DomainEmail) SendFollowerConfirmation(actor model.PersonLink, fol
 
 			// Domain info available to the template
 			"Domain_Owner": service.owner,
-			"Domain_URL":   service.host(),
+			"Domain_URL":   domain.Host(),
 			"Domain_Name":  domain.Label,
-			"Domain_Icon":  service.host() + domain.IconURL(),
+			"Domain_Icon":  domain.IconURL(),
 		},
 	)
 
@@ -148,8 +147,6 @@ func (service *DomainEmail) SendFollowerConfirmation(actor model.PersonLink, fol
 
 func (service *DomainEmail) SendFollowerActivity(follower model.Follower, activity mapof.Any) error {
 
-	host := service.host()
-
 	domain := service.domainService.Get()
 
 	// Send the activity email
@@ -161,7 +158,7 @@ func (service *DomainEmail) SendFollowerActivity(follower model.Follower, activi
 		mapof.Any{
 
 			// Parent info available to the template
-			"ParentLink": follower.ParentURL(host),
+			"ParentLink": follower.ParentURL(domain.Host()),
 
 			// Follower info available to the template
 			"FollowerID": follower.FollowerID.Hex(),
@@ -174,10 +171,10 @@ func (service *DomainEmail) SendFollowerActivity(follower model.Follower, activi
 
 			// Domain info available to the template
 			"Domain_Owner": service.owner,
-			"Domain_URL":   host,
+			"Domain_URL":   domain.Host(),
 			"Domain_Name":  domain.Label,
-			"Domain_Icon":  service.host() + domain.IconURL(),
-			"Unsubscribe":  follower.UnsubscribeLink(service.host()),
+			"Domain_Icon":  domain.IconURL(),
+			"Unsubscribe":  follower.UnsubscribeLink(domain.Host()),
 		},
 	)
 
@@ -186,12 +183,4 @@ func (service *DomainEmail) SendFollowerActivity(follower model.Follower, activi
 	}
 
 	return nil
-}
-
-/******************************************
- * Helper Methods
- ******************************************/
-
-func (service *DomainEmail) host() string {
-	return domain.Protocol(service.hostname) + service.hostname
 }
