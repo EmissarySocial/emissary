@@ -72,8 +72,12 @@ func (service *Domain) Start() error {
 
 	const location = "service.Domain.Start"
 
-	// Try to load the domain from the database
-	if err := service.collection.Load(exp.All(), &service.domain); err != nil {
+	// Try to load the domain model into memory
+	_, err := service.LoadDomain()
+
+	// In this process, some errors (like 404's) are okay,
+	// so let's look at THIS error a little more closely.
+	if err != nil {
 
 		// If it's a "real" error, then we can't continue.
 		if !derp.NotFound(err) {
