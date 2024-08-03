@@ -161,6 +161,10 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 
 		"summary": html.Summary,
 
+		"text": func(value string) template.HTML {
+			return template.HTML(html.FromText(value))
+		},
+
 		"html": func(value string) template.HTML {
 			return template.HTML(value)
 		},
