@@ -115,6 +115,7 @@ func WrapForm(endpoint string, content string, encoding string, options ...strin
 		Attr("hx-swap", "none").
 		Attr("hx-push-url", "false").
 		Attr("hx-encoding", encoding).
+		Attr("hx-trigger", "submit").
 		Script("init send checkFormRules(changed:me as Values)").
 		EndBracket()
 
