@@ -37,8 +37,9 @@
 
 #modal-window {
 	/* Sizing for visible dialog */
-	width: clamp(480px, 600px, 96%);
-	max-height:96vh;
+	width:600px;
+	max-width:99vw;
+	max-height:99vh;
 
 	/* Scrolling behavior */
 	display:flow-root;
