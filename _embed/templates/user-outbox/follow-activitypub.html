@@ -3,7 +3,7 @@
 <h3>Have an Account?</h3>
 
 <div class="margin-bottom">
-	Enter your Emissary address (or other Fediverse address) to get automatic updates on your social timeline.
+	Enter your Fediverse address to get automatic updates on your social inbox.
 </div>
 
 <form hx-post="/.ostatus/discover" hx-target="#htmx-response-message" hx-swap="innerHTML" class="margin-bottom">
@@ -17,10 +17,6 @@
 
 <div>
 	<h3>Need an Account?</h3>
-
-	Emissary is a private social app that you own.  Post updates to friends and family anywhere on the 
-	Fediverse or IndieWeb and say goodbye to ads and tracking.
-	<br><br>
 
 	{{- if .DomainHasRegistrationForm -}}
 		<a href="/register" class="primary button">Sign Up Now</a>
