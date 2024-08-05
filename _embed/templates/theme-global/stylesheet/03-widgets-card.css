@@ -31,7 +31,15 @@
 @media screen and (max-width:35.5em) {
 
 	.card {
+		display:block;
+		background-color:var(--gray05);
 		border:none;
+		border-top:solid 1px var(--gray10);
+		border-bottom:solid 1px var(--gray10);
+		border-radius:0px;
+		width: calc(100% + 40px);
+		margin-left: calc(-20px);
+		margin-right: calc(-20px);
 		margin-bottom: 40px!important;
 	}
 }

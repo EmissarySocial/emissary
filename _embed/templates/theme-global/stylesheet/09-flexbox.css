@@ -39,6 +39,12 @@
 .flex-wrap {flex-wrap:wrap}
 .flex-wrap-reverse {flex-wrap:wrap-reverse}
 
+.flex-center {
+	display:flex;
+	justify-content:center;
+	align-items:center;
+}
+
 /* Small Screens */
 @media screen and (min-width: 568px) {
 
