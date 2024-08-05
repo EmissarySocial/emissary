@@ -71,7 +71,11 @@ func (roundTripper RoundTripper) RoundTrip(request *http.Request) (*http.Respons
 	response, err := roundTripper.client.Do(request)
 
 	if err != nil {
-		return response, derp.Wrap(err, "httpcache.RoundTripper.RoundTrip", "Error executing HTTP request", derp.WithCode(response.StatusCode))
+		statusCode := 0
+		if response != nil {
+			statusCode = response.StatusCode
+		}
+		return response, derp.Wrap(err, "httpcache.RoundTripper.RoundTrip", "Error executing HTTP request", derp.WithCode(statusCode))
 	}
 
 	// Save the response to the cache
