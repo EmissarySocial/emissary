@@ -1,6 +1,6 @@
 {{- template "follow-heading" . -}}
 
-<h3>Have an Account?</h3>
+<h2>Have an Account?</h2>
 
 <div class="margin-bottom">
 	Enter your Fediverse address to get automatic updates on your social inbox.
@@ -10,13 +10,13 @@
 	<div class="flex-row" style="margin-bottom:4px;">
 		<input type="hidden" name="localAccount" value="{{.ProfileURL}}"/>
 		<input type="text" name="remoteAccount" placeholder="https://yoursite.social/@yourname" autofocus autocomplete="url"/>
-		<button class="primary nowrap">Follow on<br>my site</button>
+		<button class="primary nowrap">Follow from<br>my own server</button>
 	</div>
 	<div id="htmx-response-message" class="text-red">&nbsp;</div>
 </form>
 
 <div>
-	<h3>Need an Account?</h3>
+	<h2>Need an Account?</h2>
 
 	{{- if .DomainHasRegistrationForm -}}
 		<a href="/register" class="primary button">Sign Up Now</a>
@@ -24,11 +24,13 @@
 		<button script="on click trigger closeModal">Cancel</button>
 		
 	{{- else -}}
-		Signups on this site are closed, but you can follow {{.DisplayName}} from any other 
-		Fediverse app. Click below for a list of trustworthy providers.<br>
+		Signups on this site are closed, but you can still follow {{.DisplayName}}
+		from any Fediverse host. Check out this 
+		<a href="https://emissary.social/hosting" target="_blank">list of trustworthy providers</a>
+		to get started.
 		<br>
-		<a href="https://emissary.social/hosting" class="primary button" target="_blank">Find a Fediverse Host</a>
-			<button script="on click trigger closeModal">Cancel</button>
+		<br>	
+		<button script="on click trigger closeModal">Close Window</button>
 	{{- end -}}
 </div>
 

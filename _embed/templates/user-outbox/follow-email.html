@@ -1,9 +1,6 @@
 {{- template "follow-heading" . -}}
 
-<h3>Sign Up for Email Updates</h3>
-<div class="margin-bottom">
-	Enter your name and email below, to receive updates from <b>{{.DisplayName}}</b> in your email inbox.
-</div>
+<h2>{{icon "email"}} Updates in Your Email Inbox</h2>
 
 <form action="/.follower/new" method="post">
 
@@ -13,7 +10,7 @@
 	<div class="layout layout-vertical">
 		<div class="layout-vertical-elements">
 			<div class="layout-vertical-element">
-				<label>Full Name</label>
+				<label>Your Name</label>
 				<input type="text" name="name" required autofocus autocomplete="name">
 			</div>
 			<div class="layout-vertical-element">
