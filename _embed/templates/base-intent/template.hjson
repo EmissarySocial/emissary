@@ -1,0 +1,17 @@
+{
+	templateId:"base-intent"
+    bundles: {
+        hyperscript: {
+            content-type: "text/hyperscript"
+        }
+    }
+	actions:{
+        share: {
+            steps: [
+                {do:"as-modal", steps:[
+                    {do:"view-html"}
+                ]}
+            ]
+        }
+	}
+}

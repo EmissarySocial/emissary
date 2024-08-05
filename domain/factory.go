@@ -8,6 +8,7 @@ import (
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/camper"
 	"github.com/EmissarySocial/emissary/tools/httpcache"
 	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/data"
@@ -640,6 +641,12 @@ func (factory *Factory) getSubFolder(base afero.Fs, path string) afero.Fs {
 /******************************************
  * Other Non-Model Services
  ******************************************/
+
+// Camper returns a fully initialized Camper client (for Activity Intents)
+func (factory *Factory) Camper() camper.Camper {
+	client := httpcache.NewHTTPClient(factory.HTTPCache())
+	return camper.New(camper.WithClient(client))
+}
 
 // Content returns the Content transformation service
 func (factory *Factory) Content() *service.Content {

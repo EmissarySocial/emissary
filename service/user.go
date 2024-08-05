@@ -8,6 +8,7 @@ import (
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/queries"
+	"github.com/EmissarySocial/emissary/tools/camper"
 	"github.com/EmissarySocial/emissary/tools/random"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
@@ -609,9 +610,15 @@ func (service *User) LoadWebFinger(username string) (digit.Resource, error) {
 		Link(digit.RelationTypeHub, model.MimeTypeJSONFeed, user.JSONFeedURL()).
 		Link(digit.RelationTypeProfile, model.MimeTypeHTML, user.ActivityPubURL()).
 		Link(digit.RelationTypeAvatar, model.MimeTypeImage, user.ActivityPubIconURL()).
-		Link(digit.RelationTypeSubscribeRequest, "", service.RemoteFollowURL())
+		Link(digit.RelationTypeSubscribeRequest, "", service.RemoteFollowURL()).
+		Link(camper.IntentTypeCreate, "", service.RemoteShareURL()).
+		Link(camper.IntentTypeFollow, "", service.RemoteFollowURL())
 
 	return result, nil
+}
+
+func (service *User) RemoteShareURL() string {
+	return service.host + "/.intent/create?type={type}&name={name}&summary={summary}&content={content}&inReplyTo={inReplyTo}&on-success={on-succes}&on-cancel={on-cancel}"
 }
 
 func (service *User) RemoteFollowURL() string {

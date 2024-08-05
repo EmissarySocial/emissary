@@ -1,0 +1,170 @@
+<h1 class="modal-title">
+	{{icon "activitypub"}}
+	Share on the Fediverse
+</h1>
+<hr>
+<div id="empty-header" class="list-is-empty">
+	<h2>Have an Account?</h2>
+
+	<div class="margin-bottom">
+		Enter your Fediverse address to share this item with your community
+	</div>
+</div>
+
+<div id="full-header" class="list-populated">
+	<div class="margin-bottom italics">
+		Click the account you want to use, and be redirected to your home server.
+	</div>
+
+	<div id="accountList"></div>
+</div>
+
+<form id="NewAccountForm" hx-get="/.intent/discover" hx-target="#newAccount" hx-swap="innerHTML" hx-push-url="false">
+	<div id="queryString" hidden>{{.QueryString}}</div>
+	<div id="baseUrl" hidden>/{{.StreamID}}/intents/</div>
+	<div id="newAccount" hidden></div>
+
+	<input type="hidden" name="intent" value="Create">
+
+	<div id="addAnotherButton" class="button flex-row width-100-percent" role="button" script="on click hide me then show #addAnotherForm then focus() the #addAnotherAccountID">
+		<div class="circle-48 flex-center text-white">{{icon "add"}}</div>
+		<div class="flex-grow">
+			<div class="bold">Add Account</div>
+			<div class="text-sm text-gray">Use another account from this site</div>
+		</div>
+	</div>
+	
+	<div id="addAnotherForm" class="width-100-percent flex-row button">
+		<div id="addAnotherIcon" class="circle-48 flex-center text-white flex-shrink-0">{{icon "add"}}</div>
+		<input type="text" id="addAnotherAccountID" name="account" placeholder="@yourname@yourserver.social" class="flex-grow">
+		<button class="primary nowrap htmx-request-hide">Add Account</button>
+		<button class="primary nowrap htmx-request-show">
+			<span class="spin">{{icon "loading"}}</span>
+			Adding
+		</button>
+	</div>
+</form>
+
+<div id="empty-footer">
+	<hr>
+	<h2>Need an Account?</h2>
+
+	{{- if .DomainHasRegistrationForm -}}
+		<a href="/register" class="primary button">Sign Up Now</a>
+		<a href="https://emissary.social/hosting" class="button">Find Another Host</a>
+		<button script="on click trigger closeModal">Cancel</button>
+		
+	{{- else -}}
+		Signups on this site are closed, but you can 
+		<a href="https://emissary.social/hosting" target="_blank">Find a Fediverse Host</a>
+		from this list of trustworthy providers.
+	{{- end -}}
+</div>
+
+<div class="margin-top">
+	<button script="on click trigger closeModal">Close Window</button>
+</div>
+
+<script type="text/hyperscript">
+
+	init 
+		displayAccounts()
+	end
+
+	on htmx:afterSwap from #NewAccountForm
+		set data to #newAccount's innerText
+		set account to JSON.parse(data)
+
+		if account is null then 
+			exit
+		end
+
+		set accounts to getAccounts()
+		call accounts.push(account)
+		call setAccounts(accounts)
+
+		set the #addAnotherAccountID's value to ""
+		show #addAnotherButton
+		hide #addAnotherForm
+	end
+
+	def getAccounts()
+		set accountString to window.localStorage.getItem("accounts")
+		return JSON.parse(accountString)
+	catch exception
+		return []
+	end
+
+	def setAccounts(accounts)
+		window.localStorage.setItem("accounts", JSON.stringify(accounts))
+		displayAccounts()
+	catch exception
+		log exception
+		return []
+	end
+
+	def deleteAccount(index)
+
+		set accounts to getAccounts()
+
+		if confirm('Remove this account?') then
+			accounts.splice(index, 1)
+			setAccounts(accounts)
+		end
+	end
+
+	def goToIntent(intent, username)
+		trigger closeModal
+
+		set nextUrl to the #baseUrl's innerText
+		append intent + "?account=" + username + "&" + #queryString.innerText to nextUrl
+		window.open(nextUrl, "_blank", "width=800,height=600")
+	end
+
+	def displayAccounts()
+		set accounts to getAccounts()
+
+		if accounts.length is 0 then
+
+			show #empty-header
+			show #empty-footer
+			show #addAnotherForm
+			hide #addAnotherIcon
+			hide #full-header
+			hide #addAnotherButton
+
+		else 
+			
+			hide #empty-header
+			hide #empty-footer
+			hide #addAnotherForm
+			show #addAnotherIcon
+			show #full-header
+			show #addAnotherButton
+
+			set the accountList's innerHTML to ""
+
+			repeat for account in accounts index i
+				set row to `
+					<div class="button flex-row width-100-percent margin-bottom-xs">
+						<div class="flex-row width-100-percent" role="link" tabindex="0" script="on click goToIntent('Create', '${account.id}')">
+							<img src="${account.icon}" class="circle-48">
+							<div class="flex-grow">
+								<div class="bold">${account.name}</div>
+								<div class="text-xs text-gray">${account.url}</div>
+							</div>
+						</div>
+						<div class="clickable padding-horizontal padding-vertical-sm text-lg" role="button" script="on click deleteAccount(${i})" tabIndex="0">
+							<span class="bi bi-x"></span>
+						</div>
+					</div>
+				` 
+				put row at the end of accountList
+			end
+
+			_hyperscript.processNode(accountList)
+		end
+	end
+
+</script>
+
