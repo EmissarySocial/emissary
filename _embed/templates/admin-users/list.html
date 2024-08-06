@@ -14,7 +14,7 @@
                     <span>{{$user.DisplayName}}</span>
                 </td>
                 <td nowrap class="text-xs width-128 text-align-right">
-                    <a href="/@{{$user.UserID.Hex}}" class="button">View Profile</a>
+                    <a href="/@{{$user.Username}}" class="button">View Profile</a>
                     <form action="/.masquerade?userId={{.UserID.Hex}}" method="post" class="inline-block">
                         <button type="submit">{{icon "user-secret"}} Sign In &rarr;</button>
                     </form>
