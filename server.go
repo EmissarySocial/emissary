@@ -261,19 +261,27 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	// Profile Pages
 	// NOTE: these are rewritten from /@:userId by the rewrite middleware
 	e.GET("/@", handler.GetDomainActor(factory))
-	e.GET("/@:userId", handler.GetOutbox(factory))
-	e.POST("/@:userId", handler.PostOutbox(factory))
-	e.GET("/@:userId/:action", handler.GetOutbox(factory))
-	e.POST("/@:userId/:action", handler.PostOutbox(factory))
-	e.GET("/@:userId/attachments/:attachmentId", handler.GetUserAttachment(factory))
+	e.POST("/@/inbox", handler.PostDomainActor_Inbox(factory))
+	e.GET("/@/inbox", handler.GetEmptyCollection(factory))
+	e.GET("/@/outbox", handler.GetEmptyCollection(factory))
+	e.GET("/@/following", handler.GetEmptyCollection(factory))
+	e.GET("/@/followers", handler.GetEmptyCollection(factory))
+	e.GET("/@/liked", handler.GetEmptyCollection(factory))
 
 	// Profile Pages for "me" only routes
 	e.GET("/@me/inbox", handler.GetInbox(factory))
 	e.POST("/@me/inbox", handler.PostInbox(factory))
 	e.GET("/@me/inbox/:action", handler.GetInbox(factory))
 	e.POST("/@me/inbox/:action", handler.PostInbox(factory))
+	e.GET("/@me/intent/:intent", handler.GetUserIntent(factory))
+	e.POST("/@me/intent/:intent", handler.PostUserIntent(factory))
 
 	// ActivityPub Routes for Users
+	e.GET("/@:userId", handler.GetOutbox(factory))
+	e.POST("/@:userId", handler.PostOutbox(factory))
+	e.GET("/@:userId/:action", handler.GetOutbox(factory))
+	e.POST("/@:userId/:action", handler.PostOutbox(factory))
+	e.GET("/@:userId/attachments/:attachmentId", handler.GetUserAttachment(factory))
 	e.GET("/@:userId/pub", handler.GetOutbox(factory))
 	e.POST("/@:userId/pub/inbox", ap_user.PostInbox(factory))
 	e.GET("/@:userId/pub/outbox", ap_user.GetOutboxCollection(factory))

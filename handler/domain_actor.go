@@ -1,10 +1,16 @@
 package handler
 
 import (
+	"io"
+	"net/http"
+
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/mapof"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
+	"github.com/rs/zerolog"
 )
 
 func GetDomainActor(serverFactory *server.Factory) echo.HandlerFunc {
@@ -28,19 +34,64 @@ func GetDomainActor(serverFactory *server.Factory) echo.HandlerFunc {
 			return derp.Wrap(err, location, "Error getting public key PEM")
 		}
 
+		actorID := domainService.ActorID()
+
 		// Return the result as a JSON-LD document
 		result := map[string]any{
-			vocab.AtContext:    []string{vocab.ContextTypeActivityStreams, vocab.ContextTypeSecurity},
-			vocab.PropertyType: vocab.ActorTypeService,
-			vocab.PropertyID:   domainService.ActorID(),
-			vocab.PropertyName: domainService.Hostname(),
+			vocab.AtContext:                []any{vocab.ContextTypeActivityStreams, vocab.ContextTypeSecurity, vocab.ContextTypeToot},
+			vocab.PropertyType:             vocab.ActorTypeService,
+			vocab.PropertyID:               actorID,
+			vocab.PropertyName:             domainService.Hostname(),
+			vocab.PropertyFollowing:        actorID + "/following",
+			vocab.PropertyFollowers:        actorID + "/followers",
+			vocab.PropertyLiked:            actorID + "/liked",
+			vocab.PropertyOutbox:           actorID + "/outbox",
+			vocab.PropertyInbox:            actorID + "/inbox",
+			vocab.PropertyTootDiscoverable: false,
+			vocab.PropertyTootIndexable:    false,
+
 			vocab.PropertyPublicKey: map[string]any{
 				vocab.PropertyID:           domainService.PublicKeyID(),
-				vocab.PropertyOwner:        domainService.ActorID(),
+				vocab.PropertyOwner:        actorID,
 				vocab.PropertyPublicKeyPEM: publicKeyPEM,
 			},
 		}
 
 		return ctx.JSON(200, result)
+	}
+}
+
+// GetEmptyCollection returns an empty collection
+func GetEmptyCollection(serverFactory *server.Factory) echo.HandlerFunc {
+
+	return func(ctx echo.Context) error {
+
+		result := mapof.Any{
+			vocab.AtContext:          vocab.ContextTypeActivityStreams,
+			vocab.PropertyType:       vocab.CoreTypeOrderedCollection,
+			vocab.PropertyTotalItems: 0,
+			vocab.PropertyItems:      []any{},
+		}
+
+		return ctx.JSON(http.StatusOK, result)
+	}
+}
+
+// PostDomainActor_Inbox does not take any actions, but only logs the request
+// IF logger is in Debug or Trace mode.
+func PostDomainActor_Inbox(serverFactory *server.Factory) echo.HandlerFunc {
+
+	return func(ctx echo.Context) error {
+
+		if zerolog.GlobalLevel() > zerolog.DebugLevel {
+			return ctx.NoContent(http.StatusOK)
+		}
+
+		// Try to read/dump the Request body
+		body, err := io.ReadAll(ctx.Request().Body)
+		spew.Dump("PostDomainActor", ctx.Request().Header, string(body), err)
+
+		// Return no content
+		return ctx.NoContent(http.StatusOK)
 	}
 }

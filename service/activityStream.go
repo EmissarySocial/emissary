@@ -53,7 +53,7 @@ func (service *ActivityStream) initClients() {
 
 	// Build a new client stack
 	sherlockClient := sherlock.NewClient(
-		sherlock.WithUserAgent("Emissary.social (" + service.hostname + ")"),
+		sherlock.WithUserAgent(service.hostname + " (emissary.social)"),
 	)
 
 	// Try to attach a private key to this client
