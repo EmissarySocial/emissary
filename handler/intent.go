@@ -57,3 +57,52 @@ func GetIntentInfo(serverFactory *server.Factory) echo.HandlerFunc {
 		})
 	}
 }
+
+// GetUserIntent handles GET requests to initiate and ActivityIntent
+// for the signed-in user.
+func GetUserIntent(serverFactory *server.Factory) echo.HandlerFunc {
+
+	return func(ctx echo.Context) error {
+
+		/*
+			const location = "handler.GetUserIntent"
+			// Guarantee that we have a steranko.Context.  This should ALWAYS happen
+			sterankoContext, ok := ctx.(*steranko.Context)
+
+			if !ok {
+				return derp.NewInternalError(location, "Context must be a steranko.Context")
+			}
+
+			// Validate the domain name
+			factory, err := serverFactory.ByContext(ctx)
+
+			if err != nil {
+				return derp.Wrap(err, location, "Error getting server factory by context")
+			}
+
+			// Check the user's authorization
+			authorization := getAuthorization(sterankoContext)
+
+			if !authorization.IsAuthenticated() {
+				return derp.NewUnauthorizedError(location, "You must be signed in to perform this action")
+			}
+
+			userService := factory.User()
+			user := model.NewUser()
+
+			if err := userService.LoadByID(authorization.UserID, &user); err != nil {
+				return derp.Wrap(err, location, "Error loading user from database")
+			}
+		*/
+		return nil
+	}
+}
+
+// GetUserIntent handles POST requests to initiate and ActivityIntent
+// for the signed-in user.
+func PostUserIntent(serverFactory *server.Factory) echo.HandlerFunc {
+
+	return func(ctx echo.Context) error {
+		return nil
+	}
+}
