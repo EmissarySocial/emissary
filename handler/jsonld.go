@@ -14,7 +14,7 @@ import (
 func isJSONLDRequest(context echo.Context) bool {
 
 	acceptHeader := context.Request().Header.Get("Accept")
-	contentType, _ := accept.Negotiate(acceptHeader, vocab.ContentTypeHTML, vocab.ContentTypeActivityPub, vocab.ContentTypeJSONLD, vocab.ContentTypeJSON)
+	contentType, _ := accept.Negotiate(acceptHeader, vocab.ContentTypeHTML, vocab.ContentTypeActivityPub, vocab.ContentTypeJSON, vocab.ContentTypeJSONLD, vocab.ContentTypeJSONLDWithProfile)
 
 	return hannibal.IsActivityPubContentType(contentType)
 }
