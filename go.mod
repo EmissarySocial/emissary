@@ -15,14 +15,14 @@ require (
 	github.com/benpate/exp v0.8.3
 	github.com/benpate/exp-builder v0.8.1
 	github.com/benpate/form v0.22.6
-	github.com/benpate/hannibal v0.11.3
+	github.com/benpate/hannibal v0.11.4
 	github.com/benpate/html v0.16.11
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.11.4
 	github.com/benpate/re v0.3.1
 	github.com/benpate/remote v0.16.1
 	github.com/benpate/rosetta v0.21.2
-	github.com/benpate/sherlock v0.8.3
+	github.com/benpate/sherlock v0.8.4
 	github.com/benpate/steranko v0.20.0
 	github.com/benpate/table v0.6.17
 	github.com/benpate/toot v0.3.0
