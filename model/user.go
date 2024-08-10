@@ -247,7 +247,6 @@ func (user User) GetJSONLD() mapof.Any {
 		vocab.PropertyFollowers:         user.ActivityPubFollowersURL(),
 		vocab.PropertyLiked:             user.ActivityPubLikedURL(),
 		vocab.PropertyBlocked:           user.ActivityPubBlockedURL(),
-		vocab.PropertyPublicKey:         user.ActivityPubPublicKeyURL(),
 	}
 
 	// Conditionally add the Avatar URL
