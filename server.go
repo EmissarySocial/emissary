@@ -260,13 +260,13 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 
 	// Profile Pages
 	// NOTE: these are rewritten from /@:userId by the rewrite middleware
-	e.GET("/@", handler.GetDomainActor(factory))
-	e.POST("/@/inbox", handler.PostDomainActor_Inbox(factory))
-	e.GET("/@/inbox", handler.GetEmptyCollection(factory))
-	e.GET("/@/outbox", handler.GetEmptyCollection(factory))
-	e.GET("/@/following", handler.GetEmptyCollection(factory))
-	e.GET("/@/followers", handler.GetEmptyCollection(factory))
-	e.GET("/@/liked", handler.GetEmptyCollection(factory))
+	e.GET("/@service", handler.GetServiceActor(factory))
+	e.POST("/@service/inbox", handler.PostServiceActor_Inbox(factory))
+	e.GET("/@service/inbox", handler.GetEmptyCollection(factory))
+	e.GET("/@service/outbox", handler.GetEmptyCollection(factory))
+	e.GET("/@service/following", handler.GetEmptyCollection(factory))
+	e.GET("/@service/followers", handler.GetEmptyCollection(factory))
+	e.GET("/@service/liked", handler.GetEmptyCollection(factory))
 
 	// Profile Pages for "me" only routes
 	e.GET("/@me/inbox", handler.GetInbox(factory))

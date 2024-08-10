@@ -489,7 +489,7 @@ func (service *Domain) Hostname() string {
 
 // ActorID returns the URL for this domain/actor
 func (service *Domain) ActorID() string {
-	return domain.AddProtocol(service.hostname) + "/@"
+	return domain.AddProtocol(service.hostname) + "/@service"
 }
 
 // PublicKeyID returns the URL for the public key for this domain/actor

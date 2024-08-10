@@ -13,9 +13,9 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func GetDomainActor(serverFactory *server.Factory) echo.HandlerFunc {
+func GetServiceActor(serverFactory *server.Factory) echo.HandlerFunc {
 
-	const location = "handler.GetDomainActor"
+	const location = "handler.GetServiceActor"
 
 	return func(ctx echo.Context) error {
 
@@ -77,9 +77,9 @@ func GetEmptyCollection(serverFactory *server.Factory) echo.HandlerFunc {
 	}
 }
 
-// PostDomainActor_Inbox does not take any actions, but only logs the request
+// PostServiceActor_Inbox does not take any actions, but only logs the request
 // IF logger is in Debug or Trace mode.
-func PostDomainActor_Inbox(serverFactory *server.Factory) echo.HandlerFunc {
+func PostServiceActor_Inbox(serverFactory *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
@@ -89,7 +89,7 @@ func PostDomainActor_Inbox(serverFactory *server.Factory) echo.HandlerFunc {
 
 		// Try to read/dump the Request body
 		body, err := io.ReadAll(ctx.Request().Body)
-		spew.Dump("PostDomainActor", ctx.Request().Header, string(body), err)
+		spew.Dump("PostServiceActor", ctx.Request().Header, string(body), err)
 
 		// Return no content
 		return ctx.NoContent(http.StatusOK)
