@@ -56,7 +56,7 @@ func (service *ActivityStream) initClients() {
 		sherlock.WithUserAgent(service.hostname + " (emissary.social)"),
 	)
 
-	// Try to attach a private key to this client
+	/*/ Try to attach a private key to this client
 	if privateKey, err := service.domainService.PrivateKey(); err == nil {
 		publicKeyID := service.domainService.PublicKeyID()
 		sherlockClient.WithOptions(
@@ -65,7 +65,7 @@ func (service *ActivityStream) initClients() {
 
 	} else {
 		derp.Report(derp.Wrap(err, "service.ActivityStream.client", "Error loading private key"))
-	}
+	}*/
 
 	// enforce opinionated data formats
 	normalizerClient := asnormalizer.New(sherlockClient)
