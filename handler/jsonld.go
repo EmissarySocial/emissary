@@ -7,16 +7,12 @@ import (
 	"github.com/benpate/hannibal"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/labstack/echo/v4"
-	"github.com/timewasted/go-accept-headers"
 )
 
 // isJSONLDRequest returns TRUE if the request's "Accept" header is an ActivityPub content type.
 func isJSONLDRequest(context echo.Context) bool {
-
 	acceptHeader := context.Request().Header.Get("Accept")
-	contentType, _ := accept.Negotiate(acceptHeader, vocab.ContentTypeHTML, vocab.ContentTypeActivityPub, vocab.ContentTypeJSON, vocab.ContentTypeJSONLD, vocab.ContentTypeJSONLDWithProfile)
-
-	return hannibal.IsActivityPubContentType(contentType)
+	return hannibal.IsActivityPubContentType(acceptHeader)
 }
 
 // handleJSONLD determines if the client has requested a document encoded as ActivityPub/JSON-LD/JSON.
