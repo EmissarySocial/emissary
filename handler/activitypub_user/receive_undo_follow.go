@@ -22,39 +22,25 @@ func undoFollow(context Context, activity streams.Document) error {
 	followerService := context.factory.Follower()
 	follower := model.NewFollower()
 
-	// Load the original follow
-	originalFollow, err := activity.Object().Load()
-
-	if err != nil {
-		if derp.NotFound(err) {
-			return nil // If there is no follower record, then there's nothing to delete.
-		}
-
-		// All other errors are bad, tho.
-		return derp.Wrap(err, location, "Error retrieving original follow request", activity.Value())
-	}
-
 	// Collect data from the original follow
-	actorURL := originalFollow.Actor().ID() // The "actor" of the original follow is our follower.actor.ProfileURL
-	userURL := originalFollow.Object().ID() // The "object" of the original follow is our local UserURL
-	userService := context.factory.User()
-	userID, err := userService.ParseProfileURL(userURL)
+	actorURL := activity.Actor().ID() // The "actor" is our follower.actor.ProfileURL
 
-	if err != nil {
-		return derp.Wrap(err, location, "Invalid User URL", userURL)
-	}
-
-	if err := followerService.LoadByActivityPubFollower(model.FollowerTypeUser, userID, actorURL, &follower); err != nil {
+	if err := followerService.LoadByActivityPubFollower(model.FollowerTypeUser, context.user.UserID, actorURL, &follower); err != nil {
 
 		if derp.NotFound(err) {
 			return nil
 		}
 
-		return derp.Wrap(err, location, "Error locating follower", activity.Value(), userID, actorURL)
+		return derp.Wrap(err, location, "Error locating follower", activity.Value(), context.user.UserID, actorURL)
 	}
 
 	// Try to delete the existing follower record
 	if err := followerService.Delete(&follower, "Removed by remote client"); err != nil {
+
+		if derp.NotFound(err) {
+			return nil
+		}
+
 		return derp.Wrap(err, location, "Error deleting follower", follower)
 	}
 
