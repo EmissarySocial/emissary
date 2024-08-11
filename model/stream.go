@@ -346,7 +346,7 @@ func (stream Stream) ActivityPubResponses(responseType string) string {
 // IsPublished rturns TRUE if this Stream is currently published
 func (stream *Stream) IsPublished() bool {
 	now := time.Now().Unix()
-	return (stream.PublishDate < now) && (stream.UnPublishDate > now)
+	return (stream.PublishDate <= now) && (stream.UnPublishDate > now)
 }
 
 // PublishActivity returns the ActivityType that should be used when publishing this Stream (either Create or Update)
