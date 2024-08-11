@@ -64,12 +64,14 @@
  .circle {
 	border-radius:50%;
 	aspect-ratio: 1;
+    object-fit:cover;
 	background-color:var(--gray30);
 }
 
 .circle-24 {
 	height:24px;
 	width:24px;
+    object-fit:cover;
 	border-radius:12px;
 	background-color:var(--gray30);
 }
@@ -77,6 +79,7 @@
 .circle-32 {
     height:32px;
     width:32px;
+    object-fit:cover;
     border-radius:16px;
 	background-color:var(--gray30);
 }
@@ -84,6 +87,7 @@
 .circle-48 {
     height:48px;
     width:48px;
+    object-fit:cover;
     border-radius:24px;
 	background-color:var(--gray30);
 }
@@ -91,6 +95,7 @@
 .circle-64 {
     height:64px;
     width:64px;
+    object-fit:cover;
     border-radius:32px;
 	background-color:var(--gray30);
 }
