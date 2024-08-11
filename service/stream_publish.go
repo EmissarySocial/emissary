@@ -64,6 +64,7 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream, outbox bo
 
 	activity := mapof.Any{
 		vocab.AtContext:         vocab.ContextTypeActivityStreams,
+		vocab.PropertyID:        stream.ActivityPubURL(),
 		vocab.PropertyType:      activityType,
 		vocab.PropertyActor:     user.ActivityPubURL(),
 		vocab.PropertyObject:    object,
