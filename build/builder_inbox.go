@@ -473,11 +473,13 @@ func (w Inbox) SubBuilder(object any) (Builder, error) {
 // message is loaded instead.
 func (w Inbox) Message() model.Message {
 
+	const location = "build.Inbox.Message"
+
 	// Get the messageID from the query string
 	messageID, err := primitive.ObjectIDFromHex(w._request.URL.Query().Get("messageId"))
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "build.Inbox.Message", "Invalid message ID", w._request.URL.Query().Get("messageId")))
+		derp.Report(derp.Wrap(err, location, "Invalid message ID", w._request.URL.Query().Get("messageId")))
 		return model.NewMessage()
 	}
 
@@ -486,7 +488,7 @@ func (w Inbox) Message() model.Message {
 	message := model.NewMessage()
 
 	if err := inboxService.LoadByID(w.AuthenticatedID(), messageID, &message); err != nil {
-		derp.Report(derp.Wrap(err, "build.Inbox.Message", "Error loading message", messageID))
+		derp.Report(derp.Wrap(err, location, "Error loading message", messageID))
 		return model.NewMessage()
 	}
 

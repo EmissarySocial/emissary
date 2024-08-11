@@ -110,7 +110,10 @@ func (service *Stream) publish_User(user *model.User, activity mapof.Any) error 
 	}
 
 	// Try to publish via sendNotifications
-	log.Trace().Str("id", activity.GetString(vocab.PropertyID)).Msg("Publishing to User's outbox")
+	objectID := activity.GetString(vocab.PropertyID)
+	objectType := activity.GetString(vocab.PropertyType)
+	log.Trace().Str("location", location).Str("objectId", objectID).Str("type", objectType).Msg("Publishing to User's outbox")
+
 	if err := service.outboxService.Publish(&actor, model.FollowerTypeUser, user.UserID, activity); err != nil {
 		return derp.Wrap(err, location, "Error publishing activity", activity)
 	}
