@@ -27,6 +27,9 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream, outbox bo
 		return derp.NewBadRequestError(location, "Stream is not valid", stream)
 	}
 
+	// Determine ActitivyType FIRST, before we mess with the publish date
+	activityType := stream.PublishActivity()
+
 	// RULE: IF this stream is not yet published, then set the publish date
 	if stream.PublishDate > time.Now().Unix() {
 		stream.PublishDate = time.Now().Unix()
@@ -60,7 +63,6 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream, outbox bo
 	)
 
 	// Create the Activity to send to Followers
-	activityType := iif(stream.IsPublished(), vocab.ActivityTypeUpdate, vocab.ActivityTypeCreate)
 
 	activity := mapof.Any{
 		vocab.AtContext:         vocab.ContextTypeActivityStreams,
