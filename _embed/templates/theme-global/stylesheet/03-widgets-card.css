@@ -37,9 +37,9 @@
 		border-top:solid 1px var(--gray10);
 		border-bottom:solid 1px var(--gray10);
 		border-radius:0px;
-		width: calc(100% + 40px);
-		margin-left: calc(-20px);
-		margin-right: calc(-20px);
+		width: 100vw;
+		min-width:100vw;
+		margin-left: -20px;
 		margin-bottom: 40px!important;
 	}
 }
