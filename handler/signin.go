@@ -108,6 +108,8 @@ func GetResetPassword(serverFactory *server.Factory) echo.HandlerFunc {
 
 func PostResetPassword(serverFactory *server.Factory) echo.HandlerFunc {
 
+	const location = "handler.PostResetPassword"
+
 	return func(ctx echo.Context) error {
 
 		var transaction struct {
@@ -116,14 +118,14 @@ func PostResetPassword(serverFactory *server.Factory) echo.HandlerFunc {
 
 		// Try to get the POST transaction data from the request body
 		if err := ctx.Bind(&transaction); err != nil {
-			return derp.Wrap(err, "handler.PostResetPassword", "Error binding form data")
+			return derp.Wrap(err, location, "Error binding form data")
 		}
 
 		// Try to get the factory for this domain
 		factory, err := serverFactory.ByContext(ctx)
 
 		if err != nil {
-			return derp.NewInternalError("handler.GetResetCode", "Invalid domain")
+			return derp.NewInternalError(location, "Invalid domain")
 		}
 
 		// Try to load the user by username.  If the user cannot be found, the response
@@ -139,7 +141,7 @@ func PostResetPassword(serverFactory *server.Factory) echo.HandlerFunc {
 		template := factory.Domain().Theme().HTMLTemplate
 
 		if err := template.ExecuteTemplate(ctx.Response(), "reset-confirm", nil); err != nil {
-			return derp.Wrap(err, "handler.GetResetCode", "Error executing template")
+			return derp.Wrap(err, location, "Error executing template")
 		}
 
 		return nil
@@ -149,13 +151,15 @@ func PostResetPassword(serverFactory *server.Factory) echo.HandlerFunc {
 // GetResetCode displays a form (authenticated by the reset code) for resetting a user's password
 func GetResetCode(serverFactory *server.Factory) echo.HandlerFunc {
 
+	const location = "handler.GetResetCode"
+
 	return func(ctx echo.Context) error {
 
 		// Try to get the factory for this domain
 		factory, err := serverFactory.ByContext(ctx)
 
 		if err != nil {
-			return derp.NewInternalError("handler.GetResetCode", "Invalid domain")
+			return derp.NewInternalError(location, "Invalid domain")
 		}
 
 		// Try to load the user by userID and resetCode
@@ -165,26 +169,52 @@ func GetResetCode(serverFactory *server.Factory) echo.HandlerFunc {
 		userID := ctx.QueryParam("userId")
 		resetCode := ctx.QueryParam("code")
 
-		if err := userService.LoadByResetCode(userID, resetCode, &user); err != nil {
-			return derp.Wrap(err, "handler.GetResetCode", "Error loading user")
+		if err := userService.LoadByToken(userID, &user); err != nil {
+			return derp.Wrap(err, location, "Error loading user")
 		}
 
-		// Try to build the HTML response
+		// Get the template that will build the HTML response
 		template := factory.Domain().Theme().HTMLTemplate
-
 		domain := factory.Domain().Get()
-
 		object := mapof.Any{
-			"domainName":  domain.Label,
-			"domainIcon":  domain.IconURL(),
-			"userId":      userID,
-			"username":    user.Username,
-			"displayName": user.DisplayName,
-			"code":        resetCode,
+			"domainName": domain.Label,
+			"domainIcon": domain.IconURL(),
 		}
 
-		if err := template.ExecuteTemplate(ctx.Response(), "reset-code", object); err != nil {
-			return derp.Wrap(err, "handler.GetResetCode", "Error executing template")
+		// If the user was not found, then display an error message
+		if user.IsNew() {
+			if err := template.ExecuteTemplate(ctx.Response(), "reset-code-invalid", object); err != nil {
+				return derp.Wrap(err, location, "Error executing template")
+			}
+		}
+
+		// Is the reset code is valid, then display the form to reset the password
+		if user.PasswordReset.IsValid(resetCode) {
+
+			object["userId"] = userID
+			object["username"] = user.Username
+			object["displayName"] = user.DisplayName
+			object["code"] = resetCode
+
+			if err := template.ExecuteTemplate(ctx.Response(), "reset-code", object); err != nil {
+				return derp.Wrap(err, location, "Error executing template")
+			}
+
+			return nil
+		}
+
+		// If the reset code is expired, then give an "expired" message
+		if user.PasswordReset.NotActive() {
+			if err := template.ExecuteTemplate(ctx.Response(), "reset-code-inactive", object); err != nil {
+				return derp.Wrap(err, location, "Error executing template")
+			}
+
+			return nil
+		}
+
+		// Fall through means that the reset code is just plain wrong.
+		if err := template.ExecuteTemplate(ctx.Response(), "reset-code-invalid", object); err != nil {
+			return derp.Wrap(err, location, "Error executing template")
 		}
 
 		return nil

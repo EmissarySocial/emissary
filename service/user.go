@@ -325,7 +325,9 @@ func (service *User) LoadByEmail(email string, result *model.User) error {
 	return err
 }
 
-// LoadByUsername loads a single model.User object that matches the provided token
+// LoadByUsername loads a single model.User object that matches the provided token.
+// If the "token" is a valid ObjectID, then it attempts to load by that userID.
+// If the "token" is not a valid ObjectID (or if the first attempt fails), then it tries to load by username.
 func (service *User) LoadByToken(token string, result *model.User) error {
 
 	// If the token *looks* like an ObjectID then try that first.  If it works, then return in triumph
@@ -341,14 +343,16 @@ func (service *User) LoadByToken(token string, result *model.User) error {
 
 func (service *User) LoadByResetCode(userID string, code string, user *model.User) error {
 
+	const location = "service.User.LoadByResetCode"
+
 	// Try to find the user by ID
 	if err := service.LoadByToken(userID, user); err != nil {
-		return derp.Wrap(err, "service.User.LoadByResetCode", "Error loading User by ID", userID)
+		return derp.Wrap(err, location, "Error loading User by ID", userID)
 	}
 
 	// If the password reset is not valid, then return an "Unauthorized" error
 	if !user.PasswordReset.IsValid(code) {
-		return derp.NewUnauthorizedError("service.User.LoadByResetCode", "Invalid password reset code", userID, code)
+		return derp.NewUnauthorizedError(location, "Invalid password reset code", userID, code)
 	}
 
 	// No Error means success
@@ -557,8 +561,15 @@ func (service *User) SendPasswordResetEmail(user *model.User) {
 // MakeNewPasswordResetCode generates a new password reset code for the provided user.
 func (service *User) MakeNewPasswordResetCode(user *model.User) error {
 
-	// Create a new password reset code for this user
-	user.PasswordReset = model.NewPasswordReset(24 * time.Hour)
+	// If the PasswordReset IS NOT active then
+	// create a new password reset code for this user
+	if user.PasswordReset.NotActive() {
+		user.PasswordReset = model.NewPasswordReset()
+	}
+
+	// In all cases, refresh the expiration date of the password reset code
+	// so that it can be used for another 24 hours.
+	user.PasswordReset.RefreshExpireDate()
 
 	// Try to save the user with the new password reset code.
 	if err := service.Save(user, "Create Password Reset Code"); err != nil {

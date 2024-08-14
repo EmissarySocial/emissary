@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Password Reset Has Expired</title>
+	{{template "includes-head" .}}
+</head>
+<body>
+
+	<main class="flex-justify-center flex-align-center" style="display:flex; height:clamp(400px, 100vh, 1000px);">
+
+		<div class="card margin-auto padding-vertical padding-horizontal-lg" style="width:clamp(400px, 50%, 720px); line-height:150%;">
+
+			<div class="margin-bottom-lg">
+				{{- if ne "" .domainIcon -}}
+					<img src="{{.domainIcon}}" class="block width-40-percent" alt="{{.domainName}}">
+				{{- else -}}
+					<div class="bold text-gray text-lg">{{.domainName}}</div>
+				{{- end -}}
+			</div>
+
+			<h1 class="text-lg bold margin-top-none">Sorry, Your Password Reset Code Is Not Valid</h1>
+
+			<p>If you have an account on this server, you can still click below to create a new password reset code then check your email for the new code.</p>
+
+			<div class="margin-top-lg">
+				<a href="/signin/reset" class="button primary" tabIndex="0">Send Me a Reset Code</a>
+				<a href="/" class="button">Cancel</a>
+			</div>
+
+		</div>
+	</main>
+	
+	{{template "includes-foot" .}}
+
+</body>
+</html>
