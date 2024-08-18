@@ -99,7 +99,6 @@
 		window.localStorage.setItem("accounts", JSON.stringify(accounts))
 		displayAccounts()
 	catch exception
-		log exception
 		return []
 	end
 
@@ -150,8 +149,8 @@
 						<div class="flex-row width-100%" role="link" tabindex="0" script="on click goToIntent('Create', '${account.id}')">
 							<img src="${account.icon}" class="circle-48">
 							<div class="flex-grow">
-								<div class="bold">${account.name}</div>
-								<div class="text-xs text-gray">${account.url}</div>
+								<div class="margin-vertical-none bold">${account.name}</div>
+								<div class="margin-vertical-none text-gray">${account.preferredUsername}</div>
 							</div>
 						</div>
 						<div class="clickable padding-horizontal padding-vertical-sm text-lg" role="button" script="on click deleteAccount(${i})" tabIndex="0">

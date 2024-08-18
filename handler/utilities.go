@@ -84,14 +84,19 @@ func cleanQueryParams(values url.Values) mapof.Any {
 	return result
 }
 
+// firstOf is a quickie generic helper that returns the first
+// non-zero value from a list of comparable values.
 func firstOf[T comparable](values ...T) T {
 
 	var empty T
 
+	// Try each value in the list.  If non-zero, then celebrate success.
 	for _, value := range values {
 		if value != empty {
 			return value
 		}
 	}
+
+	// Boo, hisss...
 	return empty
 }

@@ -43,11 +43,14 @@ func GetStreamIntent(serverFactory *server.Factory) echo.HandlerFunc {
 			return derp.Wrap(err, location, "Error loading stream")
 		}
 
-		// Populate the template with data from the stream
-		nextURL := camper.PopulateTemplate(template, ctx.Request().URL.Query())
+		// Append success/cancel handlers to the URL
+		data := ctx.Request().URL.Query()
+		closeURL := url.QueryEscape(factory.Host() + "/.close-window")
+		data.Set("on-success", closeURL)
+		data.Set("on-cancel", closeURL)
 
-		closeURL := url.QueryEscape(factory.Hostname() + "/.close-window")
-		nextURL += "&on-success=" + closeURL + "&on-cancel=" + closeURL
+		// Populate the template with data from the stream
+		nextURL := camper.PopulateTemplate(template, data)
 
 		// Forward the user to the correct URL on their home server
 		return ctx.Redirect(http.StatusTemporaryRedirect, nextURL)

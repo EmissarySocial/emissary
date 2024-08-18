@@ -214,23 +214,29 @@ input[type=radio] {
 
 button,
 .button {
+	appearance:button;
+	-webkit-appearance:button;
 	font-size:calc(var(--rhythm) * 2);
+	line-height:100%;
 	font-weight:400;
 	margin-top:0px;
 	margin-left:0px;
 	margin-bottom:0px;
-	margin-right:4px;
+	margin-right:calc(var(--rhythm) / 2);
 	box-sizing:border-box;
 	width:auto;
 	display:inline-block;
 	cursor:pointer;
-	padding:10px 20px;
+	padding-top: calc(var(--rhythm) * 1.5);
+	padding-bottom: calc(var(--rhythm) * 1.5);
+	padding-left: calc(var(--rhythm) * 2);
+	padding-right: calc(var(--rhythm) * 2);
 	background-color: var(--gray10);
-	border-radius: 5px;
+	border-radius: calc(var(--rhythm) / 2);
 	border:none;
 	color: var(--gray90);
-	user-select:none;
 	text-align:left;
+	user-select:none;
 	-moz-user-select: none;
 	-webkit-user-select: none;
 	white-space:nowrap;
