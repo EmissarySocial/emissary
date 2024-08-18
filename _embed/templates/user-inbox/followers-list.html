@@ -12,7 +12,7 @@
 				<img src="{{.Actor.IconURL}}" class="circle-48">
 			{{- end -}}
 		</div>
-		<div hx-get="/@me/inbox/follower?followerId={{.FollowerID.Hex}}&amp;url={{.Actor.ProfileURL}}" class="width-100-percent">
+		<div hx-get="/@me/inbox/follower?followerId={{.FollowerID.Hex}}&amp;url={{.Actor.ProfileURL}}" class="width-100%">
 			<div>{{$actor.Name}}</div>
 			<div class="text-light-gray">{{$actor.ProfileURL}}</div>
 		</div>

@@ -29,11 +29,11 @@
 
 	{{- $children := .Children.All.Slice -}}
 	{{- if eq (len $children) 0 -}}
-		<div class="card"><img src="/{{.StreamID}}/attachments/{{.Attachment.AttachmentID.Hex}}?width=1024" class="width-100-percent"></div>
+		<div class="card"><img src="/{{.StreamID}}/attachments/{{.Attachment.AttachmentID.Hex}}?width=1024" class="width-100%"></div>
 	{{- end -}}
 	{{- if gt (len $children) 0 -}}
 
-	<div class="card"><img src="/{{.StreamID}}/attachments/{{.Attachment.AttachmentID.Hex}}?width=1024" class="width-100-percent"></div>
+	<div class="card"><img src="/{{.StreamID}}/attachments/{{.Attachment.AttachmentID.Hex}}?width=1024" class="width-100%"></div>
 	{{- range $children -}}
 	<div class="card padding-sm margin-bottom">
 		{{- .GetContent -}}

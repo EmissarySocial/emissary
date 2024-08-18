@@ -4,7 +4,7 @@
     <tbody hx-trigger="revealed" hx-get="/admin/users/list?groupId=&amp;displayName=gt:{{ $users.Last.DisplayName }}" hx-target="#users" hx-swap="beforeend" hx-push-url="false">
         {{- range $index, $user := $users -}}
             <tr class="clickable">
-                <td role="link" hx-get="/admin/users/{{$user.UserID.Hex}}/edit" class="flex-row width-100-percent">
+                <td role="link" hx-get="/admin/users/{{$user.UserID.Hex}}/edit" class="flex-row width-100%">
                     {{- $iconURL := $user.IconURL -}}
                     {{- if ne "" $iconURL -}}
                         <img src="{{$iconURL}}" class="circle-32">

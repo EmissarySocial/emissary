@@ -26,7 +26,7 @@
 
 	<input type="hidden" name="intent" value="Create">
 
-	<div id="addAnotherButton" class="button flex-row width-100-percent" role="button" script="on click hide me then show #addAnotherForm then focus() the #addAnotherAccountID">
+	<div id="addAnotherButton" class="button flex-row width-100%" role="button" script="on click hide me then show #addAnotherForm then focus() the #addAnotherAccountID">
 		<div class="circle-48 flex-center text-white">{{icon "add"}}</div>
 		<div class="flex-grow">
 			<div class="bold">Add Account</div>
@@ -34,7 +34,7 @@
 		</div>
 	</div>
 	
-	<div id="addAnotherForm" class="width-100-percent flex-row button">
+	<div id="addAnotherForm" class="width-100% flex-row button">
 		<div id="addAnotherIcon" class="circle-48 flex-center text-white flex-shrink-0">{{icon "add"}}</div>
 		<input type="text" id="addAnotherAccountID" name="account" placeholder="@yourname@yourserver.social" class="flex-grow">
 		<button class="primary nowrap htmx-request-hide">Add Account</button>
@@ -146,8 +146,8 @@
 
 			repeat for account in accounts index i
 				set row to `
-					<div class="button flex-row width-100-percent margin-bottom-xs">
-						<div class="flex-row width-100-percent" role="link" tabindex="0" script="on click goToIntent('Create', '${account.id}')">
+					<div class="button flex-row width-100% margin-bottom-xs">
+						<div class="flex-row width-100%" role="link" tabindex="0" script="on click goToIntent('Create', '${account.id}')">
 							<img src="${account.icon}" class="circle-48">
 							<div class="flex-grow">
 								<div class="bold">${account.name}</div>

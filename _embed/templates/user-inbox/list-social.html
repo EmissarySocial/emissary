@@ -61,7 +61,7 @@
 
 		{{- if $image.NotNil -}}
 			<div class="margin-top" style="position:relative;">
-				<img src="{{$image.Href}}" loading="lazy" class="width-100-percent" style="border: solid 1px var(--gray40); {{if $image.HasDimensions}}aspect-ratio:{{$image.AspectRatio}}{{end}}"/>
+				<img src="{{$image.Href}}" loading="lazy" class="width-100%" style="border: solid 1px var(--gray40); {{if $image.HasDimensions}}aspect-ratio:{{$image.AspectRatio}}{{end}}"/>
 			</div>
 		{{- end -}}
 

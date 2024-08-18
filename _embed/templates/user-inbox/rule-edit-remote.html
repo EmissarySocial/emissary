@@ -16,7 +16,7 @@
 			{{- if ne "" $following.IconURL -}}
 				<img class="circle-32" src="{{$following.IconURL}}">
 			{{- end -}}
-			<div class="width-100-percent">{{$following.Label}}</div>
+			<div class="width-100%">{{$following.Label}}</div>
 			<div class="text-sm nowrap">
 				<button hx-get="/@me/inbox/following-edit?followingId={{$following.ID}}">Edit Source</button>
 				<a href="{{$following.ProfileURL}}" role="link" class="button" target="_blank">Go to Profile</a>

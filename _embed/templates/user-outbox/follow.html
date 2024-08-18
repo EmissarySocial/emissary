@@ -1,6 +1,6 @@
 {{- template "follow-heading" . -}}
 
-<button hx-get="/@{{.UserID}}/follow-activitypub" class="flex-row width-100-percent">
+<button hx-get="/@{{.UserID}}/follow-activitypub" class="flex-row width-100%">
 	<div class="text-2xl margin-none margin-right-sm">{{icon "activitypub"}}</div>
 	<div class="flex-grow">
 		<div class="text-lg margin-none">My Fediverse Account</div>
@@ -9,7 +9,7 @@
 	<div class="text-lg">{{icon "chevron-right"}}</div>
 </button>
 
-<button hx-get="/@{{.UserID}}/follow-email" class="text-lg flex-row width-100-percent">
+<button hx-get="/@{{.UserID}}/follow-email" class="text-lg flex-row width-100%">
 	<div class="text-2xl margin-none margin-right-sm">{{icon "email"}}</div>
 	<div class="flex-grow">
 		<div class="text-lg margin-none">My Email Account</div>

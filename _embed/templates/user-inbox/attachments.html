@@ -5,7 +5,7 @@
 			{{- if eq "Video" .Type -}}
 				[Video Player: {{.URL}}]
 			{{- else -}}
-				<img src="{{.URL}}" class="width-100-percent" style="border:solid 1px var(--gray20); aspect-ratio:{{.AspectRatio}};" alt="{{.Content}}"/>
+				<img src="{{.URL}}" class="width-100%" style="border:solid 1px var(--gray20); aspect-ratio:{{.AspectRatio}};" alt="{{.Content}}"/>
 			{{- end -}}
 		{{- end }}
 	</div>

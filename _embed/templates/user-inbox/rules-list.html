@@ -3,7 +3,7 @@
 {{- $rules := $rules.Slice -}}
 
 {{- range $rules -}}
-	<div role="button" class="flex-row width-100-percent turboclick origin-{{.Origin}}" hx-get="/@me/inbox/rule-edit?ruleId={{.RuleID.Hex}}">
+	<div role="button" class="flex-row width-100% turboclick origin-{{.Origin}}" hx-get="/@me/inbox/rule-edit?ruleId={{.RuleID.Hex}}">
 
 		<div class="width-2-6 flex-row" nowrap>
 			<div class="text-xl margin-none flex-align-start">

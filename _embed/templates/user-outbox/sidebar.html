@@ -10,7 +10,7 @@
 	
 		<div style="width:90%; max-width:200px; margin:0px auto;">
 			{{- if ne "" .ActivityPubIconURL -}}
-				<img class="circle u-photo width-100-percent" src="{{.ActivityPubIconURL}}" loading="lazy">
+				<img class="circle u-photo width-100%" src="{{.ActivityPubIconURL}}" loading="lazy">
 			{{- else -}}
 				<div class="circle" style="width:90%; max-width:200px; margin:0px auto;"></div>
 			{{- end -}}
@@ -26,7 +26,7 @@
 		<div class="text-sm gray50 ellipsis">@{{.Username}}@{{.Hostname}}</div>
 		{{- if not .Myself -}}
 			<div class="margin-top">
-				<button type="button" class="primary width-100-percent ellipsis" hx-get="/@{{.UserID}}/follow">{{icon "add-circle"}} Follow {{.DisplayName}}</button>
+				<button type="button" class="primary width-100% ellipsis" hx-get="/@{{.UserID}}/follow">{{icon "add-circle"}} Follow {{.DisplayName}}</button>
 			</div>
 		{{- end -}}
 
