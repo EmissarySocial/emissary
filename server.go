@@ -273,8 +273,14 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/@me/inbox", handler.PostInbox(factory))
 	e.GET("/@me/inbox/:action", handler.GetInbox(factory))
 	e.POST("/@me/inbox/:action", handler.PostInbox(factory))
-	e.GET("/@me/intent/:intent", handler.GetUserIntent(factory))
-	e.POST("/@me/intent/:intent", handler.PostUserIntent(factory))
+	e.GET("/@me/intent/create", handler.WithUser(factory, handler.GetIntent_Create))
+	e.POST("/@me/intent/create", handler.WithUser(factory, handler.PostIntent_Create))
+	e.GET("/@me/intent/dislike", handler.WithUser(factory, handler.GetIntent_Dislike))
+	e.POST("/@me/intent/dislike", handler.WithUser(factory, handler.PostIntent_Dislike))
+	e.GET("/@me/intent/follow", handler.WithUser(factory, handler.GetIntent_Follow))
+	e.POST("/@me/intent/follow", handler.WithUser(factory, handler.PostIntent_Follow))
+	e.GET("/@me/intent/like", handler.WithUser(factory, handler.GetIntent_Like))
+	e.POST("/@me/intent/like", handler.WithUser(factory, handler.PostIntent_Like))
 
 	// ActivityPub Routes for Users
 	e.GET("/@:userId", handler.GetOutbox(factory))

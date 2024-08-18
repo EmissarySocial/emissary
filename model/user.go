@@ -32,6 +32,7 @@ type User struct {
 	StateID         string                     `json:"stateId"         bson:"stateId"`              // State ID for this user
 	InboxTemplate   string                     `json:"inboxTemplate"   bson:"inboxTemplate"`        // Template for the user's inbox
 	OutboxTemplate  string                     `json:"outboxTemplate"  bson:"outboxTemplate"`       // Template for the user's outbox
+	NoteTemplate    string                     `json:"noteTemplate"    bson:"noteTemplate"`         // Template for generically created notes
 	Links           sliceof.Object[PersonLink] `json:"links"           bson:"links"`                // Slice of links to profiles on other web services.
 	PasswordReset   PasswordReset              `json:"-"               bson:"passwordReset"`        // Most recent password reset information.
 	Data            mapof.String               `json:"data"            bson:"data"`                 // Custom profile data that can be stored with this User.

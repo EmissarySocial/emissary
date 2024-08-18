@@ -622,16 +622,30 @@ func (service *User) LoadWebFinger(username string) (digit.Resource, error) {
 		Link(digit.RelationTypeProfile, model.MimeTypeHTML, user.ActivityPubURL()).
 		Link(digit.RelationTypeAvatar, model.MimeTypeImage, user.ActivityPubIconURL()).
 		Link(digit.RelationTypeSubscribeRequest, "", service.RemoteFollowURL()).
-		Link(camper.IntentTypeCreate, "", service.RemoteShareURL()).
-		Link(camper.IntentTypeFollow, "", service.RemoteFollowURL())
+		Link(camper.IntentTypeCreate, "", service.CreateIntentURL()).
+		Link(camper.IntentTypeDislike, "", service.DislikeIntentURL()).
+		Link(camper.IntentTypeFollow, "", service.FollowIntentURL()).
+		Link(camper.IntentTypeLike, "", service.LikeIntentURL())
 
 	return result, nil
 }
 
-func (service *User) RemoteShareURL() string {
-	return service.host + "/.intent/create?type={type}&name={name}&summary={summary}&content={content}&inReplyTo={inReplyTo}&on-success={on-succes}&on-cancel={on-cancel}"
-}
-
 func (service *User) RemoteFollowURL() string {
 	return service.host + "/.ostatus/tunnel?uri={uri}"
+}
+
+func (service *User) CreateIntentURL() string {
+	return service.host + "/@me/intent/create?type={type}&name={name}&summary={summary}&content={content}&inReplyTo={inReplyTo}&on-success={on-succes}&on-cancel={on-cancel}"
+}
+
+func (service *User) DislikeIntentURL() string {
+	return service.host + "/@me/intent/dislike?object={object}&on-success={on-succes}&on-cancel={on-cancel}"
+}
+
+func (service *User) FollowIntentURL() string {
+	return service.host + "/@me/intent/follow?object={object}&on-success={on-succes}&on-cancel={on-cancel}"
+}
+
+func (service *User) LikeIntentURL() string {
+	return service.host + "/@me/intent/like?object={object}&on-success={on-succes}&on-cancel={on-cancel}"
 }
