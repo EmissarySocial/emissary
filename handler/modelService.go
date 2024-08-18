@@ -5,7 +5,6 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
 	builder "github.com/benpate/exp-builder"
-	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
 )
 
@@ -22,8 +21,7 @@ func ModelService_RenderTemplate(serverFactory *server.Factory, ctx echo.Context
 	}
 
 	// Require that the user is signed in
-	sterankoContext := ctx.(*steranko.Context)
-	authorization := getAuthorization(sterankoContext)
+	authorization := getAuthorization(ctx)
 
 	if !authorization.IsAuthenticated() {
 		return "", derp.NewUnauthorizedError(location, "You must be signed in to continue")

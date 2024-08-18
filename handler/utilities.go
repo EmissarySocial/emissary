@@ -26,12 +26,15 @@ func getActionID(ctx echo.Context) string {
 }
 
 // getAuthorization extracts a model.Authorization record from the steranko.Context
-func getAuthorization(ctx *steranko.Context) model.Authorization {
+func getAuthorization(ctx echo.Context) model.Authorization {
 
-	if claims, err := ctx.Authorization(); err == nil {
+	if sterankoContext, ok := ctx.(*steranko.Context); ok {
 
-		if auth, ok := claims.(*model.Authorization); ok {
-			return *auth
+		if claims, err := sterankoContext.Authorization(); err == nil {
+
+			if auth, ok := claims.(*model.Authorization); ok {
+				return *auth
+			}
 		}
 	}
 

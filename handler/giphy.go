@@ -8,7 +8,6 @@ import (
 	"github.com/EmissarySocial/emissary/service/providers"
 	"github.com/benpate/derp"
 	"github.com/benpate/html"
-	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
 )
 
@@ -16,10 +15,8 @@ func GetGiphyWidget(serverFactory *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
-		sterankoContext := ctx.(*steranko.Context)
-
 		// Verify authorization
-		authorization := getAuthorization(sterankoContext)
+		authorization := getAuthorization(ctx)
 
 		if !authorization.IsAuthenticated() {
 			return derp.NewUnauthorizedError("handler.GetGiphyImages", "You must be logged in to use this feature")

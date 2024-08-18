@@ -6,7 +6,6 @@ import (
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/first"
-	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
 )
 
@@ -25,13 +24,10 @@ func buildInbox(serverFactory *server.Factory, actionMethod build.ActionMethod) 
 
 	const location = "handler.buildInbox"
 
-	return func(context echo.Context) error {
-
-		// Cast the context into a steranko context (which includes authentication data)
-		sterankoContext := context.(*steranko.Context)
+	return func(ctx echo.Context) error {
 
 		// Get the domain factory from the context
-		factory, err := serverFactory.ByContext(sterankoContext)
+		factory, err := serverFactory.ByContext(ctx)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error loading domain factory")
@@ -41,7 +37,7 @@ func buildInbox(serverFactory *server.Factory, actionMethod build.ActionMethod) 
 		userService := factory.User()
 		user := model.NewUser()
 
-		authorization := getAuthorization(sterankoContext)
+		authorization := getAuthorization(ctx)
 
 		if !authorization.IsAuthenticated() {
 			return derp.NewUnauthorizedError(location, "Not Authorized")
@@ -52,19 +48,19 @@ func buildInbox(serverFactory *server.Factory, actionMethod build.ActionMethod) 
 		}
 
 		// Try to load the User's Outbox
-		actionID := first.String(context.Param("action"), "inbox")
+		actionID := first.String(ctx.Param("action"), "inbox")
 
-		if ok, err := handleJSONLD(context, &user); ok {
+		if ok, err := handleJSONLD(ctx, &user); ok {
 			return derp.Wrap(err, location, "Error building JSON-LD")
 		}
 
-		builder, err := build.NewInbox(factory, context.Request(), context.Response(), &user, actionID)
+		builder, err := build.NewInbox(factory, ctx.Request(), ctx.Response(), &user, actionID)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error creating builder")
 		}
 
 		// Forward to the standard page builder to complete the job
-		return build.AsHTML(factory, sterankoContext, builder, actionMethod)
+		return build.AsHTML(factory, ctx, builder, actionMethod)
 	}
 }

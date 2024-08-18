@@ -9,7 +9,6 @@ import (
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/html"
-	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -80,8 +79,7 @@ func PostOAuthAuthorization(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		// Get Authorization
-		sterankoContext := ctx.(*steranko.Context)
-		authorization := getAuthorization(sterankoContext)
+		authorization := getAuthorization(ctx)
 
 		// Get Application
 		clientService := factory.OAuthClient()

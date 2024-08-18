@@ -58,7 +58,7 @@ func getProfileAttachment(serverFactory *server.Factory, field string, filespec 
 		sterankoContext := ctx.(*steranko.Context)
 
 		// Get the Domain factory from the context
-		factory, err := serverFactory.ByContext(sterankoContext)
+		factory, err := serverFactory.ByContext(ctx)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error loading domain factory")
@@ -69,7 +69,7 @@ func getProfileAttachment(serverFactory *server.Factory, field string, filespec 
 		user := model.NewUser()
 
 		// Get the UserID from the URL (could be "me")
-		username, err := profileUsername(sterankoContext)
+		username, err := profileUsername(ctx)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error loading user ID")
@@ -188,10 +188,9 @@ func profileUsername(context echo.Context) (string, error) {
 
 // AuthenticatedID returns the UserID of the currently authenticated user.
 // If the user is not signed in, then this function returns an error.
-func authenticatedID(context echo.Context) (primitive.ObjectID, error) {
+func authenticatedID(ctx echo.Context) (primitive.ObjectID, error) {
 
-	sterankoContext := context.(*steranko.Context)
-	authorization := getAuthorization(sterankoContext)
+	authorization := getAuthorization(ctx)
 
 	if authorization.IsAuthenticated() {
 		return authorization.UserID, nil
