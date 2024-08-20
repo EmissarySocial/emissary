@@ -1,14 +1,12 @@
 package handler
 
 import (
-	"io"
 	"net/http"
 
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"
 )
@@ -88,8 +86,8 @@ func PostServiceActor_Inbox(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		// Try to read/dump the Request body
-		body, err := io.ReadAll(ctx.Request().Body)
-		spew.Dump("PostServiceActor", ctx.Request().Header, string(body), err)
+		// body, err := io.ReadAll(ctx.Request().Body)
+		// spew.Dump("PostServiceActor", ctx.Request().Header, string(body), err)
 
 		// Return no content
 		return ctx.NoContent(http.StatusOK)

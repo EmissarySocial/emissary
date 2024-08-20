@@ -13,7 +13,6 @@ import (
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/sherlock"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
 )
 
 func GetIntent_Follow(ctx *steranko.Context, factory *domain.Factory, user *model.User) error {
@@ -190,8 +189,6 @@ func PostIntent_Follow(ctx *steranko.Context, factory *domain.Factory, user *mod
 	if err := followingService.Save(&following, "Created via Activity Intent"); err != nil {
 		return derp.ReportAndReturn(derp.Wrap(err, location, "Error saving stream"))
 	}
-
-	spew.Dump(following)
 
 	// Redirect to the "on-success" URL
 	return ctx.Redirect(http.StatusSeeOther, onSuccess)

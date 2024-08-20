@@ -14,7 +14,6 @@ import (
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/list"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 )
 
@@ -127,8 +126,6 @@ func (camper *Camper) getTemplateFromWebfinger(intentType string, accountID stri
 		return ""
 	}
 
-	spew.Dump(resource)
-
 	// If the webfinger resource has an Activity Intents for the requested type, return it
 	intentRelation := "https://w3id.org/fep/3b86/" + intentType
 
@@ -144,7 +141,6 @@ func (camper *Camper) getTemplateFromWebfinger(intentType string, accountID stri
 
 		// Look for a "follow" intent
 		for _, link := range resource.Links {
-			spew.Dump(link)
 			if link.RelationType == digit.RelationTypeSubscribeRequest {
 				href := strings.ReplaceAll(link.Href, "{uri}", "{object}")
 				return href

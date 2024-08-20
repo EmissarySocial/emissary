@@ -8,7 +8,6 @@ import (
 	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/compare"
 	"github.com/benpate/rosetta/slice"
-	"github.com/davecgh/go-spew/spew"
 )
 
 type Client struct {
@@ -63,11 +62,10 @@ func (client *Client) Load(server string) (NodeInfo, error) {
 				With(client.options...).
 				Result(&result)
 
-			spew.Dump("trying link", link)
-			if err := txn.Send(); err == nil {
-				return result, nil
+			if err := txn.Send(); err != nil {
+				derp.Report(derp.Wrap(err, location, "Error retrieving nodeinfo document"))
 			} else {
-				spew.Dump(err)
+				return result, nil
 			}
 		}
 	}
