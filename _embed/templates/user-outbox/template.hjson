@@ -5,7 +5,7 @@
 	label:Default Outbox
 	description:Profile displays everything about a user, including their inbox and outbox information
 	icon:inbox
-	extends:["base-social"]
+	extends:["base-social", "base-intent"]
 	containedBy: []
 	schema: {
 		title:User Profile

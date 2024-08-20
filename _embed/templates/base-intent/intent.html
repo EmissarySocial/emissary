@@ -1,8 +1,32 @@
+{{- $intent := .QueryParam "intent" -}}
+
 <h1 class="modal-title">
-	{{icon "activitypub"}}
-	Share on the Fediverse
+	{{- if eq "" $intent -}}
+		{{icon "settings"}}
+		Add/Edit Account
+	{{- else if eq "announce" $intent -}}
+		{{icon "rocket"}}
+		Boost on the Fediverse
+		{{- else if eq "create" $intent -}}
+		{{icon "share"}}
+		Share on the Fediverse
+	{{- else if eq "dislike" $intent -}}
+		{{icon "thumbs-down"}}
+		Dislike on the Fediverse
+	{{- else if eq "follow" $intent -}}
+		{{icon "activitypub"}}
+		Follow on the Fediverse
+	{{- else if eq "like" $intent -}}
+		{{icon "thumbs-up"}}
+		Like on the Fediverse
+	{{- else -}}
+		{{icon "info"}}
+		Invalid Intent
+	{{- end -}}
 </h1>
+
 <hr>
+
 <div id="empty-header" class="list-is-empty">
 	<h2>Have an Account?</h2>
 
@@ -13,15 +37,18 @@
 
 <div id="full-header" class="list-populated">
 	<div class="margin-bottom italics">
-		Click the account you want to use, and be redirected to your home server.
+		{{- if eq "" $intent -}}
+			Add or remove remote accounts to use with this site.
+		{{- else -}}
+			Click the account you want to use, and be redirected to your home server.
+		{{- end -}}
 	</div>
 
 	<div id="accountList"></div>
 </div>
 
-<form id="NewAccountForm" hx-get="/.intent/discover" hx-target="#newAccount" hx-swap="innerHTML" hx-push-url="false">
-	<div id="queryString" hidden>{{.QueryString}}</div>
-	<div id="baseUrl" hidden>/{{.StreamID}}/intents/</div>
+<form id="NewAccountForm" hx-get="/.intents/discover" hx-target="#newAccount" hx-swap="innerHTML" hx-push-url="false">
+	<div id="var_queryString" hidden>{{.QueryString}}</div>
 	<div id="newAccount" hidden></div>
 
 	<input type="hidden" name="intent" value="Create">
@@ -65,9 +92,19 @@
 	<button script="on click trigger closeModal">Close Window</button>
 </div>
 
+
 <script type="text/hyperscript">
 
-	init 
+	init
+		if "{{$intent}}" is not "" then
+
+			set accounts to getAccounts()
+			if accounts.length is 1 then
+				hide #modal
+				goToIntent(accounts[0].id)
+				exit
+		end
+
 		displayAccounts()
 	end
 
@@ -112,19 +149,26 @@
 		end
 	end
 
-	def goToIntent(intent, username)
+	def goToIntent(username)
+
+		set intent to "{{$intent}}"
+		if intent is "" then
+			exit
+		end
+
 		trigger closeModal
 
-		set nextUrl to the #baseUrl's innerText
-		append intent + "?account=" + username + "&" + #queryString.innerText to nextUrl
-		window.open(nextUrl, "_blank", "width=800,height=600")
+		set queryString to the #var_queryString's innerText
+		set nextUrl to "/.intents/" + intent + "?account=" + username + "&" + queryString
+
+		window.open(nextUrl, "_blank", "width=600,height=700")
 	end
 
 	def displayAccounts()
+		set intent to "{{$intent}}"
 		set accounts to getAccounts()
 
 		if accounts.length is 0 then
-
 			show #empty-header
 			show #empty-footer
 			show #addAnotherForm
@@ -132,8 +176,8 @@
 			hide #full-header
 			hide #addAnotherButton
 
-		else 
-			
+		else
+
 			hide #empty-header
 			hide #empty-footer
 			hide #addAnotherForm
@@ -146,11 +190,11 @@
 			repeat for account in accounts index i
 				set row to `
 					<div class="button flex-row width-100% margin-bottom-xs">
-						<div class="flex-row width-100%" role="link" tabindex="0" script="on click goToIntent('Create', '${account.id}')">
+						<div class="flex-row width-100%" role="link" tabindex="0" script="on click goToIntent('${account.id}')">
 							<img src="${account.icon}" class="circle-48">
 							<div class="flex-grow">
 								<div class="margin-vertical-none bold">${account.name}</div>
-								<div class="margin-vertical-none text-gray">${account.preferredUsername}</div>
+								<div class="margin-vertical-none text-sm text-gray">${account.preferredUsername}</div>
 							</div>
 						</div>
 						<div class="clickable padding-horizontal padding-vertical-sm text-lg" role="button" script="on click deleteAccount(${i})" tabIndex="0">
@@ -166,4 +210,3 @@
 	end
 
 </script>
-

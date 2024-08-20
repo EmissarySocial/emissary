@@ -206,7 +206,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/nodeinfo/2.1", handler.GetNodeInfo21(factory))
 
 	// Built-In Service  Routes
-	e.GET("/.close-window", handler.GetCloseWindow(factory))
+	e.GET("/.close-window", handler.GetCloseWindow)
 	e.POST("/.follower/new", handler.PostEmailFollower(factory))
 	e.GET("/.giphy", handler.GetGiphyWidget(factory))
 	e.POST("/.stripe", stripe.PostWebhook(factory))
@@ -220,12 +220,15 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.websub/:userId/:followingId", handler.GetWebSubClient(factory))
 	e.POST("/.websub/:userId/:followingId", handler.PostWebSubClient(factory))
 	e.GET("/.widgets/:widgetId/:bundleId", handler.GetWidgetBundle(factory))
-	e.GET("/.widgets/:widgetId//resources/:filename", handler.GetWidgetResource(factory))
+	e.GET("/.widgets/:widgetId/resources/:filename", handler.GetWidgetResource(factory))
 
 	// Activity Intents
+	e.GET("/.intents/discover", handler.WithFactory(factory, handler.GetIntentInfo))
+	e.GET("/.intents/:intent", handler.WithFactory(factory, handler.GetOutboundIntent))
 	e.POST("/.ostatus/discover", handler.PostOStatusDiscover(factory))
 	e.GET("/.ostatus/tunnel", handler.GetFollowingTunnel)
-	e.GET("/.intent/discover", handler.GetIntentInfo(factory))
+	// TODO: LOW: .ostatus/tunnel is no longer necessary because we're using the right cookie settings now.
+	// Migrate calls to this to a more direct route.
 
 	e.GET("/apple-touch-icon.png", handler.NotFound)
 	e.GET("/apple-touch-icon-precomposed.png", handler.NotFound)
@@ -253,7 +256,6 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.DELETE("/:stream", handler.PostStreamWithAction(factory))
 
 	// Hard-coded routes for additional stream services
-	e.GET("/:stream/intents/:intent", handler.GetStreamIntent(factory))
 	e.GET("/:stream/attachments/:attachmentId", handler.GetStreamAttachment(factory)) // TODO: LOW: Can Stream Attachments be moved into a custom build step?
 	e.GET("/:stream/sse", handler.ServerSentEvent(factory))                           // TODO: LOW: Can SSE be moved into a custom build step?
 	e.GET("/:stream/qrcode", handler.GetQRCode(factory))                              // TODO: LOW: Can QR Codes be moved into a custom build step?
@@ -273,14 +275,14 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/@me/inbox", handler.PostInbox(factory))
 	e.GET("/@me/inbox/:action", handler.GetInbox(factory))
 	e.POST("/@me/inbox/:action", handler.PostInbox(factory))
-	e.GET("/@me/intent/create", handler.WithUser(factory, handler.GetIntent_Create))
-	e.POST("/@me/intent/create", handler.WithUser(factory, handler.PostIntent_Create))
-	e.GET("/@me/intent/dislike", handler.WithUser(factory, handler.GetIntent_Dislike))
-	e.POST("/@me/intent/dislike", handler.WithUser(factory, handler.PostIntent_Dislike))
-	e.GET("/@me/intent/follow", handler.WithUser(factory, handler.GetIntent_Follow))
-	e.POST("/@me/intent/follow", handler.WithUser(factory, handler.PostIntent_Follow))
-	e.GET("/@me/intent/like", handler.WithUser(factory, handler.GetIntent_Like))
-	e.POST("/@me/intent/like", handler.WithUser(factory, handler.PostIntent_Like))
+	e.GET("/@me/intent/create", handler.WithAuthenticatedUser(factory, handler.GetIntent_Create))
+	e.POST("/@me/intent/create", handler.WithAuthenticatedUser(factory, handler.PostIntent_Create))
+	e.GET("/@me/intent/dislike", handler.WithAuthenticatedUser(factory, handler.GetIntent_Dislike))
+	e.POST("/@me/intent/dislike", handler.WithAuthenticatedUser(factory, handler.PostIntent_Dislike))
+	e.GET("/@me/intent/follow", handler.WithAuthenticatedUser(factory, handler.GetIntent_Follow))
+	e.POST("/@me/intent/follow", handler.WithAuthenticatedUser(factory, handler.PostIntent_Follow))
+	e.GET("/@me/intent/like", handler.WithAuthenticatedUser(factory, handler.GetIntent_Like))
+	e.POST("/@me/intent/like", handler.WithAuthenticatedUser(factory, handler.PostIntent_Like))
 
 	// ActivityPub Routes for Users
 	e.GET("/@:userId", handler.GetOutbox(factory))

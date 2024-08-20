@@ -14,6 +14,7 @@ import (
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/list"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 )
 
@@ -65,7 +66,11 @@ func (camper *Camper) GetURL(intentType string, accountID string, values map[str
 // If none is found, then this function returns an empty string
 func (camper *Camper) GetTemplate(intentType string, accountID string) string {
 
+	// Get server name from account
 	server := camper.getServername(accountID)
+
+	// Use standard capitalization for intent types
+	intentType = CanonicalCapitalization(intentType)
 
 	// Check hard-coded service names
 	if result := camper.getTemplateFromKnownServices(intentType, server); result != "" {
@@ -83,7 +88,7 @@ func (camper *Camper) GetTemplate(intentType string, accountID string) string {
 	}
 
 	// Try the common /share path
-	if result := camper.getTemplateFromAssumeSharePath(intentType, server); result != "" {
+	if result := camper.getTemplateFromAssumeSharePath(intentType, accountID); result != "" {
 		return result
 	}
 
@@ -115,12 +120,14 @@ func (camper *Camper) getTemplateFromWebfinger(intentType string, accountID stri
 	const location = "camper.getTemplateFromWebfinger"
 
 	// Use digit to look up the account's WebFinger info
-	resource, err := digit.Lookup(accountID)
+	resource, err := digit.Lookup(accountID, camper.options...)
 
 	if err != nil {
 		derp.Report(derp.Wrap(err, location, "Error locating WebFinger resource"))
 		return ""
 	}
+
+	spew.Dump(resource)
 
 	// If the webfinger resource has an Activity Intents for the requested type, return it
 	intentRelation := "https://w3id.org/fep/3b86/" + intentType
@@ -137,8 +144,10 @@ func (camper *Camper) getTemplateFromWebfinger(intentType string, accountID stri
 
 		// Look for a "follow" intent
 		for _, link := range resource.Links {
-			if link.RelationType == "http://ostatus.org/schema/1.0/subscribe" {
-				return link.Href
+			spew.Dump(link)
+			if link.RelationType == digit.RelationTypeSubscribeRequest {
+				href := strings.ReplaceAll(link.Href, "{uri}", "{object}")
+				return href
 			}
 		}
 	}
@@ -197,7 +206,7 @@ func (camper *Camper) getTemplateFromKnownSoftware(intentType string, software s
 		return "/bookmarklet?title={name}&notes={content}&url={inReplyTo}"
 
 	case "emissary":
-		return "/.intent/share?name={name}&content={content}&inReplyTo={inReplyTo}"
+		return "/.intents/create?name={name}&content={content}&inReplyTo={inReplyTo}"
 
 	case "fedibird":
 		return "/share?text={content}"

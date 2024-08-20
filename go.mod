@@ -10,7 +10,7 @@ require (
 	github.com/benpate/data-mock v0.28.11
 	github.com/benpate/data-mongo v0.28.10
 	github.com/benpate/derp v0.31.0
-	github.com/benpate/digit v0.12.1
+	github.com/benpate/digit v0.12.2
 	github.com/benpate/domain v0.2.2
 	github.com/benpate/exp v0.8.3
 	github.com/benpate/exp-builder v0.8.1
@@ -21,7 +21,7 @@ require (
 	github.com/benpate/mediaserver v0.11.4
 	github.com/benpate/re v0.3.1
 	github.com/benpate/remote v0.16.2
-	github.com/benpate/rosetta v0.21.2
+	github.com/benpate/rosetta v0.21.3
 	github.com/benpate/sherlock v0.8.4
 	github.com/benpate/steranko v0.20.0
 	github.com/benpate/table v0.6.17

@@ -35,20 +35,24 @@ func GetIntent_Create(ctx *steranko.Context, factory *domain.Factory, user *mode
 	b.Close()
 
 	b.Body()
+
 	b.Form("POST", "/@me/intent/create")
 	b.Input("hidden", "inReplyTo").Value(txn.InReplyTo)
 	b.Input("hidden", "on-success").Value(txn.OnSuccess)
 	b.Input("hidden", "on-cancel").Value(txn.OnCancel)
 
 	b.Div().Class("flex-column", "flex-align-stretch", "padding").Style("height:100vh", "max-height:100vh")
-	intent_header(user, b)
+	{
+		write_intent_header(b, factory.Hostname(), user)
 
-	b.Textarea("content").Class("flex-grow-1", "margin-vertical", "width-100%").Style("height:100%").InnerHTML(txn.Content).Close()
+		b.Textarea("content").Class("flex-grow-1", "margin-vertical", "width-100%").Attr("autofocus", "true").Style("height:100%").InnerHTML(txn.Content).Close()
 
-	b.Div().Class("flex-shrink-0")
-	b.Button().Type("submit").Class("primary").InnerText("Create New Post").Close()
-	b.A(txn.OnCancel).Href(onCancel).Class("button").InnerText("Cancel")
-
+		b.Div().Class("flex-shrink-0")
+		{
+			b.Button().Type("submit").Class("primary").TabIndex("0").InnerText("Create New Post").Close()
+			b.A(txn.OnCancel).Href(onCancel).Class("button").TabIndex("0").InnerText("Cancel")
+		}
+	}
 	b.CloseAll()
 
 	return ctx.HTML(http.StatusOK, b.String())
@@ -70,7 +74,7 @@ func PostIntent_Create(ctx *steranko.Context, factory *domain.Factory, user *mod
 	// Create the new Stream
 	streamService := factory.Stream()
 	stream := model.NewStream()
-	stream.TemplateID = firstOf(user.NoteTemplate, "stream-outbox-message")
+	stream.TemplateID = firstOf(user.NoteTemplate, "outbox-message")
 	stream.ParentID = user.UserID
 	stream.ParentIDs = []primitive.ObjectID{user.UserID}
 	stream.Label = txn.Name
@@ -79,7 +83,7 @@ func PostIntent_Create(ctx *steranko.Context, factory *domain.Factory, user *mod
 
 	// Save the new Stream to the database
 	if err := streamService.Save(&stream, "Saved via Activity Intent"); err != nil {
-		return derp.Wrap(err, location, "Error saving stream")
+		return derp.ReportAndReturn(derp.Wrap(err, location, "Error saving stream"))
 	}
 
 	// Redirect to the "on-success" URL

@@ -1,7 +1,12 @@
+## Base-Intent template defines a modal dialog where users can
+## initate an outbount Activity Intent that discovers the
+## capabilities of their home server and links then back to 
+## it to complete an action (like, share, follow, etc) 
+
 {
 	templateId:"base-intent"
 	actions:{
-        share: {
+        intent: {
             steps: [
                 {do:"as-modal", steps:[
                     {do:"view-html"}

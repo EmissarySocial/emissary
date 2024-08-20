@@ -11,6 +11,13 @@ type CreateIntent struct {
 	OnCancel   string `query:"on-cancel"  form:"on-cancel"`
 }
 
+// FollowIntent defines the structure for a "Follow" intent
+type FollowIntent struct {
+	Object    string `query:"object"     form:"object"`
+	OnSuccess string `query:"on-success" form:"on-success"`
+	OnCancel  string `query:"on-cancel"  form:"on-cancel"`
+}
+
 // DislikeIntent defines the structure for a "Dislike" intent
 type DislikeIntent struct {
 	Object    string `query:"object"     form:"object"`

@@ -635,17 +635,17 @@ func (service *User) RemoteFollowURL() string {
 }
 
 func (service *User) CreateIntentURL() string {
-	return service.host + "/@me/intent/create?type={type}&name={name}&summary={summary}&content={content}&inReplyTo={inReplyTo}&on-success={on-succes}&on-cancel={on-cancel}"
+	return service.host + "/@me/intent/create?type={type}&name={name}&summary={summary}&content={content}&inReplyTo={inReplyTo}&on-success={on-success}&on-cancel={on-cancel}"
 }
 
 func (service *User) DislikeIntentURL() string {
-	return service.host + "/@me/intent/dislike?object={object}&on-success={on-succes}&on-cancel={on-cancel}"
+	return service.host + "/@me/intent/dislike?object={object}&on-success={on-success}&on-cancel={on-cancel}"
 }
 
 func (service *User) FollowIntentURL() string {
-	return service.host + "/@me/intent/follow?object={object}&on-success={on-succes}&on-cancel={on-cancel}"
+	return service.host + "/@me/intent/follow?object={object}&on-success={on-success}&on-cancel={on-cancel}"
 }
 
 func (service *User) LikeIntentURL() string {
-	return service.host + "/@me/intent/like?object={object}&on-success={on-succes}&on-cancel={on-cancel}"
+	return service.host + "/@me/intent/like?object={object}&on-success={on-success}&on-cancel={on-cancel}"
 }

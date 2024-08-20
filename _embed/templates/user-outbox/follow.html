@@ -1,6 +1,6 @@
 {{- template "follow-heading" . -}}
 
-<button hx-get="/@{{.UserID}}/follow-activitypub" class="flex-row width-100%">
+<button hx-get="/@{{.UserID}}/intent?intent=follow&object={{.Permalink}}" class="flex-row width-100%">
 	<div class="text-2xl margin-none margin-right-sm">{{icon "activitypub"}}</div>
 	<div class="flex-grow">
 		<div class="text-lg margin-none">My Fediverse Account</div>

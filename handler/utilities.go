@@ -5,11 +5,30 @@ import (
 	"net/url"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/domain"
+	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/steranko"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 )
+
+// ActorUsername returns a human-readable username for an Actor
+func ActorUsername(actor streams.Document) string {
+
+	// If we have a preferred username, then return it as @username@hostname
+	if username := actor.PreferredUsername(); username != "" {
+		return "@" + username + "@" + domain.NameOnly(actor.ID())
+	}
+
+	// Otherwise, try to "URL"
+	if url := actor.URL(); url != "" {
+		return url
+	}
+
+	// Otherwise, just punt and use the ID
+	return actor.ID()
+}
 
 // getActionID returns the :action token from the Request (or a default)
 func getActionID(ctx echo.Context) string {

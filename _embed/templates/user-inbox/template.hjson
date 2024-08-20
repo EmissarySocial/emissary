@@ -189,7 +189,7 @@
 		following-add: {
 			roles:["self"]
 			steps: [
-				{do:"as-modal", steps:[
+				{do:"as-modal", background:"inbox", steps:[
 					{do:"view-html"}
 				]}
 			]
