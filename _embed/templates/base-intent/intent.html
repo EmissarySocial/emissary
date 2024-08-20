@@ -1,9 +1,9 @@
 {{- $intent := .QueryParam "intent" -}}
 
-<h1 class="modal-title">
+<h1 class="modal-title" class="margin-none">
 	{{- if eq "" $intent -}}
-		{{icon "settings"}}
-		Add/Edit Account
+		{{icon "activitypub"}}
+		Add/Edit Fediverse Account
 	{{- else if eq "announce" $intent -}}
 		{{icon "rocket"}}
 		Boost on the Fediverse
@@ -25,22 +25,20 @@
 	{{- end -}}
 </h1>
 
-<hr>
-
-<div id="empty-header" class="list-is-empty">
+<div id="empty-header">
 	<h2>Have an Account?</h2>
 
-	<div class="margin-bottom">
+	<div class="margin-bottom-lg">
 		Enter your Fediverse address to share this item with your community
 	</div>
 </div>
 
-<div id="full-header" class="list-populated">
-	<div class="margin-bottom italics">
+<div id="full-header">
+	<div class="bold text-gray text-lg margin-bottom-lg">
 		{{- if eq "" $intent -}}
 			Add or remove remote accounts to use with this site.
 		{{- else -}}
-			Click the account you want to use, and be redirected to your home server.
+			Choose an account and be redirected to your home server.
 		{{- end -}}
 	</div>
 
@@ -63,7 +61,7 @@
 	
 	<div id="addAnotherForm" class="width-100% flex-row button">
 		<div id="addAnotherIcon" class="circle-48 flex-center text-white flex-shrink-0">{{icon "add"}}</div>
-		<input type="text" id="addAnotherAccountID" name="account" placeholder="@yourname@yourserver.social" class="flex-grow">
+		<input type="text" id="addAnotherAccountID" name="account" placeholder="@yourname@yourserver.social" autocomplete="off" class="flex-grow">
 		<button class="primary nowrap htmx-request-hide">Add Account</button>
 		<button class="primary nowrap htmx-request-show">
 			<span class="spin">{{icon "loading"}}</span>
@@ -103,6 +101,7 @@
 				hide #modal
 				goToIntent(accounts[0].id)
 				exit
+			end
 		end
 
 		displayAccounts()
@@ -135,8 +134,6 @@
 	def setAccounts(accounts)
 		window.localStorage.setItem("accounts", JSON.stringify(accounts))
 		displayAccounts()
-	catch exception
-		return []
 	end
 
 	def deleteAccount(index)
@@ -177,7 +174,6 @@
 			hide #addAnotherButton
 
 		else
-
 			hide #empty-header
 			hide #empty-footer
 			hide #addAnotherForm
@@ -207,6 +203,7 @@
 
 			_hyperscript.processNode(accountList)
 		end
+
 	end
 
 </script>
