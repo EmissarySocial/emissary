@@ -11,7 +11,7 @@
 
 		<div class="card" style="width:clamp(540px, 50%, 720px); margin:auto; padding:16px 32px; line-height:150%;">
 			
-			<form hx-post="/signin" hx-trigger="submit" hx-target="#message">
+			<form hx-post="/signin?next={{.next}}" hx-trigger="submit" hx-target="#message">
 
 				<div class="layout-vertical margin-bottom">
 

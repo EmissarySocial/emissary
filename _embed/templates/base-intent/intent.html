@@ -3,7 +3,7 @@
 <h1 class="modal-title" class="margin-none">
 	{{- if eq "" $intent -}}
 		{{icon "activitypub"}}
-		Add/Edit Fediverse Account
+		Add/Edit Fediverse Accounts
 	{{- else if eq "announce" $intent -}}
 		{{icon "rocket"}}
 		Boost on the Fediverse
@@ -15,7 +15,7 @@
 		Dislike on the Fediverse
 	{{- else if eq "follow" $intent -}}
 		{{icon "activitypub"}}
-		Follow on the Fediverse
+		Follow for Updates
 	{{- else if eq "like" $intent -}}
 		{{icon "thumbs-up"}}
 		Like on the Fediverse
@@ -35,9 +35,7 @@
 
 <div id="full-header">
 	<div class="bold text-gray text-lg margin-bottom-lg">
-		{{- if eq "" $intent -}}
-			Add or remove remote accounts to use with this site.
-		{{- else -}}
+		{{- if ne "" $intent -}}
 			Choose an account and be redirected to your home server.
 		{{- end -}}
 	</div>
@@ -51,27 +49,37 @@
 
 	<input type="hidden" name="intent" value="Create">
 
-	<div id="addAnotherButton" class="button flex-row width-100%" role="button" script="on click hide me then show #addAnotherForm then focus() the #addAnotherAccountID">
-		<div class="circle-48 flex-center text-white">{{icon "add"}}</div>
+	<div id="addAnotherButton" class="flex-row button width-100% margin-bottom-xs" role="button" script="on click hide me then show #addAnotherForm then focus() the #addAnotherAccountID">
+		<div class="circle-48 flex-center text-xl margin-none">{{icon "activitypub"}}</div>
 		<div class="flex-grow">
-			<div class="bold">Add Account</div>
-			<div class="text-sm text-gray">Use another account from this site</div>
+			<div class="bold">Add Fediverse Account</div>
+			<div class="text-sm text-gray">Your username for any site on the social web</div>
 		</div>
 	</div>
 	
-	<div id="addAnotherForm" class="width-100% flex-row button">
-		<div id="addAnotherIcon" class="circle-48 flex-center text-white flex-shrink-0">{{icon "add"}}</div>
+	<div id="addAnotherForm" class="flex-row button width-100% margin-bottom-xs" role="button">
+		<div id="addAnotherIcon" class="circle-48 flex-center text-xl margin-none">{{icon "activitypub"}}</div>
 		<input type="text" id="addAnotherAccountID" name="account" placeholder="@yourname@yourserver.social" autocomplete="off" class="flex-grow">
-		<button class="primary nowrap htmx-request-hide">Add Account</button>
+		<button class="primary nowrap htmx-request-hide">Add Fediverse Account</button>
 		<button class="primary nowrap htmx-request-show">
 			<span class="spin">{{icon "loading"}}</span>
 			Adding
 		</button>
 	</div>
+
+	{{- if eq "follow" $intent -}}
+		<div class="flex-row button width-100% margin-bottom-xs" role="button" hx-get="{{.BasePath}}/follow-email">
+			<div class="circle-48 flex-center text-xl margin-none flex-shrink-0">{{icon "email"}}</div>
+			<div class="flex-grow">
+				<div class="bold">Add Email Address</div>
+				<div class="text-sm text-gray">Receive updates in your email box</div>
+			</div>
+		</div>
+	{{- end -}}
+
 </form>
 
-<div id="empty-footer">
-	<hr>
+<div id="empty-footer" class="margin-top-lg">
 	<h2>Need an Account?</h2>
 
 	{{- if .DomainHasRegistrationForm -}}
@@ -90,12 +98,10 @@
 	<button script="on click trigger closeModal">Close Window</button>
 </div>
 
-
 <script type="text/hyperscript">
 
 	init
 		if "{{$intent}}" is not "" then
-
 			set accounts to getAccounts()
 			if accounts.length is 1 then
 				hide #modal
@@ -115,9 +121,7 @@
 			exit
 		end
 
-		set accounts to getAccounts()
-		call accounts.push(account)
-		call setAccounts(accounts)
+		call addAccount(account)
 
 		set the #addAnotherAccountID's value to ""
 		show #addAnotherButton
@@ -126,24 +130,32 @@
 
 	def getAccounts()
 		set accountString to window.localStorage.getItem("accounts")
-		return JSON.parse(accountString)
-	catch exception
+		set result to JSON.parse(accountString)
+
+		if result is not null then 
+			return result
+		end
+
 		return []
+	end
+
+	def addAccount(account)
+		set accounts to getAccounts()
+		call accounts.push(account)
+		call setAccounts(accounts)
+	end
+
+	def deleteAccount(index)
+		set accounts to getAccounts()
+		if confirm('Remove this account?') then
+			accounts.splice(index, 1)
+			setAccounts(accounts)
+		end
 	end
 
 	def setAccounts(accounts)
 		window.localStorage.setItem("accounts", JSON.stringify(accounts))
 		displayAccounts()
-	end
-
-	def deleteAccount(index)
-
-		set accounts to getAccounts()
-
-		if confirm('Remove this account?') then
-			accounts.splice(index, 1)
-			setAccounts(accounts)
-		end
 	end
 
 	def goToIntent(username)
@@ -154,7 +166,6 @@
 		end
 
 		trigger closeModal
-
 		set queryString to the #var_queryString's innerText
 		set nextUrl to "/.intents/" + intent + "?account=" + username + "&" + queryString
 
@@ -168,32 +179,30 @@
 		if accounts.length is 0 then
 			show #empty-header
 			show #empty-footer
-			show #addAnotherForm
+			show #addAnotherButton
+			hide #addAnotherForm
 			hide #addAnotherIcon
 			hide #full-header
-			hide #addAnotherButton
 
 		else
 			hide #empty-header
 			hide #empty-footer
-			hide #addAnotherForm
-			show #addAnotherIcon
-			show #full-header
 			show #addAnotherButton
+			hide #addAnotherForm
+			hide #addAnotherIcon
+			show #full-header
 
 			set the accountList's innerHTML to ""
 
-			repeat for account in accounts index i
+			repeat for account in accounts index idx
 				set row to `
-					<div class="button flex-row width-100% margin-bottom-xs">
-						<div class="flex-row width-100%" role="link" tabindex="0" script="on click goToIntent('${account.id}')">
-							<img src="${account.icon}" class="circle-48">
-							<div class="flex-grow">
-								<div class="margin-vertical-none bold">${account.name}</div>
-								<div class="margin-vertical-none text-sm text-gray">${account.preferredUsername}</div>
-							</div>
+					<div class="flex-row button width-100% margin-bottom-xs {{if eq "" $intent}}inactive{{end}}" {{if ne "" $intent}}tabindex="0"{{end}} role="link" onclick="goToIntent('${account.id}')">
+						<img class="circle-48 flex-center flex-shrink-0" src="${account.icon}">
+						<div class="flex-grow">
+							<div class="bold">${account.name}</div>
+							<div class="text-sm text-gray">${account.preferredUsername}</div>
 						</div>
-						<div class="clickable padding-horizontal padding-vertical-sm text-lg" role="button" script="on click deleteAccount(${i})" tabIndex="0">
+						<div class="clickable padding-horizontal padding-vertical-sm text-lg" role="button" onclick="deleteAccount(${idx})" tabIndex="0">
 							<span class="bi bi-x"></span>
 						</div>
 					</div>
@@ -201,7 +210,6 @@
 				put row at the end of accountList
 			end
 
-			_hyperscript.processNode(accountList)
 		end
 
 	end

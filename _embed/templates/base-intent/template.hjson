@@ -6,12 +6,24 @@
 {
 	templateId:"base-intent"
 	actions:{
-        intent: {
-            steps: [
-                {do:"as-modal", steps:[
-                    {do:"view-html"}
-                ]}
-            ]
-        }
+		intent: {
+			steps: [
+				{do:"as-modal", steps:[
+					{do:"view-html"}
+				]}
+			]
+		},
+		follow-email: {
+			steps: [
+				{do:"as-modal", steps:[
+					{do:"view-html"}
+				]}
+			]
+		}
+		follow-email-sent: {
+			steps: [
+				{do:"view-html"}
+			]
+		}
 	}
 }

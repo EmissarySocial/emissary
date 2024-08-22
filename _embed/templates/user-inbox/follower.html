@@ -1,72 +1,9 @@
-{{- $url := .QueryParam "url" -}}
-{{- $followerID := .QueryParam "followerId" -}}
-{{- $activityStream := .ActivityStream $url -}}
-{{- $following := .AmFollowing $url -}}
-{{- $outbox := $activityStream.Outbox | collection 4 -}}
-
-<div hx-get="/@me/inbox/follower?url={{$url}}" hx-trigger="refreshSection from:window" hx-swap="outerHTML" hx-push-url="false">
-
-	{{- if ne "" $activityStream.Image.Href -}}
-		<div style="position:absolute; top:0px; left:0px; right:0px; height:160px; background-image:url('{{$activityStream.Image.Href}}'); background-size:cover;"></div>
-		<div style="height:160px;"></div>
-	{{- end -}}
-
-	<div class="flex-row">
-		{{- if ne "" $activityStream.Icon.Href -}}
-			<img src="{{$activityStream.Icon.Href}}" class="circle-64">
-		{{- else -}}
-			<div class="circle-64"></div>
-		{{- end -}}
-		<div>
-			<h1 class="margin-none">{{- $activityStream.Name -}}</h1>
-			<div class="text-gray"><a href="{{$activityStream}}" target="_blank">{{- $activityStream.UsernameOrID -}}</a></div>
-		</div>
-
-	</div>
-
-	<div class="flex-row margin-bottom">
-		<div style="width:64px;"></div>
-		<div>
-			<a href="{{$activityStream}}" class="button text-xs" target="_blank">View Profile</a>
-
-			{{- if $following.NotZero -}}
-				<button hx-post="/@me/inbox/following-delete?followingId={{$following.FollowingID.Hex}}" class="text-xs" hx-push-url="false" hx-confirm="Do You Want To Stop Following {{$activityStream.Name}}?">&check; Following</button>
-			{{- else -}}
-				<button hx-get="/@me/inbox/following-add?url={{$activityStream.ID}}" class="text-xs" hx-push-url="false">&plus; Follow</button>
-			{{- end -}}
-		</div>
-
-		<div class="flex-grow-1 align-right">
-			<button hx-get="/@me/inbox/follower-delete?followerId={{$followerID}}" class="text-xs">Remove Follower</button>
-		</div>
-	</div>
-
-	{{- $activityStream.Summary | html -}}
-
-	{{- if eq 0 (len $outbox ) -}}
-		<div>This Person Does Not Have Any Posts.</div>
-
-	{{- else -}}
-
-		{{- range $outbox -}}
-			<hr>
-			<div role="link" script="on click go to url '{{.ID}}' in new window">
-				{{- if ne "" .Name -}}
-					<div><span class="bold">{{.Name | textOnly}}</span> &middot; {{.Published.Format "Jan 2, 2006"}}</div>
-					<div>{{.Content | textOnly | summary}}</div>
-
-				{{- else if ne "" .Summary -}}
-					<div class="bold">{{.Published.Format "Jan 2, 2006"}}</div>
-					<div>{{.Summary | textOnly | summary}}</div>
-
-				{{- else -}}
-					<div class="bold">{{.Published.Format "Jan 2, 2006"}}</div>
-					<div>{{.Content | textOnly | summary}}</div>
-
-				{{- end -}}
-
-			</div>
-		{{- end -}}
-
-	{{- end -}}
-</div>
+{{- if eq "ACTIVITYPUB" .Method -}}
+	{{- template "follower-activitypub" . -}}
+{{- else if eq "EMAIL" .Method -}}
+	{{- template "follower-email" . -}}
+{{- else if eq "WEBSUB" -}}
+	{{- template "follower-websub" . -}}
+{{- else -}}
+	There is a problem with this "Follower" record that prevents it from being displayed.
+{{- end -}}

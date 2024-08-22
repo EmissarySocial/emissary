@@ -157,8 +157,10 @@
 		follower:{
 			roles: ["self"]
 			steps:[
-				{do:"as-modal", steps:[
-					{do:"view-html", file:"follower"}
+				{do:"with-follower", steps: [
+					{do:"as-modal", steps:[
+						{do:"view-html", file:"follower"}
+					]}
 				]}
 			]
 		}
@@ -276,48 +278,69 @@
 								"delete-label:Stop Following"
 							], 
 							form:{
-								type:"layout-vertical"
+								type: "layout-tabs"
 								children: [
 									{
-										type:"select"
-										label:"Inbox Folder"
-										path:"folderId"
-										description:"Where should messages from this source be placed?"
-										options:{provider: "folders"}
-									}
+										type:"layout-vertical"
+										label:"Settings"
+										children: [
+											{
+												type:"select"
+												label:"Inbox Folder"
+												path:"folderId"
+												description:"Where should messages from this source be placed?"
+												options:{provider: "folders"}
+											}
+											{
+												type:"select", 
+												label:"Message Types", 
+												path:"behavior", 
+												description:"What kinds of posts should be shown in my timeline?"
+												options:{provider:"following-behaviors"}
+											}
+											{
+												type:"select", 
+												label:"Shared Blocks", 
+												path:"ruleAction", 
+												description:"How should blocks from this source be handled?"
+												options:{provider:"following-rule-actions"}
+											}
+											{
+												type:"toggle"
+												path:"collapseThreads"
+												default:true
+												options:{
+													true-text:"Group messages into a single thread"
+													false-text:"Show all messages separately"
+												}
+											}
+											{
+												type:"toggle"
+												path:"isPublic"
+												default:false
+												options:{
+													true-text:"Public: This 'Follow' is visible on my profile"
+													false-text:"Private: This 'Follow' is hidden from others"
+												}
+											}
+										]
+									},
 									{
-										type:"select", 
-										label:"Message Types", 
-										path:"behavior", 
-										description:"What kinds of posts should be shown in my timeline?"
-										options:{provider:"following-behaviors"}
-									}
-									{
-										type:"select", 
-										label:"Shared Blocks", 
-										path:"ruleAction", 
-										description:"How should blocks from this source be handled?"
-										options:{provider:"following-rule-actions"}
-									}
-									{
-										type:"toggle"
-										path:"collapseThreads"
-										default:true
-										options:{
-											true-text:"Group messages into a single thread"
-											false-text:"Show all messages separately"
-										}
-									}
-									{
-										type:"toggle"
-										path:"isPublic"
-										default:false
-										options:{
-											true-text:"Public: This 'Follow' is visible on my profile"
-											false-text:"Private: This 'Follow' is hidden from others"
-										}
+										type:"layout-vertical"
+										label:"Notes"
+										children: [
+											{
+												type:"textarea"
+												path:"notes"
+												description:"Notes about this person are private and not published or shared with anyone."
+												options: {
+													rows:10
+												}
+											}
+										]
 									}
 								]
+								
 							}
 						}
 					]}

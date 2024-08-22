@@ -17,12 +17,12 @@
 			<div class="width-3-5">
 				{{- if ne "" .Label -}}
 					<div class="ellipsis-block" style="max-height:3em;">
-						<div class="text-black bold">{{- .Label -}}</div>
-						<div class="text-sm text-light-gray">{{- .URL -}}</div>
+						<div class="bold">{{- .Label -}}</div>
+						<div class="text-light-gray">{{- .UsernameOrID -}}</div>
 					</div>
 				{{- else -}}
 					<div class="ellipsis-block" style="max-height:1.75em;">
-						{{- .URL -}}
+						{{- .UsernameOrID -}}
 					</div>
 				{{- end -}}
 			</div>

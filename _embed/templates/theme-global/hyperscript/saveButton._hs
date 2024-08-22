@@ -34,7 +34,6 @@ behavior SaveButton
 	end
 
 	on htmx:xhr:progress from the closest <form/>
-		log event
 
 		if event.detail.lengthComputable is not true then
 			exit
@@ -46,7 +45,6 @@ behavior SaveButton
 			exit
 		end
 
-		log progressButton
 		set percentComplete to Math.round((event.detail.loaded / event.detail.total) * 100)
 		set the progressButton's *width to percentComplete + "%"
 	end

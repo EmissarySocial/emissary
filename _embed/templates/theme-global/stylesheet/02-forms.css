@@ -243,6 +243,7 @@ button,
 	position:relative;
 }
 
+
 .text-sm button,
 .text-sm .button,
 button.text-sm,
@@ -346,7 +347,16 @@ button[disabled]:hover,
 .button[disabled]:hover {
 	background-color:var(--gray10);
 	color: var(--gray50);
-	cursor: not-allowed;
+	cursor: default;
+}
+
+button.inactive,
+.button.inactive,
+button.inactive:hover,
+.button.inactive:hover {
+	background-color: var(--gray10);
+	color: var(--gray90);
+	cursor:default;
 }
 
 .button.barberpole,
