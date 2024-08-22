@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"net/url"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
@@ -32,6 +33,7 @@ func GetSignIn(serverFactory *server.Factory) echo.HandlerFunc {
 		queryString["domainName"] = domain.Label
 		queryString["domainIcon"] = domain.IconURL()
 		queryString["hasRegistrationForm"] = factory.Domain().HasRegistrationForm()
+		queryString["next"] = url.QueryEscape(queryString.GetString("next"))
 
 		// Render the template
 		if err := template.ExecuteTemplate(ctx.Response(), "signin", queryString); err != nil {
@@ -64,12 +66,12 @@ func PostSignIn(serverFactory *server.Factory) echo.HandlerFunc {
 		// If there is a "next" parameter, then redirect to that URL.
 		if next := ctx.QueryParam("next"); next != "" {
 			ctx.Response().Header().Add("Hx-Redirect", next)
-			return ctx.NoContent(http.StatusNoContent)
+		} else {
+			// Otherwise, redirect to the user's profile page
+			ctx.Response().Header().Add("Hx-Redirect", "/@me")
 		}
 
-		// Return a success message (and redirect on the client)
-		// ctx.Response().Header().Add("Hx-Trigger", "SigninSuccess")
-		ctx.Response().Header().Add("Hx-Redirect", "/@me")
+		/// 3..2..1.. Go!
 		return ctx.NoContent(http.StatusNoContent)
 	}
 }
@@ -89,7 +91,12 @@ func PostSignOut(serverFactory *server.Factory) echo.HandlerFunc {
 
 		s := factory.Steranko()
 
-		if hasBackupProfile := s.SignOut(ctx); hasBackupProfile {
+		// If there is a "next" parameter, then redirect to that URL.
+		hasBackupProfile := s.SignOut(ctx)
+
+		if next := ctx.QueryParam("next"); next != "" {
+			ctx.Response().Header().Add("Hx-Redirect", "/signin?next="+url.QueryEscape(next))
+		} else if hasBackupProfile {
 			ctx.Response().Header().Add("HX-Redirect", "/admin/users")
 		} else {
 			ctx.Response().Header().Add("HX-Redirect", "/")

@@ -17,6 +17,7 @@ type Following struct {
 	Label           string             `json:"label"           bson:"label"`           // Label of this "following" record
 	Notes           string             `json:"notes"           bson:"notes"`           // Notes about this "following" record, entered by the user.
 	URL             string             `json:"url"             bson:"url"`             // Human-Facing URL that is being followed.
+	Username        string             `json:"username"        bson:"username"`        // Username of the actor that is being followed (@username@server.social).
 	ProfileURL      string             `json:"profileUrl"      bson:"profileUrl"`      // Updated, computer-facing URL that is being followed.
 	IconURL         string             `json:"iconUrl"         bson:"iconUrl"`         // URL of an the avatar/icon image that represents this "following"
 	Behavior        string             `json:"behavior"        bson:"behavior"`        // Behavior determines the types of records to import from this Actor [POSTS+REPLIES]
@@ -131,4 +132,12 @@ func (following Following) IsZero() bool {
 
 func (following Following) NotZero() bool {
 	return !following.IsZero()
+}
+
+func (following Following) UsernameOrID() string {
+	if following.Username != "" {
+		return following.Username
+	}
+
+	return following.ProfileURL
 }

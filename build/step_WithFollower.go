@@ -60,7 +60,7 @@ func (step StepWithFollower) execute(builder Builder, buffer io.Writer, actionMe
 	}
 
 	// Create a new builder tied to the Follower record
-	subBuilder, err := NewModel(factory, builder.request(), builder.response(), template, &follower, builder.actionID())
+	subBuilder, err := NewFollower(factory, builder.request(), builder.response(), template, &follower, builder.actionID())
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Unable to create sub-builder"))

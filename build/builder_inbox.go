@@ -442,7 +442,7 @@ func (w Inbox) SubBuilder(object any) (Builder, error) {
 		result, err = NewModel(w._factory, w._request, w._response, w._template, &typed, w._actionID)
 
 	case model.Follower:
-		result, err = NewModel(w._factory, w._request, w._response, w._template, &typed, w._actionID)
+		result, err = NewFollower(w._factory, w._request, w._response, w._template, &typed, w._actionID)
 
 	case model.Following:
 		result, err = NewModel(w._factory, w._request, w._response, w._template, &typed, w._actionID)

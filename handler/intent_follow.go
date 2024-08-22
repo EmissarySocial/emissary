@@ -61,6 +61,7 @@ func GetIntent_Follow(ctx *steranko.Context, factory *domain.Factory, user *mode
 	b.Head()
 	b.Link("stylesheet", "/.themes/global/stylesheet").Close()
 	b.Link("stylesheet", "/.themes/default/stylesheet").Close()
+	b.Script().Src("/.themes/global/resources/htmx/htmx.min.js").Close()
 	b.Close()
 
 	b.Body()
@@ -71,11 +72,11 @@ func GetIntent_Follow(ctx *steranko.Context, factory *domain.Factory, user *mode
 
 	b.Div().Class("padding", "flex-column").Style("height:100vh", "max-height:100vh")
 	{
-		write_intent_header(b, factory.Hostname(), user)
+		write_intent_header(ctx, b, user)
 
 		b.Div().Class("card", "flex-grow", "padding")
 		{
-			b.Div().Class("flex-row")
+			b.Div().Class("flex-row", "flex-align-center", "margin-bottom")
 			{
 				b.Img(actor.Icon().Href()).Class("circle-48", "flex-shrink-0").Close()
 				b.Div().Class("flex-grow")

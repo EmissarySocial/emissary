@@ -32,6 +32,7 @@ func GetIntent_Create(ctx *steranko.Context, factory *domain.Factory, user *mode
 	b.Head()
 	b.Link("stylesheet", "/.themes/global/stylesheet").Close()
 	b.Link("stylesheet", "/.themes/default/stylesheet").Close()
+	b.Script().Src("/.themes/global/resources/htmx/htmx.min.js").Close()
 	b.Close()
 
 	b.Body()
@@ -43,7 +44,7 @@ func GetIntent_Create(ctx *steranko.Context, factory *domain.Factory, user *mode
 
 	b.Div().Class("flex-column", "flex-align-stretch", "padding").Style("height:100vh", "max-height:100vh")
 	{
-		write_intent_header(b, factory.Hostname(), user)
+		write_intent_header(ctx, b, user)
 
 		b.Textarea("content").Class("flex-grow-1", "margin-vertical", "width-100%").Attr("autofocus", "true").Style("height:100%").InnerHTML(txn.Content).Close()
 

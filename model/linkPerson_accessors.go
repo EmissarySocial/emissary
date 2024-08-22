@@ -11,6 +11,7 @@ func PersonLinkSchema() schema.Element {
 		Properties: schema.ElementMap{
 			"userId":       schema.String{Format: "objectId"},
 			"name":         schema.String{MaxLength: 128},
+			"username":     schema.String{MaxLength: 128},
 			"profileUrl":   schema.String{Format: "url", MaxLength: 1024},
 			"inboxUrl":     schema.String{Format: "url", MaxLength: 1024},
 			"iconUrl":      schema.String{Format: "url", MaxLength: 1024},
@@ -28,6 +29,9 @@ func (link *PersonLink) GetPointer(name string) (any, bool) {
 
 	case "name":
 		return &link.Name, true
+
+	case "username":
+		return &link.Username, true
 
 	case "profileUrl":
 		return &link.ProfileURL, true

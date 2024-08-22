@@ -41,6 +41,7 @@ func GetIntent_Like(ctx *steranko.Context, factory *domain.Factory, user *model.
 	b.Link("stylesheet", "/.themes/global/resources/bootstrap-icons-1.11.3/font/bootstrap-icons.css").Close()
 	b.Link("stylesheet", "/.themes/global/stylesheet").Close()
 	b.Link("stylesheet", "/.themes/default/stylesheet").Close()
+	b.Script().Src("/.themes/global/resources/htmx/htmx.min.js").Close()
 	b.Close()
 
 	b.Body().Style("overflow-y:hidden")
@@ -51,7 +52,7 @@ func GetIntent_Like(ctx *steranko.Context, factory *domain.Factory, user *model.
 
 	b.Div().Class("flex-column", "padding").Style("height:99vh", "max-height:99vh")
 	{
-		write_intent_header(b, factory.Hostname(), user)
+		write_intent_header(ctx, b, user)
 
 		b.Div().Class("flex-column", "flex-grow-1", "card", "padding").Style("overflow-y:scroll")
 		{

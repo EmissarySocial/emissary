@@ -87,7 +87,7 @@ func PostServiceActor_Inbox(serverFactory *server.Factory) echo.HandlerFunc {
 
 		// Try to read/dump the Request body
 		// body, err := io.ReadAll(ctx.Request().Body)
-		// spew.Dump("PostServiceActor", ctx.Request().Header, string(body), err)
+		// log.Trace().Msg(string(body))
 
 		// Return no content
 		return ctx.NoContent(http.StatusOK)

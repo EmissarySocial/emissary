@@ -417,6 +417,7 @@ func (service *Follower) NewActivityPubFollower(parentType string, parentID prim
 	follower.Actor = model.PersonLink{
 		ProfileURL:   actor.ID(),
 		Name:         actor.Name(),
+		Username:     actor.UsernameOrID(),
 		IconURL:      actor.IconOrImage().URL(),
 		InboxURL:     actor.Get("inbox").String(),
 		EmailAddress: actor.Get("email").String(),

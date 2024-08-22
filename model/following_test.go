@@ -16,6 +16,7 @@ func TestFollowingSchema(t *testing.T) {
 		{"userId", "876543218765432187654321", nil},
 		{"folderId", "876543218765432187654321", nil},
 		{"label", "LABEL", nil},
+		{"username", "USERNAME", nil},
 		{"url", "http://url.url", nil},
 		{"profileUrl", "https://other.url", nil},
 		{"iconUrl", "https://other.url/image.png", nil},

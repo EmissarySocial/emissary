@@ -4,6 +4,7 @@ import "go.mongodb.org/mongo-driver/bson/primitive"
 
 type FollowingSummary struct {
 	FollowingID primitive.ObjectID `bson:"_id"`
+	Username    string             `bson:"username"`
 	URL         string             `bson:"url"`
 	Label       string             `bson:"label"`
 	Folder      string             `bson:"folder"`
@@ -18,7 +19,7 @@ type FollowingSummary struct {
 
 // FollowingSummaryFields returns a slice of all BSON field names for a FollowingSummary
 func FollowingSummaryFields() []string {
-	return []string{"_id", "url", "label", "folder", "folderId", "iconUrl", "method", "status", "lastPolled", "nextPoll", "createDate"}
+	return []string{"_id", "username", "url", "label", "folder", "folderId", "iconUrl", "method", "status", "lastPolled", "nextPoll", "createDate"}
 }
 
 func (summary FollowingSummary) Fields() []string {
@@ -64,4 +65,11 @@ func (summary FollowingSummary) StatusClass() string {
 
 func (summary FollowingSummary) GetRank() int64 {
 	return summary.CreateDate
+}
+
+func (summary FollowingSummary) UsernameOrID() string {
+	if summary.Username != "" {
+		return summary.Username
+	}
+	return summary.URL
 }

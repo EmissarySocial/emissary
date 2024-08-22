@@ -49,21 +49,24 @@ func (follower Follower) State() string {
 
 // Roles returns a list of all roles that match the provided authorization.
 // Since Follower records should only be accessible by the follower owner, this
-// function only returns MagicRoleMyself if applicable.  Others (like Anonymous
-// and Authenticated) should never be allowed on an Follower record, so they
-// are not returned.
+// function only returns MagicRoleMyself if applicable.
 func (follower Follower) Roles(authorization *Authorization) []string {
 
-	/* Removing this because we're authenticating access to Followers higher up the stack.
+	// Everyone matches "Anonymous"
+	result := []string{MagicRoleAnonymous}
 
-	// Followers are private, so only MagicRoleMyself is allowed
-	if authorization.UserID == follower.ParentID {
-		return []string{MagicRoleMyself}
+	// If the user is authenticated, then they match "Authenticated"
+	if authorization.IsAuthenticated() {
+		result = append(result, MagicRoleAuthenticated)
 	}
-	*/
 
-	// Intentionally NOT allowing MagicRoleAnonymous, MagicRoleAuthenticated, or MagicRoleOwner
-	return []string{MagicRoleAnonymous}
+	// If the user is the owner of this Follower, then they match "Myself"
+	if authorization.UserID == follower.ParentID {
+		result = append(result, MagicRoleMyself)
+	}
+
+	// Success?
+	return result
 }
 
 func (follower Follower) GetJSONLD() mapof.Any {

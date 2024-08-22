@@ -14,6 +14,7 @@ func TestPersonLink(t *testing.T) {
 	tests := []tableTestItem{
 		{"userId", "000000000000000000000001", nil},
 		{"name", "John Connor", nil},
+		{"username", "@john@connor.social", nil},
 		{"profileUrl", "https://john.connor.mil", nil},
 		{"inboxUrl", "https://john.connor.mil/inbox", nil},
 		{"emailAddress", "john.connor@mil", nil},

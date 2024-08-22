@@ -159,16 +159,6 @@
 			]
 		}
 
-		follow-email: {
-			steps: [
-				{do:"as-modal", background:"profile", steps:[
-					{do:"view-html"}
-				]}
-			]
-		}
-
-		follow-email-sent: {do:"view-html"}
-
 		follower-confirm: {
 			steps:[
 				{do:"with-follower", steps:[

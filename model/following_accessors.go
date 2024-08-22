@@ -15,6 +15,7 @@ func FollowingSchema() schema.Element {
 			"folderId":        schema.String{Format: "objectId", Required: true},
 			"label":           schema.String{MaxLength: 128},
 			"notes":           schema.String{MaxLength: 1024},
+			"username":        schema.String{MaxLength: 128},
 			"url":             schema.String{Required: true, MaxLength: 1024},
 			"profileUrl":      schema.String{Format: "url", MaxLength: 1024},
 			"iconUrl":         schema.String{Format: "url", MaxLength: 1024},
@@ -46,6 +47,9 @@ func (following *Following) GetPointer(name string) (any, bool) {
 
 	case "notes":
 		return &following.Notes, true
+
+	case "username":
+		return &following.Username, true
 
 	case "url":
 		return &following.URL, true

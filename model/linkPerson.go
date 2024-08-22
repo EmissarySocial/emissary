@@ -11,6 +11,7 @@ import (
 type PersonLink struct {
 	UserID       primitive.ObjectID `json:"userId,omitempty"       bson:"userId,omitempty"`       // Internal ID of the person (if they exist in this database)
 	Name         string             `json:"name,omitempty"         bson:"name,omitempty"`         // Name of the person
+	Username     string             `json:"username,omitempty"     bson:"username,omitempty"`     // Username of the person (e.g. @user@domain.social)
 	ProfileURL   string             `json:"profileUrl,omitempty"   bson:"profileUrl,omitempty"`   // URL of the person's profile
 	InboxURL     string             `json:"inboxUrl,omitempty"     bson:"inboxUrl,omitempty"`     // URL of the person's inbox
 	EmailAddress string             `json:"emailAddress,omitempty" bson:"emailAddress,omitempty"` // Email address of the person
@@ -35,6 +36,23 @@ func (person PersonLink) NotEmpty() bool {
 // HasIconURL returns TRUE if this person has a non-empty icon
 func (person PersonLink) HasIconURL() bool {
 	return person.IconURL != ""
+}
+
+// UsernameOrID returns the best-available username for this Person
+func (person PersonLink) UsernameOrID() string {
+	if person.Username != "" {
+		return person.Username
+	}
+
+	if person.ProfileURL != "" {
+		return person.ProfileURL
+	}
+
+	if person.EmailAddress != "" {
+		return person.EmailAddress
+	}
+
+	return person.InboxURL
 }
 
 // GetJSONLD returns a JSON-LD representation of this Person.
