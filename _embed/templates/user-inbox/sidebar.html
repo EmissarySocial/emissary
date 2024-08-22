@@ -6,7 +6,7 @@
 		<form class="sortable" hx-post="/@me/inbox/folder-sort" hx-push-url="false" hx-trigger="end">
 
 			{{- range .Folders -}}
-				<div role="link" hx-get="/@me/inbox/inbox?folderId={{.FolderID.Hex}}" hx-trigger="click" hx-push-url="true" class="menu-item ellipsis hover-trigger folder {{if eq $selectedID .FolderID}}selected{{end}}">
+				<div role="link" hx-get="/@me/inbox/inbox?folderId={{.FolderID.Hex}}" hx-trigger="click" hx-push-url="true" class="turboclick menu-item ellipsis hover-trigger folder {{if eq $selectedID .FolderID}}selected{{end}}">
 					{{- if eq $selectedID .FolderID -}}
 						{{- iconFilled .Icon -}}
 					{{- else -}}
