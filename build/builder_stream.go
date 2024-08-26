@@ -339,6 +339,10 @@ func (w Stream) Data(value string) any {
 	return w._stream.Data[value]
 }
 
+func (w Stream) ETag() string {
+	return w._stream.ETag()
+}
+
 // HasGrandparent returns TRUE if the stream
 func (w Stream) HasGrandparent() bool {
 	return w._stream.HasGrandparent()
@@ -441,7 +445,29 @@ func (w Stream) Grandparent(actionID string) (Stream, error) {
 	return parent.Parent(actionID)
 }
 
-// Parent returns a Stream containing the parent of the current stream
+// ParentOutbox returns an Outbox builder containing the parent of the current stream
+func (w Stream) ParentOutbox(actionID string) (Outbox, error) {
+
+	const location = "build.Stream.Parent"
+
+	var user model.User
+
+	userService := w.factory().User()
+
+	if err := userService.LoadByID(w._stream.ParentID, &user); err != nil {
+		return Outbox{}, derp.Wrap(err, location, "Error loading Parent")
+	}
+
+	builder, err := NewOutbox(w.factory(), w._request, w._response, &user, actionID)
+
+	if err != nil {
+		return Outbox{}, derp.Wrap(err, location, "Unable to create new Stream")
+	}
+
+	return builder, nil
+}
+
+// Parent returns a Stream renderer containing the parent of the current stream
 func (w Stream) Parent(actionID string) (Stream, error) {
 
 	const location = "build.Stream.Parent"
