@@ -43,7 +43,7 @@ func GetGiphyWidget(serverFactory *server.Factory) echo.HandlerFunc {
 
 		b.Div().Style("position:absolute", "border:solid 1px black", "background-color:white", "max-height:150px", "overflow-y:scroll")
 		b.Input("text", "").ID("giphySearch").Attr("placeholder", "Search Giphy").
-			Script("on keyup log my value then log '" + apiKey + "'" +
+			Script("on keyup" +
 				"set url to 'https://api.giphy.com/v1/gifs/search?api_key=" + apiKey + "&q=' & my value & '&limit=25&offset=0&rating=G&lang=en'" +
 				"fetch https://api.giphy.com/v1/gifs/search ")
 		b.CloseAll()
