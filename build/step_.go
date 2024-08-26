@@ -35,6 +35,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.AsTooltip:
 		return StepAsTooltip(s)
 
+	case step.CacheURL:
+		return StepCacheURL(s)
+
 	case step.Delete:
 		return StepDelete(s)
 

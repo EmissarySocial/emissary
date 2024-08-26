@@ -50,6 +50,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "as-tooltip":
 		return NewAsTooltip(stepInfo)
 
+	case "cache-url":
+		return NewCacheURL(stepInfo)
+
 	case "delete":
 		return NewDelete(stepInfo)
 
