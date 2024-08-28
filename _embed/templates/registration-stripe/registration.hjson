@@ -6,8 +6,8 @@
 	schema: {
 		type:object
 		properties: {
-			stripe_publishable_key: {type:"string", format:"regex", pattern:"^pk_(prod|test)_\\w+$", required:true}
-			stripe_restricted_key: {type:"string", format:"regex", pattern:"^rk_(prod|test)_\\w+$", required:true}
+			stripe_publishable_key: {type:"string", format:"regex", pattern:"^pk_(live|prod|test)_\\w+$", required:true}
+			stripe_restricted_key: {type:"string", format:"regex", pattern:"^rk_(live|prod|test)_\\w+$", required:true}
 			stripe_webhook_secret: {type:"string", format:"regex", pattern:"^whsec_\\w+$", required:true}
 			stripe_pricing_table: {type:"string", format:"regex", pattern:"^prctbl_\\w{24}$", required:true}
 			stripe_portal_url: {type:"string", format:"uri", required:true}
