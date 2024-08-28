@@ -108,6 +108,28 @@ func (service *User) Save(user *model.User, note string) error {
 
 	const location = "service.User.Save"
 
+	// RULE: DisplayName is required
+	if user.EmailAddress == "" {
+		return derp.NewBadRequestError(location, "EmailAddress is required", user)
+	}
+
+	// RULE: IF the display name is empty, then try the username and email address
+	if user.DisplayName == "" {
+
+		if user.Username != "" {
+			user.DisplayName = user.Username
+		} else if user.EmailAddress != "" {
+			user.DisplayName = strings.Split(user.EmailAddress, "@")[0]
+		} else {
+			user.DisplayName = "New User"
+		}
+	}
+
+	// RULE: If the username is empty, then try to automatically generate one
+	if err := service.CalcUsername(user); err != nil {
+		return derp.Wrap(err, location, "Error calculating username", user)
+	}
+
 	isNew := user.IsNew()
 
 	// Special steps to take on initial creation
@@ -122,23 +144,6 @@ func (service *User) Save(user *model.User, note string) error {
 
 		if user.OutboxTemplate == "" {
 			user.OutboxTemplate = theme.DefaultOutbox
-		}
-
-		// Rule: IF the display name is empty, then try the username and email address
-		if user.DisplayName == "" {
-
-			if user.Username != "" {
-				user.DisplayName = user.Username
-			} else if user.EmailAddress != "" {
-				user.DisplayName = strings.Split(user.EmailAddress, "@")[0]
-			} else {
-				user.DisplayName = "New User"
-			}
-		}
-
-		// Try to automatically generate a username (if none exists)
-		if err := service.CalcUsername(user); err != nil {
-			return derp.Wrap(err, location, "Error calculating username", user)
 		}
 	}
 
@@ -387,8 +392,13 @@ func (service *User) QueryBlockedActors(userID primitive.ObjectID, criteria exp.
 
 func (service *User) CalcUsername(user *model.User) error {
 
+	// If the User has a valid username, then there's nothing to do.
+	if user.Username != "" {
+		return nil
+	}
+
 	// Calculate the new base username
-	base := first.String(user.Username, user.DisplayName, user.EmailAddress, user.UserID.Hex())
+	base := first.String(user.DisplayName, user.EmailAddress, user.UserID.Hex())
 	base = strings.ToLower(base)
 	base = strings.ReplaceAll(base, " ", "")
 	base = strings.ReplaceAll(base, ".", "")
