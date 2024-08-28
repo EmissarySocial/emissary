@@ -34,6 +34,7 @@ func executeDomainTemplate(fm *server.Factory, ctx echo.Context, templateName st
 	return ctx.HTML(200, buffer.String())
 }
 
+// TODO: This should be refactored away using With* wrappers.
 func loadFactoryAndDomain(fm *server.Factory, ctx echo.Context) (*domain.Factory, model.Domain, error) {
 
 	const location = "handler.loadFactoryAndDomain"

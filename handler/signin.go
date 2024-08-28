@@ -29,14 +29,14 @@ func GetSignIn(serverFactory *server.Factory) echo.HandlerFunc {
 		domain := factory.Domain().Get()
 
 		// Get a clean version of the URL query parameters
-		queryString := cleanQueryParams(ctx.QueryParams())
-		queryString["domainName"] = domain.Label
-		queryString["domainIcon"] = domain.IconURL()
-		queryString["hasRegistrationForm"] = factory.Domain().HasRegistrationForm()
-		queryString["next"] = url.QueryEscape(queryString.GetString("next"))
+		data := cleanQueryParams(ctx.QueryParams())
+		data["domainName"] = domain.Label
+		data["domainIcon"] = domain.IconURL()
+		data["hasRegistrationForm"] = factory.Domain().HasRegistrationForm()
+		data["next"] = url.QueryEscape(data.GetString("next"))
 
 		// Render the template
-		if err := template.ExecuteTemplate(ctx.Response(), "signin", queryString); err != nil {
+		if err := template.ExecuteTemplate(ctx.Response(), "signin", data); err != nil {
 			return derp.Wrap(err, "handler.GetSignIn", "Error executing template")
 		}
 

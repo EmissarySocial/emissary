@@ -58,14 +58,12 @@
 
 					<span id="message" class="text-red" hidden></span>
 
-					&nbsp;
+					<a href="/signin/reset" class="margin-left">Forgot Password?</a>
 
-					<a href="/signin/reset">Forgot Password?</a>
-
-					{{- if .HasRegistrationForm -}}
+					{{- if .hasRegistrationForm -}}
 						<div class="margin-top-xl">
-							Don't have a profile? 
-							<a href="/register">Register Now &rarr;</a>
+							<h2>Need an Account?</h2>
+							<a href="/register" class="button">Register Now &rarr;</a>
 						</div>
 					{{- end -}}
 

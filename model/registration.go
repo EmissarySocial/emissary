@@ -25,6 +25,7 @@ type Registration struct {
 	HTMLTemplate   *template.Template   `json:"-"                  bson:"-"`              // Compiled HTML template
 	Bundles        mapof.Object[Bundle] `json:"bundles"            bson:"bundles"`        // Additional resources (JS, HS, CSS) reqired tp remder this Registration.
 	Resources      fs.FS                `json:"-"                  bson:"-"`              // File system containing the registration resources
+	AllowedFields  []string             `json:"allowedFields"      bson:"allowedFields"`  // List of fields that are allowed to be set by the user
 }
 
 // NewRegistration creates a new, fully initialized Registration object
@@ -36,6 +37,7 @@ func NewRegistration(registrationID string, funcMap template.FuncMap) Registrati
 		Form:           form.NewElement(),
 		Actions:        make(map[string]Action),
 		HTMLTemplate:   template.New("").Funcs(funcMap),
+		AllowedFields:  make([]string, 0),
 	}
 }
 

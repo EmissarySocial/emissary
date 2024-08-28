@@ -1,6 +1,8 @@
 package service
 
 import (
+	"strings"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
@@ -201,6 +203,9 @@ func (service *Group) ListByIDs(groupIDs ...primitive.ObjectID) ([]model.Group, 
 
 // LoadByToken loads a single Group object that matches the provided token
 func (service *Group) LoadByToken(token string, result *model.Group) error {
+
+	// Trim whitespace around the token
+	token = strings.Trim(token, " ")
 
 	// If the token *looks* like an ObjectID then try that first.  If it works, then return in triumph
 	if groupID, err := primitive.ObjectIDFromHex(token); err == nil {

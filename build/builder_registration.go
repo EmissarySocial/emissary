@@ -28,13 +28,13 @@ type Registration struct {
 	_action       model.Action
 	_domain       model.Domain
 	_provider     *service.Provider
-	_registration model.Registration
+	_registration *model.Registration
 	_user         model.User
 	Common
 }
 
 // NewRegistration returns a fully initialized `Registration` builder.
-func NewRegistration(factory Factory, request *http.Request, response http.ResponseWriter, registration model.Registration, actionID string) (Registration, error) {
+func NewRegistration(factory Factory, request *http.Request, response http.ResponseWriter, registration *model.Registration, actionID string) (Registration, error) {
 
 	const location = "build.NewRegistration"
 

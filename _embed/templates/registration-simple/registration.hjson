@@ -3,6 +3,7 @@
 	label:Free Registration
 	icon:user
 	description:Free Registration collects a user's name and email address and sends a confirmation email.
+	allowedFields: ["displayName", "emailAddress", "username", "password"]
 	schema: {
 		type:object
 		properties: {
