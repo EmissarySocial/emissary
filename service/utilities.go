@@ -265,6 +265,8 @@ func must[T any](value T, err error) T {
 
 // iif is a simple inline-if function.  You should probably never
 // do something like this.  But fuck it.
+//
+//lint:ignore U1000 Leaving this here in case we need it in the future
 func iif(condition bool, trueValue, falseValue string) string {
 	if condition {
 		return trueValue
