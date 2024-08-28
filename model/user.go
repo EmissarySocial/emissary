@@ -240,14 +240,24 @@ func (user User) GetJSONLD() mapof.Any {
 		vocab.PropertySummary:           user.StatusMessage,
 		vocab.PropertyTootDiscoverable:  user.IsDiscoverable,
 		vocab.PropertyTootIndexable:     user.IsIndexable,
-		vocab.PropertyIcon:              user.ActivityPubIconURL(),
-		vocab.PropertyImage:             user.ActivityPubImageURL(),
 		vocab.PropertyInbox:             user.ActivityPubInboxURL(),
 		vocab.PropertyOutbox:            user.ActivityPubOutboxURL(),
 		vocab.PropertyFollowing:         user.ActivityPubFollowingURL(),
 		vocab.PropertyFollowers:         user.ActivityPubFollowersURL(),
 		vocab.PropertyLiked:             user.ActivityPubLikedURL(),
 		vocab.PropertyBlocked:           user.ActivityPubBlockedURL(),
+
+		vocab.PropertyIcon: mapof.Any{
+			vocab.PropertyType:      vocab.ObjectTypeImage,
+			vocab.PropertyMediaType: "image/webp",
+			vocab.PropertyURL:       user.ActivityPubIconURL(),
+		},
+
+		vocab.PropertyImage: mapof.Any{
+			vocab.PropertyType:      vocab.ObjectTypeImage,
+			vocab.PropertyMediaType: "image/webp",
+			vocab.PropertyURL:       user.ActivityPubImageURL(),
+		},
 	}
 
 	// Conditionally add the Avatar URL
