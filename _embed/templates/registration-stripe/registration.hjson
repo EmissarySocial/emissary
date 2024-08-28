@@ -17,8 +17,8 @@
 		type: "layout-vertical",
 		children: [
 			{type:"label", description:'Copy the following configuration values from your Stripe Dashboard.<br><a href="https://emissary.dev/registration-stripe" target="_blank">Learn More &rarr;</a>'}
-			{type:"text", path:"stripe_publishable_key", label:"Publishable Key", description:"Find in: Developers > API Keys.", options:{placeholder:"pk_prod_xxxxxxxxxxxxxxxxxxxxxxxx"}},
-			{type:"text", path:"stripe_restricted_key", label:"Restricted Key", description:"Find in: Developers > API Keys.", options:{placeholder:"rk_prod_xxxxxxxxxx"}},
+			{type:"text", path:"stripe_publishable_key", label:"Publishable Key", description:"Find in: Developers > API Keys.", options:{placeholder:"pk_live_xxxxxxxxxxxxxxxxxxxxxxxx"}},
+			{type:"text", path:"stripe_restricted_key", label:"Restricted Key", description:"Find in: Developers > API Keys.", options:{placeholder:"rk_live_xxxxxxxxxx"}},
 			{type:"text", path:"stripe_webhook_secret", label:"Webhook Secret", description:"Find in: Devlopers > Webhooks.", options:{placeholder:"whsec_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}},
 			{type:"text", path:"stripe_pricing_table", label:"Pricing Table Identifier", description:"Find in: Product Catalog > Pricing Tables.", options:{placeholder:"prctbl_xxxxxxxxxxxxxxxxxxxxxxxx"}},
 			{type:"text", path:"stripe_portal_url", label:"Customer Portal URL", description:"Find in: Product Catalog > Pricing Tables.", options:{placeholder:"https://billing.stripe.com/p/login/prod_xxxxxxxxx"}},
