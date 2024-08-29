@@ -42,6 +42,20 @@
 					</div>
 				</div>
 			</a>
+
+			<div class="flex-row margin-vertical-sm text-sm">
+				<div class="flex-shrink-0 width-64 margin-right"></div>
+				<div>
+					{{- if .UserCan "like-button" -}}
+						{{.View "like-button"}}
+					{{- else -}}
+						<button hx-get="/{{.StreamID}}/intent?intent=like&object={{.Permalink}}"><span aria-hidden="true" class="margin-left-xs">{{icon "thumbs-up"}}</span> Like</button>
+						<button hx-get="/{{.StreamID}}/intent?intent=dislike&object={{.Permalink}}"><span aria-hidden="true" class="margin-left-xs">{{icon "thumbs-down"}}</span> Dislike</button>
+						<button hx-get="/{{.StreamID}}/intent?intent=create&content={{.Label}} {{.Permalink}}"><span aria-hidden="true" class="margin-left-xs">{{icon "share"}}</span> Share</button>
+						<button hx-get="/{{.StreamID}}/intent" aria-label="Manage Accounts">{{icon "more-horizontal"}}</button>
+					{{- end -}}
+				</div>
+			</div>
 		</div>
 
 		{{- if .UserCan "edit" -}}
@@ -52,9 +66,6 @@
 		
 	</div>
 
-	<div class="text-lg margin-vertical-lg">
-		{{.ContentHTML}}
-	</div>
 
 	{{- if ne .IconURL "" -}}
 		<div class="margin-vertical">
@@ -62,11 +73,9 @@
 		</div>
 	{{- end -}}
 
-	{{- if .UserCan "like-button" -}}
-		<div class="margin-vertical text-sm">
-			{{.View "like-button"}}
-		</div>
-	{{- end -}}
+	<div class="text-lg margin-vertical-lg" style="width:clamp(400px, 90%, 800px)">
+		{{.ContentHTML}}
+	</div>
 
 	{{- .View "responses-replies" -}}
 

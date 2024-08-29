@@ -4,18 +4,18 @@
 <span hx-target="this" hx-swap="outerHTML" hx-push-url="false">
 
 	{{- if $responses.Like -}}
-		<button class="turboclick bold link" hx-post="{{.BasePath}}/like-button?url={{$url}}" hx-vals='{"type":"Like", "url":"{{$url}}", "exists":false}'>{{icon "thumbs-up-fill"}} Liked</button>
+		<button class="turboclick bold link" hx-post="{{.BasePath}}/like-button?url={{$url}}" hx-vals='{"type":"Like", "url":"{{$url}}", "exists":false}'><span aria-hidden="true" class="margin-left-xs">{{icon "thumbs-up-fill"}}</span> Liked</button>
 	{{- else if $responses.Dislike -}}
-		<button class="turboclick bold link" hx-post="{{.BasePath}}/like-button?url={{$url}}" hx-vals='{"type":"Dislike", "url":"{{$url}}", "exists":false}'>{{icon "thumbs-down-fill"}} Disiked</button>
+		<button class="turboclick bold link" hx-post="{{.BasePath}}/like-button?url={{$url}}" hx-vals='{"type":"Dislike", "url":"{{$url}}", "exists":false}'><span aria-hidden="true" class="margin-left-xs">{{icon "thumbs-down-fill"}}</span> Disiked</button>
 	{{- else -}}
-		<button class="turboclick bold" hx-post="{{.BasePath}}/like-button?url={{$url}}" hx-vals='{"type":"Like", "url": "{{$url}}", "exists":true}'>{{icon "thumbs-up"}}</button>
-		<button class="turboclick bold" hx-post="{{.BasePath}}/like-button?url={{$url}}" hx-vals='{"type":"Dislike", "url": "{{$url}}", "exists":true}'>{{icon "thumbs-down"}}</button>
+		<button class="turboclick bold" hx-post="{{.BasePath}}/like-button?url={{$url}}" hx-vals='{"type":"Like", "url": "{{$url}}", "exists":true}'><span aria-hidden="true" class="margin-left-xs">{{icon "thumbs-up"}}</span> Like</button>
+		<button class="turboclick bold" hx-post="{{.BasePath}}/like-button?url={{$url}}" hx-vals='{"type":"Dislike", "url": "{{$url}}", "exists":true}'><span aria-hidden="true" class="margin-left-xs">{{icon "thumbs-down"}}</span> Dislike</button>
 	{{- end -}}
 
 	{{- if $responses.Announce -}}
-		<button class="turboclick bold link" hx-post="{{.BasePath}}/like-button?url={{$url}}" hx-vals='{"type":"Announce", "url":"{{$url}}", "exists":false}'>{{icon "share-fill"}} Shared</button>
+		<button class="turboclick bold link" hx-post="{{.BasePath}}/like-button?url={{$url}}" hx-vals='{"type":"Announce", "url":"{{$url}}", "exists":false}'><span aria-hidden="true" class="margin-left-xs">{{icon "share-fill"}}</span> Shared</button>
 	{{- else -}}
-		<button class="turboclick bold" hx-post="{{.BasePath}}/like-button?url={{$url}}" hx-vals='{"type":"Announce", "url": "{{$url}}", "exists":true}'>{{icon "share"}}</button>
+		<button class="turboclick bold" hx-post="{{.BasePath}}/like-button?url={{$url}}" hx-vals='{"type":"Announce", "url": "{{$url}}", "exists":true}'><span aria-hidden="true" class="margin-left-xs">{{icon "share"}}</span> Shared</button>
 	{{- end -}}
 
 </span>

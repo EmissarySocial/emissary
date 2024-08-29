@@ -2,7 +2,7 @@
 	templateId:"outbox-message"
 	templateRole:"outbox-message"
 	socialRole:"Note"
-	extends:["base-social"]
+	extends:["base-social", "base-intent"]
 	model:"stream"
 	icon:"message"
 	label:"Post"
