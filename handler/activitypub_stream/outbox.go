@@ -8,6 +8,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/convert"
 	"github.com/labstack/echo/v4"
 )
@@ -33,7 +34,7 @@ func GetOutboxCollection(serverFactory *server.Factory) echo.HandlerFunc {
 		publishDateString := ctx.QueryParam("publishDate")
 
 		if publishDateString == "" {
-			// ctx.Response().Header().Set("Content-Type", vocab.ContentTypeActivityPub) <- removing to test compatability issues with Mastodon
+			ctx.Response().Header().Set("Content-Type", vocab.ContentTypeActivityPub)
 			result := activitypub.Collection(stream.ActivityPubOutboxURL())
 			return ctx.JSON(http.StatusOK, result)
 		}
@@ -51,7 +52,7 @@ func GetOutboxCollection(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		// Return results as an OrderedCollectionPage
-		// ctx.Response().Header().Set("Content-Type", vocab.ContentTypeActivityPub) <- removing to test compatability issues with Mastodon
+		ctx.Response().Header().Set("Content-Type", vocab.ContentTypeActivityPub)
 		result := activitypub.CollectionPage(stream.ActivityPubOutboxURL(), pageSize, messages)
 		return ctx.JSON(http.StatusOK, result)
 	}

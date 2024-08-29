@@ -32,6 +32,6 @@ func RenderProfileJSONLD(context echo.Context, factory *domain.Factory, user *mo
 	}
 
 	// Return the user's profile in JSON-LD format
-	// context.Response().Header().Set(vocab.ContentType, vocab.ContentTypeActivityPub) <- removing to test compatability issues with Mastodon
+	context.Response().Header().Set(vocab.ContentType, vocab.ContentTypeActivityPub)
 	return context.JSON(http.StatusOK, userJSON)
 }
