@@ -37,8 +37,8 @@ github.com/benpate/data-mongo v0.28.10 h1:q1gPAHsONCOSIs70Swc2JtsyMp2szaYteCuHO+
 github.com/benpate/data-mongo v0.28.10/go.mod h1:8wyi9X3c2cMGSLZRfKKzRrPkHXcMOJdBhM5QaWFVahI=
 github.com/benpate/derp v0.31.0 h1:Vo3oQrD+eDLY/FQ4W3HUtV1Et7lkm8OEF6rJQlSd6xg=
 github.com/benpate/derp v0.31.0/go.mod h1:y+PJWv5VOBOnd1y4CGk/c7xVS0Pwxg9BGQE5r/SGc8w=
-github.com/benpate/digit v0.12.3 h1:TQp1BoHS3OHKxY/+nWZ8Hakf4az1pdhhZI/45cfXnGM=
-github.com/benpate/digit v0.12.3/go.mod h1:yrih/yDWD5mvxnxzp8uWAQix/ovHcheFgUlRQHPsbU4=
+github.com/benpate/digit v0.13.1 h1:eCFyeATnbVY9EXWYto4j3IsiBLzPGj5uC0F/YmwoZiE=
+github.com/benpate/digit v0.13.1/go.mod h1:yrih/yDWD5mvxnxzp8uWAQix/ovHcheFgUlRQHPsbU4=
 github.com/benpate/domain v0.2.2 h1:QBjXZz2Tz66izmvdXHV+fkye4lpNcy5N1w86PWC4RwU=
 github.com/benpate/domain v0.2.2/go.mod h1:Mi4/I3iFaa7Kg0c4xFiZ0Wptq1nbKNcv5PENEIKkdPU=
 github.com/benpate/exp v0.8.3 h1:rxlXtdLxc+XU5ySoAFEt7YKOjhOE7YRMz15YUePBLJk=

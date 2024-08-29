@@ -10,7 +10,7 @@ require (
 	github.com/benpate/data-mock v0.28.11
 	github.com/benpate/data-mongo v0.28.10
 	github.com/benpate/derp v0.31.0
-	github.com/benpate/digit v0.12.3
+	github.com/benpate/digit v0.13.1
 	github.com/benpate/domain v0.2.2
 	github.com/benpate/exp v0.8.3
 	github.com/benpate/exp-builder v0.8.1
