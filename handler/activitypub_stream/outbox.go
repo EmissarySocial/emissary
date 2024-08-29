@@ -33,7 +33,7 @@ func GetOutboxCollection(serverFactory *server.Factory) echo.HandlerFunc {
 		publishDateString := ctx.QueryParam("publishDate")
 
 		if publishDateString == "" {
-			ctx.Response().Header().Set("Content-Type", "application/activity+json")
+			// ctx.Response().Header().Set("Content-Type", vocab.ContentTypeActivityPub) <- removing to test compatability issues with Mastodon
 			result := activitypub.Collection(stream.ActivityPubOutboxURL())
 			return ctx.JSON(http.StatusOK, result)
 		}
@@ -51,7 +51,7 @@ func GetOutboxCollection(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		// Return results as an OrderedCollectionPage
-		ctx.Response().Header().Set("Content-Type", "application/activity+json")
+		// ctx.Response().Header().Set("Content-Type", vocab.ContentTypeActivityPub) <- removing to test compatability issues with Mastodon
 		result := activitypub.CollectionPage(stream.ActivityPubOutboxURL(), pageSize, messages)
 		return ctx.JSON(http.StatusOK, result)
 	}

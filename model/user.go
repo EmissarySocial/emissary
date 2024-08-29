@@ -244,6 +244,8 @@ func (user User) GetJSONLD() mapof.Any {
 		vocab.PropertyFollowing:         user.ActivityPubFollowingURL(),
 		vocab.PropertyFollowers:         user.ActivityPubFollowersURL(),
 		vocab.PropertyLiked:             user.ActivityPubLikedURL(),
+		// TODO: Revisit FEP-c648
+		// https://codeberg.org/fediverse/fep/src/branch/main/fep/c648/fep-c648.md
 		// vocab.PropertyBlocked:           user.ActivityPubBlockedURL(), // Temporarily removed because of problems with Mastodon parsing JSON-LD.  Maybe this is it?
 	}
 

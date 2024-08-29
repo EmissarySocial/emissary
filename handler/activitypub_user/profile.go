@@ -27,12 +27,11 @@ func RenderProfileJSONLD(context echo.Context, factory *domain.Factory, user *mo
 	userJSON := user.GetJSONLD()
 	userJSON[vocab.PropertyPublicKey] = mapof.Any{
 		vocab.PropertyID:           user.ActivityPubPublicKeyURL(),
-		vocab.PropertyType:         vocab.ObjectTypeKey,
 		vocab.PropertyOwner:        user.ActivityPubURL(),
 		vocab.PropertyPublicKeyPEM: key.PublicPEM,
 	}
 
 	// Return the user's profile in JSON-LD format
-	context.Response().Header().Set(vocab.ContentType, vocab.ContentTypeActivityPub)
+	// context.Response().Header().Set(vocab.ContentType, vocab.ContentTypeActivityPub) <- removing to test compatability issues with Mastodon
 	return context.JSON(http.StatusOK, userJSON)
 }
