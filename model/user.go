@@ -244,7 +244,7 @@ func (user User) GetJSONLD() mapof.Any {
 		vocab.PropertyFollowing:         user.ActivityPubFollowingURL(),
 		vocab.PropertyFollowers:         user.ActivityPubFollowersURL(),
 		vocab.PropertyLiked:             user.ActivityPubLikedURL(),
-		vocab.PropertyBlocked:           user.ActivityPubBlockedURL(),
+		// vocab.PropertyBlocked:           user.ActivityPubBlockedURL(), // Temporarily removed because of problems with Mastodon parsing JSON-LD.  Maybe this is it?
 	}
 
 	if user.StatusMessage != "" {
