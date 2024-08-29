@@ -114,14 +114,20 @@ func (service *JWT) ParseString(tokenString string) (*jwt.Token, error) {
 
 	const location = "service.JWT.ParseString"
 
-	claims := model.NewAuthorization()
+	// RULE: JWT token must not be empty
+	if tokenString == "" {
+		return nil, derp.NewBadRequestError(location, "JWT token is empty")
+	}
 
+	// Try to parse the JWT token
+	claims := model.NewAuthorization()
 	result, err := jwt.ParseWithClaims(tokenString, &claims, service.FindKey, jwt.WithValidMethods([]string{"HS256", "HS384", "HS512"}))
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Error parsing JWT token")
+		return nil, derp.Wrap(err, location, "Error parsing JWT token", tokenString)
 	}
 
+	// Success.
 	return result, nil
 }
 

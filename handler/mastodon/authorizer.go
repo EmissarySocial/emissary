@@ -15,7 +15,7 @@ import (
 // JWT token was created for a particular OAuth client and is not a regular User token
 func Authorizer(serverFactory *server.Factory) toot.Authorizer[model.Authorization] {
 
-	const location = "handler.mastodon_Authorization"
+	const location = "handler.mastodon.Authorizater"
 
 	return func(request *http.Request) (model.Authorization, error) {
 
