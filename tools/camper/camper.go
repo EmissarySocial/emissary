@@ -142,7 +142,7 @@ func (camper *Camper) getTemplateFromWebfinger(intentType string, accountID stri
 		// Look for a "follow" intent
 		for _, link := range resource.Links {
 			if link.RelationType == digit.RelationTypeSubscribeRequest {
-				href := strings.ReplaceAll(link.Href, "{uri}", "{object}")
+				href := strings.ReplaceAll(link.Template, "{uri}", "{object}")
 				return href
 			}
 		}

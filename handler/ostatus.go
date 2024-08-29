@@ -41,7 +41,7 @@ func PostOStatusDiscover(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		// Replace the {uri} placeholder with the actual LOCAL account name
-		forwardToURL := strings.ReplaceAll(link.Href, "{uri}", transaction.LocalAccount)
+		forwardToURL := strings.ReplaceAll(link.Template, "{uri}", transaction.LocalAccount)
 
 		// HTMX Redirect to the subscribe request page.
 		context.Response().Header().Set("HX-Redirect", forwardToURL)
