@@ -55,8 +55,9 @@ func (service *Stream) LoadWebFinger(token string) (digit.Resource, error) {
 		return digit.Resource{}, derp.NewBadRequestError(location, "Stream Template does not define an Actor", stream.TemplateID)
 	}
 
-	// Make a WebFinger resource for this user.
+	// Make a WebFinger resource for this Stream.
 	result := digit.NewResource("acct:"+token+"@"+domain.NameOnly(service.host)).
+		Alias(service.host+"/"+stream.Token).
 		Alias(stream.URL).
 		Link(digit.RelationTypeSelf, model.MimeTypeActivityPub, stream.ActivityPubURL()).
 		// Link(digit.RelationTypeHub, model.MimeTypeJSONFeed, stream.JSONFeedURL()).
