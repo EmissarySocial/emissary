@@ -628,6 +628,7 @@ func (service *User) LoadWebFinger(username string) (digit.Resource, error) {
 	result := digit.NewResource("acct:"+username+"@"+domain.NameOnly(service.host)).
 		Alias(user.ActivityPubURL()).
 		Link(digit.RelationTypeSelf, model.MimeTypeActivityPub, user.ActivityPubURL()).
+		Link(digit.RelationTypeSelf, model.MimeTypeJSONLDWithProfile, user.ActivityPubURL()).
 		Link(digit.RelationTypeHub, model.MimeTypeJSONFeed, user.JSONFeedURL()).
 		Link(digit.RelationTypeProfile, model.MimeTypeHTML, user.ActivityPubURL()).
 		Link(digit.RelationTypeAvatar, model.MimeTypeImage, user.ActivityPubIconURL()).

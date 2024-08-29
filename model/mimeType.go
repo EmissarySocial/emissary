@@ -12,6 +12,8 @@ const MimeTypeJSON = "application/json"
 
 const MimeTypeJSONLD = "application/ld+json"
 
+const MimeTypeJSONLDWithProfile = `application/ld+json; profile="https://www.w3.org/ns/activitystreams"`
+
 const MimeTypeJSONFeed = "application/feed+json"
 
 const MimeTypeJSONResourceDescriptor = "application/jrd+json"
