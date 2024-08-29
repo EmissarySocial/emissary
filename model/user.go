@@ -237,7 +237,6 @@ func (user User) GetJSONLD() mapof.Any {
 		vocab.PropertyURL:               user.ProfileURL,
 		vocab.PropertyName:              user.DisplayName,
 		vocab.PropertyPreferredUsername: user.Username,
-		vocab.PropertySummary:           user.StatusMessage,
 		vocab.PropertyTootDiscoverable:  user.IsDiscoverable,
 		vocab.PropertyTootIndexable:     user.IsIndexable,
 		vocab.PropertyInbox:             user.ActivityPubInboxURL(),
@@ -246,25 +245,25 @@ func (user User) GetJSONLD() mapof.Any {
 		vocab.PropertyFollowers:         user.ActivityPubFollowersURL(),
 		vocab.PropertyLiked:             user.ActivityPubLikedURL(),
 		vocab.PropertyBlocked:           user.ActivityPubBlockedURL(),
+	}
 
-		vocab.PropertyIcon: mapof.Any{
+	if user.StatusMessage != "" {
+		result[vocab.PropertySummary] = user.StatusMessage
+	}
+
+	if iconURL := user.ActivityPubIconURL(); iconURL != "" {
+		result[vocab.PropertyIcon] = mapof.Any{
 			vocab.PropertyType:      vocab.ObjectTypeImage,
 			vocab.PropertyMediaType: "image/webp",
 			vocab.PropertyURL:       user.ActivityPubIconURL(),
-		},
+		}
+	}
 
-		vocab.PropertyImage: mapof.Any{
+	if imageURL := user.ActivityPubImageURL(); imageURL != "" {
+		result[vocab.PropertyImage] = mapof.Any{
 			vocab.PropertyType:      vocab.ObjectTypeImage,
 			vocab.PropertyMediaType: "image/webp",
 			vocab.PropertyURL:       user.ActivityPubImageURL(),
-		},
-	}
-
-	// Conditionally add the Avatar URL
-	if avatarURL := user.ActivityPubIconURL(); avatarURL != "" {
-		result["icon"] = mapof.Any{
-			vocab.PropertyType: vocab.ObjectTypeImage,
-			vocab.PropertyURL:  avatarURL,
 		}
 	}
 
