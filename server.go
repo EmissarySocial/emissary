@@ -188,7 +188,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.Pre(middleware.RemoveTrailingSlash())
 
 	// Middleware for standard pages
-	e.Use(mw.Debug())
+	// e.Use(mw.Debug()) <- this is super chatty, so only enable it on dev, or for short periods of time.
 	e.Use(mw.Domain(factory))
 	e.Use(steranko.Middleware(factory))
 	e.Use(middleware.CORS())
