@@ -16,7 +16,12 @@ const MimeTypeJSONLDWithProfile = `application/ld+json; profile="https://www.w3.
 
 const MimeTypeJSONFeed = "application/feed+json"
 
+// https://datatracker.ietf.org/doc/html/rfc7033#section-10.2
 const MimeTypeJSONResourceDescriptor = "application/jrd+json"
+
+// https://datatracker.ietf.org/doc/html/rfc7033#section-10.2
+// With charset extension to match Mastodon
+const MimeTypeJSONResourceDescriptorWithCharset = "application/jrd+json; charset=utf-8"
 
 const MimeTypeHTML = "text/html"
 

@@ -46,7 +46,7 @@ func writeResource(ctx echo.Context, resource digit.Resource) error {
 
 	// If relation is specified, then limit links to that type only
 	resource.FilterLinks(ctx.QueryParam("rel"))
-	ctx.Response().Header().Set("Content-Type", model.MimeTypeJSONResourceDescriptor)
+	ctx.Response().Header().Set("Content-Type", model.MimeTypeJSONResourceDescriptorWithCharset)
 
 	// Return the Response as a JSON object
 	return ctx.JSON(http.StatusOK, resource)
