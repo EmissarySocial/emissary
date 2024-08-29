@@ -69,7 +69,7 @@
 
 	{{- if ne .IconURL "" -}}
 		<div class="margin-vertical">
-			<img src="{{.IconURL}}?width=600" class="u-photo width-100%">
+			<img src="{{.IconURL}}?width=600" class="u-photo" style="width:clamp(400px, 90%, 800px)">
 		</div>
 	{{- end -}}
 
