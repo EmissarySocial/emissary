@@ -13,7 +13,7 @@
 	{{- end -}}
 
 	{{- if $responses.Announce -}}
-		<button class="turboclick bold link" hx-post="{{.BasePath}}/like-button?url={{$url}}" hx-vals='{"type":"Announce", "url":"{{$url}}", "exists":false}'><span aria-hidden="true" class="margin-left-xs">{{icon "share-fill"}}</span> Shared</button>
+		<button class="turboclick bold link" hx-post="{{.BasePath}}/like-button?url={{$url}}" hx-vals='{"type":"Announce", "url":"{{$url}}", "exists":false}'><span aria-hidden="true" class="margin-left-xs">{{icon "share-fill"}}</span> Share</button>
 	{{- else -}}
 		<button class="turboclick bold" hx-post="{{.BasePath}}/like-button?url={{$url}}" hx-vals='{"type":"Announce", "url": "{{$url}}", "exists":true}'><span aria-hidden="true" class="margin-left-xs">{{icon "share"}}</span> Shared</button>
 	{{- end -}}
