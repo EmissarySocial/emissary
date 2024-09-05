@@ -47,22 +47,26 @@
 		</div>
 	</div>
 
-	<form hx-get="/admin/users/list" hx-trigger="change, keyup throttle:500ms" hx-target="#users" hx-swap="innerHTML" hx-push-url="false">
-		<div class="card padding margin-bottom flex-row">
-			<div>
-				<label for="groupId" class="text-xs text-gray">GROUP</label>
-				<select id="groupId" name="groupId" class="text-sm" script="install select(value:'{{$groupID}}', options:{{.Groups |json }})">
-					<option value="">(All Groups)</option>
-				</select>
+	<div class="card padding">
+		<form hx-get="/admin/users/list" hx-trigger="change, keyup throttle:500ms" hx-target="#users" hx-swap="innerHTML" hx-push-url="false">
+			<div class="flex-row">
+				<div>
+					<label for="groupId" class="text-xs text-gray">GROUP</label>
+					<select id="groupId" name="groupId" class="text-sm" script="install select(value:'{{$groupID}}', options:{{.Groups |json }})">
+						<option value="">(All Groups)</option>
+					</select>
+				</div>
+				<div>
+					<label for="search" class="text-xs text-gray">NAME</label>
+					<input id="search" name="search" value="{{$search}}" class="text-sm" autocomplete="off">
+				</div>
 			</div>
-			<div>
-				<label for="search" class="text-xs text-gray">NAME</label>
-				<input id="search" name="search" value="{{$search}}" class="text-sm" autocomplete="off">
-			</div>
-		</div>
-	</form>
+		</form>
 
-	<table id="users" class="table">
-		{{- .View "list" -}}
-	</table>
+		<table id="users" class="table margin-top">
+			{{- .View "list" -}}
+		</table>
+
+	</div>
+
 </div>
