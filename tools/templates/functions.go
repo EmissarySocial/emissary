@@ -204,6 +204,11 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 		},
 
 		"json": func(value any) string {
+			result, _ := json.Marshal(value)
+			return string(result)
+		},
+
+		"jsonIndent": func(value any) string {
 			result, _ := json.MarshalIndent(value, "", "    ")
 			return string(result)
 		},
