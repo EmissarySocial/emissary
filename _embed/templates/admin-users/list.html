@@ -14,10 +14,10 @@
                     {{- else -}}
                         <span class="circle-32"></span>
                     {{- end }} 
-                    <span>{{$user.DisplayName}}</span>
+                    <span>{{highlight $user.DisplayName $search}}</span>
                 </td>
                 <td nowrap class="text-xs width-128 text-align-right">
-                    <a href="/@{{$user.Username}}" class="button">View Profile</a>
+                    <a href="/@{{$user.Username}}" class="button" tabIndex="0">View Profile</a>
                     <form action="/.masquerade?userId={{.UserID.Hex}}" method="post" class="inline-block">
                         <button type="submit">{{icon "user-secret"}} Sign In &rarr;</button>
                     </form>

@@ -74,6 +74,14 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 			return convert.Int64(a) / convert.Int64(b)
 		},
 
+		"concat": func(values ...any) string {
+			result := ""
+			for _, value := range values {
+				result += convert.String(value)
+			}
+			return result
+		},
+
 		"or": func(values ...bool) bool {
 			for _, value := range values {
 				if value {
@@ -315,6 +323,14 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 
 			// Return the result.
 			return result, nil
+		},
+
+		"highlight": func(text string, search string) template.HTML {
+			if search == "" {
+				return template.HTML(text)
+			}
+			result := strings.ReplaceAll(text, search, `<b class="highlight">`+search+"</b>")
+			return template.HTML(result)
 		},
 	}
 }
