@@ -1,6 +1,6 @@
 {
 	registrationId:register-webhook
-	label:Register with External Service
+	label:External Service
 	icon:cloud
 	description:Allow an external service to handle registration and send customers/updates via WebHooks
 	allowedFields: ["displayName", "emailAddress", "username", "inboxTemplate", "outboxTemplate", "addGroups"]

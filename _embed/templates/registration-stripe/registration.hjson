@@ -1,6 +1,6 @@
 {
 	registrationId:register-stripe
-	label:Register with Stripe
+	label:Stripe
 	icon:credit-card
 	description:Stripe registration allows users to sign up via Stripe
 	schema: {

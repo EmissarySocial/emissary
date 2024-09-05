@@ -1,7 +1,9 @@
+{{- $iconURL := .ThemeData "iconUrl" -}}
+
 <!DOCTYPE html>
 <html>
 <head>
-	<title>{{first (.Data "title") "Register"}}</title>
+	<title>{{first (.RegistrationData "title") "Register"}}</title>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta name="generator" content="https://emissary.social">
@@ -14,12 +16,18 @@
 
 		<div class="card" style="width:clamp(540px, 50%, 720px); margin:auto; padding:16px 32px; line-height:150%;">
 			
+			{{- if eq "" $iconURL -}}
+				<h1 class="align-center">{{.Label}}</h1>
+			{{- else -}}
+				<img src="{{$iconURL}}" style="width:clamp(270px, 50%, 360px);">
+			{{- end -}}
+
 			<div class="layout-vertical margin-bottom">
 
 				<script async src="https://js.stripe.com/v3/pricing-table.js"></script>
 				<stripe-pricing-table
-					pricing-table-id="{{.Data `stripe_pricing_table`}}"
-					publishable-key="{{.Data `stripe_publishable_key`}}">
+					pricing-table-id="{{.RegistrationData `stripe_pricing_table`}}"
+					publishable-key="{{.RegistrationData `stripe_publishable_key`}}">
 				</stripe-pricing-table>
 
 				<div class="margin-top-xl">

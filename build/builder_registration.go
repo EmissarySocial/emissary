@@ -102,6 +102,10 @@ func (w Registration) Token() string {
 	// return w.context().Param("param1")
 }
 
+func (w Registration) Label() string {
+	return w._domain.Label
+}
+
 func (w Registration) object() data.Object {
 	return &w._user
 }
@@ -155,8 +159,17 @@ func (w Registration) PageTitle() string {
 }
 
 func (w Registration) Data(key string) string {
+	return w._domain.Data[key]
+}
+
+func (w Registration) ThemeData(key string) string {
+	return w._domain.Data[key]
+}
+
+func (w Registration) RegistrationData(key string) string {
 	return w._domain.RegistrationData[key]
 }
+
 func (w Registration) clone(action string) (Builder, error) {
 	return NewRegistration(w._factory, w._request, w._response, w._registration, action)
 }
