@@ -1,3 +1,8 @@
-<h1 class="modal-title margin-none ellipsis">{{icon "users"}}  Edit Group: &quot;{{.Label}}&quot;</h1>
-<div class="margin-left-lg text-gray">ID: {{.GroupID}}</div>
+<div class="pos-relative margin-none">
+	<h1 class="modal-title margin-none ellipsis flex-grow">{{icon "users"}}  Edit Group: &quot;{{.Label}}&quot;</h1>
+	<div class="margin-left-lg margin-top text-sm text-gray">
+		ID: {{.GroupID}}
+	</div>
+	<a href="/admin/users?groupId={{.GroupID}}" class="pos-absolute-top-right text-xs button">View Users &rarr;</a>
+</div>
 <hr>

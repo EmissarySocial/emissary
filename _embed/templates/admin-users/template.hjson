@@ -28,6 +28,7 @@
 										{type: "text", label: "Username", path: "username"}
 										{type: "text", label: "Email Address", path: "emailAddress"}
 										{type: "toggle", path: "isPublic", options: {true-text: "Show Profile Publicly", false-text: "Show Profile Publicly"}}
+										{type: "toggle", path: "isIndexable", options: {true-text: "Include in Search Engines", false-text: "Include in Search Engines"}}
 									]
 								},
 								{
@@ -79,6 +80,7 @@
 											{type: "text", label: "Username", path: "username"}
 											{type: "text", label: "Email Address", path: "emailAddress"}
 											{type: "toggle", path: "isPublic", options: {true-text: "Show Profile Publicly", false-text: "Show Profile Publicly"}}
+											{type: "toggle", path: "isIndexable", options: {true-text: "Include in Search Engines", false-text: "Include in Search Engines"}}
 										]
 									},
 									{

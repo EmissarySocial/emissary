@@ -1,14 +1,19 @@
-behavior select(value)
+behavior select(value, options)
 
 	init
-		if value is ""
-			exit
+
+		if options is not null then
+			for option in options
+				put `<option value="${option.value}">${option.label}</option>` at the end of me
+			end
 		end
 
-		set option to first <option[value="${value}"]/> in me
+		if value is not ""
+			set selectedOption to first <option[value="${value}"]/> in me
 
-		if option is not null
-			set option.selected to true
+			if selectedOption is not null
+				set selectedOption.selected to true
+			end
 		end
 	end
 end

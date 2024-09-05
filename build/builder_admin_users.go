@@ -8,10 +8,13 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
+	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	builder "github.com/benpate/exp-builder"
+	"github.com/benpate/form"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/slice"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -173,6 +176,7 @@ func (w User) MapIDs() map[string]string {
 func (w User) Users() *QueryBuilder[model.UserSummary] {
 
 	query := builder.NewBuilder().
+		String("search", builder.WithAlias("displayName"), builder.WithDefaultOpContains()).
 		String("displayName").
 		ObjectID("groupId")
 
@@ -189,6 +193,40 @@ func (w User) Users() *QueryBuilder[model.UserSummary] {
 /******************************************
  * ADDITIONAL DATA
  ******************************************/
+
+// Groups returns a slice of all Groups in the database
+func (w User) Groups() ([]form.LookupCode, error) {
+	groupService := w.factory().Group()
+	groups, err := groupService.Query(exp.All(), option.SortAsc("label"))
+
+	if err != nil {
+		return nil, derp.Wrap(err, "build.User.Groups", "Error loading groups")
+	}
+
+	result := slice.Map(groups, func(group model.Group) form.LookupCode {
+		return form.LookupCode{
+			Value: group.GroupID.Hex(),
+			Label: group.Label,
+		}
+	})
+
+	return result, nil
+}
+
+// CountUsers returns the total number of users in the database
+func (w User) CountUsers() (int64, error) {
+	return w.factory().User().Count(exp.All())
+}
+
+// CountPublicUsers returns the total number of users marked "isPublic"
+func (w User) CountPublicUsers() (int64, error) {
+	return w.factory().User().Count(exp.Equal("isPublic", true))
+}
+
+// CountIndexableUsers returns the total number of users marked "isIndexable"
+func (w User) CountIndexableUsers() (int64, error) {
+	return w.factory().User().Count(exp.And(exp.Equal("isPublic", true), exp.Equal("isIndexable", true)))
+}
 
 // Registration returns the signup template selected for this domain
 func (w User) Registration() model.Registration {

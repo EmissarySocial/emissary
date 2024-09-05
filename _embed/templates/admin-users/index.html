@@ -1,4 +1,7 @@
 {{- $registration := .Registration -}}
+{{- $groupID := .QueryParam "groupId" -}}
+{{- $search := .QueryParam "search" -}}
+
 <div class="page" hx-get="/admin/users/index" hx-trigger="refreshPage from:window">
    
     <script src="/.themes/global/resources/sortable-1.15.0/Sortable.min.js"></script>
@@ -10,24 +13,56 @@
 		{{- end -}}
 	</div>
 
-	<div class="margin-bottom">
-		<h3>New User Signups?</h3>
-		<div script="install blockselect()">
+	<div class="columns-3 margin-bottom">
+		<div class="card padding" script="install blockselect()">
+			<div class="text-sm text-gray">New User Signups</div>
+			<div class="text-lg bold">
 			{{ if $registration.IsZero -}}
-				{{icon "none" }} Signups Not Allowed
+				{{icon "none" }} Not Allowed
 			{{- else -}}
 				{{- icon $registration.Icon}} {{ $registration.Label -}}
 			{{- end}}
+			</div>
 			<button class="text-xs" hx-get="/admin/domain/signup?registrationId={{$registration.RegistrationID}}">Edit</button>
+		</div>
+
+		<div class="card padding flex-row">
+			<div class="flex-grow align-center">
+				<div class="text-sm text-gray">Total</div>
+				<div class="text-lg bold">{{.CountUsers}}</div>
+			</div>
+			<div class="flex-grow align-center">
+				<div class="text-sm text-gray">Public</div>
+				<div class="text-lg bold">{{.CountPublicUsers}}</div>
+			</div>
+			<div class="flex-grow align-center">
+				<div class="text-sm text-gray">Indexable</div>
+				<div class="text-lg bold">{{.CountIndexableUsers}}</div>
+			</div>
+		</div>
+		<div class="flex-center card" script="install blockselect()">
+			<div class="text-lg bold">
+				<button class="primary" hx-get="/admin/users/add"><span aria-hidden>{{icon "add"}}</span> Invite a User</button>
+			</div>
 		</div>
 	</div>
 
-	<h3>Current User Accounts</h3>
-	<table id="users" class="table">
-		<tr role="link" hx-get="/admin/users/add"><td class="link" colspan="2">
-			{{icon "add"}}&nbsp;Invite a Person
-		</td></tr>
+	<form hx-get="/admin/users/list" hx-trigger="change, keyup throttle:500ms" hx-target="#users" hx-swap="innerHTML" hx-push-url="false">
+		<div class="card padding margin-bottom flex-row">
+			<div>
+				<label for="groupId" class="text-xs text-gray">GROUP</label>
+				<select id="groupId" name="groupId" class="text-sm" script="install select(value:'{{$groupID}}', options:{{.Groups |json }})">
+					<option value="">(All Groups)</option>
+				</select>
+			</div>
+			<div>
+				<label for="search" class="text-xs text-gray">NAME</label>
+				<input id="search" name="search" value="{{$search}}" class="text-sm" autocomplete="off">
+			</div>
+		</div>
+	</form>
 
+	<table id="users" class="table">
 		{{- .View "list" -}}
 	</table>
 </div>

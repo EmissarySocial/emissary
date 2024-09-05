@@ -1,7 +1,10 @@
 {{- $users := .Users.Top12.ByDisplayName.Slice -}}
 {{- if not $users.IsEmpty }}
 
-    <tbody hx-trigger="revealed" hx-get="/admin/users/list?groupId=&amp;displayName=gt:{{ $users.Last.DisplayName }}" hx-target="#users" hx-swap="beforeend" hx-push-url="false">
+    {{$groupID := .QueryParam "groupId"}}
+    {{$search := .QueryParam "search"}}
+
+    <tbody hx-trigger="revealed" hx-get="/admin/users/list?groupId={{$groupID}}&amp;search={{$search}}&amp;displayName=gt:{{ $users.Last.DisplayName }}" hx-target="#users" hx-swap="beforeend" hx-push-url="false">
         {{- range $index, $user := $users -}}
             <tr class="clickable">
                 <td role="link" hx-get="/admin/users/{{$user.UserID.Hex}}/edit" class="flex-row width-100%">
