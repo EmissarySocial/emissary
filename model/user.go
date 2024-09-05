@@ -43,7 +43,6 @@ type User struct {
 	RuleCount      int  `json:"ruleCount"       bson:"ruleCount"`      // Number of rules (blocks) that this user has implemented
 	IsOwner        bool `json:"isOwner"         bson:"isOwner"`        // If TRUE, then this user is a website owner with FULL privileges.
 	IsPublic       bool `json:"isPublic"        bson:"isPublic"`       // If TRUE, then this user's profile is publicly visible
-	IsDiscoverable bool `json:"isDiscoverable"  bson:"isDiscoverable"` // If TRUE, then this user's profile can be discovered by other users.
 	IsIndexable    bool `json:"isIndexable"     bson:"isIndexable"`    // If TRUE, then this user's profile can be indexed by search engines.
 }
 
@@ -237,7 +236,7 @@ func (user User) GetJSONLD() mapof.Any {
 		vocab.PropertyURL:               user.ProfileURL,
 		vocab.PropertyName:              user.DisplayName,
 		vocab.PropertyPreferredUsername: user.Username,
-		vocab.PropertyTootDiscoverable:  user.IsDiscoverable,
+		vocab.PropertyTootDiscoverable:  true,
 		vocab.PropertyTootIndexable:     user.IsIndexable,
 		vocab.PropertyInbox:             user.ActivityPubInboxURL(),
 		vocab.PropertyOutbox:            user.ActivityPubOutboxURL(),

@@ -35,7 +35,6 @@ func TestUserSchema(t *testing.T) {
 		{"ruleCount", "3", 3},
 		{"isPublic", "true", true},
 		{"isOwner", "true", true},
-		{"isDiscoverable", "true", true},
 		{"isIndexable", "true", true},
 		{"inboxTemplate", "INBOX", nil},
 		{"outboxTemplate", "OUTBOX", nil},

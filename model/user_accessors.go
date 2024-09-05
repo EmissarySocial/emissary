@@ -34,7 +34,6 @@ func UserSchema() schema.Element {
 			"ruleCount":      schema.Integer{},
 			"isPublic":       schema.Boolean{},
 			"isOwner":        schema.Boolean{},
-			"isDiscoverable": schema.Boolean{},
 			"isIndexable":    schema.Boolean{},
 			"data":           schema.Object{Wildcard: schema.String{}},
 		},
@@ -63,9 +62,6 @@ func (user *User) GetPointer(name string) (any, bool) {
 
 	case "isPublic":
 		return &user.IsPublic, true
-
-	case "isDiscoverable":
-		return &user.IsDiscoverable, true
 
 	case "isIndexable":
 		return &user.IsIndexable, true
