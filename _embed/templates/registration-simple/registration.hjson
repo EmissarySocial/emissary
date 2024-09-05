@@ -10,16 +10,24 @@
 			title: {type:"string"}
 			description: {type:"string"}
 			groupId: {type:"string", format:"objectId"}
+			terms1: {type:"string"}
+			terms2: {type:"string"}
+			terms3: {type:"string"}
+			terms4: {type:"string"}
 		}
 	}
 	form: {
-		type: "layout-vertical",
-		children: [
-			{type:"text", path:"title", label:"Title", description:"Displayed at the top of the registration form"},
-			{type:"textarea", path:"description", label:"Description", description:"Longer text above the registration form"},
-			{type:"select", path:"groupId", label:"Group", description:"New users will be added to this group", options:{provider:"groups"}},
-		]
-	}
+			type:"layout-vertical",
+			children:[
+				{type:"select", path:"groupId", label:"Add to Group...", description:"New users will be added to this group", options:{provider:"groups"}},
+				{type:"text", path:"title", label:"Heading", description:"Displayed at the top of the registration form"}
+				{type:"textarea", path:"description", label:"Page Text", description:"Longer text above the registration form. Markdown is allowed.", options:{rows:8}}
+				{type:"text", path:"terms1", label:"Terms of Service"}
+				{type:"text", path:"terms2"}
+				{type:"text", path:"terms3"}
+				{type:"text", path:"terms4", description:"Populated lines will show as required checkboxes in the registration form."}
+			]
+		}
 	actions: {
 		view: {
 			steps:[

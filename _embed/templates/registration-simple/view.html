@@ -1,9 +1,10 @@
+{{ $builder := . }}
 {{- $message := .QueryParam "message" -}}
 
 <!DOCTYPE html>
 <html>
 <head>
-	<title>{{first (.Data "title") "Register"}}</title>
+	<title>{{first (.RegistrationData "title") "Register"}}</title>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta name="generator" content="https://emissary.social">
@@ -19,10 +20,11 @@
 			
 			<form hx-post="/signin" hx-target="#message">
 
-				<div class="layout-vertical margin-bottom">
+				<h1>{{.RegistrationData "title"}}</h1>
 
-					<div class="layout-title">{{.Data "title"}}</div>
-					<div class="margin-bottom-xl">{{.Data "description"}}</div>
+				<div class="layout-vertical margin-bottom-lg">
+
+					<div class="margin-bottom-xl">{{.RegistrationData "description" | markdown }}</div>
 
 					{{- if ne "" $message -}}
 						<div class="margin-bottom">{{$message}}</div>
@@ -52,11 +54,18 @@
 						</div>
 					</div>
 
-					<div class="layout-vertical-element">
-						<label for="password">Password</label>
-						<input type="password" name="password" id="password" required="true" minlength="12" maxlength="100" autocomplete="new-password">
-						<div role="note" class="text-sm gray40">12 or more characters.  Don't reuse passwords.</div>
-					</div>
+					{{ range $index := seq 4 }}
+						{{$termID := concat "terms" (add 1 $index)}}
+						{{$term := $builder.RegistrationData $termID}}
+						{{if ne ""  $term }}
+							<div class="layout-vertical-element">
+								<label for="{{$termID}}">
+									<input type="checkbox" id="{{$termID}}" name="{{$termID}}" required="true">
+									{{$term}}
+								</label>
+							</div>
+						{{ end }}
+					{{ end }}
 
 				</div>
 
@@ -98,7 +107,7 @@
 
 	<form hx-post="/register" hx-swap="none" hx-push-url="false" class="pure-form pure-form-stacked">
 
-		<h1>{{.Data "title"}}</h1>
+		<h1>{{.RegistrationData "title"}}</h1>
 
 		{{- if ne "" $message -}}
 			<div class="margin-bottom">{{$message}}</div>
