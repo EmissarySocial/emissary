@@ -50,7 +50,7 @@ func (service *EncryptionKey) Close() {
 
 // Count returns the number of records that match the provided criteria
 func (service *EncryptionKey) Count(criteria exp.Expression) (int64, error) {
-	return service.collection.Count(criteria)
+	return service.collection.Count(notDeleted(criteria))
 }
 
 // List returns an iterator containing all of the EncryptionKeys who match the provided criteria

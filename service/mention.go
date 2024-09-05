@@ -69,7 +69,7 @@ func (service *Mention) Close() {
 
 // Count returns the number of records that match the provided criteria
 func (service *Mention) Count(criteria exp.Expression) (int64, error) {
-	return service.collection.Count(criteria)
+	return service.collection.Count(notDeleted(criteria))
 }
 
 // Query returns a slice containing all of the Mentions that match the provided criteria

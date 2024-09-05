@@ -64,7 +64,7 @@ func (service *Outbox) New() model.OutboxMessage {
 
 // Count returns the number of records that match the provided criteria
 func (service *Outbox) Count(criteria exp.Expression) (int64, error) {
-	return service.collection.Count(criteria)
+	return service.collection.Count(notDeleted(criteria))
 }
 
 // Query returns a slice containing all of the Activities that match the provided criteria

@@ -43,7 +43,7 @@ func (service *Group) Close() {
 
 // Count returns the number of records that match the provided criteria
 func (service *Group) Count(criteria exp.Expression) (int64, error) {
-	return service.collection.Count(criteria)
+	return service.collection.Count(notDeleted(criteria))
 }
 
 func (service *Group) Query(criteria exp.Expression, options ...option.Option) ([]model.Group, error) {

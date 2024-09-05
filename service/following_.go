@@ -131,7 +131,7 @@ func (service *Following) New() model.Following {
 
 // Count returns the number of records that match the provided criteria
 func (service *Following) Count(criteria exp.Expression) (int64, error) {
-	return service.collection.Count(criteria)
+	return service.collection.Count(notDeleted(criteria))
 }
 
 // Query returns an iterator containing all of the Following who match the provided criteria

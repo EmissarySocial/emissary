@@ -150,7 +150,7 @@ func (service *Stream) New() model.Stream {
 
 // Count returns the number of records that match the provided criteria
 func (service *Stream) Count(criteria exp.Expression) (int64, error) {
-	return service.collection.Count(criteria)
+	return service.collection.Count(notDeleted(criteria))
 }
 
 // Query returns an slice containing all of the Streams that match the provided criteria

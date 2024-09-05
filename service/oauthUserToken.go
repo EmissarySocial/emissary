@@ -47,7 +47,7 @@ func (service *OAuthUserToken) Close() {
 
 // Count returns the number of records that match the provided criteria
 func (service *OAuthUserToken) Count(criteria exp.Expression) (int64, error) {
-	return service.collection.Count(criteria)
+	return service.collection.Count(notDeleted(criteria))
 }
 
 // Query returns an slice containing all of the OAuthUserTokens that match the provided criteria

@@ -54,7 +54,7 @@ func (service *Folder) New() model.Folder {
 
 // Count returns the number of records that match the provided criteria
 func (service *Folder) Count(criteria exp.Expression) (int64, error) {
-	return service.collection.Count(criteria)
+	return service.collection.Count(notDeleted(criteria))
 }
 
 // Query returns a slice of Folders that math the provided criteria

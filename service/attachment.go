@@ -51,7 +51,7 @@ func (service *Attachment) New() model.Attachment {
 
 // Count returns the number of records that match the provided criteria
 func (service *Attachment) Count(criteria exp.Expression) (int64, error) {
-	return service.collection.Count(criteria)
+	return service.collection.Count(notDeleted(criteria))
 }
 
 // List returns an iterator containing all of the Attachments who match the provided criteria

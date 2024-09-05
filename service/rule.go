@@ -54,7 +54,7 @@ func (service *Rule) Close() {
  ******************************************/
 
 func (service *Rule) Count(criteria exp.Expression) (int64, error) {
-	return service.collection.Count(criteria)
+	return service.collection.Count(notDeleted(criteria))
 }
 
 // Query returns an slice of allthe Rules that match the provided criteria

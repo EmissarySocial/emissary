@@ -41,7 +41,7 @@ func (service *Connection) Close() {
 
 // Count returns the number of records that match the provided criteria
 func (service *Connection) Count(criteria exp.Expression) (int64, error) {
-	return service.collection.Count(criteria)
+	return service.collection.Count(notDeleted(criteria))
 }
 
 func (service *Connection) Query(criteria exp.Expression, options ...option.Option) ([]model.Connection, error) {

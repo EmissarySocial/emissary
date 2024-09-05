@@ -79,7 +79,7 @@ func (service *User) Close() {
  ******************************************/
 
 func (service User) Count(criteria exp.Expression) (int64, error) {
-	return service.collection.Count(criteria)
+	return service.collection.Count(notDeleted(criteria))
 }
 
 // List returns an iterator containing all of the Users who match the provided criteria
