@@ -106,6 +106,10 @@ func (w Registration) Label() string {
 	return w._domain.Label
 }
 
+func (w Registration) IconURL() string {
+	return w._domain.IconURL()
+}
+
 func (w Registration) object() data.Object {
 	return &w._user
 }
