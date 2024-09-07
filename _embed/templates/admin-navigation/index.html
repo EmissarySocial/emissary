@@ -12,8 +12,8 @@
     {{ $navigation := .Navigation}}
     {{- if not $navigation.IsEmpty -}}
 
-        <div class="margin-bottom text-sm">
-            <button hx-get="/admin/navigation/add" class="primary">{{icon "add"}}&nbsp;Add a Top-Level Stream</button>
+        <div class="margin-vertical">
+            <span class="link" hx-get="/admin/navigation/add">{{icon "add"}}&nbsp;Add an Item</span>
         </div>
 
         <form class="sortable margin-bottom" hx-post="/admin/navigation/sort" hx-swap="none" hx-push-url="false" hx-trigger="end">
