@@ -176,7 +176,7 @@ func (service *Stream) List(criteria exp.Expression, options ...option.Option) (
 func (service *Stream) Load(criteria exp.Expression, stream *model.Stream) error {
 
 	if err := service.collection.Load(notDeleted(criteria), stream); err != nil {
-		return derp.Wrap(err, "service.Stream", "Error loading Stream", criteria)
+		return derp.Wrap(err, "service.Stream.Load", "Error loading Stream", criteria)
 	}
 
 	return nil
@@ -185,7 +185,7 @@ func (service *Stream) Load(criteria exp.Expression, stream *model.Stream) error
 // Save adds/updates an Stream in the database
 func (service *Stream) Save(stream *model.Stream, note string) error {
 
-	const location = "service.Stream"
+	const location = "service.Stream.Save"
 
 	template, err := service.templateService.Load(stream.TemplateID)
 
