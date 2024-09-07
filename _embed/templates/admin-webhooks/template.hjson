@@ -1,0 +1,70 @@
+{
+	templateId:"admin-webhooks"
+	templateRole:"admin"
+	model:"webhook"
+	containedBy:["admin"]
+	label: "Webhooks"
+	description: "Manage all webhooks on this website"
+	actions: {
+		index: {do: "view-html"}
+		list: {do: "view-html"}
+		
+		add: {
+			steps: [{
+				do: as-modal
+				steps: [
+					{
+						do: edit
+						type: user
+						form: {
+							label: Add a Webhook
+							type: layout-vertical
+							children: [
+								{type: "text", label: "Label", path: "label", description:"A friendly name to help you manage this webhook"}
+								{type: "text", label: "Target URL", path: "targetUrl", description:"The URL that will receive the webhook payload"}
+								{type: "multiselect", label: "Events", path: "events", description:"Choose which events will trigger this webhook"}
+							]
+						}
+					}
+					{do: "refresh-page"}
+				]
+			}]
+		}
+
+		edit:{
+			steps:[
+				{
+					do:"as-modal"
+					steps:[
+						{
+							do: "edit"
+							form: {
+								label: Edit Webhook
+								type: layout-vertical
+								children: [
+									{type: "text", label: "Label", path: "label", description:"A friendly name to help you manage this webhook"}
+									{type: "text", label: "Target URL", path: "targetUrl", description:"The URL that will receive the webhook payload"}
+									{type: "multiselect", label: "Events", path: "events", description:"Choose which events will trigger this webhook"}
+								]
+							}
+						},
+						{do:"refresh-page"}
+					]
+				}
+			]
+		}
+
+		send-welcome: {
+			steps:[
+				{do:"send-email", email:"welcome"}
+			]
+		}
+
+		delete: {
+			steps:[
+				{do: "delete", type: "user"}
+				{do: "refresh-page"}
+			]
+		}
+	}
+}

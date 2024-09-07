@@ -36,3 +36,9 @@ type JSONLDGetter interface {
 	GetJSONLD() mapof.Any
 	Created() int64
 }
+
+// WebhookDataGetter wraps the GetWebhook() method, which lets an object
+// return an arbitrary data structure to be sent as a webhook
+type WebhookDataGetter interface {
+	GetWebhookData() mapof.Any
+}

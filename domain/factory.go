@@ -72,6 +72,7 @@ type Factory struct {
 	streamDraftService   service.StreamDraft
 	realtimeBroker       RealtimeBroker
 	userService          service.User
+	webhookService       service.Webhook
 
 	// real-time watchers
 	streamUpdateChannel chan primitive.ObjectID
@@ -135,6 +136,7 @@ func NewFactory(domain config.Domain, port string, providers []config.Provider, 
 	factory.streamService = service.NewStream()
 	factory.streamDraftService = service.NewStreamDraft()
 	factory.userService = service.NewUser()
+	factory.webhookService = service.NewWebhook()
 
 	// Refresh the configuration with values that (may) change during the lifetime of the factory
 	if err := factory.Refresh(domain, providers, attachmentOriginals, attachmentCache); err != nil {
@@ -371,7 +373,13 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.EncryptionKey(),
 			factory.Rule(),
 			factory.Stream(),
+			factory.Webhook(),
 			factory.Host(),
+		)
+
+		// Populate Webhook Service
+		factory.webhookService.Refresh(
+			factory.collection(CollectionWebhook),
 		)
 
 		// Watch for updates to streams
@@ -576,6 +584,11 @@ func (factory *Factory) User() *service.User {
 // Widget returns a fully populated Widget service
 func (factory *Factory) Widget() *service.Widget {
 	return factory.widgetService
+}
+
+// Webhook returns a fully populated Webhook service
+func (factory *Factory) Webhook() *service.Webhook {
+	return &factory.webhookService
 }
 
 /******************************************

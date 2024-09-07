@@ -62,3 +62,6 @@ const CollectionTemplate = "Template"
 
 // CollectionUser is the name of the database collection where Users are stored
 const CollectionUser = "User"
+
+// CollectionWebhook is the name of the database collection where Webhooks are stored
+const CollectionWebhook = "Webhook"

@@ -1,0 +1,27 @@
+<h1 class="flex-row">
+	{{- if ne "" .IconURL -}}
+		<img src="{{.IconURL}}" class="circle-48">
+	{{- else -}}
+		<span class="circle-48"></span>
+	{{- end }} 
+	<span>Edit {{.DisplayName}}</span>
+</h1>
+
+<div class="text-sm margin-bottom-lg">
+	<a href="{{.ProfileURL}}" class="button">{{icon "user"}} View Profile</a>
+
+	{{- $stripeID := index .MapIDs "STRIPE" -}}
+	{{- if ne "" $stripeID -}}
+		<a href="https://dashboard.stripe.com/test/customers/{{$stripeID}}" target="_blank" class="button">{{icon "credit-card"}} Stripe Info</a>
+	{{- end -}}
+
+	<form hx-post="/admin/users/{{.UserID}}/send-welcome" class="inline-block">
+		<button class="htmx-request-hide" type="submit">{{icon "email"}} Resend Welcome</button>
+		<button class="htmx-request-show" disabled><span class="spin">{{icon "loading"}}</span> Sending Welcome</button>
+	</form>
+
+	<form action="/.masquerade?userId={{.UserID}}" method="post" class="inline-block">
+		<button type="submit">{{icon "user-secret"}} Sign In &rarr;</button>
+	</form>
+
+</div>

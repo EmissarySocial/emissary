@@ -504,5 +504,9 @@ func (w Common) AdminSections() []form.LookupCode {
 			Value: "connections",
 			Label: "Connections",
 		},
+		{
+			Value: "webhooks",
+			Label: "Webhooks",
+		},
 	}
 }

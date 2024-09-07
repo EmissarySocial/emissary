@@ -38,6 +38,7 @@ type User struct {
 	folderService     *Folder
 	followerService   *Follower
 	streamService     *Stream
+	webhookService    *Webhook
 	host              string
 }
 
@@ -51,7 +52,7 @@ func NewUser() User {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *User) Refresh(userCollection data.Collection, followerCollection data.Collection, followingCollection data.Collection, ruleCollection data.Collection, attachmentService *Attachment, domainService *Domain, emailService *DomainEmail, folderService *Folder, followerService *Follower, keyService *EncryptionKey, ruleService *Rule, streamService *Stream, host string) {
+func (service *User) Refresh(userCollection data.Collection, followerCollection data.Collection, followingCollection data.Collection, ruleCollection data.Collection, attachmentService *Attachment, domainService *Domain, emailService *DomainEmail, folderService *Folder, followerService *Follower, keyService *EncryptionKey, ruleService *Rule, streamService *Stream, webhookService *Webhook, host string) {
 	service.collection = userCollection
 	service.followers = followerCollection
 	service.following = followingCollection
@@ -65,6 +66,7 @@ func (service *User) Refresh(userCollection data.Collection, followerCollection 
 	service.keyService = keyService
 	service.ruleService = ruleService
 	service.streamService = streamService
+	service.webhookService = webhookService
 
 	service.host = host
 }
@@ -184,6 +186,13 @@ func (service *User) Save(user *model.User, note string) error {
 		service.SendWelcomeEmail(user)
 	}
 
+	// Send Webhooks (if configured)
+	if isNew {
+		service.webhookService.Send(model.WebhookEventUserCreate, user)
+	} else {
+		service.webhookService.Send(model.WebhookEventUserUpdate, user)
+	}
+
 	// Success!
 	return nil
 }
@@ -191,14 +200,36 @@ func (service *User) Save(user *model.User, note string) error {
 // Delete removes an User from the database (virtual delete)
 func (service *User) Delete(user *model.User, note string) error {
 
+	// TODO: Delete related folders
+
+	// TODO: Delete related followers
+
+	// TODO: Delete related following
+
+	// TODO: Delete related group memberships
+
+	// TODO: Delete related mentions
+
+	// TODO: Delete related inbox messages
+
+	// TODO: Delete related outbox messages
+
+	// TODO: Delete related rules
+
+	// Delete related streams
+	if err := service.streamService.DeleteByParent(user.UserID, "Deleted with owner"); err != nil {
+		return derp.Wrap(err, "service.User.Delete", "Error deleting User's streams", user, note)
+	}
+
+	// TODO: Delete related tags
+
+	// Delete the User from the database
 	if err := service.collection.Delete(user, note); err != nil {
 		return derp.Wrap(err, "service.User.Delete", "Error deleting User", user, note)
 	}
 
-	// TODO: HIGH: Clean up related records (like InboxItem and OutboxItem)
-	if err := service.streamService.DeleteByParent(user.UserID, "Deleted with owner"); err != nil {
-		return derp.Wrap(err, "service.User.Delete", "Error deleting User's streams", user, note)
-	}
+	// Send user:delete webhooks
+	service.webhookService.Send(model.WebhookEventUserDelete, user)
 
 	return nil
 }
