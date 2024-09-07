@@ -1,4 +1,4 @@
-on mousedown
+on mousedown or touchstart
 
 	if event.button is not 0 then 
 		exit
@@ -8,7 +8,25 @@ on mousedown
 
 	if node is not empty then
 		halt the event
-		send click to node
+		send click(turboclick:true) to node
 	end
 
+end
+
+on click
+log event
+	if event.button is not 0 then 
+		exit
+	end
+
+	set node to the closest <.turboclick /> to the event.target
+
+	if node is not empty then
+		if event.detail.turboclick is not true then
+			log "halting click"
+			halt the event
+			exit
+		end
+	end
+log "allowing click"
 end
