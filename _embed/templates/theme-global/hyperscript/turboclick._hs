@@ -1,0 +1,10 @@
+on mousedown or touchstart
+
+	set node to the closest <.turboclick /> to the event.target
+
+	if node is not null then
+		halt the event
+		click() the node
+	end
+
+end
