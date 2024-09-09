@@ -83,7 +83,7 @@
 	<h2>Need an Account?</h2>
 
 	{{- if .DomainHasRegistrationForm -}}
-		<a href="/register" class="primary button">Sign Up Now</a>
+		<a href="/register" class="primary button">Sign Up Here</a>
 		<a href="https://emissary.social/hosting" class="button">Find Another Host</a>
 		<button script="on click trigger closeModal">Cancel</button>
 		
@@ -91,12 +91,13 @@
 		Signups on this site are closed, but you can 
 		<a href="https://emissary.social/hosting" target="_blank">Find a Fediverse Host</a>
 		from this list of trustworthy providers.
+
+		<div class="margin-top">
+			<button script="on click trigger closeModal">Close Window</button>
+		</div>
 	{{- end -}}
 </div>
 
-<div class="margin-top">
-	<button script="on click trigger closeModal">Close Window</button>
-</div>
 
 <script type="text/hyperscript">
 
