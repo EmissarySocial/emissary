@@ -177,7 +177,9 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 			return template.HTML(value)
 		},
 
-		"markdown": func(value string) template.HTML {
+		"markdown": func(value any) template.HTML {
+
+			valueBytes := convert.Bytes(value)
 
 			// https://github.com/yuin/goldmark#built-in-extensions
 			var buffer bytes.Buffer
@@ -192,7 +194,7 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 				goldmark.WithRendererOptions(),
 			)
 
-			if err := md.Convert([]byte(value), &buffer); err != nil {
+			if err := md.Convert([]byte(valueBytes), &buffer); err != nil {
 				derp.Report(derp.Wrap(err, "tools.templates.functions.markdown", "Error converting Markdown to HTML"))
 			}
 
