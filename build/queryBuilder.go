@@ -95,6 +95,11 @@ func (builder QueryBuilder[T]) All() QueryBuilder[T] {
 	return builder
 }
 
+func (builder QueryBuilder[T]) Indexable() QueryBuilder[T] {
+	builder.Criteria = builder.Criteria.AndEqual("isIndexable", true)
+	return builder
+}
+
 func (builder QueryBuilder[T]) Featured() QueryBuilder[T] {
 	builder.Criteria = builder.Criteria.AndEqual("isFeatured", true)
 	return builder

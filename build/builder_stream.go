@@ -670,7 +670,22 @@ func (w Stream) Outbox() (QueryBuilder[model.OutboxMessage], error) {
 }
 
 /******************************************
- * RELATED RESULTSETS
+ * Other Records
+ ******************************************/
+
+func (w Stream) Streams() QueryBuilder[model.StreamSummary] {
+	streamService := w.factory().Stream()
+	return NewQueryBuilder[model.StreamSummary](streamService, exp.All())
+}
+
+func (w Stream) Users() QueryBuilder[model.UserSummary] {
+	userService := w.factory().User()
+	criteria := exp.Equal("isPublic", true)
+	return NewQueryBuilder[model.UserSummary](userService, criteria)
+}
+
+/******************************************
+ * Related Streams
  ******************************************/
 
 func (w Stream) Breadcrumbs() ([]model.StreamSummary, error) {
