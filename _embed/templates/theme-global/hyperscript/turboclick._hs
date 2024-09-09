@@ -1,8 +1,13 @@
-on mousedown or touchstart
+on __mousedown or __touchstart
 
-	if event.button is not 0 then 
+	log event
+	if (event.button is 1) or (event.buttons is 1) then
+	else
+		log "exit"
 		exit
 	end
+
+	log "continue"
 
 	set node to the closest <.turboclick /> to the event.target
 
@@ -13,20 +18,14 @@ on mousedown or touchstart
 
 end
 
-on click
-log event
-	if event.button is not 0 then 
+on __click[detail.turboclick == undefined]
+
+	log event
+	set node to the closest <.turboclick /> to the event.target
+	log node
+	if node is not empty then
+		halt the event
 		exit
 	end
-
-	set node to the closest <.turboclick /> to the event.target
-
-	if node is not empty then
-		if event.detail.turboclick is not true then
-			log "halting click"
-			halt the event
-			exit
-		end
-	end
-log "allowing click"
+	log "continue?"
 end
