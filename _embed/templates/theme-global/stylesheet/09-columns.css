@@ -23,7 +23,6 @@
 .columns-2 > *,
 .columns-1 > * {
 	display:block;
-	vertical-align:top;
 	flex-grow:0;
 	flex-shrink:0;
 	flex-basis: calc(( 100% - ((var(--cols) - 1) * var(--gap))) / var(--cols));
