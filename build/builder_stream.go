@@ -760,7 +760,7 @@ func (w Stream) Attachments() (sliceof.Object[model.Attachment], error) {
 }
 
 // AttachmentByType lists all attachments for this stream.
-func (w Stream) AttachmentByCategory(category string) (sliceof.Object[model.Attachment], error) {
+func (w Stream) AttachmentsByCategory(category string) (sliceof.Object[model.Attachment], error) {
 	return w.factory().Attachment().QueryByCategory(model.AttachmentObjectTypeStream, w._stream.StreamID, category)
 }
 
