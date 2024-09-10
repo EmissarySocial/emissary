@@ -83,9 +83,9 @@ func (service Icons) Get(name string) string {
 	case "database-fill":
 		return service.get("database-fill")
 	case "delete":
-		return service.get("trash")
+		return service.get("x-lg")
 	case "delete-fill":
-		return service.get("trash-fill")
+		return service.get("x-lg")
 	case "drag-handle":
 		return service.get("grip-vertical")
 	case "edit":
@@ -259,7 +259,9 @@ func (service Icons) Get(name string) string {
 	case "unlink":
 		return service.get("link-45deg")
 	case "upload":
-		return service.get("upload")
+		return service.get("cloud-arrow-up")
+	case "upload-fill":
+		return service.get("cloud-arrow-up-fill")
 	case "user":
 		return service.get("person-circle")
 	case "user-fill":
