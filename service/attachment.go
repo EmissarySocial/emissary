@@ -116,6 +116,71 @@ func (service *Attachment) Delete(attachment *model.Attachment, note string) err
 	return nil
 }
 
+/******************************************
+ * Generic Data Methods
+ ******************************************/
+
+// ObjectType returns the type of object that this service manages
+func (service *Attachment) ObjectType() string {
+	return "Attachment"
+}
+
+// New returns a fully initialized model.Attachment as a data.Object.
+func (service *Attachment) ObjectNew() data.Object {
+	result := model.NewAttachment("", primitive.NilObjectID)
+	return &result
+}
+
+// ObjectID retrieves the AttachmentID from the provided object
+func (service *Attachment) ObjectID(object data.Object) primitive.ObjectID {
+
+	if attachment, ok := object.(*model.Attachment); ok {
+		return attachment.AttachmentID
+	}
+
+	return primitive.NilObjectID
+}
+
+// ObjectQuery returns a slice of Attachments that match the provided criteria (generically)
+func (service *Attachment) ObjectQuery(result any, criteria exp.Expression, options ...option.Option) error {
+	return service.collection.Query(result, notDeleted(criteria), options...)
+}
+
+// ObjectList returns an iterator of Attachments that match the provided criteria (generically)
+func (service *Attachment) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+	return service.List(criteria, options...)
+}
+
+// ObjectLoad retrieves an Attachment from the database (generically)
+func (service *Attachment) ObjectLoad(criteria exp.Expression) (data.Object, error) {
+	result := model.NewAttachment("", primitive.NilObjectID)
+	err := service.Load(criteria, &result)
+	return &result, err
+}
+
+// ObjectSave adds/updates an Attachment in the database (generically)
+func (service *Attachment) ObjectSave(object data.Object, note string) error {
+
+	if attachment, ok := object.(*model.Attachment); ok {
+		return service.Save(attachment, note)
+	}
+	return derp.NewInternalError("service.Attachment.ObjectSave", "Invalid object type", object)
+}
+
+// ObjectDelete removes an Attachment from the database (generically)
+func (service *Attachment) ObjectDelete(object data.Object, note string) error {
+	if attachment, ok := object.(*model.Attachment); ok {
+		return service.Delete(attachment, note)
+	}
+	return derp.NewInternalError("service.Attachment.ObjectDelete", "Invalid object type", object)
+}
+
+// ObjectUserCan returns true if the current user has permission to perform the requested action on the provided Attachment
+func (service *Attachment) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
+	return derp.NewUnauthorizedError("service.Attachment", "Not Authorized")
+}
+
+// Schema returns the schema that this service uses to validate Attachments
 func (service *Attachment) Schema() schema.Schema {
 	return schema.New(model.AttachmentSchema())
 }

@@ -191,6 +191,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "websub":
 		return NewWebSub(stepInfo)
 
+	case "with-attachment":
+		return NewWithAttachment(stepInfo)
+
 	case "with-children":
 		return NewWithChildren(stepInfo)
 
