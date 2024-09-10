@@ -8,7 +8,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/slice"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 )
 
@@ -52,7 +51,6 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 	// Retrieve upload files from the POST
 	files := form.File[step.Fieldname]
 
-	spew.Dump("Upload Attachments", len(files))
 	if len(files) == 0 {
 		return Continue()
 	}
@@ -132,8 +130,6 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 		if err := attachmentService.Save(&attachment, "Uploaded file: "+fileHeader.Filename); err != nil {
 			return Halt().WithError(derp.Wrap(err, location, "Error saving attachment", attachment))
 		}
-
-		spew.Dump(attachment)
 
 		// Try to put the the attachmentId into the object
 		if step.AttachmentPath != "" {
