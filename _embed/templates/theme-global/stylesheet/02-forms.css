@@ -12,7 +12,7 @@ input:not([type=submit], [type=checkbox], [type=radio], [type=color]), textarea,
 
     -font-size: calc(var(--rhythm) * 2);
     -line-height:calc(var(--rhythm) * 3);
-	line-height:1em;
+	line-height:150%;
 }
 
 textarea {
