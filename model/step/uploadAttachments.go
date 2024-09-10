@@ -16,6 +16,11 @@ type UploadAttachments struct {
 	Maximum        int    // Maximum number of uploads to allow (Default: 1)
 	JSONResult     bool   // If TRUE, return a JSON structure with result data. This forces Maximum=1
 
+	Label                string // Value to set as the attachment.label
+	LabelFieldname       string // Form field that defines the attachment label
+	Description          string // Value to set as the attachment.description
+	DescriptionFieldname string // Form field that defines the attachment description
+
 	RuleHeight int      // Fixed height for all downloads
 	RuleWidth  int      // Fixed width for all downloads
 	RuleTypes  []string // Allowed extensions.  The first value is used as the default.
@@ -43,6 +48,11 @@ func NewUploadAttachments(stepInfo mapof.Any) (UploadAttachments, error) {
 		Maximum:        max(stepInfo.GetInt("maximum"), 1),
 		Category:       stepInfo.GetString("category"),
 		JSONResult:     stepInfo.GetBool("json-result"),
+
+		Label:                stepInfo.GetString("label"),
+		LabelFieldname:       stepInfo.GetString("label-fieldname"),
+		Description:          stepInfo.GetString("description"),
+		DescriptionFieldname: stepInfo.GetString("description-fieldname"),
 
 		RuleHeight: rules.GetInt("height"),
 		RuleWidth:  rules.GetInt("width"),

@@ -7,6 +7,8 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/slice"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 )
 
@@ -21,6 +23,11 @@ type StepUploadAttachments struct {
 	Category       string // Category to apply to the Attachment
 	Maximum        int    // Maximum number of uploads to allow (Default: 1)
 	JSONResult     bool   // If TRUE, return a JSON structure with result data. This forces Maximum=1
+
+	Label                string // Value to set as the attachment.label
+	LabelFieldname       string // Form field that defines the attachment label
+	Description          string // Value to set as the attachment.description
+	DescriptionFieldname string // Form field that defines the attachment description
 
 	RuleHeight int      // Fixed height for all downloads
 	RuleWidth  int      // Fixed width for all downloads
@@ -42,14 +49,20 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 		return Halt().WithError(derp.Wrap(err, location, "Error reading multipart form."))
 	}
 
+	// Retrieve upload files from the POST
 	files := form.File[step.Fieldname]
 
-	log.Trace().Str("fieldname", step.Fieldname).Msg("Searching Form for Files")
-
+	spew.Dump("Upload Attachments", len(files))
 	if len(files) == 0 {
 		return Continue()
 	}
 
+	// Number of files must be less or equal to the maximum
+	if len(files) > step.Maximum {
+		files = files[:step.Maximum]
+	}
+
+	// Required services and objects
 	factory := builder.factory()
 	attachmentService := factory.Attachment()
 
@@ -62,26 +75,17 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 		objectType = "Stream"
 	}
 
-	// Number of files must be less or equal to the maximum
-	if len(files) > step.Maximum {
-		files = files[:step.Maximum]
-	}
-
 	// Make room for new attachments
 	if err := attachmentService.MakeRoom(objectType, objectID, step.Category, step.Action, step.Maximum, len(files)); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error making room for new Attachments"))
 	}
 
 	// Make attachments for each uploaded file
-	for _, fileHeader := range files {
+	for index, fileHeader := range files {
 
 		log.Trace().Str("Filename", fileHeader.Filename).Msg("Found file")
 
-		attachment := model.NewAttachment(objectType, objectID)
-		attachment.Original = fileHeader.Filename
-		attachment.Category = step.Category
-
-		// Open the source (from the POST request)
+		// Open the uploaded file contents
 		source, err := fileHeader.Open()
 
 		if err != nil {
@@ -90,7 +94,27 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 
 		defer source.Close()
 
-		// Add the image into the media server
+		// Create a new Attachment object
+		attachment := model.NewAttachment(objectType, objectID)
+		attachment.Original = fileHeader.Filename
+		attachment.Category = step.Category
+
+		// Try to set labels from the stepInfo and form
+		if step.Label != "" {
+			attachment.Label = step.Label
+		} else if step.LabelFieldname != "" {
+			attachment.Label = slice.At(form.Value[step.LabelFieldname], index)
+		}
+
+		// Try to set descriptions from the stepInfo and form
+		if step.Description != "" {
+			attachment.Description = step.Description
+		} else if step.DescriptionFieldname != "" {
+			attachment.Description = slice.At(form.Value[step.DescriptionFieldname], index)
+		}
+
+		// Add the document into the media server.
+		// If it's an image or video, then save the dimensions as well.
 		width, height, err := factory.MediaServer().Put(attachment.AttachmentID.Hex(), source)
 
 		if err != nil {
@@ -108,6 +132,8 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 		if err := attachmentService.Save(&attachment, "Uploaded file: "+fileHeader.Filename); err != nil {
 			return Halt().WithError(derp.Wrap(err, location, "Error saving attachment", attachment))
 		}
+
+		spew.Dump(attachment)
 
 		// Try to put the the attachmentId into the object
 		if step.AttachmentPath != "" {
