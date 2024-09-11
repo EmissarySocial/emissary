@@ -1,4 +1,4 @@
-on mousedown or touchstart
+on mousedown
 
 	set node to the closest <.turboclick /> to the event.target
 
