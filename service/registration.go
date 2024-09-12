@@ -142,6 +142,16 @@ func (service *Registration) Register(groupService *Group, userService *User, do
 		return model.User{}, derp.Wrap(err, location, "Error setting user data")
 	}
 
+	// If defined in the registration data, set the User's Inbox Template
+	if inboxTemplate := domain.RegistrationData.GetString("inboxTemplate"); inboxTemplate != "" {
+		user.InboxTemplate = inboxTemplate
+	}
+
+	// If defined in the registration data, set the User's Inbox Template
+	if outboxTemplate := domain.RegistrationData.GetString("outboxTemplate"); outboxTemplate != "" {
+		user.OutboxTemplate = outboxTemplate
+	}
+
 	// Try to save the User to the database
 	if err := userService.Save(&user, "Created by Online Registration"); err != nil {
 		return model.User{}, derp.Wrap(err, location, "Error creating new User")

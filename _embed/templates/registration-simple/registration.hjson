@@ -9,7 +9,10 @@
 		properties: {
 			title: {type:"string"}
 			description: {type:"string"}
-			groupId: {type:"string", format:"objectId"}
+			confirmation: {type:"string"}
+			inboxTemplate: {type:"string"}
+			outboxTemplate: {type:"string"}
+			groupId: {type:"string"}
 			terms1: {type:"string"}
 			terms2: {type:"string"}
 			terms3: {type:"string"}
@@ -17,15 +20,42 @@
 		}
 	}
 	form: {
-			type:"layout-vertical",
-			children:[
-				{type:"select", path:"groupId", label:"Add to Group...", description:"New users will be added to this group", options:{provider:"groups"}},
-				{type:"text", path:"title", label:"Heading", description:"Displayed at the top of the registration form"}
-				{type:"textarea", path:"description", label:"Page Text", description:"Longer text above the registration form. Markdown is allowed.", options:{rows:8}}
-				{type:"text", path:"terms1", label:"Terms of Service"}
-				{type:"text", path:"terms2"}
-				{type:"text", path:"terms3"}
-				{type:"text", path:"terms4", description:"Populated lines will show as required checkboxes in the registration form."}
+			type: "layout-tabs",
+			children: [
+				{
+					type:"layout-vertical",
+					label:"Content",
+					children:[
+						{type:"text", path:"title", label:"Heading", description:"Displayed at the top of the registration form"}
+						{type:"textarea", path:"description", label:"Page Content", description:"Longer text above the registration form. Markdown is allowed.", options:{rows:8}}
+					]
+				},
+				{
+					type:"layout-vertical",
+					label:"Confirmation",
+					children:[
+						{type:"textarea", path:"confirmation", label:"Confirmation Message", description:"Confirmation message displayed when new users register.  Markdown is allowed.", options:{rows:10}}
+					]
+				},
+				{
+					type:"layout-vertical",
+					label:"Rules"
+					children:[
+						{type:"select", path:"inboxTemplate", label:"Inbox", options:{provider:"inbox-templates"}},
+						{type:"select", path:"outboxTemplate", label:"Outbox", options:{provider:"outbox-templates"}},
+						{type:"select", path:"groupId", label:"Add to Group...", description:"New users will be added to this group", format:"objectId", options:{provider:"groups"}},
+					]
+				},
+				{
+					type:"layout-vertical",
+					label:"Terms",
+					children:[
+						{type:"text", path:"terms1", label:"Terms of Service will show as required checkboxes in the registration form."}
+						{type:"text", path:"terms2"}
+						{type:"text", path:"terms3"}
+						{type:"text", path:"terms4"}
+					]
+				}
 			]
 		}
 	actions: {
@@ -34,5 +64,10 @@
 				{do:"view-html", as-full-page:true}
 			]
 		}	
+		confirm: {
+			steps:[
+				{do:"view-html"}
+			]
+		}
 	}
 }	

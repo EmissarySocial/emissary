@@ -38,6 +38,7 @@
 					steps:[
 						{
 							do: "edit"
+							options:["delete:/admin/webhooks/{{.WebhookID}}/delete"]
 							form: {
 								label: Edit Webhook
 								type: layout-vertical
