@@ -1,7 +1,19 @@
 on mousedown
 
+	-- if the event is not a left click, then nvm
+	if event.button > 0 then 
+		exit
+	end
+
+	-- ALTERNATE: if the event is not a left click, then nvm,
+	if event.buttons > 1 then
+		exit
+	end
+
+	-- See if we're in a child of a .turboclick element
 	set node to the closest <.turboclick /> to the event.target
 
+	-- if so, then just get on with it, without waiting for the mouseup.
 	if node is not null then
 		halt the event
 		click() the node
