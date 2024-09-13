@@ -1,0 +1,9 @@
+.bg-stripes {
+    background: repeating-linear-gradient(
+        45deg,
+        rgba(255, 255, 255, 0.4),
+        rgba(255, 255, 255, 0.4) 10px,
+        rgba(255, 255, 255, 0.6) 10px,
+        rgba(255, 255, 255, 0.6) 20px
+      );
+}
