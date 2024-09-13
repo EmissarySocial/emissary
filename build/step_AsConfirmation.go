@@ -22,7 +22,7 @@ func (step StepAsConfirmation) Get(builder Builder, buffer io.Writer) PipelineBe
 	b.Div().Class("margin-bottom").InnerText(step.Message).Close()
 
 	b.Div()
-	b.Button().Class("primary").Data("hx-post", builder.URL()).Data("hx-swap", "none").InnerText(step.Submit).Close()
+	b.Button().Class("primary").Data("hx-post", builder.URL()).Data("hx-swap", "none").Data("hx-push-url", "false").InnerText(step.Submit).Close()
 	b.Button().Script("on click trigger closeModal").InnerText("Cancel").Close()
 
 	// Done
