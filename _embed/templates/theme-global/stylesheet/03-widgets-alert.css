@@ -1,35 +1,27 @@
 .alert-red {
-    background-color: var(--red10);
-    border: dashed 1px var(--red40);
-    border-left: solid 4px var(--red50);
-    color: var(--red70);
+    background-color: var(--red70);
+    color: var(--white);
     padding: var(--rhythm) calc(var(--rhythm) * 2);
     margin-bottom: calc(var(--rhythm) * 2);
 }
 
 .alert-blue {
-    background-color: var(--blue10);
-    border: dashed 1px var(--blue40);
-    border-left: solid 4px var(--blue40);
-    color: var(--blue70);
+    background-color: var(--blue70);
+    color: var(--white);
     padding: var(--rhythm) calc(var(--rhythm) * 2);
     margin-bottom: calc(var(--rhythm) * 2);
 }
 
 .alert-green {
-    background-color: var(--green10);
-    border: dashed 1px var(--green60);
-    border-left: solid 4px var(--green60);
-    color: var(--green80);
+    background-color: var(--green80);
+    color: var(--white);
     padding: var(--rhythm) calc(var(--rhythm) * 2);
     margin-bottom: calc(var(--rhythm) * 2);
 }
 
 .alert-gray {
-    background-color: var(--gray10);
-    border: dashed 1px var(--gray20);
-    border-left: solid 4px var(--gray20);
-    color: var(--gray50);
+    background-color: var(--gray50);
+    color: var(--white);
     padding: var(--rhythm) calc(var(--rhythm) * 2);
     margin-bottom: calc(var(--rhythm) * 2);
 }
