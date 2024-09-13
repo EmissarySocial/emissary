@@ -20,6 +20,10 @@ func (service Icons) Get(name string) string {
 		return service.get("cassette")
 	case "album-fill":
 		return service.get("cassette-fill")
+	case "alert":
+		return service.get("exclamation-triangle")
+	case "alert-fill":
+		return service.get("exclamation-triangle-fill")
 	case "archive":
 		return service.get("archive")
 	case "archive-fill":
