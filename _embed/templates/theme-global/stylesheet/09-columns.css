@@ -25,7 +25,7 @@
 	display:block;
 	flex-grow:0;
 	flex-shrink:0;
-	flex-basis: calc(( 100% - ((var(--cols) - 1) * var(--gap))) / var(--cols));
+	width: calc(( 100% - ((var(--cols) - 1) * var(--gap))) / var(--cols));
 }
 
 .columns-6 > .col-2x,
@@ -34,7 +34,7 @@
 .columns-3 > .col-2x,
 .columns-2 > .col-2x,
 .columns-1 > .col-2x {
-	flex-basis: clamp( 0px, calc((200% / var(--cols)) - var(--gap)), 100%);
+	width: clamp( 0px, calc((200% / var(--cols)) - var(--gap)), 100%);
 }
 
 /* SMALL Screens (Phone) */
