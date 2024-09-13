@@ -35,6 +35,7 @@ func StreamSchema() schema.Element {
 			"data":             schema.Object{Wildcard: schema.Any{}},
 			"publishDate":      schema.Integer{BitSize: 64},
 			"unpublishDate":    schema.Integer{BitSize: 64},
+			"isPublished":      schema.Boolean{},
 			"isFeatured":       schema.Boolean{},
 			"startTime":        schema.Integer{BitSize: 64},
 			"endTime":          schema.Integer{BitSize: 64},
@@ -148,6 +149,31 @@ func (stream *Stream) GetPointer(name string) (any, bool) {
 	default:
 		return nil, false
 	}
+}
+
+func (stream *Stream) GetBoolOK(name string) (bool, bool) {
+
+	switch name {
+
+	// This is a READ-ONLY, virtual field that's computed based on Publish and UnPublish dates.
+	case "isPublished":
+		return stream.IsPublished(), true
+	}
+
+	return false, false
+}
+
+func (stream *Stream) SetBool(name string, value bool) bool {
+
+	switch name {
+
+	// This is a READ-ONLY, Virtual field.  To prevent errors, we're going to
+	// lie and say we set the value, but not actually change anything.
+	case "isPublished":
+		return true
+	}
+
+	return false
 }
 
 func (stream *Stream) GetStringOK(name string) (string, bool) {

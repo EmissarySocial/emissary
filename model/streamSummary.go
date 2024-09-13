@@ -1,6 +1,8 @@
 package model
 
 import (
+	"time"
+
 	"github.com/benpate/rosetta/mapof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -20,6 +22,7 @@ type StreamSummary struct {
 	AttributedTo   PersonLink         `json:"attributedTo,omitempty" bson:"attributedTo,omitempty"` // List of people who are attributed to this document
 	InReplyTo      string             `json:"inReplyTo,omitempty"    bson:"inReplyTo,omitempty"`    // If this stream is a reply to another stream or web page, then this links to the original document.
 	PublishDate    int64              `json:"publishDate"            bson:"publishDate"`            // Date when this stream was published
+	UnPublishDate  int64              `json:"unpublishDate"          bson:"unpublishDate"`          // Date when this stream should be removed from public view
 	Rank           int                `json:"rank"                   bson:"rank"`                   // If Template uses a custom sort order, then this is the value used to determine the position of this Stream.
 	IsFeatured     bool               `json:"isFeatured"             bson:"isFeatured"`             // If this Stream is "featured" then it will be displayed in a special location on the page.
 	CreateDate     int64              `json:"createDate"             bson:"createDate"`             // Date when this stream was created
@@ -38,7 +41,7 @@ func NewStreamSummary() StreamSummary {
 }
 
 func StreamSummaryFields() []string {
-	return []string{"_id", "parentId", "token", "templateId", "url", "label", "summary", "content", "data", "iconUrl", "attributedTo", "inReplyTo", "publishDate", "rank", "isFeatured", "createDate"}
+	return []string{"_id", "parentId", "token", "templateId", "url", "label", "summary", "content", "data", "iconUrl", "attributedTo", "inReplyTo", "publishDate", "unpublishDate", "rank", "isFeatured", "createDate"}
 }
 
 func (summary StreamSummary) Fields() []string {
@@ -71,4 +74,10 @@ func (summary StreamSummary) ContentHTML() string {
 
 func (summary StreamSummary) ContentRaw() string {
 	return summary.Content.Raw
+}
+
+func (summary StreamSummary) IsPublished() bool {
+	now := time.Now().Unix()
+	return (summary.PublishDate < now) && (summary.UnPublishDate > now)
+
 }

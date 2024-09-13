@@ -329,6 +329,11 @@ func (w Stream) UpdateDate() int64 {
 	return w._stream.UpdateDate
 }
 
+// IsPublished returns TRUE if the stream being built has been published
+func (w Stream) IsPublished() bool {
+	return w._stream.IsPublished()
+}
+
 // Rank returns the Rank of the stream being built
 func (w Stream) Rank() int {
 	return w._stream.Rank

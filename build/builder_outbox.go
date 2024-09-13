@@ -199,6 +199,16 @@ func (w Outbox) StateID() string {
 	return w._user.StateID
 }
 
+// IsPublished returns TRUE if the stream has been published
+func (w Outbox) IsPublic() bool {
+	return w._user.IsPublic
+}
+
+// IsIndexable returns TRUE if the stream is indexable by search engines
+func (w Outbox) IsIndexable() bool {
+	return w._user.IsIndexable
+}
+
 func (w Outbox) StatusMessage() string {
 	return w._user.StatusMessage
 }
