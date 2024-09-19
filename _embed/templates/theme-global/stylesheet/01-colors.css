@@ -72,6 +72,7 @@
 	--text-color:var(--gray80);
 	--link-color:var(--blue60);
 	--link-color-hover:var(--blue50);
+	--grid-highlight-background:var(--blue20);
 
 	--border-radius: 7px;
 }
@@ -114,8 +115,9 @@
 		--input-background-invalid: var(--red80);
 		--input-color-invalid: var(--red50);
 		--text-color: var(--gray80);
-		--link-color:var(--blue30);
-		--link-color-hover: var(--blue20);
+		--link-color:var(--blue50);
+		--link-color-hover: var(--blue40);
+		--grid-highlight-background:var(--blue100);
 
 		--button-primary-color: var(--blue20);
 		--button-primary-color-hover: var(--blue10);

@@ -108,9 +108,9 @@ td.grid-cell {
 }
 
 td.grid-cell.grid-editable {
-	border-top:solid 1px var(--blue20)!important;
-	border-bottom:solid 1px var(--blue20);
-	background-color: var(--blue10);
+	border-top:solid 1px var(--grid-highlight-background)!important;
+	border-bottom:solid 1px var(--grid-highlight-background);
+	background-color: var(--grid-highlight-background);
 	cursor:default;
 }
 
@@ -147,3 +147,5 @@ td.grid-controls > button {
 	font-size: calc(var(--rhythm) * 2);
 	line-height: calc(var(--rhythm) * 2);
 }
+
+
