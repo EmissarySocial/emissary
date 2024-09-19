@@ -41,7 +41,7 @@ func (step StepTableEditor) Get(builder Builder, buffer io.Writer) PipelineBehav
 		return Halt().WithError(derp.Wrap(err, location, "Error drawing table", step.Path))
 	}
 
-	return nil
+	return Continue().WithHeader("Hx-Push-Url", "false")
 }
 
 func (step StepTableEditor) Post(builder Builder, _ io.Writer) PipelineBehavior {
@@ -118,7 +118,7 @@ func (step StepTableEditor) Post(builder Builder, _ io.Writer) PipelineBehavior 
 		return Halt().WithError(derp.Wrap(err, location, "Error building HTML"))
 	}
 
-	return nil
+	return Continue().WithHeader("Hx-Push-Url", "false")
 }
 
 // getTargetURL returns the URL that the table should use for all of its links
