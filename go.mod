@@ -1,9 +1,10 @@
 module github.com/EmissarySocial/emissary
 
 go 1.22.4
+toolchain go1.23.1
 
 require (
-	github.com/PuerkitoBio/goquery v1.9.2
+	github.com/PuerkitoBio/goquery v1.10.0
 	github.com/aws/aws-sdk-go v1.55.5
 	github.com/benpate/color v0.1.0
 	github.com/benpate/data v0.28.4
