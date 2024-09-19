@@ -24,7 +24,7 @@ require (
 	github.com/benpate/rosetta v0.21.5
 	github.com/benpate/sherlock v0.8.5
 	github.com/benpate/steranko v0.20.0
-	github.com/benpate/table v0.6.17
+	github.com/benpate/table v0.6.18
 	github.com/benpate/toot v0.3.0
 	github.com/benpate/toot-echo v0.2.4
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
@@ -59,7 +59,7 @@ require (
 	github.com/yuin/goldmark v1.7.4
 	github.com/yuin/goldmark-highlighting/v2 v2.0.0-20230729083705-37449abec8cc
 	go.mongodb.org/mongo-driver v1.16.1
-	golang.org/x/crypto v0.26.0
+	golang.org/x/crypto v0.27.0
 	golang.org/x/exp v0.0.0-20240808152545-0cdaa3abc0fa
 	golang.org/x/oauth2 v0.22.0
 	willnorris.com/go/microformats v1.2.0
@@ -117,10 +117,10 @@ require (
 	github.com/yeqown/reedsolomon v1.0.0 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
 	golang.org/x/image v0.19.0 // indirect
-	golang.org/x/net v0.28.0 // indirect
+	golang.org/x/net v0.29.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
-	golang.org/x/sys v0.24.0 // indirect
-	golang.org/x/text v0.17.0 // indirect
+	golang.org/x/sys v0.25.0 // indirect
+	golang.org/x/text v0.18.0 // indirect
 	golang.org/x/time v0.6.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
