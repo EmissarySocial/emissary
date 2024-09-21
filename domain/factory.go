@@ -348,6 +348,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.Follower(),
 			factory.Rule(),
 			factory.User(),
+			factory.MediaServer(),
 			factory.Host(),
 			factory.StreamUpdateChannel(),
 		)

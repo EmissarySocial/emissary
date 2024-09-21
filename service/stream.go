@@ -15,6 +15,7 @@ import (
 	"github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/mediaserver"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/html"
 	"github.com/benpate/rosetta/list"
@@ -39,6 +40,7 @@ type Stream struct {
 	ruleService         *Rule
 	userService         *User
 	host                string
+	mediaserver         mediaserver.MediaServer
 	streamUpdateChannel chan<- primitive.ObjectID
 }
 
@@ -52,7 +54,7 @@ func NewStream() Stream {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Stream) Refresh(collection data.Collection, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, activityService *ActivityStream, contentService *Content, keyService *EncryptionKey, followerService *Follower, ruleService *Rule, userService *User, host string, streamUpdateChannel chan primitive.ObjectID) {
+func (service *Stream) Refresh(collection data.Collection, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, activityService *ActivityStream, contentService *Content, keyService *EncryptionKey, followerService *Follower, ruleService *Rule, userService *User, mediaserver mediaserver.MediaServer, host string, streamUpdateChannel chan primitive.ObjectID) {
 	service.collection = collection
 	service.templateService = templateService
 	service.draftService = draftService
@@ -64,6 +66,7 @@ func (service *Stream) Refresh(collection data.Collection, templateService *Temp
 	service.followerService = followerService
 	service.ruleService = ruleService
 	service.userService = userService
+	service.mediaserver = mediaserver
 
 	service.host = host
 	service.streamUpdateChannel = streamUpdateChannel

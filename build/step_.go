@@ -68,6 +68,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.EditWidget:
 		return StepEditWidget(s)
 
+	case step.Export:
+		return StepExport(s)
+
 	case step.ForwardTo:
 		return StepForwardTo(s)
 

@@ -83,6 +83,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "edit-widget":
 		return NewEditWidget(stepInfo)
 
+	case "export":
+		return NewExport(stepInfo)
+
 	case "forward-to":
 		return NewForwardTo(stepInfo)
 

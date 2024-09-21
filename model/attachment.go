@@ -133,6 +133,13 @@ func (attachment *Attachment) SetRules(width int, height int, extensions []strin
 }
 
 func (attachment Attachment) FileSpec(address *url.URL) mediaserver.FileSpec {
+
+	if address == nil {
+		address = &url.URL{
+			Path: "/" + attachment.AttachmentID.Hex(),
+		}
+	}
+
 	return attachment.Rules.FileSpec(address, attachment.MimeCategory())
 }
 
