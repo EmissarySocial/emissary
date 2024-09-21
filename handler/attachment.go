@@ -62,7 +62,7 @@ func GetStreamAttachment(factoryManager *server.Factory) echo.HandlerFunc {
 
 		// Try to find the action requested by the user.  This also enforces user permissions...
 		if _, err := build.NewStreamWithoutTemplate(factory, ctx.Request(), ctx.Response(), &stream, "view"); err != nil {
-			return derp.Wrap(err, location, "Cannot create builder")
+			return derp.ReportAndReturn(derp.Wrap(err, location, "Cannot create builder", &stream, &attachment))
 		}
 
 		// Retrieve the file from the mediaserver
