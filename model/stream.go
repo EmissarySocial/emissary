@@ -2,6 +2,7 @@ package model
 
 import (
 	"math"
+	"net/url"
 	"time"
 
 	"github.com/EmissarySocial/emissary/tools/id"
@@ -400,6 +401,16 @@ func (stream *Stream) HasParent() bool {
 	return !stream.ParentID.IsZero()
 }
 
+// ParentURL returns the URL for the parent object
+func (stream *Stream) ParentURL() string {
+	if streamURL, err := url.Parse(stream.URL); err == nil {
+		streamURL.Path = stream.ParentID.Hex()
+		return streamURL.String()
+	}
+
+	return ""
+}
+
 // HasGrandparent returns TRUE if this Stream has a GrandparentID
 func (stream *Stream) HasGrandparent() bool {
 	return len(stream.ParentIDs) > 1
@@ -412,6 +423,19 @@ func (stream *Stream) GrandparentID() primitive.ObjectID {
 	}
 
 	return primitive.NilObjectID
+}
+
+// GrandparentURL returns the URL of the parent of the parent of this Stream (if it exists)
+func (stream *Stream) GrandparentURL() string {
+
+	if grandparentID := stream.GrandparentID(); !grandparentID.IsZero() {
+		if streamURL, err := url.Parse(stream.URL); err == nil {
+			streamURL.Path = grandparentID.Hex()
+			return streamURL.String()
+		}
+	}
+
+	return ""
 }
 
 // SetAttributedTo sets the list of people that this Stream is attributed to
