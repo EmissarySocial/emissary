@@ -10,6 +10,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
+	"github.com/benpate/rosetta/translate"
 )
 
 // Template represents an HTML template used for building Streams
@@ -18,6 +19,7 @@ type Template struct {
 	URL                string               `json:"url"                bson:"url"`                // URL where this template is published
 	TemplateRole       string               `json:"templateRole"       bson:"templateRole"`       // Role that this Template performs in the system.  Used to match which streams can be contained by which other streams.
 	SocialRole         string               `json:"socialRole"         bson:"socialRole"`         // Role to use for this Template in social integrations (Article, Note, etc)
+	SocialRules        translate.Pipeline   `json:"socialRules"        bson:"socialRules"`        // List of rules to convert this Template into a social object
 	Model              string               `json:"model"              bson:"model"`              // Type of model object that this template works with. (Stream, User, Group, Domain, etc.)
 	Extends            sliceof.String       `json:"extends"            bson:"extends"`            // List of templates that this template extends.  The first template in the list is the most important, and the last template in the list is the least important.
 	ContainedBy        sliceof.String       `json:"containedBy"        bson:"containedBy"`        // Slice of Templates that can contain Streams that use this Template.
@@ -45,6 +47,7 @@ func NewTemplate(templateID string, funcMap template.FuncMap) Template {
 
 	return Template{
 		TemplateID:         templateID,
+		SocialRules:        make(translate.Pipeline, 0),
 		Extends:            make([]string, 0),
 		ContainedBy:        make([]string, 0),
 		ChildSortType:      "rank",
@@ -134,6 +137,11 @@ func (template *Template) Inherit(parent *Template) {
 	// Inherit SocialRole (if not already defined)
 	if template.SocialRole == "" {
 		template.SocialRole = parent.SocialRole
+	}
+
+	// Apply SocialRules
+	if len(parent.SocialRules) > 0 {
+		template.SocialRules = append(template.SocialRules, parent.SocialRules...)
 	}
 
 	// Inherit ContainedBy (if not already defined)

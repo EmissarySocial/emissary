@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/hannibal/outbox"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -29,9 +30,6 @@ func (service *Stream) JSONLD(stream *model.Stream) mapof.Any {
 		vocab.PropertyType:      stream.SocialRole,
 		vocab.PropertyURL:       stream.URL,
 		vocab.PropertyPublished: time.Unix(stream.PublishDate, 0).UTC().Format(time.RFC3339),
-		// "likes":     stream.ActivityPubLikesURL(),
-		// "dislikes":  stream.ActivityPubDislikesURL(),
-		// "shares":    stream.ActivityPubSharesURL(),
 	}
 
 	if stream.Label != "" {
@@ -115,6 +113,14 @@ func (service *Stream) JSONLD(stream *model.Stream) mapof.Any {
 			}
 
 			result[vocab.PropertyAttachment] = attachmentJSON
+		}
+	}
+
+	// Try to apply the "social mapping" to the stream
+	if template, err := service.templateService.Load(stream.TemplateID); err == nil {
+		if template.SocialRules.NotEmpty() {
+			err := template.SocialRules.Execute(schema.Wildcard(), stream, schema.Wildcard(), &result)
+			derp.Report(err)
 		}
 	}
 
