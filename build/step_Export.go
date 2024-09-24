@@ -3,8 +3,6 @@ package build
 import (
 	"archive/zip"
 	"io"
-	"log"
-	"os"
 
 	"github.com/benpate/derp"
 )
@@ -50,41 +48,4 @@ func (step StepExport) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 // Post removes the object from the database (likely using a soft-delete, though)
 func (step StepExport) Post(builder Builder, _ io.Writer) PipelineBehavior {
 	return Continue()
-}
-
-func (step StepExport) test() {
-
-	// Create a buffer to write our archive to.
-	buf, err := os.OpenFile("./test-example.zip", os.O_WRONLY|os.O_CREATE, 0644)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Create a new zip archive.
-	w := zip.NewWriter(buf)
-
-	// Add some files to the archive.
-	var files = []struct {
-		Name, Body string
-	}{
-		{"readme.txt", "This archive contains some text files."},
-		{"gopher.txt", "Gopher names:\nGeorge\nGeoffrey\nGonzo"},
-		{"todo.txt", "Get animal handling licence.\nWrite more examples."},
-	}
-	for _, file := range files {
-		f, err := w.Create(file.Name)
-		if err != nil {
-			log.Fatal(err)
-		}
-		_, err = f.Write([]byte(file.Body))
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	// Make sure to check the error on Close.
-	if err := w.Close(); err != nil {
-		log.Fatal(err)
-	}
 }

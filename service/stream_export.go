@@ -10,7 +10,6 @@ import (
 	"github.com/EmissarySocial/emissary/tools/counter"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/list"
-	"gopkg.in/yaml.v3"
 )
 
 func (service *Stream) ExportZip(writer *zip.Writer, stream *model.Stream, prefix string, depth int, withAttachments bool) error {
@@ -52,7 +51,7 @@ func (service *Stream) ExportZip(writer *zip.Writer, stream *model.Stream, prefi
 		}
 	}
 
-	// EXPORT A YAML FILE
+	/* EXPORT A YAML FILE
 	{
 		filenameJSON := filename.PushTail("yaml")
 
@@ -74,7 +73,7 @@ func (service *Stream) ExportZip(writer *zip.Writer, stream *model.Stream, prefi
 		if _, err := fileWriter.Write(streamYAML); err != nil {
 			return derp.Wrap(err, location, "Error writing YAML file")
 		}
-	}
+	}*/
 
 	// Export attachments, if requested
 	if withAttachments {
