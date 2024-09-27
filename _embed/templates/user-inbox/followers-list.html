@@ -1,6 +1,6 @@
 {{- $search := .QueryParam "search" -}}
 {{- $canBlock := .UserCan "block" -}}
-{{- $followers := .Followers.Top12.Slice -}}
+{{- $followers := .Followers.(By "actor.name").Top12.Slice -}}
 
 {{- range $followers -}}
 	{{- $actor := .Actor -}}
