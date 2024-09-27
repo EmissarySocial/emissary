@@ -19,9 +19,8 @@
 		{{- end -}}
 		<div>
 			<h1 class="margin-none">{{- $activityStream.Name -}}</h1>
-			<div class="text-gray"><a href="{{$activityStream}}" target="_blank">{{- $activityStream.UsernameOrID -}}</a></div>
+			<div class="text-gray"><a href="{{$activityStream.ID}}" target="_blank">{{- $activityStream.UsernameOrID -}}</a></div>
 		</div>
-
 	</div>
 
 	<div class="flex-row margin-vertical">
@@ -34,7 +33,7 @@
 			{{- else -}}
 				<button hx-get="/@me/inbox/following-add?url={{$activityStream.ID}}" class="text-xs" hx-push-url="false">&plus; Follow</button>
 			{{- end -}}
-			<a href="{{$activityStream}}" class="button text-xs" target="_blank">View Profile &rarr;</a>
+			<a href="{{$activityStream.ID}}" class="button text-xs" target="_blank">View Profile &rarr;</a>
 		</div>
 	</div>
 
