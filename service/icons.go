@@ -28,6 +28,14 @@ func (service Icons) Get(name string) string {
 		return service.get("archive")
 	case "archive-fill":
 		return service.get("archive-fill")
+	case "at":
+		return service.get("at")
+	case "at-fill":
+		return service.get("at")
+	case "bell":
+		return service.get("bell")
+	case "bell-fill":
+		return service.get("bell-fill")
 	case "book":
 		return service.get("book")
 	case "book-fill":
@@ -50,6 +58,10 @@ func (service Icons) Get(name string) string {
 		return service.get("chat")
 	case "chat-fill":
 		return service.get("chat-fill")
+	case "chat-square":
+		return service.get("chat-square-dots")
+	case "chat-square-fill":
+		return service.get("chat-square-dots-fill")
 	case "check-badge":
 		return service.get("patch-check")
 	case "check-badge-fill":
