@@ -86,7 +86,7 @@
 							type: layout-vertical
 							label: Add a Folder
 							children: [
-								{type: "text", path: "label", label: "Name"}
+								{type: "text", path: "label", label: "Name", options:{autocomplete:"off"}}
 								{type: "select", path: "icon", label: "Icon", options: {provider: "folder-icons"}}
 								{type: "select", path: "layout", label: "Layout", options: {enum: "SOCIAL,NEWSPAPER,MAGAZINE"}}
 							]}
