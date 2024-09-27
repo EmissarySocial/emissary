@@ -15,7 +15,7 @@ require (
 	github.com/benpate/exp v0.8.3
 	github.com/benpate/exp-builder v0.8.1
 	github.com/benpate/form v0.22.6
-	github.com/benpate/hannibal v0.11.8
+	github.com/benpate/hannibal v0.11.11
 	github.com/benpate/html v0.16.11
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.12.0
@@ -62,7 +62,6 @@ require (
 	golang.org/x/crypto v0.27.0
 	golang.org/x/exp v0.0.0-20240808152545-0cdaa3abc0fa
 	golang.org/x/oauth2 v0.22.0
-	gopkg.in/yaml.v3 v3.0.1
 	willnorris.com/go/microformats v1.2.0
 	willnorris.com/go/webmention v0.0.0-20220108183051-4a23794272f0
 )
@@ -124,4 +123,5 @@ require (
 	golang.org/x/text v0.18.0 // indirect
 	golang.org/x/time v0.6.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
