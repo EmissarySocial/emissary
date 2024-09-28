@@ -49,7 +49,9 @@ func Normalize(document streams.Document) map[string]any {
 	case document.IsObject():
 		return Object(document)
 
-		// TODO: Normalize Collections?
+	// Collections (OrderedCollection, Collection, etc)
+	case document.IsCollection():
+		// TODO:
 	}
 
 	switch document.Type() {
