@@ -757,9 +757,6 @@ func (factory *Factory) ModelService(object data.Object) service.ModelService {
 
 	switch object.(type) {
 
-	case *model.Rule:
-		return factory.Rule()
-
 	case *model.Folder:
 		return factory.Folder()
 
@@ -774,6 +771,9 @@ func (factory *Factory) ModelService(object data.Object) service.ModelService {
 
 	case *model.Response:
 		return factory.Response()
+
+	case *model.Rule:
+		return factory.Rule()
 
 	case *model.Stream:
 		return factory.Stream()
