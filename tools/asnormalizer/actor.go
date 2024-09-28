@@ -27,6 +27,8 @@ func Actor(document streams.Document) map[string]any {
 		vocab.PropertyLiked:     document.Liked().String(),
 		vocab.PropertyFollowers: document.Followers().String(),
 		vocab.PropertyFollowing: document.Following().String(),
+
+		"x-original": document.Value(),
 	}
 
 	// Cryptography

@@ -16,5 +16,7 @@ func Dislike(document streams.Document) map[string]any {
 		"actor":     document.Actor().ID(),
 		"object":    document.Object().ID(),
 		"published": first(document.Published(), time.Now()),
+
+		"x-original": document.Value(),
 	}
 }
