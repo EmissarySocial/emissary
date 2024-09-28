@@ -21,7 +21,6 @@ func init() {
 func BoostAny(context Context, activity streams.Document) error {
 
 	const location = "activitypub_stream.inboxRouter.BoostAny"
-	log.Debug().Str("activity", activity.ID()).Msg("Stream Inbox: Received new Activity")
 
 	// RULE: Require "boost-inbox" setting
 	if !context.actor.BoostInbox {

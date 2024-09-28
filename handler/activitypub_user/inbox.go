@@ -8,7 +8,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/inbox"
 	"github.com/labstack/echo/v4"
-	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -49,8 +48,6 @@ func PostInbox(serverFactory *server.Factory) echo.HandlerFunc {
 		if err != nil {
 			return derp.Wrap(err, location, "Error parsing ActivityPub request")
 		}
-
-		log.Info().Str("host", factory.Host()).Str("activity", activity.ID()).Msg("User Inbox: Received new activity")
 
 		// Create a new Context
 		context := Context{

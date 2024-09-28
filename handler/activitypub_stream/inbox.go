@@ -7,7 +7,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/inbox"
 	"github.com/labstack/echo/v4"
-	"github.com/rs/zerolog/log"
 )
 
 func PostInbox(serverFactory *server.Factory) echo.HandlerFunc {
@@ -33,8 +32,6 @@ func PostInbox(serverFactory *server.Factory) echo.HandlerFunc {
 		if err != nil {
 			return derp.Wrap(err, location, "Error parsing ActivityPub request")
 		}
-
-		log.Info().Str("host", factory.Host()).Str("activity", activity.ID()).Msg("Stream Inbox: Received new activity")
 
 		// Create a new request context for the ActivityPub router
 		context := Context{
