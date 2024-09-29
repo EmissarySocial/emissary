@@ -58,6 +58,7 @@ func main() {
 	fmt.Println("|_____|_| |_| |_|_|___/___/\\__,_|_|   \\__, |")
 	fmt.Println("                                      |___/ ")
 	fmt.Println("")
+	fmt.Println(os.Hostname())
 
 	go waitForSigInt()
 
