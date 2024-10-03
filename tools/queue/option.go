@@ -3,10 +3,18 @@ package queue
 // Option is a function that modifies a Queue object
 type Option func(*Queue)
 
-// WithProcessCount sets the number of concurrent processes to run
-func WithProcessCount(processCount int) Option {
+// WithStorage sets the storage and unmarshaller for the queue
+func WithStorage(storage Storage, unmarshaller Unmarshaller) Option {
 	return func(q *Queue) {
-		q.processCount = processCount
+		q.storage = storage
+		q.unmarshaller = unmarshaller
+	}
+}
+
+// WithWorkerCount sets the number of concurrent processes to run
+func WithWorkerCount(workerCount int) Option {
+	return func(q *Queue) {
+		q.workerCount = workerCount
 	}
 }
 
@@ -17,16 +25,9 @@ func WithBufferSize(bufferSize int) Option {
 	}
 }
 
-// WithTimeout sets the default timeout for tasks, after which they will be retried
-func WithTimeout(timeoutMinutes int) Option {
+// WithPollStorage sets whether the queue should poll the storage for new tasks
+func WithPollStorage(pollStorage bool) Option {
 	return func(q *Queue) {
-		q.timeoutMinutes = timeoutMinutes
-	}
-}
-
-// WithHandler adds a new task handler to the queue
-func WithHandler(name string, handler Handler) Option {
-	return func(q *Queue) {
-		q.handlers[name] = handler
+		q.pollStorage = pollStorage
 	}
 }

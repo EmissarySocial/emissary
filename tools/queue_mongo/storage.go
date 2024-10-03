@@ -29,18 +29,20 @@ func New(database *mongo.Database, lockQuantity int, timeoutMinutes int) Storage
 }
 
 // SaveTask adds/updates a task to the queue
-func (storage Storage) SaveTask(task queue.Task) error {
+func (storage Storage) SaveTask(journal queue.Journal) error {
 
 	const location = "queue.saveTask"
 	timeout, cancel := timeoutContext(16)
 	defer cancel()
 
 	// Set up filter and option arguments
-	filter := bson.M{"_id": task.TaskID}
+	filter := bson.M{"_id": journal.TaskID}
 	options := options.Update().SetUpsert(true)
 
+	update := bson.M{"$set": journal}
+
 	// Update the database
-	if _, err := storage.database.Collection(CollectionQueue).UpdateOne(timeout, filter, task, options); err != nil {
+	if _, err := storage.database.Collection(CollectionQueue).UpdateOne(timeout, filter, update, options); err != nil {
 		return derp.Wrap(err, location, "Unable to save task to task queue")
 	}
 
@@ -49,15 +51,21 @@ func (storage Storage) SaveTask(task queue.Task) error {
 }
 
 // DeleteTask removes a task from the queue
-func (storage Storage) DeleteTask(task queue.Task) error {
+func (storage Storage) DeleteTask(taskID string) error {
 
 	const location = "queue.deleteTask"
 	timeout, cancel := timeoutContext(16)
 	defer cancel()
 
-	filter := bson.M{"_id": task.TaskID}
+	// Convert the taskID into a primitive.ObjectID
+	objectID, err := primitive.ObjectIDFromHex(taskID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Invalid taskID")
+	}
 
 	// Remove the task from the task queue
+	filter := bson.M{"_id": objectID}
 	if _, err := storage.database.Collection(CollectionQueue).DeleteOne(timeout, filter); err != nil {
 		return derp.Wrap(err, location, "Unable to delete task from task queue")
 	}
@@ -66,18 +74,18 @@ func (storage Storage) DeleteTask(task queue.Task) error {
 	return nil
 }
 
-// LogTask adds a task to the error log
-func (storage Storage) LogTask(task queue.Task) error {
+// LogFailure adds a task to the error log
+func (storage Storage) LogFailure(journal queue.Journal) error {
 
 	const location = "queue.logTask"
 	timeout, cancel := timeoutContext(16)
 	defer cancel()
 
 	// Report the error (probably to the console)
-	derp.Report(task.Error)
+	derp.Report(journal.Error)
 
 	// Add the task to the log
-	if _, err := storage.database.Collection(CollectionLog).InsertOne(timeout, task); err != nil {
+	if _, err := storage.database.Collection(CollectionLog).InsertOne(timeout, journal); err != nil {
 		return derp.Wrap(err, location, "Unable to add task to error log")
 	}
 
@@ -85,14 +93,21 @@ func (storage Storage) LogTask(task queue.Task) error {
 }
 
 // GetTasks returns all tasks that are currently locked by this worker
-func (storage Storage) GetTasks(lockID primitive.ObjectID) ([]queue.Task, error) {
+func (storage Storage) GetTasks() ([]queue.Journal, error) {
 
 	const location = "mongo.Storage.queryTasks"
-	result := make([]queue.Task, 0)
 
 	// Create a timeout context for 16 seconds
 	timeout, cancel := timeoutContext(16)
 	defer cancel()
+
+	result := make([]queue.Journal, 0)
+	lockID := primitive.NewObjectID()
+
+	// Try to lock more tasks if we don't already have any
+	if err := storage.lockTasks(timeout, lockID); err != nil {
+		return result, derp.Wrap(err, location, "Unable to lock tasks")
+	}
 
 	// Find all tasks that are currently locked by this worker
 	filter := bson.M{
@@ -117,13 +132,9 @@ func (storage Storage) GetTasks(lockID primitive.ObjectID) ([]queue.Task, error)
 }
 
 // lockTasks assigns a set of tasks to the current worker
-func (storage Storage) LockTasks(lockID primitive.ObjectID) error {
+func (storage Storage) lockTasks(timeout context.Context, lockID primitive.ObjectID) error {
 
 	const location = "mongo.Storage.lockTasks"
-
-	// Create a timeout context for 16 seconds
-	timeout, cancel := timeoutContext(16)
-	defer cancel()
 
 	// Identify the next set of tasks that COULD be run by this worker
 	tasks, err := storage.pickTasks(timeout)
@@ -132,20 +143,16 @@ func (storage Storage) LockTasks(lockID primitive.ObjectID) error {
 		return derp.Wrap(err, location, "Error picking tasks")
 	}
 
-	// Try to update these tasks IF they're still unasigned
+	// Try to update these tasks IF they available to take
 	filter := bson.M{
-		"_id": tasks,
-		"$or": []bson.M{
-			{"workerId": ""},
-			{"timeoutDate": bson.M{"$lt": time.Now().Unix()}},
-		},
+		"_id":         tasks,
+		"timeoutDate": bson.M{"$lt": time.Now().Unix()},
 	}
 
 	// Assign to this worker and reset work counters
 	update := bson.M{
 		"$set": bson.M{
 			"lockId":      lockID,
-			"running":     true,
 			"startDate":   time.Now().Unix(),
 			"timeoutDate": time.Now().Add(time.Duration(storage.timeoutMinutes) * time.Minute).Unix(),
 			"error":       nil,

@@ -1,22 +1,17 @@
 package queue
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
-
 // Storage is the interface for persisting Tasks outside of memory
 type Storage interface {
 
-	// LockTasks reserves a set of tasks to be processed by this worker / lockID
-	LockTasks(primitive.ObjectID) error
+	// GetTasks retrieves a batch of Tasks from the Storage provider
+	GetTasks() ([]Journal, error)
 
-	// GetTasks retrieves the tasks reserves for this worker / lockID
-	GetTasks(primitive.ObjectID) ([]Task, error)
+	// SaveTask saves a Task to the Storage provider
+	SaveTask(journal Journal) error
 
-	// SaveTask saves a task to the storage
-	SaveTask(Task) error
+	// DeleteTask removes a Task from the Storage provider
+	DeleteTask(taskID string) error
 
-	// DeleteTask removes a task from the storage
-	DeleteTask(Task) error
-
-	// LogTask adds a task to the error log
-	LogTask(Task) error
+	// LogFailure writes a Task to the error log
+	LogFailure(journal Journal) error
 }

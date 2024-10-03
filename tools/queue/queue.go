@@ -4,17 +4,17 @@ import (
 	"time"
 
 	"github.com/benpate/derp"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"github.com/benpate/rosetta/channel"
 )
 
 type Queue struct {
-	storage        Storage            // Storage is the interface to the database
-	handlers       map[string]Handler // Handlers is a map of functions that can be called by the queue
-	timeoutMinutes int                // Default task timeout is 30 minutes
-	processCount   int                // Number of goroutines to use for processing Tasks concurrently. Default process count is 16
-	bufferSize     int                // BufferSize determines the number of Tasks to lock in one transaction. Default buffer size is 32
-	taskBuffer     chan Task          // TaskBuffer is a channel of tasks that are ready to be processed
-	pollStorage    bool               // PollStorage determines if the queue should poll the database for new tasks. Default is true
+	storage      Storage       // Storage is the interface to the database
+	unmarshaller Unmarshaller  // Unmarshaller is the interface to convert Journal objects into Task objects
+	workerCount  int           // Number of goroutines to use for processing Tasks concurrently. Default process count is 16
+	bufferSize   int           // BufferSize determines the number of Tasks to lock in one transaction. Default buffer size is 32
+	pollStorage  bool          // PollStorage determines if the queue should poll the database for new tasks. Default is true
+	buffer       chan Journal  // TaskBuffer is a channel of tasks that are ready to be processed
+	done         chan struct{} // Done channel is called to stop the queue
 }
 
 // NewQueue returns a fully initialized Queue object, with all options applied
@@ -22,11 +22,9 @@ func NewQueue(options ...Option) Queue {
 
 	// Create the new Queue object
 	result := Queue{
-		storage:        nil,
-		processCount:   16,
-		bufferSize:     32,
-		timeoutMinutes: 30,
-		pollStorage:    true,
+		workerCount: 16,
+		bufferSize:  32,
+		pollStorage: true,
 	}
 
 	// Apply options
@@ -35,11 +33,11 @@ func NewQueue(options ...Option) Queue {
 	}
 
 	// Create the task buffer last (to use the correct buffer size)
-	result.taskBuffer = make(chan Task, result.bufferSize)
+	result.buffer = make(chan Journal, result.bufferSize)
 
 	// Start `ProcessCount` processes to listen for new Tasks
-	for range result.processCount {
-		go result.startProcessor()
+	for range result.workerCount {
+		go result.startWorker()
 	}
 
 	// Poll the storage container for new Tasks
@@ -64,16 +62,13 @@ func (q *Queue) start() {
 
 	// Poll the storage container for new Tasks
 	for {
-		lockID := primitive.NewObjectID()
 
-		// Try to lock more tasks if we don't already have any
-		if err := q.storage.LockTasks(lockID); err != nil {
-			derp.Report(err)
-			continue
+		if channel.Closed(q.done) {
+			return
 		}
 
 		// Loop through any existing tasks that are locked by this worker
-		tasks, err := q.storage.GetTasks(lockID)
+		journals, err := q.storage.GetTasks()
 
 		if err != nil {
 			derp.Report(err)
@@ -81,13 +76,18 @@ func (q *Queue) start() {
 		}
 
 		// If there are no tasks, wait one minute before trying to lock more.
-		if len(tasks) == 0 {
+		if len(journals) == 0 {
 			time.Sleep(1 * time.Minute)
 		}
 
 		// Loop through all tasks that we have to process
-		for _, task := range tasks {
-			q.taskBuffer <- task
+		for _, journal := range journals {
+
+			if channel.Closed(q.done) {
+				return
+			}
+
+			q.buffer <- journal
 		}
 	}
 }
@@ -95,27 +95,62 @@ func (q *Queue) start() {
 // RunTask
 func (q *Queue) Push(task Task) error {
 
-	const location = "queue.Enqueue"
+	const location = "queue.Push"
 
-	// If requested, try to process Tasks immediately without hitting the queue
-	if task.TryBeforeQueue {
-		if err := q.processOne(task); err != nil {
-			return derp.Wrap(err, location, "Error processing task before queueing")
-		}
+	// Special Case #1: for immediate execution, just run the Task directly
+	if task.Priority() == 0 {
+		go func() {
+			if err := task.Run(); err != nil {
+
+				// If the task fails, then create a Journal and save to Storage provider
+				journal := NewJournal(task, 0)
+
+				if err := q.onTaskError(journal, err); err != nil {
+					derp.Report(err)
+				}
+			}
+		}()
 
 		return nil
 	}
 
-	// Reset Task values (just in case)
-	task.WorkerID = ""
-	task.TimeoutDate = 0
-	task.RetryCount = 0
-	task.Running = false
+	// Special Case #2: If there is no storage provider, queue the Task in the memory buffer
+	if q.storage == nil {
+		journal := NewJournal(task, 0)
+		q.buffer <- journal
+		return nil
+	}
 
-	// Fall through means we're adding the task to the queue database
-	if err := q.storage.SaveTask(task); err != nil {
+	// Otherwise, write the Task to the Storage provider
+	journal := NewJournal(task, 0)
+
+	if err := q.storage.SaveTask(journal); err != nil {
 		return derp.Wrap(err, location, "Error saving task to database")
 	}
 
 	return nil
+}
+
+func (q *Queue) Schedule(task Task, delay time.Duration) error {
+
+	const location = "queue.Schedule"
+
+	if q.storage == nil {
+		return derp.NewInternalError(location, "Must have a storage provider in order to schedule tasks")
+	}
+
+	// Create a Journal record to save to the Storage provider
+	journal := NewJournal(task, delay)
+
+	// Save the Journal to the Storage provider
+	if err := q.storage.SaveTask(journal); err != nil {
+		return derp.Wrap(err, location, "Error saving task to database")
+	}
+
+	return nil
+}
+
+// Stop closes the queue and stops all workers (after they complete their current task)
+func (queue *Queue) Stop() {
+	close(queue.done)
 }
