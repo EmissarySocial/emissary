@@ -29,7 +29,7 @@ func New(database *mongo.Database, lockQuantity int, timeoutMinutes int) Storage
 }
 
 // SaveTask adds/updates a task to the queue
-func (storage Storage) SaveTask(journal queue.Journal) error {
+func (storage Storage) SaveTask(task queue.Task) error {
 
 	const location = "queue.saveTask"
 	timeout, cancel := timeoutContext(16)
@@ -38,14 +38,14 @@ func (storage Storage) SaveTask(journal queue.Journal) error {
 	var taskID primitive.ObjectID
 	var err error
 
-	// If the Journal does not have a TaskID, then create a new one
-	if journal.TaskID == "" {
+	// If the Task does not have a TaskID, then create a new one
+	if task.TaskID == "" {
 		taskID = primitive.NewObjectID()
-		journal.TaskID = taskID.Hex()
+		task.TaskID = taskID.Hex()
 
 	} else {
 
-		taskID, err = primitive.ObjectIDFromHex(journal.TaskID)
+		taskID, err = primitive.ObjectIDFromHex(task.TaskID)
 		if err != nil {
 			return derp.Wrap(err, location, "Invalid taskID")
 		}
@@ -55,7 +55,7 @@ func (storage Storage) SaveTask(journal queue.Journal) error {
 	filter := bson.M{"_id": taskID}
 	options := options.Update().SetUpsert(true)
 
-	update := bson.M{"$set": journal}
+	update := bson.M{"$set": task}
 
 	// Update the database
 	if _, err := storage.database.Collection(CollectionQueue).UpdateOne(timeout, filter, update, options); err != nil {
@@ -91,17 +91,17 @@ func (storage Storage) DeleteTask(taskID string) error {
 }
 
 // LogFailure adds a task to the error log
-func (storage Storage) LogFailure(journal queue.Journal) error {
+func (storage Storage) LogFailure(task queue.Task) error {
 
 	const location = "queue.logTask"
 	timeout, cancel := timeoutContext(16)
 	defer cancel()
 
 	// Report the error (probably to the console)
-	derp.Report(journal.Error)
+	derp.Report(task.Error)
 
 	// Add the task to the log
-	if _, err := storage.database.Collection(CollectionLog).InsertOne(timeout, journal); err != nil {
+	if _, err := storage.database.Collection(CollectionLog).InsertOne(timeout, task); err != nil {
 		return derp.Wrap(err, location, "Unable to add task to error log")
 	}
 
@@ -109,7 +109,7 @@ func (storage Storage) LogFailure(journal queue.Journal) error {
 }
 
 // GetTasks returns all tasks that are currently locked by this worker
-func (storage Storage) GetTasks() ([]queue.Journal, error) {
+func (storage Storage) GetTasks() ([]queue.Task, error) {
 
 	const location = "mongo.Storage.queryTasks"
 
@@ -117,7 +117,7 @@ func (storage Storage) GetTasks() ([]queue.Journal, error) {
 	timeout, cancel := timeoutContext(16)
 	defer cancel()
 
-	result := make([]queue.Journal, 0)
+	result := make([]queue.Task, 0)
 	lockID := primitive.NewObjectID()
 
 	// Try to lock more tasks if we don't already have any

@@ -10,10 +10,10 @@ import (
 func (q *Queue) startWorker() {
 
 	// Pull Tasks off of the buffereed channel
-	for journal := range q.buffer {
+	for task := range q.buffer {
 
 		// Execute the Task
-		if err := q.runSingleTask(journal); err != nil {
+		if err := q.consume(task); err != nil {
 			derp.Report(err)
 		}
 
@@ -24,22 +24,28 @@ func (q *Queue) startWorker() {
 	}
 }
 
-// runSingleTask executes a single Task
-func (q *Queue) runSingleTask(journal Journal) error {
+// consume executes a single Task
+func (q *Queue) consume(task Task) error {
 
 	const location = "queue.processOne"
 
-	// If the Task has not already been unmarshalled from the Journal, then do it now
-	if ok := q.unmarshal(&journal); !ok {
-		journal.Error = derp.NewInternalError(location, "Unable to unmarshal Task")
-		return q.storage.LogFailure(journal)
+	consumer, exists := q.consumers[task.Name]
+
+	// If the consumer does not exist, then this Task is invalid.
+	// Marking it as a failure will remove it from the queue.
+	if !exists {
+		err := derp.NewInternalError(location, "Consumer does not exist", task.Name)
+		if err := q.onTaskFailure(task, err); err != nil {
+			derp.Report(err)
+			return nil
+		}
 	}
 
 	// Try to run the Task
-	if runError := journal.Task.Run(); runError != nil {
+	if runError := consumer.Run(task); runError != nil {
 
 		// If the Task fails, then try to re-queue or handle the error
-		if writeError := q.onTaskError(journal, runError); writeError != nil {
+		if writeError := q.onTaskError(task, runError); writeError != nil {
 			return derp.Wrap(writeError, location, "Error setting task error", runError)
 		}
 
@@ -49,30 +55,10 @@ func (q *Queue) runSingleTask(journal Journal) error {
 	}
 
 	// Otherwise, the Task was successful.  Remove it from the Storage provider
-	if runError := q.onTaskSucceeded(journal.TaskID); runError != nil {
+	if runError := q.onTaskSucceeded(task); runError != nil {
 		return derp.Wrap(runError, location, "Error setting task success")
 	}
 
 	// Success! uwu
 	return nil
-}
-
-// unmarshall attempts to unpack a Journal's map[string]any arguments into a a Task object.
-// It returns TRUE if successful, and FALSE if the Task could not be unmarshalled.
-func (q Queue) unmarshal(journal *Journal) bool {
-
-	// If the task has already been unmarshalled, then don't try again.
-	if journal.Task != nil {
-		return true
-	}
-
-	// Try each marshaller in order, to try to unmarshall
-	for _, marshaller := range q.marshallers {
-		if marshaller.Unmarshal(journal) {
-			return true
-		}
-	}
-
-	// Fall through means that no marshaller was able to create a Task object
-	return false
 }

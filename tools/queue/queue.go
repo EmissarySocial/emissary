@@ -8,17 +8,17 @@ import (
 )
 
 type Queue struct {
-	storage     Storage       // Storage is the interface to the database
-	marshallers []Marshaller  // Unmarshaller is the interface to convert Journal objects into Task objects
-	workerCount int           // Number of goroutines to use for processing Tasks concurrently. Default process count is 16
-	bufferSize  int           // BufferSize determines the number of Tasks to lock in one transaction. Default buffer size is 32
-	pollStorage bool          // PollStorage determines if the queue should poll the database for new tasks. Default is true
-	buffer      chan Journal  // TaskBuffer is a channel of tasks that are ready to be processed
-	done        chan struct{} // Done channel is called to stop the queue
+	storage     Storage             // Storage is the interface to the database
+	consumers   map[string]Consumer // consumers contains all registered Consumer objects
+	workerCount int                 // workerCount represents the number of goroutines to use for processing Tasks concurrently. Default process count is 16
+	bufferSize  int                 // bufferSize determines the number of Tasks to lock in one transaction. Default buffer size is 32
+	pollStorage bool                // pollStorage determines if the queue should poll the database for new tasks. Default is true
+	buffer      chan Task           // buffer is a channel of tasks that are ready to be processed
+	done        chan struct{}       // Done channel is called to stop the queue
 }
 
 // NewQueue returns a fully initialized Queue object, with all options applied
-func NewQueue(options ...Option) Queue {
+func NewQueue(options ...QueueOption) Queue {
 
 	// Create the new Queue object
 	result := Queue{
@@ -33,7 +33,7 @@ func NewQueue(options ...Option) Queue {
 	}
 
 	// Create the task buffer last (to use the correct buffer size)
-	result.buffer = make(chan Journal, result.bufferSize)
+	result.buffer = make(chan Task, result.bufferSize)
 
 	// Start `ProcessCount` processes to listen for new Tasks
 	for range result.workerCount {
@@ -93,21 +93,16 @@ func (q *Queue) start() {
 }
 
 // RunTask
-func (q *Queue) Push(task Task) error {
+func (q *Queue) Publish(task Task) error {
 
 	const location = "queue.Push"
 
 	// Special Case #1: for immediate execution, just run the Task directly
-	if task.Priority() == 0 {
+	if task.Priority == 0 {
 		go func() {
-			if err := task.Run(); err != nil {
 
-				// If the task fails, then create a Journal and save to Storage provider
-				journal := NewJournal(task, 0)
-
-				if err := q.onTaskError(journal, err); err != nil {
-					derp.Report(err)
-				}
+			if err := q.consume(task); err != nil {
+				derp.Report(err)
 			}
 		}()
 
@@ -116,15 +111,12 @@ func (q *Queue) Push(task Task) error {
 
 	// Special Case #2: If there is no storage provider, queue the Task in the memory buffer
 	if q.storage == nil {
-		journal := NewJournal(task, 0)
-		q.buffer <- journal
+		q.buffer <- task
 		return nil
 	}
 
 	// Otherwise, write the Task to the Storage provider
-	journal := NewJournal(task, 0)
-
-	if err := q.storage.SaveTask(journal); err != nil {
+	if err := q.storage.SaveTask(task); err != nil {
 		return derp.Wrap(err, location, "Error saving task to database")
 	}
 
@@ -140,10 +132,10 @@ func (q *Queue) Schedule(task Task, delay time.Duration) error {
 	}
 
 	// Create a Journal record to save to the Storage provider
-	journal := NewJournal(task, delay)
+	task.Delay(delay)
 
 	// Save the Journal to the Storage provider
-	if err := q.storage.SaveTask(journal); err != nil {
+	if err := q.storage.SaveTask(task); err != nil {
 		return derp.Wrap(err, location, "Error saving task to database")
 	}
 

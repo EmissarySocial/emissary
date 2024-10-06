@@ -7,7 +7,7 @@ import (
 )
 
 // onTaskSucceeded marks a task as completed, and removes it from the queue.
-func (q *Queue) onTaskSucceeded(taskID string) error {
+func (q *Queue) onTaskSucceeded(task Task) error {
 
 	const location = "queue.onTaskSucceeded"
 
@@ -19,7 +19,7 @@ func (q *Queue) onTaskSucceeded(taskID string) error {
 	// TODO: Calculate statistics here?
 
 	// Remove the task from the queue
-	if err := q.storage.DeleteTask(taskID); err != nil {
+	if err := q.storage.DeleteTask(task.TaskID); err != nil {
 		return derp.Wrap(err, location, "Unable to remove task from queue")
 	}
 
@@ -30,52 +30,53 @@ func (q *Queue) onTaskSucceeded(taskID string) error {
 // onTaskError marks a task as errored and attempts to re-queue it for later.
 // If the task has already been retried too many times, then it will be moved
 // to the error log and removed from the queue.
-func (q *Queue) onTaskError(journal Journal, err error) error {
-
-	// Stuff the error into the Journal record
-	journal.Error = err
+func (q *Queue) onTaskError(task Task, err error) error {
 
 	// If the task has already been (re)tried too many times, then give up
 	// and move it to the error log
-	if journal.RetryCount >= journal.RetryMax {
-		return q.onTaskFailure(journal)
+	if task.RetryCount >= task.RetryMax {
+		return q.onTaskFailure(task, err)
 	}
 
 	// Update the task data and re-queue it
-	journal.LockID = ""
-	journal.StartDate = time.Now().Add(backoff(journal.RetryCount)).Unix()
-	journal.TimeoutDate = 0
-	journal.RetryCount++
+	task.LockID = ""
+	task.StartDate = time.Now().Add(backoff(task.RetryCount)).Unix()
+	task.TimeoutDate = 0
+	task.RetryCount++
+	task.Error = err
 
 	// If there is no storage provider, then use the buffer to queue the task
 	if q.storage == nil {
-		q.buffer <- journal
+		q.buffer <- task
 		return nil
 	}
 
 	// Otherwise, write the Task back to the storage provider
-	return q.storage.SaveTask(journal)
+	return q.storage.SaveTask(task)
 }
 
 // onTaskFailure marks a task as failed and moves it to the error log.
-func (q *Queue) onTaskFailure(journal Journal) error {
+func (q *Queue) onTaskFailure(task Task, err error) error {
 
 	const location = "queue.onTaskFailure"
+
+	// Add the error into the Task record
+	task.Error = err
 
 	// If there is no storage provider, then there's not much we can do...
 	// Just report the error and return
 	if q.storage == nil {
-		derp.Report(journal.Error)
+		derp.Report(task.Error)
 		return nil
 	}
 
 	// Add the task to the error log
-	if err := q.storage.LogFailure(journal); err != nil {
+	if err := q.storage.LogFailure(task); err != nil {
 		return derp.Wrap(err, location, "Unable to add task to error log")
 	}
 
 	// Remove the task from the queue
-	if err := q.storage.DeleteTask(journal.TaskID); err != nil {
+	if err := q.storage.DeleteTask(task.TaskID); err != nil {
 		return derp.Wrap(err, location, "Unable to remove task from queue")
 	}
 
