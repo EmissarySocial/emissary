@@ -4,12 +4,12 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/queue"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/domain"
 	"github.com/benpate/exp"
-	"github.com/benpate/hannibal/queue"
 	"github.com/benpate/rosetta/iterator"
 	"github.com/benpate/rosetta/schema"
 
@@ -23,7 +23,7 @@ type Rule struct {
 	userService   *User
 	host          string
 
-	queue queue.Queue
+	queue *queue.Queue
 }
 
 // NewRule returns a fully initialized Rule service
@@ -36,7 +36,7 @@ func NewRule() Rule {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Rule) Refresh(collection data.Collection, outboxService *Outbox, userService *User, queue queue.Queue, host string) {
+func (service *Rule) Refresh(collection data.Collection, outboxService *Outbox, userService *User, queue *queue.Queue, host string) {
 	service.collection = collection
 	service.outboxService = outboxService
 	service.userService = userService

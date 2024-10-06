@@ -95,6 +95,34 @@ func PersonLinkProfileURL(person PersonLink) string {
 }
 
 /******************************************
+ * Map Marshalling
+ ******************************************/
+
+// MarshalMap returns a mapof.Any representation of this PersonLink
+func (person PersonLink) MarshalMap() mapof.Any {
+	return mapof.Any{
+		"userId":       person.UserID.Hex(),
+		"name":         person.Name,
+		"username":     person.Username,
+		"profileUrl":   person.ProfileURL,
+		"inboxUrl":     person.InboxURL,
+		"emailAddress": person.EmailAddress,
+		"iconUrl":      person.IconURL,
+	}
+}
+
+// UnmarshalMap populates this PersonLink from a mapof.Any object
+func (person *PersonLink) UnmarshalMap(data mapof.Any) {
+	person.UserID = objectID(data.GetString("userId"))
+	person.Name = data.GetString("name")
+	person.Username = data.GetString("username")
+	person.ProfileURL = data.GetString("profileUrl")
+	person.InboxURL = data.GetString("inboxUrl")
+	person.EmailAddress = data.GetString("emailAddress")
+	person.IconURL = data.GetString("iconUrl")
+}
+
+/******************************************
  * Mastodon API Methods
  ******************************************/
 

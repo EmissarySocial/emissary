@@ -30,16 +30,9 @@ func (q *Queue) runSingleTask(journal Journal) error {
 	const location = "queue.processOne"
 
 	// If the Task has not already been unmarshalled from the Journal, then do it now
-	if journal.Task == nil {
-
-		if q.unmarshaller == nil {
-			return derp.NewInternalError(location, "Must have an unmarshaller to process stored tasks. (This should never happen)")
-		}
-
-		if err := q.unmarshaller.Unmarshal(&journal); err != nil {
-			journal.Error = derp.Wrap(err, location, "Error unmarshalling Task")
-			return q.storage.LogFailure(journal)
-		}
+	if ok := q.unmarshal(&journal); !ok {
+		journal.Error = derp.NewInternalError(location, "Unable to unmarshal Task")
+		return q.storage.LogFailure(journal)
 	}
 
 	// Try to run the Task
@@ -62,4 +55,24 @@ func (q *Queue) runSingleTask(journal Journal) error {
 
 	// Success! uwu
 	return nil
+}
+
+// unmarshall attempts to unpack a Journal's map[string]any arguments into a a Task object.
+// It returns TRUE if successful, and FALSE if the Task could not be unmarshalled.
+func (q Queue) unmarshal(journal *Journal) bool {
+
+	// If the task has already been unmarshalled, then don't try again.
+	if journal.Task != nil {
+		return true
+	}
+
+	// Try each marshaller in order, to try to unmarshall
+	for _, marshaller := range q.marshallers {
+		if marshaller.Unmarshal(journal) {
+			return true
+		}
+	}
+
+	// Fall through means that no marshaller was able to create a Task object
+	return false
 }

@@ -4,9 +4,6 @@ package queue
 // (and possibly serialized to a storage system)
 type Task interface {
 
-	// TaskID returns a unique identifier for this task
-	TaskID() string
-
 	// Priority returns the priority of this task
 	// Priority = 0 is executed immediately
 	// Priority > 0 is executed in ascending order
@@ -18,7 +15,4 @@ type Task interface {
 	// Run executes the task, and returns an error if unsuccessul.
 	// The queue is responsible for handling retries and timeouts.uwu
 	Run() error
-
-	// MarshalMap exports all of the Task data into a map[string]any
-	MarshalMap() map[string]any
 }

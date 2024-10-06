@@ -35,8 +35,24 @@ func (storage Storage) SaveTask(journal queue.Journal) error {
 	timeout, cancel := timeoutContext(16)
 	defer cancel()
 
+	var taskID primitive.ObjectID
+	var err error
+
+	// If the Journal does not have a TaskID, then create a new one
+	if journal.TaskID == "" {
+		taskID = primitive.NewObjectID()
+		journal.TaskID = taskID.Hex()
+
+	} else {
+
+		taskID, err = primitive.ObjectIDFromHex(journal.TaskID)
+		if err != nil {
+			return derp.Wrap(err, location, "Invalid taskID")
+		}
+	}
+
 	// Set up filter and option arguments
-	filter := bson.M{"_id": journal.TaskID}
+	filter := bson.M{"_id": taskID}
 	options := options.Update().SetUpsert(true)
 
 	update := bson.M{"$set": journal}

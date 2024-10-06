@@ -14,9 +14,10 @@ import (
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/httpcache"
+	"github.com/EmissarySocial/emissary/tools/queue"
+	"github.com/EmissarySocial/emissary/tools/queue_mongo"
 	"github.com/benpate/derp"
 	domaintools "github.com/benpate/domain"
-	"github.com/benpate/hannibal/queue"
 	"github.com/benpate/icon"
 	"github.com/benpate/rosetta/channel"
 	"github.com/benpate/rosetta/list"
@@ -49,12 +50,12 @@ type Factory struct {
 	contentService      service.Content
 	providerService     service.Provider
 	emailService        service.ServerEmail
-	taskQueue           queue.Queue
 	embeddedFiles       embed.FS
 
-	activityCache       *mongo.Collection
 	attachmentOriginals afero.Fs
 	attachmentCache     afero.Fs
+	commonDatabase      *mongo.Database
+	queue               queue.Queue
 
 	domains   map[string]*domain.Factory
 	httpCache httpcache.HTTPCache
@@ -70,7 +71,6 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 		mutex:         sync.RWMutex{},
 		domains:       make(map[string]*domain.Factory),
 		embeddedFiles: embeddedFiles,
-		taskQueue:     queue.NewSimpleQueue(128, 16),
 		ready:         make(chan struct{}),
 	}
 
@@ -130,6 +130,25 @@ func (factory *Factory) start() {
 	// Read configuration files from the channel
 	for config := range factory.storage.Subscribe() {
 
+		// Set logging level from the configuration file
+		switch factory.config.DebugLevel {
+
+		case "Trace":
+			zerolog.SetGlobalLevel(zerolog.TraceLevel)
+		case "Debug":
+			zerolog.SetGlobalLevel(zerolog.DebugLevel)
+		case "Info":
+			zerolog.SetGlobalLevel(zerolog.InfoLevel)
+		case "Error":
+			zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+		case "Fatal":
+			zerolog.SetGlobalLevel(zerolog.FatalLevel)
+		case "Panic":
+			zerolog.SetGlobalLevel(zerolog.PanicLevel)
+		default:
+			zerolog.SetGlobalLevel(zerolog.Disabled)
+		}
+
 		log.Info().Msg("Factory: received new configuration...")
 
 		if attachmentOriginals, err := filesystemService.GetAfero(config.AttachmentOriginals); err == nil {
@@ -155,7 +174,8 @@ func (factory *Factory) start() {
 		factory.emailService.Refresh()
 		factory.templateService.Refresh(config.Templates)
 		factory.providerService.Refresh(config.Providers)
-		factory.refreshActivityCache(config.ActivityPubCache)
+		factory.refreshCommonDatabase(config.ActivityPubCache)
+		factory.refreshQueue()
 
 		// Insert/Update a factory for each domain in the configuration
 		for _, domainConfig := range config.Domains {
@@ -174,25 +194,6 @@ func (factory *Factory) start() {
 				delete(factory.domains, domainID)
 			}
 			factory.mutex.Unlock()
-		}
-
-		// Set logging level from the configuration file
-		switch factory.config.DebugLevel {
-
-		case "Trace":
-			zerolog.SetGlobalLevel(zerolog.TraceLevel)
-		case "Debug":
-			zerolog.SetGlobalLevel(zerolog.DebugLevel)
-		case "Info":
-			zerolog.SetGlobalLevel(zerolog.InfoLevel)
-		case "Error":
-			zerolog.SetGlobalLevel(zerolog.ErrorLevel)
-		case "Fatal":
-			zerolog.SetGlobalLevel(zerolog.FatalLevel)
-		case "Panic":
-			zerolog.SetGlobalLevel(zerolog.PanicLevel)
-		default:
-			zerolog.SetGlobalLevel(zerolog.Disabled)
 		}
 
 		// If the "ready" channel is still open, then close it,
@@ -232,7 +233,7 @@ func (factory *Factory) refreshDomain(config config.Config, domainConfig config.
 		domainConfig,
 		factory.port(domainConfig),
 		config.Providers,
-		factory.activityCache,
+		factory.ActivityCollection(),
 		&factory.registrationService,
 		&factory.emailService,
 		&factory.themeService,
@@ -240,7 +241,7 @@ func (factory *Factory) refreshDomain(config config.Config, domainConfig config.
 		&factory.widgetService,
 		&factory.contentService,
 		&factory.providerService,
-		factory.taskQueue,
+		&factory.queue,
 		factory.attachmentOriginals,
 		factory.attachmentCache,
 		&factory.httpCache,
@@ -256,8 +257,8 @@ func (factory *Factory) refreshDomain(config config.Config, domainConfig config.
 	return nil
 }
 
-// refreshActivityCache updates the connection to the ActivityStream cache
-func (factory *Factory) refreshActivityCache(connection mapof.String) error {
+// refreshCommonDatabase updates the connection to the ActivityStream cache
+func (factory *Factory) refreshCommonDatabase(connection mapof.String) error {
 
 	// Collect arguments from the connection config
 	uri := connection.GetString("connectString")
@@ -268,6 +269,12 @@ func (factory *Factory) refreshActivityCache(connection mapof.String) error {
 		return derp.NewInternalError("server.Factory.RefreshActivityService", "ActivityStream cache is not configured")
 	}
 
+	// If there is already a cache connection in place,
+	// then close it before we open a new one
+	if factory.commonDatabase != nil {
+		factory.commonDatabase.Client().Disconnect(context.Background())
+	}
+
 	// Try to connect to the cache database
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(uri))
 
@@ -275,15 +282,20 @@ func (factory *Factory) refreshActivityCache(connection mapof.String) error {
 		return derp.Wrap(err, "server.Factory.RefreshActivityService", "Unable to connect to database", uri)
 	}
 
-	// If there is already a cache connection in place,
-	// then close it before we open a new one
-	if factory.activityCache != nil {
-		factory.activityCache.Database().Client().Disconnect(context.Background())
-	}
-
-	// Save the new connection
-	factory.activityCache = client.Database(database).Collection("Document")
+	factory.commonDatabase = client.Database(database)
 	return nil
+}
+
+// refreshQueue updates the connection to the task queue
+func (factory *Factory) refreshQueue() {
+
+	// If there is already a queue in place, then close it before we open a new one
+	factory.queue.Stop()
+
+	// Create a new queue object
+	mongoStorage := queue_mongo.New(factory.commonDatabase, 32, 32)
+	unmarshaller := factory.Unmarshaller()
+	factory.queue = queue.NewQueue(queue.WithStorage(mongoStorage, unmarshaller))
 }
 
 /****************************
@@ -584,6 +596,33 @@ func (factory *Factory) EditorJS() *goeditorjs.HTMLEngine {
 	return result
 }
 
+func (factory *Factory) ActivityCollection() *mongo.Collection {
+
+	if factory.commonDatabase != nil {
+		return factory.commonDatabase.Collection("Document")
+	}
+
+	return nil
+}
+
+func (factory *Factory) QueueCollection() *mongo.Collection {
+
+	if factory.commonDatabase != nil {
+		return factory.commonDatabase.Collection("Queue")
+	}
+
+	return nil
+}
+
+func (factory *Factory) QueueErrorsCollection() *mongo.Collection {
+
+	if factory.commonDatabase != nil {
+		return factory.commonDatabase.Collection("QueueErrors")
+	}
+
+	return nil
+}
+
 // Steranko implements the steranko.Factory method, used for locating the specific
 // steranko instance used by a domain.
 func (factory *Factory) Steranko(ctx echo.Context) (*steranko.Steranko, error) {
@@ -599,6 +638,10 @@ func (factory *Factory) Steranko(ctx echo.Context) (*steranko.Steranko, error) {
 
 func (factory *Factory) HTTPCache() *httpcache.HTTPCache {
 	return &factory.httpCache
+}
+
+func (factory *Factory) Marshaller() queue.Marshaller {
+	return NewMarshaller(factory)
 }
 
 func (factory *Factory) port(domainConfig config.Domain) string {

@@ -4,11 +4,11 @@ import (
 	"sync"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/queue"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/benpate/hannibal/queue"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -23,7 +23,7 @@ type Outbox struct {
 	userService     *User
 	domainEmail     *DomainEmail
 	lock            *sync.Mutex
-	queue           queue.Queue
+	queue           *queue.Queue
 }
 
 // NewOutbox returns a fully populated Outbox service
@@ -38,7 +38,7 @@ func NewOutbox() Outbox {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Outbox) Refresh(collection data.Collection, streamService *Stream, activityService *ActivityStream, followerService *Follower, templateService *Template, userService *User, domainEmail *DomainEmail, queue queue.Queue) {
+func (service *Outbox) Refresh(collection data.Collection, streamService *Stream, activityService *ActivityStream, followerService *Follower, templateService *Template, userService *User, domainEmail *DomainEmail, queue *queue.Queue) {
 	service.collection = collection
 	service.streamService = streamService
 	service.activityService = activityService

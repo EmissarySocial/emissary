@@ -101,3 +101,47 @@ func (follower Follower) UnsubscribeLink(host string) string {
 
 	return ""
 }
+
+/******************************************
+ * Map Marshalling
+ ******************************************/
+
+// MarshalMap returns a mapof.Any representation of this Follower
+func (follower Follower) MarshalMap() mapof.Any {
+	return mapof.Any{
+		"followerId": follower.FollowerID.Hex(),
+		"type":       follower.ParentType,
+		"parentId":   follower.ParentID.Hex(),
+		"stateId":    follower.StateID,
+		"method":     follower.Method,
+		"format":     follower.Format,
+		"actor":      follower.Actor.MarshalMap(),
+		"data":       follower.Data,
+		"expireDate": follower.ExpireDate,
+
+		"createDate": follower.CreateDate,
+		"updateDate": follower.UpdateDate,
+		"deleteDate": follower.DeleteDate,
+		"note":       follower.Note,
+		"revision":   follower.Revision,
+	}
+}
+
+// UnmarshalMap populates this Follower from a mapof.Any object
+func (follower *Follower) UnmarshalMap(data mapof.Any) {
+	follower.FollowerID = objectID(data.GetString("followerId"))
+	follower.ParentType = data.GetString("type")
+	follower.ParentID = objectID(data.GetString("parentId"))
+	follower.StateID = data.GetString("stateId")
+	follower.Method = data.GetString("method")
+	follower.Format = data.GetString("format")
+	follower.Actor.UnmarshalMap(data.GetMap("actor"))
+	follower.Data = data.GetMap("data")
+	follower.ExpireDate = data.GetInt64("expireDate")
+
+	follower.CreateDate = data.GetInt64("createDate")
+	follower.UpdateDate = data.GetInt64("updateDate")
+	follower.DeleteDate = data.GetInt64("deleteDate")
+	follower.Note = data.GetString("note")
+	follower.Revision = data.GetInt64("revision")
+}

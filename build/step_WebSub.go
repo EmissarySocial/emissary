@@ -29,6 +29,8 @@ func (step StepWebSub) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 // Post accepts a WebSub request, verifies it, and potentially creates a new Follower record.
 func (step StepWebSub) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
+	const location = "build.StepWebSub.Post"
+
 	var transaction struct {
 		Mode         string `form:"hub.mode"`
 		Topic        string `form:"hub.topic"`
@@ -38,7 +40,7 @@ func (step StepWebSub) Post(builder Builder, _ io.Writer) PipelineBehavior {
 	}
 
 	if err := bind(builder.request(), &transaction); err != nil {
-		return Halt().WithError(derp.Wrap(err, "build.StepWebSub.Post", "Error parsing form data"))
+		return Halt().WithError(derp.Wrap(err, location, "Error parsing form data"))
 	}
 
 	// Try to validate and save the follower via the queue.
@@ -51,7 +53,7 @@ func (step StepWebSub) Post(builder Builder, _ io.Writer) PipelineBehavior {
 	}
 
 	// Run the task in the background queue.
-	factory.Queue().Push(service.NewTaskCreateWebSubFollower(
+	task := service.NewTaskCreateWebSubFollower(
 		factory.Follower(),
 		factory.Locator(),
 		builder.objectType(),
@@ -62,7 +64,12 @@ func (step StepWebSub) Post(builder Builder, _ io.Writer) PipelineBehavior {
 		transaction.Callback,
 		transaction.Secret,
 		transaction.LeaseSeconds,
-	))
+	)
+
+	queue := factory.Queue()
+	if err := queue.Push(task); err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Error pushing task to queue"))
+	}
 
 	// TODO: MEDIUM: This may not jive with the new PipelineBehavior model.  Check accordingly.
 	// Set Status Code 202 (Accepted) to conform to WebSub spec

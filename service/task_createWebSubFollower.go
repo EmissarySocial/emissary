@@ -6,6 +6,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
+	"github.com/benpate/domain"
 	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/labstack/gommon/random"
@@ -15,41 +16,70 @@ import (
 type TaskCreateWebSubFollower struct {
 	followerService *Follower
 	locatorService  Locator
-	objectType      string
-	objectID        primitive.ObjectID
-	format          string // JSONFeed, RSS, Atom
-	mode            string
-	topic           string
-	callback        string
-	secret          string
-	leaseSeconds    int
+	ObjectType      string
+	ObjectID        primitive.ObjectID
+	Format          string // JSONFeed, RSS, Atom
+	Mode            string
+	Topic           string
+	Callback        string
+	Secret          string
+	LeaseSeconds    int
 }
 
 func NewTaskCreateWebSubFollower(followerService *Follower, locatorService Locator, objectType string, objectID primitive.ObjectID, format string, mode string, topic string, callback string, secret string, leaseSeconds int) TaskCreateWebSubFollower {
 	return TaskCreateWebSubFollower{
 		followerService: followerService,
 		locatorService:  locatorService,
-		objectType:      objectType,
-		objectID:        objectID,
-		format:          format,
-		mode:            mode,
-		topic:           topic,
-		callback:        callback,
-		secret:          secret,
-		leaseSeconds:    leaseSeconds,
+		ObjectType:      objectType,
+		ObjectID:        objectID,
+		Format:          format,
+		Mode:            mode,
+		Topic:           topic,
+		Callback:        callback,
+		Secret:          secret,
+		LeaseSeconds:    leaseSeconds,
 	}
+}
+
+func (task TaskCreateWebSubFollower) MarshalMap() map[string]any {
+	return mapof.Any{
+		"type":         "createWebSubFollower",
+		"host":         task.followerService.host,
+		"objectType":   task.ObjectType,
+		"objectID":     task.ObjectID,
+		"format":       task.Format,
+		"mode":         task.Mode,
+		"topic":        task.Topic,
+		"callback":     task.Callback,
+		"secret":       task.Secret,
+		"leaseSeconds": task.LeaseSeconds,
+	}
+}
+
+func (task TaskCreateWebSubFollower) Priority() int {
+	return 20
+}
+
+func (task TaskCreateWebSubFollower) RetryMax() int {
+	return 12 // 4096 minutes = 68 hours ~= 3 days
 }
 
 func (task TaskCreateWebSubFollower) Run() error {
 
-	switch task.mode {
+	switch task.Mode {
+
 	case "subscribe":
 		return task.subscribe()
+
 	case "unsubscribe":
 		return task.unsubscribe()
 	}
 
-	return derp.NewInternalError("service.TaskCreateWebSubFollower.Run", "Invalid mode", task.mode)
+	return derp.NewInternalError("service.TaskCreateWebSubFollower.Run", "Invalid mode", task.Mode)
+}
+
+func (task TaskCreateWebSubFollower) Hostname() string {
+	return domain.NameOnly(task.followerService.host)
 }
 
 // subscribe creates/updates a follower record
@@ -61,27 +91,27 @@ func (task TaskCreateWebSubFollower) subscribe() error {
 	minLeaseSeconds := 60 * 60 * 24 * 1  // Minimum lease is 1 day
 	maxLeaseSeconds := 60 * 60 * 24 * 30 // Maximum lease is 30 days
 
-	if task.leaseSeconds < minLeaseSeconds {
-		task.leaseSeconds = minLeaseSeconds
+	if task.LeaseSeconds < minLeaseSeconds {
+		task.LeaseSeconds = minLeaseSeconds
 	}
 
-	if task.leaseSeconds > maxLeaseSeconds {
-		task.leaseSeconds = maxLeaseSeconds
+	if task.LeaseSeconds > maxLeaseSeconds {
+		task.LeaseSeconds = maxLeaseSeconds
 	}
 
 	// Create a new Follower record
-	follower, err := task.followerService.LoadOrCreateByWebSub(task.objectType, task.objectID, task.callback)
+	follower, err := task.followerService.LoadOrCreateByWebSub(task.ObjectType, task.ObjectID, task.Callback)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error loading follower", task.objectID, task.callback)
+		return derp.Wrap(err, location, "Error loading follower", task.ObjectID, task.Callback)
 	}
 
 	// Set additional properties that are not handled by LoadOrCreateByWebSub
 	follower.StateID = model.FollowerStateActive
-	follower.Format = task.format
-	follower.ExpireDate = time.Now().Add(time.Second * time.Duration(task.leaseSeconds)).Unix()
+	follower.Format = task.Format
+	follower.ExpireDate = time.Now().Add(time.Second * time.Duration(task.LeaseSeconds)).Unix()
 	follower.Data = mapof.Any{
-		"secret": task.secret,
+		"secret": task.Secret,
 	}
 
 	// Validate the request with the client
@@ -105,8 +135,8 @@ func (task TaskCreateWebSubFollower) unsubscribe() error {
 
 	// Load the existing follower record
 	follower := model.NewFollower()
-	if err := task.followerService.LoadByWebSub(task.objectType, task.objectID, task.callback, &follower); err != nil {
-		return derp.Wrap(err, location, "Error loading follower", task.objectID, task.callback)
+	if err := task.followerService.LoadByWebSub(task.ObjectType, task.ObjectID, task.Callback, &follower); err != nil {
+		return derp.Wrap(err, location, "Error loading follower", task.ObjectID, task.Callback)
 	}
 
 	// Verify the request with the callback server
@@ -132,10 +162,10 @@ func (task TaskCreateWebSubFollower) validate(follower *model.Follower) error {
 	// Validate the request with the client
 	challenge := random.String(42)
 	transaction := remote.Get(follower.Actor.InboxURL).
-		Query("hub.mode", task.mode).
-		Query("hub.topic", task.topic).
+		Query("hub.mode", task.Mode).
+		Query("hub.topic", task.Topic).
 		Query("hub.challenge", challenge).
-		Query("hub.lease_seconds", strconv.Itoa(task.leaseSeconds)).
+		Query("hub.lease_seconds", strconv.Itoa(task.LeaseSeconds)).
 		Result(&body)
 
 	if err := transaction.Send(); err != nil {
@@ -147,17 +177,17 @@ func (task TaskCreateWebSubFollower) validate(follower *model.Follower) error {
 	}
 
 	// Validate the object in our own database
-	objectType, objectID, err := task.locatorService.GetObjectFromURL(task.topic)
+	objectType, objectID, err := task.locatorService.GetObjectFromURL(task.Topic)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error parsing topic URL", follower.ID)
 	}
 
-	if objectType != task.objectType {
+	if objectType != task.ObjectType {
 		return derp.NewBadRequestError(location, "Invalid object type", follower.ID)
 	}
 
-	if objectID != task.objectID {
+	if objectID != task.ObjectID {
 		return derp.NewBadRequestError(location, "Invalid object ID", follower.ID)
 	}
 

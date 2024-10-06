@@ -2,11 +2,11 @@ package service
 
 import (
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/queue"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/benpate/hannibal/queue"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/iterator"
@@ -25,7 +25,7 @@ type Follower struct {
 	streamService   *Stream
 	domainEmail     *DomainEmail
 	activityService *ActivityStream
-	queue           queue.Queue
+	queue           *queue.Queue
 	host            string
 }
 
@@ -39,7 +39,7 @@ func NewFollower() Follower {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Follower) Refresh(collection data.Collection, userService *User, streamService *Stream, ruleService *Rule, domainEmail *DomainEmail, activityService *ActivityStream, queue queue.Queue, host string) {
+func (service *Follower) Refresh(collection data.Collection, userService *User, streamService *Stream, ruleService *Rule, domainEmail *DomainEmail, activityService *ActivityStream, queue *queue.Queue, host string) {
 	service.collection = collection
 	service.userService = userService
 	service.streamService = streamService

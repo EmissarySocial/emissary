@@ -10,13 +10,13 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/camper"
 	"github.com/EmissarySocial/emissary/tools/httpcache"
+	"github.com/EmissarySocial/emissary/tools/queue"
 	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/data"
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
 	"github.com/benpate/domain"
 	"github.com/benpate/form"
-	"github.com/benpate/hannibal/queue"
 	"github.com/benpate/icon"
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/steranko"
@@ -40,7 +40,7 @@ type Factory struct {
 	httpCache           *httpcache.HTTPCache
 	providerService     *service.Provider
 	registrationService *service.Registration
-	taskQueue           queue.Queue
+	queue               *queue.Queue
 	templateService     *service.Template
 	themeService        *service.Theme
 	widgetService       *service.Widget
@@ -81,7 +81,7 @@ type Factory struct {
 }
 
 // NewFactory creates a new factory tied to a MongoDB database
-func NewFactory(domain config.Domain, port string, providers []config.Provider, activityCache *mongo.Collection, registrationService *service.Registration, serverEmail *service.ServerEmail, themeService *service.Theme, templateService *service.Template, widgetService *service.Widget, contentService *service.Content, providerService *service.Provider, taskQueue queue.Queue, attachmentOriginals afero.Fs, attachmentCache afero.Fs, httpCache *httpcache.HTTPCache) (*Factory, error) {
+func NewFactory(domain config.Domain, port string, providers []config.Provider, activityCache *mongo.Collection, registrationService *service.Registration, serverEmail *service.ServerEmail, themeService *service.Theme, templateService *service.Template, widgetService *service.Widget, contentService *service.Content, providerService *service.Provider, queue *queue.Queue, attachmentOriginals afero.Fs, attachmentCache afero.Fs, httpCache *httpcache.HTTPCache) (*Factory, error) {
 
 	log.Info().Msg("Starting domain: " + domain.Hostname)
 
@@ -94,7 +94,7 @@ func NewFactory(domain config.Domain, port string, providers []config.Provider, 
 		widgetService:       widgetService,
 		contentService:      contentService,
 		providerService:     providerService,
-		taskQueue:           taskQueue,
+		queue:               queue,
 
 		httpCache:           httpCache,
 		attachmentOriginals: attachmentOriginals,
@@ -698,8 +698,8 @@ func (factory *Factory) HTTPCache() *httpcache.HTTPCache {
 }
 
 // Queue returns the Queue service, which manages background jobs
-func (factory *Factory) Queue() queue.Queue {
-	return factory.taskQueue
+func (factory *Factory) Queue() *queue.Queue {
+	return factory.queue
 }
 
 // Registration returns the Registration service, which managaes new user registrations

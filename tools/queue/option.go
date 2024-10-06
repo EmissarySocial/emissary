@@ -4,10 +4,10 @@ package queue
 type Option func(*Queue)
 
 // WithStorage sets the storage and unmarshaller for the queue
-func WithStorage(storage Storage, unmarshaller Unmarshaller) Option {
+func WithStorage(storage Storage, marshallers ...Marshaller) Option {
 	return func(q *Queue) {
 		q.storage = storage
-		q.unmarshaller = unmarshaller
+		q.marshallers = marshallers
 	}
 }
 

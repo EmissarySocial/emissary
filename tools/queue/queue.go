@@ -8,13 +8,13 @@ import (
 )
 
 type Queue struct {
-	storage      Storage       // Storage is the interface to the database
-	unmarshaller Unmarshaller  // Unmarshaller is the interface to convert Journal objects into Task objects
-	workerCount  int           // Number of goroutines to use for processing Tasks concurrently. Default process count is 16
-	bufferSize   int           // BufferSize determines the number of Tasks to lock in one transaction. Default buffer size is 32
-	pollStorage  bool          // PollStorage determines if the queue should poll the database for new tasks. Default is true
-	buffer       chan Journal  // TaskBuffer is a channel of tasks that are ready to be processed
-	done         chan struct{} // Done channel is called to stop the queue
+	storage     Storage       // Storage is the interface to the database
+	marshallers []Marshaller  // Unmarshaller is the interface to convert Journal objects into Task objects
+	workerCount int           // Number of goroutines to use for processing Tasks concurrently. Default process count is 16
+	bufferSize  int           // BufferSize determines the number of Tasks to lock in one transaction. Default buffer size is 32
+	pollStorage bool          // PollStorage determines if the queue should poll the database for new tasks. Default is true
+	buffer      chan Journal  // TaskBuffer is a channel of tasks that are ready to be processed
+	done        chan struct{} // Done channel is called to stop the queue
 }
 
 // NewQueue returns a fully initialized Queue object, with all options applied
