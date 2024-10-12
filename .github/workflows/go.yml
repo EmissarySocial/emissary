@@ -16,7 +16,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
-        go-version: '1.21'
+        go-version: '1.23'
 
     - name: Test
       run: go test -race -coverprofile=coverage.txt -covermode=atomic -v ./...
@@ -31,12 +31,12 @@ jobs:
         verbose: true
 
     # - name: GolangCI-Lint
-      # uses: golangci/golangci-lint-action@v4
+      # uses: golangci/golangci-lint-action@v6
       # with:
         # Require: The version of golangci-lint to use.
         # When `install-mode` is `binary` (default) the value can be v1.2 or v1.2.3 or `latest` to use the latest version.
         # When `install-mode` is `goinstall` the value can be v1.2.3, `latest`, or the hash of a commit.
-        # version: v1.56.2
+        # version: latest
         # skip-cache: true
         # skip-pkg-cache: true
         # skip-build-cache: true
