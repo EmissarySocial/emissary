@@ -22,10 +22,11 @@ FEW DEPENDENTS
 
 SOME DEPENDENTS
 
+- remote
+- turbine
 - data-mock
 - rosetta
 - data
-- remote
 
 MANY DEPENDENTS
 
