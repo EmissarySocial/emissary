@@ -8,7 +8,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/streams"
-	"github.com/benpate/hannibal/vocab"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -195,7 +194,7 @@ func (client *Client) save(url string, document streams.Document) {
 
 	const location = "ascache.Client.save"
 
-	// If the client is not writable, then don't try to save the document
+	// RULE: If the client is not writable, then don't try to save the document
 	if client.NotWritable() {
 		return
 	}
@@ -216,7 +215,7 @@ func (client *Client) save(url string, document streams.Document) {
 	value := NewValue()
 	value.URLs.Append(url)
 
-	if err := client.loadByID(document.ID(), &value); !derp.NilOrNotFound(err) {
+	if err := client.loadByURLs(url, &value); !derp.NilOrNotFound(err) {
 		derp.Report(derp.Wrap(err, location, "Error searching for duplicate document in cache", document))
 		return
 	}
@@ -249,18 +248,18 @@ func (client *Client) save(url string, document streams.Document) {
 	value.calcDocumentType(document)
 
 	// Try to upsert the document into the cache
-	filter := bson.M{"urls": value.Object.GetString(vocab.PropertyID)}
+	filter := bson.M{"urls": url}
 	update := bson.M{"$set": value}
 	queryOptions := options.Update().SetUpsert(true)
 
 	if _, err := client.collection.UpdateOne(context.Background(), filter, update, queryOptions); err != nil {
-		derp.Report(derp.Wrap(err, location, "Error saving document to cache", document.ID()))
+		derp.Report(derp.Wrap(err, location, "Error upserting document in cache", url))
 		return
 	}
 
 	// Finally, try to recalculate statistics of linked documents
 	if err := client.calcStatistics(document); err != nil {
-		derp.Report(derp.Wrap(err, location, "Error calculating statistics", document.ID()))
+		derp.Report(derp.Wrap(err, location, "Error calculating statistics", url))
 	}
 }
 
@@ -306,14 +305,6 @@ func (client *Client) load(criteria bson.M, value *Value) error {
 func (client *Client) loadByURLs(url string, value *Value) error {
 	if err := client.load(bson.M{"urls": url}, value); err != nil {
 		return derp.Wrap(err, "ascache.Client.loadByURLs", "Error loading document", url)
-	}
-	return nil
-}
-
-// loadByID loads a Value from the cache using its document.ID.
-func (client *Client) loadByID(id string, value *Value) error {
-	if err := client.load(bson.M{"object.id": id}, value); err != nil {
-		return derp.Wrap(err, "ascache.Client.loadByID", "Error loading document", id)
 	}
 	return nil
 }
