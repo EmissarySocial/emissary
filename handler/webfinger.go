@@ -11,6 +11,7 @@ import (
 )
 
 // GetWebfinger returns public webfinger information for a designated user.
+// https://webfinger.net
 // WebFinger data based on https://docs.joinmastodon.org/spec/webfinger/
 func GetWebfinger(fm *server.Factory) echo.HandlerFunc {
 
@@ -27,7 +28,12 @@ func GetWebfinger(fm *server.Factory) echo.HandlerFunc {
 
 		resourceID := ctx.QueryParam("resource")
 
-		// Look for Users first
+		// First, try the service account on the domain
+		if resource, err := factory.Domain().LoadWebFinger(resourceID); err == nil {
+			return writeResource(ctx, resource)
+		}
+
+		// Next, look for Users
 		if resource, err := factory.User().LoadWebFinger(resourceID); err == nil {
 			return writeResource(ctx, resource)
 		}

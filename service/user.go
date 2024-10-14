@@ -21,6 +21,7 @@ import (
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
+	"github.com/benpate/turbine/queue"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -39,6 +40,8 @@ type User struct {
 	followerService   *Follower
 	streamService     *Stream
 	webhookService    *Webhook
+	activityStream    *ActivityStream
+	queue             *queue.Queue
 	host              string
 }
 
@@ -52,7 +55,7 @@ func NewUser() User {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *User) Refresh(userCollection data.Collection, followerCollection data.Collection, followingCollection data.Collection, ruleCollection data.Collection, attachmentService *Attachment, domainService *Domain, emailService *DomainEmail, folderService *Folder, followerService *Follower, keyService *EncryptionKey, ruleService *Rule, streamService *Stream, webhookService *Webhook, host string) {
+func (service *User) Refresh(userCollection data.Collection, followerCollection data.Collection, followingCollection data.Collection, ruleCollection data.Collection, attachmentService *Attachment, domainService *Domain, emailService *DomainEmail, folderService *Folder, followerService *Follower, keyService *EncryptionKey, ruleService *Rule, streamService *Stream, webhookService *Webhook, queue *queue.Queue, activityStream *ActivityStream, host string) {
 	service.collection = userCollection
 	service.followers = followerCollection
 	service.following = followingCollection
@@ -67,6 +70,8 @@ func (service *User) Refresh(userCollection data.Collection, followerCollection 
 	service.ruleService = ruleService
 	service.streamService = streamService
 	service.webhookService = webhookService
+	service.activityStream = activityStream
+	service.queue = queue
 
 	service.host = host
 }

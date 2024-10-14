@@ -14,6 +14,7 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
+	"github.com/benpate/digit"
 	"github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/sigs"
@@ -554,4 +555,26 @@ func (service *Domain) PrivateKey() (*rsa.PrivateKey, error) {
 
 	// Success??
 	return privateKey, nil
+}
+
+/******************************************
+ * WebFinger Behavior
+ ******************************************/
+
+func (service *Domain) LoadWebFinger(username string) (digit.Resource, error) {
+
+	const location = "service.User.LoadWebFinger"
+
+	if username != "acct:service@"+service.hostname {
+		return digit.Resource{}, derp.NewBadRequestError(location, "Invalid username", username)
+	}
+
+	profileURL := domain.AddProtocol(service.hostname) + "/@service"
+
+	// Make a WebFinger resource for this user.
+	result := digit.NewResource("acct:service@"+service.hostname).
+		Alias(profileURL).
+		Link(digit.RelationTypeSelf, model.MimeTypeActivityPub, profileURL)
+
+	return result, nil
 }

@@ -36,17 +36,18 @@ func GetServiceActor(serverFactory *server.Factory) echo.HandlerFunc {
 
 		// Return the result as a JSON-LD document
 		result := map[string]any{
-			vocab.AtContext:                []any{vocab.ContextTypeActivityStreams, vocab.ContextTypeSecurity, vocab.ContextTypeToot},
-			vocab.PropertyType:             vocab.ActorTypeService,
-			vocab.PropertyID:               actorID,
-			vocab.PropertyName:             domainService.Hostname(),
-			vocab.PropertyFollowing:        actorID + "/following",
-			vocab.PropertyFollowers:        actorID + "/followers",
-			vocab.PropertyLiked:            actorID + "/liked",
-			vocab.PropertyOutbox:           actorID + "/outbox",
-			vocab.PropertyInbox:            actorID + "/inbox",
-			vocab.PropertyTootDiscoverable: false,
-			vocab.PropertyTootIndexable:    false,
+			vocab.AtContext:                 []any{vocab.ContextTypeActivityStreams, vocab.ContextTypeSecurity, vocab.ContextTypeToot},
+			vocab.PropertyType:              vocab.ActorTypeService,
+			vocab.PropertyID:                actorID,
+			vocab.PropertyPreferredUsername: "service",
+			vocab.PropertyName:              domainService.Hostname(),
+			vocab.PropertyFollowing:         actorID + "/following",
+			vocab.PropertyFollowers:         actorID + "/followers",
+			vocab.PropertyLiked:             actorID + "/liked",
+			vocab.PropertyOutbox:            actorID + "/outbox",
+			vocab.PropertyInbox:             actorID + "/inbox",
+			vocab.PropertyTootDiscoverable:  false,
+			vocab.PropertyTootIndexable:     false,
 
 			vocab.PropertyPublicKey: map[string]any{
 				vocab.PropertyID:           domainService.PublicKeyID(),
@@ -55,6 +56,7 @@ func GetServiceActor(serverFactory *server.Factory) echo.HandlerFunc {
 			},
 		}
 
+		ctx.Response().Header().Set("Content-Type", vocab.ContentTypeActivityPub)
 		return ctx.JSON(200, result)
 	}
 }

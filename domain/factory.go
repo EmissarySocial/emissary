@@ -10,7 +10,6 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/camper"
 	"github.com/EmissarySocial/emissary/tools/httpcache"
-	"github.com/EmissarySocial/emissary/tools/queue"
 	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/data"
 	mongodb "github.com/benpate/data-mongo"
@@ -21,6 +20,7 @@ import (
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/steranko"
 	"github.com/benpate/steranko/plugin/hash"
+	"github.com/benpate/turbine/queue"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -349,6 +349,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.Rule(),
 			factory.User(),
 			factory.MediaServer(),
+			factory.Queue(),
 			factory.Host(),
 			factory.StreamUpdateChannel(),
 		)
@@ -375,6 +376,8 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.Rule(),
 			factory.Stream(),
 			factory.Webhook(),
+			factory.Queue(),
+			factory.ActivityStream(),
 			factory.Host(),
 		)
 

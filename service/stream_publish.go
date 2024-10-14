@@ -58,8 +58,8 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream, outbox bo
 	object := service.JSONLD(stream)
 
 	// Save the object to the ActivityStream cache
-	service.activityService.Put(
-		service.activityService.NewDocument(object),
+	service.activityStream.Put(
+		service.activityStream.NewDocument(object),
 	)
 
 	// Create the Activity to send to Followers

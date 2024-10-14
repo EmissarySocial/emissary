@@ -93,7 +93,7 @@ func (service *ActivityStream) initClients() {
 	// factory.activityService.Refresh(readOnlyCache, mongodb.NewCollection(collection))
 }
 
-func (service *ActivityStream) Client() streams.Client {
+func (service *ActivityStream) getClient() streams.Client {
 
 	if service.innerClient == nil {
 		service.initClients()
@@ -125,7 +125,7 @@ func (service *ActivityStream) Load(url string, options ...any) (streams.Documen
 	}
 
 	// NPE Check
-	client := service.Client()
+	client := service.getClient()
 
 	// Forward request to inner client
 	result, err := client.Load(url, options...)

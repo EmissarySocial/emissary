@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/hannibal/outbox"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/turbine/queue"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"willnorris.com/go/webmention"
@@ -110,7 +111,16 @@ func (service Outbox) sendNotifications_WebSub(parentType string, parentID primi
 
 	// Queue up all ActivityPub messages to be sent
 	for follower := range followers {
-		service.queue.Push(NewTaskSendWebSubMessage(follower))
+
+		task := queue.NewTask("SendWebSubMessage", mapof.Any{
+			"inboxUrl": follower.Actor.InboxURL,
+			"format":   follower.Format,
+			"secret":   follower.Data.GetString("secret"),
+		})
+
+		if err := service.queue.Publish(task); err != nil {
+			derp.Report(derp.Wrap(err, location, "Error publishing task", task))
+		}
 	}
 }
 
@@ -118,6 +128,8 @@ func (service Outbox) sendNotifications_WebSub(parentType string, parentID primi
 // mentioned in this stream.  This is here (and not in the outbox service)
 // because we need to build the content in order to discover outbound links.
 func (service *Outbox) sendNotifications_WebMention(activity mapof.Any) {
+
+	const location = "service.Outbox.sendNotifications_WebMention"
 
 	// Locate the object ID for this acticity
 	object := activity.GetMap(vocab.PropertyObject)
@@ -129,7 +141,7 @@ func (service *Outbox) sendNotifications_WebMention(activity mapof.Any) {
 	links, err := webmention.DiscoverLinksFromReader(reader, id, "")
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "mention.SendWebMention.Run", "Error discovering webmention links", activity))
+		derp.Report(derp.Wrap(err, location, "Error discovering webmention links", activity))
 		return
 	}
 
@@ -140,23 +152,33 @@ func (service *Outbox) sendNotifications_WebMention(activity mapof.Any) {
 
 	// Add background tasks to TRY sending webmentions to every link we found
 	for _, link := range links {
-		service.queue.Push(NewTaskSendWebMention(id, link))
+
+		task := queue.NewTask("SendWebMention", mapof.Any{
+			"source": id,
+			"target": link,
+		})
+
+		if err := service.queue.Publish(task); err != nil {
+			derp.Report(derp.Wrap(err, location, "Error publishing task", task))
+		}
 	}
 }
 
 // sendNotifications_Email sends email notifications to all "email" Followers
 func (service *Outbox) sendNotifications_Email(parentType string, parentID primitive.ObjectID, activity mapof.Any) {
 
+	const location = "service.Outbox.sendNotifications_Email"
+
 	followers, err := service.followerService.EmailFollowersChannel(parentType, parentID)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "service.Outbox.sendNotifications_Email", "Error loading Followers", parentType, parentID))
+		derp.Report(derp.Wrap(err, location, "Error loading Followers", parentType, parentID))
 		return
 	}
 
 	for follower := range followers {
 		if err := service.domainEmail.SendFollowerActivity(follower, activity); err != nil {
-			derp.Report(derp.Wrap(err, "service.Outbox.sendNotifications_Email", "Error sending email", follower))
+			derp.Report(derp.Wrap(err, location, "Error sending email", follower))
 		}
 	}
 }

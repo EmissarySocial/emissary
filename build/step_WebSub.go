@@ -5,9 +5,10 @@ import (
 	"net/http"
 
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/list"
+	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/turbine/queue"
 	"github.com/timewasted/go-accept-headers"
 )
 
@@ -31,6 +32,7 @@ func (step StepWebSub) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
 	const location = "build.StepWebSub.Post"
 
+	// This transaction will capture the form POST input
 	var transaction struct {
 		Mode         string `form:"hub.mode"`
 		Topic        string `form:"hub.topic"`
@@ -39,35 +41,32 @@ func (step StepWebSub) Post(builder Builder, _ io.Writer) PipelineBehavior {
 		LeaseSeconds int    `form:"hub.lease_seconds"`
 	}
 
+	// Try to collect form data into the transaction struct
 	if err := bind(builder.request(), &transaction); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error parsing form data"))
 	}
 
-	// Try to validate and save the follower via the queue.
-	factory := builder.factory()
-
+	// Negotiate the content type (format) requested by the WebSub follower
 	format, err := accept.Negotiate(builder.request().Header.Get("Accept"), model.MimeTypeJSONFeed, model.MimeTypeAtom, model.MimeTypeRSS, model.MimeTypeXML, model.MimeTypeXMLText)
 
 	if err != nil {
 		format = model.MimeTypeJSONFeed
 	}
 
-	// Run the task in the background queue.
-	task := service.NewTaskCreateWebSubFollower(
-		factory.Follower(),
-		factory.Locator(),
-		builder.objectType(),
-		builder.objectID(),
-		format,
-		transaction.Mode,
-		transaction.Topic,
-		transaction.Callback,
-		transaction.Secret,
-		transaction.LeaseSeconds,
-	)
+	// Create a new background task to handle the WebSub follower
+	task := queue.NewTask("CreateWebSubFollower", mapof.Any{
+		"objectType":   builder.objectType(),
+		"objectId":     builder.objectID(),
+		"format":       format,
+		"mode":         transaction.Mode,
+		"topic":        transaction.Topic,
+		"callback":     transaction.Callback,
+		"secret":       transaction.Secret,
+		"leaseSeconds": transaction.LeaseSeconds,
+	})
 
-	queue := factory.Queue()
-	if err := queue.Push(task); err != nil {
+	// Push the new task onto the background queue.
+	if err := builder.factory().Queue().Publish(task); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error pushing task to queue"))
 	}
 

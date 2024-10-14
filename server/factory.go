@@ -11,19 +11,21 @@ import (
 
 	"github.com/EmissarySocial/emissary/build"
 	"github.com/EmissarySocial/emissary/config"
+	"github.com/EmissarySocial/emissary/consumer"
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/httpcache"
-	"github.com/EmissarySocial/emissary/tools/queue"
-	"github.com/EmissarySocial/emissary/tools/queue_mongo"
 	"github.com/benpate/derp"
 	domaintools "github.com/benpate/domain"
 	"github.com/benpate/icon"
+	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/channel"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/steranko"
+	"github.com/benpate/turbine/queue"
+	"github.com/benpate/turbine/queue_mongo"
 	"github.com/davidscottmills/goeditorjs"
 	"github.com/labstack/echo/v4"
 	"github.com/maypok86/otter"
@@ -116,6 +118,8 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 		sliceof.NewObject[mapof.String](),
 	)
 
+	factory.queue = queue.New()
+
 	go factory.start()
 
 	return &factory
@@ -123,7 +127,7 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 
 func (factory *Factory) start() {
 
-	log.Debug().Msg("Factory: waiting for configuration...")
+	log.Info().Msg("Factory: waiting for configuration...")
 
 	filesystemService := factory.Filesystem()
 
@@ -131,7 +135,7 @@ func (factory *Factory) start() {
 	for config := range factory.storage.Subscribe() {
 
 		// Set logging level from the configuration file
-		switch factory.config.DebugLevel {
+		switch config.DebugLevel {
 
 		case "Trace":
 			zerolog.SetGlobalLevel(zerolog.TraceLevel)
@@ -174,7 +178,10 @@ func (factory *Factory) start() {
 		factory.emailService.Refresh()
 		factory.templateService.Refresh(config.Templates)
 		factory.providerService.Refresh(config.Providers)
-		factory.refreshCommonDatabase(config.ActivityPubCache)
+
+		if err := factory.refreshCommonDatabase(config.ActivityPubCache); err != nil {
+			derp.Report(derp.Wrap(err, "server.Factory.start", "Error refreshing ActivityStream cache", config.ActivityPubCache))
+		}
 		factory.refreshQueue()
 
 		// Insert/Update a factory for each domain in the configuration
@@ -272,7 +279,9 @@ func (factory *Factory) refreshCommonDatabase(connection mapof.String) error {
 	// If there is already a cache connection in place,
 	// then close it before we open a new one
 	if factory.commonDatabase != nil {
-		factory.commonDatabase.Client().Disconnect(context.Background())
+		if err := factory.commonDatabase.Client().Disconnect(context.Background()); err != nil {
+			return derp.Wrap(err, "server.Factory.RefreshActivityService", "Error disconnecting from database")
+		}
 	}
 
 	// Try to connect to the cache database
@@ -292,10 +301,16 @@ func (factory *Factory) refreshQueue() {
 	// If there is already a queue in place, then close it before we open a new one
 	factory.queue.Stop()
 
-	// Create a new queue object
+	// Set up Queue storage
 	mongoStorage := queue_mongo.New(factory.commonDatabase, 32, 32)
-	unmarshaller := factory.Unmarshaller()
-	factory.queue = queue.NewQueue(queue.WithStorage(mongoStorage, unmarshaller))
+	consumer := consumer.New(factory)
+
+	// Create a new queue object with consumers, storage, and polling
+	factory.queue = queue.New(
+		queue.WithConsumers(consumer.Run, remote.Consumer()),
+		queue.WithStorage(mongoStorage),
+		queue.WithPollStorage(true),
+	)
 }
 
 /****************************
@@ -541,6 +556,11 @@ func (factory *Factory) Content() *service.Content {
 	return &factory.contentService
 }
 
+// Queue returns the gloabl message queue service
+func (factory *Factory) Queue() *queue.Queue {
+	return &factory.queue
+}
+
 // Registration returns the global template service
 func (factory *Factory) Registration() *service.Registration {
 	return &factory.registrationService
@@ -638,10 +658,6 @@ func (factory *Factory) Steranko(ctx echo.Context) (*steranko.Steranko, error) {
 
 func (factory *Factory) HTTPCache() *httpcache.HTTPCache {
 	return &factory.httpCache
-}
-
-func (factory *Factory) Marshaller() queue.Marshaller {
-	return NewMarshaller(factory)
 }
 
 func (factory *Factory) port(domainConfig config.Domain) string {

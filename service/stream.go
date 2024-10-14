@@ -22,6 +22,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/sherlock"
+	"github.com/benpate/turbine/queue"
 	"github.com/gernest/mention"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -33,7 +34,7 @@ type Stream struct {
 	draftService        *StreamDraft
 	outboxService       *Outbox
 	attachmentService   *Attachment
-	activityService     *ActivityStream
+	activityStream      *ActivityStream
 	contentService      *Content
 	keyService          *EncryptionKey
 	followerService     *Follower
@@ -41,6 +42,7 @@ type Stream struct {
 	userService         *User
 	host                string
 	mediaserver         mediaserver.MediaServer
+	queue               *queue.Queue
 	streamUpdateChannel chan<- primitive.ObjectID
 }
 
@@ -54,19 +56,20 @@ func NewStream() Stream {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Stream) Refresh(collection data.Collection, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, activityService *ActivityStream, contentService *Content, keyService *EncryptionKey, followerService *Follower, ruleService *Rule, userService *User, mediaserver mediaserver.MediaServer, host string, streamUpdateChannel chan primitive.ObjectID) {
+func (service *Stream) Refresh(collection data.Collection, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, activityStream *ActivityStream, contentService *Content, keyService *EncryptionKey, followerService *Follower, ruleService *Rule, userService *User, mediaserver mediaserver.MediaServer, queue *queue.Queue, host string, streamUpdateChannel chan primitive.ObjectID) {
 	service.collection = collection
 	service.templateService = templateService
 	service.draftService = draftService
 	service.outboxService = outboxService
 	service.attachmentService = attachmentService
-	service.activityService = activityService
+	service.activityStream = activityStream
 	service.contentService = contentService
 	service.keyService = keyService
 	service.followerService = followerService
 	service.ruleService = ruleService
 	service.userService = userService
 	service.mediaserver = mediaserver
+	service.queue = queue
 
 	service.host = host
 	service.streamUpdateChannel = streamUpdateChannel
@@ -822,7 +825,7 @@ func (service *Stream) CalcContext(stream *model.Stream) {
 	// Load the "InReplyTo" document from the ActivityStream and use its
 	// context.  Note: this should have been calculated already via the
 	// ascontextmaker client.
-	document, _ := service.activityService.Load(stream.InReplyTo)
+	document, _ := service.activityStream.Load(stream.InReplyTo)
 
 	if context := document.Context(); context != "" {
 		stream.Context = document.Context()
@@ -865,7 +868,7 @@ func (service *Stream) CalcTagsFromPaths(stream *model.Stream, paths ...string) 
 			tag.Name = strings.TrimSuffix(tag.Name, ".")
 			tag.Name = strings.TrimSuffix(tag.Name, ",")
 
-			if actor, err := service.activityService.Load(tag.Name, sherlock.AsActor()); err == nil {
+			if actor, err := service.activityStream.Load(tag.Name, sherlock.AsActor()); err == nil {
 				tag.Href = actor.ID()
 			}
 

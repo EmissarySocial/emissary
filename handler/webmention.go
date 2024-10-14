@@ -4,44 +4,39 @@ import (
 	"net/http"
 
 	"github.com/EmissarySocial/emissary/server"
-	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/turbine/queue"
 	"github.com/labstack/echo/v4"
 )
 
-func PostWebMention(fm *server.Factory) echo.HandlerFunc {
+func PostWebMention(serverFactory *server.Factory) echo.HandlerFunc {
 
 	const location = "handler.PostWebMention"
 
 	return func(ctx echo.Context) error {
 
-		// Try to collect the form data
+		// This will receive form POST data from the webmention endpoint
 		body := struct {
 			Source string `form:"source"`
 			Target string `form:"target"`
 		}{}
 
+		// Try to collect form data into the body struct
 		if err := ctx.Bind(&body); err != nil {
 			return derp.Wrap(err, location, "Invalid form data")
 		}
 
-		// Try to locate the requested domain
-		factory, err := fm.ByContext(ctx)
+		// Prepare a task to process the webmention asynchronously
+		task := queue.NewTask("ReceiveWebMention", mapof.Any{
+			"source": body.Source,
+			"target": body.Target,
+		})
 
-		if err != nil {
-			return derp.Wrap(err, location, "Unrecognized Domain")
+		// Push the new task onto the background queue.
+		if err := serverFactory.Queue().Publish(task); err != nil {
+			return derp.Wrap(err, location, "Error queuing task", task)
 		}
-
-		// Run the rest of the process asynchronously
-		factory.Queue().Push(
-			service.NewTaskReceiveWebMention(
-				factory.Stream(),
-				factory.Mention(),
-				factory.User(),
-				body.Source,
-				body.Target,
-			),
-		)
 
 		// Success!  Return 201/Accepted to indicate that this request has been queued (which is true)
 		return ctx.String(http.StatusAccepted, "Accepted")
