@@ -58,7 +58,6 @@ func main() {
 	fmt.Println("|_____|_| |_| |_|_|___/___/\\__,_|_|   \\__, |")
 	fmt.Println("                                      |___/ ")
 	fmt.Println("")
-	fmt.Println(os.Hostname())
 
 	go waitForSigInt()
 
@@ -68,6 +67,7 @@ func main() {
 
 	// Logging Configuration
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	log.Logger = log.Output(zerolog.ConsoleWriter{
 		Out:        os.Stderr,
 		NoColor:    true,

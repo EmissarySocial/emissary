@@ -17,11 +17,11 @@ func Load(args *CommandLineArgs) Storage {
 	switch args.Protocol {
 
 	case StorageTypeMongo:
-		log.Debug().Msg("Loading server config from MongoDB ")
+		log.Info().Msg("Loading server config from MongoDB ")
 		return NewMongoStorage(args)
 
 	case StorageTypeFile:
-		log.Debug().Msg("Loading server config from file: " + args.Location)
+		log.Info().Msg("Loading server config from file: " + args.Location)
 		return NewFileStorage(args)
 	}
 

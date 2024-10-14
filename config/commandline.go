@@ -34,20 +34,20 @@ func GetCommandLineArgs() CommandLineArgs {
 	if location != "" {
 
 		// Use command line argument for configuration
-		log.Debug().Msg("Locating configuration from command line argument.")
+		log.Info().Msg("Locating configuration from command line argument.")
 		source = ConfigSourceCommandLine
 
 	} else if env := os.Getenv("EMISSARY_CONFIG"); env != "" {
 
 		// Look for the configuration location in the environment
-		log.Debug().Msg("Locating configuration from environment variable.")
+		log.Info().Msg("Locating configuration from environment variable.")
 		source = ConfigSourceEnvironment
 		location = env
 
 	} else {
 
 		// Fall through to using default location (file in local directory)
-		log.Debug().Msg("No configuration specified. Using default location: `file://./config.json`")
+		log.Info().Msg("No configuration specified. Using default location: `file://./config.json`")
 		location = "file://./config.json"
 		source = ConfigSourceDefault
 	}
