@@ -264,7 +264,7 @@ func (factory *Factory) refreshDomain(config config.Config, domainConfig config.
 	return nil
 }
 
-// refreshCommonDatabase updates the connection to the ActivityStream cache
+// refreshCommonDatabase updates the connection to the common database
 func (factory *Factory) refreshCommonDatabase(connection mapof.String) error {
 
 	// Collect arguments from the connection config
@@ -273,16 +273,10 @@ func (factory *Factory) refreshCommonDatabase(connection mapof.String) error {
 
 	// ActivityStream cache is not configured.
 	if uri == "" || database == "" {
-		return derp.NewInternalError("server.Factory.RefreshActivityService", "ActivityStream cache is not configured")
+		return derp.NewInternalError("server.Factory.RefreshActivityService", "Common database is not configured")
 	}
 
-	// If there is already a cache connection in place,
-	// then close it before we open a new one
-	if factory.commonDatabase != nil {
-		if err := factory.commonDatabase.Client().Disconnect(context.Background()); err != nil {
-			return derp.Wrap(err, "server.Factory.RefreshActivityService", "Error disconnecting from database")
-		}
-	}
+	oldConnection := factory.commonDatabase
 
 	// Try to connect to the cache database
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(uri))
@@ -292,6 +286,15 @@ func (factory *Factory) refreshCommonDatabase(connection mapof.String) error {
 	}
 
 	factory.commonDatabase = client.Database(database)
+
+	// If there is already a cache connection in place,
+	// then close it before we open a new one
+	if oldConnection != nil {
+		if err := oldConnection.Client().Disconnect(context.Background()); err != nil {
+			derp.Report(derp.Wrap(err, "server.Factory.RefreshActivityService", "Error disconnecting from database"))
+		}
+	}
+
 	return nil
 }
 
