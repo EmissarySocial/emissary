@@ -6,6 +6,7 @@ import (
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/domain"
+	"github.com/benpate/exp"
 	"github.com/labstack/echo/v4"
 )
 
@@ -57,6 +58,9 @@ func GetNodeInfo20(serverFactory *server.Factory) echo.HandlerFunc {
 			return derp.Wrap(err, "handler.GetNodeInfo20", "Error loading domain")
 		}
 
+		userService := factory.User()
+		userCount, _ := userService.Count(exp.All())
+
 		result := map[string]any{
 			"version": "2.0",
 			"software": map[string]any{
@@ -71,7 +75,7 @@ func GetNodeInfo20(serverFactory *server.Factory) echo.HandlerFunc {
 			"openRegistrations": domain.HasRegistrationForm(),
 			"usage": map[string]any{
 				"users": map[string]any{
-					"total":          0,
+					"total":          userCount,
 					"activeHalfYear": 0,
 					"activeMonth":    0,
 				},
@@ -109,6 +113,9 @@ func GetNodeInfo21(serverFactory *server.Factory) echo.HandlerFunc {
 			return derp.Wrap(err, "handler.GetNodeInfo20", "Error loading domain")
 		}
 
+		userService := factory.User()
+		userCount, _ := userService.Count(exp.All())
+
 		result := map[string]any{
 			"version": "2.1",
 			"software": map[string]any{
@@ -125,7 +132,7 @@ func GetNodeInfo21(serverFactory *server.Factory) echo.HandlerFunc {
 			"openRegistrations": domain.HasRegistrationForm(),
 			"usage": map[string]any{
 				"users": map[string]any{
-					"total":          0,
+					"total":          userCount,
 					"activeHalfYear": 0,
 					"activeMonth":    0,
 				},
