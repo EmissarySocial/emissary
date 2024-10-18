@@ -16,7 +16,7 @@
 	{{- end -}}
 
 	<form hx-post="/admin/users/{{.UserID}}/send-welcome" class="inline-block">
-		<button class="htmx-request-hide" type="submit">{{icon "email"}} Resend Welcome</button>
+		<button class="htmx-request-hide" type="submit">{{icon "email"}} Reset Password</button>
 		<button class="htmx-request-show" disabled><span class="spin">{{icon "loading"}}</span> Sending Welcome</button>
 	</form>
 

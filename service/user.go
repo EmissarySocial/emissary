@@ -186,11 +186,6 @@ func (service *User) Save(user *model.User, note string) error {
 		}
 	}
 
-	// RULE: If the user has not yet been sent their password, then try to send it now.
-	if user.PasswordReset.CreateDate == 0 {
-		service.SendWelcomeEmail(user)
-	}
-
 	// Send Webhooks (if configured)
 	if isNew {
 		service.webhookService.Send(model.WebhookEventUserCreate, user)
@@ -571,22 +566,6 @@ func (service *User) DeleteAvatar(user *model.User, note string) error {
 /******************************************
  * Email Methods
  ******************************************/
-
-// SendWelcomeEmail generates a new password reset code and sends a welcome email to a new user.
-// If there is a problem sending the email, then the new code is not saved.
-func (service *User) SendWelcomeEmail(user *model.User) {
-
-	if err := service.MakeNewPasswordResetCode(user); err != nil {
-		derp.Report(derp.Wrap(err, "service.User.SendWelcomeEmail", "Error making password reset", user))
-		return
-	}
-
-	// Try to send the welcome email.  If it fails, then don't save the new password reset code.
-	if err := service.emailService.SendWelcome(user); err != nil {
-		derp.Report(derp.Wrap(err, "service.User.SendWelcomeEmail", "Error sending welcome email", user))
-		return
-	}
-}
 
 // SendPasswordResetEmail generates a new password reset code and sends a welcome email to a new user.
 // If there is a problem sending the email, then the new code is not saved.

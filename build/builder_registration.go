@@ -110,6 +110,10 @@ func (w Registration) IconURL() string {
 	return w._domain.IconURL()
 }
 
+func (w Registration) DomainData() mapof.String {
+	return w._domain.RegistrationData
+}
+
 func (w Registration) object() data.Object {
 	return &w._user
 }

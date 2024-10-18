@@ -3,6 +3,7 @@ package build
 import (
 	"io"
 
+	"github.com/EmissarySocial/emissary/tools/random"
 	"github.com/benpate/derp"
 	"github.com/benpate/html"
 	"github.com/benpate/rosetta/mapof"
@@ -127,6 +128,11 @@ func (step StepEditRegistration) Post(builder Builder, _ io.Writer) PipelineBeha
 	data := mapof.NewString()
 	if err := registration.Schema.SetAll(&data, inputs); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error updating domain object form"))
+	}
+
+	if data.GetString("secret") == "" {
+		secret, _ := random.GenerateString(32)
+		data["secret"] = secret
 	}
 
 	// Apply the new values to the domain object

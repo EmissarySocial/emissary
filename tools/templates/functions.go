@@ -19,6 +19,7 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/extension"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/EmissarySocial/emissary/tools/tinyDate"
 	"github.com/benpate/icon"
@@ -333,6 +334,10 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 			}
 			result := strings.ReplaceAll(text, search, `<b class="highlight">`+search+"</b>")
 			return template.HTML(result)
+		},
+
+		"newObjectId": func() string {
+			return primitive.NewObjectID().Hex()
 		},
 	}
 }

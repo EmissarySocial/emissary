@@ -28,26 +28,44 @@
 
 				<h1>{{.RegistrationData "title"}}</h1>
 
-				<div class="layout-vertical margin-bottom-lg">
+				<div class="margin-bottom-xl">{{.RegistrationData "description" | markdown }}</div>
 
-					<div class="margin-bottom-xl">{{.RegistrationData "description" | markdown }}</div>
+				{{- if ne "" $message -}}
+					<div class="margin-bottom">{{$message}}</div>
+				{{- end -}}
 
-					{{- if ne "" $message -}}
-						<div class="margin-bottom">{{$message}}</div>
-					{{- end -}}
+				<div id="layout" class="layout-vertical margin-bottom-lg" style="display:none;" script="on load show me">
+
+					<!-- Honeypot field -->
+					<div class="layout-vertical-elements" script="on load hide me">
+						<div class="layout-vertical-element">
+							<label for="displayName">Full Name</label>
+							<input type="text" name="fullName" id="fullName" maxlength="50" autocomplete="off" data-1p-ignore>
+							<div role="note" class="text-sm gray40">Your full name.</div>
+						</div>
+					</div>
 
 					<div class="layout-vertical-elements">
 						<div class="layout-vertical-element">
 							<label for="displayName">Your Name</label>
-							<input type="text" name="displayName" id="displayName" required="true" maxlength="50" autocomplete="name">
+							<input type="text" name="displayName" id="displayName" required="true" maxlength="50" autocomplete="off" data-1p-ignore>
 							<div role="note" class="text-sm gray40">Displayed on your profile page.</div>
+						</div>
+					</div>
+
+					<!-- Honeypot field -->
+					<div class="layout-vertical-elements" data-script="on load hide me">
+						<div class="layout-vertical-element">
+							<label for="displayName">Phone Number</label>
+							<input type="text" name="phoneNumber" id="fullName" maxlength="50" autocomplete="off" data-1p-ignore>
+							<div role="note" class="text-sm gray40">A phone number where we can reach you.</div>
 						</div>
 					</div>
 
 					<div class="layout-vertical-elements">
 						<div class="layout-vertical-element">
 							<label for="emailAddress">Email Address</label>
-							<input type="email" name="emailAddress" id="emailAddress" required="true" maxlength="50" autocomplete="email">
+							<input type="email" name="emailAddress" id="emailAddress" required="true" maxlength="50">
 							<div role="note" class="text-sm gray40">An email address where you can receive messages. Hidden from others.</div>
 						</div>
 					</div>
@@ -55,8 +73,17 @@
 					<div class="layout-vertical-elements">
 						<div class="layout-vertical-element">
 							<label for="username">Username</label>
-							<input type="text" name="username" id="username" required="true" maxlength="50" autocomplete="username">
+							<input type="text" name="username" id="username" required="true" maxlength="50" autocomplete="off" data-1p-ignore  hx-get="/register/secret" hx-trigger="focus" hx-target="#layout" hx-swap="afterbegin">
 							<div role="note" class="text-sm gray40">Displayed on your profile page. How others will reach you.</div>
+						</div>
+					</div>
+
+					<!-- Honeypot field -->
+					<div class="layout-vertical-elements" script="on load hide me">
+						<div class="layout-vertical-element">
+							<label for="displayName">Country</label>
+							<input type="text" name="country" id="country" maxlength="50" autocomplete="off" data-1p-ignore>
+							<div role="note" class="text-sm gray40">Displayed on your profile page.</div>
 						</div>
 					</div>
 
@@ -81,13 +108,13 @@
 						<span class="spin">{{icon "loading"}}</span> Registering
 					</button>
 
-					<button id="submitButton" type="submit" class="primary htmx-request-hide" tabindex="0">
+					<button type="submit" id="submitButton" class="primary htmx-request-hide" tabindex="0">
 						Register Now
 					</button>
 
 					<a href="/" class="button">Cancel</a>
 
-					<span id="message" class="text-red" hidden></span>
+					<span id="htmx-response-message" class="text-red"></span>
 
 					<div class="margin-top-xl">
 						Already have a profile?

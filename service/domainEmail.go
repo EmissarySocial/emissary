@@ -5,15 +5,17 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/steranko"
 )
 
 type DomainEmail struct {
-	serverEmail   *ServerEmail
-	domainService *Domain
-	smtp          config.SMTPConnection
-	owner         config.Owner
-	label         string
-	hostname      string
+	serverEmail     *ServerEmail
+	domainService   *Domain
+	sterankoService *steranko.Steranko
+	smtp            config.SMTPConnection
+	owner           config.Owner
+	label           string
+	hostname        string
 }
 
 func NewDomainEmail(serverEmail *ServerEmail) DomainEmail {
@@ -26,8 +28,9 @@ func NewDomainEmail(serverEmail *ServerEmail) DomainEmail {
  * Lifecycle Methods
  ******************************************/
 
-func (service *DomainEmail) Refresh(configuration config.Domain, domainService *Domain) {
+func (service *DomainEmail) Refresh(configuration config.Domain, domainService *Domain, sterankoService *steranko.Steranko) {
 	service.domainService = domainService
+	service.sterankoService = sterankoService
 	service.smtp = configuration.SMTPConnection
 	service.owner = configuration.Owner
 	service.label = configuration.Label
@@ -40,24 +43,32 @@ func (service *DomainEmail) Refresh(configuration config.Domain, domainService *
 
 // SendWelcome sends a welcome email to the user.  This method
 // returns an error so that it CAN NOT be run asynchronously.
-func (service *DomainEmail) SendWelcome(user *model.User) error {
+func (service *DomainEmail) SendWelcome(txn model.RegistrationTxn) error {
 
+	const location = "service.DomainEmail.SendWelcome"
+
+	// Create a JWT with the registration information, and populate it into the Token
+	token, err := service.sterankoService.CreateJWT(txn.Claims())
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error creating JWT")
+	}
+
+	// Get the domain information from the DomainService
 	domain := service.domainService.Get()
 
 	// Send the welcome email
-	err := service.serverEmail.Send(
+	err = service.serverEmail.Send(
 		service.smtp,
 		service.owner,
 		"user-welcome",
 		"User",
 		mapof.Any{
 			// User info available to the template
-			"UserID":     user.UserID.Hex(),
-			"Username":   user.Username,
-			"Name":       user.DisplayName,
-			"Email":      user.EmailAddress,
-			"ResetCode":  user.PasswordReset.AuthCode,
-			"ExpireDate": user.PasswordReset.ExpireDate,
+			"Username": txn.Username,
+			"Name":     txn.DisplayName,
+			"Email":    txn.EmailAddress,
+			"Token":    token,
 
 			// Domain info available to the template
 			"Domain_Owner": service.owner,
@@ -68,9 +79,10 @@ func (service *DomainEmail) SendWelcome(user *model.User) error {
 	)
 
 	if err != nil {
-		return derp.Wrap(err, "service.DomainEmail.SendWelcome", "Error sending welcome email to user", user.EmailAddress)
+		return derp.Wrap(err, "service.DomainEmail.SendWelcome", "Error sending welcome email to user", txn.EmailAddress)
 	}
 
+	// Woot!
 	return nil
 }
 

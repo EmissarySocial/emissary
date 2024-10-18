@@ -119,3 +119,12 @@ func firstOf[T comparable](values ...T) T {
 	// Boo, hisss...
 	return empty
 }
+
+func inlineError(ctx echo.Context, errorMessage string) error {
+
+	header := ctx.Response().Header()
+	header.Set("Hx-Reswap", "innerHTML")
+	header.Set("Hx-Retarget", "#htmx-response-message")
+
+	return ctx.String(http.StatusOK, errorMessage)
+}

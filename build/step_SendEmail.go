@@ -32,10 +32,7 @@ func (step StepSendEmail) Post(builder Builder, _ io.Writer) PipelineBehavior {
 	// Send the designated email
 	switch step.Email {
 
-	case "welcome":
-		userService.SendWelcomeEmail(userBuilder._user)
-
-	case "password-reset":
+	case "welcome", "password-reset":
 		userService.SendPasswordResetEmail(userBuilder._user)
 
 	default:

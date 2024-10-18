@@ -12,6 +12,7 @@ import (
 	"github.com/benpate/form"
 	"github.com/hjson/hjson-go/v4"
 	"github.com/rs/zerolog/log"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Registration service manages new user registrations
@@ -116,6 +117,33 @@ func (service *Registration) Load(registrationID string) (model.Registration, er
  * User Registration
  ******************************************/
 
+func (service *Registration) Validate(userService *User, domain *model.Domain, txn model.RegistrationTxn) error {
+
+	const location = "service.Registration.Validate"
+
+	// Validate basic transaction values (name, email, username, userID, secret)
+	if secret := domain.RegistrationData.GetString("secret"); txn.IsInvalid(secret) {
+		return derp.NewBadRequestError(location, "Invalid Registration. Please sign up again.", txn)
+	}
+
+	user := model.NewUser()
+
+	// UserID must not already exist in the database
+	if userID, err := primitive.ObjectIDFromHex(txn.UserID); err != nil {
+		return derp.NewBadRequestError(location, "Invalid UserID", txn.UserID)
+	} else if err := userService.LoadByID(userID, &user); !derp.NotFound(err) {
+		return derp.NewBadRequestError(location, "UserID already exists. Please sign up again.")
+	}
+
+	// Username must not already exist in the database
+	if err := userService.LoadByUsername(txn.Username, &user); !derp.NotFound(err) {
+		return derp.NewBadRequestError(location, "Username taken. Please choose again.")
+	}
+
+	// This transaction appears to be valid.
+	return nil
+}
+
 func (service *Registration) Register(groupService *Group, userService *User, domain *model.Domain, txn model.RegistrationTxn) (model.User, error) {
 
 	const location = "service.Registration.Register"
@@ -131,9 +159,9 @@ func (service *Registration) Register(groupService *Group, userService *User, do
 		return model.User{}, derp.NewNotFoundError(location, "Registration not found")
 	}
 
-	// Validate the Transaction
-	if secret := domain.RegistrationData.GetString("secret"); txn.IsInvalid(secret) {
-		return model.User{}, derp.NewBadRequestError(location, "Invalid Registration Transaction", txn)
+	// Validate the transaction
+	if err := service.Validate(userService, domain, txn); err != nil {
+		return model.User{}, derp.Wrap(err, location, "Invalid Registration Transaction")
 	}
 
 	// Copy Transaction data into a new User object

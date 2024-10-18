@@ -240,7 +240,9 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/signin", handler.PostSignIn(factory))
 	e.POST("/signout", handler.PostSignOut(factory))
 	e.GET("/register", handler.WithRegistration(factory, handler.GetRegister))
+	e.GET("/register/:action", handler.WithRegistration(factory, handler.GetRegister))
 	e.POST("/register", handler.WithRegistration(factory, handler.PostRegister))
+	e.GET("/register/complete", handler.WithRegistration(factory, handler.GetCompleteRegistration))
 	e.POST("/register/update", handler.WithRegistration(factory, handler.PostRegister))
 	e.GET("/signin/reset", handler.GetResetPassword(factory))
 	e.POST("/signin/reset", handler.PostResetPassword(factory))
@@ -341,6 +343,10 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 
 	// Mastodon API
 	toot.Register(e, handler.Mastodon(factory))
+
+	// Blocked Routes
+	e.Any("/wp-admin", handler.Blocked)
+	e.Any("/wp-admin/*", handler.Blocked)
 }
 
 /******************************************

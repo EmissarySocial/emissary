@@ -399,6 +399,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 	factory.emailService.Refresh(
 		domain,
 		factory.Domain(),
+		factory.Steranko(),
 	)
 
 	if err := factory.domainService.Start(); err != nil {

@@ -28,7 +28,7 @@
 						<td>{{.EmailAddress}}</td>
 						<td>{{.Username}}</td>
 						<td nowrap>
-							<button type="button" hx-post="/domains/{{$domainID}}/users/{{.UserID.Hex}}/invite" hx-swap="none" title="Resend Welcome Email">
+							<button type="button" hx-post="/domains/{{$domainID}}/users/{{.UserID.Hex}}/invite" hx-swap="none" title="Reset Password">
 								<span class="htmx-request-hide">{{icon "loading"}}</span>
 								<span class="htmx-request-show spin">{{icon "loading"}}</span>
 							</button>
