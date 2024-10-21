@@ -154,6 +154,13 @@ func buildOutbox(serverFactory *server.Factory, actionMethod build.ActionMethod)
 			return activitypub.RenderProfileJSONLD(context, factory, &user)
 		}
 
+		// If we've loaded the User by userID, then replace the URL to use the username instead
+		if userIDHex := user.UserID.Hex(); userIDHex == username {
+			if userIDHex != user.Username {
+				context.Response().Header().Set("Hx-Replace-Url", "/@"+user.Username+"/"+context.Param("action"))
+			}
+		}
+
 		// Try to load the User's Outbox
 		actionID := first.String(context.Param("action"), "view")
 
