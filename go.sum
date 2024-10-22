@@ -47,8 +47,8 @@ github.com/benpate/exp-builder v0.8.2 h1:ocH0v43rBXsgydUNWNc2DxBcu+Cq9Enm0OesVL5
 github.com/benpate/exp-builder v0.8.2/go.mod h1:NLhpQraXutDpCfgbGZTasUD3tJ/NPcTKcBS99wINZN4=
 github.com/benpate/form v0.22.7 h1:6I2JLG8EWWySeBYB/2dhZ0RS5v0J0aYrRjDsjAyTGZE=
 github.com/benpate/form v0.22.7/go.mod h1:U8L1uJYhSiJPa1YzKoS8epGFEZZculgMpf+oRClUxG8=
-github.com/benpate/hannibal v0.11.20 h1:NTE/R8cwZd/35X63SJiehOQ4i6B4QPWAsARDCoAclno=
-github.com/benpate/hannibal v0.11.20/go.mod h1:KWefSosCnYyhpruOaW0q6kYM0Uk2zGAP5kB/utaebrE=
+github.com/benpate/hannibal v0.11.21 h1:0uTW3vqAQ26iitkC2um9J/RQ6ARPdnklAugqAv6TpsY=
+github.com/benpate/hannibal v0.11.21/go.mod h1:arqQOuhmClxM83Pdm1djQlmiufewSY1ZCclF+vba9Ik=
 github.com/benpate/html v0.16.11 h1:4SNzQdgVSHr6FfV95e7Ek3ELdqLZoyzCpUSd91KmwBA=
 github.com/benpate/html v0.16.11/go.mod h1:ET6LJ0RPp0WYnvIMctZGNbHMGylobGO7i7SWROKC5eE=
 github.com/benpate/icon v0.4.0 h1:HWOMaYwxPsLb3OPX02+j05FwCq376rcAfeGG1kfDXyc=
@@ -57,8 +57,8 @@ github.com/benpate/mediaserver v0.12.1 h1:+mfBYrcH+Wn/UJRPSRM+qn3j1Wq5r59lKWoejE
 github.com/benpate/mediaserver v0.12.1/go.mod h1:xPLmoeBEvtuPFD8++QP4FKaWccZEika6hw009FvZj1M=
 github.com/benpate/re v0.3.1 h1:lslTuVnhqc3f0BTuOFZwcOztjRRr9U9RxPOfwZ+41Zk=
 github.com/benpate/re v0.3.1/go.mod h1:ifBw3C5csNXrciDF+j6XdRJTiUrMHbKk9/MjM07dMcM=
-github.com/benpate/remote v0.16.6 h1:6M9CegRTb0DZX9gmkydh0SnTyl/JEcPg9zJtmgkXX30=
-github.com/benpate/remote v0.16.6/go.mod h1:UA8Q9HHDSeu7Jk1+sDUmwWOs6Yt7slIGI+XICzfqkVg=
+github.com/benpate/remote v0.16.7 h1:7Kj70Va2bPmJgoDk88c800k/Z3fZHxCs4DkDMP4PbOY=
+github.com/benpate/remote v0.16.7/go.mod h1:UA8Q9HHDSeu7Jk1+sDUmwWOs6Yt7slIGI+XICzfqkVg=
 github.com/benpate/rosetta v0.22.2 h1:eZe8FezeoRpuY2IocSVZjjuPzhM10tM+zV5RpvnEzZs=
 github.com/benpate/rosetta v0.22.2/go.mod h1:xH4gwL4OANy3PiaRq/ED4R9tU3oZ9atvH/nBzVLIfBg=
 github.com/benpate/sherlock v0.8.8 h1:7R2Ae/8MN+f8uKeeQ6PqyuDAQCJ3yntDBz5iFLgaasY=
