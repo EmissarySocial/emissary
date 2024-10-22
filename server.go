@@ -31,7 +31,6 @@ import (
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/steranko"
-	toot "github.com/benpate/toot-echo"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -342,7 +341,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/oauth/revoke", handler.PostOAuthRevoke(factory))
 
 	// Mastodon API
-	toot.Register(e, handler.Mastodon(factory))
+	// toot.Register(e, handler.Mastodon(factory))
 
 	// Blocked Routes
 	e.Any("/wp-admin", handler.Blocked)
