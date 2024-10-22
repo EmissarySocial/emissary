@@ -51,30 +51,6 @@ func (service *Stream) ExportZip(writer *zip.Writer, stream *model.Stream, prefi
 		}
 	}
 
-	/* EXPORT A YAML FILE
-	{
-		filenameJSON := filename.PushTail("yaml")
-
-		// Create a file in the ZIP archive
-		fileWriter, err := writer.Create(filenameJSON.String())
-
-		if err != nil {
-			return derp.Wrap(err, location, "Error creating YAML file")
-		}
-
-		// Marshal the Stream data into YAML
-		streamYAML, err := yaml.Marshal(streamData)
-
-		if err != nil {
-			return derp.Wrap(err, location, "Error marshalling YAML")
-		}
-
-		// Write the JSON-LD to the file
-		if _, err := fileWriter.Write(streamYAML); err != nil {
-			return derp.Wrap(err, location, "Error writing YAML file")
-		}
-	}*/
-
 	// Export attachments, if requested
 	if withAttachments {
 
