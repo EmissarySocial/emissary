@@ -151,7 +151,7 @@ func (service *Stream) ActivityPubActor(streamID primitive.ObjectID, withFollowe
 	}
 
 	// Return the ActivityPub Actor
-	actor := outbox.NewActor(service.ActivityPubURL(streamID), privateKey, outbox.WithClient(service.activityStream), outbox.WithQueue(service.queue))
+	actor := outbox.NewActor(service.ActivityPubURL(streamID), privateKey, outbox.WithClient(service.activityStream)) // TODO: Restore Queue:: , outbox.WithQueue(service.queue))
 
 	// Populate the Actor's ActivityPub Followers, if requested
 	if withFollowers {
