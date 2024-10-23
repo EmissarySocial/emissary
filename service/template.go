@@ -233,7 +233,7 @@ func (service *Template) Add(templateID string, filesystem fs.FS, definition []b
 
 	const location = "service.template.Add"
 
-	log.Trace().Msg("Template Service: adding " + templateID)
+	log.Debug().Msg("Template Service: adding " + templateID)
 
 	template := model.NewTemplate(templateID, service.funcMap)
 
