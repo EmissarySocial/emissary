@@ -62,7 +62,7 @@ func (service *ServerEmail) Add(filesystem fs.FS, definition []byte) error {
 	}
 
 	email := model.NewEmail(temp.GetString("emailId"), service.funcMap)
-	log.Trace().Msg("Email Service: adding " + email.EmailID)
+	log.Debug().Msg("Email Service: adding " + email.EmailID)
 
 	// Read simple properties
 	email.EmailRole = temp.GetString("emailRole")

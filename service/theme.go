@@ -110,6 +110,8 @@ func (service *Theme) Add(themeID string, filesystem fs.FS, definition []byte) e
 
 	const location = "service.Theme.loadModel"
 
+	log.Debug().Msg("Theme Service: adding theme: " + themeID)
+
 	theme := model.NewTheme(themeID, service.funcMap)
 
 	// Try to parse the JSON in the buffer into a Theme object

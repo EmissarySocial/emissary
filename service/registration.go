@@ -39,7 +39,7 @@ func (service *Registration) Add(registrationID string, filesystem fs.FS, defini
 
 	const location = "service.registration.Add"
 
-	log.Trace().Msg("Registration Service: adding registration: " + registrationID)
+	log.Debug().Msg("Registration Service: adding registration: " + registrationID)
 
 	registration := model.NewRegistration(registrationID, service.funcMap)
 

@@ -35,7 +35,7 @@ func (service *Widget) Add(widgetID string, filesystem fs.FS, definition []byte)
 
 	const location = "service.widget.Add"
 
-	log.Trace().Msg("Widget Service: adding widget: " + widgetID)
+	log.Debug().Msg("Widget Service: adding widget: " + widgetID)
 
 	widget := model.NewWidget(widgetID, service.funcMap)
 
