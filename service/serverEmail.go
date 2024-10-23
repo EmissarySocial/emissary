@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"html/template"
 	"io/fs"
+	"maps"
 	"strings"
 
 	"github.com/EmissarySocial/emissary/config"
@@ -127,7 +128,7 @@ func (service *ServerEmail) Send(smtpConnection config.SMTPConnection, owner con
 	email, exists := service.emails[emailID]
 
 	if !exists {
-		return derp.NewBadRequestError(location, "Email is not defined", emailID)
+		return derp.NewBadRequestError(location, "Email is not defined", emailID, maps.Keys(service.emails))
 	}
 
 	// "Model" must be set
