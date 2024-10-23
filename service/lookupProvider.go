@@ -4,6 +4,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/dataset"
 	"github.com/benpate/form"
+	"github.com/benpate/rosetta/list"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -101,8 +102,24 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 
 	case "signup-templates":
 		return form.ReadOnlyLookupGroup(service.registrationService.List())
-
-	default:
-		return form.NewReadOnlyLookupGroup()
 	}
+
+	// If we've fallen through to here, then look for a template-based dataset
+	p := list.ByDot(path)
+
+	// first value is the template name.  If this matches a known template, then continue
+	templateName, tail := p.Split()
+	if template, err := service.templateService.Load(templateName); err == nil {
+
+		// second element is the name of the dataset
+		datasetName := tail.First()
+
+		if dataset, exists := template.Datasets[datasetName]; exists {
+			return dataset // UwU
+		}
+	}
+
+	// Fall through means one or more of the above tests failed.
+	// We couldn't find the template or dataset, so just return an empty group.
+	return form.NewReadOnlyLookupGroup()
 }

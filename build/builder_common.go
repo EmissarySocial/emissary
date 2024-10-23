@@ -361,10 +361,32 @@ func (w Common) GetFollowingID(url string) string {
 	return result
 }
 
+// lookupProvider returns the LookupProvider service, which can return form.LookupGroups
 func (w Common) lookupProvider() form.LookupProvider {
 
 	userID := w.AuthenticatedID()
 	return w._factory.LookupProvider(userID)
+}
+
+// Dataset returns a single form.LookupGroup from the LookupProvider
+func (w Common) Dataset(name string) form.LookupGroup {
+	return w.lookupProvider().Group(name)
+}
+
+// DatasetValue returns a single form.LookupCode from the LookupProvider
+func (w Common) DatasetValue(name string, value string) form.LookupCode {
+
+	dataset := w.Dataset(name)
+
+	if dataset != nil {
+		for _, item := range dataset.Get() {
+			if item.Value == value {
+				return item
+			}
+		}
+	}
+
+	return form.LookupCode{}
 }
 
 // withViewPermission augments a query criteria to include the
