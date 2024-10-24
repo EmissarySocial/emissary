@@ -18,7 +18,8 @@
 						{type:"text", path:"trigger", label:"Trigger Text"}
 						{type:"select", path:"action", label:"Action", options:{provider:"rule-actions"}}
 					]
-				}}
+				}},
+				{do:"save"}
 			]}
 			{do:"trigger-event", event:"refreshPage"}
 		]}
@@ -35,6 +36,7 @@
 						]
 					}, options:[delete:/admin/rules/{{.RuleID}}/delete"]}
 				]}
+				{do:"save"}
 				{do:"trigger-event", event:"refreshPage"}
 			]}
 		]}
