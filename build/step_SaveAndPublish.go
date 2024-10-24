@@ -7,19 +7,19 @@ import (
 	"github.com/benpate/derp"
 )
 
-// StepPublish represents an action-step that can update a stream's PublishDate with the current time.
-type StepPublish struct {
+// StepSaveAndPublish represents an action-step that can update a stream's PublishDate with the current time.
+type StepSaveAndPublish struct {
 	Outbox bool
 }
 
-func (step StepPublish) Get(builder Builder, _ io.Writer) PipelineBehavior {
+func (step StepSaveAndPublish) Get(builder Builder, _ io.Writer) PipelineBehavior {
 	return nil
 }
 
 // Post updates the stream with the current date as the "PublishDate"
-func (step StepPublish) Post(builder Builder, _ io.Writer) PipelineBehavior {
+func (step StepSaveAndPublish) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
-	const location = "build.StepPublish.Post"
+	const location = "build.StepSaveAndPublish.Post"
 
 	streamBuilder := builder.(*Stream)
 	factory := streamBuilder.factory()

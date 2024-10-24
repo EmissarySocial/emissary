@@ -116,8 +116,8 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "promote-draft":
 		return NewStreamPromoteDraft(stepInfo)
 
-	case "publish":
-		return NewPublish(stepInfo)
+	case "save-and-publish":
+		return NewSaveAndPublish(stepInfo)
 
 	case "redirect-to":
 		return NewRedirectTo(stepInfo)

@@ -46,8 +46,7 @@
 					data.format:"TABLE"
 					}
 				}
-				{do:"save"}
-				{do:"publish", outbox:true}
+				{do:"save-and-publish", outbox:true}
 				{do:"forward-to", url:"/{{.StreamID}}"}
 			]
 		}
@@ -76,8 +75,7 @@
 								]
 							}
 						}, 
-						{do:"save", comment:"Updated Folder"}
-						{do:"publish", outbox:true}
+						{do:"save-and-publish", outbox:true}
 					]
 				}
 				{do:"refresh-page"}
