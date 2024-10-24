@@ -91,6 +91,9 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream, outbox bo
 		return derp.Wrap(err, location, "Error publishing to parent Stream's outbox")
 	}
 
+	// Send stream:publish Webhook to all subscribers
+	service.webhookService.Send(stream, model.WebhookEventStreamPublish)
+
 	return nil
 }
 
@@ -206,6 +209,9 @@ func (service *Stream) UnPublish(user *model.User, stream *model.Stream, outbox 
 	if err := service.unpublish_Stream(stream); err != nil {
 		return derp.Wrap(err, location, "Error unpublishing from User's outbox", stream)
 	}
+
+	// Send stream:unpublish Webhook to all subscribers
+	service.webhookService.Send(stream, model.WebhookEventStreamUnpublish)
 
 	// Done.
 	return nil

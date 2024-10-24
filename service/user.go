@@ -188,9 +188,9 @@ func (service *User) Save(user *model.User, note string) error {
 
 	// Send Webhooks (if configured)
 	if isNew {
-		service.webhookService.Send(model.WebhookEventUserCreate, user)
+		service.webhookService.Send(user, model.WebhookEventUserCreate)
 	} else {
-		service.webhookService.Send(model.WebhookEventUserUpdate, user)
+		service.webhookService.Send(user, model.WebhookEventUserUpdate)
 	}
 
 	// Success!
@@ -229,7 +229,7 @@ func (service *User) Delete(user *model.User, note string) error {
 	}
 
 	// Send user:delete webhooks
-	service.webhookService.Send(model.WebhookEventUserDelete, user)
+	service.webhookService.Send(user, model.WebhookEventUserDelete)
 
 	return nil
 }

@@ -9,9 +9,18 @@ func WebhookSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
 			"webhookId": schema.String{Format: "objectID"},
-			"events":    schema.Array{Items: schema.String{Enum: []string{WebhookEventUserCreate, WebhookEventUserUpdate, WebhookEventUserDelete}}},
 			"label":     schema.String{},
 			"targetUrl": schema.String{Format: "url"},
+			"events": schema.Array{Items: schema.String{Enum: []string{
+				WebhookEventStreamCreate,
+				WebhookEventStreamUpdate,
+				WebhookEventStreamDelete,
+				WebhookEventUserCreate,
+				WebhookEventUserUpdate,
+				WebhookEventUserDelete,
+				WebhookEventStreamPublish,
+				WebhookEventStreamUnpublish,
+			}}},
 		},
 	}
 }

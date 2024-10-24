@@ -348,6 +348,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.Follower(),
 			factory.Rule(),
 			factory.User(),
+			factory.Webhook(),
 			factory.MediaServer(),
 			factory.Queue(),
 			factory.Host(),
@@ -384,6 +385,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		// Populate Webhook Service
 		factory.webhookService.Refresh(
 			factory.collection(CollectionWebhook),
+			factory.Queue(),
 		)
 
 		// Watch for updates to streams

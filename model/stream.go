@@ -452,3 +452,28 @@ func (stream *Stream) ActorLink() PersonLink {
 		IconURL:    stream.IconURL,
 	}
 }
+
+/******************************************
+ * Webhook Interface
+ ******************************************/
+
+// GetWebhookData returns the data for this
+// Stream that will be sent to a webhook
+func (stream Stream) GetWebhookData() mapof.Any {
+	return mapof.Any{
+		"streamId":     stream.StreamID.Hex(),
+		"url":          stream.URL,
+		"template":     stream.TemplateID,
+		"iconUrl":      stream.IconURL,
+		"label":        stream.Label,
+		"attributedTo": stream.AttributedTo,
+		"data":         stream.Data,
+		"isFeatured":   stream.IsFeatured,
+		"isSyndicated": stream.IsSyndicated,
+		"isPublished":  stream.IsPublished(),
+		"publishDate":  stream.PublishDate,
+		"createDate":   stream.CreateDate,
+		"updateDate":   stream.UpdateDate,
+		"deleteDate":   stream.DeleteDate,
+	}
+}

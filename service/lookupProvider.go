@@ -102,6 +102,18 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 
 	case "signup-templates":
 		return form.ReadOnlyLookupGroup(service.registrationService.List())
+
+	case "webhook-types":
+		return form.NewReadOnlyLookupGroup(
+			form.LookupCode{Label: "stream:create", Description: "Occurs when a Stream is first created", Value: "stream:create"},
+			form.LookupCode{Label: "stream:update", Description: "Occurs when a Stream is updated", Value: "stream:update"},
+			form.LookupCode{Label: "stream:delete", Description: "Occurs when a Stream is deleted", Value: "stream:delete"},
+			form.LookupCode{Label: "stream:publish", Description: "Occurs when a Stream is published", Value: "stream:publish"},
+			form.LookupCode{Label: "stream:unpublish", Description: "Occurs when a Stream is unpublished", Value: "stream:unpublish"},
+			form.LookupCode{Label: "user:create", Description: "Occurs when a User is first created", Value: "user:create"},
+			form.LookupCode{Label: "user:update", Description: "Occurs when a User is updated", Value: "user:update"},
+			form.LookupCode{Label: "user:delete", Description: "Occurs when a User is deleted", Value: "user:delete"},
+		)
 	}
 
 	// If we've fallen through to here, then look for a template-based dataset
