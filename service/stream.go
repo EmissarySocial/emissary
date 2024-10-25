@@ -201,7 +201,9 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 		return derp.Wrap(err, location, "Invalid Template", stream.TemplateID)
 	}
 
+	// Track changes to key status fields
 	wasNew := stream.IsNew()
+	wasSyndicated := stream.IsSyndicated
 
 	// Copy default values from the Template
 	stream.SocialRole = template.SocialRole
@@ -252,11 +254,21 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 		return derp.Wrap(err, location, "Error saving Stream", stream, note)
 	}
 
-	// Send Webhooks (if configured)
+	// Send stream:create and stream:update Webhooks
 	if wasNew {
 		service.webhookService.Send(stream, model.WebhookEventStreamCreate)
 	} else {
 		service.webhookService.Send(stream, model.WebhookEventStreamUpdate)
+	}
+
+	// If published, and syndication status has changed,
+	// then send stream:syndicate and stream:syndicate:undo Webhooks
+	if stream.IsPublished() && (wasSyndicated != stream.IsSyndicated) {
+		if stream.IsSyndicated {
+			service.webhookService.Send(stream, model.WebhookEventStreamSyndicate)
+		} else {
+			service.webhookService.Send(stream, model.WebhookEventStreamSyndicateUndo)
+		}
 	}
 
 	// NON-BLOCKING: Notify other processes on this server that the stream has been updated
@@ -285,6 +297,14 @@ func (service *Stream) Delete(stream *model.Stream, note string) error {
 
 		// Send Webhooks (if configured)
 		service.webhookService.Send(stream, model.WebhookEventStreamDelete)
+
+		if stream.IsPublished() {
+			service.webhookService.Send(stream, model.WebhookEventStreamPublishUndo)
+		}
+
+		if stream.IsSyndicated {
+			service.webhookService.Send(stream, model.WebhookEventStreamSyndicateUndo)
+		}
 
 		// RULE: Delete all related Children
 		if err := service.DeleteByParent(stream.StreamID, note); err != nil {

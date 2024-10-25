@@ -19,7 +19,9 @@ func WebhookSchema() schema.Element {
 				WebhookEventUserUpdate,
 				WebhookEventUserDelete,
 				WebhookEventStreamPublish,
-				WebhookEventStreamUnpublish,
+				WebhookEventStreamPublishUndo,
+				WebhookEventStreamSyndicate,
+				WebhookEventStreamSyndicateUndo,
 			}}},
 		},
 	}
