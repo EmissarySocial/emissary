@@ -56,6 +56,7 @@
 							]
 						}
 					}
+					{do: "save"}
 					{do: "refresh-page"}
 				]
 			}]
@@ -111,6 +112,7 @@
 								"delete:/admin/users/{{.UserID}}/delete"
 							]
 						},
+						{do:"save"}
 						{do:"refresh-page"}
 					]
 				}
@@ -118,24 +120,27 @@
 		}
 
 		edit-form: {
-			steps: [{
-				do: "edit"
-				form: {
-					type: "layout-vertical"
-					description: ""
-					children: [
-						{type: "text", label: "Full Name", path: "displayName"}
-						{type: "text", label: "Email Address", path: "emailAddress"}
-						{type: "text", label: "Username", path: "username"}
-						{type: "toggle", label: "Public?", path: "isPublic"}
-						{type: "multiselect", label: "Group(s)", path: "groupIds", options:{provider: "groups", sort:false}}
+			steps: [
+				{
+					do: "edit"
+					form: {
+						type: "layout-vertical"
+						description: ""
+						children: [
+							{type: "text", label: "Full Name", path: "displayName"}
+							{type: "text", label: "Email Address", path: "emailAddress"}
+							{type: "text", label: "Username", path: "username"}
+							{type: "toggle", label: "Public?", path: "isPublic"}
+							{type: "multiselect", label: "Group(s)", path: "groupIds", options:{provider: "groups", sort:false}}
+						]
+					}
+					options: [
+						"endpoint:/admin/users/{{.UserID}}/edit-form"
+						"delete:/admin/users/{{.UserID}}/delete"
 					]
 				}
-				options: [
-					"endpoint:/admin/users/{{.UserID}}/edit-form"
-					"delete:/admin/users/{{.UserID}}/delete"
-				]
-			}]
+				{do: "save"}
+			]
 		}
 
 		send-welcome: {

@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/null"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -37,6 +38,7 @@ func StreamSchema() schema.Element {
 			"unpublishDate":    schema.Integer{BitSize: 64},
 			"isPublished":      schema.Boolean{},
 			"isFeatured":       schema.Boolean{},
+			"isSyndicated":     schema.Boolean{},
 			"startTime":        schema.Integer{BitSize: 64},
 			"endTime":          schema.Integer{BitSize: 64},
 		},
@@ -140,6 +142,9 @@ func (stream *Stream) GetPointer(name string) (any, bool) {
 	case "isFeatured":
 		return &stream.IsFeatured, true
 
+	case "isSyndicated":
+		return &stream.IsSyndicated, true
+
 	case "startTime":
 		return &stream.StartTime, true
 
@@ -186,6 +191,12 @@ func (stream *Stream) GetStringOK(name string) (string, bool) {
 	case "parentId":
 		return stream.ParentID.Hex(), true
 
+	case "isSyndicated":
+		return convert.String(stream.IsSyndicated), true
+
+	case "isFeatured":
+		return convert.String(stream.IsFeatured), true
+
 	default:
 		return "", false
 	}
@@ -206,6 +217,14 @@ func (stream *Stream) SetString(name string, value string) bool {
 			stream.ParentID = objectID
 			return true
 		}
+
+	case "isSyndicated":
+		stream.IsSyndicated = convert.Bool(value)
+		return true
+
+	case "isFeatured":
+		stream.IsFeatured = convert.Bool(value)
+		return true
 	}
 
 	return false

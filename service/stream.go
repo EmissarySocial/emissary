@@ -40,6 +40,7 @@ type Stream struct {
 	followerService     *Follower
 	ruleService         *Rule
 	userService         *User
+	webhookService      *Webhook
 	host                string
 	mediaserver         mediaserver.MediaServer
 	queue               *queue.Queue
@@ -56,7 +57,7 @@ func NewStream() Stream {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Stream) Refresh(collection data.Collection, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, activityStream *ActivityStream, contentService *Content, keyService *EncryptionKey, followerService *Follower, ruleService *Rule, userService *User, mediaserver mediaserver.MediaServer, queue *queue.Queue, host string, streamUpdateChannel chan primitive.ObjectID) {
+func (service *Stream) Refresh(collection data.Collection, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, activityStream *ActivityStream, contentService *Content, keyService *EncryptionKey, followerService *Follower, ruleService *Rule, userService *User, webhookService *Webhook, mediaserver mediaserver.MediaServer, queue *queue.Queue, host string, streamUpdateChannel chan primitive.ObjectID) {
 	service.collection = collection
 	service.templateService = templateService
 	service.draftService = draftService
@@ -68,6 +69,7 @@ func (service *Stream) Refresh(collection data.Collection, templateService *Temp
 	service.followerService = followerService
 	service.ruleService = ruleService
 	service.userService = userService
+	service.webhookService = webhookService
 	service.mediaserver = mediaserver
 	service.queue = queue
 
@@ -199,6 +201,10 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 		return derp.Wrap(err, location, "Invalid Template", stream.TemplateID)
 	}
 
+	// Track changes to key status fields
+	wasNew := stream.IsNew()
+	wasSyndicated := stream.IsSyndicated
+
 	// Copy default values from the Template
 	stream.SocialRole = template.SocialRole
 	stream.URL = service.host + "/" + stream.StreamID.Hex()
@@ -248,6 +254,23 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 		return derp.Wrap(err, location, "Error saving Stream", stream, note)
 	}
 
+	// Send stream:create and stream:update Webhooks
+	if wasNew {
+		service.webhookService.Send(stream, model.WebhookEventStreamCreate)
+	} else {
+		service.webhookService.Send(stream, model.WebhookEventStreamUpdate)
+	}
+
+	// If published, and syndication status has changed,
+	// then send stream:syndicate and stream:syndicate:undo Webhooks
+	if stream.IsPublished() && (wasSyndicated != stream.IsSyndicated) {
+		if stream.IsSyndicated {
+			service.webhookService.Send(stream, model.WebhookEventStreamSyndicate)
+		} else {
+			service.webhookService.Send(stream, model.WebhookEventStreamSyndicateUndo)
+		}
+	}
+
 	// NON-BLOCKING: Notify other processes on this server that the stream has been updated
 	go func() {
 		// service.streamUpdateChannel <- stream.StreamID
@@ -271,6 +294,17 @@ func (service *Stream) Delete(stream *model.Stream, note string) error {
 
 	// Delete related records -- this can happen in the background
 	go func() {
+
+		// Send Webhooks (if configured)
+		service.webhookService.Send(stream, model.WebhookEventStreamDelete)
+
+		if stream.IsPublished() {
+			service.webhookService.Send(stream, model.WebhookEventStreamPublishUndo)
+		}
+
+		if stream.IsSyndicated {
+			service.webhookService.Send(stream, model.WebhookEventStreamSyndicateUndo)
+		}
 
 		// RULE: Delete all related Children
 		if err := service.DeleteByParent(stream.StreamID, note); err != nil {

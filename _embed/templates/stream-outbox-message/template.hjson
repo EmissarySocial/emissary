@@ -36,7 +36,7 @@
 				{do:"save"}
 				{do:"upload-attachments"}
 				{do:"set-thumbnail", path:"iconUrl"}
-				{do:"publish", outbox:true}
+				{do:"save-and-publish", outbox:true}
 			]
 		}
 		view: {
@@ -54,7 +54,7 @@
 					{do:"edit-content", file:"edit", format:"HTML"}
 					{do:"process-content"}
 					{do:"save"}
-					{do:"publish", outbox:true}
+					{do:"save-and-publish", outbox:true}
 					{do:"refresh-page"}
 				]}
 			]

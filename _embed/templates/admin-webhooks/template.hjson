@@ -18,14 +18,16 @@
 						type: user
 						form: {
 							label: Add a Webhook
+							description: Webhooks are a way to send data to other services when certain events happen on your website. For example, you could notify an external service every time a new user signs up, or when a new post is published.
 							type: layout-vertical
 							children: [
 								{type: "text", label: "Label", path: "label", description:"A friendly name to help you manage this webhook"}
 								{type: "text", label: "Target URL", path: "targetUrl", description:"The URL that will receive the webhook payload"}
-								{type: "multiselect", label: "Events", path: "events", description:"Choose which events will trigger this webhook"}
+								{type: "multiselect", label: "Events", path: "events", description:"Choose which events will trigger this webhook", options:{provider:"webhook-types"}}
 							]
 						}
 					}
+					{do: "save"}
 					{do: "refresh-page"}
 				]
 			}]
@@ -41,14 +43,16 @@
 							options:["delete:/admin/webhooks/{{.WebhookID}}/delete"]
 							form: {
 								label: Edit Webhook
+								description: Webhooks are a way to send data to other services when certain events happen on your website. For example, you could notify an external service every time a new user signs up, or when a new post is published.
 								type: layout-vertical
 								children: [
 									{type: "text", label: "Label", path: "label", description:"A friendly name to help you manage this webhook"}
 									{type: "text", label: "Target URL", path: "targetUrl", description:"The URL that will receive the webhook payload"}
-									{type: "multiselect", label: "Events", path: "events", description:"Choose which events will trigger this webhook"}
+									{type: "multiselect", label: "Events", path: "events", description:"Choose which events will trigger this webhook", options:{provider:"webhook-types"}}
 								]
 							}
 						},
+						{do:"save"}
 						{do:"refresh-page"}
 					]
 				}

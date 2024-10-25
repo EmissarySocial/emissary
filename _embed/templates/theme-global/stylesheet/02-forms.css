@@ -426,7 +426,7 @@ button.button-invisible {
     font-size: calc(var(--rhythm) * 3);
     line-height:calc(var(--rhythm) * 3);
     margin-top:var(--rhythm);
-    margin-bottom:calc(var(--rhythm) * 2);
+    margin-bottom:calc(var(--rhythm) * 1);
     color: var(--heading-color);
 }
 

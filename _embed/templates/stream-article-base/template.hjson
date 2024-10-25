@@ -146,8 +146,7 @@
 			steps: [
 				{do:"as-confirmation", title:"Publish this Stream?", message:"Viewers will be able to see this stream on your website immediately.", submit:"Publish"}
 				{do:"set-state", state:"published"}
-				{do:"save", message:"Published by {{.Author}}"}
-				{do:"publish", outbox:true}
+				{do:"save-and-publish", outbox:true}
 				{do:"refresh-page"}
 			]
 		}
@@ -167,7 +166,7 @@
 			steps: [
 				{do:"as-confirmation", title:"Promote this Draft?", message:"The live page will be replaced with this content.", submit:"Promote"}
 				{do:"promote-draft"}
-				{do:"publish", outbox:true}
+				{do:"save-and-publish", outbox:true}
 				{do:"refresh-page"}
 				{do:"forward-to", url:"/{{.Token}}"}
 			]

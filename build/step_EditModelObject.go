@@ -73,11 +73,6 @@ func (step StepEditModelObject) Post(builder Builder, _ io.Writer) PipelineBehav
 		return Halt().WithError(derp.Wrap(err, location, "Error applying request body to model object", body))
 	}
 
-	// Save the object to the database
-	if err := builder.service().ObjectSave(object, "Edited"); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error saving model object to database"))
-	}
-
 	// Success!
 	return nil
 }

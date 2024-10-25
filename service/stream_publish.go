@@ -91,6 +91,14 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream, outbox bo
 		return derp.Wrap(err, location, "Error publishing to parent Stream's outbox")
 	}
 
+	// Send stream:publish Webhooks
+	service.webhookService.Send(stream, model.WebhookEventStreamPublish)
+
+	// If syndicated, also send stream:syndicate Webhooks
+	if stream.IsSyndicated {
+		service.webhookService.Send(stream, model.WebhookEventStreamSyndicate)
+	}
+
 	return nil
 }
 
@@ -205,6 +213,14 @@ func (service *Stream) UnPublish(user *model.User, stream *model.Stream, outbox 
 	// Send "Undo" activities to all Stream followers.
 	if err := service.unpublish_Stream(stream); err != nil {
 		return derp.Wrap(err, location, "Error unpublishing from User's outbox", stream)
+	}
+
+	// Send stream:publish:undo Webhooks
+	service.webhookService.Send(stream, model.WebhookEventStreamPublishUndo)
+
+	// If the stream was syndicated, then then stream:syndicate:undo Webhooks
+	if stream.IsSyndicated {
+		service.webhookService.Send(stream, model.WebhookEventStreamSyndicateUndo)
 	}
 
 	// Done.

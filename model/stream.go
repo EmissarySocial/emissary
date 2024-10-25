@@ -30,7 +30,7 @@ type Stream struct {
 	ParentTemplateID string                       `json:"parentTemplateId"       bson:"parentTemplateId"`       // Unique identifier (name) of the parent's Template.
 	StateID          string                       `json:"stateId"                bson:"stateId"`                // Unique identifier of the State this Stream is in.  This is used to populate the State information from the Template service at load time.
 	SocialRole       string                       `json:"socialRole,omitempty"   bson:"socialRole,omitempty"`   // Role to use for this Stream in social integrations (Article, Note, Image, etc)
-	Permissions      mapof.Object[sliceof.String] `json:"permissions,omitempty"  bson:"permissions,omitempty"`  // Permissions for which users can access this stream.
+	Permissions      mapof.Object[sliceof.String] `json:"permissions,omitempty"  bson:"permissions,omitempty"`  // Permissions for which streams can access this stream.
 	DefaultAllow     id.Slice                     `json:"defaultAllow,omitempty" bson:"defaultAllow,omitempty"` // List of Groups that are allowed to perform the 'default' (view) action.  This is used to query general access to the Stream from the database, before performing server-based authentication.
 	URL              string                       `json:"url,omitempty"          bson:"url,omitempty"`          // URL of the original document
 	Token            string                       `json:"token,omitempty"        bson:"token,omitempty"`        // Unique value that identifies this element in the URL
@@ -46,6 +46,7 @@ type Stream struct {
 	InReplyTo        string                       `json:"inReplyTo"              bson:"inReplyTo"`              // If this stream is a reply to another stream or web page, then this links to the original document.
 	PublishDate      int64                        `json:"publishDate"            bson:"publishDate"`            // Unix timestamp of the date/time when this document is/was/will be first available on the domain.
 	UnPublishDate    int64                        `json:"unpublishDate"          bson:"unpublishDate"`          // Unix timestemp of the date/time when this document will no longer be available on the domain.
+	IsSyndicated     bool                         `json:"isSyndicated"          bson:"isSyndicated"`            // TRUE if this Stream is to be distributed to other external services (via WebHooks).
 	IsFeatured       bool                         `json:"isFeatured"             bson:"isFeatured"`             // TRUE if this Stream is featured by its parent container.
 	journal.Journal  `bson:",inline"`
 }
@@ -328,6 +329,10 @@ func (stream Stream) ActivityPubRepliesURL() string {
 	return stream.URL + "/pub/replies"
 }
 
+func (stream Stream) ActivityPubChildrenURL() string {
+	return stream.URL + "/pub/children"
+}
+
 func (stream Stream) ActivityPubResponses(responseType string) string {
 
 	switch responseType {
@@ -450,5 +455,30 @@ func (stream *Stream) ActorLink() PersonLink {
 		Name:       stream.Label,
 		ProfileURL: stream.URL,
 		IconURL:    stream.IconURL,
+	}
+}
+
+/******************************************
+ * Webhook Interface
+ ******************************************/
+
+// GetWebhookData returns the data for this
+// Stream that will be sent to a webhook
+func (stream Stream) GetWebhookData() mapof.Any {
+	return mapof.Any{
+		"streamId":     stream.StreamID.Hex(),
+		"url":          stream.URL,
+		"template":     stream.TemplateID,
+		"iconUrl":      stream.IconURL,
+		"label":        stream.Label,
+		"attributedTo": stream.AttributedTo,
+		"data":         stream.Data,
+		"isFeatured":   stream.IsFeatured,
+		"isSyndicated": stream.IsSyndicated,
+		"isPublished":  stream.IsPublished(),
+		"publishDate":  stream.PublishDate,
+		"createDate":   stream.CreateDate,
+		"updateDate":   stream.UpdateDate,
+		"deleteDate":   stream.DeleteDate,
 	}
 }

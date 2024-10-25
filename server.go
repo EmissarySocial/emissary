@@ -314,6 +314,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/:stream/pub/inbox", ap_stream.PostInbox(factory))
 	e.GET("/:stream/pub/outbox", ap_stream.GetOutboxCollection(factory))
 	e.GET("/:stream/pub/followers", ap_stream.GetFollowersCollection(factory))
+	e.GET("/:stream/pub/children", handler.WithFactory(factory, ap_stream.GetChildrenCollection))
 
 	// Domain Admin Pages
 	e.GET("/admin", handler.GetAdmin(factory), mw.Owner)

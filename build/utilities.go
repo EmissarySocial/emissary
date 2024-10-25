@@ -248,7 +248,11 @@ func AsHTML(factory Factory, ctx echo.Context, b Builder, actionMethod ActionMet
 
 	// Partial page requests can be completed here.
 	if b.IsPartialRequest() || status.FullPage {
-		return ctx.HTML(status.GetStatusCode(), partialPage.String())
+		if err := ctx.HTML(status.GetStatusCode(), partialPage.String()); err != nil {
+			return derp.Wrap(err, location, "Error building partial-page content", status.GetStatusCode())
+		}
+
+		return nil
 	}
 
 	// Full Page requests require the theme service to wrap the built content

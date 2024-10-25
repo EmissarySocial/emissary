@@ -339,11 +339,27 @@ func (w Stream) Rank() int {
 	return w._stream.Rank
 }
 
-// Data returns the custom data map of the stream being built
+// Data returns the custom data field as an "any" type
 func (w Stream) Data(value string) any {
 	return w._stream.Data[value]
 }
 
+// DataString returns a custom data field converted to a string
+func (w Stream) DataString(value string) string {
+	return w._stream.Data.GetString(value)
+}
+
+// DataInt returns a custom data field converted to an integer
+func (w Stream) DataInt(value string) int {
+	return w._stream.Data.GetInt(value)
+}
+
+// DataBool returns a custom data field converted to a bool
+func (w Stream) DataBool(value string) bool {
+	return w._stream.Data.GetBool(value)
+}
+
+// ETag returns the ETag for the stream being built
 func (w Stream) ETag() string {
 	return w._stream.ETag()
 }

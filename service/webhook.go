@@ -8,6 +8,8 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/turbine/queue"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -15,6 +17,7 @@ import (
 // Webhook service sends outbound webhooks
 type Webhook struct {
 	collection data.Collection
+	queue      *queue.Queue
 }
 
 // NewWebhook returns a new instance of the Webhook service
@@ -26,8 +29,9 @@ func NewWebhook() Webhook {
  * Lifecycle Methods
  ******************************************/
 
-func (service *Webhook) Refresh(collection data.Collection) {
+func (service *Webhook) Refresh(collection data.Collection, queue *queue.Queue) {
 	service.collection = collection
+	service.queue = queue
 }
 
 /******************************************
@@ -196,37 +200,42 @@ func (service *Webhook) QueryByEvent(event string) ([]model.Webhook, error) {
  ******************************************/
 
 // Send delivers the webhook to all the external webhook URLs that are listening to the given event
-func (service *Webhook) Send(event string, getter model.WebhookDataGetter) {
+func (service *Webhook) Send(getter model.WebhookDataGetter, events ...string) {
 
 	const location = "service.Webhook.Send"
 
 	go func() {
 
-		webhooks, err := service.QueryByEvent(event)
+		spew.Dump(events)
 
-		if err != nil {
-			derp.Report(derp.Wrap(err, location, "Error querying webhooks", event))
-			return
-		}
+		for _, event := range events {
 
-		if len(webhooks) == 0 {
-			return
-		}
+			webhooks, err := service.QueryByEvent(event)
 
-		// Calculate the data to send
-		data := getter.GetWebhookData()
-		data["event"] = event
-
-		for _, webhook := range webhooks {
-
-			// TODO: These outbound calls should be added to QoQ when it's ready
-			txn := remote.Post(webhook.TargetURL).JSON(data)
-			if err := txn.Send(); err != nil {
-				derp.Report(derp.Wrap(err, location, "Error sending webhook", webhook, data))
+			if err != nil {
+				derp.Report(derp.Wrap(err, location, "Error querying webhooks", event))
 				continue
 			}
 
-			log.Trace().Str("Event", event).Msg("Webhook sent to " + webhook.TargetURL)
+			if len(webhooks) == 0 {
+				continue
+			}
+
+			// Calculate the data to send
+			data := getter.GetWebhookData()
+			data["event"] = event
+
+			for _, webhook := range webhooks {
+
+				// Add the webhook transaction to the Queue, with low priority (32)
+				txn := remote.Post(webhook.TargetURL).JSON(data).Queue(service.queue)
+				if err := txn.Send(); err != nil {
+					derp.Report(derp.Wrap(err, location, "Error sending webhook", webhook, data))
+					continue
+				}
+
+				log.Trace().Str("Event", event).Msg("Webhook sent to " + webhook.TargetURL)
+			}
 		}
 	}()
 }

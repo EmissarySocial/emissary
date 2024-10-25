@@ -10,7 +10,6 @@ import (
 	"github.com/EmissarySocial/emissary/tools/honeypot"
 	"github.com/benpate/derp"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -96,8 +95,6 @@ func GetCompleteRegistration(ctx *steranko.Context, factory *domain.Factory, dom
 	claims := jwt.MapClaims{}
 	encryptionMethods := []string{"HS256", "HS384", "HS512"}
 	token, err := jwt.ParseWithClaims(tokenString, &claims, keyFunc, jwt.WithValidMethods(encryptionMethods))
-
-	spew.Dump(token, claims, err)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error parsing JWT token")

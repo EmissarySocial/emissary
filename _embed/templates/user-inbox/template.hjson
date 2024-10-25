@@ -151,6 +151,7 @@
 						]
 					}}
 					{do:"view-html", file:"follower"}
+					{do:"save"}
 				]}
 			]
 		}
@@ -200,10 +201,8 @@
 			roles:["self"]
 			steps:[
 				{do:"with-following", steps:[
+					{do:"set-data", from-url:["url", "folderId"]}, 
 					{
-						do:"set-data", 
-						from-url:["url", "folderId"]
-					}, {
 						do:"edit"
 						options:[
 							"endpoint:/@me/inbox/following-add-form?followingId=new"
@@ -258,7 +257,8 @@
 								}
 							]
 						}
-					}
+					},
+					{do:"save"}
 				]}
 				{do:"trigger-event", event:"closeModal"}
 				{do:"trigger-event", event:"refreshPage"}
@@ -342,7 +342,8 @@
 								]
 								
 							}
-						}
+						},
+						{do:"save"}
 					]}
 				]}
 				{do:"trigger-event", event:"closeModal"}
@@ -405,6 +406,7 @@
 							]
 						}
 					}
+					{do:"save"}
 					{do:"trigger-event", event:"refreshPage"}
 					{do:"trigger-event", event:"closeModal"}
 				]}
@@ -435,6 +437,7 @@
 							]
 						}
 					}
+					{do:"save"}
 					{do:"trigger-event", event:"refreshPage"}
 					{do:"trigger-event", event:"closeModal"}
 				]}
@@ -465,6 +468,7 @@
 							]
 						}
 					}
+					{do:"save"}
 					{do:"trigger-event", event:"refreshPage"}
 					{do:"trigger-event", event:"closeModal"}
 				]}

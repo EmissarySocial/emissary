@@ -6,6 +6,7 @@ import (
 
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
+	"github.com/benpate/form"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
@@ -38,9 +39,12 @@ type Template struct {
 	HTMLTemplate       *template.Template   `json:"-"                  bson:"-"`                  // Compiled HTML template
 	Bundles            mapof.Object[Bundle] `json:"bundles"            bson:"bundles"`            // Additional resources (JS, HS, CSS) reqired tp remder this Template.
 	Resources          fs.FS                `json:"-"                  bson:"-"`                  // File system containing the template resources
+	Datasets           DatasetMap           `json:"datasets"           bson:"-"`                  // Lookup codes defined by this template
 	DefaultAction      string               `json:"defaultAction"      bson:"defaultAction"`      // Name of the action to be used when none is provided.  Also serves as the permissions for viewing a Stream.  If this is empty, it is assumed to be "view"
 	Actor              StreamActor          `json:"actor"              bson:"actor"`              // ActivityPub Actor operated on behalf of this Template/Stream
 }
+
+type DatasetMap map[string]form.ReadOnlyLookupGroup
 
 // NewTemplate creates a new, fully initialized Template object
 func NewTemplate(templateID string, funcMap template.FuncMap) Template {
@@ -58,6 +62,8 @@ func NewTemplate(templateID string, funcMap template.FuncMap) Template {
 		Actions:            make(map[string]Action),
 		DefaultAction:      "view",
 		HTMLTemplate:       template.New("").Funcs(funcMap),
+		Bundles:            make(map[string]Bundle),
+		Datasets:           make(DatasetMap),
 	}
 }
 

@@ -1,0 +1,15 @@
+behavior selectText
+
+    init
+        set my *cursor to "pointer"
+    end
+
+    on click
+        set selection to window.getSelection()
+        selection.removeAllRanges()
+
+        set range to document.createRange()
+        range.selectNodeContents(me)
+        selection.addRange(range) 
+    end  
+end

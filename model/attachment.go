@@ -9,6 +9,7 @@ import (
 	"github.com/benpate/data/journal"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/mediaserver"
+	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/list"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -146,10 +147,10 @@ func (attachment Attachment) FileSpec(address *url.URL) mediaserver.FileSpec {
 func (attachment Attachment) JSONLD() map[string]any {
 
 	result := map[string]any{
-		vocab.PropertyType:      vocab.ObjectTypeImage, // TODO: Expand this to videos, audios, etc.
+		vocab.PropertyType:      vocab.ObjectTypeDocument, // TODO: Expand this to videos, audios, etc.
 		vocab.PropertyMediaType: attachment.DownloadMimeType(),
 		vocab.PropertyURL:       attachment.URL,
-		vocab.PropertySummary:   attachment.Description,
+		vocab.PropertyName:      first.String(attachment.Label, attachment.Description, attachment.Category),
 	}
 
 	if attachment.HasDimensions() {
@@ -158,6 +159,8 @@ func (attachment Attachment) JSONLD() map[string]any {
 	}
 
 	// TODO: Blurhash
+	// TODO: FocalPoint?? -> toot:focalPoint (http://joinmastodon.org/ns#focalPoint) https://docs.joinmastodon.org/spec/activitypub/
+	// TODO: Icon (if available) -> icon: {type:"", mediaType:"", url:""}
 
 	return result
 }

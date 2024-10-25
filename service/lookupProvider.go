@@ -4,6 +4,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/dataset"
 	"github.com/benpate/form"
+	"github.com/benpate/rosetta/list"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -102,7 +103,35 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 	case "signup-templates":
 		return form.ReadOnlyLookupGroup(service.registrationService.List())
 
-	default:
-		return form.NewReadOnlyLookupGroup()
+	case "webhook-types":
+		return form.NewReadOnlyLookupGroup(
+			form.LookupCode{Label: "stream:create", Description: "Occurs when a Stream is first created", Value: "stream:create"},
+			form.LookupCode{Label: "stream:update", Description: "Occurs when a Stream is updated", Value: "stream:update"},
+			form.LookupCode{Label: "stream:delete", Description: "Occurs when a Stream is deleted", Value: "stream:delete"},
+			form.LookupCode{Label: "stream:publish", Description: "Occurs when a Stream is published", Value: "stream:publish"},
+			form.LookupCode{Label: "stream:unpublish", Description: "Occurs when a Stream is unpublished", Value: "stream:unpublish"},
+			form.LookupCode{Label: "user:create", Description: "Occurs when a User is first created", Value: "user:create"},
+			form.LookupCode{Label: "user:update", Description: "Occurs when a User is updated", Value: "user:update"},
+			form.LookupCode{Label: "user:delete", Description: "Occurs when a User is deleted", Value: "user:delete"},
+		)
 	}
+
+	// If we've fallen through to here, then look for a template-based dataset
+	p := list.ByDot(path)
+
+	// first value is the template name.  If this matches a known template, then continue
+	templateName, tail := p.Split()
+	if template, err := service.templateService.Load(templateName); err == nil {
+
+		// second element is the name of the dataset
+		datasetName := tail.First()
+
+		if dataset, exists := template.Datasets[datasetName]; exists {
+			return dataset // UwU
+		}
+	}
+
+	// Fall through means one or more of the above tests failed.
+	// We couldn't find the template or dataset, so just return an empty group.
+	return form.NewReadOnlyLookupGroup()
 }
