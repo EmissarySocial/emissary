@@ -9,6 +9,7 @@ import (
 	"github.com/benpate/data/journal"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/mediaserver"
+	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/list"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -149,7 +150,7 @@ func (attachment Attachment) JSONLD() map[string]any {
 		vocab.PropertyType:      vocab.ObjectTypeDocument, // TODO: Expand this to videos, audios, etc.
 		vocab.PropertyMediaType: attachment.DownloadMimeType(),
 		vocab.PropertyURL:       attachment.URL,
-		vocab.PropertyName:      attachment.Description,
+		vocab.PropertyName:      first.String(attachment.Label, attachment.Description, attachment.Category),
 	}
 
 	if attachment.HasDimensions() {
