@@ -21,7 +21,7 @@ require (
 	github.com/benpate/mediaserver v0.12.1
 	github.com/benpate/re v0.3.1
 	github.com/benpate/remote v0.16.8
-	github.com/benpate/rosetta v0.22.3
+	github.com/benpate/rosetta v0.22.4
 	github.com/benpate/sherlock v0.8.8
 	github.com/benpate/steranko v0.20.1
 	github.com/benpate/table v0.6.19
