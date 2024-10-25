@@ -329,6 +329,10 @@ func (stream Stream) ActivityPubRepliesURL() string {
 	return stream.URL + "/pub/replies"
 }
 
+func (stream Stream) ActivityPubChildrenURL() string {
+	return stream.URL + "/pub/children"
+}
+
 func (stream Stream) ActivityPubResponses(responseType string) string {
 
 	switch responseType {

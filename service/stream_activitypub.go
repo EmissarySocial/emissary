@@ -104,16 +104,17 @@ func (service *Stream) JSONLD(stream *model.Stream) mapof.Any {
 			}
 		}
 
-	default:
-		if attachments, err := service.attachmentService.QueryByObjectID(model.AttachmentObjectTypeStream, stream.StreamID); err == nil {
+	}
 
-			attachmentJSON := make([]mapof.Any, 0, len(attachments))
-			for _, attachment := range attachments {
-				attachmentJSON = append(attachmentJSON, attachment.JSONLD())
-			}
+	// Include attachments for all types (including Audio)
+	if attachments, err := service.attachmentService.QueryByObjectID(model.AttachmentObjectTypeStream, stream.StreamID); err == nil {
 
-			result[vocab.PropertyAttachment] = attachmentJSON
+		attachmentJSON := make([]mapof.Any, 0, len(attachments))
+		for _, attachment := range attachments {
+			attachmentJSON = append(attachmentJSON, attachment.JSONLD())
 		}
+
+		result[vocab.PropertyAttachment] = attachmentJSON
 	}
 
 	// Try to apply the "social mapping" to the stream
