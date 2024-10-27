@@ -11,12 +11,14 @@ import (
 
 	"github.com/EmissarySocial/emissary/build"
 	"github.com/EmissarySocial/emissary/config"
+	"github.com/EmissarySocial/emissary/consumer"
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/httpcache"
 	"github.com/benpate/derp"
 	domaintools "github.com/benpate/domain"
 	"github.com/benpate/icon"
+	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/channel"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
@@ -306,11 +308,11 @@ func (factory *Factory) refreshQueue() {
 	mongoStorage := queue_mongo.New(factory.commonDatabase, 32, 32)
 
 	// Removing consumers because they're F@#$ing up outbound HTTP signatures
-	// consumer := consumer.New(factory)
+	consumer := consumer.New(factory)
 
 	// Create a new queue object with consumers, storage, and polling
 	factory.queue = queue.New(
-		//	queue.WithConsumers(consumer.Run, remote.Consumer()),
+		queue.WithConsumers(consumer.Run, remote.Consumer()),
 		queue.WithStorage(mongoStorage),
 		queue.WithPollStorage(true),
 	)

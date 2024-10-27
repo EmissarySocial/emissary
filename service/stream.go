@@ -203,7 +203,7 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 
 	// Track changes to key status fields
 	wasNew := stream.IsNew()
-	wasSyndicated := stream.IsSyndicated
+	syndicationChanged := stream.CalcSyndicationDate()
 
 	// Copy default values from the Template
 	stream.SocialRole = template.SocialRole
@@ -261,10 +261,11 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 		service.webhookService.Send(stream, model.WebhookEventStreamUpdate)
 	}
 
-	// If published, and syndication status has changed,
-	// then send stream:syndicate and stream:syndicate:undo Webhooks
-	if stream.IsPublished() && (wasSyndicated != stream.IsSyndicated) {
-		if stream.IsSyndicated {
+	// If the stream has already been published and the syndication staus
+	// has changed, then send stream:syndicate and stream:syndicate:undo Webhooks
+	if syndicationChanged {
+
+		if stream.IsPublished() && stream.IsSyndicated {
 			service.webhookService.Send(stream, model.WebhookEventStreamSyndicate)
 		} else {
 			service.webhookService.Send(stream, model.WebhookEventStreamSyndicateUndo)

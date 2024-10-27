@@ -9,7 +9,6 @@ import (
 	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/turbine/queue"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -205,8 +204,6 @@ func (service *Webhook) Send(getter model.WebhookDataGetter, events ...string) {
 	const location = "service.Webhook.Send"
 
 	go func() {
-
-		spew.Dump(events)
 
 		for _, event := range events {
 

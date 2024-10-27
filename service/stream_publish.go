@@ -22,11 +22,6 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream, outbox bo
 
 	const location = "service.Stream.Publish"
 
-	// RULE: Stream must be a valid Stream
-	if stream.IsNew() {
-		return derp.NewBadRequestError(location, "Stream is not valid", stream)
-	}
-
 	// Determine ActitivyType FIRST, before we mess with the publish date
 	activityType := stream.PublishActivity()
 
@@ -93,11 +88,6 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream, outbox bo
 
 	// Send stream:publish Webhooks
 	service.webhookService.Send(stream, model.WebhookEventStreamPublish)
-
-	// If syndicated, also send stream:syndicate Webhooks
-	if stream.IsSyndicated {
-		service.webhookService.Send(stream, model.WebhookEventStreamSyndicate)
-	}
 
 	return nil
 }
@@ -217,11 +207,6 @@ func (service *Stream) UnPublish(user *model.User, stream *model.Stream, outbox 
 
 	// Send stream:publish:undo Webhooks
 	service.webhookService.Send(stream, model.WebhookEventStreamPublishUndo)
-
-	// If the stream was syndicated, then then stream:syndicate:undo Webhooks
-	if stream.IsSyndicated {
-		service.webhookService.Send(stream, model.WebhookEventStreamSyndicateUndo)
-	}
 
 	// Done.
 	return nil

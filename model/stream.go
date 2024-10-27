@@ -46,6 +46,7 @@ type Stream struct {
 	InReplyTo        string                       `json:"inReplyTo"              bson:"inReplyTo"`              // If this stream is a reply to another stream or web page, then this links to the original document.
 	PublishDate      int64                        `json:"publishDate"            bson:"publishDate"`            // Unix timestamp of the date/time when this document is/was/will be first available on the domain.
 	UnPublishDate    int64                        `json:"unpublishDate"          bson:"unpublishDate"`          // Unix timestemp of the date/time when this document will no longer be available on the domain.
+	SyndicationDate  int64                        `json:"syndicationDate"        bson:"syndicationDate"`        // Unix timestamp of the date/time when this document was syndicated to other services (controlled by stream service)
 	IsSyndicated     bool                         `json:"isSyndicated"          bson:"isSyndicated"`            // TRUE if this Stream is to be distributed to other external services (via WebHooks).
 	IsFeatured       bool                         `json:"isFeatured"             bson:"isFeatured"`             // TRUE if this Stream is featured by its parent container.
 	journal.Journal  `bson:",inline"`
@@ -393,6 +394,39 @@ func (stream Stream) GetRank() int64 {
  * Other Methods
  ******************************************/
 
+// CalcSyndicationDate returns TRUE if the syndication data has changed.
+// If the stream has not been syndicated, but the IsSyndicated flag is true, then
+// the SyndicationDate is set to the current time.  Similarly, if the stream HAS
+// been syndicated, but the IsSyndicated flag is false, then the SyndicationDate is
+// reset set to 0.
+func (stream *Stream) CalcSyndicationDate() bool {
+
+	// If the stream has been published and IsSyndicated flag has been set to TRUE,
+	// but the stream has not been syndicated (because the SyndicationDate is 0),
+	// then set the SyndicationDate to the current time and return TRUE
+	if stream.IsPublished() && stream.IsSyndicated {
+		if stream.SyndicationDate == 0 {
+			stream.SyndicationDate = time.Now().Unix()
+			return true
+		}
+		return false
+	}
+
+	// Fall through means that the stream SHOULD NOT BE syndicated because it
+	// has not been published, or the IsSyndicated flag is FALSE.
+
+	// If the stream HAS BEEN syndicated (because the SyndicationDate is NOT 0),
+	// then reset the SyndicationDate to 0 and return TRUE
+	if stream.SyndicationDate > 0 {
+		stream.SyndicationDate = 0
+		return true
+	}
+
+	// Fall through means that the IsSyndicated flag has not been changed
+	// so no operation is necessary
+	return false
+}
+
 func (stream *Stream) DocumentLink() DocumentLink {
 	return DocumentLink{
 		ID:    stream.StreamID,
@@ -474,7 +508,6 @@ func (stream Stream) GetWebhookData() mapof.Any {
 		"attributedTo": stream.AttributedTo,
 		"data":         stream.Data,
 		"isFeatured":   stream.IsFeatured,
-		"isSyndicated": stream.IsSyndicated,
 		"isPublished":  stream.IsPublished(),
 		"publishDate":  stream.PublishDate,
 		"createDate":   stream.CreateDate,
