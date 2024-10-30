@@ -89,6 +89,24 @@ func buildAdmin_GetBuilder(factory *domain.Factory, ctx *steranko.Context, templ
 	// Create the correct builder for this controller
 	switch template.Model {
 
+	case "domain":
+		return build.NewDomain(factory, ctx.Request(), ctx.Response(), template, actionID)
+
+	case "syndication":
+		return build.NewSyndication(factory, ctx.Request(), ctx.Response(), template, actionID)
+
+	case "group":
+		group := model.NewGroup()
+
+		if !objectID.IsZero() {
+			service := factory.Group()
+			if err := service.LoadByID(objectID, &group); err != nil {
+				return nil, derp.Wrap(err, location, "Error loading Group", objectID)
+			}
+		}
+
+		return build.NewGroup(factory, ctx.Request(), ctx.Response(), template, &group, actionID)
+
 	case "rule":
 
 		ruleService := factory.Rule()
@@ -102,21 +120,6 @@ func buildAdmin_GetBuilder(factory *domain.Factory, ctx *steranko.Context, templ
 		}
 
 		return build.NewRule(factory, ctx.Request(), ctx.Response(), &rule, template, actionID)
-
-	case "domain":
-		return build.NewDomain(factory, ctx.Request(), ctx.Response(), template, actionID)
-
-	case "group":
-		group := model.NewGroup()
-
-		if !objectID.IsZero() {
-			service := factory.Group()
-			if err := service.LoadByID(objectID, &group); err != nil {
-				return nil, derp.Wrap(err, location, "Error loading Group", objectID)
-			}
-		}
-
-		return build.NewGroup(factory, ctx.Request(), ctx.Response(), template, &group, actionID)
 
 	case "stream":
 		stream := model.NewStream()
@@ -155,6 +158,6 @@ func buildAdmin_GetBuilder(factory *domain.Factory, ctx *steranko.Context, templ
 		return build.NewWebhook(factory, ctx.Request(), ctx.Response(), template, &webhook, actionID)
 
 	default:
-		return nil, derp.NewNotFoundError(location, "Template MODEL must be one of: 'rule', 'domain', 'group', 'stream', or 'user'", template.Model)
+		return nil, derp.NewNotFoundError(location, "Template MODEL must be one of: 'rule', 'domain', 'syndication', 'group', 'stream', or 'user'", template.Model)
 	}
 }

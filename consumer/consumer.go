@@ -51,6 +51,10 @@ func (consumer Consumer) Run(name string, args map[string]any) (bool, error) {
 
 	case "SendWebSubMessage":
 		return true, SendWebSubMessage(args)
+
+	case "stream.syndicate", "stream.syndicate.undo":
+		return true, StreamSyndicate(args)
+
 	}
 
 	return false, nil

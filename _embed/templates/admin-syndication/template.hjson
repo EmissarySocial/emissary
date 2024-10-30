@@ -1,0 +1,31 @@
+{
+	templateId:"admin-syndication"
+	templateRole:"admin"
+	model:"syndication"
+	containedBy:["admin"]
+	label: "Syndication"
+	description: "Domain Owners only.  Site Admin"
+	actions: {
+		index: {
+			steps: [
+				{do: "view-html"}
+				{do: "set-header", name:"Hx-Push-Url", value:"/admin/syndication/index"}
+			]
+		}
+
+		table: {
+			steps: [
+				{do:"edit-table", path:"syndication", form: {
+					type:"layout-table"
+					children: [
+						{type:"text", path:"value", label:"Token"}
+						{type:"text", path:"label", label:"Label"}
+						{type:"text", path:"description", label:"Description"}
+						{type:"text", path:"href", label:"URL"}
+					]
+				}}
+				{do:"save"}
+			]
+		}
+	}
+}

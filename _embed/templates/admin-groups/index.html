@@ -5,7 +5,7 @@
     <div id="menu-bar" hx-push-url="true">
         {{- $token := .Token -}}
         {{- range .AdminSections -}}
-            <a hx-get="/admin/{{.Value}}" class="turboclick {{if eq $token .Value}}selected{{end}}">{{.Label}}</a>
+            <a hx-get="/admin/{{.Value}}/index" class="turboclick {{if eq $token .Value}}selected{{end}}">{{.Label}}</a>
         {{- end -}}
     </div>
 

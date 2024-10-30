@@ -1,0 +1,21 @@
+<div class="page" hx-get="/admin/syndication/index" hx-trigger="refreshPage from:window">
+
+	<script src="/.themes/global/resources/sortable-1.15.0/Sortable.min.js"></script>
+	
+	<div id="menu-bar" hx-push-url="true">
+		{{- $token := .Token -}}
+		{{- range .AdminSections -}}
+			<a hx-get="/admin/{{.Value}}/index" class="turboclick {{if eq $token .Value}}selected{{end}}">{{.Label}}</a>
+		{{- end -}}
+	</div>
+
+	<div class="info">
+		Syndication targets allow users to cross-post their content to other websites.
+		Based on the templates in use, users can select which targets they want to syndicate to.
+	</div>
+
+	<div>
+		{{- .View "table" -}}
+	</div>
+
+</div>

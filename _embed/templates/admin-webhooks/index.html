@@ -7,10 +7,14 @@
 	<div id="menu-bar" hx-push-url="true">
 		{{- $token := .Token -}}
 		{{- range .AdminSections -}}
-			<a hx-get="/admin/{{.Value}}" class="turboclick {{if eq $token .Value}}selected{{end}}">{{.Label}}</a>
+			<a hx-get="/admin/{{.Value}}/index" class="turboclick {{if eq $token .Value}}selected{{end}}">{{.Label}}</a>
 		{{- end -}}
 	</div>
 
+	<div class="info">
+		Webhooks send notification events to external serverices every time a record is changed.
+		Webhooks cannot be selected by Users.
+	</div>
 
 	{{- if not $webhooks.IsEmpty }}
 
@@ -28,7 +32,6 @@
 	{{- else -}}
 
 		<div class="margin-top">
-			Webhooks allow this server to send events to other servers on the Internet.
 			Click here to add your first Webhook.
 			<br>
 			<br>

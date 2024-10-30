@@ -89,6 +89,11 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream, outbox bo
 	// Send stream:publish Webhooks
 	service.webhookService.Send(stream, model.WebhookEventStreamPublish)
 
+	// Send syndication messages to all targets
+	if err := service.sendSyndicationMessages(stream, stream.Syndication.Values, nil); err != nil {
+		derp.Report(derp.Wrap(err, location, "Error sending syndication messages", stream))
+	}
+
 	return nil
 }
 
@@ -207,6 +212,11 @@ func (service *Stream) UnPublish(user *model.User, stream *model.Stream, outbox 
 
 	// Send stream:publish:undo Webhooks
 	service.webhookService.Send(stream, model.WebhookEventStreamPublishUndo)
+
+	// Send syndication:undo messages to all targets
+	if err := service.sendSyndicationMessages(stream, nil, stream.Syndication.Values); err != nil {
+		derp.Report(derp.Wrap(err, location, "Error sending syndication messages", stream))
+	}
 
 	// Done.
 	return nil

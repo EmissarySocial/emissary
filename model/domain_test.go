@@ -29,6 +29,10 @@ func TestDomainSchema(t *testing.T) {
 		{"colorMode", "LIGHT", nil},
 		{"registrationData.custom", "CUSTOM", nil},
 		{"registrationData.value", "VALUE", nil},
+		{"syndication.0.value", "VALUE", nil},
+		{"syndication.0.label", "LABEL", nil},
+		{"syndication.1.description", "DESCRIPTION", nil},
+		{"syndication.1.href", "https://syndication.site", nil},
 	}
 
 	tableTest_Schema(t, &s, &domain, table)

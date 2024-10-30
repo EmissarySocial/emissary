@@ -9,6 +9,7 @@ import (
 )
 
 type LookupProvider struct {
+	domainService       *Domain
 	folderService       *Folder
 	groupService        *Group
 	registrationService *Registration
@@ -17,8 +18,9 @@ type LookupProvider struct {
 	userID              primitive.ObjectID
 }
 
-func NewLookupProvider(folderService *Folder, groupService *Group, registrationService *Registration, templateService *Template, themeService *Theme, userID primitive.ObjectID) LookupProvider {
+func NewLookupProvider(domainService *Domain, folderService *Folder, groupService *Group, registrationService *Registration, templateService *Template, themeService *Theme, userID primitive.ObjectID) LookupProvider {
 	return LookupProvider{
+		domainService:       domainService,
 		themeService:        themeService,
 		templateService:     templateService,
 		registrationService: registrationService,
@@ -97,11 +99,15 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 			form.LookupCode{Value: "private", Label: "Only Selected Groups"},
 		)
 
-	case "themes":
-		return NewThemeLookupProvider(service.themeService)
-
 	case "signup-templates":
 		return form.ReadOnlyLookupGroup(service.registrationService.List())
+
+	case "syndication-targets":
+		domain := service.domainService.Get()
+		return form.NewReadOnlyLookupGroup(domain.Syndication...)
+
+	case "themes":
+		return NewThemeLookupProvider(service.themeService)
 
 	case "webhook-types":
 		return form.NewReadOnlyLookupGroup(
@@ -110,8 +116,6 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 			form.LookupCode{Label: "stream:delete", Description: "Occurs when a Stream is deleted", Value: "stream:delete"},
 			form.LookupCode{Label: "stream:publish", Description: "Occurs when a Stream is published", Value: "stream:publish"},
 			form.LookupCode{Label: "stream:publish:undo", Description: "Occurs when a Stream is unpublished", Value: "stream:publish:undo"},
-			form.LookupCode{Label: "stream:syndicate", Description: "Occurs when a Stream is shared with external services", Value: "stream:syndicate"},
-			form.LookupCode{Label: "stream:syndicate:undo", Description: "Occurs when a Stream is removed from external services", Value: "stream:syndicate:undo"},
 			form.LookupCode{Label: "user:create", Description: "Occurs when a User is first created", Value: "user:create"},
 			form.LookupCode{Label: "user:update", Description: "Occurs when a User is updated", Value: "user:update"},
 			form.LookupCode{Label: "user:delete", Description: "Occurs when a User is deleted", Value: "user:delete"},

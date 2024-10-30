@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/benpate/form"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -20,6 +21,7 @@ func DomainSchema() schema.Element {
 			"forward":          schema.String{Format: "url", Required: false},
 			"data":             schema.Object{Wildcard: schema.String{}},
 			"colorMode":        schema.String{Enum: []string{DomainColorModeAuto, DomainColorModeLight, DomainColorModeDark}},
+			"syndication":      schema.Array{Items: form.LookupCodeSchema()},
 			"registrationData": schema.Object{Wildcard: schema.String{}},
 		},
 	}
@@ -62,6 +64,9 @@ func (domain *Domain) GetPointer(name string) (any, bool) {
 
 	case "data":
 		return &domain.Data, true
+
+	case "syndication":
+		return &domain.Syndication, true
 	}
 
 	return nil, false

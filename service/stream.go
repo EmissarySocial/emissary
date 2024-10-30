@@ -30,6 +30,7 @@ import (
 // Stream manages all interactions with the Stream collection
 type Stream struct {
 	collection          data.Collection
+	domainService       *Domain
 	templateService     *Template
 	draftService        *StreamDraft
 	outboxService       *Outbox
@@ -57,8 +58,9 @@ func NewStream() Stream {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Stream) Refresh(collection data.Collection, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, activityStream *ActivityStream, contentService *Content, keyService *EncryptionKey, followerService *Follower, ruleService *Rule, userService *User, webhookService *Webhook, mediaserver mediaserver.MediaServer, queue *queue.Queue, host string, streamUpdateChannel chan primitive.ObjectID) {
+func (service *Stream) Refresh(collection data.Collection, domainService *Domain, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, activityStream *ActivityStream, contentService *Content, keyService *EncryptionKey, followerService *Follower, ruleService *Rule, userService *User, webhookService *Webhook, mediaserver mediaserver.MediaServer, queue *queue.Queue, host string, streamUpdateChannel chan primitive.ObjectID) {
 	service.collection = collection
+	service.domainService = domainService
 	service.templateService = templateService
 	service.draftService = draftService
 	service.outboxService = outboxService
@@ -203,7 +205,6 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 
 	// Track changes to key status fields
 	wasNew := stream.IsNew()
-	syndicationChanged := stream.CalcSyndicationDate()
 
 	// Copy default values from the Template
 	stream.SocialRole = template.SocialRole
@@ -261,14 +262,9 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 		service.webhookService.Send(stream, model.WebhookEventStreamUpdate)
 	}
 
-	// If the stream has already been published and the syndication staus
-	// has changed, then send stream:syndicate and stream:syndicate:undo Webhooks
-	if syndicationChanged {
-
-		if stream.IsPublished() && stream.IsSyndicated {
-			service.webhookService.Send(stream, model.WebhookEventStreamSyndicate)
-		} else {
-			service.webhookService.Send(stream, model.WebhookEventStreamSyndicateUndo)
+	if stream.IsPublished() && stream.Syndication.IsChanged() {
+		if err := service.sendSyndicationMessages(stream, stream.Syndication.Added, stream.Syndication.Deleted); err != nil {
+			return derp.Wrap(err, location, "Error sending syndication messages", stream)
 		}
 	}
 
@@ -288,9 +284,11 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 // Delete removes an Stream from the database (virtual delete)
 func (service *Stream) Delete(stream *model.Stream, note string) error {
 
+	const location = "service.Stream.Delete"
+
 	// Delete this Stream
 	if err := service.collection.Delete(stream, note); err != nil {
-		return derp.Wrap(err, "service.Stream.Delete", "Error deleting Stream", stream, note)
+		return derp.Wrap(err, location, "Error deleting Stream", stream, note)
 	}
 
 	// Delete related records -- this can happen in the background
@@ -301,30 +299,30 @@ func (service *Stream) Delete(stream *model.Stream, note string) error {
 
 		if stream.IsPublished() {
 			service.webhookService.Send(stream, model.WebhookEventStreamPublishUndo)
-		}
 
-		if stream.IsSyndicated {
-			service.webhookService.Send(stream, model.WebhookEventStreamSyndicateUndo)
+			if err := service.sendSyndicationMessages(stream, nil, stream.Syndication.Values); err != nil {
+				derp.Report(derp.Wrap(err, location, "Error sending syndication messages", stream))
+			}
 		}
 
 		// RULE: Delete all related Children
 		if err := service.DeleteByParent(stream.StreamID, note); err != nil {
-			derp.Report(derp.Wrap(err, "service.Stream.Delete", "Error deleting child streams", stream, note))
+			derp.Report(derp.Wrap(err, location, "Error deleting child streams", stream, note))
 		}
 
 		// RULE: Delete all related Attachments
 		if err := service.attachmentService.DeleteAll(model.AttachmentObjectTypeStream, stream.StreamID, note); err != nil {
-			derp.Report(derp.Wrap(err, "service.Stream.Delete", "Error deleting attachments", stream, note))
+			derp.Report(derp.Wrap(err, location, "Error deleting attachments", stream, note))
 		}
 
 		// RULE: Delete all related Drafts
 		if err := service.draftService.Delete(stream, note); err != nil {
-			derp.Report(derp.Wrap(err, "service.Stream.Delete", "Error deleting drafts", stream, note))
+			derp.Report(derp.Wrap(err, location, "Error deleting drafts", stream, note))
 		}
 
 		// RULE: Delete Outbox Messages
 		if err := service.outboxService.DeleteByParentID(model.FollowerTypeStream, stream.StreamID); err != nil {
-			derp.Report(derp.Wrap(err, "service.Stream.Delete", "Error deleting outbox messages", stream, note))
+			derp.Report(derp.Wrap(err, location, "Error deleting outbox messages", stream, note))
 		}
 
 		// NON-BLOCKING: Notify other processes on this server that the stream has been updated
@@ -339,17 +337,19 @@ func (service *Stream) Delete(stream *model.Stream, note string) error {
 // DeleteMany removes all child streams from the provided stream (virtual delete)
 func (service *Stream) DeleteMany(criteria exp.Expression, note string) error {
 
+	const location = "service.Stream.DeleteMany"
+
 	it, err := service.List(notDeleted(criteria))
 
 	if err != nil {
-		return derp.Wrap(err, "service.Stream.Delete", "Error listing streams to delete", criteria)
+		return derp.Wrap(err, location, "Error listing streams to delete", criteria)
 	}
 
 	stream := model.NewStream()
 
 	for it.Next(&stream) {
 		if err := service.Delete(&stream, note); err != nil {
-			return derp.Wrap(err, "service.Stream.Delete", "Error deleting stream", stream)
+			return derp.Wrap(err, location, "Error deleting stream", stream)
 		}
 		stream = model.NewStream()
 	}

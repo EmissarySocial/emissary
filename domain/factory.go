@@ -338,6 +338,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		// Populate Stream Service
 		factory.streamService.Refresh(
 			factory.collection(CollectionStream),
+			factory.Domain(),
 			factory.Template(),
 			factory.StreamDraft(),
 			factory.Outbox(),
@@ -725,7 +726,7 @@ func (factory *Factory) Steranko() *steranko.Steranko {
 
 // LookupProvider returns a fully populated LookupProvider service
 func (factory *Factory) LookupProvider(userID primitive.ObjectID) form.LookupProvider {
-	return service.NewLookupProvider(factory.Folder(), factory.Group(), factory.Registration(), factory.Template(), factory.Theme(), userID)
+	return service.NewLookupProvider(factory.Domain(), factory.Folder(), factory.Group(), factory.Registration(), factory.Template(), factory.Theme(), userID)
 }
 
 /******************************************

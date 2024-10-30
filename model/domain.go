@@ -3,28 +3,31 @@ package model
 import (
 	"github.com/benpate/data/journal"
 	domainlib "github.com/benpate/domain"
+	"github.com/benpate/form"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Domain represents an account or node on this server.
 type Domain struct {
-	DomainID         primitive.ObjectID `bson:"_id"`              // This is the internal ID for the domain.  It should not be available via the web service.
-	IconID           primitive.ObjectID `bson:"iconId"`           // ID of the logo to use for this domain
-	Hostname         string             `bson:"hostname"`         // Hostname of this domain (e.g. "example.com")
-	Label            string             `bson:"label"`            // Human-friendly name displayed at the top of this domain
-	Description      string             `bson:"description"`      // Human-friendly description of this domain
-	ThemeID          string             `bson:"themeId"`          // ID of the theme to use for this domain
-	RegistrationID   string             `bson:"registrationId"`   // ID of the signup template to use for this domain
-	InboxID          string             `bson:"inboxId"`          // ID of the default inbox template to use for this domain
-	OutboxID         string             `bson:"outboxId"`         // ID of the default outbox template to use for this domain
-	Forward          string             `bson:"forward"`          // If present, then all requests for this domain should be forwarded to the designated new domain.
-	ThemeData        mapof.Any          `bson:"themeData"`        // Custom data stored in this domain
-	RegistrationData mapof.String       `bson:"registrationData"` // Custom data for signup template stored in this domain
-	ColorMode        string             `bson:"colorMode"`        // Color mode for this domain (e.g. "LIGHT", "DARK", or "AUTO")
-	Data             mapof.String       `bson:"data"`             // Custom data stored in this domain
-	DatabaseVersion  uint               `bson:"databaseVersion"`  // Version of the database schema
-	PrivateKey       string             `bson:"privateKey"`       // Private key for this domain
+	DomainID         primitive.ObjectID              `bson:"_id"`              // This is the internal ID for the domain.  It should not be available via the web service.
+	IconID           primitive.ObjectID              `bson:"iconId"`           // ID of the logo to use for this domain
+	Hostname         string                          `bson:"hostname"`         // Hostname of this domain (e.g. "example.com")
+	Label            string                          `bson:"label"`            // Human-friendly name displayed at the top of this domain
+	Description      string                          `bson:"description"`      // Human-friendly description of this domain
+	ThemeID          string                          `bson:"themeId"`          // ID of the theme to use for this domain
+	RegistrationID   string                          `bson:"registrationId"`   // ID of the signup template to use for this domain
+	InboxID          string                          `bson:"inboxId"`          // ID of the default inbox template to use for this domain
+	OutboxID         string                          `bson:"outboxId"`         // ID of the default outbox template to use for this domain
+	Forward          string                          `bson:"forward"`          // If present, then all requests for this domain should be forwarded to the designated new domain.
+	ThemeData        mapof.Any                       `bson:"themeData"`        // Custom data stored in this domain
+	RegistrationData mapof.String                    `bson:"registrationData"` // Custom data for signup template stored in this domain
+	ColorMode        string                          `bson:"colorMode"`        // Color mode for this domain (e.g. "LIGHT", "DARK", or "AUTO")
+	Data             mapof.String                    `bson:"data"`             // Custom data stored in this domain
+	DatabaseVersion  uint                            `bson:"databaseVersion"`  // Version of the database schema
+	Syndication      sliceof.Object[form.LookupCode] `bson:"syndication"`      // List of external services that this domain can syndicate to
+	PrivateKey       string                          `bson:"privateKey"`       // Private key for this domain
 	journal.Journal  `json:"-" bson:",inline"`
 }
 

@@ -530,5 +530,9 @@ func (w Common) AdminSections() []form.LookupCode {
 			Value: "webhooks",
 			Label: "Webhooks",
 		},
+		{
+			Value: "syndication",
+			Label: "Syndication",
+		},
 	}
 }
