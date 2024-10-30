@@ -58,6 +58,11 @@ func (slice *Slice) SetString(name string, value string) bool {
 
 func (slice *Slice) SetValue(value any) error {
 
+	if value == nil {
+		*slice = make([]primitive.ObjectID, 0)
+		return nil
+	}
+
 	switch typed := value.(type) {
 
 	case []primitive.ObjectID:
