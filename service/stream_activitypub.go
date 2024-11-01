@@ -36,9 +36,10 @@ func (service *Stream) JSONLD(stream *model.Stream) mapof.Any {
 		result[vocab.PropertyName] = stream.Label
 	}
 
+	/* REMOVED because this is used by Mastodon as a Content Warning
 	if stream.Summary != "" {
 		result[vocab.PropertySummary] = stream.Summary
-	}
+	} */
 
 	if stream.Content.HTML != "" {
 		result[vocab.PropertyContent] = stream.Content.HTML
