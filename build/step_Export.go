@@ -5,12 +5,14 @@ import (
 	"io"
 
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/translate"
 )
 
 // StepExport represents an action-step that can delete a Stream from the Domain
 type StepExport struct {
 	Depth       int
 	Attachments bool
+	Metadata    []translate.Pipeline
 }
 
 // Get displays a customizable confirmation form for the delete
@@ -31,7 +33,7 @@ func (step StepExport) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 
 	// Write the stream to the ZIP file
 	streamService := streamBuilder.factory().Stream()
-	if err := streamService.ExportZip(writer, streamBuilder._stream, "", step.Depth, step.Attachments); err != nil {
+	if err := streamService.ExportZip(writer, nil, streamBuilder._stream, "", step.Depth, step.Attachments, step.Metadata); err != nil {
 		return Halt().WithError(err)
 	}
 

@@ -10,9 +10,21 @@ import (
 	"github.com/EmissarySocial/emissary/tools/counter"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/list"
+	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/slice"
+	"github.com/benpate/rosetta/translate"
 )
 
-func (service *Stream) ExportZip(writer *zip.Writer, stream *model.Stream, prefix string, depth int, withAttachments bool) error {
+// Some info on FFmpeg metadata
+// https://gist.github.com/eyecatchup/0757b3d8b989fe433979db2ea7d95a01
+// https://jmesb.com/how_to/create_id3_tags_using_ffmpeg
+// https://wiki.multimedia.cx/index.php?title=FFmpeg_Metadata
+
+// ExportZip exports a stream (and potentially its descendents) into a ZIP archive.
+// The `depth` parameter indicates how many levels to traverse.
+// The `pipelines` parameter provides rosetta.translate mappings for attachment metadata.
+func (service *Stream) ExportZip(writer *zip.Writer, parent *model.Stream, stream *model.Stream, prefix string, depth int, withAttachments bool, pipelines []translate.Pipeline) error {
 
 	const location = "service.Stream.ExportZip"
 
@@ -27,28 +39,29 @@ func (service *Stream) ExportZip(writer *zip.Writer, stream *model.Stream, prefi
 
 	streamData := service.JSONLD(stream)
 
+	// Splite the pipelines into the first one, and the rest
+	pipeline, pipelines := slice.Split(pipelines)
+
 	// EXPORT A JSON FILE
-	{
-		filenameJSON := filename.PushTail("json")
+	filenameJSON := filename.PushTail("json")
 
-		// Create a file in the ZIP archive
-		fileWriter, err := writer.Create(filenameJSON.String())
+	// Create a file in the ZIP archive
+	fileWriter, err := writer.Create(filenameJSON.String())
 
-		if err != nil {
-			return derp.Wrap(err, location, "Error creating JSON-LD file")
-		}
+	if err != nil {
+		return derp.Wrap(err, location, "Error creating JSON-LD file")
+	}
 
-		// Marshal the Stream data into JSON
-		streamJSON, err := json.MarshalIndent(streamData, "", "\t")
+	// Marshal the Stream data into JSON
+	streamJSON, err := json.MarshalIndent(streamData, "", "\t")
 
-		if err != nil {
-			return derp.Wrap(err, location, "Error marshalling JSON-LD")
-		}
+	if err != nil {
+		return derp.Wrap(err, location, "Error marshalling JSON-LD")
+	}
 
-		// Write the JSON-LD to the file
-		if _, err := fileWriter.Write(streamJSON); err != nil {
-			return derp.Wrap(err, location, "Error writing JSON-LD file")
-		}
+	// Write the JSON-LD to the file
+	if _, err := fileWriter.Write(streamJSON); err != nil {
+		return derp.Wrap(err, location, "Error writing JSON-LD file")
 	}
 
 	// Export attachments, if requested
@@ -89,7 +102,37 @@ func (service *Stream) ExportZip(writer *zip.Writer, stream *model.Stream, prefi
 
 			// Add the corresponding extension to the filename
 			filespec := attachment.FileSpec(nil)
+			filespec.Bitrate = 320
+
 			filename = filename.PushTail(strings.TrimPrefix(filespec.Extension, "."))
+
+			// Map attachment metadata
+			if pipeline.NotEmpty() {
+
+				inSchema := schema.New(schema.Object{
+					Properties: schema.ElementMap{
+						"parent": model.StreamSchema(),
+						"stream": model.StreamSchema(),
+					},
+				})
+				inObject := mapof.Any{
+					"parent": parent,
+					"stream": stream,
+				}
+
+				outSchema := schema.New(schema.Object{
+					Wildcard: schema.String{},
+				})
+				outObject := mapof.NewString()
+
+				if err := pipeline.Execute(inSchema, inObject, outSchema, &outObject); err != nil {
+					return derp.Wrap(err, location, "Error processing metadata")
+				}
+
+				for key, value := range outObject {
+					filespec.Metadata[key] = value
+				}
+			}
 
 			// Create a file in the ZIP archive
 			fileHeader := zip.FileHeader{
@@ -128,7 +171,7 @@ func (service *Stream) ExportZip(writer *zip.Writer, stream *model.Stream, prefi
 				prefix = prefix + "/" // For deeper nesting, create a new directory
 			}
 
-			if err := service.ExportZip(writer, &child, prefix, depth-1, withAttachments); err != nil {
+			if err := service.ExportZip(writer, stream, &child, prefix, depth-1, withAttachments, pipelines); err != nil {
 				return derp.Wrap(err, location, "Error exporting child")
 			}
 

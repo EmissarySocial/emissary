@@ -93,6 +93,7 @@ func (rules AttachmentRules) FileSpec(address *url.URL, mediaCategory string) me
 		Width:     width,
 		Height:    height,
 		MimeType:  mime.TypeByExtension(extension),
+		Metadata:  make(map[string]string),
 	}
 
 	return result
