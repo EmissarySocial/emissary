@@ -21,6 +21,9 @@ import (
 // https://jmesb.com/how_to/create_id3_tags_using_ffmpeg
 // https://wiki.multimedia.cx/index.php?title=FFmpeg_Metadata
 
+// How to include album art...
+// https://www.bannerbear.com/blog/how-to-add-a-cover-art-to-audio-files-using-ffmpeg/
+
 // ExportZip exports a stream (and potentially its descendents) into a ZIP archive.
 // The `depth` parameter indicates how many levels to traverse.
 // The `pipelines` parameter provides rosetta.translate mappings for attachment metadata.
