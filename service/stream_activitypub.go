@@ -120,6 +120,7 @@ func (service *Stream) JSONLD(stream *model.Stream) mapof.Any {
 
 	// Try to apply the "social mapping" to the stream
 	if template, err := service.templateService.Load(stream.TemplateID); err == nil {
+		result[vocab.PropertyType] = template.SocialRole
 		if template.SocialRules.NotEmpty() {
 			err := template.SocialRules.Execute(schema.Wildcard(), stream, schema.Wildcard(), &result)
 			derp.Report(err)
