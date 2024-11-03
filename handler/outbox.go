@@ -154,15 +154,21 @@ func buildOutbox(serverFactory *server.Factory, actionMethod build.ActionMethod)
 			return activitypub.RenderProfileJSONLD(context, factory, &user)
 		}
 
-		// If we've loaded the User by userID, then replace the URL to use the username instead
-		if userIDHex := user.UserID.Hex(); userIDHex == username {
-			if userIDHex != user.Username {
-				context.Response().Header().Set("Hx-Replace-Url", "/@"+user.Username+"/"+context.Param("action"))
-			}
-		}
-
 		// Try to load the User's Outbox
 		actionID := first.String(context.Param("action"), "view")
+
+		// If we've directly loaded the User's profile page using a
+		// hex userID then replace the URL to use their username
+		// instead of their userID
+		if actionID == "view" {
+			if hxRequest := context.Request().Header.Get("Hx-Request"); hxRequest == "true" {
+				if userIDHex := user.UserID.Hex(); userIDHex == username {
+					if userIDHex != user.Username {
+						context.Response().Header().Set("Hx-Replace-Url", "/@"+user.Username)
+					}
+				}
+			}
+		}
 
 		if ok, err := handleJSONLD(context, &user); ok {
 			return derp.Wrap(err, location, "Error building JSON-LD")
