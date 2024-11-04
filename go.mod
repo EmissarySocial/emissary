@@ -31,7 +31,7 @@ require (
 	github.com/davidscottmills/goeditorjs v1.0.0
 	github.com/dustin/go-humanize v1.0.1
 	github.com/fclairamb/afero-s3 v0.3.1
-	github.com/fsnotify/fsnotify v1.7.0
+	github.com/fsnotify/fsnotify v1.8.0
 	github.com/gernest/mention v2.0.0+incompatible
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/gorilla/feeds v1.2.0
