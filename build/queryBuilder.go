@@ -110,6 +110,16 @@ func (builder QueryBuilder[T]) Where(field string, value any) QueryBuilder[T] {
 	return builder
 }
 
+func (builder QueryBuilder[T]) WhereGT(field string, value any) QueryBuilder[T] {
+	builder.Criteria = builder.Criteria.AndGreaterThan(field, value)
+	return builder
+}
+
+func (builder QueryBuilder[T]) WhereLT(field string, value any) QueryBuilder[T] {
+	builder.Criteria = builder.Criteria.AndLessThan(field, value)
+	return builder
+}
+
 func (builder QueryBuilder[T]) ByCreateDate() QueryBuilder[T] {
 	builder.SortField = "createDate"
 	return builder
