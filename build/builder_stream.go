@@ -364,6 +364,16 @@ func (w Stream) ETag() string {
 	return w._stream.ETag()
 }
 
+// OEmbedJSON returns the URL for the oEmbed JSON endpoint for this stream
+func (w Stream) OEmbedJSON() string {
+	return w.Host() + "/.oembed?url=" + w.Permalink() + "&format=json"
+}
+
+// OEmbedXML returns the URL for the oEmbed XML endpoint for this stream
+func (w Stream) OEmbedXML() string {
+	return w.Host() + "/.oembed?url=" + w.Permalink() + "&format=xml"
+}
+
 // HasGrandparent returns TRUE if the stream
 func (w Stream) HasGrandparent() bool {
 	return w._stream.HasGrandparent()
