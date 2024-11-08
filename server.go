@@ -201,15 +201,14 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.well-known/host-meta", handler.GetHostMeta(factory))
 	e.GET("/.well-known/host-meta.json", handler.GetHostMetaJSON(factory))
 	e.GET("/.well-known/nodeinfo", handler.GetNodeInfo(factory))
-	e.GET("/.well-known/oembed", handler.WithFactory(factory, handler.GetOEmbed))
 	e.GET("/.well-known/webfinger", handler.GetWebfinger(factory))
 	e.GET("/nodeinfo/2.0", handler.GetNodeInfo20(factory))
 	e.GET("/nodeinfo/2.1", handler.GetNodeInfo21(factory))
 
 	// Built-In Service  Routes
-	e.GET("/.close-window", handler.GetCloseWindow)
 	e.POST("/.follower/new", handler.PostEmailFollower(factory))
 	e.GET("/.giphy", handler.GetGiphyWidget(factory))
+	e.GET("/.oembed", handler.WithFactory(factory, handler.GetOEmbed))
 	e.POST("/.stripe", stripe.PostWebhook(factory))
 	e.GET("/.themes/:themeId/:bundleId", handler.GetThemeBundle(factory))
 	e.GET("/.themes/:themeId/resources/:filename", handler.GetThemeResource(factory))
