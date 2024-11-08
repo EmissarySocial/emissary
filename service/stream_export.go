@@ -107,7 +107,7 @@ func (service *Stream) ExportZip(writer *zip.Writer, parent *model.Stream, strea
 
 			// Add the corresponding extension to the filename
 			filespec := attachment.FileSpec(nil)
-			filespec.Bitrate = 320
+			filespec.Bitrate = 128 // aligning bitrate with player to see if it helps cacheability
 
 			filename = filename.PushTail(strings.TrimPrefix(filespec.Extension, "."))
 
