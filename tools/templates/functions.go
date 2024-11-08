@@ -214,6 +214,10 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 			return template.CSS(value)
 		},
 
+		"js": func(value string) string {
+			return template.JSEscapeString(value)
+		},
+
 		"json": func(value any) string {
 			result, _ := json.Marshal(value)
 			return string(result)
@@ -338,6 +342,14 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 
 		"newObjectId": func() string {
 			return primitive.NewObjectID().Hex()
+		},
+
+		"int": func(value string) int {
+			return convert.Int(value)
+		},
+
+		"int64": func(value string) int64 {
+			return convert.Int64(value)
 		},
 	}
 }
