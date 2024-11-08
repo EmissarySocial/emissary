@@ -60,13 +60,19 @@ func (rules AttachmentRules) FileSpec(address *url.URL, mediaCategory string) me
 		}
 	}
 
+	// Map duplicate extensions to the canonical value
+	switch extension {
+	case "jpg":
+		extension = "jpeg"
+	}
+
 	// Calculate default types if none is provided
 	if len(rules.Extensions) == 0 {
 
 		switch mediaCategory {
 
 		case "image":
-			rules.Extensions = []string{"webp", "png", "jpg"}
+			rules.Extensions = []string{"webp", "png", "jpeg", "gif"}
 
 		case "video":
 			rules.Extensions = []string{"mp4", "webm", "ogv"}
@@ -93,7 +99,6 @@ func (rules AttachmentRules) FileSpec(address *url.URL, mediaCategory string) me
 		Width:     width,
 		Height:    height,
 		MimeType:  mime.TypeByExtension(extension),
-		Metadata:  make(map[string]string),
 	}
 
 	return result

@@ -4,10 +4,12 @@ import (
 	"archive/zip"
 	"encoding/json"
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/counter"
+	"github.com/EmissarySocial/emissary/tools/ffmpeg"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
@@ -110,6 +112,7 @@ func (service *Stream) ExportZip(writer *zip.Writer, parent *model.Stream, strea
 			filename = filename.PushTail(strings.TrimPrefix(filespec.Extension, "."))
 
 			// Map attachment metadata
+			metadata := mapof.NewString()
 			if pipeline.NotEmpty() {
 
 				inSchema := schema.New(schema.Object{
@@ -126,18 +129,16 @@ func (service *Stream) ExportZip(writer *zip.Writer, parent *model.Stream, strea
 				outSchema := schema.New(schema.Object{
 					Wildcard: schema.String{},
 				})
-				outObject := mapof.NewString()
 
-				if err := pipeline.Execute(inSchema, inObject, outSchema, &outObject); err != nil {
+				if err := pipeline.Execute(inSchema, inObject, outSchema, &metadata); err != nil {
 					return derp.Wrap(err, location, "Error processing metadata")
-				}
-
-				for key, value := range outObject {
-					filespec.Metadata[key] = value
 				}
 			}
 
-			// Create a file in the ZIP archive
+			// Make a pipe to transfer from MediaServer to the Metadata writer
+			pipeReader, pipeWriter := io.Pipe()
+
+			// Create a fileWriter in the ZIP archive
 			fileHeader := zip.FileHeader{
 				Name:   filename.String(),
 				Method: zip.Store,
@@ -150,8 +151,19 @@ func (service *Stream) ExportZip(writer *zip.Writer, parent *model.Stream, strea
 			}
 
 			// Write the file into the ZIP archive
-			if err := service.mediaserver.Get(filespec, fileWriter); err != nil {
-				return derp.Wrap(err, location, "Error getting attachment")
+			// Using separate goroutine to avoid deadlock between pipe reader/writer
+			go func() {
+
+				defer pipeWriter.Close()
+
+				if err := service.mediaserver.Get(filespec, pipeWriter); err != nil {
+					derp.Report(derp.Wrap(err, location, "Error getting attachment"))
+				}
+			}()
+
+			// Add metadata and write to archive
+			if err := ffmpeg.SetMetadata(pipeReader, filespec.MimeType, metadata, fileWriter); err != nil {
+				return derp.Wrap(err, location, "Error setting metadata")
 			}
 		}
 	}

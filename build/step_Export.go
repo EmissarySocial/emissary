@@ -3,6 +3,7 @@ package build
 import (
 	"archive/zip"
 	"io"
+	"strings"
 
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/translate"
@@ -43,7 +44,8 @@ func (step StepExport) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 	}
 
 	// Done.
-	filename := streamBuilder._stream.Label + ".zip"
+	filename := strings.ReplaceAll(streamBuilder._stream.Label, `"`, "")
+	filename = filename + ".zip"
 	return Halt().AsFullPage().WithContentType("application/zip").WithHeader(`Content-Disposition`, `attachment; filename="`+filename+`"`)
 }
 
