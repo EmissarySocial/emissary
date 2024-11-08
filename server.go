@@ -201,7 +201,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.well-known/host-meta", handler.GetHostMeta(factory))
 	e.GET("/.well-known/host-meta.json", handler.GetHostMetaJSON(factory))
 	e.GET("/.well-known/nodeinfo", handler.GetNodeInfo(factory))
-	e.GET("/.well-known/oembed", handler.GetOEmbed(factory))
+	e.GET("/.well-known/oembed", handler.WithFactory(factory, handler.GetOEmbed))
 	e.GET("/.well-known/webfinger", handler.GetWebfinger(factory))
 	e.GET("/nodeinfo/2.0", handler.GetNodeInfo20(factory))
 	e.GET("/nodeinfo/2.1", handler.GetNodeInfo21(factory))

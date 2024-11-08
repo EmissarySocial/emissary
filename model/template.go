@@ -190,3 +190,18 @@ func (template *Template) Inherit(parent *Template) {
 		}
 	}
 }
+
+/******************************************
+ * OEmbed Methods
+ ******************************************/
+
+// HasOEmbed returns TRUE if this Template has an OEmbed template
+func (template *Template) HasOEmbed() bool {
+	return template.HTMLTemplate.Lookup("oembed") != nil
+}
+
+// GetOEmbed returns the OEmbed template for this Template
+// If no OEmbed template is found, then nil is returned
+func (template *Template) GetOEmbed() *template.Template {
+	return template.HTMLTemplate.Lookup("oembed")
+}

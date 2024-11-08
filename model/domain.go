@@ -66,6 +66,7 @@ func (domain *Domain) HasRegistrationForm() bool {
 	return domain.RegistrationID != ""
 }
 
+// Host returns a usable URL for this domain, including the HTTP(S) protocol and hostname
 func (domain *Domain) Host() string {
 	return domainlib.Protocol(domain.Hostname) + domain.Hostname
 }

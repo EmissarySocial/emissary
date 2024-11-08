@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"bytes"
+	"html/template"
 	"net/http"
 	"net/url"
 
@@ -127,4 +129,12 @@ func inlineError(ctx echo.Context, errorMessage string) error {
 	header.Set("Hx-Retarget", "#htmx-response-message")
 
 	return ctx.String(http.StatusOK, errorMessage)
+}
+
+func executeTemplate(template *template.Template, data any) string {
+	var buffer bytes.Buffer
+	if err := template.Execute(&buffer, data); err != nil {
+		return ""
+	}
+	return buffer.String()
 }
