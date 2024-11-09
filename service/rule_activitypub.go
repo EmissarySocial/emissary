@@ -32,7 +32,6 @@ func (service *Rule) JSONLD(rule model.Rule) mapof.Any {
 	// Reset JSON-LD for the rule.  We're going to recalculate EVERYTHING.
 	result := mapof.Any{
 		vocab.PropertyID:        service.ActivityPubURL(rule),
-		vocab.PropertyActor:     service.ActivityPubActorURL(rule),
 		vocab.PropertyPublished: hannibal.TimeFormat(time.Unix(rule.PublishDate, 0)),
 	}
 

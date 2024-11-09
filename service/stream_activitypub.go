@@ -58,7 +58,6 @@ func (service *Stream) JSONLD(stream *model.Stream) mapof.Any {
 	}
 
 	if stream.AttributedTo.NotEmpty() {
-		result[vocab.PropertyActor] = stream.AttributedTo.ProfileURL
 		result[vocab.PropertyAttributedTo] = stream.AttributedTo.ProfileURL
 	}
 
