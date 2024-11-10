@@ -5,6 +5,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// AttachmentSchema returns a validating schema for Attachment objects.
 func AttachmentSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
@@ -31,6 +32,8 @@ func AttachmentSchema() schema.Element {
  * Getter Interfaces
  ******************************************/
 
+// GetPointer implements the schema.PointerGetter interface, and
+// allows read/write access to (most) fields of the Attachment object.
 func (attachment *Attachment) GetPointer(name string) (any, bool) {
 
 	switch name {
@@ -75,6 +78,8 @@ func (attachment *Attachment) GetPointer(name string) (any, bool) {
 	return "", false
 }
 
+// GetStringOK implements the schema.StringGetter interface, and
+// returns string values for several fields of the Attachment object.
 func (attachment *Attachment) GetStringOK(name string) (string, bool) {
 
 	switch name {
@@ -93,6 +98,8 @@ func (attachment *Attachment) GetStringOK(name string) (string, bool) {
  * Setter Interfaces
  ******************************************/
 
+// SetString implemments the schema.StringSetter interface, and
+// allows setting string values for several fields of the Attachment object.
 func (attachment *Attachment) SetString(name string, value string) bool {
 
 	switch name {
