@@ -11,6 +11,8 @@ type ActorSummary struct {
 	Username string `bson:"preferredUsername"`
 }
 
+// UsernameOrID returns the best identifier we can find for an Actor:
+// either the Actor' username, if it exists, or the Actor's ID
 func (actor ActorSummary) UsernameOrID() string {
 	if actor.Username != "" {
 		return "@" + actor.Username + "@" + domain.NameOnly(actor.ID)
