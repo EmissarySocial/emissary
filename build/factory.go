@@ -36,6 +36,7 @@ type Factory interface {
 	Registration() *service.Registration
 	Response() *service.Response
 	Rule() *service.Rule
+	SearchTag() *service.SearchTag
 	Stream() *service.Stream
 	StreamDraft() *service.StreamDraft
 	Template() *service.Template

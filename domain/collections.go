@@ -45,6 +45,9 @@ const CollectionOAuthUserToken = "OAuthUserToken"
 // CollectionOutbox is the name of the database collection where users' Outbox records are stored
 const CollectionOutbox = "Outbox"
 
+// CollectionSearchTag is the name of the database collection where SearchTags are stored
+const CollectionSearchTag = "SearchTag"
+
 // CollectionStream is the name of the database collection where Streams are stored
 const CollectionStream = "Stream"
 

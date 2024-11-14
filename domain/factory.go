@@ -68,6 +68,7 @@ type Factory struct {
 	outboxService        service.Outbox
 	responseService      service.Response
 	ruleService          service.Rule
+	searchTagService     service.SearchTag
 	streamService        service.Stream
 	streamDraftService   service.StreamDraft
 	realtimeBroker       RealtimeBroker
@@ -133,6 +134,7 @@ func NewFactory(domain config.Domain, port string, providers []config.Provider, 
 	factory.outboxService = service.NewOutbox()
 	factory.responseService = service.NewResponse()
 	factory.ruleService = service.NewRule()
+	factory.searchTagService = service.NewSearchTag()
 	factory.streamService = service.NewStream()
 	factory.streamDraftService = service.NewStreamDraft()
 	factory.userService = service.NewUser()
@@ -332,6 +334,11 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.Outbox(),
 			factory.User(),
 			factory.Queue(),
+			factory.Host(),
+		)
+
+		factory.searchTagService.Refresh(
+			factory.collection(CollectionSearchTag),
 			factory.Host(),
 		)
 
