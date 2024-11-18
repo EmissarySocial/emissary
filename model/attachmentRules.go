@@ -16,6 +16,7 @@ type AttachmentRules struct {
 	Extensions sliceof.String // Allowed extensions.  The first value is used as the default.
 	Width      int            // Fixed width for all downloads
 	Height     int            // Fixed height for all downloads
+	Bitrate    int
 }
 
 // NewAttachmentRules returns a fully initialized AttachmentRules object
@@ -24,6 +25,7 @@ func NewAttachmentRules() AttachmentRules {
 		Extensions: []string{},
 		Width:      0,
 		Height:     0,
+		Bitrate:    0,
 	}
 }
 
@@ -39,6 +41,7 @@ func (rules AttachmentRules) FileSpec(address *url.URL, mediaCategory string) me
 	query := address.Query()
 	height := convert.Int(query.Get("height"))
 	width := convert.Int(query.Get("width"))
+	bitrate := convert.Int(query.Get("bitrate"))
 
 	// If Width is defined, use that.
 	if rules.Width > 0 {
@@ -58,6 +61,10 @@ func (rules AttachmentRules) FileSpec(address *url.URL, mediaCategory string) me
 		if rules.Width == 0 {
 			width = 0
 		}
+	}
+
+	if rules.Bitrate > 0 {
+		bitrate = rules.Bitrate
 	}
 
 	// Map duplicate extensions to the canonical value
@@ -98,6 +105,7 @@ func (rules AttachmentRules) FileSpec(address *url.URL, mediaCategory string) me
 		Extension: extension,
 		Width:     width,
 		Height:    height,
+		Bitrate:   bitrate,
 		MimeType:  mime.TypeByExtension(extension),
 	}
 
