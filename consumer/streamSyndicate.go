@@ -4,10 +4,11 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/turbine/queue"
 )
 
 // StreamSyndicate sends HTTP messages to syndication targets
-func StreamSyndicate(args mapof.Any) error {
+func StreamSyndicate(args mapof.Any) queue.Result {
 
 	// Find the endpoint Href for the selected syndication target
 	endpoint := args.GetString("endpoint")
@@ -17,9 +18,9 @@ func StreamSyndicate(args mapof.Any) error {
 	txn := remote.Post(endpoint).JSON(message)
 
 	if err := txn.Send(); err != nil {
-		return derp.Wrap(err, "consumer.StreamSyndicate", "Error sending syndication message")
+		return queue.Error(derp.Wrap(err, "consumer.StreamSyndicate", "Error sending syndication message"))
 	}
 
 	// Success!
-	return nil
+	return queue.Success()
 }
