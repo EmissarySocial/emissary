@@ -56,6 +56,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "delete":
 		return NewDelete(stepInfo)
 
+	case "delete-archive":
+		return NewDeleteArchive(stepInfo)
+
 	case "delete-attachments":
 		return NewDeleteAttachments(stepInfo)
 
@@ -83,11 +86,11 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "edit-widget":
 		return NewEditWidget(stepInfo)
 
-	case "export":
-		return NewExport(stepInfo)
-
 	case "forward-to":
 		return NewForwardTo(stepInfo)
+
+	case "get-archive":
+		return NewGetArchive(stepInfo)
 
 	case "halt":
 		return NewHalt(stepInfo)
@@ -106,6 +109,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 
 	case "inline-success":
 		return NewInlineSuccess(stepInfo)
+
+	case "make-archive":
+		return NewMakeArchive(stepInfo)
 
 	case "process-content":
 		return NewProcessContent(stepInfo)
