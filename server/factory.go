@@ -56,6 +56,7 @@ type Factory struct {
 
 	attachmentOriginals afero.Fs
 	attachmentCache     afero.Fs
+	exportCache         afero.Fs
 	commonDatabase      *mongo.Database
 	queue               queue.Queue
 
@@ -167,6 +168,12 @@ func (factory *Factory) start() {
 			derp.Report(derp.Wrap(err, "server.Factory.start", "Error getting attachment cache directory", config))
 		}
 
+		if exportCache, err := filesystemService.GetAfero(config.ExportCache); err == nil {
+			factory.exportCache = exportCache
+		} else {
+			derp.Report(derp.Wrap(err, "server.Factory.start", "Error getting export cache directory", config))
+		}
+
 		factory.config = config
 
 		// Mark all domains for deletion (then unmark them later)
@@ -180,8 +187,9 @@ func (factory *Factory) start() {
 		factory.providerService.Refresh(config.Providers)
 
 		if err := factory.refreshCommonDatabase(config.ActivityPubCache); err != nil {
-			derp.Report(derp.Wrap(err, "server.Factory.start", "Error refreshing ActivityStream cache", config.ActivityPubCache))
+			derp.Report(derp.Wrap(err, "server.Factory.start", "Error refreshing common database", config.ActivityPubCache))
 		}
+
 		factory.refreshQueue()
 
 		// Insert/Update a factory for each domain in the configuration
@@ -251,6 +259,7 @@ func (factory *Factory) refreshDomain(config config.Config, domainConfig config.
 		&factory.queue,
 		factory.attachmentOriginals,
 		factory.attachmentCache,
+		factory.exportCache,
 		&factory.httpCache,
 	)
 
@@ -267,14 +276,18 @@ func (factory *Factory) refreshDomain(config config.Config, domainConfig config.
 // refreshCommonDatabase updates the connection to the common database
 func (factory *Factory) refreshCommonDatabase(connection mapof.String) error {
 
+	const location = "server.Factory.refreshCommonDatabase"
+
 	// Collect arguments from the connection config
 	uri := connection.GetString("connectString")
 	database := connection.GetString("database")
 
 	// ActivityStream cache is not configured.
 	if uri == "" || database == "" {
-		return derp.NewInternalError("server.Factory.RefreshActivityService", "Common database is not configured")
+		return derp.NewInternalError(location, "Common database is not configured")
 	}
+
+	log.Trace().Str("database", database).Msg("Resetting common database")
 
 	oldConnection := factory.commonDatabase
 
@@ -282,16 +295,18 @@ func (factory *Factory) refreshCommonDatabase(connection mapof.String) error {
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(uri))
 
 	if err != nil {
-		return derp.Wrap(err, "server.Factory.RefreshActivityService", "Unable to connect to database", uri)
+		return derp.Wrap(err, location, "Unable to connect to database", uri)
 	}
 
 	factory.commonDatabase = client.Database(database)
+
+	log.Trace().Str("database", factory.commonDatabase.Name()).Msg("Finished resetting common database")
 
 	// If there is already a cache connection in place,
 	// then close it before we open a new one
 	if oldConnection != nil {
 		if err := oldConnection.Client().Disconnect(context.Background()); err != nil {
-			derp.Report(derp.Wrap(err, "server.Factory.RefreshActivityService", "Error disconnecting from database"))
+			derp.Report(derp.Wrap(err, location, "Error disconnecting from database"))
 		}
 	}
 
@@ -315,6 +330,7 @@ func (factory *Factory) refreshQueue() {
 		queue.WithConsumers(consumer.Run, remote.Consumer()),
 		queue.WithStorage(mongoStorage),
 		queue.WithPollStorage(true),
+		queue.WithRunImmediatePriority(32),
 	)
 }
 
@@ -625,24 +641,6 @@ func (factory *Factory) ActivityCollection() *mongo.Collection {
 
 	if factory.commonDatabase != nil {
 		return factory.commonDatabase.Collection("Document")
-	}
-
-	return nil
-}
-
-func (factory *Factory) QueueCollection() *mongo.Collection {
-
-	if factory.commonDatabase != nil {
-		return factory.commonDatabase.Collection("Queue")
-	}
-
-	return nil
-}
-
-func (factory *Factory) QueueErrorsCollection() *mongo.Collection {
-
-	if factory.commonDatabase != nil {
-		return factory.commonDatabase.Collection("QueueErrors")
 	}
 
 	return nil

@@ -37,6 +37,7 @@ type Factory interface {
 	Response() *service.Response
 	Rule() *service.Rule
 	Stream() *service.Stream
+	StreamArchive() *service.StreamArchive
 	StreamDraft() *service.StreamDraft
 	Template() *service.Template
 	Theme() *service.Theme

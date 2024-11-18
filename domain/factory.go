@@ -48,6 +48,7 @@ type Factory struct {
 	// Upload Directories (from server)
 	attachmentOriginals afero.Fs
 	attachmentCache     afero.Fs
+	exportCache         afero.Fs
 
 	// services (within this domain/factory)
 	activityService      service.ActivityStream
@@ -69,6 +70,7 @@ type Factory struct {
 	responseService      service.Response
 	ruleService          service.Rule
 	streamService        service.Stream
+	streamArchiveService service.StreamArchive
 	streamDraftService   service.StreamDraft
 	realtimeBroker       RealtimeBroker
 	userService          service.User
@@ -81,7 +83,7 @@ type Factory struct {
 }
 
 // NewFactory creates a new factory tied to a MongoDB database
-func NewFactory(domain config.Domain, port string, providers []config.Provider, activityCache *mongo.Collection, registrationService *service.Registration, serverEmail *service.ServerEmail, themeService *service.Theme, templateService *service.Template, widgetService *service.Widget, contentService *service.Content, providerService *service.Provider, queue *queue.Queue, attachmentOriginals afero.Fs, attachmentCache afero.Fs, httpCache *httpcache.HTTPCache) (*Factory, error) {
+func NewFactory(domain config.Domain, port string, providers []config.Provider, activityCache *mongo.Collection, registrationService *service.Registration, serverEmail *service.ServerEmail, themeService *service.Theme, templateService *service.Template, widgetService *service.Widget, contentService *service.Content, providerService *service.Provider, queue *queue.Queue, attachmentOriginals afero.Fs, attachmentCache afero.Fs, exportCache afero.Fs, httpCache *httpcache.HTTPCache) (*Factory, error) {
 
 	log.Info().Msg("Starting domain: " + domain.Hostname)
 
@@ -99,6 +101,7 @@ func NewFactory(domain config.Domain, port string, providers []config.Provider, 
 		httpCache:           httpCache,
 		attachmentOriginals: attachmentOriginals,
 		attachmentCache:     attachmentCache,
+		exportCache:         exportCache,
 		streamUpdateChannel: make(chan primitive.ObjectID, 1000),
 		port:                port,
 	}
@@ -134,6 +137,7 @@ func NewFactory(domain config.Domain, port string, providers []config.Provider, 
 	factory.responseService = service.NewResponse()
 	factory.ruleService = service.NewRule()
 	factory.streamService = service.NewStream()
+	factory.streamArchiveService = service.NewStreamArchive()
 	factory.streamDraftService = service.NewStreamDraft()
 	factory.userService = service.NewUser()
 	factory.webhookService = service.NewWebhook()
@@ -356,6 +360,16 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.StreamUpdateChannel(),
 		)
 
+		// Populate StreamArchive Service
+		factory.streamArchiveService.Refresh(
+			factory.Stream(),
+			factory.Attachment(),
+			factory.MediaServer(),
+			factory.exportCache,
+			factory.Queue(),
+			factory.Host(),
+		)
+
 		// Populate StreamDraft Service
 		factory.streamDraftService.Refresh(
 			factory.collection(CollectionStreamDraft),
@@ -572,6 +586,11 @@ func (factory *Factory) Outbox() *service.Outbox {
 // Stream returns a fully populated Stream service
 func (factory *Factory) Stream() *service.Stream {
 	return &factory.streamService
+}
+
+// StreamArchive returns a fully populated StreamArchive service
+func (factory *Factory) StreamArchive() *service.StreamArchive {
+	return &factory.streamArchiveService
 }
 
 // StreamDraft returns a fully populated StreamDraft service

@@ -18,6 +18,7 @@ func Schema() schema.Schema {
 				"templates":           schema.Array{Items: ReadableFolderSchema(), MinLength: 1},
 				"attachmentOriginals": WritableFolderSchema(),
 				"attachmentCache":     WritableFolderSchema(),
+				"exportCache":         WritableFolderSchema(),
 				"certificates":        WritableFolderSchema(),
 				"debugLevel":          schema.String{Enum: []string{"None", "Trace", "Debug", "Info", "Error"}, Default: "None"},
 				"adminEmail":          schema.String{Format: "email"},
@@ -51,6 +52,9 @@ func (config *Config) GetPointer(name string) (any, bool) {
 
 	case "attachmentCache":
 		return &config.AttachmentCache, true
+
+	case "exportCache":
+		return &config.ExportCache, true
 
 	case "certificates":
 		return &config.Certificates, true
