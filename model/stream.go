@@ -38,14 +38,14 @@ type Stream struct {
 	Label            string                       `json:"label,omitempty"        bson:"label,omitempty"`        // Label/Title of the document
 	Summary          string                       `json:"summary,omitempty"      bson:"summary,omitempty"`      // Brief summary of the document
 	IconURL          string                       `json:"iconUrl,omitempty"      bson:"iconUrl,omitempty"`      // URL of this document's icon/thumbnail image
+	Context          string                       `json:"context,omitempty"      bson:"context,omitempty"`      // Context of this document (usually a URL)
+	InReplyTo        string                       `json:"inReplyTo"              bson:"inReplyTo"`              // If this stream is a reply to another stream or web page, then this links to the original document.
 	AttributedTo     PersonLink                   `json:"attributedTo,omitempty" bson:"attributedTo,omitempty"` // List of people who are attributed to this document
 	Content          Content                      `json:"content,omitempty"      bson:"content,omitempty"`      // Body content object for this Stream.
 	Widgets          set.Slice[StreamWidget]      `json:"widgets,omitempty"      bson:"widgets,omitempty"`      // Additional widgets to include when building this Stream.
 	Tags             sliceof.Object[Tag]          `json:"tags,omitempty"         bson:"tags,omitempty"`         // List of tags that are associated with this document
 	Data             mapof.Any                    `json:"data,omitempty"         bson:"data,omitempty"`         // Set of data to populate into the Template.  This is validated by the JSON-Schema of the Template.
 	Syndication      delta.Slice[string]          `json:"syndication,omitempty"  bson:"syndication,omitempty"`  // List of external services that this Stream has been syndicated to.
-	Context          string                       `json:"context,omitempty"      bson:"context,omitempty"`      // Context of this document (usually a URL)
-	InReplyTo        string                       `json:"inReplyTo"              bson:"inReplyTo"`              // If this stream is a reply to another stream or web page, then this links to the original document.
 	PublishDate      int64                        `json:"publishDate"            bson:"publishDate"`            // Unix timestamp of the date/time when this document is/was/will be first available on the domain.
 	UnPublishDate    int64                        `json:"unpublishDate"          bson:"unpublishDate"`          // Unix timestemp of the date/time when this document will no longer be available on the domain.
 	IsFeatured       bool                         `json:"isFeatured"             bson:"isFeatured"`             // TRUE if this Stream is featured by its parent container.

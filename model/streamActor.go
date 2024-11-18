@@ -5,6 +5,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
+// StreamActor defines the settings for a Stream to be used as an Actor in social integrations
 type StreamActor struct {
 	SocialRole         string `json:"social-role"          bson:"socialRole"`         // StreamActor Role to use for this Template in social integrations (Person, Organization, Application, etc.)
 	RSS                bool   `json:"rss"                  bson:"rss"`                // If TRUE, Generate RSS/Atom/JSONFeed/WebSub endpoints for this actor and its children

@@ -25,6 +25,8 @@ func SetMetadata(input io.Reader, mimeType string, metadata map[string]string, o
 
 	const location = "ffmpeg.SetMetadata"
 
+	log.Trace().Str("location", location).Msg("Setting metadata")
+
 	// RULE: If FFmpeg is not installed, then break
 	if !isFFmpegInstalled {
 		return derp.NewInternalError(location, "FFmpeg is not installed")
@@ -32,6 +34,9 @@ func SetMetadata(input io.Reader, mimeType string, metadata map[string]string, o
 
 	// RULE: If there is no metadata to set, then just copy the input to the output
 	if len(metadata) == 0 {
+
+		log.Trace().Str("location", location).Msg("Metadata is empty.  Copying input directly to output")
+
 		if _, err := io.Copy(output, input); err != nil {
 			return derp.Wrap(err, location, "No metadata to set", "Error copying input to output")
 		}
@@ -71,14 +76,12 @@ func SetMetadata(input io.Reader, mimeType string, metadata map[string]string, o
 		}
 	}
 
-	// add("-write_id3v1", "1")          // write v1 tags if possible
-	// add("-id3v2_version", "4")        // write v2.4 tags if possible
 	add("-f", ffmpegFormat(mimeType)) // specify the same format for the output (because it can't be deduced from a pipe)
 	add("-c:a", "copy")               // use the original codec without change
 	add("-flush_packets", "0")        // wait for max size before writing: https://stackoverflow.com/questions/54620528/metadata-in-mp3-not-working-when-piping-from-ffmpeg-with-album-art
 	add("pipe:1")                     // write output to the output writer
 
-	log.Trace().Msg("ffmpeg " + strings.Join(args, " "))
+	log.Trace().Str("location", location).Msg("ffmpeg " + strings.Join(args, " "))
 
 	// Set up the FFmpeg command
 	command := exec.Command("ffmpeg", args...)
