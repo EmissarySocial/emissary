@@ -3,6 +3,7 @@ package build
 import (
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/benpate/derp"
@@ -38,7 +39,8 @@ func (step StepGetArchive) Get(builder Builder, writer io.Writer) PipelineBehavi
 				return Halt().WithError(err)
 			}
 
-			return Halt().AsFullPage().WithContentType("application/x-zip").WithHeader("Content-Disposition", "attachment; filename=\"archive.zip\"")
+			filename := strings.ReplaceAll(streamBuilder._stream.Label, `"`, "") + ".zip"
+			return Halt().AsFullPage().WithContentType("application/x-zip").WithHeader("Content-Disposition", `attachment; filename="`+filename+`"`)
 		}
 
 		// First time through the loop, if we don't already have a file,
