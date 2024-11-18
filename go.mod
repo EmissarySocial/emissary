@@ -9,7 +9,7 @@ require (
 	github.com/benpate/data v0.28.4
 	github.com/benpate/data-mock v0.28.12
 	github.com/benpate/data-mongo v0.28.10
-	github.com/benpate/derp v0.31.0
+	github.com/benpate/derp v0.31.1
 	github.com/benpate/digit v0.13.2
 	github.com/benpate/domain v0.2.3
 	github.com/benpate/exp v0.8.3
@@ -18,15 +18,15 @@ require (
 	github.com/benpate/hannibal v0.11.21
 	github.com/benpate/html v0.16.11
 	github.com/benpate/icon v0.4.0
-	github.com/benpate/mediaserver v0.12.5
+	github.com/benpate/mediaserver v0.12.6
 	github.com/benpate/re v0.3.1
-	github.com/benpate/remote v0.16.8
-	github.com/benpate/rosetta v0.23.1
+	github.com/benpate/remote v0.17.0
+	github.com/benpate/rosetta v0.23.2
 	github.com/benpate/sherlock v0.8.8
 	github.com/benpate/steranko v0.20.1
 	github.com/benpate/table v0.6.20
 	github.com/benpate/toot v0.3.0
-	github.com/benpate/turbine v0.1.2
+	github.com/benpate/turbine v0.2.0
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/davidscottmills/goeditorjs v1.0.0
 	github.com/dustin/go-humanize v1.0.1
@@ -60,7 +60,7 @@ require (
 	github.com/yuin/goldmark-highlighting/v2 v2.0.0-20230729083705-37449abec8cc
 	go.mongodb.org/mongo-driver v1.17.1
 	golang.org/x/crypto v0.29.0
-	golang.org/x/exp v0.0.0-20241009180824-f66d83c29e7c
+	golang.org/x/exp v0.0.0-20241108190413-2d47ceb2692f
 	golang.org/x/oauth2 v0.24.0
 	willnorris.com/go/microformats v1.2.0
 	willnorris.com/go/webmention v0.0.0-20220108183051-4a23794272f0
@@ -117,7 +117,7 @@ require (
 	github.com/yeqown/reedsolomon v1.0.0 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
 	golang.org/x/image v0.22.0 // indirect
-	golang.org/x/net v0.30.0 // indirect
+	golang.org/x/net v0.31.0 // indirect
 	golang.org/x/sync v0.9.0 // indirect
 	golang.org/x/sys v0.27.0 // indirect
 	golang.org/x/text v0.20.0 // indirect
