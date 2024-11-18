@@ -590,6 +590,11 @@ func (factory *Factory) Outbox() *service.Outbox {
 	return &factory.outboxService
 }
 
+// SearchTag returns a fully populated SearchTag service
+func (factory *Factory) SearchTag() *service.SearchTag {
+	return &factory.searchTagService
+}
+
 // Stream returns a fully populated Stream service
 func (factory *Factory) Stream() *service.Stream {
 	return &factory.streamService
