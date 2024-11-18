@@ -18,7 +18,7 @@ require (
 	github.com/benpate/hannibal v0.11.21
 	github.com/benpate/html v0.16.11
 	github.com/benpate/icon v0.4.0
-	github.com/benpate/mediaserver v0.12.6
+	github.com/benpate/mediaserver v0.12.7
 	github.com/benpate/re v0.3.1
 	github.com/benpate/remote v0.17.0
 	github.com/benpate/rosetta v0.23.2
@@ -80,7 +80,7 @@ require (
 	github.com/dyatlov/go-opengraph/opengraph v0.0.0-20220524092352-606d7b1e5f8a // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/fogleman/gg v1.3.0 // indirect
-	github.com/gammazero/deque v0.2.1 // indirect
+	github.com/gammazero/deque v1.0.0 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.6.0 // indirect
 	github.com/go-test/deep v1.1.1 // indirect
