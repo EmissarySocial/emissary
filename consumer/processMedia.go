@@ -6,7 +6,7 @@ import (
 	"github.com/benpate/turbine/queue"
 )
 
-func SendActivityPubMessage(factory *domain.Factory, args mapof.Any) queue.Result {
+func ProcessMedia(factory *domain.Factory, args mapof.Any) queue.Result {
 
 	return queue.Success()
 }

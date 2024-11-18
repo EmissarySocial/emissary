@@ -1,9 +1,7 @@
 package consumer
 
 import (
-	"github.com/EmissarySocial/emissary/domain"
-	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/turbine/queue"
 )
 
 // Consumer is the primary queue consumer for Emissary.  It handles background tasks that are triggered by the queue.
@@ -20,42 +18,35 @@ func New(serverFactory ServerFactory) Consumer {
 
 // Run is the actual consumer function that is called by the queue.
 // It receives a task name and a map of arguments, and returns a boolean success value and an error.
-func (consumer Consumer) Run(name string, args map[string]any) (bool, error) {
-
-	var factory *domain.Factory
-
-	arguments := mapof.Any(args)
-
-	if host := arguments.GetString("host"); host != "" {
-		var err error
-		factory, err = consumer.serverFactory.ByDomainName(host)
-
-		if err != nil {
-			return true, derp.Wrap(err, "consumer.Run", "Cannot find factory for host", host)
-		}
-	}
+func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 
 	switch name {
 
 	case "CreateWebSubFollower":
-		return true, CreateWebSubFollower(factory, args)
+		return WithFactory(consumer.serverFactory, args, CreateWebSubFollower)
+
+	case "MakeStreamArchive":
+		return WithStream(consumer.serverFactory, args, MakeStreamArchive)
+
+	case "ProcessMedia":
+		return WithFactory(consumer.serverFactory, args, ProcessMedia)
 
 	case "ReceiveWebMention":
-		return true, ReceiveWebMention(factory, args)
+		return WithFactory(consumer.serverFactory, args, ReceiveWebMention)
 
 	case "SendActivityPubMessage":
-		return true, SendActivityPubMessage(factory, args)
+		return WithFactory(consumer.serverFactory, args, SendActivityPubMessage)
 
 	case "SendWebMention":
-		return true, SendWebMention(args)
+		return SendWebMention(args)
 
 	case "SendWebSubMessage":
-		return true, SendWebSubMessage(args)
+		return SendWebSubMessage(args)
 
 	case "stream.syndicate", "stream.syndicate.undo":
-		return true, StreamSyndicate(args)
+		return StreamSyndicate(args)
 
 	}
 
-	return false, nil
+	return queue.Ignored()
 }

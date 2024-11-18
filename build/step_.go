@@ -41,6 +41,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.Delete:
 		return StepDelete(s)
 
+	case step.DeleteArchive:
+		return StepDeleteArchive(s)
+
 	case step.DeleteAttachments:
 		return StepDeleteAttachments(s)
 
@@ -68,11 +71,11 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.EditWidget:
 		return StepEditWidget(s)
 
-	case step.Export:
-		return StepExport(s)
-
 	case step.ForwardTo:
 		return StepForwardTo(s)
+
+	case step.GetArchive:
+		return StepGetArchive(s)
 
 	case step.Halt:
 		return StepHalt(s)
@@ -88,6 +91,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 
 	case step.InlineSuccess:
 		return StepInlineSuccess(s)
+
+	case step.MakeArchive:
+		return StepMakeArchive(s)
 
 	case step.ProcessContent:
 		return StepProcessContent(s)

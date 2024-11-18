@@ -9,9 +9,10 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/turbine/queue"
 )
 
-func SendWebSubMessage(args mapof.Any) error {
+func SendWebSubMessage(args mapof.Any) queue.Result {
 
 	const location = "consumer.SendWebSubMessage"
 
@@ -49,9 +50,9 @@ func SendWebSubMessage(args mapof.Any) error {
 
 	// Try to send the transaction to the remote WebSub client
 	if err := transaction.Send(); err != nil {
-		return derp.Wrap(err, location, "Error sending WebSub message")
+		return queue.Error(derp.Wrap(err, location, "Error sending WebSub message"))
 	}
 
 	// Woot woot!
-	return nil
+	return queue.Success()
 }

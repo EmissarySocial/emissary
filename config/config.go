@@ -24,6 +24,7 @@ type Config struct {
 	Templates           sliceof.Object[mapof.String] `json:"templates"`           // Folders containing all stream templates
 	AttachmentOriginals mapof.String                 `json:"attachmentOriginals"` // Folder where original attachments will be stored
 	AttachmentCache     mapof.String                 `json:"attachmentCache"`     // Folder (possibly memory cache) where cached versions of attachmented files will be stored.
+	ExportCache         mapof.String                 `json:"exportCache"`         // Folder where exported files will be stored
 	Certificates        mapof.String                 `json:"certificates"`        // Folder containing the SSL certificate cache for Let's Encrypt AutoSSL
 	ActivityPubCache    mapof.String                 `json:"activityPubCache"`    // Connection string for ActivityPub cache database
 	AdminEmail          string                       `json:"adminEmail"`          // Email address of the administrator
@@ -52,6 +53,7 @@ func DefaultConfig() Config {
 		Templates:           sliceof.Object[mapof.String]{mapof.String{"adapter": "EMBED", "location": "templates"}},
 		AttachmentOriginals: mapof.String{"adapter": "FILE", "location": "./.emissary/attachments"},
 		AttachmentCache:     mapof.String{"adapter": "FILE", "location": "./.emissary/cache"},
+		ExportCache:         mapof.String{"adapter": "FILE", "location": "./.emissary/exports"},
 		Certificates:        mapof.String{"adapter": "FILE", "location": "./.emissary/certificates"},
 		ActivityPubCache:    mapof.String{},
 		DebugLevel:          "None",

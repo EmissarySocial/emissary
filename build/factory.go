@@ -38,6 +38,7 @@ type Factory interface {
 	Rule() *service.Rule
 	SearchTag() *service.SearchTag
 	Stream() *service.Stream
+	StreamArchive() *service.StreamArchive
 	StreamDraft() *service.StreamDraft
 	Template() *service.Template
 	Theme() *service.Theme

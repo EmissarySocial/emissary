@@ -4,10 +4,11 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/domain"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/turbine/queue"
 	"willnorris.com/go/webmention"
 )
 
-func SendWebMention(args mapof.Any) error {
+func SendWebMention(args mapof.Any) queue.Result {
 
 	const location = "consumer.SendWebMention"
 
@@ -19,7 +20,7 @@ func SendWebMention(args mapof.Any) error {
 
 	// RULE: No need to send web mentions to local domains
 	if domain.IsLocalhost(target) {
-		return nil
+		return queue.Success()
 	}
 
 	// Try to find endpont
@@ -27,14 +28,14 @@ func SendWebMention(args mapof.Any) error {
 
 		// RULE: Do not allow remote servers to send webmentions to local domain either
 		if domain.IsLocalhost(endpoint) {
-			return nil
+			return queue.Success()
 		}
 
 		if response, err := client.SendWebmention(endpoint, source, target); err != nil {
-			return derp.Wrap(err, location, "Error sending webmention", source, target, response)
+			return queue.Error(derp.Wrap(err, location, "Error sending webmention", source, target, response))
 		}
 	}
 
 	// Veni vidi vici
-	return nil
+	return queue.Success()
 }

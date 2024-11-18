@@ -179,7 +179,7 @@ func getSetupForm(name string) (form.Element, bool, error) {
 					{Type: "text", Label: "Bucket", Path: "attachmentOriginals.bucket", Options: mapof.Any{"show-if": "attachmentOriginals.adapter eq S3"}},
 					{Type: "text", Label: "Path", Path: "attachmentOriginals.path", Options: mapof.Any{"show-if": "attachmentOriginals.adapter eq S3"}},
 				}},
-				{Type: "layout-vertical", Label: "Thumbnails", Children: []form.Element{
+				{Type: "layout-vertical", Label: "Cache", Children: []form.Element{
 					{Type: "select", Label: "Adapter", Path: "attachmentCache.adapter"},
 					{Type: "text", Label: "Location", Path: "attachmentCache.location"},
 					{Type: "text", Label: "AccessKey", Path: "attachmentCache.accessKey", Options: mapof.Any{"show-if": "attachmentCache.adapter eq S3"}},
@@ -188,6 +188,16 @@ func getSetupForm(name string) (form.Element, bool, error) {
 					{Type: "text", Label: "Region", Path: "attachmentCache.region", Options: mapof.Any{"show-if": "attachmentCache.adapter eq S3"}},
 					{Type: "text", Label: "Bucket", Path: "attachmentCache.bucket", Options: mapof.Any{"show-if": "attachmentCache.adapter eq S3"}},
 					{Type: "text", Label: "Path", Path: "attachmentCache.path", Options: mapof.Any{"show-if": "attachmentCache.adapter eq S3"}},
+				}},
+				{Type: "layout-vertical", Label: "Exports", Children: []form.Element{
+					{Type: "select", Label: "Adapter", Path: "exportCache.adapter"},
+					{Type: "text", Label: "Location", Path: "exportCache.location"},
+					{Type: "text", Label: "AccessKey", Path: "exportCache.accessKey", Options: mapof.Any{"show-if": "exportCache.adapter eq S3"}},
+					{Type: "text", Label: "SecretKey", Path: "exportCache.secretKey", Options: mapof.Any{"show-if": "exportCache.adapter eq S3"}},
+					{Type: "text", Label: "Token", Path: "exportCache.token", Options: mapof.Any{"show-if": "exportCache.adapter eq S3"}},
+					{Type: "text", Label: "Region", Path: "exportCache.region", Options: mapof.Any{"show-if": "exportCache.adapter eq S3"}},
+					{Type: "text", Label: "Bucket", Path: "exportCache.bucket", Options: mapof.Any{"show-if": "exportCache.adapter eq S3"}},
+					{Type: "text", Label: "Path", Path: "exportCache.path", Options: mapof.Any{"show-if": "exportCache.adapter eq S3"}},
 				}},
 			},
 		}, false, nil
