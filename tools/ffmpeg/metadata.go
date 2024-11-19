@@ -57,7 +57,7 @@ func SetMetadata(input io.Reader, mimeType string, metadata map[string]string, o
 
 	// Special case for cover art
 	if cover := metadata["cover"]; cover != "" {
-		add("-i", cover+".jpg?width=300&height=300")  // read the cover art from a URL
+		add("-i", cover+".jpg")                       // read the cover art from a URL
 		add("-map", "0:a")                            // Map audio into the output file
 		add("-map", "1:v")                            // Map cover art into the output file
 		add("-c:v", "copy")                           // use the original codec without change
