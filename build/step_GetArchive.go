@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/benpate/derp"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // StepGetArchive represents an action-step that can delete a Stream from the Domain
@@ -32,6 +33,7 @@ func (step StepGetArchive) Get(builder Builder, writer io.Writer) PipelineBehavi
 	// If the export file already exists, then return it
 	if streamArchiveService.Exists(streamID, step.Token) {
 
+		spew.Dump("StepGetArchve.  writer is null?", writer == nil)
 		if err := streamArchiveService.Read(streamID, step.Token, writer); err != nil {
 			return Halt().WithError(err)
 		}

@@ -16,6 +16,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/turbine/queue"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -168,6 +169,8 @@ func (service *StreamArchive) Read(streamID primitive.ObjectID, token string, wr
 	defer file.Close()
 
 	// Copy the fil to the destination
+	spew.Dump("service.StreamArchive.Read.  writer is null?", writer == nil)
+	spew.Dump("service.StreamArchive.Read.  file is null?", file == nil)
 	if _, err = io.Copy(writer, file); err != nil {
 		return derp.Wrap(err, location, "Error copying file", filename)
 	}
