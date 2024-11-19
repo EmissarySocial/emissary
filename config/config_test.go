@@ -63,6 +63,9 @@ func TestConfig(t *testing.T) {
 		{"attachmentCache.bucket", "BUCKET", nil},
 		{"attachmentCache.path", "PATH...", nil},
 
+		{"exportCache.adapter", "FILE", nil},
+		{"exportCache.location", "C:/FILE/PATH", nil},
+
 		{"adminEmail", "ADMIN@EMAIL.COM", nil},
 		{"debugLevel", "Trace", nil},
 		{"httpPort", "8080", 8080},
