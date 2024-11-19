@@ -291,21 +291,20 @@ func (service *StreamArchive) writeToZip(zipWriter *zip.Writer, parent *model.St
 				return derp.Wrap(err, location, "Error creating attachment file")
 			}
 
-			// Write the file into the ZIP archive
 			// Using separate goroutine to avoid deadlock between pipe reader/writer
 			go func() {
-
-				defer pipeWriter.Close()
-
-				if err := service.mediaserver.Get(filespec, pipeWriter); err != nil {
-					derp.Report(derp.Wrap(err, location, "Error getting attachment"))
+				// Send the output from the MediaServer through FFmpeg one more time
+				// to add metadata to the file *before* it's written to the ZIP archive
+				if err := ffmpeg.SetMetadata(pipeReader, filespec.MimeType, metadata, fileWriter); err != nil {
+					derp.Report(derp.Wrap(err, location, "Error setting metadata"))
 				}
 			}()
 
-			// Send the output from the MediaServer through FFmpeg one more time
-			// to add metadata to the file *before* it's written to the ZIP archive
-			if err := ffmpeg.SetMetadata(pipeReader, filespec.MimeType, metadata, fileWriter); err != nil {
-				return derp.Wrap(err, location, "Error setting metadata")
+			// Write the file into the ZIP archive
+			defer pipeWriter.Close()
+
+			if err := service.mediaserver.Get(filespec, pipeWriter); err != nil {
+				return derp.Wrap(err, location, "Error getting attachment")
 			}
 		}
 	}

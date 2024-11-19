@@ -85,7 +85,7 @@ func (rules AttachmentRules) FileSpec(address *url.URL, mediaCategory string) me
 			rules.Extensions = []string{"mp4", "webm", "ogv"}
 
 		case "audio":
-			rules.Extensions = []string{"m4a", "mp3", "aac", "ogg", "flac"}
+			rules.Extensions = []string{"mp3", "aac", "ogg", "flac"}
 		}
 	}
 
