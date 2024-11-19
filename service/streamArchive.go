@@ -62,7 +62,15 @@ func (service *StreamArchive) Close() {
 
 // Exists returns TRUE if the specified ZIP archive exists in the export cache
 func (service *StreamArchive) Exists(streamID primitive.ObjectID, token string) bool {
-	exists, err := afero.Exists(service.exportCache, service.filename(streamID, token))
+	filename := service.filename(streamID, token)
+	exists, err := afero.Exists(service.exportCache, filename)
+	return exists && (err == nil)
+}
+
+// ExistsTemp returns TRUE if a tempfile archive exists in the export cache
+func (service *StreamArchive) ExistsTemp(streamID primitive.ObjectID, token string) bool {
+	filename := service.filename(streamID, token) + ".tmp"
+	exists, err := afero.Exists(service.exportCache, filename)
 	return exists && (err == nil)
 }
 
@@ -82,30 +90,64 @@ func (service *StreamArchive) Create(stream *model.Stream, options StreamArchive
 		return nil
 	}
 
+	// If a temp file already exists, then there is nothing to do.
+	if service.ExistsTemp(stream.StreamID, options.Token) {
+		log.Trace().Str("location", location).Str("filename", filename).Msg("ZIP archive is being created.")
+		return nil
+	}
+
+	// Create a temp file in the export cache
+	if err := service.createTempfile(filename, stream, options); err != nil {
+		return derp.Wrap(err, location, "Error creating ZIP archive")
+	}
+
+	// Move the temp file to the permanent location
+	if err := service.exportCache.Rename(filename+".tmp", filename); err != nil {
+		return derp.Wrap(err, location, "Error moving temp file into place")
+	}
+
+	// Great success.
+	return nil
+}
+
+// createTempfile creates a ZIP archive of a stream in a temporary/working location.
+func (service *StreamArchive) createTempfile(filename string, stream *model.Stream, options StreamArchiveOptions) (errorResult error) {
+
+	const location = "service.StreamArchive.createTempfile"
+
 	// Create a new file in the export cache
-	file, err := service.exportCache.Create(filename)
+	file, err := service.exportCache.Create(filename + ".tmp")
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error opening file", filename)
 	}
 
-	defer file.Close()
-
 	log.Trace().Str("location", location).Str("filename", filename).Msg("Opened file in export cache...")
 
 	// Write the ZIP archive to the cached file
 	zipWriter := zip.NewWriter(file)
-	defer zipWriter.Close()
+
+	defer func() {
+		zipWriter.Close()
+		file.Close()
+
+		if errorResult != nil {
+			derp.Report(service.exportCache.Remove(filename + ".tmp"))
+		}
+	}()
 
 	if err := service.writeToZip(zipWriter, nil, stream, "", options); err != nil {
 		if err := service.Delete(stream.StreamID, options.Token); err != nil {
-			return derp.Wrap(err, location, "Error writing/deleting ZIP archive")
+			errorResult = derp.Wrap(err, location, "Error writing/deleting ZIP archive")
+			return
 		}
-		return derp.Wrap(err, location, "Error writing ZIP archive")
+		errorResult = derp.Wrap(err, location, "Error writing ZIP archive")
+		return
 	}
 
 	log.Trace().Str("location", location).Str("filename", filename).Msg("Finished writing ZIP file to export cache.")
-	return nil
+	errorResult = nil
+	return
 }
 
 // Read retrieves a ZIP archive from the export cache.  If the file does not

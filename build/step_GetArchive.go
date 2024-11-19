@@ -4,7 +4,6 @@ import (
 	"io"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/benpate/derp"
 )
@@ -30,34 +29,22 @@ func (step StepGetArchive) Get(builder Builder, writer io.Writer) PipelineBehavi
 	streamArchiveService := streamBuilder.factory().StreamArchive()
 	streamID := streamBuilder._stream.StreamID
 
-	for counter := range 6 {
+	// If the export file already exists, then return it
+	if streamArchiveService.Exists(streamID, step.Token) {
 
-		// If the export file already exists, then return it
-		if streamArchiveService.Exists(streamID, step.Token) {
-
-			if err := streamArchiveService.Read(streamID, step.Token, writer); err != nil {
-				return Halt().WithError(err)
-			}
-
-			filename := strings.ReplaceAll(streamBuilder._stream.Label, `"`, "") + ".zip"
-			return Halt().AsFullPage().WithContentType("application/x-zip").WithHeader("Content-Disposition", `attachment; filename="`+filename+`"`)
+		if err := streamArchiveService.Read(streamID, step.Token, writer); err != nil {
+			return Halt().WithError(err)
 		}
 
-		// First time through the loop, if we don't already have a file,
-		// try to create one, then wait for it to be created.
-		if counter == 0 {
-			stepMakeArchive := StepMakeArchive(step)
-			stepMakeArchive.Post(builder, writer)
-		}
-
-		// Wait up to (1 + 2 + 4 + 8 + 16) = 31 seconds for the file to generate before giving up.
-		if counter < 5 {
-			time.Sleep(time.Duration(2^counter) * time.Second)
-		}
+		filename := strings.ReplaceAll(streamBuilder._stream.Label, `"`, "") + ".zip"
+		return Halt().AsFullPage().WithContentType("application/x-zip").WithHeader("Content-Disposition", `attachment; filename="`+filename+`"`)
 	}
 
-	// Fall through to here means that the file is taking a LOONG time to generate.
-	// So just return a "please wait" message and tell the user to come back later.
+	// If we don't already have a file, try to create one, then wait for it to be created.
+	stepMakeArchive := StepMakeArchive(step)
+	stepMakeArchive.Post(builder, writer)
+
+	// Return a "please wait" message and tell the user to come back later.
 	return step.FileNotReady(builder, writer)
 }
 
@@ -67,11 +54,11 @@ func (step StepGetArchive) Post(builder Builder, _ io.Writer) PipelineBehavior {
 }
 
 func (step StepGetArchive) FileNotReady(builder Builder, writer io.Writer) PipelineBehavior {
-	_, _ = writer.Write([]byte(`{"error": "Export file is still being generated. Please try again in a five minutes."}`))
+	_, _ = writer.Write([]byte(`<div>Export file is being generated. Please <a href="javascript:window.location.reload()">try again</a> in one minute.</div>`))
 
 	return Halt().
 		AsFullPage().
 		WithStatusCode(http.StatusServiceUnavailable).
-		WithHeader("Retry-After", "300").
-		WithContentType("application/json")
+		WithHeader("Refresh", "60").
+		WithContentType("text/html")
 }
