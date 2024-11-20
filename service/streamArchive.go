@@ -65,7 +65,7 @@ func (service *StreamArchive) Close() {
 func (service *StreamArchive) Exists(streamID primitive.ObjectID, token string) bool {
 	filename := service.filename(streamID, token)
 	exists, _ := afero.Exists(service.exportCache, filename)
-
+	spew.Dump("service.StreamArchive.Exists:", filename, exists)
 	return exists
 }
 
@@ -73,6 +73,7 @@ func (service *StreamArchive) Exists(streamID primitive.ObjectID, token string) 
 func (service *StreamArchive) ExistsTemp(streamID primitive.ObjectID, token string) bool {
 	filename := service.filename(streamID, token) + ".tmp"
 	exists, _ := afero.Exists(service.exportCache, filename)
+	spew.Dump("service.StreamArchive.ExistsTemp:", filename, exists)
 	return exists
 }
 
