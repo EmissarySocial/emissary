@@ -52,8 +52,10 @@ func SetMetadata(input io.Reader, mimeType string, metadata map[string]string, o
 		args = append(args, values...)
 	}
 
-	add("-f", ffmpegFormat(mimeType)) // specify input format because it can't be deduced from a pipe
-	add("-i", "pipe:0")               // read the input from stdin
+	add("-f", ffmpegFormat(mimeType))   // specify input format because it can't be deduced from a pipe
+	add("-probe_size", "5000000")       // increase the probe size to 5MB to get more accurate metadata
+	add("-analyzeduration", "30000000") // increase the analysis duration to 30 seconds to get more accurate metadata
+	add("-i", "pipe:0")                 // read the input from stdin
 
 	// Special case for cover art
 	if cover := metadata["cover"]; cover != "" {
