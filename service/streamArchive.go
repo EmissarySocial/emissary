@@ -64,8 +64,12 @@ func (service *StreamArchive) Close() {
 // Exists returns TRUE if the specified ZIP archive exists in the export cache
 func (service *StreamArchive) Exists(streamID primitive.ObjectID, token string) bool {
 	filename := service.filename(streamID, token)
-	exists, _ := afero.Exists(service.exportCache, filename)
-	spew.Dump("service.StreamArchive.Exists:", filename, exists)
+	exists, err := afero.Exists(service.exportCache, filename)
+	spew.Dump("service.StreamArchive.Exists ----------------:", filename, exists, err)
+
+	fileInfo, err := service.exportCache.Stat(filename)
+	spew.Dump(fileInfo, err)
+	spew.Dump("------------------")
 	return exists
 }
 
