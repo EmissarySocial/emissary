@@ -18,7 +18,7 @@ require (
 	github.com/benpate/hannibal v0.11.21
 	github.com/benpate/html v0.16.11
 	github.com/benpate/icon v0.4.0
-	github.com/benpate/mediaserver v0.12.10
+	github.com/benpate/mediaserver v0.13.0
 	github.com/benpate/re v0.3.1
 	github.com/benpate/remote v0.17.0
 	github.com/benpate/rosetta v0.23.2
@@ -40,15 +40,15 @@ require (
 	github.com/kr/jsonfeed v0.1.1
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/labstack/gommon v0.4.2
-	github.com/maypok86/otter v1.2.3
+	github.com/maypok86/otter v1.2.4
 	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/mmcdole/gofeed v1.3.0
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
-	github.com/relvacode/iso8601 v1.5.0
+	github.com/relvacode/iso8601 v1.6.0
 	github.com/rs/zerolog v1.33.0
 	github.com/spf13/afero v1.11.0
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	github.com/stripe/stripe-go/v78 v78.12.0
 	github.com/tdewolff/minify/v2 v2.21.1
 	github.com/timewasted/go-accept-headers v0.0.0-20130320203746-c78f304b1b09
@@ -80,7 +80,7 @@ require (
 	github.com/dyatlov/go-opengraph/opengraph v0.0.0-20220524092352-606d7b1e5f8a // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/fogleman/gg v1.3.0 // indirect
-	github.com/gammazero/deque v0.2.1 // indirect
+	github.com/gammazero/deque v1.0.0 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.6.0 // indirect
 	github.com/go-test/deep v1.1.1 // indirect
