@@ -30,5 +30,8 @@ WORKDIR /app
 COPY --from=builder /app/emissary .
 COPY --from=builder /app/.docker/demo.json /data/config/config.json
 
+# Make a temporary directory for processing media files.
+RUN mkdir /tmp
+
 # Entrypoint script
 ENTRYPOINT [ "/app/emissary" ]

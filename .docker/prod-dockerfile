@@ -39,5 +39,8 @@ WORKDIR /app
 # Copy the Pre-built binary file from the previous stage
 COPY --from=builder /app/emissary .
 
+# Make a temporary directory for processing media files.
+RUN mkdir /tmp
+
 # Entrypoint script
 ENTRYPOINT [ "/app/emissary" ]
