@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/list"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
 )
 
@@ -30,7 +31,7 @@ func NewAttachmentRules() AttachmentRules {
 }
 
 // FileSpec applies the attachment rules to a request, and returns the best-matching FileSpec definition for mediaserver
-func (rules AttachmentRules) FileSpec(address *url.URL, mediaCategory string) mediaserver.FileSpec {
+func (rules AttachmentRules) FileSpec(address *url.URL, originalExtension string) mediaserver.FileSpec {
 
 	// Get path values
 	path := address.Path
@@ -67,6 +68,9 @@ func (rules AttachmentRules) FileSpec(address *url.URL, mediaCategory string) me
 		bitrate = rules.Bitrate
 	}
 
+	originalType := mime.TypeByExtension(originalExtension)
+	originalCategory := list.Slash(originalType).First()
+
 	// Map duplicate extensions to the canonical value
 	switch extension {
 	case "jpg":
@@ -76,7 +80,7 @@ func (rules AttachmentRules) FileSpec(address *url.URL, mediaCategory string) me
 	// Calculate default types if none is provided
 	if len(rules.Extensions) == 0 {
 
-		switch mediaCategory {
+		switch originalCategory {
 
 		case "image":
 			rules.Extensions = []string{"webp", "png", "jpeg", "gif"}
@@ -101,12 +105,14 @@ func (rules AttachmentRules) FileSpec(address *url.URL, mediaCategory string) me
 
 	// Return the "cleaned" mediaserver.FileSpec object
 	result := mediaserver.FileSpec{
-		Filename:  filename.String(),
-		Extension: extension,
-		Width:     width,
-		Height:    height,
-		Bitrate:   bitrate,
-		MimeType:  mime.TypeByExtension(extension),
+		Filename:          filename.String(),
+		Extension:         extension,
+		Width:             width,
+		Height:            height,
+		Bitrate:           bitrate,
+		OriginalExtension: originalExtension,
+		Metadata:          mapof.NewString(),
+		Cache:             true,
 	}
 
 	return result

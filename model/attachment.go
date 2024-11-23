@@ -141,7 +141,7 @@ func (attachment Attachment) FileSpec(address *url.URL) mediaserver.FileSpec {
 		}
 	}
 
-	return attachment.Rules.FileSpec(address, attachment.MimeCategory())
+	return attachment.Rules.FileSpec(address, attachment.OriginalExtension())
 }
 
 func (attachment Attachment) JSONLD() map[string]any {

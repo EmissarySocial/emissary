@@ -70,7 +70,7 @@ func GetStreamAttachment(factoryManager *server.Factory) echo.HandlerFunc {
 		filespec := attachment.FileSpec(ctx.Request().URL)
 
 		header := ctx.Response().Header()
-		header.Set("Mime-Type", filespec.MimeType)
+		header.Set("Content-Type", filespec.MimeType())
 		header.Set("ETag", "1")
 
 		if stream.DefaultAllowAnonymous() {
@@ -127,7 +127,7 @@ func GetDomainAttachment(factoryManager *server.Factory) echo.HandlerFunc {
 		filespec := attachment.FileSpec(ctx.Request().URL)
 
 		header := ctx.Response().Header()
-		header.Set("Mime-Type", filespec.MimeType)
+		header.Set("Content-Type", filespec.MimeType())
 		header.Set("ETag", "1")
 		header.Set("Cache-Control", "public, max-age=86400") // Store in public caches for 1 day
 
@@ -184,7 +184,7 @@ func GetUserAttachment(factoryManager *server.Factory) echo.HandlerFunc {
 		filespec := attachment.FileSpec(ctx.Request().URL)
 
 		header := ctx.Response().Header()
-		header.Set("Mime-Type", filespec.MimeType)
+		header.Set("Content-Type", filespec.MimeType())
 		header.Set("ETag", "1")
 		header.Set("Cache-Control", "public, max-age=86400") // Store in public caches for 1 day
 

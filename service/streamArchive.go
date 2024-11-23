@@ -6,21 +6,22 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"sync"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/counter"
-	"github.com/EmissarySocial/emissary/tools/ffmpeg"
 	"github.com/benpate/derp"
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/turbine/queue"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
+var streamArchiveLock sync.Mutex
 
 // StreamArchive defines a service that manages all content streamArchives created and imported by Users.
 type StreamArchive struct {
@@ -63,21 +64,19 @@ func (service *StreamArchive) Close() {
 
 // Exists returns TRUE if the specified ZIP archive exists in the export cache
 func (service *StreamArchive) Exists(streamID primitive.ObjectID, token string) bool {
-	filename := service.filename(streamID, token)
-	exists, err := afero.Exists(service.exportCache, filename)
-	spew.Dump("service.StreamArchive.Exists ----------------:", filename, exists, err)
 
-	fileInfo, err := service.exportCache.Stat(filename)
-	spew.Dump(fileInfo, err)
-	spew.Dump("------------------")
+	// Look for the file in the export cache
+	filename := service.filename(streamID, token)
+	exists, _ := afero.Exists(service.exportCache, filename)
 	return exists
 }
 
 // ExistsTemp returns TRUE if a tempfile archive exists in the export cache
 func (service *StreamArchive) ExistsTemp(streamID primitive.ObjectID, token string) bool {
+
+	// Look for the file in the export cache
 	filename := service.filename(streamID, token) + ".tmp"
 	exists, _ := afero.Exists(service.exportCache, filename)
-	spew.Dump("service.StreamArchive.ExistsTemp:", filename, exists)
 	return exists
 }
 
@@ -88,8 +87,12 @@ func (service *StreamArchive) Create(stream *model.Stream, options StreamArchive
 	const location = "service.StreamArchive.Create"
 
 	filename := service.filename(stream.StreamID, options.Token)
-
+	tempFilename := filename + ".tmp"
 	log.Trace().Str("location", location).Str("filename", filename).Msg("Creating ZIP archive...")
+
+	// WriteLock for write operations - there can be only one.
+	streamArchiveLock.Lock()
+	defer streamArchiveLock.Unlock()
 
 	// If the file already exists, then there is nothing to do.
 	if service.Exists(stream.StreamID, options.Token) {
@@ -104,57 +107,17 @@ func (service *StreamArchive) Create(stream *model.Stream, options StreamArchive
 	}
 
 	// Create a temp file in the export cache
-	if err := service.createTempfile(filename, stream, options); err != nil {
+	if err := service.createTempfile(tempFilename, stream, options); err != nil {
 		return derp.Wrap(err, location, "Error creating ZIP archive")
 	}
 
 	// Move the temp file to the permanent location
-	if err := service.exportCache.Rename(filename+".tmp", filename); err != nil {
+	if err := service.exportCache.Rename(tempFilename, filename); err != nil {
 		return derp.Wrap(err, location, "Error moving temp file into place")
 	}
 
 	// Great success.
 	return nil
-}
-
-// createTempfile creates a ZIP archive of a stream in a temporary/working location.
-func (service *StreamArchive) createTempfile(filename string, stream *model.Stream, options StreamArchiveOptions) (errorResult error) {
-
-	const location = "service.StreamArchive.createTempfile"
-
-	// Create a new file in the export cache
-	file, err := service.exportCache.Create(filename + ".tmp")
-
-	if err != nil {
-		return derp.Wrap(err, location, "Error opening file", filename)
-	}
-
-	log.Trace().Str("location", location).Str("filename", filename).Msg("Opened file in export cache...")
-
-	// Write the ZIP archive to the cached file
-	zipWriter := zip.NewWriter(file)
-
-	defer func() {
-		zipWriter.Close()
-		file.Close()
-
-		if errorResult != nil {
-			derp.Report(service.exportCache.Remove(filename + ".tmp"))
-		}
-	}()
-
-	if err := service.writeToZip(zipWriter, nil, stream, "", options); err != nil {
-		if err := service.Delete(stream.StreamID, options.Token); err != nil {
-			errorResult = derp.Wrap(err, location, "Error writing/deleting ZIP archive")
-			return
-		}
-		errorResult = derp.Wrap(err, location, "Error writing ZIP archive")
-		return
-	}
-
-	log.Trace().Str("location", location).Str("filename", filename).Msg("Finished writing ZIP file to export cache.")
-	errorResult = nil
-	return
 }
 
 // Read retrieves a ZIP archive from the export cache.  If the file does not
@@ -165,6 +128,7 @@ func (service *StreamArchive) Read(streamID primitive.ObjectID, token string, wr
 
 	// Find the file in the export cache
 	filename := service.filename(streamID, token)
+	log.Trace().Str("location", location).Str("filename", filename).Msg("Reading ZIP archive...")
 
 	file, err := service.exportCache.Open(filename)
 
@@ -174,9 +138,7 @@ func (service *StreamArchive) Read(streamID primitive.ObjectID, token string, wr
 
 	defer file.Close()
 
-	// Copy the fil to the destination
-	spew.Dump("service.StreamArchive.Read.  writer is null?", writer == nil)
-	spew.Dump("service.StreamArchive.Read.  file is null?", file == nil)
+	// Copy the file to the destination
 	if _, err = io.Copy(writer, file); err != nil {
 		return derp.Wrap(err, location, "Error copying file", filename)
 	}
@@ -191,6 +153,11 @@ func (service *StreamArchive) Delete(streamID primitive.ObjectID, token string) 
 	const location = "service.StreamArchive.Delete"
 
 	filename := service.filename(streamID, token)
+	log.Trace().Str("location", location).Str("filename", filename).Msg("Deleting ZIP archive...")
+
+	// WriteLock for write operations - there can be only one.
+	streamArchiveLock.Lock()
+	defer streamArchiveLock.Unlock()
 
 	// If the file doesn't already exist, then there is nothing to do.
 	if exists, _ := afero.Exists(service.exportCache, filename); !exists {
@@ -209,6 +176,45 @@ func (service *StreamArchive) Delete(streamID primitive.ObjectID, token string) 
 /******************************************
  * Helper Methods
  ******************************************/
+
+// createTempfile creates a ZIP archive of a stream in a temporary/working location.
+func (service *StreamArchive) createTempfile(tempFilename string, stream *model.Stream, options StreamArchiveOptions) (errorResult error) {
+
+	const location = "service.StreamArchive.createTempfile"
+
+	log.Trace().Str("location", location).Str("tempFilename", tempFilename).Msg("Creating TempFile...")
+
+	// Create a new file in the export cache
+	file, err := service.exportCache.Create(tempFilename)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error opening file", tempFilename)
+	}
+
+	defer file.Close()
+
+	log.Trace().Str("location", location).Str("tempFilename", tempFilename).Msg("Opened TempFile in export cache...")
+
+	// Write the ZIP archive to the cached file
+	zipWriter := zip.NewWriter(file)
+
+	defer zipWriter.Close()
+
+	defer func() {
+		if errorResult != nil {
+			derp.Report(service.exportCache.Remove(tempFilename))
+		}
+	}()
+
+	if err := service.writeToZip(zipWriter, nil, stream, "", options); err != nil {
+		errorResult = derp.Wrap(err, location, "Error writing ZIP archive")
+		return
+	}
+
+	log.Trace().Str("location", location).Str("tempFilename", tempFilename).Msg("Finished writing ZIP file to export cache.")
+	errorResult = nil
+	return
+}
 
 // Some info on FFmpeg metadata
 // https://gist.github.com/eyecatchup/0757b3d8b989fe433979db2ea7d95a01
@@ -298,14 +304,13 @@ func (service *StreamArchive) writeToZip(zipWriter *zip.Writer, parent *model.St
 
 			// Add the corresponding extension to the filename
 			filespec := attachment.FileSpec(nil)
-			filespec.Bitrate = 128 // aligning bitrate with player to see if it helps cacheability
-
 			filename = filename.PushTail(strings.TrimPrefix(filespec.Extension, "."))
 
 			// Map attachment metadata
-			metadata := mapof.NewString()
-
 			if pipeline := options.Pipeline(); pipeline.NotEmpty() {
+
+				// Don't use cache when we're adding custom metadata to files
+				filespec.Cache = false
 
 				inSchema := schema.New(schema.Object{
 					Properties: schema.ElementMap{
@@ -322,13 +327,11 @@ func (service *StreamArchive) writeToZip(zipWriter *zip.Writer, parent *model.St
 					Wildcard: schema.String{},
 				})
 
-				if err := pipeline.Execute(inSchema, inObject, outSchema, &metadata); err != nil {
-					return derp.Wrap(err, location, "Error processing metadata")
+				if err := pipeline.Execute(inSchema, inObject, outSchema, &filespec.Metadata); err != nil {
+					derp.Report(derp.Wrap(err, location, "Error processing metadata"))
+					continue
 				}
 			}
-
-			// Make a pipe to transfer from MediaServer to the Metadata writer
-			pipeReader, pipeWriter := io.Pipe()
 
 			// Create a fileWriter in the ZIP archive
 			fileHeader := zip.FileHeader{
@@ -342,20 +345,10 @@ func (service *StreamArchive) writeToZip(zipWriter *zip.Writer, parent *model.St
 				return derp.Wrap(err, location, "Error creating attachment file")
 			}
 
-			// Using separate goroutine to avoid deadlock between pipe reader/writer
-			go func() {
-				// Send the output from the MediaServer through FFmpeg one more time
-				// to add metadata to the file *before* it's written to the ZIP archive
-				if err := ffmpeg.SetMetadata(pipeReader, filespec.MimeType, metadata, fileWriter); err != nil {
-					derp.Report(derp.Wrap(err, location, "Error setting metadata"))
-				}
-			}()
-
-			// Write the file into the ZIP archive
-			defer pipeWriter.Close()
-
-			if err := service.mediaserver.Get(filespec, pipeWriter); err != nil {
-				return derp.Wrap(err, location, "Error getting attachment")
+			// Send the output from the MediaServer through FFmpeg one more time
+			// to add metadata to the file *before* it's written to the ZIP archive
+			if err := service.mediaserver.Process(filespec, fileWriter); err != nil {
+				return derp.Wrap(err, location, "Error processing attachment", filespec)
 			}
 		}
 	}

@@ -29,7 +29,6 @@ func GetProfileIcon(serverFactory *server.Factory) echo.HandlerFunc {
 
 	filespec := mediaserver.FileSpec{
 		Extension: ".webp",
-		MimeType:  "image/webp",
 		Height:    300,
 		Width:     300,
 	}
@@ -41,7 +40,6 @@ func GetProfileImage(serverFactory *server.Factory) echo.HandlerFunc {
 
 	filespec := mediaserver.FileSpec{
 		Extension: ".webp",
-		MimeType:  "image/webp",
 		Width:     2400,
 	}
 

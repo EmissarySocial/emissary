@@ -113,15 +113,9 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 
 		// Add the document into the media server.
 		// If it's an image or video, then save the dimensions as well.
-		width, height, err := factory.MediaServer().Put(attachment.AttachmentID.Hex(), source)
-
-		if err != nil {
+		if err := factory.MediaServer().Put(attachment.AttachmentID.Hex(), source); err != nil {
 			return Halt().WithError(derp.Wrap(err, location, "Error saving attachment to mediaserver", attachment))
 		}
-
-		// Update original dimensions
-		attachment.Width = width
-		attachment.Height = height
 
 		// Apply rules to Attachment
 		attachment.SetRules(step.RuleWidth, step.RuleHeight, step.RuleTypes)

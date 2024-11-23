@@ -15,7 +15,7 @@ import (
 func MakeStreamArchive(factory *domain.Factory, _ *service.Stream, stream *model.Stream, args mapof.Any) queue.Result {
 
 	const location = "consumer.MakeStreamArchive"
-	log.Trace().Str("location", location).Str("stream", stream.StreamID.Hex()).Msg("StreamArchive: creating archive...")
+	log.Trace().Str("location", location).Str("stream", stream.StreamID.Hex()).Msg("Making Archive...")
 
 	// Collect metadata and convert into a slice of pipelines
 	metadataAny := args.GetSliceOfAny("metadata")
