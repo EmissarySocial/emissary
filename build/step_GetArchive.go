@@ -32,12 +32,14 @@ func (step StepGetArchive) Get(builder Builder, writer io.Writer) PipelineBehavi
 	// If the export file already exists, then return it
 	if streamArchiveService.Exists(streamID, step.Token) {
 
-		if err := streamArchiveService.Read(streamID, step.Token, writer); err != nil {
-			return Halt().WithError(err)
-		}
+		if err := streamArchiveService.Read(streamID, step.Token, writer); err == nil {
+			filename := strings.ReplaceAll(streamBuilder._stream.Label, `"`, "") + ".zip"
 
-		filename := strings.ReplaceAll(streamBuilder._stream.Label, `"`, "") + ".zip"
-		return Halt().AsFullPage().WithContentType("application/x-zip").WithHeader("Content-Disposition", `attachment; filename="`+filename+`"`)
+			return Halt().
+				AsFullPage().
+				WithContentType("application/x-zip").
+				WithHeader("Content-Disposition", `attachment; filename="`+filename+`"`)
+		}
 	}
 
 	// If we don't already have a file, try to create one, then wait for it to be created.

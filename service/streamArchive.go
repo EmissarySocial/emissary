@@ -87,43 +87,40 @@ func (service *StreamArchive) Create(stream *model.Stream, options StreamArchive
 	const location = "service.StreamArchive.Create"
 
 	filename := service.filename(stream.StreamID, options.Token)
-	tempFilename := filename + ".tmp"
-	log.Trace().Str("location", location).Str("filename", filename).Msg("Creating ZIP archive...")
+	log.Trace().Str("location", location).Str("filename", filename).Msg("Started method. Waiting for lock...")
 
 	// WriteLock for write operations - there can be only one.
 	streamArchiveLock.Lock()
 	defer streamArchiveLock.Unlock()
 
-	// If the file already exists, then there is nothing to do.
-	if service.Exists(stream.StreamID, options.Token) {
-		log.Trace().Str("location", location).Str("filename", filename).Msg("ZIP archive already exists.")
-		return nil
+	// Remove orphaned files from the export cache
+	derp.Report(service.exportCache.Remove(filename))
+
+	log.Trace().Str("location", location).Str("filename", filename).Msg("Creating ZIP file in export cache...")
+
+	// Create a new file in the export cache
+	file, err := service.exportCache.Create(filename)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error opening file", filename)
 	}
 
-	// If a temp file already exists, then there is nothing to do.
-	if service.ExistsTemp(stream.StreamID, options.Token) {
-		log.Trace().Str("location", location).Str("filename", filename).Msg("ZIP archive is being created.")
-		return nil
+	defer file.Close()
+
+	log.Trace().Str("location", location).Str("filename", filename).Msg("Writing to ZIP file in export cache...")
+
+	// Write the ZIP archive to the cached file
+	zipWriter := zip.NewWriter(file)
+
+	defer zipWriter.Close()
+
+	if err := service.writeToZip(zipWriter, nil, stream, "", options); err != nil {
+		// if the write fails, then remove the file before exiting.
+		derp.Report(service.exportCache.Remove(filename))
+		return derp.Wrap(err, location, "Error writing ZIP archive")
 	}
 
-	// Create a temp file in the export cache
-	if err := service.createTempfile(tempFilename, stream, options); err != nil {
-		return derp.Wrap(err, location, "Error creating ZIP archive")
-	}
-
-	// If we fail creating or moving the temp file, then try to delete it.
-	defer func() {
-		if err := service.exportCache.Remove(tempFilename); err != nil {
-			derp.Report(derp.Wrap(err, location, "Error deleting temp file"))
-		}
-	}()
-
-	// Move the temp file to the permanent location
-	if err := service.exportCache.Rename(tempFilename, filename); err != nil {
-		return derp.Wrap(err, location, "Error moving temp file into place")
-	}
-
-	// Great success.
+	log.Trace().Str("location", location).Str("filename", filename).Msg("ZIP file written to export cache successfully.")
 	return nil
 }
 
@@ -183,45 +180,6 @@ func (service *StreamArchive) Delete(streamID primitive.ObjectID, token string) 
 /******************************************
  * Helper Methods
  ******************************************/
-
-// createTempfile creates a ZIP archive of a stream in a temporary/working location.
-func (service *StreamArchive) createTempfile(tempFilename string, stream *model.Stream, options StreamArchiveOptions) (errorResult error) {
-
-	const location = "service.StreamArchive.createTempfile"
-
-	log.Trace().Str("location", location).Str("tempFilename", tempFilename).Msg("Creating TempFile...")
-
-	// Create a new file in the export cache
-	file, err := service.exportCache.Create(tempFilename)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Error opening file", tempFilename)
-	}
-
-	defer file.Close()
-
-	log.Trace().Str("location", location).Str("tempFilename", tempFilename).Msg("Opened TempFile in export cache...")
-
-	// Write the ZIP archive to the cached file
-	zipWriter := zip.NewWriter(file)
-
-	defer zipWriter.Close()
-
-	defer func() {
-		if errorResult != nil {
-			derp.Report(service.exportCache.Remove(tempFilename))
-		}
-	}()
-
-	if err := service.writeToZip(zipWriter, nil, stream, "", options); err != nil {
-		errorResult = derp.Wrap(err, location, "Error writing ZIP archive")
-		return
-	}
-
-	log.Trace().Str("location", location).Str("tempFilename", tempFilename).Msg("Finished writing ZIP file to export cache.")
-	errorResult = nil
-	return
-}
 
 // Some info on FFmpeg metadata
 // https://gist.github.com/eyecatchup/0757b3d8b989fe433979db2ea7d95a01
