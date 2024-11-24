@@ -129,7 +129,7 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 		if step.AttachmentPath != "" {
 			log.Trace().Str("AttachmentPath", step.AttachmentPath).Str("Value", attachment.AttachmentID.Hex()).Msg("Setting attachment path")
 			if err := builder.schema().Set(object, step.AttachmentPath, attachment.AttachmentID.Hex()); err != nil {
-				return Halt().WithError(derp.Wrap(err, location, "Error setting download path", attachment))
+				return Halt().WithError(derp.Wrap(err, location, "Error setting attachment path", attachment))
 			}
 		}
 
