@@ -111,6 +111,13 @@ func (service *StreamArchive) Create(stream *model.Stream, options StreamArchive
 		return derp.Wrap(err, location, "Error creating ZIP archive")
 	}
 
+	// If we fail creating or moving the temp file, then try to delete it.
+	defer func() {
+		if err := service.exportCache.Remove(tempFilename); err != nil {
+			derp.Report(derp.Wrap(err, location, "Error deleting temp file"))
+		}
+	}()
+
 	// Move the temp file to the permanent location
 	if err := service.exportCache.Rename(tempFilename, filename); err != nil {
 		return derp.Wrap(err, location, "Error moving temp file into place")
