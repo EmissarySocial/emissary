@@ -9,6 +9,7 @@
 	schema: {
 		type: "object", 
 		properties: {
+			iconId: {type:"string", format:"objectId"}
 			iconUrl: {type:"string", format:"url"}
 			label: {type:"string", maxLength:100, required: true}
 			description: {type:"string", maxLength:100}
