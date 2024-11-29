@@ -16,6 +16,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/turbine/queue"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -67,7 +68,10 @@ func (service *StreamArchive) Exists(streamID primitive.ObjectID, token string) 
 
 	// Look for the file in the export cache
 	filename := service.filename(streamID, token)
-	exists, _ := afero.Exists(service.exportCache, filename)
+	exists, err := afero.Exists(service.exportCache, filename)
+
+	spew.Dump("streamArchive.Exists >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", exists, err)
+
 	return exists
 }
 
