@@ -61,6 +61,6 @@ func (step StepGetArchive) FileNotReady(builder Builder, writer io.Writer) Pipel
 	return Halt().
 		AsFullPage().
 		WithStatusCode(http.StatusServiceUnavailable).
-		WithHeader("Refresh", "60").
+		WithHeader("Retry-After", "60").
 		WithContentType("text/html")
 }
