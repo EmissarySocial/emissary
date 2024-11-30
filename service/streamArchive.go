@@ -70,7 +70,10 @@ func (service *StreamArchive) Exists(streamID primitive.ObjectID, token string) 
 	filename := service.filename(streamID, token)
 	exists, err := afero.Exists(service.exportCache, filename)
 
-	spew.Dump("streamArchive.Exists >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", exists, err)
+	spew.Dump("streamArchive.Exists.Exists >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", exists, err)
+
+	fileInfo, err := service.exportCache.Stat(filename)
+	spew.Dump("streamArchive.Exists.Stat >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", fileInfo, err)
 
 	return exists
 }
