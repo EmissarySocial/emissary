@@ -16,7 +16,6 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/turbine/queue"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -63,19 +62,25 @@ func (service *StreamArchive) Close() {
  * CRUD Methods
  ******************************************/
 
-// Exists returns TRUE if the specified ZIP archive exists in the export cache
-func (service *StreamArchive) Exists(streamID primitive.ObjectID, token string) bool {
+// Exists returns TRUE if the specified ZIP archive exists in the export cache.
+// This duplicates and extends the standard afero Exists() method by ALSO checking
+// if the file has a ZERO length.  This happens on AWS when multiple requests are made
+// while the file is still being written
+func (service *StreamArchive) Exists(streamID primitive.ObjectID, token string) (bool, bool) {
 
 	// Look for the file in the export cache
 	filename := service.filename(streamID, token)
-	exists, err := afero.Exists(service.exportCache, filename)
-
-	spew.Dump("streamArchive.Exists.Exists >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", exists, err)
-
 	fileInfo, err := service.exportCache.Stat(filename)
-	spew.Dump("streamArchive.Exists.Stat >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", fileInfo, err)
 
-	return exists
+	if err != nil {
+		return false, false
+	}
+
+	if fileInfo.Size() == 0 {
+		return true, false
+	}
+
+	return true, true
 }
 
 // ExistsTemp returns TRUE if a tempfile archive exists in the export cache

@@ -36,46 +36,49 @@ func (step StepGetArchive) Get(builder Builder, writer io.Writer) PipelineBehavi
 
 	log.Trace().Str("location", location).Msg("Locating archive in cache...")
 
-	// If the export file already exists, then return it
-	if streamArchiveService.Exists(streamID, step.Token) {
-		log.Trace().Str("location", location).Msg("Cache reports that stream archive exists ...")
+	exists, ready := streamArchiveService.Exists(streamID, step.Token)
 
-		if err := streamArchiveService.Read(streamID, step.Token, writer); err == nil {
-			filename := strings.ReplaceAll(streamBuilder._stream.Label, `"`, "") + ".zip"
+	if !ready {
 
-			log.Trace().Str("location", location).Msg("Delivered archive from cache.")
-			return Halt().
-				AsFullPage().
-				WithContentType("application/x-zip").
-				WithHeader("Content-Disposition", `attachment; filename="`+filename+`"`)
-		} else {
-			log.Error().Str("location", location).Err(err).Msg("Error reading archive from cache.")
-			derp.Report(err)
+		if !exists {
+
+			log.Trace().Str("location", location).Msg("Archive does not exist.  Creating now.")
+
+			// If we don't already have a file, try to create one using the task queue.
+			q := streamBuilder.factory().Queue()
+			task := queue.NewTask("MakeStreamArchive", mapof.Any{
+				"host":        streamBuilder.Hostname(),
+				"streamId":    streamBuilder.StreamID(),
+				"token":       step.Token,
+				"depth":       step.Depth,
+				"json":        step.JSON,
+				"attachments": step.Attachments,
+				"metadata":    step.Metadata,
+			})
+
+			if err := q.Publish(task); err != nil {
+				return Halt().WithError(derp.Wrap(err, location, "Error publishing task", task))
+			}
 		}
+
+		log.Trace().Str("location", location).Msg("Archive is not ready.  Please wait.")
+		return step.FileNotReady(builder, writer)
 	}
 
-	log.Trace().Str("location", location).Msg("Archive does not exist.  Fall through to create a new archive....")
+	// If the export file already exists and is ready to use, then return it
+	log.Trace().Str("location", location).Msg("Stream archive exists. Sending response to client...")
 
-	// If we don't already have a file, try to create one using the task queue.
-	q := streamBuilder.factory().Queue()
-	task := queue.NewTask("MakeStreamArchive", mapof.Any{
-		"host":        streamBuilder.Hostname(),
-		"streamId":    streamBuilder.StreamID(),
-		"token":       step.Token,
-		"depth":       step.Depth,
-		"json":        step.JSON,
-		"attachments": step.Attachments,
-		"metadata":    step.Metadata,
-	})
-
-	if err := q.Publish(task); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error publishing task", task))
+	if err := streamArchiveService.Read(streamID, step.Token, writer); err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Error reading archive from cache"))
 	}
 
-	log.Trace().Str("location", location).Msg("Archive task added to the to queue.")
+	// Add HTTP headers to the response.
+	filename := strings.ReplaceAll(streamBuilder._stream.Label, `"`, "") + ".zip"
 
-	// Return a "please wait" message and tell the user to come back later.
-	return step.FileNotReady(builder, writer)
+	return Halt().
+		AsFullPage().
+		WithContentType("application/x-zip").
+		WithHeader("Content-Disposition", `attachment; filename="`+filename+`"`)
 }
 
 // Post removes the object from the database (likely using a soft-delete, though)
@@ -86,10 +89,9 @@ func (step StepGetArchive) Post(builder Builder, _ io.Writer) PipelineBehavior {
 func (step StepGetArchive) FileNotReady(builder Builder, writer io.Writer) PipelineBehavior {
 	_, _ = writer.Write([]byte(`<div>Export file is being generated. Please <a href="javascript:window.location.reload()">try again</a> in one minute.</div>`))
 
-	log.Trace().Str("location", "build.StepGetArchive.FileNotReady").Msg("Sending 'Retry-After' message to browser.")
 	return Halt().
 		AsFullPage().
-		WithStatusCode(http.StatusServiceUnavailable).
+		WithStatusCode(http.StatusAccepted).
 		WithHeader("Retry-After", "60").
 		WithContentType("text/html")
 }
