@@ -39,6 +39,8 @@ github.com/benpate/derp v0.31.1 h1:8mnJo7A/lmHUG37GjE6fDg5kxoI1xZ5bFzszSrOA2LM=
 github.com/benpate/derp v0.31.1/go.mod h1:y+PJWv5VOBOnd1y4CGk/c7xVS0Pwxg9BGQE5r/SGc8w=
 github.com/benpate/digit v0.13.2 h1:XtppugGidsp4cnghuo0Fh8XyqjG3W0NvyYJ7c7zd4XQ=
 github.com/benpate/digit v0.13.2/go.mod h1:ZKH3GA0CbPoEeGOZH3Aw3QfO2yPO8xVaO4vmArSCHnI=
+github.com/benpate/digital-dome v0.1.5 h1:DKgaAMvYU4bAElWYLj2+XYCmBwD0Xm+DVd1oEW7T0Xg=
+github.com/benpate/digital-dome v0.1.5/go.mod h1:MSO3JRnsNM5xirwyYczAsW/eeNcEZKZWs1VifVLexgI=
 github.com/benpate/domain v0.2.3 h1:dkxV6FPeaAFuQWv+VbFPQ0lbVVewavEJpPN1DXEv3G8=
 github.com/benpate/domain v0.2.3/go.mod h1:TXot58rqxYPvSn3L07d7sCPifOjg9EoZ2N4bYprZ3yc=
 github.com/benpate/exp v0.8.3 h1:rxlXtdLxc+XU5ySoAFEt7YKOjhOE7YRMz15YUePBLJk=
@@ -63,8 +65,6 @@ github.com/benpate/rosetta v0.23.2 h1:OPc3+IcwsEBvadcgCQRnf0uTNT0kE6DyD/E5p+yjzX
 github.com/benpate/rosetta v0.23.2/go.mod h1:H5/Uaxa53/H2tQhT2lq/zdB4CKm2szSRST0awntRaU0=
 github.com/benpate/sherlock v0.8.8 h1:7R2Ae/8MN+f8uKeeQ6PqyuDAQCJ3yntDBz5iFLgaasY=
 github.com/benpate/sherlock v0.8.8/go.mod h1:kbj1D7ao7hcquEwxevid2oGV0Gxya/CfTXNecyN8VX4=
-github.com/benpate/silicon-dome v0.1.2 h1:lbiGRlH02z9wNX9Na+2s2nSPbcEvLSfx96PhtKFUXQU=
-github.com/benpate/silicon-dome v0.1.2/go.mod h1:g+EMzgeJdVyi/bhEBExGH4sxp11wGaFG81hHgdFGr0o=
 github.com/benpate/steranko v0.20.1 h1:HEFTZlScweyIFO9YJxK89Xy0+fNaFN0Ycc4GF5gGq4M=
 github.com/benpate/steranko v0.20.1/go.mod h1:Y2L+7vUsEZonIKJdeGG18GaToWDIIY4xIEwMLxgaoTg=
 github.com/benpate/table v0.6.20 h1:Yk83b8WiQI1J7al3ERQvA/OUYBWSvPUYt4HQKeh7Jcs=

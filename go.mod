@@ -2,8 +2,6 @@ module github.com/EmissarySocial/emissary
 
 go 1.23.1
 
-// replace github.com/benpate/silicon-dome => ../../benpate/silicon-dome
-
 require (
 	github.com/PuerkitoBio/goquery v1.10.0
 	github.com/aws/aws-sdk-go v1.55.5
@@ -13,6 +11,7 @@ require (
 	github.com/benpate/data-mongo v0.28.10
 	github.com/benpate/derp v0.31.1
 	github.com/benpate/digit v0.13.2
+	github.com/benpate/digital-dome v0.1.5
 	github.com/benpate/domain v0.2.3
 	github.com/benpate/exp v0.8.3
 	github.com/benpate/exp-builder v0.8.2
@@ -25,7 +24,6 @@ require (
 	github.com/benpate/remote v0.17.0
 	github.com/benpate/rosetta v0.23.2
 	github.com/benpate/sherlock v0.8.8
-	github.com/benpate/silicon-dome v0.1.2
 	github.com/benpate/steranko v0.20.1
 	github.com/benpate/table v0.6.20
 	github.com/benpate/toot v0.3.0

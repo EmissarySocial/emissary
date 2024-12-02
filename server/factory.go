@@ -17,6 +17,7 @@ import (
 	"github.com/EmissarySocial/emissary/tools/httpcache"
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
+	"github.com/benpate/digital-dome/dome"
 	domaintools "github.com/benpate/domain"
 	"github.com/benpate/icon"
 	"github.com/benpate/remote"
@@ -24,7 +25,6 @@ import (
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
-	"github.com/benpate/silicon-dome/dome"
 	"github.com/benpate/steranko"
 	"github.com/benpate/turbine/queue"
 	"github.com/benpate/turbine/queue_mongo"
@@ -201,7 +201,7 @@ func (factory *Factory) start() {
 		if factory.commonDatabase != nil {
 			log.Trace().Msg("Applying logger to SiliconDome")
 			collection := mongodb.NewSession(factory.commonDatabase).Collection("SiliconDome")
-			factory.siliconDome.With(dome.LogIPAddresses(collection))
+			factory.siliconDome.With(dome.LogDatabase(collection))
 		}
 
 		// Insert/Update a factory for each domain in the configuration
