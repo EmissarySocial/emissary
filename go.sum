@@ -63,8 +63,8 @@ github.com/benpate/rosetta v0.23.2 h1:OPc3+IcwsEBvadcgCQRnf0uTNT0kE6DyD/E5p+yjzX
 github.com/benpate/rosetta v0.23.2/go.mod h1:H5/Uaxa53/H2tQhT2lq/zdB4CKm2szSRST0awntRaU0=
 github.com/benpate/sherlock v0.8.8 h1:7R2Ae/8MN+f8uKeeQ6PqyuDAQCJ3yntDBz5iFLgaasY=
 github.com/benpate/sherlock v0.8.8/go.mod h1:kbj1D7ao7hcquEwxevid2oGV0Gxya/CfTXNecyN8VX4=
-github.com/benpate/silicon-dome v0.1.1 h1:ybRlq115JNq/i7XrgbK4oD7C6sgAOllmCj/EmEut3s4=
-github.com/benpate/silicon-dome v0.1.1/go.mod h1:g+EMzgeJdVyi/bhEBExGH4sxp11wGaFG81hHgdFGr0o=
+github.com/benpate/silicon-dome v0.1.2 h1:lbiGRlH02z9wNX9Na+2s2nSPbcEvLSfx96PhtKFUXQU=
+github.com/benpate/silicon-dome v0.1.2/go.mod h1:g+EMzgeJdVyi/bhEBExGH4sxp11wGaFG81hHgdFGr0o=
 github.com/benpate/steranko v0.20.1 h1:HEFTZlScweyIFO9YJxK89Xy0+fNaFN0Ycc4GF5gGq4M=
 github.com/benpate/steranko v0.20.1/go.mod h1:Y2L+7vUsEZonIKJdeGG18GaToWDIIY4xIEwMLxgaoTg=
 github.com/benpate/table v0.6.20 h1:Yk83b8WiQI1J7al3ERQvA/OUYBWSvPUYt4HQKeh7Jcs=
