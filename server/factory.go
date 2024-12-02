@@ -15,6 +15,7 @@ import (
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/httpcache"
+	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
 	domaintools "github.com/benpate/domain"
 	"github.com/benpate/icon"
@@ -23,6 +24,7 @@ import (
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
+	"github.com/benpate/silicon-dome/dome"
 	"github.com/benpate/steranko"
 	"github.com/benpate/turbine/queue"
 	"github.com/benpate/turbine/queue_mongo"
@@ -59,6 +61,7 @@ type Factory struct {
 	exportCache         afero.Fs
 	commonDatabase      *mongo.Database
 	queue               queue.Queue
+	siliconDome         dome.Dome
 
 	domains   map[string]*domain.Factory
 	httpCache httpcache.HTTPCache
@@ -118,6 +121,8 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 		factory.FuncMap(),
 		sliceof.NewObject[mapof.String](),
 	)
+
+	factory.siliconDome = dome.New()
 
 	factory.queue = queue.New()
 
@@ -191,6 +196,13 @@ func (factory *Factory) start() {
 		}
 
 		factory.refreshQueue()
+
+		// Add logging to the Silicon Dome WAF
+		if factory.commonDatabase != nil {
+			log.Trace().Msg("Applying logger to SiliconDome")
+			collection := mongodb.NewSession(factory.commonDatabase).Collection("SiliconDome")
+			factory.siliconDome.With(dome.LogIPAddresses(collection))
+		}
 
 		// Insert/Update a factory for each domain in the configuration
 		for _, domainConfig := range config.Domains {
@@ -657,6 +669,10 @@ func (factory *Factory) Steranko(ctx echo.Context) (*steranko.Steranko, error) {
 	}
 
 	return result.Steranko(), nil
+}
+
+func (factory *Factory) SiliconDome() *dome.Dome {
+	return &factory.siliconDome
 }
 
 func (factory *Factory) HTTPCache() *httpcache.HTTPCache {

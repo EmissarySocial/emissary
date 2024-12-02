@@ -25,7 +25,7 @@ require (
 	github.com/benpate/remote v0.17.0
 	github.com/benpate/rosetta v0.23.2
 	github.com/benpate/sherlock v0.8.8
-	github.com/benpate/silicon-dome v0.1.0
+	github.com/benpate/silicon-dome v0.1.1
 	github.com/benpate/steranko v0.20.1
 	github.com/benpate/table v0.6.20
 	github.com/benpate/toot v0.3.0
