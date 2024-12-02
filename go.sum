@@ -63,6 +63,8 @@ github.com/benpate/rosetta v0.23.2 h1:OPc3+IcwsEBvadcgCQRnf0uTNT0kE6DyD/E5p+yjzX
 github.com/benpate/rosetta v0.23.2/go.mod h1:H5/Uaxa53/H2tQhT2lq/zdB4CKm2szSRST0awntRaU0=
 github.com/benpate/sherlock v0.8.8 h1:7R2Ae/8MN+f8uKeeQ6PqyuDAQCJ3yntDBz5iFLgaasY=
 github.com/benpate/sherlock v0.8.8/go.mod h1:kbj1D7ao7hcquEwxevid2oGV0Gxya/CfTXNecyN8VX4=
+github.com/benpate/silicon-dome v0.1.0 h1:j8bJN8zcEZnm42n6MhsW3QIpY5mocaSMF1cp9/U9VO4=
+github.com/benpate/silicon-dome v0.1.0/go.mod h1:wnKhhjmeQ67nTNq0EA6TAiJEkQ7Q6bTp+CjE2eFOWFk=
 github.com/benpate/steranko v0.20.1 h1:HEFTZlScweyIFO9YJxK89Xy0+fNaFN0Ycc4GF5gGq4M=
 github.com/benpate/steranko v0.20.1/go.mod h1:Y2L+7vUsEZonIKJdeGG18GaToWDIIY4xIEwMLxgaoTg=
 github.com/benpate/table v0.6.20 h1:Yk83b8WiQI1J7al3ERQvA/OUYBWSvPUYt4HQKeh7Jcs=
@@ -71,6 +73,8 @@ github.com/benpate/toot v0.3.0 h1:Nv64oUTJo9yNQnrWVdEQRIBWi/exvwOUYo4PBdjJg9w=
 github.com/benpate/toot v0.3.0/go.mod h1:ihtqpjldJGzL0dd3S/g9dLE3HaO82P+f45kvfh1TXEc=
 github.com/benpate/turbine v0.2.0 h1:6OpQSBYcgBKj9Ake2Dz6dy826ErJ+XDlVTkI1uycGCI=
 github.com/benpate/turbine v0.2.0/go.mod h1:KCLIbDNhBYPBf0/PEcHVfe4k9nfyeFqoRCpoPqXx4gY=
+github.com/cloudflare/ahocorasick v0.0.0-20240916140611-054963ec9396 h1:W2HK1IdCnCGuLUeyizSCkwvBjdj0ZL7mxnJYQ3poyzI=
+github.com/cloudflare/ahocorasick v0.0.0-20240916140611-054963ec9396/go.mod h1:tGWUZLZp9ajsxUOnHmFFLnqnlKXsCn6GReG4jAD59H0=
 github.com/cloudflare/circl v1.5.0 h1:hxIWksrX6XN5a1L2TI/h53AGPhNHoUBo+TD1ms9+pys=
 github.com/cloudflare/circl v1.5.0/go.mod h1:uddAzsPgqdMAYatqJ0lsjX1oECcQLIlRpzZh3pJrofs=
 github.com/coreos/go-systemd/v22 v22.5.0/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSVTIJ3seZv2GcEnc=

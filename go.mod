@@ -2,6 +2,8 @@ module github.com/EmissarySocial/emissary
 
 go 1.23.1
 
+// replace github.com/benpate/silicon-dome => ../../benpate/silicon-dome
+
 require (
 	github.com/PuerkitoBio/goquery v1.10.0
 	github.com/aws/aws-sdk-go v1.55.5
@@ -23,6 +25,7 @@ require (
 	github.com/benpate/remote v0.17.0
 	github.com/benpate/rosetta v0.23.2
 	github.com/benpate/sherlock v0.8.8
+	github.com/benpate/silicon-dome v0.1.0
 	github.com/benpate/steranko v0.20.1
 	github.com/benpate/table v0.6.20
 	github.com/benpate/toot v0.3.0
@@ -73,6 +76,7 @@ require (
 	github.com/alecthomas/chroma/v2 v2.14.0 // indirect
 	github.com/andybalholm/cascadia v1.3.2 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
+	github.com/cloudflare/ahocorasick v0.0.0-20240916140611-054963ec9396 // indirect
 	github.com/cloudflare/circl v1.5.0 // indirect
 	github.com/cyphar/filepath-securejoin v0.3.4 // indirect
 	github.com/dlclark/regexp2 v1.11.4 // indirect

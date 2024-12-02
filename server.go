@@ -30,6 +30,8 @@ import (
 	"github.com/benpate/form/widget"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/slice"
+	"github.com/benpate/silicon-dome/dome"
+	"github.com/benpate/silicon-dome/dome4echo"
 	"github.com/benpate/steranko"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
@@ -183,6 +185,10 @@ func makeSetupRoutes(factory *server.Factory, e *echo.Echo) {
 func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 
 	log.Info().Msg("Starting Emissary Server.")
+
+	// WAF Middleware
+	siliconDome := dome4echo.New(dome.BlockKnownBadBots(), dome.BlockKnownPaths(), dome.BlockOnError())
+	e.Pre(siliconDome)
 
 	e.Pre(mw.HttpsRedirect)
 	e.Pre(middleware.RemoveTrailingSlash())
