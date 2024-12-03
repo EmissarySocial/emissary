@@ -22,10 +22,9 @@ jobs:
       run: go test -race -coverprofile=coverage.txt -covermode=atomic -v ./...
 
     - name: Report Code Coverage
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v5
       with:
         fail_ci_if_error: true 
-        file: ./coverage.txt
         flags: unittests
         token: ${{ secrets.CODECOV_TOKEN }}
         verbose: true
