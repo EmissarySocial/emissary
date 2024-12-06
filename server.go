@@ -186,7 +186,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	log.Info().Msg("Starting Emissary Server.")
 
 	// WAF Middleware
-	e.Pre(dome4echo.New(factory.SiliconDome()))
+	e.Pre(dome4echo.New(factory.DigitalDome()))
 
 	e.Pre(mw.HttpsRedirect)
 	e.Pre(middleware.RemoveTrailingSlash())

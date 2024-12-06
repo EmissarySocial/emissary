@@ -4,7 +4,6 @@ import (
 	"context"
 	"embed"
 	"html/template"
-	"net/http"
 	"strconv"
 	"strings"
 	"sync"
@@ -62,7 +61,7 @@ type Factory struct {
 	exportCache         afero.Fs
 	commonDatabase      *mongo.Database
 	queue               queue.Queue
-	siliconDome         dome.Dome
+	digitalDome         dome.Dome
 
 	domains   map[string]*domain.Factory
 	httpCache httpcache.HTTPCache
@@ -123,10 +122,7 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 		sliceof.NewObject[mapof.String](),
 	)
 
-	factory.siliconDome = dome.New(
-		dome.LogStatusCodes(http.StatusNotFound),
-		dome.BlockStatusCodes(http.StatusForbidden),
-	)
+	factory.digitalDome = dome.New()
 
 	factory.queue = queue.New()
 
@@ -204,8 +200,8 @@ func (factory *Factory) start() {
 		// Add logging to the Silicon Dome WAF
 		if factory.commonDatabase != nil {
 			log.Trace().Msg("Applying logger to Digital Dome")
-			collection := mongodb.NewSession(factory.commonDatabase).Collection("SiliconDome")
-			factory.siliconDome.With(dome.LogDatabase(collection))
+			collection := mongodb.NewSession(factory.commonDatabase).Collection("DigitalDome")
+			factory.digitalDome.With(dome.LogDatabase(collection))
 		}
 
 		// Insert/Update a factory for each domain in the configuration
@@ -675,8 +671,8 @@ func (factory *Factory) Steranko(ctx echo.Context) (*steranko.Steranko, error) {
 	return result.Steranko(), nil
 }
 
-func (factory *Factory) SiliconDome() *dome.Dome {
-	return &factory.siliconDome
+func (factory *Factory) DigitalDome() *dome.Dome {
+	return &factory.digitalDome
 }
 
 func (factory *Factory) HTTPCache() *httpcache.HTTPCache {
