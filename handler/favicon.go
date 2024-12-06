@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"net/http"
+
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/labstack/echo/v4"
@@ -15,6 +17,8 @@ func NotFound(ctx echo.Context) error {
 func GetFavicon(factoryManager *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
-		return derp.NewNotFoundError("", "")
+		// Using "Gone" so that we don't trigger the Dome 404 logging
+		return ctx.NoContent(http.StatusGone)
+		// return derp.NewNotFoundError("", "")
 	}
 }
