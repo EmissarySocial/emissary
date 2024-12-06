@@ -4,6 +4,7 @@ import (
 	"context"
 	"embed"
 	"html/template"
+	"net/http"
 	"strconv"
 	"strings"
 	"sync"
@@ -122,7 +123,10 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 		sliceof.NewObject[mapof.String](),
 	)
 
-	factory.siliconDome = dome.New()
+	factory.siliconDome = dome.New(
+		dome.LogStatusCodes(http.StatusNotFound),
+		dome.BlockStatusCodes(http.StatusForbidden),
+	)
 
 	factory.queue = queue.New()
 
@@ -199,7 +203,7 @@ func (factory *Factory) start() {
 
 		// Add logging to the Silicon Dome WAF
 		if factory.commonDatabase != nil {
-			log.Trace().Msg("Applying logger to SiliconDome")
+			log.Trace().Msg("Applying logger to Digital Dome")
 			collection := mongodb.NewSession(factory.commonDatabase).Collection("SiliconDome")
 			factory.siliconDome.With(dome.LogDatabase(collection))
 		}
