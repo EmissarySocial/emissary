@@ -111,7 +111,9 @@
 
 		--body-background: var(--gray05);
 		--page-background: var(--gray15);
-		--input-border-invalid: var(--red60);
+		--input-border: var(--gray20);
+		--input-background: var(--gray10);
+		--input-border-invalid: var(--gray20);
 		--input-background-invalid: var(--red80);
 		--input-color-invalid: var(--red50);
 		--text-color: var(--gray80);
