@@ -24,11 +24,11 @@ func GetNodeInfo(serverFactory *server.Factory) echo.HandlerFunc {
 			"links": []map[string]any{
 				{
 					"rel":  "http://nodeinfo.diaspora.software/ns/schema/2.0",
-					"href": server + "/nodeinfo/2.0",
+					"href": server + "/.well-known/nodeinfo/2.0",
 				},
 				{
 					"rel":  "http://nodeinfo.diaspora.software/ns/schema/2.1",
-					"href": server + "/nodeinfo/2.1",
+					"href": server + "/.well-known/nodeinfo/2.1",
 				},
 			},
 		}
