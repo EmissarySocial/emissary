@@ -197,6 +197,13 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.Use(steranko.Middleware(factory))
 	e.Use(middleware.CORS())
 
+	// TODO: Commonly accessed routest that we should serve
+	e.GET("/robots.txt", handler.TBD)
+	e.GET("/sitemap.xml", handler.TBD)
+	e.GET("/.well-known/x-nodeinfo2", handler.TBD) // Friendica polls this route
+	e.GET("/poco", handler.TBD)                    // Friendica polls this route
+	e.GET("/api/**", handler.TBD)                  // Mastodon API?
+
 	// TODO: MEDIUM: Add other Well-Known API calls?
 	// https://en.wikipedia.org/wiki/List_of_/.well-known/_services_offered_by_webservers
 
@@ -207,7 +214,9 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.well-known/nodeinfo", handler.GetNodeInfo(factory))
 	e.GET("/.well-known/webfinger", handler.GetWebfinger(factory))
 	e.GET("/nodeinfo/2.0", handler.GetNodeInfo20(factory))
+	e.GET("/nodeinfo/2.0.json", handler.GetNodeInfo20(factory))
 	e.GET("/nodeinfo/2.1", handler.GetNodeInfo21(factory))
+	e.GET("/nodeinfo/2.1.json", handler.GetNodeInfo21(factory))
 
 	// Built-In Service  Routes
 	e.POST("/.follower/new", handler.PostEmailFollower(factory))
@@ -220,6 +229,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.templates/:templateId/resources/:filename", handler.GetTemplateResource(factory))
 	e.GET("/.unsplash/photos/:photo", unsplash.GetPhoto(factory))
 	e.GET("/.unsplash/collections/:collection/random", unsplash.GetCollectionRandom(factory))
+	e.GET("/.webmention", handler.TBD)
 	e.POST("/.webmention", handler.PostWebMention(factory))
 	e.GET("/.websub/:userId/:followingId", handler.GetWebSubClient(factory))
 	e.POST("/.websub/:userId/:followingId", handler.PostWebSubClient(factory))
@@ -346,10 +356,6 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 
 	// Mastodon API
 	// toot.Register(e, handler.Mastodon(factory))
-
-	// Blocked Routes
-	e.Any("/wp-admin", handler.Blocked)
-	e.Any("/wp-admin/*", handler.Blocked)
 }
 
 /******************************************
