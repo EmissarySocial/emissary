@@ -34,7 +34,7 @@ func PostInbox(serverFactory *server.Factory) echo.HandlerFunc {
 		user := model.NewUser()
 		userService := factory.User()
 		if err := userService.LoadByID(userID, &user); err != nil {
-			return derp.Wrap(err, location, "Error loading User", userID.Hex())
+			return derp.Wrap(err, location, "Error loading User", userID.Hex(), derp.WithCode(http.StatusGone))
 		}
 
 		// RULE: Only public users can be queried
