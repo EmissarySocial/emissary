@@ -198,16 +198,24 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.Use(middleware.CORS())
 
 	// TODO: Commonly accessed routest that we should serve
-	e.GET("/robots.txt", handler.TBD)
-	e.GET("/sitemap.xml", handler.TBD)
-	e.GET("/.well-known/x-nodeinfo2", handler.TBD) // Friendica polls this route
-	e.GET("/poco", handler.TBD)                    // Friendica polls this route
-	e.GET("/api/**", handler.TBD)                  // Mastodon API?
+	e.GET("/robots.txt", handler.TBD)                       // https://developers.google.com/search/docs/advanced/robots/create-robots-txt
+	e.GET("/sitemap.xml", handler.TBD)                      // https://developers.google.com/search/docs/advanced/sitemaps/build-sitemap
+	e.GET("/humans.txt", handler.TBD)                       // http://humanstxt.org/
+	e.GET("/ads.txt", handler.TBD)                          // https://iabtechlab.com/standards/ads-txt/
+	e.GET("/security.txt", handler.TBD)                     // https://securitytxt.org/
+	e.GET("/.well-known/security.txt", handler.TBD)         // https://securitytxt.org/
+	e.GET("/.well-known/x-nodeinfo2", handler.TBD)          // Friendica polls this route
+	e.GET("/poco", handler.TBD)                             // Friendica polls this route
+	e.GET("/api/**", handler.TBD)                           // Mastodon API?
+	e.GET("/favicon.ico", handler.TBD)                      // https://developer.mozilla.org/en-US/docs/Glossary/Favicon
+	e.GET("/favicon.png", handler.TBD)                      // https://developer.mozilla.org/en-US/docs/Glossary/Favicon
+	e.GET("/apple-touch-icon.png", handler.TBD)             // https://developer.apple.com/library/archive/documentation/AppleApplications/Reference/SafariWebContent/ConfiguringWebApplications/ConfiguringWebApplications.html
+	e.GET("/apple-touch-icon-precomposed.png", handler.TBD) //https://developer.apple.com/library/archive/documentation/AppleApplications/Reference/SafariWebContent/ConfiguringWebApplications/ConfiguringWebApplications.html
+	e.GET("/manifest.json", handler.TBD)                    // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json
 
 	// TODO: MEDIUM: Add other Well-Known API calls?
 	// https://en.wikipedia.org/wiki/List_of_/.well-known/_services_offered_by_webservers
 
-	e.GET("/favicon.ico", handler.GetFavicon(factory))
 	e.GET("/.well-known/change-password", handler.GetChangePassword(factory))
 	e.GET("/.well-known/host-meta", handler.GetHostMeta(factory))
 	e.GET("/.well-known/host-meta.json", handler.GetHostMetaJSON(factory))
