@@ -4,6 +4,7 @@ import (
 	"context"
 	"embed"
 	"html/template"
+	"net/http"
 	"strconv"
 	"strings"
 	"sync"
@@ -122,7 +123,13 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 		sliceof.NewObject[mapof.String](),
 	)
 
-	factory.digitalDome = dome.New()
+	factory.digitalDome = dome.New(
+		dome.LogStatusCodes(
+			http.StatusBadRequest,
+			http.StatusNotFound,
+			http.StatusInternalServerError,
+		),
+	)
 
 	factory.queue = queue.New()
 
