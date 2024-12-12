@@ -44,7 +44,7 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 		return SendWebSubMessage(args)
 
 	case "stream.syndicate", "stream.syndicate.undo":
-		return StreamSyndicate(args)
+		return StreamSyndicate(name, args)
 
 	}
 

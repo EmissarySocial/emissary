@@ -8,7 +8,7 @@ import (
 )
 
 // StreamSyndicate sends HTTP messages to syndication targets
-func StreamSyndicate(args mapof.Any) queue.Result {
+func StreamSyndicate(name string, args mapof.Any) queue.Result {
 
 	// Find the endpoint Href for the selected syndication target
 	endpoint := args.GetString("endpoint")

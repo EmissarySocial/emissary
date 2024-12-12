@@ -231,7 +231,7 @@ func (service *Webhook) Send(getter model.WebhookDataGetter, events ...string) {
 					continue
 				}
 
-				log.Trace().Str("Event", event).Msg("Webhook sent to " + webhook.TargetURL)
+				log.Trace().Str("event", event).Msg("Webhook sent to " + webhook.TargetURL)
 			}
 		}
 	}()

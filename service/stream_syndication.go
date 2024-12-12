@@ -22,8 +22,9 @@ func (service *Stream) sendSyndicationMessages(stream *model.Stream, added []str
 		for _, endpoint := range added {
 			if target.Value == endpoint {
 
-				message.SetString("event", "stream.syndicate")
-				task := queue.NewTask("stream.syndicate.undo", mapof.Any{
+				event := "stream.syndicate"
+				message.SetString("event", event)
+				task := queue.NewTask(event, mapof.Any{
 					"endpoint": target.Href,
 					"message":  message,
 				})
@@ -39,8 +40,9 @@ func (service *Stream) sendSyndicationMessages(stream *model.Stream, added []str
 		for _, endpoint := range removed {
 			if target.Value == endpoint {
 
-				message.SetString("event", "stream.syndicate:undo")
-				task := queue.NewTask("stream.syndicate.undo", mapof.Any{
+				event := "stream.syndicate.undo"
+				message.SetString("event", event)
+				task := queue.NewTask(event, mapof.Any{
 					"endpoint": target.Href,
 					"message":  message,
 				})
