@@ -120,6 +120,11 @@ func (builder QueryBuilder[T]) WhereLT(field string, value any) QueryBuilder[T] 
 	return builder
 }
 
+func (builder QueryBuilder[T]) WhereIN(field string, value any) QueryBuilder[T] {
+	builder.Criteria = builder.Criteria.AndIn(field, value)
+	return builder
+}
+
 func (builder QueryBuilder[T]) ByCreateDate() QueryBuilder[T] {
 	builder.SortField = "createDate"
 	return builder
