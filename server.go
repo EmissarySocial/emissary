@@ -210,7 +210,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/favicon.ico", handler.TBD)                      // https://developer.mozilla.org/en-US/docs/Glossary/Favicon
 	e.GET("/favicon.png", handler.TBD)                      // https://developer.mozilla.org/en-US/docs/Glossary/Favicon
 	e.GET("/apple-touch-icon.png", handler.TBD)             // https://developer.apple.com/library/archive/documentation/AppleApplications/Reference/SafariWebContent/ConfiguringWebApplications/ConfiguringWebApplications.html
-	e.GET("/apple-touch-icon-precomposed.png", handler.TBD) //https://developer.apple.com/library/archive/documentation/AppleApplications/Reference/SafariWebContent/ConfiguringWebApplications/ConfiguringWebApplications.html
+	e.GET("/apple-touch-icon-precomposed.png", handler.TBD) // https://developer.apple.com/library/archive/documentation/AppleApplications/Reference/SafariWebContent/ConfiguringWebApplications/ConfiguringWebApplications.html
 	e.GET("/manifest.json", handler.TBD)                    // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json
 
 	// TODO: MEDIUM: Add other Well-Known API calls?
@@ -253,9 +253,6 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.ostatus/tunnel", handler.GetFollowingTunnel)
 	// TODO: LOW: .ostatus/tunnel is no longer necessary because we're using the right cookie settings now.
 	// Migrate calls to this to a more direct route.
-
-	e.GET("/apple-touch-icon.png", handler.NotFound)
-	e.GET("/apple-touch-icon-precomposed.png", handler.NotFound)
 
 	// Authentication Pages
 	e.GET("/signin", handler.GetSignIn(factory))
