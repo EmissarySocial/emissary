@@ -10,6 +10,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
+	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -26,6 +27,7 @@ func (service *Stream) JSONLDGetter(stream *model.Stream) StreamJSONLDGetter {
 // This map will still need to be marshalled into JSON
 func (service *Stream) JSONLD(stream *model.Stream) mapof.Any {
 	result := mapof.Any{
+		vocab.AtContext:         sliceof.Any{vocab.ContextTypeActivityStreams, vocab.ContextTypeSecurity, vocab.ContextTypeToot},
 		vocab.PropertyID:        stream.ActivityPubURL(),
 		vocab.PropertyType:      stream.SocialRole,
 		vocab.PropertyURL:       stream.URL,
@@ -118,10 +120,11 @@ func (service *Stream) JSONLD(stream *model.Stream) mapof.Any {
 	}
 
 	// Try to apply the "social mapping" to the stream
+	schma := service.activityStreamSchema()
 	if template, err := service.templateService.Load(stream.TemplateID); err == nil {
 		result[vocab.PropertyType] = template.SocialRole
 		if template.SocialRules.NotEmpty() {
-			err := template.SocialRules.Execute(schema.Wildcard(), stream, schema.Wildcard(), &result)
+			err := template.SocialRules.Execute(schma, stream, schma, &result)
 			derp.Report(err)
 		}
 	}
@@ -174,4 +177,16 @@ func (service *Stream) ActivityPubActor(streamID primitive.ObjectID, withFollowe
 	}
 
 	return actor, nil
+}
+
+func (service *Stream) activityStreamSchema() schema.Schema {
+
+	return schema.New(
+		schema.Object{
+			Properties: schema.ElementMap{
+				"@context": schema.Array{Items: schema.Any{}},
+			},
+			Wildcard: schema.Any{},
+		},
+	)
 }
