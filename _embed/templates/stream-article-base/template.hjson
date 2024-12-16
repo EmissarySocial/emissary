@@ -22,7 +22,10 @@
 				format: {type:"string"}
 				raw: {type:"string"}
 				html: {type:"string", format:"html"}
-			}}
+			},
+			data: {type:"object", properties: {
+				tags: {type:"string"}
+			}}}
 		}
 	}
 	states: {
@@ -81,7 +84,7 @@
 			roles: ["owner"]
 			steps: [
 				{do:"delete", title:"Delete '{{.Label}}'?", message:"All content and comments will be lost.  There is NO UNDO."}
-				{do:"unpublish", outbox:true}
+				{do:"unpublish", outbox:"true"}
 				{do:"forward-to", url:"/{{.ParentID}}"}
 			]
 		}
@@ -146,7 +149,8 @@
 			steps: [
 				{do:"as-confirmation", title:"Publish this Stream?", message:"Viewers will be able to see this stream on your website immediately.", submit:"Publish"}
 				{do:"set-state", state:"published"}
-				{do:"save-and-publish", outbox:false}
+				{do:"save-and-publish", outbox:"false"}
+				{do:"search-index"}
 				{do:"refresh-page"}
 			]
 		}
@@ -157,7 +161,7 @@
 				{do:"as-confirmation", title:"Un-Publish this Stream?", message:"Viewers will no longer be able to see this stream on your website.", submit:"Un-Publish"}
 				{do:"set-state", state:"unpublished"}
 				{do:"save", message:"Un-Published by {{.Author}}"}
-				{do:"unpublish", outbox:false}
+				{do:"unpublish", outbox:"false"}
 				{do:"refresh-page"}
 			]
 		}
@@ -166,7 +170,9 @@
 			steps: [
 				{do:"as-confirmation", title:"Promote this Draft?", message:"The live page will be replaced with this content.", submit:"Promote"}
 				{do:"promote-draft"}
-				{do:"save-and-publish", outbox:false}
+				{do:"process-tags", paths:"data.tags"}
+				{do:"save-and-publish", outbox:"false"}
+				{do:"search-index"}
 				{do:"refresh-page"}
 				{do:"forward-to", url:"/{{.Token}}"}
 			]
@@ -193,6 +199,7 @@
 									{type:"text", path:"token", label:"Token/Slug"}
 									{type:"text", path:"label", label:"Label"}
 									{type:"textarea", path:"summary", label:"Summary"}
+									{type:"textarea", path:"data.tags", label:"Hashtags", description:"List hashtags here to categorize this article."}
 								]
 							}
 						}]

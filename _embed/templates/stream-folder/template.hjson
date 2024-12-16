@@ -46,7 +46,7 @@
 					data.format:"TABLE"
 					}
 				}
-				{do:"save-and-publish", outbox:true}
+				{do:"save-and-publish", outbox:"true"}
 				{do:"forward-to", url:"/{{.StreamID}}"}
 			]
 		}
@@ -75,7 +75,7 @@
 								]
 							}
 						}, 
-						{do:"save-and-publish", outbox:true}
+						{do:"save-and-publish", outbox:"true"}
 					]
 				}
 				{do:"refresh-page"}
@@ -84,7 +84,7 @@
 		delete: {
 			roles: ["editor"]
 			steps: [
-				{do:"unpublish", outbox:true}
+				{do:"unpublish", outbox:"true"}
 				{do:"delete", title:"Delete this Folder?", message:"This will permanently delete this folder and all of its contents"}
 				{do:"forward-to", url:"/{{.ParentID}}"}
 			]

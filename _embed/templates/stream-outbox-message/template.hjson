@@ -36,7 +36,8 @@
 				{do:"save"}
 				{do:"upload-attachments"}
 				{do:"set-thumbnail", path:"iconUrl"}
-				{do:"save-and-publish", outbox:true}
+				{do:"save-and-publish", outbox:"true"}
+				{do:"search-index"}
 			]
 		}
 		view: {
@@ -54,7 +55,7 @@
 					{do:"edit-content", file:"edit", format:"HTML"}
 					{do:"process-content"}
 					{do:"save"}
-					{do:"save-and-publish", outbox:true}
+					{do:"save-and-publish", outbox:"true"}
 					{do:"refresh-page"}
 				]}
 			]
@@ -63,7 +64,7 @@
 			roles:["self"]
 			steps: [
 				{do:"delete", title:"Delete this Post?", message:"If you continue, this post will be permanently removed from your profile.  There is NO UNDO."}
-				{do:"unpublish", outbox:true}
+				{do:"unpublish", outbox:"true"}
 				{do:"refresh-page"}
 			]
 		}
