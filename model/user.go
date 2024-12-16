@@ -378,6 +378,23 @@ func (user User) GetRank() int64 {
 }
 
 /******************************************
+ * SearchResulter Interface
+ ******************************************/
+
+func (user User) SearchResult() SearchResult {
+
+	result := NewSearchResult()
+
+	result.ObjectType = "Person"
+	result.Name = user.DisplayName
+	result.Summary = user.StatusMessage
+	result.URL = user.ProfileURL
+	result.IconURL = user.ActivityPubIconURL()
+
+	return result
+}
+
+/******************************************
  * Webhook Interface
  ******************************************/
 

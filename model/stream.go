@@ -460,6 +460,20 @@ func (stream *Stream) ActorLink() PersonLink {
 	}
 }
 
+// SearchResult returns a SearchResult object that represents this Stream in the search index
+func (stream *Stream) SearchResult() SearchResult {
+
+	result := NewSearchResult()
+	result.URL = stream.URL
+	result.ObjectType = stream.SocialRole
+	result.Name = stream.Label
+	result.Summary = stream.Summary
+	result.IconURL = stream.IconURL
+	result.Tags = slice.Map(stream.Tags, TagAsNameOnly)
+
+	return result
+}
+
 /******************************************
  * Webhook Interface
  ******************************************/

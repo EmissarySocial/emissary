@@ -23,3 +23,7 @@ func TagAsJSONLD(tag Tag) mapof.Any {
 		"href": tag.Href,
 	}
 }
+
+func TagAsNameOnly(tag Tag) string {
+	return tag.Name
+}

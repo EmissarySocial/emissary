@@ -24,6 +24,13 @@ func (step StepUnPublish) Post(builder Builder, _ io.Writer) PipelineBehavior {
 	streamBuilder := builder.(*Stream)
 	factory := streamBuilder.factory()
 
+	// Try to UnPublish the Stream from the search index
+	searchResultService := factory.Search()
+
+	if err := searchResultService.DeleteByURL(streamBuilder._stream.URL); err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Error deleting search result", streamBuilder._stream.URL))
+	}
+
 	// Try to load the User from the Database
 	userService := factory.User()
 	user := model.NewUser()
@@ -34,11 +41,23 @@ func (step StepUnPublish) Post(builder Builder, _ io.Writer) PipelineBehavior {
 		}
 	}
 
-	// Try to Publish the Stream to ActivityPub
+	// Try to UnPublish the Stream from ActivityPub
 	streamService := factory.Stream()
 
 	if err := streamService.UnPublish(&user, streamBuilder._stream, step.Outbox); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error publishing stream", streamBuilder._stream))
+	}
+
+	// If this object is also a SearchResulter, then we're gonna remove it from the search index
+	if searchResulter, ok := builder.object().(SearchResulter); ok {
+
+		searchResultService := builder.factory().Search()
+		searchResult := searchResulter.SearchResult()
+
+		// Delete step here
+		if err := searchResultService.Delete(&searchResult, "unpublished"); err != nil {
+			return Halt().WithError(derp.Wrap(err, location, "Error deleting search result", searchResult))
+		}
 	}
 
 	return nil

@@ -70,6 +70,7 @@ type Factory struct {
 	responseService      service.Response
 	ruleService          service.Rule
 	searchTagService     service.SearchTag
+	searchService        service.Search
 	streamService        service.Stream
 	streamArchiveService service.StreamArchive
 	streamDraftService   service.StreamDraft
@@ -137,6 +138,7 @@ func NewFactory(domain config.Domain, port string, providers []config.Provider, 
 	factory.outboxService = service.NewOutbox()
 	factory.responseService = service.NewResponse()
 	factory.ruleService = service.NewRule()
+	factory.searchService = service.NewSearch()
 	factory.searchTagService = service.NewSearchTag()
 	factory.streamService = service.NewStream()
 	factory.streamArchiveService = service.NewStreamArchive()
@@ -341,6 +343,13 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.Host(),
 		)
 
+		// Populate the Search Service
+		factory.searchService.Refresh(
+			factory.collection(CollectionSearchResult),
+			factory.Host(),
+		)
+
+		// Populate the SearchTag Service
 		factory.searchTagService.Refresh(
 			factory.collection(CollectionSearchTag),
 			factory.Host(),
@@ -588,6 +597,11 @@ func (factory *Factory) OAuthUserToken() *service.OAuthUserToken {
 // Outbox returns a fully populated Outbox service
 func (factory *Factory) Outbox() *service.Outbox {
 	return &factory.outboxService
+}
+
+// Search returns a fully populated Search service
+func (factory *Factory) Search() *service.Search {
+	return &factory.searchService
 }
 
 // SearchTag returns a fully populated SearchTag service
