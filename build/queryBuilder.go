@@ -105,6 +105,11 @@ func (builder QueryBuilder[T]) Featured() QueryBuilder[T] {
 	return builder
 }
 
+func (builder QueryBuilder[T]) Tags(tags ...string) QueryBuilder[T] {
+	builder.Criteria = builder.Criteria.AndIn("tags.Name", tags)
+	return builder
+}
+
 func (builder QueryBuilder[T]) Where(field string, value any) QueryBuilder[T] {
 	builder.Criteria = builder.Criteria.AndEqual(field, value)
 	return builder
