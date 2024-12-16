@@ -288,6 +288,15 @@ func (w Common) UserImage() (string, error) {
 }
 
 /******************************************
+ * Search Engine
+ ******************************************/
+
+func (w Common) Search() SearchBuilder {
+
+	return NewSearchBuilder(w._factory.Search(), exp.All())
+}
+
+/******************************************
  * ActivityStreams / ActivityPub
  ******************************************/
 

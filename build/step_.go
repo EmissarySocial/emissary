@@ -101,9 +101,6 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.ProcessTags:
 		return StepProcessTags(s)
 
-	case step.SaveAndPublish:
-		return StepSaveAndPublish(s)
-
 	case step.RedirectTo:
 		return StepRedirectTo(s)
 
@@ -118,6 +115,12 @@ func ExecutableStep(stepInfo step.Step) Step {
 
 	case step.Save:
 		return StepSave(s)
+
+	case step.SaveAndPublish:
+		return StepSaveAndPublish(s)
+
+	case step.SearchIndex:
+		return StepSearchIndex(s)
 
 	case step.SendEmail:
 		return StepSendEmail(s)

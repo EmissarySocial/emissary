@@ -3,9 +3,11 @@ package service
 import (
 	"html/template"
 	"io/fs"
+	"iter"
 	"net/url"
 	"strings"
 
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/list"
@@ -14,6 +16,20 @@ import (
 	"github.com/tdewolff/minify/v2/html"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
+// RangeFunc converts a data.Iterator into a Go 1.23 RangeFunc (https://go.dev/blog/range-functions)
+func RangeFunc[T any](it data.Iterator, new func() T) iter.Seq[T] {
+
+	return func(yield func(T) bool) {
+		value := new()
+		for it.Next(&value) {
+			if !yield(value) {
+				break
+			}
+			value = new()
+		}
+	}
+}
 
 func ParseProfileURL(value string) (urlValue *url.URL, userID primitive.ObjectID, objectType string, objectID primitive.ObjectID, err error) {
 
