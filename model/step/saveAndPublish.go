@@ -1,6 +1,8 @@
 package step
 
-import "github.com/benpate/rosetta/mapof"
+import (
+	"github.com/benpate/rosetta/mapof"
+)
 
 // SaveAndPublish represents an action-step that can update a stream's SaveAndPublishDate with the current time.
 type SaveAndPublish struct {
@@ -9,6 +11,7 @@ type SaveAndPublish struct {
 
 // NewSaveAndPublish returns a fully initialized SaveAndPublish object
 func NewSaveAndPublish(stepInfo mapof.Any) (SaveAndPublish, error) {
+
 	result := SaveAndPublish{
 		Outbox: stepInfo.GetBool("outbox"),
 	}
