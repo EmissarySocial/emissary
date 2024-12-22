@@ -7,7 +7,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// RedirectTo represents an action-step that forwards the user to a new page.
+// RedirectTo is an action-step that forwards the user to a new page.
 type RedirectTo struct {
 	URL *template.Template
 }

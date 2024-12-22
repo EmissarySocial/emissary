@@ -11,7 +11,7 @@ import (
 	"github.com/benpate/rosetta/slice"
 )
 
-// StepEditTemplate represents an action-step that can delete a Stream from the Domain
+// StepEditTemplate is an action-step that can delete a Stream from the Domain
 type StepEditTemplate struct {
 	Title string
 	Paths []string

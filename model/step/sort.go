@@ -4,7 +4,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// Sort represents an action-step that can update multiple records at once
+// Sort is an action-step that can update multiple records at once
 type Sort struct {
 	Model   string
 	Keys    string

@@ -2,7 +2,7 @@ package step
 
 import "github.com/benpate/rosetta/mapof"
 
-// ViewFeed represents an action-step that can build a Stream into HTML
+// ViewFeed is an action-step that can build a Stream into HTML
 type ViewFeed struct {
 }
 

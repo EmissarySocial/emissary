@@ -7,7 +7,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// InlineError represents an action-step that displays an "inline failure" message on a form
+// InlineError is an action-step that displays an "inline failure" message on a form
 type InlineError struct {
 	Message *template.Template
 }

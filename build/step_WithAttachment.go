@@ -9,7 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// StepWithAttachment represents an action-step that can update the data.DataMap custom data stored in a Stream
+// StepWithAttachment is an action-step that can update the data.DataMap custom data stored in a Stream
 type StepWithAttachment struct {
 	SubSteps []step.Step
 }

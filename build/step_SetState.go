@@ -6,7 +6,7 @@ import (
 	"github.com/benpate/derp"
 )
 
-// StepSetState represents an action-step that can change a Stream's state
+// StepSetState is an action-step that can change a Stream's state
 type StepSetState struct {
 	State string
 }

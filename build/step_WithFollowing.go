@@ -8,7 +8,7 @@ import (
 	"github.com/benpate/derp"
 )
 
-// StepWithFollowing represents an action-step that can update the data.DataMap custom data stored in a Stream
+// StepWithFollowing is an action-step that can update the data.DataMap custom data stored in a Stream
 type StepWithFollowing struct {
 	SubSteps []step.Step
 }

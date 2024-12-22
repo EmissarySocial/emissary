@@ -6,7 +6,7 @@ import (
 	"github.com/benpate/derp"
 )
 
-// StepSendEmail represents an action-step that can send a named email to a recipient
+// StepSendEmail is an action-step that can send a named email to a recipient
 type StepSendEmail struct {
 	Email string
 }

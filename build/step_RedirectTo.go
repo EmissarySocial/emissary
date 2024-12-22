@@ -9,7 +9,7 @@ import (
 	"github.com/benpate/derp"
 )
 
-// StepRedirectTo represents an action-step that sends an HTTP redirect to another page.
+// StepRedirectTo is an action-step that sends an HTTP redirect to another page.
 type StepRedirectTo struct {
 	URL *template.Template
 }

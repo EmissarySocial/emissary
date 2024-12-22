@@ -9,7 +9,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// StepEditContent represents an action-step that can edit/update Container in a streamDraft.
+// StepEditContent is an action-step that can edit/update Container in a streamDraft.
 type StepEditContent struct {
 	Filename  string
 	Fieldname string

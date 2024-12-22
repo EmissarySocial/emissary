@@ -9,7 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// StepSortAttachments represents an action-step that can update multiple records at once
+// StepSortAttachments is an action-step that can update multiple records at once
 type StepSortAttachments struct {
 	Keys    string
 	Values  string

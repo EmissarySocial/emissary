@@ -6,7 +6,7 @@ import (
 	"github.com/benpate/derp"
 )
 
-// StepStreamPromoteDraft represents an action-step that can copy the Container from a StreamDraft into its corresponding Stream
+// StepStreamPromoteDraft is an action-step that can copy the Container from a StreamDraft into its corresponding Stream
 type StepStreamPromoteDraft struct {
 	StateID string
 }

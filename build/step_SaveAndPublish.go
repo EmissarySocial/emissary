@@ -7,7 +7,7 @@ import (
 	"github.com/benpate/derp"
 )
 
-// StepSaveAndPublish represents an action-step that can update a stream's PublishDate with the current time.
+// StepSaveAndPublish is an action-step that can update a stream's PublishDate with the current time.
 type StepSaveAndPublish struct {
 	Outbox bool
 }

@@ -2,7 +2,7 @@ package step
 
 import "github.com/benpate/rosetta/mapof"
 
-// SetState represents an action-step that can change a Stream's state
+// SetState is an action-step that can change a Stream's state
 type SetState struct {
 	State string
 }

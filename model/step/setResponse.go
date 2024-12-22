@@ -2,7 +2,7 @@ package step
 
 import "github.com/benpate/rosetta/mapof"
 
-// SetResponse represents an action-step that can create/update a response to the current model object
+// SetResponse is an action-step that can create/update a response to the current model object
 type SetResponse struct{}
 
 // NewSetResponse returns a fully initialized SetResponse object

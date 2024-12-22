@@ -8,7 +8,7 @@ import (
 	"github.com/benpate/derp"
 )
 
-// StepWithFolder represents an action-step that can update the data.DataMap custom data stored in a Stream
+// StepWithFolder is an action-step that can update the data.DataMap custom data stored in a Stream
 type StepWithFolder struct {
 	SubSteps []step.Step
 }

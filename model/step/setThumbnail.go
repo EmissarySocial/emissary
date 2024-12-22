@@ -2,7 +2,7 @@ package step
 
 import "github.com/benpate/rosetta/mapof"
 
-// SetThumbnail represents an action-step that can update the data.DataMap custom data stored in a Stream
+// SetThumbnail is an action-step that can update the data.DataMap custom data stored in a Stream
 type SetThumbnail struct {
 	Path string
 }

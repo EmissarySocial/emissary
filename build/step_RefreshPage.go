@@ -4,7 +4,7 @@ import (
 	"io"
 )
 
-// StepRefreshPage represents an action-step that forwards the user to a new page.
+// StepRefreshPage is an action-step that forwards the user to a new page.
 type StepRefreshPage struct{}
 
 func (step StepRefreshPage) Get(builder Builder, _ io.Writer) PipelineBehavior {

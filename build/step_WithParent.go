@@ -9,7 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// StepWithParent represents an action-step that can update the data.DataMap custom data stored in a Stream
+// StepWithParent is an action-step that can update the data.DataMap custom data stored in a Stream
 type StepWithParent struct {
 	SubSteps []step.Step
 }

@@ -7,7 +7,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// ForwardTo represents an action-step that forwards the user to a new page.
+// ForwardTo is an action-step that forwards the user to a new page.
 type ForwardTo struct {
 	URL *template.Template
 }

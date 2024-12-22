@@ -8,7 +8,7 @@ import (
 	"github.com/benpate/derp"
 )
 
-// StepWithPrevSibling represents an action-step that can update the data.DataMap custom data stored in a Stream
+// StepWithPrevSibling is an action-step that can update the data.DataMap custom data stored in a Stream
 type StepWithPrevSibling struct {
 	SubSteps []step.Step
 }

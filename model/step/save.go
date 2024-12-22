@@ -8,7 +8,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
-// Save represents an action-step that can save changes to any object
+// Save is an action-step that can save changes to any object
 type Save struct {
 	Comment *template.Template
 	Method  string

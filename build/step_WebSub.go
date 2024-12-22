@@ -12,7 +12,7 @@ import (
 	"github.com/timewasted/go-accept-headers"
 )
 
-// StepWebSub represents an action-step that can build a Stream into HTML
+// StepWebSub is an action-step that can build a Stream into HTML
 type StepWebSub struct {
 }
 

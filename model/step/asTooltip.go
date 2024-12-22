@@ -5,7 +5,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// AsTooltip represents an action-step that can update the data.DataMap custom data stored in a Stream
+// AsTooltip is an action-step that can update the data.DataMap custom data stored in a Stream
 type AsTooltip struct {
 	SubSteps []Step
 }

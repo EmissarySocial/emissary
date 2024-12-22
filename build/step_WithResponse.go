@@ -9,7 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// StepWithResponse represents an action-step that can update the data.DataMap custom data stored in a Stream
+// StepWithResponse is an action-step that can update the data.DataMap custom data stored in a Stream
 type StepWithResponse struct {
 	SubSteps []step.Step
 }

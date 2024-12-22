@@ -9,7 +9,7 @@ import (
 	"github.com/benpate/derp"
 )
 
-// StepAsModal represents an action-step that can update the data.DataMap custom data stored in a Stream
+// StepAsModal is an action-step that can update the data.DataMap custom data stored in a Stream
 type StepAsModal struct {
 	SubSteps   []step.Step
 	Options    []string

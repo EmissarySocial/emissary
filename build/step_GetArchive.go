@@ -11,7 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// StepGetArchive represents an action-step that can delete a Stream from the Domain
+// StepGetArchive is an action-step that can delete a Stream from the Domain
 type StepGetArchive struct {
 	Token       string
 	Depth       int

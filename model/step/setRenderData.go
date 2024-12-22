@@ -8,7 +8,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// SetRenderData represents an action-step that can update the custom data stored in a builder
+// SetRenderData is an action-step that can update the custom data stored in a builder
 type SetRenderData struct {
 	Values map[string]*template.Template // values to set directly into the object
 }

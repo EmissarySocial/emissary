@@ -10,7 +10,7 @@ import (
 	"github.com/yeqown/go-qrcode/writer/standard"
 )
 
-// StepQRCode represents an action-step that returns a QR Code for the current stream URL.
+// StepQRCode is an action-step that returns a QR Code for the current stream URL.
 type StepQRCode struct {
 }
 

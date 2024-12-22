@@ -7,7 +7,7 @@ import (
 	"github.com/benpate/derp"
 )
 
-// StepUnPublish represents an action-step that can update a stream's PublishDate with the current time.
+// StepUnPublish is an action-step that can update a stream's PublishDate with the current time.
 type StepUnPublish struct {
 	Outbox bool
 }

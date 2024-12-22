@@ -4,7 +4,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// Halt represents an action-step that can update the data.DataMap custom data stored in a Stream
+// Halt is an action-step that can update the data.DataMap custom data stored in a Stream
 type Halt struct{}
 
 // NewHalt returns a fully initialized Halt object

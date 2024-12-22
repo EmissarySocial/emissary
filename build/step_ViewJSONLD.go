@@ -9,7 +9,7 @@ import (
 	accept "github.com/timewasted/go-accept-headers"
 )
 
-// StepViewJSONLD represents an action-step that can build a Stream into HTML
+// StepViewJSONLD is an action-step that can build a Stream into HTML
 type StepViewJSONLD struct {
 	Method string
 }

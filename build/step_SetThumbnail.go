@@ -6,7 +6,7 @@ import (
 	"github.com/benpate/derp"
 )
 
-// StepSetThumbnail represents an action-step that can update the data.DataMap custom data stored in a Stream
+// StepSetThumbnail is an action-step that can update the data.DataMap custom data stored in a Stream
 type StepSetThumbnail struct {
 	Path string
 }

@@ -9,7 +9,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// StepEditRegistration represents an action-step that can update the data.DataMap custom data stored in a Stream
+// StepEditRegistration is an action-step that can update the data.DataMap custom data stored in a Stream
 type StepEditRegistration struct{}
 
 func (step StepEditRegistration) Get(builder Builder, buffer io.Writer) PipelineBehavior {

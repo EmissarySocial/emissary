@@ -5,7 +5,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// AsModal represents an action-step that can update the data.DataMap custom data stored in a Stream
+// AsModal is an action-step that can update the data.DataMap custom data stored in a Stream
 type AsModal struct {
 	SubSteps   []Step
 	Options    []string

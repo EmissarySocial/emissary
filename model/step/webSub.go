@@ -2,7 +2,7 @@ package step
 
 import "github.com/benpate/rosetta/mapof"
 
-// WebSub represents an action-step that can build a Stream into HTML
+// WebSub is an action-step that can build a Stream into HTML
 type WebSub struct {
 }
 

@@ -2,7 +2,7 @@ package step
 
 import "github.com/benpate/rosetta/mapof"
 
-// UnPublish represents an action-step that can update a stream's UnPublishDate with the current time.
+// UnPublish is an action-step that can update a stream's UnPublishDate with the current time.
 type UnPublish struct {
 	Outbox bool
 }
