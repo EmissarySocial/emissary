@@ -13,8 +13,10 @@ func TestSearchTag(t *testing.T) {
 
 	tests := []tableTestItem{
 		{"searchTagId", "000000000000000000000001", nil},
-		{"parentId", "000000000000000000000002", nil},
-		{"tag", "TAG", nil},
+		{"parent", "YOURTAG", nil},
+		{"name", "MYTAG", nil},
+		{"description", "DESCRIPTION", nil},
+		{"color", "#663399", nil},
 		{"stateId", SearchTagStateAllowed, nil},
 		{"notes", "NOTES", nil},
 		{"rank", 1234, nil},

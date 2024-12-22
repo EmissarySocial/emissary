@@ -26,7 +26,8 @@
 		edit: {steps:[
 			{do:"as-modal", background:"/admin/rules", steps:[
 				{
-					do: "edit", form:{
+					do: "edit"
+					form:{
 						type:"layout-vertical"
 						label:"Edit Server-Wide Rule"
 						children:[
@@ -34,12 +35,14 @@
 							{type:"text", path:"trigger", label:"Trigger Text"}
 							{type:"select", path:"action", label:"Action", options:{provider:"rule-actions"}}
 						]
-					}, options:[delete:/admin/rules/{{.RuleID}}/delete"]}
+					}
+					options:["delete:/admin/rules/{{.RuleID}}/delete"]
+					}
 				]}
-				{do:"save"}
-				{do:"trigger-event", event:"refreshPage"}
-			]}
+			{do:"save"}
+			{do:"trigger-event", event:"refreshPage"}
 		]}
+		
 		delete: {
 			steps:[
 				{do: "delete"}

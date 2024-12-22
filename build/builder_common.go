@@ -7,9 +7,11 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/mention"
 	"github.com/benpate/derp"
 	"github.com/benpate/domain"
 	"github.com/benpate/exp"
+	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/form"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/convert"
@@ -293,7 +295,17 @@ func (w Common) UserImage() (string, error) {
 
 func (w Common) Search() SearchBuilder {
 
-	return NewSearchBuilder(w._factory.Search(), exp.All())
+	tags, _ := mention.Parse('#', w.QueryParam("q"))
+
+	var criteria exp.Expression = exp.And(
+		exp.Equal("deleteDate", 0),
+	)
+
+	for _, tag := range tags {
+		criteria = criteria.And(exp.Equal("tags", tag))
+	}
+
+	return NewSearchBuilder(w._factory.Search(), criteria)
 }
 
 /******************************************
@@ -504,6 +516,63 @@ func (w Common) GetResponseSummary(url string) model.UserResponseSummary {
 	return result
 }
 
+func (w Common) FeaturedSearchTags() *QueryBuilder[model.SearchTag] {
+
+	criteria := exp.And(
+		exp.Equal("parent", ""),
+		exp.Equal("stateId", model.SearchTagStateFeatured),
+		exp.Equal("deleteDate", 0),
+	)
+
+	result := NewQueryBuilder[model.SearchTag](w._factory.SearchTag(), criteria)
+
+	return &result
+}
+
+func (w Common) FeaturedChildSearchTags() *QueryBuilder[model.SearchTag] {
+
+	b := builder.NewBuilder().String("parent")
+
+	criteria := exp.And(
+		b.Evaluate(w._request.URL.Query()),
+		exp.Equal("stateId", model.SearchTagStateFeatured),
+		exp.Equal("deleteDate", 0),
+	)
+
+	result := NewQueryBuilder[model.SearchTag](w._factory.SearchTag(), criteria)
+
+	return &result
+}
+
+func (w Common) AllowedSearchTags() *QueryBuilder[model.SearchTag] {
+
+	criteria := exp.And(
+		exp.GreaterOrEqual("stateId", model.SearchTagStateAllowed),
+		exp.Equal("deleteDate", 0),
+	)
+
+	result := NewQueryBuilder[model.SearchTag](w._factory.SearchTag(), criteria)
+
+	return &result
+}
+
+func (w Common) SearchTags() *QueryBuilder[model.SearchTag] {
+
+	query := builder.NewBuilder().
+		String("parent").
+		String("name").
+		Int("stateId")
+
+	criteria := exp.And(
+		query.Evaluate(w._request.URL.Query()),
+		exp.Equal("deleteDate", 0),
+	)
+
+	result := NewQueryBuilder[model.SearchTag](w._factory.SearchTag(), criteria)
+
+	return &result
+}
+
 /******************************************
  * Additional Data
  ******************************************/
@@ -530,6 +599,10 @@ func (w Common) AdminSections() []form.LookupCode {
 		{
 			Value: "rules",
 			Label: "Rules",
+		},
+		{
+			Value: "tags",
+			Label: "Tags",
 		},
 		{
 			Value: "connections",

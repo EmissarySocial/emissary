@@ -158,3 +158,43 @@ func (service *SearchTag) Schema() schema.Schema {
 /******************************************
  * Custom Queries
  ******************************************/
+
+func (service *SearchTag) LoadByID(searchTagID primitive.ObjectID, searchTag *model.SearchTag) error {
+	criteria := exp.Equal("_id", searchTagID)
+	return service.Load(criteria, searchTag)
+}
+
+func (service *SearchTag) LoadByName(name string, searchTag *model.SearchTag) error {
+	criteria := exp.Equal("name", name)
+	return service.Load(criteria, searchTag)
+}
+
+// Upsert verifies that a SearchTag exists in the database, and creates it if it does not.
+func (service *SearchTag) Upsert(name string) error {
+
+	// Try to find the SearchTag in the database
+	searchTag := model.NewSearchTag()
+	err := service.LoadByName(name, &searchTag)
+
+	// If it exists, then we're done
+	if err == nil {
+		return nil
+	}
+
+	// If "not found" then create a new SearchTag``
+	if derp.NotFound(err) {
+
+		// Set default values for the new SearchTag
+		searchTag.Name = name
+		searchTag.StateID = model.SearchTagStateWaiting
+
+		if err := service.Save(&searchTag, "New SearchTag"); err != nil {
+			return derp.Wrap(err, "service.SearchTag.Upsert", "Error saving SearchTag", name)
+		}
+
+		return nil
+	}
+
+	// Otherwise, return the error to the caller. (This should never happen)
+	return derp.Wrap(err, "service.SearchTag.Upsert", "Error loading SearchTag", name)
+}

@@ -465,7 +465,7 @@ func (stream *Stream) SearchResult() SearchResult {
 
 	result := NewSearchResult()
 	result.URL = stream.URL
-	result.ObjectType = stream.SocialRole
+	result.Type = stream.SocialRole
 	result.Name = stream.Label
 	result.Summary = stream.Summary
 	result.IconURL = stream.IconURL

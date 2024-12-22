@@ -55,7 +55,7 @@ func (step StepUnPublish) Post(builder Builder, _ io.Writer) PipelineBehavior {
 		searchResult := searchResulter.SearchResult()
 
 		// Delete step here
-		if err := searchResultService.Delete(&searchResult, "unpublished"); err != nil {
+		if err := searchResultService.DeleteByURL(searchResult.URL); err != nil {
 			return Halt().WithError(derp.Wrap(err, location, "Error deleting search result", searchResult))
 		}
 	}

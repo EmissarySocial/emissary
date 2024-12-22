@@ -16,6 +16,7 @@ import (
 	"github.com/benpate/rosetta/channel"
 	"github.com/benpate/rosetta/compare"
 	"github.com/benpate/rosetta/html"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/extension"
@@ -75,6 +76,10 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 			return convert.Int64(a) / convert.Int64(b)
 		},
 
+		"hasPrefix": func(a string, b string) bool {
+			return strings.HasPrefix(a, b)
+		},
+
 		"concat": func(values ...any) string {
 			result := ""
 			for _, value := range values {
@@ -129,6 +134,10 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 
 		"lowerCase": func(name any) string {
 			return strings.ToLower(convert.String(name))
+		},
+
+		"trim": func(value string) string {
+			return strings.TrimSpace(value)
 		},
 
 		"dollarFormat": func(value any) string {
@@ -315,7 +324,7 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 			return color.Parse(value)
 		},
 
-		"collection": func(max int, collection streams.Document) ([]streams.Document, error) {
+		"collection": func(max int, collection streams.Document) (sliceof.Object[streams.Document], error) {
 
 			// Make a channel of the first N documents
 			done := make(chan struct{})
@@ -350,6 +359,21 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 
 		"int64": func(value string) int64 {
 			return convert.Int64(value)
+		},
+
+		"split": func(value string, separator string) sliceof.String {
+			if value == "" {
+				return sliceof.String{}
+			}
+			return strings.Split(value, separator)
+		},
+
+		"join": func(values []string, separator string) string {
+			return strings.Join(values, separator)
+		},
+
+		"append": func(first []string, second []string) sliceof.String {
+			return append(first, second...)
 		},
 	}
 }

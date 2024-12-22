@@ -14,8 +14,9 @@ import (
 
 // Search defines a service that manages all searchable pages in a domain.
 type Search struct {
-	collection data.Collection
-	host       string
+	collection       data.Collection
+	searchTagService *SearchTag
+	host             string
 }
 
 // NewSearch returns a fully initialized Search service
@@ -28,8 +29,9 @@ func NewSearch() Search {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Search) Refresh(collection data.Collection, host string) {
+func (service *Search) Refresh(collection data.Collection, searchTagService *SearchTag, host string) {
 	service.collection = collection
+	service.searchTagService = searchTagService
 	service.host = host
 }
 
@@ -93,6 +95,12 @@ func (service *Search) Save(searchResult *model.SearchResult, note string) error
 	// Save the searchResult to the database
 	if err := service.collection.Save(searchResult, note); err != nil {
 		return derp.Wrap(err, "service.Search.Save", "Error saving Search", searchResult, note)
+	}
+
+	for _, tag := range searchResult.Tags {
+		if err := service.searchTagService.Upsert(tag); err != nil {
+			return derp.Wrap(err, "service.Search.Save", "Error saving SearchTag", searchResult, tag)
+		}
 	}
 
 	return nil

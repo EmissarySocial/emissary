@@ -2,8 +2,6 @@ package service
 
 import (
 	"context"
-	"crypto/rand"
-	"crypto/rsa"
 	"html/template"
 
 	"github.com/EmissarySocial/emissary/config"
@@ -17,7 +15,6 @@ import (
 	"github.com/benpate/digit"
 	"github.com/benpate/domain"
 	"github.com/benpate/exp"
-	"github.com/benpate/hannibal/sigs"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/rs/zerolog/log"
@@ -29,6 +26,7 @@ import (
 type Domain struct {
 	collection          data.Collection
 	configuration       config.Domain
+	activityStream      *ActivityStream
 	connectionService   *Connection
 	providerService     *Provider
 	registrationService *Registration
@@ -52,10 +50,11 @@ func NewDomain() Domain {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Domain) Refresh(collection data.Collection, configuration config.Domain, connectionService *Connection, providerService *Provider, registrationService *Registration, themeService *Theme, userService *User, funcMap template.FuncMap, hostname string) {
+func (service *Domain) Refresh(collection data.Collection, configuration config.Domain, activityStream *ActivityStream, connectionService *Connection, providerService *Provider, registrationService *Registration, themeService *Theme, userService *User, funcMap template.FuncMap, hostname string) {
 
 	service.collection = collection
 	service.configuration = configuration
+	service.activityStream = activityStream
 	service.connectionService = connectionService
 	service.providerService = providerService
 	service.registrationService = registrationService
@@ -477,84 +476,6 @@ func (service *Domain) GetOAuthToken(providerID string) (model.Connection, *oaut
 
 	// Success!
 	return connection, newToken, nil
-}
-
-/******************************************
- * Domain/Actor Methods
- ******************************************/
-
-// Hostname returns the domain-only name (no protocol)
-func (service *Domain) Hostname() string {
-	return service.hostname
-}
-
-// ActorID returns the URL for this domain/actor
-func (service *Domain) ActorID() string {
-	return domain.AddProtocol(service.hostname) + "/@service"
-}
-
-// PublicKeyID returns the URL for the public key for this domain/actor
-func (service *Domain) PublicKeyID() string {
-	return service.ActorID() + "#main-key"
-}
-
-// PublicKeyPEM returns the PEM-encoded public key for this domain/actor
-func (service *Domain) PublicKeyPEM() (string, error) {
-
-	// Try to retrieve the private key for this domain
-	privateKey, err := service.PrivateKey()
-
-	if err != nil {
-		return "", derp.Wrap(err, "service.Domain.PublicKeyPEM", "Error getting public key")
-	}
-
-	// Encode the public key portion
-	publicKeyPEM := sigs.EncodePublicPEM(privateKey)
-	return publicKeyPEM, nil
-}
-
-// PrivateKey returns the private key for this domain/actor
-func (service *Domain) PrivateKey() (*rsa.PrivateKey, error) {
-
-	const location = "service.Domain.PrivateKey"
-
-	// Get the Domain record
-	domain, err := service.LoadDomain()
-
-	if err != nil {
-		return nil, derp.Wrap(err, location, "Error loading Domain record")
-	}
-
-	// Try to use the existing private key
-	if domain.PrivateKey != "" {
-
-		privateKey, err := sigs.DecodePrivatePEM(domain.PrivateKey)
-
-		if rsaKey, ok := privateKey.(*rsa.PrivateKey); ok {
-			return rsaKey, nil
-		}
-
-		// Fall through means that we have a value for "domain.PrivateKey" but it's not
-		// valid.  So, let's log the error and try to make a new one.
-		derp.Report(derp.Wrap(err, location, "Error decoding private key. Creating a new key"))
-	}
-
-	// Otherwise, create a new private key, save it, and return it to the caller.
-	privateKey, err := rsa.GenerateKey(rand.Reader, encryptionKeyBits)
-
-	if err != nil {
-		return nil, derp.Wrap(err, location, "Error generating RSA key")
-	}
-
-	// Save the new private key into the Domain record
-	domain.PrivateKey = sigs.EncodePrivatePEM(privateKey)
-
-	if err := service.Save(domain, "Generated Private Key"); err != nil {
-		return nil, derp.Wrap(err, location, "Error saving new EncryptionKey")
-	}
-
-	// Success??
-	return privateKey, nil
 }
 
 /******************************************

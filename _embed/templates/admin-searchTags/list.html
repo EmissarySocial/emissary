@@ -1,0 +1,20 @@
+{{- $tags := .SearchTags.Top60.ByName.Slice -}}
+
+{{- if not $tags.IsEmpty }}
+
+    {{- range $index, $tag := $tags -}}
+        <tr class="clickable">
+            <td role="link" hx-get="/admin/tags/{{$tag.SearchTagID.Hex}}/edit">
+                {{icon "tag"}} {{$tag.Name}}
+            </td>
+            <td role="link" hx-get="/admin/tags/{{$tag.SearchTagID.Hex}}/edit">
+                {{- $tag.StatusText -}}
+            </td>
+            <td nowrap class="text-xs width-128 text-align-right">
+                <a href="/search?q={{$tag.Name}}" class="button" tabIndex="0">Search Results</a>
+                <a href="/admin/tags?parent={{$tag.Name}}" class="button" tabIndex="0">View Children</a>
+            </td>
+        </tr>
+    {{- end -}}
+
+{{- end -}}

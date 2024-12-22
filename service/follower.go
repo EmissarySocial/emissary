@@ -1,6 +1,8 @@
 package service
 
 import (
+	"iter"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
@@ -73,6 +75,17 @@ func (service *Follower) Count(criteria exp.Expression) (int64, error) {
 // List returns an iterator containing all of the Followers who match the provided criteria
 func (service *Follower) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.collection.Iterator(notDeleted(criteria), options...)
+}
+
+func (service *Follower) Range(criteria exp.Expression, options ...option.Option) (iter.Seq[model.Follower], error) {
+
+	iter, err := service.List(criteria, options...)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "service.Follower.Range", "Error creating iterator", criteria)
+	}
+
+	return RangeFunc(iter, model.NewFollower), nil
 }
 
 // Channel returns a channel containing all of the Followers who match the provided criteria
@@ -276,6 +289,17 @@ func (service *Follower) FollowersChannel(parentType string, parentID primitive.
 	return service.Channel(
 		exp.Equal("parentId", parentID).AndEqual("type", parentType),
 	)
+}
+
+func (service *Follower) RangeByTags(tags ...string) (iter.Seq[model.Follower], error) {
+
+	criteria := exp.All()
+
+	for _, tag := range tags {
+		criteria = criteria.AndEqual("tags", tag)
+	}
+
+	return service.Range(criteria)
 }
 
 // ActivityPubFollowersChannel returns a channel containing all of the Followers of specific parentID

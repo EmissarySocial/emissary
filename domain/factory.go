@@ -219,6 +219,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		factory.domainService.Refresh(
 			factory.collection(CollectionDomain),
 			domain,
+			factory.ActivityStream(),
 			factory.Connection(),
 			factory.Provider(),
 			factory.Registration(),
@@ -346,6 +347,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		// Populate the Search Service
 		factory.searchService.Refresh(
 			factory.collection(CollectionSearchResult),
+			factory.SearchTag(),
 			factory.Host(),
 		)
 

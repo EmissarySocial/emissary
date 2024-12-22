@@ -1,6 +1,10 @@
 package model
 
-import "github.com/benpate/rosetta/mapof"
+import (
+	"strings"
+
+	"github.com/benpate/rosetta/mapof"
+)
 
 type Tag struct {
 	Type string `json:"type"` // Type of Tag (e.g. "Hashtag", "Mention")
@@ -25,5 +29,9 @@ func TagAsJSONLD(tag Tag) mapof.Any {
 }
 
 func TagAsNameOnly(tag Tag) string {
-	return tag.Name
+	result := tag.Name
+
+	result = strings.TrimPrefix(result, "#")
+	result = strings.TrimPrefix(result, "@")
+	return result
 }

@@ -1,0 +1,51 @@
+{{- $parent := .QueryParam "parent" -}}
+{{- $name := .QueryParam "name" -}}
+{{- $stateID := .QueryParam "stateId" -}}
+
+<div class="page" hx-get="/admin/tags/index" hx-trigger="refreshPage from:window">
+   	
+	<div id="menu-bar" hx-push-url="true">
+		{{- $token := .Token -}}
+		{{- range .AdminSections -}}
+			<a hx-get="/admin/{{.Value}}/index" class="turboclick {{if eq $token .Value}}selected{{end}}">{{.Label}}</a>
+		{{- end -}}
+	</div>
+
+    <form hx-get="/admin/tags/list" hx-trigger="change, keyup throttle:500ms" hx-target="#results" hx-swap="innerHTML" hx-push-url="false">
+        <div class="flex-row">
+
+            {{- if ne "" $parent -}}
+                <div>
+                    <label class="text-xs text-gray">Parent Tag</label>
+                    <a href="/admin/tags/?name={{$name}}&stateId={{$stateID}}" class="block tag"><span class="text-lg bold">{{$parent}} &nbsp; {{icon "delete"}}</span></a>
+                </div>
+            {{- end -}}
+            <div>
+                <label for="search" class="text-xs text-gray">Tag</label>
+                <input id="search" name="name" value="{{$name}}" autocomplete="off">
+            </div>
+            <div>
+                <label for="search" class="text-xs text-gray">Status</label>
+                <select name="stateId" script="install select(value:'{{$stateID}}')">
+                    <option value="">(All)</option>
+                    <option value="2">Featured</option>
+                    <option value="1">Allowed</option>
+                    <option value="0">Waiting</option>
+                    <option value="-1">Blocked</option>
+                </select>
+            </div>
+        </div>
+    </form>
+
+    <table class="table margin-top">
+        <tbody>
+            <tr role="link" class="link" hx-get="/admin/tags/add">
+                <td colspan="3">{{icon "add"}} Add a Tag</td>
+            </tr>
+        </tbody>
+        <tbody id="results">
+            {{- .View "list" -}}
+        </tbody>
+    </table>
+
+</div>

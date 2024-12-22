@@ -10,10 +10,12 @@ func SearchTagSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
 			"searchTagId": schema.String{Format: "objectId"},
-			"parentId":    schema.String{Format: "objectId"},
-			"tag":         schema.String{Required: true},
+			"parent":      schema.String{},
+			"name":        schema.String{Required: true},
+			"description": schema.String{},
+			"color":       schema.String{Format: "color"},
 			"notes":       schema.String{},
-			"stateId":     schema.Integer{Required: true, Enum: []int{SearchTagStateFeatured, SearchTagStateAllowed, SearchTagStateWaiting, SearchTagStateBlocked}},
+			"stateId":     schema.Integer{Enum: []int{SearchTagStateFeatured, SearchTagStateAllowed, SearchTagStateWaiting, SearchTagStateBlocked}},
 			"rank":        schema.Integer{},
 		},
 	}
@@ -25,11 +27,20 @@ func (searchTag *SearchTag) GetPointer(name string) (any, bool) {
 
 	switch name {
 
-	case "tag":
-		return &searchTag.Tag, true
+	case "name":
+		return &searchTag.Name, true
+
+	case "parent":
+		return &searchTag.Parent, true
 
 	case "stateId":
 		return &searchTag.StateID, true
+
+	case "description":
+		return &searchTag.Description, true
+
+	case "color":
+		return &searchTag.Color, true
 
 	case "notes":
 		return &searchTag.Notes, true
@@ -49,15 +60,6 @@ func (searchTag SearchTag) GetStringOK(name string) (string, bool) {
 
 	case "searchTagId":
 		return searchTag.SearchTagID.Hex(), true
-
-	case "parentId":
-		return searchTag.ParentID.Hex(), true
-
-	case "tag":
-		return searchTag.Tag, true
-
-	case "notes":
-		return searchTag.Notes, true
 	}
 
 	return "", false
@@ -74,20 +76,6 @@ func (searchTag *SearchTag) SetString(name string, value string) bool {
 			searchTag.SearchTagID = objectID
 			return true
 		}
-
-	case "parentId":
-		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
-			searchTag.ParentID = objectID
-			return true
-		}
-
-	case "tag":
-		searchTag.Tag = value
-		return true
-
-	case "notes":
-		searchTag.Notes = value
-		return true
 	}
 
 	return false

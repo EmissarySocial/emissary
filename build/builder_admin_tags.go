@@ -24,7 +24,7 @@ type SearchTag struct {
 }
 
 // NewSearchTag returns a fully initialized `SearchTag` builder.
-func NewSearchTag(factory Factory, request *http.Request, response http.ResponseWriter, searchTag *model.SearchTag, template model.Template, actionID string) (SearchTag, error) {
+func NewSearchTag(factory Factory, request *http.Request, response http.ResponseWriter, template model.Template, searchTag *model.SearchTag, actionID string) (SearchTag, error) {
 
 	const location = "build.NewSearchTag"
 
@@ -75,7 +75,7 @@ func (w SearchTag) View(actionID string) (template.HTML, error) {
 
 	const location = "build.SearchTag.View"
 
-	builder, err := NewSearchTag(w._factory, w._request, w._response, w._searchTag, w._template, actionID)
+	builder, err := NewSearchTag(w._factory, w._request, w._response, w._template, w._searchTag, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, location, "Error creating SearchTag builder")
@@ -97,7 +97,7 @@ func (w SearchTag) BasePath() string {
 }
 
 func (w SearchTag) Token() string {
-	return "searchTags"
+	return "tags"
 }
 
 func (w SearchTag) PageTitle() string {
@@ -125,7 +125,7 @@ func (w SearchTag) service() service.ModelService {
 }
 
 func (w SearchTag) clone(action string) (Builder, error) {
-	return NewSearchTag(w._factory, w._request, w._response, w._searchTag, w._template, action)
+	return NewSearchTag(w._factory, w._request, w._response, w._template, w._searchTag, action)
 }
 
 /******************************************
@@ -139,11 +139,18 @@ func (w SearchTag) SearchTagID() string {
 	return w._searchTag.SearchTagID.Hex()
 }
 
-func (w SearchTag) Tag() string {
+func (w SearchTag) Name() string {
 	if w._searchTag == nil {
 		return ""
 	}
-	return w._searchTag.Tag
+	return w._searchTag.Name
+}
+
+func (w SearchTag) Parent() string {
+	if w._searchTag == nil {
+		return ""
+	}
+	return w._searchTag.Parent
 }
 
 /******************************************
@@ -153,31 +160,12 @@ func (w SearchTag) Tag() string {
 func (w SearchTag) SearchTags() *QueryBuilder[model.SearchTag] {
 
 	query := builder.NewBuilder().
-		String("type").
-		String("behavior").
-		String("trigger")
+		String("parent").
+		String("name").
+		Int("stateId")
 
 	criteria := exp.And(
 		query.Evaluate(w._request.URL.Query()),
-		exp.Equal("userId", w._authorization.UserID),
-		exp.Equal("deleteDate", 0),
-	)
-
-	result := NewQueryBuilder[model.SearchTag](w._factory.SearchTag(), criteria)
-
-	return &result
-}
-
-func (w SearchTag) ServerWideSearchTags() *QueryBuilder[model.SearchTag] {
-
-	query := builder.NewBuilder().
-		String("type").
-		String("behavior").
-		String("trigger")
-
-	criteria := exp.And(
-		query.Evaluate(w._request.URL.Query()),
-		exp.Equal("userId", primitive.NilObjectID),
 		exp.Equal("deleteDate", 0),
 	)
 

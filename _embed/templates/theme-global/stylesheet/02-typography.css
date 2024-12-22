@@ -193,7 +193,6 @@ a.text-red:hover {
  ******************************************/
 
 .text-plain {
-    color:var(--text-color)!important;
     text-decoration:none;
 }
 

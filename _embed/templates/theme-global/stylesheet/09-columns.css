@@ -37,6 +37,24 @@
 	width: clamp( 0px, calc((200% / var(--cols)) - var(--gap)), 100%);
 }
 
+.columns-6.no-gap,
+.columns-5.no-gap,
+.columns-4.no-gap,
+.columns-3.no-gap,
+.columns-2.no-gap,
+.columns-1.no-gap {
+	gap: 0px;
+}
+
+.columns-6.no-gap > *,
+.columns-5.no-gap > *,
+.columns-4.no-gap > *,
+.columns-3.no-gap > *,
+.columns-2.no-gap > *,
+.columns-1.no-gap > * {
+	width: calc( 100%  / var(--cols));
+}
+
 /* SMALL Screens (Phone) */
 @media screen and (min-width:568px) {
 	.columns-6 {

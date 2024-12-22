@@ -9,7 +9,7 @@ import (
 
 type Follower struct {
 	FollowerID primitive.ObjectID `json:"followerId" bson:"_id"`        // Unique identifier for this Follower
-	ParentType string             `json:"type"       bson:"type"`       // Type of record being followed (e.g. "User", "Stream")
+	ParentType string             `json:"type"       bson:"type"`       // Type of record being followed (e.g. "User", "Stream", or "Search")
 	ParentID   primitive.ObjectID `json:"parentId"   bson:"parentId"`   // Unique identifier for the Stream that is being followed (including user's outboxes)
 	StateID    string             `json:"stateId"    bson:"stateId"`    // Unique identifier for the State of this Follower ("ACTIVE", "PENDING")
 	Method     string             `json:"method"     bson:"method"`     // Method of follower (e.g. "POLL", "WEBSUB", "RSS-CLOUD", "ACTIVITYPUB", "EMAIL")

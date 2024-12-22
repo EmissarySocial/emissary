@@ -130,6 +130,11 @@ func (builder QueryBuilder[T]) WhereIN(field string, value any) QueryBuilder[T] 
 	return builder
 }
 
+func (builder QueryBuilder[T]) WhereBeginsWith(field string, value string) QueryBuilder[T] {
+	builder.Criteria = builder.Criteria.And(exp.BeginsWith(field, value))
+	return builder
+}
+
 func (builder QueryBuilder[T]) ByCreateDate() QueryBuilder[T] {
 	builder.SortField = "createDate"
 	return builder
@@ -147,6 +152,11 @@ func (builder QueryBuilder[T]) ByExpirationDate() QueryBuilder[T] {
 
 func (builder QueryBuilder[T]) ByLabel() QueryBuilder[T] {
 	builder.SortField = "label"
+	return builder
+}
+
+func (builder QueryBuilder[T]) ByName() QueryBuilder[T] {
+	builder.SortField = "name"
 	return builder
 }
 

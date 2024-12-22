@@ -385,7 +385,7 @@ func (user User) SearchResult() SearchResult {
 
 	result := NewSearchResult()
 
-	result.ObjectType = "Person"
+	result.Type = "Person"
 	result.Name = user.DisplayName
 	result.Summary = user.StatusMessage
 	result.URL = user.ProfileURL

@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/sliceof"
+	"github.com/davecgh/go-spew/spew"
 )
 
 type SearchBuilder struct {
@@ -97,11 +98,6 @@ func (builder SearchBuilder) All() SearchBuilder {
 	return builder
 }
 
-func (builder SearchBuilder) Tags(tags ...string) SearchBuilder {
-	builder.Criteria = builder.Criteria.AndIn("tags", tags)
-	return builder
-}
-
 func (builder SearchBuilder) AfterRank(rank int64) SearchBuilder {
 	builder.Criteria = builder.Criteria.AndGreaterThan("rank", rank)
 	return builder
@@ -114,6 +110,16 @@ func (builder SearchBuilder) AfterShuffle(shuffle int64) SearchBuilder {
 
 func (builder SearchBuilder) Where(field string, value any) SearchBuilder {
 	builder.Criteria = builder.Criteria.AndEqual(field, value)
+	return builder
+}
+
+func (builder SearchBuilder) WhereType(typeName string) SearchBuilder {
+	builder.Criteria = builder.Criteria.AndEqual("type", typeName)
+	return builder
+}
+
+func (builder SearchBuilder) WhereTags(tags ...string) SearchBuilder {
+	builder.Criteria = builder.Criteria.AndIn("tags", tags)
 	return builder
 }
 
@@ -153,6 +159,7 @@ func (builder SearchBuilder) Reverse() SearchBuilder {
 
 // Slice returns the results of the query as a slice of objects
 func (builder SearchBuilder) Slice() (sliceof.Object[model.SearchResult], error) {
+	spew.Dump(builder.Criteria)
 	return builder.service.Query(builder.Criteria, builder.makeOptions()...)
 }
 

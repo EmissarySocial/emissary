@@ -133,6 +133,18 @@ func buildAdmin_GetBuilder(factory *domain.Factory, ctx *steranko.Context, templ
 
 		return build.NewNavigation(factory, ctx.Request(), ctx.Response(), template, &stream, actionID)
 
+	case "tag":
+		searchTag := model.NewSearchTag()
+
+		if !objectID.IsZero() {
+			service := factory.SearchTag()
+			if err := service.LoadByID(objectID, &searchTag); err != nil {
+				return nil, derp.Wrap(err, location, "Error loading Tag", searchTag)
+			}
+		}
+
+		return build.NewSearchTag(factory, ctx.Request(), ctx.Response(), template, &searchTag, actionID)
+
 	case "user":
 		user := model.NewUser()
 
