@@ -6,7 +6,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// WithFolder is an action-step that returns a new Folder Builder
+// WithFolder is a Step that returns a new Folder Builder
 type WithFolder struct {
 	SubSteps []Step
 }

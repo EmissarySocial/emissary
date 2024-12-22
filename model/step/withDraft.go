@@ -6,7 +6,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// WithDraft is an action-step that returns a new StreamDraft Builder
+// WithDraft is a Step that returns a new StreamDraft Builder
 type WithDraft struct {
 	SubSteps []Step
 }

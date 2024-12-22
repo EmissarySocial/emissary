@@ -8,7 +8,7 @@ import (
 	"github.com/benpate/rosetta/compare"
 )
 
-// StepViewCSS is an action-step that can build a Stream into HTML
+// StepViewCSS is a Step that can build a Stream into HTML
 type StepViewCSS struct {
 	File string
 }

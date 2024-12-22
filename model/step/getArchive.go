@@ -7,7 +7,7 @@ import (
 	"github.com/benpate/rosetta/translate"
 )
 
-// GetArchive is an action-step that removes a named archive from a Stream
+// GetArchive is a Step that removes a named archive from a Stream
 type GetArchive struct {
 	Token       string
 	Depth       int

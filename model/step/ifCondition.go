@@ -7,7 +7,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// IfCondition is an action-step that can update the data.DataMap custom data stored in a Stream
+// IfCondition is a Step that can update the data.DataMap custom data stored in a Stream
 type IfCondition struct {
 	Condition *template.Template
 	Then      []Step

@@ -8,7 +8,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
-// Delete is an action-step that can delete a Stream from the Domain
+// Delete is a Step that can delete a Stream from the Domain
 type Delete struct {
 	Title   *template.Template
 	Message *template.Template

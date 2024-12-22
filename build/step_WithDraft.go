@@ -7,7 +7,7 @@ import (
 	"github.com/benpate/derp"
 )
 
-// StepWithDraft is an action-step that can update the data.DataMap custom data stored in a Stream
+// StepWithDraft is a Step that can update the data.DataMap custom data stored in a Stream
 type StepWithDraft struct {
 	SubSteps []step.Step
 }

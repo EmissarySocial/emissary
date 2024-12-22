@@ -10,10 +10,6 @@ import (
 	"github.com/yeqown/go-qrcode/writer/standard"
 )
 
-// StepQRCode is an action-step that returns a QR Code for the current stream URL.
-type StepQRCode struct {
-}
-
 // Get builds the Stream HTML to the context
 func GetQRCode(fm *server.Factory) echo.HandlerFunc {
 

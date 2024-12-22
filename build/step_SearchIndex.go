@@ -8,7 +8,7 @@ import (
 	"github.com/benpate/rosetta/convert"
 )
 
-// StepSearchIndex is an action-step that can update a stream's PublishDate with the current time.
+// StepSearchIndex is a Step that can update a stream's PublishDate with the current time.
 type StepSearchIndex struct {
 	If     *template.Template
 	Action string

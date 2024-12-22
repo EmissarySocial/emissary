@@ -4,7 +4,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// SaveAndPublish is an action-step that can update a stream's SaveAndPublishDate with the current time.
+// SaveAndPublish is a Step that can update a stream's SaveAndPublishDate with the current time.
 type SaveAndPublish struct {
 	Outbox bool // If TRUE, also send updates to this User's outbox.
 }

@@ -5,7 +5,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// EditTemplate is an action-step that lets users edit an object's template(s)
+// EditTemplate is a Step that lets users edit an object's template(s)
 type EditTemplate struct {
 	Title string
 	Paths []string

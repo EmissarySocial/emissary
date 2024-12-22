@@ -6,7 +6,7 @@ import (
 	"github.com/benpate/derp"
 )
 
-// StepDo is an action-step that sends an HTMX 'forward' to a new page.
+// StepDo is a Step that executes another action within this context.
 type StepDo struct {
 	Action string
 }

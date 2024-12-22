@@ -5,7 +5,7 @@ import (
 	"text/template"
 )
 
-// StepTriggerEvent is an action-step that forwards the user to a new page.
+// StepTriggerEvent is a Step that forwards the user to a new page.
 type StepTriggerEvent struct {
 	Event string
 	Value *template.Template

@@ -4,7 +4,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// SortAttachments is an action-step that can update multiple records at once
+// SortAttachments is a Step that can update multiple records at once
 type SortAttachments struct {
 	Keys    string
 	Values  string

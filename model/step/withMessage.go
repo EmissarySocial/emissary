@@ -6,7 +6,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// WithMessage is an action-step that returns a new Message Builder
+// WithMessage is a Step that returns a new Message Builder
 type WithMessage struct {
 	SubSteps []Step
 }

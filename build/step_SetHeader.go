@@ -8,7 +8,7 @@ import (
 	"github.com/benpate/derp"
 )
 
-// StepSetHeader is an action-step that can update the custom data stored in a Stream
+// StepSetHeader is a Step that can update the custom data stored in a Stream
 type StepSetHeader struct {
 	Method string
 	Name   string

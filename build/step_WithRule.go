@@ -8,7 +8,7 @@ import (
 	"github.com/benpate/derp"
 )
 
-// StepWithRule is an action-step that can update the data.DataMap custom data stored in a Stream
+// StepWithRule is a Step that can update the data.DataMap custom data stored in a Stream
 type StepWithRule struct {
 	SubSteps []step.Step
 }

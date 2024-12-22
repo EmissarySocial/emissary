@@ -6,7 +6,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// WithChildren is an action-step executes a list of sub-steps on every child of the current Stream
+// WithChildren is a Step executes a list of sub-steps on every child of the current Stream
 type WithChildren struct {
 	SubSteps []Step
 }

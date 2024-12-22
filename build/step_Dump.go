@@ -7,7 +7,7 @@ import (
 	"github.com/davecgh/go-spew/spew"
 )
 
-// StepDump is an action-step that can delete a Stream from the Domain
+// StepDump is a Step that can delete a Stream from the Domain
 type StepDump struct {
 	Value *template.Template
 }

@@ -9,7 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// StepSort is an action-step that can update multiple records at once
+// StepSort is a Step that can update multiple records at once
 type StepSort struct {
 	Model   string
 	Keys    string

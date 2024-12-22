@@ -10,7 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// StepSortWidgets is an action-step that can edit/update Container in a streamDraft.
+// StepSortWidgets is a Step that can edit/update Container in a streamDraft.
 type StepSortWidgets struct{}
 
 func (step StepSortWidgets) Get(builder Builder, buffer io.Writer) PipelineBehavior {

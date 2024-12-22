@@ -7,7 +7,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// Dump is an action-step that can update the data.DataMap custom data stored in a Stream
+// Dump is a Step that can update the data.DataMap custom data stored in a Stream
 type Dump struct {
 	Value *template.Template
 }

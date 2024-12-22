@@ -6,7 +6,7 @@ import (
 	"github.com/benpate/derp"
 )
 
-// StepDeleteArchive is an action-step that can delete a Stream from the Domain
+// StepDeleteArchive is a Step that can delete a Stream from the Domain
 type StepDeleteArchive struct {
 	Token string
 }

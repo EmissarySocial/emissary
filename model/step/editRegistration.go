@@ -4,7 +4,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// EditRegistration is an action-step that locates an existing widget and
+// EditRegistration is a Step that locates an existing widget and
 // creates a builder for it.
 type EditRegistration struct{}
 

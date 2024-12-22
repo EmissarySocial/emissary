@@ -9,7 +9,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// StepEditWidget is an action-step that can update the data.DataMap custom data stored in a Stream
+// StepEditWidget is a Step that can update the data.DataMap custom data stored in a Stream
 type StepEditWidget struct{}
 
 func (step StepEditWidget) Get(builder Builder, buffer io.Writer) PipelineBehavior {

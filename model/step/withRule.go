@@ -6,7 +6,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// WithRule is an action-step that returns a new Rule Builder
+// WithRule is a Step that returns a new Rule Builder
 type WithRule struct {
 	SubSteps []Step
 }

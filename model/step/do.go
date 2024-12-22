@@ -4,7 +4,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// Do is an action-step that calls anoter action to continue processing
+// Do is a Step that calls anoter action to continue processing
 type Do struct {
 	Action string
 }

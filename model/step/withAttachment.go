@@ -6,7 +6,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// WithAttachment is an action-step that returns a new Attachment Builder
+// WithAttachment is a Step that returns a new Attachment Builder
 type WithAttachment struct {
 	SubSteps []Step
 }

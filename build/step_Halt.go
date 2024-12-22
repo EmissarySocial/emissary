@@ -4,7 +4,7 @@ import (
 	"io"
 )
 
-// StepHalt is an action-step that can save changes to any object
+// StepHalt is a Step that can save changes to any object
 type StepHalt struct{}
 
 func (step StepHalt) Get(builder Builder, _ io.Writer) PipelineBehavior {

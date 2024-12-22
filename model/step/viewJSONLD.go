@@ -4,7 +4,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// ViewJSONLD is an action-step that can build a Stream into HTML
+// ViewJSONLD is a Step that can build a Stream into HTML
 type ViewJSONLD struct {
 	Method string
 }

@@ -7,7 +7,7 @@ import (
 	"github.com/benpate/rosetta/translate"
 )
 
-// MakeArchive is an action-step that removes a named archive from a Stream
+// MakeArchive is a Step that removes a named archive from a Stream
 type MakeArchive struct {
 	Token       string
 	Depth       int

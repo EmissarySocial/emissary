@@ -9,7 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// StepWithMessage is an action-step that executes a new pipeline on an Inbox Message, identified by the query parameter "messageId"
+// StepWithMessage is a Step that executes a new pipeline on an Inbox Message, identified by the query parameter "messageId"
 type StepWithMessage struct {
 	SubSteps []step.Step
 }

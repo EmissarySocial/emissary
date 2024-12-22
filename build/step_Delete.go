@@ -8,7 +8,7 @@ import (
 	"github.com/benpate/html"
 )
 
-// StepDelete is an action-step that can delete a Stream from the Domain
+// StepDelete is a Step that can delete a Stream from the Domain
 type StepDelete struct {
 	Title   *template.Template
 	Message *template.Template

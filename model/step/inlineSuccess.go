@@ -7,7 +7,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// InlineSuccess is an action-step that displays an "inline success" message on a form
+// InlineSuccess is a Step that displays an "inline success" message on a form
 type InlineSuccess struct {
 	Message *template.Template
 }

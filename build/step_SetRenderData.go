@@ -5,7 +5,7 @@ import (
 	"text/template"
 )
 
-// StepSetRenderData is an action-step that sets values to the request query string
+// StepSetRenderData is a Step that sets values to the request query string
 type StepSetRenderData struct {
 	Values map[string]*template.Template
 }

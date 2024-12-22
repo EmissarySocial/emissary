@@ -7,7 +7,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// TriggerEvent is an action-step that forwards the user to a new page.
+// TriggerEvent is a Step that forwards the user to a new page.
 type TriggerEvent struct {
 	Event string
 	Value *template.Template

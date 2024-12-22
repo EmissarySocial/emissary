@@ -6,7 +6,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// WithFollower is an action-step that returns a new Follower Builder
+// WithFollower is a Step that returns a new Follower Builder
 type WithFollower struct {
 	SubSteps []Step
 }

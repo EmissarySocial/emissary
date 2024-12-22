@@ -4,7 +4,7 @@ import (
 	"io"
 )
 
-// StepRemoveEvent is an action-step that forwards the user to a new page.
+// StepRemoveEvent is a Step that forwards the user to a new page.
 type StepRemoveEvent struct {
 	Event string
 }

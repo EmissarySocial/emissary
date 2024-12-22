@@ -5,7 +5,7 @@ import (
 	"text/template"
 )
 
-// StepSetQueryParam is an action-step that sets values to the request query string
+// StepSetQueryParam is a Step that sets values to the request query string
 type StepSetQueryParam struct {
 	Values map[string]*template.Template
 }

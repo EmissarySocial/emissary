@@ -4,7 +4,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// ViewCSS is an action-step that can build a Stream into HTML
+// ViewCSS is a Step that can build a Stream into HTML
 type ViewCSS struct {
 	File string
 }

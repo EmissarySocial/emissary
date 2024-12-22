@@ -4,7 +4,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// ViewHTML is an action-step that can build a Stream into HTML
+// ViewHTML is a Step that can build a Stream into HTML
 type ViewHTML struct {
 	File       string
 	Method     string

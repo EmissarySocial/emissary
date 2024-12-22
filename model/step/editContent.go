@@ -5,7 +5,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
-// EditContent is an action-step that can edit/update Container in a streamDraft.
+// EditContent is a Step that can edit/update Container in a streamDraft.
 type EditContent struct {
 	Filename  string
 	Fieldname string

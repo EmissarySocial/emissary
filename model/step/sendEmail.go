@@ -4,7 +4,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// SendEmail is an action-step that can send a named email to a user
+// SendEmail is a Step that can send a named email to a user
 type SendEmail struct {
 	Email string
 }

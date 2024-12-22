@@ -4,7 +4,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// RemoveEvent is an action-step that removes an HX-Trigger event from the HTTP result
+// RemoveEvent is a Step that removes an HX-Trigger event from the HTTP result
 type RemoveEvent struct {
 	Event string
 }

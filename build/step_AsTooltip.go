@@ -8,7 +8,7 @@ import (
 	"github.com/benpate/derp"
 )
 
-// StepAsTooltip is an action-step that can update the data.DataMap custom data stored in a Stream
+// StepAsTooltip is a Step that can update the data.DataMap custom data stored in a Stream
 type StepAsTooltip struct {
 	SubSteps []step.Step
 }

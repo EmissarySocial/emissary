@@ -5,7 +5,7 @@ import (
 	"text/template"
 )
 
-// StepInlineError is an action-step that can build a Stream into HTML
+// StepInlineError is a Step that can build a Stream into HTML
 type StepInlineError struct {
 	Message *template.Template
 }

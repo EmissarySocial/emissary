@@ -4,7 +4,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// SortWidgets is an action-step that can update multiple records at once
+// SortWidgets is a Step that can update multiple records at once
 type SortWidgets struct{}
 
 func NewSortWidgets(stepInfo mapof.Any) (SortWidgets, error) {

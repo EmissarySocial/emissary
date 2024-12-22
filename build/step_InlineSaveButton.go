@@ -7,7 +7,7 @@ import (
 	"github.com/benpate/html"
 )
 
-// StepInlineSaveButton is an action-step that can build a Stream into HTML
+// StepInlineSaveButton is a Step that can build a Stream into HTML
 type StepInlineSaveButton struct {
 	ID    *template.Template
 	Class string

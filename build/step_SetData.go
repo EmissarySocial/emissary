@@ -10,7 +10,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// StepSetData is an action-step that can update the custom data stored in a Stream
+// StepSetData is a Step that can update the custom data stored in a Stream
 type StepSetData struct {
 	FromURL  []string                      // List of paths to pull from URL data
 	FromForm []string                      // List of paths to pull from Form data

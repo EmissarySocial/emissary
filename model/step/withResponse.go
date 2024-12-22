@@ -6,7 +6,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// WithResponse is an action-step that returns a new Response Builder
+// WithResponse is a Step that returns a new Response Builder
 type WithResponse struct {
 	SubSteps []Step
 }

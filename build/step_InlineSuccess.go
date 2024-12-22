@@ -5,7 +5,7 @@ import (
 	"text/template"
 )
 
-// StepInlineSuccess is an action-step that can build a Stream into HTML
+// StepInlineSuccess is a Step that can build a Stream into HTML
 type StepInlineSuccess struct {
 	Message *template.Template
 }

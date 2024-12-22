@@ -8,7 +8,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// SetQueryParam is an action-step that forwards the user to a new page.
+// SetQueryParam is a Step that forwards the user to a new page.
 type SetQueryParam struct {
 	Values map[string]*template.Template
 }

@@ -6,7 +6,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// WithPrevSibling is an action-step that returns a new Stream builder keyed to the previous sibling of the current stream
+// WithPrevSibling is a Step that returns a new Stream builder keyed to the previous sibling of the current stream
 type WithPrevSibling struct {
 	SubSteps []Step
 }

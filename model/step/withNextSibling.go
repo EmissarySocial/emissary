@@ -6,7 +6,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// WithNextSibling is an action-step that returns a new Stream Builder keyed to the next sibling of the current Stream
+// WithNextSibling is a Step that returns a new Stream Builder keyed to the next sibling of the current Stream
 type WithNextSibling struct {
 	SubSteps []Step
 }

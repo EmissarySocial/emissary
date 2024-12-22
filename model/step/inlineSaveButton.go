@@ -7,7 +7,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// InlineSaveButton is an action-step that displays an "inline success" message on a form
+// InlineSaveButton is a Step that displays an "inline success" message on a form
 type InlineSaveButton struct {
 	ID    *template.Template
 	Class string

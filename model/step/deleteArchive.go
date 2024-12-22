@@ -4,7 +4,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// DeleteArchive is an action-step that removes a named archive from a Stream
+// DeleteArchive is a Step that removes a named archive from a Stream
 type DeleteArchive struct {
 	Token string
 }

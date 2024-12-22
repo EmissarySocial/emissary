@@ -6,7 +6,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// WithParent is an action-step that returns a new Stream Builder keyed to the parent of the current Stream
+// WithParent is a Step that returns a new Stream Builder keyed to the parent of the current Stream
 type WithParent struct {
 	SubSteps []Step
 }

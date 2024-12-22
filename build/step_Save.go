@@ -8,7 +8,7 @@ import (
 	"github.com/benpate/derp"
 )
 
-// StepSave is an action-step that can save changes to any object
+// StepSave is a Step that can save changes to any object
 type StepSave struct {
 	Comment *template.Template
 	Method  string

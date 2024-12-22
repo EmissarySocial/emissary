@@ -8,7 +8,7 @@ import (
 	"github.com/benpate/derp"
 )
 
-// StepWithChildren is an action-step that can update the data.DataMap custom data stored in a Stream
+// StepWithChildren is a Step that can update the data.DataMap custom data stored in a Stream
 type StepWithChildren struct {
 	SubSteps []step.Step
 }

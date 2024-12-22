@@ -8,7 +8,7 @@ import (
 	"github.com/benpate/turbine/queue"
 )
 
-// StepMakeArchive is an action-step that can delete a Stream from the Domain
+// StepMakeArchive is a Step that can delete a Stream from the Domain
 type StepMakeArchive struct {
 	Token       string
 	Depth       int

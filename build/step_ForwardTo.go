@@ -8,7 +8,7 @@ import (
 	"github.com/benpate/derp"
 )
 
-// StepForwardTo is an action-step that sends an HTMX 'forward' to a new page.
+// StepForwardTo is a Step that sends an HTMX 'forward' to a new page.
 type StepForwardTo struct {
 	URL *template.Template
 }

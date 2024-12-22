@@ -16,7 +16,7 @@ import (
 	accept "github.com/timewasted/go-accept-headers"
 )
 
-// StepViewFeed is an action-step that can build a Stream into HTML
+// StepViewFeed is a Step that can build a Stream into HTML
 type StepViewFeed struct{}
 
 // Get builds the Stream HTML to the context
