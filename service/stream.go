@@ -9,6 +9,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/queries"
 	"github.com/EmissarySocial/emissary/tools/id"
+	"github.com/EmissarySocial/emissary/tools/mention"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -23,7 +24,6 @@ import (
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/sherlock"
 	"github.com/benpate/turbine/queue"
-	"github.com/gernest/mention"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -893,15 +893,13 @@ func (service *Stream) CalcTagsFromPaths(stream *model.Stream, paths ...string) 
 		plainText := html.ToSearchText(convert.String(value))
 
 		// Add all @mentions into the Tags map
-		mentions := mention.GetTags('@', plainText)
+		mentions, _ := mention.Parse('@', plainText)
 
 		for _, value := range mentions {
 
 			tag := model.NewTag()
 			tag.Type = vocab.LinkTypeMention
-			tag.Name = string(value.Char) + value.Tag
-			tag.Name = strings.TrimSuffix(tag.Name, ".")
-			tag.Name = strings.TrimSuffix(tag.Name, ",")
+			tag.Name = "@" + value
 
 			if actor, err := service.activityStream.Load(tag.Name, sherlock.AsActor()); err == nil {
 				tag.Href = actor.ID()
@@ -911,16 +909,14 @@ func (service *Stream) CalcTagsFromPaths(stream *model.Stream, paths ...string) 
 		}
 
 		// Add all @mentions into the Tags map
-		hashtags := mention.GetTags('#', plainText)
+		hashtags, _ := mention.Parse('#', plainText)
 
 		for _, value := range hashtags {
 
 			tag := model.NewTag()
 			tag.Type = "Hashtag" // TODO: This constant should be defined by Hannibal
-			tag.Name = string(value.Char) + value.Tag
-			tag.Name = strings.TrimSuffix(tag.Name, ".")
-			tag.Name = strings.TrimSuffix(tag.Name, ",")
-			tag.Href = baseURL + strings.TrimPrefix(tag.Name, "#")
+			tag.Name = "#" + value
+			tag.Href = baseURL + value
 
 			stream.Tags = append(stream.Tags, tag)
 		}
