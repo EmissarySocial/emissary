@@ -510,6 +510,7 @@ button.button-invisible {
 	display:initial;
 	opacity:1;
 	position:initial;
+	z-index:initial;
 }
 
 
