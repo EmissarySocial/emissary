@@ -8,7 +8,6 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/sliceof"
-	"github.com/davecgh/go-spew/spew"
 )
 
 type SearchBuilder struct {
@@ -159,7 +158,6 @@ func (builder SearchBuilder) Reverse() SearchBuilder {
 
 // Slice returns the results of the query as a slice of objects
 func (builder SearchBuilder) Slice() (sliceof.Object[model.SearchResult], error) {
-	spew.Dump(builder.Criteria)
 	return builder.service.Query(builder.Criteria, builder.makeOptions()...)
 }
 
