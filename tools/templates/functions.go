@@ -22,6 +22,7 @@ import (
 	"github.com/yuin/goldmark/extension"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	"github.com/EmissarySocial/emissary/tools/mention"
 	"github.com/EmissarySocial/emissary/tools/tinyDate"
 	"github.com/benpate/icon"
 	"github.com/benpate/rosetta/convert"
@@ -374,6 +375,10 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 
 		"append": func(first []string, second []string) sliceof.String {
 			return append(first, second...)
+		},
+
+		"parseTags": func(value string) sliceof.String {
+			return mention.ParseTagsOnly('#', value)
 		},
 	}
 }
