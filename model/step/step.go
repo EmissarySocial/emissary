@@ -170,6 +170,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "set-thumbnail":
 		return NewSetThumbnail(stepInfo)
 
+	case "sleep":
+		return NewSleep(stepInfo)
+
 	case "sort":
 		return NewSort(stepInfo)
 

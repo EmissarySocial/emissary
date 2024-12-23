@@ -149,6 +149,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.SetThumbnail:
 		return StepSetThumbnail(s)
 
+	case step.Sleep:
+		return StepSleep(s)
+
 	case step.Sort:
 		return StepSort(s)
 
