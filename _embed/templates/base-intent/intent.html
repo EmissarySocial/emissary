@@ -1,6 +1,6 @@
 {{- $intent := .QueryParam "intent" -}}
 
-<h1 class="modal-title" class="margin-none">
+<h1 class="modal-title" class="margin-none margin-bottom">
 	{{- if eq "" $intent -}}
 		{{icon "activitypub"}}
 		Add/Edit Fediverse Accounts
@@ -27,10 +27,6 @@
 
 <div id="empty-header">
 	<h2>Have an Account?</h2>
-
-	<div class="margin-bottom-lg">
-		Enter your Fediverse address to share this item with your community
-	</div>
 </div>
 
 <div id="full-header">
@@ -53,7 +49,7 @@
 		<div class="circle-48 flex-center text-xl margin-none">{{icon "activitypub"}}</div>
 		<div class="flex-grow">
 			<div class="bold">Add Fediverse Account</div>
-			<div class="text-sm text-gray">Your username for any site on the social web</div>
+			<div class="text-sm text-gray">Your username from any site on the social web</div>
 		</div>
 	</div>
 	
@@ -82,20 +78,19 @@
 <div id="empty-footer" class="margin-top-lg">
 	<h2>Need an Account?</h2>
 
+	<!--
 	{{- if .DomainHasRegistrationForm -}}
 		<a href="/register" class="primary button">Sign Up Here</a>
-		<a href="https://emissary.social/hosting" class="button">Find Another Host</a>
+		<a href="https://emissary.social/hosting" class="button">Find a Fediverse Host</a>
 		<button script="on click trigger closeModal">Cancel</button>
 		
 	{{- else -}}
-		Signups on this site are closed, but you can 
-		<a href="https://emissary.social/hosting" target="_blank">Find a Fediverse Host</a>
-		from this list of trustworthy providers.
-
+	-->
 		<div class="margin-top">
-			<button script="on click trigger closeModal">Close Window</button>
+			<a href="https://emissary.social/hosting" class="primary button">Find a Fediverse Host</a>
+			<button script="on click trigger closeModal">Cancel</button>
 		</div>
-	{{- end -}}
+	<!--{{- end -}}-->
 </div>
 
 
