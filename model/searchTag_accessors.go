@@ -9,14 +9,17 @@ import (
 func SearchTagSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"searchTagId": schema.String{Format: "objectId"},
-			"parent":      schema.String{},
-			"name":        schema.String{Required: true},
-			"description": schema.String{},
-			"color":       schema.String{Format: "color"},
-			"notes":       schema.String{},
-			"stateId":     schema.Integer{Enum: []int{SearchTagStateFeatured, SearchTagStateAllowed, SearchTagStateWaiting, SearchTagStateBlocked}},
-			"rank":        schema.Integer{},
+			"searchTagId":    schema.String{Format: "objectId"},
+			"parent":         schema.String{},
+			"name":           schema.String{Required: true},
+			"description":    schema.String{},
+			"colors":         schema.Array{Items: schema.String{Format: "color"}},
+			"notes":          schema.String{},
+			"related":        schema.String{},
+			"rank":           schema.Integer{},
+			"stateId":        schema.Integer{Enum: []int{SearchTagStateAllowed, SearchTagStateWaiting, SearchTagStateBlocked}},
+			"isFeatured":     schema.Boolean{},
+			"isCustomBanner": schema.Boolean{},
 		},
 	}
 }
@@ -33,17 +36,26 @@ func (searchTag *SearchTag) GetPointer(name string) (any, bool) {
 	case "parent":
 		return &searchTag.Parent, true
 
-	case "stateId":
-		return &searchTag.StateID, true
-
 	case "description":
 		return &searchTag.Description, true
 
-	case "color":
-		return &searchTag.Color, true
+	case "colors":
+		return &searchTag.Colors, true
 
 	case "notes":
 		return &searchTag.Notes, true
+
+	case "related":
+		return &searchTag.Related, true
+
+	case "stateId":
+		return &searchTag.StateID, true
+
+	case "isFeatured":
+		return &searchTag.IsFeatured, true
+
+	case "isCustomBanner":
+		return &searchTag.IsCustomBanner, true
 
 	case "rank":
 		return &searchTag.Rank, true

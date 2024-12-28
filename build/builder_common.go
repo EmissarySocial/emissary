@@ -3,6 +3,7 @@ package build
 import (
 	"html/template"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -516,11 +517,35 @@ func (w Common) GetResponseSummary(url string) model.UserResponseSummary {
 	return result
 }
 
+func (w Common) SearchTag(value string) model.SearchTag {
+
+	result := model.NewSearchTag()
+
+	if err := w._factory.SearchTag().LoadByValue(value, &result); err != nil {
+		derp.Report(derp.Wrap(err, "build.Common.SearchTag", "Error loading SearchTag", value))
+	}
+
+	return result
+}
+
+func (w Common) SearchTagsByParent(parent string) (sliceof.Object[model.SearchTag], error) {
+
+	parent = strings.ToLower(parent)
+	result, err := w._factory.SearchTag().QueryByParent(parent)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "build.Common.SearchTagsByParent", "Error loading SearchTags by Parent", parent)
+	}
+
+	return result, nil
+}
+
 func (w Common) FeaturedSearchTags() *QueryBuilder[model.SearchTag] {
 
 	criteria := exp.And(
 		exp.Equal("parent", ""),
-		exp.Equal("stateId", model.SearchTagStateFeatured),
+		exp.Equal("stateId", model.SearchTagStateAllowed),
+		exp.Equal("isFeatured", true),
 		exp.Equal("deleteDate", 0),
 	)
 
@@ -535,7 +560,8 @@ func (w Common) FeaturedChildSearchTags() *QueryBuilder[model.SearchTag] {
 
 	criteria := exp.And(
 		b.Evaluate(w._request.URL.Query()),
-		exp.Equal("stateId", model.SearchTagStateFeatured),
+		exp.Equal("stateId", model.SearchTagStateAllowed),
+		exp.Equal("isFeatured", true),
 		exp.Equal("deleteDate", 0),
 	)
 

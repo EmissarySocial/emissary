@@ -1,6 +1,8 @@
 package service
 
 import (
+	"strings"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
@@ -70,6 +72,10 @@ func (service *SearchTag) Load(criteria exp.Expression, searchTag *model.SearchT
 
 // Save adds/updates an SearchTag in the database
 func (service *SearchTag) Save(searchTag *model.SearchTag, note string) error {
+
+	// Normalize the tag value
+	searchTag.Value = strings.ToLower(searchTag.Name)
+	searchTag.Parent = strings.ToLower(searchTag.Parent)
 
 	// Validate the value before saving
 	if err := service.Schema().Validate(searchTag); err != nil {
@@ -164,9 +170,14 @@ func (service *SearchTag) LoadByID(searchTagID primitive.ObjectID, searchTag *mo
 	return service.Load(criteria, searchTag)
 }
 
-func (service *SearchTag) LoadByName(name string, searchTag *model.SearchTag) error {
-	criteria := exp.Equal("name", name)
+func (service *SearchTag) LoadByValue(value string, searchTag *model.SearchTag) error {
+	criteria := exp.Equal("value", value)
 	return service.Load(criteria, searchTag)
+}
+
+func (service *SearchTag) QueryByParent(parent string) ([]model.SearchTag, error) {
+	criteria := exp.Equal("parent", parent)
+	return service.Query(criteria, option.SortAsc("rank"), option.SortAsc("name"))
 }
 
 // Upsert verifies that a SearchTag exists in the database, and creates it if it does not.
@@ -174,7 +185,7 @@ func (service *SearchTag) Upsert(name string) error {
 
 	// Try to find the SearchTag in the database
 	searchTag := model.NewSearchTag()
-	err := service.LoadByName(name, &searchTag)
+	err := service.LoadByValue(name, &searchTag)
 
 	// If it exists, then we're done
 	if err == nil {

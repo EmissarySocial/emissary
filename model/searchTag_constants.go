@@ -1,8 +1,5 @@
 package model
 
-// SearchTagStateFeatured represents a SearchTag that is featured on the search index
-const SearchTagStateFeatured = 2
-
 // SearchTagStateAllowed represents a SearchTag that is allowed on the search index
 const SearchTagStateAllowed = 1
 

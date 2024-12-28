@@ -94,7 +94,6 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 
 	case "searchTag-states":
 		return form.NewReadOnlyLookupGroup(
-			form.LookupCode{Value: "2", Label: "FEATURED - shows in search suggestions"},
 			form.LookupCode{Value: "1", Label: "ALLOWED - users can search for this tag"},
 			form.LookupCode{Value: "0", Label: "WAITING - has not yet been categorized."},
 			form.LookupCode{Value: "-1", Label: "BLOCKED - users cannot search for this tag"},

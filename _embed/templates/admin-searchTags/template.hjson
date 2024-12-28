@@ -1,57 +1,58 @@
 {
-	templateId:"admin-tags"
-	templateRole:"admin"
-	model:"tag"
+	templateId:admin-tags
+	templateRole:admin
+	model:tag
 	containedBy:["admin"]
-	label: "Tags"
-	description: "Manage all searchable tags on this website"
+	label:Tags
+	description: Manage all searchable tags on this website
 
 	actions: {
-		index: {do: "view-html"}
-		list: {do: "view-html"}
+		index: {do:"view-html"}
+		list: {do:"view-html"}
 		
 		add: {
 			steps: [{
-				do: as-modal
+				do:as-modal
 				steps: [
 					{
-						do: edit
-						type: searchTag
+						do:edit
+						type:searchTag
 						form: {
-							label: Add a Tag
-							type: layout-tabs
+							label:Add a Tag
+							type:layout-tabs
 							children: [
 								{
-									type: layout-vertical
-									label: General
+									type:layout-vertical
+									label:General
 									children: [
-										{type: "text", label: "Tag Name", path: "name", description:"Case insensitive. Don't include # symbol"}
-										{type: "select", label: "Status", path: "stateId", options:{provider: "searchTag-states"}}
-										{type: "text", label:"Rank", path: "rank"}
+										{type:"text", label:"Tag Name", path:"name", description:"Case insensitive. Don't include # symbol"}
+										{type:"select", label:"Status", path:"stateId", options:{provider: "searchTag-states"}}
+										{type:"text", label:"Rank", path:"rank", options:{style:"width:6em;"}}
+										{type:"toggle", path:"isFeatured", options:{true-text:"Featured. Show on search directory.", false-text:"Featured?"}}
 									]
 								}
 								{
-									type: layout-vertical
-									label: Featured
-									description: Featured tags are displayed as search suggestions.  To use these values, mark this tag's status as 'Featured'
+									type:layout-vertical
+									label:Custom Banner
 									children: [
-										{type: "text", label: "Parent", path: "parent", description:"Display this tag nested underneath its parent tag"}
-										{type: "textarea", label:"Description", path: "description", description:"Displayed in search suggestions", options:{rows:6}}
-										{type: "colorpicker", label:"Background Color", path: "color"}
+										{type:"toggle", path:"isCustomBanner", options:{true-text:"Custom Banner. Display a custom banner when searching this tag.", false-text:"Custom Banner?"}}
+										{type:"textarea", label:"Related Tags", path:"related", description:"Enter #Hashtags separated by spaces"}
+										{type:"colorpicker", label:"Background (Left)", path:"colors.0"}
+										{type:"colorpicker", label:"Background (Right)", path:"colors.1"}
 									]
 								}
 								{
-									type: layout-vertical
-									label: Notes
+									type:layout-vertical
+									label:Notes
 									children: [
-										{type: "textarea", path: "notes", description:"Notes are only visible by administrators", options:{rows:8}}
+										{type:"textarea", path:"notes", description:"Notes are only visible by administrators", options:{rows:8}}
 									]
 								}
 							]
 						}
 					}
-					{do: "save"}
-					{do: "refresh-page"}
+					{do:"save"}
+					{do:"refresh-page"}
 				]
 			}]
 		}
@@ -59,39 +60,40 @@
 		edit:{
 			steps:[
 				{
-					do:"as-modal"
+					do:as-modal
 					steps:[
 						{do:"view-html"}
 						{
-							do: "edit"
-							type: searchTag
+							do:edit
+							type:searchTag
 							form: {
-							type: layout-tabs
+							type:layout-tabs
 							children: [
 								{
-									type: layout-vertical
-									label: General
+									type:layout-vertical
+									label:General
 									children: [
-										{type: "text", label: "Tag Name", path: "name", description:"Case insensitive. Don't include # symbol"}
-										{type: "select", label: "Status", path: "stateId", options:{provider: "searchTag-states"}}
-										{type: "text", label:"Rank", path: "rank"}
+										{type:"text", label:"Tag Name", path:"name", description:"Case insensitive. Don't include # symbol"}
+										{type:"select", label:"Status", path:"stateId", options:{provider: "searchTag-states"}}
+										{type:"text", label:"Rank", path:"rank", options:{style:"width:6em;"}}
+										{type:"toggle", path:"isFeatured", options:{true-text:"Featured. Show on search directory.", false-text:"Featured?"}}
 									]
 								}
 								{
-									type: layout-vertical
-									label: Featured
-									description: Featured tags are displayed as search suggestions.  To use these values, mark this tag's status as 'Featured'
+									type:layout-vertical
+									label:Custom Banner
 									children: [
-										{type: "text", label: "Parent", path: "parent", description:"Display this tag nested underneath its parent tag"}
-										{type: "textarea", label:"Description", path: "description", description:"Additional text for search suggestions", options:{rows:6}}
-										{type: "colorpicker", label:"Background Color", path: "color"}
+										{type:"toggle", path:"isCustomBanner", options:{true-text:"Custom Banner. Display a custom banner when searching this tag.", false-text:"Custom Banner?"}}
+										{type:"textarea", label:"Related Tags", path:"related", description:"Enter #Hashtags separated by spaces"}
+										{type:"colorpicker", label:"Background (Left)", path:"colors.0"}
+										{type:"colorpicker", label:"Background (Right)", path:"colors.1"}
 									]
 								}
 								{
-									type: layout-vertical
-									label: Notes
+									type:layout-vertical
+									label:Notes
 									children: [
-										{type: "textarea", path: "notes", description:"Notes are only visible by administrators", options:{rows:8}}
+										{type:"textarea", path:"notes", description:"Notes are only visible by administrators", options:{rows:8}}
 									]
 								}
 							]
@@ -107,8 +109,8 @@
 
 		delete: {
 			steps:[
-				{do: "delete", type: "searchTag", title:"Delete '{{.Name}}'?", message:"Deleting this tag will only affect search engine suggestions, and will not remove contents that use this tag."}
-				{do: "refresh-page"}
+				{do:"delete", type:"searchTag", title:"Delete '{{.Name}}'?", message:"Deleting this tag will only affect search engine suggestions, and will not remove contents that use this tag."}
+				{do:"refresh-page"}
 			]
 		}
 	}
