@@ -20,6 +20,21 @@
 	margin:0px;
 }
 
+/******************************************
+ * Fullscreen
+ ******************************************/
+
+.fullscreen {
+    position:relative;
+	line-height:150%;
+	border: none;
+	padding: var(--rhythm);
+	font-weight:400;
+	width:100%;
+	margin:0px;
+}
+
+
 /** SMALL  Screens (tablet/vertical) ******/
 @media screen and (min-width:568px) {
 	
