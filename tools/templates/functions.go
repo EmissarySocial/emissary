@@ -61,6 +61,15 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 			return result
 		},
 
+		"in": func(value any, values ...any) bool {
+			for _, test := range values {
+				if value == test {
+					return true
+				}
+			}
+			return false
+		},
+
 		"array": func(values ...any) []any {
 			return values
 		},
