@@ -554,22 +554,6 @@ func (w Common) FeaturedSearchTags() *QueryBuilder[model.SearchTag] {
 	return &result
 }
 
-func (w Common) FeaturedChildSearchTags() *QueryBuilder[model.SearchTag] {
-
-	b := builder.NewBuilder().String("parent")
-
-	criteria := exp.And(
-		b.Evaluate(w._request.URL.Query()),
-		exp.Equal("stateId", model.SearchTagStateAllowed),
-		exp.Equal("isFeatured", true),
-		exp.Equal("deleteDate", 0),
-	)
-
-	result := NewQueryBuilder[model.SearchTag](w._factory.SearchTag(), criteria)
-
-	return &result
-}
-
 func (w Common) AllowedSearchTags() *QueryBuilder[model.SearchTag] {
 
 	criteria := exp.And(
