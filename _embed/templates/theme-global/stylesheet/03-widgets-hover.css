@@ -1,8 +1,9 @@
-/******************************************
- * Hover Show/Hide
- ******************************************/
-
  @media(hover: hover) {
+
+	/******************************************
+	* Hover Show/Hide
+	******************************************/
+
 	.hover-hide,
     .hover-show:focus,
     .hover-trigger:hover .hover-show {display:initial}
@@ -20,4 +21,19 @@
     .hover-trigger:hover .hover-invisible {opacity:0}
 
     .hover-underline:hover {text-decoration:underline}
+
+	/******************************************
+	* Hover Show/Hide
+	******************************************/
+
+	.hover-swell{
+		transition:transform 0.15s;
+		transform:scale(1);
+	}
+
+	.hover-trigger:hover .hover-swell,
+	.hover-swell:hover {
+		transform: scale(1.05);
+	}
 }
+
