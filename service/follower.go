@@ -77,6 +77,7 @@ func (service *Follower) List(criteria exp.Expression, options ...option.Option)
 	return service.collection.Iterator(notDeleted(criteria), options...)
 }
 
+// Range returns a Go 1.23 RangeFunc that iterates over the Followers who match the provided criteria
 func (service *Follower) Range(criteria exp.Expression, options ...option.Option) (iter.Seq[model.Follower], error) {
 
 	iter, err := service.List(criteria, options...)

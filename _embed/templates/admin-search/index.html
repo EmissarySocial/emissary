@@ -1,0 +1,11 @@
+{{- $parent := .QueryParam "parent" -}}
+{{- $name := .QueryParam "name" -}}
+{{- $stateID := .QueryParam "stateId" -}}
+
+<div class="page" hx-get="/admin/tags/index" hx-trigger="refreshPage from:window">
+   	
+	{{template "menubar" .}}
+
+	<button hx-post="/admin/index-all-streams" hx-swap="none" hx-push-url="false">Index All Streams</button>
+
+</div>

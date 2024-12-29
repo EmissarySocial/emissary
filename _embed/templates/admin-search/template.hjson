@@ -1,0 +1,13 @@
+{
+	templateId:admin-search
+	templateRole:admin
+	model:search
+	extends: ["admin-common"]
+	containedBy:["admin"]
+	label:Search
+	description: Manage Search Engine Settings
+
+	actions: {
+		index: {do:"view-html"}
+	}
+}

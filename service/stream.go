@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"iter"
 	"net/url"
 	"strings"
 	"time"
@@ -175,6 +176,30 @@ func (service *Stream) QuerySummary(criteria exp.Expression, options ...option.O
 	result := make([]model.StreamSummary, 0)
 	err := service.collection.Query(&result, notDeleted(criteria), options...)
 	return result, err
+}
+
+// Range returns a Go 1.23 RangeFunc that iterates over the Streams that match the provided criteria
+func (service *Stream) Range(criteria exp.Expression, options ...option.Option) (iter.Seq[model.Stream], error) {
+
+	iter, err := service.List(criteria, options...)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "service.Stream.Range", "Error creating iterator", criteria)
+	}
+
+	return RangeFunc(iter, model.NewStream), nil
+}
+
+// RangeSummary returns a Go 1.23 RangeFunc that iterates over the Stream Summaries that match the provided criteria
+func (service *Stream) RangeSummary(criteria exp.Expression, options ...option.Option) (iter.Seq[model.StreamSummary], error) {
+
+	iter, err := service.List(criteria, options...)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "service.Stream.Range", "Error creating iterator", criteria)
+	}
+
+	return RangeFunc(iter, model.NewStreamSummary), nil
 }
 
 // List returns an iterator containing all of the Streams that match the provided criteria
@@ -421,6 +446,10 @@ func (service *Stream) Schema() schema.Schema {
 /******************************************
  * Custom Queries
  ******************************************/
+
+func (service *Stream) RangeAll() (iter.Seq[model.StreamSummary], error) {
+	return service.RangeSummary(exp.All())
+}
 
 // ListNavigation returns all Streams of type FOLDER at the top of the hierarchy
 func (service *Stream) ListNavigation() (data.Iterator, error) {

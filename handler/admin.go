@@ -92,6 +92,9 @@ func buildAdmin_GetBuilder(factory *domain.Factory, ctx *steranko.Context, templ
 	case "domain":
 		return build.NewDomain(factory, ctx.Request(), ctx.Response(), template, actionID)
 
+	case "search":
+		return build.NewDomain(factory, ctx.Request(), ctx.Response(), template, actionID)
+
 	case "syndication":
 		return build.NewSyndication(factory, ctx.Request(), ctx.Response(), template, actionID)
 

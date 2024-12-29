@@ -28,6 +28,9 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 	case "CreateWebSubFollower":
 		return WithFactory(consumer.serverFactory, args, CreateWebSubFollower)
 
+	case "IndexAllStreams":
+		return WithFactory(consumer.serverFactory, args, IndexAllStreams)
+
 	case "MakeStreamArchive":
 		return WithStream(consumer.serverFactory, args, MakeStreamArchive)
 

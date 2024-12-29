@@ -344,6 +344,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/admin/:param1/:param2", handler.PostAdmin(factory), mw.Owner)
 	e.GET("/admin/:param1/:param2/:param3", handler.GetAdmin(factory), mw.Owner)
 	e.POST("/admin/:param1/:param2/:param3", handler.PostAdmin(factory), mw.Owner)
+	e.POST("/admin/index-all-streams", handler.WithFactory(factory, handler.IndexAllStreams), mw.Owner)
 
 	// OAuth Client Connections
 	e.GET("/oauth/clients/:provider", handler.GetOAuth(factory), mw.Owner)
