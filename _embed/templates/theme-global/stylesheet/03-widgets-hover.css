@@ -32,7 +32,9 @@
 	}
 
 	.hover-trigger:hover .hover-swell,
-	.hover-swell:hover {
+	.hover-swell:hover,
+	.swell {
+		transition:transform 0.15s;
 		transform: scale(1.05);
 	}
 }
