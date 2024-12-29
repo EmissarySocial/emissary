@@ -2,6 +2,7 @@
 	templateId:"admin-users"
 	templateRole:"admin"
 	model:"user"
+	extends: ["admin-common"]
 	containedBy:["admin"]
 	label: "User"
 	description: "Manage all users on this website"

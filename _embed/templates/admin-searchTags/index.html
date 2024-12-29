@@ -4,12 +4,7 @@
 
 <div class="page" hx-get="/admin/tags/index" hx-trigger="refreshPage from:window">
    	
-	<div id="menu-bar" hx-push-url="true">
-		{{- $token := .Token -}}
-		{{- range .AdminSections -}}
-			<a hx-get="/admin/{{.Value}}/index" class="turboclick {{if eq $token .Value}}selected{{end}}">{{.Label}}</a>
-		{{- end -}}
-	</div>
+	{{template "menubar" .}}
 
     <form hx-get="/admin/tags/list" hx-trigger="change, keyup throttle:500ms" hx-target="#results" hx-swap="innerHTML" hx-push-url="false">
         <div class="flex-row">

@@ -1,0 +1,5 @@
+{
+	templateId:"admin-common"
+	templateRole:"admin"
+	containedBy:["admin"]
+}

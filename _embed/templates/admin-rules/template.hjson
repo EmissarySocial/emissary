@@ -2,6 +2,7 @@
 	templateId:"admin-rules"
 	templateRole:"admin"
 	model:"rule"
+	extends: ["admin-common"]
 	containedBy:["admin"]
 	label: "Rules"
 	description: "Domain Owners only.  Site Admin"

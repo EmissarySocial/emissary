@@ -2,6 +2,7 @@
 	templateId:"admin-groups"
 	templateRole:"admin"
 	model:"group"
+	extends: ["admin-common"]
 	containedBy:["admin"]
 	label: "Group"
 	description: "Domain Owners only.  Site Admin"

@@ -4,12 +4,7 @@
    
     <script src="/.themes/global/resources/sortable-1.15.0/Sortable.min.js"></script>
 	
-	<div id="menu-bar" hx-push-url="true">
-		{{- $token := .Token -}}
-		{{- range .AdminSections -}}
-			<a hx-get="/admin/{{.Value}}/index" class="turboclick {{if eq $token .Value}}selected{{end}}">{{.Label}}</a>
-		{{- end -}}
-	</div>
+	{{template "menubar" .}}
 
 	<div class="info">
 		Webhooks send notification events to external serverices every time a record is changed.

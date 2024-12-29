@@ -3,6 +3,7 @@
 	templateRole:"admin"
 	model:"domain"
 	containedBy:["admin"]
+	extends:["admin-common"]
 	label: "Connections"
 	description: "Domain Owners only.  Site Admin"
 	schema: {type: "object", properties: {

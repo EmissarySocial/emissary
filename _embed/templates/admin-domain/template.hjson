@@ -2,6 +2,7 @@
 	templateId:"admin-domain"
 	templateRole:"admin"
 	model:"domain"
+	extends: ["admin-common"]
 	containedBy:["admin"]
 	label: "Domain"
 	description: "Domain Owners only.  Site Admin"

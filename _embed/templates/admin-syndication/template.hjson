@@ -2,6 +2,7 @@
 	templateId:"admin-syndication"
 	templateRole:"admin"
 	model:"syndication"
+	extends: ["admin-common"]
 	containedBy:["admin"]
 	label: "Syndication"
 	description: "Domain Owners only.  Site Admin"

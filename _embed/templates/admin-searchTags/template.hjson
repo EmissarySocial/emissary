@@ -2,6 +2,7 @@
 	templateId:admin-tags
 	templateRole:admin
 	model:tag
+	extends: ["admin-common"]
 	containedBy:["admin"]
 	label:Tags
 	description: Manage all searchable tags on this website

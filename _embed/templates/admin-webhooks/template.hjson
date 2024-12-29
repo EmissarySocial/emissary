@@ -2,6 +2,7 @@
 	templateId:"admin-webhooks"
 	templateRole:"admin"
 	model:"webhook"
+	extends: ["admin-common"]
 	containedBy:["admin"]
 	label: "Webhooks"
 	description: "Manage all webhooks on this website"

@@ -2,6 +2,7 @@
 	templateId:"admin-startup"
 	templateRole:"admin"
 	model:"domain"
+	extends: ["admin-common"]
 	containedBy:["admin"]
 	label: "Startup"
 	description: "Startup Wizard for new domains. (Site Admins Only)"
