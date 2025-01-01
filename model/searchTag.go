@@ -11,10 +11,8 @@ import (
 // for streams in the database.
 type SearchTag struct {
 	SearchTagID    primitive.ObjectID `bson:"_id"`            // SearchTagID is the unique identifier for a SearchTag.
-	Parent         string             `bson:"parent"`         // Parent is the name of the tag that contains this Tag (optional)
 	Name           string             `bson:"name"`           // Name used for this tag
 	Description    string             `bson:"description"`    // Description is shown on tags featured in search panels
-	Value          string             `bson:"value"`          // Value is the normalized (lowercase) version of the tag name.
 	Colors         sliceof.String     `bson:"colors"`         // Colors is a slice of one or more RGB Hex color to use for tags featured on search panels.
 	Notes          string             `bson:"notes"`          // Notes is a place for administrators to make notes about the tag.
 	Related        string             `bson:"related"`        // Related is a list of other tags that are related to this tag.

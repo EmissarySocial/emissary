@@ -10,7 +10,6 @@ func SearchTagSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
 			"searchTagId":    schema.String{Format: "objectId"},
-			"parent":         schema.String{},
 			"name":           schema.String{Required: true},
 			"description":    schema.String{},
 			"colors":         schema.Array{Items: schema.String{Format: "color"}},
@@ -32,9 +31,6 @@ func (searchTag *SearchTag) GetPointer(name string) (any, bool) {
 
 	case "name":
 		return &searchTag.Name, true
-
-	case "parent":
-		return &searchTag.Parent, true
 
 	case "description":
 		return &searchTag.Description, true
