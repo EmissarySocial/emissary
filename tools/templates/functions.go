@@ -389,5 +389,16 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 		"parseTags": func(value string) sliceof.String {
 			return mention.ParseTagsOnly('#', value)
 		},
+
+		"replaceTags": func(value string, tags []any) string {
+
+			for _, tag := range tags {
+				if replacer, isReplacer := tag.(Replacer); isReplacer {
+					value = replacer.Replace(value)
+				}
+			}
+
+			return value
+		},
 	}
 }

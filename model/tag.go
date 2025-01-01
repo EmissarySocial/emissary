@@ -20,6 +20,12 @@ func (tag Tag) JSONLD() mapof.Any {
 	return TagAsJSONLD(tag)
 }
 
+func (tag Tag) Replace(value string) string {
+	oldString := tag.Name
+	newString := `<a href="` + tag.Href + ` class="tag">` + tag.Name + "</a>"
+	return strings.ReplaceAll(value, oldString, newString)
+}
+
 func TagAsJSONLD(tag Tag) mapof.Any {
 	return mapof.Any{
 		"type": tag.Type,
