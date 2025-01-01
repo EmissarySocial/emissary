@@ -137,3 +137,32 @@ func TestWithTerminators(t *testing.T) {
 		require.Equal(t, sliceof.String{"Standard", "ThisTag.Doesnt,Have:Default;Terminators?"}, tags)
 	}
 }
+
+func TestInTheMiddleOfATag(t *testing.T) {
+
+	testMessage := "This is a #tag#tag with a @username@server.social in the middle of it."
+	{
+		tags := ParseTagsOnly('#', testMessage)
+		require.Equal(t, sliceof.String{"tag#tag"}, tags)
+	}
+
+	{
+		tags := ParseTagsOnly('@', testMessage)
+		require.Equal(t, sliceof.String{"username@server.social"}, tags)
+	}
+}
+
+func TestNewlines(t *testing.T) {
+
+	{
+		testMessage := "This is a tag after a\n#newline"
+		tags := ParseTagsOnly('#', testMessage)
+		require.Equal(t, sliceof.String{"newline"}, tags)
+	}
+
+	{
+		testMessage := "This is a tag #before\n a newline"
+		tags := ParseTagsOnly('#', testMessage)
+		require.Equal(t, sliceof.String{"before"}, tags)
+	}
+}

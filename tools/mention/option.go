@@ -43,3 +43,10 @@ func CaseSensitive() Option {
 		scanner.caseSensitive = true
 	}
 }
+
+// CaseInsensitive sets the scanner to return tags in all lowercase
+func CaseInsensitive() Option {
+	return func(scanner *Scanner) {
+		scanner.caseSensitive = true
+	}
+}

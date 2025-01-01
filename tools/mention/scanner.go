@@ -20,7 +20,7 @@ func New(options ...Option) Scanner {
 		prefixes:      []rune{'#'},
 		terminators:   []rune{' ', '.', ',', '!', '?', ';', ':', '%', '(', ')', '\t', '\n'},
 		includePrefix: false,
-		caseSensitive: false,
+		caseSensitive: true,
 	}
 
 	for _, option := range options {
