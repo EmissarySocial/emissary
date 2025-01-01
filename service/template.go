@@ -174,7 +174,6 @@ func (service *Template) loadTemplates() error {
 
 			switch definitionType {
 
-			// TODO: LOW: Add DefinitionEmail to this.  Will need a *.json file in the email directory.
 			case DefinitionEmail:
 				if err := service.emailService.Add(subdirectory, file); err != nil {
 					derp.Report(derp.Wrap(err, "service.Template.loadTemplates", "Error adding theme"))
