@@ -554,7 +554,7 @@ func (w Common) FeaturedSearchTags() *QueryBuilder[model.SearchTag] {
 func (w Common) AllowedSearchTags() *QueryBuilder[model.SearchTag] {
 
 	query := builder.NewBuilder().
-		String("name", builder.WithAlias("q"), builder.WithDefaultOpBeginsWith())
+		String("q", builder.WithAlias("name"), builder.WithDefaultOpBeginsWith())
 
 	criteria := exp.And(
 		query.Evaluate(w._request.URL.Query()),
