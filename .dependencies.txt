@@ -2,6 +2,7 @@ List of dependencies.  Promote/tag all large updates from the bottom up:
 
 NO DEPENDENTS
 
+- digital-dome
 - toot-echo
 - sherlock
 - data-mongo
