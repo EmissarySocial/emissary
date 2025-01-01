@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	textTemplate "text/template"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/set"
@@ -234,35 +235,43 @@ func (service *Template) Add(templateID string, filesystem fs.FS, definition []b
 
 	log.Debug().Msg("Template Service: adding " + templateID)
 
-	template := model.NewTemplate(templateID, service.funcMap)
+	result := model.NewTemplate(templateID, service.funcMap)
 
 	// Unmarshal the file into the schema.
-	if err := hjson.Unmarshal(definition, &template); err != nil {
+	if err := hjson.Unmarshal(definition, &result); err != nil {
 		return derp.Wrap(err, location, "Error loading Schema", templateID)
 	}
 
 	// All template schemas (except kludged registrations) also inherit from the main stream schema
-	if template.TemplateRole != "registration" {
-		template.Schema.Inherit(schema.New(model.StreamSchema()))
+	if result.TemplateRole != "registration" {
+		result.Schema.Inherit(schema.New(model.StreamSchema()))
+	}
+
+	if result.SearchText == "" {
+		result.SearchTemplate = nil
+	} else if searchTemplate, err := textTemplate.New("").Parse(result.SearchText); err == nil {
+		result.SearchTemplate = searchTemplate
+	} else {
+		return derp.Wrap(err, location, "Error parsing Search Template", templateID)
 	}
 
 	// Load all HTML templates from the filesystem
-	if err := loadHTMLTemplateFromFilesystem(filesystem, template.HTMLTemplate, service.funcMap); err != nil {
+	if err := loadHTMLTemplateFromFilesystem(filesystem, result.HTMLTemplate, service.funcMap); err != nil {
 		return derp.ReportAndReturn(derp.Wrap(err, location, "Error loading Template", templateID))
 	}
 
 	// Load all Bundles from the filesystem
-	if err := populateBundles(template.Bundles, filesystem); err != nil {
+	if err := populateBundles(result.Bundles, filesystem); err != nil {
 		return derp.ReportAndReturn(derp.Wrap(err, location, "Error loading Bundles", templateID))
 	}
 
 	// Keep a pointer to the filesystem resources (if present)
 	if resources, err := fs.Sub(filesystem, "resources"); err == nil {
-		template.Resources = resources
+		result.Resources = resources
 	}
 
 	// Add the template into the prep library
-	service.templatePrep[template.TemplateID] = template
+	service.templatePrep[result.TemplateID] = result
 
 	return nil
 }

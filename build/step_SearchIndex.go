@@ -10,8 +10,8 @@ import (
 
 // StepSearchIndex is a Step that can update a stream's PublishDate with the current time.
 type StepSearchIndex struct {
-	If     *template.Template
 	Action string
+	If     *template.Template
 }
 
 func (step StepSearchIndex) Get(builder Builder, _ io.Writer) PipelineBehavior {
@@ -23,33 +23,28 @@ func (step StepSearchIndex) Post(builder Builder, _ io.Writer) PipelineBehavior 
 
 	const location = "build.StepSearchIndex.Post"
 
-	// Verify that this object is a SearchResulter
-	searchResulter, ok := builder.object().(SearchResulter)
-
-	if !ok {
-		return Halt().WithError(derp.NewInternalError(location, "Object must be a SearchResulter"))
-	}
-
 	// Check the "IF" condition to see if this step should run...
 	if !convert.Bool(executeTemplate(step.If, builder)) {
 		return nil
 	}
 
-	searchResultService := builder.factory().Search()
-	searchResult := searchResulter.SearchResult()
+	if searchResult, ok := getSearchResult(builder); ok {
 
-	// Delete step here
-	if step.Action == "delete" {
-		if err := searchResultService.Delete(&searchResult, "deleted"); err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Error deleting search result", searchResult))
+		searchResultService := builder.factory().Search()
+
+		// Delete step here
+		if step.Action == "delete" {
+			if err := searchResultService.Delete(&searchResult, "deleted"); err != nil {
+				return Halt().WithError(derp.Wrap(err, location, "Error deleting search result", searchResult))
+			}
+
+			return nil
 		}
 
-		return nil
-	}
-
-	// Add/Update step here
-	if err := searchResultService.Upsert(searchResult); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error saving search result", searchResult))
+		// Add/Update step here
+		if err := searchResultService.Upsert(searchResult); err != nil {
+			return Halt().WithError(derp.Wrap(err, location, "Error saving search result", searchResult))
+		}
 	}
 
 	return nil

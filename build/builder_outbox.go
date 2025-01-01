@@ -233,6 +233,10 @@ func (w Outbox) Links() sliceof.Object[model.PersonLink] {
 	return w._user.Links
 }
 
+func (w Outbox) Tags() sliceof.Object[model.Tag] {
+	return w._user.Tags
+}
+
 func (w Outbox) Data(path string) any {
 	return w._user.Data[path]
 }

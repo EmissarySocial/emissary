@@ -1,6 +1,7 @@
 package service
 
 import (
+	"iter"
 	"strconv"
 	"strings"
 	"time"
@@ -9,6 +10,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/queries"
 	"github.com/EmissarySocial/emissary/tools/camper"
+	"github.com/EmissarySocial/emissary/tools/mention"
 	"github.com/EmissarySocial/emissary/tools/random"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
@@ -16,11 +18,15 @@ import (
 	"github.com/benpate/digit"
 	"github.com/benpate/domain"
 	"github.com/benpate/exp"
+	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/first"
+	"github.com/benpate/rosetta/html"
 	"github.com/benpate/rosetta/iterator"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/turbine/queue"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -85,6 +91,7 @@ func (service *User) Close() {
  * Common Data Methods
  ******************************************/
 
+// Count returns the number of Users who match the provided criteria
 func (service User) Count(criteria exp.Expression) (int64, error) {
 	return service.collection.Count(notDeleted(criteria))
 }
@@ -92,6 +99,18 @@ func (service User) Count(criteria exp.Expression) (int64, error) {
 // List returns an iterator containing all of the Users who match the provided criteria
 func (service *User) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.collection.Iterator(notDeleted(criteria), options...)
+}
+
+// Range returns an iterator containing all of the Users who match the provided criteria
+func (service *User) Range(criteria exp.Expression, options ...option.Option) (iter.Seq[model.User], error) {
+
+	iter, err := service.List(criteria, options...)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "service.User.Range", "Error creating iterator", criteria)
+	}
+
+	return RangeFunc(iter, model.NewUser), nil
 }
 
 // Query returns an slice containing all of the Users who match the provided criteria
@@ -297,6 +316,10 @@ func (service *User) Schema() schema.Schema {
 /******************************************
  * Custom Queries
  ******************************************/
+
+func (service *User) RangeAll() (iter.Seq[model.User], error) {
+	return service.Range(exp.All())
+}
 
 func (service *User) ListUsernameOrOwner(username string) (data.Iterator, error) {
 	return service.List(exp.Equal("isOwner", true).OrEqual("username", username))
@@ -674,4 +697,60 @@ func (service *User) FollowIntentURL() string {
 
 func (service *User) LikeIntentURL() string {
 	return service.host + "/@me/intent/like?object={object}&on-success={on-success}&on-cancel={on-cancel}"
+}
+
+func (service *User) CalculateTags(user *model.User, paths ...string) {
+
+	schema := service.Schema()
+	baseURL := service.host + "/tags/"
+	user.Tags = make(sliceof.Object[model.Tag], 0)
+
+	for _, path := range paths {
+
+		value, err := schema.Get(user, path)
+
+		if err != nil {
+			continue // Fail silently because "probably" this value just hasn't been set.
+		}
+
+		plainText := html.ToSearchText(convert.String(value))
+
+		// Add all @mentions into the Tags map
+		parser := mention.New(mention.Hashtags(), mention.CaseSensitive())
+		hashtags := parser.ParseTagsOnly(plainText)
+
+		for _, value := range hashtags {
+
+			tag := model.NewTag()
+			tag.Type = vocab.LinkTypeHashtag
+			tag.Name = value
+			tag.Href = baseURL + value
+
+			user.Tags = append(user.Tags, tag)
+		}
+	}
+}
+
+/******************************************
+ * SearchResulter Interface
+ ******************************************/
+
+func (service *User) SearchResult(user *model.User) (model.SearchResult, bool) {
+
+	if !user.IsIndexable {
+		return model.SearchResult{}, false
+	}
+
+	result := model.NewSearchResult()
+
+	result.Type = "Person"
+	result.Name = user.DisplayName
+	result.AttributedTo = "@" + user.Username
+	result.Summary = user.StatusMessage
+	result.URL = user.ProfileURL
+	result.IconURL = user.ActivityPubIconURL()
+	result.Tags = slice.Map(user.Tags, model.TagAsNameOnly)
+	result.FullText = user.DisplayName + ", " + user.Username + ", " + user.Location + ", " + user.StatusMessage
+
+	return result, true
 }

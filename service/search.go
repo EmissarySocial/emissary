@@ -45,24 +45,24 @@ func (service *Search) Close() {
  ******************************************/
 
 func (service *Search) Count(criteria exp.Expression) (int64, error) {
-	return service.collection.Count(notDeleted(criteria))
+	return service.collection.Count(criteria)
 }
 
 // Query returns an slice of allthe Searchs that match the provided criteria
 func (service *Search) Query(criteria exp.Expression, options ...option.Option) ([]model.SearchResult, error) {
 	result := make([]model.SearchResult, 0)
-	err := service.collection.Query(&result, notDeleted(criteria), options...)
+	err := service.collection.Query(&result, criteria, options...)
 
 	return result, err
 }
 
 // List returns an iterator containing all of the Searchs that match the provided criteria
 func (service *Search) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection.Iterator(notDeleted(criteria), options...)
+	return service.collection.Iterator(criteria, options...)
 }
 
 func (service *Search) Range(criteria exp.Expression, options ...option.Option) (iter.Seq[model.SearchResult], error) {
-	it, err := service.collection.Iterator(notDeleted(criteria), options...)
+	it, err := service.collection.Iterator(criteria, options...)
 
 	if err != nil {
 		return nil, derp.Wrap(err, "service.Search.Range", "Error creating iterator", criteria)
@@ -74,7 +74,7 @@ func (service *Search) Range(criteria exp.Expression, options ...option.Option) 
 // Load retrieves an Search from the database
 func (service *Search) Load(criteria exp.Expression, searchResult *model.SearchResult) error {
 
-	if err := service.collection.Load(notDeleted(criteria), searchResult); err != nil {
+	if err := service.collection.Load(criteria, searchResult); err != nil {
 		return derp.Wrap(err, "service.Search.Load", "Error loading Search", criteria)
 	}
 
@@ -106,11 +106,12 @@ func (service *Search) Save(searchResult *model.SearchResult, note string) error
 	return nil
 }
 
-// Delete removes an Search from the database (virtual delete)
+// Delete removes an Search from the database (HARD DELETE)
 func (service *Search) Delete(searchResult *model.SearchResult, note string) error {
 
-	// Delete this Search
-	if err := service.collection.Delete(searchResult, note); err != nil {
+	// Use HARD DELETE for search results.  No need to clutter up our indexes with "deleted" data.
+	criteria := exp.Equal("_id", searchResult.SearchResultID)
+	if err := service.collection.HardDelete(criteria); err != nil {
 		return derp.Wrap(err, "service.Search.Delete", "Error deleting Search", searchResult, note)
 	}
 
@@ -127,18 +128,6 @@ func (service *Search) RangeByTags(tags ...string) (iter.Seq[model.SearchResult]
 
 func (service *Search) LoadByURL(url string, searchResult *model.SearchResult) error {
 	return service.Load(exp.Equal("url", url), searchResult)
-}
-
-func (service *Search) DeleteByURL(url string) error {
-	searchResult := model.NewSearchResult()
-
-	if err := service.LoadByURL(url, &searchResult); err == nil {
-		return service.Delete(&searchResult, "deleted")
-	} else if !derp.NotFound(err) {
-		derp.Report(derp.Wrap(err, "service.Search.DeleteByURL", "Error loading Search", url))
-	}
-
-	return nil
 }
 
 /******************************************
@@ -171,6 +160,21 @@ func (service *Search) Upsert(searchResult model.SearchResult) error {
 	}
 
 	return nil
+}
+
+func (service *Search) DeleteByURL(url string) error {
+	searchResult := model.NewSearchResult()
+
+	if err := service.LoadByURL(url, &searchResult); err != nil {
+
+		if derp.NotFound(err) {
+			return nil
+		}
+
+		return derp.Wrap(err, "service.Search.DeleteByURL", "Error loading Search", url)
+	}
+
+	return service.Delete(&searchResult, "deleted from search index")
 }
 
 // Shuffle updates the "shuffle" field for all SearchResults that match the provided tags

@@ -22,7 +22,3 @@ type StateSetter interface {
 type PropertyFormGetter interface {
 	PropertyForm() form.Element
 }
-
-type SearchResulter interface {
-	SearchResult() model.SearchResult
-}

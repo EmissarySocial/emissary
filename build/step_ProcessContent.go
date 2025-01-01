@@ -46,7 +46,7 @@ func (step StepProcessContent) Post(builder Builder, buffer io.Writer) PipelineB
 	}
 
 	if step.AddTags {
-		streamService.CalcTags(stream)
+		streamService.CalculateTags(stream, "content.html")
 		contentService.ApplyTags(&stream.Content, stream.Tags)
 	}
 

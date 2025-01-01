@@ -48,11 +48,10 @@ func (step StepUnPublish) Post(builder Builder, _ io.Writer) PipelineBehavior {
 		return Halt().WithError(derp.Wrap(err, location, "Error publishing stream", streamBuilder._stream))
 	}
 
-	// If this object is also a SearchResulter, then we're gonna remove it from the search index
-	if searchResulter, ok := builder.object().(SearchResulter); ok {
+	// If this service is also a SearchResulter, then we're gonna remove it from the search index
+	if searchResult, ok := getSearchResult(builder); ok {
 
 		searchResultService := builder.factory().Search()
-		searchResult := searchResulter.SearchResult()
 
 		// Delete step here
 		if err := searchResultService.DeleteByURL(searchResult.URL); err != nil {

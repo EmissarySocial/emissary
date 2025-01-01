@@ -291,25 +291,6 @@ func (w Common) UserImage() (string, error) {
 }
 
 /******************************************
- * Search Engine
- ******************************************/
-
-func (w Common) Search() SearchBuilder {
-
-	tags, _ := mention.Parse('#', w.QueryParam("q"))
-
-	var criteria exp.Expression = exp.And(
-		exp.Equal("deleteDate", 0),
-	)
-
-	for _, tag := range tags {
-		criteria = criteria.And(exp.Equal("tags", tag))
-	}
-
-	return NewSearchBuilder(w._factory.Search(), criteria)
-}
-
-/******************************************
  * ActivityStreams / ActivityPub
  ******************************************/
 
@@ -517,68 +498,73 @@ func (w Common) GetResponseSummary(url string) model.UserResponseSummary {
 	return result
 }
 
-func (w Common) SearchTag(value string) model.SearchTag {
+/******************************************
+ * Search Engine
+ ******************************************/
+
+func (w Common) Search() SearchBuilder {
+
+	tags, remainder := mention.Parse('#', w.QueryParam("q"))
+
+	var criteria exp.Expression
+
+	if trimmed := strings.TrimSpace(remainder); trimmed != "" {
+		criteria = exp.Equal("$fullText", trimmed)
+	} else {
+		criteria = exp.All()
+	}
+
+	for _, tag := range tags {
+		criteria = criteria.AndEqual("tags", tag)
+	}
+
+	result := NewSearchBuilder(w._factory.Search(), criteria)
+
+	return result
+}
+
+func (w Common) SearchTag(name string) model.SearchTag {
 
 	result := model.NewSearchTag()
 
-	if err := w._factory.SearchTag().LoadByValue(value, &result); err != nil {
-		derp.Report(derp.Wrap(err, "build.Common.SearchTag", "Error loading SearchTag", value))
+	if err := w._factory.SearchTag().LoadByName(name, &result); err != nil {
+		derp.Report(derp.Wrap(err, "build.Common.SearchTag", "Error loading SearchTag", name))
 	}
 
 	return result
 }
 
-func (w Common) SearchTagsByParent(parent string) (sliceof.Object[model.SearchTag], error) {
-
-	parent = strings.ToLower(parent)
-	result, err := w._factory.SearchTag().QueryByParent(parent)
-
-	if err != nil {
-		return nil, derp.Wrap(err, "build.Common.SearchTagsByParent", "Error loading SearchTags by Parent", parent)
-	}
-
-	return result, nil
-}
-
 func (w Common) FeaturedSearchTags() *QueryBuilder[model.SearchTag] {
 
 	criteria := exp.And(
-		exp.Equal("parent", ""),
 		exp.Equal("stateId", model.SearchTagStateAllowed),
 		exp.Equal("isFeatured", true),
 		exp.Equal("deleteDate", 0),
 	)
 
 	result := NewQueryBuilder[model.SearchTag](w._factory.SearchTag(), criteria)
+	result.CaseInsensitive()
+	result.ByRank()
 
 	return &result
 }
 
+// AllowedSearchTags returns a query builder for all SearchTags that are
+// marked "Allowed" by the domain admin.
 func (w Common) AllowedSearchTags() *QueryBuilder[model.SearchTag] {
 
-	criteria := exp.And(
-		exp.GreaterOrEqual("stateId", model.SearchTagStateAllowed),
-		exp.Equal("deleteDate", 0),
-	)
-
-	result := NewQueryBuilder[model.SearchTag](w._factory.SearchTag(), criteria)
-
-	return &result
-}
-
-func (w Common) SearchTags() *QueryBuilder[model.SearchTag] {
-
 	query := builder.NewBuilder().
-		String("parent").
-		String("name").
-		Int("stateId")
+		String("name", builder.WithAlias("q"), builder.WithDefaultOpBeginsWith())
 
 	criteria := exp.And(
 		query.Evaluate(w._request.URL.Query()),
+		exp.Equal("stateId", model.SearchTagStateAllowed),
 		exp.Equal("deleteDate", 0),
 	)
 
 	result := NewQueryBuilder[model.SearchTag](w._factory.SearchTag(), criteria)
+	result.CaseInsensitive()
+	result.ByName()
 
 	return &result
 }

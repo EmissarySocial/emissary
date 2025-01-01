@@ -267,6 +267,17 @@ func slicesAreEqual(value1 []mapof.String, value2 []mapof.String) bool {
 	return true
 }
 
+// executeTemplate is some syntax sugar around the template.Execute function.
+func executeTemplate(t TemplateLike, value any) string {
+	var buffer strings.Builder
+
+	if err := t.Execute(&buffer, value); err != nil {
+		derp.Report(derp.Wrap(err, "service.executeTemplate", "Error executing template"))
+	}
+
+	return buffer.String()
+}
+
 // must strips out an error from a multi-result function call.
 // This should be used sparingly because, while it does REPORT
 // the error, it does not return it to the caller.

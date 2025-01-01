@@ -22,6 +22,7 @@ import (
 	"github.com/benpate/rosetta/html"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/sherlock"
 	"github.com/benpate/turbine/queue"
@@ -447,8 +448,20 @@ func (service *Stream) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
+// RangeAll returns a RangeFunc over all streams
 func (service *Stream) RangeAll() (iter.Seq[model.StreamSummary], error) {
 	return service.RangeSummary(exp.All())
+}
+
+// RangePublished returns a RangeFunc over all streams that are currently published
+func (service *Stream) RangePublished() (iter.Seq[model.Stream], error) {
+
+	now := time.Now().Unix()
+
+	criteria := exp.LessOrEqual("publishDate", now).
+		AndGreaterOrEqual("unpublishDate", now)
+
+	return service.Range(criteria)
 }
 
 // ListNavigation returns all Streams of type FOLDER at the top of the hierarchy
@@ -900,11 +913,7 @@ func (service *Stream) CalcContext(stream *model.Stream) {
 	stream.Context = stream.InReplyTo
 }
 
-func (service *Stream) CalcTags(stream *model.Stream) {
-	service.CalcTagsFromPaths(stream, "content.html")
-}
-
-func (service *Stream) CalcTagsFromPaths(stream *model.Stream, paths ...string) {
+func (service *Stream) CalculateTags(stream *model.Stream, paths ...string) {
 
 	schema := service.Schema()
 	stream.Tags = make(sliceof.Object[model.Tag], 0)
@@ -928,7 +937,7 @@ func (service *Stream) CalcTagsFromPaths(stream *model.Stream, paths ...string) 
 
 			tag := model.NewTag()
 			tag.Type = vocab.LinkTypeMention
-			tag.Name = "@" + value
+			tag.Name = value
 
 			if actor, err := service.activityStream.Load(tag.Name, sherlock.AsActor()); err == nil {
 				tag.Href = actor.ID()
@@ -943,11 +952,44 @@ func (service *Stream) CalcTagsFromPaths(stream *model.Stream, paths ...string) 
 		for _, value := range hashtags {
 
 			tag := model.NewTag()
-			tag.Type = "Hashtag" // TODO: This constant should be defined by Hannibal
-			tag.Name = "#" + value
+			tag.Type = vocab.LinkTypeHashtag // TODO: This constant should be defined by Hannibal
+			tag.Name = value
 			tag.Href = baseURL + value
 
 			stream.Tags = append(stream.Tags, tag)
 		}
 	}
+}
+
+/******************************************
+ * SearchResulter Interface
+ ******************************************/
+
+// SearchResult returns a SearchResult object that represents this Stream in the search index
+func (service *Stream) SearchResult(stream *model.Stream) (model.SearchResult, bool) {
+
+	const location = "service.Stream.SearchResult"
+
+	// Try to generate the searchResult.FullText using the Template for this Stream
+	template, err := service.templateService.Load(stream.TemplateID)
+
+	if err != nil {
+		return model.SearchResult{}, false
+	}
+
+	if template.SearchTemplate == nil {
+		return model.SearchResult{}, false
+	}
+
+	result := model.NewSearchResult()
+	result.URL = stream.URL
+	result.Type = stream.SocialRole
+	result.Name = stream.Label
+	result.AttributedTo = stream.AttributedTo.Name
+	result.Summary = stream.Summary
+	result.IconURL = stream.IconURL
+	result.Tags = slice.Map(stream.Tags, model.TagAsNameOnly)
+	result.FullText = executeTemplate(template.SearchTemplate, stream)
+
+	return result, true
 }

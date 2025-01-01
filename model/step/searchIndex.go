@@ -9,8 +9,8 @@ import (
 
 // SearchIndex contains the configuration data for a modal that lets administrators manage connections to external servers.
 type SearchIndex struct {
-	If     *template.Template
 	Action string
+	If     *template.Template
 }
 
 func NewSearchIndex(stepInfo mapof.Any) (SearchIndex, error) {
@@ -25,8 +25,8 @@ func NewSearchIndex(stepInfo mapof.Any) (SearchIndex, error) {
 
 	// Create the SearchIndex value
 	result := SearchIndex{
-		If:     ifTemplate,
 		Action: stepInfo.GetString("action"),
+		If:     ifTemplate,
 	}
 
 	return result, nil

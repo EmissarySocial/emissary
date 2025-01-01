@@ -146,22 +146,15 @@ func (w SearchTag) Name() string {
 	return w._searchTag.Name
 }
 
-func (w SearchTag) Parent() string {
-	if w._searchTag == nil {
-		return ""
-	}
-	return w._searchTag.Parent
-}
-
 /******************************************
  * QUERY BUILDERS
  ******************************************/
 
+// SearchTags returns a query builder for all SearchTags in the datatabase.
 func (w SearchTag) SearchTags() *QueryBuilder[model.SearchTag] {
 
 	query := builder.NewBuilder().
-		String("parent").
-		String("name").
+		String("name", builder.WithDefaultOpBeginsWith()).
 		Int("stateId")
 
 	criteria := exp.And(
@@ -170,6 +163,7 @@ func (w SearchTag) SearchTags() *QueryBuilder[model.SearchTag] {
 	)
 
 	result := NewQueryBuilder[model.SearchTag](w._factory.SearchTag(), criteria)
+	result.CaseInsensitive()
 
 	return &result
 }

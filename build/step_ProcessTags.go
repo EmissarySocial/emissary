@@ -4,6 +4,7 @@ import (
 	"io"
 
 	"github.com/benpate/derp"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // StepProcessTags is an action step that adds tags to a stream, either by scanning the content, or by
@@ -19,16 +20,24 @@ func (step StepProcessTags) Get(builder Builder, buffer io.Writer) PipelineBehav
 
 func (step StepProcessTags) Post(builder Builder, buffer io.Writer) PipelineBehavior {
 
-	// Get a Stream Builder
-	streamBuilder, ok := builder.(*Stream)
+	const location = "build.StepProcessTags.Post"
 
-	if !ok {
-		return Halt().WithError(derp.NewInternalError("builder.StepProcessTags.Post", "This step can only be used in a stream builder"))
+	switch typed := builder.(type) {
+
+	case Stream:
+		stream := typed._stream
+		streamService := builder.factory().Stream()
+		streamService.CalculateTags(stream, step.Paths...)
+		return Continue()
+
+	case Outbox:
+		user := typed._user
+		userService := builder.factory().User()
+		userService.CalculateTags(user, step.Paths...)
+		return Continue()
+
 	}
 
-	// Calculate Tags
-	stream := streamBuilder._stream
-	streamService := builder.factory().Stream()
-	streamService.CalcTagsFromPaths(stream, step.Paths...)
-	return Continue()
+	spew.Dump(builder)
+	return Halt().WithError(derp.NewInternalError(location, "This step can only be used in a Stream or User builder"))
 }

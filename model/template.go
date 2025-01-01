@@ -3,6 +3,7 @@ package model
 import (
 	"html/template"
 	"io/fs"
+	text "text/template"
 
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -37,6 +38,8 @@ type Template struct {
 	AccessRoles        mapof.Object[Role]   `json:"accessRoles"        bson:"accessRoles"`        // Map of custom roles defined by this Template.
 	Actions            mapof.Object[Action] `json:"actions"            bson:"actions"`            // Map of actions that can be performed on streams of this Template
 	HTMLTemplate       *template.Template   `json:"-"                  bson:"-"`                  // Compiled HTML template
+	SearchText         string               `json:"searchText"         bson:"-"`                  // Text template for generating a searchResult.FullText
+	SearchTemplate     *text.Template       `json:"-"                  bson:"-"`                  // Compiled searchText template
 	Bundles            mapof.Object[Bundle] `json:"bundles"            bson:"bundles"`            // Additional resources (JS, HS, CSS) reqired tp remder this Template.
 	Resources          fs.FS                `json:"-"                  bson:"-"`                  // File system containing the template resources
 	Datasets           DatasetMap           `json:"datasets"           bson:"-"`                  // Lookup codes defined by this template
@@ -127,20 +130,20 @@ func (template *Template) Inherit(parent *Template) {
 		return
 	}
 
-	// Inherit schema items from the parent (if not already defined)
+	// Inherit schema items from the parent.
 	template.Schema.Inherit(parent.Schema)
 
-	// Inherit WidgetLocations (if not already defined)
+	// Inherit WidgetLocations.
 	if len(template.WidgetLocations) == 0 {
 		template.WidgetLocations = parent.WidgetLocations
 	}
 
-	// Inherit TemplateRole (if not already defined)
+	// Inherit TemplateRole.
 	if template.TemplateRole == "" {
 		template.TemplateRole = parent.TemplateRole
 	}
 
-	// Inherit SocialRole (if not already defined)
+	// Inherit SocialRole.
 	if template.SocialRole == "" {
 		template.SocialRole = parent.SocialRole
 	}
@@ -150,38 +153,43 @@ func (template *Template) Inherit(parent *Template) {
 		template.SocialRules = append(template.SocialRules, parent.SocialRules...)
 	}
 
-	// Inherit ContainedBy (if not already defined)
+	// Inherit ContainedBy.
 	if len(template.ContainedBy) == 0 {
 		template.ContainedBy = parent.ContainedBy
 	}
 
-	// Inherit Model (if not already defined)
+	// Inherit Model.
 	if template.Model == "" {
 		template.Model = parent.Model
 	}
 
-	// Inherit Roles from the parent (if not already defined)
+	// Inherit SearchTemplate
+	if template.SearchTemplate == nil {
+		template.SearchTemplate = parent.SearchTemplate
+	}
+
+	// Inherit Roles from the parent.
 	for roleID, role := range parent.AccessRoles {
 		if _, ok := template.AccessRoles[roleID]; !ok {
 			template.AccessRoles[roleID] = role
 		}
 	}
 
-	// Inherit States from the parent (if not already defined)
+	// Inherit States from the parent.
 	for stateID, state := range parent.States {
 		if _, ok := template.States[stateID]; !ok {
 			template.States[stateID] = state
 		}
 	}
 
-	// Inherit Actions from the parent (if not already defined)
+	// Inherit Actions from the parent.
 	for actionID, action := range parent.Actions {
 		if _, ok := template.Actions[actionID]; !ok {
 			template.Actions[actionID] = action
 		}
 	}
 
-	// Inherit HTMLTemplates from the parent (if not already defined)
+	// Inherit HTMLTemplates from the parent.
 	for _, templateName := range parent.HTMLTemplate.Templates() {
 		if template.HTMLTemplate.Lookup(templateName.Name()) == nil {
 			if _, err := template.HTMLTemplate.AddParseTree(templateName.Name(), templateName.Tree); err != nil {

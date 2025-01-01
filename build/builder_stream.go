@@ -770,8 +770,10 @@ func (w Stream) makeStreamQueryBuilder(criteria exp.Expression) QueryBuilder[mod
 	)
 
 	result := NewQueryBuilder[model.StreamSummary](w._factory.Stream(), criteria)
-	result.SortField = w._template.ChildSortType
-	result.SortDirection = w._template.ChildSortDirection
+	result.By(w._template.ChildSortType)
+	if w._template.ChildSortDirection == "desc" {
+		result.Reverse()
+	}
 
 	return result
 }

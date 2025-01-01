@@ -31,6 +31,9 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 	case "IndexAllStreams":
 		return WithFactory(consumer.serverFactory, args, IndexAllStreams)
 
+	case "IndexAllUsers":
+		return WithFactory(consumer.serverFactory, args, IndexAllUsers)
+
 	case "MakeStreamArchive":
 		return WithStream(consumer.serverFactory, args, MakeStreamArchive)
 

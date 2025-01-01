@@ -3,33 +3,33 @@ package consumer
 import (
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/benpate/derp"
-	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
-	"github.com/rs/zerolog/log"
 )
 
 func IndexAllStreams(factory *domain.Factory, args mapof.Any) queue.Result {
 
 	const location = "consumer.IndexAllStreams"
 
+	searchService := factory.Search()
 	streamService := factory.Stream()
 
-	allStreams, err := streamService.RangeAll()
+	streams, err := streamService.RangePublished()
 
 	if err != nil {
 		return queue.Error(derp.Wrap(err, location, "Error retrieving Streams"))
 	}
 
-	for summary := range allStreams {
+	for stream := range streams {
 
-		log.Debug().Str("url", summary.URL).Msg("Indexing Stream")
-		transaction := remote.Post(summary.URL + "/search-index")
+		searchResult, ok := streamService.SearchResult(&stream)
 
-		if err := transaction.Send(); err != nil {
-			if !derp.IsClientError(err) {
-				return queue.Error(derp.Wrap(err, location, "Error sending request"))
-			}
+		if !ok {
+			continue
+		}
+
+		if err := searchService.Upsert(searchResult); err != nil {
+			derp.Report(derp.Wrap(err, location, "Error saving SearchResult"))
 		}
 	}
 

@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
 	"github.com/benpate/html"
 	"github.com/benpate/rosetta/convert"
@@ -330,4 +331,22 @@ func getTemplate(builder Builder) (model.Template, bool) {
 	}
 
 	return model.Template{}, false
+}
+
+func getSearchResult(builder Builder) (model.SearchResult, bool) {
+
+	switch typed := builder.(type) {
+
+	case Stream:
+		if streamService, isStreamService := typed.service().(*service.Stream); isStreamService {
+			return streamService.SearchResult(typed._stream)
+		}
+
+	case User:
+		if userService, isUserService := typed.service().(*service.User); isUserService {
+			return userService.SearchResult(typed._user)
+		}
+	}
+
+	return model.SearchResult{}, false
 }

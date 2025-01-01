@@ -5,25 +5,28 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data/option"
 	"github.com/benpate/exp"
+	"github.com/benpate/rosetta/null"
 	"github.com/benpate/rosetta/sliceof"
 )
 
 type QueryBuilder[T model.FieldLister] struct {
 	service       service.ModelService
-	Criteria      exp.Expression
-	SortField     string
-	SortDirection string
-	MaxRows       int64
+	criteria      exp.Expression
+	sortField     string
+	sortDirection string
+	maxRows       int64
+	caseSensitive null.Bool
 }
 
 func NewQueryBuilder[T model.FieldLister](service service.ModelService, criteria exp.Expression) QueryBuilder[T] {
 
 	return QueryBuilder[T]{
 		service:       service,
-		Criteria:      criteria,
-		SortField:     "rank",
-		SortDirection: "asc",
-		MaxRows:       60,
+		criteria:      criteria,
+		sortField:     "rank",
+		sortDirection: "asc",
+		maxRows:       60,
+		caseSensitive: null.Bool{},
 	}
 }
 
@@ -32,171 +35,181 @@ func NewQueryBuilder[T model.FieldLister](service service.ModelService, criteria
  ********************************/
 
 func (builder QueryBuilder[T]) Top1() QueryBuilder[T] {
-	builder.MaxRows = 1
+	builder.maxRows = 1
 	return builder
 }
 
 func (builder QueryBuilder[T]) Top6() QueryBuilder[T] {
-	builder.MaxRows = 6
+	builder.maxRows = 6
 	return builder
 }
 
 func (builder QueryBuilder[T]) Top12() QueryBuilder[T] {
-	builder.MaxRows = 12
+	builder.maxRows = 12
 	return builder
 }
 
 func (builder QueryBuilder[T]) Top30() QueryBuilder[T] {
-	builder.MaxRows = 30
+	builder.maxRows = 30
 	return builder
 }
 
 func (builder QueryBuilder[T]) Top60() QueryBuilder[T] {
-	builder.MaxRows = 60
+	builder.maxRows = 60
 	return builder
 }
 func (builder QueryBuilder[T]) Top120() QueryBuilder[T] {
-	builder.MaxRows = 120
+	builder.maxRows = 120
 	return builder
 }
 
 func (builder QueryBuilder[T]) Top150() QueryBuilder[T] {
-	builder.MaxRows = 150
+	builder.maxRows = 150
 	return builder
 }
 
 func (builder QueryBuilder[T]) Top200() QueryBuilder[T] {
-	builder.MaxRows = 200
+	builder.maxRows = 200
 	return builder
 }
 
 func (builder QueryBuilder[T]) Top300() QueryBuilder[T] {
-	builder.MaxRows = 300
+	builder.maxRows = 300
 	return builder
 }
 
 func (builder QueryBuilder[T]) Top400() QueryBuilder[T] {
-	builder.MaxRows = 400
+	builder.maxRows = 400
 	return builder
 }
 
 func (builder QueryBuilder[T]) Top500() QueryBuilder[T] {
-	builder.MaxRows = 500
+	builder.maxRows = 500
 	return builder
 }
 
 func (builder QueryBuilder[T]) Top600() QueryBuilder[T] {
-	builder.MaxRows = 600
+	builder.maxRows = 600
 	return builder
 }
 
 func (builder QueryBuilder[T]) All() QueryBuilder[T] {
-	builder.MaxRows = 0
+	builder.maxRows = 0
 	return builder
 }
 
 func (builder QueryBuilder[T]) Indexable() QueryBuilder[T] {
-	builder.Criteria = builder.Criteria.AndEqual("isIndexable", true)
+	builder.criteria = builder.criteria.AndEqual("isIndexable", true)
 	return builder
 }
 
 func (builder QueryBuilder[T]) Featured() QueryBuilder[T] {
-	builder.Criteria = builder.Criteria.AndEqual("isFeatured", true)
+	builder.criteria = builder.criteria.AndEqual("isFeatured", true)
 	return builder
 }
 
 func (builder QueryBuilder[T]) Tags(tags ...string) QueryBuilder[T] {
-	builder.Criteria = builder.Criteria.AndIn("tags.Name", tags)
+	builder.criteria = builder.criteria.AndIn("tags.Name", tags)
 	return builder
 }
 
 func (builder QueryBuilder[T]) Where(field string, value any) QueryBuilder[T] {
-	builder.Criteria = builder.Criteria.AndEqual(field, value)
+	builder.criteria = builder.criteria.AndEqual(field, value)
 	return builder
 }
 
 func (builder QueryBuilder[T]) WhereGT(field string, value any) QueryBuilder[T] {
-	builder.Criteria = builder.Criteria.AndGreaterThan(field, value)
+	builder.criteria = builder.criteria.AndGreaterThan(field, value)
 	return builder
 }
 
 func (builder QueryBuilder[T]) WhereLT(field string, value any) QueryBuilder[T] {
-	builder.Criteria = builder.Criteria.AndLessThan(field, value)
+	builder.criteria = builder.criteria.AndLessThan(field, value)
 	return builder
 }
 
 func (builder QueryBuilder[T]) WhereIN(field string, value any) QueryBuilder[T] {
-	builder.Criteria = builder.Criteria.AndIn(field, value)
+	builder.criteria = builder.criteria.AndIn(field, value)
 	return builder
 }
 
 func (builder QueryBuilder[T]) WhereBeginsWith(field string, value string) QueryBuilder[T] {
-	builder.Criteria = builder.Criteria.And(exp.BeginsWith(field, value))
+	builder.criteria = builder.criteria.And(exp.BeginsWith(field, value))
 	return builder
 }
 
 func (builder QueryBuilder[T]) WhereContains(field string, value string) QueryBuilder[T] {
-	builder.Criteria = builder.Criteria.And(exp.Contains(field, value))
+	builder.criteria = builder.criteria.And(exp.Contains(field, value))
 	return builder
 }
 
 func (builder QueryBuilder[T]) ByCreateDate() QueryBuilder[T] {
-	builder.SortField = "createDate"
+	builder.sortField = "createDate"
 	return builder
 }
 
 func (builder QueryBuilder[T]) ByDisplayName() QueryBuilder[T] {
-	builder.SortField = "displayName"
+	builder.sortField = "displayName"
 	return builder
 }
 
 func (builder QueryBuilder[T]) ByExpirationDate() QueryBuilder[T] {
-	builder.SortField = "expirationDate"
+	builder.sortField = "expirationDate"
 	return builder
 }
 
 func (builder QueryBuilder[T]) ByLabel() QueryBuilder[T] {
-	builder.SortField = "label"
+	builder.sortField = "label"
 	return builder
 }
 
 func (builder QueryBuilder[T]) ByName() QueryBuilder[T] {
-	builder.SortField = "name"
+	builder.sortField = "name"
 	return builder
 }
 
 func (builder QueryBuilder[T]) ByPublishDate() QueryBuilder[T] {
-	builder.SortField = "publishDate"
+	builder.sortField = "publishDate"
 	return builder
 }
 
 func (builder QueryBuilder[T]) ByRank() QueryBuilder[T] {
-	builder.SortField = "rank"
+	builder.sortField = "rank"
 	return builder
 }
 
 func (builder QueryBuilder[T]) ByRankAlt() QueryBuilder[T] {
-	builder.SortField = "rankAlt"
+	builder.sortField = "rankAlt"
 	return builder
 }
 
 func (builder QueryBuilder[T]) ByReadDate() QueryBuilder[T] {
-	builder.SortField = "readDate"
+	builder.sortField = "readDate"
 	return builder
 }
 
 func (builder QueryBuilder[T]) ByUpdateDate() QueryBuilder[T] {
-	builder.SortField = "updateDate"
+	builder.sortField = "updateDate"
 	return builder
 }
 
 func (builder QueryBuilder[T]) By(sortField string) QueryBuilder[T] {
-	builder.SortField = sortField
+	builder.sortField = sortField
 	return builder
 }
 
 func (builder QueryBuilder[T]) Reverse() QueryBuilder[T] {
-	builder.SortDirection = option.SortDirectionDescending
+	builder.sortDirection = option.SortDirectionDescending
+	return builder
+}
+
+func (builder QueryBuilder[T]) CaseSensitive() QueryBuilder[T] {
+	builder.caseSensitive = null.NewBool(true)
+	return builder
+}
+
+func (builder QueryBuilder[T]) CaseInsensitive() QueryBuilder[T] {
+	builder.caseSensitive = null.NewBool(false)
 	return builder
 }
 
@@ -207,13 +220,13 @@ func (builder QueryBuilder[T]) Reverse() QueryBuilder[T] {
 // Slice returns the results of the query as a slice of objects
 func (builder QueryBuilder[T]) Slice() (sliceof.Object[T], error) {
 	result := make([]T, 0)
-	err := builder.service.ObjectQuery(&result, builder.Criteria, builder.makeOptions()...)
+	err := builder.service.ObjectQuery(&result, builder.criteria, builder.makeOptions()...)
 	return result, err
 }
 
 // Count returns the number of records that match the query criteria
 func (builder QueryBuilder[T]) Count() (int64, error) {
-	return builder.service.Count(builder.Criteria)
+	return builder.service.Count(builder.criteria)
 
 }
 
@@ -229,8 +242,13 @@ func (builder QueryBuilder[T]) makeOptions() []option.Option {
 	result[0] = option.Fields(object.Fields()...)
 	result[1] = builder.makeSortOption()
 
-	if builder.MaxRows != 0 {
-		result = append(result, option.MaxRows(builder.MaxRows))
+	if builder.maxRows != 0 {
+		result = append(result, option.MaxRows(builder.maxRows))
+	}
+
+	if builder.caseSensitive.IsPresent() {
+		opt := option.CaseSensitive(builder.caseSensitive.Bool())
+		result = append(result, opt)
 	}
 
 	return result
@@ -239,9 +257,9 @@ func (builder QueryBuilder[T]) makeOptions() []option.Option {
 // sortOption returns a finalized data.option for sorting the results
 func (builder QueryBuilder[T]) makeSortOption() option.Option {
 
-	if builder.SortDirection == option.SortDirectionDescending {
-		return option.SortDesc(builder.SortField)
+	if builder.sortDirection == option.SortDirectionDescending {
+		return option.SortDesc(builder.sortField)
 	}
 
-	return option.SortAsc(builder.SortField)
+	return option.SortAsc(builder.sortField)
 }

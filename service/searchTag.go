@@ -1,9 +1,8 @@
 package service
 
 import (
-	"strings"
-
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/queries"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -70,12 +69,33 @@ func (service *SearchTag) Load(criteria exp.Expression, searchTag *model.SearchT
 	return nil
 }
 
+// LoadWithOptions retrieves a single SearchTag from the database, with additional options
+func (service *SearchTag) LoadWithOptions(criteria exp.Expression, searchTag *model.SearchTag, options ...option.Option) error {
+
+	options = append(options, option.MaxRows(1))
+
+	results, err := service.Query(criteria, options...)
+
+	if err != nil {
+		return derp.Wrap(err, "service.SearchTag.LoadByName", "Error loading SearchTag", criteria)
+	}
+
+	if len(results) == 0 {
+		return derp.NewNotFoundError("service.SearchTag.LoadByName", "SearchTag not found", criteria)
+	}
+
+	*searchTag = results[0]
+
+	return nil
+}
+
 // Save adds/updates an SearchTag in the database
 func (service *SearchTag) Save(searchTag *model.SearchTag, note string) error {
 
-	// Normalize the tag value
-	searchTag.Value = strings.ToLower(searchTag.Name)
-	searchTag.Parent = strings.ToLower(searchTag.Parent)
+	// RULE: If the SearchTag IsFeatured, then also mark it as "Allowed"
+	if searchTag.IsFeatured {
+		searchTag.StateID = model.SearchTagStateAllowed
+	}
 
 	// Validate the value before saving
 	if err := service.Schema().Validate(searchTag); err != nil {
@@ -170,22 +190,18 @@ func (service *SearchTag) LoadByID(searchTagID primitive.ObjectID, searchTag *mo
 	return service.Load(criteria, searchTag)
 }
 
-func (service *SearchTag) LoadByValue(value string, searchTag *model.SearchTag) error {
-	criteria := exp.Equal("value", value)
-	return service.Load(criteria, searchTag)
-}
-
-func (service *SearchTag) QueryByParent(parent string) ([]model.SearchTag, error) {
-	criteria := exp.Equal("parent", parent)
-	return service.Query(criteria, option.SortAsc("rank"), option.SortAsc("name"))
+func (service *SearchTag) LoadByName(name string, searchTag *model.SearchTag) error {
+	criteria := exp.Equal("name", name)
+	return service.LoadWithOptions(criteria, searchTag, option.CaseSensitive(false))
 }
 
 // Upsert verifies that a SearchTag exists in the database, and creates it if it does not.
 func (service *SearchTag) Upsert(name string) error {
 
-	// Try to find the SearchTag in the database
 	searchTag := model.NewSearchTag()
-	err := service.LoadByValue(name, &searchTag)
+
+	// Try to find the SearchTag in the database
+	err := queries.SearchTagByName(service.collection, name, &searchTag)
 
 	// If it exists, then we're done
 	if err == nil {
@@ -197,7 +213,6 @@ func (service *SearchTag) Upsert(name string) error {
 
 		// Set default values for the new SearchTag
 		searchTag.Name = name
-		searchTag.StateID = model.SearchTagStateWaiting
 
 		if err := service.Save(&searchTag, "New SearchTag"); err != nil {
 			return derp.Wrap(err, "service.SearchTag.Upsert", "Error saving SearchTag", name)

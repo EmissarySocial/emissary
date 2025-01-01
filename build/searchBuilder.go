@@ -118,7 +118,7 @@ func (builder SearchBuilder) WhereType(typeName string) SearchBuilder {
 }
 
 func (builder SearchBuilder) WhereTags(tags ...string) SearchBuilder {
-	builder.Criteria = builder.Criteria.AndIn("tags", tags)
+	builder.Criteria = builder.Criteria.AndInAll("tags", tags)
 	return builder
 }
 
@@ -179,10 +179,11 @@ func (builder SearchBuilder) Count() (int64, error) {
 func (builder SearchBuilder) makeOptions() []option.Option {
 
 	var object model.SearchResult
-	result := make([]option.Option, 2, 3)
+	result := make([]option.Option, 3, 4)
 
 	result[0] = option.Fields(object.Fields()...)
 	result[1] = builder.makeSortOption()
+	result[2] = option.CaseSensitive(false)
 
 	if builder.MaxRows != 0 {
 		result = append(result, option.MaxRows(builder.MaxRows))
