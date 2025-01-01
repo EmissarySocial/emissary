@@ -14,11 +14,11 @@
 		</a>
 
 		<a hx-get="/admin/users/index" class="turboclick {{if in .Token `users` `groups`}}selected{{end}}">
-			Authorization
+			People
 		</a>
 
 		<a hx-get="/admin/tags/index" class="turboclick {{if in .Token `search` `tags`}}selected{{end}}">
-			Search Engine
+			Search
 		</a>
 
 		<a hx-get="/admin/syndication/index" class="turboclick {{if in .Token `connections` `webhooks` `syndication`}}selected{{end}}">
