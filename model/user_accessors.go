@@ -36,6 +36,7 @@ func UserSchema() schema.Element {
 			"isOwner":        schema.Boolean{},
 			"isIndexable":    schema.Boolean{},
 			"data":           schema.Object{Wildcard: schema.String{}},
+			"tags":           schema.Array{Items: schema.String{}},
 		},
 	}
 }
@@ -110,6 +111,9 @@ func (user *User) GetPointer(name string) (any, bool) {
 
 	case "data":
 		return &user.Data, true
+
+	case "tags":
+		return &user.Tags, true
 
 	default:
 		return nil, false

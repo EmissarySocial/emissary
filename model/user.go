@@ -33,6 +33,7 @@ type User struct {
 	InboxTemplate   string                     `json:"inboxTemplate"   bson:"inboxTemplate"`        // Template for the user's inbox
 	OutboxTemplate  string                     `json:"outboxTemplate"  bson:"outboxTemplate"`       // Template for the user's outbox
 	NoteTemplate    string                     `json:"noteTemplate"    bson:"noteTemplate"`         // Template for generically created notes
+	Tags            sliceof.Object[Tag]        `json:"tags"            bson:"tags"`                 // Slice of tags that can be used to categorize this user.
 	Links           sliceof.Object[PersonLink] `json:"links"           bson:"links"`                // Slice of links to profiles on other web services.
 	PasswordReset   PasswordReset              `json:"-"               bson:"passwordReset"`        // Most recent password reset information.
 	Data            mapof.String               `json:"data"            bson:"data"`                 // Custom profile data that can be stored with this User.
@@ -91,13 +92,6 @@ func (user User) Summary() UserSummary {
 		IconID:       user.IconID,
 		ProfileURL:   user.ProfileURL,
 	}
-}
-
-// Copy returns a duplicate copy of this User
-// NOTE: This must NOT be a pointer receiver, so that a true COPY
-// of this record is returned.
-func (user User) Copy() User {
-	return user
 }
 
 /******************************************
@@ -375,23 +369,6 @@ func (user User) Toot() object.Account {
 
 func (user User) GetRank() int64 {
 	return user.CreateDate
-}
-
-/******************************************
- * SearchResulter Interface
- ******************************************/
-
-func (user User) SearchResult() SearchResult {
-
-	result := NewSearchResult()
-
-	result.Type = "Person"
-	result.Name = user.DisplayName
-	result.Summary = user.StatusMessage
-	result.URL = user.ProfileURL
-	result.IconURL = user.ActivityPubIconURL()
-
-	return result
 }
 
 /******************************************
