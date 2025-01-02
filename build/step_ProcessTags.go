@@ -23,7 +23,7 @@ func (step StepProcessTags) Post(builder Builder, buffer io.Writer) PipelineBeha
 
 	switch typed := builder.(type) {
 
-	case Stream:
+	case *Stream:
 		stream := typed._stream
 		streamService := builder.factory().Stream()
 		streamService.CalculateTags(stream, step.Paths...)
@@ -34,7 +34,6 @@ func (step StepProcessTags) Post(builder Builder, buffer io.Writer) PipelineBeha
 		userService := builder.factory().User()
 		userService.CalculateTags(user, step.Paths...)
 		return Continue()
-
 	}
 
 	return Halt().WithError(derp.NewInternalError(location, "This step can only be used in a Stream or User builder"))
