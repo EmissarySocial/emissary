@@ -4,7 +4,6 @@ import (
 	"io"
 
 	"github.com/benpate/derp"
-	"github.com/davecgh/go-spew/spew"
 )
 
 // StepProcessTags is an action step that adds tags to a stream, either by scanning the content, or by
@@ -38,6 +37,5 @@ func (step StepProcessTags) Post(builder Builder, buffer io.Writer) PipelineBeha
 
 	}
 
-	spew.Dump(builder)
 	return Halt().WithError(derp.NewInternalError(location, "This step can only be used in a Stream or User builder"))
 }
