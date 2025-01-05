@@ -199,7 +199,7 @@ func (factory *Factory) start() {
 		factory.providerService.Refresh(config.Providers)
 
 		if err := factory.refreshCommonDatabase(config.ActivityPubCache); err != nil {
-			derp.Report(derp.Wrap(err, "server.Factory.start", "Error refreshing common database", config.ActivityPubCache))
+			derp.Report(derp.Wrap(err, "server.Factory.start", "WARNING: Could not refresh common database.  Important services (like queued tasks and ActivityPub caching) may not function correctly.", config.ActivityPubCache))
 		}
 
 		factory.refreshQueue()
@@ -338,19 +338,25 @@ func (factory *Factory) refreshQueue() {
 	// If there is already a queue in place, then close it before we open a new one
 	factory.queue.Stop()
 
-	// Set up Queue storage
-	mongoStorage := queue_mongo.New(factory.commonDatabase, 32, 32)
-
 	// Removing consumers because they're F@#$ing up outbound HTTP signatures
 	consumer := consumer.New(factory)
 
 	// Create a new queue object with consumers, storage, and polling
 	factory.queue = queue.New(
 		queue.WithConsumers(consumer.Run, remote.Consumer()),
-		queue.WithStorage(mongoStorage),
-		queue.WithPollStorage(true),
 		queue.WithRunImmediatePriority(32),
 	)
+
+	// If we have a common database configured, then use it for queue storage
+	if factory.commonDatabase != nil {
+
+		// Set up Queue storage
+		mongoStorage := queue_mongo.New(factory.commonDatabase, 32, 32)
+
+		// Apply the storage to the queue
+		queue.WithStorage(mongoStorage)(&factory.queue)
+		queue.WithPollStorage(true)(&factory.queue)
+	}
 }
 
 /****************************
