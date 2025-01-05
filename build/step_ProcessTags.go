@@ -29,6 +29,12 @@ func (step StepProcessTags) Post(builder Builder, buffer io.Writer) PipelineBeha
 		streamService.CalculateTags(stream, step.Paths...)
 		return Continue()
 
+	case Stream:
+		stream := typed._stream
+		streamService := builder.factory().Stream()
+		streamService.CalculateTags(stream, step.Paths...)
+		return Continue()
+
 	case Outbox:
 		user := typed._user
 		userService := builder.factory().User()
