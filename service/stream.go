@@ -10,7 +10,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/queries"
 	"github.com/EmissarySocial/emissary/tools/id"
-	"github.com/EmissarySocial/emissary/tools/mention"
+	"github.com/EmissarySocial/emissary/tools/parse"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -931,7 +931,7 @@ func (service *Stream) CalculateTags(stream *model.Stream, paths ...string) {
 		plainText := html.ToSearchText(convert.String(value))
 
 		// Add all @mentions into the Tags map
-		mentions, _ := mention.Parse('@', plainText)
+		mentions := parse.Mentions(plainText)
 
 		for _, value := range mentions {
 
@@ -947,12 +947,12 @@ func (service *Stream) CalculateTags(stream *model.Stream, paths ...string) {
 		}
 
 		// Add all @mentions into the Tags map
-		hashtags, _ := mention.Parse('#', plainText)
+		hashtags := parse.Hashtags(plainText)
 
 		for _, value := range hashtags {
 
 			tag := model.NewTag()
-			tag.Type = vocab.LinkTypeHashtag // TODO: This constant should be defined by Hannibal
+			tag.Type = vocab.LinkTypeHashtag
 			tag.Name = value
 			tag.Href = baseURL + value
 

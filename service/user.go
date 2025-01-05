@@ -10,7 +10,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/queries"
 	"github.com/EmissarySocial/emissary/tools/camper"
-	"github.com/EmissarySocial/emissary/tools/mention"
+	"github.com/EmissarySocial/emissary/tools/parse"
 	"github.com/EmissarySocial/emissary/tools/random"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
@@ -715,9 +715,8 @@ func (service *User) CalculateTags(user *model.User, paths ...string) {
 
 		plainText := html.ToSearchText(convert.String(value))
 
-		// Add all @mentions into the Tags map
-		parser := mention.New(mention.Hashtags(), mention.CaseSensitive())
-		hashtags := parser.ParseTagsOnly(plainText)
+		// Add all #hashtags into the Tags map
+		hashtags := parse.Hashtags(plainText, parse.WithCaseSensitive())
 
 		for _, value := range hashtags {
 

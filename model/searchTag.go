@@ -1,7 +1,7 @@
 package model
 
 import (
-	"github.com/EmissarySocial/emissary/tools/mention"
+	"github.com/EmissarySocial/emissary/tools/parse"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -63,5 +63,5 @@ func (searchTag SearchTag) Fields() []string {
 }
 
 func (searchTag SearchTag) RelatedTags() sliceof.String {
-	return mention.ParseTagsOnly('#', searchTag.Related)
+	return parse.Hashtags(searchTag.Related)
 }

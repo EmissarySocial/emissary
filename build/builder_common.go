@@ -8,7 +8,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
-	"github.com/EmissarySocial/emissary/tools/mention"
+	"github.com/EmissarySocial/emissary/tools/parse"
 	"github.com/benpate/derp"
 	"github.com/benpate/domain"
 	"github.com/benpate/exp"
@@ -504,7 +504,7 @@ func (w Common) GetResponseSummary(url string) model.UserResponseSummary {
 
 func (w Common) Search() SearchBuilder {
 
-	tags, remainder := mention.Parse('#', w.QueryParam("q"))
+	tags, remainder := parse.HashtagsAndRemainder(w.QueryParam("q"))
 
 	var criteria exp.Expression
 
