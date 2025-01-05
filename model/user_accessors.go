@@ -36,7 +36,7 @@ func UserSchema() schema.Element {
 			"isOwner":        schema.Boolean{},
 			"isIndexable":    schema.Boolean{},
 			"data":           schema.Object{Wildcard: schema.String{}},
-			"tags":           schema.Array{Items: schema.String{}},
+			"tags":           schema.Array{Items: TagSchema()},
 		},
 	}
 }
