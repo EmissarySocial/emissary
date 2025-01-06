@@ -40,7 +40,7 @@ func (step StepIfCondition) execute(builder Builder, buffer io.Writer, method Ac
 		return UseResult(result)
 	}
 
-	result := Pipeline(step.Otherwise).Get(factory, builder, buffer)
+	result := Pipeline(step.Otherwise).Execute(factory, builder, buffer, method)
 	result.Error = derp.Wrap(result.Error, location, "Error executing 'otherwise' sub-steps")
 	return UseResult(result)
 }
