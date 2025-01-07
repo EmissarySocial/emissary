@@ -5,8 +5,8 @@ import (
 	"io"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/formdata"
 	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/mapof"
 )
 
 // StepEditContent is a Step that can edit/update Container in a streamDraft.
@@ -18,9 +18,11 @@ type StepEditContent struct {
 
 func (step StepEditContent) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 
+	const location = "build.StepEditContent.Get"
+
 	if step.Filename != "" {
 		if err := builder.execute(buffer, step.Filename, builder); err != nil {
-			return Halt().WithError(derp.Wrap(err, "build.StepEditContent.Get", "Error executing template"))
+			return Halt().WithError(derp.Wrap(err, location, "Error executing template"))
 		}
 	}
 
@@ -29,13 +31,15 @@ func (step StepEditContent) Get(builder Builder, buffer io.Writer) PipelineBehav
 
 func (step StepEditContent) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
+	const location = "build.StepEditContent.Post"
+
 	var rawContent string
 
 	// Require that we're working with a Stream
 	stream, ok := builder.object().(*model.Stream)
 
 	if !ok {
-		return Halt().WithError(derp.NewInternalError("build.StepEditContent.Post", "step: EditContent can only be used on a Stream"))
+		return Halt().WithError(derp.NewInternalError(location, "step: EditContent can only be used on a Stream"))
 	}
 
 	// Try to read the content from the request body
@@ -46,7 +50,7 @@ func (step StepEditContent) Post(builder Builder, _ io.Writer) PipelineBehavior 
 		var buffer bytes.Buffer
 
 		if _, err := io.Copy(&buffer, builder.request().Body); err != nil {
-			return Halt().WithError(derp.Wrap(err, "build.StepEditContent.Post", "Error reading request data"))
+			return Halt().WithError(derp.Wrap(err, location, "Error reading request data"))
 		}
 
 		rawContent = buffer.String()
@@ -54,12 +58,13 @@ func (step StepEditContent) Post(builder Builder, _ io.Writer) PipelineBehavior 
 	// All other types are a Form post
 	default:
 
-		body := mapof.NewAny()
-		if err := bind(builder.request(), &body); err != nil {
-			return Halt().WithError(derp.Wrap(err, "build.StepEditContent.Post", "Error parsing request data"))
+		value, err := formdata.Parse(builder.request())
+
+		if err != nil {
+			return Halt().WithError(derp.Wrap(err, location, "Error parsing request data"))
 		}
 
-		rawContent = body.GetString(step.Fieldname)
+		rawContent = value.Get(step.Fieldname)
 	}
 
 	// Set the new Content value in the Stream
@@ -68,7 +73,7 @@ func (step StepEditContent) Post(builder Builder, _ io.Writer) PipelineBehavior 
 
 	// Try to save the object back to the database
 	if err := builder.service().ObjectSave(stream, "Content edited"); err != nil {
-		return Halt().WithError(derp.Wrap(err, "build.StepEditContent.Post", "Error saving stream"))
+		return Halt().WithError(derp.Wrap(err, location, "Error saving stream"))
 	}
 
 	// Success!

@@ -4,6 +4,7 @@ import (
 	"io"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/formdata"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/html"
@@ -11,13 +12,13 @@ import (
 	"github.com/benpate/rosetta/slice"
 )
 
-// StepEditTemplate is a Step that can delete a Stream from the Domain
+// StepEditTemplate is a Step that lets users choose their profile template(s)
 type StepEditTemplate struct {
 	Title string
 	Paths []string
 }
 
-// Get displays a customizable confirmation form for the delete
+// Get displays a form where users can select their profile template(s)
 func (step StepEditTemplate) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 
 	schema := builder.schema()
@@ -55,7 +56,7 @@ func (step StepEditTemplate) Get(builder Builder, buffer io.Writer) PipelineBeha
 	return Continue()
 }
 
-// Post removes the object from the database (likely using a soft-delete, though)
+// Post updates a User's profile template(s)
 func (step StepEditTemplate) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
 	const location = "build.StepEditTemplate.Post"
@@ -64,9 +65,9 @@ func (step StepEditTemplate) Post(builder Builder, _ io.Writer) PipelineBehavior
 	object := builder.object()
 
 	// Collect inputs from the form
-	transaction := make(map[string]string)
+	transaction, err := formdata.Parse(builder.request())
 
-	if err := bind(builder.request(), &transaction); err != nil {
+	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error parsing form"))
 	}
 
@@ -74,7 +75,7 @@ func (step StepEditTemplate) Post(builder Builder, _ io.Writer) PipelineBehavior
 	for _, path := range step.Paths {
 
 		// Find the new TemplateID
-		newTemplateID := transaction[path]
+		newTemplateID := transaction.Get(path)
 
 		// Scan all allowed records
 		if step.isTemplateAllowed(builder, path, newTemplateID) {

@@ -3,8 +3,10 @@ package build
 import (
 	"io"
 	"net/http"
+	"strconv"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/formdata"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
@@ -33,16 +35,10 @@ func (step StepWebSub) Post(builder Builder, _ io.Writer) PipelineBehavior {
 	const location = "build.StepWebSub.Post"
 
 	// This transaction will capture the form POST input
-	var transaction struct {
-		Mode         string `form:"hub.mode"`
-		Topic        string `form:"hub.topic"`
-		Callback     string `form:"hub.callback"`
-		Secret       string `form:"hub.secret"`
-		LeaseSeconds int    `form:"hub.lease_seconds"`
-	}
+	var transaction txnStepWebSub
 
 	// Try to collect form data into the transaction struct
-	if err := bind(builder.request(), &transaction); err != nil {
+	if err := transaction.Bind(builder.request()); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error parsing form data"))
 	}
 
@@ -74,6 +70,39 @@ func (step StepWebSub) Post(builder Builder, _ io.Writer) PipelineBehavior {
 	// Set Status Code 202 (Accepted) to conform to WebSub spec
 	// https://www.w3.org/TR/websub/#subscription-response-details
 	builder.response().WriteHeader(202)
+
+	return nil
+}
+
+type txnStepWebSub struct {
+	Mode         string
+	Topic        string
+	Callback     string
+	Secret       string
+	LeaseSeconds int
+}
+
+func (txn *txnStepWebSub) Bind(request *http.Request) error {
+
+	const location = "build.txnStepWebSub.Bind"
+
+	// Parse Form Values
+	values, err := formdata.Parse(request)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error parsing form values")
+	}
+
+	// Apply values to this object
+	txn.Mode = values.Get("hub.mode")
+	txn.Topic = values.Get("hub.topic")
+	txn.Callback = values.Get("hub.callback")
+	txn.Secret = values.Get("hub.secret")
+	txn.LeaseSeconds, err = strconv.Atoi(values.Get("hub.lease_seconds"))
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error parsing integer", values.Get("hub.lease_seconds"))
+	}
 
 	return nil
 }

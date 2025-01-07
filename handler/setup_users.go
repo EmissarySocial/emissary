@@ -41,10 +41,15 @@ func SetupDomainUserPost(serverFactory *server.Factory, templates *template.Temp
 	return func(ctx echo.Context) error {
 
 		// Collect the transaction data from the request
-		data := mapof.NewAny()
+		var data struct {
+			DisplayName  string `json:"displayName"`
+			EmailAddress string `json:"emailAddress"`
+			Username     string `json:"username"`
+			Password     string `json:"password"`
+		}
 
 		if err := ctx.Bind(&data); err != nil {
-			return derp.Wrap(err, location, "Error binding data")
+			return derp.Wrap(err, location, "Error reading form data")
 		}
 
 		// Try to load the requested domain
@@ -71,7 +76,7 @@ func SetupDomainUserPost(serverFactory *server.Factory, templates *template.Temp
 			}
 
 			// Allow admins to set passwords
-			if password := data.GetString("password"); password != "" {
+			if password := data.Password; password != "" {
 				sterankoService := factory.Steranko()
 				if err := sterankoService.SetPassword(&user, password); err != nil {
 					return derp.Wrap(err, location, "Error setting password")
@@ -80,9 +85,9 @@ func SetupDomainUserPost(serverFactory *server.Factory, templates *template.Temp
 		}
 
 		// Populate the User record with the new data
-		user.DisplayName = data.GetString("displayName")
-		user.Username = data.GetString("username")
-		user.EmailAddress = data.GetString("emailAddress")
+		user.DisplayName = data.DisplayName
+		user.Username = data.Username
+		user.EmailAddress = data.EmailAddress
 		user.IsOwner = true
 		user.IsPublic = true
 

@@ -4,12 +4,12 @@ import (
 	"io"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/formdata"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
-	"github.com/benpate/rosetta/mapof"
 )
 
-// StepEditWidget is a Step that can update the data.DataMap custom data stored in a Stream
+// StepEditWidget is a Step that displays a form for editing Widgets.
 type StepEditWidget struct{}
 
 func (step StepEditWidget) Get(builder Builder, buffer io.Writer) PipelineBehavior {
@@ -36,26 +36,28 @@ func (step StepEditWidget) Get(builder Builder, buffer io.Writer) PipelineBehavi
 	return nil
 }
 
-// Post updates the stream with approved data from the request body.
+// Post updates a Widget's configuration data.
 func (step StepEditWidget) Post(builder Builder, _ io.Writer) PipelineBehavior {
+
+	const location = "build.StepEditWidget.Post"
 
 	// Locate the widget and its configuration
 	widget, streamWidget, streamBuilder, err := step.common(builder)
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, "build.StepEditWidget.Post", "Error locating widget"))
+		return Halt().WithError(derp.Wrap(err, location, "Error locating widget"))
 	}
 
 	// Get the form post information
-	formData := mapof.NewAny()
-	if err := bind(builder.request(), &formData); err != nil {
-		return Halt().WithError(derp.Wrap(err, "build.StepEditWidget.Post", "Error binding form data"))
+	values, err := formdata.Parse(builder.request())
+	if err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Error binding form data"))
 	}
 
 	// Apply the form data to the widget
 	f := form.New(widget.Schema, widget.Form)
-	if err := f.SetAll(&streamWidget.Data, formData, nil); err != nil {
-		return Halt().WithError(derp.Wrap(err, "build.StepEditWidget.Post", "Error applying form data to widget"))
+	if err := f.SetURLValues(&streamWidget.Data, values, nil); err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Error applying form data to widget"))
 	}
 
 	// Update the stream with the new widget (in the same location)

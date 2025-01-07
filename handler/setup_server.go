@@ -9,8 +9,10 @@ import (
 	"github.com/EmissarySocial/emissary/build"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
+	"github.com/EmissarySocial/emissary/tools/formdata"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
+	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/table"
 	"github.com/labstack/echo/v4"
@@ -77,9 +79,9 @@ func SetupServerPost(factory *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
-		data := mapof.NewAny()
+		data, err := formdata.Parse(ctx.Request())
 
-		if err := ctx.Bind(&data); err != nil {
+		if err != nil {
 			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, "setup.serverPost", "Error parsing form data"))
 		}
 
@@ -101,7 +103,7 @@ func SetupServerPost(factory *server.Factory) echo.HandlerFunc {
 			widget := table.New(&schema, &element, &config, section, factory.Icons(), uri)
 
 			// Apply the changes to the configuration
-			if err := widget.Do(ctx.Request().URL, data); err != nil {
+			if err := widget.Do(ctx.Request().URL, convert.MapOfAny(data)); err != nil {
 				return build.WrapInlineError(ctx.Response(), derp.Wrap(err, "setup.serverTable", "Error saving form data"))
 			}
 
@@ -118,7 +120,7 @@ func SetupServerPost(factory *server.Factory) echo.HandlerFunc {
 		form := form.New(schema, element)
 
 		// Apply the changes to the configuration
-		if err := form.SetAll(&config, data, nil); err != nil {
+		if err := form.SetURLValues(&config, data, nil); err != nil {
 			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, "setup.serverPost", "Error saving form data", data))
 		}
 

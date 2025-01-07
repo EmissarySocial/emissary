@@ -17,19 +17,19 @@ func GetIntent_Dislike(ctx *steranko.Context, factory *domain.Factory, user *mod
 	const location = "handler.GetIntent_Dislike"
 
 	// Collect values from the QueryString
-	var txn camper.DislikeIntent
-	if err := ctx.Bind(&txn); err != nil {
-		return derp.Wrap(err, location, "Error binding form to transaction")
+	var transaction camper.DislikeIntent
+	if err := ctx.Bind(&transaction); err != nil {
+		return derp.Wrap(err, location, "Error reading form data")
 	}
 
 	// Default values here
-	onCancel := firstOf(txn.OnCancel, "/@me")
+	onCancel := firstOf(transaction.OnCancel, "/@me")
 
 	activityStream := factory.ActivityStream()
-	object, err := activityStream.Load(txn.Object)
+	object, err := activityStream.Load(transaction.Object)
 
 	if err != nil {
-		return derp.ReportAndReturn(derp.Wrap(err, location, "Unable to load object", ctx.Request().URL.String(), ctx.Request().URL, txn))
+		return derp.ReportAndReturn(derp.Wrap(err, location, "Unable to load object", ctx.Request().URL.String(), ctx.Request().URL, transaction))
 	}
 
 	// Buiild HTML response
@@ -47,8 +47,8 @@ func GetIntent_Dislike(ctx *steranko.Context, factory *domain.Factory, user *mod
 	b.Body().Style("overflow-y:hidden")
 
 	b.Form("POST", "/@me/intent/dislike")
-	b.Input("hidden", "on-success").Value(txn.OnSuccess)
-	b.Input("hidden", "on-cancel").Value(txn.OnCancel)
+	b.Input("hidden", "on-success").Value(transaction.OnSuccess)
+	b.Input("hidden", "on-cancel").Value(transaction.OnCancel)
 
 	b.Div().Class("flex-column", "padding").Style("height:99vh", "max-height:99vh")
 	{
@@ -86,7 +86,7 @@ func GetIntent_Dislike(ctx *steranko.Context, factory *domain.Factory, user *mod
 		b.Div().Class("margin-top")
 		{
 			b.Button().Type("submit").Class("primary").InnerHTML(icons.Get("thumbs-down-fill") + " Dislike This").Close()
-			b.A(txn.OnCancel).Href(onCancel).Class("button").InnerText("Cancel")
+			b.A(transaction.OnCancel).Href(onCancel).Class("button").InnerText("Cancel")
 		}
 		b.Close()
 	}

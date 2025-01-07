@@ -4,6 +4,7 @@ import (
 	"io"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/formdata"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -23,28 +24,28 @@ func (step StepSortAttachments) Get(builder Builder, _ io.Writer) PipelineBehavi
 // Post updates the stream with approved data from the request body.
 func (step StepSortAttachments) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
-	var transaction struct {
-		Keys []string `form:"keys"`
-	}
+	const location = "build.StepSortAttachments.Post"
 
 	// Collect form POST information
-	if err := bind(builder.request(), &transaction); err != nil {
-		return Halt().WithError(derp.NewBadRequestError("build.StepSortAttachments.Post", "Error binding body"))
+	transaction, err := formdata.Parse(builder.request())
+
+	if err != nil {
+		return Halt().WithError(derp.NewBadRequestError(location, "Error binding body"))
 	}
 
 	factory := builder.factory()
 	attachmentService := factory.Attachment()
 
-	for index, id := range transaction.Keys {
+	for index, keyID := range transaction["keys"] {
 
 		var attachment model.Attachment
 		newRank := index + 1 // Adding one so that ranks don't include 0 (rank unset)
 
 		// Collect inputs to make a selection criteria
-		attachmentID, err := primitive.ObjectIDFromHex(id)
+		attachmentID, err := primitive.ObjectIDFromHex(keyID)
 
 		if err != nil {
-			return Halt().WithError(derp.Wrap(err, "build.StepSortAttachments.Post", "Invalid attachmentId", id))
+			return Halt().WithError(derp.Wrap(err, location, "Invalid attachmentId", keyID))
 		}
 
 		criteria := exp.Equal("streamId", builder.objectID()).
@@ -53,7 +54,7 @@ func (step StepSortAttachments) Post(builder Builder, _ io.Writer) PipelineBehav
 
 		// Try to load the attachment from the database
 		if err := attachmentService.Load(criteria, &attachment); err != nil {
-			return Halt().WithError(derp.Wrap(err, "build.StepSortAttachments.Post", "Error loading attachment with criteria: ", criteria))
+			return Halt().WithError(derp.Wrap(err, location, "Error loading attachment with criteria: ", criteria))
 		}
 
 		// If the rank for this attachment has not changed, then don't waste time saving it again.
@@ -65,7 +66,7 @@ func (step StepSortAttachments) Post(builder Builder, _ io.Writer) PipelineBehav
 
 		// Try to save back to the database
 		if err := attachmentService.Save(&attachment, step.Message); err != nil {
-			return Halt().WithError(derp.Wrap(err, "build.StepSortAttachments.Post", "Error saving record tot he database", attachment))
+			return Halt().WithError(derp.Wrap(err, location, "Error saving record tot he database", attachment))
 		}
 	}
 

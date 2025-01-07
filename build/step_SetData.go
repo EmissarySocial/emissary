@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"text/template"
 
+	"github.com/EmissarySocial/emissary/tools/formdata"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/compare"
 	"github.com/benpate/rosetta/mapof"
@@ -66,10 +67,10 @@ func (step StepSetData) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
 	if len(step.FromForm) > 0 {
 
-		transaction := mapof.NewAny()
-
 		// Collect form POST information
-		if err := bindBody(builder.request(), &transaction); err != nil {
+		transaction, err := formdata.Parse(builder.request())
+
+		if err != nil {
 			result := derp.Wrap(err, location, "Error binding body", derp.WithCode(http.StatusBadRequest))
 			return Halt().WithError(result)
 		}

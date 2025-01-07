@@ -15,14 +15,14 @@ require (
 	github.com/benpate/domain v0.2.4
 	github.com/benpate/exp v0.8.4
 	github.com/benpate/exp-builder v0.8.3
-	github.com/benpate/form v0.22.11
+	github.com/benpate/form v0.22.12
 	github.com/benpate/hannibal v0.11.25
 	github.com/benpate/html v0.16.11
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.13.5
 	github.com/benpate/re v0.3.1
 	github.com/benpate/remote v0.17.1
-	github.com/benpate/rosetta v0.24.2
+	github.com/benpate/rosetta v0.24.3
 	github.com/benpate/sherlock v0.8.9
 	github.com/benpate/steranko v0.20.3
 	github.com/benpate/table v0.6.21
@@ -38,7 +38,7 @@ require (
 	github.com/hairyhenderson/go-fsimpl v0.2.1
 	github.com/hjson/hjson-go/v4 v4.4.0
 	github.com/kr/jsonfeed v0.1.1
-	github.com/labstack/echo/v4 v4.12.0
+	github.com/labstack/echo/v4 v4.13.2
 	github.com/labstack/gommon v0.4.2
 	github.com/maypok86/otter v1.2.4
 	github.com/microcosm-cc/bluemonday v1.0.27
@@ -85,7 +85,6 @@ require (
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.6.1 // indirect
 	github.com/go-test/deep v1.1.1 // indirect
-	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect
 	github.com/golang/snappy v0.0.4 // indirect

@@ -5,9 +5,9 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/EmissarySocial/emissary/tools/formdata"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
-	"github.com/benpate/rosetta/mapof"
 )
 
 // StepEditModelObject is an action that can add new sub-streams to the domain.
@@ -58,19 +58,19 @@ func (step StepEditModelObject) Post(builder Builder, _ io.Writer) PipelineBehav
 
 	const location = "build.StepEditModelObject.Post"
 
-	// Get the request body
-	body := mapof.NewAny()
+	// Get the request data
+	values, err := formdata.Parse(builder.request())
 
-	if err := bind(builder.request(), &body); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error binding request body"))
+	if err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Error parsing form values"))
 	}
 
 	// Appy request body to the object (limited and validated by the form schema)
 	stepForm := form.New(builder.schema(), step.getForm(builder))
 	object := builder.object()
 
-	if err := stepForm.SetAll(object, body, builder.lookupProvider()); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error applying request body to model object", body))
+	if err := stepForm.SetURLValues(object, values, builder.lookupProvider()); err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Error applying request body to model object"))
 	}
 
 	// Success!

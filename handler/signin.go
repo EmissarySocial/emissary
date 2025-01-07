@@ -125,7 +125,7 @@ func PostResetPassword(serverFactory *server.Factory) echo.HandlerFunc {
 
 		// Try to get the POST transaction data from the request body
 		if err := ctx.Bind(&transaction); err != nil {
-			return derp.Wrap(err, location, "Error binding form data")
+			return derp.Wrap(err, location, "Error reading form data")
 		}
 
 		// Try to get the factory for this domain
@@ -241,7 +241,7 @@ func PostResetCode(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		if err := ctx.Bind(&txn); err != nil {
-			return derp.Wrap(err, "handler.PostResetCode", "Error binding form data")
+			return derp.Wrap(err, "handler.PostResetCode", "Error reading form data")
 		}
 
 		// RULE: Ensure that passwords match

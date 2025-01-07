@@ -17,19 +17,19 @@ func GetIntent_Like(ctx *steranko.Context, factory *domain.Factory, user *model.
 	const location = "handler.GetIntent_Like"
 
 	// Collect values from the QueryString
-	var txn camper.LikeIntent
-	if err := ctx.Bind(&txn); err != nil {
-		return derp.Wrap(err, location, "Error binding form to transaction")
+	var transaction camper.LikeIntent
+	if err := ctx.Bind(&transaction); err != nil {
+		return derp.Wrap(err, location, "Error reading form data")
 	}
 
 	// Default values here
-	onCancel := firstOf(txn.OnCancel, "/@me")
+	onCancel := firstOf(transaction.OnCancel, "/@me")
 
 	activityStream := factory.ActivityStream()
-	object, err := activityStream.Load(txn.Object)
+	object, err := activityStream.Load(transaction.Object)
 
 	if err != nil {
-		return derp.ReportAndReturn(derp.Wrap(err, location, "Unable to load object", ctx.Request().URL.String(), ctx.Request().URL, txn))
+		return derp.ReportAndReturn(derp.Wrap(err, location, "Unable to load object", ctx.Request().URL.String(), ctx.Request().URL, transaction))
 	}
 
 	// Buiild HTML response
@@ -47,8 +47,8 @@ func GetIntent_Like(ctx *steranko.Context, factory *domain.Factory, user *model.
 	b.Body().Style("overflow-y:hidden")
 
 	b.Form("POST", "/@me/intent/like")
-	b.Input("hidden", "on-success").Value(txn.OnSuccess)
-	b.Input("hidden", "on-cancel").Value(txn.OnCancel)
+	b.Input("hidden", "on-success").Value(transaction.OnSuccess)
+	b.Input("hidden", "on-cancel").Value(transaction.OnCancel)
 
 	b.Div().Class("flex-column", "padding").Style("height:99vh", "max-height:99vh")
 	{
@@ -86,7 +86,7 @@ func GetIntent_Like(ctx *steranko.Context, factory *domain.Factory, user *model.
 		b.Div().Class("margin-top")
 		{
 			b.Button().Type("submit").Class("primary").InnerHTML(icons.Get("thumbs-up-fill") + " Like This").Close()
-			b.A(txn.OnCancel).Href(onCancel).Class("button").InnerText("Cancel")
+			b.A(transaction.OnCancel).Href(onCancel).Class("button").InnerText("Cancel")
 		}
 	}
 	b.CloseAll()
@@ -103,13 +103,13 @@ func postIntent_Response(ctx *steranko.Context, factory *domain.Factory, user *m
 	const location = "handler.GetIntent_Response"
 
 	// Collect values from the Form post
-	var txn camper.LikeIntent
-	if err := ctx.Bind(&txn); err != nil {
-		return derp.Wrap(err, location, "Error binding form to transaction")
+	var transaction camper.LikeIntent
+	if err := ctx.Bind(&transaction); err != nil {
+		return derp.Wrap(err, location, "Error reading form data")
 	}
 
 	// Default values here
-	onSuccess := firstOf(txn.OnSuccess, "/@me")
+	onSuccess := firstOf(transaction.OnSuccess, "/@me")
 
 	// Create a new Response object
 	responseService := factory.Response()
@@ -117,12 +117,12 @@ func postIntent_Response(ctx *steranko.Context, factory *domain.Factory, user *m
 	response := model.NewResponse()
 	response.UserID = user.UserID
 	response.Actor = user.ActivityPubURL()
-	response.Object = txn.Object
+	response.Object = transaction.Object
 	response.Type = responseType
 
 	// Save the Response to the database
 	if err := responseService.Save(&response, "Created via Activity Intent"); err != nil {
-		return derp.ReportAndReturn(derp.Wrap(err, location, "Error saving response", txn))
+		return derp.ReportAndReturn(derp.Wrap(err, location, "Error saving response", transaction))
 	}
 
 	// Redirect to the "on-success" URL

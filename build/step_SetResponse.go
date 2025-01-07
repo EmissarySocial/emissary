@@ -2,19 +2,14 @@ package build
 
 import (
 	"io"
+	"net/http"
 
+	"github.com/EmissarySocial/emissary/tools/formdata"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
 )
 
 type StepSetResponse struct{}
-
-type StepSetResponseTransaction struct {
-	URL     string `json:"url"     form:"url"`     // The URL of the object being responded to
-	Type    string `json:"type"    form:"type"`    // The Response.Type (Like, Dislike, etc)
-	Content string `json:"content" form:"content"` // Addional Value (for Emoji, etc)
-	Exists  string `json:"exists"  form:"exists"`  // If TRUE, then create/update the response.  If FALSE, remove it.
-}
 
 func (step StepSetResponse) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 	return nil
@@ -24,10 +19,10 @@ func (step StepSetResponse) Post(builder Builder, _ io.Writer) PipelineBehavior 
 
 	const location = "build.StepSetResponse.Post"
 
-	transaction := StepSetResponseTransaction{}
-
 	// Receive the transaction data
-	if err := bind(builder.request(), &transaction); err != nil {
+	transaction := txnStepSetResponse{}
+
+	if err := transaction.Bind(builder.request()); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error binding transaction"))
 	}
 
@@ -58,4 +53,29 @@ func (step StepSetResponse) Post(builder Builder, _ io.Writer) PipelineBehavior 
 
 	// Carry on, carry onnnnn...
 	return Continue()
+}
+
+type txnStepSetResponse struct {
+	URL     string // The URL of the object being responded to
+	Type    string // The Response.Type (Like, Dislike, etc)
+	Content string // Addional Value (for Emoji, etc)
+	Exists  string // If TRUE, then create/update the response.  If FALSE, remove it.
+}
+
+func (txn *txnStepSetResponse) Bind(request *http.Request) error {
+
+	// Parse values from Form
+	values, err := formdata.Parse(request)
+
+	if err != nil {
+		return derp.Wrap(err, "build.txnStepSetResponse.Bind", "Error parsing form values")
+	}
+
+	// Populate data
+	txn.URL = values.Get("url")
+	txn.Type = values.Get("type")
+	txn.Content = values.Get("content")
+	txn.Exists = values.Get("exists")
+
+	return nil
 }

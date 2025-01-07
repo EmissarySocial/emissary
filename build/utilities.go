@@ -286,24 +286,6 @@ func isUserVisible(authorization *model.Authorization, user *model.User) bool {
 	return user.IsPublic
 }
 
-// bind replicates the echo.Context.Bind() function without
-// using an echo.Context
-func bind(request *http.Request, result any) error {
-	e := echo.New()
-	ctx := e.NewContext(request, nil)
-	return ctx.Bind(result)
-}
-
-// bindBody replicates the echo.Context.Bind() function without
-// requiring an external echo.Context.  This function ONLY binds the
-// request body, and ignores other parameters (e.g. path, query, and headers).
-func bindBody(request *http.Request, result any) error {
-	e := echo.New()
-	ctx := e.NewContext(request, nil)
-	binder := echo.DefaultBinder{}
-	return binder.BindBody(ctx, result)
-}
-
 // multipartForm replicates the echo.Context.MultipartForm() function without
 // using an echo.Context
 func multipartForm(request *http.Request) (*multipart.Form, error) {
@@ -315,8 +297,7 @@ func multipartForm(request *http.Request) (*multipart.Form, error) {
 	return request.MultipartForm, nil
 }
 
-// redirect replicates the echo.Context.Redirect() function without
-// using an echo.Context
+// redirect replicates the echo.Context.Redirect() function without using an echo.Context
 func redirect(response http.ResponseWriter, statusCode int, location string) error {
 	response.Header().Add("Location", location)
 	response.WriteHeader(statusCode)

@@ -17,10 +17,10 @@ func PostWebMention(serverFactory *server.Factory) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 
 		// This will receive form POST data from the webmention endpoint
-		body := struct {
+		var body struct {
 			Source string `form:"source"`
 			Target string `form:"target"`
-		}{}
+		}
 
 		// Try to collect form data into the body struct
 		if err := ctx.Bind(&body); err != nil {

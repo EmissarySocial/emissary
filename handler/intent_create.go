@@ -17,13 +17,14 @@ func GetIntent_Create(ctx *steranko.Context, factory *domain.Factory, user *mode
 	const location = "handler.GetIntent_Create"
 
 	// Collect values from the QueryString
-	var txn camper.CreateIntent
-	if err := ctx.Bind(&txn); err != nil {
-		return derp.Wrap(err, location, "Error binding form to transaction")
+	var transaction camper.CreateIntent
+
+	if err := ctx.Bind(&transaction); err != nil {
+		return derp.Wrap(err, location, "Error reading form data")
 	}
 
 	// Default values here
-	onCancel := firstOf(txn.OnCancel, "/@me")
+	onCancel := firstOf(transaction.OnCancel, "/@me")
 
 	// Buiild HTML response
 	b := html.New()
@@ -38,20 +39,20 @@ func GetIntent_Create(ctx *steranko.Context, factory *domain.Factory, user *mode
 	b.Body()
 
 	b.Form("POST", "/@me/intent/create")
-	b.Input("hidden", "inReplyTo").Value(txn.InReplyTo)
-	b.Input("hidden", "on-success").Value(txn.OnSuccess)
-	b.Input("hidden", "on-cancel").Value(txn.OnCancel)
+	b.Input("hidden", "inReplyTo").Value(transaction.InReplyTo)
+	b.Input("hidden", "on-success").Value(transaction.OnSuccess)
+	b.Input("hidden", "on-cancel").Value(transaction.OnCancel)
 
 	b.Div().Class("flex-column", "flex-align-stretch", "padding").Style("height:100vh", "max-height:100vh")
 	{
 		write_intent_header(ctx, b, user)
 
-		b.Textarea("content").Class("flex-grow-1", "margin-vertical", "width-100%").Attr("autofocus", "true").Style("height:100%").InnerHTML(txn.Content).Close()
+		b.Textarea("content").Class("flex-grow-1", "margin-vertical", "width-100%").Attr("autofocus", "true").Style("height:100%").InnerHTML(transaction.Content).Close()
 
 		b.Div().Class("flex-shrink-0")
 		{
 			b.Button().Type("submit").Class("primary").TabIndex("0").InnerText("Create New Post").Close()
-			b.A(txn.OnCancel).Href(onCancel).Class("button").TabIndex("0").InnerText("Cancel")
+			b.A(transaction.OnCancel).Href(onCancel).Class("button").TabIndex("0").InnerText("Cancel")
 		}
 	}
 	b.CloseAll()
@@ -64,13 +65,13 @@ func PostIntent_Create(ctx *steranko.Context, factory *domain.Factory, user *mod
 	const location = "handler.GetIntent_Create"
 
 	// Collect values from the Form post
-	var txn camper.CreateIntent
-	if err := ctx.Bind(&txn); err != nil {
-		return derp.Wrap(err, location, "Error binding form to transaction")
+	var transaction camper.CreateIntent
+	if err := ctx.Bind(&transaction); err != nil {
+		return derp.Wrap(err, location, "Error reading form data")
 	}
 
 	// Default values here
-	onSuccess := firstOf(txn.OnSuccess, "/@me")
+	onSuccess := firstOf(transaction.OnSuccess, "/@me")
 
 	// Create the new Stream
 	streamService := factory.Stream()
@@ -78,9 +79,9 @@ func PostIntent_Create(ctx *steranko.Context, factory *domain.Factory, user *mod
 	stream.TemplateID = firstOf(user.NoteTemplate, "outbox-message")
 	stream.ParentID = user.UserID
 	stream.ParentIDs = []primitive.ObjectID{user.UserID}
-	stream.Label = txn.Name
-	stream.Summary = txn.Summary
-	stream.Content = model.NewHTMLContent(txn.Content)
+	stream.Label = transaction.Name
+	stream.Summary = transaction.Summary
+	stream.Content = model.NewHTMLContent(transaction.Content)
 
 	// Save the new Stream to the database
 	if err := streamService.Save(&stream, "Saved via Activity Intent"); err != nil {

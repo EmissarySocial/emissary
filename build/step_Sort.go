@@ -4,6 +4,7 @@ import (
 	"io"
 
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/formdata"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -24,16 +25,15 @@ func (step StepSort) Get(builder Builder, _ io.Writer) PipelineBehavior {
 // Post updates the stream with approved data from the request body.
 func (step StepSort) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
+	const location = "build.StepSort.Post"
+
 	var modelService service.ModelService
 	var err error
 
-	var transaction struct {
-		Keys []string `form:"keys"`
-	}
-
 	// Collect form POST information
-	if err := bind(builder.request(), &transaction); err != nil {
-		return Halt().WithError(derp.NewBadRequestError("build.StepSort.Post", "Error binding body"))
+	transaction, err := formdata.Parse(builder.request())
+	if err != nil {
+		return Halt().WithError(derp.NewBadRequestError(location, "Error binding body"))
 	}
 
 	// Locate the model service to use
@@ -43,20 +43,20 @@ func (step StepSort) Post(builder Builder, _ io.Writer) PipelineBehavior {
 		modelService, err = builder.factory().Model(step.Model)
 
 		if err != nil {
-			return Halt().WithError(derp.Wrap(err, "build.StepSort.Post", "Error loading model service", step.Model))
+			return Halt().WithError(derp.Wrap(err, location, "Error loading model service", step.Model))
 		}
 	}
 
-	for index, id := range transaction.Keys {
+	for index, keyID := range transaction["keys"] {
 
 		// Adding one so that our index does not include 0 (rank not set)
 		newRank := index + 1
 
 		// Collect inputs to make a selection criteria
-		objectID, err := primitive.ObjectIDFromHex(id)
+		objectID, err := primitive.ObjectIDFromHex(keyID)
 
 		if err != nil {
-			return Halt().WithError(derp.Wrap(err, "build.StepSort.Post", "Invalid objectId", id))
+			return Halt().WithError(derp.Wrap(err, location, "Invalid objectId", keyID))
 		}
 
 		criteria := exp.Equal(step.Keys, objectID)
@@ -65,17 +65,17 @@ func (step StepSort) Post(builder Builder, _ io.Writer) PipelineBehavior {
 		object, err := modelService.ObjectLoad(criteria)
 
 		if err != nil {
-			return Halt().WithError(derp.Wrap(err, "build.StepSort.Post", "Error loading object with criteria: ", criteria))
+			return Halt().WithError(derp.Wrap(err, location, "Error loading object with criteria: ", criteria))
 		}
 
 		// Use the object schema to set the new sort rank
 		if err := modelService.Schema().Set(object, step.Values, newRank); err != nil {
-			return Halt().WithError(derp.Wrap(err, "build.StepSort.Post", "Error setting new rank", objectID, step.Values, newRank))
+			return Halt().WithError(derp.Wrap(err, location, "Error setting new rank", objectID, step.Values, newRank))
 		}
 
 		// Try to save back to the database
 		if err := modelService.ObjectSave(object, step.Message); err != nil {
-			return Halt().WithError(derp.Wrap(err, "build.StepSort.Post", "Error saving record tot he database", object))
+			return Halt().WithError(derp.Wrap(err, location, "Error saving record tot he database", object))
 		}
 	}
 

@@ -5,7 +5,6 @@ import (
 
 	"github.com/EmissarySocial/emissary/service/providers"
 	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/mapof"
 )
 
 type StepEditConnection struct{}
@@ -62,12 +61,6 @@ func (step StepEditConnection) Post(builder Builder, _ io.Writer) PipelineBehavi
 	// This step must be run in a Domain admin
 	domainBuilder := builder.(Domain)
 
-	postData := mapof.NewAny()
-
-	if err := bind(builder.request(), &postData); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error parsing POST data"))
-	}
-
 	// Collect parameters and services
 	providerID := builder.QueryParam("providerId")
 
@@ -92,8 +85,13 @@ func (step StepEditConnection) Post(builder Builder, _ io.Writer) PipelineBehavi
 	// Retrieve the custom form for this Manual Provider
 	form := manualProvider.ManualConfig()
 
+	// Parse the data in the Form post
+	if err := builder.request().ParseForm(); err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Error parsing form body"))
+	}
+
 	// Apply the form data to the domain object
-	if err := form.SetAll(&connection, postData, nil); err != nil {
+	if err := form.SetURLValues(&connection, builder.request().Form, nil); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error updating domain object form"))
 	}
 

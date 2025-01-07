@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/formdata"
 	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/mapof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -19,10 +19,12 @@ func (step StepSortWidgets) Get(builder Builder, buffer io.Writer) PipelineBehav
 
 func (step StepSortWidgets) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
+	const location = "build.StepSortWidgets.Post"
+
 	streamBuilder, ok := builder.(*Stream)
 
 	if !ok {
-		return Halt().WithError(derp.NewInternalError("build.StepSortWidgets.Post", "edit-widgets can only be used on Stream transaction"))
+		return Halt().WithError(derp.NewInternalError(location, "edit-widgets can only be used on Stream transaction"))
 	}
 
 	// Collect required services
@@ -30,10 +32,10 @@ func (step StepSortWidgets) Post(builder Builder, _ io.Writer) PipelineBehavior 
 	widgetService := factory.Widget()
 
 	// Collect transaction from form POST
-	transaction := mapof.NewString()
+	transaction, err := formdata.Parse(builder.request())
 
-	if err := bind(builder.request(), &transaction); err != nil {
-		return Halt().WithError(derp.Wrap(err, "build.StepSortWidgets.Post", "Error binding form transaction"))
+	if err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Error binding form transaction"))
 	}
 
 	// Set up some variables
@@ -42,26 +44,26 @@ func (step StepSortWidgets) Post(builder Builder, _ io.Writer) PipelineBehavior 
 	newWidgets := model.NewStreamWidgets()
 
 	// Find and organize the selected widgets
-	for _, location := range template.WidgetLocations {
+	for _, widgetLocation := range template.WidgetLocations {
 
-		widgetTypes := strings.Split(transaction.GetString(location), ",")
+		widgetTypes := strings.Split(transaction.Get(widgetLocation), ",")
 		for _, widgetType := range widgetTypes {
 			var widget model.StreamWidget
 
 			// Move existing widgets
 			if widgetID, err := primitive.ObjectIDFromHex(widgetType); err == nil {
 				if widget = stream.WidgetByID(widgetID); !widget.IsNew() {
-					widget.Location = location
+					widget.Location = widgetLocation
 					newWidgets.Append(widget)
 				}
 				continue
 			}
 
 			// Create new widgets
-			if template.IsValidWidgetLocation(location) {
+			if template.IsValidWidgetLocation(widgetLocation) {
 				if widgetDefinition, ok := widgetService.Get(widgetType); ok {
 					widget.StreamWidgetID = primitive.NewObjectID()
-					widget.Location = location
+					widget.Location = widgetLocation
 					widget.Type = widgetType
 					widget.Label = widgetDefinition.Label
 

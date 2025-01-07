@@ -8,6 +8,7 @@ import (
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/EmissarySocial/emissary/tools/dataset"
+	"github.com/EmissarySocial/emissary/tools/formdata"
 	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
@@ -59,6 +60,8 @@ func SetupOAuthGet(factory *server.Factory, templates *template.Template) echo.H
 
 func SetupOAuthPost(factory *server.Factory, templates *template.Template) echo.HandlerFunc {
 
+	const location = "handler.SetupOAuthPost"
+
 	return func(ctx echo.Context) error {
 
 		// Validate provider ID
@@ -66,14 +69,14 @@ func SetupOAuthPost(factory *server.Factory, templates *template.Template) echo.
 		providerID := ctx.Param("provider")
 
 		if _, ok := providers.Get(providerID); !ok {
-			return derp.NewInternalError("setup.oauth.get", "Unable to find provider", providerID)
+			return derp.NewInternalError(location, "Unable to find provider", providerID)
 		}
 
 		// Collect the updated connection information from the form post
-		data := mapof.NewAny()
+		data, err := formdata.Parse(ctx.Request())
 
-		if err := ctx.Bind(&data); err != nil {
-			return derp.Wrap(err, "handler.SetupOAuthPost", "Error binding form data")
+		if err != nil {
+			return derp.Wrap(err, location, "Error binding form data")
 		}
 
 		// Load the requested connection from the domain configuration.
@@ -83,8 +86,8 @@ func SetupOAuthPost(factory *server.Factory, templates *template.Template) echo.
 
 		// Apply the POST data into the connection
 		editForm := setupOAuthForm("")
-		if err := editForm.SetAll(&connection, data, nil); err != nil {
-			return derp.Wrap(err, "handler.SetupOAuthPost", "Error applying form data")
+		if err := editForm.SetURLValues(&connection, data, nil); err != nil {
+			return derp.Wrap(err, location, "Error applying form data")
 		}
 
 		// Save/Delete the connection
@@ -92,14 +95,14 @@ func SetupOAuthPost(factory *server.Factory, templates *template.Template) echo.
 
 			// Save to configuration location
 			if err := factory.PutProvider(connection); err != nil {
-				return derp.Wrap(err, "handler.SetupOAuthPost", "Error saving connection", connection)
+				return derp.Wrap(err, location, "Error saving connection", connection)
 			}
 
 		} else {
 
 			// Remove empty configurations
 			if err := factory.DeleteProvider(providerID); err != nil {
-				return derp.Wrap(err, "handler.SetupOAuthPost", "Error saving connection", providerID)
+				return derp.Wrap(err, location, "Error saving connection", providerID)
 			}
 		}
 

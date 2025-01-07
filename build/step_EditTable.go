@@ -4,10 +4,10 @@ import (
 	"io"
 	"strings"
 
+	"github.com/EmissarySocial/emissary/tools/formdata"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/convert"
-	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/table"
 )
 
@@ -52,9 +52,9 @@ func (step StepTableEditor) Post(builder Builder, _ io.Writer) PipelineBehavior 
 	object := builder.object()
 
 	// Try to get the form post data
-	body := mapof.NewAny()
+	body, err := formdata.Parse(builder.request())
 
-	if err := bindBody(builder.request(), &body); err != nil {
+	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Failed to bind body", step))
 	}
 
@@ -75,7 +75,7 @@ func (step StepTableEditor) Post(builder Builder, _ io.Writer) PipelineBehavior 
 		for _, field := range step.Form.AllElements() {
 			path := step.Path + "." + edit + "." + field.Path
 
-			if err := s.Set(object, path, body[field.Path]); err != nil {
+			if err := s.Set(object, path, body.Get(field.Path)); err != nil {
 				return Halt().WithError(derp.Wrap(err, location, "Error setting value in table", object, field.Path, path, body[field.Path]))
 			}
 		}

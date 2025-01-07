@@ -6,6 +6,7 @@ import (
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/camper"
+	"github.com/EmissarySocial/emissary/tools/formdata"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/html"
@@ -20,20 +21,20 @@ func GetIntent_Follow(ctx *steranko.Context, factory *domain.Factory, user *mode
 	const location = "handler.GetIntent_Follow"
 
 	// Collect values from the QueryString
-	var txn camper.FollowIntent
-	if err := ctx.Bind(&txn); err != nil {
-		return derp.Wrap(err, location, "Error binding form to transaction")
+	var transaction camper.FollowIntent
+	if err := ctx.Bind(&transaction); err != nil {
+		return derp.Wrap(err, location, "Error reading form data")
 	}
 
 	// Default values here
-	onCancel := firstOf(txn.OnCancel, "/@me")
+	onCancel := firstOf(transaction.OnCancel, "/@me")
 
 	// Try to load the remote Actor to be followed
 	activityService := factory.ActivityStream()
-	actor, err := activityService.Load(txn.Object, sherlock.AsActor())
+	actor, err := activityService.Load(transaction.Object, sherlock.AsActor())
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load object", txn)
+		return derp.Wrap(err, location, "Unable to load object", transaction)
 	}
 
 	// Try to load an existing "Following" record (allow "NOT FOUND" errors)
@@ -67,8 +68,8 @@ func GetIntent_Follow(ctx *steranko.Context, factory *domain.Factory, user *mode
 	b.Body()
 
 	b.Form("POST", "/@me/intent/follow")
-	b.Input("hidden", "url").Value(txn.Object)
-	b.Input("hidden", "on-success").Value(txn.OnSuccess)
+	b.Input("hidden", "url").Value(transaction.Object)
+	b.Input("hidden", "on-success").Value(transaction.OnSuccess)
 
 	b.Div().Class("padding", "flex-column").Style("height:100vh", "max-height:100vh")
 	{
@@ -99,7 +100,7 @@ func GetIntent_Follow(ctx *steranko.Context, factory *domain.Factory, user *mode
 		b.Div().Class("margin-top")
 		{
 			b.Button().Type("submit").Class("primary").TabIndex("0").InnerText("Follow " + actor.Name()).Close()
-			b.A(txn.OnCancel).Href(onCancel).Class("button").TabIndex("0").InnerText("Cancel")
+			b.A(transaction.OnCancel).Href(onCancel).Class("button").TabIndex("0").InnerText("Cancel")
 		}
 	}
 	b.CloseAll()
@@ -166,14 +167,14 @@ func PostIntent_Follow(ctx *steranko.Context, factory *domain.Factory, user *mod
 	const location = "handler.GetIntent_Follow"
 
 	// Collect values from the Form post
-	txn := mapof.NewAny()
+	transaction, err := formdata.Parse(ctx.Request())
 
-	if err := ctx.Bind(&txn); err != nil {
-		return derp.Wrap(err, location, "Error binding form to transaction")
+	if err != nil {
+		return derp.Wrap(err, location, "Error reading form data")
 	}
 
 	// Default values here
-	onSuccess := firstOf(txn.GetString("on-success"), "/@me")
+	onSuccess := firstOf(transaction.Get("on-success"), "/@me")
 
 	// Follow the new Stream
 	followingService := factory.Following()
@@ -182,7 +183,7 @@ func PostIntent_Follow(ctx *steranko.Context, factory *domain.Factory, user *mod
 
 	// Update the Following with values from the user
 	form := getForm_FollowingIntent()
-	if err := form.SetAll(&following, txn, factory.LookupProvider(user.UserID)); err != nil {
+	if err := form.SetURLValues(&following, transaction, factory.LookupProvider(user.UserID)); err != nil {
 		return derp.Wrap(err, location, "Error setting form values")
 	}
 

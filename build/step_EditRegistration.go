@@ -3,6 +3,7 @@ package build
 import (
 	"io"
 
+	"github.com/EmissarySocial/emissary/tools/formdata"
 	"github.com/EmissarySocial/emissary/tools/random"
 	"github.com/benpate/derp"
 	"github.com/benpate/html"
@@ -119,14 +120,14 @@ func (step StepEditRegistration) Post(builder Builder, _ io.Writer) PipelineBeha
 	}
 
 	// Bind to the form POST data
-	inputs := mapof.NewAny()
-	if err := bind(builder.request(), &inputs); err != nil {
+	inputs, err := formdata.Parse(builder.request())
+	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error binding form data"))
 	}
 
 	// Use the schema to set the form inputs into a new map
 	data := mapof.NewString()
-	if err := registration.Schema.SetAll(&data, inputs); err != nil {
+	if err := registration.Schema.SetURLValues(&data, inputs); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error updating domain object form"))
 	}
 
