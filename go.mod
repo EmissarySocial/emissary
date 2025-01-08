@@ -19,7 +19,7 @@ require (
 	github.com/benpate/hannibal v0.11.25
 	github.com/benpate/html v0.16.11
 	github.com/benpate/icon v0.4.0
-	github.com/benpate/mediaserver v0.13.5
+	github.com/benpate/mediaserver v0.13.6
 	github.com/benpate/re v0.3.1
 	github.com/benpate/remote v0.17.1
 	github.com/benpate/rosetta v0.24.3
