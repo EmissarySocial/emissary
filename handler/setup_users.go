@@ -42,10 +42,10 @@ func SetupDomainUserPost(serverFactory *server.Factory, templates *template.Temp
 
 		// Collect the transaction data from the request
 		var data struct {
-			DisplayName  string `json:"displayName"`
-			EmailAddress string `json:"emailAddress"`
-			Username     string `json:"username"`
-			Password     string `json:"password"`
+			DisplayName  string `form:"displayName"`
+			EmailAddress string `form:"emailAddress"`
+			Username     string `form:"username"`
+			Password     string `form:"password"`
 		}
 
 		if err := ctx.Bind(&data); err != nil {
