@@ -21,9 +21,12 @@
     .hover-trigger:hover .hover-invisible {opacity:0}
 
     .hover-underline:hover {text-decoration:underline}
+}
+
+@media (prefers-reduced-motion:no-preference) {
 
 	/******************************************
-	* Hover Show/Hide
+	* Hover Swell (only without prefers-reduced-motion)
 	******************************************/
 
 	.hover-swell{
@@ -38,4 +41,3 @@
 		transform: scale(1.05);
 	}
 }
-
