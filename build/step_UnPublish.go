@@ -21,7 +21,7 @@ func (step StepUnPublish) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
 	const location = "build.StepUnPublish.Post"
 
-	streamBuilder := builder.(*Stream)
+	streamBuilder := builder.(Stream)
 	factory := streamBuilder.factory()
 
 	// Try to UnPublish the Stream from the search index

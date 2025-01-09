@@ -23,7 +23,7 @@ func (step StepWithChildren) Post(builder Builder, buffer io.Writer) PipelineBeh
 	const location = "build.StepWithChildren.Post"
 
 	factory := builder.factory()
-	streamBuilder := builder.(*Stream)
+	streamBuilder := builder.(Stream)
 
 	children, err := factory.Stream().ListByParent(streamBuilder._stream.ParentID)
 

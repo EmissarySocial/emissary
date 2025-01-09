@@ -21,7 +21,7 @@ func (step StepSaveAndPublish) Post(builder Builder, _ io.Writer) PipelineBehavi
 
 	const location = "build.StepSaveAndPublish.Post"
 
-	streamBuilder := builder.(*Stream)
+	streamBuilder := builder.(Stream)
 	factory := streamBuilder.factory()
 
 	// Try to load the User from the Database

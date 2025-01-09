@@ -18,7 +18,7 @@ func (step StepWithDraft) Get(builder Builder, buffer io.Writer) PipelineBehavio
 	const location = "build.StepWithDraft.Get"
 
 	factory := builder.factory()
-	streamBuilder := builder.(*Stream)
+	streamBuilder := builder.(Stream)
 	draftBuilder, err := streamBuilder.draftBuilder()
 
 	if err != nil {
@@ -38,7 +38,7 @@ func (step StepWithDraft) Post(builder Builder, buffer io.Writer) PipelineBehavi
 	const location = "build.StepWithDraft.Post"
 
 	factory := builder.factory()
-	streamBuilder := builder.(*Stream)
+	streamBuilder := builder.(Stream)
 	draftBuilder, err := streamBuilder.draftBuilder()
 
 	if err != nil {

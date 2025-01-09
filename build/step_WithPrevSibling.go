@@ -30,7 +30,7 @@ func (step StepWithPrevSibling) execute(builder Builder, buffer io.Writer, actio
 	var sibling model.Stream
 
 	factory := builder.factory()
-	streamBuilder := builder.(*Stream)
+	streamBuilder := builder.(Stream)
 	stream := streamBuilder._stream
 
 	if err := factory.Stream().LoadPrevSibling(stream.ParentID, stream.Rank, &sibling); err != nil {

@@ -265,7 +265,7 @@ func (step StepAddStream) setLocation(builder Builder, template *model.Template,
 	default:
 
 		// Guarantee that the current builder is a Stream builder
-		streamBuilder, ok := builder.(*Stream)
+		streamBuilder, ok := builder.(Stream)
 
 		if !ok {
 			return derp.NewForbiddenError(location, "Cannot add child stream to non-stream builder")

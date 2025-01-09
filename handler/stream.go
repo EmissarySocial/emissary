@@ -70,10 +70,10 @@ func buildStream(serverFactory *server.Factory, actionMethod build.ActionMethod)
 		// Try to find the action requested by the user.  This also enforces user permissions...
 		actionID := getActionID(ctx)
 
-		b, err := build.NewStreamWithoutTemplate(factory, ctx.Request(), ctx.Response(), &stream, actionID)
+		streamBuilder, err := build.NewStreamWithoutTemplate(factory, ctx.Request(), ctx.Response(), &stream, actionID)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error creating Builder")
+			return derp.ReportAndReturn(derp.Wrap(err, location, "Error creating Builder."))
 		}
 
 		// Add webmention link header per:
@@ -82,7 +82,7 @@ func buildStream(serverFactory *server.Factory, actionMethod build.ActionMethod)
 			ctx.Response().Header().Set("Link", "/.webmention; rel=\"webmention\"")
 		}
 
-		if err := build.AsHTML(factory, ctx, &b, actionMethod); err != nil {
+		if err := build.AsHTML(factory, ctx, streamBuilder, actionMethod); err != nil {
 			return derp.Wrap(err, location, "Error building page")
 		}
 

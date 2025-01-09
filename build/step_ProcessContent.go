@@ -25,7 +25,7 @@ func (step StepProcessContent) Post(builder Builder, buffer io.Writer) PipelineB
 	const location = "build.StepProcessContent.Post"
 
 	// Require that we are working with a Stream object
-	streamBuilder, ok := builder.(*Stream)
+	streamBuilder, ok := builder.(Stream)
 
 	if !ok {
 		return Halt().WithError(derp.NewInternalError(location, "step: AddTags can only be used on a Stream"))

@@ -28,7 +28,7 @@ func (step StepMakeArchive) Post(builder Builder, _ io.Writer) PipelineBehavior 
 	const location = "build.StepMakeArchive.Get"
 
 	// Guarantee that we have a Stream builder
-	streamBuilder, isStreamBuilder := builder.(*Stream)
+	streamBuilder, isStreamBuilder := builder.(Stream)
 
 	if !isStreamBuilder {
 		err := derp.NewBadRequestError(location, "The `export` step can only be called on a `Stream` builder")

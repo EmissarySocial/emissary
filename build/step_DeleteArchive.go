@@ -20,7 +20,7 @@ func (step StepDeleteArchive) Get(builder Builder, buffer io.Writer) PipelineBeh
 // Post removes the object from the database (likely using a soft-delete, though)
 func (step StepDeleteArchive) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
-	streamBuilder, isStreamBuilder := builder.(*Stream)
+	streamBuilder, isStreamBuilder := builder.(Stream)
 
 	if !isStreamBuilder {
 		return Halt().WithError(derp.NewBadRequestError("build.StepGetArchive.Get", "The `export` step can only be called on a `Stream` builder"))

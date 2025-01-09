@@ -24,7 +24,7 @@ func (step StepWithParent) Post(builder Builder, buffer io.Writer) PipelineBehav
 	const location = "build.StepWithParent.Post"
 
 	factory := builder.factory()
-	streamBuilder := builder.(*Stream)
+	streamBuilder := builder.(Stream)
 
 	// If the parent is a USER object, then we have a slightly different workflow
 	if streamBuilder._stream.ParentID == streamBuilder.AttributedTo().UserID {
@@ -53,7 +53,7 @@ func (step StepWithParent) Post(builder Builder, buffer io.Writer) PipelineBehav
 	return UseResult(result)
 }
 
-func (step StepWithParent) postUser(streamBuilder *Stream, buffer io.Writer) PipelineBehavior {
+func (step StepWithParent) postUser(streamBuilder Stream, buffer io.Writer) PipelineBehavior {
 
 	const location = "build.StepWithParent.postUser"
 

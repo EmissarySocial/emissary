@@ -23,7 +23,7 @@ type StepSetSimpleSharing struct {
 
 func (step StepSetSimpleSharing) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 
-	streamBuilder := builder.(*Stream)
+	streamBuilder := builder.(Stream)
 	model := streamBuilder._stream.SimplePermissionModel()
 
 	// Try to write form HTML
@@ -89,7 +89,7 @@ func (step StepSetSimpleSharing) Post(builder Builder, _ io.Writer) PipelineBeha
 	}
 
 	// Build the stream criteria
-	streamBuilder := builder.(*Stream)
+	streamBuilder := builder.(Stream)
 	stream := streamBuilder._stream
 	stream.Permissions = model.NewStreamPermissions()
 

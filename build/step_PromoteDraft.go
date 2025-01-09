@@ -18,7 +18,7 @@ func (step StepStreamPromoteDraft) Get(builder Builder, _ io.Writer) PipelineBeh
 // Post copies relevant information from the draft into the primary stream, then deletes the draft
 func (step StepStreamPromoteDraft) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
-	streamBuilder := builder.(*Stream)
+	streamBuilder := builder.(Stream)
 
 	factory := builder.factory()
 
