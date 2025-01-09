@@ -10,7 +10,6 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/davecgh/go-spew/spew"
 )
 
 // Search defines a service that manages all searchable pages in a domain.
@@ -143,8 +142,6 @@ func (service *Search) Upsert(searchResult model.SearchResult) error {
 
 	err := service.LoadByURL(searchResult.URL, &original)
 
-	spew.Dump(err)
-
 	if err == nil {
 		original.Update(searchResult)
 	} else if derp.NotFound(err) {
@@ -154,7 +151,6 @@ func (service *Search) Upsert(searchResult model.SearchResult) error {
 	}
 
 	comment := iif(original.IsNew(), "added", "updated")
-	spew.Dump(original)
 
 	if err := service.Save(&original, comment); err != nil {
 		return derp.Wrap(err, "service.Search.Add", "Error adding Search", searchResult)
