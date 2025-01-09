@@ -9,16 +9,16 @@ import (
 func SearchTagSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"searchTagId":    schema.String{Format: "objectId"},
-			"name":           schema.String{Required: true},
-			"description":    schema.String{},
-			"colors":         schema.Array{Items: schema.String{Format: "color"}},
-			"notes":          schema.String{},
-			"related":        schema.String{},
-			"rank":           schema.Integer{},
-			"stateId":        schema.Integer{Enum: []int{SearchTagStateAllowed, SearchTagStateWaiting, SearchTagStateBlocked}},
-			"isFeatured":     schema.Boolean{},
-			"isCustomBanner": schema.Boolean{},
+			"searchTagId": schema.String{Format: "objectId"},
+			"group":       schema.String{},
+			"name":        schema.String{Required: true},
+			"stateId":     schema.Integer{Enum: []int{SearchTagStateFeatured, SearchTagStateAllowed, SearchTagStateWaiting, SearchTagStateBlocked}},
+			"related":     schema.String{},
+			"rank":        schema.Integer{},
+			"colors":      schema.Array{Items: schema.String{Format: "color"}},
+			"notes":       schema.String{},
+			"imageId":     schema.String{Format: "objectId"},
+			"imageUrl":    schema.String{Format: "url"},
 		},
 	}
 }
@@ -29,11 +29,20 @@ func (searchTag *SearchTag) GetPointer(name string) (any, bool) {
 
 	switch name {
 
+	case "group":
+		return &searchTag.Group, true
+
 	case "name":
 		return &searchTag.Name, true
 
-	case "description":
-		return &searchTag.Description, true
+	case "stateId":
+		return &searchTag.StateID, true
+
+	case "related":
+		return &searchTag.Related, true
+
+	case "rank":
+		return &searchTag.Rank, true
 
 	case "colors":
 		return &searchTag.Colors, true
@@ -41,20 +50,6 @@ func (searchTag *SearchTag) GetPointer(name string) (any, bool) {
 	case "notes":
 		return &searchTag.Notes, true
 
-	case "related":
-		return &searchTag.Related, true
-
-	case "stateId":
-		return &searchTag.StateID, true
-
-	case "isFeatured":
-		return &searchTag.IsFeatured, true
-
-	case "isCustomBanner":
-		return &searchTag.IsCustomBanner, true
-
-	case "rank":
-		return &searchTag.Rank, true
 	}
 
 	return nil, false
@@ -68,6 +63,12 @@ func (searchTag SearchTag) GetStringOK(name string) (string, bool) {
 
 	case "searchTagId":
 		return searchTag.SearchTagID.Hex(), true
+
+	case "imageId":
+		return searchTag.ImageID.Hex(), true
+
+	case "imageUrl":
+		return searchTag.ImageURL(), true
 	}
 
 	return "", false
@@ -84,6 +85,16 @@ func (searchTag *SearchTag) SetString(name string, value string) bool {
 			searchTag.SearchTagID = objectID
 			return true
 		}
+
+	case "imageId":
+		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
+			searchTag.ImageID = objectID
+			return true
+		}
+
+	// Fail silently when "setting" this virtual field
+	case "imageUrl":
+		return true
 	}
 
 	return false

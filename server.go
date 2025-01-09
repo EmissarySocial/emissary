@@ -233,6 +233,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.giphy", handler.GetGiphyWidget(factory))
 	e.GET("/.oembed", handler.WithFactory(factory, handler.GetOEmbed))
 	e.POST("/.stripe", stripe.PostWebhook(factory))
+	e.GET("/.searchTag/:searchTagId/attachments/:attachmentId", handler.WithFactory(factory, handler.GetSearchTagAttachment))
 	e.GET("/.themes/:themeId/:bundleId", handler.GetThemeBundle(factory))
 	e.GET("/.themes/:themeId/resources/:filename", handler.GetThemeResource(factory))
 	e.GET("/.templates/:templateId/:bundleId", handler.GetTemplateBundle(factory))

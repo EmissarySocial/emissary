@@ -11,6 +11,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	builder "github.com/benpate/exp-builder"
+	"github.com/benpate/form"
 	"github.com/benpate/rosetta/schema"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -155,6 +156,7 @@ func (w SearchTag) SearchTags() *QueryBuilder[model.SearchTag] {
 
 	query := builder.NewBuilder().
 		String("name", builder.WithDefaultOpBeginsWith()).
+		String("group").
 		Int("stateId")
 
 	criteria := exp.And(
@@ -166,6 +168,14 @@ func (w SearchTag) SearchTags() *QueryBuilder[model.SearchTag] {
 	result.CaseInsensitive()
 
 	return &result
+}
+
+func (w SearchTag) States() []form.LookupCode {
+	return w.lookupProvider().Group("searchTag-states").Get()
+}
+
+func (w SearchTag) Groups() []form.LookupCode {
+	return w._factory.SearchTag().ListGroups()
 }
 
 func (w SearchTag) debug() {

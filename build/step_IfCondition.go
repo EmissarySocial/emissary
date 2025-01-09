@@ -1,13 +1,13 @@
 package build
 
 import (
-	"bytes"
 	"html/template"
 	"io"
 	"strings"
 
 	"github.com/EmissarySocial/emissary/model/step"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/convert"
 )
 
 // StepIfCondition is a Step that can update the data.DataMap custom data stored in a Stream
@@ -47,12 +47,7 @@ func (step StepIfCondition) execute(builder Builder, buffer io.Writer, method Ac
 
 // evaluateCondition executes the conditional template and
 func (step StepIfCondition) evaluateCondition(builder Builder) bool {
-
-	var result bytes.Buffer
-
-	if err := step.Condition.Execute(&result, builder); err != nil {
-		return false
-	}
-
-	return (strings.TrimSpace(result.String()) == "true")
+	condition := executeTemplate(step.Condition, builder)
+	condition = strings.TrimSpace(condition)
+	return convert.Bool(condition)
 }

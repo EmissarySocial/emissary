@@ -10,6 +10,7 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // Search defines a service that manages all searchable pages in a domain.
@@ -134,26 +135,26 @@ func (service *Search) LoadByURL(url string, searchResult *model.SearchResult) e
  * Custom Methods
  ******************************************/
 
+// Upsert adds or updates a SearchResult in the database
 func (service *Search) Upsert(searchResult model.SearchResult) error {
 
 	// First, try to load the original Search
 	original := model.NewSearchResult()
 
-	if err := service.LoadByURL(searchResult.URL, &original); !derp.NilOrNotFound(err) {
-		return derp.Wrap(err, "service.Search.Upsert", "Error loading Search", searchResult)
-	} else if err == nil {
+	err := service.LoadByURL(searchResult.URL, &original)
+
+	spew.Dump(err)
+
+	if err == nil {
 		original.Update(searchResult)
-	} else {
+	} else if derp.NotFound(err) {
 		original = searchResult
+	} else {
+		return derp.Wrap(err, "service.Search.Upsert", "Error loading Search", searchResult)
 	}
 
-	// Update the original Search with the new values
-	original.Update(searchResult)
-	comment := "added"
-
-	if !original.IsNew() {
-		comment = "updated"
-	}
+	comment := iif(original.IsNew(), "added", "updated")
+	spew.Dump(original)
 
 	if err := service.Save(&original, comment); err != nil {
 		return derp.Wrap(err, "service.Search.Add", "Error adding Search", searchResult)
@@ -162,6 +163,7 @@ func (service *Search) Upsert(searchResult model.SearchResult) error {
 	return nil
 }
 
+// DeleteByURL removes a SearchResult from the database that matches the provided URL
 func (service *Search) DeleteByURL(url string) error {
 	searchResult := model.NewSearchResult()
 

@@ -22,6 +22,14 @@
 	position:sticky;
 }
 
+.pos-absolute-top {
+	-webkit-position:absolute;
+	position:absolute;
+	top:var(--rhythm);
+	left:var(--rhythm);
+	right: var(--rhythm);
+}
+
 .pos-absolute-top-left {
 	-webkit-position:absolute;
 	position:absolute;
@@ -34,6 +42,14 @@
 	position:absolute;
 	top:var(--rhythm);
 	right:var(--rhythm);
+}
+
+.pos-absolute-bottom {
+	-webkit-position:absolute;
+	position:absolute;
+	bottom:var(--rhythm);
+	left:var(--rhythm);
+	right: var(--rhythm);
 }
 
 .pos-absolute-bottom-left {

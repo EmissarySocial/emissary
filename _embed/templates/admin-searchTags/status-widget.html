@@ -1,0 +1,13 @@
+{{- $builder := index . 0 -}}
+{{- $tag := index . 1 -}}
+
+<div class="text-sm">
+	{{$stateID := string $tag.StateID}}
+	{{- range $index, $lookupCode := $builder.States -}}
+		{{- if eq $lookupCode.Value $stateID -}}
+			<button class="primary">{{$lookupCode.Label}}</button>
+		{{- else -}}
+			<button hx-post="/admin/tags/{{$tag.ID}}/edit" hx-vals="{'stateId':{{$stateID}}}">{{$lookupCode.Label}}</button>
+		{{- end -}}
+	{{- end -}}
+</div>

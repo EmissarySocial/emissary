@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/form"
 	"github.com/benpate/rosetta/schema"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -91,11 +92,6 @@ func (service *SearchTag) LoadWithOptions(criteria exp.Expression, searchTag *mo
 
 // Save adds/updates an SearchTag in the database
 func (service *SearchTag) Save(searchTag *model.SearchTag, note string) error {
-
-	// RULE: If the SearchTag IsFeatured, then also mark it as "Allowed"
-	if searchTag.IsFeatured {
-		searchTag.StateID = model.SearchTagStateAllowed
-	}
 
 	// Validate the value before saving
 	if err := service.Schema().Validate(searchTag); err != nil {
@@ -223,4 +219,28 @@ func (service *SearchTag) Upsert(name string) error {
 
 	// Otherwise, return the error to the caller. (This should never happen)
 	return derp.Wrap(err, "service.SearchTag.Upsert", "Error loading SearchTag", name)
+}
+
+// ListGroups returns a distinct list of all the groups that are used by SearchTags
+func (service *SearchTag) ListGroups() []form.LookupCode {
+
+	const location = "service.SearchTag.ListGroups"
+
+	groups, err := queries.SearchTags_Groups(service.collection)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, location, "Error reading distinct groups"))
+		return []form.LookupCode{}
+	}
+
+	result := make([]form.LookupCode, len(groups))
+
+	for index, group := range groups {
+		result[index] = form.LookupCode{
+			Value: group,
+			Label: group,
+		}
+	}
+
+	return result
 }

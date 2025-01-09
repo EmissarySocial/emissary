@@ -11,7 +11,7 @@ func AttachmentSchema() schema.Element {
 		Properties: schema.ElementMap{
 			"attachmentId": schema.String{Format: "objectId"},
 			"objectId":     schema.String{Format: "objectId"},
-			"objectType":   schema.String{Enum: []string{AttachmentObjectTypeDomain, AttachmentObjectTypeStream, AttachmentObjectTypeUser}},
+			"objectType":   schema.String{Enum: []string{AttachmentObjectTypeDomain, AttachmentObjectTypeSearchTag, AttachmentObjectTypeStream, AttachmentObjectTypeUser}},
 			"category":     schema.String{},
 			"label":        schema.String{},
 			"description":  schema.String{},

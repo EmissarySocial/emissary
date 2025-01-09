@@ -363,6 +363,10 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 			return primitive.NewObjectID().Hex()
 		},
 
+		"string": func(value any) string {
+			return convert.String(value)
+		},
+
 		"int": func(value string) int {
 			return convert.Int(value)
 		},

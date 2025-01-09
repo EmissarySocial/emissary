@@ -1,16 +1,26 @@
-{{- $tags := .SearchTags.Top60.ByName.Slice -}}
+{{- $builder := . -}}
+{{- $groupID := .QueryParam "group" -}}
+{{- $allowSort := ne "" $groupID -}}
+{{- $tags := .SearchTags.Top600.ByName.Slice -}}
 
 {{- if not $tags.IsEmpty }}
 
     {{- range $index, $tag := $tags -}}
         <tr class="clickable">
-            <td role="link" hx-get="/admin/tags/{{$tag.SearchTagID.Hex}}/edit">
-                {{icon "tag"}} {{$tag.Name}}
+			{{- if $allowSort -}}
+				<td>
+					{{icon "drag-handle"}}
+				</td>
+			{{- end -}}
+
+            <td class="width-100%" role="link" hx-get="/admin/tags/{{$tag.SearchTagID.Hex}}/edit">
+				{{- if not $allowSort -}}
+					{{icon "tag"}}
+				{{- end }}
+                {{$tag.Name}}
             </td>
-            <td role="link" hx-get="/admin/tags/{{$tag.SearchTagID.Hex}}/edit">
-                {{- $tag.StatusText -}}
-            </td>
-            <td nowrap class="text-xs width-128 text-align-right">
+            <td nowrap role="link">
+				{{$tag.StatusText}}
             </td>
         </tr>
     {{- end -}}

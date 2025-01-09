@@ -13,19 +13,21 @@ type LookupProvider struct {
 	folderService       *Folder
 	groupService        *Group
 	registrationService *Registration
+	searchTagService    *SearchTag
 	templateService     *Template
 	themeService        *Theme
 	userID              primitive.ObjectID
 }
 
-func NewLookupProvider(domainService *Domain, folderService *Folder, groupService *Group, registrationService *Registration, templateService *Template, themeService *Theme, userID primitive.ObjectID) LookupProvider {
+func NewLookupProvider(domainService *Domain, folderService *Folder, groupService *Group, registrationService *Registration, searchTagService *SearchTag, templateService *Template, themeService *Theme, userID primitive.ObjectID) LookupProvider {
 	return LookupProvider{
 		domainService:       domainService,
-		themeService:        themeService,
-		templateService:     templateService,
-		registrationService: registrationService,
-		groupService:        groupService,
 		folderService:       folderService,
+		groupService:        groupService,
+		registrationService: registrationService,
+		searchTagService:    searchTagService,
+		templateService:     templateService,
+		themeService:        themeService,
 		userID:              userID,
 	}
 }
@@ -94,10 +96,14 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 
 	case "searchTag-states":
 		return form.NewReadOnlyLookupGroup(
-			form.LookupCode{Value: "1", Label: "ALLOWED - users can search for this tag"},
-			form.LookupCode{Value: "0", Label: "WAITING - has not yet been categorized."},
-			form.LookupCode{Value: "-1", Label: "BLOCKED - users cannot search for this tag"},
+			form.LookupCode{Value: "2", Label: "Featured", Description: "Features this tag on search pages."},
+			form.LookupCode{Value: "1", Label: "Allowed", Description: "Users can search for this tag."},
+			form.LookupCode{Value: "0", Label: "Waiting", Description: "Has not yet been categorized."},
+			form.LookupCode{Value: "-1", Label: "Blocked", Description: "Users cannot see this tag at all."},
 		)
+
+	case "searchTag-groups":
+		return form.ReadOnlyLookupGroup(service.searchTagService.ListGroups())
 
 	case "sharing":
 		return form.NewReadOnlyLookupGroup(

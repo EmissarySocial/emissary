@@ -773,7 +773,16 @@ func (factory *Factory) Steranko() *steranko.Steranko {
 
 // LookupProvider returns a fully populated LookupProvider service
 func (factory *Factory) LookupProvider(userID primitive.ObjectID) form.LookupProvider {
-	return service.NewLookupProvider(factory.Domain(), factory.Folder(), factory.Group(), factory.Registration(), factory.Template(), factory.Theme(), userID)
+	return service.NewLookupProvider(
+		factory.Domain(),
+		factory.Folder(),
+		factory.Group(),
+		factory.Registration(),
+		factory.SearchTag(),
+		factory.Template(),
+		factory.Theme(),
+		userID,
+	)
 }
 
 /******************************************

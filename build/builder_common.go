@@ -537,8 +537,7 @@ func (w Common) SearchTag(name string) model.SearchTag {
 func (w Common) FeaturedSearchTags() *QueryBuilder[model.SearchTag] {
 
 	criteria := exp.And(
-		exp.Equal("stateId", model.SearchTagStateAllowed),
-		exp.Equal("isFeatured", true),
+		exp.Equal("stateId", model.SearchTagStateFeatured),
 		exp.Equal("deleteDate", 0),
 	)
 

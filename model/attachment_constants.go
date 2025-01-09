@@ -3,6 +3,9 @@ package model
 // AttachmentObjectTypeDomain represents an attachment that is owned by a Domain
 const AttachmentObjectTypeDomain = "Domain"
 
+// AttachmentObjectTypeSearchTag represents an attachment that is owned by a SearchTag
+const AttachmentObjectTypeSearchTag = "SearchTag"
+
 // AttachmentObjectTypeStream represents an attachment that is owned by a Stream
 const AttachmentObjectTypeStream = "Stream"
 
