@@ -483,3 +483,38 @@ func (stream Stream) GetWebhookData() mapof.Any {
 		"deleteDate":   stream.DeleteDate,
 	}
 }
+
+// CopyFrom sets all values in this Stream to match the values in the provided Stream
+func (stream *Stream) CopyFrom(other Stream) {
+	stream.StreamID = other.StreamID
+	stream.ParentID = other.ParentID
+	stream.ParentIDs = other.ParentIDs
+	stream.Rank = other.Rank
+	stream.RankAlt = other.RankAlt
+	stream.StartTime = other.StartTime
+	stream.EndTime = other.EndTime
+	stream.NavigationID = other.NavigationID
+	stream.TemplateID = other.TemplateID
+	stream.ParentTemplateID = other.ParentTemplateID
+	stream.StateID = other.StateID
+	stream.SocialRole = other.SocialRole
+	stream.Permissions = other.Permissions
+	stream.DefaultAllow = other.DefaultAllow
+	stream.URL = other.URL
+	stream.Token = other.Token
+	stream.Label = other.Label
+	stream.Summary = other.Summary
+	stream.IconURL = other.IconURL
+	stream.Context = other.Context
+	stream.InReplyTo = other.InReplyTo
+	stream.AttributedTo = other.AttributedTo
+	stream.Content = other.Content
+	stream.Widgets = other.Widgets
+	stream.Tags = other.Tags
+	stream.Data = other.Data
+	stream.Syndication = other.Syndication
+	stream.PublishDate = other.PublishDate
+	stream.UnPublishDate = other.UnPublishDate
+	stream.IsFeatured = other.IsFeatured
+	stream.Journal = other.Journal
+}

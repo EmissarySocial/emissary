@@ -124,7 +124,7 @@ func (w Stream) Render() (template.HTML, error) {
 	var buffer bytes.Buffer
 
 	// Execute step (write HTML to buffer, update context)
-	status := Pipeline(w._action.Steps).Get(w._factory, &w, &buffer)
+	status := Pipeline(w._action.Steps).Get(w._factory, w, &buffer)
 
 	if status.Error != nil {
 		err := derp.Wrap(status.Error, "build.Stream.Render", "Error generating HTML")
@@ -853,18 +853,11 @@ func (w Stream) draftBuilder() (Stream, error) {
 		return Stream{}, derp.Wrap(err, "build.Stream.draftBuilder", "Error loading draft")
 	}
 
-	// Create the underlying Common builder
-	common, err := NewCommonWithTemplate(w._factory, w._request, w._response, w._template, w._actionID)
-
-	if err != nil {
-		return Stream{}, derp.Wrap(err, "build.Stream.draftBuilder", "Error creating common builder")
-	}
-
 	// Make a duplicate of this builder.  Same object, template, action settings
 	return Stream{
 		_stream:            &draft,
 		_service:           draftService,
-		CommonWithTemplate: common,
+		CommonWithTemplate: w.CommonWithTemplate,
 	}, nil
 }
 

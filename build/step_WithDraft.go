@@ -18,7 +18,12 @@ func (step StepWithDraft) Get(builder Builder, buffer io.Writer) PipelineBehavio
 	const location = "build.StepWithDraft.Get"
 
 	factory := builder.factory()
-	streamBuilder := builder.(Stream)
+	streamBuilder, isStreamBuilder := builder.(Stream)
+
+	if !isStreamBuilder {
+		return Halt().WithError(derp.NewInternalError(location, "This step can only be used in a Stream builder"))
+	}
+
 	draftBuilder, err := streamBuilder.draftBuilder()
 
 	if err != nil {
@@ -26,7 +31,7 @@ func (step StepWithDraft) Get(builder Builder, buffer io.Writer) PipelineBehavio
 	}
 
 	// Execute the POST build pipeline on the parent
-	status := Pipeline(step.SubSteps).Get(factory, &draftBuilder, buffer)
+	status := Pipeline(step.SubSteps).Get(factory, draftBuilder, buffer)
 	status.Error = derp.Wrap(status.Error, location, "Error executing steps on draft")
 
 	return UseResult(status)

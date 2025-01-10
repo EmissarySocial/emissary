@@ -31,7 +31,7 @@ func (step StepStreamPromoteDraft) Post(builder Builder, _ io.Writer) PipelineBe
 
 	// Push the newly updated stream back to the builder so that subsequent
 	// steps (e.g. publish) can use the correct data.
-	streamBuilder._stream = &stream
+	streamBuilder._stream.CopyFrom(stream)
 
 	return nil
 }
