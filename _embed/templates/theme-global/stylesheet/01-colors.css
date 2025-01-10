@@ -74,7 +74,7 @@
 	--link-color-hover:var(--blue50);
 	--grid-highlight-background:var(--blue20);
 
-	--border-radius: 7px;
+	--border-radius: var(--rhythm);
 }
 
 .light-mode-hide,

@@ -35,7 +35,7 @@
 #menu-bar button {
 	display: inline-block;
 	padding: 8px 12px;
-	border-radius: 4px;
+	border-radius: calc(var(--rhythm) /2);
 	color: var(--gray90);
 	background-color:inherit;
 	margin:0px;
@@ -93,7 +93,7 @@
 #menu-bar-sub a {
 	color:var(--gray90);
 	font-size:12px;
-	border-radius:8px;
+	border-radius:var(--rhythm);
 	padding:4px 8px;
 }
 
