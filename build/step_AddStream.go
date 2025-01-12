@@ -220,7 +220,7 @@ func (step StepAddStream) Post(builder Builder, buffer io.Writer) PipelineBehavi
 	}
 
 	// Run the "create" action for the new stream's template, if possible
-	result := Pipeline(newBuilder.action().Steps).Post(factory, &newBuilder, buffer)
+	result := Pipeline(newBuilder.action().Steps).Post(factory, newBuilder, buffer)
 	result.Error = derp.Wrap(result.Error, location, "Unable to execute 'create' action on stream")
 
 	// For "inline" styles, use the result from the child's "create" action
