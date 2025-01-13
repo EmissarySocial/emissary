@@ -24,7 +24,6 @@ import (
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
-	"github.com/benpate/sherlock"
 	"github.com/benpate/turbine/queue"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -33,6 +32,7 @@ import (
 type Stream struct {
 	collection          data.Collection
 	domainService       *Domain
+	searchTagService    *SearchTag
 	templateService     *Template
 	draftService        *StreamDraft
 	outboxService       *Outbox
@@ -60,9 +60,10 @@ func NewStream() Stream {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Stream) Refresh(collection data.Collection, domainService *Domain, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, activityStream *ActivityStream, contentService *Content, keyService *EncryptionKey, followerService *Follower, ruleService *Rule, userService *User, webhookService *Webhook, mediaserver mediaserver.MediaServer, queue *queue.Queue, host string, streamUpdateChannel chan primitive.ObjectID) {
+func (service *Stream) Refresh(collection data.Collection, domainService *Domain, searchTagService *SearchTag, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, activityStream *ActivityStream, contentService *Content, keyService *EncryptionKey, followerService *Follower, ruleService *Rule, userService *User, webhookService *Webhook, mediaserver mediaserver.MediaServer, queue *queue.Queue, host string, streamUpdateChannel chan primitive.ObjectID) {
 	service.collection = collection
 	service.domainService = domainService
+	service.searchTagService = searchTagService
 	service.templateService = templateService
 	service.draftService = draftService
 	service.outboxService = outboxService
@@ -913,52 +914,42 @@ func (service *Stream) CalcContext(stream *model.Stream) {
 	stream.Context = stream.InReplyTo
 }
 
-func (service *Stream) CalculateTags(stream *model.Stream, paths ...string) {
+func (service *Stream) CalculateTags(stream *model.Stream) {
 
+	const location = "service.Stream.CalculateTags"
+
+	// Load the template (to get the tag paths)
+	template, err := service.templateService.Load(stream.TemplateID)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to load Template", stream.TemplateID))
+		return
+	}
+
+	// Get values for each tag path in the Stream
 	schema := service.Schema()
-	stream.Tags = make(sliceof.Object[model.Tag], 0)
+	hashtags := sliceof.NewString()
 
-	baseURL := service.host + "/tags/"
+	for _, path := range template.TagPaths {
 
-	for _, path := range paths {
+		if value, err := schema.Get(stream, path); err == nil {
 
-		value, err := schema.Get(stream, path)
-
-		if err != nil {
-			continue // Fail silently because "probably" this value just hasn't been set.
-		}
-
-		plainText := html.ToSearchText(convert.String(value))
-
-		// Add all @mentions into the Tags map
-		mentions := parse.Mentions(plainText)
-
-		for _, value := range mentions {
-
-			tag := model.NewTag()
-			tag.Type = vocab.LinkTypeMention
-			tag.Name = value
-
-			if actor, err := service.activityStream.Load(tag.Name, sherlock.AsActor()); err == nil {
-				tag.Href = actor.ID()
-			}
-
-			stream.Tags = append(stream.Tags, tag)
-		}
-
-		// Add all @mentions into the Tags map
-		hashtags := parse.Hashtags(plainText)
-
-		for _, value := range hashtags {
-
-			tag := model.NewTag()
-			tag.Type = vocab.LinkTypeHashtag
-			tag.Name = value
-			tag.Href = baseURL + value
-
-			stream.Tags = append(stream.Tags, tag)
+			// Massage the value into a cleanly searchable string
+			stringValue := convert.String(value)
+			stringValue = html.ToSearchText(stringValue)
+			hashtags = append(hashtags, parse.Hashtags(stringValue)...)
 		}
 	}
+
+	// Normalize Hashtag names by looking them up in the database
+	hashtagNames, _, err := service.searchTagService.NormalizeTags(hashtags...)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, location, "Error normalizing tags"))
+	}
+
+	// Apply the #hashtags back to the Stream
+	stream.Hashtags = hashtagNames
 }
 
 /******************************************
@@ -968,28 +959,27 @@ func (service *Stream) CalculateTags(stream *model.Stream, paths ...string) {
 // SearchResult returns a SearchResult object that represents this Stream in the search index
 func (service *Stream) SearchResult(stream *model.Stream) (model.SearchResult, bool) {
 
-	const location = "service.Stream.SearchResult"
-
 	// Try to generate the searchResult.FullText using the Template for this Stream
-	template, err := service.templateService.Load(stream.TemplateID)
+	if template, err := service.templateService.Load(stream.TemplateID); err == nil {
 
-	if err != nil {
-		return model.SearchResult{}, false
+		// If SearchOptions are not empty, then Streams using this Template are searchable
+		if len(template.SearchOptions) > 0 {
+
+			result := model.NewSearchResult()
+			result.URL = stream.URL
+			result.TagNames = stream.Hashtags
+			result.TagValues = slice.Map(stream.Hashtags, model.ToToken)
+			result.Type = firstOf(template.SearchOptions.Execute("type", stream), template.SocialRole)
+			result.Name = firstOf(template.SearchOptions.Execute("name", stream), stream.Label)
+			result.AttributedTo = firstOf(template.SearchOptions.Execute("attributedTo", stream), stream.AttributedTo.Name)
+			result.Summary = firstOf(template.SearchOptions.Execute("summary", stream), stream.Summary)
+			result.IconURL = firstOf(template.SearchOptions.Execute("iconUrl", stream), stream.IconURL)
+			result.FullText = template.SearchOptions.Execute("text", stream)
+
+			return result, true
+		}
 	}
 
-	if template.SearchTemplate == nil {
-		return model.SearchResult{}, false
-	}
-
-	result := model.NewSearchResult()
-	result.URL = stream.URL
-	result.Type = stream.SocialRole
-	result.Name = stream.Label
-	result.AttributedTo = stream.AttributedTo.Name
-	result.Summary = stream.Summary
-	result.IconURL = stream.IconURL
-	result.Tags = slice.Map(stream.Tags, model.TagAsNameOnly)
-	result.FullText = executeTemplate(template.SearchTemplate, stream)
-
-	return result, true
+	// Fall through means this Stream is not searchable
+	return model.SearchResult{}, false
 }

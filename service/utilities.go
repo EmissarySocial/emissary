@@ -245,12 +245,6 @@ func readJSON(filesystem fs.FS, filename string) ([]byte, error) {
 	return fs.ReadFile(filesystem, filename+".json")
 }
 
-// pointerTo returns a pointer to a given value.  This is just
-// some syntactic sugar for optional fields in API calls.
-func pointerTo[T any](value T) *T {
-	return &value
-}
-
 func slicesAreEqual(value1 []mapof.String, value2 []mapof.String) bool {
 	// Lengths must be identical
 	if len(value1) != len(value2) {
@@ -269,13 +263,47 @@ func slicesAreEqual(value1 []mapof.String, value2 []mapof.String) bool {
 
 // executeTemplate is some syntax sugar around the template.Execute function.
 func executeTemplate(t TemplateLike, value any) string {
-	var buffer strings.Builder
 
+	// Empty templates return empty strings
+	if t == nil {
+		return ""
+	}
+
+	// Otherwise, use a buffer to execute the template
+	var buffer strings.Builder
 	if err := t.Execute(&buffer, value); err != nil {
 		derp.Report(derp.Wrap(err, "service.executeTemplate", "Error executing template"))
 	}
 
 	return buffer.String()
+}
+
+// iif is a simple inline-if function.  You should probably never
+// do something like this.  But fuck it.
+//
+//lint:ignore U1000 Leaving this here in case we need it in the future
+func iif(condition bool, trueValue, falseValue string) string {
+	if condition {
+		return trueValue
+	}
+	return falseValue
+}
+
+// firstOf is a quickie generic helper that returns the first
+// non-zero value from a list of comparable values.
+func firstOf[T comparable](values ...T) T {
+
+	var empty T
+
+	// Try each value in the list.  If non-zero, then celebrate success.
+	for _, value := range values {
+		if value != empty {
+			return value
+		}
+	}
+
+	// Boo, hisss...
+	return empty
 }
 
 // must strips out an error from a multi-result function call.
@@ -291,13 +319,8 @@ func must[T any](value T, err error) T {
 	return value
 }
 
-// iif is a simple inline-if function.  You should probably never
-// do something like this.  But fuck it.
-//
-//lint:ignore U1000 Leaving this here in case we need it in the future
-func iif(condition bool, trueValue, falseValue string) string {
-	if condition {
-		return trueValue
-	}
-	return falseValue
+// pointerTo returns a pointer to a given value.  This is just
+// some syntactic sugar for optional fields in API calls.
+func pointerTo[T any](value T) *T {
+	return &value
 }

@@ -130,14 +130,19 @@ func (service *Content) ApplyLinks(content *model.Content) {
 	content.HTML = string(newHTML)
 }
 
-func (service *Content) ApplyTags(content *model.Content, tags []model.Tag) {
+func (service *Content) ApplyTags(content *model.Content, base string, tags []string) {
+
+	// RULE: Skip processing if content is empty
+	if content.HTML == "" {
+		return
+	}
 
 	// Last, apply tags back into the Content as links
 	for _, tag := range tags {
-		if tag.Href == "" {
+		if tag == "" {
 			continue
 		}
 
-		content.HTML = strings.ReplaceAll(content.HTML, tag.Name, `<a href="`+tag.Href+`" target="_blank">`+tag.Name+`</a>`)
+		content.HTML = strings.ReplaceAll(content.HTML, tag, `<a href="`+base+tag+`" target="_blank">`+tag+`</a>`)
 	}
 }

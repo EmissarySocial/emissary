@@ -63,8 +63,8 @@ func (service *Stream) JSONLD(stream *model.Stream) mapof.Any {
 		result[vocab.PropertyAttributedTo] = stream.AttributedTo.ProfileURL
 	}
 
-	if len(stream.Tags) > 0 {
-		result[vocab.PropertyTag] = slice.Map(stream.Tags, model.TagAsJSONLD)
+	if len(stream.Hashtags) > 0 {
+		result[vocab.PropertyTag] = slice.Map(stream.Hashtags, service.HashtagAsJSONLD)
 	}
 
 	// NOTE: According to Mastodon ActivityPub guide (https://docs.joinmastodon.org/spec/activitypub/)
@@ -130,6 +130,15 @@ func (service *Stream) JSONLD(stream *model.Stream) mapof.Any {
 	}
 
 	return result
+}
+
+// HashtagAsJSONLD returns a JSON-LD map document that represents a hashtag
+func (service *Stream) HashtagAsJSONLD(tag string) mapof.String {
+	return mapof.String{
+		vocab.PropertyType: vocab.LinkTypeHashtag,
+		vocab.PropertyName: tag,
+		vocab.PropertyHref: service.host + "/search?q=%23=" + tag,
+	}
 }
 
 func (service *Stream) ActivityPubURL(streamID primitive.ObjectID) string {

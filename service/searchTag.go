@@ -1,6 +1,8 @@
 package service
 
 import (
+	"slices"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/queries"
 	"github.com/benpate/data"
@@ -9,6 +11,9 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/slice"
+	"github.com/benpate/rosetta/sliceof"
+	"github.com/davecgh/go-spew/spew"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -92,6 +97,9 @@ func (service *SearchTag) LoadWithOptions(criteria exp.Expression, searchTag *mo
 
 // Save adds/updates an SearchTag in the database
 func (service *SearchTag) Save(searchTag *model.SearchTag, note string) error {
+
+	// Calculate the searchable value for this SearchTag
+	searchTag.Value = model.ToToken(searchTag.Name)
 
 	// Validate the value before saving
 	if err := service.Schema().Validate(searchTag); err != nil {
@@ -186,18 +194,19 @@ func (service *SearchTag) LoadByID(searchTagID primitive.ObjectID, searchTag *mo
 	return service.Load(criteria, searchTag)
 }
 
-func (service *SearchTag) LoadByName(name string, searchTag *model.SearchTag) error {
-	criteria := exp.Equal("name", name)
+func (service *SearchTag) LoadByValue(value string, searchTag *model.SearchTag) error {
+	criteria := exp.Equal("value", model.ToToken(value))
 	return service.LoadWithOptions(criteria, searchTag, option.CaseSensitive(false))
 }
 
 // Upsert verifies that a SearchTag exists in the database, and creates it if it does not.
-func (service *SearchTag) Upsert(name string) error {
+func (service *SearchTag) Upsert(tagName string) error {
 
 	searchTag := model.NewSearchTag()
+	value := model.ToToken(tagName)
 
 	// Try to find the SearchTag in the database
-	err := queries.SearchTagByName(service.collection, name, &searchTag)
+	err := service.LoadByValue(value, &searchTag)
 
 	// If it exists, then we're done
 	if err == nil {
@@ -208,17 +217,17 @@ func (service *SearchTag) Upsert(name string) error {
 	if derp.NotFound(err) {
 
 		// Set default values for the new SearchTag
-		searchTag.Name = name
+		searchTag.Name = tagName
 
-		if err := service.Save(&searchTag, "New SearchTag"); err != nil {
-			return derp.Wrap(err, "service.SearchTag.Upsert", "Error saving SearchTag", name)
+		if err := service.Save(&searchTag, "Found New SearchTag"); err != nil {
+			return derp.Wrap(err, "service.SearchTag.Upsert", "Error saving SearchTag", value)
 		}
 
 		return nil
 	}
 
 	// Otherwise, return the error to the caller. (This should never happen)
-	return derp.Wrap(err, "service.SearchTag.Upsert", "Error loading SearchTag", name)
+	return derp.Wrap(err, "service.SearchTag.Upsert", "Error loading SearchTag", value)
 }
 
 // ListGroups returns a distinct list of all the groups that are used by SearchTags
@@ -243,4 +252,72 @@ func (service *SearchTag) ListGroups() []form.LookupCode {
 	}
 
 	return result
+}
+
+// QueryByValue returns all tags in a list
+func (service *SearchTag) QueryByValue(values []string, options ...option.Option) (sliceof.Object[model.SearchTag], error) {
+	criteria := exp.In("value", values)
+	spew.Dump(criteria)
+	return service.Query(criteria, options...)
+}
+
+/******************************************
+ * Custom Actions
+ ******************************************/
+
+// NormalizeTags takes a list of tag names and verifies it against tags in the database.
+// Tags using canonical names will be returned. Blocked tags will not be included.
+// If a tag does not exist in the database, then the provided name will be used.
+func (service *SearchTag) NormalizeTags(tagNames ...string) (sliceof.String, sliceof.String, error) {
+
+	const location = "service.SearchTag.NormalizeTags"
+
+	// Sort so we can traverse both slices simultaneously.
+	slices.Sort(tagNames)
+
+	// use canonical values for all tag names
+	tagValues := slice.Map(tagNames, model.ToToken)
+
+	// Retrieve all matching tags (sorted by value)
+	dbTags, err := service.QueryByValue(tagValues, option.SortAsc("value"))
+
+	if err != nil {
+		return sliceof.NewString(), sliceof.NewString(), derp.Wrap(err, location, "Error querying existing tags")
+	}
+
+	spew.Dump(tagValues, dbTags)
+
+	// Initialize Result values
+	resultNames := make(sliceof.String, 0, len(tagNames))
+	resultValues := make(sliceof.String, 0, len(tagNames))
+
+	// Loop through tagNames AND tagValues
+	for tagIndex := range tagNames {
+
+		tagName := tagNames[tagIndex]
+		tagValue := tagValues[tagIndex]
+
+		// Search for the tagValue in the database results
+		dbTag, found := dbTags.Find(func(tag model.SearchTag) bool {
+			return tag.Value == tagValue
+		})
+
+		if found {
+
+			// Add non-blocked tags to the result
+			if dbTag.StateID != model.SearchTagStateBlocked {
+				resultNames = append(resultNames, dbTag.Name)
+				resultValues = append(resultValues, dbTag.Value)
+			}
+
+			continue
+		}
+
+		// Add new tags to the result (these will be "Waiting")
+		resultNames = append(resultNames, tagName)
+		resultValues = append(resultValues, tagValue)
+	}
+
+	// Success?!?!?
+	return resultNames, resultValues, nil
 }

@@ -7,14 +7,14 @@ import (
 
 // UserSummary is used as a lightweight, read-only summary of a user record.
 type UserSummary struct {
-	UserID        primitive.ObjectID  `bson:"_id"`
-	IconID        primitive.ObjectID  `bson:"iconId"`
-	DisplayName   string              `bson:"displayName"`
-	EmailAddress  string              `bson:"emailAddress"`
-	Username      string              `bson:"username"`
-	ProfileURL    string              `bson:"profileUrl"`
-	StatusMessage string              `bson:"statusMessage"`
-	Tags          sliceof.Object[Tag] `bson:"tags"`
+	UserID        primitive.ObjectID `bson:"_id"`
+	IconID        primitive.ObjectID `bson:"iconId"`
+	DisplayName   string             `bson:"displayName"`
+	EmailAddress  string             `bson:"emailAddress"`
+	Username      string             `bson:"username"`
+	ProfileURL    string             `bson:"profileUrl"`
+	StatusMessage string             `bson:"statusMessage"`
+	Hashtags      sliceof.String     `bson:"hashtags"`
 }
 
 func NewUserSummary() UserSummary {
@@ -26,12 +26,12 @@ func NewUserSummary() UserSummary {
 		Username:      "",
 		ProfileURL:    "",
 		StatusMessage: "",
-		Tags:          make(sliceof.Object[Tag], 0),
+		Hashtags:      sliceof.NewString(),
 	}
 }
 
 func UserSummaryFields() []string {
-	return []string{"_id", "displayName", "emailAddress", "username", "iconId", "profileUrl", "statusMessage", "tags"}
+	return []string{"_id", "displayName", "emailAddress", "username", "iconId", "profileUrl", "statusMessage", "hashtags"}
 }
 
 func (userSummary UserSummary) Fields() []string {

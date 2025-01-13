@@ -33,7 +33,7 @@ type User struct {
 	InboxTemplate   string                     `json:"inboxTemplate"   bson:"inboxTemplate"`        // Template for the user's inbox
 	OutboxTemplate  string                     `json:"outboxTemplate"  bson:"outboxTemplate"`       // Template for the user's outbox
 	NoteTemplate    string                     `json:"noteTemplate"    bson:"noteTemplate"`         // Template for generically created notes
-	Tags            sliceof.Object[Tag]        `json:"tags"            bson:"tags"`                 // Slice of tags that can be used to categorize this user.
+	Hashtags        sliceof.String             `json:"hashtags"        bson:"hashtags"`             // Slice of tags that can be used to categorize this user.
 	Links           sliceof.Object[PersonLink] `json:"links"           bson:"links"`                // Slice of links to profiles on other web services.
 	PasswordReset   PasswordReset              `json:"-"               bson:"passwordReset"`        // Most recent password reset information.
 	Data            mapof.String               `json:"data"            bson:"data"`                 // Custom profile data that can be stored with this User.

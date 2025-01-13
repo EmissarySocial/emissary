@@ -43,7 +43,7 @@ type Stream struct {
 	AttributedTo     PersonLink                   `json:"attributedTo,omitempty" bson:"attributedTo,omitempty"` // List of people who are attributed to this document
 	Content          Content                      `json:"content,omitempty"      bson:"content,omitempty"`      // Body content object for this Stream.
 	Widgets          set.Slice[StreamWidget]      `json:"widgets,omitempty"      bson:"widgets,omitempty"`      // Additional widgets to include when building this Stream.
-	Tags             sliceof.Object[Tag]          `json:"tags,omitempty"         bson:"tags,omitempty"`         // List of tags that are associated with this document
+	Hashtags         sliceof.String               `json:"hashtags,omitempty"     bson:"hashtags,omitempty"`     // List of hashtags that are associated with this document
 	Data             mapof.Any                    `json:"data,omitempty"         bson:"data,omitempty"`         // Set of data to populate into the Template.  This is validated by the JSON-Schema of the Template.
 	Syndication      delta.Slice[string]          `json:"syndication,omitempty"  bson:"syndication,omitempty"`  // List of external services that this Stream has been syndicated to.
 	PublishDate      int64                        `json:"publishDate"            bson:"publishDate"`            // Unix timestamp of the date/time when this document is/was/will be first available on the domain.
@@ -66,7 +66,7 @@ func NewStream() Stream {
 		Permissions:   NewStreamPermissions(),
 		Widgets:       NewStreamWidgets(),
 		Data:          mapof.NewAny(),
-		Tags:          sliceof.NewObject[Tag](),
+		Hashtags:      sliceof.NewString(),
 		PublishDate:   math.MaxInt64,
 		UnPublishDate: math.MaxInt64,
 		Syndication:   delta.NewSlice[string](),
@@ -510,7 +510,7 @@ func (stream *Stream) CopyFrom(other Stream) {
 	stream.AttributedTo = other.AttributedTo
 	stream.Content = other.Content
 	stream.Widgets = other.Widgets
-	stream.Tags = other.Tags
+	stream.Hashtags = other.Hashtags
 	stream.Data = other.Data
 	stream.Syndication = other.Syndication
 	stream.PublishDate = other.PublishDate

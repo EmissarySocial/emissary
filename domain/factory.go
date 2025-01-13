@@ -411,6 +411,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.Rule(),
 			factory.SearchTag(),
 			factory.Stream(),
+			factory.Template(),
 			factory.Webhook(),
 			factory.Queue(),
 			factory.ActivityStream(),

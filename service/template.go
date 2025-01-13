@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	textTemplate "text/template"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/set"
@@ -245,14 +244,6 @@ func (service *Template) Add(templateID string, filesystem fs.FS, definition []b
 	// All template schemas (except kludged registrations) also inherit from the main stream schema
 	if result.TemplateRole != "registration" {
 		result.Schema.Inherit(schema.New(model.StreamSchema()))
-	}
-
-	if result.SearchText == "" {
-		result.SearchTemplate = nil
-	} else if searchTemplate, err := textTemplate.New("").Parse(result.SearchText); err == nil {
-		result.SearchTemplate = searchTemplate
-	} else {
-		return derp.Wrap(err, location, "Error parsing Search Template", templateID)
 	}
 
 	// Load all HTML templates from the filesystem

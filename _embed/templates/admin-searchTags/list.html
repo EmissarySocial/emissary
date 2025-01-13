@@ -6,19 +6,22 @@
 {{- if not $tags.IsEmpty }}
 
     {{- range $index, $tag := $tags -}}
-        <tr class="clickable">
+        <tr class="clickable" role="link" hx-get="/admin/tags/{{$tag.SearchTagID.Hex}}/edit">
 			{{- if $allowSort -}}
 				<td>
 					{{icon "drag-handle"}}
 				</td>
 			{{- end -}}
 
-            <td class="width-100%" role="link" hx-get="/admin/tags/{{$tag.SearchTagID.Hex}}/edit">
+            <td class="width-40%">
 				{{- if not $allowSort -}}
 					{{icon "tag"}}
 				{{- end }}
                 {{$tag.Name}}
             </td>
+			<td class="width-60%">
+				{{$tag.Group}}
+			</td>
             <td nowrap role="link">
 				{{$tag.StatusText}}
             </td>

@@ -11,7 +11,10 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	builder "github.com/benpate/exp-builder"
+	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -233,8 +236,15 @@ func (w Outbox) Links() sliceof.Object[model.PersonLink] {
 	return w._user.Links
 }
 
-func (w Outbox) Tags() sliceof.Object[model.Tag] {
-	return w._user.Tags
+// Tags returns all tags (mentions, hashtags, etc) for the stream being built
+func (w Outbox) Tags() []mapof.String {
+	return slice.Map(w._user.Hashtags, func(tag string) mapof.String {
+		return mapof.String{
+			"Name": tag,
+			"Type": vocab.LinkTypeHashtag,
+			"Href": w.Host() + "/users?q=%23" + tag,
+		}
+	})
 }
 
 func (w Outbox) Data(path string) any {

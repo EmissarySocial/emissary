@@ -7,12 +7,13 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// SearchTag represents a tag that Users and Guests can use to search
-// for streams in the database.
+// SearchTag represents a tag that vistors can use to search
+// for Users and Streams in the database.
 type SearchTag struct {
 	SearchTagID primitive.ObjectID `bson:"_id"`     // SearchTagID is the unique identifier for a SearchTag.
 	Group       string             `bson:"group"`   // Group is the type of tag (GENRE, MOOD, ACTIVITY, etc.)
 	Name        string             `bson:"name"`    // Name used for this tag
+	Value       string             `bson:"value"`   // Value is the normalized version of the tag name.
 	Colors      sliceof.String     `bson:"colors"`  // Colors is a slice of one or more RGB Hex color to use for tags featured on search panels.
 	Related     string             `bson:"related"` // Related is a list of other tags that are related to this tag.
 	Notes       string             `bson:"notes"`   // Notes is a place for administrators to make notes about the tag.
@@ -53,10 +54,12 @@ func (searchTag SearchTag) StatusText() string {
 	}
 }
 
+// Fields returns a slice of field names to include in a batch search query.
 func (searchTag SearchTag) Fields() []string {
 	return []string{
 		"_id",
 		"name",
+		"group",
 		"colors",
 		"stateId",
 		"imageId",
@@ -64,10 +67,13 @@ func (searchTag SearchTag) Fields() []string {
 	}
 }
 
+// RelatedTags returns a parsed slice of tags from the "Related" tag field.
 func (searchTag SearchTag) RelatedTags() sliceof.String {
 	return parse.Hashtags(searchTag.Related)
 }
 
+// ImageURL returns the URL for the attached image (if present)
+// or an empty string.
 func (searchTag SearchTag) ImageURL() string {
 
 	if searchTag.ImageID.IsZero() {

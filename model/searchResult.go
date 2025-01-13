@@ -4,7 +4,6 @@ import (
 	"math/rand/v2"
 
 	"github.com/benpate/data/journal"
-	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -18,7 +17,8 @@ type SearchResult struct {
 	AttributedTo   string             `bson:"attributedTo"` // AttributedTo is the name (or username) of the creator of this SearchResult.
 	Summary        string             `bson:"summary"`      // Summary is a short description of the SearchResult.
 	IconURL        string             `bson:"icon"`         // IconURL is the URL of the icon for the SearchResult.
-	Tags           sliceof.String     `bson:"tags"`         // Tags is a list of tags that are associated with this SearchResult.
+	TagNames       sliceof.String     `bson:"tagNames"`     // TagNames is a human-readable list of tags that are associated with this SearchResult.
+	TagValues      sliceof.String     `bson:"tagValues"`    // TagValues is a machine-readable list of tag values that are associated with this SearchResult.
 	FullText       string             `bson:"fullText"`     // FullText is the full text of the SearchResult.
 	Rank           int64              `bson:"rank"`         // Rank is the rank of this SearchResult in the search index.
 	Shuffle        int64              `bson:"shuffle"`      // Shuffle is a random number used to shuffle the search results.
@@ -30,7 +30,8 @@ type SearchResult struct {
 func NewSearchResult() SearchResult {
 	return SearchResult{
 		SearchResultID: primitive.NewObjectID(),
-		Tags:           make(sliceof.String, 0),
+		TagNames:       make(sliceof.String, 0),
+		TagValues:      make(sliceof.String, 0),
 		Shuffle:        rand.Int64(),
 	}
 }
@@ -49,23 +50,9 @@ func (searchResult *SearchResult) Update(other SearchResult) {
 	searchResult.AttributedTo = other.AttributedTo
 	searchResult.Summary = other.Summary
 	searchResult.IconURL = other.IconURL
-	searchResult.Tags = other.Tags
+	searchResult.TagNames = other.TagNames
+	searchResult.TagValues = other.TagValues
 	searchResult.FullText = other.FullText
-}
-
-func (searchResult *SearchResult) UnmarshalMap(original map[string]any) {
-
-	value := mapof.Any(original)
-	searchResult.Type = value.GetString("type")
-	searchResult.URL = value.GetString("url")
-	searchResult.Name = value.GetString("name")
-	searchResult.AttributedTo = value.GetString("attributedTo")
-	searchResult.Summary = value.GetString("summary")
-	searchResult.IconURL = value.GetString("icon")
-	searchResult.Tags = value.GetSliceOfString("tags")
-	searchResult.Rank = value.GetInt64("rank")
-	searchResult.Shuffle = value.GetInt64("shuffle")
-	searchResult.FullText = value.GetString("fullText")
 }
 
 func (searchResult SearchResult) Fields() []string {
@@ -76,6 +63,6 @@ func (searchResult SearchResult) Fields() []string {
 		"attributedTo",
 		"summary",
 		"icon",
-		"tags",
+		"tagNames",
 	}
 }

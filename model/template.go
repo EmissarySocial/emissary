@@ -3,8 +3,8 @@ package model
 import (
 	"html/template"
 	"io/fs"
-	text "text/template"
 
+	"github.com/EmissarySocial/emissary/tools/templatemap"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
@@ -38,8 +38,8 @@ type Template struct {
 	AccessRoles        mapof.Object[Role]   `json:"accessRoles"        bson:"accessRoles"`        // Map of custom roles defined by this Template.
 	Actions            mapof.Object[Action] `json:"actions"            bson:"actions"`            // Map of actions that can be performed on streams of this Template
 	HTMLTemplate       *template.Template   `json:"-"                  bson:"-"`                  // Compiled HTML template
-	SearchText         string               `json:"searchText"         bson:"-"`                  // Text template for generating a searchResult.FullText
-	SearchTemplate     *text.Template       `json:"-"                  bson:"-"`                  // Compiled searchText template
+	TagPaths           []string             `json:"tagPaths"           bson:"tagPaths"`           // List of paths to tags that are used in this template
+	SearchOptions      templatemap.Map      `json:"search"             bson:"search"`             // Compiled templates that override default search result values
 	Bundles            mapof.Object[Bundle] `json:"bundles"            bson:"bundles"`            // Additional resources (JS, HS, CSS) reqired tp remder this Template.
 	Resources          fs.FS                `json:"-"                  bson:"-"`                  // File system containing the template resources
 	Datasets           DatasetMap           `json:"datasets"           bson:"-"`                  // Lookup codes defined by this template
@@ -65,6 +65,7 @@ func NewTemplate(templateID string, funcMap template.FuncMap) Template {
 		Actions:            make(map[string]Action),
 		DefaultAction:      "view",
 		HTMLTemplate:       template.New("").Funcs(funcMap),
+		SearchOptions:      make(templatemap.Map),
 		Bundles:            make(map[string]Bundle),
 		Datasets:           make(DatasetMap),
 	}
@@ -164,27 +165,29 @@ func (template *Template) Inherit(parent *Template) {
 	}
 
 	// Inherit SearchTemplate
-	if template.SearchTemplate == nil {
-		template.SearchTemplate = parent.SearchTemplate
+	for optionID, option := range parent.SearchOptions {
+		if _, exists := template.SearchOptions[optionID]; !exists {
+			template.SearchOptions[optionID] = option
+		}
 	}
 
 	// Inherit Roles from the parent.
 	for roleID, role := range parent.AccessRoles {
-		if _, ok := template.AccessRoles[roleID]; !ok {
+		if _, exists := template.AccessRoles[roleID]; !exists {
 			template.AccessRoles[roleID] = role
 		}
 	}
 
 	// Inherit States from the parent.
 	for stateID, state := range parent.States {
-		if _, ok := template.States[stateID]; !ok {
+		if _, exists := template.States[stateID]; !exists {
 			template.States[stateID] = state
 		}
 	}
 
 	// Inherit Actions from the parent.
 	for actionID, action := range parent.Actions {
-		if _, ok := template.Actions[actionID]; !ok {
+		if _, exists := template.Actions[actionID]; !exists {
 			template.Actions[actionID] = action
 		}
 	}

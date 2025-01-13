@@ -10,6 +10,7 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/rosetta/mapof"
 )
 
 // Search defines a service that manages all searchable pages in a domain.
@@ -97,9 +98,9 @@ func (service *Search) Save(searchResult *model.SearchResult, note string) error
 		return derp.Wrap(err, "service.Search.Save", "Error saving Search", searchResult, note)
 	}
 
-	for _, tag := range searchResult.Tags {
-		if err := service.searchTagService.Upsert(tag); err != nil {
-			return derp.Wrap(err, "service.Search.Save", "Error saving SearchTag", searchResult, tag)
+	for _, tagName := range searchResult.TagNames {
+		if err := service.searchTagService.Upsert(tagName); err != nil {
+			return derp.Wrap(err, "service.Search.Save", "Error saving SearchTag", searchResult, tagName)
 		}
 	}
 
@@ -194,4 +195,28 @@ func (service *Search) Shuffle(tags ...string) error {
 	}
 
 	return nil
+}
+
+func (service *Search) UnmarshalMap(original map[string]any) model.SearchResult {
+
+	value := mapof.Any(original)
+	searchResult := model.NewSearchResult()
+	searchResult.Type = value.GetString("type")
+	searchResult.URL = value.GetString("url")
+	searchResult.Name = value.GetString("name")
+	searchResult.AttributedTo = value.GetString("attributedTo")
+	searchResult.Summary = value.GetString("summary")
+	searchResult.IconURL = value.GetString("icon")
+	searchResult.Rank = value.GetInt64("rank")
+	searchResult.Shuffle = value.GetInt64("shuffle")
+	searchResult.FullText = value.GetString("fullText")
+
+	// Special handling for tags
+	tagNames, tagValues, err := service.searchTagService.NormalizeTags(value.GetSliceOfString("tagNames")...)
+	derp.Report(derp.Wrap(err, "service.Search.UnmarshalMap", "Error normalizing tags", value))
+
+	searchResult.TagNames = tagNames
+	searchResult.TagValues = tagValues
+
+	return searchResult
 }

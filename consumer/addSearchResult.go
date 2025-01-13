@@ -17,8 +17,7 @@ func AddSearchResult(factory *domain.Factory, args mapof.Any) queue.Result {
 
 	// Insert/Update the SearchResult in the database
 	searchService := factory.Search()
-	searchResult := model.NewSearchResult()
-	searchResult.UnmarshalMap(args)
+	searchResult := searchService.UnmarshalMap(args)
 
 	if err := searchService.Upsert(searchResult); err != nil {
 		return queue.Error(derp.Wrap(err, location, "Error saving search result"))
@@ -26,7 +25,7 @@ func AddSearchResult(factory *domain.Factory, args mapof.Any) queue.Result {
 
 	// Get All Followers who match this SearchResult
 	followerService := factory.Follower()
-	followers, err := followerService.RangeByTags(searchResult.Tags...)
+	followers, err := followerService.RangeByTags(searchResult.TagValues...)
 
 	if err != nil {
 		return queue.Error(derp.Wrap(err, location, "Error loading followers"))

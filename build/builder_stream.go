@@ -15,9 +15,11 @@ import (
 	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/form"
 	"github.com/benpate/hannibal/streams"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/channel"
 	"github.com/benpate/rosetta/convert"
 	htmlconv "github.com/benpate/rosetta/html"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
@@ -262,8 +264,14 @@ func (w Stream) IconURL() string {
 }
 
 // Tags returns all tags (mentions, hashtags, etc) for the stream being built
-func (w Stream) Tags() []model.Tag {
-	return w._stream.Tags
+func (w Stream) Tags() []mapof.String {
+	return slice.Map(w._stream.Hashtags, func(tag string) mapof.String {
+		return mapof.String{
+			"Name": tag,
+			"Type": vocab.LinkTypeHashtag,
+			"Href": w.Host() + "/search?q=%23" + tag,
+		}
+	})
 }
 
 // Permalink returns a complete URL for this stream

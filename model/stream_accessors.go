@@ -32,7 +32,7 @@ func StreamSchema() schema.Element {
 			"inReplyTo":        schema.String{Format: "url"},
 			"content":          ContentSchema(),
 			"widgets":          WidgetSchema(),
-			"tags":             schema.Object{Wildcard: schema.String{}},
+			"hashtags":         schema.Array{Items: schema.String{Format: "token"}},
 			"data":             schema.Object{Wildcard: schema.Any{}},
 			"publishDate":      schema.Integer{BitSize: 64},
 			"unpublishDate":    schema.Integer{BitSize: 64},
@@ -100,8 +100,8 @@ func (stream *Stream) GetPointer(name string) (any, bool) {
 	case "data":
 		return &stream.Data, true
 
-	case "tags":
-		return &stream.Tags, true
+	case "hashtags":
+		return &stream.Hashtags, true
 
 	case "attributedTo":
 		return &stream.AttributedTo, true

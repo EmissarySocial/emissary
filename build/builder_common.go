@@ -20,6 +20,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/sherlock"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -506,29 +507,30 @@ func (w Common) Search() SearchBuilder {
 
 	tags, remainder := parse.HashtagsAndRemainder(w.QueryParam("q"))
 
-	var criteria exp.Expression
+	// Evaluate query string
+	b := builder.NewBuilder().String("name", builder.WithDefaultOperator(">"))
+	criteria := b.Evaluate(w._request.URL.Query())
 
 	if trimmed := strings.TrimSpace(remainder); trimmed != "" {
-		criteria = exp.Equal("$fullText", trimmed)
-	} else {
-		criteria = exp.All()
+		criteria = criteria.AndEqual("$fullText", trimmed)
 	}
 
 	for _, tag := range tags {
-		criteria = criteria.AndEqual("tags", tag)
+		criteria = criteria.AndEqual("tagValues", model.ToToken(tag))
 	}
 
+	spew.Dump(criteria)
 	result := NewSearchBuilder(w._factory.Search(), criteria)
 
 	return result
 }
 
-func (w Common) SearchTag(name string) model.SearchTag {
+func (w Common) SearchTag(tagName string) model.SearchTag {
 
 	result := model.NewSearchTag()
 
-	if err := w._factory.SearchTag().LoadByName(name, &result); err != nil {
-		derp.Report(derp.Wrap(err, "build.Common.SearchTag", "Error loading SearchTag", name))
+	if err := w._factory.SearchTag().LoadByValue(tagName, &result); err != nil {
+		derp.Report(derp.Wrap(err, "build.Common.SearchTag", "Error loading SearchTag", tagName))
 	}
 
 	return result
@@ -553,7 +555,7 @@ func (w Common) FeaturedSearchTags() *QueryBuilder[model.SearchTag] {
 func (w Common) AllowedSearchTags() *QueryBuilder[model.SearchTag] {
 
 	query := builder.NewBuilder().
-		String("q", builder.WithAlias("name"), builder.WithDefaultOpBeginsWith())
+		String("q", builder.WithAlias("value"), builder.WithDefaultOpContains(), builder.WithFilter(model.ToToken))
 
 	criteria := exp.And(
 		query.Evaluate(w._request.URL.Query()),

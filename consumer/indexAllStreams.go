@@ -4,6 +4,7 @@ import (
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/turbine/queue"
 )
 
@@ -22,14 +23,22 @@ func IndexAllStreams(factory *domain.Factory, args mapof.Any) queue.Result {
 
 	for stream := range streams {
 
-		searchResult, ok := streamService.SearchResult(&stream)
+		// Recompute Hashtags
+		originalHashtags := stream.Hashtags
+		streamService.CalculateTags(&stream)
 
-		if !ok {
-			continue
+		// If necessary, re-save the Stream
+		if !slice.Equal(stream.Hashtags, originalHashtags) {
+			if err := streamService.Save(&stream, "Updating Hashtags"); err != nil {
+				derp.Report(derp.Wrap(err, location, "Error saving Stream"))
+			}
 		}
 
-		if err := searchService.Upsert(searchResult); err != nil {
-			derp.Report(derp.Wrap(err, location, "Error saving SearchResult"))
+		// Create a new SearchResult from the (updated?) Stream
+		if searchResult, hasSearchResult := streamService.SearchResult(&stream); hasSearchResult {
+			if err := searchService.Upsert(searchResult); err != nil {
+				derp.Report(derp.Wrap(err, location, "Error saving SearchResult"))
+			}
 		}
 	}
 

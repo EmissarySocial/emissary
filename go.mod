@@ -14,15 +14,15 @@ require (
 	github.com/benpate/digital-dome v0.2.2
 	github.com/benpate/domain v0.2.4
 	github.com/benpate/exp v0.8.4
-	github.com/benpate/exp-builder v0.8.3
-	github.com/benpate/form v0.22.12
+	github.com/benpate/exp-builder v0.9.0
+	github.com/benpate/form v0.22.13
 	github.com/benpate/hannibal v0.11.25
 	github.com/benpate/html v0.16.11
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.13.6
 	github.com/benpate/re v0.3.1
 	github.com/benpate/remote v0.17.1
-	github.com/benpate/rosetta v0.24.3
+	github.com/benpate/rosetta v0.24.4
 	github.com/benpate/sherlock v0.8.9
 	github.com/benpate/steranko v0.20.3
 	github.com/benpate/table v0.6.21

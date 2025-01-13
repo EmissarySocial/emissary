@@ -18,7 +18,6 @@ import (
 	"github.com/benpate/digit"
 	"github.com/benpate/domain"
 	"github.com/benpate/exp"
-	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/html"
@@ -38,6 +37,7 @@ type User struct {
 	following         data.Collection
 	rules             data.Collection
 	attachmentService *Attachment
+	searchTagService  *SearchTag
 	ruleService       *Rule
 	emailService      *DomainEmail
 	keyService        *EncryptionKey
@@ -45,6 +45,7 @@ type User struct {
 	folderService     *Folder
 	followerService   *Follower
 	streamService     *Stream
+	templateService   *Template
 	webhookService    *Webhook
 	activityStream    *ActivityStream
 	queue             *queue.Queue
@@ -61,8 +62,9 @@ func NewUser() User {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *User) Refresh(userCollection data.Collection, followerCollection data.Collection, followingCollection data.Collection, ruleCollection data.Collection, attachmentService *Attachment, domainService *Domain, emailService *DomainEmail, folderService *Folder, followerService *Follower, keyService *EncryptionKey, ruleService *Rule, streamService *Stream, webhookService *Webhook, queue *queue.Queue, activityStream *ActivityStream, host string) {
+func (service *User) Refresh(userCollection data.Collection, followerCollection data.Collection, followingCollection data.Collection, ruleCollection data.Collection, attachmentService *Attachment, domainService *Domain, emailService *DomainEmail, folderService *Folder, followerService *Follower, keyService *EncryptionKey, ruleService *Rule, searchTagService *SearchTag, streamService *Stream, templateService *Template, webhookService *Webhook, queue *queue.Queue, activityStream *ActivityStream, host string) {
 	service.collection = userCollection
+	service.searchTagService = searchTagService
 	service.followers = followerCollection
 	service.following = followingCollection
 	service.rules = ruleCollection
@@ -75,6 +77,7 @@ func (service *User) Refresh(userCollection data.Collection, followerCollection 
 	service.keyService = keyService
 	service.ruleService = ruleService
 	service.streamService = streamService
+	service.templateService = templateService
 	service.webhookService = webhookService
 	service.activityStream = activityStream
 	service.queue = queue
@@ -699,35 +702,42 @@ func (service *User) LikeIntentURL() string {
 	return service.host + "/@me/intent/like?object={object}&on-success={on-success}&on-cancel={on-cancel}"
 }
 
-func (service *User) CalculateTags(user *model.User, paths ...string) {
+func (service *User) CalculateTags(user *model.User) {
 
+	const location = "service.User.CalculateTags"
+
+	// Load the Template (to get TagPaths)
+	template, err := service.templateService.Load(user.OutboxTemplate)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, location, "Error loading template", user.OutboxTemplate))
+		return
+	}
+
+	// Prepare to scan all TagPaths for #hashtags
 	schema := service.Schema()
-	baseURL := service.host + "/tags/"
-	user.Tags = make(sliceof.Object[model.Tag], 0)
+	hashtags := sliceof.NewString()
 
-	for _, path := range paths {
+	for _, path := range template.TagPaths {
 
-		value, err := schema.Get(user, path)
+		if value, err := schema.Get(user, path); err == nil {
 
-		if err != nil {
-			continue // Fail silently because "probably" this value just hasn't been set.
-		}
-
-		plainText := html.ToSearchText(convert.String(value))
-
-		// Add all #hashtags into the Tags map
-		hashtags := parse.Hashtags(plainText, parse.WithCaseSensitive())
-
-		for _, value := range hashtags {
-
-			tag := model.NewTag()
-			tag.Type = vocab.LinkTypeHashtag
-			tag.Name = value
-			tag.Href = baseURL + value
-
-			user.Tags = append(user.Tags, tag)
+			// Massage the value into a cleanly searchable string
+			stringValue := convert.String(value)
+			stringValue = html.ToSearchText(stringValue)
+			hashtags = append(hashtags, parse.Hashtags(stringValue)...)
 		}
 	}
+
+	// Look up normalized hashtag names in the database
+	hashtagNames, _, err := service.searchTagService.NormalizeTags(hashtags...)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, location, "Error normalizing tags", hashtags))
+	}
+
+	// Apply the normalized hashtag names to the user object
+	user.Hashtags = hashtagNames
 }
 
 /******************************************
@@ -748,7 +758,8 @@ func (service *User) SearchResult(user *model.User) (model.SearchResult, bool) {
 	result.Summary = user.StatusMessage
 	result.URL = user.ProfileURL
 	result.IconURL = user.ActivityPubIconURL()
-	result.Tags = slice.Map(user.Tags, model.TagAsNameOnly)
+	result.TagNames = user.Hashtags
+	result.TagValues = slice.Map(user.Hashtags, model.ToToken)
 	result.FullText = user.DisplayName + ", " + user.Username + ", " + user.Location + ", " + user.StatusMessage
 
 	return result, true
