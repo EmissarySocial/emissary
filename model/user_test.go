@@ -38,9 +38,9 @@ func TestUserSchema(t *testing.T) {
 		{"isIndexable", "true", true},
 		{"inboxTemplate", "INBOX", nil},
 		{"outboxTemplate", "OUTBOX", nil},
-		{"tags.0.name", "HEy", nil},
-		{"tags.1.name", "ThErE", nil},
-		{"tags.2.name", "bItChEs", nil},
+		{"hashtags.0", "HEy", nil},
+		{"hashtags.1", "ThErE", nil},
+		{"hashtags.2", "bItChEs", nil},
 	}
 
 	tableTest_Schema(t, &s, &user, tests)
