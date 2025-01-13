@@ -361,6 +361,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		factory.streamService.Refresh(
 			factory.collection(CollectionStream),
 			factory.Domain(),
+			factory.SearchTag(),
 			factory.Template(),
 			factory.StreamDraft(),
 			factory.Outbox(),
@@ -408,6 +409,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.Follower(),
 			factory.EncryptionKey(),
 			factory.Rule(),
+			factory.SearchTag(),
 			factory.Stream(),
 			factory.Webhook(),
 			factory.Queue(),

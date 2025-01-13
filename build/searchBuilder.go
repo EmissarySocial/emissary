@@ -112,8 +112,8 @@ func (builder SearchBuilder) Where(field string, value any) SearchBuilder {
 	return builder
 }
 
-func (builder SearchBuilder) WhereType(typeName string) SearchBuilder {
-	builder.Criteria = builder.Criteria.AndEqual("type", typeName)
+func (builder SearchBuilder) WhereType(typeNames ...string) SearchBuilder {
+	builder.Criteria = builder.Criteria.AndIn("type", typeNames)
 	return builder
 }
 
