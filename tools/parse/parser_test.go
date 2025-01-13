@@ -25,6 +25,13 @@ func TestMention_Ending(t *testing.T) {
 	require.Equal(t, "This is a tag at the ending of the ", remainder)
 }
 
+func TestHashtag_SkipMiddle(t *testing.T) {
+	testMessage := "This has no#hashtags in it."
+	tokens, remainder := HashtagsAndRemainder(testMessage)
+	require.Zero(t, len(tokens))
+	require.Equal(t, testMessage, remainder)
+}
+
 func TestMentions_Long(t *testing.T) {
 
 	testMessage := "This is a #story of a #lovely_lady who was living with #three #very #lovely_girls.\n"
@@ -53,6 +60,12 @@ func TestCombined(t *testing.T) {
 	tokens, remainder := All(testMessage, WithIncludePrefix())
 	require.Equal(t, sliceof.String{"#story", "@lovely_lady", "#three", "#very", "#lovely_girls", "#gold", "@mother", "@youngest_one", "#curls"}, tokens)
 	require.Equal(t, "This is a  of a  who was living with   .\nThey all had hair of , like their . The  in ", remainder)
+}
+
+func TestRegression(t *testing.T) {
+	testMessage := "#all, #rock, #funky, #chicken"
+	tokens := Hashtags(testMessage)
+	require.Equal(t, sliceof.String{"all", "rock", "funky", "chicken"}, tokens)
 }
 
 // Demonstrates that the "default" setting is Case Sensitivity

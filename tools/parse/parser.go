@@ -43,6 +43,7 @@ func (parser *Parser) With(options ...Option) *Parser {
 // Parse scans the provided string, and returns a list of tags that were found, and the remainder of the string
 func (parser Parser) Parse(original string) sliceof.String {
 
+	var readyForToken bool = true
 	var ingestingToken bool
 	var currentToken strings.Builder // currentToken is the tag that we're currently ingesting
 
@@ -59,10 +60,11 @@ func (parser Parser) Parse(original string) sliceof.String {
 			// If we have reached the end of a token, then collect the tag and stop ingesting
 			if isEndOfToken(r, original, index) {
 				found = parser.foundTag(currentToken.String(), found)
+				ingestingToken = false
+				readyForToken = true
 				if parser.remainder != nil {
 					parser.remainder.WriteRune(r)
 				}
-				ingestingToken = false
 				continue
 			}
 
@@ -70,9 +72,10 @@ func (parser Parser) Parse(original string) sliceof.String {
 			currentToken.WriteRune(r)
 
 		// If this rune is a prefix character, then start ingesting a new tag
-		case parser.isPrefix(r):
+		case readyForToken && parser.isPrefix(r):
 			currentToken.Reset()
 			ingestingToken = true
+			readyForToken = false
 
 			if parser.includePrefix {
 				currentToken.WriteRune(r)
@@ -83,6 +86,7 @@ func (parser Parser) Parse(original string) sliceof.String {
 			if parser.remainder != nil {
 				parser.remainder.WriteRune(r)
 			}
+			readyForToken = isWhitespace(r)
 		}
 	}
 
