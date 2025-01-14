@@ -237,7 +237,7 @@ func (w Outbox) Links() sliceof.Object[model.PersonLink] {
 }
 
 // Tags returns all tags (mentions, hashtags, etc) for the stream being built
-func (w Outbox) Tags() []mapof.String {
+func (w Outbox) Tags() sliceof.Object[mapof.String] {
 	return slice.Map(w._user.Hashtags, func(tag string) mapof.String {
 		return mapof.String{
 			"Name": tag,
