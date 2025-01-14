@@ -13,7 +13,6 @@ import (
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
-	"github.com/davecgh/go-spew/spew"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -257,7 +256,6 @@ func (service *SearchTag) ListGroups() []form.LookupCode {
 // QueryByValue returns all tags in a list
 func (service *SearchTag) QueryByValue(values []string, options ...option.Option) (sliceof.Object[model.SearchTag], error) {
 	criteria := exp.In("value", values)
-	spew.Dump(criteria)
 	return service.Query(criteria, options...)
 }
 
@@ -284,8 +282,6 @@ func (service *SearchTag) NormalizeTags(tagNames ...string) (sliceof.String, sli
 	if err != nil {
 		return sliceof.NewString(), sliceof.NewString(), derp.Wrap(err, location, "Error querying existing tags")
 	}
-
-	spew.Dump(tagValues, dbTags)
 
 	// Initialize Result values
 	resultNames := make(sliceof.String, 0, len(tagNames))

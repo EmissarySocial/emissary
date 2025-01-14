@@ -20,7 +20,6 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/sherlock"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -519,7 +518,6 @@ func (w Common) Search() SearchBuilder {
 		criteria = criteria.AndEqual("tagValues", model.ToToken(tag))
 	}
 
-	spew.Dump(criteria)
 	result := NewSearchBuilder(w._factory.Search(), criteria)
 
 	return result
