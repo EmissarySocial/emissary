@@ -155,6 +155,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "set-header":
 		return NewSetHeader(stepInfo)
 
+	case "set-password":
+		return NewSetPassword(stepInfo)
+
 	case "set-query-param":
 		return NewSetQueryParam(stepInfo)
 

@@ -131,6 +131,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.SetHeader:
 		return StepSetHeader(s)
 
+	case step.SetPassword:
+		return StepSetPassword(s)
+
 	case step.SetQueryParam:
 		return StepSetQueryParam(s)
 
