@@ -51,7 +51,7 @@ func (step StepWithDraft) Post(builder Builder, buffer io.Writer) PipelineBehavi
 	}
 
 	// Execute the POST build pipeline on the parent
-	result := Pipeline(step.SubSteps).Post(factory, &draftBuilder, buffer)
+	result := Pipeline(step.SubSteps).Post(factory, draftBuilder, buffer)
 	result.Error = derp.Wrap(result.Error, location, "Error executing steps on draft")
 
 	return UseResult(result)
