@@ -54,6 +54,10 @@ func (service Icons) Get(name string) string {
 		return service.get("calendar3-week-fill")
 	case "cancel":
 		return service.get("x-lg")
+	case "cassette":
+		return service.get("cassette")
+	case "cassette-fill":
+		return service.get("cassette-fill")
 	case "chat":
 		return service.get("chat")
 	case "chat-fill":
