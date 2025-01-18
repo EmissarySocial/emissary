@@ -30,6 +30,14 @@
 	right: var(--rhythm);
 }
 
+.pos-absolute-top-0 {
+	-webkit-position:absolute;
+	position:absolute;
+	top:0px;
+	left:0px;
+	right:0px;
+}
+
 .pos-absolute-top-left {
 	-webkit-position:absolute;
 	position:absolute;
@@ -37,11 +45,25 @@
 	left:var(--rhythm);
 }
 
+.pos-absolute-top-left-0 {
+	-webkit-position:absolute;
+	position:absolute;
+	top:0px;
+	left:0px;
+}
+
 .pos-absolute-top-right {
 	-webkit-position:absolute;
 	position:absolute;
 	top:var(--rhythm);
 	right:var(--rhythm);
+}
+
+.pos-absolute-top-right-0 {
+	-webkit-position:absolute;
+	position:absolute;
+	top:0px;
+	right:0px;
 }
 
 .pos-absolute-bottom {
@@ -52,6 +74,14 @@
 	right: var(--rhythm);
 }
 
+.pos-absolute-bottom-0 {
+	-webkit-position:absolute;
+	position:absolute;
+	bottom:0px;
+	left:0px;
+	right:0px;
+}
+
 .pos-absolute-bottom-left {
 	-webkit-position:absolute;
 	position:absolute;
@@ -59,11 +89,25 @@
 	left:var(--rhythm);
 }
 
+.pos-absolute-bottom-left-0 {
+	-webkit-position:absolute;
+	position:absolute;
+	bottom:0px;
+	left:0px;
+}
+
 .pos-absolute-bottom-right {
 	-webkit-position:absolute;
 	position:absolute;
 	bottom:var(--rhythm);
 	right:var(--rhythm);
+}
+
+.pos-absolute-bottom-right-0 {
+	-webkit-position:absolute;
+	position:absolute;
+	bottom:0px;
+	right:0px;
 }
 
 .pos-absolute-four-corners {

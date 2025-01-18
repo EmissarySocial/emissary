@@ -100,6 +100,14 @@
 	background-color:var(--gray30);
 }
 
+.circle-96 {
+    height:96px;
+    width:96px;
+    object-fit:cover;
+    border-radius:48px;
+	background-color:var(--gray30);
+}
+
 .circle-128 {
     height:128px;
     width:128px;
