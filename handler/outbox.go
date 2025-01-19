@@ -104,7 +104,7 @@ func getProfileAttachment(serverFactory *server.Factory, field string, filespec 
 		header.Set("ETag", fieldValue)
 		header.Set("Cache-Control", "public, max-age=86400") // Store in public caches for 1 day
 
-		if err := ms.Get(filespec, ctx.Response().Writer); err != nil {
+		if err := ms.Get(ctx.Response().Writer, ctx.Request(), filespec); err != nil {
 			return derp.Wrap(err, location, "Error accessing profile attachment file")
 		}
 

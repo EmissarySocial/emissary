@@ -58,7 +58,7 @@ func GetDomainAttachment(factoryManager *server.Factory) echo.HandlerFunc {
 		header.Set("ETag", "1")
 		header.Set("Cache-Control", "public, max-age=86400") // Store in public caches for 1 day
 
-		if err := ms.Get(filespec, ctx.Response().Writer); err != nil {
+		if err := ms.Get(ctx.Response().Writer, ctx.Request(), filespec); err != nil {
 			return derp.ReportAndReturn(derp.Wrap(err, location, "Error accessing attachment file"))
 		}
 
@@ -107,7 +107,7 @@ func GetSearchTagAttachment(ctx *steranko.Context, factory *domain.Factory) erro
 	header.Set("ETag", "1")
 	header.Set("Cache-Control", "public, max-age=86400") // Store in public caches for 1 day
 
-	if err := ms.Get(filespec, ctx.Response().Writer); err != nil {
+	if err := ms.Get(ctx.Response().Writer, ctx.Request(), filespec); err != nil {
 		return derp.ReportAndReturn(derp.Wrap(err, location, "Error accessing attachment file"))
 	}
 
@@ -181,7 +181,7 @@ func GetStreamAttachment(factoryManager *server.Factory) echo.HandlerFunc {
 			header.Set("Cache-Control", "private") // Store only in private caches for 1 day
 		}
 
-		if err := ms.Get(filespec, ctx.Response().Writer); err != nil {
+		if err := ms.Get(ctx.Response().Writer, ctx.Request(), filespec); err != nil {
 			return derp.ReportAndReturn(derp.Wrap(err, location, "Error accessing attachment file"))
 		}
 
@@ -238,7 +238,7 @@ func GetUserAttachment(factoryManager *server.Factory) echo.HandlerFunc {
 		header.Set("ETag", "1")
 		header.Set("Cache-Control", "public, max-age=86400") // Store in public caches for 1 day
 
-		if err := ms.Get(filespec, ctx.Response().Writer); err != nil {
+		if err := ms.Get(ctx.Response().Writer, ctx.Request(), filespec); err != nil {
 			return derp.ReportAndReturn(derp.Wrap(err, location, "Error accessing attachment file"))
 		}
 
