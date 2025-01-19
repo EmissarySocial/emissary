@@ -7,8 +7,8 @@
 	schema: {
 		type:object
 		properties: {
-			signup_url: {type:"string", format:"uri", required:true}
-			portal_url: {type:"string", format:"uri"}
+			signup_url: {type:"string", format:"url", required:true}
+			portal_url: {type:"string", format:"url"}
 			shared_secret: {type:"string", required:true}
 		}
 	}
@@ -22,7 +22,7 @@
 		]
 	}
 	actions: {
-		view: {do:"redirect-to", url:'{{.Data "signup_url"}}'}
+		view: {do:"redirect-to", url:'{{.RegistrationData "signup_url"}}'}
 		confirm: {do:"view-html"}
 	}
 }
