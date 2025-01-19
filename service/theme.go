@@ -138,8 +138,6 @@ func (service *Theme) Add(themeID string, filesystem fs.FS, definition []byte) e
 		service.setStartupContent(&theme, content)
 	}
 
-	log.Trace().Msg("Theme Service: adding theme: " + theme.ThemeID)
-
 	// Add the theme into the theme library
 	service.set(theme)
 	return nil
