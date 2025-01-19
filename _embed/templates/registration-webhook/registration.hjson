@@ -9,7 +9,7 @@
 		properties: {
 			signup_url: {type:"string", format:"url", required:true}
 			portal_url: {type:"string", format:"url"}
-			shared_secret: {type:"string", required:true}
+			secret: {type:"string", required:true}
 		}
 	}
 	form: {
@@ -18,7 +18,7 @@
 			{type:"label", description:'Copy the following configuration values from the external service'}
 			{type:"text", path:"signup_url", label:"Signup URL", description:"Address where users will sign up.", options:{placeholder:"https://external-service.com/signup"}},
 			{type:"text", path:"portal_url", label:"Portal URL", description:"Address where users can manage their subscriptions.", options:{placeholder:"https://external-service.com/manage"}},
-			{type:"text", path:"shared_secret", label:"Shared Secret", description:"A secret code that authenticates the data sent by the external service.", options:{placeholder:"AbCdEfGhIjKlMnOpQrStUvWxYz1234567890"}},
+			{type:"text", path:"secret", label:"Shared Secret", description:"A secret code that authenticates the data sent by the external service.", options:{placeholder:"AbCdEfGhIjKlMnOpQrStUvWxYz1234567890"}},
 		]
 	}
 	actions: {
