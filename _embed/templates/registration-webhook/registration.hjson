@@ -23,6 +23,8 @@
 	}
 	actions: {
 		view: {do:"redirect-to", url:'{{.RegistrationData "signup_url"}}'}
-		confirm: {do:"view-html"}
+		confirm: {steps:[
+			{do:"view-html", as-full-page:true}
+		]}
 	}
 }
