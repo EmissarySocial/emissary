@@ -99,7 +99,7 @@
 
 #menu-bar-sub a.selected {
 	background-color:var(--gray20);
-	font-weight:bold;
+	color:var(--black);
 }
 
 
