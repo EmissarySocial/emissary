@@ -5,6 +5,7 @@ import (
 	"embed"
 	"html/template"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -21,6 +22,7 @@ import (
 	"github.com/benpate/digital-dome/dome"
 	domaintools "github.com/benpate/domain"
 	"github.com/benpate/icon"
+	"github.com/benpate/mediaserver"
 	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/channel"
 	"github.com/benpate/rosetta/list"
@@ -61,6 +63,7 @@ type Factory struct {
 	attachmentCache     afero.Fs
 	exportCache         afero.Fs
 	commonDatabase      *mongo.Database
+	workingDirectory    mediaserver.WorkingDirectory
 	queue               queue.Queue
 	digitalDome         dome.Dome
 
@@ -132,6 +135,8 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 	)
 
 	factory.queue = queue.New()
+
+	factory.workingDirectory = mediaserver.NewWorkingDirectory(os.TempDir(), 4*time.Minute, 10000)
 
 	go factory.start()
 
@@ -280,6 +285,7 @@ func (factory *Factory) refreshDomain(config config.Config, domainConfig config.
 		factory.attachmentCache,
 		factory.exportCache,
 		&factory.httpCache,
+		&factory.workingDirectory,
 	)
 
 	if err != nil {

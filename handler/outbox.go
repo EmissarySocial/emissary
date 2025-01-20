@@ -97,14 +97,7 @@ func getProfileAttachment(serverFactory *server.Factory, field string, filespec 
 
 		// Retrieve the file from the mediaserver
 		ms := factory.MediaServer()
-
-		header := ctx.Response().Header()
-
-		header.Set("Mime-Type", "image/webp")
-		header.Set("ETag", fieldValue)
-		header.Set("Cache-Control", "public, max-age=86400") // Store in public caches for 1 day
-
-		if err := ms.Get(ctx.Response().Writer, ctx.Request(), filespec); err != nil {
+		if err := ms.Serve(ctx.Response().Writer, ctx.Request(), filespec); err != nil {
 			return derp.Wrap(err, location, "Error accessing profile attachment file")
 		}
 

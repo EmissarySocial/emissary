@@ -58,7 +58,6 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream, outbox bo
 	)
 
 	// Create the Activity to send to Followers
-
 	activity := mapof.Any{
 		vocab.AtContext:         vocab.ContextTypeActivityStreams,
 		vocab.PropertyID:        stream.ActivityPubURL(),

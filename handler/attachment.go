@@ -58,7 +58,7 @@ func GetDomainAttachment(factoryManager *server.Factory) echo.HandlerFunc {
 		header.Set("ETag", "1")
 		header.Set("Cache-Control", "public, max-age=86400") // Store in public caches for 1 day
 
-		if err := ms.Get(ctx.Response().Writer, ctx.Request(), filespec); err != nil {
+		if err := ms.Serve(ctx.Response().Writer, ctx.Request(), filespec); err != nil {
 			return derp.ReportAndReturn(derp.Wrap(err, location, "Error accessing attachment file"))
 		}
 
@@ -102,12 +102,7 @@ func GetSearchTagAttachment(ctx *steranko.Context, factory *domain.Factory) erro
 	ms := factory.MediaServer()
 	filespec := attachment.FileSpec(ctx.Request().URL)
 
-	header := ctx.Response().Header()
-	header.Set("Content-Type", filespec.MimeType())
-	header.Set("ETag", "1")
-	header.Set("Cache-Control", "public, max-age=86400") // Store in public caches for 1 day
-
-	if err := ms.Get(ctx.Response().Writer, ctx.Request(), filespec); err != nil {
+	if err := ms.Serve(ctx.Response().Writer, ctx.Request(), filespec); err != nil {
 		return derp.ReportAndReturn(derp.Wrap(err, location, "Error accessing attachment file"))
 	}
 
@@ -171,17 +166,12 @@ func GetStreamAttachment(factoryManager *server.Factory) echo.HandlerFunc {
 		ms := factory.MediaServer()
 		filespec := attachment.FileSpec(ctx.Request().URL)
 
-		header := ctx.Response().Header()
-		header.Set("Content-Type", filespec.MimeType())
-		header.Set("ETag", "1")
-
-		if stream.DefaultAllowAnonymous() {
-			header.Set("Cache-Control", "public, max-age=86400") // Store in public caches for 1 day
-		} else {
+		if !stream.DefaultAllowAnonymous() {
+			header := ctx.Response().Header()
 			header.Set("Cache-Control", "private") // Store only in private caches for 1 day
 		}
 
-		if err := ms.Get(ctx.Response().Writer, ctx.Request(), filespec); err != nil {
+		if err := ms.Serve(ctx.Response().Writer, ctx.Request(), filespec); err != nil {
 			return derp.ReportAndReturn(derp.Wrap(err, location, "Error accessing attachment file"))
 		}
 
@@ -233,12 +223,7 @@ func GetUserAttachment(factoryManager *server.Factory) echo.HandlerFunc {
 		ms := factory.MediaServer()
 		filespec := attachment.FileSpec(ctx.Request().URL)
 
-		header := ctx.Response().Header()
-		header.Set("Content-Type", filespec.MimeType())
-		header.Set("ETag", "1")
-		header.Set("Cache-Control", "public, max-age=86400") // Store in public caches for 1 day
-
-		if err := ms.Get(ctx.Response().Writer, ctx.Request(), filespec); err != nil {
+		if err := ms.Serve(ctx.Response().Writer, ctx.Request(), filespec); err != nil {
 			return derp.ReportAndReturn(derp.Wrap(err, location, "Error accessing attachment file"))
 		}
 

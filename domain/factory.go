@@ -44,6 +44,7 @@ type Factory struct {
 	templateService     *service.Template
 	themeService        *service.Theme
 	widgetService       *service.Widget
+	workingDirectory    *mediaserver.WorkingDirectory
 
 	// Upload Directories (from server)
 	attachmentOriginals afero.Fs
@@ -85,7 +86,7 @@ type Factory struct {
 }
 
 // NewFactory creates a new factory tied to a MongoDB database
-func NewFactory(domain config.Domain, port string, providers []config.Provider, activityCache *mongo.Collection, registrationService *service.Registration, serverEmail *service.ServerEmail, themeService *service.Theme, templateService *service.Template, widgetService *service.Widget, contentService *service.Content, providerService *service.Provider, queue *queue.Queue, attachmentOriginals afero.Fs, attachmentCache afero.Fs, exportCache afero.Fs, httpCache *httpcache.HTTPCache) (*Factory, error) {
+func NewFactory(domain config.Domain, port string, providers []config.Provider, activityCache *mongo.Collection, registrationService *service.Registration, serverEmail *service.ServerEmail, themeService *service.Theme, templateService *service.Template, widgetService *service.Widget, contentService *service.Content, providerService *service.Provider, queue *queue.Queue, attachmentOriginals afero.Fs, attachmentCache afero.Fs, exportCache afero.Fs, httpCache *httpcache.HTTPCache, workingDirectory *mediaserver.WorkingDirectory) (*Factory, error) {
 
 	log.Info().Msg("Starting domain: " + domain.Hostname)
 
@@ -99,6 +100,7 @@ func NewFactory(domain config.Domain, port string, providers []config.Provider, 
 		contentService:      contentService,
 		providerService:     providerService,
 		queue:               queue,
+		workingDirectory:    workingDirectory,
 
 		httpCache:           httpCache,
 		attachmentOriginals: attachmentOriginals,
@@ -689,7 +691,7 @@ func (factory *Factory) MediaServer() mediaserver.MediaServer {
 	// cacheFS := afero.NewCacheOnReadFs(factory.AttachmentCache(), tempFS, 10*time.Minute)
 	// return mediaserver.New(factory.AttachmentOriginals(), cacheFS)
 
-	return mediaserver.New(factory.AttachmentOriginals(), factory.AttachmentCache())
+	return mediaserver.New(factory.AttachmentOriginals(), factory.AttachmentCache(), factory.workingDirectory)
 }
 
 // AttachmentOriginals returns a reference to the Filesystem where original attachment files are stored
