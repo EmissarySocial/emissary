@@ -2,9 +2,7 @@ package domain
 
 import (
 	"context"
-	"os"
 	"strings"
-	"time"
 
 	"github.com/EmissarySocial/emissary/build"
 	"github.com/EmissarySocial/emissary/config"
@@ -687,10 +685,11 @@ func (factory *Factory) StreamUpdateChannel() chan primitive.ObjectID {
 func (factory *Factory) MediaServer() mediaserver.MediaServer {
 
 	// Wrap the remote cache in a local filesystem cache.
-	tempFS := afero.NewBasePathFs(afero.NewOsFs(), os.TempDir())
-	cacheFS := afero.NewCacheOnReadFs(factory.AttachmentCache(), tempFS, 10*time.Minute)
+	// tempFS := afero.NewBasePathFs(afero.NewOsFs(), os.TempDir())
+	// cacheFS := afero.NewCacheOnReadFs(factory.AttachmentCache(), tempFS, 10*time.Minute)
+	// return mediaserver.New(factory.AttachmentOriginals(), cacheFS)
 
-	return mediaserver.New(factory.AttachmentOriginals(), cacheFS)
+	return mediaserver.New(factory.AttachmentOriginals(), factory.AttachmentCache())
 }
 
 // AttachmentOriginals returns a reference to the Filesystem where original attachment files are stored
