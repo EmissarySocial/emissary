@@ -124,6 +124,9 @@ func buildAdmin_GetBuilder(factory *domain.Factory, ctx *steranko.Context, templ
 
 		return build.NewRule(factory, ctx.Request(), ctx.Response(), &rule, template, actionID)
 
+	case "sso":
+		return build.NewDomain(factory, ctx.Request(), ctx.Response(), template, actionID)
+
 	case "stream":
 		stream := model.NewStream()
 

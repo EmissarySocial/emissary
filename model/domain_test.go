@@ -26,6 +26,8 @@ func TestDomainSchema(t *testing.T) {
 		{"forward", "https://other.site", nil},
 		{"data.custom", "CUSTOM", nil},
 		{"data.value", "VALUE", nil},
+		{"data.sso_active", "true", nil},
+		{"data.sso_secret", "123456789-10-11-12", nil},
 		{"colorMode", "LIGHT", nil},
 		{"registrationData.custom", "CUSTOM", nil},
 		{"registrationData.value", "VALUE", nil},

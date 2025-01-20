@@ -1,0 +1,51 @@
+{
+	templateId:"admin-sso"
+	templateRole:"admin"
+	model:"domain"
+	extends: ["admin-common"]
+	containedBy:["admin"]
+	label: "Single Sign-On"
+	description: "Domain Owners only.  Site Admin"
+	schema: {type: "object", properties: {
+		data: {type:"object", properties: {
+			sso_active:  {type:"boolean"}
+			sso_secret:   {type:"string", format:"no-html"}
+		}}
+	}}
+	actions: {
+		index: {
+			steps: [
+				{do: "view-html"}
+				{do: "edit", options: ["cancel-button:hide"], form:{
+					type:layout-vertical
+					children: [
+						{type:"toggle", path:"data.sso_active", options:{"text":"Allow Single-Sign-On"}}
+						{type:"text", path:"data.sso_secret", label:"Secret Key", description:"Encryption key for signing JWT tokens."}
+					]	
+				}}
+				{do: "save"}
+				{do: "inline-save-button"}
+				{do: "reload-page"}
+			]
+		}
+		themes: {
+			steps: [{
+				do: as-modal
+				steps: [
+					{do: "view-html"}
+					{do: "set-data", from-form:["themeId"]}
+					{do: "save"}
+					{do: "reload-page"}
+				]
+			}]
+		}
+
+		signup: {
+			steps: [
+				{do: "edit-registration"}
+				{do: "save"}
+				{do: "trigger-event", event: "refreshPage"}
+			]
+		}
+	}
+}

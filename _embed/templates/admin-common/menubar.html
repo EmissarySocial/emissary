@@ -21,7 +21,7 @@
 			Search
 		</a>
 
-		<a hx-get="/admin/syndication/index" class="turboclick {{if in .Token `connections` `webhooks` `syndication`}}selected{{end}}">
+		<a hx-get="/admin/syndication/index" class="turboclick {{if in .Token `connections` `webhooks` `syndication` `sso`}}selected{{end}}">
 			External
 		</a>
 
@@ -54,7 +54,7 @@
 
 	</div>
 
-{{ else if in .Token "connections" "webhooks" "syndication" }}
+{{ else if in .Token "connections" "webhooks" "syndication" "sso" }}
 
 	<span id="menu-bar-sub">
 		<a hx-get="/admin/syndication/index" class="turboclick {{if eq .Token `syndication`}}selected{{end}}">
@@ -69,6 +69,10 @@
 			OAuth Services
 		</a>
 	
+		<a hx-get="/admin/sso/index" class="turboclick {{if eq .Token `sso`}}selected{{end}}">
+			Single Sign On
+		</a>
+
 	</span>
 
 {{ end }}

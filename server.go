@@ -269,6 +269,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/signin/reset-code", handler.GetResetCode(factory))
 	e.POST("/signin/reset-code", handler.PostResetCode(factory))
 	e.POST("/.masquerade", handler.PostMasquerade(factory), mw.Owner)
+	e.GET("/.sso", handler.WithDomain(factory, handler.GetSingleSignOn))
 
 	// Domain Pages
 	e.GET("/.domain/attachments/:attachmentId", handler.GetDomainAttachment(factory))

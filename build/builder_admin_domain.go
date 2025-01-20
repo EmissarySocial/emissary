@@ -119,7 +119,9 @@ func (w Domain) objectType() string {
 
 func (w Domain) schema() schema.Schema {
 	theme := w.Theme(w.ThemeID())
-	return theme.Schema
+	domainSchema := schema.New(model.DomainSchema())
+	domainSchema.Inherit(theme.Schema)
+	return domainSchema
 }
 
 func (w Domain) service() service.ModelService {
