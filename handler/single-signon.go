@@ -8,7 +8,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -36,10 +35,8 @@ func GetSingleSignOn(ctx *steranko.Context, factory *domain.Factory, domain *mod
 	option := jwt.WithValidMethods([]string{"HS256", "HS384", "HS512"}) // https://pkg.go.dev/github.com/golang-jwt/jwt/v5@v5.2.1#WithValidMethods
 
 	claims := jwt.MapClaims{}
-	jwtToken, err := jwt.ParseWithClaims(tokenString, &claims, keyFunc, option)
 
-	if err != nil {
-		spew.Dump(jwtToken)
+	if _, err := jwt.ParseWithClaims(tokenString, &claims, keyFunc, option); err != nil {
 		return derp.NewBadRequestError(location, "Invalid JWT token")
 	}
 
