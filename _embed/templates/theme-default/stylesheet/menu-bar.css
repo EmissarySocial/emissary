@@ -82,7 +82,7 @@
 
 #menu-bar-sub {
 	display:block;
-	background:var(--gray02);
+	background:var(--gray05);
 	border-bottom: solid 1px var(--gray20);
 	padding:4px 8px;
 	margin-top:-32px;
