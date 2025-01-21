@@ -111,7 +111,7 @@
 							}
 							options:["delete:/admin/tags/{{.SearchTagID}}/delete"]
 						},
-						{do:"upload-attachments", category:"image", fieldname:"imageUrl", attachment-path:"imageId", accept-type:"image/*",  maximum:1, rules:{width:800, height:600}}
+						{do:"upload-attachments", category:"image", fieldname:"imageUrl", attachment-path:"imageId", accept-type:"image/*",  maximum:1, rules:{width:600, height:600}}
 						{do:"save"}
 						{do:"refresh-page"}
 					]
