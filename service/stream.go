@@ -707,6 +707,11 @@ func (service *Stream) SetLocationChild(template *model.Template, stream *model.
  * Custom Actions
  ******************************************/
 
+func (service *Stream) SetAttributedTo(user *model.User) {
+	err := queries.SetAttributedTo(context.Background(), service.collection, user.PersonLink())
+	derp.Report(derp.Wrap(err, "service.Stream.SetAttributedTo", "Error setting attributedTo"))
+}
+
 func (service *Stream) DeleteByParent(parentID primitive.ObjectID, note string) error {
 	return service.DeleteMany(exp.Equal("parentId", parentID), note)
 }

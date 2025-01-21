@@ -3,8 +3,10 @@ package queries
 import (
 	"context"
 
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
+	"github.com/benpate/exp"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -37,4 +39,17 @@ func MaxRank(ctx context.Context, collection data.Collection, parentID primitive
 
 	// Otherwise, return the count returned by mongo.
 	return result[0].MaxRank + 1, nil
+}
+
+func SetAttributedTo(ctx context.Context, collection data.Collection, personLink model.PersonLink) error {
+
+	criteria := exp.Equal("attributedTo.userId", personLink.UserID)
+
+	update := bson.M{
+		"$set": bson.M{
+			"attributedTo": personLink,
+		},
+	}
+
+	return RawUpdate(ctx, collection, criteria, update)
 }

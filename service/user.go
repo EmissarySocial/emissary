@@ -208,6 +208,9 @@ func (service *User) Save(user *model.User, note string) error {
 		}
 	}
 
+	// Denormalize User information into the Streams they own.
+	go service.streamService.SetAttributedTo(user)
+
 	// Send Webhooks (if configured)
 	if isNew {
 		service.webhookService.Send(user, model.WebhookEventUserCreate)
