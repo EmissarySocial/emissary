@@ -6,7 +6,6 @@ import (
 
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
-	"github.com/davecgh/go-spew/spew"
 )
 
 // StepSave is a Step that can save changes to any object
@@ -43,8 +42,6 @@ func (step StepSave) do(builder Builder) PipelineBehavior {
 	object := builder.object()
 	comment := executeTemplate(step.Comment, builder)
 
-	spew.Dump("step-save", modelService.ObjectNew(), object)
-
 	if setter, ok := modelService.(service.AuthorSetter); ok {
 		if err := setter.SetAuthor(object, builder.AuthenticatedID()); err != nil {
 			return Halt().WithError(derp.Wrap(err, location, "Error setting author"))
@@ -55,8 +52,6 @@ func (step StepSave) do(builder Builder) PipelineBehavior {
 	if err := modelService.ObjectSave(object, comment); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error saving model object"))
 	}
-
-	spew.Dump(object)
 
 	return Continue()
 }
