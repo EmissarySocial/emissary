@@ -6,6 +6,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/formdata"
 	"github.com/benpate/derp"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // StepSetPassword is a Step that can update a user's password
@@ -35,6 +36,8 @@ func (step StepSetPassword) Post(builder Builder, _ io.Writer) PipelineBehavior 
 		return Halt().WithError(derp.Wrap(err, location, "Error parsing form data"))
 	}
 
+	spew.Dump(transaction)
+
 	// Load the User from the database
 	factory := builder.factory()
 	userService := factory.User()
@@ -47,9 +50,11 @@ func (step StepSetPassword) Post(builder Builder, _ io.Writer) PipelineBehavior 
 	// Set the password (with Steranko password hasher)
 	steranko := factory.Steranko()
 	newPassword := transaction.Get("new_password")
+
 	if err := steranko.SetPassword(&user, newPassword); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error setting password"))
 	}
+	spew.Dump(user)
 
 	// Silence is AU-some
 	return nil
