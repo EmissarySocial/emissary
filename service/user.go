@@ -747,23 +747,28 @@ func (service *User) CalculateTags(user *model.User) {
  * SearchResulter Interface
  ******************************************/
 
-func (service *User) SearchResult(user *model.User) (model.SearchResult, bool) {
-
-	if !user.IsIndexable {
-		return model.SearchResult{}, false
-	}
+func (service *User) SearchResult(user *model.User) model.SearchResult {
 
 	result := model.NewSearchResult()
 
-	result.Type = "Person"
-	result.Name = user.DisplayName
-	result.AttributedTo = "@" + user.Username
-	result.Summary = user.StatusMessage
-	result.URL = user.ProfileURL
-	result.IconURL = user.ActivityPubIconURL()
-	result.TagNames = user.Hashtags
-	result.TagValues = slice.Map(user.Hashtags, model.ToToken)
-	result.FullText = user.DisplayName + ", " + user.Username + ", " + user.Location + ", " + user.StatusMessage
+	if user.IsPublic && user.IsIndexable {
 
-	return result, true
+		result.Type = "Person"
+		result.Name = user.DisplayName
+		result.AttributedTo = "@" + user.Username
+		result.Summary = user.StatusMessage
+		result.URL = user.ProfileURL
+		result.IconURL = user.ActivityPubIconURL()
+		result.TagNames = user.Hashtags
+		result.TagValues = slice.Map(user.Hashtags, model.ToToken)
+		result.FullText = user.DisplayName + ", " + user.Username + ", " + user.Location + ", " + user.StatusMessage
+
+		return result
+	}
+
+	result.URL = user.ProfileURL
+	result.DeleteDate = time.Now().Unix()
+
+	return result
+
 }

@@ -35,10 +35,10 @@ func IndexAllStreams(factory *domain.Factory, args mapof.Any) queue.Result {
 		}
 
 		// Create a new SearchResult from the (updated?) Stream
-		if searchResult, hasSearchResult := streamService.SearchResult(&stream); hasSearchResult {
-			if err := searchService.Upsert(searchResult); err != nil {
-				derp.Report(derp.Wrap(err, location, "Error saving SearchResult"))
-			}
+		searchResult := streamService.SearchResult(&stream)
+
+		if err := searchService.Sync(searchResult); err != nil {
+			derp.Report(derp.Wrap(err, location, "Error saving SearchResult"))
 		}
 	}
 

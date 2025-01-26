@@ -22,21 +22,10 @@ func IndexAllUsers(factory *domain.Factory, args mapof.Any) queue.Result {
 
 	for user := range allUsers {
 
-		searchResult, _ := userService.SearchResult(&user)
+		searchResult := userService.SearchResult(&user)
 
-		// If user is indexable, then add/update them in the search index
-		if user.IsIndexable {
-
-			if err := searchService.Upsert(searchResult); err != nil {
-				derp.Report(derp.Wrap(err, location, "Error saving SearchResult"))
-			}
-
-			continue
-		}
-
-		// If NOT indexable, then remove them from the search index
-		if err := searchService.DeleteByURL(searchResult.URL); err != nil {
-			derp.Report(derp.Wrap(err, location, "Error deleting SearchResult"))
+		if err := searchService.Sync(searchResult); err != nil {
+			derp.Report(derp.Wrap(err, location, "Error saving SearchResult"))
 		}
 	}
 

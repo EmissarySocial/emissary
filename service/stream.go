@@ -962,7 +962,9 @@ func (service *Stream) CalculateTags(stream *model.Stream) {
  ******************************************/
 
 // SearchResult returns a SearchResult object that represents this Stream in the search index
-func (service *Stream) SearchResult(stream *model.Stream) (model.SearchResult, bool) {
+func (service *Stream) SearchResult(stream *model.Stream) model.SearchResult {
+
+	result := model.NewSearchResult()
 
 	// Try to generate the searchResult.FullText using the Template for this Stream
 	if template, err := service.templateService.Load(stream.TemplateID); err == nil {
@@ -970,7 +972,6 @@ func (service *Stream) SearchResult(stream *model.Stream) (model.SearchResult, b
 		// If SearchOptions are not empty, then Streams using this Template are searchable
 		if len(template.SearchOptions) > 0 {
 
-			result := model.NewSearchResult()
 			result.URL = stream.URL
 			result.TagNames = stream.Hashtags
 			result.TagValues = slice.Map(stream.Hashtags, model.ToToken)
@@ -981,10 +982,12 @@ func (service *Stream) SearchResult(stream *model.Stream) (model.SearchResult, b
 			result.IconURL = firstOf(template.SearchOptions.Execute("iconUrl", stream), stream.IconURL)
 			result.FullText = template.SearchOptions.Execute("text", stream)
 
-			return result, true
+			return result
 		}
 	}
 
 	// Fall through means this Stream is not searchable
-	return model.SearchResult{}, false
+	result.URL = stream.URL
+	result.DeleteDate = time.Now().Unix()
+	return result
 }

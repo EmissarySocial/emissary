@@ -3,7 +3,9 @@ package build
 import (
 	"io"
 	"text/template"
+	"time"
 
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
 )
@@ -23,29 +25,32 @@ func (step StepSearchIndex) Post(builder Builder, _ io.Writer) PipelineBehavior 
 
 	const location = "build.StepSearchIndex.Post"
 
-	// Check the "IF" condition to see if this step should run...
+	searchResultService := builder.factory().Search()
+	searchResult := getSearchResult(builder)
+
+	// If the step.If is FALSE, then delete the searchResult no matter what
 	if !convert.Bool(executeTemplate(step.If, builder)) {
-		return nil
+		searchResult.DeleteDate = time.Now().Unix()
 	}
 
-	if searchResult, ok := getSearchResult(builder); ok {
-
-		searchResultService := builder.factory().Search()
-
-		// Delete step here
-		if step.Action == "delete" {
-			if err := searchResultService.Delete(&searchResult, "deleted"); err != nil {
-				return Halt().WithError(derp.Wrap(err, location, "Error deleting search result", searchResult))
-			}
-
-			return nil
-		}
-
-		// Add/Update step here
-		if err := searchResultService.Upsert(searchResult); err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Error saving search result", searchResult))
-		}
+	// Add/Update/Delete the searchResult here
+	if err := searchResultService.Sync(searchResult); err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Error saving search result", searchResult))
 	}
 
-	return nil
+	return Continue()
+}
+
+func (step StepSearchIndex) isSearchable(builder Builder, searchResult model.SearchResult) bool {
+
+	if searchResult.IsZero() {
+		return false
+	}
+
+	if step.Action == "delete" {
+		return false
+	}
+
+	return convert.Bool(executeTemplate(step.If, builder))
+
 }

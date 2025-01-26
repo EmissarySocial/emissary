@@ -314,7 +314,7 @@ func getTemplate(builder Builder) (model.Template, bool) {
 	return model.Template{}, false
 }
 
-func getSearchResult(builder Builder) (model.SearchResult, bool) {
+func getSearchResult(builder Builder) model.SearchResult {
 
 	switch typed := builder.(type) {
 
@@ -327,7 +327,12 @@ func getSearchResult(builder Builder) (model.SearchResult, bool) {
 		if userService, isUserService := typed.service().(*service.User); isUserService {
 			return userService.SearchResult(typed._user)
 		}
+
+	case Outbox:
+		if userService, isUserService := typed.service().(*service.User); isUserService {
+			return userService.SearchResult(typed._user)
+		}
 	}
 
-	return model.SearchResult{}, false
+	return model.SearchResult{}
 }

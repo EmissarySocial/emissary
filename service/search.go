@@ -135,8 +135,17 @@ func (service *Search) LoadByURL(url string, searchResult *model.SearchResult) e
  * Custom Methods
  ******************************************/
 
-// Upsert adds or updates a SearchResult in the database
-func (service *Search) Upsert(searchResult model.SearchResult) error {
+func (service *Search) Sync(searchResult model.SearchResult) error {
+
+	if searchResult.IsDeleted() {
+		return service.DeleteByURL(searchResult.URL)
+	}
+
+	return service.upsert(searchResult)
+}
+
+// upsert adds or updates a SearchResult in the database
+func (service *Search) upsert(searchResult model.SearchResult) error {
 
 	// First, try to load the original Search
 	original := model.NewSearchResult()
@@ -152,7 +161,6 @@ func (service *Search) Upsert(searchResult model.SearchResult) error {
 	}
 
 	comment := iif(original.IsNew(), "added", "updated")
-
 	if err := service.Save(&original, comment); err != nil {
 		return derp.Wrap(err, "service.Search.Add", "Error adding Search", searchResult)
 	}
@@ -160,8 +168,15 @@ func (service *Search) Upsert(searchResult model.SearchResult) error {
 	return nil
 }
 
-// DeleteByURL removes a SearchResult from the database that matches the provided URL
+// eleteByURL removes a SearchResult from the database that matches the provided URL
 func (service *Search) DeleteByURL(url string) error {
+
+	// RULE: If the URL is empty, then there's nothing to delete
+	if url == "" {
+		return nil
+	}
+
+	// Try to find the SearchResult that matches this URL
 	searchResult := model.NewSearchResult()
 
 	if err := service.LoadByURL(url, &searchResult); err != nil {
@@ -173,6 +188,7 @@ func (service *Search) DeleteByURL(url string) error {
 		return derp.Wrap(err, "service.Search.DeleteByURL", "Error loading Search", url)
 	}
 
+	// Delete the SearchResult
 	return service.Delete(&searchResult, "deleted from search index")
 }
 

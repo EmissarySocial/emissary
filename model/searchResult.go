@@ -66,3 +66,20 @@ func (searchResult SearchResult) Fields() []string {
 		"tagNames",
 	}
 }
+
+func (searchResult SearchResult) IsZero() bool {
+
+	if searchResult.Type == "" {
+		return true
+	}
+
+	if searchResult.URL == "" {
+		return true
+	}
+
+	if searchResult.Name == "" {
+		return true
+	}
+
+	return false
+}

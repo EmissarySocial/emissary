@@ -19,7 +19,7 @@ func AddSearchResult(factory *domain.Factory, args mapof.Any) queue.Result {
 	searchService := factory.Search()
 	searchResult := searchService.UnmarshalMap(args)
 
-	if err := searchService.Upsert(searchResult); err != nil {
+	if err := searchService.Sync(searchResult); err != nil {
 		return queue.Error(derp.Wrap(err, location, "Error saving search result"))
 	}
 

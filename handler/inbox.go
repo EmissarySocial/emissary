@@ -57,7 +57,7 @@ func buildInbox(serverFactory *server.Factory, actionMethod build.ActionMethod) 
 		builder, err := build.NewInbox(factory, ctx.Request(), ctx.Response(), &user, actionID)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error creating builder")
+			return derp.ReportAndReturn(derp.Wrap(err, location, "Error creating builder"))
 		}
 
 		// Forward to the standard page builder to complete the job
