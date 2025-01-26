@@ -966,23 +966,26 @@ func (service *Stream) SearchResult(stream *model.Stream) model.SearchResult {
 
 	result := model.NewSearchResult()
 
-	// Try to generate the searchResult.FullText using the Template for this Stream
-	if template, err := service.templateService.Load(stream.TemplateID); err == nil {
+	if stream.IsPublished() {
 
-		// If SearchOptions are not empty, then Streams using this Template are searchable
-		if len(template.SearchOptions) > 0 {
+		// Try to generate the searchResult.FullText using the Template for this Stream
+		if template, err := service.templateService.Load(stream.TemplateID); err == nil {
 
-			result.URL = stream.URL
-			result.TagNames = stream.Hashtags
-			result.TagValues = slice.Map(stream.Hashtags, model.ToToken)
-			result.Type = firstOf(template.SearchOptions.Execute("type", stream), template.SocialRole)
-			result.Name = firstOf(template.SearchOptions.Execute("name", stream), stream.Label)
-			result.AttributedTo = firstOf(template.SearchOptions.Execute("attributedTo", stream), stream.AttributedTo.Name)
-			result.Summary = firstOf(template.SearchOptions.Execute("summary", stream), stream.Summary)
-			result.IconURL = firstOf(template.SearchOptions.Execute("iconUrl", stream), stream.IconURL)
-			result.FullText = template.SearchOptions.Execute("text", stream)
+			// If SearchOptions are not empty, then Streams using this Template are searchable
+			if len(template.SearchOptions) > 0 {
 
-			return result
+				result.URL = stream.URL
+				result.TagNames = stream.Hashtags
+				result.TagValues = slice.Map(stream.Hashtags, model.ToToken)
+				result.Type = firstOf(template.SearchOptions.Execute("type", stream), template.SocialRole)
+				result.Name = firstOf(template.SearchOptions.Execute("name", stream), stream.Label)
+				result.AttributedTo = firstOf(template.SearchOptions.Execute("attributedTo", stream), stream.AttributedTo.Name)
+				result.Summary = firstOf(template.SearchOptions.Execute("summary", stream), stream.Summary)
+				result.IconURL = firstOf(template.SearchOptions.Execute("iconUrl", stream), stream.IconURL)
+				result.FullText = template.SearchOptions.Execute("text", stream)
+
+				return result
+			}
 		}
 	}
 
