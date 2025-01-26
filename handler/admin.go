@@ -89,10 +89,7 @@ func buildAdmin_GetBuilder(factory *domain.Factory, ctx *steranko.Context, templ
 	// Create the correct builder for this controller
 	switch template.Model {
 
-	case "domain":
-		return build.NewDomain(factory, ctx.Request(), ctx.Response(), template, actionID)
-
-	case "search":
+	case "domain", "search", "sso":
 		return build.NewDomain(factory, ctx.Request(), ctx.Response(), template, actionID)
 
 	case "syndication":
@@ -123,9 +120,6 @@ func buildAdmin_GetBuilder(factory *domain.Factory, ctx *steranko.Context, templ
 		}
 
 		return build.NewRule(factory, ctx.Request(), ctx.Response(), &rule, template, actionID)
-
-	case "sso":
-		return build.NewDomain(factory, ctx.Request(), ctx.Response(), template, actionID)
 
 	case "stream":
 		stream := model.NewStream()
