@@ -353,8 +353,15 @@ func (stream Stream) ActivityPubResponses(responseType string) string {
  * Publishing MetaData
  ******************************************/
 
-// IsPublished rturns TRUE if this Stream is currently published
+// IsPublished returns TRUE if this Stream is currently published
 func (stream *Stream) IsPublished() bool {
+
+	// RULE: Deleted streams are not published
+	if stream.DeleteDate > 0 {
+		return false
+	}
+
+	// Otherwise, check that "now" is in between the Publish and UnPublish dates
 	now := time.Now().Unix()
 	return (stream.PublishDate < now) && (stream.UnPublishDate > now)
 }
