@@ -478,6 +478,18 @@ func (service *Stream) ListByParent(parentID primitive.ObjectID) (data.Iterator,
 	return service.List(exp.Equal("parentId", parentID))
 }
 
+// ListPublishedByParent returns all Streams that match a particular parentID
+func (service *Stream) ListPublishedByParent(parentID primitive.ObjectID) (data.Iterator, error) {
+
+	now := time.Now().Unix()
+
+	criteria := exp.LessOrEqual("publishDate", now).
+		AndGreaterOrEqual("unpublishDate", now).
+		AndEqual("parentId", parentID)
+
+	return service.List(criteria, option.SortDesc("publishDate"))
+}
+
 // ListByTemplate returns all `Streams` that use a particular `Template`
 func (service *Stream) ListByTemplate(template string) (data.Iterator, error) {
 	return service.List(exp.Equal("templateId", template))

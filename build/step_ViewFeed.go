@@ -27,7 +27,7 @@ func (step StepViewFeed) Get(builder Builder, buffer io.Writer) PipelineBehavior
 	factory := builder.factory()
 
 	// Get all child streams from the database
-	children, err := factory.Stream().ListByParent(builder.objectID())
+	children, err := factory.Stream().ListPublishedByParent(builder.objectID())
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error querying child streams"))

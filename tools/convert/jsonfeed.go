@@ -38,7 +38,7 @@ func StreamToJsonFeed(stream model.Stream) jsonfeed.Item {
 		Summary:       stream.Summary,
 		Image:         stream.IconURL,
 		DatePublished: time.Unix(stream.PublishDate, 0),
-		DateModified:  time.Unix(stream.UpdateDate, 0),
+		DateModified:  time.UnixMilli(stream.UpdateDate),
 	}
 
 	// Attach author if available
