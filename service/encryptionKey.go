@@ -102,22 +102,24 @@ func (service *EncryptionKey) LoadByParentID(parentType string, parentID primiti
 
 	// If there is no error, then return in success
 	if err == nil {
-		return err
-	}
-
-	// "Not Found" means we should create a new encryption key
-	if derp.NotFound(err) {
-		if newKey, err := service.Create(parentType, parentID); err == nil {
-			*encryptionKey = newKey
-		} else {
-			return derp.Wrap(err, "service.EncryptionKey.LoadByID", "Error creating new EncryptionKey", parentID)
-		}
-
 		return nil
 	}
 
-	// Otherwise, it's a legitimate error, so return it.
-	return derp.Wrap(err, "service.EncryptionKey.LoadByID", "Error loading EncryptionKey", parentID)
+	// If this is a legitimate error, then return it
+	if !derp.NotFound(err) {
+		return derp.Wrap(err, "service.EncryptionKey.LoadByID", "Error loading EncryptionKey", parentID)
+	}
+
+	// Fall through means it's a "Not Found" error, so create a new key
+	newKey, err := service.Create(parentType, parentID)
+
+	if err != nil {
+		return derp.Wrap(err, "service.EncryptionKey.LoadByID", "Error creating new EncryptionKey", parentID)
+	}
+
+	// Return the key if successful
+	*encryptionKey = newKey
+	return nil
 }
 
 /******************************************

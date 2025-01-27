@@ -94,6 +94,27 @@ func WithRegistration(serverFactory *server.Factory, fn WithFunc2[model.Domain, 
 	})
 }
 
+// WithSearchQuery handles boilerplate code for requests that load a search query
+func WithSearchQuery(serverFactory *server.Factory, fn WithFunc1[model.SearchQuery]) echo.HandlerFunc {
+
+	const location = "handler.WithAuthenticatedUser"
+
+	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *domain.Factory) error {
+
+		// Load the Stream from the database
+		searchQueryService := factory.SearchQuery()
+		searchQuery := model.NewSearchQuery()
+		token := ctx.Param("searchId")
+
+		if err := searchQueryService.LoadByToken(token, &searchQuery); err != nil {
+			return derp.Wrap(err, location, "Error loading search query from database")
+		}
+
+		// Call the continuation function
+		return fn(ctx, factory, &searchQuery)
+	})
+}
+
 // WithStream handles boilerplate code for requests that load a stream
 func WithStream(serverFactory *server.Factory, fn WithFunc1[model.Stream]) echo.HandlerFunc {
 

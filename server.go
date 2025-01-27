@@ -19,6 +19,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/handler"
+	ap_search "github.com/EmissarySocial/emissary/handler/activitypub_search"
 	ap_stream "github.com/EmissarySocial/emissary/handler/activitypub_stream"
 	ap_user "github.com/EmissarySocial/emissary/handler/activitypub_user"
 	"github.com/EmissarySocial/emissary/handler/stripe"
@@ -310,12 +311,14 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@me/intent/like", handler.WithAuthenticatedUser(factory, handler.GetIntent_Like))
 	e.POST("/@me/intent/like", handler.WithAuthenticatedUser(factory, handler.PostIntent_Like))
 
-	// ActivityPub Routes for Users
+	// Routes for Users
 	e.GET("/@:userId", handler.GetOutbox(factory))
 	e.POST("/@:userId", handler.PostOutbox(factory))
 	e.GET("/@:userId/:action", handler.GetOutbox(factory))
 	e.POST("/@:userId/:action", handler.PostOutbox(factory))
 	e.GET("/@:userId/attachments/:attachmentId", handler.GetUserAttachment(factory))
+
+	// ActivityPub Routes for Users
 	e.GET("/@:userId/pub", handler.GetOutbox(factory))
 	e.POST("/@:userId/pub/inbox", ap_user.PostInbox(factory))
 	e.GET("/@:userId/pub/outbox", ap_user.GetOutboxCollection(factory))
@@ -337,6 +340,13 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/:stream/pub/outbox", ap_stream.GetOutboxCollection(factory))
 	e.GET("/:stream/pub/followers", ap_stream.GetFollowersCollection(factory))
 	e.GET("/:stream/pub/children", handler.WithFactory(factory, ap_stream.GetChildrenCollection))
+
+	// ActivityPub Routes for Search Results
+	e.GET("/.search/:searchId", handler.WithSearchQuery(factory, ap_search.GetJSONLD))
+	e.POST("/.search/:searchId/inbox", handler.WithSearchQuery(factory, ap_search.PostInbox))
+	e.GET("/.search/:searchId/outbox", handler.WithSearchQuery(factory, ap_search.GetOutboxCollection))
+	e.GET("/.search/:searchId/followers", handler.WithSearchQuery(factory, ap_search.GetFollowersCollection))
+	e.GET("/.search/:searchId/shared", handler.WithSearchQuery(factory, ap_search.GetSharedCollection))
 
 	// Domain Admin Pages
 	e.GET("/admin", handler.GetAdmin(factory), mw.Owner)
