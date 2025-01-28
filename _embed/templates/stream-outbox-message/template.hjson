@@ -43,7 +43,6 @@
 		view: {
 			steps:[
 				{do:"set-query-param", url:"{{.Permalink}}"}
-				{do:"view-json"}
 				{do:"view-html"}
 			]
 		}

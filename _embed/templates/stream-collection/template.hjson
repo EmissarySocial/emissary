@@ -63,7 +63,6 @@
 		view: {
 			roles: ["viewer", "editor", "owner"]
 			steps:[
-				{do:"view-json"}
 				{do:"view-html"}
 			]
 		}

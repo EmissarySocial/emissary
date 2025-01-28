@@ -188,9 +188,6 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.ViewHTML:
 		return StepViewHTML(s)
 
-	case step.ViewJSONLD:
-		return StepViewJSONLD(s)
-
 	case step.WebSub:
 		return StepWebSub(s)
 

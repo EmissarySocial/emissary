@@ -46,7 +46,6 @@
 		view: {
 			cache: true
 			steps:[
-				{do:"view-json"}
 				{do:"view-html"}
 			]
 		}

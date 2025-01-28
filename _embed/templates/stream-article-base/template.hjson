@@ -68,7 +68,6 @@
 				published: ["viewer"]
 			}
 			steps:[
-				{do:"view-json"}
 				{do:"view-html"}
 			]
 		}
