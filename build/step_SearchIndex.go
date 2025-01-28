@@ -41,6 +41,7 @@ func (step StepSearchIndex) Post(builder Builder, _ io.Writer) PipelineBehavior 
 	return Continue()
 }
 
+// nolint unused
 func (step StepSearchIndex) isSearchable(builder Builder, searchResult model.SearchResult) bool {
 
 	if searchResult.IsZero() {
