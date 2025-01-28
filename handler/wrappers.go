@@ -95,11 +95,11 @@ func WithRegistration(serverFactory *server.Factory, fn WithFunc2[model.Domain, 
 }
 
 // WithSearchQuery handles boilerplate code for requests that load a search query
-func WithSearchQuery(serverFactory *server.Factory, fn WithFunc1[model.SearchQuery]) echo.HandlerFunc {
+func WithSearchQuery(serverFactory *server.Factory, fn WithFunc2[model.Stream, model.SearchQuery]) echo.HandlerFunc {
 
 	const location = "handler.WithAuthenticatedUser"
 
-	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *domain.Factory) error {
+	return WithStream(serverFactory, func(ctx *steranko.Context, factory *domain.Factory, stream *model.Stream) error {
 
 		// Load the Stream from the database
 		searchQueryService := factory.SearchQuery()
@@ -111,7 +111,7 @@ func WithSearchQuery(serverFactory *server.Factory, fn WithFunc1[model.SearchQue
 		}
 
 		// Call the continuation function
-		return fn(ctx, factory, &searchQuery)
+		return fn(ctx, factory, stream, &searchQuery)
 	})
 }
 
@@ -125,9 +125,15 @@ func WithStream(serverFactory *server.Factory, fn WithFunc1[model.Stream]) echo.
 		// Load the Stream from the database
 		streamService := factory.Stream()
 		stream := model.NewStream()
-		token := ctx.Param("stream")
+		token := getStreamToken(ctx)
 
 		if err := streamService.LoadByToken(token, &stream); err != nil {
+
+			// Special case: If the HOME page is missing, then this is a new database.  Forward to the admin section
+			if derp.NotFound(err) && (token == "home") {
+				return ctx.Redirect(http.StatusTemporaryRedirect, "/startup")
+			}
+
 			return derp.Wrap(err, location, "Error loading stream from database")
 		}
 

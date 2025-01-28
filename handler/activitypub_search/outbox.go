@@ -6,6 +6,6 @@ import (
 	"github.com/benpate/steranko"
 )
 
-func GetOutboxCollection(ctx *steranko.Context, factory *domain.Factory, searchQuery *model.SearchQuery) error {
+func GetOutboxCollection(ctx *steranko.Context, factory *domain.Factory, stream *model.Stream, searchQuery *model.SearchQuery) error {
 	return nil
 }

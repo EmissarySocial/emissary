@@ -1,93 +1,92 @@
 package handler
 
 import (
-	"net/http"
-
 	"github.com/EmissarySocial/emissary/build"
+	"github.com/EmissarySocial/emissary/domain"
+	"github.com/EmissarySocial/emissary/handler/activitypub_search"
 	"github.com/EmissarySocial/emissary/handler/activitypub_stream"
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
+	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
 )
 
 // GetStream handles GET requests with the default action.
 // This handler also responds to JSON-LD requests
-func GetStream(serverFactory *server.Factory) echo.HandlerFunc {
+func GetStream(ctx *steranko.Context, factory *domain.Factory, stream *model.Stream) error {
 
-	return func(ctx echo.Context) error {
-
-		// Special case for JSON-LD requests.
-		if isJSONLDRequest(ctx) {
-			return activitypub_stream.GetJSONLD(serverFactory)(ctx)
-		}
-
-		// Otherwise, just build the stream normally
-		return buildStream(serverFactory, build.ActionMethodGet)(ctx)
+	// Special case for JSON-LD requests.
+	if isJSONLDRequest(ctx) {
+		return getStreamJSONLD(ctx, factory, stream)
 	}
+
+	// Otherwise, just build the stream normally
+	return getStreamPipeline(ctx, factory, stream, build.ActionMethodGet)
 }
 
 // GetStreamWithAction handles GET requests with a specified action
-func GetStreamWithAction(serverFactory *server.Factory) echo.HandlerFunc {
-	return buildStream(serverFactory, build.ActionMethodGet)
+func GetStreamWithAction(ctx *steranko.Context, factory *domain.Factory, stream *model.Stream) error {
+	return getStreamPipeline(ctx, factory, stream, build.ActionMethodGet)
 }
 
 // PostStreamWithAction handles POST requests with a specified action
-func PostStreamWithAction(serverFactory *server.Factory) echo.HandlerFunc {
-	return buildStream(serverFactory, build.ActionMethodPost)
+func PostStreamWithAction(ctx *steranko.Context, factory *domain.Factory, stream *model.Stream) error {
+	return getStreamPipeline(ctx, factory, stream, build.ActionMethodPost)
 }
 
-// buildStream is the common Stream handler for both GET and POST requests
-func buildStream(serverFactory *server.Factory, actionMethod build.ActionMethod) echo.HandlerFunc {
+func getStreamJSONLD(ctx *steranko.Context, factory *domain.Factory, stream *model.Stream) error {
 
-	const location = "handler.buildStream"
+	const location = "handler.getStreamJSONLD"
 
-	return func(ctx echo.Context) error {
+	// Load the Template
+	templateService := factory.Template()
+	template, err := templateService.Load(stream.TemplateID)
 
-		stream := model.NewStream()
-
-		// Try to get the factory
-		factory, err := serverFactory.ByContext(ctx)
-
-		if err != nil {
-			return derp.Wrap(err, location, "Unrecognized Domain")
-		}
-
-		// Try to load the stream using request data
-		streamService := factory.Stream()
-		streamToken := getStreamToken(ctx)
-
-		if err := streamService.LoadByToken(streamToken, &stream); err != nil {
-
-			// Special case: If the HOME page is missing, then this is a new database.  Forward to the admin section
-			if streamToken == "home" {
-				return ctx.Redirect(http.StatusTemporaryRedirect, "/startup")
-			}
-
-			return derp.Wrap(err, location, "Error loading Stream by Token", streamToken)
-		}
-
-		// Try to find the action requested by the user.  This also enforces user permissions...
-		actionID := getActionID(ctx)
-
-		streamBuilder, err := build.NewStreamWithoutTemplate(factory, ctx.Request(), ctx.Response(), &stream, actionID)
-
-		if err != nil {
-			return derp.ReportAndReturn(derp.Wrap(err, location, "Error creating Builder."))
-		}
-
-		// Add webmention link header per:
-		// https://www.w3.org/TR/webmention/#sender-discovers-receiver-webmention-endpoint
-		if actionMethod == build.ActionMethodGet {
-			ctx.Response().Header().Set("Link", "/.webmention; rel=\"webmention\"")
-		}
-
-		if err := build.AsHTML(factory, ctx, streamBuilder, actionMethod); err != nil {
-			return derp.Wrap(err, location, "Error building page")
-		}
-
-		return nil
+	if err != nil {
+		return derp.Wrap(err, location, "Error loading Template", stream.TemplateID)
 	}
+
+	if template.IsSearch() {
+
+		// Locate/Create the SearchQuery
+		searchQueryService := factory.SearchQuery()
+		searchQuery := model.NewSearchQuery()
+
+		if err := searchQueryService.LoadFromQueryString(ctx.Request().URL.Query(), searchQuery); err != nil {
+			return derp.Wrap(err, location, "Error loading SearchQuery")
+		}
+
+		return activitypub_search.GetJSONLD(ctx, factory, stream)
+	}
+
+	return activitypub_stream.GetJSONLD(ctx, factory, stream)
+}
+
+// getStreamPipeline is the common Stream handler for both GET and POST requests
+func getStreamPipeline(ctx *steranko.Context, factory *domain.Factory, stream *model.Stream, actionMethod build.ActionMethod) error {
+
+	const location = "handler.getStreamPipeline"
+
+	// Try to find the action requested by the user.  This also enforces user permissions...
+	actionID := getActionID(ctx)
+
+	streamBuilder, err := build.NewStreamWithoutTemplate(factory, ctx.Request(), ctx.Response(), stream, actionID)
+
+	if err != nil {
+		return derp.ReportAndReturn(derp.Wrap(err, location, "Error creating Builder."))
+	}
+
+	// Add webmention link header per:
+	// https://www.w3.org/TR/webmention/#sender-discovers-receiver-webmention-endpoint
+	if actionMethod == build.ActionMethodGet {
+		ctx.Response().Header().Set("Link", "/.webmention; rel=\"webmention\"")
+	}
+
+	if err := build.AsHTML(factory, ctx, streamBuilder, actionMethod); err != nil {
+		return derp.Wrap(err, location, "Error building page")
+	}
+
+	return nil
 }
 
 // getStreamToken returns the :stream token from the Request (or a default)

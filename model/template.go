@@ -202,6 +202,11 @@ func (template *Template) Inherit(parent *Template) {
 	}
 }
 
+// IsSearch returns TRUE if this is Template is a search engine
+func (template *Template) IsSearch() bool {
+	return template.Model == "search"
+}
+
 /******************************************
  * OEmbed Methods
  ******************************************/

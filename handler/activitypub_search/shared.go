@@ -6,6 +6,6 @@ import (
 	"github.com/benpate/steranko"
 )
 
-func GetSharedCollection(ctx *steranko.Context, factory *domain.Factory, searchQuery *model.SearchQuery) error {
+func GetSharedCollection(ctx *steranko.Context, factory *domain.Factory, stream *model.Stream, searchQuery *model.SearchQuery) error {
 	return nil
 }

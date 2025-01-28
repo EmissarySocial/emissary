@@ -1,6 +1,7 @@
 package service
 
 import (
+	"net/url"
 	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -78,22 +79,54 @@ func (service *SearchQuery) Save(searchQuery *model.SearchQuery, note string) er
 		return derp.New(derp.CodeBadRequestError, location, "SearchQuery.Original is too long", searchQuery)
 	}
 
-	// Split the query into tags and remainder
-	tags, remainder := parse.HashtagsAndRemainder(searchQuery.Original)
-
-	_, tagValues, err := service.searchTagService.NormalizeTags(tags...)
-
-	if err != nil {
+	// Split the query, and Normalize tags and remainder
+	if err := service.parseHashtags(searchQuery); err != nil {
 		return derp.Wrap(err, location, "Error normalizing tags", searchQuery)
 	}
 
-	// Update values
-	searchQuery.TagValues = tagValues
-	searchQuery.Remainder = strings.TrimSpace(remainder)
+	// RULE: Do not allow global searches here.
+	if searchQuery.IsEmpty() {
+		return derp.New(derp.CodeBadRequestError, location, "SearchQuery is empty", searchQuery)
+	}
+
+	wasNew := searchQuery.IsNew()
 
 	// Save the searchQuery to the database
 	if err := service.collection.Save(searchQuery, note); err != nil {
 		return derp.Wrap(err, "service.SearchQuery.Save", "Error saving SearchQuery", searchQuery, note)
+	}
+
+	if wasNew {
+		// TODO: Add a queue task to try to delete this SearchQuery if it hasn't been subscribed after 1 day
+	}
+
+	return nil
+}
+
+func (service *SearchQuery) Upsert(searchQuery *model.SearchQuery) error {
+
+	const location = "service.SearchQuery.Upsert"
+
+	if err := service.parseHashtags(searchQuery); err != nil {
+		return derp.Wrap(err, location, "Error validating query string", searchQuery.Original)
+	}
+
+	if searchQuery.IsEmpty() {
+		return derp.New(derp.CodeBadRequestError, location, "SearchQuery is empty", searchQuery)
+	}
+
+	if err := service.LoadByTagsAndRemainder(searchQuery.TagValues, searchQuery.Remainder, searchQuery); err != nil {
+
+		if derp.NotFound(err) {
+
+			if err := service.Save(searchQuery, "Upsert"); err != nil {
+				return derp.Wrap(err, location, "Error saving SearchQuery", searchQuery)
+			}
+
+			return nil
+		}
+
+		return derp.Wrap(err, location, "Error loading SearchQuery", searchQuery)
 	}
 
 	return nil
@@ -114,6 +147,45 @@ func (service *SearchQuery) Delete(searchQuery *model.SearchQuery, note string) 
  * Custom Queries
  ******************************************/
 
+func (service *SearchQuery) LoadByTagsAndRemainder(tags []string, remainder string, searchQuery *model.SearchQuery) error {
+	criteria := exp.InAll("tagValues", tags).And(exp.Equal("remainder", remainder))
+	return service.Load(criteria, searchQuery)
+}
+
+func (service *SearchQuery) LoadByQueryString(queryValues url.Values, searchQuery *model.SearchQuery) error {
+
+	const location = "service.SearchQuery.LoadByQueryString"
+
+	// If we have a searchID token, then try to use it first.
+	if token := queryValues.Get("id"); token != "" {
+		if err := service.LoadByToken(token, searchQuery); err != nil {
+			return derp.Wrap(err, location, "Error loading SearchQuery by token", token)
+		}
+	}
+
+	// Fall through means there's no token, or a deleted token.
+	if query := queryValues.Get("q"); query != "" {
+
+		searchQuery.Original = query
+
+		if err := service.parseHashtags(searchQuery); err != nil {
+			return derp.Wrap(err, location, "Error normalizing tags", searchQuery)
+		}
+
+		if err := service.LoadByTagsAndRemainder(searchQuery.TagValues, searchQuery.Remainder, searchQuery); err == nil {
+			return nil
+		}
+
+		if err := service.Upsert(searchQuery); err != nil {
+			return derp.Wrap(err, location, "Error upserting SearchQuery", query)
+		}
+
+		return nil
+	}
+
+	return derp.NewBadRequestError(location, "No search query provided", queryValues)
+}
+
 func (service *SearchQuery) LoadByToken(token string, searchQuery *model.SearchQuery) error {
 
 	const location = "service.SearchQuery.LoadByToken"
@@ -133,3 +205,26 @@ func (service *SearchQuery) LoadByToken(token string, searchQuery *model.SearchQ
 /******************************************
  * Custom Actions
  ******************************************/
+
+// parseHashtags splits the search query into tags and remainder,
+// then normalizes the tags by removing blocked tags and trimming the remainder
+func (service *SearchQuery) parseHashtags(searchQuery *model.SearchQuery) error {
+
+	const location = "service.SearchQuery.parseHashtags"
+
+	// Split the original query into tags and remainder
+	tags, remainder := parse.HashtagsAndRemainder(searchQuery.Original)
+
+	// Normalize the tags
+	_, tags, err := service.searchTagService.NormalizeTags(tags...)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error normalizing tags", searchQuery)
+	}
+
+	// Update the SearchQuery with the normalized values
+	searchQuery.TagValues = tags
+	searchQuery.Remainder = strings.TrimSpace(remainder)
+
+	return nil
+}

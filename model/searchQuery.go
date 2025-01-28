@@ -25,6 +25,29 @@ func NewSearchQuery() SearchQuery {
 
 // ID returns the unique identifier for this SearchQuery and
 // implements the data.Object interface
-func (searchResult SearchQuery) ID() string {
-	return searchResult.SearchQueryID.Hex()
+func (searchQuery SearchQuery) ID() string {
+	return searchQuery.SearchQueryID.Hex()
+}
+
+// IsEmpty returns TRUE if this SearchQuery has NO useful data
+func (searchQuery SearchQuery) IsEmpty() bool {
+
+	if searchQuery.Original != "" {
+		return false
+	}
+
+	if len(searchQuery.TagValues) > 0 {
+		return false
+	}
+
+	if searchQuery.Remainder != "" {
+		return false
+	}
+
+	return true
+}
+
+// NotEmpty returns TRUE if this SearchQuery has useful data
+func (searchQuery SearchQuery) NotEmpty() bool {
+	return !searchQuery.IsEmpty()
 }

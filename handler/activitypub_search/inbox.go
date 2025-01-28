@@ -6,6 +6,6 @@ import (
 	"github.com/benpate/steranko"
 )
 
-func PostInbox(ctx *steranko.Context, factory *domain.Factory, searchQuery *model.SearchQuery) error {
+func PostInbox(ctx *steranko.Context, factory *domain.Factory, stream *model.Stream, searchQuery *model.SearchQuery) error {
 	return nil
 }

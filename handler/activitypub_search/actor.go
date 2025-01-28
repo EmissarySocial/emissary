@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/steranko"
 )
 
-func GetJSONLD(ctx *steranko.Context, factory *domain.Factory, searchQuery *model.SearchQuery) error {
+func GetJSONLD(ctx *steranko.Context, factory *domain.Factory, stream *model.Stream, searchQuery *model.SearchQuery) error {
+
 	return nil
 }
