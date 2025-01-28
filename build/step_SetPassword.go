@@ -21,13 +21,6 @@ func (step StepSetPassword) Post(builder Builder, _ io.Writer) PipelineBehavior 
 
 	const location = "build.StepSetPassword.Post"
 
-	// Verify that the user is signed in.
-	authorization := builder.authorization()
-
-	if !authorization.IsAuthenticated() {
-		return Halt().WithError(derp.NewUnauthorizedError(location, "You must be signed in to change your password"))
-	}
-
 	// Collect form POST information
 	transaction, err := formdata.Parse(builder.request())
 
@@ -35,13 +28,20 @@ func (step StepSetPassword) Post(builder Builder, _ io.Writer) PipelineBehavior 
 		return Halt().WithError(derp.Wrap(err, location, "Error parsing form data"))
 	}
 
-	// Set the password (with Steranko password hasher)
-	factory := builder.factory()
-	steranko := factory.Steranko()
+	// RULE: Verify that the user is trying to set a new password
 	newPassword := transaction.Get("new_password")
 
 	if newPassword == "" {
 		return Continue()
+	}
+
+	// RULE: Users must be signed in, and can only change their own passwords.
+	factory := builder.factory()
+	steranko := factory.Steranko()
+	authorization := builder.authorization()
+
+	if !authorization.IsAuthenticated() {
+		return Halt().WithError(derp.NewUnauthorizedError(location, "You must be signed in to change your password"))
 	}
 
 	// Load the User from the database
@@ -52,10 +52,12 @@ func (step StepSetPassword) Post(builder Builder, _ io.Writer) PipelineBehavior 
 		return Halt().WithError(derp.Wrap(err, location, "Error loading user"))
 	}
 
+	// Update the User's password using Steranko's default password hashing algorithm
 	if err := steranko.SetPassword(&user, newPassword); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error setting password"))
 	}
 
+	// Save the User back to the database
 	if err := userService.Save(&user, "Password changed"); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error saving user"))
 	}
