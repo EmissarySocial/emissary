@@ -20,6 +20,9 @@ type WithFunc1[T any] func(ctx *steranko.Context, factory *domain.Factory, value
 // WithFunc2 is a function signature for a continuation function that requires the domain Factory and two values
 type WithFunc2[T any, U any] func(ctx *steranko.Context, factory *domain.Factory, value *T, value2 *U) error
 
+// WithFunc3 is a function signature for a continuation function that requires the domain Factory and three values
+type WithFunc3[T any, U any, V any] func(ctx *steranko.Context, factory *domain.Factory, value *T, value2 *U, value3 *V) error
+
 // WithFactory handles boilerplate code for requests that require only the domain Factory
 func WithFactory(serverFactory *server.Factory, fn WithFunc0) echo.HandlerFunc {
 
@@ -95,11 +98,11 @@ func WithRegistration(serverFactory *server.Factory, fn WithFunc2[model.Domain, 
 }
 
 // WithSearchQuery handles boilerplate code for requests that load a search query
-func WithSearchQuery(serverFactory *server.Factory, fn WithFunc2[model.Stream, model.SearchQuery]) echo.HandlerFunc {
+func WithSearchQuery(serverFactory *server.Factory, fn WithFunc3[model.Template, model.Stream, model.SearchQuery]) echo.HandlerFunc {
 
 	const location = "handler.WithAuthenticatedUser"
 
-	return WithStream(serverFactory, func(ctx *steranko.Context, factory *domain.Factory, stream *model.Stream) error {
+	return WithTemplate(serverFactory, func(ctx *steranko.Context, factory *domain.Factory, template *model.Template, stream *model.Stream) error {
 
 		// Load the Stream from the database
 		searchQueryService := factory.SearchQuery()
@@ -111,11 +114,11 @@ func WithSearchQuery(serverFactory *server.Factory, fn WithFunc2[model.Stream, m
 		}
 
 		// Call the continuation function
-		return fn(ctx, factory, stream, &searchQuery)
+		return fn(ctx, factory, template, stream, &searchQuery)
 	})
 }
 
-// WithStream handles boilerplate code for requests that load a stream
+// WithStream handles boilerplate code for requests that load a Stream
 func WithStream(serverFactory *server.Factory, fn WithFunc1[model.Stream]) echo.HandlerFunc {
 
 	const location = "handler.WithAuthenticatedUser"
@@ -139,6 +142,25 @@ func WithStream(serverFactory *server.Factory, fn WithFunc1[model.Stream]) echo.
 
 		// Call the continuation function
 		return fn(ctx, factory, &stream)
+	})
+}
+
+// WithTemplate handles boilerplate code for requests that load a Stream and its corresponding Template
+func WithTemplate(serverFactory *server.Factory, fn WithFunc2[model.Template, model.Stream]) echo.HandlerFunc {
+
+	const location = "handler.WithAuthenticatedUser"
+
+	return WithStream(serverFactory, func(ctx *steranko.Context, factory *domain.Factory, stream *model.Stream) error {
+
+		// Load the Stream from the database
+		template, err := factory.Template().Load(stream.TemplateID)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Template is not defined", stream.TemplateID)
+		}
+
+		// Call the continuation function
+		return fn(ctx, factory, &template, stream)
 	})
 }
 

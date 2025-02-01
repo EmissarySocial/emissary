@@ -13,64 +13,59 @@ import (
 
 // GetStream handles GET requests with the default action.
 // This handler also responds to JSON-LD requests
-func GetStream(ctx *steranko.Context, factory *domain.Factory, stream *model.Stream) error {
+func GetStream(ctx *steranko.Context, factory *domain.Factory, template *model.Template, stream *model.Stream) error {
 
 	// Special case for JSON-LD requests.
 	if isJSONLDRequest(ctx) {
-		return getStreamJSONLD(ctx, factory, stream)
+		return getStreamJSONLD(ctx, factory, template, stream)
 	}
 
 	// Otherwise, just build the stream normally
-	return getStreamPipeline(ctx, factory, stream, build.ActionMethodGet)
+	return getStreamPipeline(ctx, factory, template, stream, build.ActionMethodGet)
 }
 
 // GetStreamWithAction handles GET requests with a specified action
-func GetStreamWithAction(ctx *steranko.Context, factory *domain.Factory, stream *model.Stream) error {
-	return getStreamPipeline(ctx, factory, stream, build.ActionMethodGet)
+func GetStreamWithAction(ctx *steranko.Context, factory *domain.Factory, template *model.Template, stream *model.Stream) error {
+	return getStreamPipeline(ctx, factory, template, stream, build.ActionMethodGet)
 }
 
 // PostStreamWithAction handles POST requests with a specified action
-func PostStreamWithAction(ctx *steranko.Context, factory *domain.Factory, stream *model.Stream) error {
-	return getStreamPipeline(ctx, factory, stream, build.ActionMethodPost)
+func PostStreamWithAction(ctx *steranko.Context, factory *domain.Factory, template *model.Template, stream *model.Stream) error {
+	return getStreamPipeline(ctx, factory, template, stream, build.ActionMethodPost)
 }
 
-func getStreamJSONLD(ctx *steranko.Context, factory *domain.Factory, stream *model.Stream) error {
+func getStreamJSONLD(ctx *steranko.Context, factory *domain.Factory, template *model.Template, stream *model.Stream) error {
 
 	const location = "handler.getStreamJSONLD"
 
-	// Load the Template
-	templateService := factory.Template()
-	template, err := templateService.Load(stream.TemplateID)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Error loading Template", stream.TemplateID)
-	}
-
+	// Special case for "search" templates
 	if template.IsSearch() {
 
 		// Locate/Create the SearchQuery
 		searchQueryService := factory.SearchQuery()
-		searchQuery := model.NewSearchQuery()
+		searchQuery, err := searchQueryService.LoadOrCreate(ctx.Request().URL.Query())
 
-		if err := searchQueryService.LoadFromQueryString(ctx.Request().URL.Query(), searchQuery); err != nil {
+		if err != nil {
 			return derp.Wrap(err, location, "Error loading SearchQuery")
 		}
 
-		return activitypub_search.GetJSONLD(ctx, factory, stream)
+		// Return JSON-LD for this search query
+		return activitypub_search.GetJSONLD(ctx, factory, template, stream, &searchQuery)
 	}
 
-	return activitypub_stream.GetJSONLD(ctx, factory, stream)
+	// All other templates are "stream" templates
+	return activitypub_stream.GetJSONLD(ctx, factory, template, stream)
 }
 
 // getStreamPipeline is the common Stream handler for both GET and POST requests
-func getStreamPipeline(ctx *steranko.Context, factory *domain.Factory, stream *model.Stream, actionMethod build.ActionMethod) error {
+func getStreamPipeline(ctx *steranko.Context, factory *domain.Factory, template *model.Template, stream *model.Stream, actionMethod build.ActionMethod) error {
 
 	const location = "handler.getStreamPipeline"
 
 	// Try to find the action requested by the user.  This also enforces user permissions...
 	actionID := getActionID(ctx)
 
-	streamBuilder, err := build.NewStreamWithoutTemplate(factory, ctx.Request(), ctx.Response(), stream, actionID)
+	streamBuilder, err := build.NewStream(factory, ctx.Request(), ctx.Response(), *template, stream, actionID)
 
 	if err != nil {
 		return derp.ReportAndReturn(derp.Wrap(err, location, "Error creating Builder."))

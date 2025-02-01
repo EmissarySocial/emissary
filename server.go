@@ -276,11 +276,11 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.domain/attachments/:attachmentId", handler.GetDomainAttachment(factory))
 
 	// Stream Pages
-	e.GET("/", handler.WithStream(factory, handler.GetStream))
-	e.GET("/:stream", handler.WithStream(factory, handler.GetStream))
-	e.GET("/:stream/:action", handler.WithStream(factory, handler.GetStreamWithAction))
-	e.POST("/:stream/:action", handler.WithStream(factory, handler.PostStreamWithAction))
-	e.DELETE("/:stream", handler.WithStream(factory, handler.PostStreamWithAction))
+	e.GET("/", handler.WithTemplate(factory, handler.GetStream))
+	e.GET("/:stream", handler.WithTemplate(factory, handler.GetStream))
+	e.GET("/:stream/:action", handler.WithTemplate(factory, handler.GetStreamWithAction))
+	e.POST("/:stream/:action", handler.WithTemplate(factory, handler.PostStreamWithAction))
+	e.DELETE("/:stream", handler.WithTemplate(factory, handler.PostStreamWithAction))
 
 	// Hard-coded routes for additional stream services
 	e.GET("/:stream/attachments/:attachmentId", handler.GetStreamAttachment(factory)) // TODO: LOW: Can Stream Attachments be moved into a custom build step?
@@ -335,7 +335,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@:userId/pub/blocked/:ruleId", ap_user.GetBlock(factory))
 
 	// ActivityPub Routes for Streams
-	e.GET("/:stream/pub", handler.WithStream(factory, ap_stream.GetJSONLD))
+	e.GET("/:stream/pub", handler.WithTemplate(factory, ap_stream.GetJSONLD))
 	e.POST("/:stream/pub/inbox", ap_stream.PostInbox(factory))
 	e.GET("/:stream/pub/outbox", ap_stream.GetOutboxCollection(factory))
 	e.GET("/:stream/pub/followers", ap_stream.GetFollowersCollection(factory))
@@ -345,8 +345,6 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.search/:searchId", handler.WithSearchQuery(factory, ap_search.GetJSONLD))
 	e.POST("/.search/:searchId/inbox", handler.WithSearchQuery(factory, ap_search.PostInbox))
 	e.GET("/.search/:searchId/outbox", handler.WithSearchQuery(factory, ap_search.GetOutboxCollection))
-	e.GET("/.search/:searchId/followers", handler.WithSearchQuery(factory, ap_search.GetFollowersCollection))
-	e.GET("/.search/:searchId/shared", handler.WithSearchQuery(factory, ap_search.GetSharedCollection))
 
 	// Domain Admin Pages
 	e.GET("/admin", handler.GetAdmin(factory), mw.Owner)

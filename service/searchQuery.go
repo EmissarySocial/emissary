@@ -10,13 +10,19 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/hannibal/outbox"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // SearchQuery defines a service that manages all searchable tags in a domain.
 type SearchQuery struct {
 	collection       data.Collection
+	domainService    *Domain
+	followerService  *Follower
+	ruleService      *Rule
 	searchTagService *SearchTag
+	activityStream   *ActivityStream
+	host             string
 }
 
 // NewSearchQuery returns a fully initialized SearchQuery service
@@ -29,9 +35,14 @@ func NewSearchQuery() SearchQuery {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *SearchQuery) Refresh(collection data.Collection, searchTagService *SearchTag) {
+func (service *SearchQuery) Refresh(collection data.Collection, domainService *Domain, followerService *Follower, ruleService *Rule, searchTagService *SearchTag, activityStream *ActivityStream, host string) {
 	service.collection = collection
+	service.domainService = domainService
+	service.followerService = followerService
+	service.ruleService = ruleService
 	service.searchTagService = searchTagService
+	service.activityStream = activityStream
+	service.host = host
 }
 
 // Close stops any background processes controlled by this service
@@ -89,16 +100,12 @@ func (service *SearchQuery) Save(searchQuery *model.SearchQuery, note string) er
 		return derp.New(derp.CodeBadRequestError, location, "SearchQuery is empty", searchQuery)
 	}
 
-	wasNew := searchQuery.IsNew()
-
 	// Save the searchQuery to the database
 	if err := service.collection.Save(searchQuery, note); err != nil {
 		return derp.Wrap(err, "service.SearchQuery.Save", "Error saving SearchQuery", searchQuery, note)
 	}
 
-	if wasNew {
-		// TODO: Add a queue task to try to delete this SearchQuery if it hasn't been subscribed after 1 day
-	}
+	// TODO: Add a queue task to try to delete this SearchQuery if it hasn't been subscribed after 1 day
 
 	return nil
 }
@@ -107,29 +114,48 @@ func (service *SearchQuery) Upsert(searchQuery *model.SearchQuery) error {
 
 	const location = "service.SearchQuery.Upsert"
 
+	// If the SearchQuery already has an ID then just save it.
+	if !searchQuery.SearchQueryID.IsZero() {
+
+		if err := service.Save(searchQuery, "Upsert"); err != nil {
+			return derp.Wrap(err, location, "Error saving SearchQuery", searchQuery)
+		}
+
+		return nil
+	}
+
+	// Fall through means we're searching first, then saving/creating
+
+	// Normalize the Hashtags and Remainder before searching
 	if err := service.parseHashtags(searchQuery); err != nil {
 		return derp.Wrap(err, location, "Error validating query string", searchQuery.Original)
 	}
 
+	// If the SearchQuery is empty, then there's nothing to create. Return an error.
 	if searchQuery.IsEmpty() {
 		return derp.New(derp.CodeBadRequestError, location, "SearchQuery is empty", searchQuery)
 	}
 
-	if err := service.LoadByTagsAndRemainder(searchQuery.TagValues, searchQuery.Remainder, searchQuery); err != nil {
+	// Try to find other SearchTags that match this query
+	err := service.LoadByTagsAndRemainder(searchQuery.TagValues, searchQuery.Remainder, searchQuery)
 
-		if derp.NotFound(err) {
-
-			if err := service.Save(searchQuery, "Upsert"); err != nil {
-				return derp.Wrap(err, location, "Error saving SearchQuery", searchQuery)
-			}
-
-			return nil
-		}
-
-		return derp.Wrap(err, location, "Error loading SearchQuery", searchQuery)
+	// Success..
+	if err == nil {
+		return nil
 	}
 
-	return nil
+	// "Not Found" means that we should just save this as a new record
+	if derp.NotFound(err) {
+
+		if err := service.Save(searchQuery, "Upsert"); err != nil {
+			return derp.Wrap(err, location, "Error saving SearchQuery", searchQuery)
+		}
+
+		return nil
+	}
+
+	// Otherwise, you have failed.  Report to the Principal's office.
+	return derp.Wrap(err, location, "Error loading SearchQuery", searchQuery)
 }
 
 // Delete removes an SearchQuery from the database (virtual delete)
@@ -147,43 +173,40 @@ func (service *SearchQuery) Delete(searchQuery *model.SearchQuery, note string) 
  * Custom Queries
  ******************************************/
 
-func (service *SearchQuery) LoadByTagsAndRemainder(tags []string, remainder string, searchQuery *model.SearchQuery) error {
-	criteria := exp.InAll("tagValues", tags).And(exp.Equal("remainder", remainder))
-	return service.Load(criteria, searchQuery)
-}
-
-func (service *SearchQuery) LoadByQueryString(queryValues url.Values, searchQuery *model.SearchQuery) error {
+func (service *SearchQuery) LoadOrCreate(queryValues url.Values) (model.SearchQuery, error) {
 
 	const location = "service.SearchQuery.LoadByQueryString"
 
+	result := model.NewSearchQuery()
+
 	// If we have a searchID token, then try to use it first.
 	if token := queryValues.Get("id"); token != "" {
-		if err := service.LoadByToken(token, searchQuery); err != nil {
-			return derp.Wrap(err, location, "Error loading SearchQuery by token", token)
+		if err := service.LoadByToken(token, &result); err != nil {
+			return result, derp.Wrap(err, location, "Error loading SearchQuery by token", token)
 		}
 	}
 
 	// Fall through means there's no token, or a deleted token.
 	if query := queryValues.Get("q"); query != "" {
 
-		searchQuery.Original = query
+		result.Original = query
 
-		if err := service.parseHashtags(searchQuery); err != nil {
-			return derp.Wrap(err, location, "Error normalizing tags", searchQuery)
+		if err := service.parseHashtags(&result); err != nil {
+			return result, derp.Wrap(err, location, "Error normalizing tags", result.Original)
 		}
 
-		if err := service.LoadByTagsAndRemainder(searchQuery.TagValues, searchQuery.Remainder, searchQuery); err == nil {
-			return nil
+		if err := service.LoadByTagsAndRemainder(result.TagValues, result.Remainder, &result); err == nil {
+			return result, nil
 		}
 
-		if err := service.Upsert(searchQuery); err != nil {
-			return derp.Wrap(err, location, "Error upserting SearchQuery", query)
+		if err := service.Upsert(&result); err != nil {
+			return result, derp.Wrap(err, location, "Error upserting SearchQuery", query)
 		}
 
-		return nil
+		return result, nil
 	}
 
-	return derp.NewBadRequestError(location, "No search query provided", queryValues)
+	return result, derp.NewBadRequestError(location, "No search query provided", queryValues)
 }
 
 func (service *SearchQuery) LoadByToken(token string, searchQuery *model.SearchQuery) error {
@@ -202,9 +225,51 @@ func (service *SearchQuery) LoadByToken(token string, searchQuery *model.SearchQ
 	return service.Load(criteria, searchQuery)
 }
 
+func (service *SearchQuery) LoadByTagsAndRemainder(tags []string, remainder string, searchQuery *model.SearchQuery) error {
+	criteria := exp.InAll("tagValues", tags).And(exp.Equal("remainder", remainder))
+	return service.Load(criteria, searchQuery)
+}
+
 /******************************************
  * Custom Actions
  ******************************************/
+
+// ActivityPubActor returns an ActivityPub Actor object ** WHICH INCLUDES ENCRYPTION KEYS **
+// for the provided Stream.
+func (service *SearchQuery) ActivityPubActor(searchQuery *model.SearchQuery, withFollowers bool) (outbox.Actor, error) {
+
+	const location = "service.SearchQuery.ActivityPubActor"
+
+	// Retrieve the domain and Public Key
+	privateKey, err := service.domainService.PrivateKey()
+
+	if err != nil {
+		return outbox.Actor{}, derp.Wrap(err, location, "Error getting private key")
+	}
+
+	// Return the ActivityPub Actor
+	actor := outbox.NewActor(service.ActivityPubURL(searchQuery), privateKey, outbox.WithClient(service.activityStream)) // TODO: Restore Queue:: , outbox.WithQueue(service.queue))
+
+	// Populate the Actor's ActivityPub Followers, if requested
+	if withFollowers {
+
+		// Get a channel of all Followers
+		followers, err := service.followerService.ActivityPubFollowersChannel(model.FollowerTypeSearch, searchQuery.SearchQueryID)
+
+		if err != nil {
+			return outbox.Actor{}, derp.Wrap(err, location, "Error retrieving followers")
+		}
+
+		// Get a filter to prevent sending to "Blocked" followers
+		ruleFilter := service.ruleService.Filter(primitive.NilObjectID, WithBlocksOnly())
+		followerIDs := ruleFilter.ChannelSend(followers)
+
+		// Add the channel of follower IDs to the Actor
+		actor.With(outbox.WithFollowers(followerIDs))
+	}
+
+	return actor, nil
+}
 
 // parseHashtags splits the search query into tags and remainder,
 // then normalizes the tags by removing blocked tags and trimming the remainder
@@ -227,4 +292,33 @@ func (service *SearchQuery) parseHashtags(searchQuery *model.SearchQuery) error 
 	searchQuery.Remainder = strings.TrimSpace(remainder)
 
 	return nil
+}
+
+func (service *SearchQuery) ActivityPubURL(searchQuery *model.SearchQuery) string {
+	return service.host + "/.search/" + searchQuery.SearchQueryID.Hex()
+}
+
+func (service *SearchQuery) ActivityPubName(searchQuery *model.SearchQuery) string {
+	domain := service.domainService.Get()
+	return searchQuery.Original + " on " + domain.Label
+}
+
+func (service *SearchQuery) ActivityPubFollowersURL(searchQuery *model.SearchQuery) string {
+	return service.ActivityPubURL(searchQuery) + "/followers"
+}
+
+func (service *SearchQuery) ActivityPubFollowingURL(searchQuery *model.SearchQuery) string {
+	return service.ActivityPubURL(searchQuery) + "/following"
+}
+
+func (service *SearchQuery) ActivityPubInboxURL(searchQuery *model.SearchQuery) string {
+	return service.ActivityPubURL(searchQuery) + "/inbox"
+}
+
+func (service *SearchQuery) ActivityPubOutboxURL(searchQuery *model.SearchQuery) string {
+	return service.ActivityPubURL(searchQuery) + "/outbox"
+}
+
+func (service *SearchQuery) ActivityPubSharesURL(searchQuery *model.SearchQuery) string {
+	return service.ActivityPubURL(searchQuery) + "/shares"
 }

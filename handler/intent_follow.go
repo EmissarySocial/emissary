@@ -34,7 +34,7 @@ func GetIntent_Follow(ctx *steranko.Context, factory *domain.Factory, user *mode
 	actor, err := activityService.Load(transaction.Object, sherlock.AsActor())
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load object", transaction)
+		return derp.ReportAndReturn(derp.Wrap(err, location, "Unable to load object", transaction))
 	}
 
 	// Try to load an existing "Following" record (allow "NOT FOUND" errors)

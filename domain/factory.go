@@ -614,8 +614,7 @@ func (factory *Factory) Search() *service.Search {
 // SearchQuery returns a fully populated SearchQuery service
 func (factory *Factory) SearchQuery() service.SearchQuery {
 	result := service.NewSearchQuery()
-	result.Refresh(factory.collection(CollectionSearchQuery), factory.SearchTag())
-
+	result.Refresh(factory.collection(CollectionSearchQuery), factory.Domain(), factory.Follower(), factory.Rule(), factory.SearchTag(), factory.ActivityStream(), factory.Host())
 	return result
 }
 

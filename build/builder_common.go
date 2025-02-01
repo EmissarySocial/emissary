@@ -102,7 +102,7 @@ func (w Common) Host() string {
 
 // URL returns the originally requested URL
 func (w Common) URL() string {
-	return w._request.URL.RequestURI()
+	return w.Host() + w._request.URL.RequestURI()
 }
 
 // Protocol returns http:// or https:// used for this request

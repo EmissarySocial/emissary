@@ -11,19 +11,11 @@ import (
 	"github.com/benpate/steranko"
 )
 
-func GetJSONLD(ctx *steranko.Context, factory *domain.Factory, stream *model.Stream) error {
+func GetJSONLD(ctx *steranko.Context, factory *domain.Factory, template *model.Template, stream *model.Stream) error {
 
 	const location = "activitypub_stream.GetJSONLD"
 
-	// Load the Template
-	templateService := factory.Template()
 	streamService := factory.Stream()
-
-	template, err := templateService.Load(stream.TemplateID)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Error loading Template", stream.TemplateID)
-	}
 
 	// If this Stream is not an Actor, then just return a standard JSON-LD response.
 	if template.Actor.IsNil() {
