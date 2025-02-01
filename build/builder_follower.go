@@ -125,6 +125,10 @@ func (w Follower) ExpireDate() int64 {
  * Builder Interface
  ******************************************/
 
+func (w Follower) Follower() model.Follower {
+	return *w._follower
+}
+
 func (w Follower) object() data.Object {
 	return w._follower
 }
