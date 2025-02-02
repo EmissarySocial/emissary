@@ -1,0 +1,20 @@
+behavior showLimit
+
+	init 
+		set remainingId to my id + ".remaining"
+		set island to the last in my parentNode's childNodes
+		set island's *position to "relative"
+		append `<span id="${remainingId}" style="position:absolute;right:0px;"></span>` to the island
+		set :remainingNode to #{remainingId}
+		trigger calcLimit
+	end
+
+	on keyup or calcLimit
+		set length to my value's length
+		set maxlength to my @maxlength
+		set remaining to parseInt(maxlength) - length
+		set the message to length + "/" + maxlength
+		set the :remainingNode's innerHTML to the message
+	end
+
+end
