@@ -16,7 +16,7 @@ func AddSearchResult(factory *domain.Factory, args mapof.Any) queue.Result {
 	const location = "consumer.AddSearchResult"
 
 	// Insert/Update the SearchResult in the database
-	searchService := factory.Search()
+	searchService := factory.SearchResult()
 	searchResult := searchService.UnmarshalMap(args)
 
 	if err := searchService.Sync(searchResult); err != nil {

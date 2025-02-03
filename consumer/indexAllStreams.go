@@ -12,7 +12,7 @@ func IndexAllStreams(factory *domain.Factory, args mapof.Any) queue.Result {
 
 	const location = "consumer.IndexAllStreams"
 
-	searchService := factory.Search()
+	searchService := factory.SearchResult()
 	streamService := factory.Stream()
 
 	streams, err := streamService.RangePublished()

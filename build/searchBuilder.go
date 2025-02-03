@@ -11,14 +11,14 @@ import (
 )
 
 type SearchBuilder struct {
-	service       *service.Search
+	service       *service.SearchResult
 	Criteria      exp.Expression
 	SortField     string
 	SortDirection string
 	MaxRows       int64
 }
 
-func NewSearchBuilder(service *service.Search, criteria exp.Expression) SearchBuilder {
+func NewSearchBuilder(service *service.SearchResult, criteria exp.Expression) SearchBuilder {
 
 	return SearchBuilder{
 		service:       service,

@@ -25,7 +25,7 @@ func (step StepUnPublish) Post(builder Builder, _ io.Writer) PipelineBehavior {
 	factory := streamBuilder.factory()
 
 	// Try to UnPublish the Stream from the search index
-	searchResultService := factory.Search()
+	searchResultService := factory.SearchResult()
 
 	if err := searchResultService.DeleteByURL(streamBuilder._stream.URL); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error deleting search result", streamBuilder._stream.URL))

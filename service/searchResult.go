@@ -13,16 +13,16 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// Search defines a service that manages all searchable pages in a domain.
-type Search struct {
+// SearchResult defines a service that manages all searchable pages in a domain.
+type SearchResult struct {
 	collection       data.Collection
 	searchTagService *SearchTag
 	host             string
 }
 
-// NewSearch returns a fully initialized Search service
-func NewSearch() Search {
-	return Search{}
+// NewSearchResult returns a fully initialized Search service
+func NewSearchResult() SearchResult {
+	return SearchResult{}
 }
 
 /******************************************
@@ -30,14 +30,14 @@ func NewSearch() Search {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Search) Refresh(collection data.Collection, searchTagService *SearchTag, host string) {
+func (service *SearchResult) Refresh(collection data.Collection, searchTagService *SearchTag, host string) {
 	service.collection = collection
 	service.searchTagService = searchTagService
 	service.host = host
 }
 
 // Close stops any background processes controlled by this service
-func (service *Search) Close() {
+func (service *SearchResult) Close() {
 	// Nothin to do here.
 }
 
@@ -45,12 +45,12 @@ func (service *Search) Close() {
  * Common Data Methods
  ******************************************/
 
-func (service *Search) Count(criteria exp.Expression) (int64, error) {
+func (service *SearchResult) Count(criteria exp.Expression) (int64, error) {
 	return service.collection.Count(criteria)
 }
 
 // Query returns an slice of allthe Searchs that match the provided criteria
-func (service *Search) Query(criteria exp.Expression, options ...option.Option) ([]model.SearchResult, error) {
+func (service *SearchResult) Query(criteria exp.Expression, options ...option.Option) ([]model.SearchResult, error) {
 	result := make([]model.SearchResult, 0)
 	err := service.collection.Query(&result, criteria, options...)
 
@@ -58,11 +58,11 @@ func (service *Search) Query(criteria exp.Expression, options ...option.Option) 
 }
 
 // List returns an iterator containing all of the Searchs that match the provided criteria
-func (service *Search) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+func (service *SearchResult) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.collection.Iterator(criteria, options...)
 }
 
-func (service *Search) Range(criteria exp.Expression, options ...option.Option) (iter.Seq[model.SearchResult], error) {
+func (service *SearchResult) Range(criteria exp.Expression, options ...option.Option) (iter.Seq[model.SearchResult], error) {
 	it, err := service.collection.Iterator(criteria, options...)
 
 	if err != nil {
@@ -73,7 +73,7 @@ func (service *Search) Range(criteria exp.Expression, options ...option.Option) 
 }
 
 // Load retrieves an Search from the database
-func (service *Search) Load(criteria exp.Expression, searchResult *model.SearchResult) error {
+func (service *SearchResult) Load(criteria exp.Expression, searchResult *model.SearchResult) error {
 
 	if err := service.collection.Load(criteria, searchResult); err != nil {
 		return derp.Wrap(err, "service.Search.Load", "Error loading Search", criteria)
@@ -83,7 +83,7 @@ func (service *Search) Load(criteria exp.Expression, searchResult *model.SearchR
 }
 
 // Save adds/updates an Search in the database
-func (service *Search) Save(searchResult *model.SearchResult, note string) error {
+func (service *SearchResult) Save(searchResult *model.SearchResult, note string) error {
 
 	// Reindex this Search in 30 days
 	searchResult.ReIndexDate = time.Now().Add(time.Hour * 24 * 30).Unix()
@@ -108,7 +108,7 @@ func (service *Search) Save(searchResult *model.SearchResult, note string) error
 }
 
 // Delete removes an Search from the database (HARD DELETE)
-func (service *Search) Delete(searchResult *model.SearchResult, note string) error {
+func (service *SearchResult) Delete(searchResult *model.SearchResult, note string) error {
 
 	// Use HARD DELETE for search results.  No need to clutter up our indexes with "deleted" data.
 	criteria := exp.Equal("_id", searchResult.SearchResultID)
@@ -123,11 +123,11 @@ func (service *Search) Delete(searchResult *model.SearchResult, note string) err
  * Custom Queries
  ******************************************/
 
-func (service *Search) RangeByTags(tags ...string) (iter.Seq[model.SearchResult], error) {
+func (service *SearchResult) RangeByTags(tags ...string) (iter.Seq[model.SearchResult], error) {
 	return service.Range(exp.In("tags", tags))
 }
 
-func (service *Search) LoadByURL(url string, searchResult *model.SearchResult) error {
+func (service *SearchResult) LoadByURL(url string, searchResult *model.SearchResult) error {
 	return service.Load(exp.Equal("url", url), searchResult)
 }
 
@@ -135,7 +135,7 @@ func (service *Search) LoadByURL(url string, searchResult *model.SearchResult) e
  * Custom Methods
  ******************************************/
 
-func (service *Search) Sync(searchResult model.SearchResult) error {
+func (service *SearchResult) Sync(searchResult model.SearchResult) error {
 
 	if searchResult.IsDeleted() {
 		return service.DeleteByURL(searchResult.URL)
@@ -145,7 +145,7 @@ func (service *Search) Sync(searchResult model.SearchResult) error {
 }
 
 // upsert adds or updates a SearchResult in the database
-func (service *Search) upsert(searchResult model.SearchResult) error {
+func (service *SearchResult) upsert(searchResult model.SearchResult) error {
 
 	// First, try to load the original Search
 	original := model.NewSearchResult()
@@ -169,7 +169,7 @@ func (service *Search) upsert(searchResult model.SearchResult) error {
 }
 
 // eleteByURL removes a SearchResult from the database that matches the provided URL
-func (service *Search) DeleteByURL(url string) error {
+func (service *SearchResult) DeleteByURL(url string) error {
 
 	// RULE: If the URL is empty, then there's nothing to delete
 	if url == "" {
@@ -193,7 +193,7 @@ func (service *Search) DeleteByURL(url string) error {
 }
 
 // Shuffle updates the "shuffle" field for all SearchResults that match the provided tags
-func (service *Search) Shuffle(tags ...string) error {
+func (service *SearchResult) Shuffle(tags ...string) error {
 
 	const location = "service.Search.Shuffle"
 
@@ -213,7 +213,7 @@ func (service *Search) Shuffle(tags ...string) error {
 	return nil
 }
 
-func (service *Search) UnmarshalMap(original map[string]any) model.SearchResult {
+func (service *SearchResult) UnmarshalMap(original map[string]any) model.SearchResult {
 
 	value := mapof.Any(original)
 	searchResult := model.NewSearchResult()

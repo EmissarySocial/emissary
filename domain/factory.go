@@ -71,7 +71,7 @@ type Factory struct {
 	responseService      service.Response
 	ruleService          service.Rule
 	searchTagService     service.SearchTag
-	searchService        service.Search
+	searchResultService  service.SearchResult
 	streamService        service.Stream
 	streamArchiveService service.StreamArchive
 	streamDraftService   service.StreamDraft
@@ -140,7 +140,7 @@ func NewFactory(domain config.Domain, port string, providers []config.Provider, 
 	factory.outboxService = service.NewOutbox()
 	factory.responseService = service.NewResponse()
 	factory.ruleService = service.NewRule()
-	factory.searchService = service.NewSearch()
+	factory.searchResultService = service.NewSearchResult()
 	factory.searchTagService = service.NewSearchTag()
 	factory.streamService = service.NewStream()
 	factory.streamArchiveService = service.NewStreamArchive()
@@ -347,7 +347,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		)
 
 		// Populate the Search Service
-		factory.searchService.Refresh(
+		factory.searchResultService.Refresh(
 			factory.collection(CollectionSearchResult),
 			factory.SearchTag(),
 			factory.Host(),
@@ -607,8 +607,8 @@ func (factory *Factory) Outbox() *service.Outbox {
 }
 
 // Search returns a fully populated Search service
-func (factory *Factory) Search() *service.Search {
-	return &factory.searchService
+func (factory *Factory) SearchResult() *service.SearchResult {
+	return &factory.searchResultService
 }
 
 // SearchQuery returns a fully populated SearchQuery service

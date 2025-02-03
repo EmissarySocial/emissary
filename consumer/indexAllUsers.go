@@ -11,7 +11,7 @@ func IndexAllUsers(factory *domain.Factory, args mapof.Any) queue.Result {
 
 	const location = "consumer.IndexAllUsers"
 
-	searchService := factory.Search()
+	searchService := factory.SearchResult()
 	userService := factory.User()
 
 	allUsers, err := userService.RangeAll()

@@ -518,7 +518,7 @@ func (w Common) Search() SearchBuilder {
 		criteria = criteria.AndEqual("tagValues", model.ToToken(tag))
 	}
 
-	result := NewSearchBuilder(w._factory.Search(), criteria)
+	result := NewSearchBuilder(w._factory.SearchResult(), criteria)
 
 	return result
 }

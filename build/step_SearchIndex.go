@@ -25,7 +25,7 @@ func (step StepSearchIndex) Post(builder Builder, _ io.Writer) PipelineBehavior 
 
 	const location = "build.StepSearchIndex.Post"
 
-	searchResultService := builder.factory().Search()
+	searchResultService := builder.factory().SearchResult()
 	searchResult := getSearchResult(builder)
 
 	// If the step.If is FALSE, then delete the searchResult no matter what

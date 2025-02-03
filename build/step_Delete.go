@@ -63,7 +63,7 @@ func (step StepDelete) Post(builder Builder, _ io.Writer) PipelineBehavior {
 	// If this object is also a SearchResulter, then we're gonna remove it from the search index
 	if searchResult := getSearchResult(builder); searchResult.URL != "" {
 
-		searchResultService := builder.factory().Search()
+		searchResultService := builder.factory().SearchResult()
 
 		// Delete step here
 		if err := searchResultService.Delete(&searchResult, "unpublished"); err != nil {
