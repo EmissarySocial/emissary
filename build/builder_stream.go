@@ -258,6 +258,10 @@ func (w Stream) ShortSummary() string {
 	return htmlconv.Summary(w._stream.Summary)
 }
 
+func (w Stream) SummaryOrContent() string {
+	return w._stream.SummaryOrContent()
+}
+
 // IconURL returns the thumbnail image URL of the stream being built
 func (w Stream) IconURL() string {
 	return w._stream.IconURL
