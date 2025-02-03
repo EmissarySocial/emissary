@@ -100,6 +100,15 @@ func (stream *Stream) Permalink() string {
 	return stream.URL
 }
 
+// SummaryOrContent returns the stream summary -- if it exists -- otherwise, the content HTML.
+func (stream *Stream) SummaryOrContent() string {
+	if stream.Summary != "" {
+		return stream.Summary
+	}
+
+	return stream.Content.HTML
+}
+
 func (stream *Stream) WidgetsByLocation(location string) []StreamWidget {
 
 	return slice.Filter(stream.Widgets, func(widget StreamWidget) bool {

@@ -1,4 +1,4 @@
-{{- $follower := .Object -}}
+{{- $follower := .Follower -}}
 {{- $secret := $follower.Data.GetString "secret" -}}
 {{- $parentURL := $follower.ParentURL .Host -}}
 {{- $actor := .ActivityStream $parentURL -}}
