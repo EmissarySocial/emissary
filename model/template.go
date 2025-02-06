@@ -164,6 +164,13 @@ func (template *Template) Inherit(parent *Template) {
 		template.Model = parent.Model
 	}
 
+	// Inherit Datasets from the parent
+	for datasetID, dataset := range parent.Datasets {
+		if _, exists := template.Datasets[datasetID]; !exists {
+			template.Datasets[datasetID] = dataset
+		}
+	}
+
 	// Inherit SearchTemplate
 	for optionID, option := range parent.SearchOptions {
 		if _, exists := template.SearchOptions[optionID]; !exists {

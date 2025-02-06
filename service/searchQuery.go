@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/tools/parse"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -278,10 +277,7 @@ func (service *SearchQuery) parseHashtags(searchQuery *model.SearchQuery) error 
 	const location = "service.SearchQuery.parseHashtags"
 
 	// Split the original query into tags and remainder
-	tags, remainder := parse.HashtagsAndRemainder(searchQuery.Original)
-
-	// Normalize the tags
-	_, tags, err := service.searchTagService.NormalizeTags(tags...)
+	tags, err := service.searchTagService.FindAllowedTags(searchQuery.Original)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error normalizing tags", searchQuery)
@@ -289,7 +285,7 @@ func (service *SearchQuery) parseHashtags(searchQuery *model.SearchQuery) error 
 
 	// Update the SearchQuery with the normalized values
 	searchQuery.TagValues = tags
-	searchQuery.Remainder = strings.TrimSpace(remainder)
+	searchQuery.Remainder = strings.TrimSpace(searchQuery.Original)
 
 	return nil
 }

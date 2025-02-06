@@ -3,12 +3,10 @@ package build
 import (
 	"html/template"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
-	"github.com/EmissarySocial/emissary/tools/parse"
 	"github.com/benpate/derp"
 	"github.com/benpate/domain"
 	"github.com/benpate/exp"
@@ -504,23 +502,17 @@ func (w Common) GetResponseSummary(url string) model.UserResponseSummary {
 
 func (w Common) Search() SearchBuilder {
 
-	tags, remainder := parse.HashtagsAndRemainder(w.QueryParam("q"))
+	// Collect required values
+	searchTagService := w._factory.SearchTag()
+	searchResultService := w._factory.SearchResult()
+	originalQuery := w.QueryParam("q")
 
 	// Evaluate query string
 	b := builder.NewBuilder().String("name", builder.WithDefaultOperator(">"))
 	criteria := b.Evaluate(w._request.URL.Query())
 
-	if trimmed := strings.TrimSpace(remainder); trimmed != "" {
-		criteria = criteria.AndEqual("$fullText", trimmed)
-	}
-
-	for _, tag := range tags {
-		criteria = criteria.AndEqual("tagValues", model.ToToken(tag))
-	}
-
-	result := NewSearchBuilder(w._factory.SearchResult(), criteria)
-
-	return result
+	// Create the SearchBuilder for this request
+	return NewSearchBuilder(searchTagService, searchResultService, criteria, originalQuery)
 }
 
 func (w Common) SearchTag(tagName string) model.SearchTag {
@@ -557,7 +549,7 @@ func (w Common) AllowedSearchTags() *QueryBuilder[model.SearchTag] {
 
 	criteria := exp.And(
 		query.Evaluate(w._request.URL.Query()),
-		exp.Equal("stateId", model.SearchTagStateAllowed),
+		exp.In("stateId", []int{model.SearchTagStateAllowed, model.SearchTagStateFeatured}),
 		exp.Equal("deleteDate", 0),
 	)
 

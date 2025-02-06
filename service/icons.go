@@ -294,6 +294,18 @@ func (service Icons) Get(name string) string {
 		return service.get("eye")
 	case "visible-fill":
 		return service.get("eye-fill")
+	case "volume-up":
+		return service.get("volume-up")
+	case "volume-up-fill":
+		return service.get("volume-up-fill")
+	case "volume-down":
+		return service.get("volume-down")
+	case "volume-down-fill":
+		return service.get("volume-down-fill")
+	case "volume-mute":
+		return service.get("volume-mute")
+	case "volume-mute-fill":
+		return service.get("volume-mute-fill")
 
 		// Layouts
 	case "layout-social":

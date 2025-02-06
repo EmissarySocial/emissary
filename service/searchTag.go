@@ -5,6 +5,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/queries"
+	"github.com/EmissarySocial/emissary/tools/parse"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -251,6 +252,33 @@ func (service *SearchTag) ListGroups() []form.LookupCode {
 	}
 
 	return result
+}
+
+// FindAllowedTags returns a list of tag VALUES that match the query string
+func (service *SearchTag) FindAllowedTags(query string) ([]string, error) {
+
+	const location = "service.SearchTag.FindAllowedTags"
+
+	// Split tags into a slice and normalize tag names
+	tagValues := parse.Split(query)
+	tagValues = slice.Map(tagValues, model.ToToken)
+
+	// Query the database for ALLOWED and FEATURED tags that match
+	criteria := exp.In("value", tagValues).
+		AndIn("stateId", []int{model.SearchTagStateAllowed, model.SearchTagStateFeatured})
+
+	searchTags, err := service.Query(criteria, option.Fields("value"))
+
+	if err != nil {
+		return []string{}, derp.Wrap(err, location, "Error querying SearchTags", criteria)
+	}
+
+	// Map the results into a single string value
+	result := slice.Map(searchTags, func(tag model.SearchTag) string {
+		return tag.Value
+	})
+
+	return result, nil
 }
 
 // QueryByValue returns all tags in a list
