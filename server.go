@@ -298,6 +298,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@service/liked", handler.GetEmptyCollection(factory))
 
 	// Profile Pages for "me" only routes
+	e.GET("/@me", handler.WithAuthenticatedUser(factory, handler.ForwardMeURLs))
 	e.GET("/@me/inbox", handler.GetInbox(factory))
 	e.POST("/@me/inbox", handler.PostInbox(factory))
 	e.GET("/@me/inbox/:action", handler.GetInbox(factory))

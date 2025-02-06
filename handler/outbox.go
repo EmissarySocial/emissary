@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/EmissarySocial/emissary/build"
+	"github.com/EmissarySocial/emissary/domain"
 	activitypub "github.com/EmissarySocial/emissary/handler/activitypub_user"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
@@ -14,6 +15,11 @@ import (
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
+// ForwardMeURLs redirects the user to their own profile page
+func ForwardMeURLs(ctx *steranko.Context, factory *domain.Factory, user *model.User) error {
+	return ctx.Redirect(http.StatusSeeOther, "/@"+user.Username)
+}
 
 // GetOutbox handles GET requests
 func GetOutbox(serverFactory *server.Factory) echo.HandlerFunc {
