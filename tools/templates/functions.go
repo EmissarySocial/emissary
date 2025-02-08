@@ -309,7 +309,7 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 			if valueTime.IsZero() {
 				return ""
 			}
-			return valueTime.Format("3:04:05 PM")
+			return valueTime.Format("3:04 PM")
 		},
 
 		"addQueryParams": func(extraParams string, url string) string {
