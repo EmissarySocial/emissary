@@ -969,6 +969,10 @@ func (service *Stream) CalculateTags(stream *model.Stream) {
 	stream.Hashtags = hashtagNames
 }
 
+func (service *Stream) hostname() string {
+	return domain.NameOnly(service.host)
+}
+
 /******************************************
  * SearchResulter Interface
  ******************************************/
