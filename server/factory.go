@@ -497,7 +497,7 @@ func (factory *Factory) DeleteDomain(domainID string) error {
  * OAuth Connection Methods
  ****************************/
 
-// PutConnection adds a domain to the Factory
+// PutConnection adds a provider to the Factory
 func (factory *Factory) PutProvider(oauthClient config.Provider) error {
 
 	factory.mutex.Lock()
@@ -516,7 +516,7 @@ func (factory *Factory) PutProvider(oauthClient config.Provider) error {
 	return nil
 }
 
-// DeleteConnection removes a domain from the Factory
+// DeleteConnection removes a provider from the Factory
 func (factory *Factory) DeleteProvider(providerID string) error {
 
 	factory.mutex.Lock()

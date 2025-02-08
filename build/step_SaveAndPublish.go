@@ -21,8 +21,14 @@ func (step StepSaveAndPublish) Post(builder Builder, _ io.Writer) PipelineBehavi
 
 	const location = "build.StepSaveAndPublish.Post"
 
-	streamBuilder := builder.(Stream)
+	streamBuilder, ok := builder.(Stream)
+
+	if !ok {
+		return Halt().WithError(derp.NewInternalError(location, "Builder must be a StreamBuilder"))
+	}
+
 	factory := streamBuilder.factory()
+	stream := streamBuilder._stream
 
 	// Try to load the User from the Database
 	userService := factory.User()
@@ -36,8 +42,16 @@ func (step StepSaveAndPublish) Post(builder Builder, _ io.Writer) PipelineBehavi
 
 	// Try to Publish the Stream to ActivityPub
 	streamService := factory.Stream()
+	geocoder := factory.Geocode()
 
-	if err := streamService.Publish(&user, streamBuilder._stream, step.Outbox); err != nil {
+	// Try to geocode any Places in this Stream. If there are Geocoder errors,
+	// then a task will be queued to retry the geocode in 30 seconds.
+	if err := geocoder.GeocodeAndQueue(stream); err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Error geocoding stream", streamBuilder._stream))
+	}
+
+	// Publish the Stream to the ActivityPub Outbox
+	if err := streamService.Publish(&user, stream, step.Outbox); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error publishing stream", streamBuilder._stream))
 	}
 

@@ -9,10 +9,19 @@ func ConnectionSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
 			"connectionId": schema.String{Format: "objectId"},
-			"providerId":   schema.String{Enum: []string{ConnectionProviderStripe, ConnectionProviderGiphy, ConnectionProviderUnsplash}},
-			"type":         schema.String{Enum: []string{ConnectionTypeImage, ConnectionTypePayment}},
-			"data":         schema.Object{Wildcard: schema.String{}},
-			"active":       schema.Boolean{},
+			"providerId": schema.String{Enum: []string{
+				ConnectionProviderArcGIS,
+				ConnectionProviderBing,
+				ConnectionProviderGoogleMaps,
+				ConnectionProviderOpenStreetMap,
+				ConnectionProviderTomTom,
+				ConnectionProviderGiphy,
+				ConnectionProviderStripe,
+				ConnectionProviderUnsplash,
+			}},
+			"type":   schema.String{Enum: []string{ConnectionTypeGeocoder, ConnectionTypeImage, ConnectionTypePayment}},
+			"data":   schema.Object{Wildcard: schema.String{}},
+			"active": schema.Boolean{},
 		},
 	}
 }

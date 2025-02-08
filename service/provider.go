@@ -37,6 +37,15 @@ func (service *Provider) GetProvider(providerID string) (providers.Provider, boo
 	// Create an adapter for known providers
 	switch providerID {
 
+	case providers.ProviderTypeArcGIS:
+		return providers.NewArcGIS(), true
+
+	case providers.ProviderTypeGoogleMaps:
+		return providers.NewGoogleMaps(), true
+
+	case providers.ProviderTypeOpenStreetMap:
+		return providers.NewOpenStreetMap(), true
+
 	case providers.ProviderTypeGiphy:
 		return providers.NewGiphy(), true
 

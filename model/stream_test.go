@@ -50,6 +50,21 @@ func TestStreamSchema(t *testing.T) {
 		{"permissions.ABC.0", "00000000000000000000000B", nil},
 		{"permissions.ABC.1", "00000000000000000000000C", nil},
 
+		{"places.0.name", "The Whiskey-a-Go-Go", nil},
+		{"places.0.fullAddress", "8901 Sunset Blvd, West Hollywood, CA 90069", nil},
+
+		{"startDate.date", "2021-01-02", nil},
+		{"startDate.time", "15:04", nil},
+		{"startDate.datetime", "2021-01-02T15:04", nil},
+		{"startDate.timezone", "UTC", nil},
+		{"startDate.unix", int64(1609542240), nil},
+
+		{"endDate.date", "2021-01-03", nil},
+		{"endDate.time", "16:05", nil},
+		{"endDate.datetime", "2021-01-03T16:05", nil},
+		{"endDate.timezone", "UTC", nil},
+		{"endDate.unix", int64(1609542240), nil},
+
 		// TODO: LOW: Restore Widget test cases
 		// {"widgets.ABC.0", "FIRST VALUE", nil},
 		// {"widgets.ABC.1", "SECOND VALUE", nil},

@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/EmissarySocial/emissary/tools/datetime"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/null"
 	"github.com/benpate/rosetta/schema"
@@ -32,7 +33,10 @@ func StreamSchema() schema.Element {
 			"inReplyTo":        schema.String{Format: "url"},
 			"content":          ContentSchema(),
 			"widgets":          WidgetSchema(),
+			"startDate":        datetime.Schema(),
+			"endDate":          datetime.Schema(),
 			"hashtags":         schema.Array{Items: schema.String{Format: "token"}},
+			"places":           schema.Array{Items: PlaceSchema()},
 			"data":             schema.Object{Wildcard: schema.Any{}},
 			"publishDate":      schema.Integer{BitSize: 64},
 			"unpublishDate":    schema.Integer{BitSize: 64},
@@ -97,6 +101,9 @@ func (stream *Stream) GetPointer(name string) (any, bool) {
 	case "widgets":
 		return &stream.Widgets, true
 
+	case "places":
+		return &stream.Places, true
+
 	case "data":
 		return &stream.Data, true
 
@@ -142,11 +149,11 @@ func (stream *Stream) GetPointer(name string) (any, bool) {
 	case "isFeatured":
 		return &stream.IsFeatured, true
 
-	case "startTime":
-		return &stream.StartTime, true
+	case "startDate":
+		return &stream.StartDate, true
 
-	case "endTime":
-		return &stream.EndTime, true
+	case "endDate":
+		return &stream.EndDate, true
 
 	case "syndication":
 		return &stream.Syndication, true

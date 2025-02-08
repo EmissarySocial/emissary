@@ -3,6 +3,7 @@ package model
 import (
 	"time"
 
+	"github.com/EmissarySocial/emissary/tools/datetime"
 	"github.com/benpate/rosetta/mapof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -21,6 +22,7 @@ type StreamSummary struct {
 	IconURL        string             `json:"iconUrl,omitempty"      bson:"iconUrl,omitempty"`      // URL of the icon image for this document
 	AttributedTo   PersonLink         `json:"attributedTo,omitempty" bson:"attributedTo,omitempty"` // List of people who are attributed to this document
 	InReplyTo      string             `json:"inReplyTo,omitempty"    bson:"inReplyTo,omitempty"`    // If this stream is a reply to another stream or web page, then this links to the original document.
+	StartDate      datetime.DateTime  `json:"startDate,omitempty"    bson:"startDate,omitempty"`    // Date when this stream was published
 	PublishDate    int64              `json:"publishDate"            bson:"publishDate"`            // Date when this stream was published
 	UnPublishDate  int64              `json:"unpublishDate"          bson:"unpublishDate"`          // Date when this stream should be removed from public view
 	Rank           int                `json:"rank"                   bson:"rank"`                   // If Template uses a custom sort order, then this is the value used to determine the position of this Stream.
@@ -41,7 +43,7 @@ func NewStreamSummary() StreamSummary {
 }
 
 func StreamSummaryFields() []string {
-	return []string{"_id", "parentId", "token", "templateId", "url", "label", "summary", "content", "data", "iconUrl", "attributedTo", "inReplyTo", "publishDate", "unpublishDate", "rank", "isFeatured", "createDate"}
+	return []string{"_id", "parentId", "token", "templateId", "url", "label", "summary", "content", "data", "iconUrl", "attributedTo", "inReplyTo", "publishDate", "unpublishDate", "rank", "isFeatured", "startDate", "createDate"}
 }
 
 func (summary StreamSummary) Fields() []string {

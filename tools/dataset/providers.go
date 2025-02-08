@@ -1,6 +1,7 @@
 package dataset
 
 import (
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/form"
 )
 
@@ -21,6 +22,21 @@ func Providers() []form.LookupCode {
 			Description: "Embeddable Photographs",
 			Group:       "MANUAL",
 		},
+		{
+			Value:       model.ConnectionProviderArcGIS,
+			Label:       "ArcGIS",
+			Icon:        "globe",
+			Description: "Look up addresses and locations",
+			Group:       "MANUAL",
+		},
+		{
+			Value:       model.ConnectionProviderGoogleMaps,
+			Label:       "Google Maps",
+			Icon:        "globe",
+			Description: "Look up addresses and locations",
+			Group:       "MANUAL",
+		},
+
 		/* REMOVED FOR NOW
 		{
 			Value:       "STRIPE",

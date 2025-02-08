@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/EmissarySocial/emissary/tools/datetime"
 	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/data/journal"
@@ -24,8 +25,6 @@ type Stream struct {
 	ParentIDs        id.Slice                     `json:"parentIds"              bson:"parentIds"`              // List of all parent IDs, including the current parent.  This is used to generate "breadcrumbs" for the Stream.
 	Rank             int                          `json:"rank"                   bson:"rank"`                   // If Template uses a custom sort order, then this is the value used to determine the position of this Stream.
 	RankAlt          int                          `json:"rankAlt"                bson:"rankAlt"`                // Alternate sort criteria
-	StartTime        int64                        `json:"startTime"              bson:"startTime"`              // Unix timestamp of the date/time when an event is expected to start
-	EndTime          int64                        `json:"endTime"                bson:"endTime"`                // Unix timestamp of the date/time when an event is expected to end
 	NavigationID     string                       `json:"navigationId"           bson:"navigationId"`           // Unique identifier of the "top-level" Stream that this record falls within.
 	TemplateID       string                       `json:"templateId"             bson:"templateId"`             // Unique identifier (name) of the Template to use when building this Stream in HTML.
 	ParentTemplateID string                       `json:"parentTemplateId"       bson:"parentTemplateId"`       // Unique identifier (name) of the parent's Template.
@@ -44,7 +43,10 @@ type Stream struct {
 	Content          Content                      `json:"content,omitempty"      bson:"content,omitempty"`      // Body content object for this Stream.
 	Widgets          set.Slice[StreamWidget]      `json:"widgets,omitempty"      bson:"widgets,omitempty"`      // Additional widgets to include when building this Stream.
 	Hashtags         sliceof.String               `json:"hashtags,omitempty"     bson:"hashtags,omitempty"`     // List of hashtags that are associated with this document
+	Places           sliceof.Object[Place]        `json:"places,omitempty"       bson:"places,omitempty"`       // List of locations that are associated with this document
 	Data             mapof.Any                    `json:"data,omitempty"         bson:"data,omitempty"`         // Set of data to populate into the Template.  This is validated by the JSON-Schema of the Template.
+	StartDate        datetime.DateTime            `json:"startDate"              bson:"startDate"`              // Date/Time to publish as a "start date" for this Stream (semantics are dependent on the Template)
+	EndDate          datetime.DateTime            `json:"endDate"                bson:"endDate"`                // Date/Time to publish as an "end date" for this Stream (semantics are dependent on the Template)
 	Syndication      delta.Slice[string]          `json:"syndication,omitempty"  bson:"syndication,omitempty"`  // List of external services that this Stream has been syndicated to.
 	PublishDate      int64                        `json:"publishDate"            bson:"publishDate"`            // Unix timestamp of the date/time when this document is/was/will be first available on the domain.
 	UnPublishDate    int64                        `json:"unpublishDate"          bson:"unpublishDate"`          // Unix timestemp of the date/time when this document will no longer be available on the domain.
@@ -507,8 +509,8 @@ func (stream *Stream) CopyFrom(other Stream) {
 	stream.ParentIDs = other.ParentIDs
 	stream.Rank = other.Rank
 	stream.RankAlt = other.RankAlt
-	stream.StartTime = other.StartTime
-	stream.EndTime = other.EndTime
+	stream.StartDate = other.StartDate
+	stream.EndDate = other.EndDate
 	stream.NavigationID = other.NavigationID
 	stream.TemplateID = other.TemplateID
 	stream.ParentTemplateID = other.ParentTemplateID

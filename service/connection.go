@@ -13,7 +13,8 @@ import (
 
 // Connection manages all interactions with the Connection collection
 type Connection struct {
-	collection data.Collection
+	collection      data.Collection
+	providerService *Provider
 }
 
 // NewConnection returns a fully populated Connection service
@@ -26,8 +27,9 @@ func NewConnection() Connection {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Connection) Refresh(collection data.Collection) {
+func (service *Connection) Refresh(collection data.Collection, providerService *Provider) {
 	service.collection = collection
+	service.providerService = providerService
 }
 
 // Close stops any background processes controlled by this service
@@ -168,6 +170,17 @@ func (service *Connection) AllAsMap() mapof.Object[model.Connection] {
 	}
 
 	return result
+}
+
+func (service *Connection) LoadActiveByType(typeID string, connection *model.Connection) error {
+
+	criteria := exp.Equal("type", typeID).AndEqual("active", true)
+
+	if err := service.Load(criteria, connection); err != nil {
+		return derp.Wrap(err, "service.Connection.LoadByType", "Error loading Connection", typeID)
+	}
+
+	return nil
 }
 
 // LoadByProvider loads a Connection that matches the given provider.

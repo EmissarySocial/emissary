@@ -215,6 +215,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 
 		factory.connectionService.Refresh(
 			factory.collection(CollectionConnection),
+			factory.Provider(),
 		)
 
 		// Populate Domain Service
@@ -574,6 +575,11 @@ func (factory *Factory) Following() *service.Following {
 // Folder returns a fully populated Folder service
 func (factory *Factory) Folder() *service.Folder {
 	return &factory.folderService
+}
+
+// Geocode returns a fully populated Geocode service
+func (factory *Factory) Geocode() service.Geocode {
+	return service.NewGeocode(factory.Hostname(), factory.Queue(), factory.Connection())
 }
 
 // Group returns a fully populated Group service
