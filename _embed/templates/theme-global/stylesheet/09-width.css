@@ -3,47 +3,49 @@
  ******************************************/
 
 .width-1-12 {width:calc(100% / 12);}
-
+.width-1-10,
+.width-10\% {width:calc(100% / 10);}
 .width-1-8 {width:calc(100% / 8);}
 
 .width-2-12,
 .width-1-6 {width:calc(100% / 6);}
 
 .width-1-5,
-.width-20-percent,
+.width-2-10,
 .width-20\% {width:20%;}
 
 .width-3-12,
 .with-2-8,
 .width-1-4,
-.width-25-percent,
 .width-25\% {width:calc(100% / 4);}
+
+.width-3-10,
+.width-30\% {width:30%;}
 
 .width-4-12,
 .width-3-9,
 .width-2-6,
 .width-1-3,
-.width-33-percent,
 .width-33\% {width:calc(100% / 3);}
 
 .width-3-8 {width:calc(100% / 8 * 3);}
 
 .width-2-5,
-.width-40-percent,
+.width-4-10,
 .width-40\% {width:40%;}
 
 .width-5-12 {width:calc(100% / 12 * 5);}
 
 .width-6-12,
+.width-5-10,
 .width-4-8,
 .width-3-6,
 .width-2-4,
 .width-1-2,
-.width-50-percent,
 .width-50\% {width:calc(100% / 2);}
 
 .width-3-5,
-.width-60-percent,
+.width-6-10,
 .width-60\% {width:60%;}
 
 .width-5-8 {width:calc(100% / 8 * 5);}
@@ -53,17 +55,18 @@
 .width-8-12,
 .width-4-6,
 .width-2-3,
-.width-66-percent,
 .width-66\% {width:calc(100% / 12 * 8);}
+
+.width-7-10,
+.width-70\% {width:70%;}
 
 .width-9-12,
 .width-6-8,
 .width-3-4,
-.width-75-percent,
 .width-75\% {width:calc(100% / 12 * 9);}
 
 .width-4-5,
-.width-80-percent,
+.width-8-10,
 .width-80\% {width:80%;}
 
 .width-10-12,
@@ -71,9 +74,13 @@
 
 .width-7-8 {width:calc(100% / 8 * 7);}
 
+.width-9-10,
+.width-90\% {width:90%;}
+
 .width-11-12 {width:calc(100% / 12 * 11);}
 
 .width-12-12,
+.width-10-10,
 .width-6-6,
 .width-5-5,
 .width-4-4,
@@ -120,13 +127,15 @@
 
 	.sm\:width-1-12 {width:calc(100% / 12);}
 
+	.sm\:width-1-10 {width:10%;}
+
 	.sm\:width-1-8 {width:calc(100% / 8);}
 
 	.sm\:width-2-12,
 	.sm\:width-1-6 {width:calc(100% / 6);}
 
 	.sm\:width-1-5,
-	.sm\:width-20-percent,
+	.sm\:width-2-10,
 	.me\:width-20\% {width:20%;}
 
 	.sm\:width-3-12,
@@ -134,6 +143,9 @@
 	.sm\:width-1-4,
 	.sm\:width-25-percent,
 	.sm\:width-25\% {width:calc(100% / 4);}
+
+	.sm\:width-3-10,
+	.sm\:width-30\% {width:30%;}
 
 	.sm\:width-4-12,
 	.sm\:width-3-9,
@@ -145,12 +157,13 @@
 	.sm\:width-3-8 {width:calc(100% / 8 * 3);}
 
 	.sm\:width-2-5,
-	.sm\:width-40-percent,
+	.sm\:width-4-10,
 	.sm\:width-40\% {width:40%;}
 
 	.sm\:width-5-12 {width:calc(100% / 12 * 5);}
 
 	.sm\:width-6-12,
+	.sm\:width-5-10,
 	.sm\:width-4-8,
 	.sm\:width-3-6,
 	.sm\:width-2-4,
@@ -159,7 +172,7 @@
 	.sm\:width-50\% {width:calc(100% / 2);}
 
 	.sm\:width-3-5,
-	.sm\:width-60-percent,
+	.sm\:width-6-10,
 	.sm\:width-60\% {width:60%;}
 
 	.sm\:width-5-8 {width:calc(100% / 8 * 5);}
@@ -172,6 +185,9 @@
 	.sm\:width-66-percent,
 	.sm\:width-66\% {width:calc(100% / 12 * 8);}
 
+	.sm\:width-7-10,
+	.sm\:width-70\% {width:70%;}
+
 	.sm\:width-9-12,
 	.sm\:width-6-8,
 	.sm\:width-3-4,
@@ -179,7 +195,7 @@
 	.sm\:width-75\% {width:calc(100% / 12 * 9);}
 
 	.sm\:width-4-5,
-	.sm\:width-80-percent,
+	.sm\:width-8-10,
 	.sm\:width-80\% {width:80%;}
 
 	.sm\:width-10-12,
@@ -187,16 +203,19 @@
 
 	.sm\:width-7-8 {width:calc(100% / 8 * 7);}
 
+	.sm\:width-9-10,
+	.sm\:width-90\% {width:90%;}
+
 	.sm\:width-11-12 {width:calc(100% / 12 * 11);}
 
 	.sm\:width-12-12,
+	.sm\:width-10-10,
 	.sm\:width-6-6,
 	.sm\:width-5-5,
 	.sm\:width-4-4,
 	.sm\:width-3-3,
 	.sm\:width-2-2,
 	.sm\:width-1-1,
-	.sm\:width-100-percent,
 	.sm\:width-100\% {width:100%;}
 
 	.sm\:width-auto {width:auto}
@@ -231,46 +250,50 @@
 
 	.md\:width-1-12 {width:calc(100% / 12);}
 
+	.md\:width-1-10,
+	.md\:width-10\% {width:10%;}
+
 	.md\:width-1-8 {width:calc(100% / 8);}
 
 	.md\:width-2-12,
 	.md\:width-1-6 {width:calc(100% / 6);}
 
 	.md\:width-1-5,
-	.md\:width-20-percent,
+	.md\:width-2-10,
 	.md\:width-20\% {width:20%;}
 
 	.md\:width-3-12,
 	.md\:with-2-8,
 	.md\:width-1-4,
-	.md\:width-25-percent,
 	.md\:width-25\% {width:calc(100% / 4);}
+
+	.md\:width-3-10,
+	.md\:width-30\% {width:30%;}
 
 	.md\:width-4-12,
 	.md\:width-3-9,
 	.md\:width-2-6,
 	.md\:width-1-3,
-	.md\:width-33-percent,
 	.md\:width-33\% {width:calc(100% / 3);}
 
 	.md\:width-3-8 {width:calc(100% / 8 * 3);}
 
 	.md\:width-2-5,
-	.md\:width-40-percent,
+	.md\:width-4-10,
 	.md\:width-40\% {width:40%;}
 
 	.md\:width-5-12 {width:calc(100% / 12 * 5);}
 
 	.md\:width-6-12,
+	.md\:width-5-10,
 	.md\:width-4-8,
 	.md\:width-3-6,
 	.md\:width-2-4,
 	.md\:width-1-2,
-	.md\:width-50-percent,
 	.md\:width-50\% {width:calc(100% / 2);}
 
 	.md\:width-3-5,
-	.md\:width-60-percent,
+	.md\:width-6-10,
 	.md\:width-60\% {width:60%;}
 
 	.md\:width-5-8 {width:calc(100% / 8 * 5);}
@@ -280,17 +303,18 @@
 	.md\:width-8-12,
 	.md\:width-4-6,
 	.md\:width-2-3,
-	.md\:width-66-percent,
 	.md\:width-66\% {width:calc(100% / 12 * 8);}
+
+	.md\:width-7-10,
+	.md\:width-70\% {width:70%;}
 
 	.md\:width-9-12,
 	.md\:width-6-8,
 	.md\:width-3-4,
-	.md\:width-75-percent,
 	.md\:width-75\% {width:calc(100% / 12 * 9);}
 
 	.md\:width-4-5,
-	.md\:width-80-percent,
+	.md\:width-8-10,
 	.md\:width-80\% {width:80%;}
 
 	.md\:width-10-12,
@@ -298,16 +322,19 @@
 
 	.md\:width-7-8 {width:calc(100% / 8 * 7);}
 
+	.md\:width-9-10,
+	.md\:width-90\% {width:90%;}
+
 	.md\:width-11-12 {width:calc(100% / 12 * 11);}
 
 	.md\:width-12-12,
+	.md\:width-10-10,
 	.md\:width-6-6,
 	.md\:width-5-5,
 	.md\:width-4-4,
 	.md\:width-3-3,
 	.md\:width-2-2,
 	.md\:width-1-1,
-	.md\:width-100-percent,
 	.md\:width-100\% {width:100%;}
 
 
@@ -343,46 +370,50 @@
 
 	.lg\:width-1-12 {width:calc(100% / 12);}
 
+	.lg\:width-1-10,
+	.lg\:width-10\% {width:10%;}
+
 	.lg\:width-1-8 {width:calc(100% / 8);}
 
 	.lg\:width-2-12,
 	.lg\:width-1-6 {width:calc(100% / 6);}
 
 	.lg\:width-1-5,
-	.lg\:width-20-percent,
+	.lg\:width-2-10,
 	.lg\:width-20\% {width:20%;}
 
 	.lg\:width-3-12,
 	.lg\:with-2-8,
 	.lg\:width-1-4,
-	.lg\:width-25-percent,
 	.lg\:width-25\% {width:calc(100% / 4);}
+
+	.lg\:width-3-10,
+	.lg\:width-30\% {width:30%;}
 
 	.lg\:width-4-12,
 	.lg\:width-3-9,
 	.lg\:width-2-6,
 	.lg\:width-1-3,
-	.lg\:width-33-percent,
 	.lg\:width-33\% {width:calc(100% / 3);}
 
 	.lg\:width-3-8 {width:calc(100% / 8 * 3);}
 
 	.lg\:width-2-5,
-	.lg\:width-40-percent,
+	.lg\:width-4-10,
 	.lg\:width-40\% {width:40%;}
 
 	.lg\:width-5-12 {width:calc(100% / 12 * 5);}
 
 	.lg\:width-6-12,
+	.lg\:width-5-10,
 	.lg\:width-4-8,
 	.lg\:width-3-6,
 	.lg\:width-2-4,
 	.lg\:width-1-2,
-	.lg\:width-50-percent,
 	.lg\:width-50\% {width:calc(100% / 2);}
 
 	.lg\:width-3-5,
-	.lg\:width-60-percent,
+	.lg\:width-6-10,
 	.lg\:width-60\% {width:60%;}
 
 	.lg\:width-5-8 {width:calc(100% / 8 * 5);}
@@ -392,17 +423,18 @@
 	.lg\:width-8-12,
 	.lg\:width-4-6,
 	.lg\:width-2-3,
-	.lg\:width-66-percent,
 	.lg\:width-66\% {width:calc(100% / 12 * 8);}
+
+	.lg\:width-7-10,
+	.lg\:width-70\% {width:70%;}
 
 	.lg\:width-9-12,
 	.lg\:width-6-8,
 	.lg\:width-3-4,
-	.lg\:width-75-percent,
 	.lg\:width-75\% {width:calc(100% / 12 * 9);}
 
 	.lg\:width-4-5,
-	.lg\:width-80-percent,
+	.lg\:width-8-10,
 	.lg\:width-80\% {width:80%;}
 
 	.lg\:width-10-12,
@@ -410,16 +442,19 @@
 
 	.lg\:width-7-8 {width:calc(100% / 8 * 7);}
 
+	.lg\:width-9-10,
+	.lg\:width-90\% {width:90%;}
+
 	.lg\:width-11-12 {width:calc(100% / 12 * 11);}
 
 	.lg\:width-12-12,
+	.lg\:width-10-10,
 	.lg\:width-6-6,
 	.lg\:width-5-5,
 	.lg\:width-4-4,
 	.lg\:width-3-3,
 	.lg\:width-2-2,
 	.lg\:width-1-1,
-	.lg\:width-100-percent,
 	.lg\:width-100\% {width:100%;}
 
 	.lg\:width-auto {width:auto}
