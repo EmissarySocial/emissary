@@ -139,7 +139,7 @@
     font-size: calc(var(--rhythm) * 4);
     line-height:calc(var(--rhythm) * 5);
     margin-top:calc(var(--rhythm) * 1);
-    margin-bottom:calc(var(--rhythm) * 1);
+    margin-bottom:calc(var(--rhythm) * 3);
 }
 
 

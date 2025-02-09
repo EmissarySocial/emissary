@@ -173,6 +173,11 @@ func (builder QueryBuilder[T]) ByPublishDate() QueryBuilder[T] {
 	return builder
 }
 
+func (builder QueryBuilder[T]) ByStartDate() QueryBuilder[T] {
+	builder.sortField = "startDate"
+	return builder
+}
+
 func (builder QueryBuilder[T]) ByRank() QueryBuilder[T] {
 	builder.sortField = "rank"
 	return builder

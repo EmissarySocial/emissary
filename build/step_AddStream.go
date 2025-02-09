@@ -148,6 +148,11 @@ func (step StepAddStream) getInline(builder Builder, buffer io.Writer) error {
 		child.SetAttributedTo(user.PersonLink())
 	}
 
+	// Apply custom stream data from the "with-data" map
+	if err := step.setStreamData(builder, &child); err != nil {
+		return derp.Wrap(err, location, "Error setting stream data")
+	}
+
 	// Create a new child builder
 	childBuilder, err := NewStream(factory, builder.request(), builder.response(), newTemplate, &child, "create")
 	childBuilder.setArguments(builder.getArguments())

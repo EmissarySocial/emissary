@@ -9,6 +9,7 @@ import (
 type Storage interface {
 	Subscribe() <-chan Config
 	Write(Config) error
+	Close()
 }
 
 // Load retrieves a Storage object from the location designated in the config file

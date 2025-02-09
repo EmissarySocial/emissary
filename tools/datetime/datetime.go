@@ -145,6 +145,10 @@ func (dt *DateTime) SetInt64(property string, value int64) bool {
 	return false
 }
 
+func (dt DateTime) ToTime() time.Time {
+	return dt.Time
+}
+
 func (dt DateTime) DateOnly() time.Time {
 	return dt.Time.Truncate(24 * time.Hour)
 }

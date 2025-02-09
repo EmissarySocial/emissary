@@ -17,6 +17,7 @@ type MongoStorage struct {
 	location      string
 	collection    *mongo.Collection
 	updateChannel chan Config
+	cancelFunc    context.CancelFunc
 }
 
 // NewMongoStorage creates a fully initialized MongoStorage instance
@@ -36,11 +37,14 @@ func NewMongoStorage(args *CommandLineArgs) MongoStorage {
 	// Get the configuration collection
 	collection := client.Database("emissary").Collection("config")
 
+	context, cancelFunc := context.WithCancel(context.Background())
+
 	storage := MongoStorage{
 		source:        args.Source,
 		location:      args.Location,
 		collection:    collection,
 		updateChannel: make(chan Config, 1),
+		cancelFunc:    cancelFunc,
 	}
 
 	// Special rules for the first time we load the configuration file
@@ -87,14 +91,15 @@ func NewMongoStorage(args *CommandLineArgs) MongoStorage {
 	go func() {
 
 		// watch for changes to the configuration
-		cs, err := storage.collection.Watch(context.Background(), mongo.Pipeline{})
+		cs, err := storage.collection.Watch(context, mongo.Pipeline{})
 
 		if err != nil {
 			derp.Report(derp.Wrap(err, "service.Watcher", "Unable to open Mongodb Change Stream"))
 			return
 		}
 
-		for cs.Next(context.Background()) {
+		for cs.Next(context) {
+
 			if config, err := storage.load(); err == nil {
 				storage.updateChannel <- config
 			} else {
@@ -113,6 +118,10 @@ func NewMongoStorage(args *CommandLineArgs) MongoStorage {
 // Subscribe returns a channel that will receive the configuration every time it is updated
 func (storage MongoStorage) Subscribe() <-chan Config {
 	return storage.updateChannel
+}
+
+func (storage MongoStorage) Close() {
+	storage.cancelFunc()
 }
 
 // load reads the configuration from the MongoDB database

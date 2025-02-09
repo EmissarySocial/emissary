@@ -36,7 +36,7 @@
 									type:layout-vertical
 									label:Related
 									children: [
-										{type:"textarea", path:"related", description:"Enter related #Hashtags separated by spaces", options:{rows:6}}
+										{type:"textarea", path:"related", description:"Enter #Hashtags separated by spaces", options:{rows:6}}
 									]
 								}
 								{
@@ -97,7 +97,7 @@
 									type:layout-vertical
 									label:Related
 									children: [
-										{type:"textarea", path:"related", description:"Enter related #Hashtags separated by spaces", options:{rows:8}}
+										{type:"textarea", path:"related", description:"Enter #Hashtags separated by spaces", options:{rows:8}}
 									]
 								}
 								{

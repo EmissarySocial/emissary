@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"math"
 	"net/http"
+	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
@@ -268,7 +269,7 @@ func (w Stream) IconURL() string {
 }
 
 // Tags returns all tags (mentions, hashtags, etc) for the stream being built
-func (w Stream) Tags() []mapof.String {
+func (w Stream) Tags() sliceof.Object[mapof.String] {
 	return slice.Map(w._stream.Hashtags, func(tag string) mapof.String {
 		return mapof.String{
 			"Name": tag,
@@ -310,6 +311,18 @@ func (w Stream) InReplyTo() streams.Document {
 // Returns the body content as an HTML template
 func (w Stream) ContentHTML() template.HTML {
 	return template.HTML(w._stream.Content.HTML)
+}
+
+func (w Stream) Places() sliceof.Object[model.Place] {
+	return w._stream.Places
+}
+
+func (w Stream) StartDate() time.Time {
+	return w._stream.StartDate.Time
+}
+
+func (w Stream) EndDate() time.Time {
+	return w._stream.EndDate.Time
 }
 
 func (w Stream) ContentRaw() string {

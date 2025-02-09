@@ -1,20 +1,20 @@
 .rounded-sm {
-	border-radius: calc(var(--rhythm) * 0.5);
+	border-radius: calc(var(--rhythm) * 0.75);
 }
 
 .rounded-sm {
-	border-radius: calc(var(--rhythm) * 0.75);
+	border-radius: calc(var(--rhythm) * 1);
 }
 
 .rounded,
 .rounded-md {
-	border-radius: var(--rhythm);
+	border-radius: calc(var(--rhythm) * 2);
 }
 
 .rounded-lg {
-	border-radius: calc(var(--rhythm) * 1.5);
+	border-radius: calc(var(--rhythm) * 4);
 }
 
 .rounded-xl {
-	border-radius: calc(var(--rhythm) * 2);
+	border-radius: calc(var(--rhythm) * 6);
 }

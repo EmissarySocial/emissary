@@ -16,6 +16,7 @@ type FileStorage struct {
 	source        string
 	location      string
 	updateChannel chan Config
+	closeChannel  chan struct{}
 }
 
 // NewFileStorage creates a fully initialized FileStorage instance
@@ -28,6 +29,7 @@ func NewFileStorage(args *CommandLineArgs) FileStorage {
 		source:        args.Source,
 		location:      fileLocation,
 		updateChannel: make(chan Config, 1),
+		closeChannel:  make(chan struct{}),
 	}
 
 	// Special rules for the first time we load the configuration file
@@ -91,6 +93,10 @@ func NewFileStorage(args *CommandLineArgs) FileStorage {
 
 		for {
 			select {
+
+			case <-storage.closeChannel:
+				return
+
 			case <-watcher.Events:
 				if config, err := storage.load(); err == nil {
 					if config.IsEmpty() {
@@ -115,6 +121,10 @@ func NewFileStorage(args *CommandLineArgs) FileStorage {
 // Subscribe returns a channel that will receive the configuration every time it is updated
 func (storage FileStorage) Subscribe() <-chan Config {
 	return storage.updateChannel
+}
+
+func (storage FileStorage) Close() {
+	close(storage.closeChannel)
 }
 
 // load reads the configuration from the filesystem and

@@ -28,6 +28,7 @@ type Factory interface {
 	Folder() *service.Folder
 	Following() *service.Following
 	Follower() *service.Follower
+	Geocode() service.Geocode
 	Group() *service.Group
 	Inbox() *service.Inbox
 	Mention() *service.Mention
