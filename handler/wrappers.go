@@ -9,6 +9,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // WithFunc0 is a function signature for a continuation function that requires only the domain Factory
@@ -174,13 +175,69 @@ func WithUser(serverFactory *server.Factory, fn WithFunc1[model.User]) echo.Hand
 		// Load the User from the database
 		userService := factory.User()
 		user := model.NewUser()
-		userID := ctx.Param("user")
+		userID, err := profileUsername(ctx)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Invalid Username")
+		}
 
 		if err := userService.LoadByToken(userID, &user); err != nil {
 			return derp.Wrap(err, location, "Error loading user from database")
 		}
 
 		// Call the continuation function
+		return fn(ctx, factory, &user)
+	})
+}
+
+// WithUserForwarding handles boilerplate code for requests that load a user by username or ID
+// and, when called with a UserID/objectId, forwards to the user's correct username
+func WithUserForwarding(serverFactory *server.Factory, fn WithFunc1[model.User]) echo.HandlerFunc {
+
+	const location = "handler.WithUserForwarding"
+
+	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *domain.Factory) error {
+
+		// Load the User from the database
+		userService := factory.User()
+		user := model.NewUser()
+		userID, err := profileUsername(ctx)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Invalid Username")
+		}
+
+		if err := userService.LoadByToken(userID, &user); err != nil {
+			return derp.Wrap(err, location, "Error loading user from database")
+		}
+
+		// If this is actually an objectID/userID
+		if _, err := primitive.ObjectIDFromHex(userID); err == nil {
+
+			// And guarantee that the user doesn't have a wonky username that LOOKS like a hex string
+			// (for some strange reason). Then we're going to forward to the `correctURL` that uses
+			// their actual username
+			if user.Username != userID {
+
+				// Build the user's correct URL
+				correctURL := "/@" + user.Username
+
+				if action := ctx.Param("action"); action != "" {
+					correctURL += "/" + action
+				}
+
+				// If this is an HTMX request, then we can just update the header and continue without a full redirect
+				if ctx.Request().Header.Get("Hx-Request") == "true" {
+					ctx.Response().Header().Set("HX-Replace-Url", correctURL)
+
+				} else {
+					// Otherwise, we can skip the remaining code and just redirect to the correctURL
+					return ctx.Redirect(http.StatusSeeOther, correctURL)
+				}
+			}
+		}
+
+		// Execute the continuation function
 		return fn(ctx, factory, &user)
 	})
 }

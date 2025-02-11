@@ -313,14 +313,14 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/@me/intent/like", handler.WithAuthenticatedUser(factory, handler.PostIntent_Like))
 
 	// Routes for Users
-	e.GET("/@:userId", handler.GetOutbox(factory))
-	e.POST("/@:userId", handler.PostOutbox(factory))
-	e.GET("/@:userId/:action", handler.GetOutbox(factory))
-	e.POST("/@:userId/:action", handler.PostOutbox(factory))
+	e.GET("/@:userId", handler.WithUserForwarding(factory, handler.GetOutbox))
+	e.POST("/@:userId", handler.WithUser(factory, handler.PostOutbox))
+	e.GET("/@:userId/:action", handler.WithUser(factory, handler.GetOutbox))
+	e.POST("/@:userId/:action", handler.WithUser(factory, handler.PostOutbox))
 	e.GET("/@:userId/attachments/:attachmentId", handler.GetUserAttachment(factory))
 
 	// ActivityPub Routes for Users
-	e.GET("/@:userId/pub", handler.GetOutbox(factory))
+	e.GET("/@:userId/pub", handler.WithUser(factory, handler.GetOutbox))
 	e.POST("/@:userId/pub/inbox", ap_user.PostInbox(factory))
 	e.GET("/@:userId/pub/outbox", ap_user.GetOutboxCollection(factory))
 	e.GET("/@:userId/pub/followers", ap_user.GetFollowersCollection(factory))

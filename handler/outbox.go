@@ -22,13 +22,13 @@ func ForwardMeURLs(ctx *steranko.Context, factory *domain.Factory, user *model.U
 }
 
 // GetOutbox handles GET requests
-func GetOutbox(serverFactory *server.Factory) echo.HandlerFunc {
-	return buildOutbox(serverFactory, build.ActionMethodGet)
+func GetOutbox(ctx *steranko.Context, factory *domain.Factory, user *model.User) error {
+	return buildOutbox(ctx, factory, user, build.ActionMethodGet)
 }
 
 // PostOutbox handles POST/DELETE requests
-func PostOutbox(serverFactory *server.Factory) echo.HandlerFunc {
-	return buildOutbox(serverFactory, build.ActionMethodPost)
+func PostOutbox(ctx *steranko.Context, factory *domain.Factory, user *model.User) error {
+	return buildOutbox(ctx, factory, user, build.ActionMethodPost)
 }
 
 func GetProfileIcon(serverFactory *server.Factory) echo.HandlerFunc {
@@ -50,6 +50,56 @@ func GetProfileImage(serverFactory *server.Factory) echo.HandlerFunc {
 	}
 
 	return getProfileAttachment(serverFactory, "imageId", filespec)
+}
+
+// buildOutbox is the common Outbox handler for both GET and POST requests
+func buildOutbox(ctx *steranko.Context, factory *domain.Factory, user *model.User, actionMethod build.ActionMethod) error {
+
+	const location = "handler.buildOutbox"
+
+	// Get the UserID from the URL (could be "me")
+	username, err := profileUsername(ctx)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error loading user ID")
+	}
+
+	if !isUserVisible(ctx, user) {
+		return derp.NewNotFoundError("handler.buildOutbox", "User not found")
+	}
+
+	if isJSONLDRequest(ctx) {
+		return activitypub.RenderProfileJSONLD(ctx, factory, user)
+	}
+
+	// Try to load the User's Outbox
+	actionID := first.String(ctx.Param("action"), "view")
+
+	// If we've directly loaded the User's profile page using a
+	// hex userID then replace the URL to use their username
+	// instead of their userID
+	if actionID == "view" {
+		if hxRequest := ctx.Request().Header.Get("Hx-Request"); hxRequest == "true" {
+			if userIDHex := user.UserID.Hex(); userIDHex == username {
+				if userIDHex != user.Username {
+					ctx.Response().Header().Set("Hx-Replace-Url", "/@"+user.Username)
+				}
+			}
+		}
+	}
+
+	if ok, err := handleJSONLD(ctx, user); ok {
+		return derp.Wrap(err, location, "Error building JSON-LD")
+	}
+
+	builder, err := build.NewOutbox(factory, ctx.Request(), ctx.Response(), user, actionID)
+
+	if err != nil {
+		return derp.ReportAndReturn(derp.Wrap(err, location, "Error creating builder"))
+	}
+
+	// Forward to the standard page builder to complete the job
+	return build.AsHTML(factory, ctx, builder, actionMethod)
 }
 
 func getProfileAttachment(serverFactory *server.Factory, field string, filespec mediaserver.FileSpec) echo.HandlerFunc {
@@ -111,89 +161,32 @@ func getProfileAttachment(serverFactory *server.Factory, field string, filespec 
 	}
 }
 
-// buildOutbox is the common Outbox handler for both GET and POST requests
-func buildOutbox(serverFactory *server.Factory, actionMethod build.ActionMethod) echo.HandlerFunc {
-
-	const location = "handler.buildOutbox"
-
-	return func(context echo.Context) error {
-
-		// Cast the context into a steranko context (which includes authentication data)
-		sterankoContext := context.(*steranko.Context)
-
-		// Get the domain factory from the context
-		factory, err := serverFactory.ByContext(sterankoContext)
-
-		if err != nil {
-			return derp.Wrap(err, location, "Error loading domain factory")
-		}
-
-		// Get the UserID from the URL (could be "me")
-		username, err := profileUsername(sterankoContext)
-
-		if err != nil {
-			return derp.Wrap(err, location, "Error loading user ID")
-		}
-
-		// Try to load the user from the database
-		userService := factory.User()
-		user := model.NewUser()
-
-		if err := userService.LoadByToken(username, &user); err != nil {
-			return derp.Wrap(err, location, "Error loading user", username)
-		}
-
-		if !isUserVisible(sterankoContext, &user) {
-			return derp.NewNotFoundError("handler.buildOutbox", "User not found")
-		}
-
-		if isJSONLDRequest(sterankoContext) {
-			return activitypub.RenderProfileJSONLD(context, factory, &user)
-		}
-
-		// Try to load the User's Outbox
-		actionID := first.String(context.Param("action"), "view")
-
-		// If we've directly loaded the User's profile page using a
-		// hex userID then replace the URL to use their username
-		// instead of their userID
-		if actionID == "view" {
-			if hxRequest := context.Request().Header.Get("Hx-Request"); hxRequest == "true" {
-				if userIDHex := user.UserID.Hex(); userIDHex == username {
-					if userIDHex != user.Username {
-						context.Response().Header().Set("Hx-Replace-Url", "/@"+user.Username)
-					}
-				}
-			}
-		}
-
-		if ok, err := handleJSONLD(context, &user); ok {
-			return derp.Wrap(err, location, "Error building JSON-LD")
-		}
-
-		builder, err := build.NewOutbox(factory, context.Request(), context.Response(), &user, actionID)
-
-		if err != nil {
-			return derp.ReportAndReturn(derp.Wrap(err, location, "Error creating builder"))
-		}
-
-		// Forward to the standard page builder to complete the job
-		return build.AsHTML(factory, sterankoContext, builder, actionMethod)
-	}
-}
-
 // profileUsername returns a string version of the UserID.
 // if the username is "me" then this function returns the currently authenticated user's ID.
 func profileUsername(context echo.Context) (string, error) {
 
+	const location = "handler.profileUserID"
+
 	userIDString := context.Param("userId")
 
-	if (userIDString == "me") || (userIDString == "") {
+	switch userIDString {
+
+	case "":
+		return "", derp.NewBadRequestError(location, "Missing UserID")
+
+	case "me":
 		userID, err := authenticatedID(context)
-		return userID.Hex(), err
+
+		if err != nil {
+			return "", derp.Wrap(err, location, "Cannot use 'me' when not authenticated", derp.WithCode(http.StatusUnauthorized))
+		}
+
+		return userID.Hex(), nil
+
+	default:
+		return userIDString, nil
 	}
 
-	return userIDString, nil
 }
 
 // AuthenticatedID returns the UserID of the currently authenticated user.
