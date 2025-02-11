@@ -66,5 +66,5 @@ type Factory interface {
 	Providers() set.Slice[config.Provider]
 	Queue() *queue.Queue
 	Steranko() *steranko.Steranko
-	StreamUpdateChannel() chan primitive.ObjectID
+	SSEUpdateChannel() chan primitive.ObjectID
 }

@@ -1,26 +1,34 @@
-package service
+package queries
 
 import (
 	"context"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // WatchStreams initiates a mongodb change stream to on every updates to Stream data objects
-func WatchStreams(collection *mongo.Collection, result chan<- primitive.ObjectID) {
+func WatchStreams(ctx context.Context, collection data.Collection, result chan<- primitive.ObjectID) {
 
-	ctx := context.Background()
+	// Confirm that we're watching a mongo database
+	m := mongoCollection(collection)
 
-	cs, err := collection.Watch(ctx, mongo.Pipeline{})
+	if m == nil {
+		return
+	}
+
+	// Get a change stream
+	cs, err := m.Watch(ctx, mongo.Pipeline{})
 
 	if err != nil {
 		derp.Report(derp.Wrap(err, "service.Watcher", "Unable to open Mongodb Change Stream"))
 		return
 	}
 
+	// Send notifications whenever a Stream is changed
 	for cs.Next(ctx) {
 
 		var event struct {

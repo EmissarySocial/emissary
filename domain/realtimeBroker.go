@@ -25,8 +25,8 @@ type RealtimeBroker struct {
 	// map of streams being watched.
 	streams map[primitive.ObjectID]map[primitive.ObjectID]*RealtimeClient
 
-	// Channel that streams are pushed into when they change.
-	streamUpdates chan primitive.ObjectID
+	// Channel that users/streams are pushed into when they change.
+	updateChannel chan primitive.ObjectID
 
 	// Channel into which new clients can be pushed
 	AddClient chan *RealtimeClient
@@ -39,12 +39,12 @@ type RealtimeBroker struct {
 }
 
 // NewRealtimeBroker generates a new stream broker
-func NewRealtimeBroker(factory *Factory, updates chan primitive.ObjectID) RealtimeBroker {
+func NewRealtimeBroker(factory *Factory, updateChannel chan primitive.ObjectID) RealtimeBroker {
 
 	result := RealtimeBroker{
 		clients:       make(map[primitive.ObjectID]*RealtimeClient),
 		streams:       make(map[primitive.ObjectID]map[primitive.ObjectID]*RealtimeClient),
-		streamUpdates: updates,
+		updateChannel: updateChannel,
 
 		AddClient:    make(chan *RealtimeClient),
 		RemoveClient: make(chan *RealtimeClient),
@@ -110,7 +110,7 @@ func (b *RealtimeBroker) listen() {
 
 			// log.Println("Removed client")
 
-		case streamID := <-b.streamUpdates:
+		case streamID := <-b.updateChannel:
 
 			// Send an update to every client that has subscribed to this stream
 			if streamID.IsZero() {

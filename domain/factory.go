@@ -7,6 +7,7 @@ import (
 	"github.com/EmissarySocial/emissary/build"
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/queries"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/camper"
 	"github.com/EmissarySocial/emissary/tools/httpcache"
@@ -80,7 +81,8 @@ type Factory struct {
 	webhookService       service.Webhook
 
 	// real-time watchers
-	streamUpdateChannel chan primitive.ObjectID
+	refreshContext   context.CancelFunc
+	sseUpdateChannel chan primitive.ObjectID
 
 	MarkForDeletion bool
 }
@@ -106,7 +108,7 @@ func NewFactory(domain config.Domain, port string, providers []config.Provider, 
 		attachmentOriginals: attachmentOriginals,
 		attachmentCache:     attachmentCache,
 		exportCache:         exportCache,
-		streamUpdateChannel: make(chan primitive.ObjectID, 1000),
+		sseUpdateChannel:    make(chan primitive.ObjectID, 1000),
 		port:                port,
 	}
 
@@ -119,7 +121,7 @@ func NewFactory(domain config.Domain, port string, providers []config.Provider, 
 	// 2. It allows us to load (and reload) service configuration separately, as config files are loaded and changed.
 
 	// Start the Realtime Broker
-	factory.realtimeBroker = NewRealtimeBroker(&factory, factory.StreamUpdateChannel())
+	factory.realtimeBroker = NewRealtimeBroker(&factory, factory.SSEUpdateChannel())
 
 	// Create empty service pointers.  These will be populated in the Refresh() step.
 	factory.activityService = service.NewActivityStream()
@@ -193,6 +195,8 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		if factory.Session != nil {
 			factory.Session.Close()
 		}
+
+		refreshContext := factory.newRefreshContext()
 
 		// Save the new session into the factory.
 		factory.Session = session
@@ -379,7 +383,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.MediaServer(),
 			factory.Queue(),
 			factory.Host(),
-			factory.StreamUpdateChannel(),
+			factory.SSEUpdateChannel(),
 		)
 
 		// Populate StreamArchive Service
@@ -418,6 +422,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.Webhook(),
 			factory.Queue(),
 			factory.ActivityStream(),
+			factory.SSEUpdateChannel(),
 			factory.Host(),
 		)
 
@@ -427,12 +432,11 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.Queue(),
 		)
 
-		// Watch for updates to streams
-		if session, ok := factory.Session.(*mongodb.Session); ok {
-			if collection, ok := session.Collection("Stream").(*mongodb.Collection); ok {
-				go service.WatchStreams(collection.Mongo(), factory.streamUpdateChannel)
-			}
-		}
+		// Watch for updates to Stream records
+		go queries.WatchStreams(refreshContext, factory.collection(CollectionStream), factory.sseUpdateChannel)
+
+		// Watch for updates to User records
+		go queries.WatchUsers(refreshContext, factory.collection(CollectionUser), factory.sseUpdateChannel)
 	}
 
 	// Re-Populate Email Service
@@ -459,7 +463,7 @@ func (factory *Factory) Close() {
 		factory.Session.Close()
 	}
 
-	close(factory.streamUpdateChannel)
+	close(factory.sseUpdateChannel)
 
 	factory.domainService.Close()
 	factory.realtimeBroker.Close()
@@ -687,9 +691,9 @@ func (factory *Factory) RealtimeBroker() *RealtimeBroker {
 	return &factory.realtimeBroker
 }
 
-// StreamUpdateChannel initializes a background watcher and returns a channel containing any streams that have changed.
-func (factory *Factory) StreamUpdateChannel() chan primitive.ObjectID {
-	return factory.streamUpdateChannel
+// SSEUpdateChannel initializes a background watcher and returns a channel containing any streams that have changed.
+func (factory *Factory) SSEUpdateChannel() chan primitive.ObjectID {
+	return factory.sseUpdateChannel
 }
 
 /******************************************
@@ -868,4 +872,17 @@ func (factory *Factory) ModelService(object data.Object) service.ModelService {
 	default:
 		return nil
 	}
+}
+
+func (factory *Factory) newRefreshContext() context.Context {
+
+	if factory.refreshContext != nil {
+		factory.refreshContext()
+	}
+
+	ctx, cancelFunction := context.WithCancel(context.Background())
+
+	factory.refreshContext = cancelFunction
+
+	return ctx
 }

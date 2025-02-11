@@ -284,8 +284,9 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 
 	// Hard-coded routes for additional stream services
 	e.GET("/:stream/attachments/:attachmentId", handler.GetStreamAttachment(factory)) // TODO: LOW: Can Stream Attachments be moved into a custom build step?
-	e.GET("/:stream/sse", handler.ServerSentEvent(factory))                           // TODO: LOW: Can SSE be moved into a custom build step?
 	e.GET("/:stream/qrcode", handler.GetQRCode(factory))                              // TODO: LOW: Can QR Codes be moved into a custom build step?
+	e.GET("/:objectId/sse", handler.WithFactory(factory, handler.ServerSentEvent))
+	e.GET("/@:objectId/sse", handler.WithFactory(factory, handler.ServerSentEvent))
 
 	// Profile Pages
 	// NOTE: these are rewritten from /@:userId by the rewrite middleware

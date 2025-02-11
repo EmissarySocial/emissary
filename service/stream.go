@@ -30,24 +30,24 @@ import (
 
 // Stream manages all interactions with the Stream collection
 type Stream struct {
-	collection          data.Collection
-	domainService       *Domain
-	searchTagService    *SearchTag
-	templateService     *Template
-	draftService        *StreamDraft
-	outboxService       *Outbox
-	attachmentService   *Attachment
-	activityStream      *ActivityStream
-	contentService      *Content
-	keyService          *EncryptionKey
-	followerService     *Follower
-	ruleService         *Rule
-	userService         *User
-	webhookService      *Webhook
-	host                string
-	mediaserver         mediaserver.MediaServer
-	queue               *queue.Queue
-	streamUpdateChannel chan<- primitive.ObjectID
+	collection        data.Collection
+	domainService     *Domain
+	searchTagService  *SearchTag
+	templateService   *Template
+	draftService      *StreamDraft
+	outboxService     *Outbox
+	attachmentService *Attachment
+	activityStream    *ActivityStream
+	contentService    *Content
+	keyService        *EncryptionKey
+	followerService   *Follower
+	ruleService       *Rule
+	userService       *User
+	webhookService    *Webhook
+	host              string
+	mediaserver       mediaserver.MediaServer
+	queue             *queue.Queue
+	sseUpdateChannel  chan<- primitive.ObjectID
 }
 
 // NewStream returns a fully populated Stream service.
@@ -60,7 +60,7 @@ func NewStream() Stream {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Stream) Refresh(collection data.Collection, domainService *Domain, searchTagService *SearchTag, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, activityStream *ActivityStream, contentService *Content, keyService *EncryptionKey, followerService *Follower, ruleService *Rule, userService *User, webhookService *Webhook, mediaserver mediaserver.MediaServer, queue *queue.Queue, host string, streamUpdateChannel chan primitive.ObjectID) {
+func (service *Stream) Refresh(collection data.Collection, domainService *Domain, searchTagService *SearchTag, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, activityStream *ActivityStream, contentService *Content, keyService *EncryptionKey, followerService *Follower, ruleService *Rule, userService *User, webhookService *Webhook, mediaserver mediaserver.MediaServer, queue *queue.Queue, host string, sseUpdateChannel chan primitive.ObjectID) {
 	service.collection = collection
 	service.domainService = domainService
 	service.searchTagService = searchTagService
@@ -79,7 +79,7 @@ func (service *Stream) Refresh(collection data.Collection, domainService *Domain
 	service.queue = queue
 
 	service.host = host
-	service.streamUpdateChannel = streamUpdateChannel
+	service.sseUpdateChannel = sseUpdateChannel
 }
 
 func (service *Stream) Startup(theme *model.Theme) error {
@@ -297,8 +297,8 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 
 	// NON-BLOCKING: Notify other processes on this server that the stream has been updated
 	go func() {
-		// service.streamUpdateChannel <- stream.StreamID
-		service.streamUpdateChannel <- stream.ParentID
+		service.sseUpdateChannel <- stream.StreamID
+		service.sseUpdateChannel <- stream.ParentID
 	}()
 
 	// One milisecond delay prevents overlapping stream.CreateDates.  Deal with it.
@@ -353,7 +353,7 @@ func (service *Stream) Delete(stream *model.Stream, note string) error {
 		}
 
 		// NON-BLOCKING: Notify other processes on this server that the stream has been updated
-		service.streamUpdateChannel <- stream.ParentID
+		service.sseUpdateChannel <- stream.ParentID
 
 	}()
 
@@ -967,10 +967,6 @@ func (service *Stream) CalculateTags(stream *model.Stream) {
 
 	// Apply the #hashtags back to the Stream
 	stream.Hashtags = hashtagNames
-}
-
-func (service *Stream) hostname() string {
-	return domain.NameOnly(service.host)
 }
 
 /******************************************

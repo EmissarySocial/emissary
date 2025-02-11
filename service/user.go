@@ -49,6 +49,7 @@ type User struct {
 	webhookService    *Webhook
 	activityStream    *ActivityStream
 	queue             *queue.Queue
+	sseUpdateChannel  chan<- primitive.ObjectID
 	host              string
 }
 
@@ -62,7 +63,7 @@ func NewUser() User {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *User) Refresh(userCollection data.Collection, followerCollection data.Collection, followingCollection data.Collection, ruleCollection data.Collection, attachmentService *Attachment, domainService *Domain, emailService *DomainEmail, folderService *Folder, followerService *Follower, keyService *EncryptionKey, ruleService *Rule, searchTagService *SearchTag, streamService *Stream, templateService *Template, webhookService *Webhook, queue *queue.Queue, activityStream *ActivityStream, host string) {
+func (service *User) Refresh(userCollection data.Collection, followerCollection data.Collection, followingCollection data.Collection, ruleCollection data.Collection, attachmentService *Attachment, domainService *Domain, emailService *DomainEmail, folderService *Folder, followerService *Follower, keyService *EncryptionKey, ruleService *Rule, searchTagService *SearchTag, streamService *Stream, templateService *Template, webhookService *Webhook, queue *queue.Queue, activityStream *ActivityStream, sseUpdateChannel chan<- primitive.ObjectID, host string) {
 	service.collection = userCollection
 	service.searchTagService = searchTagService
 	service.followers = followerCollection
@@ -80,6 +81,7 @@ func (service *User) Refresh(userCollection data.Collection, followerCollection 
 	service.templateService = templateService
 	service.webhookService = webhookService
 	service.activityStream = activityStream
+	service.sseUpdateChannel = sseUpdateChannel
 	service.queue = queue
 
 	service.host = host
@@ -209,7 +211,10 @@ func (service *User) Save(user *model.User, note string) error {
 	}
 
 	// Denormalize User information into the Streams they own.
-	go service.streamService.SetAttributedTo(user)
+	go func() {
+		service.sseUpdateChannel <- user.UserID
+		service.streamService.SetAttributedTo(user)
+	}()
 
 	// Send Webhooks (if configured)
 	if isNew {
