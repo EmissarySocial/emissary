@@ -31,6 +31,7 @@ select {
 input:invalid,
 input.invalid,
 .input.invalid,
+select:invalid,
 [role=input].invalid {
 	border: solid 1px var(--input-border-invalid);
 	background-color: var(--input-background-invalid);
@@ -39,6 +40,7 @@ input.invalid,
 input:invalid:focus,
 input.invalid:focus,
 .input.invalid:focus,
+select:invalid:focus,
 [role=input].invalid:focus {
 	outline: unset;
 	--outline-color: var(--red70) ;
