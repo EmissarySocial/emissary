@@ -2,27 +2,31 @@ package model
 
 import (
 	"math/rand/v2"
+	"time"
 
 	"github.com/benpate/data/journal"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // SearchResult represents a value in the search index
 type SearchResult struct {
-	SearchResultID primitive.ObjectID `bson:"_id"`          // SearchResultID is the unique identifier for a SearchResult.
-	Type           string             `bson:"type"`         // Type is the ActivityPub object type (Person, Article, etc)
-	URL            string             `bson:"url"`          // URL is the URL of the SearchResult.
-	Name           string             `bson:"name"`         // Name is the name of the SearchResult.
-	AttributedTo   string             `bson:"attributedTo"` // AttributedTo is the name (or username) of the creator of this SearchResult.
-	Summary        string             `bson:"summary"`      // Summary is a short description of the SearchResult.
-	IconURL        string             `bson:"icon"`         // IconURL is the URL of the icon for the SearchResult.
-	TagNames       sliceof.String     `bson:"tagNames"`     // TagNames is a human-readable list of tags that are associated with this SearchResult.
-	TagValues      sliceof.String     `bson:"tagValues"`    // TagValues is a machine-readable list of tag values that are associated with this SearchResult.
-	FullText       string             `bson:"fullText"`     // FullText is the full text of the SearchResult.
-	Rank           int64              `bson:"rank"`         // Rank is the rank of this SearchResult in the search index.
-	Shuffle        int64              `bson:"shuffle"`      // Shuffle is a random number used to shuffle the search results.
-	ReIndexDate    int64              `bson:"reindexDate"`  // ReIndexDate is the date that this SearchResult should be reindexed.
+	SearchResultID primitive.ObjectID `bson:"_id"`                    // SearchResultID is the unique identifier for a SearchResult.
+	Type           string             `bson:"type"`                   // Type is the ActivityPub object type (Person, Article, etc)
+	URL            string             `bson:"url"`                    // URL is the URL of the SearchResult.
+	Name           string             `bson:"name"`                   // Name is the name of the SearchResult.
+	AttributedTo   string             `bson:"attributedTo,omitempty"` // AttributedTo is the name (or username) of the creator of this SearchResult.
+	Summary        string             `bson:"summary,omitempty"`      // Summary is a short description of the SearchResult.
+	IconURL        string             `bson:"icon,omitempty"`         // IconURL is the URL of the icon for the SearchResult.
+	TagNames       sliceof.String     `bson:"tagNames,omitempty"`     // TagNames is a human-readable list of tags that are associated with this SearchResult.
+	TagValues      sliceof.String     `bson:"tagValues,omitempty"`    // TagValues is a machine-readable list of tag values that are associated with this SearchResult.
+	FullText       string             `bson:"fullText"`               // FullText is the full text of the SearchResult.
+	StartDate      time.Time          `bson:"startDate,omitempty"`    // StartDate is the date that this SearchResult was created.
+	Place          mapof.Any          `bson:"place,omitempty"`        // Place is the location of the SearchResult.
+	Rank           int64              `bson:"rank"`                   // Rank is the rank of this SearchResult in the search index.
+	Shuffle        int64              `bson:"shuffle"`                // Shuffle is a random number used to shuffle the search results.
+	ReIndexDate    int64              `bson:"reindexDate"`            // ReIndexDate is the date that this SearchResult should be reindexed.
 
 	journal.Journal `bson:",inline"`
 }
@@ -33,6 +37,7 @@ func NewSearchResult() SearchResult {
 		TagNames:       make(sliceof.String, 0),
 		TagValues:      make(sliceof.String, 0),
 		Shuffle:        rand.Int64(),
+		Place:          mapof.NewAny(),
 	}
 }
 
@@ -53,6 +58,8 @@ func (searchResult *SearchResult) Update(other SearchResult) {
 	searchResult.TagNames = other.TagNames
 	searchResult.TagValues = other.TagValues
 	searchResult.FullText = other.FullText
+	searchResult.StartDate = other.StartDate
+	searchResult.Place = other.Place
 }
 
 func (searchResult SearchResult) Fields() []string {
@@ -64,6 +71,8 @@ func (searchResult SearchResult) Fields() []string {
 		"summary",
 		"icon",
 		"tagNames",
+		"startDate",
+		"place",
 	}
 }
 
@@ -82,4 +91,8 @@ func (searchResult SearchResult) IsZero() bool {
 	}
 
 	return false
+}
+
+func (searchResult SearchResult) NotZero() bool {
+	return !searchResult.IsZero()
 }

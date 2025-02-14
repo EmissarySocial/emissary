@@ -22,6 +22,7 @@ import (
 	"github.com/yuin/goldmark/extension"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	"github.com/EmissarySocial/emissary/tools/groupie"
 	"github.com/EmissarySocial/emissary/tools/parse"
 	"github.com/EmissarySocial/emissary/tools/tinyDate"
 	"github.com/benpate/icon"
@@ -287,6 +288,32 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 			return false
 		},
 
+		"longMonth": func(value any) string {
+			valueTime := convert.Time(value)
+			if valueTime.IsZero() {
+				return ""
+			}
+			return valueTime.Format("January")
+		},
+
+		"shortMonth": func(value any) string {
+			valueTime := convert.Time(value)
+			if valueTime.IsZero() {
+				return ""
+			}
+
+			return valueTime.Format("Jan")
+		},
+
+		"day": func(value any) string {
+			valueTime := convert.Time(value)
+			if valueTime.IsZero() {
+				return ""
+			}
+
+			return valueTime.Format("2")
+		},
+
 		"shortDate": func(value any) string {
 			valueTime := convert.Time(value)
 			if valueTime.IsZero() {
@@ -403,6 +430,10 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 			}
 
 			return value
+		},
+
+		"groupie": func() *groupie.Groupie {
+			return groupie.New()
 		},
 	}
 }

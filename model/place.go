@@ -145,3 +145,15 @@ func (place Place) NotEmpty() bool {
 func (place Place) HasGeocode() bool {
 	return (place.Latitude != 0) && (place.Longitude != 0)
 }
+
+// https://www.mongodb.com/docs/manual/reference/geojson/
+func (place Place) GeoJSON() mapof.Any {
+	return mapof.Any{
+		"name":        place.Name,
+		"fullAddress": place.FullAddress,
+		"location": mapof.Any{
+			"type":        "Point",
+			"coordinates": []float64{place.Longitude, place.Latitude},
+		},
+	}
+}

@@ -298,6 +298,10 @@ func (w Stream) Author() model.PersonLink {
 	return w._stream.AttributedTo
 }
 
+func (w Stream) IsAuthor() bool {
+	return w._stream.AttributedTo.UserID == w.AuthenticatedID()
+}
+
 // IsReply returns TRUE if this stream is marked as a reply to another stream or resource
 func (w Stream) IsReply() bool {
 	return (w._stream.InReplyTo != "")

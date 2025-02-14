@@ -18,6 +18,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/sherlock"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -508,8 +509,15 @@ func (w Common) Search() SearchBuilder {
 	originalQuery := w.QueryParam("q")
 
 	// Evaluate query string
-	b := builder.NewBuilder().String("name", builder.WithDefaultOperator(">"))
+	b := builder.NewBuilder().
+		String("name").
+		String("tags", builder.WithAlias("tagValues")).
+		Time("startDate").
+		Location("place")
+
 	criteria := b.Evaluate(w._request.URL.Query())
+
+	spew.Dump(criteria)
 
 	// Create the SearchBuilder for this request
 	return NewSearchBuilder(searchTagService, searchResultService, criteria, originalQuery)

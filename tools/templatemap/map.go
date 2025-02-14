@@ -17,6 +17,8 @@ func (m Map) Execute(name string, value any) string {
 		var buffer bytes.Buffer
 		if err := template.Execute(&buffer, value); err == nil {
 			return buffer.String()
+		} else {
+			derp.Report(derp.Wrap(err, "tools.templatemap.Execute", "Error executing template", name))
 		}
 	}
 

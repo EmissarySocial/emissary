@@ -92,6 +92,11 @@ func (builder SearchBuilder) Top6() SearchBuilder {
 	return builder
 }
 
+func (builder SearchBuilder) Top8() SearchBuilder {
+	builder.maxRows = 8
+	return builder
+}
+
 func (builder SearchBuilder) Top12() SearchBuilder {
 	builder.maxRows = 12
 	return builder
@@ -176,6 +181,11 @@ func (builder SearchBuilder) ByCreateDate() SearchBuilder {
 	return builder
 }
 
+func (builder SearchBuilder) ByStartDate() SearchBuilder {
+	builder.sortField = "startDate"
+	return builder
+}
+
 func (builder SearchBuilder) ByName() SearchBuilder {
 	builder.sortField = "name"
 	return builder
@@ -214,8 +224,7 @@ func (builder SearchBuilder) Slice() (sliceof.Object[model.SearchResult], error)
 		return make([]model.SearchResult, 0), nil
 	}
 
-	result, err := builder.searchResultService.Query(criteria, builder.makeOptions()...)
-	return result, err
+	return builder.searchResultService.Query(criteria, builder.makeOptions()...)
 }
 
 // Range returns the results of the query as a Go 1.23 RangeFunc
