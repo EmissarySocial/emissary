@@ -14,13 +14,15 @@
                     {{- else -}}
                         <span class="circle-32"></span>
                     {{- end }} 
-                    <span>{{highlight $user.DisplayName $search}}</span>
+                    <span class="ellipsis">{{highlight $user.DisplayName $search}}</span>
                 </td>
                 <td nowrap class="text-xs width-128 text-align-right">
-                    <a href="/@{{$user.Username}}" class="button" tabIndex="0">View Profile</a>
-                    <form action="/.masquerade?userId={{.UserID.Hex}}" method="post" class="inline-block">
-                        <button type="submit">{{icon "user-secret"}} Sign In &rarr;</button>
-                    </form>
+					<div class="hide md:show">
+						<a href="/@{{$user.Username}}" class="button" tabIndex="0">View Profile</a>
+						<form action="/.masquerade?userId={{.UserID.Hex}}" method="post" class="inline-block">
+							<button type="submit">{{icon "user-secret"}} Sign In &rarr;</button>
+						</form>
+					</div>
                 </td>
             </tr>
         {{- end -}}
