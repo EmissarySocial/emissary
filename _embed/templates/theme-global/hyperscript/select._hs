@@ -1,9 +1,14 @@
-behavior select(value, options)
+behavior select(value, options, prefix)
 
 	init
 
 		if options is not null then
 			for option in options
+
+				if prefix is not null then 
+					set option.value to prefix + option.value
+				end
+				
 				put `<option value="${option.value}">${option.label}</option>` at the end of me
 			end
 		end
