@@ -44,12 +44,13 @@
 {{ else if in .Token "search" "tags" }}
 
 	<div id="menu-bar-sub">
-		<a hx-get="/admin/search/index" class="turboclick {{if eq `search` .Token}}selected{{end}}">
-			Search
-		</a>
 	
 		<a hx-get="/admin/tags/index" class="turboclick {{if eq `tags` .Token}}selected{{end}}">
 			Tags
+		</a>
+
+		<a hx-get="/admin/search/index" class="turboclick {{if eq `search` .Token}}selected{{end}}">
+			Indexes
 		</a>
 
 	</div>
