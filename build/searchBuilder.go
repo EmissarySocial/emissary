@@ -2,81 +2,43 @@ package build
 
 import (
 	"iter"
-	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/parse"
 	"github.com/benpate/data/option"
-	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/sliceof"
+	"github.com/davecgh/go-spew/spew"
+	"github.com/dlclark/metaphone3"
 )
 
 type SearchBuilder struct {
 	searchTagService    *service.SearchTag
 	searchResultService *service.SearchResult
 	criteria            exp.Expression
-	andCriteria         []exp.Expression
-	originalQuery       string
+	textQuery           string
 	sortField           string
 	sortDirection       string
 	maxRows             int64
-	allowEmpty          bool
 }
 
-func NewSearchBuilder(searchTagService *service.SearchTag, searchResultService *service.SearchResult, criteria exp.Expression, originalQuery string) SearchBuilder {
+func NewSearchBuilder(searchTagService *service.SearchTag, searchResultService *service.SearchResult, criteria exp.Expression, textQuery string) SearchBuilder {
 
 	return SearchBuilder{
 		searchTagService:    searchTagService,
 		searchResultService: searchResultService,
 		criteria:            criteria,
-		andCriteria:         make([]exp.Expression, 0),
-		originalQuery:       originalQuery,
+		textQuery:           textQuery,
 		sortField:           "rank",
 		sortDirection:       "asc",
 		maxRows:             60,
-		allowEmpty:          false,
 	}
 }
 
 /********************************
  * CUSTOM QUERY ARGUMENTS
  ********************************/
-
-// FullText adds a full-text search to the query
-func (builder SearchBuilder) FullText() SearchBuilder {
-
-	if trimmed := strings.TrimSpace(builder.originalQuery); trimmed != "" {
-		builder.andCriteria = append(builder.andCriteria, exp.Equal("$fullText", trimmed))
-	}
-
-	return builder
-}
-
-// Tags adds a tag-based search to the query
-func (builder SearchBuilder) Tags() (SearchBuilder, error) {
-	tags, err := builder.searchTagService.FindAllowedTags(builder.originalQuery)
-
-	if err != nil {
-		return builder, derp.Wrap(err, "build.Common.Search", "Error loading SearchTags", builder.originalQuery)
-	}
-
-	if len(tags) > 0 {
-		criteria := exp.All()
-		for _, tag := range tags {
-			criteria = criteria.AndEqual("tagValues", model.ToToken(tag))
-		}
-
-		builder.andCriteria = append(builder.andCriteria, criteria)
-	}
-	return builder, nil
-}
-
-// AllowAll allows the query to run with empty criteria
-func (builder SearchBuilder) AllowAll() SearchBuilder {
-	builder.allowEmpty = true
-	return builder
-}
 
 /********************************
  * QUERY BUILDER
@@ -217,39 +179,19 @@ func (builder SearchBuilder) Reverse() SearchBuilder {
 
 // Slice returns the results of the query as a slice of objects
 func (builder SearchBuilder) Slice() (sliceof.Object[model.SearchResult], error) {
-
-	criteria, ok := builder.assembleCriteria()
-
-	if !ok {
-		return make([]model.SearchResult, 0), nil
-	}
-
+	criteria := builder.assembleCriteria()
 	return builder.searchResultService.Query(criteria, builder.makeOptions()...)
 }
 
 // Range returns the results of the query as a Go 1.23 RangeFunc
 func (builder SearchBuilder) Range() (iter.Seq[model.SearchResult], error) {
-
-	criteria, ok := builder.assembleCriteria()
-
-	if !ok {
-		return func(yield func(model.SearchResult) bool) {}, nil
-	}
-
+	criteria := builder.assembleCriteria()
 	return builder.searchResultService.Range(criteria, builder.makeOptions()...)
 }
 
 // Count returns the number of records that match the query criteria
 func (builder SearchBuilder) Count() (int64, error) {
-	criteria := builder.criteria
-
-	if len(builder.andCriteria) > 0 {
-		criteria = builder.criteria.And(exp.Or(builder.andCriteria...))
-
-	} else if !builder.allowEmpty {
-		return 0, nil
-	}
-
+	criteria := builder.assembleCriteria()
 	return builder.searchResultService.Count(criteria)
 }
 
@@ -257,28 +199,31 @@ func (builder SearchBuilder) Count() (int64, error) {
  * MISC HELPERS
  ********************************/
 
-func (builder SearchBuilder) assembleCriteria() (exp.Expression, bool) {
+func (builder SearchBuilder) assembleCriteria() exp.Expression {
 
 	result := builder.criteria
+	encoder := metaphone3.Encoder{}
+	tokens := parse.Split(builder.textQuery)
 
-	// If we have additional criteria in the query expression, then use it
-	if len(builder.andCriteria) > 0 {
+	for _, token := range tokens {
+		tagToken := model.ToToken(token)
 
-		for _, andCriteria := range builder.andCriteria {
-			result = result.And(andCriteria)
+		textToken, _ := encoder.Encode(token)
+
+		if textToken == "" {
+			result = result.AndEqual("tags", tagToken)
+			continue
 		}
 
-		return result, true
-
+		result = result.And(exp.Or(
+			exp.Equal("tags", tagToken),
+			exp.Equal("index", textToken),
+		))
 	}
 
-	// If we alllow "empty" queries, then go for it.
-	if builder.allowEmpty {
-		return result, true
-	}
+	spew.Dump("SearchCriteria", result)
 
-	// Otherwise, this query is blocked
-	return result, false
+	return result
 }
 
 func (builder SearchBuilder) makeOptions() []option.Option {

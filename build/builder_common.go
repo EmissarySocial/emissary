@@ -506,13 +506,12 @@ func (w Common) Search() SearchBuilder {
 	// Collect required values
 	searchTagService := w._factory.SearchTag()
 	searchResultService := w._factory.SearchResult()
-	originalQuery := w.QueryParam("q")
+	textQuery := w.QueryParam("q")
 
 	// Evaluate query string
 	b := builder.NewBuilder().
-		String("name").
-		String("tags", builder.WithAlias("tagValues")).
-		Time("startDate").
+		String("tags", builder.WithFilter(model.ToToken)).
+		Time("date").
 		Location("place")
 
 	criteria := b.Evaluate(w._request.URL.Query())
@@ -520,7 +519,7 @@ func (w Common) Search() SearchBuilder {
 	spew.Dump(criteria)
 
 	// Create the SearchBuilder for this request
-	return NewSearchBuilder(searchTagService, searchResultService, criteria, originalQuery)
+	return NewSearchBuilder(searchTagService, searchResultService, criteria, textQuery)
 }
 
 func (w Common) SearchTag(tagName string) model.SearchTag {
