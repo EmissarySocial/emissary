@@ -23,6 +23,8 @@ func ToToken(value string) string {
 			result.WriteRune(char)
 		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
 			result.WriteRune(char)
+		case ':':
+			result.WriteRune(':')
 		}
 	}
 

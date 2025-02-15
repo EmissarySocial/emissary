@@ -344,6 +344,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/:stream/pub/children", handler.WithFactory(factory, ap_stream.GetChildrenCollection))
 
 	// ActivityPub Routes for Search Results
+	e.GET("/.search", handler.WithSearchQuery(factory, ap_search.GetJSONLD))
 	e.GET("/.search/:searchId", handler.WithSearchQuery(factory, ap_search.GetJSONLD))
 	e.POST("/.search/:searchId/inbox", handler.WithSearchQuery(factory, ap_search.PostInbox))
 	e.GET("/.search/:searchId/outbox", handler.WithSearchQuery(factory, ap_search.GetOutboxCollection))

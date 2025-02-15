@@ -2,7 +2,6 @@ package service
 
 import (
 	"iter"
-	"math/rand"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -10,7 +9,6 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/benpate/rosetta/mapof"
 )
 
 // SearchResult defines a service that manages all searchable pages in a domain.
@@ -49,7 +47,7 @@ func (service *SearchResult) Count(criteria exp.Expression) (int64, error) {
 	return service.collection.Count(criteria)
 }
 
-// Query returns an slice of allthe Searchs that match the provided criteria
+// Query returns an slice of allthe SearchResults that match the provided criteria
 func (service *SearchResult) Query(criteria exp.Expression, options ...option.Option) ([]model.SearchResult, error) {
 	result := make([]model.SearchResult, 0)
 	err := service.collection.Query(&result, criteria, options...)
@@ -57,11 +55,12 @@ func (service *SearchResult) Query(criteria exp.Expression, options ...option.Op
 	return result, err
 }
 
-// List returns an iterator containing all of the Searchs that match the provided criteria
+// List returns an iterator containing all of the SearchResults that match the provided criteria
 func (service *SearchResult) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.collection.Iterator(criteria, options...)
 }
 
+// Range returns a Go RangeFunc that iterates over the SearchResults that match the provided criteria
 func (service *SearchResult) Range(criteria exp.Expression, options ...option.Option) (iter.Seq[model.SearchResult], error) {
 	it, err := service.collection.Iterator(criteria, options...)
 
@@ -72,7 +71,7 @@ func (service *SearchResult) Range(criteria exp.Expression, options ...option.Op
 	return RangeFunc(it, model.NewSearchResult), nil
 }
 
-// Load retrieves an Search from the database
+// Load retrieves an SearchResult from the database
 func (service *SearchResult) Load(criteria exp.Expression, searchResult *model.SearchResult) error {
 
 	if err := service.collection.Load(criteria, searchResult); err != nil {
@@ -82,23 +81,28 @@ func (service *SearchResult) Load(criteria exp.Expression, searchResult *model.S
 	return nil
 }
 
-// Save adds/updates an Search in the database
+// Save adds/updates an SearchResult in the database
 func (service *SearchResult) Save(searchResult *model.SearchResult, note string) error {
+
+	// Update tags
+	if _, tagValues, err := service.searchTagService.NormalizeTags(searchResult.Tags...); err == nil {
+		searchResult.Tags = tagValues
+	} else {
+		return derp.Wrap(err, "service.Search.Save", "Error normalizing tags", searchResult)
+	}
+
+	// Make Text Index
+	searchResult.Index = TextIndex(searchResult.Text)
 
 	// Reindex this Search in 30 days
 	searchResult.ReIndexDate = time.Now().Add(time.Hour * 24 * 30).Unix()
-
-	/*/ Validate the value before saving
-	if err := service.Schema().Validate(searchResult); err != nil {
-		return derp.Wrap(err, "service.Search.Save", "Error validating Search", searchResult)
-	}*/
 
 	// Save the searchResult to the database
 	if err := service.collection.Save(searchResult, note); err != nil {
 		return derp.Wrap(err, "service.Search.Save", "Error saving Search", searchResult, note)
 	}
 
-	for _, tagName := range searchResult.TagNames {
+	for _, tagName := range searchResult.Tags {
 		if err := service.searchTagService.Upsert(tagName); err != nil {
 			return derp.Wrap(err, "service.Search.Save", "Error saving SearchTag", searchResult, tagName)
 		}
@@ -123,10 +127,6 @@ func (service *SearchResult) Delete(searchResult *model.SearchResult, note strin
  * Custom Queries
  ******************************************/
 
-func (service *SearchResult) RangeByTags(tags ...string) (iter.Seq[model.SearchResult], error) {
-	return service.Range(exp.In("tags", tags))
-}
-
 func (service *SearchResult) LoadByURL(url string, searchResult *model.SearchResult) error {
 	return service.Load(exp.Equal("url", url), searchResult)
 }
@@ -137,34 +137,40 @@ func (service *SearchResult) LoadByURL(url string, searchResult *model.SearchRes
 
 func (service *SearchResult) Sync(searchResult model.SearchResult) error {
 
+	// If the SearchResult is marked as deleted, then remove it from the database
 	if searchResult.IsDeleted() {
 		return service.DeleteByURL(searchResult.URL)
 	}
 
-	return service.upsert(searchResult)
-}
-
-// upsert adds or updates a SearchResult in the database
-func (service *SearchResult) upsert(searchResult model.SearchResult) error {
-
-	// First, try to load the original Search
+	// Try to load the original SearchResult
 	original := model.NewSearchResult()
 
 	err := service.LoadByURL(searchResult.URL, &original)
+	var comment string
 
-	if err == nil {
+	switch {
+
+	// If the SearchResult exists in the database, then update it
+	case err == nil:
 		original.Update(searchResult)
-	} else if derp.NotFound(err) {
+		comment = "updated"
+
+	// If the SearchResult is NOT FOUND, then insert it.
+	case derp.NotFound(err):
 		original = searchResult
-	} else {
+		comment = "added"
+
+	// Return legitimate errors to the caller
+	default:
 		return derp.Wrap(err, "service.Search.Upsert", "Error loading Search", searchResult)
 	}
 
-	comment := iif(original.IsNew(), "added", "updated")
+	// Save the new/updated SearchResult to the database
 	if err := service.Save(&original, comment); err != nil {
 		return derp.Wrap(err, "service.Search.Add", "Error adding Search", searchResult)
 	}
 
+	// Great Success
 	return nil
 }
 
@@ -196,43 +202,22 @@ func (service *SearchResult) DeleteByURL(url string) error {
 func (service *SearchResult) Shuffle(tags ...string) error {
 
 	const location = "service.Search.Shuffle"
+	return derp.NewInternalError(location, "Not implemented", tags)
 
-	rangeFunc, err := service.RangeByTags(tags...)
+	/*
+		rangeFunc, err := service.RangeByTags(tags...)
 
-	if err != nil {
-		return derp.Wrap(err, location, "Error listing SearchResults", tags)
-	}
-
-	for result := range rangeFunc {
-		result.Shuffle = rand.Int63()
-		if err := service.Save(&result, "shuffled"); err != nil {
-			return derp.Wrap(err, location, "Error saving SearchResult", result)
+		if err != nil {
+			return derp.Wrap(err, location, "Error listing SearchResults", tags)
 		}
-	}
 
-	return nil
-}
+		for result := range rangeFunc {
+			result.Shuffle = rand.Int63()
+			if err := service.Save(&result, "shuffled"); err != nil {
+				return derp.Wrap(err, location, "Error saving SearchResult", result)
+			}
+		}
 
-func (service *SearchResult) UnmarshalMap(original map[string]any) model.SearchResult {
-
-	value := mapof.Any(original)
-	searchResult := model.NewSearchResult()
-	searchResult.Type = value.GetString("type")
-	searchResult.URL = value.GetString("url")
-	searchResult.Name = value.GetString("name")
-	searchResult.AttributedTo = value.GetString("attributedTo")
-	searchResult.Summary = value.GetString("summary")
-	searchResult.IconURL = value.GetString("icon")
-	searchResult.Rank = value.GetInt64("rank")
-	searchResult.Shuffle = value.GetInt64("shuffle")
-	searchResult.FullText = value.GetString("fullText")
-
-	// Special handling for tags
-	tagNames, tagValues, err := service.searchTagService.NormalizeTags(value.GetSliceOfString("tagNames")...)
-	derp.Report(derp.Wrap(err, "service.Search.UnmarshalMap", "Error normalizing tags", value))
-
-	searchResult.TagNames = tagNames
-	searchResult.TagValues = tagValues
-
-	return searchResult
+		return nil
+	*/
 }

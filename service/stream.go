@@ -987,15 +987,14 @@ func (service *Stream) SearchResult(stream *model.Stream) model.SearchResult {
 			if len(template.SearchOptions) > 0 {
 
 				result.URL = stream.URL
-				result.TagNames = stream.Hashtags
-				result.TagValues = slice.Map(stream.Hashtags, model.ToToken)
+				result.Tags = slice.Map(stream.Hashtags, model.ToToken)
 				result.Type = firstOf(template.SearchOptions.Execute("type", stream), template.SocialRole)
 				result.Name = firstOf(template.SearchOptions.Execute("name", stream), stream.Label)
 				result.AttributedTo = firstOf(template.SearchOptions.Execute("attributedTo", stream), stream.AttributedTo.Name)
 				result.Summary = firstOf(template.SearchOptions.Execute("summary", stream), stream.Summary)
 				result.IconURL = firstOf(template.SearchOptions.Execute("iconUrl", stream), stream.IconURL)
-				result.FullText = template.SearchOptions.Execute("text", stream)
-				result.StartDate = stream.StartDate.Time
+				result.Text = template.SearchOptions.Execute("text", stream)
+				result.Date = stream.StartDate.Time
 
 				if place := stream.Places.First(); place.NotEmpty() {
 					result.Place = place.GeoJSON()
@@ -1003,7 +1002,7 @@ func (service *Stream) SearchResult(stream *model.Stream) model.SearchResult {
 
 				if tagString := template.SearchOptions.Execute("tags", stream); tagString != "" {
 					tags := strings.Split(tagString, " ")
-					result.TagValues = append(result.TagValues, tags...)
+					result.Tags = append(result.Tags, tags...)
 				}
 
 				return result

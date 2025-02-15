@@ -109,6 +109,16 @@ func WithSearchQuery(serverFactory *server.Factory, fn WithFunc3[model.Template,
 		searchQueryService := factory.SearchQuery()
 		searchQuery := model.NewSearchQuery()
 		token := ctx.Param("searchId")
+		var err error
+
+		// If there is no searchId, then we should make one using the URL parameters we have
+		if token == "" {
+			token, err = searchQueryService.MakeToken(ctx.Request().URL.Query())
+
+			if err != nil {
+				return derp.Wrap(err, location, "Error creating search query token")
+			}
+		}
 
 		if err := searchQueryService.LoadByToken(token, &searchQuery); err != nil {
 			return derp.Wrap(err, location, "Error loading search query from database")

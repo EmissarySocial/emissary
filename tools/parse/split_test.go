@@ -9,6 +9,7 @@ import (
 
 func TestSplit(t *testing.T) {
 
+	require.Equal(t, sliceof.String{}, Split(""))
 	require.Equal(t, sliceof.String{"hello", "world"}, Split("hello world"))
 	require.Equal(t, sliceof.String{"hello", "world"}, Split("hello  world"))
 	require.Equal(t, sliceof.String{"hello", "world"}, Split("#hello world"))

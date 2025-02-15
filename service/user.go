@@ -764,9 +764,8 @@ func (service *User) SearchResult(user *model.User) model.SearchResult {
 		result.Summary = user.StatusMessage
 		result.URL = user.ProfileURL
 		result.IconURL = user.ActivityPubIconURL()
-		result.TagNames = user.Hashtags
-		result.TagValues = slice.Map(user.Hashtags, model.ToToken)
-		result.FullText = user.DisplayName + ", " + user.Username + ", " + user.Location + ", " + user.StatusMessage
+		result.Tags = user.Hashtags
+		result.Text = user.DisplayName + " " + user.Username
 
 		return result
 	}

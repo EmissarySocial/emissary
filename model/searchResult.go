@@ -15,17 +15,17 @@ type SearchResult struct {
 	SearchResultID primitive.ObjectID `bson:"_id"`                    // SearchResultID is the unique identifier for a SearchResult.
 	Type           string             `bson:"type"`                   // Type is the ActivityPub object type (Person, Article, etc)
 	URL            string             `bson:"url"`                    // URL is the URL of the SearchResult.
-	Name           string             `bson:"name"`                   // Name is the name of the SearchResult.
 	AttributedTo   string             `bson:"attributedTo,omitempty"` // AttributedTo is the name (or username) of the creator of this SearchResult.
+	Name           string             `bson:"name"`                   // Name is the name of the SearchResult.
+	IconURL        string             `bson:"iconUrl,omitempty"`      // IconURL is the URL of the icon for the SearchResult.
 	Summary        string             `bson:"summary,omitempty"`      // Summary is a short description of the SearchResult.
-	IconURL        string             `bson:"icon,omitempty"`         // IconURL is the URL of the icon for the SearchResult.
-	TagNames       sliceof.String     `bson:"tagNames,omitempty"`     // TagNames is a human-readable list of tags that are associated with this SearchResult.
-	TagValues      sliceof.String     `bson:"tagValues,omitempty"`    // TagValues is a machine-readable list of tag values that are associated with this SearchResult.
-	FullText       string             `bson:"fullText"`               // FullText is the full text of the SearchResult.
-	StartDate      time.Time          `bson:"startDate,omitempty"`    // StartDate is the date that this SearchResult was created.
-	Place          mapof.Any          `bson:"place,omitempty"`        // Place is the location of the SearchResult.
+	Text           string             `bson:"text,omitempty"`         // Text is the searchable text of this SearchResult.  It is used to build the index value.
+	Date           time.Time          `bson:"date,omitempty"`         // Date is the date that this SearchResult was created.
+	Place          mapof.Any          `bson:"place,omitempty"`        // Place is the location (encoded with GeoJSON) of the SearchResult.
+	Tags           sliceof.String     `bson:"tags,omitempty"`         // Tags is a machine-readable list of tag values that are associated with this SearchResult.
 	Rank           int64              `bson:"rank"`                   // Rank is the rank of this SearchResult in the search index.
 	Shuffle        int64              `bson:"shuffle"`                // Shuffle is a random number used to shuffle the search results.
+	Index          sliceof.String     `bson:"index,omitempty"`        // Index is a list of words (encoded via metaphone) that are used to index this SearchResult.
 	ReIndexDate    int64              `bson:"reindexDate"`            // ReIndexDate is the date that this SearchResult should be reindexed.
 
 	journal.Journal `bson:",inline"`
@@ -34,10 +34,10 @@ type SearchResult struct {
 func NewSearchResult() SearchResult {
 	return SearchResult{
 		SearchResultID: primitive.NewObjectID(),
-		TagNames:       make(sliceof.String, 0),
-		TagValues:      make(sliceof.String, 0),
-		Shuffle:        rand.Int64(),
 		Place:          mapof.NewAny(),
+		Tags:           make(sliceof.String, 0),
+		Shuffle:        rand.Int64(),
+		Index:          make(sliceof.String, 0),
 	}
 }
 
@@ -51,28 +51,29 @@ func (searchResult SearchResult) ID() string {
 func (searchResult *SearchResult) Update(other SearchResult) {
 	searchResult.Type = other.Type
 	searchResult.URL = other.URL
-	searchResult.Name = other.Name
 	searchResult.AttributedTo = other.AttributedTo
-	searchResult.Summary = other.Summary
+	searchResult.Name = other.Name
 	searchResult.IconURL = other.IconURL
-	searchResult.TagNames = other.TagNames
-	searchResult.TagValues = other.TagValues
-	searchResult.FullText = other.FullText
-	searchResult.StartDate = other.StartDate
+	searchResult.Summary = other.Summary
+	searchResult.Text = other.Text
+	searchResult.Date = other.Date
 	searchResult.Place = other.Place
+	searchResult.Tags = other.Tags
+	searchResult.Rank = other.Rank
+	searchResult.Shuffle = other.Shuffle
+	searchResult.Index = other.Index
+	searchResult.ReIndexDate = other.ReIndexDate
 }
 
 func (searchResult SearchResult) Fields() []string {
 	return []string{
 		"type",
 		"url",
-		"name",
 		"attributedTo",
+		"name",
+		"iconUrl",
 		"summary",
-		"icon",
-		"tagNames",
-		"startDate",
-		"place",
+		"date",
 	}
 }
 
@@ -95,4 +96,21 @@ func (searchResult SearchResult) IsZero() bool {
 
 func (searchResult SearchResult) NotZero() bool {
 	return !searchResult.IsZero()
+}
+
+func (searchResult *SearchResult) UnmarshalMap(value mapof.Any) {
+	searchResult.Type = value.GetString("type")
+	searchResult.URL = value.GetString("url")
+	searchResult.AttributedTo = value.GetString("attributedTo")
+	searchResult.Name = value.GetString("name")
+	searchResult.IconURL = value.GetString("iconUrl")
+	searchResult.Summary = value.GetString("summary")
+	searchResult.Text = value.GetString("text")
+	searchResult.Date = value.GetTime("date")
+	searchResult.Place = value.GetMap("place")
+	searchResult.Tags = value.GetSliceOfString("tags")
+	searchResult.Rank = value.GetInt64("rank")
+	searchResult.Shuffle = value.GetInt64("shuffle")
+	searchResult.Index = make(sliceof.String, 0)
+	searchResult.ReIndexDate = value.GetInt64("reindexDate")
 }

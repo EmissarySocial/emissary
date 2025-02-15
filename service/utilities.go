@@ -7,11 +7,14 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/EmissarySocial/emissary/tools/parse"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/sliceof"
+	"github.com/dlclark/metaphone3"
 	"github.com/tdewolff/minify/v2"
 	"github.com/tdewolff/minify/v2/html"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -30,6 +33,29 @@ func RangeFunc[T any](it data.Iterator, new func() T) iter.Seq[T] {
 			value = new()
 		}
 	}
+}
+
+func TextIndex(value string) sliceof.String {
+
+	// RULE: Exit early on empty strings (why would you do this? Who hurt you?)
+	if value == "" {
+		return make(sliceof.String, 0)
+	}
+
+	// Split the value into words (strips hashtags and special characters)
+	tokens := parse.Split(value)
+	result := make([]string, 0, len(tokens))
+
+	encoder := metaphone3.Encoder{}
+
+	for _, token := range tokens {
+		token, _ = encoder.Encode(token)
+		if token != "" {
+			result = append(result, token)
+		}
+	}
+
+	return result
 }
 
 func ParseProfileURL(value string) (urlValue *url.URL, userID primitive.ObjectID, objectType string, objectID primitive.ObjectID, err error) {
