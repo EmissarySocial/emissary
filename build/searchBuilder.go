@@ -9,7 +9,6 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/sliceof"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/dlclark/metaphone3"
 )
 
@@ -143,8 +142,8 @@ func (builder SearchBuilder) ByCreateDate() SearchBuilder {
 	return builder
 }
 
-func (builder SearchBuilder) ByStartDate() SearchBuilder {
-	builder.sortField = "startDate"
+func (builder SearchBuilder) ByDate() SearchBuilder {
+	builder.sortField = "date"
 	return builder
 }
 
@@ -203,7 +202,14 @@ func (builder SearchBuilder) assembleCriteria() exp.Expression {
 
 	result := builder.criteria
 	encoder := metaphone3.Encoder{}
-	tokens := parse.Split(builder.textQuery)
+	hashtags, remainder := parse.HashtagsAndRemainder(builder.textQuery)
+
+	for _, hashtag := range hashtags {
+		tagToken := model.ToToken(hashtag)
+		result = result.AndEqual("tags", tagToken)
+	}
+
+	tokens := parse.Split(remainder)
 
 	for _, token := range tokens {
 		tagToken := model.ToToken(token)
@@ -220,8 +226,6 @@ func (builder SearchBuilder) assembleCriteria() exp.Expression {
 			exp.Equal("index", textToken),
 		))
 	}
-
-	spew.Dump("SearchCriteria", result)
 
 	return result
 }
