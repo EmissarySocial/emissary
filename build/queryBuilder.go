@@ -49,6 +49,11 @@ func (builder QueryBuilder[T]) Top12() QueryBuilder[T] {
 	return builder
 }
 
+func (builder QueryBuilder[T]) Top24() QueryBuilder[T] {
+	builder.maxRows = 24
+	return builder
+}
+
 func (builder QueryBuilder[T]) Top30() QueryBuilder[T] {
 	builder.maxRows = 30
 	return builder

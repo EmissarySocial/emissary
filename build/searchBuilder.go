@@ -63,6 +63,11 @@ func (builder SearchBuilder) Top12() SearchBuilder {
 	return builder
 }
 
+func (builder SearchBuilder) Top24() SearchBuilder {
+	builder.maxRows = 24
+	return builder
+}
+
 func (builder SearchBuilder) Top30() SearchBuilder {
 	builder.maxRows = 30
 	return builder
