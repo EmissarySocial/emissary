@@ -6,7 +6,6 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -51,7 +50,6 @@ func WatchUsers(ctx context.Context, collection data.Collection, result chan<- p
 		}
 
 		log.Trace().Msg("queries.WatchUsers - Event")
-		spew.Dump(event)
 
 		// Skip "zero" sreams
 		if event.User.UserID.IsZero() {
@@ -59,7 +57,5 @@ func WatchUsers(ctx context.Context, collection data.Collection, result chan<- p
 		}
 
 		result <- event.User.UserID
-
-		spew.Dump(event.User.UserID)
 	}
 }

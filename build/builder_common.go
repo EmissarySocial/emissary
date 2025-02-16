@@ -18,7 +18,6 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/sherlock"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -515,8 +514,6 @@ func (w Common) Search() SearchBuilder {
 		Location("place")
 
 	criteria := b.Evaluate(w._request.URL.Query())
-
-	spew.Dump(criteria)
 
 	// Create the SearchBuilder for this request
 	return NewSearchBuilder(searchTagService, searchResultService, criteria, textQuery)
