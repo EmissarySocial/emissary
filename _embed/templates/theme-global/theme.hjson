@@ -14,5 +14,8 @@
 		registration: {
 			content-type:"text/hyperscript"
 		}
+		embed: {
+			content-type:"text/javascript"
+		}
 	}
 }
