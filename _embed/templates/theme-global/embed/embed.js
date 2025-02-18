@@ -5,6 +5,7 @@
 	var receiveMessage = function(event) {
 
 		var message = event.data
+		console.log(message)
 
 		if (message == null) {
 			return;
@@ -24,6 +25,11 @@
 
 		// Find and update the iframe that matches the message src.
 		var target = document.querySelector("iframe[src='" + message.src + "']");
+
+		if (target == null) {
+			console.log("embedded target not found: " + message.src);
+			return;
+		}
 
 		target.hidden = false;
 		target.scrolling = "no";
