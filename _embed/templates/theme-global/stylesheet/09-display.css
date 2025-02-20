@@ -1,10 +1,8 @@
 /* All Screens */
-:root{--rhythm: 10px}
-
-.show {display:initial}
+.show {display:revert}
 .hide {display:none}
 
-.visible {opacity:initial}
+.visible {opacity:revert}
 .invisible {opacity:0}
 
 .block {display:block}
@@ -23,11 +21,12 @@
 .float-left {float:left}
 .float-clear {float:unset}
 
-/* Small Screens (phone) */
-@media screen and (min-width:568px) {
-	:root{--rhythm: 9px}
+.object-fit-cover {object-fit:cover}
 
-	.sm\:show {display:initial}
+/* Small Screens (phone) */
+@container (min-width:640px) {
+
+	.sm\:show {display:revert}
 	.sm\:hide {display:none}
 	
     .sm\:block {display:block}
@@ -45,13 +44,14 @@
     .sm\:float-right {float:right}
     .sm\:float-left {float:left}
     .sm\:float-clear {float:unset}
+
+	.sm\:object-fit-cover {object-fit:cover}
 }
 
 /* Medium Screens (tablet) */
-@media screen and (min-width:768px) {
-	:root{--rhythm: 8px}
+@container (min-width:768px) {
 
-	.md\:show {display:initial}
+	.md\:show {display:revert}
 	.md\:hide {display:none}
 	
     .md\:block {display:block}
@@ -69,11 +69,13 @@
     .md\:float-right {float:right}
     .md\:float-left {float:left}
     .md\:float-clear {float:unset}
+
+	.md\:object-fit-cover {object-fit:cover}
 }
 
 /* Large Screens (desktop) */
-@media screen and (min-width:1024px) {
-	.lg\:show {display:initial}
+@container (min-width:1024px) {
+	.lg\:show {display:revert}
 	.lg\:hide {display:none}
 	
     .lg\:block {display:block}
@@ -91,4 +93,6 @@
     .lg\:float-right {float:right}
     .lg\:float-left {float:left}
     .lg\:float-clear {float:unset}
+
+	.lg\:object-fit-cover {object-fit:cover}
 }
