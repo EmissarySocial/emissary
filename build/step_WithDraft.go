@@ -43,7 +43,12 @@ func (step StepWithDraft) Post(builder Builder, buffer io.Writer) PipelineBehavi
 	const location = "build.StepWithDraft.Post"
 
 	factory := builder.factory()
-	streamBuilder := builder.(Stream)
+	streamBuilder, isStreamBuilder := builder.(Stream)
+
+	if !isStreamBuilder {
+		return Halt().WithError(derp.NewInternalError(location, "This step can only be used in a Stream builder"))
+	}
+
 	draftBuilder, err := streamBuilder.draftBuilder()
 
 	if err != nil {
