@@ -129,7 +129,7 @@
 			roles: ["owner", "editor"]
 			steps: [
 				{do:"with-draft", steps: [
-					{do:"upload-attachments", category:"image", accept-type:"image/*"}
+					{do:"upload-attachments", fieldname:"image", json-result:true, category:"image", accept-type:"image/*"}
 				]}
 			]
 		}
