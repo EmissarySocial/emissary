@@ -1,51 +1,61 @@
+:root {
+	--rhythm: 10px;
+}
+
+.page {
+	border: none;
+	padding: 10px;
+}
+
 .framed {
 	position: relative;
+	width:100%;
+	margin:0px;		
 }
 
-/** Extra Small Screens ******/
-@media screen and (max-width:568px) {
+/** Small Screens ******/
+@media screen and (min-width:640px) {
 
-	:root{
-		--rhythm: 10px;
+	:root {
+		--rhythm: 9px;
 	}
-
-	.framed {
-		width:100%;
-		margin:0px;		
-	}
-
-	.page {
-		border: none;
-		padding: 10px;
-		font-size: 20px;
-		font-weight:400;
-	}
-}
-
-@media screen and (min-width:568px) {
-
+	
 	.framed {
 		width:100%;
 	}
 }
 
+/** Medium Screens ******/
 @media screen and (min-width:768px) {
-
+	
+	:root {
+		--rhythm: 8px;
+	}
+		
 	.framed {
 		width:90%;
 	}
-
 }
 
+/** Large Screens ******/
 @media screen and (min-width:1024px) {
 
+	:root {
+		--rhythm: 8px;
+	}
+	
 	.framed {
 		width:85%;
 	}
 }
 
+/** Extra Large Screens ******/
 @media screen and (min-width:1280px) {
 
+	:root {
+		--rhythm: 10px;
+	}
+	
 	.framed {
 		width:80%;
 		max-width:76em;

@@ -1,7 +1,7 @@
 {{- $followerID := .QueryParam "followerId" -}}
 
 <div class="flex-row">
-    <div class="circle-64 text-xl margin-none flex-center">{{icon "email"}}</div>
+    <div class="circle width-64 text-xl margin-none flex-center">{{icon "email"}}</div>
     <div>
         <h1 class="margin-none">{{- .Label -}}</h1>
         <div class="margin-top text-gray">{{- .Actor.EmailAddress -}}</div>

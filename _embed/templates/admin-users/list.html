@@ -10,9 +10,9 @@
                 <td role="link" hx-get="/admin/users/{{$user.UserID.Hex}}/edit" class="flex-row width-100%">
                     {{- $iconURL := $user.IconURL -}}
                     {{- if ne "" $iconURL -}}
-                        <img src="{{$iconURL}}" class="circle-32">
+                        <img src="{{$iconURL}}" class="circle width-32">
                     {{- else -}}
-                        <span class="circle-32"></span>
+                        <span class="circle width-32"></span>
                     {{- end }} 
                     <span class="ellipsis">{{highlight $user.DisplayName $search}}</span>
                 </td>

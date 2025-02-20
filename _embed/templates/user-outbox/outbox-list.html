@@ -11,7 +11,7 @@
 		<div class="hover-trigger flex-row">
 			<div script="on click go to url '/{{$stream.ID}}'" role="link" class="flex-grow-1 flex-row h-entry margin-bottom turboclick">
 				<div class="flex-shrink-0" style="width:80px;">
-					<img src="{{$stream.AttributedTo.IconURL}}" class="circle-64" loading="lazy">
+					<img src="{{$stream.AttributedTo.IconURL}}" class="circle width-64" loading="lazy">
 				</div>
 				<div class="flex-grow-1" style="max-width:600px;">
 					{{- if ne "" $stream.Label -}}

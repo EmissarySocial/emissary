@@ -118,3 +118,367 @@
 	bottom:0px;
 	left:0px;
 }
+
+
+@container (min-width:640px) {
+
+	.sm\:pos-absolute {
+		-webkit-position:absolute;
+		position:absolute;
+	}
+	
+	.sm\:pos-fixed {
+		-webkit-position:fixed;
+		position:fixed;
+	}
+	
+	.sm\:pos-relative {
+		-webkit-position:relative;
+		position:relative;
+	}
+	
+	.sm\:pos-sticky {
+		-webkit-positiion:sticky;
+		position:sticky;
+	}
+	
+	.sm\:pos-absolute-top {
+		-webkit-position:absolute;
+		position:absolute;
+		top:var(--rhythm);
+		left:var(--rhythm);
+		right: var(--rhythm);
+	}
+	
+	.sm\:pos-absolute-top-0 {
+		-webkit-position:absolute;
+		position:absolute;
+		top:0px;
+		left:0px;
+		right:0px;
+	}
+	
+	.sm\:pos-absolute-top-left {
+		-webkit-position:absolute;
+		position:absolute;
+		top:var(--rhythm);
+		left:var(--rhythm);
+	}
+	
+	.sm\:pos-absolute-top-left-0 {
+		-webkit-position:absolute;
+		position:absolute;
+		top:0px;
+		left:0px;
+	}
+	
+	.sm\:pos-absolute-top-right {
+		-webkit-position:absolute;
+		position:absolute;
+		top:var(--rhythm);
+		right:var(--rhythm);
+	}
+	
+	.sm\:pos-absolute-top-right-0 {
+		-webkit-position:absolute;
+		position:absolute;
+		top:0px;
+		right:0px;
+	}
+	
+	.sm\:pos-absolute-bottom {
+		-webkit-position:absolute;
+		position:absolute;
+		bottom:var(--rhythm);
+		left:var(--rhythm);
+		right: var(--rhythm);
+	}
+	
+	.sm\:pos-absolute-bottom-0 {
+		-webkit-position:absolute;
+		position:absolute;
+		bottom:0px;
+		left:0px;
+		right:0px;
+	}
+	
+	.sm\:pos-absolute-bottom-left {
+		-webkit-position:absolute;
+		position:absolute;
+		bottom:var(--rhythm);
+		left:var(--rhythm);
+	}
+	
+	.sm\:pos-absolute-bottom-left-0 {
+		-webkit-position:absolute;
+		position:absolute;
+		bottom:0px;
+		left:0px;
+	}
+	
+	.sm\:pos-absolute-bottom-right {
+		-webkit-position:absolute;
+		position:absolute;
+		bottom:var(--rhythm);
+		right:var(--rhythm);
+	}
+	
+	.sm\:pos-absolute-bottom-right-0 {
+		-webkit-position:absolute;
+		position:absolute;
+		bottom:0px;
+		right:0px;
+	}
+	
+	.sm\:pos-absolute-four-corners {
+		-webkit-position:absolute;
+		position:absolute;
+		top:0px;
+		right:0px;
+		bottom:0px;
+		left:0px;
+	}
+		
+}
+
+
+@container (min-width:768px) {
+	
+	.md\:pos-absolute {
+		-webkit-position:absolute;
+		position:absolute;
+	}
+	
+	.md\:pos-fixed {
+		-webkit-position:fixed;
+		position:fixed;
+	}
+	
+	.md\:pos-relative {
+		-webkit-position:relative;
+		position:relative;
+	}
+	
+	.md\:pos-sticky {
+		-webkit-positiion:sticky;
+		position:sticky;
+	}
+	
+	.md\:pos-absolute-top {
+		-webkit-position:absolute;
+		position:absolute;
+		top:var(--rhythm);
+		left:var(--rhythm);
+		right: var(--rhythm);
+	}
+	
+	.md\:pos-absolute-top-0 {
+		-webkit-position:absolute;
+		position:absolute;
+		top:0px;
+		left:0px;
+		right:0px;
+	}
+	
+	.md\:pos-absolute-top-left {
+		-webkit-position:absolute;
+		position:absolute;
+		top:var(--rhythm);
+		left:var(--rhythm);
+	}
+	
+	.md\:pos-absolute-top-left-0 {
+		-webkit-position:absolute;
+		position:absolute;
+		top:0px;
+		left:0px;
+	}
+	
+	.md\:pos-absolute-top-right {
+		-webkit-position:absolute;
+		position:absolute;
+		top:var(--rhythm);
+		right:var(--rhythm);
+	}
+	
+	.md\:pos-absolute-top-right-0 {
+		-webkit-position:absolute;
+		position:absolute;
+		top:0px;
+		right:0px;
+	}
+	
+	.md\:pos-absolute-bottom {
+		-webkit-position:absolute;
+		position:absolute;
+		bottom:var(--rhythm);
+		left:var(--rhythm);
+		right: var(--rhythm);
+	}
+	
+	.md\:pos-absolute-bottom-0 {
+		-webkit-position:absolute;
+		position:absolute;
+		bottom:0px;
+		left:0px;
+		right:0px;
+	}
+	
+	.md\:pos-absolute-bottom-left {
+		-webkit-position:absolute;
+		position:absolute;
+		bottom:var(--rhythm);
+		left:var(--rhythm);
+	}
+	
+	.md\:pos-absolute-bottom-left-0 {
+		-webkit-position:absolute;
+		position:absolute;
+		bottom:0px;
+		left:0px;
+	}
+	
+	.md\:pos-absolute-bottom-right {
+		-webkit-position:absolute;
+		position:absolute;
+		bottom:var(--rhythm);
+		right:var(--rhythm);
+	}
+	
+	.md\:pos-absolute-bottom-right-0 {
+		-webkit-position:absolute;
+		position:absolute;
+		bottom:0px;
+		right:0px;
+	}
+	
+	.md\:pos-absolute-four-corners {
+		-webkit-position:absolute;
+		position:absolute;
+		top:0px;
+		right:0px;
+		bottom:0px;
+		left:0px;
+	}
+}
+
+
+@container (min-width:1024px) {
+
+	.lg\:pos-absolute {
+		-webkit-position:absolute;
+		position:absolute;
+	}
+	
+	.lg\:pos-fixed {
+		-webkit-position:fixed;
+		position:fixed;
+	}
+	
+	.lg\:pos-relative {
+		-webkit-position:relative;
+		position:relative;
+	}
+	
+	.lg\:pos-sticky {
+		-webkit-positiion:sticky;
+		position:sticky;
+	}
+	
+	.lg\:pos-absolute-top {
+		-webkit-position:absolute;
+		position:absolute;
+		top:var(--rhythm);
+		left:var(--rhythm);
+		right: var(--rhythm);
+	}
+	
+	.lg\:pos-absolute-top-0 {
+		-webkit-position:absolute;
+		position:absolute;
+		top:0px;
+		left:0px;
+		right:0px;
+	}
+	
+	.lg\:pos-absolute-top-left {
+		-webkit-position:absolute;
+		position:absolute;
+		top:var(--rhythm);
+		left:var(--rhythm);
+	}
+	
+	.lg\:pos-absolute-top-left-0 {
+		-webkit-position:absolute;
+		position:absolute;
+		top:0px;
+		left:0px;
+	}
+	
+	.lg\:pos-absolute-top-right {
+		-webkit-position:absolute;
+		position:absolute;
+		top:var(--rhythm);
+		right:var(--rhythm);
+	}
+	
+	.lg\:pos-absolute-top-right-0 {
+		-webkit-position:absolute;
+		position:absolute;
+		top:0px;
+		right:0px;
+	}
+	
+	.lg\:pos-absolute-bottom {
+		-webkit-position:absolute;
+		position:absolute;
+		bottom:var(--rhythm);
+		left:var(--rhythm);
+		right: var(--rhythm);
+	}
+	
+	.lg\:pos-absolute-bottom-0 {
+		-webkit-position:absolute;
+		position:absolute;
+		bottom:0px;
+		left:0px;
+		right:0px;
+	}
+	
+	.lg\:pos-absolute-bottom-left {
+		-webkit-position:absolute;
+		position:absolute;
+		bottom:var(--rhythm);
+		left:var(--rhythm);
+	}
+	
+	.lg\:pos-absolute-bottom-left-0 {
+		-webkit-position:absolute;
+		position:absolute;
+		bottom:0px;
+		left:0px;
+	}
+	
+	.lg\:pos-absolute-bottom-right {
+		-webkit-position:absolute;
+		position:absolute;
+		bottom:var(--rhythm);
+		right:var(--rhythm);
+	}
+	
+	.lg\:pos-absolute-bottom-right-0 {
+		-webkit-position:absolute;
+		position:absolute;
+		bottom:0px;
+		right:0px;
+	}
+	
+	.lg\:pos-absolute-four-corners {
+		-webkit-position:absolute;
+		position:absolute;
+		top:0px;
+		right:0px;
+		bottom:0px;
+		left:0px;
+	}	
+}

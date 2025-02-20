@@ -9,7 +9,7 @@
  * Font Stack
  ******************************************/
 :root {
-    --rhythm:8px;
+	--rhythm: 10px;
     --weight:400;
 }
 
@@ -17,6 +17,28 @@
     :root {
         --weight:300;
     }
+}
+
+@media screen and (min-width:640px) {
+	:root {
+		--rhythm: 8px;
+	}
+}
+
+@media screen and (min-width:760px) {
+	:root {
+		--rhythm: 8px;
+	}
+}
+@media screen and (min-width:1024px) {
+	:root {
+		--rhythm: 8px;
+	}
+}
+@media screen and (min-width:1280px) {
+	:root {
+		--rhythm: 9px;
+	}
 }
     
 html {
@@ -222,7 +244,7 @@ a.text-red:hover {
  * Text Modifiers - Code
  ******************************************/
 
- .monospace, code {
+.monospace, code {
     font-family:ui-monospace, "Menlo", "Monaco", "Cascadia Mono", "Segoe UI Mono", "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro", "Fira Mono", "Droid Sans Mono", "Courier New", monospace;
     background-color:var(--gray10);
     border:solid 1px var(--gray-20);

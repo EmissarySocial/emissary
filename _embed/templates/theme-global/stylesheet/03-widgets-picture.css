@@ -18,7 +18,7 @@ picture.picture img {
 	width:100%;
 }
 
-@media screen and (max-width:568px) {
+@media screen and (max-width:640px) {
 
 	picture.picture {
 		margin-left: -10px;

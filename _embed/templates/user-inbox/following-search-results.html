@@ -16,9 +16,9 @@
 			<div role="menuitem" tabIndex="0" hx-get="/@me/inbox/following-add?url={{.ID}}&folderId={{$folderID}}&search={{$search}}">
 				<div class="flex-row margin-vertical-sm">
 					{{- if ne "" .Icon -}}
-						<img src="{{.Icon}}" class="circle-32">
+						<img src="{{.Icon}}" class="circle width-32">
 					{{- else -}}
-						<div class="circle-32 bg-light-gray"></div>
+						<div class="circle width-32 bg-light-gray"></div>
 					{{- end -}}
 					<div class="flex-grow-1">
 						<div class="text-md margin-vertical-none">

@@ -30,9 +30,9 @@
 			<div class="flex-shrink-0">
 				{{- $userImage := .UserImage -}}
 				{{- if eq $userImage "" -}}
-					<div class="circle-48"></div>
+					<div class="circle width-48"></div>
 				{{- else -}}
-					<img class="circle-48" src="{{$userImage}}">
+					<img class="circle width-48" src="{{$userImage}}">
 				{{- end -}}
 			</div>
 			<div class="flex-grow-1">

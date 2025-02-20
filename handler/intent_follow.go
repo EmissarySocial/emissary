@@ -79,7 +79,7 @@ func GetIntent_Follow(ctx *steranko.Context, factory *domain.Factory, user *mode
 		{
 			b.Div().Class("flex-row", "flex-align-center", "margin-bottom")
 			{
-				b.Img(actor.Icon().Href()).Class("circle-48", "flex-shrink-0").Close()
+				b.Img(actor.Icon().Href()).Class("circle width-48", "flex-shrink-0").Close()
 				b.Div().Class("flex-grow")
 				{
 					b.Div().Class("text-lg", "bold", "margin-none").InnerText("Follow " + actor.Name())

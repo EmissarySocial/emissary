@@ -30,90 +30,23 @@
 }
 
 /******************************************
- * Squares
+ * Shapes
  ******************************************/
 
 .square {
     aspect-ratio:1;
+	border-radius:0px;
 }
 
-.square-24 {
-    height:24px;
-    width:24px;
-}
-
-.square-32 {
-    height:32px;
-    width:32px;
-}
-
-.square-48 {
-    height:48px;
-    width:48px;
-}
-
-.square-64 {
-    height:64px;
-    width:64px;
-}
-
-/******************************************
- * Circles
- ******************************************/
-
- .circle {
+.circle {
 	border-radius:50%;
 	aspect-ratio: 1;
     object-fit:cover;
 	background-color:var(--gray30);
 }
 
-.circle-24 {
-	height:24px;
-	width:24px;
-    object-fit:cover;
-	border-radius:12px;
-	background-color:var(--gray30);
-}
-
-.circle-32 {
-    height:32px;
-    width:32px;
-    object-fit:cover;
-    border-radius:16px;
-	background-color:var(--gray30);
-}
-
-.circle-48 {
-    height:48px;
-    width:48px;
-    object-fit:cover;
-    border-radius:24px;
-	background-color:var(--gray30);
-}
-
-.circle-64 {
-    height:64px;
-    width:64px;
-    object-fit:cover;
-    border-radius:32px;
-	background-color:var(--gray30);
-}
-
-.circle-96 {
-    height:96px;
-    width:96px;
-    object-fit:cover;
-    border-radius:48px;
-	background-color:var(--gray30);
-}
-
-.circle-128 {
-    height:128px;
-    width:128px;
-    object-fit:cover;
-    border-radius:64px;
-	background-color:var(--gray30);
+.rounded {
+	border-radius: calc(var(--rhythm) * 2);
 }
 
 /******************************************
@@ -131,26 +64,73 @@
 }
 
 /* Small Screens */
-@media screen and (min-width: 568px) {
-.sm\:aspect-square, .sm\:aspect-1-1 {aspect-ratio:1; overflow-y:hidden;}
-.sm\:aspect-2-3 {aspect-ratio:2/3; overflow-y:hidden;}
-.sm\:aspect-4-3 {aspect-ratio:4/3; overflow-y:hidden;}
-.sm\:aspect-16-9 {aspect-ratio:16/9; overflow-y:hidden;}
-}
+@container (min-width: 640px) {
+	.sm\:aspect-square, .sm\:aspect-1-1 {aspect-ratio:1; overflow-y:hidden;}
+	.sm\:aspect-2-3 {aspect-ratio:2/3; overflow-y:hidden;}
+	.sm\:aspect-4-3 {aspect-ratio:4/3; overflow-y:hidden;}
+	.sm\:aspect-16-9 {aspect-ratio:16/9; overflow-y:hidden;}
+
+	.sm\:square {
+		aspect-ratio:1;
+		border-radius:0px;
+	}
+
+	.sm\:circle {
+		border-radius:50%;
+		aspect-ratio: 1;
+		object-fit:cover;
+		background-color:var(--gray30);
+	}
+
+	.sm\:rounded {
+		border-radius: calc(var(--rhythm) * 2);
+	}
+	}
 
 /* Medium Screens */
-@media screen and (min-width: 768px) {
-.md\:aspect-square, .md\:aspect-1-1 {aspect-ratio:1; overflow-y:hidden;}
-.md\:aspect-2-3 {aspect-ratio:2/3; overflow-y:hidden;}
-.md\:aspect-4-3 {aspect-ratio:4/3; overflow-y:hidden;}
-.md\:aspect-16-9 {aspect-ratio:16/9; overflow-y:hidden;}
+@container (min-width: 768px) {
+	.md\:aspect-square, .md\:aspect-1-1 {aspect-ratio:1; overflow-y:hidden;}
+	.md\:aspect-2-3 {aspect-ratio:2/3; overflow-y:hidden;}
+	.md\:aspect-4-3 {aspect-ratio:4/3; overflow-y:hidden;}
+	.md\:aspect-16-9 {aspect-ratio:16/9; overflow-y:hidden;}
+
+	.md\:square {
+		aspect-ratio:1;
+		border-radius:0px;
+	}
+
+	.md\:circle {
+		border-radius:50%;
+		aspect-ratio: 1;
+		object-fit:cover;
+		background-color:var(--gray30);
+	}
+
+	.md\:rounded {
+		border-radius: calc(var(--rhythm) * 2);
+	}
 }
 
 /* Large Screens */
-@media screen and (min-width: 1024px) {
-.lg\:aspect-square, .lg\:aspect-1-1 {aspect-ratio:1; overflow-y:hidden;}
-.lg\:aspect-2-3 {aspect-ratio:2/3; overflow-y:hidden;}
-.lg\:aspect-4-3 {aspect-ratio:4/3; overflow-y:hidden;}
-.lg\:aspect-16-9 {aspect-ratio:16/9; overflow-y:hidden;}
-}
+@container (min-width: 1024px) {
+	.lg\:aspect-square, .lg\:aspect-1-1 {aspect-ratio:1; overflow-y:hidden;}
+	.lg\:aspect-2-3 {aspect-ratio:2/3; overflow-y:hidden;}
+	.lg\:aspect-4-3 {aspect-ratio:4/3; overflow-y:hidden;}
+	.lg\:aspect-16-9 {aspect-ratio:16/9; overflow-y:hidden;}
 
+	.lg\:square {
+		aspect-ratio:1;
+		border-radius:0px;
+	}
+
+	.lg\:circle {
+		border-radius:50%;
+		aspect-ratio: 1;
+		object-fit:cover;
+		background-color:var(--gray30);
+	}
+
+	.lg\:rounded {
+		border-radius: calc(var(--rhythm) * 2);
+	}
+}

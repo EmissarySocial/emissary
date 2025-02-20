@@ -46,7 +46,7 @@
 	<input type="hidden" name="intent" value="Create">
 
 	<div id="addAnotherButton" class="flex-row button width-100% margin-bottom-xs" role="button" script="on click hide me then show #addAnotherForm then focus() the #addAnotherAccountID">
-		<div class="circle-48 flex-center text-xl margin-none">{{icon "activitypub"}}</div>
+		<div class="circle width-48 flex-center text-xl margin-none">{{icon "activitypub"}}</div>
 		<div class="flex-grow">
 			<div class="bold">Add Fediverse Account</div>
 			<div class="text-sm text-gray">Your username from any site on the social web</div>
@@ -54,7 +54,7 @@
 	</div>
 	
 	<div id="addAnotherForm" class="flex-row button width-100% margin-bottom-xs" role="button">
-		<div id="addAnotherIcon" class="circle-48 flex-center text-xl margin-none">{{icon "activitypub"}}</div>
+		<div id="addAnotherIcon" class="circle width-48 flex-center text-xl margin-none">{{icon "activitypub"}}</div>
 		<input type="text" id="addAnotherAccountID" name="account" placeholder="@yourname@yourserver.social" autocomplete="off" class="flex-grow">
 		<button class="primary nowrap htmx-request-hide">Add Fediverse Account</button>
 		<button class="primary nowrap htmx-request-show">
@@ -65,7 +65,7 @@
 
 	{{- if eq "follow" $intent -}}
 		<div class="flex-row button width-100% margin-bottom-xs" role="button" hx-get="{{.BasePath}}/follow-email">
-			<div class="circle-48 flex-center text-xl margin-none flex-shrink-0">{{icon "email"}}</div>
+			<div class="circle width-48 flex-center text-xl margin-none flex-shrink-0">{{icon "email"}}</div>
 			<div class="flex-grow">
 				<div class="bold">Add Email Address</div>
 				<div class="text-sm text-gray">Receive updates in your email box</div>
@@ -193,7 +193,7 @@
 			repeat for account in accounts index idx
 				set row to `
 					<div class="flex-row button width-100% margin-bottom-xs {{if eq "" $intent}}inactive{{end}}" {{if ne "" $intent}}tabindex="0"{{end}} role="link" onclick="goToIntent('${account.id}')">
-						<img class="circle-48 flex-center flex-shrink-0" src="${account.icon}">
+						<img class="circle width-48 flex-center flex-shrink-0" src="${account.icon}">
 						<div class="flex-grow">
 							<div class="bold">${account.name}</div>
 							<div class="text-sm text-gray">${account.preferredUsername}</div>

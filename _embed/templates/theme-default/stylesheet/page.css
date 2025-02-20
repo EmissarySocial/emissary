@@ -4,6 +4,7 @@
 
 /* All Screens */
 .page {
+	container-type: inline-size;
     position:relative;
 	line-height:150%;
 	border: none;
@@ -25,6 +26,7 @@
  ******************************************/
 
 .fullscreen {
+	container-type:inline-size;
     position:relative;
 	line-height:150%;
 	border: none;
@@ -35,16 +37,20 @@
 }
 
 
-/** SMALL  Screens (tablet/vertical) ******/
-@media screen and (min-width:568px) {
+@media screen and (min-width:640px) {
 	
 }
 
-/** MEDIUM Screens (tablet/vertical) ******/
 @media screen and (min-width:768px) {
+
+}
+
+/** LARGE Screens (tablet/horizontal) ******/
+@media screen and (min-width:1024px) {
 
 	.page {
 		width:90%;
+		max-width:1100px;
 		margin-top:24px;
 		margin-bottom: 64px;
 		border: solid 1px var(--page-border);
@@ -53,30 +59,6 @@
 
 	.framed {
 		width:90%;
-	}
-}
-
-/** LARGE Screens (tablet/horizontal) ******/
-@media screen and (min-width:1024px) {
-	.page {
-		padding: calc(var(--rhythm) * 2);
-		width:84%;
-	}
-
-	.framed {
-		width:84%;
-	}
-}
-
-/** EXTRA LARGE Screens (laptop/desktop) ******/
-@media screen and (min-width:1280px) {
-	.page {
-		width:80%;
-		max-width:1200px;
-	}
-
-	.framed {
-		width:80%;
-		max-width:1200px;
+		max-width:1100px;
 	}
 }

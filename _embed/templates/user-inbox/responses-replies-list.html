@@ -25,9 +25,9 @@
 		<div class="flex-row">
 			<div class="flex-shrink-0" hx-get="/@me/inbox/message?messageId={{$messageID}}&folderID={{$folderID}}&origin.followingId={{$followingID}}&url={{$object.ID}}">
 				{{- if $actor.Icon.IsNil -}}
-					<div class="circle-48"></div>
+					<div class="circle width-48"></div>
 				{{- else -}}
-					<img class="circle-48" src="{{$actor.Icon.Href}}">
+					<img class="circle width-48" src="{{$actor.Icon.Href}}">
 				{{- end -}}
 			</div>
 

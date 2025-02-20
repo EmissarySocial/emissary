@@ -1,5 +1,6 @@
 /* All Screens */
 
+
 .flex-row, .flex-row-reverse {
 	display:flex;
 	flex-direction:row;
@@ -46,7 +47,7 @@
 }
 
 /* Small Screens */
-@media screen and (min-width: 568px) {
+@container (min-width: 640px) {
 
 	.sm\:flex-row,
 	.sm\:flex-row-reverse {
@@ -90,7 +91,7 @@
 }
 
 /* Medium Screens */
-@media screen and (min-width: 768px) {
+@container (min-width: 768px) {
 
 	.md\:flex-row,
 	.md\:flex-row-reverse {
@@ -134,7 +135,7 @@
 }
 
 /* Large Screens */
-@media screen and (min-width: 1024px) {
+@container (min-width: 1024px) {
 
 	.lg\:flex-row,
 	.lg\:flex-row-reverse {

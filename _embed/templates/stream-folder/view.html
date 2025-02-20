@@ -35,7 +35,7 @@
 
 	{{- if eq (.Data "format") "CARDS" -}}
 
-		<div class="columns-5" script="install sortContainer">
+		<div class="cols-5" script="install sortContainer">
 
 			{{- range .Children.ByRank.Slice -}}
 				<article class="h-entry">
@@ -57,7 +57,7 @@
 
 	{{- else if eq (.Data "format") "COLUMNS" -}}
 
-		<div class="columns-4" script="install sortContainer">
+		<div class="cols-4" script="install sortContainer">
 
 			{{- range .Children.ByRank.Slice -}}
 				<article class="draggable h-entry" hx-get="/{{.Token}}" href="/{{.Token}}">

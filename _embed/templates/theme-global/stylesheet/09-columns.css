@@ -1,10 +1,14 @@
 /* All Screens */
-.columns-6,
-.columns-5,
-.columns-4,
-.columns-3,
-.columns-2,
-.columns-1 {
+.container {
+	container-type:inline-size;
+}
+
+.cols-6,
+.cols-5,
+.cols-4,
+.cols-3,
+.cols-2,
+.cols-1 {
 	--cols: 1;
 	--gap: 4px;
 	display: flex;
@@ -16,73 +20,93 @@
 	gap: var(--gap);
 }
 
-.columns-6 > *,
-.columns-5 > *,
-.columns-4 > *,
-.columns-3 > *,
-.columns-2 > *,
-.columns-1 > * {
+.cols-2-6,
+.cols-2-5,
+.cols-2-4 {
+	--cols: 2;
+	--gap: 4px;
+	display: flex;
+	flex-wrap: wrap;
+	flex-direction: row;
+	align-items: stretch;
+	align-content: flex-start;
+	justify-content: flex-start;
+	gap: var(--gap);
+}
+
+.cols-6 > *,
+.cols-5 > *,
+.cols-4 > *,
+.cols-3 > *,
+.cols-2-6 > *,
+.cols-2-5 > *,
+.cols-2-4 > *,
+.cols-2 > *,
+.cols-1 > * {
 	display:block;
 	flex-grow:0;
 	flex-shrink:0;
 	width: calc(( 100% - ((var(--cols) - 1) * var(--gap))) / var(--cols));
 }
 
-.columns-6 > .col-2x,
-.columns-5 > .col-2x,
-.columns-4 > .col-2x,
-.columns-3 > .col-2x,
-.columns-2 > .col-2x,
-.columns-1 > .col-2x {
+.cols-6 > .col-2x,
+.cols-5 > .col-2x,
+.cols-4 > .col-2x,
+.cols-3 > .col-2x,
+.cols-2 > .col-2x,
+.cols-1 > .col-2x {
 	width: clamp( 0px, calc((200% / var(--cols)) - var(--gap)), 100%);
 }
 
-.columns-6.no-gap,
-.columns-5.no-gap,
-.columns-4.no-gap,
-.columns-3.no-gap,
-.columns-2.no-gap,
-.columns-1.no-gap {
+.cols-6.no-gap,
+.cols-5.no-gap,
+.cols-4.no-gap,
+.cols-3.no-gap,
+.cols-2.no-gap,
+.cols-1.no-gap {
 	gap: 0px;
 }
 
-.columns-6.no-gap > *,
-.columns-5.no-gap > *,
-.columns-4.no-gap > *,
-.columns-3.no-gap > *,
-.columns-2.no-gap > *,
-.columns-1.no-gap > * {
+.cols-6.no-gap > *,
+.cols-5.no-gap > *,
+.cols-4.no-gap > *,
+.cols-3.no-gap > *,
+.cols-2.no-gap > *,
+.cols-1.no-gap > * {
 	width: calc( 100%  / var(--cols));
 }
 
 /* SMALL Screens (Phone) */
-@media screen and (min-width:568px) {
-	.columns-6 {
+@container (min-width:640px) {
+	.cols-6,
+	.cols-2-6 {
 		--cols: 3;
 		--gap: 8px;
 	}
 
-	.columns-5 {
+	.cols-5,
+	.cols-2-5 {
 		--cols: 2;
 		--gap: 8px;
 	}
 
-	.columns-4 {
+	.cols-4,
+	.cols-2-4 {
 		--cols: 2;
 		--gap: 8px;
 	}
 
-	.columns-3 {
+	.cols-3 {
 		--cols: 1;
 		--gap: 8px;
 	}
 
-	.columns-2 {
+	.cols-2 {
 		--cols: 1;
 		--gap: 8px;
 	}
 
-	.columns-1 {
+	.cols-1 {
 		--cols: 1;
 		--gap: 8px;
 	}
@@ -90,34 +114,37 @@
 
 
 /* MEDIUM Screens (Tablet) */
-@media screen and (min-width:768px) {
+@container (min-width:768px) {
 
-	.columns-6 {
+	.cols-6,
+	.cols-2-6 {
 		--cols: 4;
 		--gap: 12px;
 	}
 
-	.columns-5 {
-		--cols:3;
-		--gap: 12px;
-	}
-
-	.columns-4 {
+	.cols-5,
+	.cols-2-5 {
 		--cols: 3;
 		--gap: 12px;
 	}
 
-	.columns-3 {
+	.cols-4,
+	.cols-2-4 {
+		--cols: 3;
+		--gap: 12px;
+	}
+
+	.cols-3 {
 		--cols: 2;
 		--gap: 12px;
 	}
 
-	.columns-2 {
-		--cols: 1;
+	.cols-2 {
+		--cols: 2;
 		--gap: 12px;
 	}
 
-	.columns-1 {
+	.cols-1 {
 		--cols: 1;
 		--gap: 12px;
 	}
@@ -125,35 +152,74 @@
 
 
 /* LARGE Screens (Desktop) */
-/* @media screen and (min-width:1024px) { */
-@media screen and (min-width:1280px) {
+@container (min-width:1024px) {
 
-	.columns-6 {
-		--cols: 6;
-		--gap: 24px;
-	}
-
-	.columns-5 {
+	.cols-6,
+	.cols-2-6 {
 		--cols: 5;
 		--gap: 24px;
 	}
 
-	.columns-4 {
+	.cols-5,
+	.cols-2-5 {
 		--cols: 4;
 		--gap: 24px;
 	}
 
-	.columns-3 {
+	.cols-4,
+	.cols-2-4 {
+		--cols: 4;
+		--gap: 24px;
+	}
+
+	.cols-3 {
 		--cols: 3;
 		--gap: 24px;
 	}
 
-	.columns-2 {
+	.cols-2 {
 		--cols: 2;
 		--gap: 24px;
 	}
 
-	.columns-1 {
+	.cols-1 {
+		--cols: 1;
+		--gap: 24px;
+	}
+}
+
+/* EXTRA LARGE Screens (Wide Desktop) */
+@container (min-width:1280px) {
+
+	.cols-6,
+	.cols-2-6 {
+		--cols: 6;
+		--gap: 24px;
+	}
+
+	.cols-5,
+	.cols-2-5 {
+		--cols: 5;
+		--gap: 24px;
+	}
+
+	.cols-4,
+	.cols-2-4 {
+		--cols: 4;
+		--gap: 24px;
+	}
+
+	.cols-3 {
+		--cols: 3;
+		--gap: 24px;
+	}
+
+	.cols-2 {
+		--cols: 2;
+		--gap: 24px;
+	}
+
+	.cols-1 {
 		--cols: 1;
 		--gap: 24px;
 	}

@@ -64,7 +64,7 @@ func GetIntent_Like(ctx *steranko.Context, factory *domain.Factory, user *model.
 
 				b.Div().Class("flex-row", "margin-bottom")
 				{
-					b.Img(attributedTo.Icon().Href()).Class("flex-shrink-0", "circle-32").Close()
+					b.Img(attributedTo.Icon().Href()).Class("flex-shrink-0", "circle", "width-32").Close()
 					b.Div().Class("text-sm", "margin-none")
 					{
 						b.Div().Class("bold").InnerText(attributedTo.Name()).Close()

@@ -17,9 +17,9 @@
 		
 		<div hx-get="/@me/inbox/message?messageId={{$messageID}}&folderID={{$folderID}}&origin.followingId={{$followingID}}&url={{$object.ID}}">
 			{{- if $attributedTo.Icon.IsNil -}}
-				<div class="circle-24"></div>
+				<div class="circle width-24"></div>
 			{{- else -}}
-				<img class="circle-24" src="{{$attributedTo.Icon.Href}}">
+				<img class="circle width-24" src="{{$attributedTo.Icon.Href}}">
 			{{- end -}}
 		</div>
 

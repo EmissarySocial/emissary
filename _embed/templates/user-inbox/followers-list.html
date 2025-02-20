@@ -8,11 +8,11 @@
 	<div class="flex-row" role="button">
 		<div hx-get="/@me/inbox/follower?followerId={{.FollowerID.Hex}}&amp;url={{$actor.ProfileURL}}" class="margin-right-sm">
 			{{- if eq "EMAIL" .Method -}}
-				<div class="circle-48 text-lg margin-none flex-center text-white">{{icon "email"}}</div>
+				<div class="circle width-48 text-lg margin-none flex-center text-white">{{icon "email"}}</div>
 			{{- else if eq "" $actor.IconURL -}}
-				<div class="circle-48"></div>
+				<div class="circle width-48"></div>
 			{{- else -}}
-				<img src="{{$actor.IconURL}}" class="circle-48">
+				<img src="{{$actor.IconURL}}" class="circle width-48">
 			{{- end -}}
 		</div>
 		<div hx-get="/@me/inbox/follower?followerId={{.FollowerID.Hex}}&amp;url={{$actor.ProfileURL}}" class="width-100%">

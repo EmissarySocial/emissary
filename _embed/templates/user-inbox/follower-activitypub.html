@@ -13,9 +13,9 @@
 
 	<div class="flex-row">
 		{{- if ne "" $activityStream.Icon.Href -}}
-			<img src="{{$activityStream.Icon.Href}}" class="circle-64">
+			<img src="{{$activityStream.Icon.Href}}" class="circle width-64">
 		{{- else -}}
-			<div class="circle-64"></div>
+			<div class="circle width-64"></div>
 		{{- end -}}
 		<div>
 			<h1 class="margin-none">{{- $activityStream.Name -}}</h1>
