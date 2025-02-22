@@ -409,8 +409,8 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 			return strings.Split(value, separator)
 		},
 
-		"join": func(values []string, separator string) string {
-			return strings.Join(values, separator)
+		"join": func(values []string) string {
+			return strings.Join(values, "")
 		},
 
 		"append": func(first []string, second []string) sliceof.String {
