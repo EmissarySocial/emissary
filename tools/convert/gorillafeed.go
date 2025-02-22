@@ -27,3 +27,25 @@ func StreamToGorillaFeed(stream model.Stream) *feeds.Item {
 
 	return result
 }
+
+func SearchResultToGorillaFeed(searchResult model.SearchResult) *feeds.Item {
+	result := &feeds.Item{
+		Title:       searchResult.Name,
+		Description: searchResult.Summary,
+		Link: &feeds.Link{
+			Href: searchResult.URL,
+		},
+	}
+
+	if searchResult.CreateDate != 0 {
+		result.Created = time.Unix(searchResult.CreateDate, 0)
+	}
+
+	if searchResult.AttributedTo != "" {
+		result.Author = &feeds.Author{
+			Name: searchResult.AttributedTo,
+		}
+	}
+
+	return result
+}

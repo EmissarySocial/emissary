@@ -17,7 +17,9 @@ import (
 )
 
 // StepViewFeed is a Step that can build a Stream into HTML
-type StepViewFeed struct{}
+type StepViewFeed struct {
+	SearchTypes []string
+}
 
 // Get builds the Stream HTML to the context
 func (step StepViewFeed) Get(builder Builder, buffer io.Writer) PipelineBehavior {
@@ -26,19 +28,7 @@ func (step StepViewFeed) Get(builder Builder, buffer io.Writer) PipelineBehavior
 
 	factory := builder.factory()
 
-	// Get all child streams from the database
-	children, err := factory.Stream().ListPublishedByParent(builder.objectID())
-
-	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error querying child streams"))
-	}
-
 	mimeType := step.detectMimeType(builder)
-
-	// Special case for JSONFeed
-	if mimeType == model.MimeTypeJSONFeed {
-		return step.asJSONFeed(builder, buffer, children)
-	}
 
 	// Initialize the result RSS feed
 	result := feeds.Feed{
@@ -49,7 +39,41 @@ func (step StepViewFeed) Get(builder Builder, buffer io.Writer) PipelineBehavior
 		Created:     time.Now(),
 	}
 
-	result.Items = slice.Map(iterator.Slice(children, model.NewStream), convert.StreamToGorillaFeed)
+	isSearchBuilder := len(step.SearchTypes) > 0
+
+	switch isSearchBuilder {
+
+	case false:
+
+		// Get all child streams from the database
+		children, err := factory.Stream().ListPublishedByParent(builder.objectID())
+
+		if err != nil {
+			return Halt().WithError(derp.Wrap(err, location, "Error querying child streams"))
+		}
+
+		// Special case for JSONFeed
+		if mimeType == model.MimeTypeJSONFeed {
+			return step.asJSONFeed(builder, buffer, children)
+		}
+
+		result.Items = slice.Map(iterator.Slice(children, model.NewStream), convert.StreamToGorillaFeed)
+
+	case true:
+
+		queryResults, err := builder.Search().
+			Top120().
+			ByCreateDate().
+			Reverse().
+			WhereType(step.SearchTypes...).
+			Slice()
+
+		if err != nil {
+			return Halt().WithError(derp.Wrap(err, location, "Error querying search queryResults"))
+		}
+
+		result.Items = slice.Map(queryResults, convert.SearchResultToGorillaFeed)
+	}
 
 	// Now write the feed into the requested format
 	{
@@ -63,7 +87,7 @@ func (step StepViewFeed) Get(builder Builder, buffer io.Writer) PipelineBehavior
 			mimeType = "application/atom+xml; charset=UTF=8"
 			xml, err = result.ToAtom()
 
-		case model.MimeTypeRSS:
+		default:
 			mimeType = "application/rss+xml; charset=UTF=8"
 			xml, err = result.ToRss()
 		}
