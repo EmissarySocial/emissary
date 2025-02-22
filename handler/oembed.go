@@ -5,7 +5,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/EmissarySocial/emissary/build"
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
@@ -54,6 +53,11 @@ func getOEmbed_record(ctx *steranko.Context, factory *domain.Factory, path strin
 	// Parse the path as either a Stream or a User
 	path = strings.TrimPrefix(path, "/")
 
+	// If the path is empty, then return oEmbed for the Domain
+	if path == "" {
+		return getOEmbed_Domain(factory)
+	}
+
 	// If the path begins with "@", then it is a User
 	if strings.HasPrefix(path, "@") {
 		path = strings.TrimPrefix(path, "@")
@@ -62,6 +66,22 @@ func getOEmbed_record(ctx *steranko.Context, factory *domain.Factory, path strin
 
 	// Otherwise, the path is for a Stream
 	return getOEmbed_Stream(ctx, factory, path)
+}
+
+func getOEmbed_Domain(factory *domain.Factory) (mapof.Any, error) {
+
+	domain := factory.Domain().Get()
+
+	result := mapof.Any{
+		"version":       "1.0",
+		"type":          "link",
+		"title":         domain.Label,
+		"cache_age":     86400, // cache for 24 hours
+		"provider_name": domain.Label,
+		"provider_url":  domain.Host(),
+	}
+
+	return result, nil
 }
 
 func getOEmbed_Stream(ctx *steranko.Context, factory *domain.Factory, token string) (mapof.Any, error) {
@@ -97,6 +117,9 @@ func getOEmbed_Stream(ctx *steranko.Context, factory *domain.Factory, token stri
 		result["thumbnail_width"] = 300
 	}
 
+	/* This works great, but I'm removing it for not because Mastodon doesn't
+	   support "rich" style oEmbed.
+
 	// Special case for Templates that define HTML content of OEmbed
 	templateService := factory.Template()
 	if template, err := templateService.Load(stream.TemplateID); err == nil {
@@ -128,6 +151,7 @@ func getOEmbed_Stream(ctx *steranko.Context, factory *domain.Factory, token stri
 			}
 		}
 	}
+	*/
 
 	return result, nil
 }
@@ -166,6 +190,7 @@ func getOEmbed_User(factory *domain.Factory, token string) (mapof.Any, error) {
 	return result, nil
 }
 
+// nolint: unused
 func getOEmbed_heightAndWidth(html string) (int, int) {
 
 	var height int
