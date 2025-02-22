@@ -2,6 +2,7 @@ package unsplash
 
 import (
 	"math/rand"
+	"net/http"
 	"net/url"
 	"strings"
 
@@ -123,7 +124,7 @@ func GetCollectionRandom(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		// Get the first 64 photos from the collection
-		photos := make([]map[string]any, 0, 64)
+		photos := make([]mapof.Any, 0, 64)
 
 		txn := newTransaction(factory.HTTPCache(), accessKey).
 			Get("https://api.unsplash.com/collections/" + collectionID + "/photos?per_page=64").
@@ -141,8 +142,14 @@ func GetCollectionRandom(serverFactory *server.Factory) echo.HandlerFunc {
 		photo := photos[rand.Intn(len(photos))]
 
 		// If this iis a JSON request, then return nicely formatted JSON
-		if asJSON := convert.Bool(ctx.QueryParam("json")); asJSON {
+		if convert.Bool(ctx.QueryParam("json")) {
 			return ctx.JSONPretty(200, photo, "\t")
+		}
+
+		// If this is a "forward" request, then redirect to the photo URL
+		if convert.Bool(ctx.QueryParam("forward")) {
+			url := photo.GetMap("urls").GetString("regular")
+			return ctx.Redirect(http.StatusSeeOther, url)
 		}
 
 		// Otherwise, return the photo as HTML
