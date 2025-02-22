@@ -157,6 +157,26 @@ func (dt DateTime) TimeOnly() time.Time {
 	return time.Date(0, 1, 1, dt.Hour(), dt.Minute(), dt.Second(), dt.Nanosecond(), dt.Location())
 }
 
+func (dt DateTime) IsMidnight() bool {
+	if dt.Hour() > 0 {
+		return false
+	}
+
+	if dt.Minute() > 0 {
+		return false
+	}
+
+	if dt.Second() > 0 {
+		return false
+	}
+
+	return true
+}
+
+func (dt DateTime) NotMidnight() bool {
+	return !dt.IsMidnight()
+}
+
 func splitTime(value string) (hours int, minutes int, seconds int) {
 
 	timeParts := strings.Split(value, ":")
