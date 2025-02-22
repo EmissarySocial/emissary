@@ -2,6 +2,7 @@ package step
 
 import (
 	"html/template"
+	"net/http"
 
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
@@ -9,7 +10,8 @@ import (
 
 // RedirectTo is a Step that forwards the user to a new page.
 type RedirectTo struct {
-	URL *template.Template
+	StatusCode int
+	URL        *template.Template
 }
 
 // NewRedirectTo returns a fully initialized RedirectTo object
@@ -24,7 +26,8 @@ func NewRedirectTo(stepInfo mapof.Any) (RedirectTo, error) {
 	}
 
 	return RedirectTo{
-		URL: url,
+		StatusCode: first(stepInfo.GetInt("status"), http.StatusTemporaryRedirect),
+		URL:        url,
 	}, nil
 }
 

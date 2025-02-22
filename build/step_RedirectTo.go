@@ -4,14 +4,14 @@ import (
 	"bytes"
 	"html/template"
 	"io"
-	"net/http"
 
 	"github.com/benpate/derp"
 )
 
 // StepRedirectTo is a Step that sends an HTTP redirect to another page.
 type StepRedirectTo struct {
-	URL *template.Template
+	StatusCode int
+	URL        *template.Template
 }
 
 func (step StepRedirectTo) Get(builder Builder, buffer io.Writer) PipelineBehavior {
@@ -33,9 +33,9 @@ func (step StepRedirectTo) execute(builder Builder) PipelineBehavior {
 		return Halt().WithError(derp.Wrap(err, location, "Error evaluating 'url'"))
 	}
 
-	if err := redirect(builder.response(), http.StatusTemporaryRedirect, nextPage.String()); err != nil {
+	if err := redirect(builder.response(), step.StatusCode, nextPage.String()); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error redirecting to new page"))
 	}
 
-	return nil
+	return Halt().AsFullPage()
 }
