@@ -19,7 +19,6 @@ type StepTableEditor struct {
 func (step StepTableEditor) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 
 	const location = "build.StepTableEditor.Get"
-	var err error
 
 	s := builder.schema()
 	factory := builder.factory()
@@ -29,16 +28,10 @@ func (step StepTableEditor) Get(builder Builder, buffer io.Writer) PipelineBehav
 	t.UseLookupProvider(builder.lookupProvider())
 	t.AllowAll()
 
-	if editRow, ok := convert.IntOk(builder.QueryParam("edit"), 0); ok {
-		err = t.DrawEdit(editRow, buffer)
-	} else if add := builder.QueryParam("add"); add != "" {
-		err = t.DrawAdd(buffer)
-	} else {
-		err = t.DrawView(buffer)
-	}
+	requestURL := builder.request().URL
 
-	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error drawing table", step.Path))
+	if err := t.Draw(requestURL, buffer); err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Error building HTML"))
 	}
 
 	return Continue().WithHeader("Hx-Push-Url", "false")

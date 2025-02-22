@@ -25,7 +25,7 @@ require (
 	github.com/benpate/rosetta v0.24.6
 	github.com/benpate/sherlock v0.8.9
 	github.com/benpate/steranko v0.20.3
-	github.com/benpate/table v0.6.21
+	github.com/benpate/table v0.7.0
 	github.com/benpate/toot v0.3.0
 	github.com/benpate/turbine v0.2.1
 	github.com/codingsince1985/geo-golang v1.8.4

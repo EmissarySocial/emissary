@@ -133,6 +133,18 @@ td.grid-cell div {
 	border:none;
 }
 
+td.grid-cell:has(input:focus),
+td.grid-cell:has(select:focus) {
+	outline: medium auto currentColor;
+    outline: medium auto invert;
+    outline: 5px auto -webkit-focus-ring-color;
+}
+
+td.grid-cell input:focus,
+td.grid-cell select:focus {
+	outline:none;
+}
+
 td.grid-cell.grid-controls {
 	text-align:right;
 	padding: var(--rhythm) var(--rhythm);

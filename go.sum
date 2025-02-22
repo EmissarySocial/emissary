@@ -67,8 +67,8 @@ github.com/benpate/sherlock v0.8.9 h1:3AGS9ZMQ8z+vh3Xjy4nD4OAZhVuwaXn2eeVCcMxPGz
 github.com/benpate/sherlock v0.8.9/go.mod h1:uB7EI/d/SGvU6wI9TxmHngTN4EViJJTYZqcU9HC4/Uo=
 github.com/benpate/steranko v0.20.3 h1:nKaFrvuboXBGD/mGY52jRKimp+qNFRgUkmzWag9rrIg=
 github.com/benpate/steranko v0.20.3/go.mod h1:lfVcNVHtv57GlQ4+DdNPW5raaIq2/EMB7BIfug8b+Nk=
-github.com/benpate/table v0.6.21 h1:+qI/otOTD9/s8DFQx7DskrdtfAzvjHrMto9RZq3q68Q=
-github.com/benpate/table v0.6.21/go.mod h1:U/MmryrD8j2n1c2MEkMrOIYUwBPHksPtSEc1vTI7WA4=
+github.com/benpate/table v0.7.0 h1:45tmh8kMdmIGROvisl9E7eGtUHafdGfuFz0Exz7vejw=
+github.com/benpate/table v0.7.0/go.mod h1:/LUUw7ucZi5UOSQj0ZEUQF6W9dH4igw+OCP5u+eqBls=
 github.com/benpate/toot v0.3.0 h1:Nv64oUTJo9yNQnrWVdEQRIBWi/exvwOUYo4PBdjJg9w=
 github.com/benpate/toot v0.3.0/go.mod h1:ihtqpjldJGzL0dd3S/g9dLE3HaO82P+f45kvfh1TXEc=
 github.com/benpate/turbine v0.2.1 h1:CJsy1B1t78OPnI/iRupBA7DxCLOPbxot19OuzPY1Vow=
