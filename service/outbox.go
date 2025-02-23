@@ -1,6 +1,7 @@
 package service
 
 import (
+	"iter"
 	"sync"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -78,6 +79,18 @@ func (service *Outbox) Query(criteria exp.Expression, options ...option.Option) 
 // List returns an iterator containing all of the Activities that match the provided criteria
 func (service *Outbox) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.collection.Iterator(notDeleted(criteria), options...)
+}
+
+// Range returns a Go 1.23 RangeFunc that iterates over the OutboxMessage records that match the provided criteria
+func (service *Outbox) Range(criteria exp.Expression, options ...option.Option) (iter.Seq[model.OutboxMessage], error) {
+
+	iter, err := service.List(criteria, options...)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "service.Outbox.Range", "Error creating iterator", criteria)
+	}
+
+	return RangeFunc(iter, model.NewOutboxMessage), nil
 }
 
 // Load retrieves an Outbox from the database
@@ -213,19 +226,11 @@ func (service *Outbox) LoadOrCreate(parentType string, parentID primitive.Object
 	return result, derp.Wrap(err, "service.Outbox.LoadOrCreate", "Error loading Outbox", parentID, url)
 }
 
-func (service *Outbox) ListByParentID(parentType string, parentID primitive.ObjectID) (data.Iterator, error) {
+func (service *Outbox) RangeByParentID(parentType string, parentID primitive.ObjectID) (iter.Seq[model.OutboxMessage], error) {
 	criteria := exp.Equal("parentType", parentType).
 		AndEqual("parentId", parentID)
 
-	return service.List(criteria)
-}
-
-func (service *Outbox) QueryByParentID(parentType string, parentID primitive.ObjectID, criteria exp.Expression, options ...option.Option) ([]model.OutboxMessage, error) {
-	criteria = exp.Equal("parentType", parentType).
-		AndEqual("parentId", parentID).
-		And(criteria)
-
-	return service.Query(criteria, options...)
+	return service.Range(criteria)
 }
 
 func (service *Outbox) QueryByParentAndDate(parentType string, parentID primitive.ObjectID, maxDate int64, maxRows int) ([]model.OutboxMessageSummary, error) {
@@ -263,18 +268,16 @@ func (service *Outbox) DeleteByParentID(parentType string, parentID primitive.Ob
 	const location = "service.Outbox.DeleteByParent"
 
 	// Get all messages in this Outbox
-	it, err := service.ListByParentID(parentType, parentID)
+	rangeFunc, err := service.RangeByParentID(parentType, parentID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error querying Outbox Messages", parentType, parentID)
 	}
 
-	message := model.NewOutboxMessage()
-	for it.Next(&message) {
+	for message := range rangeFunc {
 		if err := service.Delete(&message, "Deleted"); err != nil {
 			derp.Report(derp.Wrap(err, location, "Error deleting Outbox Message", message))
 		}
-		message = model.NewOutboxMessage()
 	}
 
 	return nil

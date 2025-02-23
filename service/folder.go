@@ -1,6 +1,8 @@
 package service
 
 import (
+	"iter"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/queries"
 	"github.com/benpate/data"
@@ -62,6 +64,18 @@ func (service *Folder) Query(criteria exp.Expression, options ...option.Option) 
 	result := []model.Folder{}
 	err := service.collection.Query(&result, notDeleted(criteria), options...)
 	return result, err
+}
+
+// Range returns an iterator containing all of the Folders that match the provided criteria
+func (service *Folder) Range(criteria exp.Expression, options ...option.Option) (iter.Seq[model.Folder], error) {
+
+	iter, err := service.List(criteria, options...)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "service.Folder.Range", "Error creating iterator", criteria)
+	}
+
+	return RangeFunc(iter, model.NewFolder), nil
 }
 
 // List returns an iterator containing all of the Folders that match the provided criteria
@@ -174,9 +188,27 @@ func (service *Folder) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
-// ListByUserID returns an iterator containing all of the Folders for a given user
-func (service *Folder) ListByUserID(userID primitive.ObjectID) (data.Iterator, error) {
-	return service.List(exp.Equal("userId", userID), option.SortAsc("rank"))
+// RangeByUserID returns an iterator containing all of the Folders for a given user
+func (service *Folder) RangeByUserID(userID primitive.ObjectID) (iter.Seq[model.Folder], error) {
+	return service.Range(exp.Equal("userId", userID), option.SortAsc("rank"))
+}
+
+// DeleteByUserID removes all folders for a given user
+func (service *Folder) DeleteByUserID(userID primitive.ObjectID, comment string) error {
+
+	rangeFunc, err := service.RangeByUserID(userID)
+
+	if err != nil {
+		return derp.Wrap(err, "service.Folder.DeleteByUserID", "Error listing folders", userID)
+	}
+
+	for folder := range rangeFunc {
+		if err := service.Delete(&folder, comment); err != nil {
+			return derp.Wrap(err, "service.Folder.DeleteByUserID", "Error deleting folder", folder)
+		}
+	}
+
+	return nil
 }
 
 // QueryByUserID returns all folders for a given user

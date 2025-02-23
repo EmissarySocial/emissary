@@ -77,7 +77,7 @@ func (service *Follower) List(criteria exp.Expression, options ...option.Option)
 	return service.collection.Iterator(notDeleted(criteria), options...)
 }
 
-// Range returns a Go 1.23 RangeFunc that iterates over the Followers who match the provided criteria
+// Range returns a Go 1.23 RangeFunc that iterates over the Follower records that match the provided criteria
 func (service *Follower) Range(criteria exp.Expression, options ...option.Option) (iter.Seq[model.Follower], error) {
 
 	iter, err := service.List(criteria, options...)
@@ -301,6 +301,34 @@ func (service *Follower) RangeByTags(tags ...string) (iter.Seq[model.Follower], 
 	}
 
 	return service.Range(criteria)
+}
+
+func (service *Follower) RangeByUserID(userID primitive.ObjectID) (iter.Seq[model.Follower], error) {
+	return service.Range(
+		exp.Equal("parentId", userID).
+			AndEqual("parentType", model.FollowerTypeUser),
+	)
+}
+
+// DeleteByUserID removes all Followers of a specific User
+func (service *Follower) DeleteByUserID(userID primitive.ObjectID, comment string) error {
+
+	const location = "service.Follower.DeleteByUserID"
+
+	rangeFunc, err := service.RangeByUserID(userID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error creating range function", userID)
+	}
+
+	for follower := range rangeFunc {
+
+		if err := service.Delete(&follower, comment); err != nil {
+			return derp.Wrap(err, location, "Error deleting follower", follower)
+		}
+	}
+
+	return nil
 }
 
 // ActivityPubFollowersChannel returns a channel containing all of the Followers of specific parentID

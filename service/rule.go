@@ -1,6 +1,7 @@
 package service
 
 import (
+	"iter"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -77,6 +78,18 @@ func (service *Rule) QuerySummary(criteria exp.Expression, options ...option.Opt
 // List returns an iterator containing all of the Rules that match the provided criteria
 func (service *Rule) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.collection.Iterator(notDeleted(criteria), options...)
+}
+
+// Range returns a Go 1.23 RangeFunc that iterates over the Rule records that match the provided criteria
+func (service *Rule) Range(criteria exp.Expression, options ...option.Option) (iter.Seq[model.Rule], error) {
+
+	iter, err := service.List(criteria, options...)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "service.Rule.Range", "Error creating iterator", criteria)
+	}
+
+	return RangeFunc(iter, model.NewRule), nil
 }
 
 // Channel returns a channel that will stream all of the Rules that match the provided criteria
@@ -363,6 +376,30 @@ func (service *Rule) QueryBlockedActors(userID primitive.ObjectID) ([]model.Rule
 		AndEqual("behavior", model.RuleActionBlock)
 
 	return service.Query(criteria, option.SortAsc("trigger"))
+}
+
+// RangeByUserID returns all Rules tha belong to a specific User (NO DOMAIN RULES)
+func (service *Rule) RangeByUserID(userID primitive.ObjectID) (iter.Seq[model.Rule], error) {
+	return service.Range(exp.Equal("userId", userID))
+}
+
+func (service *Rule) DeleteByUserID(userID primitive.ObjectID, comment string) error {
+
+	const location = "service.Rule.DeleteByUserID"
+
+	rangeFunc, err := service.RangeByUserID(userID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error getting range function")
+	}
+
+	for rule := range rangeFunc {
+		if err := service.Delete(&rule, comment); err != nil {
+			return derp.Wrap(err, location, "Error deleting rule", rule)
+		}
+	}
+
+	return nil
 }
 
 /******************************************

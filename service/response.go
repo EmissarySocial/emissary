@@ -1,6 +1,8 @@
 package service
 
 import (
+	"iter"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/queries"
 	"github.com/benpate/data"
@@ -61,6 +63,18 @@ func (service *Response) Query(criteria exp.Expression, options ...option.Option
 // List returns an iterator containing all of the Responses that match the provided criteria
 func (service *Response) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.collection.Iterator(notDeleted(criteria), options...)
+}
+
+// Range returns an iterator containing all of the Users who match the provided criteria
+func (service *Response) Range(criteria exp.Expression, options ...option.Option) (iter.Seq[model.Response], error) {
+
+	iter, err := service.List(criteria, options...)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "service.User.Range", "Error creating iterator", criteria)
+	}
+
+	return RangeFunc(iter, model.NewResponse), nil
 }
 
 // Load retrieves an Response from the database
@@ -189,6 +203,13 @@ func (service *Response) LoadByID(responseID primitive.ObjectID, response *model
 	return service.Load(exp.Equal("_id", responseID), response)
 }
 
+func (service *Response) RangeByUserID(userID primitive.ObjectID, options ...option.Option) (iter.Seq[model.Response], error) {
+
+	criteria := exp.Equal("userId", userID)
+
+	return service.Range(criteria, options...)
+}
+
 func (service *Response) QueryByUserAndObject(userID primitive.ObjectID, object string, options ...option.Option) ([]model.Response, error) {
 
 	criteria := exp.Equal("userId", userID).
@@ -222,6 +243,25 @@ func (service *Response) CountByContent(objectID string) (mapof.Int, error) {
 /******************************************
  * Custom Behaviors
  ******************************************/
+
+func (service *Response) DeleteByUserID(userID primitive.ObjectID, note string) error {
+
+	const location = "service.Response.DeleteByUserID"
+
+	rangeFunc, err := service.RangeByUserID(userID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error loading responses by user", userID)
+	}
+
+	for response := range rangeFunc {
+		if err := service.Delete(&response, note); err != nil {
+			return derp.Wrap(err, location, "Error deleting response", response)
+		}
+	}
+
+	return nil
+}
 
 // SetResponse is the preferred way of creating/updating a Response.  It includes the business
 // logic to search for an existing response, and delete it if one exists already (publishing UNDO actions in the process).

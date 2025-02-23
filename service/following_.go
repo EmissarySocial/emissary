@@ -1,6 +1,7 @@
 package service
 
 import (
+	"iter"
 	"math/rand"
 	"time"
 
@@ -143,6 +144,18 @@ func (service *Following) List(criteria exp.Expression, options ...option.Option
 	return service.collection.Iterator(notDeleted(criteria), options...)
 }
 
+// Range returns a Go 1.23 RangeFunc that iterates over the Following records that match the provided criteria
+func (service *Following) Range(criteria exp.Expression, options ...option.Option) (iter.Seq[model.Following], error) {
+
+	iter, err := service.List(criteria, options...)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "service.Following.Range", "Error creating iterator", criteria)
+	}
+
+	return RangeFunc(iter, model.NewFollowing), nil
+}
+
 // Load retrieves an Following from the database
 func (service *Following) Load(criteria exp.Expression, result *model.Following) error {
 
@@ -227,14 +240,8 @@ func (service *Following) Delete(following *model.Following, note string) error 
 
 	const location = "service.Following.Delete"
 
-	// Remove the Following record
-	if err := service.collection.Delete(following, note); err != nil {
+	if err := service.deleteNoStats(following, note); err != nil {
 		return derp.Wrap(err, location, "Error deleting Following", following, note)
-	}
-
-	// Remove any messages received from this Following
-	if err := service.inboxService.DeleteByOrigin(following.FollowingID, "Parent record deleted"); err != nil {
-		return derp.Wrap(err, location, "Error deleting streams for Following", following, note)
 	}
 
 	// Recalculate the follower count for this user
@@ -242,6 +249,27 @@ func (service *Following) Delete(following *model.Following, note string) error 
 
 	// Recalculate the unread count for this folder
 	go derp.Report(service.folderService.ReCalculateUnreadCountFromFolder(following.UserID, following.FolderID))
+
+	return nil
+}
+
+// deleteNoStats removes an Following from the database (virtual delete)
+// but DOES NOT recompute statistics for parent records.  This is useful when
+// cascading deletes, because there's no reason to recompute statistics for
+// records that will be deleted.
+func (service *Following) deleteNoStats(following *model.Following, comment string) error {
+
+	const location = "service.Following.deleteNoStats"
+
+	// Remove the Following record
+	if err := service.collection.Delete(following, comment); err != nil {
+		return derp.Wrap(err, location, "Error deleting Following", following, comment)
+	}
+
+	// Remove any messages received from this Following
+	if err := service.inboxService.DeleteByOrigin(following.FollowingID, "Parent record deleted"); err != nil {
+		return derp.Wrap(err, location, "Error deleting streams for Following", following)
+	}
 
 	// Disconnect from external services (if necessary)
 	service.Disconnect(following)
@@ -361,10 +389,10 @@ func (service *Following) ListPollable() (data.Iterator, error) {
 	return service.List(criteria, option.SortAsc("lastPolled"))
 }
 
-// ListByUserID returns an iterator of all following for a given userID
-func (service *Following) ListByUserID(userID primitive.ObjectID) (data.Iterator, error) {
+// RangeByUserID returns an iterator of all following for a given userID
+func (service *Following) RangeByUserID(userID primitive.ObjectID) (iter.Seq[model.Following], error) {
 	criteria := exp.Equal("userId", userID)
-	return service.List(criteria, option.SortAsc("lastPolled"))
+	return service.Range(criteria, option.SortAsc("lastPolled"))
 }
 
 // LoadByID retrieves an Following from the database.  UserID is required to prevent
@@ -442,6 +470,29 @@ func (service *Following) GetFollowingID(userID primitive.ObjectID, uri string) 
 	} else {
 		return "", derp.Wrap(err, location, "Error loading Following record", uri)
 	}
+}
+
+// DeleteByUserID removes all Following records for the provided userID
+func (service *Following) DeleteByUserID(userID primitive.ObjectID, comment string) error {
+
+	const location = "service.Following.DeleteByUserID"
+
+	// Load all Following for the provided userID
+	rangeFunc, err := service.RangeByUserID(userID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error loading following", userID)
+	}
+
+	// Delete each Following record
+	for following := range rangeFunc {
+		if err := service.deleteNoStats(&following, comment); err != nil {
+			return derp.Wrap(err, location, "Error deleting following", following)
+		}
+	}
+
+	// No Cap.
+	return nil
 }
 
 // PurgeInbox removes all inbox items that are past their expiration date.

@@ -37,13 +37,17 @@ type User struct {
 	following         data.Collection
 	rules             data.Collection
 	attachmentService *Attachment
-	searchTagService  *SearchTag
-	ruleService       *Rule
 	emailService      *DomainEmail
-	keyService        *EncryptionKey
 	domainService     *Domain
 	folderService     *Folder
 	followerService   *Follower
+	followingService  *Following
+	keyService        *EncryptionKey
+	inboxService      *Inbox
+	outboxService     *Outbox
+	responseService   *Response
+	ruleService       *Rule
+	searchTagService  *SearchTag
 	streamService     *Stream
 	templateService   *Template
 	webhookService    *Webhook
@@ -63,7 +67,32 @@ func NewUser() User {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *User) Refresh(userCollection data.Collection, followerCollection data.Collection, followingCollection data.Collection, ruleCollection data.Collection, attachmentService *Attachment, domainService *Domain, emailService *DomainEmail, folderService *Folder, followerService *Follower, keyService *EncryptionKey, ruleService *Rule, searchTagService *SearchTag, streamService *Stream, templateService *Template, webhookService *Webhook, queue *queue.Queue, activityStream *ActivityStream, sseUpdateChannel chan<- primitive.ObjectID, host string) {
+func (service *User) Refresh(
+	userCollection data.Collection,
+	followerCollection data.Collection,
+	followingCollection data.Collection,
+	ruleCollection data.Collection,
+	attachmentService *Attachment,
+	domainService *Domain,
+	emailService *DomainEmail,
+	folderService *Folder,
+	followerService *Follower,
+	followingService *Following,
+	inboxService *Inbox,
+	keyService *EncryptionKey,
+	outboxService *Outbox,
+	responseService *Response,
+	ruleService *Rule,
+	searchTagService *SearchTag,
+	streamService *Stream,
+	templateService *Template,
+	webhookService *Webhook,
+	queue *queue.Queue,
+
+	activityStream *ActivityStream,
+	sseUpdateChannel chan<- primitive.ObjectID,
+	host string) {
+
 	service.collection = userCollection
 	service.searchTagService = searchTagService
 	service.followers = followerCollection
@@ -75,7 +104,11 @@ func (service *User) Refresh(userCollection data.Collection, followerCollection 
 	service.emailService = emailService
 	service.folderService = folderService
 	service.followerService = followerService
+	service.followingService = followingService
+	service.inboxService = inboxService
 	service.keyService = keyService
+	service.outboxService = outboxService
+	service.responseService = responseService
 	service.ruleService = ruleService
 	service.streamService = streamService
 	service.templateService = templateService
@@ -230,28 +263,52 @@ func (service *User) Save(user *model.User, note string) error {
 // Delete removes an User from the database (virtual delete)
 func (service *User) Delete(user *model.User, note string) error {
 
-	// TODO: Delete related folders
+	// Delete related Folders
+	if err := service.folderService.DeleteByUserID(user.UserID, "Deleted with owner"); err != nil {
+		return derp.Wrap(err, "service.User.Delete", "Error deleting User's folders", user, note)
+	}
 
-	// TODO: Delete related followers
+	// Delete related Followers
+	if err := service.followerService.DeleteByUserID(user.UserID, "Deleted with owner"); err != nil {
+		return derp.Wrap(err, "service.User.Delete", "Error deleting User's followers", user, note)
+	}
 
-	// TODO: Delete related following
-
-	// TODO: Delete related group memberships
+	// Delete related Following
+	if err := service.followingService.DeleteByUserID(user.UserID, "Deleted with owner"); err != nil {
+		return derp.Wrap(err, "service.User.Delete", "Error deleting User's followers", user, note)
+	}
 
 	// TODO: Delete related mentions
 
-	// TODO: Delete related inbox messages
+	// Delete related Encryption Keys messages
+	if err := service.keyService.DeleteByParentID(user.UserID, "Deleted with owner"); err != nil {
+		return derp.Wrap(err, "service.User.Delete", "Error deleting User's encryption keys", user, note)
+	}
 
-	// TODO: Delete related outbox messages
+	// Delete related Inbox messages
+	if err := service.inboxService.DeleteByUserID(user.UserID, "Deleted with owner"); err != nil {
+		return derp.Wrap(err, "service.User.Delete", "Error deleting User's inbox messages", user, note)
+	}
 
-	// TODO: Delete related rules
+	// Delete related Outbox messages
+	if err := service.outboxService.DeleteByParentID(model.FollowerTypeUser, user.UserID); err != nil {
+		return derp.Wrap(err, "service.User.Delete", "Error deleting User's outbox messages", user, note)
+	}
 
-	// Delete related streams
+	// Delete related Responses
+	if err := service.responseService.DeleteByUserID(user.UserID, "Deleted with owner"); err != nil {
+		return derp.Wrap(err, "service.User.Delete", "Error deleting User's responses", user, note)
+	}
+
+	// TODO: Delete related Rules
+	if err := service.ruleService.DeleteByUserID(user.UserID, "Deleted with owner"); err != nil {
+		return derp.Wrap(err, "service.User.Delete", "Error deleting User's rules", user, note)
+	}
+
+	// Delete related Streams
 	if err := service.streamService.DeleteByParent(user.UserID, "Deleted with owner"); err != nil {
 		return derp.Wrap(err, "service.User.Delete", "Error deleting User's streams", user, note)
 	}
-
-	// TODO: Delete related tags
 
 	// Delete the User from the database
 	if err := service.collection.Delete(user, note); err != nil {
@@ -470,7 +527,7 @@ func (service *User) CalcUsername(user *model.User) error {
 	base, _, _ = strings.Cut(base, "@")
 
 	// Try to use the preferred username with no slug
-	if !service.usernameExists(user.UserID, base) {
+	if !service.UsernameExists(user.UserID, base) {
 		user.Username = base
 		return nil
 	}
@@ -480,7 +537,7 @@ func (service *User) CalcUsername(user *model.User) error {
 		slug := random.GenerateInt(1000, 9999)
 		username := base + strconv.Itoa(slug)
 
-		if !service.usernameExists(user.UserID, username) {
+		if !service.UsernameExists(user.UserID, username) {
 			user.Username = username
 			return nil
 		}
@@ -490,10 +547,12 @@ func (service *User) CalcUsername(user *model.User) error {
 	return derp.NewInternalError("service.User.CalcUsername", "Unable to generate a unique username", user)
 }
 
-// usernameExists returns TRUE if the provided username is already in use by another user
-func (service *User) usernameExists(userID primitive.ObjectID, username string) bool {
+// UsernameExists returns TRUE if the provided username is already in use by another user
+func (service *User) UsernameExists(userID primitive.ObjectID, username string) bool {
 	user := model.NewUser()
-	criteria := exp.Equal("username", username).AndNotEqual("_id", userID)
+
+	criteria := exp.Equal("username", username).
+		AndNotEqual("_id", userID)
 
 	// Try to find a User with the same username and a different ID
 	err := service.Load(criteria, &user)

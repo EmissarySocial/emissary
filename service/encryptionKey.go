@@ -5,6 +5,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
+	"iter"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
@@ -58,6 +59,18 @@ func (service *EncryptionKey) List(criteria exp.Expression, options ...option.Op
 	return service.collection.Iterator(notDeleted(criteria), options...)
 }
 
+// Range returns an iterator containing all of the EncryptionKeys that match the provided criteria
+func (service *EncryptionKey) Range(criteria exp.Expression, options ...option.Option) (iter.Seq[model.EncryptionKey], error) {
+
+	iter, err := service.List(criteria, options...)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "service.EncryptionKey.Range", "Error creating iterator", criteria)
+	}
+
+	return RangeFunc(iter, model.NewEncryptionKey), nil
+}
+
 // Load retrieves an EncryptionKey from the database
 func (service *EncryptionKey) Load(criteria exp.Expression, encryptionKey *model.EncryptionKey) error {
 
@@ -92,6 +105,10 @@ func (service *EncryptionKey) Delete(encryptionKey *model.EncryptionKey, note st
 /******************************************
  * Custom Queries
  ******************************************/
+
+func (service *EncryptionKey) RangeByParentID(parentID primitive.ObjectID) (iter.Seq[model.EncryptionKey], error) {
+	return service.Range(exp.Equal("parentId", parentID))
+}
 
 // LoadByID tries to load the EncryptionKey from the database.  If no key
 // exists for the designated user, then a new one is generated.
@@ -149,6 +166,25 @@ func (service *EncryptionKey) Create(parentType string, parentID primitive.Objec
 	}
 
 	return encryptionKey, nil
+}
+
+func (service *EncryptionKey) DeleteByParentID(parentID primitive.ObjectID, note string) error {
+
+	const location = "service.EncryptionKey.DeleteByParentID"
+
+	rangeFunc, err := service.RangeByParentID(parentID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error loading keys", parentID)
+	}
+
+	for encryptionKey := range rangeFunc {
+		if err := service.Delete(&encryptionKey, note); err != nil {
+			return derp.Wrap(err, location, "Error deleting key", encryptionKey)
+		}
+	}
+
+	return nil
 }
 
 /******************************************

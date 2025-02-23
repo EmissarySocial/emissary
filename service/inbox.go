@@ -1,6 +1,7 @@
 package service
 
 import (
+	"iter"
 	"math"
 	"sync"
 	"time"
@@ -75,6 +76,18 @@ func (service *Inbox) List(criteria exp.Expression, options ...option.Option) (d
 	return service.collection.Iterator(notDeleted(criteria), options...)
 }
 
+// Range returns a Go 1.23 RangeFunc that iterates over the Messages that match the provided criteria
+func (service *Inbox) Range(criteria exp.Expression, options ...option.Option) (iter.Seq[model.Message], error) {
+
+	iter, err := service.List(criteria, options...)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "service.Inbox.Range", "Error creating iterator", criteria)
+	}
+
+	return RangeFunc(iter, model.NewMessage), nil
+}
+
 // Load retrieves an Inbox from the database
 func (service *Inbox) Load(criteria exp.Expression, result *model.Message) error {
 
@@ -126,19 +139,16 @@ func (service *Inbox) Delete(message *model.Message, note string) error {
 // DeleteMany removes all child streams from the provided stream (virtual delete)
 func (service *Inbox) DeleteMany(criteria exp.Expression, note string) error {
 
-	it, err := service.List(criteria)
+	rangeFunc, err := service.Range(criteria)
 
 	if err != nil {
 		return derp.Wrap(err, "service.Inbox.DeleteMany", "Error listing streams to delete", criteria)
 	}
 
-	message := model.NewMessage()
-
-	for it.Next(&message) {
+	for message := range rangeFunc {
 		if err := service.Delete(&message, note); err != nil {
 			return derp.Wrap(err, "service.Inbox.DeleteMany", "Error deleting message", message)
 		}
-		message = model.NewMessage()
 	}
 
 	return nil
@@ -213,18 +223,22 @@ func (service *Inbox) QueryByUserID(userID primitive.ObjectID, criteria exp.Expr
 	return service.Query(criteria, options...)
 }
 
-func (service *Inbox) ListByFolder(userID primitive.ObjectID, folderID primitive.ObjectID) (data.Iterator, error) {
+func (service *Inbox) RangeByFolder(userID primitive.ObjectID, folderID primitive.ObjectID) (iter.Seq[model.Message], error) {
 	criteria := exp.Equal("userId", userID).
 		AndEqual("folderId", folderID)
 
-	return service.List(criteria)
+	return service.Range(criteria)
 }
 
-func (service *Inbox) ListByFollowingID(userID primitive.ObjectID, followingID primitive.ObjectID) (data.Iterator, error) {
+func (service *Inbox) RangeByFollowingID(userID primitive.ObjectID, followingID primitive.ObjectID) (iter.Seq[model.Message], error) {
 	criteria := exp.Equal("userId", userID).
 		AndEqual("origin.followingId", followingID)
 
-	return service.List(criteria)
+	return service.Range(criteria)
+}
+
+func (service *Inbox) RangeByUserID(userID primitive.ObjectID) (iter.Seq[model.Message], error) {
+	return service.Range(exp.Equal("userId", userID))
 }
 
 func (service *Inbox) LoadByID(userID primitive.ObjectID, messageID primitive.ObjectID, result *model.Message) error {
@@ -496,20 +510,18 @@ func (service *Inbox) CountUnreadMessages(userID primitive.ObjectID, folderID pr
 
 func (service *Inbox) UpdateInboxFolders(userID primitive.ObjectID, followingID primitive.ObjectID, folderID primitive.ObjectID) {
 
-	it, err := service.ListByFollowingID(userID, followingID)
+	rangeFunc, err := service.RangeByFollowingID(userID, followingID)
 
 	if err != nil {
 		derp.Report(derp.Wrap(err, "service.Inbox", "Cannot list Activities by following", userID, followingID))
 		return
 	}
 
-	message := model.NewMessage()
-	for it.Next(&message) {
+	for message := range rangeFunc {
 		message.FolderID = folderID
 		if err := service.Save(&message, "UpdateInboxFolders"); err != nil {
 			derp.Report(derp.Wrap(err, "service.Inbox", "Cannot save Inbox Message", message))
 		}
-		message = model.NewMessage()
 	}
 
 	// Recalculate the "unread" count on the new folder
@@ -518,24 +530,26 @@ func (service *Inbox) UpdateInboxFolders(userID primitive.ObjectID, followingID 
 	}
 }
 
+func (service *Inbox) DeleteByUserID(userID primitive.ObjectID, note string) error {
+	return service.DeleteMany(exp.Equal("userId", userID), note)
+}
+
 func (service *Inbox) DeleteByOrigin(internalID primitive.ObjectID, note string) error {
 	return service.DeleteMany(exp.Equal("origin.followingId", internalID), note)
 }
 
 func (service *Inbox) DeleteByFolder(userID primitive.ObjectID, folderID primitive.ObjectID) error {
 
-	it, err := service.ListByFolder(userID, folderID)
+	rangeFunc, err := service.RangeByFolder(userID, folderID)
 
 	if err != nil {
 		return derp.Wrap(err, "service.Inbox", "Cannot list Activities by folder", userID, folderID)
 	}
 
-	message := model.NewMessage()
-	for it.Next(&message) {
+	for message := range rangeFunc {
 		if err := service.Delete(&message, "DeleteByFolder"); err != nil {
 			return derp.Wrap(err, "service.Inbox", "Cannot delete Inbox", message)
 		}
-		message = model.NewMessage()
 	}
 
 	return nil
