@@ -1,0 +1,18 @@
+<h1>{{icon "user"}} Delete Your Account</h1>
+
+<div class="text-lg bold margin-bottom text-red">
+	{{icon "alert-fill"}} This is action permanent and irreversible.  You will lose all data and settings.  It <b>cannot be undone</b>.
+</div>
+
+<form hx-post="/@me/delete" hx-confirm="One last check. You're about to delete your account.  Are you really really sure?">
+	<hr class="margin-vertical">
+	<div class="margin-bottom-sm">
+		Type your username: "<b>{{.Username}}</b>" to permanently delete your account
+	</div>
+	<input type="text" name="confirm" placeholder="{{.Username}}" class="input" required xpattern="^{{.Username}}$" autofocus><br>
+	<hr class="margin-top margin-bottom-lg">
+
+	<button type="submit" class="button text-red">Yes.  Really Delete My Account</button>
+	<span role="button" class="button" script="on click send closeModal">Cancel</span>
+	<span id="htmx-response-message"></span>
+</form>

@@ -8,6 +8,7 @@ import (
 	activitypub "github.com/EmissarySocial/emissary/handler/activitypub_user"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
+	"github.com/EmissarySocial/emissary/tools/formdata"
 	"github.com/benpate/derp"
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/rosetta/first"
@@ -50,6 +51,30 @@ func GetProfileImage(serverFactory *server.Factory) echo.HandlerFunc {
 	}
 
 	return getProfileAttachment(serverFactory, "imageId", filespec)
+}
+
+func PostProfileDelete(ctx *steranko.Context, factory *domain.Factory, user *model.User) error {
+
+	const location = "handler.PostProfileDelete"
+
+	// Get the request data
+	values, err := formdata.Parse(ctx.Request())
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error parsing form values")
+	}
+
+	if values.Get("confirm") != user.Username {
+		return inlineError(ctx, `<span class="text-red">Incorrect Username. Try Again.</span>`)
+	}
+
+	userService := factory.User()
+
+	if err := userService.Delete(user, "Deleted by User"); err != nil {
+		return derp.Wrap(err, "handler.PostProfileDelete", "Error deleting user")
+	}
+
+	return ctx.Redirect(http.StatusTemporaryRedirect, "/signout")
 }
 
 // buildOutbox is the common Outbox handler for both GET and POST requests
