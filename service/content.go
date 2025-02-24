@@ -12,7 +12,9 @@ import (
 	"github.com/yuin/goldmark"
 	highlighting "github.com/yuin/goldmark-highlighting/v2"
 	"github.com/yuin/goldmark/extension"
+	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/renderer/html"
+	"go.abhg.dev/goldmark/anchor"
 )
 
 type Content struct {
@@ -59,12 +61,24 @@ func (service *Content) Format(content *model.Content) {
 		// https://github.com/yuin/goldmark#built-in-extensions
 		var buffer bytes.Buffer
 
+		// This extension adds anchor tags next to all headers
+		anchorExtension := &anchor.Extender{
+			Texter: anchor.Text(` `),
+			Attributer: anchor.Attributes{
+				"class": "bi bi-link",
+			},
+		}
+
 		md := goldmark.New(
+			goldmark.WithParserOptions(
+				parser.WithAutoHeadingID(),
+			),
 			goldmark.WithExtensions(
 				extension.Table,
 				extension.Linkify,
 				extension.Typographer,
 				extension.DefinitionList,
+				anchorExtension,
 				highlighting.NewHighlighting(
 					highlighting.WithStyle("github"),
 				),

@@ -12,38 +12,63 @@
 
 	<nav hx-push-url="true">
 		<div class="framed">
-			<div class="left">
-				{{- range .Navigation -}}
-					<a href="/{{.Token}}" class="turboclick {{ if eq $topID .StreamID -}}selected{{- end -}}">{{.Label}}</a>
-				{{- end -}}
-				{{- if .IsAuthenticated -}}
-					{{- if eq $topID "outbox" -}}
-						<a href="/@me" class="selected turboclick" id="profile">{{icon "person-fill"}} Profile</a>
-					{{- else -}}
-						<a href="/@me" class="turboclick" id="profile">{{icon "person"}} Profile</a>
-					{{- end -}}
-
-					{{- if eq $topID "inbox" -}}
-						<a href="/@me/inbox" class="selected turboclick" id="inbox">{{icon "inbox-fill"}} Inbox</a>
-					{{- else -}}
-						<a href="/@me/inbox" class="turboclick" id="inbox">{{icon "inbox"}} Inbox</a>
-					{{- end -}}
-
-				{{- end -}}
-			</div>
-			<div class="right">
-				{{- if .IsAuthenticated -}}
-					{{- if .IsOwner -}}
-						{{- if eq $topID "admin" -}}
-							<a href="/admin/domain" class="selected turboclick" id="server">{{icon "settings-fill"}} Server</a>
-						{{- else -}}
-							<a href="/admin/domain" class="turboclick" id="server">{{icon "settings"}} Server</a>
-						{{- end -}}
-					{{- end -}}
+			{{- range .Navigation -}}
+				{{ if eq $topID .StreamID -}}
+					{{- $icon := join .Icon "-fill" -}}
+					<a href="/{{.Token}}" class="turboclick selected">
+						<span class="icon">{{icon $icon}}</span>
+						<span class="label">{{.Label}}</span>
+					</a>
 				{{- else -}}
-					<a href="/signin" class="turboclick">Sign In</a>
+					<a href="/{{.Token}}" class="turboclick">
+						<span class="icon">{{icon .Icon}}</span>
+						<span class="label">{{.Label}}</span>
+					</a>
 				{{- end -}}
-			</div>
+			{{- end -}}
+			<span class="spacer"></span>
+			{{- if .IsAuthenticated -}}
+				{{- if eq $topID "outbox" -}}
+					<a href="/@me" class="selected turboclick" id="profile">
+						<span class="icon">{{icon "user-fill"}}</span>
+						<span class="label">Profile</span>
+					</a>
+				{{- else -}}
+					<a href="/@me" class="turboclick" id="profile">
+						<span class="icon">{{icon "user"}}</span>
+						<span class="label">Profile</span></a>
+				{{- end -}}
+
+				{{- if eq $topID "inbox" -}}
+					<a href="/@me/inbox" class="selected turboclick" id="inbox">
+						<span class="icon">{{icon "inbox-fill"}}</span>
+						<span class="label">Inbox</span></a>
+				{{- else -}}
+					<a href="/@me/inbox" class="turboclick" id="inbox">
+						<span class="icon">{{icon "inbox"}}</span>
+						<span class="label">Inbox</span></a>
+				{{- end -}}
+
+			{{- end -}}
+			{{- if .IsAuthenticated -}}
+				{{- if .IsOwner -}}
+					{{- if eq $topID "admin" -}}
+						<a href="/admin/domain" class="selected turboclick" id="server">
+							<span class="icon">{{icon "settings-fill"}}</span>
+							<span class="label">Server</span>
+						</a>
+					{{- else -}}
+						<a href="/admin/domain" class="turboclick" id="server">
+							<span class="icon">{{icon "settings"}}</span>
+							<span class="label">Server</span></a>
+					{{- end -}}
+				{{- end -}}
+			{{- else -}}
+				<a href="/signin" class="turboclick">
+					<span class="icon">{{icon "user"}}</span>
+					<span class="label">Sign In</span>
+				</a>
+			{{- end -}}
 		</div>
 
 	</nav>

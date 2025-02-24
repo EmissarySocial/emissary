@@ -22,7 +22,8 @@
 
 .cols-2-6,
 .cols-2-5,
-.cols-2-4 {
+.cols-2-4,
+.cols-2-3 {
 	--cols: 2;
 	--gap: 4px;
 	display: flex;
@@ -41,6 +42,7 @@
 .cols-2-6 > *,
 .cols-2-5 > *,
 .cols-2-4 > *,
+.cols-2-3 > *,
 .cols-2 > *,
 .cols-1 > * {
 	display:block;
@@ -91,7 +93,8 @@
 	}
 
 	.cols-4,
-	.cols-2-4 {
+	.cols-2-4,
+	.cols-2-3 {
 		--cols: 2;
 		--gap: 8px;
 	}
@@ -129,7 +132,8 @@
 	}
 
 	.cols-4,
-	.cols-2-4 {
+	.cols-2-4,
+	.cols-2-3 {
 		--cols: 3;
 		--gap: 12px;
 	}
@@ -172,7 +176,8 @@
 		--gap: 24px;
 	}
 
-	.cols-3 {
+	.cols-3,
+	.cols-2-3 {
 		--cols: 3;
 		--gap: 24px;
 	}
@@ -209,7 +214,8 @@
 		--gap: 24px;
 	}
 
-	.cols-3 {
+	.cols-3,
+	.cols-2-3 {
 		--cols: 3;
 		--gap: 24px;
 	}

@@ -36,6 +36,7 @@ type Stream struct {
 	Token            string                       `json:"token,omitempty"        bson:"token,omitempty"`        // Unique value that identifies this element in the URL
 	Label            string                       `json:"label,omitempty"        bson:"label,omitempty"`        // Label/Title of the document
 	Summary          string                       `json:"summary,omitempty"      bson:"summary,omitempty"`      // Brief summary of the document
+	Icon             string                       `json:"icon,omitempty"         bson:"icon,omitempty"`         // Icon CSS/Token for the document
 	IconURL          string                       `json:"iconUrl,omitempty"      bson:"iconUrl,omitempty"`      // URL of this document's icon/thumbnail image
 	Context          string                       `json:"context,omitempty"      bson:"context,omitempty"`      // Context of this document (usually a URL)
 	InReplyTo        string                       `json:"inReplyTo"              bson:"inReplyTo"`              // If this stream is a reply to another stream or web page, then this links to the original document.
@@ -523,6 +524,7 @@ func (stream *Stream) CopyFrom(other Stream) {
 	stream.Label = other.Label
 	stream.Summary = other.Summary
 	stream.IconURL = other.IconURL
+	stream.Icon = other.Icon
 	stream.Context = other.Context
 	stream.InReplyTo = other.InReplyTo
 	stream.AttributedTo = other.AttributedTo

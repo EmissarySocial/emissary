@@ -21,49 +21,56 @@ body {
 }
 
 nav {
-	position:sticky;
-	top:0px;
+	display: flex;
+	justify-content: center;
+
+	position:fixed;
+	bottom:0px;
 	left: 0px;
 	right: 0px;
-	height:56px;
 	z-index:100;
 
     color: var(--gray80);
 	font-weight:400;
 	background-color: var(--white);
-	border-bottom: solid 1px var(--gray15);
-	display: flex;
-	justify-content: center;
-	flex-wrap:wrap;
+	border-top: solid 1px var(--gray15);
 	overflow-y:hidden;
 	overflow-x:auto;
+	padding:8px 16px;
 }
 
 nav .framed {
 	display: flex;
-}
-
-nav .framed div {
-	display: flex;
-	flex-grow:1;
-	justify-content: flex-start;
-}
-
-nav .framed div:last-child {
-	justify-content: flex-end;
+	justify-content: space-evenly;
 }
 
 nav a,
 nav button {
+	display:flex;
+	flex-direction:column;
+	align-items:center;
+
     color: var(--gray80);
 	background-color: var(--white);
-    display:inline-block;
 	padding:8px 16px;
 	border-radius: var(--border-radius);
 	margin:8px 0px;
 	overflow-y:hidden;
 	white-space: nowrap;
 	text-overflow: ellipsis;
+}
+
+nav a > .icon {
+	font-size:24px;
+}
+
+nav a > .label {
+	font-size:10px;
+	line-height:14px;
+}
+
+nav .spacer {
+	display:none;
 }
 
 nav b {
@@ -92,6 +99,44 @@ nav button.selected:hover
 nav button.selected:focus {
 	background-color: var(--gray20);
 	color: var(--black);
+}
+
+
+@media screen and (min-width:640px) {
+
+	nav {
+		position:sticky;
+		top:0px;
+		bottom:unset;
+		border-top:none;
+		border-bottom: solid 1px var(--gray15);
+	}
+
+	nav .framed {
+		display: flex;
+		flex-grow:1;
+		justify-content: center;
+	}
+
+	nav a {
+		display:inline;
+	}
+
+	nav a > .icon {
+		display:unset;
+		font-size:unset;
+	}
+	
+	nav a > .label {
+		display:unset;
+		font-size:unset;
+		line-height:unset;
+	}
+
+	nav .spacer {
+		display:unset;
+		flex-grow:1;
+	}
 }
 
 main {

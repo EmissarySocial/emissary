@@ -409,7 +409,7 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 			return strings.Split(value, separator)
 		},
 
-		"join": func(values []string) string {
+		"join": func(values ...string) string {
 			return strings.Join(values, "")
 		},
 

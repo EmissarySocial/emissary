@@ -15,6 +15,7 @@
 	schema: {
 		type:"object"
 		properties: {
+			icon:{type:"string"}
 			token: {type:"string", required:true}
 			label: {type:"string"}
 			summary: {type:"string"}
@@ -196,6 +197,7 @@
 								label:"Article Properties"
 								children: [
 									{type:"text", path:"token", label:"Token/Slug"}
+									{type:"text", path:"icon", label:"Icon"}
 									{type:"text", path:"label", label:"Label"}
 									{type:"textarea", path:"summary", label:"Summary"}
 									{type:"textarea", path:"data.tags", label:"Hashtags", description:"List hashtags here to categorize this article."}

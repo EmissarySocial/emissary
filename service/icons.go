@@ -236,6 +236,8 @@ func (service Icons) Get(name string) string {
 		return service.get("check-lg")
 	case "search":
 		return service.get("search")
+	case "search-fill":
+		return service.get("search")
 	case "settings":
 		return service.get("gear")
 	case "settings-fill":
@@ -285,7 +287,7 @@ func (service Icons) Get(name string) string {
 	case "user":
 		return service.get("person-circle")
 	case "user-fill":
-		return service.get("person-circle-fill")
+		return service.get("person-circle")
 	case "users":
 		return service.get("people")
 	case "users-fill":
