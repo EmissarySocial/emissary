@@ -15,7 +15,7 @@ require (
 	github.com/benpate/domain v0.2.4
 	github.com/benpate/exp v0.8.4
 	github.com/benpate/exp-builder v0.10.0
-	github.com/benpate/form v0.22.18
+	github.com/benpate/form v0.22.21
 	github.com/benpate/hannibal v0.11.25
 	github.com/benpate/html v0.16.11
 	github.com/benpate/icon v0.4.0
@@ -89,7 +89,6 @@ require (
 	github.com/go-test/deep v1.1.1 // indirect
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect
-	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/gorilla/css v1.0.1 // indirect
 	github.com/hairyhenderson/go-git/v5 v5.12.1-0.20240530140403-1b868a7b8a3c // indirect
@@ -125,7 +124,6 @@ require (
 	golang.org/x/sys v0.30.0 // indirect
 	golang.org/x/text v0.22.0 // indirect
 	golang.org/x/time v0.10.0 // indirect
-	google.golang.org/protobuf v1.36.5 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
