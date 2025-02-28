@@ -342,6 +342,9 @@ func (service *SearchTag) NormalizeTags(tagNames ...string) (sliceof.String, sli
 		resultValues = append(resultValues, tagValue)
 	}
 
+	// Sort the values
+	slices.Sort(resultValues)
+
 	// Success?!?!?
 	return resultNames, resultValues, nil
 }
