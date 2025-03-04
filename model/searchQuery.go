@@ -79,3 +79,7 @@ func (searchQuery *SearchQuery) Parse(values url.Values) {
 		}
 	}
 }
+
+func (searchQuery SearchQuery) Match(searchResult SearchResult) bool {
+	return false
+}

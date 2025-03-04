@@ -1,6 +1,7 @@
 package service
 
 import (
+	"iter"
 	"net/url"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -67,6 +68,16 @@ func (service *SearchQuery) Query(criteria exp.Expression, options ...option.Opt
 // List returns an iterator containing all of the SearchQuerys that match the provided criteria
 func (service *SearchQuery) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.collection.Iterator(notDeleted(criteria), options...)
+}
+
+func (service *SearchQuery) Range(criteria exp.Expression, options ...option.Option) (iter.Seq[model.SearchQuery], error) {
+	it, err := service.collection.Iterator(criteria, options...)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "service.SearchQuery.Range", "Error creating iterator", criteria)
+	}
+
+	return RangeFunc(it, model.NewSearchQuery), nil
 }
 
 // Load retrieves an SearchQuery from the database
@@ -238,6 +249,10 @@ func (service *SearchQuery) LoadByToken(token string, searchQuery *model.SearchQ
 func (service *SearchQuery) LoadByTagsAndRemainder(tags []string, remainder string, searchQuery *model.SearchQuery) error {
 	criteria := exp.InAll("tagValues", tags).And(exp.Equal("remainder", remainder))
 	return service.Load(criteria, searchQuery)
+}
+
+func (service *SearchQuery) RangeAll() (iter.Seq[model.SearchQuery], error) {
+	return service.Range(exp.All())
 }
 
 /******************************************
