@@ -29,7 +29,7 @@ func WatchUsers(ctx context.Context, collection data.Collection, result chan<- p
 	cs, err := m.Watch(ctx, mongo.Pipeline{})
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "service.Watcher", "Unable to open Mongodb Change User"))
+		derp.Report(derp.Wrap(err, "queries.WatchUsers", "Unable to open Mongodb Change User"))
 		return
 	}
 
