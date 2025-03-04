@@ -94,7 +94,7 @@ func NewMongoStorage(args *CommandLineArgs) MongoStorage {
 		cs, err := storage.collection.Watch(context, mongo.Pipeline{})
 
 		if err != nil {
-			derp.Report(derp.Wrap(err, "service.Watcher", "Unable to open Mongodb Change Stream"))
+			derp.Report(derp.Wrap(err, "config.NewMongoStorage", "Unable to open Mongodb Change Stream"))
 			return
 		}
 
@@ -108,7 +108,7 @@ func NewMongoStorage(args *CommandLineArgs) MongoStorage {
 		}
 
 		if err := cs.Err(); err != nil {
-			derp.Report(derp.Wrap(err, "service.Watcher", "Error watching Mongodb Change Stream"))
+			derp.Report(derp.Wrap(err, "config.NewMongoStorage", "Error watching Mongodb Change Stream"))
 		}
 	}()
 

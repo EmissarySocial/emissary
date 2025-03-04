@@ -24,7 +24,7 @@ func WatchStreams(ctx context.Context, collection data.Collection, result chan<-
 	cs, err := m.Watch(ctx, mongo.Pipeline{})
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "service.Watcher", "Unable to open Mongodb Change Stream"))
+		derp.Report(derp.Wrap(err, "queries.WatchStreams", "Unable to open Mongodb Change Stream"))
 		return
 	}
 
