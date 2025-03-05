@@ -3,10 +3,12 @@ package handler
 import (
 	"net/http"
 
+	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"
 )
@@ -62,19 +64,17 @@ func GetServiceActor(serverFactory *server.Factory) echo.HandlerFunc {
 }
 
 // GetEmptyCollection returns an empty collection
-func GetEmptyCollection(serverFactory *server.Factory) echo.HandlerFunc {
+func GetEmptyCollection(ctx *steranko.Context, factory *domain.Factory) error {
 
-	return func(ctx echo.Context) error {
-
-		result := mapof.Any{
-			vocab.AtContext:          vocab.ContextTypeActivityStreams,
-			vocab.PropertyType:       vocab.CoreTypeOrderedCollection,
-			vocab.PropertyTotalItems: 0,
-			vocab.PropertyItems:      []any{},
-		}
-
-		return ctx.JSON(http.StatusOK, result)
+	result := mapof.Any{
+		vocab.AtContext:          vocab.ContextTypeActivityStreams,
+		vocab.PropertyType:       vocab.CoreTypeOrderedCollection,
+		vocab.PropertyID:         fullURL(factory, ctx),
+		vocab.PropertyTotalItems: 0,
+		vocab.PropertyItems:      []any{},
 	}
+
+	return ctx.JSON(http.StatusOK, result)
 }
 
 // PostServiceActor_Inbox does not take any actions, but only logs the request

@@ -16,7 +16,7 @@ require (
 	github.com/benpate/exp v0.8.4
 	github.com/benpate/exp-builder v0.10.0
 	github.com/benpate/form v0.22.21
-	github.com/benpate/hannibal v0.11.25
+	github.com/benpate/hannibal v0.12.0
 	github.com/benpate/html v0.16.11
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.15.2
@@ -62,7 +62,7 @@ require (
 	github.com/yuin/goldmark-highlighting/v2 v2.0.0-20230729083705-37449abec8cc
 	go.abhg.dev/goldmark/anchor v0.1.1
 	go.mongodb.org/mongo-driver v1.17.2
-	golang.org/x/crypto v0.33.0
+	golang.org/x/crypto v0.35.0
 	golang.org/x/exp v0.0.0-20250215185904-eff6e970281f
 	golang.org/x/oauth2 v0.26.0
 	willnorris.com/go/microformats v1.2.0
@@ -120,9 +120,9 @@ require (
 	github.com/yeqown/reedsolomon v1.0.0 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
 	golang.org/x/image v0.24.0 // indirect
-	golang.org/x/net v0.35.0 // indirect
+	golang.org/x/net v0.36.0 // indirect
 	golang.org/x/sync v0.11.0 // indirect
-	golang.org/x/sys v0.30.0 // indirect
+	golang.org/x/sys v0.31.0 // indirect
 	golang.org/x/text v0.22.0 // indirect
 	golang.org/x/time v0.10.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect

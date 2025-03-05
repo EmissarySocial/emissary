@@ -40,3 +40,8 @@ func getActor(serverFactory *server.Factory, ctx echo.Context) (*domain.Factory,
 	actor := template.Actor
 	return factory, templateService, streamService, template, stream, actor, nil
 }
+
+// fullURL returns the URL for a request that include the protocol, hostname, and path
+func fullURL(factory *domain.Factory, ctx echo.Context) string {
+	return factory.Host() + ctx.Request().URL.String()
+}

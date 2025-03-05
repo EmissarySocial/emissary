@@ -41,6 +41,7 @@ func GetOutboxCollection(serverFactory *server.Factory) echo.HandlerFunc {
 
 		// Fall through means that we're looking for a specific page of the collection
 		publishedDate := convert.Int64Default(publishDateString, math.MaxInt64)
+		pageID := fullURL(factory, ctx)
 		pageSize := 60
 
 		// Retrieve a page of messages from the database
@@ -53,7 +54,7 @@ func GetOutboxCollection(serverFactory *server.Factory) echo.HandlerFunc {
 
 		// Return results as an OrderedCollectionPage
 		ctx.Response().Header().Set("Content-Type", vocab.ContentTypeActivityPub)
-		result := activitypub.CollectionPage(stream.ActivityPubOutboxURL(), pageSize, messages)
+		result := activitypub.CollectionPage(pageID, stream.ActivityPubOutboxURL(), pageSize, messages)
 		return ctx.JSON(http.StatusOK, result)
 	}
 }
