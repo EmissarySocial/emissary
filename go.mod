@@ -60,7 +60,7 @@ require (
 	github.com/yeqown/go-qrcode/writer/standard v1.2.5
 	github.com/yuin/goldmark v1.7.8
 	github.com/yuin/goldmark-highlighting/v2 v2.0.0-20230729083705-37449abec8cc
-	go.abhg.dev/goldmark/anchor v0.1.1
+	go.abhg.dev/goldmark/anchor v0.2.0
 	go.mongodb.org/mongo-driver v1.17.2
 	golang.org/x/crypto v0.35.0
 	golang.org/x/exp v0.0.0-20250215185904-eff6e970281f
