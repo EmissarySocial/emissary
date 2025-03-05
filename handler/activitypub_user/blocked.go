@@ -54,6 +54,7 @@ func GetBlockedCollection(serverFactory *server.Factory) echo.HandlerFunc {
 		// Fallthrough means this is a request for a specific page
 		ruleService := factory.Rule()
 		publishDate := convert.Int64(publishDateString)
+		pageID := fullURL(factory, ctx)
 		pageSize := 60
 		rules, err := ruleService.QueryPublic(user.UserID, publishDate, option.MaxRows(int64(pageSize)))
 
@@ -68,7 +69,7 @@ func GetBlockedCollection(serverFactory *server.Factory) echo.HandlerFunc {
 
 		// Return results to the client.
 		ctx.Response().Header().Set("Content-Type", "application/activity+json")
-		results := activitypub.CollectionPage(user.ActivityPubBlockedURL(), pageSize, jsonldGetters)
+		results := activitypub.CollectionPage(pageID, user.ActivityPubBlockedURL(), pageSize, jsonldGetters)
 		return ctx.JSON(200, results)
 	}
 }

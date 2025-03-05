@@ -54,6 +54,7 @@ func GetResponseCollection(serverFactory *server.Factory, responseType string) e
 		// Fall through means that we're looking for a specific page of the collection
 		publishedDate := convert.Int64(publishDateString)
 		responseService := factory.Response()
+		pageID := fullURL(factory, ctx)
 		pageSize := 60
 
 		// Retrieve a page of responses from the database
@@ -67,6 +68,7 @@ func GetResponseCollection(serverFactory *server.Factory, responseType string) e
 		ctx.Response().Header().Set("Content-Type", model.MimeTypeActivityPub)
 
 		result := activitypub.CollectionPage[model.Response](
+			pageID,
 			baseRequestURL,
 			pageSize,
 			responses,

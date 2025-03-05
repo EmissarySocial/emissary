@@ -7,30 +7,27 @@ import (
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/list"
+	"github.com/davecgh/go-spew/spew"
 )
 
-func Collection(collectionURL string) streams.OrderedCollection {
+func Collection(collectionID string) streams.OrderedCollection {
 
-	collectionURL = list.First(collectionURL, '?')
-
-	// Determine the collection URL
 	// Determine the first page URL
-	firstPageURL := collectionURL + "?publishDate=" + convert.String(math.MaxInt64)
+	firstPageURL := list.First(collectionID, '?') + "?publishDate=" + convert.String(math.MaxInt64)
 
 	// Generate a new Collection stub
-	result := streams.NewOrderedCollection()
-	result.ID = collectionURL
+	result := streams.NewOrderedCollection(collectionID)
 	result.First = firstPageURL
 
 	return result
 }
 
-func CollectionPage[T model.JSONLDGetter](partOf string, pageSize int, values []T) streams.OrderedCollectionPage {
+func CollectionPage[T model.JSONLDGetter](pageID string, partOf string, pageSize int, values []T) streams.OrderedCollectionPage {
 
 	// Generate the Page record
-	result := streams.NewOrderedCollectionPage()
-	result.PartOf = partOf
+	result := streams.NewOrderedCollectionPage(pageID, partOf)
 
+	spew.Dump(result)
 	if len(values) > 0 {
 		for _, value := range values {
 			result.OrderedItems = append(result.OrderedItems, value.GetJSONLD())

@@ -39,6 +39,7 @@ func GetFollowersCollection(serverFactory *server.Factory) echo.HandlerFunc {
 
 		// Fall through means that we're looking for a specific page of the collection
 		publishedDate := convert.Int64Default(publishDateString, math.MaxInt64)
+		pageID := fullURL(factory, ctx)
 		pageSize := 60
 
 		// Retrieve a page of messages from the database
@@ -50,7 +51,7 @@ func GetFollowersCollection(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		ctx.Response().Header().Set("Content-Type", "application/activity+json")
-		result := activitypub.CollectionPage(stream.ActivityPubFollowersURL(), pageSize, followers)
+		result := activitypub.CollectionPage(pageID, stream.ActivityPubFollowersURL(), pageSize, followers)
 		return ctx.JSON(http.StatusOK, result)
 	}
 }

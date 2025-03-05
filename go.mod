@@ -16,7 +16,7 @@ require (
 	github.com/benpate/exp v0.8.4
 	github.com/benpate/exp-builder v0.10.0
 	github.com/benpate/form v0.22.21
-	github.com/benpate/hannibal v0.11.25
+	github.com/benpate/hannibal v0.12.0
 	github.com/benpate/html v0.16.11
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.15.2
@@ -122,7 +122,7 @@ require (
 	golang.org/x/image v0.24.0 // indirect
 	golang.org/x/net v0.36.0 // indirect
 	golang.org/x/sync v0.11.0 // indirect
-	golang.org/x/sys v0.30.0 // indirect
+	golang.org/x/sys v0.31.0 // indirect
 	golang.org/x/text v0.22.0 // indirect
 	golang.org/x/time v0.10.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
