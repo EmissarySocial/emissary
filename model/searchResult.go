@@ -13,6 +13,7 @@ import (
 // SearchResult represents a value in the search index
 type SearchResult struct {
 	SearchResultID primitive.ObjectID `bson:"_id"`                    // SearchResultID is the unique identifier for a SearchResult.
+	LockID         primitive.ObjectID `bson:"lockId"`                 // Unique identifier for the worker that is currently processing this task
 	Type           string             `bson:"type"`                   // Type is the ActivityPub object type (Person, Article, etc)
 	URL            string             `bson:"url"`                    // URL is the URL of the SearchResult.
 	AttributedTo   string             `bson:"attributedTo,omitempty"` // AttributedTo is the name (or username) of the creator of this SearchResult.
@@ -23,10 +24,12 @@ type SearchResult struct {
 	Date           time.Time          `bson:"date,omitempty"`         // Date is the date that this SearchResult was created.
 	Place          mapof.Any          `bson:"place,omitempty"`        // Place is the location (encoded with GeoJSON) of the SearchResult.
 	Tags           sliceof.String     `bson:"tags,omitempty"`         // Tags is a machine-readable list of tag values that are associated with this SearchResult.
+	Index          sliceof.String     `bson:"index,omitempty"`        // Index is a list of words (encoded via metaphone) that are used to index this SearchResult.
+	TimeoutDate    int64              `bson:"timeoutDate"`            // Unix epoch seconds when this task will "time out" and can be reclaimed by another process
+	ReIndexDate    int64              `bson:"reindexDate"`            // ReIndexDate is the date that this SearchResult should be reindexed.
+	NotifiedDate   int64              `bson:"notifiedDate"`           // NotifiedDate is the data that followers were notified of this SearchResult.
 	Rank           int64              `bson:"rank"`                   // Rank is the rank of this SearchResult in the search index.
 	Shuffle        int64              `bson:"shuffle"`                // Shuffle is a random number used to shuffle the search results.
-	Index          sliceof.String     `bson:"index,omitempty"`        // Index is a list of words (encoded via metaphone) that are used to index this SearchResult.
-	ReIndexDate    int64              `bson:"reindexDate"`            // ReIndexDate is the date that this SearchResult should be reindexed.
 
 	journal.Journal `bson:",inline"`
 }

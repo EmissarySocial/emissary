@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/EmissarySocial/emissary/tools/parse"
+	"github.com/EmissarySocial/emissary/tools/sorted"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -14,6 +15,7 @@ import (
 type SearchQuery struct {
 	SearchQueryID primitive.ObjectID `bson:"_id"`       // SearchQueryID is the unique identifier for a SearchQuery.
 	Query         string             `bson:"query"`     // The original string used in the search query
+	Index         []string           `bson:"index"`     // The parsed (and normalized) index of values in the search query
 	Tags          []string           `bson:"tags"`      // The parsed (and normalized) tag values
 	StartDate     string             `bson:"startDate"` // The start date of the search query
 	Location      string             `bson:"location"`  // The location of the search query
@@ -80,6 +82,23 @@ func (searchQuery *SearchQuery) Parse(values url.Values) {
 	}
 }
 
+// Match returns TRUE if this query matches the provided SearchResult
 func (searchQuery SearchQuery) Match(searchResult SearchResult) bool {
-	return false
+
+	// Match Tags
+	if !sorted.ContainsAll(searchQuery.Tags, searchResult.Tags) {
+		return false
+	}
+
+	// Match Text Index
+	if !sorted.ContainsAll(searchQuery.Index, searchResult.Index) {
+		return false
+	}
+
+	// TODO: Geosearch by Location and Radius
+
+	// TODO: Time-Based Search (might not be possible)
+
+	// Otherwise, return true
+	return true
 }

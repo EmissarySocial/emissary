@@ -49,6 +49,9 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 	case "SendActivityPubMessage":
 		return WithFactory(consumer.serverFactory, args, SendActivityPubMessage)
 
+	case "SendSearchResults":
+		return WithFactory(consumer.serverFactory, args, SendSearchResults)
+
 	case "SendWebMention":
 		return SendWebMention(args)
 
@@ -57,7 +60,6 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 
 	case "stream.syndicate", "stream.syndicate.undo":
 		return StreamSyndicate(name, args)
-
 	}
 
 	return queue.Ignored()

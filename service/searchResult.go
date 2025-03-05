@@ -1,14 +1,18 @@
 package service
 
 import (
+	"context"
 	"iter"
+	"math/rand"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/queries"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // SearchResult defines a service that manages all searchable pages in a domain.
@@ -50,6 +54,15 @@ func (service *SearchResult) Count(criteria exp.Expression) (int64, error) {
 // Query returns an slice of allthe SearchResults that match the provided criteria
 func (service *SearchResult) Query(criteria exp.Expression, options ...option.Option) ([]model.SearchResult, error) {
 	result := make([]model.SearchResult, 0)
+	err := service.collection.Query(&result, criteria, options...)
+
+	return result, err
+}
+
+// QueryIDsOnly returns an slice of allthe SearchResults that match the provided criteria
+func (service *SearchResult) QueryIDsOnly(criteria exp.Expression, options ...option.Option) ([]model.IDOnly, error) {
+	result := make([]model.IDOnly, 0)
+	options = append(options, option.Fields("_id"))
 	err := service.collection.Query(&result, criteria, options...)
 
 	return result, err
@@ -127,6 +140,13 @@ func (service *SearchResult) Delete(searchResult *model.SearchResult, note strin
  * Custom Queries
  ******************************************/
 
+// RangeAll returns an iterator function that loops over ALL SearchResults in the database.
+func (service *SearchResult) RangeAll() (iter.Seq[model.SearchResult], error) {
+	return service.Range(exp.All())
+}
+
+// LoadByURL returns a single SearchResult that matches the provided URL
+
 func (service *SearchResult) LoadByURL(url string, searchResult *model.SearchResult) error {
 	return service.Load(exp.Equal("url", url), searchResult)
 }
@@ -199,25 +219,67 @@ func (service *SearchResult) DeleteByURL(url string) error {
 }
 
 // Shuffle updates the "shuffle" field for all SearchResults that match the provided tags
-func (service *SearchResult) Shuffle(tags ...string) error {
+func (service *SearchResult) Shuffle() error {
 
 	const location = "service.Search.Shuffle"
-	return derp.NewInternalError(location, "Not implemented", tags)
 
-	/*
-		rangeFunc, err := service.RangeByTags(tags...)
+	rangeFunc, err := service.RangeAll()
 
-		if err != nil {
-			return derp.Wrap(err, location, "Error listing SearchResults", tags)
+	if err != nil {
+		return derp.Wrap(err, location, "Error listing SearchResults")
+	}
+
+	for result := range rangeFunc {
+		result.Shuffle = rand.Int63()
+		if err := service.Save(&result, "shuffled"); err != nil {
+			return derp.Wrap(err, location, "Error saving SearchResult", result)
 		}
+	}
 
-		for result := range rangeFunc {
-			result.Shuffle = rand.Int63()
-			if err := service.Save(&result, "shuffled"); err != nil {
-				return derp.Wrap(err, location, "Error saving SearchResult", result)
-			}
-		}
+	return nil
+}
 
-		return nil
-	*/
+// GetResultsToNotify locks a batch of SearchResults and returns it to the caller.
+func (service *SearchResult) GetResultsToNotify(lockID primitive.ObjectID) ([]model.SearchResult, error) {
+
+	const location = "service.Search.GetLockedResults"
+
+	// Make a timeout context for this request
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	// Load all UNLOCKED search results
+	searchResultIDs, err := service.QueryUnnotifiedAndUnlocked()
+
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Error loading search results to lock")
+	}
+
+	// Lock a batch of search results (up to 32, maybe less)
+	if err := queries.LockSearchResults(ctx, service.collection, searchResultIDs); err != nil {
+		return nil, derp.Wrap(err, location, "Error locking search results", searchResultIDs)
+	}
+
+	// Load all of the search results that are locked by this process (up to 32, maybe less)
+	criteria := exp.Equal("lockId", lockID)
+	return service.Query(criteria)
+}
+
+// QueryUnnotifiedandUnlocked returns the IDs of the first 32 SearchResults that have NOT been notified, and are NOT locked.
+func (service *SearchResult) QueryUnnotifiedAndUnlocked() ([]primitive.ObjectID, error) {
+
+	const location = "service.Search.QueryUnnotifiedAndUnlocked"
+
+	result, err := service.QueryIDsOnly(
+		exp.Equal("notifiedDate", 0).
+			AndLessThan("timeoutDate", time.Now().Unix()),
+		option.MaxRows(32),
+		option.SortAsc("createDate"),
+	)
+
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Error loading search results to lock")
+	}
+
+	return model.GetIDOnly(result), nil
 }

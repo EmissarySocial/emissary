@@ -273,40 +273,25 @@ func (service *Follower) LoadByActor(parentID primitive.ObjectID, actorID string
 	return service.Load(criteria, follower)
 }
 
-// ListByParent returns an iterator containing all of the Followers of specific parentID
-func (service *Follower) ListByParent(parentID primitive.ObjectID, options ...option.Option) (data.Iterator, error) {
-	criteria := exp.Equal("parentId", parentID)
-	return service.List(criteria, options...)
-}
-
+// QueryByParent returns an slice containing all of the Followers of specific parentID
 func (service *Follower) QueryByParent(parentType string, parentID primitive.ObjectID, options ...option.Option) ([]model.Follower, error) {
 	criteria := exp.Equal("type", parentType).AndEqual("parentId", parentID)
 	return service.Query(criteria, options...)
 }
 
-// FollowersChannel returns a channel containing all of the Followers of specific parentID
-func (service *Follower) FollowersChannel(parentType string, parentID primitive.ObjectID) (<-chan model.Follower, error) {
-
-	return service.Channel(
-		exp.Equal("parentId", parentID).AndEqual("type", parentType),
-	)
-}
-
-func (service *Follower) RangeByTags(tags ...string) (iter.Seq[model.Follower], error) {
-
-	criteria := exp.All()
-
-	for _, tag := range tags {
-		criteria = criteria.AndEqual("tags", tag)
-	}
-
-	return service.Range(criteria)
-}
-
+// RangeByUserID returns an iterator containing all of the Followers of a specific User
 func (service *Follower) RangeByUserID(userID primitive.ObjectID) (iter.Seq[model.Follower], error) {
 	return service.Range(
 		exp.Equal("parentId", userID).
 			AndEqual("parentType", model.FollowerTypeUser),
+	)
+}
+
+// RangeBySearch returns an iterator containing all of the Followers of a specific SearchQuery
+func (service *Follower) RangeBySearch(searchQueryID primitive.ObjectID) (iter.Seq[model.Follower], error) {
+	return service.Range(
+		exp.Equal("parentId", searchQueryID).
+			AndEqual("parentType", model.FollowerTypeSearch),
 	)
 }
 
