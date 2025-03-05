@@ -37,7 +37,7 @@ require (
 	github.com/fsnotify/fsnotify v1.8.0
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/gorilla/feeds v1.2.0
-	github.com/hairyhenderson/go-fsimpl v0.2.1
+	github.com/hairyhenderson/go-fsimpl v0.2.2
 	github.com/hjson/hjson-go/v4 v4.4.0
 	github.com/kr/jsonfeed v0.1.1
 	github.com/labstack/echo/v4 v4.13.3
