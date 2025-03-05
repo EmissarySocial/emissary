@@ -64,7 +64,7 @@ require (
 	go.mongodb.org/mongo-driver v1.17.2
 	golang.org/x/crypto v0.35.0
 	golang.org/x/exp v0.0.0-20250215185904-eff6e970281f
-	golang.org/x/oauth2 v0.26.0
+	golang.org/x/oauth2 v0.28.0
 	willnorris.com/go/microformats v1.2.0
 	willnorris.com/go/webmention v0.0.0-20220108183051-4a23794272f0
 )
