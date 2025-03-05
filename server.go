@@ -113,7 +113,7 @@ func main() {
 		// When running the setup tool, wait a second, then open a browser window to the correct URL
 		openLocalhostBrowser(factory, configOptions...)
 
-		// Prepare HTTP and HTTPS servers using the new configuration
+		// Prepare HTTP (only) server using the new configuration
 		go startHTTP(factory, e, configOptions...)
 
 	} else {
