@@ -29,7 +29,7 @@ func PostInbox(ctx *steranko.Context, factory *domain.Factory, template *model.T
 	}
 
 	// Handle the ActivityPub request
-	if err := searchRouter.Handle(context, activity); err != nil {
+	if err := inboxRouter.Handle(context, activity); err != nil {
 		return derp.Wrap(err, location, "Error handling ActivityPub request")
 	}
 
