@@ -107,7 +107,6 @@ func WithSearchQuery(serverFactory *server.Factory, fn WithFunc3[model.Template,
 
 		// Load the Stream from the database
 		searchQueryService := factory.SearchQuery()
-
 		token := ctx.Param("searchId")
 
 		switch token {
