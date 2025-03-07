@@ -65,11 +65,6 @@ func (service *SearchQuery) Query(criteria exp.Expression, options ...option.Opt
 	return result, err
 }
 
-// List returns an iterator containing all of the SearchQuerys that match the provided criteria
-func (service *SearchQuery) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection.Iterator(notDeleted(criteria), options...)
-}
-
 func (service *SearchQuery) Range(criteria exp.Expression, options ...option.Option) (iter.Seq[model.SearchQuery], error) {
 	it, err := service.collection.Iterator(criteria, options...)
 

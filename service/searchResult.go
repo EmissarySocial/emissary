@@ -68,11 +68,6 @@ func (service *SearchResult) QueryIDsOnly(criteria exp.Expression, options ...op
 	return result, err
 }
 
-// List returns an iterator containing all of the SearchResults that match the provided criteria
-func (service *SearchResult) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection.Iterator(criteria, options...)
-}
-
 // Range returns a Go RangeFunc that iterates over the SearchResults that match the provided criteria
 func (service *SearchResult) Range(criteria exp.Expression, options ...option.Option) (iter.Seq[model.SearchResult], error) {
 	it, err := service.collection.Iterator(criteria, options...)
