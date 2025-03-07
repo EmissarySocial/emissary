@@ -158,10 +158,6 @@ func (service *StreamDraft) ObjectQuery(result any, criteria exp.Expression, opt
 	return service.collection.Query(result, notDeleted(criteria), options...)
 }
 
-func (service *StreamDraft) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return nil, derp.NewInternalError("service.StreamDraft.ObjectList", "Unsupported")
-}
-
 func (service *StreamDraft) ObjectLoad(criteria exp.Expression) (data.Object, error) {
 	result := model.NewStream()
 	err := service.Load(criteria, &result)

@@ -152,10 +152,6 @@ func (service *Folder) ObjectQuery(result any, criteria exp.Expression, options 
 	return service.collection.Query(result, notDeleted(criteria), options...)
 }
 
-func (service *Folder) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.List(criteria, options...)
-}
-
 func (service *Folder) ObjectLoad(criteria exp.Expression) (data.Object, error) {
 	result := model.NewFolder()
 	err := service.Load(criteria, &result)

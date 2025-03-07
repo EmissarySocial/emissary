@@ -182,10 +182,6 @@ func (service *Inbox) ObjectQuery(result any, criteria exp.Expression, options .
 	return service.collection.Query(result, notDeleted(criteria), options...)
 }
 
-func (service *Inbox) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.List(criteria, options...)
-}
-
 func (service *Inbox) ObjectLoad(criteria exp.Expression) (data.Object, error) {
 	result := model.NewMessage()
 	err := service.Load(criteria, &result)

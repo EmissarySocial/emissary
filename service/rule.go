@@ -212,10 +212,6 @@ func (service *Rule) ObjectQuery(result any, criteria exp.Expression, options ..
 	return service.collection.Query(result, notDeleted(criteria), options...)
 }
 
-func (service *Rule) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.List(criteria, options...)
-}
-
 func (service *Rule) ObjectLoad(criteria exp.Expression) (data.Object, error) {
 	result := model.NewRule()
 	err := service.Load(criteria, &result)

@@ -168,10 +168,6 @@ func (service *Outbox) ObjectQuery(result any, criteria exp.Expression, options 
 	return service.collection.Query(result, notDeleted(criteria), options...)
 }
 
-func (service *Outbox) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.List(criteria, options...)
-}
-
 func (service *Outbox) ObjectLoad(criteria exp.Expression) (data.Object, error) {
 	result := model.NewOutboxMessage()
 	err := service.Load(criteria, &result)

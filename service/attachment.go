@@ -146,11 +146,6 @@ func (service *Attachment) ObjectQuery(result any, criteria exp.Expression, opti
 	return service.collection.Query(result, notDeleted(criteria), options...)
 }
 
-// ObjectList returns an iterator of Attachments that match the provided criteria (generically)
-func (service *Attachment) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.List(criteria, options...)
-}
-
 // ObjectLoad retrieves an Attachment from the database (generically)
 func (service *Attachment) ObjectLoad(criteria exp.Expression) (data.Object, error) {
 	result := model.NewAttachment("", primitive.NilObjectID)

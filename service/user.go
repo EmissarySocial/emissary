@@ -349,10 +349,6 @@ func (service *User) ObjectQuery(result any, criteria exp.Expression, options ..
 	return service.collection.Query(result, notDeleted(criteria), options...)
 }
 
-func (service *User) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.List(criteria, options...)
-}
-
 func (service *User) ObjectLoad(criteria exp.Expression) (data.Object, error) {
 	result := model.NewUser()
 	err := service.Load(criteria, &result)

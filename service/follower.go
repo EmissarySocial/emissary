@@ -169,10 +169,6 @@ func (service *Follower) ObjectQuery(result any, criteria exp.Expression, option
 	return service.collection.Query(result, notDeleted(criteria), options...)
 }
 
-func (service *Follower) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.List(criteria, options...)
-}
-
 func (service *Follower) ObjectLoad(criteria exp.Expression) (data.Object, error) {
 	result := model.NewFollower()
 	err := service.Load(criteria, &result)

@@ -151,10 +151,6 @@ func (service *Mention) ObjectQuery(result any, criteria exp.Expression, options
 	return service.collection.Query(result, notDeleted(criteria), options...)
 }
 
-func (service *Mention) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.List(criteria, options...)
-}
-
 func (service *Mention) ObjectLoad(criteria exp.Expression) (data.Object, error) {
 	result := model.NewMention()
 	err := service.Load(criteria, &result)

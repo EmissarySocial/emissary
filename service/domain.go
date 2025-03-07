@@ -219,10 +219,6 @@ func (service *Domain) ObjectQuery(result any, criteria exp.Expression, options 
 	return service.collection.Query(result, notDeleted(criteria), options...)
 }
 
-func (service *Domain) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return nil, derp.NewBadRequestError("service.Domain.ObjectDelete", "Unsupported")
-}
-
 func (service *Domain) ObjectLoad(_ exp.Expression) (data.Object, error) {
 	return &service.domain, nil
 }

@@ -412,10 +412,6 @@ func (service *Stream) ObjectQuery(result any, criteria exp.Expression, options 
 	return service.collection.Query(result, notDeleted(criteria), options...)
 }
 
-func (service *Stream) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.List(criteria, options...)
-}
-
 func (service *Stream) ObjectLoad(criteria exp.Expression) (data.Object, error) {
 	result := model.NewStream()
 	err := service.Load(criteria, &result)

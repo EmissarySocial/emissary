@@ -150,10 +150,6 @@ func (service *Webhook) ObjectQuery(result any, criteria exp.Expression, options
 	return service.collection.Query(result, notDeleted(criteria), options...)
 }
 
-func (service *Webhook) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.List(criteria, options...)
-}
-
 func (service *Webhook) ObjectLoad(criteria exp.Expression) (data.Object, error) {
 	result := model.NewWebhook()
 	err := service.Load(criteria, &result)

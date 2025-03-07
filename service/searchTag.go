@@ -153,10 +153,6 @@ func (service *SearchTag) ObjectQuery(result any, criteria exp.Expression, optio
 	return service.collection.Query(result, notDeleted(criteria), options...)
 }
 
-func (service *SearchTag) ObjectList(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.List(criteria, options...)
-}
-
 func (service *SearchTag) ObjectLoad(criteria exp.Expression) (data.Object, error) {
 	result := model.NewSearchTag()
 	err := service.Load(criteria, &result)
