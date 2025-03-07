@@ -108,8 +108,23 @@ func WithSearchQuery(serverFactory *server.Factory, fn WithFunc3[model.Template,
 		// Load the Stream from the database
 		searchQueryService := factory.SearchQuery()
 
+		token := ctx.Param("searchId")
+
+		switch token {
+
+		// If there is no token, make a new token using the URL parameters provided
+		case "":
+			searchQuery, err := searchQueryService.LoadOrCreate(ctx.Request().URL.Query())
+
+			if err != nil {
+				return derp.Wrap(err, location, "Error creating search query token")
+			}
+
+			// Call the continuation function
+			return fn(ctx, factory, template, stream, &searchQuery)
+
 		// If we have a valid token, then use it to  look up the search query
-		if token := ctx.Param("searchId"); token != "" {
+		default:
 			searchQuery := model.NewSearchQuery()
 			if err := searchQueryService.LoadByToken(token, &searchQuery); err != nil {
 				return derp.Wrap(err, location, "Error loading search query from database")
@@ -118,16 +133,6 @@ func WithSearchQuery(serverFactory *server.Factory, fn WithFunc3[model.Template,
 			// Call the continuation function
 			return fn(ctx, factory, template, stream, &searchQuery)
 		}
-
-		// Otherwise, make a new token using the URL parameters provided
-		searchQuery, err := searchQueryService.LoadOrCreate(ctx.Request().URL.Query())
-
-		if err != nil {
-			return derp.Wrap(err, location, "Error creating search query token")
-		}
-
-		// Call the continuation function
-		return fn(ctx, factory, template, stream, &searchQuery)
 	})
 }
 
