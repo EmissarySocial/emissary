@@ -12,6 +12,6 @@ import (
 func Version16(ctx context.Context, session *mongo.Database) error {
 
 	fmt.Println("... Version 16")
-	session.Collection("JWT").DeleteMany(ctx, bson.M{})
+	_, _ = session.Collection("JWT").DeleteMany(ctx, bson.M{})
 	return nil
 }

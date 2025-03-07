@@ -23,7 +23,7 @@ func MakeIndex(db *mongo.Database, collectionName string, indexName string, keyN
 		return derp.Wrap(err, "queries.upgrades.MakeIndex", "Error checking for index")
 	} else if indexExists {
 		log.Trace().Str("index", indexName).Msg("Dropping existing index")
-		indexes.DropOne(ctx, indexName)
+		_, _ = indexes.DropOne(ctx, indexName)
 	} else {
 		log.Trace().Str("index", indexName).Msg("Creating new index")
 	}
