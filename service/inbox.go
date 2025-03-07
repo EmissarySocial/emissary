@@ -163,7 +163,7 @@ func (service *Inbox) ObjectType() string {
 	return "Inbox"
 }
 
-// New returns a fully initialized model.Stream as a data.Object.
+// New returns a fully initialized model.Inbox record as a data.Object.
 func (service *Inbox) ObjectNew() data.Object {
 	result := model.NewMessage()
 	return &result

@@ -330,7 +330,7 @@ func (service *User) ObjectType() string {
 	return "User"
 }
 
-// New returns a fully initialized model.Stream as a data.Object.
+// New returns a fully initialized model.User as a data.Object.
 func (service *User) ObjectNew() data.Object {
 	result := model.NewUser()
 	return &result

@@ -150,7 +150,7 @@ func (service *Follower) ObjectType() string {
 	return "Follower"
 }
 
-// New returns a fully initialized model.Group as a data.Object.
+// New returns a fully initialized model.Follower as a data.Object.
 func (service *Follower) ObjectNew() data.Object {
 	result := model.NewFollower()
 	return &result

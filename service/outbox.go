@@ -149,7 +149,7 @@ func (service *Outbox) ObjectType() string {
 	return "OutboxMessage"
 }
 
-// New returns a fully initialized model.OutboxMessage as a data.Object.
+// New returns a fully initialized model.Outbox record as a data.Object.
 func (service *Outbox) ObjectNew() data.Object {
 	result := model.NewOutboxMessage()
 	return &result

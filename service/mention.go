@@ -132,7 +132,7 @@ func (service *Mention) ObjectType() string {
 	return "Mention"
 }
 
-// New returns a fully initialized model.Group as a data.Object.
+// New returns a fully initialized model.Mention as a data.Object.
 func (service *Mention) ObjectNew() data.Object {
 	result := model.NewMention()
 	return &result

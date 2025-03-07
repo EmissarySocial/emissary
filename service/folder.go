@@ -133,7 +133,7 @@ func (service *Folder) ObjectType() string {
 	return "Folder"
 }
 
-// New returns a fully initialized model.Group as a data.Object.
+// New returns a fully initialized model.Folder as a data.Object.
 func (service *Folder) ObjectNew() data.Object {
 	result := model.NewFolder()
 	return &result

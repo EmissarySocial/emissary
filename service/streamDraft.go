@@ -139,7 +139,7 @@ func (service *StreamDraft) ObjectType() string {
 	return "StreamDraft"
 }
 
-// New returns a fully initialized model.Stream as a data.Object.
+// New returns a fully initialized model.StreamDraft as a data.Object.
 func (service *StreamDraft) ObjectNew() data.Object {
 	result := model.NewStream()
 	return &result

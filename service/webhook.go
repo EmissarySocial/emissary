@@ -131,7 +131,7 @@ func (service *Webhook) ObjectType() string {
 	return "Webhook"
 }
 
-// New returns a fully initialized model.Stream as a data.Object.
+// ObjectNew returns a fully initialized model.Webhook as a data.Object.
 func (service *Webhook) ObjectNew() data.Object {
 	result := model.NewWebhook()
 	return &result

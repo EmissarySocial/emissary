@@ -193,7 +193,7 @@ func (service *Rule) ObjectType() string {
 	return "Rule"
 }
 
-// New returns a fully initialized model.Group as a data.Object.
+// New returns a fully initialized model.Rule as a data.Object.
 func (service *Rule) ObjectNew() data.Object {
 	result := model.NewRule()
 	return &result

@@ -200,7 +200,7 @@ func (service *Domain) ObjectType() string {
 	return "Domain"
 }
 
-// New returns a fully initialized model.Stream as a data.Object.
+// New returns a fully initialized model.Domain as a data.Object.
 func (service *Domain) ObjectNew() data.Object {
 	result := model.NewDomain()
 	return &result
