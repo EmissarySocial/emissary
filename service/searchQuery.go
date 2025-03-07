@@ -3,6 +3,8 @@ package service
 import (
 	"iter"
 	"net/url"
+	"slices"
+	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
@@ -65,8 +67,9 @@ func (service *SearchQuery) Query(criteria exp.Expression, options ...option.Opt
 	return result, err
 }
 
+// Range returns an iterator that contains all of the SearchQuerys that match the provided criteria
 func (service *SearchQuery) Range(criteria exp.Expression, options ...option.Option) (iter.Seq[model.SearchQuery], error) {
-	it, err := service.collection.Iterator(criteria, options...)
+	it, err := service.collection.Iterator(notDeleted(criteria), options...)
 
 	if err != nil {
 		return nil, derp.Wrap(err, "service.SearchQuery.Range", "Error creating iterator", criteria)
@@ -89,84 +92,24 @@ func (service *SearchQuery) Load(criteria exp.Expression, searchQuery *model.Sea
 func (service *SearchQuery) Save(searchQuery *model.SearchQuery, note string) error {
 
 	const location = "service.SearchQuery.Save"
-	return derp.NewInternalError(location, "Not implemented")
-	/*
 
-		if len(searchQuery.Original) > 128 {
-			return derp.New(derp.CodeBadRequestError, location, "SearchQuery.Original is too long", searchQuery)
-		}
+	if len(searchQuery.Query) > 128 {
+		return derp.New(derp.CodeBadRequestError, location, "SearchQuery.Original is too long", searchQuery)
+	}
 
-		// Split the query, and Normalize tags and remainder
-		if err := service.parseHashtags(searchQuery); err != nil {
-			return derp.Wrap(err, location, "Error normalizing tags", searchQuery)
-		}
+	// RULE: Do not allow global searches here.
+	if searchQuery.IsEmpty() {
+		return derp.New(derp.CodeBadRequestError, location, "SearchQuery is empty", searchQuery)
+	}
 
-		// RULE: Do not allow global searches here.
-		if searchQuery.IsEmpty() {
-			return derp.New(derp.CodeBadRequestError, location, "SearchQuery is empty", searchQuery)
-		}
+	// Save the searchQuery to the database
+	if err := service.collection.Save(searchQuery, note); err != nil {
+		return derp.Wrap(err, "service.SearchQuery.Save", "Error saving SearchQuery", searchQuery, note)
+	}
 
-		// Save the searchQuery to the database
-		if err := service.collection.Save(searchQuery, note); err != nil {
-			return derp.Wrap(err, "service.SearchQuery.Save", "Error saving SearchQuery", searchQuery, note)
-		}
+	// TODO: LOW: Add a queue task to try to delete this SearchQuery if it hasn't been subscribed after 1 day
 
-		// TODO: Add a queue task to try to delete this SearchQuery if it hasn't been subscribed after 1 day
-
-		return nil
-	*/
-}
-
-func (service *SearchQuery) Upsert(searchQuery *model.SearchQuery) error {
-
-	const location = "service.SearchQuery.Upsert"
-
-	return derp.NewInternalError(location, "Not implemented")
-
-	/*
-		// If the SearchQuery already has an ID then just save it.
-		if !searchQuery.SearchQueryID.IsZero() {
-
-			if err := service.Save(searchQuery, "Upsert"); err != nil {
-				return derp.Wrap(err, location, "Error saving SearchQuery", searchQuery)
-			}
-
-			return nil
-		}
-
-		// Fall through means we're searching first, then saving/creating
-
-		// Normalize the Hashtags and Remainder before searching
-		if err := service.parseHashtags(searchQuery); err != nil {
-			return derp.Wrap(err, location, "Error validating query string", searchQuery.Original)
-		}
-
-		// If the SearchQuery is empty, then there's nothing to create. Return an error.
-		if searchQuery.IsEmpty() {
-			return derp.New(derp.CodeBadRequestError, location, "SearchQuery is empty", searchQuery)
-		}
-
-		// Try to find other SearchTags that match this query
-		err := service.LoadByTagsAndRemainder(searchQuery.Tags, searchQuery.Remainder, searchQuery)
-
-		// Success..
-		if err == nil {
-			return nil
-		}
-
-		// "Not Found" means that we should just save this as a new record
-		if derp.NotFound(err) {
-
-			if err := service.Save(searchQuery, "Upsert"); err != nil {
-				return derp.Wrap(err, location, "Error saving SearchQuery", searchQuery)
-			}
-
-			return nil
-		}
-
-		// Otherwise, you have failed.  Report to the Principal's office.
-		return derp.Wrap(err, location, "Error loading SearchQuery", searchQuery)
-	*/
+	return nil
 }
 
 // Delete removes an SearchQuery from the database (virtual delete)
@@ -184,103 +127,106 @@ func (service *SearchQuery) Delete(searchQuery *model.SearchQuery, note string) 
  * Custom Queries
  ******************************************/
 
-func (service *SearchQuery) LoadOrCreate(queryValues url.Values) (model.SearchQuery, error) {
-
-	const location = "service.SearchQuery.LoadByQueryString"
-	return model.SearchQuery{}, derp.NewInternalError(location, "Not implemented")
-	/*
-		result := model.NewSearchQuery()
-
-		// If we have a searchID token, then try to use it first.
-		if token := queryValues.Get("id"); token != "" {
-			if err := service.LoadByToken(token, &result); err != nil {
-				return result, derp.Wrap(err, location, "Error loading SearchQuery by token", token)
-			}
-		}
-
-		// Collect the query values into a new SearchQuery object
-		result.Parse(queryValues)
-
-		// Fall through means there's no token, or a deleted token.
-		if query := queryValues.Get("q"); query != "" {
-
-			result.Query = query
-
-			if err := service.parseHashtags(&result); err != nil {
-				return result, derp.Wrap(err, location, "Error normalizing tags", result.Query)
-			}
-
-			if err := service.LoadByTagsAndRemainder(result.TagValues, result.Remainder, &result); err == nil {
-				return result, nil
-			}
-
-			if err := service.Upsert(&result); err != nil {
-				return result, derp.Wrap(err, location, "Error upserting SearchQuery", query)
-			}
-
-			return result, nil
-		}
-
-		return result, derp.NewBadRequestError(location, "No search query provided", queryValues)
-	*/
+// RangeAll returns an iterator that contains all of the SearchQuerys in the database
+func (service *SearchQuery) RangeAll() (iter.Seq[model.SearchQuery], error) {
+	return service.Range(exp.All())
 }
 
-func (service *SearchQuery) LoadByToken(token string, searchQuery *model.SearchQuery) error {
+// LoadByID retrieves a SearchQuery using the provided ID
+func (service *SearchQuery) LoadByID(searchQueryID primitive.ObjectID, searchQuery *model.SearchQuery) error {
+	criteria := exp.Equal("_id", searchQueryID)
+	return service.Load(criteria, searchQuery)
+}
 
-	const location = "service.SearchQuery.LoadByToken"
+// LoadByToken retrieves a SearchQuery using the provided token
+func (service *SearchQuery) LoadByToken(token string, searchQuery *model.SearchQuery) error {
 
 	// Parse the token as an ID
 	searchQueryID, err := primitive.ObjectIDFromHex(token)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error converting token to ObjectID", token)
+		return derp.Wrap(err, "service.SearchQuery.LoadByToken", "Error converting token to ObjectID", token)
 	}
 
-	// Query the database
-	criteria := exp.Equal("_id", searchQueryID)
-	return service.Load(criteria, searchQuery)
+	return service.LoadByID(searchQueryID, searchQuery)
 }
 
-func (service *SearchQuery) LoadByTagsAndRemainder(tags []string, remainder string, searchQuery *model.SearchQuery) error {
-	criteria := exp.InAll("tagValues", tags).And(exp.Equal("remainder", remainder))
-	return service.Load(criteria, searchQuery)
-}
+// LoadOrCreate creates/retrieves a SearchQuery using the provided queryValues
+func (service *SearchQuery) LoadOrCreate(queryValues url.Values) (model.SearchQuery, error) {
 
-func (service *SearchQuery) RangeAll() (iter.Seq[model.SearchQuery], error) {
-	return service.Range(exp.All())
-}
+	const location = "service.SearchQuery.MakeToken"
 
-/******************************************
- * Custom Actions
- ******************************************/
+	// Parse the query values into a temporary SearchQuery
+	target, isPopulated := service.parseQueryValues(queryValues)
 
-func (service *SearchQuery) MakeToken(queryString url.Values) (string, error) {
+	if !isPopulated {
+		return model.NewSearchQuery(), derp.NewBadRequestError(location, "No useful data in queryValues", queryValues)
+	}
 
-	return "", derp.NewInternalError("service.SearchQuery.MakeToken", "Not implemented")
-	/*
-		targetSearchQuery, ok := service.parseQueryString(queryString)
+	// Build search criteria to see if this SearchQuery already exists
+	criteria := exp.
+		Equal("types", target.Types).
+		AndEqual("tags", target.Tags).
+		AndEqual("index", target.Index)
 
-		criteria := exp.All()
+	// Try to find the SearchQuery in the database
+	result := model.NewSearchQuery()
+	err := service.Load(criteria, &result)
 
-		if q := queryString.Get("q"); q != "" {
-			criteria = criteria.And(exp.Equal("query", q))
+	// If it already exists, then return the ID
+	if err == nil {
+		return result, nil
+	}
+
+	// If it doesn't exist, then create a new record and return it
+	if derp.NotFound(err) {
+
+		if err := service.Save(&target, "MakeToken"); err != nil {
+			return model.NewSearchQuery(), derp.Wrap(err, location, "Error saving SearchQuery", target)
 		}
-	*/
+
+		return result, nil
+	}
+
+	// Fall through to a real error querying the database
+	return model.NewSearchQuery(), derp.Wrap(err, location, "Error searching for SearchQuery", criteria)
 }
 
-func (service *SearchQuery) parseQueryString(queryString url.Values) (model.SearchQuery, bool) {
+func (service *SearchQuery) parseQueryValues(queryValues url.Values) (model.SearchQuery, bool) {
 
 	result := model.NewSearchQuery()
-	notEmpty := false
+	isPopulated := false
 
-	if q := queryString.Get("q"); q != "" {
-		result.Query = q
-		notEmpty = true
+	// Parse "types" into the SearchQuery
+	if types := queryValues.Get("types"); types != "" {
+		result.Types = strings.Split(types, ",")
 	}
 
-	if tags := queryString["tags"]; len(tags) > 0 {
-		result.Tags = tags
-		notEmpty = true
+	// Parse the query into the SearchQuery
+	if q := queryValues.Get("q"); q != "" {
+		result.SetQuery(q)
+	}
+
+	// Parse "tags" into the SearchQuery
+	if tags := queryValues["tags"]; len(tags) > 0 {
+		result.AppendTags(tags...)
+	}
+
+	// Sort all slices so they can be compared correctly
+
+	if len(result.Types) > 0 {
+		slices.Sort(result.Types)
+		isPopulated = true
+	}
+
+	if len(result.Index) > 0 {
+		slices.Sort(result.Index)
+		isPopulated = true
+	}
+
+	if len(result.Tags) > 0 {
+		slices.Sort(result.Tags)
+		isPopulated = true
 	}
 
 	// if startDate := queryString.Get("startDate"); startDate != "" {
@@ -291,8 +237,12 @@ func (service *SearchQuery) parseQueryString(queryString url.Values) (model.Sear
 	//	result.Location = location
 	// }
 
-	return result, notEmpty
+	return result, isPopulated
 }
+
+/******************************************
+ * ActivityPub Methods
+ ******************************************/
 
 // ActivityPubActor returns an ActivityPub Actor object ** WHICH INCLUDES ENCRYPTION KEYS **
 // for the provided Stream.

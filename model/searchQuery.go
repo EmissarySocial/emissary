@@ -8,6 +8,7 @@ import (
 	"github.com/EmissarySocial/emissary/tools/sorted"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/rosetta/sliceof"
+	"github.com/dlclark/metaphone3"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -106,4 +107,31 @@ func (searchQuery SearchQuery) Match(searchResult SearchResult) bool {
 
 	// Otherwise, return true
 	return true
+}
+
+// SetQuery parses the provided string into the SearchQuery object
+func (searchQuery *SearchQuery) SetQuery(queryString string) {
+
+	searchQuery.Query = queryString
+
+	// Split out tags
+	tags, remainder := parse.HashtagsAndRemainder(queryString)
+	searchQuery.Tags = append(searchQuery.Tags, tags...)
+
+	// Full-text index the remainder
+	encoder := metaphone3.Encoder{}
+	primary, _ := encoder.Encode(remainder)
+	strings.Split(primary, " ")
+	searchQuery.Index = append(searchQuery.Index, primary)
+}
+
+// AppendTags adds one or more sets of tags to the SearchQuery
+func (searchQuery *SearchQuery) AppendTags(tags ...string) {
+	for _, tag := range tags {
+		values := parse.Split(tag)
+		if len(values) > 0 {
+			searchQuery.Tags = append(searchQuery.Tags, values...)
+		}
+	}
+
 }
