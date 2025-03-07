@@ -14,6 +14,7 @@ import (
 // SearchQuery represents a saved query that visitors can follow
 type SearchQuery struct {
 	SearchQueryID primitive.ObjectID `bson:"_id"`       // SearchQueryID is the unique identifier for a SearchQuery.
+	Types         []string           `bson:"types"`     // The types of results that this query is interested in (Person, Article, Album, Audio, etc)
 	Query         string             `bson:"query"`     // The original string used in the search query
 	Index         []string           `bson:"index"`     // The parsed (and normalized) index of values in the search query
 	Tags          []string           `bson:"tags"`      // The parsed (and normalized) tag values
@@ -38,6 +39,10 @@ func (searchQuery SearchQuery) ID() string {
 
 // IsEmpty returns TRUE if this SearchQuery has NO useful data
 func (searchQuery SearchQuery) IsEmpty() bool {
+
+	if len(searchQuery.Types) > 0 {
+		return false
+	}
 
 	if searchQuery.Query != "" {
 		return false
@@ -64,8 +69,8 @@ func (searchQuery SearchQuery) NotEmpty() bool {
 }
 
 func (searchQuery *SearchQuery) Parse(values url.Values) {
+	searchQuery.Types = strings.Split(values.Get("types"), ",")
 	searchQuery.Query = values.Get("q")
-	searchQuery.Tags = strings.Split(values.Get("tags"), ",")
 	searchQuery.StartDate = values.Get("startDate")
 	searchQuery.Location = values.Get("location")
 
