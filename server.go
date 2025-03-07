@@ -256,6 +256,12 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	// TODO: LOW: .ostatus/tunnel is no longer necessary because we're using the right cookie settings now.
 	// Migrate calls to this to a more direct route.
 
+	// ActivityPub Routes for Search Results
+	e.GET("/.search", handler.WithSearchQuery(factory, ap_search.GetJSONLD))
+	e.GET("/.search/:searchId", handler.WithSearchQuery(factory, ap_search.GetJSONLD))
+	e.POST("/.search/:searchId/inbox", handler.WithSearchQuery(factory, ap_search.PostInbox))
+	e.GET("/.search/:searchId/outbox", handler.WithSearchQuery(factory, ap_search.GetOutboxCollection))
+
 	// Authentication Pages
 	e.GET("/signin", handler.GetSignIn(factory))
 	e.POST("/signin", handler.PostSignIn(factory))
@@ -343,12 +349,6 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/:stream/pub/outbox", ap_stream.GetOutboxCollection(factory))
 	e.GET("/:stream/pub/followers", ap_stream.GetFollowersCollection(factory))
 	e.GET("/:stream/pub/children", handler.WithFactory(factory, ap_stream.GetChildrenCollection))
-
-	// ActivityPub Routes for Search Results
-	e.GET("/.search", handler.WithSearchQuery(factory, ap_search.GetJSONLD))
-	e.GET("/.search/:searchId", handler.WithSearchQuery(factory, ap_search.GetJSONLD))
-	e.POST("/.search/:searchId/inbox", handler.WithSearchQuery(factory, ap_search.PostInbox))
-	e.GET("/.search/:searchId/outbox", handler.WithSearchQuery(factory, ap_search.GetOutboxCollection))
 
 	// Domain Admin Pages
 	e.GET("/admin", handler.GetAdmin(factory), mw.Owner)

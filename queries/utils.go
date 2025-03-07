@@ -11,10 +11,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func pointer[T any](value T) *T {
-	return &value
-}
-
 // pipeline executes a mongodb pipeline and populates the results into "result"
 func pipeline(ctx context.Context, collection data.Collection, result any, pipeline bson.A, opts ...*options.AggregateOptions) error {
 
