@@ -26,11 +26,13 @@
 
 				<div role="button" class="menu-option flex-row {{ if $selected }}selected{{ end }}">
 					<div class="flex-row flex-grow-1" hx-get="/@me/inbox?folderId={{$folderID}}&origin.followingId={{.FollowingID.Hex}}" hx-target="main" hx-swap="innerHTML" script="on click send closeModal">
-						{{- if eq "" .IconURL -}}
-							<span class="circle width-32 margin-right-sm inline-block"></span>
-						{{- else -}}
-							<img src="{{.IconURL}}" class="circle width-32 margin-right-sm">
-						{{- end -}}
+						<div class="width-32">
+							{{- if eq "" .IconURL -}}
+								<span class="circle width-32 margin-right-sm inline-block"></span>
+							{{- else -}}
+								<img src="{{.IconURL}}" class="circle width-32 margin-right-sm">
+							{{- end -}}
+						</div>
 						<div class="flex-grow-1">
 							<div class="margin-vertical-none ellipsis-block">{{.Label}}</div>
 							<div class="margin-vertical-none text-xs text-gray">{{.URL}}</div>

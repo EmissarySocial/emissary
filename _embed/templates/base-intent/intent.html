@@ -165,7 +165,7 @@
 		set queryString to the #var_queryString's innerText
 		set nextUrl to "/.intents/" + intent + "?account=" + username + "&" + queryString
 
-		window.open(nextUrl, "_blank", "width=600,height=700")
+		window.open(nextUrl, "_blank", "width=600,height=750")
 	end
 
 	def displayAccounts()
@@ -193,7 +193,9 @@
 			repeat for account in accounts index idx
 				set row to `
 					<div class="flex-row button width-100% margin-bottom-xs {{if eq "" $intent}}inactive{{end}}" {{if ne "" $intent}}tabindex="0"{{end}} role="link" onclick="goToIntent('${account.id}')">
-						<img class="circle width-48 flex-center flex-shrink-0" src="${account.icon}">
+						<div class="width-48 flex-shrink-0">
+							<img class="circle width-48" src="${account.icon}">
+						</div>
 						<div class="flex-grow">
 							<div class="bold">${account.name}</div>
 							<div class="text-sm text-gray">${account.preferredUsername}</div>
