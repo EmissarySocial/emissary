@@ -617,7 +617,7 @@ q2 9 1 18q-1 19 -9 35l256 41q-1 -9 -1 -18q1 -18 10 -35zM646 863q-32 0 -55 22.5t-
 func (service Icons) activityPub() string {
 	return `<svg viewBox="0 0 1034 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="height:1em;">
 <g transform="matrix(1,0,0,1,17,-128)">
-<path d="M457,341L25,590L25,690L370,491L370,890L457,939L457,341ZM543,341L543,441L889,640L543,840L543,939L975,690L975,590L543,341ZM543,541L543,740L716,640L543,541ZM284,640L111,740L284,840L284,640Z"/>
+<path fill="currentColor" d="M457,341L25,590L25,690L370,491L370,890L457,939L457,341ZM543,341L543,441L889,640L543,840L543,939L975,690L975,590L543,341ZM543,541L543,740L716,640L543,541ZM284,640L111,740L284,840L284,640Z"/>
 </g>
 </svg>
 `
