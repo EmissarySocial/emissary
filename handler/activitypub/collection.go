@@ -7,7 +7,6 @@ import (
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/list"
-	"github.com/davecgh/go-spew/spew"
 )
 
 func Collection(collectionID string) streams.OrderedCollection {
@@ -27,7 +26,6 @@ func CollectionPage[T model.JSONLDGetter](pageID string, partOf string, pageSize
 	// Generate the Page record
 	result := streams.NewOrderedCollectionPage(pageID, partOf)
 
-	spew.Dump(result)
 	if len(values) > 0 {
 		for _, value := range values {
 			result.OrderedItems = append(result.OrderedItems, value.GetJSONLD())
