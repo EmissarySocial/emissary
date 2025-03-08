@@ -145,6 +145,11 @@ func (w Common) QueryString() template.URL {
 	return template.URL(w._request.URL.RawQuery)
 }
 
+// RawQuery returns the raw query string (encoded as a string)
+func (w Common) RawQuery() string {
+	return w._request.URL.RawQuery
+}
+
 // IsPartialRequest returns TRUE if this is a partial page request from htmx.
 func (w Common) IsPartialRequest() bool {
 	return w._request.Header.Get("HX-Request") != ""

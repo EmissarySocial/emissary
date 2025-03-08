@@ -154,10 +154,10 @@ func (service *SearchQuery) LoadByToken(token string, searchQuery *model.SearchQ
 // LoadOrCreate creates/retrieves a SearchQuery using the provided queryValues
 func (service *SearchQuery) LoadOrCreate(queryValues url.Values) (model.SearchQuery, error) {
 
-	const location = "service.SearchQuery.MakeToken"
+	const location = "service.SearchQuery.LoadOrCreate"
 
 	// Parse the query values into a temporary SearchQuery
-	target, isPopulated := service.parseQueryValues(queryValues)
+	newSearchQuery, isPopulated := service.parseQueryValues(queryValues)
 
 	if !isPopulated {
 		return model.NewSearchQuery(), derp.NewBadRequestError(location, "No useful data in queryValues", queryValues)
@@ -165,27 +165,27 @@ func (service *SearchQuery) LoadOrCreate(queryValues url.Values) (model.SearchQu
 
 	// Build search criteria to see if this SearchQuery already exists
 	criteria := exp.
-		Equal("types", target.Types).
-		AndEqual("tags", target.Tags).
-		AndEqual("index", target.Index)
+		Equal("types", newSearchQuery.Types).
+		AndEqual("tags", newSearchQuery.Tags).
+		AndEqual("index", newSearchQuery.Index)
 
 	// Try to find the SearchQuery in the database
-	result := model.NewSearchQuery()
-	err := service.Load(criteria, &result)
+	existingSearchQuery := model.NewSearchQuery()
+	err := service.Load(criteria, &existingSearchQuery)
 
 	// If it already exists, then return the ID
 	if err == nil {
-		return result, nil
+		return existingSearchQuery, nil
 	}
 
 	// If it doesn't exist, then create a new record and return it
 	if derp.NotFound(err) {
 
-		if err := service.Save(&target, "MakeToken"); err != nil {
-			return model.NewSearchQuery(), derp.Wrap(err, location, "Error saving SearchQuery", target)
+		if err := service.Save(&newSearchQuery, "LoadOrCreate"); err != nil {
+			return model.NewSearchQuery(), derp.Wrap(err, location, "Error saving SearchQuery", newSearchQuery)
 		}
 
-		return result, nil
+		return newSearchQuery, nil
 	}
 
 	// Fall through to a real error querying the database
