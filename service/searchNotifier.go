@@ -9,7 +9,6 @@ import (
 	"github.com/benpate/rosetta/channel"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -139,8 +138,6 @@ func (service *SearchNotifier) sendNotification(searchQuery model.SearchQuery, s
 	}
 
 	task := queue.NewTask("SendSearchResults", args, queue.WithPriority(200))
-
-	spew.Dump("Publishing Search Notification:::::", task)
 
 	if err := service.queue.Publish(task); err != nil {
 		return derp.Wrap(err, location, "Error publishing task")
