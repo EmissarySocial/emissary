@@ -5,6 +5,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
+	domainTools "github.com/benpate/domain"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
 )
@@ -16,6 +17,7 @@ func WithFactory(serverFactory ServerFactory, args mapof.Any, Handler func(facto
 
 	// Get the host argument from the map
 	host := args.GetString("host")
+	host = domainTools.NameOnly(host)
 
 	if host == "" {
 		// If we don't have a host, we'll never be able to run this task, so hard fail

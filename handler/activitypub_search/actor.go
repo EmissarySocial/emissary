@@ -35,7 +35,7 @@ func GetJSONLD(ctx *steranko.Context, factory *domain.Factory, template *model.T
 		vocab.PropertyTootIndexable:    false,
 
 		vocab.PropertyPublicKey: map[string]any{
-			vocab.PropertyID:           domainService.PublicKeyID(),
+			vocab.PropertyID:           actorID + "#main-key",
 			vocab.PropertyOwner:        actorID,
 			vocab.PropertyPublicKeyPEM: publicKeyPEM,
 		},

@@ -53,32 +53,34 @@ type Factory struct {
 	exportCache         afero.Fs
 
 	// services (within this domain/factory)
-	activityService      service.ActivityStream
-	attachmentService    service.Attachment
-	connectionService    service.Connection
-	domainService        service.Domain
-	emailService         service.DomainEmail
-	encryptionKeyService service.EncryptionKey
-	folderService        service.Folder
-	followerService      service.Follower
-	followingService     service.Following
-	groupService         service.Group
-	inboxService         service.Inbox
-	jwtService           service.JWT
-	mentionService       service.Mention
-	oauthClient          service.OAuthClient
-	oauthUserToken       service.OAuthUserToken
-	outboxService        service.Outbox
-	responseService      service.Response
-	ruleService          service.Rule
-	searchTagService     service.SearchTag
-	searchResultService  service.SearchResult
-	streamService        service.Stream
-	streamArchiveService service.StreamArchive
-	streamDraftService   service.StreamDraft
-	realtimeBroker       RealtimeBroker
-	userService          service.User
-	webhookService       service.Webhook
+	activityService       service.ActivityStream
+	attachmentService     service.Attachment
+	connectionService     service.Connection
+	domainService         service.Domain
+	emailService          service.DomainEmail
+	encryptionKeyService  service.EncryptionKey
+	folderService         service.Folder
+	followerService       service.Follower
+	followingService      service.Following
+	groupService          service.Group
+	inboxService          service.Inbox
+	jwtService            service.JWT
+	mentionService        service.Mention
+	oauthClient           service.OAuthClient
+	oauthUserToken        service.OAuthUserToken
+	outboxService         service.Outbox
+	responseService       service.Response
+	ruleService           service.Rule
+	searchNotifierService service.SearchNotifier
+	searchQueryService    service.SearchQuery
+	searchTagService      service.SearchTag
+	searchResultService   service.SearchResult
+	streamService         service.Stream
+	streamArchiveService  service.StreamArchive
+	streamDraftService    service.StreamDraft
+	realtimeBroker        RealtimeBroker
+	userService           service.User
+	webhookService        service.Webhook
 
 	// real-time watchers
 	refreshContext   context.CancelFunc
@@ -142,6 +144,8 @@ func NewFactory(domain config.Domain, port string, providers []config.Provider, 
 	factory.outboxService = service.NewOutbox()
 	factory.responseService = service.NewResponse()
 	factory.ruleService = service.NewRule()
+	factory.searchNotifierService = service.NewSearchNotifier()
+	factory.searchQueryService = service.NewSearchQuery()
 	factory.searchResultService = service.NewSearchResult()
 	factory.searchTagService = service.NewSearchTag()
 	factory.streamService = service.NewStream()
@@ -351,6 +355,26 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.Host(),
 		)
 
+		// Populate the Search Notifier Service
+		factory.searchNotifierService.Refresh(
+			factory.SearchQuery(),
+			factory.SearchResult(),
+			factory.Queue(),
+			factory.Host(),
+			refreshContext,
+		)
+
+		factory.searchQueryService.Refresh(
+			factory.collection(CollectionSearchQuery),
+			factory.Domain(),
+			factory.Follower(),
+			factory.Rule(),
+			factory.SearchTag(),
+			factory.ActivityStream(),
+			factory.Queue(),
+			factory.Host(),
+		)
+
 		// Populate the Search Service
 		factory.searchResultService.Refresh(
 			factory.collection(CollectionSearchResult),
@@ -441,6 +465,9 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 
 		// Watch for updates to User records
 		go queries.WatchUsers(refreshContext, factory.collection(CollectionUser), factory.sseUpdateChannel)
+
+		// Run search notifications
+		go factory.searchNotifierService.Run()
 	}
 
 	// Re-Populate Email Service
@@ -626,10 +653,8 @@ func (factory *Factory) SearchResult() *service.SearchResult {
 }
 
 // SearchQuery returns a fully populated SearchQuery service
-func (factory *Factory) SearchQuery() service.SearchQuery {
-	result := service.NewSearchQuery()
-	result.Refresh(factory.collection(CollectionSearchQuery), factory.Domain(), factory.Follower(), factory.Rule(), factory.SearchTag(), factory.ActivityStream(), factory.Host())
-	return result
+func (factory *Factory) SearchQuery() *service.SearchQuery {
+	return &factory.searchQueryService
 }
 
 // SearchTag returns a fully populated SearchTag service

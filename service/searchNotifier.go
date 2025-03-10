@@ -9,6 +9,8 @@ import (
 	"github.com/benpate/rosetta/channel"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
+	"github.com/davecgh/go-spew/spew"
+	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -29,12 +31,12 @@ func NewSearchNotifier() SearchNotifier {
 	}
 }
 
-func (service *SearchNotifier) Refresh(host string, context context.Context, searchQueryService *SearchQuery, searchResultService *SearchResult, queue *queue.Queue) {
+func (service *SearchNotifier) Refresh(searchQueryService *SearchQuery, searchResultService *SearchResult, queue *queue.Queue, host string, context context.Context) {
 	service.searchQueryService = searchQueryService
 	service.searchResultService = searchResultService
-	service.context = context
 	service.queue = queue
 	service.host = host
+	service.context = context
 }
 
 // Run executes the SearchNotifier, scanning new SearchResults as they are created,
@@ -43,7 +45,11 @@ func (service *SearchNotifier) Run() {
 
 	const location = "service.SearchNotifier.Run"
 
+	log.Debug().Msg("Starting SearchNotifier")
+
 	for {
+
+		log.Trace().Msg("SearchNotifier: Scanning for new search results...")
 
 		// If the context is closed, then exit this function
 		if channel.Closed(service.context.Done()) {
@@ -59,9 +65,12 @@ func (service *SearchNotifier) Run() {
 
 		// If there are no results, then wait before trying again.
 		if len(resultsToNotify) == 0 {
-			time.Sleep(10 * time.Minute)
+			time.Sleep(20 * time.Second)
+			// time.Sleep(10 * time.Minute)
 			continue
 		}
+
+		log.Trace().Msgf("SearchNotifier: Found %v records", len(resultsToNotify))
 
 		// Otherwise, scan all saved search queries and send notifications
 		if err := service.sendNotifications(resultsToNotify); err != nil {
@@ -70,10 +79,13 @@ func (service *SearchNotifier) Run() {
 	}
 }
 
+// sendNotifications scans all SearchQueries in the database and sends notifications
+// for all that match the provided batch of SearchResults
 func (service *SearchNotifier) sendNotifications(searchResults []model.SearchResult) error {
 
 	const location = "service.SearchNotifier.sendNotifications"
 
+	// If there are no search results, then don't load search queries
 	if len(searchResults) == 0 {
 		return nil
 	}
@@ -85,13 +97,14 @@ func (service *SearchNotifier) sendNotifications(searchResults []model.SearchRes
 		return derp.Wrap(err, location, "Error retrieving all search queries")
 	}
 
-	// Compare results with each search query
+	// Scan each SearchQuery in the database...
 	for searchQuery := range searchQueries {
 
+		// Scan each SearchResult in our current batch...
 		for _, searchResult := range searchResults {
 
+			// Send notifications for any matches
 			if searchQuery.Match(searchResult) {
-
 				if err := service.sendNotification(searchQuery, searchResult); err != nil {
 					return derp.Wrap(err, location, "Error publishing task")
 				}
@@ -102,9 +115,9 @@ func (service *SearchNotifier) sendNotifications(searchResults []model.SearchRes
 	// Mark all SearchResults as notified
 	for _, searchResult := range searchResults {
 
-		searchResult.LockID = primitive.NilObjectID
 		searchResult.NotifiedDate = time.Now().Unix()
-		searchResult.TimeoutDate = time.Now().Unix()
+		searchResult.LockID = primitive.NilObjectID
+		searchResult.TimeoutDate = 0
 
 		if err := service.searchResultService.Save(&searchResult, "Sent notifications"); err != nil {
 			return derp.Wrap(err, location, "Error saving search result")
@@ -126,6 +139,8 @@ func (service *SearchNotifier) sendNotification(searchQuery model.SearchQuery, s
 	}
 
 	task := queue.NewTask("SendSearchResults", args, queue.WithPriority(200))
+
+	spew.Dump("Publishing Search Notification:::::", task)
 
 	if err := service.queue.Publish(task); err != nil {
 		return derp.Wrap(err, location, "Error publishing task")

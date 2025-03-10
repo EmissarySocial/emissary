@@ -39,8 +39,8 @@ func NewSearchResult() SearchResult {
 		SearchResultID: primitive.NewObjectID(),
 		Place:          mapof.NewAny(),
 		Tags:           make(sliceof.String, 0),
-		Shuffle:        rand.Int64(),
 		Index:          make(sliceof.String, 0),
+		Shuffle:        rand.Int64(),
 	}
 }
 
@@ -61,11 +61,14 @@ func (searchResult *SearchResult) Update(other SearchResult) {
 	searchResult.Text = other.Text
 	searchResult.Date = other.Date
 	searchResult.Place = other.Place
+	searchResult.Index = other.Index
 	searchResult.Tags = other.Tags
+	searchResult.LockID = other.LockID
+	searchResult.TimeoutDate = other.TimeoutDate
+	searchResult.ReIndexDate = other.ReIndexDate
+	searchResult.NotifiedDate = other.NotifiedDate
 	searchResult.Rank = other.Rank
 	searchResult.Shuffle = other.Shuffle
-	searchResult.Index = other.Index
-	searchResult.ReIndexDate = other.ReIndexDate
 }
 
 func (searchResult SearchResult) Fields() []string {
@@ -99,21 +102,4 @@ func (searchResult SearchResult) IsZero() bool {
 
 func (searchResult SearchResult) NotZero() bool {
 	return !searchResult.IsZero()
-}
-
-func (searchResult *SearchResult) UnmarshalMap(value mapof.Any) {
-	searchResult.Type = value.GetString("type")
-	searchResult.URL = value.GetString("url")
-	searchResult.AttributedTo = value.GetString("attributedTo")
-	searchResult.Name = value.GetString("name")
-	searchResult.IconURL = value.GetString("iconUrl")
-	searchResult.Summary = value.GetString("summary")
-	searchResult.Text = value.GetString("text")
-	searchResult.Date = value.GetTime("date")
-	searchResult.Place = value.GetMap("place")
-	searchResult.Tags = value.GetSliceOfString("tags")
-	searchResult.Rank = value.GetInt64("rank")
-	searchResult.Shuffle = value.GetInt64("shuffle")
-	searchResult.Index = make(sliceof.String, 0)
-	searchResult.ReIndexDate = value.GetInt64("reindexDate")
 }

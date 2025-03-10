@@ -51,7 +51,7 @@ func SendSearchResults(factory *domain.Factory, args mapof.Any) queue.Result {
 
 		// Create a new queue message for each follower
 		task := queue.NewTask(
-			"sendActivityPubMessage",
+			"SendActivityPubMessage",
 			mapof.Any{
 				"actorType": model.FollowerTypeSearch,
 				"inboxURL":  follower.Actor.InboxURL,

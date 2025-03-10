@@ -12,7 +12,10 @@ func TestToToken(t *testing.T) {
 		require.Equal(t, ToToken(input), expected)
 	}
 
-	do("Hello, World!", "hello-world")
-	do("Hägen Däs", "hägen-däs")
-	do("Æthelflad", "æthelflad")
+	do("!!!! Ignore leading chars", "ignore-leading-chars")   // Ignore leading special characters
+	do("Ignore trailing chars !!!!", "ignore-trailing-chars") // Ignore trailing special characters
+	do("Hello, World!", "hello-world")                        // Lowercase, and replace special characters with "-"
+	do("Hägen Däs", "hägen-däs")                              // Allow diacritics
+	do("Æthelflad", "æthelflad")                              // Æthenflad is a bad-ass.
+	do("category:value", "category:value")                    // Intentionally allowing ":" because it's used for tag categories
 }

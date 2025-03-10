@@ -3,7 +3,6 @@ package service
 import (
 	"iter"
 	"net/url"
-	"slices"
 	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -12,6 +11,9 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/outbox"
+	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/turbine/queue"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -23,6 +25,7 @@ type SearchQuery struct {
 	ruleService      *Rule
 	searchTagService *SearchTag
 	activityStream   *ActivityStream
+	queue            *queue.Queue
 	host             string
 }
 
@@ -36,13 +39,14 @@ func NewSearchQuery() SearchQuery {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *SearchQuery) Refresh(collection data.Collection, domainService *Domain, followerService *Follower, ruleService *Rule, searchTagService *SearchTag, activityStream *ActivityStream, host string) {
+func (service *SearchQuery) Refresh(collection data.Collection, domainService *Domain, followerService *Follower, ruleService *Rule, searchTagService *SearchTag, activityStream *ActivityStream, queue *queue.Queue, host string) {
 	service.collection = collection
 	service.domainService = domainService
 	service.followerService = followerService
 	service.ruleService = ruleService
 	service.searchTagService = searchTagService
 	service.activityStream = activityStream
+	service.queue = queue
 	service.host = host
 }
 
@@ -102,12 +106,34 @@ func (service *SearchQuery) Save(searchQuery *model.SearchQuery, note string) er
 		return derp.New(derp.CodeBadRequestError, location, "SearchQuery is empty", searchQuery)
 	}
 
+	// Normalize all slices and make query signature
+	searchQuery.MakeSignature()
+	wasNew := searchQuery.IsNew()
+
 	// Save the searchQuery to the database
 	if err := service.collection.Save(searchQuery, note); err != nil {
 		return derp.Wrap(err, "service.SearchQuery.Save", "Error saving SearchQuery", searchQuery, note)
 	}
 
-	// TODO: LOW: Add a queue task to try to delete this SearchQuery if it hasn't been subscribed after 1 day
+	// Add a queue task to delete this SearchQuery if it has no followers after 12 hour.
+	if wasNew {
+		task := queue.NewTask(
+			"DeleteEmptySearchQuery",
+			mapof.Any{
+				"host":          service.host,
+				"searchQueryID": searchQuery.SearchQueryID.Hex(),
+			},
+			queue.WithPriority(200),
+			queue.WithDelaySeconds(30),
+			// queue.WithDelayHours(12),
+		)
+
+		spew.Dump("Publishing cleanup task", task)
+
+		if err := service.queue.Publish(task); err != nil {
+			return derp.Wrap(err, location, "Error publishing cleanup task", task)
+		}
+	}
 
 	return nil
 }
@@ -151,6 +177,12 @@ func (service *SearchQuery) LoadByToken(token string, searchQuery *model.SearchQ
 	return service.LoadByID(searchQueryID, searchQuery)
 }
 
+// LoadBySignature retrieves a SearchQuery using the provided signature
+func (service *SearchQuery) LoadBySignature(signature string, searchQuery *model.SearchQuery) error {
+	criteria := exp.Equal("signature", signature)
+	return service.Load(criteria, searchQuery)
+}
+
 // LoadOrCreate creates/retrieves a SearchQuery using the provided queryValues
 func (service *SearchQuery) LoadOrCreate(queryValues url.Values) (model.SearchQuery, error) {
 
@@ -163,15 +195,13 @@ func (service *SearchQuery) LoadOrCreate(queryValues url.Values) (model.SearchQu
 		return model.NewSearchQuery(), derp.NewBadRequestError(location, "No useful data in queryValues", queryValues)
 	}
 
-	// Build search criteria to see if this SearchQuery already exists
-	criteria := exp.
-		Equal("types", newSearchQuery.Types).
-		AndEqual("tags", newSearchQuery.Tags).
-		AndEqual("index", newSearchQuery.Index)
+	spew.Dump("LoadOrCreate", newSearchQuery)
 
 	// Try to find the SearchQuery in the database
 	existingSearchQuery := model.NewSearchQuery()
-	err := service.Load(criteria, &existingSearchQuery)
+	err := service.LoadBySignature(newSearchQuery.Signature, &existingSearchQuery)
+
+	spew.Dump(err, existingSearchQuery)
 
 	// If it already exists, then return the ID
 	if err == nil {
@@ -189,7 +219,7 @@ func (service *SearchQuery) LoadOrCreate(queryValues url.Values) (model.SearchQu
 	}
 
 	// Fall through to a real error querying the database
-	return model.NewSearchQuery(), derp.Wrap(err, location, "Error searching for SearchQuery", criteria)
+	return model.NewSearchQuery(), derp.Wrap(err, location, "Error locating SearchQuery")
 }
 
 func (service *SearchQuery) parseQueryValues(queryValues url.Values) (model.SearchQuery, bool) {
@@ -212,23 +242,6 @@ func (service *SearchQuery) parseQueryValues(queryValues url.Values) (model.Sear
 		result.AppendTags(tags...)
 	}
 
-	// Sort all slices so they can be compared correctly
-
-	if len(result.Types) > 0 {
-		slices.Sort(result.Types)
-		isPopulated = true
-	}
-
-	if len(result.Index) > 0 {
-		slices.Sort(result.Index)
-		isPopulated = true
-	}
-
-	if len(result.Tags) > 0 {
-		slices.Sort(result.Tags)
-		isPopulated = true
-	}
-
 	// if startDate := queryString.Get("startDate"); startDate != "" {
 	//	result.StartDate = startDate
 	// }
@@ -236,6 +249,22 @@ func (service *SearchQuery) parseQueryValues(queryValues url.Values) (model.Sear
 	// if location := queryString.Get("location"); location != "" {
 	//	result.Location = location
 	// }
+
+	// Create the "signature" value for this SearchQuery
+	result.MakeSignature()
+
+	// Determine if this has been populated or not
+	if len(result.Types) > 0 {
+		isPopulated = true
+	}
+
+	if len(result.Index) > 0 {
+		isPopulated = true
+	}
+
+	if len(result.Tags) > 0 {
+		isPopulated = true
+	}
 
 	return result, isPopulated
 }

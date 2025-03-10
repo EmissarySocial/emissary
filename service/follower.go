@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
+	"github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
@@ -27,8 +28,8 @@ type Follower struct {
 	streamService   *Stream
 	domainEmail     *DomainEmail
 	activityService *ActivityStream
-	queue           *queue.Queue
-	host            string
+	queue           *queue.Queue // The server-wide queue for background tasks
+	host            string       // The HOST for this domain (protocol + hostname)
 }
 
 // NewFollower returns a fully initialized Follower service
@@ -133,9 +134,28 @@ func (service *Follower) Save(follower *model.Follower, note string) error {
 // Delete removes an Follower from the database (virtual delete)
 func (service *Follower) Delete(follower *model.Follower, note string) error {
 
+	const location = "service.Follower.Delete"
+
 	// Delete this Follower
 	if err := service.collection.Delete(follower, note); err != nil {
-		return derp.Wrap(err, "service.Follower.Delete", "Error deleting Follower", follower, note)
+		return derp.Wrap(err, location, "Error deleting Follower", follower, note)
+	}
+
+	// Maybe delete the SearchQuery if it's no longer needed
+	if follower.ParentType == model.FollowerTypeSearch {
+
+		task := queue.NewTask(
+			"DeleteEmptySearchQuery",
+			mapof.Any{
+				"host":          domain.NameOnly(service.host),
+				"searchQueryID": follower.ParentID,
+			},
+			queue.WithPriority(200),
+		)
+
+		if err := service.queue.Publish(task); err != nil {
+			return derp.Wrap(err, location, "Error publishing cleanup task", task)
+		}
 	}
 
 	return nil
@@ -200,6 +220,11 @@ func (service *Follower) Schema() schema.Schema {
 /******************************************
  * Custom Queries
  ******************************************/
+
+func (service *Follower) CountByParent(parentType string, parentID primitive.ObjectID) (int64, error) {
+	criteria := exp.Equal("type", parentType).AndEqual("parentId", parentID)
+	return service.Count(criteria)
+}
 
 func (service *Follower) LoadOrCreate(parentID primitive.ObjectID, actorID string) (model.Follower, error) {
 

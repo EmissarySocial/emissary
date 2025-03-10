@@ -10,26 +10,33 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func LockSearchResults(ctx context.Context, collection data.Collection, searchResultIDs []primitive.ObjectID) error {
+func LockSearchResults(ctx context.Context, collection data.Collection, searchResultIDs []primitive.ObjectID, lockID primitive.ObjectID) error {
 
 	const location = "queries.LockSearchResults"
 
+	// RULE: If there are no results to lock, then don't lock any results.  Duh, Karen.
+	if len(searchResultIDs) == 0 {
+		return nil
+	}
+
+	// Try to get the MongoDB collection from the data.Collection
 	mongo := mongoCollection(collection)
 
 	if mongo == nil {
 		return derp.NewInternalError(location, "Collection is not a MongoDB Collection")
 	}
 
+	// Build the query to lock the requested SearchResults
 	criteria := bson.M{
 		"_id": bson.M{
-			"$in":    searchResultIDs,
-			"lockId": primitive.NilObjectID,
+			"$in": searchResultIDs,
 		},
+		"timeoutDate": bson.M{"$lt": time.Now().Unix()},
 	}
 
 	update := bson.M{
 		"$set": bson.M{
-			"lockId":      primitive.NewObjectID(),
+			"lockId":      lockID,
 			"timeoutDate": time.Now().Add(10 * time.Minute).Unix(),
 		},
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"iter"
 	"math/rand"
+	"slices"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -92,15 +93,17 @@ func (service *SearchResult) Load(criteria exp.Expression, searchResult *model.S
 // Save adds/updates an SearchResult in the database
 func (service *SearchResult) Save(searchResult *model.SearchResult, note string) error {
 
-	// Update tags
+	// Normalize Tags
 	if _, tagValues, err := service.searchTagService.NormalizeTags(searchResult.Tags...); err == nil {
 		searchResult.Tags = tagValues
+		slices.Sort(searchResult.Tags)
 	} else {
 		return derp.Wrap(err, "service.Search.Save", "Error normalizing tags", searchResult)
 	}
 
 	// Make Text Index
 	searchResult.Index = TextIndex(searchResult.Text)
+	slices.Sort(searchResult.Index)
 
 	// Reindex this Search in 30 days
 	searchResult.ReIndexDate = time.Now().Add(time.Hour * 24 * 30).Unix()
@@ -243,15 +246,20 @@ func (service *SearchResult) GetResultsToNotify(lockID primitive.ObjectID) ([]mo
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	// Load all UNLOCKED search results
+	// Find a batch of UNLOCKED search results
 	searchResultIDs, err := service.QueryUnnotifiedAndUnlocked()
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Error loading search results to lock")
 	}
 
-	// Lock a batch of search results (up to 32, maybe less)
-	if err := queries.LockSearchResults(ctx, service.collection, searchResultIDs); err != nil {
+	// If there are no matching results, then exit early
+	if len(searchResultIDs) == 0 {
+		return make([]model.SearchResult, 0), nil
+	}
+
+	// Try to lock a batch of search results (up to 32, maybe less)
+	if err := queries.LockSearchResults(ctx, service.collection, searchResultIDs, lockID); err != nil {
 		return nil, derp.Wrap(err, location, "Error locking search results", searchResultIDs)
 	}
 

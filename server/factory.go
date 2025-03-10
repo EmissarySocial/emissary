@@ -347,11 +347,10 @@ func (factory *Factory) refreshQueue() {
 	// Removing consumers because they're F@#$ing up outbound HTTP signatures
 	consumer := consumer.New(factory)
 
-	// Create a new queue object with consumers, storage, and polling
-	factory.queue = queue.New(
+	options := []queue.QueueOption{
 		queue.WithConsumers(consumer.Run, remote.Consumer()),
 		queue.WithRunImmediatePriority(32),
-	)
+	}
 
 	// If we have a common database configured, then use it for queue storage
 	if factory.commonDatabase != nil {
@@ -360,9 +359,14 @@ func (factory *Factory) refreshQueue() {
 		mongoStorage := queue_mongo.New(factory.commonDatabase, 32, 32)
 
 		// Apply the storage to the queue
-		queue.WithStorage(mongoStorage)(&factory.queue)
-		queue.WithPollStorage(true)(&factory.queue)
+		options = append(options,
+			queue.WithStorage(mongoStorage),
+			queue.WithPollStorage(true),
+		)
 	}
+
+	// Create a new queue object with consumers, storage, and polling
+	factory.queue = queue.New(options...)
 }
 
 /****************************
