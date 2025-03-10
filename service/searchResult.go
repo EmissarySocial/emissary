@@ -93,12 +93,18 @@ func (service *SearchResult) Load(criteria exp.Expression, searchResult *model.S
 // Save adds/updates an SearchResult in the database
 func (service *SearchResult) Save(searchResult *model.SearchResult, note string) error {
 
+	const location = "service.Search.Save"
+
+	if searchResult.SearchResultID.IsZero() {
+		return derp.NewInternalError(location, "SearchResultID is required", searchResult)
+	}
+
 	// Normalize Tags
 	if _, tagValues, err := service.searchTagService.NormalizeTags(searchResult.Tags...); err == nil {
 		searchResult.Tags = tagValues
 		slices.Sort(searchResult.Tags)
 	} else {
-		return derp.Wrap(err, "service.Search.Save", "Error normalizing tags", searchResult)
+		return derp.Wrap(err, location, "Error normalizing tags", searchResult)
 	}
 
 	// Make Text Index
@@ -110,12 +116,12 @@ func (service *SearchResult) Save(searchResult *model.SearchResult, note string)
 
 	// Save the searchResult to the database
 	if err := service.collection.Save(searchResult, note); err != nil {
-		return derp.Wrap(err, "service.Search.Save", "Error saving Search", searchResult, note)
+		return derp.Wrap(err, location, "Error saving Search", searchResult, note)
 	}
 
 	for _, tagName := range searchResult.Tags {
 		if err := service.searchTagService.Upsert(tagName); err != nil {
-			return derp.Wrap(err, "service.Search.Save", "Error saving SearchTag", searchResult, tagName)
+			return derp.Wrap(err, location, "Error saving SearchTag", searchResult, tagName)
 		}
 	}
 
@@ -155,6 +161,8 @@ func (service *SearchResult) LoadByURL(url string, searchResult *model.SearchRes
 
 func (service *SearchResult) Sync(searchResult model.SearchResult) error {
 
+	const location = "service.Search.Sync"
+
 	// If the SearchResult is marked as deleted, then remove it from the database
 	if searchResult.IsDeleted() {
 		return service.DeleteByURL(searchResult.URL)
@@ -162,38 +170,35 @@ func (service *SearchResult) Sync(searchResult model.SearchResult) error {
 
 	// Try to load the original SearchResult
 	original := model.NewSearchResult()
-
 	err := service.LoadByURL(searchResult.URL, &original)
-	var comment string
-
-	switch {
 
 	// If the SearchResult exists in the database, then update it
-	case err == nil:
+	if err == nil {
 		original.Update(searchResult)
-		comment = "updated"
+		if err := service.Save(&original, "updated"); err != nil {
+			return derp.Wrap(err, location, "Error adding Search", searchResult)
+		}
+
+		return nil
+	}
 
 	// If the SearchResult is NOT FOUND, then insert it.
-	case derp.NotFound(err):
-		original = searchResult
-		comment = "added"
+	if derp.NotFound(err) {
+		if err := service.Save(&searchResult, "added"); err != nil {
+			return derp.Wrap(err, location, "Error adding Search", searchResult)
+		}
+
+		return nil
+	}
 
 	// Return legitimate errors to the caller
-	default:
-		return derp.Wrap(err, "service.Search.Upsert", "Error loading Search", searchResult)
-	}
-
-	// Save the new/updated SearchResult to the database
-	if err := service.Save(&original, comment); err != nil {
-		return derp.Wrap(err, "service.Search.Add", "Error adding Search", searchResult)
-	}
-
-	// Great Success
-	return nil
+	return derp.Wrap(err, location, "Error loading Search", searchResult)
 }
 
 // eleteByURL removes a SearchResult from the database that matches the provided URL
 func (service *SearchResult) DeleteByURL(url string) error {
+
+	const location = "service.Search.DeleteByURL"
 
 	// RULE: If the URL is empty, then there's nothing to delete
 	if url == "" {
@@ -209,7 +214,7 @@ func (service *SearchResult) DeleteByURL(url string) error {
 			return nil
 		}
 
-		return derp.Wrap(err, "service.Search.DeleteByURL", "Error loading Search", url)
+		return derp.Wrap(err, location, "Error loading Search", url)
 	}
 
 	// Delete the SearchResult
