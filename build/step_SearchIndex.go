@@ -11,8 +11,7 @@ import (
 
 // StepSearchIndex is a Step that can update a stream's PublishDate with the current time.
 type StepSearchIndex struct {
-	Action string
-	If     *template.Template
+	If *template.Template
 }
 
 func (step StepSearchIndex) Get(builder Builder, _ io.Writer) PipelineBehavior {
