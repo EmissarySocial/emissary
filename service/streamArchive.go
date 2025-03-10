@@ -332,16 +332,16 @@ func (service *StreamArchive) writeToZip(zipWriter *zip.Writer, parent *model.St
 
 	// Export children, if requested
 	if options.HasNext() {
-		children, err := service.streamService.ListByParent(stream.StreamID)
+		children, err := service.streamService.RangeByParent(stream.StreamID)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error listing children")
 		}
 
 		index := 1
-		child := model.NewStream()
 		nextOptions := options.Next()
-		for children.Next(&child) {
+
+		for child := range children {
 
 			prefix := fmt.Sprintf("%02d.%s", index, child.Label)
 
@@ -354,7 +354,6 @@ func (service *StreamArchive) writeToZip(zipWriter *zip.Writer, parent *model.St
 			}
 
 			index = index + 1
-			child = model.NewStream()
 		}
 	}
 

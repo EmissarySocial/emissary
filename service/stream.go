@@ -469,9 +469,9 @@ func (service *Stream) ListNavigation() (data.Iterator, error) {
 	)
 }
 
-// ListByParent returns all Streams that match a particular parentID
-func (service *Stream) ListByParent(parentID primitive.ObjectID) (data.Iterator, error) {
-	return service.List(exp.Equal("parentId", parentID))
+// RangeByParent returns an iterator that contains all child streams of the provided parentID
+func (service *Stream) RangeByParent(parentID primitive.ObjectID) (iter.Seq[model.Stream], error) {
+	return service.Range(exp.Equal("parentId", parentID))
 }
 
 // ListPublishedByParent returns all Streams that match a particular parentID

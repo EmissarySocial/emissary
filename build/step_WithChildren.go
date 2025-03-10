@@ -3,7 +3,6 @@ package build
 import (
 	"io"
 
-	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/model/step"
 	"github.com/benpate/derp"
 )
@@ -23,21 +22,24 @@ func (step StepWithChildren) Post(builder Builder, buffer io.Writer) PipelineBeh
 	const location = "build.StepWithChildren.Post"
 
 	factory := builder.factory()
-	streamBuilder := builder.(Stream)
+	streamBuilder, isStreamBuilder := builder.(Stream)
 
-	children, err := factory.Stream().ListByParent(streamBuilder._stream.ParentID)
+	if !isStreamBuilder {
+		return Halt().WithError(derp.NewInternalError(location, "This step can only be used by Stream builders"))
+	}
+
+	children, err := factory.Stream().RangeByParent(streamBuilder._stream.ParentID)
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error listing children"))
 	}
 
-	child := model.NewStream()
 	result := NewPipelineResult()
 
-	for children.Next(&child) {
+	for child := range children {
 
 		// Make a builder with the new child stream
-		// TODO: LOW: Is "view" really the best action to use here??
+		// TODO: LOW: Is "view" really the best action to use here?
 		childStream, err := NewStreamWithoutTemplate(streamBuilder.factory(), streamBuilder.request(), streamBuilder.response(), &child, "view")
 
 		if err != nil {
@@ -53,7 +55,6 @@ func (step StepWithChildren) Post(builder Builder, buffer io.Writer) PipelineBeh
 		}
 
 		// Reset the child object so that old records don't bleed into new ones.
-		child = model.NewStream()
 		result.Merge(childResult)
 	}
 

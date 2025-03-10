@@ -26,19 +26,17 @@ func GetChildrenCollection(ctx *steranko.Context, factory *domain.Factory) error
 
 	// Get an iterator of all child streams
 	result := activitypub.Collection(parent.ActivityPubChildrenURL())
-	children, err := streamService.ListByParent(parent.StreamID)
+	children, err := streamService.RangeByParent(parent.StreamID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error loading children")
 	}
 
 	// Map each child into JSON and stuff it into the collection's OrderedItems
-	child := model.NewStream()
 	count := 0
-	for children.Next(&child) {
+	for child := range children {
 		childJSON := streamService.JSONLD(&child)
 		result.OrderedItems = append(result.OrderedItems, childJSON)
-		child = model.NewStream()
 		count++
 	}
 
