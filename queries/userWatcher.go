@@ -14,7 +14,9 @@ import (
 // WatchUsers initiates a mongodb change stream to on every updates to User data objects
 func WatchUsers(ctx context.Context, collection data.Collection, result chan<- primitive.ObjectID) {
 
-	log.Trace().Msg("queries.WatchUsers")
+	const location = "queries.WatchUsers"
+
+	log.Trace().Msg(location)
 
 	// Confirm that we're watching a mongo database
 	m := mongoCollection(collection)
@@ -23,22 +25,22 @@ func WatchUsers(ctx context.Context, collection data.Collection, result chan<- p
 		return
 	}
 
-	log.Trace().Msg("queries.WatchUsers - Mongo Collection")
+	log.Trace().Str("loc", location).Msg("Mongo Collection")
 
 	// Get a change stream
 	cs, err := m.Watch(ctx, mongo.Pipeline{})
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "queries.WatchUsers", "Unable to open Mongodb Change User"))
+		derp.Report(derp.Wrap(err, location, "Unable to open Mongodb Change User"))
 		return
 	}
 
-	log.Trace().Msg("queries.WatchUsers - Change Stream")
+	log.Trace().Str("loc", location).Msg("Change Stream")
 
 	// Send notifications whenever a User is changed
 	for cs.Next(ctx) {
 
-		log.Trace().Msg("queries.WatchUsers - Next")
+		log.Trace().Str("loc", location).Msg("Next")
 
 		var event struct {
 			User model.User `bson:"fullDocument"`
@@ -49,7 +51,7 @@ func WatchUsers(ctx context.Context, collection data.Collection, result chan<- p
 			continue
 		}
 
-		log.Trace().Msg("queries.WatchUsers - Event")
+		log.Trace().Str("loc", location).Msg("Event")
 
 		// Skip "zero" sreams
 		if event.User.UserID.IsZero() {
