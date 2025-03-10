@@ -5,7 +5,6 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
 )
@@ -39,19 +38,4 @@ func (step StepSearchIndex) Post(builder Builder, _ io.Writer) PipelineBehavior 
 	}
 
 	return Continue()
-}
-
-// nolint unused
-func (step StepSearchIndex) isSearchable(builder Builder, searchResult model.SearchResult) bool {
-
-	if searchResult.IsZero() {
-		return false
-	}
-
-	if step.Action == "delete" {
-		return false
-	}
-
-	return convert.Bool(executeTemplate(step.If, builder))
-
 }
