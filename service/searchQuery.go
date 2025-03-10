@@ -13,7 +13,6 @@ import (
 	"github.com/benpate/hannibal/outbox"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -128,8 +127,6 @@ func (service *SearchQuery) Save(searchQuery *model.SearchQuery, note string) er
 			// queue.WithDelayHours(12),
 		)
 
-		spew.Dump("Publishing cleanup task", task)
-
 		if err := service.queue.Publish(task); err != nil {
 			return derp.Wrap(err, location, "Error publishing cleanup task", task)
 		}
@@ -195,13 +192,9 @@ func (service *SearchQuery) LoadOrCreate(queryValues url.Values) (model.SearchQu
 		return model.NewSearchQuery(), derp.NewBadRequestError(location, "No useful data in queryValues", queryValues)
 	}
 
-	spew.Dump("LoadOrCreate", newSearchQuery)
-
 	// Try to find the SearchQuery in the database
 	existingSearchQuery := model.NewSearchQuery()
 	err := service.LoadBySignature(newSearchQuery.Signature, &existingSearchQuery)
-
-	spew.Dump(err, existingSearchQuery)
 
 	// If it already exists, then return the ID
 	if err == nil {
