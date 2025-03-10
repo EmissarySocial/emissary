@@ -242,7 +242,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.unsplash/photos/:photo", unsplash.GetPhoto(factory))
 	e.GET("/.unsplash/collections/:collection/random", unsplash.GetCollectionRandom(factory))
 	e.GET("/.webmention", handler.TBD)
-	e.POST("/.webmention", handler.PostWebMention(factory))
+	e.POST("/.webmention", handler.WithFactory(factory, handler.PostWebMention))
 	e.GET("/.websub/:userId/:followingId", handler.GetWebSubClient(factory))
 	e.POST("/.websub/:userId/:followingId", handler.PostWebSubClient(factory))
 	e.GET("/.widgets/:widgetId/:bundleId", handler.GetWidgetBundle(factory))
