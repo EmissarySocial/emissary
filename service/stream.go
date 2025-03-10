@@ -974,6 +974,7 @@ func (service *Stream) SearchResult(stream *model.Stream) model.SearchResult {
 
 	result := model.NewSearchResult()
 
+	// If the stream has been published, then try to generate a SearchResult for it.
 	if stream.IsPublished() {
 
 		// Try to generate the searchResult.FullText using the Template for this Stream
