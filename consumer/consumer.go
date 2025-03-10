@@ -22,9 +22,6 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 
 	switch name {
 
-	case "AddSearchResult":
-		return WithFactory(consumer.serverFactory, args, AddSearchResult)
-
 	case "CreateWebSubFollower":
 		return WithFactory(consumer.serverFactory, args, CreateWebSubFollower)
 
