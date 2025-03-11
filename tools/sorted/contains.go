@@ -4,6 +4,28 @@ import (
 	"strings"
 )
 
+// Contains is an efficient way to search a sorted slice for a value.
+// IMPORTANT: The slice must be sorted in order for this function to work.
+// If the slice is unsorted, the result will be inaccurate.
+func Contains(values []string, target string) bool {
+
+	for _, value := range values {
+
+		switch strings.Compare(value, target) {
+
+		case -1:
+
+		case 0:
+			return true
+
+		case 1:
+			return false
+		}
+	}
+
+	return false
+}
+
 // ContainsAll is an efficient way to compare two sorted slices
 // to see if one is completely contained within the other.
 // IMPORTANT: Both slices must be sorted in order for this function to work.

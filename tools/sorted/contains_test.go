@@ -6,6 +6,20 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestContains(t *testing.T) {
+
+	set := []string{"A", "C", "E", "G"}
+
+	require.True(t, Contains(set, "A"))
+	require.False(t, Contains(set, "B"))
+	require.True(t, Contains(set, "C"))
+	require.False(t, Contains(set, "D"))
+	require.True(t, Contains(set, "E"))
+	require.False(t, Contains(set, "F"))
+	require.True(t, Contains(set, "G"))
+	require.False(t, Contains(set, "H"))
+}
+
 func TestContainsAll_SimpleSuccess(t *testing.T) {
 
 	subset := []string{"A", "C", "E", "G"}
