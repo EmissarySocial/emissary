@@ -21,7 +21,7 @@ func GetJSONLD(ctx *steranko.Context, factory *domain.Factory, template *model.T
 	}
 
 	searchQueryService := factory.SearchQuery()
-	actorID := searchQueryService.ActivityPubURL(searchQuery)
+	actorID := searchQueryService.ActivityPubURL(searchQuery.SearchQueryID)
 
 	// Return the result as a JSON-LD document
 	result := map[string]any{

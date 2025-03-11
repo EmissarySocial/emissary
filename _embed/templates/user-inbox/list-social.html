@@ -51,6 +51,12 @@
 			</div>
 		{{- end -}}
 
+		{{- if $image.NotNil -}}
+			<div class="margin-bottom">
+				<img src="{{$image.Href}}" loading="lazy" class="width-100%" style="{{if $image.HasDimensions}}aspect-ratio:{{$image.AspectRatio}}{{end}}"/>
+			</div>
+		{{- end -}}
+
 		<div>
 			{{- if $stream.HasContent -}}
 				{{- $stream.Content | htmlMinimal -}}
@@ -58,12 +64,6 @@
 				{{- $stream.Summary | htmlMinimal -}}
 			{{- end -}}
 		</div>
-
-		{{- if $image.NotNil -}}
-			<div class="margin-top" style="position:relative;">
-				<img src="{{$image.Href}}" loading="lazy" class="width-100%" style="border: solid 1px var(--gray40); {{if $image.HasDimensions}}aspect-ratio:{{$image.AspectRatio}}{{end}}"/>
-			</div>
-		{{- end -}}
 
 		<div class="margin-top text-sm text-light-gray">
 

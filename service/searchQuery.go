@@ -268,7 +268,7 @@ func (service *SearchQuery) parseQueryValues(queryValues url.Values) (model.Sear
 
 // ActivityPubActor returns an ActivityPub Actor object ** WHICH INCLUDES ENCRYPTION KEYS **
 // for the provided Stream.
-func (service *SearchQuery) ActivityPubActor(searchQuery *model.SearchQuery, withFollowers bool) (outbox.Actor, error) {
+func (service *SearchQuery) ActivityPubActor(searchQueryID primitive.ObjectID, withFollowers bool) (outbox.Actor, error) {
 
 	const location = "service.SearchQuery.ActivityPubActor"
 
@@ -280,13 +280,13 @@ func (service *SearchQuery) ActivityPubActor(searchQuery *model.SearchQuery, wit
 	}
 
 	// Return the ActivityPub Actor
-	actor := outbox.NewActor(service.ActivityPubURL(searchQuery), privateKey, outbox.WithClient(service.activityStream)) // TODO: Restore Queue:: , outbox.WithQueue(service.queue))
+	actor := outbox.NewActor(service.ActivityPubURL(searchQueryID), privateKey, outbox.WithClient(service.activityStream)) // TODO: Restore Queue:: , outbox.WithQueue(service.queue))
 
 	// Populate the Actor's ActivityPub Followers, if requested
 	if withFollowers {
 
 		// Get a channel of all Followers
-		followers, err := service.followerService.ActivityPubFollowersChannel(model.FollowerTypeSearch, searchQuery.SearchQueryID)
+		followers, err := service.followerService.ActivityPubFollowersChannel(model.FollowerTypeSearch, searchQueryID)
 
 		if err != nil {
 			return outbox.Actor{}, derp.Wrap(err, location, "Error retrieving followers")
@@ -303,8 +303,8 @@ func (service *SearchQuery) ActivityPubActor(searchQuery *model.SearchQuery, wit
 	return actor, nil
 }
 
-func (service *SearchQuery) ActivityPubURL(searchQuery *model.SearchQuery) string {
-	return service.host + "/.search/" + searchQuery.SearchQueryID.Hex()
+func (service *SearchQuery) ActivityPubURL(searchQueryID primitive.ObjectID) string {
+	return service.host + "/.search/" + searchQueryID.Hex()
 }
 
 func (service *SearchQuery) ActivityPubName(searchQuery *model.SearchQuery) string {
@@ -312,22 +312,22 @@ func (service *SearchQuery) ActivityPubName(searchQuery *model.SearchQuery) stri
 	return searchQuery.Query + " on " + domain.Label
 }
 
-func (service *SearchQuery) ActivityPubFollowersURL(searchQuery *model.SearchQuery) string {
-	return service.ActivityPubURL(searchQuery) + "/followers"
+func (service *SearchQuery) ActivityPubFollowersURL(searchQueryID primitive.ObjectID) string {
+	return service.ActivityPubURL(searchQueryID) + "/followers"
 }
 
-func (service *SearchQuery) ActivityPubFollowingURL(searchQuery *model.SearchQuery) string {
-	return service.ActivityPubURL(searchQuery) + "/following"
+func (service *SearchQuery) ActivityPubFollowingURL(searchQueryID primitive.ObjectID) string {
+	return service.ActivityPubURL(searchQueryID) + "/following"
 }
 
-func (service *SearchQuery) ActivityPubInboxURL(searchQuery *model.SearchQuery) string {
-	return service.ActivityPubURL(searchQuery) + "/inbox"
+func (service *SearchQuery) ActivityPubInboxURL(searchQueryID primitive.ObjectID) string {
+	return service.ActivityPubURL(searchQueryID) + "/inbox"
 }
 
-func (service *SearchQuery) ActivityPubOutboxURL(searchQuery *model.SearchQuery) string {
-	return service.ActivityPubURL(searchQuery) + "/outbox"
+func (service *SearchQuery) ActivityPubOutboxURL(searchQueryID primitive.ObjectID) string {
+	return service.ActivityPubURL(searchQueryID) + "/outbox"
 }
 
-func (service *SearchQuery) ActivityPubSharesURL(searchQuery *model.SearchQuery) string {
-	return service.ActivityPubURL(searchQuery) + "/shares"
+func (service *SearchQuery) ActivityPubSharesURL(searchQueryID primitive.ObjectID) string {
+	return service.ActivityPubURL(searchQueryID) + "/shares"
 }

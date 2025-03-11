@@ -174,7 +174,15 @@ func (service *SearchResult) Sync(searchResult model.SearchResult) error {
 
 	// If the SearchResult exists in the database, then update it
 	if err == nil {
-		original.Update(searchResult)
+
+		// If the original SearchResult has been updated, then also reset the NotifiedDate.
+		changed := original.Update(searchResult)
+
+		if changed {
+			original.NotifiedDate = 0
+		}
+
+		// Save the updated SearchResult...
 		if err := service.Save(&original, "updated"); err != nil {
 			return derp.Wrap(err, location, "Error adding Search", searchResult)
 		}

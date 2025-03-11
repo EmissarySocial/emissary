@@ -16,12 +16,6 @@ func (service *Following) SaveMessage(following *model.Following, document strea
 		document, originType = getPrimaryPost(document, originType)
 	}
 
-	// If document does not include enough data to create a message, then skip it.
-	if notAdequate(document) {
-		derp.Report(derp.NewInternalError("service.Following.SaveMessage", "Skipping inadequate document", document.Value()))
-		return nil
-	}
-
 	// Convert the document into a message (and traverse responses if necessary)
 	message := getMessage(following, document, originType)
 
@@ -110,30 +104,7 @@ func getPrimaryPost(document streams.Document, originType string) (streams.Docum
 	return document, originType
 }
 
-// isAdequate returns TRUE if the document contains enough data to create an adequiae message.
-func isAdequate(document streams.Document) bool {
-
-	if document.Name() != "" {
-		return true
-	}
-
-	if document.Summary() != "" {
-		return true
-	}
-
-	if document.Content() != "" {
-		return true
-	}
-
-	return false
-}
-
-// notAdequate returns TRUE if the document DOES NOT contain enough data to create an adequiae message.
-func notAdequate(document streams.Document) bool {
-	return !isAdequate(document)
-}
-
-// getMessage returns a Message object based on the provided arguments.
+// getMessage returns an inbox Message object based on the provided arguments.
 func getMessage(following *model.Following, document streams.Document, originType string) model.Message {
 
 	result := model.NewMessage()

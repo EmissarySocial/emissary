@@ -147,7 +147,7 @@ func (attachment Attachment) FileSpec(address *url.URL) mediaserver.FileSpec {
 func (attachment Attachment) JSONLD() map[string]any {
 
 	result := map[string]any{
-		vocab.PropertyType:      vocab.ObjectTypeDocument, // TODO: Expand this to videos, audios, etc.
+		vocab.PropertyType:      vocab.ObjectTypeDocument, // TODO: Expand this to videos, audios, etc?
 		vocab.PropertyMediaType: attachment.DownloadMimeType(),
 		vocab.PropertyURL:       attachment.URL,
 		vocab.PropertyName:      first.String(attachment.Label, attachment.Description, attachment.Category),

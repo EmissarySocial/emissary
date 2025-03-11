@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/hannibal/outbox"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -33,6 +34,8 @@ func SendActivityPubMessage(factory *domain.Factory, args mapof.Any) queue.Resul
 	// Send the message to the inboxURL
 	if err := actor.SendOne(inboxURL, message); err != nil {
 
+		spew.Dump("Error sending ActivityPub message", message, err)
+
 		// If the error is "our fault" we won't be able to correct it, so Fail now
 		if derp.IsClientError(err) {
 			return queue.Failure(derp.Wrap(err, location, "Error sending message", message))
@@ -41,6 +44,8 @@ func SendActivityPubMessage(factory *domain.Factory, args mapof.Any) queue.Resul
 		// Otherwise, the error is "their fault" and we can try again later
 		return queue.Error(derp.Wrap(err, location, "Error sending message", message))
 	}
+
+	spew.Dump("Successfully sent ActivityPub message", message)
 
 	// Success
 	return queue.Success()
@@ -53,7 +58,14 @@ func getActivityPubActor(factory *domain.Factory, args mapof.Any) (outbox.Actor,
 	switch args.GetString("actorType") {
 
 	case model.FollowerTypeSearch:
-		return factory.Domain().ActivityPubActor()
+
+		searchQueryID := args.GetString("searchQueryID")
+
+		if actorID, err := primitive.ObjectIDFromHex(searchQueryID); err == nil {
+			return factory.SearchQuery().ActivityPubActor(actorID, false)
+		} else {
+			return outbox.Actor{}, derp.Wrap(err, location, "Invalid searchQueryID", searchQueryID)
+		}
 
 	case model.FollowerTypeStream:
 

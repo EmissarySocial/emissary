@@ -9,6 +9,7 @@ import (
 	"github.com/benpate/rosetta/channel"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -104,7 +105,7 @@ func (service *SearchNotifier) sendNotifications(searchResults []model.SearchRes
 
 			// Send notifications for any matches
 			if searchQuery.Match(searchResult) {
-				if err := service.sendNotification(searchQuery, searchResult); err != nil {
+				if err := service.sendNotification(searchQuery.SearchQueryID, searchResult); err != nil {
 					return derp.Wrap(err, location, "Error publishing task")
 				}
 			}
@@ -127,17 +128,20 @@ func (service *SearchNotifier) sendNotifications(searchResults []model.SearchRes
 	return nil
 }
 
-func (service *SearchNotifier) sendNotification(searchQuery model.SearchQuery, searchResult model.SearchResult) error {
+func (service *SearchNotifier) sendNotification(searchQueryID primitive.ObjectID, searchResult model.SearchResult) error {
 
 	const location = "service.SearchNotifier.sendNotification"
 
 	args := mapof.Any{
 		"host":          service.host,
-		"searchQueryID": searchQuery.SearchQueryID,
+		"actor":         service.searchQueryService.ActivityPubURL(searchQueryID),
+		"searchQueryID": searchQueryID,
 		"url":           searchResult.URL,
 	}
 
 	task := queue.NewTask("SendSearchResults", args, queue.WithPriority(200))
+
+	spew.Dump("sendNotification", task)
 
 	if err := service.queue.Publish(task); err != nil {
 		return derp.Wrap(err, location, "Error publishing task")

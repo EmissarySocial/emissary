@@ -47,10 +47,6 @@ func (service *Stream) JSONLD(stream *model.Stream) mapof.Any {
 		result[vocab.PropertyContent] = stream.Content.HTML
 	}
 
-	if stream.IconURL != "" {
-		result[vocab.PropertyIcon] = stream.IconURL
-	}
-
 	if stream.Context != "" {
 		result[vocab.PropertyContext] = stream.Context
 	}
@@ -105,7 +101,6 @@ func (service *Stream) JSONLD(stream *model.Stream) mapof.Any {
 				result[vocab.PropertyURL] = link
 			}
 		}
-
 	}
 
 	// Include attachments for all types (including Audio)

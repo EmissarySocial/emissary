@@ -97,7 +97,6 @@ func (searchQuery SearchQuery) Match(searchResult SearchResult) bool {
 	// TODO: Time-Based Search (might not be possible)
 
 	// Otherwise, return true
-	fmt.Println("searchQuery.Match: Match ZOMG!")
 	return true
 }
 

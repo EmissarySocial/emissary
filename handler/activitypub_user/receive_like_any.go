@@ -19,8 +19,15 @@ func receiveLikeOrAnnounce(context Context, activity streams.Document) error {
 
 	const location = "handler.activitypub_user.receiveLikeOrAnnounce"
 
+	// Load the original object being Announced/Liked
+	object, err := activity.Object().Load()
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error loading object", activity.Object().ID())
+	}
+
 	// Add then Shared/Liked Object into the ActivityStream cache
-	if err := inboxRouter.Handle(context, activity.Object().LoadLink()); err != nil {
+	if err := inboxRouter.Handle(context, object); err != nil {
 		return derp.Wrap(err, location, "Error processing activity Object", activity.Object().ID())
 	}
 
@@ -33,7 +40,7 @@ func receiveLikeOrAnnounce(context Context, activity streams.Document) error {
 	context.factory.ActivityStream().Put(activity)
 
 	// Add the activity into the User's Inbox
-	if err := saveMessage(context, activity, activity.Actor().ID(), getOriginType(activity.Type())); err != nil {
+	if err := saveMessage(context, object, activity.Actor().ID(), getOriginType(activity.Type())); err != nil {
 		return derp.Wrap(err, location, "Error saving message", context.user.UserID, activity.Value())
 	}
 

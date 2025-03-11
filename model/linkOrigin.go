@@ -51,7 +51,7 @@ func (origin OriginLink) Icon() string {
 		return "thumbs-down"
 
 	case OriginTypeAnnounce:
-		return "star"
+		return "rocket"
 	}
 
 	return "question-square"

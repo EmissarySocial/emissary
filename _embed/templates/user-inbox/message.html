@@ -45,7 +45,7 @@
 
 </div>
 
-<div id="modal-body">
+<div id="modal-body" class="padding-top">
 
 	{{- if $inReplyTo.NotNil -}}
 		<div class="flex-row margin-bottom">
@@ -57,30 +57,23 @@
 
 		{{- if ne "DIRECT" $message.Origin.Type -}}
 		
-			<div class="margin-bottom text-sm text-gray italics">
+			<div class="float-right text-sm text-gray bold">
 				{{- if eq "LIKE" $message.Origin.Type -}}
-					{{icon "inbox"}} 
-					In your inbox because
-				<a class="text-gray" href="/@me/inbox?folderId={{$message.FolderID.Hex}}&origin.followingId={{$message.Origin.FollowingID.Hex}}">{{$message.Origin.Label}}</a> 
-					{{icon "thumbs-up"}} LIKED this post.
+					{{icon "thumbs-up"}} Liked by
+					<a class="text-gray" href="/@me/inbox?folderId={{$message.FolderID.Hex}}&origin.followingId={{$message.Origin.FollowingID.Hex}}">{{$message.Origin.Label}}</a> 
 
 				{{- else if eq	"DISLIKE" $message.Origin.Type -}}
-					{{icon "inbox"}} 
-					In your inbox because
+					{{icon "thumbs-down"}} Disliked by.
 					<a class="text-gray" href="/@me/inbox?folderId={{$message.FolderID.Hex}}&origin.followingId={{$message.Origin.FollowingID.Hex}}">{{$message.Origin.Label}}</a>
-					{{icon "thumbs-down"}} DISLIKED this post.
-		
+					
 				{{- else if eq "ANNOUNCE" $message.Origin.Type -}}
-					{{icon "inbox"}} 
-					In your inbox because
+					{{icon "rocket"}} Boosted by
 					<a class="text-gray" href="/@me/inbox?folderId={{$message.FolderID.Hex}}&origin.followingId={{$message.Origin.FollowingID.Hex}}">{{$message.Origin.Label}}</a>
-					{{icon "rocket"}} BOOSTED this post.
 		
 				{{- else if eq "REPLY" $message.Origin.Type -}}
-					{{icon "inbox"}} 
-					In your inbox because
+					{{icon "reply"}}
 					<a class="text-gray" href="/@me/inbox?folderId={{$message.FolderID.Hex}}&origin.followingId={{$message.Origin.FollowingID.Hex}}">{{$message.Origin.Label}}</a>
-					{{icon "reply"}} REPLIED to this post.
+					replied to this post.
 
 				{{- end -}}
 			</div>
@@ -106,49 +99,41 @@
 
 	{{- end -}}
 
-	<div class="flex-row">
-		{{- if $attributedTo.Icon.NotNil -}}
-			<div class="width-64 flex-shrink-0"></div>
+	<div>
+				
+		{{- if ne "" $stream.Name -}}
+			<h1 class="margin-top-sm margin-bottom-lg"><a href="{{$stream.URLOrID}}" target="_blank" class="text-black">{{$stream.Name}}</a></h1>
 		{{- end -}}
-		<div class="flex-grow-1">
-					
-			{{- if ne "" $stream.Name -}}
-				<h1 class="margin-top-sm margin-bottom-lg"><a href="{{$stream.URLOrID}}" target="_blank" class="text-black">{{$stream.Name}}</a></h1>
+
+		<div class="content">
+
+			{{- if not (hasImage $stream.Content) -}}
+				{{- $image := $stream.ImageOrIcon -}}
+				{{- if $image.NotNil -}}
+					<div class="margin-bottom">
+						<a href="{{$stream.URLOrID}}" target="_blank"><img src="{{$image.URL}}" class="width-100%" style="{{- if $image.HasDimensions}} aspect-ratio:{{$image.AspectRatio}};{{end}}"/></a>
+					</div>
+				{{- end -}}
 			{{- end -}}
 
-			<div class="content">
+			{{- if $stream.HasContent -}}
+				<div>{{- $stream.Content | html -}}</div>
+			{{- else if $stream.HasSummary -}}
+				<div>{{- $stream.Summary -}}</div>
+			{{- end -}}
 
-				{{- if not (hasImage $stream.Content) -}}
-					{{- $image := $stream.ImageOrIcon -}}
-					{{- if $image.NotNil -}}
-						<div class="margin-bottom">
-							<a href="{{$stream.URLOrID}}" target="_blank"><img src="{{$image.URL}}" class="width-100%" style="border:solid 1px var(--gray20); {{- if $image.HasDimensions}} aspect-ratio:{{$image.AspectRatio}};{{end}}"/></a>
-						</div>
-					{{- end -}}
-				{{- end -}}
+			<div class="margin-bottom text-sm text-light-gray">{{ $stream.Published | shortDate -}}</div>
 
-				{{- if $stream.HasContent -}}
-					<div>{{- $stream.Content | html -}}</div>
-				{{- else if $stream.HasSummary -}}
-					<div>{{- $stream.Summary -}}</div>
-				{{- end -}}
+			{{- template "tags" $stream -}}
 
-				{{ template "attachments" $stream.Attachment }}
+		</div>
 
-				<div class="margin-bottom text-sm text-light-gray">{{ $stream.Published | shortDate -}}</div>
+		<div class="margin-top-lg text-xs">
+			{{.View "like-button"}}
 
-				{{- template "tags" $stream -}}
-
-			</div>
-
-			<div class="margin-top-lg text-xs">
-				{{.View "like-button"}}
-
-				{{- if .NotMe $attributedTo.ID -}}
-					<div hx-get="/@me/inbox/actor-button?url={{$attributedTo.ID}}&folderId={{$message.FolderID.Hex}}" hx-target="this" hx-swap="outerHTML" hx-trigger="modalReady from:window"></div>
-				{{- end -}}
-			</div>
-
+			{{- if .NotMe $attributedTo.ID -}}
+				<div hx-get="/@me/inbox/actor-button?url={{$attributedTo.ID}}&folderId={{$message.FolderID.Hex}}" hx-target="this" hx-swap="outerHTML" hx-trigger="modalReady from:window"></div>
+			{{- end -}}
 		</div>
 		
 	</div>

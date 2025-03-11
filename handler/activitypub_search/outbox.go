@@ -11,7 +11,7 @@ import (
 
 func GetOutboxCollection(ctx *steranko.Context, factory *domain.Factory, template *model.Template, stream *model.Stream, searchQuery *model.SearchQuery) error {
 	searchQueryService := factory.SearchQuery()
-	collectionID := searchQueryService.ActivityPubOutboxURL(searchQuery)
+	collectionID := searchQueryService.ActivityPubOutboxURL(searchQuery.SearchQueryID)
 	result := activitypub.Collection(collectionID)
 	return ctx.JSON(http.StatusOK, result)
 }

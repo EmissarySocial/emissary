@@ -51,24 +51,96 @@ func (searchResult SearchResult) ID() string {
 }
 
 // Update copies the values from another SearchResult into this SearchResult
-func (searchResult *SearchResult) Update(other SearchResult) {
-	searchResult.Type = other.Type
-	searchResult.URL = other.URL
-	searchResult.AttributedTo = other.AttributedTo
-	searchResult.Name = other.Name
-	searchResult.IconURL = other.IconURL
-	searchResult.Summary = other.Summary
-	searchResult.Text = other.Text
-	searchResult.Date = other.Date
-	searchResult.Place = other.Place
-	searchResult.Index = other.Index
-	searchResult.Tags = other.Tags
-	searchResult.LockID = other.LockID
-	searchResult.TimeoutDate = other.TimeoutDate
-	searchResult.ReIndexDate = other.ReIndexDate
-	searchResult.NotifiedDate = other.NotifiedDate
-	searchResult.Rank = other.Rank
-	searchResult.Shuffle = other.Shuffle
+func (searchResult *SearchResult) Update(other SearchResult) bool {
+
+	changed := false
+
+	if searchResult.Type != other.Type {
+		searchResult.Type = other.Type
+		changed = true
+	}
+
+	if searchResult.URL != other.URL {
+		searchResult.URL = other.URL
+		changed = true
+	}
+
+	if searchResult.AttributedTo != other.AttributedTo {
+		searchResult.AttributedTo = other.AttributedTo
+		changed = true
+	}
+
+	if searchResult.Name != other.Name {
+		searchResult.Name = other.Name
+		changed = true
+	}
+
+	if searchResult.IconURL != other.IconURL {
+		searchResult.IconURL = other.IconURL
+		changed = true
+	}
+
+	if searchResult.Summary != other.Summary {
+		searchResult.Summary = other.Summary
+		changed = true
+	}
+
+	if searchResult.Text != other.Text {
+		searchResult.Text = other.Text
+		changed = true
+	}
+
+	if searchResult.Date != other.Date {
+		searchResult.Date = other.Date
+		changed = true
+	}
+
+	if searchResult.Place.NotEqual(other.Place) {
+		searchResult.Place = other.Place
+		changed = true
+	}
+
+	if searchResult.Index.NotEqual(other.Index) {
+		searchResult.Index = other.Index
+		changed = true
+	}
+
+	if searchResult.Tags.NotEqual(other.Tags) {
+		searchResult.Tags = other.Tags
+		changed = true
+	}
+
+	if searchResult.LockID != other.LockID {
+		searchResult.LockID = other.LockID
+		changed = true
+	}
+
+	if searchResult.TimeoutDate != other.TimeoutDate {
+		searchResult.TimeoutDate = other.TimeoutDate
+		changed = true
+	}
+
+	if searchResult.ReIndexDate != other.ReIndexDate {
+		searchResult.ReIndexDate = other.ReIndexDate
+		changed = true
+	}
+
+	if searchResult.NotifiedDate != other.NotifiedDate {
+		searchResult.NotifiedDate = other.NotifiedDate
+		changed = true
+	}
+
+	if searchResult.Rank != other.Rank {
+		searchResult.Rank = other.Rank
+		changed = true
+	}
+
+	if searchResult.Shuffle != other.Shuffle {
+		searchResult.Shuffle = other.Shuffle
+		changed = true
+	}
+
+	return changed
 }
 
 func (searchResult SearchResult) Fields() []string {

@@ -17,7 +17,7 @@ func init() {
 		searchQueryService := context.factory.SearchQuery()
 
 		// RULE: Require that the search query in the document matches the search query inbox.
-		actorURL := searchQueryService.ActivityPubURL(context.searchQuery)
+		actorURL := searchQueryService.ActivityPubURL(context.searchQuery.SearchQueryID)
 
 		if activity.Object().ID() != actorURL {
 			return derp.NewInternalError(location, "Invalid Search Query ID", actorURL, activity.Object().ID())
@@ -44,7 +44,7 @@ func init() {
 		}
 
 		// Try to load the Actor for this user
-		actor, err := searchQueryService.ActivityPubActor(context.searchQuery, false)
+		actor, err := searchQueryService.ActivityPubActor(context.searchQuery.SearchQueryID, false)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error loading actor", context.searchQuery)

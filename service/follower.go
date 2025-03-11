@@ -296,7 +296,10 @@ func (service *Follower) LoadByActor(parentID primitive.ObjectID, actorID string
 
 // QueryByParent returns an slice containing all of the Followers of specific parentID
 func (service *Follower) QueryByParent(parentType string, parentID primitive.ObjectID, options ...option.Option) ([]model.Follower, error) {
-	criteria := exp.Equal("type", parentType).AndEqual("parentId", parentID)
+
+	criteria := exp.Equal("type", parentType).
+		AndEqual("parentId", parentID)
+
 	return service.Query(criteria, options...)
 }
 
@@ -304,7 +307,7 @@ func (service *Follower) QueryByParent(parentType string, parentID primitive.Obj
 func (service *Follower) RangeByUserID(userID primitive.ObjectID) (iter.Seq[model.Follower], error) {
 	return service.Range(
 		exp.Equal("parentId", userID).
-			AndEqual("parentType", model.FollowerTypeUser),
+			AndEqual("type", model.FollowerTypeUser),
 	)
 }
 
@@ -312,7 +315,7 @@ func (service *Follower) RangeByUserID(userID primitive.ObjectID) (iter.Seq[mode
 func (service *Follower) RangeBySearch(searchQueryID primitive.ObjectID) (iter.Seq[model.Follower], error) {
 	return service.Range(
 		exp.Equal("parentId", searchQueryID).
-			AndEqual("parentType", model.FollowerTypeSearch),
+			AndEqual("type", model.FollowerTypeSearch),
 	)
 }
 
