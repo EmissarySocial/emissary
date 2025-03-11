@@ -3,7 +3,6 @@ package model
 import (
 	"crypto/md5"
 	"encoding/base64"
-	"fmt"
 	"io"
 	"slices"
 	"strings"
@@ -80,15 +79,18 @@ func (searchQuery SearchQuery) NotEmpty() bool {
 // Match returns TRUE if this query matches the provided SearchResult
 func (searchQuery SearchQuery) Match(searchResult SearchResult) bool {
 
+	// Match Types
+	if !sorted.Contains(searchQuery.Types, searchResult.Type) {
+		return false
+	}
+
 	// Match Tags
 	if !sorted.ContainsAll(searchQuery.Tags, searchResult.Tags) {
-		fmt.Println("searchQuery.Match: Tags do not match")
 		return false
 	}
 
 	// Match Text Index
 	if !sorted.ContainsAll(searchQuery.Index, searchResult.Index) {
-		fmt.Println("searchQuery.Match: Index does not match")
 		return false
 	}
 

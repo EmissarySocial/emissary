@@ -65,8 +65,8 @@ func (service *SearchNotifier) Run() {
 
 		// If there are no results, then wait before trying again.
 		if len(resultsToNotify) == 0 {
-			time.Sleep(20 * time.Second)
-			// time.Sleep(10 * time.Minute)
+			// time.Sleep(20 * time.Second)
+			time.Sleep(10 * time.Minute)
 			continue
 		}
 
