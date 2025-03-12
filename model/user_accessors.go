@@ -23,7 +23,7 @@ func UserSchema() schema.Element {
 			"links":          schema.Array{Items: PersonLinkSchema(), MaxLength: 6},
 			"profileUrl":     schema.String{Format: "url"},
 			"emailAddress":   schema.String{Format: "email", Required: true},
-			"username":       schema.String{MaxLength: 32, Required: true},
+			"username":       schema.String{MaxLength: 32, Format: "username", Required: true},
 			"locale":         schema.String{},
 			"signupNote":     schema.String{MaxLength: 256},
 			"stateId":        schema.String{},

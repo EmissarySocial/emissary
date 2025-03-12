@@ -41,7 +41,7 @@
 						<div class="layout-vertical-element">
 							<label for="displayName">Full Name</label>
 							<input type="text" name="fullName" id="fullName" maxlength="50" autocomplete="off" data-1p-ignore>
-							<div role="note" class="text-sm gray40">Your full name.</div>
+							<div role="note" class="text-sm gray40">Your full name. (PUBLIC)</div>
 						</div>
 					</div>
 
@@ -49,7 +49,7 @@
 						<div class="layout-vertical-element">
 							<label for="displayName">Your Name</label>
 							<input type="text" name="displayName" id="displayName" required="true" maxlength="50" autocomplete="off" data-1p-ignore>
-							<div role="note" class="text-sm gray40">Displayed on your profile page.</div>
+							<div role="note" class="text-sm gray40">Displayed on your profile page. (PUBLIC)</div>
 						</div>
 					</div>
 
@@ -58,7 +58,7 @@
 						<div class="layout-vertical-element">
 							<label for="displayName">Phone Number</label>
 							<input type="text" name="phoneNumber" id="phoneNumber" maxlength="50" autocomplete="off" data-1p-ignore>
-							<div role="note" class="text-sm gray40">A phone number where we can reach you.</div>
+							<div role="note" class="text-sm gray40">A phone number where we can reach you. (PRIVATE)</div>
 						</div>
 					</div>
 
@@ -66,15 +66,15 @@
 						<div class="layout-vertical-element">
 							<label for="emailAddress">Email Address</label>
 							<input type="email" name="emailAddress" id="emailAddress" required="true" maxlength="50">
-							<div role="note" class="text-sm gray40">An email address where you can receive messages. Hidden from others.</div>
+							<div role="note" class="text-sm gray40">Your email is never shared with anyone. (PRIVATE)</div>
 						</div>
 					</div>
 
 					<div class="layout-vertical-elements">
 						<div class="layout-vertical-element">
 							<label for="username">Username</label>
-							<input type="text" name="username" id="username" required="true" maxlength="50" autocomplete="off" data-1p-ignore  hx-get="/register/secret" hx-trigger="focus" hx-target="#layout" hx-swap="afterbegin">
-							<div role="note" class="text-sm gray40">Displayed on your profile page. How others will reach you.</div>
+							<input type="text" name="username" id="username" pattern="^[A-Za-z0-9_-]+$" required="true" maxlength="50" autocomplete="off" data-1p-ignore  hx-get="/register/secret" hx-trigger="focus" hx-target="#layout" hx-swap="afterbegin">
+							<div role="note" class="text-sm gray40">How others will identify you. Letters and numbers only. (PUBLIC)</div>
 						</div>
 					</div>
 
