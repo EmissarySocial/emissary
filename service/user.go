@@ -24,6 +24,7 @@ import (
 	"github.com/benpate/rosetta/iterator"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/schema/format"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/turbine/queue"
@@ -189,11 +190,6 @@ func (service *User) Save(user *model.User, note string) error {
 		}
 	}
 
-	// RULE: If the username is empty, then try to automatically generate one
-	if err := service.CalcUsername(user); err != nil {
-		return derp.Wrap(err, location, "Error calculating username", user)
-	}
-
 	isNew := user.IsNew()
 
 	// Special steps to take on initial creation
@@ -209,6 +205,16 @@ func (service *User) Save(user *model.User, note string) error {
 		if user.OutboxTemplate == "" {
 			user.OutboxTemplate = theme.DefaultOutbox
 		}
+
+		// RULE: If the username is empty, then try to automatically generate one
+		if err := service.CalcNewUsername(user); err != nil {
+			return derp.Wrap(err, location, "Error calculating username", user)
+		}
+	}
+
+	// Guarantee that the username is unique, and fits formatting rules.
+	if err := service.ValidateUsername(user); err != nil {
+		return derp.Wrap(err, location, "Username is invalid", user)
 	}
 
 	// RULE: Set ProfileURL to the hostname + the username
@@ -508,7 +514,7 @@ func (service *User) QueryBlockedActors(userID primitive.ObjectID, criteria exp.
  * Custom Actions
  ******************************************/
 
-func (service *User) CalcUsername(user *model.User) error {
+func (service *User) CalcNewUsername(user *model.User) error {
 
 	// If the User has a valid username, then there's nothing to do.
 	if user.Username != "" {
@@ -541,6 +547,27 @@ func (service *User) CalcUsername(user *model.User) error {
 
 	// Okay, this sucks, but we need to call it here.  Return error.
 	return derp.NewInternalError("service.User.CalcUsername", "Unable to generate a unique username", user)
+}
+
+func (service *User) ValidateUsername(user *model.User) error {
+
+	const location = "service.User.ValidateUsername"
+
+	// RULE: Username is required
+	if user.Username == "" {
+		return derp.NewBadRequestError(location, "Username is required", user)
+	}
+
+	if _, err := format.Username("")(user.Username); err != nil {
+		return derp.Wrap(err, location, "Username must contain only: letters, numbers, underscores, and hyphens", user)
+	}
+
+	// RULE: Username must be unique
+	if service.UsernameExists(user.UserID, user.Username) {
+		return derp.NewBadRequestError(location, "Username is already in use", user)
+	}
+
+	return nil
 }
 
 // UsernameExists returns TRUE if the provided username is already in use by another user
