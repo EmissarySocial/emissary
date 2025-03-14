@@ -17,12 +17,16 @@ behavior blockselect(link)
 			exit
 		end
 		
+		if event.target.hasAttribute("hx-on:click") then
+			exit
+		end
+		
 		if window.getSelection().toString() is not "" then
 			exit
 		end
 
 		if link is null then
-			set link to the first <[href],[hx-get]/> in me
+			set link to the first <[href],[hx-get],[hx-on\:click]/> in me
 		end
 
 		if link is not null then
