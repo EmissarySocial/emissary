@@ -12,6 +12,7 @@
 
 	<nav hx-push-url="true">
 		<div class="framed">
+			<a href="#main" xclass="hide-visual">Skip navigation</a>
 			{{- range .Navigation -}}
 				{{ if eq $topID .StreamID -}}
 					{{- $icon := join .Icon "-fill" -}}
@@ -73,7 +74,7 @@
 
 	</nav>
 
-	<main>
+	<main id="main">
 		{{- .GetContent -}}
 	</main>
 	
