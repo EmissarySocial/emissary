@@ -394,11 +394,11 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 			return convert.String(value)
 		},
 
-		"int": func(value string) int {
+		"int": func(value any) int {
 			return convert.Int(value)
 		},
 
-		"int64": func(value string) int64 {
+		"int64": func(value any) int64 {
 			return convert.Int64(value)
 		},
 

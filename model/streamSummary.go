@@ -28,6 +28,7 @@ type StreamSummary struct {
 	PublishDate    int64                 `json:"publishDate"            bson:"publishDate"`            // Date when this stream was published
 	UnPublishDate  int64                 `json:"unpublishDate"          bson:"unpublishDate"`          // Date when this stream should be removed from public view
 	Rank           int                   `json:"rank"                   bson:"rank"`                   // If Template uses a custom sort order, then this is the value used to determine the position of this Stream.
+	Shuffle        int64                 `json:"shuffle"                bson:"shuffle"`                // Random value used to shuffle the order of Streams in a list
 	Places         sliceof.Object[Place] `json:"places"                 bson:"places"`                 // List of places that are associated with this document
 	IsFeatured     bool                  `json:"isFeatured"             bson:"isFeatured"`             // If this Stream is "featured" then it will be displayed in a special location on the page.
 	CreateDate     int64                 `json:"createDate"             bson:"createDate"`             // Date when this stream was created
@@ -46,7 +47,7 @@ func NewStreamSummary() StreamSummary {
 }
 
 func StreamSummaryFields() []string {
-	return []string{"_id", "parentId", "token", "templateId", "url", "label", "summary", "content", "data", "icon", "iconUrl", "attributedTo", "inReplyTo", "publishDate", "unpublishDate", "rank", "isFeatured", "startDate", "createDate", "places"}
+	return []string{"_id", "parentId", "token", "templateId", "url", "label", "summary", "content", "data", "icon", "iconUrl", "attributedTo", "inReplyTo", "publishDate", "unpublishDate", "rank", "shuffle", "isFeatured", "startDate", "createDate", "places"}
 }
 
 func (summary StreamSummary) Fields() []string {

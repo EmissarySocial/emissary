@@ -537,6 +537,37 @@ func (factory *Factory) Providers() set.Slice[config.Provider] {
 	return factory.providers
 }
 
+func (factory *Factory) Collections() []string {
+
+	return []string{
+		CollectionAttachment,
+		CollectionConnection,
+		CollectionDomain,
+		CollectionEncryptionKey,
+		CollectionFolder,
+		CollectionFollower,
+		CollectionFollowing,
+		CollectionGroup,
+		CollectionInbox,
+		CollectionJWT,
+		CollectionMention,
+		CollectionRule,
+		CollectionOAuthClient,
+		CollectionOAuthUserToken,
+		CollectionOutbox,
+		CollectionSearchQuery,
+		CollectionSearchResult,
+		CollectionSearchTag,
+		CollectionStream,
+		CollectionStreamDraft,
+		CollectionStreamOutbox,
+		CollectionResponse,
+		CollectionTemplate,
+		CollectionUser,
+		CollectionWebhook,
+	}
+}
+
 /******************************************
  * Domain Model Services
  ******************************************/

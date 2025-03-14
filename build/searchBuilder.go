@@ -132,6 +132,16 @@ func (builder SearchBuilder) Where(field string, value any) SearchBuilder {
 	return builder
 }
 
+func (builder SearchBuilder) WhereLT(field string, value any) SearchBuilder {
+	builder.criteria = builder.criteria.AndLessThan(field, value)
+	return builder
+}
+
+func (builder SearchBuilder) WhereGT(field string, value any) SearchBuilder {
+	builder.criteria = builder.criteria.AndGreaterThan(field, value)
+	return builder
+}
+
 func (builder SearchBuilder) WhereType(typeNames ...string) SearchBuilder {
 	builder.criteria = builder.criteria.AndIn("type", typeNames)
 	return builder

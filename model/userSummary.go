@@ -15,6 +15,7 @@ type UserSummary struct {
 	ProfileURL    string             `bson:"profileUrl"`
 	StatusMessage string             `bson:"statusMessage"`
 	Hashtags      sliceof.String     `bson:"hashtags"`
+	Shuffle       int64              `bson:"shuffle"`
 }
 
 func NewUserSummary() UserSummary {
@@ -31,7 +32,7 @@ func NewUserSummary() UserSummary {
 }
 
 func UserSummaryFields() []string {
-	return []string{"_id", "displayName", "emailAddress", "username", "iconId", "profileUrl", "statusMessage", "hashtags"}
+	return []string{"_id", "displayName", "emailAddress", "username", "iconId", "profileUrl", "statusMessage", "hashtags", "shuffle	"}
 }
 
 func (userSummary UserSummary) Fields() []string {

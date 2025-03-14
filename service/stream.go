@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"iter"
+	"math"
 	"net/url"
 	"strings"
 	"time"
@@ -11,6 +12,7 @@ import (
 	"github.com/EmissarySocial/emissary/queries"
 	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/EmissarySocial/emissary/tools/parse"
+	"github.com/EmissarySocial/emissary/tools/random"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -250,6 +252,11 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 			return derp.Wrap(err, location, "Error calculating max rank")
 		}
 		stream.Rank = maxRank
+	}
+
+	// RULE: If unassigned, shuffle the stream after the first trillion other results (will reset in 1 hour)
+	if stream.Shuffle == 0 {
+		stream.Shuffle = math.MaxInt64 - int64(random.GenerateInt(0, 999_999_999_999))
 	}
 
 	// RULE: Default Token
@@ -715,11 +722,23 @@ func (service *Stream) SetLocationChild(template *model.Template, stream *model.
  * Custom Actions
  ******************************************/
 
+// Shuffle assigns a unique random number to the "shuffle" field of each Stream
+func (service *Stream) Shuffle() error {
+
+	if err := queries.Shuffle(context.Background(), service.collection); err != nil {
+		return derp.Wrap(err, "service.Stream.Shuffle", "Error shuffling users")
+	}
+
+	return nil
+}
+
+// SetAttributedTo assigns a User to the "attributedTo" field of each Stream
 func (service *Stream) SetAttributedTo(user *model.User) {
 	err := queries.SetAttributedTo(context.Background(), service.collection, user.PersonLink())
 	derp.Report(derp.Wrap(err, "service.Stream.SetAttributedTo", "Error setting attributedTo"))
 }
 
+// DeleteByParent deletes all streams that are children of the provided parentID
 func (service *Stream) DeleteByParent(parentID primitive.ObjectID, note string) error {
 	return service.DeleteMany(exp.Equal("parentId", parentID), note)
 }

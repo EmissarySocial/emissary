@@ -12,15 +12,18 @@ func IndexAllStreams(factory *domain.Factory, args mapof.Any) queue.Result {
 
 	const location = "consumer.IndexAllStreams"
 
+	// Collect required services
 	searchService := factory.SearchResult()
 	streamService := factory.Stream()
 
+	// Get a RangeFunc containing all Streams in the database
 	streams, err := streamService.RangePublished()
 
 	if err != nil {
 		return queue.Error(derp.Wrap(err, location, "Error retrieving Streams"))
 	}
 
+	// Index each Stream in the range
 	for stream := range streams {
 
 		// Recompute Hashtags

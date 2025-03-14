@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"iter"
 	"strconv"
 	"strings"
@@ -513,6 +514,16 @@ func (service *User) QueryBlockedActors(userID primitive.ObjectID, criteria exp.
 /******************************************
  * Custom Actions
  ******************************************/
+
+// Shuffle assigns a unique random number to the "shuffle" field of each User
+func (service *User) Shuffle() error {
+
+	if err := queries.Shuffle(context.Background(), service.collection); err != nil {
+		return derp.Wrap(err, "service.User.Shuffle", "Error shuffling users")
+	}
+
+	return nil
+}
 
 func (service *User) CalcNewUsername(user *model.User) error {
 

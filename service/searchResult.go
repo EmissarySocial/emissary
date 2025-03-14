@@ -3,12 +3,13 @@ package service
 import (
 	"context"
 	"iter"
-	"math/rand"
+	"math"
 	"slices"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/queries"
+	"github.com/EmissarySocial/emissary/tools/random"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -95,8 +96,14 @@ func (service *SearchResult) Save(searchResult *model.SearchResult, note string)
 
 	const location = "service.Search.Save"
 
+	// RULE: Do not save empty SearchResults
 	if searchResult.SearchResultID.IsZero() {
 		return derp.NewInternalError(location, "SearchResultID is required", searchResult)
+	}
+
+	// RULE: If unassigned, shuffle the searchResult after the first trillion other results (will reset in 1 hour)
+	if searchResult.Shuffle == 0 {
+		searchResult.Shuffle = math.MaxInt64 - int64(random.GenerateInt(0, 999_999_999_999))
 	}
 
 	// Normalize Tags
@@ -234,17 +241,12 @@ func (service *SearchResult) Shuffle() error {
 
 	const location = "service.Search.Shuffle"
 
-	rangeFunc, err := service.RangeAll()
+	// Make a timeout context for this request
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+	defer cancel()
 
-	if err != nil {
-		return derp.Wrap(err, location, "Error listing SearchResults")
-	}
-
-	for result := range rangeFunc {
-		result.Shuffle = rand.Int63()
-		if err := service.Save(&result, "shuffled"); err != nil {
-			return derp.Wrap(err, location, "Error saving SearchResult", result)
-		}
+	if err := queries.Shuffle(ctx, service.collection); err != nil {
+		return derp.Wrap(err, location, "Error shuffling SearchResults")
 	}
 
 	return nil

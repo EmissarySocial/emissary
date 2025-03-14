@@ -2,6 +2,7 @@ package queries
 
 import (
 	"context"
+	"time"
 
 	"github.com/benpate/data"
 	mongodb "github.com/benpate/data-mongo"
@@ -55,4 +56,8 @@ func mongoCollection(original data.Collection) *mongo.Collection {
 	default:
 		return nil
 	}
+}
+
+func timeoutContext(seconds int) (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.Background(), time.Duration(seconds)*time.Second)
 }

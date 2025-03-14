@@ -46,6 +46,18 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 	case "ReceiveWebMention":
 		return WithFactory(consumer.serverFactory, args, ReceiveWebMention)
 
+	case "RecycleDomain":
+		return WithFactory(consumer.serverFactory, args, RecycleDomain)
+
+	case "Scheduler":
+		return Scheduler(consumer.serverFactory)
+
+	case "ScheduleDaily":
+		return ScheduleDaily(consumer.serverFactory)
+
+	case "ScheduleHourly":
+		return ScheduleHourly(consumer.serverFactory)
+
 	case "SendActivityPubMessage":
 		return WithFactory(consumer.serverFactory, args, SendActivityPubMessage)
 
@@ -57,6 +69,9 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 
 	case "SendWebSubMessage":
 		return SendWebSubMessage(args)
+
+	case "Shuffle":
+		return WithFactory(consumer.serverFactory, args, Shuffle)
 
 	case "stream.syndicate", "stream.syndicate.undo":
 		return StreamSyndicate(name, args)

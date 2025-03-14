@@ -4,6 +4,7 @@ import (
 	"context"
 	"embed"
 	"html/template"
+	"iter"
 	"net/http"
 	"os"
 	"strconv"
@@ -235,6 +236,13 @@ func (factory *Factory) start() {
 			factory.mutex.Unlock()
 		}
 
+		// Bootstrap the "Scheduler" task.  Duplicates will be dropped.
+		// This task will be used to schedule all other daily/hourly tasks
+		task := queue.NewTask("Scheduler", mapof.NewAny())
+		if err := factory.queue.Publish(task); err != nil {
+			derp.Report(derp.Wrap(err, "server.Factory.start", "Error publishing Schedule task"))
+		}
+
 		// If the "ready" channel is still open, then close it,
 		// which will unblock any waiting processes
 		if !channel.Closed(factory.ready) {
@@ -407,6 +415,20 @@ func (factory *Factory) UpdateConfig(value config.Config) error {
 /****************************
  * Domain Methods
  ****************************/
+
+func (factory *Factory) RangeDomains() iter.Seq[*domain.Factory] {
+
+	return func(yield func(*domain.Factory) bool) {
+		factory.mutex.RLock()
+		defer factory.mutex.RUnlock()
+
+		for _, domain := range factory.domains {
+			if !yield(domain) {
+				return
+			}
+		}
+	}
+}
 
 // ListDomains returns a list of all domains in the Factory
 func (factory *Factory) ListDomains() []config.Domain {

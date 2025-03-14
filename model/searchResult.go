@@ -152,6 +152,7 @@ func (searchResult SearchResult) Fields() []string {
 		"iconUrl",
 		"summary",
 		"date",
+		"shuffle",
 	}
 }
 
