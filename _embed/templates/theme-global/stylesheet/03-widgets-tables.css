@@ -69,7 +69,9 @@ div.table > .table-header {
 div.table > [role=link]:hover,
 div.table > [role=link]:focus, 
 div.table > [role=button]:hover,
-div.table > [role=button]:focus {
+div.table > [role=button]:focus,
+div.table > .clickable:hover,
+div.table > .clickable:focus {
 	background-color:var(--gray15);
 	cursor:pointer;
 }
