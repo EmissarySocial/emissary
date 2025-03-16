@@ -16,7 +16,9 @@ func write_intent_header(ctx *steranko.Context, b *html.Builder, user *model.Use
 
 	b.Div().Class("flex-shrink-0", "flex-row", "flex-align-stretch", "margin-bottom")
 	{
+		b.Div().Class("width-32")
 		b.Img(user.ActivityPubIconURL()).Class("circle width-32", "flex-shrink-0").Close()
+		b.Close()
 		b.Div().Class("flex-grow")
 		{
 			b.Div().Class("text-xs", "text-gray", "margin-none").InnerText("Signed In As:")

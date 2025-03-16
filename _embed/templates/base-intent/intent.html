@@ -2,7 +2,7 @@
 
 <h1 class="modal-title" class="margin-none margin-bottom">
 	{{- if eq "" $intent -}}
-		{{icon "activitypub"}}
+		{{icon "fediverse"}}
 		Add/Edit Fediverse Accounts
 	{{- else if eq "announce" $intent -}}
 		{{icon "rocket"}}
@@ -14,7 +14,7 @@
 		{{icon "thumbs-down"}}
 		Dislike on the Fediverse
 	{{- else if eq "follow" $intent -}}
-		{{icon "activitypub"}}
+		{{icon "fediverse"}}
 		Follow for Updates
 	{{- else if eq "like" $intent -}}
 		{{icon "thumbs-up"}}
@@ -151,6 +151,7 @@
 
 	def setAccounts(accounts)
 		window.localStorage.setItem("accounts", JSON.stringify(accounts))
+		trigger "storage" on window
 		displayAccounts()
 	end
 
