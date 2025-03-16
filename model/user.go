@@ -5,6 +5,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data/journal"
+	"github.com/benpate/domain"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
@@ -390,4 +391,22 @@ func (user User) GetWebhookData() mapof.Any {
 		"updateDate": user.UpdateDate,
 		"deleteDate": user.DeleteDate,
 	}
+}
+
+/******************************************
+ * Activity Intent Data
+ ******************************************/
+func (user User) ActivityIntentProfile() mapof.Any {
+
+	return mapof.Any{
+		vocab.PropertyID:                user.ActivityPubURL(),
+		vocab.PropertyName:              user.DisplayName,
+		vocab.PropertyIcon:              user.ActivityPubIconURL(),
+		vocab.PropertyURL:               user.ActivityPubURL(),
+		vocab.PropertyPreferredUsername: "@" + user.Username + "@" + user.Host(),
+	}
+}
+
+func (user User) Host() string {
+	return domain.NameOnly(user.ProfileURL)
 }

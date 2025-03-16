@@ -1,110 +1,92 @@
 package handler
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/url"
 
+	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
 )
 
 // GetSignIn generates an echo.HandlerFunc that handles GET /signin requests
-func GetSignIn(serverFactory *server.Factory) echo.HandlerFunc {
+func GetSignIn(ctx *steranko.Context, factory *domain.Factory) error {
 
-	return func(ctx echo.Context) error {
+	// Get the standard Signin page
+	template := factory.Domain().Theme().HTMLTemplate
 
-		// Locate the current domain
-		factory, err := serverFactory.ByContext(ctx)
+	domain := factory.Domain().Get()
 
-		if err != nil {
-			return derp.NewInternalError("handler.PostSignIn", "Invalid Domain.")
-		}
+	// Get a clean version of the URL query parameters
+	data := cleanQueryParams(ctx.QueryParams())
+	data["domainName"] = domain.Label
+	data["domainIcon"] = domain.IconURL()
+	data["hasRegistrationForm"] = factory.Domain().HasRegistrationForm()
+	data["next"] = url.QueryEscape(data.GetString("next"))
 
-		// Get the standard Signin page
-		template := factory.Domain().Theme().HTMLTemplate
-
-		domain := factory.Domain().Get()
-
-		// Get a clean version of the URL query parameters
-		data := cleanQueryParams(ctx.QueryParams())
-		data["domainName"] = domain.Label
-		data["domainIcon"] = domain.IconURL()
-		data["hasRegistrationForm"] = factory.Domain().HasRegistrationForm()
-		data["next"] = url.QueryEscape(data.GetString("next"))
-
-		// Render the template
-		if err := template.ExecuteTemplate(ctx.Response(), "signin", data); err != nil {
-			return derp.Wrap(err, "handler.GetSignIn", "Error executing template")
-		}
-
-		return nil
+	// Render the template
+	if err := template.ExecuteTemplate(ctx.Response(), "signin", data); err != nil {
+		return derp.Wrap(err, "handler.GetSignIn", "Error executing template")
 	}
+
+	return nil
 }
 
 // PostSignIn generates an echo.HandlerFunc that handles POST /signin requests
-func PostSignIn(serverFactory *server.Factory) echo.HandlerFunc {
+func PostSignIn(ctx *steranko.Context, factory *domain.Factory) error {
 
-	return func(ctx echo.Context) error {
+	// Try to sign in using Steranko
+	s := factory.Steranko()
+	sterankoUser, err := s.SignIn(ctx)
 
-		// Locate the current domain
-		factory, err := serverFactory.ByContext(ctx)
-
-		if err != nil {
-			return derp.NewInternalError("handler.PostSignIn", "Invalid Domain.")
-		}
-
-		// Try to sign in using Steranko
-		s := factory.Steranko()
-		if err := s.SignIn(ctx); err != nil {
-			ctx.Response().Header().Add("HX-Trigger", "SigninError")
-			return ctx.HTML(derp.ErrorCode(err), derp.Message(err))
-		}
-
-		// If there is a "next" parameter, then redirect to that URL.
-		if next := ctx.QueryParam("next"); next != "" {
-			ctx.Response().Header().Add("Hx-Redirect", next)
-		} else {
-			// Otherwise, redirect to the user's profile page
-			ctx.Response().Header().Add("Hx-Redirect", "/@me")
-		}
-
-		/// 3..2..1.. Go!
-		return ctx.NoContent(http.StatusNoContent)
+	if err != nil {
+		ctx.Response().Header().Add("HX-Trigger", "SigninError")
+		return ctx.HTML(derp.ErrorCode(err), derp.Message(err))
 	}
+
+	// If there is a "next" parameter, then redirect to that URL.  Otherwise, redirect to the user's profile.
+	next := first.String(ctx.QueryParam("next"), "/@me")
+	ctx.Response().Header().Add("Hx-Redirect", next)
+
+	// Add user's Activity Intent data to the response.
+	if user, isAlwaysOK := sterankoUser.(*model.User); isAlwaysOK {
+
+		message := mapof.Any{"signin-account": user.ActivityIntentProfile()}
+
+		if messageJSON, err := json.Marshal(message); err == nil {
+			ctx.Response().Header().Add("Hx-Trigger", string(messageJSON))
+
+		}
+	}
+
+	/// 3..2..1.. Go!
+	return ctx.NoContent(http.StatusNoContent)
 }
 
 // PostSignOut generates an echo.HandlerFunc that handles POST /signout requests
-func PostSignOut(serverFactory *server.Factory) echo.HandlerFunc {
+func PostSignOut(ctx *steranko.Context, factory *domain.Factory) error {
 
-	const location = "handler.PostSignOut"
+	s := factory.Steranko()
 
-	return func(ctx echo.Context) error {
+	// If there is a "next" parameter, then redirect to that URL.
+	hasBackupProfile := s.SignOut(ctx)
 
-		factory, err := serverFactory.ByContext(ctx)
-
-		if err != nil {
-			return derp.Wrap(err, location, "Invalid Domain", derp.WithCode(http.StatusBadRequest))
-		}
-
-		s := factory.Steranko()
-
-		// If there is a "next" parameter, then redirect to that URL.
-		hasBackupProfile := s.SignOut(ctx)
-
-		if next := ctx.QueryParam("next"); next != "" {
-			ctx.Response().Header().Add("Hx-Redirect", "/signin?next="+url.QueryEscape(next))
-		} else if hasBackupProfile {
-			ctx.Response().Header().Add("HX-Redirect", "/admin/users")
-		} else {
-			ctx.Response().Header().Add("HX-Redirect", "/")
-		}
-
-		// Forward the user back to the home page of the website.
-		return ctx.NoContent(http.StatusNoContent)
+	if next := ctx.QueryParam("next"); next != "" {
+		ctx.Response().Header().Add("Hx-Redirect", "/signin?next="+url.QueryEscape(next))
+	} else if hasBackupProfile {
+		ctx.Response().Header().Add("HX-Redirect", "/admin/users")
+	} else {
+		ctx.Response().Header().Add("HX-Redirect", "/")
 	}
+
+	// Forward the user back to the home page of the website.
+	return ctx.NoContent(http.StatusNoContent)
 }
 
 func GetResetPassword(serverFactory *server.Factory) echo.HandlerFunc {

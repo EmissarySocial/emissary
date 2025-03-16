@@ -263,9 +263,9 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.search/:searchId/outbox", handler.WithSearchQuery(factory, ap_search.GetOutboxCollection))
 
 	// Authentication Pages
-	e.GET("/signin", handler.GetSignIn(factory))
-	e.POST("/signin", handler.PostSignIn(factory))
-	e.POST("/signout", handler.PostSignOut(factory))
+	e.GET("/signin", handler.WithFactory(factory, handler.GetSignIn))
+	e.POST("/signin", handler.WithFactory(factory, handler.PostSignIn))
+	e.POST("/signout", handler.WithFactory(factory, handler.PostSignOut))
 	e.GET("/register", handler.WithRegistration(factory, handler.GetRegister))
 	e.GET("/register/:action", handler.WithRegistration(factory, handler.GetRegister))
 	e.POST("/register", handler.WithRegistration(factory, handler.PostRegister))
