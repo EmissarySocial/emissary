@@ -306,6 +306,8 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 
 	// Profile Pages for "me" only routes
 	e.GET("/@me", handler.WithAuthenticatedUser(factory, handler.ForwardMeURLs))
+	e.POST("/@me/delete", handler.WithAuthenticatedUser(factory, handler.PostProfileDelete))
+
 	e.GET("/@me/inbox", handler.GetInbox(factory))
 	e.POST("/@me/inbox", handler.PostInbox(factory))
 	e.GET("/@me/inbox/:action", handler.GetInbox(factory))
@@ -318,7 +320,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/@me/intent/follow", handler.WithAuthenticatedUser(factory, handler.PostIntent_Follow))
 	e.GET("/@me/intent/like", handler.WithAuthenticatedUser(factory, handler.GetIntent_Like))
 	e.POST("/@me/intent/like", handler.WithAuthenticatedUser(factory, handler.PostIntent_Like))
-	e.POST("/@me/delete", handler.WithAuthenticatedUser(factory, handler.PostProfileDelete))
+	e.GET("/@me/intent/continue", handler.WithAuthenticatedUser(factory, handler.GetIntent_Continue))
 
 	// Routes for Users
 	e.GET("/@:userId", handler.WithUserForwarding(factory, handler.GetOutbox))

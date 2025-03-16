@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"net/url"
 
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
@@ -100,7 +101,7 @@ func GetIntent_Follow(ctx *steranko.Context, factory *domain.Factory, user *mode
 		b.Div().Class("margin-top")
 		{
 			b.Button().Type("submit").Class("primary").TabIndex("0").InnerText("Follow " + actor.Name()).Close()
-			b.A(transaction.OnCancel).Href(onCancel).Class("button").TabIndex("0").InnerText("Cancel")
+			b.A("/@me/intent/continue?url=" + url.QueryEscape(onCancel)).Class("button").TabIndex("0").InnerText("Cancel")
 		}
 	}
 	b.CloseAll()
@@ -192,6 +193,6 @@ func PostIntent_Follow(ctx *steranko.Context, factory *domain.Factory, user *mod
 		return derp.ReportAndReturn(derp.Wrap(err, location, "Error saving stream"))
 	}
 
-	// Redirect to the "on-success" URL
-	return ctx.Redirect(http.StatusSeeOther, onSuccess)
+	// Return the "on-success" response
+	return ctx.HTML(http.StatusOK, getIntent_Continue(onSuccess))
 }

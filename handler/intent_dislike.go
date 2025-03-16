@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"net/url"
 
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
@@ -86,7 +87,7 @@ func GetIntent_Dislike(ctx *steranko.Context, factory *domain.Factory, user *mod
 		b.Div().Class("margin-top")
 		{
 			b.Button().Type("submit").Class("primary").InnerHTML(icons.Get("thumbs-down-fill") + " Dislike This").Close()
-			b.A(transaction.OnCancel).Href(onCancel).Class("button").InnerText("Cancel")
+			b.A("/@me/intent/continue?url=" + url.QueryEscape(onCancel)).Class("button").TabIndex("0").InnerText("Cancel")
 		}
 		b.Close()
 	}

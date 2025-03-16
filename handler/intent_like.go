@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"net/url"
 
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
@@ -86,7 +87,7 @@ func GetIntent_Like(ctx *steranko.Context, factory *domain.Factory, user *model.
 		b.Div().Class("margin-top")
 		{
 			b.Button().Type("submit").Class("primary").InnerHTML(icons.Get("thumbs-up-fill") + " Like This").Close()
-			b.A(transaction.OnCancel).Href(onCancel).Class("button").InnerText("Cancel")
+			b.A("/@me/intent/continue?url=" + url.QueryEscape(onCancel)).Class("button").TabIndex("0").InnerText("Cancel")
 		}
 	}
 	b.CloseAll()
@@ -125,6 +126,6 @@ func postIntent_Response(ctx *steranko.Context, factory *domain.Factory, user *m
 		return derp.ReportAndReturn(derp.Wrap(err, location, "Error saving response", transaction))
 	}
 
-	// Redirect to the "on-success" URL
-	return ctx.Redirect(http.StatusSeeOther, onSuccess)
+	// Return the "on-success" response
+	return ctx.HTML(http.StatusOK, getIntent_Continue(onSuccess))
 }

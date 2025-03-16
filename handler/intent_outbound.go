@@ -25,9 +25,8 @@ func GetOutboundIntent(ctx *steranko.Context, factory *domain.Factory) error {
 
 	// Append success/cancel handlers to the URL
 	data := ctx.Request().URL.Query()
-	closeURL := factory.Host() + "/.close-window"
-	data.Set("on-success", closeURL)
-	data.Set("on-cancel", closeURL)
+	data.Set("on-success", "(close)")
+	data.Set("on-cancel", "(close)")
 
 	// Populate the template with data from the stream
 	nextURL := camper.PopulateTemplate(template, data)
