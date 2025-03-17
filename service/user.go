@@ -739,15 +739,16 @@ func (service *User) LoadWebFinger(username string) (digit.Resource, error) {
 
 	const location = "service.User.LoadWebFinger"
 
+	username = strings.TrimPrefix(username, "acct:")
+
 	switch {
 
 	case domain.HasProtocol(username):
 		username = list.Last(username, '@')
 		username = list.First(username, '/')
 
-	case strings.HasPrefix(username, "acct:"):
+	case strings.HasPrefix(username, "@"):
 		// Trim prefixes "acct:" and "@"
-		username = strings.TrimPrefix(username, "acct:")
 		username = strings.TrimPrefix(username, "@")
 
 		// Trim @domain.name suffix if present

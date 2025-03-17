@@ -482,7 +482,7 @@ func (service *Domain) LoadWebFinger(username string) (digit.Resource, error) {
 
 	const location = "service.User.LoadWebFinger"
 
-	if username != "acct:service@"+service.hostname {
+	if username != "service@"+service.hostname {
 		return digit.Resource{}, derp.NewBadRequestError(location, "Invalid username", username)
 	}
 

@@ -2,50 +2,53 @@ package handler
 
 import (
 	"net/http"
+	"strings"
 
+	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
+	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
 )
 
 // GetWebfinger returns public webfinger information for a designated user.
 // https://webfinger.net
 // WebFinger data based on https://docs.joinmastodon.org/spec/webfinger/
-func GetWebfinger(fm *server.Factory) echo.HandlerFunc {
+func GetWebfinger(ctx *steranko.Context, factory *domain.Factory) error {
 
-	location := "handler.GetWebFinger"
+	const location = "handler.GetWebFinger"
 
-	return func(ctx echo.Context) error {
+	resourceID := ctx.QueryParam("resource")
 
-		// Validate Domain and Get Factory Object
-		factory, err := fm.ByContext(ctx)
-
-		if err != nil {
-			return derp.Wrap(err, location, "Unrecognized Domain")
-		}
-
-		resourceID := ctx.QueryParam("resource")
-
-		// First, try the service account on the domain
-		if resource, err := factory.Domain().LoadWebFinger(resourceID); err == nil {
-			return writeResource(ctx, resource)
-		}
-
-		// Next, look for Users
-		if resource, err := factory.User().LoadWebFinger(resourceID); err == nil {
-			return writeResource(ctx, resource)
-		}
-
-		// Next, look for Streams (that are ActivityPub actors)
-		if resource, err := factory.Stream().LoadWebFinger(resourceID); err == nil {
-			return writeResource(ctx, resource)
-		}
-
-		// Otherwise, break unceremoniously
-		return derp.NewBadRequestError(location, "Invalid Resource", resourceID)
+	if !strings.HasPrefix(resourceID, "acct:") {
+		return derp.NewBadRequestError(location, "Unrecognized Resource", resourceID)
 	}
+
+	resourceID = strings.TrimPrefix(resourceID, "acct:")
+
+	// First, try the service account on the domain
+	if resource, err := factory.Domain().LoadWebFinger(resourceID); err == nil {
+		return writeResource(ctx, resource)
+	}
+
+	// Next, look for search actors (it's an easy check)
+	if resource, err := factory.SearchQuery().LoadWebFinger(resourceID); err == nil {
+		return writeResource(ctx, resource)
+	}
+
+	// Next, look for Users
+	if resource, err := factory.User().LoadWebFinger(resourceID); err == nil {
+		return writeResource(ctx, resource)
+	}
+
+	// Next, look for Streams (that are ActivityPub actors)
+	if resource, err := factory.Stream().LoadWebFinger(resourceID); err == nil {
+		return writeResource(ctx, resource)
+	}
+
+	// Otherwise, break unceremoniously
+	return derp.NewBadRequestError(location, "Invalid Resource", resourceID)
 }
 
 func writeResource(ctx echo.Context, resource digit.Resource) error {

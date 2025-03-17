@@ -9,6 +9,8 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
+	"github.com/benpate/digit"
+	"github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/outbox"
 	"github.com/benpate/rosetta/mapof"
@@ -91,6 +93,16 @@ func (service *SearchQuery) Load(criteria exp.Expression, searchQuery *model.Sea
 	return nil
 }
 
+// LoadWithSoftDeletes searches ALL SearchQuery in the database, including those that have been "soft deleted"
+func (service *SearchQuery) LoadWithSoftDeletes(criteria exp.Expression, searchQuery *model.SearchQuery) error {
+
+	if err := service.collection.Load(criteria, searchQuery); err != nil {
+		return derp.Wrap(err, "service.SearchQuery.Load", "Error loading SearchQuery", criteria)
+	}
+
+	return nil
+}
+
 // Save adds/updates an SearchQuery in the database
 func (service *SearchQuery) Save(searchQuery *model.SearchQuery, note string) error {
 
@@ -157,8 +169,26 @@ func (service *SearchQuery) RangeAll() (iter.Seq[model.SearchQuery], error) {
 
 // LoadByID retrieves a SearchQuery using the provided ID
 func (service *SearchQuery) LoadByID(searchQueryID primitive.ObjectID, searchQuery *model.SearchQuery) error {
+
+	const location = "service.SearchQuery.LoadByID"
+
 	criteria := exp.Equal("_id", searchQueryID)
-	return service.Load(criteria, searchQuery)
+
+	if err := service.LoadWithSoftDeletes(criteria, searchQuery); err != nil {
+		return derp.Wrap(err, location, "Error loading SearchQuery", searchQueryID)
+	}
+
+	// If the SearchQuery has been deleted, then restore it before returning
+	if searchQuery.IsDeleted() {
+
+		searchQuery.DeleteDate = 0
+
+		if err := service.Save(searchQuery, "Restored"); err != nil {
+			return derp.Wrap(err, location, "Error restoring SearchQuery", searchQuery)
+		}
+	}
+
+	return nil
 }
 
 // LoadByToken retrieves a SearchQuery using the provided token
@@ -307,6 +337,10 @@ func (service *SearchQuery) ActivityPubURL(searchQueryID primitive.ObjectID) str
 	return service.host + "/.search/" + searchQueryID.Hex()
 }
 
+func (service *SearchQuery) ActivityPubUsername(searchQueryID primitive.ObjectID) string {
+	return "searchQuery_" + searchQueryID.Hex()
+}
+
 func (service *SearchQuery) ActivityPubName(searchQuery *model.SearchQuery) string {
 	domain := service.domainService.Get()
 	return searchQuery.Query + " on " + domain.Label
@@ -330,4 +364,62 @@ func (service *SearchQuery) ActivityPubOutboxURL(searchQueryID primitive.ObjectI
 
 func (service *SearchQuery) ActivityPubSharesURL(searchQueryID primitive.ObjectID) string {
 	return service.ActivityPubURL(searchQueryID) + "/shares"
+}
+
+/******************************************
+ * WebFinger Behavior
+ ******************************************/
+
+func (service *SearchQuery) LoadWebFinger(url string) (digit.Resource, error) {
+
+	const location = "service.SearchQuery.LoadWebFinger"
+
+	var searchQueryToken string
+
+	if strings.HasPrefix(url, "searchQuery_") {
+
+		if !strings.HasSuffix(url, "@"+service.Hostname()) {
+			return digit.Resource{}, derp.NewBadRequestError(location, "Invalid URL", url)
+		}
+
+		searchQueryToken = strings.TrimPrefix(url, "searchQuery_")
+		searchQueryToken = strings.TrimSuffix(searchQueryToken, "@"+service.Hostname())
+
+	} else {
+
+		var exists bool
+
+		// Split the searchQueryToken from the URL
+		_, searchQueryToken, exists = strings.Cut(url, "/.search/")
+
+		if !exists {
+			return digit.Resource{}, derp.NewBadRequestError(location, "Invalid URL", url)
+		}
+
+		searchQueryToken, _, _ = strings.Cut(searchQueryToken, "/")
+	}
+
+	// Try to load the SearchQuery from the database
+	searchQuery := model.NewSearchQuery()
+
+	if err := service.LoadByToken(searchQueryToken, &searchQuery); err != nil {
+		return digit.Resource{}, derp.ReportAndReturn(derp.Wrap(err, location, "Error loading SearchQuery", searchQueryToken))
+	}
+
+	searchQueryID := searchQuery.SearchQueryID
+	username := service.ActivityPubUsername(searchQueryID)
+	usernameWithHost := username + "@" + service.Hostname()
+
+	// Make a WebFinger resource for this user.
+	result := digit.NewResource("acct:"+usernameWithHost).
+		Alias(service.ActivityPubURL(searchQueryID)).
+		Link(digit.RelationTypeSelf, model.MimeTypeActivityPub, service.ActivityPubURL(searchQueryID)).
+		Link(digit.RelationTypeProfile, model.MimeTypeHTML, service.ActivityPubURL(searchQueryID))
+		// Link(digit.RelationTypeAvatar, model.MimeTypeImage, service.ActivityPubIconURL(searchQuery))
+
+	return result, nil
+}
+
+func (service *SearchQuery) Hostname() string {
+	return domain.NameOnly(service.host)
 }

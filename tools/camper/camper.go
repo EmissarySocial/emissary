@@ -71,13 +71,13 @@ func (camper *Camper) GetTemplate(intentType string, accountID string) string {
 	// Use standard capitalization for intent types
 	intentType = CanonicalCapitalization(intentType)
 
-	// Check hard-coded service names
-	if result := camper.getTemplateFromKnownServices(intentType, server); result != "" {
+	// If the server publishes Activity Intents, use them first
+	if result := camper.getTemplateFromWebfinger(intentType, accountID); result != "" {
 		return result
 	}
 
-	// If the server publishes Activity Intents, use them first
-	if result := camper.getTemplateFromWebfinger(intentType, accountID); result != "" {
+	// Check hard-coded service names
+	if result := camper.getTemplateFromKnownServices(intentType, server); result != "" {
 		return result
 	}
 
