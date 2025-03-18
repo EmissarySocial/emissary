@@ -1,47 +1,23 @@
 package service
 
 import (
-	"strings"
-
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
-	"github.com/benpate/domain"
-	"github.com/benpate/rosetta/list"
 )
 
 /******************************************
  * WebFinger Behavior
  ******************************************/
 
-func (service *Stream) LoadWebFinger(token string) (digit.Resource, error) {
-	const location = "service.User.LoadWebFinger"
+func (service *Stream) WebFinger(token string) (digit.Resource, error) {
 
-	switch {
+	const location = "service.User.WebFinger"
 
-	case domain.HasProtocol(token):
-		token = list.Last(token, '@')
-		token = list.First(token, '/')
-
-	case strings.HasPrefix(token, "acct:"):
-		// Trim prefixes "acct:" and "@"
-		token = strings.TrimPrefix(token, "acct:")
-		token = strings.TrimPrefix(token, "@")
-
-		// Trim @domain.name suffix if present
-		token = strings.TrimSuffix(token, "@"+domain.NameOnly(service.host))
-
-		// Trim path suffix if present
-		token = list.First(token, '/')
-
-	default:
-		return digit.Resource{}, derp.NewBadRequestError(location, "Invalid token", token)
-	}
-
-	// Try to load the user from the database
+	// Load the stream from the database
 	stream := model.NewStream()
-	if err := service.LoadByToken(token, &stream); err != nil {
-		return digit.Resource{}, derp.Wrap(err, location, "Error loading Stream", token)
+	if service.LoadByToken(token, &stream) != nil {
+		return digit.Resource{}, derp.NewBadRequestError(location, "Invalid Token", token)
 	}
 
 	// Verify Template and Actor
@@ -55,15 +31,16 @@ func (service *Stream) LoadWebFinger(token string) (digit.Resource, error) {
 		return digit.Resource{}, derp.NewBadRequestError(location, "Stream Template does not define an Actor", stream.TemplateID)
 	}
 
+	hostname := service.Hostname()
+
 	// Make a WebFinger resource for this Stream.
-	result := digit.NewResource("acct:"+token+"@"+domain.NameOnly(service.host)).
+	result := digit.NewResource("acct:"+stream.StreamID.Hex()+"@"+hostname).
+		Alias("acct:"+stream.Token+"@"+hostname).
 		Alias(service.host+"/"+stream.Token).
-		Alias(stream.URL).
+		Alias(service.host+"/"+stream.StreamID.Hex()).
 		Link(digit.RelationTypeSelf, model.MimeTypeActivityPub, stream.ActivityPubURL()).
-		// Link(digit.RelationTypeHub, model.MimeTypeJSONFeed, stream.JSONFeedURL()).
-		Link(digit.RelationTypeProfile, model.MimeTypeHTML, stream.URL) //.
-		// Link(digit.RelationTypeAvatar, model.MimeTypeImage, stream.ActivityPubIconURL()).
-		// Link(digit.RelationTypeSubscribeRequest, "", service.RemoteFollowURL())
+		Link(digit.RelationTypeProfile, model.MimeTypeHTML, stream.URL).
+		Link(digit.RelationTypeAvatar, model.MimeTypeImage, stream.IconURL)
 
 	return result, nil
 }

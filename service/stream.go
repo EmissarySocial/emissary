@@ -1031,3 +1031,7 @@ func (service *Stream) SearchResult(stream *model.Stream) model.SearchResult {
 	result.DeleteDate = time.Now().Unix()
 	return result
 }
+
+func (service *Stream) Hostname() string {
+	return domain.NameOnly(service.host)
+}

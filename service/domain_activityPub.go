@@ -4,7 +4,9 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
+	"github.com/benpate/digit"
 	"github.com/benpate/domain"
 	"github.com/benpate/hannibal/outbox"
 	"github.com/benpate/hannibal/sigs"
@@ -105,4 +107,15 @@ func (service *Domain) ActivityPubActor() (outbox.Actor, error) {
 	actor := outbox.NewActor(service.ActorID(), privateKey, outbox.WithClient(service.activityStream))
 
 	return actor, nil
+}
+
+func (service *Domain) WebFinger() digit.Resource {
+
+	// Make a WebFinger resource for this Stream.
+	result := digit.NewResource(service.ActorID()).
+		Alias("acct:service@"+service.Hostname()).
+		Link(digit.RelationTypeSelf, model.MimeTypeActivityPub, service.ActorID()).
+		Link(digit.RelationTypeProfile, model.MimeTypeHTML, service.ActorID())
+
+	return result
 }

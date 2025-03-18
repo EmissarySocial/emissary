@@ -6,26 +6,59 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
+	"github.com/benpate/digit"
+	"github.com/benpate/domain"
 	"github.com/benpate/rosetta/list"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// Locator is used to find objects based on their URL or WebFinger token
 type Locator struct {
-	userService   *User
-	streamService *Stream
-	host          string
+	domainService      *Domain
+	searchQueryService *SearchQuery
+	streamService      *Stream
+	userService        *User
+	host               string
 }
 
-func NewLocator(userService *User, streamService *Stream, host string) Locator {
-	return Locator{
-		userService:   userService,
-		streamService: streamService,
-		host:          host,
+func NewLocator() Locator {
+	return Locator{}
+}
+
+func (service *Locator) Refresh(domainService *Domain, searchQueryService *SearchQuery, streamService *Stream, userService *User, host string) {
+	service.domainService = domainService
+	service.streamService = streamService
+	service.searchQueryService = searchQueryService
+	service.userService = userService
+	service.host = host
+}
+
+func (service *Locator) GetWebFingerResult(resource string) (digit.Resource, error) {
+
+	const location = "service.Locator.GetWebFingerResult"
+
+	objectType, token := locateObjectFromURL(service.host, resource)
+
+	switch objectType {
+
+	case "Stream":
+		return service.streamService.WebFinger(token)
+
+	case "SearchQuery":
+		return service.searchQueryService.WebFinger(token)
+
+	case "User":
+		return service.userService.WebFinger(token)
+
+	case "Service":
+		return service.domainService.WebFinger(), nil
 	}
+
+	return digit.Resource{}, derp.NewBadRequestError(location, "Invalid Resource", resource)
 }
 
 // GetObjectFromURL parses a URL and verifies the existence of the referenced object.
-func (service Locator) GetObjectFromURL(value string) (string, primitive.ObjectID, error) {
+func (service *Locator) GetObjectFromURL(value string) (string, primitive.ObjectID, error) {
 
 	const location = "service.Locator.GetObjectFromURL"
 
@@ -93,4 +126,73 @@ func getObjectFromURL(value *url.URL) (string, string) {
 
 	// Otherwise, it's a stream
 	return "Stream", token
+}
+
+// locateObjectFromURL parses a URL, determines what type of object it is,
+// and extracts the objectID.  It requires the current host (protocol + domain)
+// to match and the complete URL to be looked up. The returned object type
+// can be one of: (Stream, User, SearchQuery, or Service).  If the object
+// is not found, then both the type and token will be empty strings.
+func locateObjectFromURL(host string, value string) (string, string) {
+
+	hostname := domain.NameOnly(host)
+
+	// Identify Username-type values
+	if value, found := strings.CutSuffix(value, "@"+hostname); found {
+
+		value = strings.TrimSuffix(value, "@"+hostname)
+		value = strings.TrimPrefix(value, "acct:")
+		value = strings.TrimPrefix(value, "@")
+
+		// Special case for "service" account
+		if value == "service" {
+			return "Service", ""
+		}
+
+		// Special case for SearchQuery objects
+		if value, found := strings.CutPrefix(value, "searchQuery_"); found {
+			return "SearchQuery", value
+		}
+
+		// Otherwise, it's a User
+		return "User", value
+	}
+
+	// Identify URL-type values
+	if value, found := strings.CutPrefix(value, host); found {
+
+		// Remove leading slash (if present)
+		value = strings.TrimPrefix(value, "/")
+
+		// Remove query parameters (if present)
+		value, _, _ = strings.Cut(value, "?")
+
+		// Special case for "Service" account
+		if value == "@service" {
+			return "Service", ""
+		}
+
+		// Special case for "Service" account
+		if value == "" {
+			return "Service", ""
+		}
+
+		// Identify SearchQuery URLs
+		if value, found := strings.CutPrefix(value, ".search/"); found {
+			value, _, _ = strings.Cut(value, "/")
+			return "SearchQuery", value
+		}
+
+		// Identify User URLs
+		if value, found := strings.CutPrefix(value, "@"); found {
+			value, _, _ = strings.Cut(value, "/")
+			return "User", value
+		}
+
+		// Trim off any trailing path data
+		value, _, _ = strings.Cut(value, "/")
+		return "Stream", value
+	}
+
+	return "", ""
 }

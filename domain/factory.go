@@ -65,6 +65,7 @@ type Factory struct {
 	groupService          service.Group
 	inboxService          service.Inbox
 	jwtService            service.JWT
+	locatorService        service.Locator
 	mentionService        service.Mention
 	oauthClient           service.OAuthClient
 	oauthUserToken        service.OAuthUserToken
@@ -138,6 +139,7 @@ func NewFactory(domain config.Domain, port string, providers []config.Provider, 
 	factory.groupService = service.NewGroup()
 	factory.inboxService = service.NewInbox()
 	factory.jwtService = service.NewJWT()
+	factory.locatorService = service.NewLocator()
 	factory.mentionService = service.NewMention()
 	factory.oauthClient = service.NewOAuthClient()
 	factory.oauthUserToken = service.NewOAuthUserToken()
@@ -297,7 +299,16 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			[]byte(domain.KeyEncryptingKey),
 		)
 
-		// Populate Mention Service
+		// Populate the Locator service
+		factory.locatorService.Refresh(
+			factory.Domain(),
+			factory.SearchQuery(),
+			factory.Stream(),
+			factory.User(),
+			factory.Host(),
+		)
+
+		// Populate Mention service
 		factory.mentionService.Refresh(
 			factory.collection(CollectionMention),
 			factory.Rule(),
@@ -826,13 +837,8 @@ func (factory *Factory) Icons() icon.Provider {
 }
 
 // Locator returns the locator service, which locates records based on their URLs
-// This should probably be deprecated.
-func (factory *Factory) Locator() service.Locator {
-	return service.NewLocator(
-		factory.User(),
-		factory.Stream(),
-		factory.Hostname(),
-	)
+func (factory *Factory) Locator() *service.Locator {
+	return &factory.locatorService
 }
 
 func (factory *Factory) HTTPCache() *httpcache.HTTPCache {

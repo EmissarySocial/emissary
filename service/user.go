@@ -23,7 +23,6 @@ import (
 	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/html"
 	"github.com/benpate/rosetta/iterator"
-	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/schema/format"
 	"github.com/benpate/rosetta/slice"
@@ -735,42 +734,20 @@ func (service *User) MakeNewPasswordResetCode(user *model.User) error {
  * WebFinger Behavior
  ******************************************/
 
-func (service *User) LoadWebFinger(username string) (digit.Resource, error) {
+func (service *User) WebFinger(token string) (digit.Resource, error) {
 
-	const location = "service.User.LoadWebFinger"
-
-	username = strings.TrimPrefix(username, "acct:")
-
-	switch {
-
-	case domain.HasProtocol(username):
-		username = list.Last(username, '@')
-		username = list.First(username, '/')
-
-	case strings.HasPrefix(username, "@"):
-		// Trim prefixes "acct:" and "@"
-		username = strings.TrimPrefix(username, "@")
-
-		// Trim @domain.name suffix if present
-		username = strings.TrimSuffix(username, "@"+domain.NameOnly(service.host))
-
-		// Trim path suffix if present
-		username = list.First(username, '/')
-
-	default:
-		return digit.Resource{}, derp.NewBadRequestError(location, "Invalid username", username)
-	}
+	const location = "service.User.WebFinger"
 
 	// Try to load the user from the database
 	user := model.NewUser()
-	if err := service.LoadByToken(username, &user); err != nil {
-		return digit.Resource{}, derp.Wrap(err, location, "Error loading user", username)
+	if err := service.LoadByToken(token, &user); err != nil {
+		return digit.Resource{}, derp.Wrap(err, location, "Error loading user", token)
 	}
 
 	// Make a WebFinger resource for this user.
-	result := digit.NewResource("acct:"+username+"@"+domain.NameOnly(service.host)).
+	result := digit.NewResource("acct:"+user.Username+"@"+domain.NameOnly(service.host)).
 		Alias(service.host+"/@"+user.Username).
-		Alias(user.ActivityPubURL()).
+		Alias(service.host+"/@"+user.UserID.Hex()).
 		Link(digit.RelationTypeSelf, model.MimeTypeActivityPub, user.ActivityPubURL()).
 		Link(digit.RelationTypeHub, model.MimeTypeJSONFeed, user.JSONFeedURL()).
 		Link(digit.RelationTypeProfile, model.MimeTypeHTML, user.ActivityPubURL()).

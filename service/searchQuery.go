@@ -370,52 +370,23 @@ func (service *SearchQuery) ActivityPubSharesURL(searchQueryID primitive.ObjectI
  * WebFinger Behavior
  ******************************************/
 
-func (service *SearchQuery) LoadWebFinger(url string) (digit.Resource, error) {
+func (service *SearchQuery) WebFinger(token string) (digit.Resource, error) {
 
 	const location = "service.SearchQuery.LoadWebFinger"
 
-	var searchQueryToken string
-
-	if strings.HasPrefix(url, "searchQuery_") {
-
-		if !strings.HasSuffix(url, "@"+service.Hostname()) {
-			return digit.Resource{}, derp.NewBadRequestError(location, "Invalid URL", url)
-		}
-
-		searchQueryToken = strings.TrimPrefix(url, "searchQuery_")
-		searchQueryToken = strings.TrimSuffix(searchQueryToken, "@"+service.Hostname())
-
-	} else {
-
-		var exists bool
-
-		// Split the searchQueryToken from the URL
-		_, searchQueryToken, exists = strings.Cut(url, "/.search/")
-
-		if !exists {
-			return digit.Resource{}, derp.NewBadRequestError(location, "Invalid URL", url)
-		}
-
-		searchQueryToken, _, _ = strings.Cut(searchQueryToken, "/")
-	}
-
-	// Try to load the SearchQuery from the database
+	// Load the SearchQuery from the database
 	searchQuery := model.NewSearchQuery()
-
-	if err := service.LoadByToken(searchQueryToken, &searchQuery); err != nil {
-		return digit.Resource{}, derp.ReportAndReturn(derp.Wrap(err, location, "Error loading SearchQuery", searchQueryToken))
+	if err := service.LoadByToken(token, &searchQuery); err != nil {
+		return digit.Resource{}, derp.NewBadRequestError(location, "Invalid Token", token)
 	}
 
-	searchQueryID := searchQuery.SearchQueryID
-	username := service.ActivityPubUsername(searchQueryID)
+	username := service.ActivityPubUsername(searchQuery.SearchQueryID)
 	usernameWithHost := username + "@" + service.Hostname()
 
 	// Make a WebFinger resource for this user.
 	result := digit.NewResource("acct:"+usernameWithHost).
-		Alias(service.ActivityPubURL(searchQueryID)).
-		Link(digit.RelationTypeSelf, model.MimeTypeActivityPub, service.ActivityPubURL(searchQueryID)).
-		Link(digit.RelationTypeProfile, model.MimeTypeHTML, service.ActivityPubURL(searchQueryID))
-		// Link(digit.RelationTypeAvatar, model.MimeTypeImage, service.ActivityPubIconURL(searchQuery))
+		Alias(service.ActivityPubURL(searchQuery.SearchQueryID)).
+		Link(digit.RelationTypeSelf, model.MimeTypeActivityPub, service.ActivityPubURL(searchQuery.SearchQueryID))
 
 	return result, nil
 }

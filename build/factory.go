@@ -59,7 +59,7 @@ type Factory interface {
 	Icons() icon.Provider
 	MediaServer() mediaserver.MediaServer
 	ModelService(data.Object) service.ModelService
-	Locator() service.Locator
+	Locator() *service.Locator
 	LookupProvider(primitive.ObjectID) form.LookupProvider
 	OAuthClient() *service.OAuthClient
 	OAuthUserToken() *service.OAuthUserToken
