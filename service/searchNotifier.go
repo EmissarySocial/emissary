@@ -9,7 +9,6 @@ import (
 	"github.com/benpate/rosetta/channel"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -132,16 +131,16 @@ func (service *SearchNotifier) sendNotification(searchQueryID primitive.ObjectID
 
 	const location = "service.SearchNotifier.sendNotification"
 
-	args := mapof.Any{
-		"host":          service.host,
-		"actor":         service.searchQueryService.ActivityPubURL(searchQueryID),
-		"searchQueryID": searchQueryID,
-		"url":           searchResult.URL,
-	}
-
-	task := queue.NewTask("SendSearchResults", args, queue.WithPriority(200))
-
-	spew.Dump("sendNotification", task)
+	task := queue.NewTask(
+		"SendSearchResults",
+		mapof.Any{
+			"host":          service.host,
+			"actor":         service.searchQueryService.ActivityPubURL(searchQueryID),
+			"searchQueryID": searchQueryID,
+			"url":           searchResult.URL,
+		},
+		queue.WithPriority(200),
+	)
 
 	if err := service.queue.Publish(task); err != nil {
 		return derp.Wrap(err, location, "Error publishing task")
