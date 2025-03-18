@@ -83,21 +83,23 @@ func (service *SearchQuery) Range(criteria exp.Expression, options ...option.Opt
 	return RangeFunc(it, model.NewSearchQuery), nil
 }
 
-// Load retrieves an SearchQuery from the database
-func (service *SearchQuery) Load(criteria exp.Expression, searchQuery *model.SearchQuery) error {
-
-	if err := service.collection.Load(notDeleted(criteria), searchQuery); err != nil {
-		return derp.Wrap(err, "service.SearchQuery.Load", "Error loading SearchQuery", criteria)
-	}
-
-	return nil
-}
-
 // LoadWithSoftDeletes searches ALL SearchQuery in the database, including those that have been "soft deleted"
 func (service *SearchQuery) LoadWithSoftDeletes(criteria exp.Expression, searchQuery *model.SearchQuery) error {
 
+	const location = "service.SearchQuery.LoadWithSoftDeletes"
+
 	if err := service.collection.Load(criteria, searchQuery); err != nil {
-		return derp.Wrap(err, "service.SearchQuery.Load", "Error loading SearchQuery", criteria)
+		return derp.Wrap(err, location, "Error loading SearchQuery", criteria)
+	}
+
+	// If the SearchQuery has been deleted, then restore it before returning
+	if searchQuery.IsDeleted() {
+
+		searchQuery.DeleteDate = 0
+
+		if err := service.Save(searchQuery, "Restored"); err != nil {
+			return derp.Wrap(err, location, "Error restoring SearchQuery", searchQuery)
+		}
 	}
 
 	return nil
@@ -135,8 +137,7 @@ func (service *SearchQuery) Save(searchQuery *model.SearchQuery, note string) er
 				"searchQueryID": searchQuery.SearchQueryID.Hex(),
 			},
 			queue.WithPriority(200),
-			queue.WithDelaySeconds(30),
-			// queue.WithDelayHours(12),
+			queue.WithDelayHours(1),
 		)
 
 		if err := service.queue.Publish(task); err != nil {
@@ -178,16 +179,6 @@ func (service *SearchQuery) LoadByID(searchQueryID primitive.ObjectID, searchQue
 		return derp.Wrap(err, location, "Error loading SearchQuery", searchQueryID)
 	}
 
-	// If the SearchQuery has been deleted, then restore it before returning
-	if searchQuery.IsDeleted() {
-
-		searchQuery.DeleteDate = 0
-
-		if err := service.Save(searchQuery, "Restored"); err != nil {
-			return derp.Wrap(err, location, "Error restoring SearchQuery", searchQuery)
-		}
-	}
-
 	return nil
 }
 
@@ -207,7 +198,7 @@ func (service *SearchQuery) LoadByToken(token string, searchQuery *model.SearchQ
 // LoadBySignature retrieves a SearchQuery using the provided signature
 func (service *SearchQuery) LoadBySignature(signature string, searchQuery *model.SearchQuery) error {
 	criteria := exp.Equal("signature", signature)
-	return service.Load(criteria, searchQuery)
+	return service.LoadWithSoftDeletes(criteria, searchQuery)
 }
 
 // LoadOrCreate creates/retrieves a SearchQuery using the provided queryValues
@@ -387,7 +378,9 @@ func (service *SearchQuery) WebFinger(token string) (digit.Resource, error) {
 			return digit.Resource{}, derp.NewBadRequestError(location, "Invalid Query String", token)
 		}
 
-		if _, err := service.LoadOrCreate(queryValues); err != nil {
+		searchQuery, err = service.LoadOrCreate(queryValues)
+
+		if err != nil {
 			return digit.Resource{}, derp.Wrap(err, location, "Error loading SearchQuery", queryValues)
 		}
 
