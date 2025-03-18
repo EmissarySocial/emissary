@@ -28,3 +28,6 @@ const IntentTypeTravel = "https://w3id.org/fep/3b86/Travel"
 const IntentTypeUndo = "https://w3id.org/fep/3b86/Undo"
 const IntentTypeUpdate = "https://w3id.org/fep/3b86/Update"
 const IntentTypeView = "https://w3id.org/fep/3b86/View"
+
+// Special case for opening an Object without sending a "View" activity
+const IntentTypeObject = "https://w3id.org/fep/3b86/Object"
