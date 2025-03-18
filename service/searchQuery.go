@@ -325,11 +325,11 @@ func (service *SearchQuery) ActivityPubActor(searchQueryID primitive.ObjectID, w
 }
 
 func (service *SearchQuery) ActivityPubURL(searchQueryID primitive.ObjectID) string {
-	return service.host + "/.search/" + searchQueryID.Hex()
+	return service.host + "/@search-" + searchQueryID.Hex()
 }
 
 func (service *SearchQuery) ActivityPubUsername(searchQueryID primitive.ObjectID) string {
-	return "searchQuery_" + searchQueryID.Hex()
+	return "search-" + searchQueryID.Hex()
 }
 
 func (service *SearchQuery) ActivityPubName(searchQuery *model.SearchQuery) string {
@@ -338,23 +338,23 @@ func (service *SearchQuery) ActivityPubName(searchQuery *model.SearchQuery) stri
 }
 
 func (service *SearchQuery) ActivityPubFollowersURL(searchQueryID primitive.ObjectID) string {
-	return service.ActivityPubURL(searchQueryID) + "/followers"
+	return service.ActivityPubURL(searchQueryID) + "/pub/followers"
 }
 
 func (service *SearchQuery) ActivityPubFollowingURL(searchQueryID primitive.ObjectID) string {
-	return service.ActivityPubURL(searchQueryID) + "/following"
+	return service.ActivityPubURL(searchQueryID) + "/pub/following"
 }
 
 func (service *SearchQuery) ActivityPubInboxURL(searchQueryID primitive.ObjectID) string {
-	return service.ActivityPubURL(searchQueryID) + "/inbox"
+	return service.ActivityPubURL(searchQueryID) + "/pub/inbox"
 }
 
 func (service *SearchQuery) ActivityPubOutboxURL(searchQueryID primitive.ObjectID) string {
-	return service.ActivityPubURL(searchQueryID) + "/outbox"
+	return service.ActivityPubURL(searchQueryID) + "/pub/outbox"
 }
 
 func (service *SearchQuery) ActivityPubSharesURL(searchQueryID primitive.ObjectID) string {
-	return service.ActivityPubURL(searchQueryID) + "/shares"
+	return service.ActivityPubURL(searchQueryID) + "/pub/shares"
 }
 
 /******************************************

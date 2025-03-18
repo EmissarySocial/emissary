@@ -10,6 +10,7 @@ import (
 	"github.com/EmissarySocial/emissary/tools/parse"
 	"github.com/EmissarySocial/emissary/tools/sorted"
 	"github.com/benpate/data/journal"
+	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/dlclark/metaphone3"
@@ -74,6 +75,29 @@ func (searchQuery SearchQuery) IsEmpty() bool {
 // NotEmpty returns TRUE if this SearchQuery has useful data
 func (searchQuery SearchQuery) NotEmpty() bool {
 	return !searchQuery.IsEmpty()
+}
+
+// Expression returns the criteria in this SearchQuery as an exp.Expression
+func (searchQuery SearchQuery) Expression() exp.Expression {
+
+	var result exp.Expression
+
+	result = exp.In("type", searchQuery.Types)
+
+	for _, tag := range searchQuery.Tags {
+		result = result.AndEqual("tags", tag)
+	}
+
+	for _, index := range searchQuery.Index {
+		result = result.AndEqual("index", index)
+	}
+
+	// TODO: Geosearch by Location and Radius
+
+	// TODO: Time-Based Search (might not be possible)
+
+	return result
+
 }
 
 // Match returns TRUE if this query matches the provided SearchResult

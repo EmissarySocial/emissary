@@ -29,8 +29,10 @@ func GetJSONLD(ctx *steranko.Context, factory *domain.Factory, template *model.T
 		vocab.PropertyType:             vocab.ActorTypeService,
 		vocab.PropertyID:               actorID,
 		vocab.PropertyName:             searchQueryService.ActivityPubName(searchQuery),
-		vocab.PropertyInbox:            actorID + "/inbox",
-		vocab.PropertyOutbox:           actorID + "/outbox",
+		vocab.PropertyInbox:            searchQueryService.ActivityPubInboxURL(searchQuery.SearchQueryID),
+		vocab.PropertyOutbox:           searchQueryService.ActivityPubOutboxURL(searchQuery.SearchQueryID),
+		vocab.PropertyFollowers:        searchQueryService.ActivityPubFollowersURL(searchQuery.SearchQueryID),
+		vocab.PropertyFollowing:        searchQueryService.ActivityPubFollowingURL(searchQuery.SearchQueryID),
 		vocab.PropertyTootDiscoverable: false,
 		vocab.PropertyTootIndexable:    false,
 
