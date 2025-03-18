@@ -5,18 +5,14 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/vocab"
-	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func SendSearchResults(factory *domain.Factory, args mapof.Any) queue.Result {
 
 	const location = "consumer.SendSearchResults"
-
-	spew.Dump("SendSearchResults", args)
 
 	// Collect services to use
 	followerService := factory.Follower()
@@ -55,8 +51,6 @@ func SendSearchResults(factory *domain.Factory, args mapof.Any) queue.Result {
 	// Send ActivityPub messages to each follower
 	for follower := range followers {
 
-		spew.Dump(".. Follower", follower)
-
 		// Create a new queue message for each follower
 		task := queue.NewTask(
 			"SendActivityPubMessage",
@@ -74,8 +68,6 @@ func SendSearchResults(factory *domain.Factory, args mapof.Any) queue.Result {
 			queue.WithPriority(200),
 		)
 
-		spew.Dump("..Task", task)
-
 		// Send the message to the queue
 		if err := queueService.Publish(task); err != nil {
 			return queue.Error(derp.Wrap(err, location, "Error sending message to queue"))
@@ -83,8 +75,6 @@ func SendSearchResults(factory *domain.Factory, args mapof.Any) queue.Result {
 
 		count++
 	}
-
-	spew.Dump(".. Sent to " + convert.String(count) + " followers")
 
 	// Woot woot!
 	return queue.Success()
