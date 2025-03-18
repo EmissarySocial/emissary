@@ -31,14 +31,14 @@ func TestLocator(t *testing.T) {
 	do("https://example.com/.search?types=Album&q=%23All", "SearchQuery", "?types=Album&q=%23All") // SearchQuery with query parameters
 
 	// Identify Usernames
-	do("acct:benpate@example.com", "User", "benpate")               // Username with acct: prefix
-	do("benpate@example.com", "User", "benpate")                    // Username without acct: prefix
-	do("@benpate@example.com", "User", "benpate")                   // Username with leading @
-	do("acct:@benpate@example.com", "User", "benpate")              // Username with acct: and leading @
-	do("acct:searchQuery_1234@example.com", "SearchQuery", "1234")  // SearchQuery with acct: prefix
-	do("searchQuery_1234@example.com", "SearchQuery", "1234")       // SearchQuery without acct: prefix
-	do("@searchQuery_1234@example.com", "SearchQuery", "1234")      // SearchQuery with leading @
-	do("acct:@searchQuery_1234@example.com", "SearchQuery", "1234") // SearchQuery with acct: and leading @
+	do("acct:benpate@example.com", "User", "benpate")          // Username with acct: prefix
+	do("benpate@example.com", "User", "benpate")               // Username without acct: prefix
+	do("@benpate@example.com", "User", "benpate")              // Username with leading @
+	do("acct:@benpate@example.com", "User", "benpate")         // Username with acct: and leading @
+	do("acct:search-1234@example.com", "SearchQuery", "1234")  // SearchQuery with acct: prefix
+	do("search-1234@example.com", "SearchQuery", "1234")       // SearchQuery without acct: prefix
+	do("@search-1234@example.com", "SearchQuery", "1234")      // SearchQuery with leading @
+	do("acct:@search-1234@example.com", "SearchQuery", "1234") // SearchQuery with acct: and leading @
 
 	do("service@example.com", "Service", "")  // Service account
 	do("@service@example.com", "Service", "") // Service account with leading @
