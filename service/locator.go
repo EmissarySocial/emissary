@@ -1,14 +1,12 @@
 package service
 
 import (
-	"net/url"
 	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
 	"github.com/benpate/domain"
-	"github.com/benpate/rosetta/list"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -33,6 +31,7 @@ func (service *Locator) Refresh(domainService *Domain, searchQueryService *Searc
 	service.host = host
 }
 
+// GetWebFingerResult returns a digit.Resource object based on the provided resource string.
 func (service *Locator) GetWebFingerResult(resource string) (digit.Resource, error) {
 
 	const location = "service.Locator.GetWebFingerResult"
@@ -62,26 +61,11 @@ func (service *Locator) GetObjectFromURL(value string) (string, primitive.Object
 
 	const location = "service.Locator.GetObjectFromURL"
 
-	// Parse and validate the URL
-	parsedURL, err := url.Parse(value)
-
-	if err != nil {
-		return "", primitive.NilObjectID, derp.Wrap(err, location, "Invalid URL", value)
-	}
-
-	if parsedURL.Host != service.host {
-		return "", primitive.NilObjectID, derp.NewBadRequestError(location, "Invalid Host", parsedURL.Host)
-	}
-
-	// Look up the object/type
-	class, token := getObjectFromURL(parsedURL)
-
-	if token == "" {
-		return "", primitive.NilObjectID, derp.Wrap(err, location, "Invalid URL", value)
-	}
+	objectType, token := locateObjectFromURL(service.host, value)
 
 	// Verify database records
-	switch class {
+	switch objectType {
+
 	case "User":
 
 		user := model.NewUser()
@@ -105,27 +89,7 @@ func (service *Locator) GetObjectFromURL(value string) (string, primitive.Object
 	}
 
 	// Fall through is failure.  Feel bad.
-	return "", primitive.NilObjectID, derp.NewBadRequestError(location, "Invalid Object Type", class)
-}
-
-// getObjectFromURL parses a URL, determines what kind of object it is, and extracts the objectID
-func getObjectFromURL(value *url.URL) (string, string) {
-
-	path := strings.TrimPrefix(value.Path, "/")
-	token := list.Slash(path).First()
-
-	// Empty token the default page
-	if token == "" {
-		return "Stream", "home"
-	}
-
-	// Token starting with "@" is a user
-	if strings.HasPrefix(token, "@") {
-		return "User", strings.TrimPrefix(token, "@")
-	}
-
-	// Otherwise, it's a stream
-	return "Stream", token
+	return "", primitive.NilObjectID, derp.NewBadRequestError(location, "Invalid Object Type", objectType)
 }
 
 // locateObjectFromURL parses a URL, determines what type of object it is,
@@ -164,8 +128,19 @@ func locateObjectFromURL(host string, value string) (string, string) {
 		// Remove leading slash (if present)
 		value = strings.TrimPrefix(value, "/")
 
-		// Remove query parameters (if present)
+		// Identify SearchQuery URLs (including query parameters)
+		if value, found := strings.CutPrefix(value, ".search?"); found {
+			return "SearchQuery", "?" + value
+		}
+
+		// For remaining types, remove query parameters (if present)
 		value, _, _ = strings.Cut(value, "?")
+
+		// Identify SearchQuery URLs (with tokens)
+		if value, found := strings.CutPrefix(value, ".search/"); found {
+			value, _, _ = strings.Cut(value, "/")
+			return "SearchQuery", value
+		}
 
 		// Special case for "Service" account
 		if value == "@service" {
@@ -175,12 +150,6 @@ func locateObjectFromURL(host string, value string) (string, string) {
 		// Special case for "Service" account
 		if value == "" {
 			return "Service", ""
-		}
-
-		// Identify SearchQuery URLs
-		if value, found := strings.CutPrefix(value, ".search/"); found {
-			value, _, _ = strings.Cut(value, "/")
-			return "SearchQuery", value
 		}
 
 		// Identify User URLs

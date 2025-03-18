@@ -376,8 +376,25 @@ func (service *SearchQuery) WebFinger(token string) (digit.Resource, error) {
 
 	// Load the SearchQuery from the database
 	searchQuery := model.NewSearchQuery()
-	if err := service.LoadByToken(token, &searchQuery); err != nil {
-		return digit.Resource{}, derp.NewBadRequestError(location, "Invalid Token", token)
+
+	// If the token begins with a question mark, then it's a query string
+	// and we need to parse this into a SearchQuery.
+	if token, found := strings.CutPrefix(token, "?"); found {
+
+		queryValues, err := url.ParseQuery(token)
+
+		if err != nil {
+			return digit.Resource{}, derp.NewBadRequestError(location, "Invalid Query String", token)
+		}
+
+		if _, err := service.LoadOrCreate(queryValues); err != nil {
+			return digit.Resource{}, derp.Wrap(err, location, "Error loading SearchQuery", queryValues)
+		}
+
+	} else {
+		if err := service.LoadByToken(token, &searchQuery); err != nil {
+			return digit.Resource{}, derp.NewBadRequestError(location, "Invalid Token", token)
+		}
 	}
 
 	username := service.ActivityPubUsername(searchQuery.SearchQueryID)
