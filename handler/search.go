@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/steranko"
 	"github.com/benpate/turbine/queue"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // IndexAllStreams is a handler function that triggers the IndexAllStreams queue task.
@@ -58,4 +59,24 @@ func IndexAllUsers(ctx *steranko.Context, factory *domain.Factory) error {
 
 	// Success.
 	return ctx.NoContent(http.StatusOK)
+}
+
+func PostSearchLookup(ctx *steranko.Context, factory *domain.Factory) error {
+
+	const location = "handler.PostSearchLookup"
+
+	// Load the Stream from the database
+	searchQueryService := factory.SearchQuery()
+	searchQuery, err := searchQueryService.LoadOrCreate(ctx.Request().URL.Query())
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error creating search query token")
+	}
+
+	forward := ctx.QueryParam("forward") + searchQueryService.ActivityPubURL(searchQuery.SearchQueryID)
+
+	spew.Dump("PostSearchLookup ---------------------", ctx.Request().URL.Query(), searchQuery, forward)
+
+	// Redirect to the new location, using a GET request.
+	return ctx.Redirect(http.StatusSeeOther, forward)
 }
