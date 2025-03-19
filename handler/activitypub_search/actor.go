@@ -21,19 +21,20 @@ func GetJSONLD(ctx *steranko.Context, factory *domain.Factory, template *model.T
 	}
 
 	searchQueryService := factory.SearchQuery()
-	actorID := searchQueryService.ActivityPubURL(searchQuery.SearchQueryID)
+	searchQueryID := searchQuery.SearchQueryID
+	actorID := searchQueryService.ActivityPubURL(searchQueryID)
 
 	// Return the result as a JSON-LD document
 	result := map[string]any{
 		vocab.AtContext:                []any{vocab.ContextTypeActivityStreams, vocab.ContextTypeSecurity, vocab.ContextTypeToot},
 		vocab.PropertyType:             vocab.ActorTypeService,
-		vocab.PropertyID:               searchQuery.ActivityPubURL(),
-		vocab.PropertyURL:              searchQuery.ActivityPubProfileURL(),
-		vocab.PropertyName:             searchQuery.ActivityPubName(),
-		vocab.PropertyInbox:            searchQuery.ActivityPubInboxURL(),
-		vocab.PropertyOutbox:           searchQuery.ActivityPubOutboxURL(),
-		vocab.PropertyFollowers:        searchQuery.ActivityPubFollowersURL(),
-		vocab.PropertyFollowing:        searchQuery.ActivityPubFollowingURL(),
+		vocab.PropertyID:               searchQueryService.ActivityPubURL(searchQueryID),
+		vocab.PropertyURL:              searchQueryService.ActivityPubProfileURL(searchQuery),
+		vocab.PropertyName:             searchQueryService.ActivityPubName(searchQuery),
+		vocab.PropertyInbox:            searchQueryService.ActivityPubInboxURL(searchQueryID),
+		vocab.PropertyOutbox:           searchQueryService.ActivityPubOutboxURL(searchQueryID),
+		vocab.PropertyFollowers:        searchQueryService.ActivityPubFollowersURL(searchQueryID),
+		vocab.PropertyFollowing:        searchQueryService.ActivityPubFollowingURL(searchQueryID),
 		vocab.PropertyTootDiscoverable: false,
 		vocab.PropertyTootIndexable:    false,
 

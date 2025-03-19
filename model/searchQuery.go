@@ -10,7 +10,6 @@ import (
 	"github.com/EmissarySocial/emissary/tools/parse"
 	"github.com/EmissarySocial/emissary/tools/sorted"
 	"github.com/benpate/data/journal"
-	"github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
@@ -215,48 +214,4 @@ func (searchQuery *SearchQuery) MakeSignature() {
 
 	// Save the signed value to the SearchQuery and GTFO.
 	searchQuery.Signature = signature
-}
-
-/******************************************
- * ActivityPub Methods
- ******************************************/
-
-func (searchQuery SearchQuery) ActivityPubURL() string {
-	return searchQuery.host() + "/@search-" + searchQuery.SearchQueryID.Hex()
-}
-
-func (searchQuery SearchQuery) ActivityPubProfileURL() string {
-	return searchQuery.URL
-}
-
-func (searchQuery SearchQuery) ActivityPubUsername() string {
-	return "search-" + searchQuery.SearchQueryID.Hex()
-}
-
-func (searchQuery SearchQuery) ActivityPubName() string {
-	return searchQuery.Query + " on " + searchQuery.host()
-}
-
-func (searchQuery SearchQuery) ActivityPubInboxURL() string {
-	return searchQuery.ActivityPubURL() + "/pub/inbox"
-}
-
-func (searchQuery SearchQuery) ActivityPubOutboxURL() string {
-	return searchQuery.ActivityPubURL() + "/pub/outbox"
-}
-
-func (searchQuery SearchQuery) ActivityPubFollowersURL() string {
-	return searchQuery.ActivityPubURL() + "/pub/followers"
-}
-
-func (searchQuery SearchQuery) ActivityPubFollowingURL() string {
-	return searchQuery.ActivityPubURL() + "/pub/following"
-}
-
-/******************************************
- * Helper Methods
- ******************************************/
-
-func (searchQuery SearchQuery) host() string {
-	return domain.NameOnly(searchQuery.URL)
 }

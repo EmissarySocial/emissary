@@ -328,6 +328,10 @@ func (service *SearchQuery) ActivityPubURL(searchQueryID primitive.ObjectID) str
 	return service.host + "/@search-" + searchQueryID.Hex()
 }
 
+func (service *SearchQuery) ActivityPubProfileURL(searchQuery *model.SearchQuery) string {
+	return searchQuery.URL
+}
+
 func (service *SearchQuery) ActivityPubUsername(searchQueryID primitive.ObjectID) string {
 	return "search-" + searchQueryID.Hex()
 }
@@ -396,7 +400,8 @@ func (service *SearchQuery) WebFinger(token string) (digit.Resource, error) {
 	// Make a WebFinger resource for this user.
 	result := digit.NewResource("acct:"+usernameWithHost).
 		Alias(service.ActivityPubURL(searchQuery.SearchQueryID)).
-		Link(digit.RelationTypeSelf, model.MimeTypeActivityPub, service.ActivityPubURL(searchQuery.SearchQueryID))
+		Link(digit.RelationTypeSelf, model.MimeTypeActivityPub, service.ActivityPubURL(searchQuery.SearchQueryID)).
+		Link(digit.RelationTypeProfile, model.MimeTypeHTML, service.ActivityPubProfileURL(&searchQuery))
 
 	return result, nil
 }

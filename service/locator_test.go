@@ -35,10 +35,10 @@ func TestLocator(t *testing.T) {
 	do("@benpate@example.com", "User", "benpate")      // Username with leading @
 	do("acct:@benpate@example.com", "User", "benpate") // Username with acct: and leading @
 
-	do("acct:search-1234@example.com", "SearchQuery", "1234")  // SearchQuery with acct: prefix
-	do("search-1234@example.com", "SearchQuery", "1234")       // SearchQuery without acct: prefix
-	do("@search-1234@example.com", "SearchQuery", "1234")      // SearchQuery with leading @
-	do("acct:@search-1234@example.com", "SearchQuery", "1234") // SearchQuery with acct: and leading @
+	do("acct:search-12345678@example.com", "SearchQuery", "12345678")  // SearchQuery with acct: prefix
+	do("search-12345678@example.com", "SearchQuery", "12345678")       // SearchQuery without acct: prefix
+	do("@search-12345678@example.com", "SearchQuery", "12345678")      // SearchQuery with leading @
+	do("acct:@search-12345678@example.com", "SearchQuery", "12345678") // SearchQuery with acct: and leading @
 
 	do("service@example.com", "Service", "")  // Service account
 	do("@service@example.com", "Service", "") // Service account with leading @
