@@ -257,15 +257,13 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	// Migrate calls to this to a more direct route.
 
 	// ActivityPub Routes for Search Results
-	e.GET("/.search", handler.WithSearchQuery(factory, ap_search.GetJSONLD))
-	e.GET("/.search/:searchId", handler.WithSearchQuery(factory, ap_search.GetJSONLD))
+	e.POST("/.searchQuery", handler.WithFactory(factory, handler.PostSearchLookup))
 	e.GET("/@search-:searchId", handler.WithSearchQuery(factory, ap_search.GetJSONLD))
 	e.POST("/@search-:searchId/pub/followers", handler.WithFactory(factory, handler.GetEmptyCollection))
 	e.POST("/@search-:searchId/pub/following", handler.WithFactory(factory, handler.GetEmptyCollection))
 	e.GET("/@search-:searchId/pub/inbox", handler.WithFactory(factory, handler.GetEmptyCollection))
 	e.POST("/@search-:searchId/pub/inbox", handler.WithSearchQuery(factory, ap_search.PostInbox))
 	e.GET("/@search-:searchId/pub/outbox", handler.WithSearchQuery(factory, ap_search.GetOutboxCollection))
-	e.POST("/.search-lookup", handler.WithFactory(factory, handler.PostSearchLookup))
 
 	// Authentication Pages
 	e.GET("/signin", handler.WithFactory(factory, handler.GetSignIn))
