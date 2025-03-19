@@ -24,6 +24,9 @@ func GetJSONLD(ctx *steranko.Context, factory *domain.Factory, template *model.T
 	searchQueryID := searchQuery.SearchQueryID
 	actorID := searchQueryService.ActivityPubURL(searchQueryID)
 
+	// Build the actor description
+	summary := `This is an automated search query on the server: ` + factory.Hostname() + ` that announces new search results as they are received.  <a href="` + searchQueryService.ActivityPubProfileURL(searchQuery) + `">View the full collection on ` + factory.Hostname() + `</a>.`
+
 	// Return the result as a JSON-LD document
 	result := map[string]any{
 		vocab.AtContext:                 []any{vocab.ContextTypeActivityStreams, vocab.ContextTypeSecurity, vocab.ContextTypeToot},
@@ -32,6 +35,7 @@ func GetJSONLD(ctx *steranko.Context, factory *domain.Factory, template *model.T
 		vocab.PropertyURL:               searchQueryService.ActivityPubProfileURL(searchQuery),
 		vocab.PropertyPreferredUsername: searchQueryService.ActivityPubUsername(searchQueryID),
 		vocab.PropertyName:              searchQueryService.ActivityPubName(searchQuery),
+		vocab.PropertySummary:           summary,
 		vocab.PropertyInbox:             searchQueryService.ActivityPubInboxURL(searchQueryID),
 		vocab.PropertyOutbox:            searchQueryService.ActivityPubOutboxURL(searchQueryID),
 		vocab.PropertyFollowers:         searchQueryService.ActivityPubFollowersURL(searchQueryID),
