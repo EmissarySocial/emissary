@@ -5,10 +5,10 @@ import (
 
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/benpate/derp"
+	domainTools "github.com/benpate/domain"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/steranko"
 	"github.com/benpate/turbine/queue"
-	"github.com/davecgh/go-spew/spew"
 )
 
 // IndexAllStreams is a handler function that triggers the IndexAllStreams queue task.
@@ -65,6 +65,17 @@ func PostSearchLookup(ctx *steranko.Context, factory *domain.Factory) error {
 
 	const location = "handler.PostSearchLookup"
 
+	// Collect and validate the referer/URL
+	referer := ctx.Request().Header.Get("referer")
+
+	if referer == "" {
+		return derp.New(http.StatusForbidden, location, "No referer", referer)
+	}
+
+	if domainTools.NameOnly(referer) != factory.Hostname() {
+		return derp.New(http.StatusForbidden, location, "Invalid referer", referer)
+	}
+
 	// Load the Stream from the database
 	searchQueryService := factory.SearchQuery()
 	searchQuery, err := searchQueryService.LoadOrCreate(ctx.Request().URL.Query())
@@ -73,10 +84,15 @@ func PostSearchLookup(ctx *steranko.Context, factory *domain.Factory) error {
 		return derp.Wrap(err, location, "Error creating search query token")
 	}
 
-	forward := ctx.QueryParam("forward") + searchQueryService.ActivityPubURL(searchQuery.SearchQueryID)
-
-	spew.Dump("PostSearchLookup ---------------------", ctx.Request().URL.Query(), searchQuery, forward)
+	// Set the referer/URL if it's not already set
+	if searchQuery.URL == "" {
+		searchQuery.URL = referer
+		if err := searchQueryService.Save(&searchQuery, "Set source URL"); err != nil {
+			return derp.Wrap(err, location, "Error applying URL to search query")
+		}
+	}
 
 	// Redirect to the new location, using a GET request.
+	forward := ctx.QueryParam("forward") + searchQueryService.ActivityPubURL(searchQuery.SearchQueryID)
 	return ctx.Redirect(http.StatusSeeOther, forward)
 }
