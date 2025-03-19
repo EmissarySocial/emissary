@@ -324,16 +324,16 @@ func (service *SearchQuery) ActivityPubActor(searchQueryID primitive.ObjectID, w
 	return actor, nil
 }
 
+func (service *SearchQuery) ActivityPubUsername(searchQueryID primitive.ObjectID) string {
+	return "search_" + searchQueryID.Hex()
+}
+
 func (service *SearchQuery) ActivityPubURL(searchQueryID primitive.ObjectID) string {
-	return service.host + "/@search-" + searchQueryID.Hex()
+	return service.host + "/@" + service.ActivityPubUsername(searchQueryID)
 }
 
 func (service *SearchQuery) ActivityPubProfileURL(searchQuery *model.SearchQuery) string {
 	return searchQuery.URL
-}
-
-func (service *SearchQuery) ActivityPubUsername(searchQueryID primitive.ObjectID) string {
-	return "search-" + searchQueryID.Hex()
 }
 
 func (service *SearchQuery) ActivityPubName(searchQuery *model.SearchQuery) string {

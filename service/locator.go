@@ -114,7 +114,7 @@ func locateObjectFromURL(host string, value string) (string, string) {
 		}
 
 		// Special case for SearchQuery objects
-		if value, found := strings.CutPrefix(value, "search-"); found {
+		if value, found := strings.CutPrefix(value, "search_"); found {
 			return "SearchQuery", value
 		}
 
@@ -140,7 +140,7 @@ func locateObjectFromURL(host string, value string) (string, string) {
 		}
 
 		// Identify SearchQuery URLs
-		if value, found := strings.CutPrefix(value, "@search-"); found {
+		if value, found := strings.CutPrefix(value, "@search_"); found {
 			return "SearchQuery", value
 		}
 
