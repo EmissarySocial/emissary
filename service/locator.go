@@ -125,31 +125,23 @@ func locateObjectFromURL(host string, value string) (string, string) {
 	// Identify URL-type values
 	if value, found := strings.CutPrefix(value, host); found {
 
-		// Remove leading slash (if present)
+		// Remove leading slash and query params (if present)
 		value = strings.TrimPrefix(value, "/")
-
-		// Identify SearchQuery URLs (including query parameters)
-		if value, found := strings.CutPrefix(value, ".search?"); found {
-			return "SearchQuery", "?" + value
-		}
-
-		// For remaining types, remove query parameters (if present)
 		value, _, _ = strings.Cut(value, "?")
+		value, _, _ = strings.Cut(value, "/")
 
-		// Identify SearchQuery URLs (with tokens)
-		if value, found := strings.CutPrefix(value, ".search/"); found {
-			value, _, _ = strings.Cut(value, "/")
-			return "SearchQuery", value
+		// Special case for "Service" account
+		if value == "" {
+			return "Service", ""
 		}
-
 		// Special case for "Service" account
 		if value == "@service" {
 			return "Service", ""
 		}
 
-		// Special case for "Service" account
-		if value == "" {
-			return "Service", ""
+		// Identify SearchQuery URLs
+		if value, found := strings.CutPrefix(value, "@search-"); found {
+			return "SearchQuery", value
 		}
 
 		// Identify User URLs
@@ -159,7 +151,6 @@ func locateObjectFromURL(host string, value string) (string, string) {
 		}
 
 		// Trim off any trailing path data
-		value, _, _ = strings.Cut(value, "/")
 		return "Stream", value
 	}
 

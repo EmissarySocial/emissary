@@ -23,18 +23,18 @@ func TestLocator(t *testing.T) {
 	do("https://example.com/token/", "Stream", "token")      // Stream by token (with trailing slash)
 	do("https://example.com/token/route", "Stream", "token") // Stream by token (with trailing route)
 
+	do("https://example.com/@search-1234", "SearchQuery", "1234") // SearchQuery by ID
+
 	do("https://example.com/@1234", "User", "1234")                      // User by ID
 	do("https://example.com/@username", "User", "username")              // User by username
 	do("https://example.com/@username/other-routes", "User", "username") // User by username (with trailing route)
 
-	do("https://example.com/.search/1234", "SearchQuery", "1234")                                  // SearchQuery by ID
-	do("https://example.com/.search?types=Album&q=%23All", "SearchQuery", "?types=Album&q=%23All") // SearchQuery with query parameters
-
 	// Identify Usernames
-	do("acct:benpate@example.com", "User", "benpate")          // Username with acct: prefix
-	do("benpate@example.com", "User", "benpate")               // Username without acct: prefix
-	do("@benpate@example.com", "User", "benpate")              // Username with leading @
-	do("acct:@benpate@example.com", "User", "benpate")         // Username with acct: and leading @
+	do("acct:benpate@example.com", "User", "benpate")  // Username with acct: prefix
+	do("benpate@example.com", "User", "benpate")       // Username without acct: prefix
+	do("@benpate@example.com", "User", "benpate")      // Username with leading @
+	do("acct:@benpate@example.com", "User", "benpate") // Username with acct: and leading @
+
 	do("acct:search-1234@example.com", "SearchQuery", "1234")  // SearchQuery with acct: prefix
 	do("search-1234@example.com", "SearchQuery", "1234")       // SearchQuery without acct: prefix
 	do("@search-1234@example.com", "SearchQuery", "1234")      // SearchQuery with leading @
