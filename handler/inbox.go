@@ -47,7 +47,7 @@ func buildInbox(serverFactory *server.Factory, actionMethod build.ActionMethod) 
 			return derp.Wrap(err, location, "Error loading user", authorization.UserID)
 		}
 
-		// Try to load the User's Outbox
+		// Try to load the User's Inbox
 		actionID := first.String(ctx.Param("action"), "inbox")
 
 		if ok, err := handleJSONLD(ctx, &user); ok {

@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/EmissarySocial/emissary/domain"
+	activitypub "github.com/EmissarySocial/emissary/handler/activitypub_user"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
@@ -225,6 +226,11 @@ func WithUserForwarding(serverFactory *server.Factory, fn WithFunc1[model.User])
 
 		if err := userService.LoadByToken(userID, &user); err != nil {
 			return derp.Wrap(err, location, "Error loading user from database")
+		}
+
+		// If this is a JSON-LD request, then skip the forwarding and just return the User
+		if isJSONLDRequest(ctx) {
+			return activitypub.RenderProfileJSONLD(ctx, factory, &user)
 		}
 
 		// If this is actually an objectID/userID

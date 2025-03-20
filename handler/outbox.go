@@ -5,7 +5,6 @@ import (
 
 	"github.com/EmissarySocial/emissary/build"
 	"github.com/EmissarySocial/emissary/domain"
-	activitypub "github.com/EmissarySocial/emissary/handler/activitypub_user"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/EmissarySocial/emissary/tools/formdata"
@@ -93,10 +92,6 @@ func buildOutbox(ctx *steranko.Context, factory *domain.Factory, user *model.Use
 		return derp.NewNotFoundError("handler.buildOutbox", "User not found")
 	}
 
-	if isJSONLDRequest(ctx) {
-		return activitypub.RenderProfileJSONLD(ctx, factory, user)
-	}
-
 	// Try to load the User's Outbox
 	actionID := first.String(ctx.Param("action"), "view")
 
@@ -111,10 +106,6 @@ func buildOutbox(ctx *steranko.Context, factory *domain.Factory, user *model.Use
 				}
 			}
 		}
-	}
-
-	if ok, err := handleJSONLD(ctx, user); ok {
-		return derp.Wrap(err, location, "Error building JSON-LD")
 	}
 
 	builder, err := build.NewOutbox(factory, ctx.Request(), ctx.Response(), user, actionID)
