@@ -228,7 +228,7 @@ func (user User) GetJSONLD() mapof.Any {
 		vocab.AtContext:                 sliceof.Any{vocab.ContextTypeActivityStreams, vocab.ContextTypeSecurity, vocab.ContextTypeToot},
 		vocab.PropertyID:                user.ActivityPubURL(),
 		vocab.PropertyType:              vocab.ActorTypePerson,
-		vocab.PropertyURL:               user.ProfileURL,
+		vocab.PropertyURL:               user.Host() + "/@" + user.Username,
 		vocab.PropertyName:              user.DisplayName,
 		vocab.PropertyPreferredUsername: user.Username,
 		vocab.PropertyTootDiscoverable:  true,
