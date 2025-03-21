@@ -9,7 +9,7 @@
 	schema: {type: "object", properties: {
 		connections: {type: "object", properties: {
 			stripe_isActive: {type:"string", enum:["true", "false"], default:"false"}
-			stripe_apiKey: {type:"string", format:"token", minlength:32, maxlength:32}
+			stripe_apiKey: {type:"string", format:"token", minLength:32, maxLength:32}
 			stripe_webhook_secret: {type:"string", format:"token"}
 		}}
 	}}
