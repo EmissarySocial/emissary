@@ -15,9 +15,9 @@ func TestLocator(t *testing.T) {
 	}
 
 	// Identify URLs
-	do("https://example.com", "Service", "")          // Special case for service account
-	do("https://example.com/", "Service", "")         // Special case for service account with trailing slash
-	do("https://example.com/@service", "Service", "") // Service account
+	do("https://example.com", "Application", "")              // Special case for service account
+	do("https://example.com/", "Application", "")             // Special case for service account with trailing slash
+	do("https://example.com/@application", "Application", "") // Service account
 
 	do("https://example.com/1234", "Stream", "1234")         // Stream by ID
 	do("https://example.com/token/", "Stream", "token")      // Stream by token (with trailing slash)
@@ -40,6 +40,6 @@ func TestLocator(t *testing.T) {
 	do("@search_12345678@example.com", "SearchQuery", "12345678")      // SearchQuery with leading @
 	do("acct:@search_12345678@example.com", "SearchQuery", "12345678") // SearchQuery with acct: and leading @
 
-	do("service@example.com", "Service", "")  // Service account
-	do("@service@example.com", "Service", "") // Service account with leading @
+	do("application@example.com", "Application", "")  // Service account
+	do("@application@example.com", "Application", "") // Service account with leading @
 }

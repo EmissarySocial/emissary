@@ -486,7 +486,7 @@ func (service *Domain) LoadWebFinger(username string) (digit.Resource, error) {
 		return digit.Resource{}, derp.NewBadRequestError(location, "Invalid username", username)
 	}
 
-	profileURL := domain.AddProtocol(service.hostname) + "/@service"
+	profileURL := domain.AddProtocol(service.hostname) + "/@application"
 
 	// Make a WebFinger resource for this user.
 	result := digit.NewResource("acct:service@"+service.hostname).

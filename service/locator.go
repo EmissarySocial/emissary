@@ -49,7 +49,7 @@ func (service *Locator) GetWebFingerResult(resource string) (digit.Resource, err
 	case "User":
 		return service.userService.WebFinger(token)
 
-	case "Service":
+	case "Application":
 		return service.domainService.WebFinger(), nil
 	}
 
@@ -108,9 +108,9 @@ func locateObjectFromURL(host string, value string) (string, string) {
 		value = strings.TrimPrefix(value, "acct:")
 		value = strings.TrimPrefix(value, "@")
 
-		// Special case for "service" account
-		if value == "service" {
-			return "Service", ""
+		// Special case for "Application" account
+		if value == "application" {
+			return "Application", ""
 		}
 
 		// Special case for SearchQuery objects
@@ -130,13 +130,13 @@ func locateObjectFromURL(host string, value string) (string, string) {
 		value, _, _ = strings.Cut(value, "?")
 		value, _, _ = strings.Cut(value, "/")
 
-		// Special case for "Service" account
+		// Special case for "Application" account
 		if value == "" {
-			return "Service", ""
+			return "Application", ""
 		}
-		// Special case for "Service" account
-		if value == "@service" {
-			return "Service", ""
+		// Special case for "Application" account
+		if value == "@application" {
+			return "Application", ""
 		}
 
 		// Identify SearchQuery URLs

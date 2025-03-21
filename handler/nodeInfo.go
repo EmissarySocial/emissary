@@ -30,6 +30,10 @@ func GetNodeInfo(serverFactory *server.Factory) echo.HandlerFunc {
 					"rel":  "http://nodeinfo.diaspora.software/ns/schema/2.1",
 					"href": server + "/.well-known/nodeinfo/2.1",
 				},
+				{
+					"rel":  "https://www.w3.org/ns/activitystreams#Application",
+					"href": server + "/@application",
+				},
 			},
 		}
 

@@ -299,13 +299,13 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 
 	// Profile Pages
 	// NOTE: these are rewritten from /@:userId by the rewrite middleware
-	e.GET("/@service", handler.GetServiceActor(factory))
-	e.POST("/@service/inbox", handler.PostServiceActor_Inbox(factory))
-	e.GET("/@service/inbox", handler.WithFactory(factory, handler.GetEmptyCollection))
-	e.GET("/@service/outbox", handler.WithFactory(factory, handler.GetEmptyCollection))
-	e.GET("/@service/following", handler.WithFactory(factory, handler.GetEmptyCollection))
-	e.GET("/@service/followers", handler.WithFactory(factory, handler.GetEmptyCollection))
-	e.GET("/@service/liked", handler.WithFactory(factory, handler.GetEmptyCollection))
+	e.GET("/@application", handler.WithFactory(factory, handler.GetServiceActor))
+	e.POST("/@application/inbox", handler.PostServiceActor_Inbox(factory))
+	e.GET("/@application/inbox", handler.WithFactory(factory, handler.GetEmptyCollection))
+	e.GET("/@application/outbox", handler.WithFactory(factory, handler.GetEmptyCollection))
+	e.GET("/@application/following", handler.WithFactory(factory, handler.GetEmptyCollection))
+	e.GET("/@application/followers", handler.WithFactory(factory, handler.GetEmptyCollection))
+	e.GET("/@application/liked", handler.WithFactory(factory, handler.GetEmptyCollection))
 
 	// Profile Pages for "me" only routes
 	e.GET("/@me", handler.WithAuthenticatedUser(factory, handler.ForwardMeURLs))
