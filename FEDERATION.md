@@ -55,6 +55,16 @@ Emissary can also parse MicroFormats as a feed when following a URL.
 
 Emisary implements a subset of the [Mastodon API](https://docs.joinmastodon.org/api/), allowing third-party Mastodon clients to interact with Emissary for all features commonly supported by both Emissary and Mastodon.
 
+## FEPs
+
+[Fediverse Enhancement Proposals](https://w3id.org/fep) are additional specifications, published by the Fediverse community, that extend the standard ActivityPub/ActivityStreams specs.  Emissary implements a number of FEPs, including but not limited to:
+
+* [FEP-3b86: Activity Intents](https://w3id.org/fep/3b86)
+* [FEP-C648: Blocked Collection](https://w3id.org/fep/c648)
+* [FEP-1b12: Group Federation](https://w3id.org/fep/1b12)
+* [FEP-2677: Identifying the Application Actor](https://w3id.org/fep/2677)
+* [FEP-67ff: FEDERATION.md](https://w3id.org/fep/67ff)
+
 ## Work In Progress
 
 This is a placeholder for writing FEDERATION.md documentation, similar to the entries listed here:
