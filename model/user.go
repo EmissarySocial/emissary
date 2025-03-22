@@ -408,5 +408,13 @@ func (user User) ActivityIntentProfile() mapof.Any {
 }
 
 func (user User) Host() string {
+
+	hostname := user.Hostname()
+
+	return domain.Protocol(hostname) + hostname
+}
+
+func (user User) Hostname() string {
+
 	return domain.NameOnly(user.ProfileURL)
 }
