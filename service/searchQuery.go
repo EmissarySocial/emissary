@@ -338,7 +338,12 @@ func (service *SearchQuery) ActivityPubProfileURL(searchQuery *model.SearchQuery
 
 func (service *SearchQuery) ActivityPubName(searchQuery *model.SearchQuery) string {
 	domain := service.domainService.Get()
-	return searchQuery.Query + " " + searchQuery.Types.Join(" and ") + " on " + domain.Label
+
+	if query := searchQuery.Query; query != "" {
+		return searchQuery.Query + " on " + domain.Label
+	} else {
+		return "Search everything " + domain.Label
+	}
 }
 
 func (service *SearchQuery) ActivityPubFollowersURL(searchQueryID primitive.ObjectID) string {
