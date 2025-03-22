@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"text/template"
 
+	"github.com/EmissarySocial/emissary/tools/templates"
 	"github.com/benpate/derp"
 )
 
@@ -18,7 +19,7 @@ func (m Map) Execute(name string, value any) string {
 		if err := template.Execute(&buffer, value); err == nil {
 			return buffer.String()
 		} else {
-			derp.Report(derp.Wrap(err, "tools.templatemap.Execute", "Error executing template", name))
+			derp.Report(derp.Wrap(err, "tools.templatemap.Execute", "Error executing template", name, value))
 		}
 	}
 
@@ -35,8 +36,10 @@ func (m *Map) UnmarshalJSON(data []byte) error {
 		return derp.Wrap(err, location, "Error unmarshalling JSON")
 	}
 
+	funcMap := templates.FuncMap(nil)
+
 	for key, value := range temp {
-		tmpl, err := template.New(key).Parse(value)
+		tmpl, err := template.New(key).Funcs(funcMap).Parse(value)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error parsing template", key)

@@ -10,6 +10,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/queries"
 	"github.com/EmissarySocial/emissary/tools/random"
+	"github.com/EmissarySocial/emissary/tools/sorted"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -107,16 +108,20 @@ func (service *SearchResult) Save(searchResult *model.SearchResult, note string)
 	}
 
 	// Normalize Tags
-	if _, tagValues, err := service.searchTagService.NormalizeTags(searchResult.Tags...); err == nil {
-		searchResult.Tags = tagValues
-		slices.Sort(searchResult.Tags)
-	} else {
+	_, tagValues, err := service.searchTagService.NormalizeTags(searchResult.Tags...)
+
+	if err != nil {
 		return derp.Wrap(err, location, "Error normalizing tags", searchResult)
 	}
 
+	// Make Tags Index
+	slices.Sort(tagValues)
+	searchResult.Tags = sorted.Unique(tagValues)
+
 	// Make Text Index
-	searchResult.Index = TextIndex(searchResult.Text)
-	slices.Sort(searchResult.Index)
+	textIndex := TextIndex(searchResult.Text)
+	slices.Sort(textIndex)
+	searchResult.Index = sorted.Unique(textIndex)
 
 	// Reindex this Search in 30 days
 	searchResult.ReIndexDate = time.Now().Add(time.Hour * 24 * 30).Unix()

@@ -153,6 +153,7 @@ func (searchResult SearchResult) Fields() []string {
 		"summary",
 		"date",
 		"shuffle",
+		"createDate",
 	}
 }
 
