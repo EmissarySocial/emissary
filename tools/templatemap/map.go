@@ -5,11 +5,15 @@ import (
 	"encoding/json"
 	"text/template"
 
-	"github.com/EmissarySocial/emissary/tools/templates"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/funcmap"
 )
 
 type Map map[string]*template.Template
+
+func New() Map {
+	return make(Map)
+}
 
 // Execute executes the named template with the specified value, and returns the result as a string.
 func (m Map) Execute(name string, value any) string {
@@ -36,7 +40,7 @@ func (m *Map) UnmarshalJSON(data []byte) error {
 		return derp.Wrap(err, location, "Error unmarshalling JSON")
 	}
 
-	funcMap := templates.FuncMap(nil)
+	funcMap := funcmap.All()
 
 	for key, value := range temp {
 		tmpl, err := template.New(key).Funcs(funcMap).Parse(value)
