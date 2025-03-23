@@ -30,9 +30,9 @@ func GetServiceActor(ctx *steranko.Context, factory *domain.Factory) error {
 	// Return the result as a JSON-LD document
 	result := map[string]any{
 		vocab.AtContext:                 []any{vocab.ContextTypeActivityStreams, vocab.ContextTypeSecurity, vocab.ContextTypeToot},
-		vocab.PropertyType:              vocab.ActorTypeService,
+		vocab.PropertyType:              vocab.ActorTypeApplication,
 		vocab.PropertyID:                actorID,
-		vocab.PropertyPreferredUsername: "service",
+		vocab.PropertyPreferredUsername: "application",
 		vocab.PropertyName:              domainService.Hostname(),
 		vocab.PropertyFollowing:         actorID + "/following",
 		vocab.PropertyFollowers:         actorID + "/followers",
