@@ -110,10 +110,13 @@ func (step StepViewFeed) detectMimeType(builder Builder) string {
 
 	// First, try to get the format from the query string
 	switch builder.QueryParam("format") {
+
 	case "json":
 		return model.MimeTypeJSONFeed
+
 	case "atom":
 		return model.MimeTypeAtom
+
 	case "rss":
 		return model.MimeTypeRSS
 	}
@@ -126,7 +129,7 @@ func (step StepViewFeed) detectMimeType(builder Builder) string {
 	}
 
 	// Finally, use JSONFeed as the default
-	return model.MimeTypeJSONFeed
+	return model.MimeTypeRSS
 }
 
 func (step StepViewFeed) asJSONFeed(builder Builder, buffer io.Writer, children data.Iterator) PipelineBehavior {
