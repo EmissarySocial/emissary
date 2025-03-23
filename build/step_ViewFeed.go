@@ -84,11 +84,11 @@ func (step StepViewFeed) Get(builder Builder, buffer io.Writer) PipelineBehavior
 		switch mimeType {
 
 		case model.MimeTypeAtom:
-			mimeType = "application/atom+xml; charset=UTF=8"
+			mimeType = "application/atom+xml; charset=UTF-8"
 			xml, err = result.ToAtom()
 
 		default:
-			mimeType = "application/rss+xml; charset=UTF=8"
+			mimeType = "application/rss+xml; charset=UTF-8"
 			xml, err = result.ToRss()
 		}
 
