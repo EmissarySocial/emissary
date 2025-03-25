@@ -1011,6 +1011,7 @@ func (service *Stream) SearchResult(stream *model.Stream) model.SearchResult {
 				result.IconURL = firstOf(template.SearchOptions.Execute("iconUrl", stream), stream.IconURL)
 				result.Text = template.SearchOptions.Execute("text", stream)
 				result.Date = stream.StartDate.Time
+				result.Local = true
 
 				if place := stream.Places.First(); place.NotEmpty() {
 					result.Place = place.GeoJSON()

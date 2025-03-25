@@ -837,6 +837,7 @@ func (service *User) SearchResult(user *model.User) model.SearchResult {
 		result.IconURL = user.ActivityPubIconURL()
 		result.Tags = user.Hashtags
 		result.Text = user.DisplayName + " " + user.Username + " " + strings.Join(user.Hashtags, " ")
+		result.Local = true
 
 		return result
 	}

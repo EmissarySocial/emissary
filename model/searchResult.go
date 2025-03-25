@@ -30,6 +30,7 @@ type SearchResult struct {
 	NotifiedDate   int64              `bson:"notifiedDate"`           // NotifiedDate is the data that followers were notified of this SearchResult.
 	Rank           int64              `bson:"rank"`                   // Rank is the rank of this SearchResult in the search index.
 	Shuffle        int64              `bson:"shuffle"`                // Shuffle is a random number used to shuffle the search results.
+	Local          bool               `bson:"local"`                  // Local is true if this SearchResult originates on the local server.  Only local SearchResults will be syndicated to external servers.
 
 	journal.Journal `bson:",inline"`
 }

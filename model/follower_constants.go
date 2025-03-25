@@ -1,5 +1,8 @@
 package model
 
+// FollowerTypeDomain represents a Follower that is following a Global Domain Query
+const FollowerTypeDomain = "Domain"
+
 // FollowerTypeStream represents a Follower that is following a Stream
 const FollowerTypeStream = "Stream"
 

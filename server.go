@@ -19,6 +19,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/handler"
+	ap_domain "github.com/EmissarySocial/emissary/handler/activitypub_domain"
 	ap_search "github.com/EmissarySocial/emissary/handler/activitypub_search"
 	ap_stream "github.com/EmissarySocial/emissary/handler/activitypub_stream"
 	ap_user "github.com/EmissarySocial/emissary/handler/activitypub_user"
@@ -256,7 +257,14 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	// TODO: LOW: .ostatus/tunnel is no longer necessary because we're using the right cookie settings now.
 	// Migrate calls to this to a more direct route.
 
-	// ActivityPub Routes for Search Results
+	// ActivityPub Routes for Global Search Actor
+	e.GET("/@search", handler.WithFactory(factory, ap_domain.GetJSONLD))
+	e.POST("/@search/pub/followers", handler.WithFactory(factory, handler.GetEmptyCollection))
+	e.POST("/@search/pub/following", handler.WithFactory(factory, handler.GetEmptyCollection))
+	e.POST("/@search/pub/inbox", handler.WithFactory(factory, ap_domain.PostInbox))
+	e.GET("/@search/pub/outbox", handler.WithFactory(factory, ap_domain.GetOutboxCollection))
+
+	// ActivityPub Routes for Search Queries
 	e.POST("/.searchQuery", handler.WithFactory(factory, handler.PostSearchLookup))
 	e.GET("/@search_:searchId", handler.WithSearchQuery(factory, ap_search.GetJSONLD))
 	e.POST("/@search_:searchId/pub/followers", handler.WithFactory(factory, handler.GetEmptyCollection))

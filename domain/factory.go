@@ -72,6 +72,7 @@ type Factory struct {
 	outboxService         service.Outbox
 	responseService       service.Response
 	ruleService           service.Rule
+	searchDomainService   service.SearchDomain
 	searchNotifierService service.SearchNotifier
 	searchQueryService    service.SearchQuery
 	searchTagService      service.SearchTag
@@ -146,6 +147,7 @@ func NewFactory(domain config.Domain, port string, providers []config.Provider, 
 	factory.outboxService = service.NewOutbox()
 	factory.responseService = service.NewResponse()
 	factory.ruleService = service.NewRule()
+	factory.searchDomainService = service.NewSearchDomain()
 	factory.searchNotifierService = service.NewSearchNotifier()
 	factory.searchQueryService = service.NewSearchQuery()
 	factory.searchResultService = service.NewSearchResult()
@@ -366,6 +368,18 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.Host(),
 		)
 
+		// Populate the SearchDomain Service
+		factory.searchDomainService.Refresh(
+			factory.collection(CollectionSearchQuery),
+			factory.Domain(),
+			factory.Follower(),
+			factory.Rule(),
+			factory.SearchTag(),
+			factory.ActivityStream(),
+			factory.Queue(),
+			factory.Host(),
+		)
+
 		// Populate the Search Notifier Service
 		factory.searchNotifierService.Refresh(
 			factory.SearchQuery(),
@@ -375,6 +389,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			refreshContext,
 		)
 
+		// Populate the SearchQuery Service
 		factory.searchQueryService.Refresh(
 			factory.collection(CollectionSearchQuery),
 			factory.Domain(),
@@ -689,7 +704,12 @@ func (factory *Factory) Outbox() *service.Outbox {
 	return &factory.outboxService
 }
 
-// Search returns a fully populated Search service
+// SearchDomain returns a fully populated SearchDomain service
+func (factory *Factory) SearchDomain() *service.SearchDomain {
+	return &factory.searchDomainService
+}
+
+// SearchResult returns a fully populated SearchResult service
 func (factory *Factory) SearchResult() *service.SearchResult {
 	return &factory.searchResultService
 }
