@@ -112,7 +112,6 @@ func locateObjectFromURL(host string, value string) (string, string) {
 	// Identify Username-type values
 	if value, found := strings.CutSuffix(value, "@"+hostname); found {
 
-		value = strings.TrimSuffix(value, "@"+hostname)
 		value = strings.TrimPrefix(value, "acct:")
 		value = strings.TrimPrefix(value, "@")
 
