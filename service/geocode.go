@@ -131,13 +131,13 @@ func (service Geocode) geocode(geocoder geo.Geocoder, place *model.Place) error 
 // If none is configured, then the "free" OpenStreetMap geocoder is used.
 func (service Geocode) getGeocoder() geo.Geocoder {
 
-	const location = "service.Geocode.getGeocoder"
-
 	// Get the geocoder connction config
 	connection := model.NewConnection()
 
 	if err := service.connectionService.LoadActiveByType(model.ConnectionTypeGeocoder, &connection); err != nil {
-		derp.Report(derp.Wrap(err, location, "Error loading geocoder connection"))
+		// const location = "service.Geocode.getGeocoder"
+		// derp.Report(derp.Wrap(err, location, "Error loading geocoder connection"))
+		return openstreetmap.Geocoder()
 	}
 
 	switch connection.ProviderID {

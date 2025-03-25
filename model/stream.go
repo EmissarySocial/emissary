@@ -376,7 +376,7 @@ func (stream *Stream) IsPublished() bool {
 
 	// Otherwise, check that "now" is in between the Publish and UnPublish dates
 	now := time.Now().Unix()
-	return (stream.PublishDate < now) && (stream.UnPublishDate > now)
+	return (stream.PublishDate <= now) && (stream.UnPublishDate > now)
 }
 
 // PublishActivity returns the ActivityType that should be used when publishing this Stream (either Create or Update)

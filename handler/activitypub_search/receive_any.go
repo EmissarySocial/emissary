@@ -9,7 +9,9 @@ import (
 func init() {
 	// Wildcard handler to drop any unrecognized activities
 	inboxRouter.Add(vocab.Any, vocab.Any, func(context Context, activity streams.Document) error {
-		spew.Dump("RECEIVED UNRECOGNIZED ACTIVITY ---------------------------", activity.Value())
+		if canTrace() {
+			spew.Dump("RECEIVED UNRECOGNIZED ACTIVITY ---------------------------", activity.Value())
+		}
 		return nil
 	})
 }

@@ -61,8 +61,11 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 	case "SendActivityPubMessage":
 		return WithFactory(consumer.serverFactory, args, SendActivityPubMessage)
 
-	case "SendSearchResults":
+	case "SendSearchResults-Query":
 		return WithFactory(consumer.serverFactory, args, SendSearchResults)
+
+	case "SendSearchResults-Global":
+		return WithFactory(consumer.serverFactory, args, SendSearchResultsGlobal)
 
 	case "SendWebMention":
 		return SendWebMention(args)

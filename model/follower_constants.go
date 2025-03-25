@@ -1,16 +1,16 @@
 package model
 
-// FollowerTypeDomain represents a Follower that is following a Global Domain Query
-const FollowerTypeDomain = "Domain"
+// FollowerTypeSearch represents a Follower that is following a Search Query
+const FollowerTypeSearch = "Search"
+
+// FollowerTypeSearchDomain represents a Follower that is following a Global Domain Query
+const FollowerTypeSearchDomain = "SearchDomain"
 
 // FollowerTypeStream represents a Follower that is following a Stream
 const FollowerTypeStream = "Stream"
 
 // FollowerTypeUser represents a Follower that is following a User
 const FollowerTypeUser = "User"
-
-// FollowerTypeSearch represents a Follower that is following a Search Query
-const FollowerTypeSearch = "Search"
 
 // FollowerMethodActivityPub represents a Follower subscription that
 // receives real-time updates via ActivityPub
@@ -33,3 +33,8 @@ const FollowerStateActive = "ACTIVE"
 // FollowerStatePending represents an inactive Follower who has yet
 // to confirm their subscription status (e.g. via email confirmation)
 const FollowerStatePending = "PENDING"
+
+// FollowerStateDeleted represents an inacti e Follower record that has been
+// deleted.  The canonical value for this is still the `DeleteDate` field,
+// but this value is also used for convenience.
+const FollowerStateDeleted = "DELETED"

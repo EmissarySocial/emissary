@@ -6,6 +6,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
+	"github.com/benpate/domain"
 	"github.com/benpate/rosetta/channel"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
@@ -15,8 +16,9 @@ import (
 
 // SearchNotifier
 type SearchNotifier struct {
-	searchQueryService  *SearchQuery
+	searchDomainService *SearchDomain
 	searchResultService *SearchResult
+	searchQueryService  *SearchQuery
 
 	host      string
 	processID primitive.ObjectID
@@ -30,9 +32,12 @@ func NewSearchNotifier() SearchNotifier {
 	}
 }
 
-func (service *SearchNotifier) Refresh(searchQueryService *SearchQuery, searchResultService *SearchResult, queue *queue.Queue, host string, context context.Context) {
-	service.searchQueryService = searchQueryService
+func (service *SearchNotifier) Refresh(searchDomainService *SearchDomain, searchResultService *SearchResult, searchQueryService *SearchQuery, queue *queue.Queue, host string, context context.Context) {
+
+	service.searchDomainService = searchDomainService
 	service.searchResultService = searchResultService
+	service.searchQueryService = searchQueryService
+
 	service.queue = queue
 	service.host = host
 	service.context = context
@@ -64,18 +69,76 @@ func (service *SearchNotifier) Run() {
 
 		// If there are no results, then wait before trying again.
 		if len(resultsToNotify) == 0 {
-			// time.Sleep(20 * time.Second)
+
+			// For development purposes, there's only a short delay for localhost.
+			if domain.IsLocalhost(service.host) {
+				time.Sleep(20 * time.Second)
+				continue
+			}
+
+			// "Regular" domains have a delay meant for production systems
 			time.Sleep(10 * time.Minute)
 			continue
 		}
 
 		log.Trace().Msgf("SearchNotifier: Found %v records", len(resultsToNotify))
 
-		// Otherwise, scan all saved search queries and send notifications
+		// Otherwise notify all global search followers
+		if err := service.sendGlobalNotifications(resultsToNotify); err != nil {
+			derp.Report(derp.Wrap(err, location, "Error sending notifications"))
+		}
+
+		// Then scan all saved search queries and send notifications
 		if err := service.sendNotifications(resultsToNotify); err != nil {
 			derp.Report(derp.Wrap(err, location, "Error sending notifications"))
 		}
+
+		// Last, mark all search results as "notified"
+		if err := service.markNotified(resultsToNotify); err != nil {
+			derp.Report(derp.Wrap(err, location, "Error sending notifications"))
+		}
 	}
+}
+
+// sendGlobalNotifications sends notifications to all Global Search followers
+func (service *SearchNotifier) sendGlobalNotifications(searchResults []model.SearchResult) error {
+
+	const location = "service.SearchNotifier.sendNotifications"
+
+	// If there are no search results, then don't load search queries
+	if len(searchResults) == 0 {
+		return nil
+	}
+
+	actorID := service.searchDomainService.ActivityPubURL()
+
+	// Scan each SearchResult in our current batch...
+	for _, searchResult := range searchResults {
+
+		// Only notify on new LOCAL search results (don't syndicate results we got from other servers)
+		if searchResult.Local {
+
+			log.Trace().Str("URL", searchResult.URL).Msg("Sending global notification")
+
+			// Send notifications to all followers
+			task := queue.NewTask(
+				"SendSearchResults-Global",
+				mapof.Any{
+					"host":  service.host,
+					"actor": actorID,
+					"url":   searchResult.URL,
+				},
+				queue.WithPriority(200),
+			)
+
+			if err := service.queue.Publish(task); err != nil {
+				return derp.Wrap(err, location, "Error publishing task")
+			}
+		}
+	}
+
+	// Success!
+	return nil
 }
 
 // sendNotifications scans all SearchQueries in the database and sends notifications
@@ -104,11 +167,39 @@ func (service *SearchNotifier) sendNotifications(searchResults []model.SearchRes
 
 			// Send notifications for any matches
 			if searchQuery.Match(searchResult) {
-				if err := service.sendNotification(searchQuery.SearchQueryID, searchResult); err != nil {
+				actorID := service.searchQueryService.ActivityPubURL(searchQuery.SearchQueryID)
+
+				task := queue.NewTask(
+					"SendSearchResults-Query",
+					mapof.Any{
+						"host":          service.host,
+						"actor":         actorID,
+						"searchQueryID": searchQuery.SearchQueryID,
+						"url":           searchResult.URL,
+					},
+					queue.WithPriority(200),
+				)
+
+				if err := service.queue.Publish(task); err != nil {
 					return derp.Wrap(err, location, "Error publishing task")
 				}
 			}
 		}
+	}
+
+	// Success!
+	return nil
+}
+
+// markNotified marks all of the provided SearchResult records as being notified as of
+// the current epoch.  This prevents them from being sent as duplicates in the future.
+func (service *SearchNotifier) markNotified(searchResults []model.SearchResult) error {
+
+	const location = "service.SearchNotifier.sendNotifications"
+
+	// If there are no search results, then don't load search queries
+	if len(searchResults) == 0 {
+		return nil
 	}
 
 	// Mark all SearchResults as notified
@@ -124,27 +215,5 @@ func (service *SearchNotifier) sendNotifications(searchResults []model.SearchRes
 	}
 
 	// Success!
-	return nil
-}
-
-func (service *SearchNotifier) sendNotification(searchQueryID primitive.ObjectID, searchResult model.SearchResult) error {
-
-	const location = "service.SearchNotifier.sendNotification"
-
-	task := queue.NewTask(
-		"SendSearchResults",
-		mapof.Any{
-			"host":          service.host,
-			"actor":         service.searchQueryService.ActivityPubURL(searchQueryID),
-			"searchQueryID": searchQueryID,
-			"url":           searchResult.URL,
-		},
-		queue.WithPriority(200),
-	)
-
-	if err := service.queue.Publish(task); err != nil {
-		return derp.Wrap(err, location, "Error publishing task")
-	}
-
 	return nil
 }

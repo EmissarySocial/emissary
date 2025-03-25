@@ -136,6 +136,9 @@ func (service *Follower) Delete(follower *model.Follower, note string) error {
 
 	const location = "service.Follower.Delete"
 
+	// Mark the Follower as deleted
+	follower.StateID = model.FollowerStateDeleted
+
 	// Delete this Follower
 	if err := service.collection.Delete(follower, note); err != nil {
 		return derp.Wrap(err, location, "Error deleting Follower", follower, note)
@@ -316,6 +319,16 @@ func (service *Follower) RangeBySearch(searchQueryID primitive.ObjectID) (iter.S
 	return service.Range(
 		exp.Equal("parentId", searchQueryID).
 			AndEqual("type", model.FollowerTypeSearch),
+	)
+}
+
+// RangeBySearch returns an iterator containing all of the Followers of a specific SearchQuery
+func (service *Follower) RangeByGlobalSearch() (iter.Seq[model.Follower], error) {
+
+	// Special case for Domain search queries.
+	return service.Range(
+		exp.Equal("parentId", primitive.NilObjectID).
+			AndEqual("type", model.FollowerTypeSearchDomain),
 	)
 }
 

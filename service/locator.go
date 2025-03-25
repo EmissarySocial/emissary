@@ -12,22 +12,26 @@ import (
 
 // Locator is used to find objects based on their URL or WebFinger token
 type Locator struct {
-	domainService      *Domain
-	searchQueryService *SearchQuery
-	streamService      *Stream
-	userService        *User
-	host               string
+	domainService       *Domain
+	searchDomainService *SearchDomain
+	searchQueryService  *SearchQuery
+	streamService       *Stream
+	userService         *User
+	host                string
 }
 
 func NewLocator() Locator {
 	return Locator{}
 }
 
-func (service *Locator) Refresh(domainService *Domain, searchQueryService *SearchQuery, streamService *Stream, userService *User, host string) {
+func (service *Locator) Refresh(domainService *Domain, searchDomainService *SearchDomain, searchQueryService *SearchQuery, streamService *Stream, userService *User, host string) {
+
 	service.domainService = domainService
+	service.searchDomainService = searchDomainService
 	service.streamService = streamService
 	service.searchQueryService = searchQueryService
 	service.userService = userService
+
 	service.host = host
 }
 
@@ -40,17 +44,21 @@ func (service *Locator) GetWebFingerResult(resource string) (digit.Resource, err
 
 	switch objectType {
 
-	case "Stream":
-		return service.streamService.WebFinger(token)
+	case "Application":
+		return service.domainService.WebFinger(), nil
+
+	case "SearchDomain":
+		return service.searchDomainService.WebFinger(), nil
 
 	case "SearchQuery":
 		return service.searchQueryService.WebFinger(token)
 
+	case "Stream":
+		return service.streamService.WebFinger(token)
+
 	case "User":
 		return service.userService.WebFinger(token)
 
-	case "Application":
-		return service.domainService.WebFinger(), nil
 	}
 
 	return digit.Resource{}, derp.NewBadRequestError(location, "Invalid Resource", resource)
@@ -113,6 +121,11 @@ func locateObjectFromURL(host string, value string) (string, string) {
 			return "Application", ""
 		}
 
+		// Special case for Global Search actor
+		if value == "search" {
+			return "SearchDomain", ""
+		}
+
 		// Special case for SearchQuery objects
 		if value, found := strings.CutPrefix(value, "search_"); found {
 			return "SearchQuery", value
@@ -137,6 +150,11 @@ func locateObjectFromURL(host string, value string) (string, string) {
 		// Special case for "Application" account
 		if value == "@application" {
 			return "Application", ""
+		}
+
+		// Identify Gloabl Search actor
+		if value == "@search" {
+			return "SearchDomain", ""
 		}
 
 		// Identify SearchQuery URLs

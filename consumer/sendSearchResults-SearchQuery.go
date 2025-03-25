@@ -46,8 +46,6 @@ func SendSearchResults(factory *domain.Factory, args mapof.Any) queue.Result {
 		return queue.Error(derp.Wrap(err, location, "Error retrieving followers"))
 	}
 
-	count := 0
-
 	// Send ActivityPub messages to each follower
 	for follower := range followers {
 
@@ -72,8 +70,6 @@ func SendSearchResults(factory *domain.Factory, args mapof.Any) queue.Result {
 		if err := queueService.Publish(task); err != nil {
 			return queue.Error(derp.Wrap(err, location, "Error sending message to queue"))
 		}
-
-		count++
 	}
 
 	// Woot woot!

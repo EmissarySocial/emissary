@@ -304,6 +304,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		// Populate the Locator service
 		factory.locatorService.Refresh(
 			factory.Domain(),
+			factory.SearchDomain(),
 			factory.SearchQuery(),
 			factory.Stream(),
 			factory.User(),
@@ -382,8 +383,9 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 
 		// Populate the Search Notifier Service
 		factory.searchNotifierService.Refresh(
-			factory.SearchQuery(),
+			factory.SearchDomain(),
 			factory.SearchResult(),
+			factory.SearchQuery(),
 			factory.Queue(),
 			factory.Host(),
 			refreshContext,

@@ -40,7 +40,7 @@ func init() {
 		// Try to create a new follower record
 		followerService := context.factory.Follower()
 		follower := model.NewFollower()
-		if err := followerService.NewActivityPubFollower(model.FollowerTypeSearch, primitive.NilObjectID, document, &follower); err != nil {
+		if err := followerService.NewActivityPubFollower(model.FollowerTypeSearchDomain, primitive.NilObjectID, document, &follower); err != nil {
 			return derp.Wrap(err, location, "Error creating new follower")
 		}
 

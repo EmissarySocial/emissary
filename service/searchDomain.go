@@ -67,13 +67,13 @@ func (service *SearchDomain) ActivityPubActor(withFollowers bool) (outbox.Actor,
 	}
 
 	// Return the ActivityPub Actor
-	actor := outbox.NewActor(service.ActivityPubURL(), privateKey, outbox.WithClient(service.activityStream)) // TODO: Restore Queue:: , outbox.WithQueue(service.queue))
+	actor := outbox.NewActor(service.ActivityPubURL(), privateKey, outbox.WithClient(service.activityStream))
 
 	// Populate the Actor's ActivityPub Followers, if requested
 	if withFollowers {
 
 		// Get a channel of all Followers
-		followers, err := service.followerService.ActivityPubFollowersChannel(model.FollowerTypeDomain, primitive.NilObjectID)
+		followers, err := service.followerService.ActivityPubFollowersChannel(model.FollowerTypeSearchDomain, primitive.NilObjectID)
 
 		if err != nil {
 			return outbox.Actor{}, derp.Wrap(err, location, "Error retrieving followers")
@@ -131,18 +131,17 @@ func (service *SearchDomain) ActivityPubSharesURL() string {
  * WebFinger Behavior
  ******************************************/
 
-func (service *SearchDomain) WebFinger(token string) (digit.Resource, error) {
+func (service *SearchDomain) WebFinger() digit.Resource {
 
-	username := service.ActivityPubUsername()
-	usernameWithHost := username + "@" + service.Hostname()
+	usernameWithHost := "search@" + service.Hostname()
 
 	// Make a WebFinger resource for this user.
 	result := digit.NewResource("acct:"+usernameWithHost).
 		Alias(service.ActivityPubURL()).
-		Link(digit.RelationTypeSelf, model.MimeTypeActivityPub, service.ActivityPubURL()).
-		Link(digit.RelationTypeProfile, model.MimeTypeHTML, service.ActivityPubProfileURL())
+		Link(digit.RelationTypeSelf, model.MimeTypeActivityPub, service.ActivityPubURL())
+		// .Link(digit.RelationTypeProfile, model.MimeTypeHTML, service.ActivityPubProfileURL())
 
-	return result, nil
+	return result
 }
 
 func (service *SearchDomain) Hostname() string {

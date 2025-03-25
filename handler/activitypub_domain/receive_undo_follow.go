@@ -26,7 +26,7 @@ func undoFollow(context Context, activity streams.Document) error {
 	// Collect data from the original follow
 	actorURL := activity.Actor().ID() // The "actor" is our follower.actor.ProfileURL
 
-	if err := followerService.LoadByActivityPubFollower(model.FollowerTypeDomain, primitive.NilObjectID, actorURL, &follower); err != nil {
+	if err := followerService.LoadByActivityPubFollower(model.FollowerTypeSearchDomain, primitive.NilObjectID, actorURL, &follower); err != nil {
 
 		if derp.NotFound(err) {
 			return nil

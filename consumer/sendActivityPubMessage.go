@@ -52,6 +52,7 @@ func getActivityPubActor(factory *domain.Factory, args mapof.Any) (outbox.Actor,
 
 	switch args.GetString("actorType") {
 
+	// Search Queries
 	case model.FollowerTypeSearch:
 
 		searchQueryID := args.GetString("searchQueryID")
@@ -62,6 +63,11 @@ func getActivityPubActor(factory *domain.Factory, args mapof.Any) (outbox.Actor,
 			return outbox.Actor{}, derp.Wrap(err, location, "Invalid searchQueryID", searchQueryID)
 		}
 
+	// Global Search Actors
+	case model.FollowerTypeSearchDomain:
+		return factory.SearchDomain().ActivityPubActor(false)
+
+	// Stream Actors
 	case model.FollowerTypeStream:
 
 		streamID := args.GetString("streamID")
@@ -72,6 +78,7 @@ func getActivityPubActor(factory *domain.Factory, args mapof.Any) (outbox.Actor,
 			return outbox.Actor{}, derp.Wrap(err, location, "Invalid streamID", streamID)
 		}
 
+	// Regular User Actors
 	case model.FollowerTypeUser:
 
 		userID := args.GetString("userID")
@@ -83,5 +90,6 @@ func getActivityPubActor(factory *domain.Factory, args mapof.Any) (outbox.Actor,
 		}
 	}
 
+	// Unknown.  Bork Bork.
 	return outbox.Actor{}, derp.NewInternalError(location, "Invalid actorType", args)
 }

@@ -11,7 +11,7 @@ func FollowerSchema() schema.Element {
 		Properties: schema.ElementMap{
 			"followerId": schema.String{Format: "objectId"},
 			"parentId":   schema.String{Format: "objectId"},
-			"type":       schema.String{Enum: []string{FollowerTypeSearch, FollowerTypeStream, FollowerTypeUser}},
+			"type":       schema.String{Enum: []string{FollowerTypeSearch, FollowerTypeSearchDomain, FollowerTypeStream, FollowerTypeUser}},
 			"method":     schema.String{Enum: []string{FollowerMethodActivityPub, FollowerMethodEmail, FollowerMethodWebSub}},
 			"format":     schema.String{Enum: []string{MimeTypeActivityPub, MimeTypeAtom, MimeTypeHTML, MimeTypeJSONFeed, MimeTypeRSS, MimeTypeXML}},
 			"stateId":    schema.String{Enum: []string{FollowerStateActive, FollowerStatePending}},
