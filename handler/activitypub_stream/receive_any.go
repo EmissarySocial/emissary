@@ -20,7 +20,7 @@ func init() {
 
 func BoostAny(context Context, activity streams.Document) error {
 
-	const location = "activitypub_stream.inboxRouter.BoostAny"
+	const location = "handler.activitypub_stream.BoostAny"
 
 	// RULE: Require "boost-inbox" setting
 	if !context.actor.BoostInbox {

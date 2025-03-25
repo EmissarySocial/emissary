@@ -14,7 +14,7 @@ import (
 
 func GetResponseCollection(serverFactory *server.Factory, responseType string) echo.HandlerFunc {
 
-	const location = "handler.activitypub.ActivityPub_GetResponseCollection"
+	const location = "handler.activitypub_user.GetResponseCollection"
 
 	return func(ctx echo.Context) error {
 

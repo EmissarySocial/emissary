@@ -12,7 +12,7 @@ import (
 
 func PostInbox(ctx *steranko.Context, factory *domain.Factory, template *model.Template, stream *model.Stream, searchQuery *model.SearchQuery) error {
 
-	const location = "handler/activitypub_search/PostInbox"
+	const location = "handler.activitypub_search.PostInbox"
 
 	// Retrieve the activity from the request body
 	activity, err := inbox.ReceiveRequest(ctx.Request(), factory.ActivityStream())

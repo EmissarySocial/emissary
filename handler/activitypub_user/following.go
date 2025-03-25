@@ -19,12 +19,14 @@ func GetFollowingCollection(ctx *steranko.Context, factory *domain.Factory) erro
 
 func GetFollowingRecord(ctx *steranko.Context, factory *domain.Factory) error {
 
+	const location = "handler.activitypub_user.GetFollowingRecord"
+
 	// Load the user from the database
 	userService := factory.User()
 	user := model.NewUser()
 
 	if err := userService.LoadByToken(ctx.Param("userId"), &user); err != nil {
-		return derp.Wrap(err, "emissary.handler.ActivityPub_GetFollowingRecord", "Error loading user")
+		return derp.Wrap(err, location, "Error loading user")
 	}
 
 	// Confirm that the user is visible
@@ -37,7 +39,7 @@ func GetFollowingRecord(ctx *steranko.Context, factory *domain.Factory) error {
 	following := model.NewFollowing()
 
 	if err := followingService.LoadByToken(user.UserID, ctx.Param("followingId"), &following); err != nil {
-		return derp.Wrap(err, "emissary.handler.ActivityPub_GetFollowingRecord", "Error loading following")
+		return derp.Wrap(err, location, "Error loading following")
 	}
 
 	result := followingService.AsJSONLD(&following)

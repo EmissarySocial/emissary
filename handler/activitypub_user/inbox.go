@@ -13,7 +13,7 @@ import (
 
 func PostInbox(serverFactory *server.Factory) echo.HandlerFunc {
 
-	const location = "handler.activitypub.ActivityPub_PostInbox"
+	const location = "handler.activitypub_user.PostInbox"
 
 	return func(ctx echo.Context) error {
 

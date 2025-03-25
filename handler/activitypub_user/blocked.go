@@ -17,7 +17,7 @@ import (
 
 func GetBlockedCollection(serverFactory *server.Factory) echo.HandlerFunc {
 
-	const location = "handler.activitypub.ActivityPub_GetBlocked"
+	const location = "handler.activitypub_user.GetBlockedCollection"
 
 	return func(ctx echo.Context) error {
 

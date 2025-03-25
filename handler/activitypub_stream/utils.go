@@ -13,7 +13,7 @@ import (
 // from the Request context.
 func getActor(serverFactory *server.Factory, ctx echo.Context) (*domain.Factory, *service.Template, *service.Stream, model.Template, model.Stream, model.StreamActor, error) {
 
-	const location = "activitypub_stream.getActor"
+	const location = "handler.activitypub_stream.getActor"
 
 	factory, err := serverFactory.ByContext(ctx)
 

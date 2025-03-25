@@ -15,7 +15,7 @@ import (
 
 func GetOutboxCollection(serverFactory *server.Factory) echo.HandlerFunc {
 
-	const location = "activitypub_stream.GetOutboxCollection"
+	const location = "handler.activitypub_stream.GetOutboxCollection"
 
 	return func(ctx echo.Context) error {
 

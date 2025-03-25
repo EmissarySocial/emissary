@@ -16,7 +16,7 @@ func init() {
 // that this code is called when a remote user unfollows an actor on this server.
 func undoFollow(context Context, activity streams.Document) error {
 
-	const location = "handler.activitypub.activityPub_HandleRequest_Undo_Follow"
+	const location = "handler.activitypub_user.undoFollow"
 
 	// Try to load the existing follower record
 	followerService := context.factory.Follower()

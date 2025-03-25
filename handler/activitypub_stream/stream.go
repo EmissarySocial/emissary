@@ -13,7 +13,7 @@ import (
 
 func GetJSONLD(ctx *steranko.Context, factory *domain.Factory, template *model.Template, stream *model.Stream) error {
 
-	const location = "activitypub_stream.GetJSONLD"
+	const location = "handler.activitypub_stream.GetJSONLD"
 
 	streamService := factory.Stream()
 

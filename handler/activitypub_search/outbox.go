@@ -17,7 +17,7 @@ import (
 
 func GetOutboxCollection(ctx *steranko.Context, factory *domain.Factory, template *model.Template, _ *model.Stream, searchQuery *model.SearchQuery) error {
 
-	const location = "activitypub_search.GetOutboxCollection"
+	const location = "handler.activitypub_search.GetOutboxCollection"
 
 	searchQueryService := factory.SearchQuery()
 	actorID := searchQueryService.ActivityPubURL(searchQuery.SearchQueryID)

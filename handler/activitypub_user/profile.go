@@ -13,7 +13,7 @@ import (
 
 func RenderProfileJSONLD(context echo.Context, factory *domain.Factory, user *model.User) error {
 
-	const location = "handler.activitypub.buildProfileJSONLD"
+	const location = "handler.activitypub_user.RenderProfileJSONLD"
 
 	// Try to load the key from the Datbase
 	keyService := factory.EncryptionKey()
