@@ -265,6 +265,12 @@ func (w Common) IsOwner() bool {
 	return authorization.DomainOwner
 }
 
+// IsAdminBuilder returns TRUE if the current builder is an Admin
+// route.  By default, all other builders return FALSE.
+func (w Common) IsAdminBuilder() bool {
+	return false
+}
+
 // AuthenticatedID returns the unique ID of the currently logged in user (may be nil).
 func (w Common) AuthenticatedID() primitive.ObjectID {
 	authorization := w.authorization()

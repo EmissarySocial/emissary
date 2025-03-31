@@ -1,0 +1,32 @@
+{
+	templateId:admin-followers
+	templateRole:admin
+	model:domain
+	extends: ["admin-common"]
+	containedBy:["admin"]
+	label:Search
+	description: Manage Search Engine Settings
+
+	actions: {
+		index: {do:"view-html"}
+
+		edit: {
+			do:with-followers
+			steps: [
+				{
+					do:as-modal
+					steps: [
+					{do:"view-html"}
+					]
+				}
+			]
+		}
+
+		delete: {
+			do:with-followers
+			steps:[
+				{do:"delete"}
+			]
+		}
+	}
+}

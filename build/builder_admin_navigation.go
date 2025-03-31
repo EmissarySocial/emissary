@@ -130,3 +130,12 @@ func (w Navigation) clone(action string) (Builder, error) {
 func (w Navigation) debug() {
 	log.Debug().Interface("object", w.object()).Msg("builder_admin_avigation")
 }
+
+/******************************************
+ * Other Data Accessors
+ ******************************************/
+
+// IsAdminBuilder returns TRUE because Navigation is an admin route.
+func (w Navigation) IsAdminBuilder() bool {
+	return false
+}

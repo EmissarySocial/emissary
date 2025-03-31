@@ -12,6 +12,8 @@ import (
 	"github.com/EmissarySocial/emissary/tools/dataset"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
+	"github.com/benpate/exp"
+	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
@@ -152,6 +154,11 @@ func (w Domain) clone(action string) (Builder, error) {
  * Other Data Accessors
  ******************************************/
 
+// IsAdminBuilder returns TRUE because Domain is an admin route.
+func (w Domain) IsAdminBuilder() bool {
+	return false
+}
+
 func (w Domain) ThemeID() string {
 	return w._domain.ThemeID
 }
@@ -186,6 +193,41 @@ func (w Domain) RegistrationTemplate() model.Registration {
 	}
 
 	return model.NewRegistration("", nil)
+}
+
+/******************************************
+ * Queries
+ ******************************************/
+
+func (w Domain) Followers() QueryBuilder[model.FollowerSummary] {
+
+	query := builder.NewBuilder().
+		String("label").
+		ObjectID("groupId")
+
+	criteria := exp.And(
+		query.Evaluate(w._request.URL.Query()),
+		exp.Equal("parentId", primitive.NilObjectID),
+		exp.Equal("type", model.FollowerTypeSearchDomain),
+		exp.Equal("deleteDate", 0),
+	)
+
+	return NewQueryBuilder[model.FollowerSummary](w._factory.Follower(), criteria)
+}
+
+func (w Domain) Following() QueryBuilder[model.FollowingSummary] {
+
+	query := builder.NewBuilder().
+		String("label").
+		ObjectID("groupId")
+
+	criteria := exp.And(
+		query.Evaluate(w._request.URL.Query()),
+		exp.Equal("userId", primitive.NilObjectID),
+		exp.Equal("deleteDate", 0),
+	)
+
+	return NewQueryBuilder[model.FollowingSummary](w._factory.Following(), criteria)
 }
 
 /******************************************

@@ -34,6 +34,8 @@ type Builder interface {
 	QueryParam(string) string            // Query parameter of the requested page
 	SetQueryParam(string, string)        // Sets a queryString parameter
 	IsAuthenticated() bool               // Returns TRUE if the user is signed in
+	IsOwner() bool                       // Returns TRUE if the signed-in user is the owner of this object
+	IsAdminBuilder() bool                // Returns TRUE if this is an admin route
 	IsPartialRequest() bool              // Returns TRUE if this is an HTMX request for a page fragment
 	UserCan(string) bool                 // Returns TRUE if the signed-in user has access to the named action
 	AuthenticatedID() primitive.ObjectID // Returns the ID of the signed-in user (or zero if not signed in)

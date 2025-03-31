@@ -17,7 +17,7 @@
 			People
 		</a>
 
-		<a hx-get="/admin/tags/index" class="turboclick {{if in .Token `search` `tags`}}selected{{end}}">
+		<a hx-get="/admin/tags/index" class="turboclick {{if in .Token `search` `followers` `following` `tags`}}selected{{end}}">
 			Search
 		</a>
 
@@ -41,12 +41,20 @@
 		</a>
 	</div>
 
-{{ else if in .Token "search" "tags" }}
+{{ else if in .Token "search" "followers" "following" "tags" }}
 
 	<div id="menu-bar-sub">
 	
 		<a hx-get="/admin/tags/index" class="turboclick {{if eq `tags` .Token}}selected{{end}}">
 			Tags
+		</a>
+
+		<a hx-get="/admin/following/index" class="turboclick {{if eq `following` .Token}}selected{{end}}">
+			Sources
+		</a>
+
+		<a hx-get="/admin/followers/index" class="turboclick {{if eq `followers` .Token}}selected{{end}}">
+			Subscribers
 		</a>
 
 		<a hx-get="/admin/search/index" class="turboclick {{if eq `search` .Token}}selected{{end}}">

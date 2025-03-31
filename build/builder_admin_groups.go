@@ -135,6 +135,11 @@ func (w Group) clone(action string) (Builder, error) {
  * DATA ACCESSORS
  ******************************************/
 
+// IsAdminBuilder returns TRUE because Group is an admin route.
+func (w Group) IsAdminBuilder() bool {
+	return false
+}
+
 func (w Group) GroupID() string {
 	if w._group == nil {
 		return ""

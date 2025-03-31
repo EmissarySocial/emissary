@@ -1,0 +1,44 @@
+{{- $parent := .QueryParam "parent" -}}
+{{- $name := .QueryParam "name" -}}
+{{- $stateID := .QueryParam "stateId" -}}
+
+{{- $following := .Following.ByName.Slice -}}
+
+<div class="page" hx-get="/admin/following/index" hx-trigger="refreshPage from:window">
+   	
+	{{template "menubar" .}}
+
+	<div class="info">
+		Displays all external services that provide external search results for this search index.
+		ActivityPub sources push updates in real-time.  Others are polled daily.
+	</div>
+
+	<table class="table">
+
+		<tr hx-get="/admin/following/create" class="clickable link">
+			<td style="width:1em;">{{icon "add"}}</td>
+			<td colspan="3">
+				Follow a New Source
+			</td>
+		</tr>
+
+		{{- range $following -}}
+			<tr class="clickable">
+				<td style="width:1em;">
+					{{icon "database"}}
+				</td>
+				<td>
+					<div>{{.Label}}</div>
+					<div class="text-xs text-light-gray">{{.URL}}</div>
+				</td>
+				<td>{{icon .Icon}} {{.Method}}</td>
+				<td class="align-right">{{.LastPolled | tinyDate}}</td>
+			</tr>
+		{{- end -}}
+	</table>
+
+	<div class="text-xs text-light-gray">
+		Following: {{$following.Length}} {{pluralize $following.Length "Sources" "Sources"}}
+	</div>
+
+</div>

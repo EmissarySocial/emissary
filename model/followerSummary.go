@@ -24,8 +24,9 @@ func (summary FollowerSummary) Fields() []string {
  * Other Methods
  ******************************************/
 
-func (summary FollowerSummary) MethodIcon() string {
+func (summary FollowerSummary) Icon() string {
 	switch summary.Method {
+
 	case FollowerMethodEmail:
 		return "email"
 	case FollowerMethodWebSub:
