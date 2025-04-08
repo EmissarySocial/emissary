@@ -6,6 +6,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/model/step"
 	"github.com/benpate/derp"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // StepWithFollowing is a Step that can update the data.DataMap custom data stored in a Stream
@@ -31,6 +32,24 @@ func (step StepWithFollowing) execute(builder Builder, buffer io.Writer, actionM
 		return Halt().WithError(derp.NewUnauthorizedError(location, "Anonymous user is not authorized to perform this action"))
 	}
 
+	var userID primitive.ObjectID
+	switch builder.IsAdminBuilder() {
+
+	// Admin routes use zeroes for "Following" parents
+	case true:
+
+		// Must be an owner to use the admin route
+		if !builder.IsOwner() {
+			return Halt().WithError(derp.NewForbiddenError(location, "User must be an owner to complete this action"))
+		}
+
+		userID = primitive.NilObjectID
+
+	// Non-admin routes use the authenticated user's ID
+	case false:
+		userID = builder.AuthenticatedID()
+	}
+
 	// Try to find the Template for this builder.
 	// This *should* work for all builders that use CommonWithTemplate
 	template, exists := getTemplate(builder)
@@ -44,11 +63,11 @@ func (step StepWithFollowing) execute(builder Builder, buffer io.Writer, actionM
 	followingService := factory.Following()
 	token := builder.QueryParam("followingId")
 	following := model.NewFollowing()
-	following.UserID = builder.AuthenticatedID()
+	following.UserID = userID
 
 	// If we have a real ID, then try to load the following from the database
 	if (token != "") && (token != "new") {
-		if err := followingService.LoadByToken(builder.AuthenticatedID(), token, &following); err != nil {
+		if err := followingService.LoadByToken(userID, token, &following); err != nil {
 			if actionMethod == ActionMethodGet {
 				return Halt().WithError(derp.Wrap(err, location, "Unable to load Following", token))
 			}

@@ -140,3 +140,12 @@ func (w Syndication) clone(action string) (Builder, error) {
 func (w Syndication) debug() {
 	log.Debug().Interface("object", w.object()).Msg("builder_admin_syndication")
 }
+
+/******************************************
+ * Other Data Accessors
+ ******************************************/
+
+// IsAdminBuilder returns TRUE because Syndication is an admin route.
+func (w Syndication) IsSyndication() bool {
+	return false
+}

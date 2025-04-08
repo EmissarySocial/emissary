@@ -89,7 +89,7 @@ func buildAdmin_GetBuilder(factory *domain.Factory, ctx *steranko.Context, templ
 	// Create the correct builder for this controller
 	switch template.Model {
 
-	case "domain", "search", "sso":
+	case "domain", "search", "sso", "followers", "following":
 		return build.NewDomain(factory, ctx.Request(), ctx.Response(), template, actionID)
 
 	case "syndication":

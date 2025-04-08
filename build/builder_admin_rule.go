@@ -129,8 +129,13 @@ func (w Rule) clone(action string) (Builder, error) {
 }
 
 /******************************************
- * DATA ACCESSORS
+ * Other Data Accessors
  ******************************************/
+
+// IsAdminBuilder returns TRUE because Rule is an admin route.
+func (w Rule) IsAdminBuilder() bool {
+	return false
+}
 
 func (w Rule) RuleID() string {
 	if w._rule == nil {

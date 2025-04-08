@@ -1,0 +1,70 @@
+{{- $parent := .QueryParam "parent" -}}
+{{- $name := .QueryParam "name" -}}
+{{- $stateID := .QueryParam "stateId" -}}
+
+{{- $followers := .Followers.ByName.Slice -}}
+
+<div class="page" hx-get="/admin/followers/index" hx-trigger="refreshPage from:window">
+   	
+	{{template "menubar" .}}
+
+	{{- if $followers.IsEmpty -}}
+
+		<div class="margin-horizontal-auto align-center" style="max-width:600px;">
+			<div class="text-lg bold margin-bottom">
+				No other servers have subscribed to this search index.
+				If another server subscribes, it will appear here.
+			</div>
+
+		</div>
+
+	{{- else -}}
+
+		<div class="info">
+			Displays all external services that receive real-time updates from this search index.
+			Others may download the data via RSS or JSON.
+		</div>
+
+		<pre>{{$followers | jsonIndent}}</pre>
+
+		<table class="table">
+			{{- range $followers -}}
+				<tr class="clickable">
+					<td style="width:1em;">
+						{{icon "database"}}
+					</td>
+					<td>
+						<div>{{.Actor.Name}}</div>
+						<div class="text-light-gray">{{.Actor.ProfileURL}}</div>
+					</td>
+					<td class="align-right">{{icon .Icon}} {{.Method}}</td>
+				</tr>
+			{{- end -}}
+		</table>
+
+		<div class="text-xs text-light-gray">
+			Subscribers: {{$followers.Length}} {{pluralize $followers.Length "Sources" "Sources"}}
+		</div>
+
+	{{- end -}}
+
+
+	<div class="margin-top-xl flex-row margin-horizontal-auto align-center" style="max-width:600px;">
+
+		<div class="card padding width-50%">
+			<div style="font-size:60px;">{{icon "activitypub"}}</div>
+			<div class="margin-vertical-xs text-2xl bold">ActivityPub</div>
+			<div class="margin-bottom">Subscribe via ActivityPub at:</div>
+			<div class="bold" script="install selectText">@search@{{.Hostname}}</div>
+		</div>
+
+		<div class="card padding width-50%">
+			<div style="font-size:60px;">{{icon "rss"}}</div>
+			<div class="margin-vertical-xs text-2xl bold">RSS</div>
+			<div class="margin-bottom">Subscribe via RSS at:</div>
+			<div class="bold" script="install selectText">{{.Host}}/@search/feed</div>
+		</div>
+
+	</div>
+
+</div>

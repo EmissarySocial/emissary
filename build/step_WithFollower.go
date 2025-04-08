@@ -36,12 +36,30 @@ func (step StepWithFollower) execute(builder Builder, buffer io.Writer, actionMe
 		return Halt().WithError(derp.NewInternalError(location, "This step cannot be used in this Renderer."))
 	}
 
+	var userID primitive.ObjectID
+	switch builder.IsAdminBuilder() {
+
+	// Admin routes use zeroes for "Following" parents
+	case true:
+
+		// Must be an owner to use the admin route
+		if !builder.IsOwner() {
+			return Halt().WithError(derp.NewForbiddenError(location, "User must be an owner to complete this action"))
+		}
+
+		userID = primitive.NilObjectID
+
+	// Non-admin routes use the authenticated user's ID
+	case false:
+		userID = builder.AuthenticatedID()
+	}
+
 	// Collect required services and values
 	factory := builder.factory()
 	followerService := factory.Follower()
 	token := builder.QueryParam("followerId")
 	follower := model.NewFollower()
-	follower.ParentID = builder.AuthenticatedID() // TODO: Make this generic enough to work with Content Actors...
+	follower.ParentID = userID // TODO: Make this generic enough to work with Content Actors...
 
 	// Only authenticated users can create new Follower records
 	if (token == "") || (token == "new") {
@@ -54,7 +72,7 @@ func (step StepWithFollower) execute(builder Builder, buffer io.Writer, actionMe
 
 		// Existing Follower records can be looked up if authenticated, or with a secret.
 		secret := builder.QueryParam("secret")
-		if err := step.load(followerService, token, builder.AuthenticatedID(), secret, &follower); err != nil {
+		if err := step.load(followerService, token, userID, secret, &follower); err != nil {
 			return Halt().WithError(derp.Wrap(err, location, "Unable to load Follower via ID", token))
 		}
 	}
