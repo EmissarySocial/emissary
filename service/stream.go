@@ -296,6 +296,7 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 		service.webhookService.Send(stream, model.WebhookEventStreamUpdate)
 	}
 
+	// Send Syndication Messages
 	if stream.IsPublished() && stream.Syndication.IsChanged() {
 		if err := service.sendSyndicationMessages(stream, stream.Syndication.Added, stream.Syndication.Deleted); err != nil {
 			return derp.Wrap(err, location, "Error sending syndication messages", stream)
