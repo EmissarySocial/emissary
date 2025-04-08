@@ -8,7 +8,7 @@ require (
 	github.com/benpate/color v0.1.0
 	github.com/benpate/data v0.29.1
 	github.com/benpate/data-mock v0.29.1
-	github.com/benpate/data-mongo v0.29.1
+	github.com/benpate/data-mongo v0.30.0
 	github.com/benpate/derp v0.31.1
 	github.com/benpate/digit v0.13.4
 	github.com/benpate/digital-dome v0.2.4
