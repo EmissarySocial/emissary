@@ -3,6 +3,7 @@ package domain
 import (
 	"context"
 	"strings"
+	"time"
 
 	"github.com/EmissarySocial/emissary/build"
 	"github.com/EmissarySocial/emissary/config"
@@ -26,6 +27,8 @@ import (
 	"github.com/spf13/afero"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/writeconcern"
 )
 
 // Factory knows how to create an populate all services
@@ -185,8 +188,18 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			return nil
 		}
 
+		///////////////////////////////
 		// Fall through means we need to connect to the database
-		server, err := mongodb.New(domain.ConnectString, domain.DatabaseName)
+
+		// Set Read/Write concerns to Majority to avoid stale reads/writes
+		journal := true
+		option := writeconcern.Majority()
+		option.Journal = &journal
+		option.WTimeout = 1 * time.Second
+		opt := options.Client().SetWriteConcern(option)
+
+		// Create a new server connection
+		server, err := mongodb.New(domain.ConnectString, domain.DatabaseName, opt)
 
 		if err != nil {
 			return derp.Wrap(err, "domain.factory.UpdateConfig", "Error connecting to MongoDB (Server)", domain)
