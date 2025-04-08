@@ -194,6 +194,8 @@ func (service Icons) Get(name string) string {
 		return service.get("three-dots")
 	case "more-vertical":
 		return service.get("three-dots-vertical")
+	case "music":
+		return service.get("music-note-beamed")
 	case "mute":
 		return service.get("mic-mute")
 	case "mute-fill":
