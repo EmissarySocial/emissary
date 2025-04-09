@@ -1,0 +1,42 @@
+behavior validator(url)
+
+	init
+		trigger validate
+	end
+
+	on keyup queue last
+		trigger validate
+	end
+
+	on validate
+
+		if my.value is "" then
+			tell <.badge /> in my parentNode
+				remove yourself
+			end
+			exit
+		end
+
+		set targetUrl to url + "?field=" + encodeURIComponent(my.name) + "&value=" + encodeURIComponent(my.value)
+
+		fetch `${targetUrl}` as json
+
+		tell <.badge /> in my parentNode
+			remove yourself
+		end
+
+		log the result.message
+
+		if the result.valid is true then
+			me.setCustomValidity("")
+			put `<span class="green badge">&check;</span>` at the end of my parentNode
+		else 
+			me.setCustomValidity(result.message)
+			put `<span class="red badge">X</span>` at the end of my parentNode
+		end
+
+		me.reportValidity()
+
+	end
+
+end

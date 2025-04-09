@@ -213,7 +213,7 @@ func (service *User) Save(user *model.User, note string) error {
 	}
 
 	// Guarantee that the username is unique, and fits formatting rules.
-	if err := service.ValidateUsername(user); err != nil {
+	if err := service.ValidateUsername(user.UserID, user.Username); err != nil {
 		return derp.Wrap(err, location, "Username is invalid", user)
 	}
 
@@ -559,22 +559,40 @@ func (service *User) CalcNewUsername(user *model.User) error {
 	return derp.NewInternalError("service.User.CalcUsername", "Unable to generate a unique username", user)
 }
 
-func (service *User) ValidateUsername(user *model.User) error {
+func (service *User) ValidateUsername(userID primitive.ObjectID, username string) error {
 
 	const location = "service.User.ValidateUsername"
 
+	switch username {
+
 	// RULE: Username is required
-	if user.Username == "" {
-		return derp.NewBadRequestError(location, "Username is required", user)
+	case "":
+		return derp.NewBadRequestError(location, "Username is required", username)
+
+	// RULE: Reserved names cannot be used
+	case
+		"admin",
+		"administrator",
+		"application",
+		"me",
+		"owner",
+		"root",
+		"search",
+		"service",
+		"system",
+		"test",
+		"user":
+
+		return derp.NewBadRequestError(location, "Username is not allowed", username)
 	}
 
-	if _, err := format.Username("")(user.Username); err != nil {
-		return derp.Wrap(err, location, "Username must contain only: letters, numbers, underscores, and hyphens", user)
+	if _, err := format.Username("")(username); err != nil {
+		return derp.Wrap(err, location, "Username must contain only: letters, numbers, underscores, and hyphens", username)
 	}
 
 	// RULE: Username must be unique
-	if service.UsernameExists(user.UserID, user.Username) {
-		return derp.NewBadRequestError(location, "Username is already in use", user)
+	if service.UsernameExists(userID, username) {
+		return derp.NewBadRequestError(location, "Username is already in use", username)
 	}
 
 	return nil

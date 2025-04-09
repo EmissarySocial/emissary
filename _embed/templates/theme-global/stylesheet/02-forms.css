@@ -490,7 +490,7 @@ button.button-invisible {
 }
 
 /******************************************
- * Mist Layouts
+ * Misc Layouts
  ******************************************/
 
 .height100 {height:100px;}
@@ -517,10 +517,42 @@ button.button-invisible {
 
 
 /******************************************
+ * Badges
+ ******************************************/
+
+.badge-container {
+	position:relative;
+}
+
+.badge-container > .badge {
+	position:absolute;
+	top:calc(var(--rhythm) * 1);
+	right:var(--rhythm);
+	display:inline-block;
+	color:white;
+	font-size:calc(var(--rhythm) * 1.5);
+	line-height:calc(var(--rhythm) * 2);
+	height:calc(var(--rhythm) * 3);
+	width:calc(var(--rhythm) * 3);
+	text-align:center;
+	padding:calc(var(--rhythm) / 2);
+	border-radius:calc(var(--rhythm) * 1.5);
+	white-space:nowrap;
+}
+
+.badge.red {
+	background-color:var(--red70);
+}
+
+.badge.green {
+	background-color:var(--green70);
+}
+
+/******************************************
  * Spinner
  ******************************************/
 
-.spin {
+ .spin {
 	display:inline-block;
 	animation-name: spin;
 	animation-duration: 800ms;

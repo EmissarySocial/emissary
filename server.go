@@ -215,33 +215,30 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/apple-touch-icon-precomposed.png", handler.TBD) // https://developer.apple.com/library/archive/documentation/AppleApplications/Reference/SafariWebContent/ConfiguringWebApplications/ConfiguringWebApplications.html
 	e.GET("/manifest.json", handler.TBD)                    // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json
 
-	// TODO: MEDIUM: Add other Well-Known API calls?
-	// https://en.wikipedia.org/wiki/List_of_/.well-known/_services_offered_by_webservers
-
-	e.GET("/.well-known/change-password", handler.GetChangePassword(factory))
-	e.GET("/.well-known/host-meta", handler.GetHostMeta(factory))
-	e.GET("/.well-known/host-meta.json", handler.GetHostMetaJSON(factory))
-	e.GET("/.well-known/webfinger", handler.WithFactory(factory, handler.GetWebfinger))
-	e.GET("/.well-known/nodeinfo", handler.GetNodeInfo(factory))
-	e.GET("/.well-known/nodeinfo/2.0", handler.GetNodeInfo20(factory))
-	e.GET("/.well-known/nodeinfo/2.1", handler.GetNodeInfo21(factory))
+	// NodeInfo Routes
 	e.GET("/nodeinfo/2.0", handler.GetNodeInfo20(factory))
 	e.GET("/nodeinfo/2.0.json", handler.GetNodeInfo20(factory))
 	e.GET("/nodeinfo/2.1", handler.GetNodeInfo21(factory))
 	e.GET("/nodeinfo/2.1.json", handler.GetNodeInfo21(factory))
 
-	// Built-In Service  Routes
+	// Built-In Service Routes
 	e.POST("/.follower/new", handler.PostEmailFollower(factory))
 	e.GET("/.giphy", handler.GetGiphyWidget(factory))
+	e.GET("/.intents/discover", handler.WithFactory(factory, handler.GetIntentInfo))
+	e.GET("/.intents/:intent", handler.WithFactory(factory, handler.GetOutboundIntent))
 	e.GET("/.oembed", handler.WithFactory(factory, handler.GetOEmbed))
+	e.POST("/.ostatus/discover", handler.PostOStatusDiscover(factory))
+	e.GET("/.ostatus/tunnel", handler.GetFollowingTunnel)
 	e.POST("/.stripe", stripe.PostWebhook(factory))
 	e.GET("/.searchTag/:searchTagId/attachments/:attachmentId", handler.WithFactory(factory, handler.GetSearchTagAttachment))
+	e.GET("/.sso", handler.WithDomain(factory, handler.GetSingleSignOn))
 	e.GET("/.themes/:themeId/:bundleId", handler.GetThemeBundle(factory))
 	e.GET("/.themes/:themeId/resources/:filename", handler.GetThemeResource(factory))
 	e.GET("/.templates/:templateId/:bundleId", handler.GetTemplateBundle(factory))
 	e.GET("/.templates/:templateId/resources/:filename", handler.GetTemplateResource(factory))
 	e.GET("/.unsplash/photos/:photo", unsplash.GetPhoto(factory))
 	e.GET("/.unsplash/collections/:collection/random", unsplash.GetCollectionRandom(factory))
+	e.GET("/.validate/username", handler.WithFactory(factory, handler.GetValidateUsername))
 	e.GET("/.webmention", handler.TBD)
 	e.POST("/.webmention", handler.WithFactory(factory, handler.PostWebMention))
 	e.GET("/.websub/:userId/:followingId", handler.GetWebSubClient(factory))
@@ -249,22 +246,23 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.widgets/:widgetId/:bundleId", handler.GetWidgetBundle(factory))
 	e.GET("/.widgets/:widgetId/resources/:filename", handler.GetWidgetResource(factory))
 
-	// Activity Intents
-	e.GET("/.intents/discover", handler.WithFactory(factory, handler.GetIntentInfo))
-	e.GET("/.intents/:intent", handler.WithFactory(factory, handler.GetOutboundIntent))
-	e.POST("/.ostatus/discover", handler.PostOStatusDiscover(factory))
-	e.GET("/.ostatus/tunnel", handler.GetFollowingTunnel)
-	// TODO: LOW: .ostatus/tunnel is no longer necessary because we're using the right cookie settings now.
-	// Migrate calls to this to a more direct route.
+	// Well-Known Routes https://en.wikipedia.org/wiki/List_of_/.well-known/_services_offered_by_webservers
+	e.GET("/.well-known/change-password", handler.GetChangePassword(factory))
+	e.GET("/.well-known/host-meta", handler.GetHostMeta(factory))
+	e.GET("/.well-known/host-meta.json", handler.GetHostMetaJSON(factory))
+	e.GET("/.well-known/webfinger", handler.WithFactory(factory, handler.GetWebfinger))
+	e.GET("/.well-known/nodeinfo", handler.GetNodeInfo(factory))
+	e.GET("/.well-known/nodeinfo/2.0", handler.GetNodeInfo20(factory))
+	e.GET("/.well-known/nodeinfo/2.1", handler.GetNodeInfo21(factory))
 
-	// ActivityPub Routes for Global Search Actor
+	// Global Search Actor (ActivityPub)
 	e.GET("/@search", handler.WithFactory(factory, ap_domain.GetJSONLD))
 	e.POST("/@search/pub/followers", handler.WithFactory(factory, handler.GetEmptyCollection))
 	e.POST("/@search/pub/following", handler.WithFactory(factory, handler.GetEmptyCollection))
 	e.POST("/@search/pub/inbox", handler.WithFactory(factory, ap_domain.PostInbox))
 	e.GET("/@search/pub/outbox", handler.WithFactory(factory, ap_domain.GetOutboxCollection))
 
-	// ActivityPub Routes for Search Queries
+	// Search Query Routes (ActivityPub)
 	e.POST("/.searchQuery", handler.WithFactory(factory, handler.PostSearchLookup))
 	e.GET("/@search_:searchId", handler.WithSearchQuery(factory, ap_search.GetJSONLD))
 	e.POST("/@search_:searchId/pub/followers", handler.WithFactory(factory, handler.GetEmptyCollection))
@@ -287,7 +285,6 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/signin/reset-code", handler.GetResetCode(factory))
 	e.POST("/signin/reset-code", handler.PostResetCode(factory))
 	e.POST("/.masquerade", handler.PostMasquerade(factory), mw.Owner)
-	e.GET("/.sso", handler.WithDomain(factory, handler.GetSingleSignOn))
 
 	// Domain Pages
 	e.GET("/.domain/attachments/:attachmentId", handler.GetDomainAttachment(factory))
