@@ -338,7 +338,7 @@ func firstOf[T comparable](values ...T) T {
 // This should be used sparingly because, while it does REPORT
 // the error, it does not return it to the caller.
 //
-//lint:ignore U1000 This function is used in other packages.
+// nolint:unused
 func must[T any](value T, err error) T {
 	if err != nil {
 		derp.Report(err)
@@ -376,6 +376,7 @@ func canTrace() bool {
 // (based on the global log level).
 // This makes it easier to execute expensive code conditionally,
 // for instance: marshalling a JSON object for logging.
+// nolint:unused
 func canLog(level zerolog.Level) bool {
 	return zerolog.GlobalLevel() <= level
 }

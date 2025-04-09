@@ -1,4 +1,4 @@
-<div class="page h-entry" hx-get="/{{.StreamID}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:window"  hx-sse="connect:/{{.StreamID}}/sse">
+<div class="page h-entry" hx-get="/{{.StreamID}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:window"  hx-sse="connect:/{{.StreamID}}/sse" script="on load take .selected from .nav-item for #nav-{{.NavigationID}}">
 
 	<link rel="stylesheet" href="/.templates/article-base/stylesheet"/>
 
