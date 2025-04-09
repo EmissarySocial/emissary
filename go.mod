@@ -28,7 +28,7 @@ require (
 	github.com/benpate/table v0.7.0
 	github.com/benpate/toot v0.3.0
 	github.com/benpate/turbine v0.3.0
-	github.com/codingsince1985/geo-golang v1.8.4
+	github.com/codingsince1985/geo-golang v1.8.5
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/davidscottmills/goeditorjs v1.0.0
 	github.com/dlclark/metaphone3 v0.0.0-20190903202417-5fe87fcdd547

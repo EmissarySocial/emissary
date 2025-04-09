@@ -77,8 +77,8 @@ github.com/cloudflare/ahocorasick v0.0.0-20240916140611-054963ec9396 h1:W2HK1IdC
 github.com/cloudflare/ahocorasick v0.0.0-20240916140611-054963ec9396/go.mod h1:tGWUZLZp9ajsxUOnHmFFLnqnlKXsCn6GReG4jAD59H0=
 github.com/cloudflare/circl v1.6.0 h1:cr5JKic4HI+LkINy2lg3W2jF8sHCVTBncJr5gIIq7qk=
 github.com/cloudflare/circl v1.6.0/go.mod h1:uddAzsPgqdMAYatqJ0lsjX1oECcQLIlRpzZh3pJrofs=
-github.com/codingsince1985/geo-golang v1.8.4 h1:1na/UJ8AVwte9dA/w/Ma+BjdJ8HeHyD45lH36Yfm4hQ=
-github.com/codingsince1985/geo-golang v1.8.4/go.mod h1:/XlxmuFwxAK1J+XMt4KRVv2YLlAvJgMELBvZlrD3nzo=
+github.com/codingsince1985/geo-golang v1.8.5 h1:Zc681GO3xQUPFxHnaaIhNzl4rRdPZf3qt3iOOAAZMrM=
+github.com/codingsince1985/geo-golang v1.8.5/go.mod h1:1EzFmdO4XUyijzbxQwT7CoE4v+7DTa3h4GlLo4CZq60=
 github.com/coreos/go-systemd/v22 v22.5.0/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSVTIJ3seZv2GcEnc=
 github.com/cyphar/filepath-securejoin v0.4.1 h1:JyxxyPEaktOD+GAnqIqTf9A8tHyAG22rowi7HkoSU1s=
 github.com/cyphar/filepath-securejoin v0.4.1/go.mod h1:Sdj7gXlvMcPZsbhwhQ33GguGLDGQL7h7bg04C/+u9jI=
