@@ -224,8 +224,14 @@ func (user *User) SetState(stateID string) {
 
 func (user User) GetJSONLD() mapof.Any {
 
+	contextList := sliceof.Any{
+		vocab.ContextTypeActivityStreams,
+		vocab.ContextTypeSecurity,
+		vocab.ContextTypeToot,
+	}
+
 	result := mapof.Any{
-		vocab.AtContext:                 sliceof.Any{vocab.ContextTypeActivityStreams, vocab.ContextTypeSecurity, vocab.ContextTypeToot},
+		vocab.AtContext:                 contextList,
 		vocab.PropertyID:                user.ActivityPubURL(),
 		vocab.PropertyType:              vocab.ActorTypePerson,
 		vocab.PropertyURL:               user.Host() + "/@" + user.Username,
@@ -238,9 +244,7 @@ func (user User) GetJSONLD() mapof.Any {
 		vocab.PropertyFollowing:         user.ActivityPubFollowingURL(),
 		vocab.PropertyFollowers:         user.ActivityPubFollowersURL(),
 		vocab.PropertyLiked:             user.ActivityPubLikedURL(),
-		// TODO: Revisit FEP-c648
-		// https://codeberg.org/fediverse/fep/src/branch/main/fep/c648/fep-c648.md
-		// vocab.PropertyBlocked:           user.ActivityPubBlockedURL(), // Temporarily removed because of problems with Mastodon parsing JSON-LD.  Maybe this is it?
+		vocab.PropertyFeatured:          user.ActivityPubFeaturedURL(),
 	}
 
 	if user.StatusMessage != "" {
@@ -324,6 +328,14 @@ func (user *User) ActivityPubLikedURL() string {
 	}
 
 	return user.ProfileURL + "/pub/liked"
+}
+
+func (user *User) ActivityPubFeaturedURL() string {
+	if user.ProfileURL == "" {
+		return ""
+	}
+
+	return user.ProfileURL + "/pub/featured"
 }
 
 func (user *User) ActivityPubOutboxURL() string {

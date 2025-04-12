@@ -510,6 +510,16 @@ func (service *Stream) QueryByAncestorAndDate(streamID primitive.ObjectID, publi
 	return service.Query(criteria, option.SortDesc("publishDate"), option.MaxRows(int64(pageSize)))
 }
 
+// QueryFeaturedByUser returns all Streams in a particular User's outbox that have been featured.
+func (service *Stream) QueryFeaturedByUser(userID primitive.ObjectID) ([]model.StreamSummary, error) {
+	criteria := exp.Equal("parentId", userID).AndEqual("isFeatured", true)
+	return service.QuerySummary(
+		criteria,
+		option.SortDesc("publishDate"),
+		option.Fields("url"),
+	)
+}
+
 // LoadByToken returns a single `Stream` that matches a particular `Token`
 func (service *Stream) LoadByToken(token string, result *model.Stream) error {
 

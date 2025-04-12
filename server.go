@@ -340,6 +340,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@:userId/pub", handler.WithUser(factory, handler.GetOutbox))
 	e.POST("/@:userId/pub/inbox", ap_user.PostInbox(factory))
 	e.GET("/@:userId/pub/outbox", ap_user.GetOutboxCollection(factory))
+	e.GET("/@:userId/pub/featured", handler.WithUser(factory, ap_user.GetFeaturedCollection))
 	e.GET("/@:userId/pub/followers", handler.WithFactory(factory, ap_user.GetFollowersCollection))
 	e.GET("/@:userId/pub/following", handler.WithFactory(factory, ap_user.GetFollowingCollection))
 	e.GET("/@:userId/pub/following/:followingId", handler.WithFactory(factory, ap_user.GetFollowingRecord))
@@ -349,8 +350,8 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@:userId/pub/liked/:response", ap_user.GetResponse(factory, vocab.ActivityTypeLike))
 	e.GET("/@:userId/pub/disliked", ap_user.GetResponseCollection(factory, vocab.ActivityTypeDislike))
 	e.GET("/@:userId/pub/disliked/:response", ap_user.GetResponse(factory, vocab.ActivityTypeDislike))
-	e.GET("/@:userId/pub/blocked", ap_user.GetBlockedCollection(factory))
-	e.GET("/@:userId/pub/blocked/:ruleId", ap_user.GetBlock(factory))
+	e.GET("/@:userId/pub/blocked", handler.WithUser(factory, ap_user.GetBlockedCollection))
+	e.GET("/@:userId/pub/blocked/:ruleId", handler.WithUser(factory, ap_user.GetBlock))
 
 	// ActivityPub Routes for Streams
 	e.GET("/:stream/pub", handler.WithTemplate(factory, ap_stream.GetJSONLD))
