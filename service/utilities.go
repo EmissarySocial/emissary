@@ -376,6 +376,7 @@ func canTrace() bool {
 // (based on the global log level).
 // This makes it easier to execute expensive code conditionally,
 // for instance: marshalling a JSON object for logging.
+// nolint:unused
 func canLog(level zerolog.Level) bool {
 	return zerolog.GlobalLevel() <= level
 }
