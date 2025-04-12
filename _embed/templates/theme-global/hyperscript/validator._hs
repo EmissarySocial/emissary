@@ -1,9 +1,5 @@
 behavior validator(url)
 
-	init
-		trigger validate
-	end
-
 	on keyup queue last
 		trigger validate
 	end
