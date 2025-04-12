@@ -20,7 +20,7 @@ client := camper.New( /* functional options here */ )
 
 // Look up the template for this intent and username.
 // If none is found, then urlTemplate will be empty.
-urlTemplate := client.GetTemplate("create", "@username@service.social")
+urlTemplate := client.GetTemplate("create", "@username@server.social")
 
 if urlTemplate != "" {
     // You're all clear, kid!
