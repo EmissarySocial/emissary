@@ -36,6 +36,10 @@
 .square {
     aspect-ratio:1;
 	border-radius:0px;
+    object-fit:cover;
+	background-color:var(--gray30);
+	flex-shrink:0;
+	flex-grow:0;
 }
 
 .circle {
@@ -43,6 +47,8 @@
 	aspect-ratio: 1;
     object-fit:cover;
 	background-color:var(--gray30);
+	flex-shrink:0;
+	flex-grow:0;
 }
 
 .rounded {
