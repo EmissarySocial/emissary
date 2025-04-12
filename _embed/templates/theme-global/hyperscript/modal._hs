@@ -13,9 +13,9 @@ behavior Modal
 			set the @aria-labelledby to the title's id
 		end
 
-		-- prevent window from scrolling underneath the modal
-		set document.body.style.position to "fixed"
-		set document.body.style.top to `-${window.scrollY}px`
+		-- Prevent window from scrolling underneath the modal
+		-- From: https://stackoverflow.com/questions/44103023/stop-scrolling-on-body-when-modal-is-open-and-allow-scroll-on-modal-divs
+		set document.body.style.overflow to "hidden"
 
 		wait a tick then
 		add .ready to #modal
@@ -35,14 +35,9 @@ behavior Modal
 			exit
 		end
 
-		-- reset scroll position
-		set scrollY to parseInt(document.body.style.top)
-		set document.body.style.position to ""
-		set document.body.style.top to ""
-
-		if scrollY is not empty then
-			window.scrollTo(0, scrollY * -1)
-		end
+		-- reset window scrolling
+		-- From: https://stackoverflow.com/questions/44103023/stop-scrolling-on-body-when-modal-is-open-and-allow-scroll-on-modal-divs
+		set document.body.style.overflow to ""
 
 		-- animate the modal closing
 		remove .ready from #modal
