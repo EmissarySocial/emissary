@@ -302,8 +302,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/:objectId/sse", handler.WithFactory(factory, handler.ServerSentEvent))
 	e.GET("/@:objectId/sse", handler.WithFactory(factory, handler.ServerSentEvent))
 
-	// Profile Pages
-	// NOTE: these are rewritten from /@:userId by the rewrite middleware
+	// ActivityPub pages for the application actor
 	e.GET("/@application", handler.WithFactory(factory, handler.GetServiceActor))
 	e.POST("/@application/inbox", handler.PostServiceActor_Inbox(factory))
 	e.GET("/@application/inbox", handler.WithFactory(factory, handler.GetEmptyCollection))

@@ -26,19 +26,11 @@ func GetValidateUsername(ctx *steranko.Context, factory *domain.Factory) error {
 	userID := authorization.UserID
 	username := ctx.QueryParam("value")
 
-	// RULE: Username must not be empty
-	if username == "" {
-		return ctx.JSON(http.StatusOK, mapof.Any{
-			"valid":   false,
-			"message": "Username is required",
-		})
-	}
-
 	// If the username is not allowed, then return an error
 	if err := userService.ValidateUsername(userID, username); err != nil {
 		return ctx.JSON(http.StatusOK, mapof.Any{
 			"valid":   false,
-			"message": "Username is not available",
+			"message": derp.Message(err),
 		})
 	}
 

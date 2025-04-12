@@ -586,8 +586,9 @@ func (service *User) ValidateUsername(userID primitive.ObjectID, username string
 		return derp.NewBadRequestError(location, "Username is not allowed", username)
 	}
 
+	// RULE: Username can only contain letters, numbers, and underscores
 	if _, err := format.Username("")(username); err != nil {
-		return derp.Wrap(err, location, "Username must contain only: letters, numbers, underscores, and hyphens", username)
+		return derp.Wrap(err, location, "Username must contain only: letters, numbers, and underscores.", username)
 	}
 
 	// RULE: Username must be unique
