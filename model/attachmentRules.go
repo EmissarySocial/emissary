@@ -89,7 +89,7 @@ func (rules AttachmentRules) FileSpec(address *url.URL, originalExtension string
 			rules.Extensions = []string{"mp4", "webm", "ogv"}
 
 		case "audio":
-			rules.Extensions = []string{"mp3", "aac", "ogg", "flac"}
+			rules.Extensions = []string{"mp3", "opus", "aac", "ogg", "flac"}
 		}
 	}
 
