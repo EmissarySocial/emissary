@@ -53,36 +53,39 @@ type Factory struct {
 	exportCache         afero.Fs
 
 	// services (within this domain/factory)
-	activityService       service.ActivityStream
-	attachmentService     service.Attachment
-	connectionService     service.Connection
-	domainService         service.Domain
-	emailService          service.DomainEmail
-	encryptionKeyService  service.EncryptionKey
-	folderService         service.Folder
-	followerService       service.Follower
-	followingService      service.Following
-	groupService          service.Group
-	inboxService          service.Inbox
-	jwtService            service.JWT
-	locatorService        service.Locator
-	mentionService        service.Mention
-	oauthClient           service.OAuthClient
-	oauthUserToken        service.OAuthUserToken
-	outboxService         service.Outbox
-	responseService       service.Response
-	ruleService           service.Rule
-	searchDomainService   service.SearchDomain
-	searchNotifierService service.SearchNotifier
-	searchQueryService    service.SearchQuery
-	searchTagService      service.SearchTag
-	searchResultService   service.SearchResult
-	streamService         service.Stream
-	streamArchiveService  service.StreamArchive
-	streamDraftService    service.StreamDraft
-	realtimeBroker        RealtimeBroker
-	userService           service.User
-	webhookService        service.Webhook
+	activityService        service.ActivityStream
+	attachmentService      service.Attachment
+	connectionService      service.Connection
+	domainService          service.Domain
+	emailService           service.DomainEmail
+	encryptionKeyService   service.EncryptionKey
+	folderService          service.Folder
+	followerService        service.Follower
+	followingService       service.Following
+	groupService           service.Group
+	inboxService           service.Inbox
+	jwtService             service.JWT
+	locatorService         service.Locator
+	mentionService         service.Mention
+	merchantAccountService service.MerchantAccount
+	oauthClient            service.OAuthClient
+	oauthUserToken         service.OAuthUserToken
+	outboxService          service.Outbox
+	responseService        service.Response
+	ruleService            service.Rule
+	searchDomainService    service.SearchDomain
+	searchNotifierService  service.SearchNotifier
+	searchQueryService     service.SearchQuery
+	searchTagService       service.SearchTag
+	searchResultService    service.SearchResult
+	streamService          service.Stream
+	streamArchiveService   service.StreamArchive
+	streamDraftService     service.StreamDraft
+	subscriberService      service.Subscriber
+	subscriptionService    service.Subscription
+	realtimeBroker         RealtimeBroker
+	userService            service.User
+	webhookService         service.Webhook
 
 	// real-time watchers
 	refreshContext   context.CancelFunc
@@ -142,6 +145,7 @@ func NewFactory(domain config.Domain, port string, providers []config.Provider, 
 	factory.jwtService = service.NewJWT()
 	factory.locatorService = service.NewLocator()
 	factory.mentionService = service.NewMention()
+	factory.merchantAccountService = service.NewMerchantAccount()
 	factory.oauthClient = service.NewOAuthClient()
 	factory.oauthUserToken = service.NewOAuthUserToken()
 	factory.outboxService = service.NewOutbox()
@@ -155,6 +159,8 @@ func NewFactory(domain config.Domain, port string, providers []config.Provider, 
 	factory.streamService = service.NewStream()
 	factory.streamArchiveService = service.NewStreamArchive()
 	factory.streamDraftService = service.NewStreamDraft()
+	factory.subscriberService = service.NewSubscriber()
+	factory.subscriptionService = service.NewSubscription()
 	factory.userService = service.NewUser()
 	factory.webhookService = service.NewWebhook()
 
@@ -298,7 +304,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		// Populate the JWT Key Service
 		factory.jwtService.Refresh(
 			factory.collection(CollectionJWT),
-			[]byte(domain.KeyEncryptingKey),
+			domain.MasterKey,
 		)
 
 		// Populate the Locator service
@@ -317,6 +323,12 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.Rule(),
 			factory.ActivityStream(),
 			factory.Host(),
+		)
+
+		// Populate MerchantAccount Service
+		factory.merchantAccountService.Refresh(
+			factory.collection(CollectionMerchantAccount),
+			domain.MasterKey,
 		)
 
 		// Populate OAuthClient
@@ -455,6 +467,16 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.Stream(),
 		)
 
+		// Populate Subscriber Service
+		factory.subscriberService.Refresh(
+			factory.collection(CollectionSubscriber),
+		)
+
+		// Populate Subscription Service
+		factory.subscriptionService.Refresh(
+			factory.collection(CollectionSubscription),
+		)
+
 		// Populate User Service
 		factory.userService.Refresh(
 			factory.collection(CollectionUser),
@@ -565,37 +587,6 @@ func (factory *Factory) Providers() set.Slice[config.Provider] {
 	return factory.providers
 }
 
-func (factory *Factory) Collections() []string {
-
-	return []string{
-		CollectionAttachment,
-		CollectionConnection,
-		CollectionDomain,
-		CollectionEncryptionKey,
-		CollectionFolder,
-		CollectionFollower,
-		CollectionFollowing,
-		CollectionGroup,
-		CollectionInbox,
-		CollectionJWT,
-		CollectionMention,
-		CollectionRule,
-		CollectionOAuthClient,
-		CollectionOAuthUserToken,
-		CollectionOutbox,
-		CollectionSearchQuery,
-		CollectionSearchResult,
-		CollectionSearchTag,
-		CollectionStream,
-		CollectionStreamDraft,
-		CollectionStreamOutbox,
-		CollectionResponse,
-		CollectionTemplate,
-		CollectionUser,
-		CollectionWebhook,
-	}
-}
-
 /******************************************
  * Domain Model Services
  ******************************************/
@@ -616,8 +607,17 @@ func (factory *Factory) Model(name string) (service.ModelService, error) {
 	case "following":
 		return factory.Following(), nil
 
+	case "merchantAccount":
+		return factory.MerchantAccount(), nil
+
 	case "stream":
 		return factory.Stream(), nil
+
+	case "subscriber":
+		return factory.Subscriber(), nil
+
+	case "subscription":
+		return factory.Subscription(), nil
 
 	case "user":
 		return factory.User(), nil
@@ -686,6 +686,11 @@ func (factory *Factory) Inbox() *service.Inbox {
 	return &factory.inboxService
 }
 
+// MerchantAccount returns a fully populated MerchantAccount service
+func (factory *Factory) MerchantAccount() *service.MerchantAccount {
+	return &factory.merchantAccountService
+}
+
 // Mention returns a fully populated Mention service
 func (factory *Factory) Mention() *service.Mention {
 	return &factory.mentionService
@@ -739,6 +744,16 @@ func (factory *Factory) StreamArchive() *service.StreamArchive {
 // StreamDraft returns a fully populated StreamDraft service
 func (factory *Factory) StreamDraft() *service.StreamDraft {
 	return &factory.streamDraftService
+}
+
+// Subscriber returns a fully populated Subscriber service
+func (factory *Factory) Subscriber() *service.Subscriber {
+	return &factory.subscriberService
+}
+
+// Subscription returns a fully populated Subscription service
+func (factory *Factory) Subscription() *service.Subscription {
+	return &factory.subscriptionService
 }
 
 // Response returns a fully populated Response service
@@ -945,6 +960,9 @@ func (factory *Factory) ModelService(object data.Object) service.ModelService {
 	case *model.Following:
 		return factory.Following()
 
+	case *model.MerchantAccount:
+		return factory.MerchantAccount()
+
 	case *model.Message:
 		return factory.Inbox()
 
@@ -956,6 +974,12 @@ func (factory *Factory) ModelService(object data.Object) service.ModelService {
 
 	case *model.Stream:
 		return factory.Stream()
+
+	case *model.Subscriber:
+		return factory.Subscriber()
+
+	case *model.Subscription:
+		return factory.Subscription()
 
 	default:
 		return nil

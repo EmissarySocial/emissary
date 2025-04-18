@@ -73,11 +73,11 @@ func (rule Rule) Roles(authorization *Authorization) []string {
 
 	// Rules are private, so only MagicRoleMyself is allowed
 	if authorization.UserID == rule.UserID {
-		return []string{MagicRoleMyself}
+		return []string{MagicRoleMyself, MagicRoleOwner}
 	}
 
-	// Intentionally NOT allowing MagicRoleAnonymous, MagicRoleAuthenticated, or MagicRoleOwner
-	return []string{}
+	// Intentionally NOT allowing MagicRoleAnonymous and MagicRoleAuthenticated
+	return []string{MagicRoleOwner}
 }
 
 /******************************************

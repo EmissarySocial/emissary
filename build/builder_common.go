@@ -126,10 +126,11 @@ func (w Common) PathList() list.List {
 
 // SetQueryParam updates the HTTP request, setting a new value
 // for an individual query parameter.
-func (w Common) SetQueryParam(name string, value string) {
+func (w Common) SetQueryParam(name string, value string) bool {
 	query := w._request.URL.Query()
 	query.Set(name, value)
 	w._request.URL.RawQuery = query.Encode()
+	return true
 }
 
 // Returns the designated request parameter.  If there are

@@ -1,0 +1,21 @@
+{{- $next := .QueryParam "next" -}}
+
+<h1>{{icon "add"}} Add a Merchant Account</h1>
+<p>The first step in collecting payments is to set up a merchant account with one of the supported payment procesors below.</p>
+
+<div class="flex-row margin-bottom text-sm">
+	<div hx-get="/@me/inbox/merchantAccount-edit-paypal?next={{$next}}" class="clickable card padding width-50% hover-outline" role="button">
+		<div class="align-center margin-bottom">
+			<img src="/.templates/user-inbox/resources/paypal.png" style="height:100px;">
+		</div>
+		<div class="text-gray"><b>PayPal</b> is a leading payment platform for consumers and small businesses.</div>
+	</div>
+	<div hx-get="/@me/inbox/merchantAccount-edit-stripe?next={{$next}}" class="clickable card padding width-50% hover-outline" role="button">
+		<div class="align-center margin-bottom">
+			<img src="/.templates/user-inbox/resources/stripe.svg" style="height:100px;">
+		</div>
+		<div class="text-gray"><b>Stripe</b> is a sophisticated payment platform for developers and techies.</div>
+	</div>
+</div>
+
+<button script="on click trigger closeModal">Close Window</button>

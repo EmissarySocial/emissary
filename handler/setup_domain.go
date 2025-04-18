@@ -173,9 +173,9 @@ func setupDomainForm(header string) form.Element {
 				Description: "Name of the database to use on the server",
 			}, {
 				Type:        "text",
-				Path:        "keyEncryptingKey",
+				Path:        "masterKey",
 				Label:       "Master Key",
-				Description: "32 Random Characters",
+				Description: "64 Hexadecimal Characters",
 			}},
 		}, {
 			Label: "Account Owner",

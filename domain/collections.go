@@ -33,8 +33,8 @@ const CollectionJWT = "JWT"
 // CollectionMention is the name of the database collection where Mention records are stored
 const CollectionMention = "Mention"
 
-// CollectionRule is the name of the database collection where Rule records are stored
-const CollectionRule = "Rule"
+// CollectionMerchantAccount is the name of the database collection where MerchantAccount records are stored
+const CollectionMerchantAccount = "MerchantAccount"
 
 // CollectionOAuthClient is the name of the database collection where OAuthClients are stored
 const CollectionOAuthClient = "OAuthClient"
@@ -44,6 +44,12 @@ const CollectionOAuthUserToken = "OAuthUserToken"
 
 // CollectionOutbox is the name of the database collection where users' Outbox records are stored
 const CollectionOutbox = "Outbox"
+
+// CollectionResponse is the name of the database collection where Responses are stored
+const CollectionResponse = "Response"
+
+// CollectionRule is the name of the database collection where Rule records are stored
+const CollectionRule = "Rule"
 
 // CollectionSearchQuery is the name of the database collection where SearchQueries are stored
 const CollectionSearchQuery = "SearchQuery"
@@ -60,11 +66,11 @@ const CollectionStream = "Stream"
 // CollectionStreamDraft is the name of the database collection where draft changes to streams are stored
 const CollectionStreamDraft = "StreamDraft"
 
-// CollectionStreamOutbox is the name of the database collection where users' StreamMessage records are stored
-const CollectionStreamOutbox = "StreamOutbox"
+// CollectionSubscriber is the name of the database collection where Subscribers are stored
+const CollectionSubscriber = "Subscriber"
 
-// CollectionResponse is the name of the database collection where Responses are stored
-const CollectionResponse = "Response"
+// CollectionSubscription is the name of the database collection where Subscriptions are stored
+const CollectionSubscription = "Subscription"
 
 // CollectionTemplate is the name of the database collection where Templates are stored
 const CollectionTemplate = "Template"

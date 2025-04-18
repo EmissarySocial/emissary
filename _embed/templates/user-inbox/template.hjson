@@ -493,6 +493,158 @@
 			]
 		}
 
+		merchantAccounts: {
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
+		merchantAccounts-list: {
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
+		merchantAccount-add: {
+			roles:["self"]
+			steps:[
+				{do:"as-modal", steps:[
+					{do:"view-html", file:"merchantAccount-add"}
+				]}
+			]
+		}
+
+		merchantAccount-edit-paypal: {
+			roles:["self"]
+			steps: [
+				{do:"as-modal", steps:[
+					{do:"with-merchant-account", steps:[
+						{do:"view-html", file:"merchantAccount-edit-paypal"}
+						{
+							do:edit
+							form:{
+								type:layout-vertical
+								children:[
+									{type:"hidden", path:"type", options:{value:"PAYPAL"}}
+									{type:"text", path:"name", label:"Account Label", description:"(PRIVATE) A label for you to recognize this account", options:{required:true}}
+									{type:"text", path:"vault.clientId", label:"Client ID", description:"Created in <a href='https://developer.paypal.com/dashboard/applications'>PayPal Developer Console</a>", options:{required:true}}
+									{type:"text", path:"vault.secretKey", label:"Secret Key", description:"See <a href='https://emissary.dev/merchantAccount#PayPal'>setup instructions</a> for more details.", options:{required:true}}
+								]
+							}
+							options:["delete:/@me/inbox/merchantAccount-delete?merchantAccountId={{.ObjectID}}"]
+						}
+						{do:"save"}
+						{do:"refresh-page"}
+					]}
+				]}
+			]
+		}
+
+		merchantAccount-edit-stripe: {
+			roles:["self"]
+			steps: [
+				{do:"as-modal", steps:[
+					{do:"with-merchant-account", steps:[
+						{do:"view-html", file:"merchantAccount-edit-stripe"}
+						{
+							do:edit
+							form:{
+								type:layout-vertical
+								children:[
+									{type:"hidden", path:"type", options:{value:"STRIPE"}}
+									{type:"text", path:"name", label:"Account Label", description:"(PRIVATE) A label for you to recognize this account", options:{required:true}}
+									{type:"text", path:"vault.apiKey", label:"API Key", description:"Created in <a href='https://dashboard.stripe.com' target='_blank'>Stripe dashboard</a>. See <a href='https://emissary.dev/merchantAccount#Stripe' target='_blank'>setup instructions</a> for details.", options:{required:true}}
+								]
+							}
+							options:["delete:/@me/inbox/merchantAccount-delete?merchantAccountId={{.ObjectID}}"]
+						}
+						{do:"save"}
+						{do:"refresh-page"}
+					]}
+				]}
+			]
+		}
+
+		merchantAccount-delete: {
+			roles:["self"]
+			steps:[
+				{do:"with-merchant-account", steps:[
+					{do:"delete", title:"Delete Merchant Account?", message:"Are you sure you want to delete this account?"}
+					{do:"refresh-page"}
+				]}
+			]
+		}
+
+		subscribers: {
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
+		subscribers-list: {
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
+		subscriptions: {
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
+		subscriptions-list: {
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
+		subscription-add: {
+			roles:["self"]
+			steps:[
+				{do:"as-modal", steps:[
+					{do:"view-html"}
+				]}
+			]
+		}
+
+		subscription-edit: {
+			roles:["self"]
+			steps:[
+				{do:"with-subscription", steps: [
+					{do:"as-modal", steps:[
+						{do:"include", action:"subscription-edit-inner"}
+					]}
+				]}
+			]
+		}
+
+		subscription-edit-inner: {
+			roles:["self"]
+			steps:[
+				{do:"with-subscription", steps: [
+					{do:"set-data", from-url:["merchantAccountId"]}
+					{do:"edit", form:{
+						type:"layout-vertical"
+						label:"Add Subscription"
+						children:[
+							{type:"text", path:"subscriptionToken", label:"Subscription", options:{required:true}}
+							{type:"text", path:"name", label:"Label", description:"Displayed to subscribers", opeions:{required:true}}
+							{type:"textarea", path:"description", label:"Description", description:"Displayed to subscribers"}
+						]
+					}}
+					{do:"save"}
+					{do:"refresh-page"}
+				]}
+			]
+		}
+
 		actor-button: {
 			roles:["self"]
 			steps: [

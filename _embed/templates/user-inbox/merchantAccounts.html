@@ -1,0 +1,37 @@
+{{- $folders := .Folders -}}
+
+<div class="page app flex-row">
+
+	<title>{{.RuleCount}} Rules | {{.DisplayName}}</title>
+	<link rel="stylesheet" href="/.templates/user-inbox/stylesheet">
+
+	{{- template "sidebar" $folders -}}
+
+	<div class="app-content">
+
+		<div role="tablist" class="underlined margin-top margin-bottom" hx-push-url="true">
+			<span role="tab" class="turboclick" hx-get="/@me/inbox/following">{{icon "star"}} Following</span>
+			<span role="tab" class="turboclick" hx-get="/@me/inbox/followers">{{icon "person"}} Followers</span>
+			<span role="tab" class="turboclick" hx-get="/@me/inbox/rules">{{icon "rule"}} Rules</span>
+			<span role="tab" class="turboclick" hx-get="/@me/inbox/subscriptions" aria-selected="true">{{icon "person-card-fill"}} Subscriptions</span>
+		</div>
+
+		<div role="tablist" class="align-right pills margin-top margin-bottom" hx-push-url="true">
+			<span role="tab" class="turboclick" hx-get="/@me/inbox/subscribers">Subscribers</span>
+			<span role="tab" class="turboclick" hx-get="/@me/inbox/subscriptions">Plans</span>
+			<span role="tab" class="turboclick" hx-get="/@me/inbox/merchantAccounts" aria-selected="true">Merchant Accounts</span>
+		</div>
+
+		<div class="table margin-top">
+			<div hx-get="/@me/inbox/merchantAccount-add" class="link" role="button">{{icon "add"}} Add a Merchant Account</div>
+		</div>
+
+		<div id="merchantAccounts-list" class="table">
+			{{.View "merchantAccounts-list"}}
+		</div>
+	
+	</div>
+
+	<div hx-get="{{.URL}}" hx-trigger="refreshPage from:window" hx-push-url="false"></div>
+
+</div>

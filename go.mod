@@ -2,6 +2,9 @@ module github.com/EmissarySocial/emissary
 
 go 1.24.1
 
+replace github.com/benpate/form => ../../benpate/form
+replace github.com/benpate/remote => ../../benpate/remote
+
 require (
 	github.com/PuerkitoBio/goquery v1.10.2
 	github.com/aws/aws-sdk-go v1.55.6

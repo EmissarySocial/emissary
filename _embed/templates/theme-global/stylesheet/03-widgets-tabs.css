@@ -108,18 +108,18 @@
 
  [role="tablist"].pills {
     border-bottom:none;
-    margin-bottom:calc( var(--rhythm) * 3);
+    margin-bottom:calc( var(--rhythm) * 2);
     line-height:1em;
     font-weight:400;
     font-family:inherit;
-    font-size:1rem;
+    font-size:0.8rem;
 }
 
 [role="tablist"].pills > [role="tab"] {
     background-color:rgba(0,0,0,0);
     border:none;
     margin:0px;
-    padding:8px 16px;
+    padding:8px 12px;
 
     cursor:pointer;
     display:inline-block;
@@ -132,7 +132,7 @@
 [role="tablist"].pills > [role="tab"]:focus:not([disabled]) {
     border:none;
     margin:0px;
-    padding:8px 16px;
+    padding:8px 12px;
 
     background-color:var(--gray10);
     color:var(--black);
@@ -149,11 +149,10 @@
 [role="tablist"].pills > [role="tab"].selected:hover {
     border:none;
     margin:0px;
-    padding:8px 16px;
+    padding:8px 12px;
 
-    background-color:var(--gray50);
+    background-color:var(--blue60);
     color:var(--white);
-    font-weight:500;
 }
 
 

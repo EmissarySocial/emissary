@@ -31,7 +31,7 @@ func ModelService_RenderTemplate(serverFactory *server.Factory, ctx echo.Context
 	modelService, err := factory.Model(serviceName)
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Invalid model service", serviceName)
+		return "", derp.Wrap(err, location, "Cannot make model service", serviceName)
 	}
 
 	// Use criteria builder to create a query

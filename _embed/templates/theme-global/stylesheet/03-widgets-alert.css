@@ -6,8 +6,8 @@
 }
 
 .alert-blue {
-    background-color: var(--blue70);
-    color: var(--white);
+	border:solid 1px var(--blue20);
+    background-color: var(--blue10);
     padding: var(--rhythm) calc(var(--rhythm) * 2);
     margin-bottom: calc(var(--rhythm) * 2);
 }

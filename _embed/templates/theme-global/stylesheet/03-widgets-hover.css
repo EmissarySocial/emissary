@@ -41,3 +41,8 @@
 		transform: scale(1.05);
 	}
 }
+
+.hover-outline:hover,
+.hover-trigger:hover .hover-outline {
+	border:solid 1px var(--link-color);
+}

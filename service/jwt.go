@@ -18,10 +18,10 @@ import (
 
 // JWT is a service that generates and validates JWT keys.
 type JWT struct {
-	collection       data.Collection             // Database collection where JWT keys are stored
-	cache            otter.Cache[string, []byte] // In-Memory cache for frequently used keys
-	hasCache         bool                        // Flag to indicate if the cache is enabled
-	keyEncryptingKey []byte                      // "Key Encrypting Key" used to encode/decode JWT keys that are stored in the collection
+	collection data.Collection             // Database collection where JWT keys are stored
+	cache      otter.Cache[string, []byte] // In-Memory cache for frequently used keys
+	hasCache   bool                        // Flag to indicate if the cache is enabled
+	masterKey  string                      // "Key Encrypting Key" used to encode/decode JWT keys that are stored in the collection
 }
 
 func NewJWT() JWT {
@@ -32,10 +32,10 @@ func NewJWT() JWT {
  * Lifecycle Methods
  ******************************************/
 
-func (service *JWT) Refresh(collection data.Collection, keyEncryptingKey []byte) {
+func (service *JWT) Refresh(collection data.Collection, masterKey string) {
 
 	service.collection = collection
-	service.keyEncryptingKey = keyEncryptingKey
+	service.masterKey = masterKey
 
 	builder := otter.MustBuilder[string, []byte](32).
 		WithTTL(24 * time.Hour)

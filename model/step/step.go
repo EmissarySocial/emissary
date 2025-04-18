@@ -224,6 +224,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "with-follower":
 		return NewWithFollower(stepInfo)
 
+	case "with-merchant-account":
+		return NewWithMerchantAccount(stepInfo)
+
 	case "with-message":
 		return NewWithMessage(stepInfo)
 
@@ -241,6 +244,13 @@ func New(stepInfo mapof.Any) (Step, error) {
 
 	case "with-rule":
 		return NewWithRule(stepInfo)
+
+	case "with-subscriber":
+		return NewWithSubscriber(stepInfo)
+
+	case "with-subscription":
+		return NewWithSubscription(stepInfo)
+
 	}
 
 	// Fall through means we have an unrecognized action

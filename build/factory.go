@@ -32,6 +32,7 @@ type Factory interface {
 	Group() *service.Group
 	Inbox() *service.Inbox
 	Mention() *service.Mention
+	MerchantAccount() *service.MerchantAccount
 	Outbox() *service.Outbox
 	Provider() *service.Provider
 	Registration() *service.Registration
@@ -42,6 +43,8 @@ type Factory interface {
 	Stream() *service.Stream
 	StreamArchive() *service.StreamArchive
 	StreamDraft() *service.StreamDraft
+	Subscriber() *service.Subscriber
+	Subscription() *service.Subscription
 	Template() *service.Template
 	Theme() *service.Theme
 	User() *service.User

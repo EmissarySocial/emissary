@@ -1,6 +1,6 @@
 {{- $folders := .Folders -}}
 
-<div class="page app flex-row" hx-get="{{.URL}}" hx-trigger="refreshPage from:window, refreshSection from:window" hx-target="this" hx-swap="outerHTML" hx-push-url="true">
+<div class="page app flex-row">
 	<title>{{.FollowingCount}} Following | {{.DisplayName}}</title>
 	<script src="/.templates/user-inbox/hyperscript" type="text/hyperscript"></script>
 	<link rel="stylesheet" href="/.templates/user-inbox/stylesheet">
@@ -13,6 +13,7 @@
 			<span role="tab" class="turboclick" aria-selected="true">{{icon "star-fill"}} Following</span>
 			<span role="tab" class="turboclick" hx-get="/@me/inbox/followers">{{icon "person"}} Followers</span>
 			<span role="tab" class="turboclick" hx-get="/@me/inbox/rules">{{icon "rule"}} Rules</span>
+			<span role="tab" class="turboclick" hx-get="/@me/inbox/subscriptions">{{icon "person-card"}} Subscriptions</span>
 		</div>
 
 		<div>
@@ -41,5 +42,7 @@
 		</div>
 				
 	</div>
+
+	<div hx-get="{{.URL}}" hx-trigger="refreshPage from:window" hx-push-url="false"></div>
 
 </div>
