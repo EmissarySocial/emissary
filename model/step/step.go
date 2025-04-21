@@ -170,6 +170,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "set-state":
 		return NewSetState(stepInfo)
 
+	case "set-subscriptions":
+		return NewSetSubscriptions(stepInfo)
+
 	case "set-thumbnail":
 		return NewSetThumbnail(stepInfo)
 

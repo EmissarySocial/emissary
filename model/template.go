@@ -76,6 +76,17 @@ func (template Template) ID() string {
 	return template.TemplateID
 }
 
+// AfterUnmarshal performs some post-processing on the Template object
+// after it has been unmarshalled from JSON.
+func (template *Template) AfterUnmarshal() {
+
+	// Apply RoleIDs to each AccessRole
+	for roleID, accessRole := range template.AccessRoles {
+		accessRole.RoleID = roleID
+		template.AccessRoles[roleID] = accessRole
+	}
+}
+
 func (template Template) IsZero() bool {
 	if template.TemplateID != "" {
 		return false
@@ -212,6 +223,31 @@ func (template *Template) Inherit(parent *Template) {
 // IsSearch returns TRUE if this is Template is a search engine
 func (template *Template) IsSearch() bool {
 	return template.TemplateRole == "search"
+}
+
+// IsSubscribable returns TRUE if this Template has at-least-one role that requires a subscription
+func (template *Template) IsSubscribable() bool {
+
+	for _, role := range template.AccessRoles {
+		if role.Subscription {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (template *Template) SubscribableRoles() []Role {
+
+	roles := make([]Role, 0)
+
+	for _, role := range template.AccessRoles {
+		if role.Subscription {
+			roles = append(roles, role)
+		}
+	}
+
+	return roles
 }
 
 /******************************************

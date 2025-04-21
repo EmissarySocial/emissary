@@ -10,10 +10,11 @@
 	<div class="app-content">
 
 		<div role="tablist" class="underlined margin-top margin-bottom" hx-push-url="true">
-			<span role="tab" class="turboclick" aria-selected="true">{{icon "star-fill"}} Following</span>
-			<span role="tab" class="turboclick" hx-get="/@me/inbox/followers">{{icon "person"}} Followers</span>
-			<span role="tab" class="turboclick" hx-get="/@me/inbox/rules">{{icon "rule"}} Rules</span>
-			<span role="tab" class="turboclick" hx-get="/@me/inbox/subscriptions">{{icon "person-card"}} Subscriptions</span>
+			<a href="/@me/inbox/following" hx-boost="true" role="tab" aria-selected="true">{{icon "star-fill"}} Following</a>
+			<a href="/@me/inbox/followers" hx-boost="true" role="tab">{{icon "person"}} Followers</a>
+			<a href="/@me/inbox/subscribers" hx-boost="true" role="tab">{{icon "person-card"}} Subscribers</a>
+			<a href="/@me/inbox/subscriptions" hx-boost="true" role="tab">{{icon "card"}} Subscriptions</a>
+			<a href="/@me/inbox/rules" hx-boost="true" role="tab">{{icon "rule"}} Rules</a>
 		</div>
 
 		<div>

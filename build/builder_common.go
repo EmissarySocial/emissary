@@ -378,7 +378,7 @@ func (w Common) GetFollowingID(url string) string {
 func (w Common) lookupProvider() form.LookupProvider {
 
 	userID := w.AuthenticatedID()
-	return w._factory.LookupProvider(userID)
+	return w._factory.LookupProvider(w._request, userID)
 }
 
 // Dataset returns a single form.LookupGroup from the LookupProvider
@@ -540,6 +540,52 @@ func (w Common) SearchTag(tagName string) model.SearchTag {
 	}
 
 	return result
+}
+
+func (w Common) Subscribers() QueryBuilder[model.Subscriber] {
+
+	expressionBuilder := builder.NewBuilder().
+		String("search", builder.WithAlias("emailAddress"), builder.WithDefaultOpBeginsWith())
+
+	criteria := exp.And(
+		expressionBuilder.Evaluate(w._request.URL.Query()),
+		exp.Equal("userId", w.AuthenticatedID()),
+	)
+
+	return NewQueryBuilder[model.Subscriber](w._factory.Subscriber(), criteria)
+
+}
+
+func (w Common) Subscriptions() QueryBuilder[model.Subscription] {
+
+	expressionBuilder := builder.NewBuilder().
+		String("search", builder.WithAlias("emailAddress"), builder.WithDefaultOpBeginsWith())
+
+	criteria := exp.And(
+		expressionBuilder.Evaluate(w._request.URL.Query()),
+		exp.Equal("userId", w.AuthenticatedID()),
+	)
+
+	return NewQueryBuilder[model.Subscription](w._factory.Subscription(), criteria)
+}
+
+func (w Common) MerchantAccount(merchantAccountID string) (model.MerchantAccount, error) {
+	result := model.NewMerchantAccount()
+	err := w._factory.MerchantAccount().LoadByToken(w.AuthenticatedID(), merchantAccountID, &result)
+	return result, err
+}
+
+func (w Common) MerchantAccounts() QueryBuilder[model.MerchantAccount] {
+
+	expressionBuilder := builder.NewBuilder().
+		String("search", builder.WithAlias("name"), builder.WithDefaultOpBeginsWith())
+
+	criteria := exp.And(
+		expressionBuilder.Evaluate(w._request.URL.Query()),
+		exp.Equal("userId", w.AuthenticatedID()),
+	)
+
+	return NewQueryBuilder[model.MerchantAccount](w._factory.MerchantAccount(), criteria)
 }
 
 func (w Common) FeaturedSearchTags() *QueryBuilder[model.SearchTag] {

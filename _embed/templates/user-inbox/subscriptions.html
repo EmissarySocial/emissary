@@ -1,5 +1,7 @@
 {{- $folders := .Folders -}}
+{{- $merchantAccounts := .MerchantAccounts.Slice -}}
 {{- $subscriptions := .Subscriptions.ByName.Slice -}}
+{{- $subscriberCount := .Subscribers.Count -}}
 
 <div class="page app flex-row">
 	<title>{{.RuleCount}} Rules | {{.DisplayName}}</title>
@@ -10,54 +12,123 @@
 	<div class="app-content">
 
 		<div role="tablist" class="underlined margin-top margin-bottom" hx-push-url="true">
-			<span role="tab" class="turboclick" hx-get="/@me/inbox/following">{{icon "star"}} Following</span>
-			<span role="tab" class="turboclick" hx-get="/@me/inbox/followers">{{icon "person"}} Followers</span>
-			<span role="tab" class="turboclick" hx-get="/@me/inbox/rules">{{icon "rule"}} Rules</span>
-			<span role="tab" class="turboclick" hx-get="/@me/inbox/subscriptions" aria-selected="true">{{icon "person-card-fill"}} Subscriptions</span>
+			<a href="/@me/inbox/following" hx-boost="true" role="tab">{{icon "star"}} Following</a>
+			<a href="/@me/inbox/followers" hx-boost="true" role="tab">{{icon "person"}} Followers</a>
+			<a href="/@me/inbox/subscribers" hx-boost="true" role="tab">{{icon "person-card"}} Subscribers</a>
+			<a href="/@me/inbox/subscriptions" hx-boost="true" role="tab" aria-selected="true">{{icon "card-fill"}} Subscriptions</a>
+			<a href="/@me/inbox/rules" hx-boost="true" role="tab">{{icon "rule"}} Rules</a>
 		</div>
 
-		{{- if $subscriptions.NotEmpty -}}
+		{{- if $merchantAccounts.IsEmpty -}}
 
-			<div role="tablist" class="align-right pills margin-top margin-bottom" hx-push-url="true">
-				<span role="tab" class="turboclick" hx-get="/@me/inbox/subscribers">Subscribers</span>
-				<span role="tab" class="turboclick" hx-get="/@me/inbox/subscriptions" aria-selected="true">Plans</span>
-				<span role="tab" class="turboclick" hx-get="/@me/inbox/merchantAccounts">Merchant Accounts</span>
+			<div class="alert-blue">
+				Subscriptions let you charge your followers for online access to your posts and content,
+				either as onetime payments or recurring payments.
+				<a href="https://emissary.dev/subscriptions" target="_blank">Learn more {{icon "new-window"}}</a>
 			</div>
 
-			<div class="table margin-top">
-				<div hx-get="/@me/inbox/subscription-add" role="button" class="link">
-					{{icon "add"}} Add a Subscription Plan
-				</div>
-
-				{{- range $index, $subscription := $subscriptions -}}
-					<div role="button">
-						{{icon "card"}} {{$subscription.URL}}
-					</div>
-				{{- end -}}
-
+			<h2>Step 1: Connect a Merchant Account</h2>
+			<p>To get started, you'll need to have a merchant account set up with <b>PayPal</b> or <b>Stripe</b>.
+				After you've entered your merchant account information, you'll be able to connect the subscription plan(s) from your merchant account.
+				<div>
+				<button hx-get="/@me/inbox/merchantAccount-add" class="primary">{{icon "add"}} Add a Merchant Account</button>
 			</div>
+
 
 		{{- else -}}
 
-			{{- $merchantAccounts := .MerchantAccounts.Count -}}
-		
-			<div class="margin-top">
-				<div class="alert-blue">
-					Subscriptions let you charge your followers for online access to your posts and content.
-					You'll need an account with <b>PayPal</b> or <b>Stripe</b> to begin.
-					<a href="https://emissary.dev/subscriptions" target="_blank">Learn more {{icon "new-window"}}</a>
-					<br>
-					<br>
+			<div class="flex-row margin-bottom-lg">
+				<a href="/@me/inbox/subscribers" class="text-plain text-nocolor card width-33% padding" hx-boost="true">
+					<div class="align-center text-sm text-gray margin-bottom">
+						{{ pluralize $subscriptions.Length "Subscriber" "Subscribers"}}
+					</div>
 
-					{{- if eq 0 $merchantAccounts -}}
-						<button hx-get="/@me/inbox/merchantAccount-add?next=subscription-add" class="primary">{{icon "add"}} Add a Merchant Account</button>
-					{{- else -}}
-						<button hx-get="/@me/inbox/subscription-add" class="primary">{{icon "add"}} Add a Subscription Plan</button>
+					<div class="text-xl bold align-center">
+						{{- $subscriberCount -}}
+					</div>
+
+				</a>
+				<div class="card width-33% padding">
+					<div class="align-center text-sm text-gray margin-bottom">
+						{{ pluralize $subscriptions.Length "Subscription Plan" "Subscription Plans"}}
+					</div>
+
+					<div class="text-xl bold align-center">
+						{{- $subscriptions.Length -}}
+					</div>
+
+				</div>
+				<div class="card width-33% padding">
+
+					<div class="align-center text-sm text-gray margin-bottom">
+						{{ pluralize $merchantAccounts.Length "Merchant Account" "Merchant Accounts"}}
+					</div>
+
+					<div class="flex-row">
+						{{- range  $index, $merchantAccount := $merchantAccounts -}}
+							{{- $type := lowerCase $merchantAccount.Type -}}
+							<div hx-get="/@me/inbox/merchantAccount-edit-{{$type}}?merchantAccountId={{$merchantAccount.ID}}" role="button" class="flex-grow align-center turboclick">
+								<div>{{- icon $type -}}</div>
+								<div class="text-sm bold">{{$merchantAccount.Name}}</div>
+							</div>
+						{{- end -}}
+						<div hx-get="/@me/inbox/merchantAccount-add" role="button" class="link flex-grow align-center turboclick">
+							<div>{{- icon "add" -}}</div>
+							<div class="text-sm bold">Connect</div>
+						</div>
+					</div>	
+
+				</div>
+			</div>				
+					
+			{{- if $subscriptions.IsEmpty -}}
+
+				<div class="margin-top">
+					<div class="alert-blue">
+						Subscriptions let you charge your followers for online access to your posts and content, 
+						either as onetime payments or recurring payments.
+						<a href="https://emissary.dev/subscriptions" target="_blank">Learn more {{icon "new-window"}}</a>
+						<br>
+						<br>
+
+						{{- if $merchantAccounts.IsLength 1 -}}
+							<button hx-get="/@me/inbox/subscription-edit?merchantAccountId={{$merchantAccounts.First.ID}}" class="primary turboclick">{{icon "add"}} Add a Subscription Plan</button>
+						{{- else -}}
+							<button hx-get="/@me/inbox/subscription-choose-merchantAccount" class="primary turboclick">{{icon "add"}} Add a Subscription Plan</button>
+						{{- end -}}
+					</div>
+				</div>
+
+			{{- else -}}
+
+				<div class="table margin-top">
+					{{- range $index, $merchantAccount := $merchantAccounts -}}
+						<div hx-get="/@me/inbox/subscription-edit?merchantAccountId={{$merchantAccount.ID}}" role="button" class="link turboclick">
+							{{icon "add"}} Add {{$merchantAccount.Name}} Subscription
+						</div>
 					{{- end -}}
 				</div>
-			</div>
-		
-		{{- end -}}			
+
+				<div class="table margin-top">
+					{{- range $index, $subscription := $subscriptions -}}
+						<div hx-get="/@me/inbox/subscription-edit?subscriptionId={{$subscription.ID}}" role="button" class="flex-row flex-align-start turboclick">
+							<div class="text-xl margin-none">{{icon $subscription.MerchantAccountType}}</div>
+							<div class="flex-grow">
+								<div class="bold">{{$subscription.Name}}</div>
+								<div class="text-gray text-sm">{{$subscription.Description}}</div>
+							</div>
+							<div>
+								{{- if $subscription.IsFeatured -}}
+									{{icon "star-fill"}}
+								{{- end -}}
+							</div>
+						</div>
+					{{- end -}}
+
+				</div>
+			
+			{{- end -}}			
+		{{- end -}}
 	
 	</div>
 

@@ -2,6 +2,7 @@ package model
 
 import (
 	"github.com/benpate/data/journal"
+	"github.com/benpate/form"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -15,6 +16,7 @@ type MerchantAccount struct {
 	Description          string             `bson:"description"`          // Human-friendly Description of the payment processor account
 	Vault                Vault              `bson:"vault" json:"-"`       // Vault data that is stored in the database (encrypted)
 	APIKeyExpirationDate int64              `bson:"apiKeyExpirationDate"` // Expiration date of the API key
+	LiveMode             bool               `bson:"liveMode"`             // True if this is a live account, false if it is a test/sandbox account
 
 	// Embed journal to track changes
 	journal.Journal `bson:",inline"`
@@ -66,4 +68,17 @@ func (merchantAccount MerchantAccount) Roles(authorization *Authorization) []str
 
 	// Intentionally NOT allowing MagicRoleAnonymous, or MagicRoleAuthenticated
 	return []string{MagicRoleOwner}
+}
+
+/******************************************
+ * Other Methods
+ ******************************************/
+
+func (merchantAccount MerchantAccount) LookupCode() form.LookupCode {
+
+	return form.LookupCode{
+		Value:       merchantAccount.MerchantAccountID.Hex(),
+		Label:       merchantAccount.Name,
+		Description: merchantAccount.Description,
+	}
 }

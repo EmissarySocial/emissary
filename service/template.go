@@ -261,6 +261,9 @@ func (service *Template) Add(templateID string, filesystem fs.FS, definition []b
 		result.Resources = resources
 	}
 
+	// Handle post-processing steps forthe Template
+	result.AfterUnmarshal()
+
 	// Add the template into the prep library
 	service.templatePrep[result.TemplateID] = result
 

@@ -1,34 +1,44 @@
 package service
 
 import (
+	"net/http"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/dataset"
+	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/list"
+	"github.com/benpate/rosetta/slice"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type LookupProvider struct {
-	domainService       *Domain
-	folderService       *Folder
-	groupService        *Group
-	registrationService *Registration
-	searchTagService    *SearchTag
-	templateService     *Template
-	themeService        *Theme
-	userID              primitive.ObjectID
+	domainService          *Domain
+	folderService          *Folder
+	groupService           *Group
+	merchantAccountService *MerchantAccount
+	registrationService    *Registration
+	searchTagService       *SearchTag
+	streamService          *Stream
+	templateService        *Template
+	themeService           *Theme
+	request                *http.Request
+	userID                 primitive.ObjectID
 }
 
-func NewLookupProvider(domainService *Domain, folderService *Folder, groupService *Group, registrationService *Registration, searchTagService *SearchTag, templateService *Template, themeService *Theme, userID primitive.ObjectID) LookupProvider {
+func NewLookupProvider(domainService *Domain, folderService *Folder, groupService *Group, merchantAccountService *MerchantAccount, registrationService *Registration, searchTagService *SearchTag, streamService *Stream, templateService *Template, themeService *Theme, request *http.Request, userID primitive.ObjectID) LookupProvider {
 	return LookupProvider{
-		domainService:       domainService,
-		folderService:       folderService,
-		groupService:        groupService,
-		registrationService: registrationService,
-		searchTagService:    searchTagService,
-		templateService:     templateService,
-		themeService:        themeService,
-		userID:              userID,
+		domainService:          domainService,
+		folderService:          folderService,
+		groupService:           groupService,
+		merchantAccountService: merchantAccountService,
+		registrationService:    registrationService,
+		searchTagService:       searchTagService,
+		streamService:          streamService,
+		templateService:        templateService,
+		themeService:           themeService,
+		request:                request,
+		userID:                 userID,
 	}
 }
 
@@ -76,6 +86,12 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 	case "inbox-templates":
 		return form.ReadOnlyLookupGroup(service.templateService.ListByTemplateRole("user-inbox"))
 
+	case "merchantAccounts":
+		return service.getMerchantAccounts()
+
+	case "merchantAccount-subscriptions":
+		return service.getMerchantAccountSubscriptions()
+
 	case "outbox-templates":
 		return form.ReadOnlyLookupGroup(service.templateService.ListByTemplateRole("user-outbox"))
 
@@ -115,6 +131,9 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 	case "signup-templates":
 		return form.ReadOnlyLookupGroup(service.registrationService.List())
 
+	case "streams-with-subscriptions":
+		return service.getSubscribableStreams()
+
 	case "syndication-targets":
 		domain := service.domainService.Get()
 		return form.NewReadOnlyLookupGroup(domain.Syndication...)
@@ -153,4 +172,79 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 	// Fall through means one or more of the above tests failed.
 	// We couldn't find the template or dataset, so just return an empty group.
 	return form.NewReadOnlyLookupGroup()
+}
+
+/******************************************
+ * Custom Queries
+ ******************************************/
+
+// getSubscribableStreams returns all streams that have subscribe-able content
+func (service *LookupProvider) getSubscribableStreams() form.LookupGroup {
+
+	// Query all streams in the User's outbox that are subscribe-able
+	streams, err := service.streamService.QuerySubscribable(service.userID)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, "service.LookupProvider.getSubscribableStreams", "Error loading streams with subscriptions"))
+		return form.NewReadOnlyLookupGroup()
+	}
+
+	// Convert results into a LookupGroup
+	lookupCodes := slice.Map(streams, func(streamSummary model.StreamSummary) form.LookupCode {
+		return form.LookupCode{
+			Group: streamSummary.TemplateID,
+			Value: streamSummary.StreamID(),
+			Label: streamSummary.Label,
+		}
+	})
+
+	// Subbesss!!
+	return form.NewReadOnlyLookupGroup(lookupCodes...)
+}
+
+// getMerchantAccounts returns all merchant accounts for the current user
+func (service *LookupProvider) getMerchantAccounts() form.LookupGroup {
+
+	const location = "service.LookupProvider.getMerchantAccounts"
+
+	// Load the Merchant Accounts for this User
+	result, err := service.merchantAccountService.QueryByUser(service.userID)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, location, "Error loading merchant accounts"))
+		return form.NewReadOnlyLookupGroup()
+	}
+
+	lookupCodes := slice.Map(result, func(merchantAccount model.MerchantAccount) form.LookupCode {
+		return merchantAccount.LookupCode()
+	})
+
+	// Success?!?!?
+	return form.NewReadOnlyLookupGroup(lookupCodes...)
+}
+
+// getMerchantAccountSubscriptions returns all subscriptions defined by the selected merchant account
+func (service *LookupProvider) getMerchantAccountSubscriptions() form.LookupGroup {
+
+	const location = "service.LookupProvider.getMerchantAccountSubscriptions"
+
+	// Locate the Merchant Account in the User's profile
+	token := service.request.URL.Query().Get("merchantAccountId")
+	merchantAccount := model.NewMerchantAccount()
+
+	if err := service.merchantAccountService.LoadByToken(service.userID, token, &merchantAccount); err != nil {
+		derp.Report(derp.Wrap(err, location, "Error loading merchant account"))
+		return form.NewReadOnlyLookupGroup()
+	}
+
+	// Load the Subscriptions for this Merchant Account
+	result, err := service.merchantAccountService.GetSubscriptions(&merchantAccount)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, location, "Error loading merchant account subscriptions"))
+		return form.NewReadOnlyLookupGroup()
+	}
+
+	// Success?!?!?
+	return form.NewReadOnlyLookupGroup(result...)
 }

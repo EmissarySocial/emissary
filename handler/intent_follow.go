@@ -48,7 +48,7 @@ func GetIntent_Follow(ctx *steranko.Context, factory *domain.Factory, user *mode
 	}
 
 	// Generate the input form as HTML
-	lookupProvider := factory.LookupProvider(user.UserID)
+	lookupProvider := factory.LookupProvider(ctx.Request(), user.UserID)
 	formStruct := getForm_FollowingIntent()
 	formHTML, err := formStruct.Editor(following, lookupProvider)
 
@@ -184,7 +184,7 @@ func PostIntent_Follow(ctx *steranko.Context, factory *domain.Factory, user *mod
 
 	// Update the Following with values from the user
 	form := getForm_FollowingIntent()
-	if err := form.SetURLValues(&following, transaction, factory.LookupProvider(user.UserID)); err != nil {
+	if err := form.SetURLValues(&following, transaction, factory.LookupProvider(ctx.Request(), user.UserID)); err != nil {
 		return derp.Wrap(err, location, "Error setting form values")
 	}
 

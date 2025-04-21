@@ -15,6 +15,7 @@ func MerchantAccountSchema() schema.Element {
 			"name":              schema.String{MaxLength: 128},
 			"description":       schema.String{MaxLength: 1024},
 			"vault":             schema.Object{Wildcard: schema.String{}},
+			"liveMode":          schema.Boolean{},
 		},
 	}
 }
@@ -37,6 +38,9 @@ func (merchantAccount *MerchantAccount) GetPointer(name string) (any, bool) {
 
 	case "vault":
 		return &merchantAccount.Vault, true
+
+	case "liveMode":
+		return &merchantAccount.LiveMode, true
 
 	default:
 		return nil, false

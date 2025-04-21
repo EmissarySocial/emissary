@@ -1,6 +1,8 @@
 package build
 
 import (
+	"net/http"
+
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/httpcache"
@@ -63,7 +65,7 @@ type Factory interface {
 	MediaServer() mediaserver.MediaServer
 	ModelService(data.Object) service.ModelService
 	Locator() *service.Locator
-	LookupProvider(primitive.ObjectID) form.LookupProvider
+	LookupProvider(*http.Request, primitive.ObjectID) form.LookupProvider
 	OAuthClient() *service.OAuthClient
 	OAuthUserToken() *service.OAuthUserToken
 	Providers() set.Slice[config.Provider]

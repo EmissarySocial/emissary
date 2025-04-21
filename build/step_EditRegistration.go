@@ -70,7 +70,7 @@ func (step StepEditRegistration) Get(builder Builder, buffer io.Writer) Pipeline
 	} else {
 		form := html.New()
 		userID := builder.authorization().UserID
-		lookupProvider := factory.LookupProvider(userID)
+		lookupProvider := factory.LookupProvider(builder.request(), userID)
 
 		if err := registration.Form.Edit(&registration.Schema, lookupProvider, domainBuilder._domain.RegistrationData, form); err != nil {
 			return Halt().WithError(derp.Wrap(err, "builder.StepEditRegistration", "Error building registration form"))

@@ -13,6 +13,15 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
+func (service *MerchantAccount) paypal_getServerAddress(merchantAccount *model.MerchantAccount) string {
+
+	if merchantAccount.LiveMode {
+		return "https://api-m.paypal.com"
+	} else {
+		return "https://api-m.sandbox.paypal.com"
+	}
+}
+
 // paypal_refreshMerchantAccount connects/refreshes the PayPal merchant account data
 func (service *MerchantAccount) paypal_refreshMerchantAccount(merchantAccount *model.MerchantAccount) error {
 
@@ -37,8 +46,10 @@ func (service *MerchantAccount) paypal_refreshMerchantAccount(merchantAccount *m
 	secretKey := vault.GetString("secretKey")
 	result := make(mapof.Any)
 
+	endpoint := service.paypal_getServerAddress(merchantAccount) + "/v1/oauth2/token"
+
 	// Connect to the PayPal API
-	txn := remote.Post("https://api-m.sandbox.paypal.com/v1/oauth2/token").
+	txn := remote.Post(endpoint).
 		With(options.BasicAuth(clientID, secretKey)).
 		ContentType("application/x-www-form-urlencoded").
 		Form("grant_type", "client_credentials").
@@ -65,8 +76,8 @@ func (service *MerchantAccount) paypal_refreshMerchantAccount(merchantAccount *m
 func (service *MerchantAccount) paypal_getSubscriptions(merchantAccount *model.MerchantAccount) ([]form.LookupCode, error) {
 
 	const location = "service.MerchantAccount.paypal_getSubscriptions"
-	const endpoint = "https://api-m.sandbox.paypal.com/v1/billing/plans"
 
+	endpoint := service.paypal_getServerAddress(merchantAccount) + "/v1/billing/plans"
 	txnResult := mapof.NewAny()
 
 	// Get API Keys from the vault
@@ -77,6 +88,10 @@ func (service *MerchantAccount) paypal_getSubscriptions(merchantAccount *model.M
 	}
 
 	txn := remote.Get(endpoint).
+		Query("sort_by", "create_time").
+		Query("sort_order", "desc").
+		ContentType("application/json").
+		Header("Prefer", "return=representation").
 		With(options.BearerAuth(apiKeys.GetString("accessToken"))).
 		Result(&txnResult)
 

@@ -20,40 +20,43 @@ import (
 
 // Stream corresponds to a top-level path on any Domain.
 type Stream struct {
-	StreamID         primitive.ObjectID           `json:"streamId"               bson:"_id"`                    // Unique identifier of this Stream.
-	ParentID         primitive.ObjectID           `json:"parentId"               bson:"parentId"`               // Unique identifier of the "parent" stream.
-	ParentIDs        id.Slice                     `json:"parentIds"              bson:"parentIds"`              // List of all parent IDs, including the current parent.  This is used to generate "breadcrumbs" for the Stream.
-	Rank             int                          `json:"rank"                   bson:"rank"`                   // If Template uses a custom sort order, then this is the value used to determine the position of this Stream.
-	RankAlt          int                          `json:"rankAlt"                bson:"rankAlt"`                // Alternate sort criteria
-	NavigationID     string                       `json:"navigationId"           bson:"navigationId"`           // Unique identifier of the "top-level" Stream that this record falls within.
-	TemplateID       string                       `json:"templateId"             bson:"templateId"`             // Unique identifier (name) of the Template to use when building this Stream in HTML.
-	ParentTemplateID string                       `json:"parentTemplateId"       bson:"parentTemplateId"`       // Unique identifier (name) of the parent's Template.
-	StateID          string                       `json:"stateId"                bson:"stateId"`                // Unique identifier of the State this Stream is in.  This is used to populate the State information from the Template service at load time.
-	SocialRole       string                       `json:"socialRole,omitempty"   bson:"socialRole,omitempty"`   // Role to use for this Stream in social integrations (Article, Note, Image, etc)
-	Permissions      mapof.Object[sliceof.String] `json:"permissions,omitempty"  bson:"permissions,omitempty"`  // Permissions for which streams can access this stream.
-	DefaultAllow     id.Slice                     `json:"defaultAllow,omitempty" bson:"defaultAllow,omitempty"` // List of Groups that are allowed to perform the 'default' (view) action.  This is used to query general access to the Stream from the database, before performing server-based authentication.
-	URL              string                       `json:"url,omitempty"          bson:"url,omitempty"`          // URL of the original document
-	Token            string                       `json:"token,omitempty"        bson:"token,omitempty"`        // Unique value that identifies this element in the URL
-	Label            string                       `json:"label,omitempty"        bson:"label,omitempty"`        // Label/Title of the document
-	Summary          string                       `json:"summary,omitempty"      bson:"summary,omitempty"`      // Brief summary of the document
-	Icon             string                       `json:"icon,omitempty"         bson:"icon,omitempty"`         // Icon CSS/Token for the document
-	IconURL          string                       `json:"iconUrl,omitempty"      bson:"iconUrl,omitempty"`      // URL of this document's icon/thumbnail image
-	Context          string                       `json:"context,omitempty"      bson:"context,omitempty"`      // Context of this document (usually a URL)
-	InReplyTo        string                       `json:"inReplyTo"              bson:"inReplyTo"`              // If this stream is a reply to another stream or web page, then this links to the original document.
-	AttributedTo     PersonLink                   `json:"attributedTo,omitempty" bson:"attributedTo,omitempty"` // List of people who are attributed to this document
-	Content          Content                      `json:"content,omitempty"      bson:"content,omitempty"`      // Body content object for this Stream.
-	Widgets          set.Slice[StreamWidget]      `json:"widgets,omitempty"      bson:"widgets,omitempty"`      // Additional widgets to include when building this Stream.
-	Hashtags         sliceof.String               `json:"hashtags,omitempty"     bson:"hashtags,omitempty"`     // List of hashtags that are associated with this document
-	Places           sliceof.Object[Place]        `json:"places,omitempty"       bson:"places,omitempty"`       // List of locations that are associated with this document
-	Data             mapof.Any                    `json:"data,omitempty"         bson:"data,omitempty"`         // Set of data to populate into the Template.  This is validated by the JSON-Schema of the Template.
-	StartDate        datetime.DateTime            `json:"startDate"              bson:"startDate"`              // Date/Time to publish as a "start date" for this Stream (semantics are dependent on the Template)
-	EndDate          datetime.DateTime            `json:"endDate"                bson:"endDate"`                // Date/Time to publish as an "end date" for this Stream (semantics are dependent on the Template)
-	Syndication      delta.Slice[string]          `json:"syndication,omitempty"  bson:"syndication,omitempty"`  // List of external services that this Stream has been syndicated to.
-	Shuffle          int64                        `json:"shuffle"                bson:"shuffle"`                // Random number used to shuffle the order of Streams in a list.
-	PublishDate      int64                        `json:"publishDate"            bson:"publishDate"`            // Unix timestamp of the date/time when this document is/was/will be first available on the domain.
-	UnPublishDate    int64                        `json:"unpublishDate"          bson:"unpublishDate"`          // Unix timestemp of the date/time when this document will no longer be available on the domain.
-	IsFeatured       bool                         `json:"isFeatured"             bson:"isFeatured"`             // TRUE if this Stream is featured by its parent container.
-	journal.Journal  `bson:",inline"`
+	StreamID         primitive.ObjectID           `bson:"_id"`                     // Unique identifier of this Stream.
+	ParentID         primitive.ObjectID           `bson:"parentId"`                // Unique identifier of the "parent" stream.
+	ParentIDs        id.Slice                     `bson:"parentIds"`               // List of all parent IDs, including the current parent.  This is used to generate "breadcrumbs" for the Stream.
+	Rank             int                          `bson:"rank"`                    // If Template uses a custom sort order, then this is the value used to determine the position of this Stream.
+	RankAlt          int                          `bson:"rankAlt"`                 // Alternate sort criteria
+	NavigationID     string                       `bson:"navigationId"`            // Unique identifier of the "top-level" Stream that this record falls within.
+	TemplateID       string                       `bson:"templateId"`              // Unique identifier (name) of the Template to use when building this Stream in HTML.
+	ParentTemplateID string                       `bson:"parentTemplateId"`        // Unique identifier (name) of the parent's Template.
+	StateID          string                       `bson:"stateId"`                 // Unique identifier of the State this Stream is in.  This is used to populate the State information from the Template service at load time.
+	SocialRole       string                       `bson:"socialRole,omitempty"`    // Role to use for this Stream in social integrations (Article, Note, Image, etc)
+	Permissions      mapof.Object[sliceof.String] `bson:"permissions,omitempty"`   // Permissions maps User/Groups into Roles for this Stream.
+	Subscriptions    mapof.Object[sliceof.String] `bson:"subscriptions,omitempty"` // Subscriptions maps Subscription Plans into Roles for this Stream.
+	DefaultAllow     id.Slice                     `bson:"defaultAllow,omitempty"`  // List of Groups that are allowed to perform the 'default' (view) action.  This is used to query general access to the Stream from the database, before performing server-based authentication.
+	URL              string                       `bson:"url,omitempty"`           // URL of the original document
+	Token            string                       `bson:"token,omitempty"`         // Unique value that identifies this element in the URL
+	Label            string                       `bson:"label,omitempty"`         // Label/Title of the document
+	Summary          string                       `bson:"summary,omitempty"`       // Brief summary of the document
+	Icon             string                       `bson:"icon,omitempty"`          // Icon CSS/Token for the document
+	IconURL          string                       `bson:"iconUrl,omitempty"`       // URL of this document's icon/thumbnail image
+	Context          string                       `bson:"context,omitempty"`       // Context of this document (usually a URL)
+	InReplyTo        string                       `bson:"inReplyTo"`               // If this stream is a reply to another stream or web page, then this links to the original document.
+	AttributedTo     PersonLink                   `bson:"attributedTo,omitempty"`  // List of people who are attributed to this document
+	Content          Content                      `bson:"content,omitempty"`       // Body content object for this Stream.
+	Widgets          set.Slice[StreamWidget]      `bson:"widgets,omitempty"`       // Additional widgets to include when building this Stream.
+	Hashtags         sliceof.String               `bson:"hashtags,omitempty"`      // List of hashtags that are associated with this document
+	Places           sliceof.Object[Place]        `bson:"places,omitempty"`        // List of locations that are associated with this document
+	Data             mapof.Any                    `bson:"data,omitempty"`          // Set of data to populate into the Template.  This is validated by the JSON-Schema of the Template.
+	StartDate        datetime.DateTime            `bson:"startDate"`               // Date/Time to publish as a "start date" for this Stream (semantics are dependent on the Template)
+	EndDate          datetime.DateTime            `bson:"endDate"`                 // Date/Time to publish as an "end date" for this Stream (semantics are dependent on the Template)
+	Syndication      delta.Slice[string]          `bson:"syndication,omitempty"`   // List of external services that this Stream has been syndicated to.
+	Shuffle          int64                        `bson:"shuffle"`                 // Random number used to shuffle the order of Streams in a list.
+	PublishDate      int64                        `bson:"publishDate"`             // Unix timestamp of the date/time when this document is/was/will be first available on the domain.
+	UnPublishDate    int64                        `bson:"unpublishDate"`           // Unix timestemp of the date/time when this document will no longer be available on the domain.
+	IsFeatured       bool                         `bson:"isFeatured"`              // TRUE if this Stream is featured by its parent container.
+	IsSubscribable   bool                         `bson:"isSubscribable"`          // TRUE if this Stream uses the Subscriptions service to determine access rights.
+
+	journal.Journal `bson:",inline"`
 }
 
 // NewStream returns a fully initialized Stream object.
@@ -68,6 +71,8 @@ func NewStream() Stream {
 		ParentIDs:     id.NewSlice(),
 		StateID:       "new",
 		Permissions:   NewStreamPermissions(),
+		Subscriptions: mapof.NewObject[sliceof.String](),
+		DefaultAllow:  id.NewSlice(),
 		Widgets:       NewStreamWidgets(),
 		Data:          mapof.NewAny(),
 		Hashtags:      sliceof.NewString(),
@@ -263,41 +268,6 @@ func (stream *Stream) PermissionRoles(groupIDs ...primitive.ObjectID) []string {
 	}
 
 	return result
-}
-
-// SimplePermissionModel returns a model object for displaying Simple Sharing.
-func (stream *Stream) SimplePermissionModel() mapof.Any {
-
-	// Special case if this is for EVERYBODY
-	if _, ok := stream.Permissions[MagicGroupIDAnonymous.Hex()]; ok {
-		return mapof.Any{
-			"rule":     "anonymous",
-			"groupIds": sliceof.NewString(),
-		}
-	}
-
-	// Special case if this is for AUTHENTICATED
-	if _, ok := stream.Permissions[MagicGroupIDAuthenticated.Hex()]; ok {
-		return mapof.Any{
-			"rule":     "authenticated",
-			"groupIds": sliceof.NewString(),
-		}
-	}
-
-	// Fall through means that additional groups are selected.
-	// First, get all keys to the Groups map
-	groupIDs := make(sliceof.String, len(stream.Permissions))
-	index := 0
-
-	for groupID := range stream.Permissions {
-		groupIDs[index] = groupID
-		index++
-	}
-
-	return mapof.Any{
-		"rule":     "private",
-		"groupIds": groupIDs,
-	}
 }
 
 /******************************************

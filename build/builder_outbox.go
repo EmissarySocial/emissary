@@ -344,6 +344,17 @@ func (w Outbox) Responses() QueryBuilder[model.Response] {
 	return result
 }
 
+func (w Outbox) Subscriptions() QueryBuilder[model.Subscription] {
+
+	expressionBuilder := builder.NewBuilder()
+	criteria := exp.And(
+		expressionBuilder.Evaluate(w._request.URL.Query()),
+		exp.Equal("userId", w._user.UserID),
+	)
+
+	return NewQueryBuilder[model.Subscription](w._factory.Subscription(), criteria)
+}
+
 func (w Outbox) setState(stateID string) error {
 	w._user.SetState(stateID)
 	return nil

@@ -862,6 +862,12 @@ func (w Stream) UserCan(actionID string) bool {
 	return action.UserCan(w._stream, &authorization)
 }
 
+/*
+func (w Stream)  UserRole(role string)  bool {
+	authorization := w.authorization()
+	return authorization.UserRole(role)
+}*/
+
 // CanCreate returns all of the templates that can be created underneath
 // the current stream.
 func (w Stream) CanCreate() []form.LookupCode {

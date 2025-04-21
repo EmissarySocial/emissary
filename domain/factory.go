@@ -2,6 +2,7 @@ package domain
 
 import (
 	"context"
+	"net/http"
 	"strings"
 
 	"github.com/EmissarySocial/emissary/build"
@@ -475,6 +476,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		// Populate Subscription Service
 		factory.subscriptionService.Refresh(
 			factory.collection(CollectionSubscription),
+			factory.MerchantAccount(),
 		)
 
 		// Populate User Service
@@ -903,15 +905,18 @@ func (factory *Factory) Steranko() *steranko.Steranko {
 }
 
 // LookupProvider returns a fully populated LookupProvider service
-func (factory *Factory) LookupProvider(userID primitive.ObjectID) form.LookupProvider {
+func (factory *Factory) LookupProvider(request *http.Request, userID primitive.ObjectID) form.LookupProvider {
 	return service.NewLookupProvider(
 		factory.Domain(),
 		factory.Folder(),
 		factory.Group(),
+		factory.MerchantAccount(),
 		factory.Registration(),
 		factory.SearchTag(),
+		factory.Stream(),
 		factory.Template(),
 		factory.Theme(),
+		request,
 		userID,
 	)
 }

@@ -149,6 +149,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.SetState:
 		return StepSetState(s)
 
+	case step.SetSubscriptions:
+		return StepSetSubscriptions(s)
+
 	case step.SetThumbnail:
 		return StepSetThumbnail(s)
 

@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"io"
+	"slices"
 
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
@@ -110,7 +111,7 @@ func (vault *Vault) Encrypt(encryptionKey []byte) error {
 	return nil
 }
 
-func (vault Vault) Decrypt(encryptionKey []byte) (mapof.String, error) {
+func (vault Vault) Decrypt(encryptionKey []byte, values ...string) (mapof.String, error) {
 
 	const location = "model.vault.Decrypt"
 
@@ -142,6 +143,13 @@ func (vault Vault) Decrypt(encryptionKey []byte) (mapof.String, error) {
 	// Decode ciphertext values
 	result := make(mapof.String, len(vault.Encrypted))
 	for property, value := range vault.Encrypted {
+
+		// If values are specified, then only decrypt those values.
+		if len(values) > 0 {
+			if !slices.Contains(values, property) {
+				continue
+			}
+		}
 
 		ciphertext, err := hex.DecodeString(value)
 

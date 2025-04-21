@@ -26,6 +26,20 @@ func NewAction() Action {
 	}
 }
 
+func (action *Action) UserRole(enumerator RoleStateEnumerator, authorization *Authorization, role string) bool {
+
+	// Prevent nil pointer exceptions
+	if action == nil {
+		return false
+	}
+
+	// Get a list of all roles that the user has
+	userRoles := enumerator.Roles(authorization)
+
+	// Return TRUE if the user has the requested role
+	return matchOne(userRoles, role)
+}
+
 // UserCan returns TRUE if this action is permitted on a stream (using the provided authorization)
 func (action *Action) UserCan(enumerator RoleStateEnumerator, authorization *Authorization) bool {
 

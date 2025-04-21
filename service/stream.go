@@ -237,6 +237,7 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 
 	// Copy default values from the Template
 	stream.SocialRole = template.SocialRole
+	stream.IsSubscribable = template.IsSubscribable()
 	stream.URL = service.host + "/" + stream.StreamID.Hex()
 
 	// RULE: Calculate "defaultAllow" groups for this stream.
@@ -496,6 +497,12 @@ func (service *Stream) ListPublishedByParent(parentID primitive.ObjectID) (data.
 // ListByTemplate returns all `Streams` that use a particular `Template`
 func (service *Stream) ListByTemplate(template string) (data.Iterator, error) {
 	return service.List(exp.Equal("templateId", template))
+}
+
+// QuerySubscribable returns all Streams in a User's outbox that are subscribe-able
+func (service *Stream) QuerySubscribable(userID primitive.ObjectID) ([]model.StreamSummary, error) {
+	criteria := exp.Equal("parentId", userID).AndEqual("isSubscribable", true)
+	return service.QuerySummary(criteria, option.SortAsc("templateId"), option.SortAsc("label"))
 }
 
 // QueryByParentAndDate returns a slice of Streams that are DIRECT CHILDREN of the provided StreamID

@@ -236,48 +236,6 @@ func (w Inbox) Following() QueryBuilder[model.FollowingSummary] {
 	return NewQueryBuilder[model.FollowingSummary](w._factory.Following(), criteria)
 }
 
-func (w Inbox) Subscribers() QueryBuilder[model.Subscriber] {
-
-	expressionBuilder := builder.NewBuilder().
-		String("search", builder.WithAlias("emailAddress"), builder.WithDefaultOpBeginsWith())
-
-	criteria := exp.And(
-		expressionBuilder.Evaluate(w._request.URL.Query()),
-		exp.Equal("userId", w.AuthenticatedID()),
-	)
-
-	return NewQueryBuilder[model.Subscriber](w._factory.Subscriber(), criteria)
-
-}
-
-func (w Inbox) Subscriptions() QueryBuilder[model.Subscription] {
-
-	expressionBuilder := builder.NewBuilder().
-		String("search", builder.WithAlias("emailAddress"), builder.WithDefaultOpBeginsWith())
-
-	criteria := exp.And(
-		expressionBuilder.Evaluate(w._request.URL.Query()),
-		exp.Equal("userId", w.AuthenticatedID()),
-	)
-
-	return NewQueryBuilder[model.Subscription](w._factory.Subscription(), criteria)
-
-}
-
-func (w Inbox) MerchantAccounts() QueryBuilder[model.MerchantAccount] {
-
-	expressionBuilder := builder.NewBuilder().
-		String("search", builder.WithAlias("name"), builder.WithDefaultOpBeginsWith())
-
-	criteria := exp.And(
-		expressionBuilder.Evaluate(w._request.URL.Query()),
-		exp.Equal("userId", w.AuthenticatedID()),
-	)
-
-	return NewQueryBuilder[model.MerchantAccount](w._factory.MerchantAccount(), criteria)
-
-}
-
 func (w Inbox) FollowingByFolder(token string) ([]model.FollowingSummary, error) {
 
 	// Get the UserID from the authentication scope

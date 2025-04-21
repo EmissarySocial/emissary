@@ -11,6 +11,7 @@ import (
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -24,7 +25,7 @@ type StepSetSimpleSharing struct {
 func (step StepSetSimpleSharing) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 
 	streamBuilder := builder.(Stream)
-	model := streamBuilder._stream.SimplePermissionModel()
+	model := step.SimplePermissionModel(streamBuilder._stream)
 
 	// Try to write form HTML
 	formHTML, err := form.Editor(step.schema(), step.form(), model, builder.lookupProvider())
@@ -124,5 +125,40 @@ func (step StepSetSimpleSharing) form() form.Element {
 			{Type: "radio", Path: "rule", Options: mapof.Any{"provider": "sharing"}},
 			{Type: "multiselect", Path: "groupIds", Options: mapof.Any{"provider": "groups", "show-if": "rule is private"}}, // TODO: MEDIUM: Restore conditional rules to form elements.  This one was: Show: form.Rule{Path: "rule", Value: "'private'"}
 		},
+	}
+}
+
+// SimplePermissionModel returns a model object for displaying Simple Sharing.
+func (step StepSetSimpleSharing) SimplePermissionModel(stream *model.Stream) mapof.Any {
+
+	// Special case if this is for EVERYBODY
+	if _, ok := stream.Permissions[model.MagicGroupIDAnonymous.Hex()]; ok {
+		return mapof.Any{
+			"rule":     "anonymous",
+			"groupIds": sliceof.NewString(),
+		}
+	}
+
+	// Special case if this is for AUTHENTICATED
+	if _, ok := stream.Permissions[model.MagicGroupIDAuthenticated.Hex()]; ok {
+		return mapof.Any{
+			"rule":     "authenticated",
+			"groupIds": sliceof.NewString(),
+		}
+	}
+
+	// Fall through means that additional groups are selected.
+	// First, get all keys to the Groups map
+	groupIDs := make(sliceof.String, len(stream.Permissions))
+	index := 0
+
+	for groupID := range stream.Permissions {
+		groupIDs[index] = groupID
+		index++
+	}
+
+	return mapof.Any{
+		"rule":     "private",
+		"groupIds": groupIDs,
 	}
 }

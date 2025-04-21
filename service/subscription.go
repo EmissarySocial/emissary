@@ -8,14 +8,17 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/form"
 	"github.com/benpate/rosetta/schema"
+	"github.com/davecgh/go-spew/spew"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Subscription defines a service that manages all content subscriptions created and imported by Users.
 type Subscription struct {
-	collection data.Collection
+	merchantAccountService *MerchantAccount
+	collection             data.Collection
 }
 
 // NewSubscription returns a fully initialized Subscription service
@@ -28,8 +31,9 @@ func NewSubscription() Subscription {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Subscription) Refresh(collection data.Collection) {
+func (service *Subscription) Refresh(collection data.Collection, merchantAccountService *MerchantAccount) {
 	service.collection = collection
+	service.merchantAccountService = merchantAccountService
 }
 
 // Close stops any background processes controlled by this service
@@ -87,6 +91,18 @@ func (service *Subscription) Save(subscription *model.Subscription, note string)
 	if err := service.Schema().Validate(subscription); err != nil {
 		return derp.Wrap(err, "service.Subscription.Save", "Error validating Subscription", subscription)
 	}
+
+	// Validate the Merchant Account
+	merchantAccount := model.NewMerchantAccount()
+	if err := service.merchantAccountService.LoadByID(subscription.UserID, subscription.MerchantAccountID, &merchantAccount); err != nil {
+		return derp.Wrap(err, "service.Subscription.Save", "Error loading Merchant Account", subscription.MerchantAccountID)
+	}
+
+	if err := service.merchantAccountService.RefreshAPIKeys(&merchantAccount); err != nil {
+		return derp.Wrap(err, "service.Subscription.Save", "Error validating Merchant Account", subscription.MerchantAccountID)
+	}
+
+	subscription.MerchantAccountType = merchantAccount.Type
 
 	// Save the subscription to the database
 	if err := service.collection.Save(subscription, note); err != nil {
@@ -166,6 +182,29 @@ func (service *Subscription) Schema() schema.Schema {
 /******************************************
  * Custom Queries
  ******************************************/
+
+func (service *Subscription) QueryAsLookupCodes(userID primitive.ObjectID) ([]form.LookupCode, error) {
+
+	// Query Subscription for this User
+	criteria := exp.Equal("userId", userID)
+	subscriptions, err := service.Query(criteria)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "service.Subscription.QueryAsLookupCodes", "Error querying Subscriptions", criteria)
+	}
+
+	spew.Dump(criteria, subscriptions)
+
+	// Map the Subscriptions into LookupCodes
+	result := make([]form.LookupCode, 0)
+
+	for _, subscription := range subscriptions {
+		result = append(result, subscription.LookupCode())
+	}
+
+	return result, nil
+
+}
 
 func (service *Subscription) LoadByID(userID primitive.ObjectID, subscriptionID primitive.ObjectID, subscription *model.Subscription) error {
 

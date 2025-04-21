@@ -192,6 +192,20 @@ func (service *MerchantAccount) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
+func (service *MerchantAccount) QueryByUser(userID primitive.ObjectID, options ...option.Option) ([]model.MerchantAccount, error) {
+
+	criteria := exp.Equal("userId", userID)
+
+	// Load the Merchant Accounts for this User
+	result, err := service.Query(criteria, options...)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "service.MerchantAccount.QueryByUser", "Error loading merchant accounts")
+	}
+
+	return result, nil
+}
+
 func (service *MerchantAccount) LoadByID(userID primitive.ObjectID, merchantAccountID primitive.ObjectID, merchantAccount *model.MerchantAccount) error {
 
 	criteria := exp.Equal("_id", merchantAccountID).
@@ -213,7 +227,7 @@ func (service *MerchantAccount) LoadByToken(userID primitive.ObjectID, token str
  * Custom Actions
  ******************************************/
 
-func (service *MerchantAccount) getAPIKeys(merchantAccount *model.MerchantAccount) (mapof.String, error) {
+func (service *MerchantAccount) getAPIKeys(merchantAccount *model.MerchantAccount, values ...string) (mapof.String, error) {
 
 	// Before retrieving the API keys, make sure they are up to date
 	if err := service.RefreshAPIKeys(merchantAccount); err != nil {
@@ -227,7 +241,7 @@ func (service *MerchantAccount) getAPIKeys(merchantAccount *model.MerchantAccoun
 	}
 
 	// Open the Vault to get the clientID and secret key
-	vault, err := merchantAccount.Vault.Decrypt(encryptionKey)
+	vault, err := merchantAccount.Vault.Decrypt(encryptionKey, values...)
 	if err != nil {
 		return nil, derp.Wrap(err, "service.MerchantAccount.getAPIKeys", "Error decrypting vault data")
 	}
