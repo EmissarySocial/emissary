@@ -271,6 +271,15 @@ func (stream *Stream) PermissionRoles(groupIDs ...primitive.ObjectID) []string {
 }
 
 /******************************************
+ * Subscription Methods
+ ******************************************/
+
+// HasSubscriptions returns TRUE if this Stream includes special permissions for any Subscription Plan
+func (stream *Stream) HasSubscriptions() bool {
+	return len(stream.Subscriptions) > 0
+}
+
+/******************************************
  * ActivityStream Methods
  ******************************************/
 

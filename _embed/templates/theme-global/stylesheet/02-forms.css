@@ -291,6 +291,25 @@ button.primary:focus,
 	color: var(--button-primary-color-hover);
 }
 
+button.highlight,
+button.highlight:hover,
+.button.highlight,
+.button.highlight:hover {
+	background-color: var(--gray60);
+	color: var(--white);
+}
+
+
+button.outline,
+button.outline:hover,
+.button.outline,
+.button.outline:hover {
+	background-color: rgba(0,0,0,0);
+	color: var(--button-primary-background);
+	border:solid 1px var(--button-primary-background);
+}
+
+
 button.selected,
 .button.selected {
 	background-color: var(--gray40);

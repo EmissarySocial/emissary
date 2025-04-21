@@ -862,12 +862,6 @@ func (w Stream) UserCan(actionID string) bool {
 	return action.UserCan(w._stream, &authorization)
 }
 
-/*
-func (w Stream)  UserRole(role string)  bool {
-	authorization := w.authorization()
-	return authorization.UserRole(role)
-}*/
-
 // CanCreate returns all of the templates that can be created underneath
 // the current stream.
 func (w Stream) CanCreate() []form.LookupCode {
@@ -875,6 +869,15 @@ func (w Stream) CanCreate() []form.LookupCode {
 	templateService := w.factory().Template()
 	return templateService.ListByContainer(w._template.TemplateID)
 }
+
+// HasSubscriptions returns TRUE if this stream has any subscriptions
+func (w Stream) HasSubscriptions() bool {
+	return w._stream.HasSubscriptions()
+}
+
+/******************************************
+ * Helper Functions
+ ******************************************/
 
 // draftBuilder returns a new build.Stream that is bound to the
 // draft service, and a draft copy of the current stream.
