@@ -3,11 +3,13 @@ package model
 import (
 	"html/template"
 	"io/fs"
+	"slices"
 
 	"github.com/EmissarySocial/emissary/tools/templatemap"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
+	"github.com/benpate/rosetta/compare"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
@@ -239,15 +241,20 @@ func (template *Template) IsSubscribable() bool {
 
 func (template *Template) SubscribableRoles() []Role {
 
-	roles := make([]Role, 0)
+	result := make([]Role, 0)
 
 	for _, role := range template.AccessRoles {
 		if role.Subscription {
-			roles = append(roles, role)
+			result = append(result, role)
 		}
 	}
 
-	return roles
+	// Sort the results by the role Label
+	slices.SortFunc(result, func(a, b Role) int {
+		return compare.String(a.Label, b.Label)
+	})
+
+	return result
 }
 
 /******************************************

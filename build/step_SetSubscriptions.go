@@ -10,6 +10,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
+	"github.com/benpate/rosetta/sliceof"
 )
 
 // StepSetSubscriptions represents an action that can edit a top-level folder in the Domain
@@ -28,7 +29,9 @@ func (step StepSetSubscriptions) Get(builder Builder, buffer io.Writer) Pipeline
 		return Halt().WithError(derp.NewBadRequestError(location, "Invalid builder type"))
 	}
 
-	// Get Subscriptions from the database
+	iconFunc := streamBuilder._factory.Icons().Get
+
+	// Load the User's Subscriptions
 	attributedToID := streamBuilder._stream.AttributedTo.UserID
 	subscriptions, err := streamBuilder._factory.Subscription().QueryAsLookupCodes(attributedToID)
 
@@ -36,8 +39,9 @@ func (step StepSetSubscriptions) Get(builder Builder, buffer io.Writer) Pipeline
 		return Halt().WithError(derp.Wrap(err, location, "Error retrieving subscriptions"))
 	}
 
+	// If there are no subscriptions, then display the "empty" message
 	if len(subscriptions) == 0 {
-		// TODO: Prompt user to create a subscription FIRST.
+		return step.GetEmpty(iconFunc, buffer)
 	}
 
 	roles := streamBuilder._template.SubscribableRoles()
@@ -50,10 +54,9 @@ func (step StepSetSubscriptions) Get(builder Builder, buffer io.Writer) Pipeline
 				Label: role.Label,
 				Children: []form.Element{
 					{
-						Type:        "multiselect",
-						Path:        "subscriptions." + role.RoleID,
-						Label:       "Select the subscriptions that grant access as a " + role.Label,
-						Description: "<a href='https://emissary.dev/subscriptions' target='_blank'>Need Help?</a>",
+						Type:  "multiselect",
+						Label: role.Description,
+						Path:  role.RoleID,
 						Options: mapof.Any{
 							"enum": subscriptions,
 						},
@@ -63,10 +66,13 @@ func (step StepSetSubscriptions) Get(builder Builder, buffer io.Writer) Pipeline
 		}),
 	}
 
-	model := mapof.NewAny()
-
 	// Try to write form HTML
-	formHTML, err := form.Editor(step.schema(), formDefinition, model, builder.lookupProvider())
+	formHTML, err := form.Editor(
+		step.schema(streamBuilder._template.SubscribableRoles()),
+		formDefinition,
+		streamBuilder._stream.Subscriptions,
+		builder.lookupProvider(),
+	)
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, "build.StepSetSubscriptions.Get", "Error building form"))
@@ -77,6 +83,16 @@ func (step StepSetSubscriptions) Get(builder Builder, buffer io.Writer) Pipeline
 
 	// Heading
 	b.H1().ID("modal-title").InnerText(step.Title).Close()
+	b.Div().Class("alert-blue margin-bottom-lg")
+	{
+		b.Div().InnerHTML(`
+			Subscriptions let visitors purchase access to your content, with either one-time, or recurring payments.
+			<a href="https://emissary.dev/subscriptions" target="_blank">Learn more about subscriptions ` + iconFunc("new-window") + `</a>
+			<br>
+			<br>
+			<a href="/@me/inbox/subscriptions">Edit My Subscriptions &rarr;</a>`).Close()
+	}
+	b.Close()
 
 	// Form
 	b.Form("", "").
@@ -99,56 +115,80 @@ func (step StepSetSubscriptions) Get(builder Builder, buffer io.Writer) Pipeline
 
 func (step StepSetSubscriptions) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
-	/*
-		const location = "build.StepSetSubscriptions.Post"
-		request := builder.request()
+	const location = "build.StepSetSubscriptions.Post"
 
-		// Try to parse the form input
-		if err := request.ParseForm(); err != nil {
-			return Halt().WithError(derp.Wrap(err, "build.StepSetSubscriptions", "Error parsing form input"))
+	// This step can only be used with a Stream builder
+	streamBuilder, isStreamBuilder := builder.(Stream)
+	if !isStreamBuilder {
+		return Halt().WithError(derp.NewBadRequestError(location, "Invalid builder type"))
+	}
+
+	// Try to parse the form input
+	request := streamBuilder.request()
+
+	if err := request.ParseForm(); err != nil {
+		return Halt().WithError(derp.Wrap(err, "build.StepSetSubscriptions", "Error parsing form input"))
+	}
+
+	// Clear out existing subscription settings
+	streamBuilder._stream.Subscriptions = mapof.NewObject[sliceof.String]()
+
+	// Apply new subscription settings
+	for roleID, subscriptionIDs := range request.Form {
+
+		// Ensure that the roleID exists in the stream.Subscriptions
+		if _, ok := streamBuilder._stream.Subscriptions[roleID]; !ok {
+			streamBuilder._stream.Subscriptions[roleID] = sliceof.NewString()
 		}
 
-		var groupIDs []primitive.ObjectID
+		// Append the roleId to the stream.Subscriptions
+		streamBuilder._stream.Subscriptions[roleID] = append(streamBuilder._stream.Subscriptions[roleID], subscriptionIDs...)
+	}
 
-		rule := convert.String(request.Form["rule"])
-
-		switch rule {
-		case "anonymous":
-			groupIDs = []primitive.ObjectID{model.MagicGroupIDAnonymous}
-
-		case "authenticated":
-			groupIDs = []primitive.ObjectID{model.MagicGroupIDAuthenticated}
-
-		case "private":
-			groupIDs = id.SliceOfID(request.Form["groupIds"])
-
-		default:
-			return Halt().WithError(derp.NewBadRequestError(location, "Invalid rule: ", rule))
-		}
-
-		// Build the stream criteria
-		streamBuilder := builder.(Stream)
-		stream := streamBuilder._stream
-		stream.Permissions = model.NewStreamPermissions()
-
-		for _, groupID := range groupIDs {
-			for _, role := range step.Roles {
-				stream.AssignPermission(role, groupID)
-			}
-		}
-	*/
 	// Success!
 	return nil
 }
 
+func (step StepSetSubscriptions) GetEmpty(iconFunc func(string) string, buffer io.Writer) PipelineBehavior {
+
+	// Write the rest of the HTML that contains the form
+	b := html.New()
+
+	// Heading
+	b.H1().ID("modal-title").InnerText(step.Title).Close()
+	b.Div().Class("margin-bottom-lg")
+	{
+		b.Div().Class("margin-bottom").InnerHTML(`
+			Visitors can pay for access to this stream using <b>subscriptions</b>, which are paid directly to your own <b>merchant account</b>.
+			<a href="https://emissary.dev/subscriptions" target="_blank">Learn more ` + iconFunc("new-window") + `</a>
+		`).Close()
+		b.Div().Class("margin-bottom").InnerHTML(`
+			To get started, you'll need to set up at least one subscription plan, then return here to link it to this stream.
+		`).Close()
+	}
+	b.Close()
+
+	b.Button().Script("on click go to url /@me/inbox/subscriptions").Class("primary").InnerHTML("Add a New Subscription &rarr;").Close()
+	b.Button().Script("on click trigger closeModal").InnerText("Cancel").Close()
+	b.CloseAll()
+
+	// nolint:errcheck
+	io.WriteString(buffer, b.String())
+	return nil
+}
+
 // schema returns the validating schema for this form
-func (step StepSetSubscriptions) schema() schema.Schema {
+func (step StepSetSubscriptions) schema(roles []model.Role) schema.Schema {
+
+	properties := map[string]schema.Element{}
+
+	for _, role := range roles {
+		properties[role.RoleID] = schema.Array{Items: schema.String{Format: "objectId"}}
+	}
+
 	return schema.Schema{
 		Element: schema.Object{
-			Properties: map[string]schema.Element{
-				"rule":     schema.String{Default: "anonymous"},
-				"groupIds": schema.Array{Items: schema.String{Format: "objectId"}},
-			},
+			Properties: properties,
 		},
 	}
 }

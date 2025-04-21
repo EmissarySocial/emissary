@@ -8,7 +8,7 @@
 	{{- range $index, $merchantAccount := $merchantAccounts -}}
 		{{- $type := lowerCase $merchantAccount.Type -}}
 		<div class="flex-row" role="button">
-			<div hx-get="/@me/inbox/subscription-edit-{{$type}}?merchantAccountId={{ $merchantAccount.ID }}" class="flex-grow">
+			<div hx-get="/@me/inbox/subscription-edit?merchantAccountId={{ $merchantAccount.ID }}" class="flex-grow">
 				{{icon $type}} {{ $merchantAccount.Name}}
 			</div>
 			<div>

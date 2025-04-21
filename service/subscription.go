@@ -10,7 +10,6 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/schema"
-	"github.com/davecgh/go-spew/spew"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -192,8 +191,6 @@ func (service *Subscription) QueryAsLookupCodes(userID primitive.ObjectID) ([]fo
 	if err != nil {
 		return nil, derp.Wrap(err, "service.Subscription.QueryAsLookupCodes", "Error querying Subscriptions", criteria)
 	}
-
-	spew.Dump(criteria, subscriptions)
 
 	// Map the Subscriptions into LookupCodes
 	result := make([]form.LookupCode, 0)

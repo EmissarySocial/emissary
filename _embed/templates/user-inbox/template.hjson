@@ -628,28 +628,15 @@
 						{do:"set-query-param", merchantAccountId:"{{.Object.MerchantAccountID.Hex}}"}
 						{do:"view-html"}
 						{do:"edit", form:{
-							type:"layout-tabs"
+							type:"layout-vertical"
 							children:[
-								{
-									type:"layout-vertical"
-									label:"Setup"
-									children:[
-										{type:"select", path:"subscriptionToken", label:"Subscription", description:"Set up subscriptions with your merchant account, then connect here.", options:{provider:"merchantAccount-subscriptions", required:true}}
-										{type:"text", path:"name", label:"Label", description:"Displayed on your profile", options:{required:true}}
-										{type:"textarea", path:"description", label:"Description", description:"Displayed on your profile"}
-										{type:"toggle", path:"isFeatured", options:{
-											true-text:"Featured. Shows on Profile Page"
-											false-text:"Featured?"
-										}}
-									]
-								}
-								{
-									type:"layout-vertical"
-									label:"Access"
-									children:[
-										{type:"multiselect", path:"streamIds", description:"This subscription grants access to the content selected above.", options:{rows:10, provider:"streams-with-subscriptions"}}
-									]
-								}
+								{type:"select", path:"subscriptionToken", label:"Subscription", description:"Set up subscriptions with your merchant account, then connect here.", options:{provider:"merchantAccount-subscriptions", required:true}}
+								{type:"text", path:"name", label:"Label", description:"Displayed on your profile", options:{required:true}}
+								{type:"textarea", path:"description", label:"Description", description:"Displayed on your profile"}
+								{type:"toggle", path:"isFeatured", options:{
+									true-text:"Featured. Shows on Profile Page"
+									false-text:"Featured?"
+								}}
 							]
 						},
 						options:[
