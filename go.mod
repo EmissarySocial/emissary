@@ -34,7 +34,7 @@ require (
 	github.com/dlclark/metaphone3 v0.0.0-20190903202417-5fe87fcdd547
 	github.com/dustin/go-humanize v1.0.1
 	github.com/fclairamb/afero-s3 v0.3.1
-	github.com/fsnotify/fsnotify v1.8.0
+	github.com/fsnotify/fsnotify v1.9.0
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/gorilla/feeds v1.2.0
 	github.com/hairyhenderson/go-fsimpl v0.2.5
