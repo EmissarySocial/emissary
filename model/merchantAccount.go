@@ -3,6 +3,7 @@ package model
 import (
 	"github.com/benpate/data/journal"
 	"github.com/benpate/form"
+	"github.com/benpate/rosetta/mapof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -15,6 +16,7 @@ type MerchantAccount struct {
 	Name                 string             `bson:"name"`                 // Human-friendly name for the payment processor account
 	Description          string             `bson:"description"`          // Human-friendly Description of the payment processor account
 	Vault                Vault              `bson:"vault" json:"-"`       // Vault data that is stored in the database (encrypted)
+	Plaintext            mapof.String       `bson:"plaintext"`            // Plaintext data that is stored in the database (not encrypted)
 	APIKeyExpirationDate int64              `bson:"apiKeyExpirationDate"` // Expiration date of the API key
 	LiveMode             bool               `bson:"liveMode"`             // True if this is a live account, false if it is a test/sandbox account
 

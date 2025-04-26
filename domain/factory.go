@@ -330,6 +330,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		factory.merchantAccountService.Refresh(
 			factory.collection(CollectionMerchantAccount),
 			domain.MasterKey,
+			factory.Host(),
 		)
 
 		// Populate OAuthClient

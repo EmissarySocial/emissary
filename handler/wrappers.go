@@ -70,6 +70,26 @@ func WithDomain(serverFactory *server.Factory, fn WithFunc1[model.Domain]) echo.
 	})
 }
 
+func WithMerchantAccount(serverFactory *server.Factory, fn WithFunc2[model.Subscription, model.MerchantAccount]) echo.HandlerFunc {
+
+	const location = "handler.WithMerchantAccount"
+
+	return WithSubscription(serverFactory, func(ctx *steranko.Context, factory *domain.Factory, subscription *model.Subscription) error {
+
+		// Load the MerchantAccount from the database
+		merchantAccountService := factory.MerchantAccount()
+		merchantAccount := model.NewMerchantAccount()
+
+		if err := merchantAccountService.LoadByID(subscription.UserID, subscription.MerchantAccountID, &merchantAccount); err != nil {
+			return derp.Wrap(err, location, "Error loading merchantAccount from database")
+		}
+
+		// Call the continuation function
+		return fn(ctx, factory, subscription, &merchantAccount)
+	})
+
+}
+
 // WithRegistration handles boilerplate code for requests that use a Registration object
 func WithRegistration(serverFactory *server.Factory, fn WithFunc2[model.Domain, model.Registration]) echo.HandlerFunc {
 
@@ -160,6 +180,39 @@ func WithStream(serverFactory *server.Factory, fn WithFunc1[model.Stream]) echo.
 
 		// Call the continuation function
 		return fn(ctx, factory, &stream)
+	})
+}
+
+func WithSubscription(serverFactory *server.Factory, fn WithFunc1[model.Subscription]) echo.HandlerFunc {
+
+	const location = "handler.WithSubscription"
+
+	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *domain.Factory) error {
+
+		// Get the UserID from the the URL
+		userID, err := primitive.ObjectIDFromHex(ctx.QueryParam("userId"))
+
+		if err != nil {
+			return derp.Wrap(err, location, "Invalid UserID", ctx.QueryParam("userId"))
+		}
+
+		// Get the SubscriptionID from the the URL
+		subscriptionID, err := primitive.ObjectIDFromHex(ctx.QueryParam("subscriptionId"))
+
+		if err != nil {
+			return derp.Wrap(err, location, "Invalid UserID", ctx.QueryParam("subscriptionId"))
+		}
+
+		// Load the Subscription from the database
+		subscriptionService := factory.Subscription()
+		subscription := model.NewSubscription()
+
+		if err := subscriptionService.LoadByID(userID, subscriptionID, &subscription); err != nil {
+			return derp.Wrap(err, location, "Error loading subscription from database")
+		}
+
+		// Call the continuation function
+		return fn(ctx, factory, &subscription)
 	})
 }
 

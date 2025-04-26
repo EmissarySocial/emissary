@@ -8,93 +8,74 @@ import (
 
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/server"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
-	"github.com/labstack/echo/v4"
+	"github.com/benpate/steranko"
 	"github.com/rs/zerolog/log"
 	"github.com/stripe/stripe-go/v78"
 	"github.com/stripe/stripe-go/v78/client"
 	"github.com/stripe/stripe-go/v78/webhook"
 )
 
-func PostWebhook(serverFactory *server.Factory) echo.HandlerFunc {
+func PostSignupWebhook(ctx *steranko.Context, factory *domain.Factory, domain *model.Domain) error {
 
 	const location = "handler.stripe.PostWebhook"
 
-	return func(ctx echo.Context) error {
+	//////////////////////////////////////
+	// 1. PREPARE AND VALIDATE THE REQUEST
 
-		//////////////////////////////////////
-		// 1. PREPARE AND VALIDATE THE REQUEST
-
-		// Get the factory for this Domain
-		factory, err := serverFactory.ByContext(ctx)
-
-		if err != nil {
-			return derp.ReportAndReturn(derp.Wrap(err, location, "Error getting domain factory"))
-		}
-
-		// Load the Domain record
-		domainService := factory.Domain()
-		domain, err := domainService.LoadDomain()
-
-		if err != nil {
-			return derp.ReportAndReturn(derp.Wrap(err, location, "Error loading domain record"))
-		}
-
-		// RULE: Require that a registration form has been defined
-		if !domain.HasRegistrationForm() {
-			return derp.ReportAndReturn(derp.NewNotFoundError(location, "Stripe Webhook not defined (no registration form)"))
-		}
-
-		// Collect Registration Metadata
-		secret := domain.RegistrationData.GetString("stripe_webhook_secret")
-		if secret == "" {
-			return derp.ReportAndReturn(derp.NewInternalError(location, "Stripe Webhook Secret not defined"))
-		}
-
-		restrictedKey := domain.RegistrationData.GetString("stripe_restricted_key")
-		if restrictedKey == "" {
-			return derp.ReportAndReturn(derp.NewInternalError(location, "Stripe Restricted Key not defined"))
-		}
-
-		////////////////////////////////
-		// 2. READ DATA FROM THE WEBHOOK
-
-		// Read the request body
-		payload, err := io.ReadAll(ctx.Request().Body)
-
-		if err != nil {
-			return derp.ReportAndReturn(derp.Wrap(err, location, "Error reading request body"))
-		}
-
-		// Verify the WebHook signature
-		signatureHeader := ctx.Request().Header.Get("Stripe-Signature")
-		event, err := webhook.ConstructEvent(payload, signatureHeader, secret)
-
-		if err != nil {
-			return derp.ReportAndReturn(derp.Wrap(err, location, "Error verifying webhook signature"))
-		}
-
-		// Require that the event is a "subscription" event
-		eventType := string(event.Type)
-
-		if !strings.HasPrefix(eventType, "customer.subscription.") {
-			log.Trace().Str("event", eventType).Msg("Ignoring Stripe Webhook")
-			return nil
-		}
-
-		log.Trace().Str("event", eventType).Msg("Processing Stripe Webhook")
-
-		////////////////////////////////
-		// 3. DRAW THE REST OF THE OWL HERE
-		// Moved to an async function so that our Webhook will respond to the server quickly.
-		// Whatever else happens, it's on us from here on out.
-		derp.Report(finishWebhook(factory, restrictedKey, event))
-
-		// Success?
-		return ctx.NoContent(http.StatusOK)
+	// RULE: Require that a registration form has been defined
+	if !domain.HasRegistrationForm() {
+		return derp.ReportAndReturn(derp.NewNotFoundError(location, "Stripe Webhook not defined (no registration form)"))
 	}
+
+	// Collect Registration Metadata
+	secret := domain.RegistrationData.GetString("stripe_webhook_secret")
+	if secret == "" {
+		return derp.ReportAndReturn(derp.NewInternalError(location, "Stripe Webhook Secret not defined"))
+	}
+
+	restrictedKey := domain.RegistrationData.GetString("stripe_restricted_key")
+	if restrictedKey == "" {
+		return derp.ReportAndReturn(derp.NewInternalError(location, "Stripe Restricted Key not defined"))
+	}
+
+	////////////////////////////////
+	// 2. READ DATA FROM THE WEBHOOK
+
+	// Read the request body
+	payload, err := io.ReadAll(ctx.Request().Body)
+
+	if err != nil {
+		return derp.ReportAndReturn(derp.Wrap(err, location, "Error reading request body"))
+	}
+
+	// Verify the WebHook signature
+	signatureHeader := ctx.Request().Header.Get("Stripe-Signature")
+	event, err := webhook.ConstructEvent(payload, signatureHeader, secret)
+
+	if err != nil {
+		return derp.ReportAndReturn(derp.Wrap(err, location, "Error verifying webhook signature"))
+	}
+
+	// Require that the event is a "subscription" event
+	eventType := string(event.Type)
+
+	if !strings.HasPrefix(eventType, "customer.subscription.") {
+		log.Trace().Str("event", eventType).Msg("Ignoring Stripe Webhook")
+		return nil
+	}
+
+	log.Trace().Str("event", eventType).Msg("Processing Stripe Webhook")
+
+	////////////////////////////////
+	// 3. DRAW THE REST OF THE OWL HERE
+	// Moved to an async function so that our Webhook will respond to the server quickly.
+	// Whatever else happens, it's on us from here on out.
+	derp.Report(finishWebhook(factory, restrictedKey, event))
+
+	// Success?
+	return ctx.NoContent(http.StatusOK)
 }
 
 func finishWebhook(factory *domain.Factory, restrictedKey string, event stripe.Event) error {

@@ -222,6 +222,8 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/nodeinfo/2.1.json", handler.GetNodeInfo21(factory))
 
 	// Built-In Service Routes
+	e.POST("/.checkout", handler.WithMerchantAccount(factory, handler.PostCheckout))
+	e.POST("/.checkout/webhook", handler.WithMerchantAccount(factory, handler.PostCheckoutWebhook))
 	e.POST("/.follower/new", handler.PostEmailFollower(factory))
 	e.GET("/.giphy", handler.GetGiphyWidget(factory))
 	e.GET("/.intents/discover", handler.WithFactory(factory, handler.GetIntentInfo))
@@ -229,9 +231,9 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.oembed", handler.WithFactory(factory, handler.GetOEmbed))
 	e.POST("/.ostatus/discover", handler.PostOStatusDiscover(factory))
 	e.GET("/.ostatus/tunnel", handler.GetFollowingTunnel)
-	e.POST("/.stripe", stripe.PostWebhook(factory))
 	e.GET("/.searchTag/:searchTagId/attachments/:attachmentId", handler.WithFactory(factory, handler.GetSearchTagAttachment))
 	e.GET("/.sso", handler.WithDomain(factory, handler.GetSingleSignOn))
+	e.POST("/.stripe/signup/webhook", handler.WithDomain(factory, stripe.PostSignupWebhook))
 	e.GET("/.themes/:themeId/:bundleId", handler.GetThemeBundle(factory))
 	e.GET("/.themes/:themeId/resources/:filename", handler.GetThemeResource(factory))
 	e.GET("/.templates/:templateId/:bundleId", handler.GetTemplateBundle(factory))

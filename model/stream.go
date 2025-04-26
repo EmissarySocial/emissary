@@ -279,6 +279,17 @@ func (stream *Stream) HasSubscriptions() bool {
 	return len(stream.Subscriptions) > 0
 }
 
+func (stream *Stream) SubscriptionIDs() []string {
+
+	result := make([]string, 0, len(stream.Subscriptions))
+
+	for _, subscriptions := range stream.Subscriptions {
+		result = append(result, subscriptions...)
+	}
+
+	return slice.Unique(result)
+}
+
 /******************************************
  * ActivityStream Methods
  ******************************************/

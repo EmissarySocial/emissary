@@ -73,6 +73,11 @@ func (service *MerchantAccount) paypal_refreshMerchantAccount(merchantAccount *m
 	return nil
 }
 
+// paypal_refreshSubscription refreshes the subscription data for a PayPal subscription
+func (service *MerchantAccount) paypal_refreshSubscription(merchantAccount *model.MerchantAccount, subscription *model.Subscription) error {
+	return nil
+}
+
 func (service *MerchantAccount) paypal_getSubscriptions(merchantAccount *model.MerchantAccount) ([]form.LookupCode, error) {
 
 	const location = "service.MerchantAccount.paypal_getSubscriptions"
@@ -81,7 +86,7 @@ func (service *MerchantAccount) paypal_getSubscriptions(merchantAccount *model.M
 	txnResult := mapof.NewAny()
 
 	// Get API Keys from the vault
-	apiKeys, err := service.getAPIKeys(merchantAccount)
+	apiKeys, err := service.DecryptVault(merchantAccount, "accessToken")
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Error retrieving API keys")
@@ -113,4 +118,31 @@ func (service *MerchantAccount) paypal_getSubscriptions(merchantAccount *model.M
 	}
 
 	return result, nil
+}
+
+func (service *MerchantAccount) paypal_getCheckoutURL(merchantAccount *model.MerchantAccount, subscription *model.Subscription, successURL string, cancelURL string) (string, error) {
+
+	const location = "service.MerchantAccount.paypal_getCheckoutURL"
+
+	// Get API Keys from the vault
+	apiKeys, err := service.DecryptVault(merchantAccount, "accessToken")
+
+	if err != nil {
+		return "", derp.Wrap(err, location, "Error retrieving API keys")
+	}
+
+	// Create the checkout URL
+	endpoint := service.paypal_getServerAddress(merchantAccount) + "/v1/billing/subscriptions"
+	txnResult := mapof.NewAny()
+
+	txn := remote.Post(endpoint).
+		ContentType("application/json").
+		With(options.BearerAuth(apiKeys.GetString("accessToken"))).
+		Result(&txnResult)
+
+	if err := txn.Send(); err != nil {
+		return "", derp.Wrap(err, location, "Error connecting to PayPal API")
+	}
+
+	return txnResult.GetString("checkout_url"), nil
 }

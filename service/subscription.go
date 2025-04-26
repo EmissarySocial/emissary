@@ -103,6 +103,10 @@ func (service *Subscription) Save(subscription *model.Subscription, note string)
 
 	subscription.MerchantAccountType = merchantAccount.Type
 
+	if err := service.merchantAccountService.RefreshSubscription(&merchantAccount, subscription); err != nil {
+		return derp.Wrap(err, "service.Subscription.Save", "Error validating Subscription", subscription)
+	}
+
 	// Save the subscription to the database
 	if err := service.collection.Save(subscription, note); err != nil {
 		return derp.Wrap(err, "service.Subscription.Save", "Error saving Subscription", subscription, note)
@@ -182,6 +186,18 @@ func (service *Subscription) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
+func (service *Subscription) QueryByID(userID primitive.ObjectID, subscriptionID ...primitive.ObjectID) ([]model.Subscription, error) {
+
+	criteria := exp.Equal("userId", userID).AndIn("_id", subscriptionID)
+
+	subscriptions, err := service.Query(criteria)
+	if err != nil {
+		return nil, derp.Wrap(err, "service.Subscription.QueryByID", "Error querying Subscriptions", criteria)
+	}
+
+	return subscriptions, nil
+}
+
 func (service *Subscription) QueryAsLookupCodes(userID primitive.ObjectID) ([]form.LookupCode, error) {
 
 	// Query Subscription for this User
@@ -213,9 +229,11 @@ func (service *Subscription) LoadByID(userID primitive.ObjectID, subscriptionID 
 
 func (service *Subscription) LoadByToken(userID primitive.ObjectID, token string, subscription *model.Subscription) error {
 
-	if subscriptionID, err := primitive.ObjectIDFromHex(token); err == nil {
-		return service.LoadByID(userID, subscriptionID, subscription)
-	} else {
-		return derp.Wrap(err, "service.Subscriber.LoadByToken", "Invalid Token", token)
+	subscriptionID, err := primitive.ObjectIDFromHex(token)
+
+	if err != nil {
+		return derp.Wrap(err, "service.Subscription.LoadByToken", "Invalid Token", token)
 	}
+
+	return service.LoadByID(userID, subscriptionID, subscription)
 }

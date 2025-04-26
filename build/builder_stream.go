@@ -875,6 +875,11 @@ func (w Stream) HasSubscriptions() bool {
 	return w._stream.HasSubscriptions()
 }
 
+// SubscriptionIDs returns all subscription IDs that are valid for this stream
+func (w Stream) SubscriptionIDs() []string {
+	return w._stream.SubscriptionIDs()
+}
+
 /******************************************
  * Helper Functions
  ******************************************/

@@ -21,6 +21,7 @@ import (
 type MerchantAccount struct {
 	collection    data.Collection
 	encryptionKey string
+	host          string
 }
 
 // NewMerchantAccount returns a fully initialized MerchantAccount service
@@ -33,9 +34,10 @@ func NewMerchantAccount() MerchantAccount {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *MerchantAccount) Refresh(collection data.Collection, masterKey string) {
+func (service *MerchantAccount) Refresh(collection data.Collection, masterKey string, host string) {
 	service.collection = collection
 	service.encryptionKey = masterKey
+	service.host = host
 }
 
 // Close stops any background processes controlled by this service
@@ -227,7 +229,35 @@ func (service *MerchantAccount) LoadByToken(userID primitive.ObjectID, token str
  * Custom Actions
  ******************************************/
 
-func (service *MerchantAccount) getAPIKeys(merchantAccount *model.MerchantAccount, values ...string) (mapof.String, error) {
+func (service *MerchantAccount) GetCheckoutURL(merchantAccount *model.MerchantAccount, subscription *model.Subscription, successURL string, cancelURL string) (string, error) {
+
+	switch merchantAccount.Type {
+
+	case model.MerchantAccountTypePayPal:
+		return service.paypal_getCheckoutURL(merchantAccount, subscription, successURL, cancelURL)
+
+	case model.MerchantAccountTypeStripe:
+		return service.stripe_getCheckoutURL(merchantAccount, subscription, successURL, cancelURL)
+	}
+
+	return "", derp.NewInternalError("service.MerchantAccount.GetCheckoutURL", "Invalid MerchantAccount Type", merchantAccount.Type)
+}
+
+func (service *MerchantAccount) RefreshSubscription(merchantAccount *model.MerchantAccount, subscription *model.Subscription) error {
+
+	switch merchantAccount.Type {
+
+	case model.MerchantAccountTypePayPal:
+		return service.paypal_refreshSubscription(merchantAccount, subscription)
+
+	case model.MerchantAccountTypeStripe:
+		return service.stripe_refreshSubscription(merchantAccount, subscription)
+	}
+
+	return derp.NewInternalError("service.MerchantAccount.RefreshSubscription", "Invalid MerchantAccount Type", merchantAccount.Type)
+}
+
+func (service *MerchantAccount) DecryptVault(merchantAccount *model.MerchantAccount, values ...string) (mapof.String, error) {
 
 	// Before retrieving the API keys, make sure they are up to date
 	if err := service.RefreshAPIKeys(merchantAccount); err != nil {
@@ -282,7 +312,7 @@ func (service *MerchantAccount) GetSubscriptions(merchantAccount *model.Merchant
 		return service.paypal_getSubscriptions(merchantAccount)
 
 	case model.MerchantAccountTypeStripe:
-		return service.stripe_getSubscriptions(merchantAccount)
+		return service.stripe_getPrices(merchantAccount)
 	}
 
 	// If we get here, the merchant account type is not supported
