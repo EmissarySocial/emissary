@@ -58,13 +58,13 @@ func (subscription Subscription) State() string {
 }
 
 // Roles returns a list of all roles that match the provided authorization.
-// Since Rule records should only be accessible by the rule owner, this
+// Since Subscriptions records should only be accessible by the Subscription owner, this
 // function only returns MagicRoleMyself if applicable.  Others (like Anonymous
-// and Authenticated) should never be allowed on an Rule record, so they
+// and Authenticated) should never be allowed on an Subscription record, so they
 // are not returned.
 func (subscription Subscription) Roles(authorization *Authorization) []string {
 
-	// Rules are private, so only 'myself' and 'owner' are allowed
+	// Subscriptions are private, so only 'myself' and 'owner' are allowed
 	if authorization.UserID == subscription.UserID {
 		return []string{MagicRoleMyself, MagicRoleOwner}
 	}

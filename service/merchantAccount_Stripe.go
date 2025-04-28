@@ -85,14 +85,19 @@ func (service *MerchantAccount) stripe_refreshSubscription(merchantAccount *mode
 
 	// Set/Update the RecurringType for the subscription
 	switch price.GetMap("recurring").GetString("interval") {
+
 	case "day":
 		subscription.RecurringType = model.SubscriptionRecurringTypeDaily
+
 	case "week":
 		subscription.RecurringType = model.SubscriptionRecurringTypeWeekly
+
 	case "month":
 		subscription.RecurringType = model.SubscriptionRecurringTypeMonthly
+
 	case "year":
 		subscription.RecurringType = model.SubscriptionRecurringTypeYearly
+
 	default:
 		subscription.RecurringType = model.SubscriptionRecurringTypeOnetime
 	}

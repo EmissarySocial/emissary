@@ -352,6 +352,50 @@ func (w Inbox) IsInboxEmpty(inbox []model.Message) bool {
 	return true
 }
 
+func (w Inbox) Subscriptions() QueryBuilder[model.Subscription] {
+
+	expressionBuilder := builder.NewBuilder()
+	criteria := exp.And(
+		expressionBuilder.Evaluate(w._request.URL.Query()),
+		exp.Equal("userId", w._user.UserID),
+	)
+
+	return NewQueryBuilder[model.Subscription](w._factory.Subscription(), criteria)
+}
+
+func (w Inbox) Subscribers() QueryBuilder[model.Subscriber] {
+
+	expressionBuilder := builder.NewBuilder().
+		String("search", builder.WithAlias("emailAddress"), builder.WithDefaultOpBeginsWith())
+
+	criteria := exp.And(
+		expressionBuilder.Evaluate(w._request.URL.Query()),
+		exp.Equal("userId", w._user.UserID),
+	)
+
+	return NewQueryBuilder[model.Subscriber](w._factory.Subscriber(), criteria)
+
+}
+
+func (w Inbox) MerchantAccount(merchantAccountID string) (model.MerchantAccount, error) {
+	result := model.NewMerchantAccount()
+	err := w._factory.MerchantAccount().LoadByToken(w._user.UserID, merchantAccountID, &result)
+	return result, err
+}
+
+func (w Inbox) MerchantAccounts() QueryBuilder[model.MerchantAccount] {
+
+	expressionBuilder := builder.NewBuilder().
+		String("search", builder.WithAlias("name"), builder.WithDefaultOpBeginsWith())
+
+	criteria := exp.And(
+		expressionBuilder.Evaluate(w._request.URL.Query()),
+		exp.Equal("userId", w._user.UserID),
+	)
+
+	return NewQueryBuilder[model.MerchantAccount](w._factory.MerchantAccount(), criteria)
+}
+
 // FIlteredByFollowing returns the Following record that is being used to filter the Inbox
 func (w Inbox) FilteredByFollowing() model.Following {
 

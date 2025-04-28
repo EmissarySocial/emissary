@@ -189,13 +189,6 @@ func WithSubscription(serverFactory *server.Factory, fn WithFunc1[model.Subscrip
 
 	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *domain.Factory) error {
 
-		// Get the UserID from the the URL
-		userID, err := primitive.ObjectIDFromHex(ctx.QueryParam("userId"))
-
-		if err != nil {
-			return derp.Wrap(err, location, "Invalid UserID", ctx.QueryParam("userId"))
-		}
-
 		// Get the SubscriptionID from the the URL
 		subscriptionID, err := primitive.ObjectIDFromHex(ctx.QueryParam("subscriptionId"))
 
@@ -207,7 +200,7 @@ func WithSubscription(serverFactory *server.Factory, fn WithFunc1[model.Subscrip
 		subscriptionService := factory.Subscription()
 		subscription := model.NewSubscription()
 
-		if err := subscriptionService.LoadByID(userID, subscriptionID, &subscription); err != nil {
+		if err := subscriptionService.LoadByID(subscriptionID, &subscription); err != nil {
 			return derp.Wrap(err, location, "Error loading subscription from database")
 		}
 

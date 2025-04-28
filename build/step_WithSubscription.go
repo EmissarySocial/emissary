@@ -46,7 +46,7 @@ func (step StepWithSubscription) execute(builder Builder, buffer io.Writer, acti
 	subscription.UserID = builder.AuthenticatedID()
 
 	if (subscriptionToken != "") && (subscriptionToken != "new") {
-		if err := subscriptionService.LoadByToken(builder.AuthenticatedID(), subscriptionToken, &subscription); err != nil {
+		if err := subscriptionService.LoadByUserAndToken(builder.AuthenticatedID(), subscriptionToken, &subscription); err != nil {
 			if actionMethod == ActionMethodGet {
 				return Halt().WithError(derp.Wrap(err, location, "Unable to load Subscription", subscriptionToken))
 			}

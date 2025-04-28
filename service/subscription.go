@@ -219,7 +219,14 @@ func (service *Subscription) QueryAsLookupCodes(userID primitive.ObjectID) ([]fo
 
 }
 
-func (service *Subscription) LoadByID(userID primitive.ObjectID, subscriptionID primitive.ObjectID, subscription *model.Subscription) error {
+func (service *Subscription) LoadByID(subscriptionID primitive.ObjectID, subscription *model.Subscription) error {
+
+	criteria := exp.Equal("_id", subscriptionID)
+
+	return service.Load(criteria, subscription)
+}
+
+func (service *Subscription) LoadByUserAndID(userID primitive.ObjectID, subscriptionID primitive.ObjectID, subscription *model.Subscription) error {
 
 	criteria := exp.Equal("_id", subscriptionID).
 		AndEqual("userId", userID)
@@ -227,7 +234,7 @@ func (service *Subscription) LoadByID(userID primitive.ObjectID, subscriptionID 
 	return service.Load(criteria, subscription)
 }
 
-func (service *Subscription) LoadByToken(userID primitive.ObjectID, token string, subscription *model.Subscription) error {
+func (service *Subscription) LoadByUserAndToken(userID primitive.ObjectID, token string, subscription *model.Subscription) error {
 
 	subscriptionID, err := primitive.ObjectIDFromHex(token)
 
@@ -235,5 +242,5 @@ func (service *Subscription) LoadByToken(userID primitive.ObjectID, token string
 		return derp.Wrap(err, "service.Subscription.LoadByToken", "Invalid Token", token)
 	}
 
-	return service.LoadByID(userID, subscriptionID, subscription)
+	return service.LoadByUserAndID(userID, subscriptionID, subscription)
 }

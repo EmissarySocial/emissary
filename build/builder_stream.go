@@ -880,6 +880,17 @@ func (w Stream) SubscriptionIDs() []string {
 	return w._stream.SubscriptionIDs()
 }
 
+func (w Stream) Subscriptions() QueryBuilder[model.Subscription] {
+
+	expressionBuilder := builder.NewBuilder()
+	criteria := exp.And(
+		expressionBuilder.Evaluate(w._request.URL.Query()),
+		exp.Equal("userId", w._stream.AttributedTo.UserID),
+	)
+
+	return NewQueryBuilder[model.Subscription](w._factory.Subscription(), criteria)
+}
+
 /******************************************
  * Helper Functions
  ******************************************/
