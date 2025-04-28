@@ -1,27 +1,27 @@
 
-<div id="menu-bar" hx-push-url="true">
+<div id="menu-bar" hx-push-url="true"  script="on load take .selected from .nav-item for #nav-admin">
 	<div class="center">
-		<a hx-get="/admin/domain/index" class="turboclick {{if eq .Token `domain`}}selected{{end}}">
+		<a href="/admin/domain/index" hx-boost="true" class="turboclick {{if eq .Token `domain`}}selected{{end}}">
 			General
 		</a>
 
-		<a hx-get="/admin/navigation/index" class="turboclick {{if eq .Token `navigation`}}selected{{end}}">
+		<a href="/admin/navigation/index" hx-boost="true" class="turboclick {{if eq .Token `navigation`}}selected{{end}}">
 			Navigation
 		</a>
 
-		<a hx-get="/admin/rules/index" class="turboclick {{if eq .Token `rules`}}selected{{end}}">
+		<a href="/admin/rules/index" hx-boost="true" class="turboclick {{if eq .Token `rules`}}selected{{end}}">
 			Rules
 		</a>
 
-		<a hx-get="/admin/users/index" class="turboclick {{if in .Token `users` `groups`}}selected{{end}}">
+		<a href="/admin/users/index" hx-boost="true" class="turboclick {{if in .Token `users` `groups`}}selected{{end}}">
 			People
 		</a>
 
-		<a hx-get="/admin/tags/index" class="turboclick {{if in .Token `search` `followers` `following` `tags`}}selected{{end}}">
+		<a href="/admin/tags/index" hx-boost="true" class="turboclick {{if in .Token `search` `followers` `following` `tags`}}selected{{end}}">
 			Search
 		</a>
 
-		<a hx-get="/admin/syndication/index" class="turboclick {{if in .Token `connections` `webhooks` `syndication` `sso`}}selected{{end}}">
+		<a href="/admin/syndication/index" hx-boost="true" class="turboclick {{if in .Token `connections` `webhooks` `syndication` `sso`}}selected{{end}}">
 			External
 		</a>
 
@@ -33,10 +33,10 @@
 {{ if in .Token "users" "groups" }}
 
 	<div id="menu-bar-sub">
-		<a hx-get="/admin/users/index" class="turboclick {{if eq `users` .Token}}selected{{end}}">
+		<a href="/admin/users/index" hx-boost="true" class="turboclick {{if eq `users` .Token}}selected{{end}}">
 			Users
 		</a>
-		<a hx-get="/admin/groups/index" class="turboclick {{if eq `groups` .Token}}selected{{end}}">
+		<a href="/admin/groups/index" hx-boost="true" class="turboclick {{if eq `groups` .Token}}selected{{end}}">
 			Groups
 		</a>
 	</div>
@@ -45,19 +45,19 @@
 
 	<div id="menu-bar-sub">
 	
-		<a hx-get="/admin/tags/index" class="turboclick {{if eq `tags` .Token}}selected{{end}}">
+		<a href="/admin/tags/index" hx-boost="true" class="turboclick {{if eq `tags` .Token}}selected{{end}}">
 			Tags
 		</a>
 
-		<a hx-get="/admin/following/index" class="turboclick {{if eq `following` .Token}}selected{{end}}">
+		<a href="/admin/following/index" hx-boost="true" class="turboclick {{if eq `following` .Token}}selected{{end}}">
 			Sources
 		</a>
 
-		<a hx-get="/admin/followers/index" class="turboclick {{if eq `followers` .Token}}selected{{end}}">
+		<a href="/admin/followers/index" hx-boost="true" class="turboclick {{if eq `followers` .Token}}selected{{end}}">
 			Subscribers
 		</a>
 
-		<a hx-get="/admin/search/index" class="turboclick {{if eq `search` .Token}}selected{{end}}">
+		<a href="/admin/search/index" hx-boost="true" class="turboclick {{if eq `search` .Token}}selected{{end}}">
 			Indexes
 		</a>
 
@@ -66,19 +66,19 @@
 {{ else if in .Token "connections" "webhooks" "syndication" "sso" }}
 
 	<span id="menu-bar-sub">
-		<a hx-get="/admin/syndication/index" class="turboclick {{if eq .Token `syndication`}}selected{{end}}">
+		<a href="/admin/syndication/index" hx-boost="true" class="turboclick {{if eq .Token `syndication`}}selected{{end}}">
 			Syndication
 		</a>
 
-		<a hx-get="/admin/webhooks/index" class="turboclick {{if eq .Token `webhooks`}}selected{{end}}">
+		<a href="/admin/webhooks/index" hx-boost="true" class="turboclick {{if eq .Token `webhooks`}}selected{{end}}">
 			Webhooks
 		</a>
 	
-		<a hx-get="/admin/connections/index" class="turboclick {{if eq .Token `connections`}}selected{{end}}">
+		<a href="/admin/connections/index" hx-boost="true" class="turboclick {{if eq .Token `connections`}}selected{{end}}">
 			OAuth Services
 		</a>
 	
-		<a hx-get="/admin/sso/index" class="turboclick {{if eq .Token `sso`}}selected{{end}}">
+		<a href="/admin/sso/index" hx-boost="true" class="turboclick {{if eq .Token `sso`}}selected{{end}}">
 			Single Sign On
 		</a>
 

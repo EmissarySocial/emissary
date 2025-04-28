@@ -10,6 +10,16 @@ on mousedown
 		exit
 	end
 
+	-- If CTRL modifier key is pressed (to open a new tab) then nvm
+	if event.ctrlKey is true then
+		exit
+	end
+
+	-- If META modifier key is pressed (to open a "right click" menu) then nvm
+	if event.metaKey is true then
+		exit
+	end
+
 	-- See if we're in a child of a .turboclick element
 	set node to the closest <.turboclick /> to the event.target
 

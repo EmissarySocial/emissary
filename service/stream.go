@@ -296,12 +296,6 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 		service.webhookService.Send(stream, model.WebhookEventStreamUpdate)
 	}
 
-	if stream.IsPublished() && stream.Syndication.IsChanged() {
-		if err := service.sendSyndicationMessages(stream, stream.Syndication.Added, stream.Syndication.Deleted); err != nil {
-			return derp.Wrap(err, location, "Error sending syndication messages", stream)
-		}
-	}
-
 	// NON-BLOCKING: Notify other processes on this server that the stream has been updated
 	go func() {
 		service.sseUpdateChannel <- stream.StreamID
@@ -334,7 +328,7 @@ func (service *Stream) Delete(stream *model.Stream, note string) error {
 		if stream.IsPublished() {
 			service.webhookService.Send(stream, model.WebhookEventStreamPublishUndo)
 
-			if err := service.sendSyndicationMessages(stream, nil, stream.Syndication.Values); err != nil {
+			if err := service.sendSyndicationMessages(stream, nil, nil, stream.Syndication.Values); err != nil {
 				derp.Report(derp.Wrap(err, location, "Error sending syndication messages", stream))
 			}
 		}
