@@ -18,9 +18,11 @@ import (
  ******************************************/
 
 // Publish marks this stream as "published"
-func (service *Stream) Publish(user *model.User, stream *model.Stream, outbox bool) error {
+func (service *Stream) Publish(user *model.User, stream *model.Stream, outbox bool, republish bool) error {
 
 	const location = "service.Stream.Publish"
+
+	wasPublished := stream.IsPublished()
 
 	// Determine ActitivyType FIRST, before we mess with the publish date
 	activityType := stream.PublishActivity()
@@ -42,64 +44,72 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream, outbox bo
 		return derp.Wrap(err, location, "Error saving stream", stream)
 	}
 
-	// If we're NOT publishing to the outbox, then we're done.
-	if !outbox {
-		return nil
-	}
-
 	// PUBLISH TO THE OUTBOX...
+	if outbox {
 
-	// Create the Activity to send to the User's Outbox
-	object := service.JSONLD(stream)
+		// Create the Activity to send to the User's Outbox
+		object := service.JSONLD(stream)
 
-	// Save the object to the ActivityStream cache
-	service.activityStream.Put(
-		service.activityStream.NewDocument(object),
-	)
+		// Save the object to the ActivityStream cache
+		service.activityStream.Put(
+			service.activityStream.NewDocument(object),
+		)
 
-	// Create the Activity to send to Followers
-	activity := mapof.Any{
-		vocab.AtContext:         vocab.ContextTypeActivityStreams,
-		vocab.PropertyID:        stream.ActivityPubURL(),
-		vocab.PropertyType:      activityType,
-		vocab.PropertyActor:     user.ActivityPubURL(),
-		vocab.PropertyObject:    object,
-		vocab.PropertyPublished: hannibal.TimeFormat(time.Now()),
+		// Create the Activity to send to Followers
+		activity := mapof.Any{
+			vocab.AtContext:         vocab.ContextTypeActivityStreams,
+			vocab.PropertyID:        stream.ActivityPubURL(),
+			vocab.PropertyType:      activityType,
+			vocab.PropertyActor:     user.ActivityPubURL(),
+			vocab.PropertyObject:    object,
+			vocab.PropertyPublished: hannibal.TimeFormat(time.Now()),
+		}
+
+		if to, ok := object[vocab.PropertyTo]; ok {
+			activity[vocab.PropertyTo] = to
+		}
+
+		if cc, ok := object[vocab.PropertyCC]; ok {
+			activity[vocab.PropertyCC] = cc
+		}
+
+		// Publish to the User's outbox
+		if err := service.publish_user_outbox(user, activity); err != nil {
+			return derp.Wrap(err, location, "Error publishing to User's outbox")
+		}
+
+		// Publish to the parent Stream's outbox
+		if err := service.publish_stream_outbox(stream, activity); err != nil {
+			return derp.Wrap(err, location, "Error publishing to parent Stream's outbox")
+		}
+
+		// Send stream:publish Webhooks
+		service.webhookService.Send(stream, model.WebhookEventStreamPublish)
 	}
 
-	if to, ok := object[vocab.PropertyTo]; ok {
-		activity[vocab.PropertyTo] = to
-	}
+	switch {
 
-	if cc, ok := object[vocab.PropertyCC]; ok {
-		activity[vocab.PropertyCC] = cc
-	}
+	// If the stream is being published for the first time, then only send "Create" activities
+	case !wasPublished:
+		if err := service.sendSyndicationMessages(stream, stream.Syndication.Values, nil, nil); err != nil {
+			return derp.Wrap(err, location, "Error sending syndication messages", stream)
+		}
 
-	// Publish to the User's outbox
-	if err := service.publish_User(user, activity); err != nil {
-		return derp.Wrap(err, location, "Error publishing to User's outbox")
-	}
+	// If the syndication settings have been changed (or is being republished) then send "Update" activities
+	case stream.Syndication.IsChanged(), republish:
 
-	// Publish to the parent Stream's outbox
-	if err := service.publish_Stream(stream, activity); err != nil {
-		return derp.Wrap(err, location, "Error publishing to parent Stream's outbox")
-	}
-
-	// Send stream:publish Webhooks
-	service.webhookService.Send(stream, model.WebhookEventStreamPublish)
-
-	// Send syndication messages to all targets
-	if err := service.sendSyndicationMessages(stream, stream.Syndication.Values, nil); err != nil {
-		derp.Report(derp.Wrap(err, location, "Error sending syndication messages", stream))
+		if err := service.sendSyndicationMessages(stream, stream.Syndication.Added, stream.Syndication.Unchanged(), stream.Syndication.Deleted); err != nil {
+			return derp.Wrap(err, location, "Error sending syndication messages", stream)
+		}
 	}
 
 	return nil
 }
 
-// publish_User publishes this stream to the User's outbox
-func (service *Stream) publish_User(user *model.User, activity mapof.Any) error {
+// publish_user_outbox publishes this stream to the User's outbox
+func (service *Stream) publish_user_outbox(user *model.User, activity mapof.Any) error {
 
-	const location = "service.Stream.publish_User"
+	const location = "service.Stream.publish_user_outbox"
 
 	// Do not take actions on an empty user
 	if user.IsNew() {
@@ -126,10 +136,10 @@ func (service *Stream) publish_User(user *model.User, activity mapof.Any) error 
 	return nil
 }
 
-// publish_Stream publishes this Stream to the parent Stream's outbox
-func (service *Stream) publish_Stream(stream *model.Stream, activity mapof.Any) error {
+// publish_stream_outbox publishes this Stream to the parent Stream's outbox
+func (service *Stream) publish_stream_outbox(stream *model.Stream, activity mapof.Any) error {
 
-	const location = "service.Stream.publish_Stream"
+	const location = "service.Stream.publish_stream_outbox"
 
 	// RULE: If the Stream does not have a parent template (i.e. Outbox or Top-Level Stream), then NOOP
 	if stream.ParentTemplateID == "" {
@@ -199,13 +209,13 @@ func (service *Stream) UnPublish(user *model.User, stream *model.Stream, outbox 
 
 	// Send "Undo" activities to all User followers.
 	if !user.IsNew() {
-		if err := service.unpublish_User(user.UserID, stream.URL); err != nil {
+		if err := service.unpublish_user_outbox(user.UserID, stream.URL); err != nil {
 			return derp.Wrap(err, location, "Error unpublishing from User's outbox", stream)
 		}
 	}
 
 	// Send "Undo" activities to all Stream followers.
-	if err := service.unpublish_Stream(stream); err != nil {
+	if err := service.unpublish_stream_outbox(stream); err != nil {
 		return derp.Wrap(err, location, "Error unpublishing from User's outbox", stream)
 	}
 
@@ -213,7 +223,7 @@ func (service *Stream) UnPublish(user *model.User, stream *model.Stream, outbox 
 	service.webhookService.Send(stream, model.WebhookEventStreamPublishUndo)
 
 	// Send syndication:undo messages to all targets
-	if err := service.sendSyndicationMessages(stream, nil, stream.Syndication.Values); err != nil {
+	if err := service.sendSyndicationMessages(stream, nil, nil, stream.Syndication.Values); err != nil {
 		derp.Report(derp.Wrap(err, location, "Error sending syndication messages", stream))
 	}
 
@@ -221,10 +231,10 @@ func (service *Stream) UnPublish(user *model.User, stream *model.Stream, outbox 
 	return nil
 }
 
-// publish_User publishes this stream to the User's outbox
-func (service *Stream) unpublish_User(userID primitive.ObjectID, url string) error {
+// publish_user_outbox publishes this stream to the User's outbox
+func (service *Stream) unpublish_user_outbox(userID primitive.ObjectID, url string) error {
 
-	const location = "service.Stream.unpublish_User"
+	const location = "service.Stream.unpublish_user_outbox"
 
 	// Load the Actor for this User
 	actor, err := service.userService.ActivityPubActor(userID, true)
@@ -243,10 +253,10 @@ func (service *Stream) unpublish_User(userID primitive.ObjectID, url string) err
 	return nil
 }
 
-// publish_Stream publishes this Stream to the parent Stream's outbox
-func (service *Stream) unpublish_Stream(stream *model.Stream) error {
+// publish_stream_outbox publishes this Stream to the parent Stream's outbox
+func (service *Stream) unpublish_stream_outbox(stream *model.Stream) error {
 
-	const location = "service.Stream.unpublish_Stream"
+	const location = "service.Stream.unpublish_stream_outbox"
 
 	// RULE: If the Stream does not have a parent template (i.e. Outbox or Top-Level Stream), then NOOP
 	if stream.ParentTemplateID == "" {

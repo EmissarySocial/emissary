@@ -6,6 +6,7 @@ import (
 
 // AsConfirmation displays a confirmation dialog on GET, giving users an option to continue or not
 type AsConfirmation struct {
+	Icon    string
 	Title   string
 	Message string
 	Submit  string
@@ -15,6 +16,7 @@ type AsConfirmation struct {
 func NewAsConfirmation(stepInfo mapof.Any) (AsConfirmation, error) {
 
 	return AsConfirmation{
+		Icon:    stepInfo.GetString("icon"),
 		Title:   stepInfo.GetString("title"),
 		Message: stepInfo.GetString("message"),
 		Submit:  first(stepInfo.GetString("submit"), "Continue"),

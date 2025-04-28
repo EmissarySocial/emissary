@@ -9,12 +9,12 @@ import (
 
 // sendSyndicationMessages sends messages to syndication targets
 // whenever a stream is added or removed from syndication
-func (service *Stream) sendSyndicationMessages(stream *model.Stream, added []string, removed []string) error {
+func (service *Stream) sendSyndicationMessages(stream *model.Stream, added []string, changed []string, removed []string) error {
 
 	const location = "service.Stream.sendSyndicationMessages"
 
 	domain := service.domainService.Get()
-	message := stream.GetWebhookData()
+	object := stream.GetWebhookData()
 
 	for _, target := range domain.Syndication {
 
@@ -22,35 +22,51 @@ func (service *Stream) sendSyndicationMessages(stream *model.Stream, added []str
 		for _, endpoint := range added {
 			if target.Value == endpoint {
 
-				event := "stream.syndicate"
-				message.SetString("event", event)
-				task := queue.NewTask(event, mapof.Any{
+				task := queue.NewTask("syndication.create", mapof.Any{
 					"endpoint": target.Href,
-					"message":  message,
+					"message": mapof.Any{
+						"type":   "Create",
+						"object": object,
+					},
 				})
 
 				if err := service.queue.Publish(task); err != nil {
 					return derp.Wrap(err, location, "Error publishing syndication undo task", task)
 				}
-				break
+			}
+		}
+
+		// Send syndication:undo messages
+		for _, endpoint := range changed {
+			if target.Value == endpoint {
+				task := queue.NewTask("syndication.update", mapof.Any{
+					"endpoint": target.Href,
+					"message": mapof.Any{
+						"type":   "Update",
+						"object": object,
+					},
+				})
+
+				if err := service.queue.Publish(task); err != nil {
+					return derp.Wrap(err, location, "Error publishing syndication undo task", task)
+				}
 			}
 		}
 
 		// Send syndication:undo messages
 		for _, endpoint := range removed {
 			if target.Value == endpoint {
-
-				event := "stream.syndicate.undo"
-				message.SetString("event", event)
-				task := queue.NewTask(event, mapof.Any{
+				task := queue.NewTask("syndication.delete", mapof.Any{
 					"endpoint": target.Href,
-					"message":  message,
+					"message": mapof.Any{
+						"type":   "Delete",
+						"object": object,
+					},
 				})
 
 				if err := service.queue.Publish(task); err != nil {
 					return derp.Wrap(err, location, "Error publishing syndication undo task", task)
 				}
-				break
 			}
 		}
 	}

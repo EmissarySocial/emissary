@@ -76,7 +76,7 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 	case "Shuffle":
 		return WithFactory(consumer.serverFactory, args, Shuffle)
 
-	case "stream.syndicate", "stream.syndicate.undo":
+	case "syndication.create", "syndication.update", "syndication.delete":
 		return StreamSyndicate(name, args)
 	}
 
