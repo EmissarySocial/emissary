@@ -630,7 +630,7 @@
 						{do:"edit", form:{
 							type:"layout-vertical"
 							children:[
-								{type:"select", path:"subscriptionToken", label:"Subscription", description:"Set up subscriptions with your merchant account, then connect here.", options:{provider:"merchantAccount-subscriptions", required:true}}
+								{type:"select", path:"remoteId", label:"Subscription", description:"Set up subscriptions with your merchant account, then connect here.", options:{provider:"merchantAccount-subscriptions", required:true}}
 								{type:"text", path:"name", label:"Label", description:"Displayed on your profile", options:{required:true}}
 								{type:"textarea", path:"description", label:"Description", description:"Displayed on your profile"}
 								{type:"toggle", path:"isFeatured", options:{

@@ -11,8 +11,7 @@ func SubscriptionSchema() schema.Element {
 		Properties: schema.ElementMap{
 			"subscriptionId":    schema.String{Format: "objectId"},
 			"merchantAccountId": schema.String{Format: "objectId"},
-			"subscriptionToken": schema.String{MaxLength: 1024},
-			"userId":            schema.String{Format: "objectId"},
+			"remoteId":          schema.String{MaxLength: 1024},
 			"name":              schema.String{MaxLength: 64},
 			"description":       schema.String{MaxLength: 256},
 			"price":             schema.String{MaxLength: 32},
@@ -26,69 +25,60 @@ func SubscriptionSchema() schema.Element {
  * Getter/Setter Interfaces
  *********************************/
 
-func (user *Subscription) GetPointer(name string) (any, bool) {
+func (subscription *Subscription) GetPointer(name string) (any, bool) {
 
 	switch name {
 
-	case "subscriptionToken":
-		return &user.SubscriptionToken, true
+	case "remoteId":
+		return &subscription.RemoteID, true
 
 	case "name":
-		return &user.Name, true
+		return &subscription.Name, true
 
 	case "description":
-		return &user.Description, true
+		return &subscription.Description, true
 
 	case "price":
-		return &user.Price, true
+		return &subscription.Price, true
 
 	case "recurringType":
-		return &user.RecurringType, true
+		return &subscription.RecurringType, true
 
 	case "isFeatured":
-		return &user.IsFeatured, true
+		return &subscription.IsFeatured, true
 
 	default:
 		return nil, false
 	}
 }
 
-func (user *Subscription) GetStringOK(name string) (string, bool) {
+func (subscription *Subscription) GetStringOK(name string) (string, bool) {
 	switch name {
 
 	case "subscriptionId":
-		return user.SubscriptionID.Hex(), true
+		return subscription.SubscriptionID.Hex(), true
 
 	case "merchantAccountId":
-		return user.MerchantAccountID.Hex(), true
-
-	case "userId":
-		return user.UserID.Hex(), true
+		return subscription.MerchantAccountID.Hex(), true
 
 	default:
 		return "", false
 	}
 }
 
-func (user *Subscription) SetString(name string, value string) bool {
+func (subscription *Subscription) SetString(name string, value string) bool {
 
 	switch name {
 
 	case "subscriptionId":
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
-			user.SubscriptionID = objectID
+			subscription.SubscriptionID = objectID
 			return true
 		}
 
 	case "merchantAccountId":
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
-			user.MerchantAccountID = objectID
-			return true
-		}
-
-	case "userId":
-		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
-			user.SubscriptionID = objectID
+			subscription.MerchantAccountID = objectID
 			return true
 		}
 	}

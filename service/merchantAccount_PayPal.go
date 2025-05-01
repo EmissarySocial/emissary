@@ -2,6 +2,7 @@ package service
 
 import (
 	"encoding/hex"
+	"net/http"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -11,6 +12,7 @@ import (
 	"github.com/benpate/remote/options"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/davecgh/go-spew/spew"
 )
 
 func (service *MerchantAccount) paypal_getServerAddress(merchantAccount *model.MerchantAccount) string {
@@ -20,6 +22,17 @@ func (service *MerchantAccount) paypal_getServerAddress(merchantAccount *model.M
 	} else {
 		return "https://api-m.sandbox.paypal.com"
 	}
+}
+
+// paypal_parseCheckoutWebhook processes subscription webhook events from Stripe
+func (service *MerchantAccount) paypal_parseCheckoutWebhook(request *http.Request, merchantAccount *model.MerchantAccount) ([]model.Subscriber, error) {
+
+	const location = "service.MerchantAccount.paypal_parseCheckoutWebhook"
+
+	spew.Dump(location, merchantAccount)
+	// Get API Keys from the vault
+
+	return nil, derp.NewBadRequestError(location, "Not Implemented")
 }
 
 // paypal_refreshMerchantAccount connects/refreshes the PayPal merchant account data

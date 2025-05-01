@@ -100,7 +100,7 @@ func (service *Rule) Channel(criteria exp.Expression, options ...option.Option) 
 		return nil, derp.Wrap(err, "service.Rule.Channel", "Error creating iterator", criteria, options)
 	}
 
-	return iterator.Channel[model.Rule](it, model.NewRule), nil
+	return iterator.Channel(it, model.NewRule), nil
 }
 
 // Load retrieves an Rule from the database

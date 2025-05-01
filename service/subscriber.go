@@ -167,19 +167,32 @@ func (service *Subscriber) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
-func (service *Subscriber) LoadByID(userID primitive.ObjectID, subscriberID primitive.ObjectID, subscriber *model.Subscriber) error {
+func (service *Subscriber) LoadByEmail(emailAddress string, subscriber *model.Subscriber) error {
+	criteria := exp.Equal("emailAddress", emailAddress)
+	return service.Load(criteria, subscriber)
+}
 
-	criteria := exp.Equal("_id", subscriberID).
-		AndEqual("userId", userID)
+func (service *Subscriber) LoadByEmailAndToken(emailAddress string, token string, subscriber *model.Subscriber) error {
+	criteria := exp.Equal("emailAddress", emailAddress).
+		AndEqual("token", token)
 
 	return service.Load(criteria, subscriber)
 }
 
-func (service *Subscriber) LoadByToken(userID primitive.ObjectID, token string, subscriber *model.Subscriber) error {
+func (service *Subscriber) CreateOrUpdate(subscriber *model.Subscriber) error {
 
-	if subscriberID, err := primitive.ObjectIDFromHex(token); err == nil {
-		return service.LoadByID(userID, subscriberID, subscriber)
-	} else {
-		return derp.Wrap(err, "service.Subscriber.LoadByToken", "Invalid Token", token)
+	// Try to load the subscriber by email address
+	currentSubscriber := model.NewSubscriber()
+
+	// Try to find a current, matching subscriber record
+	if err := service.LoadByEmailAndToken(subscriber.EmailAddress, subscriber.Token, &currentSubscriber); !derp.NilOrNotFound(err) {
+		return derp.Wrap(err, "service.Subscriber.CreateOrUpdate", "Error loading subscriber by email", subscriber.EmailAddress)
 	}
+
+	if changed := currentSubscriber.UpdateWith(subscriber); changed {
+		if err := service.Save(&currentSubscriber, "Updated"); err != nil {
+			return derp.Wrap(err, "service.Subscriber.CreateOrUpdate", "Error saving subscriber", currentSubscriber)
+		}
+	}
+	return nil
 }

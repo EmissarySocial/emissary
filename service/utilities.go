@@ -289,7 +289,7 @@ func slicesAreEqual(value1 []mapof.String, value2 []mapof.String) bool {
 }
 
 // executeTemplate is some syntax sugar around the template.Execute function.
-// nolint unused -- This may be unused now, but it's a great function to have around.
+// nolint:unused -- This may be unused now, but it's a great function to have around.
 func executeTemplate(t TemplateLike, value any) string {
 
 	// Empty templates return empty strings

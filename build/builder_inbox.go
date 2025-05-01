@@ -379,7 +379,7 @@ func (w Inbox) Subscribers() QueryBuilder[model.Subscriber] {
 
 func (w Inbox) MerchantAccount(merchantAccountID string) (model.MerchantAccount, error) {
 	result := model.NewMerchantAccount()
-	err := w._factory.MerchantAccount().LoadByToken(w._user.UserID, merchantAccountID, &result)
+	err := w._factory.MerchantAccount().LoadByUserAndToken(w._user.UserID, merchantAccountID, &result)
 	return result, err
 }
 

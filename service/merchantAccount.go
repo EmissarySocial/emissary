@@ -3,6 +3,7 @@ package service
 import (
 	"encoding/hex"
 	"iter"
+	"net/http"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -19,9 +20,11 @@ import (
 
 // MerchantAccount defines a service that manages all content merchantAccounts created and imported by Users.
 type MerchantAccount struct {
-	collection    data.Collection
-	encryptionKey string
-	host          string
+	collection          data.Collection
+	subscriptionService *Subscription
+	subscriberService   *Subscriber
+	encryptionKey       string
+	host                string
 }
 
 // NewMerchantAccount returns a fully initialized MerchantAccount service
@@ -34,8 +37,10 @@ func NewMerchantAccount() MerchantAccount {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *MerchantAccount) Refresh(collection data.Collection, masterKey string, host string) {
+func (service *MerchantAccount) Refresh(collection data.Collection, subscriptionService *Subscription, subscriberService *Subscriber, masterKey string, host string) {
 	service.collection = collection
+	service.subscriptionService = subscriptionService
+	service.subscriberService = subscriberService
 	service.encryptionKey = masterKey
 	service.host = host
 }
@@ -208,21 +213,38 @@ func (service *MerchantAccount) QueryByUser(userID primitive.ObjectID, options .
 	return result, nil
 }
 
-func (service *MerchantAccount) LoadByID(userID primitive.ObjectID, merchantAccountID primitive.ObjectID, merchantAccount *model.MerchantAccount) error {
+func (service *MerchantAccount) LoadByID(merchantAccountID primitive.ObjectID, merchantAccount *model.MerchantAccount) error {
 
-	criteria := exp.Equal("_id", merchantAccountID).
-		AndEqual("userId", userID)
-
+	criteria := exp.Equal("_id", merchantAccountID)
 	return service.Load(criteria, merchantAccount)
 }
 
-func (service *MerchantAccount) LoadByToken(userID primitive.ObjectID, token string, merchantAccount *model.MerchantAccount) error {
+func (service *MerchantAccount) LoadByUserAndID(userID primitive.ObjectID, merchantAccountID primitive.ObjectID, merchantAccount *model.MerchantAccount) error {
 
-	if merchantAccountID, err := primitive.ObjectIDFromHex(token); err == nil {
-		return service.LoadByID(userID, merchantAccountID, merchantAccount)
-	} else {
+	criteria := exp.Equal("_id", merchantAccountID).AndEqual("userId", userID)
+	return service.Load(criteria, merchantAccount)
+}
+
+func (service *MerchantAccount) LoadByToken(token string, merchantAccount *model.MerchantAccount) error {
+
+	merchantAccountID, err := primitive.ObjectIDFromHex(token)
+
+	if err != nil {
 		return derp.Wrap(err, "service.MerchantAccount.LoadByToken", "Invalid Token", token)
 	}
+
+	return service.LoadByID(merchantAccountID, merchantAccount)
+}
+
+func (service *MerchantAccount) LoadByUserAndToken(userID primitive.ObjectID, token string, merchantAccount *model.MerchantAccount) error {
+
+	merchantAccountID, err := primitive.ObjectIDFromHex(token)
+
+	if err != nil {
+		return derp.Wrap(err, "service.MerchantAccount.LoadByToken", "Invalid Token", token)
+	}
+
+	return service.LoadByUserAndID(userID, merchantAccountID, merchantAccount)
 }
 
 /******************************************
@@ -317,4 +339,18 @@ func (service *MerchantAccount) GetSubscriptions(merchantAccount *model.Merchant
 
 	// If we get here, the merchant account type is not supported
 	return nil, derp.NewInternalError("service.MerchantAccount.GetSubscriptions", "Invalid MerchantAccount Type", merchantAccount.Type)
+}
+
+func (service *MerchantAccount) ParseCheckoutWebhook(request *http.Request, merchantAccount *model.MerchantAccount) ([]model.Subscriber, error) {
+
+	switch merchantAccount.Type {
+
+	case model.MerchantAccountTypePayPal:
+		return service.paypal_parseCheckoutWebhook(request, merchantAccount)
+
+	case model.MerchantAccountTypeStripe:
+		return service.stripe_parseCheckoutWebhook(request, merchantAccount)
+	}
+
+	return nil, derp.NewInternalError("service.MerchantAccount.HandleWebhook", "Invalid MerchantAccount Type", merchantAccount.Type)
 }

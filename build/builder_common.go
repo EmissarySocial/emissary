@@ -542,6 +542,12 @@ func (w Common) SearchTag(tagName string) model.SearchTag {
 	return result
 }
 
+func (w Common) MerchantAccount(merchantAccountID string) (model.MerchantAccount, error) {
+	result := model.NewMerchantAccount()
+	err := w._factory.MerchantAccount().LoadByToken(merchantAccountID, &result)
+	return result, err
+}
+
 func (w Common) FeaturedSearchTags() *QueryBuilder[model.SearchTag] {
 
 	criteria := exp.And(

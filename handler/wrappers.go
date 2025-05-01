@@ -36,18 +36,18 @@ func WithFactory(serverFactory *server.Factory, fn WithFunc0) echo.HandlerFunc {
 		sterankoContext, ok := ctx.(*steranko.Context)
 
 		if !ok {
-			return derp.NewInternalError(location, "Context must be a Steranko Context")
+			return derp.ReportAndReturn(derp.NewInternalError(location, "Context must be a Steranko Context"))
 		}
 
 		// Validate the domain name
 		factory, err := serverFactory.ByContext(ctx)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unrecognized Domain")
+			return derp.ReportAndReturn(derp.Wrap(err, location, "Unrecognized Domain"))
 		}
 
 		// Call the continuation function
-		return fn(sterankoContext, factory)
+		return derp.ReportAndReturn(fn(sterankoContext, factory))
 	}
 }
 
@@ -63,29 +63,30 @@ func WithDomain(serverFactory *server.Factory, fn WithFunc1[model.Domain]) echo.
 		domain, err := domainService.LoadDomain()
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unable to load Domain")
+			return derp.Wrap(err, location, "Error loading Domain")
 		}
 
 		return fn(ctx, factory, &domain)
 	})
 }
 
-func WithMerchantAccount(serverFactory *server.Factory, fn WithFunc2[model.Subscription, model.MerchantAccount]) echo.HandlerFunc {
+func WithMerchantAccount(serverFactory *server.Factory, fn WithFunc1[model.MerchantAccount]) echo.HandlerFunc {
 
 	const location = "handler.WithMerchantAccount"
 
-	return WithSubscription(serverFactory, func(ctx *steranko.Context, factory *domain.Factory, subscription *model.Subscription) error {
+	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *domain.Factory) error {
 
 		// Load the MerchantAccount from the database
 		merchantAccountService := factory.MerchantAccount()
 		merchantAccount := model.NewMerchantAccount()
+		merchantAccountToken := ctx.QueryParam("merchantAccountId")
 
-		if err := merchantAccountService.LoadByID(subscription.UserID, subscription.MerchantAccountID, &merchantAccount); err != nil {
-			return derp.Wrap(err, location, "Error loading merchantAccount from database")
+		if err := merchantAccountService.LoadByToken(merchantAccountToken, &merchantAccount); err != nil {
+			return derp.Wrap(err, location, "Error loading MerchantAccount")
 		}
 
 		// Call the continuation function
-		return fn(ctx, factory, subscription, &merchantAccount)
+		return fn(ctx, factory, &merchantAccount)
 	})
 
 }
@@ -107,7 +108,7 @@ func WithRegistration(serverFactory *server.Factory, fn WithFunc2[model.Domain, 
 		registration, err := registrationService.Load(domain.RegistrationID)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error loading registration")
+			return derp.Wrap(err, location, "Error loading Registration")
 		}
 
 		if registration.IsZero() {
@@ -183,17 +184,17 @@ func WithStream(serverFactory *server.Factory, fn WithFunc1[model.Stream]) echo.
 	})
 }
 
-func WithSubscription(serverFactory *server.Factory, fn WithFunc1[model.Subscription]) echo.HandlerFunc {
+func WithSubscription(serverFactory *server.Factory, fn WithFunc2[model.MerchantAccount, model.Subscription]) echo.HandlerFunc {
 
 	const location = "handler.WithSubscription"
 
-	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *domain.Factory) error {
+	return WithMerchantAccount(serverFactory, func(ctx *steranko.Context, factory *domain.Factory, merchantAccount *model.MerchantAccount) error {
 
 		// Get the SubscriptionID from the the URL
 		subscriptionID, err := primitive.ObjectIDFromHex(ctx.QueryParam("subscriptionId"))
 
 		if err != nil {
-			return derp.Wrap(err, location, "Invalid UserID", ctx.QueryParam("subscriptionId"))
+			return derp.Wrap(err, location, "Invalid SubscriptionID", ctx.QueryParam("subscriptionId"))
 		}
 
 		// Load the Subscription from the database
@@ -201,11 +202,11 @@ func WithSubscription(serverFactory *server.Factory, fn WithFunc1[model.Subscrip
 		subscription := model.NewSubscription()
 
 		if err := subscriptionService.LoadByID(subscriptionID, &subscription); err != nil {
-			return derp.Wrap(err, location, "Error loading subscription from database")
+			return derp.Wrap(err, location, "Error loading Subscription")
 		}
 
 		// Call the continuation function
-		return fn(ctx, factory, &subscription)
+		return fn(ctx, factory, merchantAccount, &subscription)
 	})
 }
 
@@ -245,7 +246,7 @@ func WithUser(serverFactory *server.Factory, fn WithFunc1[model.User]) echo.Hand
 		}
 
 		if err := userService.LoadByToken(userID, &user); err != nil {
-			return derp.Wrap(err, location, "Error loading user from database")
+			return derp.Wrap(err, location, "Error loading User")
 		}
 
 		// Call the continuation function
@@ -329,7 +330,7 @@ func WithAuthenticatedUser(serverFactory *server.Factory, fn WithFunc1[model.Use
 		user := model.NewUser()
 
 		if err := userService.LoadByID(authorization.UserID, &user); err != nil {
-			return derp.Wrap(err, location, "Error loading user from database")
+			return derp.Wrap(err, location, "Error loading User")
 		}
 
 		// Call the continuation function

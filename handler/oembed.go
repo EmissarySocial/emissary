@@ -84,7 +84,7 @@ func getOEmbed_Domain(factory *domain.Factory) (mapof.Any, error) {
 	return result, nil
 }
 
-func getOEmbed_Stream(ctx *steranko.Context, factory *domain.Factory, token string) (mapof.Any, error) {
+func getOEmbed_Stream(_ *steranko.Context, factory *domain.Factory, token string) (mapof.Any, error) {
 
 	const location = "handler.getOEmbed_Stream"
 
@@ -190,7 +190,7 @@ func getOEmbed_User(factory *domain.Factory, token string) (mapof.Any, error) {
 	return result, nil
 }
 
-// nolint: unused
+// nolint:unusedfunc
 func getOEmbed_heightAndWidth(html string) (int, int) {
 
 	var height int

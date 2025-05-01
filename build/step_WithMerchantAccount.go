@@ -46,7 +46,7 @@ func (step StepWithMerchantAccount) execute(builder Builder, buffer io.Writer, a
 	merchantAccount.UserID = builder.AuthenticatedID()
 
 	if (merchantAccountToken != "") && (merchantAccountToken != "new") {
-		if err := merchantAccountService.LoadByToken(builder.AuthenticatedID(), merchantAccountToken, &merchantAccount); err != nil {
+		if err := merchantAccountService.LoadByUserAndToken(builder.AuthenticatedID(), merchantAccountToken, &merchantAccount); err != nil {
 			if actionMethod == ActionMethodGet {
 				return Halt().WithError(derp.Wrap(err, location, "Unable to load MerchantAccount", merchantAccountToken))
 			}

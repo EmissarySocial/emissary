@@ -1,5 +1,7 @@
 on mousedown
 
+	exit
+
 	-- if the event is not a left click, then nvm
 	if event.button > 0 then 
 		exit

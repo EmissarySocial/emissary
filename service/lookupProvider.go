@@ -232,7 +232,7 @@ func (service *LookupProvider) getMerchantAccountSubscriptions() form.LookupGrou
 	token := service.request.URL.Query().Get("merchantAccountId")
 	merchantAccount := model.NewMerchantAccount()
 
-	if err := service.merchantAccountService.LoadByToken(service.userID, token, &merchantAccount); err != nil {
+	if err := service.merchantAccountService.LoadByUserAndToken(service.userID, token, &merchantAccount); err != nil {
 		derp.Report(derp.Wrap(err, location, "Error loading merchant account"))
 		return form.NewReadOnlyLookupGroup()
 	}

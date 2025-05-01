@@ -41,14 +41,14 @@ func (step StepWithSubscription) execute(builder Builder, buffer io.Writer, acti
 	// Collect required services and values
 	factory := builder.factory()
 	subscriptionService := factory.Subscription()
-	subscriptionToken := builder.QueryParam("subscriptionId")
+	token := builder.QueryParam("subscriptionId")
 	subscription := model.NewSubscription()
 	subscription.UserID = builder.AuthenticatedID()
 
-	if (subscriptionToken != "") && (subscriptionToken != "new") {
-		if err := subscriptionService.LoadByUserAndToken(builder.AuthenticatedID(), subscriptionToken, &subscription); err != nil {
+	if (token != "") && (token != "new") {
+		if err := subscriptionService.LoadByUserAndToken(builder.AuthenticatedID(), token, &subscription); err != nil {
 			if actionMethod == ActionMethodGet {
-				return Halt().WithError(derp.Wrap(err, location, "Unable to load Subscription", subscriptionToken))
+				return Halt().WithError(derp.Wrap(err, location, "Unable to load Subscription", token))
 			}
 			// Fall through for POSTS..  we're just creating a new subscription.
 		}

@@ -2,6 +2,8 @@ package model
 
 const SubscriberStateActive = "ACTIVE"
 
+const SubscriberStateCanceled = "CANCELED"
+
 const SubscriberStateExpired = "EXPIRED"
 
-const SubscriberStateCanceled = "CANCELED"
+const SubscriberStatePaused = "PAUSED"

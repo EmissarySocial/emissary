@@ -222,7 +222,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/nodeinfo/2.1.json", handler.GetNodeInfo21(factory))
 
 	// Built-In Service Routes
-	e.GET("/.checkout", handler.WithMerchantAccount(factory, handler.GetCheckout))
+	e.GET("/.checkout", handler.WithSubscription(factory, handler.GetCheckout))
 	e.POST("/.checkout/webhook", handler.WithMerchantAccount(factory, handler.PostCheckoutWebhook))
 	e.POST("/.follower/new", handler.PostEmailFollower(factory))
 	e.GET("/.giphy", handler.GetGiphyWidget(factory))

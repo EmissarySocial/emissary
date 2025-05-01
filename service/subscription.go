@@ -93,7 +93,7 @@ func (service *Subscription) Save(subscription *model.Subscription, note string)
 
 	// Validate the Merchant Account
 	merchantAccount := model.NewMerchantAccount()
-	if err := service.merchantAccountService.LoadByID(subscription.UserID, subscription.MerchantAccountID, &merchantAccount); err != nil {
+	if err := service.merchantAccountService.LoadByUserAndID(subscription.UserID, subscription.MerchantAccountID, &merchantAccount); err != nil {
 		return derp.Wrap(err, "service.Subscription.Save", "Error loading Merchant Account", subscription.MerchantAccountID)
 	}
 
@@ -243,4 +243,16 @@ func (service *Subscription) LoadByUserAndToken(userID primitive.ObjectID, token
 	}
 
 	return service.LoadByUserAndID(userID, subscriptionID, subscription)
+}
+
+// LoadByRemoteID retrieves a single Subscription using the ID provided by the MerchantAccount
+func (service *Subscription) LoadByRemoteID(remoteID string, subscription *model.Subscription) error {
+
+	criteria := exp.Equal("remoteId", remoteID)
+
+	if err := service.Load(criteria, subscription); err != nil {
+		return derp.Wrap(err, "service.Subscription.LoadByRemoteID", "Error loading Subscription", criteria)
+	}
+
+	return nil
 }

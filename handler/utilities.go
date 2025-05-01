@@ -132,6 +132,7 @@ func inlineError(ctx echo.Context, errorMessage string) error {
 	return ctx.String(http.StatusOK, errorMessage)
 }
 
+// nolint:unused
 func executeTemplate(template *template.Template, data any) string {
 	var buffer bytes.Buffer
 	if err := template.Execute(&buffer, data); err != nil {
