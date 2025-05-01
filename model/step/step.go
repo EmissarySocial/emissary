@@ -248,9 +248,6 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "with-rule":
 		return NewWithRule(stepInfo)
 
-	case "with-subscriber":
-		return NewWithSubscriber(stepInfo)
-
 	case "with-subscription":
 		return NewWithSubscription(stepInfo)
 

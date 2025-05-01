@@ -233,9 +233,6 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.WithRule:
 		return StepWithRule(s)
 
-	case step.WithSubscriber:
-		return StepWithSubscriber(s)
-
 	case step.WithSubscription:
 		return StepWithSubscription(s)
 	}
