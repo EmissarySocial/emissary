@@ -29,8 +29,8 @@ func (subscriber *Subscriber) GetPointer(name string) (any, bool) {
 	case "emailAddress":
 		return &subscriber.EmailAddress, true
 
-	case "fediverseId":
-		return &subscriber.FediverseID, true
+	case "fediverseHandle":
+		return &subscriber.FediverseHandle, true
 
 	default:
 		return nil, false

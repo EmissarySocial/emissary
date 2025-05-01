@@ -172,9 +172,10 @@ func (service *Subscriber) LoadByEmail(emailAddress string, subscriber *model.Su
 	return service.Load(criteria, subscriber)
 }
 
-func (service *Subscriber) LoadByEmailAndToken(emailAddress string, token string, subscriber *model.Subscriber) error {
-	criteria := exp.Equal("emailAddress", emailAddress).
-		AndEqual("token", token)
+func (service *Subscriber) LoadByRemoteIDs(remoteUserID string, remoteSubscriptionID string, remoteSubscriberID string, subscriber *model.Subscriber) error {
+	criteria := exp.Equal("remoteUserId", remoteUserID).
+		AndEqual("remoteSubscriptionId", remoteSubscriptionID).
+		AndEqual("remoteSubscriberId", remoteSubscriberID)
 
 	return service.Load(criteria, subscriber)
 }
@@ -185,7 +186,7 @@ func (service *Subscriber) CreateOrUpdate(subscriber *model.Subscriber) error {
 	currentSubscriber := model.NewSubscriber()
 
 	// Try to find a current, matching subscriber record
-	if err := service.LoadByEmailAndToken(subscriber.EmailAddress, subscriber.Token, &currentSubscriber); !derp.NilOrNotFound(err) {
+	if err := service.LoadByRemoteIDs(subscriber.RemoteUserID, subscriber.RemoteSubscriptionID, subscriber.RemoteSubscriberID, &currentSubscriber); !derp.NilOrNotFound(err) {
 		return derp.Wrap(err, "service.Subscriber.CreateOrUpdate", "Error loading subscriber by email", subscriber.EmailAddress)
 	}
 

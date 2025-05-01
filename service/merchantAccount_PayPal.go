@@ -29,7 +29,7 @@ func (service *MerchantAccount) paypal_parseCheckoutWebhook(request *http.Reques
 
 	const location = "service.MerchantAccount.paypal_parseCheckoutWebhook"
 
-	spew.Dump(location, merchantAccount)
+	spew.Dump(location, request, merchantAccount)
 	// Get API Keys from the vault
 
 	return nil, derp.NewBadRequestError(location, "Not Implemented")
@@ -88,6 +88,8 @@ func (service *MerchantAccount) paypal_refreshMerchantAccount(merchantAccount *m
 
 // paypal_refreshSubscription refreshes the subscription data for a PayPal subscription
 func (service *MerchantAccount) paypal_refreshSubscription(merchantAccount *model.MerchantAccount, subscription *model.Subscription) error {
+
+	spew.Dump(merchantAccount, subscription)
 	return nil
 }
 
@@ -145,7 +147,7 @@ func (service *MerchantAccount) paypal_getCheckoutURL(merchantAccount *model.Mer
 	}
 
 	// Create the checkout URL
-	endpoint := service.paypal_getServerAddress(merchantAccount) + "/v1/billing/subscriptions"
+	endpoint := service.paypal_getServerAddress(merchantAccount) + "/v1/billing/subscriptions/" + subscription.RemoteID
 	txnResult := mapof.NewAny()
 
 	txn := remote.Post(endpoint).

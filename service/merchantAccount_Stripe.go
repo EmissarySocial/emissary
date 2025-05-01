@@ -17,7 +17,9 @@ import (
 	"github.com/benpate/rosetta/compare"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/stripe/stripe-go/v78"
+	"github.com/stripe/stripe-go/v78/webhook"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -87,7 +89,11 @@ func (service *MerchantAccount) stripe_parseCheckoutWebhook(request *http.Reques
 
 	defer request.Body.Close()
 
-	/*
+	switch merchantAccount.LiveMode {
+
+	// In LIVE mode, use the Stripe library to validate event
+	case true:
+
 		// Retrieve the webhook signing key from the Vault
 		vault, err := service.DecryptVault(merchantAccount, "webhookSecret")
 
@@ -96,16 +102,18 @@ func (service *MerchantAccount) stripe_parseCheckoutWebhook(request *http.Reques
 		}
 
 		// Parse and validate the Webhook event
-		event, err = webhook.ConstructEvent(body, request.Header.Get("Stripe-Signature"), vault.GetString("webhookSecret"))
+		stripeEvent, err = webhook.ConstructEvent(body, request.Header.Get("Stripe-Signature"), vault.GetString("webhookSecret"))
 
 		if err != nil {
 			return nil, derp.Wrap(err, location, "Error parsing webhook event")
 		}
-	*/
 
-	// (temp) Unpack the Webhook stripeEvent
-	if err := json.Unmarshal(body, &stripeEvent); err != nil {
-		return nil, derp.Wrap(err, location, "Error unmarshalling webhook stripeEvent")
+	// In TEST mode, just unmarshal the event
+	default:
+
+		if err := json.Unmarshal(body, &stripeEvent); err != nil {
+			return nil, derp.Wrap(err, location, "Error unmarshalling webhook stripeEvent")
+		}
 	}
 
 	// Unpack the Subscription from the Webhook event
@@ -134,6 +142,8 @@ func (service *MerchantAccount) stripe_parseCheckoutWebhook(request *http.Reques
 	result := make([]model.Subscriber, len(stripeSubscription.Items.Data))
 
 	for _, item := range stripeSubscription.Items.Data {
+
+		spew.Dump(item)
 
 		var stateID string
 		var startDate int64
@@ -193,8 +203,12 @@ func (service *MerchantAccount) stripe_parseCheckoutWebhook(request *http.Reques
 
 		// Create the new Subscriber record
 		subscriber := model.NewSubscriber()
+		subscriber.SubscriptionID = subscription.SubscriptionID
+		subscriber.UserID = subscription.UserID
 		subscriber.EmailAddress = customer.Email
-		subscriber.Token = stripeSubscription.ID
+		subscriber.RemoteUserID = customer.ID
+		subscriber.RemoteSubscriptionID = item.Price.ID
+		subscriber.RemoteSubscriberID = stripeSubscription.ID
 		subscriber.StateID = stateID
 		subscriber.StartDate = startDate
 		subscriber.EndDate = endDate
