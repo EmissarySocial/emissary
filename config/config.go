@@ -39,7 +39,14 @@ type Config struct {
 // NewConfig returns a fully initialized (but empty) Config data structure.
 func NewConfig() Config {
 	return Config{
-		Domains: make(set.Slice[Domain], 0),
+		Domains:             make(set.Slice[Domain], 0),
+		Providers:           make(set.Slice[Provider], 0),
+		Templates:           make(sliceof.Object[mapof.String], 0),
+		AttachmentOriginals: make(mapof.String, 0),
+		AttachmentCache:     make(mapof.String, 0),
+		ExportCache:         make(mapof.String, 0),
+		Certificates:        make(mapof.String, 0),
+		ActivityPubCache:    make(mapof.String, 0),
 	}
 }
 
