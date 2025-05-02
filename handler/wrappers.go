@@ -9,6 +9,7 @@ import (
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/steranko"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -135,7 +136,7 @@ func WithSearchQuery(serverFactory *server.Factory, fn WithFunc3[model.Template,
 
 		// If there is no token, make a new token using the URL parameters provided
 		case "":
-			searchQuery, err := searchQueryService.LoadOrCreate(ctx.Request().URL.Query())
+			searchQuery, err := searchQueryService.LoadOrCreate(ctx.QueryParams())
 
 			if err != nil {
 				return derp.Wrap(err, location, "Error creating search query token")
@@ -188,25 +189,82 @@ func WithSubscription(serverFactory *server.Factory, fn WithFunc2[model.Merchant
 
 	const location = "handler.WithSubscription"
 
-	return WithMerchantAccount(serverFactory, func(ctx *steranko.Context, factory *domain.Factory, merchantAccount *model.MerchantAccount) error {
+	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *domain.Factory) error {
+
+		// Get the UserID from the the URL
+		userID, err := primitive.ObjectIDFromHex(ctx.QueryParam("userId"))
+
+		if err != nil {
+			return derp.Wrap(err, location, "UserID must be a valid ObjectID", ctx.QueryParam("userId"))
+		}
 
 		// Get the SubscriptionID from the the URL
 		subscriptionID, err := primitive.ObjectIDFromHex(ctx.QueryParam("subscriptionId"))
 
 		if err != nil {
-			return derp.Wrap(err, location, "Invalid SubscriptionID", ctx.QueryParam("subscriptionId"))
+			return derp.Wrap(err, location, "SubscriptionID must be a valid ObjectID", ctx.QueryParam("subscriptionId"))
 		}
 
 		// Load the Subscription from the database
 		subscriptionService := factory.Subscription()
 		subscription := model.NewSubscription()
 
-		if err := subscriptionService.LoadByID(subscriptionID, &subscription); err != nil {
+		if err := subscriptionService.LoadByUserAndID(userID, subscriptionID, &subscription); err != nil {
 			return derp.Wrap(err, location, "Error loading Subscription")
 		}
 
+		// Load the MerchantAccount from the database
+		merchantAccountService := factory.MerchantAccount()
+		merchantAccount := model.NewMerchantAccount()
+
+		if err := merchantAccountService.LoadByID(subscription.MerchantAccountID, &merchantAccount); err != nil {
+			return derp.Wrap(err, location, "Error loading MerchantAccount")
+		}
+
 		// Call the continuation function
-		return fn(ctx, factory, merchantAccount, &subscription)
+		return fn(ctx, factory, &merchantAccount, &subscription)
+	})
+}
+
+func WithSubscriptionJWT(serverFactory *server.Factory, fn WithFunc2[model.MerchantAccount, model.Subscription]) echo.HandlerFunc {
+
+	const location = "handler.WithSubscriptionJWT"
+
+	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *domain.Factory) error {
+
+		// Parse the JWT token from the Request
+		jwtService := factory.JWT()
+		claims := jwt.MapClaims{}
+
+		if err := jwtService.ParseToken(ctx.QueryParam("jwt"), &claims); err != nil {
+			return derp.Wrap(err, location, "Error parsing JWT token")
+		}
+
+		// Retrieve the MerchantAccountID
+		userID, isString := claims["userId"].(string)
+		if !isString {
+			return derp.NewBadRequestError(location, "UserID in JWT token must be a string")
+		}
+
+		// Retrive the SubscriptionID
+		subscriptionID, isString := claims["subscriptionId"].(string)
+		if !isString {
+			return derp.NewBadRequestError(location, "SubscriptionID in JWT token must be a string")
+		}
+
+		// Retrieve TransactionID (client_reference_id)
+		transactionID, isString := claims["transactionId"].(string)
+		if !isString {
+			return derp.NewBadRequestError(location, "AuthorizationCode in JWT token must be a string")
+		}
+
+		// Apply the values to the context
+		ctx.QueryParams().Set("userId", userID)
+		ctx.QueryParams().Set("subscriptionId", subscriptionID)
+		ctx.QueryParams().Set("transactionId", transactionID)
+
+		// Continue processing using WithSubscription
+		return WithSubscription(serverFactory, fn)(ctx)
 	})
 }
 

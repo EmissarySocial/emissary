@@ -78,7 +78,7 @@ func PostSearchLookup(ctx *steranko.Context, factory *domain.Factory) error {
 
 	// Load the Stream from the database
 	searchQueryService := factory.SearchQuery()
-	searchQuery, err := searchQueryService.LoadOrCreate(ctx.Request().URL.Query())
+	searchQuery, err := searchQueryService.LoadOrCreate(ctx.QueryParams())
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error creating search query token")

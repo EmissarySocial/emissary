@@ -329,6 +329,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		// Populate MerchantAccount Service
 		factory.merchantAccountService.Refresh(
 			factory.collection(CollectionMerchantAccount),
+			factory.JWT(),
 			factory.Subscription(),
 			factory.Subscriber(),
 			domain.MasterKey,

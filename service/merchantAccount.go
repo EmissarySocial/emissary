@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"iter"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -14,6 +15,7 @@ import (
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/sliceof"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -21,6 +23,7 @@ import (
 // MerchantAccount defines a service that manages all content merchantAccounts created and imported by Users.
 type MerchantAccount struct {
 	collection          data.Collection
+	jwtService          *JWT
 	subscriptionService *Subscription
 	subscriberService   *Subscriber
 	encryptionKey       string
@@ -37,8 +40,9 @@ func NewMerchantAccount() MerchantAccount {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *MerchantAccount) Refresh(collection data.Collection, subscriptionService *Subscription, subscriberService *Subscriber, masterKey string, host string) {
+func (service *MerchantAccount) Refresh(collection data.Collection, jwtService *JWT, subscriptionService *Subscription, subscriberService *Subscriber, masterKey string, host string) {
 	service.collection = collection
+	service.jwtService = jwtService
 	service.subscriptionService = subscriptionService
 	service.subscriberService = subscriberService
 	service.encryptionKey = masterKey
@@ -251,20 +255,6 @@ func (service *MerchantAccount) LoadByUserAndToken(userID primitive.ObjectID, to
  * Custom Actions
  ******************************************/
 
-func (service *MerchantAccount) GetCheckoutURL(merchantAccount *model.MerchantAccount, subscription *model.Subscription, successURL string, cancelURL string) (string, error) {
-
-	switch merchantAccount.Type {
-
-	case model.MerchantAccountTypePayPal:
-		return service.paypal_getCheckoutURL(merchantAccount, subscription, successURL, cancelURL)
-
-	case model.MerchantAccountTypeStripe:
-		return service.stripe_getCheckoutURL(merchantAccount, subscription, successURL, cancelURL)
-	}
-
-	return "", derp.NewInternalError("service.MerchantAccount.GetCheckoutURL", "Invalid MerchantAccount Type", merchantAccount.Type)
-}
-
 func (service *MerchantAccount) RefreshSubscription(merchantAccount *model.MerchantAccount, subscription *model.Subscription) error {
 
 	switch merchantAccount.Type {
@@ -306,6 +296,50 @@ func (service *MerchantAccount) DecryptVault(merchantAccount *model.MerchantAcco
  * Provider-Specific Methods
  ******************************************/
 
+func (service *MerchantAccount) GetCheckoutURL(merchantAccount *model.MerchantAccount, subscription *model.Subscription, returnURL string) (string, error) {
+
+	switch merchantAccount.Type {
+
+	case model.MerchantAccountTypePayPal:
+		return service.paypal_getCheckoutURL(merchantAccount, subscription, returnURL)
+
+	case model.MerchantAccountTypeStripe:
+		return service.stripe_getCheckoutURL(merchantAccount, subscription, returnURL)
+	}
+
+	return "", derp.NewInternalError("service.MerchantAccount.GetCheckoutURL", "Invalid MerchantAccount Type", merchantAccount.Type)
+}
+
+func (service *MerchantAccount) ParseCheckoutResponse(queryParams url.Values, merchantAccount *model.MerchantAccount) (sliceof.Object[model.Subscriber], error) {
+
+	switch merchantAccount.Type {
+
+	case model.MerchantAccountTypePayPal:
+		return service.paypal_parseCheckoutResponse(queryParams, merchantAccount)
+
+	case model.MerchantAccountTypeStripe:
+		return service.stripe_parseCheckoutResponse(queryParams, merchantAccount)
+	}
+
+	return nil, derp.NewInternalError("service.MerchantAccount.GetCheckoutResponse", "Invalid MerchantAccount Type", merchantAccount.Type)
+}
+
+func (service *MerchantAccount) ParseCheckoutWebhook(header http.Header, body []byte, merchantAccount *model.MerchantAccount) (sliceof.Object[model.Subscriber], error) {
+
+	const location = "service.MerchantAccount.ParseCheckoutWebhook"
+
+	switch merchantAccount.Type {
+
+	case model.MerchantAccountTypePayPal:
+		return service.paypal_parseCheckoutWebhook(header, body, merchantAccount)
+
+	case model.MerchantAccountTypeStripe:
+		return service.stripe_parseCheckoutWebhook(header, body, merchantAccount)
+	}
+
+	return nil, derp.NewInternalError(location, "Invalid MerchantAccount Type", merchantAccount.Type)
+}
+
 func (service *MerchantAccount) RefreshAPIKeys(merchantAccount *model.MerchantAccount) error {
 
 	// RULE: Do not refresh API keys if they will not expire within the next hour
@@ -326,7 +360,7 @@ func (service *MerchantAccount) RefreshAPIKeys(merchantAccount *model.MerchantAc
 
 }
 
-func (service *MerchantAccount) GetSubscriptions(merchantAccount *model.MerchantAccount) ([]form.LookupCode, error) {
+func (service *MerchantAccount) GetSubscriptions(merchantAccount *model.MerchantAccount) (sliceof.Object[form.LookupCode], error) {
 
 	switch merchantAccount.Type {
 
@@ -339,18 +373,4 @@ func (service *MerchantAccount) GetSubscriptions(merchantAccount *model.Merchant
 
 	// If we get here, the merchant account type is not supported
 	return nil, derp.NewInternalError("service.MerchantAccount.GetSubscriptions", "Invalid MerchantAccount Type", merchantAccount.Type)
-}
-
-func (service *MerchantAccount) ParseCheckoutWebhook(request *http.Request, merchantAccount *model.MerchantAccount) ([]model.Subscriber, error) {
-
-	switch merchantAccount.Type {
-
-	case model.MerchantAccountTypePayPal:
-		return service.paypal_parseCheckoutWebhook(request, merchantAccount)
-
-	case model.MerchantAccountTypeStripe:
-		return service.stripe_parseCheckoutWebhook(request, merchantAccount)
-	}
-
-	return nil, derp.NewInternalError("service.MerchantAccount.HandleWebhook", "Invalid MerchantAccount Type", merchantAccount.Type)
 }

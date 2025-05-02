@@ -222,6 +222,49 @@ func (service *JWT) load(keyName string) ([]byte, error) {
  * Encryption Methods
  ******************************************/
 
+func (service *JWT) NewToken(claims jwt.Claims) (string, error) {
+
+	const location = "service.JWT.NewToken"
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
+
+	// Get the signing key from the KeyService
+	keyID, key, err := service.GetCurrentKey()
+
+	if err != nil {
+		return "", derp.Wrap(err, location, "Error getting JWT Key")
+	}
+
+	token.Header["kid"] = keyID
+
+	// Try to generate encoded token
+	result, err := token.SignedString(key)
+
+	if err != nil {
+		return "", derp.Wrap(err, location, "Error Signing JWT Token")
+	}
+
+	// Return the encoded JWT
+	return result, nil
+}
+
+func (service *JWT) ParseToken(tokenString string, claims jwt.Claims) error {
+
+	const location = "service.JWT.ParseToken"
+
+	// Try to parse the JWT token using this key service
+	if _, err := jwt.ParseWithClaims(tokenString, claims, service.FindKey, jwt.WithValidMethods([]string{"HS512"})); err != nil {
+		return derp.Wrap(err, location, "Error parsing JWT token", tokenString)
+	}
+
+	// You're so beautiful.
+	return nil
+}
+
+/******************************************
+ * Encryption Methods
+ ******************************************/
+
 // encrypt uses the service's KEK to encrypt the plaintext into an encrypted value.
 func (service *JWT) encrypt(plaintext []byte) ([]byte, error) {
 

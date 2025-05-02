@@ -223,6 +223,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 
 	// Built-In Service Routes
 	e.GET("/.checkout", handler.WithSubscription(factory, handler.GetCheckout))
+	e.GET("/.checkout/response", handler.WithSubscriptionJWT(factory, handler.GetCheckoutResponse))
 	e.POST("/.checkout/webhook", handler.WithMerchantAccount(factory, handler.PostCheckoutWebhook))
 	e.POST("/.follower/new", handler.PostEmailFollower(factory))
 	e.GET("/.giphy", handler.GetGiphyWidget(factory))

@@ -3,6 +3,7 @@ package service
 import (
 	"encoding/hex"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -25,12 +26,11 @@ func (service *MerchantAccount) paypal_getServerAddress(merchantAccount *model.M
 }
 
 // paypal_parseCheckoutWebhook processes subscription webhook events from Stripe
-func (service *MerchantAccount) paypal_parseCheckoutWebhook(request *http.Request, merchantAccount *model.MerchantAccount) ([]model.Subscriber, error) {
+func (service *MerchantAccount) paypal_parseCheckoutWebhook(header http.Header, body []byte, merchantAccount *model.MerchantAccount) ([]model.Subscriber, error) {
 
 	const location = "service.MerchantAccount.paypal_parseCheckoutWebhook"
 
-	spew.Dump(location, request, merchantAccount)
-	// Get API Keys from the vault
+	spew.Dump(location, merchantAccount, header, string(body))
 
 	return nil, derp.NewBadRequestError(location, "Not Implemented")
 }
@@ -135,7 +135,7 @@ func (service *MerchantAccount) paypal_getSubscriptions(merchantAccount *model.M
 	return result, nil
 }
 
-func (service *MerchantAccount) paypal_getCheckoutURL(merchantAccount *model.MerchantAccount, subscription *model.Subscription, successURL string, cancelURL string) (string, error) {
+func (service *MerchantAccount) paypal_getCheckoutURL(merchantAccount *model.MerchantAccount, subscription *model.Subscription, returnURL string) (string, error) {
 
 	const location = "service.MerchantAccount.paypal_getCheckoutURL"
 
@@ -160,4 +160,8 @@ func (service *MerchantAccount) paypal_getCheckoutURL(merchantAccount *model.Mer
 	}
 
 	return txnResult.GetString("checkout_url"), nil
+}
+
+func (service *MerchantAccount) paypal_parseCheckoutResponse(queryParams url.Values, merchantAccount *model.MerchantAccount) ([]model.Subscriber, error) {
+	return nil, derp.NewInternalError("service.MerchantAccount.paypal_parseCheckoutResponse", "Not Implemented")
 }

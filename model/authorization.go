@@ -9,12 +9,13 @@ import (
 
 // Authorization represents the JWT Claims that the server gives to a user when they sign in.
 type Authorization struct {
-	UserID      primitive.ObjectID   `json:"U"`           // Unique identifier of the User
-	GroupIDs    []primitive.ObjectID `json:"G"`           // IDs for all server-level groups that the User belongs to
-	ClientID    primitive.ObjectID   `json:"C,omitempty"` // Unique identifier of the OAuth Application/Client
-	DomainOwner bool                 `json:"O,omitempty"` // If TRUE, then this user is an owner of this domain
-	APIUser     bool                 `json:"A,omitempty"` // If TRUE, then this user is an API user
-	Scope       string               `json:"S,omitempty"` // OAuth Scopes that this user has access to
+	UserID       primitive.ObjectID   `json:"U"`           // Unique identifier of the User
+	GroupIDs     []primitive.ObjectID `json:"G"`           // IDs for all server-level groups that the User belongs to
+	ClientID     primitive.ObjectID   `json:"C,omitempty"` // Unique identifier of the OAuth Application/Client
+	VisitorEmail string               `json:"V,omitempty"` // Authenticated email address of an external user
+	Scope        string               `json:"S,omitempty"` // OAuth Scopes that this user has access to
+	DomainOwner  bool                 `json:"O,omitempty"` // If TRUE, then this user is an owner of this domain
+	APIUser      bool                 `json:"A,omitempty"` // If TRUE, then this user is an API user
 
 	jwt.RegisteredClaims // By embedding the "RegisteredClaims" object, this record can support standard behaviors, like token expiration, etc.
 }

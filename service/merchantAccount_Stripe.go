@@ -2,13 +2,14 @@ package service
 
 import (
 	"encoding/json"
-	"io"
-	"math"
 	"net/http"
+	"net/url"
 	"slices"
+	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/currency"
+	"github.com/EmissarySocial/emissary/tools/random"
 	"github.com/benpate/derp"
 	"github.com/benpate/domain"
 	"github.com/benpate/form"
@@ -17,10 +18,9 @@ import (
 	"github.com/benpate/rosetta/compare"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/davecgh/go-spew/spew"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/stripe/stripe-go/v78"
 	"github.com/stripe/stripe-go/v78/webhook"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // stripe_refreshMerchantAccount ensures that the Stripe webhook is configured for this MerchantAccount
@@ -71,28 +71,104 @@ func (service *MerchantAccount) stripe_refreshMerchantAccount(merchantAccount *m
 	return nil
 }
 
+func (service *MerchantAccount) stripe_getCheckoutURL(merchantAccount *model.MerchantAccount, subscription *model.Subscription, returnURL string) (string, error) {
+
+	const location = "service.MerchantAccount.stripe_getCheckoutURL"
+	restrictedKey, err := service.stripe_getRestrictedKey(merchantAccount)
+
+	if err != nil {
+		return "", derp.Wrap(err, location, "Error retrieving restricted key")
+	}
+
+	// Send checkout session to the Stripe API
+	checkoutResult := mapof.NewAny()
+	transactionID, err := random.GenerateString(32)
+
+	if err != nil {
+		return "", derp.Wrap(err, location, "Error generating transaction ID")
+	}
+
+	// Wrap the parameters in a JWT token
+	claims := jwt.MapClaims{
+		"iat":            time.Now().Unix(),
+		"exp":            time.Now().Add(time.Hour * 1).Unix(),
+		"userId":         subscription.UserID.Hex(),
+		"subscriptionId": subscription.SubscriptionID.Hex(),
+		"transactionId":  transactionID,
+	}
+
+	token, err := service.jwtService.NewToken(claims)
+
+	if err != nil {
+		return "", derp.Wrap(err, location, "Error generating JWT token")
+	}
+
+	successURL := service.host + "/.checkout/response?checkoutSessionId={CHECKOUT_SESSION_ID}&return=" + url.QueryEscape(returnURL) + "&jwt=" + token
+
+	txn := remote.Post("https://api.stripe.com/v1/checkout/sessions").
+		With(options.BearerAuth(restrictedKey)).
+		ContentType("application/x-www-form-urlencoded").
+		Form("mode", iif((subscription.RecurringType == model.SubscriptionRecurringTypeOnetime), "payment", "subscription")).
+		Form("line_items[0][price]", subscription.RemoteID).
+		Form("line_items[0][quantity]", "1").
+		Form("ui_mode", "hosted").
+		Form("client_reference_id", transactionID).
+		Form("cancel_url", returnURL).
+		Form("success_url", successURL).
+		Result(&checkoutResult)
+
+	if err := txn.Send(); err != nil {
+		return "", derp.Wrap(err, location, "Error connecting to Stripe API")
+	}
+
+	// Return the URL to the caller
+	return checkoutResult.GetString("url"), nil
+}
+
+func (service *MerchantAccount) stripe_parseCheckoutResponse(queryParams url.Values, merchantAccount *model.MerchantAccount) ([]model.Subscriber, error) {
+
+	const location = "service.MerchantAccount.stripe_parseCheckoutResponse"
+
+	// Collect the CheckoutSessionID from the request.
+	// These values were passed in a JWT, and unpacked by the WithMerchantAccount middleware, so they can be trusted
+	checkoutSessionID := queryParams.Get("checkoutSessionId")
+	transactionID := queryParams.Get("transactionId")
+
+	// Load the Checkout session from the Stripe API
+	stripeCheckoutSession, err := service.stripe_getCheckoutSession(merchantAccount, checkoutSessionID)
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Error loading checkout session from Stripe")
+	}
+
+	// Verify that the TransactionID matches the value from the Checkout Session.
+	if transactionID != stripeCheckoutSession.ClientReferenceID {
+		return nil, derp.NewBadRequestError(location, "Invalid Transaction ID", "The transaction ID does not match the checkout session")
+	}
+
+	// Map Stripe.SubscriptionID(s) into Subscribers
+	return service.stripe_mapSubscriptions(merchantAccount, stripeCheckoutSession.Subscription)
+}
+
 // stripe_handleWebhook processes subscription webhook events from Stripe
-func (service *MerchantAccount) stripe_parseCheckoutWebhook(request *http.Request, merchantAccount *model.MerchantAccount) ([]model.Subscriber, error) {
+func (service *MerchantAccount) stripe_parseCheckoutWebhook(header http.Header, body []byte, merchantAccount *model.MerchantAccount) ([]model.Subscriber, error) {
 
 	const location = "service.MerchantAccount.stripe_handleWebhook"
 
 	var stripeEvent stripe.Event
 	var stripeSubscription stripe.Subscription
 
-	// Retrieve Body data from the POST request as a byte array
-	reader := io.LimitReader(request.Body, 65536)
-	body, err := io.ReadAll(reader)
-
-	if err != nil {
-		return nil, derp.Wrap(err, location, "Error reading request body")
-	}
-
-	defer request.Body.Close()
-
+	// Parse the request body into a Stripe event
 	switch merchantAccount.LiveMode {
 
+	// In TEST mode, just unmarshal the body directly
+	case false:
+
+		if err := json.Unmarshal(body, &stripeEvent); err != nil {
+			return nil, derp.Wrap(err, location, "Error unmarshalling webhook stripeEvent")
+		}
+
 	// In LIVE mode, use the Stripe library to validate event
-	case true:
+	default:
 
 		// Retrieve the webhook signing key from the Vault
 		vault, err := service.DecryptVault(merchantAccount, "webhookSecret")
@@ -102,17 +178,10 @@ func (service *MerchantAccount) stripe_parseCheckoutWebhook(request *http.Reques
 		}
 
 		// Parse and validate the Webhook event
-		stripeEvent, err = webhook.ConstructEvent(body, request.Header.Get("Stripe-Signature"), vault.GetString("webhookSecret"))
+		stripeEvent, err = webhook.ConstructEvent(body, header.Get("Stripe-Signature"), vault.GetString("webhookSecret"))
 
 		if err != nil {
 			return nil, derp.Wrap(err, location, "Error parsing webhook event")
-		}
-
-	// In TEST mode, just unmarshal the event
-	default:
-
-		if err := json.Unmarshal(body, &stripeEvent); err != nil {
-			return nil, derp.Wrap(err, location, "Error unmarshalling webhook stripeEvent")
 		}
 	}
 
@@ -120,6 +189,14 @@ func (service *MerchantAccount) stripe_parseCheckoutWebhook(request *http.Reques
 	if err := json.Unmarshal(stripeEvent.Data.Raw, &stripeSubscription); err != nil {
 		return nil, derp.Wrap(err, location, "Error unmarshalling subscription data")
 	}
+
+	// Map subscriptions from the Webhook into Subscribers
+	return service.stripe_mapSubscriptions(merchantAccount, &stripeSubscription)
+}
+
+func (service *MerchantAccount) stripe_mapSubscriptions(merchantAccount *model.MerchantAccount, stripeSubscription *stripe.Subscription) ([]model.Subscriber, error) {
+
+	const location = "service.MerchantAccount.stripe_mapSubscriptions"
 
 	// NPE check: subscription.Customer
 	if stripeSubscription.Customer == nil {
@@ -139,16 +216,9 @@ func (service *MerchantAccount) stripe_parseCheckoutWebhook(request *http.Reques
 	}
 
 	// Create/Update Subscriber records for each "price" line item in the subscription
-	result := make([]model.Subscriber, len(stripeSubscription.Items.Data))
+	result := make([]model.Subscriber, 0, len(stripeSubscription.Items.Data))
 
 	for _, item := range stripeSubscription.Items.Data {
-
-		spew.Dump(item)
-
-		var stateID string
-		var startDate int64
-		var endDate int64
-		var recurringType = model.SubscriptionRecurringTypeOnetime
 
 		// NPE Check: item.Price
 		if item.Price == nil {
@@ -161,26 +231,29 @@ func (service *MerchantAccount) stripe_parseCheckoutWebhook(request *http.Reques
 			return nil, derp.Wrap(err, location, "Error loading subscription by token", item.Price.ID)
 		}
 
-		// Map Stripe event types => Subscriber state
-		switch stripeEvent.Type {
+		// Create the new Subscriber record
+		subscriber := model.NewSubscriber()
+		subscriber.SubscriptionID = subscription.SubscriptionID
+		subscriber.UserID = subscription.UserID
+		subscriber.EmailAddress = customer.Email
+		subscriber.RemoteUserID = customer.ID
+		subscriber.AuthorizationCode = ""
+		subscriber.RemoteSubscriptionID = item.Price.ID
+		subscriber.RemoteSubscriberID = stripeSubscription.ID
+		subscriber.StartDate = stripeSubscription.StartDate
+		subscriber.EndDate = stripeSubscription.CurrentPeriodEnd
+		subscriber.RecurringType = model.SubscriptionRecurringTypeOnetime
 
-		case "customer.subscription.created", "customer.subscription.updated", "customer.subscription.resumed":
-			stateID = model.SubscriberStateActive
-			startDate = stripeSubscription.StartDate
-			endDate = math.MaxInt64
+		switch stripeSubscription.Status {
 
-		case "customer.subscription.deleted":
-			stateID = model.SubscriberStateCanceled
-			startDate = stripeSubscription.StartDate
-			endDate = stripeSubscription.EndedAt
-
-		case "customer.subscription.paused":
-			stateID = model.SubscriberStatePaused
-			startDate = stripeSubscription.StartDate
-			endDate = stripeSubscription.CurrentPeriodEnd
-
+		case "active", "trialing", "incomplete", "past_due", "unpaid":
+			subscriber.StateID = model.SubscriberStateActive
+		case "paused":
+			subscriber.StateID = model.SubscriberStatePaused
+		case "canceled", "incomplete_expired":
+			subscriber.StateID = model.SubscriberStateCanceled
 		default:
-			return nil, derp.NewBadRequestError(location, "Unsupported Event", stripeEvent.Type)
+			subscriber.StateID = model.SubscriberStateCanceled
 		}
 
 		if item.Price.Recurring != nil {
@@ -188,31 +261,18 @@ func (service *MerchantAccount) stripe_parseCheckoutWebhook(request *http.Reques
 			switch item.Price.Recurring.Interval {
 
 			case stripe.PriceRecurringIntervalDay:
-				recurringType = model.SubscriptionRecurringTypeDaily
+				subscriber.RecurringType = model.SubscriptionRecurringTypeDaily
 
 			case stripe.PriceRecurringIntervalWeek:
-				recurringType = model.SubscriptionRecurringTypeWeekly
+				subscriber.RecurringType = model.SubscriptionRecurringTypeWeekly
 
 			case stripe.PriceRecurringIntervalMonth:
-				recurringType = model.SubscriptionRecurringTypeMonthly
+				subscriber.RecurringType = model.SubscriptionRecurringTypeMonthly
 
 			case stripe.PriceRecurringIntervalYear:
-				recurringType = model.SubscriptionRecurringTypeYearly
+				subscriber.RecurringType = model.SubscriptionRecurringTypeYearly
 			}
 		}
-
-		// Create the new Subscriber record
-		subscriber := model.NewSubscriber()
-		subscriber.SubscriptionID = subscription.SubscriptionID
-		subscriber.UserID = subscription.UserID
-		subscriber.EmailAddress = customer.Email
-		subscriber.RemoteUserID = customer.ID
-		subscriber.RemoteSubscriptionID = item.Price.ID
-		subscriber.RemoteSubscriberID = stripeSubscription.ID
-		subscriber.StateID = stateID
-		subscriber.StartDate = startDate
-		subscriber.EndDate = endDate
-		subscriber.RecurringType = recurringType
 
 		// Append the Subscriber to the result set
 		result = append(result, subscriber)
@@ -321,39 +381,6 @@ func (service *MerchantAccount) stripe_getPrices(merchantAccount *model.Merchant
 	return result, nil
 }
 
-func (service *MerchantAccount) stripe_getCheckoutURL(merchantAccount *model.MerchantAccount, subscription *model.Subscription, successURL string, cancelURL string) (string, error) {
-
-	const location = "service.MerchantAccount.stripe_getCheckoutURL"
-	restrictedKey, err := service.stripe_getRestrictedKey(merchantAccount)
-
-	if err != nil {
-		return "", derp.Wrap(err, location, "Error retrieving restricted key")
-	}
-
-	// Send checkout session to the Stripe API
-	checkoutResult := mapof.NewAny()
-	transactionID := primitive.NewObjectID().Hex()
-
-	txn := remote.Post("https://api.stripe.com/v1/checkout/sessions").
-		With(options.BearerAuth(restrictedKey)).
-		ContentType("application/x-www-form-urlencoded").
-		Form("mode", iif((subscription.RecurringType == model.SubscriptionRecurringTypeOnetime), "payment", "recurring")).
-		Form("line_items[0][price]", subscription.RemoteID).
-		Form("line_items[0][quantity]", "1").
-		Form("ui_mode", "hosted").
-		Form("client_reference_id", transactionID).
-		Form("cancel_url", cancelURL).
-		Form("success_url", successURL+"?trasactionId="+transactionID).
-		Result(&checkoutResult)
-
-	if err := txn.Send(); err != nil {
-		return "", derp.Wrap(err, location, "Error connecting to Stripe API")
-	}
-
-	// Return the URL to the caller
-	return checkoutResult.GetString("url"), nil
-}
-
 // stripe_getRestrictedKey retrieves the restricted API key for the specified MerchantAccount
 func (service *MerchantAccount) stripe_getRestrictedKey(merchantAccount *model.MerchantAccount) (string, error) {
 
@@ -376,7 +403,35 @@ func (service *MerchantAccount) stripe_getRestrictedKey(merchantAccount *model.M
 	return apiKeys.GetString(propertyName), nil
 }
 
+// https://docs.stripe.com/api/checkout/sessions/object
+func (service *MerchantAccount) stripe_getCheckoutSession(merchantAccount *model.MerchantAccount, sessionID string) (stripe.CheckoutSession, error) {
+
+	const location = "service.MerchantAccount.stripe_getCheckoutSession"
+
+	// Get API Keys from the vault
+	restrictedKey, err := service.stripe_getRestrictedKey(merchantAccount)
+
+	if err != nil {
+		return stripe.CheckoutSession{}, derp.Wrap(err, location, "Error retrieving API keys")
+	}
+
+	// Try to retrieve the Stripe Checkout session
+	checkoutSession := stripe.CheckoutSession{}
+	txn := remote.Get("https://api.stripe.com/v1/checkout/sessions/"+sessionID).
+		Query("expand[]", "customer").
+		Query("expand[]", "subscription").
+		With(options.BearerAuth(restrictedKey)).
+		Result(&checkoutSession)
+
+	if err := txn.Send(); err != nil {
+		return stripe.CheckoutSession{}, derp.Wrap(err, location, "Error connecting to Stripe API")
+	}
+
+	return checkoutSession, nil
+}
+
 // stripe_getCustomer loads a Customer record from the Stripe API
+// https://docs.stripe.com/api/customers/object
 func (service *MerchantAccount) stripe_getCustomer(merchantAccount *model.MerchantAccount, customerID string) (stripe.Customer, error) {
 
 	const location = "service.MerchantAccount.stripe_getCustomer"
