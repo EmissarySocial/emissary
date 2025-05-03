@@ -54,7 +54,8 @@ func NewConfig() Config {
 func DefaultConfig() Config {
 
 	return Config{
-		Domains: set.Slice[Domain]{},
+		Domains:   make(set.Slice[Domain], 0),
+		Providers: make(set.Slice[Provider], 0),
 
 		// File Locations
 		Templates:           sliceof.Object[mapof.String]{mapof.String{"adapter": "EMBED", "location": "templates"}},
