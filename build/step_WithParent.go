@@ -70,7 +70,7 @@ func (step StepWithParent) postUser(streamBuilder Stream, buffer io.Writer) Pipe
 
 	// Make a builder with the new parent stream
 	// TODO: LOW: Is "view" really the best action to use here??
-	outbox, err := NewOutbox(streamBuilder.factory(), streamBuilder.request(), streamBuilder.response(), &user, "")
+	outbox, err := NewOutbox(streamBuilder.factory(), streamBuilder.request(), streamBuilder.response(), &user, "view")
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error creating builder for parent"))

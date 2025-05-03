@@ -1,11 +1,11 @@
 <nav>
 	<div class="framed">
-		<a hx-get="/" {{if eq `index` . }}class="selected"{{ end }}>Emissary Setup</a>
-		<a hx-get="/server" {{if eq `server` . }}class="selected"{{ end }}>Server Settings</a>
-		<a hx-get="/domains" {{if eq `domains` . }}class="selected"{{ end }}>Domains</a>
-		<a href="https://emissary.dev/setup-console" target="_blank">Help</a>
-		<!--a hx-get="/oauth" {{if eq `oauth` . }}class="selected"{{ end }}>Connectors</a-->
-		<!--a hx-get="/" {{if eq "index" . }}class="selected"{{ end }}>Configuration</a-->
+		<a href="/" hx-boost="true" {{if eq `index` . }}class="selected"{{ end }}>Emissary Setup</a>
+		<a href="/server" hx-boost="true" {{if eq `server` . }}class="selected"{{ end }}>Server Settings</a>
+		<a href="/domains" hx-boost="true" {{if eq `domains` . }}class="selected"{{ end }}>Domains</a>
+		<a href="https://emissary.dev/setup-console" hx-boost="true" target="_blank">Help</a>
+		<!--a href="/oauth" hx-boost="true" {{if eq `oauth` . }}class="selected"{{ end }}>Connectors</a-->
+		<!--a href="/" hx-boost="true" {{if eq "index" . }}class="selected"{{ end }}>Configuration</a-->
 	</div>
 </nav>
 

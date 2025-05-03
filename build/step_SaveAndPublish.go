@@ -9,7 +9,8 @@ import (
 
 // StepSaveAndPublish is a Step that can update a stream's PublishDate with the current time.
 type StepSaveAndPublish struct {
-	Outbox bool
+	Outbox    bool
+	Republish bool
 }
 
 func (step StepSaveAndPublish) Get(builder Builder, _ io.Writer) PipelineBehavior {
@@ -51,7 +52,7 @@ func (step StepSaveAndPublish) Post(builder Builder, _ io.Writer) PipelineBehavi
 	}
 
 	// Publish the Stream to the ActivityPub Outbox
-	if err := streamService.Publish(&user, stream, step.Outbox); err != nil {
+	if err := streamService.Publish(&user, stream, step.Outbox, step.Republish); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error publishing stream", streamBuilder._stream))
 	}
 

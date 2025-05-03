@@ -8,64 +8,36 @@
 
 <body hx-target="main" hx-swap="innerHTML show:window:top" hx-push-url="true" hx-ext="a11y">
 
-	{{- $topID := .NavigationID -}}
-
-	<nav hx-push-url="true">
+	<nav  hx-push-url="true">
 		<div class="framed">
 			<a href="#main" class="hide-visual">Skip navigation</a>
 			{{- range .Navigation -}}
-				{{ if eq $topID .StreamID -}}
-					{{- $icon := join .Icon "-fill" -}}
-					<a href="/{{.Token}}" class="turboclick selected">
-						<span class="icon">{{icon $icon}}</span>
-						<span class="label">{{.Label}}</span>
-					</a>
-				{{- else -}}
-					<a href="/{{.Token}}" class="turboclick">
-						<span class="icon">{{icon .Icon}}</span>
-						<span class="label">{{.Label}}</span>
-					</a>
-				{{- end -}}
+				{{- $icon := join .Icon "-fill" -}}
+				<a href="/{{.Token}}" hx-boost="true" id="nav-{{.StreamID}}" class="nav-item turboclick">
+					<span class="icon">{{icon $icon}}</span>
+					<span class="label">{{.Label}}</span>
+				</a>
 			{{- end -}}
 			<span class="spacer"></span>
 			{{- if .IsAuthenticated -}}
-				{{- if eq $topID "outbox" -}}
-					<a href="/@me" class="selected turboclick" id="profile">
-						<span class="icon">{{icon "user-fill"}}</span>
-						<span class="label">Profile</span>
-					</a>
-				{{- else -}}
-					<a href="/@me" class="turboclick" id="profile">
-						<span class="icon">{{icon "user"}}</span>
-						<span class="label">Profile</span></a>
-				{{- end -}}
+				<a href="/@me" hx-boost="true" id="nav-outbox" class="nav-item turboclick">
+					<span class="icon">{{icon "user-fill"}}</span>
+					<span class="label">Profile</span>
+				</a>
 
-				{{- if eq $topID "inbox" -}}
-					<a href="/@me/inbox" class="selected turboclick" id="inbox">
-						<span class="icon">{{icon "inbox-fill"}}</span>
-						<span class="label">Inbox</span></a>
-				{{- else -}}
-					<a href="/@me/inbox" class="turboclick" id="inbox">
-						<span class="icon">{{icon "inbox"}}</span>
-						<span class="label">Inbox</span></a>
-				{{- end -}}
+				<a href="/@me/inbox" hx-boost="true" id="nav-inbox" class="nav-item turboclick">
+					<span class="icon">{{icon "inbox-fill"}}</span>
+					<span class="label">Inbox</span>
+				</a>
 
-			{{- end -}}
-			{{- if .IsAuthenticated -}}
 				{{- if .IsOwner -}}
-					{{- if eq $topID "admin" -}}
-						<a href="/admin/domain" class="selected turboclick" id="server">
-							<span class="icon">{{icon "settings-fill"}}</span>
-							<span class="label">Server</span>
-						</a>
-					{{- else -}}
-						<a href="/admin/domain" class="turboclick" id="server">
-							<span class="icon">{{icon "settings"}}</span>
-							<span class="label">Server</span></a>
-					{{- end -}}
+					<a href="/admin/domain" hx-boost="true" id="nav-admin" class="nav-item turboclick">
+						<span class="icon">{{icon "settings-fill"}}</span>
+						<span class="label">Server</span>
+					</a>
 				{{- end -}}
 			{{- else -}}
-				<a href="/signin" class="turboclick">
+				<a href="/signin" hx-boost="true" id="nav-signin" class="nav-item turboclick">
 					<span class="icon">{{icon "user"}}</span>
 					<span class="label">Sign In</span>
 				</a>
