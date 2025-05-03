@@ -5,13 +5,11 @@ import (
 	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
-	"github.com/davecgh/go-spew/spew"
 )
 
 // StreamSyndicate sends HTTP messages to syndication targets
 func StreamSyndicate(name string, args mapof.Any) queue.Result {
 
-	spew.Dump("StreamSyndicate", name, args)
 	// Find the endpoint Href for the selected syndication target
 	endpoint := args.GetString("endpoint")
 	message := args.GetMap("message")
