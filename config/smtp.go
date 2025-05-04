@@ -42,5 +42,11 @@ func (smtp SMTPConnection) Server() (*mail.SMTPServer, bool) {
 	result.Username = smtp.Username
 	result.Password = smtp.Password
 
+	if smtp.TLS {
+		result.Encryption = mail.EncryptionSSLTLS
+	} else {
+		result.Encryption = mail.EncryptionNone
+	}
+
 	return result, true
 }
