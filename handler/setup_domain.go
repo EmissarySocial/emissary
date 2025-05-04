@@ -165,7 +165,7 @@ func setupDomainForm(header string) form.Element {
 				Type:        "text",
 				Path:        "connectString",
 				Label:       "MongoDB Connection String",
-				Description: "Should look like mongodb://host:port/database",
+				Description: "Should look like mongodb://hostname:port. Default port is 27017",
 			}, {
 				Type:        "text",
 				Path:        "databaseName",
