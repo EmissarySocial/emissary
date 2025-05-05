@@ -15,14 +15,14 @@ require (
 	github.com/benpate/domain v0.2.4
 	github.com/benpate/exp v0.8.4
 	github.com/benpate/exp-builder v0.10.0
-	github.com/benpate/form v0.23.0
+	github.com/benpate/form v0.23.3
 	github.com/benpate/hannibal v0.12.2
 	github.com/benpate/html v0.16.11
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.15.3
 	github.com/benpate/re v0.3.1
 	github.com/benpate/remote v0.17.1
-	github.com/benpate/rosetta v0.25.4
+	github.com/benpate/rosetta v0.25.6
 	github.com/benpate/sherlock v0.8.9
 	github.com/benpate/steranko v0.21.0
 	github.com/benpate/table v0.7.2
