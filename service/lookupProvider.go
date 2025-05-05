@@ -89,8 +89,8 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 	case "merchantAccounts":
 		return service.getMerchantAccounts()
 
-	case "merchantAccount-subscriptions":
-		return service.getMerchantAccountSubscriptions()
+	case "merchantAccount-products":
+		return service.getMerchantAccountProducts()
 
 	case "outbox-templates":
 		return form.ReadOnlyLookupGroup(service.templateService.ListByTemplateRole("user-outbox"))
@@ -131,7 +131,7 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 	case "signup-templates":
 		return form.ReadOnlyLookupGroup(service.registrationService.List())
 
-	case "streams-with-subscriptions":
+	case "streams-with-products":
 		return service.getSubscribableStreams()
 
 	case "syndication-targets":
@@ -185,7 +185,7 @@ func (service *LookupProvider) getSubscribableStreams() form.LookupGroup {
 	streams, err := service.streamService.QuerySubscribable(service.userID)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "service.LookupProvider.getSubscribableStreams", "Error loading streams with subscriptions"))
+		derp.Report(derp.Wrap(err, "service.LookupProvider.getSubscribableStreams", "Error loading streams with products"))
 		return form.NewReadOnlyLookupGroup()
 	}
 
@@ -223,10 +223,10 @@ func (service *LookupProvider) getMerchantAccounts() form.LookupGroup {
 	return form.NewReadOnlyLookupGroup(lookupCodes...)
 }
 
-// getMerchantAccountSubscriptions returns all subscriptions defined by the selected merchant account
-func (service *LookupProvider) getMerchantAccountSubscriptions() form.LookupGroup {
+// getMerchantAccountProducts returns all products defined by the selected merchant account
+func (service *LookupProvider) getMerchantAccountProducts() form.LookupGroup {
 
-	const location = "service.LookupProvider.getMerchantAccountSubscriptions"
+	const location = "service.LookupProvider.getMerchantAccountProducts"
 
 	// Locate the Merchant Account in the User's profile
 	token := service.request.URL.Query().Get("merchantAccountId")
@@ -237,11 +237,11 @@ func (service *LookupProvider) getMerchantAccountSubscriptions() form.LookupGrou
 		return form.NewReadOnlyLookupGroup()
 	}
 
-	// Load the Subscriptions for this Merchant Account
-	result, err := service.merchantAccountService.GetSubscriptions(&merchantAccount)
+	// Load the Products for this Merchant Account
+	result, err := service.merchantAccountService.GetProducts(&merchantAccount)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Error loading merchant account subscriptions"))
+		derp.Report(derp.Wrap(err, location, "Error loading merchant account products"))
 		return form.NewReadOnlyLookupGroup()
 	}
 

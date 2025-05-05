@@ -352,7 +352,7 @@ func (w Inbox) IsInboxEmpty(inbox []model.Message) bool {
 	return true
 }
 
-func (w Inbox) Subscriptions() QueryBuilder[model.Subscription] {
+func (w Inbox) Products() QueryBuilder[model.Product] {
 
 	expressionBuilder := builder.NewBuilder()
 	criteria := exp.And(
@@ -360,10 +360,10 @@ func (w Inbox) Subscriptions() QueryBuilder[model.Subscription] {
 		exp.Equal("userId", w._user.UserID),
 	)
 
-	return NewQueryBuilder[model.Subscription](w._factory.Subscription(), criteria)
+	return NewQueryBuilder[model.Product](w._factory.Product(), criteria)
 }
 
-func (w Inbox) Subscribers() QueryBuilder[model.Subscriber] {
+func (w Inbox) Purchases() QueryBuilder[model.Purchase] {
 
 	expressionBuilder := builder.NewBuilder().
 		String("search", builder.WithAlias("emailAddress"), builder.WithDefaultOpBeginsWith())
@@ -373,7 +373,7 @@ func (w Inbox) Subscribers() QueryBuilder[model.Subscriber] {
 		exp.Equal("userId", w._user.UserID),
 	)
 
-	return NewQueryBuilder[model.Subscriber](w._factory.Subscriber(), criteria)
+	return NewQueryBuilder[model.Purchase](w._factory.Purchase(), criteria)
 
 }
 

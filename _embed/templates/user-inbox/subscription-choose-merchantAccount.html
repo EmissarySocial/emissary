@@ -1,14 +1,14 @@
 {{- $merchantAccounts := .MerchantAccounts.Slice -}}
 
-<h1>{{icon "add"}} Add a Subscription Plan</h1>
+<h1>{{icon "add"}} Add a Product</h1>
 
-<p>Which merchant account do you want to use for this subscription plan?</p>
+<p>Which merchant account do you want to use for this product?</p>
 
 <div class="table margin-top">
 	{{- range $index, $merchantAccount := $merchantAccounts -}}
 		{{- $type := lowerCase $merchantAccount.Type -}}
 		<div class="flex-row" role="button">
-			<div hx-get="/@me/inbox/subscription-edit?merchantAccountId={{ $merchantAccount.ID }}" class="flex-grow">
+			<div hx-get="/@me/inbox/product-edit?merchantAccountId={{ $merchantAccount.ID }}" class="flex-grow">
 				{{icon $type}} {{ $merchantAccount.Name}}
 			</div>
 			<div>

@@ -185,9 +185,9 @@ func WithStream(serverFactory *server.Factory, fn WithFunc1[model.Stream]) echo.
 	})
 }
 
-func WithSubscription(serverFactory *server.Factory, fn WithFunc2[model.MerchantAccount, model.Subscription]) echo.HandlerFunc {
+func WithProduct(serverFactory *server.Factory, fn WithFunc2[model.MerchantAccount, model.Product]) echo.HandlerFunc {
 
-	const location = "handler.WithSubscription"
+	const location = "handler.WithProduct"
 
 	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *domain.Factory) error {
 
@@ -198,37 +198,37 @@ func WithSubscription(serverFactory *server.Factory, fn WithFunc2[model.Merchant
 			return derp.Wrap(err, location, "UserID must be a valid ObjectID", ctx.QueryParam("userId"))
 		}
 
-		// Get the SubscriptionID from the the URL
-		subscriptionID, err := primitive.ObjectIDFromHex(ctx.QueryParam("subscriptionId"))
+		// Get the ProductID from the the URL
+		productID, err := primitive.ObjectIDFromHex(ctx.QueryParam("productId"))
 
 		if err != nil {
-			return derp.Wrap(err, location, "SubscriptionID must be a valid ObjectID", ctx.QueryParam("subscriptionId"))
+			return derp.Wrap(err, location, "ProductID must be a valid ObjectID", ctx.QueryParam("productId"))
 		}
 
-		// Load the Subscription from the database
-		subscriptionService := factory.Subscription()
-		subscription := model.NewSubscription()
+		// Load the Product from the database
+		productService := factory.Product()
+		product := model.NewProduct()
 
-		if err := subscriptionService.LoadByUserAndID(userID, subscriptionID, &subscription); err != nil {
-			return derp.Wrap(err, location, "Error loading Subscription")
+		if err := productService.LoadByUserAndID(userID, productID, &product); err != nil {
+			return derp.Wrap(err, location, "Error loading Product")
 		}
 
 		// Load the MerchantAccount from the database
 		merchantAccountService := factory.MerchantAccount()
 		merchantAccount := model.NewMerchantAccount()
 
-		if err := merchantAccountService.LoadByID(subscription.MerchantAccountID, &merchantAccount); err != nil {
+		if err := merchantAccountService.LoadByID(product.MerchantAccountID, &merchantAccount); err != nil {
 			return derp.Wrap(err, location, "Error loading MerchantAccount")
 		}
 
 		// Call the continuation function
-		return fn(ctx, factory, &merchantAccount, &subscription)
+		return fn(ctx, factory, &merchantAccount, &product)
 	})
 }
 
-func WithSubscriptionJWT(serverFactory *server.Factory, fn WithFunc2[model.MerchantAccount, model.Subscription]) echo.HandlerFunc {
+func WithProductJWT(serverFactory *server.Factory, fn WithFunc2[model.MerchantAccount, model.Product]) echo.HandlerFunc {
 
-	const location = "handler.WithSubscriptionJWT"
+	const location = "handler.WithProductJWT"
 
 	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *domain.Factory) error {
 
@@ -246,10 +246,10 @@ func WithSubscriptionJWT(serverFactory *server.Factory, fn WithFunc2[model.Merch
 			return derp.NewBadRequestError(location, "UserID in JWT token must be a string")
 		}
 
-		// Retrive the SubscriptionID
-		subscriptionID, isString := claims["subscriptionId"].(string)
+		// Retrive the ProductID
+		productID, isString := claims["productId"].(string)
 		if !isString {
-			return derp.NewBadRequestError(location, "SubscriptionID in JWT token must be a string")
+			return derp.NewBadRequestError(location, "ProductID in JWT token must be a string")
 		}
 
 		// Retrieve TransactionID (client_reference_id)
@@ -260,11 +260,11 @@ func WithSubscriptionJWT(serverFactory *server.Factory, fn WithFunc2[model.Merch
 
 		// Apply the values to the context
 		ctx.QueryParams().Set("userId", userID)
-		ctx.QueryParams().Set("subscriptionId", subscriptionID)
+		ctx.QueryParams().Set("productId", productID)
 		ctx.QueryParams().Set("transactionId", transactionID)
 
-		// Continue processing using WithSubscription
-		return WithSubscription(serverFactory, fn)(ctx)
+		// Continue processing using WithProduct
+		return WithProduct(serverFactory, fn)(ctx)
 	})
 }
 

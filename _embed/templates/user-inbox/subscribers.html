@@ -12,8 +12,8 @@
 		<div role="tablist" class="underlined margin-top margin-bottom" hx-push-url="true">
 			<a href="/@me/inbox/following" hx-boost="true" role="tab">{{icon "star"}} Following</a>
 			<a href="/@me/inbox/followers" hx-boost="true" role="tab">{{icon "person"}} Followers</a>
-			<a href="/@me/inbox/subscribers" hx-boost="true" role="tab" aria-selected="true">{{icon "person-card-fill"}} Subscribers</a>
-			<a href="/@me/inbox/subscriptions" hx-boost="true" role="tab">{{icon "card"}} Subscriptions</a>
+			<a href="/@me/inbox/purchases" hx-boost="true" role="tab" aria-selected="true">{{icon "person-card-fill"}} Purchases</a>
+			<a href="/@me/inbox/products" hx-boost="true" role="tab">{{icon "card"}} Products</a>
 			<a href="/@me/inbox/rules" hx-boost="true" role="tab">{{icon "rule"}} Rules</a>
 		</div>
 
@@ -21,7 +21,7 @@
 			<input
 				type="text" 
 				name="search" 
-				placeholder="Search Subscribers"
+				placeholder="Search Purchases"
 				hx-get="/@me/inbox/subscrbers-list"
 				hx-trigger="keyup queue:last delay:100ms"
 				hx-target="#rules-list"
@@ -29,8 +29,8 @@
 				hx-push-url="false">
 		</div>
 
-		<div id="subscribers-list" class="table margin-top">
-			{{.View "subscribers-list"}}
+		<div id="purchases-list" class="table margin-top">
+			{{.View "purchases-list"}}
 		</div>
 	
 	</div>

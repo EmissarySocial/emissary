@@ -227,11 +227,11 @@ func (template *Template) IsSearch() bool {
 	return template.TemplateRole == "search"
 }
 
-// IsSubscribable returns TRUE if this Template has at-least-one role that requires a subscription
+// IsSubscribable returns TRUE if this Template has at-least-one role that requires a product
 func (template *Template) IsSubscribable() bool {
 
 	for _, role := range template.AccessRoles {
-		if role.Subscription {
+		if role.Product {
 			return true
 		}
 	}
@@ -244,7 +244,7 @@ func (template *Template) SubscribableRoles() []Role {
 	result := make([]Role, 0)
 
 	for _, role := range template.AccessRoles {
-		if role.Subscription {
+		if role.Product {
 			result = append(result, role)
 		}
 	}

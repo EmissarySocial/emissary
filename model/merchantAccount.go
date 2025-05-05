@@ -8,7 +8,7 @@ import (
 )
 
 // MerchantAccount represents a User's account with a specific payment service.
-// This account will be accessed on the User's behalf to charge Subscribers for their merchant accounts
+// This account will be accessed on the User's behalf to charge Purchases for their merchant accounts
 type MerchantAccount struct {
 	MerchantAccountID    primitive.ObjectID `bson:"_id"`                  // Unique ID for the payment processor connection
 	Type                 string             `bson:"type"`                 // Internal identifier of the payment processor (STRIPE, PAYPAL, etc.)

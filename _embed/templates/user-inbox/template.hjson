@@ -582,35 +582,35 @@
 			]
 		}
 
-		subscribers: {
+		purchases: {
 			roles:["self"]
 			steps:[
 				{do:"view-html"}
 			]
 		}
 
-		subscribers-list: {
+		purchases-list: {
 			roles:["self"]
 			steps:[
 				{do:"view-html"}
 			]
 		}
 
-		subscriptions: {
+		products: {
 			roles:["self"]
 			steps:[
 				{do:"view-html"}
 			]
 		}
 
-		subscriptions-list: {
+		products-list: {
 			roles:["self"]
 			steps:[
 				{do:"view-html"}
 			]
 		}
 
-		subscription-choose-merchantAccount: {
+		product-choose-merchantAccount: {
 			roles:["self"]
 			steps:[
 				{do:"as-modal", steps:[
@@ -619,10 +619,10 @@
 			]
 		}
 
-		subscription-edit: {
+		product-edit: {
 			roles:["self"]
 			steps:[
-				{do:"with-subscription", steps: [
+				{do:"with-product", steps: [
 					{do:"as-modal", steps:[
 						{do:"set-data", from-url:["merchantAccountId"]}
 						{do:"set-query-param", merchantAccountId:"{{.Object.MerchantAccountID.Hex}}"}
@@ -630,7 +630,7 @@
 						{do:"edit", form:{
 							type:"layout-vertical"
 							children:[
-								{type:"select", path:"remoteId", label:"Subscription", description:"Set up subscriptions with your merchant account, then connect here.", options:{provider:"merchantAccount-subscriptions", required:true}}
+								{type:"select", path:"remoteId", label:"Product", description:"Set up products with your merchant account, then connect here.", options:{provider:"merchantAccount-products", required:true}}
 								{type:"text", path:"name", label:"Label", description:"Displayed on your profile", options:{required:true}}
 								{type:"textarea", path:"description", label:"Description", description:"Displayed on your profile"}
 								{type:"toggle", path:"isFeatured", options:{
@@ -640,7 +640,7 @@
 							]
 						},
 						options:[
-							"delete:/@me/inbox/subscription-delete?subscriptionId={{.ObjectID}}"
+							"delete:/@me/inbox/product-delete?productId={{.ObjectID}}"
 						]}
 						{do:"save"}
 						{do:"refresh-page"}
@@ -649,11 +649,11 @@
 			]
 		}
 
-		subscription-delete: {
+		product-delete: {
 			roles:["self"]
 			steps:[
-				{do:"with-subscription", steps:[
-					{do:"delete", title:"Delete Subscription?", message:"Are you sure you want to delete this subscription?"}
+				{do:"with-product", steps:[
+					{do:"delete", title:"Delete Product?", message:"Are you sure you want to delete this product?"}
 					{do:"refresh-page"}
 				]}
 			]

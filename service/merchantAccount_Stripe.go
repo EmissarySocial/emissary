@@ -52,11 +52,11 @@ func (service *MerchantAccount) stripe_refreshMerchantAccount(merchantAccount *m
 			Query("url", endpoint).
 			Query("description", domain.NameOnly(service.host)+" supscription updates").
 			Query("enabled_events[]", "checkout.session.completed").
-			Query("enabled_events[]", "customer.subscription.created").
-			Query("enabled_events[]", "customer.subscription.deleted").
-			Query("enabled_events[]", "customer.subscription.paused").
-			Query("enabled_events[]", "customer.subscription.resumed").
-			Query("enabled_events[]", "customer.subscription.updated").
+			Query("enabled_events[]", "customer.product.created").
+			Query("enabled_events[]", "customer.product.deleted").
+			Query("enabled_events[]", "customer.product.paused").
+			Query("enabled_events[]", "customer.product.resumed").
+			Query("enabled_events[]", "customer.product.updated").
 			Result(&webhookResult)
 
 		if err := txn.Send(); err != nil {
@@ -71,7 +71,7 @@ func (service *MerchantAccount) stripe_refreshMerchantAccount(merchantAccount *m
 	return nil
 }
 
-func (service *MerchantAccount) stripe_getCheckoutURL(merchantAccount *model.MerchantAccount, subscription *model.Subscription, returnURL string) (string, error) {
+func (service *MerchantAccount) stripe_getCheckoutURL(merchantAccount *model.MerchantAccount, product *model.Product, returnURL string) (string, error) {
 
 	const location = "service.MerchantAccount.stripe_getCheckoutURL"
 	restrictedKey, err := service.stripe_getRestrictedKey(merchantAccount)
@@ -90,11 +90,11 @@ func (service *MerchantAccount) stripe_getCheckoutURL(merchantAccount *model.Mer
 
 	// Wrap the parameters in a JWT token
 	claims := jwt.MapClaims{
-		"iat":            time.Now().Unix(),
-		"exp":            time.Now().Add(time.Hour * 1).Unix(),
-		"userId":         subscription.UserID.Hex(),
-		"subscriptionId": subscription.SubscriptionID.Hex(),
-		"transactionId":  transactionID,
+		"iat":           time.Now().Unix(),
+		"exp":           time.Now().Add(time.Hour * 1).Unix(),
+		"userId":        product.UserID.Hex(),
+		"productId":     product.ProductID.Hex(),
+		"transactionId": transactionID,
 	}
 
 	token, err := service.jwtService.NewToken(claims)
@@ -108,8 +108,8 @@ func (service *MerchantAccount) stripe_getCheckoutURL(merchantAccount *model.Mer
 	txn := remote.Post("https://api.stripe.com/v1/checkout/sessions").
 		With(options.BearerAuth(restrictedKey)).
 		ContentType("application/x-www-form-urlencoded").
-		Form("mode", iif((subscription.RecurringType == model.SubscriptionRecurringTypeOnetime), "payment", "subscription")).
-		Form("line_items[0][price]", subscription.RemoteID).
+		Form("mode", iif((product.RecurringType == model.ProductRecurringTypeOnetime), "payment", "product")).
+		Form("line_items[0][price]", product.RemoteID).
 		Form("line_items[0][quantity]", "1").
 		Form("ui_mode", "hosted").
 		Form("client_reference_id", transactionID).
@@ -125,7 +125,7 @@ func (service *MerchantAccount) stripe_getCheckoutURL(merchantAccount *model.Mer
 	return checkoutResult.GetString("url"), nil
 }
 
-func (service *MerchantAccount) stripe_parseCheckoutResponse(queryParams url.Values, merchantAccount *model.MerchantAccount) ([]model.Subscriber, error) {
+func (service *MerchantAccount) stripe_parseCheckoutResponse(queryParams url.Values, merchantAccount *model.MerchantAccount) ([]model.Purchase, error) {
 
 	const location = "service.MerchantAccount.stripe_parseCheckoutResponse"
 
@@ -145,17 +145,17 @@ func (service *MerchantAccount) stripe_parseCheckoutResponse(queryParams url.Val
 		return nil, derp.NewBadRequestError(location, "Invalid Transaction ID", "The transaction ID does not match the checkout session")
 	}
 
-	// Map Stripe.SubscriptionID(s) into Subscribers
-	return service.stripe_mapSubscriptions(merchantAccount, stripeCheckoutSession.Subscription)
+	// Map Stripe.ProductID(s) into Purchases
+	return service.stripe_mapProducts(merchantAccount, stripeCheckoutSession.Product)
 }
 
-// stripe_handleWebhook processes subscription webhook events from Stripe
-func (service *MerchantAccount) stripe_parseCheckoutWebhook(header http.Header, body []byte, merchantAccount *model.MerchantAccount) ([]model.Subscriber, error) {
+// stripe_handleWebhook processes product webhook events from Stripe
+func (service *MerchantAccount) stripe_parseCheckoutWebhook(header http.Header, body []byte, merchantAccount *model.MerchantAccount) ([]model.Purchase, error) {
 
 	const location = "service.MerchantAccount.stripe_handleWebhook"
 
 	var stripeEvent stripe.Event
-	var stripeSubscription stripe.Subscription
+	var stripeProduct stripe.Product
 
 	// Parse the request body into a Stripe event
 	switch merchantAccount.LiveMode {
@@ -185,75 +185,75 @@ func (service *MerchantAccount) stripe_parseCheckoutWebhook(header http.Header, 
 		}
 	}
 
-	// Unpack the Subscription from the Webhook event
-	if err := json.Unmarshal(stripeEvent.Data.Raw, &stripeSubscription); err != nil {
-		return nil, derp.Wrap(err, location, "Error unmarshalling subscription data")
+	// Unpack the Product from the Webhook event
+	if err := json.Unmarshal(stripeEvent.Data.Raw, &stripeProduct); err != nil {
+		return nil, derp.Wrap(err, location, "Error unmarshalling product data")
 	}
 
-	// Map subscriptions from the Webhook into Subscribers
-	return service.stripe_mapSubscriptions(merchantAccount, &stripeSubscription)
+	// Map products from the Webhook into Purchases
+	return service.stripe_mapProducts(merchantAccount, &stripeProduct)
 }
 
-func (service *MerchantAccount) stripe_mapSubscriptions(merchantAccount *model.MerchantAccount, stripeSubscription *stripe.Subscription) ([]model.Subscriber, error) {
+func (service *MerchantAccount) stripe_mapProducts(merchantAccount *model.MerchantAccount, stripeProduct *stripe.Product) ([]model.Purchase, error) {
 
-	const location = "service.MerchantAccount.stripe_mapSubscriptions"
+	const location = "service.MerchantAccount.stripe_mapProducts"
 
-	// NPE check: subscription.Customer
-	if stripeSubscription.Customer == nil {
+	// NPE check: product.Customer
+	if stripeProduct.Customer == nil {
 		return nil, derp.NewBadRequestError(location, "Invalid Customer", "The customer value must not be null")
 	}
 
-	// NPE check: subscription.Items
-	if stripeSubscription.Items == nil {
-		return nil, derp.NewBadRequestError(location, "Invalid Subscription", "No items found in subscription")
+	// NPE check: product.Items
+	if stripeProduct.Items == nil {
+		return nil, derp.NewBadRequestError(location, "Invalid Product", "No items found in product")
 	}
 
 	// Load Stripe Customer record from the remote API
-	customer, err := service.stripe_getCustomer(merchantAccount, stripeSubscription.Customer.ID)
+	customer, err := service.stripe_getCustomer(merchantAccount, stripeProduct.Customer.ID)
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Error loading customer from Stripe")
 	}
 
-	// Create/Update Subscriber records for each "price" line item in the subscription
-	result := make([]model.Subscriber, 0, len(stripeSubscription.Items.Data))
+	// Create/Update Purchase records for each "price" line item in the product
+	result := make([]model.Purchase, 0, len(stripeProduct.Items.Data))
 
-	for _, item := range stripeSubscription.Items.Data {
+	for _, item := range stripeProduct.Items.Data {
 
 		// NPE Check: item.Price
 		if item.Price == nil {
-			return nil, derp.NewBadRequestError(location, "Invalid Subscription", "No price found in subscription item")
+			return nil, derp.NewBadRequestError(location, "Invalid Product", "No price found in product item")
 		}
 
 		// Try to find the Price in the database
-		subscription := model.NewSubscription()
-		if err := service.subscriptionService.LoadByRemoteID(item.Price.ID, &subscription); err != nil {
-			return nil, derp.Wrap(err, location, "Error loading subscription by token", item.Price.ID)
+		product := model.NewProduct()
+		if err := service.productService.LoadByRemoteID(item.Price.ID, &product); err != nil {
+			return nil, derp.Wrap(err, location, "Error loading product by token", item.Price.ID)
 		}
 
-		// Create the new Subscriber record
-		subscriber := model.NewSubscriber()
-		subscriber.SubscriptionID = subscription.SubscriptionID
-		subscriber.UserID = subscription.UserID
-		subscriber.EmailAddress = customer.Email
-		subscriber.RemoteUserID = customer.ID
-		subscriber.AuthorizationCode = ""
-		subscriber.RemoteSubscriptionID = item.Price.ID
-		subscriber.RemoteSubscriberID = stripeSubscription.ID
-		subscriber.StartDate = stripeSubscription.StartDate
-		subscriber.EndDate = stripeSubscription.CurrentPeriodEnd
-		subscriber.RecurringType = model.SubscriptionRecurringTypeOnetime
+		// Create the new Purchase record
+		purchase := model.NewPurchase()
+		purchase.ProductID = product.ProductID
+		purchase.UserID = product.UserID
+		purchase.EmailAddress = customer.Email
+		purchase.RemoteUserID = customer.ID
+		purchase.AuthorizationCode = ""
+		purchase.RemoteProductID = item.Price.ID
+		purchase.RemotePurchaseID = stripeProduct.ID
+		purchase.StartDate = stripeProduct.StartDate
+		purchase.EndDate = stripeProduct.CurrentPeriodEnd
+		purchase.RecurringType = model.ProductRecurringTypeOnetime
 
-		switch stripeSubscription.Status {
+		switch stripeProduct.Status {
 
 		case "active", "trialing", "incomplete", "past_due", "unpaid":
-			subscriber.StateID = model.SubscriberStateActive
+			purchase.StateID = model.PurchaseStateActive
 		case "paused":
-			subscriber.StateID = model.SubscriberStatePaused
+			purchase.StateID = model.PurchaseStatePaused
 		case "canceled", "incomplete_expired":
-			subscriber.StateID = model.SubscriberStateCanceled
+			purchase.StateID = model.PurchaseStateCanceled
 		default:
-			subscriber.StateID = model.SubscriberStateCanceled
+			purchase.StateID = model.PurchaseStateCanceled
 		}
 
 		if item.Price.Recurring != nil {
@@ -261,31 +261,31 @@ func (service *MerchantAccount) stripe_mapSubscriptions(merchantAccount *model.M
 			switch item.Price.Recurring.Interval {
 
 			case stripe.PriceRecurringIntervalDay:
-				subscriber.RecurringType = model.SubscriptionRecurringTypeDaily
+				purchase.RecurringType = model.ProductRecurringTypeDaily
 
 			case stripe.PriceRecurringIntervalWeek:
-				subscriber.RecurringType = model.SubscriptionRecurringTypeWeekly
+				purchase.RecurringType = model.ProductRecurringTypeWeekly
 
 			case stripe.PriceRecurringIntervalMonth:
-				subscriber.RecurringType = model.SubscriptionRecurringTypeMonthly
+				purchase.RecurringType = model.ProductRecurringTypeMonthly
 
 			case stripe.PriceRecurringIntervalYear:
-				subscriber.RecurringType = model.SubscriptionRecurringTypeYearly
+				purchase.RecurringType = model.ProductRecurringTypeYearly
 			}
 		}
 
-		// Append the Subscriber to the result set
-		result = append(result, subscriber)
+		// Append the Purchase to the result set
+		result = append(result, purchase)
 	}
 
 	// Great success.
 	return result, nil
 }
 
-// stripe_refreshSubscription refreshes the subscription data for a Stripe subscription
-func (service *MerchantAccount) stripe_refreshSubscription(merchantAccount *model.MerchantAccount, subscription *model.Subscription) error {
+// stripe_refreshProduct refreshes the product data for a Stripe product
+func (service *MerchantAccount) stripe_refreshProduct(merchantAccount *model.MerchantAccount, product *model.Product) error {
 
-	const location = "service.MerchantAccount.stripe_refreshSubscription"
+	const location = "service.MerchantAccount.stripe_refreshProduct"
 
 	// Get API Keys from the vault
 	restrictedKey, err := service.stripe_getRestrictedKey(merchantAccount)
@@ -296,7 +296,7 @@ func (service *MerchantAccount) stripe_refreshSubscription(merchantAccount *mode
 
 	// Load the associated Stripe `Price` record
 	price := mapof.NewAny()
-	txn := remote.Get("https://api.stripe.com/v1/prices/" + subscription.RemoteID).
+	txn := remote.Get("https://api.stripe.com/v1/prices/" + product.RemoteID).
 		With(options.BearerAuth(restrictedKey)).
 		Result(&price)
 
@@ -304,27 +304,27 @@ func (service *MerchantAccount) stripe_refreshSubscription(merchantAccount *mode
 		return derp.Wrap(err, location, "Error connecting to Stripe API")
 	}
 
-	// Set/Update the RecurringType for the subscription
+	// Set/Update the RecurringType for the product
 	switch price.GetMap("recurring").GetString("interval") {
 
 	case "day":
-		subscription.RecurringType = model.SubscriptionRecurringTypeDaily
+		product.RecurringType = model.ProductRecurringTypeDaily
 
 	case "week":
-		subscription.RecurringType = model.SubscriptionRecurringTypeWeekly
+		product.RecurringType = model.ProductRecurringTypeWeekly
 
 	case "month":
-		subscription.RecurringType = model.SubscriptionRecurringTypeMonthly
+		product.RecurringType = model.ProductRecurringTypeMonthly
 
 	case "year":
-		subscription.RecurringType = model.SubscriptionRecurringTypeYearly
+		product.RecurringType = model.ProductRecurringTypeYearly
 
 	default:
-		subscription.RecurringType = model.SubscriptionRecurringTypeOnetime
+		product.RecurringType = model.ProductRecurringTypeOnetime
 	}
 
-	// Set/Update the Price label for the subscription
-	subscription.Price = service.stripe_priceLabel(price)
+	// Set/Update the Price label for the product
+	product.Price = service.stripe_priceLabel(price)
 
 	// Subbess.
 	return nil
@@ -333,7 +333,7 @@ func (service *MerchantAccount) stripe_refreshSubscription(merchantAccount *mode
 // stripe_getPrices retrieves all prices from the Stripe API and returns them as a list of LookupCodes
 func (service *MerchantAccount) stripe_getPrices(merchantAccount *model.MerchantAccount) ([]form.LookupCode, error) {
 
-	const location = "service.MerchantAccount.paypal_getSubscriptions"
+	const location = "service.MerchantAccount.paypal_getProducts"
 
 	txnResult := mapof.NewAny()
 
@@ -419,7 +419,7 @@ func (service *MerchantAccount) stripe_getCheckoutSession(merchantAccount *model
 	checkoutSession := stripe.CheckoutSession{}
 	txn := remote.Get("https://api.stripe.com/v1/checkout/sessions/"+sessionID).
 		Query("expand[]", "customer").
-		Query("expand[]", "subscription").
+		Query("expand[]", "product").
 		With(options.BearerAuth(restrictedKey)).
 		Result(&checkoutSession)
 

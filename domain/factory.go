@@ -85,8 +85,8 @@ type Factory struct {
 	streamService          service.Stream
 	streamArchiveService   service.StreamArchive
 	streamDraftService     service.StreamDraft
-	subscriberService      service.Subscriber
-	subscriptionService    service.Subscription
+	purchaseService        service.Purchase
+	productService         service.Product
 	realtimeBroker         RealtimeBroker
 	userService            service.User
 	webhookService         service.Webhook
@@ -163,8 +163,8 @@ func NewFactory(domain config.Domain, port string, providers []config.Provider, 
 	factory.streamService = service.NewStream()
 	factory.streamArchiveService = service.NewStreamArchive()
 	factory.streamDraftService = service.NewStreamDraft()
-	factory.subscriberService = service.NewSubscriber()
-	factory.subscriptionService = service.NewSubscription()
+	factory.purchaseService = service.NewPurchase()
+	factory.productService = service.NewProduct()
 	factory.userService = service.NewUser()
 	factory.webhookService = service.NewWebhook()
 
@@ -343,8 +343,8 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		factory.merchantAccountService.Refresh(
 			factory.collection(CollectionMerchantAccount),
 			factory.JWT(),
-			factory.Subscription(),
-			factory.Subscriber(),
+			factory.Product(),
+			factory.Purchase(),
 			domain.MasterKey,
 			factory.Host(),
 		)
@@ -485,14 +485,14 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.Stream(),
 		)
 
-		// Populate Subscriber Service
-		factory.subscriberService.Refresh(
-			factory.collection(CollectionSubscriber),
+		// Populate Purchase Service
+		factory.purchaseService.Refresh(
+			factory.collection(CollectionPurchase),
 		)
 
-		// Populate Subscription Service
-		factory.subscriptionService.Refresh(
-			factory.collection(CollectionSubscription),
+		// Populate Product Service
+		factory.productService.Refresh(
+			factory.collection(CollectionProduct),
 			factory.MerchantAccount(),
 		)
 
@@ -632,11 +632,11 @@ func (factory *Factory) Model(name string) (service.ModelService, error) {
 	case "stream":
 		return factory.Stream(), nil
 
-	case "subscriber":
-		return factory.Subscriber(), nil
+	case "purchase":
+		return factory.Purchase(), nil
 
-	case "subscription":
-		return factory.Subscription(), nil
+	case "product":
+		return factory.Product(), nil
 
 	case "user":
 		return factory.User(), nil
@@ -765,14 +765,14 @@ func (factory *Factory) StreamDraft() *service.StreamDraft {
 	return &factory.streamDraftService
 }
 
-// Subscriber returns a fully populated Subscriber service
-func (factory *Factory) Subscriber() *service.Subscriber {
-	return &factory.subscriberService
+// Purchase returns a fully populated Purchase service
+func (factory *Factory) Purchase() *service.Purchase {
+	return &factory.purchaseService
 }
 
-// Subscription returns a fully populated Subscription service
-func (factory *Factory) Subscription() *service.Subscription {
-	return &factory.subscriptionService
+// Product returns a fully populated Product service
+func (factory *Factory) Product() *service.Product {
+	return &factory.productService
 }
 
 // Response returns a fully populated Response service
@@ -997,11 +997,11 @@ func (factory *Factory) ModelService(object data.Object) service.ModelService {
 	case *model.Stream:
 		return factory.Stream()
 
-	case *model.Subscriber:
-		return factory.Subscriber()
+	case *model.Purchase:
+		return factory.Purchase()
 
-	case *model.Subscription:
-		return factory.Subscription()
+	case *model.Product:
+		return factory.Product()
 
 	default:
 		return nil

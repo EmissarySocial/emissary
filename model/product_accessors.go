@@ -5,17 +5,17 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func SubscriptionSchema() schema.Element {
+func ProductSchema() schema.Element {
 
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"subscriptionId":    schema.String{Format: "objectId"},
+			"productId":         schema.String{Format: "objectId"},
 			"merchantAccountId": schema.String{Format: "objectId"},
 			"remoteId":          schema.String{MaxLength: 1024},
 			"name":              schema.String{MaxLength: 64},
 			"description":       schema.String{MaxLength: 256},
 			"price":             schema.String{MaxLength: 32},
-			"recurringType":     schema.String{MaxLength: 32, Enum: []string{SubscriptionRecurringTypeOnetime, SubscriptionRecurringTypeWeekly, SubscriptionRecurringTypeMonthly, SubscriptionRecurringTypeYearly}},
+			"recurringType":     schema.String{MaxLength: 32, Enum: []string{ProductRecurringTypeOnetime, ProductRecurringTypeWeekly, ProductRecurringTypeMonthly, ProductRecurringTypeYearly}},
 			"isFeatured":        schema.Boolean{},
 		},
 	}
@@ -25,60 +25,60 @@ func SubscriptionSchema() schema.Element {
  * Getter/Setter Interfaces
  *********************************/
 
-func (subscription *Subscription) GetPointer(name string) (any, bool) {
+func (product *Product) GetPointer(name string) (any, bool) {
 
 	switch name {
 
 	case "remoteId":
-		return &subscription.RemoteID, true
+		return &product.RemoteID, true
 
 	case "name":
-		return &subscription.Name, true
+		return &product.Name, true
 
 	case "description":
-		return &subscription.Description, true
+		return &product.Description, true
 
 	case "price":
-		return &subscription.Price, true
+		return &product.Price, true
 
 	case "recurringType":
-		return &subscription.RecurringType, true
+		return &product.RecurringType, true
 
 	case "isFeatured":
-		return &subscription.IsFeatured, true
+		return &product.IsFeatured, true
 
 	default:
 		return nil, false
 	}
 }
 
-func (subscription *Subscription) GetStringOK(name string) (string, bool) {
+func (product *Product) GetStringOK(name string) (string, bool) {
 	switch name {
 
-	case "subscriptionId":
-		return subscription.SubscriptionID.Hex(), true
+	case "productId":
+		return product.ProductID.Hex(), true
 
 	case "merchantAccountId":
-		return subscription.MerchantAccountID.Hex(), true
+		return product.MerchantAccountID.Hex(), true
 
 	default:
 		return "", false
 	}
 }
 
-func (subscription *Subscription) SetString(name string, value string) bool {
+func (product *Product) SetString(name string, value string) bool {
 
 	switch name {
 
-	case "subscriptionId":
+	case "productId":
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
-			subscription.SubscriptionID = objectID
+			product.ProductID = objectID
 			return true
 		}
 
 	case "merchantAccountId":
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
-			subscription.MerchantAccountID = objectID
+			product.MerchantAccountID = objectID
 			return true
 		}
 	}

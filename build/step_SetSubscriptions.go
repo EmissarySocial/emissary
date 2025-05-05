@@ -13,14 +13,14 @@ import (
 	"github.com/benpate/rosetta/sliceof"
 )
 
-// StepSetSubscriptions represents an action that can edit a top-level folder in the Domain
-type StepSetSubscriptions struct {
+// StepSetProducts represents an action that can edit a top-level folder in the Domain
+type StepSetProducts struct {
 	Title string
 }
 
-func (step StepSetSubscriptions) Get(builder Builder, buffer io.Writer) PipelineBehavior {
+func (step StepSetProducts) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 
-	const location = "build.StepSetSubscriptions.Get"
+	const location = "build.StepSetProducts.Get"
 
 	// This step can only be used with a Stream builder
 	streamBuilder, isStreamBuilder := builder.(Stream)
@@ -31,16 +31,16 @@ func (step StepSetSubscriptions) Get(builder Builder, buffer io.Writer) Pipeline
 
 	iconFunc := streamBuilder._factory.Icons().Get
 
-	// Load the User's Subscriptions
+	// Load the User's Products
 	attributedToID := streamBuilder._stream.AttributedTo.UserID
-	subscriptions, err := streamBuilder._factory.Subscription().QueryAsLookupCodes(attributedToID)
+	products, err := streamBuilder._factory.Product().QueryAsLookupCodes(attributedToID)
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error retrieving subscriptions"))
+		return Halt().WithError(derp.Wrap(err, location, "Error retrieving products"))
 	}
 
-	// If there are no subscriptions, then display the "empty" message
-	if len(subscriptions) == 0 {
+	// If there are no products, then display the "empty" message
+	if len(products) == 0 {
 		return step.GetEmpty(iconFunc, buffer)
 	}
 
@@ -58,7 +58,7 @@ func (step StepSetSubscriptions) Get(builder Builder, buffer io.Writer) Pipeline
 						Label: role.Description,
 						Path:  role.RoleID,
 						Options: mapof.Any{
-							"enum": subscriptions,
+							"enum": products,
 						},
 					},
 				},
@@ -70,12 +70,12 @@ func (step StepSetSubscriptions) Get(builder Builder, buffer io.Writer) Pipeline
 	formHTML, err := form.Editor(
 		step.schema(streamBuilder._template.SubscribableRoles()),
 		formDefinition,
-		streamBuilder._stream.Subscriptions,
+		streamBuilder._stream.Products,
 		builder.lookupProvider(),
 	)
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, "build.StepSetSubscriptions.Get", "Error building form"))
+		return Halt().WithError(derp.Wrap(err, "build.StepSetProducts.Get", "Error building form"))
 	}
 
 	// Write the rest of the HTML that contains the form
@@ -86,11 +86,11 @@ func (step StepSetSubscriptions) Get(builder Builder, buffer io.Writer) Pipeline
 	b.Div().Class("alert-blue margin-bottom-lg")
 	{
 		b.Div().InnerHTML(`
-			Subscriptions let visitors purchase access to your content, with either one-time, or recurring payments.
-			<a href="https://emissary.dev/subscriptions" target="_blank">Learn more about subscriptions ` + iconFunc("new-window") + `</a>
+			Products let visitors purchase access to your content, with either one-time, or recurring payments.
+			<a href="https://emissary.dev/products" target="_blank">Learn more about products ` + iconFunc("new-window") + `</a>
 			<br>
 			<br>
-			<a href="/@me/inbox/subscriptions">Edit My Subscriptions &rarr;</a>`).Close()
+			<a href="/@me/inbox/products">Edit My Products &rarr;</a>`).Close()
 	}
 	b.Close()
 
@@ -113,9 +113,9 @@ func (step StepSetSubscriptions) Get(builder Builder, buffer io.Writer) Pipeline
 	return nil
 }
 
-func (step StepSetSubscriptions) Post(builder Builder, _ io.Writer) PipelineBehavior {
+func (step StepSetProducts) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
-	const location = "build.StepSetSubscriptions.Post"
+	const location = "build.StepSetProducts.Post"
 
 	// This step can only be used with a Stream builder
 	streamBuilder, isStreamBuilder := builder.(Stream)
@@ -127,29 +127,29 @@ func (step StepSetSubscriptions) Post(builder Builder, _ io.Writer) PipelineBeha
 	request := streamBuilder.request()
 
 	if err := request.ParseForm(); err != nil {
-		return Halt().WithError(derp.Wrap(err, "build.StepSetSubscriptions", "Error parsing form input"))
+		return Halt().WithError(derp.Wrap(err, "build.StepSetProducts", "Error parsing form input"))
 	}
 
-	// Clear out existing subscription settings
-	streamBuilder._stream.Subscriptions = mapof.NewObject[sliceof.String]()
+	// Clear out existing product settings
+	streamBuilder._stream.Products = mapof.NewObject[sliceof.String]()
 
-	// Apply new subscription settings
-	for roleID, subscriptionIDs := range request.Form {
+	// Apply new product settings
+	for roleID, productIDs := range request.Form {
 
-		// Ensure that the roleID exists in the stream.Subscriptions
-		if _, ok := streamBuilder._stream.Subscriptions[roleID]; !ok {
-			streamBuilder._stream.Subscriptions[roleID] = sliceof.NewString()
+		// Ensure that the roleID exists in the stream.Products
+		if _, ok := streamBuilder._stream.Products[roleID]; !ok {
+			streamBuilder._stream.Products[roleID] = sliceof.NewString()
 		}
 
-		// Append the roleId to the stream.Subscriptions
-		streamBuilder._stream.Subscriptions[roleID] = append(streamBuilder._stream.Subscriptions[roleID], subscriptionIDs...)
+		// Append the roleId to the stream.Products
+		streamBuilder._stream.Products[roleID] = append(streamBuilder._stream.Products[roleID], productIDs...)
 	}
 
 	// Success!
 	return nil
 }
 
-func (step StepSetSubscriptions) GetEmpty(iconFunc func(string) string, buffer io.Writer) PipelineBehavior {
+func (step StepSetProducts) GetEmpty(iconFunc func(string) string, buffer io.Writer) PipelineBehavior {
 
 	// Write the rest of the HTML that contains the form
 	b := html.New()
@@ -159,16 +159,16 @@ func (step StepSetSubscriptions) GetEmpty(iconFunc func(string) string, buffer i
 	b.Div().Class("margin-bottom-lg")
 	{
 		b.Div().Class("margin-bottom").InnerHTML(`
-			Visitors can pay for access to this stream using <b>subscriptions</b>, which are paid directly to your own <b>merchant account</b>.
-			<a href="https://emissary.dev/subscriptions" target="_blank">Learn more ` + iconFunc("new-window") + `</a>
+			Visitors can pay for access to this stream using <b>products</b>, which are paid directly to your own <b>merchant account</b>.
+			<a href="https://emissary.dev/products" target="_blank">Learn more ` + iconFunc("new-window") + `</a>
 		`).Close()
 		b.Div().Class("margin-bottom").InnerHTML(`
-			To get started, you'll need to set up at least one subscription plan, then return here to link it to this stream.
+			To get started, you'll need to set up at least one product plan, then return here to link it to this stream.
 		`).Close()
 	}
 	b.Close()
 
-	b.Button().Script("on click go to url /@me/inbox/subscriptions").Class("primary").InnerHTML("Add a New Subscription &rarr;").Close()
+	b.Button().Script("on click go to url /@me/inbox/products").Class("primary").InnerHTML("Add a New Product &rarr;").Close()
 	b.Button().Script("on click trigger closeModal").InnerText("Cancel").Close()
 	b.CloseAll()
 
@@ -178,7 +178,7 @@ func (step StepSetSubscriptions) GetEmpty(iconFunc func(string) string, buffer i
 }
 
 // schema returns the validating schema for this form
-func (step StepSetSubscriptions) schema(roles []model.Role) schema.Schema {
+func (step StepSetProducts) schema(roles []model.Role) schema.Schema {
 
 	properties := map[string]schema.Element{}
 

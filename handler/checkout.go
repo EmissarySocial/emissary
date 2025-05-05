@@ -11,15 +11,15 @@ import (
 	"github.com/davecgh/go-spew/spew"
 )
 
-// GetCheckout initiates a checkout session with the provided MerchantAccount and Subscription.
-func GetCheckout(ctx *steranko.Context, factory *domain.Factory, merchantAccount *model.MerchantAccount, subscription *model.Subscription) error {
+// GetCheckout initiates a checkout session with the provided MerchantAccount and Product.
+func GetCheckout(ctx *steranko.Context, factory *domain.Factory, merchantAccount *model.MerchantAccount, product *model.Product) error {
 
 	const location = "handler.GetCheckout"
 
 	// Create a "checkout" session, and generate a URL where the user will checkout
 	returnURL := ctx.QueryParam("return")
 	merchantAccountService := factory.MerchantAccount()
-	checkoutURL, err := merchantAccountService.GetCheckoutURL(merchantAccount, subscription, returnURL)
+	checkoutURL, err := merchantAccountService.GetCheckoutURL(merchantAccount, product, returnURL)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error retrieving checkout URL")
@@ -29,35 +29,36 @@ func GetCheckout(ctx *steranko.Context, factory *domain.Factory, merchantAccount
 	return ctx.Redirect(http.StatusTemporaryRedirect, checkoutURL)
 }
 
-// GetCheckoutResopnse initiates a checkout session with the provided MerchantAccount and Subscription.
-func GetCheckoutResponse(ctx *steranko.Context, factory *domain.Factory, merchantAccount *model.MerchantAccount, subscription *model.Subscription) error {
+// GetCheckoutResopnse initiates a checkout session with the provided MerchantAccount and Product.
+func GetCheckoutResponse(ctx *steranko.Context, factory *domain.Factory, merchantAccount *model.MerchantAccount, product *model.Product) error {
 
 	const location = "handler.GetCheckout"
 
 	// Verify the Checkout Session
 	merchantAccountService := factory.MerchantAccount()
-	subscribers, err := merchantAccountService.ParseCheckoutResponse(ctx.QueryParams(), merchantAccount)
+	guest, purchases, err := merchantAccountService.ParseCheckoutResponse(ctx.QueryParams(), merchantAccount)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error retrieving checkout URL")
 	}
 
-	if subscribers.IsEmpty() {
-		return derp.NewBadRequestError(location, "No subscribers found")
+	if purchases.IsEmpty() {
+		return derp.NewBadRequestError(location, "No purchases found")
 	}
 
-	subscriber := subscribers.First()
+	purchase := purchases.First()
+
 	authorization := getAuthorization(ctx)
-	spew.Dump(subscribers)
+	spew.Dump(purchases)
 	spew.Dump(authorization)
 
-	// If the subscriber is already logged in, then just forward them to the return URL
-	if authorization.VisitorEmail == subscriber.EmailAddress {
+	// If the purchase is already logged in, then just forward them to the return URL
+	if authorization.VisitorEmail == guest.EmailAddress {
 		return ctx.Redirect(http.StatusSeeOther, ctx.QueryParam("return"))
 	}
 
 	// Fall through means we need to update their JWT/Cookie
-	authorization.VisitorEmail = subscriber.EmailAddress
+	authorization.GuestEmail = guest.EmailAddress
 
 	jwtService := factory.JWT()
 
@@ -96,7 +97,7 @@ func PostCheckoutWebhook(ctx *steranko.Context, factory *domain.Factory, merchan
 
 	// Parse the WebHook data based on the MerchantAccount type
 	merchantAccountService := factory.MerchantAccount()
-	subscribers, err := merchantAccountService.ParseCheckoutWebhook(ctx.Request().Header, body, merchantAccount)
+	purchases, err := merchantAccountService.ParseCheckoutWebhook(ctx.Request().Header, body, merchantAccount)
 
 	if err != nil {
 
@@ -110,13 +111,13 @@ func PostCheckoutWebhook(ctx *steranko.Context, factory *domain.Factory, merchan
 		return derp.Wrap(err, location, "Error processing webhook data")
 	}
 
-	// Load/Create a subscriber record(s)
-	subscriberService := factory.Subscriber()
+	// Load/Create a purchase record(s)
+	purchaseService := factory.Purchase()
 
-	for _, subscriber := range subscribers {
+	for _, purchase := range purchases {
 
-		if err := subscriberService.CreateOrUpdate(&subscriber); err != nil {
-			return derp.Wrap(err, location, "Error loading or creating subscriber")
+		if err := purchaseService.CreateOrUpdate(&purchase); err != nil {
+			return derp.Wrap(err, location, "Error loading or creating purchase")
 		}
 
 	}

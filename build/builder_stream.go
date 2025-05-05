@@ -870,17 +870,17 @@ func (w Stream) CanCreate() []form.LookupCode {
 	return templateService.ListByContainer(w._template.TemplateID)
 }
 
-// HasSubscriptions returns TRUE if this stream has any subscriptions
-func (w Stream) HasSubscriptions() bool {
-	return w._stream.HasSubscriptions()
+// HasProducts returns TRUE if this stream has any products
+func (w Stream) HasProducts() bool {
+	return w._stream.HasProducts()
 }
 
-// SubscriptionIDs returns all subscription IDs that are valid for this stream
-func (w Stream) SubscriptionIDs() []string {
-	return w._stream.SubscriptionIDs()
+// ProductIDs returns all product IDs that are valid for this stream
+func (w Stream) ProductIDs() []string {
+	return w._stream.ProductIDs()
 }
 
-func (w Stream) Subscriptions() QueryBuilder[model.Subscription] {
+func (w Stream) Products() QueryBuilder[model.Product] {
 
 	expressionBuilder := builder.NewBuilder()
 	criteria := exp.And(
@@ -888,7 +888,7 @@ func (w Stream) Subscriptions() QueryBuilder[model.Subscription] {
 		exp.Equal("userId", w._stream.AttributedTo.UserID),
 	)
 
-	return NewQueryBuilder[model.Subscription](w._factory.Subscription(), criteria)
+	return NewQueryBuilder[model.Product](w._factory.Product(), criteria)
 }
 
 /******************************************

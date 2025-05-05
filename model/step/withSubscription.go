@@ -6,26 +6,26 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// WithSubscription is a Step that returns a new Follower Builder
-type WithSubscription struct {
+// WithProduct is a Step that returns a new Follower Builder
+type WithProduct struct {
 	SubSteps []Step
 }
 
-// NewNewWithSubscription returns a fully initialized NewWithSubscription object
-func NewWithSubscription(stepInfo mapof.Any) (WithSubscription, error) {
+// NewNewWithProduct returns a fully initialized NewWithProduct object
+func NewWithProduct(stepInfo mapof.Any) (WithProduct, error) {
 
-	const location = "NewNewWithSubscription"
+	const location = "NewNewWithProduct"
 
 	subSteps, err := NewPipeline(convert.SliceOfMap(stepInfo["steps"]))
 
 	if err != nil {
-		return WithSubscription{}, derp.Wrap(err, location, "Invalid 'steps'", stepInfo)
+		return WithProduct{}, derp.Wrap(err, location, "Invalid 'steps'", stepInfo)
 	}
 
-	return WithSubscription{
+	return WithProduct{
 		SubSteps: subSteps,
 	}, nil
 }
 
 // AmStep is here only to verify that this struct is a build pipeline step
-func (step WithSubscription) AmStep() {}
+func (step WithProduct) AmStep() {}

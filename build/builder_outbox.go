@@ -344,7 +344,7 @@ func (w Outbox) Responses() QueryBuilder[model.Response] {
 	return result
 }
 
-func (w Outbox) Subscriptions() QueryBuilder[model.Subscription] {
+func (w Outbox) Products() QueryBuilder[model.Product] {
 
 	expressionBuilder := builder.NewBuilder()
 	criteria := exp.And(
@@ -352,7 +352,7 @@ func (w Outbox) Subscriptions() QueryBuilder[model.Subscription] {
 		exp.Equal("userId", w._user.UserID),
 	)
 
-	return NewQueryBuilder[model.Subscription](w._factory.Subscription(), criteria)
+	return NewQueryBuilder[model.Product](w._factory.Product(), criteria)
 }
 
 func (w Outbox) setState(stateID string) error {

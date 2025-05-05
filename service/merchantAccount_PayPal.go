@@ -25,8 +25,8 @@ func (service *MerchantAccount) paypal_getServerAddress(merchantAccount *model.M
 	}
 }
 
-// paypal_parseCheckoutWebhook processes subscription webhook events from Stripe
-func (service *MerchantAccount) paypal_parseCheckoutWebhook(header http.Header, body []byte, merchantAccount *model.MerchantAccount) ([]model.Subscriber, error) {
+// paypal_parseCheckoutWebhook processes product webhook events from Stripe
+func (service *MerchantAccount) paypal_parseCheckoutWebhook(header http.Header, body []byte, merchantAccount *model.MerchantAccount) ([]model.Purchase, error) {
 
 	const location = "service.MerchantAccount.paypal_parseCheckoutWebhook"
 
@@ -86,16 +86,16 @@ func (service *MerchantAccount) paypal_refreshMerchantAccount(merchantAccount *m
 	return nil
 }
 
-// paypal_refreshSubscription refreshes the subscription data for a PayPal subscription
-func (service *MerchantAccount) paypal_refreshSubscription(merchantAccount *model.MerchantAccount, subscription *model.Subscription) error {
+// paypal_refreshProduct refreshes the product data for a PayPal product
+func (service *MerchantAccount) paypal_refreshProduct(merchantAccount *model.MerchantAccount, product *model.Product) error {
 
-	spew.Dump(merchantAccount, subscription)
+	spew.Dump(merchantAccount, product)
 	return nil
 }
 
-func (service *MerchantAccount) paypal_getSubscriptions(merchantAccount *model.MerchantAccount) ([]form.LookupCode, error) {
+func (service *MerchantAccount) paypal_getProducts(merchantAccount *model.MerchantAccount) ([]form.LookupCode, error) {
 
-	const location = "service.MerchantAccount.paypal_getSubscriptions"
+	const location = "service.MerchantAccount.paypal_getProducts"
 
 	endpoint := service.paypal_getServerAddress(merchantAccount) + "/v1/billing/plans"
 	txnResult := mapof.NewAny()
@@ -135,7 +135,7 @@ func (service *MerchantAccount) paypal_getSubscriptions(merchantAccount *model.M
 	return result, nil
 }
 
-func (service *MerchantAccount) paypal_getCheckoutURL(merchantAccount *model.MerchantAccount, subscription *model.Subscription, returnURL string) (string, error) {
+func (service *MerchantAccount) paypal_getCheckoutURL(merchantAccount *model.MerchantAccount, product *model.Product, returnURL string) (string, error) {
 
 	const location = "service.MerchantAccount.paypal_getCheckoutURL"
 
@@ -147,7 +147,7 @@ func (service *MerchantAccount) paypal_getCheckoutURL(merchantAccount *model.Mer
 	}
 
 	// Create the checkout URL
-	endpoint := service.paypal_getServerAddress(merchantAccount) + "/v1/billing/subscriptions/" + subscription.RemoteID
+	endpoint := service.paypal_getServerAddress(merchantAccount) + "/v1/billing/products/" + product.RemoteID
 	txnResult := mapof.NewAny()
 
 	txn := remote.Post(endpoint).
@@ -162,6 +162,6 @@ func (service *MerchantAccount) paypal_getCheckoutURL(merchantAccount *model.Mer
 	return txnResult.GetString("checkout_url"), nil
 }
 
-func (service *MerchantAccount) paypal_parseCheckoutResponse(queryParams url.Values, merchantAccount *model.MerchantAccount) ([]model.Subscriber, error) {
-	return nil, derp.NewInternalError("service.MerchantAccount.paypal_parseCheckoutResponse", "Not Implemented")
+func (service *MerchantAccount) paypal_parseCheckoutResponse(queryParams url.Values, merchantAccount *model.MerchantAccount) (model.Guest, []model.Purchase, error) {
+	return model.NewGuest(), nil, derp.NewInternalError("service.MerchantAccount.paypal_parseCheckoutResponse", "Not Implemented")
 }

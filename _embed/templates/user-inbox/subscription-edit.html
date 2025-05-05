@@ -2,9 +2,9 @@
 {{- $merchantAccount := .MerchantAccount $merchantAccountID -}}
 
 {{- if .Object.IsNew -}}
-	<h1 id="modal-title">{{icon "add"}} Add a Subscription: {{$merchantAccount.Name}}</h1>
+	<h1 id="modal-title">{{icon "add"}} Add a Product: {{$merchantAccount.Name}}</h1>
 {{- else -}}
-	<h1 id="modal-title">Edit Subscription</h1>
+	<h1 id="modal-title">Edit Product</h1>
 
 	<div class="margin-bottom">
 		Using Merchant Account: 

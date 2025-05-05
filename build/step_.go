@@ -149,8 +149,8 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.SetState:
 		return StepSetState(s)
 
-	case step.SetSubscriptions:
-		return StepSetSubscriptions(s)
+	case step.SetProducts:
+		return StepSetProducts(s)
 
 	case step.SetThumbnail:
 		return StepSetThumbnail(s)
@@ -233,8 +233,8 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.WithRule:
 		return StepWithRule(s)
 
-	case step.WithSubscription:
-		return StepWithSubscription(s)
+	case step.WithProduct:
+		return StepWithProduct(s)
 	}
 
 	return StepError{Original: stepInfo}

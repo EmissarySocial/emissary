@@ -58,10 +58,10 @@ func PostSignupWebhook(ctx *steranko.Context, factory *domain.Factory, domain *m
 		return derp.ReportAndReturn(derp.Wrap(err, location, "Error verifying webhook signature"))
 	}
 
-	// Require that the event is a "subscription" event
+	// Require that the event is a "product" event
 	eventType := string(event.Type)
 
-	if !strings.HasPrefix(eventType, "customer.subscription.") {
+	if !strings.HasPrefix(eventType, "customer.product.") {
 		log.Trace().Str("event", eventType).Msg("Ignoring Stripe Webhook")
 		return nil
 	}
@@ -86,11 +86,11 @@ func finishWebhook(factory *domain.Factory, restrictedKey string, event stripe.E
 	subscription := stripe.Subscription{}
 
 	if err := json.Unmarshal(event.Data.Raw, &subscription); err != nil {
-		return derp.Wrap(err, "handler.getSubscription", "Error unmarshalling event data")
+		return derp.Wrap(err, "handler.getProduct", "Error unmarshalling event data")
 	}
 
 	// This is the price that was paid, but it doesn't include the metadata we need.
-	// So, use the API to look up the productID first.
+	// So, use the API to look up the subscriptionID first.
 
 	price := getSubscriptionPrice(&subscription)
 
@@ -126,7 +126,7 @@ func finishWebhook(factory *domain.Factory, restrictedKey string, event stripe.E
 		// Set the user to "public" (if indicated by the Product metadata)
 		setPublic(&user, price.Product, true)
 
-	// Otherwise, CANCEL the user's subscription
+	// Otherwise, CANCEL the user's product
 	default:
 
 		// If the user doesn't exists, then we don't have to cancel their access here.
@@ -134,7 +134,7 @@ func finishWebhook(factory *domain.Factory, restrictedKey string, event stripe.E
 			return nil
 		}
 
-		// Since this subscription is no longer active, remove the user from the designated groups
+		// Since this product is no longer active, remove the user from the designated groups
 		removeGroups(factory, &user, price.Product, "add_groups")
 
 		// Set the user to "private" (if indicated by the Product metadata)

@@ -66,11 +66,11 @@ const CollectionStream = "Stream"
 // CollectionStreamDraft is the name of the database collection where draft changes to streams are stored
 const CollectionStreamDraft = "StreamDraft"
 
-// CollectionSubscriber is the name of the database collection where Subscribers are stored
-const CollectionSubscriber = "Subscriber"
+// CollectionPurchase is the name of the database collection where Purchases are stored
+const CollectionPurchase = "Purchase"
 
-// CollectionSubscription is the name of the database collection where Subscriptions are stored
-const CollectionSubscription = "Subscription"
+// CollectionProduct is the name of the database collection where Products are stored
+const CollectionProduct = "Product"
 
 // CollectionTemplate is the name of the database collection where Templates are stored
 const CollectionTemplate = "Template"
