@@ -18,6 +18,7 @@ import (
 	"github.com/benpate/rosetta/compare"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/stripe/stripe-go/v78"
 	"github.com/stripe/stripe-go/v78/webhook"
@@ -125,7 +126,7 @@ func (service *MerchantAccount) stripe_getCheckoutURL(merchantAccount *model.Mer
 	return checkoutResult.GetString("url"), nil
 }
 
-func (service *MerchantAccount) stripe_parseCheckoutResponse(queryParams url.Values, merchantAccount *model.MerchantAccount) ([]model.Purchase, error) {
+func (service *MerchantAccount) stripe_parseCheckoutResponse(queryParams url.Values, merchantAccount *model.MerchantAccount) (model.Guest, []model.Purchase, error) {
 
 	const location = "service.MerchantAccount.stripe_parseCheckoutResponse"
 
@@ -137,25 +138,25 @@ func (service *MerchantAccount) stripe_parseCheckoutResponse(queryParams url.Val
 	// Load the Checkout session from the Stripe API
 	stripeCheckoutSession, err := service.stripe_getCheckoutSession(merchantAccount, checkoutSessionID)
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Error loading checkout session from Stripe")
+		return model.Guest{}, nil, derp.Wrap(err, location, "Error loading checkout session from Stripe")
 	}
 
 	// Verify that the TransactionID matches the value from the Checkout Session.
 	if transactionID != stripeCheckoutSession.ClientReferenceID {
-		return nil, derp.NewBadRequestError(location, "Invalid Transaction ID", "The transaction ID does not match the checkout session")
+		return model.Guest{}, nil, derp.NewBadRequestError(location, "Invalid Transaction ID", "The transaction ID does not match the checkout session")
 	}
 
 	// Map Stripe.ProductID(s) into Purchases
-	return service.stripe_mapProducts(merchantAccount, stripeCheckoutSession.Product)
+	return service.stripe_mapSubscriptions(merchantAccount, stripeCheckoutSession.Subscription)
 }
 
 // stripe_handleWebhook processes product webhook events from Stripe
-func (service *MerchantAccount) stripe_parseCheckoutWebhook(header http.Header, body []byte, merchantAccount *model.MerchantAccount) ([]model.Purchase, error) {
+func (service *MerchantAccount) stripe_parseCheckoutWebhook(header http.Header, body []byte, merchantAccount *model.MerchantAccount) (model.Guest, []model.Purchase, error) {
 
 	const location = "service.MerchantAccount.stripe_handleWebhook"
 
 	var stripeEvent stripe.Event
-	var stripeProduct stripe.Product
+	var stripeSubscription stripe.Subscription
 
 	// Parse the request body into a Stripe event
 	switch merchantAccount.LiveMode {
@@ -164,7 +165,7 @@ func (service *MerchantAccount) stripe_parseCheckoutWebhook(header http.Header, 
 	case false:
 
 		if err := json.Unmarshal(body, &stripeEvent); err != nil {
-			return nil, derp.Wrap(err, location, "Error unmarshalling webhook stripeEvent")
+			return model.Guest{}, nil, derp.Wrap(err, location, "Error unmarshalling webhook stripeEvent")
 		}
 
 	// In LIVE mode, use the Stripe library to validate event
@@ -174,61 +175,65 @@ func (service *MerchantAccount) stripe_parseCheckoutWebhook(header http.Header, 
 		vault, err := service.DecryptVault(merchantAccount, "webhookSecret")
 
 		if err != nil {
-			return nil, derp.Wrap(err, location, "Error decrypting webhook secret")
+			return model.Guest{}, nil, derp.Wrap(err, location, "Error decrypting webhook secret")
 		}
 
 		// Parse and validate the Webhook event
 		stripeEvent, err = webhook.ConstructEvent(body, header.Get("Stripe-Signature"), vault.GetString("webhookSecret"))
 
 		if err != nil {
-			return nil, derp.Wrap(err, location, "Error parsing webhook event")
+			return model.Guest{}, nil, derp.Wrap(err, location, "Error parsing webhook event")
 		}
 	}
 
 	// Unpack the Product from the Webhook event
-	if err := json.Unmarshal(stripeEvent.Data.Raw, &stripeProduct); err != nil {
-		return nil, derp.Wrap(err, location, "Error unmarshalling product data")
+	if err := json.Unmarshal(stripeEvent.Data.Raw, &stripeSubscription); err != nil {
+		return model.Guest{}, nil, derp.Wrap(err, location, "Error unmarshalling product data")
 	}
 
 	// Map products from the Webhook into Purchases
-	return service.stripe_mapProducts(merchantAccount, &stripeProduct)
+	return service.stripe_mapSubscriptions(merchantAccount, &stripeSubscription)
 }
 
-func (service *MerchantAccount) stripe_mapProducts(merchantAccount *model.MerchantAccount, stripeProduct *stripe.Product) ([]model.Purchase, error) {
+func (service *MerchantAccount) stripe_mapSubscriptions(merchantAccount *model.MerchantAccount, stripeSubscription *stripe.Subscription) (model.Guest, []model.Purchase, error) {
 
-	const location = "service.MerchantAccount.stripe_mapProducts"
+	const location = "service.MerchantAccount.stripe_mapSubscriptions"
 
 	// NPE check: product.Customer
-	if stripeProduct.Customer == nil {
-		return nil, derp.NewBadRequestError(location, "Invalid Customer", "The customer value must not be null")
+	if stripeSubscription.Customer == nil {
+		return model.Guest{}, nil, derp.NewBadRequestError(location, "Invalid Customer", "The customer value must not be null")
 	}
 
 	// NPE check: product.Items
-	if stripeProduct.Items == nil {
-		return nil, derp.NewBadRequestError(location, "Invalid Product", "No items found in product")
+	if stripeSubscription.Items == nil {
+		return model.Guest{}, nil, derp.NewBadRequestError(location, "Invalid Subscription", "Stripe Subscription cannot be null")
+	}
+
+	if len(stripeSubscription.Items.Data) == 0 {
+		return model.Guest{}, nil, derp.NewBadRequestError(location, "Invalid Subscription", "Sripe Subscription must have at least one item")
 	}
 
 	// Load Stripe Customer record from the remote API
-	customer, err := service.stripe_getCustomer(merchantAccount, stripeProduct.Customer.ID)
+	customer, err := service.stripe_getCustomer(merchantAccount, stripeSubscription.Customer.ID)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Error loading customer from Stripe")
+		return model.Guest{}, nil, derp.Wrap(err, location, "Error loading customer from Stripe")
 	}
 
 	// Create/Update Purchase records for each "price" line item in the product
-	result := make([]model.Purchase, 0, len(stripeProduct.Items.Data))
+	purchases := make(sliceof.Object[model.Purchase], 0, len(stripeSubscription.Items.Data))
 
-	for _, item := range stripeProduct.Items.Data {
+	for _, item := range stripeSubscription.Items.Data {
 
 		// NPE Check: item.Price
 		if item.Price == nil {
-			return nil, derp.NewBadRequestError(location, "Invalid Product", "No price found in product item")
+			return model.Guest{}, nil, derp.NewBadRequestError(location, "Invalid Product", "No price found in product item")
 		}
 
 		// Try to find the Price in the database
 		product := model.NewProduct()
 		if err := service.productService.LoadByRemoteID(item.Price.ID, &product); err != nil {
-			return nil, derp.Wrap(err, location, "Error loading product by token", item.Price.ID)
+			return model.Guest{}, nil, derp.Wrap(err, location, "Error loading product by token", item.Price.ID)
 		}
 
 		// Create the new Purchase record
@@ -274,12 +279,14 @@ func (service *MerchantAccount) stripe_mapProducts(merchantAccount *model.Mercha
 			}
 		}
 
-		// Append the Purchase to the result set
-		result = append(result, purchase)
+		// Append the Purchase to the purchases set
+		purchases = append(purchases, purchase)
 	}
 
+	// Create/Load the Guest record for this purchase
+
 	// Great success.
-	return result, nil
+	return guest, purchases, nil
 }
 
 // stripe_refreshProduct refreshes the product data for a Stripe product
