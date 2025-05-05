@@ -21,7 +21,7 @@ func GetLists(serverFactory *server.Factory) func(model.Authorization, txn.GetLi
 	return func(auth model.Authorization, t txn.GetLists) ([]object.List, error) {
 
 		// Get the factory for this Domain
-		factory, err := serverFactory.ByDomainName(t.Host)
+		factory, err := serverFactory.ByHostname(t.Host)
 
 		if err != nil {
 			return nil, derp.Wrap(err, location, "Invalid Domain Name", t.Host)
@@ -54,7 +54,7 @@ func GetList(serverFactory *server.Factory) func(model.Authorization, txn.GetLis
 		}
 
 		// Get the factory for this Domain
-		factory, err := serverFactory.ByDomainName(t.Host)
+		factory, err := serverFactory.ByHostname(t.Host)
 
 		if err != nil {
 			return object.List{}, derp.Wrap(err, location, "Invalid Domain Name", t.Host)
@@ -81,7 +81,7 @@ func PostList(serverFactory *server.Factory) func(model.Authorization, txn.PostL
 	return func(auth model.Authorization, t txn.PostList) (object.List, error) {
 
 		// Get the factory for this Domain
-		factory, err := serverFactory.ByDomainName(t.Host)
+		factory, err := serverFactory.ByHostname(t.Host)
 
 		if err != nil {
 			return object.List{}, derp.Wrap(err, location, "Invalid Domain Name", t.Host)
@@ -118,7 +118,7 @@ func PutList(serverFactory *server.Factory) func(model.Authorization, txn.PutLis
 		}
 
 		// Get the factory for this Domain
-		factory, err := serverFactory.ByDomainName(t.Host)
+		factory, err := serverFactory.ByHostname(t.Host)
 
 		if err != nil {
 			return object.List{}, derp.Wrap(err, location, "Invalid Domain Name", t.Host)
@@ -159,7 +159,7 @@ func DeleteList(serverFactory *server.Factory) func(model.Authorization, txn.Del
 		}
 
 		// Get the factory for this Domain
-		factory, err := serverFactory.ByDomainName(t.Host)
+		factory, err := serverFactory.ByHostname(t.Host)
 
 		if err != nil {
 			return struct{}{}, derp.Wrap(err, location, "Invalid Domain Name", t.Host)
@@ -198,7 +198,7 @@ func GetList_Accounts(serverFactory *server.Factory) func(model.Authorization, t
 		}
 
 		// Get the factory for this Domain
-		factory, err := serverFactory.ByDomainName(t.Host)
+		factory, err := serverFactory.ByHostname(t.Host)
 
 		if err != nil {
 			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Invalid Domain Name", t.Host)

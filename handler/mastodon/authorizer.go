@@ -20,7 +20,7 @@ func Authorizer(serverFactory *server.Factory) toot.Authorizer[model.Authorizati
 	return func(request *http.Request) (model.Authorization, error) {
 
 		// Get the factory for this domain
-		factory, err := serverFactory.ByDomainName(request.Host)
+		factory, err := serverFactory.ByHostname(request.Host)
 
 		if err != nil {
 			return model.Authorization{}, derp.Wrap(err, location, "Unrecognized Domain")

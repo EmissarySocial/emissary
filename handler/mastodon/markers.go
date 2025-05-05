@@ -21,7 +21,7 @@ func GetMarkers(serverFactory *server.Factory) func(model.Authorization, txn.Get
 	return func(auth model.Authorization, t txn.GetMarkers) (map[string]object.Marker, error) {
 
 		// Get the factory for this Domain
-		factory, err := serverFactory.ByDomainName(t.Host)
+		factory, err := serverFactory.ByHostname(t.Host)
 
 		if err != nil {
 			return nil, derp.Wrap(err, location, "Invalid Domain")
@@ -63,7 +63,7 @@ func PostMarker(serverFactory *server.Factory) func(model.Authorization, txn.Pos
 		}
 
 		// Get the factory for this Domain
-		factory, err := serverFactory.ByDomainName(t.Host)
+		factory, err := serverFactory.ByHostname(t.Host)
 
 		if err != nil {
 			return nil, derp.Wrap(err, location, "Invalid Domain")

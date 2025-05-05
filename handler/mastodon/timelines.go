@@ -36,7 +36,7 @@ func GetTimeline_Home(serverFactory *server.Factory) func(model.Authorization, t
 	return func(auth model.Authorization, t txn.GetTimeline_Home) ([]object.Status, toot.PageInfo, error) {
 
 		// Get the factory for this Domain
-		factory, err := serverFactory.ByDomainName(t.Host)
+		factory, err := serverFactory.ByHostname(t.Host)
 
 		if err != nil {
 			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Invalid Domain")
@@ -69,7 +69,7 @@ func GetTimeline_List(serverFactory *server.Factory) func(model.Authorization, t
 		}
 
 		// Get the factory for this Domain
-		factory, err := serverFactory.ByDomainName(t.Host)
+		factory, err := serverFactory.ByHostname(t.Host)
 
 		if err != nil {
 			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Invalid Domain")

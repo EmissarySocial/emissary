@@ -16,7 +16,7 @@ func DeleteProfile_Avatar(serverFactory *server.Factory) func(model.Authorizatio
 	return func(auth model.Authorization, t txn.DeleteProfile_Avatar) (object.Account, error) {
 
 		// Get the factory for this Domain
-		factory, err := serverFactory.ByDomainName(t.Host)
+		factory, err := serverFactory.ByHostname(t.Host)
 
 		if err != nil {
 			return object.Account{}, derp.Wrap(err, location, "Invalid Domain Name", t.Host)
@@ -46,7 +46,7 @@ func DeleteProfile_Header(serverFactory *server.Factory) func(model.Authorizatio
 	return func(auth model.Authorization, t txn.DeleteProfile_Header) (object.Account, error) {
 
 		// Get the factory for this Domain
-		factory, err := serverFactory.ByDomainName(t.Host)
+		factory, err := serverFactory.ByHostname(t.Host)
 
 		if err != nil {
 			return object.Account{}, derp.Wrap(err, location, "Invalid Domain Name", t.Host)

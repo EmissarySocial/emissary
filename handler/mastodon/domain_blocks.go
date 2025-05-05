@@ -18,7 +18,7 @@ func GetDomainBlocks(serverFactory *server.Factory) func(model.Authorization, tx
 	return func(auth model.Authorization, t txn.GetDomainBlocks) ([]string, toot.PageInfo, error) {
 
 		// Get the Domain factory for this request
-		factory, err := serverFactory.ByDomainName(t.Host)
+		factory, err := serverFactory.ByHostname(t.Host)
 
 		if err != nil {
 			return []string{}, toot.PageInfo{}, derp.Wrap(err, location, "Unrecognized Domain")
@@ -49,7 +49,7 @@ func PostDomainBlock(serverFactory *server.Factory) func(model.Authorization, tx
 	return func(auth model.Authorization, t txn.PostDomainBlock) (struct{}, error) {
 
 		// Get the Domain factory for this request
-		factory, err := serverFactory.ByDomainName(t.Host)
+		factory, err := serverFactory.ByHostname(t.Host)
 
 		if err != nil {
 			return struct{}{}, derp.Wrap(err, location, "Unrecognized Domain")
@@ -78,7 +78,7 @@ func DeleteDomainBlock(serverFactory *server.Factory) func(model.Authorization, 
 	return func(auth model.Authorization, t txn.DeleteDomainBlock) (struct{}, error) {
 
 		// Get the Domain factory for this request
-		factory, err := serverFactory.ByDomainName(t.Host)
+		factory, err := serverFactory.ByHostname(t.Host)
 
 		if err != nil {
 			return struct{}{}, derp.Wrap(err, location, "Unrecognized Domain")

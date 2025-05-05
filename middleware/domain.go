@@ -10,18 +10,22 @@ import (
 // allowing the request to pass through.
 func Domain(factory *server.Factory) echo.MiddlewareFunc {
 
+	const location = "middleware.Domain"
+
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 
 		return func(ctx echo.Context) error {
 
+			// Locate the Domain factory for this request
 			domainFactory, err := factory.ByContext(ctx)
 
 			if err != nil {
-				return derp.NewForbiddenError("middleware.Domain", "Unrecognized domain", ctx.Request().URL.Hostname(), err)
+				return derp.NewMisdirectedRequestError(location, "Invalid hostname", ctx.Path(), err)
 			}
 
+			// Guarantee that the database session is not nil
 			if domainFactory.Session == nil {
-				return derp.NewForbiddenError("middleware.Domain", "Database Not Configured for this Domain")
+				return derp.NewInternalError(location, "Database not ready")
 			}
 
 			return next(ctx)

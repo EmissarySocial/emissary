@@ -21,7 +21,7 @@ func GetInstance(serverFactory *server.Factory) func(model.Authorization, txn.Ge
 	return func(auth model.Authorization, t txn.GetInstance) (object.Instance, error) {
 
 		// Get the Domain factory for this request
-		factory, err := serverFactory.ByDomainName(t.Host)
+		factory, err := serverFactory.ByHostname(t.Host)
 
 		if err != nil {
 			return object.Instance{}, derp.Wrap(err, location, "Unrecognized Domain")
@@ -78,7 +78,7 @@ func GetInstance_DomainBlocks(serverFactory *server.Factory) func(model.Authoriz
 	return func(auth model.Authorization, t txn.GetInstance_DomainBlocks) ([]object.DomainBlock, error) {
 
 		// Get the factory for this Domain
-		factory, err := serverFactory.ByDomainName(t.Host)
+		factory, err := serverFactory.ByHostname(t.Host)
 
 		if err != nil {
 			return nil, derp.Wrap(err, location, "Unrecognized Domain")
@@ -125,7 +125,7 @@ func GetInstance_V1(serverFactory *server.Factory) func(model.Authorization, txn
 	return func(auth model.Authorization, t txn.GetInstance_V1) (object.Instance_V1, error) {
 
 		// Get the Domain factory for this request
-		factory, err := serverFactory.ByDomainName(t.Host)
+		factory, err := serverFactory.ByHostname(t.Host)
 
 		if err != nil {
 			return object.Instance_V1{}, derp.Wrap(err, location, "Unrecognized Domain")

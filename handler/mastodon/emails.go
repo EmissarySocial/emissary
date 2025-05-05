@@ -15,7 +15,7 @@ func PostEmailConfirmation(serverFactory *server.Factory) func(model.Authorizati
 	return func(auth model.Authorization, t txn.PostEmailConfirmation) (struct{}, error) {
 
 		// Get the Domain factory for this request
-		factory, err := serverFactory.ByDomainName(t.Host)
+		factory, err := serverFactory.ByHostname(t.Host)
 
 		if err != nil {
 			return struct{}{}, derp.Wrap(err, location, "Unrecognized Domain")

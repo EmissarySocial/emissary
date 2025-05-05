@@ -117,7 +117,7 @@ func SetupDomainSigninPost(fm *server.Factory) echo.HandlerFunc {
 		}
 
 		// Get the real factory for this domain
-		factory, err := fm.ByDomainName(domain.Hostname)
+		factory, err := fm.ByHostname(domain.Hostname)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error loading Domain")

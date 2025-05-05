@@ -18,7 +18,7 @@ func PostStatus(serverFactory *server.Factory) func(model.Authorization, txn.Pos
 	return func(authorization model.Authorization, transaction txn.PostStatus) (object.Status, error) {
 
 		// Get the factory for this domain
-		factory, err := serverFactory.ByDomainName(transaction.Host)
+		factory, err := serverFactory.ByHostname(transaction.Host)
 
 		if err != nil {
 			return object.Status{}, derp.Wrap(err, location, "Unrecognized Domain")
@@ -176,7 +176,7 @@ func PostStatus_Favourite(serverFactory *server.Factory) func(model.Authorizatio
 	return func(auth model.Authorization, t txn.PostStatus_Favourite) (object.Status, error) {
 
 		// Get the factory for this domain
-		factory, err := serverFactory.ByDomainName(t.Host)
+		factory, err := serverFactory.ByHostname(t.Host)
 
 		if err != nil {
 			return object.Status{}, derp.Wrap(err, location, "Unrecognized Domain")
@@ -220,7 +220,7 @@ func PostStatus_Unfavourite(serverFactory *server.Factory) func(model.Authorizat
 	return func(auth model.Authorization, t txn.PostStatus_Unfavourite) (object.Status, error) {
 
 		// Get the factory for this domain
-		factory, err := serverFactory.ByDomainName(t.Host)
+		factory, err := serverFactory.ByHostname(t.Host)
 
 		if err != nil {
 			return object.Status{}, derp.Wrap(err, location, "Unrecognized Domain")
@@ -291,7 +291,7 @@ func PostStatus_Mute(serverFactory *server.Factory) func(model.Authorization, tx
 	return func(auth model.Authorization, t txn.PostStatus_Mute) (object.Status, error) {
 
 		// Get the factory for this Domain
-		factory, err := serverFactory.ByDomainName(t.Host)
+		factory, err := serverFactory.ByHostname(t.Host)
 
 		if err != nil {
 			return object.Status{}, derp.Wrap(err, location, "Invalid Domain")
@@ -322,7 +322,7 @@ func PostStatus_Unmute(serverFactory *server.Factory) func(model.Authorization, 
 	return func(auth model.Authorization, t txn.PostStatus_Unmute) (object.Status, error) {
 
 		// Get the factory for this Domain
-		factory, err := serverFactory.ByDomainName(t.Host)
+		factory, err := serverFactory.ByHostname(t.Host)
 
 		if err != nil {
 			return object.Status{}, derp.Wrap(err, location, "Invalid Domain")
@@ -369,7 +369,7 @@ func PutStatus(serverFactory *server.Factory) func(model.Authorization, txn.PutS
 	return func(auth model.Authorization, t txn.PutStatus) (object.Status, error) {
 
 		// Get the factory for this Domain
-		factory, err := serverFactory.ByDomainName(t.Host)
+		factory, err := serverFactory.ByHostname(t.Host)
 
 		if err != nil {
 			return object.Status{}, derp.Wrap(err, location, "Invalid Domain")
@@ -422,7 +422,7 @@ func GetStatus_Source(serverFactory *server.Factory) func(model.Authorization, t
 	return func(auth model.Authorization, t txn.GetStatus_Source) (object.StatusSource, error) {
 
 		// Get the factory for this Domain
-		factory, err := serverFactory.ByDomainName(t.Host)
+		factory, err := serverFactory.ByHostname(t.Host)
 
 		if err != nil {
 			return object.StatusSource{}, derp.Wrap(err, location, "Invalid Domain")

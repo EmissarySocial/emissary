@@ -96,7 +96,7 @@ func getStreamFromURL(serverFactory *server.Factory, streamURL string) (model.St
 	}
 
 	// Get the factory for this Domain
-	factory, err := serverFactory.ByDomainName(parsedURL.Host)
+	factory, err := serverFactory.ByHostname(parsedURL.Host)
 
 	if err != nil {
 		return model.Stream{}, nil, derp.Wrap(err, location, "Unrecognized Domain")

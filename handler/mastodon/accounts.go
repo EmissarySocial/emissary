@@ -22,7 +22,7 @@ func PostAccount(serverFactory *server.Factory) func(model.Authorization, txn.Po
 	return func(auth model.Authorization, t txn.PostAccount) (object.Token, error) {
 
 		// Get the Domain factory for this request
-		factory, err := serverFactory.ByDomainName(t.Host)
+		factory, err := serverFactory.ByHostname(t.Host)
 
 		if err != nil {
 			return object.Token{}, derp.Wrap(err, location, "Unrecognized Domain")
@@ -71,7 +71,7 @@ func GetAccount_VerifyCredentials(serverFactory *server.Factory) func(model.Auth
 	return func(auth model.Authorization, t txn.GetAccount_VerifyCredentials) (object.Account, error) {
 
 		// Get the Domain factory for this request
-		factory, err := serverFactory.ByDomainName(t.Host)
+		factory, err := serverFactory.ByHostname(t.Host)
 
 		if err != nil {
 			return object.Account{}, derp.Wrap(err, location, "Unrecognized Domain")
@@ -97,7 +97,7 @@ func PatchAccount_UpdateCredentials(serverFactory *server.Factory) func(model.Au
 	return func(auth model.Authorization, t txn.PatchAccount_UpdateCredentials) (object.Account, error) {
 
 		// Get the Domain factory for this request
-		factory, err := serverFactory.ByDomainName(t.Host)
+		factory, err := serverFactory.ByHostname(t.Host)
 
 		if err != nil {
 			return object.Account{}, derp.Wrap(err, location, "Unrecognized Domain")
@@ -132,7 +132,7 @@ func GetAccount(serverFactory *server.Factory) func(model.Authorization, txn.Get
 	return func(auth model.Authorization, t txn.GetAccount) (object.Account, error) {
 
 		// Get the Domain factory for this request
-		factory, err := serverFactory.ByDomainName(t.Host)
+		factory, err := serverFactory.ByHostname(t.Host)
 
 		if err != nil {
 			return object.Account{}, derp.Wrap(err, location, "Unrecognized Domain")
@@ -158,7 +158,7 @@ func GetAccount_Statuses(serverFactory *server.Factory) func(model.Authorization
 	return func(auth model.Authorization, t txn.GetAccount_Statuses) ([]object.Status, toot.PageInfo, error) {
 
 		// Get the Domain factory for this request
-		factory, err := serverFactory.ByDomainName(t.Host)
+		factory, err := serverFactory.ByHostname(t.Host)
 
 		if err != nil {
 			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Unrecognized Domain")
@@ -221,7 +221,7 @@ func PostAccount_Follow(serverFactory *server.Factory) func(model.Authorization,
 	return func(auth model.Authorization, t txn.PostAccount_Follow) (object.Relationship, error) {
 
 		// Get the Domain factory for this request
-		factory, err := serverFactory.ByDomainName(t.Host)
+		factory, err := serverFactory.ByHostname(t.Host)
 
 		if err != nil {
 			return object.Relationship{}, derp.Wrap(err, location, "Unrecognized Domain")
@@ -250,7 +250,7 @@ func PostAccount_Unfollow(serverFactory *server.Factory) func(model.Authorizatio
 	return func(auth model.Authorization, t txn.PostAccount_Unfollow) (object.Relationship, error) {
 
 		// Get the Domain factory for this request
-		factory, err := serverFactory.ByDomainName(t.Host)
+		factory, err := serverFactory.ByHostname(t.Host)
 
 		if err != nil {
 			return object.Relationship{}, derp.Wrap(err, location, "Unrecognized Domain")
@@ -280,7 +280,7 @@ func PostAccount_Block(serverFactory *server.Factory) func(model.Authorization, 
 	return func(auth model.Authorization, t txn.PostAccount_Block) (object.Relationship, error) {
 
 		// Get the Domain factory for this request
-		factory, err := serverFactory.ByDomainName(t.Host)
+		factory, err := serverFactory.ByHostname(t.Host)
 
 		if err != nil {
 			return object.Relationship{}, derp.Wrap(err, location, "Unrecognized Domain")
@@ -309,7 +309,7 @@ func PostAccount_Unblock(serverFactory *server.Factory) func(model.Authorization
 	return func(auth model.Authorization, t txn.PostAccount_Unblock) (object.Relationship, error) {
 
 		// Get the Domain factory for this request
-		factory, err := serverFactory.ByDomainName(t.Host)
+		factory, err := serverFactory.ByHostname(t.Host)
 
 		if err != nil {
 			return object.Relationship{}, derp.Wrap(err, location, "Unrecognized Domain")
@@ -340,7 +340,7 @@ func PostAccount_Mute(serverFactory *server.Factory) func(model.Authorization, t
 	return func(auth model.Authorization, t txn.PostAccount_Mute) (object.Relationship, error) {
 
 		// Get the Domain factory for this request
-		factory, err := serverFactory.ByDomainName(t.Host)
+		factory, err := serverFactory.ByHostname(t.Host)
 
 		if err != nil {
 			return object.Relationship{}, derp.Wrap(err, location, "Unrecognized Domain")
@@ -369,7 +369,7 @@ func PostAccount_Unmute(serverFactory *server.Factory) func(model.Authorization,
 	return func(auth model.Authorization, t txn.PostAccount_Unmute) (object.Relationship, error) {
 
 		// Get the Domain factory for this request
-		factory, err := serverFactory.ByDomainName(t.Host)
+		factory, err := serverFactory.ByHostname(t.Host)
 
 		if err != nil {
 			return object.Relationship{}, derp.Wrap(err, location, "Unrecognized Domain")
@@ -456,7 +456,7 @@ func GetAccount_Lookup(serverFactory *server.Factory) func(model.Authorization, 
 	return func(auth model.Authorization, t txn.GetAccount_Lookup) (object.Account, error) {
 
 		// Get the factory for this domain
-		factory, err := serverFactory.ByDomainName(t.Host)
+		factory, err := serverFactory.ByHostname(t.Host)
 
 		if err != nil {
 			return object.Account{}, derp.Wrap(err, location, "Unrecognized Domain")

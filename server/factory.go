@@ -26,7 +26,6 @@ import (
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/channel"
-	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/steranko"
@@ -377,9 +376,9 @@ func (factory *Factory) refreshQueue() {
 	factory.queue = queue.New(options...)
 }
 
-/****************************
+/******************************************
  * Server Config Methods
- ****************************/
+ ******************************************/
 
 func (factory *Factory) Version() string {
 	return "0.4.0"
@@ -412,9 +411,9 @@ func (factory *Factory) UpdateConfig(value config.Config) error {
 	return nil
 }
 
-/****************************
+/******************************************
  * Domain Methods
- ****************************/
+ ******************************************/
 
 func (factory *Factory) RangeDomains() iter.Seq[*domain.Factory] {
 
@@ -446,7 +445,7 @@ func (factory *Factory) PutDomain(configuration config.Domain) error {
 	// The storage service will trigger a new configuration via the Subscrbe() channel,
 	// But we still want to call the owner update manually.
 
-	domainFactory, err := factory.ByDomainName(configuration.Hostname)
+	domainFactory, err := factory.ByHostname(configuration.Hostname)
 
 	if err != nil {
 		return derp.Wrap(err, "server.Factory.PutDomain", "Error getting domain factory", configuration.Hostname)
@@ -519,9 +518,9 @@ func (factory *Factory) DeleteDomain(domainID string) error {
 	return nil
 }
 
-/****************************
+/******************************************
  * OAuth Connection Methods
- ****************************/
+ ******************************************/
 
 // PutConnection adds a provider to the Factory
 func (factory *Factory) PutProvider(oauthClient config.Provider) error {
@@ -559,75 +558,97 @@ func (factory *Factory) DeleteProvider(providerID string) error {
 	return nil
 }
 
-/****************************
+/******************************************
  * Factory Methods
- ****************************/
+ ******************************************/
 
-// ByContext retrieves a domain using an echo.Context
-func (factory *Factory) ByContext(ctx echo.Context) (*domain.Factory, error) {
-
-	host := factory.NormalizeHostname(ctx.Request().Host)
-	result, err := factory.ByDomainName(host)
-
-	if err != nil {
-		return nil, derp.Wrap(err, "server.Factory.ByContext", "Error finding domain", host)
-	}
-
-	return result, nil
-}
-
-// ByDomainID retrieves a domain using a DomainID
+// ByDomainID retrieves a Domain factory using a DomainID
 func (factory *Factory) ByDomainID(domainID string) (config.Domain, *domain.Factory, error) {
+
+	const location = "server.Factory.ByDomainID"
 
 	// Look up the domain name for this domainID
 	domainConfig, err := factory.DomainByID(domainID)
 
 	if err != nil {
-		return config.Domain{}, nil, derp.Wrap(err, "server.Factory.ByDomainID", "Error finding domain configuration", domainID)
+		return config.Domain{}, nil, derp.Wrap(err, location, "Invalid domain", domainID)
 	}
 
 	// Return the domain
-	result, err := factory.ByDomainName(domainConfig.Hostname)
+	result, err := factory.ByHostname(domainConfig.Hostname)
 
 	if err != nil {
-		return config.Domain{}, nil, derp.Wrap(err, "server.Factory.ByDomainID", "Error finding domain", domainConfig.Hostname)
+		return config.Domain{}, nil, derp.Wrap(err, location, "Invalid hostname", domainConfig.Hostname)
 	}
 
 	return domainConfig, result, nil
 }
 
-// ByDomainName retrieves a domain using a Domain Name
-func (factory *Factory) ByDomainName(name string) (*domain.Factory, error) {
+// ByContext retrieves a Domain factory using an echo.Context
+func (factory *Factory) ByContext(ctx echo.Context) (*domain.Factory, error) {
+	return factory.ByRequest(ctx.Request())
+}
+
+func (factory *Factory) ByRequest(req *http.Request) (*domain.Factory, error) {
+
+	const location = "server.Factory.ByRequest"
+
+	hostname := factory.getHostnameFromRequest(req)
+	result, err := factory.ByHostname(hostname)
+
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Invalid hostname", "hostname: "+hostname)
+	}
+
+	return result, nil
+}
+
+// ByHostname retrieves a Domain factory using a Hostname
+func (factory *Factory) ByHostname(hostname string) (*domain.Factory, error) {
 
 	factory.mutex.RLock()
 	defer factory.mutex.RUnlock()
 
-	if domain, ok := factory.domains[name]; ok {
+	// Clean up the hostname before using it
+	hostname = factory.normalizeHostname(hostname)
+
+	// Try to find the domain in the configuration
+	if domain, exists := factory.domains[hostname]; exists {
 		return domain, nil
 	}
 
-	return nil, derp.NewNotFoundError("server.Factory.ByDomainName", "Unrecognized domain name", name, factory.config)
+	// Failure.
+	return nil, derp.NewMisdirectedRequestError("server.Factory.ByHostname", "Invalid hostname", "hostname: "+hostname)
 }
 
-// NormalizeHostname removes some inconsistencies in host names, including a leading "www", if present
-func (factory *Factory) NormalizeHostname(hostname string) string {
+// Retrieve a hostname from this request, either from `X-Forwarded-Host` or from the `Host` header itself.
+// Hostnames returned by this function should be normalized via `normalizeHostname()` before using.
+func (factory *Factory) getHostnameFromRequest(req *http.Request) string {
 
-	hostname = strings.ToLower(hostname)
-	hostname = list.Head(hostname, ':')
-
-	if dotIndex := strings.Index(hostname, "."); dotIndex > 0 {
-
-		if subdomain := hostname[0 : dotIndex-1]; subdomain == "www" {
-			return hostname[dotIndex+1:]
-		}
+	// Use the `X-Forwarded-Host` header first, if it exists
+	if hostname := req.Header.Get("X-Forwarded-Host"); hostname != "" {
+		return hostname
 	}
 
+	// Default behavior is to use the standard `Host` header
+	return req.Host
+}
+
+// normalizeHostname removes inconsistencies in host names so that they
+// can be compared against the domain registry.
+func (factory *Factory) normalizeHostname(hostname string) string {
+
+	hostname, _, _ = strings.Cut(hostname, ":")     // Remove port number
+	hostname = strings.TrimPrefix(hostname, "www.") // Remove leading "www"
+	hostname = strings.ToLower(hostname)            // Force lowercase
+
+	// Now isn't that pretty?
 	return hostname
 }
 
-/****************************
+/******************************************
  * Other Global Services
- ****************************/
+ ******************************************/
 
 // Contet returns the global content service
 func (factory *Factory) Content() *service.Content {
@@ -710,7 +731,7 @@ func (factory *Factory) Steranko(ctx echo.Context) (*steranko.Steranko, error) {
 	result, err := factory.ByContext(ctx)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "server.Factory.Steranko", "Unable to locate factory for domain", ctx.Request().Host)
+		return nil, derp.Wrap(err, "server.Factory.Steranko", "Invalid hostname")
 	}
 
 	return result.Steranko(), nil
