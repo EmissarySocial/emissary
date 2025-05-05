@@ -63,16 +63,18 @@ func GetWidgetResource(serverFactory *server.Factory) echo.HandlerFunc {
 
 func getResource(filesystem fs.FS, filename string, response *echo.Response) error {
 
+	const location = "handler.getResource"
+
 	// Guarantee that this filesystem is not empty
 	if filesystem == nil {
-		return derp.NewNotFoundError("handler.getResource", "Resource not found", filename)
+		return derp.NewNotFoundError(location, "Resource not found", filename)
 	}
 
 	// Try to open the file from the filesystem
 	file, err := filesystem.Open(filename)
 
 	if err != nil {
-		return derp.Wrap(err, "handler.getResource", "Error opening resource", filename)
+		return derp.Wrap(err, location, "Error opening resource", filename)
 	}
 
 	defer file.Close()
@@ -89,7 +91,7 @@ func getResource(filesystem fs.FS, filename string, response *echo.Response) err
 
 	// Write the file to the client
 	if _, err := io.Copy(response, file); err != nil {
-		return derp.Wrap(err, "handler.getResource", "Error writing resource content", filename)
+		return derp.Wrap(err, location, "Error writing resource content to client", filename)
 	}
 
 	// [Station](https://billandted.fandom.com/wiki/Station)
