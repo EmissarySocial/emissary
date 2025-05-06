@@ -31,11 +31,17 @@ func WatchUsers(ctx context.Context, collection data.Collection, result chan<- p
 	cs, err := m.Watch(ctx, mongo.Pipeline{})
 
 	if err != nil {
+
+		// MongoDB error 40573 indicates that we're running on a single node, not a replica set.
+		if commandError, ok := err.(mongo.CommandError); ok {
+			if commandError.Code == 40573 {
+				return
+			}
+		}
+
 		derp.Report(derp.Wrap(err, location, "Unable to open Mongodb Change User"))
 		return
 	}
-
-	log.Trace().Str("loc", location).Msg("Change Stream")
 
 	// Send notifications whenever a User is changed
 	for cs.Next(ctx) {

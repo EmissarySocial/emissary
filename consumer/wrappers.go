@@ -16,20 +16,20 @@ func WithFactory(serverFactory ServerFactory, args mapof.Any, Handler func(facto
 	const location = "consumer.WithFactory"
 
 	// Get the host argument from the map
-	host := args.GetString("host")
-	host = domainTools.NameOnly(host)
+	hostname := args.GetString("host")
+	hostname = domainTools.NameOnly(hostname)
 
-	if host == "" {
+	if hostname == "" {
 		// If we don't have a host, we'll never be able to run this task, so hard fail
 		return queue.Failure(derp.InternalError(location, "Missing 'host' argument"))
 	}
 
 	// Load the factory
-	factory, err := serverFactory.ByDomainName(host)
+	factory, err := serverFactory.ByHostname(hostname)
 
 	if err != nil {
 		// If we can't load the factory, maybe we can in the future, so try again.
-		return queue.Failure(derp.Wrap(err, location, "Invalid 'host' argument.", host))
+		return queue.Failure(derp.Wrap(err, location, "Invalid 'host' argument.", hostname))
 	}
 
 	// Execute the handler with the Factory

@@ -17,7 +17,7 @@ func GetBlocks(serverFactory *server.Factory) func(model.Authorization, txn.GetB
 	return func(auth model.Authorization, t txn.GetBlocks) ([]object.Account, toot.PageInfo, error) {
 
 		// Get the Domain factory for this request
-		factory, err := serverFactory.ByDomainName(t.Host)
+		factory, err := serverFactory.ByHostname(t.Host)
 
 		if err != nil {
 			return []object.Account{}, toot.PageInfo{}, derp.Wrap(err, location, "Unrecognized Domain")

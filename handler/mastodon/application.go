@@ -18,7 +18,7 @@ func PostApplication(serverFactory *server.Factory) func(model.Authorization, tx
 	return func(authorization model.Authorization, t txn.PostApplication) (object.Application, error) {
 
 		// Get the domain factory for this request
-		factory, err := serverFactory.ByDomainName(t.Host)
+		factory, err := serverFactory.ByHostname(t.Host)
 
 		if err != nil {
 			return object.Application{}, derp.Wrap(err, location, "Unrecognized Domain")
@@ -49,7 +49,7 @@ func GetApplication_VerifyCredentials(serverFactory *server.Factory) func(model.
 	return func(auth model.Authorization, t txn.GetApplication_VerifyCredentials) (object.Application, error) {
 
 		// Get the domain factory
-		factory, err := serverFactory.ByDomainName(t.Host)
+		factory, err := serverFactory.ByHostname(t.Host)
 
 		if err != nil {
 			return object.Application{}, derp.Wrap(err, location, "Unrecognized Domain")

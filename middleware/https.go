@@ -23,9 +23,9 @@ func HttpsRedirect(handler echo.HandlerFunc) echo.HandlerFunc {
 			return handler(context)
 		}
 
+		// Otherwise, permanently redirect all other requests to HTTPS
 		request.URL.Scheme = "https"
 
-		// Permanently redirect all other requests to HTTPS endpoint
-		return context.Redirect(http.StatusTemporaryRedirect, request.URL.String())
+		return context.Redirect(http.StatusPermanentRedirect, request.URL.String())
 	}
 }

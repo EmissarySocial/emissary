@@ -9,6 +9,6 @@ import (
 
 type ServerFactory interface {
 	RangeDomains() iter.Seq[*domain.Factory]
-	ByDomainName(domain string) (*domain.Factory, error)
+	ByHostname(hostname string) (*domain.Factory, error)
 	Queue() *queue.Queue
 }

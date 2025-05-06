@@ -24,6 +24,14 @@ func WatchStreams(ctx context.Context, collection data.Collection, result chan<-
 	cs, err := m.Watch(ctx, mongo.Pipeline{})
 
 	if err != nil {
+
+		// MongoDB error 40573 indicates that we're running on a single node, not a replica set.
+		if commandError, ok := err.(mongo.CommandError); ok {
+			if commandError.Code == 40573 {
+				return
+			}
+		}
+
 		derp.Report(derp.Wrap(err, "queries.WatchStreams", "Unable to open Mongodb Change Stream"))
 		return
 	}

@@ -395,29 +395,8 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 }
 
 /******************************************
- * Additional Helper Functions
+ * Start HTTP/HTTPS Servers
  ******************************************/
-
-// openLocalhostBrowser opens a browser window to the localhost URL
-// IF the server is configured to run on HTTP or HTTPS
-func openLocalhostBrowser(factory *server.Factory, options ...config.Option) {
-
-	// Get and modify the configuration
-	config := factory.Config()
-	config.With(options...)
-
-	if portString, ok := config.HTTPPortString(); ok {
-		time.Sleep(500 * time.Millisecond)
-
-		if err := browser.OpenURL("http://localhost" + portString + "/"); err != nil {
-			log.Debug().Err(err).Msg("Unable to open setup tool browser window. Visit http://localhost" + portString + "/ in your web browser to edit Emissary settings")
-		}
-
-	} else {
-		log.Error().Msg("Unable to open setup tool because no HTTP port is configured.")
-		os.Exit(0)
-	}
-}
 
 // startHTTP starts the HTTPS server using Let's Encrypt SSL certificates.
 // If the configured port is not available, it will wait one second and retry until it is
@@ -482,7 +461,33 @@ func startHTTP(factory *server.Factory, e *echo.Echo, options ...config.Option) 
 	log.Info().Msg("NO HTTP PORT CONFIGURED. Skipping HTTP server")
 }
 
+/******************************************
+ * Additional Helper Functions
+ ******************************************/
+
+// openLocalhostBrowser opens a browser window to the localhost URL
+// IF the server is configured to run on HTTP or HTTPS
+func openLocalhostBrowser(factory *server.Factory, options ...config.Option) {
+
+	// Get and modify the configuration
+	config := factory.Config()
+	config.With(options...)
+
+	if portString, ok := config.HTTPPortString(); ok {
+		time.Sleep(500 * time.Millisecond)
+
+		if err := browser.OpenURL("http://localhost" + portString + "/"); err != nil {
+			log.Debug().Err(err).Msg("Unable to open setup tool browser window. Visit http://localhost" + portString + "/ in your web browser to edit Emissary settings")
+		}
+
+	} else {
+		log.Error().Msg("Unable to open setup tool because no HTTP port is configured.")
+		os.Exit(0)
+	}
+}
+
 func waitForSigInt() {
+
 	// Listen to the OS SIGINT channel for an interrupt signal
 	// Use a buffered channel to avoid missing signals as recommended for signal.Notify
 	// https://golang.org/pkg/os/signal/#Notify
