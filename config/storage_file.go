@@ -22,6 +22,8 @@ type FileStorage struct {
 // NewFileStorage creates a fully initialized FileStorage instance
 func NewFileStorage(args *CommandLineArgs) FileStorage {
 
+	const location = "config.NewFileStorage"
+
 	fileLocation := strings.TrimPrefix(args.Location, "file://")
 
 	// Create a new FileStorage instance
@@ -86,8 +88,10 @@ func NewFileStorage(args *CommandLineArgs) FileStorage {
 
 		defer watcher.Close()
 
+		// log.Debug().Str("loc", location).Msg("*** Watching for changes to configuration file: " + fileLocation)
+
 		if err := watcher.Add(storage.location); err != nil {
-			derp.Report(derp.Wrap(err, "Unable to watch for changes to configuration: ", fileLocation))
+			derp.Report(derp.Wrap(err, location, "Unable to watch for changes to configuration: ", fileLocation))
 			return
 		}
 
@@ -104,11 +108,11 @@ func NewFileStorage(args *CommandLineArgs) FileStorage {
 					}
 					storage.updateChannel <- config
 				} else {
-					derp.Report(derp.Wrap(err, "config.FileStorage", "Error loading the updated config from ", fileLocation))
+					derp.Report(derp.Wrap(err, location, "Error loading the updated config from ", fileLocation))
 				}
 
 			case err := <-watcher.Errors:
-				derp.Report(derp.Wrap(err, "config.FileStorage", "Error watching for changes to ", fileLocation))
+				derp.Report(derp.Wrap(err, location, "Error watching for changes to ", fileLocation))
 			}
 		}
 
