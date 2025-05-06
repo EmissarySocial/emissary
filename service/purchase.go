@@ -180,6 +180,22 @@ func (service *Purchase) LoadByRemoteIDs(remoteUserID string, remoteProductID st
 	return service.Load(criteria, purchase)
 }
 
+// Sync calls CreateOrUpdate for each purchase in the list
+func (service *Purchase) Sync(purchases ...model.Purchase) error {
+
+	const location = "service.Purchase.Sync"
+
+	for _, purchase := range purchases {
+
+		if err := service.CreateOrUpdate(&purchase); err != nil {
+			return derp.Wrap(err, location, "Error loading or creating purchase")
+		}
+
+	}
+
+	return nil
+}
+
 func (service *Purchase) CreateOrUpdate(purchase *model.Purchase) error {
 
 	// Try to load the purchase by email address

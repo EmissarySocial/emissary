@@ -151,12 +151,12 @@ func (service *MerchantAccount) stripe_parseCheckoutResponse(queryParams url.Val
 }
 
 // stripe_handleWebhook processes product webhook events from Stripe
-func (service *MerchantAccount) stripe_parseCheckoutWebhook(header http.Header, body []byte, merchantAccount *model.MerchantAccount) (model.Guest, []model.Purchase, error) {
+func (service *MerchantAccount) stripe_parseCheckoutWebhook(header http.Header, body []byte, merchantAccount *model.MerchantAccount) (sliceof.Object[model.Purchase], error) {
 
 	const location = "service.MerchantAccount.stripe_handleWebhook"
 
-	var stripeEvent stripe.Event
-	var stripeSubscription stripe.Subscription
+	var event stripe.Event
+	var subscription stripe.Subscription
 
 	// Parse the request body into a Stripe event
 	switch merchantAccount.LiveMode {
@@ -164,8 +164,8 @@ func (service *MerchantAccount) stripe_parseCheckoutWebhook(header http.Header, 
 	// In TEST mode, just unmarshal the body directly
 	case false:
 
-		if err := json.Unmarshal(body, &stripeEvent); err != nil {
-			return model.Guest{}, nil, derp.Wrap(err, location, "Error unmarshalling webhook stripeEvent")
+		if err := json.Unmarshal(body, &event); err != nil {
+			return nil, derp.Wrap(err, location, "Error unmarshalling webhook event")
 		}
 
 	// In LIVE mode, use the Stripe library to validate event
@@ -175,47 +175,66 @@ func (service *MerchantAccount) stripe_parseCheckoutWebhook(header http.Header, 
 		vault, err := service.DecryptVault(merchantAccount, "webhookSecret")
 
 		if err != nil {
-			return model.Guest{}, nil, derp.Wrap(err, location, "Error decrypting webhook secret")
+			return nil, derp.Wrap(err, location, "Error decrypting webhook secret")
 		}
 
 		// Parse and validate the Webhook event
-		stripeEvent, err = webhook.ConstructEvent(body, header.Get("Stripe-Signature"), vault.GetString("webhookSecret"))
+		event, err = webhook.ConstructEvent(body, header.Get("Stripe-Signature"), vault.GetString("webhookSecret"))
 
 		if err != nil {
-			return model.Guest{}, nil, derp.Wrap(err, location, "Error parsing webhook event")
+			return nil, derp.Wrap(err, location, "Error parsing webhook event")
 		}
 	}
 
+	// Filter webhooks for customer.subscription events only
+	switch event.Type {
+	case "customer.subscription.created":
+	case "customer.subscription.updated":
+	case "customer.subscription.deleted":
+	case "customer.subscription.paused":
+	case "customer.subscription.resumed":
+
+	default:
+		return nil, derp.NotImplementedError(location, event.Type)
+	}
+
 	// Unpack the Product from the Webhook event
-	if err := json.Unmarshal(stripeEvent.Data.Raw, &stripeSubscription); err != nil {
-		return model.Guest{}, nil, derp.Wrap(err, location, "Error unmarshalling product data")
+	if err := json.Unmarshal(event.Data.Raw, &subscription); err != nil {
+		return nil, derp.Wrap(err, location, "Error unmarshalling product data")
 	}
 
 	// Map products from the Webhook into Purchases
-	return service.stripe_mapSubscriptions(merchantAccount, &stripeSubscription)
+	_, purchases, err := service.stripe_mapSubscriptions(merchantAccount, &subscription)
+
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Error mapping subscriptions")
+	}
+
+	// Success!
+	return purchases, nil
 }
 
-func (service *MerchantAccount) stripe_mapSubscriptions(merchantAccount *model.MerchantAccount, stripeSubscription *stripe.Subscription) (model.Guest, []model.Purchase, error) {
+func (service *MerchantAccount) stripe_mapSubscriptions(merchantAccount *model.MerchantAccount, subscription *stripe.Subscription) (model.Guest, []model.Purchase, error) {
 
 	const location = "service.MerchantAccount.stripe_mapSubscriptions"
 
 	// NPE check: subscription.Customer must not be null
-	if stripeSubscription.Customer == nil {
+	if subscription.Customer == nil {
 		return model.Guest{}, nil, derp.BadRequestError(location, "Invalid Customer", "The customer value must not be null")
 	}
 
 	// NPE check: subscription.Items must not be null
-	if stripeSubscription.Items == nil {
+	if subscription.Items == nil {
 		return model.Guest{}, nil, derp.BadRequestError(location, "Invalid Subscription", "Stripe Subscription cannot be null")
 	}
 
 	// Length Check: must have at least one item in the subscription
-	if len(stripeSubscription.Items.Data) == 0 {
+	if len(subscription.Items.Data) == 0 {
 		return model.Guest{}, nil, derp.BadRequestError(location, "Invalid Subscription", "Sripe Subscription must have at least one item")
 	}
 
 	// Load Stripe Customer record from the remote API
-	customer, err := service.stripe_getCustomer(merchantAccount, stripeSubscription.Customer.ID)
+	customer, err := service.stripe_getCustomer(merchantAccount, subscription.Customer.ID)
 
 	if err != nil {
 		return model.Guest{}, nil, derp.Wrap(err, location, "Error loading customer from Stripe")
@@ -229,9 +248,9 @@ func (service *MerchantAccount) stripe_mapSubscriptions(merchantAccount *model.M
 	}
 
 	// Create/Update Purchase records for each "price" line item in the product
-	purchases := make(sliceof.Object[model.Purchase], 0, len(stripeSubscription.Items.Data))
+	purchases := make(sliceof.Object[model.Purchase], 0, len(subscription.Items.Data))
 
-	for _, item := range stripeSubscription.Items.Data {
+	for _, item := range subscription.Items.Data {
 
 		// NPTE Check: item
 		if item == nil {
@@ -257,13 +276,13 @@ func (service *MerchantAccount) stripe_mapSubscriptions(merchantAccount *model.M
 
 		purchase.RemoteGuestID = guest.RemoteIDs[merchantAccount.Type]
 		purchase.RemoteProductID = item.Price.ID
-		purchase.RemotePurchaseID = stripeSubscription.ID
+		purchase.RemotePurchaseID = subscription.ID
 
-		purchase.StartDate = stripeSubscription.StartDate
-		purchase.EndDate = stripeSubscription.CurrentPeriodEnd
+		purchase.StartDate = subscription.StartDate
+		purchase.EndDate = subscription.CurrentPeriodEnd
 		purchase.RecurringType = model.ProductRecurringTypeOnetime
 
-		switch stripeSubscription.Status {
+		switch subscription.Status {
 
 		case "active", "trialing", "incomplete", "past_due", "unpaid":
 			purchase.StateID = model.PurchaseStateActive

@@ -67,6 +67,7 @@ type Factory struct {
 	followerService        service.Follower
 	followingService       service.Following
 	groupService           service.Group
+	guestService           service.Guest
 	inboxService           service.Inbox
 	jwtService             service.JWT
 	locatorService         service.Locator
@@ -145,6 +146,7 @@ func NewFactory(domain config.Domain, port string, providers []config.Provider, 
 	factory.followerService = service.NewFollower()
 	factory.followingService = service.NewFollowing()
 	factory.groupService = service.NewGroup()
+	factory.guestService = service.NewGuest()
 	factory.inboxService = service.NewInbox()
 	factory.jwtService = service.NewJWT()
 	factory.locatorService = service.NewLocator()
@@ -307,6 +309,10 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.collection(CollectionGroup),
 		)
 
+		factory.guestService.Refresh(
+			factory.collection(CollectionGuest),
+		)
+
 		// Populate Inbox Service
 		factory.inboxService.Refresh(
 			factory.collection(CollectionInbox),
@@ -343,6 +349,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		factory.merchantAccountService.Refresh(
 			factory.collection(CollectionMerchantAccount),
 			factory.JWT(),
+			factory.Guest(),
 			factory.Product(),
 			factory.Purchase(),
 			domain.MasterKey,
@@ -643,7 +650,7 @@ func (factory *Factory) Model(name string) (service.ModelService, error) {
 
 	}
 
-	return nil, derp.NewInternalError("domain.Factory.Model", "Unknown model", name)
+	return nil, derp.InternalError("domain.Factory.Model", "Unknown model", name)
 }
 
 func (factory *Factory) ActivityStream() *service.ActivityStream {
@@ -698,6 +705,11 @@ func (factory *Factory) Geocode() service.Geocode {
 // Group returns a fully populated Group service
 func (factory *Factory) Group() *service.Group {
 	return &factory.groupService
+}
+
+// Guest returns a fully populated Guest service
+func (factory *Factory) Guest() *service.Guest {
+	return &factory.guestService
 }
 
 // Inbox returns a fully populated Inbox service

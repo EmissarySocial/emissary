@@ -24,6 +24,9 @@ const CollectionFollowing = "Following"
 // CollectionGroup is the name of the database collection where Group records are stored
 const CollectionGroup = "Group"
 
+// CollectionGuest is the name of the database collection where Guest records are stored
+const CollectionGuest = "Guest"
+
 // CollectionInbox is the database colleciton where user's Inbox records are stored
 const CollectionInbox = "Inbox"
 

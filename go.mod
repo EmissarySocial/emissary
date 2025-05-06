@@ -6,28 +6,28 @@ require (
 	github.com/PuerkitoBio/goquery v1.10.3
 	github.com/aws/aws-sdk-go v1.55.7
 	github.com/benpate/color v0.1.0
-	github.com/benpate/data v0.29.1
-	github.com/benpate/data-mock v0.29.1
-	github.com/benpate/data-mongo v0.30.0
+	github.com/benpate/data v0.30.0
+	github.com/benpate/data-mock v0.30.0
+	github.com/benpate/data-mongo v0.30.1
 	github.com/benpate/derp v0.32.2
-	github.com/benpate/digit v0.13.4
-	github.com/benpate/digital-dome v0.2.4
-	github.com/benpate/domain v0.2.4
-	github.com/benpate/exp v0.8.4
-	github.com/benpate/exp-builder v0.10.0
-	github.com/benpate/form v0.23.2
-	github.com/benpate/hannibal v0.12.2
-	github.com/benpate/html v0.16.11
+	github.com/benpate/digit v0.13.5
+	github.com/benpate/digital-dome v0.2.5
+	github.com/benpate/domain v0.2.5
+	github.com/benpate/exp v0.8.5
+	github.com/benpate/exp-builder v0.10.1
+	github.com/benpate/form v0.23.4
+	github.com/benpate/hannibal v0.12.3
+	github.com/benpate/html v0.16.12
 	github.com/benpate/icon v0.4.0
-	github.com/benpate/mediaserver v0.15.3
-	github.com/benpate/re v0.3.1
-	github.com/benpate/remote v0.17.2
-	github.com/benpate/rosetta v0.25.5
-	github.com/benpate/sherlock v0.8.9
+	github.com/benpate/mediaserver v0.15.4
+	github.com/benpate/re v0.3.2
+	github.com/benpate/remote v0.17.3
+	github.com/benpate/rosetta v0.25.7
+	github.com/benpate/sherlock v0.8.10
 	github.com/benpate/steranko v0.21.1
-	github.com/benpate/table v0.7.1
+	github.com/benpate/table v0.7.3
 	github.com/benpate/toot v0.3.0
-	github.com/benpate/turbine v0.3.0
+	github.com/benpate/turbine v0.3.1
 	github.com/codingsince1985/geo-golang v1.8.5
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/davidscottmills/goeditorjs v1.0.0
@@ -62,9 +62,9 @@ require (
 	github.com/yuin/goldmark-highlighting/v2 v2.0.0-20230729083705-37449abec8cc
 	go.abhg.dev/goldmark/anchor v0.2.0
 	go.mongodb.org/mongo-driver v1.17.3
-	golang.org/x/crypto v0.37.0
-	golang.org/x/exp v0.0.0-20250408133849-7e4ce0ab07d0
-	golang.org/x/oauth2 v0.29.0
+	golang.org/x/crypto v0.38.0
+	golang.org/x/exp v0.0.0-20250506013437-ce4c2cf36ca6
+	golang.org/x/oauth2 v0.30.0
 	willnorris.com/go/microformats v1.2.0
 	willnorris.com/go/webmention v0.0.0-20220108183051-4a23794272f0
 )
@@ -119,11 +119,11 @@ require (
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/yeqown/reedsolomon v1.0.0 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
-	golang.org/x/image v0.26.0 // indirect
-	golang.org/x/net v0.39.0 // indirect
-	golang.org/x/sync v0.13.0 // indirect
-	golang.org/x/sys v0.32.0 // indirect
-	golang.org/x/text v0.24.0 // indirect
+	golang.org/x/image v0.27.0 // indirect
+	golang.org/x/net v0.40.0 // indirect
+	golang.org/x/sync v0.14.0 // indirect
+	golang.org/x/sys v0.33.0 // indirect
+	golang.org/x/text v0.25.0 // indirect
 	golang.org/x/time v0.11.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

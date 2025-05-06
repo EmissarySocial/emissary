@@ -309,37 +309,69 @@ func (service *MerchantAccount) GetCheckoutURL(merchantAccount *model.MerchantAc
 		return service.stripe_getCheckoutURL(merchantAccount, product, returnURL)
 	}
 
-	return "", derp.InternalError("service.MerchantAccount.GetCheckoutURL", "Invalid MerchantAccount Type", merchantAccount.Type)
+	return "", derp.BadRequestError("service.MerchantAccount.GetCheckoutURL", "Invalid MerchantAccount Type", merchantAccount.Type)
 }
 
-func (service *MerchantAccount) ParseCheckoutResponse(queryParams url.Values, merchantAccount *model.MerchantAccount) (model.Guest, sliceof.Object[model.Purchase], error) {
+func (service *MerchantAccount) ParseCheckoutResponse(queryParams url.Values, merchantAccount *model.MerchantAccount) (model.Guest, error) {
+
+	const location = "service.MerchantAccount.ParseCheckoutResponse"
+
+	var guest model.Guest
+	var purchases sliceof.Object[model.Purchase]
+	var err error
 
 	switch merchantAccount.Type {
 
 	case model.MerchantAccountTypePayPal:
-		return service.paypal_parseCheckoutResponse(queryParams, merchantAccount)
+		guest, purchases, err = service.paypal_parseCheckoutResponse(queryParams, merchantAccount)
 
 	case model.MerchantAccountTypeStripe:
-		return service.stripe_parseCheckoutResponse(queryParams, merchantAccount)
+		guest, purchases, err = service.stripe_parseCheckoutResponse(queryParams, merchantAccount)
 	}
 
-	return model.Guest{}, nil, derp.InternalError("service.MerchantAccount.GetCheckoutResponse", "Invalid MerchantAccount Type", merchantAccount.Type)
+	if err != nil {
+		return model.Guest{}, derp.BadRequestError("service.MerchantAccount.GetCheckoutResponse", "Invalid MerchantAccount Type", merchantAccount.Type)
+	}
+
+	// Load/Create a purchase record(s)
+	if err := service.purchaseService.Sync(purchases...); err != nil {
+		return guest, derp.Wrap(err, location, "Error syncing purchase records")
+	}
+
+	return guest, nil
 }
 
-func (service *MerchantAccount) ParseCheckoutWebhook(header http.Header, body []byte, merchantAccount *model.MerchantAccount) (model.Guest, sliceof.Object[model.Purchase], error) {
+func (service *MerchantAccount) ParseCheckoutWebhook(header http.Header, body []byte, merchantAccount *model.MerchantAccount) error {
 
 	const location = "service.MerchantAccount.ParseCheckoutWebhook"
 
+	var purchases sliceof.Object[model.Purchase]
+	var err error
+
+	// Fan out to the appropriate MerchantAccount type
 	switch merchantAccount.Type {
 
 	case model.MerchantAccountTypePayPal:
-		return service.paypal_parseCheckoutWebhook(header, body, merchantAccount)
+		purchases, err = service.paypal_parseCheckoutWebhook(header, body, merchantAccount)
 
 	case model.MerchantAccountTypeStripe:
-		return service.stripe_parseCheckoutWebhook(header, body, merchantAccount)
+		purchases, err = service.stripe_parseCheckoutWebhook(header, body, merchantAccount)
+
+	default:
+		return derp.InternalError(location, "Invalid MerchantAccount Type", merchantAccount.Type)
 	}
 
-	return model.Guest{}, nil, derp.InternalError(location, "Invalid MerchantAccount Type", merchantAccount.Type)
+	if err != nil {
+		return derp.Wrap(err, location, "Error parsing webhook data")
+	}
+
+	// Sync the new/updated purchase record(s)
+	if err := service.purchaseService.Sync(purchases...); err != nil {
+		return derp.Wrap(err, location, "Error syncing purchase records")
+	}
+
+	// Done.
+	return nil
 }
 
 func (service *MerchantAccount) RefreshAPIKeys(merchantAccount *model.MerchantAccount) error {

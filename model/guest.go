@@ -2,6 +2,7 @@ package model
 
 import (
 	"github.com/benpate/data/journal"
+	"github.com/benpate/rosetta/mapof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -11,6 +12,7 @@ type Guest struct {
 	Name            string             `bson:"fullName"`        // Full name of the Guest
 	FediverseHandle string             `bson:"fediverseHandle"` // Fediverse username of the Guest (@user@server.social) used to send product notifications
 	EmailAddress    string             `bson:"emailAddress"`    // Email address of the Guest
+	RemoteIDs       mapof.String       `bson:"remoteIds"`       // Remote IDs of the Guest (e.g. PayPal, Stripe, etc.)
 
 	// Embed journal to track changes
 	journal.Journal `bson:",inline"`
@@ -35,22 +37,17 @@ func (guest Guest) Fields() []string {
 	}
 }
 
-func (guest *Guest) UpdateWith(other *Guest) bool {
+func (guest *Guest) Update(emailAddress string, merchantAccountType string, remoteID string) bool {
 
 	updated := false
 
-	if guest.Name != other.Name {
-		guest.Name = other.Name
+	if guest.EmailAddress != emailAddress {
+		guest.Name = emailAddress
 		updated = true
 	}
 
-	if guest.EmailAddress != other.EmailAddress {
-		guest.EmailAddress = other.EmailAddress
-		updated = true
-	}
-
-	if guest.FediverseHandle != other.FediverseHandle {
-		guest.FediverseHandle = other.FediverseHandle
+	if currentID := guest.RemoteIDs[merchantAccountType]; currentID != remoteID {
+		guest.RemoteIDs[merchantAccountType] = remoteID
 		updated = true
 	}
 
