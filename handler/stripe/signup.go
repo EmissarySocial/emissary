@@ -126,7 +126,7 @@ func finishWebhook(factory *domain.Factory, restrictedKey string, event stripe.E
 		// Set the user to "public" (if indicated by the Product metadata)
 		setPublic(&user, price.Product, true)
 
-	// Otherwise, CANCEL the user's product
+	// Otherwise, CANCEL the user's subscription
 	default:
 
 		// If the user doesn't exists, then we don't have to cancel their access here.
@@ -134,7 +134,7 @@ func finishWebhook(factory *domain.Factory, restrictedKey string, event stripe.E
 			return nil
 		}
 
-		// Since this product is no longer active, remove the user from the designated groups
+		// Since this subscription is no longer active, remove the user from the designated groups
 		removeGroups(factory, &user, price.Product, "add_groups")
 
 		// Set the user to "private" (if indicated by the Product metadata)
