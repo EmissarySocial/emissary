@@ -4,6 +4,7 @@ import (
 	"io/fs"
 	"net/url"
 	"os"
+	"slices"
 
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/benpate/derp"
@@ -184,31 +185,45 @@ func (filesystem *Filesystem) Watch(folder mapof.String, changes chan<- bool, do
 // watchOS watches a folder on the local filesystem for changes
 func (filesystem *Filesystem) watchOS(uri string, changes chan<- bool, done <-chan channel.Done) error {
 
+	const location = "service.Filesystem.watchOS"
+
 	// Get all entries in the directory
 	entries, err := os.ReadDir(uri)
 
 	if err != nil {
-		return derp.Wrap(err, "service.Filesystem.watchFile", "Error reading directory", uri)
+		return derp.Wrap(err, location, "Error reading directory", uri)
 	}
 
 	// Create a new directory watcher
 	watcher, err := fsnotify.NewWatcher()
 
 	if err != nil {
-		return derp.Wrap(err, "service.Filesystem.watchFile", "Error creating watcher", uri)
+		return derp.Wrap(err, location, "Error creating watcher", uri)
 	}
 
-	// Watch the top-level director
+	// Watch the top-level directory
+	// log.Debug().Str("loc", location).Msg("*** Watching for changes to directory: " + uri)
+
 	if err := watcher.Add(uri); err != nil {
-		return derp.Wrap(err, "service.Filesystem.watchFile", "Error watching directory", uri)
+		return derp.Wrap(err, location, "Error watching directory", uri)
 	}
 
-	// Watch all sub-directories
+	// Do not watch these directories
+	ignored := []string{".git", ".gitignore", ".DS_Store"}
+
+	// Watch sub-directories
 	for _, entry := range entries {
-		if entry.IsDir() {
-			if err := filesystem.watchOS(uri+"/"+entry.Name(), changes, done); err != nil {
-				derp.Report(derp.Wrap(err, "service.Filesystem.watchFile", "Error watching sub-directory", uri+"/"+entry.Name()))
-			}
+
+		if !entry.IsDir() {
+			continue
+		}
+
+		if slices.Contains(ignored, entry.Name()) {
+			continue
+		}
+
+		if err := filesystem.watchOS(uri+"/"+entry.Name(), changes, done); err != nil {
+			derp.Report(derp.Wrap(err, location, "Error watching sub-directory", uri+"/"+entry.Name()))
 		}
 	}
 
