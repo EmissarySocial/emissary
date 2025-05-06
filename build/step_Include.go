@@ -6,14 +6,14 @@ import (
 	"github.com/benpate/derp"
 )
 
-// StepDo is a Step that executes another action within this context.
-type StepDo struct {
+// StepInclude is a Step that executes another action within this context.
+type StepInclude struct {
 	Action string
 }
 
-func (step StepDo) Get(builder Builder, buffer io.Writer) PipelineBehavior {
+func (step StepInclude) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 
-	const location = "build.StepDo.Get"
+	const location = "build.StepInclude.Get"
 
 	action, ok := builder.actions()[step.Action]
 
@@ -26,9 +26,9 @@ func (step StepDo) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 }
 
 // Post updates the stream with approved data from the request body.
-func (step StepDo) Post(builder Builder, buffer io.Writer) PipelineBehavior {
+func (step StepInclude) Post(builder Builder, buffer io.Writer) PipelineBehavior {
 
-	const location = "build.StepDo.Post"
+	const location = "build.StepInclude.Post"
 
 	action, ok := builder.actions()[step.Action]
 

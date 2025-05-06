@@ -99,7 +99,7 @@ func New(stepInfo mapof.Any) (Step, error) {
 		return NewIfCondition(stepInfo)
 
 	case "include":
-		return NewDo(stepInfo)
+		return NewInclude(stepInfo)
 
 	case "inline-error":
 		return NewInlineError(stepInfo)
@@ -158,6 +158,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "set-password":
 		return NewSetPassword(stepInfo)
 
+	case "set-products":
+		return NewSetProducts(stepInfo)
+
 	case "set-query-param":
 		return NewSetQueryParam(stepInfo)
 
@@ -169,9 +172,6 @@ func New(stepInfo mapof.Any) (Step, error) {
 
 	case "set-state":
 		return NewSetState(stepInfo)
-
-	case "set-products":
-		return NewSetProducts(stepInfo)
 
 	case "set-thumbnail":
 		return NewSetThumbnail(stepInfo)

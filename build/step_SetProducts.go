@@ -44,7 +44,7 @@ func (step StepSetProducts) Get(builder Builder, buffer io.Writer) PipelineBehav
 		return step.GetEmpty(iconFunc, buffer)
 	}
 
-	roles := streamBuilder._template.SubscribableRoles()
+	roles := streamBuilder._template.PurchasableRoles()
 
 	formDefinition := form.Element{
 		Type: "layout-tabs",
@@ -68,7 +68,7 @@ func (step StepSetProducts) Get(builder Builder, buffer io.Writer) PipelineBehav
 
 	// Try to write form HTML
 	formHTML, err := form.Editor(
-		step.schema(streamBuilder._template.SubscribableRoles()),
+		step.schema(streamBuilder._template.PurchasableRoles()),
 		formDefinition,
 		streamBuilder._stream.Products,
 		builder.lookupProvider(),

@@ -47,9 +47,6 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.DeleteAttachments:
 		return StepDeleteAttachments(s)
 
-	case step.Do:
-		return StepDo(s)
-
 	case step.Dump:
 		return StepDump(s)
 
@@ -82,6 +79,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 
 	case step.IfCondition:
 		return StepIfCondition(s)
+
+	case step.Include:
+		return StepInclude(s)
 
 	case step.InlineError:
 		return StepInlineError(s)
@@ -134,6 +134,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.SetPassword:
 		return StepSetPassword(s)
 
+	case step.SetProducts:
+		return StepSetProducts(s)
+
 	case step.SetQueryParam:
 		return StepSetQueryParam(s)
 
@@ -148,9 +151,6 @@ func ExecutableStep(stepInfo step.Step) Step {
 
 	case step.SetState:
 		return StepSetState(s)
-
-	case step.SetProducts:
-		return StepSetProducts(s)
 
 	case step.SetThumbnail:
 		return StepSetThumbnail(s)
