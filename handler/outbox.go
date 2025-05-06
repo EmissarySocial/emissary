@@ -157,7 +157,7 @@ func getProfileAttachment(serverFactory *server.Factory, field string, filespec 
 		fieldValue, ok := user.GetStringOK(field)
 
 		if !ok {
-			return derp.New(derp.CodeInternalError, location, "Invalid attachment field.  This should never happen", field)
+			return derp.NewInternalError(location, "Invalid attachment field.  This should never happen", field)
 		}
 
 		filespec.Filename = fieldValue

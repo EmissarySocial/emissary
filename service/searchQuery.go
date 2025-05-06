@@ -111,12 +111,12 @@ func (service *SearchQuery) Save(searchQuery *model.SearchQuery, note string) er
 	const location = "service.SearchQuery.Save"
 
 	if len(searchQuery.Query) > 128 {
-		return derp.New(derp.CodeBadRequestError, location, "SearchQuery.Original is too long", searchQuery)
+		return derp.NewBadRequestError(location, "SearchQuery.Original is too long", searchQuery)
 	}
 
 	// RULE: Do not allow global searches here.
 	if searchQuery.IsEmpty() {
-		return derp.New(derp.CodeBadRequestError, location, "SearchQuery is empty", searchQuery)
+		return derp.NewBadRequestError(location, "SearchQuery is empty", searchQuery)
 	}
 
 	// Normalize all slices and make query signature
