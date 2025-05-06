@@ -255,7 +255,7 @@ func PostStatus_Unfavourite(serverFactory *server.Factory) func(model.Authorizat
 func PostStatus_Reblog(serverFactory *server.Factory) func(model.Authorization, txn.PostStatus_Reblog) (object.Status, error) {
 
 	return func(auth model.Authorization, t txn.PostStatus_Reblog) (object.Status, error) {
-		return object.Status{}, derp.NotImplementedError("handler.mastodon.PostStatus_Reblog", "Not Implemented")
+		return object.Status{}, derp.NotImplementedError("handler.mastodon.PostStatus_Reblog")
 	}
 }
 
@@ -263,7 +263,7 @@ func PostStatus_Reblog(serverFactory *server.Factory) func(model.Authorization, 
 func PostStatus_Unreblog(serverFactory *server.Factory) func(model.Authorization, txn.PostStatus_Unreblog) (object.Status, error) {
 
 	return func(auth model.Authorization, t txn.PostStatus_Unreblog) (object.Status, error) {
-		return object.Status{}, derp.NotImplementedError("handler.mastodon.PostStatus_Unreblog", "Not Implemented")
+		return object.Status{}, derp.NotImplementedError("handler.mastodon.PostStatus_Unreblog")
 	}
 }
 
@@ -271,7 +271,7 @@ func PostStatus_Unreblog(serverFactory *server.Factory) func(model.Authorization
 func PostStatus_Bookmark(serverFactory *server.Factory) func(model.Authorization, txn.PostStatus_Bookmark) (object.Status, error) {
 
 	return func(auth model.Authorization, t txn.PostStatus_Bookmark) (object.Status, error) {
-		return object.Status{}, derp.NotImplementedError("handler.mastodon.PostStatus_Bookmark", "Not Implemented")
+		return object.Status{}, derp.NotImplementedError("handler.mastodon.PostStatus_Bookmark")
 	}
 }
 
@@ -279,7 +279,7 @@ func PostStatus_Bookmark(serverFactory *server.Factory) func(model.Authorization
 func PostStatus_Unbookmark(serverFactory *server.Factory) func(model.Authorization, txn.PostStatus_Unbookmark) (object.Status, error) {
 
 	return func(auth model.Authorization, t txn.PostStatus_Unbookmark) (object.Status, error) {
-		return object.Status{}, derp.NotImplementedError("handler.mastodon.PostStatus_Unbookmark", "Not Implemented")
+		return object.Status{}, derp.NotImplementedError("handler.mastodon.PostStatus_Unbookmark")
 	}
 }
 
@@ -349,7 +349,7 @@ func PostStatus_Unmute(serverFactory *server.Factory) func(model.Authorization, 
 func PostStatus_Pin(serverFactory *server.Factory) func(model.Authorization, txn.PostStatus_Pin) (object.Status, error) {
 
 	return func(auth model.Authorization, t txn.PostStatus_Pin) (object.Status, error) {
-		return object.Status{}, derp.NotImplementedError("handler.mastodon.PostStatus_Pin", "Not Implemented")
+		return object.Status{}, derp.NotImplementedError("handler.mastodon.PostStatus_Pin")
 	}
 }
 
@@ -357,7 +357,7 @@ func PostStatus_Pin(serverFactory *server.Factory) func(model.Authorization, txn
 func PostStatus_Unpin(serverFactory *server.Factory) func(model.Authorization, txn.PostStatus_Unpin) (object.Status, error) {
 
 	return func(auth model.Authorization, t txn.PostStatus_Unpin) (object.Status, error) {
-		return object.Status{}, derp.NotImplementedError("handler.mastodon.PostStatus_Unpin", "Not Implemented")
+		return object.Status{}, derp.NotImplementedError("handler.mastodon.PostStatus_Unpin")
 	}
 }
 

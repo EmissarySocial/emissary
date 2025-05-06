@@ -52,5 +52,5 @@ func GetValidateStreamToken(ctx *steranko.Context, factory *domain.Factory) erro
 		})
 	}
 
-	return derp.NotImplementedError("handler.GetValidateStreamToken", "Not implemented")
+	return derp.NotImplementedError("handler.GetValidateStreamToken")
 }

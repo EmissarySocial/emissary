@@ -20,13 +20,13 @@ func GetFollowRequests(serverFactory *server.Factory) func(model.Authorization, 
 func PostFollowRequest_Authorize(serverFactory *server.Factory) func(model.Authorization, txn.PostFollowRequest_Authorize) (object.Relationship, error) {
 
 	return func(model.Authorization, txn.PostFollowRequest_Authorize) (object.Relationship, error) {
-		return object.Relationship{}, derp.NotImplementedError("handler.mastodon.PostFollowRequest_Authorize", "Not implemented")
+		return object.Relationship{}, derp.NotImplementedError("handler.mastodon.PostFollowRequest_Authorize")
 	}
 }
 
 func PostFollowRequest_Reject(serverFactory *server.Factory) func(model.Authorization, txn.PostFollowRequest_Reject) (object.Relationship, error) {
 
 	return func(model.Authorization, txn.PostFollowRequest_Reject) (object.Relationship, error) {
-		return object.Relationship{}, derp.NotImplementedError("handler.mastodon.PostFollowRequest_Reject", "Not implemented")
+		return object.Relationship{}, derp.NotImplementedError("handler.mastodon.PostFollowRequest_Reject")
 	}
 }

@@ -398,7 +398,7 @@ func PostAccount_Pin(serverFactory *server.Factory) func(model.Authorization, tx
 	const location = "handler.mastodon_PostAccount_Pin"
 
 	return func(auth model.Authorization, t txn.PostAccount_Pin) (object.Relationship, error) {
-		return object.Relationship{}, derp.NotImplementedError(location, "Not implemented")
+		return object.Relationship{}, derp.NotImplementedError(location)
 	}
 }
 
@@ -407,7 +407,7 @@ func PostAccount_Unpin(serverFactory *server.Factory) func(model.Authorization, 
 	const location = "handler.mastodon_PostAccount_Unpin"
 
 	return func(auth model.Authorization, t txn.PostAccount_Unpin) (object.Relationship, error) {
-		return object.Relationship{}, derp.NotImplementedError(location, "Not implemented")
+		return object.Relationship{}, derp.NotImplementedError(location)
 	}
 }
 
@@ -416,7 +416,7 @@ func PostAccount_Note(serverFactory *server.Factory) func(model.Authorization, t
 	const location = "handler.mastodon_PostAccount_Note"
 
 	return func(auth model.Authorization, t txn.PostAccount_Note) (object.Relationship, error) {
-		return object.Relationship{}, derp.NotImplementedError(location, "Not implemented")
+		return object.Relationship{}, derp.NotImplementedError(location)
 	}
 }
 
@@ -425,7 +425,7 @@ func GetAccount_Relationships(serverFactory *server.Factory) func(model.Authoriz
 	const location = "handler.mastodon_GetAccount_Relationships"
 
 	return func(auth model.Authorization, t txn.GetAccount_Relationships) ([]object.Relationship, error) {
-		return nil, derp.NotImplementedError(location, "Not implemented")
+		return nil, derp.NotImplementedError(location)
 	}
 }
 
@@ -434,7 +434,7 @@ func GetAccount_FamiliarFollowers(serverFactory *server.Factory) func(model.Auth
 	const location = "handler.mastodon_GetAccount_FamiliarFollowers"
 
 	return func(auth model.Authorization, t txn.GetAccount_FamiliarFollowers) (object.FamiliarFollowers, error) {
-		return nil, derp.NotImplementedError(location, "Not implemented")
+		return nil, derp.NotImplementedError(location)
 	}
 }
 
@@ -444,7 +444,7 @@ func GetAccount_Search(serverFactory *server.Factory) func(model.Authorization, 
 	const location = "handler.mastodon_GetAccount_Search"
 
 	return func(auth model.Authorization, t txn.GetAccount_Search) ([]object.Account, toot.PageInfo, error) {
-		return nil, toot.PageInfo{}, derp.NotImplementedError(location, "Not implemented")
+		return nil, toot.PageInfo{}, derp.NotImplementedError(location)
 	}
 }
 
@@ -480,6 +480,6 @@ func GetAccount_Lookup(serverFactory *server.Factory) func(model.Authorization, 
 		}
 
 		// Success.
-		return result, derp.NotImplementedError(location, "Not implemented")
+		return result, derp.NotImplementedError(location)
 	}
 }
