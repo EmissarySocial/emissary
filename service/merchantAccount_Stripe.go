@@ -143,7 +143,7 @@ func (service *MerchantAccount) stripe_parseCheckoutResponse(queryParams url.Val
 
 	// Verify that the TransactionID matches the value from the Checkout Session.
 	if transactionID != stripeCheckoutSession.ClientReferenceID {
-		return model.Guest{}, nil, derp.NewBadRequestError(location, "Invalid Transaction ID", "The transaction ID does not match the checkout session")
+		return model.Guest{}, nil, derp.BadRequestError(location, "Invalid Transaction ID", "The transaction ID does not match the checkout session")
 	}
 
 	// Map Stripe.ProductID(s) into Purchases
@@ -199,18 +199,19 @@ func (service *MerchantAccount) stripe_mapSubscriptions(merchantAccount *model.M
 
 	const location = "service.MerchantAccount.stripe_mapSubscriptions"
 
-	// NPE check: product.Customer
+	// NPE check: subscription.Customer must not be null
 	if stripeSubscription.Customer == nil {
-		return model.Guest{}, nil, derp.NewBadRequestError(location, "Invalid Customer", "The customer value must not be null")
+		return model.Guest{}, nil, derp.BadRequestError(location, "Invalid Customer", "The customer value must not be null")
 	}
 
-	// NPE check: product.Items
+	// NPE check: subscription.Items must not be null
 	if stripeSubscription.Items == nil {
-		return model.Guest{}, nil, derp.NewBadRequestError(location, "Invalid Subscription", "Stripe Subscription cannot be null")
+		return model.Guest{}, nil, derp.BadRequestError(location, "Invalid Subscription", "Stripe Subscription cannot be null")
 	}
 
+	// Length Check: must have at least one item in the subscription
 	if len(stripeSubscription.Items.Data) == 0 {
-		return model.Guest{}, nil, derp.NewBadRequestError(location, "Invalid Subscription", "Sripe Subscription must have at least one item")
+		return model.Guest{}, nil, derp.BadRequestError(location, "Invalid Subscription", "Sripe Subscription must have at least one item")
 	}
 
 	// Load Stripe Customer record from the remote API
@@ -220,14 +221,26 @@ func (service *MerchantAccount) stripe_mapSubscriptions(merchantAccount *model.M
 		return model.Guest{}, nil, derp.Wrap(err, location, "Error loading customer from Stripe")
 	}
 
+	// Load the Guest record that matches the Stripe Customer
+	guest, err := service.guestService.LoadOrCreate(customer.Email, merchantAccount.Type, customer.ID)
+
+	if err != nil {
+		return model.Guest{}, nil, derp.Wrap(err, location, "Error loading/creating guest by email", customer.Email)
+	}
+
 	// Create/Update Purchase records for each "price" line item in the product
 	purchases := make(sliceof.Object[model.Purchase], 0, len(stripeSubscription.Items.Data))
 
 	for _, item := range stripeSubscription.Items.Data {
 
+		// NPTE Check: item
+		if item == nil {
+			return model.Guest{}, nil, derp.BadRequestError(location, "Invalid Product", "Item cannot be null")
+		}
+
 		// NPE Check: item.Price
 		if item.Price == nil {
-			return model.Guest{}, nil, derp.NewBadRequestError(location, "Invalid Product", "No price found in product item")
+			return model.Guest{}, nil, derp.BadRequestError(location, "Invalid Product", "No price found in product item")
 		}
 
 		// Try to find the Price in the database
@@ -238,18 +251,19 @@ func (service *MerchantAccount) stripe_mapSubscriptions(merchantAccount *model.M
 
 		// Create the new Purchase record
 		purchase := model.NewPurchase()
-		purchase.ProductID = product.ProductID
 		purchase.UserID = product.UserID
-		purchase.EmailAddress = customer.Email
-		purchase.RemoteUserID = customer.ID
-		purchase.AuthorizationCode = ""
+		purchase.GuestID = guest.GuestID
+		purchase.ProductID = product.ProductID
+
+		purchase.RemoteGuestID = guest.RemoteIDs[merchantAccount.Type]
 		purchase.RemoteProductID = item.Price.ID
-		purchase.RemotePurchaseID = stripeProduct.ID
-		purchase.StartDate = stripeProduct.StartDate
-		purchase.EndDate = stripeProduct.CurrentPeriodEnd
+		purchase.RemotePurchaseID = stripeSubscription.ID
+
+		purchase.StartDate = stripeSubscription.StartDate
+		purchase.EndDate = stripeSubscription.CurrentPeriodEnd
 		purchase.RecurringType = model.ProductRecurringTypeOnetime
 
-		switch stripeProduct.Status {
+		switch stripeSubscription.Status {
 
 		case "active", "trialing", "incomplete", "past_due", "unpaid":
 			purchase.StateID = model.PurchaseStateActive

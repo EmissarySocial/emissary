@@ -425,18 +425,18 @@ func (service *Stream) ObjectSave(object data.Object, note string) error {
 	if stream, ok := object.(*model.Stream); ok {
 		return service.Save(stream, note)
 	}
-	return derp.NewInternalError("service.Stream.ObjectSave", "Invalid object type", object)
+	return derp.InternalError("service.Stream.ObjectSave", "Invalid object type", object)
 }
 
 func (service *Stream) ObjectDelete(object data.Object, note string) error {
 	if stream, ok := object.(*model.Stream); ok {
 		return service.Delete(stream, note)
 	}
-	return derp.NewInternalError("service.Stream.ObjectDelete", "Invalid object type", object)
+	return derp.InternalError("service.Stream.ObjectDelete", "Invalid object type", object)
 }
 
 func (service *Stream) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.NewUnauthorizedError("service.Stream", "Not Authorized")
+	return derp.UnauthorizedError("service.Stream", "Not Authorized")
 }
 
 func (service *Stream) Schema() schema.Schema {
@@ -564,7 +564,7 @@ func (service *Stream) LoadByURL(streamURL string, result *model.Stream) error {
 func (service *Stream) LoadParent(stream *model.Stream, parent *model.Stream) error {
 
 	if !stream.HasParent() {
-		return derp.NewNotFoundError("service.Stream.LoadParent", "Stream does not have a parent")
+		return derp.NotFoundError("service.Stream.LoadParent", "Stream does not have a parent")
 	}
 
 	if err := service.LoadByID(stream.ParentID, parent); err != nil {
@@ -598,7 +598,7 @@ func (service *Stream) LoadWithOptions(criteria exp.Expression, result *model.St
 		return nil
 	}
 
-	return derp.NewNotFoundError(location, "collection is empty")
+	return derp.NotFoundError(location, "collection is empty")
 }
 
 func (service *Stream) LoadFirstSibling(parentID primitive.ObjectID, result *model.Stream) error {
@@ -665,7 +665,7 @@ func (service *Stream) SetLocationTop(template *model.Template, stream *model.St
 
 	// RULE: Template must be allowed in the Top
 	if !template.CanBeContainedBy("top") {
-		return derp.NewBadRequestError("service.Stream.SetLocationTop", "Template cannot be contained by 'top'", template)
+		return derp.BadRequestError("service.Stream.SetLocationTop", "Template cannot be contained by 'top'", template)
 	}
 
 	// Set values in the Stream
@@ -684,12 +684,12 @@ func (service *Stream) SetLocationOutbox(template *model.Template, stream *model
 
 	// RULE: Valid User is Required
 	if userID.IsZero() {
-		return derp.NewUnauthorizedError(location, "User ID is required")
+		return derp.UnauthorizedError(location, "User ID is required")
 	}
 
 	// RULE: Template must be allowed in the Outbox
 	if !template.CanBeContainedBy("outbox") {
-		return derp.NewBadRequestError(location, "Template cannot be contained by 'outbox'", template)
+		return derp.BadRequestError(location, "Template cannot be contained by 'outbox'", template)
 	}
 
 	// Set values in the Stream
@@ -716,7 +716,7 @@ func (service *Stream) SetLocationChild(template *model.Template, stream *model.
 
 	// RULE: Template must be allowed in the Parent
 	if !template.CanBeContainedBy(parentTemplate.TemplateRole) {
-		return derp.NewBadRequestError(location, "Template cannot be contained by parent", template, parent)
+		return derp.BadRequestError(location, "Template cannot be contained by parent", template, parent)
 	}
 
 	// Set values in the Stream
@@ -814,7 +814,7 @@ func (service *Stream) ParsePath(uri *url.URL) (string, string, error) {
 
 	// Verify the URL matches this service
 	if domain.AddProtocol(uri.Host) != service.host {
-		return "", "", derp.NewBadRequestError("service.Stream.LoadByURL", "Hostname must match this server", uri.String())
+		return "", "", derp.BadRequestError("service.Stream.LoadByURL", "Hostname must match this server", uri.String())
 	}
 
 	// Load the Stream using the token
@@ -921,12 +921,12 @@ func (service *Stream) UserCan(authorization *model.Authorization, stream *model
 	action, ok := template.Action(actionID)
 
 	if !ok {
-		return derp.NewBadRequestError(location, "Invalid Action", actionID)
+		return derp.BadRequestError(location, "Invalid Action", actionID)
 	}
 
 	// Check permissions on the action
 	if !action.UserCan(stream, authorization) {
-		return derp.NewUnauthorizedError(location, "User is not authorized to perform this action", actionID)
+		return derp.UnauthorizedError(location, "User is not authorized to perform this action", actionID)
 	}
 
 	// UserCan!

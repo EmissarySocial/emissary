@@ -39,7 +39,7 @@ func PostInbox(serverFactory *server.Factory) echo.HandlerFunc {
 
 		// RULE: Only public users can be queried
 		if !user.IsPublic {
-			return derp.NewNotFoundError(location, "")
+			return derp.NotFoundError(location, "")
 		}
 
 		// Retrieve the activity from the request body

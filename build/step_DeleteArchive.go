@@ -23,7 +23,7 @@ func (step StepDeleteArchive) Post(builder Builder, _ io.Writer) PipelineBehavio
 	streamBuilder, isStreamBuilder := builder.(Stream)
 
 	if !isStreamBuilder {
-		return Halt().WithError(derp.NewBadRequestError("build.StepGetArchive.Get", "The `export` step can only be called on a `Stream` builder"))
+		return Halt().WithError(derp.BadRequestError("build.StepGetArchive.Get", "The `export` step can only be called on a `Stream` builder"))
 	}
 
 	streamArchiveService := streamBuilder.factory().StreamArchive()

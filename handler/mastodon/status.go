@@ -52,7 +52,7 @@ func PostStatus(serverFactory *server.Factory) func(model.Authorization, txn.Pos
 		// Verify user permissions
 		streamService := factory.Stream()
 		if err := streamService.UserCan(&authorization, &stream, "create"); err != nil {
-			return object.Status{}, derp.NewForbiddenError(location, "User is not authorized to create this stream", stream, authorization)
+			return object.Status{}, derp.ForbiddenError(location, "User is not authorized to create this stream", stream, authorization)
 		}
 
 		// Save the stream
@@ -85,7 +85,7 @@ func GetStatus(serverFactory *server.Factory) func(model.Authorization, txn.GetS
 
 		// Validate permissions
 		if err := streamService.UserCan(&authorization, &stream, "view"); err != nil {
-			return object.Status{}, derp.NewForbiddenError(location, "User is not authorized to delete this stream")
+			return object.Status{}, derp.ForbiddenError(location, "User is not authorized to delete this stream")
 		}
 
 		// Return the value
@@ -107,7 +107,7 @@ func DeleteStatus(serverFactory *server.Factory) func(model.Authorization, txn.D
 		}
 
 		if err := streamService.UserCan(&authorization, &stream, "delete"); err != nil {
-			return struct{}{}, derp.NewForbiddenError(location, "User is not authorized to delete this stream")
+			return struct{}{}, derp.ForbiddenError(location, "User is not authorized to delete this stream")
 		}
 
 		if err := streamService.Delete(&stream, "Deleted via Mastodon API"); err != nil {
@@ -255,7 +255,7 @@ func PostStatus_Unfavourite(serverFactory *server.Factory) func(model.Authorizat
 func PostStatus_Reblog(serverFactory *server.Factory) func(model.Authorization, txn.PostStatus_Reblog) (object.Status, error) {
 
 	return func(auth model.Authorization, t txn.PostStatus_Reblog) (object.Status, error) {
-		return object.Status{}, derp.NewBadRequestError("handler.mastodon.PostStatus_Reblog", "Not Implemented")
+		return object.Status{}, derp.NotImplementedError("handler.mastodon.PostStatus_Reblog", "Not Implemented")
 	}
 }
 
@@ -263,7 +263,7 @@ func PostStatus_Reblog(serverFactory *server.Factory) func(model.Authorization, 
 func PostStatus_Unreblog(serverFactory *server.Factory) func(model.Authorization, txn.PostStatus_Unreblog) (object.Status, error) {
 
 	return func(auth model.Authorization, t txn.PostStatus_Unreblog) (object.Status, error) {
-		return object.Status{}, derp.NewBadRequestError("handler.mastodon.PostStatus_Unreblog", "Not Implemented")
+		return object.Status{}, derp.NotImplementedError("handler.mastodon.PostStatus_Unreblog", "Not Implemented")
 	}
 }
 
@@ -271,7 +271,7 @@ func PostStatus_Unreblog(serverFactory *server.Factory) func(model.Authorization
 func PostStatus_Bookmark(serverFactory *server.Factory) func(model.Authorization, txn.PostStatus_Bookmark) (object.Status, error) {
 
 	return func(auth model.Authorization, t txn.PostStatus_Bookmark) (object.Status, error) {
-		return object.Status{}, derp.NewBadRequestError("handler.mastodon.PostStatus_Bookmark", "Not Implemented")
+		return object.Status{}, derp.NotImplementedError("handler.mastodon.PostStatus_Bookmark", "Not Implemented")
 	}
 }
 
@@ -279,7 +279,7 @@ func PostStatus_Bookmark(serverFactory *server.Factory) func(model.Authorization
 func PostStatus_Unbookmark(serverFactory *server.Factory) func(model.Authorization, txn.PostStatus_Unbookmark) (object.Status, error) {
 
 	return func(auth model.Authorization, t txn.PostStatus_Unbookmark) (object.Status, error) {
-		return object.Status{}, derp.NewBadRequestError("handler.mastodon.PostStatus_Unbookmark", "Not Implemented")
+		return object.Status{}, derp.NotImplementedError("handler.mastodon.PostStatus_Unbookmark", "Not Implemented")
 	}
 }
 
@@ -349,7 +349,7 @@ func PostStatus_Unmute(serverFactory *server.Factory) func(model.Authorization, 
 func PostStatus_Pin(serverFactory *server.Factory) func(model.Authorization, txn.PostStatus_Pin) (object.Status, error) {
 
 	return func(auth model.Authorization, t txn.PostStatus_Pin) (object.Status, error) {
-		return object.Status{}, derp.NewBadRequestError("handler.mastodon.PostStatus_Pin", "Not Implemented")
+		return object.Status{}, derp.NotImplementedError("handler.mastodon.PostStatus_Pin", "Not Implemented")
 	}
 }
 
@@ -357,7 +357,7 @@ func PostStatus_Pin(serverFactory *server.Factory) func(model.Authorization, txn
 func PostStatus_Unpin(serverFactory *server.Factory) func(model.Authorization, txn.PostStatus_Unpin) (object.Status, error) {
 
 	return func(auth model.Authorization, t txn.PostStatus_Unpin) (object.Status, error) {
-		return object.Status{}, derp.NewBadRequestError("handler.mastodon.PostStatus_Unpin", "Not Implemented")
+		return object.Status{}, derp.NotImplementedError("handler.mastodon.PostStatus_Unpin", "Not Implemented")
 	}
 }
 

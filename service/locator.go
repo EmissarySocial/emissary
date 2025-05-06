@@ -61,7 +61,7 @@ func (service *Locator) GetWebFingerResult(resource string) (digit.Resource, err
 
 	}
 
-	return digit.Resource{}, derp.NewBadRequestError(location, "Invalid Resource", resource)
+	return digit.Resource{}, derp.BadRequestError(location, "Invalid Resource", resource)
 }
 
 // GetObjectFromURL parses a URL and verifies the existence of the referenced object.
@@ -97,7 +97,7 @@ func (service *Locator) GetObjectFromURL(value string) (string, primitive.Object
 	}
 
 	// Fall through is failure.  Feel bad.
-	return "", primitive.NilObjectID, derp.NewBadRequestError(location, "Invalid Object Type", objectType)
+	return "", primitive.NilObjectID, derp.BadRequestError(location, "Invalid Object Type", objectType)
 }
 
 // locateObjectFromURL parses a URL, determines what type of object it is,

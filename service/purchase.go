@@ -145,18 +145,18 @@ func (service *Purchase) ObjectSave(object data.Object, comment string) error {
 	if purchase, ok := object.(*model.Purchase); ok {
 		return service.Save(purchase, comment)
 	}
-	return derp.NewInternalError("service.Purchase.ObjectSave", "Invalid Object Type", object)
+	return derp.InternalError("service.Purchase.ObjectSave", "Invalid Object Type", object)
 }
 
 func (service *Purchase) ObjectDelete(object data.Object, comment string) error {
 	if purchase, ok := object.(*model.Purchase); ok {
 		return service.Delete(purchase, comment)
 	}
-	return derp.NewInternalError("service.Purchase.ObjectDelete", "Invalid Object Type", object)
+	return derp.InternalError("service.Purchase.ObjectDelete", "Invalid Object Type", object)
 }
 
 func (service *Purchase) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.NewUnauthorizedError("service.Purchase.ObjectUserCan", "Not Authorized")
+	return derp.UnauthorizedError("service.Purchase.ObjectUserCan", "Not Authorized")
 }
 
 func (service *Purchase) Schema() schema.Schema {
@@ -186,8 +186,8 @@ func (service *Purchase) CreateOrUpdate(purchase *model.Purchase) error {
 	currentPurchase := model.NewPurchase()
 
 	// Try to find a current, matching purchase record
-	if err := service.LoadByRemoteIDs(purchase.RemoteUserID, purchase.RemoteProductID, purchase.RemotePurchaseID, &currentPurchase); !derp.NilOrNotFound(err) {
-		return derp.Wrap(err, "service.Purchase.CreateOrUpdate", "Error loading purchase by email", purchase.EmailAddress)
+	if err := service.LoadByRemoteIDs(purchase.RemoteGuestID, purchase.RemoteProductID, purchase.RemotePurchaseID, &currentPurchase); !derp.NilOrNotFound(err) {
+		return derp.Wrap(err, "service.Purchase.CreateOrUpdate", "Error loading purchase")
 	}
 
 	if changed := currentPurchase.UpdateWith(purchase); changed {

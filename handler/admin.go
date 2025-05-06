@@ -32,7 +32,7 @@ func buildAdmin(factoryManager *server.Factory, actionMethod build.ActionMethod)
 		sterankoContext := ctx.(*steranko.Context)
 
 		if !isOwner(sterankoContext.Authorization()) {
-			return derp.NewForbiddenError(location, "Unauthorized")
+			return derp.ForbiddenError(location, "Unauthorized")
 		}
 
 		// Try to get the factory from the Context
@@ -170,6 +170,6 @@ func buildAdmin_GetBuilder(factory *domain.Factory, ctx *steranko.Context, templ
 		return build.NewWebhook(factory, ctx.Request(), ctx.Response(), template, &webhook, actionID)
 
 	default:
-		return nil, derp.NewNotFoundError(location, "Template MODEL must be one of: 'rule', 'domain', 'syndication', 'group', 'stream', or 'user'", template.Model)
+		return nil, derp.NotFoundError(location, "Template MODEL must be one of: 'rule', 'domain', 'syndication', 'group', 'stream', or 'user'", template.Model)
 	}
 }

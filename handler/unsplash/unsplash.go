@@ -43,19 +43,19 @@ func GetPhoto(serverFactory *server.Factory) echo.HandlerFunc {
 		applicationName := unsplash.Data.GetString("applicationName")
 
 		if applicationName == "" {
-			return derp.NewNotFoundError(location, "Unsplash API ApplicationName cannot be empty", nil)
+			return derp.NotFoundError(location, "Unsplash API ApplicationName cannot be empty", nil)
 		}
 
 		accessKey := unsplash.Data.GetString("accessKey")
 
 		if accessKey == "" {
-			return derp.NewNotFoundError(location, "Unsplash API AccessKey cannot be empty", nil)
+			return derp.NotFoundError(location, "Unsplash API AccessKey cannot be empty", nil)
 		}
 
 		photoID := ctx.Param("photo")
 
 		if photoID == "" {
-			return derp.NewBadRequestError(location, "Photo ID is required", nil)
+			return derp.BadRequestError(location, "Photo ID is required", nil)
 		}
 
 		asJSON := false
@@ -108,19 +108,19 @@ func GetCollectionRandom(serverFactory *server.Factory) echo.HandlerFunc {
 		applicationName := unsplash.Data.GetString("applicationName")
 
 		if applicationName == "" {
-			return derp.NewNotFoundError(location, "Unsplash API ApplicationName cannot be empty", nil)
+			return derp.NotFoundError(location, "Unsplash API ApplicationName cannot be empty", nil)
 		}
 
 		accessKey := unsplash.Data.GetString("accessKey")
 
 		if accessKey == "" {
-			return derp.NewNotFoundError(location, "Unsplash API AccessKey cannot be empty", nil)
+			return derp.NotFoundError(location, "Unsplash API AccessKey cannot be empty", nil)
 		}
 
 		collectionID := ctx.Param("collection")
 
 		if collectionID == "" {
-			return derp.NewBadRequestError(location, "Photo ID is required", nil)
+			return derp.BadRequestError(location, "Photo ID is required", nil)
 		}
 
 		// Get the first 64 photos from the collection
@@ -135,7 +135,7 @@ func GetCollectionRandom(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		if len(photos) == 0 {
-			return derp.NewNotFoundError(location, "Collection is empty", collectionID)
+			return derp.NotFoundError(location, "Collection is empty", collectionID)
 		}
 
 		// Select a random photo from the collection

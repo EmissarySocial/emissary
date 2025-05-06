@@ -33,7 +33,7 @@ func (step StepSort) Post(builder Builder, _ io.Writer) PipelineBehavior {
 	// Collect form POST information
 	transaction, err := formdata.Parse(builder.request())
 	if err != nil {
-		return Halt().WithError(derp.NewBadRequestError(location, "Error binding body"))
+		return Halt().WithError(derp.BadRequestError(location, "Error binding body"))
 	}
 
 	// Locate the model service to use

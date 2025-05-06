@@ -17,11 +17,11 @@ func Domain(factory *server.Factory) echo.MiddlewareFunc {
 			domainFactory, err := factory.ByContext(ctx)
 
 			if err != nil {
-				return derp.NewForbiddenError("middleware.Domain", "Unrecognized domain", ctx.Request().URL.Hostname(), err)
+				return derp.ForbiddenError("middleware.Domain", "Unrecognized domain", ctx.Request().URL.Hostname(), err)
 			}
 
 			if domainFactory.Session == nil {
-				return derp.NewForbiddenError("middleware.Domain", "Database Not Configured for this Domain")
+				return derp.ForbiddenError("middleware.Domain", "Database Not Configured for this Domain")
 			}
 
 			return next(ctx)

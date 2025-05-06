@@ -39,7 +39,7 @@ func (step StepEditContent) Post(builder Builder, _ io.Writer) PipelineBehavior 
 	stream, ok := builder.object().(*model.Stream)
 
 	if !ok {
-		return Halt().WithError(derp.NewInternalError(location, "step: EditContent can only be used on a Stream"))
+		return Halt().WithError(derp.InternalError(location, "step: EditContent can only be used on a Stream"))
 	}
 
 	// Try to read the content from the request body

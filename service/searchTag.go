@@ -87,7 +87,7 @@ func (service *SearchTag) LoadWithOptions(criteria exp.Expression, searchTag *mo
 	}
 
 	if len(results) == 0 {
-		return derp.NewNotFoundError("service.SearchTag.LoadByName", "SearchTag not found", criteria)
+		return derp.NotFoundError("service.SearchTag.LoadByName", "SearchTag not found", criteria)
 	}
 
 	*searchTag = results[0]
@@ -163,18 +163,18 @@ func (service *SearchTag) ObjectSave(object data.Object, comment string) error {
 	if searchTag, ok := object.(*model.SearchTag); ok {
 		return service.Save(searchTag, comment)
 	}
-	return derp.NewInternalError("service.SearchTag.ObjectSave", "Invalid Object Type", object)
+	return derp.InternalError("service.SearchTag.ObjectSave", "Invalid Object Type", object)
 }
 
 func (service *SearchTag) ObjectDelete(object data.Object, comment string) error {
 	if searchTag, ok := object.(*model.SearchTag); ok {
 		return service.Delete(searchTag, comment)
 	}
-	return derp.NewInternalError("service.SearchTag.ObjectDelete", "Invalid Object Type", object)
+	return derp.InternalError("service.SearchTag.ObjectDelete", "Invalid Object Type", object)
 }
 
 func (service *SearchTag) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.NewUnauthorizedError("service.SearchTag", "Not Authorized")
+	return derp.UnauthorizedError("service.SearchTag", "Not Authorized")
 }
 
 func (service *SearchTag) Schema() schema.Schema {

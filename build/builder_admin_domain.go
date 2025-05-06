@@ -46,7 +46,7 @@ func NewDomain(factory Factory, request *http.Request, response http.ResponseWri
 
 	// Verify that the user is a Domain Owner
 	if !common._authorization.DomainOwner {
-		return Domain{}, derp.NewForbiddenError(location, "Must be domain owner to continue")
+		return Domain{}, derp.ForbiddenError(location, "Must be domain owner to continue")
 	}
 
 	// Create and return the Domain builder

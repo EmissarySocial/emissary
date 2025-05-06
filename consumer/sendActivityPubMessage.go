@@ -91,5 +91,5 @@ func getActivityPubActor(factory *domain.Factory, args mapof.Any) (outbox.Actor,
 	}
 
 	// Unknown.  Bork Bork.
-	return outbox.Actor{}, derp.NewInternalError(location, "Invalid actorType", args)
+	return outbox.Actor{}, derp.InternalError(location, "Invalid actorType", args)
 }

@@ -20,20 +20,20 @@ func GetNotifications(serverFactory *server.Factory) func(model.Authorization, t
 func GetNotification(serverFactory *server.Factory) func(model.Authorization, txn.GetNotification) (object.Notification, error) {
 
 	return func(model.Authorization, txn.GetNotification) (object.Notification, error) {
-		return object.Notification{}, derp.NewNotFoundError("handler.mastodon.GetNotification", "Not Implemented")
+		return object.Notification{}, derp.NotImplementedError("handler.mastodon.GetNotification", "Not Implemented")
 	}
 }
 
 func PostNotifications_Clear(serverFactory *server.Factory) func(model.Authorization, txn.PostNotifications_Clear) (object.Notification, error) {
 
 	return func(model.Authorization, txn.PostNotifications_Clear) (object.Notification, error) {
-		return object.Notification{}, derp.NewNotFoundError("handler.mastodon.PostNotification_Clear", "Not Implemented")
+		return object.Notification{}, derp.NotImplementedError("handler.mastodon.PostNotification_Clear", "Not Implemented")
 	}
 }
 
 func PostNotification_Dismiss(serverFactory *server.Factory) func(model.Authorization, txn.PostNotification_Dismiss) (object.Notification, error) {
 
 	return func(model.Authorization, txn.PostNotification_Dismiss) (object.Notification, error) {
-		return object.Notification{}, derp.NewNotFoundError("handler.mastodon.PostNotification_Dismiss", "Not Implemented")
+		return object.Notification{}, derp.NotImplementedError("handler.mastodon.PostNotification_Dismiss", "Not Implemented")
 	}
 }

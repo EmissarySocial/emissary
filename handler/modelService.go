@@ -24,7 +24,7 @@ func ModelService_RenderTemplate(serverFactory *server.Factory, ctx echo.Context
 	authorization := getAuthorization(ctx)
 
 	if !authorization.IsAuthenticated() {
-		return "", derp.NewUnauthorizedError(location, "You must be signed in to continue")
+		return "", derp.UnauthorizedError(location, "You must be signed in to continue")
 	}
 
 	// Get the model service
@@ -38,14 +38,14 @@ func ModelService_RenderTemplate(serverFactory *server.Factory, ctx echo.Context
 	criteria, err := builder.EvaluateAll(ctx.QueryParams())
 
 	if err != nil {
-		return "", derp.NewNotFoundError(location, "Cannot evaluate query parameters", err)
+		return "", derp.NotFoundError(location, "Cannot evaluate query parameters", err)
 	}
 
 	// Try to load the object from the database
 	object, err := modelService.ObjectLoad(criteria)
 
 	if err != nil {
-		return "", derp.NewNotFoundError(location, "Cannot load object", err)
+		return "", derp.NotFoundError(location, "Cannot load object", err)
 	}
 
 	// Verify Permissions

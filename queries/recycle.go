@@ -16,7 +16,7 @@ func Recycle(session data.Session, collectionName string) error {
 	collection := mongoCollection(session.Collection(collectionName))
 
 	if collection == nil {
-		return derp.NewInternalError(location, "Collection must be a MongoDB collection")
+		return derp.InternalError(location, "Collection must be a MongoDB collection")
 	}
 
 	// Set a max timeout of 60 seconds to run this query

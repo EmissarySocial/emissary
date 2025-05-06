@@ -25,7 +25,7 @@ func (step StepSaveAndPublish) Post(builder Builder, _ io.Writer) PipelineBehavi
 	streamBuilder, ok := builder.(Stream)
 
 	if !ok {
-		return Halt().WithError(derp.NewInternalError(location, "Builder must be a StreamBuilder"))
+		return Halt().WithError(derp.InternalError(location, "Builder must be a StreamBuilder"))
 	}
 
 	factory := streamBuilder.factory()

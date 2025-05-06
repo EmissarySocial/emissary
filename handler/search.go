@@ -19,7 +19,7 @@ func IndexAllStreams(ctx *steranko.Context, factory *domain.Factory) error {
 	authorization := getAuthorization(ctx)
 
 	if !authorization.DomainOwner {
-		return derp.NewForbiddenError("handler.IndexAllStreams", "Only administrators can call this method")
+		return derp.ForbiddenError("handler.IndexAllStreams", "Only administrators can call this method")
 	}
 
 	// Create the Index task
@@ -44,7 +44,7 @@ func IndexAllUsers(ctx *steranko.Context, factory *domain.Factory) error {
 	authorization := getAuthorization(ctx)
 
 	if !authorization.DomainOwner {
-		return derp.NewForbiddenError("handler.IndexAllUsers", "Only administrators can call this method")
+		return derp.ForbiddenError("handler.IndexAllUsers", "Only administrators can call this method")
 	}
 
 	// Create the Index task
@@ -69,11 +69,11 @@ func PostSearchLookup(ctx *steranko.Context, factory *domain.Factory) error {
 	referer := ctx.Request().Header.Get("referer")
 
 	if referer == "" {
-		return derp.NewForbiddenError(location, "No referer", referer)
+		return derp.ForbiddenError(location, "No referer", referer)
 	}
 
 	if domainTools.NameOnly(referer) != factory.Hostname() {
-		return derp.NewForbiddenError(location, "Invalid referer", referer)
+		return derp.ForbiddenError(location, "Invalid referer", referer)
 	}
 
 	// Load the Stream from the database

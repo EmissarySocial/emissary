@@ -20,7 +20,7 @@ func Shuffle(ctx context.Context, collection data.Collection) error {
 	c := mongoCollection(collection)
 
 	if c == nil {
-		return derp.NewInternalError(location, "Collection must be a MongoDB collection")
+		return derp.InternalError(location, "Collection must be a MongoDB collection")
 	}
 
 	if err := shuffleA(ctx, c); err != nil {

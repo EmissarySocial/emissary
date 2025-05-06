@@ -41,17 +41,17 @@ func (req *OAuthUserTokenRequest) Validate(app OAuthClient) error {
 
 	// RULE: ClientID must match the application
 	if req.ClientID != app.ClientID.Hex() {
-		return derp.NewBadRequestError(location, "Invalid client_id", app, req)
+		return derp.BadRequestError(location, "Invalid client_id", app, req)
 	}
 
 	// RULE: ClientSecret must match the application
 	if req.ClientSecret != app.ClientSecret {
-		return derp.NewBadRequestError(location, "Invalid client_secret", app, req)
+		return derp.BadRequestError(location, "Invalid client_secret", app, req)
 	}
 
 	// RULE: Client must have at least one redirect_uri
 	if len(app.RedirectURIs) == 0 {
-		return derp.NewInternalError(location, "Client must have at least one redirect_uri")
+		return derp.InternalError(location, "Client must have at least one redirect_uri")
 	}
 
 	// RULE: If missing, use default value for RedirectURI
@@ -61,7 +61,7 @@ func (req *OAuthUserTokenRequest) Validate(app OAuthClient) error {
 
 	// RULE: Verify that redirect URI is valid
 	if !slice.Contains(app.RedirectURIs, req.RedirectURI) {
-		return derp.NewBadRequestError(location, "Invalid redirect_uri", app, req)
+		return derp.BadRequestError(location, "Invalid redirect_uri", app, req)
 	}
 
 	// RULE: If missing, use default value for Scope
@@ -72,7 +72,7 @@ func (req *OAuthUserTokenRequest) Validate(app OAuthClient) error {
 	// RULE: Verify that scope is valid
 	for _, scope := range req.Scopes() {
 		if !slice.Contains(app.Scopes, scope) {
-			return derp.NewBadRequestError(location, "Invalid scope", scope)
+			return derp.BadRequestError(location, "Invalid scope", scope)
 		}
 	}
 

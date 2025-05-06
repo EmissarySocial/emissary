@@ -37,7 +37,7 @@ func NewGroup(factory Factory, request *http.Request, response http.ResponseWrit
 
 	// Verify that the user is a Domain Owner
 	if !common._authorization.DomainOwner {
-		return Group{}, derp.NewForbiddenError(location, "Must be domain owner to continue")
+		return Group{}, derp.ForbiddenError(location, "Must be domain owner to continue")
 	}
 
 	// Return the Group builder

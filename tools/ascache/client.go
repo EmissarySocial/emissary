@@ -136,7 +136,7 @@ func (client *Client) Delete(url string) error {
 
 	// NPE Check
 	if client.collection == nil {
-		return derp.NewInternalError(location, "Document Collection not initialized")
+		return derp.InternalError(location, "Document Collection not initialized")
 	}
 
 	// Look for the document in the cache
@@ -285,13 +285,13 @@ func (client *Client) load(criteria bson.M, value *Value) error {
 
 	// Prevent NPE
 	if client.collection == nil {
-		return derp.NewInternalError(location, "Cache connection is not defined")
+		return derp.InternalError(location, "Cache connection is not defined")
 	}
 
 	// Query the cache database
 	if err := client.collection.FindOne(context.Background(), criteria).Decode(value); err != nil {
 		if err == mongo.ErrNoDocuments {
-			return derp.NewNotFoundError(location, "Document not found", criteria)
+			return derp.NotFoundError(location, "Document not found", criteria)
 		}
 		return derp.Wrap(err, location, "Error loading document", criteria)
 	}

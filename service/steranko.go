@@ -33,7 +33,7 @@ func (service SterankoUserService) Load(username string, result steranko.User) e
 	user, ok := result.(*model.User)
 
 	if !ok {
-		return derp.NewInternalError("service.SterankoUserService.Load", "Invalid result provided.  This should never happen")
+		return derp.InternalError("service.SterankoUserService.Load", "Invalid result provided.  This should never happen")
 	}
 
 	if err := service.userService.LoadByUsernameOrEmail(username, user); err != nil {
@@ -50,7 +50,7 @@ func (service SterankoUserService) Save(user steranko.User, comment string) erro
 		return service.userService.Save(user, comment)
 	}
 
-	return derp.NewInternalError("service.SterankoUserService.Save", "Steranko User is not a valid object.  This should never happen", user)
+	return derp.InternalError("service.SterankoUserService.Save", "Steranko User is not a valid object.  This should never happen", user)
 }
 
 // Delete removes a single User from the database
@@ -60,7 +60,7 @@ func (service SterankoUserService) Delete(user steranko.User, comment string) er
 		return service.userService.Delete(user, comment)
 	}
 
-	return derp.NewInternalError("service.SterankoUserService.Delete", "Steranko User is not a valid object.  This should never happen", user)
+	return derp.InternalError("service.SterankoUserService.Delete", "Steranko User is not a valid object.  This should never happen", user)
 }
 
 // RequestPasswordReset is not currently implemented in this service. (TODO)
@@ -70,7 +70,7 @@ func (service SterankoUserService) RequestPasswordReset(user steranko.User) erro
 		return service.domainEmail.SendPasswordReset(user)
 	}
 
-	return derp.NewInternalError("service.SterankoUserService.Save", "Steranko User is not a valid object.  This should never happen", user)
+	return derp.InternalError("service.SterankoUserService.Save", "Steranko User is not a valid object.  This should never happen", user)
 }
 
 // NewClaims creates a new JWT claim object

@@ -32,7 +32,7 @@ func (step StepEditConnection) Get(builder Builder, buffer io.Writer) PipelineBe
 	manualProvider, ok := adapter.(providers.ManualProvider)
 
 	if !ok {
-		return Halt().WithError(derp.NewInternalError(location, "Provider does not implement ManualProvider interface", adapter))
+		return Halt().WithError(derp.InternalError(location, "Provider does not implement ManualProvider interface", adapter))
 	}
 
 	// Retrieve the custom form for this Manual Provider
@@ -79,7 +79,7 @@ func (step StepEditConnection) Post(builder Builder, _ io.Writer) PipelineBehavi
 	manualProvider, ok := adapter.(providers.ManualProvider)
 
 	if !ok {
-		return Halt().WithError(derp.NewInternalError(location, "Provider does not implement ManualProvider interface", adapter))
+		return Halt().WithError(derp.InternalError(location, "Provider does not implement ManualProvider interface", adapter))
 	}
 
 	// Retrieve the custom form for this Manual Provider

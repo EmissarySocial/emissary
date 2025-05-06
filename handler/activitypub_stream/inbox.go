@@ -23,7 +23,7 @@ func PostInbox(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		if actor.IsNil() {
-			return derp.NewNotFoundError(location, "Actor not found")
+			return derp.NotFoundError(location, "Actor not found")
 		}
 
 		// Retrieve the activity from the request body

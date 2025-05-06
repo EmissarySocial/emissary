@@ -84,6 +84,6 @@ func (slice *Slice) SetValue(value any) error {
 		return slice.SetValue([]string{typed})
 
 	default:
-		return derp.NewBadRequestError("id.Slice.SetValue", "Unable to convert value to Slice", value)
+		return derp.BadRequestError("id.Slice.SetValue", "Unable to convert value to Slice", value)
 	}
 }

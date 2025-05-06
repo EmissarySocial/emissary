@@ -48,7 +48,7 @@ func NewOutbox(factory Factory, request *http.Request, response http.ResponseWri
 
 	// Verify that the User's profile is visible
 	if !isUserVisible(&common._authorization, user) {
-		return Outbox{}, derp.NewNotFoundError(location, "User not found")
+		return Outbox{}, derp.NotFoundError(location, "User not found")
 	}
 
 	// Return the Outbox builder

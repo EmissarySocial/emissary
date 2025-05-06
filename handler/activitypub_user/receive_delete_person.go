@@ -13,7 +13,7 @@ func init() {
 
 		// RULE: Actors can only delete themselves, not other actors
 		if activity.Actor().ID() != activity.Object().ID() {
-			return derp.NewForbiddenError(location, "Actor and Object must be the same", activity.Actor().ID(), activity.Object().ID())
+			return derp.ForbiddenError(location, "Actor and Object must be the same", activity.Actor().ID(), activity.Object().ID())
 		}
 
 		// Delete from the cache

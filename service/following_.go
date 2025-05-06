@@ -316,18 +316,18 @@ func (service *Following) ObjectSave(object data.Object, note string) error {
 	if following, ok := object.(*model.Following); ok {
 		return service.Save(following, note)
 	}
-	return derp.NewInternalError("service.Following.ObjectSave", "Invalid object type", object)
+	return derp.InternalError("service.Following.ObjectSave", "Invalid object type", object)
 }
 
 func (service *Following) ObjectDelete(object data.Object, note string) error {
 	if following, ok := object.(*model.Following); ok {
 		return service.Delete(following, note)
 	}
-	return derp.NewInternalError("service.Following.ObjectDelete", "Invalid object type", object)
+	return derp.InternalError("service.Following.ObjectDelete", "Invalid object type", object)
 }
 
 func (service *Following) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.NewUnauthorizedError("service.Following.ObjectUserCan", "Not Authorized")
+	return derp.UnauthorizedError("service.Following.ObjectUserCan", "Not Authorized")
 }
 
 func (service *Following) Schema() schema.Schema {
@@ -453,7 +453,7 @@ func (service *Following) GetFollowingID(userID primitive.ObjectID, uri string) 
 	}
 
 	if document.IsNil() {
-		return "", derp.NewBadRequestError(location, "Invalid ActivityStream document", uri)
+		return "", derp.BadRequestError(location, "Invalid ActivityStream document", uri)
 	}
 
 	// Look for the Actor in the Following collection

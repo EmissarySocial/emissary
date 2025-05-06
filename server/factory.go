@@ -317,7 +317,7 @@ func (factory *Factory) refreshCommonDatabase(connection mapof.String) error {
 
 	// ActivityStream cache is not configured.
 	if uri == "" || database == "" {
-		return derp.NewInternalError(location, "Common database is not configured")
+		return derp.InternalError(location, "Common database is not configured")
 	}
 
 	log.Trace().Str("database", database).Msg("Resetting common database")
@@ -499,7 +499,7 @@ func (factory *Factory) DomainByID(domainID string) (config.Domain, error) {
 	}
 
 	// Not found, so return an error
-	return config.NewDomain(), derp.NewNotFoundError("server.Factory.DomainByID", "DomainID not found", domainID)
+	return config.NewDomain(), derp.NotFoundError("server.Factory.DomainByID", "DomainID not found", domainID)
 }
 
 // DeleteDomain removes a domain from the Factory
@@ -606,7 +606,7 @@ func (factory *Factory) ByDomainName(name string) (*domain.Factory, error) {
 		return domain, nil
 	}
 
-	return nil, derp.NewNotFoundError("server.Factory.ByDomainName", "Unrecognized domain name", name, factory.config)
+	return nil, derp.NotFoundError("server.Factory.ByDomainName", "Unrecognized domain name", name, factory.config)
 }
 
 // NormalizeHostname removes some inconsistencies in host names, including a leading "www", if present

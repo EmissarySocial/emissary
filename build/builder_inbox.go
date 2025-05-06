@@ -242,7 +242,7 @@ func (w Inbox) FollowingByFolder(token string) ([]model.FollowingSummary, error)
 	userID := w.AuthenticatedID()
 
 	if userID.IsZero() {
-		return nil, derp.NewUnauthorizedError("build.Inbox.FollowingByFolder", "Must be signed in to view following")
+		return nil, derp.UnauthorizedError("build.Inbox.FollowingByFolder", "Must be signed in to view following")
 	}
 
 	// Get the followingID from the token
@@ -305,7 +305,7 @@ func (w Inbox) Inbox() (QueryBuilder[model.Message], error) {
 	userID := w.AuthenticatedID()
 
 	if userID.IsZero() {
-		return QueryBuilder[model.Message]{}, derp.NewUnauthorizedError("build.Inbox.Inbox", "Must be signed in to view inbox")
+		return QueryBuilder[model.Message]{}, derp.UnauthorizedError("build.Inbox.Inbox", "Must be signed in to view inbox")
 	}
 
 	queryString := w._request.URL.Query()
@@ -425,7 +425,7 @@ func (w Inbox) Folders() (model.FolderList, error) {
 
 	// User must be authenticated to view any folders
 	if !w.IsAuthenticated() {
-		return result, derp.NewForbiddenError("build.Inbox.Folders", "Not authenticated")
+		return result, derp.ForbiddenError("build.Inbox.Folders", "Not authenticated")
 	}
 
 	folderService := w._factory.Folder()
@@ -450,7 +450,7 @@ func (w Inbox) FoldersWithSelection() (model.FolderList, error) {
 
 	// Guarantee that we have at least one folder
 	if len(result.Folders) == 0 {
-		return result, derp.NewInternalError("build.Inbox.FoldersWithSelection", "No folders found", nil)
+		return result, derp.InternalError("build.Inbox.FoldersWithSelection", "No folders found", nil)
 	}
 
 	// Find/Mark the Selected FolderID
@@ -495,7 +495,7 @@ func (w Inbox) SubBuilder(object any) (Builder, error) {
 		result, err = NewStream(w._factory, w._request, w._response, w._template, &typed, w._actionID)
 
 	default:
-		result, err = nil, derp.NewInternalError("build.Common.SubBuilder", "Invalid object type", object)
+		result, err = nil, derp.InternalError("build.Common.SubBuilder", "Invalid object type", object)
 	}
 
 	if err != nil {

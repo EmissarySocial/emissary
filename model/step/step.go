@@ -254,7 +254,7 @@ func New(stepInfo mapof.Any) (Step, error) {
 	}
 
 	// Fall through means we have an unrecognized action
-	return nil, derp.NewInternalError("model.step.New", "Unrecognized step type", stepInfo)
+	return nil, derp.InternalError("model.step.New", "Unrecognized step type", stepInfo)
 }
 
 // NewPipeline parses a series of build steps into a new array

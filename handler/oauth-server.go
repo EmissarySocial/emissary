@@ -30,7 +30,7 @@ func GetOAuthAuthorization(serverFactory *server.Factory) echo.HandlerFunc {
 		factory, err := serverFactory.ByContext(ctx)
 
 		if err != nil {
-			return derp.NewInternalError(location, "Invalid Domain.")
+			return derp.InternalError(location, "Invalid Domain.")
 		}
 
 		// Load the OAuth Builder
@@ -75,7 +75,7 @@ func PostOAuthAuthorization(serverFactory *server.Factory) echo.HandlerFunc {
 		factory, err := serverFactory.ByContext(ctx)
 
 		if err != nil {
-			return derp.NewInternalError(location, "Invalid Domain.")
+			return derp.InternalError(location, "Invalid Domain.")
 		}
 
 		// Get Authorization
@@ -112,7 +112,7 @@ func PostOAuthAuthorization(serverFactory *server.Factory) echo.HandlerFunc {
 			return postOAuthAuthorization_token(ctx, userToken, transaction)
 		}
 
-		return derp.NewBadRequestError(location, "Invalid response type", transaction.ResponseType)
+		return derp.BadRequestError(location, "Invalid response type", transaction.ResponseType)
 	}
 }
 

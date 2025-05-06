@@ -35,7 +35,7 @@ func GetResponseCollection(serverFactory *server.Factory, responseType string) e
 
 		// RULE: Only PUBLIC streams have /likes /dislikes and /mentions
 		if !stream.DefaultAllowAnonymous() {
-			return derp.NewUnauthorizedError(location, "Anonymous access not allowed")
+			return derp.UnauthorizedError(location, "Anonymous access not allowed")
 		}
 
 		// If the request is for the collection itself, then return a summary and the URL of the first page

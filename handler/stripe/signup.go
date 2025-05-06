@@ -26,18 +26,18 @@ func PostSignupWebhook(ctx *steranko.Context, factory *domain.Factory, domain *m
 
 	// RULE: Require that a registration form has been defined
 	if !domain.HasRegistrationForm() {
-		return derp.ReportAndReturn(derp.NewNotFoundError(location, "Stripe Webhook not defined (no registration form)"))
+		return derp.ReportAndReturn(derp.NotFoundError(location, "Stripe Webhook not defined (no registration form)"))
 	}
 
 	// Collect Registration Metadata
 	secret := domain.RegistrationData.GetString("stripe_webhook_secret")
 	if secret == "" {
-		return derp.ReportAndReturn(derp.NewInternalError(location, "Stripe Webhook Secret not defined"))
+		return derp.ReportAndReturn(derp.InternalError(location, "Stripe Webhook Secret not defined"))
 	}
 
 	restrictedKey := domain.RegistrationData.GetString("stripe_restricted_key")
 	if restrictedKey == "" {
-		return derp.ReportAndReturn(derp.NewInternalError(location, "Stripe Restricted Key not defined"))
+		return derp.ReportAndReturn(derp.InternalError(location, "Stripe Restricted Key not defined"))
 	}
 
 	////////////////////////////////
@@ -95,7 +95,7 @@ func finishWebhook(factory *domain.Factory, restrictedKey string, event stripe.E
 	price := getSubscriptionPrice(&subscription)
 
 	if price == nil {
-		return derp.NewBadRequestError(location, "No price found in subscription", subscription)
+		return derp.BadRequestError(location, "No price found in subscription", subscription)
 	}
 
 	if err := loadStripeProduct(restrictedKey, price.Product); err != nil {
@@ -226,7 +226,7 @@ func getSubscriptionPrice(subscription *stripe.Subscription) *stripe.Price {
 func loadUser(userService *service.User, customer *stripe.Customer, user *model.User) error {
 
 	if customer == nil {
-		return derp.NewBadRequestError("handler.stripe.loadUser", "Customer must not be nil")
+		return derp.BadRequestError("handler.stripe.loadUser", "Customer must not be nil")
 	}
 
 	// Try to load the user by their email address
@@ -271,11 +271,11 @@ func loadStripeCustomer(apiKey string, customer *stripe.Customer) error {
 	const location = "handler.stripe.loadStripeCustomer"
 
 	if customer == nil {
-		return derp.NewBadRequestError(location, "Customer must not be nil")
+		return derp.BadRequestError(location, "Customer must not be nil")
 	}
 
 	if customer.ID == "" {
-		return derp.NewBadRequestError(location, "Customer.ID must not be empty")
+		return derp.BadRequestError(location, "Customer.ID must not be empty")
 	}
 
 	// Create an API client
@@ -302,11 +302,11 @@ func loadStripeProduct(apiKey string, product *stripe.Product) error {
 	const location = "handler.stripe.loadStripeProduct"
 
 	if product == nil {
-		return derp.NewBadRequestError(location, "Product must not be nil")
+		return derp.BadRequestError(location, "Product must not be nil")
 	}
 
 	if product.ID == "" {
-		return derp.NewBadRequestError(location, "Product.ID must not be empty")
+		return derp.BadRequestError(location, "Product.ID must not be empty")
 	}
 
 	// Create an API client

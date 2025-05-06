@@ -18,7 +18,7 @@ func Convert(value any) (primitive.ObjectID, error) {
 		return primitive.ObjectIDFromHex(v)
 
 	default:
-		return primitive.NilObjectID, derp.NewInternalError("id.Convert", "Invalid Type", value)
+		return primitive.NilObjectID, derp.InternalError("id.Convert", "Invalid Type", value)
 	}
 }
 

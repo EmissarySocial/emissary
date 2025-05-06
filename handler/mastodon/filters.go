@@ -27,21 +27,21 @@ func GetFilter(serverFactory *server.Factory) func(model.Authorization, txn.GetF
 func PostFilter(serverFactory *server.Factory) func(model.Authorization, txn.PostFilter) (object.Filter, error) {
 
 	return func(model.Authorization, txn.PostFilter) (object.Filter, error) {
-		return object.Filter{}, derp.NewInternalError("handler.mastodon.PostFilter", "Not Implemented")
+		return object.Filter{}, derp.NotImplementedError("handler.mastodon.PostFilter", "Not Implemented")
 	}
 }
 
 func PutFilter(serverFactory *server.Factory) func(model.Authorization, txn.PutFilter) (object.Filter, error) {
 
 	return func(model.Authorization, txn.PutFilter) (object.Filter, error) {
-		return object.Filter{}, derp.NewInternalError("handler.mastodon.PutFilter", "Not Implemented")
+		return object.Filter{}, derp.NotImplementedError("handler.mastodon.PutFilter", "Not Implemented")
 	}
 }
 
 func DeleteFilter(serverFactory *server.Factory) func(model.Authorization, txn.DeleteFilter) (struct{}, error) {
 
 	return func(model.Authorization, txn.DeleteFilter) (struct{}, error) {
-		return struct{}{}, derp.NewInternalError("handler.mastodon.DeleteFilter", "Not Implemented")
+		return struct{}{}, derp.NotImplementedError("handler.mastodon.DeleteFilter", "Not Implemented")
 	}
 }
 
@@ -55,7 +55,7 @@ func GetFilter_Keywords(serverFactory *server.Factory) func(model.Authorization,
 func PostFilter_Keyword(serverFactory *server.Factory) func(model.Authorization, txn.PostFilter_Keyword) (struct{}, error) {
 
 	return func(model.Authorization, txn.PostFilter_Keyword) (struct{}, error) {
-		return struct{}{}, derp.NewInternalError("handler.mastodon.PostFilter_Keyword", "Not Implemented")
+		return struct{}{}, derp.NotImplementedError("handler.mastodon.PostFilter_Keyword", "Not Implemented")
 	}
 }
 
@@ -69,14 +69,14 @@ func GetFilter_Keyword(serverFactory *server.Factory) func(model.Authorization, 
 func PutFilter_Keyword(serverFactory *server.Factory) func(model.Authorization, txn.PutFilter_Keyword) (object.FilterKeyword, error) {
 
 	return func(model.Authorization, txn.PutFilter_Keyword) (object.FilterKeyword, error) {
-		return object.FilterKeyword{}, derp.NewInternalError("handler.mastodon.PutFilter_Keyword", "Not Implemented")
+		return object.FilterKeyword{}, derp.NotImplementedError("handler.mastodon.PutFilter_Keyword", "Not Implemented")
 	}
 }
 
 func DeleteFilter_Keyword(serverFactory *server.Factory) func(model.Authorization, txn.DeleteFilter_Keyword) (struct{}, error) {
 
 	return func(model.Authorization, txn.DeleteFilter_Keyword) (struct{}, error) {
-		return struct{}{}, derp.NewInternalError("handler.mastodon.DeleteFilter_Keyword", "Not Implemented")
+		return struct{}{}, derp.NotImplementedError("handler.mastodon.DeleteFilter_Keyword", "Not Implemented")
 	}
 }
 
@@ -90,7 +90,7 @@ func GetFilter_Statuses(serverFactory *server.Factory) func(model.Authorization,
 func PostFilter_Status(serverFactory *server.Factory) func(model.Authorization, txn.PostFilter_Status) (object.FilterStatus, error) {
 
 	return func(model.Authorization, txn.PostFilter_Status) (object.FilterStatus, error) {
-		return object.FilterStatus{}, derp.NewInternalError("handler.mastodon.PostFilter_Status", "Not Implemented")
+		return object.FilterStatus{}, derp.NotImplementedError("handler.mastodon.PostFilter_Status", "Not Implemented")
 	}
 }
 
@@ -104,7 +104,7 @@ func GetFilter_Status(serverFactory *server.Factory) func(model.Authorization, t
 func DeleteFilter_Status(serverFactory *server.Factory) func(model.Authorization, txn.DeleteFilter_Status) (struct{}, error) {
 
 	return func(model.Authorization, txn.DeleteFilter_Status) (struct{}, error) {
-		return struct{}{}, derp.NewInternalError("handler.mastodon.DeleteFilter_Status", "Not Implemented")
+		return struct{}{}, derp.NotImplementedError("handler.mastodon.DeleteFilter_Status", "Not Implemented")
 	}
 }
 
@@ -125,20 +125,20 @@ func GetFilter_V1(serverFactory *server.Factory) func(model.Authorization, txn.G
 func PostFilter_V1(serverFactory *server.Factory) func(model.Authorization, txn.PostFilter_V1) (object.Filter, error) {
 
 	return func(model.Authorization, txn.PostFilter_V1) (object.Filter, error) {
-		return object.Filter{}, derp.NewInternalError("handler.mastodon.PostFilter_V1", "Not Implemented")
+		return object.Filter{}, derp.NotImplementedError("handler.mastodon.PostFilter_V1", "Not Implemented")
 	}
 }
 
 func PutFilter_V1(serverFactory *server.Factory) func(model.Authorization, txn.PutFilter_V1) (object.Filter, error) {
 
 	return func(model.Authorization, txn.PutFilter_V1) (object.Filter, error) {
-		return object.Filter{}, derp.NewInternalError("handler.mastodon.PutFilter_V1", "Not Implemented")
+		return object.Filter{}, derp.NotImplementedError("handler.mastodon.PutFilter_V1", "Not Implemented")
 	}
 }
 
 func DeleteFilter_V1(serverFactory *server.Factory) func(model.Authorization, txn.DeleteFilter_V1) (struct{}, error) {
 
 	return func(model.Authorization, txn.DeleteFilter_V1) (struct{}, error) {
-		return struct{}{}, derp.NewInternalError("handler.mastodon.DeleteFilter_V1", "Not Implemented")
+		return struct{}{}, derp.NotImplementedError("handler.mastodon.DeleteFilter_V1", "Not Implemented")
 	}
 }

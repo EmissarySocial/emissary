@@ -200,7 +200,7 @@ func (service *Template) loadTemplates() error {
 				}
 
 			default:
-				derp.Report(derp.NewInternalError("service.Template.loadTemplates", "Unrecognized definition type", location, definitionType))
+				derp.Report(derp.InternalError("service.Template.loadTemplates", "Unrecognized definition type", location, definitionType))
 			}
 		}
 	}
@@ -335,7 +335,7 @@ func (service *Template) Load(templateID string) (model.Template, error) {
 		return template, nil
 	}
 
-	return model.NewTemplate(templateID, nil), derp.NewNotFoundError("sevice.Template.Load", "Template not found", templateID)
+	return model.NewTemplate(templateID, nil), derp.NotFoundError("sevice.Template.Load", "Template not found", templateID)
 }
 
 /******************************************
@@ -395,11 +395,11 @@ func (service *Template) LoadAdmin(templateID string) (model.Template, error) {
 
 	// RULE: Validate Template ContainedBy
 	if template.TemplateRole != "admin" {
-		return template, derp.NewInternalError("service.Template.LoadAdmin", "Template must have 'admin' role.", template.TemplateID, template.TemplateRole)
+		return template, derp.InternalError("service.Template.LoadAdmin", "Template must have 'admin' role.", template.TemplateID, template.TemplateRole)
 	}
 
 	if !template.ContainedBy.Equal([]string{"admin"}) {
-		return template, derp.NewInternalError("service.Template.LoadAdmin", "Template must be contained by 'admin'", template.TemplateID, template.ContainedBy)
+		return template, derp.InternalError("service.Template.LoadAdmin", "Template must be contained by 'admin'", template.TemplateID, template.ContainedBy)
 	}
 
 	// Success!

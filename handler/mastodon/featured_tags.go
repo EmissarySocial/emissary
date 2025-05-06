@@ -19,14 +19,14 @@ func GetFeaturedTags(serverFactory *server.Factory) func(model.Authorization, tx
 func PostFeaturedTag(serverFactory *server.Factory) func(model.Authorization, txn.PostFeaturedTag) (object.FeaturedTag, error) {
 
 	return func(model.Authorization, txn.PostFeaturedTag) (object.FeaturedTag, error) {
-		return object.FeaturedTag{}, derp.NewInternalError("handler.mastodon.PostFeaturedTag", "Not Implemented")
+		return object.FeaturedTag{}, derp.NotImplementedError("handler.mastodon.PostFeaturedTag", "Not Implemented")
 	}
 }
 
 func DeleteFeaturedTag(serverFactory *server.Factory) func(model.Authorization, txn.DeleteFeaturedTag) (struct{}, error) {
 
 	return func(model.Authorization, txn.DeleteFeaturedTag) (struct{}, error) {
-		return struct{}{}, derp.NewInternalError("handler.mastodon.PostFeaturedTag", "Not Implemented")
+		return struct{}{}, derp.NotImplementedError("handler.mastodon.PostFeaturedTag", "Not Implemented")
 	}
 }
 

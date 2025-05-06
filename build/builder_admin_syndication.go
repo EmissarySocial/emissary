@@ -35,7 +35,7 @@ func NewSyndication(factory Factory, request *http.Request, response http.Respon
 
 	// Verify that the user is a Syndication Owner
 	if !common._authorization.DomainOwner {
-		return Syndication{}, derp.NewForbiddenError(location, "Must be domain owner to continue")
+		return Syndication{}, derp.ForbiddenError(location, "Must be domain owner to continue")
 	}
 
 	// Create and return the Syndication builder

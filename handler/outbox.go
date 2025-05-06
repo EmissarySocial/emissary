@@ -89,7 +89,7 @@ func buildOutbox(ctx *steranko.Context, factory *domain.Factory, user *model.Use
 	}
 
 	if !isUserVisible(ctx, user) {
-		return derp.NewNotFoundError("handler.buildOutbox", "User not found")
+		return derp.NotFoundError("handler.buildOutbox", "User not found")
 	}
 
 	// Try to load the User's Outbox
@@ -150,14 +150,14 @@ func getProfileAttachment(serverFactory *server.Factory, field string, filespec 
 		}
 
 		if !isUserVisible(sterankoContext, &user) {
-			return derp.NewNotFoundError(location, "User not found")
+			return derp.NotFoundError(location, "User not found")
 		}
 
 		// Get the icon/image value from the User
 		fieldValue, ok := user.GetStringOK(field)
 
 		if !ok {
-			return derp.NewInternalError(location, "Invalid attachment field.  This should never happen", field)
+			return derp.InternalError(location, "Invalid attachment field.  This should never happen", field)
 		}
 
 		filespec.Filename = fieldValue
@@ -188,7 +188,7 @@ func profileUsername(context echo.Context) (string, error) {
 	switch userIDString {
 
 	case "":
-		return "", derp.NewBadRequestError(location, "Missing UserID")
+		return "", derp.BadRequestError(location, "Missing UserID")
 
 	case "me":
 		userID, err := authenticatedID(context)
@@ -215,5 +215,5 @@ func authenticatedID(ctx echo.Context) (primitive.ObjectID, error) {
 		return authorization.UserID, nil
 	}
 
-	return primitive.NilObjectID, derp.NewUnauthorizedError("handler.profileUserID", "User is not authenticated")
+	return primitive.NilObjectID, derp.UnauthorizedError("handler.profileUserID", "User is not authenticated")
 }

@@ -24,6 +24,7 @@ import (
 type MerchantAccount struct {
 	collection      data.Collection
 	jwtService      *JWT
+	guestService    *Guest
 	productService  *Product
 	purchaseService *Purchase
 	encryptionKey   string
@@ -40,9 +41,10 @@ func NewMerchantAccount() MerchantAccount {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *MerchantAccount) Refresh(collection data.Collection, jwtService *JWT, productService *Product, purchaseService *Purchase, masterKey string, host string) {
+func (service *MerchantAccount) Refresh(collection data.Collection, jwtService *JWT, guestService *Guest, productService *Product, purchaseService *Purchase, masterKey string, host string) {
 	service.collection = collection
 	service.jwtService = jwtService
+	service.guestService = guestService
 	service.productService = productService
 	service.purchaseService = purchaseService
 	service.encryptionKey = masterKey
@@ -181,18 +183,18 @@ func (service *MerchantAccount) ObjectSave(object data.Object, comment string) e
 	if merchantAccount, ok := object.(*model.MerchantAccount); ok {
 		return service.Save(merchantAccount, comment)
 	}
-	return derp.NewInternalError("service.MerchantAccount.ObjectSave", "Invalid Object Type", object)
+	return derp.InternalError("service.MerchantAccount.ObjectSave", "Invalid Object Type", object)
 }
 
 func (service *MerchantAccount) ObjectDelete(object data.Object, comment string) error {
 	if merchantAccount, ok := object.(*model.MerchantAccount); ok {
 		return service.Delete(merchantAccount, comment)
 	}
-	return derp.NewInternalError("service.MerchantAccount.ObjectDelete", "Invalid Object Type", object)
+	return derp.InternalError("service.MerchantAccount.ObjectDelete", "Invalid Object Type", object)
 }
 
 func (service *MerchantAccount) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.NewUnauthorizedError("service.MerchantAccount.ObjectUserCan", "Not Authorized")
+	return derp.UnauthorizedError("service.MerchantAccount.ObjectUserCan", "Not Authorized")
 }
 
 func (service *MerchantAccount) Schema() schema.Schema {
@@ -266,7 +268,7 @@ func (service *MerchantAccount) RefreshProduct(merchantAccount *model.MerchantAc
 		return service.stripe_refreshProduct(merchantAccount, product)
 	}
 
-	return derp.NewInternalError("service.MerchantAccount.RefreshProduct", "Invalid MerchantAccount Type", merchantAccount.Type)
+	return derp.InternalError("service.MerchantAccount.RefreshProduct", "Invalid MerchantAccount Type", merchantAccount.Type)
 }
 
 func (service *MerchantAccount) DecryptVault(merchantAccount *model.MerchantAccount, values ...string) (mapof.String, error) {
@@ -307,7 +309,7 @@ func (service *MerchantAccount) GetCheckoutURL(merchantAccount *model.MerchantAc
 		return service.stripe_getCheckoutURL(merchantAccount, product, returnURL)
 	}
 
-	return "", derp.NewInternalError("service.MerchantAccount.GetCheckoutURL", "Invalid MerchantAccount Type", merchantAccount.Type)
+	return "", derp.InternalError("service.MerchantAccount.GetCheckoutURL", "Invalid MerchantAccount Type", merchantAccount.Type)
 }
 
 func (service *MerchantAccount) ParseCheckoutResponse(queryParams url.Values, merchantAccount *model.MerchantAccount) (model.Guest, sliceof.Object[model.Purchase], error) {
@@ -321,10 +323,10 @@ func (service *MerchantAccount) ParseCheckoutResponse(queryParams url.Values, me
 		return service.stripe_parseCheckoutResponse(queryParams, merchantAccount)
 	}
 
-	return nil, derp.NewInternalError("service.MerchantAccount.GetCheckoutResponse", "Invalid MerchantAccount Type", merchantAccount.Type)
+	return model.Guest{}, nil, derp.InternalError("service.MerchantAccount.GetCheckoutResponse", "Invalid MerchantAccount Type", merchantAccount.Type)
 }
 
-func (service *MerchantAccount) ParseCheckoutWebhook(header http.Header, body []byte, merchantAccount *model.MerchantAccount) (sliceof.Object[model.Purchase], error) {
+func (service *MerchantAccount) ParseCheckoutWebhook(header http.Header, body []byte, merchantAccount *model.MerchantAccount) (model.Guest, sliceof.Object[model.Purchase], error) {
 
 	const location = "service.MerchantAccount.ParseCheckoutWebhook"
 
@@ -337,7 +339,7 @@ func (service *MerchantAccount) ParseCheckoutWebhook(header http.Header, body []
 		return service.stripe_parseCheckoutWebhook(header, body, merchantAccount)
 	}
 
-	return nil, derp.NewInternalError(location, "Invalid MerchantAccount Type", merchantAccount.Type)
+	return model.Guest{}, nil, derp.InternalError(location, "Invalid MerchantAccount Type", merchantAccount.Type)
 }
 
 func (service *MerchantAccount) RefreshAPIKeys(merchantAccount *model.MerchantAccount) error {
@@ -356,7 +358,7 @@ func (service *MerchantAccount) RefreshAPIKeys(merchantAccount *model.MerchantAc
 		return service.stripe_refreshMerchantAccount(merchantAccount)
 	}
 
-	return derp.NewInternalError("service.MerchantAccount.RefreshMerchantAccount", "Invalid MerchantAccount Type", merchantAccount.Type)
+	return derp.InternalError("service.MerchantAccount.RefreshMerchantAccount", "Invalid MerchantAccount Type", merchantAccount.Type)
 
 }
 
@@ -372,5 +374,5 @@ func (service *MerchantAccount) GetProducts(merchantAccount *model.MerchantAccou
 	}
 
 	// If we get here, the merchant account type is not supported
-	return nil, derp.NewInternalError("service.MerchantAccount.GetProducts", "Invalid MerchantAccount Type", merchantAccount.Type)
+	return nil, derp.InternalError("service.MerchantAccount.GetProducts", "Invalid MerchantAccount Type", merchantAccount.Type)
 }

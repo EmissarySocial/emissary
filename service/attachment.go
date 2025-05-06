@@ -159,7 +159,7 @@ func (service *Attachment) ObjectSave(object data.Object, note string) error {
 	if attachment, ok := object.(*model.Attachment); ok {
 		return service.Save(attachment, note)
 	}
-	return derp.NewInternalError("service.Attachment.ObjectSave", "Invalid object type", object)
+	return derp.InternalError("service.Attachment.ObjectSave", "Invalid object type", object)
 }
 
 // ObjectDelete removes an Attachment from the database (generically)
@@ -167,12 +167,12 @@ func (service *Attachment) ObjectDelete(object data.Object, note string) error {
 	if attachment, ok := object.(*model.Attachment); ok {
 		return service.Delete(attachment, note)
 	}
-	return derp.NewInternalError("service.Attachment.ObjectDelete", "Invalid object type", object)
+	return derp.InternalError("service.Attachment.ObjectDelete", "Invalid object type", object)
 }
 
 // ObjectUserCan returns true if the current user has permission to perform the requested action on the provided Attachment
 func (service *Attachment) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.NewUnauthorizedError("service.Attachment", "Not Authorized")
+	return derp.UnauthorizedError("service.Attachment", "Not Authorized")
 }
 
 // Schema returns the schema that this service uses to validate Attachments

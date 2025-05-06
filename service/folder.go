@@ -162,18 +162,18 @@ func (service *Folder) ObjectSave(object data.Object, comment string) error {
 	if folder, ok := object.(*model.Folder); ok {
 		return service.Save(folder, comment)
 	}
-	return derp.NewInternalError("service.Folder.ObjectSave", "Invalid object type", object)
+	return derp.InternalError("service.Folder.ObjectSave", "Invalid object type", object)
 }
 
 func (service *Folder) ObjectDelete(object data.Object, comment string) error {
 	if folder, ok := object.(*model.Folder); ok {
 		return service.Delete(folder, comment)
 	}
-	return derp.NewInternalError("service.Folder.ObjectDelete", "Invalid object type", object)
+	return derp.InternalError("service.Folder.ObjectDelete", "Invalid object type", object)
 }
 
 func (service *Folder) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.NewUnauthorizedError("service.Folder", "Not Authorized")
+	return derp.UnauthorizedError("service.Folder", "Not Authorized")
 }
 
 func (service *Folder) Schema() schema.Schema {
@@ -235,7 +235,7 @@ func (service *Folder) LoadByToken(userID primitive.ObjectID, token string, resu
 		return service.Load(criteria, result)
 	}
 
-	return derp.NewBadRequestError("service.Folder", "Invalid token", token)
+	return derp.BadRequestError("service.Folder", "Invalid token", token)
 }
 
 // LoadByLabel loads a single stream that matches the provided label

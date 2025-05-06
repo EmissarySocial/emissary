@@ -29,7 +29,7 @@ func (step StepWithFollowing) execute(builder Builder, buffer io.Writer, actionM
 
 	// RULE: User MUST be authenticated to use this step
 	if !builder.IsAuthenticated() {
-		return Halt().WithError(derp.NewUnauthorizedError(location, "Anonymous user is not authorized to perform this action"))
+		return Halt().WithError(derp.UnauthorizedError(location, "Anonymous user is not authorized to perform this action"))
 	}
 
 	var userID primitive.ObjectID
@@ -40,7 +40,7 @@ func (step StepWithFollowing) execute(builder Builder, buffer io.Writer, actionM
 
 		// Must be an owner to use the admin route
 		if !builder.IsOwner() {
-			return Halt().WithError(derp.NewForbiddenError(location, "User must be an owner to complete this action"))
+			return Halt().WithError(derp.ForbiddenError(location, "User must be an owner to complete this action"))
 		}
 
 		userID = primitive.NilObjectID
@@ -55,7 +55,7 @@ func (step StepWithFollowing) execute(builder Builder, buffer io.Writer, actionM
 	template, exists := getTemplate(builder)
 
 	if !exists {
-		return Halt().WithError(derp.NewInternalError(location, "This step cannot be used in this Renderer."))
+		return Halt().WithError(derp.InternalError(location, "This step cannot be used in this Renderer."))
 	}
 
 	// Collect required services and values

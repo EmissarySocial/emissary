@@ -43,7 +43,7 @@ func GetCheckoutResponse(ctx *steranko.Context, factory *domain.Factory, merchan
 	}
 
 	if purchases.IsEmpty() {
-		return derp.NewBadRequestError(location, "No purchases found")
+		return derp.BadRequestError(location, "No purchases found")
 	}
 
 	purchase := purchases.First()

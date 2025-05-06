@@ -21,7 +21,7 @@ func WithFactory(serverFactory ServerFactory, args mapof.Any, Handler func(facto
 
 	if host == "" {
 		// If we don't have a host, we'll never be able to run this task, so hard fail
-		return queue.Failure(derp.NewInternalError(location, "Missing 'host' argument"))
+		return queue.Failure(derp.InternalError(location, "Missing 'host' argument"))
 	}
 
 	// Load the factory

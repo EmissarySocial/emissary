@@ -179,18 +179,18 @@ func (service *Outbox) ObjectSave(object data.Object, note string) error {
 	if message, ok := object.(*model.OutboxMessage); ok {
 		return service.Save(message, note)
 	}
-	return derp.NewInternalError("service.Outbox.ObjectSave", "Invalid object type", object)
+	return derp.InternalError("service.Outbox.ObjectSave", "Invalid object type", object)
 }
 
 func (service *Outbox) ObjectDelete(object data.Object, note string) error {
 	if message, ok := object.(*model.OutboxMessage); ok {
 		return service.Delete(message, note)
 	}
-	return derp.NewInternalError("service.Outbox.ObjectDelete", "Invalid object type", object)
+	return derp.InternalError("service.Outbox.ObjectDelete", "Invalid object type", object)
 }
 
 func (service *Outbox) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.NewUnauthorizedError("service.OutboxMessage", "Not Authorized")
+	return derp.UnauthorizedError("service.OutboxMessage", "Not Authorized")
 }
 
 func (service *Outbox) Schema() schema.Schema {

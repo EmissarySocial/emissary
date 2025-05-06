@@ -40,7 +40,7 @@ func buildInbox(serverFactory *server.Factory, actionMethod build.ActionMethod) 
 		authorization := getAuthorization(ctx)
 
 		if !authorization.IsAuthenticated() {
-			return derp.NewUnauthorizedError(location, "Not Authorized")
+			return derp.UnauthorizedError(location, "Not Authorized")
 		}
 
 		if err := userService.LoadByID(authorization.UserID, &user); err != nil {

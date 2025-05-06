@@ -43,7 +43,7 @@ func (service FolderLookupProvider) Add(name string) (string, error) {
 
 	// RULE: Must have a valid UserID to add a Folder
 	if service.userID.IsZero() {
-		return "", derp.NewInternalError("service.FolderLookupProvider.Add", "Cannot add folder to anonymous user")
+		return "", derp.InternalError("service.FolderLookupProvider.Add", "Cannot add folder to anonymous user")
 	}
 
 	folder := model.NewFolder()

@@ -168,18 +168,18 @@ func (service *StreamDraft) ObjectSave(object data.Object, comment string) error
 	if stream, ok := object.(*model.Stream); ok {
 		return service.Save(stream, comment)
 	}
-	return derp.NewInternalError("service.StreamDraft.ObjectSave", "Invalid Object Type", object)
+	return derp.InternalError("service.StreamDraft.ObjectSave", "Invalid Object Type", object)
 }
 
 func (service *StreamDraft) ObjectDelete(object data.Object, comment string) error {
 	if stream, ok := object.(*model.Stream); ok {
 		return service.Delete(stream, comment)
 	}
-	return derp.NewInternalError("service.StreamDraft.ObjectDelete", "Invalid Object Type", object)
+	return derp.InternalError("service.StreamDraft.ObjectDelete", "Invalid Object Type", object)
 }
 
 func (service *StreamDraft) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.NewUnauthorizedError("service.StreamDraft", "Not Authorized")
+	return derp.UnauthorizedError("service.StreamDraft", "Not Authorized")
 }
 
 func (service *StreamDraft) Schema() schema.Schema {

@@ -76,7 +76,7 @@ func ParseProfileURL(value string) (urlValue *url.URL, userID primitive.ObjectID
 	username, path := path.Split()
 
 	if !strings.HasPrefix(username, "@") {
-		return urlValue, primitive.NilObjectID, "", primitive.NilObjectID, derp.NewBadRequestError("service.ParseURL", "Username must begin with '@'", value)
+		return urlValue, primitive.NilObjectID, "", primitive.NilObjectID, derp.BadRequestError("service.ParseURL", "Username must begin with '@'", value)
 	}
 
 	username = strings.TrimPrefix(username, "@")
@@ -84,7 +84,7 @@ func ParseProfileURL(value string) (urlValue *url.URL, userID primitive.ObjectID
 	userID, err = primitive.ObjectIDFromHex(username)
 
 	if err != nil {
-		return urlValue, userID, "", primitive.NilObjectID, derp.NewBadRequestError("service.ParseURL", "Username must be a valid hex string", value)
+		return urlValue, userID, "", primitive.NilObjectID, derp.BadRequestError("service.ParseURL", "Username must be a valid hex string", value)
 	}
 
 	// If this is the end of the path, then we're done.
@@ -96,7 +96,7 @@ func ParseProfileURL(value string) (urlValue *url.URL, userID primitive.ObjectID
 	pub, path := path.Split()
 
 	if pub != "pub" {
-		return urlValue, userID, "", primitive.NilObjectID, derp.NewBadRequestError("service.ParseURL", "Path must contain with '/pub/'", value)
+		return urlValue, userID, "", primitive.NilObjectID, derp.BadRequestError("service.ParseURL", "Path must contain with '/pub/'", value)
 	}
 
 	if path.IsEmpty() {
@@ -117,7 +117,7 @@ func ParseProfileURL(value string) (urlValue *url.URL, userID primitive.ObjectID
 	objectID, err = primitive.ObjectIDFromHex(objectName)
 
 	if err != nil {
-		return urlValue, userID, objectType, primitive.NilObjectID, derp.NewBadRequestError("service.ParseURL", "ObjectID must be a valid hex string", value)
+		return urlValue, userID, objectType, primitive.NilObjectID, derp.BadRequestError("service.ParseURL", "ObjectID must be a valid hex string", value)
 	}
 
 	// This should be the end of the path.
@@ -126,7 +126,7 @@ func ParseProfileURL(value string) (urlValue *url.URL, userID primitive.ObjectID
 	}
 
 	// But if we get here, then there are unrecognized values in the path.
-	return urlValue, userID, objectType, objectID, derp.NewBadRequestError("service.ParseURL", "Path contains unrecognized values", value)
+	return urlValue, userID, objectType, objectID, derp.BadRequestError("service.ParseURL", "Path contains unrecognized values", value)
 }
 
 func ParseProfileURL_UserID(value string) (primitive.ObjectID, error) {
@@ -142,7 +142,7 @@ func ParseProfileURL_AsFollowing(value string) (primitive.ObjectID, primitive.Ob
 	}
 
 	if objectType != "following" {
-		return primitive.NilObjectID, primitive.NilObjectID, derp.NewBadRequestError("service.ParseProfileURL_AsFollowing", "URL does not contain a following relationship", value)
+		return primitive.NilObjectID, primitive.NilObjectID, derp.BadRequestError("service.ParseProfileURL_AsFollowing", "URL does not contain a following relationship", value)
 	}
 
 	return userID, objectID, nil
@@ -259,7 +259,7 @@ func findDefinition(filesystem fs.FS) (string, []byte, error) {
 
 	// TODO: LOW: Add DefinitionEmail to this.  Will need a *.json file in the email directory.
 
-	return "", nil, derp.NewInternalError("service.findDefinition", "No definition file found")
+	return "", nil, derp.InternalError("service.findDefinition", "No definition file found")
 }
 
 // readJSON looks for JSON and HJSON files.

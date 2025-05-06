@@ -18,7 +18,7 @@ func SearchActivityStreamActors(ctx context.Context, collection data.Collection,
 	mongoCollection := mongoCollection(collection)
 
 	if mongoCollection == nil {
-		return nil, derp.NewInternalError(location, "Collection is not a MongoDB collection")
+		return nil, derp.InternalError(location, "Collection is not a MongoDB collection")
 	}
 
 	// Build the query pipeline

@@ -19,7 +19,7 @@ func GetGiphyWidget(serverFactory *server.Factory) echo.HandlerFunc {
 		authorization := getAuthorization(ctx)
 
 		if !authorization.IsAuthenticated() {
-			return derp.NewUnauthorizedError("handler.GetGiphyImages", "You must be logged in to use this feature")
+			return derp.UnauthorizedError("handler.GetGiphyImages", "You must be logged in to use this feature")
 		}
 
 		// Get the factory for this domain

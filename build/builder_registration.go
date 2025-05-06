@@ -42,7 +42,7 @@ func NewRegistration(factory Factory, request *http.Request, response http.Respo
 	action, ok := registration.Action(actionID)
 
 	if !ok {
-		return Registration{}, derp.NewBadRequestError(location, "Invalid actionID", actionID)
+		return Registration{}, derp.BadRequestError(location, "Invalid actionID", actionID)
 	}
 
 	// Create and return the Registration builder

@@ -86,7 +86,7 @@ func (step StepSetSimpleSharing) Post(builder Builder, _ io.Writer) PipelineBeha
 		groupIDs = id.SliceOfID(request.Form["groupIds"])
 
 	default:
-		return Halt().WithError(derp.NewBadRequestError(location, "Invalid rule: ", rule))
+		return Halt().WithError(derp.BadRequestError(location, "Invalid rule: ", rule))
 	}
 
 	// Build the stream criteria

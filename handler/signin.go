@@ -114,7 +114,7 @@ func PostResetPassword(serverFactory *server.Factory) echo.HandlerFunc {
 		factory, err := serverFactory.ByContext(ctx)
 
 		if err != nil {
-			return derp.NewInternalError(location, "Invalid domain")
+			return derp.InternalError(location, "Invalid domain")
 		}
 
 		// Try to load the user by username.  If the user cannot be found, the response
@@ -148,7 +148,7 @@ func GetResetCode(serverFactory *server.Factory) echo.HandlerFunc {
 		factory, err := serverFactory.ByContext(ctx)
 
 		if err != nil {
-			return derp.NewInternalError(location, "Invalid domain")
+			return derp.InternalError(location, "Invalid domain")
 		}
 
 		// Try to load the user by userID and resetCode
@@ -228,14 +228,14 @@ func PostResetCode(serverFactory *server.Factory) echo.HandlerFunc {
 
 		// RULE: Ensure that passwords match
 		if txn.Password != txn.Password2 {
-			return derp.NewBadRequestError("handler.PostResetCode", "Passwords do not match")
+			return derp.BadRequestError("handler.PostResetCode", "Passwords do not match")
 		}
 
 		// Try to get the factory for this domain
 		factory, err := serverFactory.ByContext(ctx)
 
 		if err != nil {
-			return derp.NewInternalError("handler.GetResetCode", "Invalid domain")
+			return derp.InternalError("handler.GetResetCode", "Invalid domain")
 		}
 
 		// Try to load the user by userID and resetCode

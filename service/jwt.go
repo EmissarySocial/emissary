@@ -116,7 +116,7 @@ func (service *JWT) ParseString(tokenString string) (*jwt.Token, error) {
 
 	// RULE: JWT token must not be empty
 	if tokenString == "" {
-		return nil, derp.NewBadRequestError(location, "JWT token is empty")
+		return nil, derp.BadRequestError(location, "JWT token is empty")
 	}
 
 	// Try to parse the JWT token

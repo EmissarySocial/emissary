@@ -41,7 +41,7 @@ func GetPublicKey(serverFactory *server.Factory) echo.HandlerFunc {
 
 		// RULE: Only public users can be queried
 		if !user.IsPublic {
-			return derp.NewNotFoundError(location, "")
+			return derp.NotFoundError(location, "")
 		}
 
 		// Try to load the key from the Datbase

@@ -130,18 +130,18 @@ func (service *Connection) ObjectSave(object data.Object, comment string) error 
 	if group, ok := object.(*model.Connection); ok {
 		return service.Save(group, comment)
 	}
-	return derp.NewInternalError("service.Connection.ObjectSave", "Invalid Object Type", object)
+	return derp.InternalError("service.Connection.ObjectSave", "Invalid Object Type", object)
 }
 
 func (service *Connection) ObjectDelete(object data.Object, comment string) error {
 	if group, ok := object.(*model.Connection); ok {
 		return service.Delete(group, comment)
 	}
-	return derp.NewInternalError("service.Connection.ObjectDelete", "Invalid Object Type", object)
+	return derp.InternalError("service.Connection.ObjectDelete", "Invalid Object Type", object)
 }
 
 func (service *Connection) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.NewUnauthorizedError("service.Connection", "Not Authorized")
+	return derp.UnauthorizedError("service.Connection", "Not Authorized")
 }
 
 func (service *Connection) Schema() schema.Schema {

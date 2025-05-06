@@ -12,6 +12,6 @@ func GetOEmbed(serverFactory *server.Factory) func(model.Authorization, txn.GetO
 
 	return func(model.Authorization, txn.GetOEmbed) (map[string]any, error) {
 		// TODO: Wire up OEmbed lookups with Sherlock
-		return map[string]any{}, derp.NewInternalError("handler.mastodon.GetOEmbed", "OEmbed not implemented.")
+		return map[string]any{}, derp.NotImplementedError("handler.mastodon.GetOEmbed", "OEmbed not implemented.")
 	}
 }

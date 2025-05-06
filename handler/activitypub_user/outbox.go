@@ -30,12 +30,12 @@ func GetOutboxCollection(serverFactory *server.Factory) echo.HandlerFunc {
 		user := model.NewUser()
 
 		if err := userService.LoadByToken(ctx.Param("userId"), &user); err != nil {
-			return derp.NewNotFoundError(location, "User not found", err)
+			return derp.NotFoundError(location, "User not found", err)
 		}
 
 		// RULE: Only public users can be queried
 		if !user.IsPublic {
-			return derp.NewNotFoundError(location, "User not found")
+			return derp.NotFoundError(location, "User not found")
 		}
 
 		// If the request is for the collection itself, then return a summary and the URL of the first page

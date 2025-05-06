@@ -41,7 +41,7 @@ func (step StepSetPassword) Post(builder Builder, _ io.Writer) PipelineBehavior 
 	authorization := builder.authorization()
 
 	if !authorization.IsAuthenticated() {
-		return Halt().WithError(derp.NewUnauthorizedError(location, "You must be signed in to change your password"))
+		return Halt().WithError(derp.UnauthorizedError(location, "You must be signed in to change your password"))
 	}
 
 	// Load the User from the database

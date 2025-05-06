@@ -121,7 +121,7 @@ func (service *ActivityStream) Load(url string, options ...any) (streams.Documen
 	const location = "service.ActivityStream.Load"
 
 	if url == "" {
-		return streams.NilDocument(), derp.NewNotFoundError(location, "Empty URL", url)
+		return streams.NilDocument(), derp.NotFoundError(location, "Empty URL", url)
 	}
 
 	// NPE Check
@@ -164,7 +164,7 @@ func (service *ActivityStream) PurgeCache() error {
 
 	// NPE Check
 	if service.collection == nil {
-		return derp.NewInternalError("service.ActivityStream.PurgeCache", "Document Collection not initialized")
+		return derp.InternalError("service.ActivityStream.PurgeCache", "Document Collection not initialized")
 	}
 
 	// Purge all expired Documents
@@ -194,7 +194,7 @@ func (service *ActivityStream) queryByRelation(relationType string, relationHref
 
 		// NPE Check
 		if service.collection == nil {
-			derp.Report(derp.NewInternalError(location, "Document Collection not initialized"))
+			derp.Report(derp.InternalError(location, "Document Collection not initialized"))
 			return
 		}
 
@@ -317,7 +317,7 @@ func (service *ActivityStream) documentIterator(criteria exp.Expression, options
 
 	// NPE Check
 	if service.collection == nil {
-		return nil, derp.NewInternalError(location, "Document Collection not initialized")
+		return nil, derp.InternalError(location, "Document Collection not initialized")
 	}
 
 	// Forward request to collection

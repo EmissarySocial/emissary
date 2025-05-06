@@ -133,18 +133,18 @@ func (service *Group) ObjectSave(object data.Object, comment string) error {
 	if group, ok := object.(*model.Group); ok {
 		return service.Save(group, comment)
 	}
-	return derp.NewInternalError("service.Group.ObjectSave", "Invalid Object Type", object)
+	return derp.InternalError("service.Group.ObjectSave", "Invalid Object Type", object)
 }
 
 func (service *Group) ObjectDelete(object data.Object, comment string) error {
 	if group, ok := object.(*model.Group); ok {
 		return service.Delete(group, comment)
 	}
-	return derp.NewInternalError("service.Group.ObjectDelete", "Invalid Object Type", object)
+	return derp.InternalError("service.Group.ObjectDelete", "Invalid Object Type", object)
 }
 
 func (service *Group) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.NewUnauthorizedError("service.Group", "Not Authorized")
+	return derp.UnauthorizedError("service.Group", "Not Authorized")
 }
 
 func (service *Group) Schema() schema.Schema {

@@ -175,7 +175,7 @@ func (service *User) Save(user *model.User, note string) error {
 
 	// RULE: DisplayName is required
 	if user.EmailAddress == "" {
-		return derp.NewBadRequestError(location, "EmailAddress is required", user)
+		return derp.BadRequestError(location, "EmailAddress is required", user)
 	}
 
 	// RULE: IF the display name is empty, then try the username and email address
@@ -365,18 +365,18 @@ func (service *User) ObjectSave(object data.Object, note string) error {
 	if user, ok := object.(*model.User); ok {
 		return service.Save(user, note)
 	}
-	return derp.NewInternalError("service.User.ObjectSave", "Invalid object type", object)
+	return derp.InternalError("service.User.ObjectSave", "Invalid object type", object)
 }
 
 func (service *User) ObjectDelete(object data.Object, note string) error {
 	if user, ok := object.(*model.User); ok {
 		return service.Delete(user, note)
 	}
-	return derp.NewInternalError("service.User.ObjectDelete", "Invalid object type", object)
+	return derp.InternalError("service.User.ObjectDelete", "Invalid object type", object)
 }
 
 func (service *User) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.NewUnauthorizedError("service.User.ObjectUserCan", "Not Authorized")
+	return derp.UnauthorizedError("service.User.ObjectUserCan", "Not Authorized")
 }
 
 func (service *User) Schema() schema.Schema {
@@ -481,7 +481,7 @@ func (service *User) LoadByResetCode(userID string, code string, user *model.Use
 
 	// If the password reset is not valid, then return an "Unauthorized" error
 	if !user.PasswordReset.IsValid(code) {
-		return derp.NewUnauthorizedError(location, "Invalid password reset code", userID, code)
+		return derp.UnauthorizedError(location, "Invalid password reset code", userID, code)
 	}
 
 	// No Error means success
@@ -556,7 +556,7 @@ func (service *User) CalcNewUsername(user *model.User) error {
 	}
 
 	// Okay, this sucks, but we need to call it here.  Return error.
-	return derp.NewInternalError("service.User.CalcUsername", "Unable to generate a unique username", user)
+	return derp.InternalError("service.User.CalcUsername", "Unable to generate a unique username", user)
 }
 
 func (service *User) ValidateUsername(userID primitive.ObjectID, username string) error {
@@ -567,7 +567,7 @@ func (service *User) ValidateUsername(userID primitive.ObjectID, username string
 
 	// RULE: Username is required
 	case "":
-		return derp.NewBadRequestError(location, "Username is required", username)
+		return derp.BadRequestError(location, "Username is required", username)
 
 	// RULE: Reserved names cannot be used
 	case
@@ -583,7 +583,7 @@ func (service *User) ValidateUsername(userID primitive.ObjectID, username string
 		"test",
 		"user":
 
-		return derp.NewBadRequestError(location, "Username is not allowed", username)
+		return derp.BadRequestError(location, "Username is not allowed", username)
 	}
 
 	// RULE: Username can only contain letters, numbers, and underscores
@@ -593,7 +593,7 @@ func (service *User) ValidateUsername(userID primitive.ObjectID, username string
 
 	// RULE: Username must be unique
 	if service.UsernameExists(userID, username) {
-		return derp.NewBadRequestError(location, "Username is already in use", username)
+		return derp.BadRequestError(location, "Username is already in use", username)
 	}
 
 	return nil

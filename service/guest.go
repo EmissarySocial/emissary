@@ -145,18 +145,18 @@ func (service *Guest) ObjectSave(object data.Object, comment string) error {
 	if guest, ok := object.(*model.Guest); ok {
 		return service.Save(guest, comment)
 	}
-	return derp.NewInternalError("service.Guest.ObjectSave", "Invalid Object Type", object)
+	return derp.InternalError("service.Guest.ObjectSave", "Invalid Object Type", object)
 }
 
 func (service *Guest) ObjectDelete(object data.Object, comment string) error {
 	if guest, ok := object.(*model.Guest); ok {
 		return service.Delete(guest, comment)
 	}
-	return derp.NewInternalError("service.Guest.ObjectDelete", "Invalid Object Type", object)
+	return derp.InternalError("service.Guest.ObjectDelete", "Invalid Object Type", object)
 }
 
 func (service *Guest) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.NewUnauthorizedError("service.Guest.ObjectUserCan", "Not Authorized")
+	return derp.UnauthorizedError("service.Guest.ObjectUserCan", "Not Authorized")
 }
 
 func (service *Guest) Schema() schema.Schema {
@@ -173,21 +173,22 @@ func (service *Guest) LoadByEmail(emailAddress string, guest *model.Guest) error
 	return service.Load(criteria, guest)
 }
 
-// CreateOrUpdate matches the provided Guest object against the database using the EmailAddress field.
+// LoadOrCreateByEmail searches for a Guest with the provided emailAddress.
 // If a matching record is found, it updates the record with the new values (if necessary).
 // If no matching record is found, it creates a new record with the provided values.
-func (service *Guest) LoadOrCreateByEmail(emailAddress string) (model.Guest, error) {
+func (service *Guest) LoadOrCreate(emailAddress string, merchantAccountType string, remoteID string) (model.Guest, error) {
 
 	// Try to load the guest using their email address
 	guest := model.NewGuest()
 	if err := service.LoadByEmail(emailAddress, &guest); !derp.NilOrNotFound(err) {
-		return guest, derp.Wrap(err, "service.Guest.CreateOrUpdate", "Error loading guest by email", emailAddress)
+		return guest, derp.Wrap(err, "service.Guest.LoadOrCreateByEmail", "Error loading guest by email", emailAddress)
 	}
 
-	// If the email address is not found, then save a new record to the database
-	guest.EmailAddress = emailAddress
-	if err := service.Save(&guest, "Updated"); err != nil {
-		return guest, derp.Wrap(err, "service.Guest.CreateOrUpdate", "Error saving guest", guest)
+	// Update the email and remoteID for the guest.  If changed, then save the record.
+	if updated := guest.Update(emailAddress, merchantAccountType, remoteID); updated {
+		if err := service.Save(&guest, "Updated"); err != nil {
+			return guest, derp.Wrap(err, "service.Guest.LoadOrCreateByEmail", "Error saving guest", guest)
+		}
 	}
 
 	// Done.

@@ -31,7 +31,7 @@ func SetupOAuthGet(factory *server.Factory, templates *template.Template) echo.H
 		oAuthProvider, ok := oAuthProviders.Get(oAuthProviderID)
 
 		if !ok {
-			return derp.NewInternalError("setup.oauth.get", "Unable to find provider", oAuthProviderID)
+			return derp.InternalError("setup.oauth.get", "Unable to find provider", oAuthProviderID)
 		}
 
 		// Build the custom form title
@@ -69,7 +69,7 @@ func SetupOAuthPost(factory *server.Factory, templates *template.Template) echo.
 		providerID := ctx.Param("provider")
 
 		if _, ok := providers.Get(providerID); !ok {
-			return derp.NewInternalError(location, "Unable to find provider", providerID)
+			return derp.InternalError(location, "Unable to find provider", providerID)
 		}
 
 		// Collect the updated connection information from the form post

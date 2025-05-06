@@ -57,11 +57,11 @@ func (step StepTableEditor) Post(builder Builder, _ io.Writer) PipelineBehavior 
 		editIndex, ok := convert.IntOk(edit, 0)
 
 		if !ok {
-			return Halt().WithError(derp.NewInternalError(location, "Failed to convert edit index", step.Path, edit))
+			return Halt().WithError(derp.InternalError(location, "Failed to convert edit index", step.Path, edit))
 		}
 
 		if editIndex < 0 {
-			return Halt().WithError(derp.NewInternalError(location, "Edit index out of range", step.Path, editIndex))
+			return Halt().WithError(derp.InternalError(location, "Edit index out of range", step.Path, editIndex))
 		}
 
 		// Try to edit the row in the data table
@@ -86,16 +86,16 @@ func (step StepTableEditor) Post(builder Builder, _ io.Writer) PipelineBehavior 
 		deleteIndex, ok := convert.IntOk(delete, 0)
 
 		if !ok {
-			return Halt().WithError(derp.NewInternalError(location, "Failed to convert edit index", step.Path, edit))
+			return Halt().WithError(derp.InternalError(location, "Failed to convert edit index", step.Path, edit))
 		}
 
 		if (deleteIndex < 0) || (deleteIndex >= convert.SliceLength(table)) {
-			return Halt().WithError(derp.NewInternalError(location, "Edit index out of range", step.Path, deleteIndex))
+			return Halt().WithError(derp.InternalError(location, "Edit index out of range", step.Path, deleteIndex))
 		}
 
 		// Try to find the schema element for this table control
 		if ok := builder.schema().Remove(builder.object(), step.Path+"."+delete); !ok {
-			return Halt().WithError(derp.NewInternalError(location, "Failed to remove row from table", step.Path))
+			return Halt().WithError(derp.InternalError(location, "Failed to remove row from table", step.Path))
 		}
 	}
 

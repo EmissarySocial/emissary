@@ -132,7 +132,7 @@ func (storage MongoStorage) load() (Config, error) {
 	if err := storage.collection.FindOne(context.Background(), bson.M{}).Decode(&result); err != nil {
 
 		if err == mongo.ErrNoDocuments {
-			return Config{}, derp.NewNotFoundError("config.MongoStorage", "Error loading config from MongoDB", err.Error())
+			return Config{}, derp.NotFoundError("config.MongoStorage", "Error loading config from MongoDB", err.Error())
 		}
 
 		return Config{}, derp.Wrap(err, "config.MongoStorage", "Error decoding config from MongoDB")

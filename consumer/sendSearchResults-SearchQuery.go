@@ -22,14 +22,14 @@ func SendSearchResults(factory *domain.Factory, args mapof.Any) queue.Result {
 	url := args.GetString("url")
 
 	if url == "" {
-		return queue.Failure(derp.NewInternalError(location, "'url' is required."))
+		return queue.Failure(derp.InternalError(location, "'url' is required."))
 	}
 
 	// Parse ActorID
 	actorURL := args.GetString("actor")
 
 	if actorURL == "" {
-		return queue.Failure(derp.NewInternalError(location, "'actor' is required."))
+		return queue.Failure(derp.InternalError(location, "'actor' is required."))
 	}
 
 	// Parse SearchQueryID

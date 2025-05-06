@@ -21,7 +21,7 @@ func (step StepEditRegistration) Get(builder Builder, buffer io.Writer) Pipeline
 	domainBuilder, ok := builder.(Domain)
 
 	if !ok {
-		return Halt().WithError(derp.NewInternalError(location, "Step edit-registration can only be used in an admin/domain template"))
+		return Halt().WithError(derp.InternalError(location, "Step edit-registration can only be used in an admin/domain template"))
 	}
 
 	factory := builder.factory()
@@ -97,7 +97,7 @@ func (step StepEditRegistration) Post(builder Builder, _ io.Writer) PipelineBeha
 	domainBuilder, ok := builder.(Domain)
 
 	if !ok {
-		return Halt().WithError(derp.NewInternalError(location, "Step edit-registration can only be used in an admin/domain template"))
+		return Halt().WithError(derp.InternalError(location, "Step edit-registration can only be used in an admin/domain template"))
 	}
 
 	factory := builder.factory()

@@ -37,7 +37,7 @@ func WithFactory(serverFactory *server.Factory, fn WithFunc0) echo.HandlerFunc {
 		sterankoContext, ok := ctx.(*steranko.Context)
 
 		if !ok {
-			return derp.ReportAndReturn(derp.NewInternalError(location, "Context must be a Steranko Context"))
+			return derp.ReportAndReturn(derp.InternalError(location, "Context must be a Steranko Context"))
 		}
 
 		// Validate the domain name
@@ -243,19 +243,19 @@ func WithProductJWT(serverFactory *server.Factory, fn WithFunc2[model.MerchantAc
 		// Retrieve the MerchantAccountID
 		userID, isString := claims["userId"].(string)
 		if !isString {
-			return derp.NewBadRequestError(location, "UserID in JWT token must be a string")
+			return derp.BadRequestError(location, "UserID in JWT token must be a string")
 		}
 
 		// Retrive the ProductID
 		productID, isString := claims["productId"].(string)
 		if !isString {
-			return derp.NewBadRequestError(location, "ProductID in JWT token must be a string")
+			return derp.BadRequestError(location, "ProductID in JWT token must be a string")
 		}
 
 		// Retrieve TransactionID (client_reference_id)
 		transactionID, isString := claims["transactionId"].(string)
 		if !isString {
-			return derp.NewBadRequestError(location, "AuthorizationCode in JWT token must be a string")
+			return derp.BadRequestError(location, "AuthorizationCode in JWT token must be a string")
 		}
 
 		// Apply the values to the context
@@ -380,7 +380,7 @@ func WithAuthenticatedUser(serverFactory *server.Factory, fn WithFunc1[model.Use
 		authorization := getAuthorization(ctx)
 
 		if !authorization.IsAuthenticated() {
-			return derp.NewUnauthorizedError(location, "You must be signed in to perform this action")
+			return derp.UnauthorizedError(location, "You must be signed in to perform this action")
 		}
 
 		// Load the User from the database

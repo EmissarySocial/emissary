@@ -18,7 +18,7 @@ func (step StepInclude) Get(builder Builder, buffer io.Writer) PipelineBehavior 
 	action, ok := builder.actions()[step.Action]
 
 	if !ok {
-		return Halt().WithError(derp.NewBadRequestError(location, "Action not found", step.Action))
+		return Halt().WithError(derp.BadRequestError(location, "Action not found", step.Action))
 	}
 
 	result := Pipeline(action.Steps).Get(builder.factory(), builder, buffer)
@@ -33,7 +33,7 @@ func (step StepInclude) Post(builder Builder, buffer io.Writer) PipelineBehavior
 	action, ok := builder.actions()[step.Action]
 
 	if !ok {
-		return Halt().WithError(derp.NewBadRequestError(location, "Action not found", step.Action))
+		return Halt().WithError(derp.BadRequestError(location, "Action not found", step.Action))
 	}
 
 	result := Pipeline(action.Steps).Post(builder.factory(), builder, buffer)

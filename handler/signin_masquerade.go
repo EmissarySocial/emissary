@@ -28,7 +28,7 @@ func PostMasquerade(serverFactory *server.Factory) echo.HandlerFunc {
 		sterankoContext := ctx.(*steranko.Context)
 
 		if !isOwner(sterankoContext.Authorization()) {
-			return derp.NewForbiddenError(location, "Unauthorized")
+			return derp.ForbiddenError(location, "Unauthorized")
 		}
 
 		// Collect the userID from the Request

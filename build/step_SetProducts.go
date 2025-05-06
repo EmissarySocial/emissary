@@ -26,7 +26,7 @@ func (step StepSetProducts) Get(builder Builder, buffer io.Writer) PipelineBehav
 	streamBuilder, isStreamBuilder := builder.(Stream)
 
 	if !isStreamBuilder {
-		return Halt().WithError(derp.NewBadRequestError(location, "Invalid builder type"))
+		return Halt().WithError(derp.BadRequestError(location, "Invalid builder type"))
 	}
 
 	iconFunc := streamBuilder._factory.Icons().Get
@@ -120,7 +120,7 @@ func (step StepSetProducts) Post(builder Builder, _ io.Writer) PipelineBehavior 
 	// This step can only be used with a Stream builder
 	streamBuilder, isStreamBuilder := builder.(Stream)
 	if !isStreamBuilder {
-		return Halt().WithError(derp.NewBadRequestError(location, "Invalid builder type"))
+		return Halt().WithError(derp.BadRequestError(location, "Invalid builder type"))
 	}
 
 	// Try to parse the form input

@@ -16,7 +16,7 @@ func Authenticated(next echo.HandlerFunc) echo.HandlerFunc {
 
 			// If not authorized, return NOT AUTHORIZED
 			if _, err := sterankoContext.Authorization(); err != nil {
-				return derp.NewUnauthorizedError("middleware.Owner", "sterankoContext.Authorization", err)
+				return derp.UnauthorizedError("middleware.Owner", "sterankoContext.Authorization", err)
 			}
 
 			// Success
@@ -24,6 +24,6 @@ func Authenticated(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 
 		// This should never happen
-		return derp.NewInternalError("middleware.Owner", "sterankoContext.Authorization", nil)
+		return derp.InternalError("middleware.Owner", "sterankoContext.Authorization", nil)
 	}
 }

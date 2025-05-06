@@ -35,14 +35,14 @@ func NewModel(factory Factory, request *http.Request, response http.ResponseWrit
 
 	// Check permissions on this model object
 	if roleStateEnumerator, ok := object.(model.RoleStateEnumerator); !ok {
-		return Model{}, derp.NewBadRequestError(location, "Object does not implement model.RoleStateEnumerator", object)
+		return Model{}, derp.BadRequestError(location, "Object does not implement model.RoleStateEnumerator", object)
 
 	} else if !common._action.UserCan(roleStateEnumerator, &common._authorization) {
 
 		if common._authorization.IsAuthenticated() {
-			return Model{}, derp.NewForbiddenError(location, "Forbidden")
+			return Model{}, derp.ForbiddenError(location, "Forbidden")
 		} else {
-			return Model{}, derp.NewUnauthorizedError(location, "Anonymous user is not authorized to perform this action", actionID)
+			return Model{}, derp.UnauthorizedError(location, "Anonymous user is not authorized to perform this action", actionID)
 		}
 	}
 
@@ -50,7 +50,7 @@ func NewModel(factory Factory, request *http.Request, response http.ResponseWrit
 	modelService := factory.ModelService(object)
 
 	if modelService == nil {
-		return Model{}, derp.NewInternalError(location, "Invalid model service", object)
+		return Model{}, derp.InternalError(location, "Invalid model service", object)
 	}
 
 	// Return the Model builder
@@ -173,7 +173,7 @@ func (w Model) setState(stateID string) error {
 		return nil
 	}
 
-	return derp.NewInternalError("build.Model.SetState", "Object does not implement model.StateSetter interface", w._object)
+	return derp.InternalError("build.Model.SetState", "Object does not implement model.StateSetter interface", w._object)
 }
 
 func (w Model) clone(action string) (Builder, error) {

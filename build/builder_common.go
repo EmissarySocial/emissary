@@ -442,7 +442,7 @@ func (w *Common) getDomain() (model.Domain, error) {
 	domainService := w._factory.Domain()
 
 	if !domainService.Ready() {
-		return model.Domain{}, derp.NewInternalError("build.Common.getDomain", "Domain service not ready", nil)
+		return model.Domain{}, derp.InternalError("build.Common.getDomain", "Domain service not ready", nil)
 	}
 
 	return domainService.Get(), nil
