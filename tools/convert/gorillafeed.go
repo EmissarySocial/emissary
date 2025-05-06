@@ -33,7 +33,7 @@ func SearchResultToGorillaFeed(searchResult model.SearchResult) *feeds.Item {
 	}
 
 	if searchResult.CreateDate != 0 {
-		result.Created = time.Unix(searchResult.CreateDate, 0)
+		result.Created = time.UnixMilli(searchResult.CreateDate)
 	}
 
 	if searchResult.AttributedTo != "" {
