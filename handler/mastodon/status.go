@@ -233,7 +233,7 @@ func PostStatus_Unfavourite(serverFactory *server.Factory) func(model.Authorizat
 		if err := responseService.LoadByUserAndObject(auth.UserID, t.ID, vocab.ActivityTypeLike, &response); err != nil {
 
 			// If the response doesn't exist
-			if derp.NotFound(err) {
+			if derp.IsNotFound(err) {
 				return response.Toot(), nil
 			}
 

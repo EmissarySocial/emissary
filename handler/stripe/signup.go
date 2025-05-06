@@ -245,7 +245,7 @@ func loadOrCreateUser(apiKey string, userService *service.User, customer *stripe
 		return nil
 	}
 
-	if derp.NotFound(err) {
+	if derp.IsNotFound(err) {
 
 		if err := loadStripeCustomer(apiKey, customer); err != nil {
 			return derp.Wrap(err, "handler.stripe.loadOrCreateUser", "Error loading customer from Stripe API")

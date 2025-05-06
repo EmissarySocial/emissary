@@ -27,7 +27,7 @@ func undoFollow(context Context, activity streams.Document) error {
 
 	if err := followerService.LoadByActivityPubFollower(model.FollowerTypeSearch, context.searchQuery.SearchQueryID, actorURL, &follower); err != nil {
 
-		if derp.NotFound(err) {
+		if derp.IsNotFound(err) {
 			return nil
 		}
 
@@ -37,7 +37,7 @@ func undoFollow(context Context, activity streams.Document) error {
 	// Try to delete the existing follower record
 	if err := followerService.Delete(&follower, "Removed by remote client"); err != nil {
 
-		if derp.NotFound(err) {
+		if derp.IsNotFound(err) {
 			return nil
 		}
 

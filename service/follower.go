@@ -241,7 +241,7 @@ func (service *Follower) LoadOrCreate(parentID primitive.ObjectID, actorID strin
 	}
 
 	// NotFound error means we should create a new record
-	if derp.NotFound(err) {
+	if derp.IsNotFound(err) {
 		result.ParentID = parentID
 		result.Actor.ProfileURL = actorID
 		return result, nil
@@ -414,7 +414,7 @@ func (service *Follower) LoadOrCreateByWebSub(objectType string, parentID primit
 	}
 
 	// If NOT EXISTS, then create a new one
-	if derp.NotFound(err) {
+	if derp.IsNotFound(err) {
 		result.ParentID = parentID
 		result.ParentType = objectType
 		result.Method = model.FollowerMethodWebSub
@@ -478,7 +478,7 @@ func (service *Follower) NewActivityPubFollower(parentType string, parentID prim
 
 	// Try to find an existing follower record
 	if err := service.LoadByActor(parentID, actor.ID(), follower); err != nil {
-		if !derp.NotFound(err) {
+		if !derp.IsNotFound(err) {
 			return derp.Wrap(err, "handler.activityPub_HandleRequest_Follow", "Error loading existing follower", actor)
 		}
 	}

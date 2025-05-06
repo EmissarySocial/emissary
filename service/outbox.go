@@ -213,7 +213,7 @@ func (service *Outbox) LoadOrCreate(parentType string, parentID primitive.Object
 		return result, nil
 	}
 
-	if derp.NotFound(err) {
+	if derp.IsNotFound(err) {
 		result.ParentID = parentID
 		result.URL = url
 		return result, nil

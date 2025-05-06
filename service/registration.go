@@ -131,12 +131,12 @@ func (service *Registration) Validate(userService *User, domain *model.Domain, t
 	// UserID must not already exist in the database
 	if userID, err := primitive.ObjectIDFromHex(txn.UserID); err != nil {
 		return derp.BadRequestError(location, "Invalid UserID", txn.UserID)
-	} else if err := userService.LoadByID(userID, &user); !derp.NotFound(err) {
+	} else if err := userService.LoadByID(userID, &user); !derp.IsNotFound(err) {
 		return derp.BadRequestError(location, "UserID already exists. Please sign up again.")
 	}
 
 	// Username must not already exist in the database
-	if err := userService.LoadByUsername(txn.Username, &user); !derp.NotFound(err) {
+	if err := userService.LoadByUsername(txn.Username, &user); !derp.IsNotFound(err) {
 		return derp.BadRequestError(location, "Username taken. Please choose again.")
 	}
 
@@ -217,7 +217,7 @@ func (service *Registration) UpdateRegistration(groupService *Group, userService
 	err = userService.LoadByMapID(source, sourceID, &user)
 
 	// If not found, then create a new User
-	if derp.NotFound(err) {
+	if derp.IsNotFound(err) {
 		_, err := service.Register(groupService, userService, domain, txn)
 		return err
 	}

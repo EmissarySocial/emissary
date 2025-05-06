@@ -310,7 +310,7 @@ func (service *Response) UnsetResponse(user *model.User, url string, responseTyp
 	if err := service.LoadByUserAndObject(user.UserID, url, responseType, &oldResponse); err != nil {
 
 		// If there is no matching response, then there's nothing to delete
-		if derp.NotFound(err) {
+		if derp.IsNotFound(err) {
 			return nil
 		}
 

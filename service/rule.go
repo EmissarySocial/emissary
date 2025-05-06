@@ -423,7 +423,7 @@ func (service *Rule) hasDuplicate(rule *model.Rule) bool {
 	duplicate := model.NewRule()
 
 	// If a duplicate is not found, then return FALSE
-	if err := service.Load(criteria, &duplicate); derp.NotFound(err) {
+	if err := service.Load(criteria, &duplicate); derp.IsNotFound(err) {
 		return false
 	}
 

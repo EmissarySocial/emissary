@@ -80,7 +80,7 @@ func (service *Domain) Start() error {
 	if err != nil {
 
 		// If it's a "real" error, then we can't continue.
-		if !derp.NotFound(err) {
+		if !derp.IsNotFound(err) {
 			return derp.Wrap(err, location, "Error loading domain record")
 		}
 

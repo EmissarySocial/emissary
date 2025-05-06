@@ -461,7 +461,7 @@ func (service *Following) GetFollowingID(userID primitive.ObjectID, uri string) 
 
 	if err := service.LoadByURL(userID, document.ID(), &following); err == nil {
 		return following.ID(), nil
-	} else if derp.NotFound(err) {
+	} else if derp.IsNotFound(err) {
 		return "", nil
 	} else {
 		return "", derp.Wrap(err, location, "Error loading Following record", uri)
@@ -606,7 +606,7 @@ func (service *Following) preventDuplicates(current *model.Following) error {
 	// Search the database for the original record
 	original := model.NewFollowing()
 	if err := service.LoadByURL(current.UserID, current.URL, &original); err != nil {
-		if derp.NotFound(err) {
+		if derp.IsNotFound(err) {
 			return nil
 		}
 		return derp.Wrap(err, "service.Following.preventDuplicate", "Error loading Following", current)

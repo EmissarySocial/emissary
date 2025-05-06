@@ -173,7 +173,7 @@ func WithStream(serverFactory *server.Factory, fn WithFunc1[model.Stream]) echo.
 		if err := streamService.LoadByToken(token, &stream); err != nil {
 
 			// Special case: If the HOME page is missing, then this is a new database.  Forward to the admin section
-			if derp.NotFound(err) && (token == "home") {
+			if derp.IsNotFound(err) && (token == "home") {
 				return ctx.Redirect(http.StatusTemporaryRedirect, "/startup")
 			}
 

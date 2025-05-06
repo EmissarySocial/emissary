@@ -19,7 +19,7 @@ func DeleteEmptySearchQuery(factory *domain.Factory, args mapof.Any) queue.Resul
 
 	if err := searchQueryService.LoadByToken(token, &searchQuery); err != nil {
 
-		if derp.NotFound(err) {
+		if derp.IsNotFound(err) {
 			return queue.Success()
 		}
 

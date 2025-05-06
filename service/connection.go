@@ -203,7 +203,7 @@ func (service *Connection) LoadOrCreateByProvider(providerID string) (model.Conn
 		return result, nil
 	}
 
-	if derp.NotFound(err) {
+	if derp.IsNotFound(err) {
 		result.ProviderID = providerID
 		return result, nil
 	}

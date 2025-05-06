@@ -210,7 +210,7 @@ func (service *SearchTag) Upsert(tagName string) error {
 	}
 
 	// If "not found" then create a new SearchTag``
-	if derp.NotFound(err) {
+	if derp.IsNotFound(err) {
 
 		// Set default values for the new SearchTag
 		searchTag.Name = tagName

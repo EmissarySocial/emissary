@@ -619,7 +619,7 @@ func (service *Stream) LoadPrevSibling(parentID primitive.ObjectID, rank int, re
 		return nil
 	}
 
-	if derp.NotFound(err) {
+	if derp.IsNotFound(err) {
 		return service.LoadLastSibling(parentID, result)
 	}
 
@@ -636,7 +636,7 @@ func (service *Stream) LoadNextSibling(parentID primitive.ObjectID, rank int, re
 		return nil
 	}
 
-	if derp.NotFound(err) {
+	if derp.IsNotFound(err) {
 		return service.LoadFirstSibling(parentID, result)
 	}
 

@@ -25,7 +25,7 @@ func DeleteAny(context Context, activity streams.Document) error {
 	objectID := activity.Object().ID()
 
 	if err := outboxService.LoadByURL(model.FollowerTypeStream, context.stream.StreamID, objectID, &message); err != nil {
-		if derp.NotFound(err) {
+		if derp.IsNotFound(err) {
 			log.Trace().Str("url", objectID).Msg("Not Found")
 			return nil
 		}

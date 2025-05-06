@@ -223,7 +223,7 @@ func (service *SearchQuery) LoadOrCreate(queryValues url.Values) (model.SearchQu
 	}
 
 	// If it doesn't exist, then create a new record and return it
-	if derp.NotFound(err) {
+	if derp.IsNotFound(err) {
 
 		if err := service.Save(&newSearchQuery, "LoadOrCreate"); err != nil {
 			return model.NewSearchQuery(), derp.Wrap(err, location, "Error saving SearchQuery", newSearchQuery)

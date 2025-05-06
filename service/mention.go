@@ -205,7 +205,7 @@ func (service *Mention) LoadOrCreate(objectType string, objectID primitive.Objec
 	}
 
 	// NotFound error means we should create a new record
-	if derp.NotFound(err) {
+	if derp.IsNotFound(err) {
 		result.Type = objectType
 		result.ObjectID = objectID
 		result.Origin.URL = originURL

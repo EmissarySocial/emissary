@@ -208,7 +208,7 @@ func (service *SearchResult) Sync(searchResult model.SearchResult) error {
 	}
 
 	// If the SearchResult is NOT FOUND, then insert it.
-	if derp.NotFound(err) {
+	if derp.IsNotFound(err) {
 		if err := service.Save(&searchResult, "added"); err != nil {
 			return derp.ReportAndReturn(derp.Wrap(err, location, "Error adding Search", searchResult))
 		}
@@ -235,7 +235,7 @@ func (service *SearchResult) DeleteByURL(url string) error {
 
 	if err := service.LoadByURL(url, &searchResult); err != nil {
 
-		if derp.NotFound(err) {
+		if derp.IsNotFound(err) {
 			return nil
 		}
 

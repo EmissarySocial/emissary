@@ -55,7 +55,7 @@ func NewMongoStorage(args *CommandLineArgs) MongoStorage {
 	// If the config was read successfully, then NOOP here skips down to the next section.
 	case err == nil:
 
-	case derp.NotFound(err):
+	case derp.IsNotFound(err):
 
 		if !args.Setup {
 			log.Error().Msg("Emissary could not start because the configuration database could not be found.")

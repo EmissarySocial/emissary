@@ -254,7 +254,7 @@ func PostOAuthRevoke(serverFactory *server.Factory) echo.HandlerFunc {
 
 		err = userTokenService.LoadByClientAndToken(clientID, transaction.ClientSecret, transaction.Token, &userToken)
 
-		if derp.NotFound(err) {
+		if derp.IsNotFound(err) {
 			return nil
 		}
 

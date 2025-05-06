@@ -42,7 +42,7 @@ func GetIntent_Follow(ctx *steranko.Context, factory *domain.Factory, user *mode
 	followingService := factory.Following()
 	following := model.NewFollowing()
 	if err := followingService.LoadByURL(user.UserID, actor.ID(), &following); err != nil {
-		if !derp.NotFound(err) {
+		if !derp.IsNotFound(err) {
 			return derp.Wrap(err, location, "Error loading existing following")
 		}
 	}

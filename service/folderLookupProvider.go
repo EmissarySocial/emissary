@@ -55,7 +55,7 @@ func (service FolderLookupProvider) Add(name string) (string, error) {
 		return folder.ID(), nil
 	}
 
-	if derp.NotFound(err) {
+	if derp.IsNotFound(err) {
 
 		folder.Label = name
 		folder.UserID = service.userID
