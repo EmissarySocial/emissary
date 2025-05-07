@@ -2,6 +2,7 @@ package step
 
 import (
 	"html/template"
+	"strings"
 
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
@@ -9,7 +10,8 @@ import (
 
 // ForwardTo is a Step that forwards the user to a new page.
 type ForwardTo struct {
-	URL *template.Template
+	URL    *template.Template
+	Method string
 }
 
 // NewForwardTo returns a fully initialized ForwardTo object
@@ -24,7 +26,8 @@ func NewForwardTo(stepInfo mapof.Any) (ForwardTo, error) {
 	}
 
 	return ForwardTo{
-		URL: url,
+		URL:    url,
+		Method: first(strings.ToLower(stepInfo.GetString("method")), "post"),
 	}, nil
 }
 

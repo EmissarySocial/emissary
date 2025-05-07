@@ -25,7 +25,6 @@ import (
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -878,7 +877,7 @@ func (w Stream) HasProducts() bool {
 }
 
 // ProductIDs returns all product IDs that are valid for this stream
-func (w Stream) ProductIDs() []string {
+func (w Stream) ProductIDs() sliceof.String {
 	return w._stream.ProductIDs()
 }
 
@@ -892,11 +891,7 @@ func (w Stream) Products() QueryBuilder[model.Product] {
 	criteria := expressionBuilder.Evaluate(w._request.URL.Query()).
 		AndIn("_id", productIDs)
 
-	spew.Dump(criteria)
-
 	result := NewQueryBuilder[model.Product](w._factory.Product(), criteria)
-
-	spew.Dump(result.Slice())
 	return result
 }
 
