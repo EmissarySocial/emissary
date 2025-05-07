@@ -48,6 +48,12 @@ const CollectionOAuthUserToken = "OAuthUserToken"
 // CollectionOutbox is the name of the database collection where users' Outbox records are stored
 const CollectionOutbox = "Outbox"
 
+// CollectionProduct is the name of the database collection where Products are stored
+const CollectionProduct = "Product"
+
+// CollectionPurchase is the name of the database collection where Purchases are stored
+const CollectionPurchase = "Purchase"
+
 // CollectionResponse is the name of the database collection where Responses are stored
 const CollectionResponse = "Response"
 
@@ -68,12 +74,6 @@ const CollectionStream = "Stream"
 
 // CollectionStreamDraft is the name of the database collection where draft changes to streams are stored
 const CollectionStreamDraft = "StreamDraft"
-
-// CollectionPurchase is the name of the database collection where Purchases are stored
-const CollectionPurchase = "Purchase"
-
-// CollectionProduct is the name of the database collection where Products are stored
-const CollectionProduct = "Product"
 
 // CollectionTemplate is the name of the database collection where Templates are stored
 const CollectionTemplate = "Template"

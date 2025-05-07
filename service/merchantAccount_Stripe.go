@@ -109,7 +109,7 @@ func (service *MerchantAccount) stripe_getCheckoutURL(merchantAccount *model.Mer
 	txn := remote.Post("https://api.stripe.com/v1/checkout/sessions").
 		With(options.BearerAuth(restrictedKey)).
 		ContentType("application/x-www-form-urlencoded").
-		Form("mode", iif((product.RecurringType == model.ProductRecurringTypeOnetime), "payment", "product")).
+		Form("mode", iif((product.RecurringType == model.ProductRecurringTypeOnetime), "payment", "subscription")).
 		Form("line_items[0][price]", product.RemoteID).
 		Form("line_items[0][quantity]", "1").
 		Form("ui_mode", "hosted").
@@ -437,7 +437,7 @@ func (service *MerchantAccount) stripe_getRestrictedKey(merchantAccount *model.M
 	apiKeys, err := service.DecryptVault(merchantAccount, propertyName)
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Error retrieving API keys")
+		return "", derp.Wrap(err, location, "Error retrieving API keys", propertyName)
 	}
 
 	return apiKeys.GetString(propertyName), nil

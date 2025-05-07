@@ -273,21 +273,23 @@ func (service *MerchantAccount) RefreshProduct(merchantAccount *model.MerchantAc
 
 func (service *MerchantAccount) DecryptVault(merchantAccount *model.MerchantAccount, values ...string) (mapof.String, error) {
 
+	const location = "service.MerchantAccount.DecryptVault"
+
 	// Before retrieving the API keys, make sure they are up to date
 	if err := service.RefreshAPIKeys(merchantAccount); err != nil {
-		return nil, derp.Wrap(err, "service.MerchantAccount.getAPIKeys", "Error refreshing API keys")
+		return nil, derp.Wrap(err, location, "Error refreshing API keys")
 	}
 
 	// Decode the encryption key (this should never fail)
 	encryptionKey, err := hex.DecodeString(service.encryptionKey)
 	if err != nil {
-		return nil, derp.Wrap(err, "service.MerchantAccount.getAPIKeys", "Error decoding encryption key")
+		return nil, derp.Wrap(err, location, "Error decoding encryption key")
 	}
 
 	// Open the Vault to get the clientID and secret key
 	vault, err := merchantAccount.Vault.Decrypt(encryptionKey, values...)
 	if err != nil {
-		return nil, derp.Wrap(err, "service.MerchantAccount.getAPIKeys", "Error decrypting vault data")
+		return nil, derp.Wrap(err, location, "Error decrypting vault data")
 	}
 
 	// Return vault data to the caller

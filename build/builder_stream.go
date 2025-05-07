@@ -9,6 +9,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -24,6 +25,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -880,15 +882,22 @@ func (w Stream) ProductIDs() []string {
 	return w._stream.ProductIDs()
 }
 
+// Products returns a QueryBuilder that retrieves all products that,
+// when purchased, grant additional access to this Stream.
 func (w Stream) Products() QueryBuilder[model.Product] {
 
-	expressionBuilder := builder.NewBuilder()
-	criteria := exp.And(
-		expressionBuilder.Evaluate(w._request.URL.Query()),
-		exp.Equal("userId", w._stream.AttributedTo.UserID),
-	)
+	productIDs, _ := id.ConvertSlice(w._stream.ProductIDs())
 
-	return NewQueryBuilder[model.Product](w._factory.Product(), criteria)
+	expressionBuilder := builder.NewBuilder()
+	criteria := expressionBuilder.Evaluate(w._request.URL.Query()).
+		AndIn("_id", productIDs)
+
+	spew.Dump(criteria)
+
+	result := NewQueryBuilder[model.Product](w._factory.Product(), criteria)
+
+	spew.Dump(result.Slice())
+	return result
 }
 
 /******************************************

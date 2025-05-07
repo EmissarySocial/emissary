@@ -191,13 +191,6 @@ func WithProduct(serverFactory *server.Factory, fn WithFunc2[model.MerchantAccou
 
 	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *domain.Factory) error {
 
-		// Get the UserID from the the URL
-		userID, err := primitive.ObjectIDFromHex(ctx.QueryParam("userId"))
-
-		if err != nil {
-			return derp.Wrap(err, location, "UserID must be a valid ObjectID", ctx.QueryParam("userId"))
-		}
-
 		// Get the ProductID from the the URL
 		productID, err := primitive.ObjectIDFromHex(ctx.QueryParam("productId"))
 
@@ -209,7 +202,7 @@ func WithProduct(serverFactory *server.Factory, fn WithFunc2[model.MerchantAccou
 		productService := factory.Product()
 		product := model.NewProduct()
 
-		if err := productService.LoadByUserAndID(userID, productID, &product); err != nil {
+		if err := productService.LoadByID(productID, &product); err != nil {
 			return derp.Wrap(err, location, "Error loading Product")
 		}
 

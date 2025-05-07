@@ -556,10 +556,10 @@
 								children:[
 									{type:"hidden", path:"type", options:{value:"STRIPE"}}
 									{type:"text", path:"name", label:"Account Label", description:"(PRIVATE) A label for you to recognize this account", options:{required:true}}
-									{type:"text", path:"vault.publishableKey_test", label:"Publishable Key (test mode)", description:"(PUBLIC) Create using the Stripe dashboard.", options:{show-if:"liveMode is false", required-if:"liveMode is false", placeholder:"pk_test_XXXXXXXXXXXXXXXXXXXXXXXXX", pattern:"^(\\**)|(pk_test_[A-Za-z0-9])*"}}
-									{type:"text", path:"vault.publishableKey_live", label:"Publishable Key (live mode)", description:"(PUBLIC) Create using the Stripe dashboard.", options:{show-if:"liveMode is true", required-if:"liveMode is true", placeholder:"pk_live_XXXXXXXXXXXXXXXXXXXXXXXXX", pattern:"^(\\**)|(pk_live_[A-Za-z0-9])*"}}
-									{type:"text", path:"vault.restrictedKey_test", label:"Restricted Key (test mode)", description:"(PRIVATE) Create using the Stripe dashboard.", options:{show-if:"liveMode is false", required-if:"liveMode is false", placeholder:"rk_test_XXXXXXXXXXXXXXXXXXXXXXXXX", pattern:"^(\\**)|(rk_test_[A-Za-z0-9])*"}}
-									{type:"text", path:"vault.restrictedKey_live", label:"Restricted Key (live mode)", description:"(PRIVATE) Create using the Stripe dashboard.", options:{show-if:"liveMode is true", required-if:"liveMode is true", placeholder:"rk_live_XXXXXXXXXXXXXXXXXXXXXXXXX", pattern:"^(\\**)|(rk_live_[A-Za-z0-9])*"}}
+									{type:"text", path:"vault.publishableKey_test", label:"Publishable Key (test mode)", description:"(PUBLIC) Create using the Stripe dashboard.", options:{show-if:"liveMode is false", required-if:"liveMode is false", placeholder:"pk_test_XXXXXXXXXXXXXXXXXXXXXXXXX", pattern:"^(\\**)|(pk_test_[A-Za-z0-9]+)"}}
+									{type:"text", path:"vault.publishableKey_live", label:"Publishable Key (live mode)", description:"(PUBLIC) Create using the Stripe dashboard.", options:{show-if:"liveMode is true", required-if:"liveMode is true", placeholder:"pk_live_XXXXXXXXXXXXXXXXXXXXXXXXX", pattern:"^(\\**)|(pk_live_[A-Za-z0-9]+)"}}
+									{type:"text", path:"vault.restrictedKey_test", label:"Restricted Key (test mode)", description:"(PRIVATE) Create using the Stripe dashboard.", options:{show-if:"liveMode is false", required-if:"liveMode is false", placeholder:"rk_test_XXXXXXXXXXXXXXXXXXXXXXXXX", pattern:"^(\\**)|(rk_test_[A-Za-z0-9]+)"}}
+									{type:"text", path:"vault.restrictedKey_live", label:"Restricted Key (live mode)", description:"(PRIVATE) Create using the Stripe dashboard.", options:{show-if:"liveMode is true", required-if:"liveMode is true", placeholder:"rk_live_XXXXXXXXXXXXXXXXXXXXXXXXX", pattern:"^(\\**)|(rk_live_[A-Za-z0-9]+)"}}
 									{type:"toggle", path:"liveMode", options:{true-text:"Mode: Live. (Use for Real Payments)", false-text:"Mode: Sandbox (Use for Tests Only)"}}
 								]
 							}

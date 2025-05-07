@@ -279,6 +279,8 @@ func (stream *Stream) HasProducts() bool {
 	return len(stream.Products) > 0
 }
 
+// ProductIDs returns a unique list of all Product IDs that,
+// when purchased, grant additional access to this Stream
 func (stream *Stream) ProductIDs() []string {
 
 	result := make([]string, 0, len(stream.Products))
