@@ -6,6 +6,7 @@ import (
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/domain"
+	domaintools "github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/labstack/echo/v4"
 )
@@ -17,7 +18,7 @@ func GetNodeInfo(serverFactory *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
-		host := ctx.Request().Host
+		host := domaintools.Hostname(ctx.Request())
 		server := domain.AddProtocol(host)
 
 		result := map[string]any{

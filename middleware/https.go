@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/benpate/domain"
+	domaintools "github.com/benpate/domain"
 	"github.com/labstack/echo/v4"
 )
 
@@ -19,7 +20,8 @@ func HttpsRedirect(handler echo.HandlerFunc) echo.HandlerFunc {
 		request := context.Request()
 
 		// Do not HTTPS for localhost
-		if domain.IsLocalhost(request.Host) {
+		hostname := domaintools.Hostname(request)
+		if domain.IsLocalhost(hostname) {
 			return handler(context)
 		}
 
