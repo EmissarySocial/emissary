@@ -183,7 +183,7 @@ func GetAccount_Statuses(serverFactory *server.Factory) func(model.Authorization
 		// TODO: HIGH: Work out how to set response headers here for additional pagination
 
 		// Return posts as toot.Status(es)
-		return getSliceOfToots[model.Stream, object.Status](streams), getPageInfo(streams), nil
+		return getSliceOfToots(streams), getPageInfo(streams), nil
 	}
 }
 

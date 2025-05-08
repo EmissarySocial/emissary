@@ -32,6 +32,6 @@ func GetBlocks(serverFactory *server.Factory) func(model.Authorization, txn.GetB
 		}
 
 		// Convert the results to a slice of objects
-		return getSliceOfToots[model.User, object.Account](users), getPageInfo(users), nil
+		return getSliceOfToots(users), getPageInfo(users), nil
 	}
 }

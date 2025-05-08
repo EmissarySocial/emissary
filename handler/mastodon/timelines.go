@@ -50,7 +50,7 @@ func GetTimeline_Home(serverFactory *server.Factory) func(model.Authorization, t
 			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Error retrieving messages")
 		}
 
-		return getSliceOfToots[model.Message, object.Status](messages), getPageInfo(messages), nil
+		return getSliceOfToots(messages), getPageInfo(messages), nil
 	}
 }
 
@@ -85,6 +85,6 @@ func GetTimeline_List(serverFactory *server.Factory) func(model.Authorization, t
 			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Error retrieving messages")
 		}
 
-		return getSliceOfToots[model.Message, object.Status](messages), getPageInfo(messages), nil
+		return getSliceOfToots(messages), getPageInfo(messages), nil
 	}
 }
