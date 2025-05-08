@@ -1,0 +1,78 @@
+{{- $folders := .FoldersWithSelection -}}
+{{- $folder := $folders.Selected -}}
+
+{{- $inbox := .Inbox.Top12.ByPublishDate.Slice -}}
+{{- $folderID := .QueryParam "folderId" -}}
+{{- $internalID := .QueryParam "origin.followingId" -}}
+
+{{- if eq "" (.QueryParam "remote") -}}
+
+	<div 
+		hx-get="/@me/inbox/list-before?folderId={{$folderID}}&origin.followingId={{$internalID}}&readDate=LT:{{.Now}}000"
+		hx-target="this"
+		hx-trigger="click once"
+		hx-swap="beforebegin"
+		hx-push-url="false"
+		role="button"
+		class="turboclick margin-bottom">
+		<div class="text-sm text-gray" style="margin:0px;">
+			&uarr; Older Posts &bull; click to view
+		</div>
+		<div style="border-top:solid 2px red;"></div>
+		<div class="text-sm text-red" style="margin:0px;">
+			&darr; New Posts
+		</div>
+	</div>
+	
+{{- end -}}
+
+{{- if gt (len  $inbox) 0 -}}
+
+	{{- $inboxBuilder := . -}}
+	{{- range $index, $message := $inbox -}}
+
+		<div 
+			id="item_{{$message.MessageID.Hex}}" 
+			role="button"
+			class="message turboclick"
+			style="max-width:640px;"
+			hx-get="/@me/inbox/message?messageId={{$message.MessageID.Hex}}&url={{$message.URL}}&folderId={{$folderID}}&origin.followingId={{$internalID}}"
+			hx-push-url="false"
+			tabIndex="0"
+			script="install listItem(messageId:'{{.MessageID.Hex}}')">
+
+			{{- if eq "SOCIAL" $folder.Layout -}}
+				{{- template "list-social" (array $inboxBuilder $message) -}}
+			{{- else if eq "NEWSPAPER" $folder.Layout -}}
+				{{- template "list-newspaper" (array $inboxBuilder $message) -}}
+			{{- else if eq "MAGAZINE" $folder.Layout -}}
+				{{- template "list-magazine" (array $inboxBuilder $message) -}}
+			{{- else -}}
+				{{- template "list-social" (array $inboxBuilder $message) -}}
+			{{- end -}}
+			
+		</div>
+		
+		<hr>
+
+	{{- end -}}
+
+	<!-- Target zone to load additional pages once we scroll down this far -->
+	{{- $lastMessage := $inbox.Last -}}
+	<div 
+		hx-get="/@me/inbox/list?folderId={{$folderID}}&origin.followingId={{$internalID}}&rank=GT:{{$lastMessage.Rank}}&read=false&remote=true"
+		hx-push-url="false" 
+		hx-trigger="intersect once" 
+		hx-target="this" 
+		hx-swap="outerHTML">
+		<div><span class="spin">{{icon "loading"}}</span> Loading...</div>
+	</div>
+
+{{- else -}}
+
+	{{if eq "" (.QueryParam "remote") -}}
+		<h2 class="text-gray">This inbox is empty.  Try following a new person or website.</h2>
+	{{- end -}}
+
+	<div style="height:100vw"></div>
+{{- end -}}

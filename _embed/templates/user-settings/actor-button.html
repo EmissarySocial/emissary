@@ -1,0 +1,28 @@
+{{- $url := .QueryParam "url" -}}
+{{- $following := .AmFollowing $url -}}
+
+<span hx-get="/@me/inbox/actor-button?{{.QueryString}}" hx-trigger="refresh" hx-target="this" hx-swap="outerHTML" script="install refreshPeers(id:'{{$url}}')">
+	{{- if not $following.IsNew -}}
+		{{- $subBuilder := .SubBuilder $following -}}
+		{{- template "actor-button-follow" $subBuilder -}}
+
+	{{- else -}}
+		{{- $rule := .HasRule "ACTOR" $url -}}
+
+		{{- if $rule.IsNew -}}
+			{{- template "actor-button-none" . -}}
+
+		{{- else if eq "MUTE" $rule.Action -}}
+			{{- $subBuilder := .SubBuilder $rule -}}
+			{{- template "actor-button-mute" $subBuilder -}}
+
+		{{- else if eq "BLOCK" $rule.Action -}}
+			{{- $subBuilder := .SubBuilder $rule -}}
+			{{- template "actor-button-block" $subBuilder -}}
+
+		{{- else -}}
+			{{- template "actor-button-none" . -}}
+		{{- end -}}
+		
+	{{- end -}}
+</span>

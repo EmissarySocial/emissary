@@ -1,0 +1,4 @@
+{{- $url := .QueryParam "url" -}}
+{{- $profile := .ActivityStream $url -}}
+
+<pre>{{ $profile | json }}</pre>

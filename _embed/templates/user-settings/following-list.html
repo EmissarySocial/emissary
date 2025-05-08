@@ -1,0 +1,54 @@
+{{- $search := .QueryParam "search" -}}
+{{- $following := .Following.Top12.ByLabel.Slice -}}
+
+{{- range $following -}}
+	<div hx-get="/@me/inbox?folderId={{.FolderID.Hex}}&origin.followingId={{.FollowingID.Hex}}" hx-swap="outerHTML show:window:top" hx-push-url="true" class="flex-row flex-align-center" role="button" tabIndex="0">
+
+		<div class="flex-row flex-grow-1">
+
+			<div class="margin-right-xs flex-grow-0 flex-shrink-0">
+				{{- if ne "" .IconURL -}}
+					<img src="{{.IconURL}}" class="circle width-48"/>
+				{{- else -}}
+					<div class="circle width-48"></div>
+				{{- end -}}
+			</div>
+
+			<div class="width-3-5">
+				{{- if ne "" .Label -}}
+					<div class="ellipsis-block" style="max-height:3em;">
+						<div class="bold">{{- .Label -}}</div>
+						<div class="text-light-gray">{{- .UsernameOrID -}}</div>
+					</div>
+				{{- else -}}
+					<div class="ellipsis-block" style="max-height:1.75em;">
+						{{- .UsernameOrID -}}
+					</div>
+				{{- end -}}
+			</div>
+			<div class="width-2-5">
+				<div><a hx-get="/@me/inbox/inbox?folderId={{.FolderID.Hex}}" class="text-black bold" script="on click halt the event">{{.Folder}}</a></div>
+				<div class="text-sm text-light-gray margin-none">
+					{{ if eq "SUCCESS" .Status -}}
+						{{ icon .Icon }} 
+						{{.Method}}
+						{{ .LastPolled | tinyDate }}
+					{{- else if eq "ERROR" .Status -}}
+						<span class="text-red">{{.Status}}</span>
+					{{- else -}}
+						<span class="text-green">{{.Status}}</span>
+					{{- end -}}
+				</div>
+			</div>
+		</div>
+
+		<div class="align-right" hx-push-url="false">
+			<button class="text-sm" hx-get="/@me/inbox/following-edit?followingId={{.FollowingID.Hex}}" script="on click halt the event">Edit Source</button>
+		</div>
+	</div>
+{{- end -}}
+
+{{- if eq 12 $following.Length -}}
+	{{- $last := $following.Last -}}
+	<div hx-get="/@me/inbox/following-list?search={{$search}}&label=GT:{{$last.Label}}" hx-target="this" hx-trigger="revealed" hx-swap="outerHTML" hx-push-url="false"></div>
+{{- end -}}

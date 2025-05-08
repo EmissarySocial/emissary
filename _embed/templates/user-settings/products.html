@@ -1,0 +1,137 @@
+{{- $folders := .Folders -}}
+{{- $merchantAccounts := .MerchantAccounts.Slice -}}
+{{- $products := .Products.ByName.Slice -}}
+{{- $purchaseCount := .Purchases.Count -}}
+
+<div class="page app flex-row">
+	<title>{{.RuleCount}} Rules | {{.DisplayName}}</title>
+	<link rel="stylesheet" href="/.templates/user-inbox/stylesheet">
+
+	{{- template "sidebar" $folders -}}
+
+	<div class="app-content">
+
+		<div role="tablist" class="underlined margin-top margin-bottom" hx-push-url="true">
+			<a href="/@me/inbox/following" hx-boost="true" role="tab">{{icon "star"}} Following</a>
+			<a href="/@me/inbox/followers" hx-boost="true" role="tab">{{icon "person"}} Followers</a>
+			<a href="/@me/inbox/purchases" hx-boost="true" role="tab">{{icon "person-card"}} Purchases</a>
+			<a href="/@me/inbox/products" hx-boost="true" role="tab" aria-selected="true">{{icon "card-fill"}} Products</a>
+			<a href="/@me/inbox/rules" hx-boost="true" role="tab">{{icon "rule"}} Rules</a>
+		</div>
+
+		{{- if $merchantAccounts.IsEmpty -}}
+
+			<div class="alert-blue">
+				Products let you charge your followers for online access to your posts and content,
+				either as onetime payments or recurring payments.
+				<a href="https://emissary.dev/products" target="_blank">Learn more {{icon "new-window"}}</a>
+			</div>
+
+			<h2>Step 1: Connect a Merchant Account</h2>
+			<p>To get started, you'll need to have a merchant account set up with <b>PayPal</b> or <b>Stripe</b>.
+				After you've entered your merchant account information, you'll be able to connect the product plan(s) from your merchant account.
+				<div>
+				<button hx-get="/@me/inbox/merchantAccount-add" class="primary">{{icon "add"}} Add a Merchant Account</button>
+			</div>
+
+
+		{{- else -}}
+
+			<div class="flex-row margin-bottom-lg">
+				<a href="/@me/inbox/purchases" class="text-plain text-nocolor card width-33% padding" hx-boost="true">
+					<div class="align-center text-sm text-gray margin-bottom">
+						{{ pluralize $products.Length "Purchase" "Purchases"}}
+					</div>
+
+					<div class="text-xl bold align-center">
+						{{- $purchaseCount -}}
+					</div>
+
+				</a>
+				<div class="card width-33% padding">
+					<div class="align-center text-sm text-gray margin-bottom">
+						{{ pluralize $products.Length "Product Plan" "Product Plans"}}
+					</div>
+
+					<div class="text-xl bold align-center">
+						{{- $products.Length -}}
+					</div>
+
+				</div>
+				<div class="card width-33% padding">
+
+					<div class="align-center text-sm text-gray margin-bottom">
+						{{ pluralize $merchantAccounts.Length "Merchant Account" "Merchant Accounts"}}
+					</div>
+
+					<div class="flex-row">
+						{{- range  $index, $merchantAccount := $merchantAccounts -}}
+							{{- $type := lowerCase $merchantAccount.Type -}}
+							<div hx-get="/@me/inbox/merchantAccount-edit-{{$type}}?merchantAccountId={{$merchantAccount.ID}}" role="button" class="flex-grow align-center turboclick">
+								<div>{{- icon $type -}}</div>
+								<div class="text-sm bold">{{$merchantAccount.Name}}</div>
+							</div>
+						{{- end -}}
+						<div hx-get="/@me/inbox/merchantAccount-add" role="button" class="link flex-grow align-center turboclick">
+							<div>{{- icon "add" -}}</div>
+							<div class="text-sm bold">Connect</div>
+						</div>
+					</div>	
+
+				</div>
+			</div>				
+					
+			{{- if $products.IsEmpty -}}
+
+				<div class="margin-top">
+					<div class="alert-blue">
+						Products let you charge your followers for online access to your posts and content, 
+						either as onetime payments or recurring payments.
+						<a href="https://emissary.dev/products" target="_blank">Learn more {{icon "new-window"}}</a>
+						<br>
+						<br>
+
+						{{- if $merchantAccounts.IsLength 1 -}}
+							<button hx-get="/@me/inbox/product-edit?merchantAccountId={{$merchantAccounts.First.ID}}" class="primary turboclick">{{icon "add"}} Add a Product Plan</button>
+						{{- else -}}
+							<button hx-get="/@me/inbox/product-choose-merchantAccount" class="primary turboclick">{{icon "add"}} Add a Product Plan</button>
+						{{- end -}}
+					</div>
+				</div>
+
+			{{- else -}}
+
+				<div class="table margin-top">
+					{{- range $index, $merchantAccount := $merchantAccounts -}}
+						<div hx-get="/@me/inbox/product-edit?merchantAccountId={{$merchantAccount.ID}}" role="button" class="link turboclick">
+							{{icon "add"}} Add {{$merchantAccount.Name}} Product
+						</div>
+					{{- end -}}
+				</div>
+
+				<div class="table margin-top">
+					{{- range $index, $product := $products -}}
+						<div hx-get="/@me/inbox/product-edit?productId={{$product.ID}}" role="button" class="flex-row flex-align-start turboclick">
+							<div class="text-xl margin-none">{{icon $product.MerchantAccountType}}</div>
+							<div class="flex-grow">
+								<div class="bold">{{$product.Name}}</div>
+								<div class="text-gray text-sm">{{$product.Description}}</div>
+							</div>
+							<div>
+								{{- if $product.IsFeatured -}}
+									{{icon "star-fill"}}
+								{{- end -}}
+							</div>
+						</div>
+					{{- end -}}
+
+				</div>
+			
+			{{- end -}}			
+		{{- end -}}
+	
+	</div>
+
+	<div hx-get="{{.URL}}" hx-trigger="refreshPage from:window" hx-push-url="false"></div>
+
+</div>

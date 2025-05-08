@@ -1,0 +1,855 @@
+{
+	templateId: user-settings
+	templateRole: user-settings
+	model: settings
+	label: Default User Settings
+	description: A simple settings admin with a sidebar for folders and several feed layouts
+	icon: settings
+	containedBy: []
+	schema: {
+		title: User Settings
+		type: object
+		properties: {
+			feeds: {
+				description: Array of people to render on the page
+				type: array
+				items: {
+					type: object
+					properties: {
+						url: {
+							type: string
+						}
+						name: {
+							type: string
+						}
+					}
+				}
+			}
+		}
+	}
+	bundles: {
+		stylesheet: {
+			content-type: text/css
+		}
+		hyperscript: {
+			content-type: text/hyperscript
+		}
+	}
+	actions: {
+
+		inbox: {
+			roles: ["self"]
+			do: "view-html"
+		}
+		sidebar: {
+			roles: ["self"]
+			do: "view-html"
+			file: "sidebar-remote"
+		}
+		list: {
+			roles: ["self"]
+			steps: [
+				{do: "view-html"}
+			]
+		}
+		list-before: {
+			roles: ["self"]
+			do: "view-html"
+		}
+		filter: {
+			roles: ["self"]
+			steps: [
+				{do: "as-modal", steps: [
+					{do: "view-html"}
+				]}
+			]
+		}
+		folder-add: {
+			roles: ["self"]
+			steps: [
+				{do: "set-query-param", folderId: "new"}
+				{do: "with-folder", steps: [
+					{do: "as-modal", steps: [
+						{do: "edit", form: {
+							type: layout-vertical
+							label: Add a Folder
+							children: [
+								{type: "text", path: "label", label: "Name", options:{autocomplete:"off"}}
+								{type: "select", path: "icon", label: "Icon", options: {provider: "folder-icons"}}
+								{type: "select", path: "layout", label: "Layout", options: {enum: "SOCIAL,NEWSPAPER,MAGAZINE"}}
+							]}
+						}
+						{do: "save"}
+					]}
+					{do: "trigger-event", event: "closeModal"}
+					{do: "trigger-event", event: "refreshPage"}
+				]}
+			]
+		}
+		folder-edit: {
+			roles: ["self"]
+			steps: [
+				{do: "with-folder", steps: [
+					{do: "as-modal", steps: [
+						{do:"edit", options:["delete:/@me/inbox/folder-delete?folderId={{.ObjectID}}"], form:{
+							type: layout-vertical
+							label: Folder Settings
+							children:[
+								{type:"text", path:"label", label:"Name"}
+								{type:"select", path:"icon", label:"Icon", options:{provider:"folder-icons"}}
+								{type:"select", path:"layout", label:"Layout", options:{enum:"SOCIAL,NEWSPAPER,MAGAZINE"}}
+							]}
+						}
+						{do:"save"}
+					]}
+					{do:"trigger-event", event:"closeModal"}
+					{do:"trigger-event", event:"refreshPage"}
+				]}
+			]
+		}
+		folder-delete:{
+			roles:["self"]
+			steps:[
+				{do:"with-folder", steps: [
+					{do:"delete", title:"Delete Folder: {{.Label}}?", message:"Deleting this folder will also remove all inbox items inside it."}
+					{do:"forward-to", url:"/@me/inbox"}
+				]}
+			]
+		}
+		folder-sort:{
+			roles:["self"]
+			steps:[
+				{do:"with-folder", steps:[
+					{do:"sort"}
+				]}
+			]
+		}
+		
+		followers: {do:"view-html", file:"followers"}
+		followers-list: {do:"view-html", file:"followers-list"}
+		follower-add: {
+			roles:["self"]
+			steps:[
+				{do:"as-modal", steps:[
+					{do:"edit", form: {
+						type:"layout-vertical"
+						label:"Add Follower"
+						children: [
+							{type:"text", path:"url", label:"URL"}
+						]
+					}}
+					{do:"view-html", file:"follower"}
+					{do:"save"}
+				]}
+			]
+		}
+		follower:{
+			roles: ["self"]
+			steps:[
+				{do:"with-follower", steps: [
+					{do:"as-modal", steps:[
+						{do:"view-html", file:"follower"}
+					]}
+				]}
+			]
+		}
+		follower-delete:{
+			roles: ["self"]
+			steps:[
+				{do:"with-follower", steps:[
+					{do:"delete", title:"Remove Follower?", message:"Stop sending updates to '{{.Label}}'?", button:"Remove"}
+					{do:"trigger-event", event:"refreshPage"}
+				]}
+			]
+		}
+
+		following: {do:"view-html", file:"following"}
+		following-list: {do:"view-html", file:"following-list"}
+		following-search: {
+			roles:["self"]
+			steps:[
+				{do:"as-modal", steps:[
+					{do:"view-html"}
+				]}
+			]
+		}
+		following-search-results: {
+			roles:["self"]
+			do:"view-html"
+		}
+		following-add: {
+			roles:["self"]
+			steps: [
+				{do:"as-modal", background:"inbox", steps:[
+					{do:"view-html"}
+				]}
+			]
+		}
+		following-add-form:{
+			roles:["self"]
+			steps:[
+				{do:"with-following", steps:[
+					{do:"set-data", from-url:["url", "folderId"]}, 
+					{
+						do:"edit"
+						options:[
+							"endpoint:/@me/inbox/following-add-form?followingId=new"
+							"submit-label:Follow this Source"
+							"saving-label:Following..."
+						]
+						form:{
+							type:"layout-vertical"
+							children: [
+								{
+									type:"hidden"
+									path:"url"
+								}
+								{
+									type:"select"
+									label:"Inbox Folder"
+									path:"folderId"
+									description:"Where should messages from this source be placed?"
+									options:{provider: "folders"}
+								}
+								{
+									type:"select", 
+									label:"Message Types", 
+									path:"behavior", 
+									description:"What kinds of posts should be shown in my timeline?"
+									options:{provider:"following-behaviors"}
+								}
+								{
+									type:"select", 
+									label:"Shared Blocks", 
+									path:"ruleAction", 
+									description:"How should blocks from this source be handled?"
+									options:{provider:"following-rule-actions"}
+								}
+								{
+									type:"toggle"
+									path:"collapseThreads"
+									default:true
+									options:{
+										true-text:"Group messages into a single thread"
+										false-text:"Show all messages separately"
+									}
+								}
+								{
+									type:"toggle"
+									path:"isPublic"
+									default:false
+									options:{
+										true-text:"Public: This 'Follow' is visible on my profile"
+										false-text:"Private: This 'Follow' is hidden from others"
+									}
+								}
+							]
+						}
+					},
+					{do:"save"}
+				]}
+				{do:"trigger-event", event:"closeModal"}
+				{do:"trigger-event", event:"refreshPage"}
+			]
+		}
+		following-edit:{
+			roles:["self"]
+			steps: [
+				{do:"as-modal", steps:[
+					{do:"with-following", steps:[
+						{do:"view-html"}
+						{do:"set-data", from-url:["folderId"]}
+						{
+							do:"edit", 
+							options:[
+								"delete:/@me/inbox/following-delete?followingId={{.ObjectID}}"
+								"delete-label:Stop Following"
+							], 
+							form:{
+								type: "layout-tabs"
+								children: [
+									{
+										type:"layout-vertical"
+										label:"Settings"
+										children: [
+											{
+												type:"select"
+												label:"Inbox Folder"
+												path:"folderId"
+												description:"Where should messages from this source be placed?"
+												options:{provider: "folders"}
+											}
+											{
+												type:"select", 
+												label:"Message Types", 
+												path:"behavior", 
+												description:"What kinds of posts should be shown in my timeline?"
+												options:{provider:"following-behaviors"}
+											}
+											{
+												type:"select", 
+												label:"Shared Blocks", 
+												path:"ruleAction", 
+												description:"How should blocks from this source be handled?"
+												options:{provider:"following-rule-actions"}
+											}
+											{
+												type:"toggle"
+												path:"collapseThreads"
+												default:true
+												options:{
+													true-text:"Group messages into a single thread"
+													false-text:"Show all messages separately"
+												}
+											}
+											{
+												type:"toggle"
+												path:"isPublic"
+												default:false
+												options:{
+													true-text:"Public: This 'Follow' is visible on my profile"
+													false-text:"Private: This 'Follow' is hidden from others"
+												}
+											}
+										]
+									},
+									{
+										type:"layout-vertical"
+										label:"Notes"
+										children: [
+											{
+												type:"textarea"
+												path:"notes"
+												description:"Notes about this person are private and not published or shared with anyone."
+												options: {
+													rows:10
+												}
+											}
+										]
+									}
+								]
+								
+							}
+						},
+						{do:"save"}
+					]}
+				]}
+				{do:"trigger-event", event:"closeModal"}
+				{do:"trigger-event", event:"refreshPage"}
+			]
+		}
+		following-delete:{
+			roles:["self"]
+			steps:[
+				{do:"with-following", steps:[
+					{do:"delete", title:"Stop Following {{.Label}}", message:"Are you sure you want to delete this follow?"}
+					{do:"trigger-event", event:"refreshSection"}
+				]}
+			]
+		}
+
+		rules:{roles:["self"], do:"view-html"}
+		rules-list: {roles:["self"], do:"view-html"}
+
+		rule-add:{
+			roles:["self"]
+			steps:[
+				{do:"as-modal", steps:[
+					{do:"view-html"}
+				]}
+			]
+		}
+		rule-edit:{
+			roles:["self"]
+			steps:[
+				{do:"with-rule", steps:[
+					{do:"as-modal", background:"rules", steps:[
+						{do:"view-html"}
+					]}
+				]}
+			]
+		}
+
+		rule-edit-actor: {
+			roles:["self"]
+			steps:[
+				{do:"with-rule", steps:[
+					{do:"view-html"}
+					{
+						do:"edit", 
+						options:[
+							endpoin:/@me/inbox/rule-edit-actor?ruleId={{.ObjectID}}"
+							delet:/@me/inbox/rule-delete?ruleId={{.ObjectID}}", 
+							"deletelabe:Delete Rule"
+						]
+						form:{
+							type:"layout-vertical", 
+							children:[
+								{type:"hidden", path:"type", options:{value:"ACTOR"}}
+								{type:"text", path:"trigger", label:"Fediverse Address", description:"Something like @blocked-user@domain.com orhttp://domain.com/@blocked-user", options:{focus:true}}
+								{type:"select", path:"action", label:"Action", options:{provider:"rule-actions"}}
+								{type:"text", path:"label", label:"Label", options:{show-if:"action is LABEL"}}
+								{type:"textarea", path:"summary", label:"Reason", description:"Notes about why this rule was made.", required:true}
+								{type:"toggle", path:"isPublic", options:{true-text:"PUBLISHED: Share this rule with followers", false-text:"PRIVATE: This rule is not visible to others."}}
+							]
+						}
+					}
+					{do:"save"}
+					{do:"trigger-event", event:"refreshPage"}
+					{do:"trigger-event", event:"closeModal"}
+				]}
+			]
+		}
+
+		rule-edit-domain: {
+			roles:["self"]
+			steps:[
+				{do:"with-rule", steps:[
+					{do:"view-html"}
+					{
+						do:"edit", 
+						options:[
+							"endpoint:/@me/inbox/rule-edit-actor?ruleId={{.ObjectID}}"
+							"delete:/@me/inbox/rule-delete?ruleId={{.ObjectID}}"
+							"delete-label:Delete Rule"
+						]
+						form:{
+							type:"layout-vertical", 
+							children:[
+								{type:"hidden", path:"type", options:{value:"DOMAIN"}}
+								{type:"text", path:"trigger", label:"Domain Name", description:"Something like blocked-domain.com", options:{focus:true}}
+								{type:"select", path:"action", label:"Action", options:{provider:"rule-actions"}}
+								{type:"text", path:"label", label:"Label", options:{show-if:"action is LABEL"}}
+								{type:"textarea", path:"summary", label:"Reason", description:"Notes about why this rule was made.", required:true}
+								{type:"toggle", path:"isPublic", options:{true-text:"PUBLISHED: Share this rule with followers", false-text:"PRIVATE: This rule is not visible to others."}}
+							]
+						}
+					}
+					{do:"save"}
+					{do:"trigger-event", event:"refreshPage"}
+					{do:"trigger-event", event:"closeModal"}
+				]}
+			]
+		}
+
+		rule-edit-content: {
+			roles:["self"]
+			steps:[
+				{do:"with-rule", steps:[
+					{do:"view-html"}
+					{
+						do:"edit", 
+						options:[
+							"endpoint:/@me/inbox/rule-edit-actor?ruleId={{.ObjectID}}"
+							"delete:/@me/inbox/rule-delete?ruleId={{.ObjectID}}", 
+							"delete-label:Delete Rule"
+						]
+						form:{
+							type:"layout-vertical", 
+							children:[
+								{type:"hidden", path:"type", options:{value:"CONTENT"}}
+								{type:"text", path:"trigger", label:"Tags or Keywords", description:"Individual words or hashtags, separated by spaces", options:{focus:true}}
+								{type:"select", path:"action", label:"Action", options:{provider:"rule-actions"}}
+								{type:"text", path:"label", label:"Label", options:{show-if:"action is LABEL"}}
+								{type:"textarea", path:"summary", label:"Reason", description:"Notes about why this rule was made.", required:true}
+								{type:"toggle", path:"isPublic", options:{true-text:"PUBLISHED: Share this rule with followers", false-text:"PRIVATE: This rule is not visible to others."}}
+							]
+						}
+					}
+					{do:"save"}
+					{do:"trigger-event", event:"refreshPage"}
+					{do:"trigger-event", event:"closeModal"}
+				]}
+			]
+		}
+		rule-edit-remote:{
+			roles:["self"]
+			steps:[
+				{do:"as-modal", steps:[
+					{do:"view-html"}
+				]}
+			]
+		}
+
+		rule-delete: {
+			roles:["self"]
+			steps:[
+				{do:"with-rule", steps:[
+					{do:"delete", title:"Delete Rule?", message:"Removing this rule will allow blocked messages from this source to be displayed."}
+					{do:"trigger-event", event:"refreshPage"}
+				]}
+			]
+		}
+
+		merchantAccounts: {
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
+		merchantAccounts-list: {
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
+		merchantAccount-add: {
+			roles:["self"]
+			steps:[
+				{do:"as-modal", steps:[
+					{do:"view-html", file:"merchantAccount-add"}
+				]}
+			]
+		}
+
+		merchantAccount-edit-paypal: {
+			roles:["self"]
+			steps: [
+				{do:"as-modal", steps:[
+					{do:"with-merchant-account", steps:[
+						{do:"view-html", file:"merchantAccount-edit-paypal"}
+						{
+							do:edit
+							form:{
+								type:layout-vertical
+								children:[
+									{type:"hidden", path:"type", options:{value:"PAYPAL"}}
+									{type:"text", path:"name", label:"Account Label", description:"(PRIVATE) A label for you to recognize this account", options:{required:true}}
+									{type:"text", path:"vault.clientId", label:"Client ID", description:"Created in <a href='https://developer.paypal.com/dashboard/applications' target='_blank'>PayPal Developer Console</a>", options:{required:true}}
+									{type:"text", path:"vault.secretKey", label:"Secret Key", description:"See <a href='https://emissary.dev/merchantAccount#PayPal' target='_blank'>setup instructions</a> for more details.", options:{required:true}}
+									{type:"toggle", path:"liveMode", options:{true-text:"Live Mode (Yes. Use for Actual Payments)", false-text:"Live Mode (No. Sandbox Only)"}}
+								]
+							}
+							options:["delete:/@me/inbox/merchantAccount-delete?merchantAccountId={{.ObjectID}}"]
+						}
+						{do:"save"}
+						{do:"refresh-page"}
+					]}
+				]}
+			]
+		}
+
+		merchantAccount-edit-stripe: {
+			roles:["self"]
+			steps: [
+				{do:"as-modal", steps:[
+					{do:"with-merchant-account", steps:[
+						{do:"view-html", file:"merchantAccount-edit-stripe"}
+						{
+							do:edit
+							form:{
+								type:layout-vertical
+								children:[
+									{type:"hidden", path:"type", options:{value:"STRIPE"}}
+									{type:"text", path:"name", label:"Account Label", description:"(PRIVATE) A label for you to recognize this account", options:{required:true}}
+									{type:"text", path:"vault.publishableKey_test", label:"Publishable Key (test mode)", description:"(PUBLIC) Create using the Stripe dashboard.", options:{show-if:"liveMode is false", required-if:"liveMode is false", placeholder:"pk_test_XXXXXXXXXXXXXXXXXXXXXXXXX", pattern:"^(\\**)|(pk_test_[A-Za-z0-9]+)"}}
+									{type:"text", path:"vault.publishableKey_live", label:"Publishable Key (live mode)", description:"(PUBLIC) Create using the Stripe dashboard.", options:{show-if:"liveMode is true", required-if:"liveMode is true", placeholder:"pk_live_XXXXXXXXXXXXXXXXXXXXXXXXX", pattern:"^(\\**)|(pk_live_[A-Za-z0-9]+)"}}
+									{type:"text", path:"vault.restrictedKey_test", label:"Restricted Key (test mode)", description:"(PRIVATE) Create using the Stripe dashboard.", options:{show-if:"liveMode is false", required-if:"liveMode is false", placeholder:"rk_test_XXXXXXXXXXXXXXXXXXXXXXXXX", pattern:"^(\\**)|(rk_test_[A-Za-z0-9]+)"}}
+									{type:"text", path:"vault.restrictedKey_live", label:"Restricted Key (live mode)", description:"(PRIVATE) Create using the Stripe dashboard.", options:{show-if:"liveMode is true", required-if:"liveMode is true", placeholder:"rk_live_XXXXXXXXXXXXXXXXXXXXXXXXX", pattern:"^(\\**)|(rk_live_[A-Za-z0-9]+)"}}
+									{type:"toggle", path:"liveMode", options:{true-text:"Mode: Live. (Use for Real Payments)", false-text:"Mode: Sandbox (Use for Tests Only)"}}
+								]
+							}
+							options:["delete:/@me/inbox/merchantAccount-delete?merchantAccountId={{.ObjectID}}"]
+						}
+						{do:"save"}
+						{do:"refresh-page"}
+					]}
+				]}
+			]
+		}
+
+		merchantAccount-delete: {
+			roles:["self"]
+			steps:[
+				{do:"with-merchant-account", steps:[
+					{do:"delete", title:"Delete Merchant Account?", message:"Are you sure you want to delete this account?"}
+					{do:"refresh-page"}
+				]}
+			]
+		}
+
+		purchases: {
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
+		purchases-list: {
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
+		products: {
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
+		products-list: {
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
+		product-choose-merchantAccount: {
+			roles:["self"]
+			steps:[
+				{do:"as-modal", steps:[
+					{do:"view-html"}
+				]}
+			]
+		}
+
+		product-edit: {
+			roles:["self"]
+			steps:[
+				{do:"with-product", steps: [
+					{do:"as-modal", steps:[
+						{do:"set-data", from-url:["merchantAccountId"]}
+						{do:"set-query-param", merchantAccountId:"{{.Object.MerchantAccountID.Hex}}"}
+						{do:"view-html"}
+						{do:"edit", form:{
+							type:"layout-vertical"
+							children:[
+								{type:"select", path:"remoteId", label:"Product", description:"Set up products with your merchant account, then connect here.", options:{provider:"merchantAccount-products", required:true}}
+								{type:"text", path:"name", label:"Label", description:"Displayed on your profile", options:{required:true}}
+								{type:"textarea", path:"description", label:"Description", description:"Displayed on your profile"}
+								{type:"toggle", path:"isFeatured", options:{
+									true-text:"Featured. Shows on Profile Page"
+									false-text:"Featured?"
+								}}
+							]
+						},
+						options:[
+							"delete:/@me/inbox/product-delete?productId={{.ObjectID}}"
+						]}
+						{do:"save"}
+						{do:"refresh-page"}
+					]}
+				]}
+			]
+		}
+
+		product-delete: {
+			roles:["self"]
+			steps:[
+				{do:"with-product", steps:[
+					{do:"delete", title:"Delete Product?", message:"Are you sure you want to delete this product?"}
+					{do:"refresh-page"}
+				]}
+			]
+		}
+
+		actor-button: {
+			roles:["self"]
+			steps: [
+				{do:"view-html"}
+				{do:"set-header", name:"hx-reswap", value:"outerHTML"}
+				{do:"set-header", name:"hx-push-url", value:"false"}
+			]
+		}
+
+		actor-button-follow: {
+			roles:["self"]
+			steps:[
+				{do:"with-following", steps:[
+					{do:"set-data", from-url:["folderId", "url"], values: {behavior:"POSTS+REPLIES",collapseThreads: "true"}}
+					{do:"save"}
+					{do:"trigger-event", event:"refreshPeers"}
+					{do:"view-html", method:"post", file:"actor-button-follow"}
+				]}
+			]
+		}
+		actor-button-follow-update: {
+			roles:["self"]
+			steps:[
+				{do:"with-following", steps:[
+					{do:"set-data", from-form:["behavior", "collapseThreads", "isPublic"]}
+					{do:"save"}
+					{do:"trigger-event", event:"refreshPeers"}
+					{do:"inline-success", message:"Saved"}
+				]}
+			]
+		}
+		actor-button-unfollow: {
+			roles:["self"]
+			steps:[
+				{do:"with-following", steps:[
+					{do:"delete"}
+				]}
+				{do:"view-html", method:"post", file:"actor-button-none"}
+				{do:"trigger-event", event:"refreshPeers"}
+				{do:"remove-event", event:"closeModal"}
+			]
+		}
+		actor-button-mute:{
+			roles:["self"]
+			steps:[
+				{do:"with-rule", steps:[
+					{do:"set-data", values: {type:"ACTOR", action: "MUTE", trigger:"{{.QueryParam `url`}}"}}
+					{do:"save"}
+					{do:"trigger-event", event:"refreshPeers"}
+					{do:"view-html", method:"post", file:"actor-button-mute"}
+				]}
+			]
+		}
+		actor-button-unmute:{
+			roles:["self"]
+			steps:[
+				{do:"with-rule", steps:[
+					{do:"delete"}
+				]}
+				{do:"view-html", method:"post", file:"actor-button-none"}
+				{do:"trigger-event", event:"refreshPeers"}
+				{do:"remove-event", event:"closeModal"}
+			]
+		}
+		actor-button-block:{
+			roles:["self"]
+			steps:[
+				{do:"with-rule", steps:[
+					{do:"set-data", values: {type:"ACTOR", action: "BLOCK", trigger: "{{.QueryParam `url`}}"}}
+					{do:"save"}
+					{do:"trigger-event", event:"refreshPeers"}
+					{do:"view-html", method:"post", file:"actor-button-block"}
+				]}
+			]
+		}
+		actor-button-block-update: {
+			roles:["self"]
+			steps:[
+				{do:"with-rule", steps:[
+					{do:"set-data", from-form:["comment", "isPublic"]}
+					{do:"save"}
+					{do:"trigger-event", event:"refreshPeers"}
+					{do:"inline-success", message:"Saved"}
+				]}
+			]
+		}
+		actor-button-unblock:{
+			roles:["self"]
+			steps:[
+				{do:"with-rule", steps:[
+					{do:"delete"}
+				]}
+				{do:"trigger-event", event:"refreshPeers"}
+				{do:"remove-event", event:"closeModal"}
+				{do:"view-html", method:"post", file:"actor-button-none"}
+			]
+		}
+
+		blocks: {
+			roles:["self"]
+			do:"view-html", 
+			file:"blocks"
+		}
+
+		profile: {
+			roles:["self"]
+			steps:[
+				{do:"as-modal", steps:[
+					{do:"view-html"}
+				]}
+			]
+		}
+
+		message: {
+			roles:["self"]
+			steps:[
+				{do:"as-modal", options:["class:large"], steps:[
+					{do:"view-html"}
+				]}
+			]
+		}
+		message-mute-button:{
+			roles:["self"]
+			steps:[
+				{do:"with-message", steps:[
+					{do:"view-html"}
+				]}
+			]
+		}
+		message-mute:{
+			roles:["self"]
+			steps:[
+				{do:"with-message", steps:[
+					{do:"set-state", state:"MUTED"}
+					{do:"save"}
+					{do:"view-html", method:"both", file:"message-mute-button"}
+				]}
+			]
+		}
+		message-unmute:{
+			roles:["self"]
+			steps:[
+				{do:"with-message", steps:[
+					{do:"set-state", state:"UNMUTED"}
+					{do:"save"}
+					{do:"view-html", method:"both", file:"message-mute-button"}
+				]}
+			]
+		}
+		message-delete: {
+			roles: ["self"]
+			steps: [
+				{do:"with-message", steps:[
+					{do:"delete", title:"Delete Message?", message:"Are you sure you want to delete this message?"}
+					{do:"reload-page"}
+				]}
+			]
+		}
+		message-read:{
+			roles:["self"]
+			steps:[
+				{do:"with-message", steps:[
+					{do:"set-state", state:"READ"}
+					{do:"save"}
+					{do:"trigger-event", event:"refreshSidebar"}
+				]}
+			]
+		}
+
+		responses-announces:{
+			steps: [
+				{do:"view-html"}
+			]
+		}
+		responses-likes:{
+			steps: [
+				{do:"view-html"}
+			]
+		}
+		responses-replies:{
+			steps: [
+				{do:"view-html"}
+			]
+		}
+		responses-replies-list:{
+			roles:["self"]
+			do:"view-html"
+		}
+		responses-replies-recursive:{
+			roles:["self"]
+			do:"view-html"
+		}
+		reply:{
+			roles:["self"]
+			steps:[
+				{do:"set-args", postTo:"/@me/inbox/reply?url={{.Permalink}}"}
+				{do:"add-stream", style:"inline", roles:"outbox-reply", location:"outbox", with-data:{
+					inReplyTo:"{{.Permalink}}"
+				}}
+				{do:"set-header", name:"hx-retarget", value:"#responses"}
+				{do:"set-header", name:"hx-reswap", value:"outerHTML"}
+				{do:"view-html", method:"post", file:"responses-replies"}
+			]
+		}
+	}
+}	

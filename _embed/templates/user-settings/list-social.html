@@ -1,0 +1,89 @@
+{{- $inboxBuilder := index . 0 -}}
+{{- $message := index . 1 -}}
+{{- $stream := $inboxBuilder.ActivityStream $message.URL -}}
+{{- $image := $stream.ImageOrIcon -}}
+{{- $attributedTo := $stream.AttributedTo -}}
+
+{{- if eq "NEW-REPLIES" $message.StateID -}}
+	<div class="flex-row">
+		<div class="width-32 margin-right-sm"></div>
+		<div class="bold italics text-green text-sm">
+			{{icon "chat-fill"}} New Replies
+		</div>
+	</div>
+{{- else if eq "MUTED" $message.StateID -}}
+	<div class="flex-row">
+		<div class="width-32 margin-right-sm"></div>
+		<div class="bold italics text-gray text-sm">
+			{{icon "mute"}} Notifications Muted
+		</div>
+	</div>
+{{- end -}}
+
+<div class="flex-row">
+	<div class="width-32 margin-right-sm">
+		{{- if $attributedTo.Icon.NotNil -}}
+			<img src="{{$attributedTo.Icon.Href}}" class="circle width-32">
+		{{- else -}}
+			<div class="circle width-32"></div>
+		{{- end -}}
+	</div>
+
+	<div>
+
+		{{- if ne "" $attributedTo.Name -}}
+			<div>
+				<span class="bold text-black">{{$attributedTo.Name}}</span>
+				{{- if ne "" $attributedTo.Username -}}
+					<span class="text-light-gray ellipsis">
+						&middot;
+						{{$attributedTo.Username}}
+					</span>
+				{{- end -}}
+			</div>
+		{{- else -}}
+			<div class="bold text-black">{{ $message.Origin.Label }} </div>
+		{{- end -}}
+
+		{{- if ne "" $stream.Name -}}
+			<div>
+				<span class="bold text-black">{{$stream.Name}}</span>
+			</div>
+		{{- end -}}
+
+		{{- if $image.NotNil -}}
+			<div class="margin-bottom">
+				<img src="{{$image.Href}}" loading="lazy" class="width-100%" style="{{if $image.HasDimensions}}aspect-ratio:{{$image.AspectRatio}}{{end}}"/>
+			</div>
+		{{- end -}}
+
+		<div>
+			{{- if $stream.HasContent -}}
+				{{- $stream.Content | htmlMinimal -}}
+			{{- else if $stream.HasSummary -}}
+				{{- $stream.Summary | htmlMinimal -}}
+			{{- end -}}
+		</div>
+
+		<div class="margin-top text-sm text-light-gray">
+
+			{{- $stats := $stream.Statistics -}}
+			{{- $message.UpdateDate | tinyDate }} ago
+
+			{{ if gt $stats.Replies 0 -}}
+				&middot; {{$stats.Replies}} {{pluralize $stats.Replies "Reply" "Replies"}}
+			{{- end }}
+
+			{{ if gt $stats.Likes 0 -}}
+				&middot; {{$stats.Likes}} {{pluralize $stats.Likes "Like" "Likes"}}
+			{{- end }}
+
+			{{ if gt $stats.Announces 0 -}}
+				&middot; {{$stats.Announces}} {{pluralize $stats.Announces "Share" "Shares"}}
+			{{- end }}
+
+		</div>
+
+	</div>
+</div>
+

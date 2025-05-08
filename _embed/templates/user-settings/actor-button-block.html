@@ -1,0 +1,42 @@
+{{- $url := .QueryParam "url" -}}
+{{- $folderID := .QueryParam "folderId" -}}
+{{- $block := .Object -}}
+{{- $class := iif (eq "POST" .Method) "visible" "" -}}
+
+<span script="install popUp(position:'center')" hx-target="this" hx-swap="outerHTML" hx-push-url="false" class="{{$class}}">
+	<button class="popUp-button bold">{{icon "block"}} Blocked</button>
+	<div class="popUp-content width-320 text-md">
+		<div class="margin-bottom-lg">
+			<div class="bold ellipsis">Blocked {{$block.Label}}</div>
+			<div class="text-sm text-light-gray">Don't display posts. Don't send updates.</div>
+		</div>
+
+		<div>
+			<span class="bold margin-right-sm">Settings:</span>
+		</div>
+
+		<form hx-post="/@me/inbox/actor-button-block-update?ruleId={{$block.ID}}&url={{$url}}" hx-trigger="change">
+			<div class="layout layout-vertical text-sm">
+				<div class="layout-vertical-elements">
+					<div class="layout-vertical-element">
+						<textarea name="comment" placeholder="Add a comment" rows="3">{{$block.Summary}}</textarea>
+					</div>
+					<div class="layout-vertical-element">
+						<span 
+							script="install toggle" 
+							name="isPublic" 
+							value="{{$block.IsPublic}}" 
+							true-text="PUBLIC: visible to others" 
+							false-text="PRIVATE: not visible to others">
+						</span>
+					</div>
+				</div>
+			</div>
+		</form>
+
+		<hr>
+		<div class="align-center text-red" hx-post="/@me/inbox/actor-button-unblock?ruleId={{$block.ID}}&folderId={{$folderID}}&url={{$url}}" role="button">
+			{{icon "cancel"}} Stop Blocking
+		</div>
+	</div>
+</span>

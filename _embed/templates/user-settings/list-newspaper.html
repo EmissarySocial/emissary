@@ -1,0 +1,52 @@
+{{- $inboxBuilder := index . 0 -}}
+{{- $message := index . 1 -}}
+{{- $stream := $inboxBuilder.ActivityStream $message.URL -}}
+{{- $image := $stream.IconOrImage -}}
+<div class="flex-row margin-bottom" style="justify-content:space-between;" hx-push-url="true">
+
+	<div class="flex-grow-0 flex-shrink-0 margin-right-md" style="width:160px;">
+		<div style="width:160px; min-height:84px; border:solid 1px var(--gray20); background-color:var(--gray10);">
+			{{- if ne "" $image.Href -}}
+				<img src="{{$image.Href}}" loading="lazy" style="width:160px; max-height:160px; object-fit:cover;"/>
+			{{- end -}}
+		</div>
+	</div>
+
+	<div class="pos-relative flex-grow-1 width-100%" style="min-width:0px; max-width:100%;">
+
+		{{- if eq "NEW-REPLIES" $message.StateID -}}
+			<div class="bold italics text-green text-sm">
+				{{icon "chat-fill"}} New Replies
+			</div>
+		{{- else if eq "MUTED" $message.StateID -}}
+			<div class="bold italics text-gray text-sm">
+				{{icon "mute"}} Notifications Muted
+			</div>
+		{{- end -}}
+
+		<div class="bold text-black ellipsis text-lg margin-top-none">{{$stream.Name}}</div>
+		<div class="text-sm text-light-gray flex-row">
+			<span class="ellipsis">
+				{{ icon $message.Origin.Icon }}
+				{{ $message.Origin.Label }} 
+				{{- if $stream.AttributedTo.NotNil }}
+					&middot;
+					{{ $stream.AttributedTo.Name }} 
+				{{- end -}}
+			</span>
+			<span class="nowrap">
+				&middot;
+				{{ $message.PublishDate | tinyDate }}
+			</span>
+		</div>
+		<div class="ellipsis-block margin-top-md" style="max-height:6em;">
+			{{- if $stream.HasSummary -}}
+				{{- $stream.Summary | htmlMinimal -}}
+			{{- else if $stream.HasContent -}}
+				{{- $stream.Content | htmlMinimal -}}
+			{{- end -}}
+		</div>
+
+	</div>
+ 
+</div>

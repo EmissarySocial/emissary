@@ -322,6 +322,9 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/@me/inbox", handler.PostInbox(factory))
 	e.GET("/@me/inbox/:action", handler.GetInbox(factory))
 	e.POST("/@me/inbox/:action", handler.PostInbox(factory))
+	e.GET("/@me/settings", handler.WithAuthenticatedUser(factory, handler.GetSettings))
+	e.POST("/@me/settings", handler.WithAuthenticatedUser(factory, handler.PostSettings))
+
 	e.GET("/@me/intent/create", handler.WithAuthenticatedUser(factory, handler.GetIntent_Create))
 	e.POST("/@me/intent/create", handler.WithAuthenticatedUser(factory, handler.PostIntent_Create))
 	e.GET("/@me/intent/dislike", handler.WithAuthenticatedUser(factory, handler.GetIntent_Dislike))

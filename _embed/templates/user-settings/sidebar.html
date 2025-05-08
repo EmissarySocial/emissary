@@ -1,0 +1,65 @@
+{{- $selectedID := .SelectedID -}}
+<div id="app-sidebar" class="app-sidebar" hx-target="main" hx-swap="innerHTML show:window:top" hx-push-url="true">
+
+	<div class="pos-sticky" style="top:96px;">
+
+		<form class="sortable" hx-post="/@me/inbox/folder-sort" hx-push-url="false" hx-trigger="end">
+
+			{{- range .Folders -}}
+				<div role="link" hx-get="/@me/inbox/inbox?folderId={{.FolderID.Hex}}" hx-trigger="click" hx-push-url="true" class="turboclick menu-item ellipsis hover-trigger folder {{if eq $selectedID .FolderID}}selected{{end}}">
+					{{- if eq $selectedID .FolderID -}}
+						{{- iconFilled .Icon -}}
+					{{- else -}}
+						{{- icon .Icon -}}
+					{{- end }}
+					{{.Label}}
+					<span class="folder-handle">
+						<span id="folder-unread-{{.FolderID.Hex}}"
+						class="text-sm
+							{{- if ne $selectedID .FolderID}} text-light-gray{{- end -}}
+							{{- if eq .UnreadCount 0 }} hide{{- end -}}
+						"
+						>&#9679;</span>
+						<span class="hover-visible">
+							{{icon "drag-handle"}}
+						</span>
+					</span>
+					<input type="hidden" name="keys" value="{{.FolderID.Hex}}">
+				</div>
+			{{- end -}}
+
+		</form>
+		
+		<div role="button" hx-get="/@me/inbox/folder-add" class="menu-item turboclick">{{icon "add"}} Add a Folder</div>
+
+		<hr>
+
+		{{- if .HasSelection -}}
+			<div role="button" hx-get="/@me/inbox/following" class="menu-item turboclick">{{icon "settings"}} Settings</div>
+		{{- else -}}
+			<div role="button" hx-get="/@me/inbox/following" class="selected menu-item turboclick">{{icon "settings-fill"}} Settings</div>
+		{{- end -}}
+	</div>
+
+	<div 
+		hx-get="/@me/inbox/sidebar?folderId={{$selectedID.Hex}}" 
+		hx-swap="outerHTML" 
+		hx-trigger="refreshSidebar from:window, every 600s" 
+		hx-push-url="false" 
+		hx-target="#app-sidebar">
+	</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
+	<script>
+        var sortables = document.querySelectorAll(".sortable");
+        for (var node of sortables) {
+            new Sortable(node, {
+                animation: 150,
+				handle: '.folder-handle',
+                whisperClass: 'folder-whisper'
+            });
+        }
+    </script>
+
+</div>
