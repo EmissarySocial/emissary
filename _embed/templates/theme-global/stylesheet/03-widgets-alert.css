@@ -6,10 +6,11 @@
 }
 
 .alert-blue {
-	border:solid 1px var(--blue20);
-    background-color: var(--blue10);
+	border-color: var(--blue30);
+    background-color: var(--blue20);
     padding: var(--rhythm) calc(var(--rhythm) * 2);
     margin-bottom: calc(var(--rhythm) * 2);
+	border-radius:calc(var(--rhythm) / 2);
 }
 
 .alert-green {
