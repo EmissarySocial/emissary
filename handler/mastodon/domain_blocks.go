@@ -34,7 +34,7 @@ func GetDomainBlocks(serverFactory *server.Factory) func(model.Authorization, tx
 		}
 
 		// Extract *just* the domain trigger...
-		result := slice.Map[model.Rule](rules, func(rule model.Rule) string {
+		result := slice.Map(rules, func(rule model.Rule) string {
 			return rule.Trigger
 		})
 

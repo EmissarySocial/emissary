@@ -2,13 +2,11 @@ package handler
 
 import (
 	"net/url"
-	"regexp"
 	"strings"
 
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/steranko"
 )
@@ -34,7 +32,7 @@ func GetOEmbed(ctx *steranko.Context, factory *domain.Factory) error {
 	}
 
 	// Load the OEmbed result
-	result, err := getOEmbed_record(ctx, factory, parsedToken.Path)
+	result, err := getOEmbed_record(factory, parsedToken.Path)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error loading OEmbed record")
@@ -48,7 +46,7 @@ func GetOEmbed(ctx *steranko.Context, factory *domain.Factory) error {
 	return ctx.JSON(200, result)
 }
 
-func getOEmbed_record(ctx *steranko.Context, factory *domain.Factory, path string) (mapof.Any, error) {
+func getOEmbed_record(factory *domain.Factory, path string) (mapof.Any, error) {
 
 	// Parse the path as either a Stream or a User
 	path = strings.TrimPrefix(path, "/")
@@ -65,7 +63,7 @@ func getOEmbed_record(ctx *steranko.Context, factory *domain.Factory, path strin
 	}
 
 	// Otherwise, the path is for a Stream
-	return getOEmbed_Stream(ctx, factory, path)
+	return getOEmbed_Stream(factory, path)
 }
 
 func getOEmbed_Domain(factory *domain.Factory) (mapof.Any, error) {
@@ -84,7 +82,7 @@ func getOEmbed_Domain(factory *domain.Factory) (mapof.Any, error) {
 	return result, nil
 }
 
-func getOEmbed_Stream(_ *steranko.Context, factory *domain.Factory, token string) (mapof.Any, error) {
+func getOEmbed_Stream(factory *domain.Factory, token string) (mapof.Any, error) {
 
 	const location = "handler.getOEmbed_Stream"
 
@@ -190,7 +188,8 @@ func getOEmbed_User(factory *domain.Factory, token string) (mapof.Any, error) {
 	return result, nil
 }
 
-// nolint:unusedfunc
+/*
+//nolint:unused
 func getOEmbed_heightAndWidth(html string) (int, int) {
 
 	var height int
@@ -214,3 +213,4 @@ func getOEmbed_heightAndWidth(html string) (int, int) {
 
 	return height, width
 }
+*/

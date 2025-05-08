@@ -35,7 +35,7 @@ func GetLists(serverFactory *server.Factory) func(model.Authorization, txn.GetLi
 			return nil, derp.Wrap(err, location, "Error querying database")
 		}
 
-		return getSliceOfToots[model.Folder, object.List](folders), nil
+		return getSliceOfToots(folders), nil
 	}
 }
 

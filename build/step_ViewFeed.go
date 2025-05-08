@@ -32,7 +32,7 @@ func (step StepViewFeed) Get(builder Builder, buffer io.Writer) PipelineBehavior
 
 	// Initialize the result RSS feed
 	result := feeds.Feed{
-		Title:       builder.PageTitle(),
+		Title:       builder.Hostname() + " - " + builder.PageTitle(),
 		Description: builder.Summary(),
 		Link:        &feeds.Link{Href: builder.Permalink()},
 		Author:      &feeds.Author{Name: ""},
