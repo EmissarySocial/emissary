@@ -7,6 +7,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// HttpsRedirect is a middleware that redirects all HTTP requests to HTTPS
+// when the request comes from a public network.
 func HttpsRedirect(handler echo.HandlerFunc) echo.HandlerFunc {
 
 	return func(context echo.Context) error {
@@ -18,7 +20,9 @@ func HttpsRedirect(handler echo.HandlerFunc) echo.HandlerFunc {
 
 		request := context.Request()
 
-		// Do not HTTPS for localhost
+		// Do not require HTTPS for localhost
+		// This is okay for local domains (even behind a proxy) because
+		// unencrypted traffic will only be on the private network.
 		if domain.IsLocalhost(request.Host) {
 			return handler(context)
 		}

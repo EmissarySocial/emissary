@@ -325,4 +325,5 @@ p:last-child {
 .ellipsis-block {
     text-overflow:ellipsis; 
     overflow:hidden; 
+	max-width:100%;
 }

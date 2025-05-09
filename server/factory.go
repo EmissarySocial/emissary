@@ -593,7 +593,7 @@ func (factory *Factory) ByRequest(req *http.Request) (*domain.Factory, error) {
 
 	const location = "server.Factory.ByRequest"
 
-	hostname := factory.getHostnameFromRequest(req)
+	hostname := domaintools.Hostname(req)
 	result, err := factory.ByHostname(hostname)
 
 	if err != nil {
@@ -619,19 +619,6 @@ func (factory *Factory) ByHostname(hostname string) (*domain.Factory, error) {
 
 	// Failure.
 	return nil, derp.NewMisdirectedRequestError("server.Factory.ByHostname", "Invalid hostname", "hostname: "+hostname)
-}
-
-// Retrieve a hostname from this request, either from `X-Forwarded-Host` or from the `Host` header itself.
-// Hostnames returned by this function should be normalized via `normalizeHostname()` before using.
-func (factory *Factory) getHostnameFromRequest(req *http.Request) string {
-
-	// Use the `X-Forwarded-Host` header first, if it exists
-	if hostname := req.Header.Get("X-Forwarded-Host"); hostname != "" {
-		return hostname
-	}
-
-	// Default behavior is to use the standard `Host` header
-	return req.Host
 }
 
 // normalizeHostname removes inconsistencies in host names so that they

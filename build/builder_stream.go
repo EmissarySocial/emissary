@@ -13,6 +13,7 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
+	domaintools "github.com/benpate/domain"
 	"github.com/benpate/exp"
 	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/form"
@@ -89,8 +90,10 @@ func NewStreamFromURI(serverFactory ServerFactory, request *http.Request, respon
 
 	const location = "build.NewStreamFromURI"
 
+	hostname := domaintools.Hostname(request)
+
 	// Locate the requested domain name
-	factory, err := serverFactory.ByDomainName(request.Host)
+	factory, err := serverFactory.ByDomainName(hostname)
 
 	if err != nil {
 		return Stream{}, derp.Wrap(err, location, "Invalid domain")

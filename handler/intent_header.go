@@ -5,6 +5,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/domain"
+	domaintools "github.com/benpate/domain"
 	"github.com/benpate/html"
 	"github.com/benpate/steranko"
 )
@@ -12,7 +13,8 @@ import (
 func write_intent_header(ctx *steranko.Context, b *html.Builder, user *model.User) {
 
 	currentURL := ctx.Request().URL.String()
-	hostname := domain.NameOnly(ctx.Request().Host)
+	hostname := domaintools.Hostname(ctx.Request())
+	hostname = domain.NameOnly(hostname)
 
 	b.Div().Class("flex-shrink-0", "flex-row", "flex-align-stretch", "margin-bottom")
 	{

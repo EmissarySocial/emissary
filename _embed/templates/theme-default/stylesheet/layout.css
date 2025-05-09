@@ -10,12 +10,13 @@ html, body {
 	/* https://tetralogical.com/blog/2023/06/08/focus-in-view/ */
 	scroll-padding-top: 56px; 
 	overscroll-behavior-y: none;
+	max-width: 100%;
+	overflow-x: hidden;
 }
 
 body {
 	background-color: var(--body-background);
 	color: var(--text-color);
-	overflow-x: hidden;
 	margin:0px;
 	width:100%;
 }

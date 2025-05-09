@@ -6,6 +6,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
+	domaintools "github.com/benpate/domain"
 	"github.com/benpate/toot"
 )
 
@@ -20,7 +21,8 @@ func Authorizer(serverFactory *server.Factory) toot.Authorizer[model.Authorizati
 	return func(request *http.Request) (model.Authorization, error) {
 
 		// Get the factory for this domain
-		factory, err := serverFactory.ByHostname(request.Host)
+		hostname := domaintools.Hostname(request)
+		factory, err := serverFactory.ByHostname(hostname)
 
 		if err != nil {
 			return model.Authorization{}, derp.Wrap(err, location, "Unrecognized Domain")
