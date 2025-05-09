@@ -1,9 +1,0 @@
-{{- if eq "ACTIVITYPUB" .Method -}}
-	{{- template "follower-activitypub" . -}}
-{{- else if eq "EMAIL" .Method -}}
-	{{- template "follower-email" . -}}
-{{- else if eq "WEBSUB" -}}
-	{{- template "follower-websub" . -}}
-{{- else -}}
-	There is a problem with this "Follower" record that prevents it from being displayed.
-{{- end -}}

@@ -386,6 +386,25 @@ func (w Settings) SubBuilder(object any) (Builder, error) {
 	return result, err
 }
 
+func (w Settings) AmFollowing(url string) model.Following {
+
+	// Get following service and new following record
+	followingService := w._factory.Following()
+	following := model.NewFollowing()
+
+	// Null check
+	if w._user == nil {
+		return following
+	}
+
+	// Retrieve following record. Discard errors
+	// nolint:errcheck
+	_ = followingService.LoadByURL(w._user.UserID, url, &following)
+
+	// Return the (possibly empty) Following record
+	return following
+}
+
 // HasRule returns a rule that matches the current user, rule type, and trigger.
 // If no rule is found, then an empty rule is returned.
 func (w Settings) HasRule(ruleType string, trigger string) model.Rule {

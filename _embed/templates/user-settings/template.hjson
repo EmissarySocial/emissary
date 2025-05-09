@@ -31,9 +31,6 @@
 		stylesheet: {
 			content-type: text/css
 		}
-		hyperscript: {
-			content-type: text/hyperscript
-		}
 	}
 	actions: {
 
@@ -106,7 +103,7 @@
 					{
 						do:"edit"
 						options:[
-							"endpoint:/@me/inbox/following-add-form?followingId=new"
+							"endpoint:/@me/settings/following-add-form?followingId=new"
 							"submit-label:Follow this Source"
 							"saving-label:Following..."
 						]
@@ -175,7 +172,7 @@
 						{
 							do:"edit", 
 							options:[
-								"delete:/@me/inbox/following-delete?followingId={{.ObjectID}}"
+								"delete:/@me/settings/following-delete?followingId={{.ObjectID}}"
 								"delete-label:Stop Following"
 							], 
 							form:{

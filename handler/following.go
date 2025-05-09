@@ -16,10 +16,10 @@ func GetFollowingTunnel(context echo.Context) error {
 
 	message := `<html>
 <head>
-<meta http-equiv="refresh" content="0;URL='/@me/inbox/following-add?url={uri}'"/>
+<meta http-equiv="refresh" content="0;URL='/@me/settings/following-add?url={uri}'"/>
 </head>
 <body>
-<p><a href="/@me/inbox/following-add?url={uri}">Redirecting...</p>
+<p><a href="/@me/settings/following-add?url={uri}">Redirecting...</p>
 </body>
 </html>`
 

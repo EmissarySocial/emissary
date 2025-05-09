@@ -2,11 +2,13 @@
 	<title>{{.RuleCount}} Rules | {{.DisplayName}}</title>
 	<link rel="stylesheet" href="/.templates/user-settings/stylesheet">
 
-	<div id="app-sidebar" class="app-sidebar" hx-swap="innerHTML show:window:top">
+	<div id="app-sidebar" class="app-sidebar">
 
 		<div class="pos-sticky" style="top:96px;">
 	
-			<div class="bold margin-bottom">{{icon "settings"}} Settings</div>
+			<div class="bold text-lg margin-none">My Settings</div>
+			<div class="text-xs"><a href="/@me/inbox">&larr; Back to Inbox</a></div>
+			<hr class="margin-vertical-lg">
 	
 			<div role="link" hx-get="/@me/settings/following" class="turboclick menu-item ellipsis">{{icon "star"}} Following</div>
 			<div role="link" hx-get="/@me/settings/followers" class="turboclick menu-item ellipsis">{{icon "person"}} Followers</div>

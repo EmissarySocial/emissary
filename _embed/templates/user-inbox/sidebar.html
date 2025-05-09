@@ -34,11 +34,7 @@
 
 		<hr>
 
-		{{- if .HasSelection -}}
-			<div role="button" hx-get="/@me/inbox/following" class="menu-item turboclick">{{icon "settings"}} Settings</div>
-		{{- else -}}
-			<div role="button" hx-get="/@me/inbox/following" class="selected menu-item turboclick">{{icon "settings-fill"}} Settings</div>
-		{{- end -}}
+		<div role="button" hx-get="/@me/settings" class="menu-item turboclick">{{icon "settings"}} My Settings</div>
 	</div>
 
 	<div 
