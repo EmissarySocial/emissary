@@ -73,7 +73,7 @@ func PostSearchLookup(ctx *steranko.Context, factory *domain.Factory) error {
 	}
 
 	if domaintools.NameOnly(referer) != factory.Hostname() {
-		return derp.New(http.StatusForbidden, location, "Invalid referer", referer)
+		return derp.ForbiddenError(location, "Invalid referer", referer)
 	}
 
 	// Load the Stream from the database
