@@ -5,7 +5,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/benpate/derp"
-	domainTools "github.com/benpate/domain"
+	domaintools "github.com/benpate/domain"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/steranko"
 	"github.com/benpate/turbine/queue"
@@ -24,7 +24,7 @@ func IndexAllStreams(ctx *steranko.Context, factory *domain.Factory) error {
 
 	// Create the Index task
 	task := queue.NewTask("IndexAllStreams", mapof.Any{
-		"host": ctx.Request().Host,
+		"host": domaintools.Hostname(ctx.Request()),
 	})
 
 	// Execute the task in the background
@@ -49,7 +49,7 @@ func IndexAllUsers(ctx *steranko.Context, factory *domain.Factory) error {
 
 	// Create the Index task
 	task := queue.NewTask("IndexAllUsers", mapof.Any{
-		"host": ctx.Request().Host,
+		"host": domaintools.Hostname(ctx.Request()),
 	})
 
 	// Execute the task in the background
@@ -72,8 +72,8 @@ func PostSearchLookup(ctx *steranko.Context, factory *domain.Factory) error {
 		return derp.ForbiddenError(location, "No referer", referer)
 	}
 
-	if domainTools.NameOnly(referer) != factory.Hostname() {
-		return derp.ForbiddenError(location, "Invalid referer", referer)
+	if domaintools.NameOnly(referer) != factory.Hostname() {
+		return derp.New(http.StatusForbidden, location, "Invalid referer", referer)
 	}
 
 	// Load the Stream from the database
