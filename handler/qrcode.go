@@ -5,6 +5,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
+	domaintools "github.com/benpate/domain"
 	"github.com/labstack/echo/v4"
 	"github.com/yeqown/go-qrcode/v2"
 	"github.com/yeqown/go-qrcode/writer/standard"
@@ -15,15 +16,9 @@ func GetQRCode(fm *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
-		var url string
-
-		if ctx.Request().TLS == nil {
-			url = "http://"
-		} else {
-			url = "https://"
-		}
-
-		url = url + ctx.Request().Host + strings.TrimSuffix(ctx.Request().URL.String(), "/qrcode")
+		url := domaintools.Hostname(ctx.Request())
+		url = domaintools.AddProtocol(url)
+		url = url + strings.TrimSuffix(ctx.Request().URL.String(), "/qrcode")
 
 		qrc, err := qrcode.New(url)
 
