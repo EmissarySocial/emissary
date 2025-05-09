@@ -4,7 +4,7 @@
 {{- $following := .AmFollowing $url -}}
 {{- $outbox := $activityStream.Outbox | collection 4 -}}
 
-<div hx-get="/@me/inbox/follower?url={{$url}}" hx-trigger="refreshSection from:window" hx-swap="outerHTML" hx-push-url="false">
+<div hx-get="/@me/settings/follower?url={{$url}}" hx-trigger="refreshSection from:window" hx-swap="outerHTML" hx-push-url="false">
 
 	{{- if ne "" $activityStream.Image.Href -}}
 		<div style="position:absolute; top:0px; left:0px; right:0px; height:160px; background-image:url('{{$activityStream.Image.Href}}'); background-size:cover;"></div>
@@ -29,9 +29,9 @@
 			<div class="margin-bottom text-gray">{{- $activityStream.Summary | html -}}</div>
 
 			{{- if $following.NotZero -}}
-				<button hx-get="/@me/inbox/following-delete?followingId={{$following.FollowingID.Hex}}" class="text-xs" hx-push-url="false">&check; Following</button>
+				<button hx-get="/@me/settings/following-delete?followingId={{$following.FollowingID.Hex}}" class="text-xs" hx-push-url="false">&check; Following</button>
 			{{- else -}}
-				<button hx-get="/@me/inbox/following-add?url={{$activityStream.ID}}" class="text-xs" hx-push-url="false">&plus; Follow</button>
+				<button hx-get="/@me/settings/following-add?url={{$activityStream.ID}}" class="text-xs" hx-push-url="false">&plus; Follow</button>
 			{{- end -}}
 			<a href="{{$activityStream.ID}}" class="button text-xs" target="_blank">View Profile &rarr;</a>
 		</div>
@@ -70,7 +70,7 @@
         <button script="on click trigger closeModal">Close Window</button>
 
 		<div class="flex-grow-1 align-right">
-			<button hx-get="/@me/inbox/follower-delete?followerId={{$followerID}}" class="text-red">Remove Follower</button>
+			<button hx-get="/@me/settings/follower-delete?followerId={{$followerID}}" class="text-red">Remove Follower</button>
 		</div>
 	</div>
     

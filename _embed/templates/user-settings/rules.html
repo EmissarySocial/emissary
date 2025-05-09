@@ -1,27 +1,30 @@
-{{- $folders := .Folders -}}
-
 <div class="page app flex-row">
 	<title>{{.RuleCount}} Rules | {{.DisplayName}}</title>
-	<link rel="stylesheet" href="/.templates/user-inbox/stylesheet">
+	<link rel="stylesheet" href="/.templates/user-settings/stylesheet">
 
-	{{- template "sidebar" $folders -}}
+	<div id="app-sidebar" class="app-sidebar" hx-swap="innerHTML show:window:top">
 
-	<div class="app-content">
-
-		<div role="tablist" class="underlined margin-top margin-bottom" hx-push-url="true">
-			<a href="/@me/inbox/following" hx-boost="true" role="tab">{{icon "star"}} Following</a>
-			<a href="/@me/inbox/followers" hx-boost="true" role="tab">{{icon "person"}} Followers</a>
-			<a href="/@me/inbox/purchases" hx-boost="true" role="tab">{{icon "person-card"}} Purchases</a>
-			<a href="/@me/inbox/products" hx-boost="true" role="tab">{{icon "card"}} Products</a>
-			<a href="/@me/inbox/rules" hx-boost="true" role="tab" aria-selected="true">{{icon "rule-fill"}} Rules</a>
+		<div class="pos-sticky" style="top:96px;">
+	
+			<div class="bold margin-bottom">{{icon "settings"}} Settings</div>
+	
+			<div role="link" hx-get="/@me/settings/following" class="turboclick menu-item ellipsis">{{icon "star"}} Following</div>
+			<div role="link" hx-get="/@me/settings/followers" class="turboclick menu-item ellipsis">{{icon "person"}} Followers</div>
+			<div role="link" hx-get="/@me/settings/products" class="turboclick menu-item ellipsis">{{icon "card"}} Products</div>
+			<div role="link" hx-get="/@me/settings/purchases" class="turboclick menu-item ellipsis">{{icon "person-card"}} Purchases</div>
+			<div role="link" hx-get="/@me/settings/rules" class="turboclick menu-item ellipsis selected">{{icon "rule-fill"}} Rules</div>
 		</div>
+	
+	</div>
+	
+	<div class="app-content">
 
 		<div>
 			<input
 				type="text" 
 				name="search" 
 				placeholder="Search Rules"
-				hx-get="/@me/inbox/rules-list"
+				hx-get="/@me/settings/rules-list"
 				hx-trigger="keyup queue:last delay:100ms"
 				hx-target="#rules-list"
 				hx-swap="innerHTML"
@@ -29,7 +32,7 @@
 		</div>
 
 		<div class="table margin-top">
-			<div hx-get="/@me/inbox/rule-add" role="button" class="link">
+			<div hx-get="/@me/settings/rule-add" role="button" class="link">
 				{{icon "add"}} Add an Inbox Rule
 			</div>
 		</div>

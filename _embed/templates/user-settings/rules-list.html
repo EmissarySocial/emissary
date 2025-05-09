@@ -3,7 +3,7 @@
 {{- $rules := $rules.Slice -}}
 
 {{- range $rules -}}
-	<div role="button" class="flex-row width-100% turboclick origin-{{.Origin}}" hx-get="/@me/inbox/rule-edit?ruleId={{.RuleID.Hex}}">
+	<div role="button" class="flex-row width-100% turboclick origin-{{.Origin}}" hx-get="/@me/settings/rule-edit?ruleId={{.RuleID.Hex}}">
 
 		<div class="width-2-6 flex-row" nowrap>
 			<div class="text-xl margin-none flex-align-start">
@@ -56,5 +56,5 @@
 
 {{- if eq 12 $rules.Length -}}
 	{{- $last := $rules.Last -}}
-	<div hx-get="/@me/inbox/rules-list?search={{$search}}&trigger=GT:{{$last.Trigger}}" hx-target="this" hx-trigger="revealed" hx-swap="outerHTML" hx-push-url="false"></div>
+	<div hx-get="/@me/settings/rules-list?search={{$search}}&trigger=GT:{{$last.Trigger}}" hx-target="this" hx-trigger="revealed" hx-swap="outerHTML" hx-push-url="false"></div>
 {{- end -}}

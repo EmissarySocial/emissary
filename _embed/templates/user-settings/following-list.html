@@ -27,7 +27,7 @@
 				{{- end -}}
 			</div>
 			<div class="width-2-5">
-				<div><a hx-get="/@me/inbox/inbox?folderId={{.FolderID.Hex}}" class="text-black bold" script="on click halt the event">{{.Folder}}</a></div>
+				<div><a hx-get="/@me/settings/inbox?folderId={{.FolderID.Hex}}" class="text-black bold" script="on click halt the event">{{.Folder}}</a></div>
 				<div class="text-sm text-light-gray margin-none">
 					{{ if eq "SUCCESS" .Status -}}
 						{{ icon .Icon }} 
@@ -43,12 +43,12 @@
 		</div>
 
 		<div class="align-right" hx-push-url="false">
-			<button class="text-sm" hx-get="/@me/inbox/following-edit?followingId={{.FollowingID.Hex}}" script="on click halt the event">Edit Source</button>
+			<button class="text-sm" hx-get="/@me/settings/following-edit?followingId={{.FollowingID.Hex}}" script="on click halt the event">Edit Source</button>
 		</div>
 	</div>
 {{- end -}}
 
 {{- if eq 12 $following.Length -}}
 	{{- $last := $following.Last -}}
-	<div hx-get="/@me/inbox/following-list?search={{$search}}&label=GT:{{$last.Label}}" hx-target="this" hx-trigger="revealed" hx-swap="outerHTML" hx-push-url="false"></div>
+	<div hx-get="/@me/settings/following-list?search={{$search}}&label=GT:{{$last.Label}}" hx-target="this" hx-trigger="revealed" hx-swap="outerHTML" hx-push-url="false"></div>
 {{- end -}}

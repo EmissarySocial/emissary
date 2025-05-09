@@ -6,7 +6,7 @@
 
 {{- if ne "" $search -}}
 <div class="margin-bottom">
-	<span role="link" class="link" hx-get="/@me/inbox/following-search?search={{$search}}&folderId={{$folderID}}" hx-target="#modal">
+	<span role="link" class="link" hx-get="/@me/settings/following-search?search={{$search}}&folderId={{$folderID}}" hx-target="#modal">
 		&larr; Back to Search
 	</span>
 </div>

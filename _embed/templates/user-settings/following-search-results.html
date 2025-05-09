@@ -13,7 +13,7 @@
 	<div class="text-light-gray margin-top">Found {{$resultCount}} {{pluralize $resultCount "result:" "results:"}}</div>
 	<div role="menu" class="menu margin-top">
 		{{- range $results -}}
-			<div role="menuitem" tabIndex="0" hx-get="/@me/inbox/following-add?url={{.ID}}&folderId={{$folderID}}&search={{$search}}">
+			<div role="menuitem" tabIndex="0" hx-get="/@me/settings/following-add?url={{.ID}}&folderId={{$folderID}}&search={{$search}}">
 				<div class="flex-row margin-vertical-sm">
 					<div class="width-32">
 							{{- if ne "" .Icon -}}

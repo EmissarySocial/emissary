@@ -1,7 +1,7 @@
 {{- $url := .QueryParam "url" -}}
 {{- $following := .AmFollowing $url -}}
 
-<span hx-get="/@me/inbox/actor-button?{{.QueryString}}" hx-trigger="refresh" hx-target="this" hx-swap="outerHTML" script="install refreshPeers(id:'{{$url}}')">
+<span hx-get="/@me/settings/actor-button?{{.QueryString}}" hx-trigger="refresh" hx-target="this" hx-swap="outerHTML" script="install refreshPeers(id:'{{$url}}')">
 	{{- if not $following.IsNew -}}
 		{{- $subBuilder := .SubBuilder $following -}}
 		{{- template "actor-button-follow" $subBuilder -}}

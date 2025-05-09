@@ -1,23 +1,27 @@
-{{- $folders := .Folders -}}
 {{- $merchantAccounts := .MerchantAccounts.Slice -}}
 {{- $products := .Products.ByName.Slice -}}
 {{- $purchaseCount := .Purchases.Count -}}
 
 <div class="page app flex-row">
 	<title>{{.RuleCount}} Rules | {{.DisplayName}}</title>
-	<link rel="stylesheet" href="/.templates/user-inbox/stylesheet">
+	<link rel="stylesheet" href="/.templates/user-settings/stylesheet">
 
-	{{- template "sidebar" $folders -}}
+	<div id="app-sidebar" class="app-sidebar" hx-swap="innerHTML show:window:top">
 
-	<div class="app-content">
-
-		<div role="tablist" class="underlined margin-top margin-bottom" hx-push-url="true">
-			<a href="/@me/inbox/following" hx-boost="true" role="tab">{{icon "star"}} Following</a>
-			<a href="/@me/inbox/followers" hx-boost="true" role="tab">{{icon "person"}} Followers</a>
-			<a href="/@me/inbox/purchases" hx-boost="true" role="tab">{{icon "person-card"}} Purchases</a>
-			<a href="/@me/inbox/products" hx-boost="true" role="tab" aria-selected="true">{{icon "card-fill"}} Products</a>
-			<a href="/@me/inbox/rules" hx-boost="true" role="tab">{{icon "rule"}} Rules</a>
+		<div class="pos-sticky" style="top:96px;">
+	
+			<div class="bold margin-bottom">{{icon "settings"}} Settings</div>
+	
+			<div role="link" hx-get="/@me/settings/following" class="turboclick menu-item ellipsis">{{icon "star"}} Following</div>
+			<div role="link" hx-get="/@me/settings/followers" class="turboclick menu-item ellipsis">{{icon "person"}} Followers</div>
+			<div role="link" hx-get="/@me/settings/products" class="turboclick menu-item ellipsis selected">{{icon "card-fill"}} Products</div>
+			<div role="link" hx-get="/@me/settings/purchases" class="turboclick menu-item ellipsis">{{icon "person-card"}} Purchases</div>
+			<div role="link" hx-get="/@me/settings/rules" class="turboclick menu-item ellipsis">{{icon "rule"}} Rules</div>
 		</div>
+	
+	</div>
+	
+	<div class="app-content">
 
 		{{- if $merchantAccounts.IsEmpty -}}
 
@@ -31,14 +35,14 @@
 			<p>To get started, you'll need to have a merchant account set up with <b>PayPal</b> or <b>Stripe</b>.
 				After you've entered your merchant account information, you'll be able to connect the product plan(s) from your merchant account.
 				<div>
-				<button hx-get="/@me/inbox/merchantAccount-add" class="primary">{{icon "add"}} Add a Merchant Account</button>
+				<button hx-get="/@me/settings/merchantAccount-add" class="primary">{{icon "add"}} Add a Merchant Account</button>
 			</div>
 
 
 		{{- else -}}
 
 			<div class="flex-row margin-bottom-lg">
-				<a href="/@me/inbox/purchases" class="text-plain text-nocolor card width-33% padding" hx-boost="true">
+				<a href="/@me/settings/purchases" class="text-plain text-nocolor card width-33% padding" hx-boost="true">
 					<div class="align-center text-sm text-gray margin-bottom">
 						{{ pluralize $products.Length "Purchase" "Purchases"}}
 					</div>
@@ -67,12 +71,12 @@
 					<div class="flex-row">
 						{{- range  $index, $merchantAccount := $merchantAccounts -}}
 							{{- $type := lowerCase $merchantAccount.Type -}}
-							<div hx-get="/@me/inbox/merchantAccount-edit-{{$type}}?merchantAccountId={{$merchantAccount.ID}}" role="button" class="flex-grow align-center turboclick">
+							<div hx-get="/@me/settings/merchantAccount-edit-{{$type}}?merchantAccountId={{$merchantAccount.ID}}" role="button" class="flex-grow align-center turboclick">
 								<div>{{- icon $type -}}</div>
 								<div class="text-sm bold">{{$merchantAccount.Name}}</div>
 							</div>
 						{{- end -}}
-						<div hx-get="/@me/inbox/merchantAccount-add" role="button" class="link flex-grow align-center turboclick">
+						<div hx-get="/@me/settings/merchantAccount-add" role="button" class="link flex-grow align-center turboclick">
 							<div>{{- icon "add" -}}</div>
 							<div class="text-sm bold">Connect</div>
 						</div>
@@ -92,9 +96,9 @@
 						<br>
 
 						{{- if $merchantAccounts.IsLength 1 -}}
-							<button hx-get="/@me/inbox/product-edit?merchantAccountId={{$merchantAccounts.First.ID}}" class="primary turboclick">{{icon "add"}} Add a Product Plan</button>
+							<button hx-get="/@me/settings/product-edit?merchantAccountId={{$merchantAccounts.First.ID}}" class="primary turboclick">{{icon "add"}} Add a Product Plan</button>
 						{{- else -}}
-							<button hx-get="/@me/inbox/product-choose-merchantAccount" class="primary turboclick">{{icon "add"}} Add a Product Plan</button>
+							<button hx-get="/@me/settings/product-choose-merchantAccount" class="primary turboclick">{{icon "add"}} Add a Product Plan</button>
 						{{- end -}}
 					</div>
 				</div>
@@ -103,7 +107,7 @@
 
 				<div class="table margin-top">
 					{{- range $index, $merchantAccount := $merchantAccounts -}}
-						<div hx-get="/@me/inbox/product-edit?merchantAccountId={{$merchantAccount.ID}}" role="button" class="link turboclick">
+						<div hx-get="/@me/settings/product-edit?merchantAccountId={{$merchantAccount.ID}}" role="button" class="link turboclick">
 							{{icon "add"}} Add {{$merchantAccount.Name}} Product
 						</div>
 					{{- end -}}
@@ -111,7 +115,7 @@
 
 				<div class="table margin-top">
 					{{- range $index, $product := $products -}}
-						<div hx-get="/@me/inbox/product-edit?productId={{$product.ID}}" role="button" class="flex-row flex-align-start turboclick">
+						<div hx-get="/@me/settings/product-edit?productId={{$product.ID}}" role="button" class="flex-row flex-align-start turboclick">
 							<div class="text-xl margin-none">{{icon $product.MerchantAccountType}}</div>
 							<div class="flex-grow">
 								<div class="bold">{{$product.Name}}</div>

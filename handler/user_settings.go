@@ -22,16 +22,16 @@ func PostSettings(ctx *steranko.Context, factory *domain.Factory, user *model.Us
 // buildSettings is the common Settings handler for both GET and POST requests
 func buildSettings(ctx *steranko.Context, factory *domain.Factory, user *model.User, actionMethod build.ActionMethod) error {
 
-	const location = "handler.buildInbox"
+	const location = "handler.buildSettings"
 
 	// Try to load the User's Inbox
-	actionID := first.String(ctx.Param("action"), "inbox")
+	actionID := first.String(ctx.Param("action"), "following")
 
 	if ok, err := handleJSONLD(ctx, user); ok {
 		return derp.Wrap(err, location, "Error building JSON-LD")
 	}
 
-	builder, err := build.NewInbox(factory, ctx.Request(), ctx.Response(), user, actionID)
+	builder, err := build.NewSettings(factory, ctx.Request(), ctx.Response(), user, actionID)
 
 	if err != nil {
 		return derp.ReportAndReturn(derp.Wrap(err, location, "Error creating builder"))

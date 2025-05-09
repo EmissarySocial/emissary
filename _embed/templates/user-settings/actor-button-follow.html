@@ -24,7 +24,7 @@
 			<span class="htmx-request-hide" id="htmx-response-message"></span>
 		</div>
 
-		<form hx-post="/@me/inbox/actor-button-follow-update?followingId={{$following.ID}}&url={{$url}}" hx-trigger="change">
+		<form hx-post="/@me/settings/actor-button-follow-update?followingId={{$following.ID}}&url={{$url}}" hx-trigger="change">
 			<div class="layout layout-vertical text-sm">
 				<div class="layout-vertical-elements">
 					<div class="layout-vertical-element">
@@ -64,7 +64,7 @@
 		</form>
 
 		<hr class="margin-vertical-sm">
-		<div class="align-center text-red" hx-post="/@me/inbox/actor-button-unfollow?followingId={{$following.ID}}&folderId={{$folderID}}&url={{$url}}" role="button">
+		<div class="align-center text-red" hx-post="/@me/settings/actor-button-unfollow?followingId={{$following.ID}}&folderId={{$folderID}}&url={{$url}}" role="button">
 			{{icon "cancel"}} Stop Following
 		</div>
 	</div>

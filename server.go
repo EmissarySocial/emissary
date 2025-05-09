@@ -318,12 +318,14 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@me", handler.WithAuthenticatedUser(factory, handler.ForwardMeURLs))
 	e.POST("/@me/delete", handler.WithAuthenticatedUser(factory, handler.PostProfileDelete))
 
-	e.GET("/@me/inbox", handler.GetInbox(factory))
-	e.POST("/@me/inbox", handler.PostInbox(factory))
-	e.GET("/@me/inbox/:action", handler.GetInbox(factory))
-	e.POST("/@me/inbox/:action", handler.PostInbox(factory))
+	e.GET("/@me/inbox", handler.WithAuthenticatedUser(factory, handler.GetInbox))
+	e.POST("/@me/inbox", handler.WithAuthenticatedUser(factory, handler.PostInbox))
+	e.GET("/@me/inbox/:action", handler.WithAuthenticatedUser(factory, handler.GetInbox))
+	e.POST("/@me/inbox/:action", handler.WithAuthenticatedUser(factory, handler.PostInbox))
 	e.GET("/@me/settings", handler.WithAuthenticatedUser(factory, handler.GetSettings))
 	e.POST("/@me/settings", handler.WithAuthenticatedUser(factory, handler.PostSettings))
+	e.GET("/@me/settings/:action", handler.WithAuthenticatedUser(factory, handler.GetSettings))
+	e.POST("/@me/settings/:action", handler.WithAuthenticatedUser(factory, handler.PostSettings))
 
 	e.GET("/@me/intent/create", handler.WithAuthenticatedUser(factory, handler.GetIntent_Create))
 	e.POST("/@me/intent/create", handler.WithAuthenticatedUser(factory, handler.PostIntent_Create))

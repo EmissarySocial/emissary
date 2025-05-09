@@ -1,8 +1,0 @@
-{{- $merchantAccounts := .MerchantAccounts.ByName.Slice -}}
-
-{{- range  $index, $merchantAccount := $merchantAccounts -}}
-	{{- $type := lowerCase $merchantAccount.Type -}}
-	<div hx-get="/@me/inbox/merchantAccount-edit-{{$type}}?merchantAccountId={{$merchantAccount.ID}}" role="button">
-		{{- icon $type }} {{$merchantAccount.Name}}
-	</div>
-{{- end -}}

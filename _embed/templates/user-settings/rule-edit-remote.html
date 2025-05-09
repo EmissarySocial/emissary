@@ -18,7 +18,7 @@
 			{{- end -}}
 			<div class="width-100%">{{$following.Label}}</div>
 			<div class="text-sm nowrap">
-				<button hx-get="/@me/inbox/following-edit?followingId={{$following.ID}}">Edit Source</button>
+				<button hx-get="/@me/settings/following-edit?followingId={{$following.ID}}">Edit Source</button>
 				<a href="{{$following.ProfileURL}}" role="link" class="button" target="_blank">Go to Profile</a>
 			</div>
 		</td>
@@ -45,6 +45,6 @@
 </table>
 
 <div>
-	<button class="primary" hx-get="/@me/inbox/rule-edit?ruleId={{$rule.ID}}&edit=true">Take Ownership</button>
+	<button class="primary" hx-get="/@me/settings/rule-edit?ruleId={{$rule.ID}}&edit=true">Take Ownership</button>
 	<button script="on click send closeModal">Cancel</button>
 </div>

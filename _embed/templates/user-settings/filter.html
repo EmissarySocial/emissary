@@ -11,7 +11,7 @@
 		{{- if eq 0 (len $following) -}}
 
 			This folder is empty and has no sources.
-			<span role="button" class="link" hx-get="/@me/inbox/following-search">Follow a Person or Website</span> to continue.
+			<span role="button" class="link" hx-get="/@me/settings/following-search">Follow a Person or Website</span> to continue.
 
 		{{- else -}}
 
@@ -38,7 +38,7 @@
 							<div class="margin-vertical-none text-xs text-gray">{{.URL}}</div>
 						</div>
 					</div>
-					<button class="text-xs nowrap" hx-get="/@me/inbox/following-edit?followingId={{.FollowingID.Hex}}">Edit Source</button>
+					<button class="text-xs nowrap" hx-get="/@me/settings/following-edit?followingId={{.FollowingID.Hex}}">Edit Source</button>
 				</div>
 			{{- end -}}
 	

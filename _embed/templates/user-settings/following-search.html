@@ -17,7 +17,7 @@
 			style="border:none; padding:0;" 
 			
 			script="on load call my focus() if my value is not empty then send initial"
-			hx-get="/@me/inbox/following-search-results"
+			hx-get="/@me/settings/following-search-results"
 			hx-trigger="initial, keyup changed throttle:50ms queue:last"
 			hx-target="#following-search-results"
 			hx-swap="innerHTML"

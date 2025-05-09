@@ -8,6 +8,6 @@
 
 	<div class="margin-bottom">
 		Using Merchant Account: 
-		<a hx-get="/@me/inbox/merchantAccount-edit-{{$merchantAccount.Type | lowerCase}}?merchantAccountId={{$merchantAccount.ID}}"><b>{{icon $merchantAccount.Type}} {{$merchantAccount.Name}}</b></a>
+		<a hx-get="/@me/settings/merchantAccount-edit-{{$merchantAccount.Type | lowerCase}}?merchantAccountId={{$merchantAccount.ID}}"><b>{{icon $merchantAccount.Type}} {{$merchantAccount.Name}}</b></a>
 	</div>
 {{- end -}}

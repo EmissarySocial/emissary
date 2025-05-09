@@ -5,10 +5,10 @@
 	<span hx-swap="outerHTML" hx-target="this">
 		{{- $followingID := .GetFollowingID $url -}}
 		{{- if ne "" $followingID -}}
-			<button class="bold link" hx-post="/@me/inbox/unfollow?followingId={{$followingID}}" hx-confirm="Do you want to stop following this account and remove all of their content from your inbox?">{{icon "check"}} Following</button>
+			<button class="bold link" hx-post="/@me/settings/unfollow?followingId={{$followingID}}" hx-confirm="Do you want to stop following this account and remove all of their content from your inbox?">{{icon "check"}} Following</button>
 		{{- else -}}
-			<button class="bold" hx-post="/@me/inbox/follow?followingId=new&url={{$url}}&folderId={{$folderID}}">{{icon "add"}} Follow</button>
-			<button class="bold" hx-get="/@me/inbox/block?url={{$url}}">{{icon "block"}} Block</button>
+			<button class="bold" hx-post="/@me/settings/follow?followingId=new&url={{$url}}&folderId={{$folderID}}">{{icon "add"}} Follow</button>
+			<button class="bold" hx-get="/@me/settings/block?url={{$url}}">{{icon "block"}} Block</button>
 		{{- end -}}
 	</span>
 {{- end -}}
