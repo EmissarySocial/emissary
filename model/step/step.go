@@ -197,6 +197,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "upload-attachments":
 		return NewUploadAttachments(stepInfo)
 
+	case "view-attachment":
+		return NewViewAttachment(stepInfo)
+
 	case "view-css":
 		return NewViewCSS(stepInfo)
 

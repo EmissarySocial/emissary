@@ -182,6 +182,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.UploadAttachments:
 		return StepUploadAttachments(s)
 
+	case step.ViewAttachment:
+		return StepViewAttachment(s)
+
 	case step.ViewCSS:
 		return StepViewCSS(s)
 

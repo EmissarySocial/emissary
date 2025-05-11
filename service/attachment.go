@@ -206,6 +206,27 @@ func (service *Attachment) QueryByCategory(objectType string, objectID primitive
 	return service.Query(criteria, option.SortAsc("rank"))
 }
 
+func (service *Attachment) LoadFirstByCategory(objectType string, objectID primitive.ObjectID, categories []string) (model.Attachment, error) {
+
+	const location = "service.Attachment.LoadFirstByCategory"
+
+	attachments, err := service.Query(
+		exp.Equal("objectType", objectType).
+			AndEqual("objectId", objectID).
+			AndIn("category", categories),
+		option.SortAsc("rank"), option.FirstRow())
+
+	if err != nil {
+		return model.Attachment{}, derp.Wrap(err, location, "Error loading first attachment", objectType, objectID)
+	}
+
+	for _, attachment := range attachments {
+		return attachment, err
+	}
+
+	return model.Attachment{}, derp.Wrap(err, location, "No attachments found", objectType, objectID)
+}
+
 func (service *Attachment) LoadFirstByObjectID(objectType string, objectID primitive.ObjectID) (model.Attachment, error) {
 
 	attachments, err := service.Query(
