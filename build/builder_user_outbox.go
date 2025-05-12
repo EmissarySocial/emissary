@@ -51,6 +51,15 @@ func NewOutbox(factory Factory, request *http.Request, response http.ResponseWri
 		return Outbox{}, derp.NotFoundError(location, "User not found")
 	}
 
+	// Enforce user permissions on the requested action
+	if !common._action.UserCan(user, &common._authorization) {
+		if common._authorization.IsAuthenticated() {
+			return Outbox{}, derp.ReportAndReturn(derp.NewForbiddenError(location, "Forbidden"))
+		} else {
+			return Outbox{}, derp.ReportAndReturn(derp.NewUnauthorizedError(location, "Anonymous user is not authorized to perform this action", user.ProfileURL, actionID))
+		}
+	}
+
 	// Return the Outbox builder
 	return Outbox{
 		_user:              user,
