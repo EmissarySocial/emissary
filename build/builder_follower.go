@@ -27,10 +27,21 @@ type Follower struct {
 // NewFollower returns a fully initialized `Follower` builder.
 func NewFollower(factory Factory, request *http.Request, response http.ResponseWriter, template model.Template, follower *model.Follower, actionID string) (Follower, error) {
 
+	const location = "build.NewFollower"
+
 	common, err := NewCommonWithTemplate(factory, request, response, template, actionID)
 
 	if err != nil {
 		return Follower{}, derp.Wrap(err, "build.NewFollower", "Error creating new model")
+	}
+
+	// Enforce user permissions on the requested action
+	if !common._action.UserCan(follower, &common._authorization) {
+		if common._authorization.IsAuthenticated() {
+			return Follower{}, derp.ReportAndReturn(derp.NewForbiddenError(location, "Forbidden"))
+		} else {
+			return Follower{}, derp.ReportAndReturn(derp.NewUnauthorizedError(location, "Anonymous user is not authorized to perform this action", actionID))
+		}
 	}
 
 	builder := Follower{
