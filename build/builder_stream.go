@@ -843,6 +843,21 @@ func (w Stream) Followers() ([]model.Follower, error) {
  * ACCESS PERMISSIONS
  ******************************************/
 
+// AuthorInGroup returns TRUE if the Author/AttributedTo is a member of the specified group
+func (w Stream) AuthorInGroup(string) bool {
+	return false
+}
+
+// UserInGroup returns TRUE if the user is a member of the specified group
+func (w Stream) UserInGroup(groupID string) bool {
+	return false
+}
+
+// UserHasRole returns TRUE if the user has privileges for the specified role
+func (w Stream) UserHasRole(role string) bool {
+	return false
+}
+
 // UserCan returns TRUE if this Request is authorized to access the requested view
 func (w Stream) UserCan(actionID string) bool {
 

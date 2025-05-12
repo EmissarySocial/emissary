@@ -1,6 +1,9 @@
 package model
 
-import "github.com/benpate/rosetta/mapof"
+import (
+	"github.com/benpate/rosetta/mapof"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 // StateSetter wraps the SetState() method, which updates
 // the state of an object.
@@ -10,16 +13,19 @@ type StateSetter interface {
 	SetState(string)
 }
 
-// RoleStateEnumerator wraps the methods required for an object
-// to declare what authorized roles/state combinations are required
-// for access.
-type RoleStateEnumerator interface {
-
+// StateGetter wraps the State() method, which returns the current state
+// of an object.
+type StateGetter interface {
 	// State returns the current state of the object.
 	State() string
+}
 
-	// Roles Returns the list of roles granted by the provided authorization
-	Roles(*Authorization) []string
+type AuthorGetter interface {
+	Author() primitive.ObjectID
+}
+
+type MyselfGetter interface {
+	Myself() primitive.ObjectID
 }
 
 // FieldLister wraps the Files() method, which provides the list of fields

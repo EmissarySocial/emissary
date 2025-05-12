@@ -108,8 +108,8 @@ func (step StepViewAttachment) makeFileSpec(request *http.Request, stream *model
 	query := request.URL.Query()
 
 	// Calculate generated file type
-	if fileType := query.Get("type"); step.Formats.Contains(fileType) {
-		result.Extension = "." + fileType
+	if format := query.Get("format"); step.Formats.Contains(format) {
+		result.Extension = "." + format
 	} else {
 		result.Extension = "." + step.Formats.First()
 	}

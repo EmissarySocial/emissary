@@ -41,26 +41,70 @@ func (action *Action) UserRole(enumerator RoleStateEnumerator, authorization *Au
 }
 
 // UserCan returns TRUE if this action is permitted on a stream (using the provided authorization)
-func (action *Action) UserCan(enumerator RoleStateEnumerator, authorization *Authorization) bool {
+func (action *Action) UserCan(getter StateGetter, authorization *Authorization) bool {
 
 	// Prevent nil pointer exceptions
 	if action == nil {
 		return false
 	}
 
-	// Get the list of request roles that the user has
-	userRoles := enumerator.Roles(authorization)
-
 	// Get a list of the valid roles for this action
-	allowedRoles := action.AllowedRoles(enumerator.State())
+	permission := action.AllowedRoles(getter.State())
 
-	// If one or more of these matches the allowed roles, then the request is granted.
-	return matchAny(userRoles, allowedRoles)
+	// If Anonymous access is allowed, then EVERYONE can perform this action
+	if permission.AllowAnonymous {
+		return true
+	}
+
+	// Beyond this point, you must be logged in to perform this action
+	if authorization == nil {
+		return false
+	}
+
+	// If the user is a domain owner, then they can do anything
+	if authorization.DomainOwner {
+		return true
+	}
+
+	// If "Authenticated" access is allowed, then any LOGGED IN USERS can perform this action
+	if permission.AllowAuthenticated {
+		if authorization.IsAuthenticated() {
+			return true
+		}
+	}
+
+	// If the permission allows "author" access, then check to see if the user is the author of this object
+	if permission.AllowAuthor {
+		if authorGetter, isAuthorGetter := getter.(AuthorGetter); isAuthorGetter {
+			if authorGetter.Author() == authorization.UserID {
+				return true
+			}
+		}
+	}
+
+	// If the permission allows "myself" access, then check to see if this user is "myself"
+	if permission.AllowMyself {
+		if myselfGetter, isMyselfGetter := getter.(MyselfGetter); isMyselfGetter {
+			if myselfGetter.Myself() == authorization.UserID {
+				return true
+			}
+		}
+	}
+
+	if len(permission.AllowGroups) > 0 {
+
+	}
+
+	if len(permission.AllowProducts) > 0 {
+
+	}
+
+	return false
 }
 
 // AllowedRoles returns a string of all page request roles that are allowed to
 // perform this action.  This includes system roles like "anonymous", "authenticated", "self", "author", and "owner".
-func (action *Action) AllowedRoles(stateID string) []string {
+func (action *Action) AllowedRoles(stateID string) Permission {
 
 	// If present, "States" limits the states where this action can take place at all.
 	if len(action.States) > 0 {
