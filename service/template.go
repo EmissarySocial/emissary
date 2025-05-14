@@ -248,12 +248,12 @@ func (service *Template) Add(templateID string, filesystem fs.FS, definition []b
 
 	// Load all HTML templates from the filesystem
 	if err := loadHTMLTemplateFromFilesystem(filesystem, result.HTMLTemplate, service.funcMap); err != nil {
-		return derp.ReportAndReturn(derp.Wrap(err, location, "Error loading Template", templateID))
+		return derp.Wrap(err, location, "Error loading Template", templateID)
 	}
 
 	// Load all Bundles from the filesystem
 	if err := populateBundles(result.Bundles, filesystem); err != nil {
-		return derp.ReportAndReturn(derp.Wrap(err, location, "Error loading Bundles", templateID))
+		return derp.Wrap(err, location, "Error loading Bundles", templateID)
 	}
 
 	// Keep a pointer to the filesystem resources (if present)
@@ -262,7 +262,9 @@ func (service *Template) Add(templateID string, filesystem fs.FS, definition []b
 	}
 
 	// Handle post-processing steps forthe Template
-	result.AfterUnmarshal()
+	if err := result.AfterUnmarshal(); err != nil {
+		return derp.Wrap(err, location, "Error processing Template", templateID)
+	}
 
 	// Add the template into the prep library
 	service.templatePrep[result.TemplateID] = result

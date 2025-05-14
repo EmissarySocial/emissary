@@ -37,8 +37,11 @@ func NewDomain(factory Factory, request *http.Request, response http.ResponseWri
 
 	const location = "build.NewDomain"
 
+	// Find/Create new database record for the domain.
+	domain := factory.Domain().Get()
+
 	// Create the common Builder
-	common, err := NewCommonWithTemplate(factory, request, response, template, actionID)
+	common, err := NewCommonWithTemplate(factory, request, response, template, domain, actionID)
 
 	if err != nil {
 		return Domain{}, derp.Wrap(err, location, "Error creating common builder")
@@ -52,16 +55,10 @@ func NewDomain(factory Factory, request *http.Request, response http.ResponseWri
 	// Create and return the Domain builder
 	result := Domain{
 		_provider:          factory.Provider(),
+		_domain:            domain,
 		CommonWithTemplate: common,
 	}
 
-	// Find/Create new database record for the domain.
-	domainService := factory.Domain()
-	if _, err := domainService.LoadDomain(); err != nil {
-		return Domain{}, derp.Wrap(err, location, "Error creating a new Domain")
-	}
-
-	result._domain = domainService.GetPointer()
 	return result, nil
 }
 

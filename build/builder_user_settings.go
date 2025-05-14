@@ -36,7 +36,7 @@ func NewSettings(factory Factory, request *http.Request, response http.ResponseW
 	}
 
 	// Create the underlying Common builder
-	common, err := NewCommonWithTemplate(factory, request, response, template, actionID)
+	common, err := NewCommonWithTemplate(factory, request, response, template, user, actionID)
 
 	if err != nil {
 		return Settings{}, derp.Wrap(err, location, "Error creating common builder")
@@ -128,20 +128,6 @@ func (w Settings) templateRole() string {
 
 func (w Settings) clone(action string) (Builder, error) {
 	return NewSettings(w._factory, w._request, w._response, w._user, action)
-}
-
-// UserCan returns TRUE if this Request is authorized to access the requested view
-func (w Settings) UserCan(actionID string) bool {
-
-	action, ok := w._template.Action(actionID)
-
-	if !ok {
-		return false
-	}
-
-	authorization := w.authorization()
-
-	return action.UserCan(w._user, &authorization)
 }
 
 /******************************************

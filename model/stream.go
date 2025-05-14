@@ -251,7 +251,7 @@ func (stream *Stream) PermissionGroups(roles ...string) []primitive.ObjectID {
 	}
 
 	for groupID, groupRoles := range stream.Permissions {
-		if matchAny(roles, groupRoles) {
+		if slice.ContainsAny(roles, groupRoles...) {
 			if groupID, err := primitive.ObjectIDFromHex(groupID); err == nil {
 				result = append(result, groupID)
 			}

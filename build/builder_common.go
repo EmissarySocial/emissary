@@ -235,20 +235,12 @@ func (w Common) GetContent() template.HTML {
  * Domain Data
  ******************************************/
 
-func (w Common) DomainLabel() (string, error) {
-	if domain, err := w.getDomain(); err != nil {
-		return "", err
-	} else {
-		return domain.Label, nil
-	}
+func (w Common) DomainLabel() string {
+	return w._factory.Domain().Get().Label
 }
 
-func (w Common) DomainHasRegistrationForm() (bool, error) {
-	if domain, err := w.getDomain(); err != nil {
-		return false, err
-	} else {
-		return domain.HasRegistrationForm(), nil
-	}
+func (w Common) DomainHasRegistrationForm() bool {
+	return w._factory.Domain().Get().HasRegistrationForm()
 }
 
 /***************************
@@ -435,18 +427,6 @@ func (w Common) getUser() (model.User, error) {
 	}
 
 	return result, nil
-}
-
-// getDomain retrieves the current domain model object from the domain service cache
-func (w *Common) getDomain() (model.Domain, error) {
-
-	domainService := w._factory.Domain()
-
-	if !domainService.Ready() {
-		return model.Domain{}, derp.InternalError("build.Common.getDomain", "Domain service not ready", nil)
-	}
-
-	return domainService.Get(), nil
 }
 
 /******************************************

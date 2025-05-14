@@ -40,7 +40,7 @@ func NewOutbox(factory Factory, request *http.Request, response http.ResponseWri
 	}
 
 	// Create the underlying Common builder
-	common, err := NewCommonWithTemplate(factory, request, response, template, actionID)
+	common, err := NewCommonWithTemplate(factory, request, response, template, user, actionID)
 
 	if err != nil {
 		return Outbox{}, derp.Wrap(err, location, "Error creating common builder")
@@ -52,7 +52,7 @@ func NewOutbox(factory Factory, request *http.Request, response http.ResponseWri
 	}
 
 	// Enforce user permissions on the requested action
-	if !common._action.UserCan(user, &common._authorization) {
+	if !common.UserCan(actionID) {
 		if common._authorization.IsAuthenticated() {
 			return Outbox{}, derp.ReportAndReturn(derp.ForbiddenError(location, "Forbidden"))
 		} else {
@@ -152,20 +152,6 @@ func (w Outbox) templateRole() string {
 
 func (w Outbox) clone(action string) (Builder, error) {
 	return NewOutbox(w._factory, w._request, w._response, w._user, action)
-}
-
-// UserCan returns TRUE if this Request is authorized to access the requested view
-func (w Outbox) UserCan(actionID string) bool {
-
-	action, ok := w._template.Action(actionID)
-
-	if !ok {
-		return false
-	}
-
-	authorization := w.authorization()
-
-	return action.UserCan(w._user, &authorization)
 }
 
 // IsMyself returns TRUE if the outbox record is owned

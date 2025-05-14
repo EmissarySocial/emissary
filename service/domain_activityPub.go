@@ -52,11 +52,7 @@ func (service *Domain) PrivateKey() (*rsa.PrivateKey, error) {
 	const location = "service.Domain.PrivateKey"
 
 	// Get the Domain record
-	domain, err := service.LoadDomain()
-
-	if err != nil {
-		return nil, derp.Wrap(err, location, "Error loading Domain record")
-	}
+	domain := *service.Get()
 
 	// Try to use the existing private key
 	if domain.PrivateKey != "" {

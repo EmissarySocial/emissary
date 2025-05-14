@@ -5,6 +5,7 @@ import (
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/toot"
 	"github.com/benpate/toot/object"
 	"github.com/benpate/toot/txn"
@@ -49,13 +50,8 @@ func PostStatus(serverFactory *server.Factory) func(model.Authorization, txn.Pos
 		contentService := factory.Content()
 		stream.Content = contentService.New(model.ContentFormatHTML, transaction.Status)
 
-		// Verify user permissions
-		streamService := factory.Stream()
-		if err := streamService.UserCan(&authorization, &stream, "create"); err != nil {
-			return object.Status{}, derp.ForbiddenError(location, "User is not authorized to create this stream", stream, authorization)
-		}
-
 		// Save the stream
+		streamService := factory.Stream()
 		if err := streamService.Save(&stream, "Created via Mastodon API"); err != nil {
 			return object.Status{}, derp.Wrap(err, location, "Error saving stream")
 		}
@@ -77,14 +73,14 @@ func GetStatus(serverFactory *server.Factory) func(model.Authorization, txn.GetS
 	return func(authorization model.Authorization, transaction txn.GetStatus) (object.Status, error) {
 
 		// Get the Stream from the URL
-		stream, streamService, err := getStreamFromURL(serverFactory, transaction.ID)
+		stream, _, err := getStreamFromURL(serverFactory, transaction.ID)
 
 		if err != nil {
 			return object.Status{}, derp.Wrap(err, location, "Error loading stream")
 		}
 
 		// Validate permissions
-		if err := streamService.UserCan(&authorization, &stream, "view"); err != nil {
+		if !slice.ContainsAny(stream.DefaultAllow, authorization.AllGroupIDs()...) {
 			return object.Status{}, derp.ForbiddenError(location, "User is not authorized to delete this stream")
 		}
 
@@ -106,7 +102,7 @@ func DeleteStatus(serverFactory *server.Factory) func(model.Authorization, txn.D
 			return struct{}{}, derp.Wrap(err, location, "Error loading stream")
 		}
 
-		if err := streamService.UserCan(&authorization, &stream, "delete"); err != nil {
+		if !stream.IsMyself(authorization.UserID) {
 			return struct{}{}, derp.ForbiddenError(location, "User is not authorized to delete this stream")
 		}
 
@@ -384,7 +380,7 @@ func PutStatus(serverFactory *server.Factory) func(model.Authorization, txn.PutS
 		}
 
 		// Validate authorization
-		if err := streamService.UserCan(&auth, &stream, "edit"); err != nil {
+		if !stream.IsMyself(auth.UserID) {
 			return object.Status{}, derp.Wrap(err, location, "User is not authorized to edit this stream", derp.WithForbidden())
 		}
 

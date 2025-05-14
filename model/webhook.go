@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -34,4 +35,40 @@ func (userSummary Webhook) Fields() []string {
 // ID returns the unique identifier for this Webhook, and is required to implement the data.Object interface
 func (webhook Webhook) ID() string {
 	return webhook.WebhookID.Hex()
+}
+
+/******************************************
+ * AccessLister Interface
+ ******************************************/
+
+// State returns the current state of this Webhook.
+// It is part of the AccessLister interface
+func (webhook *Webhook) State() string {
+	return "default"
+}
+
+// IsAuthor returns TRUE if the provided UserID the author of this Webhook
+// It is part of the AccessLister interface
+func (webhook *Webhook) IsAuthor(authorID primitive.ObjectID) bool {
+	return false
+}
+
+// IsMember returns TRUE if this object directly represents the provided UserID
+// It is part of the AccessLister interface
+func (webhook *Webhook) IsMyself(userID primitive.ObjectID) bool {
+	return false
+}
+
+// GroupIDs returns a map of RoleIDs to GroupIDs
+// It is part of the AccessLister interface
+// TODO: This should probably be refactored.
+// With the new authentication system, this should be a map of RoleIDs to GroupIDs
+func (webhook *Webhook) RolesToGroupIDs(roleIDs ...string) id.Slice {
+	return nil
+}
+
+// ProductID returns a map of RoleIDs to ProductIDs
+// It is part of the AccessLister interface
+func (webhook *Webhook) RolesToProductIDs(roleIDs ...string) id.Slice {
+	return nil
 }

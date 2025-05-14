@@ -15,7 +15,6 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/dlclark/metaphone3"
-	"github.com/rs/zerolog"
 	"github.com/tdewolff/minify/v2"
 	"github.com/tdewolff/minify/v2/html"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -288,28 +287,8 @@ func slicesAreEqual(value1 []mapof.String, value2 []mapof.String) bool {
 	return true
 }
 
-// executeTemplate is some syntax sugar around the template.Execute function.
-// nolint:unused -- This may be unused now, but it's a great function to have around.
-func executeTemplate(t TemplateLike, value any) string {
-
-	// Empty templates return empty strings
-	if t == nil {
-		return ""
-	}
-
-	// Otherwise, use a buffer to execute the template
-	var buffer strings.Builder
-	if err := t.Execute(&buffer, value); err != nil {
-		derp.Report(derp.Wrap(err, "service.executeTemplate", "Error executing template"))
-	}
-
-	return buffer.String()
-}
-
 // iif is a simple inline-if function.  You should probably never
 // do something like this.  But fuck it.
-//
-//lint:ignore U1000 Leaving this here in case we need it in the future
 func iif(condition bool, trueValue, falseValue string) string {
 	if condition {
 		return trueValue
@@ -334,49 +313,8 @@ func firstOf[T comparable](values ...T) T {
 	return empty
 }
 
-// must strips out an error from a multi-result function call.
-// This should be used sparingly because, while it does REPORT
-// the error, it does not return it to the caller.
-//
-// nolint:unused
-func must[T any](value T, err error) T {
-	if err != nil {
-		derp.Report(err)
-	}
-
-	return value
-}
-
 // pointerTo returns a pointer to a given value.  This is just
 // some syntactic sugar for optional fields in API calls.
 func pointerTo[T any](value T) *T {
 	return &value
-}
-
-// canInfo returns TRUE if zerolog is configured to allow Info logs
-// nolint:unused
-func canInfo() bool {
-	return canLog(zerolog.InfoLevel)
-}
-
-// canDebug returns TRUE if zerolog is configured to allow Debug logs
-// nolint:unused
-func canDebug() bool {
-	return canLog(zerolog.DebugLevel)
-}
-
-// canTrace returns TRUE if zerolog is configured to allow Trace logs
-// nolint:unused
-func canTrace() bool {
-	return canLog(zerolog.TraceLevel)
-}
-
-// canLog is a silly zerolog helper that returns TRUE
-// if the provided log level would be allowed
-// (based on the global log level).
-// This makes it easier to execute expensive code conditionally,
-// for instance: marshalling a JSON object for logging.
-// nolint:unused
-func canLog(level zerolog.Level) bool {
-	return zerolog.GlobalLevel() <= level
 }

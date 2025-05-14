@@ -904,6 +904,7 @@ func (service *Stream) CalcParentIDs(stream *model.Stream) error {
 	return nil
 }
 
+/*
 // UserCan checks a user's permission to perform an action on a Stream.  If not allowed,
 // then the returned error describes why the access was denied.
 func (service *Stream) UserCan(authorization *model.Authorization, stream *model.Stream, actionID string) error {
@@ -932,6 +933,7 @@ func (service *Stream) UserCan(authorization *model.Authorization, stream *model
 	// UserCan!
 	return nil
 }
+*/
 
 // CalcContext calculates the conversational context for a given stream,
 // IF it can be determined.

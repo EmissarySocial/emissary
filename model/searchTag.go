@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/EmissarySocial/emissary/tools/parse"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/rosetta/sliceof"
@@ -81,4 +82,40 @@ func (searchTag SearchTag) ImageURL() string {
 	}
 
 	return "/.searchTag/" + searchTag.SearchTagID.Hex() + "/attachments/" + searchTag.ImageID.Hex()
+}
+
+/******************************************
+ * AccessLister Interface
+ ******************************************/
+
+// State returns the current state of this SearchTag.
+// It is part of the AccessLister interface
+func (searchTag *SearchTag) State() string {
+	return "default"
+}
+
+// IsAuthor returns TRUE if the provided UserID the author of this SearchTag
+// It is part of the AccessLister interface
+func (searchTag *SearchTag) IsAuthor(authorID primitive.ObjectID) bool {
+	return false
+}
+
+// IsMember returns TRUE if this object directly represents the provided UserID
+// It is part of the AccessLister interface
+func (searchTag *SearchTag) IsMyself(userID primitive.ObjectID) bool {
+	return false
+}
+
+// GroupIDs returns a map of RoleIDs to GroupIDs
+// It is part of the AccessLister interface
+// TODO: This should probably be refactored.
+// With the new authentication system, this should be a map of RoleIDs to GroupIDs
+func (searchTag *SearchTag) RolesToGroupIDs(roleIDs ...string) id.Slice {
+	return nil
+}
+
+// ProductID returns a map of RoleIDs to ProductIDs
+// It is part of the AccessLister interface
+func (searchTag *SearchTag) RolesToProductIDs(roleIDs ...string) id.Slice {
+	return nil
 }

@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/mapof"
@@ -47,29 +48,39 @@ func (merchantAccount MerchantAccount) Fields() []string {
 }
 
 /******************************************
- * RoleStateGetter Interface
+ * AccessLister Interface
  ******************************************/
 
-// State returns the current state of this object.
-// For merchant accounts, there is no state, so it returns ""
-func (merchantAccount MerchantAccount) State() string {
-	return ""
+// State returns the current state of this MerchantAccount.
+// It is part of the AccessLister interface
+func (merchantAccount *MerchantAccount) State() string {
+	return "default"
 }
 
-// Roles returns a list of all roles that match the provided authorization.
-// Since Rule records should only be accessible by the rule owner, this
-// function only returns MagicRoleMyself if applicable.  Others (like Anonymous
-// and Authenticated) should never be allowed on an Rule record, so they
-// are not returned.
-func (merchantAccount MerchantAccount) Roles(authorization *Authorization) []string {
+// IsAuthor returns TRUE if the provided UserID the author of this MerchantAccount
+// It is part of the AccessLister interface
+func (merchantAccount *MerchantAccount) IsAuthor(authorID primitive.ObjectID) bool {
+	return false
+}
 
-	// Rules are private, so only 'myself' and 'owner' are allowed
-	if authorization.UserID == merchantAccount.UserID {
-		return []string{MagicRoleMyself, MagicRoleOwner}
-	}
+// IsMember returns TRUE if this object directly represents the provided UserID
+// It is part of the AccessLister interface
+func (merchantAccount *MerchantAccount) IsMyself(userID primitive.ObjectID) bool {
+	return merchantAccount.UserID == userID
+}
 
-	// Intentionally NOT allowing MagicRoleAnonymous, or MagicRoleAuthenticated
-	return []string{MagicRoleOwner}
+// GroupIDs returns a map of RoleIDs to GroupIDs
+// It is part of the AccessLister interface
+// TODO: This should probably be refactored.
+// With the new authentication system, this should be a map of RoleIDs to GroupIDs
+func (merchantAccount *MerchantAccount) RolesToGroupIDs(roleIDs ...string) id.Slice {
+	return nil
+}
+
+// ProductID returns a map of RoleIDs to ProductIDs
+// It is part of the AccessLister interface
+func (merchantAccount *MerchantAccount) RolesToProductIDs(roleIDs ...string) id.Slice {
+	return nil
 }
 
 /******************************************

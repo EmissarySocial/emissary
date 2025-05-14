@@ -35,7 +35,7 @@ func executeDomainTemplate(fm *server.Factory, ctx echo.Context, templateName st
 }
 
 // TODO: This should be refactored away using With* wrappers.
-func loadFactoryAndDomain(fm *server.Factory, ctx echo.Context) (*domain.Factory, model.Domain, error) {
+func loadFactoryAndDomain(fm *server.Factory, ctx echo.Context) (*domain.Factory, *model.Domain, error) {
 
 	const location = "handler.loadFactoryAndDomain"
 
@@ -43,7 +43,7 @@ func loadFactoryAndDomain(fm *server.Factory, ctx echo.Context) (*domain.Factory
 	factory, err := fm.ByContext(ctx)
 
 	if err != nil {
-		return nil, model.Domain{}, derp.Wrap(err, location, "Error getting factory")
+		return nil, nil, derp.Wrap(err, location, "Error getting factory")
 	}
 
 	// Get the domain record

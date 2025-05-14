@@ -58,16 +58,8 @@ func WithDomain(serverFactory *server.Factory, fn WithFunc1[model.Domain]) echo.
 	const location = "handler.WithRegistration"
 
 	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *domain.Factory) error {
-
-		// Try to retrieve the Domain record
-		domainService := factory.Domain()
-		domain, err := domainService.LoadDomain()
-
-		if err != nil {
-			return derp.Wrap(err, location, "Error loading Domain")
-		}
-
-		return fn(ctx, factory, &domain)
+		domain := factory.Domain().Get()
+		return fn(ctx, factory, domain)
 	})
 }
 

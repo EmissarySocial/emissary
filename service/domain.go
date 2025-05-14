@@ -67,13 +67,12 @@ func (service *Domain) Refresh(collection data.Collection, configuration config.
 }
 
 // Init domain guarantees that a domain record exists in the database.
-// It returns A COPY of the service domain.
 func (service *Domain) Start() error {
 
 	const location = "service.Domain.Start"
 
 	// Try to load the domain model into memory
-	_, err := service.LoadDomain()
+	err := service.collection.Load(exp.All(), &service.domain)
 
 	// In this process, some errors (like 404's) are okay,
 	// so let's look at THIS error a little more closely.
@@ -129,36 +128,12 @@ func (service *Domain) Ready() bool {
 	return service.ready
 }
 
-func (service *Domain) LoadDomain() (model.Domain, error) {
-
-	// If the domain has already been loaded, then just return it.
-	if service.domain.NotEmpty() {
-		return service.domain, nil
-	}
-
-	// Try to load the domain from the database
-	if err := service.collection.Load(exp.All(), &service.domain); err != nil {
-		return service.domain, derp.Wrap(err, "service.Domain.LoadDomain", "Domain Not Ready: Error loading domain record")
-	}
-
-	// Attach the hostname to the domain
-	// (in the future, this should probably be kept in the DB)
-	service.domain.Hostname = service.hostname
-
-	// Success.
-	return service.domain, nil
-}
-
 /******************************************
  * Common Data Methods
  ******************************************/
 
-// Load retrieves an Domain from the database (or in-memory cache)
-func (service *Domain) Get() model.Domain {
-	return service.domain
-}
-
-func (service *Domain) GetPointer() *model.Domain {
+// Get returns a pointer to the domain model object
+func (service *Domain) Get() *model.Domain {
 	return &service.domain
 }
 

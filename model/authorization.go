@@ -47,6 +47,19 @@ func (authorization Authorization) IsGuest() bool {
 	return !authorization.GuestID.IsZero()
 }
 
+// AllGroupIDs returns a slice of groups that this authorization belongs to,
+// including the magic "Anonymous", and (if valid) "Authenticated" groups.
+func (authorization *Authorization) AllGroupIDs() []primitive.ObjectID {
+	result := []primitive.ObjectID{MagicGroupIDAnonymous}
+
+	if authorization.IsAuthenticated() {
+		result = append(result, MagicGroupIDAuthenticated, authorization.UserID)
+		result = append(result, authorization.GroupIDs...)
+	}
+
+	return result
+}
+
 // IsGroupMember returns TRUE if this authorization has any one of the specified groupID
 func (authorization Authorization) IsGroupMember(groupIDs ...primitive.ObjectID) bool {
 

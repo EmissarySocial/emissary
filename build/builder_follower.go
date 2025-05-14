@@ -36,7 +36,7 @@ func NewFollower(factory Factory, request *http.Request, response http.ResponseW
 	}
 
 	// Enforce user permissions on the requested action
-	if !common._action.UserCan(follower, &common._authorization) {
+	if !common.UserCan(actionID) {
 		if common._authorization.IsAuthenticated() {
 			return Follower{}, derp.ReportAndReturn(derp.ForbiddenError(location, "Forbidden"))
 		} else {

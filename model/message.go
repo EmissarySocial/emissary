@@ -4,6 +4,7 @@ import (
 	"math"
 	"time"
 
+	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/toot/object"
@@ -58,25 +59,39 @@ func (message Message) ID() string {
 }
 
 /******************************************
- * RoleStateGetter Interface
+ * AccessLister Interface
  ******************************************/
 
-// State returns the current state of this Stream.  It is
-// part of the implementation of the RoleStateEmulator interface
-func (message Message) State() string {
-	return ""
+// State returns the current state of this Message.
+// It is part of the AccessLister interface
+func (message *Message) State() string {
+	return "default"
 }
 
-// Roles returns a list of all roles that match the provided authorization
-func (message Message) Roles(authorization *Authorization) []string {
+// IsAuthor returns TRUE if the provided UserID the author of this Message
+// It is part of the AccessLister interface
+func (message *Message) IsAuthor(authorID primitive.ObjectID) bool {
+	return false
+}
 
-	if authorization.IsAuthenticated() {
-		if authorization.UserID == message.UserID {
-			return []string{MagicRoleMyself}
-		}
-	}
+// IsMember returns TRUE if this object directly represents the provided UserID
+// It is part of the AccessLister interface
+func (message *Message) IsMyself(userID primitive.ObjectID) bool {
+	return message.UserID == userID
+}
 
-	return []string{}
+// GroupIDs returns a map of RoleIDs to GroupIDs
+// It is part of the AccessLister interface
+// TODO: This should probably be refactored.
+// With the new authentication system, this should be a map of RoleIDs to GroupIDs
+func (message *Message) RolesToGroupIDs(roleIDs ...string) id.Slice {
+	return nil
+}
+
+// ProductID returns a map of RoleIDs to ProductIDs
+// It is part of the AccessLister interface
+func (message *Message) RolesToProductIDs(roleIDs ...string) id.Slice {
+	return nil
 }
 
 /******************************************

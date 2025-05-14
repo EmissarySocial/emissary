@@ -92,11 +92,7 @@ func PostStartup(serverFactory *server.Factory) echo.HandlerFunc {
 
 		// Load/Initialize the Domain value
 		domainService := factory.Domain()
-		domain, err := domainService.LoadDomain()
-
-		if err != nil {
-			return derp.Wrap(err, location, "Error loading domain")
-		}
+		domain := *domainService.Get()
 
 		// Save the new ThemeID to the database
 		domain.ThemeID = themeID

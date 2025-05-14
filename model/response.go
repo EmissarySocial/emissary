@@ -3,6 +3,7 @@ package model
 import (
 	"time"
 
+	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/hannibal"
 	"github.com/benpate/hannibal/vocab"
@@ -116,37 +117,39 @@ func (response Response) NotEmpty() bool {
 }
 
 /******************************************
- * RoleStateGetter Methods
+ * AccessLister Interface
  ******************************************/
 
-// State returns the current state of this Stream.  It is
-// part of the implementation of the RoleStateEmulator interface
-func (response Response) State() string {
-	return ""
+// State returns the current state of this Response.
+// It is part of the AccessLister interface
+func (response *Response) State() string {
+	return "default"
 }
 
-// Roles returns a list of all roles that match the provided authorization
-func (response Response) Roles(authorization *Authorization) []string {
+// IsAuthor returns TRUE if the provided UserID the author of this Response
+// It is part of the AccessLister interface
+func (response *Response) IsAuthor(authorID primitive.ObjectID) bool {
+	return false
+}
 
-	// Everyone has "anonymous" access
-	result := []string{MagicRoleAnonymous}
+// IsMember returns TRUE if this object directly represents the provided UserID
+// It is part of the AccessLister interface
+func (response *Response) IsMyself(userID primitive.ObjectID) bool {
+	return response.UserID == userID
+}
 
-	if authorization.IsAuthenticated() {
+// GroupIDs returns a map of RoleIDs to GroupIDs
+// It is part of the AccessLister interface
+// TODO: This should probably be refactored.
+// With the new authentication system, this should be a map of RoleIDs to GroupIDs
+func (response *Response) RolesToGroupIDs(roleIDs ...string) id.Slice {
+	return nil
+}
 
-		// Owners are hard-coded to do everything, so no other roles need to be returned.
-		if authorization.DomainOwner {
-			return []string{MagicRoleOwner}
-		}
-
-		result = append(result, MagicRoleAuthenticated)
-
-		// Authors sometimes have special permissions, too.
-		if response.UserID == authorization.UserID {
-			result = append(result, MagicRoleAuthor)
-		}
-	}
-
-	return result
+// ProductID returns a map of RoleIDs to ProductIDs
+// It is part of the AccessLister interface
+func (response *Response) RolesToProductIDs(roleIDs ...string) id.Slice {
+	return nil
 }
 
 /******************************************

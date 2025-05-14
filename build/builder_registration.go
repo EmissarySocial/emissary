@@ -26,7 +26,7 @@ import (
 type Registration struct {
 	_actionID     string
 	_action       model.Action
-	_domain       model.Domain
+	_domain       *model.Domain
 	_provider     *service.Provider
 	_registration *model.Registration
 	_user         model.User

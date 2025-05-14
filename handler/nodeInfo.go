@@ -56,12 +56,7 @@ func GetNodeInfo20(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		// Get the Domain
-		domainService := factory.Domain()
-		domain, err := domainService.LoadDomain()
-
-		if err != nil {
-			return derp.Wrap(err, "handler.GetNodeInfo20", "Error loading domain")
-		}
+		domain := factory.Domain().Get()
 
 		userService := factory.User()
 		userCount, _ := userService.Count(exp.All())
@@ -111,12 +106,7 @@ func GetNodeInfo21(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		// Get the Domain
-		domainService := factory.Domain()
-		domain, err := domainService.LoadDomain()
-
-		if err != nil {
-			return derp.Wrap(err, "handler.GetNodeInfo20", "Error loading domain")
-		}
+		domain := factory.Domain().Get()
 
 		userService := factory.User()
 		userCount, _ := userService.Count(exp.All())

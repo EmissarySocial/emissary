@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/form"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -48,29 +49,39 @@ func (product Product) Fields() []string {
 }
 
 /******************************************
- * RoleStateGetter Interface
+ * AccessLister Interface
  ******************************************/
 
-// State returns the current state of this object.
-// For products, there is no state, so it returns ""
-func (product Product) State() string {
-	return ""
+// State returns the current state of this Product.
+// It is part of the AccessLister interface
+func (product *Product) State() string {
+	return "default"
 }
 
-// Roles returns a list of all roles that match the provided authorization.
-// Since Products records should only be accessible by the Product owner, this
-// function only returns MagicRoleMyself if applicable.  Others (like Anonymous
-// and Authenticated) should never be allowed on an Product record, so they
-// are not returned.
-func (product Product) Roles(authorization *Authorization) []string {
+// IsAuthor returns TRUE if the provided UserID the author of this Product
+// It is part of the AccessLister interface
+func (product *Product) IsAuthor(authorID primitive.ObjectID) bool {
+	return false
+}
 
-	// Products are private, so only 'myself' and 'owner' are allowed
-	if authorization.UserID == product.UserID {
-		return []string{MagicRoleMyself, MagicRoleOwner}
-	}
+// IsMember returns TRUE if this object directly represents the provided UserID
+// It is part of the AccessLister interface
+func (product *Product) IsMyself(userID primitive.ObjectID) bool {
+	return product.UserID == userID
+}
 
-	// Intentionally NOT allowing MagicRoleAnonymous, or MagicRoleAuthenticated
-	return []string{MagicRoleOwner}
+// GroupIDs returns a map of RoleIDs to GroupIDs
+// It is part of the AccessLister interface
+// TODO: This should probably be refactored.
+// With the new authentication system, this should be a map of RoleIDs to GroupIDs
+func (product *Product) RolesToGroupIDs(roleIDs ...string) id.Slice {
+	return nil
+}
+
+// ProductID returns a map of RoleIDs to ProductIDs
+// It is part of the AccessLister interface
+func (product *Product) RolesToProductIDs(roleIDs ...string) id.Slice {
+	return nil
 }
 
 /******************************************
