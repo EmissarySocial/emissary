@@ -30,8 +30,8 @@ type Stream struct {
 	ParentTemplateID string                       `bson:"parentTemplateId"`       // Unique identifier (name) of the parent's Template.
 	StateID          string                       `bson:"stateId"`                // Unique identifier of the State this Stream is in.  This is used to populate the State information from the Template service at load time.
 	SocialRole       string                       `bson:"socialRole,omitempty"`   // Role to use for this Stream in social integrations (Article, Note, Image, etc)
-	Permissions      mapof.Object[sliceof.String] `bson:"permissions,omitempty"`  // Permissions maps User/Groups into Roles for this Stream.
-	Products         mapof.Object[sliceof.String] `bson:"products,omitempty"`     // Products maps Product Plans into Roles for this Stream.
+	Permissions      mapof.Object[sliceof.String] `bson:"permissions,omitempty"`  // Permissions maps UserIDs/GroupIDs into Roles for this Stream.
+	Products         mapof.Object[sliceof.String] `bson:"products,omitempty"`     // Products maps ProductIDs into Roles for this Stream.
 	DefaultAllow     id.Slice                     `bson:"defaultAllow,omitempty"` // List of Groups that are allowed to perform the 'default' (view) action.  This is used to query general access to the Stream from the database, before performing server-based authentication.
 	URL              string                       `bson:"url,omitempty"`          // URL of the original document
 	Token            string                       `bson:"token,omitempty"`        // Unique value that identifies this element in the URL
@@ -151,7 +151,7 @@ func (stream *Stream) GetSort(fieldName string) any {
 }
 
 /******************************************
- * StateSetter Methods
+ * StateSetter Interface
  ******************************************/
 
 func (stream *Stream) SetState(stateID string) {
@@ -159,46 +159,56 @@ func (stream *Stream) SetState(stateID string) {
 }
 
 /******************************************
- * RoleStateEnumerator Methods
+ * AccessLister Interface
  ******************************************/
 
-// State returns the current state of this Stream.  It is
-// part of the implementation of the RoleStateEmulator interface
+// State returns the current state of this Stream.
+// It is part of the AccessLister interface
 func (stream *Stream) State() string {
 	return stream.StateID
 }
 
-// Roles returns a list of all roles that match the provided authorization
-func (stream *Stream) Roles(authorization *Authorization) []string {
+// IsAuthor returns TRUE if the provided UserID the author of this Stream
+// It is part of the AccessLister interface
+func (stream *Stream) IsAuthor(authorID primitive.ObjectID) bool {
+	return authorID == stream.AttributedTo.UserID
+}
 
-	// Everyone has "anonymous" access
-	result := []string{MagicRoleAnonymous}
+// IsMember returns TRUE if this object directly represents the provided UserID
+// It is part of the AccessLister interface
+func (stream *Stream) IsMyself(_ primitive.ObjectID) bool {
+	return false
+}
 
-	if authorization.IsAuthenticated() {
+// GroupIDs returns a map of RoleIDs to GroupIDs
+// It is part of the AccessLister interface
+// TODO: This should probably be refactored.
+// With the new authentication system, this should be a map of RoleIDs to GroupIDs
+func (stream *Stream) RolesToGroupIDs(roleIDs ...string) id.Slice {
+	return stream.PermissionGroups(roleIDs...)
+}
 
-		// Owners are hard-coded to do everything, so no other roles need to be returned.
-		if authorization.DomainOwner {
-			return []string{MagicRoleOwner}
-		}
+// ProductID returns a map of RoleIDs to ProductIDs
+// It is part of the AccessLister interface
+func (stream *Stream) RolesToProductIDs(roleIDs ...string) id.Slice {
 
-		result = append(result, MagicRoleAuthenticated)
+	result := id.NewSlice()
 
-		// Authors sometimes have special permissions, too.
-		if stream.AttributedTo.UserID == authorization.UserID {
-			result = append(result, MagicRoleAuthor)
-		}
-
-		// If this Stream is in the current User's outbox, then they also have "self" permissions
-		if stream.ParentID == authorization.UserID {
-			result = append(result, MagicRoleMyself)
+	for productID, productRoleIDs := range stream.Products {
+		for _, roleID := range roleIDs {
+			if productRoleIDs.Contains(roleID) {
+				result = append(result, objectID(productID))
+				continue
+			}
 		}
 	}
 
-	// Otherwise, append all roles matched from the permissions
-	result = append(result, stream.PermissionRoles(authorization.AllGroupIDs()...)...)
-
 	return result
 }
+
+/******************************************
+ * Permission Methods
+ ******************************************/
 
 // DefaultAllowAnonymous returns TRUE if a Stream's default action (VIEW)
 // is visible to anonymous visitors
@@ -210,10 +220,6 @@ func (stream *Stream) DefaultAllowAnonymous() bool {
 	}
 	return false
 }
-
-/******************************************
- * Permission Methods
- ******************************************/
 
 // AssignPermissions assigns a role to a group
 func (stream *Stream) AssignPermission(role string, groupID primitive.ObjectID) {
@@ -235,10 +241,10 @@ func (stream *Stream) PermissionGroups(roles ...string) []primitive.ObjectID {
 	for _, role := range roles {
 		switch role {
 
-		case "anonymous":
+		case MagicRoleAnonymous:
 			result = append(result, MagicGroupIDAnonymous)
 
-		case "authenticated":
+		case MagicRoleAuthenticated:
 			result = append(result, MagicGroupIDAuthenticated)
 
 		}

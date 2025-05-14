@@ -43,18 +43,18 @@ func NewInbox(factory Factory, request *http.Request, response http.ResponseWrit
 	}
 
 	// Create the underlying Common builder
-	common, err := NewCommonWithTemplate(factory, request, response, template, actionID)
+	common, err := NewCommonWithTemplate(factory, request, response, template, user, actionID)
 
 	if err != nil {
 		return Inbox{}, derp.Wrap(err, location, "Error creating common builder")
 	}
 
 	// Enforce user permissions on the requested action
-	if !common._action.UserCan(user, &common._authorization) {
+	if !common.UserCan(actionID) {
 		if common._authorization.IsAuthenticated() {
-			return Inbox{}, derp.ReportAndReturn(derp.NewForbiddenError(location, "Forbidden"))
+			return Inbox{}, derp.ReportAndReturn(derp.ForbiddenError(location, "Forbidden"))
 		} else {
-			return Inbox{}, derp.ReportAndReturn(derp.NewUnauthorizedError(location, "Anonymous user is not authorized to perform this action", user.ProfileURL, actionID))
+			return Inbox{}, derp.ReportAndReturn(derp.UnauthorizedError(location, "Anonymous user is not authorized to perform this action", user.ProfileURL, actionID))
 		}
 	}
 
@@ -153,20 +153,6 @@ func (w Inbox) templateRole() string {
 
 func (w Inbox) clone(action string) (Builder, error) {
 	return NewInbox(w._factory, w._request, w._response, w._user, action)
-}
-
-// UserCan returns TRUE if this Request is authorized to access the requested view
-func (w Inbox) UserCan(actionID string) bool {
-
-	action, ok := w._template.Action(actionID)
-
-	if !ok {
-		return false
-	}
-
-	authorization := w.authorization()
-
-	return action.UserCan(w._user, &authorization)
 }
 
 /******************************************
@@ -716,7 +702,7 @@ func (w Inbox) HasRule(ruleType string, trigger string) model.Rule {
 
 	// Retrieve rule record.  "Not Found" is acceptable, but "legitimate" errors are not.
 	// In either case, do not halt the request
-	if err := ruleService.LoadByTrigger(w._user.UserID, ruleType, trigger, &rule); !derp.NilOrNotFound(err) {
+	if err := ruleService.LoadByTrigger(w._user.UserID, ruleType, trigger, &rule); !derp.IsNilOrNotFound(err) {
 		derp.Report(derp.Wrap(err, "build.Inbox.HasRule", "Error loading rule", ruleType, trigger))
 	}
 

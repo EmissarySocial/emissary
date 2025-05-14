@@ -58,7 +58,7 @@ func (message Message) ID() string {
 }
 
 /******************************************
- * RoleStateEnumerator Methods
+ * RoleStateGetter Interface
  ******************************************/
 
 // State returns the current state of this Stream.  It is

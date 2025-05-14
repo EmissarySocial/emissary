@@ -215,7 +215,7 @@ func (client *Client) save(url string, document streams.Document) {
 	value := NewValue()
 	value.URLs.Append(url)
 
-	if err := client.loadByURLs(url, &value); !derp.NilOrNotFound(err) {
+	if err := client.loadByURLs(url, &value); !derp.IsNilOrNotFound(err) {
 		derp.Report(derp.Wrap(err, location, "Error searching for duplicate document in cache", document))
 		return
 	}

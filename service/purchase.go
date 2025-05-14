@@ -167,11 +167,27 @@ func (service *Purchase) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
-func (service *Purchase) LoadByEmail(emailAddress string, purchase *model.Purchase) error {
-	criteria := exp.Equal("emailAddress", emailAddress)
-	return service.Load(criteria, purchase)
+// CountByGuestAndProduct returns the number of purchases made by a guest for a list of products
+func (service *Purchase) CountByGuestAndProduct(guestID primitive.ObjectID, productIDs ...primitive.ObjectID) (int64, error) {
+
+	const location = "service.Purchase.CountByGuestAndProduct"
+
+	// RULE: GuestID must be provided
+	if guestID.IsZero() {
+		return 0, derp.InternalError(location, "No guestID provided")
+	}
+
+	// RULE: At least one productID must be provided
+	if len(productIDs) == 0 {
+		return 0, derp.InternalError(location, "No productIDs provided")
+	}
+
+	criteria := exp.Equal("guestId", guestID).AndIn("productId", productIDs)
+
+	return service.Count(criteria)
 }
 
+// LoadByRemoteIDs retrieves a purchase using the remote IDs for the user, product, and purchase
 func (service *Purchase) LoadByRemoteIDs(remoteUserID string, remoteProductID string, remotePurchaseID string, purchase *model.Purchase) error {
 	criteria := exp.Equal("remoteUserId", remoteUserID).
 		AndEqual("remoteProductId", remoteProductID).
@@ -190,19 +206,19 @@ func (service *Purchase) Sync(purchases ...model.Purchase) error {
 		if err := service.CreateOrUpdate(&purchase); err != nil {
 			return derp.Wrap(err, location, "Error loading or creating purchase")
 		}
-
 	}
 
 	return nil
 }
 
+// CreateOrUpdate creates a new purchase or updates an existing purchase
 func (service *Purchase) CreateOrUpdate(purchase *model.Purchase) error {
 
 	// Try to load the purchase by email address
 	currentPurchase := model.NewPurchase()
 
 	// Try to find a current, matching purchase record
-	if err := service.LoadByRemoteIDs(purchase.RemoteGuestID, purchase.RemoteProductID, purchase.RemotePurchaseID, &currentPurchase); !derp.NilOrNotFound(err) {
+	if err := service.LoadByRemoteIDs(purchase.RemoteGuestID, purchase.RemoteProductID, purchase.RemotePurchaseID, &currentPurchase); !derp.IsNilOrNotFound(err) {
 		return derp.Wrap(err, "service.Purchase.CreateOrUpdate", "Error loading purchase")
 	}
 

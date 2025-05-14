@@ -99,6 +99,18 @@ func (user User) Summary() UserSummary {
  * Group Interface
  ******************************************/
 
+func (user *User) IsGroupMember(groupIDs ...primitive.ObjectID) bool {
+
+	for _, groupID := range groupIDs {
+		for _, existingID := range user.GroupIDs {
+			if existingID == groupID {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // AddGroup adds a new group to this user's list of groups, avoiding duplicates
 func (user *User) AddGroup(groupID primitive.ObjectID) {
 
@@ -163,59 +175,45 @@ func (user *User) Claims() jwt.Claims {
 }
 
 /******************************************
- * RoleStateEnumerator Interface
- ******************************************/
-
-// State returns the current state of this object.
-// For users, there is no state, so it returns ""
-func (user *User) State() string {
-	return user.StateID
-}
-
-// Roles returns a list of all roles that match the provided authorization
-func (user *User) Roles(authorization *Authorization) []string {
-
-	// Everyone has "anonymous" access
-	result := []string{}
-
-	if user.IsPublic {
-		result = append(result, MagicRoleAnonymous)
-	}
-
-	// If the visitor is not signed in, then we're done.
-	if authorization == nil {
-		return result
-	}
-
-	// If the visitor is signed in as an "empty" user, then we're doine.
-	if authorization.UserID == primitive.NilObjectID {
-		return result
-	}
-
-	// Owners are hard-coded to do everything, so no other roles need to be returned.
-	if authorization.DomainOwner {
-		return []string{MagicRoleOwner}
-	}
-
-	// If we know who you are, then you're "Authenticated"
-	result = append(result, MagicRoleAuthenticated)
-
-	// Users sometimes have special permissions over their own records.
-	if authorization.UserID == user.UserID {
-		result = append(result, MagicRoleMyself)
-	}
-
-	// TODO: LOW: Add special roles for follower/following?
-
-	return result
-}
-
-/******************************************
  * StateSetter Methods
  ******************************************/
 
 func (user *User) SetState(stateID string) {
 	user.StateID = stateID
+}
+
+/******************************************
+ * AccessLister Interface
+ ******************************************/
+
+// State returns the current state of this User.
+// It is part of the AccessLister interface
+func (user *User) State() string {
+	return user.StateID
+}
+
+// IsAuthor returns TRUE if the provided UserID the author of this User
+// It is part of the AccessLister interface
+func (user *User) IsAuthor(authorID primitive.ObjectID) bool {
+	return false
+}
+
+// IsMember returns TRUE if this object directly represents the provided UserID
+// It is part of the AccessLister interface
+func (user *User) IsMyself(userID primitive.ObjectID) bool {
+	return userID == user.UserID
+}
+
+// GroupIDs returns a map of RoleIDs to GroupIDs
+// It is part of the AccessLister interface
+func (user *User) RolesToGroupIDs(roleIDs ...string) id.Slice {
+	return nil
+}
+
+// ProductID returns a map of RoleIDs to ProductIDs
+// It is part of the AccessLister interface
+func (user *User) RolesToProductIDs(roleIDs ...string) id.Slice {
+	return nil
 }
 
 /******************************************

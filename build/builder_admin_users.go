@@ -32,7 +32,7 @@ func NewUser(factory Factory, request *http.Request, response http.ResponseWrite
 	const location = "build.NewUser"
 
 	// Create the underlying Common builder
-	common, err := NewCommonWithTemplate(factory, request, response, template, actionID)
+	common, err := NewCommonWithTemplate(factory, request, response, template, user, actionID)
 
 	if err != nil {
 		return User{}, derp.Wrap(err, location, "Error creating common builder")

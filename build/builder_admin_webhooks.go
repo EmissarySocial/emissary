@@ -29,7 +29,7 @@ func NewWebhook(factory Factory, request *http.Request, response http.ResponseWr
 	const location = "build.NewWebhook"
 
 	// Create the underlying Common builder
-	common, err := NewCommonWithTemplate(factory, request, response, template, actionID)
+	common, err := NewCommonWithTemplate(factory, request, response, template, webhook, actionID)
 
 	if err != nil {
 		return Webhook{}, derp.Wrap(err, location, "Error creating common builder")

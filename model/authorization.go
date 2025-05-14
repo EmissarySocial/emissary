@@ -41,18 +41,25 @@ func (authorization Authorization) IsAuthenticated() bool {
 	return !authorization.UserID.IsZero()
 }
 
-// AllGroupIDs returns a slice of groups that this authorization belongs to,
-// including the magic "Anonymous", and (if valid) "Authenticated" groups.
-func (authorization *Authorization) AllGroupIDs() []primitive.ObjectID {
+// IsGuest returns TRUE if this authorization is valid and has a non-zero GuestID
+func (authorization Authorization) IsGuest() bool {
+	// If your GuestID is zero, then NO, you're not a guest
+	return !authorization.GuestID.IsZero()
+}
 
-	result := []primitive.ObjectID{MagicGroupIDAnonymous}
+// IsGroupMember returns TRUE if this authorization has any one of the specified groupID
+func (authorization Authorization) IsGroupMember(groupIDs ...primitive.ObjectID) bool {
 
-	if authorization.IsAuthenticated() {
-		result = append(result, MagicGroupIDAuthenticated, authorization.UserID)
-		result = append(result, authorization.GroupIDs...)
+	// Check to see if the groupID is in the list of GroupIDs
+	for _, groupID := range groupIDs {
+		for _, authorizedGroupID := range authorization.GroupIDs {
+			if authorizedGroupID == groupID {
+				return true
+			}
+		}
 	}
 
-	return result
+	return false
 }
 
 // Scopes returns a slice of scopes that this Authorization token is allowed to use.

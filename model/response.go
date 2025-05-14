@@ -116,7 +116,7 @@ func (response Response) NotEmpty() bool {
 }
 
 /******************************************
- * RoleStateEnumerator Methods
+ * RoleStateGetter Methods
  ******************************************/
 
 // State returns the current state of this Stream.  It is

@@ -48,7 +48,7 @@ func (product Product) Fields() []string {
 }
 
 /******************************************
- * RoleStateEnumerator Interface
+ * RoleStateGetter Interface
  ******************************************/
 
 // State returns the current state of this object.

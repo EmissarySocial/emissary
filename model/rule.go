@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/toot/object"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -55,29 +56,37 @@ func (rule Rule) Fields() []string {
 }
 
 /******************************************
- * RoleStateEnumerator Interface
+ * AccessLister Interface
  ******************************************/
 
-// State returns the current state of this object.
-// For users, there is no state, so it returns ""
-func (rule Rule) State() string {
-	return ""
+// State returns the current state of this Rule.
+// It is part of the AccessLister interface
+func (rule *Rule) State() string {
+	return "default"
 }
 
-// Roles returns a list of all roles that match the provided authorization.
-// Since Rule records should only be accessible by the rule owner, this
-// function only returns MagicRoleMyself if applicable.  Others (like Anonymous
-// and Authenticated) should never be allowed on an Rule record, so they
-// are not returned.
-func (rule Rule) Roles(authorization *Authorization) []string {
+// IsAuthor returns TRUE if the provided RuleID the author of this Rule
+// It is part of the AccessLister interface
+func (rule *Rule) IsAuthor(authorID primitive.ObjectID) bool {
+	return false
+}
 
-	// Rules are private, so only MagicRoleMyself is allowed
-	if authorization.UserID == rule.UserID {
-		return []string{MagicRoleMyself, MagicRoleOwner}
-	}
+// IsMember returns TRUE if this object directly represents the provided RuleID
+// It is part of the AccessLister interface
+func (rule *Rule) IsMyself(userID primitive.ObjectID) bool {
+	return userID == rule.UserID
+}
 
-	// Intentionally NOT allowing MagicRoleAnonymous and MagicRoleAuthenticated
-	return []string{MagicRoleOwner}
+// GroupIDs returns a map of RoleIDs to GroupIDs
+// It is part of the AccessLister interface
+func (rule *Rule) RolesToGroupIDs(roleIDs ...string) id.Slice {
+	return id.NewSlice()
+}
+
+// ProductID returns a map of RoleIDs to ProductIDs
+// It is part of the AccessLister interface
+func (rule *Rule) RolesToProductIDs(roleIDs ...string) id.Slice {
+	return id.NewSlice()
 }
 
 /******************************************

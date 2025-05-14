@@ -38,7 +38,7 @@ func (service *Following) saveUniqueMessage(message model.Message) error {
 	// Search for a previous UNREAD message with our same UserID and URL.
 	previousMessage := model.Message{}
 
-	if err := service.inboxService.LoadByURL(message.UserID, message.URL, &previousMessage); !derp.NilOrNotFound(err) {
+	if err := service.inboxService.LoadByURL(message.UserID, message.URL, &previousMessage); !derp.IsNilOrNotFound(err) {
 		return derp.Wrap(err, location, "Error searching for duplicate message", message)
 	}
 

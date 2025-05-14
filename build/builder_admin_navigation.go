@@ -28,7 +28,7 @@ func NewNavigation(factory Factory, request *http.Request, response http.Respons
 	const location = "build.NewGroup"
 
 	// Create the underlying Common builder
-	common, err := NewCommonWithTemplate(factory, request, response, template, actionID)
+	common, err := NewCommonWithTemplate(factory, request, response, template, stream, actionID)
 
 	if err != nil {
 		return Navigation{}, derp.Wrap(err, location, "Error creating common builder")

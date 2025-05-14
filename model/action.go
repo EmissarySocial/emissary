@@ -5,140 +5,137 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/slice"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/hjson/hjson-go/v4"
 )
 
 // Action holds the data for actions that can be performed on any Stream from a particular Template.
 type Action struct {
-	Roles      []string            `json:"roles"      bson:"roles"`      // List of roles required to execute this Action.  If empty, then none are required.
-	States     []string            `json:"states"     bson:"states"`     // List of states required to execute this Action.  If empty, then one are required.
-	StateRoles map[string][]string `json:"stateRoles" bson:"stateRoles"` // Map of states -> list of roles that can perform this Action (when a stream is in the given state)
-	Steps      []step.Step         `json:"steps"      bson:"steps"`      // List of steps to execute when GET-ing or POST-ing this Action.
+	Roles      sliceof.String                `json:"roles"      bson:"roles"`      // List of roles required to execute this Action.  If empty, then none are required.
+	States     sliceof.String                `json:"states"     bson:"states"`     // List of states required to execute this Action.  If empty, then one are required.
+	StateRoles mapof.Object[sliceof.String]  `json:"stateRoles" bson:"stateRoles"` // Map of states -> list of roles that can perform this Action (when a stream is in the given state)
+	Steps      sliceof.Object[step.Step]     `json:"steps"      bson:"steps"`      // List of steps to execute when GET-ing or POST-ing this Action.
+	AllowList  mapof.Object[ActionAllowList] `json:"-"          bson:"-"`          // Map of states -> set of users that can perform this Action.
 }
 
 // NewAction returns a fully initialized Action
 func NewAction() Action {
 	return Action{
-		Roles:      make([]string, 0),
-		States:     make([]string, 0),
-		StateRoles: make(map[string][]string),
-		Steps:      make([]step.Step, 0),
+		Roles:      make(sliceof.String, 0),
+		States:     make(sliceof.String, 0),
+		StateRoles: make(mapof.Object[sliceof.String]),
+		Steps:      make(sliceof.Object[step.Step], 0),
+		AllowList:  make(mapof.Object[ActionAllowList]),
 	}
 }
 
-func (action *Action) UserRole(enumerator RoleStateEnumerator, authorization *Authorization, role string) bool {
+// CalcAllowList translates the roles, states, and stateRoles settings into a compact AllowList that
+// can quickly determine if a user can perform this action on objects given their current state.
+func (action *Action) CalcAllowList(templateStates map[string]State, templateRoles map[string]Role) error {
 
-	// Prevent nil pointer exceptions
-	if action == nil {
-		return false
-	}
+	const location = "model.Action.CalcAllowList"
 
-	// Get a list of all roles that the user has
-	userRoles := enumerator.Roles(authorization)
-
-	// Return TRUE if the user has the requested role
-	return matchOne(userRoles, role)
-}
-
-// UserCan returns TRUE if this action is permitted on a stream (using the provided authorization)
-func (action *Action) UserCan(getter StateGetter, authorization *Authorization) bool {
-
-	// Prevent nil pointer exceptions
-	if action == nil {
-		return false
-	}
-
-	// Get a list of the valid roles for this action
-	permission := action.AllowedRoles(getter.State())
-
-	// If Anonymous access is allowed, then EVERYONE can perform this action
-	if permission.AllowAnonymous {
-		return true
-	}
-
-	// Beyond this point, you must be logged in to perform this action
-	if authorization == nil {
-		return false
-	}
-
-	// If the user is a domain owner, then they can do anything
-	if authorization.DomainOwner {
-		return true
-	}
-
-	// If "Authenticated" access is allowed, then any LOGGED IN USERS can perform this action
-	if permission.AllowAuthenticated {
-		if authorization.IsAuthenticated() {
-			return true
+	// Verify that all Roles exist in the list of templateRoles
+	for _, role := range action.Roles {
+		if _, ok := templateRoles[role]; !ok {
+			return derp.InternalError(location, "Invalid role used in Action.Roles.  Roles must be defined in the Template before it can be used for access allowLists", role)
 		}
 	}
 
-	// If the permission allows "author" access, then check to see if the user is the author of this object
-	if permission.AllowAuthor {
-		if authorGetter, isAuthorGetter := getter.(AuthorGetter); isAuthorGetter {
-			if authorGetter.Author() == authorization.UserID {
-				return true
+	// Verify that all States and Roles exist in the list of templateStates
+	for stateID, roles := range action.StateRoles {
+		if _, ok := templateStates[stateID]; !ok {
+			return derp.InternalError(location, "Invalid state used in StateRoles. State must be defined in the Template before it can be used for access allowLists", stateID)
+		}
+		for _, role := range roles {
+			if _, ok := templateRoles[role]; !ok {
+				return derp.InternalError(location, "Invalid role used in Action.StateRoles.  Role must be defined in the Template before it can be used for access allowLists", role)
 			}
 		}
 	}
 
-	// If the permission allows "myself" access, then check to see if this user is "myself"
-	if permission.AllowMyself {
-		if myselfGetter, isMyselfGetter := getter.(MyselfGetter); isMyselfGetter {
-			if myselfGetter.Myself() == authorization.UserID {
-				return true
+	// Calculate an AllowList for each state defined in the Template
+	for stateID := range templateStates {
+
+		// If specific states are required to perform this action, then verify that this state...
+		if len(action.States) > 0 {
+
+			// If the current state is not allowed, this action cannot be performed.
+			// Skipping means that a zero allowList (no permissions) will be returned for this state.
+			if action.States.NotContains(stateID) {
+				continue
 			}
 		}
-	}
 
-	if len(permission.AllowGroups) > 0 {
+		// Create an AllowList for Streams in this State
+		allowList := NewActionAllowList()
+		allowRoles := append(action.Roles, action.StateRoles[stateID]...)
 
-	}
+		for _, roleID := range allowRoles {
 
-	if len(permission.AllowProducts) > 0 {
+			switch roleID {
 
-	}
+			// MagicRoleAnonymous is a shortcut for allowing anonymous access
+			case MagicRoleAnonymous:
+				allowList.Anonymous = true
 
-	return false
-}
+			// MagicRoleAuthenticated allows access to any identified user
+			case MagicRoleAuthenticated:
+				allowList.Authenticated = true
 
-// AllowedRoles returns a string of all page request roles that are allowed to
-// perform this action.  This includes system roles like "anonymous", "authenticated", "self", "author", and "owner".
-func (action *Action) AllowedRoles(stateID string) Permission {
+			// MagicRoleMyself allows Users to perform actions on their own profies
+			case MagicRoleMyself:
+				allowList.Self = true
 
-	// If present, "States" limits the states where this action can take place at all.
-	if len(action.States) > 0 {
-		// If the current state is not present in the list of allowed states, then this action cannot be
-		// taken until the stream is moved into a new state.
-		if !matchOne(action.States, stateID) {
-			return make([]string, 0)
+			// MagicRoleAuthor allows Users to perform actions on Streams that they created
+			case MagicRoleAuthor:
+				allowList.Author = true
+
+			// All other provileges are granted via membership in a group or purchase of a product
+			default:
+				role, exists := templateRoles[roleID]
+
+				if !exists {
+					return derp.InternalError(location, "Invalid role used in Action.AllowList.  Role must be defined in the Template before it can be used for access allowLists", roleID)
+				}
+
+				if role.Purchasable {
+					allowList.ProductRoles = append(allowList.ProductRoles, roleID)
+				} else {
+					allowList.GroupRoles = append(allowList.GroupRoles, roleID)
+				}
+			}
+
+			// If NO privileges have been set for this state, then Anonymous access is allowed.
+			if allowList.IsZero() {
+				allowList.Anonymous = true
+			}
 		}
+
+		// Unique-ifly the lists of group and product roles
+		allowList.GroupRoles = slice.Unique(allowList.GroupRoles)
+		allowList.ProductRoles = slice.Unique(allowList.ProductRoles)
+
+		// Put the updated allowList back into the map
+		action.AllowList[stateID] = allowList
 	}
 
-	// By default, owners can do everything
-	result := []string{}
-
-	// If there are additional roles allowed, then add them to the result
-	if len(action.Roles) > 0 {
-		result = append(result, action.Roles...)
-	}
-
-	// If there's a corresponding entry in stateRoles, add that to the result, too.
-	if stateRoles, ok := action.StateRoles[stateID]; ok {
-		result = append(result, stateRoles...)
-	}
-
-	// If no roles have been defined, then this action can be performed by anyone
-	if len(result) == 0 {
-		result = append(result, MagicRoleAnonymous, MagicRoleAuthenticated)
-	}
-
-	// Owners can always perform actions, no matter what.
-	result = append(result, MagicRoleMyself, MagicRoleOwner)
-
-	return result
+	return nil
 }
 
+// AllowedRoles returns a slice of roles that are allowed to perform this action,
+// based on the state of the object.  This list includes
+// system roles like "anonymous", "authenticated", "self", "author", and "owner".
+func (action *Action) AllowedRoles(stateID string) []string {
+	return action.AllowList[stateID].Roles()
+}
+
+/******************************************
+ * Marshalling Methods
+ ******************************************/
+
+// UnmarshalJSON unmarshals the JSON data into this Action object.
 func (action *Action) UnmarshalJSON(data []byte) error {
 	var asMap map[string]any
 
@@ -149,6 +146,7 @@ func (action *Action) UnmarshalJSON(data []byte) error {
 	return action.UnmarshalMap(asMap)
 }
 
+// UnmarshalMap unmarshals the provided map into this Action object.
 func (action *Action) UnmarshalMap(data map[string]any) error {
 
 	// Import easy values
@@ -156,7 +154,7 @@ func (action *Action) UnmarshalMap(data map[string]any) error {
 	action.States = convert.SliceOfString(data["states"])
 
 	// Import stateRoles
-	action.StateRoles = make(map[string][]string)
+	action.StateRoles = make(mapof.Object[sliceof.String])
 	stateRoles := convert.MapOfAny(data["stateRoles"])
 	for key, value := range stateRoles {
 		action.StateRoles[key] = convert.SliceOfString(value)
@@ -178,29 +176,4 @@ func (action *Action) UnmarshalMap(data map[string]any) error {
 	}
 
 	return nil
-}
-
-// matchOne returns TRUE if the value matches one (or more) of the values in the slice
-func matchOne(slice []string, value string) bool {
-	for index := range slice {
-		if slice[index] == value {
-			return true
-		}
-	}
-
-	return false
-}
-
-// matchAny returns TRUE if any of the values in slice1 are equal to any of the values in slice2
-func matchAny(slice1 []string, slice2 []string) bool {
-
-	for index1 := range slice1 {
-		for index2 := range slice2 {
-			if slice1[index1] == slice2[index2] {
-				return true
-			}
-		}
-	}
-
-	return false
 }

@@ -47,13 +47,13 @@ func NewStream(factory Factory, request *http.Request, response http.ResponseWri
 	const location = "build.NewStream"
 
 	// Create the underlying Common builder
-	common, err := NewCommonWithTemplate(factory, request, response, template, actionID)
+	common, err := NewCommonWithTemplate(factory, request, response, template, stream, actionID)
 
 	if err != nil {
 		return Stream{}, derp.ReportAndReturn(derp.Wrap(err, location, "Error creating common builder"))
 	}
 
-	if !common._action.UserCan(stream, &common._authorization) {
+	if !common.UserCan(actionID) {
 		if common._authorization.IsAuthenticated() {
 			return Stream{}, derp.ReportAndReturn(derp.ForbiddenError(location, "Forbidden"))
 		} else {
@@ -425,15 +425,6 @@ func (w Stream) IsNew() bool {
 // IsEmpty returns TRUE if the stream is an empty placeholder.
 func (w Stream) IsEmpty() bool {
 	return (w._stream == nil) || (w._stream.StreamID == primitive.NilObjectID)
-}
-
-func (w Stream) IsCurrentStream() bool {
-	return w._stream.Token == w.PathList().First()
-}
-
-func (w Stream) Roles() []string {
-	authorization := w.authorization()
-	return w._stream.Roles(&authorization)
 }
 
 /******************************************
@@ -837,48 +828,6 @@ func (w Stream) AttachmentsByCategory(category string) (sliceof.Object[model.Att
 func (w Stream) Followers() ([]model.Follower, error) {
 	followerService := w.factory().Follower()
 	return followerService.QueryByParent(model.FollowerTypeStream, w._stream.StreamID)
-}
-
-/******************************************
- * ACCESS PERMISSIONS
- ******************************************/
-
-// AuthorInGroup returns TRUE if the Author/AttributedTo is a member of the specified group
-func (w Stream) AuthorInGroup(string) bool {
-	return false
-}
-
-// UserInGroup returns TRUE if the user is a member of the specified group
-func (w Stream) UserInGroup(groupID string) bool {
-	return false
-}
-
-// UserHasRole returns TRUE if the user has privileges for the specified role
-func (w Stream) UserHasRole(role string) bool {
-	return false
-}
-
-// UserCan returns TRUE if this Request is authorized to access the requested view
-func (w Stream) UserCan(actionID string) bool {
-
-	factory := w._factory
-	templateService := factory.Template()
-	template, err := templateService.Load(w._stream.TemplateID)
-
-	if err != nil {
-		return false
-	}
-
-	// Try to find the requested Action in the Template
-	action, ok := template.Action(actionID)
-
-	if !ok {
-		return false
-	}
-
-	// Use the action.UserCan method to determine if the user can perform this action
-	authorization := w.authorization()
-	return action.UserCan(w._stream, &authorization)
 }
 
 // CanCreate returns all of the templates that can be created underneath

@@ -180,7 +180,7 @@ func (service *Guest) LoadOrCreate(emailAddress string, merchantAccountType stri
 
 	// Try to load the guest using their email address
 	guest := model.NewGuest()
-	if err := service.LoadByEmail(emailAddress, &guest); !derp.NilOrNotFound(err) {
+	if err := service.LoadByEmail(emailAddress, &guest); !derp.IsNilOrNotFound(err) {
 		return guest, derp.Wrap(err, "service.Guest.LoadOrCreateByEmail", "Error loading guest by email", emailAddress)
 	}
 

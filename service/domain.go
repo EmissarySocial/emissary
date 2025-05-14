@@ -165,19 +165,21 @@ func (service *Domain) GetPointer() *model.Domain {
 // Save updates the value of this domain in the database (and in-memory cache)
 func (service *Domain) Save(domain model.Domain, note string) error {
 
+	const location = "service.Domain.Save"
+
 	// Validate the value using the default domain schema
 	if err := model.DomainSchema().Validate(&domain); err != nil {
-		return derp.Wrap(err, "service.Domain.Save", "Error validating Domain with standard Domain schema", domain)
+		return derp.Wrap(err, location, "Error validating Domain with standard Domain schema")
 	}
 
 	// Validate the value using the custom schema for this domain
 	if err := service.Schema().Validate(&domain); err != nil {
-		return derp.Wrap(err, "service.Domain.Save", "Error validating Domain with custom schema from Theme", domain)
+		return derp.Wrap(err, location, "Error validating Domain with custom schema from Theme")
 	}
 
 	// Try to save the value to the database
 	if err := service.collection.Save(&domain, note); err != nil {
-		return derp.Wrap(err, "service.Domain.Save", "Error saving Domain")
+		return derp.Wrap(err, location, "Error saving Domain")
 	}
 
 	// Update the in-memory cache

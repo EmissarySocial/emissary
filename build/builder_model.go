@@ -16,29 +16,25 @@ import (
 
 // Model builds objects from any model service that implements the ModelService interface
 type Model struct {
-	_object  data.Object
+	_object  model.AccessLister
 	_service service.ModelService
 	CommonWithTemplate
 }
 
 // NewModel returns a fully initialized `Model` builder.
-func NewModel(factory Factory, request *http.Request, response http.ResponseWriter, template model.Template, object data.Object, actionID string) (Model, error) {
+func NewModel(factory Factory, request *http.Request, response http.ResponseWriter, template model.Template, object model.AccessLister, actionID string) (Model, error) {
 
 	const location = "build.NewModel"
 
 	// Create the underlying Common builder
-	common, err := NewCommonWithTemplate(factory, request, response, template, actionID)
+	common, err := NewCommonWithTemplate(factory, request, response, template, object, actionID)
 
 	if err != nil {
 		return Model{}, derp.Wrap(err, location, "Error creating common builder")
 	}
 
-	// Check permissions on this model object
-	if roleStateEnumerator, ok := object.(model.RoleStateEnumerator); !ok {
-		return Model{}, derp.BadRequestError(location, "Object does not implement model.RoleStateEnumerator", object)
-
-	} else if !common._action.UserCan(roleStateEnumerator, &common._authorization) {
-
+	// Enforce permissions on the requested action
+	if !common.UserCan(actionID) {
 		if common._authorization.IsAuthenticated() {
 			return Model{}, derp.ForbiddenError(location, "Forbidden")
 		} else {

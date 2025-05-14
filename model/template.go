@@ -80,21 +80,43 @@ func (template Template) ID() string {
 
 // AfterUnmarshal performs some post-processing on the Template object
 // after it has been unmarshalled from JSON.
-func (template *Template) AfterUnmarshal() {
+func (template *Template) AfterUnmarshal() error {
+
+	const location = "model.Template.AfterUnmarshal"
 
 	// Apply RoleIDs to each AccessRole
 	for roleID, accessRole := range template.AccessRoles {
 		accessRole.RoleID = roleID
 		template.AccessRoles[roleID] = accessRole
 	}
+
+	// Calculate/Validate AllowLists for each each Action
+	for actionID, action := range template.Actions {
+
+		if err := action.CalcAllowList(template.States, template.AccessRoles); err != nil {
+			return derp.Wrap(err, location, "Error calculating AllowList for Action", actionID)
+		}
+
+		// Apply changes to the Action library
+		template.Actions[actionID] = action
+	}
+
+	// Success
+	return nil
 }
 
+// IsZero returns TRUE if this Template is a zero value
 func (template Template) IsZero() bool {
+
 	if template.TemplateID != "" {
 		return false
-	} else if template.TemplateRole != "" {
+	}
+
+	if template.TemplateRole != "" {
 		return false
-	} else if len(template.Actions) > 0 {
+	}
+
+	if len(template.Actions) > 0 {
 		return false
 	}
 
