@@ -40,22 +40,18 @@
 		}
 	}
 	roles: {
-		owner: {
-			label:"Domain Owner"
-			decription:"Full control over this stream."
-		}, 
-		editor: {
-			label:"Editor"
-			description:"Can make changes to this article."
-		}
 		viewer: {
 			label:"Viewer"
 			description:"Can read and comment on this article."
 		}
+		editor: {
+			label:"Editor"
+			description:"Can make changes to this article."
+		}
 	}
 	actions: {
 		create: {
-			roles:["editor","owner"]
+			roles:["author", "editor"]
 			steps: [
 				{do:"set-data", values: {label:"New Article (WYSIWYG)"}}
 				{do:"set-state", state:"unpublished"}
@@ -64,7 +60,7 @@
 			]
 		}
 		view: {
-			roles: ["editor", "owner"]
+			roles: ["author", "editor"]
 			stateRoles: {
 				published: ["viewer"]
 			}
@@ -73,7 +69,7 @@
 			]
 		}
 		edit: {
-			roles: ["owner", "editor"]
+			roles: ["author", "editor"]
 			steps: [
 				{do:"with-draft", steps: [
 					{do:"view-html"}
@@ -81,27 +77,30 @@
 			]
 		}
 		delete: {
-			roles: ["owner"]
+			roles: ["author", "editor"]
 			steps: [
 				{do:"delete", title:"Delete '{{.Label}}'?", message:"All content and comments will be lost.  There is NO UNDO."}
 				{do:"unpublish", outbox:"true"}
 				{do:"forward-to", url:"/{{.ParentID}}"}
 			]
 		}
+		
 		heading: {
-			roles: ["viewer", "editor", "owner"]
+			roles: ["viewer", "author", "editor"]
 			do: "view-html"
 		}
+
 		editor:{
-			roles: ["owner", "editor"]
+			roles: ["author", "editor"]
 			steps: [
 				{do:"with-draft", steps: [
 					{do:"edit-content", file:"edit", format:"EDITORJS"}
 				]}
 			]
 		}
+		
 		widgets: {
-			roles: ["owner", "editor"]
+			roles: ["author", "editor"]
 			steps: [
 				{do:"with-draft", steps: [
 					{do:"sort-widgets"}
@@ -110,8 +109,9 @@
 				]}
 			]
 		}
+		
 		widget: {
-			roles: ["owner", "editor"]
+			roles: ["author", "editor"]
 			steps: [
 				{do:"with-draft", steps: [
 					{do:"edit-widget"}
@@ -119,21 +119,24 @@
 				]}
 			]
 		}
+		
 		children: {
-			roles: ["owner", "editor"]
+			roles: ["author", "editor"]
 			steps: [
 				{do:"view-html"}
 				{do:"sort", keys:"_id", values:"rank"}
 			]
 		}
+		
 		upload-image: {
-			roles: ["owner", "editor"]
+			roles: ["author", "editor"]
 			steps: [
 				{do:"with-draft", steps: [
 					{do:"upload-attachments", fieldname:"image", json-result:true, category:"image", accept-type:"image/*"}
 				]}
 			]
 		}
+		
 		sharing: {
 			roles: ["owner"]
 			steps: [
@@ -143,9 +146,10 @@
 				]}
 			]
 		}
+		
 		publish: {
 			states: ["unpublished"]
-			roles: ["owner", "editor"]
+			roles: ["author", "editor"]
 			steps: [
 				{do:"as-confirmation", title:"Publish this Stream?", message:"Viewers will be able to see this stream on your website immediately.", submit:"Publish"}
 				{do:"set-state", state:"published"}
@@ -154,9 +158,10 @@
 				{do:"refresh-page"}
 			]
 		}
+		
 		unpublish: {
 			states: ["published"]
-			roles: ["owner", "editor"]
+			roles: ["author", "editor"]
 			steps: [
 				{do:"as-confirmation", title:"Un-Publish this Stream?", message:"Viewers will no longer be able to see this stream on your website.", submit:"Un-Publish"}
 				{do:"set-state", state:"unpublished"}
@@ -165,8 +170,9 @@
 				{do:"refresh-page"}
 			]
 		}
+		
 		promote-draft: {
-			roles: ["owner", "editor"]
+			roles: ["author", "editor"]
 			steps: [
 				{do:"as-confirmation", title:"Promote this Draft?", message:"The live page will be replaced with this content.", submit:"Promote"}
 				{do:"promote-draft"}
@@ -177,8 +183,9 @@
 				{do:"forward-to", url:"/{{.Token}}"}
 			]
 		}
+		
 		discard-draft: {
-			roles: ["owner", "editor"]
+			roles: ["author", "editor"]
 			steps: [
 				{do:"with-draft", steps:[
 					{do:"delete", title:"Discard This Draft?", message:"The original article will remain unchanged.", submit:"Discard Draft"}
@@ -186,8 +193,9 @@
 				{do:"forward-to", url:"/{{.Token}}"}
 			]
 		}
+		
 		properties: {
-			roles: ["editor", "owner"]
+			roles: ["author", "editor"]
 			steps: [
 				{do:"with-draft", steps:[
 					{do:"as-modal", steps: [
@@ -209,8 +217,9 @@
 				]
 			}]
 		}
+		
 		add-child:{
-			roles: ["owner", "editor"]
+			roles: ["author", "editor"]
 			steps: [
 				{do:"add-stream", location:"child", title:"+ Add a Stream"}
 			]

@@ -8,6 +8,7 @@
 	description: "Domain Owners only.  Site Admin"
 	actions: {
 		index: {
+			roles:["owner"]
 			steps: [
 				{do: "view-html"}
 				{do: "set-header", name:"Hx-Push-Url", value:"/admin/syndication/index"}
@@ -15,6 +16,7 @@
 		}
 
 		table: {
+			roles:["owner"]
 			steps: [
 				{do:"edit-table", path:"syndication", form: {
 					type:"layout-table"

@@ -24,22 +24,18 @@
 		}
 	}
 	roles: {
-		owner: {
-			label:"Domain Owner"
-			decription:"Full control"
-			}, 
+		viewer: {
+			label:"Viewer"
+			description:"Can view this album but cannot make changes"
+		}
 		editor: {
 			label:"Editor"
 			description:"Can make changes to this article."
 		}
-		readonly: {
-			label:"Read Only Access"
-			description:"Can read this article, but cannot make changes"
-		}
 	}
 	actions: {
 		create: {
-			roles:["editor","owner"]
+			roles:["author", "editor"]
 			steps: [
 				{
 					do:"set-data", values: 
@@ -53,14 +49,15 @@
 			]
 		}
 		view: {
-			roles: ["owner", "editor", "viewer"]
-			do:"view-html"}
+			roles: ["viewer", "author", "editor"]
+			do:"view-html"
+		}
 		edit: {
-			roles: ["owner", "editor"]
+			roles: ["author", "editor"]
 			do:"view-html"
 		}
 		delete: {
-			roles: ["owner", "editor"]
+			roles: ["author", "editor"]
 			steps: [
 				{do:"delete", title:"Delete this Photo Album?", message:"This will PERMANENTLY DELETE everyting in this album."}
 				{do:"forward-to", url:"/{{.ParentID}}"}
@@ -68,11 +65,11 @@
 		}
 
 		children: {
-			roles:["owner", "editor", "viewer"]
+			roles:["viewer", "author", "editor"]
 			do:"view-html"
 		}
 		properties: {
-			roles: ["owner", "editor"]
+			roles: ["author", "editor"]
 			steps: [
 				{do:"as-modal", steps: [
 					{
@@ -91,14 +88,14 @@
 			]
 		}
 		attachments: {
-			roles: ["owner", "editor"]
+			roles: ["author", "editor"]
 			steps: [
 				{do:"add-stream", location:"child", template:"photograph"}
 				{do:"refresh-page"}
 			]
 		}
 		sharing: {
-			roles: ["owner", "editor"]
+			roles: ["author", "editor"]
 			steps: [
 				{do:"as-modal", steps: [
 					{do:"set-simple-sharing", roles: ["viewer"], title:"Who Can See This Album?", message:"Select who can view and comment on these photos."}
@@ -106,7 +103,13 @@
 				]}
 			]
 		}
-		feed: {roles: ["viewer"], do:"view-feed"}
-		websub: {roles: ["viewer"], do:"websub"}
+		feed: {
+			roles: ["viewer", "author", "editor"]
+			do:"view-feed"
+		}
+		websub: {
+			roles: ["viewer", "author", "editor"]
+			do:"websub"
+		}
 	}
 }

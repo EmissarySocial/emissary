@@ -13,16 +13,31 @@
 		}
 	}
 	actions: {
-		index: {do: "view-html"}
-		view: {do: "view-html"}
-		sort: {do: "sort"}
+		index: {
+			roles:["owner"]
+			do: "view-html"
+		}
+
+		view: {
+			roles:["owner"]
+			do: "view-html"
+		}
+
+		sort: {
+			roles:["owner"]
+			do: "sort"
+		}
+
 		add: {
+			roles:["owner"]
 			steps: [
 				{do: "add-stream", location:"top"}
 				{do: "refresh-page"}
 			]
 		}
+
 		delete: {
+			roles:["owner"]
 			steps: [
 				{do:"delete", title: "Delete this Stream?", message: "All items beneath it will also be removed.  There is NO UNDO."}
 				{do: "refresh-page"}

@@ -3,6 +3,7 @@
 	actions:{
 
 		follow-button: {
+			roles:["authenticated"]
 			steps: [
 				{do:"view-html"}
 			]

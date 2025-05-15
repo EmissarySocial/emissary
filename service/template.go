@@ -3,6 +3,7 @@ package service
 import (
 	"html/template"
 	"io/fs"
+	"maps"
 	"sort"
 	"strconv"
 	"strings"
@@ -125,23 +126,25 @@ func (service *Template) watch() {
 // loadTemplates retrieves the template from the filesystem and parses it into
 func (service *Template) loadTemplates() error {
 
+	const location = "service.template.loadTemplates"
+
 	service.templatePrep = make(set.Map[model.Template])
 
-	// For each configured location...
-	for _, location := range service.locations {
+	// For each configured file location...
+	for _, fileLocation := range service.locations {
 
 		// Get a valid filesystem adapter
-		filesystem, err := service.filesystemService.GetFS(location)
+		filesystem, err := service.filesystemService.GetFS(fileLocation)
 
 		if err != nil {
-			derp.Report(derp.Wrap(err, "service.Template.loadTemplates", "Error getting filesystem adapter", location))
+			derp.Report(derp.Wrap(err, location, "Error getting filesystem adapter", fileLocation))
 			continue
 		}
 
 		directories, err := fs.ReadDir(filesystem, ".")
 
 		if err != nil {
-			derp.Report(derp.Wrap(err, "service.Template.loadTemplates", "Error reading directory", location))
+			derp.Report(derp.Wrap(err, location, "Error reading directory", fileLocation))
 			continue
 		}
 
@@ -161,14 +164,14 @@ func (service *Template) loadTemplates() error {
 			subdirectory, err := fs.Sub(filesystem, directoryName)
 
 			if err != nil {
-				derp.Report(derp.Wrap(err, "service.Template.loadTemplates", "Error getting filesystem adapter for sub-directory", location))
+				derp.Report(derp.Wrap(err, location, "Error getting filesystem adapter for sub-directory", fileLocation))
 				continue
 			}
 
 			definitionType, file, err := findDefinition(subdirectory)
 
 			if err != nil {
-				derp.Report(derp.Wrap(err, "service.Template.loadTemplates", "Invalid definition", location, directoryName))
+				derp.Report(derp.Wrap(err, location, "Invalid definition", fileLocation, directoryName))
 				continue
 			}
 
@@ -176,50 +179,50 @@ func (service *Template) loadTemplates() error {
 
 			case DefinitionEmail:
 				if err := service.emailService.Add(subdirectory, file); err != nil {
-					derp.Report(derp.Wrap(err, "service.Template.loadTemplates", "Error adding theme"))
+					derp.Report(derp.Wrap(err, location, "Error adding theme"))
 				}
 
 			case DefinitionTheme:
 				if err := service.themeService.Add(directoryName, subdirectory, file); err != nil {
-					derp.Report(derp.Wrap(err, "service.Template.loadTemplates", "Error adding theme"))
+					derp.Report(derp.Wrap(err, location, "Error adding theme"))
 				}
 
 			case DefinitionTemplate:
 				if err := service.Add(directoryName, subdirectory, file); err != nil {
-					derp.Report(derp.Wrap(err, "service.Template.loadTemplates", "Error adding template"))
+					derp.Report(derp.Wrap(err, location, "Error adding template"))
 				}
 
 			case DefinitionRegistration:
 				if err := service.registrationService.Add(directoryName, subdirectory, file); err != nil {
-					derp.Report(derp.Wrap(err, "service.Template.loadTemplates", "Error adding registration"))
+					derp.Report(derp.Wrap(err, location, "Error adding registration"))
 				}
 
 			case DefinitionWidget:
 				if err := service.widgetService.Add(directoryName, subdirectory, file); err != nil {
-					derp.Report(derp.Wrap(err, "service.Template.loadTemplates", "Error adding widget"))
+					derp.Report(derp.Wrap(err, location, "Error adding widget"))
 				}
 
 			default:
-				derp.Report(derp.InternalError("service.Template.loadTemplates", "Unrecognized definition type", location, definitionType))
+				derp.Report(derp.InternalError(location, "Unrecognized definition type", fileLocation, definitionType))
 			}
 		}
 	}
 
-	// Handle inheritance for each template
-	for _, template := range service.templatePrep {
-		if len(template.Extends) > 0 {
-			service.calculateInheritance(template)
-		}
-	}
+	// Calculate inheritance for Templates
+	service.calculateAllInheritance()
 
+	// Calculate inheritance for Themes
 	service.themeService.calculateAllInheritance()
+
+	// Calculate access lists for all Templates
+	if err := service.calculateAllowLists(); err != nil {
+		return derp.Wrap(err, location, "Error calculating access lists")
+	}
 
 	// Assign the prep area to live
 	service.mutex.Lock()
 	defer service.mutex.Unlock()
-	for templateID, template := range service.templatePrep {
-		service.templates[templateID] = template
-	}
+	maps.Copy(service.templates, service.templatePrep)
 
 	// Clear out the existing prep area
 	service.templatePrep = make(set.Map[model.Template])
@@ -261,10 +264,8 @@ func (service *Template) Add(templateID string, filesystem fs.FS, definition []b
 		result.Resources = resources
 	}
 
-	// Handle post-processing steps forthe Template
-	if err := result.AfterUnmarshal(); err != nil {
-		return derp.Wrap(err, location, "Error processing Template", templateID)
-	}
+	// Handle post-processing steps for the Template
+	result.AfterUnmarshal()
 
 	// Add the template into the prep library
 	service.templatePrep[result.TemplateID] = result
@@ -272,6 +273,14 @@ func (service *Template) Add(templateID string, filesystem fs.FS, definition []b
 	return nil
 }
 
+// calculateAllInheritance calls calculateInheritance for each Template in the prep area
+func (service *Template) calculateAllInheritance() {
+	for _, template := range service.templatePrep {
+		service.calculateInheritance(template)
+	}
+}
+
+// calculateInheritance recursively calculates the inheritance for a template in the prep area
 func (service *Template) calculateInheritance(template model.Template) model.Template {
 
 	if len(template.Extends) == 0 {
@@ -287,6 +296,33 @@ func (service *Template) calculateInheritance(template model.Template) model.Tem
 
 	service.templatePrep[template.TemplateID] = template
 	return template
+}
+
+// calculateAllowLists calculates the access lists for every Template in the prep area
+func (service *Template) calculateAllowLists() error {
+
+	const location = "service.template.calculateAllowLists"
+
+	// For every template in the prep area...
+	for _, template := range service.templatePrep {
+
+		// For every action in the Template
+		for actionID, action := range template.Actions {
+
+			// Calculate the AllowLists for this Action
+			if err := action.CalcAllowList(&template); err != nil {
+				return derp.Wrap(err, location, "Invalid AllowList", template.TemplateID, actionID)
+			}
+
+			// Apply changes back into the Action set
+			template.Actions[actionID] = action
+		}
+
+		// Apply changes back to the Template prep area
+		service.templatePrep[template.TemplateID] = template
+	}
+
+	return nil
 }
 
 /******************************************

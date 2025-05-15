@@ -21,22 +21,18 @@
 		}
 	}
 	roles: {
-		owner: {
-			label: "Domain Owner"
-			decription: "Full control"
-			}, 
+		viewer: {
+			label: "Viewer"
+			description: "Can view this photograph but cannot make changes"
+		}
 		editor: {
 			label: "Editor"
 			description: "Can make changes to this article."
 		}
-		readonly: {
-			label: "Read Only Access"
-			description: "Can read this article, but cannot make changes"
-		}
 	}
 	actions: {
 		create: {
-			roles:["owner", "editor"]
+			roles:["author", "editor"]
 			steps: [
 				{do:"upload-attachments", category:"image", accept-type:"image/*", maximum:1, download-path:"iconUrl"}
 				{do:"save", comment:"Created by {{.Author.DisplayName}}"}
@@ -44,13 +40,14 @@
 			]
 		}
 		view: {
+			roles: ["viewer", "author", "editor"]
 			cache: true
 			steps:[
 				{do:"view-html"}
 			]
 		}
 		edit: {
-			roles: ["owner", "editor"]
+			roles: ["author", "editor"]
 			steps: [{
 				do: "as-modal"
 				steps: [{
@@ -74,7 +71,7 @@
 			]
 		}
 		delete: {
-			roles: ["owner", "author"]
+			roles: ["author", "editor"]
 			steps: [
 				{do:"delete", title: "Delete this Photograph?", message: "All content and comments will be lost.  There is NO UNDO."}
 				{do: "forward-to", url:"/{{.ParentID}}"}

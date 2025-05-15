@@ -92,99 +92,13 @@ func (w Stream) UserHasRole(role string) bool {
 // UserCan returns TRUE if this action is permitted on a stream (using the provided authorization)
 func (builder CommonWithTemplate) UserCan(actionID string) bool {
 
-	// Find the action in the Template
-	action, exists := builder._template.Actions[actionID]
+	permissionService := builder._factory.Permission()
+	result, err := permissionService.UserCan(&builder._authorization, &builder._template, builder._accessLister, actionID)
 
-	if !exists {
+	if err != nil {
+		derp.Report(derp.Wrap(err, "builder.UserCan", "Unable to check permissions"))
 		return false
 	}
 
-	// Get a list of the valid roles for this action
-	allowList := action.AllowList[builder._accessLister.State()]
-
-	// If Anonymous access is allowed, then EVERYONE can perform this action
-	if allowList.Anonymous {
-		return true
-	}
-
-	//////////////////////////////////////////////////////////////////
-	// Beyond this point, you must be logged in to perform this action
-
-	// If the user is a domain owner, then they can do anything
-	if builder._authorization.DomainOwner {
-		return true
-	}
-
-	// If "Authenticated" access is allowed, then any LOGGED IN USERS can perform this action
-	if allowList.Authenticated {
-		if builder._authorization.IsAuthenticated() {
-			return true
-		}
-	}
-
-	// If the allowList allows "author" access, then check to see if the user is the author of this object
-	if allowList.Author {
-		if builder._accessLister.IsAuthor(builder._authorization.UserID) {
-			return true
-		}
-	}
-
-	// If the allowList allows "myself" access, then check to see if this user is "myself"
-	if allowList.Self {
-		if builder._accessLister.IsMyself(builder._authorization.UserID) {
-			return true
-		}
-	}
-
-	// Check for group access via the Authorization object
-	if len(allowList.GroupRoles) > 0 {
-
-		if builder._authorization.IsAuthenticated() {
-
-			// Map the list of allowed roles to a list of GroupIDs
-			groupIDs := builder._accessLister.RolesToGroupIDs(allowList.GroupRoles...)
-
-			// Continue ONLY IF there is at least one are an GroupID that allows access to this action
-			if len(groupIDs) > 0 {
-
-				if builder._authorization.IsGroupMember(groupIDs...) {
-					return true
-				}
-			}
-		}
-	}
-
-	// Query the database to see if this User has purchased any allowed Products...
-	if len(allowList.ProductRoles) > 0 {
-
-		// We can check for product ownership ONLY IF there is a valid GuestID
-		guestID := builder._authorization.GuestID
-
-		if !guestID.IsZero() {
-
-			// Map the list of allowed roles to a list of ProductIDs
-			productIDs := builder._accessLister.RolesToProductIDs(allowList.ProductRoles...)
-
-			// Continue ONLY IF there is at least one ProductID that allows access to this action
-			if len(productIDs) > 0 {
-
-				// Count the number of purchases for these Guest/Product combinations
-				purchaseService := builder._factory.Purchase()
-				count, err := purchaseService.CountByGuestAndProduct(guestID, productIDs...)
-
-				if err != nil {
-					derp.Report(derp.Wrap(err, "builder.UserCan", "Unable to count purchases"))
-					return false
-				}
-
-				// Allow if the guest owns any of the Products
-				if count > 0 {
-					return true
-				}
-			}
-		}
-	}
-
-	// The user does not have permission to perform this action
-	return false
+	return result
 }

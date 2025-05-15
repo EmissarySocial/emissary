@@ -32,31 +32,55 @@ func NewAction() Action {
 
 // CalcAllowList translates the roles, states, and stateRoles settings into a compact AllowList that
 // can quickly determine if a user can perform this action on objects given their current state.
-func (action *Action) CalcAllowList(templateStates map[string]State, templateRoles map[string]Role) error {
+func (action *Action) CalcAllowList(template *Template) error {
 
 	const location = "model.Action.CalcAllowList"
 
+	// RULE: Require at leas one Role.
+	if len(action.Roles) == 0 {
+		return derp.InternalError(location, "Action must have at least one Role.  If none, then use 'owner'")
+	}
+
+	// Initialize/Reset the AllowList
+	action.AllowList = make(mapof.Object[ActionAllowList])
+
 	// Verify that all Roles exist in the list of templateRoles
 	for _, role := range action.Roles {
-		if _, ok := templateRoles[role]; !ok {
-			return derp.InternalError(location, "Invalid role used in Action.Roles.  Roles must be defined in the Template before it can be used for access allowLists", role)
+		if !template.IsValidRole(role) {
+			return derp.InternalError(
+				location,
+				"Invalid role used in Action.Roles.  Roles must be defined in the Template to be used in AllowLists",
+				template.TemplateID,
+				role,
+			)
 		}
 	}
 
 	// Verify that all States and Roles exist in the list of templateStates
 	for stateID, roles := range action.StateRoles {
-		if _, ok := templateStates[stateID]; !ok {
-			return derp.InternalError(location, "Invalid state used in StateRoles. State must be defined in the Template before it can be used for access allowLists", stateID)
+
+		if !template.IsValidState(stateID) {
+			return derp.InternalError(
+				location,
+				"Invalid state used in StateRoles. States must be defined in the Template to be used in AllowLists",
+				template.TemplateID,
+				stateID,
+			)
 		}
 		for _, role := range roles {
-			if _, ok := templateRoles[role]; !ok {
-				return derp.InternalError(location, "Invalid role used in Action.StateRoles.  Role must be defined in the Template before it can be used for access allowLists", role)
+			if !template.IsValidRole(role) {
+				return derp.InternalError(
+					location,
+					"Invalid role used in Action.StateRoles.  Roles must be defined in the Template to be used in AllowLists",
+					template.TemplateID,
+					role,
+				)
 			}
 		}
 	}
 
 	// Calculate an AllowList for each state defined in the Template
-	for stateID := range templateStates {
+	for stateID := range template.States {
 
 		// If specific states are required to perform this action, then verify that this state...
 		if len(action.States) > 0 {
@@ -72,9 +96,14 @@ func (action *Action) CalcAllowList(templateStates map[string]State, templateRol
 		allowList := NewActionAllowList()
 		allowRoles := append(action.Roles, action.StateRoles[stateID]...)
 
+		// Calculate the roles in the AllowList
 		for _, roleID := range allowRoles {
 
 			switch roleID {
+
+			// MagicRoleOwner represents the domain owner who can do anything.
+			// No flag is required here because domain owners have access to everything.
+			case MagicRoleOwner:
 
 			// MagicRoleAnonymous is a shortcut for allowing anonymous access
 			case MagicRoleAnonymous:
@@ -92,24 +121,15 @@ func (action *Action) CalcAllowList(templateStates map[string]State, templateRol
 			case MagicRoleAuthor:
 				allowList.Author = true
 
-			// All other provileges are granted via membership in a group or purchase of a product
+			// All other privileges are granted via membership in a group or purchase of a product
 			default:
-				role, exists := templateRoles[roleID]
-
-				if !exists {
-					return derp.InternalError(location, "Invalid role used in Action.AllowList.  Role must be defined in the Template before it can be used for access allowLists", roleID)
-				}
+				role := template.AccessRoles[roleID] // save becuase this was already checked above
 
 				if role.Purchasable {
 					allowList.ProductRoles = append(allowList.ProductRoles, roleID)
 				} else {
 					allowList.GroupRoles = append(allowList.GroupRoles, roleID)
 				}
-			}
-
-			// If NO privileges have been set for this state, then Anonymous access is allowed.
-			if allowList.IsZero() {
-				allowList.Anonymous = true
 			}
 		}
 

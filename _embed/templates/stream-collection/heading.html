@@ -1,18 +1,18 @@
 {{- if .UserCan "edit" -}}
-<div id="menu-bar">
-    <a href="/{{.Token}}">&larr; View</a>
-    <a href="/{{.Token}}/edit">Edit</a>
-    <a href="/{{.Token}}/widgets">Widgets</a>
-    <a hx-get="/{{.Token}}/properties">Properties</a>
+	<div id="menu-bar">
+		<a href="/{{.Token}}">&larr; View</a>
+		<a href="/{{.Token}}/edit">Edit</a>
+		<a href="/{{.Token}}/widgets">Widgets</a>
+		<a hx-get="/{{.Token}}/properties">Properties</a>
 
-    {{- if .UserCan "sharing" -}}
-        <a hx-get="/{{.Token}}/sharing">Sharing</a>
-    {{- end -}}
+		{{- if .UserCan "sharing" -}}
+			<a hx-get="/{{.Token}}/sharing">Sharing</a>
+		{{- end -}}
 
-    <div class="right">
-        {{- if .UserCan "delete" -}}
-            <a hx-get="/{{.Token}}/delete" class="text-red">Delete</a>
-        {{- end -}}
-    </div>
-</div>
+		<div class="right">
+			{{- if .UserCan "delete" -}}
+				<a hx-get="/{{.Token}}/delete" class="text-red">Delete</a>
+			{{- end -}}
+		</div>
+	</div>
 {{- end -}}

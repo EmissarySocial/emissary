@@ -8,6 +8,9 @@
 	description: Manage Search Engine Settings
 
 	actions: {
-		index: {do:"view-html"}
+		index: {
+			roles:["owner"]
+			do:"view-html"
+		}
 	}
 }

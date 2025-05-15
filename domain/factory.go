@@ -76,6 +76,7 @@ type Factory struct {
 	oauthClient            service.OAuthClient
 	oauthUserToken         service.OAuthUserToken
 	outboxService          service.Outbox
+	permissionService      service.Permission
 	responseService        service.Response
 	ruleService            service.Rule
 	searchDomainService    service.SearchDomain
@@ -155,6 +156,7 @@ func NewFactory(domain config.Domain, port string, providers []config.Provider, 
 	factory.oauthClient = service.NewOAuthClient()
 	factory.oauthUserToken = service.NewOAuthUserToken()
 	factory.outboxService = service.NewOutbox()
+	factory.permissionService = service.NewPermission()
 	factory.responseService = service.NewResponse()
 	factory.ruleService = service.NewRule()
 	factory.searchDomainService = service.NewSearchDomain()
@@ -381,6 +383,11 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.User(),
 			factory.Email(),
 			factory.Queue(),
+		)
+
+		// Populate Permission Service
+		factory.permissionService.Refresh(
+			factory.Purchase(),
 		)
 
 		// Populate RealtimeBroker Service
@@ -775,6 +782,11 @@ func (factory *Factory) StreamArchive() *service.StreamArchive {
 // StreamDraft returns a fully populated StreamDraft service
 func (factory *Factory) StreamDraft() *service.StreamDraft {
 	return &factory.streamDraftService
+}
+
+// Permission returns a fully populated Permission service
+func (factory *Factory) Permission() *service.Permission {
+	return &factory.permissionService
 }
 
 // Purchase returns a fully populated Purchase service

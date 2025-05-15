@@ -19,6 +19,7 @@
 	}
 	actions: {
 		create:{
+			roles:["self"]
 			steps: [
 				{do:"edit-content", file:"create", format:"HTML"}
 				{do:"process-content"}

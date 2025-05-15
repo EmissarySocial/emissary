@@ -32,22 +32,18 @@
 		}
 	}
 	roles: {
-		owner: {
-			label:"Domain Owner"
-			decription:"Full control over this stream."
-			} 
-		editor: {
-			label:"Editor"
-			description:"Can make changes to this article."
-		}
 		viewer: {
 			label:"Viewer"
-			description:"Can read and comment on this article."
+			description:"Can read and comment on this collection."
+		}
+		editor: {
+			label:"Editor"
+			description:"Can make changes to this collection."
 		}
 	}
 	actions: {
 		create: {
-			roles:["editor","owner"]
+			roles:["author", "editor"]
 			steps: [
 				{
 					do:"set-data", 
@@ -61,20 +57,20 @@
 			]
 		}
 		view: {
-			roles: ["viewer", "editor", "owner"]
+			roles: ["viewer", "author", "editor"]
 			steps:[
 				{do:"view-html"}
 			]
 		}
 		edit: {
-			roles: ["owner", "editor"]
+			roles: ["author", "editor"]
 			steps: [
 				{do:"view-html"}
 				{do:"sort"}
 			]
 		}
 		widgets: {
-			roles: ["owner", "editor"]
+			roles: ["author", "editor"]
 			steps: [
 				{do:"sort-widgets"}
 				{do:"save", message:"Widgets updated by {{.Author}}"}
@@ -82,14 +78,14 @@
 			]
 		}
 		widget: {
-			roles: ["owner", "editor"]
+			roles: ["author", "editor"]
 			steps: [
 				{do:"edit-widget"}
 				{do:"save", comment:"Widget updated by {{.Author}}"}
 			]
 		}
 		delete: {
-			roles: ["owner"]
+			roles: ["author", "editor"]
 			steps: [
 				{do:"delete", title:"Delete this Collection?", message:"All content and comments will be lost.  There is NO UNDO."}
 				{do:"forward-to", url:"/{{.ParentID}}"}
@@ -97,16 +93,19 @@
 		}
 		
 		heading: {
-			do:"view-html"
+			roles: ["viewer", "author", "editor"]
+			steps: [
+				{do:"view-html"}
+			]
 		}
 		add-child:{
-			roles: ["owner", "editor"]
+			roles: ["author", "editor"]
 			steps: [
 				{do:"add-stream", location:"child", title:"Add Item to Collection"}
 			]
 		}
 		sharing: {
-			roles: ["owner"]
+			roles: ["author", "editor"]
 			steps: [
 				{do:"as-modal", steps: [
 					{do:"set-simple-sharing", roles: ["viewer"], title:"Who Can See This Article?", message:"Select who can view and comment on this article."}
@@ -115,7 +114,7 @@
 			]
 		}
 		properties: {
-			roles: ["editor", "owner"]
+			roles: ["author", "editor"]
 			steps: [
 				{do:"as-modal", steps: [
 					{do:"edit"

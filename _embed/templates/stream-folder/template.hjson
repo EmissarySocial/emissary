@@ -26,18 +26,18 @@
 		}
 	}
 	roles: {
-		editor: {
-			label: Editor
-			description: Editors can manage all content in this folder
-		}
 		viewer: {
 			label: Viewer
 			description: Viewers can access folder contents, but can not add new items
 		}
+		editor: {
+			label: Editor
+			description: Editors can manage all content in this folder
+		}
 	}
 	actions: {
 		create: {
-			roles:["editor","owner"]
+			roles:["author","editor"]
 			steps:[
 				{
 					do:"set-data", 
@@ -51,11 +51,11 @@
 			]
 		}
 		view: {
-			roles: ["viewer","editor","owner"]
+			roles: ["viewer","author", "editor"]
 			do:"view-html"
 		}
 		edit: {
-			roles: ["editor"]
+			roles: ["author", "editor"]
 			steps:[
 				{
 					do:"as-modal"
@@ -82,7 +82,7 @@
 			]
 		}
 		delete: {
-			roles: ["editor"]
+			roles: ["author", "editor"]
 			steps: [
 				{do:"unpublish", outbox:"true"}
 				{do:"delete", title:"Delete this Folder?", message:"This will permanently delete this folder and all of its contents"}
@@ -91,18 +91,20 @@
 		}
 
 		add-child: {
-			roles: ["editor"]
+			roles: ["author", "editor"]
 			steps:[
 				{do:"add-stream", location:"child", title:"Add Item", comment:"Created by {{.Author.DisplayName}}"}
 				{do:"refresh-page"}
 			]
 		}
 		sort:{
-			roles:["editor"]
-			do:"sort"
+			roles:["author", "editor"]
+			steps:[
+				{do:"sort"}
+			]
 		}
 		sharing: {
-			roles: ["editor"]
+			roles: ["author", "editor"]
 			steps: [
 				{do:"as-modal", steps: [
 					{do:"set-simple-sharing", roles: ["viewer"], title:"Sharing Settings", message:"Select Which People Can See This Folder"}
@@ -110,7 +112,17 @@
 				]}
 			]
 		}
-		feed: {roles: ["viewer"], do:"view-feed"}
-		websub: {roles: ["viewer"], do:"websub"}
+		feed: {
+			roles: ["viewer", "author", "editor"], 
+			steps:[
+				{do:"view-feed"}
+			]
+		}
+		websub: {
+			roles: ["viewer", "author", "editor"], 
+			steps:[
+				{do:"websub"}
+			]
+		}
 	}
 }

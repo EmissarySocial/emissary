@@ -37,7 +37,7 @@ type Template struct {
 	WidgetLocations    sliceof.String       `json:"widget-locations"   bson:"widgetLocations"`    // List of locations where widgets can be placed.  Common values are: "TOP", "BOTTOM", "LEFT", "RIGHT"
 	Schema             schema.Schema        `json:"schema"             bson:"schema"`             // JSON Schema that describes the data required to populate this Template.
 	States             mapof.Object[State]  `json:"states"             bson:"states"`             // Map of States (by state.ID) that Streams of this Template can be in.
-	AccessRoles        mapof.Object[Role]   `json:"accessRoles"        bson:"accessRoles"`        // Map of custom roles defined by this Template.
+	AccessRoles        mapof.Object[Role]   `json:"roles"              bson:"accessRoles"`        // Map of custom roles defined by this Template.
 	Actions            mapof.Object[Action] `json:"actions"            bson:"actions"`            // Map of actions that can be performed on streams of this Template
 	HTMLTemplate       *template.Template   `json:"-"                  bson:"-"`                  // Compiled HTML template
 	TagPaths           []string             `json:"tagPaths"           bson:"tagPaths"`           // List of paths to tags that are used in this template
@@ -80,29 +80,13 @@ func (template Template) ID() string {
 
 // AfterUnmarshal performs some post-processing on the Template object
 // after it has been unmarshalled from JSON.
-func (template *Template) AfterUnmarshal() error {
-
-	const location = "model.Template.AfterUnmarshal"
+func (template *Template) AfterUnmarshal() {
 
 	// Apply RoleIDs to each AccessRole
 	for roleID, accessRole := range template.AccessRoles {
 		accessRole.RoleID = roleID
 		template.AccessRoles[roleID] = accessRole
 	}
-
-	// Calculate/Validate AllowLists for each each Action
-	for actionID, action := range template.Actions {
-
-		if err := action.CalcAllowList(template.States, template.AccessRoles); err != nil {
-			return derp.Wrap(err, location, "Error calculating AllowList for Action", actionID)
-		}
-
-		// Apply changes to the Action library
-		template.Actions[actionID] = action
-	}
-
-	// Success
-	return nil
 }
 
 // IsZero returns TRUE if this Template is a zero value
@@ -138,6 +122,36 @@ func (template *Template) CanBeContainedBy(templateRoles ...string) bool {
 
 func (template *Template) IsValidWidgetLocation(location string) bool {
 	return slice.Contains(template.WidgetLocations, location)
+}
+
+// IsValidRole returns TRUE if the provided roleID is valid for this Template
+func (template *Template) IsValidRole(roleID string) bool {
+
+	switch roleID {
+
+	// MagicRoles are always valid
+	case MagicRoleOwner:
+	case MagicRoleAnonymous:
+	case MagicRoleAuthenticated:
+	case MagicRoleMyself:
+	case MagicRoleAuthor:
+
+	// Custom roles must be defined in the Template
+	default:
+		if _, ok := template.AccessRoles[roleID]; !ok {
+			return false
+		}
+	}
+
+	return true
+}
+
+// IsValidState returns TRUE if the provided stateID is valid for this Template
+func (template *Template) IsValidState(stateID string) bool {
+	if _, ok := template.States[stateID]; !ok {
+		return false
+	}
+	return true
 }
 
 // State searches for the State in this Template that matches the provided StateID

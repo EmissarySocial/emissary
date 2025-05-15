@@ -14,7 +14,14 @@
 		}}
 	}}
 	actions: {
-		index: {do: "view-html"}
-		edit: {do: "edit-connection"}
+		index: {
+			roles:["owner"],
+			do: "view-html"
+		}
+		
+		edit: {
+			roles:["owner"],
+			do: "edit-connection"
+		}
 	}
 }

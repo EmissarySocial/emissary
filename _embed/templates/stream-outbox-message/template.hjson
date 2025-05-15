@@ -22,14 +22,11 @@
 			description:"Comment is publicly visible"
 		}
 	}
-	roles: {
-		self: {
-			label:"Myself"
-			decription:"Outbox messages can only be sent by the current user."
-		}
-	}
+	roles: {}
 	actions: {
+		
 		create:{
+			roles:["self"]
 			steps: [
 				{do:"edit-content", file:"create", format:"HTML"}
 				{do:"process-content"}
@@ -40,12 +37,15 @@
 				{do:"search-index"}
 			]
 		}
+
 		view: {
+			roles:["anonymous"]
 			steps:[
 				{do:"set-query-param", url:"{{.Permalink}}"}
 				{do:"view-html"}
 			]
 		}
+		
 		edit: {
 			roles:["self"]
 			steps: [
@@ -59,6 +59,7 @@
 				]}
 			]
 		}
+		
 		delete: {
 			roles:["self"]
 			steps: [
@@ -69,24 +70,31 @@
 		}
 		
 		responses-replies:{
+			roles:["anonymous"]
 			steps: [
 				{do:"set-args", path:"/{{.StreamID}}"}
 				{do:"view-html"}
 			]
 		}
+
 		responses-announces:{
+			roles:["anonymous"]
 			steps: [
 				{do:"set-args", path:"/{{.StreamID}}"}
 				{do:"view-html"}
 			]
 		}
+
 		responses-likes:{
+			roles:["anonymous"]
 			steps: [
 				{do:"set-args", path:"/{{.StreamID}}"}
 				{do:"view-html"}
 			]
 		}
+
 		replies:{
+			roles:["anonymous"]
 			steps:[
 				{do:"set-args", path:"/{{.StreamID}}"}
 				{do:"view-html"}

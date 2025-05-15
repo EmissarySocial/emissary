@@ -13,10 +13,30 @@
 		}
 	}
 	actions: {
-		page: {do:"view-html"}
-		welcome: {do: "view-html"}
-		theme: {do: "view-html"}
-		user: {do: "view-html"}
-		confirm: {do: "view-html"}
+		page: {
+			roles:["owner"]
+			do:"view-html"
+		}
+		
+		welcome: {
+			roles:["owner"]
+			do: "view-html"
+		}
+		
+		theme: {
+			roles:["owner"]
+			do: "view-html"
+		}
+		
+		user: {
+			roles:["owner"]
+			do: "view-html"
+		}
+		
+		confirm: {
+			roles:["owner"]
+			do: "view-html"
+		}
+		
 	}
 }

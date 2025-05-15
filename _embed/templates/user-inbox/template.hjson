@@ -33,12 +33,7 @@
 			label: Inbox only has default state
 		}
 	}
-	roles: {
-		owner: {
-			label: Inbox Owner
-			decription: Full control
-		}
-	}
+	roles: {}
 	bundles: {
 		stylesheet: {
 			content-type: text/css
@@ -301,16 +296,19 @@
 		}
 
 		responses-announces:{
+			roles:["self"]
 			steps: [
 				{do:"view-html"}
 			]
 		}
 		responses-likes:{
+			roles:["self"]
 			steps: [
 				{do:"view-html"}
 			]
 		}
 		responses-replies:{
+			roles:["self"]
 			steps: [
 				{do:"view-html"}
 			]

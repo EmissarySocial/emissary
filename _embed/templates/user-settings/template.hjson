@@ -34,9 +34,18 @@
 	}
 	actions: {
 
+		followers: {
+			roles:["self"]
+			do:"view-html"
+			file:"followers"
+		}
 		
-		followers: {do:"view-html", file:"followers"}
-		followers-list: {do:"view-html", file:"followers-list"}
+		followers-list: {
+			roles:["self"]
+			do:"view-html"
+			file:"followers-list"
+		}
+
 		follower-add: {
 			roles:["self"]
 			steps:[
@@ -53,6 +62,7 @@
 				]}
 			]
 		}
+		
 		follower:{
 			roles: ["self"]
 			steps:[
@@ -63,6 +73,7 @@
 				]}
 			]
 		}
+		
 		follower-delete:{
 			roles: ["self"]
 			steps:[
@@ -73,8 +84,20 @@
 			]
 		}
 
-		following: {do:"view-html", file:"following"}
-		following-list: {do:"view-html", file:"following-list"}
+		following: {
+			roles: ["self"]
+			steps:[
+				{do:"view-html", file:"following"}
+			]
+		}
+
+		following-list: {
+			roles: ["self"]
+			steps:[
+				{do:"view-html", file:"following-list"}
+			]
+		}
+
 		following-search: {
 			roles:["self"]
 			steps:[
@@ -83,10 +106,12 @@
 				]}
 			]
 		}
+
 		following-search-results: {
 			roles:["self"]
 			do:"view-html"
 		}
+
 		following-add: {
 			roles:["self"]
 			steps: [
@@ -95,6 +120,7 @@
 				]}
 			]
 		}
+
 		following-add-form:{
 			roles:["self"]
 			steps:[
@@ -162,6 +188,7 @@
 				{do:"trigger-event", event:"refreshPage"}
 			]
 		}
+
 		following-edit:{
 			roles:["self"]
 			steps: [
@@ -258,8 +285,14 @@
 			]
 		}
 
-		rules:{roles:["self"], do:"view-html"}
-		rules-list: {roles:["self"], do:"view-html"}
+		rules:{
+			roles:["self"], 
+			do:"view-html"
+		}
+		rules-list: {
+			roles:["self"], 
+			do:"view-html"
+		}
 
 		rule-add:{
 			roles:["self"]
@@ -654,6 +687,5 @@
 				{do:"view-html", method:"post", file:"actor-button-none"}
 			]
 		}
-
 	}
 }	

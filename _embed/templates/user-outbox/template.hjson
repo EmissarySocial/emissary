@@ -31,12 +31,18 @@
 	}
 	actions: {
 		view: {
+			roles:["anonymous"]
 			steps:[
 				{do:"set-header", name:"Link", value:"<{{.Host}}/@{{.UserID}}>; rel=\"self\", <{{.Host}}/@{{.UserID}}/websub>; rel=\"hub\""}
 				{do:"view-html", file:"outbox"}
 			]
 		}
-		outbox-list: {do:"view-html"}
+		outbox-list: {
+			roles:["anonymous"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
 		outbox-add: {
 			roles: ["self"]
 			steps: [
@@ -46,12 +52,27 @@
 			]
 		}
 
-		replied: {do:"view-html"}
-		replied-list: {do:"view-html"}
-		liked: {do:"view-html"}
-		liked-list: {do:"view-html"}
+		replied: {
+			roles:["anonymous"]
+			do:"view-html"
+		}
+		replied-list: {
+			roles:["anonymous"]
+			do:"view-html"
+		}
+		liked: {
+			roles:["anonymous"]
+			do:"view-html"
+		}
+		liked-list: {
+			roles:["anonymous"]
+			do:"view-html"
+		}
 
-		sidebar: {do:"view-html"}
+		sidebar: {
+			roles:["anonymous"]
+			do:"view-html"
+		}
 		edit: {
 			roles: ["self"]
 			steps: [
@@ -143,6 +164,7 @@
 		}
 
 		follow: {
+			roles:["anonymous"]
 			steps: [
 				{do:"as-modal", background:"profile", steps:[
 					{do:"view-html"}
@@ -151,6 +173,7 @@
 		}
 
 		follow-activitypub: {
+			roles:["anonymous"]
 			steps: [
 				{do:"as-modal", background:"profile", steps:[
 					{do:"view-html"}
@@ -159,6 +182,7 @@
 		}
 
 		follower-confirm: {
+			roles:["anonymous"]
 			steps:[
 				{do:"with-follower", steps:[
 					{do:"set-data", values:{"stateId":"ACTIVE"}}
@@ -169,6 +193,7 @@
 		}
 
 		follower-unsubscribe: {
+			roles:["self"]
 			steps: [
 				{do:"with-follower", steps:[
 					{do:"view-html", file:"follower-unsubscribe"}
@@ -178,9 +203,16 @@
 			]
 		}
 
-		feed: {do:"view-feed"}
-		websub: {do:"websub"}
+		feed: {
+			roles:["anonymous"]
+			do:"view-feed"
+		}
 
+		websub: {
+			roles:["anonymous"]
+			do:"websub"
+		}
+		
 		delete: {
 			roles:["self"]
 			steps: [

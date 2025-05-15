@@ -7,7 +7,7 @@
 	icon:"markdown"
 	actions: {
 		create: {
-			roles:["editor","owner"]
+			roles:["author", "editor"]
 			steps: [
 				{
 					do:"set-data", 
@@ -23,7 +23,7 @@
 			]
 		}
 		editor: {
-			roles: ["owner", "editor"]
+			roles: ["author", "editor"]
 			steps: [
 				{do:"with-draft", steps: [
 					{do:"edit-content", file:"editor", format:"MARKDOWN"}

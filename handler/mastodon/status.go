@@ -5,7 +5,6 @@ import (
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/vocab"
-	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/toot"
 	"github.com/benpate/toot/object"
 	"github.com/benpate/toot/txn"
@@ -73,14 +72,28 @@ func GetStatus(serverFactory *server.Factory) func(model.Authorization, txn.GetS
 	return func(authorization model.Authorization, transaction txn.GetStatus) (object.Status, error) {
 
 		// Get the Stream from the URL
-		stream, _, err := getStreamFromURL(serverFactory, transaction.ID)
+		factory, _, stream, err := getStreamFromURL(serverFactory, transaction.ID)
 
 		if err != nil {
 			return object.Status{}, derp.Wrap(err, location, "Error loading stream")
 		}
 
-		// Validate permissions
-		if !slice.ContainsAny(stream.DefaultAllow, authorization.AllGroupIDs()...) {
+		// Load the template for this stream
+		templateService := factory.Template()
+		template, err := templateService.Load(stream.TemplateID)
+
+		if err != nil {
+			return object.Status{}, derp.Wrap(err, location, "Error loading template")
+		}
+
+		// Validate permissions on this Stream/Template
+		allowed, err := factory.Permission().UserCan(&authorization, &template, &stream, "view")
+
+		if err != nil {
+			return object.Status{}, derp.Wrap(err, location, "Error checking permissions")
+		}
+
+		if !allowed {
 			return object.Status{}, derp.ForbiddenError(location, "User is not authorized to delete this stream")
 		}
 
@@ -96,7 +109,7 @@ func DeleteStatus(serverFactory *server.Factory) func(model.Authorization, txn.D
 
 	return func(authorization model.Authorization, transaction txn.DeleteStatus) (struct{}, error) {
 
-		stream, streamService, err := getStreamFromURL(serverFactory, transaction.ID)
+		_, streamService, stream, err := getStreamFromURL(serverFactory, transaction.ID)
 
 		if err != nil {
 			return struct{}{}, derp.Wrap(err, location, "Error loading stream")
@@ -132,7 +145,7 @@ func PostStatus_Translate(serverFactory *server.Factory) func(model.Authorizatio
 	return func(auth model.Authorization, t txn.PostStatus_Translate) (object.Translation, error) {
 
 		// Get the Stream from the URL
-		stream, _, err := getStreamFromURL(serverFactory, t.ID)
+		_, _, stream, err := getStreamFromURL(serverFactory, t.ID)
 
 		if err != nil {
 			return object.Translation{}, derp.Wrap(err, location, "Error loading stream")

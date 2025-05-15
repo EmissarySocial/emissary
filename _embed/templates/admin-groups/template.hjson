@@ -7,10 +7,18 @@
 	label: "Group"
 	description: "Domain Owners only.  Site Admin"
 	actions: {
-		index: {do: "view-html"}
-		list: {do: "view-html"}
+		index: {
+			roles:["owner"]
+			do: "view-html"
+		}
+
+		list: {
+			roles:["owner"]
+			do: "view-html"
+		}
 		
 		add: {
+			roles:["owner"]
 			steps: [{
 				do: "as-modal"
 				steps: [
@@ -32,6 +40,7 @@
 		}
 
 		edit: {
+			roles:["owner"]
 			steps: [{
 				do: "as-modal"
 				steps: [
@@ -54,6 +63,7 @@
 		}
 
 		delete: {
+			roles:["owner"]
 			steps:[
 				{do: "delete", type: "group", message: "People will be removed from this group, but will not be deleted."}
 				{do: "refresh-page"}
