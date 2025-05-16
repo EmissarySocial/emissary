@@ -27,6 +27,7 @@ import (
 	"github.com/EmissarySocial/emissary/handler/unsplash"
 	mw "github.com/EmissarySocial/emissary/middleware"
 	"github.com/EmissarySocial/emissary/server"
+	"github.com/EmissarySocial/emissary/tools/console"
 	"github.com/benpate/derp"
 	"github.com/benpate/digital-dome/dome4echo"
 	"github.com/benpate/domain"
@@ -62,6 +63,10 @@ func main() {
 	fmt.Println("")
 
 	go waitForSigInt()
+
+	// Derp configuration
+	derp.Plugins.Clear()
+	derp.Plugins.Add(console.New())
 
 	// Troubleshoot / Error Reporting
 	spew.Config.DisableMethods = true
