@@ -87,7 +87,9 @@
 		
 		heading: {
 			roles: ["viewer", "author", "editor"]
-			do: "view-html"
+			steps: [
+				{do: "view-html"}
+			]
 		}
 
 		editor:{

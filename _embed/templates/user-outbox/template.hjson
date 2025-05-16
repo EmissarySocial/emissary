@@ -29,7 +29,9 @@
 			content-type:text/css
 		}
 	}
+
 	actions: {
+	
 		view: {
 			roles:["anonymous"]
 			steps:[
@@ -37,12 +39,14 @@
 				{do:"view-html", file:"outbox"}
 			]
 		}
+	
 		outbox-list: {
 			roles:["anonymous"]
 			steps:[
 				{do:"view-html"}
 			]
 		}
+	
 		outbox-add: {
 			roles: ["self"]
 			steps: [
@@ -54,25 +58,39 @@
 
 		replied: {
 			roles:["anonymous"]
-			do:"view-html"
+			steps:[
+				{do:"view-html"}
+			]
 		}
+		
 		replied-list: {
 			roles:["anonymous"]
-			do:"view-html"
+			steps:[
+				{do:"view-html"}
+			]
 		}
+		
 		liked: {
 			roles:["anonymous"]
-			do:"view-html"
+			steps:[
+				{do:"view-html"}
+			]
 		}
+		
 		liked-list: {
 			roles:["anonymous"]
-			do:"view-html"
+			steps:[
+				{do:"view-html"}
+			]
 		}
 
 		sidebar: {
 			roles:["anonymous"]
-			do:"view-html"
+			steps:[
+				{do:"view-html"}
+			]
 		}
+		
 		edit: {
 			roles: ["self"]
 			steps: [
@@ -114,6 +132,7 @@
 				]}
 			]
 		}
+	
 		links-table: {
 			roles: ["self"]
 			steps: [
@@ -142,7 +161,9 @@
 
 		icon-preview: {
 			roles: ["self"]
-			do:"view-html"
+			steps:[
+				{do:"view-html"}
+			]
 		}
 
 		icon-delete: {
@@ -205,12 +226,16 @@
 
 		feed: {
 			roles:["anonymous"]
-			do:"view-feed"
+			steps:[
+				{do:"view-feed"}
+			]
 		}
 
 		websub: {
 			roles:["anonymous"]
-			do:"websub"
+			steps:[
+				{do:"websub"}
+			]
 		}
 		
 		delete: {

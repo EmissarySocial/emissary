@@ -198,11 +198,6 @@ func (template *Template) Inherit(parent *Template) {
 		template.SocialRole = parent.SocialRole
 	}
 
-	// Apply SocialRules
-	if len(parent.SocialRules) > 0 {
-		template.SocialRules = append(template.SocialRules, parent.SocialRules...)
-	}
-
 	// Inherit ContainedBy.
 	if len(template.ContainedBy) == 0 {
 		template.ContainedBy = parent.ContainedBy
@@ -211,6 +206,11 @@ func (template *Template) Inherit(parent *Template) {
 	// Inherit Model.
 	if template.Model == "" {
 		template.Model = parent.Model
+	}
+
+	// Apply SocialRules
+	if len(parent.SocialRules) > 0 {
+		template.SocialRules = append(parent.SocialRules, template.SocialRules...)
 	}
 
 	// Inherit Datasets from the parent

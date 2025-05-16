@@ -22,9 +22,12 @@
 		]
 	}
 	actions: {
-		view: {do:"redirect-to", url:'{{.RegistrationData "signup_url"}}'}
-		confirm: {steps:[
-			{do:"view-html", as-full-page:true}
-		]}
+		view: {roles:["anonymous"], do:"redirect-to", url:'{{.RegistrationData "signup_url"}}'}
+		confirm: {
+			roles:["anonymous"]
+			steps:[
+				{do:"view-html", as-full-page:true}
+			]
+		}
 	}
 }

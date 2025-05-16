@@ -16,12 +16,16 @@
 	actions: {
 		index: {
 			roles:["owner"],
-			do: "view-html"
+			steps:[
+				{do: "view-html"}
+			]
 		}
 		
 		edit: {
 			roles:["owner"],
-			do: "edit-connection"
+			steps:[
+				{do: "edit-connection"}
+			]
 		}
 	}
 }

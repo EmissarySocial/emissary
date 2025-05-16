@@ -9,12 +9,16 @@
 	actions: {
 		index: {
 			roles:["owner"]
-			do: "view-html"
+			steps: [
+				{do: "view-html"}
+			]
 		}
 
 		list: {
 			roles:["owner"]
-			do: "view-html"
+			steps: [
+				{do: "view-html"}
+			]
 		}
 
 		add: {

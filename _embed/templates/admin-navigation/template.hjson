@@ -1,13 +1,13 @@
 {
-	templateId:"admin-navigation"
-	templateRole:"admin"
-	model:"stream"
+	templateId: admin-navigation
+	templateRole: admin
+	model: stream
 	extends: ["admin-common"]
 	containedBy:["admin"]
-	label: "Top Level"
-	description: "Manages list of top-level items. (Site Admins Only)"
+	label: Top Level
+	description: Manages list of top-level items. (Site Admins Only)
 	schema: {
-		type: "object"
+		type: object
 		properties: {
 			rank: {type:"integer"}
 		}
@@ -15,17 +15,23 @@
 	actions: {
 		index: {
 			roles:["owner"]
-			do: "view-html"
+			steps:[
+				{do: "view-html"}
+			]
 		}
 
 		view: {
 			roles:["owner"]
-			do: "view-html"
+			steps:[
+				{do: "view-html"}
+			]
 		}
 
 		sort: {
 			roles:["owner"]
-			do: "sort"
+			steps:[
+				{do: "sort"}
+			]
 		}
 
 		add: {

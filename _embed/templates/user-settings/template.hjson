@@ -36,14 +36,16 @@
 
 		followers: {
 			roles:["self"]
-			do:"view-html"
-			file:"followers"
+			steps:[
+				{do:"view-html", file:"followers"}
+			]
 		}
 		
 		followers-list: {
 			roles:["self"]
-			do:"view-html"
-			file:"followers-list"
+			steps:[
+				{do:"view-html", file:"followers-list"}
+			]
 		}
 
 		follower-add: {
@@ -109,7 +111,9 @@
 
 		following-search-results: {
 			roles:["self"]
-			do:"view-html"
+			steps:[
+				{do:"view-html"}
+			]
 		}
 
 		following-add: {
@@ -287,11 +291,16 @@
 
 		rules:{
 			roles:["self"], 
-			do:"view-html"
+			steps:[
+				{do:"view-html"}
+			]
 		}
+		
 		rules-list: {
 			roles:["self"], 
-			do:"view-html"
+			steps:[
+				{do:"view-html"}
+			]
 		}
 
 		rule-add:{

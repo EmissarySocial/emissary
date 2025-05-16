@@ -35,7 +35,9 @@
 		}
 		view: {
 			roles:["viewer", "author", "editor"]
-			do: "view-html" 
+			steps:[
+				{do: "view-html"}
+			]
 		}
 		edit: {
 			roles: ["author", "editor"]

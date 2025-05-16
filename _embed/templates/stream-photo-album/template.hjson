@@ -50,11 +50,15 @@
 		}
 		view: {
 			roles: ["viewer", "author", "editor"]
-			do:"view-html"
+			steps: [
+				{do:"view-html"}
+			]
 		}
 		edit: {
 			roles: ["author", "editor"]
-			do:"view-html"
+			steps: [
+				{do:"view-html"}
+			]
 		}
 		delete: {
 			roles: ["author", "editor"]
@@ -66,7 +70,9 @@
 
 		children: {
 			roles:["viewer", "author", "editor"]
-			do:"view-html"
+			steps: [
+				{do:"view-html"}
+			]
 		}
 		properties: {
 			roles: ["author", "editor"]
@@ -105,11 +111,15 @@
 		}
 		feed: {
 			roles: ["viewer", "author", "editor"]
-			do:"view-feed"
+			steps:[
+				{do:"view-feed"}
+			]
 		}
 		websub: {
 			roles: ["viewer", "author", "editor"]
-			do:"websub"
+			steps:[
+				{do:"websub"}
+			]
 		}
 	}
 }

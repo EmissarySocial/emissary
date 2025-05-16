@@ -62,16 +62,19 @@
 		}
 	actions: {
 		view: {
+			roles:["anonymous"]
 			steps:[
 				{do:"view-html", as-full-page:true}
 			]
 		}
 		secret: {
+			roles:["anonymous"]
 			steps:[
 				{do:"view-html", as-full-page:true}
 			]
 		}
 		confirm: {
+			roles:["anonymous"]
 			steps:[
 				{do:"view-html"}
 			]

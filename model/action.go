@@ -1,6 +1,8 @@
 package model
 
 import (
+	"strings"
+
 	"github.com/EmissarySocial/emissary/model/step"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
@@ -36,11 +38,6 @@ func (action *Action) CalcAllowList(template *Template) error {
 
 	const location = "model.Action.CalcAllowList"
 
-	// RULE: Require at leas one Role.
-	if len(action.Roles) == 0 {
-		return derp.InternalError(location, "Action must have at least one Role.  If none, then use 'owner'")
-	}
-
 	// Initialize/Reset the AllowList
 	action.AllowList = make(mapof.Object[ActionAllowList])
 
@@ -49,9 +46,10 @@ func (action *Action) CalcAllowList(template *Template) error {
 		if !template.IsValidRole(role) {
 			return derp.InternalError(
 				location,
-				"Invalid role used in Action.Roles.  Roles must be defined in the Template to be used in AllowLists",
-				template.TemplateID,
-				role,
+				"Undefined role used in Action.Roles.  Roles must be defined in the Template before use.",
+				"template: "+template.TemplateID,
+				"available roles: "+strings.Join(template.AccessRoles.Keys(), ", "),
+				"selected role: "+role,
 			)
 		}
 	}
@@ -62,18 +60,21 @@ func (action *Action) CalcAllowList(template *Template) error {
 		if !template.IsValidState(stateID) {
 			return derp.InternalError(
 				location,
-				"Invalid state used in StateRoles. States must be defined in the Template to be used in AllowLists",
-				template.TemplateID,
-				stateID,
+				"Undefined state used in StateRoles. States must be defined in the Template before use.",
+				"template: "+template.TemplateID,
+				"available states: "+strings.Join(template.States.Keys(), ", "),
+				"selected state: "+stateID,
 			)
 		}
 		for _, role := range roles {
 			if !template.IsValidRole(role) {
 				return derp.InternalError(
 					location,
-					"Invalid role used in Action.StateRoles.  Roles must be defined in the Template to be used in AllowLists",
-					template.TemplateID,
-					role,
+					"Undefined role used in Action.StateRoles.  Roles must be defined in the Template before use.",
+					"template: "+template.TemplateID,
+					"state: "+stateID,
+					"available roles: "+strings.Join(template.AccessRoles.Keys(), ", "),
+					"selected role: "+role,
 				)
 			}
 		}
@@ -169,6 +170,8 @@ func (action *Action) UnmarshalJSON(data []byte) error {
 // UnmarshalMap unmarshals the provided map into this Action object.
 func (action *Action) UnmarshalMap(data map[string]any) error {
 
+	const location = "model.Action.UnmarshalMap"
+
 	// Import easy values
 	action.Roles = convert.SliceOfString(data["roles"])
 	action.States = convert.SliceOfString(data["states"])
@@ -185,15 +188,16 @@ func (action *Action) UnmarshalMap(data map[string]any) error {
 	if pipeline, err := step.NewPipeline(stepsInfo); err == nil {
 		action.Steps = pipeline
 	} else {
-		return derp.Wrap(err, "model.action.UnmarshalMap", "Error reading steps", stepsInfo)
+		return derp.Wrap(err, location, "Error reading steps", stepsInfo)
 	}
 
-	// If no steps configued, then try the "do" alias
-	if len(action.Steps) == 0 {
-		if name := convert.String(data["do"]); name != "" {
-			action.Steps, _ = step.NewPipeline([]mapof.Any{data})
-		}
-	}
+	// intentionally ignoring validation errors here
+	// so that we can generate more useful error messages later.
+	// for now, everything is valid. everything is fine. nothing to see here. move along, please.
+
+	// NOT VALIDATING EMPTY ACTIONS
+	// NOT VALIDATING INCORRECT ROLES
+	// NOT VALIDATING INCORRECT STATES
 
 	return nil
 }

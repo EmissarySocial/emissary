@@ -209,10 +209,23 @@ func (service *Template) loadTemplates() error {
 	}
 
 	// Calculate inheritance for Templates
-	service.calculateAllInheritance()
+	if err := service.calculateAllInheritance(); err != nil {
+		derp.Report(derp.Wrap(err, location, "Error calculating Template inheritance"))
+	}
 
 	// Calculate inheritance for Themes
 	service.themeService.calculateAllInheritance()
+
+	// Validate required fields for all Templates
+	if errs := service.validateTemplates(); len(errs) > 0 {
+
+		log.Error().Msg("Errors validating templates.  Some templates may not function properly.")
+		for _, error := range errs {
+			derp.Report(error)
+		}
+
+		return nil
+	}
 
 	// Calculate access lists for all Templates
 	if err := service.calculateAllowLists(); err != nil {
@@ -273,29 +286,129 @@ func (service *Template) Add(templateID string, filesystem fs.FS, definition []b
 	return nil
 }
 
-// calculateAllInheritance calls calculateInheritance for each Template in the prep area
-func (service *Template) calculateAllInheritance() {
-	for _, template := range service.templatePrep {
-		service.calculateInheritance(template)
-	}
-}
+func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 
-// calculateInheritance recursively calculates the inheritance for a template in the prep area
-func (service *Template) calculateInheritance(template model.Template) model.Template {
+	log.Debug().Msg("Template Service: Validating templates...")
 
-	if len(template.Extends) == 0 {
-		return template
-	}
+	errors := make(sliceof.Object[derp.Error], 0)
 
-	for _, parentID := range template.Extends {
-		if parent, ok := service.templatePrep[parentID]; ok {
-			parent = service.calculateInheritance(parent)
-			template.Inherit(&parent)
+	for templateID, template := range service.templatePrep {
+
+		for actionID, action := range template.Actions {
+
+			// RULE: Actions must have at least one step
+			if len(action.Steps) == 0 {
+				errors.Append(derp.ValidationError(
+					"Actions must have at least one Step",
+					"template: "+templateID,
+					"action: "+actionID,
+				))
+			}
+
+			// RULE: States used in action.states must be defined
+			for _, stateID := range action.States {
+				if !template.IsValidState(stateID) {
+					errors.Append(derp.ValidationError(
+						"Undefined state used in action 'state' permissions",
+						"template: "+templateID,
+						"action: "+actionID,
+						"state: "+stateID,
+						"available roles: "+strings.Join(template.AccessRoles.Keys(), ", "),
+					))
+				}
+			}
+
+			// RULE: Roles used in action.roles must be defined i have a favorite child and her name is abby
+			for _, roleID := range action.Roles {
+				if !template.IsValidRole(roleID) {
+					errors.Append(derp.ValidationError(
+						"Undefined role used in action 'role' permissions",
+						"template: "+templateID,
+						"action: "+actionID,
+						"role: "+roleID,
+						"available roles: "+strings.Join(template.AccessRoles.Keys(), ", "),
+					))
+				}
+			}
+
+			for stateID, roles := range action.StateRoles {
+
+				// RULE: States used in action.stateRoles must be defined
+				if !template.IsValidState(stateID) {
+					errors.Append(derp.ValidationError(
+						"Undefined state used in action 'state/roles' permissions",
+						"template: "+templateID,
+						"action: "+actionID,
+						"state: "+stateID,
+						"available states: "+strings.Join(template.States.Keys(), ", "),
+					))
+				}
+
+				for _, roleID := range roles {
+
+					// RULE: Roles used in action.stateRoles must be defined
+					if !template.IsValidRole(roleID) {
+						errors.Append(derp.ValidationError(
+							"Undefined role used in action 'state/roles' permissions",
+							"template: "+templateID,
+							"action: "+actionID,
+							"role: "+roleID,
+							"state: "+stateID,
+							"available roles: "+strings.Join(template.AccessRoles.Keys(), ", "),
+						))
+					}
+				}
+			}
 		}
 	}
 
+	return errors
+}
+
+// calculateAllInheritance calls calculateInheritance for each Template in the prep area
+func (service *Template) calculateAllInheritance() error {
+	for _, template := range service.templatePrep {
+		if _, err := service.calculateInheritance(template); err != nil {
+			return derp.Wrap(err, "service.template.calculateAllInheritance", "Error calculating inheritance", template.TemplateID)
+		}
+	}
+
+	return nil
+}
+
+// calculateInheritance recursively calculates the inheritance for a template in the prep area
+func (service *Template) calculateInheritance(template model.Template) (model.Template, error) {
+
+	const location = "service.template.calculateInheritance"
+
+	if len(template.Extends) == 0 {
+		return template, nil
+	}
+
+	for _, parentID := range template.Extends {
+		parent, exists := service.templatePrep[parentID]
+
+		if !exists {
+			return model.Template{}, derp.InternalError(
+				location,
+				"Parent template is not defined",
+				"templateId: "+template.TemplateID,
+				"parentId: "+parentID,
+			)
+		}
+
+		parent, err := service.calculateInheritance(parent)
+
+		if err != nil {
+			return model.Template{}, derp.Wrap(err, location, "Error calculating inheritance", template.TemplateID, parentID)
+		}
+
+		template.Inherit(&parent)
+	}
+
 	service.templatePrep[template.TemplateID] = template
-	return template
+
+	return template, nil
 }
 
 // calculateAllowLists calculates the access lists for every Template in the prep area

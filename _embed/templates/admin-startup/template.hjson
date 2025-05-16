@@ -15,27 +15,37 @@
 	actions: {
 		page: {
 			roles:["owner"]
-			do:"view-html"
+			steps:[
+				{do:"view-html"}
+			]
 		}
 		
 		welcome: {
 			roles:["owner"]
-			do: "view-html"
+			steps:[
+				{do:"view-html"}
+			]
 		}
 		
 		theme: {
 			roles:["owner"]
-			do: "view-html"
+			steps:[
+				{do:"view-html"}
+			]
 		}
 		
 		user: {
 			roles:["owner"]
-			do: "view-html"
+			steps:[
+				{do:"view-html"}
+			]
 		}
 		
 		confirm: {
 			roles:["owner"]
-			do: "view-html"
+			steps:[
+				{do:"view-html"}
+			]
 		}
 		
 	}

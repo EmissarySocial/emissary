@@ -10,7 +10,9 @@
 	actions: {
 		index: {
 			roles:["owner"]
-			do:"view-html"
+			steps:[
+				{do:"view-html"}
+			]
 		}
 	}
 }

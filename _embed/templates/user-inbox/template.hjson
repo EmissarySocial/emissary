@@ -5,7 +5,7 @@
 	label: Default Inbox
 	description: A simple inbox with a sidebar for folders and several feed layouts
 	icon: inbox
-	extends: ["base-social", "base-block-editor"]
+	extends: ["base-social"]
 	containedBy: []
 	schema: {
 		title: User Profile
@@ -46,12 +46,15 @@
 
 		inbox: {
 			roles: ["self"]
-			do: "view-html"
+			steps:[
+				{do: "view-html"}
+			]
 		}
 		sidebar: {
 			roles: ["self"]
-			do: "view-html"
-			file: "sidebar-remote"
+			steps:[
+				{do: "view-html", file: "sidebar-remote"}
+			]
 		}
 		list: {
 			roles: ["self"]
@@ -61,7 +64,9 @@
 		}
 		list-before: {
 			roles: ["self"]
-			do: "view-html"
+			steps:[
+				{do: "view-html"}
+			]
 		}
 		filter: {
 			roles: ["self"]
@@ -315,11 +320,15 @@
 		}
 		responses-replies-list:{
 			roles:["self"]
-			do:"view-html"
+			steps:[
+				{do:"view-html"}
+			]
 		}
 		responses-replies-recursive:{
 			roles:["self"]
-			do:"view-html"
+			steps:[
+				{do:"view-html"}
+			]
 		}
 		reply:{
 			roles:["self"]
