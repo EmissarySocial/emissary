@@ -10,9 +10,9 @@ import (
 // "soft deleted" more than 30 days ago.
 func RecycleDomain(factory *domain.Factory, _ mapof.Any) queue.Result {
 
-	const location = "consumer.Recycle"
-
 	/* DISABLING RECYCLE FOR NOW BECAUSE I'M TERRIFIED OF BREAKING PRODUCTION.
+
+	const location = "consumer.Recycle"
 
 	log.Trace().Str("host", factory.Hostname()).Msg("Task: Recycle")
 
