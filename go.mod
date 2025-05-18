@@ -2,9 +2,6 @@ module github.com/EmissarySocial/emissary
 
 go 1.24.1
 
-replace github.com/benpate/mediaserver => ../../benpate/mediaserver
-replace github.com/benpate/rosetta => ../../benpate/rosetta
-
 require (
 	github.com/PuerkitoBio/goquery v1.10.3
 	github.com/aws/aws-sdk-go v1.55.7
@@ -12,7 +9,7 @@ require (
 	github.com/benpate/data v0.30.0
 	github.com/benpate/data-mock v0.30.0
 	github.com/benpate/data-mongo v0.30.1
-	github.com/benpate/derp v0.32.2
+	github.com/benpate/derp v0.32.3
 	github.com/benpate/digit v0.13.5
 	github.com/benpate/digital-dome v0.2.5
 	github.com/benpate/domain v0.2.7
@@ -22,20 +19,21 @@ require (
 	github.com/benpate/hannibal v0.12.3
 	github.com/benpate/html v0.16.12
 	github.com/benpate/icon v0.4.0
-	github.com/benpate/mediaserver v0.15.4
+	github.com/benpate/mediaserver v0.15.5
 	github.com/benpate/re v0.3.2
 	github.com/benpate/remote v0.17.3
-	github.com/benpate/rosetta v0.25.7
+	github.com/benpate/rosetta v0.25.8
 	github.com/benpate/sherlock v0.8.10
 	github.com/benpate/steranko v0.21.1
 	github.com/benpate/table v0.7.3
 	github.com/benpate/toot v0.3.0
-	github.com/benpate/turbine v0.3.1
+	github.com/benpate/turbine v0.3.2
 	github.com/codingsince1985/geo-golang v1.8.5
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/davidscottmills/goeditorjs v1.0.0
 	github.com/dlclark/metaphone3 v0.0.0-20190903202417-5fe87fcdd547
 	github.com/dustin/go-humanize v1.0.1
+	github.com/fatih/color v1.18.0
 	github.com/fclairamb/afero-s3 v0.3.1
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/golang-jwt/jwt/v5 v5.2.2
