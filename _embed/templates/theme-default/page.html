@@ -21,19 +21,24 @@
 			<span class="spacer"></span>
 			{{- if .IsAuthenticated -}}
 				<a href="/@me" hx-boost="true" id="nav-outbox" class="nav-item turboclick">
-					<span class="icon">{{icon "user-fill"}}</span>
-					<span class="label">Profile</span>
+					<span class="icon selected-hide">{{icon "user"}}</span>
+					<span class="icon selected-show">{{icon "user-fill"}}</span>
 				</a>
 
 				<a href="/@me/inbox" hx-boost="true" id="nav-inbox" class="nav-item turboclick">
-					<span class="icon">{{icon "inbox-fill"}}</span>
-					<span class="label">Inbox</span>
+					<span class="icon selected-hide">{{icon "inbox"}}</span>
+					<span class="icon selected-show">{{icon "inbox-fill"}}</span>
+				</a>
+
+				<a href="/@me/settings" hx-boost="true" id="nav-settings" class="nav-item turboclick">
+					<span class="icon selected-hide">{{icon "settings"}}</span>
+					<span class="icon selected-show">{{icon "settings-fill"}}</span>
 				</a>
 
 				{{- if .IsOwner -}}
 					<a href="/admin/domain" hx-boost="true" id="nav-admin" class="nav-item turboclick">
-						<span class="icon">{{icon "settings-fill"}}</span>
-						<span class="label">Server</span>
+						<span class="icon selected-hide">{{icon "server"}}</span>
+						<span class="icon selected-show">{{icon "server-fill"}}</span>
 					</a>
 				{{- end -}}
 			{{- else -}}
