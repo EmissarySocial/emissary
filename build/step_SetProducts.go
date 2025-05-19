@@ -90,7 +90,7 @@ func (step StepSetProducts) Get(builder Builder, buffer io.Writer) PipelineBehav
 			<a href="https://emissary.dev/products" target="_blank">Learn more about products ` + iconFunc("new-window") + `</a>
 			<br>
 			<br>
-			<a href="/@me/inbox/products">Edit My Products &rarr;</a>`).Close()
+			<a href="/@me/settings/products">Edit My Products &rarr;</a>`).Close()
 	}
 	b.Close()
 
@@ -168,7 +168,7 @@ func (step StepSetProducts) GetEmpty(iconFunc func(string) string, buffer io.Wri
 	}
 	b.Close()
 
-	b.Button().Script("on click go to url /@me/inbox/products").Class("primary").InnerHTML("Add a New Product &rarr;").Close()
+	b.Button().Script("on click go to url /@me/settings/products").Class("primary").InnerHTML("Add a New Product &rarr;").Close()
 	b.Button().Script("on click trigger closeModal").InnerText("Cancel").Close()
 	b.CloseAll()
 
