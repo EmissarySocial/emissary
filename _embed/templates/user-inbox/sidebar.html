@@ -3,7 +3,9 @@
 
 	<div class="pos-sticky" style="top:96px;">
 
-		<form class="sortable" hx-post="/@me/inbox/folder-sort" hx-push-url="false" hx-trigger="end">
+		<div class="bold text-xl margin-none margin-bottom">Inbox</div>
+
+			<form class="sortable" hx-post="/@me/inbox/folder-sort" hx-push-url="false" hx-trigger="end">
 
 			{{- range .Folders -}}
 				<div role="link" hx-get="/@me/inbox/inbox?folderId={{.FolderID.Hex}}" hx-trigger="click" hx-push-url="true" class="turboclick menu-item ellipsis hover-trigger folder {{if eq $selectedID .FolderID}}selected{{end}}">
