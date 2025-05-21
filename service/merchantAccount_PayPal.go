@@ -87,13 +87,6 @@ func (service *MerchantAccount) paypal_refreshMerchantAccount(merchantAccount *m
 	return nil
 }
 
-// paypal_refreshProduct refreshes the product data for a PayPal product
-func (service *MerchantAccount) paypal_refreshProduct(merchantAccount *model.MerchantAccount, product *model.Product) error {
-
-	spew.Dump(merchantAccount, product)
-	return nil
-}
-
 func (service *MerchantAccount) paypal_getProducts(merchantAccount *model.MerchantAccount, productIDs ...string) ([]form.LookupCode, error) {
 
 	const location = "service.MerchantAccount.paypal_getProducts"
@@ -141,7 +134,7 @@ func (service *MerchantAccount) paypal_getProducts(merchantAccount *model.Mercha
 	return result, nil
 }
 
-func (service *MerchantAccount) paypal_getCheckoutURL(merchantAccount *model.MerchantAccount, product *model.Product, returnURL string) (string, error) {
+func (service *MerchantAccount) paypal_getCheckoutURL(merchantAccount *model.MerchantAccount, remoteProductID string, returnURL string) (string, error) {
 
 	const location = "service.MerchantAccount.paypal_getCheckoutURL"
 
@@ -153,7 +146,7 @@ func (service *MerchantAccount) paypal_getCheckoutURL(merchantAccount *model.Mer
 	}
 
 	// Create the checkout URL
-	endpoint := service.paypal_getServerAddress(merchantAccount) + "/v1/billing/products/" + product.RemoteID
+	endpoint := service.paypal_getServerAddress(merchantAccount) + "/v1/billing/products/" + remoteProductID
 	txnResult := mapof.NewAny()
 
 	txn := remote.Post(endpoint).

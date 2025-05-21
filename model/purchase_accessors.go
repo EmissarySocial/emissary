@@ -27,9 +27,6 @@ func (purchase *Purchase) GetStringOK(name string) (string, bool) {
 	case "purchaseId":
 		return purchase.PurchaseID.Hex(), true
 
-	case "productId":
-		return purchase.ProductID.Hex(), true
-
 	case "guestId":
 		return purchase.GuestID.Hex(), true
 
@@ -48,12 +45,6 @@ func (purchase *Purchase) SetString(name string, value string) bool {
 	case "purchaseId":
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
 			purchase.PurchaseID = objectID
-			return true
-		}
-
-	case "productId":
-		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
-			purchase.ProductID = objectID
 			return true
 		}
 

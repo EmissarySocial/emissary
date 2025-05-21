@@ -1,9 +1,9 @@
 package build
 
 import (
-	"html/template"
+	"bytes"
 	"io"
-	"strings"
+	"text/template"
 
 	"github.com/EmissarySocial/emissary/model/step"
 	"github.com/benpate/derp"
@@ -34,7 +34,13 @@ func (step StepIfCondition) execute(builder Builder, buffer io.Writer, method Ac
 
 	factory := builder.factory()
 
-	if step.evaluateCondition(builder) {
+	condition, err := step.evaluateCondition(builder)
+
+	if err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Error evaluating condition"))
+	}
+
+	if condition {
 		result := Pipeline(step.Then).Execute(factory, builder, buffer, method)
 		result.Error = derp.Wrap(result.Error, location, "Error executing 'then' sub-steps")
 		return UseResult(result)
@@ -46,8 +52,13 @@ func (step StepIfCondition) execute(builder Builder, buffer io.Writer, method Ac
 }
 
 // evaluateCondition executes the conditional template and
-func (step StepIfCondition) evaluateCondition(builder Builder) bool {
-	condition := executeTemplate(step.Condition, builder)
-	condition = strings.TrimSpace(condition)
-	return convert.Bool(condition)
+func (step StepIfCondition) evaluateCondition(builder Builder) (bool, error) {
+
+	var buffer bytes.Buffer
+
+	if err := step.Condition.Execute(&buffer, builder); err != nil {
+		return false, derp.Wrap(err, "build.execute", "Error executing template")
+	}
+
+	return convert.Bool(buffer.String()), nil
 }

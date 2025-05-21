@@ -84,6 +84,48 @@ func WithMerchantAccount(serverFactory *server.Factory, fn WithFunc1[model.Merch
 
 }
 
+func WithMerchantAccountJWT(serverFactory *server.Factory, fn WithFunc1[model.MerchantAccount]) echo.HandlerFunc {
+
+	const location = "handler.WithProductJWT"
+
+	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *domain.Factory) error {
+
+		// Parse the JWT token from the Request
+		jwtService := factory.JWT()
+		claims := jwt.MapClaims{}
+
+		if err := jwtService.ParseToken(ctx.QueryParam("jwt"), &claims); err != nil {
+			return derp.Wrap(err, location, "Error parsing JWT token")
+		}
+
+		// Retrive the MerchantAccountID
+		merchantAccountID, isString := claims["merchantAccountId"].(string)
+		if !isString {
+			return derp.BadRequestError(location, "ProductID in JWT token must be a string")
+		}
+
+		// Retrive the ProductID
+		productID, isString := claims["productId"].(string)
+		if !isString {
+			return derp.BadRequestError(location, "ProductID in JWT token must be a string")
+		}
+
+		// Retrieve TransactionID (client_reference_id)
+		transactionID, isString := claims["transactionId"].(string)
+		if !isString {
+			return derp.BadRequestError(location, "AuthorizationCode in JWT token must be a string")
+		}
+
+		// Apply the values to the context
+		ctx.QueryParams().Set("merchantAccountId", merchantAccountID)
+		ctx.QueryParams().Set("productId", productID)
+		ctx.QueryParams().Set("transactionId", transactionID)
+
+		// Continue processing using WithMerchantAccount
+		return WithMerchantAccount(serverFactory, fn)(ctx)
+	})
+}
+
 // WithRegistration handles boilerplate code for requests that use a Registration object
 func WithRegistration(serverFactory *server.Factory, fn WithFunc2[model.Domain, model.Registration]) echo.HandlerFunc {
 
@@ -177,79 +219,38 @@ func WithStream(serverFactory *server.Factory, fn WithFunc1[model.Stream]) echo.
 	})
 }
 
-func WithProduct(serverFactory *server.Factory, fn WithFunc2[model.MerchantAccount, model.Product]) echo.HandlerFunc {
+func WithProduct(serverFactory *server.Factory, fn WithFunc2[model.MerchantAccount, string]) echo.HandlerFunc {
 
 	const location = "handler.WithProduct"
 
 	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *domain.Factory) error {
 
-		// Get the ProductID from the the URL
-		productID, err := primitive.ObjectIDFromHex(ctx.QueryParam("productId"))
+		// Collect the ProductID from the the URL
+		productID := ctx.QueryParam("productId")
 
-		if err != nil {
-			return derp.Wrap(err, location, "ProductID must be a valid ObjectID", ctx.QueryParam("productId"))
+		if productID == "" {
+			return derp.BadRequestError(location, "ProductID must be present in query string")
 		}
 
-		// Load the Product from the database
-		productService := factory.Product()
-		product := model.NewProduct()
+		// Collect the MerchantAccountID from the URL
+		merchantAccountToken := ctx.QueryParam("merchantAccountId")
 
-		if err := productService.LoadByID(productID, &product); err != nil {
-			return derp.Wrap(err, location, "Error loading Product")
+		merchantAccountID, err := primitive.ObjectIDFromHex(merchantAccountToken)
+
+		if err != nil {
+			return derp.Wrap(err, location, "MerchantAccountID must be a valid ObjectID", merchantAccountToken)
 		}
 
 		// Load the MerchantAccount from the database
 		merchantAccountService := factory.MerchantAccount()
 		merchantAccount := model.NewMerchantAccount()
 
-		if err := merchantAccountService.LoadByID(product.MerchantAccountID, &merchantAccount); err != nil {
+		if err := merchantAccountService.LoadByID(merchantAccountID, &merchantAccount); err != nil {
 			return derp.Wrap(err, location, "Error loading MerchantAccount")
 		}
 
 		// Call the continuation function
-		return fn(ctx, factory, &merchantAccount, &product)
-	})
-}
-
-func WithProductJWT(serverFactory *server.Factory, fn WithFunc2[model.MerchantAccount, model.Product]) echo.HandlerFunc {
-
-	const location = "handler.WithProductJWT"
-
-	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *domain.Factory) error {
-
-		// Parse the JWT token from the Request
-		jwtService := factory.JWT()
-		claims := jwt.MapClaims{}
-
-		if err := jwtService.ParseToken(ctx.QueryParam("jwt"), &claims); err != nil {
-			return derp.Wrap(err, location, "Error parsing JWT token")
-		}
-
-		// Retrieve the MerchantAccountID
-		userID, isString := claims["userId"].(string)
-		if !isString {
-			return derp.BadRequestError(location, "UserID in JWT token must be a string")
-		}
-
-		// Retrive the ProductID
-		productID, isString := claims["productId"].(string)
-		if !isString {
-			return derp.BadRequestError(location, "ProductID in JWT token must be a string")
-		}
-
-		// Retrieve TransactionID (client_reference_id)
-		transactionID, isString := claims["transactionId"].(string)
-		if !isString {
-			return derp.BadRequestError(location, "AuthorizationCode in JWT token must be a string")
-		}
-
-		// Apply the values to the context
-		ctx.QueryParams().Set("userId", userID)
-		ctx.QueryParams().Set("productId", productID)
-		ctx.QueryParams().Set("transactionId", transactionID)
-
-		// Continue processing using WithProduct
-		return WithProduct(serverFactory, fn)(ctx)
+		return fn(ctx, factory, &merchantAccount, &productID)
 	})
 }
 

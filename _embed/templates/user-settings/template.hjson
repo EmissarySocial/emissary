@@ -470,7 +470,7 @@
 									{type:"hidden", path:"type", options:{value:"PAYPAL"}}
 									{type:"text", path:"name", label:"Account Label", description:"(PRIVATE) A label for you to recognize this account", options:{required:true}}
 									{type:"text", path:"vault.clientId", label:"Client ID", description:"Created in <a href='https://developer.paypal.com/dashboard/applications' target='_blank'>PayPal Developer Console</a>", options:{required:true}}
-									{type:"text", path:"vault.secretKey", label:"Secret Key", description:"See <a href='https://emissary.dev/merchantAccount#PayPal' target='_blank'>setup instructions</a> for more details.", options:{required:true}}
+									{type:"text", path:"vault.secretKey", label:"Secret Key", description:"See <a href='https://emissary.dev/paypal' target='_blank'>setup instructions</a> for more details.", options:{required:true}}
 									{type:"toggle", path:"liveMode", options:{true-text:"Live Mode (Yes. Use for Actual Payments)", false-text:"Live Mode (No. Sandbox Only)"}}
 								]
 							}
@@ -533,76 +533,6 @@
 			roles:["self"]
 			steps:[
 				{do:"view-html"}
-			]
-		}
-
-		stream-products: {
-			roles:["self"]
-			steps:[
-				{do:"view-html"}
-			]
-		}
-
-		products: {
-			roles:["self"]
-			steps:[
-				{do:"view-html"}
-			]
-		}
-
-		products-list: {
-			roles:["self"]
-			steps:[
-				{do:"view-html"}
-			]
-		}
-
-		product-choose-merchantAccount: {
-			roles:["self"]
-			steps:[
-				{do:"as-modal", steps:[
-					{do:"view-html"}
-				]}
-			]
-		}
-
-		product-edit: {
-			roles:["self"]
-			steps:[
-				{do:"with-product", steps: [
-					{do:"as-modal", steps:[
-						{do:"set-data", from-url:["merchantAccountId"]}
-						{do:"set-query-param", merchantAccountId:"{{.Object.MerchantAccountID.Hex}}"}
-						{do:"view-html"}
-						{do:"edit", form:{
-							type:"layout-vertical"
-							children:[
-								{type:"select", path:"remoteId", label:"Product", description:"Set up products with your merchant account, then connect here.", options:{provider:"merchantAccount-products", required:true}}
-								{type:"text", path:"name", label:"Label", description:"Displayed on your profile", options:{required:true}}
-								{type:"textarea", path:"description", label:"Description", description:"Displayed on your profile"}
-								{type:"toggle", path:"isFeatured", options:{
-									true-text:"Featured. Shows on Profile Page"
-									false-text:"Featured?"
-								}}
-							]
-						},
-						options:[
-							"delete:/@me/inbox/product-delete?productId={{.ObjectID}}"
-						]}
-						{do:"save"}
-						{do:"refresh-page"}
-					]}
-				]}
-			]
-		}
-
-		product-delete: {
-			roles:["self"]
-			steps:[
-				{do:"with-product", steps:[
-					{do:"delete", title:"Delete Product?", message:"Are you sure you want to delete this product?"}
-					{do:"refresh-page"}
-				]}
 			]
 		}
 

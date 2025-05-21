@@ -47,7 +47,6 @@ type Factory interface {
 	StreamArchive() *service.StreamArchive
 	StreamDraft() *service.StreamDraft
 	Purchase() *service.Purchase
-	Product() *service.Product
 	Template() *service.Template
 	Theme() *service.Theme
 	User() *service.User

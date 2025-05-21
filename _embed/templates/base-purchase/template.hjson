@@ -18,17 +18,17 @@
 			steps: [
 				{do:"set-products"}
 				{do:"save"}
-				{do:"inline-success", message:"Purchase Setup Updated."}
+				{do:"forward-to", url:"{{.Permalink}}"}
 			]
 		}
 
 		checkout: {
 			roles: ["anonymous"]
 			steps: [
-				{do:"if", condition:"{{eq 1 .ProductIDs.Count }}", then:[
+				{do:"if", condition:"{{eq 1 .ProductIDs.Length }}", then:[
 					{
 						do:"forward-to"
-						url:"/.checkout?productId={{.ProductIDs.First}}&return={{.Permalink}}"
+						url:"/.checkout?token={{.ProductIDs.First}}&return={{.Permalink}}"
 						method:"get"
 					}
 				], else:[

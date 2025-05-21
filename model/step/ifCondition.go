@@ -1,7 +1,7 @@
 package step
 
 import (
-	"html/template"
+	"text/template"
 
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"

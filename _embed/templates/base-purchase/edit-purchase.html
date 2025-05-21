@@ -26,10 +26,12 @@
 
 	{{- if eq 0 $merchantAccounts.Length -}}
 
-		<h1 class="text-xl bold">Connect Your Merchant Account</h1>
-		<div class="text-gray margin-bottom-lg md:width-60%">
-			The first step in collecting payments is to set up a merchant account with one of the supported payment procesors below.
-			After you've entered your merchant account information, you'll be able to connect the product plan(s) from your merchant account.
+		<h1 class="text-xl bold">Set Up Purchase Options for this Item</h1>
+		<div class="margin-bottom-lg md:width-60%">
+			The first step in collecting payments is to connect to one of the supported payment procesors below.
+			After you've entered your merchant account information, you'll be able to use the product plan(s) from your merchant account to 
+			charge for access to this item.
+			<a href="https://emissary.dev/products" class="nowrap" target="_blank">Learn More {{icon "new-window"}}</a>
 		</div>
 
 		<div class="md:flex-row margin-bottom md:text-sm">
@@ -47,6 +49,7 @@
 			</div>
 		</div>
 
+
 	{{- else -}}
 
 		<details>
@@ -60,14 +63,9 @@
 			<div class="table margin-top">
 				{{- range  $index, $merchantAccount := $merchantAccounts -}}
 					{{- $type := lowerCase $merchantAccount.Type -}}
-					<div role="button" class="flex-row turboclick">
-						<div hx-get="/@me/settings/merchantAccount-edit-{{$type}}?merchantAccountId={{$merchantAccount.ID}}" class="flex-row flex-grow">
-							<div>{{- icon $type -}}</div>
-							<div class="flex-grow">{{$merchantAccount.Name}}</div>
-						</div>
-						<div>
-							<a href="{{$merchantAccount.APIKeyURL}}" target="_blank">Open {{icon "new-window"}}</a>
-						</div>
+					<div role="button" class="flex-row turboclick" hx-get="/@me/settings/merchantAccount-edit-{{$type}}?merchantAccountId={{$merchantAccount.ID}}">
+						<div>{{- icon $type -}}</div>
+						<div class="flex-grow">{{$merchantAccount.Name}}</div>
 					</div>
 				{{- end -}}
 				<div hx-get="/@me/settings/merchantAccount-add" role="button" class="flex-row link turboclick">

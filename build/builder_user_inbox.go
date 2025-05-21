@@ -347,17 +347,6 @@ func (w Inbox) IsInboxEmpty(inbox []model.Message) bool {
 	return true
 }
 
-func (w Inbox) Products() QueryBuilder[model.Product] {
-
-	expressionBuilder := builder.NewBuilder()
-	criteria := exp.And(
-		expressionBuilder.Evaluate(w._request.URL.Query()),
-		exp.Equal("userId", w._user.UserID),
-	)
-
-	return NewQueryBuilder[model.Product](w._factory.Product(), criteria)
-}
-
 func (w Inbox) Purchases() QueryBuilder[model.Purchase] {
 
 	expressionBuilder := builder.NewBuilder().

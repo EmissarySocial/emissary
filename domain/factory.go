@@ -88,7 +88,6 @@ type Factory struct {
 	streamArchiveService   service.StreamArchive
 	streamDraftService     service.StreamDraft
 	purchaseService        service.Purchase
-	productService         service.Product
 	realtimeBroker         RealtimeBroker
 	userService            service.User
 	webhookService         service.Webhook
@@ -168,7 +167,6 @@ func NewFactory(domain config.Domain, port string, providers []config.Provider, 
 	factory.streamArchiveService = service.NewStreamArchive()
 	factory.streamDraftService = service.NewStreamDraft()
 	factory.purchaseService = service.NewPurchase()
-	factory.productService = service.NewProduct()
 	factory.userService = service.NewUser()
 	factory.webhookService = service.NewWebhook()
 
@@ -352,7 +350,6 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.collection(CollectionMerchantAccount),
 			factory.JWT(),
 			factory.Guest(),
-			factory.Product(),
 			factory.Purchase(),
 			domain.MasterKey,
 			factory.Host(),
@@ -504,12 +501,6 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.collection(CollectionPurchase),
 		)
 
-		// Populate Product Service
-		factory.productService.Refresh(
-			factory.collection(CollectionProduct),
-			factory.MerchantAccount(),
-		)
-
 		// Populate User Service
 		factory.userService.Refresh(
 			factory.collection(CollectionUser),
@@ -648,9 +639,6 @@ func (factory *Factory) Model(name string) (service.ModelService, error) {
 
 	case "purchase":
 		return factory.Purchase(), nil
-
-	case "product":
-		return factory.Product(), nil
 
 	case "user":
 		return factory.User(), nil
@@ -792,11 +780,6 @@ func (factory *Factory) Permission() *service.Permission {
 // Purchase returns a fully populated Purchase service
 func (factory *Factory) Purchase() *service.Purchase {
 	return &factory.purchaseService
-}
-
-// Product returns a fully populated Product service
-func (factory *Factory) Product() *service.Product {
-	return &factory.productService
 }
 
 // Response returns a fully populated Response service
@@ -1023,9 +1006,6 @@ func (factory *Factory) ModelService(object data.Object) service.ModelService {
 
 	case *model.Purchase:
 		return factory.Purchase()
-
-	case *model.Product:
-		return factory.Product()
 
 	default:
 		return nil

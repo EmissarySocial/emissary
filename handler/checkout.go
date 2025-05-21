@@ -3,6 +3,7 @@ package handler
 import (
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
@@ -12,14 +13,24 @@ import (
 )
 
 // GetCheckout initiates a checkout session with the provided MerchantAccount and Product.
-func GetCheckout(ctx *steranko.Context, factory *domain.Factory, merchantAccount *model.MerchantAccount, product *model.Product) error {
+func GetCheckout(ctx *steranko.Context, factory *domain.Factory) error {
 
 	const location = "handler.GetCheckout"
+
+	// Get Parameters from the QueryString
+	token := ctx.QueryParam("token")
+	merchantAccountID, remoteProductID, _ := strings.Cut(token, ":")
+
+	// Load the MerchantAccount
+	merchantAccount := model.NewMerchantAccount()
+	if err := factory.MerchantAccount().LoadByToken(merchantAccountID, &merchantAccount); err != nil {
+		return derp.Wrap(err, location, "Error loading MerchantAccount")
+	}
 
 	// Create a "checkout" session, and generate a URL where the user will checkout
 	returnURL := ctx.QueryParam("return")
 	merchantAccountService := factory.MerchantAccount()
-	checkoutURL, err := merchantAccountService.GetCheckoutURL(merchantAccount, product, returnURL)
+	checkoutURL, err := merchantAccountService.GetCheckoutURL(&merchantAccount, remoteProductID, returnURL)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error retrieving checkout URL")
@@ -30,7 +41,7 @@ func GetCheckout(ctx *steranko.Context, factory *domain.Factory, merchantAccount
 }
 
 // GetCheckoutResopnse collects the confirmation data from a successful checkout and updates Guest/Purchase records accordingly.
-func GetCheckoutResponse(ctx *steranko.Context, factory *domain.Factory, merchantAccount *model.MerchantAccount, product *model.Product) error {
+func GetCheckoutResponse(ctx *steranko.Context, factory *domain.Factory, merchantAccount *model.MerchantAccount) error {
 
 	const location = "handler.GetCheckout"
 

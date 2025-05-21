@@ -236,8 +236,6 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.WithRule:
 		return StepWithRule(s)
 
-	case step.WithProduct:
-		return StepWithProduct(s)
 	}
 
 	return StepError{Original: stepInfo}

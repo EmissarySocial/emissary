@@ -72,13 +72,20 @@ func (service *MerchantAccount) stripe_refreshMerchantAccount(merchantAccount *m
 	return nil
 }
 
-func (service *MerchantAccount) stripe_getCheckoutURL(merchantAccount *model.MerchantAccount, product *model.Product, returnURL string) (string, error) {
+func (service *MerchantAccount) stripe_getCheckoutURL(merchantAccount *model.MerchantAccount, remoteProductID string, returnURL string) (string, error) {
 
 	const location = "service.MerchantAccount.stripe_getCheckoutURL"
 	restrictedKey, err := service.stripe_getRestrictedKey(merchantAccount)
 
 	if err != nil {
 		return "", derp.Wrap(err, location, "Error retrieving restricted key")
+	}
+
+	// Load the Price/Prooduct from the Stripe API
+	price, err := service.stripe_getPrice(restrictedKey, remoteProductID)
+
+	if err != nil {
+		return "", derp.Wrap(err, location, "Error retrieving price from Stripe")
 	}
 
 	// Send checkout session to the Stripe API
@@ -91,11 +98,11 @@ func (service *MerchantAccount) stripe_getCheckoutURL(merchantAccount *model.Mer
 
 	// Wrap the parameters in a JWT token
 	claims := jwt.MapClaims{
-		"iat":           time.Now().Unix(),
-		"exp":           time.Now().Add(time.Hour * 1).Unix(),
-		"userId":        product.UserID.Hex(),
-		"productId":     product.ProductID.Hex(),
-		"transactionId": transactionID,
+		"iat":               time.Now().Unix(),
+		"exp":               time.Now().Add(time.Hour * 1).Unix(),
+		"merchantAccountId": merchantAccount.MerchantAccountID.Hex(),
+		"productId":         remoteProductID,
+		"transactionId":     transactionID,
 	}
 
 	token, err := service.jwtService.NewToken(claims)
@@ -109,8 +116,8 @@ func (service *MerchantAccount) stripe_getCheckoutURL(merchantAccount *model.Mer
 	txn := remote.Post("https://api.stripe.com/v1/checkout/sessions").
 		With(options.BearerAuth(restrictedKey)).
 		ContentType("application/x-www-form-urlencoded").
-		Form("mode", iif((product.RecurringType == model.ProductRecurringTypeOnetime), "payment", "subscription")).
-		Form("line_items[0][price]", product.RemoteID).
+		Form("mode", service.stripe_checkoutMode(price)).
+		Form("line_items[0][price]", price.ID).
 		Form("line_items[0][quantity]", "1").
 		Form("ui_mode", "hosted").
 		Form("client_reference_id", transactionID).
@@ -262,17 +269,10 @@ func (service *MerchantAccount) stripe_mapSubscriptions(merchantAccount *model.M
 			return model.Guest{}, nil, derp.BadRequestError(location, "Invalid Product", "No price found in product item")
 		}
 
-		// Try to find the Price in the database
-		product := model.NewProduct()
-		if err := service.productService.LoadByRemoteID(item.Price.ID, &product); err != nil {
-			return model.Guest{}, nil, derp.Wrap(err, location, "Error loading product by token", item.Price.ID)
-		}
-
 		// Create the new Purchase record
 		purchase := model.NewPurchase()
-		purchase.UserID = product.UserID
+		purchase.UserID = merchantAccount.UserID
 		purchase.GuestID = guest.GuestID
-		purchase.ProductID = product.ProductID
 
 		purchase.RemoteGuestID = guest.RemoteIDs[merchantAccount.Type]
 		purchase.RemoteProductID = item.Price.ID
@@ -280,7 +280,7 @@ func (service *MerchantAccount) stripe_mapSubscriptions(merchantAccount *model.M
 
 		purchase.StartDate = subscription.StartDate
 		purchase.EndDate = subscription.CurrentPeriodEnd
-		purchase.RecurringType = model.ProductRecurringTypeOnetime
+		purchase.RecurringType = model.PurchaseRecurringTypeOnetime
 
 		switch subscription.Status {
 
@@ -299,16 +299,16 @@ func (service *MerchantAccount) stripe_mapSubscriptions(merchantAccount *model.M
 			switch item.Price.Recurring.Interval {
 
 			case stripe.PriceRecurringIntervalDay:
-				purchase.RecurringType = model.ProductRecurringTypeDaily
+				purchase.RecurringType = model.PurchaseRecurringTypeDaily
 
 			case stripe.PriceRecurringIntervalWeek:
-				purchase.RecurringType = model.ProductRecurringTypeWeekly
+				purchase.RecurringType = model.PurchaseRecurringTypeWeekly
 
 			case stripe.PriceRecurringIntervalMonth:
-				purchase.RecurringType = model.ProductRecurringTypeMonthly
+				purchase.RecurringType = model.PurchaseRecurringTypeMonthly
 
 			case stripe.PriceRecurringIntervalYear:
-				purchase.RecurringType = model.ProductRecurringTypeYearly
+				purchase.RecurringType = model.PurchaseRecurringTypeYearly
 			}
 		}
 
@@ -320,54 +320,6 @@ func (service *MerchantAccount) stripe_mapSubscriptions(merchantAccount *model.M
 
 	// Great success.
 	return guest, purchases, nil
-}
-
-// stripe_refreshProduct refreshes the product data for a Stripe product
-func (service *MerchantAccount) stripe_refreshProduct(merchantAccount *model.MerchantAccount, product *model.Product) error {
-
-	const location = "service.MerchantAccount.stripe_refreshProduct"
-
-	// Get API Keys from the vault
-	restrictedKey, err := service.stripe_getRestrictedKey(merchantAccount)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Error retrieving API keys")
-	}
-
-	// Load the associated Stripe `Price` record
-	price := mapof.NewAny()
-	txn := remote.Get("https://api.stripe.com/v1/prices/" + product.RemoteID).
-		With(options.BearerAuth(restrictedKey)).
-		Result(&price)
-
-	if err := txn.Send(); err != nil {
-		return derp.Wrap(err, location, "Error connecting to Stripe API")
-	}
-
-	// Set/Update the RecurringType for the product
-	switch price.GetMap("recurring").GetString("interval") {
-
-	case "day":
-		product.RecurringType = model.ProductRecurringTypeDaily
-
-	case "week":
-		product.RecurringType = model.ProductRecurringTypeWeekly
-
-	case "month":
-		product.RecurringType = model.ProductRecurringTypeMonthly
-
-	case "year":
-		product.RecurringType = model.ProductRecurringTypeYearly
-
-	default:
-		product.RecurringType = model.ProductRecurringTypeOnetime
-	}
-
-	// Set/Update the Price label for the product
-	product.Price = service.stripe_priceLabel(price)
-
-	// Subbess.
-	return nil
 }
 
 // stripe_getPrices retrieves all prices from the Stripe API and returns them as a list of LookupCodes
@@ -480,6 +432,26 @@ func (service *MerchantAccount) stripe_getCheckoutSession(merchantAccount *model
 	return checkoutSession, nil
 }
 
+// stripe_getPrice loads a Price/Product record from the Stripe API
+// https://docs.stripe.com/api/prices/object
+func (service *MerchantAccount) stripe_getPrice(restrictedKey string, priceID string) (stripe.Price, error) {
+
+	const location = "service.MerchantAccount.stripe_getPrice"
+
+	// Get the price from the Stripe API
+	price := stripe.Price{}
+	txn := remote.Get("https://api.stripe.com/v1/prices/"+priceID).
+		Query("expand[]", "product").
+		With(options.BearerAuth(restrictedKey)).
+		Result(&price)
+
+	if err := txn.Send(); err != nil {
+		return stripe.Price{}, derp.Wrap(err, location, "Error connecting to Stripe API")
+	}
+
+	return price, nil
+}
+
 // stripe_getCustomer loads a Customer record from the Stripe API
 // https://docs.stripe.com/api/customers/object
 func (service *MerchantAccount) stripe_getCustomer(merchantAccount *model.MerchantAccount, customerID string) (stripe.Customer, error) {
@@ -518,4 +490,37 @@ func (service *MerchantAccount) stripe_priceLabel(price mapof.Any) string {
 
 	// Simply Gorgeous.
 	return result
+}
+
+func (service *MerchantAccount) stripe_recurringType(price stripe.Price) string {
+
+	if price.Recurring != nil {
+
+		switch price.Recurring.Interval {
+
+		case stripe.PriceRecurringIntervalDay:
+			return model.PurchaseRecurringTypeDaily
+
+		case stripe.PriceRecurringIntervalWeek:
+			return model.PurchaseRecurringTypeWeekly
+
+		case stripe.PriceRecurringIntervalMonth:
+			return model.PurchaseRecurringTypeMonthly
+
+		case stripe.PriceRecurringIntervalYear:
+			return model.PurchaseRecurringTypeYearly
+		}
+	}
+
+	return model.PurchaseRecurringTypeOnetime
+}
+
+func (service *MerchantAccount) stripe_checkoutMode(price stripe.Price) string {
+
+	if service.stripe_recurringType(price) == model.PurchaseRecurringTypeOnetime {
+		return "payment"
+	}
+
+	return "subscription"
+
 }

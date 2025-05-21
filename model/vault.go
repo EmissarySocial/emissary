@@ -43,6 +43,10 @@ func (vault Vault) GetStringOK(name string) (string, bool) {
 
 func (vault *Vault) SetString(name string, value string) bool {
 
+	if vault.plaintext == nil {
+		vault.plaintext = mapof.NewString()
+	}
+
 	if value == "" {
 		delete(vault.plaintext, name)
 		delete(vault.Encrypted, name)
@@ -59,6 +63,14 @@ func (vault *Vault) SetString(name string, value string) bool {
 func (vault *Vault) Encrypt(encryptionKey []byte) error {
 
 	const location = "model.vault.Encrypt"
+
+	if vault.plaintext == nil {
+		vault.plaintext = mapof.NewString()
+	}
+
+	if vault.Encrypted == nil {
+		vault.Encrypted = mapof.NewString()
+	}
 
 	// If there are no plaintext values, then there is nothing to encrypt,
 	// so lets save the work of setting up a block cipher and exit now.

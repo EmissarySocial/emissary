@@ -26,7 +26,6 @@ type MerchantAccount struct {
 	collection      data.Collection
 	jwtService      *JWT
 	guestService    *Guest
-	productService  *Product
 	purchaseService *Purchase
 	encryptionKey   string
 	host            string
@@ -42,11 +41,10 @@ func NewMerchantAccount() MerchantAccount {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *MerchantAccount) Refresh(collection data.Collection, jwtService *JWT, guestService *Guest, productService *Product, purchaseService *Purchase, masterKey string, host string) {
+func (service *MerchantAccount) Refresh(collection data.Collection, jwtService *JWT, guestService *Guest, purchaseService *Purchase, masterKey string, host string) {
 	service.collection = collection
 	service.jwtService = jwtService
 	service.guestService = guestService
-	service.productService = productService
 	service.purchaseService = purchaseService
 	service.encryptionKey = masterKey
 	service.host = host
@@ -258,20 +256,6 @@ func (service *MerchantAccount) LoadByUserAndToken(userID primitive.ObjectID, to
  * Custom Actions
  ******************************************/
 
-func (service *MerchantAccount) RefreshProduct(merchantAccount *model.MerchantAccount, product *model.Product) error {
-
-	switch merchantAccount.Type {
-
-	case model.MerchantAccountTypePayPal:
-		return service.paypal_refreshProduct(merchantAccount, product)
-
-	case model.MerchantAccountTypeStripe:
-		return service.stripe_refreshProduct(merchantAccount, product)
-	}
-
-	return derp.InternalError("service.MerchantAccount.RefreshProduct", "Invalid MerchantAccount Type", merchantAccount.Type)
-}
-
 func (service *MerchantAccount) DecryptVault(merchantAccount *model.MerchantAccount, values ...string) (mapof.String, error) {
 
 	const location = "service.MerchantAccount.DecryptVault"
@@ -301,15 +285,15 @@ func (service *MerchantAccount) DecryptVault(merchantAccount *model.MerchantAcco
  * Provider-Specific Methods
  ******************************************/
 
-func (service *MerchantAccount) GetCheckoutURL(merchantAccount *model.MerchantAccount, product *model.Product, returnURL string) (string, error) {
+func (service *MerchantAccount) GetCheckoutURL(merchantAccount *model.MerchantAccount, remoteProductID string, returnURL string) (string, error) {
 
 	switch merchantAccount.Type {
 
 	case model.MerchantAccountTypePayPal:
-		return service.paypal_getCheckoutURL(merchantAccount, product, returnURL)
+		return service.paypal_getCheckoutURL(merchantAccount, remoteProductID, returnURL)
 
 	case model.MerchantAccountTypeStripe:
-		return service.stripe_getCheckoutURL(merchantAccount, product, returnURL)
+		return service.stripe_getCheckoutURL(merchantAccount, remoteProductID, returnURL)
 	}
 
 	return "", derp.BadRequestError("service.MerchantAccount.GetCheckoutURL", "Invalid MerchantAccount Type", merchantAccount.Type)
@@ -429,7 +413,7 @@ func (service *MerchantAccount) ProductsByID(tokens ...string) ([]form.LookupCod
 
 	// Collect unique merchantAccount and product IDs
 	merchantAccountIDs := cutAndGroup(tokens, ":")
-	result := make([]form.LookupCode, len(tokens))
+	result := make([]form.LookupCode, 0, len(tokens))
 
 	for merchantAccount, productIDs := range merchantAccountIDs {
 
