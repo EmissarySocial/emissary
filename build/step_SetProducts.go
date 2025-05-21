@@ -48,6 +48,17 @@ func (step StepSetProducts) Get(builder Builder, buffer io.Writer) PipelineBehav
 
 	roles := streamBuilder._template.PurchasableRoles()
 
+	tabLabel := html.New()
+
+	for _, merchantAccount := range merchantAccounts {
+
+		tabLabel.A(merchantAccount.ProductURL()).
+			Attr("target", "_blank").
+			Class("nowrap", "margin-right").
+			InnerHTML("Edit Products in " + merchantAccount.Name + " " + iconFunc("new-window")).
+			Close()
+	}
+
 	formDefinition := form.Element{
 		Type: "layout-tabs",
 		Children: slice.Map(roles, func(role model.Role) form.Element {
@@ -56,9 +67,10 @@ func (step StepSetProducts) Get(builder Builder, buffer io.Writer) PipelineBehav
 				Label: role.Label,
 				Children: []form.Element{
 					{
-						Type:  "multiselect",
-						Label: role.Description,
-						Path:  role.RoleID,
+						Type:        "multiselect",
+						Label:       role.Description,
+						Path:        role.RoleID,
+						Description: tabLabel.String(),
 						Options: mapof.Any{
 							"rows": 10,
 							"enum": products,
@@ -87,7 +99,7 @@ func (step StepSetProducts) Get(builder Builder, buffer io.Writer) PipelineBehav
 	b.Div().Class("margin-bottom-lg").InnerHTML(`
 		Now that your merchant account is connected, you can select the products that grant access to this item.
 		Visitors purchase access to your content, with either one-time, or recurring payments.
-		<a href="https://emissary.dev/products" target="_blank" class="nowrap">Learn more about products ` + iconFunc("new-window") + `</a>`,
+		<a href="https://emissary.dev/products" target="_blank" class="nowrap">` + iconFunc("help") + ` Help with Products</a>`,
 	).Close()
 
 	// Form
@@ -158,7 +170,7 @@ func (step StepSetProducts) GetEmpty(merchantAccounts sliceof.Object[model.Merch
 	b.Span().InnerText("Click here for ")
 	b.A(merchantAccounts.First().HelpURL()).
 		Class("nowrap").
-		InnerHTML(`help setting up products ` + iconFunc("new-window")).
+		InnerHTML(iconFunc("help") + ` Help with Products`).
 		Close()
 
 	b.Close()

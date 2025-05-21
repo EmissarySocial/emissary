@@ -154,6 +154,10 @@ func (service Icons) Get(name string) string {
 		return service.get("heart")
 	case "heart-fill":
 		return service.get("heart-fill")
+	case "help":
+		return service.get("question-circle")
+	case "help-fill":
+		return service.get("question-circle-fill")
 	case "home":
 		return service.get("house")
 	case "home-fill":
