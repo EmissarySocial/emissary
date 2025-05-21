@@ -32,8 +32,10 @@ func (step StepSetProducts) Get(builder Builder, buffer io.Writer) PipelineBehav
 	iconFunc := streamBuilder._factory.Icons().Get
 
 	// Load the User's Products
+	merchantAccountService := streamBuilder._factory.MerchantAccount()
+
 	attributedToID := streamBuilder._stream.AttributedTo.UserID
-	products, err := streamBuilder._factory.Product().QueryAsLookupCodes(attributedToID)
+	merchantAccounts, products, err := merchantAccountService.ProductsByUser(attributedToID)
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error retrieving products"))
@@ -41,7 +43,7 @@ func (step StepSetProducts) Get(builder Builder, buffer io.Writer) PipelineBehav
 
 	// If there are no products, then display the "empty" message
 	if len(products) == 0 {
-		return step.GetEmpty(iconFunc, buffer)
+		return step.GetEmpty(merchantAccounts, iconFunc, buffer)
 	}
 
 	roles := streamBuilder._template.PurchasableRoles()
@@ -58,6 +60,7 @@ func (step StepSetProducts) Get(builder Builder, buffer io.Writer) PipelineBehav
 						Label: role.Description,
 						Path:  role.RoleID,
 						Options: mapof.Any{
+							"rows": 10,
 							"enum": products,
 						},
 					},
@@ -81,18 +84,11 @@ func (step StepSetProducts) Get(builder Builder, buffer io.Writer) PipelineBehav
 	// Write the rest of the HTML that contains the form
 	b := html.New()
 
-	// Heading
-	b.H1().ID("modal-title").InnerText(step.Title).Close()
-	b.Div().Class("alert-blue margin-bottom-lg")
-	{
-		b.Div().InnerHTML(`
-			Products let visitors purchase access to your content, with either one-time, or recurring payments.
-			<a href="https://emissary.dev/products" target="_blank">Learn more about products ` + iconFunc("new-window") + `</a>
-			<br>
-			<br>
-			<a href="/@me/settings/products">Edit My Products &rarr;</a>`).Close()
-	}
-	b.Close()
+	b.Div().Class("margin-bottom-lg").InnerHTML(`
+		Now that your merchant account is connected, you can select the products that grant access to this item.
+		Visitors purchase access to your content, with either one-time, or recurring payments.
+		<a href="https://emissary.dev/products" target="_blank" class="nowrap">Learn more about products ` + iconFunc("new-window") + `</a>`,
+	).Close()
 
 	// Form
 	b.Form("", "").
@@ -105,7 +101,8 @@ func (step StepSetProducts) Get(builder Builder, buffer io.Writer) PipelineBehav
 	b.WriteString(formHTML)
 	b.Div()
 	b.Button().Type("submit").Class("primary").InnerText("Save Changes").Close()
-	b.Button().Type("button").Script("on click trigger closeModal").InnerText("Cancel").Close()
+	b.A(streamBuilder._stream.URL).Class("button").InnerText("Cancel").Close()
+	b.Span().ID("htmx-response-message").Class("margin-left", "text-green").Close()
 	b.CloseAll()
 
 	// nolint:errcheck
@@ -149,28 +146,40 @@ func (step StepSetProducts) Post(builder Builder, _ io.Writer) PipelineBehavior 
 	return nil
 }
 
-func (step StepSetProducts) GetEmpty(iconFunc func(string) string, buffer io.Writer) PipelineBehavior {
+func (step StepSetProducts) GetEmpty(merchantAccounts sliceof.Object[model.MerchantAccount], iconFunc func(string) string, buffer io.Writer) PipelineBehavior {
 
 	// Write the rest of the HTML that contains the form
 	b := html.New()
 
 	// Heading
-	b.H1().ID("modal-title").InnerText(step.Title).Close()
+	b.Div().Class("margin-bottom")
+
+	b.Span().InnerHTML(`Now that your merchant account is connected, you can connect products and subscription plans to this item.`).Close()
+	b.Span().InnerText("Click here for ")
+	b.A(merchantAccounts.First().HelpURL()).
+		Class("nowrap").
+		InnerHTML(`help setting up products ` + iconFunc("new-window")).
+		Close()
+
+	b.Close()
+	b.Close()
+
 	b.Div().Class("margin-bottom-lg")
-	{
-		b.Div().Class("margin-bottom").InnerHTML(`
-			Visitors can pay for access to this stream using <b>products</b>, which are paid directly to your own <b>merchant account</b>.
-			<a href="https://emissary.dev/products" target="_blank">Learn more ` + iconFunc("new-window") + `</a>
-		`).Close()
-		b.Div().Class("margin-bottom").InnerHTML(`
-			To get started, you'll need to set up at least one product plan, then return here to link it to this stream.
-		`).Close()
+	for _, merchantAccount := range merchantAccounts {
+
+		b.A(merchantAccount.ProductURL()).
+			Attr("target", "_blank").
+			Class("button", "primary").
+			InnerHTML(`+ Add Products to ` + merchantAccount.Name).
+			Close()
 	}
 	b.Close()
 
-	b.Button().Script("on click go to url /@me/settings/products").Class("primary").InnerHTML("Add a New Product &rarr;").Close()
-	b.Button().Script("on click trigger closeModal").InnerText("Cancel").Close()
-	b.CloseAll()
+	b.Div().Class("margin-bottom-lg", "text-gray")
+	b.Span().InnerText("When you're done, return here and ").Close()
+	b.Span().Class("link", "text-nocolor").Script("on click reload() the window's location").InnerText("refresh this page").Close()
+	b.Span().InnerText(" to connect products to this item.").Close()
+	b.Close()
 
 	// nolint:errcheck
 	io.WriteString(buffer, b.String())

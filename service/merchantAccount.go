@@ -5,6 +5,7 @@ import (
 	"iter"
 	"net/http"
 	"net/url"
+	"slices"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -396,15 +397,82 @@ func (service *MerchantAccount) RefreshAPIKeys(merchantAccount *model.MerchantAc
 
 }
 
-func (service *MerchantAccount) GetProducts(merchantAccount *model.MerchantAccount) (sliceof.Object[form.LookupCode], error) {
+func (service *MerchantAccount) ProductsByUser(userID primitive.ObjectID) (sliceof.Object[model.MerchantAccount], []form.LookupCode, error) {
+
+	// Get all MerchantAccounts for this User
+	merchantAccounts, err := service.QueryByUser(userID)
+
+	if err != nil {
+		return nil, nil, derp.Wrap(err, "service.MerchantAccount.QueryProductsAsLookupCodes", "Error loading merchant accounts")
+	}
+
+	result := make([]form.LookupCode, 0)
+
+	for _, merchantAccount := range merchantAccounts {
+
+		lookupCodes, err := service.getProducts(&merchantAccount)
+
+		if err != nil {
+			return nil, nil, derp.Wrap(err, "service.MerchantAccount.QueryProductsAsLookupCodes", "Error loading products for merchant account", merchantAccount)
+		}
+
+		result = append(result, lookupCodes...)
+	}
+
+	// Sort the final result
+	slices.SortFunc(result, form.SortLookupCodeByGroupThenLabel)
+
+	return merchantAccounts, result, nil
+}
+
+func (service *MerchantAccount) ProductsByID(tokens ...string) ([]form.LookupCode, error) {
+
+	// Collect unique merchantAccount and product IDs
+	merchantAccountIDs := cutAndGroup(tokens, ":")
+	result := make([]form.LookupCode, len(tokens))
+
+	for merchantAccount, productIDs := range merchantAccountIDs {
+
+		// Convert the merchantAccountID to an ObjectID
+		merchantAccountID, err := primitive.ObjectIDFromHex(merchantAccount)
+
+		if err != nil {
+			return nil, derp.Wrap(err, "service.MerchantAccount.QueryProductsAsLookupCodes", "Invalid MerchantAccount ID", merchantAccountID)
+		}
+
+		// Load the MerchantAccount
+		merchantAccount := model.NewMerchantAccount()
+		if err := service.LoadByID(merchantAccountID, &merchantAccount); err != nil {
+			return nil, derp.Wrap(err, "service.MerchantAccount.QueryProductsAsLookupCodes", "Error loading merchant account", merchantAccountID)
+		}
+
+		// Retrieve all of the Products from the remote services
+		lookupCodes, err := service.getProducts(&merchantAccount, productIDs...)
+
+		if err != nil {
+			return nil, derp.Wrap(err, "service.MerchantAccount.QueryProductsAsLookupCodes", "Error loading products for merchant account", merchantAccount)
+		}
+
+		// So far, so good...
+		result = append(result, lookupCodes...)
+	}
+
+	// Sort the final result
+	slices.SortFunc(result, form.SortLookupCodeByGroupThenLabel)
+
+	// Dun dun dunnnnn...
+	return result, nil
+}
+
+func (service *MerchantAccount) getProducts(merchantAccount *model.MerchantAccount, productIDs ...string) (sliceof.Object[form.LookupCode], error) {
 
 	switch merchantAccount.Type {
 
 	case model.MerchantAccountTypePayPal:
-		return service.paypal_getProducts(merchantAccount)
+		return service.paypal_getProducts(merchantAccount, productIDs...)
 
 	case model.MerchantAccountTypeStripe:
-		return service.stripe_getPrices(merchantAccount)
+		return service.stripe_getPrices(merchantAccount, productIDs...)
 	}
 
 	// If we get here, the merchant account type is not supported

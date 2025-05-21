@@ -474,7 +474,7 @@
 									{type:"toggle", path:"liveMode", options:{true-text:"Live Mode (Yes. Use for Actual Payments)", false-text:"Live Mode (No. Sandbox Only)"}}
 								]
 							}
-							options:["delete:/@me/inbox/merchantAccount-delete?merchantAccountId={{.ObjectID}}"]
+							options:["delete:/@me/settings/merchantAccount-delete?merchantAccountId={{.ObjectID}}"]
 						}
 						{do:"save"}
 						{do:"refresh-page"}
@@ -503,7 +503,7 @@
 									{type:"toggle", path:"liveMode", options:{true-text:"Mode: Live. (Use for Real Payments)", false-text:"Mode: Sandbox (Use for Tests Only)"}}
 								]
 							}
-							options:["delete:/@me/inbox/merchantAccount-delete?merchantAccountId={{.ObjectID}}"]
+							options:["delete:/@me/settings/merchantAccount-delete?merchantAccountId={{.ObjectID}}"]
 						}
 						{do:"save"}
 						{do:"refresh-page"}
@@ -530,6 +530,13 @@
 		}
 
 		purchases-list: {
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
+		stream-products: {
 			roles:["self"]
 			steps:[
 				{do:"view-html"}

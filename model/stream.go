@@ -97,7 +97,7 @@ func NewStreamWidgets() set.Slice[StreamWidget] {
  ******************************************/
 
 // ID returns the primary key of this object
-func (stream *Stream) ID() string {
+func (stream Stream) ID() string {
 	return stream.StreamID.Hex()
 }
 
@@ -105,12 +105,12 @@ func (stream *Stream) ID() string {
  * Other Data Accessors
  ******************************************/
 
-func (stream *Stream) Permalink() string {
+func (stream Stream) Permalink() string {
 	return stream.URL
 }
 
 // SummaryOrContent returns the stream summary -- if it exists -- otherwise, the content HTML.
-func (stream *Stream) SummaryOrContent() string {
+func (stream Stream) SummaryOrContent() string {
 	if stream.Summary != "" {
 		return stream.Summary
 	}
@@ -118,14 +118,14 @@ func (stream *Stream) SummaryOrContent() string {
 	return stream.Content.HTML
 }
 
-func (stream *Stream) WidgetsByLocation(location string) []StreamWidget {
+func (stream Stream) WidgetsByLocation(location string) []StreamWidget {
 
 	return slice.Filter(stream.Widgets, func(widget StreamWidget) bool {
 		return widget.Location == location
 	})
 }
 
-func (stream *Stream) WidgetByID(streamWidgetID primitive.ObjectID) StreamWidget {
+func (stream Stream) WidgetByID(streamWidgetID primitive.ObjectID) StreamWidget {
 
 	for _, widget := range stream.Widgets {
 		if widget.StreamWidgetID == streamWidgetID {
@@ -137,7 +137,7 @@ func (stream *Stream) WidgetByID(streamWidgetID primitive.ObjectID) StreamWidget
 }
 
 // GetSort returns the sortable value for this stream, based onthe provided fieldName
-func (stream *Stream) GetSort(fieldName string) any {
+func (stream Stream) GetSort(fieldName string) any {
 	switch fieldName {
 	case "publishDate":
 		return stream.PublishDate
@@ -164,19 +164,19 @@ func (stream *Stream) SetState(stateID string) {
 
 // State returns the current state of this Stream.
 // It is part of the AccessLister interface
-func (stream *Stream) State() string {
+func (stream Stream) State() string {
 	return stream.StateID
 }
 
 // IsAuthor returns TRUE if the provided UserID the author of this Stream
 // It is part of the AccessLister interface
-func (stream *Stream) IsAuthor(authorID primitive.ObjectID) bool {
+func (stream Stream) IsAuthor(authorID primitive.ObjectID) bool {
 	return authorID == stream.AttributedTo.UserID
 }
 
 // IsMember returns TRUE if this object directly represents the provided UserID
 // It is part of the AccessLister interface
-func (stream *Stream) IsMyself(_ primitive.ObjectID) bool {
+func (stream Stream) IsMyself(_ primitive.ObjectID) bool {
 	return false
 }
 
@@ -184,13 +184,13 @@ func (stream *Stream) IsMyself(_ primitive.ObjectID) bool {
 // It is part of the AccessLister interface
 // TODO: This should probably be refactored.
 // With the new authentication system, this should be a map of RoleIDs to GroupIDs
-func (stream *Stream) RolesToGroupIDs(roleIDs ...string) id.Slice {
+func (stream Stream) RolesToGroupIDs(roleIDs ...string) id.Slice {
 	return stream.PermissionGroups(roleIDs...)
 }
 
 // ProductID returns a map of RoleIDs to ProductIDs
 // It is part of the AccessLister interface
-func (stream *Stream) RolesToProductIDs(roleIDs ...string) id.Slice {
+func (stream Stream) RolesToProductIDs(roleIDs ...string) id.Slice {
 
 	result := id.NewSlice()
 
@@ -212,7 +212,7 @@ func (stream *Stream) RolesToProductIDs(roleIDs ...string) id.Slice {
 
 // DefaultAllowAnonymous returns TRUE if a Stream's default action (VIEW)
 // is visible to anonymous visitors
-func (stream *Stream) DefaultAllowAnonymous() bool {
+func (stream Stream) DefaultAllowAnonymous() bool {
 	for _, group := range stream.DefaultAllow {
 		if group == MagicGroupIDAnonymous {
 			return true
@@ -234,7 +234,7 @@ func (stream *Stream) AssignPermission(role string, groupID primitive.ObjectID) 
 }
 
 // PermissionGroups returns all groups that match the provided roles
-func (stream *Stream) PermissionGroups(roles ...string) []primitive.ObjectID {
+func (stream Stream) PermissionGroups(roles ...string) []primitive.ObjectID {
 
 	result := make([]primitive.ObjectID, 0)
 
@@ -262,7 +262,7 @@ func (stream *Stream) PermissionGroups(roles ...string) []primitive.ObjectID {
 }
 
 // PermissionRoles returns a unique list of all roles that the provided groups can access.
-func (stream *Stream) PermissionRoles(groupIDs ...primitive.ObjectID) []string {
+func (stream Stream) PermissionRoles(groupIDs ...primitive.ObjectID) []string {
 
 	result := []string{}
 
@@ -281,13 +281,13 @@ func (stream *Stream) PermissionRoles(groupIDs ...primitive.ObjectID) []string {
  ******************************************/
 
 // HasProducts returns TRUE if this Stream includes special permissions for any Product Plan
-func (stream *Stream) HasProducts() bool {
+func (stream Stream) HasProducts() bool {
 	return len(stream.Products) > 0
 }
 
 // ProductIDs returns a unique list of all Product IDs that,
 // when purchased, grant additional access to this Stream
-func (stream *Stream) ProductIDs() []string {
+func (stream Stream) ProductIDs() []string {
 
 	result := make([]string, 0, len(stream.Products))
 
@@ -306,19 +306,19 @@ func (stream Stream) ActivityPubURL() string {
 	return stream.URL
 }
 
-func (stream *Stream) ActivityPubInboxURL() string {
+func (stream Stream) ActivityPubInboxURL() string {
 	return stream.URL + "/pub/inbox"
 }
 
-func (stream *Stream) ActivityPubOutboxURL() string {
+func (stream Stream) ActivityPubOutboxURL() string {
 	return stream.URL + "/pub/outbox"
 }
 
-func (stream *Stream) ActivityPubFollowersURL() string {
+func (stream Stream) ActivityPubFollowersURL() string {
 	return stream.URL + "/pub/followers"
 }
 
-func (stream *Stream) ActivityPubAnnouncedURL() string {
+func (stream Stream) ActivityPubAnnouncedURL() string {
 	return stream.URL + "/pub/announced"
 }
 
@@ -365,7 +365,7 @@ func (stream Stream) ActivityPubResponses(responseType string) string {
  ******************************************/
 
 // IsPublished returns TRUE if this Stream is currently published
-func (stream *Stream) IsPublished() bool {
+func (stream Stream) IsPublished() bool {
 
 	// RULE: Deleted streams are not published
 	if stream.DeleteDate > 0 {
@@ -378,7 +378,7 @@ func (stream *Stream) IsPublished() bool {
 }
 
 // PublishActivity returns the ActivityType that should be used when publishing this Stream (either Create or Update)
-func (stream *Stream) PublishActivity() string {
+func (stream Stream) PublishActivity() string {
 	if stream.IsPublished() {
 		return vocab.ActivityTypeUpdate
 	}
@@ -413,7 +413,7 @@ func (stream Stream) GetRank() int64 {
  * Other Methods
  ******************************************/
 
-func (stream *Stream) DocumentLink() DocumentLink {
+func (stream Stream) DocumentLink() DocumentLink {
 	return DocumentLink{
 		ID:    stream.StreamID,
 		URL:   stream.URL,
@@ -422,12 +422,12 @@ func (stream *Stream) DocumentLink() DocumentLink {
 }
 
 // HasParent returns TRUE if this Stream has a valid parentID
-func (stream *Stream) HasParent() bool {
+func (stream Stream) HasParent() bool {
 	return !stream.ParentID.IsZero()
 }
 
 // ParentURL returns the URL for the parent object
-func (stream *Stream) ParentURL() string {
+func (stream Stream) ParentURL() string {
 	if streamURL, err := url.Parse(stream.URL); err == nil {
 		streamURL.Path = stream.ParentID.Hex()
 		return streamURL.String()
@@ -437,12 +437,12 @@ func (stream *Stream) ParentURL() string {
 }
 
 // HasGrandparent returns TRUE if this Stream has a GrandparentID
-func (stream *Stream) HasGrandparent() bool {
+func (stream Stream) HasGrandparent() bool {
 	return len(stream.ParentIDs) > 1
 }
 
 // GrandParentID returns the ID of the parent of the parent of this Stream (if it exists)
-func (stream *Stream) GrandparentID() primitive.ObjectID {
+func (stream Stream) GrandparentID() primitive.ObjectID {
 	if parentIDsLength := len(stream.ParentIDs); parentIDsLength > 1 {
 		return stream.ParentIDs[parentIDsLength-2]
 	}
@@ -451,7 +451,7 @@ func (stream *Stream) GrandparentID() primitive.ObjectID {
 }
 
 // GrandparentURL returns the URL of the parent of the parent of this Stream (if it exists)
-func (stream *Stream) GrandparentURL() string {
+func (stream Stream) GrandparentURL() string {
 
 	if grandparentID := stream.GrandparentID(); !grandparentID.IsZero() {
 		if streamURL, err := url.Parse(stream.URL); err == nil {
@@ -469,7 +469,7 @@ func (stream *Stream) SetAttributedTo(person PersonLink) {
 }
 
 // ActorLink returns a PersonLink object that represents this Stream as an ActivityPub "actor"
-func (stream *Stream) ActorLink() PersonLink {
+func (stream Stream) ActorLink() PersonLink {
 
 	return PersonLink{
 		Name:       stream.Label,

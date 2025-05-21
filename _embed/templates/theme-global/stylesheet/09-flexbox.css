@@ -11,6 +11,7 @@
 .flex-row-reverse {flex-direction:row-reverse;}
 .flex-column {display:flex; flex-direction:column;}
 .flex-column-reverse {display:flex; flex-direction:column-reverse;}
+.flex-none {display:unset}
 .flex-align-start {align-items:flex-start}
 .flex-align-end {align-items:flex-end}
 .flex-align-center {align-items:center}
@@ -60,6 +61,7 @@
 	.sm\:flex-row-reverse {flex-direction:row-reverse}
 	.sm\:flex-column {display:flex; flex-direction:column}
 	.sm\:flex-column-reverse {display:flex; flex-direction:column-reverse}
+	.sm\:flex-none {display:unset}
 	.sm\:flex-align-start {align-items:flex-start}
 	.sm\:flex-align-end {align-items:flex-end}
 	.sm\:flex-align-center {align-items:center}
@@ -104,6 +106,7 @@
 	.md\:flex-row-reverse {flex-direction:row-reverse}
 	.md\:flex-column {display:flex; flex-direction:column}
 	.md\:flex-column-reverse {display:flex; flex-direction:column-reverse}
+	.md\:flex-none {display:unset}
 	.md\:flex-align-start {align-items:flex-start}
 	.md\:flex-align-end {align-items:flex-end}
 	.md\:flex-align-center {align-items:center}
@@ -148,6 +151,7 @@
 	.lg\:flex-row-reverse {flex-direction:row-reverse}
 	.lg\:flex-column {display:flex; flex-direction:column}
 	.lg\:flex-column-reverse {display:flex; flex-direction:column-reverse}
+	.lg\:flex-none {display:unset}
 	.lg\:flex-align-start {align-items:flex-start}
 	.lg\:flex-align-end {align-items:flex-end}
 	.lg\:flex-align-center {align-items:center}

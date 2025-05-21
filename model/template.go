@@ -259,12 +259,12 @@ func (template *Template) Inherit(parent *Template) {
 }
 
 // IsSearch returns TRUE if this is Template is a search engine
-func (template *Template) IsSearch() bool {
+func (template Template) IsSearch() bool {
 	return template.TemplateRole == "search"
 }
 
 // IsSubscribable returns TRUE if this Template has at-least-one role that requires a product
-func (template *Template) IsSubscribable() bool {
+func (template Template) IsSubscribable() bool {
 
 	for _, role := range template.AccessRoles {
 		if role.Purchasable {
@@ -275,7 +275,7 @@ func (template *Template) IsSubscribable() bool {
 	return false
 }
 
-func (template *Template) PurchasableRoles() []Role {
+func (template Template) PurchasableRoles() []Role {
 
 	result := make([]Role, 0)
 
@@ -298,12 +298,12 @@ func (template *Template) PurchasableRoles() []Role {
  ******************************************/
 
 // HasOEmbed returns TRUE if this Template has an OEmbed template
-func (template *Template) HasOEmbed() bool {
+func (template Template) HasOEmbed() bool {
 	return template.HTMLTemplate.Lookup("oembed") != nil
 }
 
 // GetOEmbed returns the OEmbed template for this Template
 // If no OEmbed template is found, then nil is returned
-func (template *Template) GetOEmbed() *template.Template {
+func (template Template) GetOEmbed() *template.Template {
 	return template.HTMLTemplate.Lookup("oembed")
 }

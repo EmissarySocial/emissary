@@ -9,7 +9,6 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
-	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -843,23 +842,32 @@ func (w Stream) HasProducts() bool {
 	return w._stream.HasProducts()
 }
 
+// Template returns the named Template object
+func (w Stream) Template(templateID string) (model.Template, error) {
+	templateService := w._factory.Template()
+	return templateService.Load(templateID)
+}
+
+func (w Stream) MerchantAccounts() QueryBuilder[model.MerchantAccount] {
+
+	expressionBuilder := builder.NewBuilder().
+		String("search", builder.WithAlias("name"), builder.WithDefaultOpBeginsWith())
+
+	criteria := exp.And(
+		expressionBuilder.Evaluate(w._request.URL.Query()),
+		exp.Equal("userId", w._stream.AttributedTo.UserID),
+	)
+
+	return NewQueryBuilder[model.MerchantAccount](w._factory.MerchantAccount(), criteria)
+}
+
 // ProductIDs returns all product IDs that are valid for this stream
 func (w Stream) ProductIDs() sliceof.String {
 	return w._stream.ProductIDs()
 }
 
-// Products returns a QueryBuilder that retrieves all products that,
-// when purchased, grant additional access to this Stream.
-func (w Stream) Products() QueryBuilder[model.Product] {
-
-	productIDs, _ := id.ConvertSlice(w._stream.ProductIDs())
-
-	expressionBuilder := builder.NewBuilder()
-	criteria := expressionBuilder.Evaluate(w._request.URL.Query()).
-		AndIn("_id", productIDs)
-
-	result := NewQueryBuilder[model.Product](w._factory.Product(), criteria)
-	return result
+func (w Stream) Products() (sliceof.Object[form.LookupCode], error) {
+	return w._factory.MerchantAccount().ProductsByID(w._stream.ProductIDs()...)
 }
 
 /******************************************

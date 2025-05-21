@@ -13,6 +13,7 @@ import (
 	"github.com/benpate/remote/options"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/slice"
 	"github.com/davecgh/go-spew/spew"
 )
 
@@ -93,7 +94,7 @@ func (service *MerchantAccount) paypal_refreshProduct(merchantAccount *model.Mer
 	return nil
 }
 
-func (service *MerchantAccount) paypal_getProducts(merchantAccount *model.MerchantAccount) ([]form.LookupCode, error) {
+func (service *MerchantAccount) paypal_getProducts(merchantAccount *model.MerchantAccount, productIDs ...string) ([]form.LookupCode, error) {
 
 	const location = "service.MerchantAccount.paypal_getProducts"
 
@@ -120,16 +121,21 @@ func (service *MerchantAccount) paypal_getProducts(merchantAccount *model.Mercha
 	}
 
 	plans := txnResult.GetSliceOfAny("plans")
-	result := make([]form.LookupCode, len(plans))
+	result := make([]form.LookupCode, 0, len(plans))
 
-	for index, planAny := range plans {
+	for _, planAny := range plans {
 		plan := mapof.Any(convert.MapOfAny(planAny))
 
-		result[index] = form.LookupCode{
-			Value:       plan.GetString("id"),
+		// Optional filter by productID
+		if (len(productIDs) > 0) && (slice.NotContains(productIDs, plan.GetString("id"))) {
+			continue
+		}
+
+		result = append(result, form.LookupCode{
+			Value:       merchantAccount.ID() + ":" + plan.GetString("id"),
 			Label:       plan.GetString("name"),
 			Description: plan.GetString("description"),
-		}
+		})
 	}
 
 	return result, nil

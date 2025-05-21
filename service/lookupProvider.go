@@ -238,7 +238,7 @@ func (service *LookupProvider) getMerchantAccountProducts() form.LookupGroup {
 	}
 
 	// Load the Products for this Merchant Account
-	result, err := service.merchantAccountService.GetProducts(&merchantAccount)
+	result, err := service.merchantAccountService.getProducts(&merchantAccount)
 
 	if err != nil {
 		derp.Report(derp.Wrap(err, location, "Error loading merchant account products"))

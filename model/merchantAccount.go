@@ -83,6 +83,48 @@ func (merchantAccount *MerchantAccount) RolesToProductIDs(roleIDs ...string) id.
 	return nil
 }
 
+func (merchantAccount MerchantAccount) ProductURL() string {
+
+	switch merchantAccount.Type {
+
+	case MerchantAccountTypePayPal:
+		return "https://www.paypal.com/business/products"
+
+	case MerchantAccountTypeStripe:
+		return "https://dashboard.stripe.com/products"
+	}
+
+	return ""
+}
+
+func (merchantAccount MerchantAccount) APIKeyURL() string {
+
+	switch merchantAccount.Type {
+
+	case MerchantAccountTypePayPal:
+		return "https://www.paypal.com/business/keys"
+
+	case MerchantAccountTypeStripe:
+		return "https://dashboard.stripe.com/apikeys"
+	}
+
+	return ""
+}
+
+func (merchantAccount MerchantAccount) HelpURL() string {
+
+	switch merchantAccount.Type {
+
+	case MerchantAccountTypePayPal:
+		return "https://emissary.dev/paypal"
+
+	case MerchantAccountTypeStripe:
+		return "https://emissary.dev/stripe"
+	}
+
+	return ""
+}
+
 /******************************************
  * Other Methods
  ******************************************/

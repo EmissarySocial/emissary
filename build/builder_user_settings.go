@@ -175,6 +175,32 @@ func (w Settings) IconURL() string {
  * Settings Methods
  ******************************************/
 
+// Stream returns a stream object - if it is owned by the current user
+func (w Settings) Stream(token string) (model.Stream, error) {
+
+	// Load the stream from the database
+	streamService := w._factory.Stream()
+	stream := model.NewStream()
+
+	if err := streamService.LoadByToken(token, &stream); err != nil {
+		return model.Stream{}, derp.Wrap(err, "build.Settings.Stream", "Error loading stream", token)
+	}
+
+	// RULE: Stream must be owned by the current user
+	if stream.AttributedTo.UserID != w._user.UserID {
+		return model.Stream{}, derp.UnauthorizedError("build.Settings.Stream", "You do not have permission to view this stream")
+	}
+
+	// uWu
+	return stream, nil
+}
+
+// Template returns the named Template object
+func (w Settings) Template(templateID string) (model.Template, error) {
+	templateService := w._factory.Template()
+	return templateService.Load(templateID)
+}
+
 func (w Settings) Followers() QueryBuilder[model.FollowerSummary] {
 
 	// Define inbound parameters

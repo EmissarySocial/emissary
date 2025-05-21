@@ -1,0 +1,42 @@
+{
+	roles: {
+		editor: {
+			label: Editor
+			description: Editors can make changes to this item.
+		}
+	}
+	actions: {
+		edit-purchase: {
+			roles: ["author", "editor"]
+			steps: [
+				{do:"view-html"}
+			]
+		}
+
+		choose-products: {
+			roles: ["author", "editor"]
+			steps: [
+				{do:"set-products"}
+				{do:"save"}
+				{do:"inline-success", message:"Purchase Setup Updated."}
+			]
+		}
+
+		checkout: {
+			roles: ["anonymous"]
+			steps: [
+				{do:"if", condition:"{{eq 1 .ProductIDs.Count }}", then:[
+					{
+						do:"forward-to"
+						url:"/.checkout?productId={{.ProductIDs.First}}&return={{.Permalink}}"
+						method:"get"
+					}
+				], else:[
+					{do:"as-modal", background:"view", steps:[
+						{do:"view-html"}
+					]}
+				]}
+			]
+		}
+	}
+}

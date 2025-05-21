@@ -15,9 +15,9 @@ import (
 	"github.com/benpate/form"
 	"github.com/benpate/remote"
 	"github.com/benpate/remote/options"
-	"github.com/benpate/rosetta/compare"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/stripe/stripe-go/v78"
@@ -371,7 +371,7 @@ func (service *MerchantAccount) stripe_refreshProduct(merchantAccount *model.Mer
 }
 
 // stripe_getPrices retrieves all prices from the Stripe API and returns them as a list of LookupCodes
-func (service *MerchantAccount) stripe_getPrices(merchantAccount *model.MerchantAccount) ([]form.LookupCode, error) {
+func (service *MerchantAccount) stripe_getPrices(merchantAccount *model.MerchantAccount, priceIDs ...string) ([]form.LookupCode, error) {
 
 	const location = "service.MerchantAccount.paypal_getProducts"
 
@@ -385,7 +385,7 @@ func (service *MerchantAccount) stripe_getPrices(merchantAccount *model.Merchant
 	}
 
 	// Query the Stripe API for all Prices
-	txn := remote.Get("https://api.stripe.com/v1/prices?expand[]=data.product").
+	txn := remote.Get("https://api.stripe.com/v1/prices?active=true&expand[]=data.product").
 		With(options.BearerAuth(restrictedKey)).
 		Result(&txnResult)
 
@@ -396,26 +396,36 @@ func (service *MerchantAccount) stripe_getPrices(merchantAccount *model.Merchant
 	// Map prices into LookupCodes, grouping by Product name
 	prices := txnResult.GetSliceOfAny("data")
 
-	result := make([]form.LookupCode, len(prices))
-	for index, record := range prices {
+	result := make([]form.LookupCode, 0, len(prices))
+	for _, record := range prices {
+
 		price := mapof.Any(convert.MapOfAny(record))
 
-		result[index] = form.LookupCode{
-			Group: price.GetMap("product").GetString("name"),
-			Value: price.GetString("id"),
-			Label: service.stripe_priceLabel(price),
+		if active := price.GetBool("active"); !active {
+			continue
 		}
+
+		product := price.GetMap("product")
+
+		if active := product.GetBool("active"); !active {
+			continue
+		}
+
+		// Optional filter by PriceID
+		if (len(priceIDs) > 0) && slice.NotContains(priceIDs, price.GetString("id")) {
+			continue
+		}
+
+		// Add the Price to the result set
+		result = append(result, form.LookupCode{
+			Value:       merchantAccount.ID() + ":" + price.GetString("id"),
+			Label:       product.GetString("name"),
+			Description: service.stripe_priceLabel(price),
+		})
 	}
 
 	// Sort the results by Group then Label
-	slices.SortFunc(result, func(a, b form.LookupCode) int {
-
-		if firstSort := compare.String(a.Group, b.Group); firstSort != 0 {
-			return firstSort
-		}
-
-		return compare.String(a.Label, b.Label)
-	})
+	slices.SortFunc(result, form.SortLookupCodeByGroupThenLabel)
 
 	// Phew! Done.
 	return result, nil

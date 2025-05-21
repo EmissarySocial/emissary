@@ -318,3 +318,19 @@ func firstOf[T comparable](values ...T) T {
 func pointerTo[T any](value T) *T {
 	return &value
 }
+
+func cutAndGroup(original []string, separator string) map[string][]string {
+
+	result := make(map[string][]string, 0)
+
+	for _, value := range original {
+		before, after, _ := strings.Cut(value, separator)
+
+		if _, exists := result[before]; !exists {
+			result[before] = make([]string, 0)
+		}
+		result[before] = append(result[before], after)
+	}
+
+	return result
+}
