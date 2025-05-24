@@ -66,11 +66,11 @@ func (adapter ArcGIS) ManualConfig() form.Form {
  ******************************************/
 
 // AfterCoonnect applies any extra changes to the database after this Adapter is activated.
-func (adapter ArcGIS) AfterConnect(factory Factory, client *model.Connection) error {
+func (adapter ArcGIS) AfterConnect(factory Factory, client *model.Connection, vault mapof.String) error {
 	return nil
 }
 
 // AfterUpdate is called after a user has successfully updated their Twitter connection
-func (adapter ArcGIS) AfterUpdate(factory Factory, client *model.Connection) error {
+func (adapter ArcGIS) AfterUpdate(factory Factory, client *model.Connection, vault mapof.String) error {
 	return nil
 }

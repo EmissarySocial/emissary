@@ -6,7 +6,6 @@ import (
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/httpcache"
-	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/data"
 	"github.com/benpate/form"
 	"github.com/benpate/icon"
@@ -68,7 +67,6 @@ type Factory interface {
 	LookupProvider(*http.Request, primitive.ObjectID) form.LookupProvider
 	OAuthClient() *service.OAuthClient
 	OAuthUserToken() *service.OAuthUserToken
-	Providers() set.Slice[config.Provider]
 	Queue() *queue.Queue
 	Steranko() *steranko.Steranko
 	SSEUpdateChannel() chan primitive.ObjectID

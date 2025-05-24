@@ -14,7 +14,6 @@ func Schema() schema.Schema {
 		Element: schema.Object{
 			Properties: schema.ElementMap{
 				"domains":             schema.Array{Items: DomainSchema()},
-				"providers":           schema.Array{Items: ProviderSchema()},
 				"templates":           schema.Array{Items: ReadableFolderSchema("templates"), MinLength: 1},
 				"attachmentOriginals": WritableFolderSchema("attachmentOriginals"),
 				"attachmentCache":     WritableFolderSchema("attachmentCache"),
@@ -40,9 +39,6 @@ func (config *Config) GetPointer(name string) (any, bool) {
 
 	case "domains":
 		return &config.Domains, true
-
-	case "providers":
-		return &config.Providers, true
 
 	case "templates":
 		return &config.Templates, true

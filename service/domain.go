@@ -288,18 +288,20 @@ func (service *Domain) IsLocalhost() bool {
 // OAuthCodeURL generates a new (unique) OAuth state and AuthCodeURL for the specified provider
 func (service *Domain) OAuthCodeURL(providerID string) (string, error) {
 
+	const location = "service.Domain.OAuthCodeURL"
+
 	// Get the provider for this provider
 	provider, ok := service.OAuthProvider(providerID)
 
 	if !ok {
-		return "", derp.BadRequestError("service.Domain.OAuthCodeURL", "Unknown OAuth Provider", providerID)
+		return "", derp.BadRequestError(location, "Unknown OAuth Provider", providerID)
 	}
 
 	// Set a new "state" for this provider
 	connection, err := service.NewOAuthClient(providerID)
 
 	if err != nil {
-		return "", derp.Wrap(err, "service.Domain.OAuthCodeURL", "Error generating new OAuth connection")
+		return "", derp.Wrap(err, location, "Error generating new OAuth connection")
 	}
 
 	// Generate and return the AuthCodeURL
@@ -372,10 +374,10 @@ func (service *Domain) OAuthClientCallbackURL(providerID string) string {
 	return domain.Protocol(service.configuration.Hostname) + service.configuration.Hostname + "/oauth/connections/" + providerID + "/callback"
 }
 
-// NewOAuthState generates and returns a new OAuth state for the specified provider
+// NewOAuthClient generates and returns a new OAuth state for the specified provider
 func (service *Domain) NewOAuthClient(providerID string) (model.Connection, error) {
 
-	const location = "service.Domain.NewOAuthState"
+	const location = "service.Domain.NewOAuthClient"
 
 	// Find or Create a connection for this provider
 	connection, _ := service.connectionService.LoadOrCreateByProvider(providerID)

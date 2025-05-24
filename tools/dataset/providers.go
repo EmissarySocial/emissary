@@ -36,6 +36,13 @@ func Providers() []form.LookupCode {
 			Description: "Look up addresses and locations",
 			Group:       "MANUAL",
 		},
+		{
+			Value:       model.ConnectionProviderPayPal,
+			Label:       "PayPal",
+			Icon:        "paypal",
+			Description: "Allows users to accept payments via PayPal",
+			Group:       "MANUAL",
+		},
 
 		/* REMOVED FOR NOW
 		{

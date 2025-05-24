@@ -38,6 +38,10 @@ func (vault Vault) GetStringOK(name string) (string, bool) {
 		return VaultObscuredValue, true
 	}
 
+	if _, ok := vault.plaintext[name]; ok {
+		return VaultObscuredValue, true
+	}
+
 	return "", false
 }
 

@@ -52,6 +52,26 @@ func WithFactory(serverFactory *server.Factory, fn WithFunc0) echo.HandlerFunc {
 	}
 }
 
+func WithConnection(serverFactory *server.Factory, fn WithFunc2[model.User, model.Connection]) echo.HandlerFunc {
+
+	const location = "handler.WithConnection"
+
+	return WithUser(serverFactory, func(ctx *steranko.Context, factory *domain.Factory, user *model.User) error {
+
+		// Load the Connection from the database
+		connectionService := factory.Connection()
+		connection := model.NewConnection()
+		providerID := ctx.QueryParam("providerId")
+
+		if err := connectionService.LoadByProvider(providerID, &connection); err != nil {
+			return derp.Wrap(err, location, "Error loading Connection")
+		}
+
+		// Call the continuation function
+		return fn(ctx, factory, user, &connection)
+	})
+}
+
 // WithDomain handles boilerplate code for requests that load a domain object
 func WithDomain(serverFactory *server.Factory, fn WithFunc1[model.Domain]) echo.HandlerFunc {
 
@@ -81,7 +101,6 @@ func WithMerchantAccount(serverFactory *server.Factory, fn WithFunc1[model.Merch
 		// Call the continuation function
 		return fn(ctx, factory, &merchantAccount)
 	})
-
 }
 
 func WithMerchantAccountJWT(serverFactory *server.Factory, fn WithFunc1[model.MerchantAccount]) echo.HandlerFunc {

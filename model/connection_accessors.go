@@ -12,14 +12,16 @@ func ConnectionSchema() schema.Element {
 			"providerId": schema.String{Enum: []string{
 				ConnectionProviderArcGIS,
 				ConnectionProviderBing,
+				ConnectionProviderGiphy,
 				ConnectionProviderGoogleMaps,
 				ConnectionProviderOpenStreetMap,
-				ConnectionProviderTomTom,
-				ConnectionProviderGiphy,
+				ConnectionProviderPayPal,
 				ConnectionProviderStripe,
+				ConnectionProviderTomTom,
 				ConnectionProviderUnsplash,
 			}},
-			"type":   schema.String{Enum: []string{ConnectionTypeGeocoder, ConnectionTypeImage, ConnectionTypePayment}},
+			"type":   schema.String{Enum: []string{ConnectionTypeGeocoder, ConnectionTypeImage, ConnectionTypeUserPayment}},
+			"vault":  schema.Object{Wildcard: schema.String{}},
 			"data":   schema.Object{Wildcard: schema.String{}},
 			"active": schema.Boolean{},
 		},
@@ -42,6 +44,9 @@ func (connection *Connection) GetPointer(name string) (any, bool) {
 
 	case "data":
 		return &connection.Data, true
+
+	case "vault":
+		return &connection.Vault, true
 
 	case "active":
 		return &connection.Active, true

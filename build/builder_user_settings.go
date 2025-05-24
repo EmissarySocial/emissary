@@ -309,12 +309,6 @@ func (w Settings) Purchases() QueryBuilder[model.Purchase] {
 
 }
 
-func (w Settings) MerchantAccount(merchantAccountID string) (model.MerchantAccount, error) {
-	result := model.NewMerchantAccount()
-	err := w._factory.MerchantAccount().LoadByUserAndToken(w._user.UserID, merchantAccountID, &result)
-	return result, err
-}
-
 func (w Settings) MerchantAccounts() QueryBuilder[model.MerchantAccount] {
 
 	expressionBuilder := builder.NewBuilder().
@@ -328,7 +322,13 @@ func (w Settings) MerchantAccounts() QueryBuilder[model.MerchantAccount] {
 	return NewQueryBuilder[model.MerchantAccount](w._factory.MerchantAccount(), criteria)
 }
 
-// FIlteredByFollowing returns the Following record that is being used to filter the Settings
+func (w Settings) MerchantAccount(merchantAccountID string) (model.MerchantAccount, error) {
+	result := model.NewMerchantAccount()
+	err := w._factory.MerchantAccount().LoadByUserAndToken(w._user.UserID, merchantAccountID, &result)
+	return result, err
+}
+
+// FilteredByFollowing returns the Following record that is being used to filter the Settings
 func (w Settings) FilteredByFollowing() model.Following {
 
 	result := model.NewFollowing()

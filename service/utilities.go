@@ -287,15 +287,6 @@ func slicesAreEqual(value1 []mapof.String, value2 []mapof.String) bool {
 	return true
 }
 
-// iif is a simple inline-if function.  You should probably never
-// do something like this.  But fuck it.
-func iif(condition bool, trueValue, falseValue string) string {
-	if condition {
-		return trueValue
-	}
-	return falseValue
-}
-
 // firstOf is a quickie generic helper that returns the first
 // non-zero value from a list of comparable values.
 func firstOf[T comparable](values ...T) T {

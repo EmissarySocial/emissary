@@ -65,11 +65,11 @@ func (adapter Stripe) ManualConfig() form.Form {
  ******************************************/
 
 // AfterCoonnect applies any extra changes to the database after this Adapter is activated.
-func (adapter Stripe) AfterConnect(factory Factory, client *model.Connection) error {
+func (adapter Stripe) AfterConnect(factory Factory, client *model.Connection, vault mapof.String) error {
 	return nil
 }
 
 // AfterUpdate is called after a user has successfully updated their Twitter connection
-func (adapter Stripe) AfterUpdate(factory Factory, client *model.Connection) error {
+func (adapter Stripe) AfterUpdate(factory Factory, client *model.Connection, vault mapof.String) error {
 	return nil
 }

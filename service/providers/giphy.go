@@ -3,6 +3,7 @@ package providers
 import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/form"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 )
 
@@ -60,11 +61,11 @@ func (adapter Giphy) ManualConfig() form.Form {
  ******************************************/
 
 // AfterCoonnect applies any extra changes to the database after this Adapter is activated.
-func (adapter Giphy) AfterConnect(factory Factory, client *model.Connection) error {
+func (adapter Giphy) AfterConnect(factory Factory, client *model.Connection, vault mapof.String) error {
 	return nil
 }
 
 // AfterUpdate is called after a user has successfully updated their Twitter connection
-func (adapter Giphy) AfterUpdate(factory Factory, client *model.Connection) error {
+func (adapter Giphy) AfterUpdate(factory Factory, client *model.Connection, vault mapof.String) error {
 	return nil
 }

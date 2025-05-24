@@ -13,7 +13,6 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/camper"
 	"github.com/EmissarySocial/emissary/tools/httpcache"
-	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/data"
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
@@ -34,16 +33,14 @@ import (
 
 // Factory knows how to create an populate all services
 type Factory struct {
-	Session   data.Session
-	config    config.Domain
-	port      string
-	providers []config.Provider
+	Session data.Session
+	config  config.Domain
+	port    string
 
 	// services (from server)
 	activityCache       *mongo.Collection
 	contentService      *service.Content
 	httpCache           *httpcache.HTTPCache
-	providerService     *service.Provider
 	registrationService *service.Registration
 	queue               *queue.Queue
 	templateService     *service.Template
@@ -77,6 +74,7 @@ type Factory struct {
 	oauthUserToken         service.OAuthUserToken
 	outboxService          service.Outbox
 	permissionService      service.Permission
+	providerService        service.Provider
 	responseService        service.Response
 	ruleService            service.Rule
 	searchDomainService    service.SearchDomain
@@ -100,7 +98,7 @@ type Factory struct {
 }
 
 // NewFactory creates a new factory tied to a MongoDB database
-func NewFactory(domain config.Domain, port string, providers []config.Provider, activityCache *mongo.Collection, registrationService *service.Registration, serverEmail *service.ServerEmail, themeService *service.Theme, templateService *service.Template, widgetService *service.Widget, contentService *service.Content, providerService *service.Provider, queue *queue.Queue, attachmentOriginals afero.Fs, attachmentCache afero.Fs, exportCache afero.Fs, httpCache *httpcache.HTTPCache, workingDirectory *mediaserver.WorkingDirectory) (*Factory, error) {
+func NewFactory(domain config.Domain, port string, activityCache *mongo.Collection, registrationService *service.Registration, serverEmail *service.ServerEmail, themeService *service.Theme, templateService *service.Template, widgetService *service.Widget, contentService *service.Content, queue *queue.Queue, attachmentOriginals afero.Fs, attachmentCache afero.Fs, exportCache afero.Fs, httpCache *httpcache.HTTPCache, workingDirectory *mediaserver.WorkingDirectory) (*Factory, error) {
 
 	log.Info().Msg("Starting domain: " + domain.Hostname)
 
@@ -112,7 +110,6 @@ func NewFactory(domain config.Domain, port string, providers []config.Provider, 
 		templateService:     templateService,
 		widgetService:       widgetService,
 		contentService:      contentService,
-		providerService:     providerService,
 		queue:               queue,
 		workingDirectory:    workingDirectory,
 
@@ -156,6 +153,7 @@ func NewFactory(domain config.Domain, port string, providers []config.Provider, 
 	factory.oauthUserToken = service.NewOAuthUserToken()
 	factory.outboxService = service.NewOutbox()
 	factory.permissionService = service.NewPermission()
+	factory.providerService = service.NewProvider()
 	factory.responseService = service.NewResponse()
 	factory.ruleService = service.NewRule()
 	factory.searchDomainService = service.NewSearchDomain()
@@ -171,7 +169,7 @@ func NewFactory(domain config.Domain, port string, providers []config.Provider, 
 	factory.webhookService = service.NewWebhook()
 
 	// Refresh the configuration with values that (may) change during the lifetime of the factory
-	if err := factory.Refresh(domain, providers, attachmentOriginals, attachmentCache); err != nil {
+	if err := factory.Refresh(domain, attachmentOriginals, attachmentCache); err != nil {
 		return nil, derp.Wrap(err, "domain.NewFactory", "Error creating factory", domain)
 	}
 
@@ -182,7 +180,7 @@ func NewFactory(domain config.Domain, port string, providers []config.Provider, 
 	return &factory, nil
 }
 
-func (factory *Factory) Refresh(domain config.Domain, providers []config.Provider, attachmentOriginals afero.Fs, attachmentCache afero.Fs) error {
+func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.Fs, attachmentCache afero.Fs) error {
 
 	// Update global pointers
 	factory.attachmentOriginals = attachmentOriginals
@@ -247,9 +245,12 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 			factory.Host(),
 		)
 
+		// Populate Connection Service
 		factory.connectionService.Refresh(
 			factory.collection(CollectionConnection),
 			factory.Provider(),
+			domain.MasterKey,
+			factory.Host(),
 		)
 
 		// Populate Domain Service
@@ -348,6 +349,7 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 		// Populate MerchantAccount Service
 		factory.merchantAccountService.Refresh(
 			factory.collection(CollectionMerchantAccount),
+			factory.Connection(),
 			factory.JWT(),
 			factory.Guest(),
 			factory.Purchase(),
@@ -557,7 +559,6 @@ func (factory *Factory) Refresh(domain config.Domain, providers []config.Provide
 	}
 
 	factory.config = domain
-	factory.providers = providers
 	return nil
 }
 
@@ -605,10 +606,6 @@ func (factory *Factory) IsLocalhost() bool {
 
 func (factory *Factory) Config() config.Domain {
 	return factory.config
-}
-
-func (factory *Factory) Providers() set.Slice[config.Provider] {
-	return factory.providers
 }
 
 /******************************************
@@ -951,7 +948,7 @@ func (factory *Factory) LookupProvider(request *http.Request, userID primitive.O
 
 // OAuth returns a fully populated OAuth service
 func (factory *Factory) Provider() *service.Provider {
-	return factory.providerService
+	return &factory.providerService
 }
 
 // RSS returns a fully populated RSS service

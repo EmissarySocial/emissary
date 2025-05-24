@@ -7,12 +7,9 @@ package config
 import (
 	"strconv"
 
-	"github.com/EmissarySocial/emissary/tools/dataset"
 	"github.com/EmissarySocial/emissary/tools/set"
-	"github.com/benpate/form"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
-	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -20,7 +17,6 @@ import (
 // Config defines all of the domains available on this server
 type Config struct {
 	Domains             set.Slice[Domain]            `json:"domains"`             // Slice of one or more domain configurations
-	Providers           set.Slice[Provider]          `json:"providers"`           // Slice of one or more OAuth client configurations
 	Templates           sliceof.Object[mapof.String] `json:"templates"`           // Folders containing all stream templates
 	AttachmentOriginals mapof.String                 `json:"attachmentOriginals"` // Folder where original attachments will be stored
 	AttachmentCache     mapof.String                 `json:"attachmentCache"`     // Folder (possibly memory cache) where cached versions of attachmented files will be stored.
@@ -40,7 +36,6 @@ type Config struct {
 func NewConfig() Config {
 	return Config{
 		Domains:             make(set.Slice[Domain], 0),
-		Providers:           make(set.Slice[Provider], 0),
 		Templates:           make(sliceof.Object[mapof.String], 0),
 		AttachmentOriginals: make(mapof.String, 0),
 		AttachmentCache:     make(mapof.String, 0),
@@ -54,8 +49,7 @@ func NewConfig() Config {
 func DefaultConfig() Config {
 
 	return Config{
-		Domains:   make(set.Slice[Domain], 0),
-		Providers: make(set.Slice[Provider], 0),
+		Domains: make(set.Slice[Domain], 0),
 
 		// File Locations
 		Templates:           sliceof.Object[mapof.String]{mapof.String{"adapter": "EMBED", "location": "templates"}},
@@ -88,27 +82,6 @@ func (config Config) DomainNames() []string {
 	}
 
 	return result
-}
-
-func (config Config) AllProviders() []form.LookupCode {
-
-	// Just locate the providers that require configuration
-	allProviders := slice.Filter(dataset.Providers(), func(lookupCode form.LookupCode) bool {
-		return (lookupCode.Group != "MANUAL")
-	})
-
-	// Use the Group field to show if the provider is active or not.
-	allProviders = slice.Map(allProviders, func(lookupCode form.LookupCode) form.LookupCode {
-		provider, _ := config.Providers.Get(lookupCode.Value)
-		if provider.IsEmpty() {
-			lookupCode.Group = ""
-		} else {
-			lookupCode.Group = "ACTIVE"
-		}
-		return lookupCode
-	})
-
-	return allProviders
 }
 
 // HTTPPortString returns the HTTP port as a string (prefixed with a colon).

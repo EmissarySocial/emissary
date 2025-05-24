@@ -1,21 +1,16 @@
 package service
 
 import (
-	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/service/providers"
-	"github.com/EmissarySocial/emissary/tools/set"
 )
 
 // Provider service manages all access to external services
 type Provider struct {
-	config set.Slice[config.Provider]
 }
 
 // NewProvider returns a fully initialized Provider service
-func NewProvider(providers []config.Provider) Provider {
-	result := Provider{}
-	result.Refresh(providers)
-	return result
+func NewProvider() Provider {
+	return Provider{}
 }
 
 /******************************************
@@ -23,8 +18,7 @@ func NewProvider(providers []config.Provider) Provider {
  ******************************************/
 
 // Refresh updates the list of clients
-func (service *Provider) Refresh(providers []config.Provider) {
-	service.config = providers
+func (service *Provider) Refresh() {
 }
 
 /******************************************
@@ -40,14 +34,17 @@ func (service *Provider) GetProvider(providerID string) (providers.Provider, boo
 	case providers.ProviderTypeArcGIS:
 		return providers.NewArcGIS(), true
 
+	case providers.ProviderTypeGiphy:
+		return providers.NewGiphy(), true
+
 	case providers.ProviderTypeGoogleMaps:
 		return providers.NewGoogleMaps(), true
 
 	case providers.ProviderTypeOpenStreetMap:
 		return providers.NewOpenStreetMap(), true
 
-	case providers.ProviderTypeGiphy:
-		return providers.NewGiphy(), true
+	case providers.ProviderTypePayPal:
+		return providers.NewPayPal(), true
 
 	case providers.ProviderTypeStripe:
 		return providers.NewStripe(), true

@@ -16,7 +16,6 @@ import (
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
-	"github.com/benpate/rosetta/slice"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -199,17 +198,7 @@ func (w Registration) Template() model.Registration {
 
 // Providers lists all available external services that can be connected to this domain
 func (w Registration) Providers() []form.LookupCode {
-
-	providers := w._factory.Providers()
-
-	return slice.Filter(dataset.Providers(), func(lookupCode form.LookupCode) bool {
-		if lookupCode.Group == "MANUAL" {
-			return true
-		}
-
-		provider, _ := providers.Get(lookupCode.Value)
-		return !provider.IsEmpty()
-	})
+	return dataset.Providers()
 }
 
 // Connection loads an external service connection from the database

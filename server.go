@@ -180,9 +180,6 @@ func makeSetupRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/domains/:domain/users", handler.SetupDomainUserPost(factory, setupTemplates))
 	e.POST("/domains/:domain/users/:user/invite", handler.SetupDomainUserInvite(factory, setupTemplates))
 	e.DELETE("/domains/:domain/users/:user", handler.SetupDomainUserDelete(factory, setupTemplates))
-	e.GET("/oauth", handler.SetupOAuthList(factory, setupTemplates))
-	e.GET("/oauth/:provider", handler.SetupOAuthGet(factory, setupTemplates))
-	e.POST("/oauth/:provider", handler.SetupOAuthPost(factory, setupTemplates))
 	e.GET("/.themes/:themeId/:bundleId", handler.GetThemeBundle(factory))
 	e.GET("/.themes/:themeId/resources/:filename", handler.GetThemeResource(factory))
 }
@@ -341,6 +338,9 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@me/intent/like", handler.WithAuthenticatedUser(factory, handler.GetIntent_Like))
 	e.POST("/@me/intent/like", handler.WithAuthenticatedUser(factory, handler.PostIntent_Like))
 	e.GET("/@me/intent/continue", handler.WithAuthenticatedUser(factory, handler.GetIntent_Continue))
+	e.GET("/@me/oauth/connect/paypal", handler.WithAuthenticatedUser(factory, handler.GetUserOAuthConnect_PayPal))
+	e.GET("/@me/oauth/callback/authorize:provider", handler.WithAuthenticatedUser(factory, handler.GetUserOAuthCallback))
+	e.POST("/@me/oauth/revoke", handler.WithAuthenticatedUser(factory, handler.PostUserOAuthRevoke))
 
 	// Routes for Users
 	e.GET("/@:userId", handler.WithUserForwarding(factory, handler.GetOutbox))
@@ -384,15 +384,15 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/admin/index-all-streams", handler.WithFactory(factory, handler.IndexAllStreams), mw.Owner)
 	e.POST("/admin/index-all-users", handler.WithFactory(factory, handler.IndexAllUsers), mw.Owner)
 
-	// OAuth Client Connections
-	e.GET("/oauth/clients/:provider", handler.GetOAuth(factory), mw.Owner)
-	e.GET("/oauth/clients/:provider/callback", handler.GetOAuthCallback(factory), mw.AllowCSR, mw.Owner)
-	e.GET("/oauth/clients/redirect", handler.OAuthRedirect(factory), mw.Owner)
-
 	// Startup Wizard
 	e.GET("/startup", handler.GetStartup(factory), mw.Owner)
 	e.GET("/startup/:action", handler.GetStartup(factory), mw.Owner)
 	e.POST("/startup", handler.PostStartup(factory), mw.Owner)
+
+	// OAuth Client Connections
+	e.GET("/oauth/clients/:provider", handler.GetOAuth(factory), mw.Owner)
+	e.GET("/oauth/clients/:provider/callback", handler.GetOAuthCallback(factory), mw.AllowCSR, mw.Owner)
+	e.GET("/oauth/clients/redirect", handler.OAuthRedirect(factory), mw.Owner)
 
 	// OAuth Server
 	e.GET("/oauth/authorize", handler.GetOAuthAuthorization(factory), mw.Authenticated)

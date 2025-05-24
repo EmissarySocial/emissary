@@ -16,6 +16,7 @@ import (
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -23,12 +24,13 @@ import (
 
 // MerchantAccount defines a service that manages all content merchantAccounts created and imported by Users.
 type MerchantAccount struct {
-	collection      data.Collection
-	jwtService      *JWT
-	guestService    *Guest
-	purchaseService *Purchase
-	encryptionKey   string
-	host            string
+	collection        data.Collection
+	connectionService *Connection
+	jwtService        *JWT
+	guestService      *Guest
+	purchaseService   *Purchase
+	encryptionKey     string
+	host              string
 }
 
 // NewMerchantAccount returns a fully initialized MerchantAccount service
@@ -41,8 +43,9 @@ func NewMerchantAccount() MerchantAccount {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *MerchantAccount) Refresh(collection data.Collection, jwtService *JWT, guestService *Guest, purchaseService *Purchase, masterKey string, host string) {
+func (service *MerchantAccount) Refresh(collection data.Collection, connectionService *Connection, jwtService *JWT, guestService *Guest, purchaseService *Purchase, masterKey string, host string) {
 	service.collection = collection
+	service.connectionService = connectionService
 	service.jwtService = jwtService
 	service.guestService = guestService
 	service.purchaseService = purchaseService
@@ -203,6 +206,26 @@ func (service *MerchantAccount) Schema() schema.Schema {
 /******************************************
  * Custom Queries
  ******************************************/
+
+func (service *MerchantAccount) AvailableMerchantAccounts() ([]form.LookupCode, error) {
+
+	const location = "service.MerchantAccount.AvailableMerchantAccounts"
+
+	// Query configured Connections
+	connections, err := service.connectionService.QueryByType(model.ConnectionTypeUserPayment)
+
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Error loading connections")
+	}
+
+	// Map the connections to LookupCodes
+	result := slice.Map(connections, func(connection model.Connection) form.LookupCode {
+		return connection.LookupCode()
+	})
+
+	// Done.
+	return result, nil
+}
 
 func (service *MerchantAccount) QueryByUser(userID primitive.ObjectID, options ...option.Option) ([]model.MerchantAccount, error) {
 
@@ -381,6 +404,7 @@ func (service *MerchantAccount) RefreshAPIKeys(merchantAccount *model.MerchantAc
 
 }
 
+// ProductsByUser retrieves all available products configured in the remote MerchantAccount(s) of a specific User
 func (service *MerchantAccount) ProductsByUser(userID primitive.ObjectID) (sliceof.Object[model.MerchantAccount], []form.LookupCode, error) {
 
 	// Get all MerchantAccounts for this User
@@ -409,6 +433,7 @@ func (service *MerchantAccount) ProductsByUser(userID primitive.ObjectID) (slice
 	return merchantAccounts, result, nil
 }
 
+// ProductsByID retrieves a list of products configured in the remote MerchantAccount(s)
 func (service *MerchantAccount) ProductsByID(tokens ...string) ([]form.LookupCode, error) {
 
 	// Collect unique merchantAccount and product IDs
@@ -448,6 +473,7 @@ func (service *MerchantAccount) ProductsByID(tokens ...string) ([]form.LookupCod
 	return result, nil
 }
 
+// getProducts lists all of the products configured by a remote service
 func (service *MerchantAccount) getProducts(merchantAccount *model.MerchantAccount, productIDs ...string) (sliceof.Object[form.LookupCode], error) {
 
 	switch merchantAccount.Type {
