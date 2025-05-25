@@ -326,28 +326,42 @@ func (service *MerchantAccount) ParseCheckoutResponse(queryParams url.Values, me
 
 	const location = "service.MerchantAccount.ParseCheckoutResponse"
 
-	var guest model.Guest
-	var purchases sliceof.Object[model.Purchase]
-	var err error
+	type guestGetter = func(url.Values, *model.MerchantAccount) (model.Guest, error)
+	var getter guestGetter
 
+	// Find the appropriate getter function for this MerchantAccount type
 	switch merchantAccount.Type {
 
 	case model.MerchantAccountTypePayPal:
-		guest, purchases, err = service.paypal_parseCheckoutResponse(queryParams, merchantAccount)
+		getter = service.paypal_getGuestFromCheckoutResponse
 
 	case model.MerchantAccountTypeStripe:
-		guest, purchases, err = service.stripe_parseCheckoutResponse(queryParams, merchantAccount)
+		getter = service.stripe_getGuestFromCheckoutResponse
+
+	default:
+		return model.Guest{}, derp.BadRequestError(location, "MerchantAccount must be PAYPAL or STRIPE", merchantAccount.Type)
 	}
+
+	// Retrieve the Guest record from the checkout response
+	guest, err := getter(queryParams, merchantAccount)
 
 	if err != nil {
-		return model.Guest{}, derp.BadRequestError("service.MerchantAccount.GetCheckoutResponse", "Invalid MerchantAccount Type", merchantAccount.Type)
+		return model.Guest{}, derp.Wrap(err, location, "Error processing checkout response")
 	}
 
-	// Load/Create a purchase record(s)
-	if err := service.purchaseService.Sync(purchases...); err != nil {
+	// Make a new Purchase record for this Guest
+	purchase := model.NewPurchase()
+	purchase.GuestID = guest.GuestID
+	purchase.UserID = merchantAccount.UserID
+	purchase.RemoteProductID = queryParams.Get("productId")
+	purchase.RemoteGuestID = guest.RemoteIDs[merchantAccount.Type]
+
+	// LoadOrCreate a purchase record(s)
+	if err := service.purchaseService.Sync(purchase); err != nil {
 		return guest, derp.Wrap(err, location, "Error syncing purchase records")
 	}
 
+	// Success!
 	return guest, nil
 }
 

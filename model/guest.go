@@ -47,6 +47,11 @@ func (guest *Guest) Update(emailAddress string, merchantAccountType string, remo
 	}
 
 	if currentID := guest.RemoteIDs[merchantAccountType]; currentID != remoteID {
+
+		if guest.RemoteIDs == nil {
+			guest.RemoteIDs = make(mapof.String)
+		}
+
 		guest.RemoteIDs[merchantAccountType] = remoteID
 		updated = true
 	}

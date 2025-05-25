@@ -164,6 +164,52 @@ func (service *Purchase) Schema() schema.Schema {
 }
 
 /******************************************
+ * Custom Actions
+ ******************************************/
+
+// Sync creates/updates each purchase in the provided list.  Purchases are matched
+// on `RemoteGuestID` and `RemoteProductID`
+func (service *Purchase) Sync(purchases ...model.Purchase) error {
+
+	const location = "service.Purchase.Sync"
+
+	for _, purchase := range purchases {
+
+		if err := service.CreateOrUpdate(&purchase); err != nil {
+			return derp.Wrap(err, location, "Error loading or creating purchase")
+		}
+	}
+
+	return nil
+}
+
+// CreateOrUpdate creates a new purchase or updates an existing purchase,
+// matching on `RemoteGuestID` and `RemoteProductID`.
+func (service *Purchase) CreateOrUpdate(purchase *model.Purchase) error {
+
+	// Try to load the purchase by email address
+	currentPurchase := model.NewPurchase()
+
+	// Try to find a current, matching purchase record
+	if err := service.LoadByRemoteIDs(purchase.RemoteGuestID, purchase.RemoteProductID, &currentPurchase); !derp.IsNilOrNotFound(err) {
+		return derp.Wrap(err, "service.Purchase.CreateOrUpdate", "Error loading purchase")
+	}
+
+	// Try to update the current purchase.  Complete if no changes were made.
+	if changed := currentPurchase.UpdateWith(purchase); !changed {
+		return nil
+	}
+
+	// Save the changes to the current purchase
+	if err := service.Save(&currentPurchase, "Updated"); err != nil {
+		return derp.Wrap(err, "service.Purchase.CreateOrUpdate", "Error saving purchase", currentPurchase)
+	}
+
+	// Success.
+	return nil
+}
+
+/******************************************
  * Custom Queries
  ******************************************/
 
@@ -188,44 +234,9 @@ func (service *Purchase) CountByGuestAndProduct(guestID primitive.ObjectID, prod
 }
 
 // LoadByRemoteIDs retrieves a purchase using the remote IDs for the user, product, and purchase
-func (service *Purchase) LoadByRemoteIDs(remoteUserID string, remoteProductID string, remotePurchaseID string, purchase *model.Purchase) error {
+func (service *Purchase) LoadByRemoteIDs(remoteUserID string, remoteProductID string, purchase *model.Purchase) error {
 	criteria := exp.Equal("remoteUserId", remoteUserID).
-		AndEqual("remoteProductId", remoteProductID).
-		AndEqual("remotePurchaseId", remotePurchaseID)
+		AndEqual("remoteProductId", remoteProductID)
 
 	return service.Load(criteria, purchase)
-}
-
-// Sync calls CreateOrUpdate for each purchase in the list
-func (service *Purchase) Sync(purchases ...model.Purchase) error {
-
-	const location = "service.Purchase.Sync"
-
-	for _, purchase := range purchases {
-
-		if err := service.CreateOrUpdate(&purchase); err != nil {
-			return derp.Wrap(err, location, "Error loading or creating purchase")
-		}
-	}
-
-	return nil
-}
-
-// CreateOrUpdate creates a new purchase or updates an existing purchase
-func (service *Purchase) CreateOrUpdate(purchase *model.Purchase) error {
-
-	// Try to load the purchase by email address
-	currentPurchase := model.NewPurchase()
-
-	// Try to find a current, matching purchase record
-	if err := service.LoadByRemoteIDs(purchase.RemoteGuestID, purchase.RemoteProductID, purchase.RemotePurchaseID, &currentPurchase); !derp.IsNilOrNotFound(err) {
-		return derp.Wrap(err, "service.Purchase.CreateOrUpdate", "Error loading purchase")
-	}
-
-	if changed := currentPurchase.UpdateWith(purchase); changed {
-		if err := service.Save(&currentPurchase, "Updated"); err != nil {
-			return derp.Wrap(err, "service.Purchase.CreateOrUpdate", "Error saving purchase", currentPurchase)
-		}
-	}
-	return nil
 }

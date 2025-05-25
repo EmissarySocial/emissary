@@ -75,8 +75,6 @@ func WithConnection(serverFactory *server.Factory, fn WithFunc2[model.User, mode
 // WithDomain handles boilerplate code for requests that load a domain object
 func WithDomain(serverFactory *server.Factory, fn WithFunc1[model.Domain]) echo.HandlerFunc {
 
-	const location = "handler.WithRegistration"
-
 	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *domain.Factory) error {
 		domain := factory.Domain().Get()
 		return fn(ctx, factory, domain)

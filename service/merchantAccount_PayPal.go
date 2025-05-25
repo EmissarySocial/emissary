@@ -161,6 +161,6 @@ func (service *MerchantAccount) paypal_getCheckoutURL(merchantAccount *model.Mer
 	return txnResult.GetString("checkout_url"), nil
 }
 
-func (service *MerchantAccount) paypal_parseCheckoutResponse(queryParams url.Values, merchantAccount *model.MerchantAccount) (model.Guest, []model.Purchase, error) {
-	return model.NewGuest(), nil, derp.NotImplementedError("service.MerchantAccount.paypal_parseCheckoutResponse")
+func (service *MerchantAccount) paypal_getGuestFromCheckoutResponse(queryParams url.Values, merchantAccount *model.MerchantAccount) (model.Guest, error) {
+	return model.NewGuest(), derp.NotImplementedError("service.MerchantAccount.paypal_getGuestFromCheckoutResponse")
 }

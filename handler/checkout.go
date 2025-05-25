@@ -43,7 +43,7 @@ func GetCheckout(ctx *steranko.Context, factory *domain.Factory) error {
 // GetCheckoutResopnse collects the confirmation data from a successful checkout and updates Guest/Purchase records accordingly.
 func GetCheckoutResponse(ctx *steranko.Context, factory *domain.Factory, merchantAccount *model.MerchantAccount) error {
 
-	const location = "handler.GetCheckout"
+	const location = "handler.GetCheckoutResponse"
 
 	// Verify the Checkout Session
 	merchantAccountService := factory.MerchantAccount()
