@@ -203,6 +203,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.WithChildren:
 		return StepWithChildren(s)
 
+	case step.WithCircle:
+		return StepWithCircle(s)
+
 	case step.WithDraft:
 		return StepWithDraft(s)
 

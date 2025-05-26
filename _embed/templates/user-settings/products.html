@@ -3,7 +3,7 @@
 {{- $purchaseCount := .Purchases.Count -}}
 
 <div class="page app flex-row" script="on load take .selected from .nav-item for #nav-settings">
-	<title>{{.RuleCount}} Rules | {{.DisplayName}}</title>
+	<title>{{.RuleCount}} Products | {{.DisplayName}}</title>
 	<link rel="stylesheet" href="/.templates/user-settings/stylesheet">
 
 	<div id="app-sidebar" class="app-sidebar" hx-swap="innerHTML show:window:top">
@@ -14,7 +14,7 @@
 
 			<div role="link" hx-get="/@me/settings/following" class="turboclick menu-item ellipsis">{{icon "star"}} Following</div>
 			<div role="link" hx-get="/@me/settings/followers" class="turboclick menu-item ellipsis">{{icon "person"}} Followers</div>
-			<div role="link" hx-get="/@me/settings/products" class="turboclick menu-item ellipsis selected">{{icon "card-fill"}} Products</div>
+			<div role="link" hx-get="/@me/settings/circles" class="turboclick menu-item ellipsis selected">{{icon "circle-fill"}} Circles</div>
 			<div role="link" hx-get="/@me/settings/purchases" class="turboclick menu-item ellipsis">{{icon "person-card"}} Purchases</div>
 			<div role="link" hx-get="/@me/settings/rules" class="turboclick menu-item ellipsis">{{icon "rule"}} Rules</div>
 		</div>

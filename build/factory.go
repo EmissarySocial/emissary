@@ -25,6 +25,7 @@ type Factory interface {
 	Model(string) (service.ModelService, error)
 	ActivityStream() *service.ActivityStream
 	Attachment() *service.Attachment
+	Circle() *service.Circle
 	Connection() *service.Connection
 	Folder() *service.Folder
 	Following() *service.Following

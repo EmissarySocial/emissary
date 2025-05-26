@@ -9,23 +9,7 @@
 	schema: {
 		title: User Settings
 		type: object
-		properties: {
-			feeds: {
-				description: Array of people to render on the page
-				type: array
-				items: {
-					type: object
-					properties: {
-						url: {
-							type: string
-						}
-						name: {
-							type: string
-						}
-					}
-				}
-			}
-		}
+		properties: {}
 	}
 	bundles: {
 		stylesheet: {
@@ -34,17 +18,81 @@
 	}
 	actions: {
 
+		circles: {
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
+		circle-add: {
+			roles:["self"]
+			steps:[
+				{do:"with-circle", steps:[
+					{do:"as-modal", steps:[
+						{do:"edit", form: {
+							type:"layout-vertical"
+							label:"Add Circle"
+							children: [
+								{type:"text", path:"name", label:"Circle Name"}
+								{type:"textarea", path:"description", label:"Description"}
+							]
+						}}
+						{do:"save"}
+						{do:"trigger-event", event:"refreshPage"}
+					]}
+				]}
+			]
+		}
+
+		circle-edit: {
+			roles:["self"]
+			steps:[
+				{do:"with-circle", steps:[
+					{do:"as-modal", steps:[
+						{
+							do:edit
+							options:[
+								delete:/@me/settings/circle-delete?circleId={{.ObjectID}}
+								delete-label:Delete Circle
+							]
+							form: {
+								type:layout-vertical
+								label:Edit Circle
+								children: [
+									{type:"text", path:"name", label:"Circle Name"}
+									{type:"textarea", path:"description", label:"Description", options:{rows:5}}
+								]
+							},
+						}
+						{do:"save"}
+						{do:"trigger-event", event:"refreshPage"}
+					]}
+				]}
+			]
+		}
+
+		circle-delete: {
+			roles:["self"]
+			steps:[
+				{do:"with-circle", steps:[
+					{do:"delete", title:"Delete Circle?", message:"Are you sure you want to delete this circle? This will remove all access rights granted to circle members."}
+					{do:"trigger-event", event:"refreshPage"}
+				]}
+			]
+		}
+
 		followers: {
 			roles:["self"]
 			steps:[
-				{do:"view-html", file:"followers"}
+				{do:"view-html"}
 			]
 		}
 		
 		followers-list: {
 			roles:["self"]
 			steps:[
-				{do:"view-html", file:"followers-list"}
+				{do:"view-html"}
 			]
 		}
 
@@ -70,7 +118,7 @@
 			steps:[
 				{do:"with-follower", steps: [
 					{do:"as-modal", steps:[
-						{do:"view-html", file:"follower"}
+						{do:"view-html"}
 					]}
 				]}
 			]
@@ -89,14 +137,14 @@
 		following: {
 			roles: ["self"]
 			steps:[
-				{do:"view-html", file:"following"}
+				{do:"view-html"}
 			]
 		}
 
 		following-list: {
 			roles: ["self"]
 			steps:[
-				{do:"view-html", file:"following-list"}
+				{do:"view-html"}
 			]
 		}
 

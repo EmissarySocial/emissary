@@ -218,6 +218,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "with-children":
 		return NewWithChildren(stepInfo)
 
+	case "with-circle":
+		return NewWithCircle(stepInfo)
+
 	case "with-draft":
 		return NewWithDraft(stepInfo)
 

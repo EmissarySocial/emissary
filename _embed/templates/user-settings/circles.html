@@ -1,0 +1,55 @@
+{{- $circles := .Circles.ByName.Slice -}}
+
+<div class="page app flex-row" script="on load take .selected from .nav-item for #nav-settings">
+	<title>{{.RuleCount}} Circles | {{.DisplayName}}</title>
+	<link rel="stylesheet" href="/.templates/user-settings/stylesheet">
+
+	<div id="app-sidebar" class="app-sidebar" hx-swap="innerHTML show:window:top">
+
+		<div class="pos-sticky" style="top:96px;">
+	
+			<div class="bold text-xl margin-none margin-bottom">Settings</div>
+
+			<div role="link" hx-get="/@me/settings/following" class="turboclick menu-item ellipsis">{{icon "star"}} Following</div>
+			<div role="link" hx-get="/@me/settings/followers" class="turboclick menu-item ellipsis">{{icon "person"}} Followers</div>
+			<div role="link" hx-get="/@me/settings/circles" class="turboclick menu-item ellipsis selected">{{icon "circle-fill"}} Circles</div>
+			<div role="link" hx-get="/@me/settings/purchases" class="turboclick menu-item ellipsis">{{icon "person-card"}} Purchases</div>
+			<div role="link" hx-get="/@me/settings/rules" class="turboclick menu-item ellipsis">{{icon "rule"}} Rules</div>
+		</div>
+	
+	</div>
+	
+	<div class="app-content">
+
+		<h3>All Circles</h3>
+		<div class="alert-blue">
+			Circles help you manage your followers by grouping them together. When you add people to a circle, you can choose what content you share with them.
+			<a href="https://emissary.dev/circles" target="_blank">Learn more {{icon "new-window"}}</a>
+		</div>
+
+		<div class="table">
+
+			<div hx-get="/@me/settings/circle-add" role="button" class="link">
+				{{icon "add"}} Add a Circle
+			</div>
+
+			{{- range $index, $circle := $circles -}}
+				<div class="flex-row" role="button">
+					<div xhx-get="/@me/settings/circle-edit?circleId={{$circle.ID}}" role="button" class="flex-grow ellipsis">
+						{{icon "circle"}} {{$circle.Name}} 
+						{{- if ne "" $circle.Description -}}
+							<span class="margin-left text-sm text-gray">{{$circle.Description}}</span>
+						{{- end -}}
+					</div>
+					<div>
+						<button hx-get="/@me/settings/circle-edit?circleId={{$circle.ID}}" role="button" class="text-xs">Edit</button>
+					</div>
+				</div>
+			{{- end -}}
+		</div>
+	
+	</div>
+
+	<div hx-get="{{.URL}}" hx-trigger="refreshPage from:window" hx-push-url="false"></div>
+
+</div>

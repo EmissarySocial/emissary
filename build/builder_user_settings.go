@@ -201,6 +201,23 @@ func (w Settings) Template(templateID string) (model.Template, error) {
 	return templateService.Load(templateID)
 }
 
+// Circles returns a QueryBuilder for Circles owned by the current user
+func (w Settings) Circles() QueryBuilder[model.Circle] {
+
+	// Define inbound parameters
+	expressionBuilder := builder.NewBuilder().
+		String("label")
+
+	// Calculate criteria
+	criteria := exp.And(
+		expressionBuilder.Evaluate(w._request.URL.Query()),
+		exp.Equal("userId", w.AuthenticatedID()),
+	)
+
+	// Return the query builder
+	return NewQueryBuilder[model.Circle](w._factory.Circle(), criteria)
+}
+
 func (w Settings) Followers() QueryBuilder[model.FollowerSummary] {
 
 	// Define inbound parameters

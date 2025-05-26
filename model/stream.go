@@ -33,6 +33,7 @@ type Stream struct {
 	SocialRole       string                       `bson:"socialRole,omitempty"`   // Role to use for this Stream in social integrations (Article, Note, Image, etc)
 	Permissions      mapof.Object[sliceof.String] `bson:"permissions,omitempty"`  // Permissions maps UserIDs/GroupIDs into Roles for this Stream.
 	Products         mapof.Object[sliceof.String] `bson:"products,omitempty"`     // Products maps ProductIDs into Roles for this Stream.
+	Circles          mapof.Object[sliceof.String] `bson:"circles,omitempty"`      // Circles maps CircleIDs into Roles for this Stream.
 	DefaultAllow     id.Slice                     `bson:"defaultAllow,omitempty"` // List of Groups that are allowed to perform the 'default' (view) action.  This is used to query general access to the Stream from the database, before performing server-based authentication.
 	URL              string                       `bson:"url,omitempty"`          // URL of the original document
 	Token            string                       `bson:"token,omitempty"`        // Unique value that identifies this element in the URL

@@ -56,6 +56,7 @@ type Factory struct {
 	// services (within this domain/factory)
 	activityService        service.ActivityStream
 	attachmentService      service.Attachment
+	circleService          service.Circle
 	connectionService      service.Connection
 	domainService          service.Domain
 	emailService           service.DomainEmail
@@ -135,6 +136,7 @@ func NewFactory(domain config.Domain, port string, activityCache *mongo.Collecti
 	// Create empty service pointers.  These will be populated in the Refresh() step.
 	factory.activityService = service.NewActivityStream()
 	factory.attachmentService = service.NewAttachment()
+	factory.circleService = service.NewCircle()
 	factory.connectionService = service.NewConnection()
 	factory.domainService = service.NewDomain()
 	factory.emailService = service.NewDomainEmail(serverEmail)
@@ -243,6 +245,11 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 			factory.collection(CollectionAttachment),
 			factory.MediaServer(),
 			factory.Host(),
+		)
+
+		// Populate Circle Service
+		factory.circleService.Refresh(
+			factory.collection(CollectionConnection),
 		)
 
 		// Populate Connection Service
@@ -619,6 +626,9 @@ func (factory *Factory) Model(name string) (service.ModelService, error) {
 	case "activity":
 		return factory.Inbox(), nil
 
+	case "circle":
+		return factory.Circle(), nil
+
 	case "folder":
 		return factory.Folder(), nil
 
@@ -662,6 +672,11 @@ func (factory *Factory) Rule() *service.Rule {
 // Domain returns a fully populated Domain service
 func (factory *Factory) Domain() *service.Domain {
 	return &factory.domainService
+}
+
+// Circle returns a fully populated Circle service
+func (factory *Factory) Circle() *service.Circle {
+	return &factory.circleService
 }
 
 // Connection returns a fully populated Connection service
@@ -976,6 +991,9 @@ func (factory *Factory) collection(name string) data.Collection {
 func (factory *Factory) ModelService(object data.Object) service.ModelService {
 
 	switch object.(type) {
+
+	case *model.Circle:
+		return factory.Circle()
 
 	case *model.Folder:
 		return factory.Folder()

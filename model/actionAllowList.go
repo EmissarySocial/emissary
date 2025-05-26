@@ -12,6 +12,7 @@ type ActionAllowList struct {
 	Self          bool
 	GroupRoles    sliceof.String
 	ProductRoles  sliceof.String
+	CircleRoles   sliceof.String
 }
 
 // NewActionAllowList returns a fully initialized ActionAllowList
@@ -19,6 +20,7 @@ func NewActionAllowList() ActionAllowList {
 	return ActionAllowList{
 		GroupRoles:   make(sliceof.String, 0),
 		ProductRoles: make(sliceof.String, 0),
+		CircleRoles:  make(sliceof.String, 0),
 	}
 }
 
@@ -49,6 +51,10 @@ func (allowList ActionAllowList) Roles() sliceof.String {
 
 	if len(allowList.ProductRoles) > 0 {
 		result = append(result, allowList.ProductRoles...)
+	}
+
+	if len(allowList.CircleRoles) > 0 {
+		result = append(result, allowList.CircleRoles...)
 	}
 
 	return result
