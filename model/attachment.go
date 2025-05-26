@@ -69,9 +69,9 @@ func (attachment *Attachment) State() string {
 // It is part of the AccessLister interface
 func (attachment *Attachment) IsAuthor(authorID primitive.ObjectID) bool {
 
-	if attachment.ObjectType == AttachmentObjectTypeStream {
-		// TODO: What goes here??
-	}
+	// if attachment.ObjectType == AttachmentObjectTypeStream {
+	// TODO: What goes here??
+	// }
 
 	return false
 }
