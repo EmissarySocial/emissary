@@ -69,6 +69,6 @@ func (webhook *Webhook) RolesToGroupIDs(roleIDs ...string) id.Slice {
 
 // ProductID returns a map of RoleIDs to ProductIDs
 // It is part of the AccessLister interface
-func (webhook *Webhook) RolesToProductIDs(roleIDs ...string) id.Slice {
-	return nil
+func (webhook *Webhook) RolesToProductIDs(roleIDs ...string) sliceof.String {
+	return sliceof.NewString()
 }

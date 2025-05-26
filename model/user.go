@@ -212,8 +212,8 @@ func (user *User) RolesToGroupIDs(roleIDs ...string) id.Slice {
 
 // ProductID returns a map of RoleIDs to ProductIDs
 // It is part of the AccessLister interface
-func (user *User) RolesToProductIDs(roleIDs ...string) id.Slice {
-	return nil
+func (user *User) RolesToProductIDs(roleIDs ...string) sliceof.String {
+	return sliceof.NewString()
 }
 
 /******************************************

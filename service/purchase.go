@@ -214,7 +214,7 @@ func (service *Purchase) CreateOrUpdate(purchase *model.Purchase) error {
  ******************************************/
 
 // CountByGuestAndProduct returns the number of purchases made by a guest for a list of products
-func (service *Purchase) CountByGuestAndProduct(guestID primitive.ObjectID, productIDs ...primitive.ObjectID) (int64, error) {
+func (service *Purchase) CountByGuestAndProduct(guestID primitive.ObjectID, remoteProductIDs ...string) (int64, error) {
 
 	const location = "service.Purchase.CountByGuestAndProduct"
 
@@ -224,11 +224,11 @@ func (service *Purchase) CountByGuestAndProduct(guestID primitive.ObjectID, prod
 	}
 
 	// RULE: At least one productID must be provided
-	if len(productIDs) == 0 {
+	if len(remoteProductIDs) == 0 {
 		return 0, derp.InternalError(location, "No productIDs provided")
 	}
 
-	criteria := exp.Equal("guestId", guestID).AndIn("productId", productIDs)
+	criteria := exp.Equal("guestId", guestID).AndIn("remoteProductId", remoteProductIDs)
 
 	return service.Count(criteria)
 }

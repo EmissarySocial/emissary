@@ -116,6 +116,6 @@ func (searchTag *SearchTag) RolesToGroupIDs(roleIDs ...string) id.Slice {
 
 // ProductID returns a map of RoleIDs to ProductIDs
 // It is part of the AccessLister interface
-func (searchTag *SearchTag) RolesToProductIDs(roleIDs ...string) id.Slice {
-	return nil
+func (searchTag *SearchTag) RolesToProductIDs(roleIDs ...string) sliceof.String {
+	return sliceof.NewString()
 }

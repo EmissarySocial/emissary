@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/hannibal"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/toot/object"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -148,8 +149,8 @@ func (response *Response) RolesToGroupIDs(roleIDs ...string) id.Slice {
 
 // ProductID returns a map of RoleIDs to ProductIDs
 // It is part of the AccessLister interface
-func (response *Response) RolesToProductIDs(roleIDs ...string) id.Slice {
-	return nil
+func (response *Response) RolesToProductIDs(roleIDs ...string) sliceof.String {
+	return sliceof.NewString()
 }
 
 /******************************************

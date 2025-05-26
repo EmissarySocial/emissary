@@ -3,6 +3,7 @@ package model
 import (
 	"math"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/EmissarySocial/emissary/tools/datetime"
@@ -190,20 +191,40 @@ func (stream Stream) RolesToGroupIDs(roleIDs ...string) id.Slice {
 
 // ProductID returns a map of RoleIDs to ProductIDs
 // It is part of the AccessLister interface
-func (stream Stream) RolesToProductIDs(roleIDs ...string) id.Slice {
+func (stream Stream) RolesToProductIDs(roles ...string) sliceof.String {
 
-	result := id.NewSlice()
+	result := sliceof.NewString()
 
-	for productID, productRoleIDs := range stream.Products {
-		for _, roleID := range roleIDs {
-			if productRoleIDs.Contains(roleID) {
-				result = append(result, objectID(productID))
-				continue
-			}
+	for _, role := range roles {
+
+		combinedIDs, exists := stream.Products[role]
+
+		if !exists {
+			continue
+		}
+
+		for _, combinedID := range combinedIDs {
+			_, productID, _ := strings.Cut(combinedID, ":")
+			result = append(result, productID)
 		}
 	}
 
 	return result
+}
+
+// ProductsForRole returns a list of Product IDs that grant the requested role
+func (stream Stream) ProductsForRole(role string) sliceof.String {
+
+	// Find the products that grant the requested role
+	productIDs := sliceof.NewString()
+
+	for productID, roles := range stream.Products {
+		if roles.Contains(role) {
+			productIDs = append(productIDs, productID)
+		}
+	}
+
+	return productIDs
 }
 
 /******************************************

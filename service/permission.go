@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
+	"github.com/davecgh/go-spew/spew"
 )
 
 type Permission struct {
@@ -92,23 +93,14 @@ func (service *Permission) UserCan(authorization *model.Authorization, template 
 
 		if !guestID.IsZero() {
 
-			// Map the list of allowed roles to a list of ProductIDs
-			productIDs := accessLister.RolesToProductIDs(allowList.ProductRoles...)
+			allowed, err := service.UserHasRole(authorization, accessLister, allowList.ProductRoles...)
 
-			// Continue ONLY IF there is at least one ProductID that allows access to this action
-			if len(productIDs) > 0 {
+			if err != nil {
+				return false, derp.Wrap(err, location, "Unable to check user roles")
+			}
 
-				// Count the number of purchases for these Guest/Product combinations
-				count, err := service.purchaseService.CountByGuestAndProduct(guestID, productIDs...)
-
-				if err != nil {
-					return false, derp.Wrap(err, location, "Unable to count purchases")
-				}
-
-				// Allow if the guest owns any of the Products
-				if count > 0 {
-					return true, nil
-				}
+			if allowed {
+				return true, nil
 			}
 		}
 	}
@@ -118,12 +110,43 @@ func (service *Permission) UserCan(authorization *model.Authorization, template 
 }
 
 // UserHasRole returns TRUE if the user has privileges for the specified role
-func (service *Permission) UserHasRole() {}
+func (service *Permission) UserHasRole(authorization *model.Authorization, accessLister model.AccessLister, roles ...string) (bool, error) {
+
+	const location = "service.Permission.UserHasRole"
+
+	spew.Dump(location)
+
+	// Find the products that are associated with the provided roles
+	productIDs := accessLister.RolesToProductIDs(roles...)
+
+	spew.Dump("productIDs", productIDs)
+
+	if productIDs.IsEmpty() {
+		return false, nil // IF no products grant this role, then no access granted.
+	}
+
+	// Count how many of the eligible products the user has purchased
+	count, err := service.purchaseService.CountByGuestAndProduct(authorization.GuestID, productIDs...)
+
+	spew.Dump("count", count)
+	spew.Dump("err", err)
+
+	if err != nil {
+		return false, derp.Wrap(err, location, "Error counting purchases for user")
+	}
+
+	spew.Dump("result", count > 0)
+
+	// Return TRUE if the user has purchased on one or more eligible products
+	return (count > 0), nil
+}
 
 // UserInGroup returns TRUE if the user is a member of the specified group
-func (service *Permission) UserInGroup() {}
+func (service *Permission) UserInGroup() (bool, error) {
+	return false, derp.NotImplementedError("service.Permission.UserInGroup", "UserInGroup is not implemented")
+}
 
 // AuthorInGroup returns TRUE if the Author/AttributedTo is a member of the specified group
-func (service *Permission) AuthorInGroup(string) bool {
-	return false
+func (service *Permission) AuthorInGroup(string) (bool, error) {
+	return false, derp.NotImplementedError("service.Permission.AuthorInGroup", "AuthorInGroup is not implemented")
 }

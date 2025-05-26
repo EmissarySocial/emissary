@@ -4,6 +4,7 @@ import (
 	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/digit"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/toot/object"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -95,8 +96,8 @@ func (following *Following) RolesToGroupIDs(roleIDs ...string) id.Slice {
 
 // ProductID returns a map of RoleIDs to ProductIDs
 // It is part of the AccessLister interface
-func (following *Following) RolesToProductIDs(roleIDs ...string) id.Slice {
-	return nil
+func (following *Following) RolesToProductIDs(roleIDs ...string) sliceof.String {
+	return sliceof.NewString()
 }
 
 /******************************************

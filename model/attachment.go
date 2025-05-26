@@ -12,6 +12,7 @@ import (
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/list"
+	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -98,8 +99,8 @@ func (attachment *Attachment) RolesToGroupIDs(roleIDs ...string) id.Slice {
 
 // ProductID returns a map of RoleIDs to ProductIDs
 // It is part of the AccessLister interface
-func (attachment *Attachment) RolesToProductIDs(roleIDs ...string) id.Slice {
-	return nil
+func (attachment *Attachment) RolesToProductIDs(roleIDs ...string) sliceof.String {
+	return sliceof.NewString()
 }
 
 /******************************************

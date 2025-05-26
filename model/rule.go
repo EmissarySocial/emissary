@@ -3,6 +3,7 @@ package model
 import (
 	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data/journal"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/toot/object"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -85,8 +86,8 @@ func (rule *Rule) RolesToGroupIDs(roleIDs ...string) id.Slice {
 
 // ProductID returns a map of RoleIDs to ProductIDs
 // It is part of the AccessLister interface
-func (rule *Rule) RolesToProductIDs(roleIDs ...string) id.Slice {
-	return id.NewSlice()
+func (rule *Rule) RolesToProductIDs(roleIDs ...string) sliceof.String {
+	return sliceof.NewString()
 }
 
 /******************************************

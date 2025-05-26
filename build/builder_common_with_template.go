@@ -86,7 +86,19 @@ func (w Stream) UserInGroup(groupID string) bool {
 
 // UserHasRole returns TRUE if the user has privileges for the specified role
 func (w Stream) UserHasRole(role string) bool {
-	return false
+
+	const location = "builder.Stream.UserHasRole"
+
+	// Use the Permission service to check if the user has the specified role
+	permissionService := w._factory.Permission()
+	hasRole, err := permissionService.UserHasRole(&w._authorization, w._accessLister, role)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to check user roles"))
+		return false
+	}
+
+	return hasRole
 }
 
 // UserCan returns TRUE if this action is permitted on a stream (using the provided authorization)

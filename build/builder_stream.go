@@ -821,31 +821,12 @@ func (w Stream) AttachmentsByCategory(category string) (sliceof.Object[model.Att
 }
 
 /******************************************
- * Content Actors
+ * Purchase/Product/Checkout Methods
  ******************************************/
-
-func (w Stream) Followers() ([]model.Follower, error) {
-	followerService := w.factory().Follower()
-	return followerService.QueryByParent(model.FollowerTypeStream, w._stream.StreamID)
-}
-
-// CanCreate returns all of the templates that can be created underneath
-// the current stream.
-func (w Stream) CanCreate() []form.LookupCode {
-
-	templateService := w.factory().Template()
-	return templateService.ListByContainer(w._template.TemplateID)
-}
 
 // HasProducts returns TRUE if this stream has any products
 func (w Stream) HasProducts() bool {
 	return w._stream.HasProducts()
-}
-
-// Template returns the named Template object
-func (w Stream) Template(templateID string) (model.Template, error) {
-	templateService := w._factory.Template()
-	return templateService.Load(templateID)
 }
 
 func (w Stream) MerchantAccounts() QueryBuilder[model.MerchantAccount] {
@@ -868,6 +849,29 @@ func (w Stream) ProductIDs() sliceof.String {
 
 func (w Stream) Products() (sliceof.Object[form.LookupCode], error) {
 	return w._factory.MerchantAccount().ProductsByID(w._stream.ProductIDs()...)
+}
+
+/******************************************
+ * Other Stuff
+ ******************************************/
+
+// Followers returns all Followers of this Stream
+func (w Stream) Followers() ([]model.Follower, error) {
+	followerService := w.factory().Follower()
+	return followerService.QueryByParent(model.FollowerTypeStream, w._stream.StreamID)
+}
+
+// CanCreate returns all of the templates that can be created underneath
+// the current stream.
+func (w Stream) CanCreate() []form.LookupCode {
+	templateService := w.factory().Template()
+	return templateService.ListByContainer(w._template.TemplateID)
+}
+
+// Template returns the named Template object
+func (w Stream) Template(templateID string) (model.Template, error) {
+	templateService := w._factory.Template()
+	return templateService.Load(templateID)
 }
 
 /******************************************

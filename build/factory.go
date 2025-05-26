@@ -31,6 +31,7 @@ type Factory interface {
 	Follower() *service.Follower
 	Geocode() service.Geocode
 	Group() *service.Group
+	Guest() *service.Guest
 	Inbox() *service.Inbox
 	Mention() *service.Mention
 	MerchantAccount() *service.MerchantAccount

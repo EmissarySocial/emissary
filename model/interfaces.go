@@ -4,6 +4,7 @@ import (
 	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -33,7 +34,7 @@ type AccessLister interface {
 	RolesToGroupIDs(...string) id.Slice
 
 	// RolesToProductID returns a map of RoleIDs to ProductIDs
-	RolesToProductIDs(...string) id.Slice
+	RolesToProductIDs(...string) sliceof.String
 }
 
 // FieldLister wraps the Files() method, which provides the list of fields
