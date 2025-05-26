@@ -12,9 +12,9 @@
 		<div class="framed">
 			<a href="#main" class="hide-visual">Skip navigation</a>
 			{{- range .Navigation -}}
-				{{- $icon := join .Icon "-fill" -}}
 				<a href="/{{.Token}}" hx-boost="true" id="nav-{{.StreamID}}" class="nav-item turboclick">
-					<span class="icon">{{icon $icon}}</span>
+					<span class="icon selected-hide">{{icon .Icon}}</span>
+					<span class="icon selected-show">{{icon (join .Icon "-fill")}}</span>
 					<span class="label">{{.Label}}</span>
 				</a>
 			{{- end -}}
