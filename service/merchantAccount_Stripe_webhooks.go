@@ -5,15 +5,14 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/sliceof"
 )
 
 // stripe_handleWebhook processes product webhook events from Stripe
-func (service *MerchantAccount) stripe_parseCheckoutWebhook(header http.Header, body []byte, merchantAccount *model.MerchantAccount) (sliceof.Object[model.Purchase], error) {
+func (service *MerchantAccount) stripe_parseCheckoutWebhook(header http.Header, body []byte, merchantAccount *model.MerchantAccount) (model.Privilege, error) {
 
 	const location = "service.MerchantAccount.stripe_handleWebhook"
 
-	return nil, derp.NotImplementedError(location, "Stripe Webhook processing is not implemented yet")
+	return model.Privilege{}, derp.NotImplementedError(location, "Stripe Webhook processing is not implemented yet")
 
 	/*
 		var event stripe.Event

@@ -32,7 +32,7 @@ type Factory interface {
 	Follower() *service.Follower
 	Geocode() service.Geocode
 	Group() *service.Group
-	Guest() *service.Guest
+	Identity() *service.Identity
 	Inbox() *service.Inbox
 	Mention() *service.Mention
 	MerchantAccount() *service.MerchantAccount
@@ -47,7 +47,7 @@ type Factory interface {
 	Stream() *service.Stream
 	StreamArchive() *service.StreamArchive
 	StreamDraft() *service.StreamDraft
-	Purchase() *service.Purchase
+	Privilege() *service.Privilege
 	Template() *service.Template
 	Theme() *service.Theme
 	User() *service.User

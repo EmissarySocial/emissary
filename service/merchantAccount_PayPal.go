@@ -27,13 +27,13 @@ func (service *MerchantAccount) paypal_getServerAddress(merchantAccount *model.M
 }
 
 // paypal_parseCheckoutWebhook processes product webhook events from Stripe
-func (service *MerchantAccount) paypal_parseCheckoutWebhook(header http.Header, body []byte, merchantAccount *model.MerchantAccount) ([]model.Purchase, error) {
+func (service *MerchantAccount) paypal_parseCheckoutWebhook(header http.Header, body []byte, merchantAccount *model.MerchantAccount) (model.Privilege, error) {
 
 	const location = "service.MerchantAccount.paypal_parseCheckoutWebhook"
 
 	spew.Dump(location, merchantAccount, header, string(body))
 
-	return nil, derp.NotImplementedError(location)
+	return model.Privilege{}, derp.NotImplementedError(location)
 }
 
 // paypal_refreshMerchantAccount connects/refreshes the PayPal merchant account data
@@ -161,6 +161,6 @@ func (service *MerchantAccount) paypal_getCheckoutURL(merchantAccount *model.Mer
 	return txnResult.GetString("checkout_url"), nil
 }
 
-func (service *MerchantAccount) paypal_getGuestFromCheckoutResponse(queryParams url.Values, merchantAccount *model.MerchantAccount) (model.Guest, error) {
-	return model.NewGuest(), derp.NotImplementedError("service.MerchantAccount.paypal_getGuestFromCheckoutResponse")
+func (service *MerchantAccount) paypal_getPrivilegeFromCheckoutResponse(queryParams url.Values, merchantAccount *model.MerchantAccount) (model.Privilege, error) {
+	return model.Privilege{}, derp.NotImplementedError("service.MerchantAccount.paypal_getIdentityFromCheckoutResponse")
 }

@@ -4,6 +4,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/remote"
 	"github.com/benpate/remote/options"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/stripe/stripe-go/v78"
 )
 
@@ -30,4 +31,30 @@ func CheckoutSession(restrictedKey string, sessionID string) (stripe.CheckoutSes
 
 	// Success
 	return checkoutSession, nil
+}
+
+// CheckoutSessionProductIDs safely retrieves a slice of product IDs from Stripe Checkout Session.
+func CheckoutSessionProductIDs(checkoutSession stripe.CheckoutSession) sliceof.String {
+
+	// NPE Checks
+	if checkoutSession.LineItems == nil || checkoutSession.LineItems.Data == nil {
+		return sliceof.NewString()
+	}
+
+	result := sliceof.NewString()
+
+	// Collect the product IDs from the line items
+	for _, lineItem := range checkoutSession.LineItems.Data {
+
+		// NPE Checks
+		if lineItem == nil || lineItem.Price == nil || lineItem.Price.Product == nil {
+			continue
+		}
+
+		// Append the product ID to the result
+		result = append(result, lineItem.Price.Product.ID)
+	}
+
+	// Done.
+	return result
 }

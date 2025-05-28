@@ -27,8 +27,8 @@ type MerchantAccount struct {
 	collection        data.Collection
 	connectionService *Connection
 	jwtService        *JWT
-	guestService      *Guest
-	purchaseService   *Purchase
+	identityService   *Identity
+	privilegeService  *Privilege
 	encryptionKey     string
 	host              string
 }
@@ -43,12 +43,12 @@ func NewMerchantAccount() MerchantAccount {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *MerchantAccount) Refresh(collection data.Collection, connectionService *Connection, jwtService *JWT, guestService *Guest, purchaseService *Purchase, masterKey string, host string) {
+func (service *MerchantAccount) Refresh(collection data.Collection, connectionService *Connection, jwtService *JWT, identityService *Identity, privilegeService *Privilege, masterKey string, host string) {
 	service.collection = collection
 	service.connectionService = connectionService
 	service.jwtService = jwtService
-	service.guestService = guestService
-	service.purchaseService = purchaseService
+	service.identityService = identityService
+	service.privilegeService = privilegeService
 	service.encryptionKey = masterKey
 	service.host = host
 }
@@ -322,76 +322,70 @@ func (service *MerchantAccount) GetCheckoutURL(merchantAccount *model.MerchantAc
 	return "", derp.BadRequestError("service.MerchantAccount.GetCheckoutURL", "Invalid MerchantAccount Type", merchantAccount.Type)
 }
 
-func (service *MerchantAccount) ParseCheckoutResponse(queryParams url.Values, merchantAccount *model.MerchantAccount) (model.Guest, error) {
+func (service *MerchantAccount) ParseCheckoutResponse(queryParams url.Values, merchantAccount *model.MerchantAccount) (model.Privilege, error) {
 
 	const location = "service.MerchantAccount.ParseCheckoutResponse"
 
-	type guestGetter = func(url.Values, *model.MerchantAccount) (model.Guest, error)
-	var getter guestGetter
+	var getter func(url.Values, *model.MerchantAccount) (model.Privilege, error)
 
 	// Find the appropriate getter function for this MerchantAccount type
 	switch merchantAccount.Type {
 
 	case model.MerchantAccountTypePayPal:
-		getter = service.paypal_getGuestFromCheckoutResponse
+		getter = service.paypal_getPrivilegeFromCheckoutResponse
 
 	case model.MerchantAccountTypeStripe:
-		getter = service.stripe_getGuestFromCheckoutResponse
+		getter = service.stripe_getPrivilegeFromCheckoutResponse
 
 	default:
-		return model.Guest{}, derp.BadRequestError(location, "MerchantAccount must be PAYPAL or STRIPE", merchantAccount.Type)
+		return model.Privilege{}, derp.BadRequestError(location, "MerchantAccount must be PAYPAL or STRIPE", merchantAccount.Type)
 	}
 
-	// Retrieve the Guest record from the checkout response
-	guest, err := getter(queryParams, merchantAccount)
+	// Retrieve the Privilege record from the checkout response
+	privilege, err := getter(queryParams, merchantAccount)
 
 	if err != nil {
-		return model.Guest{}, derp.Wrap(err, location, "Error processing checkout response")
+		return model.Privilege{}, derp.Wrap(err, location, "Error processing checkout response")
 	}
 
-	// Make a new Purchase record for this Guest
-	purchase := model.NewPurchase()
-	purchase.GuestID = guest.GuestID
-	purchase.UserID = merchantAccount.UserID
-	purchase.RemoteProductID = queryParams.Get("productId")
-	purchase.RemoteGuestID = guest.RemoteIDs[merchantAccount.Type]
-
-	// LoadOrCreate a purchase record(s)
-	if err := service.purchaseService.Sync(purchase); err != nil {
-		return guest, derp.Wrap(err, location, "Error syncing purchase records")
+	// Save the (new?) Privilege record to the database
+	if err := service.privilegeService.Save(&privilege, "Created from Checkout"); err != nil {
+		return model.Privilege{}, derp.Wrap(err, location, "Error syncing privilege records")
 	}
 
 	// Success!
-	return guest, nil
+	return privilege, nil
 }
 
 func (service *MerchantAccount) ParseCheckoutWebhook(header http.Header, body []byte, merchantAccount *model.MerchantAccount) error {
 
 	const location = "service.MerchantAccount.ParseCheckoutWebhook"
 
-	var purchases sliceof.Object[model.Purchase]
-	var err error
+	var parser func(header http.Header, body []byte, merchantAccount *model.MerchantAccount) (model.Privilege, error)
 
 	// Fan out to the appropriate MerchantAccount type
 	switch merchantAccount.Type {
 
 	case model.MerchantAccountTypePayPal:
-		purchases, err = service.paypal_parseCheckoutWebhook(header, body, merchantAccount)
+		parser = service.paypal_parseCheckoutWebhook
 
 	case model.MerchantAccountTypeStripe:
-		purchases, err = service.stripe_parseCheckoutWebhook(header, body, merchantAccount)
+		parser = service.stripe_parseCheckoutWebhook
 
 	default:
 		return derp.InternalError(location, "Invalid MerchantAccount Type", merchantAccount.Type)
 	}
 
+	// Parse the webhook data
+	privilege, err := parser(header, body, merchantAccount)
+
 	if err != nil {
 		return derp.Wrap(err, location, "Error parsing webhook data")
 	}
 
-	// Sync the new/updated purchase record(s)
-	if err := service.purchaseService.Sync(purchases...); err != nil {
-		return derp.Wrap(err, location, "Error syncing purchase records")
+	// Sync the new/updated privilege record(s)
+	if err := service.privilegeService.Save(&privilege, "Updated via WebHook"); err != nil {
+		return derp.Wrap(err, location, "Error syncing privilege records")
 	}
 
 	// Done.

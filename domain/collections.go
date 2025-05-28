@@ -27,10 +27,13 @@ const CollectionGroup = "Group"
 // CollectionGuest is the name of the database collection where Guest records are stored
 const CollectionGuest = "Guest"
 
-// CollectionInbox is the database colleciton where user's Inbox records are stored
+// CollectionIdentity is the database collection where user's Identity records are stored
+const CollectionIdentity = "Identity"
+
+// CollectionInbox is the database collection where user's Inbox records are stored
 const CollectionInbox = "Inbox"
 
-// CollectionJWT is the database colleciton where user's JWTKey records are stored
+// CollectionJWT is the database collection where user's JWTKey records are stored
 const CollectionJWT = "JWT"
 
 // CollectionMention is the name of the database collection where Mention records are stored
@@ -48,11 +51,8 @@ const CollectionOAuthUserToken = "OAuthUserToken"
 // CollectionOutbox is the name of the database collection where users' Outbox records are stored
 const CollectionOutbox = "Outbox"
 
-// CollectionProduct is the name of the database collection where Products are stored
-const CollectionProduct = "Product"
-
-// CollectionPurchase is the name of the database collection where Purchases are stored
-const CollectionPurchase = "Purchase"
+// CollectionPrivilege is the name of the database collection where Privileges are stored
+const CollectionPrivilege = "Privilege"
 
 // CollectionResponse is the name of the database collection where Responses are stored
 const CollectionResponse = "Response"

@@ -312,7 +312,7 @@ func (w Settings) RuleByToken(token string) model.Rule {
 	return rule
 }
 
-func (w Settings) Purchases() QueryBuilder[model.Purchase] {
+func (w Settings) Privileges() QueryBuilder[model.Privilege] {
 
 	expressionBuilder := builder.NewBuilder().
 		String("search", builder.WithAlias("emailAddress"), builder.WithDefaultOpBeginsWith())
@@ -322,7 +322,7 @@ func (w Settings) Purchases() QueryBuilder[model.Purchase] {
 		exp.Equal("userId", w._user.UserID),
 	)
 
-	return NewQueryBuilder[model.Purchase](w._factory.Purchase(), criteria)
+	return NewQueryBuilder[model.Privilege](w._factory.Privilege(), criteria)
 
 }
 

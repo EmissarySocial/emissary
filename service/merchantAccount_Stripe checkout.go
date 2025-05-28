@@ -6,12 +6,12 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/random"
+	"github.com/EmissarySocial/emissary/tools/stripeapi"
 	api "github.com/EmissarySocial/emissary/tools/stripeapi"
 	"github.com/benpate/derp"
 	"github.com/benpate/remote"
 	"github.com/benpate/remote/options"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -85,7 +85,7 @@ func (service *MerchantAccount) stripe_getCheckoutURL(merchantAccount *model.Mer
 }
 
 // stripe_parseCheckoutResponse parses the response from a Stripe Checkout Session.
-func (service *MerchantAccount) stripe_getGuestFromCheckoutResponse(queryParams url.Values, merchantAccount *model.MerchantAccount) (model.Guest, error) {
+func (service *MerchantAccount) stripe_getPrivilegeFromCheckoutResponse(queryParams url.Values, merchantAccount *model.MerchantAccount) (model.Privilege, error) {
 
 	const location = "service.MerchantAccount.stripe_parseCheckoutResponse"
 
@@ -97,37 +97,50 @@ func (service *MerchantAccount) stripe_getGuestFromCheckoutResponse(queryParams 
 	restrictedKey, err := service.stripe_getRestrictedKey(merchantAccount)
 
 	if err != nil {
-		return model.Guest{}, derp.Wrap(err, location, "Error retrieving API keys")
+		return model.Privilege{}, derp.Wrap(err, location, "Error retrieving API keys")
 	}
 
 	// Load the Checkout session from the Stripe API so that we can validate it and retrieve the customer details
 	checkoutSession, err := api.CheckoutSession(restrictedKey, checkoutSessionID)
 	if err != nil {
-		return model.Guest{}, derp.Wrap(err, location, "Error loading checkout session from Stripe")
+		return model.Privilege{}, derp.Wrap(err, location, "Error loading checkout session from Stripe")
 	}
-
-	spew.Dump(checkoutSession)
 
 	// RULE: transaction id must match the checkout session
 	if checkoutSession.ClientReferenceID != queryParams.Get("transactionId") {
-		return model.Guest{}, derp.BadRequestError(location, "Invalid Transaction ID", "The transaction ID does not match the checkout session")
+		return model.Privilege{}, derp.BadRequestError(location, "Invalid Transaction ID", "The transaction ID does not match the checkout session")
 	}
 
 	// RULE: customer details must be present
 	if checkoutSession.CustomerDetails == nil {
-		return model.Guest{}, derp.BadRequestError(location, "Invalid Checkout Session", "The checkout session does not contain customer details")
+		return model.Privilege{}, derp.BadRequestError(location, "Invalid Checkout Session", "The checkout session does not contain customer details")
 	}
 
-	// Use customer details to load or create a Guest record
-	emailAddress := checkoutSession.CustomerDetails.Email
-	remoteGuestID := checkoutSession.Customer.ID
-
-	guest, err := service.guestService.LoadOrCreate(emailAddress, model.MerchantAccountTypeStripe, remoteGuestID)
+	// Create a new Identity record for the guest
+	identity, err := service.identityService.LoadOrCreate(model.IdentifierTypeEmail, checkoutSession.CustomerDetails.Email, true)
 
 	if err != nil {
-		return model.Guest{}, derp.Wrap(err, location, "Error loading/creating guest by email", "email: "+emailAddress, "customerId: "+remoteGuestID)
+		return model.Privilege{}, derp.Wrap(err, location, "Error saving Identity", identity)
+	}
+
+	// Create a privilege for this Identity
+	remoteProductID := stripeapi.CheckoutSessionProductIDs(checkoutSession).First()
+	remotePersonID := checkoutSession.Customer.ID
+	remotePurchaseID := checkoutSession.ID
+
+	// Populate a new Privilege record for the Identity
+	privilege := model.NewPrivilege()
+	privilege.IdentityID = identity.IdentityID
+	privilege.UserID = merchantAccount.UserID
+	privilege.MerchantAccountID = merchantAccount.MerchantAccountID
+	privilege.RemotePersonID = remotePersonID
+	privilege.RemoteProductID = remoteProductID
+	privilege.RemotePurchaseID = remotePurchaseID
+
+	if err := service.privilegeService.Save(&privilege, "Created via Stripe Checkout"); err != nil {
+		return model.Privilege{}, derp.Wrap(err, location, "Error saving Privilege", privilege)
 	}
 
 	// Success.
-	return guest, nil
+	return privilege, nil
 }

@@ -9,13 +9,13 @@ import (
 
 // Authorization represents the JWT Claims that the server gives to a user when they sign in.
 type Authorization struct {
-	UserID      primitive.ObjectID   `json:"U,omitzero"`   // ID of the signed-in User
-	GuestID     primitive.ObjectID   `json:"GID,omitzero"` // ID of the authenticated Guest
-	GroupIDs    []primitive.ObjectID `json:"G,omitzero"`   // deprecated IDs for all server-level groups that the User belongs to
-	ClientID    primitive.ObjectID   `json:"C,omitzero"`   // ID of the OAuth Application/Client
-	Scope       string               `json:"S,omitzero"`   // OAuth Scopes that this user has access to
-	DomainOwner bool                 `json:"O,omitzero"`   // If TRUE, then this user is an owner of this domain
-	APIUser     bool                 `json:"A,omitzero"`   // If TRUE, then this user is an API user
+	UserID      primitive.ObjectID   `json:"U,omitzero"` // ID of the signed-in User
+	IdentityID  primitive.ObjectID   `json:"I,omitzero"` // ID of the authenticated Identity
+	GroupIDs    []primitive.ObjectID `json:"G,omitzero"` // deprecated IDs for all server-level groups that the User belongs to
+	ClientID    primitive.ObjectID   `json:"C,omitzero"` // ID of the OAuth Application/Client
+	Scope       string               `json:"S,omitzero"` // OAuth Scopes that this user has access to
+	DomainOwner bool                 `json:"O,omitzero"` // If TRUE, then this user is an owner of this domain
+	APIUser     bool                 `json:"A,omitzero"` // If TRUE, then this user is an API user
 
 	jwt.RegisteredClaims // By embedding the "RegisteredClaims" object, this record can support standard behaviors, like token expiration, etc.
 }
@@ -41,10 +41,10 @@ func (authorization Authorization) IsAuthenticated() bool {
 	return !authorization.UserID.IsZero()
 }
 
-// IsGuest returns TRUE if this authorization is valid and has a non-zero GuestID
-func (authorization Authorization) IsGuest() bool {
-	// If your GuestID is zero, then NO, you're not a guest
-	return !authorization.GuestID.IsZero()
+// IsIdentity returns TRUE if this authorization is valid and has a non-zero IdentityID
+func (authorization Authorization) IsIdentity() bool {
+	// If your IdentityID is zero, then NO, we don't know your identity
+	return !authorization.IdentityID.IsZero()
 }
 
 // AllGroupIDs returns a slice of groups that this authorization belongs to,

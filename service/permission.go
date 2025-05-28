@@ -3,19 +3,18 @@ package service
 import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
-	"github.com/davecgh/go-spew/spew"
 )
 
 type Permission struct {
-	purchaseService *Purchase
+	privilegeService *Privilege
 }
 
 func NewPermission() Permission {
 	return Permission{}
 }
 
-func (service *Permission) Refresh(purchaseService *Purchase) {
-	service.purchaseService = purchaseService
+func (service *Permission) Refresh(privilegeService *Privilege) {
+	service.privilegeService = privilegeService
 }
 
 // UserCan returns TRUE if this action is permitted on a stream (using the provided authorization)
@@ -88,10 +87,10 @@ func (service *Permission) UserCan(authorization *model.Authorization, template 
 	// Query the database to see if this User has purchased any allowed Products...
 	if len(allowList.ProductRoles) > 0 {
 
-		// We can check for product ownership ONLY IF there is a valid GuestID
-		guestID := authorization.GuestID
+		// We can check for product ownership ONLY IF there is a valid IdentityID
+		identityID := authorization.IdentityID
 
-		if !guestID.IsZero() {
+		if !identityID.IsZero() {
 
 			allowed, err := service.UserHasRole(authorization, accessLister, allowList.ProductRoles...)
 
@@ -114,28 +113,19 @@ func (service *Permission) UserHasRole(authorization *model.Authorization, acces
 
 	const location = "service.Permission.UserHasRole"
 
-	spew.Dump(location)
-
 	// Find the products that are associated with the provided roles
 	productIDs := accessLister.RolesToProductIDs(roles...)
-
-	spew.Dump("productIDs", productIDs)
 
 	if productIDs.IsEmpty() {
 		return false, nil // IF no products grant this role, then no access granted.
 	}
 
 	// Count how many of the eligible products the user has purchased
-	count, err := service.purchaseService.CountByGuestAndProduct(authorization.GuestID, productIDs...)
-
-	spew.Dump("count", count)
-	spew.Dump("err", err)
+	count, err := service.privilegeService.CountByIdentityAndProduct(authorization.IdentityID, productIDs...)
 
 	if err != nil {
 		return false, derp.Wrap(err, location, "Error counting purchases for user")
 	}
-
-	spew.Dump("result", count > 0)
 
 	// Return TRUE if the user has purchased on one or more eligible products
 	return (count > 0), nil

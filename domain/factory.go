@@ -65,7 +65,7 @@ type Factory struct {
 	followerService        service.Follower
 	followingService       service.Following
 	groupService           service.Group
-	guestService           service.Guest
+	identityService        service.Identity
 	inboxService           service.Inbox
 	jwtService             service.JWT
 	locatorService         service.Locator
@@ -86,7 +86,7 @@ type Factory struct {
 	streamService          service.Stream
 	streamArchiveService   service.StreamArchive
 	streamDraftService     service.StreamDraft
-	purchaseService        service.Purchase
+	purchaseService        service.Privilege
 	realtimeBroker         RealtimeBroker
 	userService            service.User
 	webhookService         service.Webhook
@@ -145,7 +145,7 @@ func NewFactory(domain config.Domain, port string, activityCache *mongo.Collecti
 	factory.followerService = service.NewFollower()
 	factory.followingService = service.NewFollowing()
 	factory.groupService = service.NewGroup()
-	factory.guestService = service.NewGuest()
+	factory.identityService = service.NewIdentity()
 	factory.inboxService = service.NewInbox()
 	factory.jwtService = service.NewJWT()
 	factory.locatorService = service.NewLocator()
@@ -166,7 +166,7 @@ func NewFactory(domain config.Domain, port string, activityCache *mongo.Collecti
 	factory.streamService = service.NewStream()
 	factory.streamArchiveService = service.NewStreamArchive()
 	factory.streamDraftService = service.NewStreamDraft()
-	factory.purchaseService = service.NewPurchase()
+	factory.purchaseService = service.NewPrivilege()
 	factory.userService = service.NewUser()
 	factory.webhookService = service.NewWebhook()
 
@@ -317,8 +317,9 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 			factory.collection(CollectionGroup),
 		)
 
-		factory.guestService.Refresh(
+		factory.identityService.Refresh(
 			factory.collection(CollectionGuest),
+			factory.Privilege(),
 		)
 
 		// Populate Inbox Service
@@ -358,8 +359,8 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 			factory.collection(CollectionMerchantAccount),
 			factory.Connection(),
 			factory.JWT(),
-			factory.Guest(),
-			factory.Purchase(),
+			factory.Identity(),
+			factory.Privilege(),
 			domain.MasterKey,
 			factory.Host(),
 		)
@@ -393,7 +394,7 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 
 		// Populate Permission Service
 		factory.permissionService.Refresh(
-			factory.Purchase(),
+			factory.Privilege(),
 		)
 
 		// Populate RealtimeBroker Service
@@ -505,9 +506,10 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 			factory.Stream(),
 		)
 
-		// Populate Purchase Service
+		// Populate Privilege Service
 		factory.purchaseService.Refresh(
-			factory.collection(CollectionPurchase),
+			factory.collection(CollectionPrivilege),
+			factory.Identity(),
 		)
 
 		// Populate User Service
@@ -645,7 +647,7 @@ func (factory *Factory) Model(name string) (service.ModelService, error) {
 		return factory.Stream(), nil
 
 	case "purchase":
-		return factory.Purchase(), nil
+		return factory.Privilege(), nil
 
 	case "user":
 		return factory.User(), nil
@@ -714,9 +716,9 @@ func (factory *Factory) Group() *service.Group {
 	return &factory.groupService
 }
 
-// Guest returns a fully populated Guest service
-func (factory *Factory) Guest() *service.Guest {
-	return &factory.guestService
+// Identity returns a fully populated Identity service
+func (factory *Factory) Identity() *service.Identity {
+	return &factory.identityService
 }
 
 // Inbox returns a fully populated Inbox service
@@ -789,8 +791,8 @@ func (factory *Factory) Permission() *service.Permission {
 	return &factory.permissionService
 }
 
-// Purchase returns a fully populated Purchase service
-func (factory *Factory) Purchase() *service.Purchase {
+// Privilege returns a fully populated Privilege service
+func (factory *Factory) Privilege() *service.Privilege {
 	return &factory.purchaseService
 }
 
@@ -1019,8 +1021,8 @@ func (factory *Factory) ModelService(object data.Object) service.ModelService {
 	case *model.Stream:
 		return factory.Stream()
 
-	case *model.Purchase:
-		return factory.Purchase()
+	case *model.Privilege:
+		return factory.Privilege()
 
 	default:
 		return nil

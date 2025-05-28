@@ -9,7 +9,6 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
 )
 
 // GetCheckout initiates a checkout session with the provided MerchantAccount and Product.
@@ -47,7 +46,7 @@ func GetCheckoutResponse(ctx *steranko.Context, factory *domain.Factory, merchan
 
 	// Verify the Checkout Session
 	merchantAccountService := factory.MerchantAccount()
-	guest, err := merchantAccountService.ParseCheckoutResponse(ctx.QueryParams(), merchantAccount)
+	privilege, err := merchantAccountService.ParseCheckoutResponse(ctx.QueryParams(), merchantAccount)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error retrieving checkout URL")
@@ -56,12 +55,12 @@ func GetCheckoutResponse(ctx *steranko.Context, factory *domain.Factory, merchan
 	authorization := getAuthorization(ctx)
 
 	// If the purchase is already logged in, then just forward them to the return URL
-	if authorization.GuestID == guest.GuestID {
+	if authorization.IdentityID == privilege.IdentityID {
 		return ctx.Redirect(http.StatusSeeOther, ctx.QueryParam("return"))
 	}
 
 	// Fall through means we need to update their JWT/Cookie
-	authorization.GuestID = guest.GuestID
+	authorization.IdentityID = privilege.IdentityID
 	token, err := factory.JWT().NewToken(authorization)
 
 	if err != nil {
@@ -73,7 +72,6 @@ func GetCheckoutResponse(ctx *steranko.Context, factory *domain.Factory, merchan
 	cookie := factory.Steranko().CreateCookie(cookieName, token, isTLS)
 
 	ctx.SetCookie(&cookie)
-	spew.Dump(cookie)
 
 	// Forward the client to the checkout URL
 	returnURL := ctx.QueryParam("return")

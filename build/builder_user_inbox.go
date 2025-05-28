@@ -347,7 +347,7 @@ func (w Inbox) IsInboxEmpty(inbox []model.Message) bool {
 	return true
 }
 
-func (w Inbox) Purchases() QueryBuilder[model.Purchase] {
+func (w Inbox) Privileges() QueryBuilder[model.Privilege] {
 
 	expressionBuilder := builder.NewBuilder().
 		String("search", builder.WithAlias("emailAddress"), builder.WithDefaultOpBeginsWith())
@@ -357,7 +357,7 @@ func (w Inbox) Purchases() QueryBuilder[model.Purchase] {
 		exp.Equal("userId", w._user.UserID),
 	)
 
-	return NewQueryBuilder[model.Purchase](w._factory.Purchase(), criteria)
+	return NewQueryBuilder[model.Privilege](w._factory.Privilege(), criteria)
 
 }
 
