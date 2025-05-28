@@ -72,21 +72,21 @@ func (rule *Rule) IsAuthor(authorID primitive.ObjectID) bool {
 	return false
 }
 
-// IsMember returns TRUE if this object directly represents the provided RuleID
+// IsMyself returns TRUE if this object directly represents the provided RuleID
 // It is part of the AccessLister interface
 func (rule *Rule) IsMyself(userID primitive.ObjectID) bool {
 	return userID == rule.UserID
 }
 
-// GroupIDs returns a map of RoleIDs to GroupIDs
+// RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.
 // It is part of the AccessLister interface
 func (rule *Rule) RolesToGroupIDs(roleIDs ...string) id.Slice {
 	return id.NewSlice()
 }
 
-// ProductID returns a map of RoleIDs to ProductIDs
+// RolesToPrivileges returns a slice of Privileges that grant access to any of the requested roles
 // It is part of the AccessLister interface
-func (rule *Rule) RolesToProductIDs(roleIDs ...string) sliceof.String {
+func (rule *Rule) RolesToPrivileges(roleIDs ...string) sliceof.String {
 	return sliceof.NewString()
 }
 

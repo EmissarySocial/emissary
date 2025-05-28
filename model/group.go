@@ -60,15 +60,15 @@ func (group *Group) IsMyself(userID primitive.ObjectID) bool {
 	return false
 }
 
-// RolesTOGroupIDs returns a map of RoleIDs to GroupIDs
+// RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.
 // It is part of the AccessLister interface
 func (group *Group) RolesToGroupIDs(roleIDs ...string) id.Slice {
 	return nil
 }
 
-// RolesToProductID returns a map of RoleIDs to ProductIDs
+// RolesToPrivileges returns a slice of Privileges that grant access to any of the requested roles.
 // It is part of the AccessLister interface
-func (group *Group) RolesToProductIDs(roleIDs ...string) sliceof.String {
+func (group *Group) RolesToPrivileges(roleIDs ...string) sliceof.String {
 	return sliceof.NewString()
 }
 

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"html/template"
 	"io/fs"
 	"maps"
@@ -17,6 +18,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/hjson/hjson-go/v4"
 	"github.com/rs/zerolog/log"
 )
@@ -419,13 +421,19 @@ func (service *Template) calculateAllowLists() error {
 	// For every template in the prep area...
 	for _, template := range service.templatePrep {
 
+		fmt.Println(template.TemplateID + "----------------------------------")
+
 		// For every action in the Template
 		for actionID, action := range template.Actions {
 
-			// Calculate the AllowLists for this Action
-			if err := action.CalcAllowList(&template); err != nil {
-				return derp.Wrap(err, location, "Invalid AllowList", template.TemplateID, actionID)
+			fmt.Println("", actionID)
+
+			// Calculate the AccessLists for this Action
+			if err := action.CalcAccessList(&template); err != nil {
+				return derp.Wrap(err, location, "Invalid AccessList", template.TemplateID, actionID)
 			}
+
+			spew.Dump(action.AccessList)
 
 			// Apply changes back into the Action set
 			template.Actions[actionID] = action

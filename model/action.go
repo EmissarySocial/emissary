@@ -14,32 +14,32 @@ import (
 
 // Action holds the data for actions that can be performed on any Stream from a particular Template.
 type Action struct {
-	Roles      sliceof.String                `json:"roles"      bson:"roles"`      // List of roles required to execute this Action.  If empty, then none are required.
-	States     sliceof.String                `json:"states"     bson:"states"`     // List of states required to execute this Action.  If empty, then one are required.
-	StateRoles mapof.Object[sliceof.String]  `json:"stateRoles" bson:"stateRoles"` // Map of states -> list of roles that can perform this Action (when a stream is in the given state)
-	Steps      sliceof.Object[step.Step]     `json:"steps"      bson:"steps"`      // List of steps to execute when GET-ing or POST-ing this Action.
-	AllowList  mapof.Object[ActionAllowList] `json:"-"          bson:"-"`          // Map of states -> set of users that can perform this Action.
+	Roles      sliceof.String               `json:"roles"      bson:"roles"`      // List of roles required to execute this Action.  If empty, then none are required.
+	States     sliceof.String               `json:"states"     bson:"states"`     // List of states required to execute this Action.  If empty, then one are required.
+	StateRoles mapof.Object[sliceof.String] `json:"stateRoles" bson:"stateRoles"` // Map of states -> list of roles that can perform this Action (when a stream is in the given state)
+	Steps      sliceof.Object[step.Step]    `json:"steps"      bson:"steps"`      // List of steps to execute when GET-ing or POST-ing this Action.
+	AccessList mapof.Object[AccessList]     `json:"-"          bson:"-"`          // Map of states -> set of roles that can perform this Action.
 }
 
 // NewAction returns a fully initialized Action
 func NewAction() Action {
 	return Action{
-		Roles:      make(sliceof.String, 0),
-		States:     make(sliceof.String, 0),
-		StateRoles: make(mapof.Object[sliceof.String]),
-		Steps:      make(sliceof.Object[step.Step], 0),
-		AllowList:  make(mapof.Object[ActionAllowList]),
+		Roles:      sliceof.NewString(),
+		States:     sliceof.NewString(),
+		StateRoles: mapof.NewObject[sliceof.String](),
+		Steps:      sliceof.NewObject[step.Step](),
+		AccessList: mapof.NewObject[AccessList](),
 	}
 }
 
-// CalcAllowList translates the roles, states, and stateRoles settings into a compact AllowList that
+// CalcAccessList translates the roles, states, and stateRoles settings into a compact AccessList that
 // can quickly determine if a user can perform this action on objects given their current state.
-func (action *Action) CalcAllowList(template *Template) error {
+func (action *Action) CalcAccessList(template *Template) error {
 
-	const location = "model.Action.CalcAllowList"
+	const location = "model.Action.CalcAccessList"
 
-	// Initialize/Reset the AllowList
-	action.AllowList = make(mapof.Object[ActionAllowList])
+	// Initialize/Reset the AccessList
+	action.AccessList = mapof.NewObject[AccessList]()
 
 	// Verify that all Roles exist in the list of templateRoles
 	for _, role := range action.Roles {
@@ -80,76 +80,90 @@ func (action *Action) CalcAllowList(template *Template) error {
 		}
 	}
 
-	// Calculate an AllowList for each state defined in the Template
+	// Calculate an AccessList for each state defined in the Template
 	for stateID := range template.States {
 
 		// If specific states are required to perform this action, then verify that this state...
 		if len(action.States) > 0 {
 
 			// If the current state is not allowed, this action cannot be performed.
-			// Skipping means that a zero allowList (no permissions) will be returned for this state.
+			// Skipping means that a zero accessList (no permissions) will be returned for this state.
 			if action.States.NotContains(stateID) {
 				continue
 			}
 		}
 
-		// Create an AllowList for Streams in this State
-		allowList := NewActionAllowList()
-		allowRoles := append(action.Roles, action.StateRoles[stateID]...)
-
-		// Calculate the roles in the AllowList
-		for _, roleID := range allowRoles {
-
-			switch roleID {
-
-			// MagicRoleOwner represents the domain owner who can do anything.
-			// No flag is required here because domain owners have access to everything.
-			case MagicRoleOwner:
-
-			// MagicRoleAnonymous is a shortcut for allowing anonymous access
-			case MagicRoleAnonymous:
-				allowList.Anonymous = true
-
-			// MagicRoleAuthenticated allows access to any identified user
-			case MagicRoleAuthenticated:
-				allowList.Authenticated = true
-
-			// MagicRoleMyself allows Users to perform actions on their own profies
-			case MagicRoleMyself:
-				allowList.Self = true
-
-			// MagicRoleAuthor allows Users to perform actions on Streams that they created
-			case MagicRoleAuthor:
-				allowList.Author = true
-
-			// All other privileges are granted via membership in a group or purchase of a product
-			default:
-				role := template.AccessRoles[roleID] // save becuase this was already checked above
-
-				if role.Purchasable {
-					allowList.ProductRoles = append(allowList.ProductRoles, roleID)
-				} else {
-					allowList.GroupRoles = append(allowList.GroupRoles, roleID)
-				}
-			}
-		}
-
-		// Unique-ifly the lists of group and product roles
-		allowList.GroupRoles = slice.Unique(allowList.GroupRoles)
-		allowList.ProductRoles = slice.Unique(allowList.ProductRoles)
-
-		// Put the updated allowList back into the map
-		action.AllowList[stateID] = allowList
+		// Set the AccessList for this State
+		action.AccessList[stateID] = action.calcAccessListForStateAndRole(template, stateID)
 	}
 
 	return nil
+}
+
+func (action *Action) calcAccessListForStateAndRole(template *Template, stateID string) AccessList {
+
+	// Create an AccessList for Streams in this State
+	result := NewAccessList()
+	allowedRoles := append(action.Roles, action.StateRoles[stateID]...)
+
+	if allowedRoles.Contains(MagicRoleAnonymous) {
+		result.Anonymous = true
+		return result
+	}
+
+	// Special case for Anonymous users overrides all other roles
+	if allowedRoles.Contains(MagicRoleAnonymous) {
+		result.Anonymous = true
+		return result
+	}
+
+	// Special case for Authenticated users overrides all other roles
+	if allowedRoles.Contains(MagicRoleAuthenticated) {
+		result.Authenticated = true
+		return result
+	}
+
+	// Calculate the roles in the AccessList
+	for _, roleID := range allowedRoles {
+
+		switch roleID {
+
+		// MagicRoleOwner represents the domain owner who can do anything.
+		// No flag is required here because domain owners can already do everything.
+		case MagicRoleOwner:
+
+		// MagicRoleMyself allows Users to perform actions on their own profies
+		case MagicRoleMyself:
+			result.Self = true
+
+		// MagicRoleAuthor allows Users to perform actions on Streams that they created
+		case MagicRoleAuthor:
+			result.Author = true
+
+		// All other privileges are granted via membership in a group or purchase of a product
+		default:
+			role := template.AccessRoles[roleID] // save becuase this was already checked above
+
+			if role.Purchasable {
+				result.Privileges = append(result.Privileges, roleID)
+			} else {
+				result.Groups = append(result.Groups, roleID)
+			}
+		}
+	}
+
+	// Unique-ify the lists of group and product roles
+	result.Groups = slice.Unique(result.Groups)
+	result.Privileges = slice.Unique(result.Privileges)
+
+	return result
 }
 
 // AllowedRoles returns a slice of roles that are allowed to perform this action,
 // based on the state of the object.  This list includes
 // system roles like "anonymous", "authenticated", "self", "author", and "owner".
 func (action *Action) AllowedRoles(stateID string) []string {
-	return action.AllowList[stateID].Roles()
+	return action.AccessList[stateID].Roles()
 }
 
 /******************************************

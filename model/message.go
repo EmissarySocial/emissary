@@ -74,23 +74,21 @@ func (message *Message) IsAuthor(authorID primitive.ObjectID) bool {
 	return false
 }
 
-// IsMember returns TRUE if this object directly represents the provided UserID
+// IsMyself returns TRUE if this object directly represents the provided UserID
 // It is part of the AccessLister interface
 func (message *Message) IsMyself(userID primitive.ObjectID) bool {
 	return message.UserID == userID
 }
 
-// GroupIDs returns a map of RoleIDs to GroupIDs
+// RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.
 // It is part of the AccessLister interface
-// TODO: This should probably be refactored.
-// With the new authentication system, this should be a map of RoleIDs to GroupIDs
 func (message *Message) RolesToGroupIDs(roleIDs ...string) id.Slice {
 	return nil
 }
 
-// ProductID returns a map of RoleIDs to ProductIDs
+// RolesToPrivilegesductIDs returns a slice of Product IDs that grant access to any of the requested roles.
 // It is part of the AccessLister interface
-func (message *Message) RolesToProductIDs(roleIDs ...string) sliceof.String {
+func (message *Message) RolesToPrivileges(roleIDs ...string) sliceof.String {
 	return sliceof.NewString()
 }
 

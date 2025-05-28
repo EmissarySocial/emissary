@@ -27,14 +27,14 @@ type AccessLister interface {
 	// IsAuthor returns TRUE if the provided UserID the author of this object
 	IsAuthor(primitive.ObjectID) bool
 
-	// IsMember returns TRUE if this object directly represents the provided UserID
+	// IsMyself returns TRUE if this object directly represents the provided UserID
 	IsMyself(primitive.ObjectID) bool
 
 	// RolesToGroupIDs returns a map of RoleIDs to GroupIDs
 	RolesToGroupIDs(...string) id.Slice
 
-	// RolesToProductID returns a map of RoleIDs to ProductIDs
-	RolesToProductIDs(...string) sliceof.String
+	// RolesToPrivileges returns a map of RoleIDs to Privilege strings
+	RolesToPrivileges(...string) sliceof.String
 }
 
 // FieldLister wraps the Files() method, which provides the list of fields

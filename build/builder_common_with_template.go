@@ -75,23 +75,47 @@ func (builder CommonWithTemplate) execute(wr io.Writer, name string, data any) e
  ******************************************/
 
 // AuthorInGroup returns TRUE if the Author/AttributedTo is a member of the specified group
-func (w Stream) AuthorInGroup(string) bool {
-	return false
+func (builder CommonWithTemplate) AuthorInGroup(accessLister model.AccessLister, groupToken string) bool {
+
+	const location = "builder.Stream.AuthorInGroup"
+
+	// Use the Permission service to check if the user has the specified role
+	permissionService := builder._factory.Permission()
+	inGroup, err := permissionService.AuthorInGroup(accessLister, groupToken)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to check user roles"))
+		return false
+	}
+
+	return inGroup
 }
 
 // UserInGroup returns TRUE if the user is a member of the specified group
-func (w Stream) UserInGroup(groupID string) bool {
-	return false
+func (builder CommonWithTemplate) UserInGroup(groupToken string) bool {
+
+	const location = "builder.Stream.UserInGroup"
+
+	// Use the Permission service to check if the user has the specified role
+	permissionService := builder._factory.Permission()
+	inGroup, err := permissionService.UserInGroup(&builder._authorization, groupToken)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to check user roles"))
+		return false
+	}
+
+	return inGroup
 }
 
 // UserHasRole returns TRUE if the user has privileges for the specified role
-func (w Stream) UserHasRole(role string) bool {
+func (builder CommonWithTemplate) UserHasRole(role string) bool {
 
 	const location = "builder.Stream.UserHasRole"
 
 	// Use the Permission service to check if the user has the specified role
-	permissionService := w._factory.Permission()
-	hasRole, err := permissionService.UserHasRole(&w._authorization, w._accessLister, role)
+	permissionService := builder._factory.Permission()
+	hasRole, err := permissionService.UserHasRole(&builder._authorization, builder._accessLister, role)
 
 	if err != nil {
 		derp.Report(derp.Wrap(err, location, "Unable to check user roles"))
@@ -104,11 +128,13 @@ func (w Stream) UserHasRole(role string) bool {
 // UserCan returns TRUE if this action is permitted on a stream (using the provided authorization)
 func (builder CommonWithTemplate) UserCan(actionID string) bool {
 
+	const location = "builder.UserCan"
+
 	permissionService := builder._factory.Permission()
 	result, err := permissionService.UserCan(&builder._authorization, &builder._template, builder._accessLister, actionID)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "builder.UserCan", "Unable to check permissions"))
+		derp.Report(derp.Wrap(err, location, "Unable to check permissions"))
 		return false
 	}
 

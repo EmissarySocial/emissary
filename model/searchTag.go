@@ -100,22 +100,20 @@ func (searchTag *SearchTag) IsAuthor(authorID primitive.ObjectID) bool {
 	return false
 }
 
-// IsMember returns TRUE if this object directly represents the provided UserID
+// IsMyself returns TRUE if this object directly represents the provided UserID
 // It is part of the AccessLister interface
 func (searchTag *SearchTag) IsMyself(userID primitive.ObjectID) bool {
 	return false
 }
 
-// GroupIDs returns a map of RoleIDs to GroupIDs
+// RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.
 // It is part of the AccessLister interface
-// TODO: This should probably be refactored.
-// With the new authentication system, this should be a map of RoleIDs to GroupIDs
 func (searchTag *SearchTag) RolesToGroupIDs(roleIDs ...string) id.Slice {
 	return nil
 }
 
-// ProductID returns a map of RoleIDs to ProductIDs
+// RolesToPrivileges returns a slice of Privileges that grant access to any of the requested roles.
 // It is part of the AccessLister interface
-func (searchTag *SearchTag) RolesToProductIDs(roleIDs ...string) sliceof.String {
+func (searchTag *SearchTag) RolesToPrivileges(roleIDs ...string) sliceof.String {
 	return sliceof.NewString()
 }

@@ -176,23 +176,21 @@ func (stream Stream) IsAuthor(authorID primitive.ObjectID) bool {
 	return authorID == stream.AttributedTo.UserID
 }
 
-// IsMember returns TRUE if this object directly represents the provided UserID
+// IsMyself returns TRUE if this object directly represents the provided UserID
 // It is part of the AccessLister interface
 func (stream Stream) IsMyself(_ primitive.ObjectID) bool {
 	return false
 }
 
-// GroupIDs returns a map of RoleIDs to GroupIDs
+// RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.
 // It is part of the AccessLister interface
-// TODO: This should probably be refactored.
-// With the new authentication system, this should be a map of RoleIDs to GroupIDs
 func (stream Stream) RolesToGroupIDs(roleIDs ...string) id.Slice {
 	return stream.PermissionGroups(roleIDs...)
 }
 
-// ProductID returns a map of RoleIDs to ProductIDs
+// RolesToPrivileges returns a slice of Privileges that grant any of the requested roles
 // It is part of the AccessLister interface
-func (stream Stream) RolesToProductIDs(roles ...string) sliceof.String {
+func (stream Stream) RolesToPrivileges(roles ...string) sliceof.String {
 
 	result := sliceof.NewString()
 
@@ -211,21 +209,6 @@ func (stream Stream) RolesToProductIDs(roles ...string) sliceof.String {
 	}
 
 	return result
-}
-
-// ProductsForRole returns a list of Product IDs that grant the requested role
-func (stream Stream) ProductsForRole(role string) sliceof.String {
-
-	// Find the products that grant the requested role
-	productIDs := sliceof.NewString()
-
-	for productID, roles := range stream.Products {
-		if roles.Contains(role) {
-			productIDs = append(productIDs, productID)
-		}
-	}
-
-	return productIDs
 }
 
 /******************************************

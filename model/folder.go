@@ -66,23 +66,21 @@ func (folder *Folder) IsAuthor(authorID primitive.ObjectID) bool {
 	return false
 }
 
-// IsMember returns TRUE if this object directly represents the provided UserID
+// IsMyself returns TRUE if this object directly represents the provided UserID
 // It is part of the AccessLister interface
 func (folder *Folder) IsMyself(userID primitive.ObjectID) bool {
 	return userID == folder.UserID
 }
 
-// GroupIDs returns a map of RoleIDs to GroupIDs
+// RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.
 // It is part of the AccessLister interface
-// TODO: This should probably be refactored.
-// With the new authentication system, this should be a map of RoleIDs to GroupIDs
 func (folder *Folder) RolesToGroupIDs(roleIDs ...string) id.Slice {
 	return nil
 }
 
-// ProductID returns a map of RoleIDs to ProductIDs
+// RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.
 // It is part of the AccessLister interface
-func (folder *Folder) RolesToProductIDs(roleIDs ...string) sliceof.String {
+func (folder *Folder) RolesToPrivileges(roleIDs ...string) sliceof.String {
 	return sliceof.NewString()
 }
 

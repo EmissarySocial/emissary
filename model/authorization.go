@@ -3,19 +3,21 @@ package model
 import (
 	"strings"
 
+	"github.com/benpate/rosetta/slice"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/golang-jwt/jwt/v5"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Authorization represents the JWT Claims that the server gives to a user when they sign in.
 type Authorization struct {
-	UserID      primitive.ObjectID   `json:"U,omitzero"` // ID of the signed-in User
-	IdentityID  primitive.ObjectID   `json:"I,omitzero"` // ID of the authenticated Identity
-	GroupIDs    []primitive.ObjectID `json:"G,omitzero"` // deprecated IDs for all server-level groups that the User belongs to
-	ClientID    primitive.ObjectID   `json:"C,omitzero"` // ID of the OAuth Application/Client
-	Scope       string               `json:"S,omitzero"` // OAuth Scopes that this user has access to
-	DomainOwner bool                 `json:"O,omitzero"` // If TRUE, then this user is an owner of this domain
-	APIUser     bool                 `json:"A,omitzero"` // If TRUE, then this user is an API user
+	UserID      primitive.ObjectID                 `json:"U,omitzero"` // ID of the signed-in User
+	IdentityID  primitive.ObjectID                 `json:"I,omitzero"` // ID of the authenticated Identity
+	GroupIDs    sliceof.Object[primitive.ObjectID] `json:"G,omitzero"` // deprecated IDs for all server-level groups that the User belongs to
+	ClientID    primitive.ObjectID                 `json:"C,omitzero"` // ID of the OAuth Application/Client
+	Scope       string                             `json:"S,omitzero"` // OAuth Scopes that this user has access to
+	DomainOwner bool                               `json:"O,omitzero"` // If TRUE, then this user is an owner of this domain
+	APIUser     bool                               `json:"A,omitzero"` // If TRUE, then this user is an API user
 
 	jwt.RegisteredClaims // By embedding the "RegisteredClaims" object, this record can support standard behaviors, like token expiration, etc.
 }
@@ -25,7 +27,7 @@ func NewAuthorization() Authorization {
 
 	result := Authorization{
 		UserID:      primitive.NilObjectID,
-		GroupIDs:    make([]primitive.ObjectID, 0),
+		GroupIDs:    sliceof.NewObject[primitive.ObjectID](),
 		DomainOwner: false,
 	}
 
@@ -57,19 +59,9 @@ func (authorization *Authorization) AllGroupIDs() []primitive.ObjectID {
 	return result
 }
 
-// IsGroupMember returns TRUE if this authorization has any one of the specified groupID
+// IsGroupMember returns TRUE if this authorization contains any one of the specified groupIDs
 func (authorization Authorization) IsGroupMember(groupIDs ...primitive.ObjectID) bool {
-
-	// Check to see if the groupID is in the list of GroupIDs
-	for _, groupID := range groupIDs {
-		for _, authorizedGroupID := range authorization.GroupIDs {
-			if authorizedGroupID == groupID {
-				return true
-			}
-		}
-	}
-
-	return false
+	return slice.ContainsAny(authorization.GroupIDs, groupIDs...)
 }
 
 // Scopes returns a slice of scopes that this Authorization token is allowed to use.

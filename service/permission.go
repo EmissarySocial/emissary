@@ -1,8 +1,11 @@
 package service
 
 import (
+	"fmt"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
+	"github.com/davecgh/go-spew/spew"
 )
 
 type Permission struct {
@@ -24,85 +27,88 @@ func (service *Permission) UserCan(authorization *model.Authorization, template 
 
 	const location = "service.Permission.UserCan"
 
+	fmt.Println("")
+	spew.Dump("------------------", location, actionID)
+
 	// Find the action in the Template
 	action, exists := template.Actions[actionID]
 
 	if !exists {
+		spew.Dump("NOT EXISTS in..", template.Actions.Keys())
 		return false, nil
 	}
 
 	// Get a list of the valid roles for this action
-	allowList := action.AllowList[accessLister.State()]
+	accessList := action.AccessList[accessLister.State()]
+
+	spew.Dump(accessList)
 
 	// If Anonymous access is allowed, then EVERYONE can perform this action
-	if allowList.Anonymous {
+	if accessList.Anonymous {
+		spew.Dump("ANONYMOUS access is allowed")
 		return true, nil
 	}
 
 	//////////////////////////////////////////////////////////////////
 	// Beyond this point, you must be logged in to perform this action
 
+	// These checks are only valid if the page request is authenticated (via a UserID)
+	spew.Dump("User Is Authenticated")
 	// If the user is a domain owner, then they can do anything
 	if authorization.DomainOwner {
+		spew.Dump("DOMAIN OWNER can do anything")
 		return true, nil
 	}
 
-	// If "Authenticated" access is allowed, then any LOGGED IN USERS can perform this action
-	if allowList.Authenticated {
+	// If the accessList allows "authenticated" access, then any authenticated user can perform this action
+	if accessList.Authenticated {
 		if authorization.IsAuthenticated() {
+			spew.Dump("AUTHENTICATED access is allowed")
 			return true, nil
 		}
 	}
 
-	// If the allowList allows "author" access, then check to see if the user is the author of this object
-	if allowList.Author {
+	// If the accessList allows "author" access, then check to see if the user is the author of this object
+	if accessList.Author {
+		spew.Dump("AUTHOR access is allowed")
 		if accessLister.IsAuthor(authorization.UserID) {
+			spew.Dump("User is an AUTHOR.. allowed")
 			return true, nil
 		}
 	}
 
-	// If the allowList allows "myself" access, then check to see if this user is "myself"
-	if allowList.Self {
+	// If the accessList allows "myself" access, then check to see if this user is "myself"
+	if accessList.Self {
+		spew.Dump("MYSELF access is allowed")
 		if accessLister.IsMyself(authorization.UserID) {
+			spew.Dump("User is MYSELF.. allowed")
 			return true, nil
 		}
 	}
 
+	spew.Dump(accessList.Groups)
 	// Check for group access via the Authorization object
-	if len(allowList.GroupRoles) > 0 {
+	if len(accessList.Groups) > 0 {
 
-		if authorization.IsAuthenticated() {
+		// Map the list of allowed roles to a list of GroupIDs
+		groupIDs := accessLister.RolesToGroupIDs(accessList.Groups...)
 
-			// Map the list of allowed roles to a list of GroupIDs
-			groupIDs := accessLister.RolesToGroupIDs(allowList.GroupRoles...)
-
-			// Continue ONLY IF there is at least one are an GroupID that allows access to this action
-			if len(groupIDs) > 0 {
-
-				if authorization.IsGroupMember(groupIDs...) {
-					return true, nil
-				}
-			}
+		if authorization.IsGroupMember(groupIDs...) {
+			return true, nil
 		}
 	}
 
-	// Query the database to see if this User has purchased any allowed Products...
-	if len(allowList.ProductRoles) > 0 {
+	// These checks are only valid if the page request includes an Identity (via an IdentityID)
+	if authorization.IsIdentity() {
 
-		// We can check for product ownership ONLY IF there is a valid IdentityID
-		identityID := authorization.IdentityID
+		hasRole, err := service.hasPrivilege(authorization, accessLister, accessList.Privileges...)
 
-		if !identityID.IsZero() {
+		if err != nil {
+			return false, derp.Wrap(err, location, "Unable to check user roles")
+		}
 
-			allowed, err := service.UserHasRole(authorization, accessLister, allowList.ProductRoles...)
-
-			if err != nil {
-				return false, derp.Wrap(err, location, "Unable to check user roles")
-			}
-
-			if allowed {
-				return true, nil
-			}
+		if hasRole {
+			return true, nil
 		}
 	}
 
@@ -110,10 +116,74 @@ func (service *Permission) UserCan(authorization *model.Authorization, template 
 	return false, nil
 }
 
-// UserHasRole returns TRUE if the user has privileges for the specified role
-func (service *Permission) UserHasRole(authorization *model.Authorization, accessLister model.AccessLister, roles ...string) (bool, error) {
+// UserHasRole returns TRUE if the user has access to the specified role
+func (service *Permission) UserHasRole(authorization *model.Authorization, accessLister model.AccessLister, role string) (bool, error) {
 
 	const location = "service.Permission.UserHasRole"
+
+	spew.Dump("------------------", location, role)
+
+	// Domain Owners can do anything, so return TRUE immediately
+	if authorization.DomainOwner {
+		return true, nil
+	}
+
+	switch role {
+
+	case model.MagicRoleAnonymous:
+		return true, nil
+
+	case model.MagicRoleAuthenticated:
+		return authorization.IsAuthenticated(), nil
+
+	case model.MagicRoleAuthor:
+		return accessLister.IsAuthor(authorization.UserID), nil
+
+	case model.MagicRoleMyself:
+		return accessLister.IsMyself(authorization.UserID), nil
+
+	}
+
+	// If the authorization includes GroupIDs, then check those next
+	if authorization.GroupIDs.NotEmpty() {
+
+		// See if any of these roles are associated with the Groups from the Authorization
+		groupIDs := accessLister.RolesToGroupIDs(role)
+
+		if authorization.IsGroupMember(groupIDs...) {
+			return true, nil
+		}
+	}
+
+	// If the authorization includes an IdentityID, then check that next
+	if authorization.IsIdentity() {
+
+		// See if this Identity has privileges for the specified role
+		hasPrivilege, err := service.hasPrivilege(authorization, accessLister, role)
+
+		if err != nil {
+			return false, derp.Wrap(err, location, "Unable to check user roles")
+		}
+
+		if hasPrivilege {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+// HasPrivilege returns TRUE if the user has privileges for the specified role
+func (service *Permission) hasPrivilege(authorization *model.Authorization, accessLister model.AccessLister, allowedRoles ...string) (bool, error) {
+
+	const location = "service.Permission.HasPrivilege"
+
+	spew.Dump("------------------", location, allowedRoles)
+
+	// If no roles are provided then the user does not have permission
+	if len(allowedRoles) == 0 {
+		return false, nil
+	}
 
 	// Locate the authorized Identity
 	identity := model.NewIdentity()
@@ -122,18 +192,18 @@ func (service *Permission) UserHasRole(authorization *model.Authorization, acces
 	}
 
 	// Find the products that are associated with the provided roles
-	privileges := accessLister.RolesToProductIDs(roles...)
+	privileges := accessLister.RolesToPrivileges(allowedRoles...)
 
 	// Return TRUE if the identity includes one or more of the required privileges
 	return identity.HasPrivilege(privileges...), nil
 }
 
 // UserInGroup returns TRUE if the user is a member of the specified group
-func (service *Permission) UserInGroup() (bool, error) {
+func (service *Permission) UserInGroup(authorization *model.Authorization, groupToken string) (bool, error) {
 	return false, derp.NotImplementedError("service.Permission.UserInGroup", "UserInGroup is not implemented")
 }
 
 // AuthorInGroup returns TRUE if the Author/AttributedTo is a member of the specified group
-func (service *Permission) AuthorInGroup(string) (bool, error) {
+func (service *Permission) AuthorInGroup(accessLister model.AccessLister, groupToken string) (bool, error) {
 	return false, derp.NotImplementedError("service.Permission.AuthorInGroup", "AuthorInGroup is not implemented")
 }

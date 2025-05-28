@@ -66,21 +66,21 @@ func (domain *Domain) IsAuthor(authorID primitive.ObjectID) bool {
 	return false
 }
 
-// IsMember returns TRUE if this object directly represents the provided UserID
+// IsMyself returns TRUE if this object directly represents the provided UserID
 // It is part of the AccessLister interface
 func (domain *Domain) IsMyself(userID primitive.ObjectID) bool {
 	return false
 }
 
-// RolesToGroupIDs returns a map of RoleIDs to GroupIDs
+// RolesToGroupIDs returns a slice of GroupIDs that grant access to any of the requested roles.
 // It is part of the AccessLister interface
 func (domain *Domain) RolesToGroupIDs(roleIDs ...string) id.Slice {
 	return nil
 }
 
-// RolesToProductID returns a map of RoleIDs to ProductIDs
+// RolesToPrivileges returns a slice of Privileges that grant access to any of the requested roles.
 // It is part of the AccessLister interface
-func (domain *Domain) RolesToProductIDs(roleIDs ...string) sliceof.String {
+func (domain *Domain) RolesToPrivileges(roleIDs ...string) sliceof.String {
 	return sliceof.NewString()
 }
 

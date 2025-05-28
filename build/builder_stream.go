@@ -49,14 +49,14 @@ func NewStream(factory Factory, request *http.Request, response http.ResponseWri
 	common, err := NewCommonWithTemplate(factory, request, response, template, stream, actionID)
 
 	if err != nil {
-		return Stream{}, derp.ReportAndReturn(derp.Wrap(err, location, "Error creating common builder"))
+		return Stream{}, derp.Wrap(err, location, "Error creating common builder")
 	}
 
 	if !common.UserCan(actionID) {
 		if common._authorization.IsAuthenticated() {
-			return Stream{}, derp.ReportAndReturn(derp.ForbiddenError(location, "Forbidden"))
+			return Stream{}, derp.ForbiddenError(location, "Forbidden")
 		} else {
-			return Stream{}, derp.ReportAndReturn(derp.UnauthorizedError(location, "Anonymous user is not authorized to perform this action", stream.URL, actionID))
+			return Stream{}, derp.UnauthorizedError(location, "Anonymous user is not authorized to perform this action", stream.URL, actionID)
 		}
 	}
 

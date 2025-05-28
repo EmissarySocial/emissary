@@ -29,6 +29,14 @@ func (slice Slice) Length() int {
 	return len(slice)
 }
 
+func (slice Slice) IsEmpty() bool {
+	return slice.Length() == 0
+}
+
+func (slice Slice) NotEmpty() bool {
+	return slice.Length() > 0
+}
+
 func (slice Slice) GetStringOK(name string) (string, bool) {
 
 	if index, ok := schema.Index(name, slice.Length()); ok {
