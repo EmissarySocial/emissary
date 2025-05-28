@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
 
@@ -85,6 +86,11 @@ func (service *Identity) Load(criteria exp.Expression, identity *model.Identity)
 
 // Save adds/updates an Identity in the database
 func (service *Identity) Save(identity *model.Identity, note string) error {
+
+	// Pick a default name, if necessary
+	if identity.Name == "" {
+		identity.Name = first.String(identity.EmailAddress, identity.WebFingerHandle)
+	}
 
 	// Validate the value before saving
 	if err := service.Schema().Validate(identity); err != nil {
@@ -171,6 +177,11 @@ func (service *Identity) Schema() schema.Schema {
  ******************************************/
 
 func (service *Identity) LoadByID(identityID primitive.ObjectID, identity *model.Identity) error {
+
+	if identityID.IsZero() {
+		return derp.BadRequestError("service.Identity.LoadByID", "IdentityID cannot be empty", identityID)
+	}
+
 	criteria := exp.Equal("_id", identityID)
 	return service.Load(criteria, identity)
 }

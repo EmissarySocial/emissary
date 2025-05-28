@@ -104,3 +104,8 @@ func (identity *Identity) Verify(identifierType string) bool {
 
 	return false
 }
+
+// HasPrivilege returns TRUE if the Identity has any of the provided privileges.
+func (identity Identity) HasPrivilege(privilege ...string) bool {
+	return identity.Privileges.ContainsAny(privilege...)
+}

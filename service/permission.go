@@ -6,6 +6,7 @@ import (
 )
 
 type Permission struct {
+	identityService  *Identity
 	privilegeService *Privilege
 }
 
@@ -13,7 +14,8 @@ func NewPermission() Permission {
 	return Permission{}
 }
 
-func (service *Permission) Refresh(privilegeService *Privilege) {
+func (service *Permission) Refresh(identityService *Identity, privilegeService *Privilege) {
+	service.identityService = identityService
 	service.privilegeService = privilegeService
 }
 
@@ -113,22 +115,17 @@ func (service *Permission) UserHasRole(authorization *model.Authorization, acces
 
 	const location = "service.Permission.UserHasRole"
 
+	// Locate the authorized Identity
+	identity := model.NewIdentity()
+	if err := service.identityService.LoadByID(authorization.IdentityID, &identity); err != nil {
+		return false, derp.Wrap(err, location, "Error loading Identity for user")
+	}
+
 	// Find the products that are associated with the provided roles
-	productIDs := accessLister.RolesToProductIDs(roles...)
+	privileges := accessLister.RolesToProductIDs(roles...)
 
-	if productIDs.IsEmpty() {
-		return false, nil // IF no products grant this role, then no access granted.
-	}
-
-	// Count how many of the eligible products the user has purchased
-	count, err := service.privilegeService.CountByIdentityAndProduct(authorization.IdentityID, productIDs...)
-
-	if err != nil {
-		return false, derp.Wrap(err, location, "Error counting purchases for user")
-	}
-
-	// Return TRUE if the user has purchased on one or more eligible products
-	return (count > 0), nil
+	// Return TRUE if the identity includes one or more of the required privileges
+	return identity.HasPrivilege(privileges...), nil
 }
 
 // UserInGroup returns TRUE if the user is a member of the specified group

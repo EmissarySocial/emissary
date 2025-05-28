@@ -318,7 +318,7 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 		)
 
 		factory.identityService.Refresh(
-			factory.collection(CollectionGuest),
+			factory.collection(CollectionIdentity),
 			factory.Privilege(),
 		)
 
@@ -394,6 +394,7 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 
 		// Populate Permission Service
 		factory.permissionService.Refresh(
+			factory.Identity(),
 			factory.Privilege(),
 		)
 

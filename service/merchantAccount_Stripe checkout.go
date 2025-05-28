@@ -6,7 +6,6 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/random"
-	"github.com/EmissarySocial/emissary/tools/stripeapi"
 	api "github.com/EmissarySocial/emissary/tools/stripeapi"
 	"github.com/benpate/derp"
 	"github.com/benpate/remote"
@@ -124,7 +123,7 @@ func (service *MerchantAccount) stripe_getPrivilegeFromCheckoutResponse(queryPar
 	}
 
 	// Create a privilege for this Identity
-	remoteProductID := stripeapi.CheckoutSessionProductIDs(checkoutSession).First()
+	remoteProductID := queryParams.Get("productId") // This is safe becuase it was passed via a JWT token (see WithMerchantAccountJWT)
 	remotePersonID := checkoutSession.Customer.ID
 	remotePurchaseID := checkoutSession.ID
 
