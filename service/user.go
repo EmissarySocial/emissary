@@ -574,6 +574,7 @@ func (service *User) ValidateUsername(userID primitive.ObjectID, username string
 		"admin",
 		"administrator",
 		"application",
+		"identity",
 		"me",
 		"owner",
 		"root",

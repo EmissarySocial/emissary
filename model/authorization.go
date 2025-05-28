@@ -36,14 +36,11 @@ func NewAuthorization() Authorization {
 
 // IsAuthenticated returns TRUE if this authorization is valid and has a non-zero UserID
 func (authorization Authorization) IsAuthenticated() bool {
-
-	// If your UserID is zero, then NO, you're not authenticated
 	return !authorization.UserID.IsZero()
 }
 
 // IsIdentity returns TRUE if this authorization is valid and has a non-zero IdentityID
 func (authorization Authorization) IsIdentity() bool {
-	// If your IdentityID is zero, then NO, we don't know your identity
 	return !authorization.IdentityID.IsZero()
 }
 

@@ -44,6 +44,11 @@
 						<span class="icon selected-show">{{icon "server-fill"}}</span>
 					</a>
 				{{- end -}}
+			{{- else if .IsIdentity -}}
+				<a href="/@identity" hx-boost="true" id="nav-identity" class="nav-item turboclick">
+					<span class="icon selected-hide">{{icon "user"}}</span>
+					<span class="icon selected-show">{{icon "user-fill"}}</span>
+				</a>
 			{{- else -}}
 				<a href="/signin" id="nav-signin" class="nav-item turboclick">
 					<span class="icon">{{icon "user"}}</span>

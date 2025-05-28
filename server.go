@@ -342,6 +342,8 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@me/oauth/callback/authorize:provider", handler.WithAuthenticatedUser(factory, handler.GetUserOAuthCallback))
 	e.POST("/@me/oauth/revoke", handler.WithAuthenticatedUser(factory, handler.PostUserOAuthRevoke))
 
+	e.GET("/@identity", handler.WithIdentity(factory, handler.GetIdentity))
+
 	// Routes for Users
 	e.GET("/@:userId", handler.WithUserForwarding(factory, handler.GetOutbox))
 	e.POST("/@:userId", handler.WithUser(factory, handler.PostOutbox))

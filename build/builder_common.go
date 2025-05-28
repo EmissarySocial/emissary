@@ -253,6 +253,11 @@ func (w Common) IsAuthenticated() bool {
 	return authorization.IsAuthenticated()
 }
 
+func (w Common) IsIdentity() bool {
+	authorization := w.authorization()
+	return authorization.IsIdentity()
+}
+
 // IsOwner returns TRUE if the user is a Domain Owner
 func (w Common) IsOwner() bool {
 	authorization := w.authorization()
