@@ -1,8 +1,6 @@
 package model
 
 import (
-	"strings"
-
 	"github.com/EmissarySocial/emissary/model/step"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
@@ -34,51 +32,10 @@ func NewAction() Action {
 
 // CalcAccessList translates the roles, states, and stateRoles settings into a compact AccessList that
 // can quickly determine if a user can perform this action on objects given their current state.
-func (action *Action) CalcAccessList(template *Template) error {
-
-	const location = "model.Action.CalcAccessList"
+func (action *Action) CalcAccessList(template *Template, debug bool) error {
 
 	// Initialize/Reset the AccessList
 	action.AccessList = mapof.NewObject[AccessList]()
-
-	// Verify that all Roles exist in the list of templateRoles
-	for _, role := range action.Roles {
-		if !template.IsValidRole(role) {
-			return derp.InternalError(
-				location,
-				"Undefined role used in Action.Roles.  Roles must be defined in the Template before use.",
-				"template: "+template.TemplateID,
-				"available roles: "+strings.Join(template.AccessRoles.Keys(), ", "),
-				"selected role: "+role,
-			)
-		}
-	}
-
-	// Verify that all States and Roles exist in the list of templateStates
-	for stateID, roles := range action.StateRoles {
-
-		if !template.IsValidState(stateID) {
-			return derp.InternalError(
-				location,
-				"Undefined state used in StateRoles. States must be defined in the Template before use.",
-				"template: "+template.TemplateID,
-				"available states: "+strings.Join(template.States.Keys(), ", "),
-				"selected state: "+stateID,
-			)
-		}
-		for _, role := range roles {
-			if !template.IsValidRole(role) {
-				return derp.InternalError(
-					location,
-					"Undefined role used in Action.StateRoles.  Roles must be defined in the Template before use.",
-					"template: "+template.TemplateID,
-					"state: "+stateID,
-					"available roles: "+strings.Join(template.AccessRoles.Keys(), ", "),
-					"selected role: "+role,
-				)
-			}
-		}
-	}
 
 	// Calculate an AccessList for each state defined in the Template
 	for stateID := range template.States {

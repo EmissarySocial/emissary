@@ -25,5 +25,17 @@ func NewInlineSuccess(stepInfo mapof.Any) (InlineSuccess, error) {
 	}, nil
 }
 
-// AmStep is here only to verify that this struct is a build pipeline step
-func (step InlineSuccess) AmStep() {}
+// Name returns the name of the step, which is used in debugging.
+func (step InlineSuccess) Name() string {
+	return "inline-success"
+}
+
+// RequiredStates returns a slice of states that must be defined any Template that uses this Step
+func (step InlineSuccess) RequiredStates() []string {
+	return []string{}
+}
+
+// RequiredRoles returns a slice of roles that must be defined any Template that uses this Step
+func (step InlineSuccess) RequiredRoles() []string {
+	return []string{}
+}

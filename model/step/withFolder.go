@@ -27,5 +27,17 @@ func NewWithFolder(stepInfo mapof.Any) (WithFolder, error) {
 	}, nil
 }
 
-// AmStep is here only to verify that this struct is a build pipeline step
-func (step WithFolder) AmStep() {}
+// Name returns the name of the step, which is used in debugging.
+func (step WithFolder) Name() string {
+	return "with-folder"
+}
+
+// RequiredStates returns a slice of states that must be defined any Template that uses this Step
+func (step WithFolder) RequiredStates() []string {
+	return requiredStates(step.SubSteps...)
+}
+
+// RequiredRoles returns a slice of roles that must be defined any Template that uses this Step
+func (step WithFolder) RequiredRoles() []string {
+	return requiredRoles(step.SubSteps...)
+}

@@ -23,5 +23,17 @@ func NewAsConfirmation(stepInfo mapof.Any) (AsConfirmation, error) {
 	}, nil
 }
 
-// AmStep is here only to verify that this struct is a build pipeline step
-func (step AsConfirmation) AmStep() {}
+// Name returns the name of the step, which is used in debugging.
+func (step AsConfirmation) Name() string {
+	return "as-confirmation"
+}
+
+// RequiredStates returns a slice of states that must be defined any Template that uses this Step
+func (step AsConfirmation) RequiredStates() []string {
+	return []string{}
+}
+
+// RequiredRoles returns a slice of roles that must be defined any Template that uses this Step
+func (step AsConfirmation) RequiredRoles() []string {
+	return []string{}
+}

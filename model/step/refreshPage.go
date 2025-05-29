@@ -10,5 +10,17 @@ func NewRefreshPage(stepInfo mapof.Any) (RefreshPage, error) {
 	return RefreshPage{}, nil
 }
 
-// AmStep is here only to verify that this struct is a build pipeline step
-func (step RefreshPage) AmStep() {}
+// Name returns the name of the step, which is used in debugging.
+func (step RefreshPage) Name() string {
+	return "refresh-page"
+}
+
+// RequiredStates returns a slice of states that must be defined any Template that uses this Step
+func (step RefreshPage) RequiredStates() []string {
+	return []string{}
+}
+
+// RequiredRoles returns a slice of roles that must be defined any Template that uses this Step
+func (step RefreshPage) RequiredRoles() []string {
+	return []string{}
+}

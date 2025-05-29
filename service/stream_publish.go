@@ -188,11 +188,12 @@ func (service *Stream) publish_stream_outbox(stream *model.Stream, activity mapo
  ******************************************/
 
 // UnPublish marks this stream as "published"
-func (service *Stream) UnPublish(user *model.User, stream *model.Stream, outbox bool) error {
+func (service *Stream) UnPublish(user *model.User, stream *model.Stream, stateID string, outbox bool) error {
 
 	const location = "service.Stream.UnPublish"
 
 	// RULE: Move unpublish date all the way to the end of time.
+	stream.StateID = stateID
 	stream.UnPublishDate = time.Now().Unix()
 
 	// Re-save the Stream with the updated values.

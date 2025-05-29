@@ -13,5 +13,17 @@ func NewSetPassword(stepInfo mapof.Any) (SetPassword, error) {
 	return SetPassword{}, nil
 }
 
-// AmStep is here only to verify that this struct is a build pipeline step
-func (step SetPassword) AmStep() {}
+// Name returns the name of the step, which is used in debugging.
+func (step SetPassword) Name() string {
+	return "set-password"
+}
+
+// RequiredStates returns a slice of states that must be defined any Template that uses this Step
+func (step SetPassword) RequiredStates() []string {
+	return []string{}
+}
+
+// RequiredRoles returns a slice of roles that must be defined any Template that uses this Step
+func (step SetPassword) RequiredRoles() []string {
+	return []string{}
+}

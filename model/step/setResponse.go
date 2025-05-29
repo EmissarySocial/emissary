@@ -11,5 +11,17 @@ func NewSetResponse(stepInfo mapof.Any) (SetResponse, error) {
 	return SetResponse{}, nil
 }
 
-// AmStep is here only to verify that this struct is a build pipeline step
-func (step SetResponse) AmStep() {}
+// Name returns the name of the step, which is used in debugging.
+func (step SetResponse) Name() string {
+	return "set-response"
+}
+
+// RequiredStates returns a slice of states that must be defined any Template that uses this Step
+func (step SetResponse) RequiredStates() []string {
+	return []string{}
+}
+
+// RequiredRoles returns a slice of roles that must be defined any Template that uses this Step
+func (step SetResponse) RequiredRoles() []string {
+	return []string{}
+}

@@ -27,5 +27,17 @@ func NewWithDraft(stepInfo mapof.Any) (WithDraft, error) {
 	}, nil
 }
 
-// AmStep is here only to verify that this struct is a build pipeline step
-func (step WithDraft) AmStep() {}
+// Name returns the name of the step, which is used in debugging.
+func (step WithDraft) Name() string {
+	return "with-draft"
+}
+
+// RequiredStates returns a slice of states that must be defined any Template that uses this Step
+func (step WithDraft) RequiredStates() []string {
+	return requiredStates(step.SubSteps...)
+}
+
+// RequiredRoles returns a slice of roles that must be defined any Template that uses this Step
+func (step WithDraft) RequiredRoles() []string {
+	return requiredRoles(step.SubSteps...)
+}

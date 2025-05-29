@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"html/template"
 	"io/fs"
 	"maps"
@@ -294,55 +293,100 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 
 	errors := make(sliceof.Object[derp.Error], 0)
 
+	// Scan all Templates in the prep area
 	for templateID, template := range service.templatePrep {
 
+		// RULE: Templates MUST have at least one Action, or else permissions won't work
+		if template.States.IsEmpty() {
+			errors.Append(derp.ValidationError(
+				"Template must define at least one State. Use 'default' if no other states are required.",
+				"template: "+templateID,
+			))
+		}
+
+		// Scan all Actions in the TTemplate
 		for actionID, action := range template.Actions {
 
 			// RULE: Actions must have at least one step
 			if len(action.Steps) == 0 {
 				errors.Append(derp.ValidationError(
-					"Actions must have at least one Step",
+					"Actions must have at least one Step.",
 					"template: "+templateID,
 					"action: "+actionID,
 				))
 			}
 
-			// RULE: States used in action.states must be defined
+			// Scan all Steps in the Action
+			for _, step := range action.Steps {
+
+				// RULE: States used in action steps must be defined
+				for _, state := range step.RequiredStates() {
+					if !template.IsValidState(state) {
+						errors.Append(derp.ValidationError(
+							"Undefined state used in action step",
+							"template: "+templateID,
+							"action: "+actionID,
+							"state required: "+state,
+							"states defined: "+strings.Join(template.States.Keys(), ", "),
+						))
+					}
+				}
+
+				// RULE: Roles used in action steps must be defined
+				for _, role := range step.RequiredRoles() {
+					if !template.IsValidRole(role) {
+						errors.Append(derp.ValidationError(
+							"Undefined role used in action step",
+							"template: "+templateID,
+							"action: "+actionID,
+							"role required: "+role,
+							"roles defined: "+strings.Join(template.AccessRoles.Keys(), ", "),
+						))
+					}
+				}
+			}
+
+			// Scan all statews in the Action
 			for _, stateID := range action.States {
+
+				// RULE: States used in action.states must be defined
 				if !template.IsValidState(stateID) {
 					errors.Append(derp.ValidationError(
 						"Undefined state used in action 'state' permissions",
 						"template: "+templateID,
 						"action: "+actionID,
-						"state: "+stateID,
-						"available roles: "+strings.Join(template.AccessRoles.Keys(), ", "),
+						"state required: "+stateID,
+						"states defined: "+strings.Join(template.States.Keys(), ", "),
 					))
 				}
 			}
 
-			// RULE: Roles used in action.roles must be defined i have a favorite child and her name is abby
+			// Scan all Roles inthe Action
 			for _, roleID := range action.Roles {
+
+				// RULE: Roles used in action.roles must be defined i have a favorite child and her name is abby
 				if !template.IsValidRole(roleID) {
 					errors.Append(derp.ValidationError(
-						"Undefined role used in action 'role' permissions",
+						"Undefined role used in action 'role' permissions.",
 						"template: "+templateID,
 						"action: "+actionID,
-						"role: "+roleID,
-						"available roles: "+strings.Join(template.AccessRoles.Keys(), ", "),
+						"role required: "+roleID,
+						"roles defined: "+strings.Join(template.AccessRoles.Keys(), ", "),
 					))
 				}
 			}
 
+			// Scan all StateRoles in the Action
 			for stateID, roles := range action.StateRoles {
 
 				// RULE: States used in action.stateRoles must be defined
 				if !template.IsValidState(stateID) {
 					errors.Append(derp.ValidationError(
-						"Undefined state used in action 'state/roles' permissions",
+						"Undefined state used in action 'state/roles' permissions.",
 						"template: "+templateID,
 						"action: "+actionID,
-						"state: "+stateID,
-						"available states: "+strings.Join(template.States.Keys(), ", "),
+						"state required: "+stateID,
+						"states defined: "+strings.Join(template.States.Keys(), ", "),
 					))
 				}
 
@@ -354,9 +398,8 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 							"Undefined role used in action 'state/roles' permissions",
 							"template: "+templateID,
 							"action: "+actionID,
-							"role: "+roleID,
-							"state: "+stateID,
-							"available roles: "+strings.Join(template.AccessRoles.Keys(), ", "),
+							"role required: "+roleID,
+							"roles defined: "+strings.Join(template.AccessRoles.Keys(), ", "),
 						))
 					}
 				}
@@ -364,6 +407,7 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 		}
 	}
 
+	// Phew.  Hopefully everything is valid.
 	return errors
 }
 
@@ -421,19 +465,25 @@ func (service *Template) calculateAllowLists() error {
 	// For every template in the prep area...
 	for _, template := range service.templatePrep {
 
-		fmt.Println(template.TemplateID + "----------------------------------")
+		if template.TemplateID == "bandwagon-search" {
+			spew.Dump("Calculating Allow Lists for Template", template.TemplateID, template.States)
+		}
 
 		// For every action in the Template
 		for actionID, action := range template.Actions {
 
-			fmt.Println("", actionID)
+			if template.TemplateID == "bandwagon-search" {
+				spew.Dump(actionID+" ------", action.States, action.Roles, action.StateRoles)
+			}
 
 			// Calculate the AccessLists for this Action
-			if err := action.CalcAccessList(&template); err != nil {
+			if err := action.CalcAccessList(&template, true); err != nil {
 				return derp.Wrap(err, location, "Invalid AccessList", template.TemplateID, actionID)
 			}
 
-			spew.Dump(action.AccessList)
+			if template.TemplateID == "bandwagon-search" {
+				spew.Dump(action.AccessList)
+			}
 
 			// Apply changes back into the Action set
 			template.Actions[actionID] = action

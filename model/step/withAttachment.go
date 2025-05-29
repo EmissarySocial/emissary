@@ -27,5 +27,17 @@ func NewWithAttachment(stepInfo mapof.Any) (WithAttachment, error) {
 	}, nil
 }
 
-// AmStep is here only to verify that this struct is a build pipeline step
-func (step WithAttachment) AmStep() {}
+// Name returns the name of the step, which is used in debugging.
+func (step WithAttachment) Name() string {
+	return "with-attachment"
+}
+
+// RequiredStates returns a slice of states that must be defined any Template that uses this Step
+func (step WithAttachment) RequiredStates() []string {
+	return requiredStates(step.SubSteps...)
+}
+
+// RequiredRoles returns a slice of roles that must be defined any Template that uses this Step
+func (step WithAttachment) RequiredRoles() []string {
+	return requiredRoles(step.SubSteps...)
+}

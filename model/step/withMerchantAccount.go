@@ -27,5 +27,17 @@ func NewWithMerchantAccount(stepInfo mapof.Any) (WithMerchantAccount, error) {
 	}, nil
 }
 
-// AmStep is here only to verify that this struct is a build pipeline step
-func (step WithMerchantAccount) AmStep() {}
+// Name returns the name of the step, which is used in debugging.
+func (step WithMerchantAccount) Name() string {
+	return "with-merchant-account"
+}
+
+// RequiredStates returns a slice of states that must be defined any Template that uses this Step
+func (step WithMerchantAccount) RequiredStates() []string {
+	return requiredStates(step.SubSteps...)
+}
+
+// RequiredRoles returns a slice of roles that must be defined any Template that uses this Step
+func (step WithMerchantAccount) RequiredRoles() []string {
+	return requiredRoles(step.SubSteps...)
+}

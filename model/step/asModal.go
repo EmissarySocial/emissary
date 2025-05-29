@@ -28,5 +28,17 @@ func NewAsModal(stepInfo mapof.Any) (AsModal, error) {
 	}, nil
 }
 
-// AmStep is here only to verify that this struct is a build pipeline step
-func (step AsModal) AmStep() {}
+// Name returns the name of the step, which is used in debugging.
+func (step AsModal) Name() string {
+	return "as-modal"
+}
+
+// RequiredStates returns a slice of states that must be defined any Template that uses this Step
+func (step AsModal) RequiredStates() []string {
+	return requiredStates(step.SubSteps...)
+}
+
+// RequiredRolesStates returns a slice of states that must be defined any Template that uses this Step
+func (step AsModal) RequiredRoles() []string {
+	return requiredRoles(step.SubSteps...)
+}

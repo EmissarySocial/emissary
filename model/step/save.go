@@ -36,8 +36,20 @@ func NewSave(stepInfo mapof.Any) (Save, error) {
 	}, nil
 }
 
-// AmStep is here only to verify that this struct is a build pipeline step
-func (step Save) AmStep() {}
+// Name returns the name of the step, which is used in debugging.
+func (step Save) Name() string {
+	return "save"
+}
+
+// RequiredStates returns a slice of states that must be defined any Template that uses this Step
+func (step Save) RequiredStates() []string {
+	return []string{}
+}
+
+// RequiredRoles returns a slice of roles that must be defined any Template that uses this Step
+func (step Save) RequiredRoles() []string {
+	return []string{}
+}
 
 // StepSaveSchema returns a validating schema for the EditContent step
 func StepSaveSchema() schema.Element {

@@ -45,5 +45,17 @@ func StepEditContentSchema() schema.Element {
 	}
 }
 
-// AmStep is here only to verify that this struct is a build pipeline step
-func (step EditContent) AmStep() {}
+// Name returns the name of the step, which is used in debugging.
+func (step EditContent) Name() string {
+	return "edit-content"
+}
+
+// RequiredStates returns a slice of states that must be defined any Template that uses this Step
+func (step EditContent) RequiredStates() []string {
+	return []string{}
+}
+
+// RequiredRoles returns a slice of roles that must be defined any Template that uses this Step
+func (step EditContent) RequiredRoles() []string {
+	return []string{}
+}

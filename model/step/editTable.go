@@ -27,5 +27,17 @@ func NewTableEditor(stepInfo mapof.Any) (TableEditor, error) {
 	}, nil
 }
 
-// AmStep is here to verify that this struct is a build pipeline step
-func (step TableEditor) AmStep() {}
+// Name returns the name of the step, which is used in debugging.
+func (step TableEditor) Name() string {
+	return "edit-table"
+}
+
+// RequiredStates returns a slice of states that must be defined any Template that uses this Step
+func (step TableEditor) RequiredStates() []string {
+	return []string{}
+}
+
+// RequiredRoles returns a slice of roles that must be defined any Template that uses this Step
+func (step TableEditor) RequiredRoles() []string {
+	return []string{}
+}

@@ -27,5 +27,17 @@ func NewWithMessage(stepInfo mapof.Any) (WithMessage, error) {
 	}, nil
 }
 
-// AmStep is here only to verify that this struct is a build pipeline step
-func (step WithMessage) AmStep() {}
+// Name returns the name of the step, which is used in debugging.
+func (step WithMessage) Name() string {
+	return "with-message"
+}
+
+// RequiredStates returns a slice of states that must be defined any Template that uses this Step
+func (step WithMessage) RequiredStates() []string {
+	return requiredStates(step.SubSteps...)
+}
+
+// RequiredRoles returns a slice of roles that must be defined any Template that uses this Step
+func (step WithMessage) RequiredRoles() []string {
+	return requiredRoles(step.SubSteps...)
+}

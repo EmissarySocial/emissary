@@ -24,5 +24,17 @@ func NewAsTooltip(stepInfo mapof.Any) (AsTooltip, error) {
 	}, nil
 }
 
-// AmStep is here only to verify that this struct is a build pipeline step
-func (step AsTooltip) AmStep() {}
+// Name returns the name of the step, which is used in debugging.
+func (step AsTooltip) Name() string {
+	return "as-tooltip"
+}
+
+// RequiredStates returns a slice of states that must be defined any Template that uses this Step
+func (step AsTooltip) RequiredStates() []string {
+	return requiredStates(step.SubSteps...)
+}
+
+// RequiredRoles returns a slice of roles that must be defined any Template that uses this Step
+func (step AsTooltip) RequiredRoles() []string {
+	return requiredStates(step.SubSteps...)
+}

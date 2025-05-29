@@ -60,5 +60,17 @@ func NewUploadAttachments(stepInfo mapof.Any) (UploadAttachments, error) {
 	}, nil
 }
 
-// AmStep is here only to verify that this struct is a build pipeline step
-func (step UploadAttachments) AmStep() {}
+// Name returns the name of the step, which is used in debugging.
+func (step UploadAttachments) Name() string {
+	return "upload-attachments"
+}
+
+// RequiredStates returns a slice of states that must be defined any Template that uses this Step
+func (step UploadAttachments) RequiredStates() []string {
+	return []string{}
+}
+
+// RequiredRoles returns a slice of roles that must be defined any Template that uses this Step
+func (step UploadAttachments) RequiredRoles() []string {
+	return []string{}
+}

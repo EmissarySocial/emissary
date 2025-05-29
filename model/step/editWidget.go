@@ -13,5 +13,17 @@ func NewEditWidget(stepInfo mapof.Any) (EditWidget, error) {
 	return EditWidget{}, nil
 }
 
-// AmStep is here only to verify that this struct is a build pipeline step
-func (step EditWidget) AmStep() {}
+// Name returns the name of the step, which is used in debugging.
+func (step EditWidget) Name() string {
+	return "edit-widget"
+}
+
+// RequiredStates returns a slice of states that must be defined any Template that uses this Step
+func (step EditWidget) RequiredStates() []string {
+	return []string{}
+}
+
+// RequiredRoles returns a slice of roles that must be defined any Template that uses this Step
+func (step EditWidget) RequiredRoles() []string {
+	return []string{}
+}

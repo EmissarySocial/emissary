@@ -47,5 +47,17 @@ func NewViewAttachment(stepInfo mapof.Any) (ViewAttachment, error) {
 	}, nil
 }
 
-// AmStep is here only to verify that this struct is a build pipeline step
-func (step ViewAttachment) AmStep() {}
+// Name returns the name of the step, which is used in debugging.
+func (step ViewAttachment) Name() string {
+	return "view-attachment"
+}
+
+// RequiredStates returns a slice of states that must be defined any Template that uses this Step
+func (step ViewAttachment) RequiredStates() []string {
+	return []string{}
+}
+
+// RequiredRoles returns a slice of roles that must be defined any Template that uses this Step
+func (step ViewAttachment) RequiredRoles() []string {
+	return []string{}
+}

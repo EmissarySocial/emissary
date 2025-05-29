@@ -46,8 +46,20 @@ func NewDelete(stepInfo mapof.Any) (Delete, error) {
 	}, nil
 }
 
-// AmStep is here only to verify that this struct is a build pipeline step
-func (step Delete) AmStep() {}
+// Name returns the name of the step, which is used in debugging.
+func (step Delete) Name() string {
+	return "delete"
+}
+
+// RequiredStates returns a slice of states that must be defined any Template that uses this Step
+func (step Delete) RequiredStates() []string {
+	return []string{}
+}
+
+// RequiredRoles returns a slice of roles that must be defined any Template that uses this Step
+func (step Delete) RequiredRoles() []string {
+	return []string{}
+}
 
 // StepDeleteSchema returns a validating schema for the EditContent step
 func StepDeleteSchema() schema.Element {

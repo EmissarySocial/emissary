@@ -16,6 +16,7 @@ type StepAddStream struct {
 	Style         string                        // Style of input widget to use. Options are: "chooser"  and "inline".  Defaults to "chooser".
 	Title         string                        // Title to use on the create modal. Defaults to "Add a Stream"
 	Location      string                        // Options are: "top", "child", "outbox".  Defaults to "child".
+	StateID       string                        // Initial State to use when adding the Stream
 	TemplateID    string                        // ID of the template to use.  If empty, then template roles are used.
 	TemplateRoles []string                      // List of acceptable Template Roles that can be used to make a stream.  If empty, then all template for this container are valid.
 	WithData      map[string]*template.Template // Map of values to preset in the new stream
@@ -200,6 +201,7 @@ func (step StepAddStream) Post(builder Builder, buffer io.Writer) PipelineBehavi
 	// Create the new Stream
 	streamService := factory.Stream()
 	newStream := streamService.New()
+	newStream.StateID = step.StateID
 
 	// Assign the current user as the author (with silent failure, but why would it do that?)
 	if user, err := builder.getUser(); err == nil {

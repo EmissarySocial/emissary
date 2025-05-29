@@ -31,5 +31,17 @@ func NewDump(stepInfo mapof.Any) (Dump, error) {
 	return result, nil
 }
 
-// AmStep is here only to verify that this struct is a build pipeline step
-func (step Dump) AmStep() {}
+// Name returns the name of the step, which is used in debugging.
+func (step Dump) Name() string {
+	return "dump"
+}
+
+// RequiredStates returns a slice of states that must be defined any Template that uses this Step
+func (step Dump) RequiredStates() []string {
+	return []string{}
+}
+
+// RequiredRoles returns a slice of roles that must be defined any Template that uses this Step
+func (step Dump) RequiredRoles() []string {
+	return []string{}
+}

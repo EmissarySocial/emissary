@@ -15,5 +15,17 @@ func NewStreamPromoteDraft(stepInfo mapof.Any) (StreamPromoteDraft, error) {
 	}, nil
 }
 
-// AmStep is here only to verify that this struct is a build pipeline step
-func (step StreamPromoteDraft) AmStep() {}
+// Name returns the name of the step, which is used in debugging.
+func (step StreamPromoteDraft) Name() string {
+	return "promote-draft"
+}
+
+// RequiredStates returns a slice of states that must be defined any Template that uses this Step
+func (step StreamPromoteDraft) RequiredStates() []string {
+	return []string{step.StateID}
+}
+
+// RequiredRoles returns a slice of roles that must be defined any Template that uses this Step
+func (step StreamPromoteDraft) RequiredRoles() []string {
+	return []string{}
+}

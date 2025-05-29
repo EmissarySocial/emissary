@@ -9,5 +9,17 @@ func NewEditConnection(stepInfo mapof.Any) (EditConnection, error) {
 	return EditConnection{}, nil
 }
 
-// AmStep is here only to verify that this struct is a build pipeline step
-func (step EditConnection) AmStep() {}
+// Name returns the name of the step, which is used in debugging.
+func (step EditConnection) Name() string {
+	return "edit-connection"
+}
+
+// RequiredStates returns a slice of states that must be defined any Template that uses this Step
+func (step EditConnection) RequiredStates() []string {
+	return []string{}
+}
+
+// RequiredRoles returns a slice of roles that must be defined any Template that uses this Step
+func (step EditConnection) RequiredRoles() []string {
+	return []string{}
+}

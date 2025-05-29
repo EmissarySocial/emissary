@@ -11,8 +11,15 @@ import (
 
 // Step interface is used here to bind together the structs in this package
 type Step interface {
-	// AmStep is a NO-OP.  It is only used to validate that a struct contains "step-like" data.
-	AmStep()
+
+	// Name returns the name of the step, which is used in debugging.
+	Name() string
+
+	// RequiredStates returns a slice of states that must be defined in any Template that uses this Step.
+	RequiredStates() []string
+
+	// RequiredRoles returns a slice of roles that must be defined in any Template that uses this Step
+	RequiredRoles() []string
 }
 
 // TypeRequirer interface wraps the "RequireType" method, which specifies that a step can ONLY
@@ -253,9 +260,6 @@ func New(stepInfo mapof.Any) (Step, error) {
 
 	case "with-rule":
 		return NewWithRule(stepInfo)
-
-	case "with-product":
-		return NewWithProduct(stepInfo)
 
 	}
 

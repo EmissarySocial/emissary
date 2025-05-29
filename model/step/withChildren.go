@@ -27,5 +27,17 @@ func NewWithChildren(stepInfo mapof.Any) (WithChildren, error) {
 	}, nil
 }
 
-// AmStep is here only to verify that this struct is a build pipeline step
-func (step WithChildren) AmStep() {}
+// Name returns the name of the step, which is used in debugging.
+func (step WithChildren) Name() string {
+	return "with-children"
+}
+
+// RequiredStates returns a slice of states that must be defined any Template that uses this Step
+func (step WithChildren) RequiredStates() []string {
+	return requiredStates(step.SubSteps...)
+}
+
+// RequiredRoles returns a slice of roles that must be defined any Template that uses this Step
+func (step WithChildren) RequiredRoles() []string {
+	return requiredRoles(step.SubSteps...)
+}

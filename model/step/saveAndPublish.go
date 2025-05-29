@@ -21,5 +21,17 @@ func NewSaveAndPublish(stepInfo mapof.Any) (SaveAndPublish, error) {
 	return result, nil
 }
 
-// AmStep is here only to verify that this struct is a build pipeline step
-func (step SaveAndPublish) AmStep() {}
+// Name returns the name of the step, which is used in debugging.
+func (step SaveAndPublish) Name() string {
+	return "save-and-publish"
+}
+
+// RequiredStates returns a slice of states that must be defined any Template that uses this Step
+func (step SaveAndPublish) RequiredStates() []string {
+	return []string{"published"}
+}
+
+// RequiredRoles returns a slice of roles that must be defined any Template that uses this Step
+func (step SaveAndPublish) RequiredRoles() []string {
+	return []string{}
+}

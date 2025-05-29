@@ -31,5 +31,17 @@ func NewForwardTo(stepInfo mapof.Any) (ForwardTo, error) {
 	}, nil
 }
 
-// AmStep is here only to verify that this struct is a build pipeline step
-func (step ForwardTo) AmStep() {}
+// Name returns the name of the step, which is used in debugging.
+func (step ForwardTo) Name() string {
+	return "forward-to"
+}
+
+// RequiredStates returns a slice of states that must be defined any Template that uses this Step
+func (step ForwardTo) RequiredStates() []string {
+	return []string{}
+}
+
+// RequiredRoles returns a slice of roles that must be defined any Template that uses this Step
+func (step ForwardTo) RequiredRoles() []string {
+	return []string{}
+}

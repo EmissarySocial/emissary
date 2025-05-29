@@ -19,5 +19,17 @@ func NewDeleteAttachments(stepInfo mapof.Any) (DeleteAttachments, error) {
 	}, nil
 }
 
-// AmStep is here only to verify that this struct is a build pipeline step
-func (step DeleteAttachments) AmStep() {}
+// Name returns the name of the step, which is used in debugging.
+func (step DeleteAttachments) Name() string {
+	return "delete-attachments"
+}
+
+// RequiredStates returns a slice of states that must be defined any Template that uses this Step
+func (step DeleteAttachments) RequiredStates() []string {
+	return []string{}
+}
+
+// RequiredRoles returns a slice of roles that must be defined any Template that uses this Step
+func (step DeleteAttachments) RequiredRoles() []string {
+	return []string{}
+}

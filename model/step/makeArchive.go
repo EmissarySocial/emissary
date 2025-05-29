@@ -45,5 +45,17 @@ func NewMakeArchive(stepInfo mapof.Any) (MakeArchive, error) {
 	}, nil
 }
 
-// AmStep is here only to verify that this struct is a build pipeline step
-func (step MakeArchive) AmStep() {}
+// Name returns the name of the step, which is used in debugging.
+func (step MakeArchive) Name() string {
+	return "make-archive"
+}
+
+// RequiredStates returns a slice of states that must be defined any Template that uses this Step
+func (step MakeArchive) RequiredStates() []string {
+	return []string{}
+}
+
+// RequiredRoles returns a slice of roles that must be defined any Template that uses this Step
+func (step MakeArchive) RequiredRoles() []string {
+	return []string{}
+}

@@ -16,5 +16,17 @@ func NewInclude(stepInfo mapof.Any) (Include, error) {
 	}, nil
 }
 
-// AmStep is here only to verify that this struct is a build pipeline step
-func (step Include) AmStep() {}
+// Name returns the name of the step, which is used in debugging.
+func (step Include) Name() string {
+	return "include"
+}
+
+// RequiredStates returns a slice of states that must be defined any Template that uses this Step
+func (step Include) RequiredStates() []string {
+	return []string{}
+}
+
+// RequiredRoles returns a slice of roles that must be defined any Template that uses this Step
+func (step Include) RequiredRoles() []string {
+	return []string{}
+}

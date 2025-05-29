@@ -36,5 +36,17 @@ func NewAddModelObject(stepInfo mapof.Any) (AddModelObject, error) {
 	}, nil
 }
 
-// AmStep is here only to verify that this struct is a build pipeline step
-func (step AddModelObject) AmStep() {}
+// Name returns the name of the step, which is used in debugging.
+func (step AddModelObject) Name() string {
+	return "add"
+}
+
+// RequiredStates returns a slice of states that must be defined any Template that uses this Step
+func (step AddModelObject) RequiredStates() []string {
+	return requiredStates(step.Defaults...)
+}
+
+// RequiredRoles returns a slice of roles that must be defined any Template that uses this Step
+func (step AddModelObject) RequiredRoles() []string {
+	return []string{}
+}

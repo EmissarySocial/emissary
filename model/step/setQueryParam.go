@@ -34,5 +34,17 @@ func NewSetQueryParam(stepInfo mapof.Any) (SetQueryParam, error) {
 	return result, nil
 }
 
-// AmStep is here only to verify that this struct is a build pipeline step
-func (step SetQueryParam) AmStep() {}
+// Name returns the name of the step, which is used in debugging.
+func (step SetQueryParam) Name() string {
+	return "set-query-param"
+}
+
+// RequiredStates returns a slice of states that must be defined any Template that uses this Step
+func (step SetQueryParam) RequiredStates() []string {
+	return []string{}
+}
+
+// RequiredRoles returns a slice of roles that must be defined any Template that uses this Step
+func (step SetQueryParam) RequiredRoles() []string {
+	return []string{}
+}
