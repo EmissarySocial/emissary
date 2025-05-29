@@ -5,6 +5,14 @@
 
 {
 	templateId:"base-intent"
+
+	states: {
+		default: {
+			label: Default State,
+			description: Initial state for this template
+		}
+	}
+
 	actions:{
 		intent: {
 			roles:["anonymous"]

@@ -12,4 +12,11 @@
 			content-type:"text/hyperscript"
 		}
 	}
+
+	states: {
+		default: {
+			label: Default State,
+			description: Initial state for this template
+		}
+	}
 }

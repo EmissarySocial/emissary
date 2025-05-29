@@ -12,7 +12,6 @@ import (
 	"github.com/benpate/remote/options"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
 )
 
 func GetUserOAuthConnect_PayPal(ctx *steranko.Context, factory *domain.Factory, user *model.User) error {
@@ -61,7 +60,6 @@ func GetUserOAuthConnect_PayPal(ctx *steranko.Context, factory *domain.Factory, 
 		return derp.Wrap(err, location, "Error sending referral to PayPal")
 	}
 
-	spew.Dump(result)
 	return nil
 }
 

@@ -34,7 +34,7 @@ func (step WithParent) Name() string {
 
 // RequiredStates returns a slice of states that must be defined any Template that uses this Step
 func (step WithParent) RequiredStates() []string {
-	return requiredStates(step.SubSteps...)
+	return []string{} // removing this because states may be different in the child objects // requiredStates(step.SubSteps...)
 }
 
 // RequiredRoles returns a slice of roles that must be defined any Template that uses this Step

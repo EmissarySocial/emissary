@@ -27,7 +27,6 @@ import (
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/turbine/queue"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -242,11 +241,9 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 	stream.URL = service.host + "/" + stream.StreamID.Hex()
 
 	// RULE: Calculate "defaultAllow" groups for this stream.
-	defaultTemplate := template.Default()
-	defaultRoles := defaultTemplate.AllowedRoles(stream.StateID)
+	defaultAction := template.Default()
+	defaultRoles := defaultAction.AllowedRoles(stream.StateID)
 	stream.DefaultAllow = stream.RolesToGroupIDs(defaultRoles...)
-
-	spew.Dump("state", stream.StateID, "defaultRoles", defaultRoles, "defaultAllow", stream.DefaultAllow)
 
 	// RULE: Calculate rank
 	if stream.Rank == 0 {

@@ -7,7 +7,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
 )
 
 func GetFeaturedCollection(ctx *steranko.Context, factory *domain.Factory, user *model.User) error {
@@ -30,8 +29,6 @@ func GetFeaturedCollection(ctx *steranko.Context, factory *domain.Factory, user 
 	objectIDs := slice.Map(streams, func(stream model.StreamSummary) any {
 		return stream.URL
 	})
-
-	spew.Dump(objectIDs)
 
 	// Return results to the client.
 	ctx.Response().Header().Set("Content-Type", "application/activity+json")

@@ -1,11 +1,8 @@
 package service
 
 import (
-	"fmt"
-
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
-	"github.com/davecgh/go-spew/spew"
 )
 
 type Permission struct {
@@ -27,25 +24,18 @@ func (service *Permission) UserCan(authorization *model.Authorization, template 
 
 	const location = "service.Permission.UserCan"
 
-	fmt.Println("")
-	spew.Dump("------------------", location, actionID)
-
 	// Find the action in the Template
 	action, exists := template.Actions[actionID]
 
 	if !exists {
-		spew.Dump("NOT EXISTS in..", template.Actions.Keys())
 		return false, nil
 	}
 
 	// Get a list of the valid roles for this action
 	accessList := action.AccessList[accessLister.State()]
 
-	spew.Dump(accessList)
-
 	// If Anonymous access is allowed, then EVERYONE can perform this action
 	if accessList.Anonymous {
-		spew.Dump("ANONYMOUS access is allowed")
 		return true, nil
 	}
 
@@ -53,40 +43,32 @@ func (service *Permission) UserCan(authorization *model.Authorization, template 
 	// Beyond this point, you must be logged in to perform this action
 
 	// These checks are only valid if the page request is authenticated (via a UserID)
-	spew.Dump("User Is Authenticated")
 	// If the user is a domain owner, then they can do anything
 	if authorization.DomainOwner {
-		spew.Dump("DOMAIN OWNER can do anything")
 		return true, nil
 	}
 
 	// If the accessList allows "authenticated" access, then any authenticated user can perform this action
 	if accessList.Authenticated {
 		if authorization.IsAuthenticated() {
-			spew.Dump("AUTHENTICATED access is allowed")
 			return true, nil
 		}
 	}
 
 	// If the accessList allows "author" access, then check to see if the user is the author of this object
 	if accessList.Author {
-		spew.Dump("AUTHOR access is allowed")
 		if accessLister.IsAuthor(authorization.UserID) {
-			spew.Dump("User is an AUTHOR.. allowed")
 			return true, nil
 		}
 	}
 
 	// If the accessList allows "myself" access, then check to see if this user is "myself"
 	if accessList.Self {
-		spew.Dump("MYSELF access is allowed")
 		if accessLister.IsMyself(authorization.UserID) {
-			spew.Dump("User is MYSELF.. allowed")
 			return true, nil
 		}
 	}
 
-	spew.Dump(accessList.Groups)
 	// Check for group access via the Authorization object
 	if len(accessList.Groups) > 0 {
 
@@ -120,8 +102,6 @@ func (service *Permission) UserCan(authorization *model.Authorization, template 
 func (service *Permission) UserHasRole(authorization *model.Authorization, accessLister model.AccessLister, role string) (bool, error) {
 
 	const location = "service.Permission.UserHasRole"
-
-	spew.Dump("------------------", location, role)
 
 	// Domain Owners can do anything, so return TRUE immediately
 	if authorization.DomainOwner {
@@ -177,8 +157,6 @@ func (service *Permission) UserHasRole(authorization *model.Authorization, acces
 func (service *Permission) hasPrivilege(authorization *model.Authorization, accessLister model.AccessLister, allowedRoles ...string) (bool, error) {
 
 	const location = "service.Permission.HasPrivilege"
-
-	spew.Dump("------------------", location, allowedRoles)
 
 	// If no roles are provided then the user does not have permission
 	if len(allowedRoles) == 0 {

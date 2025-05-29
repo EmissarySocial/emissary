@@ -18,7 +18,7 @@ import (
  ******************************************/
 
 // Publish marks this stream as "published"
-func (service *Stream) Publish(user *model.User, stream *model.Stream, outbox bool, republish bool) error {
+func (service *Stream) Publish(user *model.User, stream *model.Stream, stateID string, outbox bool, republish bool) error {
 
 	const location = "service.Stream.Publish"
 
@@ -28,7 +28,7 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream, outbox bo
 	activityType := stream.PublishActivity()
 
 	// RULE: IF this stream is not yet published, then set the publish date
-	if stream.PublishDate > time.Now().Unix() {
+	if (stream.PublishDate > time.Now().Unix()) || (stream.StateID != stateID) {
 		stream.PublishDate = time.Now().Unix()
 	}
 
@@ -38,6 +38,9 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream, outbox bo
 
 	// RULE: Set Author to the currently logged in user.
 	stream.SetAttributedTo(user.PersonLink())
+
+	// RULE: Set the new state ID
+	stream.StateID = stateID
 
 	// Re-save the Stream with the updated values.
 	if err := service.Save(stream, "Publishing"); err != nil {

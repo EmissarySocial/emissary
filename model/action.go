@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -121,6 +122,21 @@ func (action *Action) calcAccessListForStateAndRole(template *Template, stateID 
 // system roles like "anonymous", "authenticated", "self", "author", and "owner".
 func (action *Action) AllowedRoles(stateID string) []string {
 	return action.AccessList[stateID].Roles()
+}
+
+// Dump is a debugging method that outputs all of the contents of an Action
+// without displaying steps/templates (which are huge)
+func (action *Action) Dump() {
+
+	spew.Dump(map[string]any{
+		"roles":      action.Roles,
+		"states":     action.States,
+		"stateRoles": action.StateRoles,
+		"accessList": action.AccessList,
+		"steps": slice.Map(action.Steps, func(step step.Step) string {
+			return step.Name()
+		}),
+	})
 }
 
 /******************************************

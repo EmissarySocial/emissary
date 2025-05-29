@@ -15,6 +15,13 @@
 			}}
 		}
 	}
+	states: {
+		default: {
+			label: "Default"
+			description: "Default state for Redirects"
+		}
+	}
+
 	roles: {
 		viewer:{
 			label: "Viewer"

@@ -24,6 +24,14 @@
 			}
 		}
 	}
+
+	states: {
+		default: {
+			label: Default
+			description: Default state for Bandwagon Common
+		}
+	}
+
 	bundles: {
 		stylesheet: {
 			content-type:text/css

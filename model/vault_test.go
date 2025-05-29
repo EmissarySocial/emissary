@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/require"
 )
 
@@ -51,7 +50,4 @@ func TestVault(t *testing.T) {
 	require.Equal(t, "1234567890", decrypted["numbers"])
 	require.Equal(t, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", decrypted["letters"])
 	require.Equal(t, "!@#$%^&*()", decrypted["symbols"])
-
-	spew.Dump(vault)
-	spew.Dump(decrypted)
 }

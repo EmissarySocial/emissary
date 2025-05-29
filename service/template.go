@@ -17,7 +17,6 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/hjson/hjson-go/v4"
 	"github.com/rs/zerolog/log"
 )
@@ -220,10 +219,13 @@ func (service *Template) loadTemplates() error {
 	// Validate required fields for all Templates
 	if errs := service.validateTemplates(); len(errs) > 0 {
 
-		log.Error().Msg("Errors validating templates.  Some templates may not function properly.")
+		errorLength := strconv.Itoa(len(errs))
+
+		log.Error().Msg(errorLength + " errors validating templates.")
 		for _, error := range errs {
 			derp.Report(error)
 		}
+		log.Error().Msg("Finished reporting " + errorLength + " template errors.  Some templates may not function properly.")
 
 		return nil
 	}
@@ -304,47 +306,8 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 			))
 		}
 
-		// Scan all Actions in the TTemplate
+		// Scan all Actions in the Template
 		for actionID, action := range template.Actions {
-
-			// RULE: Actions must have at least one step
-			if len(action.Steps) == 0 {
-				errors.Append(derp.ValidationError(
-					"Actions must have at least one Step.",
-					"template: "+templateID,
-					"action: "+actionID,
-				))
-			}
-
-			// Scan all Steps in the Action
-			for _, step := range action.Steps {
-
-				// RULE: States used in action steps must be defined
-				for _, state := range step.RequiredStates() {
-					if !template.IsValidState(state) {
-						errors.Append(derp.ValidationError(
-							"Undefined state used in action step",
-							"template: "+templateID,
-							"action: "+actionID,
-							"state required: "+state,
-							"states defined: "+strings.Join(template.States.Keys(), ", "),
-						))
-					}
-				}
-
-				// RULE: Roles used in action steps must be defined
-				for _, role := range step.RequiredRoles() {
-					if !template.IsValidRole(role) {
-						errors.Append(derp.ValidationError(
-							"Undefined role used in action step",
-							"template: "+templateID,
-							"action: "+actionID,
-							"role required: "+role,
-							"roles defined: "+strings.Join(template.AccessRoles.Keys(), ", "),
-						))
-					}
-				}
-			}
 
 			// Scan all statews in the Action
 			for _, stateID := range action.States {
@@ -399,6 +362,47 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 							"template: "+templateID,
 							"action: "+actionID,
 							"role required: "+roleID,
+							"roles defined: "+strings.Join(template.AccessRoles.Keys(), ", "),
+						))
+					}
+				}
+			}
+
+			// RULE: Actions must have at least one step
+			if len(action.Steps) == 0 {
+				errors.Append(derp.ValidationError(
+					"Actions must have at least one Step.",
+					"template: "+templateID,
+					"action: "+actionID,
+				))
+			}
+
+			// Scan all Steps in the Action
+			for _, step := range action.Steps {
+
+				// RULE: States used in action steps must be defined
+				for _, state := range step.RequiredStates() {
+					if !template.IsValidState(state) {
+						errors.Append(derp.ValidationError(
+							"Undefined state used in action step",
+							"template: "+templateID,
+							"action: "+actionID,
+							"step: "+step.Name(),
+							"state required: "+state,
+							"states defined: "+strings.Join(template.States.Keys(), ", "),
+						))
+					}
+				}
+
+				// RULE: Roles used in action steps must be defined
+				for _, role := range step.RequiredRoles() {
+					if !template.IsValidRole(role) {
+						errors.Append(derp.ValidationError(
+							"Undefined role used in action step",
+							"template: "+templateID,
+							"action: "+actionID,
+							"step: "+step.Name(),
+							"role required: "+role,
 							"roles defined: "+strings.Join(template.AccessRoles.Keys(), ", "),
 						))
 					}
@@ -465,24 +469,12 @@ func (service *Template) calculateAllowLists() error {
 	// For every template in the prep area...
 	for _, template := range service.templatePrep {
 
-		if template.TemplateID == "bandwagon-search" {
-			spew.Dump("Calculating Allow Lists for Template", template.TemplateID, template.States)
-		}
-
 		// For every action in the Template
 		for actionID, action := range template.Actions {
-
-			if template.TemplateID == "bandwagon-search" {
-				spew.Dump(actionID+" ------", action.States, action.Roles, action.StateRoles)
-			}
 
 			// Calculate the AccessLists for this Action
 			if err := action.CalcAccessList(&template, true); err != nil {
 				return derp.Wrap(err, location, "Invalid AccessList", template.TemplateID, actionID)
-			}
-
-			if template.TemplateID == "bandwagon-search" {
-				spew.Dump(action.AccessList)
 			}
 
 			// Apply changes back into the Action set

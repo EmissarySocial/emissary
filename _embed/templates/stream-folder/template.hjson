@@ -22,7 +22,11 @@
 	states: {
 		default: {
 			label: Default
-			description: Folders only have one state
+			description: This item is not visible to anyone except the author and editors
+		}
+		published: {
+			label: Published
+			description: This item is visible to all Viewers
 		}
 	}
 	roles: {
@@ -51,7 +55,10 @@
 			]
 		}
 		view: {
-			roles: ["viewer","author", "editor"]
+			roles: ["author", "editor"]
+			stateRoles: {
+				published: ["viewer"]
+			}
 			steps: [
 				{do:"view-html"}
 			]
@@ -77,7 +84,7 @@
 								]
 							}
 						}, 
-						{do:"save-and-publish", outbox:"true"}
+						{do:"save-and-publish", state:"published", outbox:"true"}
 					]
 				}
 				{do:"refresh-page"}
@@ -86,8 +93,8 @@
 		delete: {
 			roles: ["author", "editor"]
 			steps: [
-				{do:"unpublish", outbox:"true"}
 				{do:"delete", title:"Delete this Folder?", message:"This will permanently delete this folder and all of its contents"}
+				{do:"unpublish", state:"default", outbox:"true"}
 				{do:"forward-to", url:"/{{.ParentID}}"}
 			]
 		}

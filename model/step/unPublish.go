@@ -1,7 +1,6 @@
 package step
 
 import (
-	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 )
 
@@ -14,11 +13,7 @@ type UnPublish struct {
 // NewUnPublish returns a fully initialized UnPublish object
 func NewUnPublish(stepInfo mapof.Any) (UnPublish, error) {
 
-	stateID := stepInfo.GetString("stateID")
-
-	if stateID == "" {
-		return UnPublish{}, derp.ValidationError("UnPublish step requires a stateID to be defined", stepInfo)
-	}
+	stateID := first(stepInfo.GetString("state"), "default")
 
 	return UnPublish{
 		Outbox:  stepInfo.GetBool("outbox"),

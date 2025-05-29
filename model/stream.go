@@ -71,7 +71,7 @@ func NewStream() Stream {
 		Token:         streamID.Hex(),
 		ParentID:      primitive.NilObjectID,
 		ParentIDs:     id.NewSlice(),
-		StateID:       "new",
+		StateID:       "default",
 		Permissions:   NewStreamPermissions(),
 		Privileges:    mapof.NewObject[sliceof.String](),
 		Groups:        mapof.NewObject[id.Slice](),
@@ -192,7 +192,21 @@ func (stream Stream) RolesToGroupIDs(roles ...string) id.Slice {
 	result := id.NewSlice()
 
 	for _, role := range roles {
-		result = append(result, stream.Groups[role]...)
+
+		switch role {
+
+		case MagicRoleAnonymous:
+			result = append(result, MagicGroupIDAnonymous)
+
+		case MagicRoleAuthenticated:
+			result = append(result, MagicGroupIDAuthenticated)
+
+		case MagicRoleAuthor:
+			result = append(result, stream.AttributedTo.UserID)
+
+		default:
+			result = append(result, stream.Groups[role]...)
+		}
 	}
 
 	return result

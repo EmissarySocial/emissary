@@ -30,7 +30,7 @@
 		}
 	}
 	states: {
-		unpublished: {
+		default: {
 			label:"Default State"
 			description:"Visible only to Authors and Owners"
 		}
@@ -54,7 +54,7 @@
 			roles:["author", "editor"]
 			steps: [
 				{do:"set-data", values: {label:"New Article (WYSIWYG)"}}
-				{do:"set-state", state:"unpublished"}
+				{do:"set-state", state:"default"}
 				{do:"save", message:"Created by {{.Author.DisplayName}}"}
 				{do:"forward-to", url:"/{{.StreamID}}/edit"}
 			]
@@ -80,7 +80,7 @@
 			roles: ["author", "editor"]
 			steps: [
 				{do:"delete", title:"Delete '{{.Label}}'?", message:"All content and comments will be lost.  There is NO UNDO."}
-				{do:"unpublish", outbox:"true"}
+				{do:"unpublish", state:"default", outbox:"true"}
 				{do:"forward-to", url:"/{{.ParentID}}"}
 			]
 		}
@@ -150,12 +150,11 @@
 		}
 		
 		publish: {
-			states: ["unpublished"]
+			states: ["default"]
 			roles: ["author", "editor"]
 			steps: [
 				{do:"as-confirmation", title:"Publish this Stream?", message:"Viewers will be able to see this stream on your website immediately.", submit:"Publish"}
-				{do:"set-state", state:"published"}
-				{do:"save-and-publish", outbox:"false"}
+				{do:"save-and-publish", state:"published", outbox:"false"}
 				{do:"search-index"}
 				{do:"refresh-page"}
 			]
@@ -166,9 +165,7 @@
 			roles: ["author", "editor"]
 			steps: [
 				{do:"as-confirmation", title:"Un-Publish this Stream?", message:"Viewers will no longer be able to see this stream on your website.", submit:"Un-Publish"}
-				{do:"set-state", state:"unpublished"}
-				{do:"save", message:"Un-Published by {{.Author}}"}
-				{do:"unpublish", outbox:"false"}
+				{do:"unpublish", state:"default", outbox:"false"}
 				{do:"refresh-page"}
 			]
 		}
@@ -179,7 +176,7 @@
 				{do:"as-confirmation", title:"Promote this Draft?", message:"The live page will be replaced with this content.", submit:"Promote"}
 				{do:"promote-draft"}
 				{do:"process-tags", paths:"data.tags"}
-				{do:"save-and-publish", outbox:"false"}
+				{do:"save-and-publish", state:"published", outbox:"false"}
 				{do:"search-index"}
 				{do:"refresh-page"}
 				{do:"forward-to", url:"/{{.Token}}"}
