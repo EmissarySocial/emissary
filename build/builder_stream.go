@@ -824,9 +824,9 @@ func (w Stream) AttachmentsByCategory(category string) (sliceof.Object[model.Att
  * Purchase/Product/Checkout Methods
  ******************************************/
 
-// HasProducts returns TRUE if this stream has any products
-func (w Stream) HasProducts() bool {
-	return w._stream.HasProducts()
+// HasPrivileges returns TRUE if this stream has any products
+func (w Stream) HasPrivileges() bool {
+	return w._stream.HasPrivileges()
 }
 
 func (w Stream) MerchantAccounts() QueryBuilder[model.MerchantAccount] {
@@ -842,13 +842,13 @@ func (w Stream) MerchantAccounts() QueryBuilder[model.MerchantAccount] {
 	return NewQueryBuilder[model.MerchantAccount](w._factory.MerchantAccount(), criteria)
 }
 
-// ProductIDs returns all product IDs that are valid for this stream
-func (w Stream) ProductIDs() sliceof.String {
-	return w._stream.ProductIDs()
+// PrivilegeIDs returns all privilege IDs that are valid for this stream
+func (w Stream) PrivilegeIDs() sliceof.String {
+	return w._stream.PrivilegeIDs()
 }
 
 func (w Stream) Products() (sliceof.Object[form.LookupCode], error) {
-	return w._factory.MerchantAccount().ProductsByID(w._stream.ProductIDs()...)
+	return w._factory.MerchantAccount().ProductsByID(w._stream.PrivilegeIDs()...)
 }
 
 /******************************************

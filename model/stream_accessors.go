@@ -23,8 +23,8 @@ func StreamSchema() schema.Element {
 			"socialRole":       schema.String{MaxLength: 128},
 			"stateId":          schema.String{MaxLength: 128},
 			"permissions":      PermissionSchema(),
-			"products":         PermissionSchema(),
-			"circles":          PermissionSchema(),
+			"privileges":       schema.Object{Wildcard: schema.Array{Items: schema.String{}}},
+			"groups":           schema.Object{Wildcard: schema.Array{Items: schema.String{Format: "objectId"}}},
 			"defaultAllow":     schema.Array{Items: schema.String{Format: "objectId"}},
 			"url":              schema.String{Format: "url"},
 			"label":            schema.String{MaxLength: 128},
@@ -83,11 +83,11 @@ func (stream *Stream) GetPointer(name string) (any, bool) {
 	case "permissions":
 		return &stream.Permissions, true
 
-	case "products":
-		return &stream.Products, true
+	case "privileges":
+		return &stream.Privileges, true
 
-	case "circles":
-		return &stream.Circles, true
+	case "groups":
+		return &stream.Groups, true
 
 	case "defaultAllow":
 		return &stream.DefaultAllow, true

@@ -158,8 +158,8 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "set-password":
 		return NewSetPassword(stepInfo)
 
-	case "set-products":
-		return NewSetProducts(stepInfo)
+	case "set-privileges":
+		return NewSetPrivileges(stepInfo)
 
 	case "set-query-param":
 		return NewSetQueryParam(stepInfo)

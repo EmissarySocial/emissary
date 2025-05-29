@@ -32,8 +32,8 @@ type Stream struct {
 	StateID          string                       `bson:"stateId"`                // Unique identifier of the State this Stream is in.  This is used to populate the State information from the Template service at load time.
 	SocialRole       string                       `bson:"socialRole,omitempty"`   // Role to use for this Stream in social integrations (Article, Note, Image, etc)
 	Permissions      mapof.Object[sliceof.String] `bson:"permissions,omitempty"`  // Permissions maps UserIDs/GroupIDs into Roles for this Stream.
-	Products         mapof.Object[sliceof.String] `bson:"products,omitempty"`     // Products maps ProductIDs into Roles for this Stream.
-	Circles          mapof.Object[sliceof.String] `bson:"circles,omitempty"`      // Circles maps CircleIDs into Roles for this Stream.
+	Privileges       mapof.Object[sliceof.String] `bson:"products,omitempty"`     // Products maps ProductIDs into Roles for this Stream.
+	Groups           mapof.Object[id.Slice]       `bson:"circles,omitempty"`      // Circles maps CircleIDs into Roles for this Stream.
 	DefaultAllow     id.Slice                     `bson:"defaultAllow,omitempty"` // List of Groups that are allowed to perform the 'default' (view) action.  This is used to query general access to the Stream from the database, before performing server-based authentication.
 	URL              string                       `bson:"url,omitempty"`          // URL of the original document
 	Token            string                       `bson:"token,omitempty"`        // Unique value that identifies this element in the URL
@@ -73,7 +73,8 @@ func NewStream() Stream {
 		ParentIDs:     id.NewSlice(),
 		StateID:       "new",
 		Permissions:   NewStreamPermissions(),
-		Products:      mapof.NewObject[sliceof.String](),
+		Privileges:    mapof.NewObject[sliceof.String](),
+		Groups:        mapof.NewObject[id.Slice](),
 		DefaultAllow:  id.NewSlice(),
 		Widgets:       NewStreamWidgets(),
 		Data:          mapof.NewAny(),
@@ -184,8 +185,17 @@ func (stream Stream) IsMyself(_ primitive.ObjectID) bool {
 
 // RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.
 // It is part of the AccessLister interface
-func (stream Stream) RolesToGroupIDs(roleIDs ...string) id.Slice {
-	return stream.PermissionGroups(roleIDs...)
+func (stream Stream) RolesToGroupIDs(roles ...string) id.Slice {
+
+	stream.tempHackGroupPermissions()
+
+	result := id.NewSlice()
+
+	for _, role := range roles {
+		result = append(result, stream.Groups[role]...)
+	}
+
+	return result
 }
 
 // RolesToPrivileges returns a slice of Privileges that grant any of the requested roles
@@ -195,8 +205,7 @@ func (stream Stream) RolesToPrivileges(roles ...string) sliceof.String {
 	result := sliceof.NewString()
 
 	for _, role := range roles {
-
-		combinedIDs, exists := stream.Products[role]
+		combinedIDs, exists := stream.Privileges[role]
 
 		if !exists {
 			continue
@@ -228,76 +237,64 @@ func (stream Stream) DefaultAllowAnonymous() bool {
 
 // AssignPermissions assigns a role to a group
 func (stream *Stream) AssignPermission(role string, groupID primitive.ObjectID) {
+
+	// Old Style
 	groupIDHex := groupID.Hex()
 
-	if _, ok := stream.Permissions[groupIDHex]; !ok {
+	if _, exists := stream.Permissions[groupIDHex]; !exists {
 		stream.Permissions[groupIDHex] = []string{role}
 		return
 	}
 
+	// New Style
 	stream.Permissions[groupIDHex] = append(stream.Permissions[groupIDHex], role)
-}
 
-// PermissionGroups returns all groups that match the provided roles
-func (stream Stream) PermissionGroups(roles ...string) []primitive.ObjectID {
-
-	result := make([]primitive.ObjectID, 0)
-
-	for _, role := range roles {
-		switch role {
-
-		case MagicRoleAnonymous:
-			result = append(result, MagicGroupIDAnonymous)
-
-		case MagicRoleAuthenticated:
-			result = append(result, MagicGroupIDAuthenticated)
-
-		}
+	if _, exists := stream.Groups[role]; !exists {
+		stream.Groups[role] = id.Slice{groupID}
+		return
 	}
 
-	for groupID, groupRoles := range stream.Permissions {
-		if slice.ContainsAny(roles, groupRoles...) {
-			if groupID, err := primitive.ObjectIDFromHex(groupID); err == nil {
-				result = append(result, groupID)
+	stream.Groups[role] = append(stream.Groups[role], groupID)
+}
+
+func (stream *Stream) tempHackGroupPermissions() {
+
+	stream.Groups = make(map[string]id.Slice)
+
+	// Convert old-style permissions to new-style permissions
+	for group, roles := range stream.Permissions {
+
+		if groupID, err := primitive.ObjectIDFromHex(group); err == nil {
+
+			for _, role := range roles {
+				if _, exists := stream.Groups[role]; !exists {
+					stream.Groups[role] = id.Slice{groupID}
+					continue
+				}
+
+				stream.Groups[role] = append(stream.Groups[role], groupID)
 			}
 		}
 	}
-
-	return result
-}
-
-// PermissionRoles returns a unique list of all roles that the provided groups can access.
-func (stream Stream) PermissionRoles(groupIDs ...primitive.ObjectID) []string {
-
-	result := []string{}
-
-	// Copy values from group roles
-	for _, groupID := range groupIDs {
-		if roles, ok := stream.Permissions[groupID.Hex()]; ok {
-			result = append(result, roles...)
-		}
-	}
-
-	return result
 }
 
 /******************************************
- * Product Methods
+ * Privilege Methods
  ******************************************/
 
-// HasProducts returns TRUE if this Stream includes special permissions for any Product Plan
-func (stream Stream) HasProducts() bool {
-	return len(stream.Products) > 0
+// HasPrivileges returns TRUE if this Stream includes special permissions for any Privilege
+func (stream Stream) HasPrivileges() bool {
+	return len(stream.Privileges) > 0
 }
 
-// ProductIDs returns a unique list of all Product IDs that,
+// PrivilegeIDs returns a unique list of all Privilege IDs that,
 // when purchased, grant additional access to this Stream
-func (stream Stream) ProductIDs() []string {
+func (stream Stream) PrivilegeIDs() []string {
 
-	result := make([]string, 0, len(stream.Products))
+	result := make([]string, 0, len(stream.Privileges))
 
-	for _, products := range stream.Products {
-		result = append(result, products...)
+	for _, privileges := range stream.Privileges {
+		result = append(result, privileges...)
 	}
 
 	return slice.Unique(result)

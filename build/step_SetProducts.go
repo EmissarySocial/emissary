@@ -13,14 +13,14 @@ import (
 	"github.com/benpate/rosetta/sliceof"
 )
 
-// StepSetProducts represents an action that can edit a top-level folder in the Domain
-type StepSetProducts struct {
+// StepSetPrivileges represents an action that can edit a top-level folder in the Domain
+type StepSetPrivileges struct {
 	Title string
 }
 
-func (step StepSetProducts) Get(builder Builder, buffer io.Writer) PipelineBehavior {
+func (step StepSetPrivileges) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 
-	const location = "build.StepSetProducts.Get"
+	const location = "build.StepSetPrivileges.Get"
 
 	// This step can only be used with a Stream builder
 	streamBuilder, isStreamBuilder := builder.(Stream)
@@ -85,12 +85,12 @@ func (step StepSetProducts) Get(builder Builder, buffer io.Writer) PipelineBehav
 	formHTML, err := form.Editor(
 		step.schema(streamBuilder._template.PurchasableRoles()),
 		formDefinition,
-		streamBuilder._stream.Products,
+		streamBuilder._stream.Privileges,
 		builder.lookupProvider(),
 	)
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, "build.StepSetProducts.Get", "Error building form"))
+		return Halt().WithError(derp.Wrap(err, "build.StepSetPrivileges.Get", "Error building form"))
 	}
 
 	// Write the rest of the HTML that contains the form
@@ -122,9 +122,9 @@ func (step StepSetProducts) Get(builder Builder, buffer io.Writer) PipelineBehav
 	return nil
 }
 
-func (step StepSetProducts) Post(builder Builder, _ io.Writer) PipelineBehavior {
+func (step StepSetPrivileges) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
-	const location = "build.StepSetProducts.Post"
+	const location = "build.StepSetPrivileges.Post"
 
 	// This step can only be used with a Stream builder
 	streamBuilder, isStreamBuilder := builder.(Stream)
@@ -136,29 +136,29 @@ func (step StepSetProducts) Post(builder Builder, _ io.Writer) PipelineBehavior 
 	request := streamBuilder.request()
 
 	if err := request.ParseForm(); err != nil {
-		return Halt().WithError(derp.Wrap(err, "build.StepSetProducts", "Error parsing form input"))
+		return Halt().WithError(derp.Wrap(err, "build.StepSetPrivileges", "Error parsing form input"))
 	}
 
 	// Clear out existing product settings
-	streamBuilder._stream.Products = mapof.NewObject[sliceof.String]()
+	streamBuilder._stream.Privileges = mapof.NewObject[sliceof.String]()
 
 	// Apply new product settings
 	for roleID, productIDs := range request.Form {
 
-		// Ensure that the roleID exists in the stream.Products
-		if _, ok := streamBuilder._stream.Products[roleID]; !ok {
-			streamBuilder._stream.Products[roleID] = sliceof.NewString()
+		// Ensure that the roleID exists in the stream.Privileges
+		if _, ok := streamBuilder._stream.Privileges[roleID]; !ok {
+			streamBuilder._stream.Privileges[roleID] = sliceof.NewString()
 		}
 
-		// Append the roleId to the stream.Products
-		streamBuilder._stream.Products[roleID] = append(streamBuilder._stream.Products[roleID], productIDs...)
+		// Append the roleId to the stream.Privileges
+		streamBuilder._stream.Privileges[roleID] = append(streamBuilder._stream.Privileges[roleID], productIDs...)
 	}
 
 	// Success!
 	return nil
 }
 
-func (step StepSetProducts) GetEmpty(merchantAccounts sliceof.Object[model.MerchantAccount], iconFunc func(string) string, buffer io.Writer) PipelineBehavior {
+func (step StepSetPrivileges) GetEmpty(merchantAccounts sliceof.Object[model.MerchantAccount], iconFunc func(string) string, buffer io.Writer) PipelineBehavior {
 
 	// Write the rest of the HTML that contains the form
 	b := html.New()
@@ -199,7 +199,7 @@ func (step StepSetProducts) GetEmpty(merchantAccounts sliceof.Object[model.Merch
 }
 
 // schema returns the validating schema for this form
-func (step StepSetProducts) schema(roles []model.Role) schema.Schema {
+func (step StepSetPrivileges) schema(roles []model.Role) schema.Schema {
 
 	properties := map[string]schema.Element{}
 

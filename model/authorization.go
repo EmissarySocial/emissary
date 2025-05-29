@@ -61,7 +61,7 @@ func (authorization *Authorization) AllGroupIDs() []primitive.ObjectID {
 
 // IsGroupMember returns TRUE if this authorization contains any one of the specified groupIDs
 func (authorization Authorization) IsGroupMember(groupIDs ...primitive.ObjectID) bool {
-	return slice.ContainsAny(authorization.GroupIDs, groupIDs...)
+	return slice.ContainsAny(authorization.AllGroupIDs(), groupIDs...)
 }
 
 // Scopes returns a slice of scopes that this Authorization token is allowed to use.

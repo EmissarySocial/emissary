@@ -4,18 +4,18 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// SetProducts represents an action that can edit a top-level folder in the Domain
-type SetProducts struct {
+// SetPrivileges represents an action that can edit a top-level folder in the Domain
+type SetPrivileges struct {
 	Title string
 }
 
-// NewSetProducts returns a fully parsed SetProducts object
-func NewSetProducts(stepInfo mapof.Any) (SetProducts, error) {
+// NewSetPrivileges returns a fully parsed SetPrivileges object
+func NewSetPrivileges(stepInfo mapof.Any) (SetPrivileges, error) {
 
-	return SetProducts{
+	return SetPrivileges{
 		Title: first(stepInfo.GetString("title"), "Product Settings"),
 	}, nil
 }
 
 // AmStep is here only to verify that this struct is a build pipeline step
-func (step SetProducts) AmStep() {}
+func (step SetPrivileges) AmStep() {}

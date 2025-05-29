@@ -134,8 +134,8 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.SetPassword:
 		return StepSetPassword(s)
 
-	case step.SetProducts:
-		return StepSetProducts(s)
+	case step.SetPrivileges:
+		return StepSetPrivileges(s)
 
 	case step.SetQueryParam:
 		return StepSetQueryParam(s)

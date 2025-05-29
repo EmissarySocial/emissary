@@ -16,7 +16,7 @@
 		choose-products: {
 			roles: ["author", "editor"]
 			steps: [
-				{do:"set-products"}
+				{do:"set-privileges"}
 				{do:"save"}
 				{do:"forward-to", url:"{{.Permalink}}"}
 			]
