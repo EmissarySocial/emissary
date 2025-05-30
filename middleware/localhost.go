@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 )
@@ -14,6 +15,7 @@ func Localhost() echo.MiddlewareFunc {
 		return func(ctx echo.Context) error {
 
 			hostname := ctx.Request().Host
+			hostname, _, _ = strings.Cut(hostname, ":")
 
 			if hostname != "localhost" {
 				return ctx.NoContent(http.StatusNotFound)
