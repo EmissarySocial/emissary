@@ -49,6 +49,7 @@ main {
 	display:block;
 	padding: 4px 32px 4px 8px;
 	border-radius:4px;
+	color:var(--gray80);
 }
 
 .app-sidebar .menu-item:hover {
