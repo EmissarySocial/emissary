@@ -10,7 +10,7 @@ import (
 
 // Identity represents a combination of identifiers that all represent a single individual.
 // This is used to track pseud-logins by individuals who do not have a registered username on this server.
-// Identities can be tied to a Follower and to a Purchase via the `Identifier` type.
+// Identities can be tied to a Follower and to a Privilege via the two identifiers: EmailAddress and WebFingerHandle.
 type Identity struct {
 	IdentityID              primitive.ObjectID `bson:"_id"`                               // Unique ID for the Identity
 	Name                    string             `bson:"name"`                              // Full name of the Individual ("John Connor")

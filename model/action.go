@@ -102,7 +102,7 @@ func (action *Action) calcAccessListForStateAndRole(template *Template, stateID 
 		default:
 			role := template.AccessRoles[roleID] // save becuase this was already checked above
 
-			if role.Purchasable {
+			if role.IsPrivileged {
 				result.Privileges = append(result.Privileges, roleID)
 			} else {
 				result.Groups = append(result.Groups, roleID)

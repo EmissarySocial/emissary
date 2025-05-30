@@ -267,7 +267,7 @@ func (template Template) IsSearch() bool {
 func (template Template) IsSubscribable() bool {
 
 	for _, role := range template.AccessRoles {
-		if role.Purchasable {
+		if role.IsPrivileged {
 			return true
 		}
 	}
@@ -275,12 +275,12 @@ func (template Template) IsSubscribable() bool {
 	return false
 }
 
-func (template Template) PurchasableRoles() []Role {
+func (template Template) PrivilegedRoles() []Role {
 
 	result := make([]Role, 0)
 
 	for _, role := range template.AccessRoles {
-		if role.Purchasable {
+		if role.IsPrivileged {
 			result = append(result, role)
 		}
 	}

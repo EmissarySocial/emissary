@@ -25,9 +25,13 @@
 
 	{{- if eq 0 $merchantAccounts.Length -}}
 
-		<h1 class="text-xl bold">Set Up Purchase Options for this Item</h1>
+		<h1 class="text-xl bold">
+			1. Merchant Account
+		</h1>
+		
 		<div class="margin-bottom-lg md:width-60%">
-			The first step in collecting payments is to connect to one of the supported payment procesors below.
+			To sell access to this album online, you must first sign up and connect to one of the supported payment procesors below.
+			<br><br>
 			After you've entered your merchant account information, you'll be able to use the product plan(s) from your merchant account to 
 			charge for access to this item.
 			<a href="https://emissary.dev/products" class="nowrap" target="_blank">Learn More {{icon "new-window"}}</a>
@@ -52,13 +56,12 @@
 			</div>
 		</div>
 
-
 	{{- else -}}
 
-		<details>
+		<details class="margin-bottom-xl">
 			<summary class="clickable flex-row flex-align-center">
-				<h1 class="text-xl bold margin-none margin-right inline" style="line-height:1em;">
-					Merchant Account
+				<h1 class="text-xl bold">
+					1. Merchant Account 
 				</h1>
 				<span class="text-sm" style="color:white; background:var(--green70); border-radius:8px; padding:8px 16px;"> &check; Connected</span>
 			</summary>
@@ -80,15 +83,34 @@
 			</div>
 		</details>
 
-		<h1 class="margin-top-lg text-xl bold">Products &amp; Subscriptions</h1>
+		{{- $privileges := .HasPrivileges -}}
+		<details class="margin-bottom-xl" {{if not $privileges}} open="true" {{end}} >
+			<summary class="clickable flex-row flex-align-center">
+				<h1 class="text-xl bold">
+					2. Products &amp; Subscriptions
+				</h1>
+				{{- if $privileges}}
+					<span class="text-sm" style="color:white; background:var(--green70); border-radius:8px; padding:8px 16px;"> &check; Connected</span>
+				{{- end -}}
+			</summary>
 
-		<div id="choose-products" hx-get="/{{.StreamID}}/choose-products" hx-trigger="load" hx-target="#choose-products" hx-swap="innerHTML" hx-push-url="false">
-			One moment please, loading...
-		</div>
+			<div class="margin-bottom-lg">
+				Now that your merchant account is connected, you can select the products that grant access to this item.
+				Visitors purchase access to your content, with either one-time, or recurring payments.
+				<a href="https://emissary.dev/products" target="_blank" class="nowrap">{{icon "help"}} Help with Products</a>
+			</div>
+
+			<div id="edit-products" hx-get="/{{.StreamID}}/edit-products" hx-trigger="load" hx-target="#edit-products" hx-swap="innerHTML" hx-push-url="false">
+				One moment please, loading...
+			</div>
+
+		</details>
+
+		{{- .View "edit-paid-content" -}}
 
 	{{- end -}}
 
 	<div class="margin-vertical-xl"></div>
 
-	<div hx-get="/{{.StreamID}}/edit-purchase" hx-trigger="refreshPage from:window" hx-push-url="false"></div>
+	<div hx-get="/{{.StreamID}}/edit-checkout" hx-trigger="refreshPage from:window" hx-push-url="false"></div>
 </div>

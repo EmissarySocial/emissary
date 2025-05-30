@@ -1,4 +1,7 @@
 {
+	templateId: "base-checkout"
+	model: "stream"
+	
 	states: {
 		default: {
 			label: Default State,
@@ -12,19 +15,27 @@
 		}
 	}
 	actions: {
-		edit-purchase: {
+		
+		edit-checkout: {
 			roles: ["author", "editor"]
 			steps: [
 				{do:"view-html"}
 			]
 		}
 
-		choose-products: {
+		edit-products: {
 			roles: ["author", "editor"]
 			steps: [
 				{do:"set-privileges"}
 				{do:"save"}
 				{do:"forward-to", url:"{{.Permalink}}"}
+			]
+		}
+
+		edit-paid-content: {
+			roles: ["author", "editor"]
+			steps: [
+				{do:"view-html"}
 			]
 		}
 

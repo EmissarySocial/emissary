@@ -46,7 +46,7 @@ func (step StepSetPrivileges) Get(builder Builder, buffer io.Writer) PipelineBeh
 		return step.GetEmpty(merchantAccounts, iconFunc, buffer)
 	}
 
-	roles := streamBuilder._template.PurchasableRoles()
+	roles := streamBuilder._template.PrivilegedRoles()
 
 	tabLabel := html.New()
 
@@ -81,9 +81,9 @@ func (step StepSetPrivileges) Get(builder Builder, buffer io.Writer) PipelineBeh
 		}),
 	}
 
-	// Try to write form HTML
+	// Write form HTML
 	formHTML, err := form.Editor(
-		step.schema(streamBuilder._template.PurchasableRoles()),
+		step.schema(streamBuilder._template.PrivilegedRoles()),
 		formDefinition,
 		streamBuilder._stream.Privileges,
 		builder.lookupProvider(),
@@ -95,12 +95,6 @@ func (step StepSetPrivileges) Get(builder Builder, buffer io.Writer) PipelineBeh
 
 	// Write the rest of the HTML that contains the form
 	b := html.New()
-
-	b.Div().Class("margin-bottom-lg").InnerHTML(`
-		Now that your merchant account is connected, you can select the products that grant access to this item.
-		Visitors purchase access to your content, with either one-time, or recurring payments.
-		<a href="https://emissary.dev/products" target="_blank" class="nowrap">` + iconFunc("help") + ` Help with Products</a>`,
-	).Close()
 
 	// Form
 	b.Form("", "").
@@ -162,19 +156,6 @@ func (step StepSetPrivileges) GetEmpty(merchantAccounts sliceof.Object[model.Mer
 
 	// Write the rest of the HTML that contains the form
 	b := html.New()
-
-	// Heading
-	b.Div().Class("margin-bottom")
-
-	b.Span().InnerHTML(`Now that your merchant account is connected, you can connect products and subscription plans to this item.`).Close()
-	b.Span().InnerText("Click here for ")
-	b.A(merchantAccounts.First().HelpURL()).
-		Class("nowrap").
-		InnerHTML(iconFunc("help") + ` Help with Products`).
-		Close()
-
-	b.Close()
-	b.Close()
 
 	b.Div().Class("margin-bottom-lg")
 	for _, merchantAccount := range merchantAccounts {

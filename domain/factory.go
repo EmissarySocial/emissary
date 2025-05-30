@@ -86,7 +86,7 @@ type Factory struct {
 	streamService          service.Stream
 	streamArchiveService   service.StreamArchive
 	streamDraftService     service.StreamDraft
-	purchaseService        service.Privilege
+	privilegeService       service.Privilege
 	realtimeBroker         RealtimeBroker
 	userService            service.User
 	webhookService         service.Webhook
@@ -166,7 +166,7 @@ func NewFactory(domain config.Domain, port string, activityCache *mongo.Collecti
 	factory.streamService = service.NewStream()
 	factory.streamArchiveService = service.NewStreamArchive()
 	factory.streamDraftService = service.NewStreamDraft()
-	factory.purchaseService = service.NewPrivilege()
+	factory.privilegeService = service.NewPrivilege()
 	factory.userService = service.NewUser()
 	factory.webhookService = service.NewWebhook()
 
@@ -508,7 +508,7 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 		)
 
 		// Populate Privilege Service
-		factory.purchaseService.Refresh(
+		factory.privilegeService.Refresh(
 			factory.collection(CollectionPrivilege),
 			factory.Identity(),
 		)
@@ -644,11 +644,11 @@ func (factory *Factory) Model(name string) (service.ModelService, error) {
 	case "merchantAccount":
 		return factory.MerchantAccount(), nil
 
+	case "privilege":
+		return factory.Privilege(), nil
+
 	case "stream":
 		return factory.Stream(), nil
-
-	case "purchase":
-		return factory.Privilege(), nil
 
 	case "user":
 		return factory.User(), nil
@@ -794,7 +794,7 @@ func (factory *Factory) Permission() *service.Permission {
 
 // Privilege returns a fully populated Privilege service
 func (factory *Factory) Privilege() *service.Privilege {
-	return &factory.purchaseService
+	return &factory.privilegeService
 }
 
 // Response returns a fully populated Response service

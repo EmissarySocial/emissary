@@ -21,42 +21,42 @@ import (
 
 // Stream corresponds to a top-level path on any Domain.
 type Stream struct {
-	StreamID         primitive.ObjectID           `bson:"_id"`                    // Unique identifier of this Stream.
-	ParentID         primitive.ObjectID           `bson:"parentId"`               // Unique identifier of the "parent" stream.
-	ParentIDs        id.Slice                     `bson:"parentIds"`              // List of all parent IDs, including the current parent.  This is used to generate "breadcrumbs" for the Stream.
-	Rank             int                          `bson:"rank"`                   // If Template uses a custom sort order, then this is the value used to determine the position of this Stream.
-	RankAlt          int                          `bson:"rankAlt"`                // Alternate sort criteria
-	NavigationID     string                       `bson:"navigationId"`           // Unique identifier of the "top-level" Stream that this record falls within.
-	TemplateID       string                       `bson:"templateId"`             // Unique identifier (name) of the Template to use when building this Stream in HTML.
-	ParentTemplateID string                       `bson:"parentTemplateId"`       // Unique identifier (name) of the parent's Template.
-	StateID          string                       `bson:"stateId"`                // Unique identifier of the State this Stream is in.  This is used to populate the State information from the Template service at load time.
-	SocialRole       string                       `bson:"socialRole,omitempty"`   // Role to use for this Stream in social integrations (Article, Note, Image, etc)
-	Permissions      mapof.Object[sliceof.String] `bson:"permissions,omitempty"`  // Permissions maps UserIDs/GroupIDs into Roles for this Stream.
-	Privileges       mapof.Object[sliceof.String] `bson:"products,omitempty"`     // Products maps ProductIDs into Roles for this Stream.
-	Groups           mapof.Object[id.Slice]       `bson:"circles,omitempty"`      // Circles maps CircleIDs into Roles for this Stream.
-	DefaultAllow     id.Slice                     `bson:"defaultAllow,omitempty"` // List of Groups that are allowed to perform the 'default' (view) action.  This is used to query general access to the Stream from the database, before performing server-based authentication.
-	URL              string                       `bson:"url,omitempty"`          // URL of the original document
-	Token            string                       `bson:"token,omitempty"`        // Unique value that identifies this element in the URL
-	Label            string                       `bson:"label,omitempty"`        // Label/Title of the document
-	Summary          string                       `bson:"summary,omitempty"`      // Brief summary of the document
-	Icon             string                       `bson:"icon,omitempty"`         // Icon CSS/Token for the document
-	IconURL          string                       `bson:"iconUrl,omitempty"`      // URL of this document's icon/thumbnail image
-	Context          string                       `bson:"context,omitempty"`      // Context of this document (usually a URL)
-	InReplyTo        string                       `bson:"inReplyTo"`              // If this stream is a reply to another stream or web page, then this links to the original document.
-	AttributedTo     PersonLink                   `bson:"attributedTo,omitempty"` // List of people who are attributed to this document
-	Content          Content                      `bson:"content,omitempty"`      // Body content object for this Stream.
-	Widgets          set.Slice[StreamWidget]      `bson:"widgets,omitempty"`      // Additional widgets to include when building this Stream.
-	Hashtags         sliceof.String               `bson:"hashtags,omitempty"`     // List of hashtags that are associated with this document
-	Places           sliceof.Object[Place]        `bson:"places,omitempty"`       // List of locations that are associated with this document
-	Data             mapof.Any                    `bson:"data,omitempty"`         // Set of data to populate into the Template.  This is validated by the JSON-Schema of the Template.
-	StartDate        datetime.DateTime            `bson:"startDate"`              // Date/Time to publish as a "start date" for this Stream (semantics are dependent on the Template)
-	EndDate          datetime.DateTime            `bson:"endDate"`                // Date/Time to publish as an "end date" for this Stream (semantics are dependent on the Template)
-	Syndication      delta.Slice[string]          `bson:"syndication,omitempty"`  // List of external services that this Stream has been syndicated to.
-	Shuffle          int64                        `bson:"shuffle"`                // Random number used to shuffle the order of Streams in a list.
-	PublishDate      int64                        `bson:"publishDate"`            // Unix timestamp of the date/time when this document is/was/will be first available on the domain.
-	UnPublishDate    int64                        `bson:"unpublishDate"`          // Unix timestemp of the date/time when this document will no longer be available on the domain.
-	IsFeatured       bool                         `bson:"isFeatured"`             // TRUE if this Stream is featured by its parent container.
-	IsSubscribable   bool                         `bson:"isSubscribable"`         // TRUE if this Stream uses the Products service to determine access rights.
+	StreamID         primitive.ObjectID           `bson:"_id"`                   // Unique identifier of this Stream.
+	ParentID         primitive.ObjectID           `bson:"parentId"`              // Unique identifier of the "parent" stream.
+	ParentIDs        id.Slice                     `bson:"parentIds"`             // List of all parent IDs, including the current parent.  This is used to generate "breadcrumbs" for the Stream.
+	Rank             int                          `bson:"rank"`                  // If Template uses a custom sort order, then this is the value used to determine the position of this Stream.
+	RankAlt          int                          `bson:"rankAlt"`               // Alternate sort criteria
+	NavigationID     string                       `bson:"navigationId"`          // Unique identifier of the "top-level" Stream that this record falls within.
+	TemplateID       string                       `bson:"templateId"`            // Unique identifier (name) of the Template to use when building this Stream in HTML.
+	ParentTemplateID string                       `bson:"parentTemplateId"`      // Unique identifier (name) of the parent's Template.
+	StateID          string                       `bson:"stateId"`               // Unique identifier of the State this Stream is in.  This is used to populate the State information from the Template service at load time.
+	SocialRole       string                       `bson:"socialRole,omitzero"`   // Role to use for this Stream in social integrations (Article, Note, Image, etc)
+	Permissions      mapof.Object[sliceof.String] `bson:"permissions,omitzero"`  // Permissions maps UserIDs/GroupIDs into Roles for this Stream.
+	Privileges       mapof.Object[sliceof.String] `bson:"products,omitzero"`     // Privileges maps roles into privileges (either remoteProductIds or circleIds) for this Stream.
+	Groups           mapof.Object[id.Slice]       `bson:"circles,omitzero"`      // Groups maps roles into GroupIDs for this Stream.
+	DefaultAllow     id.Slice                     `bson:"defaultAllow,omitzero"` // List of Groups that are allowed to perform the 'default' (view) action.  This is used to query general access to the Stream from the database, before performing server-based authentication.
+	URL              string                       `bson:"url,omitzero"`          // URL of the original document
+	Token            string                       `bson:"token,omitzero"`        // Unique value that identifies this element in the URL
+	Label            string                       `bson:"label,omitzero"`        // Label/Title of the document
+	Summary          string                       `bson:"summary,omitzero"`      // Brief summary of the document
+	Icon             string                       `bson:"icon,omitzero"`         // Icon CSS/Token for the document
+	IconURL          string                       `bson:"iconUrl,omitzero"`      // URL of this document's icon/thumbnail image
+	Context          string                       `bson:"context,omitzero"`      // Context of this document (usually a URL)
+	InReplyTo        string                       `bson:"inReplyTo"`             // If this stream is a reply to another stream or web page, then this links to the original document.
+	AttributedTo     PersonLink                   `bson:"attributedTo,omitzero"` // List of people who are attributed to this document
+	Content          Content                      `bson:"content,omitzero"`      // Body content object for this Stream.
+	Widgets          set.Slice[StreamWidget]      `bson:"widgets,omitzero"`      // Additional widgets to include when building this Stream.
+	Hashtags         sliceof.String               `bson:"hashtags,omitzero"`     // List of hashtags that are associated with this document
+	Places           sliceof.Object[Place]        `bson:"places,omitzero"`       // List of locations that are associated with this document
+	Data             mapof.Any                    `bson:"data,omitzero"`         // Set of data to populate into the Template.  This is validated by the JSON-Schema of the Template.
+	StartDate        datetime.DateTime            `bson:"startDate,omitzero"`    // Date/Time to publish as a "start date" for this Stream (semantics are dependent on the Template)
+	EndDate          datetime.DateTime            `bson:"endDate,omitzero"`      // Date/Time to publish as an "end date" for this Stream (semantics are dependent on the Template)
+	Syndication      delta.Slice[string]          `bson:"syndication,omitzero"`  // List of external services that this Stream has been syndicated to.
+	Shuffle          int64                        `bson:"shuffle"`               // Random number used to shuffle the order of Streams in a list.
+	PublishDate      int64                        `bson:"publishDate"`           // Unix timestamp of the date/time when this document is/was/will be first available on the domain.
+	UnPublishDate    int64                        `bson:"unpublishDate"`         // Unix timestemp of the date/time when this document will no longer be available on the domain.
+	IsFeatured       bool                         `bson:"isFeatured"`            // TRUE if this Stream is featured by its parent container.
+	IsSubscribable   bool                         `bson:"isSubscribable"`        // TRUE if this Stream uses the Products service to determine access rights.
 
 	journal.Journal `bson:",inline"`
 }

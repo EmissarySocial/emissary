@@ -72,6 +72,14 @@ input[type=radio] {
 	border: none;
 }
 
+
+.disabled {
+	color: var(--input-color-disabled);
+	cursor: default;
+	pointer-events: none;
+	user-select: none;
+}
+
 /******************************************
  * Toggle Controls
  ******************************************/
@@ -506,6 +514,7 @@ button.button-invisible {
 }
 
 .layout-group > .layout-group-elements {
+
 }
 
 /******************************************

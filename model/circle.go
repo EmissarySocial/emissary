@@ -14,7 +14,7 @@ type Circle struct {
 	UserID      primitive.ObjectID `json:"userId"     bson:"userId"`       // UserID of owner of this Circle
 	Name        string             `json:"name"       bson:"name"`         // Human-readable name for this circle.
 	Description string             `json:"description" bson:"description"` // Human-readable description of this Circle
-	ProductIDs  sliceof.String     `json:"productIds" bson:"productIds"`   // List of ProductIDs that can purchase membership in this Circle
+	ProductIDs  sliceof.String     `json:"productIds" bson:"productIds"`   // List of remote ProductIDs that can purchase membership in this Circle
 
 	journal.Journal `json:"-" bson:",inline"`
 }
