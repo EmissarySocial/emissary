@@ -28,27 +28,25 @@
 			<a href="https://emissary.dev/circles" target="_blank">{{icon "help"}} Help with Circles</a>
 		</div>
 
-		<div class="table">
-
-			<div hx-get="/@me/settings/circle-add" role="button" class="link">
-				{{icon "add"}} Add a Circle
-			</div>
-
+		<table class="table">
+			<tr role="button"><td class="link" colspan="4">{{icon "add"}} Add a Circle</td></tr>
 			{{- range $index, $circle := $circles -}}
-				<div class="flex-row" role="button">
-					<a href="/@me/settings/circle-members?circleId={{$circle.ID}}" role="button" class="flex-grow text-nocolor ellipsis">
-						{{icon "circle"}} {{$circle.Name}} 
-						{{- if ne "" $circle.Description -}}
-							<span class="margin-left text-sm text-gray">{{$circle.Description}}</span>
-						{{- end -}}
-					</a>
-					<div>
-						<button hx-get="/@me/settings/circle-edit?circleId={{$circle.ID}}" role="button" class="text-xs">Edit Settings</button>
-					</div>
-				</div>
-			{{- end -}}
-		</div>
-	
+			<tr role="button">
+				<td hx-get="/@me/settings/circle-members?circleId={{$circle.ID}}">{{icon "circle"}} {{$circle.Name}}</td>
+				<td hx-get="/@me/settings/circle-members?circleId={{$circle.ID}}" nowrap>
+					<span class="nowrap margin-horizontal-lg">{{$circle.MemberCount}} {{pluralize $circle.MemberCount "member" "members"}}</span>
+				</td>
+				<td hx-get="/@me/settings/circle-products?circleId={{$circle.ID}}" nowrap>
+					<span>{{$circle.ProductIDs.Length}} {{pluralize $circle.ProductIDs.Length "product" "products"}}</span>
+				</td>
+				<td class="align-right" nowrap>
+					<button hx-get="/@me/settings/circle-edit?circleId={{$circle.ID}}" role="button" class="text-xs">Edit Circle</button>
+				</td>
+			</tr>
+			{{- end}}
+			
+		</table>
+
 	</div>
 
 	<div hx-get="{{.URL}}" hx-trigger="refreshPage from:window" hx-push-url="false"></div>

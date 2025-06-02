@@ -83,6 +83,7 @@
 										description: Link this Circle to the products in your merchant account and guests will be able to purchase membership in this Circle. <a href="https://emissary.dev/circles" target="_blank"><i class="bi bi-question-circle"></i> Help with Circles</a>
 										children:[
 											{type:"multiselect", path:"productIds", options:{provider:"merchantAccounts-all-products"}}
+											{type:"toggle", path:"isFeatured", options:{false-text:"Featured?", true-text:"Featured. Displays on your profile page."}}
 										]
 									}
 								]

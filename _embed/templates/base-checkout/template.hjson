@@ -28,7 +28,7 @@
 			steps: [
 				{do:"set-privileges"}
 				{do:"save"}
-				{do:"forward-to", url:"{{.Permalink}}"}
+				{do:"refresh-page"}
 			]
 		}
 
@@ -42,10 +42,10 @@
 		checkout: {
 			roles: ["anonymous"]
 			steps: [
-				{do:"if", condition:"{{eq 1 .ProductIDs.Length }}", then:[
+				{do:"if", condition:"{{eq 1 .PrivilegeIDs.Length }}", then:[
 					{
 						do:"forward-to"
-						url:"/.checkout?token={{.ProductIDs.First}}&return={{.Permalink}}"
+						url:"/.checkout?token={{.PrivilegeIDs.First}}&return={{.Permalink}}"
 						method:"get"
 					}
 				], else:[

@@ -38,6 +38,14 @@
 	color: var(--gray90);
 }
 
+.app-sidebar .menu-item.link {
+	color:var(--link-color);
+}
+
+.app-sidebar .menu-item.link:hover {
+	color:var(--link-color-hover);
+}
+
 .app-sidebar .selected {
 	font-weight:bold;
 	color: var(--black);

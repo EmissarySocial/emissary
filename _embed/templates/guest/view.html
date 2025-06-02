@@ -30,7 +30,6 @@
 			{{- end -}}
 		</div>
 
-
 		<div class="margin-bottom text-sm">
 			{{- if not .HasWebfingerHandle -}}
 				<button>Add Fediverse Handle</button>
@@ -41,6 +40,9 @@
 			{{- end -}}
 		</div>
 
+		{{- if not .IsAuthenticated -}}
+			<button hx-post="/signout" class="button text-sm">Sign Out</button>
+		{{- end -}}
 	</div>
 	
 </div>
