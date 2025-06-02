@@ -226,33 +226,6 @@ func (w Model) CircleMembers() (QueryBuilder[model.Identity], error) {
 	return NewQueryBuilder[model.Identity](w._factory.Identity(), criteria), nil
 }
 
-// Privileges returns a QueryBuilder for the Privileges of the
-// currently signed-in Identity (only works on Identity objects)
-func (w Model) Privileges() (QueryBuilder[model.Privilege], error) {
-
-	const location = "build.Model.Privileges"
-
-	// Guarantee that we are working with an Identity model object
-	identity, isIdentity := w._object.(*model.Identity)
-
-	if !isIdentity {
-		return QueryBuilder[model.Privilege]{}, derp.InternalError(location, "Builder method `CircleMembers` can only be used within the guest-profile template.")
-	}
-
-	// Define inbound parameters
-	expressionBuilder := builder.NewBuilder().
-		String("name")
-
-	// Calculate criteria
-	criteria := exp.And(
-		expressionBuilder.Evaluate(w._request.URL.Query()),
-		exp.Equal("identityId", identity.IdentityID.Hex()),
-	)
-
-	// Return the query builder
-	return NewQueryBuilder[model.Privilege](w._factory.Privilege(), criteria), nil
-}
-
 /******************************************
  * Helper functions
  ******************************************/

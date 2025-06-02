@@ -13,28 +13,23 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+// GetIdentity handles GET request for the /@guest route
 func GetIdentity(ctx *steranko.Context, factory *domain.Factory, identity *model.Identity) error {
 	return buildIdentity(ctx, factory, identity, build.ActionMethodGet)
 }
 
+// PostIdentity handles POST request for the /@guest route
 func PostIdentity(ctx *steranko.Context, factory *domain.Factory, identity *model.Identity) error {
 	return buildIdentity(ctx, factory, identity, build.ActionMethodPost)
 }
 
+// buildIdentity is the common function that handles both GET and POSt requests for the /@guest route.
 func buildIdentity(ctx *steranko.Context, factory *domain.Factory, identity *model.Identity, actionMethod build.ActionMethod) error {
 	const location = "handler.GetIdentity"
 
-	// Get the standard Signin page
-	templateService := factory.Template()
-	template, err := templateService.Load("guest-profile")
-
-	if err != nil {
-		return derp.Wrap(err, location, "Cannot load template `guest-profile`")
-	}
-
 	// Create a builder
 	actionID := getActionID(ctx)
-	builder, err := build.NewModel(factory, ctx.Request(), ctx.Response(), template, identity, actionID)
+	builder, err := build.NewIdentity(factory, ctx.Request(), ctx.Response(), identity, actionID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error creating builder")
@@ -48,9 +43,10 @@ func buildIdentity(ctx *steranko.Context, factory *domain.Factory, identity *mod
 	return ctx.NoContent(http.StatusOK)
 }
 
-func GetIdentityAuthenticate(ctx *steranko.Context, factory *domain.Factory) error {
+// GetIdentitySignin displays the Signin page for guest Identities
+func GetIdentitySignin(ctx *steranko.Context, factory *domain.Factory) error {
 
-	const location = "handler.GetIdentityAuthenticate"
+	const location = "handler.GetIdentitySignin"
 
 	// Get the standard Signin page
 	template := factory.Domain().Theme().HTMLTemplate
@@ -70,9 +66,11 @@ func GetIdentityAuthenticate(ctx *steranko.Context, factory *domain.Factory) err
 	return ctx.JSON(http.StatusOK, "")
 }
 
-func PostIdentityAuthenticate(ctx *steranko.Context, factory *domain.Factory) error {
+// PostIdentitySignin accepts POST from the guest Signin page, and sends
+// guest signin codes to the email/handle provided by the user.
+func PostIdentitySignin(ctx *steranko.Context, factory *domain.Factory) error {
 
-	const location = "handler.PostIdentityAuthenticate"
+	const location = "handler.PostIdentitySignin"
 
 	// Create and send a guest signin code
 	identityService := factory.Identity()
@@ -95,9 +93,11 @@ func PostIdentityAuthenticate(ctx *steranko.Context, factory *domain.Factory) er
 	return ctx.HTML(http.StatusOK, b.String())
 }
 
-func GetIdentityConnect(ctx *steranko.Context, factory *domain.Factory) error {
+// GetIdentitySigninWithJWT receives JWT tokens from the request, and signs guests
+// into the website with their Identity.
+func GetIdentitySigninWithJWT(ctx *steranko.Context, factory *domain.Factory) error {
 
-	const location = "handler.GetIdentityConnect"
+	const location = "handler.GetIdentitySigninWithJWT"
 
 	// Read and parse the JWT token
 	tokenString := ctx.Param("jwt")

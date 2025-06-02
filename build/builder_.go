@@ -21,8 +21,8 @@ type Builder interface {
 	View(string) (template.HTML, error) // Render function outputs an HTML template
 
 	// COMMON API METHODS
-	Host() string                        // String representation of the protocol + hostname
 	Protocol() string                    // String representation of the HTTP protocol to use when addressing this record (http:// or https://)
+	Host() string                        // String representation of the protocol + hostname
 	Hostname() string                    // Hostname for this server
 	Token() string                       // URL Token of the record being built
 	NavigationID() string                // ID of the Top-Level item to highlight in the navigation.

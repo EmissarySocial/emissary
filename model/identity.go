@@ -64,8 +64,8 @@ func (identity Identity) IsAuthor(primitive.ObjectID) bool {
 }
 
 // IsMyself returns TRUE if this object directly represents the provided UserID
-func (identity Identity) IsMyself(primitive.ObjectID) bool {
-	return false
+func (identity Identity) IsMyself(identityID primitive.ObjectID) bool {
+	return identity.IdentityID == identityID
 }
 
 // RolesToGroupIDs returns a map of RoleIDs to GroupIDs
@@ -82,6 +82,15 @@ func (identity Identity) RolesToPrivileges(...string) sliceof.String {
  * Other Getters
  ******************************************/
 
+func (identity Identity) HasEmailAddress() bool {
+	return identity.EmailAddress != ""
+}
+
+func (identity Identity) HasWebfingerHandle() bool {
+	return identity.WebfingerHandle != ""
+}
+
+// Icon returns an icon name to use for this Identity, based on the type of identifier(s) present.
 func (identity Identity) Icon() string {
 
 	if identity.WebfingerHandle != "" {
@@ -95,19 +104,7 @@ func (identity Identity) Icon() string {
 	return "person-circle"
 }
 
-func (identity Identity) Identifier() string {
-
-	if identity.WebfingerHandle != "" {
-		return identity.WebfingerHandle
-	}
-
-	if identity.EmailAddress != "" {
-		return identity.EmailAddress
-	}
-
-	return ""
-}
-
+// IdentifierType returns the "primary" identifier type that is present in this Identity.
 func (identity Identity) IdentifierType() string {
 
 	if identity.WebfingerHandle != "" {
@@ -116,6 +113,20 @@ func (identity Identity) IdentifierType() string {
 
 	if identity.EmailAddress != "" {
 		return IdentifierTypeEmail
+	}
+
+	return ""
+}
+
+// Identifier returns the "primary" identifier for this Identity.
+func (identity Identity) Identifier() string {
+
+	if identity.WebfingerHandle != "" {
+		return identity.WebfingerHandle
+	}
+
+	if identity.EmailAddress != "" {
+		return identity.EmailAddress
 	}
 
 	return ""
