@@ -43,10 +43,30 @@ func Prices(restrictedKey string, priceIDs ...string) ([]stripe.Price, error) {
 			continue
 		}
 
-		// If the priceID is specified, only return that price
-		if len(priceIDs) == 0 || slice.Contains(priceIDs, price.ID) {
-			result = append(result, *price)
+		// Filter out inactive prices
+		if !price.Active {
+			continue
 		}
+
+		// NPE check for Product
+		if price.Product == nil {
+			continue
+		}
+
+		// Filter out inactive products
+		if !price.Product.Active {
+			continue
+		}
+
+		// If priceIDs are provided then filter by priceIDs
+		if len(priceIDs) > 0 {
+			if slice.NotContains(priceIDs, price.ID) {
+				continue
+			}
+		}
+
+		// Result is valid; append to the result.
+		result = append(result, *price)
 	}
 
 	// Done.
