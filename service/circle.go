@@ -12,7 +12,8 @@ import (
 
 // Circle manages all interactions with the Circle collection
 type Circle struct {
-	collection data.Collection
+	collection       data.Collection
+	privilegeService *Privilege
 }
 
 // NewCircle returns a fully populated Circle service
@@ -25,8 +26,9 @@ func NewCircle() Circle {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Circle) Refresh(collection data.Collection) {
+func (service *Circle) Refresh(collection data.Collection, privilegeService *Privilege) {
 	service.collection = collection
+	service.privilegeService = privilegeService
 }
 
 // Close stops any background processes controlled by this service
@@ -90,7 +92,10 @@ func (service *Circle) Delete(circle *model.Circle, note string) error {
 		return derp.Wrap(err, location, "Error deleting Circle", circle, note)
 	}
 
-	// TODO: HIGH: Also remove connections to Users that still use this Circle
+	if err := service.privilegeService.DeleteByCircle(circle.CircleID, note); err != nil {
+		return derp.Wrap(err, location, "Error deleting Privileges for Circle", circle.CircleID, note)
+	}
+
 	// TODO: HIGH: Also remove connections to Streams that still use this Circle
 
 	return nil
@@ -166,4 +171,42 @@ func (service *Circle) QueryByUser(userID primitive.ObjectID, options ...option.
 func (service *Circle) LoadByID(userID primitive.ObjectID, circleID primitive.ObjectID, result *model.Circle) error {
 	criteria := exp.Equal("_id", circleID).AndEqual("userId", userID)
 	return service.Load(criteria, result)
+}
+
+/******************************************
+ * Custom Behaviors
+ ******************************************/
+
+// RefreshMemberCounts updates the member counts for the Circle with the provided circleID
+func (service *Circle) RefreshMemberCounts(userID primitive.ObjectID, circleID primitive.ObjectID) error {
+
+	const location = "service.Circle.RefreshMemberCounts"
+
+	// Load the circle to ensure it exists
+	circle := model.NewCircle()
+	if err := service.LoadByID(userID, circleID, &circle); err != nil {
+		return derp.Wrap(err, location, "Error loading Circle", circleID)
+	}
+
+	// Count the number of privileges for this Circle
+	count, err := service.privilegeService.CountByCircle(circleID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error counting privileges for Circle", circleID)
+	}
+
+	// If the count is correct, then we have triumphed
+	if count == circle.MemberCount {
+		return nil
+	}
+
+	// Otherwise, true grit would update the Circle with the new member count
+	circle.MemberCount = count
+
+	if err := service.Save(&circle, "Refresh Member Count"); err != nil {
+		return derp.Wrap(err, location, "Error saving Circle with updated member count", circleID)
+	}
+
+	// We have survived another day
+	return nil
 }

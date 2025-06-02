@@ -16,6 +16,7 @@ import (
 // Privilege defines a service that manages all content privileges created and imported by Users.
 type Privilege struct {
 	collection      data.Collection
+	circleService   *Circle
 	identityService *Identity
 }
 
@@ -29,8 +30,9 @@ func NewPrivilege() Privilege {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Privilege) Refresh(collection data.Collection, identityService *Identity) {
+func (service *Privilege) Refresh(collection data.Collection, circleService *Circle, identityService *Identity) {
 	service.collection = collection
+	service.circleService = circleService
 	service.identityService = identityService
 }
 
@@ -92,6 +94,10 @@ func (service *Privilege) Save(privilege *model.Privilege, note string) error {
 		return derp.Wrap(err, location, "Error validating Privilege", privilege)
 	}
 
+	if err := service.maybeCreateIdentity(privilege); err != nil {
+		return derp.Wrap(err, location, "Error creating related Identity")
+	}
+
 	// Save the privilege to the database
 	if err := service.collection.Save(privilege, note); err != nil {
 		return derp.Wrap(err, location, "Error saving Privilege", privilege, note)
@@ -100,6 +106,13 @@ func (service *Privilege) Save(privilege *model.Privilege, note string) error {
 	// Recalculate the privileges for the identityID
 	if err := service.identityService.RefreshPrivileges(privilege.IdentityID); err != nil {
 		return derp.Wrap(err, location, "Error refreshing privileges", privilege.IdentityID)
+	}
+
+	// Recalculate member counts for the Circle, if applicable
+	if !privilege.CircleID.IsZero() {
+		if err := service.circleService.RefreshMemberCounts(privilege.UserID, privilege.CircleID); err != nil {
+			return derp.Wrap(err, location, "Error refreshing Circle member counts", privilege.CircleID)
+		}
 	}
 
 	return nil
@@ -118,6 +131,13 @@ func (service *Privilege) Delete(privilege *model.Privilege, note string) error 
 	// Recalculate the privileges for the identityID
 	if err := service.identityService.RefreshPrivileges(privilege.IdentityID); err != nil {
 		return derp.Wrap(err, location, "Error refreshing privileges", privilege.IdentityID)
+	}
+
+	// Recalculate member counts for the Circle, if applicable
+	if !privilege.CircleID.IsZero() {
+		if err := service.circleService.RefreshMemberCounts(privilege.UserID, privilege.CircleID); err != nil {
+			return derp.Wrap(err, location, "Error refreshing Circle member counts", privilege.CircleID)
+		}
 	}
 
 	return nil
@@ -183,6 +203,51 @@ func (service *Privilege) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
+func (service *Privilege) LoadByID(userID primitive.ObjectID, privilegeID primitive.ObjectID, privilege *model.Privilege) error {
+	criteria := exp.Equal("_id", privilegeID).AndEqual("userId", userID)
+	return service.Load(criteria, privilege)
+}
+
+func (service *Privilege) LoadByIdentityAndCircle(userID primitive.ObjectID, identityID primitive.ObjectID, circleID primitive.ObjectID, privilege *model.Privilege) error {
+
+	const location = "service.Privilege.LoadByIdentityAndCircle"
+
+	// RULE: UserID must not be zero
+	if userID.IsZero() {
+		return derp.InternalError(location, "UserID must be provided")
+	}
+
+	// RULE: CircleID must not be zero
+	if identityID.IsZero() {
+		return derp.InternalError(location, "IdentityID must be provided")
+	}
+
+	// RULE: CircleID must not be zero
+	if circleID.IsZero() {
+		return derp.InternalError(location, "CircleID must be provided")
+	}
+
+	criteria := exp.Equal("userId", userID).
+		AndEqual("identityId", identityID).
+		AndEqual("circleId", circleID)
+
+	return service.Load(criteria, privilege)
+}
+
+func (service *Privilege) RangeByCircle(circleID primitive.ObjectID, options ...option.Option) (iter.Seq[model.Privilege], error) {
+
+	const location = "service.Privilege.RangeByCircle"
+
+	// RULE: CircleID must be provided
+	if circleID.IsZero() {
+		return nil, derp.InternalError(location, "No circleID provided")
+	}
+
+	criteria := exp.Equal("circleId", circleID)
+
+	return service.Range(criteria, options...)
+}
+
 func (service *Privilege) QueryByIdentity(identityID primitive.ObjectID, options ...option.Option) ([]model.Privilege, error) {
 
 	const location = "service.Privilege.QueryByIdentity"
@@ -197,23 +262,9 @@ func (service *Privilege) QueryByIdentity(identityID primitive.ObjectID, options
 	return service.Query(criteria, options...)
 }
 
-// CountByIdentityAndProduct returns the number of privileges made by an identity for a list of products
-func (service *Privilege) CountByIdentityAndProduct(identityID primitive.ObjectID, remoteProductIDs ...string) (int64, error) {
-
-	const location = "service.Privilege.CountByIdentityAndProduct"
-
-	// RULE: IdentityID must be provided
-	if identityID.IsZero() {
-		return 0, derp.InternalError(location, "No identityID provided")
-	}
-
-	// RULE: At least one productID must be provided
-	if len(remoteProductIDs) == 0 {
-		return 0, derp.InternalError(location, "No productIDs provided")
-	}
-
-	criteria := exp.Equal("identityId", identityID).AndIn("remoteProductId", remoteProductIDs)
-
+// CountByIdentityAndCircle returns the number of privileges are granted to a particular Circle
+func (service *Privilege) CountByCircle(circleID primitive.ObjectID) (int64, error) {
+	criteria := exp.Equal("circleId", circleID)
 	return service.Count(criteria)
 }
 
@@ -223,4 +274,58 @@ func (service *Privilege) LoadByRemoteIDs(remotePersonID string, remoteProductID
 		AndEqual("remoteProductId", remoteProductID)
 
 	return service.Load(criteria, privilege)
+}
+
+/******************************************
+ * Custom Behaviors
+ ******************************************/
+
+func (service *Privilege) DeleteByCircle(circleID primitive.ObjectID, note string) error {
+
+	const location = "service.Circle.DeleteByCircle"
+
+	// Range all privileges for this circle
+	privileges, err := service.RangeByCircle(circleID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error loading Privileges for Circle", circleID)
+	}
+
+	// Delete them (thank you RangeFuncs!)
+	for privilege := range privileges {
+		if err := service.Delete(&privilege, note); err != nil {
+			return derp.Wrap(err, location, "Error deleting Privilege", privilege.ID(), note)
+		}
+	}
+
+	// Everything is awesome.
+	return nil
+}
+
+/******************************************
+ * Helper Methods
+ ******************************************/
+
+// maybeCreateIdentity guarantees that the provided Privilege is connected to a valid Identity.
+// If the IdentityID field is zero, then a matching Identity is located or created.
+func (service *Privilege) maybeCreateIdentity(privilege *model.Privilege) error {
+
+	const location = "service.Privilege.maybeCreateIdentity"
+
+	// If this privilege is already bound to a valid Identity, then we're all good
+	if !privilege.IdentityID.IsZero() {
+		return nil
+	}
+
+	// Fall through means we need to load or create the upstream record before we continue
+	identity, err := service.identityService.LoadOrCreate(privilege.IdentifierType, privilege.IdentifierValue, true)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error loading/creating Identifier", privilege.IdentifierType, privilege.IdentifierValue)
+	}
+
+	// Update the Privilege with the correct IdentityID
+	privilege.IdentityID = identity.IdentityID
+
+	return nil
 }

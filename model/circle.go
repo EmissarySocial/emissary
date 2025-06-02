@@ -15,6 +15,7 @@ type Circle struct {
 	Name        string             `json:"name"       bson:"name"`         // Human-readable name for this circle.
 	Description string             `json:"description" bson:"description"` // Human-readable description of this Circle
 	ProductIDs  sliceof.String     `json:"productIds" bson:"productIds"`   // List of remote ProductIDs that can purchase membership in this Circle
+	MemberCount int64              `json:"memberCount" bson:"memberCount"` // Number of members in this Circle
 
 	journal.Journal `json:"-" bson:",inline"`
 }

@@ -1,0 +1,30 @@
+{
+	templateId: guest-profile
+	templateRole: guest-profile
+	model: identity
+	label: Guest Profile Page
+	description: Default profile page for Guests
+	containedBy: []
+	schema: {
+		title: Guest Profile
+		type: object
+		properties: {}
+	}
+
+	states: {
+		default: {
+			label: Default
+			description: Default state for guest profiles
+		}
+	}
+
+	actions: {
+
+		view: {
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+	}
+}	

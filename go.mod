@@ -4,6 +4,8 @@ go 1.24.1
 
 replace github.com/benpate/form => ../../benpate/form 
 replace github.com/benpate/rosetta => ../../benpate/rosetta 
+replace github.com/benpate/steranko => ../../benpate/steranko 
+
 
 require (
 	github.com/PuerkitoBio/goquery v1.10.3

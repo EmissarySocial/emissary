@@ -189,6 +189,17 @@ input[type=radio] {
 	width:2em;
 }
 
+.multiselect > .options > .multiselect-header {
+	display:block;
+	padding:10px 5px 5px 5px;
+	cursor: pointer;
+	border-top: solid 1px rgba(0,0,0,0);
+	border-bottom: solid 1px var(--gray20);
+	font-weight:bold;
+	font-size: calc(var(--rhythm) * 1.75);
+	text-transform: uppercase;
+}
+
 .multiselect > .options > label > div {
 	display:inline-block;
 	vertical-align:top;

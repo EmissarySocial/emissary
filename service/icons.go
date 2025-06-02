@@ -102,6 +102,10 @@ func (service Icons) Get(name string) string {
 		return service.get("cloud")
 	case "cloud-fill":
 		return service.get("cloud-fill")
+	case "credit-card":
+		return service.get("credit-card")
+	case "credit-card-fill":
+		return service.get("credit-card-fill")
 	case "database":
 		return service.get("database")
 	case "database-fill":

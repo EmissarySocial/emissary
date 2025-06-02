@@ -37,7 +37,7 @@ func (identity *Identity) GetPointer(name string) (any, bool) {
 		return &identity.EmailAddress, true
 
 	case "webfingerHandle":
-		return &identity.WebFingerHandle, true
+		return &identity.WebfingerHandle, true
 
 	}
 

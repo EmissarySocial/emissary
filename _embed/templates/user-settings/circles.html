@@ -13,7 +13,7 @@
 			<a href="/@me/settings/following" hx-boost="true" class="turboclick menu-item ellipsis">{{icon "star"}} Following</a>
 			<a href="/@me/settings/followers" hx-boost="true" class="turboclick menu-item ellipsis">{{icon "person"}} Followers</a>
 			<a href="/@me/settings/circles" hx-boost="true" class="turboclick menu-item ellipsis selected">{{icon "circle-fill"}} Circles</a>
-			<a href="/@me/settings/purchases" hx-boost="true" class="turboclick menu-item ellipsis">{{icon "person-card"}} Purchases</a>
+			<a href="/@me/settings/payments" hx-boost="true" class="turboclick menu-item ellipsis">{{icon "credit-card"}} Payments</a>
 			<a href="/@me/settings/rules" hx-boost="true" class="turboclick menu-item ellipsis">{{icon "rule"}} Rules</a>
 		</div>
 	
@@ -21,10 +21,9 @@
 	
 	<div class="app-content">
 
-		<h3>All Circles</h3>
-		<div class="alert-blue">
-			Circles help you manage your followers by grouping them together. When you add people to a circle, you can choose what content you share with them.
-			<a href="https://emissary.dev/circles" target="_blank">Learn more {{icon "new-window"}}</a>
+		<div class="flex-row flex-align-center margin-bottom-lg">
+			<h1 class="text-xl bold margin-none flex-grow">All Circles</h1>
+			<a href="https://emissary.dev/circles" target="_blank">{{icon "help"}} Help with Circles</a>
 		</div>
 
 		<div class="table">
@@ -35,14 +34,14 @@
 
 			{{- range $index, $circle := $circles -}}
 				<div class="flex-row" role="button">
-					<div xhx-get="/@me/settings/circle-edit?circleId={{$circle.ID}}" role="button" class="flex-grow ellipsis">
+					<a href="/@me/settings/circle-members?circleId={{$circle.ID}}" role="button" class="flex-grow text-nocolor ellipsis">
 						{{icon "circle"}} {{$circle.Name}} 
 						{{- if ne "" $circle.Description -}}
 							<span class="margin-left text-sm text-gray">{{$circle.Description}}</span>
 						{{- end -}}
-					</div>
+					</a>
 					<div>
-						<button hx-get="/@me/settings/circle-edit?circleId={{$circle.ID}}" role="button" class="text-xs">Edit</button>
+						<button hx-get="/@me/settings/circle-edit?circleId={{$circle.ID}}" role="button" class="text-xs">Edit Settings</button>
 					</div>
 				</div>
 			{{- end -}}

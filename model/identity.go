@@ -3,6 +3,7 @@ package model
 import (
 	"time"
 
+	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -10,18 +11,16 @@ import (
 
 // Identity represents a combination of identifiers that all represent a single individual.
 // This is used to track pseud-logins by individuals who do not have a registered username on this server.
-// Identities can be tied to a Follower and to a Privilege via the two identifiers: EmailAddress and WebFingerHandle.
+// Identities can be tied to a Follower and to a Privilege via the two identifiers: EmailAddress and WebfingerHandle.
 type Identity struct {
-	IdentityID              primitive.ObjectID `bson:"_id"`                               // Unique ID for the Identity
-	Name                    string             `bson:"name"`                              // Full name of the Individual ("John Connor")
-	IconURL                 string             `bson:"iconUrl"`                           // URL to an icon representing the Identity (e.g., a profile picture)
-	EmailAddress            string             `bson:"emailAddress"`                      // Email address of the Identity ("john@connor.mil")
-	WebFingerHandle         string             `bson:"webfingerHandle"`                   // WebFinger handle of the Identity ("@john@connor.social")
-	EmailVerifiedDate       int64              `bson:"emailVerifiedDate"`                 // Unix epoch (in seconds) when the email address was verified
-	WebFingerVerifiedDate   int64              `bson:"webfingerVerifiedDate"`             // Unix epoch (in seconds) when the WebFinger handle was verified
-	VerificationSecret      string             `bson:"verificationSecret,omitempty"`      // Secret token used to verify email or fediverse values
-	VerificationExpiresDate int64              `bson:"verificationExpiresDate,omitempty"` // Unix epoch (in seconds) when the verification secret expires and must be regenerated
-	Privileges              sliceof.String     `bson:"privileges,omitempty"`              // List of privileges associated with this Identity, either a circleID, or a remoteProductID
+	IdentityID            primitive.ObjectID `bson:"_id"`                   // Unique ID for the Identity
+	Name                  string             `bson:"name"`                  // Full name of the Individual ("John Connor")
+	IconURL               string             `bson:"iconUrl"`               // URL to an icon representing the Identity (e.g., a profile picture)
+	EmailAddress          string             `bson:"emailAddress"`          // Email address of the Identity ("john@connor.mil")
+	WebfingerHandle       string             `bson:"webfingerHandle"`       // WebFinger handle of the Identity ("@john@connor.social")
+	EmailVerifiedDate     int64              `bson:"emailVerifiedDate"`     // Unix epoch (in seconds) when the email address was verified
+	WebfingerVerifiedDate int64              `bson:"webfingerVerifiedDate"` // Unix epoch (in seconds) when the WebFinger handle was verified
+	Privileges            sliceof.String     `bson:"privileges,omitempty"`  // List of privileges associated with this Identity, either a circleID, or a remoteProductID
 
 	// Embed journal to track changes
 	journal.Journal `bson:",inline"`
@@ -46,8 +45,80 @@ func (identity Identity) Fields() []string {
 		"name",
 		"iconUrl",
 		"emailAddress",
-		"webFingerHandle",
+		"webfingerHandle",
 	}
+}
+
+/******************************************
+ * AccessLister Interface
+ ******************************************/
+
+// State returns the current state of the object.
+func (identity Identity) State() string {
+	return ""
+}
+
+// IsAuthor returns TRUE if the provided UserID the author of this object
+func (identity Identity) IsAuthor(primitive.ObjectID) bool {
+	return false
+}
+
+// IsMyself returns TRUE if this object directly represents the provided UserID
+func (identity Identity) IsMyself(primitive.ObjectID) bool {
+	return false
+}
+
+// RolesToGroupIDs returns a map of RoleIDs to GroupIDs
+func (identity Identity) RolesToGroupIDs(...string) id.Slice {
+	return id.NewSlice()
+}
+
+// RolesToPrivileges returns a map of RoleIDs to Privilege strings
+func (identity Identity) RolesToPrivileges(...string) sliceof.String {
+	return sliceof.NewString()
+}
+
+/******************************************
+ * Other Getters
+ ******************************************/
+
+func (identity Identity) Icon() string {
+
+	if identity.WebfingerHandle != "" {
+		return "fediverse"
+	}
+
+	if identity.EmailAddress != "" {
+		return "email"
+	}
+
+	return "person-circle"
+}
+
+func (identity Identity) Identifier() string {
+
+	if identity.WebfingerHandle != "" {
+		return identity.WebfingerHandle
+	}
+
+	if identity.EmailAddress != "" {
+		return identity.EmailAddress
+	}
+
+	return ""
+}
+
+func (identity Identity) IdentifierType() string {
+
+	if identity.WebfingerHandle != "" {
+		return IdentifierTypeWebFinger
+	}
+
+	if identity.EmailAddress != "" {
+		return IdentifierTypeEmail
+	}
+
+	return ""
 }
 
 // SetIdentifier sets the value of the provided identifier type.
@@ -61,7 +132,7 @@ func (identity *Identity) SetIdentifier(identifierType string, value string) boo
 		return true
 
 	case IdentifierTypeWebFinger:
-		identity.WebFingerHandle = value
+		identity.WebfingerHandle = value
 		return true
 	}
 
@@ -69,7 +140,7 @@ func (identity *Identity) SetIdentifier(identifierType string, value string) boo
 }
 
 // IsVerified returns TRUE if the provided identifier type has been verified.
-func (identity *Identity) IsVerified(identifierType string) bool {
+func (identity Identity) IsVerified(identifierType string) bool {
 
 	switch identifierType {
 
@@ -77,7 +148,7 @@ func (identity *Identity) IsVerified(identifierType string) bool {
 		return identity.EmailVerifiedDate > 0
 
 	case IdentifierTypeWebFinger:
-		return identity.WebFingerVerifiedDate > 0
+		return identity.WebfingerVerifiedDate > 0
 	}
 
 	return false
@@ -96,8 +167,8 @@ func (identity *Identity) Verify(identifierType string) bool {
 		}
 
 	case IdentifierTypeWebFinger:
-		if identity.WebFingerVerifiedDate == 0 {
-			identity.WebFingerVerifiedDate = time.Now().Unix()
+		if identity.WebfingerVerifiedDate == 0 {
+			identity.WebfingerVerifiedDate = time.Now().Unix()
 			return true
 		}
 	}

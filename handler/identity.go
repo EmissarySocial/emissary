@@ -3,14 +3,129 @@ package handler
 import (
 	"net/http"
 
+	"github.com/EmissarySocial/emissary/build"
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/derp"
+	"github.com/benpate/html"
+	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/steranko"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 func GetIdentity(ctx *steranko.Context, factory *domain.Factory, identity *model.Identity) error {
-
 	const location = "handler.GetIdentity"
 
+	// Get the standard Signin page
+	templateService := factory.Template()
+	template, err := templateService.Load("guest-profile")
+
+	if err != nil {
+		return derp.Wrap(err, location, "Cannot load template `guest-profile`")
+	}
+
+	// Create a builder
+	actionID := getActionID(ctx)
+	builder, err := build.NewModel(factory, ctx.Request(), ctx.Response(), template, identity, actionID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error creating builder")
+	}
+
+	// Build the HTML response
+	if err := build.AsHTML(factory, ctx, builder, build.ActionMethodGet); err != nil {
+		return derp.Wrap(err, location, "Error building page")
+	}
+
 	return ctx.NoContent(http.StatusOK)
+}
+
+func GetIdentityAuthenticate(ctx *steranko.Context, factory *domain.Factory) error {
+
+	const location = "handler.GetIdentityAuthenticate"
+
+	// Get the standard Signin page
+	template := factory.Domain().Theme().HTMLTemplate
+
+	domain := factory.Domain().Get()
+
+	// Get a clean version of the URL query parameters
+	data := cleanQueryParams(ctx.QueryParams())
+	data["domainName"] = domain.Label
+	data["domainIcon"] = domain.IconURL()
+
+	// Render the template
+	if err := template.ExecuteTemplate(ctx.Response(), "guest-signin", data); err != nil {
+		return derp.Wrap(err, location, "Error executing template")
+	}
+
+	return ctx.JSON(http.StatusOK, "")
+}
+
+func PostIdentityAuthenticate(ctx *steranko.Context, factory *domain.Factory) error {
+
+	const location = "handler.PostIdentityAuthenticate"
+
+	// Create and send a guest signin code
+	identityService := factory.Identity()
+	if err := identityService.SendGuestCode(ctx.FormValue("identifier")); err != nil {
+
+		// Report the error for debugging...
+		derp.Report(derp.Wrap(err, location, "Error sending Guest Code"))
+
+		// Report errors to the caller
+		return inlineError(ctx, "Can't send guest code. Please double check your address.")
+	}
+
+	// Write a response to the caller
+	b := html.New()
+	b.H1().InnerText("Please check your inbox").Close()
+	b.Div().InnerText("Your signin code should be delivered to your inbox in just a moment. Please click the link you find there to sign in.").Close()
+	ctx.Response().Header().Set("Hx-Retarget", "#response")
+
+	// Done!
+	return ctx.HTML(http.StatusOK, b.String())
+}
+
+func GetIdentityConnect(ctx *steranko.Context, factory *domain.Factory) error {
+
+	const location = "handler.GetIdentityConnect"
+
+	// Read and parse the JWT token
+	tokenString := ctx.Param("jwt")
+	jwtService := factory.JWT()
+
+	claims := jwt.MapClaims{}
+	encryptionMethods := []string{"HS256", "HS384", "HS512"}
+	token, err := jwt.ParseWithClaims(tokenString, &claims, jwtService.FindKey, jwt.WithValidMethods(encryptionMethods))
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error parsing JWT Token")
+	}
+
+	if !token.Valid {
+		return derp.Wrap(err, location, "Invalid JWT Token")
+	}
+
+	// Isolate the Identifier
+	identityService := factory.Identity()
+	identifier := convert.String(claims["id"])
+	identifierType := identityService.GuessIdentifierType(identifier)
+	identity, err := identityService.LoadOrCreate(identifierType, identifier, true)
+
+	if err != nil {
+		return derp.InternalError(location, "Error loading/creating new Identity", identifier)
+	}
+
+	// Update the Authorization with the (new?) IdentityID
+	authorization := getAuthorization(ctx)
+	authorization.IdentityID = identity.IdentityID
+
+	// Create a new JWT token and return it as a cookie
+	steranko := factory.Steranko()
+	if err := steranko.SetCookieFromClaims(ctx, authorization); err != nil {
+		return derp.Wrap(err, location, "Error setting authorization cookie")
+	}
+
+	return ctx.Redirect(http.StatusSeeOther, "/@guest")
 }

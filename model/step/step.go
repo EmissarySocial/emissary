@@ -255,6 +255,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "with-prev-sibling":
 		return NewWithPrevSibling(stepInfo)
 
+	case "with-privilege":
+		return NewWithPrivilege(stepInfo)
+
 	case "with-response":
 		return NewWithResponse(stepInfo)
 

@@ -233,6 +233,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.WithPrevSibling:
 		return StepWithPrevSibling(s)
 
+	case step.WithPrivilege:
+		return StepWithPrivilege(s)
+
 	case step.WithResponse:
 		return StepWithResponse(s)
 

@@ -2,6 +2,9 @@ package service
 
 import (
 	"iter"
+	"net/mail"
+	"strings"
+	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
@@ -11,6 +14,7 @@ import (
 	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
+	"github.com/golang-jwt/jwt/v5"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -18,6 +22,8 @@ import (
 // Identity defines a service that manages all content identitys created and imported by Users.
 type Identity struct {
 	collection       data.Collection
+	emailService     *DomainEmail
+	jwtService       *JWT
 	privilegeService *Privilege
 }
 
@@ -31,8 +37,10 @@ func NewIdentity() Identity {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Identity) Refresh(collection data.Collection, privilegeService *Privilege) {
+func (service *Identity) Refresh(collection data.Collection, emailService *DomainEmail, jwtService *JWT, privilegeService *Privilege) {
 	service.collection = collection
+	service.emailService = emailService
+	service.jwtService = jwtService
 	service.privilegeService = privilegeService
 }
 
@@ -89,7 +97,7 @@ func (service *Identity) Save(identity *model.Identity, note string) error {
 
 	// Pick a default name, if necessary
 	if identity.Name == "" {
-		identity.Name = first.String(identity.EmailAddress, identity.WebFingerHandle)
+		identity.Name = first.String(identity.EmailAddress, identity.WebfingerHandle)
 	}
 
 	// Validate the value before saving
@@ -176,14 +184,31 @@ func (service *Identity) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
+// LoadByID retrieves a single Identity using the provided IdentityID.
 func (service *Identity) LoadByID(identityID primitive.ObjectID, identity *model.Identity) error {
 
+	const location = "service.Identity.LoadByID"
+
 	if identityID.IsZero() {
-		return derp.BadRequestError("service.Identity.LoadByID", "IdentityID cannot be empty", identityID)
+		return derp.BadRequestError(location, "IdentityID cannot be empty", identityID)
 	}
 
 	criteria := exp.Equal("_id", identityID)
 	return service.Load(criteria, identity)
+}
+
+// LoadByToken retrieves a single Identity using the string representation of their IdentityID.
+func (service *Identity) LoadByToken(token string, identity *model.Identity) error {
+
+	const location = "service.Identity.LoadByToken"
+
+	identityID, err := primitive.ObjectIDFromHex(token)
+
+	if err != nil {
+		return derp.BadRequestError(location, "Invalid IdentityID", token)
+	}
+
+	return service.LoadByID(identityID, identity)
 }
 
 // LoadOrCreateByEmail searches for a Guest with the provided emailAddress.
@@ -205,7 +230,7 @@ func (service *Identity) LoadOrCreate(identifierType string, identifierValue str
 
 	// Try to load the Identity using the provided identifier
 	identity := model.NewIdentity()
-	err := service.LoadByIdentifier(identifierType, identifierValue, &identity)
+	err := service.LoadByIdentifierAndType(identifierType, identifierValue, &identity)
 
 	// If the identity was found, then just return it...
 	if err == nil {
@@ -250,7 +275,22 @@ func (service *Identity) LoadOrCreate(identifierType string, identifierValue str
 	return identity, nil
 }
 
-func (service *Identity) LoadByIdentifier(identifierType string, identifierValue string, identity *model.Identity) error {
+func (service *Identity) LoadByIdentifier(identifier string, identity *model.Identity) error {
+
+	const location = "service.identity.LoadByIdentifier"
+
+	// Guess the identifier type
+	identifierType := service.GuessIdentifierType(identifier)
+
+	if identifierType == "" {
+		return derp.BadRequestError(location, "Invalid identifier", identifier)
+	}
+
+	return service.LoadByIdentifierAndType(identifierType, identifier, identity)
+
+}
+
+func (service *Identity) LoadByIdentifierAndType(identifierType string, identifierValue string, identity *model.Identity) error {
 
 	switch identifierType {
 
@@ -258,7 +298,7 @@ func (service *Identity) LoadByIdentifier(identifierType string, identifierValue
 		return service.LoadByEmailAddress(identifierValue, identity)
 
 	case model.IdentifierTypeWebFinger:
-		return service.LoadByWebFingerHandle(identifierValue, identity)
+		return service.LoadByWebfingerHandle(identifierValue, identity)
 	}
 
 	return derp.InternalError("service.Identity.LoadByAddress", "Invalid Identity Type", identifierType)
@@ -270,8 +310,8 @@ func (service *Identity) LoadByEmailAddress(emailAddress string, identity *model
 	return service.Load(criteria, identity)
 }
 
-// LoadByWebFingerHandle retrieves a single Identity from the database using the provided WebFinger handle
-func (service *Identity) LoadByWebFingerHandle(emailAddress string, identity *model.Identity) error {
+// LoadByWebfingerHandle retrieves a single Identity from the database using the provided WebFinger handle
+func (service *Identity) LoadByWebfingerHandle(emailAddress string, identity *model.Identity) error {
 	criteria := exp.Equal("webfingerHandle", emailAddress)
 	return service.Load(criteria, identity)
 }
@@ -322,4 +362,84 @@ func (service *Identity) RefreshPrivileges(identityID primitive.ObjectID) error 
 
 	// Retire in Cabo
 	return nil
+}
+
+func (service *Identity) SendGuestCode(identifier string) error {
+
+	const location = "service.Identity.SendGuestCode"
+
+	// RULE: Identifier must be provided
+	if identifier == "" {
+		return derp.BadRequestError(location, "Identifier cannot be empty", identifier)
+	}
+
+	identifierType := service.GuessIdentifierType(identifier)
+
+	if identifierType == "" {
+		return derp.BadRequestError(location, "Unrecognized Identifier Type", identifierType)
+	}
+
+	// Create a new Guest Code for the identifier :)
+	guestCode, err := service.makeGuestCode(identifierType, identifier)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error creating Guest Code", identifier)
+	}
+
+	switch service.GuessIdentifierType(identifier) {
+
+	case model.IdentifierTypeEmail:
+		return service.sendGuestCode_Email(identifier, guestCode)
+
+	case model.IdentifierTypeWebFinger:
+		return service.emailService.SendGuestCode(identifier, guestCode)
+
+	}
+
+	return derp.BadRequestError(location, "Unrecognized Address: "+identifier)
+}
+
+// makeGuestCode creates a new JWT token for the Guest to authenticate
+func (service *Identity) makeGuestCode(identifierType string, identifier string) (string, error) {
+
+	// Claims for the Identifier, expiring in 1 hour
+	claims := jwt.MapClaims{
+		"exp":  time.Now().Add(time.Hour).Unix(),
+		"type": identifierType,
+		"id":   identifier,
+	}
+
+	// Create and sign the new JWT token
+	token, err := service.jwtService.NewToken(claims)
+
+	if err != nil {
+		return "", derp.Wrap(err, "service.Identity.makeGuestCode", "Error creating JWT token for Guest Code", identifier)
+	}
+
+	// Fantastic.
+	return token, nil
+}
+
+// GuessIdentifierType attempts to guess the type of identifier based on its format.
+// TODO: this can be more sophisticated, validationary.
+func (service *Identity) GuessIdentifierType(identifier string) string {
+
+	// WebFinger begins with "@"
+	if strings.HasPrefix(identifier, "@") {
+
+		identifier = strings.TrimPrefix(identifier, "@")
+
+		if _, err := mail.ParseAddress(identifier); err != nil {
+			return ""
+		}
+
+		return model.IdentifierTypeWebFinger
+	}
+
+	// Assume Email Address
+	if _, err := mail.ParseAddress(identifier); err != nil {
+		return ""
+	}
+
+	return model.IdentifierTypeEmail
 }

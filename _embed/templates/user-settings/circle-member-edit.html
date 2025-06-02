@@ -1,0 +1,41 @@
+{{- $privilege := .Object -}}
+{{- $identity := .Identity $privilege.IdentityID -}}
+
+<div class="flex-row flex-align-center">
+	{{- if ne "" $identity.IconURL -}}
+		<img src="{{$identity.IconURL}}" class="circle width-64"></img>
+	{{- else -}}
+		<span style="font-size:64px;">{{icon $identity.Icon}}</span>
+	{{- end -}}
+
+	<h3 class="flex-grow margin-none">{{$identity.Name}}</h3>
+</div>
+
+<div class="flex-row">
+	<div class="width-64 flex-shrink-0"></div>
+	<div>	
+		{{- if ne "" $identity.EmailAddress -}}
+			{{- if ne $identity.Name $identity.EmailAddress -}}
+				<div class="text-sm text-gray">Email: {{$identity.EmailAddress}}</div>
+			{{- end -}}
+		{{- end -}}
+		{{- if ne "" $identity.WebfingerHandle -}}
+			{{- if ne $identity.Name $identity.WebfingerHandle -}}
+				<div class="text-sm text-gray">Fediverse: {{$identity.WebfingerHandle}}</div>
+			{{- end -}}
+		{{- end -}}
+
+		{{- if not $privilege.IsPurchase -}}
+			<div class="text-lg margin-top-lg">
+				Added by You on <b>{{$privilege.CreateDate | shortDate}}</b>
+			</div>
+		{{- end -}}
+	</div>
+</div>
+
+<div class="margin-top-xl">
+	{{- if not $privilege.IsPurchase -}}
+		<span hx-get="/@me/settings/circle-member-delete?privilegeId={{$privilege.ID}}" class="text-red clickable float-right">Remove from Circle</span>
+	{{- end -}}
+	<button script="on click trigger closeModal">Close Window</button>
+</div>

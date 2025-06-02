@@ -250,6 +250,7 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 		// Populate Circle Service
 		factory.circleService.Refresh(
 			factory.collection(CollectionConnection),
+			factory.Privilege(),
 		)
 
 		// Populate Connection Service
@@ -319,6 +320,8 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 
 		factory.identityService.Refresh(
 			factory.collection(CollectionIdentity),
+			factory.Email(),
+			factory.JWT(),
 			factory.Privilege(),
 		)
 
@@ -510,6 +513,7 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 		// Populate Privilege Service
 		factory.privilegeService.Refresh(
 			factory.collection(CollectionPrivilege),
+			factory.Circle(),
 			factory.Identity(),
 		)
 
@@ -640,6 +644,9 @@ func (factory *Factory) Model(name string) (service.ModelService, error) {
 
 	case "following":
 		return factory.Following(), nil
+
+	case "identity":
+		return factory.Identity(), nil
 
 	case "merchantAccount":
 		return factory.MerchantAccount(), nil
@@ -1007,6 +1014,9 @@ func (factory *Factory) ModelService(object data.Object) service.ModelService {
 	case *model.Following:
 		return factory.Following()
 
+	case *model.Identity:
+		return factory.Identity()
+
 	case *model.MerchantAccount:
 		return factory.MerchantAccount()
 
@@ -1026,6 +1036,7 @@ func (factory *Factory) ModelService(object data.Object) service.ModelService {
 		return factory.Privilege()
 
 	default:
+		derp.Report(derp.InternalError("factory.ModelService", "Unrecognized object type", object))
 		return nil
 	}
 }

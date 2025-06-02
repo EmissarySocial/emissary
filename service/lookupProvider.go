@@ -2,6 +2,7 @@ package service
 
 import (
 	"net/http"
+	"slices"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/dataset"
@@ -83,6 +84,12 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 	case "groups":
 		return NewGroupLookupProvider(service.groupService)
 
+	case "identifier-types":
+		return form.NewReadOnlyLookupGroup(
+			form.LookupCode{Label: "Fediverse Handle", Value: model.IdentifierTypeWebFinger},
+			form.LookupCode{Label: "Email Address", Value: model.IdentifierTypeEmail},
+		)
+
 	case "inbox-templates":
 		return form.ReadOnlyLookupGroup(service.templateService.ListByTemplateRole("user-inbox"))
 
@@ -91,6 +98,9 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 
 	case "merchantAccount-products":
 		return service.getMerchantAccountProducts()
+
+	case "merchantAccounts-all-products":
+		return service.getMerchantAccountsAllProducts()
 
 	case "outbox-templates":
 		return form.ReadOnlyLookupGroup(service.templateService.ListByTemplateRole("user-outbox"))
@@ -171,6 +181,7 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 
 	// Fall through means one or more of the above tests failed.
 	// We couldn't find the template or dataset, so just return an empty group.
+	derp.Report(derp.InternalError("service.LookupProvider.Group", "Could not find template or dataset named '"+path+"'"))
 	return form.NewReadOnlyLookupGroup()
 }
 
@@ -246,5 +257,44 @@ func (service *LookupProvider) getMerchantAccountProducts() form.LookupGroup {
 	}
 
 	// Success?!?!?
+	return form.NewReadOnlyLookupGroup(result...)
+}
+
+// getMerchantAccountsAllProducts returns all products defined by the selected merchant account
+func (service *LookupProvider) getMerchantAccountsAllProducts() form.LookupGroup {
+
+	const location = "service.LookupProvider.getMerchantAccountsAllProducts"
+
+	// Load all Merchant Accounts for this User (probably just one, though)
+	merchantAccounts, err := service.merchantAccountService.QueryByUser(service.userID)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, location, "Error loading merchant accounts"))
+		return form.NewReadOnlyLookupGroup()
+	}
+
+	// If there are no merchant accounts, then return an empty group
+	if len(merchantAccounts) == 0 {
+		return form.NewReadOnlyLookupGroup()
+	}
+
+	// Find all products for each Merchant Account
+	result := make([]form.LookupCode, 0)
+	for _, merchantAccount := range merchantAccounts {
+
+		products, err := service.merchantAccountService.getProducts(&merchantAccount)
+
+		if err != nil {
+			derp.Report(derp.Wrap(err, location, "Error loading merchant account products"))
+			return form.NewReadOnlyLookupGroup()
+		}
+
+		result = append(result, products...)
+	}
+
+	// Sort the results by label
+	slices.SortFunc(result, form.SortLookupCodeByLabel)
+
+	// Everything is cool when you're part of a team.
 	return form.NewReadOnlyLookupGroup(result...)
 }

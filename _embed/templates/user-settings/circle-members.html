@@ -1,0 +1,72 @@
+{{- $circle := .Object -}}
+{{- $members := .CircleMembers.Slice -}}
+
+<div class="page app flex-row" script="on load take .selected from .nav-item for #nav-settings">
+	<title> {{.Name}} | Circles</title>
+	<link rel="stylesheet" href="/.templates/user-settings/stylesheet">
+
+	<div id="app-sidebar" class="app-sidebar" hx-swap="innerHTML show:window:top">
+
+		<div class="pos-sticky" style="top:96px;">
+	
+			<div class="bold text-xl margin-none margin-bottom">Settings</div>
+
+			<a href="/@me/settings/following" hx-boost="true" class="turboclick menu-item ellipsis">{{icon "star"}} Following</a>
+			<a href="/@me/settings/followers" hx-boost="true" class="turboclick menu-item ellipsis">{{icon "person"}} Followers</a>
+			<a href="/@me/settings/circles" hx-boost="true" class="turboclick menu-item ellipsis selected">{{icon "circle-fill"}} Circles</a>
+			<a href="/@me/settings/payments" hx-boost="true" class="turboclick menu-item ellipsis">{{icon "credit-card"}} Payments</a>
+			<a href="/@me/settings/rules" hx-boost="true" class="turboclick menu-item ellipsis">{{icon "rule"}} Rules</a>
+		</div>
+	
+	</div>
+	
+	<div class="app-content">
+		<h1 class="text-xl bold margin-none">
+			<a href="/@me/settings/circles" hx-boost="true">All Circles</a> 
+			&middot; 
+			{{.Name}}
+		</h1>
+
+		<div class="flex-row width-100% margin-top margin-bottom-lg">
+			<div class="card flex-grow padding align-center">
+				<div class="text-sm text-gray">MEMBERS</div>
+				<div class="text-2xl margin-none bold">{{$circle.MemberCount}}</div>
+			</div>
+			<div class="card flex-grow padding flex-center">
+				<button hx-get="/@me/settings/circle-member-add?circleId={{$circle.ID}}" class="primary">&plus; Add Member</button>
+			</div>
+			<div class="card flex-grow padding flex-center">
+				<button hx-get="/@me/settings/circle-edit?circleId={{$circle.ID}}">Edit Settings</button>
+			</div>
+		</div>
+
+		{{- if $members.IsEmpty -}}
+			This circle is empty.  Click here to <span hx-get="/@me/settings/circle-member-add?circleId={{$circle.ID}}" class="link">add the first member</span> manually,
+			or set up a merchant account to let people purchase membership.
+		{{- else -}}
+
+			<div class="table">
+				{{- range $index, $member := $members -}}
+					{{- $identifierType := $member.IdentifierType -}}
+					<div hx-get="/@me/settings/circle-member-edit?identityId={{$member.ID}}&circleId={{$circle.ID}}" class="flex-row flex-align-center" role="button">
+						<div class="text-xl margin-none">
+							{{- if $member.IconURL -}}
+								<img src="{{$member.IconURL}}" class="circle width-32">
+							{{- else -}}
+								<span style="font-size:32px;">{{icon $member.Icon}}</span>
+							{{- end -}}
+						</div>
+						<div class="flex-grow">
+							<div>{{$member.Name}}</div>
+						</div>
+						<div></div>
+					</div>
+				{{- end -}}
+			</div>
+		{{- end -}}
+
+	</div>
+	
+	<div hx-get="{{.URL}}" hx-trigger="refreshPage from:window" hx-push-url="false"></div>
+
+</div>

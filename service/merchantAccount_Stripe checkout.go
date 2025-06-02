@@ -131,10 +131,11 @@ func (service *MerchantAccount) stripe_getPrivilegeFromCheckoutResponse(queryPar
 	privilege := model.NewPrivilege()
 	privilege.IdentityID = identity.IdentityID
 	privilege.UserID = merchantAccount.UserID
-	privilege.MerchantAccountID = merchantAccount.MerchantAccountID
 	privilege.RemotePersonID = remotePersonID
 	privilege.RemoteProductID = remoteProductID
 	privilege.RemotePurchaseID = remotePurchaseID
+	privilege.IdentifierType = model.IdentifierTypeEmail
+	privilege.IdentifierValue = identity.EmailAddress
 
 	if err := service.privilegeService.Save(&privilege, "Created via Stripe Checkout"); err != nil {
 		return model.Privilege{}, derp.Wrap(err, location, "Error saving Privilege", privilege)

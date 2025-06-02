@@ -116,7 +116,7 @@ func WithIdentity(serverFactory *server.Factory, fn WithFunc1[model.Identity]) e
 		authorization := getAuthorization(ctx)
 
 		if authorization.IdentityID.IsZero() {
-			return derp.UnauthorizedError(location, "You must be signed in to perform this action")
+			return ctx.Redirect(http.StatusSeeOther, "/@guest/signin")
 		}
 
 		identityService := factory.Identity()

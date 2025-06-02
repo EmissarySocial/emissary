@@ -40,7 +40,8 @@
 					{do:"as-modal", steps:[
 						{do:"edit", form: {
 							type:"layout-vertical"
-							label:"Add Circle"
+							label:"+ Add a Circle"
+							description: Circles help you to share exclusive posts and content to specific groups of people.
 							children: [
 								{type:"text", path:"name", label:"Circle Name"}
 								{type:"textarea", path:"description", label:"Description"}
@@ -65,13 +66,26 @@
 								delete-label:Delete Circle
 							]
 							form: {
-								type:layout-vertical
-								label:Edit Circle
-								children: [
-									{type:"text", path:"name", label:"Circle Name"}
-									{type:"textarea", path:"description", label:"Description", options:{rows:5}}
+								type: layout-tabs
+								label: Edit Circle
+								children:[
+									{
+										type:layout-vertical
+										label:Setup
+										children: [
+											{type:"text", path:"name", label:"Circle Name"}
+											{type:"textarea", path:"description", label:"Description", options:{rows:5}}
+										]
+									}
+									{
+										type:layout-vertical
+										label:Payments
+										children:[
+											{type:"multiselect", path:"productIds", description:"When a guest purchases the product(s) selected above, they'll automatically join this circle.", options:{provider:"merchantAccounts-all-products"}}
+										]
+									}
 								]
-							},
+							}
 						}
 						{do:"save"}
 						{do:"trigger-event", event:"refreshPage"}
@@ -86,6 +100,48 @@
 				{do:"with-circle", steps:[
 					{do:"delete", title:"Delete Circle?", message:"Are you sure you want to delete this circle? This will remove all access rights granted to circle members."}
 					{do:"trigger-event", event:"refreshPage"}
+				]}
+			]
+		}
+
+		circle-members: {
+			roles: ["self"]
+			steps: [
+				{do:"with-circle", steps:[
+					{do:"view-html"}
+				]}
+			]
+		}
+
+		circle-member-add: {
+			roles: ["self"]
+			steps: [
+				{do:"with-privilege", steps: [
+					{do:"as-modal", steps: [
+						{do:"edit", form: {
+							type:layout-vertical
+							label: + Add a Circle Member
+							description: Enter the member's email or fediverse handle below to put them in this circle and grant them access to all of the posts and content in it.
+							children: [
+								{type:"select", path:"identifierType", label:"Identity Type", options:{provider:"identifier-types", autocomplete:"off", required:true}}
+								{type:"text", path:"identifierValue", label:"Identifier", description:"The Fediverse Handle or Email Address that you're adding to this circle.", options:{autocomplete:"off", required:true}}
+							]
+						}}
+						{do:"set-data", from-url:"circleId"}
+						{do:"save"}
+						{do:"trigger-event", event:"refreshPage"}
+					]}
+				]}
+			]
+		}
+
+		circle-member-edit: {
+			roles: ["self"]
+			steps: [
+				{do:"with-privilege", steps: [
+					{do:"as-modal", steps: [
+						{do:"view-html"}
+					]}
 				]}
 			]
 		}
@@ -578,14 +634,14 @@
 			]
 		}
 
-		purchases: {
+		payments: {
 			roles:["self"]
 			steps:[
 				{do:"view-html"}
 			]
 		}
 
-		purchases-list: {
+		payments-list: {
 			roles:["self"]
 			steps:[
 				{do:"view-html"}

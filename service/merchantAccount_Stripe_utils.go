@@ -52,8 +52,9 @@ func (service *MerchantAccount) stripe_getPrices(merchantAccount *model.Merchant
 
 	result := slice.Map(prices, func(price stripe.Price) form.LookupCode {
 		return form.LookupCode{
-			Value: merchantAccount.MerchantAccountID.Hex() + ":" + price.ID,
+			Group: price.Product.Name,
 			Label: service.stripe_priceLabel(price),
+			Value: merchantAccount.MerchantAccountID.Hex() + ":" + price.ID,
 		}
 	})
 

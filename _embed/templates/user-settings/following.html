@@ -11,8 +11,13 @@
 			<a href="/@me/settings/following" hx-boost="true" class="turboclick menu-item ellipsis selected">{{icon "star-fill"}} Following</a>
 			<a href="/@me/settings/followers" hx-boost="true" class="turboclick menu-item ellipsis">{{icon "person"}} Followers</a>
 			<a href="/@me/settings/circles" hx-boost="true" class="turboclick menu-item ellipsis">{{icon "circle"}} Circles</a>
-			<a href="/@me/settings/purchases" hx-boost="true" class="turboclick menu-item ellipsis">{{icon "person-card"}} Purchases</a>
+			<a href="/@me/settings/payments" hx-boost="true" class="turboclick menu-item ellipsis">{{icon "credit-card"}} Payments</a>
 			<a href="/@me/settings/rules" hx-boost="true" class="turboclick menu-item ellipsis">{{icon "rule"}} Rules</a>
+
+			{{- if .IsIdentity -}}
+				<hr>
+				<a href="/@guest" hx-boost="true" class="turboclick menu-item ellipsis">{{icon "person-circle"}} My Guest Profile</a>
+			{{- end -}}
 		</div>
 	
 	</div>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Sign In &middot; {{.domainName}}</title>
+	{{- template "includes-head" . -}}
+</head>
+
+<body hx-target="main" hx-swap="innerHTML" hx-push-url="false" hx-ext="a11y">
+
+	<main class="flex-justify-center flex-align-center" style="display:flex; height:clamp(400px, 100vh, 1000px);">
+
+		<div id="response" class="card" style="width:clamp(540px, 50%, 720px); margin:auto; padding:16px 32px; line-height:150%;">
+			
+			<form hx-post="/@guest/signin">
+
+				<div class="layout-vertical margin-bottom">
+
+					{{- if ne "" .domainIcon -}}
+						<div style="margin-bottom:32px; text-align: center;">
+							<img src="{{.domainIcon}}" style="width:40%; margin:0px auto; display:block;">
+						</div>
+						<h2>Sign In</h2>
+					{{- else -}}
+						<div class="bold text-gray text-lg margin-vertical-none">{{.domainName}}</div>
+						<h1 class="margin-top-none">{{icon "shield-lock"}} Guest Sign In</h1>
+					{{- end -}}
+	
+					<div class="margin-vertical">
+						We'll send a onetime code to your <i class="nowrap">Email Address</i> or <i class="nowrap">Fediverse account</i> to get you signed in,
+						so you can access privileged content on this site.
+					</div>
+
+					<div class="layout-vertical-elements">
+						<div class="layout-vertical-element">
+							<label class="bold" for="username">Your Email Address or Fediverse Username</label>
+							<input type="text" name="identifier" required="true" maxlength="50" autofocus autocomplete="username">
+							<span class="text-sm text-gray">
+						</div>
+					</div>
+
+				</div>
+
+				<div>
+
+					<button id="submitButton" type="submit" class="primary htmx-request-hide" tabIndex="0">
+						Send Me a Signin Code
+					</button>
+
+					<button class="htmx-request-show primary" disabled>
+						<span class="spin">{{icon "loading"}}</span> Sending Code
+					</button>
+
+					<button type="button" script="on click window.history.back()">Cancel</button>
+
+					<span id="htmx-response-message"></span>
+
+				</div>
+
+			</form>
+
+		</div>
+
+	</main>
+
+	<script type="text/hyperscript">	
+
+		on htmx:beforeRequest
+			add [@hidden=true] to #htmx-response-message
+			add [@disabled=true] to #submitButton
+		end
+
+	</script>
+
+	{{ template "includes-foot" . }}
+	
+</body>
+</html>
