@@ -346,9 +346,9 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/@guest", handler.WithIdentity(factory, handler.PostIdentity))
 	e.GET("/@guest/:action", handler.WithIdentity(factory, handler.GetIdentity))
 	e.POST("/@guest/:action", handler.WithIdentity(factory, handler.PostIdentity))
-	e.GET("/@guest/signin", handler.WithFactory(factory, handler.GetIdentityAuthenticate))
-	e.POST("/@guest/signin", handler.WithFactory(factory, handler.PostIdentityAuthenticate))
-	e.GET("/@guest/signin/:jwt", handler.WithFactory(factory, handler.GetIdentityConnect))
+	e.GET("/@guest/signin", handler.WithFactory(factory, handler.GetIdentitySignin))
+	e.POST("/@guest/signin", handler.WithFactory(factory, handler.PostIdentitySignin))
+	e.GET("/@guest/signin/:jwt", handler.WithFactory(factory, handler.GetIdentitySigninWithJWT))
 
 	// Routes for Users
 	e.GET("/@:userId", handler.WithUserForwarding(factory, handler.GetOutbox))
