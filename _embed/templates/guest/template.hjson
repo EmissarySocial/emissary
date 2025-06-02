@@ -1,6 +1,6 @@
 {
-	templateId: guest-profile
-	templateRole: guest-profile
+	templateId: guest
+	templateRole: guest
 	model: identity
 	label: Guest Profile Page
 	description: Default profile page for Guests

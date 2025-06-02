@@ -1,6 +1,5 @@
 <div class="page app flex-row" script="on load take .selected from .nav-item for #nav-settings">
 	<title>{{.FollowerCount}} {{pluralize .FollowerCount "Follower" "Followers"}} | {{.DisplayName}}</title>
-	<link rel="stylesheet" href="/.templates/user-settings/stylesheet">
 
 	<div id="app-sidebar" class="app-sidebar" hx-swap="innerHTML show:window:top">
 
@@ -12,8 +11,9 @@
 			<a href="/@me/settings/circles" hx-boost="true" class="turboclick menu-item ellipsis">{{icon "circle"}} Circles</a>
 			<a href="/@me/settings/payments" hx-boost="true" class="turboclick menu-item ellipsis">{{icon "credit-card"}} Payments</a>
 			<a href="/@me/settings/rules" hx-boost="true" class="turboclick menu-item ellipsis">{{icon "rule"}} Rules</a>
+			<a href="/@guest" class="turboclick menu-item ellipsis">{{icon "user"}} Guest Profile</a>
 			<hr>
-			<a href="/@guest" class="turboclick menu-item ellipsis">{{icon "person-circle"}} My Guest Profile</a>
+			<a hx-post="/signout" class="button text-xs">Sign Out</a>
 		</div>
 	
 	</div>
