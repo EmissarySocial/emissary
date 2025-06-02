@@ -95,7 +95,7 @@ func (merchantAccount MerchantAccount) ProductURL() string {
 		return "https://www.paypal.com/business/products"
 
 	case MerchantAccountTypeStripe:
-		return "https://dashboard.stripe.com/products"
+		return "https://dashboard.stripe.com/products?active=true"
 	}
 
 	return ""

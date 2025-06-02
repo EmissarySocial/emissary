@@ -167,6 +167,12 @@ func (service *Circle) QueryByUser(userID primitive.ObjectID, options ...option.
 	return service.Query(criteria, options...)
 }
 
+// QueryPrivilegedByUser returns all Circles that are marked as "featured" by the provided userID
+func (service *Circle) QueryFeaturedByUser(userID primitive.ObjectID, options ...option.Option) ([]model.Circle, error) {
+	criteria := exp.Equal("userId", userID).AndEqual("featured", true)
+	return service.Query(criteria, options...)
+}
+
 // LoadByID loads a single model.Circle object that matches the provided circleID
 func (service *Circle) LoadByID(userID primitive.ObjectID, circleID primitive.ObjectID, result *model.Circle) error {
 	criteria := exp.Equal("_id", circleID).AndEqual("userId", userID)

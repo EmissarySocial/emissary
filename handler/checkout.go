@@ -54,28 +54,26 @@ func GetCheckoutResponse(ctx *steranko.Context, factory *domain.Factory, merchan
 
 	authorization := getAuthorization(ctx)
 
-	// If the purchase is already logged in, then just forward them to the return URL
-	if authorization.IdentityID == privilege.IdentityID {
-		return ctx.Redirect(http.StatusSeeOther, ctx.QueryParam("return"))
+	// If the guest is not already logged in, then lets log them in now
+	if authorization.IdentityID != privilege.IdentityID {
+
+		// Fall through means we need to update their JWT/Cookie
+		authorization.IdentityID = privilege.IdentityID
+		token, err := factory.JWT().NewToken(authorization)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Error creating authorization token")
+		}
+
+		cookieName := steranko.CookieName(ctx.Request())
+		isTLS := ctx.Request().TLS != nil
+		cookie := factory.Steranko().CreateCookie(cookieName, token, isTLS)
+
+		ctx.SetCookie(&cookie)
 	}
 
-	// Fall through means we need to update their JWT/Cookie
-	authorization.IdentityID = privilege.IdentityID
-	token, err := factory.JWT().NewToken(authorization)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Error creating authorization token")
-	}
-
-	cookieName := steranko.CookieName(ctx.Request())
-	isTLS := ctx.Request().TLS != nil
-	cookie := factory.Steranko().CreateCookie(cookieName, token, isTLS)
-
-	ctx.SetCookie(&cookie)
-
-	// Forward the client to the checkout URL
-	returnURL := ctx.QueryParam("return")
-	return ctx.Redirect(http.StatusSeeOther, returnURL)
+	// Forward the client to their profile page and highlight the newly purchased privilege.
+	return ctx.Redirect(http.StatusSeeOther, "/@guest?privilegeId="+privilege.ID())
 }
 
 // PostCheckoutWebhook processes inbound webhook events for a specific MerchantAccount

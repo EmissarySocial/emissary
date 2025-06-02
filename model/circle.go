@@ -10,11 +10,12 @@ import (
 
 // Circle is a grouping of people that is created/defined by a single UserID.
 type Circle struct {
-	CircleID    primitive.ObjectID `json:"circleId"   bson:"_id"`          // Unique identifier assigned by the database
-	UserID      primitive.ObjectID `json:"userId"     bson:"userId"`       // UserID of owner of this Circle
-	Name        string             `json:"name"       bson:"name"`         // Human-readable name for this circle.
+	CircleID    primitive.ObjectID `json:"circleId"    bson:"_id"`         // Unique identifier assigned by the database
+	UserID      primitive.ObjectID `json:"userId"      bson:"userId"`      // UserID of owner of this Circle
+	Name        string             `json:"name"        bson:"name"`        // Human-readable name for this circle.
 	Description string             `json:"description" bson:"description"` // Human-readable description of this Circle
-	ProductIDs  sliceof.String     `json:"productIds" bson:"productIds"`   // List of remote ProductIDs that can purchase membership in this Circle
+	ProductIDs  sliceof.String     `json:"productIds"  bson:"productIds"`  // List of remote ProductIDs that can purchase membership in this Circle
+	IsFeatured  bool               `json:"isFeatured"  bson:"isFeatured"`  // TRUE if this Circle should be featured on the User's profile page.
 	MemberCount int64              `json:"memberCount" bson:"memberCount"` // Number of members in this Circle
 
 	journal.Journal `json:"-" bson:",inline"`
@@ -79,6 +80,10 @@ func (circle *Circle) RolesToPrivileges(roleIDs ...string) sliceof.String {
 /******************************************
  * Other Data Accessors
  ******************************************/
+
+func (circle Circle) HasProducts() bool {
+	return circle.ProductIDs.NotEmpty()
+}
 
 func (circle *Circle) LookupCode() form.LookupCode {
 	return form.LookupCode{

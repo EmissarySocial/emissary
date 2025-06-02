@@ -12,6 +12,7 @@ func CircleSchema() schema.Element {
 			"userId":      schema.String{Format: "objectId", Required: true},
 			"name":        schema.String{MaxLength: 64, Required: true},
 			"description": schema.String{MaxLength: 2048},
+			"isFeatured":  schema.Boolean{},
 		},
 	}
 }
@@ -71,4 +72,21 @@ func (circle *Circle) SetString(name string, value string) bool {
 	}
 
 	return false
+}
+
+func (circle *Circle) GetPointer(name string) (any, bool) {
+
+	switch name {
+
+	case "name":
+		return &circle.Name, true
+
+	case "description":
+		return &circle.Description, true
+
+	case "isFeatured":
+		return &circle.IsFeatured, true
+	}
+
+	return nil, false
 }

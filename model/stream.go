@@ -32,7 +32,7 @@ type Stream struct {
 	StateID          string                       `bson:"stateId"`               // Unique identifier of the State this Stream is in.  This is used to populate the State information from the Template service at load time.
 	SocialRole       string                       `bson:"socialRole,omitzero"`   // Role to use for this Stream in social integrations (Article, Note, Image, etc)
 	Permissions      mapof.Object[sliceof.String] `bson:"permissions,omitzero"`  // Permissions maps UserIDs/GroupIDs into Roles for this Stream.
-	Privileges       mapof.Object[sliceof.String] `bson:"products,omitzero"`     // Privileges maps roles into privileges (either remoteProductIds or circleIds) for this Stream.
+	Privileges       mapof.Object[sliceof.String] `bson:"privileges,omitzero"`   // Privileges maps roles into privileges (either remoteProductIds or circleIds) for this Stream.
 	Groups           mapof.Object[id.Slice]       `bson:"circles,omitzero"`      // Groups maps roles into GroupIDs for this Stream.
 	DefaultAllow     id.Slice                     `bson:"defaultAllow,omitzero"` // List of Groups that are allowed to perform the 'default' (view) action.  This is used to query general access to the Stream from the database, before performing server-based authentication.
 	URL              string                       `bson:"url,omitzero"`          // URL of the original document
