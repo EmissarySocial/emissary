@@ -72,7 +72,6 @@ input[type=radio] {
 	border: none;
 }
 
-
 .disabled {
 	color: var(--input-color-disabled);
 	cursor: default;
@@ -156,9 +155,9 @@ input[type=radio] {
 	display:block;
 	flex-grow:1;
 	border: solid 1px var(--input-border);
+	border-radius:calc(var(--rhythm) * 0.75);
 	background-color: var(--input-background);
 	height:auto;
-	margin-right:10px;
 	overflow-y:auto;
 	overflow-x:hidden;
 }

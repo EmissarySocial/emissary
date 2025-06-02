@@ -14,12 +14,15 @@ html, body {
 	overflow-x: hidden;
 }
 
+
 body {
 	background-color: var(--body-background);
 	color: var(--text-color);
 	margin:0px;
+	min-height:100vh;
 	width:100%;
 }
+
 
 nav {
 	display: flex;
@@ -107,6 +110,9 @@ main {
 	flex-direction:row;
 	justify-content: center;
 	padding-bottom:128px;
+	min-height:100vh;
+	overscroll-behavior-y: none;
+	container-type:inline-size;
 }
 
 @media screen and (min-width:640px) {

@@ -32,12 +32,6 @@
 		}
 	}
 
-	bundles: {
-		stylesheet: {
-			content-type:text/css
-		}
-	}
-
 	actions: {
 	
 		view: {

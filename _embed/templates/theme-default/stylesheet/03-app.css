@@ -2,25 +2,6 @@
  * Page
  ******************************************/
 
-html {
-	overscroll-behavior-y: none;
-}
-
-body {
-	min-height:100vh;
-	overscroll-behavior-y: none;
-}
-
-main {
-	min-height:100vh;
-	overscroll-behavior-y: none;
-	container-type:inline-size;
-}
-
-.fullscreen {
-	width:100%;
-}
-
 .app {
 	display:flex;
 	flex-direction:row;
@@ -49,6 +30,7 @@ main {
 	display:block;
 	padding: 4px 32px 4px 8px;
 	border-radius:4px;
+	color:var(--gray80);
 }
 
 .app-sidebar .menu-item:hover {
@@ -59,6 +41,10 @@ main {
 .app-sidebar .selected {
 	font-weight:bold;
 	color: var(--black);
+}
+
+.app-sidebar button {
+	margin-right:0px;
 }
 
 .app-content {
@@ -89,3 +75,6 @@ main {
 	background-color:var(--red50);
 	color:var(--white);
 }
+
+
+i.bi {min-width:calc(1.5 * var(--rhythm))px;}

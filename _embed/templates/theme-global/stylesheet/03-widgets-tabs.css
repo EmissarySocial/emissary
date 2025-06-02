@@ -19,7 +19,10 @@
     background-color:var(--gray05);
     border:solid 1px var(--gray30);
     border-bottom:solid 1px var(--gray40);
-    border-radius:4px 4px 0px 0px; 
+	border-top-left-radius:calc(var(--rhythm) * 0.75);
+	border-top-right-radius: calc(var(--rhythm) * 0.75);
+	border-bottom-left-radius: 0px;
+	border-bottom-right-radius: 0px;
     color:var(--gray70);
     font-family:inherit;
     font-size:0.9rem;
