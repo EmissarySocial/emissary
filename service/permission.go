@@ -103,11 +103,6 @@ func (service *Permission) UserHasRole(authorization *model.Authorization, acces
 
 	const location = "service.Permission.UserHasRole"
 
-	// Domain Owners can do anything, so return TRUE immediately
-	if authorization.DomainOwner {
-		return true, nil
-	}
-
 	switch role {
 
 	case model.MagicRoleAnonymous:
@@ -122,6 +117,8 @@ func (service *Permission) UserHasRole(authorization *model.Authorization, acces
 	case model.MagicRoleMyself:
 		return accessLister.IsMyself(authorization.UserID), nil
 
+	case model.MagicRoleOwner:
+		return authorization.DomainOwner, nil
 	}
 
 	// If the authorization includes GroupIDs, then check those next
