@@ -1,8 +1,14 @@
 {{- $identity := .Object -}}
 {{- $privileges := .Privileges.Slice -}}
-<div class="page">
+<div class="page" script="on load take .selected from .nav-item for #nav-settings">
 
-	<h1>{{$identity.Name}}</h1>
+	{{- if .IsAuthenticated -}}
+		<div>
+			<a href="/@me/settings">&larr; Back to My Settings</a>
+		</div>
+	{{- end -}}
+
+	<h1 class="margin-top">{{$identity.Name}}</h1>
 
 	{{- if ne "" $identity.WebfingerHandle -}}
 		{{- if ne $identity.Name $identity.WebfingerHandle -}}

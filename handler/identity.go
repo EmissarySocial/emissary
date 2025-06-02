@@ -14,6 +14,14 @@ import (
 )
 
 func GetIdentity(ctx *steranko.Context, factory *domain.Factory, identity *model.Identity) error {
+	return buildIdentity(ctx, factory, identity, build.ActionMethodGet)
+}
+
+func PostIdentity(ctx *steranko.Context, factory *domain.Factory, identity *model.Identity) error {
+	return buildIdentity(ctx, factory, identity, build.ActionMethodPost)
+}
+
+func buildIdentity(ctx *steranko.Context, factory *domain.Factory, identity *model.Identity, actionMethod build.ActionMethod) error {
 	const location = "handler.GetIdentity"
 
 	// Get the standard Signin page
@@ -33,7 +41,7 @@ func GetIdentity(ctx *steranko.Context, factory *domain.Factory, identity *model
 	}
 
 	// Build the HTML response
-	if err := build.AsHTML(factory, ctx, builder, build.ActionMethodGet); err != nil {
+	if err := build.AsHTML(factory, ctx, builder, actionMethod); err != nil {
 		return derp.Wrap(err, location, "Error building page")
 	}
 

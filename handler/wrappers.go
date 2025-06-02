@@ -113,14 +113,40 @@ func WithIdentity(serverFactory *server.Factory, fn WithFunc1[model.Identity]) e
 
 	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *domain.Factory) error {
 
+		identityService := factory.Identity()
+		identity := model.NewIdentity()
+
 		authorization := getAuthorization(ctx)
 
 		if authorization.IdentityID.IsZero() {
+
+			// If we're authenticated but don't have an Identity,
+			// then we'll MAKE one using the authenticated user
+			if authorization.IsAuthenticated() {
+
+				// Load the signed-in user
+				userService := factory.User()
+				user := model.NewUser()
+
+				if err := userService.LoadByID(authorization.UserID, &user); err != nil {
+					return derp.Wrap(err, location, "Error loading signed-in user")
+				}
+
+				// Load/Create an Identity for the signed-in User
+				identity, err := identityService.LoadOrCreate(model.IdentifierTypeEmail, user.EmailAddress, true)
+
+				if err != nil {
+					return derp.Wrap(err, location, "Error loading/creating Identity")
+				}
+
+				// TODO: update the signed-in authorization so we don't
+				// have to hit the database all the time
+
+				return fn(ctx, factory, &identity)
+			}
+
 			return ctx.Redirect(http.StatusSeeOther, "/@guest/signin")
 		}
-
-		identityService := factory.Identity()
-		identity := model.NewIdentity()
 
 		if err := identityService.LoadByID(authorization.IdentityID, &identity); err != nil {
 			return derp.Wrap(err, location, "Error loading Identity")

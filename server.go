@@ -343,11 +343,12 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/@me/oauth/revoke", handler.WithAuthenticatedUser(factory, handler.PostUserOAuthRevoke))
 
 	e.GET("/@guest", handler.WithIdentity(factory, handler.GetIdentity))
+	e.POST("/@guest", handler.WithIdentity(factory, handler.PostIdentity))
+	e.GET("/@guest/:action", handler.WithIdentity(factory, handler.GetIdentity))
+	e.POST("/@guest/:action", handler.WithIdentity(factory, handler.PostIdentity))
 	e.GET("/@guest/signin", handler.WithFactory(factory, handler.GetIdentityAuthenticate))
 	e.POST("/@guest/signin", handler.WithFactory(factory, handler.PostIdentityAuthenticate))
 	e.GET("/@guest/signin/:jwt", handler.WithFactory(factory, handler.GetIdentityConnect))
-	e.GET("/@guest/:any", handler.NotFound)
-	e.POST("/@guest/:any", handler.NotFound)
 
 	// Routes for Users
 	e.GET("/@:userId", handler.WithUserForwarding(factory, handler.GetOutbox))
