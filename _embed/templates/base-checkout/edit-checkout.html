@@ -83,7 +83,7 @@
 			</div>
 		</details>
 
-		{{- $privileges := .HasPrivileges -}}
+		{{- $privileges := .StreamHasPrivileges -}}
 		<details class="margin-bottom-xl" {{if not $privileges}} open="true" {{end}} >
 			<summary class="clickable flex-row flex-align-center">
 				<h1 class="text-xl bold">

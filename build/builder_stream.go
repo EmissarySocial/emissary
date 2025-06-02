@@ -824,8 +824,8 @@ func (w Stream) AttachmentsByCategory(category string) (sliceof.Object[model.Att
  * Purchase/Product/Checkout Methods
  ******************************************/
 
-// HasPrivileges returns TRUE if this stream has any products
-func (w Stream) HasPrivileges() bool {
+// StreamHasPrivileges returns TRUE if this stream has any products
+func (w Stream) StreamHasPrivileges() bool {
 	return w._stream.HasPrivileges()
 }
 
