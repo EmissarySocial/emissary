@@ -6,11 +6,13 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/random"
+	"github.com/EmissarySocial/emissary/tools/stripeapi"
 	api "github.com/EmissarySocial/emissary/tools/stripeapi"
 	"github.com/benpate/derp"
 	"github.com/benpate/remote"
 	"github.com/benpate/remote/options"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -61,23 +63,31 @@ func (service *MerchantAccount) stripe_getCheckoutURL(merchantAccount *model.Mer
 
 	// Create a new Stripe Checkout Session
 	successURL := service.host + "/.checkout/response?checkoutSessionId={CHECKOUT_SESSION_ID}&return=" + url.QueryEscape(returnURL) + "&jwt=" + token
+	checkoutMode := service.stripe_checkoutMode(price)
 
 	txn := remote.Post("https://api.stripe.com/v1/checkout/sessions").
-		With(options.BearerAuth(restrictedKey)).
+		With(options.BearerAuth(restrictedKey), options.Debug()).
 		ContentType("application/x-www-form-urlencoded").
-		Form("mode", service.stripe_checkoutMode(price)).
+		Form("mode", checkoutMode).
 		Form("line_items[0][price]", price.ID).
 		Form("line_items[0][quantity]", "1").
 		Form("ui_mode", "hosted").
 		Form("client_reference_id", transactionID).
-		Form("customer_creation", "always").
 		Form("cancel_url", returnURL).
 		Form("success_url", successURL).
 		Result(&checkoutResult)
 
+	// If this is a single payment (not a subscription), then we need to create a customer
+	if checkoutMode == "payment" {
+		txn.Form("customer_creation", "always")
+	}
+
+	// Send the transaction to Stripe
 	if err := txn.Send(); err != nil {
 		return "", derp.Wrap(err, location, "Error connecting to Stripe API")
 	}
+
+	spew.Dump(location, checkoutResult)
 
 	// Return the URL to the caller
 	return checkoutResult.GetString("url"), nil
@@ -105,6 +115,8 @@ func (service *MerchantAccount) stripe_getPrivilegeFromCheckoutResponse(queryPar
 		return model.Privilege{}, derp.Wrap(err, location, "Error loading checkout session from Stripe")
 	}
 
+	spew.Dump(location, checkoutSession)
+
 	// RULE: transaction id must match the checkout session
 	if checkoutSession.ClientReferenceID != queryParams.Get("transactionId") {
 		return model.Privilege{}, derp.BadRequestError(location, "Invalid Transaction ID", "The transaction ID does not match the checkout session")
@@ -115,22 +127,41 @@ func (service *MerchantAccount) stripe_getPrivilegeFromCheckoutResponse(queryPar
 		return model.Privilege{}, derp.BadRequestError(location, "Invalid Checkout Session", "The checkout session does not contain customer details")
 	}
 
+	// This is safe becuase it was passed via a JWT token (see WithMerchantAccountJWT)
+	productID := queryParams.Get("productId")
+
+	// Retrieve the Price/Product from the Stripe API
+	price, err := stripeapi.Price(restrictedKey, productID)
+
+	if err != nil {
+		return model.Privilege{}, derp.Wrap(err, location, "Error retrieving price from Stripe", productID)
+	}
+
 	// Create a new Identity record for the guest
-	identity, err := service.identityService.LoadOrCreate(model.IdentifierTypeEmail, checkoutSession.CustomerDetails.Email, true)
+	identity, err := service.identityService.LoadOrCreate(
+		checkoutSession.CustomerDetails.Name,
+		model.IdentifierTypeEmail,
+		checkoutSession.CustomerDetails.Email,
+		true,
+	)
 
 	if err != nil {
 		return model.Privilege{}, derp.Wrap(err, location, "Error saving Identity", identity)
 	}
 
 	// Create a privilege for this Identity
-	remoteProductID := queryParams.Get("productId") // This is safe becuase it was passed via a JWT token (see WithMerchantAccountJWT)
+	remoteProductID := productID
 	remotePersonID := checkoutSession.Customer.ID
 	remotePurchaseID := checkoutSession.ID
 
 	// Populate a new Privilege record for the Identity
 	privilege := model.NewPrivilege()
 	privilege.IdentityID = identity.IdentityID
+	privilege.Name = price.Product.Name
+	privilege.PriceDescription = service.stripe_priceLabel(price)
+	privilege.RecurringType = service.stripe_recurringType(price)
 	privilege.UserID = merchantAccount.UserID
+	privilege.MerchantAccountID = merchantAccount.MerchantAccountID
 	privilege.RemotePersonID = remotePersonID
 	privilege.RemoteProductID = remoteProductID
 	privilege.RemotePurchaseID = remotePurchaseID

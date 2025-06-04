@@ -26,5 +26,39 @@
 				{do:"view-html"}
 			]
 		}
+
+		edit: {
+			roles:["self"]
+			steps:[
+				{do:"as-modal", steps:[
+					{do:"edit", form: {
+						label: Edit My Name
+						type: layout-vertical
+						children: [
+							{do:"input", path:"name", label:"Name", type:"text", options:{autocomplete:"name"}},
+						]
+					}}
+					{do:"save"}
+					{do:"refresh-page"}
+				]}
+			]
+		}
+
+		email: {
+			roles:["self"]
+			steps:[
+				{do:"as-modal", steps:[
+					{do:"view-html"}
+				]}
+			]
+		}
+		webfinger: {
+			roles:["self"]
+			steps:[
+				{do:"as-modal", steps:[
+					{do:"view-html"}
+				]}
+			]
+		}
 	}
 }	

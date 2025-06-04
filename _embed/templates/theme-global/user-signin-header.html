@@ -1,0 +1,9 @@
+{{- if ne "" .domainIcon -}}
+	<div style="margin-bottom:32px; text-align: center;">
+		<img src="{{.domainIcon}}" style="width:40%; margin:0px auto; display:block;">
+	</div>
+	<h2>Sign In</h2>
+{{- else -}}
+	<div class="bold text-gray text-lg margin-vertical-none">{{.domainName}}</div>
+	<h1 class="margin-top-none">{{icon "shield-lock"}} Sign In</h1>
+{{- end -}}

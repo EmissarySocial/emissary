@@ -54,7 +54,8 @@ func (service *MerchantAccount) stripe_getPrices(merchantAccount *model.Merchant
 		return form.LookupCode{
 			Group: price.Product.Name,
 			Label: service.stripe_priceLabel(price),
-			Value: merchantAccount.MerchantAccountID.Hex() + ":" + price.ID,
+			Value: "MA:" + merchantAccount.MerchantAccountID.Hex() + ":" + price.ID,
+			Icon:  "stripe",
 		}
 	})
 
@@ -78,7 +79,31 @@ func (service *MerchantAccount) stripe_priceLabel(price stripe.Price) string {
 	return result
 }
 
-// stripe_checkoutMode returns the checkout mode that matches the provided Stripe `Price`.
+// stripe_recurringType returns the INTERNAL recurring type constant that matches the provided Stripe `Price` record.
+func (service *MerchantAccount) stripe_recurringType(price stripe.Price) string {
+
+	if price.Recurring != nil {
+
+		switch price.Recurring.Interval {
+
+		case stripe.PriceRecurringIntervalDay:
+			return model.PrivilegeRecurringTypeDay
+
+		case stripe.PriceRecurringIntervalWeek:
+			return model.PrivilegeRecurringTypeWeek
+
+		case stripe.PriceRecurringIntervalMonth:
+			return model.PrivilegeRecurringTypeMonth
+
+		case stripe.PriceRecurringIntervalYear:
+			return model.PrivilegeRecurringTypeYear
+		}
+	}
+
+	return model.PrivilegeRecurringTypeOnetime
+}
+
+// stripe_checkoutMode returns the checkout mode that matches the provided Stripe `Price` (either "payment" or "subscription")
 func (service *MerchantAccount) stripe_checkoutMode(price stripe.Price) string {
 
 	if price.Recurring == nil {

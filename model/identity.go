@@ -82,12 +82,24 @@ func (identity Identity) RolesToPrivileges(...string) sliceof.String {
  * Other Getters
  ******************************************/
 
+// HasEmailAddress returns TRUE if the Identity has an email address.
 func (identity Identity) HasEmailAddress() bool {
 	return identity.EmailAddress != ""
 }
 
+// IsEmailVerified returns TRUE if EmailAddress has been verified
+func (identity Identity) IsEmailVerified() bool {
+	return identity.EmailVerifiedDate > 0
+}
+
+// HasWebfingerHandle returns TRUE if the Identity has a WebFinger handle.
 func (identity Identity) HasWebfingerHandle() bool {
 	return identity.WebfingerHandle != ""
+}
+
+// IsWebfingerVerified returns TRUE if WebfingerHandle has been verified
+func (identity Identity) IsWebfingerVerified() bool {
+	return identity.WebfingerVerifiedDate > 0
 }
 
 // Icon returns an icon name to use for this Identity, based on the type of identifier(s) present.

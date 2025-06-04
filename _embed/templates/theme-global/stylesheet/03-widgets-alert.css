@@ -23,8 +23,8 @@
 }
 
 .alert-gray {
-    background-color: var(--gray50);
-    color: var(--white);
+    background-color: var(--gray10);
+    border: solid 1px var(--gray20);
     padding: var(--rhythm) calc(var(--rhythm) * 2);
     margin-bottom: calc(var(--rhythm) * 2);
 	border-radius:calc(var(--rhythm) * 0.75);

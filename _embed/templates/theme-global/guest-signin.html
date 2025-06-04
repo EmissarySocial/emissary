@@ -15,29 +15,19 @@
 
 				<div class="layout-vertical margin-bottom">
 
-					{{- if ne "" .domainIcon -}}
-						<div style="margin-bottom:32px; text-align: center;">
-							<img src="{{.domainIcon}}" style="width:40%; margin:0px auto; display:block;">
-						</div>
-						<h2>Sign In</h2>
-					{{- else -}}
-						<div class="bold text-gray text-lg margin-vertical-none">{{.domainName}}</div>
-						<h1 class="margin-top-none">{{icon "shield-lock"}} Guest Sign In</h1>
-					{{- end -}}
-	
-					<div class="margin-vertical">
-						We'll send a onetime code to your <i class="nowrap">Email Address</i> or <i class="nowrap">Fediverse account</i> to get you signed in,
-						so you can access privileged content on this site.
-					</div>
+					{{- template "guest-signin-header" . -}}
 
 					<div class="layout-vertical-elements">
 						<div class="layout-vertical-element">
-							<label class="bold" for="username">Your Email Address or Fediverse Username</label>
+							<label for="username">Email / Fediverse Username</label>
 							<input type="text" name="identifier" required="true" maxlength="50" autofocus autocomplete="username">
-							<span class="text-sm text-gray">
 						</div>
-					</div>
+					</div>					
+				</div>
 
+				<div class="margin-bottom-lg">
+					No signup is necessary.  Just enter your <b class="nowrap">Email Address</b> or <b class="nowrap">Fediverse account</b>
+					and we'll send you a one-time code to get in.
 				</div>
 
 				<div>

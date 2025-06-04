@@ -27,6 +27,7 @@ type MerchantAccount struct {
 	collection        data.Collection
 	connectionService *Connection
 	jwtService        *JWT
+	circleService     *Circle
 	identityService   *Identity
 	privilegeService  *Privilege
 	encryptionKey     string
@@ -43,8 +44,9 @@ func NewMerchantAccount() MerchantAccount {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *MerchantAccount) Refresh(collection data.Collection, connectionService *Connection, jwtService *JWT, identityService *Identity, privilegeService *Privilege, masterKey string, host string) {
+func (service *MerchantAccount) Refresh(collection data.Collection, circleService *Circle, connectionService *Connection, jwtService *JWT, identityService *Identity, privilegeService *Privilege, masterKey string, host string) {
 	service.collection = collection
+	service.circleService = circleService
 	service.connectionService = connectionService
 	service.jwtService = jwtService
 	service.identityService = identityService
@@ -255,10 +257,12 @@ func (service *MerchantAccount) LoadByUserAndID(userID primitive.ObjectID, merch
 
 func (service *MerchantAccount) LoadByToken(token string, merchantAccount *model.MerchantAccount) error {
 
+	const location = "service.MerchantAccount.LoadByToken"
+
 	merchantAccountID, err := primitive.ObjectIDFromHex(token)
 
 	if err != nil {
-		return derp.Wrap(err, "service.MerchantAccount.LoadByToken", "Invalid Token", token)
+		return derp.Wrap(err, location, "Invalid Token", token)
 	}
 
 	return service.LoadByID(merchantAccountID, merchantAccount)
@@ -266,10 +270,12 @@ func (service *MerchantAccount) LoadByToken(token string, merchantAccount *model
 
 func (service *MerchantAccount) LoadByUserAndToken(userID primitive.ObjectID, token string, merchantAccount *model.MerchantAccount) error {
 
+	const location = "service.MerchantAccount.LoadByUserAndToken"
+
 	merchantAccountID, err := primitive.ObjectIDFromHex(token)
 
 	if err != nil {
-		return derp.Wrap(err, "service.MerchantAccount.LoadByToken", "Invalid Token", token)
+		return derp.Wrap(err, location, "Invalid Token", token)
 	}
 
 	return service.LoadByUserAndID(userID, merchantAccountID, merchantAccount)
@@ -442,11 +448,22 @@ func (service *MerchantAccount) ProductsByUser(userID primitive.ObjectID) (slice
 }
 
 // ProductsByID retrieves a list of products configured in the remote MerchantAccount(s)
-func (service *MerchantAccount) ProductsByID(tokens ...string) ([]form.LookupCode, error) {
+func (service *MerchantAccount) ProductsByID(userID primitive.ObjectID, tokens ...string) ([]form.LookupCode, error) {
 
 	// Collect unique merchantAccount and product IDs
 	merchantAccountIDs := cutAndGroup(tokens, ":")
 	result := make([]form.LookupCode, 0, len(tokens))
+
+	// Get all Circles
+	circles, err := service.circleService.QueryByUser(userID)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "service.MerchantAccount.QueryProductsAsLookupCodes", "Error loading circles")
+	}
+
+	for _, circle := range circles {
+		result = append(result, circle.LookupCode())
+	}
 
 	for merchantAccount, productIDs := range merchantAccountIDs {
 
@@ -459,7 +476,7 @@ func (service *MerchantAccount) ProductsByID(tokens ...string) ([]form.LookupCod
 
 		// Load the MerchantAccount
 		merchantAccount := model.NewMerchantAccount()
-		if err := service.LoadByID(merchantAccountID, &merchantAccount); err != nil {
+		if err := service.LoadByUserAndID(userID, merchantAccountID, &merchantAccount); err != nil {
 			return nil, derp.Wrap(err, "service.MerchantAccount.QueryProductsAsLookupCodes", "Error loading merchant account", merchantAccountID)
 		}
 

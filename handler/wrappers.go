@@ -133,7 +133,7 @@ func WithIdentity(serverFactory *server.Factory, fn WithFunc1[model.Identity]) e
 				}
 
 				// Load/Create an Identity for the signed-in User
-				identity, err := identityService.LoadOrCreate(model.IdentifierTypeEmail, user.EmailAddress, true)
+				identity, err := identityService.LoadOrCreate(user.DisplayName, model.IdentifierTypeEmail, user.EmailAddress, true)
 
 				if err != nil {
 					return derp.Wrap(err, location, "Error loading/creating Identity")

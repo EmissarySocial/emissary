@@ -1,9 +1,9 @@
-{{- $privileges := .Privileges.Slice -}}
+{{- $privileges := .Privileges.ByCreateDate.Reverse.Slice -}}
 
 <div class="page app" script="on load take .selected from .nav-item for #nav-settings">
 
 	{{- if .IsAuthenticated -}}
-		<div class="app-sidebar">
+		<div id="app-sidebar" class="app-sidebar">
 			<div class="bold text-xl margin-none margin-bottom">Settings</div>
 	
 			<a href="/@me/settings/following" hx-boost="true" class="turboclick menu-item ellipsis">{{icon "star"}} Following</a>
@@ -18,31 +18,119 @@
 	{{- end -}}
 
 	<div class="app-content">
-		<h1 class="margin-top">{{icon "person-circle"}} {{.Name}}</h1>
+		<h1 class="text-xl bold margin-none">Guest Profile</h1>
 
-		<div class="margin-bottom text-gray">
-			{{- if .HasWebfingerHandle -}}
-				<div>{{icon "fediverse"}} {{ .WebfingerHandle -}}</div>
-			{{- end -}}
+		<div class="margin-top rounded card padding md:width-80% lg:width-60% flex-row flex-align-start">
+			<div class="margin-horizontal">
+				<span style="font-size:64px;">{{icon "person-circle"}}</span>
+			</div>
 
-			{{- if .HasEmailAddress -}}
-				<div>{{icon "email"}} {{ .EmailAddress -}}</div>
-			{{- end -}}
+			<div class="flex-column flex-align-stretch flex-grow table">
+				<div hx-get="/@guest/edit" class="clickable flex-row flex-align-center">
+					<div class="flex-grow text-lg bold margin-none margin-right-sm">{{.Name}}</div>
+					<span class="button text-xs">change</span>
+				</div>
+
+				<div hx-get="/@guest/webfinger" class="clickable flex-row flex-align-center">
+					<div class="flex-grow margin-right-sm">
+						{{icon "fediverse"}} 
+						{{ if .HasWebfingerHandle }}
+							{{.WebfingerHandle}}
+
+							{{ if .IsWebfingerVerified -}}
+								<span class="text-light-gray margin-left-sm">
+									{{icon "check-badge-fill"}} verified
+								</span>
+							{{- end -}}
+
+						{{- else -}}
+							<span class="text-red bold">Add Your Fediverse Handle</span>
+						{{- end -}}
+	
+					</div>
+					<span class="button text-xs">
+						{{- if .HasWebfingerHandle -}}
+							change
+						{{- else -}}
+							connect
+						{{- end -}}
+					</span>					
+				</div>
+
+				<div hx-get="/@guest/email" class="clickable flex-row flex-align-center">
+					<div class="flex-grow margin-right-sm">
+						{{icon "email"}} 
+						{{- if .HasEmailAddress }}
+							{{.EmailAddress}}
+
+							{{if .IsEmailVerified}}
+								<span class="text-light-gray margin-left-sm">
+									{{icon "check-badge-fill"}} verified
+								</span>
+							{{- end -}}
+
+						{{- else -}}
+							<span class="text-red bold">Add Your Email Address</span>
+						{{- end -}}
+					</div>
+
+					<span class="button text-xs">
+						{{- if .HasEmailAddress -}}
+							change
+						{{- else -}}
+							connect
+						{{- end -}}							
+					</span>
+				</div>
+			</div>
 		</div>
 
-		<div class="margin-bottom text-sm">
-			{{- if not .HasWebfingerHandle -}}
-				<button>Add Fediverse Handle</button>
-			{{- end -}}
+		{{- if $privileges.IsEmpty -}}
+			<h1 class="text-xl bold margin-top-xl">No Purchases</h1>
+			You haven't made any purchases on this server yet.
+		{{- else -}}
 
-			{{- if not .HasEmailAddress -}}
-				<button>Add Email Address</button>
-			{{- end -}}
-		</div>
+			{{- $privilegedStreams := .PrivilegedStreams $privileges -}}
+			<h1 class="text-xl bold margin-top-xl">My Purchases</h1>
+
+			<table class="table">
+				{{- range $index, $privilege := $privileges -}}
+					<tr>
+						<td class="padding width-25%">
+							<div class="bold text-lg margin-none">{{ $privilege.Name }}</div>
+							<div class="text-sm text-light-gray">{{ $privilege.PriceDescription }}</div>
+							<div class="text-sm text-light-gray">{{ $privilege.CreateDate | shortDate }}</div>
+						</td>
+						<td class="padding width-75%">
+							{{- range $privilegeID, $streamIDs := $privilegedStreams -}}
+								{{- if eq $privilege.CompoundID $privilegeID -}}
+									{{- range $index, $streamID := $streamIDs -}}
+										<div hx-get="/{{$streamID.Hex}}/paid-content" hx-trigger="revealed" hx-target="this" hx-swap="innerHTML" hx-push-url="false"></div>
+									{{- end -}}
+								{{- end -}}
+							{{- end -}}
+						</td>
+					</tr>
+				{{- end -}}
+			</table>
+
+			<!--
+			<h3>Privilege IDs</h3>
+			<pre>{{.PrivilegeIDs | jsonIndent}}</pre>
+
+			<h3>Privileges</h3>
+			<pre>{{$privileges | jsonIndent}}</pre>
+
+			<h3>Privileged Streams</h3>
+			<pre>{{$privilegedStreams | jsonIndent}}</pre>
+			-->
+			
+		{{- end -}}
 
 		{{- if not .IsAuthenticated -}}
 			<button hx-post="/signout" class="button text-sm">Sign Out</button>
 		{{- end -}}
 	</div>
 	
+	<div hx-get="{{.URL}}" hx-trigger="refreshPage from:window" hx-push-url="false"></div>
 </div>

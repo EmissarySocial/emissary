@@ -1,0 +1,34 @@
+{{- if .HasWebfingerHandle -}}
+	<h1>{{icon "email"}} Edit Your Fediverse Handle</h1>
+
+	<div class="alert-gray margin-bottom-lg">
+		Enter a new email address to replace your current one.  We'll send you a verification email to complete the change.<br>
+		<br>
+		This will replace your current address and all purchases made with it.  To access any purchases you've made so far, you'll need to sign in 
+		again with your old address.
+	</div>
+
+{{- else -}}
+	<h1>Add a Fediverse Handle</h1>
+
+	<div class="alert-gray margin-bottom-lg">
+		When you add a Fediverse Handle to your guest profile, you'll receive exclusive posts from the accounts you follow.
+	</div>
+{{- end -}}
+
+<form hx-post="/@me/settings/identifier">
+
+	<div class="layout-vertical">
+		<div class="layout-vertical-elements">
+			<div class="layout-vertical-element">
+				<label for="email">New Fediverse Handle</label>
+				<input type="hidden" name="identifierType" value="EMAIL">
+				<input type="text" id="email" name="identifier" value="{{.WebfingerHandle}}" pattern="^@[^@]+@[^@]+\.[^@]+$" aria-labelledby="identifier-label" aria-describedby="identifier-label" required="true"autocomplete="username" autofocus="true" tabindex="0">
+				<div id="identifier-label" class="text-sm gray40">E.g. @username@server.social</div>
+			</div>
+		</div>
+	</div>
+
+	<button type="submit" class="primary">Set My Fediverse Handle</button>
+	<button script="on click trigger closeModal">Cancel</button>
+</form>

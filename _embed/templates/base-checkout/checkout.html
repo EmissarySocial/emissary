@@ -5,7 +5,7 @@
 
 <div class="table">
 	{{- range $index, $product := .Products -}}
-		<a href="/.checkout?token={{$product.Value}}&return={{$permalink}}" role="link" class="text-nocolor text-plain flex-row">
+		<a href="/.checkout?token=MA:{{$product.Value}}&return={{$permalink}}" role="link" class="text-nocolor text-plain flex-row">
 			<div class="flex-grow">
 				<div class="bold">{{$product.Label}}</div>
 				<div class="text-sm text-gray">{{$product.Description}}</div>

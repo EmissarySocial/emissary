@@ -214,7 +214,7 @@ func (service *Identity) LoadByToken(token string, identity *model.Identity) err
 // LoadOrCreateByEmail searches for a Guest with the provided emailAddress.
 // If a matching record is found, it updates the record with the new values (if necessary).
 // If no matching record is found, it creates a new record with the provided values.
-func (service *Identity) LoadOrCreate(identifierType string, identifierValue string, isVerified bool) (model.Identity, error) {
+func (service *Identity) LoadOrCreate(name string, identifierType string, identifierValue string, isVerified bool) (model.Identity, error) {
 
 	const location = "service.Identity.LoadOrCreate"
 
@@ -256,6 +256,7 @@ func (service *Identity) LoadOrCreate(identifierType string, identifierValue str
 		return model.Identity{}, derp.Wrap(err, location, "Error loading identity", identifierType, identifierValue)
 	}
 
+	identity.Name = name
 	// Otherwise, populate the identifier into the Identity object
 	if ok := identity.SetIdentifier(identifierType, identifierValue); !ok {
 		return model.Identity{}, derp.BadRequestError(location, "Invalid Identifier Type", identifierType)
@@ -340,12 +341,12 @@ func (service *Identity) RefreshPrivileges(identityID primitive.ObjectID) error 
 
 	for _, privilege := range privileges {
 
-		if !privilege.CircleID.IsZero() {
-			privilegeStrings = append(privilegeStrings, privilege.CircleID.Hex())
+		if compoundID := privilege.CompoundID_Circle(); compoundID != "" {
+			privilegeStrings = append(privilegeStrings, compoundID)
 		}
 
-		if privilege.RemoteProductID != "" {
-			privilegeStrings = append(privilegeStrings, privilege.RemoteProductID)
+		if compoundID := privilege.CompoundID_MerchantAccount(); compoundID != "" {
+			privilegeStrings = append(privilegeStrings, compoundID)
 		}
 	}
 
@@ -364,7 +365,7 @@ func (service *Identity) RefreshPrivileges(identityID primitive.ObjectID) error 
 	return nil
 }
 
-func (service *Identity) SendGuestCode(identifier string) error {
+func (service *Identity) SendGuestCode(identity *model.Identity, identifierType string, identifier string) error {
 
 	const location = "service.Identity.SendGuestCode"
 
@@ -373,14 +374,8 @@ func (service *Identity) SendGuestCode(identifier string) error {
 		return derp.BadRequestError(location, "Identifier cannot be empty", identifier)
 	}
 
-	identifierType := service.GuessIdentifierType(identifier)
-
-	if identifierType == "" {
-		return derp.BadRequestError(location, "Unrecognized Identifier Type", identifierType)
-	}
-
 	// Create a new Guest Code for the identifier :)
-	guestCode, err := service.makeGuestCode(identifierType, identifier)
+	guestCode, err := service.makeGuestCode(nil, identifierType, identifier)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error creating Guest Code", identifier)
@@ -400,13 +395,18 @@ func (service *Identity) SendGuestCode(identifier string) error {
 }
 
 // makeGuestCode creates a new JWT token for the Guest to authenticate
-func (service *Identity) makeGuestCode(identifierType string, identifier string) (string, error) {
+func (service *Identity) makeGuestCode(identity *model.Identity, identifierType string, identifier string) (string, error) {
 
 	// Claims for the Identifier, expiring in 1 hour
 	claims := jwt.MapClaims{
 		"exp":  time.Now().Add(time.Hour).Unix(),
 		"type": identifierType,
 		"id":   identifier,
+	}
+
+	// If we have a valid Identity, then add the IdentityID to the claim
+	if identity != nil {
+		claims["I"] = identity.IdentityID.Hex()
 	}
 
 	// Create and sign the new JWT token

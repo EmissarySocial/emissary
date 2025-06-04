@@ -327,3 +327,12 @@ p:last-child {
     overflow:hidden; 
 	max-width:100%;
 }
+
+
+/******************************************
+ * Fonts
+ ******************************************/
+
+.font-mono {
+	font-family: 'Nimbus Mono PS', 'Courier New', monospace;
+}

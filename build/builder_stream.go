@@ -530,7 +530,7 @@ func (w Stream) Parent(actionID string) (Stream, error) {
 
 	streamService := w.factory().Stream()
 
-	if err := streamService.LoadParent(w._stream, &parent); err != nil {
+	if err := streamService.LoadByID(w._stream.StreamID, &parent); err != nil {
 		return Stream{}, derp.Wrap(err, location, "Error loading Parent")
 	}
 
@@ -757,7 +757,7 @@ func (w Stream) Ancestors() QueryBuilder[model.StreamSummary] {
 
 	streamService := w.factory().Stream()
 
-	if err := streamService.LoadParent(w._stream, &parent); err != nil {
+	if err := streamService.LoadByID(w._stream.ParentID, &parent); err != nil {
 		derp.Report(derp.Wrap(err, "build.Stream.Ancestors", "Error loading parent"))
 	}
 
@@ -842,13 +842,14 @@ func (w Stream) MerchantAccounts() QueryBuilder[model.MerchantAccount] {
 	return NewQueryBuilder[model.MerchantAccount](w._factory.MerchantAccount(), criteria)
 }
 
-// PrivilegeIDs returns all privilege IDs that are valid for this stream
-func (w Stream) PrivilegeIDs() sliceof.String {
-	return w._stream.PrivilegeIDs()
+// Products returns all Remote Products that (when purchased) provide privileges for this Stream.
+func (w Stream) Products() (sliceof.Object[form.LookupCode], error) {
+	return w._factory.MerchantAccount().ProductsByID(w._stream.AttributedTo.UserID, w._stream.PrivilegeIDs...)
 }
 
-func (w Stream) Products() (sliceof.Object[form.LookupCode], error) {
-	return w._factory.MerchantAccount().ProductsByID(w._stream.PrivilegeIDs()...)
+// PrivilegeIDs returns all privilege IDs that are valid for this stream
+func (w Stream) PrivilegeIDs() sliceof.String {
+	return w._stream.PrivilegeIDs
 }
 
 /******************************************

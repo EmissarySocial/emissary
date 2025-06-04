@@ -9,6 +9,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/steranko"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // GetCheckout initiates a checkout session with the provided MerchantAccount and Product.
@@ -18,7 +19,29 @@ func GetCheckout(ctx *steranko.Context, factory *domain.Factory) error {
 
 	// Get Parameters from the QueryString
 	token := ctx.QueryParam("token")
-	merchantAccountID, remoteProductID, _ := strings.Cut(token, ":")
+	tokenArgs := strings.SplitN(token, ":", 3)
+
+	if len(tokenArgs) != 3 {
+		return derp.InternalError(
+			location,
+			"Invalid token format. Expected format: tokenType:merchantAccountID:remoteProductID",
+			token,
+		)
+	}
+
+	tokenType := tokenArgs[0]
+	merchantAccountID := tokenArgs[1]
+	remoteProductID := tokenArgs[2]
+
+	if tokenType != "MA" {
+		return derp.InternalError(
+			location,
+			"Invalid token type. Expected 'MA' for Merchant Account",
+			token,
+		)
+	}
+
+	spew.Dump(tokenArgs)
 
 	// Load the MerchantAccount
 	merchantAccount := model.NewMerchantAccount()
@@ -73,7 +96,7 @@ func GetCheckoutResponse(ctx *steranko.Context, factory *domain.Factory, merchan
 	}
 
 	// Forward the client to their profile page and highlight the newly purchased privilege.
-	return ctx.Redirect(http.StatusSeeOther, "/@guest?privilegeId="+privilege.ID())
+	return ctx.Redirect(http.StatusSeeOther, "/@guest")
 }
 
 // PostCheckoutWebhook processes inbound webhook events for a specific MerchantAccount

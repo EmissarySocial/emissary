@@ -29,15 +29,26 @@
 		</div>
 
 		<table class="table">
-			<tr role="button"><td class="link" colspan="4">{{icon "add"}} Add a Circle</td></tr>
+			<tr hx-get="/@me/settings/circle-add" role="button"><td class="link" colspan="5">{{icon "add"}} Add a Circle</td></tr>
 			{{- range $index, $circle := $circles -}}
 			<tr role="button">
-				<td hx-get="/@me/settings/circle-members?circleId={{$circle.ID}}">{{icon "circle"}} {{$circle.Name}}</td>
+				<td hx-get="/@me/settings/circle-members?circleId={{$circle.ID}}">
+					{{icon "circle"}} {{$circle.Name}}
+				</td>
 				<td hx-get="/@me/settings/circle-members?circleId={{$circle.ID}}" nowrap>
-					<span class="nowrap margin-horizontal-lg">{{$circle.MemberCount}} {{pluralize $circle.MemberCount "member" "members"}}</span>
+					{{- if $circle.IsFeatured -}}
+						<span class="text-green">{{icon "check-circle-fill"}}</span>
+					{{- end -}}
+				</td>
+				<td hx-get="/@me/settings/circle-members?circleId={{$circle.ID}}" nowrap>
+					<span class="text-light-gray">{{icon "person-fill"}}</span> 
+					{{$circle.MemberCount}}
 				</td>
 				<td hx-get="/@me/settings/circle-products?circleId={{$circle.ID}}" nowrap>
-					<span>{{$circle.ProductIDs.Length}} {{pluralize $circle.ProductIDs.Length "product" "products"}}</span>
+					{{- if $circle.HasProducts -}}
+						<span class="text-light-gray">{{icon "box-fill"}}</span> 
+					{{- end -}}
+				</td>
 				</td>
 				<td class="align-right" nowrap>
 					<button hx-get="/@me/settings/circle-edit?circleId={{$circle.ID}}" role="button" class="text-xs">Edit Circle</button>

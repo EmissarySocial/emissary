@@ -15,8 +15,8 @@ type Circle struct {
 	Name        string             `json:"name"        bson:"name"`        // Human-readable name for this circle.
 	Description string             `json:"description" bson:"description"` // Human-readable description of this Circle
 	ProductIDs  sliceof.String     `json:"productIds"  bson:"productIds"`  // List of remote ProductIDs that can purchase membership in this Circle
-	IsFeatured  bool               `json:"isFeatured"  bson:"isFeatured"`  // TRUE if this Circle should be featured on the User's profile page.
 	MemberCount int64              `json:"memberCount" bson:"memberCount"` // Number of members in this Circle
+	IsFeatured  bool               `json:"isFeatured"  bson:"isFeatured"`  // TRUE if this Circle should be featured on the User's profile page.
 
 	journal.Journal `json:"-" bson:",inline"`
 }
@@ -28,7 +28,7 @@ func NewCircle() Circle {
 }
 
 func CircleFields() []string {
-	return []string{"_id", "name", "description"}
+	return []string{"_id", "name", "description", "productIds", "memberCount", "isFeatured"}
 }
 
 func (userSummary Circle) Fields() []string {
@@ -90,5 +90,6 @@ func (circle *Circle) LookupCode() form.LookupCode {
 		Value:       circle.CircleID.Hex(),
 		Label:       circle.Name,
 		Description: circle.Description,
+		Icon:        "circle",
 	}
 }

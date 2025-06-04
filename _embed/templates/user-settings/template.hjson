@@ -75,15 +75,15 @@
 										children: [
 											{type:"text", path:"name", label:"Circle Name"}
 											{type:"textarea", path:"description", label:"Description", options:{rows:5}}
+											{type:"toggle", path:"isFeatured", options:{false-text:"Featured?", true-text:"Featured. Displays on your profile page."}}
 										]
 									}
 									{
 										type: layout-vertical
-										label: Payments
+										label: Products
 										description: Link this Circle to the products in your merchant account and guests will be able to purchase membership in this Circle. <a href="https://emissary.dev/circles" target="_blank"><i class="bi bi-question-circle"></i> Help with Circles</a>
 										children:[
 											{type:"multiselect", path:"productIds", options:{provider:"merchantAccounts-all-products"}}
-											{type:"toggle", path:"isFeatured", options:{false-text:"Featured?", true-text:"Featured. Displays on your profile page."}}
 										]
 									}
 								]
@@ -122,7 +122,7 @@
 					{do:"as-modal", steps: [
 						{do:"edit", form: {
 							type:layout-vertical
-							label: + Add a Circle Member
+							label: + Add a Member
 							description: Enter the member's email or fediverse handle below to put them in this circle and grant them access to all of the posts and content in it.
 							children: [
 								{type:"select", path:"identifierType", label:"Identity Type", options:{provider:"identifier-types", autocomplete:"off", required:true}}

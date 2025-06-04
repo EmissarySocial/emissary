@@ -31,7 +31,7 @@ func GetSignIn(ctx *steranko.Context, factory *domain.Factory) error {
 	data["next"] = url.QueryEscape(data.GetString("next"))
 
 	// Render the template
-	if err := template.ExecuteTemplate(ctx.Response(), "signin", data); err != nil {
+	if err := template.ExecuteTemplate(ctx.Response(), "user-signin", data); err != nil {
 		return derp.Wrap(err, "handler.GetSignIn", "Error executing template")
 	}
 

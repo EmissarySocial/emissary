@@ -7,11 +7,14 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	builder "github.com/benpate/exp-builder"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -105,6 +108,16 @@ func (w Identity) HasWebfingerHandle() bool {
 	return w._identity.HasWebfingerHandle()
 }
 
+// IsEmailVerified returns TRUE if EmailAddress has been verified
+func (w Identity) IsEmailVerified() bool {
+	return w._identity.IsEmailVerified()
+}
+
+// IsWebfingerVerified returns TRUE if WebfingerHandle has been verified
+func (w Identity) IsWebfingerVerified() bool {
+	return w._identity.IsWebfingerVerified()
+}
+
 // Icon returns an icon name to use for this Identity, based on the available identifiers.
 func (w Identity) Icon() string {
 	return w._identity.Icon()
@@ -120,8 +133,13 @@ func (w Identity) UpdateDate() int64 {
 	return w._identity.UpdateDate
 }
 
+func (w Identity) PrivilegeIDs() sliceof.String {
+	// Return the PrivilegeIDs property of this Identity
+	return w._identity.Privileges
+}
+
 // Privileges returns a QueryBuilder for the Privileges of the
-// currently signed-in Identity (only works on Identity objects)
+// currently signed-in Identity
 func (w Identity) Privileges() (QueryBuilder[model.Privilege], error) {
 
 	// Define inbound parameters
@@ -130,12 +148,18 @@ func (w Identity) Privileges() (QueryBuilder[model.Privilege], error) {
 
 	// Calculate criteria
 	criteria := exp.And(
+		exp.Equal("identityId", w._identity.IdentityID),
 		expressionBuilder.Evaluate(w._request.URL.Query()),
-		exp.Equal("identityId", w._identity.IdentityID.Hex()),
 	)
 
 	// Return the query builder
 	return NewQueryBuilder[model.Privilege](w._factory.Privilege(), criteria), nil
+}
+
+// PrivilegedStreams returns a QueryBuilder for the Streams that the
+// currently signed-in Identity has privileges for
+func (w Identity) PrivilegedStreams(privileges sliceof.Object[model.Privilege]) (mapof.Object[id.Slice], error) {
+	return w._factory.Stream().MapByPrivileges(privileges...)
 }
 
 /******************************************

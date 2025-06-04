@@ -72,9 +72,17 @@ func PostIdentitySignin(ctx *steranko.Context, factory *domain.Factory) error {
 
 	const location = "handler.PostIdentitySignin"
 
-	// Create and send a guest signin code
+	// Collect parameters from the request
 	identityService := factory.Identity()
-	if err := identityService.SendGuestCode(ctx.FormValue("identifier")); err != nil {
+	identifier := ctx.FormValue("identifier")
+	identifierType := identityService.GuessIdentifierType(identifier)
+
+	if identifierType == "" {
+		return derp.BadRequestError(location, "Unrecognized Identifier Type", identifierType)
+	}
+
+	// Create and send a guest signin code
+	if err := identityService.SendGuestCode(nil, identifierType, identifier); err != nil {
 
 		// Report the error for debugging...
 		derp.Report(derp.Wrap(err, location, "Error sending Guest Code"))
@@ -119,7 +127,7 @@ func GetIdentitySigninWithJWT(ctx *steranko.Context, factory *domain.Factory) er
 	identityService := factory.Identity()
 	identifier := convert.String(claims["id"])
 	identifierType := identityService.GuessIdentifierType(identifier)
-	identity, err := identityService.LoadOrCreate(identifierType, identifier, true)
+	identity, err := identityService.LoadOrCreate("", identifierType, identifier, true)
 
 	if err != nil {
 		return derp.InternalError(location, "Error loading/creating new Identity", identifier)
@@ -136,4 +144,21 @@ func GetIdentitySigninWithJWT(ctx *steranko.Context, factory *domain.Factory) er
 	}
 
 	return ctx.Redirect(http.StatusSeeOther, "/@guest")
+}
+
+// PostIdentityIdentifier allows guests to edit the identifiers for their Identity.
+func PostIdentityIdentifier(ctx *steranko.Context, factory *domain.Factory, identity *model.Identity) error {
+
+	const location = "handler.PostIdentityEditIdentifier"
+
+	// Get the identifier type and value from the request
+	identifierType := ctx.FormValue("identifierType")
+	identifierValue := ctx.FormValue("identifier")
+	identityService := factory.Identity()
+
+	if err := identityService.SendGuestCode(identity, identifierType, identifierValue); err != nil {
+		return derp.Wrap(err, location, "Error setting identifier on Identity")
+	}
+
+	return build.WrapInlineSuccess(ctx.Response().Writer, "Updated")
 }

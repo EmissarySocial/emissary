@@ -360,6 +360,7 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 		// Populate MerchantAccount Service
 		factory.merchantAccountService.Refresh(
 			factory.collection(CollectionMerchantAccount),
+			factory.Circle(),
 			factory.Connection(),
 			factory.JWT(),
 			factory.Identity(),
