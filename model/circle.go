@@ -56,13 +56,13 @@ func (circle *Circle) State() string {
 // IsAuthor returns TRUE if the provided UserID the author of this Circle
 // It is part of the AccessLister interface
 func (circle *Circle) IsAuthor(authorID primitive.ObjectID) bool {
-	return authorID == circle.UserID
+	return false
 }
 
 // IsMyself returns TRUE if this object directly represents the provided UserID
 // It is part of the AccessLister interface
 func (circle *Circle) IsMyself(userID primitive.ObjectID) bool {
-	return false
+	return userID == circle.UserID
 }
 
 // RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.

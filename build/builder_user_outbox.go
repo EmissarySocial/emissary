@@ -308,6 +308,21 @@ func (w Outbox) Outbox() QueryBuilder[model.StreamSummary] {
 	return result
 }
 
+func (w Outbox) Circles() QueryBuilder[model.Circle] {
+
+	expressionBuilder := builder.NewBuilder().
+		String("name")
+
+	criteria := exp.And(
+		expressionBuilder.Evaluate(w._request.URL.Query()),
+		exp.Equal("userId", w.objectID()),
+	)
+
+	result := NewQueryBuilder[model.Circle](w._factory.Circle(), criteria)
+
+	return result
+}
+
 func (w Outbox) Replies() QueryBuilder[model.StreamSummary] {
 
 	expressionBuilder := builder.NewBuilder().

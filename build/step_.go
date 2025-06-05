@@ -125,6 +125,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.SendEmail:
 		return StepSendEmail(s)
 
+	case step.SetCircleSharing:
+		return StepSetCircleSharing(s)
+
 	case step.SetData:
 		return StepSetData(s)
 

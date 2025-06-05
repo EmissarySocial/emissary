@@ -33,12 +33,12 @@
 			{{- range $index, $circle := $circles -}}
 			<tr role="button">
 				<td hx-get="/@me/settings/circle-members?circleId={{$circle.ID}}">
-					{{icon "circle"}} {{$circle.Name}}
-				</td>
-				<td hx-get="/@me/settings/circle-members?circleId={{$circle.ID}}" nowrap>
 					{{- if $circle.IsFeatured -}}
 						<span class="text-green">{{icon "check-circle-fill"}}</span>
-					{{- end -}}
+					{{- else -}}
+						{{icon "circle"}} 
+					{{- end }}
+					{{$circle.Name}}
 				</td>
 				<td hx-get="/@me/settings/circle-members?circleId={{$circle.ID}}" nowrap>
 					<span class="text-light-gray">{{icon "person-fill"}}</span> 

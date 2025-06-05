@@ -36,7 +36,7 @@ func NewInbox(factory Factory, request *http.Request, response http.ResponseWrit
 
 	// Load the Template
 	templateService := factory.Template()
-	template, err := templateService.Load(user.InboxTemplate) // TODO: Users should get to select their inbox template
+	template, err := templateService.Load(user.InboxTemplate)
 
 	if err != nil {
 		return Inbox{}, derp.Wrap(err, location, "Error loading template")
@@ -52,7 +52,7 @@ func NewInbox(factory Factory, request *http.Request, response http.ResponseWrit
 	// Enforce user permissions on the requested action
 	if !common.UserCan(actionID) {
 		if common._authorization.IsAuthenticated() {
-			return Inbox{}, derp.ReportAndReturn(derp.ForbiddenError(location, "Forbidden"))
+			return Inbox{}, derp.ReportAndReturn(derp.ForbiddenError(location, "Forbidden", "User is authenticated, but this action is not allowed", actionID))
 		} else {
 			return Inbox{}, derp.ReportAndReturn(derp.UnauthorizedError(location, "Anonymous user is not authorized to perform this action", user.ProfileURL, actionID))
 		}

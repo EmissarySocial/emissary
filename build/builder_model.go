@@ -38,7 +38,7 @@ func NewModel(factory Factory, request *http.Request, response http.ResponseWrit
 	// Enforce permissions on the requested action
 	if !common.UserCan(actionID) {
 		if common._authorization.IsAuthenticated() {
-			return Model{}, derp.ForbiddenError(location, "Forbidden")
+			return Model{}, derp.ForbiddenError(location, "Forbidden", "User is authenticated, but this action is not allowed", actionID)
 		} else {
 			return Model{}, derp.UnauthorizedError(location, "Anonymous user is not authorized to perform this action", actionID)
 		}

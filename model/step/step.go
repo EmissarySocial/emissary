@@ -156,6 +156,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "set-args":
 		return NewSetRenderData(stepInfo)
 
+	case "set-circle-sharing":
+		return NewSetCircleSharing(stepInfo)
+
 	case "set-data":
 		return NewSetData(stepInfo)
 

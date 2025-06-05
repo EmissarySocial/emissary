@@ -14,6 +14,7 @@ import (
 )
 
 type LookupProvider struct {
+	circleService          *Circle
 	domainService          *Domain
 	folderService          *Folder
 	groupService           *Group
@@ -27,8 +28,9 @@ type LookupProvider struct {
 	userID                 primitive.ObjectID
 }
 
-func NewLookupProvider(domainService *Domain, folderService *Folder, groupService *Group, merchantAccountService *MerchantAccount, registrationService *Registration, searchTagService *SearchTag, streamService *Stream, templateService *Template, themeService *Theme, request *http.Request, userID primitive.ObjectID) LookupProvider {
+func NewLookupProvider(circleService *Circle, domainService *Domain, folderService *Folder, groupService *Group, merchantAccountService *MerchantAccount, registrationService *Registration, searchTagService *SearchTag, streamService *Stream, templateService *Template, themeService *Theme, request *http.Request, userID primitive.ObjectID) LookupProvider {
 	return LookupProvider{
+		circleService:          circleService,
 		domainService:          domainService,
 		folderService:          folderService,
 		groupService:           groupService,
@@ -47,6 +49,15 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 
 	switch path {
 
+	case "circles":
+		return NewCircleLookupProvider(service.circleService, service.userID)
+
+	case "folders":
+		return NewFolderLookupProvider(service.folderService, service.userID)
+
+	case "folder-icons":
+		return form.NewReadOnlyLookupGroup(dataset.Icons()...)
+
 	case "following-behaviors":
 		return form.NewReadOnlyLookupGroup(
 			form.LookupCode{Value: "POSTS+REPLIES", Label: "Posts and Replies"},
@@ -60,26 +71,6 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 			form.LookupCode{Value: "MUTE", Label: "MUTE senders who are blocked by this source (one-way block)"},
 			form.LookupCode{Value: "BLOCK", Label: "BLOCK senders and prevent followers who are blocked by this source (two-way block)"},
 		)
-
-	case "rule-actions":
-		return form.NewReadOnlyLookupGroup(
-			form.LookupCode{Value: "LABEL", Label: "LABEL posts that match this rule"},
-			form.LookupCode{Value: "MUTE", Label: "MUTE senders but do not prevent followers (one-way block)"},
-			form.LookupCode{Value: "BLOCK", Label: "BLOCK senders and prevent followers (two-way block)"},
-		)
-
-	case "rule-types":
-		return form.NewReadOnlyLookupGroup(
-			form.LookupCode{Label: "Filter by Person", Value: model.RuleTypeActor},
-			form.LookupCode{Label: "Filter by Domain", Value: model.RuleTypeDomain},
-			form.LookupCode{Label: "Filter by Tags & Keywords", Value: model.RuleTypeContent},
-		)
-
-	case "folders":
-		return NewFolderLookupProvider(service.folderService, service.userID)
-
-	case "folder-icons":
-		return form.NewReadOnlyLookupGroup(dataset.Icons()...)
 
 	case "groups":
 		return NewGroupLookupProvider(service.groupService)
@@ -118,6 +109,20 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 			form.LookupCode{Label: "Question", Group: "Like", Value: "❓"},
 			form.LookupCode{Label: "Crown", Group: "Like", Value: "👑"},
 			form.LookupCode{Label: "Fire", Group: "Like", Value: "🔥"},
+		)
+
+	case "rule-actions":
+		return form.NewReadOnlyLookupGroup(
+			form.LookupCode{Value: "LABEL", Label: "LABEL posts that match this rule"},
+			form.LookupCode{Value: "MUTE", Label: "MUTE senders but do not prevent followers (one-way block)"},
+			form.LookupCode{Value: "BLOCK", Label: "BLOCK senders and prevent followers (two-way block)"},
+		)
+
+	case "rule-types":
+		return form.NewReadOnlyLookupGroup(
+			form.LookupCode{Label: "Filter by Person", Value: model.RuleTypeActor},
+			form.LookupCode{Label: "Filter by Domain", Value: model.RuleTypeDomain},
+			form.LookupCode{Label: "Filter by Tags & Keywords", Value: model.RuleTypeContent},
 		)
 
 	case "searchTag-states":
