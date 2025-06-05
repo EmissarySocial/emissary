@@ -132,7 +132,7 @@ func (vault Vault) Decrypt(encryptionKey []byte, values ...string) (mapof.String
 	const location = "model.vault.Decrypt"
 
 	if len(vault.Nonce) == 0 {
-		return nil, derp.InternalError(location, "Nonce is not set")
+		return mapof.NewString(), nil
 	}
 
 	// Create AES block cipher
