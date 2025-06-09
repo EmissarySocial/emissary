@@ -12,7 +12,6 @@ import (
 	"github.com/benpate/remote"
 	"github.com/benpate/remote/options"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -87,8 +86,6 @@ func (service *MerchantAccount) stripe_getCheckoutURL(merchantAccount *model.Mer
 		return "", derp.Wrap(err, location, "Error connecting to Stripe API")
 	}
 
-	spew.Dump(location, checkoutResult)
-
 	// Return the URL to the caller
 	return checkoutResult.GetString("url"), nil
 }
@@ -114,8 +111,6 @@ func (service *MerchantAccount) stripe_getPrivilegeFromCheckoutResponse(queryPar
 	if err != nil {
 		return model.Privilege{}, derp.Wrap(err, location, "Error loading checkout session from Stripe")
 	}
-
-	spew.Dump(location, checkoutSession)
 
 	// RULE: transaction id must match the checkout session
 	if checkoutSession.ClientReferenceID != queryParams.Get("transactionId") {

@@ -28,7 +28,6 @@ import (
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/turbine/queue"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -904,8 +903,6 @@ func (service *Stream) MapByPrivileges(privileges ...model.Privilege) (mapof.Obj
 			}
 		}
 	}
-
-	spew.Dump(result)
 
 	// Ugly, but she rides.
 	return result, nil

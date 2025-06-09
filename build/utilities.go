@@ -125,8 +125,6 @@ func WrapForm(endpoint string, content string, encoding string, options ...strin
 	b.WriteString(content)
 
 	// Controls
-	b.Div()
-
 	submitLabel := first.String(optionMap.GetString("submit-label"), "Save Changes")
 
 	b.Div().Class("flex-row")

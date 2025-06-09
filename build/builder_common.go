@@ -374,7 +374,6 @@ func (w Common) GetFollowingID(url string) string {
 
 // lookupProvider returns the LookupProvider service, which can return form.LookupGroups
 func (w Common) lookupProvider() form.LookupProvider {
-
 	userID := w.AuthenticatedID()
 	return w._factory.LookupProvider(w._request, userID)
 }

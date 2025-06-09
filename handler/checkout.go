@@ -9,7 +9,6 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
 )
 
 // GetCheckout initiates a checkout session with the provided MerchantAccount and Product.
@@ -40,8 +39,6 @@ func GetCheckout(ctx *steranko.Context, factory *domain.Factory) error {
 			token,
 		)
 	}
-
-	spew.Dump(tokenArgs)
 
 	// Load the MerchantAccount
 	merchantAccount := model.NewMerchantAccount()

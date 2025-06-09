@@ -3,7 +3,6 @@ package service
 import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
-	"github.com/davecgh/go-spew/spew"
 )
 
 type Permission struct {
@@ -32,14 +31,8 @@ func (service *Permission) UserCan(authorization *model.Authorization, template 
 		return false, nil
 	}
 
-	spew.Dump(location, accessLister, accessLister.State())
-	spew.Dump("THIS IS CURRENTLY BREAKING for non-admin users.  Bandwagon OUTBOX states (LIVE) don't show up correctly in this INBOX template, which is messing things up.")
-	action.Dump()
-
 	// Get a list of the valid roles for this action
 	accessList := action.AccessList[accessLister.State()]
-
-	spew.Dump(accessList)
 
 	// If Anonymous access is allowed, then EVERYONE can perform this action
 	if accessList.Anonymous {

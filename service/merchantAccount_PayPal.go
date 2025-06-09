@@ -14,7 +14,6 @@ import (
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/slice"
-	"github.com/davecgh/go-spew/spew"
 )
 
 func (service *MerchantAccount) paypal_getServerAddress(merchantAccount *model.MerchantAccount) string {
@@ -30,9 +29,6 @@ func (service *MerchantAccount) paypal_getServerAddress(merchantAccount *model.M
 func (service *MerchantAccount) paypal_parseCheckoutWebhook(header http.Header, body []byte, merchantAccount *model.MerchantAccount) (model.Privilege, error) {
 
 	const location = "service.MerchantAccount.paypal_parseCheckoutWebhook"
-
-	spew.Dump(location, merchantAccount, header, string(body))
-
 	return model.Privilege{}, derp.NotImplementedError(location)
 }
 

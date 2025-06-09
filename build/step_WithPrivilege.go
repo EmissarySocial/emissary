@@ -76,10 +76,10 @@ func (step StepWithPrivilege) execute(builder Builder, buffer io.Writer, actionM
 	}
 
 	// Execute the POST build pipeline on the child
-	reesult := Pipeline(step.SubSteps).Execute(factory, subBuilder, buffer, actionMethod)
-	reesult.Error = derp.Wrap(reesult.Error, location, "Error executing steps for child")
+	result := Pipeline(step.SubSteps).Execute(factory, subBuilder, buffer, actionMethod)
+	result.Error = derp.Wrap(result.Error, location, "Error executing steps for child")
 
-	return UseResult(reesult)
+	return UseResult(result)
 }
 
 // Special case to find/load privileges using the CircleID and IdentityID
