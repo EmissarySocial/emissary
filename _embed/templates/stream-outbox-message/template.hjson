@@ -3,7 +3,7 @@
 	templateRole:"outbox-message"
 	socialRole:"Note"
 	extends:["base-social", "base-intent"]
-	model:"stream"
+	model: Stream
 	icon:"message"
 	label:"Post"
 	description:"Single comment in the comments section of a page."

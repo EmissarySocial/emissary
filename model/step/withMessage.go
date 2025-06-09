@@ -32,6 +32,12 @@ func (step WithMessage) Name() string {
 	return "with-message"
 }
 
+// RequiredModel returns the name of the model object that MUST be present in the Template.
+// If this value is not empty, then the Template MUST use this model object.
+func (step WithMessage) RequiredModel() string {
+	return ""
+}
+
 // RequiredStates returns a slice of states that must be defined any Template that uses this Step
 func (step WithMessage) RequiredStates() []string {
 	return []string{} // removing this because states may be different in the child objects // requiredStates(step.SubSteps...)

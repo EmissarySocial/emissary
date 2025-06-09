@@ -1,6 +1,6 @@
 {
 	templateId: "photograph"
-	model:"stream"
+	model: Stream
 	containedBy: ["photo-album"]
 	label: "Photograph"
 	description: "Individual photograph or slideshow to include in your photo album."

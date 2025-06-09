@@ -22,6 +22,12 @@ func (step SetPrivileges) Name() string {
 	return "set-privileges"
 }
 
+// RequiredModel returns the name of the model object that MUST be present in the Template.
+// If this value is not empty, then the Template MUST use this model object.
+func (step SetPrivileges) RequiredModel() string {
+	return "Stream"
+}
+
 // RequiredStates returns a slice of states that must be defined any Template that uses this Step
 func (step SetPrivileges) RequiredStates() []string {
 	return []string{}

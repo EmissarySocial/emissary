@@ -1,7 +1,7 @@
 {
 	templateId:collection
 	templateRole:collection
-	model:stream
+	model:Stream
 	extends:["base-widget-editor"]
 	containedBy: ["top", "folder", "article"]
 	label:Collection

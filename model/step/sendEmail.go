@@ -21,6 +21,12 @@ func (step SendEmail) Name() string {
 	return "send-email"
 }
 
+// RequiredModel returns the name of the model object that MUST be present in the Template.
+// If this value is not empty, then the Template MUST use this model object.
+func (step SendEmail) RequiredModel() string {
+	return ""
+}
+
 // RequiredStates returns a slice of states that must be defined any Template that uses this Step
 func (step SendEmail) RequiredStates() []string {
 	return []string{}

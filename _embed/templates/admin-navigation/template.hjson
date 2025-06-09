@@ -1,7 +1,7 @@
 {
 	templateId: admin-navigation
 	templateRole: admin
-	model: stream
+	model: Stream
 	extends: ["admin-common"]
 	containedBy:["admin"]
 	label: Top Level

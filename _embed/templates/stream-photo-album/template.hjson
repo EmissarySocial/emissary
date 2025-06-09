@@ -2,7 +2,7 @@
 	templateId:"photo-album"
 	templateRole:"photo-album"
 	socialRole:"Page"
-	model:"stream"
+	model: Stream
 	containedBy: ["top", "folder"]
 	label:"Photo Album"
 	description:"A collection of photographs"

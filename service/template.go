@@ -380,6 +380,21 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 			// Scan all Steps in the Action
 			for _, step := range action.Steps {
 
+				// RULE: If the step requires a specific model object, then
+				// verify the correct model object is defined in the Template
+				if requiredModel := step.RequiredModel(); requiredModel != "" {
+					if template.Model != requiredModel {
+						errors.Append(derp.ValidationError(
+							"Step can only be used in specific Templates",
+							"template: "+templateID,
+							"action: "+actionID,
+							"step: "+step.Name(),
+							"model required by step: "+requiredModel,
+							"model defined in template: "+template.Model,
+						))
+					}
+				}
+
 				// RULE: States used in action steps must be defined
 				for _, state := range step.RequiredStates() {
 					if !template.IsValidState(state) {

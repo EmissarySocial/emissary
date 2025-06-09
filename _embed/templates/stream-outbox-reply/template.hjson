@@ -3,7 +3,7 @@
 	templateRole:"outbox-reply"
 	socialRole:"Note"
 	extends:["outbox-message"]
-	model:"stream"
+	model: Stream
 	icon:"message"
 	label:"Reply"
 	description:"Reply to a post"

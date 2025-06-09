@@ -19,23 +19,25 @@ type Delete struct {
 // NewDelete returns a fully populated Delete object
 func NewDelete(stepInfo mapof.Any) (Delete, error) {
 
+	const location = "model.step.NewDelete"
+
 	// Validate the step configuration
 	if err := StepDeleteSchema().Validate(stepInfo); err != nil {
-		return Delete{}, derp.Wrap(err, "model.step.NewDelete", "Invalid step configuration", stepInfo)
+		return Delete{}, derp.Wrap(err, location, "Invalid step configuration", stepInfo)
 	}
 
 	// Create the "title" template
 	titleTemplate, err := template.New("").Parse(first(stepInfo.GetString("title"), "Delete '{{.Label}}'?"))
 
 	if err != nil {
-		return Delete{}, derp.Wrap(err, "model.step.NewDelete", "Invalid 'title' template", stepInfo)
+		return Delete{}, derp.Wrap(err, location, "Invalid 'title' template", stepInfo)
 	}
 
 	// Create the "message" template
 	messageTemplate, err := template.New("").Parse(first(stepInfo.GetString("message"), "Are you sure you want to delete {{.Label}}? There is NO UNDO."))
 
 	if err != nil {
-		return Delete{}, derp.Wrap(err, "model.step.NewDelete", "Invalid 'message' template", stepInfo)
+		return Delete{}, derp.Wrap(err, location, "Invalid 'message' template", stepInfo)
 	}
 
 	return Delete{
@@ -49,6 +51,12 @@ func NewDelete(stepInfo mapof.Any) (Delete, error) {
 // Name returns the name of the step, which is used in debugging.
 func (step Delete) Name() string {
 	return "delete"
+}
+
+// RequiredModel returns the name of the model object that MUST be present in the Template.
+// If this value is not empty, then the Template MUST use this model object.
+func (step Delete) RequiredModel() string {
+	return ""
 }
 
 // RequiredStates returns a slice of states that must be defined any Template that uses this Step

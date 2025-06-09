@@ -1,7 +1,7 @@
 {
 	templateId:"admin-connections"
 	templateRole:"admin"
-	model:"domain"
+	model: Domain
 	containedBy:["admin"]
 	extends:["admin-common"]
 	label: "Connections"

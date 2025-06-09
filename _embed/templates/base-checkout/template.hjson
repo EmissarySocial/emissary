@@ -1,6 +1,6 @@
 {
-	templateId: "base-checkout"
-	model: "stream"
+	templateId: base-checkout
+	model: Stream
 	
 	states: {
 		default: {
@@ -45,7 +45,7 @@
 				{do:"if", condition:"{{eq 1 .PrivilegeIDs.Length }}", then:[
 					{
 						do:"forward-to"
-						url:"/.checkout?token=MA:{{.PrivilegeIDs.First}}&return={{.Permalink}}"
+						url:"/.checkout?token={{.PrivilegeIDs.First}}&return={{.Permalink}}"
 						method:"get"
 					}
 				], else:[

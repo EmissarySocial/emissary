@@ -1,6 +1,6 @@
 {
-	templateId: "redirect"
-	model:"stream"
+	templateId: redirect
+	model: Stream
 	containedBy: ["top", "folder"]
 	label: "Redirect"
 	description: "Forward your visitors to an external website"

@@ -1,7 +1,7 @@
 {
 	templateId: folder
 	templateRole: folder
-	model: stream
+	model: Stream
 	containedBy: ["top", "folder"]
 	label: Folder
 	description: Folders can contain all other streams

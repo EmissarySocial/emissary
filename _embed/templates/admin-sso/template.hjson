@@ -1,7 +1,7 @@
 {
 	templateId:"admin-sso"
 	templateRole:"admin"
-	model:"domain"
+	model: Domain
 	extends: ["admin-common"]
 	containedBy:["admin"]
 	label: "Single Sign-On"

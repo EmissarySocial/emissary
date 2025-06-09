@@ -15,17 +15,15 @@ type Step interface {
 	// Name returns the name of the step, which is used in debugging.
 	Name() string
 
+	// RequiredModel returns the name of the model object that MUST be present in the Template.
+	// If this value is not empty, then the Template MUST use this model object.
+	RequiredModel() string
+
 	// RequiredStates returns a slice of states that must be defined in any Template that uses this Step.
 	RequiredStates() []string
 
 	// RequiredRoles returns a slice of roles that must be defined in any Template that uses this Step
 	RequiredRoles() []string
-}
-
-// TypeRequirer interface wraps the "RequireType" method, which specifies that a step can ONLY
-// be used with a specific type of builder (like: "template", "registration", "widget", "email", etc.)
-type TypeRequirer interface {
-	RequireType() string
 }
 
 // ModelRequirer interface wraps the "RequireModel" method, which specifies that a step can ONLY
