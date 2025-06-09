@@ -58,7 +58,10 @@
 
 		{{- else -}}
 
-			<h1 class="text-xl bold margin-none">Merchant Accounts</h1>
+			<div class="flex-row flex-align-center margin-bottom-lg">
+				<h1 class="text-xl bold margin-none flex-grow">Merchant Accounts</h1>
+				<a href="https://emissary.dev/payments" target="_blank">{{icon "help"}} Help with Payments</a>
+			</div>
 				
 			<div class="table margin-top">
 				{{- range  $index, $merchantAccount := $merchantAccounts -}}
