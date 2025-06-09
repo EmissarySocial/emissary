@@ -41,8 +41,24 @@ func (step StepSetPrivileges) Get(builder Builder, buffer io.Writer) PipelineBeh
 		return Halt().WithError(derp.Wrap(err, location, "Error retrieving products"))
 	}
 
-	// If there are no products, then display the "empty" message
-	if len(products) == 0 {
+	circleService := streamBuilder._factory.Circle()
+	circles, err := circleService.QueryByUser(attributedToID)
+
+	if err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Error retrieving circles"))
+	}
+
+	circleOptions := slice.Map(circles, func(circle model.Circle) form.LookupCode {
+		result := circle.LookupCode()
+		result.Value = "CIR:" + circle.CircleID.Hex()
+		result.Group = "Circles"
+		return result
+	})
+
+	options := append(circleOptions, products...)
+
+	// If there are no multi-select options, then display the "empty" message
+	if len(options) == 0 {
 		return step.GetEmpty(merchantAccounts, iconFunc, buffer)
 	}
 
@@ -59,6 +75,12 @@ func (step StepSetPrivileges) Get(builder Builder, buffer io.Writer) PipelineBeh
 			Close()
 	}
 
+	tabLabel.
+		A("/@me/settings/circles").
+		Class("nowrap", "margin-right").
+		InnerHTML("Edit Circles " + iconFunc("new-window")).
+		Close()
+
 	formDefinition := form.Element{
 		Type: "layout-tabs",
 		Children: slice.Map(roles, func(role model.Role) form.Element {
@@ -73,7 +95,7 @@ func (step StepSetPrivileges) Get(builder Builder, buffer io.Writer) PipelineBeh
 						Description: tabLabel.String(),
 						Options: mapof.Any{
 							"rows": 10,
-							"enum": products,
+							"enum": options,
 						},
 					},
 				},
@@ -111,8 +133,10 @@ func (step StepSetPrivileges) Get(builder Builder, buffer io.Writer) PipelineBeh
 	b.Span().ID("htmx-response-message").Class("margin-left", "text-green").Close()
 	b.CloseAll()
 
-	// nolint:errcheck
-	io.WriteString(buffer, b.String())
+	if _, err := io.WriteString(buffer, b.String()); err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Error writing form HTML to buffer"))
+	}
+
 	return nil
 }
 
@@ -174,8 +198,10 @@ func (step StepSetPrivileges) GetEmpty(merchantAccounts sliceof.Object[model.Mer
 	b.Span().InnerText(" to connect products to this item.").Close()
 	b.Close()
 
-	// nolint:errcheck
-	io.WriteString(buffer, b.String())
+	if _, err := io.WriteString(buffer, b.String()); err != nil {
+		return Halt().WithError(derp.Wrap(err, "build.StepSetPrivileges.GetEmpty", "Error writing empty form HTML to buffer"))
+	}
+
 	return nil
 }
 

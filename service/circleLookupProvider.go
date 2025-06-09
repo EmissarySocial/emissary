@@ -15,11 +15,14 @@ type CircleLookupProvider struct {
 func NewCircleLookupProvider(circleService *Circle, userID primitive.ObjectID) CircleLookupProvider {
 	return CircleLookupProvider{
 		circleService: circleService,
+		userID:        userID,
 	}
 }
 
 func (service CircleLookupProvider) Get() []form.LookupCode {
-	circles, _ := service.circleService.QueryByUser(service.userID)
+	circles, err := service.circleService.QueryByUser(service.userID)
+
+	derp.Report(derp.Wrap(err, "service.CircleLookupProvider.Get", "Error retrieving circles for user", service.userID.Hex()))
 
 	result := make([]form.LookupCode, 0, len(circles))
 
@@ -28,7 +31,6 @@ func (service CircleLookupProvider) Get() []form.LookupCode {
 	}
 
 	return result
-
 }
 
 func (service CircleLookupProvider) Add(name string) (string, error) {

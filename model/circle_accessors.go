@@ -11,7 +11,10 @@ func CircleSchema() schema.Element {
 			"circleId":    schema.String{Format: "objectId", Required: true},
 			"userId":      schema.String{Format: "objectId", Required: true},
 			"name":        schema.String{MaxLength: 64, Required: true},
+			"color":       schema.String{MaxLength: 32, Default: "#000000"},
+			"icon":        schema.String{MaxLength: 64, Default: "circle", Required: true},
 			"description": schema.String{MaxLength: 2048},
+			"productIds":  schema.Array{Items: schema.String{}},
 			"isFeatured":  schema.Boolean{},
 		},
 	}
@@ -33,6 +36,12 @@ func (circle *Circle) GetStringOK(name string) (string, bool) {
 
 	case "name":
 		return circle.Name, true
+
+	case "color":
+		return circle.Color, true
+
+	case "icon":
+		return circle.Icon, true
 
 	case "description":
 		return circle.Description, true
@@ -65,6 +74,14 @@ func (circle *Circle) SetString(name string, value string) bool {
 		circle.Name = value
 		return true
 
+	case "color":
+		circle.Color = value
+		return true
+
+	case "icon":
+		circle.Icon = value
+		return true
+
 	case "description":
 		circle.Description = value
 		return true
@@ -81,8 +98,17 @@ func (circle *Circle) GetPointer(name string) (any, bool) {
 	case "name":
 		return &circle.Name, true
 
+	case "color":
+		return &circle.Color, true
+
+	case "icon":
+		return &circle.Icon, true
+
 	case "description":
 		return &circle.Description, true
+
+	case "productIds":
+		return &circle.ProductIDs, true
 
 	case "isFeatured":
 		return &circle.IsFeatured, true

@@ -219,7 +219,7 @@ func (w Model) CircleMembers() (QueryBuilder[model.Identity], error) {
 	// Calculate criteria
 	criteria := exp.And(
 		expressionBuilder.Evaluate(w._request.URL.Query()),
-		exp.Equal("privileges", circle.CircleID.Hex()),
+		exp.Equal("privileges", "CIR:"+circle.CircleID.Hex()),
 	)
 
 	// Return the query builder

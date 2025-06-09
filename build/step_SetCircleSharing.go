@@ -2,13 +2,13 @@ package build
 
 import (
 	"io"
+	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/html"
-	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
@@ -19,19 +19,27 @@ import (
 type StepSetCircleSharing struct {
 	Title   string
 	Message string
-	Roles   []string
+	Button  string
+	Role    string
 }
 
 func (step StepSetCircleSharing) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 
-	streamBuilder := builder.(Stream)
-	model := step.SimplePermissionModel(streamBuilder._stream)
+	const location = "build.StepSetCircleSharing.Get"
 
-	// Try to write form HTML
-	formHTML, err := form.Editor(step.schema(), step.form(), model, builder.lookupProvider())
+	streamBuilder, isStreamBuilder := builder.(Stream)
+
+	if !isStreamBuilder {
+		return Halt().WithError(derp.BadRequestError(location, "Builder is not a StreamBuilder"))
+	}
+
+	// Calculate the value object for this step
+	value := step.calculateValue(streamBuilder._stream)
+	schema := step.schema()
+	form, err := step.form()
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, "build.StepSetCircleSharing.Get", "Error building form"))
+		return Halt().WithError(derp.Wrap(err, location, "Error building form for StepSetCircleSharing"))
 	}
 
 	// Write the rest of the HTML that contains the form
@@ -41,22 +49,19 @@ func (step StepSetCircleSharing) Get(builder Builder, buffer io.Writer) Pipeline
 	b.H2().InnerText(step.Title).Close()
 	b.H3().InnerText(step.Message).Close()
 
-	// Form
-	b.Form("", "").
-		Data("hx-post", builder.URL()).
-		Data("hx-swap", "none").
-		Data("hx-push-url", "false").
-		Script("init send checkFormRules(changed:me as Values)").
-		EndBracket()
+	if err := form.Edit(&schema, builder.lookupProvider(), value, b); err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Error rendering form for StepSetCircleSharing"))
+	}
 
-	b.WriteString(formHTML)
-	b.Div()
-	b.Button().Type("submit").Class("primary").InnerText("Save Changes").Close()
-	b.Button().Type("button").Script("on click trigger closeModal").InnerText("Cancel").Close()
 	b.CloseAll()
 
-	// nolint:errcheck
-	io.WriteString(buffer, b.String())
+	result := WrapForm(builder.URL(), b.String(), "application/x-www-form-urlencoded", "submit-label:"+step.Button)
+
+	// Write the result to the buffer
+	if _, err := io.WriteString(buffer, result); err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Error writing HTML to buffer"))
+	}
+
 	return nil
 }
 
@@ -64,43 +69,48 @@ func (step StepSetCircleSharing) Post(builder Builder, _ io.Writer) PipelineBeha
 
 	const location = "build.StepSetCircleSharing.Post"
 
-	request := builder.request()
+	// Guarantee that we have a Stream builder
+	streamBuilder, isStreamBuilder := builder.(Stream)
+
+	if !isStreamBuilder {
+		return Halt().WithError(derp.BadRequestError(location, "Builder is not a StreamBuilder"))
+	}
 
 	// Try to parse the form input
+	request := streamBuilder.request()
+
 	if err := request.ParseForm(); err != nil {
 		return Halt().WithError(derp.Wrap(err, "build.StepSetCircleSharing", "Error parsing form input"))
 	}
 
-	var circleIDs []primitive.ObjectID
-
-	rule := convert.String(request.Form["rule"])
-
-	switch rule {
-	case "anonymous":
-		circleIDs = []primitive.ObjectID{model.MagicGroupIDAnonymous}
-
-	case "authenticated":
-		circleIDs = []primitive.ObjectID{model.MagicGroupIDAuthenticated}
-
-	case "private":
-		circleIDs = id.SliceOfID(request.Form["circleIds"])
-
-	default:
-		return Halt().WithError(derp.BadRequestError(location, "Invalid rule: ", rule))
-	}
-
-	// Build the stream criteria
-	streamBuilder := builder.(Stream)
+	// Reset mapped privileges for the Stream
 	stream := streamBuilder._stream
-	stream.Permissions = model.NewStreamPermissions()
+	stream.Groups[step.Role] = id.NewSlice()
+	stream.Privileges[step.Role] = sliceof.NewString()
 
-	for _, circleID := range circleIDs {
-		for _, role := range step.Roles {
-			stream.AssignPermission(role, circleID)
+	for _, permission := range request.Form["permissions"] {
+
+		// If "Anonymous" permissions are allowed, then that's all we need.
+		if permission == model.MagicRoleAnonymous {
+			stream.Privileges[step.Role] = sliceof.NewString()
+			break
 		}
+
+		// Verify we have a valid CircleID
+		if _, err := primitive.ObjectIDFromHex(permission); err != nil {
+			return Halt().WithError(derp.Wrap(err, location, "Invalid CircleID: ", permission))
+		}
+
+		// Add the CircleID to the list of allowed Privileges
+		stream.Privileges[step.Role] = append(stream.Privileges[step.Role], "CIR:"+permission)
 	}
 
-	// Success!
+	// If no privileges have been set, then we allow Anonymous by default
+	if len(stream.Privileges[step.Role]) == 0 {
+		stream.Groups[step.Role] = id.Slice{model.MagicGroupIDAnonymous}
+	}
+
+	// Done!
 	return nil
 }
 
@@ -109,56 +119,65 @@ func (step StepSetCircleSharing) schema() schema.Schema {
 	return schema.Schema{
 		Element: schema.Object{
 			Properties: map[string]schema.Element{
-				"rule":      schema.String{Default: "anonymous"},
-				"circleIds": schema.Array{Items: schema.String{Format: "objectId"}},
+				"permissions": schema.Array{Items: schema.String{}},
 			},
 		},
 	}
 }
 
 // form returns the form to be displayed
-func (step StepSetCircleSharing) form() form.Element {
+func (step StepSetCircleSharing) form() (form.Element, error) {
 
+	// Build the form element
 	return form.Element{
 		Type: "layout-vertical",
 		Children: []form.Element{
-			{Type: "radio", Path: "rule", Options: mapof.Any{"provider": "sharing"}},
-			{Type: "multiselect", Path: "circleIds", Options: mapof.Any{"provider": "circles", "show-if": "rule is private"}}, // TODO: MEDIUM: Restore conditional rules to form elements.  This one was: Show: form.Rule{Path: "rule", Value: "'private'"}
+			{
+				Type:        "check-button",
+				Path:        "permissions",
+				Label:       "Share with Everyone",
+				Description: "This is a cool test description",
+				Options: mapof.Any{
+					"icon":   "globe",
+					"class":  "checkbutton-public",
+					"value":  model.MagicRoleAnonymous,
+					"script": "on change if my.checked tell .checkbutton-circle set your.checked to false end else set my.checked to true",
+				},
+			},
+			{
+				Type:  "check-button-group",
+				Path:  "permissions",
+				Label: "These Circles Only",
+				Options: mapof.Any{
+					"class":    "checkbutton-circle",
+					"provider": "circles",
+					"script":   "on change if my.checked then set .checkbutton-public.checked to false",
+				},
+			},
 		},
-	}
+	}, nil
 }
 
-// SimplePermissionModel returns a model object for displaying Simple Sharing.
-func (step StepSetCircleSharing) SimplePermissionModel(stream *model.Stream) mapof.Any {
+func (step StepSetCircleSharing) calculateValue(stream *model.Stream) mapof.Object[sliceof.String] {
 
-	// Special case if this is for EVERYBODY
-	if _, ok := stream.Permissions[model.MagicGroupIDAnonymous.Hex()]; ok {
-		return mapof.Any{
-			"rule":      "anonymous",
-			"circleIds": sliceof.NewString(),
+	const location = "build.StepSetCircleSharing.parseAccessList"
+
+	permissions := sliceof.NewString()
+
+	for _, privilege := range stream.Privileges[step.Role] {
+		if strings.HasPrefix(privilege, "CIR:") {
+			circleID := strings.TrimPrefix(privilege, "CIR:")
+			permissions = append(permissions, circleID)
 		}
 	}
 
-	// Special case if this is for AUTHENTICATED
-	if _, ok := stream.Permissions[model.MagicGroupIDAuthenticated.Hex()]; ok {
-		return mapof.Any{
-			"rule":      "authenticated",
-			"circleIds": sliceof.NewString(),
+	if len(permissions) > 0 {
+		return mapof.Object[sliceof.String]{
+			"permissions": permissions,
 		}
 	}
 
-	// Fall through means that additional circles are selected.
-	// First, get all keys to the Groups map
-	circleIDs := make(sliceof.String, len(stream.Permissions))
-	index := 0
-
-	for circleID := range stream.Permissions {
-		circleIDs[index] = circleID
-		index++
-	}
-
-	return mapof.Any{
-		"rule":      "private",
-		"circleIds": circleIDs,
+	return mapof.Object[sliceof.String]{
+		"permissions": sliceof.String{model.MagicRoleAnonymous},
 	}
 }

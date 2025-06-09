@@ -13,6 +13,8 @@ type Circle struct {
 	CircleID    primitive.ObjectID `json:"circleId"    bson:"_id"`         // Unique identifier assigned by the database
 	UserID      primitive.ObjectID `json:"userId"      bson:"userId"`      // UserID of owner of this Circle
 	Name        string             `json:"name"        bson:"name"`        // Human-readable name for this circle.
+	Color       string             `json:"color"       bson:"color"`       // Color of this Circle, used to color the circle icon
+	Icon        string             `json:"icon"        bson:"icon"`        // Icon of this Circle, used to display the circle icon
 	Description string             `json:"description" bson:"description"` // Human-readable description of this Circle
 	ProductIDs  sliceof.String     `json:"productIds"  bson:"productIds"`  // List of remote ProductIDs that can purchase membership in this Circle
 	MemberCount int64              `json:"memberCount" bson:"memberCount"` // Number of members in this Circle
@@ -28,7 +30,7 @@ func NewCircle() Circle {
 }
 
 func CircleFields() []string {
-	return []string{"_id", "name", "description", "productIds", "memberCount", "isFeatured"}
+	return []string{"_id", "name", "icon", "color", "description", "productIds", "memberCount", "isFeatured"}
 }
 
 func (userSummary Circle) Fields() []string {
@@ -85,11 +87,15 @@ func (circle Circle) HasProducts() bool {
 	return circle.ProductIDs.NotEmpty()
 }
 
+func (circle Circle) ProductCount() int {
+	return circle.ProductIDs.Length()
+}
+
 func (circle *Circle) LookupCode() form.LookupCode {
 	return form.LookupCode{
 		Value:       circle.CircleID.Hex(),
 		Label:       circle.Name,
 		Description: circle.Description,
-		Icon:        "circle",
+		Icon:        circle.Icon,
 	}
 }

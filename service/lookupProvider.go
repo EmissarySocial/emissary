@@ -52,6 +52,9 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 	case "circles":
 		return NewCircleLookupProvider(service.circleService, service.userID)
 
+	case "circle-icons":
+		return form.NewReadOnlyLookupGroup(dataset.Icons()...)
+
 	case "folders":
 		return NewFolderLookupProvider(service.folderService, service.userID)
 

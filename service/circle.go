@@ -6,7 +6,9 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/form"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/slice"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -182,6 +184,25 @@ func (service *Circle) LoadByID(userID primitive.ObjectID, circleID primitive.Ob
 /******************************************
  * Custom Behaviors
  ******************************************/
+
+// QueryByUserAsLookupCode returns all Circles owned by the provided userID as a slice of form.LookupCode
+func (service *Circle) QueryByUserAsLookupCode(userID primitive.ObjectID, options ...option.Option) ([]form.LookupCode, error) {
+
+	const location = "service.Circle.QueryByUserAsLookupCode"
+
+	// Query for all Circles owned by the user
+	circles, err := service.QueryByUser(userID, options...)
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Error querying Circles by User", userID)
+	}
+
+	// Convert the Circles to a slice of lookup codes
+	result := slice.Map(circles, func(circle model.Circle) form.LookupCode {
+		return circle.LookupCode()
+	})
+
+	return result, nil
+}
 
 // RefreshMemberCounts updates the member counts for the Circle with the provided circleID
 func (service *Circle) RefreshMemberCounts(userID primitive.ObjectID, circleID primitive.ObjectID) error {
