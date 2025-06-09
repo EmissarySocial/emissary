@@ -2,11 +2,11 @@
 	templateId: redirect
 	model: Stream
 	containedBy: ["top", "folder"]
-	label: "Redirect"
-	description: "Forward your visitors to an external website"
-	icon: "forward"
+	label: Redirect
+	description: Forward your visitors to an external website
+	icon: forward
 	schema: {
-		type: "object"
+		type: object
 		properties: {
 			label: {type:"string"}
 			summary: {type:"string"}
@@ -17,19 +17,19 @@
 	}
 	states: {
 		default: {
-			label: "Default"
-			description: "Default state for Redirects"
+			label: Default
+			description: Default state for Redirects
 		}
 	}
 
 	roles: {
 		viewer:{
-			label: "Viewer"
-			description: "Can view this redirect but cannot make changes"
+			label: Viewer
+			description: Can view this redirect but cannot make changes
 		}
 		editor:{
-			label: "Editor"
-			description: "Editors can make changes to this stream"
+			label: Editor
+			description: Editors can make changes to this stream
 		}
 	}
 	actions: {

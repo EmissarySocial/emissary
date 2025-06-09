@@ -80,6 +80,32 @@ input[type=radio] {
 }
 
 /******************************************
+ * Checkbutton - Fancy Checkboxes
+ ******************************************/
+
+label.checkbutton:has(input[type=checkbox]) {
+	display:flex!important;
+	flex-direction:row;
+	align-items:center;
+	cursor:pointer;
+	border:solid 2px var(--gray20);
+	background-color: var(--gray05);
+	border-radius:var(--rhythm);
+	padding:calc(var(--rhythm) * 2) var(--rhythm);
+}
+
+label.checkbutton:has(input[type=checkbox]:checked) {
+	border:solid 2px var(--blue50);
+	color:var(--blue50);
+	background-color: var(--blue10);
+}
+
+label.checkbutton input[type=checkbox] {
+	display:none;
+}
+
+
+/******************************************
  * Toggle Controls
  ******************************************/
 
@@ -196,7 +222,6 @@ input[type=radio] {
 	border-bottom: solid 1px var(--gray20);
 	font-weight:bold;
 	font-size: calc(var(--rhythm) * 1.75);
-	text-transform: uppercase;
 }
 
 .multiselect > .options > label > div {
@@ -442,7 +467,6 @@ button.button-invisible {
 	border-bottom-right-radius:5px;
 }
 
-
 .button-progress {
 	position:absolute;
 	top:0px;
@@ -473,7 +497,7 @@ button.button-invisible {
 	margin-bottom: calc(var(--rhythm) * 4);
 }
 
-.layout-vertical > .layout-vertical-elements > .layout-vertical-heading {
+.layout-vertical > .layout-elements > .layout-vertical-heading {
 	font-weight: calc(var(--weight) + 200);
 	font-size: calc(var(--rhythm) * 2);
 	line-height: calc(var(--rhythm) * 2);
@@ -482,25 +506,25 @@ button.button-invisible {
 	color: var(--heading-color);
 }
 
-.layout-vertical > .layout-vertical-elements > .layout-vertical-element {
+.layout-vertical > .layout-elements > .layout-element {
 	margin-bottom:24px;
 }
 
-.layout-vertical > .layout-vertical-elements > .layout-vertical-element > label {
+.layout-vertical > .layout-elements > .layout-element > label {
 	margin-bottom:8px;
 	display:block;
 }
 
-.layout-vertical > .layout-vertical-elements > .layout-vertical-element > input {
+.layout-vertical > .layout-elements > .layout-element > input {
 	display:block;
 }
 
-.layout-vertical > .layout-vertical-element > input[type=checkbox] {
+.layout-vertical > .layout-element > input[type=checkbox] {
 	display:inline-block;
 	vertical-align: middle;
 }
 
-.layout-horizontal > .layout-horizontal-elements {
+.layout-horizontal > .layout-elements {
 	display:flex;
 	flex-direction: row;
 	flex-wrap:nowrap;
@@ -510,11 +534,11 @@ button.button-invisible {
 	width:100%;
 }
 
-.layout-horizontal > .layout-horizontal-elements > .layout-horizontal-element {
+.layout-horizontal > .layout-elements > .layout-element {
 	display:block;
 }
 
-.layout-horizontal > .layout-horizontal-elements > .layout-horizontal-element > label {
+.layout-horizontal > .layout-elements > .layout-element > label {
 	margin-bottom:8px;
 	display:block;
 }

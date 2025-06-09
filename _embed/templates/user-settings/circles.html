@@ -29,31 +29,31 @@
 		</div>
 
 		<table class="table">
-			<tr hx-get="/@me/settings/circle-add" role="button"><td class="link" colspan="5">{{icon "add"}} Add a Circle</td></tr>
+			<tr hx-get="/@me/settings/circle-add" role="button"><td class="link" colspan="5">
+				<span class="margin-right-xs">{{icon "add"}}</span>
+				Add a Circle</td></tr>
 			{{- range $index, $circle := $circles -}}
-			<tr role="button">
-				<td hx-get="/@me/settings/circle-members?circleId={{$circle.ID}}">
-					{{- if $circle.IsFeatured -}}
-						<span class="text-green">{{icon "check-circle-fill"}}</span>
-					{{- else -}}
-						{{icon "circle"}} 
-					{{- end }}
-					{{$circle.Name}}
-				</td>
-				<td hx-get="/@me/settings/circle-members?circleId={{$circle.ID}}" nowrap>
-					<span class="text-light-gray">{{icon "person-fill"}}</span> 
-					{{$circle.MemberCount}}
-				</td>
-				<td hx-get="/@me/settings/circle-products?circleId={{$circle.ID}}" nowrap>
-					{{- if $circle.HasProducts -}}
-						<span class="text-light-gray">{{icon "box-fill"}}</span> 
-					{{- end -}}
-				</td>
-				</td>
-				<td class="align-right" nowrap>
-					<button hx-get="/@me/settings/circle-edit?circleId={{$circle.ID}}" role="button" class="text-xs">Edit Circle</button>
-				</td>
-			</tr>
+				{{- $icon := concat $circle.Icon "-fill" -}}
+				<tr role="button">
+					<td hx-get="/@me/settings/circle-members?circleId={{$circle.ID}}">
+						<span class="margin-right-xs" style="color:{{$circle.Color}}">{{icon $icon}}</span>
+						{{$circle.Name}}
+					</td>
+					<td hx-get="/@me/settings/circle-members?circleId={{$circle.ID}}" nowrap>
+						<span class="text-light-gray">{{icon "person-fill"}}</span> 
+						{{$circle.MemberCount}}
+					</td>
+					<td hx-get="/@me/settings/circle-products?circleId={{$circle.ID}}" nowrap>
+						{{- if $circle.HasProducts -}}
+							<span class="text-light-gray">{{icon "box-fill"}}</span> 
+							{{$circle.ProductCount -}}
+						{{- end -}}
+					</td>
+					</td>
+					<td class="align-right" nowrap>
+						<button hx-get="/@me/settings/circle-edit?circleId={{$circle.ID}}" role="button" class="text-xs">Edit Circle</button>
+					</td>
+				</tr>
 			{{- end}}
 			
 		</table>

@@ -37,15 +37,38 @@
 			roles:["self"]
 			steps:[
 				{do:"with-circle", steps:[
+					{do:"set-data", values:{"icon":"circle"}}
 					{do:"as-modal", steps:[
 						{do:"edit", form: {
-							type:"layout-vertical"
-							label:"+ Add a Circle"
-							description: Circles help you to share exclusive posts and content to specific groups of people.
-							children: [
-								{type:"text", path:"name", label:"Circle Name"}
-								{type:"textarea", path:"description", label:"Description"}
-							]
+								type: layout-tabs
+								label: + Add a Circle
+								children:[
+									{
+										type:layout-vertical
+										label:Setup
+										children: [
+											{type:"text", path:"name", label:"Circle Name"}
+											{type:"select", path:"icon", label:"Icon", options:{provider:"circle-icons"}}
+											{type:"colorpicker", path:"color", label:"Color"}
+										]
+									}
+									{
+										type:layout-vertical
+										label:Description
+										children: [
+											{type:"textarea", path:"description", label:"Description", options:{rows:8}}
+										]
+									}
+									{
+										type: layout-vertical
+										label: Products
+										description: Link this Circle to the products in your merchant account and guests will be able to purchase membership in this Circle. <a href="https://emissary.dev/circles" target="_blank"><i class="bi bi-question-circle"></i> Help with Circles</a>
+										children:[
+											{type:"multiselect", path:"productIds", options:{provider:"merchantAccounts-all-products"}}
+											{type:"toggle", path:"isFeatured", options:{false-text:"Featured?", true-text:"Featured. Displays on your profile page."}}
+										]
+									}
+								]
 						}}
 						{do:"save"}
 						{do:"trigger-event", event:"refreshPage"}
@@ -74,8 +97,15 @@
 										label:Setup
 										children: [
 											{type:"text", path:"name", label:"Circle Name"}
-											{type:"textarea", path:"description", label:"Description", options:{rows:5}}
-											{type:"toggle", path:"isFeatured", options:{false-text:"Featured?", true-text:"Featured. Displays on your profile page."}}
+											{type:"select", path:"icon", label:"Icon", options:{provider:"circle-icons"}}
+											{type:"colorpicker", path:"color", label:"Color"}
+										]
+									}
+									{
+										type:layout-vertical
+										label:Description
+										children: [
+											{type:"textarea", path:"description", label:"Description", options:{rows:8}}
 										]
 									}
 									{
@@ -84,6 +114,7 @@
 										description: Link this Circle to the products in your merchant account and guests will be able to purchase membership in this Circle. <a href="https://emissary.dev/circles" target="_blank"><i class="bi bi-question-circle"></i> Help with Circles</a>
 										children:[
 											{type:"multiselect", path:"productIds", options:{provider:"merchantAccounts-all-products"}}
+											{type:"toggle", path:"isFeatured", options:{false-text:"Featured?", true-text:"Featured. Displays on your profile page."}}
 										]
 									}
 								]
@@ -143,6 +174,18 @@
 				{do:"with-privilege", steps: [
 					{do:"as-modal", steps: [
 						{do:"view-html"}
+					]}
+				]}
+			]
+		}
+
+		circle-member-delete: {
+			roles: ["self"]
+			steps: [
+				{do:"with-privilege", steps: [
+					{do:"as-modal", steps: [
+						{do:"delete", title:"Remove Member from this Circle?"}
+						{do:"refresh-page"}
 					]}
 				]}
 			]
