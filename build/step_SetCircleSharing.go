@@ -136,7 +136,7 @@ func (step StepSetCircleSharing) form() (form.Element, error) {
 				Type:        "check-button",
 				Path:        "permissions",
 				Label:       "Share with Everyone",
-				Description: "This is a cool test description",
+				Description: "Publicly visible to everyone on the Internet, signed in or not.",
 				Options: mapof.Any{
 					"icon":   "globe",
 					"class":  "checkbutton-public",

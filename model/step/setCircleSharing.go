@@ -24,7 +24,7 @@ func NewSetCircleSharing(stepInfo mapof.Any) (SetCircleSharing, error) {
 
 	return SetCircleSharing{
 		Title:   first(stepInfo.GetString("title"), "Sharing Settings"),
-		Message: first(stepInfo.GetString("message"), "Determine Who Can See This Stream"),
+		Message: first(stepInfo.GetString("message"), "Public Settings"),
 		Button:  first(stepInfo.GetString("button"), "Save Changes"),
 		Role:    first(stepInfo.GetString("role"), "editor"),
 	}, nil

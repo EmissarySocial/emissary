@@ -31,12 +31,13 @@
 		<table class="table">
 			<tr hx-get="/@me/settings/circle-add" role="button"><td class="link" colspan="5">
 				<span class="margin-right-xs">{{icon "add"}}</span>
-				Add a Circle</td></tr>
+				Add a Circle
+			</td></tr>
+			
 			{{- range $index, $circle := $circles -}}
-				{{- $icon := concat $circle.Icon "-fill" -}}
 				<tr role="button">
 					<td hx-get="/@me/settings/circle-members?circleId={{$circle.ID}}">
-						<span class="margin-right-xs" style="color:{{$circle.Color}}">{{icon $icon}}</span>
+						<span class="margin-right-xs xtext-light-gray">{{icon $circle.Icon}}</span>
 						{{$circle.Name}}
 					</td>
 					<td hx-get="/@me/settings/circle-members?circleId={{$circle.ID}}" nowrap>
