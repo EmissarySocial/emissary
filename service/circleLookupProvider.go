@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -20,7 +21,7 @@ func NewCircleLookupProvider(circleService *Circle, userID primitive.ObjectID) C
 }
 
 func (service CircleLookupProvider) Get() []form.LookupCode {
-	circles, err := service.circleService.QueryByUser(service.userID)
+	circles, err := service.circleService.QueryByUser(service.userID, option.SortAsc("name"))
 
 	derp.Report(derp.Wrap(err, "service.CircleLookupProvider.Get", "Error retrieving circles for user", service.userID.Hex()))
 
