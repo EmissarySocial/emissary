@@ -96,8 +96,10 @@ func (step StepViewFeed) Get(builder Builder, buffer io.Writer) PipelineBehavior
 			return Halt().WithError(derp.Wrap(err, location, "Error generating feed. This should never happen"))
 		}
 
-		// nolint:errcheck
-		buffer.Write([]byte(xml))
+		if _, err := buffer.Write([]byte(xml)); err != nil {
+			return Halt().WithError(derp.Wrap(err, location, "Error writing feed to buffer"))
+		}
+
 		return Halt().AsFullPage().WithContentType(mimeType)
 	}
 }
@@ -134,6 +136,8 @@ func (step StepViewFeed) detectMimeType(builder Builder) string {
 
 func (step StepViewFeed) asJSONFeed(builder Builder, buffer io.Writer, children data.Iterator) PipelineBehavior {
 
+	const location = "build.StepViewFeed.asJSONFeed"
+
 	feed := jsonfeed.Feed{
 		Version:     "https://jsonfeed.org/version/1.1",
 		Title:       builder.PageTitle(),
@@ -155,11 +159,12 @@ func (step StepViewFeed) asJSONFeed(builder Builder, buffer io.Writer, children 
 	bytes, err := json.Marshal(feed)
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, "build.StepViewFeed.asJSONFeed", "Error generating JSONFeed"))
+		return Halt().WithError(derp.Wrap(err, location, "Error generating JSONFeed"))
 	}
 
-	// nolint:errcheck
-	buffer.Write(bytes)
+	if _, err := buffer.Write(bytes); err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Error writing JSONFeed to buffer"))
+	}
 
 	// Set ContentType
 	return Halt().AsFullPage().WithContentType(model.MimeTypeJSONFeed)

@@ -24,6 +24,8 @@ type StepSetSimpleSharing struct {
 
 func (step StepSetSimpleSharing) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 
+	const location = "build.StepSetSimpleSharing.Get"
+
 	streamBuilder := builder.(Stream)
 	model := step.SimplePermissionModel(streamBuilder._stream)
 
@@ -31,7 +33,7 @@ func (step StepSetSimpleSharing) Get(builder Builder, buffer io.Writer) Pipeline
 	formHTML, err := form.Editor(step.schema(), step.form(), model, builder.lookupProvider())
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, "build.StepSetSimpleSharing.Get", "Error building form"))
+		return Halt().WithError(derp.Wrap(err, location, "Error building form"))
 	}
 
 	// Write the rest of the HTML that contains the form
@@ -55,8 +57,10 @@ func (step StepSetSimpleSharing) Get(builder Builder, buffer io.Writer) Pipeline
 	b.Button().Type("button").Script("on click trigger closeModal").InnerText("Cancel").Close()
 	b.CloseAll()
 
-	// nolint:errcheck
-	io.WriteString(buffer, b.String())
+	if _, err := io.WriteString(buffer, b.String()); err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Error writing form HTML to buffer"))
+	}
+
 	return nil
 }
 

@@ -39,8 +39,10 @@ func (step StepAddModelObject) Get(builder Builder, buffer io.Writer) PipelineBe
 	formHTML = WrapForm(builder.URL(), formHTML, step.Form.Encoding())
 
 	// Wrap formHTML as a modal dialog
-	// nolint:errcheck
-	io.WriteString(buffer, formHTML)
+	if _, err := io.WriteString(buffer, formHTML); err != nil {
+		return Halt().WithError(derp.Wrap(err, "build.StepAddModelObject.Get", "Error writing form HTML to buffer"))
+	}
+
 	return nil
 }
 

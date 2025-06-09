@@ -84,8 +84,9 @@ func (step StepAddStream) getChooser(builder Builder, buffer io.Writer) error {
 
 	result := WrapModalWithCloseButton(response, b.String())
 
-	// nolint:errcheck
-	io.WriteString(buffer, result)
+	if _, err := io.WriteString(buffer, result); err != nil {
+		return derp.Wrap(err, "build.StepAddStream.getChooser", "Error writing chooser HTML to buffer")
+	}
 
 	return nil
 }
@@ -173,8 +174,10 @@ func (step StepAddStream) getInline(builder Builder, buffer io.Writer) error {
 	b.Close()
 
 	// Write the whole widget back to the outpub buffer
-	// nolint:errcheck
-	buffer.Write(b.Bytes())
+	if _, err := buffer.Write(b.Bytes()); err != nil {
+		return derp.Wrap(err, location, "Error writing inline HTML to buffer")
+	}
+
 	return nil
 }
 

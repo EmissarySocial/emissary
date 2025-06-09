@@ -30,8 +30,9 @@ func (step StepEditWidget) Get(builder Builder, buffer io.Writer) PipelineBehavi
 	// Wrap the form as a modal and return it to the client
 	formHTML = WrapModalForm(builder.response(), builder.URL(), formHTML, widget.Form.Encoding())
 
-	// nolint:errcheck
-	buffer.Write([]byte(formHTML))
+	if _, err := buffer.Write([]byte(formHTML)); err != nil {
+		return Halt().WithError(derp.Wrap(err, "build.StepEditWidget.Get", "Error writing form HTML to buffer"))
+	}
 
 	return nil
 }
