@@ -58,7 +58,7 @@
 
 		{{- else -}}
 
-			<div class="flex-row flex-align-center margin-bottom-lg">
+			<div class="flex-row flex-align-center margin-bottom">
 				<h1 class="text-xl bold margin-none flex-grow">Merchant Accounts</h1>
 				<a href="https://emissary.dev/payments" target="_blank">{{icon "help"}} Help with Payments</a>
 			</div>
@@ -78,6 +78,28 @@
 					<div>Connect Another</div>
 				</div>
 			</div>
+
+			{{- $products := .Products -}}
+
+			{{- if $products.NotEmpty -}}
+				{{- $group := groupie -}}
+
+				<div class="margin-top-xl margin-bottom">
+					<h1 class="text-xl bold margin-none flex-grow">Products</h1>
+				</div>
+
+				<div class="table">
+					{{- range $index, $product := $products -}}
+							<div class="flex-row flex-align-center">
+								<div class="flex-grow">{{icon $product.Icon}} {{$product.Group}}</div>						
+								<div class="margin-right-lg text-gray">{{$product.Label}}</div>
+								<div>
+									<a href="{{$product.Href}}" target="_blank" class="button text-sm">Manage &rarr;</a>
+								</div>
+							</div>
+					{{- end -}}
+				</div>
+			{{- end -}}
 
 		{{- end -}}
 	

@@ -56,6 +56,7 @@ func (service *MerchantAccount) stripe_getPrices(merchantAccount *model.Merchant
 			Label: service.stripe_priceLabel(price),
 			Value: "MA:" + merchantAccount.MerchantAccountID.Hex() + ":" + price.ID,
 			Icon:  "stripe",
+			Href:  "https://dashboard.stripe.com/prices/" + price.ID,
 		}
 	})
 

@@ -538,6 +538,18 @@ func (w Common) MerchantAccount(merchantAccountID string) (model.MerchantAccount
 	return result, err
 }
 
+// Products returns all Remote Products that (when purchased) provide privileges for this Stream.
+func (w Common) Products() (sliceof.Object[form.LookupCode], error) {
+
+	_, products, err := w._factory.MerchantAccount().ProductsByUser(w.AuthenticatedID())
+
+	if err != nil {
+		return nil, derp.Wrap(err, "build.Common.Products", "Error loading products for user", w.AuthenticatedID())
+	}
+
+	return products, nil
+}
+
 func (w Common) FeaturedSearchTags() *QueryBuilder[model.SearchTag] {
 
 	criteria := exp.And(

@@ -686,13 +686,6 @@
 			]
 		}
 
-		payments-list: {
-			roles:["self"]
-			steps:[
-				{do:"view-html"}
-			]
-		}
-
 		actor-button: {
 			roles:["self"]
 			steps: [

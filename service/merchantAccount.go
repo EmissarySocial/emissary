@@ -231,13 +231,15 @@ func (service *MerchantAccount) AvailableMerchantAccounts() ([]form.LookupCode, 
 
 func (service *MerchantAccount) QueryByUser(userID primitive.ObjectID, options ...option.Option) ([]model.MerchantAccount, error) {
 
+	const location = "service.MerchantAccount.QueryByUser"
+
 	criteria := exp.Equal("userId", userID)
 
 	// Load the Merchant Accounts for this User
 	result, err := service.Query(criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.MerchantAccount.QueryByUser", "Error loading merchant accounts")
+		return nil, derp.Wrap(err, location, "Error loading merchant accounts")
 	}
 
 	return result, nil
@@ -421,11 +423,18 @@ func (service *MerchantAccount) RefreshAPIKeys(merchantAccount *model.MerchantAc
 // ProductsByUser retrieves all available products configured in the remote MerchantAccount(s) of a specific User
 func (service *MerchantAccount) ProductsByUser(userID primitive.ObjectID) (sliceof.Object[model.MerchantAccount], []form.LookupCode, error) {
 
+	const location = "service.MerchantAccount.ProductsByUser"
+
+	// RULE: Require a valid UserID
+	if userID.IsZero() {
+		return nil, nil, derp.ValidationError("UserID cannot be zero")
+	}
+
 	// Get all MerchantAccounts for this User
 	merchantAccounts, err := service.QueryByUser(userID)
 
 	if err != nil {
-		return nil, nil, derp.Wrap(err, "service.MerchantAccount.QueryProductsAsLookupCodes", "Error loading merchant accounts")
+		return nil, nil, derp.Wrap(err, location, "Error loading merchant accounts")
 	}
 
 	result := make([]form.LookupCode, 0)
@@ -435,7 +444,7 @@ func (service *MerchantAccount) ProductsByUser(userID primitive.ObjectID) (slice
 		lookupCodes, err := service.getProducts(&merchantAccount)
 
 		if err != nil {
-			return nil, nil, derp.Wrap(err, "service.MerchantAccount.QueryProductsAsLookupCodes", "Error loading products for merchant account", merchantAccount)
+			return nil, nil, derp.Wrap(err, location, "Error loading products for merchant account", merchantAccount)
 		}
 
 		result = append(result, lookupCodes...)
@@ -450,6 +459,13 @@ func (service *MerchantAccount) ProductsByUser(userID primitive.ObjectID) (slice
 // ProductsByID retrieves a list of products configured in the remote MerchantAccount(s)
 func (service *MerchantAccount) ProductsByID(userID primitive.ObjectID, tokens ...string) ([]form.LookupCode, error) {
 
+	const location = "service.MerchantAccount.ProductsByID"
+
+	// RULE: Require a valid UserID
+	if userID.IsZero() {
+		return nil, derp.ValidationError("UserID cannot be zero")
+	}
+
 	// Collect unique merchantAccount and product IDs
 	merchantAccountIDs := cutAndGroup(tokens, ":")
 	result := make([]form.LookupCode, 0, len(tokens))
@@ -458,7 +474,7 @@ func (service *MerchantAccount) ProductsByID(userID primitive.ObjectID, tokens .
 	circles, err := service.circleService.QueryByUser(userID)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.MerchantAccount.QueryProductsAsLookupCodes", "Error loading circles")
+		return nil, derp.Wrap(err, location, "Error loading circles")
 	}
 
 	for _, circle := range circles {
@@ -471,20 +487,20 @@ func (service *MerchantAccount) ProductsByID(userID primitive.ObjectID, tokens .
 		merchantAccountID, err := primitive.ObjectIDFromHex(merchantAccount)
 
 		if err != nil {
-			return nil, derp.Wrap(err, "service.MerchantAccount.QueryProductsAsLookupCodes", "Invalid MerchantAccount ID", merchantAccountID)
+			return nil, derp.Wrap(err, location, "Invalid MerchantAccount ID", merchantAccountID)
 		}
 
 		// Load the MerchantAccount
 		merchantAccount := model.NewMerchantAccount()
 		if err := service.LoadByUserAndID(userID, merchantAccountID, &merchantAccount); err != nil {
-			return nil, derp.Wrap(err, "service.MerchantAccount.QueryProductsAsLookupCodes", "Error loading merchant account", merchantAccountID)
+			return nil, derp.Wrap(err, location, "Error loading merchant account", merchantAccountID)
 		}
 
 		// Retrieve all of the Products from the remote services
 		lookupCodes, err := service.getProducts(&merchantAccount, productIDs...)
 
 		if err != nil {
-			return nil, derp.Wrap(err, "service.MerchantAccount.QueryProductsAsLookupCodes", "Error loading products for merchant account", merchantAccount)
+			return nil, derp.Wrap(err, location, "Error loading products for merchant account", merchantAccount)
 		}
 
 		// So far, so good...
