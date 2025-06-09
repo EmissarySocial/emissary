@@ -6,11 +6,13 @@ import (
 )
 
 func Convert(value any) (primitive.ObjectID, error) {
+
 	if value == nil {
 		return primitive.NilObjectID, nil
 	}
 
 	switch v := value.(type) {
+
 	case primitive.ObjectID:
 		return v, nil
 
@@ -38,18 +40,4 @@ func ConvertSlice(original []string) ([]primitive.ObjectID, error) {
 	}
 
 	return result, nil
-}
-
-func ToBytes(value primitive.ObjectID) []byte {
-	return value[:]
-}
-
-func FromBytes(value []byte) primitive.ObjectID {
-
-	if len(value) == 12 {
-		array := (*[12]byte)(value)
-		return primitive.ObjectID(*array)
-	}
-
-	return primitive.NilObjectID
 }
