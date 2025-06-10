@@ -1,7 +1,7 @@
 {
 	templateId: user-settings
 	templateRole: user-settings
-	model: settings
+	model: Settings
 	label: Default User Settings
 	description: A simple settings admin with a sidebar for folders and several feed layouts
 	icon: settings

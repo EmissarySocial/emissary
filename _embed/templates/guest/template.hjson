@@ -1,7 +1,7 @@
 {
 	templateId: guest
 	templateRole: guest
-	model: identity
+	model: Identity
 	label: Guest Profile Page
 	description: Default profile page for Guests
 	containedBy: []

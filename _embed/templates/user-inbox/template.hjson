@@ -1,7 +1,7 @@
 {
 	templateId: user-inbox
 	templateRole: user-inbox
-	model: inbox
+	model: Inbox
 	label: Default Inbox
 	description: A simple inbox with a sidebar for folders and several feed layouts
 	icon: inbox

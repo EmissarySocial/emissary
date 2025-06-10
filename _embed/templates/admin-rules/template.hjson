@@ -1,7 +1,7 @@
 {
 	templateId:"admin-rules"
 	templateRole:"admin"
-	model:"rule"
+	model:"Rule"
 	extends: ["admin-common"]
 	containedBy:["admin"]
 	label: "Rules"

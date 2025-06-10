@@ -1,7 +1,7 @@
 {
 	templateId:"admin-webhooks"
 	templateRole:"admin"
-	model:"webhook"
+	model:"Webhook"
 	extends: ["admin-common"]
 	containedBy:["admin"]
 	label: "Webhooks"

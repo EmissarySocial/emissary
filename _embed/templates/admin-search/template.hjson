@@ -1,7 +1,7 @@
 {
 	templateId:admin-search
 	templateRole:admin
-	model:search
+	model:Search
 	extends: ["admin-common"]
 	containedBy:["admin"]
 	label:Search

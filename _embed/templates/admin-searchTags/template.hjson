@@ -1,7 +1,7 @@
 {
 	templateId:admin-tags
 	templateRole:admin
-	model:tag
+	model:Tag
 	extends: ["admin-common"]
 	containedBy:["admin"]
 	label:Tags

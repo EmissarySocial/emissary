@@ -1,7 +1,7 @@
 {
 	templateId:admin-followers
 	templateRole:admin
-	model:domain
+	model:Domain
 	extends:["admin-common"]
 	containedBy:["admin"]
 	label:Search

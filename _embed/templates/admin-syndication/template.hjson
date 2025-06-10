@@ -1,7 +1,7 @@
 {
 	templateId:"admin-syndication"
 	templateRole:"admin"
-	model:"syndication"
+	model:"Syndication"
 	extends: ["admin-common"]
 	containedBy:["admin"]
 	label: "Syndication"
