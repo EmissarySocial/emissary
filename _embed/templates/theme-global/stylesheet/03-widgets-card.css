@@ -20,3 +20,7 @@
 	padding-top:var(--rhythm);
 	padding-bottom:var(--rhythm);
 }
+
+.card.link:hover {
+	border:solid 1px var(--link-color);
+}

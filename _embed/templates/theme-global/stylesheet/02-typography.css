@@ -148,7 +148,7 @@ input.text-md {
 .text-sm,
 .text-sm p {
     font-size:calc(var(--rhythm) * 1.75);
-    line-height:calc(var(--rhythm) * 2);
+    line-height:calc(var(--rhythm) * 2.5);
     margin-top:calc(var(--rhythm) * 0.5);
     margin-bottom:calc(var(--rhythm) * 0.5);
 }

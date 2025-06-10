@@ -1,41 +1,44 @@
 <div class="page">
 
-	<div class="text-lg margin-bottom-lg">
-		<a href="/@{{.AttributedTo.UserID.Hex}}">{{.AttributedTo.Name}} </a> &middot;
-		<a href="/{{.StreamID}}"> {{.Label}}</a>
-	</div>
-
-	<div class="flex-row margin-bottom-xl">
-		<div>
-			{{- $iconURL := .IconURL -}}
-			{{- if ne "" $iconURL -}}
-				<img src="{{$iconURL}}" class="rounded square width-96">
-			{{- else -}}
-				<div class="rounded square width-96"></div>
-			{{- end -}}
-		</div>
+	<div class="flex-row margin-bottom">
 		<div class="flex-grow">
-			<h1 class="margin-none">{{.Label}}</h1>
-			<div class="text-gray">
-				Set Up Purchase Options...
-			</div>
+			<a href="/@{{.AttributedTo.UserID.Hex}}">&larr; {{.AttributedTo.Name}} </a> &middot;
+			<a href="/{{.StreamID}}">{{.Label}}</a>
+			&middot;
+			<b>Sell Online</b>
 		</div>
+
+		<a href="https://emissary.dev/products" class="nowrap" target="_blank">{{icon "help"}} Help with Products</a>
 	</div>
 
 	{{- $merchantAccounts := .MerchantAccounts.Slice -}}
 
 	{{- if eq 0 $merchantAccounts.Length -}}
 
+		<div role="tablist" class="wizard margin-bottom-xl">
+			<div role="tab">
+				<div class="step-number">1</div>
+				<div class="step-label">Merchant<br>Account</div>
+			</div>	
+			<div class="line" disabled></div>
+			<div role="tab" disabled>
+				<div class="step-number">2</div>
+				<div class="step-label">Connect<br>Products</div>
+			</div>
+			<div class="line" disabled></div>
+			<div role="tab" disabled>
+				<div class="step-number">3</div>
+				<div class="step-label">Exclusive<br>Content</div>
+			</div>
+		</div>
+
 		<h1 class="text-xl bold">
-			1. Merchant Account
+			1. Connect Your Merchant Account
 		</h1>
 		
-		<div class="margin-bottom-lg md:width-60%">
-			To sell access to this album online, you must first sign up and connect to one of the supported payment procesors below.
-			<br><br>
-			After you've entered your merchant account information, you'll be able to use the product plan(s) from your merchant account to 
-			charge for access to this item.
-			<a href="https://emissary.dev/products" class="nowrap" target="_blank">Learn More {{icon "new-window"}}</a>
+		<div class="text-sm text-gray margin-bottom-lg md:width-60%">
+			To get started, connect to one of the payment procesors listed here.
+			If you don't already have an account, you can create one with the links below.
 		</div>
 
 		<div class="md:flex-row margin-bottom md:text-sm">
@@ -59,59 +62,80 @@
 
 	{{- else -}}
 
-		<details class="margin-bottom-xl">
-			<summary class="clickable flex-row flex-align-center">
-				<h1 class="text-xl bold">
-					1. Merchant Account 
-				</h1>
-				<span class="text-sm" style="color:white; background:var(--green70); border-radius:8px; padding:8px 16px;"> &check; Connected</span>
-			</summary>
+		{{- $hasproducts := .StreamHasPrivileges -}}
 
-			<div class="table margin-top">
-				{{- range  $index, $merchantAccount := $merchantAccounts -}}
-					{{- $type := lowerCase $merchantAccount.Type -}}
-					<div role="button" class="flex-row turboclick">
-						<div hx-get="/@me/settings/merchantAccount-edit-{{$type}}?merchantAccountId={{$merchantAccount.ID}}" class="flex-row flex-grow">
-							<div>{{- icon $type -}}</div>
-							<div class="flex-grow">{{$merchantAccount.Name}}</div>
-						</div>
+		<div script="install TabContainer">
+			
+			<div role="tablist" class="wizard margin-bottom-xl">
+				<div role="tab" aria-controls="tab-merchant-account" class="done">
+					<div class="step-number">&check;</div>
+					<div class="step-label">Merchant<br>Account</div>
+				</div>	
+				<div class="line done"></div>
+				<div role="tab" aria-controls="tab-products" {{if $hasproducts}} class="done" {{else}} aria-selected="true" {{end}}>
+					<div class="step-number">
+						{{if $hasproducts}}&check;{{else}}2{{end}}
 					</div>
-				{{- end -}}
-				<div hx-get="/@me/settings/merchantAccount-add" role="button" class="flex-row link turboclick">
-					<div>{{- icon "add" -}}</div>
-					<div>Connect Another</div>
+					<div class="step-label">Connect<br>Products</div>
+				</div>
+				<div class="line" {{if not $hasproducts}} disabled {{end}}></div>
+				<div role="tab" aria-controls="tab-content" {{if $hasproducts}} aria-selected="true" {{else}} disabled {{end}}>
+					<div class="step-number">3</div>
+					<div class="step-label">Exclusive<br>Content</div>
 				</div>
 			</div>
-		</details>
 
-		{{- $privileges := .StreamHasPrivileges -}}
-		<details class="margin-bottom-xl" {{if not $privileges}} open="true" {{end}} >
-			<summary class="clickable flex-row flex-align-center">
+			<div id="tab-merchant-account" role="tabpanel" hidden>
+				
 				<h1 class="text-xl bold">
-					2. Products &amp; Subscriptions
+					1. Connect Your Merchant Account
 				</h1>
-				{{- if $privileges}}
-					<span class="text-sm" style="color:white; background:var(--green70); border-radius:8px; padding:8px 16px;"> &check; Connected</span>
-				{{- end -}}
-			</summary>
 
-			<div class="margin-bottom-lg">
-				Now that your merchant account is connected, you can select the products that grant access to this item.
-				Visitors purchase access to your content, with either one-time, or recurring payments.
-				<a href="https://emissary.dev/products" target="_blank" class="nowrap">{{icon "help"}} Help with Products</a>
+				<div class="text-sm text-gray margin-bottom-lg md:width-60%">
+					Use this menu to edit your merchant account settings, or to add another merchant account.
+				</div>
+
+				<div class="table margin-top">
+					{{- range  $index, $merchantAccount := $merchantAccounts -}}
+						{{- $type := lowerCase $merchantAccount.Type -}}
+						<div role="button" class="flex-row turboclick">
+							<div hx-get="/@me/settings/merchantAccount-edit-{{$type}}?merchantAccountId={{$merchantAccount.ID}}" class="flex-row flex-grow">
+								<div>{{- icon $type -}}</div>
+								<div class="flex-grow">{{$merchantAccount.Name}}</div>
+							</div>
+						</div>
+					{{- end -}}
+					<div hx-get="/@me/settings/merchantAccount-add" role="button" class="flex-row link turboclick">
+						<div>{{- icon "add" -}}</div>
+						<div>Connect Another</div>
+					</div>
+				</div>
 			</div>
 
-			<div id="edit-products" hx-get="/{{.StreamID}}/edit-products" hx-trigger="load" hx-target="#edit-products" hx-swap="innerHTML" hx-push-url="false">
-				One moment please, loading...
+			<div id="tab-products" role="tabpanel" {{if $hasproducts}} hidden {{end}}>
+				<h1 class="text-xl bold">
+					2. Connect Products &amp; Subscriptions
+				</h1>
+
+				<div class="text-sm text-gray md:width-60% margin-bottom-lg">
+					Now that your merchant account is connected, you can select the products that grant access to this item.
+					Visitors purchase access to your content, with either one-time, or recurring payments.
+				</div>
+
+				<div id="edit-products" hx-get="/{{.StreamID}}/edit-products" hx-trigger="load" hx-target="#edit-products" hx-swap="innerHTML" hx-push-url="false">
+					One moment please, loading...
+				</div>
+
 			</div>
 
-		</details>
+			<div id="tab-content" role="tabpanel" {{if not $hasproducts}} hidden {{end}}>
+				{{- .View "edit-paid-content" -}}
+			</div>
 
-		{{- .View "edit-paid-content" -}}
+		</div>
+
 
 	{{- end -}}
-
-	<div class="margin-vertical-xl"></div>
 
 	<div hx-get="/{{.StreamID}}/edit-checkout" hx-trigger="refreshPage from:window" hx-push-url="false"></div>
 </div>
