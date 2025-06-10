@@ -4,10 +4,11 @@ behavior TabContainer
 	-- (and points to one of our tabs) then select it first.  Otherwise,
 	-- select the first tab in the list
 	init
-		set target to the first <[aria-selected="true"]/> in me
+		set :myTablist to first <[role=tablist] /> in me
+		set target to the first <[aria-selected="true"]/> in :myTablist
 		
 		if target is null then 
-			set target to first <[role=tab]/> in me
+			set target to first <[role=tab]/> in :myTablist
 		end
 
 		send selectTab to target
@@ -36,20 +37,30 @@ behavior TabContainer
 
 	on selectTab(target)
 
+		set target to the closest <[role=tab] /> to the target
+
+		if :myTablist is not the closest <[role=tablist] /> to the target then
+			exit
+		end
+
 		if target [@disabled] is not null then 
 			exit
 		end
 
 		for tab in <[role=tab] /> in me
-			if tab == target
-				add [@aria-selected="true"] to tab
-			else
-				remove [@aria-selected] from tab
+			if :myTablist is the closest <[role=tablist] /> to tab
+				if tab == target
+					add [@aria-selected="true"] to tab
+				else
+					remove [@aria-selected] from tab
+				end
 			end
 		end
 
-		for panel in <[role=tabpanel] /> in me
-			set {hidden: (panel[@id] != target[@aria-controls])} on panel
+		for panel in <[role=tabpanel] />
+			if panel.parentNode is me then
+				set {hidden: (panel[@id] != target[@aria-controls])} on panel
+			end
 		end
 	end
 end
