@@ -48,7 +48,7 @@ func NewIdentity(factory Factory, request *http.Request, response http.ResponseW
 	}
 
 	// RULE: The template must use the model: "identity"
-	if template.Model != "identity" {
+	if template.Model != "Identity" {
 		return Identity{}, derp.InternalError(location, "Identity template must use the Model `identity`", template.Model)
 	}
 
