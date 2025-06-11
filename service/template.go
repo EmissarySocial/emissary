@@ -298,6 +298,17 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 	// Scan all Templates in the prep area
 	for templateID, template := range service.templatePrep {
 
+		allowedModels := sliceof.String{"None", "Domain", "Followers", "Following", "Group", "Identity", "Inbox", "Outbox", "Rule", "Search", "Settings", "Stream", "Syndication", "Tag", "User", "Webhook"}
+
+		if !allowedModels.Contains(template.Model) {
+			errors.Append(derp.ValidationError(
+				"Invalid 'model' used in Template definition",
+				"template: "+templateID,
+				"models allowed: "+strings.Join(allowedModels, ", "),
+				"model used: "+template.Model,
+			))
+		}
+
 		// RULE: Templates MUST have at least one Action, or else permissions won't work
 		if template.States.IsEmpty() {
 			errors.Append(derp.ValidationError(

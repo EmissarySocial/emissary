@@ -4,7 +4,8 @@
 ## it to complete an action (like, share, follow, etc) 
 
 {
-	templateId:"base-intent"
+	templateId: base-intent
+	model: None
 
 	states: {
 		default: {

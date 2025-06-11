@@ -1,5 +1,6 @@
 {
-	templateId:"base-social"
+	templateId: base-social
+	model: None
 
 	states: {
 		default: {
