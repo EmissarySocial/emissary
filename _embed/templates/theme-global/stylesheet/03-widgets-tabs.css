@@ -168,12 +168,13 @@
 	display: flex;
 	flex-direction:row;
 	align-items:start;
-    border-bottom:none;
     margin-bottom:calc( var(--rhythm) * 2);
     line-height:1em;
     font-weight:400;
     font-family:inherit;
     font-size:0.8rem;
+	padding:8px 16px;
+	border:none;
 }
 
 /* Regular Tab */
@@ -204,13 +205,13 @@
 	display:flex;
 	justify-content:center;
 	align-items:center;
-	height:32px;
-	width:32px;
+	height:24px;
+	width:24px;
 	border-radius:50%;
 	background-color:var(--blue60);
 	color:var(--white);
-	font-size:16px;
-	margin:4px 8px 14px 8px;
+	font-size:12px;
+	margin:8px 8px 18px 8px;
 	transition:height 0.1s, width 0.1s, font-size 0.1s, margin 0.1s;
 }
 
@@ -230,6 +231,10 @@
 }
 
 /* Selected Tab */
+[role="tablist"].wizard > [role="tab"][aria-selected="true"] {
+	background-color:unset;
+}
+
 [role="tablist"].wizard > [role="tab"][aria-selected="true"] .step-number,
 [role="tablist"].wizard > [role="tab"]:hover .step-number {
 	height:42px;
