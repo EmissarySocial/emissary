@@ -7,7 +7,6 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
-	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
@@ -156,9 +155,9 @@ func (w Identity) Privileges() (QueryBuilder[model.Privilege], error) {
 	return NewQueryBuilder[model.Privilege](w._factory.Privilege(), criteria), nil
 }
 
-// PrivilegedStreams returns a QueryBuilder for the Streams that the
+// PrivilegedStreams returns a map of the Streams that the
 // currently signed-in Identity has privileges for
-func (w Identity) PrivilegedStreams(privileges sliceof.Object[model.Privilege]) (mapof.Object[id.Slice], error) {
+func (w Identity) PrivilegedStreams(privileges sliceof.Object[model.Privilege]) (mapof.Slices[string, primitive.ObjectID], error) {
 	return w._factory.Stream().MapByPrivileges(privileges...)
 }
 

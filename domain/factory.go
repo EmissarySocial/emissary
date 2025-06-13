@@ -249,7 +249,7 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 
 		// Populate Circle Service
 		factory.circleService.Refresh(
-			factory.collection(CollectionConnection),
+			factory.collection(CollectionCircle),
 			factory.Privilege(),
 		)
 
@@ -475,6 +475,7 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 		// Populate Stream Service
 		factory.streamService.Refresh(
 			factory.collection(CollectionStream),
+			factory.Circle(),
 			factory.Domain(),
 			factory.SearchTag(),
 			factory.Template(),

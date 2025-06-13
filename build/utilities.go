@@ -10,11 +10,13 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
+	"github.com/benpate/form"
 	"github.com/benpate/html"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
 )
@@ -333,4 +335,15 @@ func getSearchResult(builder Builder) model.SearchResult {
 	}
 
 	return model.SearchResult{}
+}
+
+func mapRemoteProductsToLookupCodes(remoteProducts ...model.RemoteProduct) sliceof.Object[form.LookupCode] {
+
+	lookupCodes := make([]form.LookupCode, len(remoteProducts))
+
+	for index, remoteProduct := range remoteProducts {
+		lookupCodes[index] = remoteProduct.LookupCode()
+	}
+
+	return lookupCodes
 }

@@ -3,6 +3,9 @@ package domain
 // CollectionAttachment is the name of the database collection where Attachments are stored
 const CollectionAttachment = "Attachment"
 
+// CollectionCircle is the name of the database collection where Circle records are stored
+const CollectionCircle = "Circle"
+
 // CollectionConnection is the name of the database collection where Connection records are stored
 const CollectionConnection = "Connection"
 

@@ -90,13 +90,13 @@
 
 				<div class="table">
 					{{- range $index, $product := $products -}}
-							<div class="flex-row flex-align-center">
-								<div class="flex-grow">{{icon $product.Icon}} {{$product.Group}}</div>						
-								<div class="margin-right-lg text-gray">{{$product.Label}}</div>
-								<div>
-									<a href="{{$product.Href}}" target="_blank" class="button text-sm">Manage &rarr;</a>
-								</div>
+						<div class="flex-row flex-align-center">
+							<div class="flex-grow">{{icon $product.Icon}} {{$product.Group}}</div>						
+							<div class="margin-right-lg text-gray">{{$product.Label}}</div>
+							<div>
+								<a href="{{$product.Href}}" target="_blank" class="button text-sm">Manage &rarr;</a>
 							</div>
+						</div>
 					{{- end -}}
 				</div>
 			{{- end -}}

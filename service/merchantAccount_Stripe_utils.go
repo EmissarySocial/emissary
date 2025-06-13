@@ -5,7 +5,6 @@ import (
 	"github.com/EmissarySocial/emissary/tools/currency"
 	api "github.com/EmissarySocial/emissary/tools/stripeapi"
 	"github.com/benpate/derp"
-	"github.com/benpate/form"
 	"github.com/benpate/rosetta/slice"
 	"github.com/stripe/stripe-go/v78"
 )
@@ -32,7 +31,7 @@ func (service *MerchantAccount) stripe_getRestrictedKey(merchantAccount *model.M
 	return apiKeys.GetString(propertyName), nil
 }
 
-func (service *MerchantAccount) stripe_getPrices(merchantAccount *model.MerchantAccount, priceIDs ...string) ([]form.LookupCode, error) {
+func (service *MerchantAccount) stripe_getPrices(merchantAccount *model.MerchantAccount, priceIDs ...string) ([]model.RemoteProduct, error) {
 
 	const location = "service.MerchantAccount.stripe_getPrices"
 
@@ -50,13 +49,14 @@ func (service *MerchantAccount) stripe_getPrices(merchantAccount *model.Merchant
 		return nil, derp.Wrap(err, location, "Error retrieving prices from Stripe")
 	}
 
-	result := slice.Map(prices, func(price stripe.Price) form.LookupCode {
-		return form.LookupCode{
-			Group: price.Product.Name,
-			Label: service.stripe_priceLabel(price),
-			Value: "MA:" + merchantAccount.MerchantAccountID.Hex() + ":" + price.ID,
-			Icon:  "stripe",
-			Href:  "https://dashboard.stripe.com/prices/" + price.ID,
+	result := slice.Map(prices, func(price stripe.Price) model.RemoteProduct {
+		return model.RemoteProduct{
+			MerchantAccountID: merchantAccount.MerchantAccountID,
+			ProductID:         price.ID,
+			Name:              price.Product.Name,
+			Description:       service.stripe_priceLabel(price),
+			Icon:              "stripe",
+			AdminHref:         "https://dashboard.stripe.com/prices/" + price.ID,
 		}
 	})
 

@@ -38,6 +38,8 @@
 .flex-grow-0 {flex-grow:0}
 .flex-grow, .flex-grow-1 {flex-grow: 1}
 .flex-grow-2 {flex-grow:2}
+.flex-grow-3 {flex-grow:3}
+.flex-grow-4 {flex-grow:4}
 .flex-wrap {flex-wrap:wrap}
 .flex-wrap-reverse {flex-wrap:wrap-reverse}
 
@@ -88,6 +90,8 @@
 	.sm\:flex-grow-0 {flex-grow:0}
 	.sm\:flex-grow, .flex-grow-1 {flex-grow: 1}
 	.sm\:flex-grow-2 {flex-grow:2}
+	.sm\:flex-grow-3 {flex-grow:3}
+	.sm\:flex-grow-4 {flex-grow:4}
 	.sm\:flex-wrap {flex-wrap:wrap}
 	.sm\:flex-wrap-reverse {flex-wrap:wrap-reverse}
 }
@@ -133,6 +137,8 @@
 	.md\:flex-grow-0 {flex-grow:0}
 	.md\:flex-grow, .flex-grow-1 {flex-grow: 1}
 	.md\:flex-grow-2 {flex-grow:2}
+	.md\:flex-grow-3 {flex-grow:3}
+	.md\:flex-grow-4 {flex-grow:4}
 	.md\:flex-wrap {flex-wrap:wrap}
 	.md\:flex-wrap-reverse {flex-wrap:wrap-reverse}
 }
@@ -178,6 +184,8 @@
 	.lg\:flex-grow-0 {flex-grow:0}
 	.lg\:flex-grow, .flex-grow-1 {flex-grow: 1}
 	.lg\:flex-grow-2 {flex-grow:2}
+	.lg\:flex-grow-3 {flex-grow:3}
+	.lg\:flex-grow-4 {flex-grow:4}
 	.lg\:flex-wrap {flex-wrap:wrap}
 	.lg\:flex-wrap-reverse {flex-wrap:wrap-reverse}
 }

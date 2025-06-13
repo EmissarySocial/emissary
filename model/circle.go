@@ -91,11 +91,12 @@ func (circle Circle) ProductCount() int {
 	return circle.ProductIDs.Length()
 }
 
-func (circle *Circle) LookupCode() form.LookupCode {
+func (circle Circle) LookupCode() form.LookupCode {
 	return form.LookupCode{
-		Value:       circle.CircleID.Hex(),
+		Value:       "CIR:" + circle.CircleID.Hex(),
 		Label:       circle.Name,
 		Description: circle.Description,
 		Icon:        circle.Icon,
+		Group:       "Circles",
 	}
 }

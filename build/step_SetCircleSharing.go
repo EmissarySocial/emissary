@@ -160,8 +160,6 @@ func (step StepSetCircleSharing) form() (form.Element, error) {
 
 func (step StepSetCircleSharing) calculateValue(stream *model.Stream) mapof.Object[sliceof.String] {
 
-	const location = "build.StepSetCircleSharing.parseAccessList"
-
 	permissions := sliceof.NewString()
 
 	for _, privilege := range stream.Privileges[step.Role] {

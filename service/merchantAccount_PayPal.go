@@ -8,7 +8,6 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
-	"github.com/benpate/form"
 	"github.com/benpate/remote"
 	"github.com/benpate/remote/options"
 	"github.com/benpate/rosetta/convert"
@@ -83,7 +82,7 @@ func (service *MerchantAccount) paypal_refreshMerchantAccount(merchantAccount *m
 	return nil
 }
 
-func (service *MerchantAccount) paypal_getProducts(merchantAccount *model.MerchantAccount, productIDs ...string) ([]form.LookupCode, error) {
+func (service *MerchantAccount) paypal_getProducts(merchantAccount *model.MerchantAccount, productIDs ...string) ([]model.RemoteProduct, error) {
 
 	const location = "service.MerchantAccount.paypal_getProducts"
 
@@ -110,7 +109,7 @@ func (service *MerchantAccount) paypal_getProducts(merchantAccount *model.Mercha
 	}
 
 	plans := txnResult.GetSliceOfAny("plans")
-	result := make([]form.LookupCode, 0, len(plans))
+	result := make([]model.RemoteProduct, 0, len(plans))
 
 	for _, planAny := range plans {
 		plan := mapof.Any(convert.MapOfAny(planAny))
@@ -120,10 +119,13 @@ func (service *MerchantAccount) paypal_getProducts(merchantAccount *model.Mercha
 			continue
 		}
 
-		result = append(result, form.LookupCode{
-			Value:       merchantAccount.ID() + ":" + plan.GetString("id"),
-			Label:       plan.GetString("name"),
-			Description: plan.GetString("description"),
+		result = append(result, model.RemoteProduct{
+			MerchantAccountID: merchantAccount.MerchantAccountID,
+			ProductID:         plan.GetString("id"),
+			Name:              plan.GetString("name"),
+			Description:       plan.GetString("description"),
+			Icon:              "paypal",
+			AdminHref:         "https://www.paypal.com/business/manage/products/" + plan.GetString("id"),
 		})
 	}
 

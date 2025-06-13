@@ -28,12 +28,14 @@ import (
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/turbine/queue"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Stream manages all interactions with the Stream collection
 type Stream struct {
 	collection        data.Collection
+	circleService     *Circle
 	domainService     *Domain
 	searchTagService  *SearchTag
 	templateService   *Template
@@ -63,8 +65,9 @@ func NewStream() Stream {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Stream) Refresh(collection data.Collection, domainService *Domain, searchTagService *SearchTag, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, activityStream *ActivityStream, contentService *Content, keyService *EncryptionKey, followerService *Follower, ruleService *Rule, userService *User, webhookService *Webhook, mediaserver mediaserver.MediaServer, queue *queue.Queue, host string, sseUpdateChannel chan primitive.ObjectID) {
+func (service *Stream) Refresh(collection data.Collection, circleService *Circle, domainService *Domain, searchTagService *SearchTag, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, activityStream *ActivityStream, contentService *Content, keyService *EncryptionKey, followerService *Follower, ruleService *Rule, userService *User, webhookService *Webhook, mediaserver mediaserver.MediaServer, queue *queue.Queue, host string, sseUpdateChannel chan primitive.ObjectID) {
 	service.collection = collection
+	service.circleService = circleService
 	service.domainService = domainService
 	service.searchTagService = searchTagService
 	service.templateService = templateService
@@ -287,7 +290,9 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 	service.CalcContext(stream)
 
 	// RULE: Calculate privileges for this stream
-	service.CalcPrivileges(stream)
+	if err := service.CalcPrivileges(stream); err != nil {
+		return derp.Wrap(err, location, "Error calculating privileges", stream)
+	}
 
 	// Try to save the Stream to the database
 	if err := service.collection.Save(stream, note); err != nil {
@@ -490,6 +495,8 @@ func (service *Stream) RangeByPrivileges(privileges ...string) (iter.Seq[model.S
 	}
 
 	criteria := exp.In("privilegeIds", privileges)
+
+	spew.Dump(criteria)
 
 	return service.Range(criteria)
 }
@@ -858,17 +865,19 @@ func (service *Stream) DeleteRelatedDuplicate(parentID primitive.ObjectID, origi
 	return nil
 }
 
-func (service *Stream) MapByPrivileges(privileges ...model.Privilege) (mapof.Object[id.Slice], error) {
+func (service *Stream) MapByPrivileges(privileges ...model.Privilege) (map[string][]primitive.ObjectID, error) {
 
 	const location = "service.Stream.MapByPrivileges"
 
 	// RULE: If no privileges are provided, then return an empty map
 	if len(privileges) == 0 {
-		return make(mapof.Object[id.Slice]), nil
+		return make(mapof.Slices[string, primitive.ObjectID]), nil
 	}
 
 	// Scan all privileges for CircleIDs and MerchantAccounts/RemoteProductIDs
 	privilegeIDs := make([]string, 0, len(privileges))
+
+	spew.Dump("------------------", location, privileges)
 
 	for _, privilege := range privileges {
 
@@ -881,6 +890,8 @@ func (service *Stream) MapByPrivileges(privileges ...model.Privilege) (mapof.Obj
 		}
 	}
 
+	spew.Dump(privilegeIDs)
+
 	// Find all Streams that match the included privilegeIDs
 	streams, err := service.RangeByPrivileges(privilegeIDs...)
 
@@ -889,21 +900,15 @@ func (service *Stream) MapByPrivileges(privileges ...model.Privilege) (mapof.Obj
 	}
 
 	// Translate the range of Streams into a map of privilegeID => streamIDs
-	result := make(mapof.Object[id.Slice])
+	result := make(mapof.Slices[string, primitive.ObjectID])
 
 	for stream := range streams {
-		for _, privilegeIDs := range stream.Privileges {
-			for _, privilegeID := range privilegeIDs {
-
-				if _, exists := result[privilegeID]; !exists {
-					result[privilegeID] = id.NewSlice()
-				}
-
-				result[privilegeID] = append(result[privilegeID], stream.StreamID)
-			}
+		for _, privilegeID := range stream.PrivilegeIDs {
+			result.Add(privilegeID, stream.StreamID)
 		}
 	}
 
+	spew.Dump(location, result)
 	// Ugly, but she rides.
 	return result, nil
 }
@@ -1103,15 +1108,78 @@ func (service *Stream) CalcContext(stream *model.Stream) {
 
 // CalcPrivileges denormalizes all privileges for a Stream into
 // a single data structure that can be scanned for quick access.
-func (service *Stream) CalcPrivileges(stream *model.Stream) {
+func (service *Stream) CalcPrivileges(stream *model.Stream) error {
+
+	const location = "service.Stream.CalcPrivileges"
 
 	result := make([]string, 0, len(stream.Privileges))
 
+	// Collect Privileges provided to all Roles
 	for _, privileges := range stream.Privileges {
 		result = append(result, privileges...)
 	}
 
+	spew.Dump(location, "Privileges", result)
+
+	// If there are any privileges, then let's try to expand them into circleIDs
+	if len(result) > 0 {
+
+		circleIDs := service.extractCircleIDs(result...)
+
+		spew.Dump("CircleIDs", circleIDs)
+
+		// If we have circle IDs, then load all of the Circles.
+		if circleIDs.NotEmpty() {
+
+			circles, err := service.circleService.QueryByIDs(stream.AttributedTo.UserID, circleIDs)
+
+			if err != nil {
+				return derp.Wrap(err, location, "Error loading circles for privileges", circleIDs)
+			}
+
+			spew.Dump(location, circles)
+
+			// Append any RemoteProductIDs from the Circle ito the result
+			for _, circle := range circles {
+				result = append(result, circle.ProductIDs...)
+			}
+		}
+	}
+
+	spew.Dump(result)
+
+	// Make a unique list of privileges
 	stream.PrivilegeIDs = slice.Unique(result)
+
+	spew.Dump(stream.PrivilegeIDs)
+	return nil
+}
+
+func (service *Stream) extractCircleIDs(tokens ...string) id.Slice {
+
+	result := id.NewSlice()
+
+	for _, token := range tokens {
+
+		if circleID := service.extractCircleID(token); !circleID.IsZero() {
+			result = append(result, circleID)
+		}
+	}
+
+	return result
+}
+
+func (service *Stream) extractCircleID(token string) primitive.ObjectID {
+
+	if strings.HasPrefix(token, "CIR:") {
+		token = strings.TrimPrefix(token, "CIR:")
+
+		if circleID, err := primitive.ObjectIDFromHex(token); err == nil {
+			return circleID
+		}
+	}
+
+	return primitive.NilObjectID
 }
 
 func (service *Stream) CalculateTags(stream *model.Stream) {

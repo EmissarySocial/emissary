@@ -18,6 +18,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
+	"github.com/davecgh/go-spew/spew"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -421,7 +422,7 @@ func (service *MerchantAccount) RefreshAPIKeys(merchantAccount *model.MerchantAc
 }
 
 // ProductsByUser retrieves all available products configured in the remote MerchantAccount(s) of a specific User
-func (service *MerchantAccount) ProductsByUser(userID primitive.ObjectID) (sliceof.Object[model.MerchantAccount], []form.LookupCode, error) {
+func (service *MerchantAccount) RemoteProductsByUser(userID primitive.ObjectID) (sliceof.Object[model.MerchantAccount], sliceof.Object[model.RemoteProduct], error) {
 
 	const location = "service.MerchantAccount.ProductsByUser"
 
@@ -437,58 +438,54 @@ func (service *MerchantAccount) ProductsByUser(userID primitive.ObjectID) (slice
 		return nil, nil, derp.Wrap(err, location, "Error loading merchant accounts")
 	}
 
-	result := make([]form.LookupCode, 0)
+	result := sliceof.NewObject[model.RemoteProduct]()
 
 	for _, merchantAccount := range merchantAccounts {
 
-		lookupCodes, err := service.getProducts(&merchantAccount)
+		remoteProducts, err := service.getRemoteProducts(&merchantAccount)
 
 		if err != nil {
 			return nil, nil, derp.Wrap(err, location, "Error loading products for merchant account", merchantAccount)
 		}
 
-		result = append(result, lookupCodes...)
+		result = append(result, remoteProducts...)
 	}
 
 	// Sort the final result
-	slices.SortFunc(result, form.SortLookupCodeByGroupThenLabel)
+	slices.SortFunc(result, sortRemoteProducts)
 
 	return merchantAccounts, result, nil
 }
 
 // ProductsByID retrieves a list of products configured in the remote MerchantAccount(s)
-func (service *MerchantAccount) ProductsByID(userID primitive.ObjectID, tokens ...string) ([]form.LookupCode, error) {
+func (service *MerchantAccount) ProductsByID(userID primitive.ObjectID, tokens ...string) ([]model.RemoteProduct, error) {
 
 	const location = "service.MerchantAccount.ProductsByID"
+
+	spew.Dump(location, userID, tokens)
 
 	// RULE: Require a valid UserID
 	if userID.IsZero() {
 		return nil, derp.ValidationError("UserID cannot be zero")
 	}
 
-	// Collect unique merchantAccount and product IDs
-	merchantAccountIDs := cutAndGroup(tokens, ":")
-	result := make([]form.LookupCode, 0, len(tokens))
-
-	// Get all Circles
-	circles, err := service.circleService.QueryByUser(userID)
+	// Load all Circles that are listed in the token slice
+	circleIDs := extractCircleIDs(tokens...)
+	circles, err := service.circleService.QueryByIDs(userID, circleIDs)
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Error loading circles")
 	}
 
+	// Add purchase options from circles into the list of products to include
 	for _, circle := range circles {
-		result = append(result, circle.LookupCode())
+		tokens = append(tokens, circle.ProductIDs...)
 	}
 
-	for merchantAccount, productIDs := range merchantAccountIDs {
+	merchantAccountsAndProducts := extractProductIDs(tokens...)
 
-		// Convert the merchantAccountID to an ObjectID
-		merchantAccountID, err := primitive.ObjectIDFromHex(merchantAccount)
-
-		if err != nil {
-			return nil, derp.Wrap(err, location, "Invalid MerchantAccount ID", merchantAccountID)
-		}
+	result := make([]model.RemoteProduct, 0, len(merchantAccountsAndProducts))
+	for merchantAccountID, productIDs := range merchantAccountsAndProducts {
 
 		// Load the MerchantAccount
 		merchantAccount := model.NewMerchantAccount()
@@ -497,25 +494,25 @@ func (service *MerchantAccount) ProductsByID(userID primitive.ObjectID, tokens .
 		}
 
 		// Retrieve all of the Products from the remote services
-		lookupCodes, err := service.getProducts(&merchantAccount, productIDs...)
+		remoteProducts, err := service.getRemoteProducts(&merchantAccount, productIDs...)
 
 		if err != nil {
 			return nil, derp.Wrap(err, location, "Error loading products for merchant account", merchantAccount)
 		}
 
 		// So far, so good...
-		result = append(result, lookupCodes...)
+		result = append(result, remoteProducts...)
 	}
 
 	// Sort the final result
-	slices.SortFunc(result, form.SortLookupCodeByGroupThenLabel)
+	slices.SortFunc(result, model.SortRemoteProducts)
 
 	// Dun dun dunnnnn...
 	return result, nil
 }
 
 // getProducts lists all of the products configured by a remote service
-func (service *MerchantAccount) getProducts(merchantAccount *model.MerchantAccount, productIDs ...string) (sliceof.Object[form.LookupCode], error) {
+func (service *MerchantAccount) getRemoteProducts(merchantAccount *model.MerchantAccount, productIDs ...string) (sliceof.Object[model.RemoteProduct], error) {
 
 	switch merchantAccount.Type {
 

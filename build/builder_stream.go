@@ -843,7 +843,7 @@ func (w Stream) MerchantAccounts() QueryBuilder[model.MerchantAccount] {
 }
 
 // Products returns all Remote Products that (when purchased) provide privileges for this Stream.
-func (w Stream) Products() (sliceof.Object[form.LookupCode], error) {
+func (w Stream) Products() (sliceof.Object[model.RemoteProduct], error) {
 	return w._factory.MerchantAccount().ProductsByID(w._stream.AttributedTo.UserID, w._stream.PrivilegeIDs...)
 }
 

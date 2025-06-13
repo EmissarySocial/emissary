@@ -7,10 +7,14 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/EmissarySocial/emissary/tools/parse"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/form"
+	"github.com/benpate/rosetta/compare"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
@@ -310,17 +314,79 @@ func pointerTo[T any](value T) *T {
 	return &value
 }
 
-func cutAndGroup(original []string, separator string) map[string][]string {
+func extractCircleIDs(tokens ...string) id.Slice {
 
-	result := make(map[string][]string, 0)
+	circleIDs := make(id.Slice, 0, len(tokens))
 
-	for _, value := range original {
-		before, after, _ := strings.Cut(value, separator)
+	for _, token := range tokens {
 
-		if _, exists := result[before]; !exists {
-			result[before] = make([]string, 0)
+		if !strings.HasPrefix(token, "CIR:") {
+			continue
 		}
-		result[before] = append(result[before], after)
+
+		token = strings.TrimPrefix(token, "CIR:")
+
+		// Convert to a primitive.ObjectID
+		if circleID, err := primitive.ObjectIDFromHex(token); err == nil {
+			circleIDs = append(circleIDs, circleID)
+		}
+	}
+
+	return circleIDs
+}
+
+// extractProductIDs takes a slice of strings in the format "MA:merchantID:productID"
+// and returns a map where the keys are merchant IDs and the values are slices of product IDs.
+func extractProductIDs(tokens ...string) mapof.Slices[primitive.ObjectID, string] {
+
+	result := make(mapof.Slices[primitive.ObjectID, string])
+
+	for _, token := range tokens {
+
+		// Filter for Merchant Account tokens only.
+		if !strings.HasPrefix(token, "MA:") {
+			continue
+		}
+
+		token = strings.TrimPrefix(token, "MA:")
+
+		// Split into a merchantID and productID
+		merchant, product, found := strings.Cut(token, ":")
+
+		if !found {
+			continue
+		}
+
+		// Convert the merchantID to an ObjectID
+		merchantID, err := primitive.ObjectIDFromHex(merchant)
+
+		if err != nil {
+			continue
+		}
+
+		// (Safely) append the productID to the merchantID map
+		result.Add(merchantID, product)
+	}
+
+	// Success!
+	return result
+}
+
+func sortRemoteProducts(p1 model.RemoteProduct, p2 model.RemoteProduct) int {
+
+	if comparison := compare.String(p1.Name, p2.Name); comparison != 0 {
+		return comparison
+	}
+
+	return compare.String(p1.Description, p2.Description)
+}
+
+func mapRemoteProductsToLookupCodes(remoteProducts ...model.RemoteProduct) sliceof.Object[form.LookupCode] {
+
+	result := make(sliceof.Object[form.LookupCode], len(remoteProducts))
+
+	for index, remoteProduct := range remoteProducts {
+		result[index] = remoteProduct.LookupCode()
 	}
 
 	return result

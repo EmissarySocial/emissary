@@ -96,12 +96,12 @@
 			<table class="table">
 				{{- range $index, $privilege := $privileges -}}
 					<tr>
-						<td class="padding width-25%">
+						<td class="padding width-40%">
 							<div class="bold text-lg margin-none">{{ $privilege.Name }}</div>
 							<div class="text-sm text-light-gray">{{ $privilege.PriceDescription }}</div>
 							<div class="text-sm text-light-gray">{{ $privilege.CreateDate | shortDate }}</div>
 						</td>
-						<td class="padding width-75%">
+						<td class="padding width-60%">
 							{{- range $privilegeID, $streamIDs := $privilegedStreams -}}
 								{{- if eq $privilege.CompoundID $privilegeID -}}
 									{{- range $index, $streamID := $streamIDs -}}
@@ -113,18 +113,9 @@
 					</tr>
 				{{- end -}}
 			</table>
-
-			<!--
-			<h3>Privilege IDs</h3>
-			<pre>{{.PrivilegeIDs | jsonIndent}}</pre>
-
-			<h3>Privileges</h3>
-			<pre>{{$privileges | jsonIndent}}</pre>
-
-			<h3>Privileged Streams</h3>
-			<pre>{{$privilegedStreams | jsonIndent}}</pre>
-			-->
 			
+			<pre>{{$privileges | jsonIndent}}</pre>
+			<pre>{{$privilegedStreams | jsonIndent}}</pre>
 		{{- end -}}
 
 		{{- if not .IsAuthenticated -}}

@@ -115,7 +115,7 @@ func PostCheckoutWebhook(ctx *steranko.Context, factory *domain.Factory, merchan
 	merchantAccountService := factory.MerchantAccount()
 	if err := merchantAccountService.ParseCheckoutWebhook(ctx.Request().Header, body, merchantAccount); err != nil {
 
-		// Suppress errors from unsupported events
+		// Suppress errors from unsupported event handlers
 		if derp.IsNotImplemented(err) {
 			return nil
 		}

@@ -29,18 +29,10 @@ func (step StepSetPrivileges) Get(builder Builder, buffer io.Writer) PipelineBeh
 		return Halt().WithError(derp.BadRequestError(location, "Invalid builder type"))
 	}
 
+	attributedToID := streamBuilder._stream.AttributedTo.UserID
 	iconFunc := streamBuilder._factory.Icons().Get
 
-	// Load the User's Products
-	merchantAccountService := streamBuilder._factory.MerchantAccount()
-
-	attributedToID := streamBuilder._stream.AttributedTo.UserID
-	merchantAccounts, products, err := merchantAccountService.ProductsByUser(attributedToID)
-
-	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error retrieving products"))
-	}
-
+	// Load the Circles defined by this User
 	circleService := streamBuilder._factory.Circle()
 	circles, err := circleService.QueryByUser(attributedToID)
 
@@ -49,13 +41,20 @@ func (step StepSetPrivileges) Get(builder Builder, buffer io.Writer) PipelineBeh
 	}
 
 	circleOptions := slice.Map(circles, func(circle model.Circle) form.LookupCode {
-		result := circle.LookupCode()
-		result.Value = "CIR:" + circle.CircleID.Hex()
-		result.Group = "Circles"
-		return result
+		return circle.LookupCode()
 	})
 
-	options := append(circleOptions, products...)
+	// Load the Remote Products for this User's Merchant Account(s)
+	merchantAccountService := streamBuilder._factory.MerchantAccount()
+	merchantAccounts, remoteProducts, err := merchantAccountService.RemoteProductsByUser(attributedToID)
+
+	if err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Error retrieving products"))
+	}
+
+	// List of Privileges/Options includes all Circles and all Remote Products
+	lookupCodes := mapRemoteProductsToLookupCodes(remoteProducts...)
+	options := append(circleOptions, lookupCodes...)
 
 	// If there are no multi-select options, then display the "empty" message
 	if len(options) == 0 {

@@ -163,20 +163,69 @@ func (service *Circle) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
+func (service *Circle) QueryByIDs(userID primitive.ObjectID, circleIDs []primitive.ObjectID, options ...option.Option) ([]model.Circle, error) {
+
+	const location = "service.Circle.QueryByIDs"
+
+	// RULE: Require a valid UserID
+	if userID.IsZero() {
+		return nil, derp.ValidationError("UserID cannot be zero")
+	}
+
+	// RULE: Require at least one CircleID
+	if len(circleIDs) == 0 {
+		return nil, derp.ValidationError("CircleIDs cannot be empty")
+	}
+
+	criteria := exp.In("_id", circleIDs).AndEqual("userId", userID)
+
+	// Load the Merchant Accounts for this User
+	result, err := service.Query(criteria, options...)
+
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Error loading merchant accounts")
+	}
+
+	return result, nil
+}
+
 // QueryByUser returns all Circles that are owned by the provided userID
 func (service *Circle) QueryByUser(userID primitive.ObjectID, options ...option.Option) ([]model.Circle, error) {
+
+	// RULE: Require a valid UserID
+	if userID.IsZero() {
+		return nil, derp.ValidationError("UserID cannot be zero")
+	}
+
 	criteria := exp.Equal("userId", userID)
 	return service.Query(criteria, options...)
 }
 
 // QueryPrivilegedByUser returns all Circles that are marked as "featured" by the provided userID
 func (service *Circle) QueryFeaturedByUser(userID primitive.ObjectID, options ...option.Option) ([]model.Circle, error) {
+
+	// RULE: Require a valid UserID
+	if userID.IsZero() {
+		return nil, derp.ValidationError("UserID cannot be zero")
+	}
+
 	criteria := exp.Equal("userId", userID).AndEqual("featured", true)
 	return service.Query(criteria, options...)
 }
 
 // LoadByID loads a single model.Circle object that matches the provided circleID
 func (service *Circle) LoadByID(userID primitive.ObjectID, circleID primitive.ObjectID, result *model.Circle) error {
+
+	// RULE: Require a valid UserID
+	if userID.IsZero() {
+		return derp.ValidationError("UserID cannot be zero")
+	}
+
+	// RULE: Require a valid CircleID
+	if circleID.IsZero() {
+		return derp.ValidationError("CircleID cannot be zero")
+	}
+
 	criteria := exp.Equal("_id", circleID).AndEqual("userId", userID)
 	return service.Load(criteria, result)
 }

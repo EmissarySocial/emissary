@@ -48,15 +48,9 @@
 										label:Setup
 										children: [
 											{type:"text", path:"name", label:"Circle Name"}
-											{type:"select", path:"icon", label:"Icon", options:{provider:"circle-icons"}}
-											{type:"colorpicker", path:"color", label:"Color"}
-										]
-									}
-									{
-										type:layout-vertical
-										label:Description
-										children: [
 											{type:"textarea", path:"description", label:"Description", options:{rows:8}}
+											// {type:"select", path:"icon", label:"Icon", options:{provider:"circle-icons"}}
+											{type:"colorpicker", path:"color", label:"Color"}
 										]
 									}
 									{
@@ -97,15 +91,9 @@
 										label:Setup
 										children: [
 											{type:"text", path:"name", label:"Circle Name"}
-											{type:"select", path:"icon", label:"Icon", options:{provider:"circle-icons"}}
-											{type:"colorpicker", path:"color", label:"Color"}
-										]
-									}
-									{
-										type:layout-vertical
-										label:Description
-										children: [
 											{type:"textarea", path:"description", label:"Description", options:{rows:8}}
+											// {type:"select", path:"icon", label:"Icon", options:{provider:"circle-icons"}}
+											{type:"colorpicker", path:"color", label:"Color"}
 										]
 									}
 									{

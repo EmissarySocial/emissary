@@ -257,15 +257,17 @@ func (service *LookupProvider) getMerchantAccountProducts() form.LookupGroup {
 	}
 
 	// Load the Products for this Merchant Account
-	result, err := service.merchantAccountService.getProducts(&merchantAccount)
+	remoteProducts, err := service.merchantAccountService.getRemoteProducts(&merchantAccount)
 
 	if err != nil {
 		derp.Report(derp.Wrap(err, location, "Error loading merchant account products"))
 		return form.NewReadOnlyLookupGroup()
 	}
 
+	lookupCodes := mapRemoteProductsToLookupCodes(remoteProducts...)
+
 	// Success?!?!?
-	return form.NewReadOnlyLookupGroup(result...)
+	return form.NewReadOnlyLookupGroup(lookupCodes...)
 }
 
 // getMerchantAccountsAllProducts returns all products defined by the selected merchant account
@@ -290,14 +292,16 @@ func (service *LookupProvider) getMerchantAccountsAllProducts() form.LookupGroup
 	result := make([]form.LookupCode, 0)
 	for _, merchantAccount := range merchantAccounts {
 
-		products, err := service.merchantAccountService.getProducts(&merchantAccount)
+		remoteProducts, err := service.merchantAccountService.getRemoteProducts(&merchantAccount)
 
 		if err != nil {
 			derp.Report(derp.Wrap(err, location, "Error loading merchant account products"))
 			return form.NewReadOnlyLookupGroup()
 		}
 
-		result = append(result, products...)
+		lookupCodes := mapRemoteProductsToLookupCodes(remoteProducts...)
+
+		result = append(result, lookupCodes...)
 	}
 
 	// Sort the results by label
