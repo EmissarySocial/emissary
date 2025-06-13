@@ -366,11 +366,11 @@ func (service *MerchantAccount) ParseCheckoutResponse(queryParams url.Values, me
 	return privilege, nil
 }
 
-func (service *MerchantAccount) ParseCheckoutWebhook(header http.Header, body []byte, merchantAccount *model.MerchantAccount) error {
+func (service *MerchantAccount) ParseCheckoutWebhook(header http.Header, body []byte, merchantAccount *model.MerchantAccount) (model.Privilege, bool, error) {
 
 	const location = "service.MerchantAccount.ParseCheckoutWebhook"
 
-	var parser func(header http.Header, body []byte, merchantAccount *model.MerchantAccount) (model.Privilege, error)
+	var parser func(header http.Header, body []byte, merchantAccount *model.MerchantAccount) (model.Privilege, bool, error)
 
 	// Fan out to the appropriate MerchantAccount type
 	switch merchantAccount.Type {
@@ -382,23 +382,11 @@ func (service *MerchantAccount) ParseCheckoutWebhook(header http.Header, body []
 		parser = service.stripe_parseCheckoutWebhook
 
 	default:
-		return derp.InternalError(location, "Invalid MerchantAccount Type", merchantAccount.Type)
+		return model.Privilege{}, false, derp.InternalError(location, "Invalid MerchantAccount Type", merchantAccount.Type)
 	}
 
 	// Parse the webhook data
-	privilege, err := parser(header, body, merchantAccount)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Error parsing webhook data")
-	}
-
-	// Sync the new/updated privilege record(s)
-	if err := service.privilegeService.Save(&privilege, "Updated via WebHook"); err != nil {
-		return derp.Wrap(err, location, "Error syncing privilege records")
-	}
-
-	// Done.
-	return nil
+	return parser(header, body, merchantAccount)
 }
 
 func (service *MerchantAccount) RefreshAPIKeys(merchantAccount *model.MerchantAccount) error {
@@ -469,17 +457,19 @@ func (service *MerchantAccount) ProductsByID(userID primitive.ObjectID, tokens .
 		return nil, derp.ValidationError("UserID cannot be zero")
 	}
 
-	// Load all Circles that are listed in the token slice
-	circleIDs := extractCircleIDs(tokens...)
-	circles, err := service.circleService.QueryByIDs(userID, circleIDs)
+	// Expand any Circles that appear in the tokens -> turn them into ProductIDs
+	if circleIDs := extractCircleIDs(tokens...); circleIDs.NotEmpty() {
 
-	if err != nil {
-		return nil, derp.Wrap(err, location, "Error loading circles")
-	}
+		circles, err := service.circleService.QueryByIDs(userID, circleIDs)
 
-	// Add purchase options from circles into the list of products to include
-	for _, circle := range circles {
-		tokens = append(tokens, circle.ProductIDs...)
+		if err != nil {
+			return nil, derp.Wrap(err, location, "Error loading circles")
+		}
+
+		// Add purchase options from circles into the list of products to include
+		for _, circle := range circles {
+			tokens = append(tokens, circle.ProductIDs...)
+		}
 	}
 
 	merchantAccountsAndProducts := extractProductIDs(tokens...)

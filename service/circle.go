@@ -9,6 +9,8 @@ import (
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
+	"github.com/benpate/rosetta/sliceof"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -209,7 +211,7 @@ func (service *Circle) QueryFeaturedByUser(userID primitive.ObjectID, options ..
 		return nil, derp.ValidationError("UserID cannot be zero")
 	}
 
-	criteria := exp.Equal("userId", userID).AndEqual("featured", true)
+	criteria := exp.Equal("userId", userID).AndEqual("isFeatured", true)
 	return service.Query(criteria, options...)
 }
 
@@ -228,6 +230,61 @@ func (service *Circle) LoadByID(userID primitive.ObjectID, circleID primitive.Ob
 
 	criteria := exp.Equal("_id", circleID).AndEqual("userId", userID)
 	return service.Load(criteria, result)
+}
+
+func (service *Circle) RemoteProductCount(userID primitive.ObjectID) (int, error) {
+
+	const location = "service.Circle.CountRemoteProducts"
+
+	// RULE: Require a valid UserID
+	if userID.IsZero() {
+		return 0, derp.ValidationError("UserID cannot be zero")
+	}
+
+	// Count the number of remote products for this user
+	circles, err := service.QueryFeaturedByUser(userID)
+
+	if err != nil {
+		return 0, derp.Wrap(err, location, "Error counting remote products for User", userID)
+	}
+
+	// Count all products across all "Featured" circles
+	result := 0
+
+	for _, circle := range circles {
+		result += circle.ProductCount()
+	}
+
+	return int(result), nil
+}
+
+func (service *Circle) RemoteProductIDs(userID primitive.ObjectID) (sliceof.String, error) {
+
+	const location = "service.Circle.RemoteProductIDs"
+
+	// RULE: Require a valid UserID
+	if userID.IsZero() {
+		return nil, derp.ValidationError("UserID cannot be zero")
+	}
+
+	// Load all Circles for this User
+	circles, err := service.QueryFeaturedByUser(userID)
+
+	spew.Dump(location, userID, circles, err)
+
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Error loading remote products for User", userID)
+	}
+
+	// Collect all of the Remote Product IDs from the Circles
+	result := sliceof.NewString()
+
+	for _, circle := range circles {
+		result = append(result, circle.ProductIDs...)
+	}
+
+	spew.Dump(result)
+	return result, nil
 }
 
 /******************************************

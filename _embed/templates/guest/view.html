@@ -115,12 +115,14 @@
 			</table>
 			
 			<pre>{{$privileges | jsonIndent}}</pre>
-			<pre>{{$privilegedStreams | jsonIndent}}</pre>
+			<pre>{{$privilegedStreams | jsonIndent}}</pre>		
+
 		{{- end -}}
 
 		{{- if not .IsAuthenticated -}}
 			<button hx-post="/signout" class="button text-sm">Sign Out</button>
 		{{- end -}}
+
 	</div>
 	
 	<div hx-get="{{.URL}}" hx-trigger="refreshPage from:window" hx-push-url="false"></div>

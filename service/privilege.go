@@ -269,9 +269,8 @@ func (service *Privilege) CountByCircle(circleID primitive.ObjectID) (int64, err
 }
 
 // LoadByRemoteIDs retrieves a privilege using the remote IDs for the user, product, and privilege
-func (service *Privilege) LoadByRemoteIDs(remotePersonID string, remoteProductID string, privilege *model.Privilege) error {
-	criteria := exp.Equal("remotePersonId", remotePersonID).
-		AndEqual("remoteProductId", remoteProductID)
+func (service *Privilege) LoadByRemotePurchaseID(remotePurchaseID string, privilege *model.Privilege) error {
+	criteria := exp.Equal("remotePurchaseId", remotePurchaseID)
 
 	return service.Load(criteria, privilege)
 }

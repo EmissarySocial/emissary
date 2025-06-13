@@ -9,6 +9,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/steranko"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // GetCheckout initiates a checkout session with the provided MerchantAccount and Product.
@@ -113,15 +114,32 @@ func PostCheckoutWebhook(ctx *steranko.Context, factory *domain.Factory, merchan
 
 	// Parse the WebHook data based on the MerchantAccount type
 	merchantAccountService := factory.MerchantAccount()
-	if err := merchantAccountService.ParseCheckoutWebhook(ctx.Request().Header, body, merchantAccount); err != nil {
+	privilege, active, err := merchantAccountService.ParseCheckoutWebhook(ctx.Request().Header, body, merchantAccount)
+
+	spew.Dump(privilege, active, err)
+
+	if err != nil {
 
 		// Suppress errors from unsupported event handlers
 		if derp.IsNotImplemented(err) {
 			return nil
 		}
 
+		// Suppress errors from subscriptions that are not found on this server
+		if derp.IsNotFound(err) {
+			return nil
+		}
+
 		// All other errors are reported to the caller
 		return derp.Wrap(err, location, "Error processing webhook data")
+	}
+
+	// Delete inactive privileges
+	if !active {
+		privilegeService := factory.Privilege()
+		if err := privilegeService.Delete(&privilege, "Updated via WebHook"); err != nil {
+			return derp.Wrap(err, location, "Error syncing privilege records")
+		}
 	}
 
 	// Success.  WebHook complete.

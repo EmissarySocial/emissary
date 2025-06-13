@@ -16,6 +16,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -316,11 +317,46 @@ func (w Outbox) Circles() QueryBuilder[model.Circle] {
 	criteria := exp.And(
 		expressionBuilder.Evaluate(w._request.URL.Query()),
 		exp.Equal("userId", w.objectID()),
+		exp.Equal("isFeatured", true),
 	)
 
 	result := NewQueryBuilder[model.Circle](w._factory.Circle(), criteria)
 
 	return result
+}
+
+func (w Outbox) RemoteProductCount() (int, error) {
+	return w._factory.Circle().RemoteProductCount(w._user.UserID)
+}
+
+func (w Outbox) RemoteProducts() (sliceof.Object[model.RemoteProduct], error) {
+
+	const location = "build.Outbox.RemoteProducts"
+
+	spew.Dump(location)
+
+	// Get purchaseable products from all Featured Circles
+	tokens, err := w._factory.Circle().RemoteProductIDs(w._user.UserID)
+
+	spew.Dump(err, tokens)
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Error retrieving remote products for user", w._user.UserID.Hex())
+	}
+
+	if tokens.IsEmpty() {
+		// If there are no remote products, return an empty slice
+		return sliceof.Object[model.RemoteProduct]{}, nil
+	}
+
+	// Look up the products in the Merchant Service using their IDs
+	remoteProducts, err := w._factory.MerchantAccount().ProductsByID(w._user.UserID, tokens...)
+
+	spew.Dump(err, remoteProducts)
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Error retrieving remote products for user", w._user.UserID.Hex())
+	}
+
+	return remoteProducts, nil
 }
 
 func (w Outbox) Replies() QueryBuilder[model.StreamSummary] {

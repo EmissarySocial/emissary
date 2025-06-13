@@ -25,10 +25,10 @@ func (service *MerchantAccount) paypal_getServerAddress(merchantAccount *model.M
 }
 
 // paypal_parseCheckoutWebhook processes product webhook events from Stripe
-func (service *MerchantAccount) paypal_parseCheckoutWebhook(header http.Header, body []byte, merchantAccount *model.MerchantAccount) (model.Privilege, error) {
+func (service *MerchantAccount) paypal_parseCheckoutWebhook(header http.Header, body []byte, merchantAccount *model.MerchantAccount) (model.Privilege, bool, error) {
 
 	const location = "service.MerchantAccount.paypal_parseCheckoutWebhook"
-	return model.Privilege{}, derp.NotImplementedError(location)
+	return model.Privilege{}, false, derp.NotImplementedError(location)
 }
 
 // paypal_refreshMerchantAccount connects/refreshes the PayPal merchant account data
