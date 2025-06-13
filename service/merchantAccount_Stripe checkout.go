@@ -12,7 +12,6 @@ import (
 	"github.com/benpate/remote"
 	"github.com/benpate/remote/options"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -144,8 +143,6 @@ func (service *MerchantAccount) stripe_getPrivilegeFromCheckoutResponse(queryPar
 	if err != nil {
 		return model.Privilege{}, derp.Wrap(err, location, "Error saving Identity", identity)
 	}
-
-	spew.Dump("CHECKOUT SESSION", checkoutSession)
 
 	// Create a privilege for this Identity
 	remoteProductID := productID

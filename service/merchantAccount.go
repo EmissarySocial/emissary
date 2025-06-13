@@ -18,7 +18,6 @@ import (
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
-	"github.com/davecgh/go-spew/spew"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -449,8 +448,6 @@ func (service *MerchantAccount) RemoteProductsByUser(userID primitive.ObjectID) 
 func (service *MerchantAccount) ProductsByID(userID primitive.ObjectID, tokens ...string) ([]model.RemoteProduct, error) {
 
 	const location = "service.MerchantAccount.ProductsByID"
-
-	spew.Dump(location, userID, tokens)
 
 	// RULE: Require a valid UserID
 	if userID.IsZero() {

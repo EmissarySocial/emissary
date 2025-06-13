@@ -9,7 +9,6 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
 )
 
 // GetCheckout initiates a checkout session with the provided MerchantAccount and Product.
@@ -115,8 +114,6 @@ func PostCheckoutWebhook(ctx *steranko.Context, factory *domain.Factory, merchan
 	// Parse the WebHook data based on the MerchantAccount type
 	merchantAccountService := factory.MerchantAccount()
 	privilege, active, err := merchantAccountService.ParseCheckoutWebhook(ctx.Request().Header, body, merchantAccount)
-
-	spew.Dump(privilege, active, err)
 
 	if err != nil {
 

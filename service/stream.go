@@ -28,7 +28,6 @@ import (
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/turbine/queue"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -496,8 +495,6 @@ func (service *Stream) RangeByPrivileges(privileges ...string) (iter.Seq[model.S
 
 	criteria := exp.In("privilegeIds", privileges)
 
-	spew.Dump(criteria)
-
 	return service.Range(criteria)
 }
 
@@ -877,8 +874,6 @@ func (service *Stream) MapByPrivileges(privileges ...model.Privilege) (map[strin
 	// Scan all privileges for CircleIDs and MerchantAccounts/RemoteProductIDs
 	privilegeIDs := make([]string, 0, len(privileges))
 
-	spew.Dump("------------------", location, privileges)
-
 	for _, privilege := range privileges {
 
 		if compoundID := privilege.CompoundID_Circle(); compoundID != "" {
@@ -889,8 +884,6 @@ func (service *Stream) MapByPrivileges(privileges ...model.Privilege) (map[strin
 			privilegeIDs = append(privilegeIDs, compoundID)
 		}
 	}
-
-	spew.Dump(privilegeIDs)
 
 	// Find all Streams that match the included privilegeIDs
 	streams, err := service.RangeByPrivileges(privilegeIDs...)
@@ -908,7 +901,6 @@ func (service *Stream) MapByPrivileges(privileges ...model.Privilege) (map[strin
 		}
 	}
 
-	spew.Dump(location, result)
 	// Ugly, but she rides.
 	return result, nil
 }
@@ -1119,14 +1111,10 @@ func (service *Stream) CalcPrivileges(stream *model.Stream) error {
 		result = append(result, privileges...)
 	}
 
-	spew.Dump(location, "Privileges", result)
-
 	// If there are any privileges, then let's try to expand them into circleIDs
 	if len(result) > 0 {
 
 		circleIDs := service.extractCircleIDs(result...)
-
-		spew.Dump("CircleIDs", circleIDs)
 
 		// If we have circle IDs, then load all of the Circles.
 		if circleIDs.NotEmpty() {
@@ -1137,8 +1125,6 @@ func (service *Stream) CalcPrivileges(stream *model.Stream) error {
 				return derp.Wrap(err, location, "Error loading circles for privileges", circleIDs)
 			}
 
-			spew.Dump(location, circles)
-
 			// Append any RemoteProductIDs from the Circle ito the result
 			for _, circle := range circles {
 				result = append(result, circle.ProductIDs...)
@@ -1146,12 +1132,9 @@ func (service *Stream) CalcPrivileges(stream *model.Stream) error {
 		}
 	}
 
-	spew.Dump(result)
-
 	// Make a unique list of privileges
 	stream.PrivilegeIDs = slice.Unique(result)
 
-	spew.Dump(stream.PrivilegeIDs)
 	return nil
 }
 

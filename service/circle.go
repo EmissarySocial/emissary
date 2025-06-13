@@ -10,7 +10,6 @@ import (
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -270,8 +269,6 @@ func (service *Circle) RemoteProductIDs(userID primitive.ObjectID) (sliceof.Stri
 	// Load all Circles for this User
 	circles, err := service.QueryFeaturedByUser(userID)
 
-	spew.Dump(location, userID, circles, err)
-
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Error loading remote products for User", userID)
 	}
@@ -283,7 +280,6 @@ func (service *Circle) RemoteProductIDs(userID primitive.ObjectID) (sliceof.Stri
 		result = append(result, circle.ProductIDs...)
 	}
 
-	spew.Dump(result)
 	return result, nil
 }
 
