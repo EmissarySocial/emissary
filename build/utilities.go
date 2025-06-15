@@ -178,9 +178,9 @@ func TriggerEvent(ctx echo.Context, event string) {
 }
 
 // getAuthorization extracts a model.Authorization record from the steranko.Context
-func getAuthorization(st *steranko.Steranko, request *http.Request) model.Authorization {
+func getAuthorization(steranko *steranko.Steranko, request *http.Request) model.Authorization {
 
-	if claims, err := st.GetAuthorization(request); err == nil {
+	if claims, err := steranko.GetAuthorization(request); err == nil {
 
 		if auth, ok := claims.(*model.Authorization); ok {
 			return *auth

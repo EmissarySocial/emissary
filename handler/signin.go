@@ -42,8 +42,7 @@ func GetSignIn(ctx *steranko.Context, factory *domain.Factory) error {
 func PostSignIn(ctx *steranko.Context, factory *domain.Factory) error {
 
 	// Try to sign in using Steranko
-	s := factory.Steranko()
-	sterankoUser, err := s.SignIn(ctx)
+	user, err := factory.Steranko().SigninFormPost(ctx)
 
 	if err != nil {
 		ctx.Response().Header().Add("HX-Trigger", "SigninError")
@@ -55,13 +54,12 @@ func PostSignIn(ctx *steranko.Context, factory *domain.Factory) error {
 	ctx.Response().Header().Add("Hx-Redirect", next)
 
 	// Add user's Activity Intent data to the response.
-	if user, isAlwaysOK := sterankoUser.(*model.User); isAlwaysOK {
+	if user, isAlwaysOK := user.(*model.User); isAlwaysOK {
 
 		message := mapof.Any{"signin-account": user.ActivityIntentProfile()}
 
 		if messageJSON, err := json.Marshal(message); err == nil {
 			ctx.Response().Header().Add("Hx-Trigger", string(messageJSON))
-
 		}
 	}
 

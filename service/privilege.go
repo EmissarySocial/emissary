@@ -94,8 +94,14 @@ func (service *Privilege) Save(privilege *model.Privilege, note string) error {
 		return derp.Wrap(err, location, "Error validating Privilege", privilege)
 	}
 
+	// If the Identity does not exists, then creat a new Identity for this Privilege
 	if err := service.maybeCreateIdentity(privilege); err != nil {
 		return derp.Wrap(err, location, "Error creating related Identity")
+	}
+
+	// RULE: Validate the CircleID for this Privilege
+	if err := service.validateCircle(privilege); err != nil {
+		return derp.Wrap(err, location, "Error validating Circle for Privilege", privilege)
 	}
 
 	// Save the privilege to the database
@@ -248,6 +254,19 @@ func (service *Privilege) RangeByCircle(circleID primitive.ObjectID, options ...
 	return service.Range(criteria, options...)
 }
 
+func (service *Privilege) RangeByRemoteTokens(remoteTokens ...string) (iter.Seq[model.Privilege], error) {
+
+	const location = "service.Privilege.RangeByRemoteTokens"
+
+	// RULE: RemoteProductID must be provided
+	if len(remoteTokens) == 0 {
+		return nil, derp.InternalError(location, "No remoteProductID provided")
+	}
+
+	criteria := exp.In("remoteToken", remoteTokens)
+	return service.Range(criteria)
+}
+
 func (service *Privilege) QueryByIdentity(identityID primitive.ObjectID, options ...option.Option) ([]model.Privilege, error) {
 
 	const location = "service.Privilege.QueryByIdentity"
@@ -325,6 +344,80 @@ func (service *Privilege) maybeCreateIdentity(privilege *model.Privilege) error 
 
 	// Update the Privilege with the correct IdentityID
 	privilege.IdentityID = identity.IdentityID
+
+	return nil
+}
+
+func (service *Privilege) validateCircle(privilege *model.Privilege) error {
+
+	// If this privilege already has a CircleID, then we're done.
+	if !privilege.CircleID.IsZero() {
+		return nil
+	}
+
+	// RULE: Compute RemoteToken (if possible)
+	if privilege.RemoteProductID == "" {
+		return nil
+	}
+
+	// Computet the RemoteToken for this Privilege
+	privilege.RemoteToken = "MA:" + privilege.MerchantAccountID.Hex() + ":" + privilege.RemoteProductID
+
+	// Try to find the Circle using the RemoteToken
+	circle := model.NewCircle()
+	if err := service.circleService.LoadByProductID(privilege.UserID, privilege.RemoteToken, &circle); err != nil {
+
+		// If no Circle is bound to the RemoteProductID, then there's nothing to do.
+		if derp.IsNotFound(err) {
+			return nil
+		}
+		return derp.Wrap(err, "service.Privilege.validateCircle", "Error loading Circle by RemoteProductID", privilege.RemoteProductID)
+	}
+
+	// Apply the CircleID to the Privilege
+	privilege.CircleID = circle.CircleID
+	return nil
+}
+
+func (service *Privilege) RefreshCircle(circle *model.Circle) error {
+
+	const location = "service.Privilege.RefreshCircle"
+
+	// Add CircleID to all Privileges that match the remote products linked to this Circle
+	if circle.ProductIDs.NotEmpty() {
+		privileges, err := service.RangeByRemoteTokens(circle.ProductIDs...)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Error loading Privileges by RemoteTokens", circle.CircleID)
+		}
+
+		for privilege := range privileges {
+
+			if privilege.CircleID != circle.CircleID {
+				privilege.CircleID = circle.CircleID
+				if err := service.Save(&privilege, "Updating Circle settings"); err != nil {
+					return derp.Wrap(err, location, "Error refreshing Privilege", circle.CircleID)
+				}
+			}
+		}
+	}
+
+	// Remove CircleID from all Privileges that no longer match the remote products linked to this Circle
+	privileges, err := service.RangeByCircle(circle.CircleID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error loading Privileges by CircleID", circle)
+	}
+
+	for privilege := range privileges {
+
+		if circle.ProductIDs.NotContains(privilege.RemoteProductID) {
+			privilege.CircleID = primitive.NilObjectID
+			if err := service.Save(&privilege, "Updating Circle settings"); err != nil {
+				return derp.Wrap(err, location, "Error refreshing Privilege", circle)
+			}
+		}
+	}
 
 	return nil
 }

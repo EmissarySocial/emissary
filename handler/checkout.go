@@ -79,17 +79,10 @@ func GetCheckoutResponse(ctx *steranko.Context, factory *domain.Factory, merchan
 
 		// Fall through means we need to update their JWT/Cookie
 		authorization.IdentityID = privilege.IdentityID
-		token, err := factory.JWT().NewToken(authorization)
 
-		if err != nil {
-			return derp.Wrap(err, location, "Error creating authorization token")
+		if err := factory.Steranko().SetCookie(ctx, authorization); err != nil {
+			return derp.Wrap(err, location, "Error setting guest authorization")
 		}
-
-		cookieName := steranko.CookieName(ctx.Request())
-		isTLS := ctx.Request().TLS != nil
-		cookie := factory.Steranko().CreateCookie(cookieName, token, isTLS)
-
-		ctx.SetCookie(&cookie)
 	}
 
 	// Forward the client to their profile page and highlight the newly purchased privilege.

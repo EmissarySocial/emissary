@@ -91,6 +91,17 @@ func (circle Circle) ProductCount() int {
 	return circle.ProductIDs.Length()
 }
 
+func (circle Circle) Privileges() sliceof.String {
+
+	result := sliceof.String{"CIR:" + circle.CircleID.Hex()}
+
+	if circle.HasProducts() {
+		result.Append(circle.ProductIDs...)
+	}
+
+	return result
+}
+
 func (circle Circle) LookupCode() form.LookupCode {
 	return form.LookupCode{
 		Value:       "CIR:" + circle.CircleID.Hex(),

@@ -12,6 +12,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/convert"
+	"github.com/benpate/steranko"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/maypok86/otter"
 )
@@ -121,7 +122,7 @@ func (service *JWT) ParseString(tokenString string) (*jwt.Token, error) {
 
 	// Try to parse the JWT token
 	claims := model.NewAuthorization()
-	result, err := jwt.ParseWithClaims(tokenString, &claims, service.FindKey, jwt.WithValidMethods([]string{"HS256", "HS384", "HS512"}))
+	result, err := jwt.ParseWithClaims(tokenString, &claims, service.FindKey, steranko.JWTValidMethods())
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Error parsing JWT token", tokenString)

@@ -1125,16 +1125,15 @@ func (service *Stream) CalcPrivileges(stream *model.Stream) error {
 				return derp.Wrap(err, location, "Error loading circles for privileges", circleIDs)
 			}
 
-			// Append any RemoteProductIDs from the Circle ito the result
+			// Append any CircleIDs and RemoteProductIDs from the Circle ito the result
 			for _, circle := range circles {
-				result = append(result, circle.ProductIDs...)
+				result = append(result, circle.Privileges()...)
 			}
 		}
 	}
 
-	// Make a unique list of privileges
+	// Make a unique list of privileges and celebrate our successes
 	stream.PrivilegeIDs = slice.Unique(result)
-
 	return nil
 }
 

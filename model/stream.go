@@ -3,7 +3,6 @@ package model
 import (
 	"math"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/EmissarySocial/emissary/tools/datetime"
@@ -226,10 +225,7 @@ func (stream Stream) RolesToPrivileges(roles ...string) sliceof.String {
 			continue
 		}
 
-		for _, combinedID := range combinedIDs {
-			_, productID, _ := strings.Cut(combinedID, ":")
-			result = append(result, productID)
-		}
+		result = append(result, combinedIDs...)
 	}
 
 	return result
@@ -469,7 +465,9 @@ func (stream Stream) GrandparentURL() string {
 
 // SetAttributedTo sets the list of people that this Stream is attributed to
 func (stream *Stream) SetAttributedTo(person PersonLink) {
-	stream.AttributedTo = person
+	if stream.AttributedTo.IsEmpty() {
+		stream.AttributedTo = person
+	}
 }
 
 // ActorLink returns a PersonLink object that represents this Stream as an ActivityPub "actor"

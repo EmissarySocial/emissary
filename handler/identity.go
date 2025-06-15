@@ -112,8 +112,7 @@ func GetIdentitySigninWithJWT(ctx *steranko.Context, factory *domain.Factory) er
 	jwtService := factory.JWT()
 
 	claims := jwt.MapClaims{}
-	encryptionMethods := []string{"HS256", "HS384", "HS512"}
-	token, err := jwt.ParseWithClaims(tokenString, &claims, jwtService.FindKey, jwt.WithValidMethods(encryptionMethods))
+	token, err := jwt.ParseWithClaims(tokenString, &claims, jwtService.FindKey, steranko.JWTValidMethods())
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error parsing JWT Token")
@@ -138,8 +137,7 @@ func GetIdentitySigninWithJWT(ctx *steranko.Context, factory *domain.Factory) er
 	authorization.IdentityID = identity.IdentityID
 
 	// Create a new JWT token and return it as a cookie
-	steranko := factory.Steranko()
-	if err := steranko.SetCookieFromClaims(ctx, authorization); err != nil {
+	if err := factory.Steranko().SetCookie(ctx, authorization); err != nil {
 		return derp.Wrap(err, location, "Error setting authorization cookie")
 	}
 

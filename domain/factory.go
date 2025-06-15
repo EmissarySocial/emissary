@@ -946,7 +946,7 @@ func (factory *Factory) Registration() *service.Registration {
 func (factory *Factory) Steranko() *steranko.Steranko {
 
 	return steranko.New(
-		service.NewSterankoUserService(factory.User(), factory.Email()),
+		service.NewSterankoUserService(factory.Identity(), factory.User(), factory.Email()),
 		factory.JWT(),
 		steranko.WithPasswordHasher(hash.BCrypt(15), hash.Plaintext{}),
 	)

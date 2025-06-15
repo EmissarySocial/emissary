@@ -124,20 +124,14 @@ func SetupDomainSigninPost(fm *server.Factory) echo.HandlerFunc {
 		}
 
 		// Create a fake "User" record for the system administrator and sign in
-		s := factory.Steranko()
-
 		administrator := model.NewUser()
 		administrator.DisplayName = "Server Administrator"
 		administrator.IsOwner = true
 
-		cookie, err := s.CreateCertificate(ctx.Request(), &administrator)
-
-		if err != nil {
-			return derp.Wrap(err, location, "Error creating certificate")
+		// Sign the Administrator into the system
+		if err := factory.Steranko().SigninUser(ctx, &administrator); err != nil {
+			return derp.Wrap(err, location, "Error signing in administrator")
 		}
-
-		// Set the cookie in the response
-		ctx.SetCookie(&cookie)
 
 		// Redirect to the admin page of this domain
 		return ctx.Redirect(http.StatusTemporaryRedirect, "//"+domain.Hostname+"/startup")

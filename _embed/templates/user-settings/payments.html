@@ -79,9 +79,9 @@
 				</div>
 			</div>
 
-			{{- $products := .Products -}}
+			{{- $remoteProducts := .RemoteProducts -}}
 
-			{{- if $products.NotEmpty -}}
+			{{- if $remoteProducts.NotEmpty -}}
 				{{- $group := groupie -}}
 
 				<div class="margin-top-xl margin-bottom">
@@ -89,12 +89,12 @@
 				</div>
 
 				<div class="table">
-					{{- range $index, $product := $products -}}
+					{{- range $index, $remoteProduct := $remoteProducts -}}
 						<div class="flex-row flex-align-center">
-							<div class="flex-grow">{{icon $product.Icon}} {{$product.Group}}</div>						
-							<div class="margin-right-lg text-gray">{{$product.Label}}</div>
+							<div class="flex-grow">{{icon $remoteProduct.Icon}} {{$remoteProduct.Name}}</div>						
+							<div class="margin-right-lg text-gray">{{$remoteProduct.Description}}</div>
 							<div>
-								<a href="{{$product.Href}}" target="_blank" class="button text-sm">Manage &rarr;</a>
+								<a href="{{$remoteProduct.AdminHref}}" target="_blank" class="button text-sm">Manage &rarr;</a>
 							</div>
 						</div>
 					{{- end -}}

@@ -10,7 +10,6 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/toot/object"
-	"github.com/golang-jwt/jwt/v5"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -156,22 +155,6 @@ func (user *User) SetUsername(username string) {
 // SetPassword updates the password for this User.  A part of the "steranko.User" interface.
 func (user *User) SetPassword(password string) {
 	user.Password = password
-}
-
-// Claims returns all access privileges given to this user.  A part of the "steranko.User" interface.
-func (user *User) Claims() jwt.Claims {
-
-	result := Authorization{
-		UserID:      user.UserID,
-		GroupIDs:    user.GroupIDs,
-		DomainOwner: user.IsOwner,
-		RegisteredClaims: jwt.RegisteredClaims{
-			IssuedAt:  jwt.NewNumericDate(time.Now()),                   // Current create date.  (Used by Steranko to refresh tokens)
-			ExpiresAt: jwt.NewNumericDate(time.Now().AddDate(10, 0, 0)), // Expires ten years from now (but re-validated sooner by Steranko)
-		},
-	}
-
-	return result
 }
 
 /******************************************
@@ -414,7 +397,7 @@ func (user User) ActivityIntentProfile() mapof.Any {
 		vocab.PropertyName:              user.DisplayName,
 		vocab.PropertyIcon:              user.ActivityPubIconURL(),
 		vocab.PropertyURL:               user.ActivityPubURL(),
-		vocab.PropertyPreferredUsername: "@" + user.Username + "@" + user.Host(),
+		vocab.PropertyPreferredUsername: "@" + user.Username + "@" + user.Hostname(),
 	}
 }
 

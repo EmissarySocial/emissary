@@ -61,8 +61,11 @@ func (service *Circle) List(criteria exp.Expression, options ...option.Option) (
 
 // Load retrieves an Circle from the database
 func (service *Circle) Load(criteria exp.Expression, result *model.Circle) error {
+
+	const location = "service.Circle.Load"
+
 	if err := service.collection.Load(notDeleted(criteria), result); err != nil {
-		return derp.Wrap(err, "service.Circle.Load", "Error loading Circle", criteria)
+		return derp.Wrap(err, location, "Error loading Circle", criteria)
 	}
 
 	return nil
@@ -81,6 +84,11 @@ func (service *Circle) Save(circle *model.Circle, note string) error {
 	// Save the value to the database
 	if err := service.collection.Save(circle, note); err != nil {
 		return derp.Wrap(err, location, "Error saving Circle", circle, note)
+	}
+
+	// Recalculate privileges based on new Circle settings.
+	if err := service.privilegeService.RefreshCircle(circle); err != nil {
+		return derp.Wrap(err, location, "Error refreshing Privileges for Circle", circle.CircleID, note)
 	}
 
 	return nil
@@ -228,6 +236,22 @@ func (service *Circle) LoadByID(userID primitive.ObjectID, circleID primitive.Ob
 	}
 
 	criteria := exp.Equal("_id", circleID).AndEqual("userId", userID)
+	return service.Load(criteria, result)
+}
+
+func (service *Circle) LoadByProductID(userID primitive.ObjectID, remoteProductID string, result *model.Circle) error {
+
+	// RULE: Require a valid UserID
+	if userID.IsZero() {
+		return derp.ValidationError("UserID cannot be zero")
+	}
+
+	// RULE: Require a valid RemoteToken
+	if remoteProductID == "" {
+		return derp.ValidationError("RemoteProductID cannot be empty")
+	}
+
+	criteria := exp.Equal("userId", userID).AndEqual("productIds", remoteProductID)
 	return service.Load(criteria, result)
 }
 

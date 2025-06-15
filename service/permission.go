@@ -151,12 +151,12 @@ func (service *Permission) UserHasRole(authorization *model.Authorization, acces
 }
 
 // HasPrivilege returns TRUE if the user has privileges for the specified role
-func (service *Permission) hasPrivilege(authorization *model.Authorization, accessLister model.AccessLister, allowedRoles ...string) (bool, error) {
+func (service *Permission) hasPrivilege(authorization *model.Authorization, accessLister model.AccessLister, requiredRoles ...string) (bool, error) {
 
 	const location = "service.Permission.HasPrivilege"
 
 	// If no roles are provided then the user does not have permission
-	if len(allowedRoles) == 0 {
+	if len(requiredRoles) == 0 {
 		return false, nil
 	}
 
@@ -167,10 +167,10 @@ func (service *Permission) hasPrivilege(authorization *model.Authorization, acce
 	}
 
 	// Find the products that are associated with the provided roles
-	privileges := accessLister.RolesToPrivileges(allowedRoles...)
+	requiredPrivileges := accessLister.RolesToPrivileges(requiredRoles...)
 
 	// Return TRUE if the identity includes one or more of the required privileges
-	return identity.HasPrivilege(privileges...), nil
+	return identity.HasPrivilege(requiredPrivileges...), nil
 }
 
 // UserInGroup returns TRUE if the user is a member of the specified group

@@ -77,8 +77,7 @@ func SetupDomainUserPost(serverFactory *server.Factory, templates *template.Temp
 
 			// Allow admins to set passwords
 			if password := data.Password; password != "" {
-				sterankoService := factory.Steranko()
-				if err := sterankoService.SetPassword(&user, password); err != nil {
+				if err := factory.Steranko().SetPassword(&user, password); err != nil {
 					return derp.Wrap(err, location, "Error setting password")
 				}
 			}
