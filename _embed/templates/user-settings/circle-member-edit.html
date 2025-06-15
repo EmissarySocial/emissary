@@ -16,20 +16,28 @@
 	<div>	
 		{{- if ne "" $identity.EmailAddress -}}
 			{{- if ne $identity.Name $identity.EmailAddress -}}
-				<div class="text-sm text-gray">Email: {{$identity.EmailAddress}}</div>
+				<div class="text-gray">Email: {{$identity.EmailAddress}}</div>
 			{{- end -}}
 		{{- end -}}
 		{{- if ne "" $identity.WebfingerHandle -}}
 			{{- if ne $identity.Name $identity.WebfingerHandle -}}
-				<div class="text-sm text-gray">Fediverse: {{$identity.WebfingerHandle}}</div>
+				<div class="text-gray">Fediverse: {{$identity.WebfingerHandle}}</div>
 			{{- end -}}
 		{{- end -}}
 
-		{{- if not $privilege.IsPurchase -}}
-			<div class="text-lg margin-top-lg">
-				Added by You on <b>{{$privilege.CreateDate | shortDate}}</b>
+		<div class="margin-top-lg">
+			{{- if $privilege.IsPurchase -}}
+				<div class="text-gray">Date: {{$privilege.CreateDate | shortDate}}</div>
+				<div class="text-gray">Product: {{$privilege.Name}}</div>
+				<div class="text-gray">Product Number: {{$privilege.RemoteProductID}}</div>
+				<div class="text-gray">Price: {{$privilege.PriceDescription}}</div>
+				<div class="text-gray">Receipt: {{$privilege.RemotePurchaseID}}</div>
+			{{- else -}}
+				<div class="text-lg">
+					Added by You on <b>{{$privilege.CreateDate | shortDate}}</b>
+				</div>
+			{{- end -}}
 			</div>
-		{{- end -}}
 	</div>
 </div>
 
