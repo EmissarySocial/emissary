@@ -28,6 +28,7 @@ func NewConnection() Connection {
 	return Connection{
 		ConnectionID: primitive.NewObjectID(),
 		Data:         mapof.NewString(),
+		Vault:        NewVault(),
 	}
 }
 

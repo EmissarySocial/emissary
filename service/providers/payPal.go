@@ -1,6 +1,8 @@
 package providers
 
 import (
+	"net/http"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
@@ -34,12 +36,13 @@ func (provider PayPal) ManualConfig() form.Form {
 					"active": schema.Boolean{},
 					"data": schema.Object{
 						Properties: schema.ElementMap{
-							"clientId": schema.String{Required: true},
+							"bnCode":   schema.String{Required: true},
 							"liveMode": schema.String{Enum: []string{"SANDBOX", "LIVE"}},
 						},
 					},
 					"vault": schema.Object{
 						Properties: schema.ElementMap{
+							"clientId":  schema.String{Required: true},
 							"secretKey": schema.String{Required: true},
 						},
 					},
@@ -48,7 +51,7 @@ func (provider PayPal) ManualConfig() form.Form {
 		},
 		Element: form.Element{
 			Type:        "layout-vertical",
-			Label:       "PayPal Partner Setup",
+			Label:       "PayPal Marketplace",
 			Description: "Allows users to accept payments from their own PayPal accounts.",
 			Children: []form.Element{
 				{
@@ -57,16 +60,25 @@ func (provider PayPal) ManualConfig() form.Form {
 					Options: mapof.Any{"value": "USER-PAYMENT"},
 				},
 				{
-					Type:    "text",
-					Path:    "data.clientId",
-					Label:   "Client ID",
-					Options: mapof.Any{"autocomplete": "off"},
+					Type:        "text",
+					Path:        "vault.clientId",
+					Label:       "Client ID",
+					Description: "Your Client ID found in the PayPal Developer Dashboard, under 'Apps & Credentials'",
+					Options:     mapof.Any{"autocomplete": "off", "autocorrect": "false", "spellcheck": "false"},
 				},
 				{
-					Type:    "text",
-					Path:    "vault.secretKey",
-					Label:   "Secret Key",
-					Options: mapof.Any{"autocomplete": "off"},
+					Type:        "text",
+					Path:        "vault.secretKey",
+					Label:       "Secret Key",
+					Description: "Your Secret Key found in the PayPal Developer Dashboard, under 'Apps & Credentials'",
+					Options:     mapof.Any{"autocomplete": "off", "autocorrect": "false", "spellcheck": "false"},
+				},
+				{
+					Type:        "text",
+					Path:        "data.bnCode",
+					Label:       "Build Notation (BN) Code",
+					Description: "Your BN code was provided by PayPal during the Marketplace onboarding process, and is included in all API calls from this site.",
+					Options:     mapof.Any{"autocomplete": "off", "autocorrect": "false", "spellcheck": "false"},
 				},
 				{
 					Type:    "select",
@@ -87,7 +99,7 @@ func (provider PayPal) ManualConfig() form.Form {
 func (provider PayPal) AfterConnect(factory Factory, connection *model.Connection, vault mapof.String) error {
 
 	if err := provider.refreshAccessToken(connection, vault); err != nil {
-		return derp.Wrap(err, "service.providers.PayPal", "Error refreshing access token")
+		return derp.Wrap(err, "service.providers.PayPal", "Error refreshing access token", derp.WithCode(http.StatusInternalServerError))
 	}
 
 	return nil
@@ -96,7 +108,7 @@ func (provider PayPal) AfterConnect(factory Factory, connection *model.Connectio
 func (provider PayPal) AfterUpdate(factory Factory, connection *model.Connection, vault mapof.String) error {
 
 	if err := provider.refreshAccessToken(connection, vault); err != nil {
-		return derp.Wrap(err, "service.providers.PayPal", "Error refreshing access token")
+		return derp.Wrap(err, "service.providers.PayPal", "Error refreshing access token", derp.WithCode(http.StatusInternalServerError))
 	}
 
 	return nil
@@ -112,8 +124,9 @@ func (provider PayPal) refreshAccessToken(connection *model.Connection, vault ma
 
 	txn := remote.Post(url).
 		ContentType("application/x-www-form-urlencoded").
+		Header("User-Agent", "Emissary Social").
 		Form("grant_type", "client_credentials").
-		With(options.BasicAuth(connection.Data.GetString("clientId"), vault.GetString("secretKey"))).
+		With(options.BasicAuth(vault.GetString("clientId"), vault.GetString("secretKey"))).
 		Result(&token)
 
 	if err := txn.Send(); err != nil {

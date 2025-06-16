@@ -38,9 +38,9 @@ func Providers() []form.LookupCode {
 		},
 		{
 			Value:       model.ConnectionProviderPayPal,
-			Label:       "PayPal",
+			Label:       "PayPal Marketplace",
 			Icon:        "paypal",
-			Description: "Allows users to accept payments via PayPal",
+			Description: "Allows users to accept payments via PayPal. Requires a Marketplace account with PayPal.",
 			Group:       "MANUAL",
 		},
 

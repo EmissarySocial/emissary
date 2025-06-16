@@ -96,23 +96,11 @@ func (vault *Vault) Encrypt(encryptionKey []byte) error {
 		return derp.Wrap(err, location, "Error generating GCM cipher")
 	}
 
-	// If not present, Create (and save) a randome nonce
-	nonce := make([]byte, aesgcm.NonceSize())
+	// If not present, Create (and save) a randome n-once
+	nonce, err := vault.getNonce(aesgcm)
 
-	if len(vault.Nonce) == 0 {
-
-		if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
-			return derp.Wrap(err, location, "Error generating nonce")
-		}
-
-		vault.Nonce = hex.EncodeToString(nonce)
-
-	} else {
-		nonce, err = hex.DecodeString(vault.Nonce)
-
-		if err != nil {
-			return derp.Wrap(err, location, "Invalid nonce in vault")
-		}
+	if err != nil {
+		return derp.Wrap(err, location, "Error retrieving n-once for vault")
 	}
 
 	// Encrypt all plaintext values in the vault
@@ -131,10 +119,6 @@ func (vault Vault) Decrypt(encryptionKey []byte, values ...string) (mapof.String
 
 	const location = "model.vault.Decrypt"
 
-	if len(vault.Nonce) == 0 {
-		return mapof.NewString(), nil
-	}
-
 	// Create AES block cipher
 	block, err := aes.NewCipher(encryptionKey)
 
@@ -150,14 +134,14 @@ func (vault Vault) Decrypt(encryptionKey []byte, values ...string) (mapof.String
 	}
 
 	// Retrieve the N-Once
-	nonce, err := hex.DecodeString(vault.Nonce)
+	nonce, err := vault.getNonce(aesgcm)
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Invalid nonce in vault")
 	}
 
 	// Decode ciphertext values
-	result := make(mapof.String, len(vault.Encrypted))
+	result := make(mapof.String, len(values))
 	for property, value := range vault.Encrypted {
 
 		// If values are specified, then only decrypt those values.
@@ -181,11 +165,26 @@ func (vault Vault) Decrypt(encryptionKey []byte, values ...string) (mapof.String
 		result[property] = string(plaintext)
 	}
 
+	// Patch plaintext values into the result.
+	// If a property is in the plaintext, then it hasn't been encrypted/saved yet.
+	// They're still valid to use, so put them in here, if applicable.
+	for property, value := range vault.plaintext {
+
+		// If values are specified, then only decrypt those values.
+		if len(values) > 0 {
+			if !slices.Contains(values, property) {
+				continue
+			}
+		}
+
+		result[property] = value
+	}
+
 	// Success.
 	return result, nil
 }
 
-// hasEncryptableValue returns TRUS if there are any non-empty/non-obscured values in the vault
+// hasEncryptableValue returns TRUE if there are any non-empty/non-obscured values in the vault
 // that should be encrypted
 func (vault Vault) hasEncryptableValues() bool {
 
@@ -196,6 +195,34 @@ func (vault Vault) hasEncryptableValues() bool {
 	}
 
 	return false
+}
+
+// getNonce retrieves (or generates) the N-Once used to encrypt the vault data.
+func (vault *Vault) getNonce(aesgcm cipher.AEAD) ([]byte, error) {
+	const location = "model.vault.getNonce"
+
+	if len(vault.Nonce) == 0 {
+
+		// Generate a random N-Once
+		nonce := make([]byte, aesgcm.NonceSize())
+
+		if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
+			return nil, derp.Wrap(err, location, "Error generating nonce")
+		}
+
+		vault.Nonce = hex.EncodeToString(nonce)
+
+		return nonce, nil
+	}
+
+	// Decode the n-once as a hex string
+	nonce, err := hex.DecodeString(vault.Nonce)
+
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Invalid nonce in vault")
+	}
+
+	return nonce, nil
 }
 
 // isEncryptable returns true if the value is not empty and not a `VaultObscuredValue`
