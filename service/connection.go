@@ -78,6 +78,12 @@ func (service *Connection) Save(connection *model.Connection, note string) error
 
 	const location = "service.Connection.Save"
 
+	provider, isValidProvider := service.providerService.GetProvider(connection.ProviderID)
+
+	if !isValidProvider {
+		return derp.InternalError(location, "Invalid Provider", connection.ProviderID)
+	}
+
 	// Decode the EncryptionKey
 	encryptionKey, err := hex.DecodeString(service.keyEncryptingKey)
 
@@ -89,9 +95,34 @@ func (service *Connection) Save(connection *model.Connection, note string) error
 	if err := connection.Vault.Encrypt(encryptionKey); err != nil {
 		return derp.Wrap(err, location, "Error encrypting vault values")
 	}
+
 	// Validate the value before saving
 	if err := service.Schema().Validate(connection); err != nil {
 		return derp.Wrap(err, location, "Error validating Connection", connection)
+	}
+
+	// Decrypt the vault data
+	vault, err := service.DecryptVault(connection)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error getting vault")
+	}
+
+	switch connection.Active {
+
+	// Connect/Update the connection
+	case true:
+
+		if err := provider.Connect(connection, vault); err != nil {
+			return derp.Wrap(err, location, "Error installing connection")
+		}
+
+	// Disconnect the connection
+	case false:
+
+		if err := provider.Disconnect(connection, vault); err != nil {
+			return derp.Wrap(err, location, "Error installing connection")
+		}
 	}
 
 	// Save the value to the database
@@ -177,6 +208,14 @@ func (service *Connection) QueryAll(options ...option.Option) ([]model.Connectio
 }
 
 func (service *Connection) QueryByType(typeID string, options ...option.Option) ([]model.Connection, error) {
+
+	const location = "service.Connection.QueryByType"
+
+	// RULE: typeID must not be empty
+	if typeID == "" {
+		return nil, derp.InternalError(location, "Invalid Type ID", typeID)
+	}
+
 	return service.Query(exp.Equal("type", typeID), options...)
 }
 
@@ -192,12 +231,52 @@ func (service *Connection) AllAsMap() mapof.Object[model.Connection] {
 	return result
 }
 
+func (service *Connection) LoadByID(connectionID primitive.ObjectID, connection *model.Connection) error {
+
+	const location = "service.Connection.LoadByID"
+
+	// RULE: connectionID must not be empty
+	if connectionID.IsZero() {
+		return derp.InternalError(location, "Invalid Connection ID", connectionID)
+	}
+
+	criteria := exp.Equal("_id", connectionID)
+
+	if err := service.Load(criteria, connection); err != nil {
+		return derp.Wrap(err, location, "Error loading Connection", connectionID)
+	}
+
+	return nil
+}
+
+func (service *Connection) LoadByToken(token string, connection *model.Connection) error {
+
+	const location = "service.Connection.LoadByToken"
+
+	// Convert the token to an ObjectID
+	connectionID, err := primitive.ObjectIDFromHex(token)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Invalid Connection ID", token)
+	}
+
+	// Load the Connection by ID
+	return service.LoadByID(connectionID, connection)
+}
+
 func (service *Connection) LoadActiveByType(typeID string, connection *model.Connection) error {
+
+	const location = "service.Connection.LoadActiveByType"
+
+	// RULE: typeID must not be empty
+	if typeID == "" {
+		return derp.InternalError(location, "Invalid Type ID", typeID)
+	}
 
 	criteria := exp.Equal("type", typeID).AndEqual("active", true)
 
 	if err := service.Load(criteria, connection); err != nil {
-		return derp.Wrap(err, "service.Connection.LoadByType", "Error loading Connection", typeID)
+		return derp.Wrap(err, location, "Error loading Connection", typeID)
 	}
 
 	return nil
@@ -206,10 +285,17 @@ func (service *Connection) LoadActiveByType(typeID string, connection *model.Con
 // LoadByProvider loads a Connection that matches the given provider.
 func (service *Connection) LoadByProvider(providerID string, connection *model.Connection) error {
 
+	const location = "service.Connection.LoadByProvider"
+
+	// RULE: providerID must not be empty
+	if providerID == "" {
+		return derp.InternalError(location, "Invalid Provider ID", providerID)
+	}
+
 	criteria := exp.Equal("providerId", providerID)
 
 	if err := service.Load(criteria, connection); err != nil {
-		return derp.Wrap(err, "service.Connection.LoadByProvider", "Error loading Connection", providerID)
+		return derp.Wrap(err, location, "Error loading Connection", providerID)
 	}
 
 	return nil
@@ -218,70 +304,37 @@ func (service *Connection) LoadByProvider(providerID string, connection *model.C
 // LoadOrCreateByProvider loads a Connection that matches the given provider.  If no Connection is found, a new one is created.
 func (service *Connection) LoadOrCreateByProvider(providerID string) (model.Connection, error) {
 
+	const location = "service.Connection.LoadOrCreateByProvider"
+
+	// RULE: providerID must not be empty
+	if providerID == "" {
+		return model.Connection{}, derp.InternalError(location, "Invalid Provider ID", providerID)
+	}
+
 	result := model.NewConnection()
 
 	criteria := exp.Equal("providerId", providerID)
 
-	err := service.Load(criteria, &result)
-	if err == nil {
-		return result, nil
-	}
+	if err := service.Load(criteria, &result); err != nil {
 
-	if derp.IsNotFound(err) {
-		result.ProviderID = providerID
-		return result, nil
-	}
-
-	return result, derp.Wrap(err, "service.Connection.LoadOrCreateByProvider", "Error loading Connection", providerID)
-}
-
-/******************************************
- * OAuth2 Configuration
- ******************************************/
-
-// GetOAuthConfig generates an OAuth2 configuration for the provided MerchantAccount
-func (service *Connection) GetOAuthConfig(providerID string) (oauth2.Config, error) {
-
-	const location = "service.Connection.GetOAuthConfig"
-
-	// Load the connection for this provider
-	connection := model.NewConnection()
-	if err := service.LoadByProvider(providerID, &connection); err != nil {
-		return oauth2.Config{}, derp.Wrap(err, location, "Error loading connection", providerID)
-	}
-
-	// Create the OAuth2 config for this server
-	result := oauth2.Config{}
-
-	// Custom settings for different MerchantAccount types:
-	switch connection.ProviderID {
-
-	case model.MerchantAccountTypePayPal:
-		result.ClientID = connection.Data.GetString("clientId")
-		result.ClientSecret = connection.Data.GetString("clientSecret")
-		result.Endpoint = oauth2.Endpoint{
-			AuthURL:  service.paypal_getServerAddress(connection) + "/signin/authorize",
-			TokenURL: service.paypal_getServerAddress(connection) + "/v1/oauth2/token",
+		if derp.IsNotFound(err) {
+			result.ProviderID = providerID
+			return result, nil
 		}
-		result.Scopes = []string{"openid", "profile", "email", "address", "phone"}
-		result.RedirectURL = service.host + "/@me/oauth/callback/paypal"
 
-	default:
-		return oauth2.Config{}, derp.InternalError(location, "Invalid Provider", connection.ProviderID)
+		return result, derp.Wrap(err, location, "Error loading Connection", providerID)
 	}
 
 	return result, nil
 }
 
-func (service *Connection) paypal_getServerAddress(connection model.Connection) string {
-	if connection.Data.GetString("liveMode") == "LIVE" {
-		return "https://api.paypal.com"
-	}
-	return "https://api.sandbox.paypal.com"
-}
-
 func (service *Connection) DecryptVault(connection *model.Connection) (mapof.String, error) {
 	const location = "service.Connection.DecryptVault"
+
+	// RULE: connection must not be nil
+	if connection == nil {
+		return nil, derp.InternalError(location, "Connection is nil")
+	}
 
 	// Decode the EncryptionKey
 	encryptionKey, err := hex.DecodeString(service.keyEncryptingKey)
@@ -298,4 +351,38 @@ func (service *Connection) DecryptVault(connection *model.Connection) (mapof.Str
 	}
 
 	return result, nil
+}
+
+func (service *Connection) GetAccessToken(connection *model.Connection) (oauth2.Token, error) {
+
+	const location = "service.Connection.GetAccessToken"
+
+	// If the token is valid, then return it immediately
+	if connection.Token.Valid() {
+		return *connection.Token, nil
+	}
+
+	// Fall through means that we need to refresh the access token
+
+	// Find the correct provider...
+	provider, isValidProvider := service.providerService.GetProvider(connection.ProviderID)
+
+	if !isValidProvider {
+		return oauth2.Token{}, derp.InternalError(location, "Invalid Provider", connection.ProviderID)
+	}
+
+	// Decrypt the vault (access keys will be in here)
+	vault, err := service.DecryptVault(connection)
+
+	if err != nil {
+		return oauth2.Token{}, derp.Wrap(err, location, "Error decrypting vault", connection.ProviderID)
+	}
+
+	// Refresh the Access Token according to the provider's rules
+	if err := provider.Refresh(connection, vault); err != nil {
+		return oauth2.Token{}, derp.Wrap(err, location, "Error refreshing access token", connection.ProviderID)
+	}
+
+	// Triumphantly return the access token
+	return *connection.Token, nil
 }

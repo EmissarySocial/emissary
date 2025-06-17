@@ -12,10 +12,10 @@ import (
 	"github.com/stripe/stripe-go/v78/webhook"
 )
 
-// stripe_handleWebhook processes product webhook events from Stripe
-func (service *MerchantAccount) stripe_parseCheckoutWebhook(header http.Header, body []byte, merchantAccount *model.MerchantAccount) (model.Privilege, bool, error) {
+// stripe_processWebhook processes product webhook events from Stripe
+func (service *MerchantAccount) stripe_processWebhook(header http.Header, body []byte, merchantAccount *model.MerchantAccount) error {
 
-	const location = "service.MerchantAccount.stripe_handleWebhook"
+	const location = "service.MerchantAccount.stripe_processWebhook"
 
 	var event stripe.Event
 
@@ -26,7 +26,7 @@ func (service *MerchantAccount) stripe_parseCheckoutWebhook(header http.Header, 
 	case false:
 
 		if err := json.Unmarshal(body, &event); err != nil {
-			return model.Privilege{}, false, derp.Wrap(err, location, "Error unmarshalling webhook event")
+			return derp.Wrap(err, location, "Error unmarshalling webhook event")
 		}
 
 	// In LIVE mode, use the Stripe library to validate event
@@ -36,35 +36,42 @@ func (service *MerchantAccount) stripe_parseCheckoutWebhook(header http.Header, 
 		vault, err := service.DecryptVault(merchantAccount, "webhookSecret")
 
 		if err != nil {
-			return model.Privilege{}, false, derp.Wrap(err, location, "Error decrypting webhook secret")
+			return derp.Wrap(err, location, "Error decrypting webhook secret")
 		}
 
 		// Parse and validate the Webhook event
 		event, err = webhook.ConstructEvent(body, header.Get("Stripe-Signature"), vault.GetString("webhookSecret"))
 
 		if err != nil {
-			return model.Privilege{}, false, derp.Wrap(err, location, "Error parsing webhook event")
+			return derp.Wrap(err, location, "Error parsing webhook event")
 		}
 	}
 
 	// Filter out other non-subscription events
 	if !strings.HasPrefix(string(event.Type), "customer.subscription.") {
-		return model.Privilege{}, false, derp.NotImplementedError(location)
+		return derp.NotImplementedError(location)
 	}
 
 	// Unpack the Subscription from the Webhook event
 	var subscription stripe.Subscription
 	if err := json.Unmarshal(event.Data.Raw, &subscription); err != nil {
-		return model.Privilege{}, false, derp.Wrap(err, location, "Error unmarshalling subscription data")
+		return derp.Wrap(err, location, "Error unmarshalling subscription data")
 	}
 
 	// Load the Privilege associated with this Stripe Subscription.
 	privilege := model.NewPrivilege()
 	if err := service.privilegeService.LoadByRemotePurchaseID(subscription.ID, &privilege); err != nil {
-		return model.Privilege{}, false, derp.Wrap(err, location, "Error loading privilege")
+		return derp.Wrap(err, location, "Error loading privilege")
 	}
 
-	isActive := stripeapi.SubscriptionIsActive(subscription)
+	// If the underlying Subscription is no longer active, then remove the Privilege
+	if isActive := stripeapi.SubscriptionIsActive(subscription); !isActive {
 
-	return privilege, isActive, nil
+		if err := service.privilegeService.Delete(&privilege, "Updated via WebHook"); err != nil {
+			return derp.Wrap(err, location, "Error syncing privilege records")
+		}
+	}
+
+	// Successfully processed the WebHook event
+	return nil
 }

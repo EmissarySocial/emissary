@@ -32,6 +32,25 @@ func NewVault() Vault {
 	}
 }
 
+// HasString returns TRUE if the vault has a value for the specified name.
+// This method is lightweight because it does not decrypt the value, only
+// checks to see if it exists.
+func (vault Vault) HasString(name string) bool {
+
+	if _, ok := vault.Encrypted[name]; ok {
+		return true
+	}
+
+	if _, ok := vault.plaintext[name]; ok {
+		return true
+	}
+
+	return false
+}
+
+// GetStringOK returns human-visible value for the specified name,
+// which means returning a `VaultObscuredValue` the value is present,
+// or a blank string if it is not.
 func (vault Vault) GetStringOK(name string) (string, bool) {
 
 	if _, ok := vault.Encrypted[name]; ok {
@@ -45,6 +64,9 @@ func (vault Vault) GetStringOK(name string) (string, bool) {
 	return "", false
 }
 
+// SetString sets the value for a specified name in the vault. It does
+// this intelligently, by not overwriting actual values if a `VaultObscuredValue`
+// was passed in through the UX.
 func (vault *Vault) SetString(name string, value string) bool {
 
 	if vault.plaintext == nil {

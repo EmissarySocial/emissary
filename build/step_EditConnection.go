@@ -96,18 +96,6 @@ func (step StepEditConnection) Post(builder Builder, _ io.Writer) PipelineBehavi
 		return Halt().WithError(derp.Wrap(err, location, "Error updating domain object with form data"))
 	}
 
-	// Decrypt the vault data
-	vault, err := connectionService.DecryptVault(&connection)
-
-	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error getting vault"))
-	}
-
-	// Run post-configuration scripts, if any
-	if err := adapter.AfterConnect(builder.factory(), &connection, vault); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error installing connection"))
-	}
-
 	// Try to save the domain object back to the database
 	if err := connectionService.Save(&connection, "Updated by Administrator"); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error saving domain object"))

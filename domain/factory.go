@@ -365,6 +365,7 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 			factory.JWT(),
 			factory.Identity(),
 			factory.Privilege(),
+			factory.User(),
 			domain.MasterKey,
 			factory.Host(),
 		)

@@ -30,6 +30,7 @@ type MerchantAccount struct {
 	circleService     *Circle
 	identityService   *Identity
 	privilegeService  *Privilege
+	userService       *User
 	encryptionKey     string
 	host              string
 }
@@ -44,13 +45,14 @@ func NewMerchantAccount() MerchantAccount {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *MerchantAccount) Refresh(collection data.Collection, circleService *Circle, connectionService *Connection, jwtService *JWT, identityService *Identity, privilegeService *Privilege, masterKey string, host string) {
+func (service *MerchantAccount) Refresh(collection data.Collection, circleService *Circle, connectionService *Connection, jwtService *JWT, identityService *Identity, privilegeService *Privilege, userService *User, masterKey string, host string) {
 	service.collection = collection
 	service.circleService = circleService
 	service.connectionService = connectionService
 	service.jwtService = jwtService
 	service.identityService = identityService
 	service.privilegeService = privilegeService
+	service.userService = userService
 	service.encryptionKey = masterKey
 	service.host = host
 }
@@ -365,27 +367,22 @@ func (service *MerchantAccount) ParseCheckoutResponse(queryParams url.Values, me
 	return privilege, nil
 }
 
-func (service *MerchantAccount) ParseCheckoutWebhook(header http.Header, body []byte, merchantAccount *model.MerchantAccount) (model.Privilege, bool, error) {
+func (service *MerchantAccount) ParseCheckoutWebhook(header http.Header, body []byte, merchantAccount *model.MerchantAccount) error {
 
 	const location = "service.MerchantAccount.ParseCheckoutWebhook"
-
-	var parser func(header http.Header, body []byte, merchantAccount *model.MerchantAccount) (model.Privilege, bool, error)
 
 	// Fan out to the appropriate MerchantAccount type
 	switch merchantAccount.Type {
 
 	case model.MerchantAccountTypePayPal:
-		parser = service.paypal_parseCheckoutWebhook
+		return service.paypal_processWebhook(header, body, merchantAccount)
 
 	case model.MerchantAccountTypeStripe:
-		parser = service.stripe_parseCheckoutWebhook
+		return service.stripe_processWebhook(header, body, merchantAccount)
 
-	default:
-		return model.Privilege{}, false, derp.InternalError(location, "Invalid MerchantAccount Type", merchantAccount.Type)
 	}
 
-	// Parse the webhook data
-	return parser(header, body, merchantAccount)
+	return derp.InternalError(location, "Invalid MerchantAccount Type", merchantAccount.Type)
 }
 
 func (service *MerchantAccount) RefreshAPIKeys(merchantAccount *model.MerchantAccount) error {

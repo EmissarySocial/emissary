@@ -106,9 +106,8 @@ func PostCheckoutWebhook(ctx *steranko.Context, factory *domain.Factory, merchan
 
 	// Parse the WebHook data based on the MerchantAccount type
 	merchantAccountService := factory.MerchantAccount()
-	privilege, active, err := merchantAccountService.ParseCheckoutWebhook(ctx.Request().Header, body, merchantAccount)
 
-	if err != nil {
+	if err := merchantAccountService.ParseCheckoutWebhook(ctx.Request().Header, body, merchantAccount); err != nil {
 
 		// Suppress errors from unsupported event handlers
 		if derp.IsNotImplemented(err) {
@@ -122,14 +121,6 @@ func PostCheckoutWebhook(ctx *steranko.Context, factory *domain.Factory, merchan
 
 		// All other errors are reported to the caller
 		return derp.Wrap(err, location, "Error processing webhook data")
-	}
-
-	// Delete inactive privileges
-	if !active {
-		privilegeService := factory.Privilege()
-		if err := privilegeService.Delete(&privilege, "Updated via WebHook"); err != nil {
-			return derp.Wrap(err, location, "Error syncing privilege records")
-		}
 	}
 
 	// Success.  WebHook complete.

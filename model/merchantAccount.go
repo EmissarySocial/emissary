@@ -13,8 +13,9 @@ import (
 // This account will be accessed on the User's behalf to charge Purchases for their merchant accounts
 type MerchantAccount struct {
 	MerchantAccountID    primitive.ObjectID `bson:"_id"`                  // Unique ID for the payment processor connection
-	Type                 string             `bson:"type"`                 // Internal identifier of the payment processor (STRIPE, PAYPAL, etc.)
+	ConnectionID         primitive.ObjectID `bson:"connectionId"`         // Unique ID of the Connection that this MerchantAccount uses to access the payment processor
 	UserID               primitive.ObjectID `bson:"userId"`               // Unique ID of the user who owns the account with this payment processor
+	Type                 string             `bson:"type"`                 // Internal identifier of the payment processor (STRIPE, PAYPAL, etc.)
 	Name                 string             `bson:"name"`                 // Human-friendly name for the payment processor account
 	Description          string             `bson:"description"`          // Human-friendly Description of the payment processor account
 	Vault                Vault              `bson:"vault" json:"-"`       // Vault data that is stored in the database (encrypted)
@@ -45,6 +46,7 @@ func (merchantAccount MerchantAccount) Fields() []string {
 		"type",
 		"name",
 		"description",
+		"liveMode",
 	}
 }
 

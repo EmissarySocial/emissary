@@ -52,23 +52,23 @@ func WithAuthenticatedUser(serverFactory *server.Factory, fn WithFunc1[model.Use
 		return fn(ctx, factory, &user)
 	})
 }
-func WithConnection(serverFactory *server.Factory, fn WithFunc2[model.User, model.Connection]) echo.HandlerFunc {
+func WithConnection(serverFactory *server.Factory, fn WithFunc1[model.Connection]) echo.HandlerFunc {
 
 	const location = "handler.WithConnection"
 
-	return WithUser(serverFactory, func(ctx *steranko.Context, factory *domain.Factory, user *model.User) error {
+	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *domain.Factory) error {
 
 		// Load the Connection from the database
 		connectionService := factory.Connection()
 		connection := model.NewConnection()
-		providerID := ctx.QueryParam("providerId")
+		connectionID := ctx.QueryParam("connectionId")
 
-		if err := connectionService.LoadByProvider(providerID, &connection); err != nil {
+		if err := connectionService.LoadByToken(connectionID, &connection); err != nil {
 			return derp.Wrap(err, location, "Error loading Connection")
 		}
 
 		// Call the continuation function
-		return fn(ctx, factory, user, &connection)
+		return fn(ctx, factory, &connection)
 	})
 }
 

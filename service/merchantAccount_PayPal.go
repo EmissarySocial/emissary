@@ -10,9 +10,8 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/remote"
 	"github.com/benpate/remote/options"
-	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/benpate/rosetta/slice"
+	"github.com/davecgh/go-spew/spew"
 )
 
 func (service *MerchantAccount) paypal_getServerAddress(merchantAccount *model.MerchantAccount) string {
@@ -24,17 +23,29 @@ func (service *MerchantAccount) paypal_getServerAddress(merchantAccount *model.M
 	}
 }
 
-// paypal_parseCheckoutWebhook processes product webhook events from Stripe
-func (service *MerchantAccount) paypal_parseCheckoutWebhook(header http.Header, body []byte, merchantAccount *model.MerchantAccount) (model.Privilege, bool, error) {
+// paypal_processWebhook processes product webhook events from PayPal
+func (service *MerchantAccount) paypal_processWebhook(header http.Header, body []byte, merchantAccount *model.MerchantAccount) error {
 
-	const location = "service.MerchantAccount.paypal_parseCheckoutWebhook"
-	return model.Privilege{}, false, derp.NotImplementedError(location)
+	const location = "service.MerchantAccount.paypal_processWebhook"
+	return derp.NotImplementedError(location)
 }
 
 // paypal_refreshMerchantAccount connects/refreshes the PayPal merchant account data
 func (service *MerchantAccount) paypal_refreshMerchantAccount(merchantAccount *model.MerchantAccount) error {
 
 	const location = "service.MerchantAccount.paypal_refreshMerchantAccount"
+
+	// RULE: Vault MUST have clientId to proceed.  Otherwise,
+	// this MMerchantAccount is not fully configured yet.
+	if !merchantAccount.Vault.HasString("clientId") {
+		return nil
+	}
+
+	// RULE: Vault MUST have secretKey to proceed.  Otherwise,
+	// this MerchantAccount is not fully configured yet.
+	if !merchantAccount.Vault.HasString("secretKey") {
+		return nil
+	}
 
 	// Decode the encryption key (this should never fail)
 	encryptionKey, err := hex.DecodeString(service.encryptionKey)
@@ -86,50 +97,79 @@ func (service *MerchantAccount) paypal_getProducts(merchantAccount *model.Mercha
 
 	const location = "service.MerchantAccount.paypal_getProducts"
 
-	endpoint := service.paypal_getServerAddress(merchantAccount) + "/v1/billing/plans"
-	txnResult := mapof.NewAny()
-
-	// Get API Keys from the vault
-	apiKeys, err := service.DecryptVault(merchantAccount, "accessToken")
-
-	if err != nil {
-		return nil, derp.Wrap(err, location, "Error retrieving API keys")
+	// Load the PayPal connection
+	connection := model.NewConnection()
+	if err := service.connectionService.LoadActiveByType(model.ConnectionProviderPayPal, &connection); err != nil {
+		return nil, derp.Wrap(err, location, "Error retrieving PayPal connection")
 	}
 
+	// Query PayPal for all Products for this Merchant Account
+	endpoint := service.paypal_getServerAddress(merchantAccount) + "/v1/catalogs/products"
+	txnResult := mapof.NewAny()
 	txn := remote.Get(endpoint).
-		Query("sort_by", "create_time").
-		Query("sort_order", "desc").
+		//	Query("sort_by", "create_time").
+		//	Query("sort_order", "desc").
 		ContentType("application/json").
 		Header("Prefer", "return=representation").
-		With(options.BearerAuth(apiKeys.GetString("accessToken"))).
+		With(options.BearerAuth(connection.Token.AccessToken)).
+		With(options.Debug()).
 		Result(&txnResult)
 
 	if err := txn.Send(); err != nil {
 		return nil, derp.Wrap(err, location, "Error connecting to PayPal API")
 	}
 
-	plans := txnResult.GetSliceOfAny("plans")
-	result := make([]model.RemoteProduct, 0, len(plans))
+	spew.Dump(txnResult)
 
-	for _, planAny := range plans {
-		plan := mapof.Any(convert.MapOfAny(planAny))
+	return []model.RemoteProduct{}, nil
 
-		// Optional filter by productID
-		if (len(productIDs) > 0) && (slice.NotContains(productIDs, plan.GetString("id"))) {
-			continue
+	/*
+
+		endpoint := service.paypal_getServerAddress(merchantAccount) + "/v1/billing/plans"
+		txnResult := mapof.NewAny()
+
+		// Get API Keys from the vault
+		apiKeys, err := service.DecryptVault(merchantAccount, "accessToken")
+
+		if err != nil {
+			return nil, derp.Wrap(err, location, "Error retrieving API keys")
 		}
 
-		result = append(result, model.RemoteProduct{
-			MerchantAccountID: merchantAccount.MerchantAccountID,
-			ProductID:         plan.GetString("id"),
-			Name:              plan.GetString("name"),
-			Description:       plan.GetString("description"),
-			Icon:              "paypal",
-			AdminHref:         "https://www.paypal.com/business/manage/products/" + plan.GetString("id"),
-		})
-	}
+		txn := remote.Get(endpoint).
+			Query("sort_by", "create_time").
+			Query("sort_order", "desc").
+			ContentType("application/json").
+			Header("Prefer", "return=representation").
+			With(options.BearerAuth(apiKeys.GetString("accessToken"))).
+			Result(&txnResult)
 
-	return result, nil
+		if err := txn.Send(); err != nil {
+			return nil, derp.Wrap(err, location, "Error connecting to PayPal API")
+		}
+
+		plans := txnResult.GetSliceOfAny("plans")
+		result := make([]model.RemoteProduct, 0, len(plans))
+
+		for _, planAny := range plans {
+			plan := mapof.Any(convert.MapOfAny(planAny))
+
+			// Optional filter by productID
+			if (len(productIDs) > 0) && (slice.NotContains(productIDs, plan.GetString("id"))) {
+				continue
+			}
+
+			result = append(result, model.RemoteProduct{
+				MerchantAccountID: merchantAccount.MerchantAccountID,
+				ProductID:         plan.GetString("id"),
+				Name:              plan.GetString("name"),
+				Description:       plan.GetString("description"),
+				Icon:              "paypal",
+				AdminHref:         "https://www.paypal.com/business/manage/products/" + plan.GetString("id"),
+			})
+		}
+
+		return result, nil
+	*/
 }
 
 func (service *MerchantAccount) paypal_getCheckoutURL(merchantAccount *model.MerchantAccount, remoteProductID string, returnURL string) (string, error) {

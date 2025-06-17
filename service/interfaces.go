@@ -13,6 +13,7 @@ type TemplateLike interface {
 }
 
 type MerchantAccountAdapter interface {
+	GetSignupURL(*model.Connection) (string, error)
 	RefreshAPIKeys() error
 	GetCheckoutURL() (string, error)
 	ParseCheckoutResponse(url.Values) (model.Privilege, error)
