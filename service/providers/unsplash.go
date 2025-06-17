@@ -86,12 +86,17 @@ func (adapter Unsplash) ManualConfig() form.Form {
  * Lifecycle Methods
  ******************************************/
 
-// AfterCoonnect applies any extra changes to the database after this Adapter is activated.
-func (adapter Unsplash) AfterConnect(factory Factory, client *model.Connection, vault mapof.String) error {
+// Connect applies any extra changes to the database after this Adapter is activated.
+func (adapter Unsplash) Connect(connection *model.Connection, vault mapof.String) error {
 	return nil
 }
 
-// AfterUpdate is called after a user has successfully updated their Twitter connection
-func (adapter Unsplash) AfterUpdate(factory Factory, client *model.Connection, vault mapof.String) error {
+// Refresh updates this connection if it has changed or is out of date
+func (adapter Unsplash) Refresh(connection *model.Connection, vault mapof.String) error {
+	return nil
+}
+
+// Disconnect applies any extra changes to the database when this Adapter is disconnected
+func (adapter Unsplash) Disconnect(connection *model.Connection, vault mapof.String) error {
 	return nil
 }

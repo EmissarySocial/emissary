@@ -10,8 +10,9 @@ import (
 type Provider interface {
 
 	// Lifecycle Methods
-	AfterConnect(factory Factory, client *model.Connection, vault mapof.String) error
-	AfterUpdate(factory Factory, client *model.Connection, vault mapof.String) error
+	Connect(connection *model.Connection, vault mapof.String) error
+	Refresh(connection *model.Connection, vault mapof.String) error
+	Disconnect(connection *model.Connection, vault mapof.String) error
 }
 
 type OAuthProvider interface {

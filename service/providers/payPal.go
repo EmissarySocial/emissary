@@ -2,8 +2,10 @@ package providers
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/paypal"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/remote"
@@ -63,21 +65,21 @@ func (provider PayPal) ManualConfig() form.Form {
 					Type:        "text",
 					Path:        "vault.clientId",
 					Label:       "Client ID",
-					Description: "Your Client ID found in the PayPal Developer Dashboard, under 'Apps & Credentials'",
+					Description: "Found in the PayPal Developer Dashboard, under 'Apps & Credentials'",
 					Options:     mapof.Any{"autocomplete": "off", "autocorrect": "false", "spellcheck": "false"},
 				},
 				{
 					Type:        "text",
 					Path:        "vault.secretKey",
 					Label:       "Secret Key",
-					Description: "Your Secret Key found in the PayPal Developer Dashboard, under 'Apps & Credentials'",
+					Description: "Found in the PayPal Developer Dashboard, under 'Apps & Credentials'",
 					Options:     mapof.Any{"autocomplete": "off", "autocorrect": "false", "spellcheck": "false"},
 				},
 				{
 					Type:        "text",
 					Path:        "data.bnCode",
 					Label:       "Build Notation (BN) Code",
-					Description: "Your BN code was provided by PayPal during the Marketplace onboarding process, and is included in all API calls from this site.",
+					Description: "Provided by PayPal during Marketplace onboarding",
 					Options:     mapof.Any{"autocomplete": "off", "autocorrect": "false", "spellcheck": "false"},
 				},
 				{
@@ -96,42 +98,43 @@ func (provider PayPal) ManualConfig() form.Form {
 	}
 }
 
-func (provider PayPal) AfterConnect(factory Factory, connection *model.Connection, vault mapof.String) error {
+func (provider PayPal) Connect(connection *model.Connection, vault mapof.String) error {
 
-	if err := provider.refreshAccessToken(connection, vault); err != nil {
+	if err := provider.Refresh(connection, vault); err != nil {
 		return derp.Wrap(err, "service.providers.PayPal", "Error refreshing access token", derp.WithCode(http.StatusInternalServerError))
 	}
 
 	return nil
 }
 
-func (provider PayPal) AfterUpdate(factory Factory, connection *model.Connection, vault mapof.String) error {
+func (provider PayPal) Refresh(connection *model.Connection, vault mapof.String) error {
 
-	if err := provider.refreshAccessToken(connection, vault); err != nil {
-		return derp.Wrap(err, "service.providers.PayPal", "Error refreshing access token", derp.WithCode(http.StatusInternalServerError))
+	const location = "service.providers.PayPal.Refresh"
+
+	// If the token is still valid, then don't refresh it now.
+	if connection.Token.Valid() {
+		return nil
 	}
-
-	return nil
-}
-
-func (provider PayPal) refreshAccessToken(connection *model.Connection, vault mapof.String) error {
-
-	const location = "service.providers.PayPal.refreshAccessToken"
 
 	// Request a new access token
+	liveMode := connection.Data.GetString("liveMode") == "LIVE"
+	url := paypal.APIHost(liveMode) + "/v1/oauth2/token"
 	token := oauth2.Token{}
-	url := provider.serverName(connection) + "/v1/oauth2/token"
 
 	txn := remote.Post(url).
 		ContentType("application/x-www-form-urlencoded").
 		Header("User-Agent", "Emissary Social").
 		Form("grant_type", "client_credentials").
 		With(options.BasicAuth(vault.GetString("clientId"), vault.GetString("secretKey"))).
+		With(options.Debug()).
 		Result(&token)
 
 	if err := txn.Send(); err != nil {
 		return derp.Wrap(err, location, "Error requesting Access Token from PayPal")
 	}
+
+	// Calculate the Token expiry time.
+	token.Expiry = time.Now().Add(time.Duration(token.ExpiresIn) * time.Second).Add(-1 * time.Hour)
 
 	// Apply the access token to the connection object
 	connection.Token = &token
@@ -139,11 +142,13 @@ func (provider PayPal) refreshAccessToken(connection *model.Connection, vault ma
 	return nil
 }
 
-func (provider PayPal) serverName(connection *model.Connection) string {
+// Disconnect applies any extra changes to the database when this Adapter is disconnected
+func (adapter PayPal) Disconnect(connection *model.Connection, vault mapof.String) error {
 
-	if connection.Data.GetString("liveMode") == "LIVE" {
-		return "https://api-m.paypal.com"
-	}
+	// TODO: Probably need to send an API call to PayPal to revoke this token.
+	// if connection.Token != nil {
+	// }
 
-	return "https://api-m.sandbox.paypal.com"
+	connection.Token = nil
+	return nil
 }
