@@ -6,7 +6,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
 )
 
 type DomainEmail struct {
@@ -127,10 +126,8 @@ func (service *DomainEmail) SendPasswordReset(user *model.User) error {
 // sign their "Identity" into the system
 func (service *DomainEmail) SendGuestCode(identifier string, token string) error {
 
-	spew.Dump("SendGuestCode", identifier, "http://localhost/@guest/signin/"+token)
-	return nil
+	const location = "service.DomainEmail.SendGuestCode"
 
-	/* Get the domain information from the DomainService
 	domain := service.domainService.Get()
 
 	// Send the welcome email
@@ -153,12 +150,11 @@ func (service *DomainEmail) SendGuestCode(identifier string, token string) error
 	)
 
 	if err != nil {
-		return derp.Wrap(err, "service.DomainEmail.SendWelcome", "Error sending guest code to: "+identifier)
+		return derp.Wrap(err, location, "Error sending guest code to: "+identifier)
 	}
 
 	// Woot!
 	return nil
-	*/
 }
 
 func (service *DomainEmail) SendFollowerConfirmation(actor model.PersonLink, follower *model.Follower) error {

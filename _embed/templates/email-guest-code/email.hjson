@@ -3,5 +3,5 @@
     emailRole: user-guest-code
     model: Identity
     to: "{{.Email}}"
-    subject: Reset Your Password on {{.Domain_Name}}
+    subject: Your Sign In Code for {{.Domain_Name}}
 }

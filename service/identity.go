@@ -374,6 +374,21 @@ func (service *Identity) SendGuestCode(identity *model.Identity, identifierType 
 		return derp.BadRequestError(location, "Identifier cannot be empty", identifier)
 	}
 
+	// Find the correct sender function based on the identifier type
+	var sender func(string, string) error
+
+	switch identifierType {
+
+	case model.IdentifierTypeEmail:
+		sender = service.emailService.SendGuestCode
+
+	case model.IdentifierTypeWebFinger:
+		sender = service.sendGuestCode_Webfinger
+
+	default:
+		return derp.BadRequestError(location, "Unrecognized Identifier Type", identifierType)
+	}
+
 	// Create a new Guest Code for the identifier :)
 	guestCode, err := service.makeGuestCode(nil, identifierType, identifier)
 
@@ -381,17 +396,13 @@ func (service *Identity) SendGuestCode(identity *model.Identity, identifierType 
 		return derp.Wrap(err, location, "Error creating Guest Code", identifier)
 	}
 
-	switch service.GuessIdentifierType(identifier) {
-
-	case model.IdentifierTypeEmail:
-		return service.sendGuestCode_Email(identifier, guestCode)
-
-	case model.IdentifierTypeWebFinger:
-		return service.emailService.SendGuestCode(identifier, guestCode)
-
+	// Send the Guest Code to the
+	if err := sender(identifier, guestCode); err != nil {
+		return derp.Wrap(err, location, "Error sending Guest Code", identifier, guestCode)
 	}
 
-	return derp.BadRequestError(location, "Unrecognized Address: "+identifier)
+	// Looky here. I *am* a Fortunate Son!
+	return nil
 }
 
 // makeGuestCode creates a new JWT token for the Guest to authenticate

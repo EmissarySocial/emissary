@@ -158,5 +158,5 @@ func PostIdentityIdentifier(ctx *steranko.Context, factory *domain.Factory, iden
 		return derp.Wrap(err, location, "Error setting identifier on Identity")
 	}
 
-	return build.WrapInlineSuccess(ctx.Response().Writer, "Updated")
+	return build.WrapInlineSuccess(ctx.Response().Writer, "Code Sent. Check your inbox.")
 }

@@ -82,6 +82,13 @@
 						{{- end -}}							
 					</span>
 				</div>
+
+				{{- if not .IsAuthenticated -}}
+					<div>
+						<button hx-post="/signout" class="button text-sm">Sign Out</button>
+					</div>
+				{{- end -}}
+
 			</div>
 		</div>
 
@@ -114,10 +121,6 @@
 				{{- end -}}
 			</table>
 			
-		{{- end -}}
-
-		{{- if not .IsAuthenticated -}}
-			<button hx-post="/signout" class="button text-sm">Sign Out</button>
 		{{- end -}}
 
 	</div>

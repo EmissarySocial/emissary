@@ -16,7 +16,7 @@
 	</div>
 {{- end -}}
 
-<form hx-post="/@me/settings/identifier">
+<form hx-post="/@guest/identifier">
 
 	<div class="layout-vertical">
 		<div class="layout-vertical-elements">
@@ -28,6 +28,10 @@
 		</div>
 	</div>
 
-	<button type="submit" class="primary">Set My Email Address</button>
-	<button script="on click trigger closeModal">Cancel</button>
+	<div class="margin-top-lg">
+		<button type="submit" class="primary">Set My Email Address</button>
+		<button script="on click trigger closeModal">Cancel</button>
+		<span id="htmx-response-message"></span>
+	</div>
+
 </form>

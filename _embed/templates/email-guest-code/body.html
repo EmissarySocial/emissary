@@ -16,18 +16,18 @@
             </div>
         {{- end -}}
 
-        <p>Here is your guest code to sign in to {{.Domain_Name}}.</p>
+        <p>Here is your guest code to sign in to <b>{{.Domain_Name}}</b>. This code is valid for <b>1 hour</b>.</p>
         <p>If you did not make this request, then you can safely ignore this email and no other actions will be taken.</p>
-        <p>To complete this request, please click the button below and you'll be linked back to your guest profile on {{.Domain_Name}}.</p>
+        <p>To continue, click the button below and you'll be linked back to your guest profile on {{.Domain_Name}}.</p>
         
-        <p><a href="{{.Domain_URL}}/@guest/signin/{{.JWT}}" style="
+        <p><a href="{{.Domain_URL}}/@guest/signin/{{.Token}}" style="
             display:inline-block;
             padding:9px 18px;
             background-color:#ff5522;
             color:white;
             border-radius:6px;
             text-decoration:none;
-            ">Reset My Password &rarr;</a>
+            ">Sign In Now &rarr;</a>
         </p>
 
 </td></tr></table>
