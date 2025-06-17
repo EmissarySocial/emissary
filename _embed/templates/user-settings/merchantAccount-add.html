@@ -6,12 +6,13 @@
 
 <div class="flex-row margin-bottom text-sm">
 	{{- range $index, $merchantAccount := $available -}}
-		<div hx-get="/@me/oauth/connect/{{$merchantAccount.Value | lowerCase }}?next={{$next}}" class="clickable card padding width-50% hover-outline" role="button">
+		{{- $token := lowerCase $merchantAccount.Value -}}
+		<a href="/.{{$token}}/connect" class="clickable card padding width-50% hover-outline text-nocolor" role="button">
 			<div class="align-center margin-bottom">
 				<img src="{{$merchantAccount.Icon}}" style="height:100px;">
 			</div>
-			<div class="text-gray">{{$merchantAccount.Description}}</div>
-		</div>
+			<div class="text-gray">{{ $merchantAccount.Description }}</div>
+		</a>
 	{{- end -}}
 	
 	<!-- Stripe is hard coded (for now) because it is always available -->

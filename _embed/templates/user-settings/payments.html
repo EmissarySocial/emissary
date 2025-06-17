@@ -70,6 +70,13 @@
 						<div hx-get="/@me/settings/merchantAccount-edit-{{$type}}?merchantAccountId={{$merchantAccount.ID}}" class="flex-row flex-grow">
 							<div>{{- icon $type -}}</div>
 							<div class="flex-grow">{{$merchantAccount.Name}}</div>
+							<div>
+								{{- if $merchantAccount.LiveMode -}}
+									<span class="text-green">Live</span>
+								{{- else -}}
+									<span class="text-gray">Sandbox</span>
+								{{- end -}}
+							</div>
 						</div>
 					</div>
 				{{- end -}}
@@ -79,27 +86,9 @@
 				</div>
 			</div>
 
-			{{- $remoteProducts := .RemoteProducts -}}
-
-			{{- if $remoteProducts.NotEmpty -}}
-				{{- $group := groupie -}}
-
-				<div class="margin-top-xl margin-bottom">
-					<h1 class="text-xl bold margin-none flex-grow">Products</h1>
-				</div>
-
-				<div class="table">
-					{{- range $index, $remoteProduct := $remoteProducts -}}
-						<div class="flex-row flex-align-center">
-							<div class="flex-grow">{{icon $remoteProduct.Icon}} {{$remoteProduct.Name}}</div>						
-							<div class="margin-right-lg text-gray">{{$remoteProduct.Description}}</div>
-							<div>
-								<a href="{{$remoteProduct.AdminHref}}" target="_blank" class="button text-sm">Manage &rarr;</a>
-							</div>
-						</div>
-					{{- end -}}
-				</div>
-			{{- end -}}
+			<div hx-get="/@me/settings/remoteProducts" hx-target="this" hx-trigger="load" hx-push-url="false" hx-swap="innerHTML" class="margin-top-xl">
+				Loading Products from Your Merchant Accounts...
+			</div>
 
 		{{- end -}}
 	

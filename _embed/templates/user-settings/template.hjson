@@ -26,6 +26,84 @@
 	}
 	actions: {
 
+		actor-button-follow-update: {
+			roles:["self"]
+			steps:[
+				{do:"with-following", steps:[
+					{do:"set-data", from-form:["behavior", "collapseThreads", "isPublic"]}
+					{do:"save"}
+					{do:"trigger-event", event:"refreshPeers"}
+					{do:"inline-success", message:"Saved"}
+				]}
+			]
+		}
+		actor-button-unfollow: {
+			roles:["self"]
+			steps:[
+				{do:"with-following", steps:[
+					{do:"delete"}
+				]}
+				{do:"view-html", method:"post", file:"actor-button-none"}
+				{do:"trigger-event", event:"refreshPeers"}
+				{do:"remove-event", event:"closeModal"}
+			]
+		}
+		actor-button-mute:{
+			roles:["self"]
+			steps:[
+				{do:"with-rule", steps:[
+					{do:"set-data", values: {type:"ACTOR", action: "MUTE", trigger:"{{.QueryParam `url`}}"}}
+					{do:"save"}
+					{do:"trigger-event", event:"refreshPeers"}
+					{do:"view-html", method:"post", file:"actor-button-mute"}
+				]}
+			]
+		}
+		actor-button-unmute:{
+			roles:["self"]
+			steps:[
+				{do:"with-rule", steps:[
+					{do:"delete"}
+				]}
+				{do:"view-html", method:"post", file:"actor-button-none"}
+				{do:"trigger-event", event:"refreshPeers"}
+				{do:"remove-event", event:"closeModal"}
+			]
+		}
+		actor-button-block:{
+			roles:["self"]
+			steps:[
+				{do:"with-rule", steps:[
+					{do:"set-data", values: {type:"ACTOR", action: "BLOCK", trigger: "{{.QueryParam `url`}}"}}
+					{do:"save"}
+					{do:"trigger-event", event:"refreshPeers"}
+					{do:"view-html", method:"post", file:"actor-button-block"}
+				]}
+			]
+		}
+		actor-button-block-update: {
+			roles:["self"]
+			steps:[
+				{do:"with-rule", steps:[
+					{do:"set-data", from-form:["comment", "isPublic"]}
+					{do:"save"}
+					{do:"trigger-event", event:"refreshPeers"}
+					{do:"inline-success", message:"Saved"}
+				]}
+			]
+		}
+		actor-button-unblock:{
+			roles:["self"]
+			steps:[
+				{do:"with-rule", steps:[
+					{do:"delete"}
+				]}
+				{do:"trigger-event", event:"refreshPeers"}
+				{do:"remove-event", event:"closeModal"}
+				{do:"view-html", method:"post", file:"actor-button-none"}
+			]
+		}
+
 		circles: {
 			roles:["self"]
 			steps:[
@@ -434,6 +512,107 @@
 			]
 		}
 
+		merchantAccounts: {
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
+		merchantAccounts-list: {
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
+		merchantAccount-add: {
+			roles:["self"]
+			steps:[
+				{do:"as-modal", steps:[
+					{do:"view-html", file:"merchantAccount-add"}
+				]}
+			]
+		}
+
+		merchantAccount-edit-paypal: {
+			roles:["self"]
+			steps: [
+				{do:"as-modal", steps:[
+					{do:"with-merchant-account", steps:[
+						{do:"view-html", file:"merchantAccount-edit-paypal"}
+						{
+							do:edit
+							form:{
+								type:layout-vertical
+								children:[
+									{type:"hidden", path:"type", options:{value:"PAYPAL"}}
+									{type:"text", path:"name", label:"Account Label", description:"(PRIVATE) A label for you to recognize this account", options:{required:true}}
+									{type:"toggle", path:"liveMode", options:{true-text:"Live Mode (Yes. Use for Actual Payments)", false-text:"Live Mode (No. Sandbox Only)"}}
+								]
+							}
+							options:["delete:/@me/settings/merchantAccount-delete?merchantAccountId={{.ObjectID}}"]
+						}
+						{do:"save"}
+						{do:"refresh-page"}
+					]}
+				]}
+			]
+		}
+
+		merchantAccount-edit-stripe: {
+			roles:["self"]
+			steps: [
+				{do:"as-modal", steps:[
+					{do:"with-merchant-account", steps:[
+						{do:"view-html", file:"merchantAccount-edit-stripe"}
+						{
+							do:edit
+							form:{
+								type:layout-vertical
+								children:[
+									{type:"hidden", path:"type", options:{value:"STRIPE"}}
+									{type:"text", path:"name", label:"Account Label", description:"(PRIVATE) A label for you to recognize this account", options:{required:true}}
+									{type:"text", path:"vault.publishableKey_test", label:"Publishable Key (test mode)", description:"(PUBLIC) Create using the Stripe dashboard.", options:{show-if:"liveMode is false", required-if:"liveMode is false", placeholder:"pk_test_XXXXXXXXXXXXXXXXXXXXXXXXX", pattern:"^(\\**)|(pk_test_[A-Za-z0-9]+)"}}
+									{type:"text", path:"vault.publishableKey_live", label:"Publishable Key (live mode)", description:"(PUBLIC) Create using the Stripe dashboard.", options:{show-if:"liveMode is true", required-if:"liveMode is true", placeholder:"pk_live_XXXXXXXXXXXXXXXXXXXXXXXXX", pattern:"^(\\**)|(pk_live_[A-Za-z0-9]+)"}}
+									{type:"text", path:"vault.restrictedKey_test", label:"Restricted Key (test mode)", description:"(PRIVATE) Create using the Stripe dashboard.", options:{show-if:"liveMode is false", required-if:"liveMode is false", placeholder:"rk_test_XXXXXXXXXXXXXXXXXXXXXXXXX", pattern:"^(\\**)|(rk_test_[A-Za-z0-9]+)"}}
+									{type:"text", path:"vault.restrictedKey_live", label:"Restricted Key (live mode)", description:"(PRIVATE) Create using the Stripe dashboard.", options:{show-if:"liveMode is true", required-if:"liveMode is true", placeholder:"rk_live_XXXXXXXXXXXXXXXXXXXXXXXXX", pattern:"^(\\**)|(rk_live_[A-Za-z0-9]+)"}}
+									{type:"toggle", path:"liveMode", options:{true-text:"Mode: Live. (Use for Real Payments)", false-text:"Mode: Sandbox (Use for Tests Only)"}}
+								]
+							}
+							options:["delete:/@me/settings/merchantAccount-delete?merchantAccountId={{.ObjectID}}"]
+						}
+						{do:"save"}
+						{do:"refresh-page"}
+					]}
+				]}
+			]
+		}
+
+		merchantAccount-delete: {
+			roles:["self"]
+			steps:[
+				{do:"with-merchant-account", steps:[
+					{do:"delete", title:"Delete Merchant Account?", message:"Are you sure you want to delete this account?"}
+					{do:"refresh-page"}
+				]}
+			]
+		}
+
+		payments: {
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
+		remoteProducts: {
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
 		rules:{
 			roles:["self"], 
 			steps:[
@@ -578,101 +757,6 @@
 			]
 		}
 
-		merchantAccounts: {
-			roles:["self"]
-			steps:[
-				{do:"view-html"}
-			]
-		}
-
-		merchantAccounts-list: {
-			roles:["self"]
-			steps:[
-				{do:"view-html"}
-			]
-		}
-
-		merchantAccount-add: {
-			roles:["self"]
-			steps:[
-				{do:"as-modal", steps:[
-					{do:"view-html", file:"merchantAccount-add"}
-				]}
-			]
-		}
-
-		merchantAccount-edit-paypal: {
-			roles:["self"]
-			steps: [
-				{do:"as-modal", steps:[
-					{do:"with-merchant-account", steps:[
-						{do:"view-html", file:"merchantAccount-edit-paypal"}
-						{
-							do:edit
-							form:{
-								type:layout-vertical
-								children:[
-									{type:"hidden", path:"type", options:{value:"PAYPAL"}}
-									{type:"text", path:"name", label:"Account Label", description:"(PRIVATE) A label for you to recognize this account", options:{required:true}}
-									{type:"text", path:"vault.clientId", label:"Client ID", description:"Created in <a href='https://developer.paypal.com/dashboard/applications' target='_blank'>PayPal Developer Console</a>", options:{required:true}}
-									{type:"text", path:"vault.secretKey", label:"Secret Key", description:"See <a href='https://emissary.dev/paypal' target='_blank'>setup instructions</a> for more details.", options:{required:true}}
-									{type:"toggle", path:"liveMode", options:{true-text:"Live Mode (Yes. Use for Actual Payments)", false-text:"Live Mode (No. Sandbox Only)"}}
-								]
-							}
-							options:["delete:/@me/settings/merchantAccount-delete?merchantAccountId={{.ObjectID}}"]
-						}
-						{do:"save"}
-						{do:"refresh-page"}
-					]}
-				]}
-			]
-		}
-
-		merchantAccount-edit-stripe: {
-			roles:["self"]
-			steps: [
-				{do:"as-modal", steps:[
-					{do:"with-merchant-account", steps:[
-						{do:"view-html", file:"merchantAccount-edit-stripe"}
-						{
-							do:edit
-							form:{
-								type:layout-vertical
-								children:[
-									{type:"hidden", path:"type", options:{value:"STRIPE"}}
-									{type:"text", path:"name", label:"Account Label", description:"(PRIVATE) A label for you to recognize this account", options:{required:true}}
-									{type:"text", path:"vault.publishableKey_test", label:"Publishable Key (test mode)", description:"(PUBLIC) Create using the Stripe dashboard.", options:{show-if:"liveMode is false", required-if:"liveMode is false", placeholder:"pk_test_XXXXXXXXXXXXXXXXXXXXXXXXX", pattern:"^(\\**)|(pk_test_[A-Za-z0-9]+)"}}
-									{type:"text", path:"vault.publishableKey_live", label:"Publishable Key (live mode)", description:"(PUBLIC) Create using the Stripe dashboard.", options:{show-if:"liveMode is true", required-if:"liveMode is true", placeholder:"pk_live_XXXXXXXXXXXXXXXXXXXXXXXXX", pattern:"^(\\**)|(pk_live_[A-Za-z0-9]+)"}}
-									{type:"text", path:"vault.restrictedKey_test", label:"Restricted Key (test mode)", description:"(PRIVATE) Create using the Stripe dashboard.", options:{show-if:"liveMode is false", required-if:"liveMode is false", placeholder:"rk_test_XXXXXXXXXXXXXXXXXXXXXXXXX", pattern:"^(\\**)|(rk_test_[A-Za-z0-9]+)"}}
-									{type:"text", path:"vault.restrictedKey_live", label:"Restricted Key (live mode)", description:"(PRIVATE) Create using the Stripe dashboard.", options:{show-if:"liveMode is true", required-if:"liveMode is true", placeholder:"rk_live_XXXXXXXXXXXXXXXXXXXXXXXXX", pattern:"^(\\**)|(rk_live_[A-Za-z0-9]+)"}}
-									{type:"toggle", path:"liveMode", options:{true-text:"Mode: Live. (Use for Real Payments)", false-text:"Mode: Sandbox (Use for Tests Only)"}}
-								]
-							}
-							options:["delete:/@me/settings/merchantAccount-delete?merchantAccountId={{.ObjectID}}"]
-						}
-						{do:"save"}
-						{do:"refresh-page"}
-					]}
-				]}
-			]
-		}
-
-		merchantAccount-delete: {
-			roles:["self"]
-			steps:[
-				{do:"with-merchant-account", steps:[
-					{do:"delete", title:"Delete Merchant Account?", message:"Are you sure you want to delete this account?"}
-					{do:"refresh-page"}
-				]}
-			]
-		}
-
-		payments: {
-			roles:["self"]
-			steps:[
-				{do:"view-html"}
-			]
-		}
 
 		actor-button: {
 			roles:["self"]
@@ -694,82 +778,6 @@
 				]}
 			]
 		}
-		actor-button-follow-update: {
-			roles:["self"]
-			steps:[
-				{do:"with-following", steps:[
-					{do:"set-data", from-form:["behavior", "collapseThreads", "isPublic"]}
-					{do:"save"}
-					{do:"trigger-event", event:"refreshPeers"}
-					{do:"inline-success", message:"Saved"}
-				]}
-			]
-		}
-		actor-button-unfollow: {
-			roles:["self"]
-			steps:[
-				{do:"with-following", steps:[
-					{do:"delete"}
-				]}
-				{do:"view-html", method:"post", file:"actor-button-none"}
-				{do:"trigger-event", event:"refreshPeers"}
-				{do:"remove-event", event:"closeModal"}
-			]
-		}
-		actor-button-mute:{
-			roles:["self"]
-			steps:[
-				{do:"with-rule", steps:[
-					{do:"set-data", values: {type:"ACTOR", action: "MUTE", trigger:"{{.QueryParam `url`}}"}}
-					{do:"save"}
-					{do:"trigger-event", event:"refreshPeers"}
-					{do:"view-html", method:"post", file:"actor-button-mute"}
-				]}
-			]
-		}
-		actor-button-unmute:{
-			roles:["self"]
-			steps:[
-				{do:"with-rule", steps:[
-					{do:"delete"}
-				]}
-				{do:"view-html", method:"post", file:"actor-button-none"}
-				{do:"trigger-event", event:"refreshPeers"}
-				{do:"remove-event", event:"closeModal"}
-			]
-		}
-		actor-button-block:{
-			roles:["self"]
-			steps:[
-				{do:"with-rule", steps:[
-					{do:"set-data", values: {type:"ACTOR", action: "BLOCK", trigger: "{{.QueryParam `url`}}"}}
-					{do:"save"}
-					{do:"trigger-event", event:"refreshPeers"}
-					{do:"view-html", method:"post", file:"actor-button-block"}
-				]}
-			]
-		}
-		actor-button-block-update: {
-			roles:["self"]
-			steps:[
-				{do:"with-rule", steps:[
-					{do:"set-data", from-form:["comment", "isPublic"]}
-					{do:"save"}
-					{do:"trigger-event", event:"refreshPeers"}
-					{do:"inline-success", message:"Saved"}
-				]}
-			]
-		}
-		actor-button-unblock:{
-			roles:["self"]
-			steps:[
-				{do:"with-rule", steps:[
-					{do:"delete"}
-				]}
-				{do:"trigger-event", event:"refreshPeers"}
-				{do:"remove-event", event:"closeModal"}
-				{do:"view-html", method:"post", file:"actor-button-none"}
-			]
-		}
+
 	}
 }	

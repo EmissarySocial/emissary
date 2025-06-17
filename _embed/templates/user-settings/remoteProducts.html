@@ -1,0 +1,21 @@
+{{- $remoteProducts := .RemoteProducts -}}
+
+{{- if $remoteProducts.NotEmpty -}}
+	{{- $group := groupie -}}
+
+	<div class="margin-bottom">
+		<h1 class="text-xl bold margin-none flex-grow">Products</h1>
+	</div>
+
+	<div class="table">
+		{{- range $index, $remoteProduct := $remoteProducts -}}
+			<div class="flex-row flex-align-center">
+				<div class="flex-grow">{{icon $remoteProduct.Icon}} {{$remoteProduct.Name}}</div>						
+				<div class="margin-right-lg text-gray">{{$remoteProduct.Description}}</div>
+				<div>
+					<a href="{{$remoteProduct.AdminHref}}" target="_blank" class="button text-sm">Edit &rarr;</a>
+				</div>
+			</div>
+		{{- end -}}
+	</div>
+{{- end -}}
