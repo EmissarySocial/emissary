@@ -34,17 +34,10 @@
 				<div hx-get="/@guest/webfinger" class="clickable flex-row flex-align-center">
 					<div class="flex-grow margin-right-sm">
 						{{icon "fediverse"}} 
-						{{ if .HasWebfingerHandle }}
+						{{ if .HasWebfingerHandle -}}
 							{{.WebfingerHandle}}
-
-							{{ if .IsWebfingerVerified -}}
-								<span class="text-light-gray margin-left-sm">
-									{{icon "check-badge-fill"}} verified
-								</span>
-							{{- end -}}
-
 						{{- else -}}
-							<span class="text-red bold">Add Your Fediverse Handle</span>
+							<span class="text-green">Add Your Fediverse Handle</span>
 						{{- end -}}
 	
 					</div>
@@ -60,17 +53,10 @@
 				<div hx-get="/@guest/email" class="clickable flex-row flex-align-center">
 					<div class="flex-grow margin-right-sm">
 						{{icon "email"}} 
-						{{- if .HasEmailAddress }}
+						{{ if .HasEmailAddress -}}
 							{{.EmailAddress}}
-
-							{{if .IsEmailVerified}}
-								<span class="text-light-gray margin-left-sm">
-									{{icon "check-badge-fill"}} verified
-								</span>
-							{{- end -}}
-
 						{{- else -}}
-							<span class="text-red bold">Add Your Email Address</span>
+							<span class="text-green">Add Your Email Address</span>
 						{{- end -}}
 					</div>
 

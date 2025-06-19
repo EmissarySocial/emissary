@@ -107,16 +107,6 @@ func (w Identity) HasWebfingerHandle() bool {
 	return w._identity.HasWebfingerHandle()
 }
 
-// IsEmailVerified returns TRUE if EmailAddress has been verified
-func (w Identity) IsEmailVerified() bool {
-	return w._identity.IsEmailVerified()
-}
-
-// IsWebfingerVerified returns TRUE if WebfingerHandle has been verified
-func (w Identity) IsWebfingerVerified() bool {
-	return w._identity.IsWebfingerVerified()
-}
-
 // Icon returns an icon name to use for this Identity, based on the available identifiers.
 func (w Identity) Icon() string {
 	return w._identity.Icon()

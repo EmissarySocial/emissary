@@ -53,10 +53,10 @@ func SendSearchResults(factory *domain.Factory, args mapof.Any) queue.Result {
 		task := queue.NewTask(
 			"SendActivityPubMessage",
 			mapof.Any{
-				"host":          factory.Hostname(),
-				"actorType":     model.FollowerTypeSearch,
-				"searchQueryID": searchQueryID.Hex(),
-				"inboxURL":      follower.Actor.InboxURL,
+				"host":      factory.Hostname(),
+				"actorType": model.FollowerTypeSearch,
+				"actorID":   searchQueryID.Hex(),
+				"inboxURL":  follower.Actor.InboxURL,
 				"message": mapof.Any{
 					vocab.PropertyActor:  actorURL,
 					vocab.PropertyType:   vocab.ActivityTypeAnnounce,

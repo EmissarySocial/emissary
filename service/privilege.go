@@ -336,7 +336,7 @@ func (service *Privilege) maybeCreateIdentity(privilege *model.Privilege) error 
 	}
 
 	// Fall through means we need to load or create the upstream record before we continue
-	identity, err := service.identityService.LoadOrCreate("", privilege.IdentifierType, privilege.IdentifierValue, true)
+	identity, err := service.identityService.LoadOrCreate("", privilege.IdentifierType, privilege.IdentifierValue)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error loading/creating Identifier", privilege.IdentifierType, privilege.IdentifierValue)

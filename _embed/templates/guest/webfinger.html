@@ -22,16 +22,23 @@
 		<div class="layout-vertical-elements">
 			<div class="layout-vertical-element">
 				<label for="email">New Fediverse Handle</label>
-				<input type="hidden" name="identifierType" value="EMAIL">
+				<input type="hidden" name="identifierType" value="WEBFINGER">
 				<input type="text" id="email" name="identifier" value="{{.WebfingerHandle}}" pattern="^@[^@]+@[^@]+\.[^@]+$" aria-labelledby="identifier-label" aria-describedby="identifier-label" required="true"autocomplete="username" autofocus="true" tabindex="0">
-				<div id="identifier-label" class="text-sm gray40">E.g. @username@server.social</div>
+				<div id="identifier-label" class="text-sm gray40">e.g. @username@server.social</div>
 			</div>
 		</div>
 	</div>
 
-	<div class="margin-top-lg">
-		<button type="submit" class="primary">Set My Fediverse Handle</button>
+	<div class="margin-top-lg flex-row">
+		<button type="submit" class="primary">Set My Handle</button>
 		<button script="on click trigger closeModal">Cancel</button>
-		<span id="htmx-response-message"></span>
+		<span class="align-right flex-grow">
+			<span 
+				class="text-red clickable" 
+				hx-post="/@guest/identifier"
+				hx-vals='{"identifierType": "WEBFINGER","identifier": ""}'
+				hx-confirm="This will remove your Fediverse Handle from this guest identity. Are you sure you want to continue?"
+			>Remove Handle</span>
+		</span>
 	</div>
 </form>

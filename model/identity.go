@@ -1,8 +1,6 @@
 package model
 
 import (
-	"time"
-
 	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/rosetta/sliceof"
@@ -13,14 +11,12 @@ import (
 // This is used to track pseud-logins by individuals who do not have a registered username on this server.
 // Identities can be tied to a Follower and to a Privilege via the two identifiers: EmailAddress and WebfingerHandle.
 type Identity struct {
-	IdentityID            primitive.ObjectID `bson:"_id"`                   // Unique ID for the Identity
-	Name                  string             `bson:"name"`                  // Full name of the Individual ("John Connor")
-	IconURL               string             `bson:"iconUrl"`               // URL to an icon representing the Identity (e.g., a profile picture)
-	EmailAddress          string             `bson:"emailAddress"`          // Email address of the Identity ("john@connor.mil")
-	WebfingerHandle       string             `bson:"webfingerHandle"`       // WebFinger handle of the Identity ("@john@connor.social")
-	EmailVerifiedDate     int64              `bson:"emailVerifiedDate"`     // Unix epoch (in seconds) when the email address was verified
-	WebfingerVerifiedDate int64              `bson:"webfingerVerifiedDate"` // Unix epoch (in seconds) when the WebFinger handle was verified
-	Privileges            sliceof.String     `bson:"privileges,omitempty"`  // List of privileges associated with this Identity, either a circleID, or a remoteProductID
+	IdentityID      primitive.ObjectID `bson:"_id"`                  // Unique ID for the Identity
+	Name            string             `bson:"name"`                 // Full name of the Individual ("John Connor")
+	IconURL         string             `bson:"iconUrl"`              // URL to an icon representing the Identity (e.g., a profile picture)
+	EmailAddress    string             `bson:"emailAddress"`         // Email address of the Identity ("john@connor.mil")
+	WebfingerHandle string             `bson:"webfingerHandle"`      // WebFinger handle of the Identity ("@john@connor.social")
+	Privileges      sliceof.String     `bson:"privileges,omitempty"` // List of privileges associated with this Identity, either a circleID, or a remoteProductID
 
 	// Embed journal to track changes
 	journal.Journal `bson:",inline"`
@@ -87,19 +83,9 @@ func (identity Identity) HasEmailAddress() bool {
 	return identity.EmailAddress != ""
 }
 
-// IsEmailVerified returns TRUE if EmailAddress has been verified
-func (identity Identity) IsEmailVerified() bool {
-	return identity.EmailVerifiedDate > 0
-}
-
 // HasWebfingerHandle returns TRUE if the Identity has a WebFinger handle.
 func (identity Identity) HasWebfingerHandle() bool {
 	return identity.WebfingerHandle != ""
-}
-
-// IsWebfingerVerified returns TRUE if WebfingerHandle has been verified
-func (identity Identity) IsWebfingerVerified() bool {
-	return identity.WebfingerVerifiedDate > 0
 }
 
 // Icon returns an icon name to use for this Identity, based on the type of identifier(s) present.
@@ -157,43 +143,6 @@ func (identity *Identity) SetIdentifier(identifierType string, value string) boo
 	case IdentifierTypeWebFinger:
 		identity.WebfingerHandle = value
 		return true
-	}
-
-	return false
-}
-
-// IsVerified returns TRUE if the provided identifier type has been verified.
-func (identity Identity) IsVerified(identifierType string) bool {
-
-	switch identifierType {
-
-	case IdentifierTypeEmail:
-		return identity.EmailVerifiedDate > 0
-
-	case IdentifierTypeWebFinger:
-		return identity.WebfingerVerifiedDate > 0
-	}
-
-	return false
-}
-
-// Verify marks the selected identifier as "verified" by setting the verification date to the current time.
-// If the identifier has already been verified, then this method does nothing and returns false.
-func (identity *Identity) Verify(identifierType string) bool {
-
-	switch identifierType {
-
-	case IdentifierTypeEmail:
-		if identity.EmailVerifiedDate == 0 {
-			identity.EmailVerifiedDate = time.Now().Unix()
-			return true
-		}
-
-	case IdentifierTypeWebFinger:
-		if identity.WebfingerVerifiedDate == 0 {
-			identity.WebfingerVerifiedDate = time.Now().Unix()
-			return true
-		}
 	}
 
 	return false

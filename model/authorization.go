@@ -26,12 +26,15 @@ type Authorization struct {
 func NewAuthorization() Authorization {
 
 	result := Authorization{
-		UserID:      primitive.NilObjectID,
-		GroupIDs:    sliceof.NewObject[primitive.ObjectID](),
-		DomainOwner: false,
+		UserID:           primitive.NilObjectID,
+		IdentityID:       primitive.NilObjectID,
+		GroupIDs:         sliceof.NewObject[primitive.ObjectID](),
+		ClientID:         primitive.NilObjectID,
+		Scope:            "",
+		DomainOwner:      false,
+		APIUser:          false,
+		RegisteredClaims: jwt.RegisteredClaims{},
 	}
-
-	result.RegisteredClaims = jwt.RegisteredClaims{}
 
 	return result
 }

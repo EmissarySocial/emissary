@@ -262,22 +262,6 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.well-known/nodeinfo/2.0", handler.GetNodeInfo20(factory))
 	e.GET("/.well-known/nodeinfo/2.1", handler.GetNodeInfo21(factory))
 
-	// Global Search Actor (ActivityPub)
-	e.GET("/@search", handler.WithFactory(factory, ap_domain.GetJSONLD))
-	e.POST("/@search/pub/followers", handler.WithFactory(factory, handler.GetEmptyCollection))
-	e.POST("/@search/pub/following", handler.WithFactory(factory, handler.GetEmptyCollection))
-	e.POST("/@search/pub/inbox", handler.WithFactory(factory, ap_domain.PostInbox))
-	e.GET("/@search/pub/outbox", handler.WithFactory(factory, ap_domain.GetOutboxCollection))
-
-	// Search Query Routes (ActivityPub)
-	e.POST("/.searchQuery", handler.WithFactory(factory, handler.PostSearchLookup))
-	e.GET("/@search_:searchId", handler.WithSearchQuery(factory, ap_search.GetJSONLD))
-	e.POST("/@search_:searchId/pub/followers", handler.WithFactory(factory, handler.GetEmptyCollection))
-	e.POST("/@search_:searchId/pub/following", handler.WithFactory(factory, handler.GetEmptyCollection))
-	e.GET("/@search_:searchId/pub/inbox", handler.WithFactory(factory, handler.GetEmptyCollection))
-	e.POST("/@search_:searchId/pub/inbox", handler.WithSearchQuery(factory, ap_search.PostInbox))
-	e.GET("/@search_:searchId/pub/outbox", handler.WithSearchQuery(factory, ap_search.GetOutboxCollection))
-
 	// Authentication Pages
 	e.GET("/signin", handler.WithFactory(factory, handler.GetSignIn))
 	e.POST("/signin", handler.WithFactory(factory, handler.PostSignIn))
@@ -310,8 +294,8 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@:objectId/sse", handler.WithFactory(factory, handler.ServerSentEvent))
 
 	// ActivityPub pages for the application actor
-	e.GET("/@application", handler.WithFactory(factory, handler.GetServiceActor))
-	e.POST("/@application/inbox", handler.PostServiceActor_Inbox(factory))
+	e.GET("/@application", handler.WithFactory(factory, handler.GetApplicationActor))
+	e.POST("/@application/inbox", handler.PostApplicationActor_Inbox(factory))
 	e.GET("/@application/inbox", handler.WithFactory(factory, handler.GetEmptyCollection))
 	e.GET("/@application/outbox", handler.WithFactory(factory, handler.GetEmptyCollection))
 	e.GET("/@application/following", handler.WithFactory(factory, handler.GetEmptyCollection))
@@ -349,6 +333,22 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/@guest/signin", handler.WithFactory(factory, handler.PostIdentitySignin))
 	e.GET("/@guest/signin/:jwt", handler.WithFactory(factory, handler.GetIdentitySigninWithJWT))
 	e.POST("/@guest/identifier", handler.WithIdentity(factory, handler.PostIdentityIdentifier))
+
+	// Global Search Actor (ActivityPub)
+	e.GET("/@search", handler.WithFactory(factory, ap_domain.GetJSONLD))
+	e.POST("/@search/pub/followers", handler.WithFactory(factory, handler.GetEmptyCollection))
+	e.POST("/@search/pub/following", handler.WithFactory(factory, handler.GetEmptyCollection))
+	e.POST("/@search/pub/inbox", handler.WithFactory(factory, ap_domain.PostInbox))
+	e.GET("/@search/pub/outbox", handler.WithFactory(factory, ap_domain.GetOutboxCollection))
+
+	// Search Query Routes (ActivityPub)
+	e.POST("/.searchQuery", handler.WithFactory(factory, handler.PostSearchLookup))
+	e.GET("/@search_:searchId", handler.WithSearchQuery(factory, ap_search.GetJSONLD))
+	e.POST("/@search_:searchId/pub/followers", handler.WithFactory(factory, handler.GetEmptyCollection))
+	e.POST("/@search_:searchId/pub/following", handler.WithFactory(factory, handler.GetEmptyCollection))
+	e.GET("/@search_:searchId/pub/inbox", handler.WithFactory(factory, handler.GetEmptyCollection))
+	e.POST("/@search_:searchId/pub/inbox", handler.WithSearchQuery(factory, ap_search.PostInbox))
+	e.GET("/@search_:searchId/pub/outbox", handler.WithSearchQuery(factory, ap_search.GetOutboxCollection))
 
 	// Routes for Users
 	e.GET("/@:userId", handler.WithUserForwarding(factory, handler.GetOutbox))

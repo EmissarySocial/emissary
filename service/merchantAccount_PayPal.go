@@ -11,7 +11,6 @@ import (
 	"github.com/benpate/remote"
 	"github.com/benpate/remote/options"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/davecgh/go-spew/spew"
 )
 
 func (service *MerchantAccount) paypal_getServerAddress(merchantAccount *model.MerchantAccount) string {
@@ -118,8 +117,6 @@ func (service *MerchantAccount) paypal_getProducts(merchantAccount *model.Mercha
 	if err := txn.Send(); err != nil {
 		return nil, derp.Wrap(err, location, "Error connecting to PayPal API")
 	}
-
-	spew.Dump(txnResult)
 
 	return []model.RemoteProduct{}, nil
 

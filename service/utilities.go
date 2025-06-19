@@ -391,3 +391,11 @@ func mapRemoteProductsToLookupCodes(remoteProducts ...model.RemoteProduct) slice
 
 	return result
 }
+
+// Don't judge me.
+func iif[T any](condition bool, trueValue T, falseValue T) T {
+	if condition {
+		return trueValue
+	}
+	return falseValue
+}

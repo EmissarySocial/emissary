@@ -11,6 +11,7 @@ import (
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/steranko"
 	"github.com/golang-jwt/jwt/v5"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // GetIdentity handles GET request for the /@guest route
@@ -107,6 +108,9 @@ func GetIdentitySigninWithJWT(ctx *steranko.Context, factory *domain.Factory) er
 
 	const location = "handler.GetIdentitySigninWithJWT"
 
+	// Get the Authorization from the Request
+	authorization := getAuthorization(ctx)
+
 	// Read and parse the JWT token
 	tokenString := ctx.Param("jwt")
 	jwtService := factory.JWT()
@@ -122,23 +126,53 @@ func GetIdentitySigninWithJWT(ctx *steranko.Context, factory *domain.Factory) er
 		return derp.Wrap(err, location, "Invalid JWT Token")
 	}
 
-	// Isolate the Identifier
+	// Collect the identifier and identifier type from the JWT claims
 	identityService := factory.Identity()
-	identifier := convert.String(claims["id"])
-	identifierType := identityService.GuessIdentifierType(identifier)
-	identity, err := identityService.LoadOrCreate("", identifierType, identifier, true)
+	identifier := convert.String(claims["A"])
+	identifierType := convert.String(claims["T"])
 
-	if err != nil {
-		return derp.InternalError(location, "Error loading/creating new Identity", identifier)
+	// If the JWT token has an IdentityID, then set this in the Authorization
+	// (overriding a pre-existing IdentityID, if any)
+	if identityID, exists := claims["I"]; exists {
+		identityIDstring := convert.String(identityID)
+		if identityID, err := primitive.ObjectIDFromHex(identityIDstring); err == nil {
+			authorization.IdentityID = identityID
+		}
 	}
 
-	// Update the Authorization with the (new?) IdentityID
-	authorization := getAuthorization(ctx)
-	authorization.IdentityID = identity.IdentityID
+	switch authorization.IdentityID {
 
-	// Create a new JWT token and return it as a cookie
-	if err := factory.Steranko().SetCookie(ctx, authorization); err != nil {
-		return derp.Wrap(err, location, "Error setting authorization cookie")
+	// If the JWT is not already linked to an Identity, then load or create one from scratch.
+	case primitive.NilObjectID:
+
+		identity, err := identityService.LoadOrCreate("", identifierType, identifier)
+
+		if err != nil {
+			return derp.InternalError(location, "Error loading/creating new Identity", identifier)
+		}
+
+		// Update the Authorization with the (new?) IdentityID
+		authorization.IdentityID = identity.IdentityID
+
+		// Create a new JWT token and return it as a cookie
+		if err := factory.Steranko().SetCookie(ctx, authorization); err != nil {
+			return derp.Wrap(err, location, "Error setting authorization cookie")
+		}
+
+	// Otherwise, add/update the identifier in the existing Identity
+	default:
+
+		identity := model.NewIdentity()
+
+		if err := identityService.LoadByID(authorization.IdentityID, &identity); err != nil {
+			return derp.Wrap(err, location, "Error loading Identity by ID", authorization.IdentityID)
+		}
+
+		identity.SetIdentifier(identifierType, identifier)
+
+		if err := identityService.Save(&identity, "Added/Updated Identifier: "+identifierType); err != nil {
+			return derp.Wrap(err, location, "Error saving Identity with new identifier", identity.IdentityID)
+		}
 	}
 
 	return ctx.Redirect(http.StatusSeeOther, "/@guest")
@@ -148,15 +182,27 @@ func GetIdentitySigninWithJWT(ctx *steranko.Context, factory *domain.Factory) er
 func PostIdentityIdentifier(ctx *steranko.Context, factory *domain.Factory, identity *model.Identity) error {
 
 	const location = "handler.PostIdentityEditIdentifier"
-
 	// Get the identifier type and value from the request
 	identifierType := ctx.FormValue("identifierType")
 	identifierValue := ctx.FormValue("identifier")
 	identityService := factory.Identity()
 
-	if err := identityService.SendGuestCode(identity, identifierType, identifierValue); err != nil {
-		return derp.Wrap(err, location, "Error setting identifier on Identity")
+	// If we're setting a new identifier, then send a guest code to the user
+	if identifierValue != "" {
+
+		if err := identityService.SendGuestCode(identity, identifierType, identifierValue); err != nil {
+			return derp.Wrap(err, location, "Error setting identifier on Identity")
+		}
+
+		return ctx.Redirect(http.StatusSeeOther, "/@guest/confirm")
 	}
 
-	return build.WrapInlineSuccess(ctx.Response().Writer, "Code Sent. Check your inbox.")
+	// Fall through means we're deleting an existing identifier
+	identity.SetIdentifier(identifierType, "")
+
+	if err := identityService.Save(identity, "Removed identifier: "+identifierType); err != nil {
+		return derp.Wrap(err, location, "Error saving Identity", identity.IdentityID)
+	}
+
+	return closeModalAndRefreshPage(ctx)
 }

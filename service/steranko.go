@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/steranko"
 	"github.com/golang-jwt/jwt/v5"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // SterankoUserService is a wrapper/adapter that makes the User service compatable with Steranko.
@@ -107,11 +108,12 @@ func (service SterankoUserService) Claims(sterankoUser steranko.User) (jwt.Claim
 		return nil, derp.Wrap(err, location, "Error loading identity for user")
 	}
 
-	// Claims returns all access privileges given to this user.  A part of the "steranko.User" interface.
+	identityID := iif(identity.IsNew(), primitive.NilObjectID, identity.IdentityID)
 
+	// Claims returns all access privileges given to this user.  A part of the "steranko.User" interface.
 	result := model.Authorization{
 		UserID:      user.UserID,
-		IdentityID:  identity.IdentityID,
+		IdentityID:  identityID,
 		GroupIDs:    user.GroupIDs,
 		DomainOwner: user.IsOwner,
 		RegisteredClaims: jwt.RegisteredClaims{

@@ -60,5 +60,14 @@
 				]}
 			]
 		}
+
+		confirm: {
+			roles:["self"]
+			steps:[
+				{do:"as-modal", steps:[
+					{do:"view-html"}
+				]}
+			]
+		}
 	}
 }	

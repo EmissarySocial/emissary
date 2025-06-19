@@ -235,8 +235,13 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 
 		// Populate Activity Stream Service
 		factory.activityService.Refresh(
-			factory.Domain(),
 			factory.activityCache,
+			factory.Domain(),
+			factory.Locator(),
+			factory.SearchDomain(),
+			factory.SearchQuery(),
+			factory.Stream(),
+			factory.User(),
 			factory.Hostname(),
 		)
 
@@ -320,9 +325,12 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 
 		factory.identityService.Refresh(
 			factory.collection(CollectionIdentity),
+			factory.ActivityStream(),
 			factory.Email(),
 			factory.JWT(),
 			factory.Privilege(),
+			factory.Queue(),
+			factory.Host(),
 		)
 
 		// Populate Inbox Service

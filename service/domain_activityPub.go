@@ -108,8 +108,8 @@ func (service *Domain) ActivityPubActor() (outbox.Actor, error) {
 func (service *Domain) WebFinger() digit.Resource {
 
 	// Make a WebFinger resource for this Stream.
-	result := digit.NewResource(service.ActorID()).
-		Alias("acct:application@"+service.Hostname()).
+	result := digit.NewResource("acct:application@"+service.Hostname()).
+		Alias(service.ActorID()).
 		Link(digit.RelationTypeSelf, model.MimeTypeActivityPub, service.ActorID()).
 		Link(digit.RelationTypeProfile, model.MimeTypeHTML, service.ActorID())
 

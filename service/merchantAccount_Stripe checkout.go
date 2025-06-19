@@ -137,7 +137,6 @@ func (service *MerchantAccount) stripe_getPrivilegeFromCheckoutResponse(queryPar
 		checkoutSession.CustomerDetails.Name,
 		model.IdentifierTypeEmail,
 		checkoutSession.CustomerDetails.Email,
-		true,
 	)
 
 	if err != nil {

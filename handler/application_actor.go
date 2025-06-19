@@ -10,12 +10,11 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
-	"github.com/rs/zerolog"
 )
 
-func GetServiceActor(ctx *steranko.Context, factory *domain.Factory) error {
+func GetApplicationActor(ctx *steranko.Context, factory *domain.Factory) error {
 
-	const location = "handler.GetServiceActor"
+	const location = "handler.GetApplicationActor"
 
 	// Retrieve the domain and Public Key
 	domainService := factory.Domain()
@@ -67,21 +66,11 @@ func GetEmptyCollection(ctx *steranko.Context, factory *domain.Factory) error {
 	return ctx.JSON(http.StatusOK, result)
 }
 
-// PostServiceActor_Inbox does not take any actions, but only logs the request
+// PostApplicationActor_Inbox does not take any actions, but only logs the request
 // IF logger is in Debug or Trace mode.
-func PostServiceActor_Inbox(serverFactory *server.Factory) echo.HandlerFunc {
+func PostApplicationActor_Inbox(serverFactory *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
-
-		if zerolog.GlobalLevel() > zerolog.DebugLevel {
-			return ctx.NoContent(http.StatusOK)
-		}
-
-		// Try to read/dump the Request body
-		// body, err := io.ReadAll(ctx.Request().Body)
-		// log.Trace().Msg(string(body))
-
-		// Return no content
 		return ctx.NoContent(http.StatusOK)
 	}
 }

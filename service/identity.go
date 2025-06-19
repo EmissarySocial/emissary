@@ -10,10 +10,12 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
+	"github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
+	"github.com/benpate/turbine/queue"
 	"github.com/golang-jwt/jwt/v5"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -22,9 +24,12 @@ import (
 // Identity defines a service that manages all content identitys created and imported by Users.
 type Identity struct {
 	collection       data.Collection
+	activityService  *ActivityStream
 	emailService     *DomainEmail
 	jwtService       *JWT
 	privilegeService *Privilege
+	queue            *queue.Queue
+	host             string
 }
 
 // NewIdentity returns a fully initialized Identity service
@@ -37,11 +42,14 @@ func NewIdentity() Identity {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Identity) Refresh(collection data.Collection, emailService *DomainEmail, jwtService *JWT, privilegeService *Privilege) {
+func (service *Identity) Refresh(collection data.Collection, activityService *ActivityStream, emailService *DomainEmail, jwtService *JWT, privilegeService *Privilege, queue *queue.Queue, host string) {
 	service.collection = collection
+	service.activityService = activityService
 	service.emailService = emailService
 	service.jwtService = jwtService
 	service.privilegeService = privilegeService
+	service.queue = queue
+	service.host = host
 }
 
 // Close stops any background processes controlled by this service
@@ -214,7 +222,7 @@ func (service *Identity) LoadByToken(token string, identity *model.Identity) err
 // LoadOrCreateByEmail searches for a Guest with the provided emailAddress.
 // If a matching record is found, it updates the record with the new values (if necessary).
 // If no matching record is found, it creates a new record with the provided values.
-func (service *Identity) LoadOrCreate(name string, identifierType string, identifierValue string, isVerified bool) (model.Identity, error) {
+func (service *Identity) LoadOrCreate(name string, identifierType string, identifierValue string) (model.Identity, error) {
 
 	const location = "service.Identity.LoadOrCreate"
 
@@ -234,20 +242,6 @@ func (service *Identity) LoadOrCreate(name string, identifierType string, identi
 
 	// If the identity was found, then just return it...
 	if err == nil {
-
-		// ... but before we do, there's a slight chance we may need to "verify" the identifier first
-
-		// If the caller has verified the identifier but it's not verified in the Identity, then verify it now
-		if isVerified {
-
-			if changed := identity.Verify(identifierType); changed {
-
-				if err := service.Save(&identity, "Verified Identifier"); err != nil {
-					return model.Identity{}, derp.Wrap(err, location, "Error verifying identity", identity)
-				}
-			}
-		}
-
 		return identity, nil
 	}
 
@@ -256,15 +250,14 @@ func (service *Identity) LoadOrCreate(name string, identifierType string, identi
 		return model.Identity{}, derp.Wrap(err, location, "Error loading identity", identifierType, identifierValue)
 	}
 
-	identity.Name = name
 	// Otherwise, populate the identifier into the Identity object
 	if ok := identity.SetIdentifier(identifierType, identifierValue); !ok {
 		return model.Identity{}, derp.BadRequestError(location, "Invalid Identifier Type", identifierType)
 	}
 
-	// If the identifier has been verified
-	if isVerified {
-		identity.Verify(identifierType)
+	// Set a default name if the Identity doesn't already have one
+	if (identity.Name == "") && (name != "") {
+		identity.Name = name
 	}
 
 	// Save the Identity to the database
@@ -410,14 +403,14 @@ func (service *Identity) makeGuestCode(identity *model.Identity, identifierType 
 
 	// Claims for the Identifier, expiring in 1 hour
 	claims := jwt.MapClaims{
-		"exp":  time.Now().Add(time.Hour).Unix(),
-		"type": identifierType,
-		"id":   identifier,
+		"exp": time.Now().Add(time.Hour).Unix(), // expiration
+		"T":   identifierType,                   // Identifier Type
+		"A":   identifier,                       // Identifier (Address)
 	}
 
-	// If we have a valid Identity, then add the IdentityID to the claim
-	if identity != nil {
-		claims["I"] = identity.IdentityID.Hex()
+	// If we have an Identity, then include this in the claims.
+	if identity != nil && !identity.IdentityID.IsZero() {
+		claims["I"] = identity.IdentityID.Hex() // Identity ID
 	}
 
 	// Create and sign the new JWT token
@@ -453,4 +446,8 @@ func (service *Identity) GuessIdentifierType(identifier string) string {
 	}
 
 	return model.IdentifierTypeEmail
+}
+
+func (service *Identity) hostname() string {
+	return domain.NameOnly(service.host)
 }

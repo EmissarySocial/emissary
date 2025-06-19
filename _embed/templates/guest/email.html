@@ -24,14 +24,22 @@
 				<label for="email">New Email Address</label>
 				<input type="hidden" name="identifierType" value="EMAIL">
 				<input type="email" id="email" name="identifier" value="{{.EmailAddress}}" autocomplete="email" autofocus="true" tabindex="0" required="true">
+				<div id="identifier-label" class="text-sm gray40">e.g. user@server.com</div>
 			</div>
 		</div>
 	</div>
 
-	<div class="margin-top-lg">
+	<div class="margin-top-lg flex-row">
 		<button type="submit" class="primary">Set My Email Address</button>
 		<button script="on click trigger closeModal">Cancel</button>
-		<span id="htmx-response-message"></span>
+		<span class="align-right flex-grow">
+			<span 
+				class="text-red clickable" 
+				hx-post="/@guest/identifier"
+				hx-vals='{"identifierType": "EMAIL","identifier": ""}'
+				hx-confirm="This will remove your Email Address from this guest identity. Are you sure you want to continue?"
+			>Remove Email</span>
+		</span>
 	</div>
 
 </form>

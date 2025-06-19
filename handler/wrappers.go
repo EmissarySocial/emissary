@@ -61,9 +61,9 @@ func WithConnection(serverFactory *server.Factory, fn WithFunc1[model.Connection
 		// Load the Connection from the database
 		connectionService := factory.Connection()
 		connection := model.NewConnection()
-		connectionID := ctx.QueryParam("connectionId")
+		provider := ctx.Param("provider")
 
-		if err := connectionService.LoadByToken(connectionID, &connection); err != nil {
+		if err := connectionService.LoadByProvider(provider, &connection); err != nil {
 			return derp.Wrap(err, location, "Error loading Connection")
 		}
 
@@ -133,7 +133,7 @@ func WithIdentity(serverFactory *server.Factory, fn WithFunc1[model.Identity]) e
 				}
 
 				// Load/Create an Identity for the signed-in User
-				identity, err := identityService.LoadOrCreate(user.DisplayName, model.IdentifierTypeEmail, user.EmailAddress, true)
+				identity, err := identityService.LoadOrCreate(user.DisplayName, model.IdentifierTypeEmail, user.EmailAddress)
 
 				if err != nil {
 					return derp.Wrap(err, location, "Error loading/creating Identity")
