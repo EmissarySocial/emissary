@@ -11,7 +11,7 @@ import (
 // CheckoutSession retrieves a Checkout Session from the Stripe API and returns the customer a slice of priceIDs that were purchased
 // in this checkout session.
 // https://docs.stripe.com/api/checkout/sessions/object
-func CheckoutSession(restrictedKey string, sessionID string) (stripe.CheckoutSession, error) {
+func CheckoutSession(restrictedKey string, connectedAccountID string, sessionID string) (stripe.CheckoutSession, error) {
 
 	const location = "tools.stripeapi.CheckoutSession"
 
@@ -23,6 +23,10 @@ func CheckoutSession(restrictedKey string, sessionID string) (stripe.CheckoutSes
 		Query("expand[]", "subscription").
 		With(options.BearerAuth(restrictedKey), options.Debug()).
 		Result(&checkoutSession)
+
+	if connectedAccountID != "" {
+		txn.Header("Stripe-Account", connectedAccountID)
+	}
 
 	// Send the transaction
 	if err := txn.Send(); err != nil {

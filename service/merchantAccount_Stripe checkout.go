@@ -25,8 +25,10 @@ func (service *MerchantAccount) stripe_getCheckoutURL(merchantAccount *model.Mer
 		return "", derp.Wrap(err, location, "Error retrieving restricted key")
 	}
 
+	connectedAccountID := service.stripe_getConnectedAccountID(merchantAccount)
+
 	// Load the Price/Prooduct from the Stripe API
-	price, err := api.Price(restrictedKey, remoteProductID)
+	price, err := api.Price(restrictedKey, connectedAccountID, remoteProductID)
 
 	if err != nil {
 		return "", derp.Wrap(err, location, "Error retrieving price from Stripe")
@@ -76,6 +78,10 @@ func (service *MerchantAccount) stripe_getCheckoutURL(merchantAccount *model.Mer
 		Form("success_url", successURL).
 		Result(&checkoutResult)
 
+	if connectedAccountID != "" {
+		txn.Header("Stripe-Account", connectedAccountID)
+	}
+
 	// If this is a single payment (not a subscription), then we need to create a customer
 	if checkoutMode == "payment" {
 		txn.Form("customer_creation", "always")
@@ -106,8 +112,10 @@ func (service *MerchantAccount) stripe_getPrivilegeFromCheckoutResponse(queryPar
 		return model.Privilege{}, derp.Wrap(err, location, "Error retrieving API keys")
 	}
 
+	connectedAccountID := service.stripe_getConnectedAccountID(merchantAccount)
+
 	// Load the Checkout session from the Stripe API so that we can validate it and retrieve the customer details
-	checkoutSession, err := api.CheckoutSession(restrictedKey, checkoutSessionID)
+	checkoutSession, err := api.CheckoutSession(restrictedKey, connectedAccountID, checkoutSessionID)
 	if err != nil {
 		return model.Privilege{}, derp.Wrap(err, location, "Error loading checkout session from Stripe")
 	}
@@ -126,7 +134,7 @@ func (service *MerchantAccount) stripe_getPrivilegeFromCheckoutResponse(queryPar
 	productID := queryParams.Get("productId")
 
 	// Retrieve the Price/Product from the Stripe API
-	price, err := stripeapi.Price(restrictedKey, productID)
+	price, err := stripeapi.Price(restrictedKey, connectedAccountID, productID)
 
 	if err != nil {
 		return model.Privilege{}, derp.Wrap(err, location, "Error retrieving price from Stripe", productID)

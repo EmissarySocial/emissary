@@ -45,6 +45,9 @@ func (service *MerchantAccount) stripe_refreshMerchantAccount(merchantAccount *m
 			Query("enabled_events[]", "customer.product.updated").
 			Result(&webhookResult)
 
+		if connectedAccountID := merchantAccount.Plaintext.GetString("accountId"); connectedAccountID != "" {
+			txn.Header("Stripe-Account", connectedAccountID)
+		}
 		if err := txn.Send(); err != nil {
 			return derp.Wrap(err, location, "Error connecting to Stripe API")
 		}

@@ -11,7 +11,7 @@ import (
 // Prices retrieves all prices from the Stripe API and returns them as a slice
 // If no prices are specified, then all active prices are returned.
 // https://docs.stripe.com/api/prices/list
-func Prices(restrictedKey string, priceIDs ...string) ([]stripe.Price, error) {
+func Prices(restrictedKey string, connectedAccountID string, priceIDs ...string) ([]stripe.Price, error) {
 
 	const location = "tools.stripeapi.Products"
 
@@ -23,8 +23,12 @@ func Prices(restrictedKey string, priceIDs ...string) ([]stripe.Price, error) {
 		Query("expand[]", "data.product").
 		Query("active", "true").
 		With(options.BearerAuth(restrictedKey)).
+		With(options.Debug()).
 		Result(&response)
 
+	if connectedAccountID != "" {
+		txn.Header("Stripe-Account", connectedAccountID)
+	}
 	if err := txn.Send(); err != nil {
 		return nil, derp.Wrap(err, location, "Error connecting to PayPal API")
 	}
@@ -75,7 +79,7 @@ func Prices(restrictedKey string, priceIDs ...string) ([]stripe.Price, error) {
 
 // Price loads a Price/Product record from the Stripe API
 // https://docs.stripe.com/api/prices/object
-func Price(restrictedKey string, priceID string) (stripe.Price, error) {
+func Price(restrictedKey string, connectedAccountID string, priceID string) (stripe.Price, error) {
 
 	const location = "tools.stripeapi.Price"
 
@@ -85,6 +89,10 @@ func Price(restrictedKey string, priceID string) (stripe.Price, error) {
 		Query("expand[]", "product").
 		With(options.BearerAuth(restrictedKey)).
 		Result(&price)
+
+	if connectedAccountID != "" {
+		txn.Header("Stripe-Account", connectedAccountID)
+	}
 
 	if err := txn.Send(); err != nil {
 		return stripe.Price{}, derp.Wrap(err, location, "Error connecting to Stripe API")

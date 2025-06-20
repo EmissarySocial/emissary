@@ -32,6 +32,7 @@ func NewMerchantAccount() MerchantAccount {
 	return MerchantAccount{
 		MerchantAccountID: primitive.NewObjectID(),
 		Vault:             NewVault(),
+		Plaintext:         mapof.NewString(),
 	}
 }
 
@@ -93,10 +94,13 @@ func (merchantAccount MerchantAccount) ProductURL() string {
 
 	switch merchantAccount.Type {
 
-	case MerchantAccountTypePayPal:
+	case ConnectionProviderPayPal:
 		return "https://www.paypal.com/business/products"
 
-	case MerchantAccountTypeStripe:
+	case ConnectionProviderStripe:
+		return "https://dashboard.stripe.com/products?active=true"
+
+	case ConnectionProviderStripeConnect:
 		return "https://dashboard.stripe.com/products?active=true"
 	}
 
@@ -108,10 +112,13 @@ func (merchantAccount MerchantAccount) APIKeyURL() string {
 
 	switch merchantAccount.Type {
 
-	case MerchantAccountTypePayPal:
+	case ConnectionProviderPayPal:
 		return "https://www.paypal.com/business/keys"
 
-	case MerchantAccountTypeStripe:
+	case ConnectionProviderStripe:
+		return "https://dashboard.stripe.com/apikeys"
+
+	case ConnectionProviderStripeConnect:
 		return "https://dashboard.stripe.com/apikeys"
 	}
 
@@ -123,10 +130,13 @@ func (merchantAccount MerchantAccount) HelpURL() string {
 
 	switch merchantAccount.Type {
 
-	case MerchantAccountTypePayPal:
+	case ConnectionProviderPayPal:
 		return "https://emissary.dev/paypal"
 
-	case MerchantAccountTypeStripe:
+	case ConnectionProviderStripe:
+		return "https://emissary.dev/stripe"
+
+	case ConnectionProviderStripeConnect:
 		return "https://emissary.dev/stripe"
 	}
 

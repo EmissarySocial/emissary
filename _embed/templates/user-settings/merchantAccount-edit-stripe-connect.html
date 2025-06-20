@@ -1,0 +1,22 @@
+<div class="flex-row flex-align-center margin-bottom">
+	<h1 class="margin-none flex-grow">{{icon "stripe"}} Stripe Connect</h1>
+</div>
+
+<div class="margin-bottom-lg">
+</div>
+
+<div class="table">
+	<a href="https://dashboard.stripe.com/" target="_blank" role="link" class="text-nocolor block flex-row">
+		<div class="flex-grow">Label: {{.Object.Name}}</div>
+		<div class="link">Sign in &rarr;</div>
+	</a>
+
+	<div>AccountID: {{.Object.Plaintext.GetString "accountId"}}</div>
+</div>
+
+<div class="margin-top-lg flex-row">
+	<button script="on click trigger closeModal">Close Window</button>
+	<span class="flex-grow align-right">
+		<span hx-get="/@me/settings/merchantAccount-delete?merchantAccountId={{.ObjectID}}" class="clickable text-red">Disconnect Account</span>
+	</span>
+</div>

@@ -17,6 +17,7 @@ func ConnectionSchema() schema.Element {
 				ConnectionProviderOpenStreetMap,
 				ConnectionProviderPayPal,
 				ConnectionProviderStripe,
+				ConnectionProviderStripeConnect,
 				ConnectionProviderTomTom,
 				ConnectionProviderUnsplash,
 			}},

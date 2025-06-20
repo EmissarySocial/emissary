@@ -1,6 +1,26 @@
 {{- $remoteProducts := .RemoteProducts -}}
 
-{{- if $remoteProducts.NotEmpty -}}
+{{- if $remoteProducts.IsEmpty -}}
+
+	{{- $merchantAccounts := .MerchantAccounts.Slice -}}
+
+	<div class="margin-bottom">
+		<h1 class="text-xl bold margin-none flex-grow">Products</h1>
+	</div>
+
+	<div class="card padding md:width-80% lg:width-60%">
+		The next step is to set up products on your merchant account.
+		<br><br>
+		Sign in to 
+		{{ range $index, $merchantAccount := $merchantAccounts }}
+			{{ if gt $index 0 }} or {{ end }}
+			<span class="nowrap bold">{{$merchantAccount.Name}}</span>
+		{{ end }}
+		to create one or more products, then return here to link them to your posts.
+	</div>
+
+{{- else -}}
+
 	{{- $group := groupie -}}
 
 	<div class="margin-bottom">

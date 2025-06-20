@@ -9,7 +9,7 @@ import (
 
 // Customer loads a Customer record from the Stripe API
 // https://docs.stripe.com/api/customers/object
-func Customer(restrictedKey string, customerID string) (stripe.Customer, error) {
+func Customer(restrictedKey string, connectedAccountID string, customerID string) (stripe.Customer, error) {
 
 	const location = "tools.stripeapi.Customer"
 
@@ -18,6 +18,10 @@ func Customer(restrictedKey string, customerID string) (stripe.Customer, error) 
 	txn := remote.Get("https://api.stripe.com/v1/customers/" + customerID).
 		With(options.BearerAuth(restrictedKey)).
 		Result(&customer)
+
+	if connectedAccountID != "" {
+		txn.Header("Stripe-Account", connectedAccountID)
+	}
 
 	// Send the transaction
 	if err := txn.Send(); err != nil {

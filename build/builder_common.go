@@ -493,7 +493,7 @@ func (w Common) GetResponseSummary(url string) model.UserResponseSummary {
 	return result
 }
 
-func (w Common) AvailableMerchantAccounts() ([]form.LookupCode, error) {
+func (w Common) AvailableMerchantAccounts() (sliceof.Object[form.LookupCode], error) {
 	merchantAccountService := w._factory.MerchantAccount()
 	return merchantAccountService.AvailableMerchantAccounts()
 }

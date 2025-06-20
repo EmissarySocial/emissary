@@ -9,7 +9,7 @@ import (
 
 // Subscription loads a Subscription record from the Stripe API
 // https://docs.stripe.com/api/subscriptions/object
-func Subscription(restrictedKey string, subscriptionID string) (stripe.Subscription, error) {
+func Subscription(restrictedKey string, connectedAccountID string, subscriptionID string) (stripe.Subscription, error) {
 
 	const location = "tools.stripeapi.Subscription"
 
@@ -18,6 +18,10 @@ func Subscription(restrictedKey string, subscriptionID string) (stripe.Subscript
 	txn := remote.Get("https://api.stripe.com/v1/subscriptions/" + subscriptionID).
 		With(options.BearerAuth(restrictedKey)).
 		Result(&subscription)
+
+	if connectedAccountID != "" {
+		txn.Header("Stripe-Account", connectedAccountID)
+	}
 
 	// Send the transaction
 	if err := txn.Send(); err != nil {

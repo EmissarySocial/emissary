@@ -14,21 +14,33 @@ func (service *MerchantAccount) stripe_getRestrictedKey(merchantAccount *model.M
 
 	const location = "service.MerchantAccount.stripe_getRestrictedKey"
 
-	var propertyName string
-
-	if merchantAccount.LiveMode {
-		propertyName = "restrictedKey_live"
-	} else {
-		propertyName = "restrictedKey_test"
+	if merchantAccount == nil {
+		return "", derp.InternalError(location, "MerchantAccount cannot be nil")
 	}
 
-	apiKeys, err := service.DecryptVault(merchantAccount, propertyName)
+	apiKeys, err := service.DecryptVault(merchantAccount, "restrictedKey")
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Error retrieving API keys", propertyName)
+		return "", derp.Wrap(err, location, "Error retrieving API keys")
 	}
 
-	return apiKeys.GetString(propertyName), nil
+	return apiKeys.GetString("restrictedKey"), nil
+}
+
+// stripe_getConnectedAccountID retrieves the connected account ID for the specified MerchantAccount
+// This is ONLY used by Stripe Connect accounts, to retrieve a specific merchant that we're working with.
+// For all others (e.g. Stripe) this will return an empty string.
+func (service *MerchantAccount) stripe_getConnectedAccountID(merchantAccount *model.MerchantAccount) string {
+
+	if merchantAccount == nil {
+		return ""
+	}
+
+	if merchantAccount.Type != model.ConnectionProviderStripeConnect {
+		return ""
+	}
+
+	return merchantAccount.Plaintext.GetString("accountId")
 }
 
 func (service *MerchantAccount) stripe_getPrices(merchantAccount *model.MerchantAccount, priceIDs ...string) ([]model.RemoteProduct, error) {
@@ -42,8 +54,10 @@ func (service *MerchantAccount) stripe_getPrices(merchantAccount *model.Merchant
 		return nil, derp.Wrap(err, location, "Error retrieving restricted key")
 	}
 
+	connectedAccountID := merchantAccount.Plaintext.GetString("accountId")
+
 	// Load the Prices from the Stripe API
-	prices, err := api.Prices(restrictedKey, priceIDs...)
+	prices, err := api.Prices(restrictedKey, connectedAccountID, priceIDs...)
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Error retrieving prices from Stripe")

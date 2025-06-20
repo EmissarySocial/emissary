@@ -1,27 +1,11 @@
-{{- $available := .AvailableMerchantAccounts -}}
+{{- $connections := .AvailableMerchantAccounts -}}
 {{- $next := .QueryParam "next" -}}
 
 <h1>{{icon "add"}} Add a Merchant Account</h1>
 <p>The first step in collecting payments is to set up a merchant account with one of the supported payment procesors below.</p>
 
-<div class="flex-row margin-bottom text-sm">
-	{{- range $index, $merchantAccount := $available -}}
-		{{- $token := lowerCase $merchantAccount.Value -}}
-		<a href="/.{{$token}}/connect" class="clickable card padding width-50% hover-outline text-nocolor" role="button">
-			<div class="align-center margin-bottom">
-				<img src="{{$merchantAccount.Icon}}" style="height:100px;">
-			</div>
-			<div class="text-gray">{{ $merchantAccount.Description }}</div>
-		</a>
-	{{- end -}}
-	
-	<!-- Stripe is hard coded (for now) because it is always available -->
-	<div hx-get="/@me/settings/merchantAccount-edit-stripe?next={{$next}}" class="clickable card padding width-50% hover-outline" role="button">
-		<div class="align-center margin-bottom">
-			<img src="/.templates/user-inbox/resources/stripe.svg" style="height:100px;">
-		</div>
-		<div class="text-gray"><b>Stripe</b> is a sophisticated payment platform for developers and techies.</div>
-	</div>
+<div class="margin-bottom-lg">
+	{{template "merchantAccount-add-list" $connections}}
 </div>
 
 <button script="on click trigger closeModal">Close Window</button>

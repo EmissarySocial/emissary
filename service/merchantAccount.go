@@ -211,12 +211,12 @@ func (service *MerchantAccount) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
-func (service *MerchantAccount) AvailableMerchantAccounts() ([]form.LookupCode, error) {
+func (service *MerchantAccount) AvailableMerchantAccounts() (sliceof.Object[form.LookupCode], error) {
 
 	const location = "service.MerchantAccount.AvailableMerchantAccounts"
 
 	// Query configured Connections
-	connections, err := service.connectionService.QueryByType(model.ConnectionTypeUserPayment)
+	connections, err := service.connectionService.QueryActiveByType(model.ConnectionTypeUserPayment)
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Error loading connections")
@@ -231,7 +231,7 @@ func (service *MerchantAccount) AvailableMerchantAccounts() ([]form.LookupCode, 
 	return result, nil
 }
 
-func (service *MerchantAccount) QueryByUser(userID primitive.ObjectID, options ...option.Option) ([]model.MerchantAccount, error) {
+func (service *MerchantAccount) QueryByUser(userID primitive.ObjectID, options ...option.Option) (sliceof.Object[model.MerchantAccount], error) {
 
 	const location = "service.MerchantAccount.QueryByUser"
 
@@ -322,10 +322,13 @@ func (service *MerchantAccount) GetCheckoutURL(merchantAccount *model.MerchantAc
 
 	switch merchantAccount.Type {
 
-	case model.MerchantAccountTypePayPal:
+	case model.ConnectionProviderPayPal:
 		return service.paypal_getCheckoutURL(merchantAccount, remoteProductID, returnURL)
 
-	case model.MerchantAccountTypeStripe:
+	case model.ConnectionProviderStripe:
+		return service.stripe_getCheckoutURL(merchantAccount, remoteProductID, returnURL)
+
+	case model.ConnectionProviderStripeConnect:
 		return service.stripe_getCheckoutURL(merchantAccount, remoteProductID, returnURL)
 	}
 
@@ -341,10 +344,13 @@ func (service *MerchantAccount) ParseCheckoutResponse(queryParams url.Values, me
 	// Find the appropriate getter function for this MerchantAccount type
 	switch merchantAccount.Type {
 
-	case model.MerchantAccountTypePayPal:
+	case model.ConnectionProviderPayPal:
 		getter = service.paypal_getPrivilegeFromCheckoutResponse
 
-	case model.MerchantAccountTypeStripe:
+	case model.ConnectionProviderStripe:
+		getter = service.stripe_getPrivilegeFromCheckoutResponse
+
+	case model.ConnectionProviderStripeConnect:
 		getter = service.stripe_getPrivilegeFromCheckoutResponse
 
 	default:
@@ -374,12 +380,14 @@ func (service *MerchantAccount) ParseCheckoutWebhook(header http.Header, body []
 	// Fan out to the appropriate MerchantAccount type
 	switch merchantAccount.Type {
 
-	case model.MerchantAccountTypePayPal:
+	case model.ConnectionProviderPayPal:
 		return service.paypal_processWebhook(header, body, merchantAccount)
 
-	case model.MerchantAccountTypeStripe:
+	case model.ConnectionProviderStripe:
 		return service.stripe_processWebhook(header, body, merchantAccount)
 
+	case model.ConnectionProviderStripeConnect:
+		return service.stripe_processWebhook(header, body, merchantAccount)
 	}
 
 	return derp.InternalError(location, "Invalid MerchantAccount Type", merchantAccount.Type)
@@ -394,10 +402,13 @@ func (service *MerchantAccount) RefreshAPIKeys(merchantAccount *model.MerchantAc
 
 	switch merchantAccount.Type {
 
-	case model.MerchantAccountTypePayPal:
+	case model.ConnectionProviderPayPal:
 		return service.paypal_refreshMerchantAccount(merchantAccount)
 
-	case model.MerchantAccountTypeStripe:
+	case model.ConnectionProviderStripe:
+		return service.stripe_refreshMerchantAccount(merchantAccount)
+
+	case model.ConnectionProviderStripeConnect:
 		return service.stripe_refreshMerchantAccount(merchantAccount)
 	}
 
@@ -500,10 +511,13 @@ func (service *MerchantAccount) getRemoteProducts(merchantAccount *model.Merchan
 
 	switch merchantAccount.Type {
 
-	case model.MerchantAccountTypePayPal:
+	case model.ConnectionProviderPayPal:
 		return service.paypal_getProducts(merchantAccount, productIDs...)
 
-	case model.MerchantAccountTypeStripe:
+	case model.ConnectionProviderStripe:
+		return service.stripe_getPrices(merchantAccount, productIDs...)
+
+	case model.ConnectionProviderStripeConnect:
 		return service.stripe_getPrices(merchantAccount, productIDs...)
 	}
 

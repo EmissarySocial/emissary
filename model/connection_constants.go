@@ -43,8 +43,12 @@ const ConnectionProviderGiphy = "GIPHY"
 const ConnectionProviderPayPal = "PAYPAL"
 
 // ConnectionProviderStripe represents an API connection to the https://stripe.com service
-// for processing payments.
+// for processing payments, using direct API keys.
 const ConnectionProviderStripe = "STRIPE"
+
+// ConnectionProviderStripeConnect represents an API connection to the https://stripe.com service
+// for processing payments, using the Stripe Connect / OAuth authentication.
+const ConnectionProviderStripeConnect = "STRIPE-CONNECT"
 
 // ConnectionProviderUnsplash represents an API connection to the https://unsplash.com service
 // for generating photographs.

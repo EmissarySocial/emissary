@@ -154,6 +154,7 @@
 			steps:[
 				{do:"with-circle", steps:[
 					{do:"as-modal", steps:[
+						{do:"view-html"}
 						{
 							do:edit
 							options:[
@@ -162,7 +163,6 @@
 							]
 							form: {
 								type: layout-tabs
-								label: Edit Circle
 								children:[
 									{
 										type:layout-vertical
@@ -170,14 +170,14 @@
 										children: [
 											{type:"text", path:"name", label:"Circle Name"}
 											{type:"textarea", path:"description", label:"Description", options:{rows:8}}
-											// {type:"select", path:"icon", label:"Icon", options:{provider:"circle-icons"}}
+											{type:"select", path:"icon", label:"Icon", options:{provider:"circle-icons"}}
 											{type:"colorpicker", path:"color", label:"Color"}
 										]
 									}
 									{
 										type: layout-vertical
 										label: Products
-										description: Link this Circle to the products in your merchant account and guests will be able to purchase membership in this Circle. <a href="https://emissary.dev/circles" target="_blank"><i class="bi bi-question-circle"></i> Help with Circles</a>
+										description: Link this Circle to the products in your merchant account and guests will be able to purchase membership in this Circle.
 										children:[
 											{type:"multiselect", path:"productIds", options:{provider:"merchantAccounts-all-products"}}
 											{type:"toggle", path:"isFeatured", options:{false-text:"Featured?", true-text:"Featured. Displays on your profile page."}}
@@ -530,8 +530,15 @@
 			roles:["self"]
 			steps:[
 				{do:"as-modal", steps:[
-					{do:"view-html", file:"merchantAccount-add"}
+					{do:"view-html"}
 				]}
+			]
+		}
+
+		merchantAccount-add-list: {
+			roles:["self"]
+			steps:[
+					{do:"view-html"}
 			]
 		}
 
@@ -573,10 +580,8 @@
 								children:[
 									{type:"hidden", path:"type", options:{value:"STRIPE"}}
 									{type:"text", path:"name", label:"Account Label", description:"(PRIVATE) A label for you to recognize this account", options:{required:true}}
-									{type:"text", path:"vault.publishableKey_test", label:"Publishable Key (test mode)", description:"(PUBLIC) Create using the Stripe dashboard.", options:{show-if:"liveMode is false", required-if:"liveMode is false", placeholder:"pk_test_XXXXXXXXXXXXXXXXXXXXXXXXX", pattern:"^(\\**)|(pk_test_[A-Za-z0-9]+)"}}
-									{type:"text", path:"vault.publishableKey_live", label:"Publishable Key (live mode)", description:"(PUBLIC) Create using the Stripe dashboard.", options:{show-if:"liveMode is true", required-if:"liveMode is true", placeholder:"pk_live_XXXXXXXXXXXXXXXXXXXXXXXXX", pattern:"^(\\**)|(pk_live_[A-Za-z0-9]+)"}}
-									{type:"text", path:"vault.restrictedKey_test", label:"Restricted Key (test mode)", description:"(PRIVATE) Create using the Stripe dashboard.", options:{show-if:"liveMode is false", required-if:"liveMode is false", placeholder:"rk_test_XXXXXXXXXXXXXXXXXXXXXXXXX", pattern:"^(\\**)|(rk_test_[A-Za-z0-9]+)"}}
-									{type:"text", path:"vault.restrictedKey_live", label:"Restricted Key (live mode)", description:"(PRIVATE) Create using the Stripe dashboard.", options:{show-if:"liveMode is true", required-if:"liveMode is true", placeholder:"rk_live_XXXXXXXXXXXXXXXXXXXXXXXXX", pattern:"^(\\**)|(rk_live_[A-Za-z0-9]+)"}}
+									{type:"text", path:"vault.publishableKey", label:"Publishable Key", description:"(PUBLIC) Create using the Stripe dashboard.", options:{placeholder:"pk_live_XXXXXXXXXXXXXXXXXXXXXXXXX", pattern:"^(\\**)|(pk_(live|test)_[A-Za-z0-9]+)"}}
+									{type:"text", path:"vault.restrictedKey", label:"Restricted Key", description:"(PRIVATE) Create using the Stripe dashboard.", options:{placeholder:"rk_live_XXXXXXXXXXXXXXXXXXXXXXXXX", pattern:"^(\\**)|(rk_(live|test)_[A-Za-z0-9]+)"}}
 									{type:"toggle", path:"liveMode", options:{true-text:"Mode: Live. (Use for Real Payments)", false-text:"Mode: Sandbox (Use for Tests Only)"}}
 								]
 							}
@@ -589,11 +594,22 @@
 			]
 		}
 
+		merchantAccount-edit-stripe-connect: {
+			roles:["self"]
+			steps:[
+				{do:"as-modal", steps:[
+					{do:"with-merchant-account", steps:[
+						{do:"view-html"}
+					]}
+				]}
+			]
+		}
+
 		merchantAccount-delete: {
 			roles:["self"]
 			steps:[
 				{do:"with-merchant-account", steps:[
-					{do:"delete", title:"Delete Merchant Account?", message:"Are you sure you want to delete this account?"}
+					{do:"delete", title:"Disconnect Merchant Account?", message:"Are you sure you want to disconnect this account? Your account will remain at your merchant processor, but will be disconnected form this app."}
 					{do:"refresh-page"}
 				]}
 			]

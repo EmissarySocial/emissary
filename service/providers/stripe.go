@@ -38,17 +38,12 @@ func (adapter Stripe) ManualConfig() form.Form {
 		Element: form.Element{
 			Type:        "layout-vertical",
 			Label:       "Stripe Setup",
-			Description: "Sign into your Stripe account and create an API key.  Then, paste the API key into the field below.",
+			Description: "Allows users to accept payments by entering Stripe API keys directly.",
 			Children: []form.Element{
 				{
 					Type:    "hidden",
 					Path:    "type",
-					Options: mapof.Any{"value": "PAYMENT"},
-				},
-				{
-					Type:  "text",
-					Path:  "data.apiKey",
-					Label: "API Key",
+					Options: mapof.Any{"value": "USER-PAYMENT"},
 				},
 				{
 					Type:  "toggle",

@@ -22,39 +22,38 @@
 	
 	<div class="app-content">
 
+		{{- if $merchantAccounts.IsEmpty -}}
 
-		{{- if eq 0 $merchantAccounts.Length -}}
+			{{- $connections := .AvailableMerchantAccounts -}}
 
-			<h1 class="text-xl bold">
-				Accept Payments for your Posts
-			</h1>
-			
-			<div class="margin-bottom-lg  md:width-80% lg:width-60%">
-				To sell access to your online posts, you must first sign up and connect to one of the supported payment procesors below.
-				<br><br>
-				After you've entered your merchant account information, you'll be able to use the product plan(s) from your merchant account to 
-				charge for access to this item.
-				<a href="https://emissary.dev/payments" class="nowrap" target="_blank">Learn More {{icon "new-window"}}</a>
-			</div>
+			{{- if $connections.IsEmpty -}}
 
-			<div class="md:flex-row margin-bottom md:text-sm">
-				{{- $connections := .AvailableMerchantAccounts -}}
-
-				{{- range $index, $connection := $connections -}}
-					<a href="/@me/oauth/connect/{{$connection.Value | lowerCase }}" class="text-nocolor card padding margin-bottom hover-outline flex-row sm:flex-column md:width-50% lg:width-33% xl:width-25%" role="button">
-						<div class="align-center margin-bottom flex-grow">
-							<img src="{{$connection.Icon}}" class="width-64 md:height-100%">
-						</div>
-						<div class="text-gray">{{$connection.Description}}</div>
-					</a>
-				{{- end -}}
-				<div hx-get="/@me/settings/merchantAccount-edit-stripe" class="clickable card padding margin-bottom hover-outline flex-row sm:flex-column md:width-50% lg:width-33% xl:width-25%" role="button">
-					<div class="align-center margin-bottom flex-grow">
-						<img src="/.templates/user-inbox/resources/stripe.svg" class="width-128 md:height-100%">
-					</div>
-					<div class="text-gray">Stripe is a sophisticated payment platform for developers and techies.</div>
+				<h1 class="text-xl bold">
+					Payments Not Available
+				</h1>
+				
+				<div class="margin-bottom-lg  md:width-80% lg:width-60%">
+					This server has not been configured to support payments. Please ask your server administrator
+					to enable one or more payment processors, and  you to accept payments for your posts.
 				</div>
-			</div>
+			{{- else -}}
+				<h1 class="text-xl bold">
+					Accept Payments for your Posts
+				</h1>
+				
+				<div class="margin-bottom-lg  md:width-80% lg:width-60%">
+					To sell access to your online posts, you must first sign up and connect to one of the supported payment procesors below.
+					<br><br>
+					After you've entered your merchant account information, you'll be able to use the product plan(s) from your merchant account to 
+					charge for access to this item.
+					<a href="https://emissary.dev/payments" class="nowrap" target="_blank">Learn More {{icon "new-window"}}</a>
+				</div>
+
+				<div class="md:flex-row margin-bottom md:text-sm">
+					{{template "merchantAccount-add-list" $connections}}
+				</div>
+
+			{{- end -}}
 
 		{{- else -}}
 

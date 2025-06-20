@@ -207,7 +207,7 @@ func (service *Connection) QueryAll(options ...option.Option) ([]model.Connectio
 	return service.Query(exp.All(), options...)
 }
 
-func (service *Connection) QueryByType(typeID string, options ...option.Option) ([]model.Connection, error) {
+func (service *Connection) QueryActiveByType(typeID string, options ...option.Option) ([]model.Connection, error) {
 
 	const location = "service.Connection.QueryByType"
 
@@ -216,7 +216,7 @@ func (service *Connection) QueryByType(typeID string, options ...option.Option) 
 		return nil, derp.InternalError(location, "Invalid Type ID", typeID)
 	}
 
-	return service.Query(exp.Equal("type", typeID), options...)
+	return service.Query(exp.Equal("type", typeID).AndEqual("active", true), options...)
 }
 
 func (service *Connection) AllAsMap() mapof.Object[model.Connection] {

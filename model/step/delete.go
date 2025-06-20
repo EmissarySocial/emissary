@@ -73,8 +73,8 @@ func (step Delete) RequiredRoles() []string {
 func StepDeleteSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"title":   schema.String{MaxLength: 1024, Format: "text"},
-			"message": schema.String{MaxLength: 128, Format: "text"},
+			"title":   schema.String{MaxLength: 128, Format: "text"},
+			"message": schema.String{MaxLength: 512, Format: "text"},
 			"submit":  schema.String{MaxLength: 32, Format: "text"},
 			"method":  schema.String{Enum: []string{"get", "post", "both"}, Default: "both"},
 		},
