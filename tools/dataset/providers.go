@@ -50,6 +50,8 @@ func Providers() []form.LookupCode {
 			Description: "Allow users to accept payments via Stripe.  Use this configuration if you have set up Stripe Connect and want users to authenticate via OAuth. (Easier for Users)",
 			Group:       "OAUTH",
 		},
+
+		/* REMOVED FOR NOW
 		{
 			Value:       model.ConnectionProviderPayPal,
 			Label:       "PayPal Marketplace",
@@ -57,8 +59,6 @@ func Providers() []form.LookupCode {
 			Description: "(On Probation) Allows users to accept payments via PayPal. Requires a Marketplace account with PayPal.",
 			Group:       "MANUAL",
 		},
-
-		/* REMOVED FOR NOW
 		{
 			Value:       "SQUARE",
 			Label:       "Square",
