@@ -6,18 +6,20 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/list"
+	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Attachment represents a file that has been uploaded to the software
 type Attachment struct {
 	AttachmentID primitive.ObjectID `bson:"_id"`         // ID of this Attachment
-	ObjectID     primitive.ObjectID `bson:"objectId"`    // ID of the Stream that owns this Attachment
+	ObjectID     primitive.ObjectID `bson:"objectId"`    // ID of the object that owns this Attachment
 	ObjectType   string             `bson:"objectType"`  // Type of object that owns this Attachment
 	Original     string             `bson:"original"`    // Original filename uploaded by user
 	Category     string             `bson:"category"`    // Category of the file (defined by the Template)
@@ -51,6 +53,52 @@ func NewAttachment(objectType string, objectID primitive.ObjectID) Attachment {
 // ID returns the primary key of this object
 func (attachment *Attachment) ID() string {
 	return attachment.AttachmentID.Hex()
+}
+
+/******************************************
+ * AccessLister Interface
+ ******************************************/
+
+// State returns the current state of this Attachment.
+// It is part of the AccessLister interface
+func (attachment *Attachment) State() string {
+	return "default"
+}
+
+// IsAuthor returns TRUE if the provided UserID the author of this Attachment
+// It is part of the AccessLister interface
+func (attachment *Attachment) IsAuthor(authorID primitive.ObjectID) bool {
+
+	// if attachment.ObjectType == AttachmentObjectTypeStream {
+	// TODO: What goes here??
+	// }
+
+	return false
+}
+
+// IsMyself returns TRUE if this object directly represents the provided UserID
+// It is part of the AccessLister interface
+func (attachment *Attachment) IsMyself(userID primitive.ObjectID) bool {
+
+	if attachment.ObjectType == AttachmentObjectTypeUser {
+		if attachment.ObjectID == userID {
+			return true
+		}
+	}
+
+	return false
+}
+
+// RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.
+// It is part of the AccessLister interface
+func (attachment *Attachment) RolesToGroupIDs(roleIDs ...string) id.Slice {
+	return nil
+}
+
+// RolesToPrivilegesIDs returns a slice of Privileges that grant access to any of the requested roles.
+// It is part of the AccessLister interface
+func (attachment *Attachment) RolesToPrivileges(roleIDs ...string) sliceof.String {
+	return sliceof.NewString()
 }
 
 /******************************************

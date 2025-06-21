@@ -84,24 +84,23 @@ func PostRegister(ctx *steranko.Context, factory *domain.Factory, domain *model.
 	return nil
 }
 
-// PostRegister generates an echo.HandlerFunc that handles POST /register requests
+// GetCompleteRegistration finalizes a registration request by processing a JWT token passed from the confirmation email to the query string.
 func GetCompleteRegistration(ctx *steranko.Context, factory *domain.Factory, domain *model.Domain, registration *model.Registration) error {
 
-	const location = "handler.PostRegister"
+	const location = "handler.GetCompleteRegistration"
 
 	// Parse the JWT token from the query string
 	tokenString := ctx.QueryParam("token")
 	keyFunc := factory.JWT().FindKey
 	claims := jwt.MapClaims{}
-	encryptionMethods := []string{"HS256", "HS384", "HS512"}
-	token, err := jwt.ParseWithClaims(tokenString, &claims, keyFunc, jwt.WithValidMethods(encryptionMethods))
+	token, err := jwt.ParseWithClaims(tokenString, &claims, keyFunc, steranko.JWTValidMethods())
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error parsing JWT token")
 	}
 
 	if !token.Valid {
-		return derp.NewBadRequestError(location, "Invalid JWT token")
+		return derp.BadRequestError(location, "Invalid JWT token")
 	}
 
 	// Parse the Registration Transaction from the JWT token
@@ -124,14 +123,10 @@ func GetCompleteRegistration(ctx *steranko.Context, factory *domain.Factory, dom
 	}
 
 	// Try to sign-in with the new user's account
-	s := factory.Steranko()
-	cookie, err := s.CreateCertificate(ctx.Request(), &user)
-
-	if err != nil {
+	if err := factory.Steranko().SigninUser(ctx, &user); err != nil {
 		return derp.Wrap(err, location, "Error signing in user")
 	}
 
-	ctx.SetCookie(&cookie)
 	return ctx.Redirect(http.StatusFound, "/@me")
 }
 
@@ -161,11 +156,11 @@ func PostUpdateRegistration(ctx *steranko.Context, factory *domain.Factory, doma
 	secret := domain.RegistrationData.GetString("secret")
 
 	if secret == "" {
-		return derp.NewNotFoundError(location, "Secret not found")
+		return derp.NotFoundError(location, "Secret not found")
 	}
 
 	if !txn.IsValid(secret) {
-		return derp.NewBadRequestError(location, "Invalid Registration Transaction", txn)
+		return derp.BadRequestError(location, "Invalid Registration Transaction", txn)
 	}
 
 	// Update the User' registration

@@ -4,9 +4,19 @@
 ## it to complete an action (like, share, follow, etc) 
 
 {
-	templateId:"base-intent"
+	templateId: base-intent
+	model: None
+
+	states: {
+		default: {
+			label: Default State,
+			description: Initial state for this template
+		}
+	}
+
 	actions:{
 		intent: {
+			roles:["anonymous"]
 			steps: [
 				{do:"as-modal", steps:[
 					{do:"view-html"}
@@ -14,6 +24,7 @@
 			]
 		},
 		follow-email: {
+			roles:["anonymous"]
 			steps: [
 				{do:"as-modal", steps:[
 					{do:"view-html"}
@@ -21,6 +32,7 @@
 			]
 		}
 		follow-email-sent: {
+			roles:["anonymous"]
 			steps: [
 				{do:"view-html"}
 			]

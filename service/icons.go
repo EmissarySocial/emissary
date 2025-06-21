@@ -54,6 +54,10 @@ func (service Icons) Get(name string) string {
 		return service.get("calendar3-week-fill")
 	case "cancel":
 		return service.get("x-lg")
+	case "card":
+		return service.get("postcard")
+	case "card-fill":
+		return service.get("postcard-fill")
 	case "cassette":
 		return service.get("cassette")
 	case "cassette-fill":
@@ -98,6 +102,10 @@ func (service Icons) Get(name string) string {
 		return service.get("cloud")
 	case "cloud-fill":
 		return service.get("cloud-fill")
+	case "credit-card":
+		return service.get("credit-card")
+	case "credit-card-fill":
+		return service.get("credit-card-fill")
 	case "database":
 		return service.get("database")
 	case "database-fill":
@@ -150,6 +158,10 @@ func (service Icons) Get(name string) string {
 		return service.get("heart")
 	case "heart-fill":
 		return service.get("heart-fill")
+	case "help":
+		return service.get("question-circle")
+	case "help-fill":
+		return service.get("question-circle-fill")
 	case "home":
 		return service.get("house")
 	case "home-fill":
@@ -200,6 +212,8 @@ func (service Icons) Get(name string) string {
 		return service.get("mic-mute")
 	case "mute-fill":
 		return service.get("mic-mute-fill")
+	case "new-window":
+		return service.get("arrow-up-right-square")
 	case "newspaper":
 		return service.get("newspaper")
 	case "none":
@@ -212,6 +226,10 @@ func (service Icons) Get(name string) string {
 		return service.get("person")
 	case "person-fill":
 		return service.get("person-fill")
+	case "person-card":
+		return service.get("person-vcard")
+	case "person-card-fill":
+		return service.get("person-vcard-fill")
 	case "people":
 		return service.get("people")
 	case "people-fill":
@@ -363,10 +381,6 @@ func (service Icons) Get(name string) string {
 		return service.get("cloud-arrow-down")
 	case "rss-cloud-fill":
 		return service.get("cloud-arrow-down-fill")
-	case "stripe":
-		return service.get("credit-card")
-	case "stripe-fill":
-		return service.get("credit-card-fill")
 	case "websub":
 		return service.get("cloud-arrow-down")
 	case "websub-fill":
@@ -451,6 +465,13 @@ func (service Icons) Get(name string) string {
 
 	case "public-domain":
 		return service.publicDomain()
+
+	// Services
+	case "paypal", "PAYPAL":
+		return service.get("paypal")
+
+	case "stripe", "STRIPE":
+		return service.get("stripe")
 
 	}
 

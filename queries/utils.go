@@ -21,7 +21,7 @@ func pipeline(ctx context.Context, collection data.Collection, result any, pipel
 	mongo := mongoCollection(collection)
 
 	if mongo == nil {
-		return derp.NewInternalError("queries.pipeline", "Database must be MongoDB")
+		return derp.InternalError("queries.pipeline", "Database must be MongoDB")
 	}
 
 	// Define a cursor for the pipeline results

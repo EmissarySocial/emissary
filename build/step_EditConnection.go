@@ -32,7 +32,7 @@ func (step StepEditConnection) Get(builder Builder, buffer io.Writer) PipelineBe
 	manualProvider, ok := adapter.(providers.ManualProvider)
 
 	if !ok {
-		return Halt().WithError(derp.NewInternalError(location, "Provider does not implement ManualProvider interface", adapter))
+		return Halt().WithError(derp.InternalError(location, "Provider does not implement ManualProvider interface", adapter))
 	}
 
 	// Retrieve the custom form for this Manual Provider
@@ -48,8 +48,9 @@ func (step StepEditConnection) Get(builder Builder, buffer io.Writer) PipelineBe
 	// Wrap the form as a ModalForm and return
 	formHTML = WrapModalForm(builder.response(), builder.URL(), formHTML, form.Encoding())
 
-	// nolint:errcheck
-	buffer.Write([]byte(formHTML))
+	if _, err := buffer.Write([]byte(formHTML)); err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Error writing form HTML to buffer"))
+	}
 
 	return Halt().AsFullPage()
 }
@@ -79,7 +80,7 @@ func (step StepEditConnection) Post(builder Builder, _ io.Writer) PipelineBehavi
 	manualProvider, ok := adapter.(providers.ManualProvider)
 
 	if !ok {
-		return Halt().WithError(derp.NewInternalError(location, "Provider does not implement ManualProvider interface", adapter))
+		return Halt().WithError(derp.InternalError(location, "Provider does not implement ManualProvider interface", adapter))
 	}
 
 	// Retrieve the custom form for this Manual Provider
@@ -92,12 +93,7 @@ func (step StepEditConnection) Post(builder Builder, _ io.Writer) PipelineBehavi
 
 	// Apply the form data to the domain object
 	if err := form.SetURLValues(&connection, builder.request().Form, nil); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error updating domain object form"))
-	}
-
-	// Run post-configuration scripts, if any
-	if err := adapter.AfterConnect(builder.factory(), &connection); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error installing connection"))
+		return Halt().WithError(derp.Wrap(err, location, "Error updating domain object with form data"))
 	}
 
 	// Try to save the domain object back to the database

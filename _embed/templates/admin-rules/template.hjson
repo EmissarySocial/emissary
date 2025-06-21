@@ -1,15 +1,29 @@
 {
 	templateId:"admin-rules"
 	templateRole:"admin"
-	model:"rule"
+	model:"Rule"
 	extends: ["admin-common"]
 	containedBy:["admin"]
 	label: "Rules"
 	description: "Domain Owners only.  Site Admin"
 	actions: {
-		index: {do: "view-html"}
-		list: {do: "view-html"}
-		add: {steps:[
+		index: {
+			roles:["owner"]
+			steps:[
+				{do: "view-html"}
+			]
+		}
+
+		list: {
+			roles:["owner"]
+			steps:[
+				{do: "view-html"}
+			]
+		}
+
+		add: {
+			roles:["owner"]
+			steps:[
 			{do:"as-modal", background:"/admin/rules", steps:[
 				{do: "edit", form:{
 					type:"layout-vertical"
@@ -24,7 +38,10 @@
 			]}
 			{do:"trigger-event", event:"refreshPage"}
 		]}
-		edit: {steps:[
+		
+		edit: {
+			roles:["owner"]
+			steps:[
 			{do:"as-modal", background:"/admin/rules", steps:[
 				{
 					do: "edit"
@@ -45,6 +62,7 @@
 		]}
 		
 		delete: {
+			roles:["owner"]
 			steps:[
 				{do: "delete"}
 				{do:"trigger-event", event:"refreshPage"}

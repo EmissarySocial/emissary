@@ -16,14 +16,14 @@ func GetSingleSignOn(ctx *steranko.Context, factory *domain.Factory, domain *mod
 
 	// RULE: Guarantee that the SSO is active
 	if domain.Data.GetString("sso_active") != "true" {
-		return derp.NewNotFoundError(location, "Single Sign-On is not active")
+		return derp.NotFoundError(location, "Single Sign-On is not active")
 	}
 
 	// RULE: Guarantee that the SSO secret has been set
 	secret := domain.Data.GetString("sso_secret")
 
 	if secret == "" {
-		return derp.NewInternalError(location, "SSO secret key is not set")
+		return derp.InternalError(location, "SSO secret key is not set")
 	}
 
 	// Parse the JWT Token
@@ -32,12 +32,10 @@ func GetSingleSignOn(ctx *steranko.Context, factory *domain.Factory, domain *mod
 	}
 
 	tokenString := ctx.QueryParam("token")
-	option := jwt.WithValidMethods([]string{"HS256", "HS384", "HS512"}) // https://pkg.go.dev/github.com/golang-jwt/jwt/v5@v5.2.1#WithValidMethods
-
 	claims := jwt.MapClaims{}
 
-	if _, err := jwt.ParseWithClaims(tokenString, &claims, keyFunc, option); err != nil {
-		return derp.NewBadRequestError(location, "Invalid JWT token")
+	if _, err := jwt.ParseWithClaims(tokenString, &claims, keyFunc, steranko.JWTValidMethods()); err != nil {
+		return derp.BadRequestError(location, "Invalid JWT token")
 	}
 
 	// Extract User Information from the Token
@@ -52,16 +50,9 @@ func GetSingleSignOn(ctx *steranko.Context, factory *domain.Factory, domain *mod
 	}
 
 	// Create a sign-in session for the user
-	sterankoService := factory.Steranko()
-
-	certificate, err := sterankoService.CreateCertificate(ctx.Request(), &user)
-
-	if err != nil {
+	if err := factory.Steranko().SigninUser(ctx, &user); err != nil {
 		return derp.Wrap(err, location, "Error creating certificate")
 	}
-
-	// Push the certificate and make a -backup cookie
-	sterankoService.PushCookie(ctx, certificate)
 
 	// Forward to the user's profile page
 	return ctx.Redirect(http.StatusSeeOther, "/@"+user.Username)

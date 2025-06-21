@@ -30,7 +30,7 @@ func NewSearchTag(factory Factory, request *http.Request, response http.Response
 	const location = "build.NewSearchTag"
 
 	// Create the underlying Common builder
-	common, err := NewCommonWithTemplate(factory, request, response, template, actionID)
+	common, err := NewCommonWithTemplate(factory, request, response, template, searchTag, actionID)
 
 	if err != nil {
 		return SearchTag{}, derp.Wrap(err, location, "Error creating common builder")
@@ -38,7 +38,7 @@ func NewSearchTag(factory Factory, request *http.Request, response http.Response
 
 	// Verify that the user is a Domain Owner
 	if !common._authorization.DomainOwner {
-		return SearchTag{}, derp.NewForbiddenError(location, "Must be domain owner to continue")
+		return SearchTag{}, derp.ForbiddenError(location, "Must be domain owner to continue")
 	}
 
 	// Return the SearchTag builder

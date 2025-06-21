@@ -1,0 +1,45 @@
+{{- if .HasEmailAddress -}}
+	<h1>{{icon "email"}} Edit Your Email Address</h1>
+
+	<div class="alert-gray margin-bottom-lg">
+		Enter a new email address to replace your current one.  We'll send you a verification email to complete the change.<br>
+		<br>
+		This will replace your current address and all purchases made with it.  To access any purchases you've made so far, you'll need to sign in 
+		again with your old address.
+	</div>
+
+{{- else -}}
+	<h1>{{icon "email"}} Add an Email Address</h1>
+
+	<div class="alert-gray margin-bottom-lg">
+		When you add an email address to your guest profile, you'll connect any purchases you made using that address.
+	</div>
+{{- end -}}
+
+<form hx-post="/@guest/identifier">
+
+	<div class="layout-vertical">
+		<div class="layout-vertical-elements">
+			<div class="layout-vertical-element">
+				<label for="email">New Email Address</label>
+				<input type="hidden" name="identifierType" value="EMAIL">
+				<input type="email" id="email" name="identifier" value="{{.EmailAddress}}" autocomplete="email" autofocus="true" tabindex="0" required="true">
+				<div id="identifier-label" class="text-sm gray40">e.g. user@server.com</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="margin-top-lg flex-row">
+		<button type="submit" class="primary">Set My Email Address</button>
+		<button script="on click trigger closeModal">Cancel</button>
+		<span class="align-right flex-grow">
+			<span 
+				class="text-red clickable" 
+				hx-post="/@guest/identifier"
+				hx-vals='{"identifierType": "EMAIL","identifier": ""}'
+				hx-confirm="This will remove your Email Address from this guest identity. Are you sure you want to continue?"
+			>Remove Email</span>
+		</span>
+	</div>
+
+</form>

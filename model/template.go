@@ -3,11 +3,13 @@ package model
 import (
 	"html/template"
 	"io/fs"
+	"slices"
 
 	"github.com/EmissarySocial/emissary/tools/templatemap"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
+	"github.com/benpate/rosetta/compare"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
@@ -35,7 +37,7 @@ type Template struct {
 	WidgetLocations    sliceof.String       `json:"widget-locations"   bson:"widgetLocations"`    // List of locations where widgets can be placed.  Common values are: "TOP", "BOTTOM", "LEFT", "RIGHT"
 	Schema             schema.Schema        `json:"schema"             bson:"schema"`             // JSON Schema that describes the data required to populate this Template.
 	States             mapof.Object[State]  `json:"states"             bson:"states"`             // Map of States (by state.ID) that Streams of this Template can be in.
-	AccessRoles        mapof.Object[Role]   `json:"accessRoles"        bson:"accessRoles"`        // Map of custom roles defined by this Template.
+	AccessRoles        mapof.Object[Role]   `json:"roles"              bson:"accessRoles"`        // Map of custom roles defined by this Template.
 	Actions            mapof.Object[Action] `json:"actions"            bson:"actions"`            // Map of actions that can be performed on streams of this Template
 	HTMLTemplate       *template.Template   `json:"-"                  bson:"-"`                  // Compiled HTML template
 	TagPaths           []string             `json:"tagPaths"           bson:"tagPaths"`           // List of paths to tags that are used in this template
@@ -76,12 +78,29 @@ func (template Template) ID() string {
 	return template.TemplateID
 }
 
+// AfterUnmarshal performs some post-processing on the Template object
+// after it has been unmarshalled from JSON.
+func (template *Template) AfterUnmarshal() {
+
+	// Apply RoleIDs to each AccessRole
+	for roleID, accessRole := range template.AccessRoles {
+		accessRole.RoleID = roleID
+		template.AccessRoles[roleID] = accessRole
+	}
+}
+
+// IsZero returns TRUE if this Template is a zero value
 func (template Template) IsZero() bool {
+
 	if template.TemplateID != "" {
 		return false
-	} else if template.TemplateRole != "" {
+	}
+
+	if template.TemplateRole != "" {
 		return false
-	} else if len(template.Actions) > 0 {
+	}
+
+	if len(template.Actions) > 0 {
 		return false
 	}
 
@@ -103,6 +122,36 @@ func (template *Template) CanBeContainedBy(templateRoles ...string) bool {
 
 func (template *Template) IsValidWidgetLocation(location string) bool {
 	return slice.Contains(template.WidgetLocations, location)
+}
+
+// IsValidRole returns TRUE if the provided roleID is valid for this Template
+func (template *Template) IsValidRole(roleID string) bool {
+
+	switch roleID {
+
+	// MagicRoles are always valid
+	case MagicRoleOwner:
+	case MagicRoleAnonymous:
+	case MagicRoleAuthenticated:
+	case MagicRoleMyself:
+	case MagicRoleAuthor:
+
+	// Custom roles must be defined in the Template
+	default:
+		if _, ok := template.AccessRoles[roleID]; !ok {
+			return false
+		}
+	}
+
+	return true
+}
+
+// IsValidState returns TRUE if the provided stateID is valid for this Template
+func (template *Template) IsValidState(stateID string) bool {
+	if _, ok := template.States[stateID]; !ok {
+		return false
+	}
+	return true
 }
 
 // State searches for the State in this Template that matches the provided StateID
@@ -149,11 +198,6 @@ func (template *Template) Inherit(parent *Template) {
 		template.SocialRole = parent.SocialRole
 	}
 
-	// Apply SocialRules
-	if len(parent.SocialRules) > 0 {
-		template.SocialRules = append(template.SocialRules, parent.SocialRules...)
-	}
-
 	// Inherit ContainedBy.
 	if len(template.ContainedBy) == 0 {
 		template.ContainedBy = parent.ContainedBy
@@ -162,6 +206,11 @@ func (template *Template) Inherit(parent *Template) {
 	// Inherit Model.
 	if template.Model == "" {
 		template.Model = parent.Model
+	}
+
+	// Apply SocialRules
+	if len(parent.SocialRules) > 0 {
+		template.SocialRules = append(parent.SocialRules, template.SocialRules...)
 	}
 
 	// Inherit Datasets from the parent
@@ -210,8 +259,38 @@ func (template *Template) Inherit(parent *Template) {
 }
 
 // IsSearch returns TRUE if this is Template is a search engine
-func (template *Template) IsSearch() bool {
+func (template Template) IsSearch() bool {
 	return template.TemplateRole == "search"
+}
+
+// IsSubscribable returns TRUE if this Template has at-least-one role that requires a product
+func (template Template) IsSubscribable() bool {
+
+	for _, role := range template.AccessRoles {
+		if role.IsPrivileged {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (template Template) PrivilegedRoles() []Role {
+
+	result := make([]Role, 0)
+
+	for _, role := range template.AccessRoles {
+		if role.IsPrivileged {
+			result = append(result, role)
+		}
+	}
+
+	// Sort the results by the role Label
+	slices.SortFunc(result, func(a, b Role) int {
+		return compare.String(a.Label, b.Label)
+	})
+
+	return result
 }
 
 /******************************************
@@ -219,12 +298,12 @@ func (template *Template) IsSearch() bool {
  ******************************************/
 
 // HasOEmbed returns TRUE if this Template has an OEmbed template
-func (template *Template) HasOEmbed() bool {
+func (template Template) HasOEmbed() bool {
 	return template.HTMLTemplate.Lookup("oembed") != nil
 }
 
 // GetOEmbed returns the OEmbed template for this Template
 // If no OEmbed template is found, then nil is returned
-func (template *Template) GetOEmbed() *template.Template {
+func (template Template) GetOEmbed() *template.Template {
 	return template.HTMLTemplate.Lookup("oembed")
 }

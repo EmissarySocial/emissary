@@ -29,7 +29,7 @@ func NewRule(factory Factory, request *http.Request, response http.ResponseWrite
 	const location = "build.NewRule"
 
 	// Create the underlying Common builder
-	common, err := NewCommonWithTemplate(factory, request, response, template, actionID)
+	common, err := NewCommonWithTemplate(factory, request, response, template, rule, actionID)
 
 	if err != nil {
 		return Rule{}, derp.Wrap(err, location, "Error creating common builder")
@@ -37,7 +37,7 @@ func NewRule(factory Factory, request *http.Request, response http.ResponseWrite
 
 	// Verify that the user is a Domain Owner
 	if !common._authorization.DomainOwner {
-		return Rule{}, derp.NewForbiddenError(location, "Must be domain owner to continue")
+		return Rule{}, derp.ForbiddenError(location, "Must be domain owner to continue")
 	}
 
 	// Return the Rule builder

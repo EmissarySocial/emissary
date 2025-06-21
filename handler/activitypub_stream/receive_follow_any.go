@@ -16,13 +16,13 @@ func init() {
 
 		// Validate that the receiving Stream matches the Actor ID in the Activity
 		if context.stream.ActivityPubURL() != activity.Object().ID() {
-			return derp.NewInternalError(location, "Invalid User ID", context.stream.ActivityPubURL(), activity.Object().ID())
+			return derp.InternalError(location, "Invalid User ID", context.stream.ActivityPubURL(), activity.Object().ID())
 		}
 
 		// Apply rules to filter out unwanted follow activities
 		ruleFilter := context.factory.Rule().Filter(primitive.NilObjectID, service.WithBlocksOnly())
 		if ruleFilter.Disallow(&activity) {
-			return derp.NewForbiddenError(location, "Blocked by rule", activity.Object().ID())
+			return derp.ForbiddenError(location, "Blocked by rule", activity.Object().ID())
 		}
 
 		// Try to look up the complete actor record from the activity

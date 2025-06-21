@@ -110,7 +110,7 @@ func (service *Registration) Load(registrationID string) (model.Registration, er
 		return registration, nil
 	}
 
-	return model.NewRegistration(registrationID, nil), derp.NewNotFoundError("sevice.Registration.Load", "Registration not found", registrationID)
+	return model.NewRegistration(registrationID, nil), derp.NotFoundError("sevice.Registration.Load", "Registration not found", registrationID)
 }
 
 /******************************************
@@ -123,21 +123,21 @@ func (service *Registration) Validate(userService *User, domain *model.Domain, t
 
 	// Validate basic transaction values (name, email, username, userID, secret)
 	if secret := domain.RegistrationData.GetString("secret"); txn.IsInvalid(secret) {
-		return derp.NewBadRequestError(location, "Invalid Registration. Please sign up again.", txn)
+		return derp.BadRequestError(location, "Invalid Registration. Please sign up again.", txn)
 	}
 
 	user := model.NewUser()
 
 	// UserID must not already exist in the database
 	if userID, err := primitive.ObjectIDFromHex(txn.UserID); err != nil {
-		return derp.NewBadRequestError(location, "Invalid UserID", txn.UserID)
-	} else if err := userService.LoadByID(userID, &user); !derp.NotFound(err) {
-		return derp.NewBadRequestError(location, "UserID already exists. Please sign up again.")
+		return derp.BadRequestError(location, "Invalid UserID", txn.UserID)
+	} else if err := userService.LoadByID(userID, &user); !derp.IsNotFound(err) {
+		return derp.BadRequestError(location, "UserID already exists. Please sign up again.")
 	}
 
 	// Username must not already exist in the database
-	if err := userService.LoadByUsername(txn.Username, &user); !derp.NotFound(err) {
-		return derp.NewBadRequestError(location, "Username taken. Please choose again.")
+	if err := userService.LoadByUsername(txn.Username, &user); !derp.IsNotFound(err) {
+		return derp.BadRequestError(location, "Username taken. Please choose again.")
 	}
 
 	// This transaction appears to be valid.
@@ -156,7 +156,7 @@ func (service *Registration) Register(groupService *Group, userService *User, do
 	}
 
 	if registration.IsZero() {
-		return model.User{}, derp.NewNotFoundError(location, "Registration not found")
+		return model.User{}, derp.NotFoundError(location, "Registration not found")
 	}
 
 	// Validate the transaction
@@ -202,14 +202,14 @@ func (service *Registration) UpdateRegistration(groupService *Group, userService
 	}
 
 	if registration.IsZero() {
-		return derp.NewNotFoundError(location, "Registration not found")
+		return derp.NotFoundError(location, "Registration not found")
 	}
 
 	// Validate the Transaction
 	if secret := domain.RegistrationData.GetString("secret"); secret == "" {
-		return derp.NewNotFoundError(location, "This registration form requires a secret key")
+		return derp.NotFoundError(location, "This registration form requires a secret key")
 	} else if txn.IsInvalid(secret) {
-		return derp.NewBadRequestError(location, "Invalid Registration Transaction", txn)
+		return derp.BadRequestError(location, "Invalid Registration Transaction", txn)
 	}
 
 	// Try to locate the user from their remote ID
@@ -217,7 +217,7 @@ func (service *Registration) UpdateRegistration(groupService *Group, userService
 	err = userService.LoadByMapID(source, sourceID, &user)
 
 	// If not found, then create a new User
-	if derp.NotFound(err) {
+	if derp.IsNotFound(err) {
 		_, err := service.Register(groupService, userService, domain, txn)
 		return err
 	}
@@ -303,7 +303,7 @@ func (service *Registration) setUserData(groupService *Group, domain *model.Doma
 			}
 
 		default:
-			derp.Report(derp.NewInternalError(location, "Unknown field", fieldName))
+			derp.Report(derp.InternalError(location, "Unknown field", fieldName))
 		}
 	}
 

@@ -127,10 +127,11 @@ func (w Common) PathList() list.List {
 
 // SetQueryParam updates the HTTP request, setting a new value
 // for an individual query parameter.
-func (w Common) SetQueryParam(name string, value string) {
+func (w Common) SetQueryParam(name string, value string) bool {
 	query := w._request.URL.Query()
 	query.Set(name, value)
 	w._request.URL.RawQuery = query.Encode()
+	return true
 }
 
 // Returns the designated request parameter.  If there are
@@ -234,20 +235,12 @@ func (w Common) GetContent() template.HTML {
  * Domain Data
  ******************************************/
 
-func (w Common) DomainLabel() (string, error) {
-	if domain, err := w.getDomain(); err != nil {
-		return "", err
-	} else {
-		return domain.Label, nil
-	}
+func (w Common) DomainLabel() string {
+	return w._factory.Domain().Get().Label
 }
 
-func (w Common) DomainHasRegistrationForm() (bool, error) {
-	if domain, err := w.getDomain(); err != nil {
-		return false, err
-	} else {
-		return domain.HasRegistrationForm(), nil
-	}
+func (w Common) DomainHasRegistrationForm() bool {
+	return w._factory.Domain().Get().HasRegistrationForm()
 }
 
 /***************************
@@ -258,6 +251,11 @@ func (w Common) DomainHasRegistrationForm() (bool, error) {
 func (w Common) IsAuthenticated() bool {
 	authorization := w.authorization()
 	return authorization.IsAuthenticated()
+}
+
+func (w Common) IsIdentity() bool {
+	authorization := w.authorization()
+	return authorization.IsIdentity()
 }
 
 // IsOwner returns TRUE if the user is a Domain Owner
@@ -376,9 +374,8 @@ func (w Common) GetFollowingID(url string) string {
 
 // lookupProvider returns the LookupProvider service, which can return form.LookupGroups
 func (w Common) lookupProvider() form.LookupProvider {
-
 	userID := w.AuthenticatedID()
-	return w._factory.LookupProvider(userID)
+	return w._factory.LookupProvider(w._request, userID)
 }
 
 // Dataset returns a single form.LookupGroup from the LookupProvider
@@ -434,18 +431,6 @@ func (w Common) getUser() (model.User, error) {
 	}
 
 	return result, nil
-}
-
-// getDomain retrieves the current domain model object from the domain service cache
-func (w *Common) getDomain() (model.Domain, error) {
-
-	domainService := w._factory.Domain()
-
-	if !domainService.Ready() {
-		return model.Domain{}, derp.NewInternalError("build.Common.getDomain", "Domain service not ready", nil)
-	}
-
-	return domainService.Get(), nil
 }
 
 /******************************************
@@ -508,6 +493,11 @@ func (w Common) GetResponseSummary(url string) model.UserResponseSummary {
 	return result
 }
 
+func (w Common) AvailableMerchantAccounts() (sliceof.Object[form.LookupCode], error) {
+	merchantAccountService := w._factory.MerchantAccount()
+	return merchantAccountService.AvailableMerchantAccounts()
+}
+
 /******************************************
  * Search Engine
  ******************************************/
@@ -540,6 +530,24 @@ func (w Common) SearchTag(tagName string) model.SearchTag {
 	}
 
 	return result
+}
+
+func (w Common) MerchantAccount(merchantAccountID string) (model.MerchantAccount, error) {
+	result := model.NewMerchantAccount()
+	err := w._factory.MerchantAccount().LoadByToken(merchantAccountID, &result)
+	return result, err
+}
+
+// Products returns all Remote Products that (when purchased) provide privileges for this Stream.
+func (w Common) RemoteProducts() (sliceof.Object[model.RemoteProduct], error) {
+
+	_, remoteProducts, err := w._factory.MerchantAccount().RemoteProductsByUser(w.AuthenticatedID())
+
+	if err != nil {
+		return nil, derp.Wrap(err, "build.Common.Products", "Error loading products for user", w.AuthenticatedID())
+	}
+
+	return remoteProducts, nil
 }
 
 func (w Common) FeaturedSearchTags() *QueryBuilder[model.SearchTag] {

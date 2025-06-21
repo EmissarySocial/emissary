@@ -3,6 +3,7 @@ package id
 import (
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/slice"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -27,6 +28,14 @@ func (slice Slice) Length() int {
 		return 0
 	}
 	return len(slice)
+}
+
+func (slice Slice) IsEmpty() bool {
+	return slice.Length() == 0
+}
+
+func (slice Slice) NotEmpty() bool {
+	return slice.Length() > 0
 }
 
 func (slice Slice) GetStringOK(name string) (string, bool) {
@@ -84,6 +93,19 @@ func (slice *Slice) SetValue(value any) error {
 		return slice.SetValue([]string{typed})
 
 	default:
-		return derp.NewBadRequestError("id.Slice.SetValue", "Unable to convert value to Slice", value)
+		return derp.BadRequestError("id.Slice.SetValue", "Unable to convert value to Slice", value)
 	}
+
+}
+
+// ContainsInterface returns TRUE if the provided generic value is contained in the slice.
+func (x Slice) ContainsInterface(value any) bool {
+
+	// Convert the value to a string
+	if value, err := Convert(value); err == nil {
+		return slice.Contains(x, value)
+	}
+
+	// If we can't convert the value to a string, then it is not contained in the slice
+	return false
 }

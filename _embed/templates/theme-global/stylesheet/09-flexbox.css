@@ -11,6 +11,7 @@
 .flex-row-reverse {flex-direction:row-reverse;}
 .flex-column {display:flex; flex-direction:column;}
 .flex-column-reverse {display:flex; flex-direction:column-reverse;}
+.flex-none {display:unset}
 .flex-align-start {align-items:flex-start}
 .flex-align-end {align-items:flex-end}
 .flex-align-center {align-items:center}
@@ -37,6 +38,8 @@
 .flex-grow-0 {flex-grow:0}
 .flex-grow, .flex-grow-1 {flex-grow: 1}
 .flex-grow-2 {flex-grow:2}
+.flex-grow-3 {flex-grow:3}
+.flex-grow-4 {flex-grow:4}
 .flex-wrap {flex-wrap:wrap}
 .flex-wrap-reverse {flex-wrap:wrap-reverse}
 
@@ -60,6 +63,7 @@
 	.sm\:flex-row-reverse {flex-direction:row-reverse}
 	.sm\:flex-column {display:flex; flex-direction:column}
 	.sm\:flex-column-reverse {display:flex; flex-direction:column-reverse}
+	.sm\:flex-none {display:unset}
 	.sm\:flex-align-start {align-items:flex-start}
 	.sm\:flex-align-end {align-items:flex-end}
 	.sm\:flex-align-center {align-items:center}
@@ -86,6 +90,8 @@
 	.sm\:flex-grow-0 {flex-grow:0}
 	.sm\:flex-grow, .flex-grow-1 {flex-grow: 1}
 	.sm\:flex-grow-2 {flex-grow:2}
+	.sm\:flex-grow-3 {flex-grow:3}
+	.sm\:flex-grow-4 {flex-grow:4}
 	.sm\:flex-wrap {flex-wrap:wrap}
 	.sm\:flex-wrap-reverse {flex-wrap:wrap-reverse}
 }
@@ -104,6 +110,7 @@
 	.md\:flex-row-reverse {flex-direction:row-reverse}
 	.md\:flex-column {display:flex; flex-direction:column}
 	.md\:flex-column-reverse {display:flex; flex-direction:column-reverse}
+	.md\:flex-none {display:unset}
 	.md\:flex-align-start {align-items:flex-start}
 	.md\:flex-align-end {align-items:flex-end}
 	.md\:flex-align-center {align-items:center}
@@ -130,6 +137,8 @@
 	.md\:flex-grow-0 {flex-grow:0}
 	.md\:flex-grow, .flex-grow-1 {flex-grow: 1}
 	.md\:flex-grow-2 {flex-grow:2}
+	.md\:flex-grow-3 {flex-grow:3}
+	.md\:flex-grow-4 {flex-grow:4}
 	.md\:flex-wrap {flex-wrap:wrap}
 	.md\:flex-wrap-reverse {flex-wrap:wrap-reverse}
 }
@@ -148,6 +157,7 @@
 	.lg\:flex-row-reverse {flex-direction:row-reverse}
 	.lg\:flex-column {display:flex; flex-direction:column}
 	.lg\:flex-column-reverse {display:flex; flex-direction:column-reverse}
+	.lg\:flex-none {display:unset}
 	.lg\:flex-align-start {align-items:flex-start}
 	.lg\:flex-align-end {align-items:flex-end}
 	.lg\:flex-align-center {align-items:center}
@@ -174,6 +184,8 @@
 	.lg\:flex-grow-0 {flex-grow:0}
 	.lg\:flex-grow, .flex-grow-1 {flex-grow: 1}
 	.lg\:flex-grow-2 {flex-grow:2}
+	.lg\:flex-grow-3 {flex-grow:3}
+	.lg\:flex-grow-4 {flex-grow:4}
 	.lg\:flex-wrap {flex-wrap:wrap}
 	.lg\:flex-wrap-reverse {flex-wrap:wrap-reverse}
 }

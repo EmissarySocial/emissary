@@ -4,6 +4,7 @@ import (
 	"net/url"
 	"strconv"
 
+	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/EmissarySocial/emissary/service"
@@ -84,7 +85,7 @@ func queryExpression(queryPager txn.QueryPager) exp.Expression {
 // steps: 1) locate the domain from the provided Stream URL, 2) load the
 // requested stream from the database, and 3) return the Stream and corresponding
 // StreamService to the caller.
-func getStreamFromURL(serverFactory *server.Factory, streamURL string) (model.Stream, *service.Stream, error) {
+func getStreamFromURL(serverFactory *server.Factory, streamURL string) (*domain.Factory, *service.Stream, model.Stream, error) {
 
 	const location = "handler.getStreamFromURI"
 
@@ -92,14 +93,14 @@ func getStreamFromURL(serverFactory *server.Factory, streamURL string) (model.St
 	parsedURL, err := url.Parse(streamURL)
 
 	if err != nil {
-		return model.Stream{}, nil, derp.Wrap(err, location, "Invalid URI")
+		return nil, nil, model.Stream{}, derp.Wrap(err, location, "Invalid URI")
 	}
 
 	// Get the factory for this Domain
 	factory, err := serverFactory.ByHostname(parsedURL.Host)
 
 	if err != nil {
-		return model.Stream{}, nil, derp.Wrap(err, location, "Unrecognized Domain")
+		return nil, nil, model.Stream{}, derp.Wrap(err, location, "Unrecognized Domain")
 	}
 
 	// Try to load the requested Stream using its URL
@@ -107,10 +108,10 @@ func getStreamFromURL(serverFactory *server.Factory, streamURL string) (model.St
 	stream := model.NewStream()
 
 	if err := streamService.LoadByURL(streamURL, &stream); err != nil {
-		return model.Stream{}, nil, derp.Wrap(err, location, "Error loading stream")
+		return nil, nil, model.Stream{}, derp.Wrap(err, location, "Error loading stream")
 	}
 
 	// Return values to the caller.
-	return stream, streamService, nil
+	return factory, streamService, stream, nil
 
 }

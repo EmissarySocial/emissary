@@ -128,17 +128,17 @@ func (service *ServerEmail) Send(smtpConnection config.SMTPConnection, owner con
 	email, exists := service.emails[emailID]
 
 	if !exists {
-		return derp.NewBadRequestError(location, "Email is not defined", emailID, maps.Keys(service.emails))
+		return derp.BadRequestError(location, "Email is not defined", emailID, maps.Keys(service.emails))
 	}
 
 	// "Model" must be set
 	if model == "" {
-		return derp.NewBadRequestError(location, "Model is required", emailID)
+		return derp.BadRequestError(location, "Model is required", emailID)
 	}
 
 	// Require that the email is defined for the correct model
 	if email.Model != model {
-		return derp.NewBadRequestError(location, "Email is not defined for this model", emailID, model)
+		return derp.BadRequestError(location, "Email is not defined for this model", emailID, model)
 	}
 
 	// If the SMTP Connection is empty, then don't try to send an email
@@ -151,7 +151,7 @@ func (service *ServerEmail) Send(smtpConnection config.SMTPConnection, owner con
 	server, ok := smtpConnection.Server()
 
 	if !ok {
-		return derp.NewInternalError(location, "Cannot create SMTP Connection - invalid or empty credentials", smtpConnection.Hostname, smtpConnection.Username)
+		return derp.InternalError(location, "Cannot create SMTP Connection - invalid or empty credentials", smtpConnection.Hostname, smtpConnection.Username)
 	}
 
 	client, err := server.Connect()

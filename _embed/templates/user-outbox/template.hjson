@@ -1,7 +1,7 @@
 {
 	templateId:user-outbox
 	templateRole:user-outbox
-	model:outbox
+	model:Outbox
 	label:Default Outbox
 	description:Profile displays everything about a user, including their inbox and outbox information
 	icon:inbox
@@ -24,19 +24,31 @@
 			}
 		}
 	}
-	bundles: {
-		stylesheet: {
-			content-type:text/css
+
+	states: {
+		default: {
+			label: Default
+			description: Default state for Bandwagon Common
 		}
 	}
+
 	actions: {
+	
 		view: {
+			roles:["anonymous"]
 			steps:[
 				{do:"set-header", name:"Link", value:"<{{.Host}}/@{{.UserID}}>; rel=\"self\", <{{.Host}}/@{{.UserID}}/websub>; rel=\"hub\""}
 				{do:"view-html", file:"outbox"}
 			]
 		}
-		outbox-list: {do:"view-html"}
+	
+		outbox-list: {
+			roles:["anonymous"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+	
 		outbox-add: {
 			roles: ["self"]
 			steps: [
@@ -46,12 +58,41 @@
 			]
 		}
 
-		replied: {do:"view-html"}
-		replied-list: {do:"view-html"}
-		liked: {do:"view-html"}
-		liked-list: {do:"view-html"}
+		replied: {
+			roles:["anonymous"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+		
+		replied-list: {
+			roles:["anonymous"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+		
+		liked: {
+			roles:["anonymous"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+		
+		liked-list: {
+			roles:["anonymous"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
 
-		sidebar: {do:"view-html"}
+		sidebar: {
+			roles:["anonymous"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+		
 		edit: {
 			roles: ["self"]
 			steps: [
@@ -93,6 +134,7 @@
 				]}
 			]
 		}
+	
 		links-table: {
 			roles: ["self"]
 			steps: [
@@ -121,7 +163,9 @@
 
 		icon-preview: {
 			roles: ["self"]
-			do:"view-html"
+			steps:[
+				{do:"view-html"}
+			]
 		}
 
 		icon-delete: {
@@ -143,6 +187,7 @@
 		}
 
 		follow: {
+			roles:["anonymous"]
 			steps: [
 				{do:"as-modal", background:"profile", steps:[
 					{do:"view-html"}
@@ -151,6 +196,7 @@
 		}
 
 		follow-activitypub: {
+			roles:["anonymous"]
 			steps: [
 				{do:"as-modal", background:"profile", steps:[
 					{do:"view-html"}
@@ -159,6 +205,7 @@
 		}
 
 		follower-confirm: {
+			roles:["anonymous"]
 			steps:[
 				{do:"with-follower", steps:[
 					{do:"set-data", values:{"stateId":"ACTIVE"}}
@@ -169,6 +216,7 @@
 		}
 
 		follower-unsubscribe: {
+			roles:["self"]
 			steps: [
 				{do:"with-follower", steps:[
 					{do:"view-html", file:"follower-unsubscribe"}
@@ -178,9 +226,20 @@
 			]
 		}
 
-		feed: {do:"view-feed"}
-		websub: {do:"websub"}
+		feed: {
+			roles:["anonymous"]
+			steps:[
+				{do:"view-feed"}
+			]
+		}
 
+		websub: {
+			roles:["anonymous"]
+			steps:[
+				{do:"websub"}
+			]
+		}
+		
 		delete: {
 			roles:["self"]
 			steps: [

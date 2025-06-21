@@ -27,5 +27,23 @@ func NewWithRule(stepInfo mapof.Any) (WithRule, error) {
 	}, nil
 }
 
-// AmStep is here only to verify that this struct is a build pipeline step
-func (step WithRule) AmStep() {}
+// Name returns the name of the step, which is used in debugging.
+func (step WithRule) Name() string {
+	return "with-rule"
+}
+
+// RequiredModel returns the name of the model object that MUST be present in the Template.
+// If this value is not empty, then the Template MUST use this model object.
+func (step WithRule) RequiredModel() string {
+	return ""
+}
+
+// RequiredStates returns a slice of states that must be defined any Template that uses this Step
+func (step WithRule) RequiredStates() []string {
+	return []string{} // removing this because states may be different in the child objects // requiredStates(step.SubSteps...)
+}
+
+// RequiredRoles returns a slice of roles that must be defined any Template that uses this Step
+func (step WithRule) RequiredRoles() []string {
+	return requiredRoles(step.SubSteps...)
+}

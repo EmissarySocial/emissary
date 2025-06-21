@@ -71,5 +71,5 @@ func (client *Client) Load(server string) (NodeInfo, error) {
 	}
 
 	// If no valid links were found, return an error
-	return NewNodeInfo(), derp.NewNotFoundError(location, "No valid nodeinfo links found")
+	return NewNodeInfo(), derp.NotFoundError(location, "No valid nodeinfo links found")
 }

@@ -4,7 +4,6 @@ import (
 	"io"
 	"text/template"
 
-	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
 )
 
@@ -41,12 +40,6 @@ func (step StepSave) do(builder Builder) PipelineBehavior {
 	modelService := builder.service()
 	object := builder.object()
 	comment := executeTemplate(step.Comment, builder)
-
-	if setter, ok := modelService.(service.AuthorSetter); ok {
-		if err := setter.SetAuthor(object, builder.AuthenticatedID()); err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Error setting author"))
-		}
-	}
 
 	// Try to update the stream
 	if err := modelService.ObjectSave(object, comment); err != nil {

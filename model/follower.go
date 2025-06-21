@@ -1,9 +1,11 @@
 package model
 
 import (
+	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -38,43 +40,41 @@ func (follower *Follower) ID() string {
 }
 
 /******************************************
- * RoleStateEnumerator Interface
+ * AccessLister Interface
  ******************************************/
 
-// State returns the current state of this object.
-// For users, there is no state, so it returns ""
-func (follower Follower) State() string {
-	return ""
+// State returns the current state of this Follower.
+// It is part of the AccessLister interface
+func (follower *Follower) State() string {
+	return "default"
 }
 
-// Roles returns a list of all roles that match the provided authorization.
-// Since Follower records should only be accessible by the follower owner, this
-// function only returns MagicRoleMyself if applicable.
-func (follower Follower) Roles(authorization *Authorization) []string {
-
-	// Everyone matches "Anonymous"
-	result := []string{MagicRoleAnonymous}
-
-	// If the user is authenticated, then they match "Authenticated"
-	if authorization.IsAuthenticated() {
-		result = append(result, MagicRoleAuthenticated)
-	}
-
-	// If the user is the owner of this Follower, then they match "Myself"
-	if authorization.UserID == follower.ParentID {
-		result = append(result, MagicRoleMyself)
-	}
-
-	// Success?
-	return result
+// IsAuthor returns TRUE if the provided UserID the author of this Follower
+// It is part of the AccessLister interface
+func (follower *Follower) IsAuthor(authorID primitive.ObjectID) bool {
+	return false
 }
 
-func (follower Follower) GetJSONLD() mapof.Any {
-
-	return mapof.Any{
-		vocab.PropertyID:   follower.Actor.ProfileURL,
-		vocab.PropertyName: follower.Actor.Name,
+// IsMyself returns TRUE if this object directly represents the provided UserID
+// It is part of the AccessLister interface
+func (follower *Follower) IsMyself(userID primitive.ObjectID) bool {
+	if follower.ParentType == FollowerTypeUser {
+		return follower.ParentID == userID
 	}
+
+	return false
+}
+
+// RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.
+// It is part of the AccessLister interface
+func (follower *Follower) RolesToGroupIDs(roleIDs ...string) id.Slice {
+	return nil
+}
+
+// RolesToPrivileges returns a slice of Privileges that grant access to any of the requested roles.
+// It is part of the AccessLister interface
+func (follower *Follower) RolesToPrivileges(roleIDs ...string) sliceof.String {
+	return sliceof.NewString()
 }
 
 /******************************************
@@ -103,45 +103,13 @@ func (follower Follower) UnsubscribeLink(host string) string {
 }
 
 /******************************************
- * Map Marshalling
+ * ActivityPub Methods
  ******************************************/
 
-// MarshalMap returns a mapof.Any representation of this Follower
-func (follower Follower) MarshalMap() mapof.Any {
+func (follower Follower) GetJSONLD() mapof.Any {
+
 	return mapof.Any{
-		"followerId": follower.FollowerID.Hex(),
-		"type":       follower.ParentType,
-		"parentId":   follower.ParentID.Hex(),
-		"stateId":    follower.StateID,
-		"method":     follower.Method,
-		"format":     follower.Format,
-		"actor":      follower.Actor.MarshalMap(),
-		"data":       follower.Data,
-		"expireDate": follower.ExpireDate,
-
-		"createDate": follower.CreateDate,
-		"updateDate": follower.UpdateDate,
-		"deleteDate": follower.DeleteDate,
-		"note":       follower.Note,
-		"revision":   follower.Revision,
+		vocab.PropertyID:   follower.Actor.ProfileURL,
+		vocab.PropertyName: follower.Actor.Name,
 	}
-}
-
-// UnmarshalMap populates this Follower from a mapof.Any object
-func (follower *Follower) UnmarshalMap(data mapof.Any) {
-	follower.FollowerID = objectID(data.GetString("followerId"))
-	follower.ParentType = data.GetString("type")
-	follower.ParentID = objectID(data.GetString("parentId"))
-	follower.StateID = data.GetString("stateId")
-	follower.Method = data.GetString("method")
-	follower.Format = data.GetString("format")
-	follower.Actor.UnmarshalMap(data.GetMap("actor"))
-	follower.Data = data.GetMap("data")
-	follower.ExpireDate = data.GetInt64("expireDate")
-
-	follower.CreateDate = data.GetInt64("createDate")
-	follower.UpdateDate = data.GetInt64("updateDate")
-	follower.DeleteDate = data.GetInt64("deleteDate")
-	follower.Note = data.GetString("note")
-	follower.Revision = data.GetInt64("revision")
 }

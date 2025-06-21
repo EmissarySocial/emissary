@@ -9,7 +9,8 @@ import (
 
 // StepUnPublish is a Step that can update a stream's PublishDate with the current time.
 type StepUnPublish struct {
-	Outbox bool
+	Outbox  bool
+	StateID string
 }
 
 func (step StepUnPublish) Get(builder Builder, _ io.Writer) PipelineBehavior {
@@ -44,7 +45,7 @@ func (step StepUnPublish) Post(builder Builder, _ io.Writer) PipelineBehavior {
 	// Try to UnPublish the Stream from ActivityPub
 	streamService := factory.Stream()
 
-	if err := streamService.UnPublish(&user, streamBuilder._stream, step.Outbox); err != nil {
+	if err := streamService.UnPublish(&user, streamBuilder._stream, step.StateID, step.Outbox); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error publishing stream", streamBuilder._stream))
 	}
 

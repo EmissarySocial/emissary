@@ -1,0 +1,71 @@
+{{- $url := .QueryParam "url" -}}
+{{- $folderID := .QueryParam "folderId" -}}
+{{- $following := .Object -}}
+{{- $class := iif (eq "POST" .Method) "visible" "" -}}
+
+<span script="install popUp(position:'center')" hx-target="this" hx-swap="outerHTML" hx-push-url="false" class="{{$class}}">
+	<button class="popUp-button bold">{{icon "check"}} Following</button>
+	<div class="popUp-content text-md width-320">
+
+		<div class="margin-bottom-lg">
+			<div class="bold ellipsis">Following {{$following.Label}}</div>
+			{{- if eq "ACTIVITYPUB" $following.Method -}}
+				<div class="text-sm text-light-gray">{{icon "activitypub"}} ActivityPub. Real-time updates.</div>
+			{{- else if eq "WEBSUB" $following.Method -}}
+				<div class="text-sm text-light-gray">{{icon "websub"}} WebSub. Real-time updates.</div>
+			{{- else if eq "POLL" $following.Method -}}
+				<div class="text-sm text-light-gray">{{icon "rss"}} RSS/Atom. Daily Updates.</div>
+			{{- end -}}
+		</div>
+		
+		<div>
+			<span class="bold margin-right-sm">Settings:</span>
+			<span class="htmx-request-show spin">{{icon "loading"}}</span>
+			<span class="htmx-request-hide" id="htmx-response-message"></span>
+		</div>
+
+		<form hx-post="/@me/settings/actor-button-follow-update?followingId={{$following.ID}}&url={{$url}}" hx-trigger="change">
+			<div class="layout layout-vertical text-sm">
+				<div class="layout-vertical-elements">
+					<div class="layout-vertical-element">
+						<select name="behavior" script="install select(value:'{{$following.Behavior}}')">
+							<option value="POSTS+REPLIES">Show: Posts and Replies</option>
+							<option value="POSTS">Show: Posts Only (ignore replies)</option>
+						</select>
+					</div>
+					<div class="layout-vertical-element">
+						<select name="ruleAction" script="install select(value:'{{$following.RuleAction}}')">
+							<option value="IGNORE">Shared Blocks: Display normally</option>
+							<option value="LABEL">Shared Blocks: Display with a Label</option>
+							<option value="MUTE">Shared Blocks: Mute incoming messages</option>
+							<option value="BLOCK">Shared Blocks: Block all communication</option>
+						</select>
+					</div>
+					<div class="layout-vertical-element">
+						<span 
+							script="install toggle" 
+							name="collapseThreads" 
+							value="{{$following.CollapseThreads}}" 
+							true-text="Group messages into a single thread" 
+							false-text="Show all messages separately">
+						</span>
+					</div>
+					<div class="layout-vertical-element">
+						<span 
+							script="install toggle" 
+							name="isPublic" 
+							value="{{$following.IsPublic}}" 
+							true-text="Shown on my profile" 
+							false-text="Hidden from others">
+						</span>
+					</div>
+				</div>
+			</div>
+		</form>
+
+		<hr class="margin-vertical-sm">
+		<div class="align-center text-red" hx-post="/@me/settings/actor-button-unfollow?followingId={{$following.ID}}&folderId={{$folderID}}&url={{$url}}" role="button">
+			{{icon "cancel"}} Stop Following
+		</div>
+	</div>
+</span>

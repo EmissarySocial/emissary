@@ -35,15 +35,23 @@ behavior toggle
 	end
 
     on toggle
-
 		if my @value == "true" then
-            set my @value to "false"
+			trigger setFalse
         else 
-            set my @value to "true"
+			trigger setTrue
         end
+	end
 
-        send recalculate
-        send change
+	on setTrue
+		set my @value to "true"
+		send recalculate
+		send change
+	end
+
+	on setFalse
+		set my @value to "false"
+		send recalculate
+		send change
 	end
 
     on recalculate

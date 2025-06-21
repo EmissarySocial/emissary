@@ -20,7 +20,7 @@ func Owner(next echo.HandlerFunc) echo.HandlerFunc {
 
 			if err != nil {
 				// If not authorized, return NOT AUTHORIZED
-				return derp.NewUnauthorizedError("middleware.Owner", "sterankoContext.Authorization", err)
+				return derp.UnauthorizedError("middleware.Owner", "sterankoContext.Authorization", err)
 			}
 
 			// Guarantee that we have a model.Authorization
@@ -28,7 +28,7 @@ func Owner(next echo.HandlerFunc) echo.HandlerFunc {
 
 				// If not the domain owner, return FORBIDDEN
 				if !auth.DomainOwner {
-					return derp.NewForbiddenError("middleware.Owner", "authorization.DomainOwner", nil)
+					return derp.ForbiddenError("middleware.Owner", "authorization.DomainOwner", nil)
 				}
 
 				// Success!  Continue on to the next handler
@@ -36,10 +36,10 @@ func Owner(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 
 			// This should never happen
-			return derp.NewInternalError("middleware.Owner", "authorization.(*model.Authorization)", nil)
+			return derp.InternalError("middleware.Owner", "authorization.(*model.Authorization)", nil)
 		}
 
 		// This should never happen
-		return derp.NewInternalError("middleware.Owner", "sterankoContext.Authorization", nil)
+		return derp.InternalError("middleware.Owner", "sterankoContext.Authorization", nil)
 	}
 }

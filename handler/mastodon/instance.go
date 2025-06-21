@@ -27,12 +27,7 @@ func GetInstance(serverFactory *server.Factory) func(model.Authorization, txn.Ge
 			return object.Instance{}, derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
-		domainService := factory.Domain()
-		domain, err := domainService.LoadDomain()
-
-		if err != nil {
-			return object.Instance{}, derp.Wrap(err, location, "Error loading Domain record")
-		}
+		domain := factory.Domain().Get()
 
 		result := object.Instance{
 			Domain:      t.Host,
@@ -131,12 +126,7 @@ func GetInstance_V1(serverFactory *server.Factory) func(model.Authorization, txn
 			return object.Instance_V1{}, derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
-		domainService := factory.Domain()
-		domain, err := domainService.LoadDomain()
-
-		if err != nil {
-			return object.Instance_V1{}, derp.Wrap(err, location, "Error loading Domain record")
-		}
+		domain := factory.Domain().Get()
 
 		result := object.Instance_V1{
 			URI:         t.Host,

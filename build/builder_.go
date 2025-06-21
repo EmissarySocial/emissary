@@ -21,8 +21,8 @@ type Builder interface {
 	View(string) (template.HTML, error) // Render function outputs an HTML template
 
 	// COMMON API METHODS
-	Host() string                        // String representation of the protocol + hostname
 	Protocol() string                    // String representation of the HTTP protocol to use when addressing this record (http:// or https://)
+	Host() string                        // String representation of the protocol + hostname
 	Hostname() string                    // Hostname for this server
 	Token() string                       // URL Token of the record being built
 	NavigationID() string                // ID of the Top-Level item to highlight in the navigation.
@@ -32,7 +32,7 @@ type Builder interface {
 	BasePath() string                    // URL Path of the root of this object, without any additional actions.
 	URL() string                         // Complete URL of the requested page
 	QueryParam(string) string            // Query parameter of the requested page
-	SetQueryParam(string, string)        // Sets a queryString parameter
+	SetQueryParam(string, string) bool   // Sets a queryString parameter
 	IsAuthenticated() bool               // Returns TRUE if the user is signed in
 	IsOwner() bool                       // Returns TRUE if the signed-in user is the owner of this object
 	IsAdminBuilder() bool                // Returns TRUE if this is an admin route

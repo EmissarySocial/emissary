@@ -1,7 +1,7 @@
 {
 	templateId:"admin-connections"
 	templateRole:"admin"
-	model:"domain"
+	model: Domain
 	containedBy:["admin"]
 	extends:["admin-common"]
 	label: "Connections"
@@ -14,7 +14,18 @@
 		}}
 	}}
 	actions: {
-		index: {do: "view-html"}
-		edit: {do: "edit-connection"}
+		index: {
+			roles:["owner"],
+			steps:[
+				{do: "view-html"}
+			]
+		}
+		
+		edit: {
+			roles:["owner"],
+			steps:[
+				{do: "edit-connection"}
+			]
+		}
 	}
 }

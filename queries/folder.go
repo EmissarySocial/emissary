@@ -16,7 +16,7 @@ func FolderSetUnreadCount(collection data.Collection, userID primitive.ObjectID,
 	mongo := mongoCollection(collection)
 
 	if mongo == nil {
-		return derp.NewInternalError("queries.FolderSetUnreadCount", "Database must be MongoDB")
+		return derp.InternalError("queries.FolderSetUnreadCount", "Database must be MongoDB")
 	}
 
 	// Create filter and update statements

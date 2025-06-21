@@ -3,6 +3,7 @@ package service
 import (
 	"html/template"
 	"io/fs"
+	"maps"
 	"sort"
 	"strconv"
 	"strings"
@@ -125,23 +126,25 @@ func (service *Template) watch() {
 // loadTemplates retrieves the template from the filesystem and parses it into
 func (service *Template) loadTemplates() error {
 
+	const location = "service.template.loadTemplates"
+
 	service.templatePrep = make(set.Map[model.Template])
 
-	// For each configured location...
-	for _, location := range service.locations {
+	// For each configured file location...
+	for _, fileLocation := range service.locations {
 
 		// Get a valid filesystem adapter
-		filesystem, err := service.filesystemService.GetFS(location)
+		filesystem, err := service.filesystemService.GetFS(fileLocation)
 
 		if err != nil {
-			derp.Report(derp.Wrap(err, "service.Template.loadTemplates", "Error getting filesystem adapter", location))
+			derp.Report(derp.Wrap(err, location, "Error getting filesystem adapter", fileLocation))
 			continue
 		}
 
 		directories, err := fs.ReadDir(filesystem, ".")
 
 		if err != nil {
-			derp.Report(derp.Wrap(err, "service.Template.loadTemplates", "Error reading directory", location))
+			derp.Report(derp.Wrap(err, location, "Error reading directory", fileLocation))
 			continue
 		}
 
@@ -161,14 +164,14 @@ func (service *Template) loadTemplates() error {
 			subdirectory, err := fs.Sub(filesystem, directoryName)
 
 			if err != nil {
-				derp.Report(derp.Wrap(err, "service.Template.loadTemplates", "Error getting filesystem adapter for sub-directory", location))
+				derp.Report(derp.Wrap(err, location, "Error getting filesystem adapter for sub-directory", fileLocation))
 				continue
 			}
 
 			definitionType, file, err := findDefinition(subdirectory)
 
 			if err != nil {
-				derp.Report(derp.Wrap(err, "service.Template.loadTemplates", "Invalid definition", location, directoryName))
+				derp.Report(derp.Wrap(err, location, "Invalid definition", fileLocation, directoryName))
 				continue
 			}
 
@@ -176,50 +179,66 @@ func (service *Template) loadTemplates() error {
 
 			case DefinitionEmail:
 				if err := service.emailService.Add(subdirectory, file); err != nil {
-					derp.Report(derp.Wrap(err, "service.Template.loadTemplates", "Error adding theme"))
+					derp.Report(derp.Wrap(err, location, "Error adding theme"))
 				}
 
 			case DefinitionTheme:
 				if err := service.themeService.Add(directoryName, subdirectory, file); err != nil {
-					derp.Report(derp.Wrap(err, "service.Template.loadTemplates", "Error adding theme"))
+					derp.Report(derp.Wrap(err, location, "Error adding theme"))
 				}
 
 			case DefinitionTemplate:
 				if err := service.Add(directoryName, subdirectory, file); err != nil {
-					derp.Report(derp.Wrap(err, "service.Template.loadTemplates", "Error adding template"))
+					derp.Report(derp.Wrap(err, location, "Error adding template"))
 				}
 
 			case DefinitionRegistration:
 				if err := service.registrationService.Add(directoryName, subdirectory, file); err != nil {
-					derp.Report(derp.Wrap(err, "service.Template.loadTemplates", "Error adding registration"))
+					derp.Report(derp.Wrap(err, location, "Error adding registration"))
 				}
 
 			case DefinitionWidget:
 				if err := service.widgetService.Add(directoryName, subdirectory, file); err != nil {
-					derp.Report(derp.Wrap(err, "service.Template.loadTemplates", "Error adding widget"))
+					derp.Report(derp.Wrap(err, location, "Error adding widget"))
 				}
 
 			default:
-				derp.Report(derp.NewInternalError("service.Template.loadTemplates", "Unrecognized definition type", location, definitionType))
+				derp.Report(derp.InternalError(location, "Unrecognized definition type", fileLocation, definitionType))
 			}
 		}
 	}
 
-	// Handle inheritance for each template
-	for _, template := range service.templatePrep {
-		if len(template.Extends) > 0 {
-			service.calculateInheritance(template)
-		}
+	// Calculate inheritance for Templates
+	if err := service.calculateAllInheritance(); err != nil {
+		derp.Report(derp.Wrap(err, location, "Error calculating Template inheritance"))
 	}
 
+	// Calculate inheritance for Themes
 	service.themeService.calculateAllInheritance()
+
+	// Validate required fields for all Templates
+	if errs := service.validateTemplates(); len(errs) > 0 {
+
+		errorLength := strconv.Itoa(len(errs))
+
+		log.Error().Msg(errorLength + " errors validating templates.")
+		for _, error := range errs {
+			derp.Report(error)
+		}
+		log.Error().Msg("Finished reporting " + errorLength + " template errors.  Some templates may not function properly.")
+
+		return nil
+	}
+
+	// Calculate access lists for all Templates
+	if err := service.calculateAllowLists(); err != nil {
+		return derp.Wrap(err, location, "Error calculating access lists")
+	}
 
 	// Assign the prep area to live
 	service.mutex.Lock()
 	defer service.mutex.Unlock()
-	for templateID, template := range service.templatePrep {
-		service.templates[templateID] = template
-	}
+	maps.Copy(service.templates, service.templatePrep)
 
 	// Clear out the existing prep area
 	service.templatePrep = make(set.Map[model.Template])
@@ -248,12 +267,12 @@ func (service *Template) Add(templateID string, filesystem fs.FS, definition []b
 
 	// Load all HTML templates from the filesystem
 	if err := loadHTMLTemplateFromFilesystem(filesystem, result.HTMLTemplate, service.funcMap); err != nil {
-		return derp.ReportAndReturn(derp.Wrap(err, location, "Error loading Template", templateID))
+		return derp.Wrap(err, location, "Error loading Template", templateID)
 	}
 
 	// Load all Bundles from the filesystem
 	if err := populateBundles(result.Bundles, filesystem); err != nil {
-		return derp.ReportAndReturn(derp.Wrap(err, location, "Error loading Bundles", templateID))
+		return derp.Wrap(err, location, "Error loading Bundles", templateID)
 	}
 
 	// Keep a pointer to the filesystem resources (if present)
@@ -261,27 +280,238 @@ func (service *Template) Add(templateID string, filesystem fs.FS, definition []b
 		result.Resources = resources
 	}
 
+	// Handle post-processing steps for the Template
+	result.AfterUnmarshal()
+
 	// Add the template into the prep library
 	service.templatePrep[result.TemplateID] = result
 
 	return nil
 }
 
-func (service *Template) calculateInheritance(template model.Template) model.Template {
+func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 
-	if len(template.Extends) == 0 {
-		return template
-	}
+	log.Debug().Msg("Template Service: Validating templates...")
 
-	for _, parentID := range template.Extends {
-		if parent, ok := service.templatePrep[parentID]; ok {
-			parent = service.calculateInheritance(parent)
-			template.Inherit(&parent)
+	errors := make(sliceof.Object[derp.Error], 0)
+
+	// Scan all Templates in the prep area
+	for templateID, template := range service.templatePrep {
+
+		allowedModels := sliceof.String{"None", "Domain", "Followers", "Following", "Group", "Identity", "Inbox", "Outbox", "Rule", "Search", "Settings", "Stream", "Syndication", "Tag", "User", "Webhook"}
+
+		if !allowedModels.Contains(template.Model) {
+			errors.Append(derp.ValidationError(
+				"Invalid 'model' used in Template definition",
+				"template: "+templateID,
+				"models allowed: "+strings.Join(allowedModels, ", "),
+				"model used: "+template.Model,
+			))
+		}
+
+		// RULE: Templates MUST have at least one Action, or else permissions won't work
+		if template.States.IsEmpty() {
+			errors.Append(derp.ValidationError(
+				"Template must define at least one State. Use 'default' if no other states are required.",
+				"template: "+templateID,
+			))
+		}
+
+		// Scan all Actions in the Template
+		for actionID, action := range template.Actions {
+
+			// Scan all statews in the Action
+			for _, stateID := range action.States {
+
+				// RULE: States used in action.states must be defined
+				if !template.IsValidState(stateID) {
+					errors.Append(derp.ValidationError(
+						"Undefined state used in action 'state' permissions",
+						"template: "+templateID,
+						"action: "+actionID,
+						"state required: "+stateID,
+						"states defined: "+strings.Join(template.States.Keys(), ", "),
+					))
+				}
+			}
+
+			// Scan all Roles inthe Action
+			for _, roleID := range action.Roles {
+
+				// RULE: Roles used in action.roles must be defined i have a favorite child and her name is abby
+				if !template.IsValidRole(roleID) {
+					errors.Append(derp.ValidationError(
+						"Undefined role used in action 'role' permissions.",
+						"template: "+templateID,
+						"action: "+actionID,
+						"role required: "+roleID,
+						"roles defined: "+strings.Join(template.AccessRoles.Keys(), ", "),
+					))
+				}
+			}
+
+			// Scan all StateRoles in the Action
+			for stateID, roles := range action.StateRoles {
+
+				// RULE: States used in action.stateRoles must be defined
+				if !template.IsValidState(stateID) {
+					errors.Append(derp.ValidationError(
+						"Undefined state used in action 'state/roles' permissions.",
+						"template: "+templateID,
+						"action: "+actionID,
+						"state required: "+stateID,
+						"states defined: "+strings.Join(template.States.Keys(), ", "),
+					))
+				}
+
+				for _, roleID := range roles {
+
+					// RULE: Roles used in action.stateRoles must be defined
+					if !template.IsValidRole(roleID) {
+						errors.Append(derp.ValidationError(
+							"Undefined role used in action 'state/roles' permissions",
+							"template: "+templateID,
+							"action: "+actionID,
+							"role required: "+roleID,
+							"roles defined: "+strings.Join(template.AccessRoles.Keys(), ", "),
+						))
+					}
+				}
+			}
+
+			// RULE: Actions must have at least one step
+			if len(action.Steps) == 0 {
+				errors.Append(derp.ValidationError(
+					"Actions must have at least one Step.",
+					"template: "+templateID,
+					"action: "+actionID,
+				))
+			}
+
+			// Scan all Steps in the Action
+			for _, step := range action.Steps {
+
+				// RULE: If the step requires a specific model object, then
+				// verify the correct model object is defined in the Template
+				if requiredModel := step.RequiredModel(); requiredModel != "" {
+					if template.Model != requiredModel {
+						errors.Append(derp.ValidationError(
+							"Step can only be used in specific Templates",
+							"template: "+templateID,
+							"action: "+actionID,
+							"step: "+step.Name(),
+							"model required by step: "+requiredModel,
+							"model defined in template: "+template.Model,
+						))
+					}
+				}
+
+				// RULE: States used in action steps must be defined
+				for _, state := range step.RequiredStates() {
+					if !template.IsValidState(state) {
+						errors.Append(derp.ValidationError(
+							"Undefined state used in action step",
+							"template: "+templateID,
+							"action: "+actionID,
+							"step: "+step.Name(),
+							"state required: "+state,
+							"states defined: "+strings.Join(template.States.Keys(), ", "),
+						))
+					}
+				}
+
+				// RULE: Roles used in action steps must be defined
+				for _, role := range step.RequiredRoles() {
+					if !template.IsValidRole(role) {
+						errors.Append(derp.ValidationError(
+							"Undefined role used in action step",
+							"template: "+templateID,
+							"action: "+actionID,
+							"step: "+step.Name(),
+							"role required: "+role,
+							"roles defined: "+strings.Join(template.AccessRoles.Keys(), ", "),
+						))
+					}
+				}
+			}
 		}
 	}
 
+	// Phew.  Hopefully everything is valid.
+	return errors
+}
+
+// calculateAllInheritance calls calculateInheritance for each Template in the prep area
+func (service *Template) calculateAllInheritance() error {
+	for _, template := range service.templatePrep {
+		if _, err := service.calculateInheritance(template); err != nil {
+			return derp.Wrap(err, "service.template.calculateAllInheritance", "Error calculating inheritance", template.TemplateID)
+		}
+	}
+
+	return nil
+}
+
+// calculateInheritance recursively calculates the inheritance for a template in the prep area
+func (service *Template) calculateInheritance(template model.Template) (model.Template, error) {
+
+	const location = "service.template.calculateInheritance"
+
+	if len(template.Extends) == 0 {
+		return template, nil
+	}
+
+	for _, parentID := range template.Extends {
+		parent, exists := service.templatePrep[parentID]
+
+		if !exists {
+			return model.Template{}, derp.InternalError(
+				location,
+				"Parent template is not defined",
+				"templateId: "+template.TemplateID,
+				"parentId: "+parentID,
+			)
+		}
+
+		parent, err := service.calculateInheritance(parent)
+
+		if err != nil {
+			return model.Template{}, derp.Wrap(err, location, "Error calculating inheritance", template.TemplateID, parentID)
+		}
+
+		template.Inherit(&parent)
+	}
+
 	service.templatePrep[template.TemplateID] = template
-	return template
+
+	return template, nil
+}
+
+// calculateAllowLists calculates the access lists for every Template in the prep area
+func (service *Template) calculateAllowLists() error {
+
+	const location = "service.template.calculateAllowLists"
+
+	// For every template in the prep area...
+	for _, template := range service.templatePrep {
+
+		// For every action in the Template
+		for actionID, action := range template.Actions {
+
+			// Calculate the AccessLists for this Action
+			if err := action.CalcAccessList(&template, true); err != nil {
+				return derp.Wrap(err, location, "Invalid AccessList", template.TemplateID, actionID)
+			}
+
+			// Apply changes back into the Action set
+			template.Actions[actionID] = action
+		}
+
+		// Apply changes back to the Template prep area
+		service.templatePrep[template.TemplateID] = template
+	}
+
+	return nil
 }
 
 /******************************************
@@ -332,7 +562,7 @@ func (service *Template) Load(templateID string) (model.Template, error) {
 		return template, nil
 	}
 
-	return model.NewTemplate(templateID, nil), derp.NewNotFoundError("sevice.Template.Load", "Template not found", templateID)
+	return model.NewTemplate(templateID, nil), derp.NotFoundError("sevice.Template.Load", "Template not found", templateID)
 }
 
 /******************************************
@@ -392,11 +622,11 @@ func (service *Template) LoadAdmin(templateID string) (model.Template, error) {
 
 	// RULE: Validate Template ContainedBy
 	if template.TemplateRole != "admin" {
-		return template, derp.NewInternalError("service.Template.LoadAdmin", "Template must have 'admin' role.", template.TemplateID, template.TemplateRole)
+		return template, derp.InternalError("service.Template.LoadAdmin", "Template must have 'admin' role.", template.TemplateID, template.TemplateRole)
 	}
 
 	if !template.ContainedBy.Equal([]string{"admin"}) {
-		return template, derp.NewInternalError("service.Template.LoadAdmin", "Template must be contained by 'admin'", template.TemplateID, template.ContainedBy)
+		return template, derp.InternalError("service.Template.LoadAdmin", "Template must be contained by 'admin'", template.TemplateID, template.ContainedBy)
 	}
 
 	// Success!

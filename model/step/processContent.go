@@ -21,5 +21,23 @@ func NewProcessContent(stepInfo mapof.Any) (ProcessContent, error) {
 	}, nil
 }
 
-// AmStep is here to verify that this struct is a build pipeline step
-func (step ProcessContent) AmStep() {}
+// Name returns the name of the step, which is used in debugging.
+func (step ProcessContent) Name() string {
+	return "process-content"
+}
+
+// RequiredModel returns the name of the model object that MUST be present in the Template.
+// If this value is not empty, then the Template MUST use this model object.
+func (step ProcessContent) RequiredModel() string {
+	return "Stream"
+}
+
+// RequiredStates returns a slice of states that must be defined any Template that uses this Step
+func (step ProcessContent) RequiredStates() []string {
+	return []string{}
+}
+
+// RequiredRoles returns a slice of roles that must be defined any Template that uses this Step
+func (step ProcessContent) RequiredRoles() []string {
+	return []string{}
+}

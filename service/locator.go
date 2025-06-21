@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
 	"github.com/benpate/domain"
+	"github.com/benpate/hannibal/outbox"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -61,7 +62,7 @@ func (service *Locator) GetWebFingerResult(resource string) (digit.Resource, err
 
 	}
 
-	return digit.Resource{}, derp.NewBadRequestError(location, "Invalid Resource", resource)
+	return digit.Resource{}, derp.BadRequestError(location, "Invalid Resource", resource)
 }
 
 // GetObjectFromURL parses a URL and verifies the existence of the referenced object.
@@ -74,16 +75,6 @@ func (service *Locator) GetObjectFromURL(value string) (string, primitive.Object
 	// Verify database records
 	switch objectType {
 
-	case "User":
-
-		user := model.NewUser()
-
-		if err := service.userService.LoadByToken(token, &user); err != nil {
-			return "", primitive.NilObjectID, derp.Wrap(err, location, "Error loading user", token)
-		}
-
-		return "User", user.UserID, nil
-
 	case "Stream":
 
 		stream := model.NewStream()
@@ -94,10 +85,58 @@ func (service *Locator) GetObjectFromURL(value string) (string, primitive.Object
 
 		return "Stream", stream.StreamID, nil
 
+	case "User":
+
+		user := model.NewUser()
+
+		if err := service.userService.LoadByToken(token, &user); err != nil {
+			return "", primitive.NilObjectID, derp.Wrap(err, location, "Error loading user", token)
+		}
+
+		return "User", user.UserID, nil
+
 	}
 
 	// Fall through is failure.  Feel bad.
-	return "", primitive.NilObjectID, derp.NewBadRequestError(location, "Invalid Object Type", objectType)
+	return "", primitive.NilObjectID, derp.BadRequestError(location, "Invalid Object Type", objectType)
+}
+
+func (service *Locator) GetActor(actorType string, actorID string, withFollowers bool) (outbox.Actor, error) {
+
+	switch actorType {
+
+	case "Application":
+		return service.domainService.ActivityPubActor()
+
+	case "SearchDomain":
+		return service.searchDomainService.ActivityPubActor(withFollowers)
+
+	case "SearchQuery":
+
+		if searchQueryID, err := primitive.ObjectIDFromHex(actorID); err == nil {
+			return service.searchQueryService.ActivityPubActor(searchQueryID, withFollowers)
+		} else {
+			return outbox.Actor{}, derp.Wrap(err, "service.Locator.GetActor", "Invalid SearchQueryID", actorID)
+		}
+
+	case "Stream":
+
+		if streamID, err := primitive.ObjectIDFromHex(actorID); err == nil {
+			return service.streamService.ActivityPubActor(streamID, withFollowers)
+		} else {
+			return outbox.Actor{}, derp.Wrap(err, "service.Locator.GetActor", "Invalid StreamID", actorID)
+		}
+
+	case "User":
+
+		if userID, err := primitive.ObjectIDFromHex(actorID); err == nil {
+			return service.userService.ActivityPubActor(userID, withFollowers)
+		} else {
+			return outbox.Actor{}, derp.Wrap(err, "service.Locator.GetActor", "Invalid UserID", actorID)
+		}
+	}
+
+	return outbox.Actor{}, derp.BadRequestError("service.Locator.GetActor", "Invalid Actor Type", actorType)
 }
 
 // locateObjectFromURL parses a URL, determines what type of object it is,

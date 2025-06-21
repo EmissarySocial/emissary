@@ -38,13 +38,13 @@ func Authorizer(serverFactory *server.Factory) toot.Authorizer[model.Authorizati
 
 		// Validate the token
 		if !token.Valid {
-			return model.Authorization{}, derp.NewForbiddenError(location, "Invalid token: Invalid JWT")
+			return model.Authorization{}, derp.ForbiddenError(location, "Invalid token: Invalid JWT")
 		}
 
 		authorization, ok := token.Claims.(*model.Authorization)
 
 		if !ok {
-			return model.Authorization{}, derp.NewForbiddenError(location, "Invalid token: Invalid Claims", token)
+			return model.Authorization{}, derp.ForbiddenError(location, "Invalid token: Invalid Claims", token)
 		}
 
 		// Return the token to the caller.

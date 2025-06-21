@@ -47,9 +47,6 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.DeleteAttachments:
 		return StepDeleteAttachments(s)
 
-	case step.Do:
-		return StepDo(s)
-
 	case step.Dump:
 		return StepDump(s)
 
@@ -82,6 +79,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 
 	case step.IfCondition:
 		return StepIfCondition(s)
+
+	case step.Include:
+		return StepInclude(s)
 
 	case step.InlineError:
 		return StepInlineError(s)
@@ -125,6 +125,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.SendEmail:
 		return StepSendEmail(s)
 
+	case step.SetCircleSharing:
+		return StepSetCircleSharing(s)
+
 	case step.SetData:
 		return StepSetData(s)
 
@@ -133,6 +136,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 
 	case step.SetPassword:
 		return StepSetPassword(s)
+
+	case step.SetPrivileges:
+		return StepSetPrivileges(s)
 
 	case step.SetQueryParam:
 		return StepSetQueryParam(s)
@@ -179,6 +185,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.UploadAttachments:
 		return StepUploadAttachments(s)
 
+	case step.ViewAttachment:
+		return StepViewAttachment(s)
+
 	case step.ViewCSS:
 		return StepViewCSS(s)
 
@@ -197,6 +206,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.WithChildren:
 		return StepWithChildren(s)
 
+	case step.WithCircle:
+		return StepWithCircle(s)
+
 	case step.WithDraft:
 		return StepWithDraft(s)
 
@@ -209,6 +221,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.WithFollowing:
 		return StepWithFollowing(s)
 
+	case step.WithMerchantAccount:
+		return StepWithMerchantAccount(s)
+
 	case step.WithMessage:
 		return StepWithMessage(s)
 
@@ -220,6 +235,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 
 	case step.WithPrevSibling:
 		return StepWithPrevSibling(s)
+
+	case step.WithPrivilege:
+		return StepWithPrivilege(s)
 
 	case step.WithResponse:
 		return StepWithResponse(s)

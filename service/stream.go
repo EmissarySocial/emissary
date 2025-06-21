@@ -23,6 +23,7 @@ import (
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/html"
 	"github.com/benpate/rosetta/list"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
@@ -33,6 +34,7 @@ import (
 // Stream manages all interactions with the Stream collection
 type Stream struct {
 	collection        data.Collection
+	circleService     *Circle
 	domainService     *Domain
 	searchTagService  *SearchTag
 	templateService   *Template
@@ -62,8 +64,9 @@ func NewStream() Stream {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Stream) Refresh(collection data.Collection, domainService *Domain, searchTagService *SearchTag, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, activityStream *ActivityStream, contentService *Content, keyService *EncryptionKey, followerService *Follower, ruleService *Rule, userService *User, webhookService *Webhook, mediaserver mediaserver.MediaServer, queue *queue.Queue, host string, sseUpdateChannel chan primitive.ObjectID) {
+func (service *Stream) Refresh(collection data.Collection, circleService *Circle, domainService *Domain, searchTagService *SearchTag, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, activityStream *ActivityStream, contentService *Content, keyService *EncryptionKey, followerService *Follower, ruleService *Rule, userService *User, webhookService *Webhook, mediaserver mediaserver.MediaServer, queue *queue.Queue, host string, sseUpdateChannel chan primitive.ObjectID) {
 	service.collection = collection
+	service.circleService = circleService
 	service.domainService = domainService
 	service.searchTagService = searchTagService
 	service.templateService = templateService
@@ -237,12 +240,13 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 
 	// Copy default values from the Template
 	stream.SocialRole = template.SocialRole
+	stream.IsSubscribable = template.IsSubscribable()
 	stream.URL = service.host + "/" + stream.StreamID.Hex()
 
 	// RULE: Calculate "defaultAllow" groups for this stream.
-	defaultTemplate := template.Default()
-	defaultRoles := defaultTemplate.AllowedRoles(stream.StateID)
-	stream.DefaultAllow = stream.PermissionGroups(defaultRoles...)
+	defaultAction := template.Default()
+	defaultRoles := defaultAction.AllowedRoles(stream.StateID)
+	stream.DefaultAllow = stream.RolesToGroupIDs(defaultRoles...)
 
 	// RULE: Calculate rank
 	if stream.Rank == 0 {
@@ -283,6 +287,11 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 
 	// RULE: Calculate the stream context
 	service.CalcContext(stream)
+
+	// RULE: Calculate privileges for this stream
+	if err := service.CalcPrivileges(stream); err != nil {
+		return derp.Wrap(err, location, "Error calculating privileges", stream)
+	}
 
 	// Try to save the Stream to the database
 	if err := service.collection.Save(stream, note); err != nil {
@@ -424,18 +433,18 @@ func (service *Stream) ObjectSave(object data.Object, note string) error {
 	if stream, ok := object.(*model.Stream); ok {
 		return service.Save(stream, note)
 	}
-	return derp.NewInternalError("service.Stream.ObjectSave", "Invalid object type", object)
+	return derp.InternalError("service.Stream.ObjectSave", "Invalid object type", object)
 }
 
 func (service *Stream) ObjectDelete(object data.Object, note string) error {
 	if stream, ok := object.(*model.Stream); ok {
 		return service.Delete(stream, note)
 	}
-	return derp.NewInternalError("service.Stream.ObjectDelete", "Invalid object type", object)
+	return derp.InternalError("service.Stream.ObjectDelete", "Invalid object type", object)
 }
 
 func (service *Stream) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.NewUnauthorizedError("service.Stream", "Not Authorized")
+	return derp.UnauthorizedError("service.Stream", "Not Authorized")
 }
 
 func (service *Stream) Schema() schema.Schema {
@@ -475,8 +484,29 @@ func (service *Stream) RangeByParent(parentID primitive.ObjectID) (iter.Seq[mode
 	return service.Range(exp.Equal("parentId", parentID))
 }
 
+func (service *Stream) RangeByPrivileges(privileges ...string) (iter.Seq[model.Stream], error) {
+
+	const location = "service.Stream.RangeByPrivilege"
+
+	// RULE: PrivilegeID is required
+	if len(privileges) == 0 {
+		return nil, derp.BadRequestError(location, "Query must have at least one Privilege")
+	}
+
+	criteria := exp.In("privilegeIds", privileges)
+
+	return service.Range(criteria)
+}
+
 // ListPublishedByParent returns all Streams that match a particular parentID
 func (service *Stream) ListPublishedByParent(parentID primitive.ObjectID) (data.Iterator, error) {
+
+	const location = "service.Stream.ListPublishedByParent"
+
+	// RULE: ParentID is required
+	if parentID.IsZero() {
+		return nil, derp.BadRequestError(location, "ParentID is required")
+	}
 
 	now := time.Now().Unix()
 
@@ -489,29 +519,90 @@ func (service *Stream) ListPublishedByParent(parentID primitive.ObjectID) (data.
 
 // ListByTemplate returns all `Streams` that use a particular `Template`
 func (service *Stream) ListByTemplate(template string) (data.Iterator, error) {
+
+	const location = "service.Stream.ListByTemplate"
+
+	// RULE: Template is required
+	if template == "" {
+		return nil, derp.BadRequestError(location, "Template is required")
+	}
+
 	return service.List(exp.Equal("templateId", template))
+}
+
+// QuerySubscribable returns all Streams in a User's outbox that are subscribe-able
+func (service *Stream) QuerySubscribable(userID primitive.ObjectID) ([]model.StreamSummary, error) {
+
+	const location = "service.Stream.QuerySubscribable"
+
+	// RULE: UserID is required
+	if userID.IsZero() {
+		return nil, derp.BadRequestError(location, "UserID is required")
+	}
+
+	criteria := exp.Equal("parentId", userID).AndEqual("isSubscribable", true)
+	return service.QuerySummary(criteria, option.SortAsc("templateId"), option.SortAsc("label"))
 }
 
 // QueryByParentAndDate returns a slice of Streams that are DIRECT CHILDREN of the provided StreamID
 func (service *Stream) QueryByParentAndDate(streamID primitive.ObjectID, publishedDate int64, pageSize int) ([]model.Stream, error) {
+
+	const location = "service.Stream.QueryByParentAndDate"
+
+	// RULE: StreamID is required
+	if streamID.IsZero() {
+		return nil, derp.BadRequestError(location, "StreamID is required")
+	}
+
 	criteria := exp.Equal("parentId", streamID).AndLessThan("publishDate", publishedDate)
 	return service.Query(criteria, option.SortDesc("publishDate"), option.MaxRows(int64(pageSize)))
 }
 
 // QueryByParentAndDate returns a slice of Streams that are ANY DEPTH below the provided StreamID
 func (service *Stream) QueryByAncestorAndDate(streamID primitive.ObjectID, publishedDate int64, pageSize int) ([]model.Stream, error) {
+
+	const location = "service.Stream.QueryByAncestorAndDate"
+
+	// RULE: StreamID is required
+	if streamID.IsZero() {
+		return nil, derp.BadRequestError(location, "StreamID is required")
+	}
+
 	criteria := exp.Equal("parentIds", streamID).AndLessThan("publishDate", publishedDate)
 	return service.Query(criteria, option.SortDesc("publishDate"), option.MaxRows(int64(pageSize)))
 }
 
 // QueryFeaturedByUser returns all Streams in a particular User's outbox that have been featured.
 func (service *Stream) QueryFeaturedByUser(userID primitive.ObjectID) ([]model.StreamSummary, error) {
+
+	const location = "service.Stream.QueryFeaturedByUser"
+
+	// RULE: UserID is required
+	if userID.IsZero() {
+		return nil, derp.BadRequestError(location, "UserID is required")
+	}
+
 	criteria := exp.Equal("parentId", userID).AndEqual("isFeatured", true)
 	return service.QuerySummary(
 		criteria,
 		option.SortDesc("publishDate"),
 		option.Fields("url"),
 	)
+}
+
+// QueryByPrivilege returns all Streams that are associated with a particular PrivilegeID
+func (service *Stream) QueryByPrivilege(privilegeIDs ...primitive.ObjectID) ([]model.Stream, error) {
+
+	const location = "service.Stream.QueryByPrivilege"
+
+	// RULE: PrivilegeID is required
+	if len(privilegeIDs) == 0 {
+		return nil, derp.BadRequestError(location, "Must have at least one PrivilegeID")
+	}
+
+	criteria := exp.In("privilegeId", privilegeIDs)
+
+	return service.Query(criteria)
 }
 
 // LoadByToken returns a single `Stream` that matches a particular `Token`
@@ -530,45 +621,53 @@ func (service *Stream) LoadByToken(token string, result *model.Stream) error {
 
 // LoadByID returns a single `Stream` that matches the provided streamID
 func (service *Stream) LoadByID(streamID primitive.ObjectID, result *model.Stream) error {
+
+	const location = "service.Stream.LoadByID"
+
+	// RULE: StreamID is required
+	if streamID.IsZero() {
+		return derp.BadRequestError(location, "StreamID is required")
+	}
+
 	return service.Load(exp.Equal("_id", streamID), result)
 }
 
 // LoadByURL returns a single `Stream` that matches the provided URL
 func (service *Stream) LoadByURL(streamURL string, result *model.Stream) error {
 
+	const location = "service.Stream.LoadByURL"
+
+	// RULE: StreamURL is required
+	if streamURL == "" {
+		return derp.BadRequestError(location, "StreamURL is required")
+	}
+
 	// Verify we have a valid URL
 	uri, err := url.Parse(streamURL)
 
 	if err != nil {
-		return derp.Wrap(err, "service.Stream.LoadByURL", "Invalid URL", streamURL)
+		return derp.Wrap(err, location, "Invalid URL", streamURL)
 	}
 
 	// Retrieve the Token from the request path
 	token, _, err := service.ParsePath(uri)
 
 	if err != nil {
-		return derp.Wrap(err, "service.Stream.LoadByURL", "Invalid URL", streamURL)
+		return derp.Wrap(err, location, "Invalid URL", streamURL)
 	}
 
 	return service.LoadByToken(token, result)
 }
 
-// LoadParent returns the Stream that is the parent of the provided Stream
-func (service *Stream) LoadParent(stream *model.Stream, parent *model.Stream) error {
-
-	if !stream.HasParent() {
-		return derp.NewNotFoundError("service.Stream.LoadParent", "Stream does not have a parent")
-	}
-
-	if err := service.LoadByID(stream.ParentID, parent); err != nil {
-		return derp.Wrap(err, "service.stream.LoadParent", "Error loading parent", stream)
-	}
-
-	return nil
-}
-
 // LoadNavigationByID locates a single stream in the top level of the site hierarchy
 func (service *Stream) LoadNavigationByID(streamID primitive.ObjectID, result *model.Stream) error {
+
+	const location = "service.Stream.LoadNavigationByID"
+
+	// RULE: StreamID is required
+	if streamID.IsZero() {
+		return derp.BadRequestError(location, "StreamID is required")
+	}
 
 	criteria := exp.
 		Equal("_id", streamID).
@@ -591,7 +690,7 @@ func (service *Stream) LoadWithOptions(criteria exp.Expression, result *model.St
 		return nil
 	}
 
-	return derp.NewNotFoundError(location, "collection is empty")
+	return derp.NotFoundError(location, "collection is empty")
 }
 
 func (service *Stream) LoadFirstSibling(parentID primitive.ObjectID, result *model.Stream) error {
@@ -599,6 +698,8 @@ func (service *Stream) LoadFirstSibling(parentID primitive.ObjectID, result *mod
 }
 
 func (service *Stream) LoadPrevSibling(parentID primitive.ObjectID, rank int, result *model.Stream) error {
+
+	const location = "service.stream.LoadPreviousSibling"
 
 	if rank == 0 {
 		return service.LoadLastSibling(parentID, result)
@@ -612,14 +713,16 @@ func (service *Stream) LoadPrevSibling(parentID primitive.ObjectID, rank int, re
 		return nil
 	}
 
-	if derp.NotFound(err) {
+	if derp.IsNotFound(err) {
 		return service.LoadLastSibling(parentID, result)
 	}
 
-	return derp.Wrap(err, "service.stream.LoadPreviousSibling", "Error loading Previous Sibling")
+	return derp.Wrap(err, location, "Error loading Previous Sibling")
 }
 
 func (service *Stream) LoadNextSibling(parentID primitive.ObjectID, rank int, result *model.Stream) error {
+
+	const location = "service.stream.LoadNextSibling"
 
 	criteria := exp.Equal("parentId", parentID).AndGreaterThan("rank", rank)
 
@@ -629,11 +732,11 @@ func (service *Stream) LoadNextSibling(parentID primitive.ObjectID, rank int, re
 		return nil
 	}
 
-	if derp.NotFound(err) {
+	if derp.IsNotFound(err) {
 		return service.LoadFirstSibling(parentID, result)
 	}
 
-	return derp.Wrap(err, "service.stream.LoadNextSibling", "Error loading Next Sibling")
+	return derp.Wrap(err, location, "Error loading Next Sibling")
 }
 
 func (service *Stream) LoadLastSibling(parentID primitive.ObjectID, result *model.Stream) error {
@@ -658,7 +761,7 @@ func (service *Stream) SetLocationTop(template *model.Template, stream *model.St
 
 	// RULE: Template must be allowed in the Top
 	if !template.CanBeContainedBy("top") {
-		return derp.NewBadRequestError("service.Stream.SetLocationTop", "Template cannot be contained by 'top'", template)
+		return derp.BadRequestError("service.Stream.SetLocationTop", "Template cannot be contained by 'top'", template)
 	}
 
 	// Set values in the Stream
@@ -677,12 +780,12 @@ func (service *Stream) SetLocationOutbox(template *model.Template, stream *model
 
 	// RULE: Valid User is Required
 	if userID.IsZero() {
-		return derp.NewUnauthorizedError(location, "User ID is required")
+		return derp.UnauthorizedError(location, "User ID is required")
 	}
 
 	// RULE: Template must be allowed in the Outbox
 	if !template.CanBeContainedBy("outbox") {
-		return derp.NewBadRequestError(location, "Template cannot be contained by 'outbox'", template)
+		return derp.BadRequestError(location, "Template cannot be contained by 'outbox'", template)
 	}
 
 	// Set values in the Stream
@@ -709,7 +812,7 @@ func (service *Stream) SetLocationChild(template *model.Template, stream *model.
 
 	// RULE: Template must be allowed in the Parent
 	if !template.CanBeContainedBy(parentTemplate.TemplateRole) {
-		return derp.NewBadRequestError(location, "Template cannot be contained by parent", template, parent)
+		return derp.BadRequestError(location, "Template cannot be contained by parent", template, parent)
 	}
 
 	// Set values in the Stream
@@ -757,6 +860,49 @@ func (service *Stream) DeleteRelatedDuplicate(parentID primitive.ObjectID, origi
 	}
 
 	return nil
+}
+
+func (service *Stream) MapByPrivileges(privileges ...model.Privilege) (map[string][]primitive.ObjectID, error) {
+
+	const location = "service.Stream.MapByPrivileges"
+
+	// RULE: If no privileges are provided, then return an empty map
+	if len(privileges) == 0 {
+		return make(mapof.Slices[string, primitive.ObjectID]), nil
+	}
+
+	// Scan all privileges for CircleIDs and MerchantAccounts/RemoteProductIDs
+	privilegeIDs := make([]string, 0, len(privileges))
+
+	for _, privilege := range privileges {
+
+		if compoundID := privilege.CompoundID_Circle(); compoundID != "" {
+			privilegeIDs = append(privilegeIDs, compoundID)
+		}
+
+		if compoundID := privilege.CompoundID_MerchantAccount(); compoundID != "" {
+			privilegeIDs = append(privilegeIDs, compoundID)
+		}
+	}
+
+	// Find all Streams that match the included privilegeIDs
+	streams, err := service.RangeByPrivileges(privilegeIDs...)
+
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Error loading streams", privilegeIDs)
+	}
+
+	// Translate the range of Streams into a map of privilegeID => streamIDs
+	result := make(mapof.Slices[string, primitive.ObjectID])
+
+	for stream := range streams {
+		for _, privilegeID := range stream.PrivilegeIDs {
+			result.Add(privilegeID, stream.StreamID)
+		}
+	}
+
+	// Ugly, but she rides.
+	return result, nil
 }
 
 // RestoreDeleted un-deletes all soft-deleted records underneath a common ancestor.
@@ -807,7 +953,7 @@ func (service *Stream) ParsePath(uri *url.URL) (string, string, error) {
 
 	// Verify the URL matches this service
 	if domain.AddProtocol(uri.Host) != service.host {
-		return "", "", derp.NewBadRequestError("service.Stream.LoadByURL", "Hostname must match this server", uri.String())
+		return "", "", derp.BadRequestError("service.Stream.LoadByURL", "Hostname must match this server", uri.String())
 	}
 
 	// Load the Stream using the token
@@ -897,6 +1043,7 @@ func (service *Stream) CalcParentIDs(stream *model.Stream) error {
 	return nil
 }
 
+/*
 // UserCan checks a user's permission to perform an action on a Stream.  If not allowed,
 // then the returned error describes why the access was denied.
 func (service *Stream) UserCan(authorization *model.Authorization, stream *model.Stream, actionID string) error {
@@ -914,17 +1061,18 @@ func (service *Stream) UserCan(authorization *model.Authorization, stream *model
 	action, ok := template.Action(actionID)
 
 	if !ok {
-		return derp.NewBadRequestError(location, "Invalid Action", actionID)
+		return derp.BadRequestError(location, "Invalid Action", actionID)
 	}
 
 	// Check permissions on the action
 	if !action.UserCan(stream, authorization) {
-		return derp.NewUnauthorizedError(location, "User is not authorized to perform this action", actionID)
+		return derp.UnauthorizedError(location, "User is not authorized to perform this action", actionID)
 	}
 
 	// UserCan!
 	return nil
 }
+*/
 
 // CalcContext calculates the conversational context for a given stream,
 // IF it can be determined.
@@ -937,7 +1085,7 @@ func (service *Stream) CalcContext(stream *model.Stream) {
 	}
 
 	// Load the "InReplyTo" document from the ActivityStream and use its
-	// context.  Note: this should have been calculated already via the
+	// context.  Note: this should have been calculated already via th
 	// ascontextmaker client.
 	document, _ := service.activityStream.Load(stream.InReplyTo)
 
@@ -948,6 +1096,72 @@ func (service *Stream) CalcContext(stream *model.Stream) {
 
 	// If a context could not be assigned, then use the InReplyTo value instead.
 	stream.Context = stream.InReplyTo
+}
+
+// CalcPrivileges denormalizes all privileges for a Stream into
+// a single data structure that can be scanned for quick access.
+func (service *Stream) CalcPrivileges(stream *model.Stream) error {
+
+	const location = "service.Stream.CalcPrivileges"
+
+	result := make([]string, 0, len(stream.Privileges))
+
+	// Collect Privileges provided to all Roles
+	for _, privileges := range stream.Privileges {
+		result = append(result, privileges...)
+	}
+
+	// If there are any privileges, then let's try to expand them into circleIDs
+	if len(result) > 0 {
+
+		circleIDs := service.extractCircleIDs(result...)
+
+		// If we have circle IDs, then load all of the Circles.
+		if circleIDs.NotEmpty() {
+
+			circles, err := service.circleService.QueryByIDs(stream.AttributedTo.UserID, circleIDs)
+
+			if err != nil {
+				return derp.Wrap(err, location, "Error loading circles for privileges", circleIDs)
+			}
+
+			// Append any CircleIDs and RemoteProductIDs from the Circle ito the result
+			for _, circle := range circles {
+				result = append(result, circle.Privileges()...)
+			}
+		}
+	}
+
+	// Make a unique list of privileges and celebrate our successes
+	stream.PrivilegeIDs = slice.Unique(result)
+	return nil
+}
+
+func (service *Stream) extractCircleIDs(tokens ...string) id.Slice {
+
+	result := id.NewSlice()
+
+	for _, token := range tokens {
+
+		if circleID := service.extractCircleID(token); !circleID.IsZero() {
+			result = append(result, circleID)
+		}
+	}
+
+	return result
+}
+
+func (service *Stream) extractCircleID(token string) primitive.ObjectID {
+
+	if strings.HasPrefix(token, "CIR:") {
+		token = strings.TrimPrefix(token, "CIR:")
+
+		if circleID, err := primitive.ObjectIDFromHex(token); err == nil {
+			return circleID
+		}
+	}
+
+	return primitive.NilObjectID
 }
 
 func (service *Stream) CalculateTags(stream *model.Stream) {

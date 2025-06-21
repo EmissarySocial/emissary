@@ -47,8 +47,9 @@ func (step StepEditModelObject) Get(builder Builder, buffer io.Writer) PipelineB
 
 	result = WrapForm(builder.URL(), result, element.Encoding(), optionStrings...)
 
-	// nolint:errcheck
-	io.WriteString(buffer, result)
+	if _, err := io.WriteString(buffer, result); err != nil {
+		return Halt().WithError(derp.Wrap(err, "build.StepEditModelObject.Get", "Error writing form HTML to buffer"))
+	}
 
 	return nil
 }

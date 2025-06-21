@@ -30,8 +30,9 @@ func (step StepEditWidget) Get(builder Builder, buffer io.Writer) PipelineBehavi
 	// Wrap the form as a modal and return it to the client
 	formHTML = WrapModalForm(builder.response(), builder.URL(), formHTML, widget.Form.Encoding())
 
-	// nolint:errcheck
-	buffer.Write([]byte(formHTML))
+	if _, err := buffer.Write([]byte(formHTML)); err != nil {
+		return Halt().WithError(derp.Wrap(err, "build.StepEditWidget.Get", "Error writing form HTML to buffer"))
+	}
 
 	return nil
 }
@@ -75,43 +76,43 @@ func (step StepEditWidget) common(builder Builder) (model.Widget, model.StreamWi
 	streamBuilder, ok := builder.(Stream)
 
 	if !ok {
-		return model.Widget{}, model.StreamWidget{}, Stream{}, derp.NewInternalError(location, "Builder is not a StreamBuilder")
+		return model.Widget{}, model.StreamWidget{}, Stream{}, derp.InternalError(location, "Builder is not a StreamBuilder")
 	}
 
 	// User must be authenticated to view widget details
 	if !streamBuilder.IsAuthenticated() {
-		return model.Widget{}, model.StreamWidget{}, Stream{}, derp.NewUnauthorizedError(location, "Anonymous user is not authorized to perform this action")
+		return model.Widget{}, model.StreamWidget{}, Stream{}, derp.UnauthorizedError(location, "Anonymous user is not authorized to perform this action")
 	}
 
 	// Get the token from the request
 	token := builder.QueryParam("widgetId")
 
 	if token == "" {
-		return model.Widget{}, model.StreamWidget{}, Stream{}, derp.NewBadRequestError(location, "Missing required parameter: widgetId")
+		return model.Widget{}, model.StreamWidget{}, Stream{}, derp.BadRequestError(location, "Missing required parameter: widgetId")
 	}
 
 	// Try to find the widget in the stream
 	streamWidget, ok := streamBuilder._stream.Widgets.Get(token)
 
 	if !ok {
-		return model.Widget{}, model.StreamWidget{}, Stream{}, derp.NewBadRequestError(location, "Invalid widgetId", token)
+		return model.Widget{}, model.StreamWidget{}, Stream{}, derp.BadRequestError(location, "Invalid widgetId", token)
 	}
 
 	widgetService := streamBuilder.factory().Widget()
 	widget, ok := widgetService.Get(streamWidget.Type)
 
 	if !ok {
-		return model.Widget{}, model.StreamWidget{}, Stream{}, derp.NewInternalError(location, "Unknown widget type", streamWidget.Type)
+		return model.Widget{}, model.StreamWidget{}, Stream{}, derp.InternalError(location, "Unknown widget type", streamWidget.Type)
 	}
 
 	// TODO: LOW: This should be IsEmpty() accessor method on the Widget object
 	if len(widget.Form.Children) == 0 {
-		return model.Widget{}, model.StreamWidget{}, Stream{}, derp.NewBadRequestError(location, "Widget does not support editing (empty form)", streamWidget.Type)
+		return model.Widget{}, model.StreamWidget{}, Stream{}, derp.BadRequestError(location, "Widget does not support editing (empty form)", streamWidget.Type)
 	}
 
 	// TODO: LOW: This should be IsEmpty() accessor method on the Schema object
 	if widget.Schema.Element == nil {
-		return model.Widget{}, model.StreamWidget{}, Stream{}, derp.NewBadRequestError(location, "Widget does not support editing (empty schema)", streamWidget.Type)
+		return model.Widget{}, model.StreamWidget{}, Stream{}, derp.BadRequestError(location, "Widget does not support editing (empty schema)", streamWidget.Type)
 	}
 
 	return widget, streamWidget, streamBuilder, nil

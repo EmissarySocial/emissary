@@ -24,7 +24,7 @@ func GetOutboundIntent(ctx *steranko.Context, factory *domain.Factory) error {
 	}
 
 	// Append success/cancel handlers to the URL
-	data := ctx.Request().URL.Query()
+	data := ctx.QueryParams()
 	data.Set("on-success", "(close)")
 	data.Set("on-cancel", "(close)")
 

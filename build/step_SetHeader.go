@@ -10,9 +10,9 @@ import (
 
 // StepSetHeader is a Step that can update the custom data stored in a Stream
 type StepSetHeader struct {
-	Method string
-	Name   string
-	Value  *template.Template
+	Method     string
+	HeaderName string
+	Value      *template.Template
 }
 
 func (step StepSetHeader) Get(builder Builder, buffer io.Writer) PipelineBehavior {
@@ -38,7 +38,7 @@ func (step StepSetHeader) setHeader(builder Builder) PipelineBehavior {
 		return Halt().WithError(derp.Wrap(err, "build.StepSetHeader.Post", "Error executing template", step.Value))
 	}
 
-	builder.response().Header().Set(step.Name, value.String())
+	builder.response().Header().Set(step.HeaderName, value.String())
 
 	return nil
 }

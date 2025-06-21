@@ -17,7 +17,7 @@ func (service *Stream) WebFinger(token string) (digit.Resource, error) {
 	// Load the stream from the database
 	stream := model.NewStream()
 	if service.LoadByToken(token, &stream) != nil {
-		return digit.Resource{}, derp.NewBadRequestError(location, "Invalid Token", token)
+		return digit.Resource{}, derp.BadRequestError(location, "Invalid Token", token)
 	}
 
 	// Verify Template and Actor
@@ -28,7 +28,7 @@ func (service *Stream) WebFinger(token string) (digit.Resource, error) {
 	}
 
 	if template.Actor.IsNil() {
-		return digit.Resource{}, derp.NewBadRequestError(location, "Stream Template does not define an Actor", stream.TemplateID)
+		return digit.Resource{}, derp.BadRequestError(location, "Stream Template does not define an Actor", stream.TemplateID)
 	}
 
 	hostname := service.Hostname()

@@ -3,10 +3,12 @@ package model
 import (
 	"time"
 
+	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/hannibal"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/toot/object"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -116,37 +118,37 @@ func (response Response) NotEmpty() bool {
 }
 
 /******************************************
- * RoleStateEnumerator Methods
+ * AccessLister Interface
  ******************************************/
 
-// State returns the current state of this Stream.  It is
-// part of the implementation of the RoleStateEmulator interface
-func (response Response) State() string {
-	return ""
+// State returns the current state of this Response.
+// It is part of the AccessLister interface
+func (response *Response) State() string {
+	return "default"
 }
 
-// Roles returns a list of all roles that match the provided authorization
-func (response Response) Roles(authorization *Authorization) []string {
+// IsAuthor returns TRUE if the provided UserID the author of this Response
+// It is part of the AccessLister interface
+func (response *Response) IsAuthor(authorID primitive.ObjectID) bool {
+	return false
+}
 
-	// Everyone has "anonymous" access
-	result := []string{MagicRoleAnonymous}
+// IsMyself returns TRUE if this object directly represents the provided UserID
+// It is part of the AccessLister interface
+func (response *Response) IsMyself(userID primitive.ObjectID) bool {
+	return response.UserID == userID
+}
 
-	if authorization.IsAuthenticated() {
+// RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.
+// It is part of the AccessLister interface
+func (response *Response) RolesToGroupIDs(roleIDs ...string) id.Slice {
+	return nil
+}
 
-		// Owners are hard-coded to do everything, so no other roles need to be returned.
-		if authorization.DomainOwner {
-			return []string{MagicRoleOwner}
-		}
-
-		result = append(result, MagicRoleAuthenticated)
-
-		// Authors sometimes have special permissions, too.
-		if response.UserID == authorization.UserID {
-			result = append(result, MagicRoleAuthor)
-		}
-	}
-
-	return result
+// RolesToPrivileges returns a slice of Privileges that grant access to any of the requested roles.
+// It is part of the AccessLister interface
+func (response *Response) RolesToPrivileges(roleIDs ...string) sliceof.String {
+	return sliceof.NewString()
 }
 
 /******************************************

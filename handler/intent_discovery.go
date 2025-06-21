@@ -19,14 +19,14 @@ func GetIntentInfo(ctx *steranko.Context, factory *domain.Factory) error {
 	intentType := ctx.QueryParam("intent")
 
 	if intentType == "" {
-		return derp.NewBadRequestError(location, "You must specify an intent")
+		return derp.BadRequestError(location, "You must specify an intent")
 	}
 
 	// Collect accountID
 	accountID := ctx.QueryParam("account")
 
 	if accountID == "" {
-		return derp.NewBadRequestError(location, "You must specify a Fediverse account")
+		return derp.BadRequestError(location, "You must specify a Fediverse account")
 	}
 
 	// Look up the account via the ActivityService

@@ -27,7 +27,7 @@ type Attachment struct {
 // NewAttachment returns a fully initialized `Attachment` builder.
 func NewAttachment(factory Factory, request *http.Request, response http.ResponseWriter, template model.Template, attachment *model.Attachment, actionID string) (Attachment, error) {
 
-	common, err := NewCommonWithTemplate(factory, request, response, template, actionID)
+	common, err := NewCommonWithTemplate(factory, request, response, template, attachment, actionID)
 
 	if err != nil {
 		return Attachment{}, derp.Wrap(err, "build.NewAttachment", "Error creating new model")

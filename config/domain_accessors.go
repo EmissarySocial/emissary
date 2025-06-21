@@ -1,24 +1,20 @@
 package config
 
 import (
-	"github.com/EmissarySocial/emissary/tools/random"
 	"github.com/benpate/rosetta/schema"
 )
 
 func DomainSchema() schema.Element {
 
-	// Default KEK is a slice of 64 random bytes
-	keyEncryptingKey, _ := random.GenerateString(32)
-
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"label":            schema.String{MaxLength: 100, Required: true},
-			"hostname":         schema.String{MaxLength: 255, Required: true},
-			"connectString":    schema.String{MaxLength: 1000, Required: true},
-			"databaseName":     schema.String{Pattern: `[a-zA-Z0-9-_]+`, Required: true},
-			"smtp":             SMTPConnectionSchema(),
-			"owner":            OwnerSchema(),
-			"keyEncryptingKey": schema.String{MinLength: 32, MaxLength: 32, Default: keyEncryptingKey},
+			"label":         schema.String{MaxLength: 100, Required: true},
+			"hostname":      schema.String{MaxLength: 255, Required: true},
+			"connectString": schema.String{MaxLength: 1000, Required: true},
+			"databaseName":  schema.String{Pattern: `[a-zA-Z0-9-_]+`, Required: true},
+			"smtp":          SMTPConnectionSchema(),
+			"owner":         OwnerSchema(),
+			"masterKey":     schema.String{MinLength: 64, MaxLength: 64, Pattern: "^[0-9A-Fa-f]{64}$"},
 		},
 	}
 }
@@ -49,8 +45,8 @@ func (domain *Domain) GetPointer(name string) (any, bool) {
 	case "databaseName":
 		return &domain.DatabaseName, true
 
-	case "keyEncryptingKey":
-		return &domain.KeyEncryptingKey, true
+	case "masterKey":
+		return &domain.MasterKey, true
 	}
 
 	return nil, false

@@ -55,7 +55,6 @@ type Factory struct {
 	templateService     service.Template
 	widgetService       service.Widget
 	contentService      service.Content
-	providerService     service.Provider
 	emailService        service.ServerEmail
 	embeddedFiles       embed.FS
 
@@ -118,7 +117,6 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 	)
 
 	factory.contentService = service.NewContent(factory.EditorJS())
-	factory.providerService = service.NewProvider(factory.config.Providers)
 
 	factory.emailService = service.NewServerEmail(
 		factory.Filesystem(),
@@ -201,7 +199,6 @@ func (factory *Factory) start() {
 		// Refresh cached values in global services
 		factory.emailService.Refresh()
 		factory.templateService.Refresh(config.Templates)
-		factory.providerService.Refresh(config.Providers)
 
 		if err := factory.refreshCommonDatabase(config.ActivityPubCache); err != nil {
 			derp.Report(derp.Wrap(err, "server.Factory.start", "WARNING: Could not refresh common database.  Important services (like queued tasks and ActivityPub caching) may not function correctly.", config.ActivityPubCache))
@@ -220,7 +217,7 @@ func (factory *Factory) start() {
 		for _, domainConfig := range config.Domains {
 
 			factory.mutex.Lock()
-			if err := factory.refreshDomain(config, domainConfig); err != nil {
+			if err := factory.refreshDomain(domainConfig); err != nil {
 				derp.Report(derp.Wrap(err, "server.Factory.start", "Error refreshing domain", domainConfig.ID))
 			}
 			factory.mutex.Unlock()
@@ -258,7 +255,9 @@ func (factory *Factory) Ready() <-chan struct{} {
 
 // refreshDomain attempts to refresh an existing domain, or creates a new one if it doesn't exist
 // CALLS TO THIS MUST BE LOCKED
-func (factory *Factory) refreshDomain(config config.Config, domainConfig config.Domain) error {
+func (factory *Factory) refreshDomain(domainConfig config.Domain) error {
+
+	const location = "server.factory.refreshDomain"
 
 	// Try to find the domain
 	if existing := factory.domains[domainConfig.Hostname]; existing != nil {
@@ -267,8 +266,8 @@ func (factory *Factory) refreshDomain(config config.Config, domainConfig config.
 		existing.MarkForDeletion = false
 
 		// Try to refresh the domain
-		if err := existing.Refresh(domainConfig, config.Providers, factory.attachmentOriginals, factory.attachmentCache); err != nil {
-			return derp.Wrap(err, "server.Factory.start", "Error refreshing domain", domainConfig.Hostname)
+		if err := existing.Refresh(domainConfig, factory.attachmentOriginals, factory.attachmentCache); err != nil {
+			return derp.Wrap(err, location, "Error refreshing domain", domainConfig.Hostname)
 		}
 
 		return nil
@@ -278,7 +277,6 @@ func (factory *Factory) refreshDomain(config config.Config, domainConfig config.
 	newDomain, err := domain.NewFactory(
 		domainConfig,
 		factory.port(domainConfig),
-		config.Providers,
 		factory.ActivityCollection(),
 		&factory.registrationService,
 		&factory.emailService,
@@ -286,7 +284,6 @@ func (factory *Factory) refreshDomain(config config.Config, domainConfig config.
 		&factory.templateService,
 		&factory.widgetService,
 		&factory.contentService,
-		&factory.providerService,
 		&factory.queue,
 		factory.attachmentOriginals,
 		factory.attachmentCache,
@@ -296,7 +293,7 @@ func (factory *Factory) refreshDomain(config config.Config, domainConfig config.
 	)
 
 	if err != nil {
-		return derp.Wrap(err, "server.Factory.start", "Unable to start domain", domainConfig)
+		return derp.Wrap(err, location, "Unable to refresh configuration", domainConfig)
 	}
 
 	// If there are no errors, then add the domain to the list.
@@ -308,7 +305,7 @@ func (factory *Factory) refreshDomain(config config.Config, domainConfig config.
 // refreshCommonDatabase updates the connection to the common database
 func (factory *Factory) refreshCommonDatabase(connection mapof.String) error {
 
-	const location = "server.Factory.refreshCommonDatabase"
+	const location = "server.factory.refreshCommonDatabase"
 
 	// Collect arguments from the connection config
 	uri := connection.GetString("connectString")
@@ -316,7 +313,7 @@ func (factory *Factory) refreshCommonDatabase(connection mapof.String) error {
 
 	// ActivityStream cache is not configured.
 	if uri == "" || database == "" {
-		return derp.NewInternalError(location, "Common database is not configured")
+		return derp.InternalError(location, "Common database is not configured")
 	}
 
 	log.Trace().Str("database", database).Msg("Resetting common database")
@@ -405,7 +402,7 @@ func (factory *Factory) UpdateConfig(value config.Config) error {
 	factory.config = value
 
 	if err := factory.storage.Write(value); err != nil {
-		return derp.Wrap(err, "server.Factory.UpdateConfig", "Error writing configuration", value)
+		return derp.Wrap(err, "server.factory.UpdateConfig", "Error writing configuration", value)
 	}
 
 	return nil
@@ -474,7 +471,7 @@ func (factory *Factory) putDomain(configuration config.Domain) error {
 	}
 
 	// Try to update the domain in the in-memory cache
-	if err := factory.refreshDomain(factory.config, configuration); err != nil {
+	if err := factory.refreshDomain(configuration); err != nil {
 		return derp.Wrap(err, "server.Factory.putDomain", "Error refreshing domain", configuration)
 	}
 
@@ -498,7 +495,7 @@ func (factory *Factory) DomainByID(domainID string) (config.Domain, error) {
 	}
 
 	// Not found, so return an error
-	return config.NewDomain(), derp.NewNotFoundError("server.Factory.DomainByID", "DomainID not found", domainID)
+	return config.NewDomain(), derp.NotFoundError("server.Factory.DomainByID", "DomainID not found", domainID)
 }
 
 // DeleteDomain removes a domain from the Factory
@@ -509,46 +506,6 @@ func (factory *Factory) DeleteDomain(domainID string) error {
 
 	// Delete the domain from the collection
 	factory.config.Domains.Delete(domainID)
-
-	// Write changes to the storage engine.
-	if err := factory.storage.Write(factory.config); err != nil {
-		return derp.Wrap(err, "server.Factory.DeleteDomain", "Error saving configuration")
-	}
-
-	return nil
-}
-
-/******************************************
- * OAuth Connection Methods
- ******************************************/
-
-// PutConnection adds a provider to the Factory
-func (factory *Factory) PutProvider(oauthClient config.Provider) error {
-
-	factory.mutex.Lock()
-	defer factory.mutex.Unlock()
-
-	// Add the domain to the collection
-	factory.config.Providers.Put(oauthClient)
-
-	// Try to write the configuration to the storage service
-	if err := factory.storage.Write(factory.config); err != nil {
-		return derp.Wrap(err, "server.Factory.WriteConfig", "Error writing configuration")
-	}
-
-	// The storage service will trigger a new configuration via the Subscrbe() channel
-
-	return nil
-}
-
-// DeleteConnection removes a provider from the Factory
-func (factory *Factory) DeleteProvider(providerID string) error {
-
-	factory.mutex.Lock()
-	defer factory.mutex.Unlock()
-
-	// Delete the connection from the collection
-	factory.config.Providers.Delete(providerID)
 
 	// Write changes to the storage engine.
 	if err := factory.storage.Write(factory.config); err != nil {

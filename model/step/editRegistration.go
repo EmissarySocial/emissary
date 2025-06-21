@@ -13,9 +13,23 @@ func NewEditRegistration(stepInfo mapof.Any) (EditRegistration, error) {
 	return EditRegistration{}, nil
 }
 
-// AmStep is here only to verify that this struct is a build pipeline step
-func (step EditRegistration) AmStep() {}
+// Name returns the name of the step, which is used in debugging.
+func (step EditRegistration) Name() string {
+	return "edit-registration"
+}
 
-func (step EditRegistration) RequireType() string {
-	return "registration"
+// RequiredModel returns the name of the model object that MUST be present in the Template.
+// If this value is not empty, then the Template MUST use this model object.
+func (step EditRegistration) RequiredModel() string {
+	return "Domain"
+}
+
+// RequiredStates returns a slice of states that must be defined any Template that uses this Step
+func (step EditRegistration) RequiredStates() []string {
+	return []string{}
+}
+
+// RequiredRoles returns a slice of roles that must be defined any Template that uses this Step
+func (step EditRegistration) RequiredRoles() []string {
+	return []string{}
 }

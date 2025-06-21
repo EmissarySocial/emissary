@@ -3,6 +3,9 @@ package domain
 // CollectionAttachment is the name of the database collection where Attachments are stored
 const CollectionAttachment = "Attachment"
 
+// CollectionCircle is the name of the database collection where Circle records are stored
+const CollectionCircle = "Circle"
+
 // CollectionConnection is the name of the database collection where Connection records are stored
 const CollectionConnection = "Connection"
 
@@ -24,17 +27,20 @@ const CollectionFollowing = "Following"
 // CollectionGroup is the name of the database collection where Group records are stored
 const CollectionGroup = "Group"
 
-// CollectionInbox is the database colleciton where user's Inbox records are stored
+// CollectionIdentity is the database collection where user's Identity records are stored
+const CollectionIdentity = "Identity"
+
+// CollectionInbox is the database collection where user's Inbox records are stored
 const CollectionInbox = "Inbox"
 
-// CollectionJWT is the database colleciton where user's JWTKey records are stored
+// CollectionJWT is the database collection where user's JWTKey records are stored
 const CollectionJWT = "JWT"
 
 // CollectionMention is the name of the database collection where Mention records are stored
 const CollectionMention = "Mention"
 
-// CollectionRule is the name of the database collection where Rule records are stored
-const CollectionRule = "Rule"
+// CollectionMerchantAccount is the name of the database collection where MerchantAccount records are stored
+const CollectionMerchantAccount = "MerchantAccount"
 
 // CollectionOAuthClient is the name of the database collection where OAuthClients are stored
 const CollectionOAuthClient = "OAuthClient"
@@ -44,6 +50,15 @@ const CollectionOAuthUserToken = "OAuthUserToken"
 
 // CollectionOutbox is the name of the database collection where users' Outbox records are stored
 const CollectionOutbox = "Outbox"
+
+// CollectionPrivilege is the name of the database collection where Privileges are stored
+const CollectionPrivilege = "Privilege"
+
+// CollectionResponse is the name of the database collection where Responses are stored
+const CollectionResponse = "Response"
+
+// CollectionRule is the name of the database collection where Rule records are stored
+const CollectionRule = "Rule"
 
 // CollectionSearchQuery is the name of the database collection where SearchQueries are stored
 const CollectionSearchQuery = "SearchQuery"
@@ -59,12 +74,6 @@ const CollectionStream = "Stream"
 
 // CollectionStreamDraft is the name of the database collection where draft changes to streams are stored
 const CollectionStreamDraft = "StreamDraft"
-
-// CollectionStreamOutbox is the name of the database collection where users' StreamMessage records are stored
-const CollectionStreamOutbox = "StreamOutbox"
-
-// CollectionResponse is the name of the database collection where Responses are stored
-const CollectionResponse = "Response"
 
 // CollectionTemplate is the name of the database collection where Templates are stored
 const CollectionTemplate = "Template"

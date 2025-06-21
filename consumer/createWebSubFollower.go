@@ -37,7 +37,7 @@ func CreateWebSubFollower(factory *domain.Factory, args mapof.Any) queue.Result 
 		return createWebSubFollower_unsubscribe(factory, objectType, objectID, mode, topic, callback, leaseSeconds)
 	}
 
-	return queue.Failure(derp.NewInternalError(location, "Invalid mode", mode))
+	return queue.Failure(derp.InternalError(location, "Invalid mode", mode))
 }
 
 // subscribe creates/updates a follower record
@@ -133,7 +133,7 @@ func createWebSubFollower_validate(factory *domain.Factory, follower *model.Foll
 	}
 
 	if body != challenge {
-		return queue.Failure(derp.NewBadRequestError(location, "Invalid challenge response", follower.ID))
+		return queue.Failure(derp.BadRequestError(location, "Invalid challenge response", follower.ID))
 	}
 
 	// Validate the object in our own database
@@ -145,11 +145,11 @@ func createWebSubFollower_validate(factory *domain.Factory, follower *model.Foll
 	}
 
 	if objectType != foundObjectType {
-		return queue.Failure(derp.NewBadRequestError(location, "Invalid object type", follower.ID))
+		return queue.Failure(derp.BadRequestError(location, "Invalid object type", follower.ID))
 	}
 
 	if objectID != foundObjectID {
-		return queue.Failure(derp.NewBadRequestError(location, "Invalid object ID", follower.ID))
+		return queue.Failure(derp.BadRequestError(location, "Invalid object ID", follower.ID))
 	}
 
 	return queue.Success()

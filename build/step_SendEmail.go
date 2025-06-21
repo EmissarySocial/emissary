@@ -22,7 +22,7 @@ func (step StepSendEmail) Post(builder Builder, _ io.Writer) PipelineBehavior {
 	userBuilder, ok := builder.(User)
 
 	if !ok {
-		return Halt().WithError(derp.NewInternalError("build.StepSendEmail.Post", "Invalid Builder", "Builder must be Admin/User"))
+		return Halt().WithError(derp.InternalError("build.StepSendEmail.Post", "Invalid Builder", "Builder must be Admin/User"))
 	}
 
 	// Collect required services
@@ -36,7 +36,7 @@ func (step StepSendEmail) Post(builder Builder, _ io.Writer) PipelineBehavior {
 		userService.SendPasswordResetEmail(userBuilder._user)
 
 	default:
-		return Halt().WithError(derp.NewInternalError("build.StepSendEmail.Post", "Invalid email name", "Name must be 'welcome' or 'password-reset'"))
+		return Halt().WithError(derp.InternalError("build.StepSendEmail.Post", "Invalid email name", "Name must be 'welcome' or 'password-reset'"))
 	}
 
 	// Banana

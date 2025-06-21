@@ -3,6 +3,7 @@ package build
 import (
 	"io"
 
+	"github.com/benpate/derp"
 	"github.com/benpate/html"
 )
 
@@ -35,9 +36,10 @@ func (step StepAsConfirmation) Get(builder Builder, buffer io.Writer) PipelineBe
 	b.CloseAll()
 
 	modalHTML := WrapModal(builder.response(), b.String())
+	if _, err := io.WriteString(buffer, modalHTML); err != nil {
+		return Halt().WithError(derp.Wrap(err, "build.StepAsConfirmation.Get", "Error writing modal HTML to buffer"))
+	}
 
-	// nolint:errcheck
-	io.WriteString(buffer, modalHTML)
 	return Halt().AsFullPage()
 }
 

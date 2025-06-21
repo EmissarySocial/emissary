@@ -12,16 +12,17 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/convert"
+	"github.com/benpate/steranko"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/maypok86/otter"
 )
 
 // JWT is a service that generates and validates JWT keys.
 type JWT struct {
-	collection       data.Collection             // Database collection where JWT keys are stored
-	cache            otter.Cache[string, []byte] // In-Memory cache for frequently used keys
-	hasCache         bool                        // Flag to indicate if the cache is enabled
-	keyEncryptingKey []byte                      // "Key Encrypting Key" used to encode/decode JWT keys that are stored in the collection
+	collection data.Collection             // Database collection where JWT keys are stored
+	cache      otter.Cache[string, []byte] // In-Memory cache for frequently used keys
+	hasCache   bool                        // Flag to indicate if the cache is enabled
+	masterKey  string                      // "Key Encrypting Key" used to encode/decode JWT keys that are stored in the collection
 }
 
 func NewJWT() JWT {
@@ -32,10 +33,10 @@ func NewJWT() JWT {
  * Lifecycle Methods
  ******************************************/
 
-func (service *JWT) Refresh(collection data.Collection, keyEncryptingKey []byte) {
+func (service *JWT) Refresh(collection data.Collection, masterKey string) {
 
 	service.collection = collection
-	service.keyEncryptingKey = keyEncryptingKey
+	service.masterKey = masterKey
 
 	builder := otter.MustBuilder[string, []byte](32).
 		WithTTL(24 * time.Hour)
@@ -116,12 +117,12 @@ func (service *JWT) ParseString(tokenString string) (*jwt.Token, error) {
 
 	// RULE: JWT token must not be empty
 	if tokenString == "" {
-		return nil, derp.NewBadRequestError(location, "JWT token is empty")
+		return nil, derp.BadRequestError(location, "JWT token is empty")
 	}
 
 	// Try to parse the JWT token
 	claims := model.NewAuthorization()
-	result, err := jwt.ParseWithClaims(tokenString, &claims, service.FindKey, jwt.WithValidMethods([]string{"HS256", "HS384", "HS512"}))
+	result, err := jwt.ParseWithClaims(tokenString, &claims, service.FindKey, steranko.JWTValidMethods())
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Error parsing JWT token", tokenString)
@@ -216,6 +217,49 @@ func (service *JWT) load(keyName string) ([]byte, error) {
 
 	// Return the plaintext to the rest of the application
 	return plaintext, nil
+}
+
+/******************************************
+ * Encryption Methods
+ ******************************************/
+
+func (service *JWT) NewToken(claims jwt.Claims) (string, error) {
+
+	const location = "service.JWT.NewToken"
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
+
+	// Get the signing key from the KeyService
+	keyID, key, err := service.GetCurrentKey()
+
+	if err != nil {
+		return "", derp.Wrap(err, location, "Error getting JWT Key")
+	}
+
+	token.Header["kid"] = keyID
+
+	// Try to generate encoded token
+	result, err := token.SignedString(key)
+
+	if err != nil {
+		return "", derp.Wrap(err, location, "Error Signing JWT Token")
+	}
+
+	// Return the encoded JWT
+	return result, nil
+}
+
+func (service *JWT) ParseToken(tokenString string, claims jwt.Claims) error {
+
+	const location = "service.JWT.ParseToken"
+
+	// Try to parse the JWT token using this key service
+	if _, err := jwt.ParseWithClaims(tokenString, claims, service.FindKey, jwt.WithValidMethods([]string{"HS512"})); err != nil {
+		return derp.Wrap(err, location, "Error parsing JWT token", tokenString)
+	}
+
+	// You're so beautiful.
+	return nil
 }
 
 /******************************************

@@ -3,13 +3,15 @@
     color: var(--white);
     padding: var(--rhythm) calc(var(--rhythm) * 2);
     margin-bottom: calc(var(--rhythm) * 2);
+	border-radius:calc(var(--rhythm) * 0.75);
 }
 
 .alert-blue {
-    background-color: var(--blue70);
-    color: var(--white);
+	border-color: var(--blue30);
+    background-color: var(--blue20);
     padding: var(--rhythm) calc(var(--rhythm) * 2);
     margin-bottom: calc(var(--rhythm) * 2);
+	border-radius:calc(var(--rhythm) * 0.75);
 }
 
 .alert-green {
@@ -17,11 +19,13 @@
     color: var(--white);
     padding: var(--rhythm) calc(var(--rhythm) * 2);
     margin-bottom: calc(var(--rhythm) * 2);
+	border-radius:calc(var(--rhythm) * 0.75);
 }
 
 .alert-gray {
-    background-color: var(--gray50);
-    color: var(--white);
+    background-color: var(--gray10);
+    border: solid 1px var(--gray20);
     padding: var(--rhythm) calc(var(--rhythm) * 2);
     margin-bottom: calc(var(--rhythm) * 2);
+	border-radius:calc(var(--rhythm) * 0.75);
 }

@@ -16,7 +16,7 @@ func RawUpdate(ctx context.Context, collection data.Collection, criteria exp.Exp
 	mongo := mongoCollection(collection)
 
 	if mongo == nil {
-		return derp.NewInternalError("queries.RawUpdate", "Collection is not a MongoDB collection")
+		return derp.InternalError("queries.RawUpdate", "Collection is not a MongoDB collection")
 	}
 
 	// Update the database

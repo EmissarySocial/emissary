@@ -9,6 +9,8 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
+	"github.com/benpate/exp"
+	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/rosetta/schema"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -16,33 +18,29 @@ import (
 
 // Model builds objects from any model service that implements the ModelService interface
 type Model struct {
-	_object  data.Object
+	_object  model.AccessLister
 	_service service.ModelService
 	CommonWithTemplate
 }
 
 // NewModel returns a fully initialized `Model` builder.
-func NewModel(factory Factory, request *http.Request, response http.ResponseWriter, template model.Template, object data.Object, actionID string) (Model, error) {
+func NewModel(factory Factory, request *http.Request, response http.ResponseWriter, template model.Template, object model.AccessLister, actionID string) (Model, error) {
 
 	const location = "build.NewModel"
 
 	// Create the underlying Common builder
-	common, err := NewCommonWithTemplate(factory, request, response, template, actionID)
+	common, err := NewCommonWithTemplate(factory, request, response, template, object, actionID)
 
 	if err != nil {
 		return Model{}, derp.Wrap(err, location, "Error creating common builder")
 	}
 
-	// Check permissions on this model object
-	if roleStateEnumerator, ok := object.(model.RoleStateEnumerator); !ok {
-		return Model{}, derp.NewBadRequestError(location, "Object does not implement model.RoleStateEnumerator", object)
-
-	} else if !common._action.UserCan(roleStateEnumerator, &common._authorization) {
-
+	// Enforce permissions on the requested action
+	if !common.UserCan(actionID) {
 		if common._authorization.IsAuthenticated() {
-			return Model{}, derp.NewForbiddenError(location, "Forbidden")
+			return Model{}, derp.ForbiddenError(location, "Forbidden", "User is authenticated, but this action is not allowed", actionID)
 		} else {
-			return Model{}, derp.NewUnauthorizedError(location, "Anonymous user is not authorized to perform this action", actionID)
+			return Model{}, derp.UnauthorizedError(location, "Anonymous user is not authorized to perform this action", actionID)
 		}
 	}
 
@@ -50,7 +48,7 @@ func NewModel(factory Factory, request *http.Request, response http.ResponseWrit
 	modelService := factory.ModelService(object)
 
 	if modelService == nil {
-		return Model{}, derp.NewInternalError(location, "Invalid model service", object)
+		return Model{}, derp.InternalError(location, "Invalid model service", object)
 	}
 
 	// Return the Model builder
@@ -89,23 +87,33 @@ func (w Model) ObjectID() string {
 	return w._object.ID()
 }
 
-func (w Model) Label() string {
-	switch object := w._object.(type) {
+func (w Model) Name() string {
+	return w.Label()
+}
 
-	case *model.Rule:
-		return object.Label
+func (w Model) Label() string {
+	switch typed := w._object.(type) {
+
+	case *model.Circle:
+		return typed.Name
 
 	case *model.Folder:
-		return object.Label
-
-	case *model.Following:
-		return object.Label
+		return typed.Label
 
 	case *model.Follower:
-		return object.Actor.Name
+		return typed.Actor.Name
+
+	case *model.Following:
+		return typed.Label
+
+	case *model.Identity:
+		return typed.Name
+
+	case *model.Rule:
+		return typed.Label
 
 	case *model.Stream:
-		return object.Label
+		return typed.Label
 
 	default:
 		return ""
@@ -166,6 +174,62 @@ func (w Model) View(actionID string) (template.HTML, error) {
 	return subStream.Render()
 }
 
+/******************************************
+ * Custom Queries
+ * (may only apply to certain model objects)
+ ******************************************/
+
+func (w Model) Identity(identityID primitive.ObjectID) (model.Identity, error) {
+
+	const location = "build.Model.Identity"
+
+	// User must be signed in to view Identities
+	if !w._authorization.IsAuthenticated() {
+		return model.Identity{}, derp.UnauthorizedError(location, "Anonymous user is not authorized to perform this action", identityID)
+	}
+
+	// Load the Identity from the database
+	identity := model.NewIdentity()
+
+	if err := w.factory().Identity().LoadByID(identityID, &identity); err != nil {
+		return model.Identity{}, derp.Wrap(err, location, "Error loading identity by token")
+	}
+
+	// Everything is groovy!
+	return identity, nil
+}
+
+// CircleMembers returns a QueryBuilder for Circle Members
+// in the current Circle (only works on Circle objects)
+func (w Model) CircleMembers() (QueryBuilder[model.Identity], error) {
+
+	const location = "build.Model.CircleMembers"
+
+	// Guarantee that we are working with a Circle model object
+	circle, isCircle := w._object.(*model.Circle)
+
+	if !isCircle {
+		return QueryBuilder[model.Identity]{}, derp.InternalError(location, "Builder method `CircleMembers` can only be used within a `with-circle` action.")
+	}
+
+	// Define inbound parameters
+	expressionBuilder := builder.NewBuilder().
+		String("name")
+
+	// Calculate criteria
+	criteria := exp.And(
+		expressionBuilder.Evaluate(w._request.URL.Query()),
+		exp.Equal("privileges", "CIR:"+circle.CircleID.Hex()),
+	)
+
+	// Return the query builder
+	return NewQueryBuilder[model.Identity](w._factory.Identity(), criteria), nil
+}
+
+/******************************************
+ * Helper functions
+ ******************************************/
+
 func (w Model) setState(stateID string) error {
 
 	if setter, ok := w._object.(model.StateSetter); ok {
@@ -173,7 +237,7 @@ func (w Model) setState(stateID string) error {
 		return nil
 	}
 
-	return derp.NewInternalError("build.Model.SetState", "Object does not implement model.StateSetter interface", w._object)
+	return derp.InternalError("build.Model.SetState", "Object does not implement model.StateSetter interface", w._object)
 }
 
 func (w Model) clone(action string) (Builder, error) {

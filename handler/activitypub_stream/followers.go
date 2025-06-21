@@ -25,7 +25,7 @@ func GetFollowersCollection(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		if actor.IsNil() {
-			return derp.NewNotFoundError(location, "Actor not found")
+			return derp.NotFoundError(location, "Actor not found")
 		}
 
 		// If the request is for the collection itself, then return a summary and the URL of the first page

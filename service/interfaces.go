@@ -2,15 +2,21 @@ package service
 
 import (
 	"io"
+	"net/http"
+	"net/url"
 
-	"github.com/benpate/data"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"github.com/EmissarySocial/emissary/model"
 )
-
-type AuthorSetter interface {
-	SetAuthor(object data.Object, authorID primitive.ObjectID) error
-}
 
 type TemplateLike interface {
 	Execute(writer io.Writer, data any) error
+}
+
+type MerchantAccountAdapter interface {
+	GetSignupURL(*model.Connection) (string, error)
+	RefreshAPIKeys() error
+	GetCheckoutURL() (string, error)
+	ParseCheckoutResponse(url.Values) (model.Privilege, error)
+	ParseCheckoutWebhook(http.Header, []byte) error
+	SubscriptionCancelURL(string) (string, error)
 }

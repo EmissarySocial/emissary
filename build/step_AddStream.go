@@ -16,6 +16,7 @@ type StepAddStream struct {
 	Style         string                        // Style of input widget to use. Options are: "chooser"  and "inline".  Defaults to "chooser".
 	Title         string                        // Title to use on the create modal. Defaults to "Add a Stream"
 	Location      string                        // Options are: "top", "child", "outbox".  Defaults to "child".
+	StateID       string                        // Initial State to use when adding the Stream
 	TemplateID    string                        // ID of the template to use.  If empty, then template roles are used.
 	TemplateRoles []string                      // List of acceptable Template Roles that can be used to make a stream.  If empty, then all template for this container are valid.
 	WithData      map[string]*template.Template // Map of values to preset in the new stream
@@ -83,8 +84,9 @@ func (step StepAddStream) getChooser(builder Builder, buffer io.Writer) error {
 
 	result := WrapModalWithCloseButton(response, b.String())
 
-	// nolint:errcheck
-	io.WriteString(buffer, result)
+	if _, err := io.WriteString(buffer, result); err != nil {
+		return derp.Wrap(err, "build.StepAddStream.getChooser", "Error writing chooser HTML to buffer")
+	}
 
 	return nil
 }
@@ -172,8 +174,10 @@ func (step StepAddStream) getInline(builder Builder, buffer io.Writer) error {
 	b.Close()
 
 	// Write the whole widget back to the outpub buffer
-	// nolint:errcheck
-	buffer.Write(b.Bytes())
+	if _, err := buffer.Write(b.Bytes()); err != nil {
+		return derp.Wrap(err, location, "Error writing inline HTML to buffer")
+	}
+
 	return nil
 }
 
@@ -200,6 +204,7 @@ func (step StepAddStream) Post(builder Builder, buffer io.Writer) PipelineBehavi
 	// Create the new Stream
 	streamService := factory.Stream()
 	newStream := streamService.New()
+	newStream.StateID = step.StateID
 
 	// Assign the current user as the author (with silent failure, but why would it do that?)
 	if user, err := builder.getUser(); err == nil {
@@ -273,7 +278,7 @@ func (step StepAddStream) setLocation(builder Builder, template *model.Template,
 		streamBuilder, ok := builder.(Stream)
 
 		if !ok {
-			return derp.NewForbiddenError(location, "Cannot add child stream to non-stream builder")
+			return derp.ForbiddenError(location, "Cannot add child stream to non-stream builder")
 		}
 
 		parent := streamBuilder._stream
@@ -314,7 +319,7 @@ func (step StepAddStream) getBestTemplate(templateService *service.Template, con
 
 	// If NO Templates are eligible, then return empty string
 	if len(eligible) == 0 {
-		return []form.LookupCode{}, model.Template{}, derp.NewInternalError(location, "No eligible Templates provided")
+		return []form.LookupCode{}, model.Template{}, derp.InternalError(location, "No eligible Templates provided")
 	}
 
 	// If the Step already has a Template defined, then this overrides the passed-in value
@@ -324,7 +329,7 @@ func (step StepAddStream) getBestTemplate(templateService *service.Template, con
 				return step.getBestTemplate_result(templateService, eligible[index:index+1], step.TemplateID)
 			}
 		}
-		return []form.LookupCode{}, model.Template{}, derp.NewInternalError(location, "Template '"+step.TemplateID+"' (defined in this Step) cannot be placed within '"+containedByRole+"'")
+		return []form.LookupCode{}, model.Template{}, derp.InternalError(location, "Template '"+step.TemplateID+"' (defined in this Step) cannot be placed within '"+containedByRole+"'")
 	}
 
 	// Search eligible templates for the selected TemplateID, returning when found

@@ -3,7 +3,7 @@ package service
 import (
 	"html/template"
 	"io/fs"
-	"sort"
+	"slices"
 	"sync"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -92,9 +92,8 @@ func (service *Widget) List() []form.LookupCode {
 		})
 	}
 
-	sort.Slice(result, func(a int, b int) bool {
-		return form.SortLookupCodeByLabel(result[a], result[b])
-	})
+	// Sort the results
+	slices.SortFunc(result, form.SortLookupCodeByLabel)
 
 	return result
 }

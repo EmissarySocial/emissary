@@ -36,5 +36,5 @@ func (step StepProcessTags) Post(builder Builder, buffer io.Writer) PipelineBeha
 		return Continue()
 	}
 
-	return Halt().WithError(derp.NewInternalError(location, "This step can only be used in a Stream or User builder"))
+	return Halt().WithError(derp.InternalError(location, "This step can only be used in a Stream or User builder"))
 }

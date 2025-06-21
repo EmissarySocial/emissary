@@ -7,7 +7,7 @@
 	icon:"article"
 	actions: {
 		create: {
-			roles:["editor","owner"]
+			roles:["author","editor"]
 			steps: [
 				{
 					do:"set-data", 
@@ -17,13 +17,13 @@
 						content.raw:"{}"
 					}
 				}
-				{do:"set-state", state:"unpublished"}
+				{do:"set-state", state:"default"}
 				{do:"save"}
 				{do:"forward-to", url:"/{{.StreamID}}/edit"}
 			]
 		}
 		editor: {
-			roles: ["owner", "editor"]
+			roles: ["author", "editor"]
 			steps: [
 				{do:"with-draft", steps: [
 					{do:"edit-content", file:"editor", format:"EDITORJS"}

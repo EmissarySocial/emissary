@@ -108,7 +108,7 @@ func (client *Client) Load(url string, options ...any) (streams.Document, error)
 	if err != nil {
 
 		// If the original document is gone, and we're forcing a reload, then remove the value from the cache
-		if derp.NotFound(err) && config.forceReload {
+		if derp.IsNotFound(err) && config.forceReload {
 			if err := client.Delete(url); err != nil {
 				return result, derp.Wrap(err, "ascache.Client.Load", "Error purging document from the cache", url)
 			}
@@ -136,14 +136,14 @@ func (client *Client) Delete(url string) error {
 
 	// NPE Check
 	if client.collection == nil {
-		return derp.NewInternalError(location, "Document Collection not initialized")
+		return derp.InternalError(location, "Document Collection not initialized")
 	}
 
 	// Look for the document in the cache
 	value, err := client.Load(url)
 
 	// If there's nothing in the cache, then there's nothing to delete
-	if derp.NotFound(err) {
+	if derp.IsNotFound(err) {
 		return nil
 	}
 
@@ -215,7 +215,7 @@ func (client *Client) save(url string, document streams.Document) {
 	value := NewValue()
 	value.URLs.Append(url)
 
-	if err := client.loadByURLs(url, &value); !derp.NilOrNotFound(err) {
+	if err := client.loadByURLs(url, &value); !derp.IsNilOrNotFound(err) {
 		derp.Report(derp.Wrap(err, location, "Error searching for duplicate document in cache", document))
 		return
 	}
@@ -285,13 +285,13 @@ func (client *Client) load(criteria bson.M, value *Value) error {
 
 	// Prevent NPE
 	if client.collection == nil {
-		return derp.NewInternalError(location, "Cache connection is not defined")
+		return derp.InternalError(location, "Cache connection is not defined")
 	}
 
 	// Query the cache database
 	if err := client.collection.FindOne(context.Background(), criteria).Decode(value); err != nil {
 		if err == mongo.ErrNoDocuments {
-			return derp.NewNotFoundError(location, "Document not found", criteria)
+			return derp.NotFoundError(location, "Document not found", criteria)
 		}
 		return derp.Wrap(err, location, "Error loading document", criteria)
 	}

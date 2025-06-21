@@ -1,28 +1,49 @@
 {
-	templateId:"admin-navigation"
-	templateRole:"admin"
-	model:"stream"
+	templateId: admin-navigation
+	templateRole: admin
+	model: Stream
 	extends: ["admin-common"]
 	containedBy:["admin"]
-	label: "Top Level"
-	description: "Manages list of top-level items. (Site Admins Only)"
+	label: Top Level
+	description: Manages list of top-level items. (Site Admins Only)
 	schema: {
-		type: "object"
+		type: object
 		properties: {
 			rank: {type:"integer"}
 		}
 	}
 	actions: {
-		index: {do: "view-html"}
-		view: {do: "view-html"}
-		sort: {do: "sort"}
+		index: {
+			roles:["owner"]
+			steps:[
+				{do: "view-html"}
+			]
+		}
+
+		view: {
+			roles:["owner"]
+			steps:[
+				{do: "view-html"}
+			]
+		}
+
+		sort: {
+			roles:["owner"]
+			steps:[
+				{do: "sort"}
+			]
+		}
+
 		add: {
+			roles:["owner"]
 			steps: [
 				{do: "add-stream", location:"top"}
 				{do: "refresh-page"}
 			]
 		}
+
 		delete: {
+			roles:["owner"]
 			steps: [
 				{do:"delete", title: "Delete this Stream?", message: "All items beneath it will also be removed.  There is NO UNDO."}
 				{do: "refresh-page"}

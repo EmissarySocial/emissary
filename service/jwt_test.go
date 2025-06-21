@@ -2,6 +2,9 @@ package service
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
+	"fmt"
 	"testing"
 	"time"
 
@@ -28,7 +31,7 @@ func TestJWT(t *testing.T) {
 
 	collection := session.Collection("test")
 	service := NewJWT()
-	service.Refresh(collection, []byte("0123456789ABCDEF0123456789ABCDEF"))
+	service.Refresh(collection, "0123456789ABCDEF0123456789ABCDE0123456789ABCDEF0123456789ABCDEFF")
 
 	// Create Key1
 	name1, value1, err := service.GetCurrentKey()
@@ -68,7 +71,7 @@ func TestJWTCacheHit(t *testing.T) {
 
 	collection := session.Collection("test")
 	service := NewJWT()
-	service.Refresh(collection, []byte("0123456789ABCDEF0123456789ABCDEF"))
+	service.Refresh(collection, "0123456789ABCDEF0123456789ABCDE0123456789ABCDEF0123456789ABCDEFF")
 
 	// Create Key1
 	name1, value1, err := service.GetCurrentKey()
@@ -96,9 +99,9 @@ func TestJWTCacheMiss(t *testing.T) {
 
 	collection := session.Collection("test")
 	service := NewJWT()
-	service.Refresh(collection, []byte("0123456789ABCDEF0123456789ABCDEF"))
+	service.Refresh(collection, "0123456789ABCDEF0123456789ABCDE0123456789ABCDEF0123456789ABCDEFF")
 
-	spew.Dump(service.keyEncryptingKey)
+	spew.Dump(service.masterKey)
 
 	// Create Key1
 	name1, value1, err := service.GetCurrentKey()
@@ -130,7 +133,7 @@ func TestJWTEncryptDecrypt(t *testing.T) {
 
 	collection := session.Collection("test")
 	service := NewJWT()
-	service.Refresh(collection, []byte("0123456789ABCDEF0123456789ABCDEF"))
+	service.Refresh(collection, "0123456789ABCDEF0123456789ABCDE0123456789ABCDEF0123456789ABCDEFF")
 
 	original := []byte("This is a test.  It has to be very long because the encryption algorithms looked like they were cutting off after, idk, something like 32 bytes.  So this is mos/def more than 32 bytes.")
 	spew.Dump(original)
@@ -143,4 +146,14 @@ func TestJWTEncryptDecrypt(t *testing.T) {
 	require.Nil(t, err)
 	spew.Dump(plaintext)
 	require.Equal(t, original, plaintext)
+}
+
+func TestJWTKeyEncryptingKey(t *testing.T) {
+
+	key := make([]byte, 32)
+
+	_, err := rand.Reader.Read(key)
+	require.Nil(t, err)
+
+	fmt.Println(hex.EncodeToString(key))
 }

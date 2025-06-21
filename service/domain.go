@@ -67,20 +67,19 @@ func (service *Domain) Refresh(collection data.Collection, configuration config.
 }
 
 // Init domain guarantees that a domain record exists in the database.
-// It returns A COPY of the service domain.
 func (service *Domain) Start() error {
 
 	const location = "service.Domain.Start"
 
 	// Try to load the domain model into memory
-	_, err := service.LoadDomain()
+	err := service.collection.Load(exp.All(), &service.domain)
 
 	// In this process, some errors (like 404's) are okay,
 	// so let's look at THIS error a little more closely.
 	if err != nil {
 
 		// If it's a "real" error, then we can't continue.
-		if !derp.NotFound(err) {
+		if !derp.IsNotFound(err) {
 			return derp.Wrap(err, location, "Error loading domain record")
 		}
 
@@ -129,55 +128,33 @@ func (service *Domain) Ready() bool {
 	return service.ready
 }
 
-func (service *Domain) LoadDomain() (model.Domain, error) {
-
-	// If the domain has already been loaded, then just return it.
-	if service.domain.NotEmpty() {
-		return service.domain, nil
-	}
-
-	// Try to load the domain from the database
-	if err := service.collection.Load(exp.All(), &service.domain); err != nil {
-		return service.domain, derp.Wrap(err, "service.Domain.LoadDomain", "Domain Not Ready: Error loading domain record")
-	}
-
-	// Attach the hostname to the domain
-	// (in the future, this should probably be kept in the DB)
-	service.domain.Hostname = service.hostname
-
-	// Success.
-	return service.domain, nil
-}
-
 /******************************************
  * Common Data Methods
  ******************************************/
 
-// Load retrieves an Domain from the database (or in-memory cache)
-func (service *Domain) Get() model.Domain {
-	return service.domain
-}
-
-func (service *Domain) GetPointer() *model.Domain {
+// Get returns a pointer to the domain model object
+func (service *Domain) Get() *model.Domain {
 	return &service.domain
 }
 
 // Save updates the value of this domain in the database (and in-memory cache)
 func (service *Domain) Save(domain model.Domain, note string) error {
 
+	const location = "service.Domain.Save"
+
 	// Validate the value using the default domain schema
 	if err := model.DomainSchema().Validate(&domain); err != nil {
-		return derp.Wrap(err, "service.Domain.Save", "Error validating Domain with standard Domain schema", domain)
+		return derp.Wrap(err, location, "Error validating Domain with standard Domain schema")
 	}
 
 	// Validate the value using the custom schema for this domain
 	if err := service.Schema().Validate(&domain); err != nil {
-		return derp.Wrap(err, "service.Domain.Save", "Error validating Domain with custom schema from Theme", domain)
+		return derp.Wrap(err, location, "Error validating Domain with custom schema from Theme")
 	}
 
 	// Try to save the value to the database
 	if err := service.collection.Save(&domain, note); err != nil {
-		return derp.Wrap(err, "service.Domain.Save", "Error saving Domain")
+		return derp.Wrap(err, location, "Error saving Domain")
 	}
 
 	// Update the in-memory cache
@@ -228,15 +205,15 @@ func (service *Domain) ObjectSave(object data.Object, note string) error {
 		return service.Save(*domain, note)
 	}
 
-	return derp.NewInternalError("service.Domain.ObjectSave", "Invalid Object Type", object)
+	return derp.InternalError("service.Domain.ObjectSave", "Invalid Object Type", object)
 }
 
 func (service *Domain) ObjectDelete(object data.Object, note string) error {
-	return derp.NewBadRequestError("service.Domain.ObjectDelete", "Unsupported")
+	return derp.BadRequestError("service.Domain.ObjectDelete", "Unsupported")
 }
 
 func (service *Domain) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.NewUnauthorizedError("service.Domain", "Not Authorized")
+	return derp.UnauthorizedError("service.Domain", "Not Authorized")
 }
 
 func (service *Domain) Schema() schema.Schema {
@@ -311,18 +288,20 @@ func (service *Domain) IsLocalhost() bool {
 // OAuthCodeURL generates a new (unique) OAuth state and AuthCodeURL for the specified provider
 func (service *Domain) OAuthCodeURL(providerID string) (string, error) {
 
+	const location = "service.Domain.OAuthCodeURL"
+
 	// Get the provider for this provider
 	provider, ok := service.OAuthProvider(providerID)
 
 	if !ok {
-		return "", derp.NewBadRequestError("service.Domain.OAuthCodeURL", "Unknown OAuth Provider", providerID)
+		return "", derp.BadRequestError(location, "Unknown OAuth Provider", providerID)
 	}
 
 	// Set a new "state" for this provider
 	connection, err := service.NewOAuthClient(providerID)
 
 	if err != nil {
-		return "", derp.Wrap(err, "service.Domain.OAuthCodeURL", "Error generating new OAuth connection")
+		return "", derp.Wrap(err, location, "Error generating new OAuth connection")
 	}
 
 	// Generate and return the AuthCodeURL
@@ -351,19 +330,19 @@ func (service *Domain) OAuthExchange(providerID string, state string, code strin
 	provider, ok := service.OAuthProvider(providerID)
 
 	if !ok {
-		return derp.NewBadRequestError(location, "Unknown OAuth Provider", providerID)
+		return derp.BadRequestError(location, "Unknown OAuth Provider", providerID)
 	}
 
 	// The connection must already be set up for this exchange to work.
 	connection, err := service.connectionService.LoadOrCreateByProvider(providerID)
 
 	if err != nil {
-		return derp.NewBadRequestError(location, "Unknown OAuth Provider", providerID)
+		return derp.BadRequestError(location, "Unknown OAuth Provider", providerID)
 	}
 
 	// Validate the state across requests
 	if newState, _ := connection.Data.GetStringOK("state"); newState != state {
-		return derp.NewBadRequestError(location, "Invalid OAuth State", state)
+		return derp.BadRequestError(location, "Invalid OAuth State", state)
 	}
 
 	// Try to generate the OAuth token
@@ -374,7 +353,7 @@ func (service *Domain) OAuthExchange(providerID string, state string, code strin
 		oauth2.SetAuthURLParam("redirect_uri", service.OAuthClientCallbackURL(providerID)))
 
 	if err != nil {
-		return derp.NewInternalError(location, "Error exchanging OAuth code for token", err.Error())
+		return derp.InternalError(location, "Error exchanging OAuth code for token", err.Error())
 	}
 
 	// Try to update the connection with the new token
@@ -383,7 +362,7 @@ func (service *Domain) OAuthExchange(providerID string, state string, code strin
 	connection.Active = true
 
 	if service.connectionService.Save(&connection, "OAuth Exchange") != nil {
-		return derp.NewInternalError(location, "Error saving domain")
+		return derp.InternalError(location, "Error saving domain")
 	}
 
 	// Success!
@@ -395,10 +374,10 @@ func (service *Domain) OAuthClientCallbackURL(providerID string) string {
 	return domain.Protocol(service.configuration.Hostname) + service.configuration.Hostname + "/oauth/connections/" + providerID + "/callback"
 }
 
-// NewOAuthState generates and returns a new OAuth state for the specified provider
+// NewOAuthClient generates and returns a new OAuth state for the specified provider
 func (service *Domain) NewOAuthClient(providerID string) (model.Connection, error) {
 
-	const location = "service.Domain.NewOAuthState"
+	const location = "service.Domain.NewOAuthClient"
 
 	// Find or Create a connection for this provider
 	connection, _ := service.connectionService.LoadOrCreateByProvider(providerID)
@@ -436,20 +415,20 @@ func (service *Domain) GetOAuthToken(providerID string) (model.Connection, *oaut
 	provider, ok := service.OAuthProvider(providerID)
 
 	if !ok {
-		return model.Connection{}, nil, derp.NewBadRequestError("service.Domain.GetOAuthToken", "Unknown OAuth Provider", providerID)
+		return model.Connection{}, nil, derp.BadRequestError("service.Domain.GetOAuthToken", "Unknown OAuth Provider", providerID)
 	}
 
 	// Try to load the Connection config
 	connection := model.NewConnection()
 	if err := service.connectionService.LoadByProvider(providerID, &connection); err != nil {
-		return model.Connection{}, nil, derp.NewBadRequestError("service.Domain.GetOAuthToken", "Error reading OAuth connection")
+		return model.Connection{}, nil, derp.BadRequestError("service.Domain.GetOAuthToken", "Error reading OAuth connection")
 	}
 
 	// Retrieve the Token from the connection
 	token := connection.Token
 
 	if token == nil {
-		return model.Connection{}, token, derp.NewBadRequestError("service.Domain.GetOAuthToken", "No OAuth token found for provider", providerID)
+		return model.Connection{}, token, derp.BadRequestError("service.Domain.GetOAuthToken", "No OAuth token found for provider", providerID)
 	}
 
 	// Use TokenSource to update tokens when they expire.
@@ -483,7 +462,7 @@ func (service *Domain) LoadWebFinger(username string) (digit.Resource, error) {
 	const location = "service.User.LoadWebFinger"
 
 	if username != "service@"+service.hostname {
-		return digit.Resource{}, derp.NewBadRequestError(location, "Invalid username", username)
+		return digit.Resource{}, derp.BadRequestError(location, "Invalid username", username)
 	}
 
 	profileURL := domain.AddProtocol(service.hostname) + "/@application"

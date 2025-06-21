@@ -1,0 +1,7 @@
+{
+    emailId: user-guest-code
+    emailRole: user-guest-code
+    model: Identity
+    to: "{{.Email}}"
+    subject: Your Sign In Code for {{.Domain_Name}}
+}

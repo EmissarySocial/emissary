@@ -22,14 +22,14 @@ func SendSearchResults(factory *domain.Factory, args mapof.Any) queue.Result {
 	url := args.GetString("url")
 
 	if url == "" {
-		return queue.Failure(derp.NewInternalError(location, "'url' is required."))
+		return queue.Failure(derp.InternalError(location, "'url' is required."))
 	}
 
 	// Parse ActorID
 	actorURL := args.GetString("actor")
 
 	if actorURL == "" {
-		return queue.Failure(derp.NewInternalError(location, "'actor' is required."))
+		return queue.Failure(derp.InternalError(location, "'actor' is required."))
 	}
 
 	// Parse SearchQueryID
@@ -53,10 +53,10 @@ func SendSearchResults(factory *domain.Factory, args mapof.Any) queue.Result {
 		task := queue.NewTask(
 			"SendActivityPubMessage",
 			mapof.Any{
-				"host":          factory.Hostname(),
-				"actorType":     model.FollowerTypeSearch,
-				"searchQueryID": searchQueryID.Hex(),
-				"inboxURL":      follower.Actor.InboxURL,
+				"host":      factory.Hostname(),
+				"actorType": model.FollowerTypeSearch,
+				"actorID":   searchQueryID.Hex(),
+				"inboxURL":  follower.Actor.InboxURL,
 				"message": mapof.Any{
 					vocab.PropertyActor:  actorURL,
 					vocab.PropertyType:   vocab.ActivityTypeAnnounce,

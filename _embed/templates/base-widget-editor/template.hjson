@@ -1,8 +1,8 @@
 {
-	templateId:"base-widget-editor"
-	model:"stream"
-	label:"Widget Editor (BASE TEMPLATE)"
-	description:"Base Template to be used by other templates to edit widget locations"
+	templateId:base-widget-editor
+	model: Stream
+	label:Widget Editor (BASE TEMPLATE)
+	description:Base Template to be used by other templates to edit widget locations
 	widget-locations: ["LEFT", "TOP", "RIGHT", "BOTTOM"]
 	bundles: {
 		stylesheet: {
@@ -10,6 +10,13 @@
 		}
 		hyperscript: {
 			content-type:"text/hyperscript"
+		}
+	}
+
+	states: {
+		default: {
+			label: Default State,
+			description: Initial state for this template
 		}
 	}
 }

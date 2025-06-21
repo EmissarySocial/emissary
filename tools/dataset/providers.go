@@ -36,15 +36,46 @@ func Providers() []form.LookupCode {
 			Description: "Look up addresses and locations",
 			Group:       "MANUAL",
 		},
+		{
+			Value:       model.ConnectionProviderStripe,
+			Label:       "Stripe Payments",
+			Icon:        "stripe",
+			Description: "Allow users to accept payments via Stripe. Users copy/paste API keys directly from their own Stripe Dashboard. (Easier for Server Admins)",
+			Group:       "MANUAL",
+		},
+		{
+			Value:       model.ConnectionProviderStripeConnect,
+			Label:       "Stripe Connect",
+			Icon:        "stripe",
+			Description: "Allow users to accept payments via Stripe.  Use this configuration if you have set up Stripe Connect and want users to authenticate via OAuth. (Easier for Users)",
+			Group:       "OAUTH",
+		},
 
 		/* REMOVED FOR NOW
 		{
-			Value:       "STRIPE",
-			Label:       "Stripe",
-			Icon:        "stripe",
-			Description: "To migrate from original API key",
+			Value:       model.ConnectionProviderPayPal,
+			Label:       "PayPal Marketplace",
+			Icon:        "paypal",
+			Description: "(On Probation) Allows users to accept payments via PayPal. Requires a Marketplace account with PayPal.",
 			Group:       "MANUAL",
 		},
+		{
+			Value:       "SQUARE",
+			Label:       "Square",
+			Icon:        "square",
+			Description: "Allow users to accept payments via Square.",
+			Group:       "MANUAL",
+			Href:        "https://developer.squareup.com",
+		},
+		{
+			Value:       "SHOPIFY",
+			Label:       "Shopify",
+			Icon:        "shopify",
+			Description: "Allow users to accept payments via Shopify.",
+			Group:       "MANUAL",
+			Href:       "https://shopify.dev",
+		},
+
 		{
 			Value:       "FACEBOOK",
 			Label:       "Facebook",

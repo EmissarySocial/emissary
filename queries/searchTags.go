@@ -18,7 +18,7 @@ func SearchTags_Groups(collection data.Collection) ([]string, error) {
 	m := mongoCollection(collection)
 
 	if m == nil {
-		return nil, derp.NewInternalError(location, "Invalid collection")
+		return nil, derp.InternalError(location, "Invalid collection")
 	}
 
 	// Context

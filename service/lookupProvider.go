@@ -1,40 +1,65 @@
 package service
 
 import (
+	"net/http"
+	"slices"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/dataset"
+	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/list"
+	"github.com/benpate/rosetta/slice"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type LookupProvider struct {
-	domainService       *Domain
-	folderService       *Folder
-	groupService        *Group
-	registrationService *Registration
-	searchTagService    *SearchTag
-	templateService     *Template
-	themeService        *Theme
-	userID              primitive.ObjectID
+	circleService          *Circle
+	domainService          *Domain
+	folderService          *Folder
+	groupService           *Group
+	merchantAccountService *MerchantAccount
+	registrationService    *Registration
+	searchTagService       *SearchTag
+	streamService          *Stream
+	templateService        *Template
+	themeService           *Theme
+	request                *http.Request
+	userID                 primitive.ObjectID
 }
 
-func NewLookupProvider(domainService *Domain, folderService *Folder, groupService *Group, registrationService *Registration, searchTagService *SearchTag, templateService *Template, themeService *Theme, userID primitive.ObjectID) LookupProvider {
+func NewLookupProvider(circleService *Circle, domainService *Domain, folderService *Folder, groupService *Group, merchantAccountService *MerchantAccount, registrationService *Registration, searchTagService *SearchTag, streamService *Stream, templateService *Template, themeService *Theme, request *http.Request, userID primitive.ObjectID) LookupProvider {
 	return LookupProvider{
-		domainService:       domainService,
-		folderService:       folderService,
-		groupService:        groupService,
-		registrationService: registrationService,
-		searchTagService:    searchTagService,
-		templateService:     templateService,
-		themeService:        themeService,
-		userID:              userID,
+		circleService:          circleService,
+		domainService:          domainService,
+		folderService:          folderService,
+		groupService:           groupService,
+		merchantAccountService: merchantAccountService,
+		registrationService:    registrationService,
+		searchTagService:       searchTagService,
+		streamService:          streamService,
+		templateService:        templateService,
+		themeService:           themeService,
+		request:                request,
+		userID:                 userID,
 	}
 }
 
 func (service LookupProvider) Group(path string) form.LookupGroup {
 
 	switch path {
+
+	case "circles":
+		return NewCircleLookupProvider(service.circleService, service.userID)
+
+	case "circle-icons":
+		return form.NewReadOnlyLookupGroup(dataset.Icons()...)
+
+	case "folders":
+		return NewFolderLookupProvider(service.folderService, service.userID)
+
+	case "folder-icons":
+		return form.NewReadOnlyLookupGroup(dataset.Icons()...)
 
 	case "following-behaviors":
 		return form.NewReadOnlyLookupGroup(
@@ -50,31 +75,26 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 			form.LookupCode{Value: "BLOCK", Label: "BLOCK senders and prevent followers who are blocked by this source (two-way block)"},
 		)
 
-	case "rule-actions":
-		return form.NewReadOnlyLookupGroup(
-			form.LookupCode{Value: "LABEL", Label: "LABEL posts that match this rule"},
-			form.LookupCode{Value: "MUTE", Label: "MUTE senders but do not prevent followers (one-way block)"},
-			form.LookupCode{Value: "BLOCK", Label: "BLOCK senders and prevent followers (two-way block)"},
-		)
-
-	case "rule-types":
-		return form.NewReadOnlyLookupGroup(
-			form.LookupCode{Label: "Filter by Person", Value: model.RuleTypeActor},
-			form.LookupCode{Label: "Filter by Domain", Value: model.RuleTypeDomain},
-			form.LookupCode{Label: "Filter by Tags & Keywords", Value: model.RuleTypeContent},
-		)
-
-	case "folders":
-		return NewFolderLookupProvider(service.folderService, service.userID)
-
-	case "folder-icons":
-		return form.NewReadOnlyLookupGroup(dataset.Icons()...)
-
 	case "groups":
 		return NewGroupLookupProvider(service.groupService)
 
+	case "identifier-types":
+		return form.NewReadOnlyLookupGroup(
+			form.LookupCode{Label: "Fediverse Handle", Value: model.IdentifierTypeWebFinger},
+			form.LookupCode{Label: "Email Address", Value: model.IdentifierTypeEmail},
+		)
+
 	case "inbox-templates":
 		return form.ReadOnlyLookupGroup(service.templateService.ListByTemplateRole("user-inbox"))
+
+	case "merchantAccounts":
+		return service.getMerchantAccounts()
+
+	case "merchantAccount-products":
+		return service.getMerchantAccountProducts()
+
+	case "merchantAccounts-all-products":
+		return service.getMerchantAccountsAllProducts()
 
 	case "outbox-templates":
 		return form.ReadOnlyLookupGroup(service.templateService.ListByTemplateRole("user-outbox"))
@@ -92,6 +112,20 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 			form.LookupCode{Label: "Question", Group: "Like", Value: "❓"},
 			form.LookupCode{Label: "Crown", Group: "Like", Value: "👑"},
 			form.LookupCode{Label: "Fire", Group: "Like", Value: "🔥"},
+		)
+
+	case "rule-actions":
+		return form.NewReadOnlyLookupGroup(
+			form.LookupCode{Value: "LABEL", Label: "LABEL posts that match this rule"},
+			form.LookupCode{Value: "MUTE", Label: "MUTE senders but do not prevent followers (one-way block)"},
+			form.LookupCode{Value: "BLOCK", Label: "BLOCK senders and prevent followers (two-way block)"},
+		)
+
+	case "rule-types":
+		return form.NewReadOnlyLookupGroup(
+			form.LookupCode{Label: "Filter by Person", Value: model.RuleTypeActor},
+			form.LookupCode{Label: "Filter by Domain", Value: model.RuleTypeDomain},
+			form.LookupCode{Label: "Filter by Tags & Keywords", Value: model.RuleTypeContent},
 		)
 
 	case "searchTag-states":
@@ -114,6 +148,9 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 
 	case "signup-templates":
 		return form.ReadOnlyLookupGroup(service.registrationService.List())
+
+	case "streams-with-products":
+		return service.getSubscribableStreams()
 
 	case "syndication-targets":
 		domain := service.domainService.Get()
@@ -152,5 +189,124 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 
 	// Fall through means one or more of the above tests failed.
 	// We couldn't find the template or dataset, so just return an empty group.
+	derp.Report(derp.InternalError("service.LookupProvider.Group", "Could not find template or dataset named '"+path+"'"))
 	return form.NewReadOnlyLookupGroup()
+}
+
+/******************************************
+ * Custom Queries
+ ******************************************/
+
+// getSubscribableStreams returns all streams that have subscribe-able content
+func (service *LookupProvider) getSubscribableStreams() form.LookupGroup {
+
+	// Query all streams in the User's outbox that are subscribe-able
+	streams, err := service.streamService.QuerySubscribable(service.userID)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, "service.LookupProvider.getSubscribableStreams", "Error loading streams with products"))
+		return form.NewReadOnlyLookupGroup()
+	}
+
+	// Convert results into a LookupGroup
+	lookupCodes := slice.Map(streams, func(streamSummary model.StreamSummary) form.LookupCode {
+		return form.LookupCode{
+			Group: streamSummary.TemplateID,
+			Value: streamSummary.StreamID(),
+			Label: streamSummary.Label,
+		}
+	})
+
+	// Subbesss!!
+	return form.NewReadOnlyLookupGroup(lookupCodes...)
+}
+
+// getMerchantAccounts returns all merchant accounts for the current user
+func (service *LookupProvider) getMerchantAccounts() form.LookupGroup {
+
+	const location = "service.LookupProvider.getMerchantAccounts"
+
+	// Load the Merchant Accounts for this User
+	result, err := service.merchantAccountService.QueryByUser(service.userID)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, location, "Error loading merchant accounts"))
+		return form.NewReadOnlyLookupGroup()
+	}
+
+	lookupCodes := slice.Map(result, func(merchantAccount model.MerchantAccount) form.LookupCode {
+		return merchantAccount.LookupCode()
+	})
+
+	// Success?!?!?
+	return form.NewReadOnlyLookupGroup(lookupCodes...)
+}
+
+// getMerchantAccountProducts returns all products defined by the selected merchant account
+func (service *LookupProvider) getMerchantAccountProducts() form.LookupGroup {
+
+	const location = "service.LookupProvider.getMerchantAccountProducts"
+
+	// Locate the Merchant Account in the User's profile
+	token := service.request.URL.Query().Get("merchantAccountId")
+	merchantAccount := model.NewMerchantAccount()
+
+	if err := service.merchantAccountService.LoadByUserAndToken(service.userID, token, &merchantAccount); err != nil {
+		derp.Report(derp.Wrap(err, location, "Error loading merchant account"))
+		return form.NewReadOnlyLookupGroup()
+	}
+
+	// Load the Products for this Merchant Account
+	remoteProducts, err := service.merchantAccountService.getRemoteProducts(&merchantAccount)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, location, "Error loading merchant account products"))
+		return form.NewReadOnlyLookupGroup()
+	}
+
+	lookupCodes := mapRemoteProductsToLookupCodes(remoteProducts...)
+
+	// Success?!?!?
+	return form.NewReadOnlyLookupGroup(lookupCodes...)
+}
+
+// getMerchantAccountsAllProducts returns all products defined by the selected merchant account
+func (service *LookupProvider) getMerchantAccountsAllProducts() form.LookupGroup {
+
+	const location = "service.LookupProvider.getMerchantAccountsAllProducts"
+
+	// Load all Merchant Accounts for this User (probably just one, though)
+	merchantAccounts, err := service.merchantAccountService.QueryByUser(service.userID)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, location, "Error loading merchant accounts"))
+		return form.NewReadOnlyLookupGroup()
+	}
+
+	// If there are no merchant accounts, then return an empty group
+	if len(merchantAccounts) == 0 {
+		return form.NewReadOnlyLookupGroup()
+	}
+
+	// Find all products for each Merchant Account
+	result := make([]form.LookupCode, 0)
+	for _, merchantAccount := range merchantAccounts {
+
+		remoteProducts, err := service.merchantAccountService.getRemoteProducts(&merchantAccount)
+
+		if err != nil {
+			derp.Report(derp.Wrap(err, location, "Error loading merchant account products"))
+			return form.NewReadOnlyLookupGroup()
+		}
+
+		lookupCodes := mapRemoteProductsToLookupCodes(remoteProducts...)
+
+		result = append(result, lookupCodes...)
+	}
+
+	// Sort the results by label
+	slices.SortFunc(result, form.SortLookupCodeByLabel)
+
+	// Everything is cool when you're part of a team.
+	return form.NewReadOnlyLookupGroup(result...)
 }

@@ -29,7 +29,7 @@ func GetStartup(serverFactory *server.Factory) echo.HandlerFunc {
 
 		// Only domain owners can access admin pages
 		if !isOwner(sterankoContext.Authorization()) {
-			return derp.NewUnauthorizedError(location, "Unauthorized")
+			return derp.UnauthorizedError(location, "Unauthorized")
 		}
 
 		// Collect parameters to build
@@ -78,7 +78,7 @@ func PostStartup(serverFactory *server.Factory) echo.HandlerFunc {
 
 		// Only domain owners can access admin pages
 		if !isOwner(sterankoContext.Authorization()) {
-			return derp.NewUnauthorizedError(location, "Unauthorized")
+			return derp.UnauthorizedError(location, "Unauthorized")
 		}
 
 		// Try to load the requested theme from the Theme Service
@@ -87,16 +87,12 @@ func PostStartup(serverFactory *server.Factory) echo.HandlerFunc {
 		theme := themeService.GetTheme(themeID)
 
 		if theme.IsEmpty() {
-			return derp.NewNotFoundError("handler.PostStartup", "Theme not found", themeID)
+			return derp.NotFoundError("handler.PostStartup", "Theme not found", themeID)
 		}
 
 		// Load/Initialize the Domain value
 		domainService := factory.Domain()
-		domain, err := domainService.LoadDomain()
-
-		if err != nil {
-			return derp.Wrap(err, location, "Error loading domain")
-		}
+		domain := *domainService.Get()
 
 		// Save the new ThemeID to the database
 		domain.ThemeID = themeID

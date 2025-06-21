@@ -70,12 +70,12 @@ func GetWebSubClient(serverFactory *server.Factory) echo.HandlerFunc {
 
 		// RULE: Require that this Following uses WebSub
 		if following.Method != model.FollowingMethodWebSub {
-			return derp.NewBadRequestError(location, "Not a WebSub follow", following, transaction)
+			return derp.BadRequestError(location, "Not a WebSub follow", following, transaction)
 		}
 
 		// RULE: Require that the Topic URL matches this Following
 		if transaction.Topic != following.URL {
-			return derp.NewNotFoundError(location, "Invalid WebSub topic", following, transaction)
+			return derp.NotFoundError(location, "Invalid WebSub topic", following, transaction)
 		}
 
 		// RULE: Force another poll in half the time of this lease
@@ -136,7 +136,7 @@ func PostWebSubClient(serverFactory *server.Factory) echo.HandlerFunc {
 
 		// Validate the request (B)
 		if following.Method != model.FollowingMethodWebSub {
-			return derp.NewBadRequestError(location, "Not a WebSub follow", following)
+			return derp.BadRequestError(location, "Not a WebSub follow", following)
 		}
 
 		// Validate the HMAC signature

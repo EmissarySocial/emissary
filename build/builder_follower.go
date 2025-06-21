@@ -29,18 +29,18 @@ func NewFollower(factory Factory, request *http.Request, response http.ResponseW
 
 	const location = "build.NewFollower"
 
-	common, err := NewCommonWithTemplate(factory, request, response, template, actionID)
+	common, err := NewCommonWithTemplate(factory, request, response, template, follower, actionID)
 
 	if err != nil {
 		return Follower{}, derp.Wrap(err, "build.NewFollower", "Error creating new model")
 	}
 
 	// Enforce user permissions on the requested action
-	if !common._action.UserCan(follower, &common._authorization) {
+	if !common.UserCan(actionID) {
 		if common._authorization.IsAuthenticated() {
-			return Follower{}, derp.ReportAndReturn(derp.NewForbiddenError(location, "Forbidden"))
+			return Follower{}, derp.ReportAndReturn(derp.ForbiddenError(location, "Forbidden"))
 		} else {
-			return Follower{}, derp.ReportAndReturn(derp.NewUnauthorizedError(location, "Anonymous user is not authorized to perform this action", actionID))
+			return Follower{}, derp.ReportAndReturn(derp.UnauthorizedError(location, "Anonymous user is not authorized to perform this action", actionID))
 		}
 	}
 

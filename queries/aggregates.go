@@ -41,7 +41,7 @@ func GroupBy(collection data.Collection, pipeline []bson.M) (mapof.Int, error) {
 	mongo := mongoCollection(collection)
 
 	if mongo == nil {
-		return nil, derp.NewInternalError("queries.GroupBy", "Collection is not a MongoDB collection")
+		return nil, derp.InternalError("queries.GroupBy", "Collection is not a MongoDB collection")
 	}
 
 	ctx := context.TODO()

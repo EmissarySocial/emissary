@@ -1,29 +1,39 @@
 {
 	templateId:admin-following
 	templateRole:admin
-	model:domain
+	model:Domain
 	extends: ["admin-common"]
 	containedBy:["admin"]
 	label:Search
 	description: Manage Search Engine Settings
 
 	actions: {
-		index: {do:"view-html"}
+		index: {
+			roles:["owner"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
 
 		create: {
-			do:with-followers
-			steps: [
+			roles:["owner"]
+			steps:[
 				{
-					do:as-modal
+					do:with-follower
 					steps: [
 						{
-							do:edit
-							form:{
-								type:layout-vertical
-								children:[
-									{type:"text", path:"url", label:"Actor", placeholder:"@search@servername.social", required:true, validation:{type:"string", min:1, max:100}},
-								]
-							}
+							do:as-modal
+							steps: [
+								{
+									do:edit
+									form:{
+										type:layout-vertical
+										children:[
+											{type:"text", path:"url", label:"Actor", placeholder:"@search@servername.social", required:true, validation:{type:"string", min:1, max:100}},
+										]
+									}
+								}
+							]
 						}
 					]
 				}

@@ -40,8 +40,9 @@ func (step StepDelete) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 
 	modalHTML := WrapModal(builder.response(), b.String())
 
-	// nolint:errcheck
-	io.WriteString(buffer, modalHTML)
+	if _, err := io.WriteString(builder.response(), modalHTML); err != nil {
+		return Halt().WithError(derp.Wrap(err, "build.StepDelete.Get", "Error writing from builder to buffer"))
+	}
 
 	return Halt().AsFullPage()
 }

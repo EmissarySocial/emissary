@@ -1,31 +1,46 @@
 {
 	templateId:admin-followers
 	templateRole:admin
-	model:domain
-	extends: ["admin-common"]
+	model:Domain
+	extends:["admin-common"]
 	containedBy:["admin"]
 	label:Search
 	description: Manage Search Engine Settings
 
-	actions: {
-		index: {do:"view-html"}
+	actions:{
+		index: {
+			roles:["owner"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
 
-		edit: {
-			do:with-followers
-			steps: [
+		edit:{
+			roles:["owner"]
+			steps:[
 				{
-					do:as-modal
+					do:with-follower
 					steps: [
-					{do:"view-html"}
+						{
+							do:as-modal
+							steps: [
+								{do:"view-html"}
+							]
+						}
 					]
 				}
 			]
 		}
 
-		delete: {
-			do:with-followers
+		delete:{
+			roles:["owner"]
 			steps:[
-				{do:"delete"}
+				{
+					do:with-follower
+					steps:[
+						{do:"delete"}
+					]
+				}
 			]
 		}
 	}

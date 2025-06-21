@@ -10,34 +10,33 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/toot/object"
-	"github.com/golang-jwt/jwt/v5"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // User represents a person or machine account that can own pages and sections.
 type User struct {
-	UserID          primitive.ObjectID         `json:"userId"          bson:"_id"`                  // Unique identifier for this user.
-	MapIDs          mapof.String               `json:"mapIds"          bson:"mapIds"`               // Map of IDs for this user on other web services.
-	GroupIDs        id.Slice                   `json:"groupIds"        bson:"groupIds"`             // Slice of IDs for the groups that this user belongs to.
-	IconID          primitive.ObjectID         `json:"iconId"          bson:"iconId"`               // AttachmentID of this user's avatar/icon image.
-	ImageID         primitive.ObjectID         `json:"imageId"         bson:"imageId"`              // AttachmentID of this user's banner image.
-	DisplayName     string                     `json:"displayName"     bson:"displayName"`          // Name to be displayed for this user
-	StatusMessage   string                     `json:"statusMessage"   bson:"statusMessage"`        // Status summary for this user
-	Location        string                     `json:"location"        bson:"location"`             // Human-friendly description of this user's physical location.
-	ProfileURL      string                     `json:"profileUrl"      bson:"profileUrl"`           // Fully Qualified profile URL for this user (including domain name)
-	EmailAddress    string                     `json:"emailAddress"    bson:"emailAddress"`         // Email address for this user
-	Username        string                     `json:"username"        bson:"username"`             // This is the primary public identifier for the user.
-	Password        string                     `json:"-"               bson:"password"`             // This password should be encrypted with BCrypt.
-	Locale          string                     `json:"locale"          bson:"locale"`               // Language code for this user's preferred language.
-	SignupNote      string                     `json:"signupNote"      bson:"signupNote,omitempty"` // Note that was included when this user signed up.
-	StateID         string                     `json:"stateId"         bson:"stateId"`              // State ID for this user
-	InboxTemplate   string                     `json:"inboxTemplate"   bson:"inboxTemplate"`        // Template for the user's inbox
-	OutboxTemplate  string                     `json:"outboxTemplate"  bson:"outboxTemplate"`       // Template for the user's outbox
-	NoteTemplate    string                     `json:"noteTemplate"    bson:"noteTemplate"`         // Template for generically created notes
-	Hashtags        sliceof.String             `json:"hashtags"        bson:"hashtags"`             // Slice of tags that can be used to categorize this user.
-	Links           sliceof.Object[PersonLink] `json:"links"           bson:"links"`                // Slice of links to profiles on other web services.
-	PasswordReset   PasswordReset              `json:"-"               bson:"passwordReset"`        // Most recent password reset information.
-	Data            mapof.String               `json:"data"            bson:"data"`                 // Custom profile data that can be stored with this User.
+	UserID          primitive.ObjectID                 `json:"userId"          bson:"_id"`                  // Unique identifier for this user.
+	MapIDs          mapof.String                       `json:"mapIds"          bson:"mapIds"`               // Map of IDs for this user on other web services.
+	GroupIDs        sliceof.Object[primitive.ObjectID] `json:"groupIds"        bson:"groupIds"`             // Slice of IDs for the groups that this user belongs to.
+	IconID          primitive.ObjectID                 `json:"iconId"          bson:"iconId"`               // AttachmentID of this user's avatar/icon image.
+	ImageID         primitive.ObjectID                 `json:"imageId"         bson:"imageId"`              // AttachmentID of this user's banner image.
+	DisplayName     string                             `json:"displayName"     bson:"displayName"`          // Name to be displayed for this user
+	StatusMessage   string                             `json:"statusMessage"   bson:"statusMessage"`        // Status summary for this user
+	Location        string                             `json:"location"        bson:"location"`             // Human-friendly description of this user's physical location.
+	ProfileURL      string                             `json:"profileUrl"      bson:"profileUrl"`           // Fully Qualified profile URL for this user (including domain name)
+	EmailAddress    string                             `json:"emailAddress"    bson:"emailAddress"`         // Email address for this user
+	Username        string                             `json:"username"        bson:"username"`             // This is the primary public identifier for the user.
+	Password        string                             `json:"-"               bson:"password"`             // This password should be encrypted with BCrypt.
+	Locale          string                             `json:"locale"          bson:"locale"`               // Language code for this user's preferred language.
+	SignupNote      string                             `json:"signupNote"      bson:"signupNote,omitempty"` // Note that was included when this user signed up.
+	StateID         string                             `json:"stateId"         bson:"stateId"`              // State ID for this user
+	InboxTemplate   string                             `json:"inboxTemplate"   bson:"inboxTemplate"`        // Template for the user's inbox
+	OutboxTemplate  string                             `json:"outboxTemplate"  bson:"outboxTemplate"`       // Template for the user's outbox
+	NoteTemplate    string                             `json:"noteTemplate"    bson:"noteTemplate"`         // Template for generically created notes
+	Hashtags        sliceof.String                     `json:"hashtags"        bson:"hashtags"`             // Slice of tags that can be used to categorize this user.
+	Links           sliceof.Object[PersonLink]         `json:"links"           bson:"links"`                // Slice of links to profiles on other web services.
+	PasswordReset   PasswordReset                      `json:"-"               bson:"passwordReset"`        // Most recent password reset information.
+	Data            mapof.String                       `json:"data"            bson:"data"`                 // Custom profile data that can be stored with this User.
 	journal.Journal `json:"-" bson:",inline"`
 
 	FollowerCount  int  `json:"followerCount"   bson:"followerCount"`  // Number of followers for this user
@@ -53,7 +52,7 @@ func NewUser() User {
 	return User{
 		UserID:   primitive.NewObjectID(),
 		MapIDs:   mapof.NewString(),
-		GroupIDs: make([]primitive.ObjectID, 0),
+		GroupIDs: sliceof.NewObject[primitive.ObjectID](),
 		Links:    sliceof.NewObject[PersonLink](),
 		Data:     mapof.NewString(),
 	}
@@ -98,6 +97,18 @@ func (user User) Summary() UserSummary {
 /******************************************
  * Group Interface
  ******************************************/
+
+func (user *User) IsGroupMember(groupIDs ...primitive.ObjectID) bool {
+
+	for _, groupID := range groupIDs {
+		for _, existingID := range user.GroupIDs {
+			if existingID == groupID {
+				return true
+			}
+		}
+	}
+	return false
+}
 
 // AddGroup adds a new group to this user's list of groups, avoiding duplicates
 func (user *User) AddGroup(groupID primitive.ObjectID) {
@@ -146,76 +157,47 @@ func (user *User) SetPassword(password string) {
 	user.Password = password
 }
 
-// Claims returns all access privileges given to this user.  A part of the "steranko.User" interface.
-func (user *User) Claims() jwt.Claims {
-
-	result := Authorization{
-		UserID:      user.UserID,
-		GroupIDs:    user.GroupIDs,
-		DomainOwner: user.IsOwner,
-		RegisteredClaims: jwt.RegisteredClaims{
-			IssuedAt:  jwt.NewNumericDate(time.Now()),                   // Current create date.  (Used by Steranko to refresh tokens)
-			ExpiresAt: jwt.NewNumericDate(time.Now().AddDate(10, 0, 0)), // Expires ten years from now (but re-validated sooner by Steranko)
-		},
-	}
-
-	return result
-}
-
-/******************************************
- * RoleStateEnumerator Interface
- ******************************************/
-
-// State returns the current state of this object.
-// For users, there is no state, so it returns ""
-func (user *User) State() string {
-	return user.StateID
-}
-
-// Roles returns a list of all roles that match the provided authorization
-func (user *User) Roles(authorization *Authorization) []string {
-
-	// Everyone has "anonymous" access
-	result := []string{}
-
-	if user.IsPublic {
-		result = append(result, MagicRoleAnonymous)
-	}
-
-	// If the visitor is not signed in, then we're done.
-	if authorization == nil {
-		return result
-	}
-
-	// If the visitor is signed in as an "empty" user, then we're doine.
-	if authorization.UserID == primitive.NilObjectID {
-		return result
-	}
-
-	// Owners are hard-coded to do everything, so no other roles need to be returned.
-	if authorization.DomainOwner {
-		return []string{MagicRoleOwner}
-	}
-
-	// If we know who you are, then you're "Authenticated"
-	result = append(result, MagicRoleAuthenticated)
-
-	// Users sometimes have special permissions over their own records.
-	if authorization.UserID == user.UserID {
-		result = append(result, MagicRoleMyself)
-	}
-
-	// TODO: LOW: Add special roles for follower/following?
-
-	return result
-}
-
 /******************************************
  * StateSetter Methods
  ******************************************/
 
 func (user *User) SetState(stateID string) {
 	user.StateID = stateID
+}
+
+/******************************************
+ * AccessLister Interface
+ ******************************************/
+
+// State returns the current state of this User.
+// It is part of the AccessLister interface
+func (user *User) State() string {
+	// return user.StateID
+	return "default" // This is a hack to maybe make this work.
+}
+
+// IsAuthor returns TRUE if the provided UserID the author of this User
+// It is part of the AccessLister interface
+func (user *User) IsAuthor(authorID primitive.ObjectID) bool {
+	return false
+}
+
+// IsMyself returns TRUE if this object directly represents the provided UserID
+// It is part of the AccessLister interface
+func (user *User) IsMyself(userID primitive.ObjectID) bool {
+	return userID == user.UserID
+}
+
+// RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.
+// It is part of the AccessLister interface
+func (user *User) RolesToGroupIDs(roleIDs ...string) id.Slice {
+	return id.NewSlice()
+}
+
+// RolesToPrivileges returns a slice of Privileges that grant access to any of the requested roles.
+// It is part of the AccessLister interface
+func (user *User) RolesToPrivileges(roleIDs ...string) sliceof.String {
+	return sliceof.NewString()
 }
 
 /******************************************
@@ -415,7 +397,7 @@ func (user User) ActivityIntentProfile() mapof.Any {
 		vocab.PropertyName:              user.DisplayName,
 		vocab.PropertyIcon:              user.ActivityPubIconURL(),
 		vocab.PropertyURL:               user.ActivityPubURL(),
-		vocab.PropertyPreferredUsername: "@" + user.Username + "@" + user.Host(),
+		vocab.PropertyPreferredUsername: "@" + user.Username + "@" + user.Hostname(),
 	}
 }
 

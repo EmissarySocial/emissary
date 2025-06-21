@@ -100,7 +100,7 @@ func (service *Rule) Channel(criteria exp.Expression, options ...option.Option) 
 		return nil, derp.Wrap(err, "service.Rule.Channel", "Error creating iterator", criteria, options)
 	}
 
-	return iterator.Channel[model.Rule](it, model.NewRule), nil
+	return iterator.Channel(it, model.NewRule), nil
 }
 
 // Load retrieves an Rule from the database
@@ -222,18 +222,18 @@ func (service *Rule) ObjectSave(object data.Object, comment string) error {
 	if rule, ok := object.(*model.Rule); ok {
 		return service.Save(rule, comment)
 	}
-	return derp.NewInternalError("service.Rule.ObjectSave", "Invalid Object Type", object)
+	return derp.InternalError("service.Rule.ObjectSave", "Invalid Object Type", object)
 }
 
 func (service *Rule) ObjectDelete(object data.Object, comment string) error {
 	if rule, ok := object.(*model.Rule); ok {
 		return service.Delete(rule, comment)
 	}
-	return derp.NewInternalError("service.Rule.ObjectDelete", "Invalid Object Type", object)
+	return derp.InternalError("service.Rule.ObjectDelete", "Invalid Object Type", object)
 }
 
 func (service *Rule) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.NewUnauthorizedError("service.Rule", "Not Authorized")
+	return derp.UnauthorizedError("service.Rule", "Not Authorized")
 }
 
 func (service *Rule) Schema() schema.Schema {
@@ -423,7 +423,7 @@ func (service *Rule) hasDuplicate(rule *model.Rule) bool {
 	duplicate := model.NewRule()
 
 	// If a duplicate is not found, then return FALSE
-	if err := service.Load(criteria, &duplicate); derp.NotFound(err) {
+	if err := service.Load(criteria, &duplicate); derp.IsNotFound(err) {
 		return false
 	}
 

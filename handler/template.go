@@ -4,24 +4,17 @@ import (
 	"bytes"
 
 	"github.com/EmissarySocial/emissary/domain"
-	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
-	"github.com/labstack/echo/v4"
+	"github.com/benpate/steranko"
 )
 
-func executeDomainTemplate(fm *server.Factory, ctx echo.Context, templateName string) error {
+func executeDomainTemplate(ctx *steranko.Context, factory *domain.Factory, templateName string) error {
 
 	const location = "handler.executeDomainTemplate"
 
 	var buffer bytes.Buffer
 
-	// Try to load the factory and domain
-	factory, domain, err := loadFactoryAndDomain(fm, ctx)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Error getting factory")
-	}
+	domain := factory.Domain().Get()
 
 	// Find and execute the template
 	template := factory.Domain().Theme().HTMLTemplate
@@ -32,22 +25,4 @@ func executeDomainTemplate(fm *server.Factory, ctx echo.Context, templateName st
 
 	// Write the result to the response.
 	return ctx.HTML(200, buffer.String())
-}
-
-// TODO: This should be refactored away using With* wrappers.
-func loadFactoryAndDomain(fm *server.Factory, ctx echo.Context) (*domain.Factory, model.Domain, error) {
-
-	const location = "handler.loadFactoryAndDomain"
-
-	// Try to locate the factory for this domain
-	factory, err := fm.ByContext(ctx)
-
-	if err != nil {
-		return nil, model.Domain{}, derp.Wrap(err, location, "Error getting factory")
-	}
-
-	// Get the domain record
-	domain := factory.Domain().Get()
-
-	return factory, domain, nil
 }

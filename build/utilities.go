@@ -10,11 +10,13 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
+	"github.com/benpate/form"
 	"github.com/benpate/html"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
 )
@@ -26,7 +28,7 @@ func WrapInlineSuccess(response http.ResponseWriter, message any) error {
 	response.Header().Set("HX-Retarget", "#htmx-response-message")
 	response.WriteHeader(http.StatusOK)
 
-	_, err := response.Write([]byte(`<span class="green">` + convert.String(message) + `</span>`))
+	_, err := response.Write([]byte(`<span class="text-green">` + convert.String(message) + `</span>`))
 	return derp.Wrap(err, "build.WrapInlineSuccess", "Error writing response", message)
 }
 
@@ -125,8 +127,6 @@ func WrapForm(endpoint string, content string, encoding string, options ...strin
 	b.WriteString(content)
 
 	// Controls
-	b.Div()
-
 	submitLabel := first.String(optionMap.GetString("submit-label"), "Save Changes")
 
 	b.Div().Class("flex-row")
@@ -178,9 +178,9 @@ func TriggerEvent(ctx echo.Context, event string) {
 }
 
 // getAuthorization extracts a model.Authorization record from the steranko.Context
-func getAuthorization(st *steranko.Steranko, request *http.Request) model.Authorization {
+func getAuthorization(steranko *steranko.Steranko, request *http.Request) model.Authorization {
 
-	if claims, err := st.GetAuthorization(request); err == nil {
+	if claims, err := steranko.GetAuthorization(request); err == nil {
 
 		if auth, ok := claims.(*model.Authorization); ok {
 			return *auth
@@ -335,4 +335,15 @@ func getSearchResult(builder Builder) model.SearchResult {
 	}
 
 	return model.SearchResult{}
+}
+
+func mapRemoteProductsToLookupCodes(remoteProducts ...model.RemoteProduct) sliceof.Object[form.LookupCode] {
+
+	lookupCodes := make([]form.LookupCode, len(remoteProducts))
+
+	for index, remoteProduct := range remoteProducts {
+		lookupCodes[index] = remoteProduct.LookupCode()
+	}
+
+	return lookupCodes
 }

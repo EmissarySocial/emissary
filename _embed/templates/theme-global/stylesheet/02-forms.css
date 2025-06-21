@@ -72,6 +72,39 @@ input[type=radio] {
 	border: none;
 }
 
+.disabled {
+	color: var(--input-color-disabled);
+	cursor: default;
+	pointer-events: none;
+	user-select: none;
+}
+
+/******************************************
+ * Checkbutton - Fancy Checkboxes
+ ******************************************/
+
+label.checkbutton:has(input[type=checkbox]) {
+	display:flex!important;
+	flex-direction:row;
+	align-items:center;
+	cursor:pointer;
+	border:solid 2px var(--gray20);
+	background-color: var(--gray05);
+	border-radius:var(--rhythm);
+	padding:calc(var(--rhythm) * 2) var(--rhythm);
+}
+
+label.checkbutton:has(input[type=checkbox]:checked) {
+	border:solid 2px var(--blue50);
+	color:var(--blue50);
+	background-color: var(--blue10);
+}
+
+label.checkbutton input[type=checkbox] {
+	display:none;
+}
+
+
 /******************************************
  * Toggle Controls
  ******************************************/
@@ -148,9 +181,9 @@ input[type=radio] {
 	display:block;
 	flex-grow:1;
 	border: solid 1px var(--input-border);
+	border-radius:calc(var(--rhythm) * 0.75);
 	background-color: var(--input-background);
 	height:auto;
-	margin-right:10px;
 	overflow-y:auto;
 	overflow-x:hidden;
 }
@@ -162,6 +195,7 @@ input[type=radio] {
 	border-top: solid 1px rgba(0,0,0,0);
 	border-bottom: solid 1px var(--gray20);
 	transition:background-color 100ms;
+	white-space:nowrap;
 }
 
 .multiselect > .options > label.selected,
@@ -179,6 +213,16 @@ input[type=radio] {
 	margin-right:0.5em;
 	height:2em;
 	width:2em;
+}
+
+.multiselect > .options > .multiselect-header {
+	display:block;
+	padding:10px 5px 5px 5px;
+	cursor: pointer;
+	border-top: solid 1px rgba(0,0,0,0);
+	border-bottom: solid 1px var(--gray20);
+	font-weight:bold;
+	font-size: calc(var(--rhythm) * 1.75);
 }
 
 .multiselect > .options > label > div {
@@ -290,6 +334,25 @@ button.primary:focus,
 	background-color: var(--button-primary-background-hover);
 	color: var(--button-primary-color-hover);
 }
+
+button.highlight,
+button.highlight:hover,
+.button.highlight,
+.button.highlight:hover {
+	background-color: var(--gray60);
+	color: var(--white);
+}
+
+
+button.outline,
+button.outline:hover,
+.button.outline,
+.button.outline:hover {
+	background-color: rgba(0,0,0,0);
+	color: var(--button-primary-background);
+	border:solid 1px var(--button-primary-background);
+}
+
 
 button.selected,
 .button.selected {
@@ -405,7 +468,6 @@ button.button-invisible {
 	border-bottom-right-radius:5px;
 }
 
-
 .button-progress {
 	position:absolute;
 	top:0px;
@@ -436,7 +498,7 @@ button.button-invisible {
 	margin-bottom: calc(var(--rhythm) * 4);
 }
 
-.layout-vertical > .layout-vertical-elements > .layout-vertical-heading {
+.layout-vertical > .layout-elements > .layout-vertical-heading {
 	font-weight: calc(var(--weight) + 200);
 	font-size: calc(var(--rhythm) * 2);
 	line-height: calc(var(--rhythm) * 2);
@@ -445,25 +507,25 @@ button.button-invisible {
 	color: var(--heading-color);
 }
 
-.layout-vertical > .layout-vertical-elements > .layout-vertical-element {
+.layout-vertical > .layout-elements > .layout-element {
 	margin-bottom:24px;
 }
 
-.layout-vertical > .layout-vertical-elements > .layout-vertical-element > label {
+.layout-vertical > .layout-elements > .layout-element > label {
 	margin-bottom:8px;
 	display:block;
 }
 
-.layout-vertical > .layout-vertical-elements > .layout-vertical-element > input {
+.layout-vertical > .layout-elements > .layout-element > input {
 	display:block;
 }
 
-.layout-vertical > .layout-vertical-element > input[type=checkbox] {
+.layout-vertical > .layout-element > input[type=checkbox] {
 	display:inline-block;
 	vertical-align: middle;
 }
 
-.layout-horizontal > .layout-horizontal-elements {
+.layout-horizontal > .layout-elements {
 	display:flex;
 	flex-direction: row;
 	flex-wrap:nowrap;
@@ -473,11 +535,11 @@ button.button-invisible {
 	width:100%;
 }
 
-.layout-horizontal > .layout-horizontal-elements > .layout-horizontal-element {
+.layout-horizontal > .layout-elements > .layout-element {
 	display:block;
 }
 
-.layout-horizontal > .layout-horizontal-elements > .layout-horizontal-element > label {
+.layout-horizontal > .layout-elements > .layout-element > label {
 	margin-bottom:8px;
 	display:block;
 }
@@ -486,8 +548,9 @@ button.button-invisible {
 	margin-bottom:24px;
 }
 
-.layout-group > .layout-group-elements {
-}
+/* .layout-group > .layout-group-elements {
+
+} */
 
 /******************************************
  * Misc Layouts
@@ -498,7 +561,6 @@ button.button-invisible {
 .height300 {height:300px;}
 .height400 {height:400px;}
 .height500 {height:500px;}
-
 
 .htmx-request .htmx-request-hide,
 .htmx-request-show {
@@ -547,6 +609,7 @@ button.button-invisible {
 .badge.green {
 	background-color:var(--green70);
 }
+
 
 /******************************************
  * Spinner

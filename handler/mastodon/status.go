@@ -49,19 +49,14 @@ func PostStatus(serverFactory *server.Factory) func(model.Authorization, txn.Pos
 		contentService := factory.Content()
 		stream.Content = contentService.New(model.ContentFormatHTML, transaction.Status)
 
-		// Verify user permissions
-		streamService := factory.Stream()
-		if err := streamService.UserCan(&authorization, &stream, "create"); err != nil {
-			return object.Status{}, derp.NewForbiddenError(location, "User is not authorized to create this stream", stream, authorization)
-		}
-
 		// Save the stream
+		streamService := factory.Stream()
 		if err := streamService.Save(&stream, "Created via Mastodon API"); err != nil {
 			return object.Status{}, derp.Wrap(err, location, "Error saving stream")
 		}
 
 		// Publish the Stream to the User's outbox
-		if err := streamService.Publish(&user, &stream, true, false); err != nil {
+		if err := streamService.Publish(&user, &stream, "published", true, false); err != nil {
 			return object.Status{}, derp.Wrap(err, location, "Error publishing stream")
 		}
 
@@ -77,15 +72,29 @@ func GetStatus(serverFactory *server.Factory) func(model.Authorization, txn.GetS
 	return func(authorization model.Authorization, transaction txn.GetStatus) (object.Status, error) {
 
 		// Get the Stream from the URL
-		stream, streamService, err := getStreamFromURL(serverFactory, transaction.ID)
+		factory, _, stream, err := getStreamFromURL(serverFactory, transaction.ID)
 
 		if err != nil {
 			return object.Status{}, derp.Wrap(err, location, "Error loading stream")
 		}
 
-		// Validate permissions
-		if err := streamService.UserCan(&authorization, &stream, "view"); err != nil {
-			return object.Status{}, derp.NewForbiddenError(location, "User is not authorized to delete this stream")
+		// Load the template for this stream
+		templateService := factory.Template()
+		template, err := templateService.Load(stream.TemplateID)
+
+		if err != nil {
+			return object.Status{}, derp.Wrap(err, location, "Error loading template")
+		}
+
+		// Validate permissions on this Stream/Template
+		allowed, err := factory.Permission().UserCan(&authorization, &template, &stream, "view")
+
+		if err != nil {
+			return object.Status{}, derp.Wrap(err, location, "Error checking permissions")
+		}
+
+		if !allowed {
+			return object.Status{}, derp.ForbiddenError(location, "User is not authorized to delete this stream")
 		}
 
 		// Return the value
@@ -100,14 +109,14 @@ func DeleteStatus(serverFactory *server.Factory) func(model.Authorization, txn.D
 
 	return func(authorization model.Authorization, transaction txn.DeleteStatus) (struct{}, error) {
 
-		stream, streamService, err := getStreamFromURL(serverFactory, transaction.ID)
+		_, streamService, stream, err := getStreamFromURL(serverFactory, transaction.ID)
 
 		if err != nil {
 			return struct{}{}, derp.Wrap(err, location, "Error loading stream")
 		}
 
-		if err := streamService.UserCan(&authorization, &stream, "delete"); err != nil {
-			return struct{}{}, derp.NewForbiddenError(location, "User is not authorized to delete this stream")
+		if !stream.IsMyself(authorization.UserID) {
+			return struct{}{}, derp.ForbiddenError(location, "User is not authorized to delete this stream")
 		}
 
 		if err := streamService.Delete(&stream, "Deleted via Mastodon API"); err != nil {
@@ -136,7 +145,7 @@ func PostStatus_Translate(serverFactory *server.Factory) func(model.Authorizatio
 	return func(auth model.Authorization, t txn.PostStatus_Translate) (object.Translation, error) {
 
 		// Get the Stream from the URL
-		stream, _, err := getStreamFromURL(serverFactory, t.ID)
+		_, _, stream, err := getStreamFromURL(serverFactory, t.ID)
 
 		if err != nil {
 			return object.Translation{}, derp.Wrap(err, location, "Error loading stream")
@@ -233,7 +242,7 @@ func PostStatus_Unfavourite(serverFactory *server.Factory) func(model.Authorizat
 		if err := responseService.LoadByUserAndObject(auth.UserID, t.ID, vocab.ActivityTypeLike, &response); err != nil {
 
 			// If the response doesn't exist
-			if derp.NotFound(err) {
+			if derp.IsNotFound(err) {
 				return response.Toot(), nil
 			}
 
@@ -255,7 +264,7 @@ func PostStatus_Unfavourite(serverFactory *server.Factory) func(model.Authorizat
 func PostStatus_Reblog(serverFactory *server.Factory) func(model.Authorization, txn.PostStatus_Reblog) (object.Status, error) {
 
 	return func(auth model.Authorization, t txn.PostStatus_Reblog) (object.Status, error) {
-		return object.Status{}, derp.NewBadRequestError("handler.mastodon.PostStatus_Reblog", "Not Implemented")
+		return object.Status{}, derp.NotImplementedError("handler.mastodon.PostStatus_Reblog")
 	}
 }
 
@@ -263,7 +272,7 @@ func PostStatus_Reblog(serverFactory *server.Factory) func(model.Authorization, 
 func PostStatus_Unreblog(serverFactory *server.Factory) func(model.Authorization, txn.PostStatus_Unreblog) (object.Status, error) {
 
 	return func(auth model.Authorization, t txn.PostStatus_Unreblog) (object.Status, error) {
-		return object.Status{}, derp.NewBadRequestError("handler.mastodon.PostStatus_Unreblog", "Not Implemented")
+		return object.Status{}, derp.NotImplementedError("handler.mastodon.PostStatus_Unreblog")
 	}
 }
 
@@ -271,7 +280,7 @@ func PostStatus_Unreblog(serverFactory *server.Factory) func(model.Authorization
 func PostStatus_Bookmark(serverFactory *server.Factory) func(model.Authorization, txn.PostStatus_Bookmark) (object.Status, error) {
 
 	return func(auth model.Authorization, t txn.PostStatus_Bookmark) (object.Status, error) {
-		return object.Status{}, derp.NewBadRequestError("handler.mastodon.PostStatus_Bookmark", "Not Implemented")
+		return object.Status{}, derp.NotImplementedError("handler.mastodon.PostStatus_Bookmark")
 	}
 }
 
@@ -279,7 +288,7 @@ func PostStatus_Bookmark(serverFactory *server.Factory) func(model.Authorization
 func PostStatus_Unbookmark(serverFactory *server.Factory) func(model.Authorization, txn.PostStatus_Unbookmark) (object.Status, error) {
 
 	return func(auth model.Authorization, t txn.PostStatus_Unbookmark) (object.Status, error) {
-		return object.Status{}, derp.NewBadRequestError("handler.mastodon.PostStatus_Unbookmark", "Not Implemented")
+		return object.Status{}, derp.NotImplementedError("handler.mastodon.PostStatus_Unbookmark")
 	}
 }
 
@@ -349,7 +358,7 @@ func PostStatus_Unmute(serverFactory *server.Factory) func(model.Authorization, 
 func PostStatus_Pin(serverFactory *server.Factory) func(model.Authorization, txn.PostStatus_Pin) (object.Status, error) {
 
 	return func(auth model.Authorization, t txn.PostStatus_Pin) (object.Status, error) {
-		return object.Status{}, derp.NewBadRequestError("handler.mastodon.PostStatus_Pin", "Not Implemented")
+		return object.Status{}, derp.NotImplementedError("handler.mastodon.PostStatus_Pin")
 	}
 }
 
@@ -357,7 +366,7 @@ func PostStatus_Pin(serverFactory *server.Factory) func(model.Authorization, txn
 func PostStatus_Unpin(serverFactory *server.Factory) func(model.Authorization, txn.PostStatus_Unpin) (object.Status, error) {
 
 	return func(auth model.Authorization, t txn.PostStatus_Unpin) (object.Status, error) {
-		return object.Status{}, derp.NewBadRequestError("handler.mastodon.PostStatus_Unpin", "Not Implemented")
+		return object.Status{}, derp.NotImplementedError("handler.mastodon.PostStatus_Unpin")
 	}
 }
 
@@ -384,7 +393,7 @@ func PutStatus(serverFactory *server.Factory) func(model.Authorization, txn.PutS
 		}
 
 		// Validate authorization
-		if err := streamService.UserCan(&auth, &stream, "edit"); err != nil {
+		if !stream.IsMyself(auth.UserID) {
 			return object.Status{}, derp.Wrap(err, location, "User is not authorized to edit this stream", derp.WithForbidden())
 		}
 

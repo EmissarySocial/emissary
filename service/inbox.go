@@ -192,18 +192,18 @@ func (service *Inbox) ObjectSave(object data.Object, note string) error {
 	if message, ok := object.(*model.Message); ok {
 		return service.Save(message, note)
 	}
-	return derp.NewInternalError("service.Inbox.ObjectSave", "Invalid Object Type", object)
+	return derp.InternalError("service.Inbox.ObjectSave", "Invalid Object Type", object)
 }
 
 func (service *Inbox) ObjectDelete(object data.Object, note string) error {
 	if message, ok := object.(*model.Message); ok {
 		return service.Delete(message, note)
 	}
-	return derp.NewInternalError("service.Inbox.ObjectDelete", "Invalid Object Type", object)
+	return derp.InternalError("service.Inbox.ObjectDelete", "Invalid Object Type", object)
 }
 
 func (service *Inbox) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.NewUnauthorizedError("service.Inbox.ObjectUserCan", "Not Authorized")
+	return derp.UnauthorizedError("service.Inbox.ObjectUserCan", "Not Authorized")
 }
 
 func (service *Inbox) Schema() schema.Schema {
@@ -259,7 +259,7 @@ func (service *Inbox) LoadByRank(userID primitive.ObjectID, folderID primitive.O
 		return nil
 	}
 
-	return derp.NewNotFoundError("service.Inbox.LoadByRank", "Inbox message not found", userID, folderID, rankExpression)
+	return derp.NotFoundError("service.Inbox.LoadByRank", "Inbox message not found", userID, folderID, rankExpression)
 }
 
 // LoadByURL returns the first message that matches the provided UserID and URL
@@ -318,7 +318,7 @@ func (service *Inbox) LoadSibling(folderID primitive.ObjectID, rank int64, follo
 	}
 
 	// No results.  Shame! Shame!
-	return model.Message{}, derp.NewNotFoundError(location, "No record found")
+	return model.Message{}, derp.NotFoundError(location, "No record found")
 }
 
 func (service *Inbox) LoadOldestUnread(userID primitive.ObjectID, message *model.Message) error {
@@ -338,7 +338,7 @@ func (service *Inbox) LoadOldestUnread(userID primitive.ObjectID, message *model
 		return nil
 	}
 
-	return derp.NewNotFoundError(location, "No unread messages")
+	return derp.NotFoundError(location, "No unread messages")
 }
 
 func (service *Inbox) MarkReadByDate(userID primitive.ObjectID, rank int64) error {

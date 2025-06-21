@@ -1,17 +1,29 @@
 {
 	templateId:admin-tags
 	templateRole:admin
-	model:tag
+	model:Tag
 	extends: ["admin-common"]
 	containedBy:["admin"]
 	label:Tags
 	description: Manage all searchable tags on this website
 
 	actions: {
-		index: {do:"view-html"}
-		list: {do:"view-html"}
-		
+		index: {
+			roles:["owner"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
+		list: {
+			roles:["owner"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
 		add: {
+			roles:["owner"]
 			steps: [{
 				do:as-modal
 				steps: [
@@ -63,6 +75,7 @@
 		}
 
 		edit:{
+			roles:["owner"]
 			steps:[
 				{
 					do:as-modal
@@ -120,6 +133,7 @@
 		}
 
 		delete: {
+			roles:["owner"]
 			steps:[
 				{do:"delete", type:"searchTag", title:"Delete '{{.Name}}'?", message:"Deleting this tag will only affect search engine suggestions, and will not remove contents that use this tag."}
 				{do:"refresh-page"}
@@ -127,7 +141,7 @@
 		}
 
 		delete-image: {
-			roles:["self"]
+			roles:["owner"]
 			steps:[
 				{do:"delete-attachments", field:"iconId"}
 				{do:"save", comment:"Deleted Image"}

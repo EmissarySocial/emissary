@@ -26,7 +26,7 @@ func undoFollow(context Context, activity streams.Document) error {
 	originalFollow, err := activity.Object().Load()
 
 	if err != nil {
-		if derp.NotFound(err) {
+		if derp.IsNotFound(err) {
 			return nil // If there is no follower record, then there's nothing to delete.
 		}
 
@@ -45,7 +45,7 @@ func undoFollow(context Context, activity streams.Document) error {
 
 	if err := followerService.LoadByActivityPubFollower(model.FollowerTypeStream, streamID, actorURL, &follower); err != nil {
 
-		if derp.NotFound(err) {
+		if derp.IsNotFound(err) {
 			return nil
 		}
 

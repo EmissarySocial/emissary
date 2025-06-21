@@ -99,7 +99,7 @@ func (service *SearchResult) Save(searchResult *model.SearchResult, note string)
 
 	// RULE: Do not save empty SearchResults
 	if searchResult.SearchResultID.IsZero() {
-		return derp.NewInternalError(location, "SearchResultID is required", searchResult)
+		return derp.InternalError(location, "SearchResultID is required", searchResult)
 	}
 
 	// RULE: If unassigned, shuffle the searchResult after the first trillion other results (will reset in 1 hour)
@@ -208,7 +208,7 @@ func (service *SearchResult) Sync(searchResult model.SearchResult) error {
 	}
 
 	// If the SearchResult is NOT FOUND, then insert it.
-	if derp.NotFound(err) {
+	if derp.IsNotFound(err) {
 		if err := service.Save(&searchResult, "added"); err != nil {
 			return derp.ReportAndReturn(derp.Wrap(err, location, "Error adding Search", searchResult))
 		}
@@ -235,7 +235,7 @@ func (service *SearchResult) DeleteByURL(url string) error {
 
 	if err := service.LoadByURL(url, &searchResult); err != nil {
 
-		if derp.NotFound(err) {
+		if derp.IsNotFound(err) {
 			return nil
 		}
 

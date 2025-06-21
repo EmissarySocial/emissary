@@ -1,5 +1,26 @@
 package model
 
+/******************************************
+ * Connection Types
+ * defines that specific that a provider
+ * performs.
+ ******************************************/
+
+// ConnectionTypeGeocoder represents a provider that can geocode addresses
+const ConnectionTypeGeocoder = "GEOCODER"
+
+// ConnectionTypeImage represents a provider/connection that can be used to generate images
+const ConnectionTypeImage = "IMAGE"
+
+// ConnectionTypeUserUserPayment represents a provider that can take payments for users
+const ConnectionTypeUserPayment = "USER-PAYMENT"
+
+/******************************************
+ * Provider Definitions
+ * definitions of the services that have
+ * been implemented in the system.
+ ******************************************/
+
 // ConnectionProviderArcGIS represents an API connection to the https://www.arcgis.com service
 const ConnectionProviderArcGIS = "ARCGIS"
 
@@ -17,18 +38,18 @@ const ConnectionProviderTomTom = "TOMTOM"
 // for generating animated GIFs.
 const ConnectionProviderGiphy = "GIPHY"
 
-// ConnectionProviderStripe represents an API connection to the https://stripe.com service
+// ConnectionProviderPayPal represents an API connection to the https://paypal.com service
 // for processing payments.
+const ConnectionProviderPayPal = "PAYPAL"
+
+// ConnectionProviderStripe represents an API connection to the https://stripe.com service
+// for processing payments, using direct API keys.
 const ConnectionProviderStripe = "STRIPE"
+
+// ConnectionProviderStripeConnect represents an API connection to the https://stripe.com service
+// for processing payments, using the Stripe Connect / OAuth authentication.
+const ConnectionProviderStripeConnect = "STRIPE-CONNECT"
 
 // ConnectionProviderUnsplash represents an API connection to the https://unsplash.com service
 // for generating photographs.
 const ConnectionProviderUnsplash = "UNSPLASH"
-
-const ConnectionTypeGeocoder = "GEOCODER"
-
-// ConnectionTypeIMage represents a provider/connection that can be used to generate images.
-const ConnectionTypeImage = "IMAGE"
-
-// ConnectionTypePayment represents a provider/connection that can be used to process payments.
-const ConnectionTypePayment = "PAYMENT"

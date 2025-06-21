@@ -1,0 +1,37 @@
+{{- $search := .QueryParam "search" -}}
+{{- $folderID := .QueryParam "folderId" -}}
+<h2 class="margin-bottom-lg">{{icon "add"}} Follow a Person or Website</h2>
+
+<div script="install menu(input:#following-search-input)" id="following-search">
+
+	<div role="input" class="flex-row">
+		
+		<input 
+			id="following-search-input"
+			type="text" 
+			name="search" 
+			class="flex-grow-1" 
+			placeholder="Enter a Name, @Username, or Website Address"
+			tabIndex="0"
+			value="{{attr $search}}"
+			style="border:none; padding:0;" 
+			
+			script="on load call my focus() if my value is not empty then send initial"
+			hx-get="/@me/settings/following-search-results"
+			hx-trigger="initial, keyup changed throttle:50ms queue:last"
+			hx-target="#following-search-results"
+			hx-swap="innerHTML"
+			hx-push-url="false"
+			hx-vals='{"folderId":"{{$folderID}}"}'
+			hx-indicator="#following-search">
+
+	</div>
+
+	<div class="htmx-request-show">
+		<div class="margin-vertical">
+			<span class="spin">{{icon "loading"}}</span> Loading
+		</div>
+	</div>
+
+	<div id="following-search-results"></div>
+</div>

@@ -7,15 +7,18 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/EmissarySocial/emissary/tools/parse"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/form"
+	"github.com/benpate/rosetta/compare"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/dlclark/metaphone3"
-	"github.com/rs/zerolog"
 	"github.com/tdewolff/minify/v2"
 	"github.com/tdewolff/minify/v2/html"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -76,7 +79,7 @@ func ParseProfileURL(value string) (urlValue *url.URL, userID primitive.ObjectID
 	username, path := path.Split()
 
 	if !strings.HasPrefix(username, "@") {
-		return urlValue, primitive.NilObjectID, "", primitive.NilObjectID, derp.NewBadRequestError("service.ParseURL", "Username must begin with '@'", value)
+		return urlValue, primitive.NilObjectID, "", primitive.NilObjectID, derp.BadRequestError("service.ParseURL", "Username must begin with '@'", value)
 	}
 
 	username = strings.TrimPrefix(username, "@")
@@ -84,7 +87,7 @@ func ParseProfileURL(value string) (urlValue *url.URL, userID primitive.ObjectID
 	userID, err = primitive.ObjectIDFromHex(username)
 
 	if err != nil {
-		return urlValue, userID, "", primitive.NilObjectID, derp.NewBadRequestError("service.ParseURL", "Username must be a valid hex string", value)
+		return urlValue, userID, "", primitive.NilObjectID, derp.BadRequestError("service.ParseURL", "Username must be a valid hex string", value)
 	}
 
 	// If this is the end of the path, then we're done.
@@ -96,7 +99,7 @@ func ParseProfileURL(value string) (urlValue *url.URL, userID primitive.ObjectID
 	pub, path := path.Split()
 
 	if pub != "pub" {
-		return urlValue, userID, "", primitive.NilObjectID, derp.NewBadRequestError("service.ParseURL", "Path must contain with '/pub/'", value)
+		return urlValue, userID, "", primitive.NilObjectID, derp.BadRequestError("service.ParseURL", "Path must contain with '/pub/'", value)
 	}
 
 	if path.IsEmpty() {
@@ -117,7 +120,7 @@ func ParseProfileURL(value string) (urlValue *url.URL, userID primitive.ObjectID
 	objectID, err = primitive.ObjectIDFromHex(objectName)
 
 	if err != nil {
-		return urlValue, userID, objectType, primitive.NilObjectID, derp.NewBadRequestError("service.ParseURL", "ObjectID must be a valid hex string", value)
+		return urlValue, userID, objectType, primitive.NilObjectID, derp.BadRequestError("service.ParseURL", "ObjectID must be a valid hex string", value)
 	}
 
 	// This should be the end of the path.
@@ -126,7 +129,7 @@ func ParseProfileURL(value string) (urlValue *url.URL, userID primitive.ObjectID
 	}
 
 	// But if we get here, then there are unrecognized values in the path.
-	return urlValue, userID, objectType, objectID, derp.NewBadRequestError("service.ParseURL", "Path contains unrecognized values", value)
+	return urlValue, userID, objectType, objectID, derp.BadRequestError("service.ParseURL", "Path contains unrecognized values", value)
 }
 
 func ParseProfileURL_UserID(value string) (primitive.ObjectID, error) {
@@ -142,7 +145,7 @@ func ParseProfileURL_AsFollowing(value string) (primitive.ObjectID, primitive.Ob
 	}
 
 	if objectType != "following" {
-		return primitive.NilObjectID, primitive.NilObjectID, derp.NewBadRequestError("service.ParseProfileURL_AsFollowing", "URL does not contain a following relationship", value)
+		return primitive.NilObjectID, primitive.NilObjectID, derp.BadRequestError("service.ParseProfileURL_AsFollowing", "URL does not contain a following relationship", value)
 	}
 
 	return userID, objectID, nil
@@ -259,7 +262,7 @@ func findDefinition(filesystem fs.FS) (string, []byte, error) {
 
 	// TODO: LOW: Add DefinitionEmail to this.  Will need a *.json file in the email directory.
 
-	return "", nil, derp.NewInternalError("service.findDefinition", "No definition file found")
+	return "", nil, derp.InternalError("service.findDefinition", "No definition file found")
 }
 
 // readJSON looks for JSON and HJSON files.
@@ -288,35 +291,6 @@ func slicesAreEqual(value1 []mapof.String, value2 []mapof.String) bool {
 	return true
 }
 
-// executeTemplate is some syntax sugar around the template.Execute function.
-// nolint unused -- This may be unused now, but it's a great function to have around.
-func executeTemplate(t TemplateLike, value any) string {
-
-	// Empty templates return empty strings
-	if t == nil {
-		return ""
-	}
-
-	// Otherwise, use a buffer to execute the template
-	var buffer strings.Builder
-	if err := t.Execute(&buffer, value); err != nil {
-		derp.Report(derp.Wrap(err, "service.executeTemplate", "Error executing template"))
-	}
-
-	return buffer.String()
-}
-
-// iif is a simple inline-if function.  You should probably never
-// do something like this.  But fuck it.
-//
-//lint:ignore U1000 Leaving this here in case we need it in the future
-func iif(condition bool, trueValue, falseValue string) string {
-	if condition {
-		return trueValue
-	}
-	return falseValue
-}
-
 // firstOf is a quickie generic helper that returns the first
 // non-zero value from a list of comparable values.
 func firstOf[T comparable](values ...T) T {
@@ -334,49 +308,94 @@ func firstOf[T comparable](values ...T) T {
 	return empty
 }
 
-// must strips out an error from a multi-result function call.
-// This should be used sparingly because, while it does REPORT
-// the error, it does not return it to the caller.
-//
-// nolint:unused
-func must[T any](value T, err error) T {
-	if err != nil {
-		derp.Report(err)
-	}
-
-	return value
-}
-
 // pointerTo returns a pointer to a given value.  This is just
 // some syntactic sugar for optional fields in API calls.
 func pointerTo[T any](value T) *T {
 	return &value
 }
 
-// canInfo returns TRUE if zerolog is configured to allow Info logs
-// nolint:unused
-func canInfo() bool {
-	return canLog(zerolog.InfoLevel)
+func extractCircleIDs(tokens ...string) id.Slice {
+
+	circleIDs := make(id.Slice, 0, len(tokens))
+
+	for _, token := range tokens {
+
+		if !strings.HasPrefix(token, "CIR:") {
+			continue
+		}
+
+		token = strings.TrimPrefix(token, "CIR:")
+
+		// Convert to a primitive.ObjectID
+		if circleID, err := primitive.ObjectIDFromHex(token); err == nil {
+			circleIDs = append(circleIDs, circleID)
+		}
+	}
+
+	return circleIDs
 }
 
-// canDebug returns TRUE if zerolog is configured to allow Debug logs
-// nolint:unused
-func canDebug() bool {
-	return canLog(zerolog.DebugLevel)
+// extractProductIDs takes a slice of strings in the format "MA:merchantID:productID"
+// and returns a map where the keys are merchant IDs and the values are slices of product IDs.
+func extractProductIDs(tokens ...string) mapof.Slices[primitive.ObjectID, string] {
+
+	result := make(mapof.Slices[primitive.ObjectID, string])
+
+	for _, token := range tokens {
+
+		// Filter for Merchant Account tokens only.
+		if !strings.HasPrefix(token, "MA:") {
+			continue
+		}
+
+		token = strings.TrimPrefix(token, "MA:")
+
+		// Split into a merchantID and productID
+		merchant, product, found := strings.Cut(token, ":")
+
+		if !found {
+			continue
+		}
+
+		// Convert the merchantID to an ObjectID
+		merchantID, err := primitive.ObjectIDFromHex(merchant)
+
+		if err != nil {
+			continue
+		}
+
+		// (Safely) append the productID to the merchantID map
+		result.Add(merchantID, product)
+	}
+
+	// Success!
+	return result
 }
 
-// canTrace returns TRUE if zerolog is configured to allow Trace logs
-// nolint:unused
-func canTrace() bool {
-	return canLog(zerolog.TraceLevel)
+func sortRemoteProducts(p1 model.RemoteProduct, p2 model.RemoteProduct) int {
+
+	if comparison := compare.String(p1.Name, p2.Name); comparison != 0 {
+		return comparison
+	}
+
+	return compare.String(p1.Description, p2.Description)
 }
 
-// canLog is a silly zerolog helper that returns TRUE
-// if the provided log level would be allowed
-// (based on the global log level).
-// This makes it easier to execute expensive code conditionally,
-// for instance: marshalling a JSON object for logging.
-// nolint:unused
-func canLog(level zerolog.Level) bool {
-	return zerolog.GlobalLevel() <= level
+func mapRemoteProductsToLookupCodes(remoteProducts ...model.RemoteProduct) sliceof.Object[form.LookupCode] {
+
+	result := make(sliceof.Object[form.LookupCode], len(remoteProducts))
+
+	for index, remoteProduct := range remoteProducts {
+		result[index] = remoteProduct.LookupCode()
+	}
+
+	return result
+}
+
+// Don't judge me.
+func iif[T any](condition bool, trueValue T, falseValue T) T {
+	if condition {
+		return trueValue
+	}
+	return falseValue
 }

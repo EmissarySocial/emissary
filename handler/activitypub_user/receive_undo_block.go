@@ -31,7 +31,7 @@ func init() {
 		rule := ruleFromActivity(&following, activity.Object())
 
 		if err := ruleService.LoadByFollowing(context.user.UserID, following.FollowingID, rule.Type, rule.Trigger, &rule); err != nil {
-			if derp.NotFound(err) {
+			if derp.IsNotFound(err) {
 				return nil
 			}
 			return derp.Wrap(err, location, "Error loading rule", activity.Value())

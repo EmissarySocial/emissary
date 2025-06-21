@@ -8,42 +8,8 @@
 
 <body hx-target="main" hx-swap="innerHTML show:window:top" hx-push-url="true" hx-ext="a11y">
 
-	<nav  hx-push-url="true">
-		<div class="framed">
-			<a href="#main" class="hide-visual">Skip navigation</a>
-			{{- range .Navigation -}}
-				{{- $icon := join .Icon "-fill" -}}
-				<a href="/{{.Token}}" hx-boost="true" id="nav-{{.StreamID}}" class="nav-item turboclick">
-					<span class="icon">{{icon $icon}}</span>
-					<span class="label">{{.Label}}</span>
-				</a>
-			{{- end -}}
-			<span class="spacer"></span>
-			{{- if .IsAuthenticated -}}
-				<a href="/@me" hx-boost="true" id="nav-outbox" class="nav-item turboclick">
-					<span class="icon">{{icon "user-fill"}}</span>
-					<span class="label">Profile</span>
-				</a>
-
-				<a href="/@me/inbox" hx-boost="true" id="nav-inbox" class="nav-item turboclick">
-					<span class="icon">{{icon "inbox-fill"}}</span>
-					<span class="label">Inbox</span>
-				</a>
-
-				{{- if .IsOwner -}}
-					<a href="/admin/domain" hx-boost="true" id="nav-admin" class="nav-item turboclick">
-						<span class="icon">{{icon "settings-fill"}}</span>
-						<span class="label">Server</span>
-					</a>
-				{{- end -}}
-			{{- else -}}
-				<a href="/signin" hx-boost="true" id="nav-signin" class="nav-item turboclick">
-					<span class="icon">{{icon "user"}}</span>
-					<span class="label">Sign In</span>
-				</a>
-			{{- end -}}
-		</div>
-
+	<nav>
+		{{template "navigation" . }}
 	</nav>
 
 	<main id="main">

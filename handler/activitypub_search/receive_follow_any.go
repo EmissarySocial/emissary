@@ -20,13 +20,13 @@ func init() {
 		actorURL := searchQueryService.ActivityPubURL(context.searchQuery.SearchQueryID)
 
 		if activity.Object().ID() != actorURL {
-			return derp.NewInternalError(location, "Invalid Search Query ID", actorURL, activity.Object().ID())
+			return derp.InternalError(location, "Invalid Search Query ID", actorURL, activity.Object().ID())
 		}
 
 		// RULE: Do not allow new "Follows" of any blocked Actors
 		ruleFilter := context.factory.Rule().Filter(context.searchQuery.SearchQueryID, service.WithBlocksOnly())
 		if ruleFilter.Disallow(&activity) {
-			return derp.NewForbiddenError(location, "Blocked by rule", activity.Object().ID())
+			return derp.ForbiddenError(location, "Blocked by rule", activity.Object().ID())
 		}
 
 		// Try to look up the complete actor record from the activity

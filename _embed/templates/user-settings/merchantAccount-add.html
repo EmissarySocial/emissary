@@ -1,0 +1,11 @@
+{{- $connections := .AvailableMerchantAccounts -}}
+{{- $next := .QueryParam "next" -}}
+
+<h1>{{icon "add"}} Add a Merchant Account</h1>
+<p>The first step in collecting payments is to set up a merchant account with one of the supported payment procesors below.</p>
+
+<div class="margin-bottom-lg">
+	{{template "merchantAccount-add-list" $connections}}
+</div>
+
+<button script="on click trigger closeModal">Close Window</button>

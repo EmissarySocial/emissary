@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"net/http"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -18,17 +19,23 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/sherlock"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // ActivityStream implements the Hannibal HTTP client interface, and provides a cache for ActivityStream documents.
 type ActivityStream struct {
-	domainService *Domain
-	collection    *mongo.Collection
-	innerClient   streams.Client
-	cacheClient   *ascache.Client
-	hostname      string
+	domainService       *Domain
+	locatorService      *Locator
+	searchDomainService *SearchDomain
+	searchQueryService  *SearchQuery
+	streamService       *Stream
+	userService         *User
+	collection          *mongo.Collection
+	innerClient         streams.Client
+	cacheClient         *ascache.Client
+	hostname            string
 }
 
 /******************************************
@@ -41,8 +48,13 @@ func NewActivityStream() ActivityStream {
 }
 
 // Refresh updates the ActivityStream service with new dependencies
-func (service *ActivityStream) Refresh(domainService *Domain, collection *mongo.Collection, hostname string) {
+func (service *ActivityStream) Refresh(collection *mongo.Collection, domainService *Domain, locatorService *Locator, searchDomainService *SearchDomain, searchQueryService *SearchQuery, streamService *Stream, userService *User, hostname string) {
 	service.domainService = domainService
+	service.locatorService = locatorService
+	service.searchDomainService = searchDomainService
+	service.searchQueryService = searchQueryService
+	service.streamService = streamService
+	service.userService = userService
 	service.collection = collection
 	service.hostname = hostname
 	service.innerClient = nil
@@ -121,7 +133,7 @@ func (service *ActivityStream) Load(url string, options ...any) (streams.Documen
 	const location = "service.ActivityStream.Load"
 
 	if url == "" {
-		return streams.NilDocument(), derp.NewNotFoundError(location, "Empty URL", url)
+		return streams.NilDocument(), derp.NotFoundError(location, "Empty URL", url)
 	}
 
 	// NPE Check
@@ -164,7 +176,7 @@ func (service *ActivityStream) PurgeCache() error {
 
 	// NPE Check
 	if service.collection == nil {
-		return derp.NewInternalError("service.ActivityStream.PurgeCache", "Document Collection not initialized")
+		return derp.InternalError("service.ActivityStream.PurgeCache", "Document Collection not initialized")
 	}
 
 	// Purge all expired Documents
@@ -194,7 +206,7 @@ func (service *ActivityStream) queryByRelation(relationType string, relationHref
 
 		// NPE Check
 		if service.collection == nil {
-			derp.Report(derp.NewInternalError(location, "Document Collection not initialized"))
+			derp.Report(derp.InternalError(location, "Document Collection not initialized"))
 			return
 		}
 
@@ -306,6 +318,54 @@ func (service *ActivityStream) QueryLikesBeforeDate(relationHref string, maxDate
 	return service.queryByRelation(vocab.ActivityTypeLike, relationHref, "before", maxDate, done)
 }
 
+// SendMessage sends an ActivityPub message to a single recipient/inboxURL
+// `inboxURL` the URL to deliver the message to
+// `actorType` the type of actor that is sending the message (User, Stream, Search)
+// `actorID` unique ID of the actor (zero value for Search Actor)
+// `message` the ActivityPub message to send
+func (service *ActivityStream) SendMessage(args mapof.Any) error {
+
+	const location = "consumer.SendActivityPubMessage"
+
+	// Collect arguments
+	message := args.GetMap("message")
+	inboxURL := args.GetString("inboxURL")
+
+	// Find ActivityPub Actor
+	actor, err := service.locatorService.GetActor(args.GetString("actorType"), args.GetString("actorID"), false)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error finding ActivityPub Actor")
+	}
+
+	// Send the message to the inboxURL
+	if err := actor.SendOne(inboxURL, message); err != nil {
+		return derp.Wrap(err, location, "Error sending message", message, derp.WithCode(http.StatusInternalServerError))
+	}
+
+	// Success!!
+	return nil
+}
+
+func (service *ActivityStream) GetRecipient(recipient string) (string, string, error) {
+
+	const location = "consumer.getRecipientInbox"
+
+	// Try to load the recipient as a JSON-LD document
+	document, err := service.Load(recipient, sherlock.AsActor())
+
+	if err != nil {
+		return "", "", derp.Wrap(err, location, "Error loading ActivityPub Actor", recipient)
+	}
+
+	if !document.IsActor() {
+		return "", "", derp.NotFoundError(location, "Recipient is not an ActivityPub Actor", recipient)
+	}
+
+	// Successssssssss.
+	return document.ID(), document.Inbox().String(), nil
+}
+
 /******************************************
  * Internal Methods
  ******************************************/
@@ -317,7 +377,7 @@ func (service *ActivityStream) documentIterator(criteria exp.Expression, options
 
 	// NPE Check
 	if service.collection == nil {
-		return nil, derp.NewInternalError(location, "Document Collection not initialized")
+		return nil, derp.InternalError(location, "Document Collection not initialized")
 	}
 
 	// Forward request to collection

@@ -1,8 +1,18 @@
 {
-	templateId:"base-social"
+	templateId: base-social
+	model: None
+
+	states: {
+		default: {
+			label: Default State,
+			description: Initial state for this template
+		}
+	}
+
 	actions:{
 
 		follow-button: {
+			roles:["authenticated"]
 			steps: [
 				{do:"view-html"}
 			]

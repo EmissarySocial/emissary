@@ -32,7 +32,7 @@ func buildAdmin(factoryManager *server.Factory, actionMethod build.ActionMethod)
 		sterankoContext := ctx.(*steranko.Context)
 
 		if !isOwner(sterankoContext.Authorization()) {
-			return derp.NewForbiddenError(location, "Unauthorized")
+			return derp.ForbiddenError(location, "Unauthorized")
 		}
 
 		// Try to get the factory from the Context
@@ -57,7 +57,7 @@ func buildAdmin(factoryManager *server.Factory, actionMethod build.ActionMethod)
 		builder, err := buildAdmin_GetBuilder(factory, sterankoContext, template, actionID, objectID)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error generating builder")
+			return derp.ReportAndReturn(derp.Wrap(err, location, "Error generating builder"))
 		}
 
 		// Success!!
@@ -89,13 +89,13 @@ func buildAdmin_GetBuilder(factory *domain.Factory, ctx *steranko.Context, templ
 	// Create the correct builder for this controller
 	switch template.Model {
 
-	case "domain", "search", "sso", "followers", "following":
+	case "Domain", "Search", "SSO", "Followers", "Following":
 		return build.NewDomain(factory, ctx.Request(), ctx.Response(), template, actionID)
 
-	case "syndication":
+	case "Syndication":
 		return build.NewSyndication(factory, ctx.Request(), ctx.Response(), template, actionID)
 
-	case "group":
+	case "Group":
 		group := model.NewGroup()
 
 		if !objectID.IsZero() {
@@ -107,7 +107,7 @@ func buildAdmin_GetBuilder(factory *domain.Factory, ctx *steranko.Context, templ
 
 		return build.NewGroup(factory, ctx.Request(), ctx.Response(), template, &group, actionID)
 
-	case "rule":
+	case "Rule":
 
 		ruleService := factory.Rule()
 		rule := model.NewRule()
@@ -121,7 +121,7 @@ func buildAdmin_GetBuilder(factory *domain.Factory, ctx *steranko.Context, templ
 
 		return build.NewRule(factory, ctx.Request(), ctx.Response(), &rule, template, actionID)
 
-	case "stream":
+	case "Stream":
 		stream := model.NewStream()
 
 		if !objectID.IsZero() {
@@ -133,7 +133,7 @@ func buildAdmin_GetBuilder(factory *domain.Factory, ctx *steranko.Context, templ
 
 		return build.NewNavigation(factory, ctx.Request(), ctx.Response(), template, &stream, actionID)
 
-	case "tag":
+	case "Tag":
 		searchTag := model.NewSearchTag()
 
 		if !objectID.IsZero() {
@@ -145,7 +145,7 @@ func buildAdmin_GetBuilder(factory *domain.Factory, ctx *steranko.Context, templ
 
 		return build.NewSearchTag(factory, ctx.Request(), ctx.Response(), template, &searchTag, actionID)
 
-	case "user":
+	case "User":
 		user := model.NewUser()
 
 		if !objectID.IsZero() {
@@ -157,7 +157,7 @@ func buildAdmin_GetBuilder(factory *domain.Factory, ctx *steranko.Context, templ
 
 		return build.NewUser(factory, ctx.Request(), ctx.Response(), template, &user, actionID)
 
-	case "webhook":
+	case "Webhook":
 		webhook := model.NewWebhook()
 
 		if !objectID.IsZero() {
@@ -170,6 +170,6 @@ func buildAdmin_GetBuilder(factory *domain.Factory, ctx *steranko.Context, templ
 		return build.NewWebhook(factory, ctx.Request(), ctx.Response(), template, &webhook, actionID)
 
 	default:
-		return nil, derp.NewNotFoundError(location, "Template MODEL must be one of: 'rule', 'domain', 'syndication', 'group', 'stream', or 'user'", template.Model)
+		return nil, derp.NotFoundError(location, "Template MODEL must be one of: 'Rule', 'Domain', 'Syndication', 'Group', 'Stream', 'Tag', or 'User'", template.Model)
 	}
 }

@@ -1,6 +1,5 @@
 <div class="app-sidebar">
 	
-	<link rel="stylesheet" href="/.templates/user-outbox/stylesheet">
 	<link rel="canonical" class="u-url" href="{{.ProfileURL}}">
 
 	<div class="margin-bottom" style="position:relative;">
@@ -70,9 +69,9 @@
 	{{- if .IsMyself -}}
 		<hr>
 		<div class="bold">Personal Settings</div>
-		<div class="margin-top-xs"><a href="/@me/inbox/following" class="text-plain">{{icon "person"}} {{.FollowingCount}} Following</a></div>
-		<div class="margin-top-xs"><a href="/@me/inbox/followers" class="text-plain">{{icon "person"}} {{.FollowerCount}} {{pluralize .FollowerCount "Follower" "Followers"}}</a></div>
-		<div class="margin-top-xs"><a href="/@me/inbox/rules" class="text-plain">{{icon "rule"}} {{.RuleCount}} {{pluralize .RuleCount "Rule" "Rules"}}</a></div>
+		<div class="margin-top-xs"><a href="/@me/settings/following" class="text-plain">{{icon "person"}} {{.FollowingCount}} Following</a></div>
+		<div class="margin-top-xs"><a href="/@me/settings/followers" class="text-plain">{{icon "person"}} {{.FollowerCount}} {{pluralize .FollowerCount "Follower" "Followers"}}</a></div>
+		<div class="margin-top-xs"><a href="/@me/settings/rules" class="text-plain">{{icon "rule"}} {{.RuleCount}} {{pluralize .RuleCount "Rule" "Rules"}}</a></div>
 		<div class="margin-top-xs"><a hx-get="/@me/edit-template" class="text-plain">{{icon "template"}} Template</a></div>
 		<div class="margin-top"><button hx-post="/signout" hx-target="body">Sign Out</button></div>
 	{{- end -}}

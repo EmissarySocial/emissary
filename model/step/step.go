@@ -11,14 +11,19 @@ import (
 
 // Step interface is used here to bind together the structs in this package
 type Step interface {
-	// AmStep is a NO-OP.  It is only used to validate that a struct contains "step-like" data.
-	AmStep()
-}
 
-// TypeRequirer interface wraps the "RequireType" method, which specifies that a step can ONLY
-// be used with a specific type of builder (like: "template", "registration", "widget", "email", etc.)
-type TypeRequirer interface {
-	RequireType() string
+	// Name returns the name of the step, which is used in debugging.
+	Name() string
+
+	// RequiredModel returns the name of the model object that MUST be present in the Template.
+	// If this value is not empty, then the Template MUST use this model object.
+	RequiredModel() string
+
+	// RequiredStates returns a slice of states that must be defined in any Template that uses this Step.
+	RequiredStates() []string
+
+	// RequiredRoles returns a slice of roles that must be defined in any Template that uses this Step
+	RequiredRoles() []string
 }
 
 // ModelRequirer interface wraps the "RequireModel" method, which specifies that a step can ONLY
@@ -99,7 +104,7 @@ func New(stepInfo mapof.Any) (Step, error) {
 		return NewIfCondition(stepInfo)
 
 	case "include":
-		return NewDo(stepInfo)
+		return NewInclude(stepInfo)
 
 	case "inline-error":
 		return NewInlineError(stepInfo)
@@ -149,6 +154,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "set-args":
 		return NewSetRenderData(stepInfo)
 
+	case "set-circle-sharing":
+		return NewSetCircleSharing(stepInfo)
+
 	case "set-data":
 		return NewSetData(stepInfo)
 
@@ -157,6 +165,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 
 	case "set-password":
 		return NewSetPassword(stepInfo)
+
+	case "set-privileges":
+		return NewSetPrivileges(stepInfo)
 
 	case "set-query-param":
 		return NewSetQueryParam(stepInfo)
@@ -194,6 +205,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "upload-attachments":
 		return NewUploadAttachments(stepInfo)
 
+	case "view-attachment":
+		return NewViewAttachment(stepInfo)
+
 	case "view-css":
 		return NewViewCSS(stepInfo)
 
@@ -212,6 +226,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "with-children":
 		return NewWithChildren(stepInfo)
 
+	case "with-circle":
+		return NewWithCircle(stepInfo)
+
 	case "with-draft":
 		return NewWithDraft(stepInfo)
 
@@ -223,6 +240,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 
 	case "with-follower":
 		return NewWithFollower(stepInfo)
+
+	case "with-merchant-account":
+		return NewWithMerchantAccount(stepInfo)
 
 	case "with-message":
 		return NewWithMessage(stepInfo)
@@ -236,15 +256,19 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "with-prev-sibling":
 		return NewWithPrevSibling(stepInfo)
 
+	case "with-privilege":
+		return NewWithPrivilege(stepInfo)
+
 	case "with-response":
 		return NewWithResponse(stepInfo)
 
 	case "with-rule":
 		return NewWithRule(stepInfo)
+
 	}
 
 	// Fall through means we have an unrecognized action
-	return nil, derp.NewInternalError("model.step.New", "Unrecognized step type", stepInfo)
+	return nil, derp.InternalError("model.step.New", "Unrecognized step type", stepInfo.GetString("do"), stepInfo)
 }
 
 // NewPipeline parses a series of build steps into a new array

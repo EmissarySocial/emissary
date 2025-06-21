@@ -5,82 +5,145 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/slice"
+	"github.com/benpate/rosetta/sliceof"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/hjson/hjson-go/v4"
 )
 
 // Action holds the data for actions that can be performed on any Stream from a particular Template.
 type Action struct {
-	Roles      []string            `json:"roles"      bson:"roles"`      // List of roles required to execute this Action.  If empty, then none are required.
-	States     []string            `json:"states"     bson:"states"`     // List of states required to execute this Action.  If empty, then one are required.
-	StateRoles map[string][]string `json:"stateRoles" bson:"stateRoles"` // Map of states -> list of roles that can perform this Action (when a stream is in the given state)
-	Steps      []step.Step         `json:"steps"      bson:"steps"`      // List of steps to execute when GET-ing or POST-ing this Action.
+	Roles      sliceof.String               `json:"roles"      bson:"roles"`      // List of roles required to execute this Action.  If empty, then none are required.
+	States     sliceof.String               `json:"states"     bson:"states"`     // List of states required to execute this Action.  If empty, then one are required.
+	StateRoles mapof.Object[sliceof.String] `json:"stateRoles" bson:"stateRoles"` // Map of states -> list of roles that can perform this Action (when a stream is in the given state)
+	Steps      sliceof.Object[step.Step]    `json:"steps"      bson:"steps"`      // List of steps to execute when GET-ing or POST-ing this Action.
+	AccessList mapof.Object[AccessList]     `json:"-"          bson:"-"`          // Map of states -> set of roles that can perform this Action.
 }
 
 // NewAction returns a fully initialized Action
 func NewAction() Action {
 	return Action{
-		Roles:      make([]string, 0),
-		States:     make([]string, 0),
-		StateRoles: make(map[string][]string),
-		Steps:      make([]step.Step, 0),
+		Roles:      sliceof.NewString(),
+		States:     sliceof.NewString(),
+		StateRoles: mapof.NewObject[sliceof.String](),
+		Steps:      sliceof.NewObject[step.Step](),
+		AccessList: mapof.NewObject[AccessList](),
 	}
 }
 
-// UserCan returns TRUE if this action is permitted on a stream (using the provided authorization)
-func (action *Action) UserCan(enumerator RoleStateEnumerator, authorization *Authorization) bool {
+// CalcAccessList translates the roles, states, and stateRoles settings into a compact AccessList that
+// can quickly determine if a user can perform this action on objects given their current state.
+func (action *Action) CalcAccessList(template *Template, debug bool) error {
 
-	// Prevent nil pointer exceptions
-	if action == nil {
-		return false
+	// Initialize/Reset the AccessList
+	action.AccessList = mapof.NewObject[AccessList]()
+
+	// Calculate an AccessList for each state defined in the Template
+	for stateID := range template.States {
+
+		// If specific states are required to perform this action, then verify that this state...
+		if len(action.States) > 0 {
+
+			// If the current state is not allowed, this action cannot be performed.
+			// Skipping means that a zero accessList (no permissions) will be returned for this state.
+			if action.States.NotContains(stateID) {
+				continue
+			}
+		}
+
+		// Set the AccessList for this State
+		action.AccessList[stateID] = action.calcAccessListForStateAndRole(template, stateID)
 	}
 
-	// Get the list of request roles that the user has
-	userRoles := enumerator.Roles(authorization)
-
-	// Get a list of the valid roles for this action
-	allowedRoles := action.AllowedRoles(enumerator.State())
-
-	// If one or more of these matches the allowed roles, then the request is granted.
-	return matchAny(userRoles, allowedRoles)
+	return nil
 }
 
-// AllowedRoles returns a string of all page request roles that are allowed to
-// perform this action.  This includes system roles like "anonymous", "authenticated", "self", "author", and "owner".
-func (action *Action) AllowedRoles(stateID string) []string {
+func (action *Action) calcAccessListForStateAndRole(template *Template, stateID string) AccessList {
 
-	// If present, "States" limits the states where this action can take place at all.
-	if len(action.States) > 0 {
-		// If the current state is not present in the list of allowed states, then this action cannot be
-		// taken until the stream is moved into a new state.
-		if !matchOne(action.States, stateID) {
-			return make([]string, 0)
+	// Create an AccessList for Streams in this State
+	result := NewAccessList()
+	allowedRoles := append(action.Roles, action.StateRoles[stateID]...)
+
+	if allowedRoles.Contains(MagicRoleAnonymous) {
+		result.Anonymous = true
+		return result
+	}
+
+	// Special case for Anonymous users overrides all other roles
+	if allowedRoles.Contains(MagicRoleAnonymous) {
+		result.Anonymous = true
+		return result
+	}
+
+	// Special case for Authenticated users overrides all other roles
+	if allowedRoles.Contains(MagicRoleAuthenticated) {
+		result.Authenticated = true
+		return result
+	}
+
+	// Calculate the roles in the AccessList
+	for _, roleID := range allowedRoles {
+
+		switch roleID {
+
+		// MagicRoleOwner represents the domain owner who can do anything.
+		// No flag is required here because domain owners can already do everything.
+		case MagicRoleOwner:
+
+		// MagicRoleMyself allows Users to perform actions on their own profies
+		case MagicRoleMyself:
+			result.Self = true
+
+		// MagicRoleAuthor allows Users to perform actions on Streams that they created
+		case MagicRoleAuthor:
+			result.Author = true
+
+		// All other privileges are granted via membership in a group or purchase of a product
+		default:
+			role := template.AccessRoles[roleID] // save becuase this was already checked above
+
+			if role.IsPrivileged {
+				result.Privileges = append(result.Privileges, roleID)
+			} else {
+				result.Groups = append(result.Groups, roleID)
+			}
 		}
 	}
 
-	// By default, owners can do everything
-	result := []string{}
-
-	// If there are additional roles allowed, then add them to the result
-	if len(action.Roles) > 0 {
-		result = append(result, action.Roles...)
-	}
-
-	// If there's a corresponding entry in stateRoles, add that to the result, too.
-	if stateRoles, ok := action.StateRoles[stateID]; ok {
-		result = append(result, stateRoles...)
-	}
-
-	// If no roles have been defined, then this action can be performed by anyone
-	if len(result) == 0 {
-		result = append(result, MagicRoleAnonymous, MagicRoleAuthenticated)
-	}
-
-	// Owners can always perform actions, no matter what.
-	result = append(result, MagicRoleMyself, MagicRoleOwner)
+	// Unique-ify the lists of group and product roles
+	result.Groups = slice.Unique(result.Groups)
+	result.Privileges = slice.Unique(result.Privileges)
 
 	return result
 }
 
+// AllowedRoles returns a slice of roles that are allowed to perform this action,
+// based on the state of the object.  This list includes
+// system roles like "anonymous", "authenticated", "self", "author", and "owner".
+func (action *Action) AllowedRoles(stateID string) []string {
+	return action.AccessList[stateID].Roles()
+}
+
+// Dump is a debugging method that outputs all of the contents of an Action
+// without displaying steps/templates (which are huge)
+func (action *Action) Dump() {
+
+	spew.Dump(map[string]any{
+		"roles":      action.Roles,
+		"states":     action.States,
+		"stateRoles": action.StateRoles,
+		"accessList": action.AccessList,
+		"steps": slice.Map(action.Steps, func(step step.Step) string {
+			return step.Name()
+		}),
+	})
+}
+
+/******************************************
+ * Marshalling Methods
+ ******************************************/
+
+// UnmarshalJSON unmarshals the JSON data into this Action object.
 func (action *Action) UnmarshalJSON(data []byte) error {
 	var asMap map[string]any
 
@@ -91,14 +154,17 @@ func (action *Action) UnmarshalJSON(data []byte) error {
 	return action.UnmarshalMap(asMap)
 }
 
+// UnmarshalMap unmarshals the provided map into this Action object.
 func (action *Action) UnmarshalMap(data map[string]any) error {
+
+	const location = "model.Action.UnmarshalMap"
 
 	// Import easy values
 	action.Roles = convert.SliceOfString(data["roles"])
 	action.States = convert.SliceOfString(data["states"])
 
 	// Import stateRoles
-	action.StateRoles = make(map[string][]string)
+	action.StateRoles = make(mapof.Object[sliceof.String])
 	stateRoles := convert.MapOfAny(data["stateRoles"])
 	for key, value := range stateRoles {
 		action.StateRoles[key] = convert.SliceOfString(value)
@@ -109,40 +175,16 @@ func (action *Action) UnmarshalMap(data map[string]any) error {
 	if pipeline, err := step.NewPipeline(stepsInfo); err == nil {
 		action.Steps = pipeline
 	} else {
-		return derp.Wrap(err, "model.action.UnmarshalMap", "Error reading steps", stepsInfo)
+		return derp.Wrap(err, location, "Error reading steps", stepsInfo)
 	}
 
-	// If no steps configued, then try the "do" alias
-	if len(action.Steps) == 0 {
-		if name := convert.String(data["do"]); name != "" {
-			action.Steps, _ = step.NewPipeline([]mapof.Any{data})
-		}
-	}
+	// intentionally ignoring validation errors here
+	// so that we can generate more useful error messages later.
+	// for now, everything is valid. everything is fine. nothing to see here. move along, please.
+
+	// NOT VALIDATING EMPTY ACTIONS
+	// NOT VALIDATING INCORRECT ROLES
+	// NOT VALIDATING INCORRECT STATES
 
 	return nil
-}
-
-// matchOne returns TRUE if the value matches one (or more) of the values in the slice
-func matchOne(slice []string, value string) bool {
-	for index := range slice {
-		if slice[index] == value {
-			return true
-		}
-	}
-
-	return false
-}
-
-// matchAny returns TRUE if any of the values in slice1 are equal to any of the values in slice2
-func matchAny(slice1 []string, slice2 []string) bool {
-
-	for index1 := range slice1 {
-		for index2 := range slice2 {
-			if slice1[index1] == slice2[index2] {
-				return true
-			}
-		}
-	}
-
-	return false
 }

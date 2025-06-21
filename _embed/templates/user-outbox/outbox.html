@@ -1,5 +1,5 @@
 <!-- Page content -->
-<div class="framed page app h-card" hx-get="/@{{.UserID}}" hx-trigger="refreshPage from:window" hx-target="this" hx-swap="outerHTML" script="on load take .selected from .nav-item for #nav-outbox">
+<div class="app framed page h-card" hx-get="/@{{.UserID}}" hx-trigger="refreshPage from:window" hx-target="this" hx-swap="outerHTML" script="on load take .selected from .nav-item for #nav-outbox">
 
 	<title>{{.DisplayName}}</title>
 

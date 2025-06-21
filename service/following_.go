@@ -316,18 +316,18 @@ func (service *Following) ObjectSave(object data.Object, note string) error {
 	if following, ok := object.(*model.Following); ok {
 		return service.Save(following, note)
 	}
-	return derp.NewInternalError("service.Following.ObjectSave", "Invalid object type", object)
+	return derp.InternalError("service.Following.ObjectSave", "Invalid object type", object)
 }
 
 func (service *Following) ObjectDelete(object data.Object, note string) error {
 	if following, ok := object.(*model.Following); ok {
 		return service.Delete(following, note)
 	}
-	return derp.NewInternalError("service.Following.ObjectDelete", "Invalid object type", object)
+	return derp.InternalError("service.Following.ObjectDelete", "Invalid object type", object)
 }
 
 func (service *Following) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.NewUnauthorizedError("service.Following.ObjectUserCan", "Not Authorized")
+	return derp.UnauthorizedError("service.Following.ObjectUserCan", "Not Authorized")
 }
 
 func (service *Following) Schema() schema.Schema {
@@ -453,7 +453,7 @@ func (service *Following) GetFollowingID(userID primitive.ObjectID, uri string) 
 	}
 
 	if document.IsNil() {
-		return "", derp.NewBadRequestError(location, "Invalid ActivityStream document", uri)
+		return "", derp.BadRequestError(location, "Invalid ActivityStream document", uri)
 	}
 
 	// Look for the Actor in the Following collection
@@ -461,7 +461,7 @@ func (service *Following) GetFollowingID(userID primitive.ObjectID, uri string) 
 
 	if err := service.LoadByURL(userID, document.ID(), &following); err == nil {
 		return following.ID(), nil
-	} else if derp.NotFound(err) {
+	} else if derp.IsNotFound(err) {
 		return "", nil
 	} else {
 		return "", derp.Wrap(err, location, "Error loading Following record", uri)
@@ -606,7 +606,7 @@ func (service *Following) preventDuplicates(current *model.Following) error {
 	// Search the database for the original record
 	original := model.NewFollowing()
 	if err := service.LoadByURL(current.UserID, current.URL, &original); err != nil {
-		if derp.NotFound(err) {
+		if derp.IsNotFound(err) {
 			return nil
 		}
 		return derp.Wrap(err, "service.Following.preventDuplicate", "Error loading Following", current)

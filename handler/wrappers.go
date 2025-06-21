@@ -9,6 +9,7 @@ import (
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
 	"github.com/benpate/steranko"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -25,6 +26,61 @@ type WithFunc2[T any, U any] func(ctx *steranko.Context, factory *domain.Factory
 // WithFunc3 is a function signature for a continuation function that requires the domain Factory and three values
 type WithFunc3[T any, U any, V any] func(ctx *steranko.Context, factory *domain.Factory, value *T, value2 *U, value3 *V) error
 
+// WithAuthenticatedUser handles boilerplate code for requests that require a signed-in user
+func WithAuthenticatedUser(serverFactory *server.Factory, fn WithFunc1[model.User]) echo.HandlerFunc {
+
+	const location = "handler.WithAuthenticatedUser"
+
+	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *domain.Factory) error {
+
+		// Guarantee that the user is signed in
+		authorization := getAuthorization(ctx)
+
+		if !authorization.IsAuthenticated() {
+			return derp.UnauthorizedError(location, "You must be signed in to perform this action")
+		}
+
+		// Load the User from the database
+		userService := factory.User()
+		user := model.NewUser()
+
+		if err := userService.LoadByID(authorization.UserID, &user); err != nil {
+			return derp.Wrap(err, location, "Error loading User")
+		}
+
+		// Call the continuation function
+		return fn(ctx, factory, &user)
+	})
+}
+func WithConnection(serverFactory *server.Factory, fn WithFunc1[model.Connection]) echo.HandlerFunc {
+
+	const location = "handler.WithConnection"
+
+	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *domain.Factory) error {
+
+		// Load the Connection from the database
+		connectionService := factory.Connection()
+		connection := model.NewConnection()
+		provider := ctx.Param("provider")
+
+		if err := connectionService.LoadByProvider(provider, &connection); err != nil {
+			return derp.Wrap(err, location, "Error loading Connection")
+		}
+
+		// Call the continuation function
+		return fn(ctx, factory, &connection)
+	})
+}
+
+// WithDomain handles boilerplate code for requests that load a domain object
+func WithDomain(serverFactory *server.Factory, fn WithFunc1[model.Domain]) echo.HandlerFunc {
+
+	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *domain.Factory) error {
+		domain := factory.Domain().Get()
+		return fn(ctx, factory, domain)
+	})
+}
+
 // WithFactory handles boilerplate code for requests that require only the domain Factory
 func WithFactory(serverFactory *server.Factory, fn WithFunc0) echo.HandlerFunc {
 
@@ -36,37 +92,130 @@ func WithFactory(serverFactory *server.Factory, fn WithFunc0) echo.HandlerFunc {
 		sterankoContext, ok := ctx.(*steranko.Context)
 
 		if !ok {
-			return derp.NewInternalError(location, "Context must be a Steranko Context")
+			return derp.ReportAndReturn(derp.InternalError(location, "Context must be a Steranko Context"))
 		}
 
 		// Validate the domain name
 		factory, err := serverFactory.ByContext(ctx)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unrecognized Domain")
+			return derp.ReportAndReturn(derp.Wrap(err, location, "Unrecognized Domain"))
 		}
 
 		// Call the continuation function
-		return fn(sterankoContext, factory)
+		return derp.ReportAndReturn(fn(sterankoContext, factory))
 	}
 }
 
-// WithDomain handles boilerplate code for requests that load a domain object
-func WithDomain(serverFactory *server.Factory, fn WithFunc1[model.Domain]) echo.HandlerFunc {
+func WithIdentity(serverFactory *server.Factory, fn WithFunc1[model.Identity]) echo.HandlerFunc {
 
-	const location = "handler.WithRegistration"
+	const location = "handler.WithIdentity"
 
 	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *domain.Factory) error {
 
-		// Try to retrieve the Domain record
-		domainService := factory.Domain()
-		domain, err := domainService.LoadDomain()
+		identityService := factory.Identity()
+		identity := model.NewIdentity()
 
-		if err != nil {
-			return derp.Wrap(err, location, "Unable to load Domain")
+		authorization := getAuthorization(ctx)
+
+		if authorization.IdentityID.IsZero() {
+
+			// If we're authenticated but don't have an Identity,
+			// then we'll MAKE one using the authenticated user
+			if authorization.IsAuthenticated() {
+
+				// Load the signed-in user
+				userService := factory.User()
+				user := model.NewUser()
+
+				if err := userService.LoadByID(authorization.UserID, &user); err != nil {
+					return derp.Wrap(err, location, "Error loading signed-in user")
+				}
+
+				// Load/Create an Identity for the signed-in User
+				identity, err := identityService.LoadOrCreate(user.DisplayName, model.IdentifierTypeEmail, user.EmailAddress)
+
+				if err != nil {
+					return derp.Wrap(err, location, "Error loading/creating Identity")
+				}
+
+				// TODO: update the signed-in authorization so we don't
+				// have to hit the database all the time
+
+				return fn(ctx, factory, &identity)
+			}
+
+			return ctx.Redirect(http.StatusSeeOther, "/@guest/signin")
 		}
 
-		return fn(ctx, factory, &domain)
+		if err := identityService.LoadByID(authorization.IdentityID, &identity); err != nil {
+			return derp.Wrap(err, location, "Error loading Identity")
+		}
+
+		// Call the continuation function
+		return fn(ctx, factory, &identity)
+	})
+}
+
+func WithMerchantAccount(serverFactory *server.Factory, fn WithFunc1[model.MerchantAccount]) echo.HandlerFunc {
+
+	const location = "handler.WithMerchantAccount"
+
+	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *domain.Factory) error {
+
+		// Load the MerchantAccount from the database
+		merchantAccountService := factory.MerchantAccount()
+		merchantAccount := model.NewMerchantAccount()
+		merchantAccountToken := ctx.QueryParam("merchantAccountId")
+
+		if err := merchantAccountService.LoadByToken(merchantAccountToken, &merchantAccount); err != nil {
+			return derp.Wrap(err, location, "Error loading MerchantAccount")
+		}
+
+		// Call the continuation function
+		return fn(ctx, factory, &merchantAccount)
+	})
+}
+
+func WithMerchantAccountJWT(serverFactory *server.Factory, fn WithFunc1[model.MerchantAccount]) echo.HandlerFunc {
+
+	const location = "handler.WithProductJWT"
+
+	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *domain.Factory) error {
+
+		// Parse the JWT token from the Request
+		jwtService := factory.JWT()
+		claims := jwt.MapClaims{}
+
+		if err := jwtService.ParseToken(ctx.QueryParam("jwt"), &claims); err != nil {
+			return derp.Wrap(err, location, "Error parsing JWT token")
+		}
+
+		// Retrive the MerchantAccountID
+		merchantAccountID, isString := claims["merchantAccountId"].(string)
+		if !isString {
+			return derp.BadRequestError(location, "ProductID in JWT token must be a string")
+		}
+
+		// Retrive the ProductID
+		productID, isString := claims["productId"].(string)
+		if !isString {
+			return derp.BadRequestError(location, "ProductID in JWT token must be a string")
+		}
+
+		// Retrieve TransactionID (client_reference_id)
+		transactionID, isString := claims["transactionId"].(string)
+		if !isString {
+			return derp.BadRequestError(location, "AuthorizationCode in JWT token must be a string")
+		}
+
+		// Apply the values to the context
+		ctx.QueryParams().Set("merchantAccountId", merchantAccountID)
+		ctx.QueryParams().Set("productId", productID)
+		ctx.QueryParams().Set("transactionId", transactionID)
+
+		// Continue processing using WithMerchantAccount
+		return WithMerchantAccount(serverFactory, fn)(ctx)
 	})
 }
 
@@ -87,7 +236,7 @@ func WithRegistration(serverFactory *server.Factory, fn WithFunc2[model.Domain, 
 		registration, err := registrationService.Load(domain.RegistrationID)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error loading registration")
+			return derp.Wrap(err, location, "Error loading Registration")
 		}
 
 		if registration.IsZero() {
@@ -114,7 +263,7 @@ func WithSearchQuery(serverFactory *server.Factory, fn WithFunc3[model.Template,
 
 		// If there is no token, make a new token using the URL parameters provided
 		case "":
-			searchQuery, err := searchQueryService.LoadOrCreate(ctx.Request().URL.Query())
+			searchQuery, err := searchQueryService.LoadOrCreate(ctx.QueryParams())
 
 			if err != nil {
 				return derp.Wrap(err, location, "Error creating search query token")
@@ -151,7 +300,7 @@ func WithStream(serverFactory *server.Factory, fn WithFunc1[model.Stream]) echo.
 		if err := streamService.LoadByToken(token, &stream); err != nil {
 
 			// Special case: If the HOME page is missing, then this is a new database.  Forward to the admin section
-			if derp.NotFound(err) && (token == "home") {
+			if derp.IsNotFound(err) && (token == "home") {
 				return ctx.Redirect(http.StatusTemporaryRedirect, "/startup")
 			}
 
@@ -199,7 +348,7 @@ func WithUser(serverFactory *server.Factory, fn WithFunc1[model.User]) echo.Hand
 		}
 
 		if err := userService.LoadByToken(userID, &user); err != nil {
-			return derp.Wrap(err, location, "Error loading user from database")
+			return derp.Wrap(err, location, "Error loading User")
 		}
 
 		// Call the continuation function
@@ -260,33 +409,6 @@ func WithUserForwarding(serverFactory *server.Factory, fn WithFunc1[model.User])
 		}
 
 		// Execute the continuation function
-		return fn(ctx, factory, &user)
-	})
-}
-
-// WithAuthenticatedUser handles boilerplate code for requests that require a signed-in user
-func WithAuthenticatedUser(serverFactory *server.Factory, fn WithFunc1[model.User]) echo.HandlerFunc {
-
-	const location = "handler.WithAuthenticatedUser"
-
-	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *domain.Factory) error {
-
-		// Guarantee that the user is signed in
-		authorization := getAuthorization(ctx)
-
-		if !authorization.IsAuthenticated() {
-			return derp.NewUnauthorizedError(location, "You must be signed in to perform this action")
-		}
-
-		// Load the User from the database
-		userService := factory.User()
-		user := model.NewUser()
-
-		if err := userService.LoadByID(authorization.UserID, &user); err != nil {
-			return derp.Wrap(err, location, "Error loading user from database")
-		}
-
-		// Call the continuation function
 		return fn(ctx, factory, &user)
 	})
 }

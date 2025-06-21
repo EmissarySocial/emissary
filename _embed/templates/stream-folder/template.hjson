@@ -1,7 +1,7 @@
 {
 	templateId: folder
 	templateRole: folder
-	model: stream
+	model: Stream
 	containedBy: ["top", "folder"]
 	label: Folder
 	description: Folders can contain all other streams
@@ -22,22 +22,26 @@
 	states: {
 		default: {
 			label: Default
-			description: Folders only have one state
+			description: This item is not visible to anyone except the author and editors
+		}
+		published: {
+			label: Published
+			description: This item is visible to all Viewers
 		}
 	}
 	roles: {
-		editor: {
-			label: Editor
-			description: Editors can manage all content in this folder
-		}
 		viewer: {
 			label: Viewer
 			description: Viewers can access folder contents, but can not add new items
 		}
+		editor: {
+			label: Editor
+			description: Editors can manage all content in this folder
+		}
 	}
 	actions: {
 		create: {
-			roles:["editor","owner"]
+			roles:["author","editor"]
 			steps:[
 				{
 					do:"set-data", 
@@ -51,11 +55,16 @@
 			]
 		}
 		view: {
-			roles: ["viewer","editor","owner"]
-			do:"view-html"
+			roles: ["author", "editor"]
+			stateRoles: {
+				published: ["viewer"]
+			}
+			steps: [
+				{do:"view-html"}
+			]
 		}
 		edit: {
-			roles: ["editor"]
+			roles: ["author", "editor"]
 			steps:[
 				{
 					do:"as-modal"
@@ -75,34 +84,36 @@
 								]
 							}
 						}, 
-						{do:"save-and-publish", outbox:"true"}
+						{do:"save-and-publish", state:"published", outbox:"true"}
 					]
 				}
 				{do:"refresh-page"}
 			]
 		}
 		delete: {
-			roles: ["editor"]
+			roles: ["author", "editor"]
 			steps: [
-				{do:"unpublish", outbox:"true"}
 				{do:"delete", title:"Delete this Folder?", message:"This will permanently delete this folder and all of its contents"}
+				{do:"unpublish", state:"default", outbox:"true"}
 				{do:"forward-to", url:"/{{.ParentID}}"}
 			]
 		}
 
 		add-child: {
-			roles: ["editor"]
+			roles: ["author", "editor"]
 			steps:[
 				{do:"add-stream", location:"child", title:"Add Item", comment:"Created by {{.Author.DisplayName}}"}
 				{do:"refresh-page"}
 			]
 		}
 		sort:{
-			roles:["editor"]
-			do:"sort"
+			roles:["author", "editor"]
+			steps:[
+				{do:"sort"}
+			]
 		}
 		sharing: {
-			roles: ["editor"]
+			roles: ["author", "editor"]
 			steps: [
 				{do:"as-modal", steps: [
 					{do:"set-simple-sharing", roles: ["viewer"], title:"Sharing Settings", message:"Select Which People Can See This Folder"}
@@ -110,7 +121,17 @@
 				]}
 			]
 		}
-		feed: {roles: ["viewer"], do:"view-feed"}
-		websub: {roles: ["viewer"], do:"websub"}
+		feed: {
+			roles: ["viewer", "author", "editor"], 
+			steps:[
+				{do:"view-feed"}
+			]
+		}
+		websub: {
+			roles: ["viewer", "author", "editor"], 
+			steps:[
+				{do:"websub"}
+			]
+		}
 	}
 }

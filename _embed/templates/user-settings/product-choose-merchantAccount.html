@@ -1,0 +1,28 @@
+{{- $merchantAccounts := .MerchantAccounts.Slice -}}
+
+<h1>{{icon "add"}} Add a Product</h1>
+
+<p>Which merchant account do you want to use for this product?</p>
+
+<div class="table margin-top">
+	{{- range $index, $merchantAccount := $merchantAccounts -}}
+		{{- $type := lowerCase $merchantAccount.Type -}}
+		<div class="flex-row" role="button">
+			<div hx-get="/@me/settings/product-edit?merchantAccountId={{ $merchantAccount.ID }}" class="flex-grow">
+				{{icon $type}} {{ $merchantAccount.Name}}
+			</div>
+			<div>
+				<button class="button text-sm" hx-get="/@me/settings/merchantAccount-edit?merchantAccountId={{ $merchantAccount.ID }}">
+					Edit
+				</button>
+			</div>
+		</div>
+	{{- end -}}
+</div>
+
+<div class="margin-top flex-row">
+	<div class="flex-grow">
+		<button script="on click trigger closeModal">Cancel</button>
+	</div>
+	<a href="/@me/settings/merchantAccounts" hx-boost="true">Edit Merchant Accounts</a>
+</div>

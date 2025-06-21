@@ -1,13 +1,18 @@
 {
 	templateId:admin-search
 	templateRole:admin
-	model:search
+	model:Search
 	extends: ["admin-common"]
 	containedBy:["admin"]
 	label:Search
 	description: Manage Search Engine Settings
 
 	actions: {
-		index: {do:"view-html"}
+		index: {
+			roles:["owner"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
 	}
 }

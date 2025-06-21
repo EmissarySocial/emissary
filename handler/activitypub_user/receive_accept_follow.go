@@ -37,7 +37,7 @@ func receive_AcceptFollow(context Context, activity streams.Document) error {
 
 	// RULE: Validate that the Following record matches the Accept
 	if following.ProfileURL != activity.Actor().ID() {
-		return derp.NewForbiddenError(location, "Invalid Accept", following.ProfileURL, activity.Actor().ID())
+		return derp.ForbiddenError(location, "Invalid Accept", following.ProfileURL, activity.Actor().ID())
 	}
 
 	// Populate our "Following" record with the NAME and AVATAR of the remote Actor

@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data/journal"
 	domainlib "github.com/benpate/domain"
 	"github.com/benpate/form"
@@ -47,6 +48,40 @@ func NewDomain() Domain {
 // ID returns the primary key of this object
 func (domain *Domain) ID() string {
 	return domain.DomainID.Hex()
+}
+
+/******************************************
+ * AccessLister Interface
+ ******************************************/
+
+// State returns the current state of this Domain.
+// It is part of the AccessLister interface
+func (domain *Domain) State() string {
+	return "default"
+}
+
+// IsAuthor returns TRUE if the provided UserID the author of this Domain
+// It is part of the AccessLister interface
+func (domain *Domain) IsAuthor(authorID primitive.ObjectID) bool {
+	return false
+}
+
+// IsMyself returns TRUE if this object directly represents the provided UserID
+// It is part of the AccessLister interface
+func (domain *Domain) IsMyself(userID primitive.ObjectID) bool {
+	return false
+}
+
+// RolesToGroupIDs returns a slice of GroupIDs that grant access to any of the requested roles.
+// It is part of the AccessLister interface
+func (domain *Domain) RolesToGroupIDs(roleIDs ...string) id.Slice {
+	return nil
+}
+
+// RolesToPrivileges returns a slice of Privileges that grant access to any of the requested roles.
+// It is part of the AccessLister interface
+func (domain *Domain) RolesToPrivileges(roleIDs ...string) sliceof.String {
+	return sliceof.NewString()
 }
 
 /******************************************

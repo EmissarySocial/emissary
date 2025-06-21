@@ -202,7 +202,7 @@ func (service *OAuthUserToken) Create(client model.OAuthClient, authorization mo
 
 	// Require that the user is actualy logged in
 	if !authorization.IsAuthenticated() {
-		return model.OAuthUserToken{}, derp.NewUnauthorizedError(location, "User is not logged in")
+		return model.OAuthUserToken{}, derp.UnauthorizedError(location, "User is not logged in")
 	}
 
 	// Validate the request

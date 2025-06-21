@@ -20,12 +20,12 @@ func Domain(factory *server.Factory) echo.MiddlewareFunc {
 			domainFactory, err := factory.ByContext(ctx)
 
 			if err != nil {
-				return derp.NewMisdirectedRequestError(location, "Invalid hostname", ctx.Path(), err)
+				return derp.MisdirectedRequestError(location, "Invalid hostname", ctx.Path(), err)
 			}
 
 			// Guarantee that the database session is not nil
 			if domainFactory.Session == nil {
-				return derp.NewInternalError(location, "Database not ready")
+				return derp.InternalError(location, "Database not ready")
 			}
 
 			return next(ctx)

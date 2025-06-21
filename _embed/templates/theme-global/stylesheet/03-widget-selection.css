@@ -1,0 +1,9 @@
+.selected > .selected-hide,
+:not(.selected) > .selected-show {
+	display:none;
+}
+
+.selected > .selected-show,
+:not(.selected) > .selected-hide {
+	display:initial;
+}

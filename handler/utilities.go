@@ -130,6 +130,12 @@ func inlineError(ctx echo.Context, errorMessage string) error {
 	return ctx.String(http.StatusOK, errorMessage)
 }
 
+func closeModalAndRefreshPage(ctx echo.Context) error {
+	header := ctx.Response().Header()
+	header.Set("Hx-Trigger", `{"closeModal": true, "refreshPage": true}`)
+	return ctx.NoContent(http.StatusOK)
+}
+
 // fullURL returns the URL for a request that include the protocol, hostname, and path
 func fullURL(factory *domain.Factory, ctx echo.Context) string {
 	return factory.Host() + ctx.Request().URL.String()

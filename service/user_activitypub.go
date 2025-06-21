@@ -31,7 +31,7 @@ func (service *User) ParseProfileURL(value string) (primitive.ObjectID, error) {
 
 	// RULE: server must be the same as the server we're running on
 	if urlValue.Scheme+"://"+urlValue.Host != service.host {
-		return primitive.NilObjectID, derp.NewBadRequestError(location, "Profile URL must exist on this server", urlValue, value, service.host)
+		return primitive.NilObjectID, derp.BadRequestError(location, "Profile URL must exist on this server", urlValue, value, service.host)
 	}
 
 	// Extract the username from the URL
@@ -39,7 +39,7 @@ func (service *User) ParseProfileURL(value string) (primitive.ObjectID, error) {
 	username := path.Head()
 
 	if !strings.HasPrefix(username, "@") {
-		return primitive.NilObjectID, derp.NewBadRequestError(location, "Username must begin with an '@'", value)
+		return primitive.NilObjectID, derp.BadRequestError(location, "Username must begin with an '@'", value)
 	}
 
 	username = strings.TrimPrefix(username, "@")

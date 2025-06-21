@@ -23,7 +23,7 @@ func LockSearchResults(ctx context.Context, collection data.Collection, searchRe
 	mongo := mongoCollection(collection)
 
 	if mongo == nil {
-		return derp.NewInternalError(location, "Collection is not a MongoDB Collection")
+		return derp.InternalError(location, "Collection is not a MongoDB Collection")
 	}
 
 	// Build the query to lock the requested SearchResults

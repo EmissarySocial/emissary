@@ -67,7 +67,7 @@ func (client *Client) calcStatistics_inner(objectID string, relationType string)
 		fieldName = "statistics.dislikes"
 
 	default:
-		return derp.NewInternalError(location, "Invalid relationType", relationType)
+		return derp.InternalError(location, "Invalid relationType", relationType)
 	}
 
 	// Count all documents in the cache with the same relation type/href

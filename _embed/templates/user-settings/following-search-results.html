@@ -1,0 +1,41 @@
+{{- $search := .QueryParam "search" -}}
+{{- $folderID := .QueryParam "folderId" -}}
+{{- $results := .ActivityStreamActors $search -}}
+{{- $resultCount := len $results}}
+
+{{- if eq "" $search -}}
+
+{{- else if eq 0 $resultCount -}}
+	<div class="text-center margin-top">
+		<div class="text-light-gray">No results... Try a different name or address</div>
+	</div>
+{{- else -}}
+	<div class="text-light-gray margin-top">Found {{$resultCount}} {{pluralize $resultCount "result:" "results:"}}</div>
+	<div role="menu" class="menu margin-top">
+		{{- range $results -}}
+			<div role="menuitem" tabIndex="0" hx-get="/@me/settings/following-add?url={{.ID}}&folderId={{$folderID}}&search={{$search}}">
+				<div class="flex-row margin-vertical-sm">
+					<div class="width-32">
+							{{- if ne "" .Icon -}}
+								<img src="{{.Icon}}" class="circle width-32">
+							{{- else -}}
+								<div class="circle width-32 bg-light-gray"></div>
+							{{- end -}}
+					</div>
+					<div class="flex-grow-1">
+						<div class="text-md margin-vertical-none">
+							<span class="bold">{{.Name}}</span>
+						</div>
+						<div class="text-light-gray text-sm ellipsis">
+								{{.UsernameOrID}}
+						</div>
+					</div>
+
+					<div class="text-sm">
+						<span class="button">Follow</span>
+					</div>
+				</div>
+			</div>
+		{{- end -}}
+	</div>
+{{- end -}}

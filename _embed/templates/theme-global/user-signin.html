@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Sign In &middot; {{.domainName}}</title>
+	{{- template "includes-head" . -}}
+</head>
+
+<body hx-target="main" hx-swap="innerHTML" hx-push-url="false" hx-ext="a11y">
+
+	<main class="flex-justify-center flex-align-center" style="display:flex; height:clamp(400px, 100vh, 1000px);">
+
+		<div class="card" style="width:clamp(540px, 50%, 720px); margin:auto; padding:16px 32px; line-height:150%;">
+			
+			<form hx-post="/signin?next={{.next}}" hx-trigger="submit" hx-target="#message">
+
+				<div class="layout-vertical margin-bottom">
+
+					{{- if eq .message "password-reset" -}}
+						<div class="alert-green"><b>Success</b> {{icon "thumbs-up-fill"}} Your password has been updated. To continue, please sign in with your new password below.</div>
+						<div script="on load focus() the #password"></div>
+					{{- else -}}
+						<div script="on load focus() the #username"></div>
+					{{- end -}}
+
+					<!-- Customizable Header for Signin Page -->
+					{{- template "user-signin-header" . -}}
+	
+					<div class="layout-vertical-elements">
+						<div class="layout-vertical-element">
+							<label for="username">Email / Username</label>
+							<input type="text" name="username" id="username" required="true" value="{{.username}}" maxlength="50" autofocus autocomplete="username">
+						</div>
+					</div>
+
+					<div class="layout-vertical-element">
+						<label for="password">Password</label>
+						<input type="password" name="password" id="password" required="true" maxlength="100" autocomplete="current-password">
+					</div>
+
+				</div>
+
+				<div>
+
+					<button id="submitButton" type="submit" class="primary htmx-request-hide" tabIndex="0">
+						Sign In
+					</button>
+
+					<button class="htmx-request-show primary" disabled>
+						<span class="spin">{{icon "loading"}}</span> Signing In
+					</button>
+
+					<span id="message" class="text-red" hidden></span>
+
+					<a href="/signin/reset" class="margin-left">Forgot Password?</a>
+
+					{{- if .hasRegistrationForm -}}
+						<div class="margin-top-xl">
+							<h2>Need an Account?</h2>
+							<a href="/register" class="button">Register Now &rarr;</a>
+						</div>
+					{{- end -}}
+
+				</div>
+
+			</form>
+
+		</div>
+
+	</main>
+
+	<script type="text/hyperscript">	
+		init 
+			set lastPage to document.referrer
+			if (lastPage is empty) or (lastPage contains "/signin") or (lastPage contains "/register") then 
+				call sessionStorage.removeItem("signin-return")
+				exit
+			end
+
+			call sessionStorage.setItem("signin-return", lastPage)
+		end
+
+		on htmx:beforeRequest
+			add [@hidden=true] to #message
+			add [@disabled=true] to #submitButton
+
+		on SigninSuccess
+			set lastPage to sessionStorage.getItem("signin-return")
+			call sessionStorage.removeItem("signin-return")
+			if lastPage is empty then
+				set lastPage to "/home"
+			end
+			set window.location to lastPage
+		end
+
+		on SigninError
+			set #message.innerHTML to "Invalid Login.  Please Try Again."
+			remove [@hidden] from #message
+			remove [@disabled] from #submitButton
+	</script>
+
+	{{ template "includes-foot" . }}
+	
+</body>
+</html>

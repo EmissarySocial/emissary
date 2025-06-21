@@ -31,7 +31,7 @@ func Validate(request *http.Request, bannedFields ...string) error {
 	for _, field := range bannedFields {
 
 		if values.Get(field) != "" {
-			return derp.NewBadRequestError(location, "Honeypot field is not empty", field, values.Get(field))
+			return derp.BadRequestError(location, "Honeypot field is not empty", field, values.Get(field))
 		}
 	}
 

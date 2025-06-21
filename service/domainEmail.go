@@ -122,6 +122,41 @@ func (service *DomainEmail) SendPasswordReset(user *model.User) error {
 	return nil
 }
 
+// SendGuestCode sends JWT signin code to the provided email address, which will
+// sign their "Identity" into the system
+func (service *DomainEmail) SendGuestCode(identifier string, token string) error {
+
+	const location = "service.DomainEmail.SendGuestCode"
+
+	domain := service.domainService.Get()
+
+	// Send the welcome email
+	err := service.serverEmail.Send(
+		service.smtp,
+		service.owner,
+		"user-guest-code",
+		"Identity",
+		mapof.Any{
+			// User info available to the template
+			"Email": identifier,
+			"Token": token,
+
+			// Domain info available to the template
+			"Domain_Owner": service.owner,
+			"Domain_URL":   domain.Host(),
+			"Domain_Name":  domain.Label,
+			"Domain_Icon":  domain.IconURL(),
+		},
+	)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error sending guest code to: "+identifier)
+	}
+
+	// Woot!
+	return nil
+}
+
 func (service *DomainEmail) SendFollowerConfirmation(actor model.PersonLink, follower *model.Follower) error {
 
 	domain := service.domainService.Get()

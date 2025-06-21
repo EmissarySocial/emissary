@@ -19,23 +19,25 @@ type Delete struct {
 // NewDelete returns a fully populated Delete object
 func NewDelete(stepInfo mapof.Any) (Delete, error) {
 
+	const location = "model.step.NewDelete"
+
 	// Validate the step configuration
 	if err := StepDeleteSchema().Validate(stepInfo); err != nil {
-		return Delete{}, derp.Wrap(err, "model.step.NewDelete", "Invalid step configuration", stepInfo)
+		return Delete{}, derp.Wrap(err, location, "Invalid step configuration", stepInfo)
 	}
 
 	// Create the "title" template
 	titleTemplate, err := template.New("").Parse(first(stepInfo.GetString("title"), "Delete '{{.Label}}'?"))
 
 	if err != nil {
-		return Delete{}, derp.Wrap(err, "model.step.NewDelete", "Invalid 'title' template", stepInfo)
+		return Delete{}, derp.Wrap(err, location, "Invalid 'title' template", stepInfo)
 	}
 
 	// Create the "message" template
 	messageTemplate, err := template.New("").Parse(first(stepInfo.GetString("message"), "Are you sure you want to delete {{.Label}}? There is NO UNDO."))
 
 	if err != nil {
-		return Delete{}, derp.Wrap(err, "model.step.NewDelete", "Invalid 'message' template", stepInfo)
+		return Delete{}, derp.Wrap(err, location, "Invalid 'message' template", stepInfo)
 	}
 
 	return Delete{
@@ -46,15 +48,33 @@ func NewDelete(stepInfo mapof.Any) (Delete, error) {
 	}, nil
 }
 
-// AmStep is here only to verify that this struct is a build pipeline step
-func (step Delete) AmStep() {}
+// Name returns the name of the step, which is used in debugging.
+func (step Delete) Name() string {
+	return "delete"
+}
+
+// RequiredModel returns the name of the model object that MUST be present in the Template.
+// If this value is not empty, then the Template MUST use this model object.
+func (step Delete) RequiredModel() string {
+	return ""
+}
+
+// RequiredStates returns a slice of states that must be defined any Template that uses this Step
+func (step Delete) RequiredStates() []string {
+	return []string{}
+}
+
+// RequiredRoles returns a slice of roles that must be defined any Template that uses this Step
+func (step Delete) RequiredRoles() []string {
+	return []string{}
+}
 
 // StepDeleteSchema returns a validating schema for the EditContent step
 func StepDeleteSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"title":   schema.String{MaxLength: 1024, Format: "text"},
-			"message": schema.String{MaxLength: 128, Format: "text"},
+			"title":   schema.String{MaxLength: 128, Format: "text"},
+			"message": schema.String{MaxLength: 512, Format: "text"},
 			"submit":  schema.String{MaxLength: 32, Format: "text"},
 			"method":  schema.String{Enum: []string{"get", "post", "both"}, Default: "both"},
 		},

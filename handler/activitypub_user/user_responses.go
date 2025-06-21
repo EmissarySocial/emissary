@@ -30,12 +30,12 @@ func GetResponseCollection(serverFactory *server.Factory, responseType string) e
 		user := model.NewUser()
 
 		if err := userService.LoadByToken(ctx.Param("userId"), &user); err != nil {
-			return derp.NewNotFoundError(location, "User not found", err)
+			return derp.NotFoundError(location, "User not found", err)
 		}
 
 		// RULE: Only public users can be queried
 		if !user.IsPublic {
-			return derp.NewNotFoundError(location, "User not found")
+			return derp.NotFoundError(location, "User not found")
 		}
 
 		// If the request is for the collection itself, then return a summary and the URL of the first page
@@ -77,7 +77,7 @@ func GetResponse(serverFactory *server.Factory, responseType string) echo.Handle
 		responseID, err := primitive.ObjectIDFromHex(ctx.Param("response"))
 
 		if err != nil {
-			return derp.NewNotFoundError(location, "Invalid Response ID", err)
+			return derp.NotFoundError(location, "Invalid Response ID", err)
 		}
 
 		// Validate the domain name
@@ -92,12 +92,12 @@ func GetResponse(serverFactory *server.Factory, responseType string) echo.Handle
 		user := model.NewUser()
 
 		if err := userService.LoadByToken(ctx.Param("userId"), &user); err != nil {
-			return derp.NewNotFoundError(location, "User not found", err)
+			return derp.NotFoundError(location, "User not found", err)
 		}
 
 		// RULE: Only public users can be queried
 		if !user.IsPublic {
-			return derp.NewNotFoundError(location, "User not found")
+			return derp.NotFoundError(location, "User not found")
 		}
 
 		// Try to load the Response from the database
@@ -109,11 +109,11 @@ func GetResponse(serverFactory *server.Factory, responseType string) echo.Handle
 		}
 
 		if response.Actor != user.ProfileURL {
-			return derp.NewNotFoundError(location, "Response not found", "ActorID does not match")
+			return derp.NotFoundError(location, "Response not found", "ActorID does not match")
 		}
 
 		if response.Type != responseType {
-			return derp.NewNotFoundError(location, "Response not found", "Type does not match")
+			return derp.NotFoundError(location, "Response not found", "Type does not match")
 		}
 
 		// Return the response as JSON-LD

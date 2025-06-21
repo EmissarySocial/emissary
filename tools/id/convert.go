@@ -6,11 +6,13 @@ import (
 )
 
 func Convert(value any) (primitive.ObjectID, error) {
+
 	if value == nil {
 		return primitive.NilObjectID, nil
 	}
 
 	switch v := value.(type) {
+
 	case primitive.ObjectID:
 		return v, nil
 
@@ -18,20 +20,24 @@ func Convert(value any) (primitive.ObjectID, error) {
 		return primitive.ObjectIDFromHex(v)
 
 	default:
-		return primitive.NilObjectID, derp.NewInternalError("id.Convert", "Invalid Type", value)
+		return primitive.NilObjectID, derp.InternalError("id.Convert", "Invalid Type", value)
 	}
 }
 
-func ToBytes(value primitive.ObjectID) []byte {
-	return value[:]
-}
+func ConvertSlice(original []string) ([]primitive.ObjectID, error) {
 
-func FromBytes(value []byte) primitive.ObjectID {
+	result := make([]primitive.ObjectID, 0, len(original))
 
-	if len(value) == 12 {
-		array := (*[12]byte)(value)
-		return primitive.ObjectID(*array)
+	for index, value := range original {
+
+		objectID, err := primitive.ObjectIDFromHex(value)
+
+		if err == nil {
+			result = append(result, objectID)
+		} else {
+			return nil, derp.Wrap(err, "id.ConvertSlice", "Error converting string to ObjectID", value, index)
+		}
 	}
 
-	return primitive.NilObjectID
+	return result, nil
 }

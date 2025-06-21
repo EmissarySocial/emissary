@@ -25,7 +25,7 @@
 		]
 	}
 	actions: {
-		view: {do:"view-html", as-full-page:true}
-		confirm: {do:"view-html", as-full-page:true}
+		view: {roles:["anonymous"], do:"view-html", as-full-page:true}
+		confirm: {roles:["anonymous"], do:"view-html", as-full-page:true}
 	}
 }

@@ -1,0 +1,50 @@
+{{- $ruleID := .QueryParam "ruleId" -}}
+{{- $rule := .RuleByToken $ruleID -}}
+{{- $following := .FollowingByToken $rule.FollowingID.Hex -}}
+
+<h2>{{icon "cloud"}} Imported Rule</h2>
+
+<div class="info margin-bottom">
+	This imported rule is owned by its original publisher.<br><br>
+	Take ownership (below) to: 1) save your own changes, and 2) prevent the publisher from updating it in the future.
+</div>
+
+<table class="table margin-bottom-lg">
+	<tr>
+		<td>Publisher</td>
+		<td width="100%" class="flex-row">
+			{{- if ne "" $following.IconURL -}}
+				<img class="circle width-32" src="{{$following.IconURL}}">
+			{{- end -}}
+			<div class="width-100%">{{$following.Label}}</div>
+			<div class="text-sm nowrap">
+				<button hx-get="/@me/settings/following-edit?followingId={{$following.ID}}">Edit Source</button>
+				<a href="{{$following.ProfileURL}}" role="link" class="button" target="_blank">Go to Profile</a>
+			</div>
+		</td>
+	</tr>
+	<tr>
+		<td>Rule</td>
+		<td>
+			<div class="text-sm text-gray">{{$rule.Type}}</div>
+			<div>{{$rule.Trigger}}</div>
+		</td>
+	</tr>
+	<tr>
+		<td>Label</td>
+		<td>{{$rule.Label}}</td>
+	</tr>
+	<tr>
+		<td>Sharing</td>
+		<td>Private. Not shared with my followers</td>
+	</tr>
+	<tr>
+		<td>Updating</td>
+		<td>Automatic (when the publisher makes changes)</td>
+	</tr>	
+</table>
+
+<div>
+	<button class="primary" hx-get="/@me/settings/rule-edit?ruleId={{$rule.ID}}&edit=true">Take Ownership</button>
+	<button script="on click send closeModal">Cancel</button>
+</div>

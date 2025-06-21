@@ -16,7 +16,6 @@ import (
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
-	"github.com/benpate/rosetta/slice"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -26,7 +25,7 @@ import (
 type Registration struct {
 	_actionID     string
 	_action       model.Action
-	_domain       model.Domain
+	_domain       *model.Domain
 	_provider     *service.Provider
 	_registration *model.Registration
 	_user         model.User
@@ -42,7 +41,7 @@ func NewRegistration(factory Factory, request *http.Request, response http.Respo
 	action, ok := registration.Action(actionID)
 
 	if !ok {
-		return Registration{}, derp.NewBadRequestError(location, "Invalid actionID", actionID)
+		return Registration{}, derp.BadRequestError(location, "Invalid actionID", actionID)
 	}
 
 	// Create and return the Registration builder
@@ -199,17 +198,7 @@ func (w Registration) Template() model.Registration {
 
 // Providers lists all available external services that can be connected to this domain
 func (w Registration) Providers() []form.LookupCode {
-
-	providers := w._factory.Providers()
-
-	return slice.Filter(dataset.Providers(), func(lookupCode form.LookupCode) bool {
-		if lookupCode.Group == "MANUAL" {
-			return true
-		}
-
-		provider, _ := providers.Get(lookupCode.Value)
-		return !provider.IsEmpty()
-	})
+	return dataset.Providers()
 }
 
 // Connection loads an external service connection from the database

@@ -58,7 +58,7 @@ func (service *Outbox) UnPublish(actor *outbox.Actor, parentType string, parentI
 	// Load the Outbox Message
 	message := model.NewOutboxMessage()
 	if err := service.LoadByURL(parentType, parentID, url, &message); err != nil {
-		if derp.NotFound(err) {
+		if derp.IsNotFound(err) {
 			log.Debug().Str("type", parentType).Str("parent", parentID.Hex()).Str("url", url).Msg("Outbox Message not found")
 			return nil
 		}

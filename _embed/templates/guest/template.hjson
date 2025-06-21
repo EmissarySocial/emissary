@@ -1,0 +1,73 @@
+{
+	templateId: guest
+	templateRole: guest
+	model: Identity
+	label: Guest Profile Page
+	description: Default profile page for Guests
+	containedBy: []
+	schema: {
+		title: Guest Profile
+		type: object
+		properties: {}
+	}
+
+	states: {
+		default: {
+			label: Default
+			description: Default state for guest profiles
+		}
+	}
+
+	actions: {
+
+		view: {
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
+		edit: {
+			roles:["self"]
+			steps:[
+				{do:"as-modal", steps:[
+					{do:"edit", form: {
+						label: Edit My Name
+						type: layout-vertical
+						children: [
+							{do:"input", path:"name", label:"Name", type:"text", options:{autocomplete:"name"}},
+						]
+					}}
+					{do:"save"}
+					{do:"refresh-page"}
+				]}
+			]
+		}
+
+		email: {
+			roles:["self"]
+			steps:[
+				{do:"as-modal", steps:[
+					{do:"view-html"}
+				]}
+			]
+		}
+		webfinger: {
+			roles:["self"]
+			steps:[
+				{do:"as-modal", steps:[
+					{do:"view-html"}
+				]}
+			]
+		}
+
+		confirm: {
+			roles:["self"]
+			steps:[
+				{do:"as-modal", steps:[
+					{do:"view-html"}
+				]}
+			]
+		}
+	}
+}	

@@ -1,16 +1,28 @@
 {
 	templateId:"admin-users"
 	templateRole:"admin"
-	model:"user"
+	model:"User"
 	extends: ["admin-common"]
 	containedBy:["admin"]
 	label: "User"
 	description: "Manage all users on this website"
 	actions: {
-		index: {do: "view-html"}
-		list: {do: "view-html"}
-		
+		index: {
+			roles:["owner"]
+			steps: [
+				{do: "view-html"}
+			]
+		}
+
+		list: {
+			roles:["owner"]
+			steps: [
+				{do: "view-html"}
+			]
+		}
+
 		add: {
+			roles:["owner"]
 			steps: [{
 				do: as-modal
 				steps: [
@@ -64,6 +76,7 @@
 		}
 
 		edit:{
+			roles:["owner"]
 			steps:[
 				{
 					do:"as-modal"
@@ -121,6 +134,7 @@
 		}
 
 		edit-form: {
+			roles:["owner"]
 			steps: [
 				{
 					do: "edit"
@@ -145,12 +159,14 @@
 		}
 
 		send-welcome: {
+			roles:["owner"]
 			steps:[
 				{do:"send-email", email:"welcome"}
 			]
 		}
 
 		delete: {
+			roles:["owner"]
 			steps:[
 				{do: "delete", type: "user"}
 				{do: "refresh-page"}

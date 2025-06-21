@@ -123,7 +123,7 @@ func (service *EncryptionKey) LoadByParentID(parentType string, parentID primiti
 	}
 
 	// If this is a legitimate error, then return it
-	if !derp.NotFound(err) {
+	if !derp.IsNotFound(err) {
 		return derp.Wrap(err, "service.EncryptionKey.LoadByID", "Error loading EncryptionKey", parentID)
 	}
 

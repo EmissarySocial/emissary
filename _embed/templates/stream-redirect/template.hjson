@@ -1,14 +1,12 @@
 {
-	templateId: "redirect"
-	model:"stream"
+	templateId: redirect
+	model: Stream
 	containedBy: ["top", "folder"]
-	label: "Redirect"
-	description: "Forward your visitors to an external website"
-	icon: "forward"
-	childSortType: "label"
-	childSortOrder: "ASC"
+	label: Redirect
+	description: Forward your visitors to an external website
+	icon: forward
 	schema: {
-		type: "object"
+		type: object
 		properties: {
 			label: {type:"string"}
 			summary: {type:"string"}
@@ -17,43 +15,63 @@
 			}}
 		}
 	}
+	states: {
+		default: {
+			label: Default
+			description: Default state for Redirects
+		}
+	}
+
 	roles: {
-		owner: {}
-		viewer:{}
+		viewer:{
+			label: Viewer
+			description: Can view this redirect but cannot make changes
+		}
+		editor:{
+			label: Editor
+			description: Editors can make changes to this stream
+		}
 	}
 	actions: {
 		create: {
-			roles:["owner"]
+			roles:["author", "editor"]
 			steps:[
 				{do:"save"}
 				{do:"forward-to", url:"/{{.StreamID}}"}
 			]
 		}
-		view: {do: "view-html", roles:["viewer"]}
+		view: {
+			roles:["viewer", "author", "editor"]
+			steps:[
+				{do: "view-html"}
+			]
+		}
 		edit: {
-			roles: ["owner"]
-			steps:[{
-				do: "as-modal"
-				background:"view"
-				steps: [
-					{
-						do: "edit"
-						label: "Edit Redirect"
-						form: {
-							type: "layout-vertical"
-							children: [
-								{type: "text", label: "Label", path: "label"}
-								{type: "textarea", label: "Summary", path: "summary"}
-								{type: "text", label: "URL", path: "data.url"}
-							]
-						}
-					}, 
-					{do: "save", comment: "Updated Redirect"}
-				]
-			}]
+			roles: ["author", "editor"]
+			steps:[
+				{
+					do: "as-modal"
+					background:"view"
+					steps: [
+						{
+							do: "edit"
+							label: "Edit Redirect"
+							form: {
+								type: "layout-vertical"
+								children: [
+									{type: "text", label: "Label", path: "label"}
+									{type: "textarea", label: "Summary", path: "summary"}
+									{type: "text", label: "URL", path: "data.url"}
+								]
+							}
+						}, 
+						{do: "save", comment: "Updated Redirect"}
+					]
+				}
+			]
 		}
 		delete: {
-			roles: ["owner"]
+			roles: ["author", "editor"]
 			steps: [
 				{do:"delete", title:"Delete this Item?", message:"This will permanently delete this item from your website."}
 				{do:"forward-to", url:"{{.ParentID}}/"}
@@ -61,7 +79,7 @@
 		}
 		
 		sharing: {
-			roles: ["owner"]
+			roles: ["author", "editor"]
 			steps: [
 				{do:"as-modal", steps: [
 					{do: "set-simple-sharing", roles: ["viewer"], title:"Who Can See This Folder?", message: "Select who can view this folder."}

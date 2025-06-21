@@ -1,8 +1,10 @@
 package model
 
 import (
+	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/form"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/toot/object"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -49,28 +51,37 @@ func (folder Folder) LookupCode() form.LookupCode {
 }
 
 /******************************************
- * RoleStateEnumerator Interface
+ * AccessLister Interface
  ******************************************/
 
-// State returns the current state of this object.
-// For users, there is no state, so it returns ""
-func (folder Folder) State() string {
-	return ""
+// State returns the current state of this Folder.
+// It is part of the AccessLister interface
+func (folder *Folder) State() string {
+	return "default"
 }
 
-// Roles returns a list of all roles that match the provided authorization.
-// Since Folders should only be accessible by the folder owner, this function only
-// returns MagicRoleMyself if applicable.  Others (like Anonymous and Authenticated)
-// should never be allowed on an inbox folder, so they are not returned.
-func (folder Folder) Roles(authorization *Authorization) []string {
+// IsAuthor returns TRUE if the provided UserID the author of this Folder
+// It is part of the AccessLister interface
+func (folder *Folder) IsAuthor(authorID primitive.ObjectID) bool {
+	return false
+}
 
-	// Folders are private, so only MagicRoleMyself is allowed
-	if authorization.UserID == folder.UserID {
-		return []string{MagicRoleMyself}
-	}
+// IsMyself returns TRUE if this object directly represents the provided UserID
+// It is part of the AccessLister interface
+func (folder *Folder) IsMyself(userID primitive.ObjectID) bool {
+	return userID == folder.UserID
+}
 
-	// Intentionally NOT allowing MagicRoleAnonymous, MagicRoleAuthenticated, or MagicRoleOwner
-	return []string{}
+// RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.
+// It is part of the AccessLister interface
+func (folder *Folder) RolesToGroupIDs(roleIDs ...string) id.Slice {
+	return nil
+}
+
+// RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.
+// It is part of the AccessLister interface
+func (folder *Folder) RolesToPrivileges(roleIDs ...string) sliceof.String {
+	return sliceof.NewString()
 }
 
 /******************************************

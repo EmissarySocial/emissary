@@ -1,7 +1,7 @@
 {
 	templateId:"admin-sso"
 	templateRole:"admin"
-	model:"domain"
+	model: Domain
 	extends: ["admin-common"]
 	containedBy:["admin"]
 	label: "Single Sign-On"
@@ -14,6 +14,7 @@
 	}}
 	actions: {
 		index: {
+			roles:["owner"]
 			steps: [
 				{do: "view-html"}
 				{do: "edit", options: ["cancel-button:hide"], form:{
@@ -29,6 +30,7 @@
 			]
 		}
 		themes: {
+			roles:["owner"]
 			steps: [{
 				do: as-modal
 				steps: [
@@ -41,6 +43,7 @@
 		}
 
 		signup: {
+			roles:["owner"]
 			steps: [
 				{do: "edit-registration"}
 				{do: "save"}

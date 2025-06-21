@@ -3,7 +3,7 @@
 	templateRole:"outbox-reply"
 	socialRole:"Note"
 	extends:["outbox-message"]
-	model:"stream"
+	model: Stream
 	icon:"message"
 	label:"Reply"
 	description:"Reply to a post"
@@ -17,12 +17,21 @@
 			inReplyTo: {type:"string", format:"url"}
 		}
 	}
+
+	states: {
+		default: {
+			label:"Default"
+			description:"This item onlly has one state"
+		}
+	}
+
 	actions: {
 		create:{
+			roles:["self"]
 			steps: [
 				{do:"edit-content", file:"create", format:"HTML"}
 				{do:"process-content"}
-				{do:"save-and-publish", outbox:"true"}
+				{do:"save-and-publish", state:"default", outbox:"true"}
 			]
 		}
 		edit: {
@@ -32,7 +41,7 @@
 					{do:"set-args", postTo:"/{{.StreamID}}/edit"}
 					{do:"edit-content", file:"edit", format:"HTML"}
 					{do:"process-content"}
-					{do:"save-and-publish", outbox:"true"}
+					{do:"save-and-publish", state:"default", outbox:"true"}
 					{do:"refresh-page"}
 				]}
 			]

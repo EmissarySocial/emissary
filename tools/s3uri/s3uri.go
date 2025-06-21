@@ -169,7 +169,7 @@ func parse(s3u *S3URI, s any) (*S3URI, error) {
 	}
 
 	matches := s3URLPattern.FindStringSubmatch(u.Host)
-	if matches == nil || len(matches) < 1 {
+	if len(matches) < 1 {
 		return nil, ErrInvalidS3Endpoint
 	}
 

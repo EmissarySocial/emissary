@@ -1,7 +1,7 @@
 {
 	templateId:"admin-startup"
 	templateRole:"admin"
-	model:"domain"
+	model: Domain
 	extends: ["admin-common"]
 	containedBy:["admin"]
 	label: "Startup"
@@ -13,10 +13,40 @@
 		}
 	}
 	actions: {
-		page: {do:"view-html"}
-		welcome: {do: "view-html"}
-		theme: {do: "view-html"}
-		user: {do: "view-html"}
-		confirm: {do: "view-html"}
+		page: {
+			roles:["owner"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+		
+		welcome: {
+			roles:["owner"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+		
+		theme: {
+			roles:["owner"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+		
+		user: {
+			roles:["owner"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+		
+		confirm: {
+			roles:["owner"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+		
 	}
 }

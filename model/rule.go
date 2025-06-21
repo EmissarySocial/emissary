@@ -1,7 +1,9 @@
 package model
 
 import (
+	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data/journal"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/toot/object"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -55,29 +57,37 @@ func (rule Rule) Fields() []string {
 }
 
 /******************************************
- * RoleStateEnumerator Interface
+ * AccessLister Interface
  ******************************************/
 
-// State returns the current state of this object.
-// For users, there is no state, so it returns ""
-func (rule Rule) State() string {
-	return ""
+// State returns the current state of this Rule.
+// It is part of the AccessLister interface
+func (rule *Rule) State() string {
+	return "default"
 }
 
-// Roles returns a list of all roles that match the provided authorization.
-// Since Rule records should only be accessible by the rule owner, this
-// function only returns MagicRoleMyself if applicable.  Others (like Anonymous
-// and Authenticated) should never be allowed on an Rule record, so they
-// are not returned.
-func (rule Rule) Roles(authorization *Authorization) []string {
+// IsAuthor returns TRUE if the provided RuleID the author of this Rule
+// It is part of the AccessLister interface
+func (rule *Rule) IsAuthor(authorID primitive.ObjectID) bool {
+	return false
+}
 
-	// Rules are private, so only MagicRoleMyself is allowed
-	if authorization.UserID == rule.UserID {
-		return []string{MagicRoleMyself}
-	}
+// IsMyself returns TRUE if this object directly represents the provided RuleID
+// It is part of the AccessLister interface
+func (rule *Rule) IsMyself(userID primitive.ObjectID) bool {
+	return userID == rule.UserID
+}
 
-	// Intentionally NOT allowing MagicRoleAnonymous, MagicRoleAuthenticated, or MagicRoleOwner
-	return []string{}
+// RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.
+// It is part of the AccessLister interface
+func (rule *Rule) RolesToGroupIDs(roleIDs ...string) id.Slice {
+	return id.NewSlice()
+}
+
+// RolesToPrivileges returns a slice of Privileges that grant access to any of the requested roles
+// It is part of the AccessLister interface
+func (rule *Rule) RolesToPrivileges(roleIDs ...string) sliceof.String {
+	return sliceof.NewString()
 }
 
 /******************************************

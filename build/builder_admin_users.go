@@ -32,7 +32,7 @@ func NewUser(factory Factory, request *http.Request, response http.ResponseWrite
 	const location = "build.NewUser"
 
 	// Create the underlying Common builder
-	common, err := NewCommonWithTemplate(factory, request, response, template, actionID)
+	common, err := NewCommonWithTemplate(factory, request, response, template, user, actionID)
 
 	if err != nil {
 		return User{}, derp.Wrap(err, location, "Error creating common builder")
@@ -40,7 +40,7 @@ func NewUser(factory Factory, request *http.Request, response http.ResponseWrite
 
 	// Verify that the user is a Domain Owner
 	if !common._authorization.DomainOwner {
-		return User{}, derp.NewForbiddenError(location, "Must be domain owner to continue")
+		return User{}, derp.ForbiddenError(location, "Must be domain owner to continue")
 	}
 
 	// Return the User builder

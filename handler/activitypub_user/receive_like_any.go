@@ -60,7 +60,7 @@ func saveMessage(context Context, activity streams.Document, actorID string, ori
 	// If the "Following" record cannot be found, then do not add a message
 	if err := followingService.LoadByURL(context.user.UserID, actorID, &following); err != nil {
 
-		if derp.NotFound(err) {
+		if derp.IsNotFound(err) {
 			return nil
 		}
 

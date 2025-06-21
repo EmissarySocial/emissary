@@ -46,17 +46,17 @@ func NewStream(factory Factory, request *http.Request, response http.ResponseWri
 	const location = "build.NewStream"
 
 	// Create the underlying Common builder
-	common, err := NewCommonWithTemplate(factory, request, response, template, actionID)
+	common, err := NewCommonWithTemplate(factory, request, response, template, stream, actionID)
 
 	if err != nil {
-		return Stream{}, derp.ReportAndReturn(derp.Wrap(err, location, "Error creating common builder"))
+		return Stream{}, derp.Wrap(err, location, "Error creating common builder")
 	}
 
-	if !common._action.UserCan(stream, &common._authorization) {
+	if !common.UserCan(actionID) {
 		if common._authorization.IsAuthenticated() {
-			return Stream{}, derp.ReportAndReturn(derp.NewForbiddenError(location, "Forbidden"))
+			return Stream{}, derp.ForbiddenError(location, "Forbidden")
 		} else {
-			return Stream{}, derp.ReportAndReturn(derp.NewUnauthorizedError(location, "Anonymous user is not authorized to perform this action", stream.URL, actionID))
+			return Stream{}, derp.UnauthorizedError(location, "Anonymous user is not authorized to perform this action", stream.URL, actionID)
 		}
 	}
 
@@ -426,15 +426,6 @@ func (w Stream) IsEmpty() bool {
 	return (w._stream == nil) || (w._stream.StreamID == primitive.NilObjectID)
 }
 
-func (w Stream) IsCurrentStream() bool {
-	return w._stream.Token == w.PathList().First()
-}
-
-func (w Stream) Roles() []string {
-	authorization := w.authorization()
-	return w._stream.Roles(&authorization)
-}
-
 /******************************************
  * Widgets
  ******************************************/
@@ -539,7 +530,7 @@ func (w Stream) Parent(actionID string) (Stream, error) {
 
 	streamService := w.factory().Stream()
 
-	if err := streamService.LoadParent(w._stream, &parent); err != nil {
+	if err := streamService.LoadByID(w._stream.StreamID, &parent); err != nil {
 		return Stream{}, derp.Wrap(err, location, "Error loading Parent")
 	}
 
@@ -766,7 +757,7 @@ func (w Stream) Ancestors() QueryBuilder[model.StreamSummary] {
 
 	streamService := w.factory().Stream()
 
-	if err := streamService.LoadParent(w._stream, &parent); err != nil {
+	if err := streamService.LoadByID(w._stream.ParentID, &parent); err != nil {
 		derp.Report(derp.Wrap(err, "build.Stream.Ancestors", "Error loading parent"))
 	}
 
@@ -830,48 +821,63 @@ func (w Stream) AttachmentsByCategory(category string) (sliceof.Object[model.Att
 }
 
 /******************************************
- * Content Actors
+ * Purchase/Product/Checkout Methods
  ******************************************/
 
+// StreamHasPrivileges returns TRUE if this stream has any products
+func (w Stream) StreamHasPrivileges() bool {
+	return w._stream.HasPrivileges()
+}
+
+func (w Stream) MerchantAccounts() QueryBuilder[model.MerchantAccount] {
+
+	expressionBuilder := builder.NewBuilder().
+		String("search", builder.WithAlias("name"), builder.WithDefaultOpBeginsWith())
+
+	criteria := exp.And(
+		expressionBuilder.Evaluate(w._request.URL.Query()),
+		exp.Equal("userId", w._stream.AttributedTo.UserID),
+	)
+
+	return NewQueryBuilder[model.MerchantAccount](w._factory.MerchantAccount(), criteria)
+}
+
+// Products returns all Remote Products that (when purchased) provide privileges for this Stream.
+func (w Stream) Products() (sliceof.Object[model.RemoteProduct], error) {
+	return w._factory.MerchantAccount().ProductsByID(w._stream.AttributedTo.UserID, w._stream.PrivilegeIDs...)
+}
+
+// PrivilegeIDs returns all privilege IDs that are valid for this stream
+func (w Stream) PrivilegeIDs() sliceof.String {
+	return w._stream.PrivilegeIDs
+}
+
+/******************************************
+ * Other Stuff
+ ******************************************/
+
+// Followers returns all Followers of this Stream
 func (w Stream) Followers() ([]model.Follower, error) {
 	followerService := w.factory().Follower()
 	return followerService.QueryByParent(model.FollowerTypeStream, w._stream.StreamID)
 }
 
-/******************************************
- * ACCESS PERMISSIONS
- ******************************************/
-
-// UserCan returns TRUE if this Request is authorized to access the requested view
-func (w Stream) UserCan(actionID string) bool {
-
-	factory := w._factory
-	templateService := factory.Template()
-	template, err := templateService.Load(w._stream.TemplateID)
-
-	if err != nil {
-		return false
-	}
-
-	// Try to find the requested Action in the Template
-	action, ok := template.Action(actionID)
-
-	if !ok {
-		return false
-	}
-
-	// Use the action.UserCan method to determine if the user can perform this action
-	authorization := w.authorization()
-	return action.UserCan(w._stream, &authorization)
-}
-
 // CanCreate returns all of the templates that can be created underneath
 // the current stream.
 func (w Stream) CanCreate() []form.LookupCode {
-
 	templateService := w.factory().Template()
 	return templateService.ListByContainer(w._template.TemplateID)
 }
+
+// Template returns the named Template object
+func (w Stream) Template(templateID string) (model.Template, error) {
+	templateService := w._factory.Template()
+	return templateService.Load(templateID)
+}
+
+/******************************************
+ * Helper Functions
+ ******************************************/
 
 // draftBuilder returns a new build.Stream that is bound to the
 // draft service, and a draft copy of the current stream.

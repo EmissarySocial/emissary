@@ -26,8 +26,11 @@ func NewSyndication(factory Factory, request *http.Request, response http.Respon
 
 	const location = "build.NewSyndication"
 
+	// Find/Create new database record for the domain.
+	domain := factory.Domain().Get()
+
 	// Create the common Builder
-	common, err := NewCommonWithTemplate(factory, request, response, template, actionID)
+	common, err := NewCommonWithTemplate(factory, request, response, template, domain, actionID)
 
 	if err != nil {
 		return Syndication{}, derp.Wrap(err, location, "Error creating common builder")
@@ -35,21 +38,15 @@ func NewSyndication(factory Factory, request *http.Request, response http.Respon
 
 	// Verify that the user is a Syndication Owner
 	if !common._authorization.DomainOwner {
-		return Syndication{}, derp.NewForbiddenError(location, "Must be domain owner to continue")
+		return Syndication{}, derp.ForbiddenError(location, "Must be domain owner to continue")
 	}
 
 	// Create and return the Syndication builder
 	result := Syndication{
 		CommonWithTemplate: common,
+		_domain:            domain,
 	}
 
-	// Find/Create new database record for the domain.
-	domainService := factory.Domain()
-	if _, err := domainService.LoadDomain(); err != nil {
-		return Syndication{}, derp.Wrap(err, location, "Error creating a new Syndication")
-	}
-
-	result._domain = domainService.GetPointer()
 	return result, nil
 }
 

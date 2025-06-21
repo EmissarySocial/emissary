@@ -1,5 +1,8 @@
 package model
 
+// FollowerTypeApplication represents the domain service actor
+const FollowerTypeApplication = "Application"
+
 // FollowerTypeSearch represents a Follower that is following a Search Query
 const FollowerTypeSearch = "Search"
 
