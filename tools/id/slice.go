@@ -98,6 +98,14 @@ func (slice *Slice) SetValue(value any) error {
 
 }
 
+func (x Slice) Contains(value primitive.ObjectID) bool {
+	return slice.Contains(x, value)
+}
+
+func (x Slice) ContainsAny(values ...primitive.ObjectID) bool {
+	return slice.ContainsAny(x, values...)
+}
+
 // ContainsInterface returns TRUE if the provided generic value is contained in the slice.
 func (x Slice) ContainsInterface(value any) bool {
 
