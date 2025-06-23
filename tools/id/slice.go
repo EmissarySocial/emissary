@@ -133,3 +133,14 @@ func (x Slice) ContainsInterface(value any) bool {
 	// If we can't convert the value to a string, then it is not contained in the slice
 	return false
 }
+
+func (x Slice) SliceOfString() []string {
+
+	// Convert the slice of ObjectIDs to a slice of strings
+	result := make([]string, len(x))
+	for index := range x {
+		result[index] = x[index].Hex()
+	}
+
+	return result
+}
