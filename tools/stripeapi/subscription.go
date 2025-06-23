@@ -1,6 +1,8 @@
 package stripeapi
 
 import (
+	"net/http"
+
 	"github.com/benpate/derp"
 	"github.com/benpate/remote"
 	"github.com/benpate/remote/options"
@@ -17,15 +19,12 @@ func Subscription(restrictedKey string, connectedAccountID string, subscriptionI
 	subscription := stripe.Subscription{}
 	txn := remote.Get("https://api.stripe.com/v1/subscriptions/" + subscriptionID).
 		With(options.BearerAuth(restrictedKey)).
+		With(ConnectedAccount(connectedAccountID)).
 		Result(&subscription)
-
-	if connectedAccountID != "" {
-		txn.Header("Stripe-Account", connectedAccountID)
-	}
 
 	// Send the transaction
 	if err := txn.Send(); err != nil {
-		return stripe.Subscription{}, derp.Wrap(err, location, "Error connecting to Stripe API")
+		return stripe.Subscription{}, derp.Wrap(err, location, "Error connecting to Stripe API", derp.WithCode(http.StatusInternalServerError))
 	}
 
 	// Success

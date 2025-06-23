@@ -8,12 +8,12 @@ import (
 // IMPORTANT: By default, no roles are allowed to perform any actions, so if no allow list is
 // provided then it will only be accessible to Domain Owners.
 type AccessList struct {
+	Groups        sliceof.String
+	Privileges    sliceof.String
 	Anonymous     bool
 	Authenticated bool
 	Author        bool
 	Self          bool
-	Groups        sliceof.String
-	Privileges    sliceof.String
 }
 
 // NewAccessList returns a fully initialized AccessList

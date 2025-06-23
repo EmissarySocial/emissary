@@ -4,6 +4,7 @@ import (
 	"io"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/html"
@@ -29,72 +30,75 @@ func (step StepSetPrivileges) Get(builder Builder, buffer io.Writer) PipelineBeh
 		return Halt().WithError(derp.BadRequestError(location, "Invalid builder type"))
 	}
 
+	// Collect prerequisites
+	factory := streamBuilder.factory()
 	attributedToID := streamBuilder._stream.AttributedTo.UserID
-	iconFunc := streamBuilder._factory.Icons().Get
+	iconFunc := factory.Icons().Get
 
-	// Load the Circles defined by this User
-	circleService := streamBuilder._factory.Circle()
-	circles, err := circleService.QueryByUser(attributedToID)
-
-	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error retrieving circles"))
-	}
-
-	circleOptions := slice.Map(circles, func(circle model.Circle) form.LookupCode {
-		return circle.LookupCode()
-	})
-
-	// Load the Remote Products for this User's Merchant Account(s)
-	merchantAccountService := streamBuilder._factory.MerchantAccount()
-	merchantAccounts, remoteProducts, err := merchantAccountService.RemoteProductsByUser(attributedToID)
+	// Load the Products for this User
+	merchantAccounts, products, err := factory.Product().SyncRemoteProducts(attributedToID)
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error retrieving products"))
 	}
 
-	// List of Privileges/Options includes all Circles and all Remote Products
-	lookupCodes := mapRemoteProductsToLookupCodes(remoteProducts...)
-	options := append(circleOptions, lookupCodes...)
-
-	// If there are no multi-select options, then display the "empty" message
-	if len(options) == 0 {
+	if merchantAccounts.IsEmpty() {
 		return step.GetEmpty(merchantAccounts, iconFunc, buffer)
 	}
 
-	roles := streamBuilder._template.PrivilegedRoles()
+	// Load the Circles defined by this User
+	circles, err := factory.Circle().QueryByUser(attributedToID)
 
-	tabLabel := html.New()
+	if err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Error retrieving circles"))
+	}
+
+	// If there are no multi-select options, then display the "empty" message
+	if circles.IsEmpty() && products.IsEmpty() {
+		return step.GetEmpty(merchantAccounts, iconFunc, buffer)
+	}
+
+	// Fall through means that we display the selection form
+
+	editLinks := html.New()
 
 	for _, merchantAccount := range merchantAccounts {
 
-		tabLabel.A(merchantAccount.ProductURL()).
+		editLinks.A(merchantAccount.ProductURL()).
 			Attr("target", "_blank").
 			Class("nowrap", "margin-right").
-			InnerHTML("Edit Products in " + merchantAccount.Name + " " + iconFunc("new-window")).
+			InnerHTML("Manage Products in " + merchantAccount.Name + " &rarr;").
 			Close()
 	}
 
-	tabLabel.
-		A("/@me/settings/circles").
-		Class("nowrap", "margin-right").
-		InnerHTML("Edit Circles " + iconFunc("new-window")).
-		Close()
+	roles := streamBuilder._template.PrivilegedRoles()
 
 	formDefinition := form.Element{
 		Type: "layout-tabs",
 		Children: slice.Map(roles, func(role model.Role) form.Element {
 			return form.Element{
-				Type:  "layout-vertical",
-				Label: role.Label,
+				Type:        "layout-vertical",
+				Label:       role.Label,
+				Description: role.Description,
 				Children: []form.Element{
 					{
 						Type:        "multiselect",
-						Label:       role.Description,
-						Path:        role.RoleID,
-						Description: tabLabel.String(),
+						Label:       "Circles",
+						Path:        "circles." + role.RoleID,
+						Description: `<a href="/@me/settings/circles" target="_blank">Manage Circles &rarr;</a>`,
 						Options: mapof.Any{
-							"rows": 10,
-							"enum": options,
+							"rows": 6,
+							"enum": mapCirclesToLookupCodes(circles...),
+						},
+					},
+					{
+						Type:        "multiselect",
+						Label:       "Products",
+						Path:        "products." + role.RoleID,
+						Description: editLinks.String(),
+						Options: mapof.Any{
+							"rows": 8,
+							"enum": mapProductsToLookupCodes(products...),
 						},
 					},
 				},
@@ -106,7 +110,7 @@ func (step StepSetPrivileges) Get(builder Builder, buffer io.Writer) PipelineBeh
 	formHTML, err := form.Editor(
 		step.schema(streamBuilder._template.PrivilegedRoles()),
 		formDefinition,
-		streamBuilder._stream.Privileges,
+		streamBuilder._stream,
 		builder.lookupProvider(),
 	)
 
@@ -157,19 +161,22 @@ func (step StepSetPrivileges) Post(builder Builder, _ io.Writer) PipelineBehavio
 	}
 
 	// Clear out existing product settings
-	streamBuilder._stream.Privileges = mapof.NewObject[sliceof.String]()
+	streamBuilder._stream.Circles = mapof.NewObject[id.Slice]()
+	streamBuilder._stream.Products = mapof.NewObject[id.Slice]()
 
-	// Apply new product settings
-	for roleID, productIDs := range request.Form {
+	/*
+		// Apply new product settings
+		for roleID, productIDs := range request.Form {
 
-		// Ensure that the roleID exists in the stream.Privileges
-		if _, ok := streamBuilder._stream.Privileges[roleID]; !ok {
-			streamBuilder._stream.Privileges[roleID] = sliceof.NewString()
+			// Ensure that the roleID exists in the stream.Privileges
+			if _, ok := streamBuilder._stream.Privileges[roleID]; !ok {
+				streamBuilder._stream.Privileges[roleID] = sliceof.NewString()
+			}
+
+			// Append the roleId to the stream.Privileges
+			streamBuilder._stream.Privileges[roleID] = append(streamBuilder._stream.Privileges[roleID], productIDs...)
 		}
-
-		// Append the roleId to the stream.Privileges
-		streamBuilder._stream.Privileges[roleID] = append(streamBuilder._stream.Privileges[roleID], productIDs...)
-	}
+	*/
 
 	// Success!
 	return nil

@@ -322,8 +322,8 @@ func (service *MerchantAccount) GetCheckoutURL(merchantAccount *model.MerchantAc
 
 	switch merchantAccount.Type {
 
-	case model.ConnectionProviderPayPal:
-		return service.paypal_getCheckoutURL(merchantAccount, remoteProductID, returnURL)
+	// case model.ConnectionProviderPayPal:
+	//	return service.paypal_getCheckoutURL(merchantAccount, remoteProductID, returnURL)
 
 	case model.ConnectionProviderStripe:
 		return service.stripe_getCheckoutURL(merchantAccount, remoteProductID, returnURL)
@@ -344,8 +344,8 @@ func (service *MerchantAccount) ParseCheckoutResponse(queryParams url.Values, me
 	// Find the appropriate getter function for this MerchantAccount type
 	switch merchantAccount.Type {
 
-	case model.ConnectionProviderPayPal:
-		getter = service.paypal_getPrivilegeFromCheckoutResponse
+	// case model.ConnectionProviderPayPal:
+	//	getter = service.paypal_getPrivilegeFromCheckoutResponse
 
 	case model.ConnectionProviderStripe:
 		getter = service.stripe_getPrivilegeFromCheckoutResponse
@@ -380,8 +380,8 @@ func (service *MerchantAccount) ParseCheckoutWebhook(header http.Header, body []
 	// Fan out to the appropriate MerchantAccount type
 	switch merchantAccount.Type {
 
-	case model.ConnectionProviderPayPal:
-		return service.paypal_processWebhook(header, body, merchantAccount)
+	// case model.ConnectionProviderPayPal:
+	//	return service.paypal_processWebhook(header, body, merchantAccount)
 
 	case model.ConnectionProviderStripe:
 		return service.stripe_processWebhook(header, body, merchantAccount)
@@ -402,8 +402,8 @@ func (service *MerchantAccount) RefreshAPIKeys(merchantAccount *model.MerchantAc
 
 	switch merchantAccount.Type {
 
-	case model.ConnectionProviderPayPal:
-		return service.paypal_refreshMerchantAccount(merchantAccount)
+	// case model.ConnectionProviderPayPal:
+	//	return service.paypal_refreshMerchantAccount(merchantAccount)
 
 	case model.ConnectionProviderStripe:
 		return service.stripe_refreshMerchantAccount(merchantAccount)
@@ -417,9 +417,9 @@ func (service *MerchantAccount) RefreshAPIKeys(merchantAccount *model.MerchantAc
 }
 
 // ProductsByUser retrieves all available products configured in the remote MerchantAccount(s) of a specific User
-func (service *MerchantAccount) RemoteProductsByUser(userID primitive.ObjectID) (sliceof.Object[model.MerchantAccount], sliceof.Object[model.RemoteProduct], error) {
+func (service *MerchantAccount) RemoteProductsByUser(userID primitive.ObjectID) (sliceof.Object[model.MerchantAccount], sliceof.Object[model.Product], error) {
 
-	const location = "service.MerchantAccount.ProductsByUser"
+	const location = "service.MerchantAccount.RemoteProductsByUser"
 
 	// RULE: Require a valid UserID
 	if userID.IsZero() {
@@ -433,7 +433,7 @@ func (service *MerchantAccount) RemoteProductsByUser(userID primitive.ObjectID) 
 		return nil, nil, derp.Wrap(err, location, "Error loading merchant accounts")
 	}
 
-	result := sliceof.NewObject[model.RemoteProduct]()
+	result := sliceof.NewObject[model.Product]()
 
 	for _, merchantAccount := range merchantAccounts {
 
@@ -447,13 +447,14 @@ func (service *MerchantAccount) RemoteProductsByUser(userID primitive.ObjectID) 
 	}
 
 	// Sort the final result
-	slices.SortFunc(result, sortRemoteProducts)
+	slices.SortFunc(result, model.SortProducts)
 
 	return merchantAccounts, result, nil
 }
 
+/*
 // ProductsByID retrieves a list of products configured in the remote MerchantAccount(s)
-func (service *MerchantAccount) ProductsByID(userID primitive.ObjectID, tokens ...string) ([]model.RemoteProduct, error) {
+func (service *MerchantAccount) ProductsByID(userID primitive.ObjectID, tokens ...string) ([]model.Product, error) {
 
 	const location = "service.MerchantAccount.ProductsByID"
 
@@ -479,7 +480,7 @@ func (service *MerchantAccount) ProductsByID(userID primitive.ObjectID, tokens .
 
 	merchantAccountsAndProducts := extractProductIDs(tokens...)
 
-	result := make([]model.RemoteProduct, 0, len(merchantAccountsAndProducts))
+	result := make([]model.Product, 0, len(merchantAccountsAndProducts))
 	for merchantAccountID, productIDs := range merchantAccountsAndProducts {
 
 		// Load the MerchantAccount
@@ -500,19 +501,22 @@ func (service *MerchantAccount) ProductsByID(userID primitive.ObjectID, tokens .
 	}
 
 	// Sort the final result
-	slices.SortFunc(result, model.SortRemoteProducts)
+	slices.SortFunc(result, model.SortProducts)
 
 	// Dun dun dunnnnn...
 	return result, nil
 }
+*/
 
 // getProducts lists all of the products configured by a remote service
-func (service *MerchantAccount) getRemoteProducts(merchantAccount *model.MerchantAccount, productIDs ...string) (sliceof.Object[model.RemoteProduct], error) {
+func (service *MerchantAccount) getRemoteProducts(merchantAccount *model.MerchantAccount, productIDs ...string) (sliceof.Object[model.Product], error) {
+
+	const location = "service.MerchantAccount.getRemoteProducts"
 
 	switch merchantAccount.Type {
 
-	case model.ConnectionProviderPayPal:
-		return service.paypal_getProducts(merchantAccount, productIDs...)
+	// case model.ConnectionProviderPayPal:
+	//	return service.paypal_getProducts(merchantAccount, productIDs...)
 
 	case model.ConnectionProviderStripe:
 		return service.stripe_getPrices(merchantAccount, productIDs...)
@@ -522,5 +526,5 @@ func (service *MerchantAccount) getRemoteProducts(merchantAccount *model.Merchan
 	}
 
 	// If we get here, the merchant account type is not supported
-	return nil, derp.InternalError("service.MerchantAccount.GetProducts", "Invalid MerchantAccount Type", merchantAccount.Type)
+	return nil, derp.InternalError(location, "Invalid MerchantAccount Type", merchantAccount.Type)
 }

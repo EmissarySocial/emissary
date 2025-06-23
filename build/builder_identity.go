@@ -7,6 +7,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
@@ -122,9 +123,9 @@ func (w Identity) UpdateDate() int64 {
 	return w._identity.UpdateDate
 }
 
-func (w Identity) PrivilegeIDs() sliceof.String {
+func (w Identity) PrivilegeIDs() id.Slice {
 	// Return the PrivilegeIDs property of this Identity
-	return w._identity.Privileges
+	return w._identity.PrivilegeIDs
 }
 
 // Privileges returns a QueryBuilder for the Privileges of the
@@ -147,7 +148,7 @@ func (w Identity) Privileges() (QueryBuilder[model.Privilege], error) {
 
 // PrivilegedStreams returns a map of the Streams that the
 // currently signed-in Identity has privileges for
-func (w Identity) PrivilegedStreams(privileges sliceof.Object[model.Privilege]) (mapof.Slices[string, primitive.ObjectID], error) {
+func (w Identity) PrivilegedStreams(privileges sliceof.Object[model.Privilege]) (mapof.Slices[primitive.ObjectID, primitive.ObjectID], error) {
 	return w._factory.Stream().MapByPrivileges(privileges...)
 }
 

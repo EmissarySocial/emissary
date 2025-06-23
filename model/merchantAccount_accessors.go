@@ -11,7 +11,7 @@ func MerchantAccountSchema() schema.Element {
 		Properties: schema.ElementMap{
 			"merchantAccountId": schema.String{Format: "objectId"},
 			"userId":            schema.String{Format: "objectId"},
-			"type":              schema.String{Enum: []string{ConnectionProviderPayPal, ConnectionProviderStripe, ConnectionProviderStripeConnect}},
+			"type":              schema.String{Enum: []string{ConnectionProviderStripe, ConnectionProviderStripeConnect}}, // ConnectionProviderPayPal,
 			"name":              schema.String{MaxLength: 128},
 			"description":       schema.String{MaxLength: 1024},
 			"vault":             schema.Object{Wildcard: schema.String{}},

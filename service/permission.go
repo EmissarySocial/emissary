@@ -160,14 +160,18 @@ func (service *Permission) hasPrivilege(authorization *model.Authorization, acce
 		return false, nil
 	}
 
+	// Find the products that are associated with the provided roles
+	requiredPrivileges := accessLister.RolesToPrivileges(requiredRoles...)
+
+	if requiredPrivileges.IsEmpty() {
+		return false, nil // No privileges associated with this role
+	}
+
 	// Locate the authorized Identity
 	identity := model.NewIdentity()
 	if err := service.identityService.LoadByID(authorization.IdentityID, &identity); err != nil {
 		return false, derp.Wrap(err, location, "Error loading Identity for user")
 	}
-
-	// Find the products that are associated with the provided roles
-	requiredPrivileges := accessLister.RolesToPrivileges(requiredRoles...)
 
 	// Return TRUE if the identity includes one or more of the required privileges
 	return identity.HasPrivilege(requiredPrivileges...), nil

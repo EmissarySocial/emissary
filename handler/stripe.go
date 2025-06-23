@@ -59,7 +59,6 @@ func GetStripeConnect(ctx *steranko.Context, factory *domain.Factory, user *mode
 		Form("controller[requirement_collection]", "stripe"). // Stripe is responsible for collecting requirements
 
 		With(options.BasicAuth(vault.GetString("restrictedKey"), "")).
-		With(options.Debug()).
 		Result(&stripeAccount)
 
 	if err := accountTransaction.Send(); err != nil {
@@ -84,7 +83,6 @@ func GetStripeConnect(ctx *steranko.Context, factory *domain.Factory, user *mode
 		Form("return_url", returnURL).
 		Form("type", "account_onboarding").
 		With(options.BasicAuth(vault.GetString("restrictedKey"), "")).
-		With(options.Debug()).
 		Result(&accountLink)
 
 	if err := accountLinkTransaction.Send(); err != nil {

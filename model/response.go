@@ -8,7 +8,6 @@ import (
 	"github.com/benpate/hannibal"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/toot/object"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -147,8 +146,8 @@ func (response *Response) RolesToGroupIDs(roleIDs ...string) id.Slice {
 
 // RolesToPrivileges returns a slice of Privileges that grant access to any of the requested roles.
 // It is part of the AccessLister interface
-func (response *Response) RolesToPrivileges(roleIDs ...string) sliceof.String {
-	return sliceof.NewString()
+func (response *Response) RolesToPrivileges(roleIDs ...string) id.Slice {
+	return nil
 }
 
 /******************************************

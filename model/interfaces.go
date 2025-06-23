@@ -4,7 +4,6 @@ import (
 	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -30,11 +29,11 @@ type AccessLister interface {
 	// IsMyself returns TRUE if this object directly represents the provided UserID
 	IsMyself(primitive.ObjectID) bool
 
-	// RolesToGroupIDs returns a map of RoleIDs to GroupIDs
+	// RolesToGroupIDs returns a slice of GroupIDs that match the provided RoleIDs
 	RolesToGroupIDs(...string) id.Slice
 
-	// RolesToPrivileges returns a map of RoleIDs to Privilege strings
-	RolesToPrivileges(...string) sliceof.String
+	// RolesToPrivileges returns a slice of privileges (CircleIDs and ProductIDs) that match the provided RoleIDs
+	RolesToPrivileges(...string) id.Slice
 }
 
 // FieldLister wraps the Files() method, which provides the list of fields

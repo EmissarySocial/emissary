@@ -324,34 +324,34 @@ func (w Outbox) Circles() QueryBuilder[model.Circle] {
 	return result
 }
 
-func (w Outbox) RemoteProductCount() (int, error) {
-	return w._factory.Circle().RemoteProductCount(w._user.UserID)
+func (w Outbox) HasProducts() (bool, error) {
+	return w._factory.Circle().HasAssignedProducts(w._user.UserID)
 }
 
-func (w Outbox) RemoteProducts() (sliceof.Object[model.RemoteProduct], error) {
+func (w Outbox) Products() (sliceof.Object[model.Product], error) {
 
-	const location = "build.Outbox.RemoteProducts"
+	const location = "build.Outbox.Products"
 
 	// Get purchaseable products from all Featured Circles
-	tokens, err := w._factory.Circle().RemoteProductIDs(w._user.UserID)
+	productIDs, err := w._factory.Circle().AssignedProductIDs(w._user.UserID)
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Error retrieving remote products for user", w._user.UserID.Hex())
 	}
 
-	if tokens.IsEmpty() {
-		// If there are no remote products, return an empty slice
-		return sliceof.Object[model.RemoteProduct]{}, nil
+	// If there are no remote products, return an empty slice
+	if productIDs.IsEmpty() {
+		return sliceof.Object[model.Product]{}, nil
 	}
 
-	// Look up the products in the Merchant Service using their IDs
-	remoteProducts, err := w._factory.MerchantAccount().ProductsByID(w._user.UserID, tokens...)
+	// Look up the products for this User using their IDs
+	products, err := w._factory.Product().QueryByIDs(w._user.UserID, productIDs...)
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Error retrieving remote products for user", w._user.UserID.Hex())
 	}
 
-	return remoteProducts, nil
+	return products, nil
 }
 
 func (w Outbox) Replies() QueryBuilder[model.StreamSummary] {

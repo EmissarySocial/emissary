@@ -59,14 +59,14 @@ func (connection Connection) LookupCode() form.LookupCode {
 			Icon:        "/.templates/user-inbox/resources/stripe.svg",
 		}
 
-	case ConnectionProviderPayPal:
-		return form.LookupCode{
-			Group:       "MANUAL",
-			Value:       connection.ProviderID,
-			Label:       "PayPal",
-			Description: "PayPal is a leading payment platform for consumers and small businesses.",
-			Icon:        "/.templates/user-inbox/resources/paypal.png",
-		}
+		// case ConnectionProviderPayPal:
+		//	return form.LookupCode{
+		//		Group:       "MANUAL",
+		//		Value:       connection.ProviderID,
+		//		Label:       "PayPal",
+		//		Description: "PayPal is a leading payment platform for consumers and small businesses.",
+		//		Icon:        "/.templates/user-inbox/resources/paypal.png",
+		//	}
 	}
 
 	return form.LookupCode{

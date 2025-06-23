@@ -14,9 +14,11 @@
 		Sign in to 
 		{{ range $index, $merchantAccount := $merchantAccounts }}
 			{{ if gt $index 0 }} or {{ end }}
-			<span class="nowrap bold">{{$merchantAccount.Name}}</span>
+			<a href="{{$merchantAccount.ProductURL}}" target="_blank" class="nowrap">{{$merchantAccount.Name}} {{icon "new-window"}}</a>
 		{{ end }}
 		to create one or more products, then return here to link them to your posts.
+		<br><br>
+		If you've already set up products with your Merchant Account, then <span script="on click reload() the window's location" class="link">refresh this page</a> to view them.
 	</div>
 
 {{- else -}}
@@ -31,7 +33,7 @@
 		{{- range $index, $remoteProduct := $remoteProducts -}}
 			<div class="flex-row flex-align-center">
 				<div class="flex-grow">{{icon $remoteProduct.Icon}} {{$remoteProduct.Name}}</div>						
-				<div class="margin-right-lg text-gray">{{$remoteProduct.Description}}</div>
+				<div class="margin-right-lg text-gray">{{$remoteProduct.Price}}</div>
 				<div>
 					<a href="{{$remoteProduct.AdminHref}}" target="_blank" class="button text-sm">Edit &rarr;</a>
 				</div>

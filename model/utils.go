@@ -3,13 +3,10 @@ package model
 import (
 	"strings"
 
+	"github.com/EmissarySocial/emissary/tools/id"
+	"github.com/benpate/rosetta/mapof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
-
-func objectID(value string) primitive.ObjectID {
-	result, _ := primitive.ObjectIDFromHex(value)
-	return result
-}
 
 // ToToken returns a normalized version of the input string, stripping out
 // all non-alphanumeric characters, and converting all characters to lowercase.
@@ -43,4 +40,26 @@ func ToToken(value string) string {
 	}
 
 	return result.String()
+}
+
+func flatten(original mapof.Object[id.Slice]) id.Slice {
+
+	length := len(original)
+
+	if length == 0 {
+		return id.Slice{}
+	}
+
+	result := make(id.Slice, 0, length)
+
+	for _, value := range original {
+		result = append(result, value...)
+	}
+
+	return result
+}
+
+func objectID(value string) primitive.ObjectID {
+	result, _ := primitive.ObjectIDFromHex(value)
+	return result
 }

@@ -126,7 +126,6 @@ func (provider PayPal) Refresh(connection *model.Connection, vault mapof.String)
 		Header("User-Agent", "Emissary Social").
 		Form("grant_type", "client_credentials").
 		With(options.BasicAuth(vault.GetString("clientId"), vault.GetString("secretKey"))).
-		With(options.Debug()).
 		Result(&token)
 
 	if err := txn.Send(); err != nil {

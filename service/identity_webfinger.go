@@ -8,7 +8,6 @@ import (
 	"github.com/benpate/hannibal"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/davecgh/go-spew/spew"
 )
 
 func (service *Identity) sendGuestCode_Webfinger(identifier string, code string) error {
@@ -64,8 +63,6 @@ func (service *Identity) sendGuestCode_Webfinger(identifier string, code string)
 		"inboxURL":  inboxURL,
 		"message":   activity,
 	}
-
-	spew.Dump(location, message)
 
 	// Because we want a real-time response, we're going to run this queue task inline
 	if err := service.activityService.SendMessage(message); err != nil {

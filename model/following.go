@@ -4,7 +4,6 @@ import (
 	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/digit"
-	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/toot/object"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -94,8 +93,8 @@ func (following *Following) RolesToGroupIDs(roleIDs ...string) id.Slice {
 
 // RolesToPrivileges returns a slice of Privileges that grant access to any of the requested roles.
 // It is part of the AccessLister interface
-func (following *Following) RolesToPrivileges(roleIDs ...string) sliceof.String {
-	return sliceof.NewString()
+func (following *Following) RolesToPrivileges(roleIDs ...string) id.Slice {
+	return nil
 }
 
 /******************************************

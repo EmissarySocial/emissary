@@ -43,7 +43,7 @@ func (service *MerchantAccount) stripe_getConnectedAccountID(merchantAccount *mo
 	return merchantAccount.Plaintext.GetString("accountId")
 }
 
-func (service *MerchantAccount) stripe_getPrices(merchantAccount *model.MerchantAccount, priceIDs ...string) ([]model.RemoteProduct, error) {
+func (service *MerchantAccount) stripe_getPrices(merchantAccount *model.MerchantAccount, priceIDs ...string) ([]model.Product, error) {
 
 	const location = "service.MerchantAccount.stripe_getPrices"
 
@@ -63,15 +63,16 @@ func (service *MerchantAccount) stripe_getPrices(merchantAccount *model.Merchant
 		return nil, derp.Wrap(err, location, "Error retrieving prices from Stripe")
 	}
 
-	result := slice.Map(prices, func(price stripe.Price) model.RemoteProduct {
-		return model.RemoteProduct{
-			MerchantAccountID: merchantAccount.MerchantAccountID,
-			ProductID:         price.ID,
-			Name:              price.Product.Name,
-			Description:       service.stripe_priceLabel(price),
-			Icon:              "stripe",
-			AdminHref:         "https://dashboard.stripe.com/prices/" + price.ID,
-		}
+	result := slice.Map(prices, func(price stripe.Price) model.Product {
+		result := model.NewProduct()
+		result.MerchantAccountID = merchantAccount.MerchantAccountID
+		result.RemoteID = price.ID
+		result.Name = price.Product.Name
+		result.Price = service.stripe_priceLabel(price)
+		result.Icon = "stripe"
+		result.AdminHref = "https://dashboard.stripe.com/prices/" + price.ID
+
+		return result
 	})
 
 	return result, nil

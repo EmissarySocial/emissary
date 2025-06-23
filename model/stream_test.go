@@ -85,7 +85,7 @@ func TestStreamSchema(t *testing.T) {
 func TestPermissionSchema(t *testing.T) {
 
 	m := mapof.NewObject[sliceof.String]()
-	s := schema.New(PermissionSchema())
+	s := schema.New(permissionSchema())
 
 	table := []tableTestItem{
 		{"ABC.0", "FIRST VALUE", nil},

@@ -191,13 +191,13 @@ func (user *User) IsMyself(userID primitive.ObjectID) bool {
 // RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.
 // It is part of the AccessLister interface
 func (user *User) RolesToGroupIDs(roleIDs ...string) id.Slice {
-	return id.NewSlice()
+	return nil
 }
 
 // RolesToPrivileges returns a slice of Privileges that grant access to any of the requested roles.
 // It is part of the AccessLister interface
-func (user *User) RolesToPrivileges(roleIDs ...string) sliceof.String {
-	return sliceof.NewString()
+func (user *User) RolesToPrivileges(roleIDs ...string) id.Slice {
+	return nil
 }
 
 /******************************************

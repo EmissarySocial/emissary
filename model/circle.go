@@ -4,7 +4,6 @@ import (
 	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/form"
-	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -16,7 +15,7 @@ type Circle struct {
 	Color       string             `json:"color"       bson:"color"`       // Color of this Circle, used to color the circle icon
 	Icon        string             `json:"icon"        bson:"icon"`        // Icon of this Circle, used to display the circle icon
 	Description string             `json:"description" bson:"description"` // Human-readable description of this Circle
-	ProductIDs  sliceof.String     `json:"productIds"  bson:"productIds"`  // List of remote ProductIDs that can purchase membership in this Circle
+	ProductIDs  id.Slice           `json:"productIds"  bson:"productIds"`  // List of remote ProductIDs that can purchase membership in this Circle
 	MemberCount int64              `json:"memberCount" bson:"memberCount"` // Number of members in this Circle
 	IsFeatured  bool               `json:"isFeatured"  bson:"isFeatured"`  // TRUE if this Circle should be featured on the User's profile page.
 
@@ -75,8 +74,8 @@ func (circle *Circle) RolesToGroupIDs(roleIDs ...string) id.Slice {
 
 // RolesToPrivileges returns a slice of Privileges that grant access to any of the requested roles.
 // It is part of the AccessLister interface
-func (circle *Circle) RolesToPrivileges(roleIDs ...string) sliceof.String {
-	return sliceof.NewString()
+func (circle *Circle) RolesToPrivileges(roleIDs ...string) id.Slice {
+	return nil
 }
 
 /******************************************
@@ -91,9 +90,9 @@ func (circle Circle) ProductCount() int {
 	return circle.ProductIDs.Length()
 }
 
-func (circle Circle) Privileges() sliceof.String {
+func (circle Circle) Privileges() id.Slice {
 
-	result := sliceof.String{"CIR:" + circle.CircleID.Hex()}
+	result := id.Slice{circle.CircleID}
 
 	if circle.HasProducts() {
 		result.Append(circle.ProductIDs...)
@@ -104,10 +103,9 @@ func (circle Circle) Privileges() sliceof.String {
 
 func (circle Circle) LookupCode() form.LookupCode {
 	return form.LookupCode{
-		Value:       "CIR:" + circle.CircleID.Hex(),
+		Value:       circle.CircleID.Hex(),
 		Label:       circle.Name,
 		Description: circle.Description,
 		Icon:        circle.Icon,
-		Group:       "Circles",
 	}
 }

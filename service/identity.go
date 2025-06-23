@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -310,8 +311,8 @@ func (service *Identity) LoadByWebfingerHandle(emailAddress string, identity *mo
 	return service.Load(criteria, identity)
 }
 
-// RefreshPrivileges recalculates the privileges for the provided IdentityID by loading all privileges
-// and collecting the list of unique CircleIDs and RemoteProductIDs.
+// RefreshPrivileges recalculates the privileges for the provided IdentityID by
+// loading all privileges and collecting the list of unique CircleIDs and ProductIDs.
 func (service *Identity) RefreshPrivileges(identityID primitive.ObjectID) error {
 
 	const location = "service.Identity.RefreshPrivileges"
@@ -330,24 +331,24 @@ func (service *Identity) RefreshPrivileges(identityID primitive.ObjectID) error 
 	}
 
 	// Collect the CircleIDs and RemoteProductIDs from each privileges
-	privilegeStrings := make([]string, 0, len(privileges))
+	privilegeIDs := id.NewSlice()
 
 	for _, privilege := range privileges {
 
-		if compoundID := privilege.CompoundID_Circle(); compoundID != "" {
-			privilegeStrings = append(privilegeStrings, compoundID)
+		if !privilege.CircleID.IsZero() {
+			privilegeIDs = append(privilegeIDs, privilege.CircleID)
 		}
 
-		if compoundID := privilege.CompoundID_MerchantAccount(); compoundID != "" {
-			privilegeStrings = append(privilegeStrings, compoundID)
+		if !privilege.ProductID.IsZero() {
+			privilegeIDs = append(privilegeIDs, privilege.ProductID)
 		}
 	}
 
 	// Remove Duplicates
-	privilegeStrings = slice.Unique(privilegeStrings)
+	privilegeIDs = slice.Unique(privilegeIDs)
 
 	// Apply to Identity
-	identity.Privileges = privilegeStrings
+	identity.PrivilegeIDs = privilegeIDs
 
 	// Save changes
 	if err := service.Save(&identity, "Refreshed Privileges"); err != nil {

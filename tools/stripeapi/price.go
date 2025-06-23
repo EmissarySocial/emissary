@@ -1,6 +1,8 @@
 package stripeapi
 
 import (
+	"net/http"
+
 	"github.com/benpate/derp"
 	"github.com/benpate/remote"
 	"github.com/benpate/remote/options"
@@ -20,17 +22,14 @@ func Prices(restrictedKey string, connectedAccountID string, priceIDs ...string)
 
 	// Query the Stripe API for all Prices
 	txn := remote.Get("https://api.stripe.com/v1/prices").
+		With(options.BearerAuth(restrictedKey)).
+		With(ConnectedAccount(connectedAccountID)).
 		Query("expand[]", "data.product").
 		Query("active", "true").
-		With(options.BearerAuth(restrictedKey)).
-		With(options.Debug()).
 		Result(&response)
 
-	if connectedAccountID != "" {
-		txn.Header("Stripe-Account", connectedAccountID)
-	}
 	if err := txn.Send(); err != nil {
-		return nil, derp.Wrap(err, location, "Error connecting to PayPal API")
+		return nil, derp.Wrap(err, location, "Error connecting to Stripe API", derp.WithCode(http.StatusInternalServerError))
 	}
 
 	// NPE check
@@ -86,16 +85,13 @@ func Price(restrictedKey string, connectedAccountID string, priceID string) (str
 	// Get the price from the Stripe API
 	price := stripe.Price{}
 	txn := remote.Get("https://api.stripe.com/v1/prices/"+priceID).
-		Query("expand[]", "product").
 		With(options.BearerAuth(restrictedKey)).
+		With(ConnectedAccount(connectedAccountID)).
+		Query("expand[]", "product").
 		Result(&price)
 
-	if connectedAccountID != "" {
-		txn.Header("Stripe-Account", connectedAccountID)
-	}
-
 	if err := txn.Send(); err != nil {
-		return stripe.Price{}, derp.Wrap(err, location, "Error connecting to Stripe API")
+		return stripe.Price{}, derp.Wrap(err, location, "Error connecting to Stripe API", derp.WithCode(http.StatusInternalServerError))
 	}
 
 	return price, nil

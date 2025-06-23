@@ -2,7 +2,6 @@ package build
 
 import (
 	"io"
-	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/id"
@@ -11,7 +10,6 @@ import (
 	"github.com/benpate/html"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
-	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -86,27 +84,24 @@ func (step StepSetCircleSharing) Post(builder Builder, _ io.Writer) PipelineBeha
 	// Reset mapped privileges for the Stream
 	stream := streamBuilder._stream
 	stream.Groups[step.Role] = id.NewSlice()
-	stream.Privileges[step.Role] = sliceof.NewString()
+	stream.Circles[step.Role] = id.NewSlice()
 
-	for _, permission := range request.Form["permissions"] {
+	for _, permission := range request.Form["circles"] {
 
 		// If "Anonymous" permissions are allowed, then that's all we need.
 		if permission == model.MagicRoleAnonymous {
-			stream.Privileges[step.Role] = sliceof.NewString()
+			stream.Circles[step.Role] = id.NewSlice()
 			break
 		}
 
-		// Verify we have a valid CircleID
-		if _, err := primitive.ObjectIDFromHex(permission); err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Invalid CircleID: ", permission))
+		// Verify we have a valid CircleID, then add it to the list of allowed Circles
+		if circleID, err := primitive.ObjectIDFromHex(permission); err == nil {
+			stream.Circles[step.Role] = append(stream.Circles[step.Role], circleID)
 		}
-
-		// Add the CircleID to the list of allowed Privileges
-		stream.Privileges[step.Role] = append(stream.Privileges[step.Role], "CIR:"+permission)
 	}
 
 	// If no privileges have been set, then we allow Anonymous by default
-	if len(stream.Privileges[step.Role]) == 0 {
+	if len(stream.Circles[step.Role]) == 0 {
 		stream.Groups[step.Role] = id.Slice{model.MagicGroupIDAnonymous}
 	}
 
@@ -134,19 +129,19 @@ func (step StepSetCircleSharing) form() (form.Element, error) {
 		Children: []form.Element{
 			{
 				Type:        "check-button",
-				Path:        "permissions",
+				Path:        "circles",
 				Label:       "Share with Everyone",
 				Description: "Publicly visible to everyone on the Internet, signed in or not.",
 				Options: mapof.Any{
 					"icon":   "globe",
 					"class":  "checkbutton-public",
-					"value":  model.MagicRoleAnonymous,
+					"value":  model.MagicGroupIDAnonymous,
 					"script": "on change if my.checked tell .checkbutton-circle set your.checked to false end else set my.checked to true",
 				},
 			},
 			{
 				Type:  "check-button-group",
-				Path:  "permissions",
+				Path:  "circles",
 				Label: "These Circles Only",
 				Options: mapof.Any{
 					"class":    "checkbutton-circle",
@@ -158,24 +153,15 @@ func (step StepSetCircleSharing) form() (form.Element, error) {
 	}, nil
 }
 
-func (step StepSetCircleSharing) calculateValue(stream *model.Stream) mapof.Object[sliceof.String] {
+func (step StepSetCircleSharing) calculateValue(stream *model.Stream) mapof.Object[id.Slice] {
 
-	permissions := sliceof.NewString()
-
-	for _, privilege := range stream.Privileges[step.Role] {
-		if strings.HasPrefix(privilege, "CIR:") {
-			circleID := strings.TrimPrefix(privilege, "CIR:")
-			permissions = append(permissions, circleID)
+	if circles := stream.Circles[step.Role]; circles.NotEmpty() {
+		return mapof.Object[id.Slice]{
+			"circles": circles,
 		}
 	}
 
-	if len(permissions) > 0 {
-		return mapof.Object[sliceof.String]{
-			"permissions": permissions,
-		}
-	}
-
-	return mapof.Object[sliceof.String]{
-		"permissions": sliceof.String{model.MagicRoleAnonymous},
+	return mapof.Object[id.Slice]{
+		"circles": id.Slice{model.MagicGroupIDAnonymous},
 	}
 }

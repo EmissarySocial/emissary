@@ -3,7 +3,6 @@ package model
 import (
 	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data/journal"
-	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -16,7 +15,7 @@ type Identity struct {
 	IconURL         string             `bson:"iconUrl"`              // URL to an icon representing the Identity (e.g., a profile picture)
 	EmailAddress    string             `bson:"emailAddress"`         // Email address of the Identity ("john@connor.mil")
 	WebfingerHandle string             `bson:"webfingerHandle"`      // WebFinger handle of the Identity ("@john@connor.social")
-	Privileges      sliceof.String     `bson:"privileges,omitempty"` // List of privileges associated with this Identity, either a circleID, or a remoteProductID
+	PrivilegeIDs    id.Slice           `bson:"privileges,omitempty"` // List of privileges associated with this Identity, either a circleID, or a remoteProductID
 
 	// Embed journal to track changes
 	journal.Journal `bson:",inline"`
@@ -25,7 +24,8 @@ type Identity struct {
 // NewIdentity returns a fully populated Identity object
 func NewIdentity() Identity {
 	return Identity{
-		IdentityID: primitive.NewObjectID(),
+		IdentityID:   primitive.NewObjectID(),
+		PrivilegeIDs: id.NewSlice(),
 	}
 }
 
@@ -66,12 +66,12 @@ func (identity Identity) IsMyself(identityID primitive.ObjectID) bool {
 
 // RolesToGroupIDs returns a map of RoleIDs to GroupIDs
 func (identity Identity) RolesToGroupIDs(...string) id.Slice {
-	return id.NewSlice()
+	return nil
 }
 
 // RolesToPrivileges returns a map of RoleIDs to Privilege strings
-func (identity Identity) RolesToPrivileges(...string) sliceof.String {
-	return sliceof.NewString()
+func (identity Identity) RolesToPrivileges(...string) id.Slice {
+	return nil
 }
 
 /******************************************
@@ -149,6 +149,6 @@ func (identity *Identity) SetIdentifier(identifierType string, value string) boo
 }
 
 // HasPrivilege returns TRUE if the Identity has any of the provided privileges.
-func (identity Identity) HasPrivilege(privilege ...string) bool {
-	return identity.Privileges.ContainsAny(privilege...)
+func (identity Identity) HasPrivilege(privilege ...primitive.ObjectID) bool {
+	return identity.PrivilegeIDs.ContainsAny(privilege...)
 }

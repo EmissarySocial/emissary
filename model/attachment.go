@@ -12,7 +12,6 @@ import (
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/list"
-	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -51,7 +50,7 @@ func NewAttachment(objectType string, objectID primitive.ObjectID) Attachment {
  ******************************************/
 
 // ID returns the primary key of this object
-func (attachment *Attachment) ID() string {
+func (attachment Attachment) ID() string {
 	return attachment.AttachmentID.Hex()
 }
 
@@ -61,13 +60,13 @@ func (attachment *Attachment) ID() string {
 
 // State returns the current state of this Attachment.
 // It is part of the AccessLister interface
-func (attachment *Attachment) State() string {
+func (attachment Attachment) State() string {
 	return "default"
 }
 
 // IsAuthor returns TRUE if the provided UserID the author of this Attachment
 // It is part of the AccessLister interface
-func (attachment *Attachment) IsAuthor(authorID primitive.ObjectID) bool {
+func (attachment Attachment) IsAuthor(authorID primitive.ObjectID) bool {
 
 	// if attachment.ObjectType == AttachmentObjectTypeStream {
 	// TODO: What goes here??
@@ -91,21 +90,21 @@ func (attachment *Attachment) IsMyself(userID primitive.ObjectID) bool {
 
 // RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.
 // It is part of the AccessLister interface
-func (attachment *Attachment) RolesToGroupIDs(roleIDs ...string) id.Slice {
+func (attachment Attachment) RolesToGroupIDs(roleIDs ...string) id.Slice {
 	return nil
 }
 
-// RolesToPrivilegesIDs returns a slice of Privileges that grant access to any of the requested roles.
-// It is part of the AccessLister interface
-func (attachment *Attachment) RolesToPrivileges(roleIDs ...string) sliceof.String {
-	return sliceof.NewString()
+// RolesToCircleIDs returns a slice of Prilieges (CircleIDs and ProductIDs) that
+// grant access to any of the requested roles. It is part of the AccessLister interface
+func (attachment Attachment) RolesToPrivileges(roleIDs ...string) id.Slice {
+	return nil
 }
 
 /******************************************
  * Other Methods
  ******************************************/
 
-func (attachment *Attachment) CalcURL(host string) string {
+func (attachment Attachment) CalcURL(host string) string {
 
 	switch attachment.ObjectType {
 
@@ -120,11 +119,11 @@ func (attachment *Attachment) CalcURL(host string) string {
 	}
 }
 
-func (attachment *Attachment) SetURL(host string) {
+func (attachment Attachment) SetURL(host string) {
 	attachment.URL = attachment.CalcURL(host)
 }
 
-func (attachment *Attachment) DownloadExtension() string {
+func (attachment Attachment) DownloadExtension() string {
 
 	ext := strings.ToLower(attachment.OriginalExtension())
 
@@ -136,25 +135,25 @@ func (attachment *Attachment) DownloadExtension() string {
 	return ext
 }
 
-func (attachment *Attachment) DownloadMimeType() string {
+func (attachment Attachment) DownloadMimeType() string {
 	return mime.TypeByExtension(attachment.DownloadExtension())
 }
 
 // OriginalExtension returns the file extension of the original filename
-func (attachment *Attachment) OriginalExtension() string {
+func (attachment Attachment) OriginalExtension() string {
 	return "." + list.Dot(attachment.Original).Last()
 }
 
 // MimeType returns the mime-type of the attached file
-func (attachment *Attachment) MimeType() string {
+func (attachment Attachment) MimeType() string {
 	return mime.TypeByExtension(attachment.OriginalExtension())
 }
 
-func (attachment *Attachment) MimeCategory() string {
+func (attachment Attachment) MimeCategory() string {
 	return list.Slash(attachment.MimeType()).First()
 }
 
-func (attachment *Attachment) AspectRatio() string {
+func (attachment Attachment) AspectRatio() string {
 
 	if attachment.Width == 0 {
 		return ""
@@ -173,12 +172,6 @@ func (attachment Attachment) HasDimensions() bool {
 	}
 
 	return true
-}
-
-func (attachment *Attachment) SetRules(width int, height int, extensions []string) {
-	attachment.Rules.Extensions = extensions
-	attachment.Rules.Width = width
-	attachment.Rules.Height = height
 }
 
 func (attachment Attachment) FileSpec(address *url.URL) mediaserver.FileSpec {
@@ -211,4 +204,14 @@ func (attachment Attachment) JSONLD() map[string]any {
 	// TODO: Icon (if available) -> icon: {type:"", mediaType:"", url:""}
 
 	return result
+}
+
+/******************************************
+ * Setter Methods
+ ******************************************/
+
+func (attachment *Attachment) SetRules(width int, height int, extensions []string) {
+	attachment.Rules.Extensions = extensions
+	attachment.Rules.Width = width
+	attachment.Rules.Height = height
 }

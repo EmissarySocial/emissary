@@ -5,7 +5,6 @@ import (
 	"github.com/benpate/data/journal"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -73,8 +72,8 @@ func (follower *Follower) RolesToGroupIDs(roleIDs ...string) id.Slice {
 
 // RolesToPrivileges returns a slice of Privileges that grant access to any of the requested roles.
 // It is part of the AccessLister interface
-func (follower *Follower) RolesToPrivileges(roleIDs ...string) sliceof.String {
-	return sliceof.NewString()
+func (follower *Follower) RolesToPrivileges(roleIDs ...string) id.Slice {
+	return nil
 }
 
 /******************************************

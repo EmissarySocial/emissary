@@ -54,6 +54,9 @@ const CollectionOutbox = "Outbox"
 // CollectionPrivilege is the name of the database collection where Privileges are stored
 const CollectionPrivilege = "Privilege"
 
+// CollectionProduct is the name of the database collection where Products are stored
+const CollectionProduct = "Product"
+
 // CollectionResponse is the name of the database collection where Responses are stored
 const CollectionResponse = "Response"
 

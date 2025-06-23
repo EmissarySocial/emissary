@@ -38,6 +38,13 @@ func (slice Slice) NotEmpty() bool {
 	return slice.Length() > 0
 }
 
+func (slice Slice) First() primitive.ObjectID {
+	if slice.Length() == 0 {
+		return primitive.NilObjectID
+	}
+	return slice[0]
+}
+
 func (slice Slice) GetStringOK(name string) (string, bool) {
 
 	if index, ok := schema.Index(name, slice.Length()); ok {
@@ -98,8 +105,17 @@ func (slice *Slice) SetValue(value any) error {
 
 }
 
+// Append adds one or more elements to the end of the slice
+func (x *Slice) Append(value ...primitive.ObjectID) {
+	*x = append(*x, value...)
+}
+
 func (x Slice) Contains(value primitive.ObjectID) bool {
 	return slice.Contains(x, value)
+}
+
+func (x Slice) NotContains(value primitive.ObjectID) bool {
+	return !slice.Contains(x, value)
 }
 
 func (x Slice) ContainsAny(values ...primitive.ObjectID) bool {

@@ -1,6 +1,8 @@
 package stripeapi
 
 import (
+	"net/http"
+
 	"github.com/benpate/derp"
 	"github.com/benpate/remote"
 	"github.com/benpate/remote/options"
@@ -18,19 +20,16 @@ func CheckoutSession(restrictedKey string, connectedAccountID string, sessionID 
 	// Build a transaction to retrieve the Stripe Checkout session
 	checkoutSession := stripe.CheckoutSession{}
 	txn := remote.Get("https://api.stripe.com/v1/checkout/sessions/"+sessionID).
+		With(options.BearerAuth(restrictedKey), options.Debug()).
+		With(ConnectedAccount(connectedAccountID)).
 		Query("expand[]", "customer").
 		Query("expand[]", "line_items").
 		Query("expand[]", "subscription").
-		With(options.BearerAuth(restrictedKey), options.Debug()).
 		Result(&checkoutSession)
-
-	if connectedAccountID != "" {
-		txn.Header("Stripe-Account", connectedAccountID)
-	}
 
 	// Send the transaction
 	if err := txn.Send(); err != nil {
-		return stripe.CheckoutSession{}, derp.Wrap(err, location, "Error connecting to Stripe API")
+		return stripe.CheckoutSession{}, derp.Wrap(err, location, "Error connecting to Stripe API", derp.WithCode(http.StatusInternalServerError))
 	}
 
 	// Success

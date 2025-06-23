@@ -22,9 +22,10 @@ func StreamSchema() schema.Element {
 			"parentTemplateId": schema.String{MaxLength: 128},
 			"socialRole":       schema.String{MaxLength: 128},
 			"stateId":          schema.String{MaxLength: 128},
-			"permissions":      PermissionSchema(),
+			"groups":           permissionSchema(),
+			"circles":          permissionSchema(),
+			"products":         permissionSchema(),
 			"privileges":       schema.Object{Wildcard: schema.Array{Items: schema.String{}}},
-			"groups":           schema.Object{Wildcard: schema.Array{Items: schema.String{Format: "objectId"}}},
 			"defaultAllow":     schema.Array{Items: schema.String{Format: "objectId"}},
 			"url":              schema.String{Format: "url"},
 			"label":            schema.String{MaxLength: 128},
@@ -61,7 +62,9 @@ func WidgetSchema() schema.Element {
 	}
 }
 
-func PermissionSchema() schema.Element {
+// permissionSchema defines the schema for the three separate
+// permission maps: groups, circles, and products.
+func permissionSchema() schema.Element {
 	return schema.Object{
 		Wildcard: schema.Array{
 			Items: schema.String{Format: "objectId"},
@@ -83,11 +86,14 @@ func (stream *Stream) GetPointer(name string) (any, bool) {
 	case "permissions":
 		return &stream.Permissions, true
 
-	case "privileges":
-		return &stream.Privileges, true
-
 	case "groups":
 		return &stream.Groups, true
+
+	case "circles":
+		return &stream.Circles, true
+
+	case "products":
+		return &stream.Products, true
 
 	case "defaultAllow":
 		return &stream.DefaultAllow, true

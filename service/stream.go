@@ -289,9 +289,7 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 	service.CalcContext(stream)
 
 	// RULE: Calculate privileges for this stream
-	if err := service.CalcPrivileges(stream); err != nil {
-		return derp.Wrap(err, location, "Error calculating privileges", stream)
-	}
+	service.CalcPrivilegeIDs(stream)
 
 	// Try to save the Stream to the database
 	if err := service.collection.Save(stream, note); err != nil {
@@ -484,7 +482,7 @@ func (service *Stream) RangeByParent(parentID primitive.ObjectID) (iter.Seq[mode
 	return service.Range(exp.Equal("parentId", parentID))
 }
 
-func (service *Stream) RangeByPrivileges(privileges ...string) (iter.Seq[model.Stream], error) {
+func (service *Stream) RangeByPrivileges(privileges ...primitive.ObjectID) (iter.Seq[model.Stream], error) {
 
 	const location = "service.Stream.RangeByPrivilege"
 
@@ -862,26 +860,26 @@ func (service *Stream) DeleteRelatedDuplicate(parentID primitive.ObjectID, origi
 	return nil
 }
 
-func (service *Stream) MapByPrivileges(privileges ...model.Privilege) (map[string][]primitive.ObjectID, error) {
+func (service *Stream) MapByPrivileges(privileges ...model.Privilege) (map[primitive.ObjectID][]primitive.ObjectID, error) {
 
 	const location = "service.Stream.MapByPrivileges"
 
 	// RULE: If no privileges are provided, then return an empty map
 	if len(privileges) == 0 {
-		return make(mapof.Slices[string, primitive.ObjectID]), nil
+		return make(mapof.Slices[primitive.ObjectID, primitive.ObjectID]), nil
 	}
 
 	// Scan all privileges for CircleIDs and MerchantAccounts/RemoteProductIDs
-	privilegeIDs := make([]string, 0, len(privileges))
+	privilegeIDs := make([]primitive.ObjectID, 0, len(privileges))
 
 	for _, privilege := range privileges {
 
-		if compoundID := privilege.CompoundID_Circle(); compoundID != "" {
-			privilegeIDs = append(privilegeIDs, compoundID)
+		if !privilege.CircleID.IsZero() {
+			privilegeIDs = append(privilegeIDs, privilege.CircleID)
 		}
 
-		if compoundID := privilege.CompoundID_MerchantAccount(); compoundID != "" {
-			privilegeIDs = append(privilegeIDs, compoundID)
+		if !privilege.ProductID.IsZero() {
+			privilegeIDs = append(privilegeIDs, privilege.ProductID)
 		}
 	}
 
@@ -893,7 +891,7 @@ func (service *Stream) MapByPrivileges(privileges ...model.Privilege) (map[strin
 	}
 
 	// Translate the range of Streams into a map of privilegeID => streamIDs
-	result := make(mapof.Slices[string, primitive.ObjectID])
+	result := make(mapof.Slices[primitive.ObjectID, primitive.ObjectID])
 
 	for stream := range streams {
 		for _, privilegeID := range stream.PrivilegeIDs {
@@ -1098,70 +1096,13 @@ func (service *Stream) CalcContext(stream *model.Stream) {
 	stream.Context = stream.InReplyTo
 }
 
-// CalcPrivileges denormalizes all privileges for a Stream into
-// a single data structure that can be scanned for quick access.
-func (service *Stream) CalcPrivileges(stream *model.Stream) error {
-
-	const location = "service.Stream.CalcPrivileges"
-
-	result := make([]string, 0, len(stream.Privileges))
-
-	// Collect Privileges provided to all Roles
-	for _, privileges := range stream.Privileges {
-		result = append(result, privileges...)
-	}
-
-	// If there are any privileges, then let's try to expand them into circleIDs
-	if len(result) > 0 {
-
-		circleIDs := service.extractCircleIDs(result...)
-
-		// If we have circle IDs, then load all of the Circles.
-		if circleIDs.NotEmpty() {
-
-			circles, err := service.circleService.QueryByIDs(stream.AttributedTo.UserID, circleIDs)
-
-			if err != nil {
-				return derp.Wrap(err, location, "Error loading circles for privileges", circleIDs)
-			}
-
-			// Append any CircleIDs and RemoteProductIDs from the Circle ito the result
-			for _, circle := range circles {
-				result = append(result, circle.Privileges()...)
-			}
-		}
-	}
-
-	// Make a unique list of privileges and celebrate our successes
-	stream.PrivilegeIDs = slice.Unique(result)
-	return nil
-}
-
-func (service *Stream) extractCircleIDs(tokens ...string) id.Slice {
-
-	result := id.NewSlice()
-
-	for _, token := range tokens {
-
-		if circleID := service.extractCircleID(token); !circleID.IsZero() {
-			result = append(result, circleID)
-		}
-	}
-
-	return result
-}
-
-func (service *Stream) extractCircleID(token string) primitive.ObjectID {
-
-	if strings.HasPrefix(token, "CIR:") {
-		token = strings.TrimPrefix(token, "CIR:")
-
-		if circleID, err := primitive.ObjectIDFromHex(token); err == nil {
-			return circleID
-		}
-	}
-
-	return primitive.NilObjectID
+// CalcPrivileges denormalizes all privileges (CircleIDs and ProductIDs)
+// for a Stream into a single data structure that can be scanned
+// easily by MongoDB.
+func (service *Stream) CalcPrivilegeIDs(stream *model.Stream) {
+	circles := flatten(stream.Circles)
+	privileges := flatten(stream.Products)
+	stream.PrivilegeIDs = append(circles, privileges...)
 }
 
 func (service *Stream) CalculateTags(stream *model.Stream) {

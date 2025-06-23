@@ -40,7 +40,7 @@ const ConnectionProviderGiphy = "GIPHY"
 
 // ConnectionProviderPayPal represents an API connection to the https://paypal.com service
 // for processing payments.
-const ConnectionProviderPayPal = "PAYPAL"
+// const ConnectionProviderPayPal = "PAYPAL"
 
 // ConnectionProviderStripe represents an API connection to the https://stripe.com service
 // for processing payments, using direct API keys.

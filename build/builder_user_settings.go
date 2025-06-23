@@ -12,6 +12,7 @@ import (
 	"github.com/benpate/exp"
 	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -343,6 +344,18 @@ func (w Settings) MerchantAccount(merchantAccountID string) (model.MerchantAccou
 	result := model.NewMerchantAccount()
 	err := w._factory.MerchantAccount().LoadByUserAndToken(w._user.UserID, merchantAccountID, &result)
 	return result, err
+}
+
+// RemoteProducts syncs the remote products from all MerchantAccounts and returns the full Product catalog.
+func (w Settings) RemoteProducts() (sliceof.Object[model.Product], error) {
+
+	_, remoteProducts, err := w._factory.Product().SyncRemoteProducts(w._user.UserID)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "build.Common.Products", "Error loading products for user", w._user.UserID)
+	}
+
+	return remoteProducts, nil
 }
 
 // FilteredByFollowing returns the Following record that is being used to filter the Settings

@@ -38,6 +38,7 @@ type Factory interface {
 	MerchantAccount() *service.MerchantAccount
 	Outbox() *service.Outbox
 	Permission() *service.Permission
+	Product() *service.Product
 	Provider() *service.Provider
 	Registration() *service.Registration
 	Response() *service.Response

@@ -254,16 +254,16 @@ func (service *Privilege) RangeByCircle(circleID primitive.ObjectID, options ...
 	return service.Range(criteria, options...)
 }
 
-func (service *Privilege) RangeByRemoteTokens(remoteTokens ...string) (iter.Seq[model.Privilege], error) {
+func (service *Privilege) RangeByProducts(productIDs ...primitive.ObjectID) (iter.Seq[model.Privilege], error) {
 
-	const location = "service.Privilege.RangeByRemoteTokens"
+	const location = "service.Privilege.RangeByProductIDs"
 
-	// RULE: RemoteProductID must be provided
-	if len(remoteTokens) == 0 {
-		return nil, derp.InternalError(location, "No remoteProductID provided")
+	// RULE: Must have at least one productIDs
+	if len(productIDs) == 0 {
+		return nil, derp.InternalError(location, "No productIDs provided")
 	}
 
-	criteria := exp.In("remoteToken", remoteTokens)
+	criteria := exp.In("productId", productIDs)
 	return service.Range(criteria)
 }
 
@@ -383,9 +383,10 @@ func (service *Privilege) RefreshCircle(circle *model.Circle) error {
 
 	const location = "service.Privilege.RefreshCircle"
 
-	// Add CircleID to all Privileges that match the remote products linked to this Circle
+	// Set CircleID for all Privileges that match the Products linked to this Circle
 	if circle.ProductIDs.NotEmpty() {
-		privileges, err := service.RangeByRemoteTokens(circle.ProductIDs...)
+
+		privileges, err := service.RangeByProducts(circle.ProductIDs...)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error loading Privileges by RemoteTokens", circle.CircleID)
@@ -393,6 +394,7 @@ func (service *Privilege) RefreshCircle(circle *model.Circle) error {
 
 		for privilege := range privileges {
 
+			// Update the Circle if it does not match
 			if privilege.CircleID != circle.CircleID {
 				privilege.CircleID = circle.CircleID
 				if err := service.Save(&privilege, "Updating Circle settings"); err != nil {
@@ -402,7 +404,7 @@ func (service *Privilege) RefreshCircle(circle *model.Circle) error {
 		}
 	}
 
-	// Remove CircleID from all Privileges that no longer match the remote products linked to this Circle
+	// Remove CircleID from all Privileges that no longer match the ProductIDs linked to this Circle
 	privileges, err := service.RangeByCircle(circle.CircleID)
 
 	if err != nil {
@@ -411,7 +413,7 @@ func (service *Privilege) RefreshCircle(circle *model.Circle) error {
 
 	for privilege := range privileges {
 
-		if circle.ProductIDs.NotContains(privilege.RemoteProductID) {
+		if circle.ProductIDs.NotContains(privilege.ProductID) {
 			privilege.CircleID = primitive.NilObjectID
 			if err := service.Save(&privilege, "Updating Circle settings"); err != nil {
 				return derp.Wrap(err, location, "Error refreshing Privilege", circle)

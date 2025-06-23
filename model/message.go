@@ -88,8 +88,8 @@ func (message *Message) RolesToGroupIDs(roleIDs ...string) id.Slice {
 
 // RolesToPrivilegesductIDs returns a slice of Product IDs that grant access to any of the requested roles.
 // It is part of the AccessLister interface
-func (message *Message) RolesToPrivileges(roleIDs ...string) sliceof.String {
-	return sliceof.NewString()
+func (message *Message) RolesToPrivileges(roleIDs ...string) id.Slice {
+	return nil
 }
 
 /******************************************

@@ -3,7 +3,6 @@ package model
 import (
 	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data/journal"
-	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -14,6 +13,7 @@ type Privilege struct {
 	UserID            primitive.ObjectID `bson:"userId"`                     // Unique ID of the User who owns the Circle or MerchantAccount
 	CircleID          primitive.ObjectID `bson:"circleId,omitzero"`          // Unique ID of the Circle that this membership is associated with (if any)
 	MerchantAccountID primitive.ObjectID `bson:"merchantAccountId,omitzero"` // Unique ID of the Merchant Account that this Privilege is associated with (if any)
+	ProductID         primitive.ObjectID `bson:"productId,omitzero"`         // Unique ID of the Product/Plan that this Privilege is associated with (if any)
 	Name              string             `bson:"name"`                       // Human-readable name of the privilege (e.g. "Monthly Subscription", "Annual Subscription", etc.)
 	PriceDescription  string             `bson:"priceDescription,omitzero"`  // Description of the price for this privilege (e.g. "Monthly Subscription", "Annual Subscription", etc.)
 	RecurringType     string             `bson:"recurringType,omitzero"`     // Type of recurring payment (e.g. "ONETIME", "WEEK", "MONTH", "YEAR")
@@ -85,8 +85,8 @@ func (privilege *Privilege) RolesToGroupIDs(roleIDs ...string) id.Slice {
 
 // RolesToPrivileges returns a slice of Privileges that grant access to any of the requested roles.
 // It is part of the AccessLister interface
-func (privilege *Privilege) RolesToPrivileges(roleIDs ...string) sliceof.String {
-	return sliceof.NewString()
+func (privilege *Privilege) RolesToPrivileges(roleIDs ...string) id.Slice {
+	return nil
 }
 
 /******************************************
@@ -97,6 +97,7 @@ func (privilege Privilege) IsPurchase() bool {
 	return privilege.RemotePurchaseID != ""
 }
 
+/*
 // CompundID returns the primary reason for this privilege to exist, either it was:
 // 1) purchased via a Merchant Account, or 2) granted manually by the User
 func (privilege Privilege) CompoundID() string {
@@ -128,3 +129,4 @@ func (privilege Privilege) CompoundID_MerchantAccount() string {
 
 	return "MA:" + privilege.MerchantAccountID.Hex() + ":" + privilege.RemoteProductID
 }
+*/

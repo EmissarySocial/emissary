@@ -337,12 +337,23 @@ func getSearchResult(builder Builder) model.SearchResult {
 	return model.SearchResult{}
 }
 
-func mapRemoteProductsToLookupCodes(remoteProducts ...model.RemoteProduct) sliceof.Object[form.LookupCode] {
+func mapProductsToLookupCodes(products ...model.Product) sliceof.Object[form.LookupCode] {
 
-	lookupCodes := make([]form.LookupCode, len(remoteProducts))
+	lookupCodes := make([]form.LookupCode, len(products))
 
-	for index, remoteProduct := range remoteProducts {
-		lookupCodes[index] = remoteProduct.LookupCode()
+	for index, product := range products {
+		lookupCodes[index] = product.LookupCode()
+	}
+
+	return lookupCodes
+}
+
+func mapCirclesToLookupCodes(circles ...model.Circle) sliceof.Object[form.LookupCode] {
+
+	lookupCodes := make([]form.LookupCode, len(circles))
+
+	for index, circle := range circles {
+		lookupCodes[index] = circle.LookupCode()
 	}
 
 	return lookupCodes

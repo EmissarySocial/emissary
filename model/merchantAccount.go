@@ -5,7 +5,6 @@ import (
 	"github.com/benpate/data/journal"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -81,8 +80,8 @@ func (merchantAccount *MerchantAccount) RolesToGroupIDs(roleIDs ...string) id.Sl
 
 // RolesToPrivileges returns a slice of Privileges that grant access to any of the requested roles.
 // It is part of the AccessLister interface
-func (merchantAccount *MerchantAccount) RolesToPrivileges(roleIDs ...string) sliceof.String {
-	return sliceof.NewString()
+func (merchantAccount *MerchantAccount) RolesToPrivileges(roleIDs ...string) id.Slice {
+	return nil
 }
 
 /******************************************
@@ -94,8 +93,8 @@ func (merchantAccount MerchantAccount) ProductURL() string {
 
 	switch merchantAccount.Type {
 
-	case ConnectionProviderPayPal:
-		return "https://www.paypal.com/business/products"
+	// case ConnectionProviderPayPal:
+	//	return "https://www.paypal.com/business/products"
 
 	case ConnectionProviderStripe:
 		return "https://dashboard.stripe.com/products?active=true"
@@ -112,8 +111,8 @@ func (merchantAccount MerchantAccount) APIKeyURL() string {
 
 	switch merchantAccount.Type {
 
-	case ConnectionProviderPayPal:
-		return "https://www.paypal.com/business/keys"
+	// case ConnectionProviderPayPal:
+	//	return "https://www.paypal.com/business/keys"
 
 	case ConnectionProviderStripe:
 		return "https://dashboard.stripe.com/apikeys"
@@ -130,8 +129,8 @@ func (merchantAccount MerchantAccount) HelpURL() string {
 
 	switch merchantAccount.Type {
 
-	case ConnectionProviderPayPal:
-		return "https://emissary.dev/paypal"
+	// case ConnectionProviderPayPal:
+	//	return "https://emissary.dev/paypal"
 
 	case ConnectionProviderStripe:
 		return "https://emissary.dev/stripe"

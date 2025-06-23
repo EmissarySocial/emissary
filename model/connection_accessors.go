@@ -15,7 +15,7 @@ func ConnectionSchema() schema.Element {
 				ConnectionProviderGiphy,
 				ConnectionProviderGoogleMaps,
 				ConnectionProviderOpenStreetMap,
-				ConnectionProviderPayPal,
+				// ConnectionProviderPayPal,
 				ConnectionProviderStripe,
 				ConnectionProviderStripeConnect,
 				ConnectionProviderTomTom,

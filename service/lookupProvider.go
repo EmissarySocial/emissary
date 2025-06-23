@@ -264,7 +264,7 @@ func (service *LookupProvider) getMerchantAccountProducts() form.LookupGroup {
 		return form.NewReadOnlyLookupGroup()
 	}
 
-	lookupCodes := mapRemoteProductsToLookupCodes(remoteProducts...)
+	lookupCodes := mapProductsToLookupCodes(remoteProducts...)
 
 	// Success?!?!?
 	return form.NewReadOnlyLookupGroup(lookupCodes...)
@@ -299,7 +299,7 @@ func (service *LookupProvider) getMerchantAccountsAllProducts() form.LookupGroup
 			return form.NewReadOnlyLookupGroup()
 		}
 
-		lookupCodes := mapRemoteProductsToLookupCodes(remoteProducts...)
+		lookupCodes := mapProductsToLookupCodes(remoteProducts...)
 
 		result = append(result, lookupCodes...)
 	}

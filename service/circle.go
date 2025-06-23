@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -199,7 +200,7 @@ func (service *Circle) QueryByIDs(userID primitive.ObjectID, circleIDs []primiti
 }
 
 // QueryByUser returns all Circles that are owned by the provided userID
-func (service *Circle) QueryByUser(userID primitive.ObjectID, options ...option.Option) ([]model.Circle, error) {
+func (service *Circle) QueryByUser(userID primitive.ObjectID, options ...option.Option) (sliceof.Object[model.Circle], error) {
 
 	// RULE: Require a valid UserID
 	if userID.IsZero() {
@@ -211,7 +212,7 @@ func (service *Circle) QueryByUser(userID primitive.ObjectID, options ...option.
 }
 
 // QueryPrivilegedByUser returns all Circles that are marked as "featured" by the provided userID
-func (service *Circle) QueryFeaturedByUser(userID primitive.ObjectID, options ...option.Option) ([]model.Circle, error) {
+func (service *Circle) QueryFeaturedByUser(userID primitive.ObjectID, options ...option.Option) (sliceof.Object[model.Circle], error) {
 
 	// RULE: Require a valid UserID
 	if userID.IsZero() {
@@ -255,35 +256,35 @@ func (service *Circle) LoadByProductID(userID primitive.ObjectID, remoteProductI
 	return service.Load(criteria, result)
 }
 
-func (service *Circle) RemoteProductCount(userID primitive.ObjectID) (int, error) {
+func (service *Circle) HasAssignedProducts(userID primitive.ObjectID) (bool, error) {
 
 	const location = "service.Circle.CountRemoteProducts"
 
 	// RULE: Require a valid UserID
 	if userID.IsZero() {
-		return 0, derp.ValidationError("UserID cannot be zero")
+		return false, derp.ValidationError("UserID cannot be zero")
 	}
 
 	// Count the number of remote products for this user
 	circles, err := service.QueryFeaturedByUser(userID)
 
 	if err != nil {
-		return 0, derp.Wrap(err, location, "Error counting remote products for User", userID)
+		return false, derp.Wrap(err, location, "Error counting remote products for User", userID)
 	}
 
 	// Count all products across all "Featured" circles
-	result := 0
-
 	for _, circle := range circles {
-		result += circle.ProductCount()
+		if circle.HasProducts() {
+			return true, nil
+		}
 	}
 
-	return int(result), nil
+	return false, nil
 }
 
-func (service *Circle) RemoteProductIDs(userID primitive.ObjectID) (sliceof.String, error) {
+func (service *Circle) AssignedProductIDs(userID primitive.ObjectID) (id.Slice, error) {
 
-	const location = "service.Circle.RemoteProductIDs"
+	const location = "service.Circle.ProductIDs"
 
 	// RULE: Require a valid UserID
 	if userID.IsZero() {
@@ -298,11 +299,13 @@ func (service *Circle) RemoteProductIDs(userID primitive.ObjectID) (sliceof.Stri
 	}
 
 	// Collect all of the Remote Product IDs from the Circles
-	result := sliceof.NewString()
+	result := id.NewSlice()
 
 	for _, circle := range circles {
 		result = append(result, circle.ProductIDs...)
 	}
+
+	result = slice.Unique(result)
 
 	return result, nil
 }

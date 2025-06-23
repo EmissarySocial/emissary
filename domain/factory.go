@@ -75,6 +75,7 @@ type Factory struct {
 	oauthUserToken         service.OAuthUserToken
 	outboxService          service.Outbox
 	permissionService      service.Permission
+	productService         service.Product
 	providerService        service.Provider
 	responseService        service.Response
 	ruleService            service.Rule
@@ -155,6 +156,7 @@ func NewFactory(domain config.Domain, port string, activityCache *mongo.Collecti
 	factory.oauthUserToken = service.NewOAuthUserToken()
 	factory.outboxService = service.NewOutbox()
 	factory.permissionService = service.NewPermission()
+	factory.productService = service.NewProduct()
 	factory.providerService = service.NewProvider()
 	factory.responseService = service.NewResponse()
 	factory.ruleService = service.NewRule()
@@ -409,6 +411,12 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 		factory.permissionService.Refresh(
 			factory.Identity(),
 			factory.Privilege(),
+		)
+
+		// Populate Product Service
+		factory.productService.Refresh(
+			factory.collection(CollectionProduct),
+			factory.MerchantAccount(),
 		)
 
 		// Populate RealtimeBroker Service
@@ -813,6 +821,11 @@ func (factory *Factory) Permission() *service.Permission {
 // Privilege returns a fully populated Privilege service
 func (factory *Factory) Privilege() *service.Privilege {
 	return &factory.privilegeService
+}
+
+// Product returns a fully populated Product service
+func (factory *Factory) Product() *service.Product {
+	return &factory.productService
 }
 
 // Response returns a fully populated Response service

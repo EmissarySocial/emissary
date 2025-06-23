@@ -9,6 +9,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -843,12 +844,16 @@ func (w Stream) MerchantAccounts() QueryBuilder[model.MerchantAccount] {
 }
 
 // Products returns all Remote Products that (when purchased) provide privileges for this Stream.
-func (w Stream) Products() (sliceof.Object[model.RemoteProduct], error) {
-	return w._factory.MerchantAccount().ProductsByID(w._stream.AttributedTo.UserID, w._stream.PrivilegeIDs...)
+func (w Stream) Products() (sliceof.Object[model.Product], error) {
+
+	return w._factory.Product().QueryByIDs(
+		w._stream.AttributedTo.UserID,
+		w._stream.ProductIDs()...,
+	)
 }
 
 // PrivilegeIDs returns all privilege IDs that are valid for this stream
-func (w Stream) PrivilegeIDs() sliceof.String {
+func (w Stream) PrivilegeIDs() id.Slice {
 	return w._stream.PrivilegeIDs
 }
 
