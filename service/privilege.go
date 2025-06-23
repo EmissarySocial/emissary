@@ -89,6 +89,10 @@ func (service *Privilege) Save(privilege *model.Privilege, note string) error {
 
 	const location = "service.Privilege.Save"
 
+	if err := service.validateIdentifier(privilege); err != nil {
+		return derp.Wrap(err, location, "Error validating Identifier", privilege.IdentifierType, privilege.IdentifierValue)
+	}
+
 	// Validate the value before saving
 	if err := service.Schema().Validate(privilege); err != nil {
 		return derp.Wrap(err, location, "Error validating Privilege", privilege)
@@ -324,6 +328,25 @@ func (service *Privilege) DeleteByCircle(circleID primitive.ObjectID, note strin
  * Helper Methods
  ******************************************/
 
+func (service *Privilege) validateIdentifier(privilege *model.Privilege) error {
+
+	const location = "service.Privilege.validateIdentifier"
+
+	if privilege.IdentifierValue == "" {
+		return derp.InternalError(location, "IdentifierValue must be provided")
+	}
+
+	if privilege.IdentifierType == "" {
+		privilege.IdentifierType = service.identityService.GuessIdentifierType(privilege.IdentifierValue)
+
+		if privilege.IdentifierType == "" {
+			return derp.InternalError(location, "Could not guess identifier type.")
+		}
+	}
+
+	return nil
+}
+
 // maybeCreateIdentity guarantees that the provided Privilege is connected to a valid Identity.
 // If the IdentityID field is zero, then a matching Identity is located or created.
 func (service *Privilege) maybeCreateIdentity(privilege *model.Privilege) error {
@@ -411,11 +434,20 @@ func (service *Privilege) RefreshCircle(circle *model.Circle) error {
 
 	for privilege := range privileges {
 
-		if circle.ProductIDs.NotContains(privilege.ProductID) {
-			privilege.CircleID = primitive.NilObjectID
-			if err := service.Save(&privilege, "Updating Circle settings"); err != nil {
-				return derp.Wrap(err, location, "Error refreshing Privilege", circle)
-			}
+		// Do not remove manually assigned privileges
+		if !privilege.IsPurchase() {
+			continue
+		}
+
+		// Do not remove privileges that match the Circle's CURRENT ProductIDs
+		if circle.ProductIDs.Contains(privilege.ProductID) {
+			continue
+		}
+
+		// Otherwise, remove Privileges that no longer match this Circle's ProductIDs
+		privilege.CircleID = primitive.NilObjectID
+		if err := service.Save(&privilege, "Updating Circle settings"); err != nil {
+			return derp.Wrap(err, location, "Error refreshing Privilege", circle)
 		}
 	}
 

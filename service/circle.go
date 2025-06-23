@@ -359,8 +359,10 @@ func (service *Circle) RefreshMemberCounts(userID primitive.ObjectID, circleID p
 	// Otherwise, true grit would update the Circle with the new member count
 	circle.MemberCount = count
 
-	if err := service.Save(&circle, "Refresh Member Count"); err != nil {
-		return derp.Wrap(err, location, "Error saving Circle with updated member count", circleID)
+	// Save the value to the database
+	// Saving directly to the Collection to bypass other validation and business logic.
+	if err := service.collection.Save(&circle, "Refreshing Member Count"); err != nil {
+		return derp.Wrap(err, location, "Error saving Circle", circle)
 	}
 
 	// We have survived another day

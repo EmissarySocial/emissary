@@ -179,7 +179,7 @@
 										label: Products
 										description: Link this Circle to the products in your merchant account and guests will be able to purchase membership in this Circle.
 										children:[
-											{type:"multiselect", path:"productIds", options:{provider:"merchantAccounts-all-products"}}
+											{type:"multiselect", path:"productIds", description:"<a href='/@me/settings/payments'>Manage Products &rarr;</a>", options:{provider:"merchantAccounts-all-products"}}
 											{type:"toggle", path:"isFeatured", options:{false-text:"Featured?", true-text:"Featured. Can be purchased from your profile page."}}
 										]
 									}
@@ -222,8 +222,11 @@
 							label: + Add a Member
 							description: Enter the member's email or fediverse handle below to put them in this circle and grant them access to all of the posts and content in it.
 							children: [
-								{type:"select", path:"identifierType", label:"Identity Type", options:{provider:"identifier-types", autocomplete:"off", required:true}}
-								{type:"text", path:"identifierValue", label:"Identifier", description:"The Fediverse Handle or Email Address that you're adding to this circle.", options:{autocomplete:"off", required:true}}
+								{
+									type:"text", 
+									path:"identifierValue", 
+									label:"Fediverse Handle or Email", 
+									description:"Use: @username@server.social for Fediverse handles<br>Use: username@server.com for email addresses", options:{autocomplete:"off", required:true}}
 							]
 						}}
 						{do:"set-data", from-url:"circleId"}
