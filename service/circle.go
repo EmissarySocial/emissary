@@ -240,7 +240,7 @@ func (service *Circle) LoadByID(userID primitive.ObjectID, circleID primitive.Ob
 	return service.Load(criteria, result)
 }
 
-func (service *Circle) LoadByProductID(userID primitive.ObjectID, remoteProductID string, result *model.Circle) error {
+func (service *Circle) LoadByProductID(userID primitive.ObjectID, productID primitive.ObjectID, result *model.Circle) error {
 
 	// RULE: Require a valid UserID
 	if userID.IsZero() {
@@ -248,11 +248,11 @@ func (service *Circle) LoadByProductID(userID primitive.ObjectID, remoteProductI
 	}
 
 	// RULE: Require a valid RemoteToken
-	if remoteProductID == "" {
-		return derp.ValidationError("RemoteProductID cannot be empty")
+	if productID.IsZero() {
+		return derp.ValidationError("ProductID cannot be zero")
 	}
 
-	criteria := exp.Equal("userId", userID).AndEqual("productIds", remoteProductID)
+	criteria := exp.Equal("userId", userID).AndEqual("productIds", productID)
 	return service.Load(criteria, result)
 }
 

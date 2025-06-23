@@ -355,17 +355,15 @@ func (service *Privilege) validateCircle(privilege *model.Privilege) error {
 		return nil
 	}
 
-	// RULE: Compute RemoteToken (if possible)
-	if privilege.RemoteProductID == "" {
+	// RULE: If the Privilege does not link to a ProductID, then we're done.
+	if privilege.ProductID.IsZero() {
 		return nil
 	}
 
-	// Computet the RemoteToken for this Privilege
-	privilege.RemoteToken = "MA:" + privilege.MerchantAccountID.Hex() + ":" + privilege.RemoteProductID
-
-	// Try to find the Circle using the RemoteToken
+	// Since we've purchased a ProductID, let's see if there's a Circle that matches it.
+	// If so, then we'll apply the CircleID to the Privilege.
 	circle := model.NewCircle()
-	if err := service.circleService.LoadByProductID(privilege.UserID, privilege.RemoteToken, &circle); err != nil {
+	if err := service.circleService.LoadByProductID(privilege.UserID, privilege.ProductID, &circle); err != nil {
 
 		// If no Circle is bound to the RemoteProductID, then there's nothing to do.
 		if derp.IsNotFound(err) {

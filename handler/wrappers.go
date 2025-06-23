@@ -177,7 +177,7 @@ func WithMerchantAccount(serverFactory *server.Factory, fn WithFunc1[model.Merch
 	})
 }
 
-func WithMerchantAccountJWT(serverFactory *server.Factory, fn WithFunc1[model.MerchantAccount]) echo.HandlerFunc {
+func WithMerchantAccountJWT(serverFactory *server.Factory, fn WithFunc2[model.MerchantAccount, model.Product]) echo.HandlerFunc {
 
 	const location = "handler.WithProductJWT"
 
@@ -189,12 +189,6 @@ func WithMerchantAccountJWT(serverFactory *server.Factory, fn WithFunc1[model.Me
 
 		if err := jwtService.ParseToken(ctx.QueryParam("jwt"), &claims); err != nil {
 			return derp.Wrap(err, location, "Error parsing JWT token")
-		}
-
-		// Retrive the MerchantAccountID
-		merchantAccountID, isString := claims["merchantAccountId"].(string)
-		if !isString {
-			return derp.BadRequestError(location, "ProductID in JWT token must be a string")
 		}
 
 		// Retrive the ProductID
@@ -210,12 +204,39 @@ func WithMerchantAccountJWT(serverFactory *server.Factory, fn WithFunc1[model.Me
 		}
 
 		// Apply the values to the context
-		ctx.QueryParams().Set("merchantAccountId", merchantAccountID)
 		ctx.QueryParams().Set("productId", productID)
 		ctx.QueryParams().Set("transactionId", transactionID)
 
 		// Continue processing using WithMerchantAccount
-		return WithMerchantAccount(serverFactory, fn)(ctx)
+		return WithProduct(serverFactory, fn)(ctx)
+	})
+}
+
+// WithProduct handles boilerplate code for requests that use a Product object
+func WithProduct(serverFactory *server.Factory, fn WithFunc2[model.MerchantAccount, model.Product]) echo.HandlerFunc {
+
+	const location = "handler.WithAuthenticatedUser"
+
+	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *domain.Factory) error {
+
+		// Load the Product from the URL parameters
+		productService := factory.Product()
+		product := model.NewProduct()
+
+		if err := productService.LoadByToken(ctx.QueryParam("productId"), &product); err != nil {
+			return derp.Wrap(err, location, "Error loading Product")
+		}
+
+		// Load the MerchantAccount used for the Product
+		merchantAccountService := factory.MerchantAccount()
+		merchantAccount := model.NewMerchantAccount()
+
+		if err := merchantAccountService.LoadByID(product.MerchantAccountID, &merchantAccount); err != nil {
+			return derp.Wrap(err, location, "Error loading MerchantAccount")
+		}
+
+		// Call the continuation function
+		return fn(ctx, factory, &merchantAccount, &product)
 	})
 }
 

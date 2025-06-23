@@ -45,7 +45,7 @@
 				{do:"if", condition:"{{eq 1 .PrivilegeIDs.Length }}", then:[
 					{
 						do:"forward-to"
-						url:"/.checkout?token={{.PrivilegeIDs.First.Hex}}&return={{.Permalink}}"
+						url:"/.checkout?productId={{.PrivilegeIDs.First.Hex}}&return={{.Permalink}}"
 						method:"get"
 					}
 				], else:[

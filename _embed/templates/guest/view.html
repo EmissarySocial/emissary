@@ -95,11 +95,10 @@
 							<div class="text-sm text-light-gray">{{ $privilege.CreateDate | shortDate }}</div>
 						</td>
 						<td class="padding width-60%">
-							{{- range $privilegeID, $streamIDs := $privilegedStreams -}}
-								{{- if eq $privilege.CompoundID $privilegeID -}}
-									{{- range $index, $streamID := $streamIDs -}}
-										<div hx-get="/{{$streamID.Hex}}/paid-content" hx-trigger="revealed" hx-target="this" hx-swap="innerHTML" hx-push-url="false"></div>
-									{{- end -}}
+							{{- range $index, $compoundID := $privilege.CompoundIDs -}}
+								{{- $streamIDs := index $privilegedStreams $compoundID -}}
+								{{- range $index, $streamID := $streamIDs -}}
+									<div hx-get="/{{$streamID.Hex}}/paid-content" hx-trigger="revealed" hx-target="this" hx-swap="innerHTML" hx-push-url="false"></div>
 								{{- end -}}
 							{{- end -}}
 						</td>

@@ -318,7 +318,7 @@ func (service *MerchantAccount) DecryptVault(merchantAccount *model.MerchantAcco
  * Provider-Specific Methods
  ******************************************/
 
-func (service *MerchantAccount) GetCheckoutURL(merchantAccount *model.MerchantAccount, remoteProductID string, returnURL string) (string, error) {
+func (service *MerchantAccount) GetCheckoutURL(merchantAccount *model.MerchantAccount, product *model.Product, returnURL string) (string, error) {
 
 	switch merchantAccount.Type {
 
@@ -326,20 +326,20 @@ func (service *MerchantAccount) GetCheckoutURL(merchantAccount *model.MerchantAc
 	//	return service.paypal_getCheckoutURL(merchantAccount, remoteProductID, returnURL)
 
 	case model.ConnectionProviderStripe:
-		return service.stripe_getCheckoutURL(merchantAccount, remoteProductID, returnURL)
+		return service.stripe_getCheckoutURL(merchantAccount, product, returnURL)
 
 	case model.ConnectionProviderStripeConnect:
-		return service.stripe_getCheckoutURL(merchantAccount, remoteProductID, returnURL)
+		return service.stripe_getCheckoutURL(merchantAccount, product, returnURL)
 	}
 
 	return "", derp.BadRequestError("service.MerchantAccount.GetCheckoutURL", "Invalid MerchantAccount Type", merchantAccount.Type)
 }
 
-func (service *MerchantAccount) ParseCheckoutResponse(queryParams url.Values, merchantAccount *model.MerchantAccount) (model.Privilege, error) {
+func (service *MerchantAccount) ParseCheckoutResponse(merchantAccount *model.MerchantAccount, product *model.Product, transactionID string, queryParams url.Values) (model.Privilege, error) {
 
 	const location = "service.MerchantAccount.ParseCheckoutResponse"
 
-	var getter func(url.Values, *model.MerchantAccount) (model.Privilege, error)
+	var getter func(*model.MerchantAccount, *model.Product, string, url.Values) (model.Privilege, error)
 
 	// Find the appropriate getter function for this MerchantAccount type
 	switch merchantAccount.Type {
@@ -358,7 +358,7 @@ func (service *MerchantAccount) ParseCheckoutResponse(queryParams url.Values, me
 	}
 
 	// Retrieve the Privilege record from the checkout response
-	privilege, err := getter(queryParams, merchantAccount)
+	privilege, err := getter(merchantAccount, product, transactionID, queryParams)
 
 	if err != nil {
 		return model.Privilege{}, derp.Wrap(err, location, "Error processing checkout response")

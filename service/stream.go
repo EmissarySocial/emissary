@@ -28,6 +28,7 @@ import (
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/turbine/queue"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -860,9 +861,13 @@ func (service *Stream) DeleteRelatedDuplicate(parentID primitive.ObjectID, origi
 	return nil
 }
 
+// MapByPrivileges returns a map of PrivilegeIDs to a slice of StreamIDs that grant additional access
+// to Identities that hold of that Privileges.
 func (service *Stream) MapByPrivileges(privileges ...model.Privilege) (map[primitive.ObjectID][]primitive.ObjectID, error) {
 
 	const location = "service.Stream.MapByPrivileges"
+
+	spew.Dump(privileges)
 
 	// RULE: If no privileges are provided, then return an empty map
 	if len(privileges) == 0 {
@@ -883,6 +888,11 @@ func (service *Stream) MapByPrivileges(privileges ...model.Privilege) (map[primi
 		}
 	}
 
+	// RULE: If no CircleIDs or ProductIDs are defined, then return an empty map
+	if len(privilegeIDs) == 0 {
+		return make(mapof.Slices[primitive.ObjectID, primitive.ObjectID]), nil
+	}
+
 	// Find all Streams that match the included privilegeIDs
 	streams, err := service.RangeByPrivileges(privilegeIDs...)
 
@@ -898,6 +908,8 @@ func (service *Stream) MapByPrivileges(privileges ...model.Privilege) (map[primi
 			result.Add(privilegeID, stream.StreamID)
 		}
 	}
+
+	spew.Dump(result)
 
 	// Ugly, but she rides.
 	return result, nil

@@ -36,15 +36,8 @@
 
 				<div class="text-sm text-gray margin-bottom">{{icon "circle"}} DESCRIPTION</div>
 				<div class="flex-grow margin-bottom">{{$circle.Description}}</div>
-				<div class="flex-row">
-					{{- if $circle.IsFeatured -}}
-						<span class="text-sm text-green">{{icon "check-circle-fill"}} Featured on Profile</span>
-					{{- else -}}
-						<span class="text-sm text-light-gray">{{icon "circle"}} Not Featured</span>
-					{{- end -}}
-					<span class="flex-grow align-right">
-						<button class="text-xs" hx-get="/@me/settings/circle-edit?circleId={{$circle.ID}}">Edit Circle</button>
-					</span>
+				<div class="align-right">
+					<button class="text-xs" hx-get="/@me/settings/circle-edit?circleId={{$circle.ID}}">Edit Circle</button>
 				</div>
 			</div>
 			<div class="card flex-grow flex-column padding align-center width-1-4">
@@ -57,9 +50,14 @@
 			<div class="card flex-grow flex-column padding align-center width-1-4">
 				<div class="text-sm text-gray">{{icon "box-fill"}} PRODUCTS</div>
 				<div class="flex-grow text-2xl margin-none bold">{{$circle.ProductIDs.Length}}</div>
-				<!--div class="align-center">
-					<button class="text-xs" hx-get="/@me/settings/circle-edit?circleId={{$circle.ID}}">Edit Products</button>
-				</div-->
+				<div class="align-center">
+					{{- if $circle.IsFeatured -}}
+						<span class="text-sm text-green">{{icon "check-circle-fill"}} Featured on Profile</span>
+					{{- else -}}
+						<span class="text-sm text-light-gray">{{icon "circle"}} Not Featured</span>
+					{{- end -}}
+					<!--button class="text-xs" hx-get="/@me/settings/circle-edit?circleId={{$circle.ID}}">Edit Products</button-->
+				</div>
 			</div>
 		</div>
 

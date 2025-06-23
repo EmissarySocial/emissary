@@ -4,7 +4,6 @@ import (
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/steranko"
 )
 
@@ -145,13 +144,12 @@ func PostPayPalWebhook(ctx *steranko.Context, factory *domain.Factory) error {
 	*/
 }
 
+/*
 func postPayPalWebhook_MerchantOnboardingCompleted(factory *domain.Factory, event mapof.Any) error {
 
 	const location = "handler.PostPaypalWebhook_MerchantOnboardingCompleted"
 
 	return derp.NotImplementedError(location, "PayPal Merchant Onboarding Completed webhook is not implemented")
-
-	/*
 
 		// Collect values from the webhook event
 		resource := event.GetMap("resource")
@@ -174,5 +172,5 @@ func postPayPalWebhook_MerchantOnboardingCompleted(factory *domain.Factory, even
 		}
 
 		return nil
-	*/
 }
+*/

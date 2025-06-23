@@ -2,8 +2,7 @@
 
 	<div class="flex-row margin-bottom">
 		<div class="flex-grow">
-			<a href="/@{{.AttributedTo.UserID.Hex}}">&larr; {{.AttributedTo.Name}} </a> &middot;
-			<a href="/{{.StreamID}}">{{.Label}}</a>
+			<a href="/{{.StreamID}}">&larr; {{.Label}}</a>
 			&middot;
 			<b>Sell Online</b>
 		</div>
@@ -18,17 +17,17 @@
 		<div role="tablist" class="wizard margin-bottom-xl">
 			<div role="tab">
 				<div class="step-number">1</div>
-				<div class="step-label">Merchant<br>Account</div>
+				<div class="step-label">Account</div>
 			</div>	
 			<div class="line" disabled></div>
 			<div role="tab" disabled>
 				<div class="step-number">2</div>
-				<div class="step-label">Connect<br>Products</div>
+				<div class="step-label">Products</div>
 			</div>
 			<div class="line" disabled></div>
 			<div role="tab" disabled>
 				<div class="step-number">3</div>
-				<div class="step-label">Exclusive<br>Content</div>
+				<div class="step-label">Content</div>
 			</div>
 		</div>
 
@@ -69,19 +68,19 @@
 			<div role="tablist" class="wizard margin-bottom-xl">
 				<div role="tab" aria-controls="tab-merchant-account" class="done">
 					<div class="step-number">&check;</div>
-					<div class="step-label">Merchant<br>Account</div>
+					<div class="step-label">Account</div>
 				</div>	
 				<div class="line done"></div>
 				<div role="tab" aria-controls="tab-products" {{if $hasproducts}} class="done" {{else}} aria-selected="true" {{end}}>
 					<div class="step-number">
 						{{if $hasproducts}}&check;{{else}}2{{end}}
 					</div>
-					<div class="step-label">Connect<br>Products</div>
+					<div class="step-label">Products</div>
 				</div>
 				<div class="line" {{if not $hasproducts}} disabled {{end}}></div>
 				<div role="tab" aria-controls="tab-content" {{if $hasproducts}} aria-selected="true" {{else}} disabled {{end}}>
 					<div class="step-number">3</div>
-					<div class="step-label">Exclusive<br>Content</div>
+					<div class="step-label">Content</div>
 				</div>
 			</div>
 

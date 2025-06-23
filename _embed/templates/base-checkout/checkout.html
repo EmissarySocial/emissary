@@ -5,10 +5,10 @@
 
 <div class="table">
 	{{- range $index, $product := .Products -}}
-		<a href="/.checkout?token={{$product.Token}}&return={{$permalink}}" role="link" class="text-nocolor text-plain flex-row">
+		<a href="/.checkout?token={{$product.ProductID}}&return={{$permalink}}" role="link" class="text-nocolor text-plain flex-row">
 			<div class="flex-grow">
 				<div class="bold">{{$product.Name}}</div>
-				<div class="text-sm text-gray">{{$product.Description}}</div>
+				<div class="text-sm text-gray">{{$product.Price}}</div>
 			</div>
 			<div class="flex-align-self-start text-xl margin-none">&rarr;</div>
 		</a>

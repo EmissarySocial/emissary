@@ -153,9 +153,20 @@ func (service *Product) Schema() schema.Schema {
  ******************************************/
 
 // LoadByID loads a single model.Product object that matches the provided productID
-func (service *Product) LoadByID(userID primitive.ObjectID, productID primitive.ObjectID, result *model.Product) error {
-	criteria := exp.Equal("_id", productID).AndEqual("userId", userID)
+func (service *Product) LoadByID(productID primitive.ObjectID, result *model.Product) error {
+	criteria := exp.Equal("_id", productID)
 	return service.Load(criteria, result)
+}
+
+func (service *Product) LoadByToken(token string, result *model.Product) error {
+
+	productID, err := primitive.ObjectIDFromHex(token)
+
+	if err != nil {
+		return derp.Wrap(err, "service.Product.LoadByToken", "Invalid Product ID", token)
+	}
+
+	return service.LoadByID(productID, result)
 }
 
 // QueryByUser returns a slice of Products that match the provided productIDs
