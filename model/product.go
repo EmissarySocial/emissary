@@ -37,7 +37,7 @@ func (product Product) LookupCode() form.LookupCode {
 	return form.LookupCode{
 		Group: product.Name,
 		Label: product.Price,
-		Value: "MA:" + product.MerchantAccountID.Hex() + ":" + product.ProductID.Hex(),
+		Value: product.ProductID.Hex(),
 		Icon:  product.Icon,
 		Href:  product.AdminHref,
 	}

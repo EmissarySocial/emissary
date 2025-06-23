@@ -27,10 +27,20 @@ func TestStreamSchema(t *testing.T) {
 		{"socialRole", "SOCIAL-ROLE", nil},
 		{"stateId", "STATE", nil},
 
-		{"permissions.A.0", "000000000000000000000007", nil},
-		{"permissions.A.1", "000000000000000000000008", nil},
-		{"permissions.B.0", "000000000000000000000009", nil},
-		{"permissions.B.1", "00000000000000000000000a", nil},
+		{"groups.A.0", "000000000000000000000007", nil},
+		{"groups.A.1", "000000000000000000000008", nil},
+		{"groups.B.0", "000000000000000000000009", nil},
+		{"groups.B.1", "00000000000000000000000a", nil},
+
+		{"circles.A.0", "000000000000000000000007", nil},
+		{"circles.A.1", "000000000000000000000008", nil},
+		{"circles.B.0", "000000000000000000000009", nil},
+		{"circles.B.1", "00000000000000000000000a", nil},
+
+		{"products.A.0", "000000000000000000000007", nil},
+		{"products.A.1", "000000000000000000000008", nil},
+		{"products.B.0", "000000000000000000000009", nil},
+		{"products.B.1", "00000000000000000000000a", nil},
 
 		{"defaultAllow.0", "00000000000000000000000b", nil},
 		{"defaultAllow.1", "00000000000000000000000c", nil},
@@ -46,9 +56,6 @@ func TestStreamSchema(t *testing.T) {
 		{"content.format", "HTML", nil},
 		{"content.raw", "TEST_RAWCONTENT", nil},
 		{"content.html", "TEST_HTML", nil},
-
-		{"permissions.ABC.0", "00000000000000000000000B", nil},
-		{"permissions.ABC.1", "00000000000000000000000C", nil},
 
 		{"places.0.name", "The Whiskey-a-Go-Go", nil},
 		{"places.0.fullAddress", "8901 Sunset Blvd, West Hollywood, CA 90069", nil},

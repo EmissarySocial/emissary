@@ -66,6 +66,7 @@ func (service *MerchantAccount) stripe_getPrices(merchantAccount *model.Merchant
 	result := slice.Map(prices, func(price stripe.Price) model.Product {
 		result := model.NewProduct()
 		result.MerchantAccountID = merchantAccount.MerchantAccountID
+		result.UserID = merchantAccount.UserID
 		result.RemoteID = price.ID
 		result.Name = price.Product.Name
 		result.Price = service.stripe_priceLabel(price)

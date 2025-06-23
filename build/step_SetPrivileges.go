@@ -2,6 +2,7 @@ package build
 
 import (
 	"io"
+	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/id"
@@ -161,22 +162,37 @@ func (step StepSetPrivileges) Post(builder Builder, _ io.Writer) PipelineBehavio
 	}
 
 	// Clear out existing product settings
-	streamBuilder._stream.Circles = mapof.NewObject[id.Slice]()
-	streamBuilder._stream.Products = mapof.NewObject[id.Slice]()
+	stream := streamBuilder._stream
+	stream.Circles = mapof.NewObject[id.Slice]()
+	stream.Products = mapof.NewObject[id.Slice]()
 
-	/*
-		// Apply new product settings
-		for roleID, productIDs := range request.Form {
+	// Apply new product settings
+	for key, values := range request.Form {
 
-			// Ensure that the roleID exists in the stream.Privileges
-			if _, ok := streamBuilder._stream.Privileges[roleID]; !ok {
-				streamBuilder._stream.Privileges[roleID] = sliceof.NewString()
-			}
+		valueIDs, err := id.ConvertSlice(values)
 
-			// Append the roleId to the stream.Privileges
-			streamBuilder._stream.Privileges[roleID] = append(streamBuilder._stream.Privileges[roleID], productIDs...)
+		if err != nil {
+			return Halt().WithError(derp.Wrap(err, location, "Error converting form values to IDs"))
 		}
-	*/
+
+		property, role, _ := strings.Cut(key, ".")
+
+		if role == "" {
+			return Halt().WithError(derp.BadRequestError(location, "Role must not be empty", key, values))
+		}
+
+		switch property {
+
+		case "circles":
+			stream.Circles[role] = valueIDs
+
+		case "products":
+			stream.Products[role] = valueIDs
+
+		default:
+			return Halt().WithError(derp.BadRequestError(location, "Property must be 'circles' or 'products'", key, values))
+		}
+	}
 
 	// Success!
 	return nil
@@ -222,7 +238,10 @@ func (step StepSetPrivileges) schema(roles []model.Role) schema.Schema {
 
 	return schema.Schema{
 		Element: schema.Object{
-			Properties: properties,
+			Properties: schema.ElementMap{
+				"circles":  schema.Object{Properties: properties},
+				"products": schema.Object{Properties: properties},
+			},
 		},
 	}
 }

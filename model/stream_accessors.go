@@ -25,7 +25,6 @@ func StreamSchema() schema.Element {
 			"groups":           permissionSchema(),
 			"circles":          permissionSchema(),
 			"products":         permissionSchema(),
-			"privileges":       schema.Object{Wildcard: schema.Array{Items: schema.String{}}},
 			"defaultAllow":     schema.Array{Items: schema.String{Format: "objectId"}},
 			"url":              schema.String{Format: "url"},
 			"label":            schema.String{MaxLength: 128},
