@@ -231,7 +231,8 @@
 }
 
 /* Selected Tab */
-[role="tablist"].wizard > [role="tab"][aria-selected="true"] {
+[role="tablist"].wizard > [role="tab"][aria-selected="true"],
+[role="tablist"].wizard > [role="tab"][aria-selected="true"]:hover {
 	background-color:unset;
 }
 
