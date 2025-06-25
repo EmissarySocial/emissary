@@ -4,7 +4,11 @@
     {{- range $groups -}}
         <tr class="clickable">
             <td role="link" hx-get="/admin/groups/{{.GroupID.Hex}}/edit" class="width-100%">
-                {{icon "users"}}&nbsp;{{.Label}}
+				<div class="ellipsis">
+					{{ icon .IconWithDefault }}
+					{{.Label}}
+					<span class="text-gray margin-left">{{.Description}}</span>
+				</div>
             </td>
         </tr>
     {{- end -}}

@@ -30,11 +30,25 @@
 					do: "add"
 					type: "group"
 					form: {
-						type: "layout-vertical"
+						type: "layout-tabs"
 						label: "Add a Group"
 						children: [
-							{type: "text", label: "Label", path: "label", description:"Human readable name for the group"}
-							{type: "text", label: "Token", path: "token", description:"(Optional) identifier used by automated APIs"}
+							{
+								type: layout-vertical
+								label: Basics
+								children: [
+									{type: "text", label: "Label", path: "label", description:"Human readable name for the group"}
+									{type: "text", label: "Token", path: "token", description:"(Optional) identifier used by automated APIs"}
+									{type: "select", label: "Icon", path: "icon", options:{provider:"group-icons"}}
+								]
+							}
+							{
+								type: layout-vertical
+								label: Description
+								children: [
+									{type: "textarea", path: "description", description:"PRIVATE: For admin use only.", options:{rows:8}}
+								]
+							}
 						]
 					}
 				}
@@ -52,10 +66,24 @@
 					{
 						do: "edit"
 						form: {
-							type: "layout-vertical"
+							type: "layout-tabs"
 							children: [
-								{type: "text", label: "Label", path: "label", description:"Human readable name for the group"}
-								{type: "text", label: "Token", path: "token", description:"(optional) identifier used by automated APIs"}
+								{
+									type: layout-vertical
+									label: Basics
+									children: [
+										{type: "text", label: "Label", path: "label", description:"Human readable name for the group"}
+										{type: "text", label: "Token", path: "token", description:"(Optional) identifier used by automated APIs"}
+										{type: "select", label: "Icon", path: "icon", options:{provider:"group-icons"}}
+									]
+								}
+								{
+									type: layout-vertical
+									label: Description
+									children: [
+										{type: "textarea", path: "description", description:"PRIVATE: For admin use only.", options:{rows:8}}
+									]
+								}
 							]
 						}
 						options: ["delete:/admin/groups/{{.GroupID}}/delete"]
