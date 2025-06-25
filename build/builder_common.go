@@ -27,7 +27,9 @@ type Common struct {
 	_factory       Factory             // Factory interface is required for locating other services.
 	_request       *http.Request       // Pointer to the HTTP request we are serving
 	_response      http.ResponseWriter // ResponseWriter for this request
-	_authorization model.Authorization // Authorization information for the current user
+	_authorization model.Authorization // Authorization information for the current website visitor
+	_user          *model.User         // User information for the current website User (if any)
+	_identity      *model.Identity     // Identity information for the current website visitor (if any)
 
 	arguments mapof.String // Temporary data scope for this request
 
@@ -399,38 +401,93 @@ func (w Common) DatasetValue(name string, value string) form.LookupCode {
 	return form.LookupCode{}
 }
 
-// withViewPermission augments a query criteria to include the
+// defaultAllowed augments a query criteria to include the
 // group authorizations of the currently signed in user.
-func (w Common) withViewPermission(criteria exp.Expression) exp.Expression {
+func (w Common) defaultAllowed() exp.Expression {
 
-	result := criteria.
-		And(exp.Equal("deleteDate", 0)) // Stream must not be deleted
+	var result exp.Expression = exp.Equal("deleteDate", 0) // Stream must not be deleted
 
 	// If the user IS NOT a domain owner, then we must also
 	// check their permission to VIEW this stream
 	authorization := w.authorization()
 
-	if !authorization.DomainOwner {
-		result = result.And(exp.In("defaultAllow", authorization.AllGroupIDs())).
-			And(exp.LessThan("publishDate", time.Now().Unix())) // Stream must be published
+	if authorization.DomainOwner {
+		return result
 	}
 
+	// Fall through means this is a regular user, so standard permissions apply
+
+	// The Stream must be published
+	result = result.
+		AndLessThan("publishDate", time.Now().Unix()).
+		AndGreaterThan("unpublishDate", time.Now().Unix())
+
+	// Retrieve the Identity of the current website guest (if any)
+	var identity *model.Identity
+	identity, err := w.getIdentity()
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, "build.Common.defaultAllowed", "Error loading Identity"))
+	}
+
+	// Get the access list for this user
+	permissionService := w._factory.Permission()
+	if permissions := permissionService.Permissions(&authorization, identity); permissions.NotEmpty() {
+		result = result.AndIn("defaultAllow", permissions)
+	}
+
+	// Done.
 	return result
 }
 
 // getUser loads/caches the currently-signed-in user to be used by other functions in this builder
-func (w Common) getUser() (model.User, error) {
+func (w Common) getUser() (*model.User, error) {
 
-	userService := w._factory.User()
-	steranko := w._factory.Steranko()
-	result := model.NewUser()
-	authorization := getAuthorization(steranko, w._request)
-
-	if err := userService.LoadByID(authorization.UserID, &result); err != nil {
-		return model.User{}, derp.Wrap(err, "build.Common.getUser", "Error loading user from database", authorization.UserID)
+	// If we already have a cached User, then return that
+	if w._user != nil {
+		return w._user, nil
 	}
 
-	return result, nil
+	// Otherwise, try to load the User from the database
+	userService := w._factory.User()
+	steranko := w._factory.Steranko()
+	authorization := getAuthorization(steranko, w._request)
+
+	user := model.NewUser()
+	if err := userService.LoadByID(authorization.UserID, &user); err != nil {
+		return nil, derp.Wrap(err, "build.Common.getUser", "Error loading user from database", authorization.UserID)
+	}
+
+	// Save the User in the builder to use it later
+	w._user = &user
+
+	// Return the User to the caller
+	return w._user, nil
+}
+
+func (w Common) getIdentity() (*model.Identity, error) {
+
+	// If no Identity is provided, then return nil
+	if !w._authorization.IsIdentity() {
+		return nil, nil
+	}
+
+	// If Identity exists in the cache, then use it.
+	if w._identity != nil {
+		return w._identity, nil
+	}
+
+	// Otherwise, try to load the Identity from the database
+	identity := model.NewIdentity()
+	if err := w._factory.Identity().LoadByID(w._authorization.IdentityID, &identity); err != nil {
+		return nil, derp.Wrap(err, "build.Common.getIdentity", "Error loading Identity from database", w._authorization.IdentityID)
+	}
+
+	// Save the Identity in the builder to use it later
+	w._identity = &identity
+
+	// Return the Identity to the caller.
+	return w._identity, nil
 }
 
 /******************************************
@@ -439,7 +496,9 @@ func (w Common) getUser() (model.User, error) {
 
 // Navigation returns an array of Streams that have a Zero ParentID
 func (w Common) Navigation() (sliceof.Object[model.StreamSummary], error) {
-	criteria := w.withViewPermission(exp.Equal("parentId", primitive.NilObjectID))
+	criteria := w.defaultAllowed().
+		AndEqual("parentId", primitive.NilObjectID)
+
 	builder := NewQueryBuilder[model.StreamSummary](w._factory.Stream(), criteria)
 
 	result, err := builder.Top60().ByRank().Slice()

@@ -28,7 +28,6 @@ import (
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/turbine/queue"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -245,9 +244,7 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 	stream.URL = service.host + "/" + stream.StreamID.Hex()
 
 	// RULE: Calculate "defaultAllow" groups for this stream.
-	defaultAction := template.Default()
-	defaultRoles := defaultAction.AllowedRoles(stream.StateID)
-	stream.DefaultAllow = stream.RolesToGroupIDs(defaultRoles...)
+	service.calcDefaultAllow(&template, stream)
 
 	// RULE: Calculate rank
 	if stream.Rank == 0 {
@@ -867,8 +864,6 @@ func (service *Stream) MapByPrivileges(privileges ...model.Privilege) (map[primi
 
 	const location = "service.Stream.MapByPrivileges"
 
-	spew.Dump(privileges)
-
 	// RULE: If no privileges are provided, then return an empty map
 	if len(privileges) == 0 {
 		return make(mapof.Slices[primitive.ObjectID, primitive.ObjectID]), nil
@@ -908,8 +903,6 @@ func (service *Stream) MapByPrivileges(privileges ...model.Privilege) (map[primi
 			result.Add(privilegeID, stream.StreamID)
 		}
 	}
-
-	spew.Dump(result)
 
 	// Ugly, but she rides.
 	return result, nil
@@ -1053,36 +1046,16 @@ func (service *Stream) CalcParentIDs(stream *model.Stream) error {
 	return nil
 }
 
-/*
-// UserCan checks a user's permission to perform an action on a Stream.  If not allowed,
-// then the returned error describes why the access was denied.
-func (service *Stream) UserCan(authorization *model.Authorization, stream *model.Stream, actionID string) error {
+func (service *Stream) calcDefaultAllow(template *model.Template, stream *model.Stream) {
 
-	const location = "service.Stream.UserCan"
+	defaultAction := template.Default()
+	defaultRoles := defaultAction.AllowedRoles(stream.StateID)
 
-	// Find the Template used by this stream
-	template, err := service.templateService.Load(stream.TemplateID)
+	groupIDs := stream.RolesToGroupIDs(defaultRoles...)
+	privilegeIDs := stream.RolesToPrivilegeIDs(defaultRoles...)
 
-	if err != nil {
-		return derp.Wrap(err, location, "Invalid Template")
-	}
-
-	// Find the action that the user wants to perform
-	action, ok := template.Action(actionID)
-
-	if !ok {
-		return derp.BadRequestError(location, "Invalid Action", actionID)
-	}
-
-	// Check permissions on the action
-	if !action.UserCan(stream, authorization) {
-		return derp.UnauthorizedError(location, "User is not authorized to perform this action", actionID)
-	}
-
-	// UserCan!
-	return nil
+	stream.DefaultAllow = append(groupIDs, privilegeIDs...)
 }
-*/
 
 // CalcContext calculates the conversational context for a given stream,
 // IF it can be determined.

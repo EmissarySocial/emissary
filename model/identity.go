@@ -69,14 +69,18 @@ func (identity Identity) RolesToGroupIDs(...string) id.Slice {
 	return nil
 }
 
-// RolesToPrivileges returns a map of RoleIDs to Privilege strings
-func (identity Identity) RolesToPrivileges(...string) id.Slice {
+// RolesToPrivilegeIDs returns a map of RoleIDs to Privilege strings
+func (identity Identity) RolesToPrivilegeIDs(...string) id.Slice {
 	return nil
 }
 
 /******************************************
  * Other Getters
  ******************************************/
+
+func (identity Identity) IsZero() bool {
+	return identity.IdentityID.IsZero()
+}
 
 // HasEmailAddress returns TRUE if the Identity has an email address.
 func (identity Identity) HasEmailAddress() bool {

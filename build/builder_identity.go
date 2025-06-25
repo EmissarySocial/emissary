@@ -139,6 +139,7 @@ func (w Identity) Privileges() (QueryBuilder[model.Privilege], error) {
 	// Calculate criteria
 	criteria := exp.And(
 		exp.Equal("identityId", w._identity.IdentityID),
+		exp.Equal("isVisible", true),
 		expressionBuilder.Evaluate(w._request.URL.Query()),
 	)
 

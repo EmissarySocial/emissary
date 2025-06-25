@@ -44,7 +44,10 @@ func (step StepSetCircleSharing) Get(builder Builder, buffer io.Writer) Pipeline
 	b := html.New()
 
 	// Heading
-	b.H2().InnerText(step.Title).Close()
+	b.Div().Class("flex-row", "flex-align-center")
+	b.H2().Class("margin-none", "flex-grow").InnerText(step.Title).Close()
+	b.A("/@me/settings/circles").InnerHTML("Manage Circles &rarr;").Close()
+	b.Close()
 	b.H3().InnerText(step.Message).Close()
 
 	if err := form.Edit(&schema, builder.lookupProvider(), value, b); err != nil {
@@ -88,16 +91,21 @@ func (step StepSetCircleSharing) Post(builder Builder, _ io.Writer) PipelineBeha
 
 	for _, permission := range request.Form["circles"] {
 
+		// Verify we have a valid CircleID, then add it to the list of allowed Circles
+		circleID, err := primitive.ObjectIDFromHex(permission)
+
+		if err != nil {
+			return Halt().WithError(derp.Wrap(err, location, "Invalid CircleID in form input"))
+		}
+
 		// If "Anonymous" permissions are allowed, then that's all we need.
-		if permission == model.MagicRoleAnonymous {
+		if circleID == model.MagicGroupIDAnonymous {
 			stream.Circles[step.Role] = id.NewSlice()
 			break
 		}
 
-		// Verify we have a valid CircleID, then add it to the list of allowed Circles
-		if circleID, err := primitive.ObjectIDFromHex(permission); err == nil {
-			stream.Circles[step.Role] = append(stream.Circles[step.Role], circleID)
-		}
+		// Otherwise, add the CircleID to the list of allowed Circles
+		stream.Circles[step.Role] = append(stream.Circles[step.Role], circleID)
 	}
 
 	// If no privileges have been set, then we allow Anonymous by default
@@ -114,7 +122,7 @@ func (step StepSetCircleSharing) schema() schema.Schema {
 	return schema.Schema{
 		Element: schema.Object{
 			Properties: map[string]schema.Element{
-				"permissions": schema.Array{Items: schema.String{}},
+				"circles": schema.Array{Items: schema.String{}},
 			},
 		},
 	}

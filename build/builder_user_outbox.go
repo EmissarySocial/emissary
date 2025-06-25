@@ -301,6 +301,7 @@ func (w Outbox) Outbox() QueryBuilder[model.StreamSummary] {
 		expressionBuilder.Evaluate(w._request.URL.Query()),
 		exp.Equal("parentId", w._user.UserID),
 		exp.Equal("inReplyTo", ""),
+		w.defaultAllowed(),
 	)
 
 	result := NewQueryBuilder[model.StreamSummary](w._factory.Stream(), criteria)
@@ -317,6 +318,7 @@ func (w Outbox) Circles() QueryBuilder[model.Circle] {
 		expressionBuilder.Evaluate(w._request.URL.Query()),
 		exp.Equal("userId", w.objectID()),
 		exp.Equal("isFeatured", true),
+		w.defaultAllowed(),
 	)
 
 	result := NewQueryBuilder[model.Circle](w._factory.Circle(), criteria)

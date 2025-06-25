@@ -373,8 +373,20 @@ func (service *Privilege) maybeCreateIdentity(privilege *model.Privilege) error 
 
 func (service *Privilege) validateCircle(privilege *model.Privilege) error {
 
+	const location = "service.Privilege.validateCircle"
+
 	// If this privilege already has a CircleID, then we're done.
 	if !privilege.CircleID.IsZero() {
+
+		if privilege.Name == "" {
+
+			circle := model.NewCircle()
+			if err := service.circleService.LoadByID(privilege.UserID, privilege.CircleID, &circle); err != nil {
+				return derp.Wrap(err, location, "Error loading Circle by ID", privilege.CircleID)
+			}
+
+			privilege.SetCircleInfo(&circle)
+		}
 		return nil
 	}
 
@@ -392,7 +404,7 @@ func (service *Privilege) validateCircle(privilege *model.Privilege) error {
 		if derp.IsNotFound(err) {
 			return nil
 		}
-		return derp.Wrap(err, "service.Privilege.validateCircle", "Error loading Circle by RemoteProductID", privilege.RemoteProductID)
+		return derp.Wrap(err, location, "Error loading Circle by RemoteProductID", privilege.RemoteProductID)
 	}
 
 	// Apply the CircleID to the Privilege
@@ -400,7 +412,7 @@ func (service *Privilege) validateCircle(privilege *model.Privilege) error {
 	return nil
 }
 
-func (service *Privilege) RefreshCircle(circle *model.Circle) error {
+func (service *Privilege) RefreshCircleInfo(circle *model.Circle) error {
 
 	const location = "service.Privilege.RefreshCircle"
 
@@ -416,8 +428,8 @@ func (service *Privilege) RefreshCircle(circle *model.Circle) error {
 		for privilege := range privileges {
 
 			// Update the Circle if it does not match
-			if privilege.CircleID != circle.CircleID {
-				privilege.CircleID = circle.CircleID
+			if privilege.SetCircleInfo(circle) {
+
 				if err := service.Save(&privilege, "Updating Circle settings"); err != nil {
 					return derp.Wrap(err, location, "Error refreshing Privilege", circle.CircleID)
 				}
@@ -434,20 +446,22 @@ func (service *Privilege) RefreshCircle(circle *model.Circle) error {
 
 	for privilege := range privileges {
 
-		// Do not remove manually assigned privileges
-		if !privilege.IsPurchase() {
+		// If the Privilege is linked to the Circle incorrectly, then remove the CircleID
+		if privilege.IsPurchase() && !circle.ProductIDs.Contains(privilege.ProductID) {
+			privilege.CircleID = primitive.NilObjectID
+
+			if err := service.Save(&privilege, "Updating Circle settings"); err != nil {
+				return derp.Wrap(err, location, "Error refreshing Privilege", circle)
+			}
+
 			continue
 		}
 
-		// Do not remove privileges that match the Circle's CURRENT ProductIDs
-		if circle.ProductIDs.Contains(privilege.ProductID) {
-			continue
-		}
-
-		// Otherwise, remove Privileges that no longer match this Circle's ProductIDs
-		privilege.CircleID = primitive.NilObjectID
-		if err := service.Save(&privilege, "Updating Circle settings"); err != nil {
-			return derp.Wrap(err, location, "Error refreshing Privilege", circle)
+		// If the Circle info has changed, then update the Privilege
+		if privilege.SetCircleInfo(circle) {
+			if err := service.Save(&privilege, "Updating Circle settings"); err != nil {
+				return derp.Wrap(err, location, "Error refreshing Privilege", circle)
+			}
 		}
 	}
 

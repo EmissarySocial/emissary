@@ -15,6 +15,7 @@ func CircleSchema() schema.Element {
 			"icon":        schema.String{MaxLength: 64, Default: "circle", Required: true},
 			"description": schema.String{MaxLength: 2048},
 			"productIds":  schema.Array{Items: schema.String{}},
+			"isVisible":   schema.Boolean{},
 			"isFeatured":  schema.Boolean{},
 		},
 	}
@@ -109,6 +110,9 @@ func (circle *Circle) GetPointer(name string) (any, bool) {
 
 	case "productIds":
 		return &circle.ProductIDs, true
+
+	case "isVisible":
+		return &circle.IsVisible, true
 
 	case "isFeatured":
 		return &circle.IsFeatured, true

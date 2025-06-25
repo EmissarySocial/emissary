@@ -8,9 +8,11 @@ import (
 )
 
 type Group struct {
-	GroupID primitive.ObjectID `json:"groupId" bson:"_id"`   // Unique identifier assigned by the database
-	Token   string             `json:"token"   bson:"token"` // Uniqe token chosen by the administrator
-	Label   string             `json:"label"   bson:"label"` // Human-readable label for this group.
+	GroupID     primitive.ObjectID `bson:"_id"`         // Unique identifier assigned by the database
+	Token       string             `bson:"token"`       // Uniqe token chosen by the administrator
+	Label       string             `bson:"label"`       // Human-readable label for this group.
+	Description string             `bson:"description"` // Human-readable description of this Group
+	Icon        string             `bson:"icon"`        // Icon for this Group
 
 	journal.Journal `json:"-" bson:",inline"`
 }
@@ -22,7 +24,7 @@ func NewGroup() Group {
 }
 
 func GroupFields() []string {
-	return []string{"_id", "label"}
+	return []string{"_id", "label", "description", "icon"}
 }
 
 func (userSummary Group) Fields() []string {
@@ -65,9 +67,9 @@ func (group *Group) RolesToGroupIDs(roleIDs ...string) id.Slice {
 	return nil
 }
 
-// RolesToPrivileges returns a slice of Privileges that grant access to any of the requested roles.
+// RolesToPrivilegeIDs returns a slice of Privileges that grant access to any of the requested roles.
 // It is part of the AccessLister interface
-func (group *Group) RolesToPrivileges(roleIDs ...string) id.Slice {
+func (group *Group) RolesToPrivilegeIDs(roleIDs ...string) id.Slice {
 	return nil
 }
 
@@ -75,9 +77,18 @@ func (group *Group) RolesToPrivileges(roleIDs ...string) id.Slice {
  * Other Data Accessors
  ******************************************/
 
-func (group *Group) LookupCode() form.LookupCode {
+func (group Group) IconWithDefault() string {
+	if group.Icon == "" {
+		return "people"
+	}
+	return group.Icon
+}
+
+func (group Group) LookupCode() form.LookupCode {
 	return form.LookupCode{
-		Value: group.GroupID.Hex(),
-		Label: group.Label,
+		Value:       group.GroupID.Hex(),
+		Label:       group.Label,
+		Description: group.Description,
+		Icon:        group.IconWithDefault(),
 	}
 }

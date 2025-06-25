@@ -10,6 +10,7 @@ func IdentitySchema() schema.Element {
 		Properties: schema.ElementMap{
 			"identityId":            schema.String{Format: "objectId", Required: true},
 			"name":                  schema.String{Required: true, MinLength: 1, MaxLength: 100},
+			"description":           schema.String{Required: false, MaxLength: 500},
 			"iconUrl":               schema.String{Format: "url", Required: false, MaxLength: 500},
 			"emailAddress":          schema.String{Format: "email", Required: false, MaxLength: 200},
 			"webfingerHandle":       schema.String{Format: "webfinger", Required: false, MaxLength: 200},

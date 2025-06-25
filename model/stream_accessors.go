@@ -82,9 +82,6 @@ func (stream *Stream) GetPointer(name string) (any, bool) {
 	case "parentIds":
 		return &stream.ParentIDs, true
 
-	case "permissions":
-		return &stream.Permissions, true
-
 	case "groups":
 		return &stream.Groups, true
 

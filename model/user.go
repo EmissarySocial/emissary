@@ -194,9 +194,9 @@ func (user *User) RolesToGroupIDs(roleIDs ...string) id.Slice {
 	return nil
 }
 
-// RolesToPrivileges returns a slice of Privileges that grant access to any of the requested roles.
+// RolesToPrivilegeIDs returns a slice of Privileges that grant access to any of the requested roles.
 // It is part of the AccessLister interface
-func (user *User) RolesToPrivileges(roleIDs ...string) id.Slice {
+func (user *User) RolesToPrivilegeIDs(roleIDs ...string) id.Slice {
 	return nil
 }
 

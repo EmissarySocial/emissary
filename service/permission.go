@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/derp"
 )
 
@@ -161,7 +162,7 @@ func (service *Permission) hasPrivilege(authorization *model.Authorization, acce
 	}
 
 	// Find the products that are associated with the provided roles
-	requiredPrivileges := accessLister.RolesToPrivileges(requiredRoles...)
+	requiredPrivileges := accessLister.RolesToPrivilegeIDs(requiredRoles...)
 
 	if requiredPrivileges.IsEmpty() {
 		return false, nil // No privileges associated with this role
@@ -185,4 +186,29 @@ func (service *Permission) UserInGroup(authorization *model.Authorization, group
 // AuthorInGroup returns TRUE if the Author/AttributedTo is a member of the specified group
 func (service *Permission) AuthorInGroup(accessLister model.AccessLister, groupToken string) (bool, error) {
 	return false, derp.NotImplementedError("service.Permission.AuthorInGroup", "AuthorInGroup is not implemented")
+}
+
+func (service *Permission) Permissions(authorization *model.Authorization, identity *model.Identity) id.Slice {
+
+	result := id.Slice{model.MagicGroupIDAnonymous}
+
+	if authorization != nil {
+
+		// Domain owners can see every valid object. Do not touch the criteria
+		if authorization.DomainOwner {
+			return id.NewSlice()
+		}
+
+		if authorization.IsAuthenticated() {
+			result.Append(model.MagicGroupIDAuthenticated, authorization.UserID)
+			result.Append(authorization.GroupIDs...)
+		}
+	}
+
+	// If an identity is provided, then include all of the Privileges for this Identity
+	if identity != nil {
+		result.Append(identity.PrivilegeIDs...)
+	}
+
+	return result
 }

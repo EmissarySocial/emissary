@@ -12,7 +12,6 @@ import (
 	"github.com/benpate/remote"
 	"github.com/benpate/remote/options"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -55,16 +54,12 @@ func (service *MerchantAccount) stripe_getCheckoutURL(merchantAccount *model.Mer
 		claims["exp"] = time.Now().Add(time.Hour * 1).Unix()
 	}
 
-	spew.Dump("-----------------------------", location, claims)
-
 	// Create and sign the JWT token
 	token, err := service.jwtService.NewToken(claims)
 
 	if err != nil {
 		return "", derp.Wrap(err, location, "Error generating JWT token")
 	}
-
-	spew.Dump(token)
 
 	// Create a new Stripe Checkout Session
 	successURL := service.host + "/.checkout/response?checkoutSessionId={CHECKOUT_SESSION_ID}&return=" + url.QueryEscape(returnURL) + "&jwt=" + token
@@ -101,8 +96,6 @@ func (service *MerchantAccount) stripe_getCheckoutURL(merchantAccount *model.Mer
 func (service *MerchantAccount) stripe_getPrivilegeFromCheckoutResponse(merchantAccount *model.MerchantAccount, product *model.Product, transactionID string, queryParams url.Values) (model.Privilege, error) {
 
 	const location = "service.MerchantAccount.stripe_parseCheckoutResponse"
-
-	spew.Dump("-----------------------------", product, queryParams)
 
 	// Collect the CheckoutSessionID from the request.
 	// This value was passed in a JWT, and unpacked by the WithMerchantAccount middleware, so it can be trusted
@@ -172,6 +165,7 @@ func (service *MerchantAccount) stripe_getPrivilegeFromCheckoutResponse(merchant
 	privilege.RemotePurchaseID = remotePurchaseID
 	privilege.IdentifierType = model.IdentifierTypeEmail
 	privilege.IdentifierValue = identity.EmailAddress
+	privilege.IsVisible = true
 
 	if err := service.privilegeService.Save(&privilege, "Created via Stripe Checkout"); err != nil {
 		return model.Privilege{}, derp.Wrap(err, location, "Error saving Privilege", privilege)

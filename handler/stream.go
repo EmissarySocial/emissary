@@ -68,7 +68,7 @@ func getStreamPipeline(ctx *steranko.Context, factory *domain.Factory, template 
 	streamBuilder, err := build.NewStream(factory, ctx.Request(), ctx.Response(), *template, stream, actionID)
 
 	if err != nil {
-		return derp.ReportAndReturn(derp.Wrap(err, location, "Error creating Builder."))
+		return derp.Wrap(err, location, "Error creating Builder.")
 	}
 
 	// Add webmention link header per:

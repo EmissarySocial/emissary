@@ -32,8 +32,8 @@ type AccessLister interface {
 	// RolesToGroupIDs returns a slice of GroupIDs that match the provided RoleIDs
 	RolesToGroupIDs(...string) id.Slice
 
-	// RolesToPrivileges returns a slice of privileges (CircleIDs and ProductIDs) that match the provided RoleIDs
-	RolesToPrivileges(...string) id.Slice
+	// RolesToPrivilegeIDs returns a slice of privileges (CircleIDs and ProductIDs) that match the provided RoleIDs
+	RolesToPrivilegeIDs(...string) id.Slice
 }
 
 // FieldLister wraps the Files() method, which provides the list of fields

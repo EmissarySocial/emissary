@@ -12,6 +12,9 @@ var MagicGroupIDAnonymous primitive.ObjectID
 // Go won't let us make constant arrays, but consider this variable to be immutable.
 var MagicGroupIDAuthenticated primitive.ObjectID
 
+// MagicGroupIDOwners refers to domain owners only.
+var MagicGroupIDOwners primitive.ObjectID
+
 // MagicRoleAnonymous grants permissions to a user who has not been signed in.
 const MagicRoleAnonymous = "anonymous"
 
@@ -30,4 +33,5 @@ const MagicRoleOwner = "owner"
 func init() {
 	MagicGroupIDAnonymous = primitive.ObjectID{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 	MagicGroupIDAuthenticated = primitive.ObjectID{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}
+	MagicGroupIDOwners = primitive.ObjectID{255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255}
 }

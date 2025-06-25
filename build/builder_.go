@@ -53,18 +53,19 @@ type Builder interface {
 	GetContent() template.HTML
 	SetContent(string)
 
-	factory() Factory                    // The service factory
-	request() *http.Request              // The original http.Request that we are responding to
-	response() http.ResponseWriter       // The original http.ResponseWriter that we are responding to
-	authorization() model.Authorization  // The user's authorization data from the context
-	service() service.ModelService       // The abstracted ModelService the backs this Builder
-	templateRole() string                // Returns the role that the current template plays in the system. Used for choosing child template.
-	objectType() string                  // The type of object being built
-	schema() schema.Schema               // Schema to use to validate this Object
-	object() data.Object                 // Model Object being built
-	objectID() primitive.ObjectID        // MongoDB ObjectID of the Object being built
-	getUser() (model.User, error)        // Retrieves the currently-logged-in user
-	lookupProvider() form.LookupProvider // Retrieves the LookupProvider for this user
+	factory() Factory                      // The service factory
+	request() *http.Request                // The original http.Request that we are responding to
+	response() http.ResponseWriter         // The original http.ResponseWriter that we are responding to
+	authorization() model.Authorization    // The user's authorization data from the context
+	service() service.ModelService         // The abstracted ModelService the backs this Builder
+	templateRole() string                  // Returns the role that the current template plays in the system. Used for choosing child template.
+	objectType() string                    // The type of object being built
+	schema() schema.Schema                 // Schema to use to validate this Object
+	object() data.Object                   // Model Object being built
+	objectID() primitive.ObjectID          // MongoDB ObjectID of the Object being built
+	getUser() (*model.User, error)         // Retrieves the currently-logged-in user
+	getIdentity() (*model.Identity, error) // Retrieves the currently-logged-in user
+	lookupProvider() form.LookupProvider   // Retrieves the LookupProvider for this user
 
 	actionID() string                     // Token that identifies the action requested via the URL.
 	actions() map[string]model.Action     // Map of actions that are available for this object

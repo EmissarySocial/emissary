@@ -116,7 +116,7 @@
 			roles: ["author", "editor"]
 			steps: [
 				{do:"as-modal", steps: [
-					{do:"set-simple-sharing", roles: ["viewer"], title:"Sharing Settings", message:"Select Which People Can See This Folder"}
+					{do:"set-simple-sharing", role: "viewer", title:"Sharing Settings", message:"Select Which People Can See This Folder"}
 					{do:"save", message:"Sharing updated by {{.Author}}"}
 				]}
 			]

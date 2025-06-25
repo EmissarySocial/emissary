@@ -59,7 +59,7 @@ func GetDomainAttachment(factoryManager *server.Factory) echo.HandlerFunc {
 		header.Set("Cache-Control", "public, max-age=86400") // Store in public caches for 1 day
 
 		if err := ms.Serve(ctx.Response().Writer, ctx.Request(), filespec); err != nil {
-			return derp.ReportAndReturn(derp.Wrap(err, location, "Error accessing attachment file"))
+			return derp.Wrap(err, location, "Error accessing attachment file", derp.WithCode(http.StatusInternalServerError))
 		}
 
 		return nil
@@ -103,7 +103,7 @@ func GetSearchTagAttachment(ctx *steranko.Context, factory *domain.Factory) erro
 	filespec := attachment.FileSpec(ctx.Request().URL)
 
 	if err := ms.Serve(ctx.Response().Writer, ctx.Request(), filespec); err != nil {
-		return derp.ReportAndReturn(derp.Wrap(err, location, "Error accessing attachment file"))
+		return derp.Wrap(err, location, "Error accessing attachment file", derp.WithCode(http.StatusInternalServerError))
 	}
 
 	return nil
@@ -159,7 +159,7 @@ func GetStreamAttachment(factoryManager *server.Factory) echo.HandlerFunc {
 
 		// Try to find the action requested by the user.  This also enforces user permissions...
 		if _, err := build.NewStreamWithoutTemplate(factory, ctx.Request(), ctx.Response(), &stream, "view"); err != nil {
-			return derp.ReportAndReturn(derp.Wrap(err, location, "Cannot create builder", &stream, &attachment))
+			return derp.Wrap(err, location, "Cannot create builder", &stream, &attachment)
 		}
 
 		// Retrieve the file from the mediaserver

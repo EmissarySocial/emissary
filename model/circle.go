@@ -17,6 +17,7 @@ type Circle struct {
 	Description string             `json:"description" bson:"description"` // Human-readable description of this Circle
 	ProductIDs  id.Slice           `json:"productIds"  bson:"productIds"`  // List of remote ProductIDs that can purchase membership in this Circle
 	MemberCount int64              `json:"memberCount" bson:"memberCount"` // Number of members in this Circle
+	IsVisible   bool               `json:"isVisible"   bson:"isVisible"`   // TRUE if members of this Circle can see that they're in this Circle.
 	IsFeatured  bool               `json:"isFeatured"  bson:"isFeatured"`  // TRUE if this Circle should be featured on the User's profile page.
 
 	journal.Journal `json:"-" bson:",inline"`
@@ -72,9 +73,9 @@ func (circle *Circle) RolesToGroupIDs(roleIDs ...string) id.Slice {
 	return nil
 }
 
-// RolesToPrivileges returns a slice of Privileges that grant access to any of the requested roles.
+// RolesToPrivilegeIDs returns a slice of Privileges that grant access to any of the requested roles.
 // It is part of the AccessLister interface
-func (circle *Circle) RolesToPrivileges(roleIDs ...string) id.Slice {
+func (circle *Circle) RolesToPrivilegeIDs(roleIDs ...string) id.Slice {
 	return nil
 }
 

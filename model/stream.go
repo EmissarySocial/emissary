@@ -59,7 +59,7 @@ type Stream struct {
 	IsSubscribable   bool                    `bson:"isSubscribable"`         // TRUE if this Stream uses the Products service to determine access rights.
 
 	// Deprecated: Permissions maps UserIDs/GroupIDs into Roles for this Stream.
-	Permissions mapof.Object[sliceof.String] `bson:"permissions,omitempty"`
+	// Permissions mapof.Object[sliceof.String] `bson:"permissions,omitempty"`
 
 	journal.Journal `bson:",inline"`
 }
@@ -75,7 +75,6 @@ func NewStream() Stream {
 		ParentID:      primitive.NilObjectID,
 		ParentIDs:     id.NewSlice(),
 		StateID:       "default",
-		Permissions:   NewStreamPermissions(),
 		Groups:        mapof.NewObject[id.Slice](),
 		Circles:       mapof.NewObject[id.Slice](),
 		Products:      mapof.NewObject[id.Slice](),
@@ -87,11 +86,6 @@ func NewStream() Stream {
 		UnPublishDate: math.MaxInt64,
 		Syndication:   delta.NewSlice[string](),
 	}
-}
-
-// NewStreamPermissions returns a fully initialized Permissions object
-func NewStreamPermissions() mapof.Object[sliceof.String] {
-	return make(mapof.Object[sliceof.String])
 }
 
 // NewStreamWidgets returns a fully initialized StreamWidget slice
@@ -191,7 +185,7 @@ func (stream Stream) IsMyself(_ primitive.ObjectID) bool {
 // It is part of the AccessLister interface
 func (stream Stream) RolesToGroupIDs(roles ...string) id.Slice {
 
-	stream.tempHackGroupPermissions()
+	// stream.tempHackGroupPermissions()
 
 	result := id.NewSlice()
 
@@ -200,10 +194,10 @@ func (stream Stream) RolesToGroupIDs(roles ...string) id.Slice {
 		switch role {
 
 		case MagicRoleAnonymous:
-			result = append(result, MagicGroupIDAnonymous)
+			return id.Slice{MagicGroupIDAnonymous}
 
 		case MagicRoleAuthenticated:
-			result = append(result, MagicGroupIDAuthenticated)
+			return id.Slice{MagicGroupIDAuthenticated}
 
 		case MagicRoleAuthor:
 			result = append(result, stream.AttributedTo.UserID)
@@ -216,9 +210,9 @@ func (stream Stream) RolesToGroupIDs(roles ...string) id.Slice {
 	return result
 }
 
-// RolesToPrivileges returns a slice of Privileges that grant any of the requested roles
+// RolesToPrivilegeIDs returns a slice of Privileges that grant any of the requested roles
 // It is part of the AccessLister interface
-func (stream Stream) RolesToPrivileges(roles ...string) id.Slice {
+func (stream Stream) RolesToPrivilegeIDs(roles ...string) id.Slice {
 
 	result := id.NewSlice()
 
@@ -248,49 +242,6 @@ func (stream Stream) DefaultAllowAnonymous() bool {
 		}
 	}
 	return false
-}
-
-// AssignPermissions assigns a role to a group
-func (stream *Stream) AssignPermission(role string, groupID primitive.ObjectID) {
-
-	// Old Style
-	groupIDHex := groupID.Hex()
-
-	if _, exists := stream.Permissions[groupIDHex]; !exists {
-		stream.Permissions[groupIDHex] = []string{role}
-		return
-	}
-
-	// New Style
-	stream.Permissions[groupIDHex] = append(stream.Permissions[groupIDHex], role)
-
-	if _, exists := stream.Groups[role]; !exists {
-		stream.Groups[role] = id.Slice{groupID}
-		return
-	}
-
-	stream.Groups[role] = append(stream.Groups[role], groupID)
-}
-
-func (stream *Stream) tempHackGroupPermissions() {
-
-	stream.Groups = make(map[string]id.Slice)
-
-	// Convert old-style permissions to new-style permissions
-	for group, roles := range stream.Permissions {
-
-		if groupID, err := primitive.ObjectIDFromHex(group); err == nil {
-
-			for _, role := range roles {
-				if _, exists := stream.Groups[role]; !exists {
-					stream.Groups[role] = id.Slice{groupID}
-					continue
-				}
-
-				stream.Groups[role] = append(stream.Groups[role], groupID)
-			}
-		}
-	}
 }
 
 /******************************************
@@ -536,7 +487,10 @@ func (stream *Stream) CopyFrom(other Stream) {
 	stream.ParentTemplateID = other.ParentTemplateID
 	stream.StateID = other.StateID
 	stream.SocialRole = other.SocialRole
-	stream.Permissions = other.Permissions
+	stream.Groups = other.Groups
+	stream.Circles = other.Circles
+	stream.Products = other.Products
+	stream.PrivilegeIDs = other.PrivilegeIDs
 	stream.DefaultAllow = other.DefaultAllow
 	stream.URL = other.URL
 	stream.Token = other.Token

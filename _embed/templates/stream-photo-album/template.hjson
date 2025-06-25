@@ -104,7 +104,7 @@
 			roles: ["author", "editor"]
 			steps: [
 				{do:"as-modal", steps: [
-					{do:"set-simple-sharing", roles: ["viewer"], title:"Who Can See This Album?", message:"Select who can view and comment on these photos."}
+					{do:"set-simple-sharing", role: "viewer", title:"Who Can See This Album?", message:"Select who can view and comment on these photos."}
 					{do:"save", message:"Sharing updated by {{.Author}}"}
 				]}
 			]

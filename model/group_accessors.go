@@ -8,9 +8,11 @@ import (
 func GroupSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"groupId": schema.String{Format: "objectId"},
-			"token":   schema.String{MaxLength: 64},
-			"label":   schema.String{MaxLength: 64, Required: true},
+			"groupId":     schema.String{Format: "objectId"},
+			"token":       schema.String{MaxLength: 64},
+			"label":       schema.String{MaxLength: 64, Required: true},
+			"description": schema.String{MaxLength: 500, Required: false},
+			"icon":        schema.String{MaxLength: 64, Required: false},
 		},
 	}
 }
@@ -25,12 +27,6 @@ func (group *Group) GetStringOK(name string) (string, bool) {
 
 	case "groupId":
 		return group.GroupID.Hex(), true
-
-	case "token":
-		return group.Token, true
-
-	case "label":
-		return group.Label, true
 	}
 
 	return "", false
@@ -49,15 +45,27 @@ func (group *Group) SetString(name string, value string) bool {
 			group.GroupID = objectID
 			return true
 		}
-
-	case "token":
-		group.Token = value
-		return true
-
-	case "label":
-		group.Label = value
-		return true
 	}
 
 	return false
+}
+
+func (group *Group) GetPointer(name string) (any, bool) {
+
+	switch name {
+
+	case "token":
+		return &group.Token, true
+
+	case "label":
+		return &group.Label, true
+
+	case "description":
+		return &group.Description, true
+
+	case "icon":
+		return &group.Icon, true
+	}
+
+	return nil, false
 }

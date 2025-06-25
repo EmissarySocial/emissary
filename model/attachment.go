@@ -94,9 +94,9 @@ func (attachment Attachment) RolesToGroupIDs(roleIDs ...string) id.Slice {
 	return nil
 }
 
-// RolesToCircleIDs returns a slice of Prilieges (CircleIDs and ProductIDs) that
+// RolesToPrivilegeIDs returns a slice of Privileges (CircleIDs and ProductIDs) that
 // grant access to any of the requested roles. It is part of the AccessLister interface
-func (attachment Attachment) RolesToPrivileges(roleIDs ...string) id.Slice {
+func (attachment Attachment) RolesToPrivilegeIDs(roleIDs ...string) id.Slice {
 	return nil
 }
 

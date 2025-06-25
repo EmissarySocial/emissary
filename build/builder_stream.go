@@ -55,9 +55,9 @@ func NewStream(factory Factory, request *http.Request, response http.ResponseWri
 
 	if !common.UserCan(actionID) {
 		if common._authorization.IsAuthenticated() {
-			return Stream{}, derp.ForbiddenError(location, "Forbidden")
+			return Stream{}, derp.ForbiddenError(location, "Forbidden", "url:"+stream.URL, "template:"+template.TemplateID, "action: "+actionID, "state: "+stream.StateID)
 		} else {
-			return Stream{}, derp.UnauthorizedError(location, "Anonymous user is not authorized to perform this action", stream.URL, actionID)
+			return Stream{}, derp.UnauthorizedError(location, "Anonymous user is not authorized to perform this action", "Forbidden", "url:"+stream.URL, "template:"+template.TemplateID, "action: "+actionID, "state: "+stream.StateID)
 		}
 	}
 
@@ -72,16 +72,24 @@ func NewStream(factory Factory, request *http.Request, response http.ResponseWri
 // NewStreamWithoutTemplate creates a new object that can generate HTML for a specific stream/view
 func NewStreamWithoutTemplate(factory Factory, request *http.Request, response http.ResponseWriter, stream *model.Stream, actionID string) (Stream, error) {
 
+	const location = "build.NewStreamWithoutTemplate"
+
 	// Use the template service to look up the correct template
 	templateService := factory.Template()
 	template, err := templateService.Load(stream.TemplateID)
 
 	if err != nil {
-		return Stream{}, derp.Wrap(err, "build.NewStreamWithoutTemplate", "Error loading Template", stream)
+		return Stream{}, derp.Wrap(err, location, "Error loading Template", stream)
 	}
 
 	// Return a fully populated service
-	return NewStream(factory, request, response, template, stream, actionID)
+	result, err := NewStream(factory, request, response, template, stream, actionID)
+
+	if err != nil {
+		return Stream{}, derp.Wrap(err, location, "Error creating Stream builder")
+	}
+
+	return result, nil
 }
 
 // NewStreamFromURI creates a new Stream builder for the provided request context.
@@ -531,7 +539,7 @@ func (w Stream) Parent(actionID string) (Stream, error) {
 
 	streamService := w.factory().Stream()
 
-	if err := streamService.LoadByID(w._stream.StreamID, &parent); err != nil {
+	if err := streamService.LoadByID(w._stream.ParentID, &parent); err != nil {
 		return Stream{}, derp.Wrap(err, location, "Error loading Parent")
 	}
 
@@ -570,7 +578,6 @@ func (w Stream) NextSibling(sortField string, action string) (Stream, error) {
 func (w Stream) FirstChild(sort string, action string) (Stream, error) {
 
 	criteria := exp.Equal("parentId", w._stream.StreamID)
-
 	sortOption := option.SortAsc(sort)
 
 	return w.getFirstStream(criteria, sortOption, action), nil
@@ -589,7 +596,7 @@ func (w Stream) LastChild(sort string, action string) (Stream, error) {
 // It is used internally by PrevSibling, NextSibling, FirstChild, and LastChild
 func (w Stream) getFirstStream(criteria exp.Expression, sortOption option.Option, actionID string) Stream {
 
-	criteria = w.withViewPermission(criteria)
+	criteria = criteria.And(w.defaultAllowed())
 
 	streamService := w.factory().Stream()
 	iterator, err := streamService.List(criteria, sortOption, option.FirstRow())
@@ -719,6 +726,7 @@ func (w Stream) Outbox() (QueryBuilder[model.OutboxMessage], error) {
 		exp.Equal("parentId", w._stream.StreamID),
 		exp.Equal("deleteDate", 0),
 		expBuilder.Evaluate(queryString),
+		w.defaultAllowed(),
 	)
 
 	return NewQueryBuilder[model.OutboxMessage](w._factory.Outbox(), criteria), nil
@@ -730,7 +738,7 @@ func (w Stream) Outbox() (QueryBuilder[model.OutboxMessage], error) {
 
 func (w Stream) Streams() QueryBuilder[model.StreamSummary] {
 	streamService := w.factory().Stream()
-	return NewQueryBuilder[model.StreamSummary](streamService, exp.All())
+	return NewQueryBuilder[model.StreamSummary](streamService, w.defaultAllowed())
 }
 
 func (w Stream) Users() QueryBuilder[model.UserSummary] {
@@ -744,10 +752,11 @@ func (w Stream) Users() QueryBuilder[model.UserSummary] {
  ******************************************/
 
 func (w Stream) Breadcrumbs() ([]model.StreamSummary, error) {
-	streamService := w.factory().Stream()
 
-	return streamService.QuerySummary(
-		exp.In("_id", w._stream.ParentIDs),
+	criteria := exp.In("_id", w._stream.ParentIDs).
+		And(w.defaultAllowed())
+
+	return w.factory().Stream().QuerySummary(criteria,
 		option.SortAsc("depth"),
 	)
 }
@@ -762,7 +771,10 @@ func (w Stream) Ancestors() QueryBuilder[model.StreamSummary] {
 		derp.Report(derp.Wrap(err, "build.Stream.Ancestors", "Error loading parent"))
 	}
 
-	return w.makeStreamQueryBuilder(exp.Equal("parentId", parent.ParentID))
+	criteria := exp.Equal("parentId", parent.ParentID).
+		And(w.defaultAllowed())
+
+	return w.makeStreamQueryBuilder(criteria)
 }
 
 // Siblings returns all Streams that have the same "parent" as the current Stream
@@ -788,10 +800,7 @@ func (w Stream) makeStreamQueryBuilder(criteria exp.Expression) QueryBuilder[mod
 
 	queryValues := w._request.URL.Query()
 	query := queryBuilder.Evaluate(queryValues)
-
-	criteria = w.withViewPermission(
-		criteria.And(query),
-	)
+	criteria = criteria.And(query).And(w.defaultAllowed())
 
 	result := NewQueryBuilder[model.StreamSummary](w._factory.Stream(), criteria)
 	result.By(w._template.ChildSortType)

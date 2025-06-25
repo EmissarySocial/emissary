@@ -78,9 +78,9 @@ func (merchantAccount *MerchantAccount) RolesToGroupIDs(roleIDs ...string) id.Sl
 	return nil
 }
 
-// RolesToPrivileges returns a slice of Privileges that grant access to any of the requested roles.
+// RolesToPrivilegeIDs returns a slice of Privileges that grant access to any of the requested roles.
 // It is part of the AccessLister interface
-func (merchantAccount *MerchantAccount) RolesToPrivileges(roleIDs ...string) id.Slice {
+func (merchantAccount *MerchantAccount) RolesToPrivilegeIDs(roleIDs ...string) id.Slice {
 	return nil
 }
 

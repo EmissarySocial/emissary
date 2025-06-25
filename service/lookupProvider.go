@@ -75,6 +75,9 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 			form.LookupCode{Value: "BLOCK", Label: "BLOCK senders and prevent followers who are blocked by this source (two-way block)"},
 		)
 
+	case "group-icons":
+		return form.NewReadOnlyLookupGroup(dataset.Icons()...)
+
 	case "groups":
 		return NewGroupLookupProvider(service.groupService)
 

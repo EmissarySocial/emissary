@@ -233,7 +233,11 @@ func (service *Group) ListAsOptions() []form.LookupCode {
 
 	var group model.Group
 	for it.Next(&group) {
-		result = append(result, form.LookupCode{Label: group.Label, Value: group.GroupID.Hex()})
+		result = append(result, form.LookupCode{
+			Label: group.Label,
+			Value: group.GroupID.Hex(),
+			Icon:  "people",
+		})
 	}
 
 	return result

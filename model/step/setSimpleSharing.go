@@ -1,6 +1,7 @@
 package step
 
 import (
+	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 )
 
@@ -8,16 +9,23 @@ import (
 type SetSimpleSharing struct {
 	Title   string
 	Message string
-	Roles   []string
+	Role    string
 }
 
 // NewSetSimpleSharing returns a fully parsed SetSimpleSharing object
 func NewSetSimpleSharing(stepInfo mapof.Any) (SetSimpleSharing, error) {
 
+	// Confirm that the role is defined
+	role := stepInfo.GetString("role")
+
+	if role == "" {
+		return SetSimpleSharing{}, derp.BadRequestError("step.NewSetSimpleSharing", "Role is required")
+	}
+
 	return SetSimpleSharing{
 		Title:   first(stepInfo.GetString("title"), "Sharing Settings"),
-		Message: first(stepInfo.GetString("message"), "Determine Who Can See This Stream"),
-		Roles:   stepInfo.GetSliceOfString("roles"),
+		Message: first(stepInfo.GetString("message"), ""),
+		Role:    role,
 	}, nil
 }
 
@@ -39,5 +47,5 @@ func (step SetSimpleSharing) RequiredStates() []string {
 
 // RequiredRoles returns a slice of roles that must be defined any Template that uses this Step
 func (step SetSimpleSharing) RequiredRoles() []string {
-	return step.Roles
+	return []string{step.Role}
 }

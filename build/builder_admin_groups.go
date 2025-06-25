@@ -154,6 +154,21 @@ func (w Group) Label() string {
 	return w._group.Label
 }
 
+func (w Group) Description() string {
+	if w._group == nil {
+		return ""
+	}
+	return w._group.Description
+}
+
+func (w Group) Icon() string {
+	return w._group.Icon
+}
+
+func (w Group) IconWithDefault() string {
+	return w._group.IconWithDefault()
+}
+
 /******************************************
  * QUERY BUILDERS
  ******************************************/

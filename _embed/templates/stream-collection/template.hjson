@@ -108,7 +108,7 @@
 			roles: ["author", "editor"]
 			steps: [
 				{do:"as-modal", steps: [
-					{do:"set-simple-sharing", roles: ["viewer"], title:"Who Can See This Article?", message:"Select who can view and comment on this article."}
+					{do:"set-simple-sharing", role: "viewer"}
 					{do:"save", message:"Sharing updated by {{.Author}}"}
 				]}
 			]

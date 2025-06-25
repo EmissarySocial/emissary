@@ -77,7 +77,7 @@ func (builder CommonWithTemplate) execute(wr io.Writer, name string, data any) e
 // AuthorInGroup returns TRUE if the Author/AttributedTo is a member of the specified group
 func (builder CommonWithTemplate) AuthorInGroup(accessLister model.AccessLister, groupToken string) bool {
 
-	const location = "builder.Stream.AuthorInGroup"
+	const location = "builder.CommonWithTemplate.AuthorInGroup"
 
 	// Use the Permission service to check if the user has the specified role
 	permissionService := builder._factory.Permission()
@@ -94,7 +94,7 @@ func (builder CommonWithTemplate) AuthorInGroup(accessLister model.AccessLister,
 // UserInGroup returns TRUE if the user is a member of the specified group
 func (builder CommonWithTemplate) UserInGroup(groupToken string) bool {
 
-	const location = "builder.Stream.UserInGroup"
+	const location = "builder.CommonWithTemplate.UserInGroup"
 
 	// Use the Permission service to check if the user has the specified role
 	permissionService := builder._factory.Permission()
@@ -111,7 +111,7 @@ func (builder CommonWithTemplate) UserInGroup(groupToken string) bool {
 // UserHasRole returns TRUE if the user has privileges for the specified role
 func (builder CommonWithTemplate) UserHasRole(role string) bool {
 
-	const location = "builder.Stream.UserHasRole"
+	const location = "builder.CommonWithTemplate.UserHasRole"
 
 	// Use the Permission service to check if the user has the specified role
 	permissionService := builder._factory.Permission()
@@ -128,7 +128,7 @@ func (builder CommonWithTemplate) UserHasRole(role string) bool {
 // UserCan returns TRUE if this action is permitted on a stream (using the provided authorization)
 func (builder CommonWithTemplate) UserCan(actionID string) bool {
 
-	const location = "builder.UserCan"
+	const location = "builder.CommonWithTemplate.UserCan"
 
 	permissionService := builder._factory.Permission()
 	result, err := permissionService.UserCan(&builder._authorization, &builder._template, builder._accessLister, actionID)

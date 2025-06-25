@@ -88,7 +88,7 @@ func (service *Circle) Save(circle *model.Circle, note string) error {
 	}
 
 	// Recalculate privileges based on new Circle settings.
-	if err := service.privilegeService.RefreshCircle(circle); err != nil {
+	if err := service.privilegeService.RefreshCircleInfo(circle); err != nil {
 		return derp.Wrap(err, location, "Error refreshing Privileges for Circle", circle.CircleID, note)
 	}
 
