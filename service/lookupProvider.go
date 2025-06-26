@@ -81,12 +81,6 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 	case "groups":
 		return NewGroupLookupProvider(service.groupService)
 
-	case "identifier-types":
-		return form.NewReadOnlyLookupGroup(
-			form.LookupCode{Label: "Fediverse Handle", Value: model.IdentifierTypeWebFinger},
-			form.LookupCode{Label: "Email Address", Value: model.IdentifierTypeEmail},
-		)
-
 	case "inbox-templates":
 		return form.ReadOnlyLookupGroup(service.templateService.ListByTemplateRole("user-inbox"))
 

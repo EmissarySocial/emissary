@@ -8,14 +8,12 @@ import (
 func IdentitySchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"identityId":            schema.String{Format: "objectId", Required: true},
-			"name":                  schema.String{Required: true, MinLength: 1, MaxLength: 100},
-			"description":           schema.String{Required: false, MaxLength: 500},
-			"iconUrl":               schema.String{Format: "url", Required: false, MaxLength: 500},
-			"emailAddress":          schema.String{Format: "email", Required: false, MaxLength: 200},
-			"webfingerHandle":       schema.String{Format: "webfinger", Required: false, MaxLength: 200},
-			"emailVerifiedDate":     schema.Integer{Required: false},
-			"webfingerVerifiedDate": schema.Integer{Required: false},
+			"identityId":       schema.String{Format: "objectId", Required: true},
+			"name":             schema.String{Required: true, MinLength: 1, MaxLength: 100},
+			"description":      schema.String{Required: false, MaxLength: 500},
+			"iconUrl":          schema.String{Format: "url", Required: false, MaxLength: 500},
+			"emailAddress":     schema.String{Format: "email", Required: false, MaxLength: 200},
+			"activityPubActor": schema.String{Format: "url", Required: false, MaxLength: 200},
 		},
 	}
 }
@@ -37,8 +35,8 @@ func (identity *Identity) GetPointer(name string) (any, bool) {
 	case "emailAddress":
 		return &identity.EmailAddress, true
 
-	case "webfingerHandle":
-		return &identity.WebfingerHandle, true
+	case "activityPubActor":
+		return &identity.ActivityPubActor, true
 
 	}
 

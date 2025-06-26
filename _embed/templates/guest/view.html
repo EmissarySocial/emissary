@@ -34,14 +34,14 @@
 				<div hx-get="/@guest/webfinger" class="clickable flex-row flex-align-center">
 					<div class="flex-grow margin-right-sm">
 						{{icon "fediverse"}} 
-						{{ if .HasWebfingerHandle -}}
-							{{.WebfingerHandle}}
+						{{ if .HasActivityPubActor -}}
+							{{.ActivityPubActor}}
 						{{- else -}}
 							<span class="text-green">Add Your Fediverse Handle</span>
 						{{- end -}}
 					</div>
 					<span class="button text-xs">
-						{{- if .HasWebfingerHandle -}}
+						{{- if .HasActivityPubActor -}}
 							change
 						{{- else -}}
 							connect

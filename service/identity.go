@@ -11,12 +11,14 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
+	"github.com/benpate/digit"
 	"github.com/benpate/domain"
 	"github.com/benpate/exp"
-	"github.com/benpate/rosetta/first"
+	"github.com/benpate/hannibal"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/turbine/queue"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/golang-jwt/jwt/v5"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -82,10 +84,12 @@ func (service *Identity) List(criteria exp.Expression, options ...option.Option)
 // Range returns a Go 1.23 RangeFunc that iterates over the Identity records that match the provided criteria
 func (service *Identity) Range(criteria exp.Expression, options ...option.Option) (iter.Seq[model.Identity], error) {
 
+	const location = "service.Identity.Range"
+
 	iter, err := service.List(criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.Identity.Range", "Error creating iterator", criteria)
+		return nil, derp.Wrap(err, location, "Error creating iterator", criteria)
 	}
 
 	return RangeFunc(iter, model.NewIdentity), nil
@@ -94,8 +98,10 @@ func (service *Identity) Range(criteria exp.Expression, options ...option.Option
 // Load retrieves an Identity from the database
 func (service *Identity) Load(criteria exp.Expression, identity *model.Identity) error {
 
+	const location = "service.Identity.Load"
+
 	if err := service.collection.Load(notDeleted(criteria), identity); err != nil {
-		return derp.Wrap(err, "service.Identity.Load", "Error loading Identity", criteria)
+		return derp.Wrap(err, location, "Error loading Identity", criteria)
 	}
 
 	return nil
@@ -104,19 +110,21 @@ func (service *Identity) Load(criteria exp.Expression, identity *model.Identity)
 // Save adds/updates an Identity in the database
 func (service *Identity) Save(identity *model.Identity, note string) error {
 
+	const location = "service.Identity.Save"
+
 	// Pick a default name, if necessary
-	if identity.Name == "" {
-		identity.Name = first.String(identity.EmailAddress, identity.WebfingerHandle)
+	if err := service.calcName(identity); err != nil {
+		return derp.Wrap(err, location, "Error calculating default name for Identity")
 	}
 
 	// Validate the value before saving
 	if err := service.Schema().Validate(identity); err != nil {
-		return derp.Wrap(err, "service.Identity.Save", "Error validating Identity", identity)
+		return derp.Wrap(err, location, "Error validating Identity", identity)
 	}
 
 	// Save the identity to the database
 	if err := service.collection.Save(identity, note); err != nil {
-		return derp.Wrap(err, "service.Identity.Save", "Error saving Identity", identity, note)
+		return derp.Wrap(err, location, "Error saving Identity", identity, note)
 	}
 
 	return nil
@@ -275,13 +283,13 @@ func (service *Identity) LoadByIdentifier(identifier string, identity *model.Ide
 	const location = "service.identity.LoadByIdentifier"
 
 	// Guess the identifier type
-	identifierType := service.GuessIdentifierType(identifier)
+	identifierType, identifierValue := service.ParseIdentifier(identifier)
 
 	if identifierType == "" {
 		return derp.BadRequestError(location, "Invalid identifier", identifier)
 	}
 
-	return service.LoadByIdentifierAndType(identifierType, identifier, identity)
+	return service.LoadByIdentifierAndType(identifierType, identifierValue, identity)
 
 }
 
@@ -292,8 +300,8 @@ func (service *Identity) LoadByIdentifierAndType(identifierType string, identifi
 	case model.IdentifierTypeEmail:
 		return service.LoadByEmailAddress(identifierValue, identity)
 
-	case model.IdentifierTypeWebFinger:
-		return service.LoadByWebfingerHandle(identifierValue, identity)
+	case model.IdentifierTypeActivityPub:
+		return service.LoadByActivityPubActor(identifierValue, identity)
 	}
 
 	return derp.InternalError("service.Identity.LoadByAddress", "Invalid Identity Type", identifierType)
@@ -305,9 +313,9 @@ func (service *Identity) LoadByEmailAddress(emailAddress string, identity *model
 	return service.Load(criteria, identity)
 }
 
-// LoadByWebfingerHandle retrieves a single Identity from the database using the provided WebFinger handle
-func (service *Identity) LoadByWebfingerHandle(emailAddress string, identity *model.Identity) error {
-	criteria := exp.Equal("webfingerHandle", emailAddress)
+// LoadByActvityPubActor retrieves a single Identity from the database using the provided WebFinger handle
+func (service *Identity) LoadByActivityPubActor(actorID string, identity *model.Identity) error {
+	criteria := exp.Equal("activityPubActor", actorID)
 	return service.Load(criteria, identity)
 }
 
@@ -359,13 +367,13 @@ func (service *Identity) RefreshPrivileges(identityID primitive.ObjectID) error 
 	return nil
 }
 
-func (service *Identity) SendGuestCode(identity *model.Identity, identifierType string, identifier string) error {
+func (service *Identity) SendGuestCode(identity *model.Identity, identifierType string, identifierValue string) error {
 
 	const location = "service.Identity.SendGuestCode"
 
 	// RULE: Identifier must be provided
-	if identifier == "" {
-		return derp.BadRequestError(location, "Identifier cannot be empty", identifier)
+	if identifierValue == "" {
+		return derp.BadRequestError(location, "Identifier cannot be empty", identifierValue)
 	}
 
 	// Find the correct sender function based on the identifier type
@@ -376,23 +384,23 @@ func (service *Identity) SendGuestCode(identity *model.Identity, identifierType 
 	case model.IdentifierTypeEmail:
 		sender = service.emailService.SendGuestCode
 
-	case model.IdentifierTypeWebFinger:
-		sender = service.sendGuestCode_Webfinger
+	case model.IdentifierTypeActivityPub:
+		sender = service.sendGuestCode_ActivityPub
 
 	default:
 		return derp.BadRequestError(location, "Unrecognized Identifier Type", identifierType)
 	}
 
 	// Create a new Guest Code for the identifier :)
-	guestCode, err := service.makeGuestCode(nil, identifierType, identifier)
+	guestCode, err := service.makeGuestCode(nil, identifierType, identifierValue)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error creating Guest Code", identifier)
+		return derp.Wrap(err, location, "Error creating Guest Code", identifierValue)
 	}
 
 	// Send the Guest Code to the
-	if err := sender(identifier, guestCode); err != nil {
-		return derp.Wrap(err, location, "Error sending Guest Code", identifier, guestCode)
+	if err := sender(identifierValue, guestCode); err != nil {
+		return derp.Wrap(err, location, "Error sending Guest Code", identifierValue, guestCode)
 	}
 
 	// Looky here. I *am* a Fortunate Son!
@@ -425,28 +433,72 @@ func (service *Identity) makeGuestCode(identity *model.Identity, identifierType 
 	return token, nil
 }
 
-// GuessIdentifierType attempts to guess the type of identifier based on its format.
-// TODO: this can be more sophisticated, validationary.
-func (service *Identity) GuessIdentifierType(identifier string) string {
+func (service *Identity) calcName(identity *model.Identity) error {
 
-	// WebFinger begins with "@"
-	if strings.HasPrefix(identifier, "@") {
+	// If we already have a "Name", then there's nothing else to do
+	if identity.Name != "" {
+		return nil
+	}
 
-		identifier = strings.TrimPrefix(identifier, "@")
+	if identity.HasActivityPubActor() {
 
-		if _, err := mail.ParseAddress(identifier); err != nil {
-			return ""
+		actor, err := service.activityService.Load(identity.ActivityPubActor)
+
+		spew.Dump("calcName", identity, actor.Name(), actor.Icon(), err)
+
+		if err != nil {
+			return derp.Wrap(err, "service.Identity.calcName", "Error loading ActivityPub Actor", identity.ActivityPubActor)
 		}
 
-		return model.IdentifierTypeWebFinger
+		identity.Name = actor.Name()
+		identity.IconURL = actor.Icon().Href()
+		return nil
+	}
+
+	// If we can't look up an ActivityPub actor, then just use the email address as the name
+	identity.Name = identity.EmailAddress
+	return nil
+}
+
+// ParseIdentifier attempts to guess the type of identifier based on its format.
+func (service *Identity) ParseIdentifier(identifier string) (string, string) {
+
+	// WebFinger begins with "@" and needs to be translated into an ActivityPub Actor
+	if strings.HasPrefix(identifier, "@") {
+
+		// Look up the identifier using WebFinger
+		webfinger, err := digit.Lookup(identifier)
+
+		spew.Dump(webfinger, err)
+
+		if err != nil {
+			return "", ""
+		}
+
+		// If we have a profile link, then success
+		for _, link := range webfinger.Links {
+			if link.RelationType == digit.RelationTypeSelf {
+				if hannibal.IsActivityPubContentType(link.MediaType) {
+					return model.IdentifierTypeActivityPub, link.Href
+				}
+			}
+		}
+
+		// Otherwise, failure.
+		return "", ""
+	}
+
+	// ActivityPub Actor URLs begin with "https://" or "http://"
+	if strings.HasPrefix(identifier, "https://") || strings.HasPrefix(identifier, "http://") {
+		return model.IdentifierTypeActivityPub, identifier
 	}
 
 	// Assume Email Address
 	if _, err := mail.ParseAddress(identifier); err != nil {
-		return ""
+		return "", ""
 	}
 
-	return model.IdentifierTypeEmail
+	return model.IdentifierTypeEmail, identifier
 }
 
 func (service *Identity) hostname() string {

@@ -337,11 +337,15 @@ func (service *Privilege) validateIdentifier(privilege *model.Privilege) error {
 	}
 
 	if privilege.IdentifierType == "" {
-		privilege.IdentifierType = service.identityService.GuessIdentifierType(privilege.IdentifierValue)
 
-		if privilege.IdentifierType == "" {
+		identifierType, identifierValue := service.identityService.ParseIdentifier(privilege.IdentifierValue)
+
+		if identifierType == "" {
 			return derp.InternalError(location, "Could not guess identifier type.")
 		}
+
+		privilege.IdentifierType = identifierType
+		privilege.IdentifierValue = identifierValue
 	}
 
 	return nil

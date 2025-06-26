@@ -363,7 +363,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	// ActivityPub Routes for Users
 	e.GET("/@:userId/pub", handler.WithUser(factory, handler.GetOutbox))
 	e.POST("/@:userId/pub/inbox", ap_user.PostInbox(factory))
-	e.GET("/@:userId/pub/outbox", ap_user.GetOutboxCollection(factory))
+	e.GET("/@:userId/pub/outbox", handler.WithUser(factory, ap_user.GetOutboxCollection))
 	e.GET("/@:userId/pub/featured", handler.WithUser(factory, ap_user.GetFeaturedCollection))
 	e.GET("/@:userId/pub/followers", handler.WithFactory(factory, ap_user.GetFollowersCollection))
 	e.GET("/@:userId/pub/following", handler.WithFactory(factory, ap_user.GetFollowingCollection))

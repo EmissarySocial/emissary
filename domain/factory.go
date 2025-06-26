@@ -409,8 +409,10 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 
 		// Populate Permission Service
 		factory.permissionService.Refresh(
+			factory.ActivityStream(),
 			factory.Identity(),
 			factory.Privilege(),
+			factory.User(),
 		)
 
 		// Populate Product Service

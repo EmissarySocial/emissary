@@ -4,20 +4,26 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/derp"
+	"github.com/benpate/hannibal/sigs"
+	"github.com/benpate/steranko"
 )
 
 type Permission struct {
+	activityStream   *ActivityStream
 	identityService  *Identity
 	privilegeService *Privilege
+	userService      *User
 }
 
 func NewPermission() Permission {
 	return Permission{}
 }
 
-func (service *Permission) Refresh(identityService *Identity, privilegeService *Privilege) {
+func (service *Permission) Refresh(activityStream *ActivityStream, identityService *Identity, privilegeService *Privilege, userService *User) {
+	service.activityStream = activityStream
 	service.identityService = identityService
 	service.privilegeService = privilegeService
+	service.userService = userService
 }
 
 // UserCan returns TRUE if this action is permitted on a stream (using the provided authorization)
@@ -209,6 +215,50 @@ func (service *Permission) Permissions(authorization *model.Authorization, ident
 	if identity != nil {
 		result.Append(identity.PrivilegeIDs...)
 	}
+
+	return result
+}
+
+func (service *Permission) ParseHTTPSignature(ctx *steranko.Context) id.Slice {
+
+	result := id.Slice{model.MagicGroupIDAnonymous}
+
+	// If there is no signature, then only allow anonymous access
+	if !sigs.HasSignature(ctx.Request()) {
+		return result
+	}
+
+	// Verify the signature
+	// verifier := sigs.NewVerifier()
+	verifier := sigs.NewMockVerifier("https://mastodon.social/users/benpate/#main-key", true)
+
+	signature, err := verifier.Verify(ctx.Request(), service.activityStream.PublicKeyFinder)
+
+	if err != nil {
+		return result
+	}
+
+	// Find an Identity based on the signature
+	identity := model.NewIdentity()
+	if err := service.identityService.LoadByActivityPubActor(signature.ActorID(), &identity); err != nil {
+		return result
+	}
+
+	// If present, then add the privileges for this Identity
+	result.Append(identity.PrivilegeIDs...)
+
+	if !identity.HasEmailAddress() {
+		return result
+	}
+
+	// If the Identity DOES have an email address, then look for a User, too
+	user := model.NewUser()
+	if err := service.userService.LoadByEmail(identity.EmailAddress, &user); err != nil {
+		return result
+	}
+
+	result.Append(model.MagicGroupIDAuthenticated, user.UserID)
+	result.Append(user.GroupIDs...)
 
 	return result
 }

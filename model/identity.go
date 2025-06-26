@@ -8,14 +8,14 @@ import (
 
 // Identity represents a combination of identifiers that all represent a single individual.
 // This is used to track pseud-logins by individuals who do not have a registered username on this server.
-// Identities can be tied to a Follower and to a Privilege via the two identifiers: EmailAddress and WebfingerHandle.
+// Identities can be tied to a Follower and to a Privilege via the two identifiers: EmailAddress and ActivityPub.
 type Identity struct {
-	IdentityID      primitive.ObjectID `bson:"_id"`                  // Unique ID for the Identity
-	Name            string             `bson:"name"`                 // Full name of the Individual ("John Connor")
-	IconURL         string             `bson:"iconUrl"`              // URL to an icon representing the Identity (e.g., a profile picture)
-	EmailAddress    string             `bson:"emailAddress"`         // Email address of the Identity ("john@connor.mil")
-	WebfingerHandle string             `bson:"webfingerHandle"`      // WebFinger handle of the Identity ("@john@connor.social")
-	PrivilegeIDs    id.Slice           `bson:"privileges,omitempty"` // List of privileges associated with this Identity, either a circleID, or a remoteProductID
+	IdentityID       primitive.ObjectID `bson:"_id"`                  // Unique ID for the Identity
+	Name             string             `bson:"name"`                 // Full name of the Individual ("John Connor")
+	IconURL          string             `bson:"iconUrl"`              // URL to an icon representing the Identity (e.g., a profile picture)
+	EmailAddress     string             `bson:"emailAddress"`         // Email address of the Identity ("john@connor.mil")
+	ActivityPubActor string             `bson:"activityPubActor"`     // ActivityPub Actor URL (https://connor.mil/@john) possibly derived from a WebFinger handle
+	PrivilegeIDs     id.Slice           `bson:"privileges,omitempty"` // List of privileges associated with this Identity, either a circleID, or a remoteProductID
 
 	// Embed journal to track changes
 	journal.Journal `bson:",inline"`
@@ -41,7 +41,7 @@ func (identity Identity) Fields() []string {
 		"name",
 		"iconUrl",
 		"emailAddress",
-		"webfingerHandle",
+		"activityPubActor",
 	}
 }
 
@@ -87,19 +87,19 @@ func (identity Identity) HasEmailAddress() bool {
 	return identity.EmailAddress != ""
 }
 
-// HasWebfingerHandle returns TRUE if the Identity has a WebFinger handle.
-func (identity Identity) HasWebfingerHandle() bool {
-	return identity.WebfingerHandle != ""
+// HasActivityPubActor TRUE if the Identity has an ActivityPub Actor URL.
+func (identity Identity) HasActivityPubActor() bool {
+	return identity.ActivityPubActor != ""
 }
 
 // Icon returns an icon name to use for this Identity, based on the type of identifier(s) present.
 func (identity Identity) Icon() string {
 
-	if identity.WebfingerHandle != "" {
-		return "fediverse"
+	if identity.HasActivityPubActor() {
+		return "activitypub"
 	}
 
-	if identity.EmailAddress != "" {
+	if identity.HasEmailAddress() {
 		return "email"
 	}
 
@@ -109,11 +109,11 @@ func (identity Identity) Icon() string {
 // IdentifierType returns the "primary" identifier type that is present in this Identity.
 func (identity Identity) IdentifierType() string {
 
-	if identity.WebfingerHandle != "" {
-		return IdentifierTypeWebFinger
+	if identity.HasActivityPubActor() {
+		return IdentifierTypeActivityPub
 	}
 
-	if identity.EmailAddress != "" {
+	if identity.HasEmailAddress() {
 		return IdentifierTypeEmail
 	}
 
@@ -123,11 +123,11 @@ func (identity Identity) IdentifierType() string {
 // Identifier returns the "primary" identifier for this Identity.
 func (identity Identity) Identifier() string {
 
-	if identity.WebfingerHandle != "" {
-		return identity.WebfingerHandle
+	if identity.HasActivityPubActor() {
+		return identity.ActivityPubActor
 	}
 
-	if identity.EmailAddress != "" {
+	if identity.HasEmailAddress() {
 		return identity.EmailAddress
 	}
 
@@ -144,8 +144,8 @@ func (identity *Identity) SetIdentifier(identifierType string, value string) boo
 		identity.EmailAddress = value
 		return true
 
-	case IdentifierTypeWebFinger:
-		identity.WebfingerHandle = value
+	case IdentifierTypeActivityPub:
+		identity.ActivityPubActor = value
 		return true
 	}
 

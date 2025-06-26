@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -364,6 +365,34 @@ func (service *ActivityStream) GetRecipient(recipient string) (string, string, e
 
 	// Successssssssss.
 	return document.ID(), document.Inbox().String(), nil
+}
+
+func (service *ActivityStream) PublicKeyFinder(keyID string) (string, error) {
+
+	const location = "service.ActivityStream.PublicKeyFinder"
+
+	actorID, _, _ := strings.Cut(keyID, "#")
+
+	document := service.NewDocument(mapof.Any{
+		vocab.PropertyID: actorID,
+	})
+
+	// Load the Actor from the document
+	actor, err := document.Actor().Load()
+
+	if err != nil {
+		return "", derp.Wrap(err, location, "Error retrieving Actor from ActivityPub document", document.Value())
+	}
+
+	// Search the Actor's public keys for the one that matches the provided keyID
+	for key := actor.PublicKey(); key.NotNil(); key = key.Tail() {
+
+		if key.ID() == keyID {
+			return key.PublicKeyPEM(), nil
+		}
+	}
+
+	return "", derp.NotFoundError(location, "Public Key not found", keyID)
 }
 
 /******************************************

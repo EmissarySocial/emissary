@@ -16,7 +16,7 @@ func PrivilegeSchema() schema.Element {
 			"remotePersonId":   schema.String{MaxLength: 256},
 			"remoteProductId":  schema.String{MaxLength: 256},
 			"remotePurchaseId": schema.String{MaxLength: 256},
-			"identifierType":   schema.String{Enum: []string{IdentifierTypeEmail, IdentifierTypeWebFinger}},
+			"identifierType":   schema.String{Enum: []string{IdentifierTypeEmail, IdentifierTypeActivityPub}},
 			"identifierValue":  schema.String{MaxLength: 256},
 		},
 	}

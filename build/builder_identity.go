@@ -93,9 +93,9 @@ func (w Identity) EmailAddress() string {
 	return w._identity.EmailAddress
 }
 
-// WebfingerHandle returns the WebfingerHandle (Fediverse username) property of this Identity
-func (w Identity) WebfingerHandle() string {
-	return w._identity.WebfingerHandle
+// ActivityPubActor returns the ActivityPubActor (Fediverse username) property of this Identity
+func (w Identity) ActivityPubActor() string {
+	return w._identity.ActivityPubActor
 }
 
 // HasEmailAddress returns TRUE if this Identity has a non-zero email address
@@ -103,9 +103,9 @@ func (w Identity) HasEmailAddress() bool {
 	return w._identity.HasEmailAddress()
 }
 
-// HasWebfingerHandle returns TRUE if this Identity has a non-zero webfinger handle
-func (w Identity) HasWebfingerHandle() bool {
-	return w._identity.HasWebfingerHandle()
+// HasActivityPubActor returns TRUE if this Identity has a non-zero webfinger handle
+func (w Identity) HasActivityPubActor() bool {
+	return w._identity.HasActivityPubActor()
 }
 
 // Icon returns an icon name to use for this Identity, based on the available identifiers.

@@ -10,9 +10,9 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-func (service *Identity) sendGuestCode_Webfinger(identifier string, code string) error {
+func (service *Identity) sendGuestCode_ActivityPub(identifier string, code string) error {
 
-	const location = "service.Identity.sendGuestCode_Webfinger"
+	const location = "service.Identity.sendGuestCode_ActivityPub"
 
 	// Find Recipient
 	recipientID, inboxURL, err := service.activityService.GetRecipient(identifier)
