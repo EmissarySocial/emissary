@@ -53,7 +53,7 @@
 	background-color: var(--page-background);
 	padding: calc(var(--rhythm) * 2);
 	line-height: 150%;
-	transform:scale(0.8);
+	transform:scale(0.9);
 	margin-top:24px;
 }
 
@@ -106,29 +106,29 @@
 #modal.ready {
 	opacity: 1;
 	transition:opacity;
-	transition-duration:200ms;
-	transition-timing-function: ease-in-out;
+	transition-duration:240ms;
+	transition-timing-function: ease;
 }
 
 #modal.ready #modal-window {
 	transform:scale(1);
 	transition:transform;
-	transition-duration:200ms;
-	transition-timing-function: ease-in-out;
+	transition-duration:240ms;
+	transition-timing-function: ease
 }
 
 #modal.closing {
 	animation-name:fadeOut;
-	animation-duration:200ms;
+	animation-duration:160ms;
 	animation-timing-function: ease;
 
 	/* Hide after animation */
 	opacity:0;
 }
 
-#modal.closing #modal-content {
+#modal.closing #modal-window {
 	animation-name: zoomOut;
-	animation-duration:200ms;
+	animation-duration:160ms;
 	animation-timing-function: ease;
 }
 
