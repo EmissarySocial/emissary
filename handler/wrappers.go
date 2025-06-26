@@ -318,18 +318,31 @@ func WithStream(serverFactory *server.Factory, fn WithFunc1[model.Stream]) echo.
 		stream := model.NewStream()
 		token := getStreamToken(ctx)
 
-		if err := streamService.LoadByToken(token, &stream); err != nil {
+		// Try to load the Stream using a Token
+		err := streamService.LoadByToken(token, &stream)
 
-			// Special case: If the HOME page is missing, then this is a new database.  Forward to the admin section
-			if derp.IsNotFound(err) && (token == "home") {
-				return ctx.Redirect(http.StatusTemporaryRedirect, "/startup")
-			}
+		if err == nil {
+			return fn(ctx, factory, &stream)
+		}
 
+		// Anything but a "Not Found" error is a problem
+		if !derp.IsNotFound(err) {
 			return derp.Wrap(err, location, "Error loading stream from database")
 		}
 
-		// Call the continuation function
-		return fn(ctx, factory, &stream)
+		// If the "home" page is requested but not found, then we're in "startup" mode
+		if token == "home" {
+			return ctx.Redirect(http.StatusTemporaryRedirect, "/startup")
+		}
+
+		// Maybe we're looking for a User, but forgot the "@" prefix?
+		user := model.NewUser()
+		if err := factory.User().LoadByUsername(token, &user); err == nil {
+			return ctx.Redirect(http.StatusSeeOther, "/@"+user.Username)
+		}
+
+		// I give up, man..
+		return ctx.NoContent(http.StatusNotFound)
 	})
 }
 
