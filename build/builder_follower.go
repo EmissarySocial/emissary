@@ -38,9 +38,9 @@ func NewFollower(factory Factory, request *http.Request, response http.ResponseW
 	// Enforce user permissions on the requested action
 	if !common.UserCan(actionID) {
 		if common._authorization.IsAuthenticated() {
-			return Follower{}, derp.ReportAndReturn(derp.ForbiddenError(location, "Forbidden"))
+			return Follower{}, derp.ForbiddenError(location, "Forbidden")
 		} else {
-			return Follower{}, derp.ReportAndReturn(derp.UnauthorizedError(location, "Anonymous user is not authorized to perform this action", actionID))
+			return Follower{}, derp.UnauthorizedError(location, "Anonymous user is not authorized to perform this action", actionID)
 		}
 	}
 

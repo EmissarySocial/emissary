@@ -78,7 +78,7 @@ func (step StepWithParent) postUser(streamBuilder Stream, buffer io.Writer) Pipe
 
 	// Execute the POST build pipeline on the parent
 	result := Pipeline(step.SubSteps).Post(factory, &outbox, buffer)
-	result.Error = derp.ReportAndReturn(derp.Wrap(result.Error, location, "Error executing steps for parent"))
+	result.Error = derp.Wrap(result.Error, location, "Error executing steps for parent")
 
 	return UseResult(result)
 }

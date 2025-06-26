@@ -172,7 +172,7 @@ func GetStreamAttachment(factoryManager *server.Factory) echo.HandlerFunc {
 		}
 
 		if err := ms.Serve(ctx.Response().Writer, ctx.Request(), filespec); err != nil {
-			return derp.ReportAndReturn(derp.Wrap(err, location, "Error accessing attachment file"))
+			return derp.Wrap(err, location, "Error accessing attachment file")
 		}
 
 		return nil
@@ -224,7 +224,7 @@ func GetUserAttachment(factoryManager *server.Factory) echo.HandlerFunc {
 		filespec := attachment.FileSpec(ctx.Request().URL)
 
 		if err := ms.Serve(ctx.Response().Writer, ctx.Request(), filespec); err != nil {
-			return derp.ReportAndReturn(derp.Wrap(err, location, "Error accessing attachment file"))
+			return derp.Wrap(err, location, "Error accessing attachment file")
 		}
 
 		return nil

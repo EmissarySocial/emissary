@@ -62,7 +62,7 @@ func (w Settings) Render() (template.HTML, error) {
 	status := Pipeline(w._action.Steps).Get(w._factory, &w, &buffer)
 
 	if status.Error != nil {
-		return "", derp.ReportAndReturn(derp.Wrap(status.Error, "build.Settings.Render", "Error generating HTML", w._request.URL.String()))
+		return "", derp.Wrap(status.Error, "build.Settings.Render", "Error generating HTML", w._request.URL.String())
 	}
 
 	// Success!
@@ -76,7 +76,7 @@ func (w Settings) View(actionID string) (template.HTML, error) {
 	builder, err := NewSettings(w._factory, w._request, w._response, w._user, actionID)
 
 	if err != nil {
-		return template.HTML(""), derp.ReportAndReturn(derp.Wrap(err, "build.Settings.View", "Error creating Settings builder"))
+		return template.HTML(""), derp.Wrap(err, "build.Settings.View", "Error creating Settings builder")
 	}
 
 	return builder.Render()

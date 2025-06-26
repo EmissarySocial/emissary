@@ -250,7 +250,7 @@ func (service *Stream) unpublish_user_outbox(userID primitive.ObjectID, url stri
 	// Try to publish via sendNotifications
 	log.Trace().Str("id", url).Msg("UnPublishing from User's outbox")
 	if err := service.outboxService.UnPublish(&actor, model.FollowerTypeUser, userID, url); err != nil {
-		return derp.ReportAndReturn(derp.Wrap(err, location, "Error un-publishing activity", url))
+		return derp.Wrap(err, location, "Error un-publishing activity", url)
 	}
 
 	// Done.

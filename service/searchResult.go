@@ -179,7 +179,7 @@ func (service *SearchResult) Sync(searchResult model.SearchResult) error {
 	if searchResult.IsDeleted() {
 
 		if err := service.DeleteByURL(searchResult.URL); err != nil {
-			return derp.ReportAndReturn(derp.Wrap(err, location, "Error deleting Search", searchResult))
+			return derp.Wrap(err, location, "Error deleting Search", searchResult)
 		}
 
 		return nil
@@ -201,7 +201,7 @@ func (service *SearchResult) Sync(searchResult model.SearchResult) error {
 
 		// Save the updated SearchResult...
 		if err := service.Save(&original, "updated"); err != nil {
-			return derp.ReportAndReturn(derp.Wrap(err, location, "Error adding Search", searchResult))
+			return derp.Wrap(err, location, "Error adding Search", searchResult)
 		}
 
 		return nil
@@ -210,7 +210,7 @@ func (service *SearchResult) Sync(searchResult model.SearchResult) error {
 	// If the SearchResult is NOT FOUND, then insert it.
 	if derp.IsNotFound(err) {
 		if err := service.Save(&searchResult, "added"); err != nil {
-			return derp.ReportAndReturn(derp.Wrap(err, location, "Error adding Search", searchResult))
+			return derp.Wrap(err, location, "Error adding Search", searchResult)
 		}
 
 		return nil

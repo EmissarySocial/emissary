@@ -52,9 +52,9 @@ func NewInbox(factory Factory, request *http.Request, response http.ResponseWrit
 	// Enforce user permissions on the requested action
 	if !common.UserCan(actionID) {
 		if common._authorization.IsAuthenticated() {
-			return Inbox{}, derp.ReportAndReturn(derp.ForbiddenError(location, "Forbidden", "User is authenticated, but this action is not allowed", actionID))
+			return Inbox{}, derp.ForbiddenError(location, "Forbidden", "User is authenticated, but this action is not allowed", actionID)
 		} else {
-			return Inbox{}, derp.ReportAndReturn(derp.UnauthorizedError(location, "Anonymous user is not authorized to perform this action", user.ProfileURL, actionID))
+			return Inbox{}, derp.UnauthorizedError(location, "Anonymous user is not authorized to perform this action", user.ProfileURL, actionID)
 		}
 	}
 
@@ -77,7 +77,7 @@ func (w Inbox) Render() (template.HTML, error) {
 	status := Pipeline(w._action.Steps).Get(w._factory, &w, &buffer)
 
 	if status.Error != nil {
-		return "", derp.ReportAndReturn(derp.Wrap(status.Error, "build.Inbox.Render", "Error generating HTML", w._request.URL.String()))
+		return "", derp.Wrap(status.Error, "build.Inbox.Render", "Error generating HTML", w._request.URL.String())
 	}
 
 	// Success!
@@ -91,7 +91,7 @@ func (w Inbox) View(actionID string) (template.HTML, error) {
 	builder, err := NewInbox(w._factory, w._request, w._response, w._user, actionID)
 
 	if err != nil {
-		return template.HTML(""), derp.ReportAndReturn(derp.Wrap(err, "build.Inbox.View", "Error creating Inbox builder"))
+		return template.HTML(""), derp.Wrap(err, "build.Inbox.View", "Error creating Inbox builder")
 	}
 
 	return builder.Render()

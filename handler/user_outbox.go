@@ -111,7 +111,7 @@ func buildOutbox(ctx *steranko.Context, factory *domain.Factory, user *model.Use
 	builder, err := build.NewOutbox(factory, ctx.Request(), ctx.Response(), user, actionID)
 
 	if err != nil {
-		return derp.ReportAndReturn(derp.Wrap(err, location, "Error creating builder"))
+		return derp.Wrap(err, location, "Error creating builder")
 	}
 
 	// Forward to the standard page builder to complete the job

@@ -92,18 +92,18 @@ func WithFactory(serverFactory *server.Factory, fn WithFunc0) echo.HandlerFunc {
 		sterankoContext, ok := ctx.(*steranko.Context)
 
 		if !ok {
-			return derp.ReportAndReturn(derp.InternalError(location, "Context must be a Steranko Context"))
+			return derp.InternalError(location, "Context must be a Steranko Context")
 		}
 
 		// Validate the domain name
 		factory, err := serverFactory.ByContext(ctx)
 
 		if err != nil {
-			return derp.ReportAndReturn(derp.Wrap(err, location, "Unrecognized Domain"))
+			return derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
 		// Call the continuation function
-		return derp.ReportAndReturn(fn(sterankoContext, factory))
+		return fn(sterankoContext, factory)
 	}
 }
 

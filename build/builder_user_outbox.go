@@ -54,9 +54,9 @@ func NewOutbox(factory Factory, request *http.Request, response http.ResponseWri
 	// Enforce user permissions on the requested action
 	if !common.UserCan(actionID) {
 		if common._authorization.IsAuthenticated() {
-			return Outbox{}, derp.ReportAndReturn(derp.ForbiddenError(location, "Forbidden"))
+			return Outbox{}, derp.ForbiddenError(location, "Forbidden")
 		} else {
-			return Outbox{}, derp.ReportAndReturn(derp.UnauthorizedError(location, "Anonymous user is not authorized to perform this action", user.ProfileURL, actionID))
+			return Outbox{}, derp.UnauthorizedError(location, "Anonymous user is not authorized to perform this action", user.ProfileURL, actionID)
 		}
 	}
 

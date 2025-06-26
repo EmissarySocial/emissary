@@ -34,7 +34,7 @@ func buildInbox(ctx *steranko.Context, factory *domain.Factory, user *model.User
 	builder, err := build.NewInbox(factory, ctx.Request(), ctx.Response(), user, actionID)
 
 	if err != nil {
-		return derp.ReportAndReturn(derp.Wrap(err, location, "Error creating builder"))
+		return derp.Wrap(err, location, "Error creating builder")
 	}
 
 	// Forward to the standard page builder to complete the job

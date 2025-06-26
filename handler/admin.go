@@ -57,7 +57,7 @@ func buildAdmin(factoryManager *server.Factory, actionMethod build.ActionMethod)
 		builder, err := buildAdmin_GetBuilder(factory, sterankoContext, template, actionID, objectID)
 
 		if err != nil {
-			return derp.ReportAndReturn(derp.Wrap(err, location, "Error generating builder"))
+			return derp.Wrap(err, location, "Error generating builder")
 		}
 
 		// Success!!

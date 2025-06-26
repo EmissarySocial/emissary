@@ -23,12 +23,12 @@ func Aggregate[T any](ctx context.Context, collection *mongo.Collection, pipelin
 	cursor, err := collection.Aggregate(ctx, pipeline, opts...)
 
 	if err != nil {
-		return nil, derp.ReportAndReturn(derp.Wrap(err, location, "Error counting records", pipeline))
+		return nil, derp.Wrap(err, location, "Error counting records", pipeline)
 	}
 
 	// Read results into the result
 	if err := cursor.All(ctx, &result); err != nil {
-		return nil, derp.ReportAndReturn(derp.Wrap(err, location, "Error reading records from cursor", pipeline))
+		return nil, derp.Wrap(err, location, "Error reading records from cursor", pipeline)
 	}
 
 	return result, nil

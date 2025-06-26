@@ -34,7 +34,7 @@ func buildSettings(ctx *steranko.Context, factory *domain.Factory, user *model.U
 	builder, err := build.NewSettings(factory, ctx.Request(), ctx.Response(), user, actionID)
 
 	if err != nil {
-		return derp.ReportAndReturn(derp.Wrap(err, location, "Error creating builder"))
+		return derp.Wrap(err, location, "Error creating builder")
 	}
 
 	// Forward to the standard page builder to complete the job

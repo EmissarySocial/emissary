@@ -89,7 +89,7 @@ func (step StepViewAttachment) Get(builder Builder, buffer io.Writer) PipelineBe
 	}
 
 	if err := ms.Serve(streamBuilder.response(), streamBuilder.request(), filespec); err != nil {
-		return Halt().WithError(derp.ReportAndReturn(derp.Wrap(err, location, "Error accessing attachment file")))
+		return Halt().WithError(derp.Wrap(err, location, "Error accessing attachment file"))
 	}
 
 	return Halt().AsFullPage()

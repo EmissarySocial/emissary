@@ -30,7 +30,7 @@ func GetIntent_Like(ctx *steranko.Context, factory *domain.Factory, user *model.
 	object, err := activityStream.Load(transaction.Object)
 
 	if err != nil {
-		return derp.ReportAndReturn(derp.Wrap(err, location, "Unable to load object", ctx.Request().URL.String(), ctx.Request().URL, transaction))
+		return derp.Wrap(err, location, "Unable to load object", ctx.Request().URL.String(), ctx.Request().URL, transaction)
 	}
 
 	// Buiild HTML response
@@ -123,7 +123,7 @@ func postIntent_Response(ctx *steranko.Context, factory *domain.Factory, user *m
 
 	// Save the Response to the database
 	if err := responseService.Save(&response, "Created via Activity Intent"); err != nil {
-		return derp.ReportAndReturn(derp.Wrap(err, location, "Error saving response", transaction))
+		return derp.Wrap(err, location, "Error saving response", transaction)
 	}
 
 	// Return the "on-success" response

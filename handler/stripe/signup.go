@@ -26,18 +26,18 @@ func PostSignupWebhook(ctx *steranko.Context, factory *domain.Factory, domain *m
 
 	// RULE: Require that a registration form has been defined
 	if !domain.HasRegistrationForm() {
-		return derp.ReportAndReturn(derp.NotFoundError(location, "Stripe Webhook not defined (no registration form)"))
+		return derp.NotFoundError(location, "Stripe Webhook not defined (no registration form)")
 	}
 
 	// Collect Registration Metadata
 	secret := domain.RegistrationData.GetString("stripe_webhook_secret")
 	if secret == "" {
-		return derp.ReportAndReturn(derp.InternalError(location, "Stripe Webhook Secret not defined"))
+		return derp.InternalError(location, "Stripe Webhook Secret not defined")
 	}
 
 	restrictedKey := domain.RegistrationData.GetString("stripe_restricted_key")
 	if restrictedKey == "" {
-		return derp.ReportAndReturn(derp.InternalError(location, "Stripe Restricted Key not defined"))
+		return derp.InternalError(location, "Stripe Restricted Key not defined")
 	}
 
 	////////////////////////////////
@@ -47,7 +47,7 @@ func PostSignupWebhook(ctx *steranko.Context, factory *domain.Factory, domain *m
 	payload, err := io.ReadAll(ctx.Request().Body)
 
 	if err != nil {
-		return derp.ReportAndReturn(derp.Wrap(err, location, "Error reading request body"))
+		return derp.Wrap(err, location, "Error reading request body")
 	}
 
 	// Verify the WebHook signature
@@ -55,7 +55,7 @@ func PostSignupWebhook(ctx *steranko.Context, factory *domain.Factory, domain *m
 	event, err := webhook.ConstructEvent(payload, signatureHeader, secret)
 
 	if err != nil {
-		return derp.ReportAndReturn(derp.Wrap(err, location, "Error verifying webhook signature"))
+		return derp.Wrap(err, location, "Error verifying webhook signature")
 	}
 
 	// Require that the event is a "product" event
@@ -99,7 +99,7 @@ func finishWebhook(factory *domain.Factory, restrictedKey string, event stripe.E
 	}
 
 	if err := loadStripeProduct(restrictedKey, price.Product); err != nil {
-		return derp.ReportAndReturn(derp.Wrap(err, location, "Error getting product details"))
+		return derp.Wrap(err, location, "Error getting product details")
 	}
 
 	// Get ready to create/update a user

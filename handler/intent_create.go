@@ -86,7 +86,7 @@ func PostIntent_Create(ctx *steranko.Context, factory *domain.Factory, user *mod
 
 	// Save the new Stream to the database
 	if err := streamService.Save(&stream, "Saved via Activity Intent"); err != nil {
-		return derp.ReportAndReturn(derp.Wrap(err, location, "Error saving stream"))
+		return derp.Wrap(err, location, "Error saving stream")
 	}
 
 	// Return the "on-success" response

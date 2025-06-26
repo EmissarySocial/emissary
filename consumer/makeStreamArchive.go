@@ -44,7 +44,7 @@ func MakeStreamArchive(factory *domain.Factory, _ *service.Stream, stream *model
 	streamArchiveService := factory.StreamArchive()
 
 	if err := streamArchiveService.Create(stream, streamArchiveOptions); err != nil {
-		return queue.Error(derp.ReportAndReturn(derp.Wrap(err, location, "Error creating archive")))
+		return queue.Error(derp.Wrap(err, location, "Error creating archive"))
 	}
 
 	// Done.

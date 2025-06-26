@@ -30,7 +30,7 @@ func GetIntent_Dislike(ctx *steranko.Context, factory *domain.Factory, user *mod
 	object, err := activityStream.Load(transaction.Object)
 
 	if err != nil {
-		return derp.ReportAndReturn(derp.Wrap(err, location, "Unable to load object", ctx.Request().URL.String(), ctx.Request().URL, transaction))
+		return derp.Wrap(err, location, "Unable to load object", ctx.Request().URL.String(), ctx.Request().URL, transaction)
 	}
 
 	// Buiild HTML response

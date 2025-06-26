@@ -72,14 +72,14 @@ func (service *ServerEmail) Add(filesystem fs.FS, definition []byte) error {
 	if toTemplate, err := email.To.Parse(temp.GetString("to")); err == nil {
 		email.To = toTemplate
 	} else {
-		return derp.ReportAndReturn(derp.Wrap(err, location, "Error parsing 'to' template", email.EmailID))
+		return derp.Wrap(err, location, "Error parsing 'to' template", email.EmailID)
 	}
 
 	// Read "subject" template
 	if subjectTemplate, err := email.Subject.Parse(temp.GetString("subject")); err == nil {
 		email.Subject = subjectTemplate
 	} else {
-		return derp.ReportAndReturn(derp.Wrap(err, location, "Error parsing 'subject' template", email.EmailID))
+		return derp.Wrap(err, location, "Error parsing 'subject' template", email.EmailID)
 	}
 
 	// Read "headers" templates
