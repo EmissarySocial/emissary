@@ -24,6 +24,7 @@ import (
 )
 
 // RangeFunc converts a data.Iterator into a Go 1.23 RangeFunc (https://go.dev/blog/range-functions)
+// Deprecated: This should be coded directly into each service.
 func RangeFunc[T any](it data.Iterator, new func() T) iter.Seq[T] {
 
 	return func(yield func(T) bool) {

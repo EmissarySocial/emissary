@@ -83,20 +83,22 @@ func (service *Follower) Range(criteria exp.Expression, options ...option.Option
 
 	return func(yield func(model.Follower) bool) {
 
+		// Retrieve the Followers from the database
 		followers, err := service.List(criteria, options...)
 
+		// Soft fail.  Report, but do not crash.
 		if err != nil {
 			derp.Report(derp.Wrap(err, "service.Follower.Range", "Error creating iterator", criteria))
 			return
 		}
 
 		defer followers.Close()
-		follower := model.NewFollower()
-		for followers.Next(&follower) {
+
+		// Yield each follower to the caller one-by-one
+		for follower := model.NewFollower(); followers.Next(&follower); follower = model.NewFollower() {
 			if !yield(follower) {
 				return
 			}
-			follower = model.NewFollower()
 		}
 	}
 }
