@@ -69,14 +69,14 @@ func (circle *Circle) IsMyself(userID primitive.ObjectID) bool {
 
 // RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.
 // It is part of the AccessLister interface
-func (circle *Circle) RolesToGroupIDs(roleIDs ...string) id.Slice {
-	return nil
+func (circle *Circle) RolesToGroupIDs(roleIDs ...string) Permissions {
+	return NewPermissions()
 }
 
 // RolesToPrivilegeIDs returns a slice of Privileges that grant access to any of the requested roles.
 // It is part of the AccessLister interface
-func (circle *Circle) RolesToPrivilegeIDs(roleIDs ...string) id.Slice {
-	return nil
+func (circle *Circle) RolesToPrivilegeIDs(roleIDs ...string) Permissions {
+	return NewPermissions()
 }
 
 /******************************************

@@ -398,9 +398,11 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 		// Populate Outbox Service
 		factory.outboxService.Refresh(
 			factory.collection(CollectionOutbox),
-			factory.Stream(),
 			factory.ActivityStream(),
 			factory.Follower(),
+			factory.Identity(),
+			factory.Rule(),
+			factory.Stream(),
 			factory.Template(),
 			factory.User(),
 			factory.Email(),

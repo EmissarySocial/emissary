@@ -13,7 +13,7 @@ type Context struct {
 	actor   *model.StreamActor
 }
 
-func (context Context) ActivityPubActor(withFollowers bool) (outbox.Actor, error) {
+func (context Context) ActivityPubActor() (outbox.Actor, error) {
 
-	return context.factory.Stream().ActivityPubActor(context.stream.StreamID, withFollowers)
+	return context.factory.Stream().ActivityPubActor(context.stream.StreamID)
 }

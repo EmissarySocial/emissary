@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/mediaserver"
@@ -90,14 +89,14 @@ func (attachment *Attachment) IsMyself(userID primitive.ObjectID) bool {
 
 // RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.
 // It is part of the AccessLister interface
-func (attachment Attachment) RolesToGroupIDs(roleIDs ...string) id.Slice {
-	return nil
+func (attachment Attachment) RolesToGroupIDs(roleIDs ...string) Permissions {
+	return NewPermissions()
 }
 
 // RolesToPrivilegeIDs returns a slice of Privileges (CircleIDs and ProductIDs) that
 // grant access to any of the requested roles. It is part of the AccessLister interface
-func (attachment Attachment) RolesToPrivilegeIDs(roleIDs ...string) id.Slice {
-	return nil
+func (attachment Attachment) RolesToPrivilegeIDs(roleIDs ...string) Permissions {
+	return NewPermissions()
 }
 
 /******************************************

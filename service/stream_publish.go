@@ -24,9 +24,6 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream, stateID s
 
 	wasPublished := stream.IsPublished()
 
-	// Determine ActitivyType FIRST, before we mess with the publish date
-	activityType := stream.PublishActivity()
-
 	// RULE: IF this stream is not yet published, then set the publish date
 	if (stream.PublishDate > time.Now().Unix()) || (stream.StateID != stateID) {
 		stream.PublishDate = time.Now().Unix()
@@ -58,6 +55,13 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream, stateID s
 			service.activityStream.NewDocument(object),
 		)
 
+		// If this has not been published yet, then `Create` activity. Otherwise, `Update`
+		activityType := iif(
+			wasPublished,
+			vocab.ActivityTypeUpdate,
+			vocab.ActivityTypeCreate,
+		)
+
 		// Create the Activity to send to Followers
 		activity := mapof.Any{
 			vocab.AtContext:         vocab.ContextTypeActivityStreams,
@@ -77,7 +81,7 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream, stateID s
 		}
 
 		// Publish to the User's outbox
-		if err := service.publish_user_outbox(user, activity); err != nil {
+		if err := service.publish_user_outbox(user, stream, activity); err != nil {
 			return derp.Wrap(err, location, "Error publishing to User's outbox")
 		}
 
@@ -85,11 +89,12 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream, stateID s
 		if err := service.publish_stream_outbox(stream, activity); err != nil {
 			return derp.Wrap(err, location, "Error publishing to parent Stream's outbox")
 		}
-
-		// Send stream:publish Webhooks
-		service.webhookService.Send(stream, model.WebhookEventStreamPublish)
 	}
 
+	// Send stream:publish Webhooks
+	service.webhookService.Send(stream, model.WebhookEventStreamPublish)
+
+	// Send syndication messages to all targets
 	switch {
 
 	// If the stream is being published for the first time, then only send "Create" activities
@@ -110,17 +115,22 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream, stateID s
 }
 
 // publish_user_outbox publishes this stream to the User's outbox
-func (service *Stream) publish_user_outbox(user *model.User, activity mapof.Any) error {
+func (service *Stream) publish_user_outbox(user *model.User, stream *model.Stream, activity mapof.Any) error {
 
 	const location = "service.Stream.publish_user_outbox"
 
-	// Do not take actions on an empty user
+	// RULE: Do not allow empty Users
+	if user == nil {
+		return derp.InternalError(location, "User cannot be nil")
+	}
+
+	// RULE: Do not allow "new" Users
 	if user.IsNew() {
 		return nil
 	}
 
 	// Load the Actor for this User
-	actor, err := service.userService.ActivityPubActor(user.UserID, true)
+	actor, err := service.userService.ActivityPubActor(user.UserID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error loading actor", user.UserID)
@@ -131,7 +141,7 @@ func (service *Stream) publish_user_outbox(user *model.User, activity mapof.Any)
 	objectType := activity.GetString(vocab.PropertyType)
 	log.Trace().Str("location", location).Str("objectId", objectID).Str("type", objectType).Msg("Publishing to User's outbox")
 
-	if err := service.outboxService.Publish(&actor, model.FollowerTypeUser, user.UserID, activity); err != nil {
+	if err := service.outboxService.Publish(&actor, model.FollowerTypeUser, user.UserID, activity, stream.DefaultAllow); err != nil {
 		return derp.Wrap(err, location, "Error publishing activity", activity)
 	}
 
@@ -162,7 +172,7 @@ func (service *Stream) publish_stream_outbox(stream *model.Stream, activity mapo
 	}
 
 	// Load the Actor for the parent Stream
-	actor, err := service.ActivityPubActor(stream.ParentID, true)
+	actor, err := service.ActivityPubActor(stream.ParentID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error loading parent actor")
@@ -178,7 +188,7 @@ func (service *Stream) publish_stream_outbox(stream *model.Stream, activity mapo
 
 	// Try to publish via sendNotifications
 	log.Trace().Str("id", stream.URL).Msg("Publishing to parent Stream's outbox")
-	if err := service.outboxService.Publish(&actor, model.FollowerTypeStream, stream.ParentID, boostActivity); err != nil {
+	if err := service.outboxService.Publish(&actor, model.FollowerTypeStream, stream.ParentID, boostActivity, stream.DefaultAllow); err != nil {
 		return derp.Wrap(err, location, "Error publishing activity", activity)
 	}
 
@@ -241,7 +251,7 @@ func (service *Stream) unpublish_user_outbox(userID primitive.ObjectID, url stri
 	const location = "service.Stream.unpublish_user_outbox"
 
 	// Load the Actor for this User
-	actor, err := service.userService.ActivityPubActor(userID, true)
+	actor, err := service.userService.ActivityPubActor(userID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error loading actor", userID)
@@ -280,7 +290,7 @@ func (service *Stream) unpublish_stream_outbox(stream *model.Stream) error {
 	}
 
 	// Load the Actor for the parent Stream
-	actor, err := service.ActivityPubActor(stream.ParentID, true)
+	actor, err := service.ActivityPubActor(stream.ParentID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error loading parent actor")

@@ -1087,7 +1087,7 @@ func (service *Stream) CalcContext(stream *model.Stream) {
 func (service *Stream) CalcPrivilegeIDs(stream *model.Stream) {
 	circles := flatten(stream.Circles)
 	privileges := flatten(stream.Products)
-	stream.PrivilegeIDs = append(circles, privileges...)
+	stream.PrivilegeIDs = model.Permissions(append(circles, privileges...))
 }
 
 func (service *Stream) CalculateTags(stream *model.Stream) {

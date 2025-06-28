@@ -18,8 +18,10 @@ import (
 type Outbox struct {
 	collection      data.Collection
 	activityService *ActivityStream
-	streamService   *Stream
 	followerService *Follower
+	identityService *Identity
+	ruleService     *Rule
+	streamService   *Stream
 	templateService *Template
 	userService     *User
 	domainEmail     *DomainEmail
@@ -39,11 +41,13 @@ func NewOutbox() Outbox {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Outbox) Refresh(collection data.Collection, streamService *Stream, activityService *ActivityStream, followerService *Follower, templateService *Template, userService *User, domainEmail *DomainEmail, queue *queue.Queue) {
+func (service *Outbox) Refresh(collection data.Collection, activityService *ActivityStream, followerService *Follower, identityService *Identity, ruleService *Rule, streamService *Stream, templateService *Template, userService *User, domainEmail *DomainEmail, queue *queue.Queue) {
 	service.collection = collection
-	service.streamService = streamService
 	service.activityService = activityService
 	service.followerService = followerService
+	service.identityService = identityService
+	service.ruleService = ruleService
+	service.streamService = streamService
 	service.templateService = templateService
 	service.userService = userService
 	service.domainEmail = domainEmail
@@ -115,7 +119,7 @@ func (service *Outbox) Save(outboxMessage *model.OutboxMessage, note string) err
 
 	// If this message has a valid URL, then try cache it into the activitystream service.
 	// nolint:errcheck
-	go service.activityService.Load(outboxMessage.URL)
+	go service.activityService.Load(outboxMessage.ObjectID)
 
 	return nil
 }
@@ -133,7 +137,7 @@ func (service *Outbox) Delete(outboxMessage *model.OutboxMessage, note string) e
 	}
 
 	// Delete the document from the cache
-	if err := service.activityService.Delete(outboxMessage.URL); err != nil {
+	if err := service.activityService.Delete(outboxMessage.ObjectID); err != nil {
 		return derp.Wrap(err, location, "Error deleting ActivityStream", outboxMessage, note)
 	}
 
@@ -203,36 +207,18 @@ func (service *Outbox) Schema() schema.Schema {
  * Custom Query Methods
  ******************************************/
 
-func (service *Outbox) LoadOrCreate(parentType string, parentID primitive.ObjectID, url string) (model.OutboxMessage, error) {
-
-	result := model.NewOutboxMessage()
-
-	err := service.LoadByURL(parentType, parentID, url, &result)
-
-	if err == nil {
-		return result, nil
-	}
-
-	if derp.IsNotFound(err) {
-		result.ParentID = parentID
-		result.URL = url
-		return result, nil
-	}
-
-	return result, derp.Wrap(err, "service.Outbox.LoadOrCreate", "Error loading Outbox", parentID, url)
-}
-
-func (service *Outbox) RangeByParentID(parentType string, parentID primitive.ObjectID) (iter.Seq[model.OutboxMessage], error) {
-	criteria := exp.Equal("parentType", parentType).
-		AndEqual("parentId", parentID)
+// RangeByParentID returns a Go 1.23 RangeFunc that iterates over the OutboxMessage records for a specific parent (actorType, actorID)
+func (service *Outbox) RangeByParentID(actorType string, actorID primitive.ObjectID) (iter.Seq[model.OutboxMessage], error) {
+	criteria := exp.Equal("actorType", actorType).
+		AndEqual("actorId", actorID)
 
 	return service.Range(criteria)
 }
 
-func (service *Outbox) QueryByParentAndDate(parentType string, parentID primitive.ObjectID, maxDate int64, maxRows int) ([]model.OutboxMessageSummary, error) {
+func (service *Outbox) QueryByParentAndDate(actorType string, actorID primitive.ObjectID, maxDate int64, maxRows int) ([]model.OutboxMessageSummary, error) {
 
-	criteria := exp.Equal("parentType", parentType).
-		AndEqual("parentId", parentID).
+	criteria := exp.Equal("actorType", actorType).
+		AndEqual("actorId", actorID).
 		And(exp.LessThan("createDate", maxDate))
 
 	options := []option.Option{
@@ -244,56 +230,36 @@ func (service *Outbox) QueryByParentAndDate(parentType string, parentID primitiv
 	result := make([]model.OutboxMessageSummary, 0, maxRows)
 
 	if err := service.collection.Query(&result, criteria, options...); err != nil {
-		return nil, derp.Wrap(err, "service.Outbox.QueryByUserAndDate", "Error querying outbox", parentID, maxDate)
+		return nil, derp.Wrap(err, "service.Outbox.QueryByUserAndDate", "Error querying outbox", actorID, maxDate)
 	}
 
 	return result, nil
 }
 
-func (service *Outbox) LoadByURL(parentType string, parentID primitive.ObjectID, url string, result *model.OutboxMessage) error {
+func (service *Outbox) LoadByURL(actorType string, actorID primitive.ObjectID, url string, result *model.OutboxMessage) error {
 
-	criteria := exp.Equal("parentType", parentType).
-		AndEqual("parentId", parentID).
+	criteria := exp.Equal("actorType", actorType).
+		AndEqual("actorId", actorID).
 		AndEqual("url", url)
 
 	return service.Load(criteria, result)
 }
 
-func (service *Outbox) DeleteByParentID(parentType string, parentID primitive.ObjectID) error {
+func (service *Outbox) DeleteByParentID(actorType string, actorID primitive.ObjectID) error {
 
 	const location = "service.Outbox.DeleteByParent"
 
 	// Get all messages in this Outbox
-	rangeFunc, err := service.RangeByParentID(parentType, parentID)
+	rangeFunc, err := service.RangeByParentID(actorType, actorID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error querying Outbox Messages", parentType, parentID)
+		return derp.Wrap(err, location, "Error querying Outbox Messages", actorType, actorID)
 	}
 
 	for message := range rangeFunc {
 		if err := service.Delete(&message, "Deleted"); err != nil {
 			derp.Report(derp.Wrap(err, location, "Error deleting Outbox Message", message))
 		}
-	}
-
-	return nil
-}
-
-func (service *Outbox) DeleteByURL(parentType string, parentID primitive.ObjectID, url string) error {
-
-	const location = "service.Outbox.DeleteByURL"
-
-	criteria := exp.Equal("parentType", parentType).
-		AndEqual("parentId", parentID).
-		AndEqual("url", url)
-
-	if err := service.collection.HardDelete(criteria); err != nil {
-		return derp.Wrap(err, location, "Error deleting Outbox Message", url)
-	}
-
-	// Delete the document from the cache
-	if err := service.activityService.Delete(url); err != nil {
-		return derp.Wrap(err, location, "Error deleting ActivityStream", url)
 	}
 
 	return nil

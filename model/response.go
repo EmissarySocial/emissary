@@ -3,7 +3,6 @@ package model
 import (
 	"time"
 
-	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/hannibal"
 	"github.com/benpate/hannibal/vocab"
@@ -140,14 +139,14 @@ func (response *Response) IsMyself(userID primitive.ObjectID) bool {
 
 // RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.
 // It is part of the AccessLister interface
-func (response *Response) RolesToGroupIDs(roleIDs ...string) id.Slice {
-	return nil
+func (response *Response) RolesToGroupIDs(roleIDs ...string) Permissions {
+	return NewPermissions()
 }
 
 // RolesToPrivilegeIDs returns a slice of Privileges that grant access to any of the requested roles.
 // It is part of the AccessLister interface
-func (response *Response) RolesToPrivilegeIDs(roleIDs ...string) id.Slice {
-	return nil
+func (response *Response) RolesToPrivilegeIDs(roleIDs ...string) Permissions {
+	return NewPermissions()
 }
 
 /******************************************

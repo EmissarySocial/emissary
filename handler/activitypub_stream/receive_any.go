@@ -65,7 +65,7 @@ func BoostAny(context Context, activity streams.Document) error {
 func announce(context Context, activity streams.Document) error {
 
 	// Try to load the Actor for this Stream
-	actor, err := context.ActivityPubActor(true)
+	actor, err := context.ActivityPubActor()
 
 	if err != nil {
 		return derp.Wrap(err, "handler.activityPub_HandleRequest_Follow", "Error loading actor", context.stream)
@@ -73,10 +73,10 @@ func announce(context Context, activity streams.Document) error {
 
 	// Convert the Activity into an Inbox Message
 	message := model.NewOutboxMessage()
-	message.ParentID = context.stream.StreamID
-	message.ParentType = model.FollowerTypeStream
+	message.ActorID = context.stream.StreamID
+	message.ActorType = model.FollowerTypeStream
 	message.ActivityType = activity.Type()
-	message.URL = activity.ID()
+	message.ObjectID = activity.ID()
 
 	// Try to save the message to the content Actor's outbox
 	outboxService := context.factory.Outbox()

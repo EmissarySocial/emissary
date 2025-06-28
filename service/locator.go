@@ -101,7 +101,7 @@ func (service *Locator) GetObjectFromURL(value string) (string, primitive.Object
 	return "", primitive.NilObjectID, derp.BadRequestError(location, "Invalid Object Type", objectType)
 }
 
-func (service *Locator) GetActor(actorType string, actorID string, withFollowers bool) (outbox.Actor, error) {
+func (service *Locator) GetActor(actorType string, actorID string) (outbox.Actor, error) {
 
 	switch actorType {
 
@@ -109,12 +109,12 @@ func (service *Locator) GetActor(actorType string, actorID string, withFollowers
 		return service.domainService.ActivityPubActor()
 
 	case "SearchDomain":
-		return service.searchDomainService.ActivityPubActor(withFollowers)
+		return service.searchDomainService.ActivityPubActor()
 
 	case "SearchQuery":
 
 		if searchQueryID, err := primitive.ObjectIDFromHex(actorID); err == nil {
-			return service.searchQueryService.ActivityPubActor(searchQueryID, withFollowers)
+			return service.searchQueryService.ActivityPubActor(searchQueryID)
 		} else {
 			return outbox.Actor{}, derp.Wrap(err, "service.Locator.GetActor", "Invalid SearchQueryID", actorID)
 		}
@@ -122,7 +122,7 @@ func (service *Locator) GetActor(actorType string, actorID string, withFollowers
 	case "Stream":
 
 		if streamID, err := primitive.ObjectIDFromHex(actorID); err == nil {
-			return service.streamService.ActivityPubActor(streamID, withFollowers)
+			return service.streamService.ActivityPubActor(streamID)
 		} else {
 			return outbox.Actor{}, derp.Wrap(err, "service.Locator.GetActor", "Invalid StreamID", actorID)
 		}
@@ -130,7 +130,7 @@ func (service *Locator) GetActor(actorType string, actorID string, withFollowers
 	case "User":
 
 		if userID, err := primitive.ObjectIDFromHex(actorID); err == nil {
-			return service.userService.ActivityPubActor(userID, withFollowers)
+			return service.userService.ActivityPubActor(userID)
 		} else {
 			return outbox.Actor{}, derp.Wrap(err, "service.Locator.GetActor", "Invalid UserID", actorID)
 		}

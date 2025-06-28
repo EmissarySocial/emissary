@@ -13,14 +13,14 @@ import (
 func (service *Rule) publish(rule model.Rule) error {
 
 	// Get an ActivityPub Actor for this User
-	actor, err := service.userService.ActivityPubActor(rule.UserID, true)
+	actor, err := service.userService.ActivityPubActor(rule.UserID)
 
 	if err != nil {
 		return derp.Wrap(err, "service.Rule.Save", "Error loading User", rule)
 	}
 
 	// Publish this Rule to the User's outbox
-	if err := service.outboxService.Publish(&actor, model.FollowerTypeUser, rule.UserID, service.JSONLD(rule)); err != nil {
+	if err := service.outboxService.Publish(&actor, model.FollowerTypeUser, rule.UserID, service.JSONLD(rule), model.NewAnonymousPermissions()); err != nil {
 		return derp.Wrap(err, "service.Rule.Save", "Error publishing Rule", rule)
 	}
 
@@ -31,7 +31,7 @@ func (service *Rule) publish(rule model.Rule) error {
 func (service *Rule) unpublish(rule model.Rule) error {
 
 	// Get an ActivityPub Actor for this User
-	actor, err := service.userService.ActivityPubActor(rule.UserID, true)
+	actor, err := service.userService.ActivityPubActor(rule.UserID)
 
 	if err != nil {
 		return derp.Wrap(err, "service.Rule.Save", "Error loading User", rule)
@@ -48,7 +48,7 @@ func (service *Rule) unpublish(rule model.Rule) error {
 func (service *Rule) republish(rule model.Rule) error {
 
 	// Get an ActivityPub Actor for this User
-	actor, err := service.userService.ActivityPubActor(rule.UserID, true)
+	actor, err := service.userService.ActivityPubActor(rule.UserID)
 
 	if err != nil {
 		return derp.Wrap(err, "service.Rule.Save", "Error loading User", rule)
@@ -60,7 +60,7 @@ func (service *Rule) republish(rule model.Rule) error {
 	}
 
 	// Publish the updated Rule to the User's outbox
-	if err := service.outboxService.Publish(&actor, model.FollowerTypeUser, rule.UserID, service.JSONLD(rule)); err != nil {
+	if err := service.outboxService.Publish(&actor, model.FollowerTypeUser, rule.UserID, service.JSONLD(rule), model.NewAnonymousPermissions()); err != nil {
 		return derp.Wrap(err, "service.Rule.Save", "Error publishing Rule", rule)
 	}
 

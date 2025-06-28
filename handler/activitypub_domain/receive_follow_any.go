@@ -45,7 +45,7 @@ func init() {
 		}
 
 		// Try to load the Actor for this user
-		actor, err := searchDomainService.ActivityPubActor(false)
+		actor, err := searchDomainService.ActivityPubActor()
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error loading domain search actor")

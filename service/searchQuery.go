@@ -289,7 +289,7 @@ func (service *SearchQuery) parseQueryValues(queryValues url.Values) (model.Sear
 
 // ActivityPubActor returns an ActivityPub Actor object ** WHICH INCLUDES ENCRYPTION KEYS **
 // for the provided Stream.
-func (service *SearchQuery) ActivityPubActor(searchQueryID primitive.ObjectID, withFollowers bool) (outbox.Actor, error) {
+func (service *SearchQuery) ActivityPubActor(searchQueryID primitive.ObjectID) (outbox.Actor, error) {
 
 	const location = "service.SearchQuery.ActivityPubActor"
 
@@ -301,27 +301,29 @@ func (service *SearchQuery) ActivityPubActor(searchQueryID primitive.ObjectID, w
 	}
 
 	// Return the ActivityPub Actor
-	actor := outbox.NewActor(service.ActivityPubURL(searchQueryID), privateKey, outbox.WithClient(service.activityStream)) // TODO: Restore Queue:: , outbox.WithQueue(service.queue))
-
-	// Populate the Actor's ActivityPub Followers, if requested
-	if withFollowers {
-
-		// Get a channel of all Followers
-		followers, err := service.followerService.ActivityPubFollowersChannel(model.FollowerTypeSearch, searchQueryID)
-
-		if err != nil {
-			return outbox.Actor{}, derp.Wrap(err, location, "Error retrieving followers")
-		}
-
-		// Get a filter to prevent sending to "Blocked" followers
-		ruleFilter := service.ruleService.Filter(primitive.NilObjectID, WithBlocksOnly())
-		followerIDs := ruleFilter.ChannelSend(followers)
-
-		// Add the channel of follower IDs to the Actor
-		actor.With(outbox.WithFollowers(followerIDs))
-	}
+	actor := outbox.NewActor(
+		service.ActivityPubURL(searchQueryID),
+		privateKey,
+		outbox.WithFollowers(service.rangeActivityPubFollowers(searchQueryID)),
+		outbox.WithClient(service.activityStream),
+		// TODO: Restore Queue:: , outbox.WithQueue(service.queue))
+	)
 
 	return actor, nil
+}
+
+func (service *SearchQuery) rangeActivityPubFollowers(searchQueryID primitive.ObjectID) iter.Seq[string] {
+
+	return func(yield func(string) bool) {
+
+		followers := service.followerService.RangeActivityPubByType(model.FollowerTypeSearch, searchQueryID)
+
+		for follower := range followers {
+			if !yield(follower.Actor.ProfileURL) {
+				return // Stop iterating if the yield function returns false
+			}
+		}
+	}
 }
 
 func (service *SearchQuery) ActivityPubUsername(searchQueryID primitive.ObjectID) string {

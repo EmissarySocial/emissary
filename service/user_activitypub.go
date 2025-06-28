@@ -1,6 +1,7 @@
 package service
 
 import (
+	"iter"
 	"net/url"
 	"strings"
 
@@ -69,7 +70,7 @@ func (service *User) ActivityPubPublicKeyURL(userID primitive.ObjectID) string {
 
 // ActivityPubActor returns an ActivityPub Actor object ** WHICH INCLUDES ENCRYPTION KEYS **
 // for the provided User.
-func (service *User) ActivityPubActor(userID primitive.ObjectID, withFollowers bool) (outbox.Actor, error) {
+func (service *User) ActivityPubActor(userID primitive.ObjectID) (outbox.Actor, error) {
 
 	const location = "service.Stream.ActivityPubActor"
 
@@ -87,25 +88,29 @@ func (service *User) ActivityPubActor(userID primitive.ObjectID, withFollowers b
 	}
 
 	// Return the ActivityPub Actor
-	actor := outbox.NewActor(service.ActivityPubURL(userID), privateKey, outbox.WithClient(service.activityStream)) // TODO: Restore Queue:: , outbox.WithQueue(service.queue))
-
-	// Populate the Actor's ActivityPub Followers, if requested
-	if withFollowers {
-
-		// Get a channel of all Followers
-		followers, err := service.followerService.ActivityPubFollowersChannel(model.FollowerTypeUser, userID)
-
-		if err != nil {
-			return outbox.Actor{}, derp.Wrap(err, location, "Error retrieving followers")
-		}
-
-		// Get a filter to prevent sending to "Blocked" followers
-		ruleFilter := service.ruleService.Filter(userID, WithBlocksOnly())
-		followerIDs := ruleFilter.ChannelSend(followers)
-
-		// Add the channel of follower IDs to the Actor
-		actor.With(outbox.WithFollowers(followerIDs))
-	}
+	actor := outbox.NewActor(
+		service.ActivityPubURL(userID),
+		privateKey,
+		outbox.WithFollowers(service.rangeActivityPubFollowers(userID)),
+		outbox.WithClient(service.activityStream),
+		// TODO: Restore Queue:: , outbox.WithQueue(service.queue))
+	)
 
 	return actor, nil
+}
+
+// ActivityPubActor returns an ActivityPub Actor object ** WHICH INCLUDES ENCRYPTION KEYS **
+// for the provided User.
+func (service *User) rangeActivityPubFollowers(userID primitive.ObjectID) iter.Seq[string] {
+
+	return func(yield func(string) bool) {
+
+		followers := service.followerService.RangeActivityPubByType(model.FollowerTypeUser, userID)
+
+		for follower := range followers {
+			if !yield(follower.Actor.ProfileURL) {
+				return
+			}
+		}
+	}
 }

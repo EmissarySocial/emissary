@@ -1,6 +1,7 @@
 package service
 
 import (
+	"iter"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -142,7 +143,7 @@ func (service *Stream) ActivityPubURL(streamID primitive.ObjectID) string {
 
 // ActivityPubActor returns an ActivityPub Actor object ** WHICH INCLUDES ENCRYPTION KEYS **
 // for the provided Stream.
-func (service *Stream) ActivityPubActor(streamID primitive.ObjectID, withFollowers bool) (outbox.Actor, error) {
+func (service *Stream) ActivityPubActor(streamID primitive.ObjectID) (outbox.Actor, error) {
 
 	const location = "service.Stream.ActivityPubActor"
 
@@ -160,27 +161,32 @@ func (service *Stream) ActivityPubActor(streamID primitive.ObjectID, withFollowe
 	}
 
 	// Return the ActivityPub Actor
-	actor := outbox.NewActor(service.ActivityPubURL(streamID), privateKey, outbox.WithClient(service.activityStream)) // TODO: Restore Queue:: , outbox.WithQueue(service.queue))
-
-	// Populate the Actor's ActivityPub Followers, if requested
-	if withFollowers {
-
-		// Get a channel of all Followers
-		followers, err := service.followerService.ActivityPubFollowersChannel(model.FollowerTypeStream, streamID)
-
-		if err != nil {
-			return outbox.Actor{}, derp.Wrap(err, location, "Error retrieving followers")
-		}
-
-		// Get a filter to prevent sending to "Blocked" followers
-		ruleFilter := service.ruleService.Filter(primitive.NilObjectID, WithBlocksOnly())
-		followerIDs := ruleFilter.ChannelSend(followers)
-
-		// Add the channel of follower IDs to the Actor
-		actor.With(outbox.WithFollowers(followerIDs))
-	}
+	actor := outbox.NewActor(
+		service.ActivityPubURL(streamID),
+		privateKey,
+		outbox.WithFollowers(service.RangeActivityPubFollowers(streamID)),
+		outbox.WithClient(service.activityStream),
+		// TODO: Restore Queue:: , outbox.WithQueue(service.queue))
+	)
 
 	return actor, nil
+}
+
+// ActivityPubActor returns an ActivityPub Actor object ** WHICH INCLUDES ENCRYPTION KEYS **
+// for the provided User.
+func (service *Stream) RangeActivityPubFollowers(streamID primitive.ObjectID) iter.Seq[string] {
+
+	return func(yield func(string) bool) {
+
+		// Retrieve all Followers for this Stream
+		followers := service.followerService.RangeActivityPubByType(model.FollowerTypeStream, streamID)
+
+		for follower := range followers {
+			if !yield(follower.Actor.ProfileURL) {
+				return // Stop iterating if the yield function returns false
+			}
+		}
+	}
 }
 
 func (service *Stream) activityStreamSchema() schema.Schema {

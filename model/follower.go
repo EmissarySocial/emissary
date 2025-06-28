@@ -1,7 +1,6 @@
 package model
 
 import (
-	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
@@ -66,14 +65,14 @@ func (follower *Follower) IsMyself(userID primitive.ObjectID) bool {
 
 // RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.
 // It is part of the AccessLister interface
-func (follower *Follower) RolesToGroupIDs(roleIDs ...string) id.Slice {
-	return nil
+func (follower *Follower) RolesToGroupIDs(roleIDs ...string) Permissions {
+	return NewPermissions()
 }
 
 // RolesToPrivilegeIDs returns a slice of Privileges that grant access to any of the requested roles.
 // It is part of the AccessLister interface
-func (follower *Follower) RolesToPrivilegeIDs(roleIDs ...string) id.Slice {
-	return nil
+func (follower *Follower) RolesToPrivilegeIDs(roleIDs ...string) Permissions {
+	return NewPermissions()
 }
 
 /******************************************

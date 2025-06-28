@@ -67,7 +67,7 @@ func GetResponseCollection(serverFactory *server.Factory, responseType string) e
 		// Return a JSON-LD document
 		ctx.Response().Header().Set("Content-Type", model.MimeTypeActivityPub)
 
-		result := activitypub.CollectionPage[model.Response](
+		result := activitypub.CollectionPage(
 			pageID,
 			baseRequestURL,
 			pageSize,

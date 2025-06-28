@@ -4,7 +4,6 @@ import (
 	"math"
 	"time"
 
-	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/toot/object"
@@ -82,14 +81,14 @@ func (message *Message) IsMyself(userID primitive.ObjectID) bool {
 
 // RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.
 // It is part of the AccessLister interface
-func (message *Message) RolesToGroupIDs(roleIDs ...string) id.Slice {
-	return nil
+func (message *Message) RolesToGroupIDs(roleIDs ...string) Permissions {
+	return NewPermissions()
 }
 
 // RolesToPrivilegeIDsductIDs returns a slice of Product IDs that grant access to any of the requested roles.
 // It is part of the AccessLister interface
-func (message *Message) RolesToPrivilegeIDs(roleIDs ...string) id.Slice {
-	return nil
+func (message *Message) RolesToPrivilegeIDs(roleIDs ...string) Permissions {
+	return NewPermissions()
 }
 
 /******************************************

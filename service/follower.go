@@ -79,15 +79,26 @@ func (service *Follower) List(criteria exp.Expression, options ...option.Option)
 }
 
 // Range returns a Go 1.23 RangeFunc that iterates over the Follower records that match the provided criteria
-func (service *Follower) Range(criteria exp.Expression, options ...option.Option) (iter.Seq[model.Follower], error) {
+func (service *Follower) Range(criteria exp.Expression, options ...option.Option) iter.Seq[model.Follower] {
 
-	iter, err := service.List(criteria, options...)
+	return func(yield func(model.Follower) bool) {
 
-	if err != nil {
-		return nil, derp.Wrap(err, "service.Follower.Range", "Error creating iterator", criteria)
+		followers, err := service.List(criteria, options...)
+
+		if err != nil {
+			derp.Report(derp.Wrap(err, "service.Follower.Range", "Error creating iterator", criteria))
+			return
+		}
+
+		defer followers.Close()
+		follower := model.NewFollower()
+		for followers.Next(&follower) {
+			if !yield(follower) {
+				return
+			}
+			follower = model.NewFollower()
+		}
 	}
-
-	return RangeFunc(iter, model.NewFollower), nil
 }
 
 // Channel returns a channel containing all of the Followers who match the provided criteria
@@ -307,15 +318,24 @@ func (service *Follower) QueryByParent(parentType string, parentID primitive.Obj
 }
 
 // RangeByUserID returns an iterator containing all of the Followers of a specific User
-func (service *Follower) RangeByUserID(userID primitive.ObjectID) (iter.Seq[model.Follower], error) {
+func (service *Follower) RangeByUserID(userID primitive.ObjectID) iter.Seq[model.Follower] {
 	return service.Range(
 		exp.Equal("parentId", userID).
 			AndEqual("type", model.FollowerTypeUser),
 	)
 }
 
+// RangeActivityPubByUserID returns an iterator containing all of the Followers of a specific User
+func (service *Follower) RangeActivityPubByType(followerType string, userID primitive.ObjectID) iter.Seq[model.Follower] {
+	return service.Range(
+		exp.Equal("parentId", userID).
+			AndEqual("type", followerType).
+			AndEqual("method", model.FollowerMethodActivityPub),
+	)
+}
+
 // RangeBySearch returns an iterator containing all of the Followers of a specific SearchQuery
-func (service *Follower) RangeBySearch(searchQueryID primitive.ObjectID) (iter.Seq[model.Follower], error) {
+func (service *Follower) RangeBySearch(searchQueryID primitive.ObjectID) iter.Seq[model.Follower] {
 	return service.Range(
 		exp.Equal("parentId", searchQueryID).
 			AndEqual("type", model.FollowerTypeSearch),
@@ -323,7 +343,7 @@ func (service *Follower) RangeBySearch(searchQueryID primitive.ObjectID) (iter.S
 }
 
 // RangeBySearch returns an iterator containing all of the Followers of a specific SearchQuery
-func (service *Follower) RangeByGlobalSearch() (iter.Seq[model.Follower], error) {
+func (service *Follower) RangeByGlobalSearch() iter.Seq[model.Follower] {
 
 	// Special case for Domain search queries.
 	return service.Range(
@@ -337,13 +357,7 @@ func (service *Follower) DeleteByUserID(userID primitive.ObjectID, comment strin
 
 	const location = "service.Follower.DeleteByUserID"
 
-	rangeFunc, err := service.RangeByUserID(userID)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Error creating range function", userID)
-	}
-
-	for follower := range rangeFunc {
+	for follower := range service.RangeByUserID(userID) {
 
 		if err := service.Delete(&follower, comment); err != nil {
 			return derp.Wrap(err, location, "Error deleting follower", follower)
@@ -353,14 +367,12 @@ func (service *Follower) DeleteByUserID(userID primitive.ObjectID, comment strin
 	return nil
 }
 
-// ActivityPubFollowersChannel returns a channel containing all of the Followers of specific parentID
-// who use ActivityPub for updates
-func (service *Follower) ActivityPubFollowersChannel(parentType string, parentID primitive.ObjectID) (<-chan model.Follower, error) {
+// RangeFollowers returns a rangeFunc containing all of the Followers of specific parentID
+func (service *Follower) RangeFollowers(parentType string, parentID primitive.ObjectID) iter.Seq[model.Follower] {
 
-	return service.Channel(
+	return service.Range(
 		exp.Equal("parentId", parentID).
-			AndEqual("type", parentType).
-			AndEqual("method", model.FollowerMethodActivityPub),
+			AndEqual("type", parentType),
 	)
 }
 
@@ -377,17 +389,6 @@ func (service *Follower) QueryByParentAndDate(parentType string, parentID primit
 /******************************************
  * WebSub Queries
  ******************************************/
-
-// WebSubFollowersChannel returns a channel containing all of the Followers of specific parentID
-// who use WebSub for updates
-func (service *Follower) WebSubFollowersChannel(parentType string, parentID primitive.ObjectID) (<-chan model.Follower, error) {
-
-	return service.Channel(
-		exp.Equal("parentId", parentID).
-			AndEqual("type", parentType).
-			AndEqual("method", model.FollowerMethodWebSub),
-	)
-}
 
 // LoadByWebSub retrieves a follower based on the parentID and callback
 func (service *Follower) LoadByWebSub(objectType string, parentID primitive.ObjectID, callback string, result *model.Follower) error {
@@ -556,16 +557,6 @@ func (service *Follower) AsJSONLD(follower *model.Follower) mapof.Any {
 /******************************************
  * Email Queries
  ******************************************/
-
-func (service *Follower) EmailFollowersChannel(parentType string, parentID primitive.ObjectID) (<-chan model.Follower, error) {
-
-	return service.Channel(
-		exp.Equal("parentId", parentID).
-			AndEqual("type", parentType).
-			AndEqual("method", model.FollowerMethodEmail).
-			AndEqual("stateId", model.FollowerStateActive),
-	)
-}
 
 func (service *Follower) LoadPendingEmailFollower(followerID primitive.ObjectID, secret string, follower *model.Follower) error {
 

@@ -10,7 +10,6 @@ type Context struct {
 	factory *domain.Factory
 }
 
-func (context Context) ActivityPubActor(withFollowers bool) (outbox.Actor, error) {
-	searchDomainService := context.factory.SearchDomain()
-	return searchDomainService.ActivityPubActor(withFollowers)
+func (context Context) ActivityPubActor() (outbox.Actor, error) {
+	return context.factory.SearchDomain().ActivityPubActor()
 }

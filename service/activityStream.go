@@ -333,7 +333,7 @@ func (service *ActivityStream) SendMessage(args mapof.Any) error {
 	inboxURL := args.GetString("inboxURL")
 
 	// Find ActivityPub Actor
-	actor, err := service.locatorService.GetActor(args.GetString("actorType"), args.GetString("actorID"), false)
+	actor, err := service.locatorService.GetActor(args.GetString("actorType"), args.GetString("actorID"))
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error finding ActivityPub Actor")

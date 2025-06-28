@@ -170,7 +170,7 @@ func (service *Permission) hasPrivilege(authorization *model.Authorization, acce
 	// Find the products that are associated with the provided roles
 	requiredPrivileges := accessLister.RolesToPrivilegeIDs(requiredRoles...)
 
-	if requiredPrivileges.IsEmpty() {
+	if requiredPrivileges.IsZero() {
 		return false, nil // No privileges associated with this role
 	}
 

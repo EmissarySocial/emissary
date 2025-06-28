@@ -38,6 +38,46 @@ func RangeFunc[T any](it data.Iterator, new func() T) iter.Seq[T] {
 	}
 }
 
+func joinSlices[T any](slices ...[]T) []T {
+
+	totalSize := 0
+	for _, slice := range slices {
+		totalSize += len(slice)
+	}
+
+	result := make([]T, 0, totalSize)
+
+	for _, slice := range slices {
+		result = append(result, slice...)
+	}
+
+	return result
+}
+
+func joinIterators[T any](iterators ...iter.Seq[T]) iter.Seq[T] {
+
+	return func(yield func(T) bool) {
+		for _, iterator := range iterators {
+			for value := range iterator {
+				if !yield(value) {
+					return
+				}
+			}
+		}
+	}
+}
+
+func iterateFollowerAddresses(followers iter.Seq[model.Follower]) iter.Seq[string] {
+
+	return func(yield func(string) bool) {
+		for follower := range followers {
+			if !yield(follower.Actor.ProfileURL) {
+				return
+			}
+		}
+	}
+}
+
 func TextIndex(value string) sliceof.String {
 
 	// RULE: Exit early on empty strings (why would you do this? Who hurt you?)

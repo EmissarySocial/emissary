@@ -44,7 +44,7 @@ func init() {
 		}
 
 		// Try to load the Actor for this user
-		actor, err := searchQueryService.ActivityPubActor(context.searchQuery.SearchQueryID, false)
+		actor, err := searchQueryService.ActivityPubActor(context.searchQuery.SearchQueryID)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error loading actor", context.searchQuery)

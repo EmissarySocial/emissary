@@ -284,14 +284,14 @@ func (service *Response) SetResponse(user *model.User, url string, responseType 
 	}
 
 	// Get an ActivityPub actor for the User
-	actor, err := service.userService.ActivityPubActor(user.UserID, true)
+	actor, err := service.userService.ActivityPubActor(user.UserID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error loading ActivityPub Actor", user.UserID)
 	}
 
 	// Publish the new Response to the Outbox, sending "Like" notifications to all followers.
-	if err := service.outboxService.Publish(&actor, model.FollowerTypeUser, user.UserID, response.GetJSONLD()); err != nil {
+	if err := service.outboxService.Publish(&actor, model.FollowerTypeUser, user.UserID, response.GetJSONLD(), model.NewAnonymousPermissions()); err != nil {
 		derp.Report(derp.Wrap(err, location, "Error publishing Response", response))
 	}
 
@@ -323,7 +323,7 @@ func (service *Response) UnsetResponse(user *model.User, url string, responseTyp
 	}
 
 	// Get an ActivityPub actor for the User
-	actor, err := service.userService.ActivityPubActor(user.UserID, true)
+	actor, err := service.userService.ActivityPubActor(user.UserID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error loading ActivityPub Actor", user.UserID)

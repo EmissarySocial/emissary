@@ -48,7 +48,7 @@ func init() {
 		}
 
 		// Try to load the Actor for this user
-		actor, err := userService.ActivityPubActor(context.user.UserID, false)
+		actor, err := userService.ActivityPubActor(context.user.UserID)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error loading actor", context.user)

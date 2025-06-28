@@ -407,14 +407,35 @@ func (service *Identity) SendGuestCode(identity *model.Identity, identifierType 
 	return nil
 }
 
+// HasPermissions returns TRUE if the provided identifier has any of the required permissions
+func (service *Identity) HasPermissions(identifierType string, identifierValue string, permissions model.Permissions) bool {
+
+	// RULE: If permissions include "anonymous" then anyone can view this item.
+	if permissions.IsAnonymous() {
+		return true
+	}
+
+	// Otherwise, look for the Identity and check it's Privileges
+	identity := model.NewIdentity()
+	if err := service.LoadByIdentifierAndType(identifierType, identifierValue, &identity); err != nil {
+		return false
+	}
+
+	// Celebrate good times, come on!
+	return identity.PrivilegeIDs.ContainsAny(permissions...)
+}
+
 // makeGuestCode creates a new JWT token for the Guest to authenticate
 func (service *Identity) makeGuestCode(identity *model.Identity, identifierType string, identifier string) (string, error) {
 
+	// Expires in 1 hour
+	expirationDate := time.Now().Add(time.Hour).Unix()
+
 	// Claims for the Identifier, expiring in 1 hour
 	claims := jwt.MapClaims{
-		"exp": time.Now().Add(time.Hour).Unix(), // expiration
-		"T":   identifierType,                   // Identifier Type
-		"A":   identifier,                       // Identifier (Address)
+		"exp": expirationDate, // expiration
+		"T":   identifierType, // Identifier Type
+		"A":   identifier,     // Identifier (Address)
 	}
 
 	// If we have an Identity, then include this in the claims.
@@ -469,8 +490,6 @@ func (service *Identity) ParseIdentifier(identifier string) (string, string) {
 		// Look up the identifier using WebFinger
 		webfinger, err := digit.Lookup(identifier)
 
-		spew.Dump(webfinger, err)
-
 		if err != nil {
 			return "", ""
 		}
@@ -494,11 +513,12 @@ func (service *Identity) ParseIdentifier(identifier string) (string, string) {
 	}
 
 	// Assume Email Address
-	if _, err := mail.ParseAddress(identifier); err != nil {
-		return "", ""
+	if _, err := mail.ParseAddress(identifier); err == nil {
+		return model.IdentifierTypeEmail, identifier
 	}
 
-	return model.IdentifierTypeEmail, identifier
+	// Unknown identifier type
+	return "", ""
 }
 
 func (service *Identity) hostname() string {

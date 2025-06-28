@@ -1,7 +1,6 @@
 package model
 
 import (
-	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/toot/object"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -79,14 +78,14 @@ func (rule *Rule) IsMyself(userID primitive.ObjectID) bool {
 
 // RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.
 // It is part of the AccessLister interface
-func (rule *Rule) RolesToGroupIDs(roleIDs ...string) id.Slice {
-	return id.NewSlice()
+func (rule *Rule) RolesToGroupIDs(roleIDs ...string) Permissions {
+	return NewPermissions()
 }
 
 // RolesToPrivilegeIDs returns a slice of Privileges that grant access to any of the requested roles
 // It is part of the AccessLister interface
-func (rule *Rule) RolesToPrivilegeIDs(roleIDs ...string) id.Slice {
-	return nil
+func (rule *Rule) RolesToPrivilegeIDs(roleIDs ...string) Permissions {
+	return NewPermissions()
 }
 
 /******************************************

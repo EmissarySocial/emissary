@@ -1,6 +1,8 @@
 package service
 
 import (
+	"iter"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
@@ -55,7 +57,7 @@ func (service *SearchDomain) Close() {
 
 // ActivityPubActor returns an ActivityPub Actor object ** WHICH INCLUDES ENCRYPTION KEYS **
 // for the provided Stream.
-func (service *SearchDomain) ActivityPubActor(withFollowers bool) (outbox.Actor, error) {
+func (service *SearchDomain) ActivityPubActor() (outbox.Actor, error) {
 
 	const location = "service.SearchDomain.ActivityPubActor"
 
@@ -67,27 +69,29 @@ func (service *SearchDomain) ActivityPubActor(withFollowers bool) (outbox.Actor,
 	}
 
 	// Return the ActivityPub Actor
-	actor := outbox.NewActor(service.ActivityPubURL(), privateKey, outbox.WithClient(service.activityStream))
-
-	// Populate the Actor's ActivityPub Followers, if requested
-	if withFollowers {
-
-		// Get a channel of all Followers
-		followers, err := service.followerService.ActivityPubFollowersChannel(model.FollowerTypeSearchDomain, primitive.NilObjectID)
-
-		if err != nil {
-			return outbox.Actor{}, derp.Wrap(err, location, "Error retrieving followers")
-		}
-
-		// Get a filter to prevent sending to "Blocked" followers
-		ruleFilter := service.ruleService.Filter(primitive.NilObjectID, WithBlocksOnly())
-		followerIDs := ruleFilter.ChannelSend(followers)
-
-		// Add the channel of follower IDs to the Actor
-		actor.With(outbox.WithFollowers(followerIDs))
-	}
+	actor := outbox.NewActor(
+		service.ActivityPubURL(),
+		privateKey,
+		outbox.WithFollowers(service.rangeActivityPubFollowers()),
+		outbox.WithClient(service.activityStream),
+	)
 
 	return actor, nil
+}
+
+func (service *SearchDomain) rangeActivityPubFollowers() iter.Seq[string] {
+
+	return func(yield func(string) bool) {
+
+		// Get a channel of all Followers
+		followers := service.followerService.RangeActivityPubByType(model.FollowerTypeSearchDomain, primitive.NilObjectID)
+
+		for follower := range followers {
+			if !yield(follower.Actor.ProfileURL) {
+				return // Stop iterating if the yield function returns false
+			}
+		}
+	}
 }
 
 func (service *SearchDomain) ActivityPubUsername() string {
@@ -146,4 +150,13 @@ func (service *SearchDomain) WebFinger() digit.Resource {
 
 func (service *SearchDomain) Hostname() string {
 	return domain.NameOnly(service.host)
+}
+
+/******************************************
+ * Custom Queries
+ ******************************************/
+
+func (service *SearchDomain) RangeActivityPubFollowers() iter.Seq[string] {
+	followers := service.followerService.RangeActivityPubByType(model.FollowerTypeSearchDomain, primitive.NilObjectID)
+	return iterateFollowerAddresses(followers)
 }

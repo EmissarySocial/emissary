@@ -9,25 +9,34 @@ func OutboxMessageSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
 			"outboxMessageId": schema.String{Format: "objectId", Required: true},
-			"parentType":      schema.String{Required: true, Enum: []string{FollowerTypeStream, FollowerTypeUser}},
-			"parentId":        schema.String{Format: "object", Required: true},
+			"actorId":         schema.String{Format: "object", Required: true},
+			"actorType":       schema.String{Required: true, Enum: []string{FollowerTypeStream, FollowerTypeUser}},
 			"activityType":    schema.String{Format: "string", Required: true},
-			"url":             schema.String{Format: "url", Required: true},
+			"objectId":        schema.String{Format: "url", Required: true},
+			"publishedDate":   schema.Integer{Required: true},
+			"permissions":     schema.Array{Items: schema.String{Format: "permission"}, Required: true},
 		},
 	}
 }
 
 func (message *OutboxMessage) GetPointer(name string) (any, bool) {
+
 	switch name {
 
-	case "parentType":
-		return &message.ParentType, true
+	case "actorType":
+		return &message.ActorType, true
 
 	case "activityType":
 		return &message.ActivityType, true
 
-	case "url":
-		return &message.URL, true
+	case "objectId":
+		return &message.ObjectID, true
+
+	case "publishedDate":
+		return &message.PublishedDate, true
+
+	case "permissions":
+		return &message.Permissions, true
 	}
 
 	return nil, false
@@ -40,8 +49,8 @@ func (message *OutboxMessage) GetStringOK(name string) (string, bool) {
 	case "outboxMessageId":
 		return message.OutboxMessageID.Hex(), true
 
-	case "parentId":
-		return message.ParentID.Hex(), true
+	case "actorId":
+		return message.ActorID.Hex(), true
 	}
 
 	return "", false
@@ -57,9 +66,9 @@ func (message *OutboxMessage) SetString(name string, value string) bool {
 			return true
 		}
 
-	case "parentId":
-		if objectId, err := primitive.ObjectIDFromHex(value); err == nil {
-			message.ParentID = objectId
+	case "actorId":
+		if actorID, err := primitive.ObjectIDFromHex(value); err == nil {
+			message.ActorID = actorID
 			return true
 		}
 	}

@@ -1,7 +1,6 @@
 package model
 
 import (
-	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/form"
 	"github.com/benpate/toot/object"
@@ -73,14 +72,14 @@ func (folder *Folder) IsMyself(userID primitive.ObjectID) bool {
 
 // RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.
 // It is part of the AccessLister interface
-func (folder *Folder) RolesToGroupIDs(roleIDs ...string) id.Slice {
-	return nil
+func (folder *Folder) RolesToGroupIDs(roleIDs ...string) Permissions {
+	return NewPermissions()
 }
 
 // RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.
 // It is part of the AccessLister interface
-func (folder *Folder) RolesToPrivilegeIDs(roleIDs ...string) id.Slice {
-	return nil
+func (folder *Folder) RolesToPrivilegeIDs(roleIDs ...string) Permissions {
+	return NewPermissions()
 }
 
 /******************************************

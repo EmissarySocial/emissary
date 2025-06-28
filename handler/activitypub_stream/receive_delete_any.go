@@ -38,7 +38,7 @@ func DeleteAny(context Context, activity streams.Document) error {
 	}
 
 	// Try to load the Actor for this user
-	actor, err := context.ActivityPubActor(true)
+	actor, err := context.ActivityPubActor()
 
 	if err != nil {
 		return derp.Wrap(err, "handler.activityPub_HandleRequest_Follow", "Error loading actor", context.stream)

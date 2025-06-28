@@ -192,7 +192,7 @@ func (service *DomainEmail) SendFollowerConfirmation(actor model.PersonLink, fol
 	return nil
 }
 
-func (service *DomainEmail) SendFollowerActivity(follower model.Follower, activity mapof.Any) error {
+func (service *DomainEmail) SendFollowerActivity(follower *model.Follower, activity mapof.Any) error {
 
 	domain := service.domainService.Get()
 

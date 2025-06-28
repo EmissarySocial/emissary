@@ -2,19 +2,19 @@ package model
 
 import (
 	"github.com/benpate/data/journal"
-	"github.com/benpate/hannibal/vocab"
-	"github.com/benpate/rosetta/mapof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // OutboxMessage represents a single item in a User's inbox or outbox.  It is loosely modelled on the OutboxMessageStreams
 // standard, and can be converted into a strict go-fed streams.Type object.
 type OutboxMessage struct {
-	OutboxMessageID primitive.ObjectID `json:"messageId"  bson:"_id"`        // Unique ID of the OutboxMessage
-	ParentType      string             `json:"parentType" bson:"parentType"` // Type of the parent object (User or Stream)
-	ParentID        primitive.ObjectID `json:"parentId"   bson:"parentId"`   // Unique ID of the User who owns this OutboxMessage (in their inbox or outbox)
-	ActivityType    string             `json:"type"       bson:"type"`       // Type of the activity (Create, Follow, Like, Block, etc.)
-	URL             string             `json:"url"        bson:"url"`        // URL of the object (if applicable)
+	OutboxMessageID primitive.ObjectID `json:"messageId"     bson:"_id"`           // Unique ID of the OutboxMessage
+	ActorID         primitive.ObjectID `json:"actorId"       bson:"actorId"`       // Unique ID of the User who owns this OutboxMessage (in their inbox or outbox)
+	ActorType       string             `json:"actorType"     bson:"actorType"`     // Type of the parent object (User or Stream)
+	ActivityType    string             `json:"activityType"  bson:"activityType"`  // Type of the activity (Create, Follow, Like, Block, etc.)
+	ObjectID        string             `json:"objectId"      bson:"objectId"`      // URL of the object (if applicable)
+	PublishedDate   int64              `json:"publishedDate" bson:"publishedDate"` // Date when this OutboxMessage was published
+	Permissions     Permissions        `json:"permissions"   bson:"permissions"`   // List of permissions for this OutboxMessage
 
 	journal.Journal `json:"-" bson:",inline"`
 }
@@ -37,12 +37,6 @@ func (summary OutboxMessage) Fields() []string {
 /******************************************
  * JSONLDGetter Interface
  ******************************************/
-
-func (message OutboxMessage) GetJSONLD() mapof.Any {
-	return mapof.Any{
-		vocab.PropertyID: message.URL,
-	}
-}
 
 func (message OutboxMessage) Created() int64 {
 	return message.Journal.CreateDate

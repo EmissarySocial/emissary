@@ -40,7 +40,7 @@ func init() {
 		}
 
 		// Send an "Accept" message to the Requester
-		actor, err := context.ActivityPubActor(false)
+		actor, err := context.ActivityPubActor()
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error loading actor", context.stream)

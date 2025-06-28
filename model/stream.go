@@ -33,8 +33,8 @@ type Stream struct {
 	Groups           mapof.Object[id.Slice]  `bson:"groups,omitempty"`       // Groups maps roles into GroupIDs for this Stream.  This is used to determine access rights for the Stream.
 	Circles          mapof.Object[id.Slice]  `bson:"circles,omitempty"`      // Circles maps roles into CircleIDs for this Stream.  This is used to determine access rights for the Stream.
 	Products         mapof.Object[id.Slice]  `bson:"products,omitempty"`     // Products maps roles into ProductIDs for this Stream.  This is used to determine access rights for the Stream.
-	PrivilegeIDs     id.Slice                `bson:"privilegeIds,omitempty"` // List of ALL Privilege IDs that grant ANY permissions to this Stream (denormalized from the Products and Circles maps)
-	DefaultAllow     id.Slice                `bson:"defaultAllow,omitempty"` // List of Groups that are allowed to perform the 'default' (view) action.  This is used to query general access to the Stream from the database, before performing server-based authentication.
+	PrivilegeIDs     Permissions             `bson:"privilegeIds,omitempty"` // List of ALL Privilege IDs that grant ANY permissions to this Stream (denormalized from the Products and Circles maps)
+	DefaultAllow     Permissions             `bson:"defaultAllow,omitempty"` // List of Groups that are allowed to perform the 'default' (view) action.  This is used to query general access to the Stream from the database, before performing server-based authentication.
 	URL              string                  `bson:"url,omitempty"`          // URL of the original document
 	Token            string                  `bson:"token,omitempty"`        // Unique value that identifies this element in the URL
 	Label            string                  `bson:"label,omitempty"`        // Label/Title of the document
@@ -78,7 +78,8 @@ func NewStream() Stream {
 		Groups:        mapof.NewObject[id.Slice](),
 		Circles:       mapof.NewObject[id.Slice](),
 		Products:      mapof.NewObject[id.Slice](),
-		DefaultAllow:  id.NewSlice(),
+		DefaultAllow:  NewPermissions(),
+		PrivilegeIDs:  NewPermissions(),
 		Widgets:       NewStreamWidgets(),
 		Data:          mapof.NewAny(),
 		Hashtags:      sliceof.NewString(),
@@ -183,21 +184,19 @@ func (stream Stream) IsMyself(_ primitive.ObjectID) bool {
 
 // RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.
 // It is part of the AccessLister interface
-func (stream Stream) RolesToGroupIDs(roles ...string) id.Slice {
+func (stream Stream) RolesToGroupIDs(roles ...string) Permissions {
 
-	// stream.tempHackGroupPermissions()
-
-	result := id.NewSlice()
+	result := NewPermissions()
 
 	for _, role := range roles {
 
 		switch role {
 
 		case MagicRoleAnonymous:
-			return id.Slice{MagicGroupIDAnonymous}
+			return NewAnonymousPermissions()
 
 		case MagicRoleAuthenticated:
-			return id.Slice{MagicGroupIDAuthenticated}
+			return NewAuthenticatedPermissions()
 
 		case MagicRoleAuthor:
 			result = append(result, stream.AttributedTo.UserID)
@@ -212,9 +211,9 @@ func (stream Stream) RolesToGroupIDs(roles ...string) id.Slice {
 
 // RolesToPrivilegeIDs returns a slice of Privileges that grant any of the requested roles
 // It is part of the AccessLister interface
-func (stream Stream) RolesToPrivilegeIDs(roles ...string) id.Slice {
+func (stream Stream) RolesToPrivilegeIDs(roles ...string) Permissions {
 
-	result := id.NewSlice()
+	result := NewPermissions()
 
 	for _, role := range roles {
 		if circles, exists := stream.Circles[role]; exists {
@@ -344,15 +343,6 @@ func (stream Stream) IsPublished() bool {
 	// Otherwise, check that "now" is in between the Publish and UnPublish dates
 	now := time.Now().Unix()
 	return (stream.PublishDate <= now) && (stream.UnPublishDate > now)
-}
-
-// PublishActivity returns the ActivityType that should be used when publishing this Stream (either Create or Update)
-func (stream Stream) PublishActivity() string {
-	if stream.IsPublished() {
-		return vocab.ActivityTypeUpdate
-	}
-
-	return vocab.ActivityTypeCreate
 }
 
 /******************************************

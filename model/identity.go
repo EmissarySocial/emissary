@@ -65,13 +65,13 @@ func (identity Identity) IsMyself(identityID primitive.ObjectID) bool {
 }
 
 // RolesToGroupIDs returns a map of RoleIDs to GroupIDs
-func (identity Identity) RolesToGroupIDs(...string) id.Slice {
-	return nil
+func (identity Identity) RolesToGroupIDs(...string) Permissions {
+	return NewPermissions()
 }
 
 // RolesToPrivilegeIDs returns a map of RoleIDs to Privilege strings
-func (identity Identity) RolesToPrivilegeIDs(...string) id.Slice {
-	return nil
+func (identity Identity) RolesToPrivilegeIDs(...string) Permissions {
+	return NewPermissions()
 }
 
 /******************************************

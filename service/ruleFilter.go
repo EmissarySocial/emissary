@@ -81,6 +81,7 @@ func (filter *RuleFilter) Disallow(document *streams.Document) bool {
 
 // Channel returns a channel of all documents that are allowed by User/Domain filters.
 // Documents may be modified by filters in the process, for instance, to add content warning labels.
+// Deprecated: this should be removed in favor of range function iterators.
 func (filter *RuleFilter) Channel(ch <-chan streams.Document) <-chan streams.Document {
 
 	result := make(chan streams.Document)
@@ -94,21 +95,6 @@ func (filter *RuleFilter) Channel(ch <-chan streams.Document) <-chan streams.Doc
 			}
 		}
 	}()
-
-	return result
-}
-
-// Slice returns a slice of all documents from the input that are allowed by User/Domain filters.
-// Documents may be modified by filters in the process, for instance, to add content warning labels.
-func (filter *RuleFilter) Slice(documents []streams.Document) []streams.Document {
-
-	result := make([]streams.Document, 0, len(documents))
-
-	for _, document := range documents {
-		if filter.Allow(&document) {
-			result = append(result, document)
-		}
-	}
 
 	return result
 }

@@ -1,7 +1,9 @@
 package service
 
 import (
+	"iter"
 	"strings"
+	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
@@ -19,47 +21,80 @@ import (
  ******************************************/
 
 // Publish adds an OutboxMessage to the Actor's Outbox and sends notifications to all Followers.
-func (service *Outbox) Publish(actor *outbox.Actor, parentType string, parentID primitive.ObjectID, activity mapof.Any) error {
+func (service *Outbox) Publish(actor *outbox.Actor, actorType string, actorID primitive.ObjectID, activity mapof.Any, permissions model.Permissions) error {
 
 	const location = "service.Outbox.Publish"
 
-	// If we have anything BUT an "Update" activity, then write it to the Actor's Outbox
-	if activity.GetString(vocab.PropertyType) == vocab.ActivityTypeCreate {
+	// Write a new OutboxMessage to the database
+	outboxMessage := model.NewOutboxMessage()
+	outboxMessage.ActorType = actorType
+	outboxMessage.ActorID = actorID
+	outboxMessage.ObjectID = activity.GetMap(vocab.PropertyObject).GetString(vocab.PropertyID)
+	outboxMessage.ActivityType = activity.GetString(vocab.PropertyType)
+	outboxMessage.Permissions = permissions
+	outboxMessage.PublishedDate = time.Now().Unix()
 
-		if object, ok := activity[vocab.PropertyObject].(mapof.Any); ok {
+	if err := service.Save(&outboxMessage, "Publishing"); err != nil {
+		return derp.Wrap(err, location, "Error saving outbox message", outboxMessage)
+	}
 
-			// Write a new OutboxMessage to the database
-			outboxMessage := model.NewOutboxMessage()
-			outboxMessage.ParentType = parentType
-			outboxMessage.ParentID = parentID
-			outboxMessage.URL = object.GetString(vocab.PropertyID)
-			outboxMessage.ActivityType = object.GetString(vocab.PropertyType)
+	log.Trace().Str("id", outboxMessage.ObjectID).Msg("Outbox Message saved.  Notifying Followers")
 
-			if err := service.Save(&outboxMessage, "Publishing"); err != nil {
-				return derp.Wrap(err, location, "Error saving outbox message", outboxMessage)
-			}
-			log.Trace().Str("id", outboxMessage.URL).Msg("Outbox Message saved")
+	// Get All Followers for this Actor and Addressees
+	followers := service.followerService.RangeFollowers(actorType, actorID)
+
+	recipients := joinIterators(
+		followers,
+		service.addresseesAsFollowers(activity),
+		// TODO: service.webMentionsAsFollowers(activity),
+	)
+
+	ruleFilter := service.ruleService.Filter(actorID, WithBlocksOnly())
+
+	for follower := range recipients {
+
+		// Do not send to blocked Followers
+		if !ruleFilter.AllowSend(follower.Actor.ProfileURL) {
+			continue
+		}
+
+		// Do not send to Followers who do not have permissions to view this activity
+		if !service.identityService.HasPermissions(follower.Method, follower.Actor.ProfileURL, permissions) {
+			continue
+		}
+
+		switch follower.Method {
+
+		case model.FollowerMethodActivityPub:
+			service.sendNotification_ActivityPub(actor, &follower, activity)
+
+		case model.FollowerMethodWebSub:
+			service.sendNotification_WebSub(&follower, activity)
+
+		case model.FollowerMethodEmail:
+			service.sendNotification_Email(&follower, activity)
+
+		// TODO: Can we move WebMentions into this too?
+		default:
+			derp.Report(derp.InternalError(location, "Unknown Follower Method.  This should never happen", follower))
 		}
 	}
 
 	// Send notifications to all Followers
-	go service.sendNotifications_ActivityPub(actor, activity)
-	go service.sendNotifications_WebSub(parentType, parentID)
 	go service.sendNotifications_WebMention(activity)
-	go service.sendNotifications_Email(parentType, parentID, activity)
 
 	// Success!!
 	return nil
 }
 
 // UnPublish deletes an OutboxMessage from the Outbox, and sends notifications to all Followers
-func (service *Outbox) UnPublish(actor *outbox.Actor, parentType string, parentID primitive.ObjectID, url string) error {
+func (service *Outbox) UnPublish(actor *outbox.Actor, actorType string, actorID primitive.ObjectID, url string) error {
 
 	// Load the Outbox Message
 	message := model.NewOutboxMessage()
-	if err := service.LoadByURL(parentType, parentID, url, &message); err != nil {
+	if err := service.LoadByURL(actorType, actorID, url, &message); err != nil {
 		if derp.IsNotFound(err) {
-			log.Debug().Str("type", parentType).Str("parent", parentID.Hex()).Str("url", url).Msg("Outbox Message not found")
+			log.Debug().Str("type", actorType).Str("parent", actorID.Hex()).Str("url", url).Msg("Outbox Message not found")
 			return nil
 		}
 		return derp.Wrap(err, "service.Outbox.UnPublish", "Error loading outbox message", url)
@@ -92,35 +127,61 @@ func (service *Outbox) UnPublish(actor *outbox.Actor, parentType string, parentI
  * Notification Protocols
  ******************************************/
 
+func (service *Outbox) addresseesAsFollowers(activity mapof.Any) iter.Seq[model.Follower] {
+
+	addressees := joinSlices(
+		activity.GetSliceOfString(vocab.PropertyTo),
+		activity.GetSliceOfString(vocab.PropertyCC),
+		activity.GetSliceOfString(vocab.PropertyBTo),
+		activity.GetSliceOfString(vocab.PropertyBCC),
+	)
+
+	return func(yield func(model.Follower) bool) {
+
+		for _, address := range addressees {
+			follower := model.NewFollower()
+			follower.Actor.ProfileURL = address
+			follower.Method = model.FollowerMethodActivityPub
+			follower.StateID = model.FollowerStateActive
+
+			if !yield(follower) {
+				return
+			}
+		}
+	}
+}
+
 // sendNotifications_ActivityPub sends ActivityPub updates to all Followers
-func (service Outbox) sendNotifications_ActivityPub(actor *outbox.Actor, activity mapof.Any) {
-	actor.Send(activity)
+// TODO: HIGH: This should be a background task with retries, just like sendNotification_WebSub
+func (service Outbox) sendNotification_ActivityPub(actor *outbox.Actor, follower *model.Follower, activity mapof.Any) {
+	if err := actor.SendOne(follower.Actor.ProfileURL, activity); err != nil {
+		derp.Report(derp.Wrap(err, "service.Outbox.sendNotifications_ActivityPub", "Error sending ActivityPub notification", follower.Actor.ProfileURL))
+	}
 }
 
 // TODO: HIGH: Thoroughly re-test WebSub notifications.  They've been rebuilt from scratch.
-func (service Outbox) sendNotifications_WebSub(parentType string, parentID primitive.ObjectID) {
+func (service Outbox) sendNotification_WebSub(follower *model.Follower, _ mapof.Any) {
 
 	const location = "service.Outbox.sendNotifications_WebSub"
 
-	// Get this User's Followers from the database
-	followers, err := service.followerService.WebSubFollowersChannel(parentType, parentID)
+	task := queue.NewTask("SendWebSubMessage", mapof.Any{
+		"inboxUrl": follower.Actor.InboxURL,
+		"format":   follower.Format,
+		"secret":   follower.Data.GetString("secret"),
+	})
 
-	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Error loading Followers", parentType, parentID))
+	if err := service.queue.Publish(task); err != nil {
+		derp.Report(derp.Wrap(err, location, "Error publishing task", task))
 	}
+}
 
-	// Queue up all ActivityPub messages to be sent
-	for follower := range followers {
+// sendNotifications_Email sends email notifications to all "email" Followers
+func (service *Outbox) sendNotification_Email(follower *model.Follower, activity mapof.Any) {
 
-		task := queue.NewTask("SendWebSubMessage", mapof.Any{
-			"inboxUrl": follower.Actor.InboxURL,
-			"format":   follower.Format,
-			"secret":   follower.Data.GetString("secret"),
-		})
+	const location = "service.Outbox.sendNotifications_Email"
 
-		if err := service.queue.Publish(task); err != nil {
-			derp.Report(derp.Wrap(err, location, "Error publishing task", task))
-		}
+	if err := service.domainEmail.SendFollowerActivity(follower, activity); err != nil {
+		derp.Report(derp.Wrap(err, location, "Error sending email", follower))
 	}
 }
 
@@ -160,25 +221,6 @@ func (service *Outbox) sendNotifications_WebMention(activity mapof.Any) {
 
 		if err := service.queue.Publish(task); err != nil {
 			derp.Report(derp.Wrap(err, location, "Error publishing task", task))
-		}
-	}
-}
-
-// sendNotifications_Email sends email notifications to all "email" Followers
-func (service *Outbox) sendNotifications_Email(parentType string, parentID primitive.ObjectID, activity mapof.Any) {
-
-	const location = "service.Outbox.sendNotifications_Email"
-
-	followers, err := service.followerService.EmailFollowersChannel(parentType, parentID)
-
-	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Error loading Followers", parentType, parentID))
-		return
-	}
-
-	for follower := range followers {
-		if err := service.domainEmail.SendFollowerActivity(follower, activity); err != nil {
-			derp.Report(derp.Wrap(err, location, "Error sending email", follower))
 		}
 	}
 }

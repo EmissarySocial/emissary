@@ -13,7 +13,7 @@ type Context struct {
 	searchQuery *model.SearchQuery
 }
 
-func (context Context) ActivityPubActor(withFollowers bool) (outbox.Actor, error) {
+func (context Context) ActivityPubActor() (outbox.Actor, error) {
 	searchQueryService := context.factory.SearchQuery()
-	return searchQueryService.ActivityPubActor(context.searchQuery.SearchQueryID, withFollowers)
+	return searchQueryService.ActivityPubActor(context.searchQuery.SearchQueryID)
 }

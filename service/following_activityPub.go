@@ -20,7 +20,7 @@ func (service *Following) connect_ActivityPub(following *model.Following, remote
 	following.StatusMessage = "Pending ActivityPub connection"
 
 	// Try to get the Actor (don't need Following channel)
-	localActor, err := service.userService.ActivityPubActor(following.UserID, false)
+	localActor, err := service.userService.ActivityPubActor(following.UserID)
 
 	if err != nil {
 		return false, derp.Wrap(err, location, "Error getting ActivityPub actor", following.UserID)
@@ -43,7 +43,7 @@ func (service *Following) disconnect_ActivityPub(following *model.Following) err
 	const location = "service.Following.disconnect_ActivityPub"
 
 	// Try to get the local Actor (don't need Following channel)
-	actor, err := service.userService.ActivityPubActor(following.UserID, false)
+	actor, err := service.userService.ActivityPubActor(following.UserID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error getting ActivityPub actor", following.UserID)

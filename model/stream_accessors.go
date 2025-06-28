@@ -25,7 +25,6 @@ func StreamSchema() schema.Element {
 			"groups":           permissionSchema(),
 			"circles":          permissionSchema(),
 			"products":         permissionSchema(),
-			"defaultAllow":     schema.Array{Items: schema.String{Format: "objectId"}},
 			"url":              schema.String{Format: "url"},
 			"label":            schema.String{MaxLength: 128},
 			"summary":          schema.String{MaxLength: 2048},
@@ -90,9 +89,6 @@ func (stream *Stream) GetPointer(name string) (any, bool) {
 
 	case "products":
 		return &stream.Products, true
-
-	case "defaultAllow":
-		return &stream.DefaultAllow, true
 
 	case "url":
 		return &stream.URL, true

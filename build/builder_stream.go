@@ -9,7 +9,6 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
-	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -862,7 +861,7 @@ func (w Stream) Products() (sliceof.Object[model.Product], error) {
 }
 
 // PrivilegeIDs returns all privilege IDs that are valid for this stream
-func (w Stream) PrivilegeIDs() id.Slice {
+func (w Stream) PrivilegeIDs() model.Permissions {
 	return w._stream.PrivilegeIDs
 }
 
