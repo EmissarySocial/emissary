@@ -9,7 +9,7 @@ func Attachment(document streams.Document) []map[string]any {
 
 	result := make([]map[string]any, 0, document.Len())
 
-	for attachment := range document.Channel() {
+	for attachment := range document.Range() {
 
 		file := map[string]any{
 			vocab.PropertyType:      attachment.Type(),

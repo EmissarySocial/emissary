@@ -12,7 +12,7 @@ func Tags(document streams.Document) []map[string]any {
 
 	result := make([]map[string]any, 0, document.Len())
 
-	for tag := range document.Channel() {
+	for tag := range document.Range() {
 
 		allow := true
 

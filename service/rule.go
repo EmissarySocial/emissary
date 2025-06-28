@@ -10,7 +10,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/domain"
 	"github.com/benpate/exp"
-	"github.com/benpate/rosetta/iterator"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/turbine/queue"
 
@@ -90,17 +89,6 @@ func (service *Rule) Range(criteria exp.Expression, options ...option.Option) (i
 	}
 
 	return RangeFunc(iter, model.NewRule), nil
-}
-
-// Channel returns a channel that will stream all of the Rules that match the provided criteria
-func (service *Rule) Channel(criteria exp.Expression, options ...option.Option) (<-chan model.Rule, error) {
-	it, err := service.List(criteria, options...)
-
-	if err != nil {
-		return nil, derp.Wrap(err, "service.Rule.Channel", "Error creating iterator", criteria, options)
-	}
-
-	return iterator.Channel(it, model.NewRule), nil
 }
 
 // Load retrieves an Rule from the database

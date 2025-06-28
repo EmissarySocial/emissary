@@ -11,7 +11,6 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
-	"github.com/benpate/rosetta/iterator"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/sherlock"
@@ -101,18 +100,6 @@ func (service *Follower) Range(criteria exp.Expression, options ...option.Option
 			}
 		}
 	}
-}
-
-// Channel returns a channel containing all of the Followers who match the provided criteria
-func (service *Follower) Channel(criteria exp.Expression, options ...option.Option) (<-chan model.Follower, error) {
-
-	it, err := service.List(criteria, options...)
-
-	if err != nil {
-		return nil, derp.Wrap(err, "service.Follower.ChannelByParent", "Error creating iterator", criteria)
-	}
-
-	return iterator.Channel(it, model.NewFollower), nil
 }
 
 // Load retrieves an Follower from the database
