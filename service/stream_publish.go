@@ -44,50 +44,10 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream, stateID s
 		return derp.Wrap(err, location, "Error saving stream", stream)
 	}
 
-	// PUBLISH TO THE OUTBOX...
+	// Publish to user/stream outboxes
 	if outbox {
-
-		// Create the Activity to send to the User's Outbox
-		object := service.JSONLD(stream)
-
-		// Save the object to the ActivityStream cache
-		service.activityStream.Put(
-			service.activityStream.NewDocument(object),
-		)
-
-		// If this has not been published yet, then `Create` activity. Otherwise, `Update`
-		activityType := iif(
-			wasPublished,
-			vocab.ActivityTypeUpdate,
-			vocab.ActivityTypeCreate,
-		)
-
-		// Create the Activity to send to Followers
-		activity := mapof.Any{
-			vocab.AtContext:         vocab.ContextTypeActivityStreams,
-			vocab.PropertyID:        stream.ActivityPubURL(),
-			vocab.PropertyType:      activityType,
-			vocab.PropertyActor:     user.ActivityPubURL(),
-			vocab.PropertyObject:    object,
-			vocab.PropertyPublished: hannibal.TimeFormat(time.Now()),
-		}
-
-		if to, ok := object[vocab.PropertyTo]; ok {
-			activity[vocab.PropertyTo] = to
-		}
-
-		if cc, ok := object[vocab.PropertyCC]; ok {
-			activity[vocab.PropertyCC] = cc
-		}
-
-		// Publish to the User's outbox
-		if err := service.publish_user_outbox(user, stream, activity); err != nil {
-			return derp.Wrap(err, location, "Error publishing to User's outbox")
-		}
-
-		// Publish to the parent Stream's outbox
-		if err := service.publish_stream_outbox(stream, activity); err != nil {
-			return derp.Wrap(err, location, "Error publishing to parent Stream's outbox")
+		if err := service.publish_outbox(user, stream, wasPublished); err != nil {
+			return derp.Wrap(err, location, "Error publishing to outbox", stream)
 		}
 	}
 
@@ -114,10 +74,60 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream, stateID s
 	return nil
 }
 
-// publish_user_outbox publishes this stream to the User's outbox
-func (service *Stream) publish_user_outbox(user *model.User, stream *model.Stream, activity mapof.Any) error {
+func (service *Stream) publish_outbox(user *model.User, stream *model.Stream, wasPublished bool) error {
 
-	const location = "service.Stream.publish_user_outbox"
+	const location = "service.Stream.publish_outbox"
+
+	// Create the Activity to send to the User's Outbox
+	object := service.JSONLD(stream)
+
+	// Save the object to the ActivityStream cache
+	service.activityStream.Put(
+		service.activityStream.NewDocument(object),
+	)
+
+	// If this has not been published yet, then `Create` activity. Otherwise, `Update`
+	activityType := iif(
+		wasPublished,
+		vocab.ActivityTypeUpdate,
+		vocab.ActivityTypeCreate,
+	)
+
+	// Create the Activity to send to Followers
+	activity := mapof.Any{
+		vocab.AtContext:         vocab.ContextTypeActivityStreams,
+		vocab.PropertyID:        stream.ActivityPubURL(),
+		vocab.PropertyType:      activityType,
+		vocab.PropertyActor:     user.ActivityPubURL(),
+		vocab.PropertyObject:    object,
+		vocab.PropertyPublished: hannibal.TimeFormat(time.Now()),
+	}
+
+	if to, ok := object[vocab.PropertyTo]; ok {
+		activity[vocab.PropertyTo] = to
+	}
+
+	if cc, ok := object[vocab.PropertyCC]; ok {
+		activity[vocab.PropertyCC] = cc
+	}
+
+	// Publish to the User's outbox
+	if err := service.publish_outbox_user(user, stream, activity); err != nil {
+		return derp.Wrap(err, location, "Error publishing to User's outbox")
+	}
+
+	// Publish to the parent Stream's outbox
+	if err := service.publish_outbox_stream(stream, activity); err != nil {
+		return derp.Wrap(err, location, "Error publishing to parent Stream's outbox")
+	}
+
+	return nil
+}
+
+// publish_outbox_user publishes this stream to the User's outbox
+func (service *Stream) publish_outbox_user(user *model.User, stream *model.Stream, activity mapof.Any) error {
+
+	const location = "service.Stream.publish_outbox_user"
 
 	// RULE: Do not allow empty Users
 	if user == nil {
@@ -141,7 +151,9 @@ func (service *Stream) publish_user_outbox(user *model.User, stream *model.Strea
 	objectType := activity.GetString(vocab.PropertyType)
 	log.Trace().Str("location", location).Str("objectId", objectID).Str("type", objectType).Msg("Publishing to User's outbox")
 
-	if err := service.outboxService.Publish(&actor, model.FollowerTypeUser, user.UserID, activity, stream.DefaultAllow); err != nil {
+	document := service.activityStream.NewDocument(activity)
+
+	if err := service.outboxService.Publish(&actor, model.FollowerTypeUser, user.UserID, document, stream.DefaultAllow); err != nil {
 		return derp.Wrap(err, location, "Error publishing activity", activity)
 	}
 
@@ -149,10 +161,10 @@ func (service *Stream) publish_user_outbox(user *model.User, stream *model.Strea
 	return nil
 }
 
-// publish_stream_outbox publishes this Stream to the parent Stream's outbox
-func (service *Stream) publish_stream_outbox(stream *model.Stream, activity mapof.Any) error {
+// publish_outbox_stream publishes this Stream to the parent Stream's outbox
+func (service *Stream) publish_outbox_stream(stream *model.Stream, activity mapof.Any) error {
 
-	const location = "service.Stream.publish_stream_outbox"
+	const location = "service.Stream.publish_outbox_stream"
 
 	// RULE: If the Stream does not have a parent template (i.e. Outbox or Top-Level Stream), then NOOP
 	if stream.ParentTemplateID == "" {
@@ -179,16 +191,18 @@ func (service *Stream) publish_stream_outbox(stream *model.Stream, activity mapo
 	}
 
 	// Make a new "Announce/Boost" activity so that our encryption keys are correct.
-	boostActivity := mapof.Any{
+	announce := mapof.Any{
 		vocab.AtContext:      vocab.ContextTypeActivityStreams,
 		vocab.PropertyType:   vocab.ActivityTypeAnnounce,
 		vocab.PropertyActor:  service.ActivityPubURL(stream.ParentID),
 		vocab.PropertyObject: activity,
 	}
 
+	document := service.activityStream.NewDocument(announce)
+
 	// Try to publish via sendNotifications
 	log.Trace().Str("id", stream.URL).Msg("Publishing to parent Stream's outbox")
-	if err := service.outboxService.Publish(&actor, model.FollowerTypeStream, stream.ParentID, boostActivity, stream.DefaultAllow); err != nil {
+	if err := service.outboxService.Publish(&actor, model.FollowerTypeStream, stream.ParentID, document, stream.DefaultAllow); err != nil {
 		return derp.Wrap(err, location, "Error publishing activity", activity)
 	}
 
@@ -223,13 +237,13 @@ func (service *Stream) UnPublish(user *model.User, stream *model.Stream, stateID
 
 	// Send "Undo" activities to all User followers.
 	if !user.IsNew() {
-		if err := service.unpublish_user_outbox(user.UserID, stream.URL); err != nil {
+		if err := service.unpublish_outbox_user(user.UserID, stream.URL); err != nil {
 			return derp.Wrap(err, location, "Error unpublishing from User's outbox", stream)
 		}
 	}
 
 	// Send "Undo" activities to all Stream followers.
-	if err := service.unpublish_stream_outbox(stream); err != nil {
+	if err := service.unpublish_outbox_stream(stream); err != nil {
 		return derp.Wrap(err, location, "Error unpublishing from User's outbox", stream)
 	}
 
@@ -245,10 +259,10 @@ func (service *Stream) UnPublish(user *model.User, stream *model.Stream, stateID
 	return nil
 }
 
-// publish_user_outbox publishes this stream to the User's outbox
-func (service *Stream) unpublish_user_outbox(userID primitive.ObjectID, url string) error {
+// publish_outbox_user publishes this stream to the User's outbox
+func (service *Stream) unpublish_outbox_user(userID primitive.ObjectID, url string) error {
 
-	const location = "service.Stream.unpublish_user_outbox"
+	const location = "service.Stream.unpublish_outbox_user"
 
 	// Load the Actor for this User
 	actor, err := service.userService.ActivityPubActor(userID)
@@ -267,10 +281,10 @@ func (service *Stream) unpublish_user_outbox(userID primitive.ObjectID, url stri
 	return nil
 }
 
-// publish_stream_outbox publishes this Stream to the parent Stream's outbox
-func (service *Stream) unpublish_stream_outbox(stream *model.Stream) error {
+// publish_outbox_stream publishes this Stream to the parent Stream's outbox
+func (service *Stream) unpublish_outbox_stream(stream *model.Stream) error {
 
-	const location = "service.Stream.unpublish_stream_outbox"
+	const location = "service.Stream.unpublish_outbox_stream"
 
 	// RULE: If the Stream does not have a parent template (i.e. Outbox or Top-Level Stream), then NOOP
 	if stream.ParentTemplateID == "" {

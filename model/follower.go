@@ -104,6 +104,10 @@ func (follower Follower) UnsubscribeLink(host string) string {
  * ActivityPub Methods
  ******************************************/
 
+func (follower Follower) ActivityPubURL() string {
+	return follower.Actor.ProfileURL
+}
+
 func (follower Follower) GetJSONLD() mapof.Any {
 
 	return mapof.Any{

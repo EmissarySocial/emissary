@@ -28,7 +28,7 @@ func CollectionPage[T model.JSONLDGetter](pageID string, partOf string, pageSize
 
 	if len(values) > 0 {
 		for _, value := range values {
-			result.OrderedItems = append(result.OrderedItems, value.GetJSONLD())
+			result.OrderedItems = append(result.OrderedItems, value.ActivityPubURL())
 		}
 
 		if len(values) == pageSize {

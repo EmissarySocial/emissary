@@ -5,6 +5,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/hannibal"
+	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 )
@@ -24,6 +25,10 @@ func (service *Rule) ActivityPubURL(rule model.Rule) string {
 // JSONLDGetter returns a new JSONLDGetter for the provided stream
 func (service *Rule) JSONLDGetter(rule model.Rule) RuleJSONLDGetter {
 	return NewRuleJSONLDGetter(service, rule)
+}
+
+func (service *Rule) Activity(rule model.Rule) streams.Document {
+	return service.activityService.NewDocument(service.JSONLD(rule))
 }
 
 // JSONLD returns a JSON-LD representation of the provided Rule

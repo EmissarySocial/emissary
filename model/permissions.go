@@ -22,9 +22,14 @@ func NewAuthenticatedPermissions() Permissions {
 	return Permissions{MagicGroupIDAuthenticated}
 }
 
-// IsZero returns TRUE if this Permissions slice is empty.
+// IsZero returns TRUE if this Permissions slice has zero items.
 func (permissions Permissions) IsZero() bool {
 	return len(permissions) == 0
+}
+
+// NotZero returns TRUE if this Permissions slice has at least one item.
+func (permissions Permissions) NotZero() bool {
+	return len(permissions) > 0
 }
 
 // IsAnonymous returns TRUE if this Permisssions slice allows "anonymous" access.
@@ -35,4 +40,8 @@ func (permissions Permissions) IsAnonymous() bool {
 // IsAuthenticated returns TRUE if this Permissions slice allows "authenticated" access.
 func (permissions Permissions) IsAuthenticated() bool {
 	return slice.Contains(permissions, MagicGroupIDAuthenticated)
+}
+
+func (permissions Permissions) Intersects(other Permissions) bool {
+	return slice.ContainsAny(permissions, other...)
 }

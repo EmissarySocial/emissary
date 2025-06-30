@@ -18,10 +18,11 @@ import (
 
 // Rule defines a service that manages all content rules created and imported by Users.
 type Rule struct {
-	collection    data.Collection
-	outboxService *Outbox
-	userService   *User
-	host          string
+	collection      data.Collection
+	activityService *ActivityStream
+	outboxService   *Outbox
+	userService     *User
+	host            string
 
 	queue *queue.Queue
 }
@@ -36,8 +37,9 @@ func NewRule() Rule {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Rule) Refresh(collection data.Collection, outboxService *Outbox, userService *User, queue *queue.Queue, host string) {
+func (service *Rule) Refresh(collection data.Collection, activityService *ActivityStream, outboxService *Outbox, userService *User, queue *queue.Queue, host string) {
 	service.collection = collection
+	service.activityService = activityService
 	service.outboxService = outboxService
 	service.userService = userService
 	service.queue = queue

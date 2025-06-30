@@ -9,6 +9,7 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -16,10 +17,11 @@ import (
 
 // Response defines a service that can send and receive response data
 type Response struct {
-	collection    data.Collection
-	userService   *User
-	outboxService *Outbox
-	host          string
+	collection      data.Collection
+	activityService *ActivityStream
+	outboxService   *Outbox
+	userService     *User
+	host            string
 }
 
 // NewResponse returns a fully initialized Response service
@@ -32,10 +34,11 @@ func NewResponse() Response {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Response) Refresh(collection data.Collection, userService *User, outboxService *Outbox, host string) {
+func (service *Response) Refresh(collection data.Collection, activityService *ActivityStream, outboxService *Outbox, userService *User, host string) {
 	service.collection = collection
-	service.userService = userService
+	service.activityService = activityService
 	service.outboxService = outboxService
+	service.userService = userService
 	service.host = host
 }
 
@@ -290,8 +293,10 @@ func (service *Response) SetResponse(user *model.User, url string, responseType 
 		return derp.Wrap(err, location, "Error loading ActivityPub Actor", user.UserID)
 	}
 
+	activity := service.Activity(response)
+
 	// Publish the new Response to the Outbox, sending "Like" notifications to all followers.
-	if err := service.outboxService.Publish(&actor, model.FollowerTypeUser, user.UserID, response.GetJSONLD(), model.NewAnonymousPermissions()); err != nil {
+	if err := service.outboxService.Publish(&actor, model.FollowerTypeUser, user.UserID, activity, model.NewAnonymousPermissions()); err != nil {
 		derp.Report(derp.Wrap(err, location, "Error publishing Response", response))
 	}
 
@@ -336,4 +341,8 @@ func (service *Response) UnsetResponse(user *model.User, url string, responseTyp
 
 	// Success!!
 	return nil
+}
+
+func (service *Response) Activity(response model.Response) streams.Document {
+	return service.activityService.NewDocument(response.GetJSONLD())
 }

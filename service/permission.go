@@ -1,11 +1,13 @@
 package service
 
 import (
+	"math"
+	"net/http"
+
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/derp"
+	"github.com/benpate/domain"
 	"github.com/benpate/hannibal/sigs"
-	"github.com/benpate/steranko"
 )
 
 type Permission struct {
@@ -194,45 +196,42 @@ func (service *Permission) AuthorInGroup(accessLister model.AccessLister, groupT
 	return false, derp.NotImplementedError("service.Permission.AuthorInGroup", "AuthorInGroup is not implemented")
 }
 
-func (service *Permission) Permissions(authorization *model.Authorization, identity *model.Identity) id.Slice {
+func (service *Permission) Permissions(authorization *model.Authorization, identity *model.Identity) model.Permissions {
 
-	result := id.Slice{model.MagicGroupIDAnonymous}
+	result := model.NewAnonymousPermissions()
 
 	if authorization != nil {
 
 		// Domain owners can see every valid object. Do not touch the criteria
 		if authorization.DomainOwner {
-			return id.NewSlice()
+			return model.NewPermissions()
 		}
 
 		if authorization.IsAuthenticated() {
-			result.Append(model.MagicGroupIDAuthenticated, authorization.UserID)
-			result.Append(authorization.GroupIDs...)
+			result = append(result, model.MagicGroupIDAuthenticated, authorization.UserID)
+			result = append(result, authorization.GroupIDs...)
 		}
 	}
 
 	// If an identity is provided, then include all of the Privileges for this Identity
 	if identity != nil {
-		result.Append(identity.PrivilegeIDs...)
+		result = append(result, identity.PrivilegeIDs...)
 	}
 
 	return result
 }
 
-func (service *Permission) ParseHTTPSignature(ctx *steranko.Context) id.Slice {
+func (service *Permission) ParseHTTPSignature(request *http.Request) model.Permissions {
 
-	result := id.Slice{model.MagicGroupIDAnonymous}
+	result := model.NewAnonymousPermissions()
 
-	// If there is no signature, then only allow anonymous access
-	if !sigs.HasSignature(ctx.Request()) {
+	// RULE: Empty requests are not signed.  This should never happen..
+	if request == nil {
 		return result
 	}
 
 	// Verify the signature
-	// verifier := sigs.NewVerifier()
-	verifier := sigs.NewMockVerifier("https://mastodon.social/users/benpate/#main-key", true)
-
-	signature, err := verifier.Verify(ctx.Request(), service.activityStream.PublicKeyFinder)
+	signature, err := service.getSignature(request)
 
 	if err != nil {
 		return result
@@ -245,7 +244,7 @@ func (service *Permission) ParseHTTPSignature(ctx *steranko.Context) id.Slice {
 	}
 
 	// If present, then add the privileges for this Identity
-	result.Append(identity.PrivilegeIDs...)
+	result = append(result, identity.PrivilegeIDs...)
 
 	if !identity.HasEmailAddress() {
 		return result
@@ -257,8 +256,43 @@ func (service *Permission) ParseHTTPSignature(ctx *steranko.Context) id.Slice {
 		return result
 	}
 
-	result.Append(model.MagicGroupIDAuthenticated, user.UserID)
-	result.Append(user.GroupIDs...)
+	result = append(result, model.MagicGroupIDAuthenticated, user.UserID)
+	result = append(result, user.GroupIDs...)
 
 	return result
+}
+
+func (service *Permission) getSignature(request *http.Request) (sigs.Signature, error) {
+
+	const location = "service.Permission.getSignature"
+
+	// First, try to verify the signature using the standard method
+	verifier := sigs.NewVerifier()
+
+	signature, err := verifier.Verify(request, service.activityStream.PublicKeyFinder)
+
+	if err == nil {
+		return signature, nil
+	}
+
+	// If there's an error on production servers, then fail
+	if !domain.IsLocalhost(request.Host) {
+		return sigs.Signature{}, derp.Wrap(err, location, "Unable to verify signature for request")
+	}
+
+	// Fall through means we're on localhost; try the "mock" verifier
+	if mockKeyID := request.Header.Get("Mock-Key-Id"); mockKeyID != "" {
+		result := sigs.Signature{
+			KeyID:     mockKeyID,
+			Algorithm: "MOCK",
+			Headers:   make([]string, 0),
+			Signature: make([]byte, 0),
+			Expires:   math.MaxInt64,
+		}
+
+		return result, nil
+	}
+
+	return sigs.Signature{}, derp.Wrap(err, location, "No valid signature found. For local domains, use 'Mock-Key-Id' header to simulate a signing key.")
+
 }

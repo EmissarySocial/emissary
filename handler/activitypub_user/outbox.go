@@ -21,8 +21,6 @@ func GetOutboxCollection(ctx *steranko.Context, factory *domain.Factory, user *m
 		return derp.NotFoundError(location, "User not found")
 	}
 
-	// permissions := factory.Permission().ParseHTTPSignature(ctx)
-
 	// If the request is for the collection itself, then return a summary and the URL of the first page
 	publishDateString := ctx.QueryParam("publishDate")
 
@@ -32,6 +30,9 @@ func GetOutboxCollection(ctx *steranko.Context, factory *domain.Factory, user *m
 		return ctx.JSON(http.StatusOK, result)
 	}
 
+	// Retrieve permissions from the request signature
+	permissions := factory.Permission().ParseHTTPSignature(ctx.Request())
+
 	// Fall through means that we're looking for a specific page of the collection
 	publishedDate := convert.Int64Default(publishDateString, math.MaxInt64)
 	outboxService := factory.Outbox()
@@ -39,7 +40,7 @@ func GetOutboxCollection(ctx *steranko.Context, factory *domain.Factory, user *m
 	pageSize := 60
 
 	// Retrieve a page of messages from the database
-	messages, err := outboxService.QueryByParentAndDate(model.FollowerTypeUser, user.UserID, publishedDate, pageSize)
+	messages, err := outboxService.QueryByParentAndDate(model.FollowerTypeUser, user.UserID, permissions, publishedDate, pageSize)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error loading outbox messages")

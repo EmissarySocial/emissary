@@ -39,22 +39,6 @@ func RangeFunc[T any](it data.Iterator, new func() T) iter.Seq[T] {
 	}
 }
 
-func joinSlices[T any](slices ...[]T) []T {
-
-	totalSize := 0
-	for _, slice := range slices {
-		totalSize += len(slice)
-	}
-
-	result := make([]T, 0, totalSize)
-
-	for _, slice := range slices {
-		result = append(result, slice...)
-	}
-
-	return result
-}
-
 func joinIterators[T any](iterators ...iter.Seq[T]) iter.Seq[T] {
 
 	return func(yield func(T) bool) {

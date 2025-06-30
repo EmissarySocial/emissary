@@ -432,14 +432,16 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 		// Populate the Response Service
 		factory.responseService.Refresh(
 			factory.collection(CollectionResponse),
-			factory.User(),
+			factory.ActivityStream(),
 			factory.Outbox(),
+			factory.User(),
 			factory.Host(),
 		)
 
 		// Populate the Rule Service
 		factory.ruleService.Refresh(
 			factory.collection(CollectionRule),
+			factory.ActivityStream(),
 			factory.Outbox(),
 			factory.User(),
 			factory.Queue(),
@@ -496,6 +498,7 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 		// Populate Stream Service
 		factory.streamService.Refresh(
 			factory.collection(CollectionStream),
+			factory.ActivityStream(),
 			factory.Circle(),
 			factory.Domain(),
 			factory.SearchTag(),

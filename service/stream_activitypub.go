@@ -7,6 +7,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/outbox"
+	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
@@ -22,6 +23,11 @@ import (
 // JSONLDGetter returns a new JSONLDGetter for the provided stream
 func (service *Stream) JSONLDGetter(stream *model.Stream) StreamJSONLDGetter {
 	return NewStreamJSONLDGetter(service, stream)
+}
+
+func (service *Stream) Activity(stream *model.Stream) streams.Document {
+	// Create a new ActivityPub Document for this Stream
+	return service.activityStream.NewDocument(service.JSONLD(stream))
 }
 
 // GetJSONLD returns a map document that conforms to the ActivityStreams 2.0 spec.

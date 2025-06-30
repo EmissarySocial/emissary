@@ -30,6 +30,8 @@ func GetOutboxCollection(serverFactory *server.Factory) echo.HandlerFunc {
 			return derp.NotFoundError(location, "Actor not found")
 		}
 
+		permissions := factory.Permission().ParseHTTPSignature(ctx.Request())
+
 		// If the request is for the collection itself, then return a summary and the URL of the first page
 		publishDateString := ctx.QueryParam("publishDate")
 
@@ -46,7 +48,7 @@ func GetOutboxCollection(serverFactory *server.Factory) echo.HandlerFunc {
 
 		// Retrieve a page of messages from the database
 		outboxService := factory.Outbox()
-		messages, err := outboxService.QueryByParentAndDate(model.FollowerTypeStream, stream.StreamID, publishedDate, 60)
+		messages, err := outboxService.QueryByParentAndDate(model.FollowerTypeStream, stream.StreamID, permissions, publishedDate, 60)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error loading outbox messages")

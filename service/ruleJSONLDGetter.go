@@ -24,6 +24,10 @@ func (getter RuleJSONLDGetter) GetJSONLD() mapof.Any {
 	return getter.service.JSONLD(getter.rule)
 }
 
+func (getter RuleJSONLDGetter) ActivityPubURL() string {
+	return ""
+}
+
 // Created returns the creation date of the wrapped Rule
 func (getter RuleJSONLDGetter) Created() int64 {
 	return getter.rule.CreateDate

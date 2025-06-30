@@ -34,6 +34,7 @@ import (
 // Stream manages all interactions with the Stream collection
 type Stream struct {
 	collection        data.Collection
+	activityService   *ActivityStream
 	circleService     *Circle
 	domainService     *Domain
 	searchTagService  *SearchTag
@@ -64,8 +65,9 @@ func NewStream() Stream {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Stream) Refresh(collection data.Collection, circleService *Circle, domainService *Domain, searchTagService *SearchTag, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, activityStream *ActivityStream, contentService *Content, keyService *EncryptionKey, followerService *Follower, ruleService *Rule, userService *User, webhookService *Webhook, mediaserver mediaserver.MediaServer, queue *queue.Queue, host string, sseUpdateChannel chan primitive.ObjectID) {
+func (service *Stream) Refresh(collection data.Collection, activityService *ActivityStream, circleService *Circle, domainService *Domain, searchTagService *SearchTag, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, activityStream *ActivityStream, contentService *Content, keyService *EncryptionKey, followerService *Follower, ruleService *Rule, userService *User, webhookService *Webhook, mediaserver mediaserver.MediaServer, queue *queue.Queue, host string, sseUpdateChannel chan primitive.ObjectID) {
 	service.collection = collection
+	service.activityService = activityService
 	service.circleService = circleService
 	service.domainService = domainService
 	service.searchTagService = searchTagService

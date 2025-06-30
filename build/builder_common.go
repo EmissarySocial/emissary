@@ -432,7 +432,7 @@ func (w Common) defaultAllowed() exp.Expression {
 
 	// Get the access list for this user
 	permissionService := w._factory.Permission()
-	if permissions := permissionService.Permissions(&authorization, identity); permissions.NotEmpty() {
+	if permissions := permissionService.Permissions(&authorization, identity); permissions.NotZero() {
 		result = result.AndIn("defaultAllow", permissions)
 	}
 

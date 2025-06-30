@@ -33,7 +33,7 @@ func (message *OutboxMessage) GetPointer(name string) (any, bool) {
 		return &message.ObjectID, true
 
 	case "publishedDate":
-		return &message.PublishedDate, true
+		return &message.CreateDate, true
 
 	case "permissions":
 		return &message.Permissions, true

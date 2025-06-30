@@ -8,12 +8,21 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/steranko"
 )
 
 func GetJSONLD(ctx *steranko.Context, factory *domain.Factory, template *model.Template, stream *model.Stream) error {
 
 	const location = "handler.activitypub_stream.GetJSONLD"
+
+	// Verify permissions by checking the required permissions (stream.DefaultAllow) against the permissions in the request signature
+	permissionService := factory.Permission()
+	permissions := permissionService.ParseHTTPSignature(ctx.Request())
+
+	if !slice.ContainsAny(stream.DefaultAllow, permissions...) {
+		return derp.ForbiddenError(location, "You do not have permission to view this content")
+	}
 
 	streamService := factory.Stream()
 

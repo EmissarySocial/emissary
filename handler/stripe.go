@@ -9,9 +9,7 @@ import (
 	"github.com/benpate/remote"
 	"github.com/benpate/remote/options"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/stripe/stripe-go/v78"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // GetStripeConnect initiates the Stripe connection process for a User.
@@ -36,12 +34,13 @@ func GetStripeConnect(ctx *steranko.Context, factory *domain.Factory, user *mode
 	// Create a MerchantAccount for this User
 	merchantAccountService := factory.MerchantAccount()
 
-	if id := ctx.QueryParam("merchantAccountId"); id != "" {
-		if merchantAccountID, err := primitive.ObjectIDFromHex(id); err == nil {
-			// TODO: Refresh existing MerchantAccount links??
-			spew.Dump(merchantAccountID)
+	/*
+		if id := ctx.QueryParam("merchantAccountId"); id != "" {
+			if merchantAccountID, err := primitive.ObjectIDFromHex(id); err == nil {
+				// TODO: Refresh existing MerchantAccount links??
+			}
 		}
-	}
+	*/
 
 	merchantAccount := model.NewMerchantAccount()
 	merchantAccount.UserID = user.UserID

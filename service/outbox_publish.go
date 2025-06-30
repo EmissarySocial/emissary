@@ -3,11 +3,11 @@ package service
 import (
 	"iter"
 	"strings"
-	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/outbox"
+	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
@@ -21,7 +21,7 @@ import (
  ******************************************/
 
 // Publish adds an OutboxMessage to the Actor's Outbox and sends notifications to all Followers.
-func (service *Outbox) Publish(actor *outbox.Actor, actorType string, actorID primitive.ObjectID, activity mapof.Any, permissions model.Permissions) error {
+func (service *Outbox) Publish(actor *outbox.Actor, actorType string, actorID primitive.ObjectID, activity streams.Document, permissions model.Permissions) error {
 
 	const location = "service.Outbox.Publish"
 
@@ -29,10 +29,9 @@ func (service *Outbox) Publish(actor *outbox.Actor, actorType string, actorID pr
 	outboxMessage := model.NewOutboxMessage()
 	outboxMessage.ActorType = actorType
 	outboxMessage.ActorID = actorID
-	outboxMessage.ObjectID = activity.GetMap(vocab.PropertyObject).GetString(vocab.PropertyID)
-	outboxMessage.ActivityType = activity.GetString(vocab.PropertyType)
+	outboxMessage.ObjectID = activity.Object().ID()
+	outboxMessage.ActivityType = activity.Type()
 	outboxMessage.Permissions = permissions
-	outboxMessage.PublishedDate = time.Now().Unix()
 
 	if err := service.Save(&outboxMessage, "Publishing"); err != nil {
 		return derp.Wrap(err, location, "Error saving outbox message", outboxMessage)
@@ -41,15 +40,15 @@ func (service *Outbox) Publish(actor *outbox.Actor, actorType string, actorID pr
 	log.Trace().Str("id", outboxMessage.ObjectID).Msg("Outbox Message saved.  Notifying Followers")
 
 	// Get All Followers for this Actor and Addressees
-	followers := service.followerService.RangeFollowers(actorType, actorID)
-
 	recipients := joinIterators(
-		followers,
-		service.addresseesAsFollowers(activity),
+		service.followerService.RangeFollowers(actorType, actorID),
+		service.addresseesAsFollowers(activity.RangeAddressees()),
+		service.addresseesAsFollowers(activity.RangeInReplyTo()),
 		// TODO: service.webMentionsAsFollowers(activity),
 	)
 
 	ruleFilter := service.ruleService.Filter(actorID, WithBlocksOnly())
+	activityMap := activity.Map()
 
 	for follower := range recipients {
 
@@ -66,13 +65,13 @@ func (service *Outbox) Publish(actor *outbox.Actor, actorType string, actorID pr
 		switch follower.Method {
 
 		case model.FollowerMethodActivityPub:
-			service.sendNotification_ActivityPub(actor, &follower, activity)
+			service.sendNotification_ActivityPub(actor, &follower, activityMap)
 
 		case model.FollowerMethodWebSub:
-			service.sendNotification_WebSub(&follower, activity)
+			service.sendNotification_WebSub(&follower)
 
 		case model.FollowerMethodEmail:
-			service.sendNotification_Email(&follower, activity)
+			service.sendNotification_Email(&follower, activityMap)
 
 		// TODO: Can we move WebMentions into this too?
 		default:
@@ -81,7 +80,7 @@ func (service *Outbox) Publish(actor *outbox.Actor, actorType string, actorID pr
 	}
 
 	// Send notifications to all Followers
-	go service.sendNotifications_WebMention(activity)
+	go service.sendNotifications_WebMention(activityMap)
 
 	// Success!!
 	return nil
@@ -127,20 +126,15 @@ func (service *Outbox) UnPublish(actor *outbox.Actor, actorType string, actorID 
  * Notification Protocols
  ******************************************/
 
-func (service *Outbox) addresseesAsFollowers(activity mapof.Any) iter.Seq[model.Follower] {
-
-	addressees := joinSlices(
-		activity.GetSliceOfString(vocab.PropertyTo),
-		activity.GetSliceOfString(vocab.PropertyCC),
-		activity.GetSliceOfString(vocab.PropertyBTo),
-		activity.GetSliceOfString(vocab.PropertyBCC),
-	)
+func (service *Outbox) addresseesAsFollowers(addressees iter.Seq[string]) iter.Seq[model.Follower] {
 
 	return func(yield func(model.Follower) bool) {
 
-		for _, address := range addressees {
+		uniquer := streams.NewUniquer[string]()
+
+		for addressee := range uniquer.Range(addressees) {
 			follower := model.NewFollower()
-			follower.Actor.ProfileURL = address
+			follower.Actor.ProfileURL = addressee
 			follower.Method = model.FollowerMethodActivityPub
 			follower.StateID = model.FollowerStateActive
 
@@ -160,7 +154,7 @@ func (service Outbox) sendNotification_ActivityPub(actor *outbox.Actor, follower
 }
 
 // TODO: HIGH: Thoroughly re-test WebSub notifications.  They've been rebuilt from scratch.
-func (service Outbox) sendNotification_WebSub(follower *model.Follower, _ mapof.Any) {
+func (service Outbox) sendNotification_WebSub(follower *model.Follower) {
 
 	const location = "service.Outbox.sendNotifications_WebSub"
 

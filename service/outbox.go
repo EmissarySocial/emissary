@@ -215,10 +215,13 @@ func (service *Outbox) RangeByParentID(actorType string, actorID primitive.Objec
 	return service.Range(criteria)
 }
 
-func (service *Outbox) QueryByParentAndDate(actorType string, actorID primitive.ObjectID, maxDate int64, maxRows int) ([]model.OutboxMessageSummary, error) {
+func (service *Outbox) QueryByParentAndDate(actorType string, actorID primitive.ObjectID, permissions model.Permissions, maxDate int64, maxRows int) ([]model.OutboxMessageSummary, error) {
+
+	const location = "service.Outbox.QueryByParentAndDate"
 
 	criteria := exp.Equal("actorType", actorType).
 		AndEqual("actorId", actorID).
+		AndIn("permissions", permissions).
 		And(exp.LessThan("createDate", maxDate))
 
 	options := []option.Option{
@@ -230,7 +233,7 @@ func (service *Outbox) QueryByParentAndDate(actorType string, actorID primitive.
 	result := make([]model.OutboxMessageSummary, 0, maxRows)
 
 	if err := service.collection.Query(&result, criteria, options...); err != nil {
-		return nil, derp.Wrap(err, "service.Outbox.QueryByUserAndDate", "Error querying outbox", actorID, maxDate)
+		return nil, derp.Wrap(err, location, "Error querying outbox", actorID, maxDate)
 	}
 
 	return result, nil

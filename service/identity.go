@@ -18,7 +18,6 @@ import (
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/turbine/queue"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/golang-jwt/jwt/v5"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -464,8 +463,6 @@ func (service *Identity) calcName(identity *model.Identity) error {
 	if identity.HasActivityPubActor() {
 
 		actor, err := service.activityService.Load(identity.ActivityPubActor)
-
-		spew.Dump("calcName", identity, actor.Name(), actor.Icon(), err)
 
 		if err != nil {
 			return derp.Wrap(err, "service.Identity.calcName", "Error loading ActivityPub Actor", identity.ActivityPubActor)
