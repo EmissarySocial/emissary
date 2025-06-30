@@ -26,6 +26,27 @@ func CollectionPage[T model.JSONLDGetter](pageID string, partOf string, pageSize
 	// Generate the Page record
 	result := streams.NewOrderedCollectionPage(pageID, partOf)
 
+	if len(values) == 0 {
+		return result
+	}
+
+	for _, value := range values {
+		result.OrderedItems = append(result.OrderedItems, value.GetJSONLD())
+	}
+
+	if len(values) == pageSize {
+		lastValue := values[pageSize-1]
+		result.Next = partOf + "?publishDate=" + convert.String(lastValue.Created())
+	}
+
+	return result
+}
+
+func CollectionPage_Links[T model.ActivityPubURLGetter](pageID string, partOf string, pageSize int, values []T) streams.OrderedCollectionPage {
+
+	// Generate the Page record
+	result := streams.NewOrderedCollectionPage(pageID, partOf)
+
 	if len(values) > 0 {
 		for _, value := range values {
 			result.OrderedItems = append(result.OrderedItems, value.ActivityPubURL())

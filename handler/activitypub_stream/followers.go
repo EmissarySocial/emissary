@@ -51,7 +51,7 @@ func GetFollowersCollection(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		ctx.Response().Header().Set("Content-Type", "application/activity+json")
-		result := activitypub.CollectionPage(pageID, stream.ActivityPubFollowersURL(), pageSize, followers)
+		result := activitypub.CollectionPage_Links(pageID, stream.ActivityPubFollowersURL(), pageSize, followers)
 		return ctx.JSON(http.StatusOK, result)
 	}
 }

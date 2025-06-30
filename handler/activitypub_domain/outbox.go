@@ -64,6 +64,8 @@ func mapSearchResult(actorID string) func(r model.SearchResult) model.JSONLD {
 	return func(r model.SearchResult) model.JSONLD {
 
 		return model.JSONLD{
+			vocab.AtContext:         vocab.ContextTypeActivityStreams,
+			vocab.PropertyID:        actorID + "/pub/outbox/" + r.SearchResultID.Hex(),
 			vocab.PropertyActor:     actorID,
 			vocab.PropertyType:      vocab.ActivityTypeAnnounce,
 			vocab.PropertyObject:    r.URL,
