@@ -44,19 +44,13 @@
 			{{- $connections := .AvailableMerchantAccounts -}}
 
 			{{- range $index, $connection := $connections -}}
-				<a href="/@me/oauth/connect/{{$connection.Value | lowerCase }}" class="text-nocolor card padding margin-bottom hover-outline flex-row md:flex-column md:width-25%">
+				<a href="/.{{$connection.Value | lowerCase }}/connect" class="text-nocolor card padding margin-bottom hover-outline flex-row md:flex-column md:width-25%">
 					<div class="align-center margin-bottom flex-grow">
-						<img src="{{$connection.Icon}}" class="width-64 md:height-100%">
+						<img src="{{$connection.Icon}}" class="width-128 md:height-100%">
 					</div>
 					<div class="text-gray">{{$connection.Description}}</div>
 				</a>
 			{{- end -}}
-			<div hx-get="/@me/settings/merchantAccount-edit-stripe" class="clickable card padding margin-bottom hover-outline flex-row md:flex-column md:width-25%" role="button">
-				<div class="align-center margin-bottom flex-grow">
-					<img src="/.templates/user-inbox/resources/stripe.svg" class="width-128 md:height-100%">
-				</div>
-				<div class="text-gray">Stripe is a sophisticated payment platform for developers and techies.</div>
-			</div>
 		</div>
 
 	{{- else -}}

@@ -118,39 +118,39 @@
 					{do:"set-data", values:{"icon":"circle"}}
 					{do:"as-modal", steps:[
 						{do:"edit", form: {
-								type: layout-tabs
-								label: + Add a Circle
-								children:[
-									{
-										type:layout-vertical
-										label:Setup
-										children: [
-											{type:"text", path:"name", label:"Circle Name"}
-											{type:"select", path:"icon", label:"Icon", options:{provider:"circle-icons"}}
-											{type:"toggle", path:"isVisible", options:{false-text:"Visible?", true-text:"Visible. Members see this circle on their profiles."}}
-										]
-									}
-									{
-										type:layout-vertical
-										label:Description
-										children: [
-											{type:"textarea", path:"description", label:"Description", options:{rows:8}}
-										]
-									}
-									{
-										type: layout-vertical
-										label: Products
-										description: Link this Circle to the products in your merchant account and guests will be able to purchase membership in this Circle. <a href="https://emissary.dev/circles" target="_blank"><i class="bi bi-question-circle"></i> Help with Circles</a>
-										children:[
-											{type:"toggle", path:"isFeatured", options:{false-text:"Featured?", true-text:"Featured. Can be purchased from your profile page."}}
-											{type:"multiselect", path:"productIds", options:{provider:"merchantAccounts-all-products"}}
-										]
-									}
-								]
+							type: layout-tabs
+							label: + Add a Circle
+							children:[
+								{
+									type:layout-vertical
+									label:Setup
+									children: [
+										{type:"text", path:"name", label:"Circle Name"}
+										{type:"select", path:"icon", label:"Icon", options:{provider:"circle-icons"}}
+										{type:"toggle", path:"isVisible", options:{false-text:"Visible?", true-text:"Visible. Members see this circle on their profiles."}}
+									]
+								}
+								{
+									type:layout-vertical
+									label:Description
+									children: [
+										{type:"textarea", path:"description", label:"Description", options:{rows:8}}
+									]
+								}
+								{
+									type: layout-vertical
+									label: Products
+									description: Link this Circle to the products in your merchant account and guests will be able to purchase membership in this Circle. <a href="https://emissary.dev/circles" target="_blank"><i class="bi bi-question-circle"></i> Help with Circles</a>
+									children:[
+										{type:"toggle", path:"isFeatured", options:{false-text:"Featured?", true-text:"Featured. Can be purchased from your profile page."}}
+										{type:"multiselect", path:"productIds", options:{provider:"merchantAccounts-all-products"}}
+									]
+								}
+							]
 						}}
-						{do:"save"}
-						{do:"trigger-event", event:"refreshPage"}
 					]}
+					{do:"save"}
+					{do:"forward-to", url:"/@me/settings/circle-members?circleId={{.ObjectID}}"}
 				]}
 			]
 		}
@@ -210,7 +210,8 @@
 			steps:[
 				{do:"with-circle", steps:[
 					{do:"delete", title:"Delete Circle?", message:"Are you sure you want to delete this circle? This will remove all access rights granted to circle members."}
-					{do:"trigger-event", event:"refreshPage"}
+					{do:"forward-to", url:"/@me/settings/circles"}
+					{do:"refresh-page"}
 				]}
 			]
 		}
