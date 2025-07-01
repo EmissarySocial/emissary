@@ -29,24 +29,22 @@ behavior Modal
 		send modalReady
 	end
 
-	on closeModal(nextPage) from window	
+	on closeModal from window	
 
 		if #modal is empty then 
 			exit
 		end
 
-		-- reset window scrolling
-		-- From: https://stackoverflow.com/questions/44103023/stop-scrolling-on-body-when-modal-is-open-and-allow-scroll-on-modal-divs
-		set document.body.style.overflow to ""
-
 		-- animate the modal closing
 		remove .ready from #modal
-		add .closing to #modal
 		settle
 
 		-- done
 		remove #modal
 
+		-- reset window scrolling
+		-- From: https://stackoverflow.com/questions/44103023/stop-scrolling-on-body-when-modal-is-open-and-allow-scroll-on-modal-divs
+		set document.body.style.overflow to ""
 	end
 	
 	on click (target)
