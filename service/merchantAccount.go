@@ -452,62 +452,6 @@ func (service *MerchantAccount) RemoteProductsByUser(userID primitive.ObjectID) 
 	return merchantAccounts, result, nil
 }
 
-/*
-// ProductsByID retrieves a list of products configured in the remote MerchantAccount(s)
-func (service *MerchantAccount) ProductsByID(userID primitive.ObjectID, tokens ...string) ([]model.Product, error) {
-
-	const location = "service.MerchantAccount.ProductsByID"
-
-	// RULE: Require a valid UserID
-	if userID.IsZero() {
-		return nil, derp.ValidationError("UserID cannot be zero")
-	}
-
-	// Expand any Circles that appear in the tokens -> turn them into ProductIDs
-	if circleIDs := extractCircleIDs(tokens...); circleIDs.NotEmpty() {
-
-		circles, err := service.circleService.QueryByIDs(userID, circleIDs)
-
-		if err != nil {
-			return nil, derp.Wrap(err, location, "Error loading circles")
-		}
-
-		// Add purchase options from circles into the list of products to include
-		for _, circle := range circles {
-			tokens = append(tokens, circle.ProductIDs...)
-		}
-	}
-
-	merchantAccountsAndProducts := extractProductIDs(tokens...)
-
-	result := make([]model.Product, 0, len(merchantAccountsAndProducts))
-	for merchantAccountID, productIDs := range merchantAccountsAndProducts {
-
-		// Load the MerchantAccount
-		merchantAccount := model.NewMerchantAccount()
-		if err := service.LoadByUserAndID(userID, merchantAccountID, &merchantAccount); err != nil {
-			return nil, derp.Wrap(err, location, "Error loading merchant account", merchantAccountID)
-		}
-
-		// Retrieve all of the Products from the remote services
-		remoteProducts, err := service.getRemoteProducts(&merchantAccount, productIDs...)
-
-		if err != nil {
-			return nil, derp.Wrap(err, location, "Error loading products for merchant account", merchantAccount)
-		}
-
-		// So far, so good...
-		result = append(result, remoteProducts...)
-	}
-
-	// Sort the final result
-	slices.SortFunc(result, model.SortProducts)
-
-	// Dun dun dunnnnn...
-	return result, nil
-}
-*/
-
 // getProducts lists all of the products configured by a remote service
 func (service *MerchantAccount) getRemoteProducts(merchantAccount *model.MerchantAccount, productIDs ...string) (sliceof.Object[model.Product], error) {
 

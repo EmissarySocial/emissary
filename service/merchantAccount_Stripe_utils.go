@@ -5,7 +5,6 @@ import (
 	"github.com/EmissarySocial/emissary/tools/currency"
 	api "github.com/EmissarySocial/emissary/tools/stripeapi"
 	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/slice"
 	"github.com/stripe/stripe-go/v78"
 )
 
@@ -63,18 +62,37 @@ func (service *MerchantAccount) stripe_getPrices(merchantAccount *model.Merchant
 		return nil, derp.Wrap(err, location, "Error retrieving prices from Stripe")
 	}
 
-	result := slice.Map(prices, func(price stripe.Price) model.Product {
-		result := model.NewProduct()
-		result.MerchantAccountID = merchantAccount.MerchantAccountID
-		result.UserID = merchantAccount.UserID
-		result.RemoteID = price.ID
-		result.Name = price.Product.Name
-		result.Price = service.stripe_priceLabel(price)
-		result.Icon = "stripe"
-		result.AdminHref = "https://dashboard.stripe.com/prices/" + price.ID
+	result := make([]model.Product, 0, len(prices))
 
-		return result
-	})
+	for _, price := range prices {
+
+		// RULE: Price must be active
+		if !price.Active {
+			continue
+		}
+
+		// RULE: Product must not be nil
+		if price.Product == nil {
+			continue
+		}
+
+		// RULE: Product must be active
+		if !price.Product.Active {
+			continue
+		}
+
+		// Append the model.Product to the result
+		product := model.NewProduct()
+		product.MerchantAccountID = merchantAccount.MerchantAccountID
+		product.UserID = merchantAccount.UserID
+		product.RemoteID = price.ID
+		product.Name = price.Product.Name
+		product.Price = service.stripe_priceLabel(price)
+		product.Icon = "stripe"
+		product.AdminHref = "https://dashboard.stripe.com/prices/" + price.ID
+
+		result = append(result, product)
+	}
 
 	return result, nil
 }

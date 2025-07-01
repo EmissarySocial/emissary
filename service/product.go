@@ -215,10 +215,12 @@ func (service *Product) SyncRemoteProducts(userID primitive.ObjectID) (sliceof.O
 
 	productIndex := service.indexByRemoteID(products)
 
+	// Scan products/remoteProducts; add new remote Products to local Products list.
 	for _, remoteProduct := range remoteProducts {
 
 		// Skip this remote product if it already exists in the database
 		if _, exists := productIndex[remoteProduct.RemoteID]; exists {
+			delete(productIndex, remoteProduct.RemoteID)
 			continue
 		}
 
@@ -229,6 +231,21 @@ func (service *Product) SyncRemoteProducts(userID primitive.ObjectID) (sliceof.O
 
 		// Add the new remote product to the result
 		products.Append(remoteProduct)
+	}
+
+	// Remove local Product records that are no longer in the remote products list
+	for _, product := range productIndex {
+		if err := service.Delete(&product, "Removed from merchant account"); err != nil {
+			return nil, nil, derp.Wrap(err, location, "Error deleting local product", product)
+		}
+
+		// Delete the Product from the result
+		for index := range products {
+			if products[index].ProductID == product.ProductID {
+				products.RemoveAt(index)
+				break
+			}
+		}
 	}
 
 	return merchantAccounts, products, nil
