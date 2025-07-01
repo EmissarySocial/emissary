@@ -1,4 +1,4 @@
-<div class="page h-entry" hx-get="/{{.StreamID}}" hx-target="this" hx-swap="outerHTML" hx-trigger="sse:{{.StreamID}}, refreshPage from:window">
+<div class="page h-entry">
 
 	<link rel="stylesheet" href="/.templates/collection/stylesheet">
 
@@ -21,4 +21,12 @@
 		</div>
 	{{- end -}}
 
+	<div 
+		hx-get="/{{.StreamID}}" 
+		hx-trigger="refreshPage from:window"
+		hx-target="#main" 
+		hx-swap="innerHTML" 
+		hx-push-url="false">
+	</div>
+	
 </div>

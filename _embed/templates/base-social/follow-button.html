@@ -2,7 +2,7 @@
 {{- $url := .QueryParam "url" -}}
 
 {{- if .NotMe $url -}}
-	<span hx-swap="outerHTML" hx-target="this">
+	<span hx-swap="outerHTML" hx-target="this" hx-push-url="false">
 		{{- $followingID := .GetFollowingID $url -}}
 		{{- if ne "" $followingID -}}
 			<button class="bold link" hx-post="/@me/inbox/unfollow?followingId={{$followingID}}" hx-confirm="Do you want to stop following this account and remove all of their content from your inbox?">{{icon "check"}} Following</button>

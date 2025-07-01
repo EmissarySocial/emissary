@@ -93,7 +93,13 @@
 	
 	</div>
 
-	<div hx-get="{{.URL}}" hx-trigger="refreshPage from:window" hx-push-url="false"></div>
+	<div 
+		hx-get="{{.URL}}" 
+		hx-trigger="refreshPage from:window" 
+		hx-target="#main"
+		hx-swap="innerHTML"
+		hx-push-url="false">
+	</div>
 
 </div>
 

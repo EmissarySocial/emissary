@@ -1,4 +1,4 @@
-<div class="page" hx-get="/admin/connections/index" hx-trigger="refreshPage from:window">
+<div class="page">
 
 	<script src="/.themes/global/resources/sortable-1.15.0/Sortable.min.js"></script>
 
@@ -26,6 +26,14 @@
 				</div>
 		{{- end -}}
 
+	</div>
+	
+	<div
+		hx-get="/admin/connections/index" 
+		hx-trigger="refreshPage from:window"
+		hx-target="#main"
+		hx-swap="innerHTML"
+		hx-push-url="false">
 	</div>
 	
 </div>

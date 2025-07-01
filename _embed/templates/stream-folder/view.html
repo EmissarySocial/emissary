@@ -1,4 +1,4 @@
-<div class="page h-item" hx-get="/{{.StreamID}}" hx-trigger="refreshPage from:window" hx-target="this" hx-swap="outerHTML" hx-push-url="true">
+<div class="page h-item">
 
 	<!-- Alternate links for service discovery -->
 	<link rel="alternate" type="application/rss+xml" href="/{{.StreamID}}/rss"/>
@@ -97,17 +97,25 @@
 		</table>
 	{{- end -}}
 
+	<div
+		hx-get="/{{.StreamID}}" 
+		hx-trigger="refreshPage from:window" 
+		hx-target="#main" 
+		hx-swap="innerHTML" 
+		hx-push-url="true">
+	</div>
+
+	{{- if .UserCan "sort" -}}
+		<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
+		<form
+			hx-post="/{{.StreamID}}/sort" 
+			hx-push-url="false" 
+			hx-swap="none"
+			hx-trigger="end from:document"
+			hx-include="[name=keys]">
+		</form>
+
+	{{- end -}}
+
 </div>
-
-{{- if .UserCan "sort" -}}
-	<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-
-	<form
-		hx-post="/{{.StreamID}}/sort" 
-		hx-push-url="false" 
-		hx-swap="none"
-		hx-trigger="end from:document"
-		hx-include="[name=keys]">
-	</form>
-
-{{- end -}}

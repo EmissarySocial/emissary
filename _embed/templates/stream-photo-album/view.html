@@ -1,4 +1,4 @@
-<div class="page h-entry" hx-get="/{{.StreamID}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:window"  hx-sse="connect:/{{.StreamID}}/sse">
+<div class="page h-entry" hx-sse="connect:/{{.StreamID}}/sse">
 
 	<link rel="stylesheet" href="/.templates/photo-album/stylesheet"/>
 
@@ -42,4 +42,12 @@
 		{{- .View "children" -}}
 	</div>
 
+	<div 
+		hx-get="/{{.StreamID}}" 
+		hx-trigger="sse:{{.StreamID}}, refreshPage from:window"
+		hx-target="#main"
+		hx-swap="innerHTML"
+		hx-push-url="false">
+	</div>
+	
 </div>

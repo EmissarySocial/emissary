@@ -3,7 +3,7 @@
 {{- $block := .Object -}}
 {{- $class := iif (eq "POST" .Method) "visible" "" -}}
 
-<span script="install popUp(position:'center')" hx-target="this" hx-swap="outerHTML" hx-push-url="false" class="{{$class}}">
+<span  class="{{$class}}" script="install popUp(position:'center')" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
 	<button class="popUp-button bold">{{icon "block"}} Blocked</button>
 	<div class="popUp-content width-320 text-md">
 		<div class="margin-bottom-lg">

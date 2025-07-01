@@ -5,7 +5,7 @@
 {{- $folderID := $folder.FolderID.Hex -}}
 {{- $followingID := .QueryParam "origin.followingId" -}}
 
-<div class="page app flex-row" hx-get="{{.URL}}" hx-trigger="refreshPage from:window" script="on load take .selected from .nav-item for #nav-inbox">
+<div class="page app flex-row" script="on load take .selected from .nav-item for #nav-inbox">
 
 	<link rel="stylesheet" href="/.templates/user-inbox/stylesheet">
 
@@ -62,4 +62,12 @@
 
 	<script src="/.templates/user-inbox/hyperscript" type="text/hyperscript"></script>
 
+	<div
+		hx-get="{{.URL}}" 
+		hx-trigger="refreshPage from:window"
+		hx-target="#main"
+		hx-swap="innerHTML"
+		hx-push-url="false">
+	</div>
+	
 </div>

@@ -1,4 +1,4 @@
-<div hx-get="/admin/users/{{.UserID}}/view" hx-trigger="refreshPage from:window" hx-push-url="false">
+<div>
     <div class="margin-bottom">
         <a hx-get="/admin/users">{{icon "chevron-left"}} All People</a>
     </div>
@@ -13,4 +13,12 @@
     <button hx-get="/admin/users/{{.UserID}}/edit">Edit</button>
     <button hx-get="/admin/users/{{.UserID}}/delete" class="warning">Delete</button>
 
+	<div 
+		hx-get="/admin/users/{{.UserID}}/view" 
+		hx-trigger="refreshPage from:window" 
+		hx-target="#main" 
+		hx-swap="innerHTML"
+		hx-push-url="false">
+	</div>
+	
 </div>

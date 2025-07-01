@@ -1,4 +1,4 @@
-<div class="page h-entry" hx-get="/{{.StreamID}}" hx-trigger="sse:{{.StreamID}}, refreshPage from:window"  hx-sse="connect:/{{.StreamID}}/sse">
+<div class="page h-entry" hx-sse="connect:/{{.StreamID}}/sse">
 
 	<div id="menu-bar">
 		<div class="left">
@@ -37,5 +37,13 @@
 		</div>
 
 	</article>
+
+	<div 
+		hx-get="/{{.StreamID}}" 
+		hx-trigger="sse:{{.StreamID}}, refreshPage from:window" 
+		hx-target="#main" 
+		hx-swap="innerHTML" 
+		hx-push-url="false">
+	</div>
 
 </div>
