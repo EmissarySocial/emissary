@@ -2,9 +2,6 @@ module github.com/EmissarySocial/emissary
 
 go 1.24.1
 
-replace github.com/benpate/form => ../../benpate/form
-replace github.com/benpate/rosetta => ../../benpate/rosetta
-
 require (
 	github.com/PuerkitoBio/goquery v1.10.3
 	github.com/aws/aws-sdk-go v1.55.7
@@ -18,14 +15,14 @@ require (
 	github.com/benpate/domain v0.2.7
 	github.com/benpate/exp v0.8.5
 	github.com/benpate/exp-builder v0.10.1
-	github.com/benpate/form v0.23.5
-	github.com/benpate/hannibal v0.12.3
+	github.com/benpate/form v0.23.6
+	github.com/benpate/hannibal v0.13.0
 	github.com/benpate/html v0.16.12
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.15.5
 	github.com/benpate/re v0.3.2
 	github.com/benpate/remote v0.17.3
-	github.com/benpate/rosetta v0.25.10
+	github.com/benpate/rosetta v0.25.11
 	github.com/benpate/sherlock v0.8.10
 	github.com/benpate/steranko v0.22.0
 	github.com/benpate/table v0.7.3
@@ -77,7 +74,7 @@ require (
 	dario.cat/mergo v1.0.2 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/ProtonMail/go-crypto v1.3.0 // indirect
-	github.com/alecthomas/chroma/v2 v2.18.0 // indirect
+	github.com/alecthomas/chroma/v2 v2.19.0 // indirect
 	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/cloudflare/ahocorasick v0.0.0-20240916140611-054963ec9396 // indirect
