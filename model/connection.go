@@ -47,7 +47,7 @@ func (connection Connection) LookupCode() form.LookupCode {
 			Value:       connection.ProviderID,
 			Label:       "Stripe",
 			Description: "Stripe is a sophisticated payment platform for techies. Manage your own Stripe API keys.",
-			Icon:        "/.templates/user-inbox/resources/stripe.svg",
+			Icon:        "/.templates/user-settings/resources/stripe.svg",
 		}
 
 	case ConnectionProviderStripeConnect:
@@ -56,7 +56,7 @@ func (connection Connection) LookupCode() form.LookupCode {
 			Value:       connection.ProviderID,
 			Label:       "Stripe Connect",
 			Description: "Stripe Connect is a powerful payment platform for techies. Connect your Stripe account via OAuth.",
-			Icon:        "/.templates/user-inbox/resources/stripe.svg",
+			Icon:        "/.templates/user-settings/resources/stripe.svg",
 		}
 
 		// case ConnectionProviderPayPal:
@@ -65,7 +65,7 @@ func (connection Connection) LookupCode() form.LookupCode {
 		//		Value:       connection.ProviderID,
 		//		Label:       "PayPal",
 		//		Description: "PayPal is a leading payment platform for consumers and small businesses.",
-		//		Icon:        "/.templates/user-inbox/resources/paypal.png",
+		//		Icon:        "/.templates/user-settings/resources/paypal.png",
 		//	}
 	}
 
