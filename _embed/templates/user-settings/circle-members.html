@@ -30,33 +30,42 @@
 			{{.Name}}
 		</h1>
 
-		<div class="flex-row width-100% margin-top margin-bottom-lg">
+		<div class="md:flex-row width-100% margin-top margin-bottom-lg">
 
-			<div class="card flex-grow flex-column padding width-1-2">
+			<div class="card flex-grow flex-column padding margin-bottom md:width-1-2">
 
-				<div class="text-sm text-gray margin-bottom">{{icon "circle"}} DESCRIPTION</div>
+				<div class="text-sm text-gray margin-bottom">{{icon "circle"}} CIRCLE DESCRIPTION</div>
 				<div class="flex-grow margin-bottom">{{$circle.Description}}</div>
-				<div class="align-right">
+				<div class="flex-row">
+					<div class="flex-grow">
+						{{- if $circle.IsFeatured -}}
+							<span class="text-sm text-green">{{icon "check-circle-fill"}} Shows on Profile</span>
+						{{- else -}}
+							<span class="text-sm text-light-gray">{{icon "circle"}} Not Featured</span>
+						{{- end -}}
+					</div>
+
 					<button class="text-xs" hx-get="/@me/settings/circle-edit?circleId={{$circle.ID}}">Edit Circle</button>
 				</div>
 			</div>
-			<div class="card flex-grow flex-column padding align-center width-1-4">
+			<div class="card flex-grow flex-column padding align-center margin-bottom md:width-1-4">
+				<div class="text-sm text-gray">{{icon "box-fill"}} SELL ONLINE</div>
+				<div class="flex-grow text-2xl margin-none bold">
+					{{- if $circle.ProductIDs.IsEmpty -}}
+						&mdash;
+					{{- else -}}
+						Yes
+					{{- end -}}
+				</div>
+				<div class="align-center">
+					<button class="text-xs" hx-get="/@me/settings/circle-edit?circleId={{$circle.ID}}&selected-tab=2">Edit Products</button>
+				</div>
+			</div>
+			<div class="card flex-grow flex-column padding align-center margin-bottom md:width-1-4">
 				<div class="text-sm text-gray">{{icon "person-fill"}} MEMBERS</div>
 				<div class="flex-grow text-2xl margin-none bold">{{$circle.MemberCount}}</div>
 				<div class="align-center">
 					<button class="primary text-xs" hx-get="/@me/settings/circle-member-add?circleId={{$circle.ID}}#" class="primary">&plus; Add a Member</button>
-				</div>
-			</div>
-			<div class="card flex-grow flex-column padding align-center width-1-4">
-				<div class="text-sm text-gray">{{icon "box-fill"}} PRODUCTS</div>
-				<div class="flex-grow text-2xl margin-none bold">{{$circle.ProductIDs.Length}}</div>
-				<div class="align-center">
-					{{- if $circle.IsFeatured -}}
-						<span class="text-sm text-green">{{icon "check-circle-fill"}} Featured on Profile</span>
-					{{- else -}}
-						<span class="text-sm text-light-gray">{{icon "circle"}} Not Featured</span>
-					{{- end -}}
-					<!--button class="text-xs" hx-get="/@me/settings/circle-edit?circleId={{$circle.ID}}">Edit Products</button-->
 				</div>
 			</div>
 		</div>

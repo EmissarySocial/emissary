@@ -142,8 +142,8 @@
 									label: Products
 									description: Link this Circle to the products in your merchant account and guests will be able to purchase membership in this Circle. <a href="https://emissary.dev/circles" target="_blank"><i class="bi bi-question-circle"></i> Help with Circles</a>
 									children:[
-										{type:"toggle", path:"isFeatured", options:{false-text:"Featured?", true-text:"Featured. Can be purchased from your profile page."}}
 										{type:"multiselect", path:"productIds", options:{provider:"merchantAccounts-all-products"}}
+										{type:"toggle", path:"isFeatured", options:{false-text:"Featured?", true-text:"Featured. Can be purchased from your profile page."}}
 									]
 								}
 							]
@@ -166,6 +166,7 @@
 							options:[
 								delete:/@me/settings/circle-delete?circleId={{.ObjectID}}
 								delete-label:Delete Circle
+								selected-tab:{{.QueryParam `selected-tab`}}
 							]
 							form: {
 								type: layout-tabs
@@ -191,8 +192,8 @@
 										label: Products
 										description: Link this Circle to the products in your merchant account and guests will be able to purchase membership in this Circle.
 										children:[
-											{type:"toggle", path:"isFeatured", options:{false-text:"Featured?", true-text:"Featured. Can be purchased from your profile page."}}
 											{type:"multiselect", path:"productIds", description:"<a href='/@me/settings/payments'>Manage Products &rarr;</a>", options:{provider:"merchantAccounts-all-products"}}
+											{type:"toggle", path:"isFeatured", options:{false-text:"Featured?", true-text:"Featured. Can be purchased from your profile page."}}
 										]
 									}
 								]
