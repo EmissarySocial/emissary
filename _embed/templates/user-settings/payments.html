@@ -15,7 +15,7 @@
 			<a href="/@me/settings/rules" hx-boost="true" class="turboclick menu-item ellipsis">{{icon "rule"}} Rules</a>
 			<a href="/@guest" class="turboclick menu-item ellipsis">{{icon "user"}} Guest Profile</a>
 			<hr>
-			<a hx-post="/signout" class="button text-xs">Sign Out</a>
+			<a hx-post="/signout" class="button">Sign Out</a>
 		</div>
 	
 	</div>
@@ -85,7 +85,7 @@
 				</div>
 			</div>
 
-			<div hx-get="/@me/settings/remoteProducts" hx-target="this" hx-trigger="load" hx-push-url="false" hx-swap="innerHTML" class="margin-top-xl">
+			<div hx-get="/@me/settings/remoteProducts" hx-target="this" hx-trigger="load, focus from:window" hx-push-url="false" hx-swap="innerHTML" class="margin-top-xl">
 				Loading Products from Your Merchant Accounts...
 			</div>
 
