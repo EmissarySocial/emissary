@@ -93,8 +93,8 @@
 						}
 						{do: "save"}
 					]}
-					{do: "trigger-event", event: "closeModal"}
-					{do: "trigger-event", event: "refreshPage"}
+					{do: "close-modal"}
+					{do: "refresh-page"}
 				]}
 			]
 		}

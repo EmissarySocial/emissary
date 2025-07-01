@@ -47,7 +47,7 @@
 			steps: [
 				{do: "edit-registration"}
 				{do: "save"}
-				{do: "trigger-event", event: "refreshPage"}
+				{do: "refresh-page"}
 			]
 		}
 	}
