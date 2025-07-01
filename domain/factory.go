@@ -989,6 +989,7 @@ func (factory *Factory) LookupProvider(request *http.Request, userID primitive.O
 		factory.Folder(),
 		factory.Group(),
 		factory.MerchantAccount(),
+		factory.Product(),
 		factory.Registration(),
 		factory.SearchTag(),
 		factory.Stream(),

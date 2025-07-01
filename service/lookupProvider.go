@@ -19,6 +19,7 @@ type LookupProvider struct {
 	folderService          *Folder
 	groupService           *Group
 	merchantAccountService *MerchantAccount
+	productService         *Product
 	registrationService    *Registration
 	searchTagService       *SearchTag
 	streamService          *Stream
@@ -28,13 +29,14 @@ type LookupProvider struct {
 	userID                 primitive.ObjectID
 }
 
-func NewLookupProvider(circleService *Circle, domainService *Domain, folderService *Folder, groupService *Group, merchantAccountService *MerchantAccount, registrationService *Registration, searchTagService *SearchTag, streamService *Stream, templateService *Template, themeService *Theme, request *http.Request, userID primitive.ObjectID) LookupProvider {
+func NewLookupProvider(circleService *Circle, domainService *Domain, folderService *Folder, groupService *Group, merchantAccountService *MerchantAccount, productService *Product, registrationService *Registration, searchTagService *SearchTag, streamService *Stream, templateService *Template, themeService *Theme, request *http.Request, userID primitive.ObjectID) LookupProvider {
 	return LookupProvider{
 		circleService:          circleService,
 		domainService:          domainService,
 		folderService:          folderService,
 		groupService:           groupService,
 		merchantAccountService: merchantAccountService,
+		productService:         productService,
 		registrationService:    registrationService,
 		searchTagService:       searchTagService,
 		streamService:          streamService,
@@ -86,9 +88,6 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 
 	case "merchantAccounts":
 		return service.getMerchantAccounts()
-
-	case "merchantAccount-products":
-		return service.getMerchantAccountProducts()
 
 	case "merchantAccounts-all-products":
 		return service.getMerchantAccountsAllProducts()
@@ -239,67 +238,19 @@ func (service *LookupProvider) getMerchantAccounts() form.LookupGroup {
 	return form.NewReadOnlyLookupGroup(lookupCodes...)
 }
 
-// getMerchantAccountProducts returns all products defined by the selected merchant account
-func (service *LookupProvider) getMerchantAccountProducts() form.LookupGroup {
-
-	const location = "service.LookupProvider.getMerchantAccountProducts"
-
-	// Locate the Merchant Account in the User's profile
-	token := service.request.URL.Query().Get("merchantAccountId")
-	merchantAccount := model.NewMerchantAccount()
-
-	if err := service.merchantAccountService.LoadByUserAndToken(service.userID, token, &merchantAccount); err != nil {
-		derp.Report(derp.Wrap(err, location, "Error loading merchant account"))
-		return form.NewReadOnlyLookupGroup()
-	}
-
-	// Load the Products for this Merchant Account
-	remoteProducts, err := service.merchantAccountService.getRemoteProducts(&merchantAccount)
-
-	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Error loading merchant account products"))
-		return form.NewReadOnlyLookupGroup()
-	}
-
-	lookupCodes := mapProductsToLookupCodes(remoteProducts...)
-
-	// Success?!?!?
-	return form.NewReadOnlyLookupGroup(lookupCodes...)
-}
-
 // getMerchantAccountsAllProducts returns all products defined by the selected merchant account
 func (service *LookupProvider) getMerchantAccountsAllProducts() form.LookupGroup {
 
 	const location = "service.LookupProvider.getMerchantAccountsAllProducts"
 
-	// Load all Merchant Accounts for this User (probably just one, though)
-	merchantAccounts, err := service.merchantAccountService.QueryByUser(service.userID)
+	_, products, err := service.productService.SyncRemoteProducts(service.userID)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Error loading merchant accounts"))
+		derp.Report(derp.Wrap(err, location, "Error loading remote products for user", service.userID.Hex()))
 		return form.NewReadOnlyLookupGroup()
 	}
 
-	// If there are no merchant accounts, then return an empty group
-	if len(merchantAccounts) == 0 {
-		return form.NewReadOnlyLookupGroup()
-	}
-
-	// Find all products for each Merchant Account
-	result := make([]form.LookupCode, 0)
-	for _, merchantAccount := range merchantAccounts {
-
-		remoteProducts, err := service.merchantAccountService.getRemoteProducts(&merchantAccount)
-
-		if err != nil {
-			derp.Report(derp.Wrap(err, location, "Error loading merchant account products"))
-			return form.NewReadOnlyLookupGroup()
-		}
-
-		lookupCodes := mapProductsToLookupCodes(remoteProducts...)
-
-		result = append(result, lookupCodes...)
-	}
+	result := mapProductsToLookupCodes(products...)
 
 	// Sort the results by label
 	slices.SortFunc(result, form.SortLookupCodeByLabel)
