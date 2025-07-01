@@ -21,16 +21,7 @@ func (step StepEditModelObject) Get(builder Builder, buffer io.Writer) PipelineB
 
 	const location = "build.StepEditModelObject.Get"
 
-	schema := builder.schema()
-
-	// Try to build the Form HTML
-	element := step.getForm(builder)
-	result, err := form.Editor(schema, element, builder.object(), builder.lookupProvider())
-
-	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error generating form"))
-	}
-
+	// Evaluate options to pass into the form.
 	optionStrings := make([]string, 0, len(step.Options))
 	for _, option := range step.Options {
 
@@ -45,12 +36,24 @@ func (step StepEditModelObject) Get(builder Builder, buffer io.Writer) PipelineB
 		optionStrings = append(optionStrings, optionString)
 	}
 
+	// Try to build the Form HTML
+	schema := builder.schema()
+	element := step.getForm(builder)
+	result, err := form.Editor(schema, element, builder.object(), builder.lookupProvider(), optionStrings...)
+
+	if err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Error generating form"))
+	}
+
+	// Wrap the form layout in a <form> element
 	result = WrapForm(builder.URL(), result, element.Encoding(), optionStrings...)
 
+	// Write to the result buffer
 	if _, err := io.WriteString(buffer, result); err != nil {
 		return Halt().WithError(derp.Wrap(err, "build.StepEditModelObject.Get", "Error writing form HTML to buffer"))
 	}
 
+	// Retire in Cabo.
 	return nil
 }
 

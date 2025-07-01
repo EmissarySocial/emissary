@@ -33,11 +33,13 @@ func (step StepSetSimpleSharing) Get(builder Builder, buffer io.Writer) Pipeline
 	// Calculate the value object for this step
 	value := step.calculateValue(streamBuilder._stream)
 	schema := step.schema()
-	form, err := step.form()
+	element, err := step.form()
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error building form for StepSetSimpleSharing"))
 	}
+
+	form := form.New(schema, element)
 
 	// Write the rest of the HTML that contains the form
 	b := html.New()
@@ -53,10 +55,13 @@ func (step StepSetSimpleSharing) Get(builder Builder, buffer io.Writer) Pipeline
 		b.H3().InnerText(step.Message).Close()
 	}
 
-	if err := form.Edit(&schema, builder.lookupProvider(), value, b); err != nil {
+	formHTML, err := form.Editor(value, builder.lookupProvider())
+
+	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error rendering form for StepSetSimpleSharing"))
 	}
 
+	b.WriteString(formHTML)
 	b.CloseAll()
 
 	result := WrapForm(builder.URL(), b.String(), "application/x-www-form-urlencoded")

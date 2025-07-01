@@ -6,6 +6,7 @@ import (
 	"github.com/EmissarySocial/emissary/tools/formdata"
 	"github.com/EmissarySocial/emissary/tools/random"
 	"github.com/benpate/derp"
+	"github.com/benpate/form"
 	"github.com/benpate/html"
 	"github.com/benpate/rosetta/mapof"
 )
@@ -68,15 +69,17 @@ func (step StepEditRegistration) Get(builder Builder, buffer io.Writer) Pipeline
 		result = b.String()
 
 	} else {
-		form := html.New()
 		userID := builder.authorization().UserID
 		lookupProvider := factory.LookupProvider(builder.request(), userID)
 
-		if err := registration.Form.Edit(&registration.Schema, lookupProvider, domainBuilder._domain.RegistrationData, form); err != nil {
+		f := form.New(registration.Schema, registration.Form)
+		formHTML, err := f.Editor(domainBuilder._domain.RegistrationData, lookupProvider)
+
+		if err != nil {
 			return Halt().WithError(derp.Wrap(err, "builder.StepEditRegistration", "Error building registration form"))
 		}
 
-		result += WrapForm("/admin/domain/signup?registrationId="+registrationID, form.String(), "")
+		result += WrapForm("/admin/domain/signup?registrationId="+registrationID, formHTML, "")
 	}
 
 	result = WrapModal(builder.response(), result)
