@@ -117,9 +117,9 @@
 				{do:"with-circle", steps:[
 					{do:"set-data", values:{"icon":"circle"}}
 					{do:"as-modal", steps:[
+						{do:"view-html"}
 						{do:"edit", form: {
 							type: layout-tabs
-							label: + Add a Circle
 							children:[
 								{
 									type:layout-vertical
@@ -142,7 +142,7 @@
 									label: Products
 									description: Link this Circle to the products in your merchant account and guests will be able to purchase membership in this Circle. <a href="https://emissary.dev/circles" target="_blank"><i class="bi bi-question-circle"></i> Help with Circles</a>
 									children:[
-										{type:"multiselect", path:"productIds", options:{provider:"merchantAccounts-all-products"}}
+										{type:"multiselect", path:"productIds",description:"<a href='/@me/settings/payments'>Manage Products &rarr;</a>",  options:{provider:"merchantAccounts-all-products"}}
 										{type:"toggle", path:"isFeatured", options:{false-text:"Featured?", true-text:"Featured. Can be purchased from your profile page."}}
 									]
 								}
