@@ -244,7 +244,7 @@
 						}}
 						{do:"set-data", from-url:"circleId"}
 						{do:"save"}
-						{do:"trigger-event", event:"refreshPage"}
+						{do:"refresh-page"}
 					]}
 				]}
 			]
@@ -320,7 +320,7 @@
 			steps:[
 				{do:"with-follower", steps:[
 					{do:"delete", title:"Remove Follower?", message:"Stop sending updates to '{{.Label}}'?", button:"Remove"}
-					{do:"trigger-event", event:"refreshPage"}
+					{do:"refresh-page"}
 				]}
 			]
 		}
@@ -428,7 +428,7 @@
 					{do:"save"}
 				]}
 				{do:"trigger-event", event:"closeModal"}
-				{do:"trigger-event", event:"refreshPage"}
+				{do:"refresh-page"}
 			]
 		}
 
@@ -515,7 +515,7 @@
 					]}
 				]}
 				{do:"trigger-event", event:"closeModal"}
-				{do:"trigger-event", event:"refreshPage"}
+				{do:"refresh-page"}
 			]
 		}
 		following-delete:{
@@ -703,7 +703,7 @@
 						}
 					}
 					{do:"save"}
-					{do:"trigger-event", event:"refreshPage"}
+					{do:"refresh-page"}
 					{do:"trigger-event", event:"closeModal"}
 				]}
 			]
@@ -734,7 +734,7 @@
 						}
 					}
 					{do:"save"}
-					{do:"trigger-event", event:"refreshPage"}
+					{do:"refresh-page"}
 					{do:"trigger-event", event:"closeModal"}
 				]}
 			]
@@ -765,7 +765,7 @@
 						}
 					}
 					{do:"save"}
-					{do:"trigger-event", event:"refreshPage"}
+					{do:"refresh-page"}
 					{do:"trigger-event", event:"closeModal"}
 				]}
 			]
@@ -784,7 +784,7 @@
 			steps:[
 				{do:"with-rule", steps:[
 					{do:"delete", title:"Delete Rule?", message:"Removing this rule will allow blocked messages from this source to be displayed."}
-					{do:"trigger-event", event:"refreshPage"}
+					{do:"refresh-page"}
 				]}
 			]
 		}

@@ -36,7 +36,7 @@
 				}},
 				{do:"save"}
 			]}
-			{do:"trigger-event", event:"refreshPage"}
+			{do:"refresh-page"}
 		]}
 		
 		edit: {
@@ -58,14 +58,14 @@
 					}
 				]}
 			{do:"save"}
-			{do:"trigger-event", event:"refreshPage"}
+			{do:"refresh-page"}
 		]}
 		
 		delete: {
 			roles:["owner"]
 			steps:[
 				{do: "delete"}
-				{do:"trigger-event", event:"refreshPage"}
+				{do:"refresh-page"}
 			]
 		}
 	}

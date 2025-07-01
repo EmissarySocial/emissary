@@ -109,7 +109,7 @@
 					}}
 					{do:"save", comment:"Profile updated by me"}
 				]}
-				{do:"trigger-event", event:"refreshPage"}
+				{do:"refresh-page"}
 			]
 		}
 
