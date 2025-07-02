@@ -46,3 +46,18 @@ func SubscriptionIsActive(subscription stripe.Subscription) bool {
 
 	return false
 }
+
+func SubscriptionCancel(restrictedKey string, connectedAccountID string, subscriptionID string) error {
+
+	const location = "tools.stripeapi.SubscriptionCancel"
+
+	txn := remote.Delete("https://api.stripe.com/v1/subscriptions/" + subscriptionID).
+		With(options.BearerAuth(restrictedKey)).
+		With(ConnectedAccount(connectedAccountID))
+
+	if err := txn.Send(); err != nil {
+		return derp.Wrap(err, location, "Error canceling subscription", derp.WithCode(http.StatusInternalServerError))
+	}
+
+	return nil
+}

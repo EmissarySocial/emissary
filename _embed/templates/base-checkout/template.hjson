@@ -42,7 +42,7 @@
 		checkout: {
 			roles: ["anonymous"]
 			steps: [
-				{do:"if", condition:"{{eq 1 .PrivilegeIDs.Length }}", then:[
+				{do:"if", condition:"{{.PrivilegeIDs.IsLength 1}}", then:[
 					{
 						do:"forward-to"
 						url:"/.checkout?productId={{.PrivilegeIDs.First.Hex}}&return={{.Permalink}}"

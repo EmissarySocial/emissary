@@ -15,9 +15,10 @@ import (
 
 // Privilege defines a service that manages all content privileges created and imported by Users.
 type Privilege struct {
-	collection      data.Collection
-	circleService   *Circle
-	identityService *Identity
+	collection             data.Collection
+	circleService          *Circle
+	identityService        *Identity
+	merchantAccountService *MerchantAccount
 }
 
 // NewPrivilege returns a fully initialized Privilege service
@@ -30,10 +31,11 @@ func NewPrivilege() Privilege {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Privilege) Refresh(collection data.Collection, circleService *Circle, identityService *Identity) {
+func (service *Privilege) Refresh(collection data.Collection, circleService *Circle, identityService *Identity, merchantAccountService *MerchantAccount) {
 	service.collection = collection
 	service.circleService = circleService
 	service.identityService = identityService
+	service.merchantAccountService = merchantAccountService
 }
 
 // Close stops any background processes controlled by this service
@@ -215,6 +217,25 @@ func (service *Privilege) Schema() schema.Schema {
 
 func (service *Privilege) LoadByID(userID primitive.ObjectID, privilegeID primitive.ObjectID, privilege *model.Privilege) error {
 	criteria := exp.Equal("_id", privilegeID).AndEqual("userId", userID)
+	return service.Load(criteria, privilege)
+}
+
+func (service *Privilege) LoadByIdentity(identityID primitive.ObjectID, privilegeID primitive.ObjectID, privilege *model.Privilege) error {
+
+	const location = "service.Privilege.LoadByIdentity"
+
+	// RULE: IdentityID must not be zero
+	if identityID.IsZero() {
+		return derp.InternalError(location, "IdentityID must be provided")
+	}
+
+	// RULE: PrivilegeID must not be zero
+	if privilegeID.IsZero() {
+		return derp.InternalError(location, "PrivilegeID must be provided")
+	}
+
+	criteria := exp.Equal("_id", privilegeID).AndEqual("identityId", identityID)
+
 	return service.Load(criteria, privilege)
 }
 
@@ -467,6 +488,30 @@ func (service *Privilege) RefreshCircleInfo(circle *model.Circle) error {
 				return derp.Wrap(err, location, "Error refreshing Privilege", circle)
 			}
 		}
+	}
+
+	return nil
+}
+
+// Cancel cancels a Privilege subscription.
+func (service *Privilege) Cancel(privilege *model.Privilege) error {
+
+	const location = "service.Privilege.Cancel"
+
+	if privilege.MerchantAccountID.IsZero() {
+		return derp.BadRequestError(location, "Privilege cannot be canceled without a valid MerchantAccountID")
+	}
+
+	if !privilege.IsRecurring() {
+		return derp.BadRequestError(location, "Privilege cannot be canceled if it is not a recurring charge.")
+	}
+
+	if err := service.merchantAccountService.CancelPrivilege(privilege); err != nil {
+		return derp.Wrap(err, location, "Error canceling subscription for Privilege", privilege.PrivilegeID)
+	}
+
+	if err := service.Delete(privilege, "Canceled by User"); err != nil {
+		return derp.Wrap(err, location, "Error deleting Privilege after canceling subscription", privilege.PrivilegeID)
 	}
 
 	return nil

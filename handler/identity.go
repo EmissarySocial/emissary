@@ -44,6 +44,65 @@ func buildIdentity(ctx *steranko.Context, factory *domain.Factory, identity *mod
 	return ctx.NoContent(http.StatusOK)
 }
 
+func GetPrivilegeDelete(ctx *steranko.Context, factory *domain.Factory, identity *model.Identity, privilege *model.Privilege) error {
+
+	if privilege.IsRecurring() {
+		b := html.New()
+		b.H1()
+		b.I().Class("bi bi-exclamation-triangle-fill margin-right-sm").Close()
+		b.Span().InnerText("Confirm Cancelation").Close()
+		b.Close()
+
+		b.Div().InnerText("If you cancel this subscription, it will take effect immediately and you will lose access to any content you have purchased.  There is NO UNDO.").Close()
+		b.Div().Class("margin-top")
+		b.Button().Class("warning").Data("hx-post", ctx.Request().URL.String())
+		b.Span().Class("htmx-request-hide").InnerText("Cancel Subscription Now").Close()
+		b.Span().Class("htmx-request-show")
+		b.I().Class("spin bi bi-arrow-clockwise").Close()
+		b.Span().InnerText("Canceling...").Close()
+		b.Close()
+		b.Close()
+		b.Button().Script("on click trigger closeModal").InnerText("Keep Subscription").Close()
+		b.CloseAll()
+
+		result := build.WrapModal(ctx.Response().Writer, b.String())
+		return ctx.HTML(http.StatusOK, result)
+	}
+
+	user := model.NewUser()
+	if err := factory.User().LoadByID(privilege.UserID, &user); err != nil {
+		return derp.Wrap(err, "handler.GetPrivilegeDelete", "Error loading User for Privilege", privilege.PrivilegeID)
+	}
+
+	b := html.New()
+	b.H1().InnerText("How to Request a Refund:").Close()
+	b.Div().InnerText("Automatic refunds are not available for digital goods. To request a refund, please email " + user.EmailAddress + " directly.").Close()
+	b.Div().Class("margin-top")
+	b.Button().Script("on click trigger closeModal").InnerText("Close Window").Close()
+	b.CloseAll()
+
+	result := build.WrapModal(ctx.Response().Writer, b.String())
+	return ctx.HTML(http.StatusOK, result)
+
+}
+
+func PostPrivilegeDelete(ctx *steranko.Context, factory *domain.Factory, identity *model.Identity, privilege *model.Privilege) error {
+
+	const location = "handler.PostPrivilegeCancel"
+
+	if !privilege.IsRecurring() {
+		return derp.BadRequestError(location, "Privilege is not recurring", privilege.PrivilegeID)
+	}
+
+	// Cancel the privilege
+	if err := factory.Privilege().Cancel(privilege); err != nil {
+		return derp.Wrap(err, location, "Error cancelling privilege", privilege.PrivilegeID)
+	}
+
+	// Close the modal and refresh the page
+	return closeModalAndRefreshPage(ctx)
+}
+
 // GetIdentitySignin displays the Signin page for guest Identities
 func GetIdentitySignin(ctx *steranko.Context, factory *domain.Factory) error {
 

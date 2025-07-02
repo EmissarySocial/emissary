@@ -595,7 +595,9 @@ func (w Stream) LastChild(sort string, action string) (Stream, error) {
 // It is used internally by PrevSibling, NextSibling, FirstChild, and LastChild
 func (w Stream) getFirstStream(criteria exp.Expression, sortOption option.Option, actionID string) Stream {
 
-	criteria = criteria.And(w.defaultAllowed())
+	criteria = criteria.
+		And(w.defaultAllowed()).
+		And(w.withinPublishDate())
 
 	streamService := w.factory().Stream()
 	iterator, err := streamService.List(criteria, sortOption, option.FirstRow())
@@ -737,7 +739,11 @@ func (w Stream) Outbox() (QueryBuilder[model.OutboxMessage], error) {
 
 func (w Stream) Streams() QueryBuilder[model.StreamSummary] {
 	streamService := w.factory().Stream()
-	return NewQueryBuilder[model.StreamSummary](streamService, w.defaultAllowed())
+
+	criteria := w.defaultAllowed().
+		And(w.withinPublishDate())
+
+	return NewQueryBuilder[model.StreamSummary](streamService, criteria)
 }
 
 func (w Stream) Users() QueryBuilder[model.UserSummary] {
@@ -753,7 +759,8 @@ func (w Stream) Users() QueryBuilder[model.UserSummary] {
 func (w Stream) Breadcrumbs() ([]model.StreamSummary, error) {
 
 	criteria := exp.In("_id", w._stream.ParentIDs).
-		And(w.defaultAllowed())
+		And(w.defaultAllowed()).
+		And(w.withinPublishDate())
 
 	return w.factory().Stream().QuerySummary(criteria,
 		option.SortAsc("depth"),
@@ -771,7 +778,8 @@ func (w Stream) Ancestors() QueryBuilder[model.StreamSummary] {
 	}
 
 	criteria := exp.Equal("parentId", parent.ParentID).
-		And(w.defaultAllowed())
+		And(w.defaultAllowed()).
+		And(w.withinPublishDate())
 
 	return w.makeStreamQueryBuilder(criteria)
 }
@@ -799,7 +807,10 @@ func (w Stream) makeStreamQueryBuilder(criteria exp.Expression) QueryBuilder[mod
 
 	queryValues := w._request.URL.Query()
 	query := queryBuilder.Evaluate(queryValues)
-	criteria = criteria.And(query).And(w.defaultAllowed())
+	criteria = criteria.
+		And(query).
+		And(w.defaultAllowed()).
+		And(w.withinPublishDate())
 
 	result := NewQueryBuilder[model.StreamSummary](w._factory.Stream(), criteria)
 	result.By(w._template.ChildSortType)

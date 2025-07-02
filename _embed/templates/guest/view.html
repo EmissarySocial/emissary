@@ -92,8 +92,15 @@
 							<div class="bold text-lg margin-none">{{ $privilege.Name }}</div>
 							<div class="text-sm text-light-gray">{{ $privilege.PriceDescription }}</div>
 							<div class="text-sm text-light-gray">{{ $privilege.CreateDate | shortDate }}</div>
+
+							{{- if $privilege.IsRecurring -}}
+								<span class="link" hx-get="/@guest/delete/{{$privilege.ID}}">Cancel Subscription</span>
+							{{- else -}}
+								<span class="link" hx-get="/@guest/delete/{{$privilege.ID}}">Refund Info</span>
+							{{- end -}}
 						</td>
 						<td class="padding width-60%">
+
 							{{- range $index, $compoundID := $privilege.CompoundIDs -}}
 								{{- $streamIDs := index $privilegedStreams $compoundID -}}
 								{{- range $index, $streamID := $streamIDs -}}

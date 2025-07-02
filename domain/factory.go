@@ -541,6 +541,7 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 			factory.collection(CollectionPrivilege),
 			factory.Circle(),
 			factory.Identity(),
+			factory.MerchantAccount(),
 		)
 
 		// Populate User Service

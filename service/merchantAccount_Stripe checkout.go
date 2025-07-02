@@ -174,3 +174,25 @@ func (service *MerchantAccount) stripe_getPrivilegeFromCheckoutResponse(merchant
 	// Success.
 	return privilege, nil
 }
+
+func (service *MerchantAccount) stripe_CancelPrivilege(merchantAccount *model.MerchantAccount, privilege *model.Privilege) error {
+
+	const location = "service.MerchantAccount.stripe_CancelPrivilege"
+
+	// Get API Keys from the vault
+	restrictedKey, err := service.stripe_getRestrictedKey(merchantAccount)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error retrieving API keys")
+	}
+
+	connectedAccountID := service.stripe_getConnectedAccountID(merchantAccount)
+
+	// Call the Stripe API to cancel the subscription
+	if err := api.SubscriptionCancel(restrictedKey, connectedAccountID, privilege.RemotePurchaseID); err != nil {
+		return derp.Wrap(err, location, "Error canceling subscription")
+	}
+
+	// Success.
+	return nil
+}

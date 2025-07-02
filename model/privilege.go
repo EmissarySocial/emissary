@@ -97,6 +97,19 @@ func (privilege Privilege) IsPurchase() bool {
 	return privilege.RemotePurchaseID != ""
 }
 
+func (privilege Privilege) IsRecurring() bool {
+	switch privilege.RecurringType {
+
+	case PrivilegeRecurringTypeDay,
+		PrivilegeRecurringTypeWeek,
+		PrivilegeRecurringTypeMonth,
+		PrivilegeRecurringTypeYear:
+		return true
+	}
+
+	return false
+}
+
 func (privilege Privilege) CompoundIDs() []primitive.ObjectID {
 	result := make([]primitive.ObjectID, 0, 2)
 

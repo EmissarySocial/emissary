@@ -401,6 +401,11 @@ func (w Common) DatasetValue(name string, value string) form.LookupCode {
 	return form.LookupCode{}
 }
 
+func (w Common) withinPublishDate() exp.Expression {
+	return exp.LessThan("publishDate", time.Now().Unix()).
+		AndGreaterThan("unpublishDate", time.Now().Unix())
+}
+
 // defaultAllowed augments a query criteria to include the
 // group authorizations of the currently signed in user.
 func (w Common) defaultAllowed() exp.Expression {
@@ -416,11 +421,6 @@ func (w Common) defaultAllowed() exp.Expression {
 	}
 
 	// Fall through means this is a regular user, so standard permissions apply
-
-	// The Stream must be published
-	result = result.
-		AndLessThan("publishDate", time.Now().Unix()).
-		AndGreaterThan("unpublishDate", time.Now().Unix())
 
 	// Retrieve the Identity of the current website guest (if any)
 	var identity *model.Identity
@@ -497,6 +497,7 @@ func (w Common) getIdentity() (*model.Identity, error) {
 // Navigation returns an array of Streams that have a Zero ParentID
 func (w Common) Navigation() (sliceof.Object[model.StreamSummary], error) {
 	criteria := w.defaultAllowed().
+		And(w.withinPublishDate()).
 		AndEqual("parentId", primitive.NilObjectID)
 
 	builder := NewQueryBuilder[model.StreamSummary](w._factory.Stream(), criteria)

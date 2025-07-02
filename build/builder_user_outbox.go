@@ -317,8 +317,6 @@ func (w Outbox) Circles() QueryBuilder[model.Circle] {
 	criteria := exp.And(
 		expressionBuilder.Evaluate(w._request.URL.Query()),
 		exp.Equal("userId", w.objectID()),
-		exp.Equal("isFeatured", true),
-		w.defaultAllowed(),
 	)
 
 	result := NewQueryBuilder[model.Circle](w._factory.Circle(), criteria)

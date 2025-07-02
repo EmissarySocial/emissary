@@ -330,6 +330,8 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 
 	e.GET("/@guest", handler.WithIdentity(factory, handler.GetIdentity))
 	e.POST("/@guest", handler.WithIdentity(factory, handler.PostIdentity))
+	e.GET("/@guest/delete/:privilegeId", handler.WithPrivilege(factory, handler.GetPrivilegeDelete))
+	e.POST("/@guest/delete/:privilegeId", handler.WithPrivilege(factory, handler.PostPrivilegeDelete))
 	e.GET("/@guest/:action", handler.WithIdentity(factory, handler.GetIdentity))
 	e.POST("/@guest/:action", handler.WithIdentity(factory, handler.PostIdentity))
 	e.GET("/@guest/signin", handler.WithFactory(factory, handler.GetIdentitySignin))

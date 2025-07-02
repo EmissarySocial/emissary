@@ -472,3 +472,24 @@ func (service *MerchantAccount) getRemoteProducts(merchantAccount *model.Merchan
 	// If we get here, the merchant account type is not supported
 	return nil, derp.InternalError(location, "Invalid MerchantAccount Type", merchantAccount.Type)
 }
+
+func (service *MerchantAccount) CancelPrivilege(privilege *model.Privilege) error {
+
+	const location = "service.MerchantAccount.CancelPrivilege"
+
+	merchantAccount := model.NewMerchantAccount()
+
+	if err := service.LoadByID(privilege.MerchantAccountID, &merchantAccount); err != nil {
+		return derp.Wrap(err, "service.MerchantAccount.CancelPrivilege", "Error loading MerchantAccount for Privilege", privilege.PrivilegeID)
+	}
+
+	switch merchantAccount.Type {
+	case model.ConnectionProviderStripe:
+		return service.stripe_CancelPrivilege(&merchantAccount, privilege)
+
+	case model.ConnectionProviderStripeConnect:
+		return service.stripe_CancelPrivilege(&merchantAccount, privilege)
+	}
+
+	return derp.InternalError(location, "Invalid MerchantAccount Type", merchantAccount.Type)
+}

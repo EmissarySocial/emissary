@@ -212,6 +212,31 @@ func WithMerchantAccountJWT(serverFactory *server.Factory, fn WithFunc2[model.Me
 	})
 }
 
+func WithPrivilege(serverFactory *server.Factory, fn WithFunc2[model.Identity, model.Privilege]) echo.HandlerFunc {
+
+	const location = "handler.WithPrivilege"
+
+	return WithIdentity(serverFactory, func(ctx *steranko.Context, factory *domain.Factory, identity *model.Identity) error {
+
+		// Load the Privilege from the database
+		privilegeService := factory.Privilege()
+		privilege := model.NewPrivilege()
+
+		privilegeID, err := primitive.ObjectIDFromHex(ctx.Param("privilegeId"))
+
+		if err != nil {
+			return derp.BadRequestError(location, "Invalid PrivilegeID", "PrivilegeID must be a valid ObjectID")
+		}
+
+		if err := privilegeService.LoadByIdentity(identity.IdentityID, privilegeID, &privilege); err != nil {
+			return derp.Wrap(err, location, "Error loading Privilege")
+		}
+
+		// Call the continuation function
+		return fn(ctx, factory, identity, &privilege)
+	})
+}
+
 // WithProduct handles boilerplate code for requests that use a Product object
 func WithProduct(serverFactory *server.Factory, fn WithFunc2[model.MerchantAccount, model.Product]) echo.HandlerFunc {
 

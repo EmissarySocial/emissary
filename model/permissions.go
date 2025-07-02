@@ -32,6 +32,14 @@ func (permissions Permissions) NotZero() bool {
 	return len(permissions) > 0
 }
 
+func (permissions Permissions) Length() int {
+	return len(permissions)
+}
+
+func (permissions Permissions) IsLength(length int) bool {
+	return len(permissions) == length
+}
+
 // IsAnonymous returns TRUE if this Permisssions slice allows "anonymous" access.
 func (permissions Permissions) IsAnonymous() bool {
 	return slice.Contains(permissions, MagicGroupIDAnonymous)
@@ -44,4 +52,12 @@ func (permissions Permissions) IsAuthenticated() bool {
 
 func (permissions Permissions) Intersects(other Permissions) bool {
 	return slice.ContainsAny(permissions, other...)
+}
+
+func (permissions Permissions) First() primitive.ObjectID {
+	if permissions.IsZero() {
+		return primitive.NilObjectID
+	}
+
+	return permissions[0]
 }
