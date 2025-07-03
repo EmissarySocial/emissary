@@ -59,7 +59,7 @@ func SendSearchResults(factory *domain.Factory, args mapof.Any) queue.Result {
 				"host":      factory.Hostname(),
 				"actorType": model.FollowerTypeSearch,
 				"actorID":   searchQueryID.Hex(),
-				"inboxURL":  follower.Actor.InboxURL,
+				"to":        follower.Actor.ProfileURL,
 				"message": mapof.Any{
 					vocab.PropertyActor:  actorURL,
 					vocab.PropertyType:   vocab.ActivityTypeAnnounce,

@@ -39,7 +39,10 @@ func (privilege Privilege) ID() string {
 
 func (privilege Privilege) Fields() []string {
 	return []string{
+		"_id",
 		"identityId",
+		"userId",
+		"circleId",
 		"merchantAccountId",
 		"productId",
 		"name",
@@ -47,10 +50,10 @@ func (privilege Privilege) Fields() []string {
 		"recurringType",
 		"identifierType",
 		"identifierValue",
-		"remoteEmailAddress",
 		"remotePersonId",
 		"remoteProductId",
 		"remotePurchaseId",
+		"isVisible",
 		"createDate",
 	}
 }
@@ -108,6 +111,10 @@ func (privilege Privilege) IsRecurring() bool {
 	}
 
 	return false
+}
+
+func (privilege Privilege) IsCircle() bool {
+	return !privilege.CircleID.IsZero()
 }
 
 func (privilege Privilege) CompoundIDs() []primitive.ObjectID {

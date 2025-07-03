@@ -1,4 +1,5 @@
 {{- $privileges := .Privileges.ByCreateDate.Reverse.Slice -}}
+{{- $hasActivityPubActor := .HasActivityPubActor -}}
 
 <div class="page app" script="on load take .selected from .nav-item for #nav-settings">
 
@@ -34,14 +35,14 @@
 				<div hx-get="/@guest/webfinger" class="clickable flex-row flex-align-center">
 					<div class="flex-grow margin-right-sm">
 						{{icon "fediverse"}} 
-						{{ if .HasActivityPubActor -}}
+						{{ if $hasActivityPubActor -}}
 							{{.ActivityPubActor}}
 						{{- else -}}
 							<span class="text-green">Add Your Fediverse Handle</span>
 						{{- end -}}
 					</div>
 					<span class="button text-xs">
-						{{- if .HasActivityPubActor -}}
+						{{- if $hasActivityPubActor -}}
 							change
 						{{- else -}}
 							connect
@@ -88,10 +89,10 @@
 			<table class="table">
 				{{- range $index, $privilege := $privileges -}}
 					<tr>
-						<td class="padding width-40%">
+						<td class="padding-vertical width-40%">
 							<div class="bold text-lg margin-none">{{ $privilege.Name }}</div>
 							<div class="text-sm text-light-gray">{{ $privilege.PriceDescription }}</div>
-							<div class="text-sm text-light-gray">{{ $privilege.CreateDate | shortDate }}</div>
+							<div class="text-sm text-light-gray margin-bottom">{{ $privilege.CreateDate | shortDate }}</div>
 
 							{{- if $privilege.IsRecurring -}}
 								<span class="link" hx-get="/@guest/delete/{{$privilege.ID}}">Cancel Subscription</span>
@@ -100,6 +101,16 @@
 							{{- end -}}
 						</td>
 						<td class="padding width-60%">
+
+							{{- if $privilege.IsCircle -}}
+								{{- if not $hasActivityPubActor -}}
+									<div class="margin-none text-lg bold">Next Step...</div>
+									<div class="text-sm text-light-gray margin-bottom">
+										Get fast updates in your inbox when you connect this subscription to your Fediverse Handle.
+									</div>
+									<button class="primary padding-vertical-sm" hx-get="/@guest/webfinger">Add Your Fediverse Handle &rarr;</button>
+								{{- end -}}
+							{{- end -}}
 
 							{{- range $index, $compoundID := $privilege.CompoundIDs -}}
 								{{- $streamIDs := index $privilegedStreams $compoundID -}}

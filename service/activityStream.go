@@ -326,11 +326,20 @@ func (service *ActivityStream) QueryLikesBeforeDate(relationHref string, maxDate
 // `message` the ActivityPub message to send
 func (service *ActivityStream) SendMessage(args mapof.Any) error {
 
-	const location = "consumer.SendActivityPubMessage"
+	const location = "service.ActivityStream.SendMessage"
 
 	// Collect arguments
+	recipientID := args.GetString("to")
+
+	if recipientID == "" {
+		return derp.NotFoundError(location, "Recipient ID is required", recipientID)
+	}
+
 	message := args.GetMap("message")
-	inboxURL := args.GetString("inboxURL")
+
+	if message.IsEmpty() {
+		return derp.NotFoundError(location, "Message is required", message)
+	}
 
 	// Find ActivityPub Actor
 	actor, err := service.locatorService.GetActor(args.GetString("actorType"), args.GetString("actorID"))
@@ -339,8 +348,8 @@ func (service *ActivityStream) SendMessage(args mapof.Any) error {
 		return derp.Wrap(err, location, "Error finding ActivityPub Actor")
 	}
 
-	// Send the message to the inboxURL
-	if err := actor.SendOne(inboxURL, message); err != nil {
+	// Send the message to the recipientID
+	if err := actor.SendOne(recipientID, message); err != nil {
 		return derp.Wrap(err, location, "Error sending message", message, derp.WithCode(http.StatusInternalServerError))
 	}
 
@@ -350,7 +359,7 @@ func (service *ActivityStream) SendMessage(args mapof.Any) error {
 
 func (service *ActivityStream) GetRecipient(recipient string) (string, string, error) {
 
-	const location = "consumer.getRecipientInbox"
+	const location = "service.ActivityStream.GetRecipient"
 
 	// Try to load the recipient as a JSON-LD document
 	document, err := service.Load(recipient, sherlock.AsActor())

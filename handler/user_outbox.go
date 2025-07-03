@@ -64,7 +64,7 @@ func PostProfileDelete(ctx *steranko.Context, factory *domain.Factory, user *mod
 	}
 
 	if values.Get("confirm") != user.Username {
-		return inlineError(ctx, `<span class="text-red">Incorrect Username. Try Again.</span>`)
+		return inlineError(ctx, `Incorrect Username. Try Again.`)
 	}
 
 	userService := factory.User()

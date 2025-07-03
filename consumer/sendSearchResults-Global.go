@@ -51,7 +51,7 @@ func SendSearchResultsGlobal(factory *domain.Factory, args mapof.Any) queue.Resu
 			mapof.Any{
 				"host":      factory.Hostname(),
 				"actorType": model.FollowerTypeSearchDomain,
-				"inboxURL":  follower.Actor.InboxURL,
+				"to":        follower.Actor.ProfileURL,
 				"message": mapof.Any{
 					vocab.PropertyActor:  actorURL,
 					vocab.PropertyType:   vocab.ActivityTypeAnnounce,

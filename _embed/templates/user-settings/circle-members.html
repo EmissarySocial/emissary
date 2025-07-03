@@ -32,7 +32,7 @@
 
 		<div class="md:flex-row width-100% margin-top margin-bottom-lg">
 
-			<div class="card flex-grow flex-column padding margin-bottom md:width-1-2">
+			<div class="clickable card flex-grow flex-column padding margin-bottom md:width-1-2" hx-get="/@me/settings/circle-edit?circleId={{$circle.ID}}">
 
 				<div class="text-sm text-gray margin-bottom">{{icon "circle"}} CIRCLE DESCRIPTION</div>
 				<div class="flex-grow margin-bottom">{{$circle.Description}}</div>
@@ -45,10 +45,10 @@
 						{{- end -}}
 					</div>
 
-					<button class="text-xs" hx-get="/@me/settings/circle-edit?circleId={{$circle.ID}}">Edit Circle</button>
+					<button class="text-xs">Edit Circle</button>
 				</div>
 			</div>
-			<div class="card flex-grow flex-column padding align-center margin-bottom md:width-1-4">
+			<div class="clickable card flex-grow flex-column padding align-center margin-bottom md:width-1-4" hx-get="/@me/settings/circle-edit?circleId={{$circle.ID}}&selected-tab=2">
 				<div class="text-sm text-gray">{{icon "box-fill"}} SELL ONLINE</div>
 				<div class="flex-grow text-2xl margin-none bold">
 					{{- if $circle.ProductIDs.IsEmpty -}}
@@ -58,14 +58,14 @@
 					{{- end -}}
 				</div>
 				<div class="align-center">
-					<button class="text-xs" hx-get="/@me/settings/circle-edit?circleId={{$circle.ID}}&selected-tab=2">Edit Products</button>
+					<button class="text-xs">Edit Products</button>
 				</div>
 			</div>
-			<div class="card flex-grow flex-column padding align-center margin-bottom md:width-1-4">
+			<div class="clickable card flex-grow flex-column padding align-center margin-bottom md:width-1-4" hx-get="/@me/settings/circle-member-add?circleId={{$circle.ID}}">
 				<div class="text-sm text-gray">{{icon "person-fill"}} MEMBERS</div>
 				<div class="flex-grow text-2xl margin-none bold">{{$circle.MemberCount}}</div>
 				<div class="align-center">
-					<button class="primary text-xs" hx-get="/@me/settings/circle-member-add?circleId={{$circle.ID}}#" class="primary">&plus; Add a Member</button>
+					<button class="primary text-xs" class="primary">&plus; Add a Member</button>
 				</div>
 			</div>
 		</div>

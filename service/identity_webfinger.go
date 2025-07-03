@@ -15,10 +15,10 @@ func (service *Identity) sendGuestCode_ActivityPub(identifier string, code strin
 	const location = "service.Identity.sendGuestCode_ActivityPub"
 
 	// Find Recipient
-	recipientID, inboxURL, err := service.activityService.GetRecipient(identifier)
+	recipientID, _, err := service.activityService.GetRecipient(identifier)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error finding recipient inbox", inboxURL)
+		return derp.Wrap(err, location, "Error finding recipient inbox", identifier)
 	}
 
 	// Create the outbound message
@@ -60,7 +60,7 @@ func (service *Identity) sendGuestCode_ActivityPub(identifier string, code strin
 	message := mapof.Any{
 		"host":      hostname,
 		"actorType": model.FollowerTypeApplication,
-		"inboxURL":  inboxURL,
+		"to":        recipientID,
 		"message":   activity,
 	}
 

@@ -18,7 +18,7 @@ func (step StepInlineSuccess) Get(builder Builder, buffer io.Writer) PipelineBeh
 func (step StepInlineSuccess) Post(builder Builder, buffer io.Writer) PipelineBehavior {
 	result := executeTemplate(step.Message, builder)
 
-	if _, err := buffer.Write([]byte(`<span class="green">` + result + `</span>`)); err != nil {
+	if _, err := buffer.Write([]byte(`<span class="text-green">` + result + `</span>`)); err != nil {
 		return Halt().WithError(err)
 	}
 	return Halt().WithHeader("HX-Reswap", "innerHTML").WithHeader("HX-Retarget", "#htmx-response-message")

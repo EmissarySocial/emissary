@@ -248,12 +248,12 @@ func (client *Client) save(url string, document streams.Document) {
 	value.calcDocumentType(document)
 
 	// Try to upsert the document into the cache
-	filter := bson.M{"urls": url}
+	filter := bson.M{"urls": bson.M{"$in": value.URLs}}
 	update := bson.M{"$set": value}
 	queryOptions := options.Update().SetUpsert(true)
 
 	if _, err := client.collection.UpdateOne(context.Background(), filter, update, queryOptions); err != nil {
-		derp.Report(derp.Wrap(err, location, "Error upserting document in cache", url))
+		derp.Report(derp.Wrap(err, location, "Error upserting document in cache", url, filter, update))
 		return
 	}
 

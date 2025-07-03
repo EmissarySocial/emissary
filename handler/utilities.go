@@ -127,11 +127,12 @@ func inlineError(ctx echo.Context, errorMessage string) error {
 	header.Set("Hx-Reswap", "innerHTML")
 	header.Set("Hx-Retarget", "#htmx-response-message")
 
-	return ctx.String(http.StatusOK, errorMessage)
+	return ctx.String(http.StatusOK, `<span class="text-red">`+errorMessage+`</span>`)
 }
 
 func closeModalAndRefreshPage(ctx echo.Context) error {
 	header := ctx.Response().Header()
+	header.Set("Hx-Push-Url", "false")
 	header.Set("Hx-Trigger", `{"closeModal": true, "refreshPage": true}`)
 	return ctx.NoContent(http.StatusOK)
 }

@@ -1,5 +1,5 @@
 {{- if .HasActivityPubActor -}}
-	<h1>{{icon "email"}} Edit Your Fediverse Handle</h1>
+	<h1>{{icon "fediverse"}} Edit Your Fediverse Handle</h1>
 
 	<div class="alert-gray margin-bottom-lg">
 		Enter a new email address to replace your current one.  We'll send you a verification email to complete the change.<br>
@@ -9,14 +9,14 @@
 	</div>
 
 {{- else -}}
-	<h1>Add a Fediverse Handle</h1>
+	<h1>{{icon "fediverse"}} Add Your Fediverse Handle</h1>
 
 	<div class="alert-gray margin-bottom-lg">
 		When you add a Fediverse Handle to your guest profile, you'll receive exclusive posts from the accounts you follow.
 	</div>
 {{- end -}}
 
-<form hx-post="/@guest/identifier">
+<form hx-post="/@guest/identifier" hx-push-url="false">
 
 	<div class="layout-vertical">
 		<div class="layout-vertical-elements">
@@ -29,10 +29,13 @@
 		</div>
 	</div>
 
-	<div class="margin-top-lg flex-row">
+	<div class="margin-top-lg flex-row flex-align-center">
 		<button type="submit" class="primary">Set My Handle</button>
-		<button script="on click trigger closeModal">Cancel</button>
-		<span class="align-right flex-grow">
+		<button type="button" script="on click trigger closeModal">Cancel</button>
+		<span id="htmx-response-message" class="flex-grow"></span>
+
+		{{- if ne "" .ActivityPubActor -}}
+		<span class="align-right">
 			<span 
 				class="text-red clickable" 
 				hx-post="/@guest/identifier"
@@ -40,5 +43,6 @@
 				hx-confirm="This will remove your Fediverse Handle from this guest identity. Are you sure you want to continue?"
 			>Remove Handle</span>
 		</span>
+		{{- end -}}
 	</div>
 </form>

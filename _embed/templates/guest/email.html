@@ -16,7 +16,7 @@
 	</div>
 {{- end -}}
 
-<form hx-post="/@guest/identifier">
+<form hx-post="/@guest/identifier" hx-push-url="false">
 
 	<div class="layout-vertical">
 		<div class="layout-vertical-elements">
@@ -29,17 +29,20 @@
 		</div>
 	</div>
 
-	<div class="margin-top-lg flex-row">
+	<div class="margin-top-lg flex-row flex-align-center">
 		<button type="submit" class="primary">Set My Email Address</button>
-		<button script="on click trigger closeModal">Cancel</button>
-		<span class="align-right flex-grow">
-			<span 
-				class="text-red clickable" 
-				hx-post="/@guest/identifier"
-				hx-vals='{"identifierType": "EMAIL","identifier": ""}'
-				hx-confirm="This will remove your Email Address from this guest identity. Are you sure you want to continue?"
-			>Remove Email</span>
-		</span>
+		<button type="button" script="on click trigger closeModal">Cancel</button>
+
+		{{- if ne "" .EmailAddress -}}
+			<span class="align-right flex-grow">
+				<span 
+					class="text-red clickable" 
+					hx-post="/@guest/identifier"
+					hx-vals='{"identifierType": "EMAIL","identifier": ""}'
+					hx-confirm="This will remove your Email Address from this guest identity. Are you sure you want to continue?"
+				>Remove Email</span>
+			</span>
+		{{- end -}}
 	</div>
 
 </form>

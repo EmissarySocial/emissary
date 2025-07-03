@@ -54,7 +54,8 @@ func GetPrivilegeDelete(ctx *steranko.Context, factory *domain.Factory, identity
 		b.Close()
 
 		b.Div().InnerText("If you cancel this subscription, it will take effect immediately and you will lose access to any content you have purchased.  There is NO UNDO.").Close()
-		b.Div().Class("margin-top")
+
+		b.Div().Class("margin-top-lg")
 		b.Button().Class("warning").Data("hx-post", ctx.Request().URL.String())
 		b.Span().Class("htmx-request-hide").InnerText("Cancel Subscription Now").Close()
 		b.Span().Class("htmx-request-show")
@@ -76,8 +77,13 @@ func GetPrivilegeDelete(ctx *steranko.Context, factory *domain.Factory, identity
 
 	b := html.New()
 	b.H1().InnerText("How to Request a Refund:").Close()
-	b.Div().InnerText("Automatic refunds are not available for digital goods. To request a refund, please email " + user.EmailAddress + " directly.").Close()
-	b.Div().Class("margin-top")
+	b.Div()
+	b.Span().InnerText("Automatic refunds are not available for digital goods. To request a refund, please email ").Close()
+	b.A("mailto:" + user.EmailAddress).InnerText(user.EmailAddress).Close()
+	b.Span().InnerText(" directly.").Close()
+	b.Close()
+
+	b.Div().Class("margin-top-lg")
 	b.Button().Script("on click trigger closeModal").InnerText("Close Window").Close()
 	b.CloseAll()
 
@@ -250,7 +256,8 @@ func PostIdentityIdentifier(ctx *steranko.Context, factory *domain.Factory, iden
 	if identifierValue != "" {
 
 		if err := identityService.SendGuestCode(identity, identifierType, identifierValue); err != nil {
-			return derp.Wrap(err, location, "Error setting identifier on Identity")
+			derp.Report(derp.Wrap(err, location, "Error setting identifier on Identity"))
+			return inlineError(ctx, "Unable to send signin code.")
 		}
 
 		return ctx.Redirect(http.StatusSeeOther, "/@guest/confirm")
