@@ -15,17 +15,17 @@ require (
 	github.com/benpate/domain v0.2.7
 	github.com/benpate/exp v0.8.5
 	github.com/benpate/exp-builder v0.10.1
-	github.com/benpate/form v0.23.6
+	github.com/benpate/form v0.24.0
 	github.com/benpate/hannibal v0.13.0
 	github.com/benpate/html v0.16.12
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.15.5
 	github.com/benpate/re v0.3.2
 	github.com/benpate/remote v0.17.3
-	github.com/benpate/rosetta v0.25.11
+	github.com/benpate/rosetta v0.25.12
 	github.com/benpate/sherlock v0.8.10
 	github.com/benpate/steranko v0.22.0
-	github.com/benpate/table v0.7.3
+	github.com/benpate/table v0.7.4
 	github.com/benpate/toot v0.3.0
 	github.com/benpate/turbine v0.3.2
 	github.com/codingsince1985/geo-golang v1.8.5
