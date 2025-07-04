@@ -23,14 +23,18 @@
 			<div class="layout-vertical-element">
 				<label for="email">New Fediverse Handle</label>
 				<input type="hidden" name="identifierType" value="ACTIVITYPUB">
-				<input type="text" id="email" name="identifier" value="{{.ActivityPubActor}}" pattern="^@[^@]+@[^@]+\.[^@]+$" aria-labelledby="identifier-label" aria-describedby="identifier-label" required="true"autocomplete="username" autofocus="true" tabindex="0">
+				<input type="text" id="email" name="identifier" value="{{.ActivityPubActor}}" pattern="^@[^@]+@[^@]+\.[^@]+$" aria-labelledby="identifier-label" aria-describedby="identifier-label" required="true" autocomplete="none" data-1p-ignore="true" autofocus="true" tabindex="0">
 				<div id="identifier-label" class="text-sm gray40">e.g. @username@server.social</div>
 			</div>
 		</div>
 	</div>
 
 	<div class="margin-top-lg flex-row flex-align-center">
-		<button type="submit" class="primary">Set My Handle</button>
+		<button type="submit" class="primary htmx-request-hide">Set My Handle</button>
+		<button type="submit" class="primary htmx-request-show" disabled>
+			<span class="spin">{{icon "loading"}}</span>
+			Sending Code
+		</button>
 		<button type="button" script="on click trigger closeModal">Cancel</button>
 		<span id="htmx-response-message" class="flex-grow"></span>
 

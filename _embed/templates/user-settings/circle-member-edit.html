@@ -33,8 +33,9 @@
 				<div class="text-gray">Price: {{$privilege.PriceDescription}}</div>
 				<div class="text-gray">Receipt: {{$privilege.RemotePurchaseID}}</div>
 			{{- else -}}
+				<div class="text-gray">ADDED BY YOU</div>
 				<div class="text-lg">
-					Added by You on <b>{{$privilege.CreateDate | shortDate}}</b>
+					<b>{{$privilege.CreateDate | shortDate}}</b>
 				</div>
 			{{- end -}}
 			</div>

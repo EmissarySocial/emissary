@@ -79,11 +79,11 @@
 				{{- range $index, $member := $members -}}
 					{{- $identifierType := $member.IdentifierType -}}
 					<div hx-get="/@me/settings/circle-member-edit?identityId={{$member.ID}}&circleId={{$circle.ID}}" class="flex-row flex-align-center" role="button">
-						<div class="text-xl margin-none">
+						<div class="margin-none">
 							{{- if $member.IconURL -}}
 								<img src="{{$member.IconURL}}" class="circle width-32">
 							{{- else -}}
-								<span style="font-size:32px;">{{icon $member.Icon}}</span>
+								<span style="font-size:32px; line-height:32px;">{{icon $member.Icon}}</span>
 							{{- end -}}
 						</div>
 						<div class="flex-grow">

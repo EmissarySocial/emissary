@@ -1,20 +1,21 @@
 {{- $attachments := .AttachmentsByCategory "paid" -}}
 
-<div class="flex-row">
+<div class="md:flex-row">
 
-	<div class="margin-right">
+	<div class="margin-right margin-bottom">
 		<a href="/{{.StreamID}}" class="turboclick"><img src="{{.IconURL}}" class="rounded square width-96"></a>
 	</div>
 
 	<div>
-		<!--div class="bold">{{.Label}}</div-->
 		<div class="bold margin-bottom-sm">{{.Label}}</div>
 
 		{{range $index, $attachment := $attachments}}
-			<a href="/{{$attachment.ObjectID.Hex}}/attachments/{{$attachment.ID}}" target="_blank" class="flex-row flex-align-center" role="link">
-				<div class="margin-none">{{icon "file"}}</div>
-				<div class="flex-grow">{{$attachment.Label}}</div>
-			</a><br>
+			<a href="/{{$attachment.ObjectID.Hex}}/attachments/{{$attachment.ID}}" target="_blank" class="flex-row flex-align-center text-nocolor" role="link">
+				<div class="flex-grow">
+					<div class="link">{{$attachment.Label}}</div>
+					<div class="text-sm text-light-gray margin-bottom">{{$attachment.Description}}</div>
+				</div>
+			</a>
 		{{end}}
 	</div>
 </div>
