@@ -1,8 +1,7 @@
+{{- $merchantAccounts := .MerchantAccounts.Slice -}}
 {{- $remoteProducts := .RemoteProducts -}}
 
 {{- if $remoteProducts.IsEmpty -}}
-
-	{{- $merchantAccounts := .MerchantAccounts.Slice -}}
 
 	<div class="margin-bottom">
 		<h1 class="text-xl bold margin-none flex-grow">Products</h1>
@@ -42,5 +41,14 @@
 				</div>
 			</div>
 		{{- end -}}
+
+		<div>
+			{{- range $index, $merchantAccount := $merchantAccounts -}}
+				<a href="{{$merchantAccount.ProductURL}}" target="_blank">
+					&plus; Add Product on {{$merchantAccount.Name}}
+				</a>
+				&nbsp;
+			{{- end -}}
+		</div>
 	</div>
 {{- end -}}

@@ -67,7 +67,7 @@
 					{{- $type := lowerCase $merchantAccount.Type -}}
 					<div role="button" class="flex-row turboclick">
 						<div hx-get="/@me/settings/merchantAccount-edit-{{$type}}?merchantAccountId={{$merchantAccount.ID}}" class="flex-row flex-grow">
-							<div>{{- icon $type -}}</div>
+							<div>{{- icon $merchantAccount.Icon -}}</div>
 							<div class="flex-grow">{{$merchantAccount.Name}}</div>
 							<div>
 								{{- if $merchantAccount.LiveMode -}}

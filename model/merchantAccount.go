@@ -87,6 +87,23 @@ func (merchantAccount *MerchantAccount) RolesToPrivilegeIDs(roleIDs ...string) P
  * API URL Getters
  ******************************************/
 
+func (merchantAccount MerchantAccount) Icon() string {
+
+	switch merchantAccount.Type {
+
+	// case ConnectionProviderPayPal:
+	//	return "paypal"
+
+	case ConnectionProviderStripe:
+		return "stripe"
+
+	case ConnectionProviderStripeConnect:
+		return "stripe"
+	}
+
+	return ""
+}
+
 // ProductURL returns the URL to the product page for this MerchantAccount.
 func (merchantAccount MerchantAccount) ProductURL() string {
 
