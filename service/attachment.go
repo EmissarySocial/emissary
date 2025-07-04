@@ -89,7 +89,7 @@ func (service *Attachment) Save(attachment *model.Attachment, note string) error
 	}
 
 	// Calculate the URL
-	attachment.SetURL(service.host)
+	attachment.URL = attachment.CalcURL(service.host)
 
 	// Save the record to the database
 	if err := service.collection.Save(attachment, note); err != nil {

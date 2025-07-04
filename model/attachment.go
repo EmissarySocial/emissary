@@ -118,10 +118,6 @@ func (attachment Attachment) CalcURL(host string) string {
 	}
 }
 
-func (attachment Attachment) SetURL(host string) {
-	attachment.URL = attachment.CalcURL(host)
-}
-
 func (attachment Attachment) DownloadExtension() string {
 
 	ext := strings.ToLower(attachment.OriginalExtension())
