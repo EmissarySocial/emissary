@@ -3,21 +3,21 @@ package model
 import (
 	"strings"
 
+	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/rosetta/slice"
-	"github.com/benpate/rosetta/sliceof"
 	"github.com/golang-jwt/jwt/v5"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Authorization represents the JWT Claims that the server gives to a user when they sign in.
 type Authorization struct {
-	UserID      primitive.ObjectID                 `json:"U,omitzero"`  // ID of the signed-in User
-	IdentityID  primitive.ObjectID                 `json:"I,omitzero"`  // ID of the authenticated Identity
-	GroupIDs    sliceof.Object[primitive.ObjectID] `json:"G,omitempty"` // deprecated IDs for all server-level groups that the User belongs to
-	ClientID    primitive.ObjectID                 `json:"C,omitzero"`  // ID of the OAuth Application/Client
-	Scope       string                             `json:"S,omitzero"`  // OAuth Scopes that this user has access to
-	DomainOwner bool                               `json:"O,omitzero"`  // If TRUE, then this user is an owner of this domain
-	APIUser     bool                               `json:"A,omitzero"`  // If TRUE, then this user is an API user
+	UserID      primitive.ObjectID `json:"U,omitzero"`  // ID of the signed-in User
+	IdentityID  primitive.ObjectID `json:"I,omitzero"`  // ID of the authenticated Identity
+	GroupIDs    id.Slice           `json:"G,omitempty"` // deprecated IDs for all server-level groups that the User belongs to
+	ClientID    primitive.ObjectID `json:"C,omitzero"`  // ID of the OAuth Application/Client
+	Scope       string             `json:"S,omitzero"`  // OAuth Scopes that this user has access to
+	DomainOwner bool               `json:"O,omitzero"`  // If TRUE, then this user is an owner of this domain
+	APIUser     bool               `json:"A,omitzero"`  // If TRUE, then this user is an API user
 
 	jwt.RegisteredClaims // By embedding the "RegisteredClaims" object, this record can support standard behaviors, like token expiration, etc.
 }
@@ -28,7 +28,7 @@ func NewAuthorization() Authorization {
 	result := Authorization{
 		UserID:           primitive.NilObjectID,
 		IdentityID:       primitive.NilObjectID,
-		GroupIDs:         sliceof.NewObject[primitive.ObjectID](),
+		GroupIDs:         id.NewSlice(),
 		ClientID:         primitive.NilObjectID,
 		Scope:            "",
 		DomainOwner:      false,

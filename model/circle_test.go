@@ -17,8 +17,8 @@ func TestCircleSchema(t *testing.T) {
 		{"name", "Name", nil},
 		{"color", "#000000", nil},
 		{"icon", "circle", nil},
-		{"productIds.0", "123456789", nil},
-		{"productIds.1", "987654321", nil},
+		{"productIds.0", "086753090867530908675309", nil},
+		{"productIds.1", "086753090867530908675309", nil},
 		{"description", "Description", nil},
 		{"isFeatured", true, nil},
 	}

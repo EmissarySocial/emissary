@@ -13,7 +13,6 @@ func OutboxMessageSchema() schema.Element {
 			"actorType":       schema.String{Required: true, Enum: []string{FollowerTypeStream, FollowerTypeUser}},
 			"activityType":    schema.String{Format: "string", Required: true},
 			"objectId":        schema.String{Format: "url", Required: true},
-			"publishedDate":   schema.Integer{Required: true},
 			"permissions":     schema.Array{Items: schema.String{Format: "permission"}, Required: true},
 		},
 	}
@@ -31,9 +30,6 @@ func (message *OutboxMessage) GetPointer(name string) (any, bool) {
 
 	case "objectId":
 		return &message.ObjectID, true
-
-	case "publishedDate":
-		return &message.CreateDate, true
 
 	case "permissions":
 		return &message.Permissions, true

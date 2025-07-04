@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -60,4 +61,31 @@ func (permissions Permissions) First() primitive.ObjectID {
 	}
 
 	return permissions[0]
+}
+
+func (permissions Permissions) GetStringOK(name string) (string, bool) {
+
+	if index, ok := schema.Index(name, permissions.Length()); ok {
+		return permissions[index].Hex(), true
+	}
+
+	return "", false
+}
+
+func (permissions *Permissions) SetString(name string, value string) bool {
+
+	if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
+
+		if index, ok := schema.Index(name); ok {
+
+			for index >= permissions.Length() {
+				(*permissions) = append(*permissions, primitive.NilObjectID)
+			}
+
+			(*permissions)[index] = objectID
+			return true
+		}
+	}
+
+	return false
 }

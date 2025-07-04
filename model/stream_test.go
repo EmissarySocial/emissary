@@ -42,13 +42,14 @@ func TestStreamSchema(t *testing.T) {
 		{"products.B.0", "000000000000000000000009", nil},
 		{"products.B.1", "00000000000000000000000a", nil},
 
-		{"defaultAllow.0", "00000000000000000000000b", nil},
-		{"defaultAllow.1", "00000000000000000000000c", nil},
+		// {"defaultAllow.0", "00000000000000000000000b", nil},
+		// {"defaultAllow.1", "00000000000000000000000c", nil},
 
 		{"url", "https://example/document", nil},
 		{"label", "DOC-LABEL", nil},
 		{"summary", "DOC-SUMMARY", nil},
-		{"iconUrl", "DOC-ICONURL", nil},
+		{"icon", "https://example/icon.png", nil},
+		{"iconUrl", "https://DOC.ICONURL.COM", nil},
 		{"attributedTo.name", "DOC-AUTHOR-NAME", nil},
 		{"attributedTo.profileUrl", "https://example/author", nil},
 

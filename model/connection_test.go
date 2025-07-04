@@ -15,7 +15,7 @@ func TestConnection(t *testing.T) {
 	table := []tableTestItem{
 		{"connectionId", "123456781234567812345678", nil},
 		{"providerId", "GIPHY", nil},
-		{"type", "PAYMENT", nil},
+		{"type", "USER-PAYMENT", nil},
 		{"data.random", "Any Value", nil},
 		{"active", "true", true},
 	}
