@@ -37,6 +37,7 @@ func (service *Permission) UserCan(authorization *model.Authorization, template 
 	action, exists := template.Actions[actionID]
 
 	if !exists {
+		derp.Report(derp.InternalError(location, "Action not found in template", "ActionID: "+actionID, "TemplateID: "+template.TemplateID))
 		return false, nil
 	}
 
@@ -48,48 +49,47 @@ func (service *Permission) UserCan(authorization *model.Authorization, template 
 		return true, nil
 	}
 
-	//////////////////////////////////////////////////////////////////
-	// Beyond this point, you must be logged in to perform this action
+	// These checks are only valid if the request includes a UserID
+	if authorization.IsAuthenticated() {
 
-	// These checks are only valid if the page request is authenticated (via a UserID)
-	// If the user is a domain owner, then they can do anything
-	if authorization.DomainOwner {
-		return true, nil
-	}
-
-	// If the accessList allows "authenticated" access, then any authenticated user can perform this action
-	if accessList.Authenticated {
-		if authorization.IsAuthenticated() {
+		// These checks are only valid if the page request is authenticated (via a UserID)
+		// If the user is a domain owner, then they can do anything
+		if authorization.DomainOwner {
 			return true, nil
+		}
+
+		// If the accessList allows "authenticated" access, then any authenticated user can perform this action
+		if accessList.Authenticated {
+			return true, nil
+		}
+
+		// If the accessList allows "author" access, then check to see if the user is the author of this object
+		if accessList.Author {
+			if accessLister.IsAuthor(authorization.UserID) {
+				return true, nil
+			}
+		}
+
+		// If the accessList allows "myself" access, then check to see if this user is "myself"
+		if accessList.Self {
+			if accessLister.IsMyself(authorization.UserID) {
+				return true, nil
+			}
+		}
+
+		// Check for group access via the Authorization object
+		if len(accessList.Groups) > 0 {
+
+			// Map the list of allowed roles to a list of GroupIDs
+			groupIDs := accessLister.RolesToGroupIDs(accessList.Groups...)
+
+			if authorization.IsGroupMember(groupIDs...) {
+				return true, nil
+			}
 		}
 	}
 
-	// If the accessList allows "author" access, then check to see if the user is the author of this object
-	if accessList.Author {
-		if accessLister.IsAuthor(authorization.UserID) {
-			return true, nil
-		}
-	}
-
-	// If the accessList allows "myself" access, then check to see if this user is "myself"
-	if accessList.Self {
-		if accessLister.IsMyself(authorization.UserID) {
-			return true, nil
-		}
-	}
-
-	// Check for group access via the Authorization object
-	if len(accessList.Groups) > 0 {
-
-		// Map the list of allowed roles to a list of GroupIDs
-		groupIDs := accessLister.RolesToGroupIDs(accessList.Groups...)
-
-		if authorization.IsGroupMember(groupIDs...) {
-			return true, nil
-		}
-	}
-
-	// These checks are only valid if the page request includes an Identity (via an IdentityID)
+	// These checks are only valid if the request includes an IdentityID
 	if authorization.IsIdentity() {
 
 		hasRole, err := service.hasPrivilege(authorization, accessLister, accessList.Privileges...)
@@ -294,5 +294,4 @@ func (service *Permission) getSignature(request *http.Request) (sigs.Signature, 
 	}
 
 	return sigs.Signature{}, derp.Wrap(err, location, "No valid signature found. For local domains, use 'Mock-Key-Id' header to simulate a signing key.")
-
 }

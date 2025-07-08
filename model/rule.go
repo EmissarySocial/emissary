@@ -73,7 +73,7 @@ func (rule *Rule) IsAuthor(authorID primitive.ObjectID) bool {
 // IsMyself returns TRUE if this object directly represents the provided RuleID
 // It is part of the AccessLister interface
 func (rule *Rule) IsMyself(userID primitive.ObjectID) bool {
-	return userID == rule.UserID
+	return !userID.IsZero() && userID == rule.UserID
 }
 
 // RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.

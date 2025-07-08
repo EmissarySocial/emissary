@@ -66,11 +66,6 @@ func (attachment Attachment) State() string {
 // IsAuthor returns TRUE if the provided UserID the author of this Attachment
 // It is part of the AccessLister interface
 func (attachment Attachment) IsAuthor(authorID primitive.ObjectID) bool {
-
-	// if attachment.ObjectType == AttachmentObjectTypeStream {
-	// TODO: What goes here??
-	// }
-
 	return false
 }
 
@@ -79,7 +74,7 @@ func (attachment Attachment) IsAuthor(authorID primitive.ObjectID) bool {
 func (attachment *Attachment) IsMyself(userID primitive.ObjectID) bool {
 
 	if attachment.ObjectType == AttachmentObjectTypeUser {
-		if attachment.ObjectID == userID {
+		if !userID.IsZero() && attachment.ObjectID == userID {
 			return true
 		}
 	}

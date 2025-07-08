@@ -61,7 +61,7 @@ func (identity Identity) IsAuthor(primitive.ObjectID) bool {
 
 // IsMyself returns TRUE if this object directly represents the provided UserID
 func (identity Identity) IsMyself(identityID primitive.ObjectID) bool {
-	return identity.IdentityID == identityID
+	return !identityID.IsZero() && identity.IdentityID == identityID
 }
 
 // RolesToGroupIDs returns a map of RoleIDs to GroupIDs

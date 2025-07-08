@@ -67,7 +67,7 @@ func (folder *Folder) IsAuthor(authorID primitive.ObjectID) bool {
 // IsMyself returns TRUE if this object directly represents the provided UserID
 // It is part of the AccessLister interface
 func (folder *Folder) IsMyself(userID primitive.ObjectID) bool {
-	return userID == folder.UserID
+	return !userID.IsZero() && userID == folder.UserID
 }
 
 // RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.

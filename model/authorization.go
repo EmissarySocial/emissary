@@ -4,7 +4,9 @@ import (
 	"strings"
 
 	"github.com/EmissarySocial/emissary/tools/id"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/slice"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/golang-jwt/jwt/v5"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -71,4 +73,17 @@ func (authorization Authorization) IsGroupMember(groupIDs ...primitive.ObjectID)
 // This implements the toot.ScopesGetter interface.
 func (authorization Authorization) Scopes() []string {
 	return strings.Split(authorization.Scope, " ")
+}
+
+func (authorization Authorization) Dump() {
+
+	spew.Dump(mapof.Any{
+		"userID":      authorization.UserID,
+		"identityID":  authorization.IdentityID,
+		"groupIDs":    authorization.GroupIDs,
+		"clientID":    authorization.ClientID,
+		"scope":       authorization.Scope,
+		"domainOwner": authorization.DomainOwner,
+		"apiUser":     authorization.APIUser,
+	})
 }

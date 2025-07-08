@@ -77,7 +77,7 @@ func (privilege *Privilege) IsAuthor(authorID primitive.ObjectID) bool {
 // IsMyself returns TRUE if this object directly represents the provided UserID
 // It is part of the AccessLister interface
 func (privilege *Privilege) IsMyself(userID primitive.ObjectID) bool {
-	return userID == privilege.UserID
+	return !userID.IsZero() && userID == privilege.UserID
 }
 
 // RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.

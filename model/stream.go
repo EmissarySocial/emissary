@@ -173,7 +173,7 @@ func (stream Stream) State() string {
 // IsAuthor returns TRUE if the provided UserID the author of this Stream
 // It is part of the AccessLister interface
 func (stream Stream) IsAuthor(authorID primitive.ObjectID) bool {
-	return authorID == stream.AttributedTo.UserID
+	return !authorID.IsZero() && authorID == stream.AttributedTo.UserID
 }
 
 // IsMyself returns TRUE if this object directly represents the provided UserID

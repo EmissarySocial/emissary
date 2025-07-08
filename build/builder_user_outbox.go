@@ -157,7 +157,7 @@ func (w Outbox) clone(action string) (Builder, error) {
 // IsMyself returns TRUE if the outbox record is owned
 // by the currently signed-in user
 func (w Outbox) IsMyself() bool {
-	return w._user.UserID == w.authorization().UserID
+	return w._user.IsMyself(w._authorization.UserID)
 }
 
 /******************************************
@@ -170,7 +170,7 @@ func (w Outbox) UserID() string {
 
 // Myself returns TRUE if the current user is viewing their own profile
 func (w Outbox) Myself() bool {
-	return w._authorization.UserID == w._user.UserID
+	return w._user.IsMyself(w._authorization.UserID)
 }
 
 func (w Outbox) Username() string {

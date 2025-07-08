@@ -134,7 +134,7 @@ func (response *Response) IsAuthor(authorID primitive.ObjectID) bool {
 // IsMyself returns TRUE if this object directly represents the provided UserID
 // It is part of the AccessLister interface
 func (response *Response) IsMyself(userID primitive.ObjectID) bool {
-	return response.UserID == userID
+	return !userID.IsZero() && response.UserID == userID
 }
 
 // RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.

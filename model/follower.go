@@ -57,7 +57,7 @@ func (follower *Follower) IsAuthor(authorID primitive.ObjectID) bool {
 // It is part of the AccessLister interface
 func (follower *Follower) IsMyself(userID primitive.ObjectID) bool {
 	if follower.ParentType == FollowerTypeUser {
-		return follower.ParentID == userID
+		return !userID.IsZero() && follower.ParentID == userID
 	}
 
 	return false

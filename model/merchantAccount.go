@@ -68,7 +68,7 @@ func (merchantAccount *MerchantAccount) IsAuthor(authorID primitive.ObjectID) bo
 // IsMyself returns TRUE if this object directly represents the provided UserID
 // It is part of the AccessLister interface
 func (merchantAccount *MerchantAccount) IsMyself(userID primitive.ObjectID) bool {
-	return merchantAccount.UserID == userID
+	return !userID.IsZero() && merchantAccount.UserID == userID
 }
 
 // RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.
