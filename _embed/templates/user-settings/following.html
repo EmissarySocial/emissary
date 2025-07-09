@@ -1,18 +1,18 @@
 <div class="page app flex-row" script="on load take .selected from .nav-item for #nav-settings">
 	<title>{{.FollowingCount}} Following | {{.DisplayName}}</title>
 
-	<div id="app-sidebar" class="app-sidebar" hx-swap="innerHTML show:window:top">
+	<div id="app-sidebar" class="app-sidebar">
 
 		<div class="pos-sticky" style="top:96px;">
 	
 			<div class="bold text-xl margin-none margin-bottom">Settings</div>
-	
-			<a href="/@me/settings/following" hx-boost="true" class="turboclick menu-item ellipsis selected">{{icon "star-fill"}} Following</a>
-			<a href="/@me/settings/followers" hx-boost="true" class="turboclick menu-item ellipsis">{{icon "person"}} Followers</a>
-			<a href="/@me/settings/circles" hx-boost="true" class="turboclick menu-item ellipsis">{{icon "circle"}} Circles</a>
-			<a href="/@me/settings/payments" hx-boost="true" class="turboclick menu-item ellipsis">{{icon "credit-card"}} Payments</a>
-			<a href="/@me/settings/rules" hx-boost="true" class="turboclick menu-item ellipsis">{{icon "rule"}} Rules</a>
-			<a href="/@guest" class="turboclick menu-item ellipsis">{{icon "user"}} Guest Profile</a>
+
+			<a href="/@me/settings/following" hx-boost="true" class="turboclick menu-item ellipsis selected" style="view-transition-name: nav-following;">{{icon "star-fill"}} Following</a>
+			<a href="/@me/settings/followers" hx-boost="true" class="turboclick menu-item ellipsis" style="view-transition-name: nav-followers;">{{icon "person"}} Followers</a>
+			<a href="/@me/settings/circles" hx-boost="true" class="turboclick menu-item ellipsis" style="view-transition-name: nav-circles;">{{icon "circle"}} Circles</a>
+			<a href="/@me/settings/payments" hx-boost="true" class="turboclick menu-item ellipsis" style="view-transition-name: nav-payments;">{{icon "credit-card"}} Payments</a>
+			<a href="/@me/settings/rules" hx-boost="true" class="turboclick menu-item ellipsis" style="view-transition-name: nav-rules;">{{icon "rule"}} Rules</a>
+			<a href="/@guest" class="turboclick menu-item ellipsis" style="view-transition-name: nav-guest;">{{icon "user"}} Guest Profile</a>
 			<hr>
 			<a hx-post="/signout" class="button">Sign Out</a>
 		</div>
@@ -20,6 +20,11 @@
 	</div>
 	
 	<div class="app-content">
+
+		<div class="flex-row flex-align-center margin-bottom-lg">
+			<h1 class="text-xl bold margin-none flex-grow">Following</h1>
+			<a href="https://emissary.dev/following" target="_blank">{{icon "help"}} Help with Following</a>
+		</div>
 
 		<div>
 			<input

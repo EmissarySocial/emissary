@@ -4,8 +4,10 @@ import (
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
+	"github.com/benpate/domain"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/steranko"
+	"github.com/davecgh/go-spew/spew"
 )
 
 type DomainEmail struct {
@@ -72,14 +74,14 @@ func (service *DomainEmail) SendWelcome(txn model.RegistrationTxn) error {
 
 			// Domain info available to the template
 			"Domain_Owner": service.owner,
-			"Domain_URL":   domain.Host(),
+			"Domain_URL":   service.host(),
 			"Domain_Name":  domain.Label,
 			"Domain_Icon":  domain.IconURL(),
 		},
 	)
 
 	if err != nil {
-		return derp.Wrap(err, "service.DomainEmail.SendWelcome", "Error sending welcome email to user", txn.EmailAddress)
+		return derp.Wrap(err, location, "Error sending welcome email to user", txn.EmailAddress)
 	}
 
 	// Woot!
@@ -89,6 +91,8 @@ func (service *DomainEmail) SendWelcome(txn model.RegistrationTxn) error {
 // SendPasswordReset sends a passowrd reset email to the user.  This method
 // swallows errors so that it can be run asynchronously.
 func (service *DomainEmail) SendPasswordReset(user *model.User) error {
+
+	const location = "service.DomainEmail.SendPasswordReset"
 
 	domain := service.domainService.Get()
 
@@ -109,14 +113,14 @@ func (service *DomainEmail) SendPasswordReset(user *model.User) error {
 
 			// Domain info available to the template
 			"Domain_Owner": service.owner,
-			"Domain_URL":   domain.Host(),
+			"Domain_URL":   service.host(),
 			"Domain_Name":  domain.Label,
 			"Domain_Icon":  domain.IconURL(),
 		},
 	)
 
 	if err != nil {
-		return derp.Wrap(err, "service.DomainEmail.SendWelcome", "Error sending password reset email to user", user.Username)
+		return derp.Wrap(err, location, "Error sending password reset email to user", user.Username)
 	}
 
 	return nil
@@ -129,6 +133,8 @@ func (service *DomainEmail) SendGuestCode(identifier string, token string) error
 	const location = "service.DomainEmail.SendGuestCode"
 
 	domain := service.domainService.Get()
+
+	spew.Dump(location, domain)
 
 	// Send the welcome email
 	err := service.serverEmail.Send(
@@ -143,7 +149,7 @@ func (service *DomainEmail) SendGuestCode(identifier string, token string) error
 
 			// Domain info available to the template
 			"Domain_Owner": service.owner,
-			"Domain_URL":   domain.Host(),
+			"Domain_URL":   service.host(),
 			"Domain_Name":  domain.Label,
 			"Domain_Icon":  domain.IconURL(),
 		},
@@ -158,6 +164,8 @@ func (service *DomainEmail) SendGuestCode(identifier string, token string) error
 }
 
 func (service *DomainEmail) SendFollowerConfirmation(actor model.PersonLink, follower *model.Follower) error {
+
+	const location = "service.DomainEmail.SendFollowerConfirmation"
 
 	domain := service.domainService.Get()
 
@@ -179,20 +187,22 @@ func (service *DomainEmail) SendFollowerConfirmation(actor model.PersonLink, fol
 
 			// Domain info available to the template
 			"Domain_Owner": service.owner,
-			"Domain_URL":   domain.Host(),
+			"Domain_URL":   service.host(),
 			"Domain_Name":  domain.Label,
 			"Domain_Icon":  domain.IconURL(),
 		},
 	)
 
 	if err != nil {
-		return derp.Wrap(err, "service.DomainEmail.SendFollowConfirmation", "Error sending follow confirmation email to user", follower.Actor.EmailAddress)
+		return derp.Wrap(err, location, "Error sending follow confirmation email to user", follower.Actor.EmailAddress)
 	}
 
 	return nil
 }
 
 func (service *DomainEmail) SendFollowerActivity(follower *model.Follower, activity mapof.Any) error {
+
+	const location = "service.DomainEmail.SendFollowerActivity"
 
 	domain := service.domainService.Get()
 
@@ -218,7 +228,7 @@ func (service *DomainEmail) SendFollowerActivity(follower *model.Follower, activ
 
 			// Domain info available to the template
 			"Domain_Owner": service.owner,
-			"Domain_URL":   domain.Host(),
+			"Domain_URL":   service.host(),
 			"Domain_Name":  domain.Label,
 			"Domain_Icon":  domain.IconURL(),
 			"Unsubscribe":  follower.UnsubscribeLink(domain.Host()),
@@ -226,8 +236,12 @@ func (service *DomainEmail) SendFollowerActivity(follower *model.Follower, activ
 	)
 
 	if err != nil {
-		return derp.Wrap(err, "service.DomainEmail.SendFollowerEmail", "Error sending follower email to user", follower.Actor.EmailAddress)
+		return derp.Wrap(err, location, "Error sending follower email to user", follower.Actor.EmailAddress)
 	}
 
 	return nil
+}
+
+func (service *DomainEmail) host() string {
+	return domain.AddProtocol(service.hostname)
 }

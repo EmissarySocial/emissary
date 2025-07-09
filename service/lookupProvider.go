@@ -253,7 +253,7 @@ func (service *LookupProvider) getMerchantAccountsAllProducts() form.LookupGroup
 	result := mapProductsToLookupCodes(products...)
 
 	// Sort the results by label
-	slices.SortFunc(result, form.SortLookupCodeByLabel)
+	slices.SortFunc(result, form.SortLookupCodeByGroupThenLabel)
 
 	// Everything is cool when you're part of a team.
 	return form.NewReadOnlyLookupGroup(result...)

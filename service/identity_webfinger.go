@@ -1,6 +1,7 @@
 package service
 
 import (
+	"crypto/sha256"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -24,6 +25,9 @@ func (service *Identity) sendGuestCode_ActivityPub(identifier string, code strin
 	// Create the outbound message
 	hostname := service.hostname()
 
+	idHash := sha256.Sum256([]byte(code))
+	objectID := service.host + "/@guest/signin/" + string(idHash[:])
+
 	url := service.host + "/@guest/signin/" + code
 	publishedDate := hannibal.TimeFormat(time.Now())
 
@@ -38,15 +42,18 @@ func (service *Identity) sendGuestCode_ActivityPub(identifier string, code strin
 
 	activity := mapof.Any{
 		vocab.AtContext:         vocab.ContextTypeActivityStreams,
+		vocab.PropertyID:        objectID,
 		vocab.PropertyType:      vocab.ActivityTypeCreate,
 		vocab.PropertyActor:     service.host + "/@application",
 		vocab.PropertyPublished: publishedDate,
 		vocab.PropertyTo:        []string{recipientID},
 		vocab.PropertyObject: mapof.Any{
-			vocab.PropertyType:      vocab.ObjectTypeNote,
-			vocab.PropertyPublished: publishedDate,
-			vocab.PropertyTo:        []string{recipientID},
-			vocab.PropertyContent:   content,
+			vocab.PropertyType:         vocab.ObjectTypeNote,
+			vocab.PropertyID:           objectID,
+			vocab.PropertyPublished:    publishedDate,
+			vocab.PropertyAttributedTo: service.host + "/@application",
+			vocab.PropertyTo:           []string{recipientID},
+			vocab.PropertyContent:      content,
 			vocab.PropertyTag: []mapof.Any{
 				{
 					vocab.PropertyType: vocab.LinkTypeMention,

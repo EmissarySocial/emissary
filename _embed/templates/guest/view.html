@@ -21,7 +21,7 @@
 	<div class="app-content">
 		<h1 class="text-xl bold margin-none">Guest Profile</h1>
 
-		<div class="margin-top rounded card padding md:width-80% lg:width-60% flex-row flex-align-start">
+		<div class="margin-top rounded card padding flex-row flex-align-start" style="width:min-content;">
 			<div class="margin-horizontal">
 				<span style="font-size:64px;">{{icon "person-circle"}}</span>
 			</div>
@@ -33,7 +33,7 @@
 				</div>
 
 				<div hx-get="/@guest/webfinger" class="clickable flex-row flex-align-center">
-					<div class="flex-grow margin-right-sm">
+					<div class="flex-grow margin-right-sm ellipsis">
 						{{icon "fediverse"}} 
 						{{ if $hasActivityPubActor -}}
 							{{.ActivityPubActor}}
@@ -51,7 +51,7 @@
 				</div>
 
 				<div hx-get="/@guest/email" class="clickable flex-row flex-align-center">
-					<div class="flex-grow margin-right-sm">
+					<div class="flex-grow margin-right-sm ellipsis">
 						{{icon "email"}} 
 						{{ if .HasEmailAddress -}}
 							{{.EmailAddress}}

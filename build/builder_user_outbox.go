@@ -325,7 +325,11 @@ func (w Outbox) Circles() QueryBuilder[model.Circle] {
 }
 
 func (w Outbox) HasProducts() (bool, error) {
-	return w._factory.Circle().HasAssignedProducts(w._user.UserID)
+	return w._factory.Circle().HasProducts(w._user.UserID)
+}
+
+func (w Outbox) ProductCount() (int, error) {
+	return w._factory.Circle().ProductCount(w._user.UserID)
 }
 
 func (w Outbox) Products() (sliceof.Object[model.Product], error) {

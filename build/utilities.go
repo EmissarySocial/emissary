@@ -5,6 +5,7 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -345,6 +346,7 @@ func mapProductsToLookupCodes(products ...model.Product) sliceof.Object[form.Loo
 		lookupCodes[index] = product.LookupCode()
 	}
 
+	slices.SortFunc(lookupCodes, form.SortLookupCodeByGroupThenLabel)
 	return lookupCodes
 }
 
@@ -356,5 +358,6 @@ func mapCirclesToLookupCodes(circles ...model.Circle) sliceof.Object[form.Lookup
 		lookupCodes[index] = circle.LookupCode()
 	}
 
+	slices.SortFunc(lookupCodes, form.SortLookupCodeByGroupThenLabel)
 	return lookupCodes
 }

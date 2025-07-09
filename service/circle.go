@@ -256,35 +256,44 @@ func (service *Circle) LoadByProductID(userID primitive.ObjectID, productID prim
 	return service.Load(criteria, result)
 }
 
-func (service *Circle) HasAssignedProducts(userID primitive.ObjectID) (bool, error) {
+func (service *Circle) HasProducts(userID primitive.ObjectID) (bool, error) {
 
-	const location = "service.Circle.CountRemoteProducts"
+	count, err := service.ProductCount(userID)
+
+	if err != nil {
+		return false, derp.Wrap(err, "service.Circle.HasProducts", "Error counting products for User", userID)
+	}
+
+	return count > 0, nil
+}
+
+func (service *Circle) ProductCount(userID primitive.ObjectID) (int, error) {
+
+	const location = "service.Circle.ProductCount"
 
 	// RULE: Require a valid UserID
 	if userID.IsZero() {
-		return false, derp.ValidationError("UserID cannot be zero")
+		return 0, derp.ValidationError("UserID cannot be zero")
 	}
 
 	// Count the number of remote products for this user
 	circles, err := service.QueryFeaturedByUser(userID)
 
 	if err != nil {
-		return false, derp.Wrap(err, location, "Error counting remote products for User", userID)
+		return 0, derp.Wrap(err, location, "Error counting remote products for User", userID)
 	}
 
 	// Count all products across all "Featured" circles
+	result := 0
 	for _, circle := range circles {
-		if circle.HasProducts() {
-			return true, nil
-		}
+		result += circle.ProductCount()
 	}
-
-	return false, nil
+	return result, nil
 }
 
 func (service *Circle) AssignedProductIDs(userID primitive.ObjectID) (id.Slice, error) {
 
-	const location = "service.Circle.ProductIDs"
+	const location = "service.Circle.AssignedProductIDs"
 
 	// RULE: Require a valid UserID
 	if userID.IsZero() {

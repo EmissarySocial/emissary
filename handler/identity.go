@@ -10,6 +10,7 @@ import (
 	"github.com/benpate/html"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/steranko"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/golang-jwt/jwt/v5"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -252,6 +253,8 @@ func PostIdentityIdentifier(ctx *steranko.Context, factory *domain.Factory, iden
 	identifierValue := ctx.FormValue("identifier")
 	identityService := factory.Identity()
 
+	spew.Dump(location, identifierType, identifierValue)
+
 	// If we're setting a new identifier, then send a guest code to the user
 	if identifierValue != "" {
 
@@ -269,6 +272,8 @@ func PostIdentityIdentifier(ctx *steranko.Context, factory *domain.Factory, iden
 	if err := identityService.Save(identity, "Removed identifier: "+identifierType); err != nil {
 		return derp.Wrap(err, location, "Error saving Identity", identity.IdentityID)
 	}
+
+	spew.Dump(identity)
 
 	return closeModalAndRefreshPage(ctx)
 }

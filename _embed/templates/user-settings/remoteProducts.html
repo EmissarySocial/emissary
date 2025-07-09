@@ -27,11 +27,20 @@
 	<h1 class="text-xl bold margin-none flex-grow">Products</h1>
 
 	<div class="text-gray md:width-80% lg:width-60% margin-bottom">
-		Now that your merchant account is connected, you can link these products to the content that you post.
-		Go to <a href="/@me">your profile</a> to link specific items to a product, or <a href="/@me/settings/circles">circles</a> to link products to group access controls.
+		Now that your merchant account is connected, you can link these products to your custom 
+		<a href="/@me/settings/circles" class="nowrap">Circles</a> or to other items in
+		<a href="/@me" class="nowrap">Your Profile</a>.
 	</div>
 
 	<div class="table">
+		<div>
+			{{- range $index, $merchantAccount := $merchantAccounts -}}
+				<a href="{{$merchantAccount.ProductURL}}" target="_blank">
+					&plus; Add Another Product on {{$merchantAccount.Name}}
+				</a>
+				&nbsp;
+			{{- end -}}
+		</div>
 		{{- range $index, $remoteProduct := $remoteProducts -}}
 			<div class="flex-row flex-align-center">
 				<div class="flex-grow">{{icon $remoteProduct.Icon}} {{$remoteProduct.Name}}</div>						
@@ -41,14 +50,5 @@
 				</div>
 			</div>
 		{{- end -}}
-
-		<div>
-			{{- range $index, $merchantAccount := $merchantAccounts -}}
-				<a href="{{$merchantAccount.ProductURL}}" target="_blank">
-					&plus; Add Product on {{$merchantAccount.Name}}
-				</a>
-				&nbsp;
-			{{- end -}}
-		</div>
 	</div>
 {{- end -}}
