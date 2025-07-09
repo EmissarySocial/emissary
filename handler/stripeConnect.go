@@ -33,15 +33,6 @@ func GetStripeConnect(ctx *steranko.Context, factory *domain.Factory, user *mode
 
 	// Create a MerchantAccount for this User
 	merchantAccountService := factory.MerchantAccount()
-
-	/*
-		if id := ctx.QueryParam("merchantAccountId"); id != "" {
-			if merchantAccountID, err := primitive.ObjectIDFromHex(id); err == nil {
-				// TODO: Refresh existing MerchantAccount links??
-			}
-		}
-	*/
-
 	merchantAccount := model.NewMerchantAccount()
 	merchantAccount.UserID = user.UserID
 	merchantAccount.Type = model.ConnectionProviderStripeConnect
@@ -89,4 +80,39 @@ func GetStripeConnect(ctx *steranko.Context, factory *domain.Factory, user *mode
 	}
 
 	return ctx.Redirect(http.StatusFound, accountLink.URL)
+}
+
+// PostStripeConnectWebhook_Checkout processes inbound webhook events for a specific MerchantAccount
+func PostStripeConnectWebhook_Checkout(ctx *steranko.Context, factory *domain.Factory, connection *model.Connection) error {
+
+	const location = "handler.PostStripeConnectWebhook_Checkout"
+
+	// RULE: Connection must be a STRIPE CONNECT account
+	if connection.Type != model.ConnectionProviderStripeConnect {
+		return derp.NotImplementedError(location, "Connection is not a Stripe Connect account")
+	}
+
+	// Retrieve the webhook signing key from the Vault
+	vault, err := factory.Connection().DecryptVault(connection, "webhookSecret")
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error decrypting webhook secret")
+	}
+
+	liveMode := connection.Data.GetString("liveMode") == "LIVE"
+
+	// Process the Stripe WebHook data
+	if err = stripe_ProcessWebhook(factory, ctx.Request(), vault.GetString("webhookSecret"), liveMode); err != nil {
+
+		// Suppress errors from subscriptions that are not found on this server
+		if derp.IsNotFound(err) {
+			return nil
+		}
+
+		// All other errors are reported to the caller
+		return derp.Wrap(err, location, "Error processing webhook data")
+	}
+
+	// Success. WebHook complete.
+	return ctx.NoContent(http.StatusOK)
 }

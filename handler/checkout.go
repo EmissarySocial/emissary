@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"io"
 	"net/http"
 
 	"github.com/EmissarySocial/emissary/domain"
@@ -56,42 +55,4 @@ func GetCheckoutResponse(ctx *steranko.Context, factory *domain.Factory, merchan
 
 	// Forward the client to their profile page and highlight the newly purchased privilege.
 	return ctx.Redirect(http.StatusSeeOther, "/@guest")
-}
-
-// PostCheckoutWebhook processes inbound webhook events for a specific MerchantAccount
-func PostCheckoutWebhook(ctx *steranko.Context, factory *domain.Factory, merchantAccount *model.MerchantAccount) error {
-
-	const location = "handler.PostCheckoutWebhook"
-
-	// Read the request Body as a byte array
-	reader := io.LimitReader(ctx.Request().Body, 65535)
-	body, err := io.ReadAll(reader)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Error reading request body")
-	}
-
-	defer ctx.Request().Body.Close()
-
-	// Parse the WebHook data based on the MerchantAccount type
-	merchantAccountService := factory.MerchantAccount()
-
-	if err := merchantAccountService.ParseCheckoutWebhook(ctx.Request().Header, body, merchantAccount); err != nil {
-
-		// Suppress errors from unsupported event handlers
-		if derp.IsNotImplemented(err) {
-			return nil
-		}
-
-		// Suppress errors from subscriptions that are not found on this server
-		if derp.IsNotFound(err) {
-			return nil
-		}
-
-		// All other errors are reported to the caller
-		return derp.Wrap(err, location, "Error processing webhook data")
-	}
-
-	// Success.  WebHook complete.
-	return ctx.NoContent(http.StatusOK)
 }

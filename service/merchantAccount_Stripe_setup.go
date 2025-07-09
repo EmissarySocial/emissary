@@ -10,10 +10,10 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// stripe_refreshMerchantAccount ensures that the Stripe webhook is configured for this MerchantAccount
-func (service *MerchantAccount) stripe_refreshMerchantAccount(merchantAccount *model.MerchantAccount) error {
+// stripe_Connect ensures that the Stripe webhook is configured for this MerchantAccount
+func (service *MerchantAccount) stripe_Connect(merchantAccount *model.MerchantAccount) error {
 
-	const location = "service.MerchantAccount.stripe_refreshMerchantAccount"
+	const location = "service.MerchantAccount.stripe_Connect"
 
 	// RULE: Cannot set webhooks for local domains
 	if domain.IsLocalhost(service.host) {

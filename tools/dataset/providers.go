@@ -48,7 +48,7 @@ func Providers() []form.LookupCode {
 			Label:       "Stripe Connect",
 			Icon:        "stripe",
 			Description: "Allow users to accept payments via Stripe.  Use this configuration if you have set up Stripe Connect and want users to authenticate via OAuth. (Easier for Users)",
-			Group:       "OAUTH",
+			Group:       "MANUAL",
 		},
 
 		/* REMOVED FOR NOW

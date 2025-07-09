@@ -3,7 +3,6 @@ package service
 import (
 	"encoding/hex"
 	"iter"
-	"net/http"
 	"net/url"
 	"slices"
 	"time"
@@ -128,7 +127,7 @@ func (service *MerchantAccount) Save(merchantAccount *model.MerchantAccount, not
 	}
 
 	// Refresh OAuth connections (if necessary)
-	if err := service.RefreshAPIKeys(merchantAccount); err != nil {
+	if err := service.Connect(merchantAccount); err != nil {
 		return derp.Wrap(err, location, "Could not connect to "+merchantAccount.Type)
 	}
 
@@ -293,10 +292,14 @@ func (service *MerchantAccount) DecryptVault(merchantAccount *model.MerchantAcco
 
 	const location = "service.MerchantAccount.DecryptVault"
 
-	// Before retrieving the API keys, make sure they are up to date
-	if err := service.RefreshAPIKeys(merchantAccount); err != nil {
-		return nil, derp.Wrap(err, location, "Error refreshing API keys")
-	}
+	/*
+		REMOVEING THIS UNTIL WE HAVE AN INTEGRATION THAT DOESN'T USE PERMANENT API KEYS.
+		FOR NOW, STRIPE DOESN'T REQUIRE US TO RENEW API KEYS, SO LET'S JUST NOT.
+		// Before retrieving the API keys, make sure they are up to date
+		if err := service.RefreshAPIKeys(merchantAccount); err != nil {
+			return nil, derp.Wrap(err, location, "Error refreshing API keys")
+		}
+	*/
 
 	// Decode the encryption key (this should never fail)
 	encryptionKey, err := hex.DecodeString(service.encryptionKey)
@@ -373,27 +376,7 @@ func (service *MerchantAccount) ParseCheckoutResponse(merchantAccount *model.Mer
 	return privilege, nil
 }
 
-func (service *MerchantAccount) ParseCheckoutWebhook(header http.Header, body []byte, merchantAccount *model.MerchantAccount) error {
-
-	const location = "service.MerchantAccount.ParseCheckoutWebhook"
-
-	// Fan out to the appropriate MerchantAccount type
-	switch merchantAccount.Type {
-
-	// case model.ConnectionProviderPayPal:
-	//	return service.paypal_processWebhook(header, body, merchantAccount)
-
-	case model.ConnectionProviderStripe:
-		return service.stripe_processWebhook(header, body, merchantAccount)
-
-	case model.ConnectionProviderStripeConnect:
-		return service.stripe_processWebhook(header, body, merchantAccount)
-	}
-
-	return derp.InternalError(location, "Invalid MerchantAccount Type", merchantAccount.Type)
-}
-
-func (service *MerchantAccount) RefreshAPIKeys(merchantAccount *model.MerchantAccount) error {
+func (service *MerchantAccount) Connect(merchantAccount *model.MerchantAccount) error {
 
 	// RULE: Do not refresh API keys if they will not expire within the next hour
 	if merchantAccount.APIKeyExpirationDate > time.Now().Add(-1*time.Hour).Unix() {
@@ -402,14 +385,11 @@ func (service *MerchantAccount) RefreshAPIKeys(merchantAccount *model.MerchantAc
 
 	switch merchantAccount.Type {
 
-	// case model.ConnectionProviderPayPal:
-	//	return service.paypal_refreshMerchantAccount(merchantAccount)
-
 	case model.ConnectionProviderStripe:
-		return service.stripe_refreshMerchantAccount(merchantAccount)
+		return service.stripe_Connect(merchantAccount)
 
 	case model.ConnectionProviderStripeConnect:
-		return service.stripe_refreshMerchantAccount(merchantAccount)
+		return service.stripeConnect_Connect(merchantAccount)
 	}
 
 	return derp.InternalError("service.MerchantAccount.RefreshMerchantAccount", "Invalid MerchantAccount Type", merchantAccount.Type)

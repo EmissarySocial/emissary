@@ -61,7 +61,7 @@ func (adapter Giphy) ManualConfig() form.Form {
  ******************************************/
 
 // Connect applies any extra changes to the database after this Adapter is activated.
-func (adapter Giphy) Connect(connection *model.Connection, vault mapof.String) error {
+func (adapter Giphy) Connect(connection *model.Connection, vault mapof.String, host string) error {
 	return nil
 }
 

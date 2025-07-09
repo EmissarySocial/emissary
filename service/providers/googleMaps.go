@@ -66,7 +66,7 @@ func (adapter GoogleMaps) ManualConfig() form.Form {
  ******************************************/
 
 // Connect applies any extra changes to the database after this Adapter is activated.
-func (adapter GoogleMaps) Connect(connection *model.Connection, vault mapof.String) error {
+func (adapter GoogleMaps) Connect(connection *model.Connection, vault mapof.String, host string) error {
 	return nil
 }
 

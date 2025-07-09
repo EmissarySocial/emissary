@@ -66,7 +66,7 @@ func (adapter ArcGIS) ManualConfig() form.Form {
  ******************************************/
 
 // Connect applies any extra changes to the database after this Adapter is activated.
-func (adapter ArcGIS) Connect(connection *model.Connection, vault mapof.String) error {
+func (adapter ArcGIS) Connect(connection *model.Connection, vault mapof.String, host string) error {
 	return nil
 }
 

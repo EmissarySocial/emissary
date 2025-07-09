@@ -113,7 +113,7 @@ func (service *Connection) Save(connection *model.Connection, note string) error
 	// Connect/Update the connection
 	case true:
 
-		if err := provider.Connect(connection, vault); err != nil {
+		if err := provider.Connect(connection, vault, service.host); err != nil {
 			return derp.Wrap(err, location, "Error installing connection")
 		}
 
@@ -328,7 +328,7 @@ func (service *Connection) LoadOrCreateByProvider(providerID string) (model.Conn
 	return result, nil
 }
 
-func (service *Connection) DecryptVault(connection *model.Connection) (mapof.String, error) {
+func (service *Connection) DecryptVault(connection *model.Connection, values ...string) (mapof.String, error) {
 	const location = "service.Connection.DecryptVault"
 
 	// RULE: connection must not be nil
@@ -344,7 +344,7 @@ func (service *Connection) DecryptVault(connection *model.Connection) (mapof.Str
 	}
 
 	// Decrypt the vault
-	result, err := connection.Vault.Decrypt(encryptionKey)
+	result, err := connection.Vault.Decrypt(encryptionKey, values...)
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Error decrypting vault")

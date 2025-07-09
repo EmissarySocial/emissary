@@ -52,7 +52,7 @@ func WithAuthenticatedUser(serverFactory *server.Factory, fn WithFunc1[model.Use
 		return fn(ctx, factory, &user)
 	})
 }
-func WithConnection(serverFactory *server.Factory, fn WithFunc1[model.Connection]) echo.HandlerFunc {
+func WithConnection(provider string, serverFactory *server.Factory, fn WithFunc1[model.Connection]) echo.HandlerFunc {
 
 	const location = "handler.WithConnection"
 
@@ -61,7 +61,10 @@ func WithConnection(serverFactory *server.Factory, fn WithFunc1[model.Connection
 		// Load the Connection from the database
 		connectionService := factory.Connection()
 		connection := model.NewConnection()
-		provider := ctx.Param("provider")
+
+		if provider == "" {
+			provider = ctx.Param("provider")
+		}
 
 		if err := connectionService.LoadByProvider(provider, &connection); err != nil {
 			return derp.Wrap(err, location, "Error loading Connection")

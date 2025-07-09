@@ -2,7 +2,11 @@ package providers
 
 import (
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/derp"
+	"github.com/benpate/domain"
 	"github.com/benpate/form"
+	"github.com/benpate/remote"
+	"github.com/benpate/remote/options"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/null"
 	"github.com/benpate/rosetta/schema"
@@ -114,7 +118,45 @@ func (adapter StripeConnect) ManualConfig() form.Form {
  ******************************************/
 
 // Connect applies any extra changes to the database after this Adapter is activated.
-func (adapter StripeConnect) Connect(connection *model.Connection, vault mapof.String) error {
+func (adapter StripeConnect) Connect(connection *model.Connection, vault mapof.String, host string) error {
+
+	const location = "providers.StripeConnect.Connect"
+
+	// RULE: Cannot set webhooks for local domains
+	if domain.IsLocalhost(host) {
+		return nil
+	}
+
+	// RULE: If we already have a webhook for this MerchantAccount, then don't add another one.
+	if connection.Data.GetString("webhook") != "" {
+		return nil
+	}
+
+	// Configure a new Webhook in the Stripe API
+	webhookResult := mapof.NewAny()
+	txn := remote.Post("https://api.stripe.com/v1/webhook_endpoints").
+		With(options.BearerAuth(vault.GetString("restrictedKey"))).
+		With(options.Debug()).
+		Query("url", host+"/.stripe-connect/webhook/checkout").
+		Query("description", domain.NameOnly(host)+" supscription updates").
+		Query("enabled_events[]", "checkout.session.completed").
+		Query("enabled_events[]", "customer.subscription.created").
+		Query("enabled_events[]", "customer.subscription.deleted").
+		Query("enabled_events[]", "customer.subscription.paused").
+		Query("enabled_events[]", "customer.subscription.resumed").
+		Query("enabled_events[]", "customer.subscription.updated").
+		Query("connect", "true").
+		Result(&webhookResult)
+
+	if err := txn.Send(); err != nil {
+		return derp.Wrap(err, location, "Error creating WebHook via Stripe API")
+	}
+
+	// Save the webhook data into the MerchantAccount
+	connection.Data.SetString("webhook", webhookResult.GetString("id"))
+	connection.Vault.SetString("webhookSecret", webhookResult.GetString("secret"))
+
+	// Success!
 	return nil
 }
 

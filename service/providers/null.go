@@ -11,7 +11,7 @@ type Null struct{}
  * Lifecycle Methods
  ******************************************/
 
-func (adapter Null) Connect(connection *model.Connection, vault mapof.String) error {
+func (adapter Null) Connect(connection *model.Connection, vault mapof.String, host string) error {
 	return nil
 }
 
