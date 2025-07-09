@@ -9,8 +9,8 @@ import (
 	"github.com/benpate/hannibal"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 /******************************************
@@ -64,7 +64,7 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream, stateID s
 		}
 
 	// If the syndication settings have been changed (or is being republished) then send "Update" activities
-	case stream.Syndication.IsChanged(), republish:
+	case stream.Syndication.IsChanged() || republish:
 
 		if err := service.sendSyndicationMessages(stream, stream.Syndication.Added, stream.Syndication.Unchanged(), stream.Syndication.Deleted); err != nil {
 			return derp.Wrap(err, location, "Error sending syndication messages", stream)
@@ -110,6 +110,8 @@ func (service *Stream) publish_outbox(user *model.User, stream *model.Stream, wa
 	if cc, ok := object[vocab.PropertyCC]; ok {
 		activity[vocab.PropertyCC] = cc
 	}
+
+	spew.Dump(location, activity)
 
 	// Publish to the User's outbox
 	if err := service.publish_outbox_user(user, stream, activity); err != nil {
@@ -204,116 +206,6 @@ func (service *Stream) publish_outbox_stream(stream *model.Stream, activity mapo
 	log.Trace().Str("id", stream.URL).Msg("Publishing to parent Stream's outbox")
 	if err := service.outboxService.Publish(&actor, model.FollowerTypeStream, stream.ParentID, document, stream.DefaultAllow); err != nil {
 		return derp.Wrap(err, location, "Error publishing activity", activity)
-	}
-
-	// Done.
-	return nil
-}
-
-/******************************************
- * UnPublish Methods
- ******************************************/
-
-// UnPublish marks this stream as "published"
-func (service *Stream) UnPublish(user *model.User, stream *model.Stream, stateID string, outbox bool) error {
-
-	const location = "service.Stream.UnPublish"
-
-	// RULE: Move unpublish date all the way to the end of time.
-	stream.StateID = stateID
-	stream.UnPublishDate = time.Now().Unix()
-
-	// Re-save the Stream with the updated values.
-	if err := service.Save(stream, "UnPublish"); err != nil {
-		return derp.Wrap(err, location, "Error saving stream", stream)
-	}
-
-	// If we're not publishing to the outbox, then we're done
-	if !outbox {
-		return nil
-	}
-
-	// UN-PUBLISH FROM THE OUTBOX...
-
-	// Send "Undo" activities to all User followers.
-	if !user.IsNew() {
-		if err := service.unpublish_outbox_user(user.UserID, stream.URL); err != nil {
-			return derp.Wrap(err, location, "Error unpublishing from User's outbox", stream)
-		}
-	}
-
-	// Send "Undo" activities to all Stream followers.
-	if err := service.unpublish_outbox_stream(stream); err != nil {
-		return derp.Wrap(err, location, "Error unpublishing from User's outbox", stream)
-	}
-
-	// Send stream:publish:undo Webhooks
-	service.webhookService.Send(stream, model.WebhookEventStreamPublishUndo)
-
-	// Send syndication:undo messages to all targets
-	if err := service.sendSyndicationMessages(stream, nil, nil, stream.Syndication.Values); err != nil {
-		derp.Report(derp.Wrap(err, location, "Error sending syndication messages", stream))
-	}
-
-	// Done.
-	return nil
-}
-
-// publish_outbox_user publishes this stream to the User's outbox
-func (service *Stream) unpublish_outbox_user(userID primitive.ObjectID, url string) error {
-
-	const location = "service.Stream.unpublish_outbox_user"
-
-	// Load the Actor for this User
-	actor, err := service.userService.ActivityPubActor(userID)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Error loading actor", userID)
-	}
-
-	// Try to publish via sendNotifications
-	log.Trace().Str("id", url).Msg("UnPublishing from User's outbox")
-	if err := service.outboxService.UnPublish(&actor, model.FollowerTypeUser, userID, url); err != nil {
-		return derp.Wrap(err, location, "Error un-publishing activity", url)
-	}
-
-	// Done.
-	return nil
-}
-
-// publish_outbox_stream publishes this Stream to the parent Stream's outbox
-func (service *Stream) unpublish_outbox_stream(stream *model.Stream) error {
-
-	const location = "service.Stream.unpublish_outbox_stream"
-
-	// RULE: If the Stream does not have a parent template (i.e. Outbox or Top-Level Stream), then NOOP
-	if stream.ParentTemplateID == "" {
-		return nil
-	}
-
-	// Get the parent Template
-	parentTemplate, err := service.templateService.Load(stream.ParentTemplateID)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Error loading parent template", stream.ParentTemplateID)
-	}
-
-	// RULE: If the parent Actor is not set to boost children, then NOOP
-	if !parentTemplate.Actor.BoostChildren {
-		return nil
-	}
-
-	// Load the Actor for the parent Stream
-	actor, err := service.ActivityPubActor(stream.ParentID)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Error loading parent actor")
-	}
-
-	// Try to publish via sendNotifications
-	log.Trace().Str("id", stream.URL).Msg("UnPublishing from parent Stream's outbox")
-	if err := service.outboxService.UnPublish(&actor, model.FollowerTypeStream, stream.ParentID, stream.ActivityPubURL()); err != nil {
-		return derp.Wrap(err, location, "Error publishing activity", stream)
 	}
 
 	// Done.

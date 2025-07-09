@@ -22,13 +22,13 @@ func GetStripeConnect(ctx *steranko.Context, factory *domain.Factory, user *mode
 	connection := model.NewConnection()
 
 	if err := connectionService.LoadByProvider(model.ConnectionProviderStripeConnect, &connection); err != nil {
-		return derp.Wrap(err, location, "Error loading Stripe-Connect Connection")
+		return derp.Wrap(err, location, "Unable to load Stripe-Connect Connection")
 	}
 
 	vault, err := connectionService.DecryptVault(&connection)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error decrypting Stripe-Connect Connection Vault")
+		return derp.Wrap(err, location, "Unable to decrypt Vault data")
 	}
 
 	// Create a MerchantAccount for this User
@@ -52,14 +52,14 @@ func GetStripeConnect(ctx *steranko.Context, factory *domain.Factory, user *mode
 		Result(&stripeAccount)
 
 	if err := accountTransaction.Send(); err != nil {
-		return derp.Wrap(err, location, "Error sending referral to Stripe", derp.WithCode(http.StatusInternalServerError))
+		return derp.Wrap(err, location, "Unable to create account on Stripe", derp.WithCode(http.StatusInternalServerError))
 	}
 
 	// Save the new MerchantAccount (including Stripe Account ID)
 	merchantAccount.Plaintext.SetString("accountId", stripeAccount.ID)
 
 	if err := merchantAccountService.Save(&merchantAccount, "Linked by User"); err != nil {
-		return derp.Wrap(err, location, "Error creating MerchantAccount", derp.WithCode(http.StatusInternalServerError))
+		return derp.Wrap(err, location, "Unable to create MerchantAccount", derp.WithCode(http.StatusInternalServerError))
 	}
 
 	// Create a new ACCOUNT LINK on Stripe
@@ -76,7 +76,7 @@ func GetStripeConnect(ctx *steranko.Context, factory *domain.Factory, user *mode
 		Result(&accountLink)
 
 	if err := accountLinkTransaction.Send(); err != nil {
-		return derp.Wrap(err, location, "Error sending referral to Stripe", derp.WithCode(http.StatusInternalServerError))
+		return derp.Wrap(err, location, "Unable to create account link on Stripe", derp.WithCode(http.StatusInternalServerError))
 	}
 
 	return ctx.Redirect(http.StatusFound, accountLink.URL)
@@ -88,15 +88,15 @@ func PostStripeConnectWebhook_Checkout(ctx *steranko.Context, factory *domain.Fa
 	const location = "handler.PostStripeConnectWebhook_Checkout"
 
 	// RULE: Connection must be a STRIPE CONNECT account
-	if connection.Type != model.ConnectionProviderStripeConnect {
-		return derp.NotImplementedError(location, "Connection is not a Stripe Connect account")
+	if connection.ProviderID != model.ConnectionProviderStripeConnect {
+		return derp.NotImplementedError(location, "This Webhook handler is only valid for Stripe Connect accounts")
 	}
 
 	// Retrieve the webhook signing key from the Vault
 	vault, err := factory.Connection().DecryptVault(connection, "webhookSecret")
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error decrypting webhook secret")
+		return derp.Wrap(err, location, "Unable to decrypt webhook secret")
 	}
 
 	liveMode := connection.Data.GetString("liveMode") == "LIVE"
@@ -110,7 +110,7 @@ func PostStripeConnectWebhook_Checkout(ctx *steranko.Context, factory *domain.Fa
 		}
 
 		// All other errors are reported to the caller
-		return derp.Wrap(err, location, "Error processing webhook data")
+		return derp.Wrap(err, location, "Unable to process webhook data")
 	}
 
 	// Success. WebHook complete.

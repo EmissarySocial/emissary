@@ -31,6 +31,25 @@ func (service *Rule) Activity(rule model.Rule) streams.Document {
 	return service.activityService.NewDocument(service.JSONLD(rule))
 }
 
+func (service *Rule) ActivityType(rule model.Rule) string {
+
+	// Determine the ActivityPub type for this Rule
+	switch rule.Action {
+
+	case model.RuleActionBlock:
+		return vocab.ActivityTypeBlock
+
+	case model.RuleActionMute:
+		return vocab.ActivityTypeIgnore
+
+	case model.RuleActionLabel:
+		return vocab.ActivityTypeFlag
+	}
+
+	// If we don't know the type, then return an empty string
+	return ""
+}
+
 // JSONLD returns a JSON-LD representation of the provided Rule
 func (service *Rule) JSONLD(rule model.Rule) mapof.Any {
 
@@ -38,18 +57,7 @@ func (service *Rule) JSONLD(rule model.Rule) mapof.Any {
 	result := mapof.Any{
 		vocab.PropertyID:        service.ActivityPubURL(rule),
 		vocab.PropertyPublished: hannibal.TimeFormat(time.Unix(rule.PublishDate, 0)),
-	}
-
-	switch rule.Action {
-
-	case model.RuleActionBlock:
-		result[vocab.PropertyType] = vocab.ActivityTypeBlock
-
-	case model.RuleActionMute:
-		result[vocab.PropertyType] = vocab.ActivityTypeIgnore
-
-	case model.RuleActionLabel:
-		result[vocab.PropertyType] = vocab.ActivityTypeFlag
+		vocab.PropertyType:      service.ActivityType(rule),
 	}
 
 	// Create the summary based on the type of Rule

@@ -3,14 +3,17 @@ package service
 import (
 	"iter"
 	"strings"
+	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
+	"github.com/benpate/hannibal"
 	"github.com/benpate/hannibal/outbox"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"willnorris.com/go/webmention"
@@ -37,7 +40,7 @@ func (service *Outbox) Publish(actor *outbox.Actor, actorType string, actorID pr
 		return derp.Wrap(err, location, "Error saving outbox message", outboxMessage)
 	}
 
-	log.Trace().Str("id", outboxMessage.ObjectID).Msg("Outbox Message saved.  Notifying Followers")
+	log.Trace().Str("objectId", outboxMessage.ObjectID).Msg("Outbox Message saved.  Notifying Followers")
 
 	// Get All Followers for this Actor and Addressees
 	recipients := joinIterators(
@@ -49,6 +52,7 @@ func (service *Outbox) Publish(actor *outbox.Actor, actorType string, actorID pr
 
 	ruleFilter := service.ruleService.Filter(actorID, WithBlocksOnly())
 	activityMap := activity.Map()
+	activityMap[vocab.PropertyID] = outboxMessage.ActivityPubURL()
 
 	for follower := range recipients {
 
@@ -86,39 +90,53 @@ func (service *Outbox) Publish(actor *outbox.Actor, actorType string, actorID pr
 	return nil
 }
 
+func (service *Outbox) DeleteActivity(actor *outbox.Actor, actorType string, actorID primitive.ObjectID, objectID string, permissions model.Permissions) error {
+	return service.unpublish(actor, actorType, actorID, vocab.ActivityTypeDelete, objectID, permissions)
+}
+
+func (service *Outbox) UndoActivity(actor *outbox.Actor, actorType string, actorID primitive.ObjectID, objectID string, permissions model.Permissions) error {
+	return service.unpublish(actor, actorType, actorID, vocab.ActivityTypeUndo, objectID, permissions)
+}
+
 // UnPublish deletes an OutboxMessage from the Outbox, and sends notifications to all Followers
-func (service *Outbox) UnPublish(actor *outbox.Actor, actorType string, actorID primitive.ObjectID, url string) error {
+func (service *Outbox) unpublish(actor *outbox.Actor, actorType string, actorID primitive.ObjectID, activityType string, objectID string, permissions model.Permissions) error {
 
-	// Load the Outbox Message
-	message := model.NewOutboxMessage()
-	if err := service.LoadByURL(actorType, actorID, url, &message); err != nil {
-		if derp.IsNotFound(err) {
-			log.Debug().Str("type", actorType).Str("parent", actorID.Hex()).Str("url", url).Msg("Outbox Message not found")
-			return nil
+	const location = "service.Outbox.unpublish"
+
+	spew.Dump(location, actorType, actorID.Hex(), activityType, objectID)
+
+	// Find all activities in the outbox related to this activity
+	activities, err := service.RangeByObjectID(actorType, actorID, objectID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Unable to load outbox activity", objectID)
+	}
+
+	// Remove each outbox activity
+	for activity := range activities {
+
+		// Delete the Activity from the User's Outbox
+		if err := service.Delete(&activity, "Un-Publishing"); err != nil {
+			return derp.Wrap(err, location, "Unable to delete outbox activity", activity)
 		}
-		return derp.Wrap(err, "service.Outbox.UnPublish", "Error loading outbox message", url)
 	}
 
-	// Delete the Message from the User's Outbox
-	if err := service.Delete(&message, "Un-Publishing"); err != nil {
-		return derp.Wrap(err, "service.Outbox.UnPublish", "Error deleting outbox message", message)
-	}
+	// TODO: This should also support "Undo" activities in the future,
+	// but this will require additional function arguments.
 
-	// Make a streams.Document from the URL
+	// Make a streams.Document to represent the "Delete" activity
 	document := service.activityService.NewDocument(mapof.Any{
-		vocab.PropertyID: url,
+		vocab.PropertyActor:     actor.ActorID(),
+		vocab.PropertyType:      activityType,
+		vocab.PropertyObject:    objectID,
+		vocab.PropertyPublished: hannibal.TimeFormat(time.Now()),
 	})
 
-	// If the Message was a "Create" activity, then send a "Delete" activity to all followers
-	if message.ActivityType == vocab.ActivityTypeCreate {
-		log.Debug().Str("id", url).Msg("Sending Delete Activity")
-		go actor.SendDelete(document)
-		return nil
+	// Publish the "Delete" activity to the Outbox
+	if err := service.Publish(actor, actorType, actorID, document, permissions); err != nil {
+		return derp.Wrap(err, location, "Unable to publish DELETE activity", objectID)
 	}
 
-	// Otherwise, send an "Undo" activity to all followers
-	log.Debug().Str("id", url).Msg("Sending Undo Activity")
-	go actor.SendUndo(document)
 	return nil
 }
 

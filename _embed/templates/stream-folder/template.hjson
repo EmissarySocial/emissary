@@ -93,8 +93,8 @@
 		delete: {
 			roles: ["author", "editor"]
 			steps: [
-				{do:"delete", title:"Delete this Folder?", message:"This will permanently delete this folder and all of its contents"}
 				{do:"unpublish", state:"default", outbox:"true"}
+				{do:"delete", title:"Delete this Folder?", message:"This will permanently delete this folder and all of its contents"}
 				{do:"forward-to", url:"/{{.ParentID}}"}
 			]
 		}

@@ -21,20 +21,21 @@ func DeleteAny(context Context, activity streams.Document) error {
 
 	// Try to find the message in the cache
 	outboxService := context.factory.Outbox()
-	message := model.NewOutboxMessage()
 	objectID := activity.Object().ID()
 
-	if err := outboxService.LoadByURL(model.FollowerTypeStream, context.stream.StreamID, objectID, &message); err != nil {
-		if derp.IsNotFound(err) {
-			log.Trace().Str("url", objectID).Msg("Not Found")
-			return nil
-		}
-		return derp.Wrap(err, location, "Error loading message", objectID)
+	// Find all activities that match the deleted object
+	activities, err := outboxService.RangeByObjectID(model.FollowerTypeStream, context.stream.StreamID, objectID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Unable to locate matching activities", objectID)
 	}
 
-	// If Found, delete the message
-	if err := outboxService.Delete(&message, "Removed via ActivityPub"); err != nil {
-		return derp.Wrap(err, location, "Error deleting message", message)
+	// Delete all outbox activities that match the deleted object
+	for activity := range activities {
+
+		if err := outboxService.Delete(&activity, "Removed via ActivityPub"); err != nil {
+			return derp.Wrap(err, location, "Error deleting message", activity)
+		}
 	}
 
 	// Try to load the Actor for this user

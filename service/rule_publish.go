@@ -38,7 +38,7 @@ func (service *Rule) unpublish(rule model.Rule) error {
 	}
 
 	// UnPublish this Rule from the User's outbox
-	if err := service.outboxService.UnPublish(&actor, model.FollowerTypeUser, rule.UserID, service.ActivityPubURL(rule)); err != nil {
+	if err := service.outboxService.DeleteActivity(&actor, model.FollowerTypeUser, rule.UserID, service.ActivityPubURL(rule), model.NewAnonymousPermissions()); err != nil {
 		return derp.Wrap(err, "service.Rule.Save", "Error publishing Rule", rule)
 	}
 
@@ -55,7 +55,7 @@ func (service *Rule) republish(rule model.Rule) error {
 	}
 
 	// UnPublish the original Rule from the User's outbox
-	if err := service.outboxService.UnPublish(&actor, model.FollowerTypeUser, rule.UserID, service.ActivityPubURL(rule)); err != nil {
+	if err := service.outboxService.DeleteActivity(&actor, model.FollowerTypeUser, rule.UserID, service.ActivityPubURL(rule), model.NewAnonymousPermissions()); err != nil {
 		return derp.Wrap(err, "service.Rule.Save", "Error publishing Rule", rule)
 	}
 

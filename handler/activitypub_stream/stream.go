@@ -10,6 +10,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/steranko"
+	"github.com/davecgh/go-spew/spew"
 )
 
 func GetJSONLD(ctx *steranko.Context, factory *domain.Factory, template *model.Template, stream *model.Stream) error {
@@ -21,6 +22,7 @@ func GetJSONLD(ctx *steranko.Context, factory *domain.Factory, template *model.T
 	permissions := permissionService.ParseHTTPSignature(ctx.Request())
 
 	if !slice.ContainsAny(stream.DefaultAllow, permissions...) {
+		spew.Dump(stream, permissions)
 		return derp.ForbiddenError(location, "You do not have permission to view this content")
 	}
 

@@ -335,7 +335,7 @@ func (service *Response) UnsetResponse(user *model.User, url string, responseTyp
 	}
 
 	// Unpublish from the Outbox, and send the "Undo" activity to followers
-	if err := service.outboxService.UnPublish(&actor, model.FollowerTypeUser, user.UserID, oldResponse.ActivityPubURL()); err != nil {
+	if err := service.outboxService.UndoActivity(&actor, model.FollowerTypeUser, user.UserID, oldResponse.ActivityPubURL(), model.NewAnonymousPermissions()); err != nil {
 		derp.Report(derp.Wrap(err, location, "Error publishing Response", oldResponse))
 	}
 

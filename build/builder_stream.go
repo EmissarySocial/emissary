@@ -434,6 +434,11 @@ func (w Stream) IsEmpty() bool {
 	return (w._stream == nil) || (w._stream.StreamID == primitive.NilObjectID)
 }
 
+// IsFeatured returns TRUE if the stream is featured.
+func (w Stream) IsFeatured() bool {
+	return w._stream.IsFeatured
+}
+
 /******************************************
  * Widgets
  ******************************************/
@@ -874,6 +879,10 @@ func (w Stream) Products() (sliceof.Object[model.Product], error) {
 // PrivilegeIDs returns all privilege IDs that are valid for this stream
 func (w Stream) PrivilegeIDs() model.Permissions {
 	return w._stream.PrivilegeIDs
+}
+
+func (w Stream) IsPublic() bool {
+	return w._stream.IsPublic()
 }
 
 /******************************************

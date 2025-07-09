@@ -51,6 +51,28 @@ func (permissions Permissions) IsAuthenticated() bool {
 	return slice.Contains(permissions, MagicGroupIDAuthenticated)
 }
 
+// Compact returns a new Permissions object with duplicate and unnecessary permissions removed.
+func (permissions Permissions) Compact() Permissions {
+
+	result := make(Permissions, 0, len(permissions))
+
+	// Remove any NilObjectIDs from the slice
+	for _, permissionID := range permissions {
+
+		switch permissionID {
+		case MagicGroupIDAnonymous, MagicGroupIDAuthenticated:
+			return Permissions{permissionID}
+
+		}
+
+		if !slice.Contains(result, permissionID) {
+			result = append(result, permissionID)
+		}
+	}
+
+	return result
+}
+
 func (permissions Permissions) Intersects(other Permissions) bool {
 	return slice.ContainsAny(permissions, other...)
 }

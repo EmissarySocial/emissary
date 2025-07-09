@@ -242,7 +242,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/.stripe/webhook/checkout", handler.WithMerchantAccount(factory, handler.PostStripeWebhook_Checkout))
 	e.GET("/.stripe-connect/connect", handler.WithAuthenticatedUser(factory, handler.GetStripeConnect))
 	e.POST("/.stripe-connect/webhook/signup", handler.WithDomain(factory, stripe.PostSignupWebhook))
-	e.POST("/.stripe-connect/webhook/checkout", handler.WithConnection(model.ConnectionProviderStripe, factory, handler.PostStripeConnectWebhook_Checkout))
+	e.POST("/.stripe-connect/webhook/checkout", handler.WithConnection(model.ConnectionProviderStripeConnect, factory, handler.PostStripeConnectWebhook_Checkout))
 	e.GET("/.themes/:themeId/:bundleId", handler.GetThemeBundle(factory))
 	e.GET("/.themes/:themeId/resources/:filename", handler.GetThemeResource(factory))
 	e.GET("/.templates/:templateId/:bundleId", handler.GetTemplateBundle(factory))

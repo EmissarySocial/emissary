@@ -25,6 +25,7 @@ type OutboxMessage struct {
 func NewOutboxMessage() OutboxMessage {
 	return OutboxMessage{
 		OutboxMessageID: primitive.NewObjectID(),
+		Permissions:     NewPermissions(),
 	}
 }
 

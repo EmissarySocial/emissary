@@ -247,6 +247,10 @@ func (stream Stream) DefaultAllowAnonymous() bool {
  * Privilege Methods
  ******************************************/
 
+func (stream Stream) IsPublic() bool {
+	return stream.DefaultAllowAnonymous()
+}
+
 // HasPrivileges returns TRUE if this Stream includes special permissions for any Privilege
 func (stream Stream) HasPrivileges() bool {
 	return (len(stream.Circles) > 0) || (len(stream.Products) > 0)

@@ -323,7 +323,7 @@ func (service *Stream) Delete(stream *model.Stream, note string) error {
 
 	// Delete this Stream
 	if err := service.collection.Delete(stream, note); err != nil {
-		return derp.Wrap(err, location, "Error deleting Stream", stream, note)
+		return derp.Wrap(err, location, "Unable to delete Stream from database", stream, note)
 	}
 
 	// Delete related records -- this can happen in the background
@@ -336,33 +336,32 @@ func (service *Stream) Delete(stream *model.Stream, note string) error {
 			service.webhookService.Send(stream, model.WebhookEventStreamPublishUndo)
 
 			if err := service.sendSyndicationMessages(stream, nil, nil, stream.Syndication.Values); err != nil {
-				derp.Report(derp.Wrap(err, location, "Error sending syndication messages", stream))
+				derp.Report(derp.Wrap(err, location, "Unable to send syndication messages", stream))
 			}
 		}
 
 		// RULE: Delete all related Children
 		if err := service.DeleteByParent(stream.StreamID, note); err != nil {
-			derp.Report(derp.Wrap(err, location, "Error deleting child streams", stream, note))
+			derp.Report(derp.Wrap(err, location, "Unable to delete child streams", stream, note))
 		}
 
 		// RULE: Delete all related Attachments
 		if err := service.attachmentService.DeleteAll(model.AttachmentObjectTypeStream, stream.StreamID, note); err != nil {
-			derp.Report(derp.Wrap(err, location, "Error deleting attachments", stream, note))
+			derp.Report(derp.Wrap(err, location, "Unable to delete attachments", stream, note))
 		}
 
 		// RULE: Delete all related Drafts
 		if err := service.draftService.Delete(stream, note); err != nil {
-			derp.Report(derp.Wrap(err, location, "Error deleting drafts", stream, note))
+			derp.Report(derp.Wrap(err, location, "Unable to delete drafts", stream, note))
 		}
 
 		// RULE: Delete Outbox Messages
 		if err := service.outboxService.DeleteByParentID(model.FollowerTypeStream, stream.StreamID); err != nil {
-			derp.Report(derp.Wrap(err, location, "Error deleting outbox messages", stream, note))
+			derp.Report(derp.Wrap(err, location, "Unable to delete outbox messages", stream, note))
 		}
 
 		// NON-BLOCKING: Notify other processes on this server that the stream has been updated
 		service.sseUpdateChannel <- stream.ParentID
-
 	}()
 
 	// Bueno!!
@@ -1056,7 +1055,9 @@ func (service *Stream) calcDefaultAllow(template *model.Template, stream *model.
 	groupIDs := stream.RolesToGroupIDs(defaultRoles...)
 	privilegeIDs := stream.RolesToPrivilegeIDs(defaultRoles...)
 
-	stream.DefaultAllow = append(groupIDs, privilegeIDs...)
+	result := append(groupIDs, privilegeIDs...)
+	result = result.Compact()
+	stream.DefaultAllow = result
 }
 
 // CalcContext calculates the conversational context for a given stream,

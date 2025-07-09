@@ -238,13 +238,13 @@ func (service *Outbox) QueryByParentAndDate(actorType string, actorID primitive.
 	return result, nil
 }
 
-func (service *Outbox) LoadByURL(actorType string, actorID primitive.ObjectID, url string, result *model.OutboxMessage) error {
+func (service *Outbox) RangeByObjectID(actorType string, actorID primitive.ObjectID, objectID string) (iter.Seq[model.OutboxMessage], error) {
 
 	criteria := exp.Equal("actorType", actorType).
 		AndEqual("actorId", actorID).
-		AndEqual("url", url)
+		AndEqual("objectId", objectID)
 
-	return service.Load(criteria, result)
+	return service.Range(criteria)
 }
 
 func (service *Outbox) DeleteByParentID(actorType string, actorID primitive.ObjectID) error {

@@ -1,5 +1,6 @@
 {{- $privileges := .Privileges.ByCreateDate.Reverse.Slice -}}
 {{- $hasActivityPubActor := .HasActivityPubActor -}}
+{{- $activityPubActor := .ActivityPubActor -}}
 
 <div class="page app" script="on load take .selected from .nav-item for #nav-settings">
 
@@ -103,23 +104,28 @@
 						<td class="padding width-66%">
 
 							{{- if $privilege.IsCircle -}}
-								{{- if not $hasActivityPubActor -}}
-									<div class="md:flex-row">
+								<div class="md:flex-row">
 
-										<div class="margin-right margin-bottom">
-											<div class="rounded square width-96"></div>
-										</div>
+									<div class="margin-right margin-bottom">
+										<div class="rounded square width-96"></div>
+									</div>
 
-										<div class="margin-bottom">
+									<div class="margin-bottom">
+										{{- if $hasActivityPubActor -}}
+											<div>
+												<div class="bold text-green">{{icon "check-circle-fill"}} You're All Set</div>
+												<div class="text-gray">You'll receive new posts in your inbox: {{$activityPubActor}}</div>
+											</div>
+										{{- else -}}
 											<button class="primary padding-vertical-sm margin-bottom-sm" hx-get="/@guest/webfinger">Add Your Fediverse Handle &rarr;</button>
 											<div class="text-sm text-light-gray">
 												Get fast updates in your inbox when you connect this subscription to your Fediverse Handle.
 											</div>
-										</div>
+										{{- end -}}
 									</div>
-								{{- end -}}
+								</div>
 							{{- end -}}
-
+							
 							{{- range $index, $compoundID := $privilege.CompoundIDs -}}
 								{{- $streamIDs := index $privilegedStreams $compoundID -}}
 								{{- range $index, $streamID := $streamIDs -}}
