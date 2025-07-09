@@ -7,7 +7,6 @@ import (
 	"github.com/benpate/domain"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
 )
 
 type DomainEmail struct {
@@ -133,8 +132,6 @@ func (service *DomainEmail) SendGuestCode(identifier string, token string) error
 	const location = "service.DomainEmail.SendGuestCode"
 
 	domain := service.domainService.Get()
-
-	spew.Dump(location, domain)
 
 	// Send the welcome email
 	err := service.serverEmail.Send(

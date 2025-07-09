@@ -13,7 +13,6 @@ import (
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"willnorris.com/go/webmention"
@@ -102,8 +101,6 @@ func (service *Outbox) UndoActivity(actor *outbox.Actor, actorType string, actor
 func (service *Outbox) unpublish(actor *outbox.Actor, actorType string, actorID primitive.ObjectID, activityType string, objectID string, permissions model.Permissions) error {
 
 	const location = "service.Outbox.unpublish"
-
-	spew.Dump(location, actorType, actorID.Hex(), activityType, objectID)
 
 	// Find all activities in the outbox related to this activity
 	activities, err := service.RangeByObjectID(actorType, actorID, objectID)

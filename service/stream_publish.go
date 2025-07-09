@@ -9,7 +9,6 @@ import (
 	"github.com/benpate/hannibal"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 )
 
@@ -110,8 +109,6 @@ func (service *Stream) publish_outbox(user *model.User, stream *model.Stream, wa
 	if cc, ok := object[vocab.PropertyCC]; ok {
 		activity[vocab.PropertyCC] = cc
 	}
-
-	spew.Dump(location, activity)
 
 	// Publish to the User's outbox
 	if err := service.publish_outbox_user(user, stream, activity); err != nil {

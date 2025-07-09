@@ -11,7 +11,6 @@ import (
 	"github.com/EmissarySocial/emissary/tools/stripeapi"
 	"github.com/benpate/derp"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/stripe/stripe-go/v78"
 	"github.com/stripe/stripe-go/v78/webhook"
 )
@@ -56,8 +55,6 @@ func stripe_ProcessWebhook(factory *domain.Factory, request *http.Request, webho
 
 	const location = "handler.stripe_ProcessWebhook"
 
-	spew.Dump(location)
-
 	// Parse the request body into a Stripe event
 	event, err := stripe_UnmarshalEvent(request, webhookSecret, liveMode)
 
@@ -76,17 +73,11 @@ func stripe_ProcessWebhook(factory *domain.Factory, request *http.Request, webho
 		return derp.Wrap(err, location, "Error unmarshalling subscription data")
 	}
 
-	spew.Dump(subscription)
-
 	// Load the Privilege associated with this Stripe Subscription.
 	privilege := model.NewPrivilege()
 	if err := factory.Privilege().LoadByRemotePurchaseID(subscription.ID, &privilege); err != nil {
 		return derp.Wrap(err, location, "Error loading privilege")
 	}
-
-	spew.Dump(privilege)
-
-	spew.Dump(stripeapi.SubscriptionIsActive(subscription))
 
 	// If the underlying Subscription is no longer active, then remove the Privilege
 	if isActive := stripeapi.SubscriptionIsActive(subscription); !isActive {
