@@ -267,9 +267,7 @@ func (service *Permission) getSignature(request *http.Request) (sigs.Signature, 
 	const location = "service.Permission.getSignature"
 
 	// First, try to verify the signature using the standard method
-	verifier := sigs.NewVerifier()
-
-	signature, err := verifier.Verify(request, service.activityStream.PublicKeyFinder)
+	signature, err := sigs.Verify(request, service.activityStream.PublicKeyFinder)
 
 	if err == nil {
 		return signature, nil
