@@ -5,6 +5,7 @@ import (
 	"embed"
 	"html/template"
 	"iter"
+	"maps"
 	"net/http"
 	"os"
 	"strconv"
@@ -563,11 +564,14 @@ func (factory *Factory) ByRequest(req *http.Request) (*domain.Factory, error) {
 // ByHostname retrieves a Domain factory using a Hostname
 func (factory *Factory) ByHostname(hostname string) (*domain.Factory, error) {
 
-	factory.mutex.RLock()
-	defer factory.mutex.RUnlock()
+	const location = "server.Factory.ByHostname"
 
 	// Clean up the hostname before using it
 	hostname = factory.normalizeHostname(hostname)
+
+	// Read Lock the mutex to prevent concurrent writes
+	factory.mutex.RLock()
+	defer factory.mutex.RUnlock()
 
 	// Try to find the domain in the configuration
 	if domain, exists := factory.domains[hostname]; exists {
@@ -575,7 +579,7 @@ func (factory *Factory) ByHostname(hostname string) (*domain.Factory, error) {
 	}
 
 	// Failure.
-	return nil, derp.NewMisdirectedRequestError("server.Factory.ByHostname", "Invalid hostname", "hostname: "+hostname)
+	return nil, derp.MisdirectedRequestError(location, "Invalid hostname", "hostname: "+hostname, maps.Keys(factory.domains))
 }
 
 // normalizeHostname removes inconsistencies in host names so that they
