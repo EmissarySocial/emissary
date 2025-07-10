@@ -1143,33 +1143,37 @@ func (service *Stream) SearchResult(stream *model.Stream) model.SearchResult {
 	// If the stream has been published, then try to generate a SearchResult for it.
 	if stream.IsPublished() {
 
-		// Try to generate the searchResult.FullText using the Template for this Stream
-		if template, err := service.templateService.Load(stream.TemplateID); err == nil {
+		// Only create a search result if the stream is visible by ALL people
+		if stream.DefaultAllowAnonymous() {
 
-			// If SearchOptions are not empty, then Streams using this Template are searchable
-			if len(template.SearchOptions) > 0 {
+			// Try to generate the searchResult.FullText using the Template for this Stream
+			if template, err := service.templateService.Load(stream.TemplateID); err == nil {
 
-				result.URL = stream.URL
-				result.Tags = slice.Map(stream.Hashtags, model.ToToken)
-				result.Type = firstOf(template.SearchOptions.Execute("type", stream), template.SocialRole)
-				result.Name = firstOf(template.SearchOptions.Execute("name", stream), stream.Label)
-				result.AttributedTo = firstOf(template.SearchOptions.Execute("attributedTo", stream), stream.AttributedTo.Name)
-				result.Summary = firstOf(template.SearchOptions.Execute("summary", stream), stream.Summary)
-				result.IconURL = firstOf(template.SearchOptions.Execute("iconUrl", stream), stream.IconURL)
-				result.Text = template.SearchOptions.Execute("text", stream)
-				result.Date = stream.StartDate.Time
-				result.Local = true
+				// If SearchOptions are not empty, then Streams using this Template are searchable
+				if len(template.SearchOptions) > 0 {
 
-				if place := stream.Places.First(); place.NotEmpty() {
-					result.Place = place.GeoJSON()
+					result.URL = stream.URL
+					result.Tags = slice.Map(stream.Hashtags, model.ToToken)
+					result.Type = firstOf(template.SearchOptions.Execute("type", stream), template.SocialRole)
+					result.Name = firstOf(template.SearchOptions.Execute("name", stream), stream.Label)
+					result.AttributedTo = firstOf(template.SearchOptions.Execute("attributedTo", stream), stream.AttributedTo.Name)
+					result.Summary = firstOf(template.SearchOptions.Execute("summary", stream), stream.Summary)
+					result.IconURL = firstOf(template.SearchOptions.Execute("iconUrl", stream), stream.IconURL)
+					result.Text = template.SearchOptions.Execute("text", stream)
+					result.Date = stream.StartDate.Time
+					result.Local = true
+
+					if place := stream.Places.First(); place.NotEmpty() {
+						result.Place = place.GeoJSON()
+					}
+
+					if tagString := template.SearchOptions.Execute("tags", stream); tagString != "" {
+						tags := strings.Split(tagString, " ")
+						result.Tags = append(result.Tags, tags...)
+					}
+
+					return result
 				}
-
-				if tagString := template.SearchOptions.Execute("tags", stream); tagString != "" {
-					tags := strings.Split(tagString, " ")
-					result.Tags = append(result.Tags, tags...)
-				}
-
-				return result
 			}
 		}
 	}
