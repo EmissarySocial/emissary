@@ -1,5 +1,4 @@
 {{- $search := .QueryParam "search" -}}
-{{- $canBlock := .UserCan "block" -}}
 {{- $followers := .Followers.Top12.By "actor.name" -}}
 {{- $followers := $followers.Slice -}}
 
@@ -19,11 +18,9 @@
 			<div class="bold">{{$actor.Name}}</div>
 			<div class="text-light-gray">{{$actor.UsernameOrID}}</div>
 		</div>
-		<div class="align-right">
-			{{- if $canBlock -}}
-				<button class="text-red">Block</button>
-			{{- end -}}
-		</div>
+		<!--div class="align-right">
+			<button class="text-red">Block</button>
+		</div-->
 	</div>
 {{ end }}
 

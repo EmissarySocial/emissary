@@ -127,7 +127,7 @@
 									children: [
 										{type:"text", path:"name", label:"Circle Name"}
 										{type:"select", path:"icon", label:"Icon", options:{provider:"circle-icons"}}
-										{type:"toggle", path:"isVisible", options:{false-text:"Visible?", true-text:"Visible. Members see this circle on their profiles."}}
+										{type:"toggle", path:"isVisible", options:{false-text:"Visible to Members?", true-text:"Visible to Members.  This circle appears on guest profile pages."}}
 									]
 								}
 								{
@@ -143,7 +143,7 @@
 									description: Link this Circle to the products in your merchant account and guests will be able to purchase membership in this Circle. <a href="https://emissary.dev/circles" target="_blank"><i class="bi bi-question-circle"></i> Help with Circles</a>
 									children:[
 										{type:"multiselect", path:"productIds",description:"<a href='/@me/settings/payments'>Manage Products &rarr;</a>",  options:{provider:"merchantAccounts-all-products"}}
-										{type:"toggle", path:"isFeatured", options:{false-text:"Featured?", true-text:"Featured. Can be purchased from your profile page."}}
+										{type:"toggle", path:"isFeatured", options:{false-text:"Available to Purchase?", true-text:"Available to Purchase.  This circle is visible from my profile page."}}
 									]
 								}
 							]
@@ -177,7 +177,7 @@
 										children: [
 											{type:"text", path:"name", label:"Circle Name"}
 											{type:"select", path:"icon", label:"Icon", options:{provider:"circle-icons"}}
-											{type:"toggle", path:"isVisible", options:{false-text:"Visible?", true-text:"Visible. Members see this circle on their profile."}}
+											{type:"toggle", path:"isVisible", options:{false-text:"Visible to Members?", true-text:"Visible to Members.  This circle appears on guest profile pages."}}
 										]
 									}
 									{
@@ -193,7 +193,7 @@
 										description: Link this Circle to the products in your merchant account and guests will be able to purchase membership in this Circle.
 										children:[
 											{type:"multiselect", path:"productIds", description:"<a href='/@me/settings/payments'>Manage Products &rarr;</a>", options:{provider:"merchantAccounts-all-products"}}
-											{type:"toggle", path:"isFeatured", options:{false-text:"Featured?", true-text:"Featured. Can be purchased from your profile page."}}
+											{type:"toggle", path:"isFeatured", options:{false-text:"Available to Purchase?", true-text:"Available to Purchase.  This circle is visible from my profile page."}}
 										]
 									}
 								]
