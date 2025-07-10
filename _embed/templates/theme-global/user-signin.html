@@ -16,7 +16,7 @@
 				<div class="layout-vertical margin-bottom">
 
 					{{- if eq .message "password-reset" -}}
-						<div class="alert-green"><b>Success</b> {{icon "thumbs-up-fill"}} Your password has been updated. To continue, please sign in with your new password below.</div>
+						<div class="text-green margin-bottom-lg">{{icon "thumbs-up-fill"}} <b>Your password has been updated.</b> To continue, please sign in with your new password below.</div>
 						<div script="on load focus() the #password"></div>
 					{{- else -}}
 						<div script="on load focus() the #username"></div>
@@ -25,14 +25,14 @@
 					<!-- Customizable Header for Signin Page -->
 					{{- template "user-signin-header" . -}}
 	
-					<div class="layout-vertical-elements">
-						<div class="layout-vertical-element">
+					<div class="layout-elements">
+						<div class="layout-element">
 							<label for="username">Email / Username</label>
 							<input type="text" name="username" id="username" required="true" value="{{.username}}" maxlength="50" autofocus autocomplete="username">
 						</div>
 					</div>
 
-					<div class="layout-vertical-element">
+					<div class="layout-element">
 						<label for="password">Password</label>
 						<input type="password" name="password" id="password" required="true" maxlength="100" autocomplete="current-password">
 					</div>

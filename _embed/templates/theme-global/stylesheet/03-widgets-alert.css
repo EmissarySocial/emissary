@@ -15,7 +15,7 @@
 }
 
 .alert-green {
-    background-color: var(--green80);
+    background-color: var(--green70);
     color: var(--white);
     padding: var(--rhythm) calc(var(--rhythm) * 2);
     margin-bottom: calc(var(--rhythm) * 2);

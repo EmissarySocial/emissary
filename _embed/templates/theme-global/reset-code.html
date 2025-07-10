@@ -14,10 +14,10 @@
 				<div style="margin-bottom:32px; text-align: center;">
 					<img src="{{.domainIcon}}" style="width:40%; margin:0px auto; display:block;">
 				</div>
-				<h2>Choose Your New Password</h2>
+				<h2>Choose New Password</h2>
 			{{- else -}}
 				<div class="bold text-gray text-lg margin-vertical-none">{{.domainName}}</div>
-				<h1 class="margin-top-none">{{icon "key"}} Choose Your New Password</h1>
+				<h1 class="margin-top-none">{{icon "key"}} Choose New Password</h1>
 			{{- end -}}
 
 			<p>Hello, <b>{{.username}}</b>. Enter your new password below.</p>
@@ -27,12 +27,14 @@
 				<input type="hidden" name="code" value="{{.code}}">
 
 				<div class="layout-vertical">
-					<div class="layout-vertical-elements">
-						<div class="layout-vertical-element flex-grow-1">
+					<div class="layout-elements">
+						<div class="layout-element">
 							<input type="password" name="password" placeholder="New Password" autofocus required>
+							<div class="text-sm text-gray">Enter your new password here.  It must not be easy to guess.</div>
 						</div>
-						<div class="layout-vertical-element">
+						<div class="layout-element">
 							<input type="password" name="password2" placeholder="Confirm Password" required>
+							<div class="text-sm text-gray">Re-enter your password to prevent mistakes.</div>
 						</div>
 					</div>
 				</div>

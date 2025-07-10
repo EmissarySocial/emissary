@@ -26,14 +26,14 @@
 
 		<form hx-post="/@me/inbox/actor-button-follow-update?followingId={{$following.ID}}&url={{$url}}" hx-trigger="change">
 			<div class="layout layout-vertical text-sm">
-				<div class="layout-vertical-elements">
-					<div class="layout-vertical-element">
+				<div class="layout-elements">
+					<div class="layout-element">
 						<select name="behavior" script="install select(value:'{{$following.Behavior}}')">
 							<option value="POSTS+REPLIES">Show: Posts and Replies</option>
 							<option value="POSTS">Show: Posts Only (ignore replies)</option>
 						</select>
 					</div>
-					<div class="layout-vertical-element">
+					<div class="layout-element">
 						<select name="ruleAction" script="install select(value:'{{$following.RuleAction}}')">
 							<option value="IGNORE">Shared Blocks: Display normally</option>
 							<option value="LABEL">Shared Blocks: Display with a Label</option>
@@ -41,7 +41,7 @@
 							<option value="BLOCK">Shared Blocks: Block all communication</option>
 						</select>
 					</div>
-					<div class="layout-vertical-element">
+					<div class="layout-element">
 						<span 
 							script="install toggle" 
 							name="collapseThreads" 
@@ -50,7 +50,7 @@
 							false-text="Show all messages separately">
 						</span>
 					</div>
-					<div class="layout-vertical-element">
+					<div class="layout-element">
 						<span 
 							script="install toggle" 
 							name="isPublic" 

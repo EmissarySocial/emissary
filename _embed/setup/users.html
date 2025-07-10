@@ -5,7 +5,7 @@
 	<div id="modal-window" class="large">
 
 		<div class="bold">Edit Domain Owners</div>
-		<div class="modal-title">{{icon "server"}} {{.Domain}}</h1>
+		<h1 id="modal-title">{{icon "server"}} {{.Domain}}</h1>
 
 		<form hx-post="/domains/{{$domainID}}/users" hx-target="#modal" hx-swap="outerHTML" hx-push-url="false">
 

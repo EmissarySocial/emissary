@@ -37,16 +37,16 @@
 				<div id="layout" class="layout-vertical margin-bottom-lg" style="display:none;" script="on load show me">
 
 					<!-- Honeypot field -->
-					<div class="layout-vertical-elements" script="on load hide me">
-						<div class="layout-vertical-element">
+					<div class="layout-elements" script="on load hide me">
+						<div class="layout-element">
 							<label for="displayName">Full Name</label>
 							<input type="text" name="fullName" id="fullName" minlength="3" maxlength="50" autocomplete="off" data-1p-ignore>
 							<div role="note" class="text-sm gray40">Your full name. (PUBLIC)</div>
 						</div>
 					</div>
 
-					<div class="layout-vertical-elements">
-						<div class="layout-vertical-element">
+					<div class="layout-elements">
+						<div class="layout-element">
 							<label for="displayName">Your Name</label>
 							<input type="text" name="displayName" id="displayName" required="true" minlength="3" maxlength="50" autocomplete="off" data-1p-ignore>
 							<div role="note" class="text-sm gray40">Displayed on your profile page. (PUBLIC)</div>
@@ -54,24 +54,24 @@
 					</div>
 
 					<!-- Honeypot field -->
-					<div class="layout-vertical-elements" data-script="on load hide me">
-						<div class="layout-vertical-element">
+					<div class="layout-elements" data-script="on load hide me">
+						<div class="layout-element">
 							<label for="phoneNumber">Phone Number</label>
 							<input type="text" name="phoneNumber" id="phoneNumber" minlength="7" maxlength="50" autocomplete="off" data-1p-ignore>
 							<div role="note" class="text-sm gray40">A phone number where we can reach you. (PRIVATE)</div>
 						</div>
 					</div>
 
-					<div class="layout-vertical-elements">
-						<div class="layout-vertical-element">
+					<div class="layout-elements">
+						<div class="layout-element">
 							<label for="emailAddress">Email Address</label>
 							<input type="email" name="emailAddress" id="emailAddress" required="true" minlength="6" maxlength="50">
 							<div role="note" class="text-sm gray40">Your email is never shared with anyone. (PRIVATE)</div>
 						</div>
 					</div>
 
-					<div class="layout-vertical-elements">
-						<div class="layout-vertical-element">
+					<div class="layout-elements">
+						<div class="layout-element">
 							<label for="username">Username</label>
 							<input type="text" name="username" id="username" pattern="^[A-Za-z0-9_]+$" required="true" minlength="5" maxlength="50" autocomplete="off" data-1p-ignore  hx-get="/register/secret" hx-trigger="focus" hx-target="#layout" hx-swap="afterbegin">
 							<div role="note" class="text-sm gray40">How others will identify you. Letters and numbers only. (PUBLIC)</div>
@@ -79,8 +79,8 @@
 					</div>
 
 					<!-- Honeypot field -->
-					<div class="layout-vertical-elements" script="on load hide me">
-						<div class="layout-vertical-element">
+					<div class="layout-elements" script="on load hide me">
+						<div class="layout-element">
 							<label for="country">Country</label>
 							<input type="text" name="country" id="country" minlength="2" maxlength="50" autocomplete="off" data-1p-ignore>
 							<div role="note" class="text-sm gray40">Displayed on your profile page.</div>
@@ -91,7 +91,7 @@
 						{{$termID := concat "terms" (add 1 $index)}}
 						{{$term := $builder.RegistrationData $termID}}
 						{{if ne ""  $term }}
-							<div class="layout-vertical-element">
+							<div class="layout-element">
 								<label for="{{$termID}}">
 									<input type="checkbox" id="{{$termID}}" name="{{$termID}}" required="true">
 									{{$term}}

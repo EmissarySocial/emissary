@@ -498,7 +498,7 @@ button.button-invisible {
 	margin-bottom: calc(var(--rhythm) * 4);
 }
 
-.layout-vertical > .layout-elements > .layout-vertical-heading {
+.layout-vertical > .layout-elements > .layout-heading {
 	font-weight: calc(var(--weight) + 200);
 	font-size: calc(var(--rhythm) * 2);
 	line-height: calc(var(--rhythm) * 2);

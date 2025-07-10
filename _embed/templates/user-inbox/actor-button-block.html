@@ -17,11 +17,11 @@
 
 		<form hx-post="/@me/inbox/actor-button-block-update?ruleId={{$block.ID}}&url={{$url}}" hx-trigger="change">
 			<div class="layout layout-vertical text-sm">
-				<div class="layout-vertical-elements">
-					<div class="layout-vertical-element">
+				<div class="layout-elements">
+					<div class="layout-element">
 						<textarea name="comment" placeholder="Add a comment" rows="3">{{$block.Summary}}</textarea>
 					</div>
-					<div class="layout-vertical-element">
+					<div class="layout-element">
 						<span 
 							script="install toggle" 
 							name="isPublic" 

@@ -19,8 +19,8 @@
 <form hx-post="/@guest/identifier" hx-push-url="false">
 
 	<div class="layout-vertical">
-		<div class="layout-vertical-elements">
-			<div class="layout-vertical-element">
+		<div class="layout-elements">
+			<div class="layout-element">
 				<label for="email">New Email Address</label>
 				<input type="hidden" name="identifierType" value="EMAIL">
 				<input type="email" id="email" name="identifier" value="{{.EmailAddress}}" autocomplete="email" data-1p-ignore="true" autofocus="true" tabindex="0" required="true">
