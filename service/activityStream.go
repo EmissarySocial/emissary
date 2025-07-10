@@ -382,19 +382,19 @@ func (service *ActivityStream) PublicKeyFinder(keyID string) (string, error) {
 
 	actorID, _, _ := strings.Cut(keyID, "#")
 
-	document := service.NewDocument(mapof.Any{
+	actor := service.NewDocument(mapof.Any{
 		vocab.PropertyID: actorID,
 	})
 
 	// Load the Actor from the document
-	actor, err := document.Actor().Load()
+	actor, err := actor.Load(sherlock.AsActor())
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Error retrieving Actor from ActivityPub document", document.Value())
+		return "", derp.Wrap(err, location, "Error retrieving Actor from ActivityPub document", actor.Value())
 	}
 
 	// Search the Actor's public keys for the one that matches the provided keyID
-	for key := actor.PublicKey(); key.NotNil(); key = key.Tail() {
+	for key := range actor.PublicKey().Range() {
 
 		if key.ID() == keyID {
 			return key.PublicKeyPEM(), nil
