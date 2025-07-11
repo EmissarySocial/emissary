@@ -62,13 +62,14 @@ func getStreamPipeline(ctx *steranko.Context, factory *domain.Factory, template 
 
 	const location = "handler.getStreamPipeline"
 
-	// Try to find the action requested by the user.  This also enforces user permissions...
+	// Try to find the action requested by the user.
 	actionID := getActionID(ctx)
 
+	// Get a stream builder.  This also enforces permissions
 	streamBuilder, err := build.NewStream(factory, ctx.Request(), ctx.Response(), *template, stream, actionID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error creating Builder.")
+		return derp.Wrap(err, location, "Unable to create Builder.")
 	}
 
 	// Add webmention link header per:
@@ -77,10 +78,12 @@ func getStreamPipeline(ctx *steranko.Context, factory *domain.Factory, template 
 		ctx.Response().Header().Set("Link", "/.webmention; rel=\"webmention\"")
 	}
 
+	// Build the HTML page (execute the pipeline)
 	if err := build.AsHTML(factory, ctx, streamBuilder, actionMethod); err != nil {
-		return derp.Wrap(err, location, "Error building page", stream.Token)
+		return derp.Wrap(err, location, "Unable to build page", stream.Token)
 	}
 
+	// Yusss
 	return nil
 }
 
