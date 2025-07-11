@@ -571,8 +571,10 @@ func errorHandler(err error, ctx echo.Context) {
 		return
 	}
 
+	fullURL := domain.AddProtocol(request.Host) + request.URL.String()
+
 	// Write the error to the console (on production and local domains)
-	derp.Report(err)
+	derp.Report(derp.Wrap(err, "emissary.server.errorHandler", "Error generating web page", fullURL, ctx.Request().Header))
 
 	// Get the true hostname of the request.
 	hostname := domain.Hostname(request)
