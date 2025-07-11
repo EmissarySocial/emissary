@@ -49,14 +49,17 @@ func NewStream(factory Factory, request *http.Request, response http.ResponseWri
 	common, err := NewCommonWithTemplate(factory, request, response, template, stream, actionID)
 
 	if err != nil {
-		return Stream{}, derp.Wrap(err, location, "Error creating common builder")
+		return Stream{}, derp.Wrap(err, location, "Unable to create common builder")
 	}
 
+	// Enforce permissions on the Action
 	if !common.UserCan(actionID) {
 		if common._authorization.IsAuthenticated() {
-			return Stream{}, derp.ForbiddenError(location, "Forbidden", "url:"+stream.URL, "template:"+template.TemplateID, "action: "+actionID, "state: "+stream.StateID)
+			return Stream{}, derp.ForbiddenError(location, "Forbidden (signed in as User)", "url: "+stream.URL, "template: "+template.TemplateID, "action: "+actionID, "state: "+stream.StateID)
+		} else if common._authorization.IsIdentity() {
+			return Stream{}, derp.ForbiddenError(location, "Forbidden (signed in as Guest)", "url: "+stream.URL, "template: "+template.TemplateID, "action: "+actionID, "state: "+stream.StateID)
 		} else {
-			return Stream{}, derp.UnauthorizedError(location, "Anonymous user is not authorized to perform this action", "Forbidden", "url:"+stream.URL, "template:"+template.TemplateID, "action: "+actionID, "state: "+stream.StateID)
+			return Stream{}, derp.UnauthorizedError(location, "Unauthorized: Anonymous user is not authorized to perform this action", "url: "+stream.URL, "template: "+template.TemplateID, "action: "+actionID, "state: "+stream.StateID)
 		}
 	}
 
