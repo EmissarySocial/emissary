@@ -112,24 +112,40 @@ func (service *Identity) Save(identity *model.Identity, note string) error {
 
 	const location = "service.Identity.Save"
 
-	// Fill in missing fields
+	// Try to calculate the ActivityPub Actor by looking up the WebFinger username.
 	if err := service.calcActivityPubActor(identity); err != nil {
-		return derp.Wrap(err, location, "Error calculating ActivityPub Actor for Identity")
+		return derp.Wrap(err, location, "Unable to calculating ActivityPub Actor for Identity")
 	}
 
 	// Pick a default name, if necessary
 	if err := service.calcName(identity); err != nil {
-		return derp.Wrap(err, location, "Error calculating default name for Identity")
+		return derp.Wrap(err, location, "Unable to calculate default name for Identity")
 	}
 
 	// Validate the value before saving
 	if err := service.Schema().Validate(identity); err != nil {
-		return derp.Wrap(err, location, "Error validating Identity", identity)
+		return derp.Wrap(err, location, "Unable to validate Identity", identity)
 	}
 
 	// Save the identity to the database
 	if err := service.collection.Save(identity, note); err != nil {
-		return derp.Wrap(err, location, "Error saving Identity", identity, note)
+		return derp.Wrap(err, location, "Unable to save Identity", identity, note)
+	}
+
+	// Remove duplicate identifiers from other identities
+	if err := service.uniquify(identity); err != nil {
+		return derp.Wrap(err, location, "Unable to uniquify Identity", identity)
+	}
+
+	// Recalculate the privileges linked to this Identity
+	if err := service.privilegeService.refreshIdentity(identity); err != nil {
+		return derp.Wrap(err, location, "Unable to remove Privileges granted by email", identity)
+	}
+
+	// Recalculates privilegeIDs stored in Identity.  This probably duplicates
+	// logic from above, but this is a more comprehensive/idempotent calculation.
+	if err := service.refreshPrivileges(identity); err != nil {
+		return derp.Wrap(err, location, "Unable to recalculate privileges for Identity", identity)
 	}
 
 	return nil
@@ -141,6 +157,31 @@ func (service *Identity) Delete(identity *model.Identity, note string) error {
 	// Delete this Identity
 	if err := service.collection.Delete(identity, note); err != nil {
 		return derp.Wrap(err, "service.Identity.Delete", "Error deleting Identity", identity, note)
+	}
+
+	return nil
+}
+
+// SaveOrDelete saves the Identity if it is not empty, otherwise deletes it.
+// No other business logic is applied to this method.
+func (service *Identity) SaveOrDelete(identity *model.Identity, note string) error {
+
+	const location = "service.Identity.SaveOrDelete"
+
+	// If the Identity is empty...
+	if identity.IsEmpty() {
+
+		// Delete the identity directly from the datbase (no business logic applied)
+		if err := service.collection.Delete(identity, note); err != nil {
+			return derp.Wrap(err, location, "Unable to delete empty Identity", identity, note)
+		}
+
+		return nil
+	}
+
+	// Otherwise, save the Identity directly to the DB (no business logic applied)
+	if err := service.collection.Save(identity, note); err != nil {
+		return derp.Wrap(err, location, "Unable to save Identity", identity, note)
 	}
 
 	return nil
@@ -252,7 +293,7 @@ func (service *Identity) LoadOrCreate(name string, identifierType string, identi
 
 	// Try to load the Identity using the provided identifier
 	identity := model.NewIdentity()
-	err := service.LoadByIdentifierAndType(identifierType, identifierValue, &identity)
+	err := service.LoadByIdentifier(identifierType, identifierValue, &identity)
 
 	// If the identity was found, then just return it...
 	if err == nil {
@@ -283,22 +324,7 @@ func (service *Identity) LoadOrCreate(name string, identifierType string, identi
 	return identity, nil
 }
 
-func (service *Identity) LoadByIdentifier(identifierValue string, identity *model.Identity) error {
-
-	const location = "service.identity.LoadByIdentifier"
-
-	// Guess the identifier type
-	identifierType := service.GuessIdentifierType(identifierValue)
-
-	if identifierType == "" {
-		return derp.BadRequestError(location, "Invalid identifier", identifierValue)
-	}
-
-	return service.LoadByIdentifierAndType(identifierType, identifierValue, identity)
-
-}
-
-func (service *Identity) LoadByIdentifierAndType(identifierType string, identifierValue string, identity *model.Identity) error {
+func (service *Identity) LoadByIdentifier(identifierType string, identifierValue string, identity *model.Identity) error {
 
 	switch identifierType {
 
@@ -333,6 +359,36 @@ func (service *Identity) LoadByWebfingerUsername(username string, identity *mode
 	return service.Load(criteria, identity)
 }
 
+func (service *Identity) RangeByIdentity(identityID primitive.ObjectID) (iter.Seq[model.Identity], error) {
+
+	const location = "service.Identity.RangeByIdentity"
+
+	// RULE: IdentityID must be provided
+	if identityID.IsZero() {
+		return nil, derp.BadRequestError(location, "IdentityID cannot be empty", identityID)
+	}
+
+	// Create a criteria to find the Identity by ID
+	criteria := exp.Equal("identityId", identityID)
+
+	// Return query as a RangeFunc
+	return service.Range(criteria)
+}
+
+// RangeByIdentifiers returns an iterator containing all of the Identities that match ANY of the provided identifiers.
+func (service *Identity) RangeByIdentifiers(emailAddress string, webfingerUsername string, activityPubActor string) (iter.Seq[model.Identity], error) {
+
+	// Create a criteria to find the Identity by any of the identifiers
+	criteria := exp.Or(
+		exp.Equal("emailAddress", emailAddress),
+		exp.Equal("webfingerUsername", webfingerUsername),
+		exp.Equal("activityPubActor", activityPubActor),
+	)
+
+	// Return query as a RangeFunc
+	return service.Range(criteria)
+}
+
 // RefreshPrivileges recalculates the privileges for the provided IdentityID by
 // loading all privileges and collecting the list of unique CircleIDs and ProductIDs.
 func (service *Identity) RefreshPrivileges(identityID primitive.ObjectID) error {
@@ -342,20 +398,38 @@ func (service *Identity) RefreshPrivileges(identityID primitive.ObjectID) error 
 	// Load the Identity from the database
 	identity := model.NewIdentity()
 	if err := service.LoadByID(identityID, &identity); err != nil {
-		return derp.Wrap(err, location, "Error loading identity", identityID)
+		return derp.Wrap(err, location, "Unable to load identity", identityID)
 	}
 
+	// Recalculate the privileges for this Identity
+	if err := service.refreshPrivileges(&identity); err != nil {
+		return derp.Wrap(err, location, "Unable to refresh privileges", identity.IdentityID)
+	}
+
+	// Save changes (with no additional business logic)
+	if err := service.collection.Save(&identity, "Refreshed Privileges"); err != nil {
+		return derp.Wrap(err, location, "Unable to save identity", identity)
+	}
+
+	// Retire in Cabo
+	return nil
+}
+
+func (service *Identity) refreshPrivileges(identity *model.Identity) error {
+
+	const location = "service.Identity.refreshPrivileges"
+
 	// Get all privileges for this Identity
-	privileges, err := service.privilegeService.QueryByIdentity(identityID)
+	privileges, err := service.privilegeService.RangeByIdentity(identity.IdentityID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error loading privileges for identity", identityID)
+		return derp.Wrap(err, location, "Unable to load privileges for identity", identity.IdentityID)
 	}
 
 	// Collect the CircleIDs and RemoteProductIDs from each privileges
 	privilegeIDs := id.NewSlice()
 
-	for _, privilege := range privileges {
+	for privilege := range privileges {
 
 		if !privilege.CircleID.IsZero() {
 			privilegeIDs = append(privilegeIDs, privilege.CircleID)
@@ -372,12 +446,7 @@ func (service *Identity) RefreshPrivileges(identityID primitive.ObjectID) error 
 	// Apply to Identity
 	identity.PrivilegeIDs = privilegeIDs
 
-	// Save changes
-	if err := service.Save(&identity, "Refreshed Privileges"); err != nil {
-		return derp.Wrap(err, location, "Error saving identity", identity)
-	}
-
-	// Retire in Cabo
+	// Success
 	return nil
 }
 
@@ -426,12 +495,41 @@ func (service *Identity) HasPermissions(identifierType string, identifierValue s
 
 	// Otherwise, look for the Identity and check it's Privileges
 	identity := model.NewIdentity()
-	if err := service.LoadByIdentifierAndType(identifierType, identifierValue, &identity); err != nil {
+	if err := service.LoadByIdentifier(identifierType, identifierValue, &identity); err != nil {
 		return false
 	}
 
 	// Celebrate good times, come on!
 	return identity.PrivilegeIDs.ContainsAny(permissions...)
+}
+
+// ParseIdentifier attempts to guess the type of identifier based on its format.
+func (service *Identity) GuessIdentifierType(identifier string) string {
+
+	// WebFinger begins with "@" and needs to be translated into an ActivityPub Actor
+	if strings.HasPrefix(identifier, "@") {
+
+		identifier = strings.TrimPrefix(identifier, "@")
+		if _, err := mail.ParseAddress(identifier); err == nil {
+			return model.IdentifierTypeWebfinger
+		}
+
+		// Otherwise, failure.
+		return ""
+	}
+
+	// ActivityPub Actor URLs begin with "https://" or "http://"
+	if strings.HasPrefix(identifier, "https://") || strings.HasPrefix(identifier, "http://") {
+		return model.IdentifierTypeActivityPub
+	}
+
+	// Assume Email Address
+	if _, err := mail.ParseAddress(identifier); err == nil {
+		return model.IdentifierTypeEmail
+	}
+
+	// Unknown identifier type
+	return ""
 }
 
 // makeGuestCode creates a new JWT token for the Guest to authenticate
@@ -536,33 +634,50 @@ func (service *Identity) calcName(identity *model.Identity) error {
 	return nil
 }
 
-// ParseIdentifier attempts to guess the type of identifier based on its format.
-func (service *Identity) GuessIdentifierType(identifier string) string {
+// uniquify takes duplicate Identitifiers from any other Identities
+// and merges their privileges with the provided Identity.
+func (service *Identity) uniquify(identity *model.Identity) error {
 
-	// WebFinger begins with "@" and needs to be translated into an ActivityPub Actor
-	if strings.HasPrefix(identifier, "@") {
+	const location = "service.Identity.uniquify"
 
-		identifier = strings.TrimPrefix(identifier, "@")
-		if _, err := mail.ParseAddress(identifier); err == nil {
-			return model.IdentifierTypeWebfinger
+	// Take Privileges that match my Identifiers from other
+	privileges, err := service.privilegeService.RangeByIdentifiers(identity.EmailAddress, identity.WebfingerUsername, identity.ActivityPubActor)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Unable to load Privileges", identity)
+	}
+
+	// Link the current identity to each Privilege listed
+	for privilege := range privileges {
+
+		if err := service.privilegeService.maybeSetIdentity(&privilege, identity); err != nil {
+			return derp.Wrap(err, location, "Unable to link Identity to this Privilege", privilege)
+		}
+	}
+
+	// Remove my Identifiers from other Identities
+	identities, err := service.RangeByIdentifiers(identity.EmailAddress, identity.WebfingerUsername, identity.ActivityPubActor)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Unable to load Identities", identity)
+	}
+
+	for other := range identities {
+
+		// RULE: No need to change myself
+		if other.IdentityID == identity.IdentityID {
+			continue
 		}
 
-		// Otherwise, failure.
-		return ""
+		other.RemoveIdentifier(model.IdentifierTypeEmail, identity.EmailAddress)
+		other.RemoveIdentifier(model.IdentifierTypeWebfinger, identity.WebfingerUsername)
+
+		if err := service.SaveOrDelete(&other, "Removed identity"); err != nil {
+			derp.Report(derp.Wrap(err, location, "Error uniquifying Identity", other))
+		}
 	}
 
-	// ActivityPub Actor URLs begin with "https://" or "http://"
-	if strings.HasPrefix(identifier, "https://") || strings.HasPrefix(identifier, "http://") {
-		return model.IdentifierTypeActivityPub
-	}
-
-	// Assume Email Address
-	if _, err := mail.ParseAddress(identifier); err == nil {
-		return model.IdentifierTypeEmail
-	}
-
-	// Unknown identifier type
-	return ""
+	return nil
 }
 
 func (service *Identity) hostname() string {

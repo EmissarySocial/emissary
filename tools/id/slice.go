@@ -45,6 +45,16 @@ func (slice Slice) First() primitive.ObjectID {
 	return slice[0]
 }
 
+func (slice Slice) IndexOf(value primitive.ObjectID) int {
+
+	for index, item := range slice {
+		if item == value {
+			return index
+		}
+	}
+	return -1
+}
+
 func (slice Slice) GetStringOK(name string) (string, bool) {
 
 	if index, ok := schema.Index(name, slice.Length()); ok {

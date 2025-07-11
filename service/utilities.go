@@ -29,6 +29,11 @@ func RangeFunc[T any](it data.Iterator, new func() T) iter.Seq[T] {
 
 	return func(yield func(T) bool) {
 		defer it.Close()
+
+		if it == nil {
+			return
+		}
+
 		value := new()
 		for it.Next(&value) {
 			if !yield(value) {

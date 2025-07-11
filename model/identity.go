@@ -80,8 +80,8 @@ func (identity Identity) RolesToPrivilegeIDs(...string) Permissions {
  * Other Getters
  ******************************************/
 
-func (identity Identity) IsZero() bool {
-	return identity.IdentityID.IsZero()
+func (identity Identity) IsEmpty() bool {
+	return (identity.EmailAddress == "") && (identity.WebfingerUsername == "")
 }
 
 // HasEmailAddress returns TRUE if the Identity has an email address.
@@ -113,6 +113,23 @@ func (identity Identity) Icon() string {
 	return "person-circle"
 }
 
+func (identity *Identity) Identifier(identifierType string) string {
+
+	switch identifierType {
+
+	case IdentifierTypeEmail:
+		return identity.EmailAddress
+
+	case IdentifierTypeActivityPub:
+		return identity.ActivityPubActor
+
+	case IdentifierTypeWebfinger:
+		return identity.WebfingerUsername
+	}
+
+	return ""
+}
+
 // SetIdentifier sets the value of the provided identifier type.
 // This method returns TRUE if the identifier type is recognized.
 func (identity *Identity) SetIdentifier(identifierType string, value string) bool {
@@ -136,7 +153,77 @@ func (identity *Identity) SetIdentifier(identifierType string, value string) boo
 	return false
 }
 
+func (identity *Identity) RemoveIdentifier(identifierType string, value string) bool {
+
+	switch identifierType {
+
+	case IdentifierTypeEmail:
+		if identity.EmailAddress == value {
+			identity.EmailAddress = ""
+			return true
+		}
+
+	case IdentifierTypeActivityPub:
+		if identity.ActivityPubActor == value {
+			identity.ActivityPubActor = ""
+			identity.WebfingerUsername = ""
+			return true
+		}
+
+	case IdentifierTypeWebfinger:
+		if identity.WebfingerUsername == value {
+			identity.ActivityPubActor = ""
+			identity.WebfingerUsername = ""
+			return true
+		}
+	}
+
+	return false
+}
+
 // HasPrivilege returns TRUE if the Identity has any of the provided privileges.
 func (identity Identity) HasPrivilege(privilege ...primitive.ObjectID) bool {
 	return identity.PrivilegeIDs.ContainsAny(privilege...)
+}
+
+// SetPrivilegeID adds a privilegeID to the Identity's list of privileges.
+func (identity *Identity) SetPrivilegeID(privilegeID primitive.ObjectID) {
+
+	// RULE: Identity must not be nil
+	if identity == nil {
+		return
+	}
+
+	// RULE: Do not set Zero privilegeIDs
+	if privilegeID.IsZero() {
+		return
+	}
+
+	// RULE: If the Identity already has this privilege, do nothing.
+	if identity.HasPrivilege(privilegeID) {
+		return
+	}
+
+	// Add the privilegeID to the Identity
+	identity.PrivilegeIDs = append(identity.PrivilegeIDs, privilegeID)
+}
+
+// RemovePrivilegeID safely removes a privilegeID from the Identity's list of privileges.
+func (identity *Identity) RemovePrivilegeID(privilegeID primitive.ObjectID) {
+	// RULE: Identity must not be nil
+	if identity == nil {
+		return
+	}
+
+	// RULE: Do not remove Zero privilegeIDs
+	if privilegeID.IsZero() {
+		return
+	}
+
+	// Remove the privilegeID from the Identity
+	index := identity.PrivilegeIDs.IndexOf(privilegeID)
+
+	if index >= 0 {
+		identity.PrivilegeIDs = append(identity.PrivilegeIDs[:index], identity.PrivilegeIDs[index+1:]...)
+	}
 }

@@ -113,7 +113,12 @@ func (service *Privilege) Save(privilege *model.Privilege, note string) error {
 
 	// Recalculate the privileges for the identityID
 	if err := service.identityService.RefreshPrivileges(privilege.IdentityID); err != nil {
-		return derp.Wrap(err, location, "Error refreshing privileges", privilege.IdentityID)
+
+		if derp.IsNotFound(err) {
+			privilege.IdentityID = primitive.NilObjectID
+		} else {
+			return derp.Wrap(err, location, "Error refreshing privileges", privilege.IdentityID)
+		}
 	}
 
 	// Recalculate member counts for the Circle, if applicable
@@ -261,6 +266,44 @@ func (service *Privilege) LoadByIdentityAndCircle(userID primitive.ObjectID, ide
 	return service.Load(criteria, privilege)
 }
 
+// RangeByIdentity returns an iterator containing all of the Privileges that match the provided IdentityID
+func (service *Privilege) RangeByIdentity(identityID primitive.ObjectID) (iter.Seq[model.Privilege], error) {
+
+	const location = "service.Privilege.RangeByIdentity"
+
+	// RULE: IdentityID must not be zero
+	if identityID.IsZero() {
+		return nil, derp.InternalError(location, "IdentityID must be provided")
+	}
+
+	criteria := exp.Equal("identityId", identityID)
+
+	return service.Range(criteria)
+}
+
+// RangeByIdentifiers returns an iterator containing all of the Privileges that match the provided identifiers (email, webfinger, activitypub)
+func (service *Privilege) RangeByIdentifiers(emailAddress string, webfingerUsername string, activityPubActor string) (iter.Seq[model.Privilege], error) {
+
+	// Create a criteria to find the Identity by any of the identifiers
+	criteria := exp.Or(
+		exp.And(
+			exp.Equal("identifierType", model.IdentifierTypeEmail),
+			exp.Equal("identifierValue", emailAddress),
+		),
+		exp.And(
+			exp.Equal("identifierType", model.IdentifierTypeWebfinger),
+			exp.Equal("identifierValue", webfingerUsername),
+		),
+		exp.And(
+			exp.Equal("identifierType", model.IdentifierTypeActivityPub),
+			exp.Equal("identifierValue", activityPubActor),
+		),
+	)
+
+	return service.Range(criteria)
+}
+
+// RangeByCircle returns an iterator containing all of the Privileges that match the provided CircleID
 func (service *Privilege) RangeByCircle(circleID primitive.ObjectID, options ...option.Option) (iter.Seq[model.Privilege], error) {
 
 	const location = "service.Privilege.RangeByCircle"
@@ -426,6 +469,62 @@ func (service *Privilege) validateCircle(privilege *model.Privilege) error {
 	return nil
 }
 
+// refreshIdentity recalculates all Privileges linked to the provided Identity,
+// adding/removing IdentityIDs based on matching identifiers.
+func (service *Privilege) refreshIdentity(identity *model.Identity) error {
+
+	const location = "service.Privilege.RefreshIdentity"
+
+	// RULE: NPE check
+	if identity == nil {
+		return derp.InternalError(location, "Identity cannot be nil.  This should never happen.")
+	}
+
+	// RULE: IdentityID must not be zero
+	if identity.IdentityID.IsZero() {
+		return derp.BadRequestError(location, "IdentityID cannot be empty.  This should never happen.", identity)
+	}
+
+	//////////////////////////
+	// Step 1: Remove the IdentityID from Privileges
+	// that no longer match the identifiers for this Identity
+
+	// Load all of the Privileges that match this IdentityID
+	privilegesToRemove, err := service.RangeByIdentity(identity.IdentityID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error loading Privileges by IdentityID", identity.IdentityID)
+	}
+
+	// Remove this Identity from all privileges that no longer have matching identifiers
+	for privilege := range privilegesToRemove {
+		if err := service.maybeRemoveIdentity(&privilege, identity); err != nil {
+			return derp.Wrap(err, location, "Unable to remove IdentityID from Privilege", privilege.PrivilegeID)
+		}
+	}
+
+	//////////////////////////
+	// Step 2: Reassign the IdentityID to all Privileges
+	// that currently match the identifiers for this Identity
+
+	// Load all Privileges that match the identifiers for this Identity
+	privilegesToAssign, err := service.RangeByIdentifiers(identity.EmailAddress, identity.WebfingerUsername, identity.ActivityPubActor)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error loading Privileges by identifiers", identity)
+	}
+
+	for privilege := range privilegesToAssign {
+
+		if err := service.maybeSetIdentity(&privilege, identity); err != nil {
+			return derp.Wrap(err, location, "Unable to set IdentityID on Privilege", privilege.PrivilegeID)
+		}
+	}
+
+	// Phew!  Everything is awesome.
+	return nil
+}
+
 func (service *Privilege) RefreshCircleInfo(circle *model.Circle) error {
 
 	const location = "service.Privilege.RefreshCircle"
@@ -477,6 +576,83 @@ func (service *Privilege) RefreshCircleInfo(circle *model.Circle) error {
 				return derp.Wrap(err, location, "Error refreshing Privilege", circle)
 			}
 		}
+	}
+
+	return nil
+}
+
+// maybeSetIdentity bi-directionally links a Privilege to an Identity
+func (service *Privilege) maybeSetIdentity(privilege *model.Privilege, identity *model.Identity) error {
+
+	const location = "service.Privilege.SetIdentityID"
+
+	// RULE: Privilege must not be nil
+	if privilege == nil {
+		return derp.BadRequestError(location, "Privilege cannot be nil. This should never happen.")
+	}
+
+	// RULE: Identity must not be nil
+	if identity == nil {
+		return derp.BadRequestError(location, "Identity cannot be nil. This should never happen.")
+	}
+
+	// If the identifier does not match, then do not reassign (but this should never happen)
+	if identity.Identifier(privilege.IdentifierType) != privilege.IdentifierValue {
+		return derp.BadRequestError(location, "Privilege must match the identifier in the Identity. This shoulld never happen.", privilege.IdentifierType, privilege.IdentifierValue, identity)
+	}
+
+	// Make sure that the Identity includes a link to the Privilege
+	identity.SetPrivilegeID(privilege.PrivilegeID)
+
+	// If the Privilege is already linked to this Identity, then there's nothing more to do.
+	if privilege.IdentityID == identity.IdentityID {
+		return nil
+	}
+
+	// Set the IdentityID in the Privilege
+	privilege.IdentityID = identity.IdentityID
+
+	// Update the Privilege without triggering any additional business logic.
+	if err := service.collection.Save(privilege, "Setting IdentityID"); err != nil {
+		return derp.Wrap(err, location, "Unable to set IdentityID on Privilege", privilege.PrivilegeID)
+	}
+
+	// Return in success.
+	return nil
+}
+
+func (service *Privilege) maybeRemoveIdentity(privilege *model.Privilege, identity *model.Identity) error {
+
+	const location = "service.Privilege.RemoveIdentity"
+
+	// RULE: Privilege must not be nil
+	if privilege == nil {
+		return derp.BadRequestError(location, "Privilege cannot be nil")
+	}
+
+	// RULE: Identity must not be nil
+	if identity == nil {
+		return derp.BadRequestError(location, "Identity cannot be nil. This should never happen")
+	}
+
+	// If the identifier matches, then this Privilege is still valid
+	if identity.Identifier(privilege.IdentifierType) == privilege.IdentifierValue {
+		return nil
+	}
+
+	// Remove the PrivilegeID from the Identity
+	identity.RemovePrivilegeID(privilege.PrivilegeID)
+
+	// RULE: If the Identity is already Zero, then there's nothing to do
+	if privilege.IdentityID.IsZero() {
+		return nil
+	}
+
+	// Remove the IdentityID from the Privilege
+	privilege.IdentityID = primitive.NilObjectID
+
+	if err := service.collection.Save(privilege, "Removing IdentityID"); err != nil {
+		return derp.Wrap(err, location, "Unable to remove IdentityID from Privilege", privilege.PrivilegeID)
 	}
 
 	return nil
