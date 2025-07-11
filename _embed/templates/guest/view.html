@@ -1,6 +1,6 @@
 {{- $privileges := .Privileges.ByCreateDate.Reverse.Slice -}}
-{{- $hasActivityPubActor := .HasActivityPubActor -}}
-{{- $activityPubActor := .ActivityPubActor -}}
+{{- $hasWebfingerUsername := .HasWebfingerUsername -}}
+{{- $webfingerUsername := .WebfingerUsername -}}
 
 <div class="page app" script="on load take .selected from .nav-item for #nav-settings">
 
@@ -36,14 +36,14 @@
 				<div hx-get="/@guest/webfinger" class="clickable flex-row flex-align-center">
 					<div class="flex-grow margin-right-sm ellipsis">
 						{{icon "fediverse"}} 
-						{{ if $hasActivityPubActor -}}
-							{{.ActivityPubActor}}
+						{{ if $hasWebfingerUsername -}}
+							{{.WebfingerUsername}}
 						{{- else -}}
 							<span class="text-green">Add Your Fediverse Handle</span>
 						{{- end -}}
 					</div>
 					<span class="button text-xs">
-						{{- if $hasActivityPubActor -}}
+						{{- if $hasWebfingerUsername -}}
 							change
 						{{- else -}}
 							connect
@@ -111,10 +111,10 @@
 									</div>
 
 									<div class="margin-bottom">
-										{{- if $hasActivityPubActor -}}
+										{{- if $hasWebfingerUsername -}}
 											<div>
 												<div class="bold text-green">{{icon "check-circle-fill"}} You're All Set</div>
-												<div class="text-gray">You'll receive new posts in your inbox: {{$activityPubActor}}</div>
+												<div class="text-gray">You'll receive new posts in your inbox: {{$webfingerUsername}}</div>
 											</div>
 										{{- else -}}
 											<button class="primary padding-vertical-sm margin-bottom-sm" hx-get="/@guest/webfinger">Add Your Fediverse Handle &rarr;</button>

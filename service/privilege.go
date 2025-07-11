@@ -91,10 +91,6 @@ func (service *Privilege) Save(privilege *model.Privilege, note string) error {
 
 	const location = "service.Privilege.Save"
 
-	if err := service.validateIdentifier(privilege); err != nil {
-		return derp.Wrap(err, location, "Error validating Identifier", privilege.IdentifierType, privilege.IdentifierValue)
-	}
-
 	// Validate the value before saving
 	if err := service.Schema().Validate(privilege); err != nil {
 		return derp.Wrap(err, location, "Error validating Privilege", privilege)
@@ -349,38 +345,25 @@ func (service *Privilege) DeleteByCircle(circleID primitive.ObjectID, note strin
  * Helper Methods
  ******************************************/
 
-func (service *Privilege) validateIdentifier(privilege *model.Privilege) error {
-
-	const location = "service.Privilege.validateIdentifier"
-
-	if privilege.IdentifierValue == "" {
-		return derp.InternalError(location, "IdentifierValue must be provided")
-	}
-
-	if privilege.IdentifierType == "" {
-
-		identifierType, identifierValue := service.identityService.ParseIdentifier(privilege.IdentifierValue)
-
-		if identifierType == "" {
-			return derp.InternalError(location, "Could not guess identifier type.")
-		}
-
-		privilege.IdentifierType = identifierType
-		privilege.IdentifierValue = identifierValue
-	}
-
-	return nil
-}
-
 // maybeCreateIdentity guarantees that the provided Privilege is connected to a valid Identity.
 // If the IdentityID field is zero, then a matching Identity is located or created.
 func (service *Privilege) maybeCreateIdentity(privilege *model.Privilege) error {
 
 	const location = "service.Privilege.maybeCreateIdentity"
 
-	// If this privilege is already bound to a valid Identity, then we're all good
+	// RULE: If this privilege is already bound to a valid Identity, then we're all good
 	if !privilege.IdentityID.IsZero() {
 		return nil
+	}
+
+	// RULE: IdentifierType MUST be present
+	if privilege.IdentifierValue == "" {
+		return derp.BadRequestError(location, "Privilege must have an IdentifierValue to create an Identity", privilege)
+	}
+
+	// Try to guess the IdentifierType if it is not already set
+	if privilege.IdentifierType == "" {
+		privilege.IdentifierType = service.identityService.GuessIdentifierType(privilege.IdentifierValue)
 	}
 
 	// Fall through means we need to load or create the upstream record before we continue
@@ -392,6 +375,12 @@ func (service *Privilege) maybeCreateIdentity(privilege *model.Privilege) error 
 
 	// Update the Privilege with the correct IdentityID
 	privilege.IdentityID = identity.IdentityID
+
+	// If we are starting with a Webbfinger username, then switch to the ActivityPub actor before we save.
+	if privilege.IdentifierType == model.IdentifierTypeWebfinger {
+		privilege.IdentifierType = model.IdentifierTypeActivityPub
+		privilege.IdentifierValue = identity.ActivityPubActor
+	}
 
 	return nil
 }

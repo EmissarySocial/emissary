@@ -77,7 +77,6 @@
 
 			<div class="table">
 				{{- range $index, $member := $members -}}
-					{{- $identifierType := $member.IdentifierType -}}
 					<div hx-get="/@me/settings/circle-member-edit?identityId={{$member.ID}}&circleId={{$circle.ID}}" class="flex-row flex-align-center" role="button">
 						<div class="margin-none">
 							{{- if $member.IconURL -}}

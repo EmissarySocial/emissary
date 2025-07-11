@@ -141,14 +141,14 @@ func PostIdentitySignin(ctx *steranko.Context, factory *domain.Factory) error {
 	// Collect parameters from the request
 	identityService := factory.Identity()
 	identifier := ctx.FormValue("identifier")
-	identifierType, identifierValue := identityService.ParseIdentifier(identifier)
+	identifierType := identityService.GuessIdentifierType(identifier)
 
 	if identifierType == "" {
 		return derp.BadRequestError(location, "Unrecognized Identifier Type", identifierType)
 	}
 
 	// Create and send a guest signin code
-	if err := identityService.SendGuestCode(nil, identifierType, identifierValue); err != nil {
+	if err := identityService.SendGuestCode(nil, identifierType, identifier); err != nil {
 
 		// Report the error for debugging...
 		derp.Report(derp.Wrap(err, location, "Error sending Guest Code"))

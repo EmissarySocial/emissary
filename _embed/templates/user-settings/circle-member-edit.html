@@ -19,9 +19,9 @@
 				<div class="text-gray">{{icon "email"}} {{$identity.EmailAddress}}</div>
 			{{- end -}}
 		{{- end -}}
-		{{- if $identity.HasActivityPubActor -}}
-			{{- if ne $identity.Name $identity.ActivityPubActor -}}
-				<div class="text-gray">{{icon "globe"}} <a href="{{$identity.ActivityPubActor}}" target="_blank">{{$identity.ActivityPubActor}} &rarr;</a></div>
+		{{- if $identity.HasWebfingerUsername -}}
+			{{- if ne $identity.Name $identity.WebfingerUsername -}}
+				<div class="text-gray">{{icon "globe"}} <a href="{{$identity.ActivityPubActor}}" target="_blank">{{$identity.WebfingerUsername}} &rarr;</a></div>
 			{{- end -}}
 		{{- end -}}
 

@@ -10,12 +10,13 @@ import (
 // This is used to track pseud-logins by individuals who do not have a registered username on this server.
 // Identities can be tied to a Follower and to a Privilege via the two identifiers: EmailAddress and ActivityPub.
 type Identity struct {
-	IdentityID       primitive.ObjectID `bson:"_id"`                  // Unique ID for the Identity
-	Name             string             `bson:"name"`                 // Full name of the Individual ("John Connor")
-	IconURL          string             `bson:"iconUrl"`              // URL to an icon representing the Identity (e.g., a profile picture)
-	EmailAddress     string             `bson:"emailAddress"`         // Email address of the Identity ("john@connor.mil")
-	ActivityPubActor string             `bson:"activityPubActor"`     // ActivityPub Actor URL (https://connor.mil/@john) possibly derived from a WebFinger handle
-	PrivilegeIDs     id.Slice           `bson:"privileges,omitempty"` // List of privileges associated with this Identity, either a circleID, or a remoteProductID
+	IdentityID        primitive.ObjectID `bson:"_id"`                  // Unique ID for the Identity
+	Name              string             `bson:"name"`                 // Full name of the Individual ("John Connor")
+	IconURL           string             `bson:"iconUrl"`              // URL to an icon representing the Identity (e.g., a profile picture)
+	EmailAddress      string             `bson:"emailAddress"`         // Email address of the Identity ("john@connor.mil")
+	WebfingerUsername string             `bson:"webfingerUsername"`    // Webfinger Username (e.g., "@john@connor.mil")
+	ActivityPubActor  string             `bson:"activityPubActor"`     // ActivityPub Actor URL (https://connor.mil/@john) possibly derived from a WebFinger handle
+	PrivilegeIDs      id.Slice           `bson:"privileges,omitempty"` // List of privileges associated with this Identity, either a circleID, or a remoteProductID
 
 	// Embed journal to track changes
 	journal.Journal `bson:",inline"`
@@ -42,6 +43,7 @@ func (identity Identity) Fields() []string {
 		"iconUrl",
 		"emailAddress",
 		"activityPubActor",
+		"activityPubUsername",
 	}
 }
 
@@ -87,9 +89,14 @@ func (identity Identity) HasEmailAddress() bool {
 	return identity.EmailAddress != ""
 }
 
-// HasActivityPubActor TRUE if the Identity has an ActivityPub Actor URL.
+// HasActivityPubActor TRUE if the Identity has an ActivityPub Actor.
 func (identity Identity) HasActivityPubActor() bool {
 	return identity.ActivityPubActor != ""
+}
+
+// HasWebfingerUsername TRUE if the Identity has a Webfinger Username.
+func (identity Identity) HasWebfingerUsername() bool {
+	return identity.WebfingerUsername != ""
 }
 
 // Icon returns an icon name to use for this Identity, based on the type of identifier(s) present.
@@ -106,34 +113,6 @@ func (identity Identity) Icon() string {
 	return "person-circle"
 }
 
-// IdentifierType returns the "primary" identifier type that is present in this Identity.
-func (identity Identity) IdentifierType() string {
-
-	if identity.HasActivityPubActor() {
-		return IdentifierTypeActivityPub
-	}
-
-	if identity.HasEmailAddress() {
-		return IdentifierTypeEmail
-	}
-
-	return ""
-}
-
-// Identifier returns the "primary" identifier for this Identity.
-func (identity Identity) Identifier() string {
-
-	if identity.HasActivityPubActor() {
-		return identity.ActivityPubActor
-	}
-
-	if identity.HasEmailAddress() {
-		return identity.EmailAddress
-	}
-
-	return ""
-}
-
 // SetIdentifier sets the value of the provided identifier type.
 // This method returns TRUE if the identifier type is recognized.
 func (identity *Identity) SetIdentifier(identifierType string, value string) bool {
@@ -146,6 +125,11 @@ func (identity *Identity) SetIdentifier(identifierType string, value string) boo
 
 	case IdentifierTypeActivityPub:
 		identity.ActivityPubActor = value
+		return true
+
+	case IdentifierTypeWebfinger:
+		identity.WebfingerUsername = value
+		identity.ActivityPubActor = "" // This extra step resets the ActivityPub Actor so that we can recalculate it on save.
 		return true
 	}
 

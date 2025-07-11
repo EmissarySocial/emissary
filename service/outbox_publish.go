@@ -57,13 +57,17 @@ func (service *Outbox) Publish(actor *outbox.Actor, actorType string, actorID pr
 
 		// Do not send to blocked Followers
 		if !ruleFilter.AllowSend(follower.Actor.ProfileURL) {
+			log.Trace().Msg("Follower blocked by rule filter: " + follower.Actor.ProfileURL)
 			continue
 		}
 
 		// Do not send to Followers who do not have permissions to view this activity
 		if !service.identityService.HasPermissions(follower.Method, follower.Actor.ProfileURL, permissions) {
+			log.Trace().Msg("Follower does not have permissions to view this activity: " + follower.Actor.ProfileURL)
 			continue
 		}
+
+		log.Debug().Msg("Sending notification to Follower: " + follower.Actor.ProfileURL)
 
 		switch follower.Method {
 

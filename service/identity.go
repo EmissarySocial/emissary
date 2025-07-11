@@ -14,9 +14,10 @@ import (
 	"github.com/benpate/digit"
 	"github.com/benpate/domain"
 	"github.com/benpate/exp"
-	"github.com/benpate/hannibal"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
+	"github.com/benpate/sherlock"
 	"github.com/benpate/turbine/queue"
 	"github.com/golang-jwt/jwt/v5"
 
@@ -110,6 +111,11 @@ func (service *Identity) Load(criteria exp.Expression, identity *model.Identity)
 func (service *Identity) Save(identity *model.Identity, note string) error {
 
 	const location = "service.Identity.Save"
+
+	// Fill in missing fields
+	if err := service.calcActivityPubActor(identity); err != nil {
+		return derp.Wrap(err, location, "Error calculating ActivityPub Actor for Identity")
+	}
 
 	// Pick a default name, if necessary
 	if err := service.calcName(identity); err != nil {
@@ -277,15 +283,15 @@ func (service *Identity) LoadOrCreate(name string, identifierType string, identi
 	return identity, nil
 }
 
-func (service *Identity) LoadByIdentifier(identifier string, identity *model.Identity) error {
+func (service *Identity) LoadByIdentifier(identifierValue string, identity *model.Identity) error {
 
 	const location = "service.identity.LoadByIdentifier"
 
 	// Guess the identifier type
-	identifierType, identifierValue := service.ParseIdentifier(identifier)
+	identifierType := service.GuessIdentifierType(identifierValue)
 
 	if identifierType == "" {
-		return derp.BadRequestError(location, "Invalid identifier", identifier)
+		return derp.BadRequestError(location, "Invalid identifier", identifierValue)
 	}
 
 	return service.LoadByIdentifierAndType(identifierType, identifierValue, identity)
@@ -301,6 +307,9 @@ func (service *Identity) LoadByIdentifierAndType(identifierType string, identifi
 
 	case model.IdentifierTypeActivityPub:
 		return service.LoadByActivityPubActor(identifierValue, identity)
+
+	case model.IdentifierTypeWebfinger:
+		return service.LoadByWebfingerUsername(identifierValue, identity)
 	}
 
 	return derp.InternalError("service.Identity.LoadByAddress", "Invalid Identity Type", identifierType)
@@ -312,9 +321,15 @@ func (service *Identity) LoadByEmailAddress(emailAddress string, identity *model
 	return service.Load(criteria, identity)
 }
 
-// LoadByActvityPubActor retrieves a single Identity from the database using the provided WebFinger handle
+// LoadByActivityPubActor retrieves a single Identity from the database using the provided WebFinger handle
 func (service *Identity) LoadByActivityPubActor(actorID string, identity *model.Identity) error {
 	criteria := exp.Equal("activityPubActor", actorID)
+	return service.Load(criteria, identity)
+}
+
+// LoadByWebfingerUsername retrieves a single Identity from the database using the provided WebFinger handle
+func (service *Identity) LoadByWebfingerUsername(username string, identity *model.Identity) error {
+	criteria := exp.Equal("webfingerUsername", username)
 	return service.Load(criteria, identity)
 }
 
@@ -370,11 +385,6 @@ func (service *Identity) SendGuestCode(identity *model.Identity, identifierType 
 
 	const location = "service.Identity.SendGuestCode"
 
-	// RULE: Identifier must be provided
-	if identifierValue == "" {
-		return derp.BadRequestError(location, "Identifier cannot be empty", identifierValue)
-	}
-
 	// Find the correct sender function based on the identifier type
 	var sender func(string, string) error
 
@@ -383,7 +393,7 @@ func (service *Identity) SendGuestCode(identity *model.Identity, identifierType 
 	case model.IdentifierTypeEmail:
 		sender = service.emailService.SendGuestCode
 
-	case model.IdentifierTypeActivityPub:
+	case model.IdentifierTypeWebfinger, model.IdentifierTypeActivityPub:
 		sender = service.sendGuestCode_ActivityPub
 
 	default:
@@ -453,6 +463,46 @@ func (service *Identity) makeGuestCode(identity *model.Identity, identifierType 
 	return token, nil
 }
 
+func (service *Identity) calcActivityPubActor(identity *model.Identity) error {
+
+	const location = "service.Identity.calcActivityPubActor"
+
+	// If we don't have a WebFinger username, then there's nothing to do
+	if !identity.HasWebfingerUsername() {
+		return nil
+	}
+
+	// If we already have an ActivityPub Actor, then we're done
+	if identity.HasActivityPubActor() {
+		return nil
+	}
+
+	// Use Webfinger to look up the ActivityPub Actor.
+	record, err := digit.Lookup(identity.WebfingerUsername)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Unable to look up WebFinger username", identity.WebfingerUsername)
+	}
+
+	// Look for the ActivityPub Actor in the WebFinger record
+	for _, link := range record.Links {
+
+		if link.RelationType != digit.RelationTypeSelf {
+			continue
+		}
+
+		if link.MediaType != vocab.ContentTypeActivityPub {
+			continue
+		}
+
+		identity.ActivityPubActor = link.Href
+		return nil
+	}
+
+	// uwuuwuwuuwuwuwuwuwuwuwuwuwuwuwuwuwu
+	return derp.BadRequestError(location, "WebFinger record does not include an ActivityPub address", identity.WebfingerUsername)
+}
+
 func (service *Identity) calcName(identity *model.Identity) error {
 
 	// If we already have a "Name", then there's nothing else to do
@@ -460,9 +510,10 @@ func (service *Identity) calcName(identity *model.Identity) error {
 		return nil
 	}
 
+	// If we have an ActivityPub Actor, then look up the name from their profile
 	if identity.HasActivityPubActor() {
 
-		actor, err := service.activityService.Load(identity.ActivityPubActor)
+		actor, err := service.activityService.Load(identity.ActivityPubActor, sherlock.AsActor())
 
 		if err != nil {
 			return derp.Wrap(err, "service.Identity.calcName", "Error loading ActivityPub Actor", identity.ActivityPubActor)
@@ -473,49 +524,45 @@ func (service *Identity) calcName(identity *model.Identity) error {
 		return nil
 	}
 
+	// If we have a WebFinger username, then we can use that as the name
+	if identity.HasWebfingerUsername() {
+
+		identity.Name = identity.WebfingerUsername
+		return nil
+	}
+
 	// If we can't look up an ActivityPub actor, then just use the email address as the name
 	identity.Name = identity.EmailAddress
 	return nil
 }
 
 // ParseIdentifier attempts to guess the type of identifier based on its format.
-func (service *Identity) ParseIdentifier(identifier string) (string, string) {
+func (service *Identity) GuessIdentifierType(identifier string) string {
 
 	// WebFinger begins with "@" and needs to be translated into an ActivityPub Actor
 	if strings.HasPrefix(identifier, "@") {
 
-		// Look up the identifier using WebFinger
-		webfinger, err := digit.Lookup(identifier)
-
-		if err != nil {
-			return "", ""
-		}
-
-		// If we have a profile link, then success
-		for _, link := range webfinger.Links {
-			if link.RelationType == digit.RelationTypeSelf {
-				if hannibal.IsActivityPubContentType(link.MediaType) {
-					return model.IdentifierTypeActivityPub, link.Href
-				}
-			}
+		identifier = strings.TrimPrefix(identifier, "@")
+		if _, err := mail.ParseAddress(identifier); err == nil {
+			return model.IdentifierTypeWebfinger
 		}
 
 		// Otherwise, failure.
-		return "", ""
+		return ""
 	}
 
 	// ActivityPub Actor URLs begin with "https://" or "http://"
 	if strings.HasPrefix(identifier, "https://") || strings.HasPrefix(identifier, "http://") {
-		return model.IdentifierTypeActivityPub, identifier
+		return model.IdentifierTypeActivityPub
 	}
 
 	// Assume Email Address
 	if _, err := mail.ParseAddress(identifier); err == nil {
-		return model.IdentifierTypeEmail, identifier
+		return model.IdentifierTypeEmail
 	}
 
 	// Unknown identifier type
-	return "", ""
+	return ""
 }
 
 func (service *Identity) hostname() string {

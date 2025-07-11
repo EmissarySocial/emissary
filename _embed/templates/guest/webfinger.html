@@ -1,4 +1,4 @@
-{{- if .HasActivityPubActor -}}
+{{- if .HasWebfingerUsername -}}
 	<h1>{{icon "fediverse"}} Edit Your Fediverse Handle</h1>
 
 	<div class="alert-gray margin-bottom-lg">
@@ -22,8 +22,8 @@
 		<div class="layout-elements">
 			<div class="layout-element">
 				<label for="email">New Fediverse Handle</label>
-				<input type="hidden" name="identifierType" value="ACTIVITYPUB">
-				<input type="text" id="email" name="identifier" value="{{.ActivityPubActor}}" pattern="^@[^@]+@[^@]+\.[^@]+$" aria-labelledby="identifier-label" aria-describedby="identifier-label" required="true" autocomplete="none" data-1p-ignore="true" autofocus="true" tabindex="0">
+				<input type="hidden" name="identifierType" value="WEBFINGER">
+				<input type="text" id="email" name="identifier" value="{{.WebfingerUsername}}" pattern="^@[^@]+@[^@]+\.[^@]+$" aria-labelledby="identifier-label" aria-describedby="identifier-label" required="true" autocomplete="none" data-1p-ignore="true" autofocus="true" tabindex="0">
 				<div id="identifier-label" class="text-sm gray40">e.g. @username@server.social</div>
 			</div>
 		</div>
@@ -38,12 +38,12 @@
 		<button type="button" script="on click trigger closeModal">Cancel</button>
 		<span id="htmx-response-message" class="flex-grow"></span>
 
-		{{- if ne "" .ActivityPubActor -}}
+		{{- if ne "" .WebfingerUsername -}}
 		<span class="align-right">
 			<span 
 				class="text-red clickable" 
 				hx-post="/@guest/identifier"
-				hx-vals='{"identifierType": "ACTIVITYPUB","identifier": ""}'
+				hx-vals='{"identifierType": "WEBFINGER","identifier": ""}'
 				hx-confirm="This will remove your Fediverse Handle from this guest identity. Are you sure you want to continue?"
 			>Remove Handle</span>
 		</span>
