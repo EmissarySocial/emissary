@@ -231,7 +231,7 @@ func (service *Template) loadTemplates() error {
 	}
 
 	// Calculate access lists for all Templates
-	if err := service.calculateAllowLists(); err != nil {
+	if err := service.calculateAccessLists(); err != nil {
 		return derp.Wrap(err, location, "Error calculating access lists")
 	}
 
@@ -487,10 +487,10 @@ func (service *Template) calculateInheritance(template model.Template) (model.Te
 	return template, nil
 }
 
-// calculateAllowLists calculates the access lists for every Template in the prep area
-func (service *Template) calculateAllowLists() error {
+// calculateAccessLists calculates the access lists for every Template in the prep area
+func (service *Template) calculateAccessLists() error {
 
-	const location = "service.template.calculateAllowLists"
+	const location = "service.template.calculateAccessLists"
 
 	// For every template in the prep area...
 	for _, template := range service.templatePrep {
