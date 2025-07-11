@@ -33,15 +33,17 @@ func (permissions Permissions) NotZero() bool {
 	return len(permissions) > 0
 }
 
+// Length returns the number of permissions in this Permissions slice.
 func (permissions Permissions) Length() int {
 	return len(permissions)
 }
 
+// IsLength returns TRUE if this Permissions slice has the specified length.
 func (permissions Permissions) IsLength(length int) bool {
 	return len(permissions) == length
 }
 
-// IsAnonymous returns TRUE if this Permisssions slice allows "anonymous" access.
+// IsAnonymous returns TRUE if this Permissions slice allows "anonymous" access.
 func (permissions Permissions) IsAnonymous() bool {
 	return slice.Contains(permissions, MagicGroupIDAnonymous)
 }
@@ -62,7 +64,6 @@ func (permissions Permissions) Compact() Permissions {
 		switch permissionID {
 		case MagicGroupIDAnonymous, MagicGroupIDAuthenticated:
 			return Permissions{permissionID}
-
 		}
 
 		if !slice.Contains(result, permissionID) {
@@ -73,18 +74,16 @@ func (permissions Permissions) Compact() Permissions {
 	return result
 }
 
+// Intersects returns TRUE if this Permissions slice intersects with the other Permissions slice.
 func (permissions Permissions) Intersects(other Permissions) bool {
 	return slice.ContainsAny(permissions, other...)
 }
 
-func (permissions Permissions) First() primitive.ObjectID {
-	if permissions.IsZero() {
-		return primitive.NilObjectID
-	}
+/******************************************
+ * Schema Getter/Setter Methods
+ ******************************************/
 
-	return permissions[0]
-}
-
+// GetString returns the string value at the specified index
 func (permissions Permissions) GetStringOK(name string) (string, bool) {
 
 	if index, ok := schema.Index(name, permissions.Length()); ok {
@@ -94,6 +93,7 @@ func (permissions Permissions) GetStringOK(name string) (string, bool) {
 	return "", false
 }
 
+// SetString sets the value at the specified index to the provided string
 func (permissions *Permissions) SetString(name string, value string) bool {
 
 	if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
