@@ -7,7 +7,6 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -17,7 +16,7 @@ type Action struct {
 	States     sliceof.String               `json:"states"     bson:"states"`     // List of states required to execute this Action.  If empty, then one are required.
 	StateRoles mapof.Object[sliceof.String] `json:"stateRoles" bson:"stateRoles"` // Map of states -> list of roles that can perform this Action (when a stream is in the given state)
 	Steps      sliceof.Object[step.Step]    `json:"steps"      bson:"steps"`      // List of steps to execute when GET-ing or POST-ing this Action.
-	AccessList mapof.Object[AccessList]     `json:"-"          bson:"-"`          // Map of states -> set of roles that can perform this Action.
+	AccessList mapof.Object[sliceof.String] `json:"-"          bson:"-"`          // Map of states -> set of roles that can perform this Action.
 }
 
 // NewAction returns a fully initialized Action
@@ -27,7 +26,7 @@ func NewAction() Action {
 		States:     sliceof.NewString(),
 		StateRoles: mapof.NewObject[sliceof.String](),
 		Steps:      sliceof.NewObject[step.Step](),
-		AccessList: mapof.NewObject[AccessList](),
+		AccessList: mapof.NewObject[sliceof.String](),
 	}
 }
 
@@ -36,7 +35,7 @@ func NewAction() Action {
 func (action *Action) CalcAccessList(template *Template, debug bool) error {
 
 	// Initialize/Reset the AccessList
-	action.AccessList = mapof.NewObject[AccessList]()
+	action.AccessList = mapof.NewObject[sliceof.String]()
 
 	// Calculate an AccessList for each state defined in the Template
 	for stateID := range template.States {
@@ -52,32 +51,27 @@ func (action *Action) CalcAccessList(template *Template, debug bool) error {
 		}
 
 		// Set the AccessList for this State
-		action.AccessList[stateID] = action.calcAccessListForStateAndRole(template, stateID)
+		action.AccessList[stateID] = action.calcAccessListForStateAndRole(stateID)
 	}
 
 	return nil
 }
 
-func (action *Action) calcAccessListForStateAndRole(template *Template, stateID string) AccessList {
+func (action *Action) calcAccessListForStateAndRole(stateID string) sliceof.String {
 
 	// Create an AccessList for Streams in this State
-	result := NewAccessList()
+	result := sliceof.NewString()
 	allowedRoles := append(action.Roles, action.StateRoles[stateID]...)
-
-	if allowedRoles.Contains(MagicRoleAnonymous) {
-		result.Anonymous = true
-		return result
-	}
 
 	// Special case for Anonymous users overrides all other roles
 	if allowedRoles.Contains(MagicRoleAnonymous) {
-		result.Anonymous = true
+		result = []string{MagicRoleAnonymous}
 		return result
 	}
 
 	// Special case for Authenticated users overrides all other roles
 	if allowedRoles.Contains(MagicRoleAuthenticated) {
-		result.Authenticated = true
+		result = []string{MagicRoleAuthenticated}
 		return result
 	}
 
@@ -92,27 +86,20 @@ func (action *Action) calcAccessListForStateAndRole(template *Template, stateID 
 
 		// MagicRoleMyself allows Users to perform actions on their own profies
 		case MagicRoleMyself:
-			result.Self = true
+			result = append(result, MagicRoleMyself)
 
 		// MagicRoleAuthor allows Users to perform actions on Streams that they created
 		case MagicRoleAuthor:
-			result.Author = true
+			result = append(result, MagicRoleAuthor)
 
 		// All other privileges are granted via membership in a group or purchase of a product
 		default:
-			role := template.AccessRoles[roleID] // save becuase this was already checked above
-
-			if role.IsPrivileged {
-				result.Privileges = append(result.Privileges, roleID)
-			} else {
-				result.Groups = append(result.Groups, roleID)
-			}
+			result = append(result, roleID)
 		}
 	}
 
 	// Unique-ify the lists of group and product roles
-	result.Groups = slice.Unique(result.Groups)
-	result.Privileges = slice.Unique(result.Privileges)
+	result = slice.Unique(result)
 
 	return result
 }
@@ -120,15 +107,15 @@ func (action *Action) calcAccessListForStateAndRole(template *Template, stateID 
 // AllowedRoles returns a slice of roles that are allowed to perform this action,
 // based on the state of the object.  This list includes
 // system roles like "anonymous", "authenticated", "self", "author", and "owner".
-func (action *Action) AllowedRoles(stateID string) []string {
-	return action.AccessList[stateID].Roles()
+func (action *Action) AllowedRoles(stateID string) sliceof.String {
+	return action.AccessList[stateID]
 }
 
 // Dump is a debugging method that outputs all of the contents of an Action
 // without displaying steps/templates (which are huge)
-func (action *Action) Dump() {
+func (action *Action) Debug() mapof.Any {
 
-	spew.Dump(map[string]any{
+	return mapof.Any{
 		"roles":      action.Roles,
 		"states":     action.States,
 		"stateRoles": action.StateRoles,
@@ -136,7 +123,7 @@ func (action *Action) Dump() {
 		"steps": slice.Map(action.Steps, func(step step.Step) string {
 			return step.Name()
 		}),
-	})
+	}
 }
 
 /******************************************

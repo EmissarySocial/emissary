@@ -108,7 +108,7 @@ func (searchTag *SearchTag) IsMyself(userID primitive.ObjectID) bool {
 // RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.
 // It is part of the AccessLister interface
 func (searchTag *SearchTag) RolesToGroupIDs(roleIDs ...string) Permissions {
-	return NewPermissions()
+	return defaultRolesToGroupIDs(primitive.NilObjectID, roleIDs...)
 }
 
 // RolesToPrivilegeIDs returns a slice of Privileges that grant access to any of the requested roles.

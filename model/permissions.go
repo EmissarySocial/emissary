@@ -11,7 +11,7 @@ type Permissions []primitive.ObjectID
 
 // NewPermissions returns fully initialized Permissions slice (with no permissions added)
 func NewPermissions() Permissions {
-	return make(Permissions, 0)
+	return make(Permissions, 0, 4)
 }
 
 // NewPermissions returns a fully initialized Permissions slice with "anonymous" permissions included.

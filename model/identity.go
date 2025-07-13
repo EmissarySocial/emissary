@@ -67,12 +67,12 @@ func (identity Identity) IsMyself(identityID primitive.ObjectID) bool {
 }
 
 // RolesToGroupIDs returns a map of RoleIDs to GroupIDs
-func (identity Identity) RolesToGroupIDs(...string) Permissions {
-	return NewPermissions()
+func (identity Identity) RolesToGroupIDs(roleIDs ...string) Permissions {
+	return defaultRolesToGroupIDs(identity.IdentityID, roleIDs...)
 }
 
 // RolesToPrivilegeIDs returns a map of RoleIDs to Privilege strings
-func (identity Identity) RolesToPrivilegeIDs(...string) Permissions {
+func (identity Identity) RolesToPrivilegeIDs(roleIDs ...string) Permissions {
 	return NewPermissions()
 }
 

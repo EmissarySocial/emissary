@@ -6,7 +6,6 @@ import (
 	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/slice"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/golang-jwt/jwt/v5"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -75,9 +74,9 @@ func (authorization Authorization) Scopes() []string {
 	return strings.Split(authorization.Scope, " ")
 }
 
-func (authorization Authorization) Dump() {
+func (authorization Authorization) Debug() mapof.Any {
 
-	spew.Dump(mapof.Any{
+	return mapof.Any{
 		"userID":      authorization.UserID,
 		"identityID":  authorization.IdentityID,
 		"groupIDs":    authorization.GroupIDs,
@@ -85,5 +84,5 @@ func (authorization Authorization) Dump() {
 		"scope":       authorization.Scope,
 		"domainOwner": authorization.DomainOwner,
 		"apiUser":     authorization.APIUser,
-	})
+	}
 }

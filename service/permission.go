@@ -44,55 +44,36 @@ func (service *Permission) UserCan(authorization *model.Authorization, template 
 	// Get a list of the valid roles for this action
 	accessList := action.AccessList[accessLister.State()]
 
-	// If Anonymous access is allowed, then EVERYONE can perform this action
-	if accessList.Anonymous {
+	// Map the list of allowed roles to a list of GroupIDs
+	permissions := accessLister.RolesToGroupIDs(accessList...)
+
+	if permissions.IsAnonymous() {
 		return true, nil
 	}
 
 	// These checks are only valid if the request includes a UserID
 	if authorization.IsAuthenticated() {
 
-		// These checks are only valid if the page request is authenticated (via a UserID)
 		// If the user is a domain owner, then they can do anything
 		if authorization.DomainOwner {
 			return true, nil
 		}
 
-		// If the accessList allows "authenticated" access, then any authenticated user can perform this action
-		if accessList.Authenticated {
+		// If the permissions require an "authenticated" user, then allow the request
+		if permissions.IsAuthenticated() {
 			return true, nil
 		}
 
-		// If the accessList allows "author" access, then check to see if the user is the author of this object
-		if accessList.Author {
-			if accessLister.IsAuthor(authorization.UserID) {
-				return true, nil
-			}
-		}
-
-		// If the accessList allows "myself" access, then check to see if this user is "myself"
-		if accessList.Self {
-			if accessLister.IsMyself(authorization.UserID) {
-				return true, nil
-			}
-		}
-
-		// Check for group access via the Authorization object
-		if len(accessList.Groups) > 0 {
-
-			// Map the list of allowed roles to a list of GroupIDs
-			groupIDs := accessLister.RolesToGroupIDs(accessList.Groups...)
-
-			if authorization.IsGroupMember(groupIDs...) {
-				return true, nil
-			}
+		// Otherwise, check if the authorization includes one of the required permissions
+		if authorization.IsGroupMember(permissions...) {
+			return true, nil
 		}
 	}
 
 	// These checks are only valid if the request includes an IdentityID
 	if authorization.IsIdentity() {
 
-		hasRole, err := service.hasPrivilege(authorization, accessLister, accessList.Privileges...)
+		hasRole, err := service.hasPrivilege(authorization, accessLister, accessList...)
 
 		if err != nil {
 			return false, derp.Wrap(err, location, "Unable to check user roles")

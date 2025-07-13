@@ -63,3 +63,25 @@ func objectID(value string) primitive.ObjectID {
 	result, _ := primitive.ObjectIDFromHex(value)
 	return result
 }
+
+func defaultRolesToGroupIDs(ownerID primitive.ObjectID, roleIDs ...string) Permissions {
+	result := make(Permissions, 0, len(roleIDs))
+
+	for _, roleID := range roleIDs {
+		switch roleID {
+
+		case MagicRoleAnonymous:
+			result = append(result, MagicGroupIDAnonymous)
+
+		case MagicRoleAuthenticated:
+			result = append(result, MagicGroupIDAuthenticated)
+
+		case MagicRoleMyself, MagicRoleAuthor:
+			if !ownerID.IsZero() {
+				result = append(result, ownerID)
+			}
+		}
+	}
+
+	return result
+}

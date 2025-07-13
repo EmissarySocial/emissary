@@ -73,7 +73,7 @@ func (folder *Folder) IsMyself(userID primitive.ObjectID) bool {
 // RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.
 // It is part of the AccessLister interface
 func (folder *Folder) RolesToGroupIDs(roleIDs ...string) Permissions {
-	return NewPermissions()
+	return defaultRolesToGroupIDs(folder.UserID, roleIDs...)
 }
 
 // RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.

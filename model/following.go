@@ -87,7 +87,7 @@ func (following *Following) IsMyself(userID primitive.ObjectID) bool {
 // RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.
 // It is part of the AccessLister interface
 func (following *Following) RolesToGroupIDs(roleIDs ...string) Permissions {
-	return NewPermissions()
+	return defaultRolesToGroupIDs(following.UserID, roleIDs...)
 }
 
 // RolesToPrivilegeIDs returns a slice of Privileges that grant access to any of the requested roles.

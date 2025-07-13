@@ -79,7 +79,7 @@ func (rule *Rule) IsMyself(userID primitive.ObjectID) bool {
 // RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.
 // It is part of the AccessLister interface
 func (rule *Rule) RolesToGroupIDs(roleIDs ...string) Permissions {
-	return NewPermissions()
+	return defaultRolesToGroupIDs(rule.UserID, roleIDs...)
 }
 
 // RolesToPrivilegeIDs returns a slice of Privileges that grant access to any of the requested roles
