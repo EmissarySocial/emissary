@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"html/template"
 	"io/fs"
-	"maps"
+	"slices"
 	"strings"
+
+	"github.com/benpate/rosetta/maps"
 
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
@@ -116,6 +118,12 @@ func (service *ServerEmail) Add(filesystem fs.FS, definition []byte) error {
 	return nil
 }
 
+func (service *ServerEmail) Names() []string {
+	result := maps.Keys(service.emails)
+	slices.Sort(result)
+	return result
+}
+
 /******************************************
  * Send Emails API
  ******************************************/
@@ -138,7 +146,7 @@ func (service *ServerEmail) Send(smtpConnection config.SMTPConnection, owner con
 
 	// Require that the email is defined for the correct model
 	if email.Model != model {
-		return derp.BadRequestError(location, "Email is not defined for this model", emailID, model)
+		return derp.BadRequestError(location, "Email requires a different model object", "email: "+emailID, "required model: "+email.Model, "requested model: "+model)
 	}
 
 	// If the SMTP Connection is empty, then don't try to send an email

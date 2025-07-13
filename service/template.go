@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"io/fs"
 	"maps"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -15,6 +16,7 @@ import (
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/channel"
 	"github.com/benpate/rosetta/mapof"
+	rosettamaps "github.com/benpate/rosetta/maps"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/hjson/hjson-go/v4"
@@ -517,6 +519,13 @@ func (service *Template) calculateAccessLists() error {
 /******************************************
  * Common Data Methods
  ******************************************/
+
+func (service *Template) Names() []string {
+
+	result := rosettamaps.Keys(service.templates)
+	slices.Sort(result)
+	return result
+}
 
 // List returns all templates that match the provided criteria
 func (service *Template) List(filter func(*model.Template) bool) []form.LookupCode {
