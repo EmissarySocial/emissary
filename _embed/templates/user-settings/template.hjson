@@ -212,7 +212,6 @@
 				{do:"with-circle", steps:[
 					{do:"delete", title:"Delete Circle?", message:"Are you sure you want to delete this circle? This will remove all access rights granted to circle members."}
 					{do:"forward-to", url:"/@me/settings/circles"}
-					{do:"refresh-page"}
 				]}
 			]
 		}
