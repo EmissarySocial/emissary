@@ -350,6 +350,9 @@ func (service *Circle) RefreshMemberCounts(userID primitive.ObjectID, circleID p
 	// Load the circle to ensure it exists
 	circle := model.NewCircle()
 	if err := service.LoadByID(userID, circleID, &circle); err != nil {
+		if derp.IsNotFound(err) {
+			return nil
+		}
 		return derp.Wrap(err, location, "Error loading Circle", circleID)
 	}
 
