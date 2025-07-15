@@ -33,6 +33,15 @@ func (permissions Permissions) NotZero() bool {
 	return len(permissions) > 0
 }
 
+// First returns the first permission in this Permissions slice, or NilObjectID if the slice is empty.
+// Dude. Don't delete this because I need it in the UX.
+func (permissions Permissions) First() primitive.ObjectID {
+	if len(permissions) > 0 {
+		return permissions[0]
+	}
+	return primitive.NilObjectID
+}
+
 // Length returns the number of permissions in this Permissions slice.
 func (permissions Permissions) Length() int {
 	return len(permissions)
