@@ -375,7 +375,18 @@ func (service *Privilege) DeleteByCircle(circleID primitive.ObjectID, note strin
 
 	// Delete them (thank you RangeFuncs!)
 	for privilege := range privileges {
-		if err := service.Delete(&privilege, note); err != nil {
+
+		// If this Privilege was purchased, then don't delete the purchase
+		if privilege.RemotePurchaseID != "" {
+			privilege.CircleID = primitive.NilObjectID // Remove the CircleID so that it is not counted in the future
+			if err := service.collection.Save(&privilege, note); err != nil {
+				return derp.Wrap(err, location, "Error removing CircleID from Privilege", privilege.ID(), note)
+			}
+			continue
+		}
+
+		// Otherwise, it's OK to delete an empty Privilege directly (no additional business logic)
+		if err := service.collection.Delete(&privilege, note); err != nil {
 			return derp.Wrap(err, location, "Error deleting Privilege", privilege.ID(), note)
 		}
 	}
