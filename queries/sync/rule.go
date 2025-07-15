@@ -2,5 +2,5 @@ package sync
 
 {
   "userId": 1,
-  "rank": 1
+  "followingId": 1
 }
