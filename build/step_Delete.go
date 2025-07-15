@@ -58,7 +58,7 @@ func (step StepDelete) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
 	// Delete the object via the model service.
 	if err := builder.service().ObjectDelete(builder.object(), "Deleted"); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error deleting stream"))
+		return Halt().WithError(derp.Wrap(err, location, "Error deleting object"))
 	}
 
 	// If this object is also a SearchResulter, then we're gonna remove it from the search index
