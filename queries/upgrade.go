@@ -45,6 +45,7 @@ func UpgradeMongoDB(connectionString string, databaseName string, domain *model.
 		return nil
 	}
 
+	// Connect to the database
 	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(connectionString))
 
