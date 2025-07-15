@@ -27,7 +27,7 @@ func Version19(ctx context.Context, session *mongo.Database) error {
 			delete(record, "parentType")
 		}
 
-		if _, exists := record["activityType"]; exists {
+		if _, exists := record["type"]; exists {
 			record["activityType"] = "Create"
 			delete(record, "type")
 		}
