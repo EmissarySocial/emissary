@@ -8,9 +8,6 @@ func TestConfig(t *testing.T) {
 	s := Schema()
 
 	table := []tableTestItem{
-		{"providers.0.providerId", "GIPHY", nil},
-		{"providers.0.clientId", "CLIENT_ID", nil},
-		{"providers.0.clientSecret", "CLIENT_SECRET", nil},
 		{"domains.0.label", "LABEL", nil},
 		{"domains.0.hostname", "HOSTNAME", nil},
 		{"domains.0.connectString", "CONNECT_STRING", nil},
@@ -25,7 +22,7 @@ func TestConfig(t *testing.T) {
 		{"domains.0.owner.emailAddress", "EMAIL@ADDRESS.COM", nil},
 		{"domains.0.owner.phoneNumber", "PHONE_NUMBER", nil},
 		{"domains.0.owner.mailingAddress", "MAILING_ADDRESS", nil},
-		{"domains.0.keyEncryptingKey", "12345678901234567890123456789012", nil},
+		{"domains.0.masterKey", "1234567890123456789012345678901234567890123456789012345678901234", nil},
 
 		{"templates.0.adapter", "S3", nil},
 		{"templates.0.location", "LOCATION", nil},
