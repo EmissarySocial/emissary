@@ -2,6 +2,7 @@ package indexer
 
 import (
 	"context"
+	"sync"
 
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
@@ -10,9 +11,14 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+var mutex sync.Mutex
+
 func Sync(ctx context.Context, collection *mongo.Collection, newIndexes map[string]mongo.IndexModel) error {
 
 	const location = "tools.indexer.Sync"
+
+	mutex.Lock()
+	defer mutex.Unlock()
 
 	// Prepare the index set
 	for key, newIndex := range newIndexes {
@@ -32,6 +38,8 @@ func Sync(ctx context.Context, collection *mongo.Collection, newIndexes map[stri
 		return err
 	}
 
+	database := collection.Database().Name()
+
 	// Scan all existing indexes to Update or Delete
 	for currentIndex := range rangeFunc[mapof.Any](ctx, cursor) {
 
@@ -42,26 +50,30 @@ func Sync(ctx context.Context, collection *mongo.Collection, newIndexes map[stri
 			continue
 		}
 
-		log.Trace().Msg("Syncing Index: " + currentIndex.GetString("name"))
+		log.Trace().Str("database", database).Str("index", name).Msg("checking...")
 
 		// See if the index already exists in the new set
 		newIndex, exists := newIndexes[name]
 
-		if compareModel(currentIndex, newIndex) {
-			log.Debug().Msg("Skipping index: models are equal")
+		if !exists {
 			continue
 		}
 
 		delete(newIndexes, name)
 
-		log.Trace().Msg("Deleting Index: " + name)
+		if compareModel(currentIndex, newIndex) {
+			log.Debug().Str("database", database).Str("index", name).Msg("in sync.   ")
+			continue
+		}
+
+		log.Debug().Str("database", database).Str("index", name).Msg("deleting changed index...")
 		if bsonRaw, err := collection.Indexes().DropOne(ctx, name); err != nil {
 			derp.Report(derp.Wrap(err, location, "Error updating index", "index", name, newIndex, bsonRaw))
 			continue
 		}
 
 		if exists {
-			log.Debug().Msg("Adding Index: " + name)
+			log.Debug().Str("database", database).Str("index", name).Msg("recreating changed index...")
 			if bsonRaw, err := collection.Indexes().CreateOne(ctx, newIndex); err != nil {
 				derp.Report(derp.Wrap(err, location, "Error creating index", "index", name, newIndex, bsonRaw))
 				continue
@@ -71,7 +83,7 @@ func Sync(ctx context.Context, collection *mongo.Collection, newIndexes map[stri
 
 	// Add new indexes that are not already in the collection
 	for indexName, newIndex := range newIndexes {
-		log.Debug().Msg("Adding Index: " + indexName)
+		log.Debug().Str("database", database).Str("index", indexName).Msg("adding new index...")
 		if bsonRaw, err := collection.Indexes().CreateOne(ctx, newIndex); err != nil {
 			derp.Report(derp.Wrap(err, location, "Error creating index", "index", indexName, newIndex, bsonRaw))
 			continue
@@ -79,6 +91,5 @@ func Sync(ctx context.Context, collection *mongo.Collection, newIndexes map[stri
 	}
 
 	// Success.
-	log.Debug().Msg("DONE SYNCING INDEXES")
 	return nil
 }

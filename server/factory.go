@@ -17,6 +17,7 @@ import (
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/consumer"
 	"github.com/EmissarySocial/emissary/domain"
+	"github.com/EmissarySocial/emissary/queries"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/httpcache"
 	mongodb "github.com/benpate/data-mongo"
@@ -330,14 +331,20 @@ func (factory *Factory) refreshCommonDatabase(connection mapof.String) error {
 
 	factory.commonDatabase = client.Database(database)
 
-	log.Trace().Str("database", factory.commonDatabase.Name()).Msg("Finished resetting common database")
+	log.Trace().Str("database", factory.commonDatabase.Name()).Msg("Connected to common database")
 
 	// If there is already a cache connection in place,
 	// then close it before we open a new one
 	if oldConnection != nil {
 		if err := oldConnection.Client().Disconnect(context.Background()); err != nil {
-			derp.Report(derp.Wrap(err, location, "Error disconnecting from database"))
+			derp.Report(derp.Wrap(err, location, "Unable to disconnect from database"))
 		}
+	}
+
+	// Update indexes
+	log.Trace().Str("database", factory.commonDatabase.Name()).Msg("Synchronizing common database indexes")
+	if err := queries.SyncSharedIndexes(uri, database); err != nil {
+		return derp.Wrap(err, location, "Unable to sync common indexes")
 	}
 
 	return nil

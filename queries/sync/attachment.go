@@ -11,7 +11,7 @@ import (
 
 func Attachment(ctx context.Context, database *mongo.Database) error {
 
-	log.Debug().Str("database", database.Name()).Str("collection", "Attachment").Msg("Sync Indexes")
+	log.Debug().Str("database", database.Name()).Str("collection", "Attachment").Msg("COLLECTION:")
 
 	return indexer.Sync(ctx, database.Collection("Attachment"), indexer.IndexSet{
 
