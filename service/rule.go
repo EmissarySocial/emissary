@@ -268,9 +268,9 @@ func (service *Rule) LoadByTrigger(userID primitive.ObjectID, ruleType string, t
 func (service *Rule) LoadByFollowing(userID primitive.ObjectID, followingID primitive.ObjectID, ruleType string, trigger string, rule *model.Rule) error {
 
 	criteria := exp.Equal("userId", userID).
-		AndEqual("followingId", followingID).
 		AndEqual("type", ruleType).
-		AndEqual("trigger", trigger)
+		AndEqual("trigger", trigger).
+		AndEqual("followingId", followingID)
 
 	return service.Load(criteria, rule)
 }
@@ -301,31 +301,8 @@ func (service *Rule) QueryByType(userID primitive.ObjectID, ruleType string, cri
 	return result, err
 }
 
-func (service *Rule) QueryByTypeActor(userID primitive.ObjectID, criteria exp.Expression, options ...option.Option) ([]model.Rule, error) {
-	return service.QueryByType(userID, model.RuleTypeActor, criteria, options...)
-}
-
 func (service *Rule) QueryByTypeDomain(userID primitive.ObjectID, criteria exp.Expression, options ...option.Option) ([]model.Rule, error) {
 	return service.QueryByType(userID, model.RuleTypeDomain, criteria, options...)
-}
-
-func (service *Rule) QueryByTypeContent(userID primitive.ObjectID, criteria exp.Expression, options ...option.Option) ([]model.Rule, error) {
-	return service.QueryByType(userID, model.RuleTypeContent, criteria, options...)
-}
-
-// QueryByActor retrieves a slice of RuleSummaries that match the provided User and Actor
-func (service *Rule) QueryByActor(userID primitive.ObjectID, actorID string) ([]model.RuleSummary, error) {
-
-	criteria := exp.And(
-		service.byUserID(userID),
-		exp.Or(
-			exp.Equal("type", model.RuleTypeActor).AndEqual("trigger", actorID),
-			exp.Equal("type", model.RuleTypeDomain).AndEqual("trigger", domain.NameOnly(actorID)),
-			exp.Equal("type", model.RuleTypeContent),
-		),
-	)
-
-	return service.QuerySummary(criteria)
 }
 
 // QueryByActorAndActions retrieves a slice of RuleSummaries that match the provided User, Actor, and potential actions

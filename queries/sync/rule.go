@@ -7,6 +7,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func Rule(ctx context.Context, database *mongo.Database) error {
@@ -18,8 +19,22 @@ func Rule(ctx context.Context, database *mongo.Database) error {
 		"idx_Rule_User": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "userId", Value: 1},
+				{Key: "type", Value: 1},
+				{Key: "trigger", Value: 1},
 				{Key: "followingId", Value: 1},
 			},
+		},
+
+		"idx_Rule_User_Public": mongo.IndexModel{
+			Keys: bson.D{
+				{Key: "userId", Value: 1},
+				{Key: "type", Value: 1},
+				{Key: "trigger", Value: 1},
+				{Key: "publishDate", Value: -1},
+			},
+			Options: options.Index().SetUnique(true).SetPartialFilterExpression(bson.D{
+				{Key: "public", Value: true},
+			}),
 		},
 	})
 }

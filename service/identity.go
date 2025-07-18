@@ -359,22 +359,6 @@ func (service *Identity) LoadByWebfingerUsername(username string, identity *mode
 	return service.Load(criteria, identity)
 }
 
-func (service *Identity) RangeByIdentity(identityID primitive.ObjectID) (iter.Seq[model.Identity], error) {
-
-	const location = "service.Identity.RangeByIdentity"
-
-	// RULE: IdentityID must be provided
-	if identityID.IsZero() {
-		return nil, derp.BadRequestError(location, "IdentityID cannot be empty", identityID)
-	}
-
-	// Create a criteria to find the Identity by ID
-	criteria := exp.Equal("identityId", identityID)
-
-	// Return query as a RangeFunc
-	return service.Range(criteria)
-}
-
 // RangeByIdentifiers returns an iterator containing all of the Identities that match ANY of the provided identifiers.
 func (service *Identity) RangeByIdentifiers(emailAddress string, webfingerUsername string, activityPubActor string) (iter.Seq[model.Identity], error) {
 

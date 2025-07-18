@@ -15,6 +15,13 @@ func SearchTag(ctx context.Context, database *mongo.Database) error {
 
 	return indexer.Sync(ctx, database.Collection("SearchTag"), indexer.IndexSet{
 
+		"idx_SearchTag_Value": mongo.IndexModel{
+			Keys: bson.D{
+				{Key: "value", Value: 1},
+				{Key: "stateId", Value: 1},
+			},
+		},
+
 		"idx_SearchTag_State_Name": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "stateId", Value: 1},

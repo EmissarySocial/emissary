@@ -17,8 +17,9 @@ func Follower(ctx context.Context, database *mongo.Database) error {
 
 		"idx_Follower_Parent": mongo.IndexModel{
 			Keys: bson.D{
-				{Key: "parentType", Value: 1},
+				{Key: "type", Value: 1},
 				{Key: "parentId", Value: 1},
+				{Key: "method", Value: 1},
 			},
 		},
 	})

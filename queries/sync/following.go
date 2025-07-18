@@ -15,10 +15,23 @@ func Following(ctx context.Context, database *mongo.Database) error {
 
 	return indexer.Sync(ctx, database.Collection("Following"), indexer.IndexSet{
 
-		"idx_Following_UserID": mongo.IndexModel{
+		"idx_Following_User_Folder": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "userId", Value: 1},
 				{Key: "folderId", Value: 1},
+			},
+		},
+
+		"idx_Following_User_Profile": mongo.IndexModel{
+			Keys: bson.D{
+				{Key: "userId", Value: 1},
+				{Key: "profileUrl", Value: 1},
+			},
+		},
+
+		"idx_Following_NextPoll": mongo.IndexModel{
+			Keys: bson.D{
+				{Key: "nextPoll", Value: 1},
 			},
 		},
 	})

@@ -15,10 +15,23 @@ func Outbox(ctx context.Context, database *mongo.Database) error {
 
 	return indexer.Sync(ctx, database.Collection("Outbox"), indexer.IndexSet{
 
-		"idx_Outbox_Parent": mongo.IndexModel{
+		"idx_Outbox_Actor": mongo.IndexModel{
 			Keys: bson.D{
-				{Key: "parentType", Value: 1},
-				{Key: "parentId", Value: 1},
+				{Key: "actorType", Value: 1},
+				{Key: "actorId", Value: 1},
+				{Key: "createDate", Value: -1},
+			},
+		},
+
+		"idx_Outbox_Permissions": mongo.IndexModel{
+			Keys: bson.D{
+				{Key: "permissions", Value: 1},
+			},
+		},
+
+		"idx_Outbox_Object": mongo.IndexModel{
+			Keys: bson.D{
+				{Key: "objectId", Value: 1},
 			},
 		},
 	})

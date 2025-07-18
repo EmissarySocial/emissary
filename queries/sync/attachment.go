@@ -20,6 +20,7 @@ func Attachment(ctx context.Context, database *mongo.Database) error {
 				{Key: "objectType", Value: 1},
 				{Key: "objectId", Value: 1},
 				{Key: "category", Value: 1},
+				{Key: "rank", Value: 1},
 			},
 		},
 	})

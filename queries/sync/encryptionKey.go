@@ -17,7 +17,6 @@ func EncryptionKey(ctx context.Context, database *mongo.Database) error {
 
 		"idx_EncryptionKey_Parent": mongo.IndexModel{
 			Keys: bson.D{
-				{Key: "parentType", Value: 1},
 				{Key: "parentId", Value: 1},
 			},
 		},

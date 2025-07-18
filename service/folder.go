@@ -248,16 +248,6 @@ func (service *Folder) LoadByLabel(userID primitive.ObjectID, label string, resu
 	return service.Load(criteria, result)
 }
 
-// LoadBySource locates a single stream that matches the provided OriginURL
-func (service *Folder) LoadByOriginURL(userID primitive.ObjectID, originURL string, result *model.Folder) error {
-
-	criteria := exp.
-		Equal("userId", userID).
-		AndEqual("origin.url", originURL)
-
-	return service.Load(criteria, result)
-}
-
 /******************************************
  * Other Behaviors
  ******************************************/

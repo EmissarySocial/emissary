@@ -244,24 +244,6 @@ func (service *Inbox) LoadByID(userID primitive.ObjectID, messageID primitive.Ob
 	return service.Load(criteria, result)
 }
 
-func (service *Inbox) LoadByRank(userID primitive.ObjectID, folderID primitive.ObjectID, rankExpression exp.Expression, result *model.Message, options ...option.Option) error {
-	criteria := exp.Equal("userId", userID).
-		AndEqual("folderId", folderID).
-		And(rankExpression)
-
-	it, err := service.List(criteria, options...)
-
-	if err != nil {
-		return derp.Wrap(err, "service.Inbox.LoadByRank", "Error loading Inbox", userID, folderID, rankExpression)
-	}
-
-	for it.Next(result) {
-		return nil
-	}
-
-	return derp.NotFoundError("service.Inbox.LoadByRank", "Inbox message not found", userID, folderID, rankExpression)
-}
-
 // LoadByURL returns the first message that matches the provided UserID and URL
 func (service *Inbox) LoadByURL(userID primitive.ObjectID, url string, result *model.Message) error {
 	criteria := exp.Equal("userId", userID).

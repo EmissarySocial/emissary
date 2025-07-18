@@ -15,15 +15,22 @@ func SearchResult(ctx context.Context, database *mongo.Database) error {
 
 	return indexer.Sync(ctx, database.Collection("SearchResult"), indexer.IndexSet{
 
-		"idx_SearchResult_Date": mongo.IndexModel{
+		"idx_SearchResult_URL": mongo.IndexModel{
 			Keys: bson.D{
-				{Key: "date", Value: 1},
+				{Key: "url", Value: 1},
 			},
 		},
 
-		"idex_SearchResult_ReindexDate": mongo.IndexModel{
+		"idx_SearchResult_Notified": mongo.IndexModel{
 			Keys: bson.D{
-				{Key: "reindexDate", Value: 1},
+				{Key: "notifiedDate", Value: 1},
+				{Key: "timeoutDate", Value: -1},
+			},
+		},
+
+		"idx_SearchResult_Locked": mongo.IndexModel{
+			Keys: bson.D{
+				{Key: "lockId", Value: 1},
 			},
 		},
 
@@ -31,6 +38,7 @@ func SearchResult(ctx context.Context, database *mongo.Database) error {
 			Keys: bson.D{
 				{Key: "type", Value: 1},
 				{Key: "tags", Value: 1},
+				{Key: "shuffle", Value: 1},
 			},
 		},
 
@@ -38,12 +46,7 @@ func SearchResult(ctx context.Context, database *mongo.Database) error {
 			Keys: bson.D{
 				{Key: "type", Value: 1},
 				{Key: "index", Value: 1},
-			},
-		},
-
-		"idx_SearchResult_URL": mongo.IndexModel{
-			Keys: bson.D{
-				{Key: "url", Value: 1},
+				{Key: "shuffle", Value: 1},
 			},
 		},
 	})
