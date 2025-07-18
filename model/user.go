@@ -226,7 +226,10 @@ func (user User) GetJSONLD() mapof.Any {
 		vocab.PropertyFollowing:         user.ActivityPubFollowingURL(),
 		vocab.PropertyFollowers:         user.ActivityPubFollowersURL(),
 		vocab.PropertyLiked:             user.ActivityPubLikedURL(),
-		vocab.PropertyFeatured:          user.ActivityPubFeaturedURL(),
+
+		// Removing "Featured" until I can sort out how to use it for Bandwagon "featured" posts
+		// WITHOUT making all of the posts "pinned" --> https://mastodon.me.uk/@delanthear/114873976765234644
+		// vocab.PropertyFeatured:          user.ActivityPubFeaturedURL(),
 	}
 
 	if user.StatusMessage != "" {
