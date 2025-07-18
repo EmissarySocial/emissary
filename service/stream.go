@@ -452,11 +452,6 @@ func (service *Stream) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
-// RangeAll returns a RangeFunc over all streams
-func (service *Stream) RangeAll() (iter.Seq[model.StreamSummary], error) {
-	return service.RangeSummary(exp.All())
-}
-
 // RangePublished returns a RangeFunc over all streams that are currently published
 func (service *Stream) RangePublished() (iter.Seq[model.Stream], error) {
 

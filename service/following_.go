@@ -335,17 +335,6 @@ func (service *Following) Schema() schema.Schema {
 }
 
 /******************************************
- * ActivityPub Queries
- ******************************************/
-
-func (service *Following) ListActivityPub(userID primitive.ObjectID, options ...option.Option) (data.Iterator, error) {
-	criteria := exp.Equal("userId", userID).
-		AndEqual("method", model.FollowingMethodActivityPub)
-
-	return service.List(criteria, options...)
-}
-
-/******************************************
  * Custom Queries
  ******************************************/
 
@@ -388,7 +377,7 @@ func (service *Following) ListPollable() (data.Iterator, error) {
 // RangeByUserID returns an iterator of all following for a given userID
 func (service *Following) RangeByUserID(userID primitive.ObjectID) (iter.Seq[model.Following], error) {
 	criteria := exp.Equal("userId", userID)
-	return service.Range(criteria, option.SortAsc("lastPolled"))
+	return service.Range(criteria)
 }
 
 // LoadByID retrieves an Following from the database.  UserID is required to prevent

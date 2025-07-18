@@ -156,11 +156,6 @@ func (service *SearchResult) Delete(searchResult *model.SearchResult, note strin
  * Custom Queries
  ******************************************/
 
-// RangeAll returns an iterator function that loops over ALL SearchResults in the database.
-func (service *SearchResult) RangeAll() (iter.Seq[model.SearchResult], error) {
-	return service.Range(exp.All())
-}
-
 // LoadByURL returns a single SearchResult that matches the provided URL
 
 func (service *SearchResult) LoadByURL(url string, searchResult *model.SearchResult) error {
@@ -302,7 +297,6 @@ func (service *SearchResult) QueryUnnotifiedAndUnlocked() ([]primitive.ObjectID,
 		exp.Equal("notifiedDate", 0).
 			AndLessThan("timeoutDate", time.Now().Unix()),
 		option.MaxRows(32),
-		option.SortAsc("createDate"),
 	)
 
 	if err != nil {

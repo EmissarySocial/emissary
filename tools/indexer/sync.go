@@ -32,6 +32,8 @@ func Sync(ctx context.Context, collection *mongo.Collection, newIndexes map[stri
 		return err
 	}
 
+	database := collection.Database().Name()
+
 	// Scan all existing indexes to Update or Delete
 	for currentIndex := range rangeFunc[mapof.Any](ctx, cursor) {
 
@@ -42,26 +44,28 @@ func Sync(ctx context.Context, collection *mongo.Collection, newIndexes map[stri
 			continue
 		}
 
-		log.Trace().Msg("Syncing Index: " + currentIndex.GetString("name"))
-
 		// See if the index already exists in the new set
 		newIndex, exists := newIndexes[name]
 
-		if compareModel(currentIndex, newIndex) {
-			log.Debug().Msg("Skipping index: models are equal")
+		if !exists {
 			continue
 		}
 
 		delete(newIndexes, name)
 
-		log.Trace().Msg("Deleting Index: " + name)
+		if compareModel(currentIndex, newIndex) {
+			log.Debug().Str("database", database).Str("index", name).Msg("index in sync.")
+			continue
+		}
+
+		log.Debug().Str("database", database).Str("index", name).Msg("deleting changed index...")
 		if bsonRaw, err := collection.Indexes().DropOne(ctx, name); err != nil {
 			derp.Report(derp.Wrap(err, location, "Error updating index", "index", name, newIndex, bsonRaw))
 			continue
 		}
 
 		if exists {
-			log.Debug().Msg("Adding Index: " + name)
+			log.Debug().Str("database", database).Str("index", name).Msg("recreating changed index...")
 			if bsonRaw, err := collection.Indexes().CreateOne(ctx, newIndex); err != nil {
 				derp.Report(derp.Wrap(err, location, "Error creating index", "index", name, newIndex, bsonRaw))
 				continue
@@ -71,7 +75,7 @@ func Sync(ctx context.Context, collection *mongo.Collection, newIndexes map[stri
 
 	// Add new indexes that are not already in the collection
 	for indexName, newIndex := range newIndexes {
-		log.Debug().Msg("Adding Index: " + indexName)
+		log.Debug().Str("database", database).Str("index", indexName).Msg("adding new index...")
 		if bsonRaw, err := collection.Indexes().CreateOne(ctx, newIndex); err != nil {
 			derp.Report(derp.Wrap(err, location, "Error creating index", "index", indexName, newIndex, bsonRaw))
 			continue
@@ -79,6 +83,5 @@ func Sync(ctx context.Context, collection *mongo.Collection, newIndexes map[stri
 	}
 
 	// Success.
-	log.Debug().Msg("DONE SYNCING INDEXES")
 	return nil
 }
