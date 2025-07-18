@@ -341,11 +341,9 @@ func (factory *Factory) refreshCommonDatabase(connection mapof.String) error {
 		}
 	}
 
-	// Update indexes
+	// Update indexes asynchronously
 	log.Trace().Str("database", factory.commonDatabase.Name()).Msg("Synchronizing common database indexes")
-	if err := queries.SyncSharedIndexes(uri, database); err != nil {
-		return derp.Wrap(err, location, "Unable to sync common indexes")
-	}
+	go derp.Report(queries.SyncSharedIndexes(uri, database))
 
 	return nil
 }

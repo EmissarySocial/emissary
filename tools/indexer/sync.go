@@ -2,6 +2,7 @@ package indexer
 
 import (
 	"context"
+	"sync"
 
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
@@ -10,9 +11,15 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+var lock sync.Mutex
+
 func Sync(ctx context.Context, collection *mongo.Collection, newIndexes map[string]mongo.IndexModel) error {
 
 	const location = "tools.indexer.Sync"
+
+	// Only allow one "sync" operation to run at a time.
+	lock.Lock()
+	defer lock.Unlock()
 
 	// Prepare the index set
 	for key, newIndex := range newIndexes {

@@ -116,10 +116,8 @@ func (service *Domain) Start() error {
 		return derp.Wrap(err, location, "Domain Not Ready: Error upgrading domain record")
 	}
 
-	// Update indexes
-	if err := queries.SyncDomainIndexes(service.configuration.ConnectString, service.configuration.DatabaseName); err != nil {
-		return derp.Wrap(err, location, "Domain Not Ready: Error syncing MongoDB indexes")
-	}
+	// Update indexes asynchronously
+	go derp.Report(queries.SyncDomainIndexes(service.configuration.ConnectString, service.configuration.DatabaseName))
 
 	return nil
 }
