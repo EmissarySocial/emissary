@@ -17,6 +17,13 @@ func Document(ctx context.Context, database *mongo.Database) error {
 
 	return indexer.Sync(ctx, database.Collection("Document"), indexer.IndexSet{
 
+		"idx_Document_Metadata": mongo.IndexModel{
+			Keys: bson.D{
+				{Key: "metadata.relationType", Value: 1},
+				{Key: "metadata.relationHref", Value: 1},
+			},
+		},
+
 		"idx_Document_FullText": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "_fts", Value: "text"},
