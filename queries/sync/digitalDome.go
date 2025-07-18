@@ -16,24 +16,9 @@ func DigitalDome(ctx context.Context, database *mongo.Database) error {
 
 	return indexer.Sync(ctx, database.Collection("DigitalDome"), indexer.IndexSet{
 
-		"idx_DigitalDome_Lock": mongo.IndexModel{
+		"idx_DigitalDome_CreateDate": mongo.IndexModel{
 			Keys: bson.D{
-				{Key: "lockId", Value: 1},
-				{Key: "startDate", Value: 1},
-				{Key: "priority", Value: 1},
-			},
-		},
-
-		"idx_DigitalDome_StartDate": mongo.IndexModel{
-			Keys: bson.D{
-				{Key: "startDate", Value: -1},
-				{Key: "timeoutDate", Value: -1},
-			},
-		},
-
-		"idx_DigitalDome_Signature": mongo.IndexModel{
-			Keys: bson.D{
-				{Key: "signature", Value: 1},
+				{Key: "createDate", Value: -1},
 			},
 		},
 	})
