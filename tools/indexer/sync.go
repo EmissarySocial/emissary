@@ -2,7 +2,6 @@ package indexer
 
 import (
 	"context"
-	"sync"
 
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
@@ -11,14 +10,9 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var mutex sync.Mutex
-
 func Sync(ctx context.Context, collection *mongo.Collection, newIndexes map[string]mongo.IndexModel) error {
 
 	const location = "tools.indexer.Sync"
-
-	mutex.Lock()
-	defer mutex.Unlock()
 
 	// Prepare the index set
 	for key, newIndex := range newIndexes {
@@ -50,8 +44,6 @@ func Sync(ctx context.Context, collection *mongo.Collection, newIndexes map[stri
 			continue
 		}
 
-		log.Trace().Str("database", database).Str("index", name).Msg("checking...")
-
 		// See if the index already exists in the new set
 		newIndex, exists := newIndexes[name]
 
@@ -62,7 +54,7 @@ func Sync(ctx context.Context, collection *mongo.Collection, newIndexes map[stri
 		delete(newIndexes, name)
 
 		if compareModel(currentIndex, newIndex) {
-			log.Debug().Str("database", database).Str("index", name).Msg("in sync.   ")
+			log.Debug().Str("database", database).Str("index", name).Msg("index in sync.")
 			continue
 		}
 
