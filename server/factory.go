@@ -221,7 +221,7 @@ func (factory *Factory) start() {
 			// Derp configuration
 			derp.Plugins.Clear()
 			derp.Plugins.Add(derpconsole.New())
-			derp.Plugins.Add(derpmongo.New(factory.commonDatabase.Collection("Errors")))
+			derp.Plugins.Add(derpmongo.New(factory.commonDatabase.Collection("Error")))
 
 			// Digital Dome configuration
 			collection := mongodb.NewCollection(factory.commonDatabase.Collection("DigitalDome"))

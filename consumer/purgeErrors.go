@@ -15,7 +15,7 @@ func PurgeErrors(factory ServerFactory) queue.Result {
 	log.Trace().Msg("Task: PurgeErrors")
 
 	// Purge old Error records from the error log
-	collection := factory.CommonDatabase().Collection("Errors")
+	collection := factory.CommonDatabase().Collection("Error")
 
 	_, err := collection.DeleteMany(
 		context.Background(),
