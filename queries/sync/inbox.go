@@ -26,18 +26,19 @@ func Inbox(ctx context.Context, database *mongo.Database) error {
 				SetPartialFilterExpression(bson.M{"deleteDate": 0}),
 		},
 
-		"idx_Inbox_URL": mongo.IndexModel{
+		"idx_Inbox_User_CreateDate": mongo.IndexModel{
 			Keys: bson.D{
-				{Key: "url", Value: 1},
+				{Key: "userId", Value: 1},
+				{Key: "folderId", Value: 1},
+				{Key: "createDate", Value: 1},
 			},
 			Options: options.Index().
 				SetPartialFilterExpression(bson.M{"deleteDate": 0}),
 		},
 
-		"idx_Inbox_User_CreateDate": mongo.IndexModel{
+		"idx_Inbox_URL": mongo.IndexModel{
 			Keys: bson.D{
-				{Key: "userId", Value: 1},
-				{Key: "createDate", Value: 1},
+				{Key: "url", Value: 1},
 			},
 			Options: options.Index().
 				SetPartialFilterExpression(bson.M{"deleteDate": 0}),
