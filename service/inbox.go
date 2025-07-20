@@ -534,16 +534,17 @@ func (service *Inbox) DeleteByFolder(userID primitive.ObjectID, folderID primiti
 }
 
 // QueryPurgeable returns a list of Inboxs that are older than the purge date for this following
-// TODO: HIGH: ReadDate is gone.  Need another way to purge messages.
-func (service *Inbox) QueryPurgeable(following *model.Following) ([]model.Message, error) {
+func (service *Inbox) RangePurgeable(following *model.Following) (iter.Seq[model.Message], error) {
 
 	// Purge date is X days before the current date
 	purgeDuration := time.Duration(following.PurgeDuration) * 24 * time.Hour
 	purgeDate := time.Now().Add(0 - purgeDuration).Unix()
 
 	// Activities in the INBOX can be purged if they are READ and older than the purge date
-	criteria := exp.GreaterThan("readDate", 0).
+	criteria := exp.
+		Equal("followingId", following.FollowingID).
+		AndGreaterThan("readDate", 0).
 		AndLessThan("readDate", purgeDate)
 
-	return service.Query(criteria)
+	return service.Range(criteria)
 }

@@ -105,16 +105,17 @@ func (service *Following) Start() {
 					derp.Report(derp.Wrap(err, location, "Error connecting to remote server"))
 				}
 
-				if err := service.PurgeInbox(following); err != nil {
-					derp.Report(derp.Wrap(err, location, "Error purghing inbox"))
-				}
+				// TODO: Reschedule this to run MUCH less frequently
+				// if err := service.PurgeInbox(following); err != nil {
+				//	derp.Report(derp.Wrap(err, location, "Error purghing inbox"))
+				// }
 			}
 
 			following = model.NewFollowing()
 		}
 
-		// Poll randomly between 45 and 75 minutes
-		time.Sleep(time.Duration(rand.Intn(30)+45) * time.Minute)
+		// Poll every 4 hours (plus 45 minute jitter)
+		time.Sleep(time.Duration(rand.Intn(45)+240) * time.Minute)
 	}
 }
 
@@ -481,13 +482,13 @@ func (service *Following) DeleteByUserID(userID primitive.ObjectID, comment stri
 }
 
 // PurgeInbox removes all inbox items that are past their expiration date.
-// TODO: LOW: Should this be in the Inbox service?
+// TODO: HIGH: This should be rescheduled to run less frequently
 func (service *Following) PurgeInbox(following model.Following) error {
 
 	const location = "service.Following.PurgeFollowing"
 
 	// Check each following for expired items.
-	items, err := service.inboxService.QueryPurgeable(&following)
+	messages, err := service.inboxService.RangePurgeable(&following)
 
 	// If there was an error querying for purgeable items, log it and exit.
 	if err != nil {
@@ -495,9 +496,9 @@ func (service *Following) PurgeInbox(following model.Following) error {
 	}
 
 	// Purge each item that has expired
-	for _, item := range items {
-		if err := service.inboxService.Delete(&item, "Purged"); err != nil {
-			return derp.Wrap(err, location, "Error purging item", item)
+	for message := range messages {
+		if err := service.inboxService.Delete(&message, "Purged"); err != nil {
+			return derp.Wrap(err, location, "Error purging message", message)
 		}
 	}
 
