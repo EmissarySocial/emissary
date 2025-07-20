@@ -22,14 +22,29 @@ func ScheduleDaily(serverFactory ServerFactory) queue.Result {
 	}
 
 	// Add a "Purge Errors" task to the queue
-	task := queue.NewTask(
-		"PurgeErrors",
-		nil,
-		queue.WithPriority(1000),
-	)
+	{
+		task := queue.NewTask(
+			"PurgeErrors",
+			nil,
+			queue.WithPriority(1000),
+		)
 
-	if err := serverFactory.Queue().Publish(task); err != nil {
-		return queue.Error(err)
+		if err := serverFactory.Queue().Publish(task); err != nil {
+			return queue.Error(err)
+		}
+	}
+
+	// Add a "Purge Dome Log" task to the queue
+	{
+		task := queue.NewTask(
+			"PurgeDomeLog",
+			nil,
+			queue.WithPriority(1000),
+		)
+
+		if err := serverFactory.Queue().Publish(task); err != nil {
+			return queue.Error(err)
+		}
 	}
 
 	// Daily tasks for each domain

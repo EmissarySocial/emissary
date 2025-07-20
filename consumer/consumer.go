@@ -46,6 +46,9 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 	case "PurgeErrors":
 		return PurgeErrors(consumer.serverFactory)
 
+	case "PurgeDomeLog":
+		return PurgeDomeLog(consumer.serverFactory)
+
 	case "ReceiveWebMention":
 		return WithFactory(consumer.serverFactory, args, ReceiveWebMention)
 
