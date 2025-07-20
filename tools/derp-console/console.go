@@ -1,5 +1,5 @@
 // Package console is a derp.Reporter that reports errors to the console in a pretty format.
-package console
+package derpconsole
 
 import (
 	"encoding/json"

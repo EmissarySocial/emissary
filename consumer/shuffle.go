@@ -12,7 +12,7 @@ import (
 // by updating the "shuffle" field to a unique random value.
 func Shuffle(factory *domain.Factory, _ mapof.Any) queue.Result {
 
-	const location = "consumer.Recycle"
+	const location = "consumer.Shuffle"
 
 	log.Trace().Str("host", factory.Hostname()).Msg("Task: Shuffle")
 

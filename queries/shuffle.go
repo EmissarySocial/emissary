@@ -38,7 +38,7 @@ func Shuffle(ctx context.Context, collection data.Collection) error {
 // shuffleA assigns a random number to the "shuffle" field for each record in the Collection
 func shuffleA(ctx context.Context, collection *mongo.Collection) error {
 
-	const location = "queries.Shuffle"
+	const location = "queries.shuffleA"
 
 	opts := options.FindOptions{
 		Projection: bson.M{"_id": 1},
@@ -79,7 +79,7 @@ func shuffleA(ctx context.Context, collection *mongo.Collection) error {
 // shuffleB sets the "shuffle" field to a sequential number
 func shuffleB(ctx context.Context, collection *mongo.Collection) error {
 
-	const location = "queries.Shuffle"
+	const location = "queries.shuffleB"
 
 	var shuffle int64
 

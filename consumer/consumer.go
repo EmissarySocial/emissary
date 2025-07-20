@@ -43,6 +43,9 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 	case "ProcessMedia":
 		return WithFactory(consumer.serverFactory, args, ProcessMedia)
 
+	case "PurgeErrors":
+		return PurgeErrors(consumer.serverFactory)
+
 	case "ReceiveWebMention":
 		return WithFactory(consumer.serverFactory, args, ReceiveWebMention)
 

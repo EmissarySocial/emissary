@@ -246,11 +246,7 @@ func (service *SearchResult) Shuffle() error {
 
 	const location = "service.Search.Shuffle"
 
-	// Make a timeout context for this request
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
-	defer cancel()
-
-	if err := queries.Shuffle(ctx, service.collection); err != nil {
+	if err := queries.Shuffle(context.Background(), service.collection); err != nil {
 		return derp.Wrap(err, location, "Error shuffling SearchResults")
 	}
 

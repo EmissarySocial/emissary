@@ -28,7 +28,7 @@ import (
 	mw "github.com/EmissarySocial/emissary/middleware"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
-	"github.com/EmissarySocial/emissary/tools/console"
+	derpconsole "github.com/EmissarySocial/emissary/tools/derp-console"
 	"github.com/benpate/derp"
 	"github.com/benpate/digital-dome/dome4echo"
 	"github.com/benpate/domain"
@@ -65,9 +65,9 @@ func main() {
 
 	go waitForSigInt()
 
-	// Derp configuration
+	// Derp configuration (rewritten once we have a shared database)
 	derp.Plugins.Clear()
-	derp.Plugins.Add(console.New())
+	derp.Plugins.Add(derpconsole.New())
 
 	// Troubleshoot / Error Reporting
 	spew.Config.DisableMethods = true

@@ -19,6 +19,8 @@ import (
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/queries"
 	"github.com/EmissarySocial/emissary/service"
+	derpconsole "github.com/EmissarySocial/emissary/tools/derp-console"
+	derpmongo "github.com/EmissarySocial/emissary/tools/derp-mongo"
 	"github.com/EmissarySocial/emissary/tools/httpcache"
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
@@ -213,8 +215,16 @@ func (factory *Factory) start() {
 
 		// Add logging to the Silicon Dome WAF
 		if factory.commonDatabase != nil {
-			log.Trace().Msg("Applying logger to Digital Dome")
-			collection := mongodb.NewSession(factory.commonDatabase).Collection("DigitalDome")
+
+			log.Trace().Msg("Setting up Common Database")
+
+			// Derp configuration
+			derp.Plugins.Clear()
+			derp.Plugins.Add(derpconsole.New())
+			derp.Plugins.Add(derpmongo.New(factory.commonDatabase.Collection("Errors")))
+
+			// Digital Dome configuration
+			collection := mongodb.NewCollection(factory.commonDatabase.Collection("DigitalDome"))
 			factory.digitalDome.With(dome.LogDatabase(collection))
 		}
 
@@ -699,6 +709,10 @@ func (factory *Factory) DigitalDome() *dome.Dome {
 
 func (factory *Factory) HTTPCache() *httpcache.HTTPCache {
 	return &factory.httpCache
+}
+
+func (factory *Factory) CommonDatabase() *mongo.Database {
+	return factory.commonDatabase
 }
 
 func (factory *Factory) port(domainConfig config.Domain) string {

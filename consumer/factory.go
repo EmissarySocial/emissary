@@ -5,10 +5,12 @@ import (
 
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/benpate/turbine/queue"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type ServerFactory interface {
 	RangeDomains() iter.Seq[*domain.Factory]
 	ByHostname(hostname string) (*domain.Factory, error)
 	Queue() *queue.Queue
+	CommonDatabase() *mongo.Database
 }
