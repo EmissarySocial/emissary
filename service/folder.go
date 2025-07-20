@@ -254,15 +254,25 @@ func (service *Folder) LoadByLabel(userID primitive.ObjectID, label string, resu
 
 func (service *Folder) ReCalculateUnreadCountFromFolder(userID primitive.ObjectID, folderID primitive.ObjectID) error {
 
+	const location = "service.Folder.ReCalculateUnreadCountFromFolder"
+
+	if userID.IsZero() {
+		return derp.BadRequestError(location, "UserID cannot be empty", userID)
+	}
+
+	if folderID.IsZero() {
+		return derp.BadRequestError(location, "FolderID cannot be empty", folderID)
+	}
+
 	// Try to load the folder
 	folder := model.NewFolder()
 	if err := service.LoadByID(userID, folderID, &folder); err != nil {
-		return derp.Wrap(err, "service.Folder.ReCalculateUnreadCountFromFolder", "Error loading folder")
+		return derp.Wrap(err, location, "Unable to load Folder")
 	}
 
 	// Recalculate unread counts
 	if err := service.CalculateUnreadCount(userID, folderID); err != nil {
-		return derp.Wrap(err, "service.Folder.ReCalculateUnReadCountFromFolder", "Error updating Unread count")
+		return derp.Wrap(err, location, "Unable to update `Unread` count")
 	}
 
 	return nil
