@@ -18,7 +18,7 @@ func Log(ctx context.Context, database *mongo.Database) error {
 
 		"idx_Log_CreateDate": mongo.IndexModel{
 			Keys: bson.D{
-				{Key: "createDate", Value: -1},
+				{Key: "createDate", Value: 1},
 			},
 		},
 	})
