@@ -30,6 +30,7 @@ type Config struct {
 	Source              string                       `json:"-"`                   // READONLY: Where did the initial config location come from?  (Command Line, Environment Variable, Default)
 	Location            string                       `json:"-"`                   // READONLY: Location where this config file is read from/to.  Not a part of the configuration itself.
 	MongoID             primitive.ObjectID           `json:"-" bson:"_id"`        // Used as unique key for MongoDB
+	QueryLogTimeout     int                          `json:"queryLogTimeout"`     // Timeout for logging slow queries (0 = do not log)
 }
 
 // NewConfig returns a fully initialized (but empty) Config data structure.

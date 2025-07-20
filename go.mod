@@ -8,8 +8,8 @@ require (
 	github.com/benpate/color v0.1.0
 	github.com/benpate/data v0.30.0
 	github.com/benpate/data-mock v0.30.0
-	github.com/benpate/data-mongo v0.30.1
-	github.com/benpate/derp v0.32.3
+	github.com/benpate/data-mongo v0.30.2
+	github.com/benpate/derp v0.32.4
 	github.com/benpate/digit v0.13.5
 	github.com/benpate/digital-dome v0.2.5
 	github.com/benpate/domain v0.2.7
@@ -50,10 +50,10 @@ require (
 	github.com/relvacode/iso8601 v1.6.0
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/afero v1.14.0
-	github.com/spf13/pflag v1.0.6
+	github.com/spf13/pflag v1.0.7
 	github.com/stretchr/testify v1.10.0
 	github.com/stripe/stripe-go/v78 v78.12.0
-	github.com/tdewolff/minify/v2 v2.23.8
+	github.com/tdewolff/minify/v2 v2.23.9
 	github.com/timewasted/go-accept-headers v0.0.0-20130320203746-c78f304b1b09
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
 	github.com/xhit/go-simple-mail/v2 v2.16.0
@@ -64,7 +64,7 @@ require (
 	go.abhg.dev/goldmark/anchor v0.2.0
 	go.mongodb.org/mongo-driver v1.17.4
 	golang.org/x/crypto v0.40.0
-	golang.org/x/exp v0.0.0-20250711185948-6ae5c78190dc
+	golang.org/x/exp v0.0.0-20250718183923-645b1fa84792
 	golang.org/x/oauth2 v0.30.0
 	willnorris.com/go/microformats v1.2.0
 	willnorris.com/go/webmention v0.0.0-20250531043116-33a44c5fb605

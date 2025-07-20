@@ -152,6 +152,9 @@ func (factory *Factory) start() {
 	// Read configuration files from the channel
 	for config := range factory.storage.Subscribe() {
 
+		// Set timeout threshold for slow queries
+		mongodb.SetLogTimeout(config.QueryLogTimeout)
+
 		// Set logging level from the configuration file
 		switch config.DebugLevel {
 
