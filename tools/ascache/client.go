@@ -293,6 +293,7 @@ func (client *Client) load(criteria bson.M, value *Value) error {
 		if err == mongo.ErrNoDocuments {
 			return derp.NotFoundError(location, "Document not found", criteria)
 		}
+
 		return derp.Wrap(err, location, "Error loading document", criteria)
 	}
 
@@ -303,9 +304,13 @@ func (client *Client) load(criteria bson.M, value *Value) error {
 // loadByURLs loads a Value from the cache using its URL.
 // This value can match any of the URLs in the "urls" array.
 func (client *Client) loadByURLs(url string, value *Value) error {
+
+	const location = "ascache.Client.loadByURLs"
+
 	if err := client.load(bson.M{"urls": url}, value); err != nil {
-		return derp.Wrap(err, "ascache.Client.loadByURLs", "Error loading document", url)
+		return derp.Wrap(err, location, "Error loading document", url)
 	}
+
 	return nil
 }
 
