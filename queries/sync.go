@@ -32,7 +32,7 @@ func SyncSharedIndexes(connectionString string, databaseName string) error {
 		derp.Report(err)
 	}
 
-	if err := sync.Error(ctx, session); err != nil {
+	if err := sync.ErrorLog(ctx, session); err != nil {
 		derp.Report(err)
 	}
 

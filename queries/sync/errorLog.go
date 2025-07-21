@@ -9,14 +9,14 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// Error synchronizes the Error collection in the SHARED DATABASE.
-func Error(ctx context.Context, database *mongo.Database) error {
+// ErrorLog synchronizes the ErrorLog collection in the SHARED DATABASE.
+func ErrorLog(ctx context.Context, database *mongo.Database) error {
 
 	log.Debug().Str("database", database.Name()).Str("collection", "ErrorLog").Msg("COLLECTION:")
 
-	return indexer.Sync(ctx, database.Collection("Log"), indexer.IndexSet{
+	return indexer.Sync(ctx, database.Collection("ErrorLog"), indexer.IndexSet{
 
-		"idx_Error_CreateDate": mongo.IndexModel{
+		"idx_ErrorLog_CreateDate": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "createDate", Value: 1},
 			},
