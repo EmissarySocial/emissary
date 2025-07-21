@@ -342,14 +342,23 @@ func (factory *Factory) refreshCommonDatabase(connection mapof.String) error {
 	uri := connection.GetString("connectString")
 	database := connection.GetString("database")
 
-	// ActivityStream cache is not configured.
-	if uri == "" || database == "" {
-		return derp.InternalError(location, "Common database is not configured")
+	// RULE: Must have URI
+	if uri == "" {
+		return derp.InternalError(location, "Must have a URI for the common database")
 	}
 
-	log.Trace().Str("database", database).Msg("Resetting common database")
+	// RULE: Must have a database name
+	if database == "" {
+		return derp.InternalError(location, "Must have a database name for the common database")
+	}
 
-	oldConnection := factory.commonDatabase
+	// If there is already a cache connection in place, then close it before we open a new one
+	if factory.commonDatabase != nil {
+		log.Trace().Str("database", database).Msg("Resetting common database")
+		if err := factory.commonDatabase.Client().Disconnect(context.Background()); err != nil {
+			derp.Report(derp.Wrap(err, location, "Unable to disconnect from database"))
+		}
+	}
 
 	// Try to connect to the cache database
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(uri))
@@ -358,17 +367,8 @@ func (factory *Factory) refreshCommonDatabase(connection mapof.String) error {
 		return derp.Wrap(err, location, "Unable to connect to database", uri)
 	}
 
+	log.Trace().Msg("Connected to common database")
 	factory.commonDatabase = client.Database(database)
-
-	log.Trace().Str("database", factory.commonDatabase.Name()).Msg("Connected to common database")
-
-	// If there is already a cache connection in place,
-	// then close it before we open a new one
-	if oldConnection != nil {
-		if err := oldConnection.Client().Disconnect(context.Background()); err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to disconnect from database"))
-		}
-	}
 
 	// Update indexes asynchronously
 	log.Trace().Str("database", factory.commonDatabase.Name()).Msg("Synchronizing common database indexes")
