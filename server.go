@@ -547,16 +547,14 @@ func gracefulShutdown(e *echo.Echo) {
 // errorHandler is a custom error handler that returns a JSON error message to the client
 func errorHandler(err error, ctx echo.Context) {
 
+	const location = "server.errorHandler"
+
 	// Special handling of permisssion errors
 	request := ctx.Request()
 
 	errorCode := derp.ErrorCode(err)
 
 	switch errorCode {
-
-	case http.StatusNotFound:
-		_ = ctx.String(derp.ErrorCode(err), derp.Message(err))
-		return
 
 	case http.StatusUnauthorized:
 
@@ -575,7 +573,8 @@ func errorHandler(err error, ctx echo.Context) {
 	fullURL := domain.AddProtocol(request.Host) + request.URL.String()
 
 	// Write the error to the console (on production and local domains)
-	derp.Report(derp.Wrap(err, "emissary.server.errorHandler", "Error generating web page", fullURL, ctx.Request().Header))
+	spew.Dump("REPORTING ERROR")
+	derp.Report(derp.Wrap(err, location, "Error generating web page", fullURL, ctx.Request().Header))
 
 	// Get the true hostname of the request.
 	hostname := domain.Hostname(request)

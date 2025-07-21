@@ -30,7 +30,8 @@ type Config struct {
 	Source              string                       `json:"-"`                   // READONLY: Where did the initial config location come from?  (Command Line, Environment Variable, Default)
 	Location            string                       `json:"-"`                   // READONLY: Location where this config file is read from/to.  Not a part of the configuration itself.
 	MongoID             primitive.ObjectID           `json:"-" bson:"_id"`        // Used as unique key for MongoDB
-	QueryLogTimeout     int                          `json:"queryLogTimeout"`     // Timeout for logging slow queries (0 = do not log)
+	Loggers             sliceof.Object[mapof.Any]    `json:"loggers"`             // Logging configuration for this server
+	LogSlowQueries      int                          `json:"logSlowQueries"`      // Log queries that take longer than this many milliseconds (0 = do not log)
 }
 
 // NewConfig returns a fully initialized (but empty) Config data structure.
@@ -43,6 +44,7 @@ func NewConfig() Config {
 		ExportCache:         make(mapof.String, 0),
 		Certificates:        make(mapof.String, 0),
 		ActivityPubCache:    make(mapof.String, 0),
+		Loggers:             make(sliceof.Object[mapof.Any], 0),
 	}
 }
 
@@ -53,13 +55,14 @@ func DefaultConfig() Config {
 		Domains: make(set.Slice[Domain], 0),
 
 		// File Locations
-		Templates:           sliceof.Object[mapof.String]{mapof.String{"adapter": "EMBED", "location": "templates"}},
+		Templates:           sliceof.Object[mapof.String]{{"adapter": "EMBED", "location": "templates"}},
 		AttachmentOriginals: mapof.String{"adapter": "FILE", "location": "./.emissary/attachments"},
 		AttachmentCache:     mapof.String{"adapter": "FILE", "location": "./.emissary/cache"},
 		ExportCache:         mapof.String{"adapter": "FILE", "location": "./.emissary/exports"},
 		Certificates:        mapof.String{"adapter": "FILE", "location": "./.emissary/certificates"},
 		ActivityPubCache:    mapof.String{},
 		DebugLevel:          "None",
+		Loggers:             sliceof.Object[mapof.Any]{{"type": "console"}},
 		HTTPPort:            8080,
 		HTTPSPort:           443,
 	}

@@ -155,7 +155,7 @@ func (factory *Factory) start() {
 	for config := range factory.storage.Subscribe() {
 
 		// Set timeout threshold for slow queries
-		mongodb.SetLogTimeout(config.QueryLogTimeout)
+		mongodb.SetLogTimeout(config.LogSlowQueries)
 
 		// Set logging level from the configuration file
 		switch config.DebugLevel {
@@ -218,14 +218,30 @@ func (factory *Factory) start() {
 
 			log.Trace().Msg("Setting up Common Database")
 
-			// Derp configuration
-			derp.Plugins.Clear()
-			derp.Plugins.Add(derpconsole.New())
-			derp.Plugins.Add(derpmongo.New(factory.commonDatabase.Collection("Error")))
-
 			// Digital Dome configuration
 			collection := mongodb.NewCollection(factory.commonDatabase.Collection("DigitalDome"))
 			factory.digitalDome.With(dome.LogDatabase(collection))
+
+			// Derp configuration
+			derp.Plugins.Clear()
+			for _, logger := range config.Loggers {
+
+				switch logger.GetString("type") {
+
+				case "console":
+					log.Trace().Msg("Adding console logger to DERP")
+					derp.Plugins.Add(derpconsole.New())
+
+				case "mongo":
+					log.Trace().Msg("Adding mongo logger to DERP")
+					derp.Plugins.Add(derpmongo.New(
+						factory.commonDatabase.Collection("ErrorLog"),
+						logger))
+
+				default:
+					log.Error().Str("type", logger.GetString("type")).Msg("Unknown logging type")
+				}
+			}
 		}
 
 		// Insert/Update a factory for each domain in the configuration

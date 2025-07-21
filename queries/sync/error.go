@@ -12,7 +12,7 @@ import (
 // Error synchronizes the Error collection in the SHARED DATABASE.
 func Error(ctx context.Context, database *mongo.Database) error {
 
-	log.Debug().Str("database", database.Name()).Str("collection", "Error").Msg("COLLECTION:")
+	log.Debug().Str("database", database.Name()).Str("collection", "ErrorLog").Msg("COLLECTION:")
 
 	return indexer.Sync(ctx, database.Collection("Log"), indexer.IndexSet{
 

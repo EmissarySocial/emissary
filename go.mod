@@ -9,7 +9,7 @@ require (
 	github.com/benpate/data v0.30.0
 	github.com/benpate/data-mock v0.30.0
 	github.com/benpate/data-mongo v0.30.2
-	github.com/benpate/derp v0.32.4
+	github.com/benpate/derp v0.32.5
 	github.com/benpate/digit v0.13.5
 	github.com/benpate/digital-dome v0.2.5
 	github.com/benpate/domain v0.2.7
