@@ -32,7 +32,6 @@ func User(ctx context.Context, database *mongo.Database) error {
 				{Key: "emailAddress", Value: 1},
 			},
 			Options: options.Index().
-				SetUnique(true).
 				SetPartialFilterExpression(bson.M{
 					"deleteDate": 0,
 				}),
