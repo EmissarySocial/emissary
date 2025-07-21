@@ -7,6 +7,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func SearchResult(ctx context.Context, database *mongo.Database) error {
@@ -19,6 +20,7 @@ func SearchResult(ctx context.Context, database *mongo.Database) error {
 			Keys: bson.D{
 				{Key: "url", Value: 1},
 			},
+			Options: options.Index().SetUnique(true),
 		},
 
 		"idx_SearchResult_Notified": mongo.IndexModel{
@@ -48,6 +50,15 @@ func SearchResult(ctx context.Context, database *mongo.Database) error {
 				{Key: "index", Value: 1},
 				{Key: "shuffle", Value: 1},
 			},
+		},
+
+		"idx_SearchResult_Date": mongo.IndexModel{
+			Keys: bson.D{
+				{Key: "date", Value: 1},
+			},
+			Options: options.Index().SetPartialFilterExpression(bson.M{
+				"date": bson.M{"$exists": true},
+			}),
 		},
 
 		"idx_SearchResult_Shuffle": mongo.IndexModel{
