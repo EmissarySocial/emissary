@@ -48,6 +48,7 @@ func Document(ctx context.Context, database *mongo.Database) error {
 			Keys: bson.D{
 				{Key: "urls", Value: 1},
 			},
+			Options: options.Index().SetUnique(true),
 		},
 	})
 }
