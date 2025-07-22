@@ -15,7 +15,17 @@
 	<!-- Main App Content -->
 	<div class="app-content">
 
-		<div class="pos-sticky flex-row" style="padding:8px 0px; top:56px; width:100%; background-color:var(--page-background);z-index:100;">
+		<div class="text-sm nowrap margin-top-sm pos-sticky" style="float:right; top:56px; padding:16px 0px 16px 16px; border-radius:4px; background-color:var(--page-background);">
+			<button hx-get="/@me/settings/following-search?folderId={{$folderID}}" class="primary turboclick">{{icon "add"}} Follow</button>
+			{{- if $filter.IsZero -}}
+				<button hx-get="/@me/inbox/filter?folderId={{$folderID}}" class="turboclick">{{icon "filter"}} Filter</button>
+			{{- else -}}
+				<button hx-get="/@me/inbox/filter?folderId={{$folderID}}&followingId={{$followingID}}" class="selected ellipsis turboclick" style="max-width:160px;">{{icon "filter-fill"}} {{$filter.Label}}</button>
+			{{- end -}}
+			<button hx-get="/@me/inbox/folder-edit?folderId={{$folderID}}" class="turboclick">{{icon "settings"}} Folder Settings</button>
+		</div>
+
+		<div class="flex-row">
 
 			{{- if $filter.NotZero -}}
 				{{- $following := .FollowingByToken $followingID -}}
@@ -42,18 +52,8 @@
 					</div>
 				</div>
 			{{- else -}}
-				<h1 class="margin-top-sm flex-grow-1">{{icon $folder.Icon}} {{$folder.Label}}</h1>
+				<h1 class="margin-top-sm margin-bottom flex-grow-1">{{icon $folder.Icon}} {{$folder.Label}}</h1>
 			{{- end -}}
-		</div>
-
-		<div class="text-sm nowrap margin-top-sm pos-absolute" style="top:8px; right:8px; z-index:1000;">
-			<button hx-get="/@me/settings/following-search?folderId={{$folderID}}" class="primary turboclick">{{icon "add"}} Follow</button>
-			{{- if $filter.IsZero -}}
-				<button hx-get="/@me/inbox/filter?folderId={{$folderID}}" class="turboclick">{{icon "filter"}} Filter</button>
-			{{- else -}}
-				<button hx-get="/@me/inbox/filter?folderId={{$folderID}}&followingId={{$followingID}}" class="selected ellipsis turboclick" style="max-width:160px;">{{icon "filter-fill"}} {{$filter.Label}}</button>
-			{{- end -}}
-			<button hx-get="/@me/inbox/folder-edit?folderId={{$folderID}}" class="turboclick">{{icon "settings"}} Folder Settings</button>
 		</div>
 
 		{{- template "list" . -}}

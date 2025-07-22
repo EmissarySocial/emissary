@@ -1,89 +1,141 @@
-{{- $inboxBuilder := index . 0 -}}
-{{- $message := index . 1 -}}
-{{- $stream := $inboxBuilder.ActivityStream $message.URL -}}
-{{- $image := $stream.ImageOrIcon -}}
-{{- $attributedTo := $stream.AttributedTo -}}
+{{- $inbox := .Inbox.Top12.ByPublishDate.Reverse.Slice -}}
+{{- $folderID := .QueryParam "folderId" -}}
+{{- $internalID := .QueryParam "origin.followingId" -}}
 
-{{- if eq "NEW-REPLIES" $message.StateID -}}
-	<div class="flex-row">
-		<div class="width-32 margin-right-sm"></div>
-		<div class="bold italics text-green text-sm">
-			{{icon "chat-fill"}} New Replies
-		</div>
-	</div>
-{{- else if eq "MUTED" $message.StateID -}}
-	<div class="flex-row">
-		<div class="width-32 margin-right-sm"></div>
-		<div class="bold italics text-gray text-sm">
-			{{icon "mute"}} Notifications Muted
-		</div>
-	</div>
-{{- end -}}
+{{- if $inbox.NotEmpty -}}
 
-<div class="flex-row">
-	<div class="width-32 margin-right-sm">
-		{{- if $attributedTo.Icon.NotNil -}}
-			<img src="{{$attributedTo.Icon.Href}}" class="circle width-32">
-		{{- else -}}
-			<div class="circle width-32"></div>
-		{{- end -}}
-	</div>
+	{{- $inboxBuilder := . -}}
+	{{- range $index, $message := $inbox -}}
 
-	<div>
+		<hr>
+		<div 
+			id="item_{{$message.MessageID.Hex}}" 
+			class="message"
+			script="install listItem(messageId:'{{.MessageID.Hex}}')">
 
-		{{- if ne "" $attributedTo.Name -}}
-			<div>
-				<span class="bold text-black">{{$attributedTo.Name}}</span>
-				{{- if ne "" $attributedTo.Username -}}
-					<span class="text-light-gray ellipsis">
-						&middot;
-						{{$attributedTo.Username}}
-					</span>
-				{{- end -}}
-			</div>
-		{{- else -}}
-			<div class="bold text-black">{{ $message.Origin.Label }} </div>
-		{{- end -}}
+			{{- $stream := $inboxBuilder.ActivityStream $message.URL -}}
+			{{- $image := $stream.ImageOrIcon -}}
+			{{- $attributedTo := $stream.AttributedTo -}}
 
-		{{- if ne "" $stream.Name -}}
-			<div>
-				<span class="bold text-black">{{$stream.Name}}</span>
-			</div>
-		{{- end -}}
-
-		{{- if $image.NotNil -}}
-			<div class="margin-bottom">
-				<img src="{{$image.Href}}" loading="lazy" class="width-100%" style="{{if $image.HasDimensions}}aspect-ratio:{{$image.AspectRatio}}{{end}}"/>
-			</div>
-		{{- end -}}
-
-		<div>
-			{{- if $stream.HasContent -}}
-				{{- $stream.Content | htmlMinimal -}}
-			{{- else if $stream.HasSummary -}}
-				{{- $stream.Summary | htmlMinimal -}}
+			{{- if eq "NEW-REPLIES" $message.StateID -}}
+				<div class="flex-row">
+					<div class="width-48 margin-right-sm"></div>
+					<div class="bold italics text-green text-sm">
+						{{icon "chat-fill"}} New Replies
+					</div>
+				</div>
+			{{- else if eq "MUTED" $message.StateID -}}
+				<div class="flex-row">
+					<div class="width-48 margin-right-sm"></div>
+					<div class="bold italics text-gray text-sm">
+						{{icon "mute"}} Notifications Muted
+					</div>
+				</div>
 			{{- end -}}
+
+			<div class="flex-row width-100%">
+				<div class="width-48 margin-right-sm noselect">
+					{{- if $attributedTo.Icon.NotNil -}}
+						<img src="{{$attributedTo.Icon.Href}}" class="circle width-48">
+					{{- else -}}
+						<div class="circle width-48"></div>
+					{{- end -}}
+				</div>
+
+				<div class="flex-grow">
+					{{- if ne "" $attributedTo.Name -}}
+						<div class="bold text-black">{{$attributedTo.Name}}</div>
+						{{- if ne "" $attributedTo.Username -}}
+							<div class="text-light-gray ellipsis">
+								{{$attributedTo.Username}}
+							</div>
+						{{- end -}}
+					{{- else -}}
+						<div class="bold text-black">{{ $message.Origin.Label }} </div>
+					{{- end -}}
+
+					{{- if ne "" $stream.Name -}}
+						<div>
+							<span class="bold text-black">{{$stream.Name}}</span>
+						</div>
+					{{- end -}}
+
+					<div class="margin-top">
+						{{- if $stream.HasContent -}}
+							{{- $stream.Content | htmlMinimal -}}
+						{{- else if $stream.HasSummary -}}
+							{{- $stream.Summary | htmlMinimal -}}
+						{{- end -}}
+					</div>
+
+					{{- if $image.NotNil -}}
+						<div class="margin-vertical">
+							<img src="{{$image.Href}}" loading="lazy" class="width-100%" style="{{if $image.HasDimensions}}aspect-ratio:{{$image.AspectRatio}}{{end}}"/>
+						</div>
+					{{- end -}}
+
+					{{- $stats := $stream.Statistics -}}
+
+					<div class="margin-top text-gray noselect">
+						<span 			
+							role="button"
+							hx-get="/@me/inbox/message?messageId={{$message.MessageID.Hex}}&url={{$message.URL}}&folderId={{$folderID}}&origin.followingId={{$internalID}}"
+							hx-push-url="false"
+							tabIndex="0"
+							class="clickable margin-right hover-swell" 
+							title="Reply to this item">{{icon "chat"}}</span>
+
+						<span class="margin-right hover-swell" title="Like this item">{{icon "heart"}}</span>
+
+						<span class="margin-right hover-swell" title="Share this item">{{icon "share"}}</span>
+
+						<span class="margin-right hover-swell" title="Bookmark this item">{{icon "bookmark"}}</span>
+
+						{{ if gt $stats.Replies 0 }}
+							&middot; <span
+								role="button"
+								hx-get="/@me/inbox/message?messageId={{$message.MessageID.Hex}}&url={{$message.URL}}&folderId={{$folderID}}&origin.followingId={{$internalID}}"
+								hx-push-url="false"
+								tabIndex="0"
+								class="margin-horizontal-sm">{{$stats.Replies}} {{pluralize $stats.Replies "Reply" "Replies"}}</span>
+						{{ end }}
+
+						{{ if gt $stats.Likes 0 }}
+							&middot; <span class="margin-horizontal-sm">{{$stats.Likes}} {{pluralize $stats.Likes "Like" "Likes"}}</span>
+						{{ end }}
+
+						{{ if gt $stats.Announces 0 }}
+							&middot; <span class="margin-horizontal-sm">{{$stats.Announces}} {{pluralize $stats.Announces "Share" "Shares"}}</span>
+						{{ end }}
+					</div>
+				</div>
+
+				<div class="text-sm text-light-gray nowrap align-right">
+					{{- $message.PublishDate | tinyDate }} ago
+				</div>
+
+			</div>
+			
 		</div>
+		
+	{{- end -}}
 
-		<div class="margin-top text-sm text-light-gray">
-
-			{{- $stats := $stream.Statistics -}}
-			{{- $message.UpdateDate | tinyDate }} ago
-
-			{{ if gt $stats.Replies 0 -}}
-				&middot; {{$stats.Replies}} {{pluralize $stats.Replies "Reply" "Replies"}}
-			{{- end }}
-
-			{{ if gt $stats.Likes 0 -}}
-				&middot; {{$stats.Likes}} {{pluralize $stats.Likes "Like" "Likes"}}
-			{{- end }}
-
-			{{ if gt $stats.Announces 0 -}}
-				&middot; {{$stats.Announces}} {{pluralize $stats.Announces "Share" "Shares"}}
-			{{- end }}
-
-		</div>
-
+	<!-- Target zone to load additional pages once we scroll down this far -->
+	{{- $lastMessage := $inbox.Last -}}
+	<div 
+		hx-get="/@me/inbox/list?folderId={{$folderID}}&origin.followingId={{$internalID}}&rank=LT:{{$lastMessage.Rank}}&read=false&remote=true"
+		hx-push-url="false" 
+		hx-trigger="intersect once" 
+		hx-target="this" 
+		hx-swap="outerHTML">
+		<div><span class="spin">{{icon "loading"}}</span> Loading...</div>
 	</div>
-</div>
 
+{{- else -}}
+
+	{{if eq "" (.QueryParam "remote") -}}
+		<h2 class="text-gray">This inbox is empty.  Try following a new person or website.</h2>
+	{{- end -}}
+
+	<div style="height:100vw"></div>
+{{- end -}}
