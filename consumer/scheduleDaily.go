@@ -21,6 +21,19 @@ func ScheduleDaily(serverFactory ServerFactory) queue.Result {
 		return queue.Error(err)
 	}
 
+	// Add a "Purge ActivityStream Cache" task to the queue
+	{
+		task := queue.NewTask(
+			"PurgeActivityStreamCache",
+			nil,
+			queue.WithPriority(1000),
+		)
+
+		if err := serverFactory.Queue().Publish(task); err != nil {
+			return queue.Error(err)
+		}
+	}
+
 	// Add a "Purge Errors" task to the queue
 	{
 		task := queue.NewTask(

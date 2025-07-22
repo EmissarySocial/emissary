@@ -43,6 +43,9 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 	case "ProcessMedia":
 		return WithFactory(consumer.serverFactory, args, ProcessMedia)
 
+	case "PurgeActivityStreamCache":
+		return PurgeActivityStreamCache(consumer.serverFactory)
+
 	case "PurgeErrors":
 		return PurgeErrors(consumer.serverFactory)
 
