@@ -311,10 +311,6 @@ func (w Inbox) Inbox() (QueryBuilder[model.Message], error) {
 		return QueryBuilder[model.Message]{}, derp.Wrap(err, "build.Inbox.Inbox", "Invalid folderId", queryString.Get("folderId"))
 	}
 
-	if queryString.Get("readDate") == "" {
-		queryString.Set("readDate", convert.String(math.MaxInt64))
-	}
-
 	expBuilder := builder.NewBuilder().
 		ObjectID("origin.followingId").
 		ObjectID("followingId", builder.WithAlias("origin.followingId")).
