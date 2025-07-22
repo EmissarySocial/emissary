@@ -7,7 +7,7 @@
 	{{- $inboxBuilder := . -}}
 	{{- range $index, $message := $inbox -}}
 
-		<hr>
+		<hr class="noselect">
 		<div 
 			id="item_{{$message.MessageID.Hex}}" 
 			class="message"
@@ -110,7 +110,7 @@
 					</div>
 				</div>
 
-				<div class="text-sm text-light-gray nowrap align-right">
+				<div class="text-sm text-light-gray nowrap align-right noselect">
 					{{- $message.PublishDate | tinyDate }} ago
 				</div>
 
