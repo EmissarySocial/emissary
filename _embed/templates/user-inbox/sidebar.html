@@ -1,11 +1,11 @@
 {{- $selectedID := .SelectedID -}}
 <div id="app-sidebar" class="app-sidebar" hx-target="main" hx-push-url="true">
 
-	<div class="pos-sticky" style="top:96px;">
+	<div class="pos-fixed width-20%">
 
 		<div class="bold text-xl margin-none margin-bottom">Inbox</div>
 
-			<form class="sortable" hx-post="/@me/inbox/folder-sort" hx-push-url="false" hx-trigger="end">
+		<form class="sortable" hx-post="/@me/inbox/folder-sort" hx-push-url="false" hx-trigger="end">
 
 			{{- range .Folders -}}
 				<div role="link" hx-get="/@me/inbox/inbox?folderId={{.FolderID.Hex}}" hx-trigger="click" hx-push-url="true" class="turboclick menu-item ellipsis hover-trigger folder {{if eq $selectedID .FolderID}}selected{{end}}">
@@ -31,12 +31,12 @@
 			{{- end -}}
 
 		</form>
-		
+
 		<hr>
 		<div role="button" hx-get="/@me/inbox/folder-add" class="menu-item link turboclick">{{icon "add"}} Add a Folder</div>
 
 	</div>
-
+	
 	<div 
 		hx-get="/@me/inbox/sidebar?folderId={{$selectedID.Hex}}" 
 		hx-swap="outerHTML" 
