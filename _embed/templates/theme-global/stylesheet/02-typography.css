@@ -272,6 +272,18 @@ code.inline {
     white-space: nowrap;
 }
 
+.noselect {
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	user-select: none;
+}
+
+.nopointer {
+	pointer-events: none;
+	-webkit-pointer-events: none;
+	-moz-pointer-events: none;
+}
+
 .wrap {
     white-space: normal;
 }
