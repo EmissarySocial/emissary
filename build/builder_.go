@@ -32,7 +32,7 @@ type Builder interface {
 	BasePath() string                    // URL Path of the root of this object, without any additional actions.
 	URL() string                         // Complete URL of the requested page
 	QueryParam(string) string            // Query parameter of the requested page
-	SetQueryParam(string, string) bool   // Sets a queryString parameter
+	SetQueryParam(string, string) string // Sets a queryString parameter
 	IsAuthenticated() bool               // Returns TRUE if the user is signed in
 	IsOwner() bool                       // Returns TRUE if the signed-in user is the owner of this object
 	IsAdminBuilder() bool                // Returns TRUE if this is an admin route

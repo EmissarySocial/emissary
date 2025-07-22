@@ -8,10 +8,11 @@
 
 html, body {
 	/* https://tetralogical.com/blog/2023/06/08/focus-in-view/ */
-	scroll-padding-top: 56px; 
-	overscroll-behavior-y: none;
+	scroll-padding-top: 56px;
 	max-width: 100%;
-	overflow-x: hidden;
+	-overflow-x: hidden;
+	-overflow-y: scroll;
+	overscroll-behavior-y: none;
 }
 
 
@@ -32,7 +33,7 @@ nav {
 	bottom:0px;
 	left: 0px;
 	right: 0px;
-	z-index:100;
+	z-index:1000;
 
     color: var(--gray80);
 	font-weight:400;
@@ -40,7 +41,6 @@ nav {
 	border-top: solid 1px var(--gray15);
 	overflow-y:hidden;
 	overflow-x:auto;
-	padding:8px 16px;
 }
 
 nav .framed {
