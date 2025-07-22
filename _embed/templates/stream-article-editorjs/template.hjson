@@ -5,6 +5,8 @@
 	label:"Article (WYSIWYG)"
 	description:"For regular use. Contains text, images, and more."
 	icon:"article"
+
+	
 	actions: {
 		create: {
 			roles:["author","editor"]

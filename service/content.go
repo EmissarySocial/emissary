@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
+	blocks "github.com/EmissarySocial/emissary/tools/editorjs-blocks"
 	"github.com/benpate/derp"
 	"github.com/davidscottmills/goeditorjs"
 	"github.com/microcosm-cc/bluemonday"
@@ -22,6 +23,14 @@ type Content struct {
 }
 
 func NewContent(editorJS *goeditorjs.HTMLEngine) Content {
+
+	editorJS.RegisterBlockHandlers(
+		blocks.Code{},
+		blocks.List{},
+		blocks.Quote{},
+		blocks.Table{},
+	)
+
 	return Content{
 		editorJS: editorJS,
 	}

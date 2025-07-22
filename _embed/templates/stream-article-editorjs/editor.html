@@ -8,9 +8,12 @@
 <script src="https://cdn.jsdelivr.net/npm/@editorjs/embed@latest"></script>
 <script src="https://cdn.jsdelivr.net/npm/@editorjs/image@latest"></script>
 <script src="https://cdn.jsdelivr.net/npm/@editorjs/attaches@latest"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/@editorjs/code@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/@editorjs/quote@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/@editorjs/table@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/editorjs-color-picker@latest/dist/index.umd.js"></script>
 <script>
-	
+	const { ColorPicker } = window;
 	var editor = new EditorJS({
 		holder: "content-editor",
 		data: JSON.parse(document.getElementById("content-editor").getAttribute("data-content")),
@@ -28,22 +31,10 @@
 					defaultLevel: 2,
 				},
 			},
-			list: {
-				class: List,
-				inlineToolbar: true,
-				config: {
-					placeholder: 'List',
-				},
-			},
 			linkTool: {
 				class: LinkTool,
 				config: {
 				// endpoint: 'http://localhost:8008/fetchUrl', // Your backend endpoint for url data fetching,
-				}
-			},
-			embed: {
-				class: Embed,
-				config: {
 				}
 			},
 			image: {
@@ -55,12 +46,44 @@
 					}
 				}
 			},
+			embed: {
+				class: Embed,
+				config: {
+				}
+			},
 			attaches: {
 				class: AttachesTool,
 				config: {
 					endpoint: 'http://localhost:8008/uploadFile'
 				}
-			}
+			},
+			/* REMOVED FOR NOW
+			table: {
+				class: Table,
+				inlineToolbar: true,
+				config: {
+					rows: 2,
+					cols: 3,
+				},
+			},
+			*/
+			list: {
+				class: EditorjsList,
+				inlineToolbar: true,
+				config: {
+					defaultStyle: 'unordered',
+				},
+			},
+			quote: {
+				class: Quote,
+				inlineToolbar: true,
+			},
+			code: {
+				class: CodeTool,
+			},
+			ColorPicker: {
+      			class: ColorPicker.default,
+    		}
 		},
 	})
 
