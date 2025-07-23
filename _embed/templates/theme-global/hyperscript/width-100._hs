@@ -1,0 +1,10 @@
+behavior width_100
+
+	init 
+		set my.style.width to my parentElement's *computed-width
+	end
+
+	on resize from window
+		set my.style.width to my.parentElement's *computed-width
+	end
+end
