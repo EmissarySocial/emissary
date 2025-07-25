@@ -2,6 +2,7 @@ package model
 
 import (
 	"github.com/benpate/data/journal"
+	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/compare"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -41,6 +42,50 @@ func (product Product) LookupCode() form.LookupCode {
 		Icon:  product.Icon,
 		Href:  product.AdminHref,
 	}
+}
+
+// Refresh updates this Product with the values from another Product.
+// This method returns TRUE if the Product was updated
+func (product *Product) Refresh(other Product) (bool, error) {
+
+	const location = "model.Product.Refresh"
+
+	if product.UserID != other.UserID {
+		return false, derp.BadRequestError(location, "UserID must match")
+	}
+
+	if product.MerchantAccountID != other.MerchantAccountID {
+		return false, derp.BadRequestError(location, "MerchantAccountID must match")
+	}
+
+	if product.RemoteID != other.RemoteID {
+		return false, derp.BadRequestError(location, "RemoteID must match")
+	}
+
+	changed := false
+
+	if product.Name != other.Name {
+		product.Name = other.Name
+		changed = true
+	}
+
+	if product.Price != other.Price {
+		product.Price = other.Price
+		changed = true
+	}
+
+	if product.Icon != other.Icon {
+		product.Icon = other.Icon
+		changed = true
+	}
+
+	if product.AdminHref != other.AdminHref {
+		product.AdminHref = other.AdminHref
+		changed = true
+	}
+
+	return changed, nil
+
 }
 
 func SortProducts(p1 Product, p2 Product) int {

@@ -319,6 +319,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/@me/settings", handler.WithAuthenticatedUser(factory, handler.PostSettings))
 	e.GET("/@me/settings/:action", handler.WithAuthenticatedUser(factory, handler.GetSettings))
 	e.POST("/@me/settings/:action", handler.WithAuthenticatedUser(factory, handler.PostSettings))
+	e.POST("/@me/settings/-refresh-merchant-accounts", handler.WithAuthenticatedUser(factory, handler.PostRefreshMerchantAccounts))
 
 	e.GET("/@me/intent/create", handler.WithAuthenticatedUser(factory, handler.GetIntent_Create))
 	e.POST("/@me/intent/create", handler.WithAuthenticatedUser(factory, handler.PostIntent_Create))

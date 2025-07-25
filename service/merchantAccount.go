@@ -29,6 +29,7 @@ type MerchantAccount struct {
 	circleService     *Circle
 	identityService   *Identity
 	privilegeService  *Privilege
+	productService    *Product
 	userService       *User
 	encryptionKey     string
 	host              string
@@ -44,13 +45,14 @@ func NewMerchantAccount() MerchantAccount {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *MerchantAccount) Refresh(collection data.Collection, circleService *Circle, connectionService *Connection, jwtService *JWT, identityService *Identity, privilegeService *Privilege, userService *User, masterKey string, host string) {
+func (service *MerchantAccount) Refresh(collection data.Collection, circleService *Circle, connectionService *Connection, jwtService *JWT, identityService *Identity, privilegeService *Privilege, productService *Product, userService *User, masterKey string, host string) {
 	service.collection = collection
 	service.circleService = circleService
 	service.connectionService = connectionService
 	service.jwtService = jwtService
 	service.identityService = identityService
 	service.privilegeService = privilegeService
+	service.productService = productService
 	service.userService = userService
 	service.encryptionKey = masterKey
 	service.host = host
@@ -472,4 +474,10 @@ func (service *MerchantAccount) CancelPrivilege(privilege *model.Privilege) erro
 	}
 
 	return derp.InternalError(location, "Invalid MerchantAccount Type", merchantAccount.Type)
+}
+
+func mapProductRemoteIDs(products []model.Product) []string {
+	return slice.Map(products, func(product model.Product) string {
+		return product.RemoteID
+	})
 }

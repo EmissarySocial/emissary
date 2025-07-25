@@ -51,4 +51,15 @@
 			</div>
 		{{- end -}}
 	</div>
+
+	<div class="text-gray text-sm">
+		For performance reasons, your product list is copied to this server.
+		If you've made changes, click here to 
+		<span script="on click trigger refreshPage" class="link nowrap">
+			<span class="htmx-request-hide">{{icon "reload"}}</span>
+			<span class="htmx-request-show spin">{{icon "reload"}}</span>
+			refresh this list
+		</span>
+	</div>
+
 {{- end -}}

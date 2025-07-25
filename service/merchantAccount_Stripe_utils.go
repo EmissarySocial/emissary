@@ -5,6 +5,7 @@ import (
 	"github.com/EmissarySocial/emissary/tools/currency"
 	api "github.com/EmissarySocial/emissary/tools/stripeapi"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/convert"
 	"github.com/stripe/stripe-go/v78"
 )
 
@@ -103,15 +104,19 @@ func (service *MerchantAccount) stripe_priceLabel(price stripe.Price) string {
 	// Price in local currency
 	result := currency.UnitFormat(string(price.Currency), price.UnitAmount)
 
-	// Per recurring interval (if necessary)
-	if price.Type == "recurring" {
-		if recurring := price.Recurring; recurring != nil {
-			result += " / " + string(recurring.Interval)
-		}
+	if price.Recurring == nil {
+		return result
 	}
 
-	// Simply Gorgeous.
-	return result
+	if price.Type != "recurring" {
+		return result
+	}
+
+	if price.Recurring.IntervalCount == 1 {
+		return result + " per " + string(price.Recurring.Interval)
+	}
+
+	return result + " every " + convert.String(price.Recurring.IntervalCount) + " " + string(price.Recurring.Interval) + "s"
 }
 
 // stripe_recurringType returns the INTERNAL recurring type constant that matches the provided Stripe `Price` record.

@@ -238,6 +238,8 @@ func (service Icons) Get(name string) string {
 		return service.get("play")
 	case "play-fill":
 		return service.get("play-fill")
+	case "reload":
+		return service.get("arrow-repeat")
 	case "reply":
 		return service.get("reply")
 	case "reply-fill":

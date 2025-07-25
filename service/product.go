@@ -169,6 +169,13 @@ func (service *Product) LoadByToken(token string, result *model.Product) error {
 	return service.LoadByID(productID, result)
 }
 
+// LoadByRemoteID loads a single model.Product object that matches the provided remoteID
+func (service *Product) LoadByRemoteID(userID primitive.ObjectID, remoteID string, result *model.Product) error {
+
+	criteria := exp.Equal("userId", userID).AndEqual("remoteId", remoteID)
+	return service.Load(criteria, result)
+}
+
 // QueryByUser returns a slice of Products that match the provided productIDs
 func (service *Product) QueryByUser(userID primitive.ObjectID) (sliceof.Object[model.Product], error) {
 
@@ -215,36 +222,48 @@ func (service *Product) SyncRemoteProducts(userID primitive.ObjectID) (sliceof.O
 
 	productIndex := service.indexByRemoteID(products)
 
+	result := make(sliceof.Object[model.Product], 0, len(remoteProducts))
+
 	// Scan products/remoteProducts; add new remote Products to local Products list.
 	for _, remoteProduct := range remoteProducts {
 
 		// Skip this remote product if it already exists in the database
-		if _, exists := productIndex[remoteProduct.RemoteID]; exists {
+		if currentProduct, exists := productIndex[remoteProduct.RemoteID]; exists {
+
+			// Remote the current product from the Index so we won't delete it later
 			delete(productIndex, remoteProduct.RemoteID)
+
+			// If the remote product changed, then update the local product record
+			changed, err := currentProduct.Refresh(remoteProduct)
+
+			if err != nil {
+				return nil, nil, derp.Wrap(err, location, "Error refreshing remote product", remoteProduct)
+			}
+
+			if changed {
+				if err := service.Save(&currentProduct, "Updated Remote Product changes"); err != nil {
+					return nil, nil, derp.Wrap(err, location, "Error saving updated remote product", currentProduct)
+				}
+			}
+
+			// Add the existing product to the result
+			result.Append(currentProduct)
 			continue
 		}
 
-		// Add the remote product to the database
+		// Otherwise, the Remote Product is new, so create a local copy of it here.
 		if err := service.Save(&remoteProduct, "Sync Remote Product"); err != nil {
 			return nil, nil, derp.Wrap(err, location, "Error saving remote product", remoteProduct)
 		}
 
-		// Add the new remote product to the result
-		products.Append(remoteProduct)
+		// Add the new Remote Product to the result
+		result.Append(remoteProduct)
 	}
 
 	// Remove local Product records that are no longer in the remote products list
 	for _, product := range productIndex {
 		if err := service.Delete(&product, "Removed from merchant account"); err != nil {
 			return nil, nil, derp.Wrap(err, location, "Error deleting local product", product)
-		}
-
-		// Delete the Product from the result
-		for index := range products {
-			if products[index].ProductID == product.ProductID {
-				products.RemoveAt(index)
-				break
-			}
 		}
 	}
 
