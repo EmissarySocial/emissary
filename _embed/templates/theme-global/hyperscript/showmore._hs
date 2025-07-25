@@ -1,0 +1,32 @@
+behavior showMore(maxHeight)
+
+	init
+
+		set :button to the first <.showMore-button /> in me
+		set :content to the first <.showMore-content /> in me
+
+		log maxHeight
+		log :content
+		measure the :content's height
+		log height
+		if the height is less than maxHeight
+			trigger removeButton
+			exit
+		end
+
+		set :content.style.overflowY to "hidden"
+		set :content.style.maxHeight to maxHeight px
+		remove @hidden from the :button
+	end
+
+	on click from <.showMore-button /> in me
+		trigger removeButton
+	end
+
+	on removeButton 
+		set :content.style.maxHeight to ""
+		remove .showMore-content from :button
+		remove :button
+	end
+
+end

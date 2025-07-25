@@ -60,12 +60,17 @@
 						</div>
 					{{- end -}}
 
-					<div class="margin-top">
+					<div class="margin-top" script="install showMore(maxHeight:240)">
+						<div class="showMore-content">
 						{{- if $stream.HasContent -}}
 							{{- $stream.Content | htmlMinimal -}}
 						{{- else if $stream.HasSummary -}}
 							{{- $stream.Summary | htmlMinimal -}}
 						{{- end -}}
+						</div>
+						<div class="margin-vertical">
+							<button class="text-xs showMore-button" hidden>Show More &hellip;</button>
+						</div>
 					</div>
 
 					{{- if $image.NotNil -}}
