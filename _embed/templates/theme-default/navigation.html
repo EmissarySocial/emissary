@@ -1,4 +1,4 @@
-<div hx-push-url="true" class="framed">
+<div hx-push-url="true" hx-swap="transition:true" class="framed">
 	<a href="#main" class="hide-visual">Skip navigation</a>
 	{{- range .Navigation -}}
 		<a href="/{{.Token}}" id="nav-{{.StreamID}}" class="nav-item turboclick" aria-label="{{.Label}}">
@@ -15,28 +15,32 @@
 		<a href="/@me" id="nav-outbox" class="nav-item turboclick" aria-label="Profile">
 			<span class="icon selected-hide">{{icon "user"}}</span>
 			<span class="icon selected-show">{{icon "user-fill"}}</span>
+			<span class="selected-show label">Profile</span>
 		</a>
 
 		<a href="/@me/inbox" id="nav-inbox" class="nav-item turboclick" aria-label="Inbox">
 			<span class="icon selected-hide">{{icon "inbox"}}</span>
 			<span class="icon selected-show">{{icon "inbox-fill"}}</span>
+			<span class="selected-show label">Inbox</span>
 		</a>
 
 		<a href="/@me/settings" id="nav-settings" class="nav-item turboclick" aria-label="Settings">
 			<span class="icon selected-hide">{{icon "settings"}}</span>
 			<span class="icon selected-show">{{icon "settings-fill"}}</span>
+			<span class="selected-show label">Settings</span>
 		</a>
 
 		{{- if .IsOwner -}}
 			<a href="/admin/domain" id="nav-admin" class="nav-item turboclick" aria-label="Server Admin">
 				<span class="icon selected-hide">{{icon "server"}}</span>
 				<span class="icon selected-show">{{icon "server-fill"}}</span>
+				<span class="selected-show label">Admin</span>
 			</a>
 		{{- end -}}
 	{{- else if .IsIdentity -}}
 		<a href="/@guest" id="nav-settings" class="nav-item turboclick" aria-label="Profile">
 			<span class="icon selected-hide">{{icon "user"}}</span>
-			<span class="icon selected-show">{{icon "user-fill"}}</span>
+			<span class="icon selected-show">{{icon "user-fill"}} <span class="label">Profile</span></span>
 		</a>
 	{{- else -}}
 		<a href="/signin" id="nav-signin" class="nav-item turboclick" aria-label="Sign In">
