@@ -60,16 +60,9 @@ func (service *Stream) unpublish_outbox_user(userID primitive.ObjectID, stream *
 
 	const location = "service.Stream.unpublish_outbox_user"
 
-	// Load the Actor for this User
-	actor, err := service.userService.ActivityPubActor(userID)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Unable to load actor", userID)
-	}
-
 	// Try to publish via sendNotifications
 	log.Trace().Str("id", stream.URL).Msg("Publishing a DELETE from User's outbox")
-	if err := service.outboxService.DeleteActivity(&actor, model.FollowerTypeUser, userID, stream.URL, stream.DefaultAllow); err != nil {
+	if err := service.outboxService.DeleteActivity(model.FollowerTypeUser, userID, stream.URL, stream.DefaultAllow); err != nil {
 		return derp.Wrap(err, location, "Unable to unpublish activity", stream.URL)
 	}
 
@@ -99,16 +92,8 @@ func (service *Stream) unpublish_outbox_stream(stream *model.Stream) error {
 		return nil
 	}
 
-	// Load the Actor for the parent Stream
-	actor, err := service.ActivityPubActor(stream.ParentID)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Unable to load parent actor")
-	}
-
 	// Try to publish via sendNotifications
-	log.Trace().Str("id", stream.URL).Msg("Deleting object from parent's outbox")
-	if err := service.outboxService.DeleteActivity(&actor, model.FollowerTypeStream, stream.ParentID, stream.ActivityPubURL(), stream.DefaultAllow); err != nil {
+	if err := service.outboxService.DeleteActivity(model.FollowerTypeStream, stream.ParentID, stream.ActivityPubURL(), stream.DefaultAllow); err != nil {
 		return derp.Wrap(err, location, "Unable to publish a DELETE activity for this Stream", stream)
 	}
 

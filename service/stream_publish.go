@@ -138,13 +138,6 @@ func (service *Stream) publish_outbox_user(user *model.User, stream *model.Strea
 		return nil
 	}
 
-	// Load the Actor for this User
-	actor, err := service.userService.ActivityPubActor(user.UserID)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Error loading actor", user.UserID)
-	}
-
 	// Try to publish via sendNotifications
 	objectID := activity.GetString(vocab.PropertyID)
 	objectType := activity.GetString(vocab.PropertyType)
@@ -152,7 +145,7 @@ func (service *Stream) publish_outbox_user(user *model.User, stream *model.Strea
 
 	document := service.activityStream.NewDocument(activity)
 
-	if err := service.outboxService.Publish(&actor, model.FollowerTypeUser, user.UserID, document, stream.DefaultAllow); err != nil {
+	if err := service.outboxService.Publish(model.FollowerTypeUser, user.UserID, document, stream.DefaultAllow); err != nil {
 		return derp.Wrap(err, location, "Error publishing activity", activity)
 	}
 
@@ -182,13 +175,6 @@ func (service *Stream) publish_outbox_stream(stream *model.Stream, activity mapo
 		return nil
 	}
 
-	// Load the Actor for the parent Stream
-	actor, err := service.ActivityPubActor(stream.ParentID)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Error loading parent actor")
-	}
-
 	// Make a new "Announce/Boost" activity so that our encryption keys are correct.
 	announce := mapof.Any{
 		vocab.AtContext:      vocab.ContextTypeActivityStreams,
@@ -201,7 +187,7 @@ func (service *Stream) publish_outbox_stream(stream *model.Stream, activity mapo
 
 	// Try to publish via sendNotifications
 	log.Trace().Str("id", stream.URL).Msg("Publishing to parent Stream's outbox")
-	if err := service.outboxService.Publish(&actor, model.FollowerTypeStream, stream.ParentID, document, stream.DefaultAllow); err != nil {
+	if err := service.outboxService.Publish(model.FollowerTypeStream, stream.ParentID, document, stream.DefaultAllow); err != nil {
 		return derp.Wrap(err, location, "Error publishing activity", activity)
 	}
 

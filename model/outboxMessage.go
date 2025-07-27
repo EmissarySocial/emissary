@@ -15,6 +15,7 @@ type OutboxMessage struct {
 	ActorType       string             `bson:"actorType"`    // Type of the parent object (User or Stream)
 	ActorURL        string             `bson:"actorUrl"`     // URL of the parent object (User or Stream)
 	ActivityType    string             `bson:"activityType"` // Type of the activity (Create, Follow, Like, Block, etc.)
+	ActivityURL     string             `bson:"activityUrl"`  // URL of the ActivityPub object (if applicable)
 	ObjectID        string             `bson:"objectId"`     // URL of the object (if applicable)
 	Permissions     Permissions        `bson:"permissions"`  // List of permissions for this OutboxMessage
 
@@ -42,14 +43,19 @@ func (summary OutboxMessage) Fields() []string {
  ******************************************/
 
 func (message OutboxMessage) ActivityPubURL() string {
-	return message.ObjectID
+
+	if message.ActivityURL != "" {
+		return message.ActivityURL
+	}
+
+	return message.ActorURL + "/pub/outbox/" + message.OutboxMessageID.Hex()
 }
 
 func (message OutboxMessage) GetJSONLD() mapof.Any {
 
 	result := mapof.Any{
 		vocab.AtContext:         vocab.ContextTypeActivityStreams,
-		vocab.PropertyID:        message.ActorURL + "/pub/outbox/" + message.OutboxMessageID.Hex(),
+		vocab.PropertyID:        message.ActivityPubURL(),
 		vocab.PropertyActor:     message.ActorURL,
 		vocab.PropertyType:      message.ActivityType,
 		vocab.PropertyObject:    message.ObjectID,
