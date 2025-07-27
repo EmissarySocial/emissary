@@ -12,16 +12,11 @@ import (
 // publish marks the Rule as published, and sends "Create" activities to all ActivityPub followers
 func (service *Rule) publish(rule model.Rule) error {
 
-	// Get an ActivityPub Actor for this User
-	actor, err := service.userService.ActivityPubActor(rule.UserID)
-
-	if err != nil {
-		return derp.Wrap(err, "service.Rule.Save", "Error loading User", rule)
-	}
+	const location = "service.Rule.Save"
 
 	// Publish this Rule to the User's outbox
-	if err := service.outboxService.Publish(&actor, model.FollowerTypeUser, rule.UserID, service.Activity(rule), model.NewAnonymousPermissions()); err != nil {
-		return derp.Wrap(err, "service.Rule.Save", "Error publishing Rule", rule)
+	if err := service.outboxService.Publish(model.FollowerTypeUser, rule.UserID, service.Activity(rule), model.NewAnonymousPermissions()); err != nil {
+		return derp.Wrap(err, location, "Error publishing Rule", rule)
 	}
 
 	return nil
@@ -30,16 +25,11 @@ func (service *Rule) publish(rule model.Rule) error {
 // unpublish marks the Rule as unpublished and sends "Undo" activities to all ActivityPub followers
 func (service *Rule) unpublish(rule model.Rule) error {
 
-	// Get an ActivityPub Actor for this User
-	actor, err := service.userService.ActivityPubActor(rule.UserID)
-
-	if err != nil {
-		return derp.Wrap(err, "service.Rule.Save", "Error loading User", rule)
-	}
+	const location = "service.Rule.unpublish"
 
 	// UnPublish this Rule from the User's outbox
-	if err := service.outboxService.DeleteActivity(&actor, model.FollowerTypeUser, rule.UserID, service.ActivityPubURL(rule), model.NewAnonymousPermissions()); err != nil {
-		return derp.Wrap(err, "service.Rule.Save", "Error publishing Rule", rule)
+	if err := service.outboxService.DeleteActivity(model.FollowerTypeUser, rule.UserID, service.ActivityPubURL(rule), model.NewAnonymousPermissions()); err != nil {
+		return derp.Wrap(err, location, "Error publishing Rule", rule)
 	}
 
 	return nil
@@ -47,21 +37,16 @@ func (service *Rule) unpublish(rule model.Rule) error {
 
 func (service *Rule) republish(rule model.Rule) error {
 
-	// Get an ActivityPub Actor for this User
-	actor, err := service.userService.ActivityPubActor(rule.UserID)
-
-	if err != nil {
-		return derp.Wrap(err, "service.Rule.Save", "Error loading User", rule)
-	}
+	const location = "service.Rule.republish"
 
 	// UnPublish the original Rule from the User's outbox
-	if err := service.outboxService.DeleteActivity(&actor, model.FollowerTypeUser, rule.UserID, service.ActivityPubURL(rule), model.NewAnonymousPermissions()); err != nil {
-		return derp.Wrap(err, "service.Rule.Save", "Error publishing Rule", rule)
+	if err := service.outboxService.DeleteActivity(model.FollowerTypeUser, rule.UserID, service.ActivityPubURL(rule), model.NewAnonymousPermissions()); err != nil {
+		return derp.Wrap(err, location, "Error publishing Rule", rule)
 	}
 
 	// Publish the updated Rule to the User's outbox
-	if err := service.outboxService.Publish(&actor, model.FollowerTypeUser, rule.UserID, service.Activity(rule), model.NewAnonymousPermissions()); err != nil {
-		return derp.Wrap(err, "service.Rule.Save", "Error publishing Rule", rule)
+	if err := service.outboxService.Publish(model.FollowerTypeUser, rule.UserID, service.Activity(rule), model.NewAnonymousPermissions()); err != nil {
+		return derp.Wrap(err, location, "Error publishing Rule", rule)
 	}
 
 	return nil

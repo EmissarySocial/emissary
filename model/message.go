@@ -4,7 +4,9 @@ import (
 	"math"
 	"time"
 
+	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data/journal"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/toot/object"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -21,7 +23,7 @@ type Message struct {
 	References  sliceof.Object[OriginLink] `json:"references"   bson:"references,omitempty"`  // Links to other references to this Message - likes, reposts, or comments that informed us of its existence
 	URL         string                     `json:"url"          bson:"url"`                   // URL of this Message
 	InReplyTo   string                     `json:"inReplyTo"    bson:"inReplyTo,omitempty"`   // URL this message is in reply to
-	MyResponse  string                     `json:"myResponse"   bson:"myResponse,omitempty"`  // If the owner of this message has responded, then this field contains the responseType (Like, Dislike, Repost)
+	Response    id.Map                     `json:"response"     bson:"response,omitempty"`    // Map of responses: Like, Dislike, Announce, etc.
 	StateID     string                     `json:"stateId"      bson:"stateId"`               // StateID of this message (UNREAD,READ,MUTED,NEW-REPLIES)
 	PublishDate int64                      `json:"publishDate"  bson:"publishDate,omitempty"` // Unix timestamp of the date/time when this Message was published
 	ReadDate    int64                      `json:"readDate"     bson:"readDate"`              // Unix timestamp of the date/time when this Message was read.  If unread, this is MaxInt64.
@@ -36,13 +38,14 @@ func NewMessage() Message {
 		MessageID:  primitive.NewObjectID(),
 		Origin:     NewOriginLink(),
 		References: sliceof.NewObject[OriginLink](),
+		Response:   id.NewMap(),
 		StateID:    MessageStateUnread,
 		ReadDate:   math.MaxInt64,
 	}
 }
 
 func MessageFields() []string {
-	return []string{"_id", "userId", "socialRole", "origin", "url", "folderId", "publishDate", "rank", "myResponse", "stateId", "readDate", "createDate", "updateDate"}
+	return []string{"_id", "userId", "socialRole", "origin", "url", "folderId", "publishDate", "rank", "response", "stateId", "readDate", "createDate", "updateDate"}
 }
 
 func (summary Message) Fields() []string {
@@ -108,6 +111,21 @@ func (message Message) IsRead() bool {
 // NotRead returns TRUE if this message does not have a valid ReadDate
 func (message Message) NotRead() bool {
 	return message.ReadDate == math.MaxInt64
+}
+
+// IsLiked returns TRUE if this message has been "Liked" by the recipient
+func (message Message) IsLiked() bool {
+	return !message.Response[vocab.ActivityTypeLike].IsZero()
+}
+
+// IsDisliked returns TRUE if this message has been "Disliked" by the recipient
+func (message Message) IsDisliked() bool {
+	return !message.Response[vocab.ActivityTypeDislike].IsZero()
+}
+
+// IsAnnounced returns TRUE if this message has been "Announced" by the recipient
+func (message Message) IsAnnounced() bool {
+	return !message.Response[vocab.ActivityTypeAnnounce].IsZero()
 }
 
 /******************************************
@@ -278,11 +296,6 @@ func (message *Message) AddReference(reference OriginLink) bool {
 
 	// Sucsess!!
 	return true
-}
-
-// SetMyResponse
-func (message *Message) SetMyResponse(responseType string) {
-	message.MyResponse = responseType
 }
 
 /******************************************

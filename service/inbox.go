@@ -12,6 +12,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/schema"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -82,7 +83,7 @@ func (service *Inbox) Range(criteria exp.Expression, options ...option.Option) (
 	iter, err := service.List(criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.Inbox.Range", "Error creating iterator", criteria)
+		return nil, derp.Wrap(err, "service.Inbox.Range", "Unable to create iterator", criteria)
 	}
 
 	return RangeFunc(iter, model.NewMessage), nil
@@ -92,7 +93,7 @@ func (service *Inbox) Range(criteria exp.Expression, options ...option.Option) (
 func (service *Inbox) Load(criteria exp.Expression, result *model.Message) error {
 
 	if err := service.collection.Load(notDeleted(criteria), result); err != nil {
-		return derp.Wrap(err, "service.Inbox.Load", "Error loading Inbox message", criteria)
+		return derp.Wrap(err, "service.Inbox.Load", "Unable to load Inbox message", criteria)
 	}
 
 	return nil
@@ -103,7 +104,7 @@ func (service *Inbox) Save(message *model.Message, note string) error {
 
 	// Validate the value before saving
 	if err := service.Schema().Validate(message); err != nil {
-		return derp.Wrap(err, "service.Inbox.Save", "Error validating Inbox", message)
+		return derp.Wrap(err, "service.Inbox.Save", "Unable to validate Inbox", message)
 	}
 
 	// Calculate a (hopefully unique) rank for this message
@@ -111,12 +112,12 @@ func (service *Inbox) Save(message *model.Message, note string) error {
 
 	// Save the value to the database
 	if err := service.collection.Save(message, note); err != nil {
-		return derp.Wrap(err, "service.Inbox.Save", "Error saving Inbox", message, note)
+		return derp.Wrap(err, "service.Inbox.Save", "Unable to save Inbox", message, note)
 	}
 
 	// Recalculate the unread count for the folder that owns this message.
 	if err := service.folderService.CalculateUnreadCount(message.UserID, message.FolderID); err != nil {
-		return derp.Wrap(err, "service.Inbox.Save", "Error recalculating unread count", message)
+		return derp.Wrap(err, "service.Inbox.Save", "Unable to recalculate unread count", message)
 	}
 
 	// Wait 1 millisecond between each document to guarantee sorting by CreateDate
@@ -130,7 +131,7 @@ func (service *Inbox) Delete(message *model.Message, note string) error {
 
 	// Delete Inbox record last.
 	if err := service.collection.Delete(message, note); err != nil {
-		return derp.Wrap(err, "service.Inbox.Delete", "Error deleting Inbox", message, note)
+		return derp.Wrap(err, "service.Inbox.Delete", "Unable to delete Inbox", message, note)
 	}
 
 	return nil
@@ -142,12 +143,12 @@ func (service *Inbox) DeleteMany(criteria exp.Expression, note string) error {
 	rangeFunc, err := service.Range(criteria)
 
 	if err != nil {
-		return derp.Wrap(err, "service.Inbox.DeleteMany", "Error listing streams to delete", criteria)
+		return derp.Wrap(err, "service.Inbox.DeleteMany", "Unable to list streams to delete", criteria)
 	}
 
 	for message := range rangeFunc {
 		if err := service.Delete(&message, note); err != nil {
-			return derp.Wrap(err, "service.Inbox.DeleteMany", "Error deleting message", message)
+			return derp.Wrap(err, "service.Inbox.DeleteMany", "Unable to delete message", message)
 		}
 	}
 
@@ -288,7 +289,7 @@ func (service *Inbox) LoadSibling(folderID primitive.ObjectID, rank int64, follo
 	it, err := service.List(criteria, option.FirstRow(), sort)
 
 	if err != nil {
-		return model.Message{}, derp.Wrap(err, location, "Error retrieving siblings")
+		return model.Message{}, derp.Wrap(err, location, "Unable to retrieve siblings")
 	}
 
 	// Try to read the results
@@ -300,7 +301,7 @@ func (service *Inbox) LoadSibling(folderID primitive.ObjectID, rank int64, follo
 	}
 
 	// No results.  Shame! Shame!
-	return model.Message{}, derp.NotFoundError(location, "No record found")
+	return model.Message{}, derp.NotFoundError(location, "Sibling record not found")
 }
 
 func (service *Inbox) LoadOldestUnread(userID primitive.ObjectID, message *model.Message) error {
@@ -313,7 +314,7 @@ func (service *Inbox) LoadOldestUnread(userID primitive.ObjectID, message *model
 	it, err := service.List(criteria, option.FirstRow(), sort)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error listing messages")
+		return derp.Wrap(err, location, "Unable to list messages")
 	}
 
 	for it.Next(message) {
@@ -333,13 +334,13 @@ func (service *Inbox) MarkReadByDate(userID primitive.ObjectID, rank int64) erro
 	it, err := service.List(criteria, sort)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error listing messages")
+		return derp.Wrap(err, location, "Unable to list messages")
 	}
 
 	message := model.NewMessage()
 	for it.Next(&message) {
 		if err := service.MarkRead(&message); err != nil {
-			return derp.Wrap(err, location, "Error marking message as read")
+			return derp.Wrap(err, location, "Unable to mark message as read")
 		}
 	}
 
@@ -362,12 +363,12 @@ func (service *Inbox) MarkRead(message *model.Message) error {
 
 	// Save the message
 	if err := service.Save(message, "Update StateID to "+message.StateID); err != nil {
-		return derp.Wrap(err, location, "Error saving message")
+		return derp.Wrap(err, location, "Unable to save message")
 	}
 
 	// Recalculate statistics
 	if err := service.recalculateUnreadCounts(message); err != nil {
-		return derp.Wrap(err, location, "Error recalculating unread counts")
+		return derp.Wrap(err, location, "Unable to recalculate unread counts")
 	}
 
 	// Lo hicimos!
@@ -386,12 +387,12 @@ func (service *Inbox) MarkUnread(message *model.Message) error {
 
 	// Save the message
 	if err := service.Save(message, "Update StateID to "+message.StateID); err != nil {
-		return derp.Wrap(err, location, "Error saving message")
+		return derp.Wrap(err, location, "Unable to save message")
 	}
 
 	// Recalculate statistics
 	if err := service.recalculateUnreadCounts(message); err != nil {
-		return derp.Wrap(err, location, "Error recalculating unread counts")
+		return derp.Wrap(err, location, "Unable to recalculate unread counts")
 	}
 
 	// Success
@@ -409,7 +410,7 @@ func (service *Inbox) MarkMuted(message *model.Message) error {
 
 	// Save the message
 	if err := service.Save(message, "Set Status to MUTED"); err != nil {
-		return derp.Wrap(err, location, "Error saving message")
+		return derp.Wrap(err, location, "Unable to save message")
 	}
 
 	return nil
@@ -426,10 +427,44 @@ func (service *Inbox) MarkUnmuted(message *model.Message) error {
 
 	// Save the message
 	if err := service.Save(message, "Set Status to MUTED"); err != nil {
-		return derp.Wrap(err, location, "Error saving message")
+		return derp.Wrap(err, location, "Unable to save message")
 	}
 
 	// Success
+	return nil
+}
+
+// SetResponse sets/clears a Response type from a Message
+func (service *Inbox) setResponse(userID primitive.ObjectID, url string, responseType string, responseID primitive.ObjectID) error {
+
+	const location = "service.Inbox.setResponse"
+
+	spew.Dump("................", location, userID, url, responseType, responseID)
+
+	// Load the message that is being responded to
+	message := model.NewMessage()
+	if err := service.LoadByURL(userID, url, &message); err != nil {
+
+		// Exceptional case: If there is no message to respond to, then do not return an error.
+		if derp.IsNotFound(err) {
+			return nil
+		}
+
+		// Failure and Shame!
+		return derp.Wrap(err, location, "Unable to load message by URL", url)
+	}
+
+	// Set the response on the message
+	if changed := message.Response.SetDelta(responseType, responseID); !changed {
+		return nil
+	}
+
+	// Save the message
+	if err := service.Save(&message, "Set Response"); err != nil {
+		return derp.Wrap(err, location, "Unable to save message with response")
+	}
+
+	// Silence is GoLdEN.
 	return nil
 }
 
@@ -441,12 +476,12 @@ func (service *Inbox) recalculateUnreadCounts(message *model.Message) error {
 	unreadCount, err := service.CountUnreadMessages(message.UserID, message.FolderID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error counting unread messages")
+		return derp.Wrap(err, location, "Unable to count unread messages")
 	}
 
 	// Update the "unread" count for the Folder
 	if err := service.folderService.SetUnreadCount(message.UserID, message.FolderID, unreadCount); err != nil {
-		return derp.Wrap(err, location, "Error setting unread count")
+		return derp.Wrap(err, location, "Unable to set unread count")
 	}
 
 	// Lo hicimos! we did it.
@@ -491,20 +526,20 @@ func (service *Inbox) UpdateInboxFolders(userID primitive.ObjectID, followingID 
 	rangeFunc, err := service.RangeByFollowingID(userID, followingID)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "service.Inbox", "Cannot list Activities by following", userID, followingID))
+		derp.Report(derp.Wrap(err, "service.Inbox", "Unable to list Activities by following", userID, followingID))
 		return
 	}
 
 	for message := range rangeFunc {
 		message.FolderID = folderID
 		if err := service.Save(&message, "UpdateInboxFolders"); err != nil {
-			derp.Report(derp.Wrap(err, "service.Inbox", "Cannot save Inbox Message", message))
+			derp.Report(derp.Wrap(err, "service.Inbox", "Unable to save Inbox Message", message))
 		}
 	}
 
 	// Recalculate the "unread" count on the new folder
 	if err := service.folderService.CalculateUnreadCount(userID, folderID); err != nil {
-		derp.Report(derp.Wrap(err, "service.Inbox", "Cannot calculate unread count for new folder", userID, folderID))
+		derp.Report(derp.Wrap(err, "service.Inbox", "Unable to calculate unread count for new folder", userID, folderID))
 	}
 }
 
@@ -521,12 +556,12 @@ func (service *Inbox) DeleteByFolder(userID primitive.ObjectID, folderID primiti
 	rangeFunc, err := service.RangeByFolder(userID, folderID)
 
 	if err != nil {
-		return derp.Wrap(err, "service.Inbox", "Cannot list Activities by folder", userID, folderID)
+		return derp.Wrap(err, "service.Inbox", "Unable to list Activities by folder", userID, folderID)
 	}
 
 	for message := range rangeFunc {
 		if err := service.Delete(&message, "DeleteByFolder"); err != nil {
-			return derp.Wrap(err, "service.Inbox", "Cannot delete Inbox", message)
+			return derp.Wrap(err, "service.Inbox", "Unable to delete Inbox", message)
 		}
 	}
 

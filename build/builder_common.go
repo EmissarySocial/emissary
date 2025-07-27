@@ -280,10 +280,13 @@ func (w Common) AuthenticatedID() primitive.ObjectID {
 
 // UserName returns the DisplayName of the user
 func (w Common) UserName() (string, error) {
+
+	const location = "build.Stream.UserName"
+
 	user, err := w.getUser()
 
 	if err != nil {
-		return "", derp.Wrap(err, "build.Stream.UserName", "Error loading User")
+		return "", derp.Wrap(err, location, "Error loading User")
 	}
 
 	return user.DisplayName, nil
@@ -291,10 +294,13 @@ func (w Common) UserName() (string, error) {
 
 // UserAvatar returns the avatar image of the user
 func (w Common) UserImage() (string, error) {
+
+	const location = "build.Stream.UserImage"
+
 	user, err := w.getUser()
 
 	if err != nil {
-		return "", derp.Wrap(err, "build.Stream.UserAvatar", "Error loading User")
+		return "", derp.Wrap(err, location, "Error loading User")
 	}
 
 	return user.ActivityPubIconURL(), nil
@@ -309,11 +315,12 @@ func (w Common) UserImage() (string, error) {
 // document values and rules from the server's shared cache.
 func (w Common) ActivityStream(url string) streams.Document {
 
+	const location = "build.Common.ActivityStream"
 	// Load the document from the Interwebs
 	result, err := w._factory.ActivityStream().Load(url)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "build.Common.ActivityStream", "Error loading ActivityStream"))
+		derp.Report(derp.Wrap(err, location, "Error loading ActivityStream"))
 	}
 
 	// Search for rules that might add a LABEL to this document.
@@ -363,11 +370,13 @@ func (w Common) NotMe(url string) bool {
 // document at a specific URI (or the actor who created the document)
 func (w Common) GetFollowingID(url string) string {
 
+	const location = "build.Common.GetFollowingID"
+
 	followingService := w._factory.Following()
 	result, err := followingService.GetFollowingID(w.AuthenticatedID(), url)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "build.Common.GetFollowingID", "Error getting following status", url))
+		derp.Report(derp.Wrap(err, location, "Error getting following status", url))
 		return ""
 	}
 
@@ -410,6 +419,8 @@ func (w Common) withinPublishDate() exp.Expression {
 // group authorizations of the currently signed in user.
 func (w Common) defaultAllowed() exp.Expression {
 
+	const location = "build.Common.defaultAllowed"
+
 	var result exp.Expression = exp.Equal("deleteDate", 0) // Stream must not be deleted
 
 	// If the user IS NOT a domain owner, then we must also
@@ -427,7 +438,7 @@ func (w Common) defaultAllowed() exp.Expression {
 	identity, err := w.getIdentity()
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "build.Common.defaultAllowed", "Error loading Identity"))
+		derp.Report(derp.Wrap(err, location, "Error loading Identity"))
 	}
 
 	// Get the access list for this user
@@ -443,6 +454,8 @@ func (w Common) defaultAllowed() exp.Expression {
 // getUser loads/caches the currently-signed-in user to be used by other functions in this builder
 func (w Common) getUser() (*model.User, error) {
 
+	const location = "build.Common.getUser"
+
 	// If we already have a cached User, then return that
 	if w._user != nil {
 		return w._user, nil
@@ -455,7 +468,7 @@ func (w Common) getUser() (*model.User, error) {
 
 	user := model.NewUser()
 	if err := userService.LoadByID(authorization.UserID, &user); err != nil {
-		return nil, derp.Wrap(err, "build.Common.getUser", "Error loading user from database", authorization.UserID)
+		return nil, derp.Wrap(err, location, "Error loading user from database", authorization.UserID)
 	}
 
 	// Save the User in the builder to use it later
@@ -466,6 +479,8 @@ func (w Common) getUser() (*model.User, error) {
 }
 
 func (w Common) getIdentity() (*model.Identity, error) {
+
+	const location = "build.Common.getIdentity"
 
 	// If no Identity is provided, then return nil
 	if !w._authorization.IsIdentity() {
@@ -480,7 +495,7 @@ func (w Common) getIdentity() (*model.Identity, error) {
 	// Otherwise, try to load the Identity from the database
 	identity := model.NewIdentity()
 	if err := w._factory.Identity().LoadByID(w._authorization.IdentityID, &identity); err != nil {
-		return nil, derp.Wrap(err, "build.Common.getIdentity", "Error loading Identity from database", w._authorization.IdentityID)
+		return nil, derp.Wrap(err, location, "Error loading Identity from database", w._authorization.IdentityID)
 	}
 
 	// Save the Identity in the builder to use it later
@@ -583,10 +598,12 @@ func (w Common) Search() SearchBuilder {
 
 func (w Common) SearchTag(tagName string) model.SearchTag {
 
+	const location = "build.Common.SearchTag"
+
 	result := model.NewSearchTag()
 
 	if err := w._factory.SearchTag().LoadByValue(tagName, &result); err != nil {
-		derp.Report(derp.Wrap(err, "build.Common.SearchTag", "Error loading SearchTag", tagName))
+		derp.Report(derp.Wrap(err, location, "Error loading SearchTag", tagName))
 	}
 
 	return result

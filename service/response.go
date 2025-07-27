@@ -19,6 +19,7 @@ import (
 type Response struct {
 	collection      data.Collection
 	activityService *ActivityStream
+	inboxService    *Inbox
 	outboxService   *Outbox
 	userService     *User
 	host            string
@@ -34,9 +35,10 @@ func NewResponse() Response {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Response) Refresh(collection data.Collection, activityService *ActivityStream, outboxService *Outbox, userService *User, host string) {
+func (service *Response) Refresh(collection data.Collection, activityService *ActivityStream, inboxService *Inbox, outboxService *Outbox, userService *User, host string) {
 	service.collection = collection
 	service.activityService = activityService
+	service.inboxService = inboxService
 	service.outboxService = outboxService
 	service.userService = userService
 	service.host = host
@@ -105,6 +107,11 @@ func (service *Response) Save(response *model.Response, note string) error {
 		return derp.Wrap(err, location, "Error saving Response", response, note)
 	}
 
+	// Try to update the inbox message being responded to
+	if err := service.inboxService.setResponse(response.UserID, response.Object, response.Type, response.ResponseID); err != nil {
+		return derp.Wrap(err, location, "Unable to set Response to inbox message", response.UserID)
+	}
+
 	return nil
 }
 
@@ -115,7 +122,17 @@ func (service *Response) Delete(response *model.Response, note string) error {
 
 	// Delete this Response
 	if err := service.collection.HardDelete(exp.Equal("_id", response.ResponseID)); err != nil {
-		return derp.Wrap(err, location, "Error deleting Response", response)
+		return derp.Wrap(err, location, "Unable to delete Response", response)
+	}
+
+	// Try to update the inbox message being responded to
+	if err := service.inboxService.setResponse(response.UserID, response.Object, response.Type, primitive.NilObjectID); err != nil {
+		return derp.Wrap(err, location, "Unable to remove Response from inbox message", response.UserID)
+	}
+
+	// Unpublish from the Outbox, and send the "Undo" activity to followers
+	if err := service.outboxService.UndoActivity(model.FollowerTypeUser, response.UserID, response.ActivityPubURL(), model.NewAnonymousPermissions()); err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to send Undo activity"))
 	}
 
 	return nil
@@ -268,9 +285,9 @@ func (service *Response) SetResponse(user *model.User, url string, responseType 
 
 	const location = "service.Response.SetResponse"
 
-	// Remove pre-existing response of this same type (if exists)
-	if err := service.UnsetResponse(user, url, responseType); err != nil {
-		return derp.Wrap(err, location, "Error removing previous response", user.UserID, url, responseType)
+	// Remove previous Response (if it exists)
+	if service.UnsetResponse(user, url, responseType) != nil {
+		return derp.Wrap(nil, location, "Error removing previous response", user.UserID, url, responseType)
 	}
 
 	// Create a new Response object
@@ -286,17 +303,10 @@ func (service *Response) SetResponse(user *model.User, url string, responseType 
 		return derp.Wrap(err, location, "Error saving response", response)
 	}
 
-	// Get an ActivityPub actor for the User
-	actor, err := service.userService.ActivityPubActor(user.UserID)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Error loading ActivityPub Actor", user.UserID)
-	}
-
 	activity := service.Activity(response)
 
 	// Publish the new Response to the Outbox, sending "Like" notifications to all followers.
-	if err := service.outboxService.Publish(&actor, model.FollowerTypeUser, user.UserID, activity, model.NewAnonymousPermissions()); err != nil {
+	if err := service.outboxService.Publish(model.FollowerTypeUser, user.UserID, activity, model.NewAnonymousPermissions()); err != nil {
 		derp.Report(derp.Wrap(err, location, "Error publishing Response", response))
 	}
 
@@ -310,33 +320,21 @@ func (service *Response) UnsetResponse(user *model.User, url string, responseTyp
 	const location = "service.Response.UnsetResponse"
 
 	// Search for a previous Response from this User
-	oldResponse := model.NewResponse()
+	previousResponse := model.NewResponse()
 
-	if err := service.LoadByUserAndObject(user.UserID, url, responseType, &oldResponse); err != nil {
+	err := service.LoadByUserAndObject(user.UserID, url, responseType, &previousResponse)
 
-		// If there is no matching response, then there's nothing to delete
-		if derp.IsNotFound(err) {
-			return nil
-		}
+	if derp.IsNotFound(err) {
+		return nil
+	}
 
+	if derp.NotNil(err) {
 		return derp.Wrap(err, location, "Error loading original response", user.UserID, url, responseType)
 	}
 
 	// Otherwise, delete the old Response
-	if err := service.Delete(&oldResponse, ""); err != nil {
-		return derp.Wrap(err, location, "Error deleting old response", oldResponse)
-	}
-
-	// Get an ActivityPub actor for the User
-	actor, err := service.userService.ActivityPubActor(user.UserID)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Error loading ActivityPub Actor", user.UserID)
-	}
-
-	// Unpublish from the Outbox, and send the "Undo" activity to followers
-	if err := service.outboxService.UndoActivity(&actor, model.FollowerTypeUser, user.UserID, oldResponse.ActivityPubURL(), model.NewAnonymousPermissions()); err != nil {
-		derp.Report(derp.Wrap(err, location, "Error publishing Response", oldResponse))
+	if err := service.Delete(&previousResponse, ""); err != nil {
+		return derp.Wrap(err, location, "Error deleting old response", previousResponse)
 	}
 
 	// Success!!

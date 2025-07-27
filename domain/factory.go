@@ -433,6 +433,7 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 		factory.responseService.Refresh(
 			factory.collection(CollectionResponse),
 			factory.ActivityStream(),
+			factory.Inbox(),
 			factory.Outbox(),
 			factory.User(),
 			factory.Host(),

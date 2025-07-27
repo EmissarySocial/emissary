@@ -19,7 +19,13 @@ func MessageSchema() schema.Element {
 			"references":  schema.Array{Items: OriginLinkSchema()},
 			"url":         schema.String{Format: "url"},
 			"inReplyTo":   schema.String{Format: "url"},
-			"myResponse":  schema.String{Enum: []string{vocab.ActivityTypeAnnounce, vocab.ActivityTypeLike, vocab.ActivityTypeDislike}},
+			"response": schema.Object{
+				Properties: schema.ElementMap{
+					vocab.ActivityTypeAnnounce: schema.String{Format: "objectId"},
+					vocab.ActivityTypeLike:     schema.String{Format: "objectId"},
+					vocab.ActivityTypeDislike:  schema.String{Format: "objectId"},
+				},
+			},
 			"stateId":     schema.String{Enum: []string{MessageStateUnread, MessageStateRead, MessageStateMuted, MessageStateNewReplies}},
 			"publishDate": schema.Integer{BitSize: 64},
 			"readDate":    schema.Integer{BitSize: 64},
@@ -50,8 +56,8 @@ func (message *Message) GetPointer(name string) (any, bool) {
 	case "inReplyTo":
 		return &message.InReplyTo, true
 
-	case "myResponse":
-		return &message.MyResponse, true
+	case "response":
+		return &message.Response, true
 
 	case "stateId":
 		return &message.StateID, true
