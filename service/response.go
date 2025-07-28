@@ -12,7 +12,6 @@ import (
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -98,24 +97,20 @@ func (service *Response) Save(response *model.Response, note string) error {
 
 	const location = "service.Response.Save"
 
-	spew.Dump(location)
 	// Validate the value before saving
 	if err := service.Schema().Validate(response); err != nil {
 		return derp.Wrap(err, location, "Error validating Response", response)
 	}
 
-	spew.Dump("1")
 	// Save the value to the database
 	if err := service.collection.Save(response, note); err != nil {
 		return derp.Wrap(err, location, "Error saving Response", response, note)
 	}
-	spew.Dump("2")
 
 	// Try to update the inbox message being responded to
 	if err := service.inboxService.setResponse(response.UserID, response.Object, response.Type, response.ResponseID); err != nil {
 		return derp.Wrap(err, location, "Unable to set Response to inbox message", response.UserID)
 	}
-	spew.Dump("3")
 
 	return nil
 }
@@ -290,8 +285,6 @@ func (service *Response) SetResponse(user *model.User, url string, responseType 
 
 	const location = "service.Response.SetResponse"
 
-	spew.Dump(location, url, responseType, content)
-
 	// Remove previous Response (if it exists)
 	if service.UnsetResponse(user, url, responseType) != nil {
 		return derp.Wrap(nil, location, "Error removing previous response", user.UserID, url, responseType)
@@ -310,8 +303,6 @@ func (service *Response) SetResponse(user *model.User, url string, responseType 
 		return derp.Wrap(err, location, "Error saving response", response)
 	}
 
-	spew.Dump("saved response", response)
-
 	activity := service.Activity(response)
 
 	// Publish the new Response to the Outbox, sending "Like" notifications to all followers.
@@ -328,8 +319,6 @@ func (service *Response) UnsetResponse(user *model.User, url string, responseTyp
 
 	const location = "service.Response.UnsetResponse"
 
-	spew.Dump(location, user.UserID, url, responseType)
-
 	// Search for a previous Response from this User
 	previousResponse := model.NewResponse()
 	err := service.LoadByUserAndObject(user.UserID, url, responseType, &previousResponse)
@@ -341,8 +330,6 @@ func (service *Response) UnsetResponse(user *model.User, url string, responseTyp
 	if derp.NotNil(err) {
 		return derp.Wrap(err, location, "Error loading original response", user.UserID, url, responseType)
 	}
-
-	spew.Dump(previousResponse, err)
 
 	// Otherwise, delete the old Response
 	if err := service.Delete(&previousResponse, ""); err != nil {

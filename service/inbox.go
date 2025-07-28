@@ -12,7 +12,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/schema"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -438,8 +437,6 @@ func (service *Inbox) MarkUnmuted(message *model.Message) error {
 func (service *Inbox) setResponse(userID primitive.ObjectID, url string, responseType string, responseID primitive.ObjectID) error {
 
 	const location = "service.Inbox.setResponse"
-
-	spew.Dump("................", location, userID, url, responseType, responseID)
 
 	// Load the message that is being responded to
 	message := model.NewMessage()

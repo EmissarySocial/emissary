@@ -7,7 +7,6 @@ import (
 	"github.com/EmissarySocial/emissary/tools/formdata"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
-	"github.com/davecgh/go-spew/spew"
 )
 
 type StepSetResponse struct{}
@@ -27,8 +26,6 @@ func (step StepSetResponse) Post(builder Builder, _ io.Writer) PipelineBehavior 
 		return Halt().WithError(derp.Wrap(err, location, "Error binding transaction"))
 	}
 
-	spew.Dump(location, transaction)
-
 	// Retrieve the currently authenticated user
 	user, err := builder.getUser()
 
@@ -36,32 +33,23 @@ func (step StepSetResponse) Post(builder Builder, _ io.Writer) PipelineBehavior 
 		return Halt().WithError(derp.Wrap(err, location, "Error getting user"))
 	}
 
-	spew.Dump("A")
-
 	// Set the value in the database
 	responseService := builder.factory().Response()
-	spew.Dump("B")
 
 	// Create/Update the response
 	if transaction.Exists {
-		spew.Dump("C")
 
 		if err := responseService.SetResponse(user, transaction.URL, transaction.Type, transaction.Content); err != nil {
-			spew.Dump("D")
 			return Halt().WithError(derp.Wrap(err, location, "Error setting response"))
 		}
-		spew.Dump("E")
 
 		return Continue()
 	}
-	spew.Dump("F")
 
 	// Fall through means DELETE the Response
 	if err := responseService.UnsetResponse(user, transaction.URL, transaction.Type); err != nil {
-		spew.Dump("G")
 		return Halt().WithError(derp.Wrap(err, location, "Error setting response"))
 	}
-	spew.Dump("H")
 
 	// Carry on, carry onnnnn...
 	return Continue()
@@ -84,8 +72,6 @@ func (txn *txnStepSetResponse) Bind(request *http.Request) error {
 	if err != nil {
 		return derp.Wrap(err, location, "Error parsing form values")
 	}
-
-	spew.Dump(location, values)
 
 	// Populate data
 	if url := values.Get("url"); url == "" {
