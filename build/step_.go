@@ -200,6 +200,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.WebSub:
 		return StepWebSub(s)
 
+	case step.WithAnnotation:
+		return StepWithAnnotation(s)
+
 	case step.WithAttachment:
 		return StepWithAttachment(s)
 

@@ -7,7 +7,7 @@
 <div id="modal-header" class="flex-row">
 	<div role="tablist" class="pills margin-bottom-none">
 		<button role="tab" aria-selected="true">{{icon "person"}} Profile</button>
-		<button role="tab" hx-get="/@me/settings/actor-notes?followingId={{$following.ID}}">{{icon "note"}} Notes</button>
+		<button role="tab" hx-get="/@me/inbox/annotation?url={{$actor.ID}}">{{icon "note"}} Notes</button>
 
 		{{ if $following.IsNew -}}
 			<button role="tab" hx-get="/@me/settings/following-edit?url={{$actor.ID}}">{{icon "add"}} Follow</button>

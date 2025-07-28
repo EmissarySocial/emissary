@@ -76,6 +76,25 @@
 				]}
 			]
 		}
+
+		annotation: {
+			roles: ["self"]
+			steps: [
+				{do: "with-annotation", steps: [
+					{do: "as-modal", options:["xclass:large"], steps: [
+						{do: "view-html"}
+						{do:"edit", form: {
+							type: layout-vertical
+							children:[
+								{type:"textarea", path:"content", description:"(PRIVATE) These notes are not shared with anyone", options:{rows:12, autocomplete:"off"}}
+							]
+						}}
+						{do: "save"}
+					]}
+				]}
+			]
+		}
+
 		folder-add: {
 			roles: ["self"]
 			steps: [

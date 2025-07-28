@@ -98,6 +98,9 @@ func (w Model) Name() string {
 func (w Model) Label() string {
 	switch typed := w._object.(type) {
 
+	case *model.Annotation:
+		return typed.Name
+
 	case *model.Circle:
 		return typed.Name
 

@@ -3,7 +3,7 @@
 {{- $args := array . $document -}}
 
 {{- if $document.IsActor -}}
-	{{- template "notes-actor" $args -}}
+	{{- template "annotation-actor" $args -}}
 {{- else  -}}
-	{{ template "notes-document" $args -}}
+	{{ template "annotation-document" $args -}}
 {{- end -}}

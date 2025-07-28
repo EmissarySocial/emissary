@@ -24,6 +24,7 @@ type Factory interface {
 	// Model Services
 	Model(string) (service.ModelService, error)
 	ActivityStream() *service.ActivityStream
+	Annotation() *service.Annotation
 	Attachment() *service.Attachment
 	Circle() *service.Circle
 	Connection() *service.Connection

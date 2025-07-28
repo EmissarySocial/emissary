@@ -63,6 +63,10 @@ func SyncDomainIndexes(connectionString string, databaseName string) error {
 
 	log.Debug().Msg("SYNC INDEXES FOR: " + databaseName)
 
+	if err := sync.Annotation(ctx, session); err != nil {
+		derp.Report(err)
+	}
+
 	if err := sync.Attachment(ctx, session); err != nil {
 		derp.Report(err)
 	}

@@ -1,5 +1,8 @@
 package domain
 
+// CollectionAnnotation is the name of the database collection where Annotations are stored
+const CollectionAnnotation = "Annotation"
+
 // CollectionAttachment is the name of the database collection where Attachments are stored
 const CollectionAttachment = "Attachment"
 

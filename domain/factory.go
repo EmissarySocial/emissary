@@ -55,6 +55,7 @@ type Factory struct {
 
 	// services (within this domain/factory)
 	activityService        service.ActivityStream
+	annotationService      service.Annotation
 	attachmentService      service.Attachment
 	circleService          service.Circle
 	connectionService      service.Connection
@@ -136,6 +137,7 @@ func NewFactory(domain config.Domain, port string, activityCache *mongo.Collecti
 
 	// Create empty service pointers.  These will be populated in the Refresh() step.
 	factory.activityService = service.NewActivityStream()
+	factory.annotationService = service.NewAnnotation()
 	factory.attachmentService = service.NewAttachment()
 	factory.circleService = service.NewCircle()
 	factory.connectionService = service.NewConnection()
@@ -245,6 +247,11 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 			factory.Stream(),
 			factory.User(),
 			factory.Hostname(),
+		)
+
+		factory.annotationService.Refresh(
+			factory.collection(CollectionAnnotation),
+			factory.ActivityStream(),
 		)
 
 		// Populate Attachment Service
@@ -661,6 +668,9 @@ func (factory *Factory) Model(name string) (service.ModelService, error) {
 	case "activity":
 		return factory.Inbox(), nil
 
+	case "annotation":
+		return factory.Annotation(), nil
+
 	case "circle":
 		return factory.Circle(), nil
 
@@ -695,6 +705,11 @@ func (factory *Factory) Model(name string) (service.ModelService, error) {
 
 func (factory *Factory) ActivityStream() *service.ActivityStream {
 	return &factory.activityService
+}
+
+// Annotation returns a fully populated Annotation service
+func (factory *Factory) Annotation() *service.Annotation {
+	return &factory.annotationService
 }
 
 // Attachment returns a fully populated Attachment service
@@ -1036,6 +1051,9 @@ func (factory *Factory) collection(name string) data.Collection {
 func (factory *Factory) ModelService(object data.Object) service.ModelService {
 
 	switch object.(type) {
+
+	case *model.Annotation:
+		return factory.Annotation()
 
 	case *model.Circle:
 		return factory.Circle()
