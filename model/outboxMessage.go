@@ -72,7 +72,7 @@ func (message OutboxMessage) GetJSONLD() mapof.Any {
 }
 
 func (message OutboxMessage) Created() int64 {
-	return message.Journal.CreateDate
+	return message.CreateDate
 }
 
 /******************************************
