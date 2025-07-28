@@ -7,6 +7,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
+	"github.com/benpate/domain"
 	"github.com/benpate/hannibal"
 	"github.com/benpate/hannibal/outbox"
 	"github.com/benpate/hannibal/streams"
@@ -64,15 +65,23 @@ func (service *Outbox) Publish(actorType string, actorID primitive.ObjectID, act
 	activityMap[vocab.PropertyID] = outboxMessage.ActivityPubURL()
 	ruleFilter := service.ruleService.Filter(actorID, WithBlocksOnly())
 
+	isLocalhost := domain.IsLocalhost(service.hostname)
+
 	for follower := range recipients {
 
-		// Do not send to blocked Followers
+		// RULE: Only deliver to Followers on the same network as the Actor
+		// (local can send to local, public can send to public, but local cannot send to public)
+		if domain.IsLocalhost(follower.Actor.InboxURL) != isLocalhost {
+			continue
+		}
+
+		// RULE: Do not send to blocked Followers
 		if !ruleFilter.AllowSend(follower.Actor.ProfileURL) {
 			log.Trace().Msg("Follower blocked by rule filter: " + follower.Actor.ProfileURL)
 			continue
 		}
 
-		// Do not send to Followers who do not have permissions to view this activity
+		// RULE: Do not send to Followers who do not have permissions to view this activity
 		if !service.identityService.HasPermissions(follower.Method, follower.Actor.ProfileURL, permissions) {
 			log.Trace().Msg("Follower does not have permissions to view this activity: " + follower.Actor.ProfileURL)
 			continue
@@ -92,6 +101,7 @@ func (service *Outbox) Publish(actorType string, actorID primitive.ObjectID, act
 			service.sendNotification_Email(&follower, activityMap)
 
 		// TODO: Can we move WebMentions into this too?
+
 		default:
 			derp.Report(derp.InternalError(location, "Unknown Follower Method.  This should never happen", follower))
 		}

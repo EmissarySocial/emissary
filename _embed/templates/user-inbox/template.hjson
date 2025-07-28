@@ -325,6 +325,15 @@
 				]}
 			]
 		}
+		message-set-response: {
+			roles:["self"]
+			steps:[
+				{do:"with-message", steps: [
+					{do:"set-response"}
+					{do:"view-html", method:"both"}
+				]}
+			]
+		}
 
 		responses-announces:{
 			roles:["self"]

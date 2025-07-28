@@ -1,0 +1,80 @@
+{{- $message := index . 0 -}}
+{{- $document := index . 1 -}}
+{{- $folderID := index . 2 -}}
+{{- $internalID := index . 3 -}}
+
+{{- $stats := $document.Statistics -}}
+{{- $url := $document.ID -}}
+
+<div class="margin-top text-sm noselect" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
+	
+	<span
+		id="reply-{{$message.ID}}"
+		role="button"
+		hx-get="/@me/inbox/message?messageId={{$message.ID}}&url={{$url}}&folderId={{$folderID}}&origin.followingId={{$internalID}}"
+		hx-push-url="false"
+		tabIndex="0"
+		class="button" 
+		title="Reply to this item">
+			{{icon "reply"}}
+			Reply
+		</span>
+
+	{{- if $message.IsAnnounced -}}
+		<span 
+			id="announce-{{$message.ID}}" 
+			role="button" 
+			class="button link" 
+			aria-label="Shared. Click to undo"
+			hx-post="/@me/inbox/message-set-response?messageId={{$message.ID}}" 
+			hx-vals='{"type":"Announce", "url":"{{$url}}", "exists":false}'
+		>{{icon "announce-fill"}} Shared</span>
+	{{- else -}}
+		<span 
+			id="announce-{{$message.ID}}" 
+			role="button" 
+			class="button" 
+			aria-label="Share this item"
+			hx-post="/@me/inbox/message-set-response?messageId={{$message.ID}}" 
+			hx-vals='{"type":"Announce", "url":"{{$url}}", "exists":true}'
+		>{{icon "announce"}} Share</span>
+	{{- end -}}
+
+	{{- if $message.IsLiked -}}
+		<span 
+			id="like-{{$message.ID}}" 
+			role="button" 
+			class="button link" 
+			aria-label="Liked. Click to undo."
+			hx-post="/@me/inbox/message-set-response?messageId={{$message.ID}}" 
+			hx-vals='{"type":"Like", "url":"{{$url}}", "exists":false}'
+		>{{icon "like-fill"}} Liked</span>
+	{{- else -}}
+		<span 
+			id="like-{{$message.ID}}" 
+			role="button" 
+			class="button" 
+			aria-label="Like' this item"
+			hx-post="/@me/inbox/message-set-response?messageId={{$message.ID}}" 
+			hx-vals='{"type":"Like", "url":"{{$url}}", "exists":true}'
+		>{{icon "like"}} Like</span>
+	{{- end -}}
+
+	{{ if gt $stats.Replies 0 }}
+		<span
+			role="button"
+			hx-get="/@me/inbox/message?messageId={{$message.ID}}&url={{$message.URL}}&folderId={{$folderID}}&origin.followingId={{$internalID}}"
+			hx-push-url="false"
+			tabIndex="0"
+			class="text-gray margin-left">{{$stats.Replies}} {{pluralize $stats.Replies "Reply" "Replies"}}</span>
+	{{ end }}
+
+	{{ if gt $stats.Announces 0 }}
+		<span class="text-gray margin-left">{{$stats.Announces}} {{pluralize $stats.Announces "Share" "Shares"}}</span>
+	{{ end }}
+
+	{{ if gt $stats.Likes 0 }}
+		<span class="text-gray margin-left">{{$stats.Likes}} {{pluralize $stats.Likes "Like" "Likes"}}</span>
+	{{ end }}
+
+</div>

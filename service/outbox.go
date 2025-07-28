@@ -27,6 +27,7 @@ type Outbox struct {
 	domainEmail     *DomainEmail
 	lock            *sync.Mutex
 	queue           *queue.Queue
+	hostname        string
 }
 
 // NewOutbox returns a fully populated Outbox service
@@ -41,7 +42,7 @@ func NewOutbox() Outbox {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Outbox) Refresh(collection data.Collection, activityService *ActivityStream, followerService *Follower, identityService *Identity, ruleService *Rule, streamService *Stream, templateService *Template, userService *User, domainEmail *DomainEmail, queue *queue.Queue) {
+func (service *Outbox) Refresh(collection data.Collection, activityService *ActivityStream, followerService *Follower, identityService *Identity, ruleService *Rule, streamService *Stream, templateService *Template, userService *User, domainEmail *DomainEmail, queue *queue.Queue, hostname string) {
 	service.collection = collection
 	service.activityService = activityService
 	service.followerService = followerService
@@ -52,6 +53,7 @@ func (service *Outbox) Refresh(collection data.Collection, activityService *Acti
 	service.userService = userService
 	service.domainEmail = domainEmail
 	service.queue = queue
+	service.hostname = hostname
 }
 
 // Close stops any background processes controlled by this service
