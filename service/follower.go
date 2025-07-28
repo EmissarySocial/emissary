@@ -293,6 +293,16 @@ func (service *Follower) LoadBySecret(followerID primitive.ObjectID, secret stri
 // LoadByActor retrieves an Follower from the database by parentID and actorID
 func (service *Follower) LoadByActor(parentID primitive.ObjectID, actorID string, follower *model.Follower) error {
 
+	// RULE: The parentID must not be zero
+	if parentID.IsZero() {
+		return derp.ValidationError("ParentID cannot be zero", parentID)
+	}
+
+	// RULE: The actorID must not be empty
+	if actorID == "" {
+		return derp.ValidationError("ActorID cannot be empty", actorID)
+	}
+
 	criteria := exp.Equal("parentId", parentID).AndEqual("actor.profileUrl", actorID)
 	return service.Load(criteria, follower)
 }

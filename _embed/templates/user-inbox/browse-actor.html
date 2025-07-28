@@ -3,22 +3,33 @@
 
 {{- $following := $builder.AmFollowing $actor.ID -}}
 {{- $follower := $builder.IsFollower $actor.ID -}}
+{{- $search := $builder.QueryParam "search" -}}
+{{- $folderID := $builder.QueryParam "folderId" -}}
+{{- $url := $actor.ID -}}
 
 <div id="modal-header" class="flex-row">
 	<div role="tablist" class="pills margin-bottom-none">
-		<button role="tab" aria-selected="true">{{icon "person"}} Profile</button>
-		<button role="tab" hx-get="/@me/inbox/annotation?url={{$actor.ID}}">{{icon "note"}} Notes</button>
+
+		{{- if ne "" $search -}}
+			<span role="link" class="link margin-right" hx-get="/@me/settings/following-search?search={{$search}}&folderId={{$folderID}}">
+				&larr; Search
+			</span>
+		{{- end -}}
+
+		<button role="tab" hx-get="/@me/inbox/browse?url={{$url}}&search={{$search}}&folderId={{$folderID}}" aria-selected="true">{{icon "person"}} Profile</button>
+		<button role="tab" hx-get="/@me/inbox/annotation?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}">{{icon "note"}} Notes</button>
 
 		{{ if $following.IsNew -}}
-			<button role="tab" hx-get="/@me/settings/following-edit?url={{$actor.ID}}">{{icon "add"}} Follow</button>
+			<button role="tab" hx-get="/@me/settings/following-edit?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}">{{icon "add"}} Follow</button>
 		{{- else -}}
-			<button role="tab" hx-get="/@me/settings/following-edit?url={{$actor.ID}}">{{icon "check"}} Following</button>
+			<button role="tab" hx-get="/@me/settings/following-edit?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}">{{icon "check"}} Following</button>
 		{{- end }}
 
-		{{ if not $follower.IsNew -}}
-			<button role="tab" hx-get="/@me/settings/follower-edit?followerId={{$follower.ID}}">{{icon "fediverse"}} Follows You</button>
+		{{ if $follower.IsNew -}}
+			<span class="text-light-gray margin-left" disabled>Doesn't Follow You</span>
+		{{- else -}}
+			<button role="tab" hx-get="/@me/settings/follower?followerId={{$follower.FollowerID.Hex}}&search={{$search}}&folderId={{$folderID}}">{{icon "check"}} Follows You</button>
 		{{- end }}
-		<!--button script="on click trigger closeModal">Close</button-->
 	</div>
 </div>
 
@@ -40,9 +51,13 @@
 				<div class="text-light-gray margin-vertical-none">{{$actor.UsernameOrID}}</div>
 			</div>
 		</div>
+	</div>
+
+	<div class="flex-row">
+		<div class="width-64 flex-shrink-0"></div>
 		<div class="text-sm">
+			<button hx-get="/@me/inbox/message-new?url={{$actor.ID}}" class="primary">{{icon "chat"}} Direct Message</button>
 			<a class="button outline" href="{{$actor.ID}}" target="_blank">{{icon "globe"}} Website</a>
-			<button hx-get="/@me/inbox/message-new?url={{$actor.ID}}" class="primary">{{icon "chat"}} Message</button>
 		</div>
 	</div>
 

@@ -3,22 +3,32 @@
 
 {{- $following := $builder.AmFollowing $actor.ID -}}
 {{- $follower := $builder.IsFollower $actor.ID -}}
+{{- $search := $builder.QueryParam "search" -}}
+{{- $folderID := $builder.QueryParam "folderId" -}}
 
 <div id="modal-header" class="flex-row">
 	<div role="tablist" class="pills margin-bottom-none">
-		<button role="tab" hx-get="/@me/inbox/browse?url={{$actor.ID}}">{{icon "person"}} Profile</button>
-		<button role="tab" aria-selected="true" hx-get="/@me/inbox/notes?followingId={{$following.ID}}">{{icon "note"}} Notes</button>
+
+		{{- if ne "" $search -}}
+			<span role="link" class="link margin-right" hx-get="/@me/settings/following-search?search={{$search}}&folderId={{$folderID}}">
+				&larr; Search
+			</span>
+		{{- end -}}
+
+		<button role="tab" hx-get="/@me/inbox/browse?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}">{{icon "person"}} Profile</button>
+		<button role="tab" aria-selected="true" hx-get="/@me/inbox/notes?followingId={{$following.ID}}&search={{$search}}&folderId={{$folderID}}">{{icon "note"}} Notes</button>
 
 		{{ if $following.IsNew -}}
-			<button role="tab" hx-get="/@me/settings/following-edit?url={{$actor.ID}}">{{icon "add"}} Follow</button>
+			<button role="tab" hx-get="/@me/settings/following-edit?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}">{{icon "add"}} Follow</button>
 		{{- else -}}
-			<button role="tab" hx-get="/@me/settings/following-edit?url={{$actor.ID}}">{{icon "check"}} Following</button>
+			<button role="tab" hx-get="/@me/settings/following-edit?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}">{{icon "check"}} Following</button>
 		{{- end }}
 
-		{{ if not $follower.IsNew -}}
-			<button role="tab" hx-get="/@me/settings/follower-edit?followerId={{$follower.ID}}">{{icon "fediverse"}} Follows You</button>
+		{{ if $follower.IsNew -}}
+			<span class="text-light-gray margin-left" disabled>Doesn't Follow You</span>
+		{{- else -}}
+			<button role="tab" hx-get="/@me/settings/follower?followerId={{$follower.FollowerID.Hex}}&search={{$search}}&folderId={{$folderID}}">{{icon "check"}} Follows You</button>
 		{{- end }}
-		<!--button script="on click trigger closeModal">Close</button-->
 	</div>
 </div>
 

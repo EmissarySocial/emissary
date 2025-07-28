@@ -66,6 +66,7 @@ func (w Attachment) AmFollowing(url string) model.Following {
 	return following
 }
 
+/*
 func (w Attachment) IsFollower(url string) model.Follower {
 
 	followerService := w._factory.Follower()
@@ -78,6 +79,7 @@ func (w Attachment) IsFollower(url string) model.Follower {
 	_ = followerService.LoadByActor(w._user.UserID, url, &follower)
 	return follower
 }
+*/
 
 // AttachmentID returns the AttachmentID property of this Follow
 func (w Attachment) AttachmentID() string {

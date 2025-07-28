@@ -358,11 +358,7 @@ func (w Common) IsFollower(url string) model.Follower {
 	followerService := w._factory.Follower()
 	follower := model.NewFollower()
 
-	if w._user == nil {
-		return follower
-	}
-
-	_ = followerService.LoadByActor(w._user.UserID, url, &follower)
+	_ = followerService.LoadByActor(w.AuthenticatedID(), url, &follower)
 	return follower
 }
 

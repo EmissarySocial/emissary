@@ -325,7 +325,7 @@
 			roles: ["self"]
 			steps:[
 				{do:"with-follower", steps:[
-					{do:"delete", title:"Remove Follower?", message:"Stop sending updates to '{{.Label}}'?", button:"Remove"}
+					{do:"delete", title:"Remove Follower?", message:"Stop sending updates to '{{.Label}}'?", submit:"Remove"}
 					{do:"refresh-page"}
 				]}
 			]
