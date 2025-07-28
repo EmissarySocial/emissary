@@ -20,6 +20,10 @@ behavior blockselect(link)
 		if event.target.hasAttribute("hx-on:click") then
 			exit
 		end
+
+		if event.target.classList.contains("blockselect-ignore") then
+			exit
+		end
 		
 		if window.getSelection().toString() is not "" then
 			exit

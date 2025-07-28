@@ -20,7 +20,12 @@ behavior Modal
 		wait a tick then
 		add .ready to #modal
 
-		set firstElement to the first <[tabindex]/> in me
+		log #modal-body
+		if #modal-body is not null then
+			set firstElement to the first <[tabindex]/> in the #modal-body
+		else
+			set firstElement to the first <[tabindex]/> in me
+		end
 
 		if firstElement is not null then 
 			focus() the firstElement

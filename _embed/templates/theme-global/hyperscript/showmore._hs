@@ -5,6 +5,8 @@ behavior showMore(maxHeight)
 		set :button to the first <.showMore-button /> in me
 		set :content to the first <.showMore-content /> in me
 
+		add .blockselect-ignore to :button
+
 		log maxHeight
 		log :content
 		measure the :content's height

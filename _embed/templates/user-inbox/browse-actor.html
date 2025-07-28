@@ -1,0 +1,95 @@
+{{- $builder := index . 0 -}}
+{{- $actor := index . 1 -}}
+
+{{- $following := $builder.AmFollowing $actor.ID -}}
+{{- $follower := $builder.IsFollower $actor.ID -}}
+
+<div id="modal-header" class="flex-row">
+	<div role="tablist" class="pills margin-bottom-none">
+		<button role="tab" aria-selected="true">{{icon "person"}} Profile</button>
+		<button role="tab" hx-get="/@me/settings/actor-notes?followingId={{$following.ID}}">{{icon "note"}} Notes</button>
+
+		{{ if $following.IsNew -}}
+			<button role="tab" hx-get="/@me/settings/following-edit?url={{$actor.ID}}">{{icon "add"}} Follow</button>
+		{{- else -}}
+			<button role="tab" hx-get="/@me/settings/following-edit?url={{$actor.ID}}">{{icon "check"}} Following</button>
+		{{- end }}
+
+		{{ if not $follower.IsNew -}}
+			<button role="tab" hx-get="/@me/settings/follower-edit?followerId={{$follower.ID}}">{{icon "fediverse"}} Follows You</button>
+		{{- end }}
+		<!--button script="on click trigger closeModal">Close</button-->
+	</div>
+</div>
+
+<div id="modal-body" class="pos-relative">
+
+	{{- if $actor.HasImage -}}
+		<div class="margin-bottom" xstyle="width:100%; margin-left:calc(0 - (var(--rhythm) * 2)); margin-right:calc(0 - (var(--rhythm) * 2)); margin-top:calc(0 - (var(--rhythm) * 2));">
+			<img src="{{$actor.Image.Href}}" class="width-100% object-fit-cover" style="max-height:240px">
+		</div>
+	{{- end -}}
+
+	<div class="flex-row margin-bottom">
+		<div class="flex-grow flex-row flex-align-center text-plain">
+			{{- if $actor.Icon.NotNil -}}
+				<img src="{{$actor.Icon.Href}}" class="circle width-64">
+			{{- end -}}
+			<div>
+				<div class="text-plain text-lg bold margin-vertical-none">{{$actor.Name}}</div>
+				<div class="text-light-gray margin-vertical-none">{{$actor.UsernameOrID}}</div>
+			</div>
+		</div>
+		<div class="text-sm">
+			<a class="button outline" href="{{$actor.ID}}" target="_blank">{{icon "globe"}} Website</a>
+			<button hx-get="/@me/inbox/message-new?url={{$actor.ID}}" class="primary">{{icon "chat"}} Message</button>
+		</div>
+	</div>
+
+	{{- if ne "" $actor.Summary -}}
+		<div class="margin-vertical">
+			{{- $actor.SummaryWithTagLinks | htmlMinimal -}}
+		</div>
+
+	{{- else if $actor.Tag.NotEmpty -}}
+		<div class="margin-vertical text-xs">
+			{{- range $tag := $actor.Tag.Range -}}
+				<a href="{{$tag.Href}}" target="_blank" class="button">{{$tag.Name}}</a>
+			{{- end -}}
+		</div>
+	{{- end -}}
+
+	{{- if $actor.Attachment.NotEmpty -}}
+		<table class="table">
+			{{range $attachment := $actor.Attachment.Range}}
+				{{- $attachmentValue := $attachment.Get "value" -}}
+				{{- $attachmentValue := $attachmentValue.String -}}
+				<tr>
+					<td nowrap>{{$attachment.Name}}</td>
+					<td style="width:100%">{{$attachmentValue | html}}</td>
+				</tr>
+			{{end}}
+		</table>
+	{{- end -}}
+
+	{{- $featured := $actor.Featured.String -}}
+	{{- if ne "" $featured -}}
+		{{- $featured := $builder.ActivityStream $featured -}}
+		{{- if $featured.Items.NotEmpty -}}
+			<div class="margin-top bold">{{icon "pin-fill"}} Featured Posts</div>
+			{{- range $index, $item := $featured.Items.RangeWithIndex -}}
+				<div class="card padding margin-top" script="install blockselect(link:#featured-{{$index}})">
+
+					<div class="bold">{{$item.Name}}</div>
+					<div>{{$item.Content | htmlMinimal}}</div>
+					<div class="flex-row text-sm">
+						<span class="flex-grow text-light-gray margin-right">{{- $item.Published | shortDate -}}</span>
+						<span id="featured-{{$index}}" hx-get="/@me/inbox/browse?url={{$item.ID}}" class="link">View Full Post &rarr;</span>
+					</div>
+				</div>
+			{{- end -}}
+		{{- end -}}
+	{{- end -}}
+	
+</div>
+	

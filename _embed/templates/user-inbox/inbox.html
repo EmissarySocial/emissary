@@ -16,7 +16,7 @@
 	<div class="app-content">
 
 		<div class="text-sm nowrap margin-top-sm pos-sticky" style="float:right; top:56px; padding:16px 0px 16px 16px; border-radius:4px; background-color:var(--page-background);">
-			<button hx-get="/@me/settings/following-search?folderId={{$folderID}}" class="primary turboclick">{{icon "add"}} Follow</button>
+			<button hx-get="/@me/settings/following-search?folderId={{$folderID}}" class="primary turboclick">{{icon "add"}} Source</button>
 			{{- if $filter.IsZero -}}
 				<button hx-get="/@me/inbox/filter?folderId={{$folderID}}" class="turboclick">{{icon "filter"}} Filter</button>
 			{{- else -}}

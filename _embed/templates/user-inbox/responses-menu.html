@@ -1,0 +1,19 @@
+{{- $document := . -}}
+{{- $url := $document.ID -}}
+{{- $statistics := $document.Statistics -}}
+
+<hr class="margin-bottom-sm"/>
+
+<div role="tablist" class="pills">
+	<span role="tab" aria-selected="true" hx-get="/@me/inbox/responses-replies?url={{$url}}">
+		Replies <span class="pill pill-blue">{{- $statistics.Replies }}</span>
+	</span>
+	<span role="tab" hx-get="/@me/inbox/responses-announces?url={{$url}}">
+		Shares <span class="pill">{{- $statistics.Announces }}</span>
+	</span>
+	<span role="tab" hx-get="/@me/inbox/responses-likes?url={{$url}}">
+		Likes <span class="pill">{{- $statistics.Likes }}</span>
+	</span>
+</div>
+
+<hr class="margin-top-none"/>

@@ -1,0 +1,46 @@
+{{- $message := .Message -}}
+
+{{- $url := .QueryParam "url" -}}
+{{- $folderID := .QueryParam "folderId" -}}
+{{- $followingID := .QueryParam "origin.followingId" -}}
+
+{{- $document := .ActivityStream $url -}}
+{{- $attributedTo := $document.AttributedTo -}}
+{{- $inReplyTo := $document.InReplyTo -}}
+{{- $inReplyToAttributedTo := $inReplyTo.AttributedTo -}}
+
+<div id="modal-header">
+
+	<div>
+		<div class="flex-row text-xs">
+
+			<div class="flex-grow-1">
+				<span class="button-group" script="install message(messageId:'{{$message.ID}}')">
+					<button id="previous" hx-get="/@me/inbox/message?messageId={{$message.ID}}&sibling=prev&folder={{$folderID}}&followingId={{$followingID}}" script="install hotkey" aria-key-shortcuts="ArrowLeft">&laquo; Prev</button>
+					<button id="next" hx-get="/@me/inbox/message?messageId={{$message.ID}}&sibling=next&folderId={{$folderID}}&followingId={{$followingID}}" script="install hotkey" aria-key-shortcuts="ArrowLeft">Next &raquo;</button>
+				</span>
+
+				<span class="button-group">
+					{{.View "message-mute-button"}}
+				</span>
+				<span class="button-group">
+					<a href="{{$message.URL}}" target="_blank" class="button">{{icon "globe"}} Website</a>
+					<a hx-get="/@me/inbox/message?messageId={{$message.ID}}&followingId={{$followingID}}" class="button selected bold">{{icon "braces"}} Code</a>
+				</span>
+			</div>
+
+			<div>
+				<span class="button-group">	
+					<button script="on click send closeModal">Close</button>
+				</span>
+			</div>
+		
+		</div>
+
+	</div>
+
+</div>
+
+<div id="modal-body" class="padding-top">
+	<pre><code class="text-sm">{{ $document | jsonIndent }}</code></pre>
+</div>

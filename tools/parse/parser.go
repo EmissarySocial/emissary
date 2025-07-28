@@ -45,13 +45,13 @@ func (parser *Parser) With(options ...Option) *Parser {
 // Parse scans the provided string, and returns a list of tags that were found, and the remainder of the string
 func (parser Parser) Parse(original string) sliceof.String {
 
-	var readyForToken bool = true
-	var ingestingToken bool
+	var readyForToken = true
+	var ingestingToken = false
 	var currentToken strings.Builder // currentToken is the tag that we're currently ingesting
 
 	found := sliceof.NewString() // found is the list of tags that we've found
 
-	// Scan each run in the original string
+	// Scan each rune in the original string
 	for index, r := range original {
 
 		switch {

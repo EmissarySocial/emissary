@@ -22,12 +22,14 @@ func Actor(document streams.Document) map[string]any {
 		vocab.PropertyURL:               document.URL(),
 
 		// Collections
-		vocab.PropertyInbox:     document.Inbox().String(),
-		vocab.PropertyOutbox:    document.Outbox().Value(), // using raw outbox value because RSS feeds stuff data in here.
-		vocab.PropertyLiked:     document.Liked().String(),
-		vocab.PropertyFollowers: document.Followers().String(),
-		vocab.PropertyFollowing: document.Following().String(),
-		vocab.PropertyPublicKey: document.PublicKey().Value(),
+		vocab.PropertyAttachment: document.Attachment().Value(),
+		vocab.PropertyInbox:      document.Inbox().String(),
+		vocab.PropertyOutbox:     document.Outbox().Value(), // using raw outbox value because RSS feeds stuff data in here.
+		vocab.PropertyLiked:      document.Liked().String(),
+		vocab.PropertyFeatured:   document.Featured().String(),
+		vocab.PropertyFollowers:  document.Followers().String(),
+		vocab.PropertyFollowing:  document.Following().String(),
+		vocab.PropertyPublicKey:  document.PublicKey().Value(),
 
 		"x-original": document.Value(),
 	}

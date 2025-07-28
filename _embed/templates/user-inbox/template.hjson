@@ -250,6 +250,15 @@
 				]}
 			]
 		}
+		message-code: {
+			roles:["self"]
+			steps:[
+				{do:"as-modal", options:["class:large"], steps:[
+					{do:"view-html"}
+				]}
+			]
+		}
+
 		message-mute-button:{
 			roles:["self"]
 			steps:[
@@ -338,6 +347,15 @@
 				{do:"set-header", name:"hx-retarget", value:"#responses"}
 				{do:"set-header", name:"hx-reswap", value:"outerHTML"}
 				{do:"view-html", method:"post", file:"responses-replies"}
+			]
+		}
+
+		browse: {
+			roles: ["self"]
+			steps: [
+				{do:"as-modal", options:["xclass:large"], steps:[
+					{do: "view-html"}
+				]}
 			]
 		}
 	}

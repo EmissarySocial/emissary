@@ -3,11 +3,11 @@
 
 {{- if lt $query.Length 6 -}}
 
-	<div class="margin-top">
+	<div class="table margin-top">
 
 		{{- range $index, $like := $query -}}
 			{{- $icon := $like.Actor.Icon -}}
-			<div hx-get="/@me/settings/following-add?url={{$like.Actor.ID}}" class="flex-row clickable" role="link">
+			<div hx-get="/@me/settings/following-edit?url={{$like.Actor.ID}}" class="flex-row clickable" role="link">
 
 				<div class="margin-right">
 					{{- if $icon.NotNil -}}
@@ -20,7 +20,7 @@
 				<div>
 					<div class="bold">{{$label}} {{$like.Actor.Name}}</div>
 					{{- if not $like.Published.IsZero -}}
-						<div class="text-gray">on {{$like.Published | shortDate}}</div>
+						<div class="text-gray text-sm">on {{$like.Published | shortDate}}</div>
 					{{- end -}}
 				</div>
 
@@ -36,12 +36,12 @@
 		{{- $size := iif (lt $query.Length 18) "32" "48" -}}			
 		{{- range $index, $like := $query -}}
 			{{- $icon := $like.Actor.Icon -}}
-			<div hx-get="/@me/settings/following-add?url={{$like.Actor.ID}}" class="clickable tooltip-container" role="link">
+			<div hx-get="/@me/settings/browse?url={{$like.Actor.ID}}" class="clickable tooltip-container" role="link">
 
 				<div class="tooltip align-left">
 					<div class="bold margin-vertical-xs">{{$label}} {{$like.Actor.Name}}</div>
 					{{- if not $like.Published.IsZero -}}
-						<div class="text-gray margin-vertical-xs">on {{$like.Published | shortDate}}</div>
+						<div class="text-sm text-gray margin-vertical-xs">on {{$like.Published | shortDate}}</div>
 					{{- end -}}
 				</div>
 

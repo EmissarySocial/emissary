@@ -1,0 +1,9 @@
+{{- $url := .QueryParam "url" -}}
+{{- $document := .ActivityStream $url -}}
+{{- $args := array . $document -}}
+
+{{- if $document.IsActor -}}
+	{{- template "notes-actor" $args -}}
+{{- else  -}}
+	{{ template "notes-document" $args -}}
+{{- end -}}

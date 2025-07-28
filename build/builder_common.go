@@ -332,6 +332,40 @@ func (w Common) ActivityStream(url string) streams.Document {
 	return result
 }
 
+// AmFollowing returns a Following record for the current user and the given URL
+// If the user is not authenticated, or the URL is not valid, then an empty Following record is returned.
+// The UX uses this to label "mutual" follows
+func (w Common) AmFollowing(url string) model.Following {
+
+	if !w._authorization.IsAuthenticated() {
+		return model.NewFollowing()
+	}
+
+	// Get following service and new following record
+	followingService := w._factory.Following()
+	following := model.NewFollowing()
+
+	// Retrieve following record. Discard errors
+	// nolint:errcheck
+	_ = followingService.LoadByURL(w._authorization.UserID, url, &following)
+
+	// Return the (possibly empty) Following record
+	return following
+}
+
+func (w Common) IsFollower(url string) model.Follower {
+
+	followerService := w._factory.Follower()
+	follower := model.NewFollower()
+
+	if w._user == nil {
+		return follower
+	}
+
+	_ = followerService.LoadByActor(w._user.UserID, url, &follower)
+	return follower
+}
+
 // ActivityStreamActor returns an ActivityStream actor document for the provided URL.  The
 // returned document uses Emissary's custom ActivityStream service, which uses
 // document values and rules from the server's shared cache.

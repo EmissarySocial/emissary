@@ -79,6 +79,10 @@ func (w Model) service() service.ModelService {
 	return w._service
 }
 
+func (w Model) IsNew() bool {
+	return w._object.IsNew()
+}
+
 func (w Model) Object() any {
 	return w._object
 }

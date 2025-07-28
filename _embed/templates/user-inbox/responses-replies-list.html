@@ -39,6 +39,7 @@
 			</div>
 
 			<div class="align-right text-xs nowrap">
+				<!--
 				<span
 					hx-get="/@me/inbox/like-button?url={{$object.ID}}"
 					hx-target="this"
@@ -56,6 +57,7 @@
 						</span>
 					{{- end -}}
 				{{- end -}}
+				-->
 				
 			</div>
 
@@ -103,7 +105,18 @@
 				{{ end }}
 
 			</div>
-			{{ template "tags" $stream }}
+
+			<div class="margin-vertical">
+				{{ template "tags" $stream }}
+			</div>
+
+			<div class="text-xs margin-top"
+				hx-get="/@me/inbox/like-button?url={{$object.ID}}"
+				hx-target="this"
+				hx-trigger="load"
+				hx-swap="innerHTML">
+			</div>
+
 		</div>
 	</div>
 

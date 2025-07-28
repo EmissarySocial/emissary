@@ -671,6 +671,19 @@ func (w Inbox) AmFollowing(url string) model.Following {
 	return following
 }
 
+func (w Inbox) IsFollower(url string) model.Follower {
+
+	followerService := w._factory.Follower()
+	follower := model.NewFollower()
+
+	if w._user == nil {
+		return follower
+	}
+
+	_ = followerService.LoadByActor(w._user.UserID, url, &follower)
+	return follower
+}
+
 // HasRule returns a rule that matches the current user, rule type, and trigger.
 // If no rule is found, then an empty rule is returned.
 func (w Inbox) HasRule(ruleType string, trigger string) model.Rule {

@@ -9,6 +9,24 @@ type Icons struct{}
 func (service Icons) Get(name string) string {
 	switch name {
 
+	// Semantic
+	case "announce":
+		return service.get("rocket-takeoff")
+	case "announce-fill":
+		return service.get("rocket-takeoff-fill")
+	case "dislike":
+		return service.get("thumbs-down")
+	case "dislike-fill":
+		return service.get("thumbs-down-fill")
+	case "like":
+		return service.get("heart")
+	case "like-fill":
+		return service.get("heart-fill")
+	case "reply":
+		return service.get("reply")
+	case "reply-fill":
+		return service.get("reply-fill")
+
 	// App Actions and Behaviors
 	case "add":
 		return service.get("plus-lg")
@@ -36,6 +54,8 @@ func (service Icons) Get(name string) string {
 		return service.get("bell")
 	case "bell-fill":
 		return service.get("bell-fill")
+	case "braces":
+		return service.get("braces")
 	case "book":
 		return service.get("book")
 	case "book-fill":
@@ -218,6 +238,14 @@ func (service Icons) Get(name string) string {
 		return service.get("newspaper")
 	case "none":
 		return service.get("ban")
+	case "note":
+		return service.get("sticky")
+	case "note-fill":
+		return service.get("sticky-fill")
+	case "notes":
+		return service.get("stickies")
+	case "notes-fill":
+		return service.get("stickies-fill")
 	case "pause":
 		return service.get("pause")
 	case "pause-fill":
@@ -238,10 +266,6 @@ func (service Icons) Get(name string) string {
 		return service.get("play")
 	case "play-fill":
 		return service.get("play-fill")
-	case "reply":
-		return service.get("reply")
-	case "reply-fill":
-		return service.get("reply-fill")
 	case "repost":
 		return service.get("repeat")
 	case "rocket":

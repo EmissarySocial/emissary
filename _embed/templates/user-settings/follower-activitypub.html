@@ -31,7 +31,7 @@
 			{{- if $following.NotZero -}}
 				<button hx-get="/@me/settings/following-delete?followingId={{$following.FollowingID.Hex}}" class="text-xs" hx-push-url="false">&check; Following</button>
 			{{- else -}}
-				<button hx-get="/@me/settings/following-add?url={{$activityStream.ID}}" class="text-xs" hx-push-url="false">&plus; Follow</button>
+				<button hx-get="/@me/settings/following-edit?url={{$activityStream.ID}}" class="text-xs" hx-push-url="false">&plus; Follow</button>
 			{{- end -}}
 			<a href="{{$activityStream.ID}}" class="button text-xs" target="_blank">View Profile &rarr;</a>
 		</div>

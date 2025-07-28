@@ -1,28 +1,70 @@
+{{- $search := .QueryParam "search" -}}
+{{- $url := .QueryParam "url" -}}
+{{- $folderID := .QueryParam "folderId"}}
 {{- $following := .Object -}}
+{{- $actor := .ActivityStreamActor $url -}}
+{{- $follower := .IsFollower $actor.ID -}}
 
-<div class="flex-row flex-align-start margin-bottom-lg">
-	<div class="margin-top-sm">
-		{{- if ne "" $following.IconURL -}}
-			<img src="{{$following.IconURL}}" class="circle width-64">
+<div id="modal-header" class="flex-row">
+	<div role="tablist" class="pills margin-bottom-none">
+		<button hx-get="/@me/inbox/browse?url={{$actor.ID}}" role="tab">{{icon "person"}} Profile</button>
+		<button role="tab" hx-get="/@me/inbox/notes?url={{$actor.ID}}">{{icon "note"}} Notes</button>
+
+		{{ if $following.IsNew -}}
+			<button aria-selected="true" role="tab">{{icon "add"}} Follow</button>
 		{{- else -}}
-			<div class="circle width-64"></div>
-		{{- end -}}
-	</div>
+			<button aria-selected="true" role="tab">{{icon "check"}} Following</button>
+		{{- end }}
 
-	<div>
-		<div class="text-xl bold margin-top-sm margin-bottom-none">{{$following.Label}}</div>
-		<div class="margin-vertical-none">
-			<a href="{{$following.URL}}" target="_blank" tabIndex="0" class="text-plain">
-				<span class="clickable text-light-gray">{{$following.UsernameOrID}}</span> &nbsp;
-				<span class="button text-sm">Go to Profile &rarr;</span>
-			</a>
-		</div>
-		<div class="text-green bold margin-top">
-			{{ if eq "ACTIVITYPUB" $following.Method -}}
-				{{icon "check-badge-fill"}} Following via ActivityPub
-			{{ else if eq "POLL" $following.Method -}}
-				{{icon "rss-fill"}} Following via RSS/Atom
-			{{- end -}}
-		</div>
+		{{ if not $follower.IsNew -}}
+			<button role="tab" hx-get="/@me/settings/follower-edit?followerId={{$follower.ID}}">{{icon "fediverse"}} Follows You</button>
+		{{- end }}
+		<!--button script="on click trigger closeModal">Close</button-->
 	</div>
 </div>
+
+<div id="modal-body">
+
+	{{- if ne "" $search -}}
+		<div class="margin-bottom">
+			<span role="link" class="link" hx-get="/@me/settings/following-search?search={{$search}}&folderId={{$folderID}}" hx-target="#modal">
+				&larr; Back to Search
+			</span>
+		</div>
+	{{- end -}}
+
+	<div class="flex-row width-100% flex-align-start margin-bottom-lg">
+		<div class="margin-top-sm">
+			{{- if $actor.HasIcon -}}
+				<img src="{{$actor.Icon.Href}}" class="circle width-64">
+			{{- else -}}
+				<div class="circle width-64"></div>
+			{{- end -}}
+		</div>
+
+		<div class="flex-grow">
+			<div class="text-lg bold margin-none">{{$actor.Name}}</div>
+			<div class="margin-bottom text-light-gray">{{$actor.UsernameOrID}}</div>
+
+			{{- if not $following.IsNew -}}
+				<div class="text-green bold margin-top">
+					{{ if eq "ACTIVITYPUB" $following.Method -}}
+						{{icon "check-badge-fill"}} Following via ActivityPub
+					{{ else if eq "POLL" $following.Method -}}
+						{{icon "rss-fill"}} Following via RSS/Atom
+					{{- end -}}
+				</div>
+			{{- end -}}
+		</div>
+
+		<!--
+		<div class="flex-align-center">
+			<button hx-get="/@me/inbox/browse?url={{$actor.ID}}" class="text-xs">
+				{{icon "person"}} Profile
+			</button>
+			<a href="{{$actor.ID}}" target="_blank" class="button text-xs">
+				{{icon "globe"}} Website
+			</a>
+		</div>
+		-->
+	</div>

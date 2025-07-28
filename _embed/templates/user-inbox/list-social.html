@@ -9,68 +9,85 @@
 
 		<hr class="noselect">
 		<div 
-			id="item_{{$message.MessageID.Hex}}" 
+			id="item_{{$message.ID}}" 
 			class="message"
-			script="install listItem(messageId:'{{.MessageID.Hex}}')">
+			style="max-width:640px"
+			script="
+				install listItem(messageId:'{{$message.ID}}')
+			">
 
-			{{- $stream := $inboxBuilder.ActivityStream $message.URL -}}
-			{{- $image := $stream.ImageOrIcon -}}
-			{{- $attributedTo := $stream.AttributedTo -}}
+			{{- $document := $inboxBuilder.ActivityStream $message.URL -}}
+			{{- $image := $document.ImageOrIcon -}}
+			{{- $attributedTo := $document.AttributedTo -}}
 
 			{{- if eq "NEW-REPLIES" $message.StateID -}}
 				<div class="flex-row">
-					<div class="width-48 margin-right-sm"></div>
+					<div class="width-48 flex-shrink-0 margin-right-sm"></div>
 					<div class="bold italics text-green text-sm">
 						{{icon "chat-fill"}} New Replies
 					</div>
 				</div>
 			{{- else if eq "MUTED" $message.StateID -}}
 				<div class="flex-row">
-					<div class="width-48 margin-right-sm"></div>
+					<div class="width-48 flex-shrink-0 margin-right-sm"></div>
 					<div class="bold italics text-gray text-sm">
 						{{icon "mute"}} Notifications Muted
 					</div>
 				</div>
+			{{- else if ne "PRIMARY" $message.Origin.Type -}}
+				<div class="flex-row">
+					<div class="width-48 flex-shrink-0 margin-right-sm"></div>
+					<div class="margin-bottom-sm">
+						{{- template "message-origin" $message -}}
+					</div>
+				</div>
 			{{- end -}}
 
-			<div class="flex-row width-100%">
-				<div class="width-48 margin-right-sm noselect">
-					{{- if $attributedTo.Icon.NotNil -}}
-						<img src="{{$attributedTo.Icon.Href}}" class="circle width-48">
-					{{- else -}}
-						<div class="circle width-48"></div>
-					{{- end -}}
-				</div>
+			{{- if $attributedTo.NotEmpty -}}
+				<div class="flex-row width-100%" hx-get="/@me/inbox/browse?url={{$attributedTo.ID}}">
+					<div class="width-48 flex-shrink-0 margin-right-sm noselect clickable">
+						{{- if $attributedTo.Icon.NotNil -}}
+							<img src="{{$attributedTo.Icon.Href}}" class="circle width-48">
+						{{- else -}}
+							<div class="circle width-48"></div>
+						{{- end -}}
+					</div>
 
-				<div class="flex-grow">
-					{{- if ne "" $attributedTo.Name -}}
-						<div class="bold text-black">{{$attributedTo.Name}}</div>
-						{{- if ne "" $attributedTo.Username -}}
+					<div class="flex-grow">
+						{{- if ne "" $attributedTo.Name -}}
+							<div class="bold text-black"><span class="clickable">{{$attributedTo.Name}}</span></div>
 							<div class="text-light-gray ellipsis">
-								{{$attributedTo.Username}}
+								<span class="clickable">{{$attributedTo.UsernameOrID}}</span>
 							</div>
 						{{- end -}}
-					{{- else -}}
-						<div class="bold text-black">{{ $message.Origin.Label }} </div>
-					{{- end -}}
+					</div>
+				</div>
+			{{- end -}}
+			
+			<div class="flex-row width-100% clickable margin-top-sm" script="install blockselect(link:#reply-{{$message.ID}})">
+				<div class="width-48 flex-shrink-0 margin-right-sm noselect"></div>
 
-					{{- if ne "" $stream.Name -}}
-						<div>
-							<span class="bold text-black">{{$stream.Name}}</span>
-						</div>
+				<div class="flex-grow">
+
+					{{- if ne "" $document.Name -}}
+						<div class="bold text-black">{{$document.Name}}</div>
 					{{- end -}}
 
 					<div class="margin-top" script="install showMore(maxHeight:240)">
 						<div class="showMore-content">
-						{{- if $stream.HasContent -}}
-							{{- $stream.Content | htmlMinimal -}}
-						{{- else if $stream.HasSummary -}}
-							{{- $stream.Summary | htmlMinimal -}}
-						{{- end -}}
+							{{- if $document.HasContent -}}
+								{{- $document.Content | htmlMinimal -}}
+							{{- else if $document.HasSummary -}}
+								{{- $document.Summary | htmlMinimal -}}
+							{{- end }}
 						</div>
 						<div class="margin-vertical">
 							<button class="text-xs showMore-button" hidden>Show More &hellip;</button>
 						</div>
+					</div>
+
+					<div class="text-sm text-light-gray">
+						{{ $message.PublishDate | tinyDate }} ago
 					</div>
 
 					{{- if $image.NotNil -}}
@@ -79,44 +96,7 @@
 						</div>
 					{{- end -}}
 
-					{{- $stats := $stream.Statistics -}}
-
-					<div class="margin-top text-gray noselect">
-						<span 			
-							role="button"
-							hx-get="/@me/inbox/message?messageId={{$message.MessageID.Hex}}&url={{$message.URL}}&folderId={{$folderID}}&origin.followingId={{$internalID}}"
-							hx-push-url="false"
-							tabIndex="0"
-							class="clickable margin-right hover-swell" 
-							title="Reply to this item">{{icon "chat"}}</span>
-
-						<span class="margin-right hover-swell" title="Like this item">{{icon "heart"}}</span>
-
-						<span class="margin-right hover-swell" title="Share this item">{{icon "share"}}</span>
-
-						<span class="margin-right hover-swell" title="Bookmark this item">{{icon "bookmark"}}</span>
-
-						{{ if gt $stats.Replies 0 }}
-							&middot; <span
-								role="button"
-								hx-get="/@me/inbox/message?messageId={{$message.MessageID.Hex}}&url={{$message.URL}}&folderId={{$folderID}}&origin.followingId={{$internalID}}"
-								hx-push-url="false"
-								tabIndex="0"
-								class="margin-horizontal-sm">{{$stats.Replies}} {{pluralize $stats.Replies "Reply" "Replies"}}</span>
-						{{ end }}
-
-						{{ if gt $stats.Likes 0 }}
-							&middot; <span class="margin-horizontal-sm">{{$stats.Likes}} {{pluralize $stats.Likes "Like" "Likes"}}</span>
-						{{ end }}
-
-						{{ if gt $stats.Announces 0 }}
-							&middot; <span class="margin-horizontal-sm">{{$stats.Announces}} {{pluralize $stats.Announces "Share" "Shares"}}</span>
-						{{ end }}
-					</div>
-				</div>
-
-				<div class="text-sm text-light-gray nowrap align-right noselect">
-					{{- $message.PublishDate | tinyDate }} ago
+					{{- template "message-activities" (array $message $document $folderID $internalID) -}}
 				</div>
 
 			</div>
@@ -138,8 +118,8 @@
 
 {{- else -}}
 
-	{{if eq "" (.QueryParam "remote") -}}
-		<h2 class="text-gray">This inbox is empty.  Try following a new person or website.</h2>
+	{{- if eq "" (.QueryParam "remote") -}}
+			<h2 class="text-gray">This inbox is empty.  You can <span hx-get="/@me/settings/following-search?folderId={{$folderID}}" class="link">follow a new person</span> or website to add more.</h2>
 	{{- end -}}
 
 	<div style="height:100vw"></div>

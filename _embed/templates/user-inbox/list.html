@@ -78,7 +78,7 @@
 	{{- else -}}
 
 		{{if eq "" (.QueryParam "remote") -}}
-			<h2 class="text-gray">This inbox is empty.  Try following a new person or website.</h2>
+			<h2 class="text-gray">This inbox is empty.  You can <span hx-get="/@me/settings/following-search?folderId={{$folderID}}" class="link">follow a new person</span> or website to add more.</h2>
 		{{- end -}}
 
 		<div style="height:100vw"></div>
