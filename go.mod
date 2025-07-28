@@ -8,7 +8,7 @@ require (
 	github.com/benpate/color v0.1.0
 	github.com/benpate/data v0.30.0
 	github.com/benpate/data-mock v0.30.0
-	github.com/benpate/data-mongo v0.30.2
+	github.com/benpate/data-mongo v0.30.3
 	github.com/benpate/derp v0.32.5
 	github.com/benpate/digit v0.13.5
 	github.com/benpate/digital-dome v0.2.5
@@ -16,7 +16,7 @@ require (
 	github.com/benpate/exp v0.8.5
 	github.com/benpate/exp-builder v0.10.2
 	github.com/benpate/form v0.24.1
-	github.com/benpate/hannibal v0.13.2
+	github.com/benpate/hannibal v0.13.3
 	github.com/benpate/html v0.16.12
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.15.5
@@ -53,13 +53,13 @@ require (
 	github.com/spf13/pflag v1.0.7
 	github.com/stretchr/testify v1.10.0
 	github.com/stripe/stripe-go/v78 v78.12.0
-	github.com/tdewolff/minify/v2 v2.23.9
+	github.com/tdewolff/minify/v2 v2.23.10
 	github.com/timewasted/go-accept-headers v0.0.0-20130320203746-c78f304b1b09
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
 	github.com/xhit/go-simple-mail/v2 v2.16.0
 	github.com/yeqown/go-qrcode/v2 v2.2.5
 	github.com/yeqown/go-qrcode/writer/standard v1.3.0
-	github.com/yuin/goldmark v1.7.12
+	github.com/yuin/goldmark v1.7.13
 	github.com/yuin/goldmark-highlighting/v2 v2.0.0-20230729083705-37449abec8cc
 	go.abhg.dev/goldmark/anchor v0.2.0
 	go.mongodb.org/mongo-driver v1.17.4
