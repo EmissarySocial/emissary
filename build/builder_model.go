@@ -24,12 +24,12 @@ type Model struct {
 }
 
 // NewModel returns a fully initialized `Model` builder.
-func NewModel(factory Factory, request *http.Request, response http.ResponseWriter, template model.Template, object model.AccessLister, actionID string) (Model, error) {
+func NewModel(factory Factory, session data.Session, request *http.Request, response http.ResponseWriter, template model.Template, object model.AccessLister, actionID string) (Model, error) {
 
 	const location = "build.NewModel"
 
 	// Create the underlying Common builder
-	common, err := NewCommonWithTemplate(factory, request, response, template, object, actionID)
+	common, err := NewCommonWithTemplate(factory, session, request, response, template, object, actionID)
 
 	if err != nil {
 		return Model{}, derp.Wrap(err, location, "Error creating common builder")
@@ -171,7 +171,7 @@ func (w Model) View(actionID string) (template.HTML, error) {
 	const location = "build.Stream.View"
 
 	// Create a new builder (this will also validate the user's permissions)
-	subStream, err := NewModel(w._factory, w._request, w._response, w._template, w._object, actionID)
+	subStream, err := NewModel(w._factory, w._session, w._request, w._response, w._template, w._object, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, location, "Error creating sub-builder")
@@ -198,7 +198,7 @@ func (w Model) Identity(identityID primitive.ObjectID) (model.Identity, error) {
 	// Load the Identity from the database
 	identity := model.NewIdentity()
 
-	if err := w.factory().Identity().LoadByID(identityID, &identity); err != nil {
+	if err := w._factory.Identity().LoadByID(w._session, identityID, &identity); err != nil {
 		return model.Identity{}, derp.Wrap(err, location, "Error loading identity by token")
 	}
 
@@ -230,7 +230,7 @@ func (w Model) CircleMembers() (QueryBuilder[model.Identity], error) {
 	)
 
 	// Return the query builder
-	return NewQueryBuilder[model.Identity](w._factory.Identity(), criteria), nil
+	return NewQueryBuilder[model.Identity](w._factory.Identity(), w._session, criteria), nil
 }
 
 /******************************************
@@ -248,7 +248,7 @@ func (w Model) setState(stateID string) error {
 }
 
 func (w Model) clone(action string) (Builder, error) {
-	return NewModel(w._factory, w._request, w._response, w._template, w._object, action)
+	return NewModel(w._factory, w._session, w._request, w._response, w._template, w._object, action)
 }
 
 func (w Model) debug() {

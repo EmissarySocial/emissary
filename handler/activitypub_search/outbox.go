@@ -7,6 +7,7 @@ import (
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/handler/activitypub"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/vocab"
@@ -15,7 +16,7 @@ import (
 	"github.com/benpate/steranko"
 )
 
-func GetOutboxCollection(ctx *steranko.Context, factory *domain.Factory, template *model.Template, _ *model.Stream, searchQuery *model.SearchQuery) error {
+func GetOutboxCollection(ctx *steranko.Context, factory *domain.Factory, session data.Session, template *model.Template, _ *model.Stream, searchQuery *model.SearchQuery) error {
 
 	const location = "handler.activitypub_search.GetOutboxCollection"
 
@@ -43,7 +44,7 @@ func GetOutboxCollection(ctx *steranko.Context, factory *domain.Factory, templat
 	criteria = criteria.AndLessThan("createDate", publishedDate)
 
 	searchResultService := factory.SearchResult()
-	results, err := searchResultService.Query(criteria, option.SortDesc("createDate"), option.MaxRows(60))
+	results, err := searchResultService.Query(session, criteria, option.SortDesc("createDate"), option.MaxRows(60))
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error retrieving search results")

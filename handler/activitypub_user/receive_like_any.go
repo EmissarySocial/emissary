@@ -58,7 +58,7 @@ func saveMessage(context Context, activity streams.Document, actorID string, ori
 	following := model.NewFollowing()
 
 	// If the "Following" record cannot be found, then do not add a message
-	if err := followingService.LoadByURL(context.user.UserID, actorID, &following); err != nil {
+	if err := followingService.LoadByURL(context.session, context.user.UserID, actorID, &following); err != nil {
 
 		if derp.IsNotFound(err) {
 			return nil
@@ -68,7 +68,7 @@ func saveMessage(context Context, activity streams.Document, actorID string, ori
 	}
 
 	// Try to save the message to the database (with de-duplication)
-	if err := followingService.SaveMessage(&following, activity, originType); err != nil {
+	if err := followingService.SaveMessage(context.session, &following, activity, originType); err != nil {
 		return derp.Wrap(err, location, "Error saving message", context.user.UserID, activity.Value())
 	}
 

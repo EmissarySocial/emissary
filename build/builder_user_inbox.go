@@ -30,7 +30,7 @@ type Inbox struct {
 }
 
 // NewInbox returns a fully initialized `Inbox` builder
-func NewInbox(factory Factory, request *http.Request, response http.ResponseWriter, user *model.User, actionID string) (Inbox, error) {
+func NewInbox(factory Factory, session data.Session, request *http.Request, response http.ResponseWriter, user *model.User, actionID string) (Inbox, error) {
 
 	const location = "build.NewInbox"
 
@@ -43,7 +43,7 @@ func NewInbox(factory Factory, request *http.Request, response http.ResponseWrit
 	}
 
 	// Create the underlying Common builder
-	common, err := NewCommonWithTemplate(factory, request, response, template, user, actionID)
+	common, err := NewCommonWithTemplate(factory, session, request, response, template, user, actionID)
 
 	if err != nil {
 		return Inbox{}, derp.Wrap(err, location, "Error creating common builder")
@@ -88,7 +88,7 @@ func (w Inbox) Render() (template.HTML, error) {
 // View executes a separate view for this Inbox
 func (w Inbox) View(actionID string) (template.HTML, error) {
 
-	builder, err := NewInbox(w._factory, w._request, w._response, w._user, actionID)
+	builder, err := NewInbox(w._factory, w._session, w._request, w._response, w._user, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, "build.Inbox.View", "Error creating Inbox builder")
@@ -152,7 +152,7 @@ func (w Inbox) templateRole() string {
 }
 
 func (w Inbox) clone(action string) (Builder, error) {
-	return NewInbox(w._factory, w._request, w._response, w._user, action)
+	return NewInbox(w._factory, w._session, w._request, w._response, w._user, action)
 }
 
 /******************************************
@@ -214,7 +214,7 @@ func (w Inbox) Followers() QueryBuilder[model.FollowerSummary] {
 	)
 
 	// Return the query builder
-	return NewQueryBuilder[model.FollowerSummary](w._factory.Follower(), criteria)
+	return NewQueryBuilder[model.FollowerSummary](w._factory.Follower(), w._session, criteria)
 }
 
 func (w Inbox) Following() QueryBuilder[model.FollowingSummary] {
@@ -228,7 +228,7 @@ func (w Inbox) Following() QueryBuilder[model.FollowingSummary] {
 		exp.Equal("userId", w.AuthenticatedID()),
 	)
 
-	return NewQueryBuilder[model.FollowingSummary](w._factory.Following(), criteria)
+	return NewQueryBuilder[model.FollowingSummary](w._factory.Following(), w._session, criteria)
 }
 
 func (w Inbox) FollowingByFolder(token string) ([]model.FollowingSummary, error) {
@@ -249,7 +249,7 @@ func (w Inbox) FollowingByFolder(token string) ([]model.FollowingSummary, error)
 
 	// Try to load the matching records
 	followingService := w._factory.Following()
-	return followingService.QueryByFolder(userID, followingID)
+	return followingService.QueryByFolder(w._session, userID, followingID)
 }
 
 func (w Inbox) FollowingByToken(followingToken string) (model.Following, error) {
@@ -260,7 +260,7 @@ func (w Inbox) FollowingByToken(followingToken string) (model.Following, error) 
 
 	following := model.NewFollowing()
 
-	if err := followingService.LoadByToken(userID, followingToken, &following); err != nil {
+	if err := followingService.LoadByToken(w._session, userID, followingToken, &following); err != nil {
 		return model.Following{}, derp.Wrap(err, "build.Inbox.FollowingByID", "Error loading following")
 	}
 
@@ -278,7 +278,7 @@ func (w Inbox) Rules() QueryBuilder[model.Rule] {
 		exp.Equal("userId", w.AuthenticatedID()),
 	)
 
-	result := NewQueryBuilder[model.Rule](w._factory.Rule(), criteria)
+	result := NewQueryBuilder[model.Rule](w._factory.Rule(), w._session, criteria)
 
 	return result
 }
@@ -287,7 +287,7 @@ func (w Inbox) RuleByToken(token string) model.Rule {
 	ruleService := w._factory.Rule()
 	rule := model.NewRule()
 
-	if err := ruleService.LoadByToken(w.AuthenticatedID(), token, &rule); err != nil {
+	if err := ruleService.LoadByToken(w._session, w.AuthenticatedID(), token, &rule); err != nil {
 		derp.Report(derp.Wrap(err, "build.Inbox.RuleByToken", "Error loading rule", token))
 	}
 
@@ -325,7 +325,7 @@ func (w Inbox) Inbox() (QueryBuilder[model.Message], error) {
 		expBuilder.Evaluate(queryString),
 	)
 
-	return NewQueryBuilder[model.Message](w._factory.Inbox(), criteria), nil
+	return NewQueryBuilder[model.Message](w._factory.Inbox(), w._session, criteria), nil
 }
 
 // IsInboxEmpty returns TRUE if the inbox has no results and there are no filters applied
@@ -353,13 +353,13 @@ func (w Inbox) Privileges() QueryBuilder[model.Privilege] {
 		exp.Equal("userId", w._user.UserID),
 	)
 
-	return NewQueryBuilder[model.Privilege](w._factory.Privilege(), criteria)
+	return NewQueryBuilder[model.Privilege](w._factory.Privilege(), w._session, criteria)
 
 }
 
 func (w Inbox) MerchantAccount(merchantAccountID string) (model.MerchantAccount, error) {
 	result := model.NewMerchantAccount()
-	err := w._factory.MerchantAccount().LoadByUserAndToken(w._user.UserID, merchantAccountID, &result)
+	err := w._factory.MerchantAccount().LoadByUserAndToken(w._session, w._user.UserID, merchantAccountID, &result)
 	return result, err
 }
 
@@ -373,7 +373,7 @@ func (w Inbox) MerchantAccounts() QueryBuilder[model.MerchantAccount] {
 		exp.Equal("userId", w._user.UserID),
 	)
 
-	return NewQueryBuilder[model.MerchantAccount](w._factory.MerchantAccount(), criteria)
+	return NewQueryBuilder[model.MerchantAccount](w._factory.MerchantAccount(), w._session, criteria)
 }
 
 // FIlteredByFollowing returns the Following record that is being used to filter the Inbox
@@ -390,7 +390,7 @@ func (w Inbox) FilteredByFollowing() model.Following {
 	if followingID, err := primitive.ObjectIDFromHex(token); err == nil {
 		followingService := w._factory.Following()
 
-		if err := followingService.LoadByID(w.AuthenticatedID(), followingID, &result); err == nil {
+		if err := followingService.LoadByID(w._session, w.AuthenticatedID(), followingID, &result); err == nil {
 			return result
 		}
 	}
@@ -409,7 +409,7 @@ func (w Inbox) Folders() (model.FolderList, error) {
 	}
 
 	folderService := w._factory.Folder()
-	folders, err := folderService.QueryByUserID(w.AuthenticatedID())
+	folders, err := folderService.QueryByUserID(w._session, w.AuthenticatedID())
 
 	if err != nil {
 		return result, derp.Wrap(err, "build.Inbox.Folders", "Error loading folders")
@@ -460,19 +460,19 @@ func (w Inbox) SubBuilder(object any) (Builder, error) {
 	switch typed := object.(type) {
 
 	case model.Rule:
-		result, err = NewModel(w._factory, w._request, w._response, w._template, &typed, w._actionID)
+		result, err = NewModel(w._factory, w._session, w._request, w._response, w._template, &typed, w._actionID)
 
 	case model.Folder:
-		result, err = NewModel(w._factory, w._request, w._response, w._template, &typed, w._actionID)
+		result, err = NewModel(w._factory, w._session, w._request, w._response, w._template, &typed, w._actionID)
 
 	case model.Follower:
-		result, err = NewFollower(w._factory, w._request, w._response, w._template, &typed, w._actionID)
+		result, err = NewFollower(w._factory, w._session, w._request, w._response, w._template, &typed, w._actionID)
 
 	case model.Following:
-		result, err = NewModel(w._factory, w._request, w._response, w._template, &typed, w._actionID)
+		result, err = NewModel(w._factory, w._session, w._request, w._response, w._template, &typed, w._actionID)
 
 	case model.Stream:
-		result, err = NewStream(w._factory, w._request, w._response, w._template, &typed, w._actionID)
+		result, err = NewStream(w._factory, w._session, w._request, w._response, w._template, &typed, w._actionID)
 
 	default:
 		result, err = nil, derp.InternalError("build.Common.SubBuilder", "Invalid object type", object)
@@ -510,7 +510,7 @@ func (w Inbox) Message() model.Message {
 	inboxService := w._factory.Inbox()
 	message := model.NewMessage()
 
-	if err := inboxService.LoadByID(w.AuthenticatedID(), messageID, &message); err != nil {
+	if err := inboxService.LoadByID(w._session, w.AuthenticatedID(), messageID, &message); err != nil {
 		derp.Report(derp.Wrap(err, location, "Error loading message", messageID))
 		return model.NewMessage()
 	}
@@ -536,7 +536,7 @@ func (w Inbox) Message() model.Message {
 		}
 
 		// Get results from the database
-		result, _ := inboxService.Query(criteria, options...)
+		result, _ := inboxService.Query(w._session, criteria, options...)
 
 		// If we have (a) result, then return it.
 		if len(result) > 0 {
@@ -575,7 +575,7 @@ func (w Inbox) RepliesBefore(url string, dateString string, maxRows int) sliceof
 	// Filter replies based on rules
 	ruleService := w._factory.Rule()
 	ruleFilter := ruleService.Filter(w.AuthenticatedID())
-	filteredReplies := ruleFilter.Channel(replies)
+	filteredReplies := ruleFilter.Channel(w._session, replies)
 
 	// Limit to maximum number of replies
 	// limitedReplies := channel.Limit(maxRows, filteredReplies, done)
@@ -598,7 +598,7 @@ func (w Inbox) RepliesAfter(url string, dateString string, maxRows int) sliceof.
 	// Filter replies based on rules
 	ruleService := w._factory.Rule()
 	ruleFilter := ruleService.Filter(w.AuthenticatedID())
-	filteredReplies := ruleFilter.Channel(replies)
+	filteredReplies := ruleFilter.Channel(w._session, replies)
 
 	// Limit to maximum number of replies
 	limitedReplies := channel.Limit(maxRows, filteredReplies, done)
@@ -620,7 +620,7 @@ func (w Inbox) AnnouncesBefore(url string, dateString string, maxRows int) slice
 	// Filter replies based on rules
 	ruleService := w._factory.Rule()
 	ruleFilter := ruleService.Filter(w.AuthenticatedID())
-	filteredAnnounces := ruleFilter.Channel(announces)
+	filteredAnnounces := ruleFilter.Channel(w._session, announces)
 
 	// Limit to maximum number of replies
 	limitedAnnounces := channel.Limit(maxRows, filteredAnnounces, done)
@@ -642,7 +642,7 @@ func (w Inbox) LikesBefore(url string, dateString string, maxRows int) sliceof.O
 	// Filter replies based on rules
 	ruleService := w._factory.Rule()
 	ruleFilter := ruleService.Filter(w.AuthenticatedID())
-	filteredLikes := ruleFilter.Channel(announces)
+	filteredLikes := ruleFilter.Channel(w._session, announces)
 
 	// Limit to maximum number of replies
 	limitedLikes := channel.Limit(maxRows, filteredLikes, done)
@@ -665,7 +665,7 @@ func (w Inbox) AmFollowing(url string) model.Following {
 
 	// Retrieve following record. Discard errors
 	// nolint:errcheck
-	_ = followingService.LoadByURL(w._user.UserID, url, &following)
+	_ = followingService.LoadByURL(w._session, w._user.UserID, url, &following)
 
 	// Return the (possibly empty) Following record
 	return following
@@ -701,7 +701,7 @@ func (w Inbox) HasRule(ruleType string, trigger string) model.Rule {
 
 	// Retrieve rule record.  "Not Found" is acceptable, but "legitimate" errors are not.
 	// In either case, do not halt the request
-	if err := ruleService.LoadByTrigger(w._user.UserID, ruleType, trigger, &rule); !derp.IsNilOrNotFound(err) {
+	if err := ruleService.LoadByTrigger(w._session, w._user.UserID, ruleType, trigger, &rule); !derp.IsNilOrNotFound(err) {
 		derp.Report(derp.Wrap(err, "build.Inbox.HasRule", "Error loading rule", ruleType, trigger))
 	}
 

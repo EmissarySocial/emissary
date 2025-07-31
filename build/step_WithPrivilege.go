@@ -48,7 +48,7 @@ func (step StepWithPrivilege) execute(builder Builder, buffer io.Writer, actionM
 
 	if circleID, identityID, exists := step.getCircleAndIdentity(builder); exists {
 
-		if err := privilegeService.LoadByIdentityAndCircle(builder.AuthenticatedID(), identityID, circleID, &privilege); err != nil {
+		if err := privilegeService.LoadByIdentityAndCircle(builder.session(), builder.AuthenticatedID(), identityID, circleID, &privilege); err != nil {
 			return Halt().WithError(derp.Wrap(err, location, "Unable to load Privilege by Identity and Circle", "identityID: "+identityID.Hex(), "circleID: "+circleID.Hex()))
 		}
 	}
@@ -60,7 +60,7 @@ func (step StepWithPrivilege) execute(builder Builder, buffer io.Writer, actionM
 			return Halt().WithError(derp.Wrap(err, location, "Invalid Privilege ID", privilegeToken))
 		}
 
-		if err := privilegeService.LoadByID(builder.AuthenticatedID(), privilegeID, &privilege); err != nil {
+		if err := privilegeService.LoadByID(builder.session(), builder.AuthenticatedID(), privilegeID, &privilege); err != nil {
 			if actionMethod == ActionMethodGet {
 				return Halt().WithError(derp.Wrap(err, location, "Unable to load Privilege", privilegeID))
 			}
@@ -69,7 +69,7 @@ func (step StepWithPrivilege) execute(builder Builder, buffer io.Writer, actionM
 	}
 
 	// Create a new builder tied to the Privilege record
-	subBuilder, err := NewModel(factory, builder.request(), builder.response(), template, &privilege, builder.actionID())
+	subBuilder, err := NewModel(factory, builder.session(), builder.request(), builder.response(), template, &privilege, builder.actionID())
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Unable to create sub-builder"))

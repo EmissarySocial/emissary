@@ -7,13 +7,14 @@ import (
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/camper"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/html"
 	"github.com/benpate/steranko"
 )
 
-func GetIntent_Like(ctx *steranko.Context, factory *domain.Factory, user *model.User) error {
+func GetIntent_Like(ctx *steranko.Context, factory *domain.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.GetIntent_Like"
 
@@ -95,11 +96,11 @@ func GetIntent_Like(ctx *steranko.Context, factory *domain.Factory, user *model.
 	return ctx.HTML(http.StatusOK, b.String())
 }
 
-func PostIntent_Like(ctx *steranko.Context, factory *domain.Factory, user *model.User) error {
-	return postIntent_Response(ctx, factory, user, vocab.ActivityTypeLike)
+func PostIntent_Like(ctx *steranko.Context, factory *domain.Factory, session data.Session, user *model.User) error {
+	return postIntent_Response(ctx, factory, session, user, vocab.ActivityTypeLike)
 }
 
-func postIntent_Response(ctx *steranko.Context, factory *domain.Factory, user *model.User, responseType string) error {
+func postIntent_Response(ctx *steranko.Context, factory *domain.Factory, session data.Session, user *model.User, responseType string) error {
 
 	const location = "handler.GetIntent_Response"
 
@@ -122,7 +123,7 @@ func postIntent_Response(ctx *steranko.Context, factory *domain.Factory, user *m
 	response.Type = responseType
 
 	// Save the Response to the database
-	if err := responseService.Save(&response, "Created via Activity Intent"); err != nil {
+	if err := responseService.Save(session, &response, "Created via Activity Intent"); err != nil {
 		return derp.Wrap(err, location, "Error saving response", transaction)
 	}
 

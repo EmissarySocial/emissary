@@ -37,7 +37,7 @@ func (step StepSetPrivileges) Get(builder Builder, buffer io.Writer) PipelineBeh
 	iconFunc := factory.Icons().Get
 
 	// Load the Products for this User
-	merchantAccounts, products, err := factory.Product().SyncRemoteProducts(attributedToID)
+	merchantAccounts, products, err := factory.Product().SyncRemoteProducts(builder.session(), attributedToID)
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error retrieving products"))
@@ -48,7 +48,7 @@ func (step StepSetPrivileges) Get(builder Builder, buffer io.Writer) PipelineBeh
 	}
 
 	// Load the Circles defined by this User
-	circles, err := factory.Circle().QueryByUser(attributedToID)
+	circles, err := factory.Circle().QueryByUser(builder.session(), attributedToID)
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error retrieving circles"))

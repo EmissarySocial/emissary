@@ -72,7 +72,7 @@ func (step StepEditContent) Post(builder Builder, _ io.Writer) PipelineBehavior 
 	stream.Content = contentService.New(step.Format, rawContent)
 
 	// Try to save the object back to the database
-	if err := builder.service().ObjectSave(stream, "Content edited"); err != nil {
+	if err := builder.service().ObjectSave(builder.session(), stream, "Content edited"); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error saving stream"))
 	}
 

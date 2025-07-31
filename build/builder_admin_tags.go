@@ -25,12 +25,12 @@ type SearchTag struct {
 }
 
 // NewSearchTag returns a fully initialized `SearchTag` builder.
-func NewSearchTag(factory Factory, request *http.Request, response http.ResponseWriter, template model.Template, searchTag *model.SearchTag, actionID string) (SearchTag, error) {
+func NewSearchTag(factory Factory, session data.Session, request *http.Request, response http.ResponseWriter, template model.Template, searchTag *model.SearchTag, actionID string) (SearchTag, error) {
 
 	const location = "build.NewSearchTag"
 
 	// Create the underlying Common builder
-	common, err := NewCommonWithTemplate(factory, request, response, template, searchTag, actionID)
+	common, err := NewCommonWithTemplate(factory, session, request, response, template, searchTag, actionID)
 
 	if err != nil {
 		return SearchTag{}, derp.Wrap(err, location, "Error creating common builder")
@@ -76,7 +76,7 @@ func (w SearchTag) View(actionID string) (template.HTML, error) {
 
 	const location = "build.SearchTag.View"
 
-	builder, err := NewSearchTag(w._factory, w._request, w._response, w._template, w._searchTag, actionID)
+	builder, err := NewSearchTag(w._factory, w._session, w._request, w._response, w._template, w._searchTag, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, location, "Error creating SearchTag builder")
@@ -126,7 +126,7 @@ func (w SearchTag) service() service.ModelService {
 }
 
 func (w SearchTag) clone(action string) (Builder, error) {
-	return NewSearchTag(w._factory, w._request, w._response, w._template, w._searchTag, action)
+	return NewSearchTag(w._factory, w._session, w._request, w._response, w._template, w._searchTag, action)
 }
 
 /******************************************
@@ -169,7 +169,7 @@ func (w SearchTag) SearchTags() *QueryBuilder[model.SearchTag] {
 		exp.Equal("deleteDate", 0),
 	)
 
-	result := NewQueryBuilder[model.SearchTag](w._factory.SearchTag(), criteria)
+	result := NewQueryBuilder[model.SearchTag](w._factory.SearchTag(), w._session, criteria)
 	result.CaseInsensitive()
 
 	return &result
@@ -180,7 +180,7 @@ func (w SearchTag) States() []form.LookupCode {
 }
 
 func (w SearchTag) Groups() []form.LookupCode {
-	return w._factory.SearchTag().ListGroups()
+	return w._factory.SearchTag().ListGroups(w._session)
 }
 
 func (w SearchTag) debug() {

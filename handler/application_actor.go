@@ -5,6 +5,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/server"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
@@ -12,13 +13,13 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func GetApplicationActor(ctx *steranko.Context, factory *domain.Factory) error {
+func GetApplicationActor(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
 
 	const location = "handler.GetApplicationActor"
 
 	// Retrieve the domain and Public Key
 	domainService := factory.Domain()
-	publicKeyPEM, err := domainService.PublicKeyPEM()
+	publicKeyPEM, err := domainService.PublicKeyPEM(session)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error getting public key PEM")
@@ -53,7 +54,7 @@ func GetApplicationActor(ctx *steranko.Context, factory *domain.Factory) error {
 }
 
 // GetEmptyCollection returns an empty collection
-func GetEmptyCollection(ctx *steranko.Context, factory *domain.Factory) error {
+func GetEmptyCollection(ctx *steranko.Context, factory *domain.Factory, _ data.Session) error {
 
 	result := mapof.Any{
 		vocab.AtContext:          vocab.ContextTypeActivityStreams,

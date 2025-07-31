@@ -12,7 +12,6 @@ import (
 
 // Annotation manages all interactions with the Annotation collection
 type Annotation struct {
-	collection      data.Collection
 	activityService *ActivityStream
 }
 
@@ -26,8 +25,7 @@ func NewAnnotation() Annotation {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Annotation) Refresh(collection data.Collection, activityService *ActivityStream) {
-	service.collection = collection
+func (service *Annotation) Refresh(activityService *ActivityStream) {
 	service.activityService = activityService
 }
 
@@ -40,28 +38,32 @@ func (service *Annotation) Close() {
  * Common Data Methods
  ******************************************/
 
-// Count returns the number of records that match the provided criteria
-func (service *Annotation) Count(criteria exp.Expression) (int64, error) {
-	return service.collection.Count(notDeleted(criteria))
+func (service *Annotation) collection(session data.Session) data.Collection {
+	return session.Collection("Annotation")
 }
 
-func (service *Annotation) Query(criteria exp.Expression, options ...option.Option) ([]model.Annotation, error) {
+// Count returns the number of records that match the provided criteria
+func (service *Annotation) Count(session data.Session, criteria exp.Expression) (int64, error) {
+	return service.collection(session).Count(notDeleted(criteria))
+}
+
+func (service *Annotation) Query(session data.Session, criteria exp.Expression, options ...option.Option) ([]model.Annotation, error) {
 	result := make([]model.Annotation, 0)
-	err := service.collection.Query(&result, notDeleted(criteria), options...)
+	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
 	return result, err
 }
 
 // List returns an iterator containing all of the Annotations who match the provided criteria
-func (service *Annotation) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection.Iterator(notDeleted(criteria), options...)
+func (service *Annotation) List(session data.Session, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+	return service.collection(session).Iterator(notDeleted(criteria), options...)
 }
 
 // Load retrieves an Annotation from the database
-func (service *Annotation) Load(criteria exp.Expression, result *model.Annotation) error {
+func (service *Annotation) Load(session data.Session, criteria exp.Expression, result *model.Annotation) error {
 
 	const location = "service.Annotation.Load"
 
-	if err := service.collection.Load(notDeleted(criteria), result); err != nil {
+	if err := service.collection(session).Load(notDeleted(criteria), result); err != nil {
 		return derp.Wrap(err, location, "Error loading Annotation", criteria)
 	}
 
@@ -69,7 +71,7 @@ func (service *Annotation) Load(criteria exp.Expression, result *model.Annotatio
 }
 
 // Save adds/updates an Annotation in the database
-func (service *Annotation) Save(annotation *model.Annotation, note string) error {
+func (service *Annotation) Save(session data.Session, annotation *model.Annotation, note string) error {
 
 	const location = "service.Annotation.Save"
 
@@ -89,7 +91,7 @@ func (service *Annotation) Save(annotation *model.Annotation, note string) error
 	}
 
 	// Save the value to the database
-	if err := service.collection.Save(annotation, note); err != nil {
+	if err := service.collection(session).Save(annotation, note); err != nil {
 		return derp.Wrap(err, location, "Error saving Annotation", annotation, note)
 	}
 
@@ -97,11 +99,11 @@ func (service *Annotation) Save(annotation *model.Annotation, note string) error
 }
 
 // Delete removes an Annotation from the database (virtual delete)
-func (service *Annotation) Delete(annotation *model.Annotation, note string) error {
+func (service *Annotation) Delete(session data.Session, annotation *model.Annotation, note string) error {
 
 	const location = "service.Annotation.Delete"
 
-	if err := service.collection.Delete(annotation, note); err != nil {
+	if err := service.collection(session).Delete(annotation, note); err != nil {
 		return derp.Wrap(err, location, "Error deleting Annotation", annotation, note)
 	}
 
@@ -132,26 +134,26 @@ func (service *Annotation) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
-func (service *Annotation) ObjectQuery(result any, criteria exp.Expression, options ...option.Option) error {
-	return service.collection.Query(result, notDeleted(criteria), options...)
+func (service *Annotation) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
+	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
-func (service *Annotation) ObjectLoad(criteria exp.Expression) (data.Object, error) {
+func (service *Annotation) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewAnnotation()
-	err := service.Load(criteria, &result)
+	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
-func (service *Annotation) ObjectSave(object data.Object, comment string) error {
+func (service *Annotation) ObjectSave(session data.Session, object data.Object, comment string) error {
 	if annotation, ok := object.(*model.Annotation); ok {
-		return service.Save(annotation, comment)
+		return service.Save(session, annotation, comment)
 	}
 	return derp.InternalError("service.Annotation.ObjectSave", "Invalid Object Type", object)
 }
 
-func (service *Annotation) ObjectDelete(object data.Object, comment string) error {
+func (service *Annotation) ObjectDelete(session data.Session, object data.Object, comment string) error {
 	if annotation, ok := object.(*model.Annotation); ok {
-		return service.Delete(annotation, comment)
+		return service.Delete(session, annotation, comment)
 	}
 	return derp.InternalError("service.Annotation.ObjectDelete", "Invalid Object Type", object)
 }
@@ -168,7 +170,7 @@ func (service *Annotation) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
-func (service *Annotation) QueryByUser(userID primitive.ObjectID, options ...option.Option) ([]model.Annotation, error) {
+func (service *Annotation) QueryByUser(session data.Session, userID primitive.ObjectID, options ...option.Option) ([]model.Annotation, error) {
 
 	// RULE: Require a valid UserID
 	if userID.IsZero() {
@@ -177,11 +179,11 @@ func (service *Annotation) QueryByUser(userID primitive.ObjectID, options ...opt
 
 	// Query the database
 	criteria := exp.In("_id", userID)
-	return service.Query(criteria, options...)
+	return service.Query(session, criteria, options...)
 }
 
 // LoadByID loads a single model.Annotation object that matches the provided annotationID
-func (service *Annotation) LoadByID(userID primitive.ObjectID, annotationID primitive.ObjectID, result *model.Annotation) error {
+func (service *Annotation) LoadByID(session data.Session, userID primitive.ObjectID, annotationID primitive.ObjectID, result *model.Annotation) error {
 
 	// RULE: Require a valid UserID
 	if userID.IsZero() {
@@ -195,10 +197,10 @@ func (service *Annotation) LoadByID(userID primitive.ObjectID, annotationID prim
 
 	// Query the database
 	criteria := exp.Equal("_id", annotationID).AndEqual("userId", userID)
-	return service.Load(criteria, result)
+	return service.Load(session, criteria, result)
 }
 
-func (service *Annotation) LoadByToken(userID primitive.ObjectID, token string, result *model.Annotation) error {
+func (service *Annotation) LoadByToken(session data.Session, userID primitive.ObjectID, token string, result *model.Annotation) error {
 
 	// RULE: Require a valid UserID
 	if userID.IsZero() {
@@ -211,14 +213,14 @@ func (service *Annotation) LoadByToken(userID primitive.ObjectID, token string, 
 	}
 
 	if annotationID, err := primitive.ObjectIDFromHex(token); err == nil {
-		return service.LoadByID(userID, annotationID, result)
+		return service.LoadByID(session, userID, annotationID, result)
 	}
 
 	return derp.ValidationError("Token is must be a valid ObjectID", token)
 }
 
 // LoadByID loads a single model.Annotation object that matches the provided annotationID
-func (service *Annotation) LoadByURL(userID primitive.ObjectID, url string, result *model.Annotation) error {
+func (service *Annotation) LoadByURL(session data.Session, userID primitive.ObjectID, url string, result *model.Annotation) error {
 
 	// RULE: Require a valid UserID
 	if userID.IsZero() {
@@ -232,7 +234,7 @@ func (service *Annotation) LoadByURL(userID primitive.ObjectID, url string, resu
 
 	// Query the database
 	criteria := exp.Equal("userId", userID).AndEqual("url", url)
-	return service.Load(criteria, result)
+	return service.Load(session, criteria, result)
 }
 
 /******************************************

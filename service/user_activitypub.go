@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/outbox"
 	"github.com/benpate/rosetta/list"
@@ -19,7 +20,7 @@ import (
 // ParseProfileURL parses (or looks up) the correct UserID from a given URL.
 // Unlike the package-level ParseProfileURL, this method can resolve usernames into objectIDs
 // because it has access to the database server.
-func (service *User) ParseProfileURL(value string) (primitive.ObjectID, error) {
+func (service *User) ParseProfileURL(session data.Session, value string) (primitive.ObjectID, error) {
 
 	const location = "service.User.ParseProfileURL"
 
@@ -53,7 +54,7 @@ func (service *User) ParseProfileURL(value string) (primitive.ObjectID, error) {
 	// Otherwise, look it up in the database
 	user := model.NewUser()
 
-	if err := service.LoadByUsername(username, &user); err != nil {
+	if err := service.LoadByUsername(session, username, &user); err != nil {
 		return primitive.NilObjectID, derp.Wrap(err, location, "Error loading user by username", username)
 	}
 
@@ -70,13 +71,13 @@ func (service *User) ActivityPubPublicKeyURL(userID primitive.ObjectID) string {
 
 // ActivityPubActor returns an ActivityPub Actor object ** WHICH INCLUDES ENCRYPTION KEYS **
 // for the provided User.
-func (service *User) ActivityPubActor(userID primitive.ObjectID) (outbox.Actor, error) {
+func (service *User) ActivityPubActor(session data.Session, userID primitive.ObjectID) (outbox.Actor, error) {
 
 	const location = "service.Stream.ActivityPubActor"
 
 	// Try to load the user's keys from the database
 	encryptionKey := model.NewEncryptionKey()
-	if err := service.keyService.LoadByParentID(model.EncryptionKeyTypeUser, userID, &encryptionKey); err != nil {
+	if err := service.keyService.LoadByParentID(session, model.EncryptionKeyTypeUser, userID, &encryptionKey); err != nil {
 		return outbox.Actor{}, derp.Wrap(err, location, "Error loading encryption key", userID)
 	}
 
@@ -91,7 +92,7 @@ func (service *User) ActivityPubActor(userID primitive.ObjectID) (outbox.Actor, 
 	actor := outbox.NewActor(
 		service.ActivityPubURL(userID),
 		privateKey,
-		outbox.WithFollowers(service.rangeActivityPubFollowers(userID)),
+		outbox.WithFollowers(service.rangeActivityPubFollowers(session, userID)),
 		outbox.WithClient(service.activityStream),
 		// TODO: Restore Queue:: , outbox.WithQueue(service.queue))
 	)
@@ -101,11 +102,11 @@ func (service *User) ActivityPubActor(userID primitive.ObjectID) (outbox.Actor, 
 
 // ActivityPubActor returns an ActivityPub Actor object ** WHICH INCLUDES ENCRYPTION KEYS **
 // for the provided User.
-func (service *User) rangeActivityPubFollowers(userID primitive.ObjectID) iter.Seq[string] {
+func (service *User) rangeActivityPubFollowers(session data.Session, userID primitive.ObjectID) iter.Seq[string] {
 
 	return func(yield func(string) bool) {
 
-		followers := service.followerService.RangeActivityPubByType(model.FollowerTypeUser, userID)
+		followers := service.followerService.RangeActivityPubByType(session, model.FollowerTypeUser, userID)
 
 		for follower := range followers {
 			if !yield(follower.Actor.ProfileURL) {

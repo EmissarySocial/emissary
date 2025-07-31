@@ -25,7 +25,7 @@ func init() {
 
 		// RULE: Do not allow new "Follows" of any blocked Actors
 		ruleFilter := context.factory.Rule().Filter(context.searchQuery.SearchQueryID, service.WithBlocksOnly())
-		if ruleFilter.Disallow(&activity) {
+		if ruleFilter.Disallow(context.session, &activity) {
 			return derp.ForbiddenError(location, "Blocked by rule", activity.Object().ID())
 		}
 
@@ -39,12 +39,12 @@ func init() {
 		// Try to create a new follower record
 		followerService := context.factory.Follower()
 		follower := model.NewFollower()
-		if err := followerService.NewActivityPubFollower(model.FollowerTypeSearch, context.searchQuery.SearchQueryID, document, &follower); err != nil {
+		if err := followerService.NewActivityPubFollower(context.session, model.FollowerTypeSearch, context.searchQuery.SearchQueryID, document, &follower); err != nil {
 			return derp.Wrap(err, location, "Error creating new follower", context.searchQuery)
 		}
 
 		// Try to load the Actor for this user
-		actor, err := searchQueryService.ActivityPubActor(context.searchQuery.SearchQueryID)
+		actor, err := searchQueryService.ActivityPubActor(context.session, context.searchQuery.SearchQueryID)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error loading actor", context.searchQuery)

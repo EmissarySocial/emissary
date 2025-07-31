@@ -24,7 +24,7 @@ type Settings struct {
 }
 
 // NewSettings returns a fully initialized `Settings` builder
-func NewSettings(factory Factory, request *http.Request, response http.ResponseWriter, user *model.User, actionID string) (Settings, error) {
+func NewSettings(factory Factory, session data.Session, request *http.Request, response http.ResponseWriter, user *model.User, actionID string) (Settings, error) {
 
 	const location = "build.NewSettings"
 
@@ -37,7 +37,7 @@ func NewSettings(factory Factory, request *http.Request, response http.ResponseW
 	}
 
 	// Create the underlying Common builder
-	common, err := NewCommonWithTemplate(factory, request, response, template, user, actionID)
+	common, err := NewCommonWithTemplate(factory, session, request, response, template, user, actionID)
 
 	if err != nil {
 		return Settings{}, derp.Wrap(err, location, "Error creating common builder")
@@ -73,7 +73,7 @@ func (w Settings) Render() (template.HTML, error) {
 // View executes a separate view for this Settings
 func (w Settings) View(actionID string) (template.HTML, error) {
 
-	builder, err := NewSettings(w._factory, w._request, w._response, w._user, actionID)
+	builder, err := NewSettings(w._factory, w._session, w._request, w._response, w._user, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, "build.Settings.View", "Error creating Settings builder")
@@ -128,7 +128,7 @@ func (w Settings) templateRole() string {
 }
 
 func (w Settings) clone(action string) (Builder, error) {
-	return NewSettings(w._factory, w._request, w._response, w._user, action)
+	return NewSettings(w._factory, w._session, w._request, w._response, w._user, action)
 }
 
 /******************************************
@@ -183,7 +183,7 @@ func (w Settings) Stream(token string) (model.Stream, error) {
 	streamService := w._factory.Stream()
 	stream := model.NewStream()
 
-	if err := streamService.LoadByToken(token, &stream); err != nil {
+	if err := streamService.LoadByToken(w._session, token, &stream); err != nil {
 		return model.Stream{}, derp.Wrap(err, "build.Settings.Stream", "Error loading stream", token)
 	}
 
@@ -216,7 +216,7 @@ func (w Settings) Circles() QueryBuilder[model.Circle] {
 	)
 
 	// Return the query builder
-	return NewQueryBuilder[model.Circle](w._factory.Circle(), criteria)
+	return NewQueryBuilder[model.Circle](w._factory.Circle(), w._session, criteria)
 }
 
 func (w Settings) Followers() QueryBuilder[model.FollowerSummary] {
@@ -233,7 +233,7 @@ func (w Settings) Followers() QueryBuilder[model.FollowerSummary] {
 	)
 
 	// Return the query builder
-	return NewQueryBuilder[model.FollowerSummary](w._factory.Follower(), criteria)
+	return NewQueryBuilder[model.FollowerSummary](w._factory.Follower(), w._session, criteria)
 }
 
 func (w Settings) Following() QueryBuilder[model.FollowingSummary] {
@@ -247,7 +247,7 @@ func (w Settings) Following() QueryBuilder[model.FollowingSummary] {
 		exp.Equal("userId", w.AuthenticatedID()),
 	)
 
-	return NewQueryBuilder[model.FollowingSummary](w._factory.Following(), criteria)
+	return NewQueryBuilder[model.FollowingSummary](w._factory.Following(), w._session, criteria)
 }
 
 func (w Settings) FollowingByFolder(token string) ([]model.FollowingSummary, error) {
@@ -268,7 +268,7 @@ func (w Settings) FollowingByFolder(token string) ([]model.FollowingSummary, err
 
 	// Try to load the matching records
 	followingService := w._factory.Following()
-	return followingService.QueryByFolder(userID, followingID)
+	return followingService.QueryByFolder(w._session, userID, followingID)
 }
 
 func (w Settings) FollowingByToken(followingToken string) (model.Following, error) {
@@ -279,7 +279,7 @@ func (w Settings) FollowingByToken(followingToken string) (model.Following, erro
 
 	following := model.NewFollowing()
 
-	if err := followingService.LoadByToken(userID, followingToken, &following); err != nil {
+	if err := followingService.LoadByToken(w._session, userID, followingToken, &following); err != nil {
 		return model.Following{}, derp.Wrap(err, "build.Settings.FollowingByID", "Error loading following")
 	}
 
@@ -297,7 +297,7 @@ func (w Settings) Rules() QueryBuilder[model.Rule] {
 		exp.Equal("userId", w.AuthenticatedID()),
 	)
 
-	result := NewQueryBuilder[model.Rule](w._factory.Rule(), criteria)
+	result := NewQueryBuilder[model.Rule](w._factory.Rule(), w._session, criteria)
 
 	return result
 }
@@ -306,7 +306,7 @@ func (w Settings) RuleByToken(token string) model.Rule {
 	ruleService := w._factory.Rule()
 	rule := model.NewRule()
 
-	if err := ruleService.LoadByToken(w.AuthenticatedID(), token, &rule); err != nil {
+	if err := ruleService.LoadByToken(w._session, w.AuthenticatedID(), token, &rule); err != nil {
 		derp.Report(derp.Wrap(err, "build.Settings.RuleByToken", "Error loading rule", token))
 	}
 
@@ -323,7 +323,7 @@ func (w Settings) Privileges() QueryBuilder[model.Privilege] {
 		exp.Equal("userId", w._user.UserID),
 	)
 
-	return NewQueryBuilder[model.Privilege](w._factory.Privilege(), criteria)
+	return NewQueryBuilder[model.Privilege](w._factory.Privilege(), w._session, criteria)
 
 }
 
@@ -337,19 +337,19 @@ func (w Settings) MerchantAccounts() QueryBuilder[model.MerchantAccount] {
 		exp.Equal("userId", w._user.UserID),
 	)
 
-	return NewQueryBuilder[model.MerchantAccount](w._factory.MerchantAccount(), criteria)
+	return NewQueryBuilder[model.MerchantAccount](w._factory.MerchantAccount(), w._session, criteria)
 }
 
 func (w Settings) MerchantAccount(merchantAccountID string) (model.MerchantAccount, error) {
 	result := model.NewMerchantAccount()
-	err := w._factory.MerchantAccount().LoadByUserAndToken(w._user.UserID, merchantAccountID, &result)
+	err := w._factory.MerchantAccount().LoadByUserAndToken(w._session, w._user.UserID, merchantAccountID, &result)
 	return result, err
 }
 
 // RemoteProducts syncs the remote products from all MerchantAccounts and returns the full Product catalog.
 func (w Settings) RemoteProducts() (sliceof.Object[model.Product], error) {
 
-	_, remoteProducts, err := w._factory.Product().SyncRemoteProducts(w._user.UserID)
+	_, remoteProducts, err := w._factory.Product().SyncRemoteProducts(w._session, w._user.UserID)
 
 	if err != nil {
 		return nil, derp.Wrap(err, "build.Common.Products", "Error loading products for user", w._user.UserID)
@@ -372,7 +372,7 @@ func (w Settings) FilteredByFollowing() model.Following {
 	if followingID, err := primitive.ObjectIDFromHex(token); err == nil {
 		followingService := w._factory.Following()
 
-		if err := followingService.LoadByID(w.AuthenticatedID(), followingID, &result); err == nil {
+		if err := followingService.LoadByID(w._session, w.AuthenticatedID(), followingID, &result); err == nil {
 			return result
 		}
 	}
@@ -391,19 +391,19 @@ func (w Settings) SubBuilder(object any) (Builder, error) {
 	switch typed := object.(type) {
 
 	case model.Rule:
-		result, err = NewModel(w._factory, w._request, w._response, w._template, &typed, w._actionID)
+		result, err = NewModel(w._factory, w._session, w._request, w._response, w._template, &typed, w._actionID)
 
 	case model.Folder:
-		result, err = NewModel(w._factory, w._request, w._response, w._template, &typed, w._actionID)
+		result, err = NewModel(w._factory, w._session, w._request, w._response, w._template, &typed, w._actionID)
 
 	case model.Follower:
-		result, err = NewFollower(w._factory, w._request, w._response, w._template, &typed, w._actionID)
+		result, err = NewFollower(w._factory, w._session, w._request, w._response, w._template, &typed, w._actionID)
 
 	case model.Following:
-		result, err = NewModel(w._factory, w._request, w._response, w._template, &typed, w._actionID)
+		result, err = NewModel(w._factory, w._session, w._request, w._response, w._template, &typed, w._actionID)
 
 	case model.Stream:
-		result, err = NewStream(w._factory, w._request, w._response, w._template, &typed, w._actionID)
+		result, err = NewStream(w._factory, w._session, w._request, w._response, w._template, &typed, w._actionID)
 
 	default:
 		result, err = nil, derp.InternalError("build.Common.SubBuilder", "Invalid object type", object)
@@ -430,7 +430,7 @@ func (w Settings) AmFollowing(url string) model.Following {
 
 	// Retrieve following record. Discard errors
 	// nolint:errcheck
-	_ = followingService.LoadByURL(w._user.UserID, url, &following)
+	_ = followingService.LoadByURL(w._session, w._user.UserID, url, &following)
 
 	// Return the (possibly empty) Following record
 	return following
@@ -466,7 +466,7 @@ func (w Settings) HasRule(ruleType string, trigger string) model.Rule {
 
 	// Retrieve rule record.  "Not Found" is acceptable, but "legitimate" errors are not.
 	// In either case, do not halt the request
-	if err := ruleService.LoadByTrigger(w._user.UserID, ruleType, trigger, &rule); !derp.IsNilOrNotFound(err) {
+	if err := ruleService.LoadByTrigger(w._session, w._user.UserID, ruleType, trigger, &rule); !derp.IsNilOrNotFound(err) {
 		derp.Report(derp.Wrap(err, "build.Settings.HasRule", "Error loading rule", ruleType, trigger))
 	}
 

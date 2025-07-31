@@ -24,12 +24,12 @@ type Webhook struct {
 }
 
 // NewWebhook returns a fully initialized `Webhook` builder.
-func NewWebhook(factory Factory, request *http.Request, response http.ResponseWriter, template model.Template, webhook *model.Webhook, actionID string) (Webhook, error) {
+func NewWebhook(factory Factory, session data.Session, request *http.Request, response http.ResponseWriter, template model.Template, webhook *model.Webhook, actionID string) (Webhook, error) {
 
 	const location = "build.NewWebhook"
 
 	// Create the underlying Common builder
-	common, err := NewCommonWithTemplate(factory, request, response, template, webhook, actionID)
+	common, err := NewCommonWithTemplate(factory, session, request, response, template, webhook, actionID)
 
 	if err != nil {
 		return Webhook{}, derp.Wrap(err, location, "Error creating common builder")
@@ -57,7 +57,7 @@ func (w Webhook) Render() (template.HTML, error) {
 	var buffer bytes.Buffer
 
 	// Execute step (write HTML to buffer, update context)
-	status := Pipeline(w._action.Steps).Get(w.factory(), &w, &buffer)
+	status := Pipeline(w._action.Steps).Get(w._factory, &w, &buffer)
 
 	if status.Error != nil {
 		err := derp.Wrap(status.Error, "build.Webhook.Render", "Error generating HTML")
@@ -73,7 +73,7 @@ func (w Webhook) Render() (template.HTML, error) {
 // View executes a separate view for this Webhook
 func (w Webhook) View(actionID string) (template.HTML, error) {
 
-	builder, err := NewWebhook(w._factory, w._request, w._response, w._template, w._webhook, actionID)
+	builder, err := NewWebhook(w._factory, w._session, w._request, w._response, w._template, w._webhook, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, "build.Webhook.View", "Error creating builder")
@@ -123,7 +123,7 @@ func (w Webhook) service() service.ModelService {
 }
 
 func (w Webhook) clone(action string) (Builder, error) {
-	return NewWebhook(w._factory, w._request, w._response, w._template, w._webhook, action)
+	return NewWebhook(w._factory, w._session, w._request, w._response, w._template, w._webhook, action)
 }
 
 /******************************************
@@ -174,7 +174,7 @@ func (w Webhook) Webhooks() *QueryBuilder[model.Webhook] {
 		exp.Equal("deleteDate", 0),
 	)
 
-	result := NewQueryBuilder[model.Webhook](w._factory.Webhook(), criteria)
+	result := NewQueryBuilder[model.Webhook](w._factory.Webhook(), w._session, criteria)
 
 	return &result
 }

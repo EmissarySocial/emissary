@@ -20,7 +20,6 @@ import (
 
 // SearchQuery defines a service that manages all searchable tags in a domain.
 type SearchQuery struct {
-	collection       data.Collection
 	domainService    *Domain
 	followerService  *Follower
 	ruleService      *Rule
@@ -40,8 +39,7 @@ func NewSearchQuery() SearchQuery {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *SearchQuery) Refresh(collection data.Collection, domainService *Domain, followerService *Follower, ruleService *Rule, searchTagService *SearchTag, activityStream *ActivityStream, queue *queue.Queue, host string) {
-	service.collection = collection
+func (service *SearchQuery) Refresh(domainService *Domain, followerService *Follower, ruleService *Rule, searchTagService *SearchTag, activityStream *ActivityStream, queue *queue.Queue, host string) {
 	service.domainService = domainService
 	service.followerService = followerService
 	service.ruleService = ruleService
@@ -60,21 +58,25 @@ func (service *SearchQuery) Close() {
  * Common Data Methods
  ******************************************/
 
-func (service *SearchQuery) Count(criteria exp.Expression) (int64, error) {
-	return service.collection.Count(notDeleted(criteria))
+func (service *SearchQuery) collection(session data.Session) data.Collection {
+	return session.Collection("SearchQuery")
+}
+
+func (service *SearchQuery) Count(session data.Session, criteria exp.Expression) (int64, error) {
+	return service.collection(session).Count(notDeleted(criteria))
 }
 
 // Query returns an slice of allthe SearchQuerys that match the provided criteria
-func (service *SearchQuery) Query(criteria exp.Expression, options ...option.Option) ([]model.SearchQuery, error) {
+func (service *SearchQuery) Query(session data.Session, criteria exp.Expression, options ...option.Option) ([]model.SearchQuery, error) {
 	result := make([]model.SearchQuery, 0)
-	err := service.collection.Query(&result, notDeleted(criteria), options...)
+	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
 
 	return result, err
 }
 
 // Range returns an iterator that contains all of the SearchQuerys that match the provided criteria
-func (service *SearchQuery) Range(criteria exp.Expression, options ...option.Option) (iter.Seq[model.SearchQuery], error) {
-	it, err := service.collection.Iterator(notDeleted(criteria), options...)
+func (service *SearchQuery) Range(session data.Session, criteria exp.Expression, options ...option.Option) (iter.Seq[model.SearchQuery], error) {
+	it, err := service.collection(session).Iterator(notDeleted(criteria), options...)
 
 	if err != nil {
 		return nil, derp.Wrap(err, "service.SearchQuery.Range", "Error creating iterator", criteria)
@@ -84,11 +86,11 @@ func (service *SearchQuery) Range(criteria exp.Expression, options ...option.Opt
 }
 
 // LoadWithSoftDeletes searches ALL SearchQuery in the database, including those that have been "soft deleted"
-func (service *SearchQuery) LoadWithSoftDeletes(criteria exp.Expression, searchQuery *model.SearchQuery) error {
+func (service *SearchQuery) LoadWithSoftDeletes(session data.Session, criteria exp.Expression, searchQuery *model.SearchQuery) error {
 
 	const location = "service.SearchQuery.LoadWithSoftDeletes"
 
-	if err := service.collection.Load(criteria, searchQuery); err != nil {
+	if err := service.collection(session).Load(criteria, searchQuery); err != nil {
 		return derp.Wrap(err, location, "Error loading SearchQuery", criteria)
 	}
 
@@ -97,7 +99,7 @@ func (service *SearchQuery) LoadWithSoftDeletes(criteria exp.Expression, searchQ
 
 		searchQuery.DeleteDate = 0
 
-		if err := service.Save(searchQuery, "Restored"); err != nil {
+		if err := service.Save(session, searchQuery, "Restored"); err != nil {
 			return derp.Wrap(err, location, "Error restoring SearchQuery", searchQuery)
 		}
 	}
@@ -106,7 +108,7 @@ func (service *SearchQuery) LoadWithSoftDeletes(criteria exp.Expression, searchQ
 }
 
 // Save adds/updates an SearchQuery in the database
-func (service *SearchQuery) Save(searchQuery *model.SearchQuery, note string) error {
+func (service *SearchQuery) Save(session data.Session, searchQuery *model.SearchQuery, note string) error {
 
 	const location = "service.SearchQuery.Save"
 
@@ -124,8 +126,8 @@ func (service *SearchQuery) Save(searchQuery *model.SearchQuery, note string) er
 	wasNew := searchQuery.IsNew()
 
 	// Save the searchQuery to the database
-	if err := service.collection.Save(searchQuery, note); err != nil {
-		return derp.Wrap(err, "service.SearchQuery.Save", "Error saving SearchQuery", searchQuery, note)
+	if err := service.collection(session).Save(searchQuery, note); err != nil {
+		return derp.Wrap(err, location, "Error saving SearchQuery", searchQuery, note)
 	}
 
 	// Add a queue task to delete this SearchQuery if it has no followers after 12 hour.
@@ -149,10 +151,10 @@ func (service *SearchQuery) Save(searchQuery *model.SearchQuery, note string) er
 }
 
 // Delete removes an SearchQuery from the database (virtual delete)
-func (service *SearchQuery) Delete(searchQuery *model.SearchQuery, note string) error {
+func (service *SearchQuery) Delete(session data.Session, searchQuery *model.SearchQuery, note string) error {
 
 	// Delete this SearchQuery
-	if err := service.collection.Delete(searchQuery, note); err != nil {
+	if err := service.collection(session).Delete(searchQuery, note); err != nil {
 		return derp.Wrap(err, "service.SearchQuery.Delete", "Error deleting SearchQuery", searchQuery, note)
 	}
 
@@ -164,18 +166,18 @@ func (service *SearchQuery) Delete(searchQuery *model.SearchQuery, note string) 
  ******************************************/
 
 // RangeAll returns an iterator that contains all of the SearchQuerys in the database
-func (service *SearchQuery) RangeAll() (iter.Seq[model.SearchQuery], error) {
-	return service.Range(exp.All())
+func (service *SearchQuery) RangeAll(session data.Session) (iter.Seq[model.SearchQuery], error) {
+	return service.Range(session, exp.All())
 }
 
 // LoadByID retrieves a SearchQuery using the provided ID
-func (service *SearchQuery) LoadByID(searchQueryID primitive.ObjectID, searchQuery *model.SearchQuery) error {
+func (service *SearchQuery) LoadByID(session data.Session, searchQueryID primitive.ObjectID, searchQuery *model.SearchQuery) error {
 
 	const location = "service.SearchQuery.LoadByID"
 
 	criteria := exp.Equal("_id", searchQueryID)
 
-	if err := service.LoadWithSoftDeletes(criteria, searchQuery); err != nil {
+	if err := service.LoadWithSoftDeletes(session, criteria, searchQuery); err != nil {
 		return derp.Wrap(err, location, "Error loading SearchQuery", searchQueryID)
 	}
 
@@ -183,7 +185,7 @@ func (service *SearchQuery) LoadByID(searchQueryID primitive.ObjectID, searchQue
 }
 
 // LoadByToken retrieves a SearchQuery using the provided token
-func (service *SearchQuery) LoadByToken(token string, searchQuery *model.SearchQuery) error {
+func (service *SearchQuery) LoadByToken(session data.Session, token string, searchQuery *model.SearchQuery) error {
 
 	// Parse the token as an ID
 	searchQueryID, err := primitive.ObjectIDFromHex(token)
@@ -192,17 +194,17 @@ func (service *SearchQuery) LoadByToken(token string, searchQuery *model.SearchQ
 		return derp.Wrap(err, "service.SearchQuery.LoadByToken", "Error converting token to ObjectID", token)
 	}
 
-	return service.LoadByID(searchQueryID, searchQuery)
+	return service.LoadByID(session, searchQueryID, searchQuery)
 }
 
 // LoadBySignature retrieves a SearchQuery using the provided signature
-func (service *SearchQuery) LoadBySignature(signature string, searchQuery *model.SearchQuery) error {
+func (service *SearchQuery) LoadBySignature(session data.Session, signature string, searchQuery *model.SearchQuery) error {
 	criteria := exp.Equal("signature", signature)
-	return service.LoadWithSoftDeletes(criteria, searchQuery)
+	return service.LoadWithSoftDeletes(session, criteria, searchQuery)
 }
 
 // LoadOrCreate creates/retrieves a SearchQuery using the provided queryValues
-func (service *SearchQuery) LoadOrCreate(queryValues url.Values) (model.SearchQuery, error) {
+func (service *SearchQuery) LoadOrCreate(session data.Session, queryValues url.Values) (model.SearchQuery, error) {
 
 	const location = "service.SearchQuery.LoadOrCreate"
 
@@ -215,7 +217,7 @@ func (service *SearchQuery) LoadOrCreate(queryValues url.Values) (model.SearchQu
 
 	// Try to find the SearchQuery in the database
 	existingSearchQuery := model.NewSearchQuery()
-	err := service.LoadBySignature(newSearchQuery.Signature, &existingSearchQuery)
+	err := service.LoadBySignature(session, newSearchQuery.Signature, &existingSearchQuery)
 
 	// If it already exists, then return the ID
 	if err == nil {
@@ -225,7 +227,7 @@ func (service *SearchQuery) LoadOrCreate(queryValues url.Values) (model.SearchQu
 	// If it doesn't exist, then create a new record and return it
 	if derp.IsNotFound(err) {
 
-		if err := service.Save(&newSearchQuery, "LoadOrCreate"); err != nil {
+		if err := service.Save(session, &newSearchQuery, "LoadOrCreate"); err != nil {
 			return model.NewSearchQuery(), derp.Wrap(err, location, "Error saving SearchQuery", newSearchQuery)
 		}
 
@@ -289,12 +291,12 @@ func (service *SearchQuery) parseQueryValues(queryValues url.Values) (model.Sear
 
 // ActivityPubActor returns an ActivityPub Actor object ** WHICH INCLUDES ENCRYPTION KEYS **
 // for the provided Stream.
-func (service *SearchQuery) ActivityPubActor(searchQueryID primitive.ObjectID) (outbox.Actor, error) {
+func (service *SearchQuery) ActivityPubActor(session data.Session, searchQueryID primitive.ObjectID) (outbox.Actor, error) {
 
 	const location = "service.SearchQuery.ActivityPubActor"
 
 	// Retrieve the domain and Public Key
-	privateKey, err := service.domainService.PrivateKey()
+	privateKey, err := service.domainService.PrivateKey(session)
 
 	if err != nil {
 		return outbox.Actor{}, derp.Wrap(err, location, "Error getting private key")
@@ -304,7 +306,7 @@ func (service *SearchQuery) ActivityPubActor(searchQueryID primitive.ObjectID) (
 	actor := outbox.NewActor(
 		service.ActivityPubURL(searchQueryID),
 		privateKey,
-		outbox.WithFollowers(service.rangeActivityPubFollowers(searchQueryID)),
+		outbox.WithFollowers(service.rangeActivityPubFollowers(session, searchQueryID)),
 		outbox.WithClient(service.activityStream),
 		// TODO: Restore Queue:: , outbox.WithQueue(service.queue))
 	)
@@ -312,11 +314,11 @@ func (service *SearchQuery) ActivityPubActor(searchQueryID primitive.ObjectID) (
 	return actor, nil
 }
 
-func (service *SearchQuery) rangeActivityPubFollowers(searchQueryID primitive.ObjectID) iter.Seq[string] {
+func (service *SearchQuery) rangeActivityPubFollowers(session data.Session, searchQueryID primitive.ObjectID) iter.Seq[string] {
 
 	return func(yield func(string) bool) {
 
-		followers := service.followerService.RangeActivityPubByType(model.FollowerTypeSearch, searchQueryID)
+		followers := service.followerService.RangeActivityPubByType(session, model.FollowerTypeSearch, searchQueryID)
 
 		for follower := range followers {
 			if !yield(follower.Actor.ProfileURL) {
@@ -372,7 +374,7 @@ func (service *SearchQuery) ActivityPubSharesURL(searchQueryID primitive.ObjectI
  * WebFinger Behavior
  ******************************************/
 
-func (service *SearchQuery) WebFinger(token string) (digit.Resource, error) {
+func (service *SearchQuery) WebFinger(session data.Session, token string) (digit.Resource, error) {
 
 	const location = "service.SearchQuery.LoadWebFinger"
 
@@ -389,14 +391,14 @@ func (service *SearchQuery) WebFinger(token string) (digit.Resource, error) {
 			return digit.Resource{}, derp.BadRequestError(location, "Invalid Query String", token)
 		}
 
-		searchQuery, err = service.LoadOrCreate(queryValues)
+		searchQuery, err = service.LoadOrCreate(session, queryValues)
 
 		if err != nil {
 			return digit.Resource{}, derp.Wrap(err, location, "Error loading SearchQuery", queryValues)
 		}
 
 	} else {
-		if err := service.LoadByToken(token, &searchQuery); err != nil {
+		if err := service.LoadByToken(session, token, &searchQuery); err != nil {
 			return digit.Resource{}, derp.BadRequestError(location, "Invalid Token", token)
 		}
 	}

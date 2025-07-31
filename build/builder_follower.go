@@ -25,11 +25,11 @@ type Follower struct {
  ******************************************/
 
 // NewFollower returns a fully initialized `Follower` builder.
-func NewFollower(factory Factory, request *http.Request, response http.ResponseWriter, template model.Template, follower *model.Follower, actionID string) (Follower, error) {
+func NewFollower(factory Factory, session data.Session, request *http.Request, response http.ResponseWriter, template model.Template, follower *model.Follower, actionID string) (Follower, error) {
 
 	const location = "build.NewFollower"
 
-	common, err := NewCommonWithTemplate(factory, request, response, template, follower, actionID)
+	common, err := NewCommonWithTemplate(factory, session, request, response, template, follower, actionID)
 
 	if err != nil {
 		return Follower{}, derp.Wrap(err, "build.NewFollower", "Error creating new model")
@@ -71,7 +71,7 @@ func (w Follower) AmFollowing(url string) model.Following {
 
 	// Retrieve following record. Discard errors
 	// nolint:errcheck
-	_ = followingService.LoadByURL(w._authorization.UserID, url, &following)
+	_ = followingService.LoadByURL(w._session, w._authorization.UserID, url, &following)
 
 	// Return the (possibly empty) Following record
 	return following
@@ -208,7 +208,7 @@ func (w Follower) View(actionID string) (template.HTML, error) {
 	const location = "build.Follower.View"
 
 	// Create a new builder (this will also validate the user's permissions)
-	subStream, err := NewModel(w._factory, w._request, w._response, w._template, w._follower, actionID)
+	subStream, err := NewModel(w._factory, w._session, w._request, w._response, w._template, w._follower, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, location, "Error creating sub-builder")
@@ -223,7 +223,7 @@ func (w Follower) setState(stateID string) error {
 }
 
 func (w Follower) clone(action string) (Builder, error) {
-	return NewFollower(w._factory, w._request, w._response, w._template, w._follower, action)
+	return NewFollower(w._factory, w._session, w._request, w._response, w._template, w._follower, action)
 }
 
 func (w Follower) debug() {

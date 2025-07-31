@@ -2,12 +2,13 @@ package service
 
 import (
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 )
 
 // saveToInbox adds/updates an individual Message based on an RSS item.  It returns TRUE if a new record was created
-func (service *Following) SaveMessage(following *model.Following, document streams.Document, originType string) error {
+func (service *Following) SaveMessage(session data.Session, following *model.Following, document streams.Document, originType string) error {
 
 	const location = "service.Following.SaveMessage"
 
@@ -20,7 +21,7 @@ func (service *Following) SaveMessage(following *model.Following, document strea
 	message := getMessage(following, document, originType)
 
 	// Try to save a unique version of this message to the database (always collapse duplicates)
-	if err := service.saveUniqueMessage(message); err != nil {
+	if err := service.saveUniqueMessage(session, message); err != nil {
 		return derp.Wrap(err, location, "Error saving message")
 	}
 
@@ -31,21 +32,21 @@ func (service *Following) SaveMessage(following *model.Following, document strea
 // saveUnique adds/updates a message in the database.  If the message.URL does not already
 // exist, then a new message is added to the Inbox.  Otherwise, the "references" data will
 // of the existing record be updated and the unique value will be re-saved.
-func (service *Following) saveUniqueMessage(message model.Message) error {
+func (service *Following) saveUniqueMessage(session data.Session, message model.Message) error {
 
 	const location = "service.Following.saveUnique"
 
 	// Search for a previous UNREAD message with our same UserID and URL.
 	previousMessage := model.Message{}
 
-	if err := service.inboxService.LoadByURL(message.UserID, message.URL, &previousMessage); !derp.IsNilOrNotFound(err) {
+	if err := service.inboxService.LoadByURL(session, message.UserID, message.URL, &previousMessage); !derp.IsNilOrNotFound(err) {
 		return derp.Wrap(err, location, "Error searching for duplicate message", message)
 	}
 
 	// If no previous message was found, then save the current message as is
 	if previousMessage.IsNew() {
 
-		if err := service.inboxService.Save(&message, "Created"); err != nil {
+		if err := service.inboxService.Save(session, &message, "Created"); err != nil {
 			return derp.Wrap(err, location, "Error saving new message", message)
 		}
 
@@ -66,7 +67,7 @@ func (service *Following) saveUniqueMessage(message model.Message) error {
 
 	// if the message was updated (from AddReference or MarkNewReplies) then save it.
 	if isReferenceUpdated || isStatusUpdated {
-		if err := service.inboxService.Save(&previousMessage, "Message Imported"); err != nil {
+		if err := service.inboxService.Save(session, &previousMessage, "Message Imported"); err != nil {
 			return derp.Wrap(err, location, "Error updating previous message with new origin and status", previousMessage)
 		}
 	}

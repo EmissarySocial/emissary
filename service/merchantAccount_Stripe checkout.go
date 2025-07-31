@@ -8,6 +8,7 @@ import (
 	"github.com/EmissarySocial/emissary/tools/random"
 	"github.com/EmissarySocial/emissary/tools/stripeapi"
 	api "github.com/EmissarySocial/emissary/tools/stripeapi"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/remote"
 	"github.com/benpate/remote/options"
@@ -93,7 +94,7 @@ func (service *MerchantAccount) stripe_getCheckoutURL(merchantAccount *model.Mer
 }
 
 // stripe_parseCheckoutResponse parses the response from a Stripe Checkout Session.
-func (service *MerchantAccount) stripe_getPrivilegeFromCheckoutResponse(merchantAccount *model.MerchantAccount, product *model.Product, transactionID string, queryParams url.Values) (model.Privilege, error) {
+func (service *MerchantAccount) stripe_getPrivilegeFromCheckoutResponse(session data.Session, merchantAccount *model.MerchantAccount, product *model.Product, transactionID string, queryParams url.Values) (model.Privilege, error) {
 
 	const location = "service.MerchantAccount.stripe_parseCheckoutResponse"
 
@@ -135,6 +136,7 @@ func (service *MerchantAccount) stripe_getPrivilegeFromCheckoutResponse(merchant
 
 	// Create a new Identity record for the guest
 	identity, err := service.identityService.LoadOrCreate(
+		session,
 		checkoutSession.CustomerDetails.Name,
 		model.IdentifierTypeEmail,
 		checkoutSession.CustomerDetails.Email,
@@ -167,7 +169,7 @@ func (service *MerchantAccount) stripe_getPrivilegeFromCheckoutResponse(merchant
 	privilege.IdentifierValue = identity.EmailAddress
 	privilege.IsVisible = true
 
-	if err := service.privilegeService.Save(&privilege, "Created via Stripe Checkout"); err != nil {
+	if err := service.privilegeService.Save(session, &privilege, "Created via Stripe Checkout"); err != nil {
 		return model.Privilege{}, derp.Wrap(err, location, "Error saving Privilege", privilege)
 	}
 

@@ -33,7 +33,6 @@ import (
 	"github.com/benpate/digital-dome/dome4echo"
 	"github.com/benpate/domain"
 	"github.com/benpate/form/widget"
-	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/steranko"
 	"github.com/davecgh/go-spew/spew"
@@ -220,10 +219,10 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/manifest.json", handler.TBD)                    // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json
 
 	// NodeInfo Routes
-	e.GET("/nodeinfo/2.0", handler.GetNodeInfo20(factory))
-	e.GET("/nodeinfo/2.0.json", handler.GetNodeInfo20(factory))
-	e.GET("/nodeinfo/2.1", handler.GetNodeInfo21(factory))
-	e.GET("/nodeinfo/2.1.json", handler.GetNodeInfo21(factory))
+	e.GET("/nodeinfo/2.0", handler.WithFactory(factory, handler.GetNodeInfo20))
+	e.GET("/nodeinfo/2.0.json", handler.WithFactory(factory, handler.GetNodeInfo20))
+	e.GET("/nodeinfo/2.1", handler.WithFactory(factory, handler.GetNodeInfo21))
+	e.GET("/nodeinfo/2.1.json", handler.WithFactory(factory, handler.GetNodeInfo21))
 
 	// Built-In Service Routes
 	e.GET("/.checkout", handler.WithProduct(factory, handler.GetCheckout))
@@ -253,8 +252,8 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.validate/username", handler.WithFactory(factory, handler.GetValidateUsername))
 	e.GET("/.webmention", handler.TBD)
 	e.POST("/.webmention", handler.WithFactory(factory, handler.PostWebMention))
-	e.GET("/.websub/:userId/:followingId", handler.GetWebSubClient(factory))
-	e.POST("/.websub/:userId/:followingId", handler.PostWebSubClient(factory))
+	e.GET("/.websub/:userId/:followingId", handler.WithFactory(factory, handler.GetWebSubClient))
+	e.POST("/.websub/:userId/:followingId", handler.WithFactory(factory, handler.PostWebSubClient))
 	e.GET("/.widgets/:widgetId/:bundleId", handler.GetWidgetBundle(factory))
 	e.GET("/.widgets/:widgetId/resources/:filename", handler.GetWidgetResource(factory))
 
@@ -263,9 +262,9 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.well-known/host-meta", handler.GetHostMeta(factory))
 	e.GET("/.well-known/host-meta.json", handler.GetHostMetaJSON(factory))
 	e.GET("/.well-known/webfinger", handler.WithFactory(factory, handler.GetWebfinger))
-	e.GET("/.well-known/nodeinfo", handler.GetNodeInfo(factory))
-	e.GET("/.well-known/nodeinfo/2.0", handler.GetNodeInfo20(factory))
-	e.GET("/.well-known/nodeinfo/2.1", handler.GetNodeInfo21(factory))
+	e.GET("/.well-known/nodeinfo", handler.WithFactory(factory, handler.GetNodeInfo))
+	e.GET("/.well-known/nodeinfo/2.0", handler.WithFactory(factory, handler.GetNodeInfo20))
+	e.GET("/.well-known/nodeinfo/2.1", handler.WithFactory(factory, handler.GetNodeInfo21))
 
 	// Authentication Pages
 	e.GET("/signin", handler.WithFactory(factory, handler.GetSignIn))
@@ -283,7 +282,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/.masquerade", handler.WithFactory(factory, handler.PostMasquerade), mw.Owner)
 
 	// Domain Pages
-	e.GET("/.domain/attachments/:attachmentId", handler.GetDomainAttachment(factory))
+	e.GET("/.domain/attachments/:attachmentId", handler.WithFactory(factory, handler.GetDomainAttachment))
 
 	// Stream Pages
 	e.GET("/", handler.WithTemplate(factory, handler.GetStream))
@@ -293,7 +292,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.DELETE("/:stream", handler.WithTemplate(factory, handler.PostStreamWithAction))
 
 	// Hard-coded routes for additional stream services
-	e.GET("/:stream/attachments/:attachmentId", handler.GetStreamAttachment(factory)) // TODO: LOW: Can Stream Attachments be moved into a custom build step?
+	e.GET("/:stream/attachments/:attachmentId", handler.WithFactory(factory, handler.GetStreamAttachment))
 	e.GET("/:stream/qrcode", handler.WithFactory(factory, handler.GetQRCode))
 	e.GET("/:objectId/sse", handler.WithFactory(factory, handler.ServerSentEvent))
 	e.GET("/@:objectId/sse", handler.WithFactory(factory, handler.ServerSentEvent))
@@ -362,23 +361,23 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/@:userId", handler.WithUser(factory, handler.PostOutbox))
 	e.GET("/@:userId/:action", handler.WithUser(factory, handler.GetOutbox))
 	e.POST("/@:userId/:action", handler.WithUser(factory, handler.PostOutbox))
-	e.GET("/@:userId/attachments/:attachmentId", handler.GetUserAttachment(factory))
-	e.GET("/@:userId/qrcode", handler.WithFactory(factory, handler.GetQRCode)) // TODO: LOW: Can QR Codes be moved into a custom build step?
+	e.GET("/@:userId/attachments/:attachmentId", handler.WithFactory(factory, handler.GetUserAttachment))
+	e.GET("/@:userId/qrcode", handler.WithFactory(factory, handler.GetQRCode))
 
 	// ActivityPub Routes for Users
 	e.GET("/@:userId/pub", handler.WithUser(factory, handler.GetOutbox))
-	e.POST("/@:userId/pub/inbox", ap_user.PostInbox(factory))
+	e.POST("/@:userId/pub/inbox", handler.WithUser(factory, ap_user.PostInbox))
 	e.GET("/@:userId/pub/outbox", handler.WithUser(factory, ap_user.GetOutboxCollection))
 	e.GET("/@:userId/pub/featured", handler.WithUser(factory, ap_user.GetFeaturedCollection))
 	e.GET("/@:userId/pub/followers", handler.WithFactory(factory, ap_user.GetFollowersCollection))
 	e.GET("/@:userId/pub/following", handler.WithFactory(factory, ap_user.GetFollowingCollection))
 	e.GET("/@:userId/pub/following/:followingId", handler.WithFactory(factory, ap_user.GetFollowingRecord))
-	e.GET("/@:userId/pub/shared", ap_user.GetResponseCollection(factory, vocab.ActivityTypeAnnounce))
-	e.GET("/@:userId/pub/shared/:response", ap_user.GetResponse(factory, vocab.ActivityTypeAnnounce))
-	e.GET("/@:userId/pub/liked", ap_user.GetResponseCollection(factory, vocab.ActivityTypeLike))
-	e.GET("/@:userId/pub/liked/:response", ap_user.GetResponse(factory, vocab.ActivityTypeLike))
-	e.GET("/@:userId/pub/disliked", ap_user.GetResponseCollection(factory, vocab.ActivityTypeDislike))
-	e.GET("/@:userId/pub/disliked/:response", ap_user.GetResponse(factory, vocab.ActivityTypeDislike))
+	e.GET("/@:userId/pub/shared", handler.WithUser(factory, ap_user.GetResponseCollection))
+	e.GET("/@:userId/pub/shared/:response", handler.WithUser(factory, ap_user.GetResponse))
+	e.GET("/@:userId/pub/liked", handler.WithUser(factory, ap_user.GetResponseCollection))
+	e.GET("/@:userId/pub/liked/:response", handler.WithUser(factory, ap_user.GetResponse))
+	e.GET("/@:userId/pub/disliked", handler.WithUser(factory, ap_user.GetResponseCollection))
+	e.GET("/@:userId/pub/disliked/:response", handler.WithUser(factory, ap_user.GetResponse))
 	e.GET("/@:userId/pub/blocked", handler.WithUser(factory, ap_user.GetBlockedCollection))
 	e.GET("/@:userId/pub/blocked/:ruleId", handler.WithUser(factory, ap_user.GetBlock))
 
@@ -390,31 +389,31 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/:stream/pub/children", handler.WithFactory(factory, ap_stream.GetChildrenCollection))
 
 	// Domain Admin Pages
-	e.GET("/admin", handler.GetAdmin(factory), mw.Owner)
-	e.GET("/admin/:param1", handler.GetAdmin(factory), mw.Owner)
-	e.POST("/admin/:param1", handler.PostAdmin(factory), mw.Owner)
-	e.GET("/admin/:param1/:param2", handler.GetAdmin(factory), mw.Owner)
-	e.POST("/admin/:param1/:param2", handler.PostAdmin(factory), mw.Owner)
-	e.GET("/admin/:param1/:param2/:param3", handler.GetAdmin(factory), mw.Owner)
-	e.POST("/admin/:param1/:param2/:param3", handler.PostAdmin(factory), mw.Owner)
+	e.GET("/admin", handler.WithFactory(factory, handler.GetAdmin), mw.Owner)
+	e.GET("/admin/:param1", handler.WithFactory(factory, handler.GetAdmin), mw.Owner)
+	e.POST("/admin/:param1", handler.WithFactory(factory, handler.PostAdmin), mw.Owner)
+	e.GET("/admin/:param1/:param2", handler.WithFactory(factory, handler.GetAdmin), mw.Owner)
+	e.POST("/admin/:param1/:param2", handler.WithFactory(factory, handler.PostAdmin), mw.Owner)
+	e.GET("/admin/:param1/:param2/:param3", handler.WithFactory(factory, handler.GetAdmin), mw.Owner)
+	e.POST("/admin/:param1/:param2/:param3", handler.WithFactory(factory, handler.PostAdmin), mw.Owner)
 	e.POST("/admin/index-all-streams", handler.WithFactory(factory, handler.IndexAllStreams), mw.Owner)
 	e.POST("/admin/index-all-users", handler.WithFactory(factory, handler.IndexAllUsers), mw.Owner)
 
 	// Startup Wizard
-	e.GET("/startup", handler.GetStartup(factory), mw.Owner)
-	e.GET("/startup/:action", handler.GetStartup(factory), mw.Owner)
-	e.POST("/startup", handler.PostStartup(factory), mw.Owner)
+	e.GET("/startup", handler.WithFactory(factory, handler.GetStartup), mw.Owner)
+	e.GET("/startup/:action", handler.WithFactory(factory, handler.GetStartup), mw.Owner)
+	e.POST("/startup", handler.WithFactory(factory, handler.PostStartup), mw.Owner)
 
 	// OAuth Client Connections
-	e.GET("/oauth/clients/:provider", handler.GetOAuth(factory), mw.Owner)
-	e.GET("/oauth/clients/:provider/callback", handler.GetOAuthCallback(factory), mw.AllowCSR, mw.Owner)
-	e.GET("/oauth/clients/redirect", handler.OAuthRedirect(factory), mw.Owner)
+	e.GET("/oauth/clients/:provider", handler.WithFactory(factory, handler.GetOAuth), mw.Owner)
+	e.GET("/oauth/clients/:provider/callback", handler.WithFactory(factory, handler.GetOAuthCallback), mw.AllowCSR, mw.Owner)
+	e.GET("/oauth/clients/redirect", handler.WithFactory(factory, handler.OAuthRedirect), mw.Owner)
 
 	// OAuth Server
-	e.GET("/oauth/authorize", handler.GetOAuthAuthorization(factory), mw.Authenticated)
-	e.POST("/oauth/authorize", handler.PostOAuthAuthorization(factory), mw.Authenticated)
-	e.POST("/oauth/token", handler.PostOAuthToken(factory))
-	e.POST("/oauth/revoke", handler.PostOAuthRevoke(factory))
+	e.GET("/oauth/authorize", handler.WithFactory(factory, handler.GetOAuthAuthorization), mw.Authenticated)
+	e.POST("/oauth/authorize", handler.WithFactory(factory, handler.PostOAuthAuthorization), mw.Authenticated)
+	e.POST("/oauth/token", handler.WithFactory(factory, handler.PostOAuthToken))
+	e.POST("/oauth/revoke", handler.WithFactory(factory, handler.PostOAuthRevoke))
 
 	// Mastodon API
 	// toot.Register(e, handler.Mastodon(factory))

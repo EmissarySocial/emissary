@@ -49,7 +49,7 @@ func (step StepWithResponse) execute(builder Builder, buffer io.Writer, actionMe
 	// If we have a real ID, then try to load the response from the database
 	if (responseToken != "") && (responseToken != "new") {
 		if responseID, err := primitive.ObjectIDFromHex(responseToken); err == nil {
-			if err := responseService.LoadByID(responseID, &response); err != nil {
+			if err := responseService.LoadByID(builder.session(), responseID, &response); err != nil {
 				if actionMethod == ActionMethodGet {
 					return Halt().WithError(derp.Wrap(err, location, "Unable to load Response", responseToken))
 				}
@@ -59,7 +59,7 @@ func (step StepWithResponse) execute(builder Builder, buffer io.Writer, actionMe
 	}
 
 	// Create a new builder tied to the Response record
-	subBuilder, err := NewModel(factory, builder.request(), builder.response(), template, &response, builder.actionID())
+	subBuilder, err := NewModel(factory, builder.session(), builder.request(), builder.response(), template, &response, builder.actionID())
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Unable to create sub-builder"))

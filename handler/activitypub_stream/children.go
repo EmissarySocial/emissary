@@ -6,12 +6,13 @@ import (
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/handler/activitypub"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/steranko"
 )
 
 // GetChildrenCollection returns a collection of all child streams for a given parent stream
-func GetChildrenCollection(ctx *steranko.Context, factory *domain.Factory) error {
+func GetChildrenCollection(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
 
 	const location = "handler.activitypub_stream.GetChildrenCollection"
 
@@ -20,13 +21,13 @@ func GetChildrenCollection(ctx *steranko.Context, factory *domain.Factory) error
 
 	// Load the parent stream information
 	parent := model.NewStream()
-	if err := streamService.LoadByToken(token, &parent); err != nil {
+	if err := streamService.LoadByToken(session, token, &parent); err != nil {
 		return derp.Wrap(err, location, "Error loading stream")
 	}
 
 	// Get an iterator of all child streams
 	result := activitypub.Collection(parent.ActivityPubChildrenURL())
-	children, err := streamService.RangeByParent(parent.StreamID)
+	children, err := streamService.RangeByParent(session, parent.StreamID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error loading children")
@@ -35,7 +36,7 @@ func GetChildrenCollection(ctx *steranko.Context, factory *domain.Factory) error
 	// Map each child into JSON and stuff it into the collection's OrderedItems
 	count := 0
 	for child := range children {
-		childJSON := streamService.JSONLD(&child)
+		childJSON := streamService.JSONLD(session, &child)
 		result.OrderedItems = append(result.OrderedItems, childJSON)
 		count++
 	}

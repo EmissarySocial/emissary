@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/EmissarySocial/emissary/domain"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	domaintools "github.com/benpate/domain"
 	"github.com/benpate/steranko"
@@ -12,7 +13,7 @@ import (
 )
 
 // GetQRCode generates a QR Code for the provided URL
-func GetQRCode(ctx *steranko.Context, factory *domain.Factory) error {
+func GetQRCode(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
 
 	// Get the URL from the request; strip "/qrcode" from the path
 	url := domaintools.Hostname(ctx.Request())

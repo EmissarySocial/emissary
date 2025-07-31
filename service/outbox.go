@@ -16,7 +16,6 @@ import (
 
 // Outbox manages all Outbox records for a User.  This includes Outbox and Outbox
 type Outbox struct {
-	collection      data.Collection
 	activityService *ActivityStream
 	followerService *Follower
 	identityService *Identity
@@ -42,8 +41,7 @@ func NewOutbox() Outbox {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Outbox) Refresh(collection data.Collection, activityService *ActivityStream, followerService *Follower, identityService *Identity, ruleService *Rule, streamService *Stream, templateService *Template, userService *User, domainEmail *DomainEmail, queue *queue.Queue, hostname string) {
-	service.collection = collection
+func (service *Outbox) Refresh(activityService *ActivityStream, followerService *Follower, identityService *Identity, ruleService *Rule, streamService *Stream, templateService *Template, userService *User, domainEmail *DomainEmail, queue *queue.Queue, hostname string) {
 	service.activityService = activityService
 	service.followerService = followerService
 	service.identityService = identityService
@@ -64,33 +62,37 @@ func (service *Outbox) Close() {
  * Common Data Methods
  ******************************************/
 
+func (service *Outbox) collection(session data.Session) data.Collection {
+	return session.Collection("Outbox")
+}
+
 // New creates a newly initialized Outbox that is ready to use
 func (service *Outbox) New() model.OutboxMessage {
 	return model.NewOutboxMessage()
 }
 
 // Count returns the number of records that match the provided criteria
-func (service *Outbox) Count(criteria exp.Expression) (int64, error) {
-	return service.collection.Count(notDeleted(criteria))
+func (service *Outbox) Count(session data.Session, criteria exp.Expression) (int64, error) {
+	return service.collection(session).Count(notDeleted(criteria))
 }
 
 // Query returns a slice containing all of the Activities that match the provided criteria
-func (service *Outbox) Query(criteria exp.Expression, options ...option.Option) ([]model.OutboxMessage, error) {
+func (service *Outbox) Query(session data.Session, criteria exp.Expression, options ...option.Option) ([]model.OutboxMessage, error) {
 	result := make([]model.OutboxMessage, 0)
-	err := service.collection.Query(&result, notDeleted(criteria), options...)
+	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
 
 	return result, err
 }
 
 // List returns an iterator containing all of the Activities that match the provided criteria
-func (service *Outbox) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection.Iterator(notDeleted(criteria), options...)
+func (service *Outbox) List(session data.Session, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+	return service.collection(session).Iterator(notDeleted(criteria), options...)
 }
 
 // Range returns a Go 1.23 RangeFunc that iterates over the OutboxMessage records that match the provided criteria
-func (service *Outbox) Range(criteria exp.Expression, options ...option.Option) (iter.Seq[model.OutboxMessage], error) {
+func (service *Outbox) Range(session data.Session, criteria exp.Expression, options ...option.Option) (iter.Seq[model.OutboxMessage], error) {
 
-	iter, err := service.List(criteria, options...)
+	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
 		return nil, derp.Wrap(err, "service.Outbox.Range", "Error creating iterator", criteria)
@@ -100,9 +102,9 @@ func (service *Outbox) Range(criteria exp.Expression, options ...option.Option) 
 }
 
 // Load retrieves an Outbox from the database
-func (service *Outbox) Load(criteria exp.Expression, result *model.OutboxMessage) error {
+func (service *Outbox) Load(session data.Session, criteria exp.Expression, result *model.OutboxMessage) error {
 
-	if err := service.collection.Load(notDeleted(criteria), result); err != nil {
+	if err := service.collection(session).Load(notDeleted(criteria), result); err != nil {
 		return derp.Wrap(err, "service.Outbox.Load", "Error loading Outbox Message", criteria)
 	}
 
@@ -110,12 +112,12 @@ func (service *Outbox) Load(criteria exp.Expression, result *model.OutboxMessage
 }
 
 // Save adds/updates an Outbox in the database
-func (service *Outbox) Save(outboxMessage *model.OutboxMessage, note string) error {
+func (service *Outbox) Save(session data.Session, outboxMessage *model.OutboxMessage, note string) error {
 
 	const location = "service.Outbox.Save"
 
 	// Save the value to the database
-	if err := service.collection.Save(outboxMessage, note); err != nil {
+	if err := service.collection(session).Save(outboxMessage, note); err != nil {
 		return derp.Wrap(err, location, "Error saving Outbox", outboxMessage, note)
 	}
 
@@ -127,14 +129,14 @@ func (service *Outbox) Save(outboxMessage *model.OutboxMessage, note string) err
 }
 
 // Delete removes an Outbox from the database (virtual delete)
-func (service *Outbox) Delete(outboxMessage *model.OutboxMessage, note string) error {
+func (service *Outbox) Delete(session data.Session, outboxMessage *model.OutboxMessage, note string) error {
 
 	const location = "service.Outbox.Delete"
 
 	// Delete the message from the outbox
 	criteria := exp.Equal("_id", outboxMessage.OutboxMessageID)
 
-	if err := service.collection.HardDelete(criteria); err != nil {
+	if err := service.collection(session).HardDelete(criteria); err != nil {
 		return derp.Wrap(err, location, "Error deleting Outbox", outboxMessage, note)
 	}
 
@@ -170,27 +172,27 @@ func (service *Outbox) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
-func (service *Outbox) ObjectQuery(result any, criteria exp.Expression, options ...option.Option) error {
-	return service.collection.Query(result, notDeleted(criteria), options...)
+func (service *Outbox) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
+	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
-func (service *Outbox) ObjectLoad(criteria exp.Expression) (data.Object, error) {
+func (service *Outbox) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewOutboxMessage()
-	err := service.Load(criteria, &result)
+	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
-func (service *Outbox) ObjectSave(object data.Object, note string) error {
+func (service *Outbox) ObjectSave(session data.Session, object data.Object, note string) error {
 
 	if message, ok := object.(*model.OutboxMessage); ok {
-		return service.Save(message, note)
+		return service.Save(session, message, note)
 	}
 	return derp.InternalError("service.Outbox.ObjectSave", "Invalid object type", object)
 }
 
-func (service *Outbox) ObjectDelete(object data.Object, note string) error {
+func (service *Outbox) ObjectDelete(session data.Session, object data.Object, note string) error {
 	if message, ok := object.(*model.OutboxMessage); ok {
-		return service.Delete(message, note)
+		return service.Delete(session, message, note)
 	}
 	return derp.InternalError("service.Outbox.ObjectDelete", "Invalid object type", object)
 }
@@ -210,14 +212,14 @@ func (service *Outbox) Schema() schema.Schema {
  ******************************************/
 
 // RangeByParentID returns a Go 1.23 RangeFunc that iterates over the OutboxMessage records for a specific parent (actorType, actorID)
-func (service *Outbox) RangeByParentID(actorType string, actorID primitive.ObjectID) (iter.Seq[model.OutboxMessage], error) {
+func (service *Outbox) RangeByParentID(session data.Session, actorType string, actorID primitive.ObjectID) (iter.Seq[model.OutboxMessage], error) {
 	criteria := exp.Equal("actorType", actorType).
 		AndEqual("actorId", actorID)
 
-	return service.Range(criteria)
+	return service.Range(session, criteria)
 }
 
-func (service *Outbox) QueryByParentAndDate(actorType string, actorID primitive.ObjectID, permissions model.Permissions, maxDate int64, maxRows int) ([]model.OutboxMessage, error) {
+func (service *Outbox) QueryByParentAndDate(session data.Session, actorType string, actorID primitive.ObjectID, permissions model.Permissions, maxDate int64, maxRows int) ([]model.OutboxMessage, error) {
 
 	const location = "service.Outbox.QueryByParentAndDate"
 
@@ -233,35 +235,35 @@ func (service *Outbox) QueryByParentAndDate(actorType string, actorID primitive.
 
 	result := make([]model.OutboxMessage, 0, maxRows)
 
-	if err := service.collection.Query(&result, criteria, options...); err != nil {
+	if err := service.collection(session).Query(&result, criteria, options...); err != nil {
 		return nil, derp.Wrap(err, location, "Error querying outbox", actorID, maxDate)
 	}
 
 	return result, nil
 }
 
-func (service *Outbox) RangeByObjectID(actorType string, actorID primitive.ObjectID, objectID string) (iter.Seq[model.OutboxMessage], error) {
+func (service *Outbox) RangeByObjectID(session data.Session, actorType string, actorID primitive.ObjectID, objectID string) (iter.Seq[model.OutboxMessage], error) {
 
 	criteria := exp.Equal("actorType", actorType).
 		AndEqual("actorId", actorID).
 		AndEqual("objectId", objectID)
 
-	return service.Range(criteria)
+	return service.Range(session, criteria)
 }
 
-func (service *Outbox) DeleteByParentID(actorType string, actorID primitive.ObjectID) error {
+func (service *Outbox) DeleteByParentID(session data.Session, actorType string, actorID primitive.ObjectID) error {
 
 	const location = "service.Outbox.DeleteByParent"
 
 	// Get all messages in this Outbox
-	rangeFunc, err := service.RangeByParentID(actorType, actorID)
+	rangeFunc, err := service.RangeByParentID(session, actorType, actorID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error querying Outbox Messages", actorType, actorID)
 	}
 
 	for message := range rangeFunc {
-		if err := service.Delete(&message, "Deleted"); err != nil {
+		if err := service.Delete(session, &message, "Deleted"); err != nil {
 			derp.Report(derp.Wrap(err, location, "Error deleting Outbox Message", message))
 		}
 	}

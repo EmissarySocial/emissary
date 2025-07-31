@@ -9,6 +9,7 @@ import (
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/steranko"
 	"github.com/rs/zerolog/log"
@@ -17,7 +18,7 @@ import (
 	"github.com/stripe/stripe-go/v78/webhook"
 )
 
-func PostSignupWebhook(ctx *steranko.Context, factory *domain.Factory, domain *model.Domain) error {
+func PostSignupWebhook(ctx *steranko.Context, factory *domain.Factory, session data.Session, domain *model.Domain) error {
 
 	const location = "handler.stripe.PostWebhook"
 
@@ -72,13 +73,13 @@ func PostSignupWebhook(ctx *steranko.Context, factory *domain.Factory, domain *m
 	// 3. DRAW THE REST OF THE OWL HERE
 	// Moved to an async function so that our Webhook will respond to the server quickly.
 	// Whatever else happens, it's on us from here on out.
-	derp.Report(finishWebhook(factory, restrictedKey, event))
+	derp.Report(finishWebhook(factory, session, restrictedKey, event))
 
 	// Success?
 	return ctx.NoContent(http.StatusOK)
 }
 
-func finishWebhook(factory *domain.Factory, restrictedKey string, event stripe.Event) error {
+func finishWebhook(factory *domain.Factory, session data.Session, restrictedKey string, event stripe.Event) error {
 
 	const location = "handler.stripe.finishWebhook"
 
@@ -113,15 +114,15 @@ func finishWebhook(factory *domain.Factory, restrictedKey string, event stripe.E
 		stripe.SubscriptionStatusTrialing:
 
 		// Try to load/create the user
-		if err := loadOrCreateUser(restrictedKey, userService, subscription.Customer, &user); err != nil {
+		if err := loadOrCreateUser(userService, session, restrictedKey, subscription.Customer, &user); err != nil {
 			return derp.Wrap(err, location, "Error creating customer", subscription.Customer)
 		}
 
 		// Add the user to the designated groups
-		addGroups(factory, &user, price.Product, "add_groups")
+		addGroups(factory, session, &user, price.Product, "add_groups")
 
 		// Remove the user from the designated groups
-		removeGroups(factory, &user, price.Product, "remove_groups")
+		removeGroups(factory, session, &user, price.Product, "remove_groups")
 
 		// Set the user to "public" (if indicated by the Product metadata)
 		setPublic(&user, price.Product, true)
@@ -130,19 +131,19 @@ func finishWebhook(factory *domain.Factory, restrictedKey string, event stripe.E
 	default:
 
 		// If the user doesn't exists, then we don't have to cancel their access here.
-		if err := loadUser(userService, subscription.Customer, &user); err != nil {
+		if err := loadUser(userService, session, subscription.Customer, &user); err != nil {
 			return nil
 		}
 
 		// Since this subscription is no longer active, remove the user from the designated groups
-		removeGroups(factory, &user, price.Product, "add_groups")
+		removeGroups(factory, session, &user, price.Product, "add_groups")
 
 		// Set the user to "private" (if indicated by the Product metadata)
 		setPublic(&user, price.Product, false)
 	}
 
 	// Save the new User to the database.  Yay!
-	if err := userService.Save(&user, "Created by Stripe Webhook"); err != nil {
+	if err := userService.Save(session, &user, "Created by Stripe Webhook"); err != nil {
 		return derp.Wrap(err, location, "Error saving user record")
 	}
 
@@ -151,7 +152,7 @@ func finishWebhook(factory *domain.Factory, restrictedKey string, event stripe.E
 }
 
 // addGroups adds groups to the User's list, as specified by the Product metadata
-func addGroups(factory *domain.Factory, user *model.User, product *stripe.Product, token string) {
+func addGroups(factory *domain.Factory, session data.Session, user *model.User, product *stripe.Product, token string) {
 
 	if user == nil {
 		return
@@ -166,14 +167,14 @@ func addGroups(factory *domain.Factory, user *model.User, product *stripe.Produc
 
 	for _, groupToken := range groupIDs {
 		group := model.NewGroup()
-		if err := groupService.LoadByToken(groupToken, &group); err == nil {
+		if err := groupService.LoadByToken(session, groupToken, &group); err == nil {
 			user.AddGroup(group.GroupID)
 		}
 	}
 }
 
 // removeGroups removes groups from the User's list, as specified by the Product metadata
-func removeGroups(factory *domain.Factory, user *model.User, product *stripe.Product, token string) {
+func removeGroups(factory *domain.Factory, session data.Session, user *model.User, product *stripe.Product, token string) {
 
 	if user == nil {
 		return
@@ -188,7 +189,7 @@ func removeGroups(factory *domain.Factory, user *model.User, product *stripe.Pro
 
 	for _, groupToken := range groupIDs {
 		group := model.NewGroup()
-		if err := groupService.LoadByToken(groupToken, &group); err == nil {
+		if err := groupService.LoadByToken(session, groupToken, &group); err == nil {
 			user.RemoveGroup(group.GroupID)
 		}
 	}
@@ -223,23 +224,23 @@ func getSubscriptionPrice(subscription *stripe.Subscription) *stripe.Price {
 	return nil
 }
 
-func loadUser(userService *service.User, customer *stripe.Customer, user *model.User) error {
+func loadUser(userService *service.User, session data.Session, customer *stripe.Customer, user *model.User) error {
 
 	if customer == nil {
 		return derp.BadRequestError("handler.stripe.loadUser", "Customer must not be nil")
 	}
 
 	// Try to load the user by their email address
-	if err := userService.LoadByMapID(model.UserMapIDStripe, customer.ID, user); err != nil {
+	if err := userService.LoadByMapID(session, model.UserMapIDStripe, customer.ID, user); err != nil {
 		return derp.Wrap(err, "handler.stripe.loadUser", "Error loading user record")
 	}
 
 	return nil
 }
 
-func loadOrCreateUser(apiKey string, userService *service.User, customer *stripe.Customer, user *model.User) error {
+func loadOrCreateUser(userService *service.User, session data.Session, apiKey string, customer *stripe.Customer, user *model.User) error {
 
-	err := loadUser(userService, customer, user)
+	err := loadUser(userService, session, customer, user)
 
 	if err == nil {
 		return nil

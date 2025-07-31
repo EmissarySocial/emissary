@@ -22,6 +22,7 @@ import (
 	derpconsole "github.com/EmissarySocial/emissary/tools/derp-console"
 	derpmongo "github.com/EmissarySocial/emissary/tools/derp-mongo"
 	"github.com/EmissarySocial/emissary/tools/httpcache"
+	"github.com/benpate/data"
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
 	"github.com/benpate/digital-dome/dome"
@@ -412,10 +413,6 @@ func (factory *Factory) refreshQueue() {
  * Server Config Methods
  ******************************************/
 
-func (factory *Factory) Version() string {
-	return "0.4.0"
-}
-
 // Config returns the current configuration for the Factory
 func (factory *Factory) Config() config.Config {
 
@@ -467,7 +464,7 @@ func (factory *Factory) ListDomains() []config.Domain {
 }
 
 // PutDomain adds a domain to the Factory
-func (factory *Factory) PutDomain(configuration config.Domain) error {
+func (factory *Factory) PutDomain(session data.Session, configuration config.Domain) error {
 
 	// Save the domain info ant write a new configuration to the storage service
 	if err := factory.putDomain(configuration); err != nil {
@@ -484,7 +481,7 @@ func (factory *Factory) PutDomain(configuration config.Domain) error {
 	}
 
 	userService := domainFactory.User()
-	if err := userService.SetOwner(configuration.Owner); err != nil {
+	if err := userService.SetOwner(session, configuration.Owner); err != nil {
 		return derp.Wrap(err, "server.Factory.PutDomain", "Error setting owner", configuration.Owner)
 	}
 

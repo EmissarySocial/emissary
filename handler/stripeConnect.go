@@ -5,6 +5,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/remote"
 	"github.com/benpate/remote/options"
@@ -13,7 +14,7 @@ import (
 )
 
 // GetStripeConnect initiates the Stripe connection process for a User.
-func GetStripeConnect(ctx *steranko.Context, factory *domain.Factory, user *model.User) error {
+func GetStripeConnect(ctx *steranko.Context, factory *domain.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.GetStripeConnect"
 
@@ -21,7 +22,7 @@ func GetStripeConnect(ctx *steranko.Context, factory *domain.Factory, user *mode
 	connectionService := factory.Connection()
 	connection := model.NewConnection()
 
-	if err := connectionService.LoadByProvider(model.ConnectionProviderStripeConnect, &connection); err != nil {
+	if err := connectionService.LoadByProvider(session, model.ConnectionProviderStripeConnect, &connection); err != nil {
 		return derp.Wrap(err, location, "Unable to load Stripe-Connect Connection")
 	}
 
@@ -58,7 +59,7 @@ func GetStripeConnect(ctx *steranko.Context, factory *domain.Factory, user *mode
 	// Save the new MerchantAccount (including Stripe Account ID)
 	merchantAccount.Plaintext.SetString("accountId", stripeAccount.ID)
 
-	if err := merchantAccountService.Save(&merchantAccount, "Linked by User"); err != nil {
+	if err := merchantAccountService.Save(session, &merchantAccount, "Linked by User"); err != nil {
 		return derp.Wrap(err, location, "Unable to create MerchantAccount", derp.WithCode(http.StatusInternalServerError))
 	}
 
@@ -83,7 +84,7 @@ func GetStripeConnect(ctx *steranko.Context, factory *domain.Factory, user *mode
 }
 
 // PostStripeConnectWebhook_Checkout processes inbound webhook events for a specific MerchantAccount
-func PostStripeConnectWebhook_Checkout(ctx *steranko.Context, factory *domain.Factory, connection *model.Connection) error {
+func PostStripeConnectWebhook_Checkout(ctx *steranko.Context, factory *domain.Factory, session data.Session, connection *model.Connection) error {
 
 	const location = "handler.PostStripeConnectWebhook_Checkout"
 
@@ -102,7 +103,7 @@ func PostStripeConnectWebhook_Checkout(ctx *steranko.Context, factory *domain.Fa
 	liveMode := connection.Data.GetString("liveMode") == "LIVE"
 
 	// Process the Stripe WebHook data
-	if err = stripe_ProcessWebhook(factory, ctx.Request(), vault.GetString("webhookSecret"), liveMode); err != nil {
+	if err = stripe_ProcessWebhook(factory, session, ctx.Request(), vault.GetString("webhookSecret"), liveMode); err != nil {
 
 		// Suppress errors from subscriptions that are not found on this server
 		if derp.IsNotFound(err) {

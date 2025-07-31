@@ -18,7 +18,6 @@ import (
 
 // Rule defines a service that manages all content rules created and imported by Users.
 type Rule struct {
-	collection      data.Collection
 	activityService *ActivityStream
 	outboxService   *Outbox
 	userService     *User
@@ -37,8 +36,7 @@ func NewRule() Rule {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Rule) Refresh(collection data.Collection, activityService *ActivityStream, outboxService *Outbox, userService *User, queue *queue.Queue, host string) {
-	service.collection = collection
+func (service *Rule) Refresh(activityService *ActivityStream, outboxService *Outbox, userService *User, queue *queue.Queue, host string) {
 	service.activityService = activityService
 	service.outboxService = outboxService
 	service.userService = userService
@@ -55,36 +53,40 @@ func (service *Rule) Close() {
  * Common Data Methods
  ******************************************/
 
-func (service *Rule) Count(criteria exp.Expression) (int64, error) {
-	return service.collection.Count(notDeleted(criteria))
+func (service *Rule) collection(session data.Session) data.Collection {
+	return session.Collection("Rule")
+}
+
+func (service *Rule) Count(session data.Session, criteria exp.Expression) (int64, error) {
+	return service.collection(session).Count(notDeleted(criteria))
 }
 
 // Query returns an slice of allthe Rules that match the provided criteria
-func (service *Rule) Query(criteria exp.Expression, options ...option.Option) ([]model.Rule, error) {
+func (service *Rule) Query(session data.Session, criteria exp.Expression, options ...option.Option) ([]model.Rule, error) {
 	result := make([]model.Rule, 0)
-	err := service.collection.Query(&result, notDeleted(criteria), options...)
+	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
 
 	return result, err
 }
 
 // QuerySummary returns an slice of allthe Rules that match the provided criteria
-func (service *Rule) QuerySummary(criteria exp.Expression, options ...option.Option) ([]model.RuleSummary, error) {
+func (service *Rule) QuerySummary(session data.Session, criteria exp.Expression, options ...option.Option) ([]model.RuleSummary, error) {
 	result := make([]model.RuleSummary, 0)
 	options = append(options, option.Fields(model.RuleSummaryFields()...))
-	err := service.collection.Query(&result, notDeleted(criteria), options...)
+	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
 
 	return result, err
 }
 
 // List returns an iterator containing all of the Rules that match the provided criteria
-func (service *Rule) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection.Iterator(notDeleted(criteria), options...)
+func (service *Rule) List(session data.Session, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+	return service.collection(session).Iterator(notDeleted(criteria), options...)
 }
 
 // Range returns a Go 1.23 RangeFunc that iterates over the Rule records that match the provided criteria
-func (service *Rule) Range(criteria exp.Expression, options ...option.Option) (iter.Seq[model.Rule], error) {
+func (service *Rule) Range(session data.Session, criteria exp.Expression, options ...option.Option) (iter.Seq[model.Rule], error) {
 
-	iter, err := service.List(criteria, options...)
+	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
 		return nil, derp.Wrap(err, "service.Rule.Range", "Error creating iterator", criteria)
@@ -94,9 +96,9 @@ func (service *Rule) Range(criteria exp.Expression, options ...option.Option) (i
 }
 
 // Load retrieves an Rule from the database
-func (service *Rule) Load(criteria exp.Expression, rule *model.Rule) error {
+func (service *Rule) Load(session data.Session, criteria exp.Expression, rule *model.Rule) error {
 
-	if err := service.collection.Load(notDeleted(criteria), rule); err != nil {
+	if err := service.collection(session).Load(notDeleted(criteria), rule); err != nil {
 		return derp.Wrap(err, "service.Rule.Load", "Error loading Rule", criteria)
 	}
 
@@ -104,15 +106,17 @@ func (service *Rule) Load(criteria exp.Expression, rule *model.Rule) error {
 }
 
 // Save adds/updates an Rule in the database
-func (service *Rule) Save(rule *model.Rule, note string) error {
+func (service *Rule) Save(session data.Session, rule *model.Rule, note string) error {
+
+	const location = "service.Rule.Save"
 
 	// Validate the value before saving
 	if err := service.Schema().Validate(rule); err != nil {
-		return derp.Wrap(err, "service.Rule.Save", "Error validating Rule", rule)
+		return derp.Wrap(err, location, "Error validating Rule", rule)
 	}
 
 	// If this is a duplicate rule, then halt
-	if service.hasDuplicate(rule) {
+	if service.hasDuplicate(session, rule) {
 		return nil
 	}
 
@@ -131,11 +135,11 @@ func (service *Rule) Save(rule *model.Rule, note string) error {
 		case 0:
 
 			rule.PublishDate = time.Now().Unix()
-			go derp.Report(service.publish(*rule))
+			go derp.Report(service.publish(session, *rule))
 
 		// "Republish" changes when a public Rule is updated
 		default:
-			go derp.Report(service.republish(*rule))
+			go derp.Report(service.republish(session, *rule))
 		}
 
 	case false:
@@ -143,32 +147,32 @@ func (service *Rule) Save(rule *model.Rule, note string) error {
 		// RULE: Unpublish Rules when they are no longer shared publicly
 		if rule.PublishDate > 0 {
 
-			go derp.Report(service.unpublish(*rule))
+			go derp.Report(service.unpublish(session, *rule))
 			rule.PublishDate = 0
 		}
 	}
 
 	// Save the rule to the database
-	if err := service.collection.Save(rule, note); err != nil {
-		return derp.Wrap(err, "service.Rule.Save", "Error saving Rule", rule, note)
+	if err := service.collection(session).Save(rule, note); err != nil {
+		return derp.Wrap(err, location, "Error saving Rule", rule, note)
 	}
 
 	// Recalculate the rule count for this user
-	go service.userService.CalcRuleCount(rule.UserID)
+	go service.userService.CalcRuleCount(session, rule.UserID)
 
 	return nil
 }
 
 // Delete removes an Rule from the database (virtual delete)
-func (service *Rule) Delete(rule *model.Rule, note string) error {
+func (service *Rule) Delete(session data.Session, rule *model.Rule, note string) error {
 
 	// Delete this Rule
-	if err := service.collection.Delete(rule, note); err != nil {
+	if err := service.collection(session).Delete(rule, note); err != nil {
 		return derp.Wrap(err, "service.Rule.Delete", "Error deleting Rule", rule, note)
 	}
 
 	if rule.IsPublic {
-		go derp.Report(service.unpublish(*rule))
+		go derp.Report(service.unpublish(session, *rule))
 	}
 
 	return nil
@@ -198,26 +202,26 @@ func (service *Rule) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
-func (service *Rule) ObjectQuery(result any, criteria exp.Expression, options ...option.Option) error {
-	return service.collection.Query(result, notDeleted(criteria), options...)
+func (service *Rule) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
+	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
-func (service *Rule) ObjectLoad(criteria exp.Expression) (data.Object, error) {
+func (service *Rule) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewRule()
-	err := service.Load(criteria, &result)
+	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
-func (service *Rule) ObjectSave(object data.Object, comment string) error {
+func (service *Rule) ObjectSave(session data.Session, object data.Object, comment string) error {
 	if rule, ok := object.(*model.Rule); ok {
-		return service.Save(rule, comment)
+		return service.Save(session, rule, comment)
 	}
 	return derp.InternalError("service.Rule.ObjectSave", "Invalid Object Type", object)
 }
 
-func (service *Rule) ObjectDelete(object data.Object, comment string) error {
+func (service *Rule) ObjectDelete(session data.Session, object data.Object, comment string) error {
 	if rule, ok := object.(*model.Rule); ok {
-		return service.Delete(rule, comment)
+		return service.Delete(session, rule, comment)
 	}
 	return derp.InternalError("service.Rule.ObjectDelete", "Invalid Object Type", object)
 }
@@ -234,15 +238,32 @@ func (service *Rule) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
-func (service *Rule) LoadByID(userID primitive.ObjectID, ruleID primitive.ObjectID, rule *model.Rule) error {
+func (service *Rule) LoadByID(session data.Session, userID primitive.ObjectID, ruleID primitive.ObjectID, rule *model.Rule) error {
+
+	// RULE: UserID cannot be zero
+	if userID.IsZero() {
+		return derp.ValidationError("UserID cannot be zero")
+	}
+
+	// RULE: RuleID cannot be zero
+	if ruleID.IsZero() {
+		return derp.ValidationError("RuleID cannot be zero")
+	}
 
 	criteria := exp.Equal("_id", ruleID).
 		And(service.byUserID(userID))
 
-	return service.Load(criteria, rule)
+	return service.Load(session, criteria, rule)
 }
 
-func (service *Rule) LoadByToken(userID primitive.ObjectID, token string, rule *model.Rule) error {
+func (service *Rule) LoadByToken(session data.Session, userID primitive.ObjectID, token string, rule *model.Rule) error {
+
+	// RULE: UserID cannot be zero
+	if userID.IsZero() {
+		return derp.ValidationError("UserID cannot be zero")
+	}
+
+	// RULE: token must be a valid ObjectID
 	ruleID, err := primitive.ObjectIDFromHex(token)
 
 	if err != nil {
@@ -251,44 +272,84 @@ func (service *Rule) LoadByToken(userID primitive.ObjectID, token string, rule *
 
 	criteria := exp.Equal("_id", ruleID).AndEqual("userId", userID)
 
-	return service.Load(criteria, rule)
+	return service.Load(session, criteria, rule)
 }
 
 // LoadByTrigger retrieves a single Rule that maches the provided User, RuleType, and Trigger
-func (service *Rule) LoadByTrigger(userID primitive.ObjectID, ruleType string, trigger string, rule *model.Rule) error {
+func (service *Rule) LoadByTrigger(session data.Session, userID primitive.ObjectID, ruleType string, trigger string, rule *model.Rule) error {
+
+	// RULE: UserID cannot be zero
+	if userID.IsZero() {
+		return derp.ValidationError("UserID cannot be zero")
+	}
+
+	// RULE: RuleType cannot be empty
+	if ruleType == "" {
+		return derp.ValidationError("RuleType cannot be empty")
+	}
+
+	// RULE: Trigger cannot be empty
+	if trigger == "" {
+		return derp.ValidationError("Trigger cannot be empty")
+	}
 
 	criteria := service.byUserID(userID).
 		AndEqual("type", ruleType).
 		AndEqual("trigger", trigger)
 
-	return service.Load(criteria, rule)
+	return service.Load(session, criteria, rule)
 }
 
 // LoadByFollowing retrieves a single Rule that maches the provided User, Following, RuleType, and Trigger
-func (service *Rule) LoadByFollowing(userID primitive.ObjectID, followingID primitive.ObjectID, ruleType string, trigger string, rule *model.Rule) error {
+func (service *Rule) LoadByFollowing(session data.Session, userID primitive.ObjectID, followingID primitive.ObjectID, ruleType string, trigger string, rule *model.Rule) error {
+
+	// RULE: UserID cannot be zero
+	if userID.IsZero() {
+		return derp.ValidationError("UserID cannot be zero")
+	}
+
+	// RULE: FollowingID cannot be zero
+	if followingID.IsZero() {
+		return derp.ValidationError("FollowingID cannot be zero")
+	}
+
+	// RULE: RuleType cannot be empty
+	if ruleType == "" {
+		return derp.ValidationError("RuleType cannot be empty")
+	}
+
+	// RULE: Trigger cannot be empty
+	if trigger == "" {
+		return derp.ValidationError("Trigger cannot be empty")
+	}
 
 	criteria := exp.Equal("userId", userID).
 		AndEqual("type", ruleType).
 		AndEqual("trigger", trigger).
 		AndEqual("followingId", followingID)
 
-	return service.Load(criteria, rule)
+	return service.Load(session, criteria, rule)
 }
 
 // QueryPublic returns a collection of Rules that are marked Public, in reverse chronological order.
-func (service *Rule) QueryPublic(userID primitive.ObjectID, maxDate int64, options ...option.Option) ([]model.Rule, error) {
+func (service *Rule) QueryPublic(session data.Session, userID primitive.ObjectID, maxDate int64, options ...option.Option) ([]model.Rule, error) {
+
+	// RULE: UserID cannot be zero
+	if userID.IsZero() {
+		return nil, derp.ValidationError("UserID cannot be zero")
+	}
 
 	criteria := service.byUserID(userID).
 		AndEqual("isPublic", true).
 		AndLessThan("publishDate", maxDate)
 
 	options = append(options, option.SortDesc("publishDate"))
-	result, err := service.Query(criteria, options...)
+	result, err := service.Query(session, criteria, options...)
 
 	return result, err
 }
 
-func (service *Rule) QueryByType(userID primitive.ObjectID, ruleType string, criteria exp.Expression, options ...option.Option) ([]model.Rule, error) {
+func (service *Rule) QueryByType(session data.Session, userID primitive.ObjectID, ruleType string, criteria exp.Expression, options ...option.Option) ([]model.Rule, error) {
 
 	criteria = service.byUserID(userID).
 		AndEqual("type", ruleType).
@@ -296,17 +357,17 @@ func (service *Rule) QueryByType(userID primitive.ObjectID, ruleType string, cri
 		And(criteria)
 
 	options = append(options, option.SortDesc("publishDate"))
-	result, err := service.Query(criteria, options...)
+	result, err := service.Query(session, criteria, options...)
 
 	return result, err
 }
 
-func (service *Rule) QueryByTypeDomain(userID primitive.ObjectID, criteria exp.Expression, options ...option.Option) ([]model.Rule, error) {
-	return service.QueryByType(userID, model.RuleTypeDomain, criteria, options...)
+func (service *Rule) QueryByTypeDomain(session data.Session, userID primitive.ObjectID, criteria exp.Expression, options ...option.Option) ([]model.Rule, error) {
+	return service.QueryByType(session, userID, model.RuleTypeDomain, criteria, options...)
 }
 
 // QueryByActorAndActions retrieves a slice of RuleSummaries that match the provided User, Actor, and potential actions
-func (service *Rule) QueryByActorAndActions(userID primitive.ObjectID, actorID string, actions ...string) ([]model.RuleSummary, error) {
+func (service *Rule) QueryByActorAndActions(session data.Session, userID primitive.ObjectID, actorID string, actions ...string) ([]model.RuleSummary, error) {
 
 	criteria := exp.And(
 		service.byUserID(userID),
@@ -318,46 +379,46 @@ func (service *Rule) QueryByActorAndActions(userID primitive.ObjectID, actorID s
 		exp.In("action", actions),
 	)
 
-	return service.QuerySummary(criteria)
+	return service.QuerySummary(session, criteria)
 }
 
 // QueryDomainBlocks returns all external domains blocked by this Instance/Domain.
-func (service *Rule) QueryDomainBlocks() ([]model.Rule, error) {
+func (service *Rule) QueryDomainBlocks(session data.Session) ([]model.Rule, error) {
 
 	criteria := exp.Equal("userId", primitive.NilObjectID).
 		AndEqual("type", model.RuleTypeDomain).
 		AndEqual("behavior", model.RuleActionBlock)
 
-	return service.Query(criteria, option.SortAsc("trigger"))
+	return service.Query(session, criteria, option.SortAsc("trigger"))
 }
 
 // QueryBlockedActors returns all Actors blocked by this User (or by the Domain on behalf of the User)
-func (service *Rule) QueryBlockedActors(userID primitive.ObjectID) ([]model.Rule, error) {
+func (service *Rule) QueryBlockedActors(session data.Session, userID primitive.ObjectID) ([]model.Rule, error) {
 
 	criteria := service.byUserID(userID).
 		AndEqual("type", model.RuleTypeActor).
 		AndEqual("behavior", model.RuleActionBlock)
 
-	return service.Query(criteria, option.SortAsc("trigger"))
+	return service.Query(session, criteria, option.SortAsc("trigger"))
 }
 
 // RangeByUserID returns all Rules tha belong to a specific User (NO DOMAIN RULES)
-func (service *Rule) RangeByUserID(userID primitive.ObjectID) (iter.Seq[model.Rule], error) {
-	return service.Range(exp.Equal("userId", userID))
+func (service *Rule) RangeByUserID(session data.Session, userID primitive.ObjectID) (iter.Seq[model.Rule], error) {
+	return service.Range(session, exp.Equal("userId", userID))
 }
 
-func (service *Rule) DeleteByUserID(userID primitive.ObjectID, comment string) error {
+func (service *Rule) DeleteByUserID(session data.Session, userID primitive.ObjectID, comment string) error {
 
 	const location = "service.Rule.DeleteByUserID"
 
-	rangeFunc, err := service.RangeByUserID(userID)
+	rangeFunc, err := service.RangeByUserID(session, userID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error getting range function")
 	}
 
 	for rule := range rangeFunc {
-		if err := service.Delete(&rule, comment); err != nil {
+		if err := service.Delete(session, &rule, comment); err != nil {
 			return derp.Wrap(err, location, "Error deleting rule", rule)
 		}
 	}
@@ -379,7 +440,7 @@ func (service *Rule) Filter(userID primitive.ObjectID, options ...RuleFilterOpti
 
 // hasDuplicate returns TRUE if the provided Rule is a duplicate of an existing Rule.
 // IMPORTANT: This method MAY update the provided Rule
-func (service *Rule) hasDuplicate(rule *model.Rule) bool {
+func (service *Rule) hasDuplicate(session data.Session, rule *model.Rule) bool {
 
 	// Search the database for duplicate rules
 	criteria := exp.NotEqual("_id", rule.RuleID).
@@ -390,7 +451,7 @@ func (service *Rule) hasDuplicate(rule *model.Rule) bool {
 	duplicate := model.NewRule()
 
 	// If a duplicate is not found, then return FALSE
-	if err := service.Load(criteria, &duplicate); derp.IsNotFound(err) {
+	if err := service.Load(session, criteria, &duplicate); derp.IsNotFound(err) {
 		return false
 	}
 

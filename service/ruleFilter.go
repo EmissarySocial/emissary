@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -43,7 +44,7 @@ func NewRuleFilter(ruleService *Rule, userID primitive.ObjectID, options ...Rule
 // Allow returns TRUE if this document is allowed past all User and Domain filters.
 // The document is passed as a pointer because it MAY BE MODIFIED by the filter, for
 // instance, to add a label or other metadata.
-func (filter *RuleFilter) Allow(document *streams.Document) bool {
+func (filter *RuleFilter) Allow(session data.Session, document *streams.Document) bool {
 
 	// Get the actor ID from the document.
 	actorID := document.Actor().ID()
@@ -52,7 +53,7 @@ func (filter *RuleFilter) Allow(document *streams.Document) bool {
 	if filter.cache[actorID] == nil {
 
 		allowedActions := filter.allowedActions()
-		rules, err := filter.ruleService.QueryByActorAndActions(filter.userID, actorID, allowedActions...)
+		rules, err := filter.ruleService.QueryByActorAndActions(session, filter.userID, actorID, allowedActions...)
 
 		if err != nil {
 			derp.Report(derp.Wrap(err, "emissary.RuleFilter.FilterOne", "Error loading rules"))
@@ -75,14 +76,14 @@ func (filter *RuleFilter) Allow(document *streams.Document) bool {
 }
 
 // Disallow returns TRUE if a document is NOT allowed past all User and Domain filters.
-func (filter *RuleFilter) Disallow(document *streams.Document) bool {
-	return !filter.Allow(document)
+func (filter *RuleFilter) Disallow(session data.Session, document *streams.Document) bool {
+	return !filter.Allow(session, document)
 }
 
 // Channel returns a channel of all documents that are allowed by User/Domain filters.
 // Documents may be modified by filters in the process, for instance, to add content warning labels.
 // Deprecated: this should be removed in favor of range function iterators.
-func (filter *RuleFilter) Channel(ch <-chan streams.Document) <-chan streams.Document {
+func (filter *RuleFilter) Channel(session data.Session, ch <-chan streams.Document) <-chan streams.Document {
 
 	result := make(chan streams.Document)
 
@@ -90,7 +91,7 @@ func (filter *RuleFilter) Channel(ch <-chan streams.Document) <-chan streams.Doc
 		defer close(result)
 
 		for document := range ch {
-			if filter.Allow(&document) {
+			if filter.Allow(session, &document) {
 				result <- document
 			}
 		}

@@ -6,6 +6,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/parse"
+	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/sliceof"
@@ -15,6 +16,7 @@ import (
 type SearchBuilder struct {
 	searchTagService    *service.SearchTag
 	searchResultService *service.SearchResult
+	session             data.Session
 	criteria            exp.Expression
 	textQuery           string
 	sortField           string
@@ -22,11 +24,12 @@ type SearchBuilder struct {
 	maxRows             int64
 }
 
-func NewSearchBuilder(searchTagService *service.SearchTag, searchResultService *service.SearchResult, criteria exp.Expression, textQuery string) SearchBuilder {
+func NewSearchBuilder(searchTagService *service.SearchTag, searchResultService *service.SearchResult, session data.Session, criteria exp.Expression, textQuery string) SearchBuilder {
 
 	return SearchBuilder{
 		searchTagService:    searchTagService,
 		searchResultService: searchResultService,
+		session:             session,
 		criteria:            criteria,
 		textQuery:           textQuery,
 		sortField:           "rank",
@@ -194,19 +197,19 @@ func (builder SearchBuilder) Reverse() SearchBuilder {
 // Slice returns the results of the query as a slice of objects
 func (builder SearchBuilder) Slice() (sliceof.Object[model.SearchResult], error) {
 	criteria := builder.assembleCriteria()
-	return builder.searchResultService.Query(criteria, builder.makeOptions()...)
+	return builder.searchResultService.Query(builder.session, criteria, builder.makeOptions()...)
 }
 
 // Range returns the results of the query as a Go 1.23 RangeFunc
 func (builder SearchBuilder) Range() (iter.Seq[model.SearchResult], error) {
 	criteria := builder.assembleCriteria()
-	return builder.searchResultService.Range(criteria, builder.makeOptions()...)
+	return builder.searchResultService.Range(builder.session, criteria, builder.makeOptions()...)
 }
 
 // Count returns the number of records that match the query criteria
 func (builder SearchBuilder) Count() (int64, error) {
 	criteria := builder.assembleCriteria()
-	return builder.searchResultService.Count(criteria)
+	return builder.searchResultService.Count(builder.session, criteria)
 }
 
 /********************************

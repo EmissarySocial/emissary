@@ -49,7 +49,7 @@ func (step StepWithFollowing) execute(builder Builder, buffer io.Writer, actionM
 	}
 
 	// Create a new builder tied to the Following record
-	subBuilder, err := NewModel(factory, builder.request(), builder.response(), template, &following, builder.actionID())
+	subBuilder, err := NewModel(factory, builder.session(), builder.request(), builder.response(), template, &following, builder.actionID())
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Unable to create sub-builder"))
@@ -85,7 +85,7 @@ func (step StepWithFollowing) getFollowing(builder Builder) (model.Following, er
 	// If a `url` query parameter is provided, then use it to load the Following record
 	if url := builder.QueryParam("url"); url != "" {
 
-		if err := followingService.LoadByURL(userID, url, &following); !derp.IsNilOrNotFound(err) {
+		if err := followingService.LoadByURL(builder.session(), userID, url, &following); !derp.IsNilOrNotFound(err) {
 			return model.NewFollowing(), derp.Wrap(err, location, "Unable to load Following by URL", url)
 		}
 
@@ -97,7 +97,7 @@ func (step StepWithFollowing) getFollowing(builder Builder) (model.Following, er
 	token := builder.QueryParam("followingId")
 
 	// Finally, try to load the Following record from the database.
-	if err := followingService.LoadByToken(userID, token, &following); err != nil {
+	if err := followingService.LoadByToken(builder.session(), userID, token, &following); err != nil {
 		return following, derp.Wrap(err, location, "Unable to load Following", token)
 	}
 

@@ -15,7 +15,6 @@ import (
 
 // SearchDomain defines a service that manages the global domain search actor.
 type SearchDomain struct {
-	collection       data.Collection
 	domainService    *Domain
 	followerService  *Follower
 	ruleService      *Rule
@@ -35,8 +34,7 @@ func NewSearchDomain() SearchDomain {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *SearchDomain) Refresh(collection data.Collection, domainService *Domain, followerService *Follower, ruleService *Rule, searchTagService *SearchTag, activityStream *ActivityStream, queue *queue.Queue, host string) {
-	service.collection = collection
+func (service *SearchDomain) Refresh(domainService *Domain, followerService *Follower, ruleService *Rule, searchTagService *SearchTag, activityStream *ActivityStream, queue *queue.Queue, host string) {
 	service.domainService = domainService
 	service.followerService = followerService
 	service.ruleService = ruleService
@@ -57,12 +55,12 @@ func (service *SearchDomain) Close() {
 
 // ActivityPubActor returns an ActivityPub Actor object ** WHICH INCLUDES ENCRYPTION KEYS **
 // for the provided Stream.
-func (service *SearchDomain) ActivityPubActor() (outbox.Actor, error) {
+func (service *SearchDomain) ActivityPubActor(session data.Session) (outbox.Actor, error) {
 
 	const location = "service.SearchDomain.ActivityPubActor"
 
 	// Retrieve the domain and Public Key
-	privateKey, err := service.domainService.PrivateKey()
+	privateKey, err := service.domainService.PrivateKey(session)
 
 	if err != nil {
 		return outbox.Actor{}, derp.Wrap(err, location, "Error getting private key")
@@ -72,19 +70,19 @@ func (service *SearchDomain) ActivityPubActor() (outbox.Actor, error) {
 	actor := outbox.NewActor(
 		service.ActivityPubURL(),
 		privateKey,
-		outbox.WithFollowers(service.rangeActivityPubFollowers()),
+		outbox.WithFollowers(service.rangeActivityPubFollowers(session)),
 		outbox.WithClient(service.activityStream),
 	)
 
 	return actor, nil
 }
 
-func (service *SearchDomain) rangeActivityPubFollowers() iter.Seq[string] {
+func (service *SearchDomain) rangeActivityPubFollowers(session data.Session) iter.Seq[string] {
 
 	return func(yield func(string) bool) {
 
 		// Get a channel of all Followers
-		followers := service.followerService.RangeActivityPubByType(model.FollowerTypeSearchDomain, primitive.NilObjectID)
+		followers := service.followerService.RangeActivityPubByType(session, model.FollowerTypeSearchDomain, primitive.NilObjectID)
 
 		for follower := range followers {
 			if !yield(follower.Actor.ProfileURL) {
@@ -156,7 +154,7 @@ func (service *SearchDomain) Hostname() string {
  * Custom Queries
  ******************************************/
 
-func (service *SearchDomain) RangeActivityPubFollowers() iter.Seq[string] {
-	followers := service.followerService.RangeActivityPubByType(model.FollowerTypeSearchDomain, primitive.NilObjectID)
+func (service *SearchDomain) RangeActivityPubFollowers(session data.Session) iter.Seq[string] {
+	followers := service.followerService.RangeActivityPubByType(session, model.FollowerTypeSearchDomain, primitive.NilObjectID)
 	return iterateFollowerAddresses(followers)
 }

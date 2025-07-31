@@ -1,7 +1,6 @@
 package service
 
 import (
-	"context"
 	"iter"
 	"math"
 	"net/url"
@@ -33,7 +32,6 @@ import (
 
 // Stream manages all interactions with the Stream collection
 type Stream struct {
-	collection        data.Collection
 	activityService   *ActivityStream
 	circleService     *Circle
 	domainService     *Domain
@@ -65,8 +63,7 @@ func NewStream() Stream {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Stream) Refresh(collection data.Collection, activityService *ActivityStream, circleService *Circle, domainService *Domain, searchTagService *SearchTag, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, activityStream *ActivityStream, contentService *Content, keyService *EncryptionKey, followerService *Follower, ruleService *Rule, userService *User, webhookService *Webhook, mediaserver mediaserver.MediaServer, queue *queue.Queue, host string, sseUpdateChannel chan primitive.ObjectID) {
-	service.collection = collection
+func (service *Stream) Refresh(activityService *ActivityStream, circleService *Circle, domainService *Domain, searchTagService *SearchTag, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, activityStream *ActivityStream, contentService *Content, keyService *EncryptionKey, followerService *Follower, ruleService *Rule, userService *User, webhookService *Webhook, mediaserver mediaserver.MediaServer, queue *queue.Queue, host string, sseUpdateChannel chan primitive.ObjectID) {
 	service.activityService = activityService
 	service.circleService = circleService
 	service.domainService = domainService
@@ -89,10 +86,10 @@ func (service *Stream) Refresh(collection data.Collection, activityService *Acti
 	service.sseUpdateChannel = sseUpdateChannel
 }
 
-func (service *Stream) Startup(theme *model.Theme) error {
+func (service *Stream) Startup(session data.Session, theme *model.Theme) error {
 
 	// Try to count the number of streams currently in the database
-	count, err := service.Count(exp.All())
+	count, err := service.Count(session, exp.All())
 
 	if err != nil {
 		return derp.Wrap(err, "service.Theme.Startup", "Unable to count streams")
@@ -141,7 +138,7 @@ func (service *Stream) Startup(theme *model.Theme) error {
 		}
 
 		// Save the new Stream to the database
-		if err := service.Save(&stream, "Created by Startup"); err != nil {
+		if err := service.Save(session, &stream, "Created by Startup"); err != nil {
 			derp.Report(derp.Wrap(err, "service.Theme.Startup", "Unable to save stream", stream))
 			continue
 		}
@@ -159,6 +156,10 @@ func (service *Stream) Close() {
  * Common Methods
  ******************************************/
 
+func (service *Stream) collection(session data.Session) data.Collection {
+	return session.Collection("Stream")
+}
+
 // New returns a new Stream that uses the named template.
 func (service *Stream) New() model.Stream {
 	result := model.NewStream()
@@ -169,28 +170,28 @@ func (service *Stream) New() model.Stream {
 }
 
 // Count returns the number of records that match the provided criteria
-func (service *Stream) Count(criteria exp.Expression) (int64, error) {
-	return service.collection.Count(notDeleted(criteria))
+func (service *Stream) Count(session data.Session, criteria exp.Expression) (int64, error) {
+	return service.collection(session).Count(notDeleted(criteria))
 }
 
 // Query returns an slice containing all of the Streams that match the provided criteria
-func (service *Stream) Query(criteria exp.Expression, options ...option.Option) ([]model.Stream, error) {
+func (service *Stream) Query(session data.Session, criteria exp.Expression, options ...option.Option) ([]model.Stream, error) {
 	result := make([]model.Stream, 0)
-	err := service.collection.Query(&result, notDeleted(criteria), options...)
+	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
 	return result, err
 }
 
 // QuerySummary returns an slice containing StreamSummaries for all of the Streams that match the provided criteria
-func (service *Stream) QuerySummary(criteria exp.Expression, options ...option.Option) ([]model.StreamSummary, error) {
+func (service *Stream) QuerySummary(session data.Session, criteria exp.Expression, options ...option.Option) ([]model.StreamSummary, error) {
 	result := make([]model.StreamSummary, 0)
-	err := service.collection.Query(&result, notDeleted(criteria), options...)
+	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
 	return result, err
 }
 
 // Range returns a Go 1.23 RangeFunc that iterates over the Streams that match the provided criteria
-func (service *Stream) Range(criteria exp.Expression, options ...option.Option) (iter.Seq[model.Stream], error) {
+func (service *Stream) Range(session data.Session, criteria exp.Expression, options ...option.Option) (iter.Seq[model.Stream], error) {
 
-	iter, err := service.List(criteria, options...)
+	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
 		return nil, derp.Wrap(err, "service.Stream.Range", "Error creating iterator", criteria)
@@ -200,9 +201,9 @@ func (service *Stream) Range(criteria exp.Expression, options ...option.Option) 
 }
 
 // RangeSummary returns a Go 1.23 RangeFunc that iterates over the Stream Summaries that match the provided criteria
-func (service *Stream) RangeSummary(criteria exp.Expression, options ...option.Option) (iter.Seq[model.StreamSummary], error) {
+func (service *Stream) RangeSummary(session data.Session, criteria exp.Expression, options ...option.Option) (iter.Seq[model.StreamSummary], error) {
 
-	iter, err := service.List(criteria, options...)
+	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
 		return nil, derp.Wrap(err, "service.Stream.Range", "Error creating iterator", criteria)
@@ -212,14 +213,14 @@ func (service *Stream) RangeSummary(criteria exp.Expression, options ...option.O
 }
 
 // List returns an iterator containing all of the Streams that match the provided criteria
-func (service *Stream) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection.Iterator(notDeleted(criteria), options...)
+func (service *Stream) List(session data.Session, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+	return service.collection(session).Iterator(notDeleted(criteria), options...)
 }
 
 // Load retrieves an Stream from the database
-func (service *Stream) Load(criteria exp.Expression, stream *model.Stream) error {
+func (service *Stream) Load(session data.Session, criteria exp.Expression, stream *model.Stream) error {
 
-	if err := service.collection.Load(notDeleted(criteria), stream); err != nil {
+	if err := service.collection(session).Load(notDeleted(criteria), stream); err != nil {
 		return derp.Wrap(err, "service.Stream.Load", "Error loading Stream", criteria)
 	}
 
@@ -227,7 +228,7 @@ func (service *Stream) Load(criteria exp.Expression, stream *model.Stream) error
 }
 
 // Save adds/updates an Stream in the database
-func (service *Stream) Save(stream *model.Stream, note string) error {
+func (service *Stream) Save(session data.Session, stream *model.Stream, note string) error {
 
 	const location = "service.Stream.Save"
 
@@ -250,7 +251,7 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 
 	// RULE: Calculate rank
 	if stream.Rank == 0 {
-		maxRank, err := service.MaxRank(stream.ParentID)
+		maxRank, err := service.MaxRank(session, stream.ParentID)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error calculating max rank")
@@ -280,7 +281,7 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 
 	// RULE: If this stream is not a profile stream and does not have ParentIDs, then calculate them now.
 	if (stream.NavigationID != "profile") && (len(stream.ParentIDs) == 0) {
-		if err := service.CalcParentIDs(stream); err != nil {
+		if err := service.CalcParentIDs(session, stream); err != nil {
 			return derp.Wrap(err, location, "Error calculating parent IDs", stream)
 		}
 	}
@@ -292,15 +293,15 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 	service.CalcPrivilegeIDs(stream)
 
 	// Try to save the Stream to the database
-	if err := service.collection.Save(stream, note); err != nil {
+	if err := service.collection(session).Save(stream, note); err != nil {
 		return derp.Wrap(err, location, "Error saving Stream", stream, note)
 	}
 
 	// Send stream:create and stream:update Webhooks
 	if wasNew {
-		service.webhookService.Send(stream, model.WebhookEventStreamCreate)
+		service.webhookService.Send(session, stream, model.WebhookEventStreamCreate)
 	} else {
-		service.webhookService.Send(stream, model.WebhookEventStreamUpdate)
+		service.webhookService.Send(session, stream, model.WebhookEventStreamUpdate)
 	}
 
 	// NON-BLOCKING: Notify other processes on this server that the stream has been updated
@@ -317,12 +318,12 @@ func (service *Stream) Save(stream *model.Stream, note string) error {
 }
 
 // Delete removes an Stream from the database (virtual delete)
-func (service *Stream) Delete(stream *model.Stream, note string) error {
+func (service *Stream) Delete(session data.Session, stream *model.Stream, note string) error {
 
 	const location = "service.Stream.Delete"
 
 	// Delete this Stream
-	if err := service.collection.Delete(stream, note); err != nil {
+	if err := service.collection(session).Delete(stream, note); err != nil {
 		return derp.Wrap(err, location, "Unable to delete Stream from database", stream, note)
 	}
 
@@ -330,10 +331,10 @@ func (service *Stream) Delete(stream *model.Stream, note string) error {
 	go func() {
 
 		// Send Webhooks (if configured)
-		service.webhookService.Send(stream, model.WebhookEventStreamDelete)
+		service.webhookService.Send(session, stream, model.WebhookEventStreamDelete)
 
 		if stream.IsPublished() {
-			service.webhookService.Send(stream, model.WebhookEventStreamPublishUndo)
+			service.webhookService.Send(session, stream, model.WebhookEventStreamPublishUndo)
 
 			if err := service.sendSyndicationMessages(stream, nil, nil, stream.Syndication.Values); err != nil {
 				derp.Report(derp.Wrap(err, location, "Unable to send syndication messages", stream))
@@ -341,22 +342,22 @@ func (service *Stream) Delete(stream *model.Stream, note string) error {
 		}
 
 		// RULE: Delete all related Children
-		if err := service.DeleteByParent(stream.StreamID, note); err != nil {
+		if err := service.DeleteByParent(session, stream.StreamID, note); err != nil {
 			derp.Report(derp.Wrap(err, location, "Unable to delete child streams", stream, note))
 		}
 
 		// RULE: Delete all related Attachments
-		if err := service.attachmentService.DeleteAll(model.AttachmentObjectTypeStream, stream.StreamID, note); err != nil {
+		if err := service.attachmentService.DeleteAll(session, model.AttachmentObjectTypeStream, stream.StreamID, note); err != nil {
 			derp.Report(derp.Wrap(err, location, "Unable to delete attachments", stream, note))
 		}
 
 		// RULE: Delete all related Drafts
-		if err := service.draftService.Delete(stream, note); err != nil {
+		if err := service.draftService.Delete(session, stream, note); err != nil {
 			derp.Report(derp.Wrap(err, location, "Unable to delete drafts", stream, note))
 		}
 
 		// RULE: Delete Outbox Messages
-		if err := service.outboxService.DeleteByParentID(model.FollowerTypeStream, stream.StreamID); err != nil {
+		if err := service.outboxService.DeleteByParentID(session, model.FollowerTypeStream, stream.StreamID); err != nil {
 			derp.Report(derp.Wrap(err, location, "Unable to delete outbox messages", stream, note))
 		}
 
@@ -369,23 +370,20 @@ func (service *Stream) Delete(stream *model.Stream, note string) error {
 }
 
 // DeleteMany removes all child streams from the provided stream (virtual delete)
-func (service *Stream) DeleteMany(criteria exp.Expression, note string) error {
+func (service *Stream) DeleteMany(session data.Session, criteria exp.Expression, note string) error {
 
 	const location = "service.Stream.DeleteMany"
 
-	it, err := service.List(notDeleted(criteria))
+	it, err := service.List(session, criteria)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error listing streams to delete", criteria)
 	}
 
-	stream := model.NewStream()
-
-	for it.Next(&stream) {
-		if err := service.Delete(&stream, note); err != nil {
+	for stream := model.NewStream(); it.Next(&stream); stream = model.NewStream() {
+		if err := service.Delete(session, &stream, note); err != nil {
 			return derp.Wrap(err, location, "Error deleting stream", stream)
 		}
-		stream = model.NewStream()
 	}
 
 	return nil
@@ -415,27 +413,27 @@ func (service *Stream) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
-func (service *Stream) ObjectQuery(result any, criteria exp.Expression, options ...option.Option) error {
-	return service.collection.Query(result, notDeleted(criteria), options...)
+func (service *Stream) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
+	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
-func (service *Stream) ObjectLoad(criteria exp.Expression) (data.Object, error) {
+func (service *Stream) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewStream()
-	err := service.Load(criteria, &result)
+	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
-func (service *Stream) ObjectSave(object data.Object, note string) error {
+func (service *Stream) ObjectSave(session data.Session, object data.Object, note string) error {
 
 	if stream, ok := object.(*model.Stream); ok {
-		return service.Save(stream, note)
+		return service.Save(session, stream, note)
 	}
 	return derp.InternalError("service.Stream.ObjectSave", "Invalid object type", object)
 }
 
-func (service *Stream) ObjectDelete(object data.Object, note string) error {
+func (service *Stream) ObjectDelete(session data.Session, object data.Object, note string) error {
 	if stream, ok := object.(*model.Stream); ok {
-		return service.Delete(stream, note)
+		return service.Delete(session, stream, note)
 	}
 	return derp.InternalError("service.Stream.ObjectDelete", "Invalid object type", object)
 }
@@ -453,30 +451,31 @@ func (service *Stream) Schema() schema.Schema {
  ******************************************/
 
 // RangePublished returns a RangeFunc over all streams that are currently published
-func (service *Stream) RangePublished() (iter.Seq[model.Stream], error) {
+func (service *Stream) RangePublished(session data.Session) (iter.Seq[model.Stream], error) {
 
 	now := time.Now().Unix()
 
 	criteria := exp.LessOrEqual("publishDate", now).
 		AndGreaterOrEqual("unpublishDate", now)
 
-	return service.Range(criteria)
+	return service.Range(session, criteria)
 }
 
 // ListNavigation returns all Streams of type FOLDER at the top of the hierarchy
-func (service *Stream) ListNavigation() (data.Iterator, error) {
+func (service *Stream) ListNavigation(session data.Session) (data.Iterator, error) {
 	return service.List(
+		session,
 		exp.Equal("parentId", primitive.NilObjectID),
 		option.SortAsc("rank"),
 	)
 }
 
 // RangeByParent returns an iterator that contains all child streams of the provided parentID
-func (service *Stream) RangeByParent(parentID primitive.ObjectID) (iter.Seq[model.Stream], error) {
-	return service.Range(exp.Equal("parentId", parentID))
+func (service *Stream) RangeByParent(session data.Session, parentID primitive.ObjectID) (iter.Seq[model.Stream], error) {
+	return service.Range(session, exp.Equal("parentId", parentID))
 }
 
-func (service *Stream) RangeByPrivileges(privileges ...primitive.ObjectID) (iter.Seq[model.Stream], error) {
+func (service *Stream) RangeByPrivileges(session data.Session, privileges ...primitive.ObjectID) (iter.Seq[model.Stream], error) {
 
 	const location = "service.Stream.RangeByPrivilege"
 
@@ -487,11 +486,11 @@ func (service *Stream) RangeByPrivileges(privileges ...primitive.ObjectID) (iter
 
 	criteria := exp.In("privilegeIds", privileges)
 
-	return service.Range(criteria)
+	return service.Range(session, criteria)
 }
 
 // ListPublishedByParent returns all Streams that match a particular parentID
-func (service *Stream) ListPublishedByParent(parentID primitive.ObjectID) (data.Iterator, error) {
+func (service *Stream) ListPublishedByParent(session data.Session, parentID primitive.ObjectID) (data.Iterator, error) {
 
 	const location = "service.Stream.ListPublishedByParent"
 
@@ -506,11 +505,11 @@ func (service *Stream) ListPublishedByParent(parentID primitive.ObjectID) (data.
 		AndGreaterOrEqual("unpublishDate", now).
 		AndEqual("parentId", parentID)
 
-	return service.List(criteria, option.SortDesc("publishDate"))
+	return service.List(session, criteria, option.SortDesc("publishDate"))
 }
 
 // ListByTemplate returns all `Streams` that use a particular `Template`
-func (service *Stream) ListByTemplate(template string) (data.Iterator, error) {
+func (service *Stream) ListByTemplate(session data.Session, template string) (data.Iterator, error) {
 
 	const location = "service.Stream.ListByTemplate"
 
@@ -519,11 +518,11 @@ func (service *Stream) ListByTemplate(template string) (data.Iterator, error) {
 		return nil, derp.BadRequestError(location, "Template is required")
 	}
 
-	return service.List(exp.Equal("templateId", template))
+	return service.List(session, exp.Equal("templateId", template))
 }
 
 // QuerySubscribable returns all Streams in a User's outbox that are subscribe-able
-func (service *Stream) QuerySubscribable(userID primitive.ObjectID) ([]model.StreamSummary, error) {
+func (service *Stream) QuerySubscribable(session data.Session, userID primitive.ObjectID) ([]model.StreamSummary, error) {
 
 	const location = "service.Stream.QuerySubscribable"
 
@@ -533,25 +532,25 @@ func (service *Stream) QuerySubscribable(userID primitive.ObjectID) ([]model.Str
 	}
 
 	criteria := exp.Equal("parentId", userID).AndEqual("isSubscribable", true)
-	return service.QuerySummary(criteria, option.SortAsc("templateId"), option.SortAsc("label"))
+	return service.QuerySummary(session, criteria, option.SortAsc("templateId"), option.SortAsc("label"))
 }
 
 // QueryByParentAndDate returns a slice of Streams that are DIRECT CHILDREN of the provided StreamID
-func (service *Stream) QueryByParentAndDate(streamID primitive.ObjectID, publishedDate int64, pageSize int) ([]model.Stream, error) {
+func (service *Stream) QueryByParentAndDate(session data.Session, parentID primitive.ObjectID, publishedDate int64, pageSize int) ([]model.Stream, error) {
 
 	const location = "service.Stream.QueryByParentAndDate"
 
-	// RULE: StreamID is required
-	if streamID.IsZero() {
-		return nil, derp.BadRequestError(location, "StreamID is required")
+	// RULE: ParentID is required
+	if parentID.IsZero() {
+		return nil, derp.BadRequestError(location, "ParentID is required")
 	}
 
-	criteria := exp.Equal("parentId", streamID).AndLessThan("publishDate", publishedDate)
-	return service.Query(criteria, option.SortDesc("publishDate"), option.MaxRows(int64(pageSize)))
+	criteria := exp.Equal("parentId", parentID).AndLessThan("publishDate", publishedDate)
+	return service.Query(session, criteria, option.SortDesc("publishDate"), option.MaxRows(int64(pageSize)))
 }
 
 // QueryByParentAndDate returns a slice of Streams that are ANY DEPTH below the provided StreamID
-func (service *Stream) QueryByAncestorAndDate(streamID primitive.ObjectID, publishedDate int64, pageSize int) ([]model.Stream, error) {
+func (service *Stream) QueryByAncestorAndDate(session data.Session, streamID primitive.ObjectID, publishedDate int64, pageSize int) ([]model.Stream, error) {
 
 	const location = "service.Stream.QueryByAncestorAndDate"
 
@@ -561,11 +560,11 @@ func (service *Stream) QueryByAncestorAndDate(streamID primitive.ObjectID, publi
 	}
 
 	criteria := exp.Equal("parentIds", streamID).AndLessThan("publishDate", publishedDate)
-	return service.Query(criteria, option.SortDesc("publishDate"), option.MaxRows(int64(pageSize)))
+	return service.Query(session, criteria, option.SortDesc("publishDate"), option.MaxRows(int64(pageSize)))
 }
 
 // QueryFeaturedByUser returns all Streams in a particular User's outbox that have been featured.
-func (service *Stream) QueryFeaturedByUser(userID primitive.ObjectID) ([]model.StreamSummary, error) {
+func (service *Stream) QueryFeaturedByUser(session data.Session, userID primitive.ObjectID) ([]model.StreamSummary, error) {
 
 	const location = "service.Stream.QueryFeaturedByUser"
 
@@ -575,7 +574,9 @@ func (service *Stream) QueryFeaturedByUser(userID primitive.ObjectID) ([]model.S
 	}
 
 	criteria := exp.Equal("parentId", userID).AndEqual("isFeatured", true)
+
 	return service.QuerySummary(
+		session,
 		criteria,
 		option.SortDesc("publishDate"),
 		option.Fields("url"),
@@ -583,7 +584,7 @@ func (service *Stream) QueryFeaturedByUser(userID primitive.ObjectID) ([]model.S
 }
 
 // QueryByPrivilege returns all Streams that are associated with a particular PrivilegeID
-func (service *Stream) QueryByPrivilege(privilegeIDs ...primitive.ObjectID) ([]model.Stream, error) {
+func (service *Stream) QueryByPrivilege(session data.Session, privilegeIDs ...primitive.ObjectID) ([]model.Stream, error) {
 
 	const location = "service.Stream.QueryByPrivilege"
 
@@ -594,25 +595,25 @@ func (service *Stream) QueryByPrivilege(privilegeIDs ...primitive.ObjectID) ([]m
 
 	criteria := exp.In("privilegeId", privilegeIDs)
 
-	return service.Query(criteria)
+	return service.Query(session, criteria)
 }
 
 // LoadByToken returns a single `Stream` that matches a particular `Token`
-func (service *Stream) LoadByToken(token string, result *model.Stream) error {
+func (service *Stream) LoadByToken(session data.Session, token string, result *model.Stream) error {
 
 	// If the token looks like an ObjectID, then try Load by ID first.
 	if streamID, err := primitive.ObjectIDFromHex(token); err == nil {
-		if err := service.LoadByID(streamID, result); err == nil {
+		if err := service.LoadByID(session, streamID, result); err == nil {
 			return nil
 		}
 	}
 
 	// Default to Load by Token
-	return service.Load(exp.Equal("token", token), result)
+	return service.Load(session, exp.Equal("token", token), result)
 }
 
 // LoadByID returns a single `Stream` that matches the provided streamID
-func (service *Stream) LoadByID(streamID primitive.ObjectID, result *model.Stream) error {
+func (service *Stream) LoadByID(session data.Session, streamID primitive.ObjectID, result *model.Stream) error {
 
 	const location = "service.Stream.LoadByID"
 
@@ -621,11 +622,11 @@ func (service *Stream) LoadByID(streamID primitive.ObjectID, result *model.Strea
 		return derp.BadRequestError(location, "StreamID is required")
 	}
 
-	return service.Load(exp.Equal("_id", streamID), result)
+	return service.Load(session, exp.Equal("_id", streamID), result)
 }
 
 // LoadByURL returns a single `Stream` that matches the provided URL
-func (service *Stream) LoadByURL(streamURL string, result *model.Stream) error {
+func (service *Stream) LoadByURL(session data.Session, streamURL string, result *model.Stream) error {
 
 	const location = "service.Stream.LoadByURL"
 
@@ -648,11 +649,11 @@ func (service *Stream) LoadByURL(streamURL string, result *model.Stream) error {
 		return derp.Wrap(err, location, "Invalid URL", streamURL)
 	}
 
-	return service.LoadByToken(token, result)
+	return service.LoadByToken(session, token, result)
 }
 
 // LoadNavigationByID locates a single stream in the top level of the site hierarchy
-func (service *Stream) LoadNavigationByID(streamID primitive.ObjectID, result *model.Stream) error {
+func (service *Stream) LoadNavigationByID(session data.Session, streamID primitive.ObjectID, result *model.Stream) error {
 
 	const location = "service.Stream.LoadNavigationByID"
 
@@ -665,14 +666,14 @@ func (service *Stream) LoadNavigationByID(streamID primitive.ObjectID, result *m
 		Equal("_id", streamID).
 		AndEqual("parentId", primitive.NilObjectID)
 
-	return service.Load(criteria, result)
+	return service.Load(session, criteria, result)
 }
 
-func (service *Stream) LoadWithOptions(criteria exp.Expression, result *model.Stream, options ...option.Option) error {
+func (service *Stream) LoadWithOptions(session data.Session, criteria exp.Expression, result *model.Stream, options ...option.Option) error {
 
 	const location = "service.stream.LoadWithOptions"
 
-	it, err := service.List(notDeleted(criteria), options...)
+	it, err := service.List(session, criteria, options...)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error getting iterator")
@@ -685,63 +686,64 @@ func (service *Stream) LoadWithOptions(criteria exp.Expression, result *model.St
 	return derp.NotFoundError(location, "collection is empty")
 }
 
-func (service *Stream) LoadFirstSibling(parentID primitive.ObjectID, result *model.Stream) error {
-	return service.LoadWithOptions(exp.Equal("parentId", parentID), result, option.SortAsc("rank"))
+func (service *Stream) LoadFirstSibling(session data.Session, parentID primitive.ObjectID, result *model.Stream) error {
+	return service.LoadWithOptions(session, exp.Equal("parentId", parentID), result, option.SortAsc("rank"))
 }
 
-func (service *Stream) LoadPrevSibling(parentID primitive.ObjectID, rank int, result *model.Stream) error {
+func (service *Stream) LoadPrevSibling(session data.Session, parentID primitive.ObjectID, rank int, result *model.Stream) error {
 
 	const location = "service.stream.LoadPreviousSibling"
 
 	if rank == 0 {
-		return service.LoadLastSibling(parentID, result)
+		return service.LoadLastSibling(session, parentID, result)
 	}
 
 	criteria := exp.Equal("parentId", parentID).AndLessThan("rank", rank)
 
-	err := service.LoadWithOptions(criteria, result, option.SortDesc("rank"))
+	err := service.LoadWithOptions(session, criteria, result, option.SortDesc("rank"))
 
 	if err == nil {
 		return nil
 	}
 
 	if derp.IsNotFound(err) {
-		return service.LoadLastSibling(parentID, result)
+		return service.LoadLastSibling(session, parentID, result)
 	}
 
 	return derp.Wrap(err, location, "Error loading Previous Sibling")
 }
 
-func (service *Stream) LoadNextSibling(parentID primitive.ObjectID, rank int, result *model.Stream) error {
+func (service *Stream) LoadNextSibling(session data.Session, parentID primitive.ObjectID, rank int, result *model.Stream) error {
 
 	const location = "service.stream.LoadNextSibling"
 
 	criteria := exp.Equal("parentId", parentID).AndGreaterThan("rank", rank)
 
-	err := service.LoadWithOptions(criteria, result, option.SortAsc("rank"))
+	err := service.LoadWithOptions(session, criteria, result, option.SortAsc("rank"))
 
 	if err == nil {
 		return nil
 	}
 
 	if derp.IsNotFound(err) {
-		return service.LoadFirstSibling(parentID, result)
+		return service.LoadFirstSibling(session, parentID, result)
 	}
 
 	return derp.Wrap(err, location, "Error loading Next Sibling")
 }
 
-func (service *Stream) LoadLastSibling(parentID primitive.ObjectID, result *model.Stream) error {
-	return service.LoadWithOptions(exp.Equal("parentId", parentID), result, option.SortDesc("rank"))
+func (service *Stream) LoadLastSibling(session data.Session, parentID primitive.ObjectID, result *model.Stream) error {
+	return service.LoadWithOptions(session, exp.Equal("parentId", parentID), result, option.SortDesc("rank"))
 }
 
-func (service *Stream) LoadFirstAttachment(streamID primitive.ObjectID) (model.Attachment, error) {
-	return service.attachmentService.LoadFirstByObjectID(model.AttachmentObjectTypeStream, streamID)
+func (service *Stream) LoadFirstAttachment(session data.Session, streamID primitive.ObjectID) (model.Attachment, error) {
+	return service.attachmentService.LoadFirstByObjectID(session, model.AttachmentObjectTypeStream, streamID)
 }
 
 // MaxRank returns the maximum rank of all children of a stream
-func (service *Stream) MaxRank(parentID primitive.ObjectID) (int, error) {
-	return queries.MaxRank(context.TODO(), service.collection, parentID)
+func (service *Stream) MaxRank(session data.Session, parentID primitive.ObjectID) (int, error) {
+	collection := service.collection(session)
+	return queries.MaxRank(session.Context(), collection, parentID)
 }
 
 /******************************************
@@ -822,9 +824,10 @@ func (service *Stream) SetLocationChild(template *model.Template, stream *model.
  ******************************************/
 
 // Shuffle assigns a unique random number to the "shuffle" field of each Stream
-func (service *Stream) Shuffle() error {
+func (service *Stream) Shuffle(session data.Session) error {
 
-	if err := queries.Shuffle(context.Background(), service.collection); err != nil {
+	collection := service.collection(session)
+	if err := queries.Shuffle(session.Context(), collection); err != nil {
 		return derp.Wrap(err, "service.Stream.Shuffle", "Error shuffling users")
 	}
 
@@ -832,22 +835,33 @@ func (service *Stream) Shuffle() error {
 }
 
 // SetAttributedTo assigns a User to the "attributedTo" field of each Stream
-func (service *Stream) SetAttributedTo(user *model.User) {
-	err := queries.SetAttributedTo(context.Background(), service.collection, user.PersonLink())
-	derp.Report(derp.Wrap(err, "service.Stream.SetAttributedTo", "Error setting attributedTo"))
+func (service *Stream) SetAttributedTo(session data.Session, user *model.User) {
+
+	const location = "service.Stream.SetAttributedTo"
+
+	collection := service.collection(session)
+	if err := queries.SetAttributedTo(session.Context(), collection, user.PersonLink()); err != nil {
+		derp.Report(derp.Wrap(err, location, "Error setting attributedTo"))
+	}
 }
 
 // DeleteByParent deletes all streams that are children of the provided parentID
-func (service *Stream) DeleteByParent(parentID primitive.ObjectID, note string) error {
-	return service.DeleteMany(exp.Equal("parentId", parentID), note)
+func (service *Stream) DeleteByParent(session data.Session, parentID primitive.ObjectID, note string) error {
+
+	// RULE: ParentID is required
+	if parentID.IsZero() {
+		return derp.ValidationError("ParentID cannot be zero")
+	}
+
+	return service.DeleteMany(session, exp.Equal("parentId", parentID), note)
 }
 
 // Delete RelatedDuplicate hard deletes any inbox/outbox streams that point to the same original.
-func (service *Stream) DeleteRelatedDuplicate(parentID primitive.ObjectID, originalStreamID primitive.ObjectID) error {
+func (service *Stream) DeleteRelatedDuplicate(session data.Session, parentID primitive.ObjectID, originalStreamID primitive.ObjectID) error {
 
 	criteria := exp.Equal("parentId", parentID).AndEqual("data.originalStreamId", originalStreamID)
 
-	if err := service.collection.HardDelete(criteria); err != nil {
+	if err := service.collection(session).HardDelete(criteria); err != nil {
 		return derp.Wrap(err, "service.Stream.DeleteRelatedDuplicate", "Error deleting related duplicate")
 	}
 
@@ -856,7 +870,7 @@ func (service *Stream) DeleteRelatedDuplicate(parentID primitive.ObjectID, origi
 
 // MapByPrivileges returns a map of PrivilegeIDs to a slice of StreamIDs that grant additional access
 // to Identities that hold of that Privileges.
-func (service *Stream) MapByPrivileges(privileges ...model.Privilege) (map[primitive.ObjectID][]primitive.ObjectID, error) {
+func (service *Stream) MapByPrivileges(session data.Session, privileges ...model.Privilege) (map[primitive.ObjectID][]primitive.ObjectID, error) {
 
 	const location = "service.Stream.MapByPrivileges"
 
@@ -885,7 +899,7 @@ func (service *Stream) MapByPrivileges(privileges ...model.Privilege) (map[primi
 	}
 
 	// Find all Streams that match the included privilegeIDs
-	streams, err := service.RangeByPrivileges(privilegeIDs...)
+	streams, err := service.RangeByPrivileges(session, privilegeIDs...)
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Error loading streams", privilegeIDs)
@@ -902,49 +916,6 @@ func (service *Stream) MapByPrivileges(privileges ...model.Privilege) (map[primi
 
 	// Ugly, but she rides.
 	return result, nil
-}
-
-// RestoreDeleted un-deletes all soft-deleted records underneath a common ancestor.
-func (service *Stream) RestoreDeleted(ancestorID primitive.ObjectID) error {
-
-	const location = "service.Stream.RestoreDeleted"
-
-	// Try to list all deleted descendents
-	criteria := exp.Equal("parentIds", ancestorID).AndGreaterThan("deleteDate", 0)
-	iterator, err := service.collection.Iterator(criteria)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Error listing soft-deleted streams")
-	}
-
-	// Iterate through all descendents and UnDelete
-	stream := model.NewStream()
-	for iterator.Next(&stream) {
-		stream.Journal.DeleteDate = 0
-
-		if err := service.Save(&stream, "RestoreDeleted stream"); err != nil {
-			return derp.Wrap(err, location, "Error restoring deleted stream", stream)
-		}
-
-		stream = model.NewStream()
-	}
-
-	// No discomfort, no expansion.
-	return nil
-}
-
-// PurgeDeleted hard deletes all items with the given ancestor that have already been soft-deleted
-func (service *Stream) PurgeDeleted(ancestorID primitive.ObjectID) error {
-
-	const location = "service.Stream.PurgeDeleted"
-
-	criteria := exp.Equal("parentIds", ancestorID).AndGreaterThan("deleteDate", 0)
-
-	if err := service.collection.HardDelete(criteria); err != nil {
-		return derp.Wrap(err, location, "Error purging soft-deleted streams")
-	}
-
-	return nil
 }
 
 // ParsePathextracts the Stream token and actionID from a URL
@@ -973,7 +944,7 @@ func (service *Stream) ParsePath(uri *url.URL) (string, string, error) {
 }
 
 // ParseURL validates that a URL matches the current server, and then extracts the streamID from it.
-func (service *Stream) ParseURL(streamURL string) (primitive.ObjectID, error) {
+func (service *Stream) ParseURL(session data.Session, streamURL string) (primitive.ObjectID, error) {
 
 	const location = "service.Stream.ParseURL"
 
@@ -994,7 +965,7 @@ func (service *Stream) ParseURL(streamURL string) (primitive.ObjectID, error) {
 
 	// Otherwise, try to load the stream by Token
 	stream := model.NewStream()
-	if err := service.LoadByToken(path, &stream); err != nil {
+	if err := service.LoadByToken(session, path, &stream); err != nil {
 		return primitive.NilObjectID, derp.Wrap(err, location, "Invalid Token", path)
 	}
 
@@ -1003,7 +974,7 @@ func (service *Stream) ParseURL(streamURL string) (primitive.ObjectID, error) {
 
 // CalcParentIDs scans the parent chain of a stream and generates a "breadcrumbs" slice
 // of all of this Stream's parents
-func (service *Stream) CalcParentIDs(stream *model.Stream) error {
+func (service *Stream) CalcParentIDs(session data.Session, stream *model.Stream) error {
 
 	// Rule: Notes are always stored under a user's profile, so they have no parents
 	if stream.SocialRole == vocab.ObjectTypeNote {
@@ -1019,19 +990,19 @@ func (service *Stream) CalcParentIDs(stream *model.Stream) error {
 
 	// Otherwise, load the Parent stream and try to use its parentIDs
 	parentStream := model.NewStream()
-	if err := service.LoadByID(stream.ParentID, &parentStream); err != nil {
+	if err := service.LoadByID(session, stream.ParentID, &parentStream); err != nil {
 		return derp.Wrap(err, "service.Stream.CalcParentIDs", "Unable to load Parent stream", stream.ParentID)
 	}
 
 	// If the parent has no parentIDs, then try to calculate them
 	if len(parentStream.ParentIDs) == 0 {
-		if err := service.CalcParentIDs(&parentStream); err != nil {
+		if err := service.CalcParentIDs(session, &parentStream); err != nil {
 			return derp.Wrap(err, "service.Stream.CalcParentIDs", "Unable to calculate ParentIDs for Parent stream", stream.ParentID)
 		}
 
 		// If the parent has been changed, then save that calculation.
 		if len(parentStream.ParentIDs) > 0 {
-			if err := service.Save(&parentStream, "CalcParentIDs"); err != nil {
+			if err := service.Save(session, &parentStream, "CalcParentIDs"); err != nil {
 				return derp.Wrap(err, "service.Stream.CalcParentIDs", "Unable to save Parent stream", stream.ParentID)
 			}
 		}
@@ -1088,7 +1059,7 @@ func (service *Stream) CalcPrivilegeIDs(stream *model.Stream) {
 	stream.PrivilegeIDs = model.Permissions(append(circles, privileges...))
 }
 
-func (service *Stream) CalculateTags(stream *model.Stream) {
+func (service *Stream) CalculateTags(session data.Session, stream *model.Stream) {
 
 	const location = "service.Stream.CalculateTags"
 
@@ -1116,7 +1087,7 @@ func (service *Stream) CalculateTags(stream *model.Stream) {
 	}
 
 	// Normalize Hashtag names by looking them up in the database
-	hashtagNames, _, err := service.searchTagService.NormalizeTags(hashtags...)
+	hashtagNames, _, err := service.searchTagService.NormalizeTags(session, hashtags...)
 
 	if err != nil {
 		derp.Report(derp.Wrap(err, location, "Error normalizing tags"))

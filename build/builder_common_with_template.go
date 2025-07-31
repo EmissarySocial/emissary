@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 )
 
@@ -17,7 +18,7 @@ type CommonWithTemplate struct {
 	Common
 }
 
-func NewCommonWithTemplate(factory Factory, request *http.Request, response http.ResponseWriter, template model.Template, accessLister model.AccessLister, actionID string) (CommonWithTemplate, error) {
+func NewCommonWithTemplate(factory Factory, session data.Session, request *http.Request, response http.ResponseWriter, template model.Template, accessLister model.AccessLister, actionID string) (CommonWithTemplate, error) {
 
 	const location = "build.NewCommonWithTemplate"
 
@@ -34,7 +35,7 @@ func NewCommonWithTemplate(factory Factory, request *http.Request, response http
 		_action:       action,
 		_template:     template,
 		_accessLister: accessLister,
-		Common:        NewCommon(factory, request, response),
+		Common:        NewCommon(factory, session, request, response),
 	}
 
 	// Calculate permissions...
@@ -115,7 +116,7 @@ func (builder CommonWithTemplate) UserHasRole(role string) bool {
 
 	// Use the Permission service to check if the user has the specified role
 	permissionService := builder._factory.Permission()
-	hasRole, err := permissionService.UserHasRole(&builder._authorization, builder._accessLister, role)
+	hasRole, err := permissionService.UserHasRole(builder._session, &builder._authorization, builder._accessLister, role)
 
 	if err != nil {
 		derp.Report(derp.Wrap(err, location, "Unable to check user roles"))
@@ -131,7 +132,7 @@ func (builder CommonWithTemplate) UserCan(actionID string) bool {
 	const location = "builder.CommonWithTemplate.UserCan"
 
 	permissionService := builder._factory.Permission()
-	result, err := permissionService.UserCan(&builder._authorization, &builder._template, builder._accessLister, actionID)
+	result, err := permissionService.UserCan(builder._session, &builder._authorization, &builder._template, builder._accessLister, actionID)
 
 	if err != nil {
 		derp.Report(derp.Wrap(err, location, "Unable to check permissions"))

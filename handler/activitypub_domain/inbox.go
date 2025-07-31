@@ -4,12 +4,13 @@ import (
 	"net/http"
 
 	"github.com/EmissarySocial/emissary/domain"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/inbox"
 	"github.com/benpate/steranko"
 )
 
-func PostInbox(ctx *steranko.Context, factory *domain.Factory) error {
+func PostInbox(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
 
 	const location = "handler.activitypub_domain.PostInbox"
 

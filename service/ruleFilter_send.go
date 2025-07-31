@@ -1,13 +1,14 @@
 package service
 
 import (
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/rs/zerolog/log"
 )
 
 // AllowSend returns TRUE if this actorID is allowed to receive messages.
-func (filter *RuleFilter) AllowSend(actorID string) bool {
+func (filter *RuleFilter) AllowSend(session data.Session, actorID string) bool {
 
 	const location = "service.RuleFilter.AllowSend"
 
@@ -29,7 +30,7 @@ func (filter *RuleFilter) AllowSend(actorID string) bool {
 	if filter.cache[actorID] == nil {
 
 		allowedActions := filter.allowedActions()
-		rules, err := filter.ruleService.QueryByActorAndActions(filter.userID, actorID, allowedActions...)
+		rules, err := filter.ruleService.QueryByActorAndActions(session, filter.userID, actorID, allowedActions...)
 
 		if err != nil {
 			derp.Report(derp.Wrap(err, location, "Error loading rules"))

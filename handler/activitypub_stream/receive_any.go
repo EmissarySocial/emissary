@@ -29,7 +29,7 @@ func BoostAny(context Context, activity streams.Document) error {
 
 	// RULE: If "followers-only" is set, then only accept activities from followers
 	if context.actor.BoostFollowersOnly {
-		if !context.factory.Follower().IsActivityPubFollower(model.FollowerTypeStream, context.stream.StreamID, activity.Actor().ID()) {
+		if !context.factory.Follower().IsActivityPubFollower(context.session, model.FollowerTypeStream, context.stream.StreamID, activity.Actor().ID()) {
 			return derp.ForbiddenError(location, "Must be a follower to post to this Actor", activity.Actor().ID())
 		}
 	}
@@ -80,7 +80,7 @@ func announce(context Context, activity streams.Document) error {
 
 	// Try to save the message to the content Actor's outbox
 	outboxService := context.factory.Outbox()
-	if err := outboxService.Save(&message, "via ActivityPub"); err != nil {
+	if err := outboxService.Save(context.session, &message, "via ActivityPub"); err != nil {
 		return derp.Wrap(err, "activitypub_stream.saveMessage", "Error saving message", context.stream.StreamID, activity.ID())
 	}
 

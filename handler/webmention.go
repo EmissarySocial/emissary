@@ -4,13 +4,14 @@ import (
 	"net/http"
 
 	"github.com/EmissarySocial/emissary/domain"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/steranko"
 	"github.com/benpate/turbine/queue"
 )
 
-func PostWebMention(ctx *steranko.Context, factory *domain.Factory) error {
+func PostWebMention(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
 
 	const location = "handler.PostWebMention"
 

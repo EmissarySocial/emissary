@@ -43,7 +43,7 @@ func (step StepWithAnnotation) execute(builder Builder, buffer io.Writer, action
 	}
 
 	// Create a new builder tied to the Annotation record
-	subBuilder, err := NewModel(factory, builder.request(), builder.response(), template, &annotation, builder.actionID())
+	subBuilder, err := NewModel(factory, builder.session(), builder.request(), builder.response(), template, &annotation, builder.actionID())
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Unable to create sub-builder"))
@@ -71,7 +71,7 @@ func (step StepWithAnnotation) getAnnotation(builder Builder) (model.Annotation,
 	// If a `url` query parameter is provided, then use it to load the Annotation record
 	if url := builder.QueryParam("url"); url != "" {
 
-		if err := annotationService.LoadByURL(userID, url, &annotation); !derp.IsNilOrNotFound(err) {
+		if err := annotationService.LoadByURL(builder.session(), userID, url, &annotation); !derp.IsNilOrNotFound(err) {
 			return model.NewAnnotation(), derp.Wrap(err, location, "Unable to load Annotation by URL", url)
 		}
 
@@ -83,7 +83,7 @@ func (step StepWithAnnotation) getAnnotation(builder Builder) (model.Annotation,
 	token := builder.QueryParam("annotationId")
 
 	// Finally, try to load the Annotation record from the database.
-	if err := annotationService.LoadByToken(userID, token, &annotation); err != nil {
+	if err := annotationService.LoadByToken(builder.session(), userID, token, &annotation); err != nil {
 		return annotation, derp.Wrap(err, location, "Unable to load Annotation", token)
 	}
 

@@ -20,8 +20,7 @@ import (
 
 // SearchTag defines a service that manages all searchable tags in a domain.
 type SearchTag struct {
-	collection data.Collection
-	host       string
+	host string
 }
 
 // NewSearchTag returns a fully initialized SearchTag service
@@ -34,8 +33,7 @@ func NewSearchTag() SearchTag {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *SearchTag) Refresh(collection data.Collection, host string) {
-	service.collection = collection
+func (service *SearchTag) Refresh(host string) {
 	service.host = host
 }
 
@@ -48,27 +46,31 @@ func (service *SearchTag) Close() {
  * Common Data Methods
  ******************************************/
 
-func (service *SearchTag) Count(criteria exp.Expression) (int64, error) {
-	return service.collection.Count(notDeleted(criteria))
+func (service *SearchTag) collection(session data.Session) data.Collection {
+	return session.Collection("SearchTag")
+}
+
+func (service *SearchTag) Count(session data.Session, criteria exp.Expression) (int64, error) {
+	return service.collection(session).Count(notDeleted(criteria))
 }
 
 // Query returns an slice of allthe SearchTags that match the provided criteria
-func (service *SearchTag) Query(criteria exp.Expression, options ...option.Option) ([]model.SearchTag, error) {
+func (service *SearchTag) Query(session data.Session, criteria exp.Expression, options ...option.Option) ([]model.SearchTag, error) {
 	result := make([]model.SearchTag, 0)
-	err := service.collection.Query(&result, notDeleted(criteria), options...)
+	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
 
 	return result, err
 }
 
 // List returns an iterator containing all of the SearchTags that match the provided criteria
-func (service *SearchTag) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection.Iterator(notDeleted(criteria), options...)
+func (service *SearchTag) List(session data.Session, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+	return service.collection(session).Iterator(notDeleted(criteria), options...)
 }
 
 // Load retrieves an SearchTag from the database
-func (service *SearchTag) Load(criteria exp.Expression, searchTag *model.SearchTag) error {
+func (service *SearchTag) Load(session data.Session, criteria exp.Expression, searchTag *model.SearchTag) error {
 
-	if err := service.collection.Load(notDeleted(criteria), searchTag); err != nil {
+	if err := service.collection(session).Load(notDeleted(criteria), searchTag); err != nil {
 		return derp.Wrap(err, "service.SearchTag.Load", "Error loading SearchTag", criteria)
 	}
 
@@ -76,18 +78,20 @@ func (service *SearchTag) Load(criteria exp.Expression, searchTag *model.SearchT
 }
 
 // LoadWithOptions retrieves a single SearchTag from the database, with additional options
-func (service *SearchTag) LoadWithOptions(criteria exp.Expression, searchTag *model.SearchTag, options ...option.Option) error {
+func (service *SearchTag) LoadWithOptions(session data.Session, criteria exp.Expression, searchTag *model.SearchTag, options ...option.Option) error {
+
+	const location = "service.SearchTag.LoadWithOptions"
 
 	options = append(options, option.MaxRows(1))
 
-	results, err := service.Query(criteria, options...)
+	results, err := service.Query(session, criteria, options...)
 
 	if err != nil {
-		return derp.Wrap(err, "service.SearchTag.LoadByName", "Error loading SearchTag", criteria)
+		return derp.Wrap(err, location, "Unable to load SearchTag", criteria)
 	}
 
 	if len(results) == 0 {
-		return derp.NotFoundError("service.SearchTag.LoadByName", "SearchTag not found", criteria)
+		return derp.NotFoundError(location, "SearchTag not found", criteria)
 	}
 
 	*searchTag = results[0]
@@ -96,29 +100,31 @@ func (service *SearchTag) LoadWithOptions(criteria exp.Expression, searchTag *mo
 }
 
 // Save adds/updates an SearchTag in the database
-func (service *SearchTag) Save(searchTag *model.SearchTag, note string) error {
+func (service *SearchTag) Save(session data.Session, searchTag *model.SearchTag, note string) error {
+
+	const location = "service.SearchTag.Save"
 
 	// Calculate the searchable value for this SearchTag
 	searchTag.Value = model.ToToken(searchTag.Name)
 
 	// Validate the value before saving
 	if err := service.Schema().Validate(searchTag); err != nil {
-		return derp.Wrap(err, "service.SearchTag.Save", "Error validating SearchTag", searchTag)
+		return derp.Wrap(err, location, "Error validating SearchTag", searchTag)
 	}
 
 	// Save the searchTag to the database
-	if err := service.collection.Save(searchTag, note); err != nil {
-		return derp.Wrap(err, "service.SearchTag.Save", "Error saving SearchTag", searchTag, note)
+	if err := service.collection(session).Save(searchTag, note); err != nil {
+		return derp.Wrap(err, location, "Error saving SearchTag", searchTag, note)
 	}
 
 	return nil
 }
 
 // Delete removes an SearchTag from the database (virtual delete)
-func (service *SearchTag) Delete(searchTag *model.SearchTag, note string) error {
+func (service *SearchTag) Delete(session data.Session, searchTag *model.SearchTag, note string) error {
 
 	// Delete this SearchTag
-	if err := service.collection.Delete(searchTag, note); err != nil {
+	if err := service.collection(session).Delete(searchTag, note); err != nil {
 		return derp.Wrap(err, "service.SearchTag.Delete", "Error deleting SearchTag", searchTag, note)
 	}
 
@@ -149,26 +155,26 @@ func (service *SearchTag) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
-func (service *SearchTag) ObjectQuery(result any, criteria exp.Expression, options ...option.Option) error {
-	return service.collection.Query(result, notDeleted(criteria), options...)
+func (service *SearchTag) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
+	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
-func (service *SearchTag) ObjectLoad(criteria exp.Expression) (data.Object, error) {
+func (service *SearchTag) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewSearchTag()
-	err := service.Load(criteria, &result)
+	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
-func (service *SearchTag) ObjectSave(object data.Object, comment string) error {
+func (service *SearchTag) ObjectSave(session data.Session, object data.Object, comment string) error {
 	if searchTag, ok := object.(*model.SearchTag); ok {
-		return service.Save(searchTag, comment)
+		return service.Save(session, searchTag, comment)
 	}
 	return derp.InternalError("service.SearchTag.ObjectSave", "Invalid Object Type", object)
 }
 
-func (service *SearchTag) ObjectDelete(object data.Object, comment string) error {
+func (service *SearchTag) ObjectDelete(session data.Session, object data.Object, comment string) error {
 	if searchTag, ok := object.(*model.SearchTag); ok {
-		return service.Delete(searchTag, comment)
+		return service.Delete(session, searchTag, comment)
 	}
 	return derp.InternalError("service.SearchTag.ObjectDelete", "Invalid Object Type", object)
 }
@@ -185,24 +191,24 @@ func (service *SearchTag) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
-func (service *SearchTag) LoadByID(searchTagID primitive.ObjectID, searchTag *model.SearchTag) error {
+func (service *SearchTag) LoadByID(session data.Session, searchTagID primitive.ObjectID, searchTag *model.SearchTag) error {
 	criteria := exp.Equal("_id", searchTagID)
-	return service.Load(criteria, searchTag)
+	return service.Load(session, criteria, searchTag)
 }
 
-func (service *SearchTag) LoadByValue(value string, searchTag *model.SearchTag) error {
+func (service *SearchTag) LoadByValue(session data.Session, value string, searchTag *model.SearchTag) error {
 	criteria := exp.Equal("value", model.ToToken(value))
-	return service.LoadWithOptions(criteria, searchTag, option.CaseSensitive(false))
+	return service.LoadWithOptions(session, criteria, searchTag, option.CaseSensitive(false))
 }
 
 // Upsert verifies that a SearchTag exists in the database, and creates it if it does not.
-func (service *SearchTag) Upsert(tagName string) error {
+func (service *SearchTag) Upsert(session data.Session, tagName string) error {
 
 	searchTag := model.NewSearchTag()
 	value := model.ToToken(tagName)
 
 	// Try to find the SearchTag in the database
-	err := service.LoadByValue(value, &searchTag)
+	err := service.LoadByValue(session, value, &searchTag)
 
 	// If it exists, then we're done
 	if err == nil {
@@ -215,7 +221,7 @@ func (service *SearchTag) Upsert(tagName string) error {
 		// Set default values for the new SearchTag
 		searchTag.Name = tagName
 
-		if err := service.Save(&searchTag, "Found New SearchTag"); err != nil {
+		if err := service.Save(session, &searchTag, "Found New SearchTag"); err != nil {
 			return derp.Wrap(err, "service.SearchTag.Upsert", "Error saving SearchTag", value)
 		}
 
@@ -227,11 +233,12 @@ func (service *SearchTag) Upsert(tagName string) error {
 }
 
 // ListGroups returns a distinct list of all the groups that are used by SearchTags
-func (service *SearchTag) ListGroups() []form.LookupCode {
+func (service *SearchTag) ListGroups(session data.Session) []form.LookupCode {
 
 	const location = "service.SearchTag.ListGroups"
 
-	groups, err := queries.SearchTags_Groups(service.collection)
+	collection := service.collection(session)
+	groups, err := queries.SearchTags_Groups(collection)
 
 	if err != nil {
 		derp.Report(derp.Wrap(err, location, "Error reading distinct groups"))
@@ -251,7 +258,7 @@ func (service *SearchTag) ListGroups() []form.LookupCode {
 }
 
 // FindAllowedTags returns a list of tag VALUES that match the query string
-func (service *SearchTag) FindAllowedTags(query string) ([]string, error) {
+func (service *SearchTag) FindAllowedTags(session data.Session, query string) ([]string, error) {
 
 	const location = "service.SearchTag.FindAllowedTags"
 
@@ -263,7 +270,7 @@ func (service *SearchTag) FindAllowedTags(query string) ([]string, error) {
 	criteria := exp.In("value", tagValues).
 		AndIn("stateId", []int{model.SearchTagStateAllowed, model.SearchTagStateFeatured})
 
-	searchTags, err := service.Query(criteria, option.Fields("value"))
+	searchTags, err := service.Query(session, criteria, option.Fields("value"))
 
 	if err != nil {
 		return []string{}, derp.Wrap(err, location, "Error querying SearchTags", criteria)
@@ -278,9 +285,9 @@ func (service *SearchTag) FindAllowedTags(query string) ([]string, error) {
 }
 
 // QueryByValue returns all tags in a list
-func (service *SearchTag) QueryByValue(values []string, options ...option.Option) (sliceof.Object[model.SearchTag], error) {
+func (service *SearchTag) QueryByValue(session data.Session, values []string, options ...option.Option) (sliceof.Object[model.SearchTag], error) {
 	criteria := exp.In("value", values)
-	return service.Query(criteria, options...)
+	return service.Query(session, criteria, options...)
 }
 
 /******************************************
@@ -290,7 +297,7 @@ func (service *SearchTag) QueryByValue(values []string, options ...option.Option
 // NormalizeTags takes a list of tag names and verifies it against tags in the database.
 // Tags using canonical names will be returned. Blocked tags will not be included.
 // If a tag does not exist in the database, then the provided name will be used.
-func (service *SearchTag) NormalizeTags(tagNames ...string) (sliceof.String, sliceof.String, error) {
+func (service *SearchTag) NormalizeTags(session data.Session, tagNames ...string) (sliceof.String, sliceof.String, error) {
 
 	const location = "service.SearchTag.NormalizeTags"
 
@@ -301,7 +308,7 @@ func (service *SearchTag) NormalizeTags(tagNames ...string) (sliceof.String, sli
 	tagValues := slice.Map(tagNames, model.ToToken)
 
 	// Retrieve all matching tags (sorted by value)
-	dbTags, err := service.QueryByValue(tagValues, option.SortAsc("value"))
+	dbTags, err := service.QueryByValue(session, tagValues, option.SortAsc("value"))
 
 	if err != nil {
 		return sliceof.NewString(), sliceof.NewString(), derp.Wrap(err, location, "Error querying existing tags")

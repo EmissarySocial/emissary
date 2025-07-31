@@ -35,13 +35,13 @@ func (step StepWithParent) Post(builder Builder, buffer io.Writer) PipelineBehav
 	var parent model.Stream
 
 	// Try to load the parent Stream
-	if err := factory.Stream().LoadByID(streamBuilder._stream.ParentID, &parent); err != nil {
+	if err := factory.Stream().LoadByID(builder.session(), streamBuilder._stream.ParentID, &parent); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error listing parent"))
 	}
 
 	// Make a builder with the new parent stream
 	// TODO: LOW: Is "view" really the best action to use here??
-	parentStream, err := NewStreamWithoutTemplate(streamBuilder.factory(), streamBuilder.request(), streamBuilder.response(), &parent, "")
+	parentStream, err := NewStreamWithoutTemplate(streamBuilder.factory(), streamBuilder.session(), streamBuilder.request(), streamBuilder.response(), &parent, "")
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error creating builder for parent"))
@@ -64,13 +64,13 @@ func (step StepWithParent) postUser(streamBuilder Stream, buffer io.Writer) Pipe
 	factory := streamBuilder.factory()
 
 	// Try to load the parent Stream
-	if err := factory.User().LoadByID(streamBuilder._stream.ParentID, &user); err != nil {
+	if err := factory.User().LoadByID(streamBuilder.session(), streamBuilder._stream.ParentID, &user); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error listing parent"))
 	}
 
 	// Make a builder with the new parent stream
 	// TODO: LOW: Is "view" really the best action to use here??
-	outbox, err := NewOutbox(streamBuilder.factory(), streamBuilder.request(), streamBuilder.response(), &user, "view")
+	outbox, err := NewOutbox(streamBuilder.factory(), streamBuilder.session(), streamBuilder.request(), streamBuilder.response(), &user, "view")
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error creating builder for parent"))

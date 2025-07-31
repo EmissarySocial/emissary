@@ -7,6 +7,7 @@ import (
 	"github.com/EmissarySocial/emissary/handler/activitypub"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
@@ -15,7 +16,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func GetBlockedCollection(ctx *steranko.Context, factory *domain.Factory, user *model.User) error {
+func GetBlockedCollection(ctx *steranko.Context, factory *domain.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.activitypub_user.GetBlockedCollection"
 
@@ -39,7 +40,7 @@ func GetBlockedCollection(ctx *steranko.Context, factory *domain.Factory, user *
 	publishDate := convert.Int64(publishDateString)
 	pageID := fullURL(factory, ctx)
 	pageSize := 60
-	rules, err := ruleService.QueryPublic(user.UserID, publishDate, option.MaxRows(int64(pageSize)))
+	rules, err := ruleService.QueryPublic(session, user.UserID, publishDate, option.MaxRows(int64(pageSize)))
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error loading rules")
@@ -56,7 +57,7 @@ func GetBlockedCollection(ctx *steranko.Context, factory *domain.Factory, user *
 	return ctx.JSON(200, results)
 }
 
-func GetBlock(ctx *steranko.Context, factory *domain.Factory, user *model.User) error {
+func GetBlock(ctx *steranko.Context, factory *domain.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.activitypub.ActivityPub_GetBlock"
 
@@ -76,7 +77,7 @@ func GetBlock(ctx *steranko.Context, factory *domain.Factory, user *model.User) 
 	ruleService := factory.Rule()
 	rule := model.NewRule()
 
-	if err := ruleService.LoadByID(user.UserID, ruleID, &rule); err != nil {
+	if err := ruleService.LoadByID(session, user.UserID, ruleID, &rule); err != nil {
 		return derp.Wrap(err, location, "Error loading rule")
 	}
 

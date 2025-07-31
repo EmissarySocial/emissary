@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/EmissarySocial/emissary/domain"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
@@ -11,7 +12,7 @@ import (
 	"github.com/benpate/steranko"
 )
 
-func GetIntentInfo(ctx *steranko.Context, factory *domain.Factory) error {
+func GetIntentInfo(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
 
 	const location = "handler.GetIntentInfo"
 

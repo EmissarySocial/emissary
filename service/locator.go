@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
 	"github.com/benpate/domain"
@@ -37,7 +38,7 @@ func (service *Locator) Refresh(domainService *Domain, searchDomainService *Sear
 }
 
 // GetWebFingerResult returns a digit.Resource object based on the provided resource string.
-func (service *Locator) GetWebFingerResult(resource string) (digit.Resource, error) {
+func (service *Locator) GetWebFingerResult(session data.Session, resource string) (digit.Resource, error) {
 
 	const location = "service.Locator.GetWebFingerResult"
 
@@ -52,13 +53,13 @@ func (service *Locator) GetWebFingerResult(resource string) (digit.Resource, err
 		return service.searchDomainService.WebFinger(), nil
 
 	case "SearchQuery":
-		return service.searchQueryService.WebFinger(token)
+		return service.searchQueryService.WebFinger(session, token)
 
 	case "Stream":
-		return service.streamService.WebFinger(token)
+		return service.streamService.WebFinger(session, token)
 
 	case "User":
-		return service.userService.WebFinger(token)
+		return service.userService.WebFinger(session, token)
 
 	}
 
@@ -66,7 +67,7 @@ func (service *Locator) GetWebFingerResult(resource string) (digit.Resource, err
 }
 
 // GetObjectFromURL parses a URL and verifies the existence of the referenced object.
-func (service *Locator) GetObjectFromURL(value string) (string, primitive.ObjectID, error) {
+func (service *Locator) GetObjectFromURL(session data.Session, value string) (string, primitive.ObjectID, error) {
 
 	const location = "service.Locator.GetObjectFromURL"
 
@@ -79,7 +80,7 @@ func (service *Locator) GetObjectFromURL(value string) (string, primitive.Object
 
 		stream := model.NewStream()
 
-		if err := service.streamService.LoadByToken(token, &stream); err != nil {
+		if err := service.streamService.LoadByToken(session, token, &stream); err != nil {
 			return "", primitive.NilObjectID, derp.Wrap(err, location, "Error loading stream", token)
 		}
 
@@ -89,7 +90,7 @@ func (service *Locator) GetObjectFromURL(value string) (string, primitive.Object
 
 		user := model.NewUser()
 
-		if err := service.userService.LoadByToken(token, &user); err != nil {
+		if err := service.userService.LoadByToken(session, token, &user); err != nil {
 			return "", primitive.NilObjectID, derp.Wrap(err, location, "Error loading user", token)
 		}
 
@@ -101,20 +102,20 @@ func (service *Locator) GetObjectFromURL(value string) (string, primitive.Object
 	return "", primitive.NilObjectID, derp.BadRequestError(location, "Invalid Object Type", objectType)
 }
 
-func (service *Locator) GetActor(actorType string, actorID string) (outbox.Actor, error) {
+func (service *Locator) GetActor(session data.Session, actorType string, actorID string) (outbox.Actor, error) {
 
 	switch actorType {
 
 	case "Application":
-		return service.domainService.ActivityPubActor()
+		return service.domainService.ActivityPubActor(session)
 
 	case "SearchDomain":
-		return service.searchDomainService.ActivityPubActor()
+		return service.searchDomainService.ActivityPubActor(session)
 
 	case "SearchQuery":
 
 		if searchQueryID, err := primitive.ObjectIDFromHex(actorID); err == nil {
-			return service.searchQueryService.ActivityPubActor(searchQueryID)
+			return service.searchQueryService.ActivityPubActor(session, searchQueryID)
 		} else {
 			return outbox.Actor{}, derp.Wrap(err, "service.Locator.GetActor", "Invalid SearchQueryID", actorID)
 		}
@@ -122,7 +123,7 @@ func (service *Locator) GetActor(actorType string, actorID string) (outbox.Actor
 	case "Stream":
 
 		if streamID, err := primitive.ObjectIDFromHex(actorID); err == nil {
-			return service.streamService.ActivityPubActor(streamID)
+			return service.streamService.ActivityPubActor(session, streamID)
 		} else {
 			return outbox.Actor{}, derp.Wrap(err, "service.Locator.GetActor", "Invalid StreamID", actorID)
 		}
@@ -130,7 +131,7 @@ func (service *Locator) GetActor(actorType string, actorID string) (outbox.Actor
 	case "User":
 
 		if userID, err := primitive.ObjectIDFromHex(actorID); err == nil {
-			return service.userService.ActivityPubActor(userID)
+			return service.userService.ActivityPubActor(session, userID)
 		} else {
 			return outbox.Actor{}, derp.Wrap(err, "service.Locator.GetActor", "Invalid UserID", actorID)
 		}

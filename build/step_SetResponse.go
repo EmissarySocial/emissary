@@ -39,7 +39,7 @@ func (step StepSetResponse) Post(builder Builder, _ io.Writer) PipelineBehavior 
 	// Create/Update the response
 	if transaction.Exists {
 
-		if err := responseService.SetResponse(user, transaction.URL, transaction.Type, transaction.Content); err != nil {
+		if err := responseService.SetResponse(builder.session(), user, transaction.URL, transaction.Type, transaction.Content); err != nil {
 			return Halt().WithError(derp.Wrap(err, location, "Error setting response"))
 		}
 
@@ -47,7 +47,7 @@ func (step StepSetResponse) Post(builder Builder, _ io.Writer) PipelineBehavior 
 	}
 
 	// Fall through means DELETE the Response
-	if err := responseService.UnsetResponse(user, transaction.URL, transaction.Type); err != nil {
+	if err := responseService.UnsetResponse(builder.session(), user, transaction.URL, transaction.Type); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error setting response"))
 	}
 

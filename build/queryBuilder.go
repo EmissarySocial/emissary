@@ -3,6 +3,7 @@ package build
 import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/null"
@@ -11,6 +12,7 @@ import (
 
 type QueryBuilder[T model.FieldLister] struct {
 	service       service.ModelService
+	session       data.Session
 	criteria      exp.Expression
 	sortField     string
 	sortDirection string
@@ -18,10 +20,11 @@ type QueryBuilder[T model.FieldLister] struct {
 	caseSensitive null.Bool
 }
 
-func NewQueryBuilder[T model.FieldLister](service service.ModelService, criteria exp.Expression) QueryBuilder[T] {
+func NewQueryBuilder[T model.FieldLister](service service.ModelService, session data.Session, criteria exp.Expression) QueryBuilder[T] {
 
 	return QueryBuilder[T]{
 		service:       service,
+		session:       session,
 		criteria:      criteria,
 		sortField:     "rank",
 		sortDirection: "asc",
@@ -230,13 +233,13 @@ func (builder QueryBuilder[T]) CaseInsensitive() QueryBuilder[T] {
 // Slice returns the results of the query as a slice of objects
 func (builder QueryBuilder[T]) Slice() (sliceof.Object[T], error) {
 	result := make([]T, 0)
-	err := builder.service.ObjectQuery(&result, builder.criteria, builder.makeOptions()...)
+	err := builder.service.ObjectQuery(builder.session, &result, builder.criteria, builder.makeOptions()...)
 	return result, err
 }
 
 // Count returns the number of records that match the query criteria
 func (builder QueryBuilder[T]) Count() (int64, error) {
-	return builder.service.Count(builder.criteria)
+	return builder.service.Count(builder.session, builder.criteria)
 
 }
 

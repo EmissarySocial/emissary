@@ -24,12 +24,12 @@ type Rule struct {
 }
 
 // NewRule returns a fully initialized `Rule` builder.
-func NewRule(factory Factory, request *http.Request, response http.ResponseWriter, rule *model.Rule, template model.Template, actionID string) (Rule, error) {
+func NewRule(factory Factory, session data.Session, request *http.Request, response http.ResponseWriter, rule *model.Rule, template model.Template, actionID string) (Rule, error) {
 
 	const location = "build.NewRule"
 
 	// Create the underlying Common builder
-	common, err := NewCommonWithTemplate(factory, request, response, template, rule, actionID)
+	common, err := NewCommonWithTemplate(factory, session, request, response, template, rule, actionID)
 
 	if err != nil {
 		return Rule{}, derp.Wrap(err, location, "Error creating common builder")
@@ -75,7 +75,7 @@ func (w Rule) View(actionID string) (template.HTML, error) {
 
 	const location = "build.Rule.View"
 
-	builder, err := NewRule(w._factory, w._request, w._response, w._rule, w._template, actionID)
+	builder, err := NewRule(w._factory, w._session, w._request, w._response, w._rule, w._template, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, location, "Error creating Rule builder")
@@ -125,7 +125,7 @@ func (w Rule) service() service.ModelService {
 }
 
 func (w Rule) clone(action string) (Builder, error) {
-	return NewRule(w._factory, w._request, w._response, w._rule, w._template, action)
+	return NewRule(w._factory, w._session, w._request, w._response, w._rule, w._template, action)
 }
 
 /******************************************
@@ -168,7 +168,7 @@ func (w Rule) Rules() *QueryBuilder[model.Rule] {
 		exp.Equal("deleteDate", 0),
 	)
 
-	result := NewQueryBuilder[model.Rule](w._factory.Rule(), criteria)
+	result := NewQueryBuilder[model.Rule](w._factory.Rule(), w._session, criteria)
 
 	return &result
 }
@@ -186,7 +186,7 @@ func (w Rule) ServerWideRules() *QueryBuilder[model.Rule] {
 		exp.Equal("deleteDate", 0),
 	)
 
-	result := NewQueryBuilder[model.Rule](w._factory.Rule(), criteria)
+	result := NewQueryBuilder[model.Rule](w._factory.Rule(), w._session, criteria)
 
 	return &result
 }

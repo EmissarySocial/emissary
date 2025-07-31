@@ -7,13 +7,14 @@ import (
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/camper"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/html"
 	"github.com/benpate/steranko"
 )
 
-func GetIntent_Dislike(ctx *steranko.Context, factory *domain.Factory, user *model.User) error {
+func GetIntent_Dislike(ctx *steranko.Context, factory *domain.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.GetIntent_Dislike"
 
@@ -96,6 +97,6 @@ func GetIntent_Dislike(ctx *steranko.Context, factory *domain.Factory, user *mod
 	return ctx.HTML(http.StatusOK, b.String())
 }
 
-func PostIntent_Dislike(ctx *steranko.Context, factory *domain.Factory, user *model.User) error {
-	return postIntent_Response(ctx, factory, user, vocab.ActivityTypeLike)
+func PostIntent_Dislike(ctx *steranko.Context, factory *domain.Factory, session data.Session, user *model.User) error {
+	return postIntent_Response(ctx, factory, session, user, vocab.ActivityTypeDislike)
 }

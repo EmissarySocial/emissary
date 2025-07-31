@@ -5,12 +5,13 @@ import (
 
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/inbox"
 	"github.com/benpate/steranko"
 )
 
-func PostInbox(ctx *steranko.Context, factory *domain.Factory, template *model.Template, stream *model.Stream, searchQuery *model.SearchQuery) error {
+func PostInbox(ctx *steranko.Context, factory *domain.Factory, session data.Session, template *model.Template, stream *model.Stream, searchQuery *model.SearchQuery) error {
 
 	const location = "handler.activitypub_search.PostInbox"
 

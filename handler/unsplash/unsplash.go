@@ -11,6 +11,7 @@ import (
 	"github.com/EmissarySocial/emissary/service/providers"
 	"github.com/EmissarySocial/emissary/tools/httpcache"
 	"github.com/benpate/color"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/html"
 	"github.com/benpate/remote"
@@ -21,7 +22,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func GetPhoto(ctx *steranko.Context, factory *domain.Factory) error {
+func GetPhoto(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
 
 	const location = "handler.unsplash.GetPhoto"
 
@@ -29,7 +30,7 @@ func GetPhoto(ctx *steranko.Context, factory *domain.Factory) error {
 	connectionService := factory.Connection()
 	unsplash := model.NewConnection()
 
-	if err := connectionService.LoadByProvider(providers.ProviderTypeUnsplash, &unsplash); err != nil {
+	if err := connectionService.LoadByProvider(session, providers.ProviderTypeUnsplash, &unsplash); err != nil {
 		return derp.Wrap(err, location, "Giphy is not configured for this domain")
 	}
 
@@ -80,7 +81,7 @@ func GetPhoto(ctx *steranko.Context, factory *domain.Factory) error {
 	return displayPhoto(ctx, applicationName, photo)
 }
 
-func GetCollectionRandom(ctx *steranko.Context, factory *domain.Factory) error {
+func GetCollectionRandom(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
 
 	const location = "handler.unsplash.GetCollectionRandom"
 
@@ -88,7 +89,7 @@ func GetCollectionRandom(ctx *steranko.Context, factory *domain.Factory) error {
 	connectionService := factory.Connection()
 	unsplash := model.NewConnection()
 
-	if err := connectionService.LoadByProvider(providers.ProviderTypeUnsplash, &unsplash); err != nil {
+	if err := connectionService.LoadByProvider(session, providers.ProviderTypeUnsplash, &unsplash); err != nil {
 		return derp.Wrap(err, "handler.unsplash.GetCollectionRandom", "Giphy is not configured for this domain")
 	}
 

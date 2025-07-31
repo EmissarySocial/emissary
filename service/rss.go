@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
@@ -28,11 +29,11 @@ func NewRSS(streamService *Stream, host string) *RSS {
 // has a lot of incomplete data at the top level, so we're expecting the handler
 // that calls this to fill in the rest of the gaps before it passes the values back
 // to the requester.
-func (rss RSS) Feed(criteria ...exp.Expression) (*feeds.JSONFeed, error) {
+func (rss RSS) Feed(session data.Session, criteria ...exp.Expression) (*feeds.JSONFeed, error) {
 
 	filter := exp.And(criteria...)
 
-	streams, err := rss.streamService.List(filter, option.SortDesc("publishDate"))
+	streams, err := rss.streamService.List(session, filter, option.SortDesc("publishDate"))
 	stream := model.NewStream()
 
 	if err != nil {

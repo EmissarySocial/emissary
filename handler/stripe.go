@@ -9,6 +9,7 @@ import (
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/stripeapi"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/steranko"
 	"github.com/stripe/stripe-go/v78"
@@ -16,7 +17,7 @@ import (
 )
 
 // PostCheckoutWebhook processes inbound webhook events for a specific MerchantAccount
-func PostStripeWebhook_Checkout(ctx *steranko.Context, factory *domain.Factory, merchantAccount *model.MerchantAccount) error {
+func PostStripeWebhook_Checkout(ctx *steranko.Context, factory *domain.Factory, session data.Session, merchantAccount *model.MerchantAccount) error {
 
 	const location = "handler.PostStripeWebhook_Checkout"
 
@@ -35,7 +36,7 @@ func PostStripeWebhook_Checkout(ctx *steranko.Context, factory *domain.Factory, 
 		return derp.Wrap(err, location, "Error decrypting webhook secret")
 	}
 
-	if err = stripe_ProcessWebhook(factory, ctx.Request(), vault.GetString("webhookSecret"), merchantAccount.LiveMode); err != nil {
+	if err = stripe_ProcessWebhook(factory, session, ctx.Request(), vault.GetString("webhookSecret"), merchantAccount.LiveMode); err != nil {
 
 		// Suppress errors from subscriptions that are not found on this server
 		if derp.IsNotFound(err) {
@@ -51,7 +52,7 @@ func PostStripeWebhook_Checkout(ctx *steranko.Context, factory *domain.Factory, 
 }
 
 // stripe_ProcessWebhook processes product webhook events from Stripe
-func stripe_ProcessWebhook(factory *domain.Factory, request *http.Request, webhookSecret string, liveMode bool) error {
+func stripe_ProcessWebhook(factory *domain.Factory, session data.Session, request *http.Request, webhookSecret string, liveMode bool) error {
 
 	const location = "handler.stripe_ProcessWebhook"
 
@@ -75,14 +76,14 @@ func stripe_ProcessWebhook(factory *domain.Factory, request *http.Request, webho
 
 	// Load the Privilege associated with this Stripe Subscription.
 	privilege := model.NewPrivilege()
-	if err := factory.Privilege().LoadByRemotePurchaseID(subscription.ID, &privilege); err != nil {
+	if err := factory.Privilege().LoadByRemotePurchaseID(session, subscription.ID, &privilege); err != nil {
 		return derp.Wrap(err, location, "Error loading privilege")
 	}
 
 	// If the underlying Subscription is no longer active, then remove the Privilege
 	if isActive := stripeapi.SubscriptionIsActive(subscription); !isActive {
 
-		if err := factory.Privilege().Delete(&privilege, "Updated via WebHook"); err != nil {
+		if err := factory.Privilege().Delete(session, &privilege, "Updated via WebHook"); err != nil {
 			return derp.Wrap(err, location, "Error syncing privilege records")
 		}
 	}

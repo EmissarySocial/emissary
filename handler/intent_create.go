@@ -7,13 +7,14 @@ import (
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/camper"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/html"
 	"github.com/benpate/steranko"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func GetIntent_Create(ctx *steranko.Context, factory *domain.Factory, user *model.User) error {
+func GetIntent_Create(ctx *steranko.Context, factory *domain.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.GetIntent_Create"
 
@@ -61,7 +62,7 @@ func GetIntent_Create(ctx *steranko.Context, factory *domain.Factory, user *mode
 	return ctx.HTML(http.StatusOK, b.String())
 }
 
-func PostIntent_Create(ctx *steranko.Context, factory *domain.Factory, user *model.User) error {
+func PostIntent_Create(ctx *steranko.Context, factory *domain.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.GetIntent_Create"
 
@@ -85,7 +86,7 @@ func PostIntent_Create(ctx *steranko.Context, factory *domain.Factory, user *mod
 	stream.Content = model.NewHTMLContent(transaction.Content)
 
 	// Save the new Stream to the database
-	if err := streamService.Save(&stream, "Saved via Activity Intent"); err != nil {
+	if err := streamService.Save(session, &stream, "Saved via Activity Intent"); err != nil {
 		return derp.Wrap(err, location, "Error saving stream")
 	}
 

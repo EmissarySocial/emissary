@@ -33,7 +33,7 @@ func (step StepSendEmail) Post(builder Builder, _ io.Writer) PipelineBehavior {
 	switch step.Email {
 
 	case "welcome", "password-reset":
-		userService.SendPasswordResetEmail(userBuilder._user)
+		userService.SendPasswordResetEmail(builder.session(), userBuilder._user)
 
 	default:
 		return Halt().WithError(derp.InternalError("build.StepSendEmail.Post", "Invalid email name", "Name must be 'welcome' or 'password-reset'"))

@@ -5,12 +5,13 @@ import (
 
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/data"
 	"github.com/benpate/html"
 	"github.com/benpate/rosetta/first"
 	"github.com/benpate/steranko"
 )
 
-func GetIntent_Continue(ctx *steranko.Context, factory *domain.Factory, user *model.User) error {
+func GetIntent_Continue(ctx *steranko.Context, factory *domain.Factory, session data.Session, user *model.User) error {
 	url := first.String(ctx.QueryParam("url"), "/@me")
 	return ctx.HTML(http.StatusOK, getIntent_Continue(url))
 }

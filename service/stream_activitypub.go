@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/outbox"
 	"github.com/benpate/hannibal/streams"
@@ -21,18 +22,18 @@ import (
  ******************************************/
 
 // JSONLDGetter returns a new JSONLDGetter for the provided stream
-func (service *Stream) JSONLDGetter(stream *model.Stream) StreamJSONLDGetter {
-	return NewStreamJSONLDGetter(service, stream)
+func (service *Stream) JSONLDGetter(session data.Session, stream *model.Stream) StreamJSONLDGetter {
+	return NewStreamJSONLDGetter(session, service, stream)
 }
 
-func (service *Stream) Activity(stream *model.Stream) streams.Document {
+func (service *Stream) Activity(session data.Session, stream *model.Stream) streams.Document {
 	// Create a new ActivityPub Document for this Stream
-	return service.activityStream.NewDocument(service.JSONLD(stream))
+	return service.activityStream.NewDocument(service.JSONLD(session, stream))
 }
 
 // GetJSONLD returns a map document that conforms to the ActivityStreams 2.0 spec.
 // This map will still need to be marshalled into JSON
-func (service *Stream) JSONLD(stream *model.Stream) mapof.Any {
+func (service *Stream) JSONLD(session data.Session, stream *model.Stream) mapof.Any {
 	result := mapof.Any{
 		vocab.AtContext:         sliceof.Any{vocab.ContextTypeActivityStreams, vocab.ContextTypeSecurity, vocab.ContextTypeToot},
 		vocab.PropertyID:        stream.ActivityPubURL(),
@@ -89,7 +90,7 @@ func (service *Stream) JSONLD(stream *model.Stream) mapof.Any {
 		// Duration
 		// Library (custom Funkwhale type)
 
-		if attachments, err := service.attachmentService.QueryByCategory(model.AttachmentObjectTypeStream, stream.StreamID, vocab.ObjectTypeAudio); err == nil {
+		if attachments, err := service.attachmentService.QueryByCategory(session, model.AttachmentObjectTypeStream, stream.StreamID, vocab.ObjectTypeAudio); err == nil {
 			link := make([]mapof.Any, 0, len(attachments))
 
 			for _, attachment := range attachments {
@@ -111,7 +112,7 @@ func (service *Stream) JSONLD(stream *model.Stream) mapof.Any {
 	}
 
 	// Include attachments for all types (including Audio)
-	if attachments, err := service.attachmentService.QueryByObjectID(model.AttachmentObjectTypeStream, stream.StreamID); err == nil {
+	if attachments, err := service.attachmentService.QueryByObjectID(session, model.AttachmentObjectTypeStream, stream.StreamID); err == nil {
 
 		attachmentJSON := make([]mapof.Any, 0, len(attachments))
 		for _, attachment := range attachments {
@@ -149,13 +150,13 @@ func (service *Stream) ActivityPubURL(streamID primitive.ObjectID) string {
 
 // ActivityPubActor returns an ActivityPub Actor object ** WHICH INCLUDES ENCRYPTION KEYS **
 // for the provided Stream.
-func (service *Stream) ActivityPubActor(streamID primitive.ObjectID) (outbox.Actor, error) {
+func (service *Stream) ActivityPubActor(session data.Session, streamID primitive.ObjectID) (outbox.Actor, error) {
 
 	const location = "service.Stream.ActivityPubActor"
 
 	// Try to load the user's keys from the database
 	encryptionKey := model.NewEncryptionKey()
-	if err := service.keyService.LoadByParentID(model.EncryptionKeyTypeStream, streamID, &encryptionKey); err != nil {
+	if err := service.keyService.LoadByParentID(session, model.EncryptionKeyTypeStream, streamID, &encryptionKey); err != nil {
 		return outbox.Actor{}, derp.Wrap(err, location, "Error loading encryption key", streamID)
 	}
 
@@ -170,7 +171,7 @@ func (service *Stream) ActivityPubActor(streamID primitive.ObjectID) (outbox.Act
 	actor := outbox.NewActor(
 		service.ActivityPubURL(streamID),
 		privateKey,
-		outbox.WithFollowers(service.RangeActivityPubFollowers(streamID)),
+		outbox.WithFollowers(service.RangeActivityPubFollowers(session, streamID)),
 		outbox.WithClient(service.activityStream),
 		// TODO: Restore Queue:: , outbox.WithQueue(service.queue))
 	)
@@ -180,12 +181,12 @@ func (service *Stream) ActivityPubActor(streamID primitive.ObjectID) (outbox.Act
 
 // ActivityPubActor returns an ActivityPub Actor object ** WHICH INCLUDES ENCRYPTION KEYS **
 // for the provided User.
-func (service *Stream) RangeActivityPubFollowers(streamID primitive.ObjectID) iter.Seq[string] {
+func (service *Stream) RangeActivityPubFollowers(session data.Session, streamID primitive.ObjectID) iter.Seq[string] {
 
 	return func(yield func(string) bool) {
 
 		// Retrieve all Followers for this Stream
-		followers := service.followerService.RangeActivityPubByType(model.FollowerTypeStream, streamID)
+		followers := service.followerService.RangeActivityPubByType(session, model.FollowerTypeStream, streamID)
 
 		for follower := range followers {
 			if !yield(follower.Actor.ProfileURL) {

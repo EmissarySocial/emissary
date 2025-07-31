@@ -5,19 +5,20 @@ import (
 
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/steranko"
 )
 
-func GetFollowingCollection(ctx *steranko.Context, factory *domain.Factory) error {
+func GetFollowingCollection(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
 	collectionID := fullURL(factory, ctx)
 	result := streams.NewOrderedCollection(collectionID)
 	ctx.Response().Header().Set("Content-Type", "application/activity+json")
 	return ctx.JSON(http.StatusOK, result)
 }
 
-func GetFollowingRecord(ctx *steranko.Context, factory *domain.Factory) error {
+func GetFollowingRecord(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
 
 	const location = "handler.activitypub_user.GetFollowingRecord"
 
@@ -25,7 +26,7 @@ func GetFollowingRecord(ctx *steranko.Context, factory *domain.Factory) error {
 	userService := factory.User()
 	user := model.NewUser()
 
-	if err := userService.LoadByToken(ctx.Param("userId"), &user); err != nil {
+	if err := userService.LoadByToken(session, ctx.Param("userId"), &user); err != nil {
 		return derp.Wrap(err, location, "Error loading user")
 	}
 
@@ -38,7 +39,7 @@ func GetFollowingRecord(ctx *steranko.Context, factory *domain.Factory) error {
 	followingService := factory.Following()
 	following := model.NewFollowing()
 
-	if err := followingService.LoadByToken(user.UserID, ctx.Param("followingId"), &following); err != nil {
+	if err := followingService.LoadByToken(session, user.UserID, ctx.Param("followingId"), &following); err != nil {
 		return derp.Wrap(err, location, "Error loading following")
 	}
 

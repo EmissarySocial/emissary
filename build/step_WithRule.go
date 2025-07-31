@@ -46,7 +46,7 @@ func (step StepWithRule) execute(builder Builder, buffer io.Writer, actionMethod
 	rule.UserID = builder.AuthenticatedID()
 
 	if (ruleToken != "") && (ruleToken != "new") {
-		if err := ruleService.LoadByToken(builder.AuthenticatedID(), ruleToken, &rule); err != nil {
+		if err := ruleService.LoadByToken(builder.session(), builder.AuthenticatedID(), ruleToken, &rule); err != nil {
 			if actionMethod == ActionMethodGet {
 				return Halt().WithError(derp.Wrap(err, location, "Unable to load Rule", ruleToken))
 			}
@@ -55,7 +55,7 @@ func (step StepWithRule) execute(builder Builder, buffer io.Writer, actionMethod
 	}
 
 	// Create a new builder tied to the Rule record
-	subBuilder, err := NewModel(factory, builder.request(), builder.response(), template, &rule, builder.actionID())
+	subBuilder, err := NewModel(factory, builder.session(), builder.request(), builder.response(), template, &rule, builder.actionID())
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Unable to create sub-builder"))

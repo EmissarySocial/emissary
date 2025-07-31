@@ -8,6 +8,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/steranko"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -15,7 +16,7 @@ import (
 
 // ServerSentEvent generates an echo.HandlerFunc that listens for requests for
 // SSE following.
-func ServerSentEvent(ctx *steranko.Context, factory *domain.Factory) error {
+func ServerSentEvent(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
 
 	// Close SSE connections that remain open after 15 minutes
 	timeoutContext, cancel := context.WithTimeout(ctx.Request().Context(), 15*time.Minute)

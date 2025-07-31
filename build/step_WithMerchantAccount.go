@@ -46,7 +46,7 @@ func (step StepWithMerchantAccount) execute(builder Builder, buffer io.Writer, a
 	merchantAccount.UserID = builder.AuthenticatedID()
 
 	if (merchantAccountToken != "") && (merchantAccountToken != "new") {
-		if err := merchantAccountService.LoadByUserAndToken(builder.AuthenticatedID(), merchantAccountToken, &merchantAccount); err != nil {
+		if err := merchantAccountService.LoadByUserAndToken(builder.session(), builder.AuthenticatedID(), merchantAccountToken, &merchantAccount); err != nil {
 			if actionMethod == ActionMethodGet {
 				return Halt().WithError(derp.Wrap(err, location, "Unable to load MerchantAccount", merchantAccountToken))
 			}
@@ -55,7 +55,7 @@ func (step StepWithMerchantAccount) execute(builder Builder, buffer io.Writer, a
 	}
 
 	// Create a new builder tied to the MerchantAccount record
-	subBuilder, err := NewModel(factory, builder.request(), builder.response(), template, &merchantAccount, builder.actionID())
+	subBuilder, err := NewModel(factory, builder.session(), builder.request(), builder.response(), template, &merchantAccount, builder.actionID())
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Unable to create sub-builder"))

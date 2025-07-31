@@ -17,7 +17,6 @@ import (
 
 // Response defines a service that can send and receive response data
 type Response struct {
-	collection      data.Collection
 	activityService *ActivityStream
 	inboxService    *Inbox
 	outboxService   *Outbox
@@ -35,8 +34,7 @@ func NewResponse() Response {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Response) Refresh(collection data.Collection, activityService *ActivityStream, inboxService *Inbox, outboxService *Outbox, userService *User, host string) {
-	service.collection = collection
+func (service *Response) Refresh(activityService *ActivityStream, inboxService *Inbox, outboxService *Outbox, userService *User, host string) {
 	service.activityService = activityService
 	service.inboxService = inboxService
 	service.outboxService = outboxService
@@ -53,27 +51,31 @@ func (service *Response) Close() {
  * Common Data Methods
  ******************************************/
 
+func (service *Response) collection(session data.Session) data.Collection {
+	return session.Collection("Response")
+}
+
 // Count returns the number of Responses that match the provided criteria
-func (service *Response) Count(criteria exp.Expression) (int64, error) {
-	return service.collection.Count(notDeleted(criteria))
+func (service *Response) Count(session data.Session, criteria exp.Expression) (int64, error) {
+	return service.collection(session).Count(notDeleted(criteria))
 }
 
 // Query returns a slice containing all of the Responses that match the provided criteria
-func (service *Response) Query(criteria exp.Expression, options ...option.Option) ([]model.Response, error) {
+func (service *Response) Query(session data.Session, criteria exp.Expression, options ...option.Option) ([]model.Response, error) {
 	result := make([]model.Response, 0)
-	err := service.collection.Query(&result, notDeleted(criteria), options...)
+	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
 	return result, err
 }
 
 // List returns an iterator containing all of the Responses that match the provided criteria
-func (service *Response) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection.Iterator(notDeleted(criteria), options...)
+func (service *Response) List(session data.Session, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+	return service.collection(session).Iterator(notDeleted(criteria), options...)
 }
 
 // Range returns an iterator containing all of the Users who match the provided criteria
-func (service *Response) Range(criteria exp.Expression, options ...option.Option) (iter.Seq[model.Response], error) {
+func (service *Response) Range(session data.Session, criteria exp.Expression, options ...option.Option) (iter.Seq[model.Response], error) {
 
-	iter, err := service.List(criteria, options...)
+	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
 		return nil, derp.Wrap(err, "service.User.Range", "Error creating iterator", criteria)
@@ -83,9 +85,9 @@ func (service *Response) Range(criteria exp.Expression, options ...option.Option
 }
 
 // Load retrieves an Response from the database
-func (service *Response) Load(criteria exp.Expression, response *model.Response) error {
+func (service *Response) Load(session data.Session, criteria exp.Expression, response *model.Response) error {
 
-	if err := service.collection.Load(notDeleted(criteria), response); err != nil {
+	if err := service.collection(session).Load(notDeleted(criteria), response); err != nil {
 		return derp.Wrap(err, "service.Response.Load", "Error loading Response", criteria)
 	}
 
@@ -93,7 +95,7 @@ func (service *Response) Load(criteria exp.Expression, response *model.Response)
 }
 
 // Save adds/updates an Response in the database
-func (service *Response) Save(response *model.Response, note string) error {
+func (service *Response) Save(session data.Session, response *model.Response, note string) error {
 
 	const location = "service.Response.Save"
 
@@ -103,12 +105,12 @@ func (service *Response) Save(response *model.Response, note string) error {
 	}
 
 	// Save the value to the database
-	if err := service.collection.Save(response, note); err != nil {
+	if err := service.collection(session).Save(response, note); err != nil {
 		return derp.Wrap(err, location, "Error saving Response", response, note)
 	}
 
 	// Try to update the inbox message being responded to
-	if err := service.inboxService.setResponse(response.UserID, response.Object, response.Type, response.ResponseID); err != nil {
+	if err := service.inboxService.setResponse(session, response.UserID, response.Object, response.Type, response.ResponseID); err != nil {
 		return derp.Wrap(err, location, "Unable to set Response to inbox message", response.UserID)
 	}
 
@@ -116,22 +118,22 @@ func (service *Response) Save(response *model.Response, note string) error {
 }
 
 // Delete removes an Response from the database (hard delete)
-func (service *Response) Delete(response *model.Response, note string) error {
+func (service *Response) Delete(session data.Session, response *model.Response, note string) error {
 
 	const location = "service.Response.Delete"
 
 	// Delete this Response
-	if err := service.collection.HardDelete(exp.Equal("_id", response.ResponseID)); err != nil {
+	if err := service.collection(session).HardDelete(exp.Equal("_id", response.ResponseID)); err != nil {
 		return derp.Wrap(err, location, "Unable to delete Response", response)
 	}
 
 	// Try to update the inbox message being responded to
-	if err := service.inboxService.setResponse(response.UserID, response.Object, response.Type, primitive.NilObjectID); err != nil {
+	if err := service.inboxService.setResponse(session, response.UserID, response.Object, response.Type, primitive.NilObjectID); err != nil {
 		return derp.Wrap(err, location, "Unable to remove Response from inbox message", response.UserID)
 	}
 
 	// Unpublish from the Outbox, and send the "Undo" activity to followers
-	if err := service.outboxService.UndoActivity(model.FollowerTypeUser, response.UserID, response.ActivityPubURL(), model.NewAnonymousPermissions()); err != nil {
+	if err := service.outboxService.UndoActivity(session, model.FollowerTypeUser, response.UserID, response.ActivityPubURL(), model.NewAnonymousPermissions()); err != nil {
 		derp.Report(derp.Wrap(err, location, "Unable to send Undo activity"))
 	}
 
@@ -162,27 +164,27 @@ func (service *Response) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
-func (service *Response) ObjectQuery(result any, criteria exp.Expression, options ...option.Option) error {
-	return service.collection.Query(result, notDeleted(criteria), options...)
+func (service *Response) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
+	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
-func (service *Response) ObjectLoad(criteria exp.Expression) (data.Object, error) {
+func (service *Response) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewResponse()
-	err := service.Load(criteria, &result)
+	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
-func (service *Response) ObjectSave(object data.Object, note string) error {
+func (service *Response) ObjectSave(session data.Session, object data.Object, note string) error {
 
 	if response, ok := object.(*model.Response); ok {
-		return service.Save(response, note)
+		return service.Save(session, response, note)
 	}
 	return derp.InternalError("service.Response.ObjectSave", "Invalid object type", object)
 }
 
-func (service *Response) ObjectDelete(object data.Object, note string) error {
+func (service *Response) ObjectDelete(session data.Session, object data.Object, note string) error {
 	if response, ok := object.(*model.Response); ok {
-		return service.Delete(response, note)
+		return service.Delete(session, response, note)
 	}
 	return derp.InternalError("service.Response.ObjectDelete", "Invalid object type", object)
 }
@@ -199,79 +201,80 @@ func (service *Response) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
-func (service *Response) QueryByUserAndDate(userID primitive.ObjectID, responseType string, maxDate int64, pageSize int) ([]model.Response, error) {
+func (service *Response) QueryByUserAndDate(session data.Session, userID primitive.ObjectID, responseType string, maxDate int64, pageSize int) ([]model.Response, error) {
 
 	criteria := exp.Equal("userId", userID).AndEqual("type", responseType).And(exp.LessThan("createDate", maxDate))
 	options := []option.Option{option.SortDesc("createDate"), option.MaxRows(int64(pageSize))}
 
-	return service.Query(criteria, options...)
+	return service.Query(session, criteria, options...)
 }
 
-func (service *Response) QueryByObjectAndDate(objectID string, responseType string, maxDate int64, pageSize int) ([]model.Response, error) {
+func (service *Response) QueryByObjectAndDate(session data.Session, objectID string, responseType string, maxDate int64, pageSize int) ([]model.Response, error) {
 
 	criteria := exp.Equal("objectId", objectID).AndEqual("type", responseType).And(exp.LessThan("createDate", maxDate))
 	options := []option.Option{option.SortDesc("createDate"), option.MaxRows(int64(pageSize))}
 
-	return service.Query(criteria, options...)
+	return service.Query(session, criteria, options...)
 }
 
-func (service *Response) LoadByID(responseID primitive.ObjectID, response *model.Response) error {
-	return service.Load(exp.Equal("_id", responseID), response)
+func (service *Response) LoadByID(session data.Session, responseID primitive.ObjectID, response *model.Response) error {
+	return service.Load(session, exp.Equal("_id", responseID), response)
 }
 
-func (service *Response) RangeByUserID(userID primitive.ObjectID, options ...option.Option) (iter.Seq[model.Response], error) {
+func (service *Response) RangeByUserID(session data.Session, userID primitive.ObjectID, options ...option.Option) (iter.Seq[model.Response], error) {
 
 	criteria := exp.Equal("userId", userID)
 
-	return service.Range(criteria, options...)
+	return service.Range(session, criteria, options...)
 }
 
-func (service *Response) QueryByUserAndObject(userID primitive.ObjectID, object string, options ...option.Option) ([]model.Response, error) {
+func (service *Response) QueryByUserAndObject(session data.Session, userID primitive.ObjectID, object string, options ...option.Option) ([]model.Response, error) {
 
 	criteria := exp.Equal("userId", userID).
 		AndEqual("object", object)
 
-	return service.Query(criteria, options...)
+	return service.Query(session, criteria, options...)
 }
 
-func (service *Response) LoadByUserAndObject(userID primitive.ObjectID, object string, responseType string, response *model.Response) error {
+func (service *Response) LoadByUserAndObject(session data.Session, userID primitive.ObjectID, object string, responseType string, response *model.Response) error {
 
 	criteria := exp.Equal("userId", userID).
 		AndEqual("object", object).
 		AndEqual("type", responseType)
 
-	return service.Load(criteria, response)
+	return service.Load(session, criteria, response)
 }
 
-func (service *Response) LoadByActorAndObject(actor string, object string, responseType string, response *model.Response) error {
+func (service *Response) LoadByActorAndObject(session data.Session, actor string, object string, responseType string, response *model.Response) error {
 
 	criteria := exp.Equal("actor", actor).
 		AndEqual("object", object).
 		AndEqual("type", responseType)
 
-	return service.Load(criteria, response)
+	return service.Load(session, criteria, response)
 }
 
-func (service *Response) CountByContent(objectID string) (mapof.Int, error) {
-	return queries.CountResponsesByContent(service.collection, objectID)
+func (service *Response) CountByContent(session data.Session, objectID string) (mapof.Int, error) {
+	collection := service.collection(session)
+	return queries.CountResponsesByContent(collection, objectID)
 }
 
 /******************************************
  * Custom Behaviors
  ******************************************/
 
-func (service *Response) DeleteByUserID(userID primitive.ObjectID, note string) error {
+func (service *Response) DeleteByUserID(session data.Session, userID primitive.ObjectID, note string) error {
 
 	const location = "service.Response.DeleteByUserID"
 
-	rangeFunc, err := service.RangeByUserID(userID)
+	rangeFunc, err := service.RangeByUserID(session, userID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error loading responses by user", userID)
 	}
 
 	for response := range rangeFunc {
-		if err := service.Delete(&response, note); err != nil {
+		if err := service.Delete(session, &response, note); err != nil {
 			return derp.Wrap(err, location, "Error deleting response", response)
 		}
 	}
@@ -281,12 +284,12 @@ func (service *Response) DeleteByUserID(userID primitive.ObjectID, note string) 
 
 // SetResponse is the preferred way of creating/updating a Response.  It includes the business
 // logic to search for an existing response, and delete it if one exists already (publishing UNDO actions in the process).
-func (service *Response) SetResponse(user *model.User, url string, responseType string, content string) error {
+func (service *Response) SetResponse(session data.Session, user *model.User, url string, responseType string, content string) error {
 
 	const location = "service.Response.SetResponse"
 
 	// Remove previous Response (if it exists)
-	if service.UnsetResponse(user, url, responseType) != nil {
+	if service.UnsetResponse(session, user, url, responseType) != nil {
 		return derp.Wrap(nil, location, "Error removing previous response", user.UserID, url, responseType)
 	}
 
@@ -299,14 +302,14 @@ func (service *Response) SetResponse(user *model.User, url string, responseType 
 	response.Content = content
 
 	// Save the Response to the database (response service will automatically publish to ActivityPub and beyond)
-	if err := service.Save(&response, "Set Response"); err != nil {
+	if err := service.Save(session, &response, "Set Response"); err != nil {
 		return derp.Wrap(err, location, "Error saving response", response)
 	}
 
 	activity := service.Activity(response)
 
 	// Publish the new Response to the Outbox, sending "Like" notifications to all followers.
-	if err := service.outboxService.Publish(model.FollowerTypeUser, user.UserID, activity, model.NewAnonymousPermissions()); err != nil {
+	if err := service.outboxService.Publish(session, model.FollowerTypeUser, user.UserID, activity, model.NewAnonymousPermissions()); err != nil {
 		derp.Report(derp.Wrap(err, location, "Error publishing Response", response))
 	}
 
@@ -315,13 +318,13 @@ func (service *Response) SetResponse(user *model.User, url string, responseType 
 }
 
 // UnsetReponse removes a reponse based on the User, URL, and Response Type
-func (service *Response) UnsetResponse(user *model.User, url string, responseType string) error {
+func (service *Response) UnsetResponse(session data.Session, user *model.User, url string, responseType string) error {
 
 	const location = "service.Response.UnsetResponse"
 
 	// Search for a previous Response from this User
 	previousResponse := model.NewResponse()
-	err := service.LoadByUserAndObject(user.UserID, url, responseType, &previousResponse)
+	err := service.LoadByUserAndObject(session, user.UserID, url, responseType, &previousResponse)
 
 	if derp.IsNotFound(err) {
 		return nil
@@ -332,7 +335,7 @@ func (service *Response) UnsetResponse(user *model.User, url string, responseTyp
 	}
 
 	// Otherwise, delete the old Response
-	if err := service.Delete(&previousResponse, ""); err != nil {
+	if err := service.Delete(session, &previousResponse, ""); err != nil {
 		return derp.Wrap(err, location, "Error deleting old response", previousResponse)
 	}
 

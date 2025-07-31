@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
@@ -11,17 +12,19 @@ import (
 type CircleLookupProvider struct {
 	circleService *Circle
 	userID        primitive.ObjectID
+	session       data.Session
 }
 
-func NewCircleLookupProvider(circleService *Circle, userID primitive.ObjectID) CircleLookupProvider {
+func NewCircleLookupProvider(session data.Session, circleService *Circle, userID primitive.ObjectID) CircleLookupProvider {
 	return CircleLookupProvider{
 		circleService: circleService,
 		userID:        userID,
+		session:       session,
 	}
 }
 
 func (service CircleLookupProvider) Get() []form.LookupCode {
-	circles, err := service.circleService.QueryByUser(service.userID, option.SortAsc("name"))
+	circles, err := service.circleService.QueryByUser(service.session, service.userID, option.SortAsc("name"))
 
 	derp.Report(derp.Wrap(err, "service.CircleLookupProvider.Get", "Error retrieving circles for user", service.userID.Hex()))
 
@@ -40,7 +43,7 @@ func (service CircleLookupProvider) Add(name string) (string, error) {
 	circle.Name = name
 	circle.UserID = service.userID
 
-	if err := service.circleService.Save(&circle, "created"); err != nil {
+	if err := service.circleService.Save(service.session, &circle, "created"); err != nil {
 		return "", derp.Wrap(err, "service.CircleLookupProvider.Add", "Error saving circle", name)
 	}
 

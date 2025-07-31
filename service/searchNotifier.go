@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/domain"
 	"github.com/benpate/rosetta/channel"
@@ -89,7 +90,7 @@ func (service *SearchNotifier) Run() {
 		}
 
 		// Then scan all saved search queries and send notifications
-		if err := service.sendNotifications(resultsToNotify); err != nil {
+		if err := service.sendNotifications(session, resultsToNotify); err != nil {
 			derp.Report(derp.Wrap(err, location, "Error sending notifications"))
 		}
 
@@ -143,7 +144,7 @@ func (service *SearchNotifier) sendGlobalNotifications(searchResults []model.Sea
 
 // sendNotifications scans all SearchQueries in the database and sends notifications
 // for all that match the provided batch of SearchResults
-func (service *SearchNotifier) sendNotifications(searchResults []model.SearchResult) error {
+func (service *SearchNotifier) sendNotifications(session data.Session, searchResults []model.SearchResult) error {
 
 	const location = "service.SearchNotifier.sendNotifications"
 
@@ -153,7 +154,7 @@ func (service *SearchNotifier) sendNotifications(searchResults []model.SearchRes
 	}
 
 	// Get all search queries
-	searchQueries, err := service.searchQueryService.RangeAll()
+	searchQueries, err := service.searchQueryService.RangeAll(session)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error retrieving all search queries")

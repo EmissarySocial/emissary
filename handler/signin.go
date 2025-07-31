@@ -7,6 +7,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/mapof"
@@ -14,7 +15,7 @@ import (
 )
 
 // GetSignIn generates an echo.HandlerFunc that handles GET /signin requests
-func GetSignIn(ctx *steranko.Context, factory *domain.Factory) error {
+func GetSignIn(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
 
 	// Get the standard Signin page
 	template := factory.Domain().Theme().HTMLTemplate
@@ -37,7 +38,7 @@ func GetSignIn(ctx *steranko.Context, factory *domain.Factory) error {
 }
 
 // PostSignIn generates an echo.HandlerFunc that handles POST /signin requests
-func PostSignIn(ctx *steranko.Context, factory *domain.Factory) error {
+func PostSignIn(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
 
 	// Try to sign in using Steranko
 	user, err := factory.Steranko().SigninFormPost(ctx)
@@ -66,7 +67,7 @@ func PostSignIn(ctx *steranko.Context, factory *domain.Factory) error {
 }
 
 // PostSignOut generates an echo.HandlerFunc that handles POST /signout requests
-func PostSignOut(ctx *steranko.Context, factory *domain.Factory) error {
+func PostSignOut(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
 
 	s := factory.Steranko()
 
@@ -85,11 +86,11 @@ func PostSignOut(ctx *steranko.Context, factory *domain.Factory) error {
 	return ctx.NoContent(http.StatusNoContent)
 }
 
-func GetResetPassword(ctx *steranko.Context, factory *domain.Factory) error {
+func GetResetPassword(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
 	return executeDomainTemplate(ctx, factory, "reset-password")
 }
 
-func PostResetPassword(ctx *steranko.Context, factory *domain.Factory) error {
+func PostResetPassword(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
 
 	const location = "handler.PostResetPassword"
 
@@ -107,8 +108,8 @@ func PostResetPassword(ctx *steranko.Context, factory *domain.Factory) error {
 	userService := factory.User()
 	user := model.NewUser()
 
-	if err := userService.LoadByUsernameOrEmail(transaction.EmailAddress, &user); err == nil {
-		userService.SendPasswordResetEmail(&user)
+	if err := userService.LoadByUsernameOrEmail(session, transaction.EmailAddress, &user); err == nil {
+		userService.SendPasswordResetEmail(session, &user)
 	}
 
 	// Return a success message regardless of whether or not the user was found.
@@ -122,7 +123,7 @@ func PostResetPassword(ctx *steranko.Context, factory *domain.Factory) error {
 }
 
 // GetResetCode displays a form (authenticated by the reset code) for resetting a user's password
-func GetResetCode(ctx *steranko.Context, factory *domain.Factory) error {
+func GetResetCode(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
 
 	const location = "handler.GetResetCode"
 
@@ -133,7 +134,7 @@ func GetResetCode(ctx *steranko.Context, factory *domain.Factory) error {
 	userID := ctx.QueryParam("userId")
 	resetCode := ctx.QueryParam("code")
 
-	if err := userService.LoadByToken(userID, &user); err != nil {
+	if err := userService.LoadByToken(session, userID, &user); err != nil {
 		return derp.Wrap(err, location, "Error loading user")
 	}
 
@@ -184,7 +185,7 @@ func GetResetCode(ctx *steranko.Context, factory *domain.Factory) error {
 	return nil
 }
 
-func PostResetCode(ctx *steranko.Context, factory *domain.Factory) error {
+func PostResetCode(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
 
 	// Try to get the transaction data from the request body.
 	var txn struct {
@@ -208,14 +209,14 @@ func PostResetCode(ctx *steranko.Context, factory *domain.Factory) error {
 
 	user := model.NewUser()
 
-	if err := userService.LoadByResetCode(txn.UserID, txn.Code, &user); err != nil {
+	if err := userService.LoadByResetCode(session, txn.UserID, txn.Code, &user); err != nil {
 		return derp.Wrap(err, "handler.GetResetCode", "Error loading user")
 	}
 
 	// Update the user with the new password
 	user.SetPassword(txn.Password)
 
-	if err := userService.Save(&user, "Updated Password"); err != nil {
+	if err := userService.Save(session, &user, "Updated Password"); err != nil {
 		return derp.Wrap(err, "handler.GetResetCode", "Error saving user")
 	}
 

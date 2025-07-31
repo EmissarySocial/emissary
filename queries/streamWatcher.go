@@ -11,10 +11,18 @@ import (
 )
 
 // WatchStreams initiates a mongodb change stream to on every updates to Stream data objects
-func WatchStreams(ctx context.Context, collection data.Collection, result chan<- primitive.ObjectID) {
+func WatchStreams(ctx context.Context, server data.Server, result chan<- primitive.ObjectID) {
+
+	// Connect to the database for as long as our refresh context is active
+	session, err := server.Session(ctx)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, "queries.WatchStreams", "Unable to open database session"))
+		return
+	}
 
 	// Confirm that we're watching a mongo database
-	m := mongoCollection(collection)
+	m := mongoCollection(session.Collection("Stream"))
 
 	if m == nil {
 		return

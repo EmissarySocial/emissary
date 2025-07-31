@@ -25,9 +25,9 @@ type Attachment struct {
  ******************************************/
 
 // NewAttachment returns a fully initialized `Attachment` builder.
-func NewAttachment(factory Factory, request *http.Request, response http.ResponseWriter, template model.Template, attachment *model.Attachment, actionID string) (Attachment, error) {
+func NewAttachment(factory Factory, session data.Session, request *http.Request, response http.ResponseWriter, template model.Template, attachment *model.Attachment, actionID string) (Attachment, error) {
 
-	common, err := NewCommonWithTemplate(factory, request, response, template, attachment, actionID)
+	common, err := NewCommonWithTemplate(factory, session, request, response, template, attachment, actionID)
 
 	if err != nil {
 		return Attachment{}, derp.Wrap(err, "build.NewAttachment", "Error creating new model")
@@ -60,7 +60,7 @@ func (w Attachment) AmFollowing(url string) model.Following {
 
 	// Retrieve following record. Discard errors
 	// nolint:errcheck
-	_ = followingService.LoadByURL(w._authorization.UserID, url, &following)
+	_ = followingService.LoadByURL(w._session, w._authorization.UserID, url, &following)
 
 	// Return the (possibly empty) Following record
 	return following
@@ -183,11 +183,11 @@ func (w Attachment) PageTitle() string {
 }
 
 func (w Attachment) Permalink() string {
-	return w._attachment.CalcURL(w.factory().Host())
+	return w._attachment.CalcURL(w._factory.Host())
 }
 
 func (w Attachment) BasePath() string {
-	return w._attachment.CalcURL(w.factory().Host())
+	return w._attachment.CalcURL(w._factory.Host())
 }
 
 func (w Attachment) UserCan(string) bool {
@@ -218,7 +218,7 @@ func (w Attachment) View(actionID string) (template.HTML, error) {
 	const location = "build.Attachment.View"
 
 	// Create a new builder (this will also validate the user's permissions)
-	subStream, err := NewModel(w._factory, w._request, w._response, w._template, w._attachment, actionID)
+	subStream, err := NewModel(w._factory, w._session, w._request, w._response, w._template, w._attachment, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, location, "Error creating sub-builder")
@@ -233,7 +233,7 @@ func (w Attachment) setState(stateID string) error {
 }
 
 func (w Attachment) clone(action string) (Builder, error) {
-	return NewAttachment(w._factory, w._request, w._response, w._template, w._attachment, action)
+	return NewAttachment(w._factory, w._session, w._request, w._response, w._template, w._attachment, action)
 }
 
 func (w Attachment) debug() {

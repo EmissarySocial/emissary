@@ -22,7 +22,7 @@ type Syndication struct {
 }
 
 // NewSyndication returns a fully initialized `Syndication` builder.
-func NewSyndication(factory Factory, request *http.Request, response http.ResponseWriter, template model.Template, actionID string) (Syndication, error) {
+func NewSyndication(factory Factory, session data.Session, request *http.Request, response http.ResponseWriter, template model.Template, actionID string) (Syndication, error) {
 
 	const location = "build.NewSyndication"
 
@@ -30,7 +30,7 @@ func NewSyndication(factory Factory, request *http.Request, response http.Respon
 	domain := factory.Domain().Get()
 
 	// Create the common Builder
-	common, err := NewCommonWithTemplate(factory, request, response, template, domain, actionID)
+	common, err := NewCommonWithTemplate(factory, session, request, response, template, domain, actionID)
 
 	if err != nil {
 		return Syndication{}, derp.Wrap(err, location, "Error creating common builder")
@@ -80,7 +80,7 @@ func (w Syndication) View(actionID string) (template.HTML, error) {
 
 	const location = "build.Syndication.View"
 
-	builder, err := NewSyndication(w._factory, w._request, w._response, w._template, actionID)
+	builder, err := NewSyndication(w._factory, w._session, w._request, w._response, w._template, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, location, "Error creating Group builder")
@@ -131,7 +131,7 @@ func (w Syndication) PageTitle() string {
 }
 
 func (w Syndication) clone(action string) (Builder, error) {
-	return NewSyndication(w._factory, w._request, w._response, w._template, action)
+	return NewSyndication(w._factory, w._session, w._request, w._response, w._template, action)
 }
 
 func (w Syndication) debug() {

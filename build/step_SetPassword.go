@@ -48,7 +48,7 @@ func (step StepSetPassword) Post(builder Builder, _ io.Writer) PipelineBehavior 
 	userService := factory.User()
 	user := model.NewUser()
 
-	if err := userService.LoadByID(authorization.UserID, &user); err != nil {
+	if err := userService.LoadByID(builder.session(), authorization.UserID, &user); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error loading user"))
 	}
 
@@ -58,7 +58,7 @@ func (step StepSetPassword) Post(builder Builder, _ io.Writer) PipelineBehavior 
 	}
 
 	// Save the User back to the database
-	if err := userService.Save(&user, "Password changed"); err != nil {
+	if err := userService.Save(builder.session(), &user, "Password changed"); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error saving user"))
 	}
 

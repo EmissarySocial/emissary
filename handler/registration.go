@@ -8,13 +8,14 @@ import (
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/honeypot"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/steranko"
 	"github.com/golang-jwt/jwt/v5"
 )
 
 // GetRegister generates an echo.HandlerFunc that handles GET /register requests
-func GetRegister(ctx *steranko.Context, factory *domain.Factory, domain *model.Domain, registration *model.Registration) error {
+func GetRegister(ctx *steranko.Context, factory *domain.Factory, session data.Session, domain *model.Domain, registration *model.Registration) error {
 
 	const location = "handler.GetRegister"
 
@@ -33,14 +34,14 @@ func GetRegister(ctx *steranko.Context, factory *domain.Factory, domain *model.D
 	}
 
 	// Return a response to the client
-	if err := build.AsHTML(factory, ctx, b, build.ActionMethodGet); err != nil {
+	if err := build.AsHTML(ctx, factory, b, build.ActionMethodGet); err != nil {
 		return derp.Wrap(err, location, "Error building HTML")
 	}
 
 	return nil
 }
 
-func PostRegister(ctx *steranko.Context, factory *domain.Factory, domain *model.Domain, registration *model.Registration) error {
+func PostRegister(ctx *steranko.Context, factory *domain.Factory, session data.Session, domain *model.Domain, registration *model.Registration) error {
 
 	const location = "handler.PostPreRegister"
 
@@ -59,7 +60,7 @@ func PostRegister(ctx *steranko.Context, factory *domain.Factory, domain *model.
 	}
 
 	// Validate the transaction
-	if err := factory.Registration().Validate(factory.User(), domain, txn); err != nil {
+	if err := factory.Registration().Validate(session, factory.User(), domain, txn); err != nil {
 		derp.Report(derp.Wrap(err, location, "Error validating registration"))
 		return inlineError(ctx, derp.Message(derp.RootCause(err)))
 	}
@@ -76,7 +77,7 @@ func PostRegister(ctx *steranko.Context, factory *domain.Factory, domain *model.
 		return derp.Wrap(err, location, "Error creating Builder")
 	}
 
-	if err := build.AsHTML(factory, ctx, b, build.ActionMethodGet); err != nil {
+	if err := build.AsHTML(ctx, factory, b, build.ActionMethodGet); err != nil {
 		return derp.Wrap(err, location, "Error building HTML")
 	}
 
@@ -85,7 +86,7 @@ func PostRegister(ctx *steranko.Context, factory *domain.Factory, domain *model.
 }
 
 // GetCompleteRegistration finalizes a registration request by processing a JWT token passed from the confirmation email to the query string.
-func GetCompleteRegistration(ctx *steranko.Context, factory *domain.Factory, domain *model.Domain, registration *model.Registration) error {
+func GetCompleteRegistration(ctx *steranko.Context, factory *domain.Factory, session data.Session, domain *model.Domain, registration *model.Registration) error {
 
 	const location = "handler.GetCompleteRegistration"
 
@@ -107,13 +108,13 @@ func GetCompleteRegistration(ctx *steranko.Context, factory *domain.Factory, dom
 	txn := model.ParseRegistrationFromClaims(claims)
 
 	// Validate the registration transaction
-	if err := factory.Registration().Validate(factory.User(), domain, txn); err != nil {
+	if err := factory.Registration().Validate(session, factory.User(), domain, txn); err != nil {
 		return derp.Wrap(err, location, "Error validating registration")
 	}
 
 	// Register the new User
 	registrationService := factory.Registration()
-	user, err := registrationService.Register(factory.Group(), factory.User(), domain, txn)
+	user, err := registrationService.Register(session, factory.Group(), factory.User(), domain, txn)
 
 	if err != nil {
 		event := map[string]any{"eventValidatorError": "Could not register this account. Please try again."}
@@ -131,7 +132,7 @@ func GetCompleteRegistration(ctx *steranko.Context, factory *domain.Factory, dom
 }
 
 // PostUpdateRegistration generates an echo.HandlerFunc that handles POST /register requests
-func PostUpdateRegistration(ctx *steranko.Context, factory *domain.Factory, domain *model.Domain, registration *model.Registration) error {
+func PostUpdateRegistration(ctx *steranko.Context, factory *domain.Factory, session data.Session, domain *model.Domain, registration *model.Registration) error {
 
 	const location = "handler.PostRegister"
 
@@ -166,7 +167,7 @@ func PostUpdateRegistration(ctx *steranko.Context, factory *domain.Factory, doma
 	// Update the User' registration
 	registrationService := factory.Registration()
 
-	if err := registrationService.UpdateRegistration(factory.Group(), factory.User(), domain, userInfo.Source, userInfo.SourceID, txn); err != nil {
+	if err := registrationService.UpdateRegistration(session, factory.Group(), factory.User(), domain, userInfo.Source, userInfo.SourceID, txn); err != nil {
 		return derp.Wrap(err, location, "Error updating user registration")
 	}
 

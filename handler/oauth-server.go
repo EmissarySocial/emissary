@@ -5,115 +5,97 @@ import (
 	"net/url"
 
 	"github.com/EmissarySocial/emissary/build"
+	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/server"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/html"
+	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func GetOAuthAuthorization(serverFactory *server.Factory) echo.HandlerFunc {
+func GetOAuthAuthorization(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
 
 	const location = "handler.GetOAuthAuthorization"
 
-	return func(ctx echo.Context) error {
+	// Collect the query parameters
+	transaction := model.NewOAuthAuthorizationRequest()
 
-		// Collect the query parameters
-		transaction := model.NewOAuthAuthorizationRequest()
-
-		if err := ctx.Bind(&transaction); err != nil {
-			return derp.Wrap(err, location, "Error binding query parameters")
-		}
-
-		// Locate the current domain
-		factory, err := serverFactory.ByContext(ctx)
-
-		if err != nil {
-			return derp.InternalError(location, "Invalid Domain.")
-		}
-
-		// Load the OAuth Builder
-		builder, err := build.NewOAuthAuthorization(factory, transaction)
-
-		if err != nil {
-			return derp.Wrap(err, location, "Error Generating Builder")
-		}
-
-		// Render the template
-		template := factory.Domain().Theme().HTMLTemplate
-
-		if err := template.ExecuteTemplate(ctx.Response(), "oauth", builder); err != nil {
-			return derp.Wrap(err, location, "Error executing template")
-		}
-
-		return nil
+	if err := ctx.Bind(&transaction); err != nil {
+		return derp.Wrap(err, location, "Error binding query parameters")
 	}
+
+	// Load the OAuth Builder
+	builder, err := build.NewOAuthAuthorization(factory, transaction)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error Generating Builder")
+	}
+
+	// Render the template
+	template := factory.Domain().Theme().HTMLTemplate
+
+	if err := template.ExecuteTemplate(ctx.Response(), "oauth", builder); err != nil {
+		return derp.Wrap(err, location, "Error executing template")
+	}
+
+	return nil
 }
 
-func PostOAuthAuthorization(serverFactory *server.Factory) echo.HandlerFunc {
+func PostOAuthAuthorization(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
 
 	const location = "handler.PostOAuthAuthorization"
 
-	return func(ctx echo.Context) error {
+	// Collect Form parameters
+	transaction := model.NewOAuthAuthorizationRequest()
 
-		// Collect Form parameters
-		transaction := model.NewOAuthAuthorizationRequest()
-
-		if err := ctx.Bind(&transaction); err != nil {
-			return derp.Wrap(err, location, "Invalid form parameters")
-		}
-
-		// Convert the ClientID
-		clientID, err := primitive.ObjectIDFromHex(transaction.ClientID)
-
-		if err != nil {
-			return derp.Wrap(err, location, "Invalid client_id")
-		}
-
-		// Locate the current domain
-		factory, err := serverFactory.ByContext(ctx)
-
-		if err != nil {
-			return derp.InternalError(location, "Invalid Domain.")
-		}
-
-		// Get Authorization
-		authorization := getAuthorization(ctx)
-
-		// Get Application
-		clientService := factory.OAuthClient()
-		application := model.NewOAuthClient()
-
-		if err := clientService.LoadByClientID(clientID, &application); err != nil {
-			return derp.Wrap(err, location, "Error loading OAuth Application")
-		}
-
-		// Validate the transaction
-		if err := transaction.Validate(application); err != nil {
-			return derp.Wrap(err, location, "Invalid transaction")
-		}
-
-		// Create a UserToken
-		userTokenService := factory.OAuthUserToken()
-		userToken, err := userTokenService.Create(application, authorization, transaction)
-
-		if err != nil {
-			return derp.Wrap(err, location, "Error creating OAuthUserToken")
-		}
-
-		// Complete the transaction based on the grant type
-		switch transaction.ResponseType {
-
-		case "code":
-			return postOAuthAuthorization_code(ctx, userToken, transaction)
-
-		case "token":
-			return postOAuthAuthorization_token(ctx, userToken, transaction)
-		}
-
-		return derp.BadRequestError(location, "Invalid response type", transaction.ResponseType)
+	if err := ctx.Bind(&transaction); err != nil {
+		return derp.Wrap(err, location, "Invalid form parameters")
 	}
+
+	// Convert the ClientID
+	clientID, err := primitive.ObjectIDFromHex(transaction.ClientID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Invalid client_id")
+	}
+
+	// Get Authorization
+	authorization := getAuthorization(ctx)
+
+	// Get Application
+	clientService := factory.OAuthClient()
+	application := model.NewOAuthClient()
+
+	if err := clientService.LoadByClientID(session, clientID, &application); err != nil {
+		return derp.Wrap(err, location, "Error loading OAuth Application")
+	}
+
+	// Validate the transaction
+	if err := transaction.Validate(application); err != nil {
+		return derp.Wrap(err, location, "Invalid transaction")
+	}
+
+	// Create a UserToken
+	userTokenService := factory.OAuthUserToken()
+	userToken, err := userTokenService.Create(session, application, authorization, transaction)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error creating OAuthUserToken")
+	}
+
+	// Complete the transaction based on the grant type
+	switch transaction.ResponseType {
+
+	case "code":
+		return postOAuthAuthorization_code(ctx, userToken, transaction)
+
+	case "token":
+		return postOAuthAuthorization_token(ctx, userToken, transaction)
+	}
+
+	return derp.BadRequestError(location, "Invalid response type", transaction.ResponseType)
 }
 
 // postOAuthAuthorization_code handles `code` grant types used by server authentication flow
@@ -174,98 +156,78 @@ func postOAuthAuthorization_token(ctx echo.Context, userToken model.OAuthUserTok
 	return ctx.Redirect(http.StatusFound, redirectURI.String())
 }
 
-func PostOAuthToken(serverFactory *server.Factory) echo.HandlerFunc {
+func PostOAuthToken(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
 
 	const location = "handler.PostOAuthToken"
 
-	return func(ctx echo.Context) error {
+	// Collect transaction data
+	transaction := model.NewOAuthUserTokenRequest()
 
-		// Collect transaction data
-		transaction := model.NewOAuthUserTokenRequest()
-
-		if err := ctx.Bind(&transaction); err != nil {
-			return derp.Wrap(err, location, "Invalid form parameters")
-		}
-
-		// Convert client ID
-		clientID, err := primitive.ObjectIDFromHex(transaction.ClientID)
-
-		if err != nil {
-			return derp.Wrap(err, location, "Invalid client_id")
-		}
-
-		// Convert transaction.Code => userToken
-		userTokenID, err := primitive.ObjectIDFromHex(transaction.Code)
-
-		if err != nil {
-			return derp.Wrap(err, location, "Invalid code")
-		}
-
-		// Locate the domain factory
-		factory, err := serverFactory.ByContext(ctx)
-
-		if err != nil {
-			return derp.Wrap(err, location, "Invalid Domain.")
-		}
-
-		// Load the UserToken
-		userTokenService := factory.OAuthUserToken()
-		userToken := model.NewOAuthUserToken()
-
-		if err := userTokenService.LoadByClientAndCode(userTokenID, clientID, transaction.ClientSecret, &userToken); err != nil {
-			return derp.Wrap(err, location, "Error loading OAuthUserToken")
-		}
-
-		// Return the Token as JSON
-		return ctx.JSON(http.StatusOK, userToken.JSONResponse())
+	if err := ctx.Bind(&transaction); err != nil {
+		return derp.Wrap(err, location, "Invalid form parameters")
 	}
+
+	// Convert client ID
+	clientID, err := primitive.ObjectIDFromHex(transaction.ClientID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Invalid client_id")
+	}
+
+	// Convert transaction.Code => userToken
+	userTokenID, err := primitive.ObjectIDFromHex(transaction.Code)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Invalid code")
+	}
+
+	// Load the UserToken
+	userTokenService := factory.OAuthUserToken()
+	userToken := model.NewOAuthUserToken()
+
+	if err := userTokenService.LoadByClientAndCode(session, userTokenID, clientID, transaction.ClientSecret, &userToken); err != nil {
+		return derp.Wrap(err, location, "Error loading OAuthUserToken")
+	}
+
+	// Return the Token as JSON
+	return ctx.JSON(http.StatusOK, userToken.JSONResponse())
 }
 
-func PostOAuthRevoke(serverFactory *server.Factory) echo.HandlerFunc {
+func PostOAuthRevoke(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
 
 	const location = "handler.PostOAuthRevoke"
 
-	return func(ctx echo.Context) error {
+	// Collect transaction data
+	transaction := model.NewOAuthUserTokenRevokeRequest()
 
-		// Collect transaction data
-		transaction := model.NewOAuthUserTokenRevokeRequest()
-
-		if err := ctx.Bind(&transaction); err != nil {
-			return derp.Wrap(err, location, "Invalid form parameters")
-		}
-
-		// Convert clientID
-		clientID, err := primitive.ObjectIDFromHex(transaction.ClientID)
-
-		if err != nil {
-			return derp.Wrap(err, location, "Invalid client_id")
-		}
-
-		// Locate the domain factory
-		factory, err := serverFactory.ByContext(ctx)
-
-		if err != nil {
-			return derp.Wrap(err, location, "Invalid Domain.")
-		}
-
-		// Load the UserToken
-		userTokenService := factory.OAuthUserToken()
-		userToken := model.NewOAuthUserToken()
-
-		err = userTokenService.LoadByClientAndToken(clientID, transaction.ClientSecret, transaction.Token, &userToken)
-
-		if derp.IsNotFound(err) {
-			return nil
-		}
-
-		if err != nil {
-			return derp.Wrap(err, location, "Error loading OAuthUserToken")
-		}
-
-		if err := userTokenService.Delete(&userToken, "Revoked by Client"); err != nil {
-			return derp.Wrap(err, location, "Error deleting OAuthUserToken")
-		}
-
-		return ctx.JSON(http.StatusOK, map[string]any{})
+	if err := ctx.Bind(&transaction); err != nil {
+		return derp.Wrap(err, location, "Invalid form parameters")
 	}
+
+	// Convert clientID
+	clientID, err := primitive.ObjectIDFromHex(transaction.ClientID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Invalid client_id")
+	}
+
+	// Load the UserToken
+	userTokenService := factory.OAuthUserToken()
+	userToken := model.NewOAuthUserToken()
+
+	err = userTokenService.LoadByClientAndToken(session, clientID, transaction.ClientSecret, transaction.Token, &userToken)
+
+	if derp.IsNotFound(err) {
+		return nil
+	}
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error loading OAuthUserToken")
+	}
+
+	if err := userTokenService.Delete(session, &userToken, "Revoked by Client"); err != nil {
+		return derp.Wrap(err, location, "Error deleting OAuthUserToken")
+	}
+
+	return ctx.JSON(http.StatusOK, map[string]any{})
 }

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/domain"
 	"github.com/benpate/hannibal"
@@ -24,7 +25,7 @@ import (
  ******************************************/
 
 // Publish adds an OutboxMessage to the Actor's Outbox and sends notifications to all Followers.
-func (service *Outbox) Publish(actorType string, actorID primitive.ObjectID, activity streams.Document, permissions model.Permissions) error {
+func (service *Outbox) Publish(session data.Session, actorType string, actorID primitive.ObjectID, activity streams.Document, permissions model.Permissions) error {
 
 	// TODO: This should become a background process.
 
@@ -34,7 +35,7 @@ func (service *Outbox) Publish(actorType string, actorID primitive.ObjectID, act
 	}
 
 	// Generate an Actor for the Outbox
-	actor, err := service.getActor(actorType, actorID)
+	actor, err := service.getActor(session, actorType, actorID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Unable to get Actor", actorType, actorID)
@@ -49,13 +50,13 @@ func (service *Outbox) Publish(actorType string, actorID primitive.ObjectID, act
 	outboxMessage.ActivityURL = activity.ID()
 	outboxMessage.Permissions = permissions
 
-	if err := service.Save(&outboxMessage, "Publishing"); err != nil {
+	if err := service.Save(session, &outboxMessage, "Publishing"); err != nil {
 		return derp.Wrap(err, location, "Error saving outbox message", outboxMessage)
 	}
 
 	// Get All Followers for this Actor and Addressees
 	recipients := joinIterators(
-		service.followerService.RangeFollowers(actorType, actorID),
+		service.followerService.RangeFollowers(session, actorType, actorID),
 		service.addresseesAsFollowers(activity.RangeAddressees()),
 		service.addresseesAsFollowers(activity.RangeInReplyTo()),
 		// TODO: service.webMentionsAsFollowers(activity),
@@ -76,13 +77,13 @@ func (service *Outbox) Publish(actorType string, actorID primitive.ObjectID, act
 		}
 
 		// RULE: Do not send to blocked Followers
-		if !ruleFilter.AllowSend(follower.Actor.ProfileURL) {
+		if !ruleFilter.AllowSend(session, follower.Actor.ProfileURL) {
 			log.Trace().Msg("Follower blocked by rule filter: " + follower.Actor.ProfileURL)
 			continue
 		}
 
 		// RULE: Do not send to Followers who do not have permissions to view this activity
-		if !service.identityService.HasPermissions(follower.Method, follower.Actor.ProfileURL, permissions) {
+		if !service.identityService.HasPermissions(session, follower.Method, follower.Actor.ProfileURL, permissions) {
 			log.Trace().Msg("Follower does not have permissions to view this activity: " + follower.Actor.ProfileURL)
 			continue
 		}
@@ -114,28 +115,28 @@ func (service *Outbox) Publish(actorType string, actorID primitive.ObjectID, act
 	return nil
 }
 
-func (service *Outbox) DeleteActivity(actorType string, actorID primitive.ObjectID, objectID string, permissions model.Permissions) error {
-	return service.unpublish(actorType, actorID, vocab.ActivityTypeDelete, objectID, permissions)
+func (service *Outbox) DeleteActivity(session data.Session, actorType string, actorID primitive.ObjectID, objectID string, permissions model.Permissions) error {
+	return service.unpublish(session, actorType, actorID, vocab.ActivityTypeDelete, objectID, permissions)
 }
 
-func (service *Outbox) UndoActivity(actorType string, actorID primitive.ObjectID, objectID string, permissions model.Permissions) error {
-	return service.unpublish(actorType, actorID, vocab.ActivityTypeUndo, objectID, permissions)
+func (service *Outbox) UndoActivity(session data.Session, actorType string, actorID primitive.ObjectID, objectID string, permissions model.Permissions) error {
+	return service.unpublish(session, actorType, actorID, vocab.ActivityTypeUndo, objectID, permissions)
 }
 
 // UnPublish deletes an OutboxMessage from the Outbox, and sends notifications to all Followers
-func (service *Outbox) unpublish(actorType string, actorID primitive.ObjectID, activityType string, objectID string, permissions model.Permissions) error {
+func (service *Outbox) unpublish(session data.Session, actorType string, actorID primitive.ObjectID, activityType string, objectID string, permissions model.Permissions) error {
 
 	const location = "service.Outbox.unpublish"
 
 	// Generate an Actor for the Outbox
-	actor, err := service.getActor(actorType, actorID)
+	actor, err := service.getActor(session, actorType, actorID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Unable to get Actor", actorType, actorID)
 	}
 
 	// Find all activities in the outbox related to this activity
-	activities, err := service.RangeByObjectID(actorType, actorID, objectID)
+	activities, err := service.RangeByObjectID(session, actorType, actorID, objectID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Unable to load outbox activity", objectID)
@@ -145,7 +146,7 @@ func (service *Outbox) unpublish(actorType string, actorID primitive.ObjectID, a
 	for activity := range activities {
 
 		// Delete the Activity from the User's Outbox
-		if err := service.Delete(&activity, "Un-Publishing"); err != nil {
+		if err := service.Delete(session, &activity, "Un-Publishing"); err != nil {
 			return derp.Wrap(err, location, "Unable to delete outbox activity", activity)
 		}
 	}
@@ -162,22 +163,22 @@ func (service *Outbox) unpublish(actorType string, actorID primitive.ObjectID, a
 	})
 
 	// Publish the "Delete" activity to the Outbox
-	if err := service.Publish(actorType, actorID, document, permissions); err != nil {
+	if err := service.Publish(session, actorType, actorID, document, permissions); err != nil {
 		return derp.Wrap(err, location, "Unable to publish DELETE activity", objectID)
 	}
 
 	return nil
 }
 
-func (service *Outbox) getActor(actorType string, actorID primitive.ObjectID) (outbox.Actor, error) {
+func (service *Outbox) getActor(session data.Session, actorType string, actorID primitive.ObjectID) (outbox.Actor, error) {
 
 	switch actorType {
 
 	case model.FollowerTypeUser:
-		return service.userService.ActivityPubActor(actorID)
+		return service.userService.ActivityPubActor(session, actorID)
 
 	case model.FollowerTypeStream:
-		return service.streamService.ActivityPubActor(actorID)
+		return service.streamService.ActivityPubActor(session, actorID)
 
 	case model.FollowerTypeApplication:
 

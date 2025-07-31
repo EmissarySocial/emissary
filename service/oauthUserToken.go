@@ -13,7 +13,6 @@ import (
 
 // OAuthUserToken manages all interactions with the OAuthUserToken collection
 type OAuthUserToken struct {
-	collection         data.Collection
 	oauthClientService *OAuthClient
 	jwtService         *JWT
 	host               string
@@ -29,8 +28,7 @@ func NewOAuthUserToken() OAuthUserToken {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *OAuthUserToken) Refresh(collection data.Collection, oauthClientService *OAuthClient, jwtService *JWT, host string) {
-	service.collection = collection
+func (service *OAuthUserToken) Refresh(oauthClientService *OAuthClient, jwtService *JWT, host string) {
 	service.oauthClientService = oauthClientService
 	service.jwtService = jwtService
 	service.host = host
@@ -45,27 +43,31 @@ func (service *OAuthUserToken) Close() {
  * Common Data Methods
  ******************************************/
 
+func (service *OAuthUserToken) collection(session data.Session) data.Collection {
+	return session.Collection("OAuthUserToken")
+}
+
 // Count returns the number of records that match the provided criteria
-func (service *OAuthUserToken) Count(criteria exp.Expression) (int64, error) {
-	return service.collection.Count(notDeleted(criteria))
+func (service *OAuthUserToken) Count(session data.Session, criteria exp.Expression) (int64, error) {
+	return service.collection(session).Count(notDeleted(criteria))
 }
 
 // Query returns an slice containing all of the OAuthUserTokens that match the provided criteria
-func (service *OAuthUserToken) Query(criteria exp.Expression, options ...option.Option) ([]model.OAuthUserToken, error) {
+func (service *OAuthUserToken) Query(session data.Session, criteria exp.Expression, options ...option.Option) ([]model.OAuthUserToken, error) {
 	result := make([]model.OAuthUserToken, 0)
-	err := service.collection.Query(&result, notDeleted(criteria), options...)
+	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
 	return result, err
 }
 
 // Iterator returns an iterator containing all of the OAuthUserTokens that match the provided criteria
-func (service *OAuthUserToken) Iterator(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection.Iterator(notDeleted(criteria), options...)
+func (service *OAuthUserToken) Iterator(session data.Session, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+	return service.collection(session).Iterator(notDeleted(criteria), options...)
 }
 
 // Load retrieves an OAuthUserToken from the database
-func (service *OAuthUserToken) Load(criteria exp.Expression, application *model.OAuthUserToken) error {
+func (service *OAuthUserToken) Load(session data.Session, criteria exp.Expression, application *model.OAuthUserToken) error {
 
-	if err := service.collection.Load(notDeleted(criteria), application); err != nil {
+	if err := service.collection(session).Load(notDeleted(criteria), application); err != nil {
 		return derp.Wrap(err, "service.OAuthUserToken", "Error loading OAuthUserToken", criteria)
 	}
 
@@ -73,17 +75,17 @@ func (service *OAuthUserToken) Load(criteria exp.Expression, application *model.
 }
 
 // Save adds/updates an OAuthUserToken in the database
-func (service *OAuthUserToken) Save(application *model.OAuthUserToken, note string) error {
+func (service *OAuthUserToken) Save(session data.Session, application *model.OAuthUserToken, note string) error {
 
 	const location = "service.OAuthUserToken"
 
 	// Validate the value (using the global application schema) before saving
 	if err := service.Schema().Validate(application); err != nil {
-		return derp.Wrap(err, "service.OAuthUserToken.Save", "Error validating OAuthUserToken using OAuthUserTokenSchema", application)
+		return derp.Wrap(err, location, "Error validating OAuthUserToken using OAuthUserTokenSchema", application)
 	}
 
 	// Try to save the OAuthUserToken to the database
-	if err := service.collection.Save(application, note); err != nil {
+	if err := service.collection(session).Save(application, note); err != nil {
 		return derp.Wrap(err, location, "Error saving OAuthUserToken", application, note)
 	}
 
@@ -91,10 +93,10 @@ func (service *OAuthUserToken) Save(application *model.OAuthUserToken, note stri
 }
 
 // Delete removes an OAuthUserToken from the database (virtual delete)
-func (service *OAuthUserToken) Delete(application *model.OAuthUserToken, note string) error {
+func (service *OAuthUserToken) Delete(session data.Session, application *model.OAuthUserToken, note string) error {
 
 	// Delete this OAuthUserToken
-	if err := service.collection.Delete(application, note); err != nil {
+	if err := service.collection(session).Delete(application, note); err != nil {
 		return derp.Wrap(err, "service.OAuthUserToken.Delete", "Error deleting OAuthUserToken", application, note)
 	}
 
@@ -103,19 +105,21 @@ func (service *OAuthUserToken) Delete(application *model.OAuthUserToken, note st
 }
 
 // DeleteMany removes all child streams from the provided stream (virtual delete)
-func (service *OAuthUserToken) DeleteMany(criteria exp.Expression, note string) error {
+func (service *OAuthUserToken) DeleteMany(session data.Session, criteria exp.Expression, note string) error {
 
-	it, err := service.Iterator(criteria)
+	const location = "service.OAuthUserToken.DeleteMany"
+
+	it, err := service.Iterator(session, criteria)
 
 	if err != nil {
-		return derp.Wrap(err, "service.Stream.Delete", "Error listing streams to delete", criteria)
+		return derp.Wrap(err, location, "Error listing streams to delete", criteria)
 	}
 
 	userToken := model.NewOAuthUserToken()
 
 	for it.Next(&userToken) {
-		if err := service.Delete(&userToken, note); err != nil {
-			return derp.Wrap(err, "service.Stream.Delete", "Error deleting stream", userToken)
+		if err := service.Delete(session, &userToken, note); err != nil {
+			return derp.Wrap(err, location, "Error deleting stream", userToken)
 		}
 		userToken = model.NewOAuthUserToken()
 	}
@@ -131,49 +135,49 @@ func (service *OAuthUserToken) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
-func (service *OAuthUserToken) LoadByUserAndClient(userID primitive.ObjectID, clientID primitive.ObjectID, result *model.OAuthUserToken) error {
+func (service *OAuthUserToken) LoadByUserAndClient(session data.Session, userID primitive.ObjectID, clientID primitive.ObjectID, result *model.OAuthUserToken) error {
 
 	criteria := exp.Equal("userId", userID).
 		AndEqual("clientId", clientID)
 
-	return service.Load(criteria, result)
+	return service.Load(session, criteria, result)
 }
 
-func (service *OAuthUserToken) LoadByClientAndCode(userTokenID primitive.ObjectID, clientID primitive.ObjectID, clientSecret string, result *model.OAuthUserToken) error {
+func (service *OAuthUserToken) LoadByClientAndCode(session data.Session, userTokenID primitive.ObjectID, clientID primitive.ObjectID, clientSecret string, result *model.OAuthUserToken) error {
 
 	// RULE: must have a valid clientSecret to load this record
-	if err := service.oauthClientService.ValidateClientSecret(clientID, clientSecret); err != nil {
+	if err := service.oauthClientService.ValidateClientSecret(session, clientID, clientSecret); err != nil {
 		return derp.Wrap(err, "service.OAuthUserToken.LoadByClientAndToken", "Invalid client secret")
 	}
 
 	criteria := exp.Equal("_id", userTokenID).
 		AndEqual("clientId", clientID)
 
-	return service.Load(criteria, result)
+	return service.Load(session, criteria, result)
 }
 
-func (service *OAuthUserToken) LoadByClientAndToken(clientID primitive.ObjectID, clientSecret string, token string, result *model.OAuthUserToken) error {
+func (service *OAuthUserToken) LoadByClientAndToken(session data.Session, clientID primitive.ObjectID, clientSecret string, token string, result *model.OAuthUserToken) error {
 
 	// RULE: must have a valid clientSecret to load this record
-	if err := service.oauthClientService.ValidateClientSecret(clientID, clientSecret); err != nil {
+	if err := service.oauthClientService.ValidateClientSecret(session, clientID, clientSecret); err != nil {
 		return derp.Wrap(err, "service.OAuthUserToken.LoadByClientAndToken", "Invalid client secret")
 	}
 
 	criteria := exp.Equal("clientId", clientID).
 		AndEqual("token", token)
 
-	return service.Load(criteria, result)
+	return service.Load(session, criteria, result)
 }
 
 /******************************************
  * Custom Methods
  ******************************************/
 
-func (service *OAuthUserToken) CreateFromUser(user *model.User, clientID primitive.ObjectID, scope string) (model.OAuthUserToken, error) {
+func (service *OAuthUserToken) CreateFromUser(session data.Session, user *model.User, clientID primitive.ObjectID, scope string) (model.OAuthUserToken, error) {
 
 	// Load the client from the database
 	client := model.NewOAuthClient()
-	if err := service.oauthClientService.LoadByClientID(clientID, &client); err != nil {
+	if err := service.oauthClientService.LoadByClientID(session, clientID, &client); err != nil {
 		return model.OAuthUserToken{}, derp.Wrap(err, "service.OAuthUserToken.CreateFromUser", "Error loading client", clientID)
 	}
 
@@ -192,11 +196,11 @@ func (service *OAuthUserToken) CreateFromUser(user *model.User, clientID primiti
 	txn.ResponseType = "token"
 
 	// Create and return the Token
-	return service.Create(client, authorization, txn)
+	return service.Create(session, client, authorization, txn)
 }
 
 // Create creates a new OAuthUserToken for the provided application and authorization
-func (service *OAuthUserToken) Create(client model.OAuthClient, authorization model.Authorization, transaction model.OAuthAuthorizationRequest) (model.OAuthUserToken, error) {
+func (service *OAuthUserToken) Create(session data.Session, client model.OAuthClient, authorization model.Authorization, transaction model.OAuthAuthorizationRequest) (model.OAuthUserToken, error) {
 
 	const location = "service.OAuthUserToken.Create"
 
@@ -212,7 +216,7 @@ func (service *OAuthUserToken) Create(client model.OAuthClient, authorization mo
 
 	// If we already have a token for this user/client, then just return that.
 	result := model.NewOAuthUserToken()
-	if err := service.LoadByUserAndClient(authorization.UserID, client.ClientID, &result); err == nil {
+	if err := service.LoadByUserAndClient(session, authorization.UserID, client.ClientID, &result); err == nil {
 		return result, nil
 	}
 
@@ -231,16 +235,16 @@ func (service *OAuthUserToken) Create(client model.OAuthClient, authorization mo
 	result.APIUser = true
 
 	// Save the result to the database
-	if err := service.Save(&result, "Create"); err != nil {
+	if err := service.Save(session, &result, "Create"); err != nil {
 		return model.OAuthUserToken{}, derp.Wrap(err, location, "Error saving OAuthUserToken", result)
 	}
 
 	return result, nil
 }
 
-func (service *OAuthUserToken) DeleteByClient(clientID primitive.ObjectID, note string) error {
+func (service *OAuthUserToken) DeleteByClient(session data.Session, clientID primitive.ObjectID, note string) error {
 	criteria := exp.Equal("clientId", clientID)
-	return service.DeleteMany(criteria, note)
+	return service.DeleteMany(session, criteria, note)
 }
 
 // JWT encodes an OAuthUserToken as a new JWT.

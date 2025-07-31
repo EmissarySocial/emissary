@@ -13,7 +13,6 @@ import (
 
 // StreamDraft manages all interactions with the StreamDraft collection
 type StreamDraft struct {
-	collection      data.Collection
 	templateService *Template
 	streamService   *Stream
 }
@@ -28,8 +27,7 @@ func NewStreamDraft() StreamDraft {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *StreamDraft) Refresh(collection data.Collection, templateService *Template, streamService *Stream) {
-	service.collection = collection
+func (service *StreamDraft) Refresh(templateService *Template, streamService *Stream) {
 	service.templateService = templateService
 	service.streamService = streamService
 }
@@ -43,9 +41,9 @@ func (service *StreamDraft) Close() {
  * Common Data Methods
  ******************************************/
 
-/******************************************
- * COMMON DATA FUNCTIONS
- ******************************************/
+func (service *StreamDraft) collection(session data.Session) data.Collection {
+	return session.Collection("StreamDraft")
+}
 
 // New creates a newly initialized StreamDraft that is ready to use
 func (service *StreamDraft) New() model.Stream {
@@ -53,17 +51,17 @@ func (service *StreamDraft) New() model.Stream {
 }
 
 // Count returns the number of records that match the provided criteria
-func (service *StreamDraft) Count(criteria exp.Expression) (int64, error) {
-	return service.collection.Count(notDeleted(criteria))
+func (service *StreamDraft) Count(session data.Session, criteria exp.Expression) (int64, error) {
+	return service.collection(session).Count(notDeleted(criteria))
 }
 
 // Load either: 1) loads a valid draft from the database, or 2) creates a new draft and returns it instead
-func (service *StreamDraft) Load(criteria exp.Expression, result *model.Stream) error {
+func (service *StreamDraft) Load(session data.Session, criteria exp.Expression, result *model.Stream) error {
 
 	const location = "service.StreamDraft.Load"
 
 	// Try to load a draft using the provided criteria
-	if err := service.collection.Load(criteria, result); err == nil {
+	if err := service.collection(session).Load(criteria, result); err == nil {
 		return nil
 	} else if !derp.IsNotFound(err) {
 		derp.Report(derp.Wrap(err, location, "Error loading StreamDraft"))
@@ -72,7 +70,7 @@ func (service *StreamDraft) Load(criteria exp.Expression, result *model.Stream) 
 	// Fall through means we could not load a draft (probably 404 not found)
 
 	// Try to locate the original stream
-	if err := service.streamService.Load(criteria, result); err != nil {
+	if err := service.streamService.Load(session, criteria, result); err != nil {
 		return derp.Wrap(err, location, "Error loading original stream")
 	}
 
@@ -80,7 +78,7 @@ func (service *StreamDraft) Load(criteria exp.Expression, result *model.Stream) 
 	result.Journal = journal.Journal{}
 
 	// Save a draft copy of the original stream
-	if err := service.Save(result, "create draft record"); err != nil {
+	if err := service.Save(session, result, "create draft record"); err != nil {
 		return derp.Wrap(err, location, "Error saving draft", criteria)
 	}
 
@@ -89,7 +87,7 @@ func (service *StreamDraft) Load(criteria exp.Expression, result *model.Stream) 
 }
 
 // save adds/updates an StreamDraft in the database
-func (service *StreamDraft) Save(draft *model.Stream, note string) error {
+func (service *StreamDraft) Save(session data.Session, draft *model.Stream, note string) error {
 
 	const location = "service.StreamDraft.Save"
 
@@ -110,7 +108,7 @@ func (service *StreamDraft) Save(draft *model.Stream, note string) error {
 		return derp.Wrap(err, location, "Error validating Stream using TemplateSchema", draft)
 	}
 
-	if err := service.collection.Save(draft, note); err != nil {
+	if err := service.collection(session).Save(draft, note); err != nil {
 		return derp.Wrap(err, location, "Error saving draft", draft, note)
 	}
 
@@ -118,12 +116,12 @@ func (service *StreamDraft) Save(draft *model.Stream, note string) error {
 }
 
 // Delete removes an StreamDraft from the database (hard delete)
-func (service *StreamDraft) Delete(draft *model.Stream, _note string) error {
+func (service *StreamDraft) Delete(session data.Session, draft *model.Stream, _note string) error {
 
 	criteria := exp.Equal("_id", draft.StreamID)
 
 	// Use a hard delete to remove drafts permanently.
-	if err := service.collection.HardDelete(criteria); err != nil {
+	if err := service.collection(session).HardDelete(criteria); err != nil {
 		return derp.Wrap(err, "service.StreamDraft.Delete", "Error deleting draft", criteria)
 	}
 
@@ -154,26 +152,26 @@ func (service *StreamDraft) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
-func (service *StreamDraft) ObjectQuery(result any, criteria exp.Expression, options ...option.Option) error {
-	return service.collection.Query(result, notDeleted(criteria), options...)
+func (service *StreamDraft) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
+	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
-func (service *StreamDraft) ObjectLoad(criteria exp.Expression) (data.Object, error) {
+func (service *StreamDraft) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewStream()
-	err := service.Load(criteria, &result)
+	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
-func (service *StreamDraft) ObjectSave(object data.Object, comment string) error {
+func (service *StreamDraft) ObjectSave(session data.Session, object data.Object, comment string) error {
 	if stream, ok := object.(*model.Stream); ok {
-		return service.Save(stream, comment)
+		return service.Save(session, stream, comment)
 	}
 	return derp.InternalError("service.StreamDraft.ObjectSave", "Invalid Object Type", object)
 }
 
-func (service *StreamDraft) ObjectDelete(object data.Object, comment string) error {
+func (service *StreamDraft) ObjectDelete(session data.Session, object data.Object, comment string) error {
 	if stream, ok := object.(*model.Stream); ok {
-		return service.Delete(stream, comment)
+		return service.Delete(session, stream, comment)
 	}
 	return derp.InternalError("service.StreamDraft.ObjectDelete", "Invalid Object Type", object)
 }
@@ -191,27 +189,27 @@ func (service *StreamDraft) Schema() schema.Schema {
  ******************************************/
 
 // LoadByID returns a single Stream that matches a particular StreamID
-func (service *StreamDraft) LoadByID(streamID primitive.ObjectID, result *model.Stream) error {
+func (service *StreamDraft) LoadByID(session data.Session, streamID primitive.ObjectID, result *model.Stream) error {
 	criteria := exp.Equal("_id", streamID)
-	return service.Load(criteria, result)
+	return service.Load(session, criteria, result)
 }
 
 /******************************************
  * CUSTOM ACTIONS
  ******************************************/
 
-func (service *StreamDraft) Promote(streamID primitive.ObjectID, stateID string) (model.Stream, error) {
+func (service *StreamDraft) Promote(session data.Session, streamID primitive.ObjectID, stateID string) (model.Stream, error) {
 
 	var draft model.Stream
 	var stream model.Stream
 
 	// Try to load the draft
-	if err := service.LoadByID(streamID, &draft); err != nil {
+	if err := service.LoadByID(session, streamID, &draft); err != nil {
 		return model.Stream{}, derp.Wrap(err, "service.StreamDraft.Publish", "Error loading draft")
 	}
 
 	// Try to load the production stream
-	if err := service.streamService.LoadByID(streamID, &stream); err != nil {
+	if err := service.streamService.LoadByID(session, streamID, &stream); err != nil {
 		return model.Stream{}, derp.Wrap(err, "service.StreamDraft.Publish", "Error loading draft")
 	}
 
@@ -231,12 +229,12 @@ func (service *StreamDraft) Promote(streamID primitive.ObjectID, stateID string)
 	stream.Journal.DeleteDate = 0 // just in case...
 
 	// Try to save the updated stream back to the database
-	if err := service.streamService.Save(&stream, "published"); err != nil {
+	if err := service.streamService.Save(session, &stream, "published"); err != nil {
 		return model.Stream{}, derp.Wrap(err, "service.StreamDraft.Publish", "Error publishing stream")
 	}
 
 	// Try to save the updated stream back to the database
-	if err := service.Delete(&draft, "published"); err != nil {
+	if err := service.Delete(session, &draft, "published"); err != nil {
 		return model.Stream{}, derp.Wrap(err, "service.StreamDraft.Publish", "Error deleting draft")
 	}
 

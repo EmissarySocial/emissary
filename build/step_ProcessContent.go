@@ -46,7 +46,7 @@ func (step StepProcessContent) Post(builder Builder, buffer io.Writer) PipelineB
 	}
 
 	if step.AddTags {
-		streamService.CalculateTags(stream)
+		streamService.CalculateTags(builder.session(), stream)
 		contentService.ApplyTags(&stream.Content, "/search?q=%23", stream.Hashtags)
 	}
 

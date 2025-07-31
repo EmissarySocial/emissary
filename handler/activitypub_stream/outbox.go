@@ -4,59 +4,53 @@ import (
 	"math"
 	"net/http"
 
+	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/handler/activitypub"
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/server"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/convert"
-	"github.com/labstack/echo/v4"
+	"github.com/benpate/steranko"
 )
 
-func GetOutboxCollection(serverFactory *server.Factory) echo.HandlerFunc {
+func GetOutboxCollection(ctx *steranko.Context, factory *domain.Factory, session data.Session, stream *model.Stream, template *model.Template) error {
 
 	const location = "handler.activitypub_stream.GetOutboxCollection"
 
-	return func(ctx echo.Context) error {
+	// Verify the stream is an ActivityPub actor
+	actor := template.Actor
 
-		// Load all of the necessary object from the request
-		factory, _, _, _, stream, actor, err := getActor(serverFactory, ctx)
+	if actor.IsNil() {
+		return derp.NotFoundError(location, "Actor not found")
+	}
 
-		if err != nil {
-			return derp.Wrap(err, location, "Request Not Accepted")
-		}
+	permissions := factory.Permission().ParseHTTPSignature(session, ctx.Request())
 
-		if actor.IsNil() {
-			return derp.NotFoundError(location, "Actor not found")
-		}
+	// If the request is for the collection itself, then return a summary and the URL of the first page
+	publishDateString := ctx.QueryParam("publishDate")
 
-		permissions := factory.Permission().ParseHTTPSignature(ctx.Request())
-
-		// If the request is for the collection itself, then return a summary and the URL of the first page
-		publishDateString := ctx.QueryParam("publishDate")
-
-		if publishDateString == "" {
-			ctx.Response().Header().Set("Content-Type", vocab.ContentTypeActivityPub)
-			result := activitypub.Collection(stream.ActivityPubOutboxURL())
-			return ctx.JSON(http.StatusOK, result)
-		}
-
-		// Fall through means that we're looking for a specific page of the collection
-		publishedDate := convert.Int64Default(publishDateString, math.MaxInt64)
-		pageID := fullURL(factory, ctx)
-		pageSize := 60
-
-		// Retrieve a page of messages from the database
-		outboxService := factory.Outbox()
-		messages, err := outboxService.QueryByParentAndDate(model.FollowerTypeStream, stream.StreamID, permissions, publishedDate, 60)
-
-		if err != nil {
-			return derp.Wrap(err, location, "Error loading outbox messages")
-		}
-
-		// Return results as an OrderedCollectionPage
+	if publishDateString == "" {
 		ctx.Response().Header().Set("Content-Type", vocab.ContentTypeActivityPub)
-		result := activitypub.CollectionPage(pageID, stream.ActivityPubOutboxURL(), pageSize, messages)
+		result := activitypub.Collection(stream.ActivityPubOutboxURL())
 		return ctx.JSON(http.StatusOK, result)
 	}
+
+	// Fall through means that we're looking for a specific page of the collection
+	publishedDate := convert.Int64Default(publishDateString, math.MaxInt64)
+	pageID := fullURL(factory, ctx)
+	pageSize := 60
+
+	// Retrieve a page of messages from the database
+	outboxService := factory.Outbox()
+	messages, err := outboxService.QueryByParentAndDate(session, model.FollowerTypeStream, stream.StreamID, permissions, publishedDate, 60)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error loading outbox messages")
+	}
+
+	// Return results as an OrderedCollectionPage
+	ctx.Response().Header().Set("Content-Type", vocab.ContentTypeActivityPub)
+	result := activitypub.CollectionPage(pageID, stream.ActivityPubOutboxURL(), pageSize, messages)
+	return ctx.JSON(http.StatusOK, result)
 }

@@ -6,6 +6,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/dataset"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/list"
@@ -14,51 +15,33 @@ import (
 )
 
 type LookupProvider struct {
-	circleService          *Circle
-	domainService          *Domain
-	folderService          *Folder
-	groupService           *Group
-	merchantAccountService *MerchantAccount
-	productService         *Product
-	registrationService    *Registration
-	searchTagService       *SearchTag
-	streamService          *Stream
-	templateService        *Template
-	themeService           *Theme
-	request                *http.Request
-	userID                 primitive.ObjectID
+	session data.Session
+	factory Factory
+	request *http.Request
+	userID  primitive.ObjectID
 }
 
-func NewLookupProvider(circleService *Circle, domainService *Domain, folderService *Folder, groupService *Group, merchantAccountService *MerchantAccount, productService *Product, registrationService *Registration, searchTagService *SearchTag, streamService *Stream, templateService *Template, themeService *Theme, request *http.Request, userID primitive.ObjectID) LookupProvider {
+func NewLookupProvider(session data.Session, factory Factory, request *http.Request, userID primitive.ObjectID) LookupProvider {
 	return LookupProvider{
-		circleService:          circleService,
-		domainService:          domainService,
-		folderService:          folderService,
-		groupService:           groupService,
-		merchantAccountService: merchantAccountService,
-		productService:         productService,
-		registrationService:    registrationService,
-		searchTagService:       searchTagService,
-		streamService:          streamService,
-		templateService:        templateService,
-		themeService:           themeService,
-		request:                request,
-		userID:                 userID,
+		session: session,
+		factory: factory,
+		request: request,
+		userID:  userID,
 	}
 }
 
-func (service LookupProvider) Group(path string) form.LookupGroup {
+func (service LookupProvider) Group(session data.Session, path string) form.LookupGroup {
 
 	switch path {
 
 	case "circles":
-		return NewCircleLookupProvider(service.circleService, service.userID)
+		return NewCircleLookupProvider(session, service.factory.Circle(), service.userID)
 
 	case "circle-icons":
 		return form.NewReadOnlyLookupGroup(dataset.Icons()...)
 
 	case "folders":
-		return NewFolderLookupProvider(service.folderService, service.userID)
+		return NewFolderLookupProvider(session, service.factory.Folder(), service.userID)
 
 	case "folder-icons":
 		return form.NewReadOnlyLookupGroup(dataset.Icons()...)
@@ -81,19 +64,19 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 		return form.NewReadOnlyLookupGroup(dataset.Icons()...)
 
 	case "groups":
-		return NewGroupLookupProvider(service.groupService)
+		return NewGroupLookupProvider(service.factory.Group())
 
 	case "inbox-templates":
-		return form.ReadOnlyLookupGroup(service.templateService.ListByTemplateRole("user-inbox"))
+		return form.ReadOnlyLookupGroup(service.factory.Template().ListByTemplateRole("user-inbox"))
 
 	case "merchantAccounts":
-		return service.getMerchantAccounts()
+		return service.getMerchantAccounts(service.session)
 
 	case "merchantAccounts-all-products":
-		return service.getMerchantAccountsAllProducts()
+		return service.getMerchantAccountsAllProducts(service.session)
 
 	case "outbox-templates":
-		return form.ReadOnlyLookupGroup(service.templateService.ListByTemplateRole("user-outbox"))
+		return form.ReadOnlyLookupGroup(service.factory.Template().ListByTemplateRole("user-outbox"))
 
 	case "reaction-icons":
 		return form.NewReadOnlyLookupGroup(
@@ -133,7 +116,7 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 		)
 
 	case "searchTag-groups":
-		return form.ReadOnlyLookupGroup(service.searchTagService.ListGroups())
+		return form.ReadOnlyLookupGroup(service.factory.SearchTag().ListGroups(session))
 
 	case "sharing":
 		return form.NewReadOnlyLookupGroup(
@@ -143,17 +126,17 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 		)
 
 	case "signup-templates":
-		return form.ReadOnlyLookupGroup(service.registrationService.List())
+		return form.ReadOnlyLookupGroup(service.factory.Registration().List())
 
 	case "streams-with-products":
-		return service.getSubscribableStreams()
+		return service.getSubscribableStreams(service.session)
 
 	case "syndication-targets":
-		domain := service.domainService.Get()
+		domain := service.factory.Domain().Get()
 		return form.NewReadOnlyLookupGroup(domain.Syndication...)
 
 	case "themes":
-		return NewThemeLookupProvider(service.themeService)
+		return NewThemeLookupProvider(service.factory.Theme())
 
 	case "webhook-types":
 		return form.NewReadOnlyLookupGroup(
@@ -173,7 +156,7 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 
 	// first value is the template name.  If this matches a known template, then continue
 	templateName, tail := p.Split()
-	if template, err := service.templateService.Load(templateName); err == nil {
+	if template, err := service.factory.Template().Load(templateName); err == nil {
 
 		// second element is the name of the dataset
 		datasetName := tail.First()
@@ -194,13 +177,15 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
  ******************************************/
 
 // getSubscribableStreams returns all streams that have subscribe-able content
-func (service *LookupProvider) getSubscribableStreams() form.LookupGroup {
+func (service *LookupProvider) getSubscribableStreams(session data.Session) form.LookupGroup {
+
+	const location = "service.LookupProvider.getSubscribableStreams"
 
 	// Query all streams in the User's outbox that are subscribe-able
-	streams, err := service.streamService.QuerySubscribable(service.userID)
+	streams, err := service.factory.Stream().QuerySubscribable(session, service.userID)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "service.LookupProvider.getSubscribableStreams", "Error loading streams with products"))
+		derp.Report(derp.Wrap(err, location, "Error loading streams with products"))
 		return form.NewReadOnlyLookupGroup()
 	}
 
@@ -218,12 +203,12 @@ func (service *LookupProvider) getSubscribableStreams() form.LookupGroup {
 }
 
 // getMerchantAccounts returns all merchant accounts for the current user
-func (service *LookupProvider) getMerchantAccounts() form.LookupGroup {
+func (service *LookupProvider) getMerchantAccounts(session data.Session) form.LookupGroup {
 
 	const location = "service.LookupProvider.getMerchantAccounts"
 
 	// Load the Merchant Accounts for this User
-	result, err := service.merchantAccountService.QueryByUser(service.userID)
+	result, err := service.factory.MerchantAccount().QueryByUser(session, service.userID)
 
 	if err != nil {
 		derp.Report(derp.Wrap(err, location, "Error loading merchant accounts"))
@@ -239,11 +224,11 @@ func (service *LookupProvider) getMerchantAccounts() form.LookupGroup {
 }
 
 // getMerchantAccountsAllProducts returns all products defined by the selected merchant account
-func (service *LookupProvider) getMerchantAccountsAllProducts() form.LookupGroup {
+func (service *LookupProvider) getMerchantAccountsAllProducts(session data.Session) form.LookupGroup {
 
 	const location = "service.LookupProvider.getMerchantAccountsAllProducts"
 
-	_, products, err := service.productService.SyncRemoteProducts(service.userID)
+	_, products, err := service.factory.Product().SyncRemoteProducts(session, service.userID)
 
 	if err != nil {
 		derp.Report(derp.Wrap(err, location, "Error loading remote products for user", service.userID.Hex()))

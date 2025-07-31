@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/EmissarySocial/emissary/domain"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	domaintools "github.com/benpate/domain"
 	"github.com/benpate/rosetta/mapof"
@@ -13,7 +14,7 @@ import (
 
 // IndexAllStreams is a handler function that triggers the IndexAllStreams queue task.
 // It can only be called by an authenticated administrator.
-func IndexAllStreams(ctx *steranko.Context, factory *domain.Factory) error {
+func IndexAllStreams(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
 
 	// Verify that this is an Administrator
 	authorization := getAuthorization(ctx)
@@ -38,7 +39,7 @@ func IndexAllStreams(ctx *steranko.Context, factory *domain.Factory) error {
 
 // IndexAllUsers is a handler function that triggers the IndexAllUsers queue task.
 // It can only be called by an authenticated administrator.
-func IndexAllUsers(ctx *steranko.Context, factory *domain.Factory) error {
+func IndexAllUsers(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
 
 	// Verify that this is an Administrator
 	authorization := getAuthorization(ctx)
@@ -61,7 +62,7 @@ func IndexAllUsers(ctx *steranko.Context, factory *domain.Factory) error {
 	return ctx.NoContent(http.StatusOK)
 }
 
-func PostSearchLookup(ctx *steranko.Context, factory *domain.Factory) error {
+func PostSearchLookup(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
 
 	const location = "handler.PostSearchLookup"
 
@@ -78,7 +79,7 @@ func PostSearchLookup(ctx *steranko.Context, factory *domain.Factory) error {
 
 	// Load the Stream from the database
 	searchQueryService := factory.SearchQuery()
-	searchQuery, err := searchQueryService.LoadOrCreate(ctx.QueryParams())
+	searchQuery, err := searchQueryService.LoadOrCreate(session, ctx.QueryParams())
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error creating search query token")
@@ -87,7 +88,7 @@ func PostSearchLookup(ctx *steranko.Context, factory *domain.Factory) error {
 	// Set the referer/URL if it's not already set
 	if searchQuery.URL == "" {
 		searchQuery.URL = referer
-		if err := searchQueryService.Save(&searchQuery, "Set source URL"); err != nil {
+		if err := searchQueryService.Save(session, &searchQuery, "Set source URL"); err != nil {
 			return derp.Wrap(err, location, "Error applying URL to search query")
 		}
 	}

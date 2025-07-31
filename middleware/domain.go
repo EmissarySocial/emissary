@@ -1,11 +1,6 @@
 package middleware
 
-import (
-	"github.com/EmissarySocial/emissary/server"
-	"github.com/benpate/derp"
-	"github.com/labstack/echo/v4"
-)
-
+/*
 // Domain middleware validates that the requested domain has been fully activated before
 // allowing the request to pass through.
 func Domain(factory *server.Factory) echo.MiddlewareFunc {
@@ -32,3 +27,4 @@ func Domain(factory *server.Factory) echo.MiddlewareFunc {
 		}
 	}
 }
+*/

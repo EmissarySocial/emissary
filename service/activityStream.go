@@ -62,7 +62,7 @@ func (service *ActivityStream) Refresh(collection *mongo.Collection, domainServi
 	service.cacheClient = nil
 }
 
-func (service *ActivityStream) initClients() {
+func (service *ActivityStream) initClients(session data.Session) {
 
 	// Build a new client stack
 	sherlockClient := sherlock.NewClient(
@@ -70,7 +70,7 @@ func (service *ActivityStream) initClients() {
 	)
 
 	// Try to attach a private key to this client
-	if privateKey, err := service.domainService.PrivateKey(); err == nil {
+	if privateKey, err := service.domainService.PrivateKey(session); err == nil {
 		publicKeyID := service.domainService.PublicKeyID()
 		sherlockClient.WithOptions(
 			sherlock.WithActor(publicKeyID, privateKey),
@@ -106,19 +106,19 @@ func (service *ActivityStream) initClients() {
 	// factory.activityService.Refresh(readOnlyCache, mongodb.NewCollection(collection))
 }
 
-func (service *ActivityStream) getClient() streams.Client {
+func (service *ActivityStream) getClient(session data.Session) streams.Client {
 
 	if service.innerClient == nil {
-		service.initClients()
+		service.initClients(session)
 	}
 
 	return service.innerClient
 }
 
-func (service *ActivityStream) CacheClient() *ascache.Client {
+func (service *ActivityStream) CacheClient(session data.Session) *ascache.Client {
 
 	if service.cacheClient == nil {
-		service.initClients()
+		service.initClients(session)
 	}
 
 	return service.cacheClient
@@ -324,7 +324,7 @@ func (service *ActivityStream) QueryLikesBeforeDate(relationHref string, maxDate
 // `actorType` the type of actor that is sending the message (User, Stream, Search)
 // `actorID` unique ID of the actor (zero value for Search Actor)
 // `message` the ActivityPub message to send
-func (service *ActivityStream) SendMessage(args mapof.Any) error {
+func (service *ActivityStream) SendMessage(session data.Session, args mapof.Any) error {
 
 	const location = "service.ActivityStream.SendMessage"
 
@@ -342,7 +342,7 @@ func (service *ActivityStream) SendMessage(args mapof.Any) error {
 	}
 
 	// Find ActivityPub Actor
-	actor, err := service.locatorService.GetActor(args.GetString("actorType"), args.GetString("actorID"))
+	actor, err := service.locatorService.GetActor(session, args.GetString("actorType"), args.GetString("actorID"))
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error finding ActivityPub Actor")

@@ -13,7 +13,6 @@ import (
 
 // Product manages all interactions with the Product collection
 type Product struct {
-	collection             data.Collection
 	merchantAccountService *MerchantAccount
 }
 
@@ -27,8 +26,7 @@ func NewProduct() Product {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Product) Refresh(collection data.Collection, merchantAccountService *MerchantAccount) {
-	service.collection = collection
+func (service *Product) Refresh(merchantAccountService *MerchantAccount) {
 	service.merchantAccountService = merchantAccountService
 }
 
@@ -41,25 +39,29 @@ func (service *Product) Close() {
  * Common Data Methods
  ******************************************/
 
-// Count returns the number of records that match the provided criteria
-func (service *Product) Count(criteria exp.Expression) (int64, error) {
-	return service.collection.Count(notDeleted(criteria))
+func (service *Product) collection(session data.Session) data.Collection {
+	return session.Collection("Product")
 }
 
-func (service *Product) Query(criteria exp.Expression, options ...option.Option) ([]model.Product, error) {
+// Count returns the number of records that match the provided criteria
+func (service *Product) Count(session data.Session, criteria exp.Expression) (int64, error) {
+	return service.collection(session).Count(notDeleted(criteria))
+}
+
+func (service *Product) Query(session data.Session, criteria exp.Expression, options ...option.Option) ([]model.Product, error) {
 	result := make([]model.Product, 0)
-	err := service.collection.Query(&result, notDeleted(criteria), options...)
+	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
 	return result, err
 }
 
 // List returns an iterator containing all of the Products who match the provided criteria
-func (service *Product) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection.Iterator(notDeleted(criteria), options...)
+func (service *Product) List(session data.Session, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+	return service.collection(session).Iterator(notDeleted(criteria), options...)
 }
 
 // Load retrieves an Product from the database
-func (service *Product) Load(criteria exp.Expression, result *model.Product) error {
-	if err := service.collection.Load(notDeleted(criteria), result); err != nil {
+func (service *Product) Load(session data.Session, criteria exp.Expression, result *model.Product) error {
+	if err := service.collection(session).Load(notDeleted(criteria), result); err != nil {
 		return derp.Wrap(err, "service.Product.Load", "Error loading Product", criteria)
 	}
 
@@ -67,25 +69,27 @@ func (service *Product) Load(criteria exp.Expression, result *model.Product) err
 }
 
 // Save adds/updates an Product in the database
-func (service *Product) Save(product *model.Product, note string) error {
+func (service *Product) Save(session data.Session, product *model.Product, note string) error {
+
+	const location = "service.Product.Save"
 
 	// Validate the value before saving
 	if err := service.Schema().Validate(product); err != nil {
-		return derp.Wrap(err, "service.Product.Save", "Error validating Product", product)
+		return derp.Wrap(err, location, "Invalid Product", product)
 	}
 
 	// Save the value to the database
-	if err := service.collection.Save(product, note); err != nil {
-		return derp.Wrap(err, "service.Product.Save", "Error saving Product", product, note)
+	if err := service.collection(session).Save(product, note); err != nil {
+		return derp.Wrap(err, location, "Unable to save Product", product, note)
 	}
 
 	return nil
 }
 
 // Delete removes an Product from the database (virtual delete)
-func (service *Product) Delete(product *model.Product, note string) error {
+func (service *Product) Delete(session data.Session, product *model.Product, note string) error {
 
-	if err := service.collection.Delete(product, note); err != nil {
+	if err := service.collection(session).Delete(product, note); err != nil {
 		return derp.Wrap(err, "service.Product.Delete", "Error deleting Product", product, note)
 	}
 
@@ -116,26 +120,26 @@ func (service *Product) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
-func (service *Product) ObjectQuery(result any, criteria exp.Expression, options ...option.Option) error {
-	return service.collection.Query(result, notDeleted(criteria), options...)
+func (service *Product) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
+	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
-func (service *Product) ObjectLoad(criteria exp.Expression) (data.Object, error) {
+func (service *Product) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewProduct()
-	err := service.Load(criteria, &result)
+	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
-func (service *Product) ObjectSave(object data.Object, comment string) error {
+func (service *Product) ObjectSave(session data.Session, object data.Object, comment string) error {
 	if product, ok := object.(*model.Product); ok {
-		return service.Save(product, comment)
+		return service.Save(session, product, comment)
 	}
 	return derp.InternalError("service.Product.ObjectSave", "Invalid Object Type", object)
 }
 
-func (service *Product) ObjectDelete(object data.Object, comment string) error {
+func (service *Product) ObjectDelete(session data.Session, object data.Object, comment string) error {
 	if product, ok := object.(*model.Product); ok {
-		return service.Delete(product, comment)
+		return service.Delete(session, product, comment)
 	}
 	return derp.InternalError("service.Product.ObjectDelete", "Invalid Object Type", object)
 }
@@ -153,12 +157,12 @@ func (service *Product) Schema() schema.Schema {
  ******************************************/
 
 // LoadByID loads a single model.Product object that matches the provided productID
-func (service *Product) LoadByID(productID primitive.ObjectID, result *model.Product) error {
+func (service *Product) LoadByID(session data.Session, productID primitive.ObjectID, result *model.Product) error {
 	criteria := exp.Equal("_id", productID)
-	return service.Load(criteria, result)
+	return service.Load(session, criteria, result)
 }
 
-func (service *Product) LoadByToken(token string, result *model.Product) error {
+func (service *Product) LoadByToken(session data.Session, token string, result *model.Product) error {
 
 	productID, err := primitive.ObjectIDFromHex(token)
 
@@ -166,36 +170,36 @@ func (service *Product) LoadByToken(token string, result *model.Product) error {
 		return derp.Wrap(err, "service.Product.LoadByToken", "Invalid Product ID", token)
 	}
 
-	return service.LoadByID(productID, result)
+	return service.LoadByID(session, productID, result)
 }
 
 // QueryByUser returns a slice of Products that match the provided productIDs
-func (service *Product) QueryByUser(userID primitive.ObjectID) (sliceof.Object[model.Product], error) {
+func (service *Product) QueryByUser(session data.Session, userID primitive.ObjectID) (sliceof.Object[model.Product], error) {
 
 	criteria := exp.Equal("userId", userID)
 
-	return service.Query(criteria, option.SortAsc("name"), option.SortAsc("price"))
+	return service.Query(session, criteria, option.SortAsc("name"), option.SortAsc("price"))
 }
 
 // QueryByIDs returns a slice of Products that match the provided productIDs
-func (service *Product) QueryByIDs(userID primitive.ObjectID, productIDs ...primitive.ObjectID) (sliceof.Object[model.Product], error) {
+func (service *Product) QueryByIDs(session data.Session, userID primitive.ObjectID, productIDs ...primitive.ObjectID) (sliceof.Object[model.Product], error) {
 
 	criteria := exp.Equal("userId", userID).
 		AndIn("_id", productIDs)
 
-	return service.Query(criteria, option.SortAsc("name"), option.SortAsc("price"))
+	return service.Query(session, criteria, option.SortAsc("name"), option.SortAsc("price"))
 }
 
 /******************************************
  * Custom Behaviors
  ******************************************/
 
-func (service *Product) SyncRemoteProducts(userID primitive.ObjectID) (sliceof.Object[model.MerchantAccount], sliceof.Object[model.Product], error) {
+func (service *Product) SyncRemoteProducts(session data.Session, userID primitive.ObjectID) (sliceof.Object[model.MerchantAccount], sliceof.Object[model.Product], error) {
 
 	const location = "service.Product.SyncRemoteProducts"
 
 	// Scan all Remote Products from every Merchant Account for this User
-	merchantAccounts, remoteProducts, err := service.merchantAccountService.RemoteProductsByUser(userID)
+	merchantAccounts, remoteProducts, err := service.merchantAccountService.RemoteProductsByUser(session, userID)
 
 	if err != nil {
 		return nil, nil, derp.Wrap(err, location, "Error retrieving remote products for user", userID)
@@ -207,7 +211,7 @@ func (service *Product) SyncRemoteProducts(userID primitive.ObjectID) (sliceof.O
 	}
 
 	// Retrieve all Products currently in the database
-	products, err := service.QueryByUser(userID)
+	products, err := service.QueryByUser(session, userID)
 
 	if err != nil {
 		return nil, nil, derp.Wrap(err, location, "Error retrieving local products for user", userID)
@@ -225,7 +229,7 @@ func (service *Product) SyncRemoteProducts(userID primitive.ObjectID) (sliceof.O
 		}
 
 		// Add the remote product to the database
-		if err := service.Save(&remoteProduct, "Sync Remote Product"); err != nil {
+		if err := service.Save(session, &remoteProduct, "Sync Remote Product"); err != nil {
 			return nil, nil, derp.Wrap(err, location, "Error saving remote product", remoteProduct)
 		}
 
@@ -235,7 +239,7 @@ func (service *Product) SyncRemoteProducts(userID primitive.ObjectID) (sliceof.O
 
 	// Remove local Product records that are no longer in the remote products list
 	for _, product := range productIndex {
-		if err := service.Delete(&product, "Removed from merchant account"); err != nil {
+		if err := service.Delete(session, &product, "Removed from merchant account"); err != nil {
 			return nil, nil, derp.Wrap(err, location, "Error deleting local product", product)
 		}
 

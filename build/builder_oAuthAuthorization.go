@@ -5,6 +5,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -18,7 +19,7 @@ type OAuthAuthorization struct {
 }
 
 // NewOAuthAuthorization returns a fully initialized/loaded `OAuthAuthorization` builder
-func NewOAuthAuthorization(factory Factory, request model.OAuthAuthorizationRequest) (OAuthAuthorization, error) {
+func NewOAuthAuthorization(factory Factory, session data.Session, request model.OAuthAuthorizationRequest) (OAuthAuthorization, error) {
 
 	const location = "build.NewOAuthAuthorization"
 
@@ -37,7 +38,7 @@ func NewOAuthAuthorization(factory Factory, request model.OAuthAuthorizationRequ
 	}
 
 	// Try to load the OAuthClient object
-	if err := result._service.LoadByClientID(clientID, &result._client); err != nil {
+	if err := result._service.LoadByClientID(session, clientID, &result._client); err != nil {
 		return OAuthAuthorization{}, derp.Wrap(err, location, "Error loading OAuth Application")
 	}
 

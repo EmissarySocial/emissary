@@ -24,7 +24,7 @@ func DeleteAny(context Context, activity streams.Document) error {
 	objectID := activity.Object().ID()
 
 	// Find all activities that match the deleted object
-	activities, err := outboxService.RangeByObjectID(model.FollowerTypeStream, context.stream.StreamID, objectID)
+	activities, err := outboxService.RangeByObjectID(context.session, model.FollowerTypeStream, context.stream.StreamID, objectID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Unable to locate matching activities", objectID)
@@ -33,7 +33,7 @@ func DeleteAny(context Context, activity streams.Document) error {
 	// Delete all outbox activities that match the deleted object
 	for activity := range activities {
 
-		if err := outboxService.Delete(&activity, "Removed via ActivityPub"); err != nil {
+		if err := outboxService.Delete(context.session, &activity, "Removed via ActivityPub"); err != nil {
 			return derp.Wrap(err, location, "Error deleting message", activity)
 		}
 	}

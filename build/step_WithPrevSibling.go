@@ -33,13 +33,13 @@ func (step StepWithPrevSibling) execute(builder Builder, buffer io.Writer, actio
 	streamBuilder := builder.(Stream)
 	stream := streamBuilder._stream
 
-	if err := factory.Stream().LoadPrevSibling(stream.ParentID, stream.Rank, &sibling); err != nil {
+	if err := factory.Stream().LoadPrevSibling(builder.session(), stream.ParentID, stream.Rank, &sibling); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error listing parent"))
 	}
 
 	// Make a builder with the new parent stream
 	// TODO: Is "view" really the best action to use here??
-	siblingBuilder, err := NewStreamWithoutTemplate(streamBuilder.factory(), streamBuilder.request(), streamBuilder.response(), &sibling, "view")
+	siblingBuilder, err := NewStreamWithoutTemplate(streamBuilder.factory(), streamBuilder.session(), streamBuilder.request(), streamBuilder.response(), &sibling, "view")
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error creating builder for sibling"))

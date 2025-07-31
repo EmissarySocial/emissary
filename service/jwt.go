@@ -33,7 +33,7 @@ func NewJWT() JWT {
  * Lifecycle Methods
  ******************************************/
 
-func (service *JWT) Refresh(collection data.Collection, masterKey string) {
+func (service *JWT) Refresh(masterKey string) {
 
 	service.collection = collection
 	service.masterKey = masterKey

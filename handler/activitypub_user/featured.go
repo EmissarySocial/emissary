@@ -4,13 +4,14 @@ import (
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/handler/activitypub"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/steranko"
 )
 
-func GetFeaturedCollection(ctx *steranko.Context, factory *domain.Factory, user *model.User) error {
-	const location = "handler.activitypub_user.GetBlockedCollection"
+func GetFeaturedCollection(ctx *steranko.Context, factory *domain.Factory, session data.Session, user *model.User) error {
+	const location = "handler.activitypub_user.GetFeaturedCollection"
 
 	// RULE: Only public users can be queried
 	if !user.IsPublic {
@@ -19,7 +20,7 @@ func GetFeaturedCollection(ctx *steranko.Context, factory *domain.Factory, user 
 
 	// Fallthrough means this is a request for a specific page
 	streamService := factory.Stream()
-	streams, err := streamService.QueryFeaturedByUser(user.UserID)
+	streams, err := streamService.QueryFeaturedByUser(session, user.UserID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error loading streams")

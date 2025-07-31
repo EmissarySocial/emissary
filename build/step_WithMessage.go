@@ -54,12 +54,12 @@ func (step StepWithMessage) execute(builder Builder, buffer io.Writer, actionMet
 	userID := builder.AuthenticatedID()
 
 	// If we have a real ID, then try to load the message from the database
-	if err := inboxService.LoadByID(userID, messageID, &message); err != nil {
+	if err := inboxService.LoadByID(builder.session(), userID, messageID, &message); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Unable to load Message", messageID))
 	}
 
 	// Create a new builder tied to the Message record
-	subBuilder, err := NewModel(factory, builder.request(), builder.response(), template, &message, builder.actionID())
+	subBuilder, err := NewModel(factory, builder.session(), builder.request(), builder.response(), template, &message, builder.actionID())
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Unable to create sub-builder"))

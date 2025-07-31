@@ -54,13 +54,13 @@ func (step StepWithAttachment) execute(builder Builder, buffer io.Writer, action
 
 	} else if attachmentID, err := primitive.ObjectIDFromHex(token); err == nil {
 
-		if err := attachmentService.LoadByID(objectType, objectID, attachmentID, &attachment); err != nil {
+		if err := attachmentService.LoadByID(builder.session(), objectType, objectID, attachmentID, &attachment); err != nil {
 			return Halt().WithError(derp.Wrap(err, location, "Unable to load Attachment via ID", token))
 		}
 	}
 
 	// Create a new builder tied to the Attachment record
-	subBuilder, err := NewAttachment(factory, builder.request(), builder.response(), template, &attachment, builder.actionID())
+	subBuilder, err := NewAttachment(factory, builder.session(), builder.request(), builder.response(), template, &attachment, builder.actionID())
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Unable to create sub-builder"))

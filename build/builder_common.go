@@ -7,6 +7,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/domain"
 	domaintools "github.com/benpate/domain"
@@ -25,6 +26,7 @@ import (
 // Common provides common building functions that are needed by ALL builders
 type Common struct {
 	_factory       Factory             // Factory interface is required for locating other services.
+	_session       data.Session        // Database session for all db requests
 	_request       *http.Request       // Pointer to the HTTP request we are serving
 	_response      http.ResponseWriter // ResponseWriter for this request
 	_authorization model.Authorization // Authorization information for the current website visitor
@@ -37,7 +39,7 @@ type Common struct {
 	domain model.Domain // This is a value because we expect to use it in every request.
 }
 
-func NewCommon(factory Factory, request *http.Request, response http.ResponseWriter) Common {
+func NewCommon(factory Factory, session data.Session, request *http.Request, response http.ResponseWriter) Common {
 
 	// Retrieve the user's authorization information
 	steranko := factory.Steranko()
@@ -46,6 +48,7 @@ func NewCommon(factory Factory, request *http.Request, response http.ResponseWri
 	// Return a new Common builder
 	return Common{
 		_factory:       factory,
+		_session:       session,
 		_request:       request,
 		_response:      response,
 		_authorization: authorization,
@@ -63,14 +66,22 @@ func (w Common) factory() Factory {
 	return w._factory
 }
 
+// session returns the database session that this Builder is using.
+func (w Common) session() data.Session {
+	return w._session
+}
+
+// request returns the original http.Request that we are responding to.
 func (w Common) request() *http.Request {
 	return w._request
 }
 
+// response returns the original http.ResponseWriter that we are writing to.
 func (w Common) response() http.ResponseWriter {
 	return w._response
 }
 
+// authorization returns the user's authorization data from the context.
 func (w Common) authorization() model.Authorization {
 	return w._authorization
 }
@@ -326,7 +337,7 @@ func (w Common) ActivityStream(url string) streams.Document {
 	// Search for rules that might add a LABEL to this document.
 	ruleService := w._factory.Rule()
 	filter := ruleService.Filter(w.AuthenticatedID(), service.WithLabelsOnly())
-	filter.Allow(&result)
+	filter.Allow(w._session, &result)
 
 	// Return the result
 	return result
@@ -347,7 +358,7 @@ func (w Common) AmFollowing(url string) model.Following {
 
 	// Retrieve following record. Discard errors
 	// nolint:errcheck
-	_ = followingService.LoadByURL(w._authorization.UserID, url, &following)
+	_ = followingService.LoadByURL(w._session, w._authorization.UserID, url, &following)
 
 	// Return the (possibly empty) Following record
 	return following
@@ -358,7 +369,7 @@ func (w Common) IsFollower(url string) model.Follower {
 	followerService := w._factory.Follower()
 	follower := model.NewFollower()
 
-	_ = followerService.LoadByActor(w.AuthenticatedID(), url, &follower)
+	_ = followerService.LoadByActor(w._session, w.AuthenticatedID(), url, &follower)
 	return follower
 }
 
@@ -403,7 +414,7 @@ func (w Common) GetFollowingID(url string) string {
 	const location = "build.Common.GetFollowingID"
 
 	followingService := w._factory.Following()
-	result, err := followingService.GetFollowingID(w.AuthenticatedID(), url)
+	result, err := followingService.GetFollowingID(w._session, w.AuthenticatedID(), url)
 
 	if err != nil {
 		derp.Report(derp.Wrap(err, location, "Error getting following status", url))
@@ -497,7 +508,7 @@ func (w Common) getUser() (*model.User, error) {
 	authorization := getAuthorization(steranko, w._request)
 
 	user := model.NewUser()
-	if err := userService.LoadByID(authorization.UserID, &user); err != nil {
+	if err := userService.LoadByID(w._session, authorization.UserID, &user); err != nil {
 		return nil, derp.Wrap(err, location, "Error loading user from database", authorization.UserID)
 	}
 
@@ -524,7 +535,7 @@ func (w Common) getIdentity() (*model.Identity, error) {
 
 	// Otherwise, try to load the Identity from the database
 	identity := model.NewIdentity()
-	if err := w._factory.Identity().LoadByID(w._authorization.IdentityID, &identity); err != nil {
+	if err := w._factory.Identity().LoadByID(w._session, w._authorization.IdentityID, &identity); err != nil {
 		return nil, derp.Wrap(err, location, "Error loading Identity from database", w._authorization.IdentityID)
 	}
 
@@ -545,7 +556,7 @@ func (w Common) Navigation() (sliceof.Object[model.StreamSummary], error) {
 		And(w.withinPublishDate()).
 		AndEqual("parentId", primitive.NilObjectID)
 
-	builder := NewQueryBuilder[model.StreamSummary](w._factory.Stream(), criteria)
+	builder := NewQueryBuilder[model.StreamSummary](w._factory.Stream(), w._session, criteria)
 
 	result, err := builder.Top60().ByRank().Slice()
 	return result, err
@@ -566,7 +577,7 @@ func (w Common) GetResponseID(responseType string, url string) string {
 	responseService := w._factory.Response()
 	response := model.NewResponse()
 
-	if err := responseService.LoadByUserAndObject(w.AuthenticatedID(), url, responseType, &response); err == nil {
+	if err := responseService.LoadByUserAndObject(w._session, w.AuthenticatedID(), url, responseType, &response); err == nil {
 		return response.ResponseID.Hex()
 	}
 
@@ -589,7 +600,7 @@ func (w Common) GetResponseSummary(url string) model.UserResponseSummary {
 	// If the user is signed in, then we need to check the database to see if they've responded.
 	responseService := w._factory.Response()
 
-	if responses, err := responseService.QueryByUserAndObject(w.AuthenticatedID(), url); err == nil {
+	if responses, err := responseService.QueryByUserAndObject(w._session, w.AuthenticatedID(), url); err == nil {
 		for _, response := range responses {
 			result.SetResponse(response.Type, true)
 		}
@@ -600,7 +611,7 @@ func (w Common) GetResponseSummary(url string) model.UserResponseSummary {
 
 func (w Common) AvailableMerchantAccounts() (sliceof.Object[form.LookupCode], error) {
 	merchantAccountService := w._factory.MerchantAccount()
-	return merchantAccountService.AvailableMerchantAccounts()
+	return merchantAccountService.AvailableMerchantAccounts(w._session)
 }
 
 /******************************************
@@ -623,7 +634,7 @@ func (w Common) Search() SearchBuilder {
 	criteria := b.Evaluate(w._request.URL.Query())
 
 	// Create the SearchBuilder for this request
-	return NewSearchBuilder(searchTagService, searchResultService, criteria, textQuery)
+	return NewSearchBuilder(searchTagService, searchResultService, w._session, criteria, textQuery)
 }
 
 func (w Common) SearchTag(tagName string) model.SearchTag {
@@ -632,7 +643,7 @@ func (w Common) SearchTag(tagName string) model.SearchTag {
 
 	result := model.NewSearchTag()
 
-	if err := w._factory.SearchTag().LoadByValue(tagName, &result); err != nil {
+	if err := w._factory.SearchTag().LoadByValue(w._session, tagName, &result); err != nil {
 		derp.Report(derp.Wrap(err, location, "Error loading SearchTag", tagName))
 	}
 
@@ -641,7 +652,7 @@ func (w Common) SearchTag(tagName string) model.SearchTag {
 
 func (w Common) MerchantAccount(merchantAccountID string) (model.MerchantAccount, error) {
 	result := model.NewMerchantAccount()
-	err := w._factory.MerchantAccount().LoadByToken(merchantAccountID, &result)
+	err := w._factory.MerchantAccount().LoadByToken(w._session, merchantAccountID, &result)
 	return result, err
 }
 
@@ -652,7 +663,7 @@ func (w Common) FeaturedSearchTags() *QueryBuilder[model.SearchTag] {
 		exp.Equal("deleteDate", 0),
 	)
 
-	result := NewQueryBuilder[model.SearchTag](w._factory.SearchTag(), criteria)
+	result := NewQueryBuilder[model.SearchTag](w._factory.SearchTag(), w._session, criteria)
 	result.CaseInsensitive()
 	result.ByRank()
 
@@ -672,7 +683,7 @@ func (w Common) AllowedSearchTags() *QueryBuilder[model.SearchTag] {
 		exp.Equal("deleteDate", 0),
 	)
 
-	result := NewQueryBuilder[model.SearchTag](w._factory.SearchTag(), criteria)
+	result := NewQueryBuilder[model.SearchTag](w._factory.SearchTag(), w._session, criteria)
 	result.CaseInsensitive()
 	result.ByName()
 

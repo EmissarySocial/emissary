@@ -6,12 +6,13 @@ import (
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service/providers"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/html"
 	"github.com/benpate/steranko"
 )
 
-func GetGiphyWidget(ctx *steranko.Context, factory *domain.Factory) error {
+func GetGiphyWidget(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
 
 	// Verify authorization
 	authorization := getAuthorization(ctx)
@@ -24,7 +25,7 @@ func GetGiphyWidget(ctx *steranko.Context, factory *domain.Factory) error {
 	connectionService := factory.Connection()
 	giphy := model.NewConnection()
 
-	if err := connectionService.LoadByProvider(providers.ProviderTypeGiphy, &giphy); err != nil {
+	if err := connectionService.LoadByProvider(session, providers.ProviderTypeGiphy, &giphy); err != nil {
 		return derp.Wrap(err, "handler.GetGiphyImages", "Giphy is not configured for this domain")
 	}
 

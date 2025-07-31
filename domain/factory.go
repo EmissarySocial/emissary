@@ -33,9 +33,9 @@ import (
 
 // Factory knows how to create an populate all services
 type Factory struct {
-	Session data.Session
-	config  config.Domain
-	port    string
+	server mongodb.Server
+	config config.Domain
+	port   string
 
 	// services (from server)
 	activityCache       *mongo.Collection
@@ -218,22 +218,9 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 			return derp.Wrap(err, "domain.factory.UpdateConfig", "Error connecting to MongoDB (Server)", domain)
 		}
 
-		// Establish a connection
-		session, err := server.Session(context.Background())
-
-		if err != nil {
-			return derp.Wrap(err, "domain.factory.UpdateConfig", "Error connecting to MongoDB (Session)", domain)
-		}
-
-		// If we already have a database connection, then close it
-		if factory.Session != nil {
-			factory.Session.Close()
-		}
+		factory.server = server.Database()
 
 		refreshContext := factory.newRefreshContext()
-
-		// Save the new session into the factory.
-		factory.Session = session
 
 		// REFRESH CACHED SERVICES
 
@@ -250,26 +237,22 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 		)
 
 		factory.annotationService.Refresh(
-			factory.collection(CollectionAnnotation),
 			factory.ActivityStream(),
 		)
 
 		// Populate Attachment Service
 		factory.attachmentService.Refresh(
-			factory.collection(CollectionAttachment),
 			factory.MediaServer(),
 			factory.Host(),
 		)
 
 		// Populate Circle Service
 		factory.circleService.Refresh(
-			factory.collection(CollectionCircle),
 			factory.Privilege(),
 		)
 
 		// Populate Connection Service
 		factory.connectionService.Refresh(
-			factory.collection(CollectionConnection),
 			factory.Provider(),
 			domain.MasterKey,
 			factory.Host(),
@@ -277,7 +260,6 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 
 		// Populate Domain Service
 		factory.domainService.Refresh(
-			factory.collection(CollectionDomain),
 			domain,
 			factory.ActivityStream(),
 			factory.Connection(),
@@ -291,13 +273,11 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 
 		// Populate EncryptionKey Service
 		factory.encryptionKeyService.Refresh(
-			factory.collection(CollectionEncryptionKey),
 			factory.Host(),
 		)
 
 		// Populate Folder Service
 		factory.folderService.Refresh(
-			factory.collection(CollectionFolder),
 			factory.Theme(),
 			factory.Domain(),
 			factory.Inbox(),
@@ -305,7 +285,6 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 
 		// Populate Follower Service
 		factory.followerService.Refresh(
-			factory.collection(CollectionFollower),
 			factory.User(),
 			factory.Stream(),
 			factory.Rule(),
@@ -317,7 +296,6 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 
 		// Populate Following Service
 		factory.followingService.Refresh(
-			factory.collection(CollectionFollowing),
 			factory.Stream(),
 			factory.User(),
 			factory.Inbox(),
@@ -328,12 +306,9 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 		)
 
 		// Populate Group Service
-		factory.groupService.Refresh(
-			factory.collection(CollectionGroup),
-		)
+		factory.groupService.Refresh()
 
 		factory.identityService.Refresh(
-			factory.collection(CollectionIdentity),
 			factory.ActivityStream(),
 			factory.Email(),
 			factory.JWT(),
@@ -344,7 +319,6 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 
 		// Populate Inbox Service
 		factory.inboxService.Refresh(
-			factory.collection(CollectionInbox),
 			factory.Rule(),
 			factory.Folder(),
 			factory.Host(),
@@ -352,7 +326,6 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 
 		// Populate the JWT Key Service
 		factory.jwtService.Refresh(
-			factory.collection(CollectionJWT),
 			domain.MasterKey,
 		)
 
@@ -368,7 +341,6 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 
 		// Populate Mention service
 		factory.mentionService.Refresh(
-			factory.collection(CollectionMention),
 			factory.Rule(),
 			factory.ActivityStream(),
 			factory.Host(),
@@ -376,7 +348,6 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 
 		// Populate MerchantAccount Service
 		factory.merchantAccountService.Refresh(
-			factory.collection(CollectionMerchantAccount),
 			factory.Circle(),
 			factory.Connection(),
 			factory.JWT(),
@@ -389,14 +360,12 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 
 		// Populate OAuthClient
 		factory.oauthClient.Refresh(
-			factory.collection(CollectionOAuthClient),
 			factory.OAuthUserToken(),
 			factory.Host(),
 		)
 
 		// Populate OAuthUserToken
 		factory.oauthUserToken.Refresh(
-			factory.collection(CollectionOAuthUserToken),
 			factory.OAuthClient(),
 			factory.JWT(),
 			factory.Host(),
@@ -404,7 +373,6 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 
 		// Populate Outbox Service
 		factory.outboxService.Refresh(
-			factory.collection(CollectionOutbox),
 			factory.ActivityStream(),
 			factory.Follower(),
 			factory.Identity(),
@@ -427,7 +395,6 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 
 		// Populate Product Service
 		factory.productService.Refresh(
-			factory.collection(CollectionProduct),
 			factory.MerchantAccount(),
 		)
 
@@ -439,7 +406,6 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 
 		// Populate the Response Service
 		factory.responseService.Refresh(
-			factory.collection(CollectionResponse),
 			factory.ActivityStream(),
 			factory.Inbox(),
 			factory.Outbox(),
@@ -449,7 +415,6 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 
 		// Populate the Rule Service
 		factory.ruleService.Refresh(
-			factory.collection(CollectionRule),
 			factory.ActivityStream(),
 			factory.Outbox(),
 			factory.User(),
@@ -459,7 +424,6 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 
 		// Populate the SearchDomain Service
 		factory.searchDomainService.Refresh(
-			factory.collection(CollectionSearchQuery),
 			factory.Domain(),
 			factory.Follower(),
 			factory.Rule(),
@@ -481,7 +445,6 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 
 		// Populate the SearchQuery Service
 		factory.searchQueryService.Refresh(
-			factory.collection(CollectionSearchQuery),
 			factory.Domain(),
 			factory.Follower(),
 			factory.Rule(),
@@ -493,20 +456,17 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 
 		// Populate the Search Service
 		factory.searchResultService.Refresh(
-			factory.collection(CollectionSearchResult),
 			factory.SearchTag(),
 			factory.Host(),
 		)
 
 		// Populate the SearchTag Service
 		factory.searchTagService.Refresh(
-			factory.collection(CollectionSearchTag),
 			factory.Host(),
 		)
 
 		// Populate Stream Service
 		factory.streamService.Refresh(
-			factory.collection(CollectionStream),
 			factory.ActivityStream(),
 			factory.Circle(),
 			factory.Domain(),
@@ -540,14 +500,12 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 
 		// Populate StreamDraft Service
 		factory.streamDraftService.Refresh(
-			factory.collection(CollectionStreamDraft),
 			factory.Template(),
 			factory.Stream(),
 		)
 
 		// Populate Privilege Service
 		factory.privilegeService.Refresh(
-			factory.collection(CollectionPrivilege),
 			factory.Circle(),
 			factory.Identity(),
 			factory.MerchantAccount(),
@@ -555,10 +513,6 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 
 		// Populate User Service
 		factory.userService.Refresh(
-			factory.collection(CollectionUser),
-			factory.collection(CollectionFollower),
-			factory.collection(CollectionFollowing),
-			factory.collection(CollectionRule),
 			factory.Attachment(),
 			factory.Domain(),
 			factory.Email(),
@@ -582,15 +536,14 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 
 		// Populate Webhook Service
 		factory.webhookService.Refresh(
-			factory.collection(CollectionWebhook),
 			factory.Queue(),
 		)
 
 		// Watch for updates to Stream records
-		go queries.WatchStreams(refreshContext, factory.collection(CollectionStream), factory.sseUpdateChannel)
+		go queries.WatchStreams(refreshContext, factory.server, factory.sseUpdateChannel)
 
 		// Watch for updates to User records
-		go queries.WatchUsers(refreshContext, factory.collection(CollectionUser), factory.sseUpdateChannel)
+		go queries.WatchUsers(refreshContext, factory.server, factory.sseUpdateChannel)
 
 		// Run search notifications
 		go factory.searchNotifierService.Run()
@@ -615,10 +568,6 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 // Close disconnects any background processes before this factory is destroyed
 func (factory *Factory) Close() {
 
-	if factory.Session != nil {
-		factory.Session.Close()
-	}
-
 	close(factory.sseUpdateChannel)
 
 	factory.domainService.Close()
@@ -633,6 +582,14 @@ func (factory *Factory) Close() {
 /******************************************
  * Domain Data Accessors
  ******************************************/
+
+func (factory *Factory) Server() mongodb.Server {
+	return factory.server
+}
+
+func (factory *Factory) Version() string {
+	return "0.8.0"
+}
 
 // ID implements the set.Set interface.  (Domains are indexed by their hostname)
 func (factory *Factory) ID() string {
@@ -1038,15 +995,6 @@ func (factory *Factory) RSS() *service.RSS {
 /******************************************
  * Helper Utilities
  ******************************************/
-
-// collection returns a data.Collection that matches the requested name.
-func (factory *Factory) collection(name string) data.Collection {
-
-	if factory.Session == nil {
-		return nil
-	}
-	return factory.Session.Collection(name)
-}
 
 // ModelService returns the correct service to use for this particular Model object
 func (factory *Factory) ModelService(object data.Object) service.ModelService {

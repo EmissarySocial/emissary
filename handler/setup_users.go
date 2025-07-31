@@ -9,6 +9,7 @@ import (
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/labstack/echo/v4"
@@ -29,8 +30,17 @@ func SetupDomainUsersGet(serverFactory *server.Factory, templates *template.Temp
 			return derp.Wrap(err, location, "Error loading factory")
 		}
 
+		// Open a database session
+		session, err := factory.Server().Session(ctx.Request().Context())
+
+		if err != nil {
+			return derp.Wrap(err, location, "Unable to open database session")
+		}
+
+		defer session.Close()
+
 		// Display the modal's inner content
-		return displayDomainUsersModal(ctx, domainConfig, factory, templates)
+		return displayDomainUsersModal(ctx, factory, session, domainConfig, templates)
 	}
 }
 
@@ -60,6 +70,15 @@ func SetupDomainUserPost(serverFactory *server.Factory, templates *template.Temp
 			return derp.Wrap(err, location, "Error loading factory")
 		}
 
+		// Open a database session
+		session, err := factory.Server().Session(ctx.Request().Context())
+
+		if err != nil {
+			return derp.Wrap(err, location, "Unable to open database session")
+		}
+
+		defer session.Close()
+
 		// Populate the new user record
 		userService := factory.User()
 		user := model.NewUser()
@@ -70,7 +89,7 @@ func SetupDomainUserPost(serverFactory *server.Factory, templates *template.Temp
 			// Allow admins to UPDATE domain owners (if "userId" is provided)
 			if userID, err := primitive.ObjectIDFromHex(ctx.QueryParam("userId")); err == nil {
 
-				if err := userService.LoadByID(userID, &user); err != nil {
+				if err := userService.LoadByID(session, userID, &user); err != nil {
 					return derp.Wrap(err, location, "Error loading user")
 				}
 			}
@@ -91,7 +110,7 @@ func SetupDomainUserPost(serverFactory *server.Factory, templates *template.Temp
 		user.IsPublic = true
 
 		// Try to save the new user record
-		if err := userService.Save(&user, "Created by Server Admin"); err != nil {
+		if err := userService.Save(session, &user, "Created by Server Admin"); err != nil {
 			return derp.Wrap(err, location, "Error saving user")
 		}
 
@@ -99,11 +118,13 @@ func SetupDomainUserPost(serverFactory *server.Factory, templates *template.Temp
 		ctx.QueryParams().Set("userId", user.UserID.Hex())
 
 		// Display the modal's NEW inner contents
-		return displayDomainUsersModal(ctx, domainConfig, factory, templates)
+		return displayDomainUsersModal(ctx, factory, session, domainConfig, templates)
 	}
 }
 
 func SetupDomainUserInvite(serverFactory *server.Factory, templates *template.Template) echo.HandlerFunc {
+
+	const location = "handler.SetupDomainUserInvite"
 
 	return func(ctx echo.Context) error {
 
@@ -111,16 +132,25 @@ func SetupDomainUserInvite(serverFactory *server.Factory, templates *template.Te
 		_, factory, err := serverFactory.ByDomainID(domainID)
 
 		if err != nil {
-			return derp.Wrap(err, "handler.SetupDomainUserInvite", "Error loading factory")
+			return derp.Wrap(err, location, "Error loading factory")
 		}
+
+		// Open a database session
+		session, err := factory.Server().Session(ctx.Request().Context())
+
+		if err != nil {
+			return derp.Wrap(err, location, "Unable to open database session")
+		}
+
+		defer session.Close()
 
 		// Try to load the requested User
 		user := model.NewUser()
 		userID := ctx.Param("user")
 		userService := factory.User()
 
-		if err := userService.LoadByToken(userID, &user); err != nil {
-			return derp.Wrap(err, "handler.SetupDomainUserInvite", "Error loading user")
+		if err := userService.LoadByToken(session, userID, &user); err != nil {
+			return derp.Wrap(err, location, "Error loading user")
 		}
 
 		// Try to (re?)send the email invitation
@@ -147,27 +177,34 @@ func SetupDomainUserDelete(serverFactory *server.Factory, templates *template.Te
 			return derp.Wrap(err, location, "Error loading factory")
 		}
 
-		// Populate the new user record
-		user := model.NewUser()
+		// Open a database session
+		session, err := factory.Server().Session(ctx.Request().Context())
+
+		if err != nil {
+			return derp.Wrap(err, location, "Unable to open database session")
+		}
+
+		defer session.Close()
 
 		// Try to find the existing user record
+		user := model.NewUser()
 		userService := factory.User()
 
-		if err := userService.LoadByToken(ctx.Param("user"), &user); err != nil {
+		if err := userService.LoadByToken(session, ctx.Param("user"), &user); err != nil {
 			return derp.Wrap(err, location, "Error loading user")
 		}
 
 		// Try to delete the user record
-		if err := userService.Delete(&user, "Deleted by Server Admin"); err != nil {
+		if err := userService.Delete(session, &user, "Deleted by Server Admin"); err != nil {
 			return derp.Wrap(err, location, "Error deleting user")
 		}
 
 		// Display the modal's NEW inner contents
-		return displayDomainUsersModal(ctx, domainConfig, factory, templates)
+		return displayDomainUsersModal(ctx, factory, session, domainConfig, templates)
 	}
 }
 
-func displayDomainUsersModal(ctx echo.Context, domainConfig config.Domain, factory *domain.Factory, templates *template.Template) error {
+func displayDomainUsersModal(ctx echo.Context, factory *domain.Factory, session data.Session, domainConfig config.Domain, templates *template.Template) error {
 
 	const location = "handler.displayDomainUsersModal"
 
@@ -177,7 +214,7 @@ func displayDomainUsersModal(ctx echo.Context, domainConfig config.Domain, facto
 	data := mapof.Any{
 		"DomainID":  domainConfig.DomainID,
 		"Domain":    domainConfig.Label,
-		"Users":     userService.ListOwnersAsSlice(),
+		"Users":     userService.ListOwnersAsSlice(session),
 		"UpdatedID": ctx.QueryParam("userId"),
 	}
 

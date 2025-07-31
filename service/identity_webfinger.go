@@ -5,13 +5,14 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 )
 
-func (service *Identity) sendGuestCode_ActivityPub(identifier string, code string) error {
+func (service *Identity) sendGuestCode_ActivityPub(session data.Session, identifier string, code string) error {
 
 	const location = "service.Identity.sendGuestCode_ActivityPub"
 
@@ -72,7 +73,7 @@ func (service *Identity) sendGuestCode_ActivityPub(identifier string, code strin
 	}
 
 	// Because we want a real-time response, we're going to run this queue task inline
-	if err := service.activityService.SendMessage(message); err != nil {
+	if err := service.activityService.SendMessage(session, message); err != nil {
 		return derp.Wrap(err, location, "Error sending guest code to WebFinger identifier", identifier)
 	}
 

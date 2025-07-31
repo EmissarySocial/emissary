@@ -24,12 +24,12 @@ type Group struct {
 }
 
 // NewGroup returns a fully initialized `Group` builder.
-func NewGroup(factory Factory, request *http.Request, response http.ResponseWriter, template model.Template, group *model.Group, actionID string) (Group, error) {
+func NewGroup(factory Factory, session data.Session, request *http.Request, response http.ResponseWriter, template model.Template, group *model.Group, actionID string) (Group, error) {
 
 	const location = "build.NewGroup"
 
 	// Create the underlying Common builder
-	common, err := NewCommonWithTemplate(factory, request, response, template, group, actionID)
+	common, err := NewCommonWithTemplate(factory, session, request, response, template, group, actionID)
 
 	if err != nil {
 		return Group{}, derp.Wrap(err, location, "Error creating common builder")
@@ -75,7 +75,7 @@ func (w Group) View(actionID string) (template.HTML, error) {
 
 	const location = "build.Group.View"
 
-	builder, err := NewGroup(w._factory, w._request, w._response, w._template, w._group, actionID)
+	builder, err := NewGroup(w._factory, w._session, w._request, w._response, w._template, w._group, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, location, "Error creating Group builder")
@@ -128,7 +128,7 @@ func (w Group) service() service.ModelService {
 }
 
 func (w Group) clone(action string) (Builder, error) {
-	return NewGroup(w._factory, w._request, w._response, w._template, w._group, action)
+	return NewGroup(w._factory, w._session, w._request, w._response, w._template, w._group, action)
 }
 
 /******************************************
@@ -184,7 +184,7 @@ func (w Group) Groups() *QueryBuilder[model.Group] {
 		exp.Equal("deleteDate", 0),
 	)
 
-	result := NewQueryBuilder[model.Group](w._factory.Group(), criteria)
+	result := NewQueryBuilder[model.Group](w._factory.Group(), w._session, criteria)
 
 	return &result
 }

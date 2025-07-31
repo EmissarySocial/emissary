@@ -8,6 +8,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/camper"
 	"github.com/EmissarySocial/emissary/tools/formdata"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/html"
@@ -17,7 +18,7 @@ import (
 	"github.com/benpate/steranko"
 )
 
-func GetIntent_Follow(ctx *steranko.Context, factory *domain.Factory, user *model.User) error {
+func GetIntent_Follow(ctx *steranko.Context, factory *domain.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.GetIntent_Follow"
 
@@ -41,7 +42,7 @@ func GetIntent_Follow(ctx *steranko.Context, factory *domain.Factory, user *mode
 	// Try to load an existing "Following" record (allow "NOT FOUND" errors)
 	followingService := factory.Following()
 	following := model.NewFollowing()
-	if err := followingService.LoadByURL(user.UserID, actor.ID(), &following); err != nil {
+	if err := followingService.LoadByURL(session, user.UserID, actor.ID(), &following); err != nil {
 		if !derp.IsNotFound(err) {
 			return derp.Wrap(err, location, "Error loading existing following")
 		}
@@ -163,7 +164,7 @@ func getForm_FollowingIntent() form.Form {
 	}
 }
 
-func PostIntent_Follow(ctx *steranko.Context, factory *domain.Factory, user *model.User) error {
+func PostIntent_Follow(ctx *steranko.Context, factory *domain.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.GetIntent_Follow"
 
@@ -189,7 +190,7 @@ func PostIntent_Follow(ctx *steranko.Context, factory *domain.Factory, user *mod
 	}
 
 	// Save the new Stream to the database
-	if err := followingService.Save(&following, "Created via Activity Intent"); err != nil {
+	if err := followingService.Save(session, &following, "Created via Activity Intent"); err != nil {
 		return derp.Wrap(err, location, "Error saving stream")
 	}
 
