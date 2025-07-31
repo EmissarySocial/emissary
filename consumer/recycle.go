@@ -2,13 +2,14 @@ package consumer
 
 import (
 	"github.com/EmissarySocial/emissary/domain"
+	"github.com/benpate/data"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
 )
 
 // RecycleDomain deletes all records from the database that were
 // "soft deleted" more than 30 days ago.
-func RecycleDomain(factory *domain.Factory, _ mapof.Any) queue.Result {
+func RecycleDomain(factory *domain.Factory, session data.Session, _ mapof.Any) queue.Result {
 
 	/* DISABLING RECYCLE FOR NOW BECAUSE I'M TERRIFIED OF BREAKING PRODUCTION.
 

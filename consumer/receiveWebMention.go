@@ -5,13 +5,14 @@ import (
 
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func ReceiveWebMention(factory *domain.Factory, args mapof.Any) queue.Result {
+func ReceiveWebMention(factory *domain.Factory, session data.Session, args mapof.Any) queue.Result {
 
 	const location = "consumer.ReceiveWebMention"
 
@@ -41,7 +42,7 @@ func ReceiveWebMention(factory *domain.Factory, args mapof.Any) queue.Result {
 	case model.MentionTypeStream:
 		streamService := factory.Stream()
 		stream := model.NewStream()
-		if err := streamService.LoadByToken(token, &stream); err != nil {
+		if err := streamService.LoadByToken(session, token, &stream); err != nil {
 			return queue.Error(derp.Wrap(err, location, "Cannot load stream", target))
 		}
 		objectID = stream.StreamID
@@ -49,7 +50,7 @@ func ReceiveWebMention(factory *domain.Factory, args mapof.Any) queue.Result {
 	case model.MentionTypeUser:
 		userService := factory.User()
 		user := model.NewUser()
-		if err := userService.LoadByToken(token, &user); err != nil {
+		if err := userService.LoadByToken(session, token, &user); err != nil {
 			return queue.Error(derp.Wrap(err, location, "Cannot load user", token))
 		}
 		objectID = user.UserID
@@ -59,7 +60,7 @@ func ReceiveWebMention(factory *domain.Factory, args mapof.Any) queue.Result {
 	}
 
 	// Check the database for an existing Mention record
-	mention, err := mentionService.LoadOrCreate(objectType, objectID, source)
+	mention, err := mentionService.LoadOrCreate(session, objectType, objectID, source)
 
 	if err != nil {
 		return queue.Error(derp.Wrap(err, location, "Error loading mention", objectType, token))
@@ -71,7 +72,7 @@ func ReceiveWebMention(factory *domain.Factory, args mapof.Any) queue.Result {
 	}
 
 	// Try to save the mention to the database
-	if err := mentionService.Save(&mention, "Created"); err != nil {
+	if err := mentionService.Save(session, &mention, "Created"); err != nil {
 		return queue.Error(derp.Wrap(err, location, "Error saving mention"))
 	}
 
