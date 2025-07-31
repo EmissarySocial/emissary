@@ -108,7 +108,7 @@ func buildOutbox(ctx *steranko.Context, factory *domain.Factory, session data.Se
 		}
 	}
 
-	builder, err := build.NewOutbox(factory, ctx.Request(), ctx.Response(), user, actionID)
+	builder, err := build.NewOutbox(factory, session, ctx.Request(), ctx.Response(), user, actionID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error creating builder")

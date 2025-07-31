@@ -67,7 +67,7 @@ func getStreamPipeline(ctx *steranko.Context, factory *domain.Factory, session d
 	actionID := getActionID(ctx)
 
 	// Get a stream builder.  This also enforces permissions
-	streamBuilder, err := build.NewStream(factory, ctx.Request(), ctx.Response(), *template, stream, actionID)
+	streamBuilder, err := build.NewStream(factory, session, ctx.Request(), ctx.Response(), *template, stream, actionID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Unable to create Builder.")

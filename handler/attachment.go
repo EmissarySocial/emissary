@@ -138,7 +138,7 @@ func GetStreamAttachment(ctx *steranko.Context, factory *domain.Factory, session
 	}
 
 	// Try to find the action requested by the user.  This also enforces user permissions...
-	if _, err := build.NewStreamWithoutTemplate(factory, ctx.Request(), ctx.Response(), &stream, "view"); err != nil {
+	if _, err := build.NewStreamWithoutTemplate(factory, session, ctx.Request(), ctx.Response(), &stream, "view"); err != nil {
 		return derp.Wrap(err, location, "Cannot create builder", &stream, &attachment)
 	}
 

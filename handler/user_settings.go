@@ -32,7 +32,7 @@ func buildSettings(ctx *steranko.Context, factory *domain.Factory, session data.
 		return derp.Wrap(err, location, "Error building JSON-LD")
 	}
 
-	builder, err := build.NewSettings(factory, ctx.Request(), ctx.Response(), user, actionID)
+	builder, err := build.NewSettings(factory, session, ctx.Request(), ctx.Response(), user, actionID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error creating builder")

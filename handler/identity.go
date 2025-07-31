@@ -31,7 +31,7 @@ func buildIdentity(ctx *steranko.Context, factory *domain.Factory, session data.
 
 	// Create a builder
 	actionID := getActionID(ctx)
-	builder, err := build.NewIdentity(factory, ctx.Request(), ctx.Response(), identity, actionID)
+	builder, err := build.NewIdentity(factory, session, ctx.Request(), ctx.Response(), identity, actionID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error creating builder")

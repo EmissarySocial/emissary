@@ -27,7 +27,7 @@ func GetRegister(ctx *steranko.Context, factory *domain.Factory, session data.Se
 	// Build the registration form
 	actionID := getActionID(ctx)
 
-	b, err := build.NewRegistration(factory, ctx.Request(), ctx.Response(), registration, actionID)
+	b, err := build.NewRegistration(factory, session, ctx.Request(), ctx.Response(), registration, actionID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error creating Builder")
@@ -71,7 +71,7 @@ func PostRegister(ctx *steranko.Context, factory *domain.Factory, session data.S
 	}
 
 	// Build confirmation response
-	b, err := build.NewRegistration(factory, ctx.Request(), ctx.Response(), registration, "confirm")
+	b, err := build.NewRegistration(factory, session, ctx.Request(), ctx.Response(), registration, "confirm")
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error creating Builder")

@@ -80,7 +80,7 @@ func buildAdmin_GetBuilder(ctx *steranko.Context, factory *domain.Factory, sessi
 		return build.NewDomain(factory, session, ctx.Request(), ctx.Response(), template, actionID)
 
 	case "Syndication":
-		return build.NewSyndication(factory, ctx.Request(), ctx.Response(), template, actionID)
+		return build.NewSyndication(factory, session, ctx.Request(), ctx.Response(), template, actionID)
 
 	case "Group":
 		group := model.NewGroup()
@@ -92,7 +92,7 @@ func buildAdmin_GetBuilder(ctx *steranko.Context, factory *domain.Factory, sessi
 			}
 		}
 
-		return build.NewGroup(factory, ctx.Request(), ctx.Response(), template, &group, actionID)
+		return build.NewGroup(factory, session, ctx.Request(), ctx.Response(), template, &group, actionID)
 
 	case "Rule":
 
@@ -106,7 +106,7 @@ func buildAdmin_GetBuilder(ctx *steranko.Context, factory *domain.Factory, sessi
 			}
 		}
 
-		return build.NewRule(factory, ctx.Request(), ctx.Response(), &rule, template, actionID)
+		return build.NewRule(factory, session, ctx.Request(), ctx.Response(), &rule, template, actionID)
 
 	case "Stream":
 		stream := model.NewStream()
@@ -118,7 +118,7 @@ func buildAdmin_GetBuilder(ctx *steranko.Context, factory *domain.Factory, sessi
 			}
 		}
 
-		return build.NewNavigation(factory, ctx.Request(), ctx.Response(), template, &stream, actionID)
+		return build.NewNavigation(factory, session, ctx.Request(), ctx.Response(), template, &stream, actionID)
 
 	case "Tag":
 		searchTag := model.NewSearchTag()
@@ -130,7 +130,7 @@ func buildAdmin_GetBuilder(ctx *steranko.Context, factory *domain.Factory, sessi
 			}
 		}
 
-		return build.NewSearchTag(factory, ctx.Request(), ctx.Response(), template, &searchTag, actionID)
+		return build.NewSearchTag(factory, session, ctx.Request(), ctx.Response(), template, &searchTag, actionID)
 
 	case "User":
 		user := model.NewUser()
@@ -142,7 +142,7 @@ func buildAdmin_GetBuilder(ctx *steranko.Context, factory *domain.Factory, sessi
 			}
 		}
 
-		return build.NewUser(factory, ctx.Request(), ctx.Response(), template, &user, actionID)
+		return build.NewUser(factory, session, ctx.Request(), ctx.Response(), template, &user, actionID)
 
 	case "Webhook":
 		webhook := model.NewWebhook()
@@ -154,7 +154,7 @@ func buildAdmin_GetBuilder(ctx *steranko.Context, factory *domain.Factory, sessi
 			}
 		}
 
-		return build.NewWebhook(factory, ctx.Request(), ctx.Response(), template, &webhook, actionID)
+		return build.NewWebhook(factory, session, ctx.Request(), ctx.Response(), template, &webhook, actionID)
 
 	default:
 		return nil, derp.NotFoundError(location, "Template MODEL must be one of: 'Rule', 'Domain', 'Syndication', 'Group', 'Stream', 'Tag', or 'User'", template.Model)

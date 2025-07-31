@@ -27,7 +27,7 @@ func GetOAuthAuthorization(ctx *steranko.Context, factory *domain.Factory, sessi
 	}
 
 	// Load the OAuth Builder
-	builder, err := build.NewOAuthAuthorization(factory, transaction)
+	builder, err := build.NewOAuthAuthorization(factory, session, transaction)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error Generating Builder")
