@@ -14,7 +14,7 @@ import (
 	"github.com/benpate/steranko"
 )
 
-func GetOutboxCollection(ctx *steranko.Context, factory *domain.Factory, session data.Session, stream *model.Stream, template *model.Template) error {
+func GetOutboxCollection(ctx *steranko.Context, factory *domain.Factory, session data.Session, template *model.Template, stream *model.Stream) error {
 
 	const location = "handler.activitypub_stream.GetOutboxCollection"
 

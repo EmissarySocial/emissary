@@ -197,8 +197,6 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.Pre(middleware.RemoveTrailingSlash())
 
 	// Middleware for standard pages
-	// e.Use(mw.Debug()) <- this is super chatty, so only enable it on dev, or for short periods of time.
-	e.Use(mw.Domain(factory))
 	e.Use(steranko.Middleware(factory))
 	e.Use(middleware.CORS())
 
@@ -383,9 +381,9 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 
 	// ActivityPub Routes for Streams
 	e.GET("/:stream/pub", handler.WithTemplate(factory, ap_stream.GetJSONLD))
-	e.POST("/:stream/pub/inbox", ap_stream.PostInbox(factory))
-	e.GET("/:stream/pub/outbox", ap_stream.GetOutboxCollection(factory))
-	e.GET("/:stream/pub/followers", ap_stream.GetFollowersCollection(factory))
+	e.POST("/:stream/pub/inbox", handler.WithTemplate(factory, ap_stream.PostInbox))
+	e.GET("/:stream/pub/outbox", handler.WithTemplate(factory, ap_stream.GetOutboxCollection))
+	e.GET("/:stream/pub/followers", handler.WithTemplate(factory, ap_stream.GetFollowersCollection))
 	e.GET("/:stream/pub/children", handler.WithFactory(factory, ap_stream.GetChildrenCollection))
 
 	// Domain Admin Pages

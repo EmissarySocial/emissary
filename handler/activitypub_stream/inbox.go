@@ -11,7 +11,7 @@ import (
 	"github.com/benpate/steranko"
 )
 
-func PostInbox(ctx *steranko.Context, factory *domain.Factory, session data.Session, stream *model.Stream, template *model.Template) error {
+func PostInbox(ctx *steranko.Context, factory *domain.Factory, session data.Session, template *model.Template, stream *model.Stream) error {
 
 	const location = "handler.activitypub_stream.PostInbox"
 
