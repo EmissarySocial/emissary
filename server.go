@@ -196,7 +196,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.Pre(middleware.RemoveTrailingSlash())
 
 	// Middleware for standard pages
-	e.Use(steranko.Middleware(factory))
+	// e.Use(steranko.Middleware(factory))
 	e.Use(middleware.CORS())
 
 	// TODO: Commonly accessed routest that we should serve
