@@ -15,33 +15,33 @@ import (
 )
 
 type LookupProvider struct {
-	session data.Session
 	factory Factory
 	request *http.Request
+	session data.Session
 	userID  primitive.ObjectID
 }
 
-func NewLookupProvider(session data.Session, factory Factory, request *http.Request, userID primitive.ObjectID) LookupProvider {
+func NewLookupProvider(factory Factory, request *http.Request, session data.Session, userID primitive.ObjectID) LookupProvider {
 	return LookupProvider{
-		session: session,
 		factory: factory,
 		request: request,
+		session: session,
 		userID:  userID,
 	}
 }
 
-func (service LookupProvider) Group(session data.Session, path string) form.LookupGroup {
+func (service LookupProvider) Group(path string) form.LookupGroup {
 
 	switch path {
 
 	case "circles":
-		return NewCircleLookupProvider(session, service.factory.Circle(), service.userID)
+		return NewCircleLookupProvider(service.session, service.factory.Circle(), service.userID)
 
 	case "circle-icons":
 		return form.NewReadOnlyLookupGroup(dataset.Icons()...)
 
 	case "folders":
-		return NewFolderLookupProvider(session, service.factory.Folder(), service.userID)
+		return NewFolderLookupProvider(service.session, service.factory.Folder(), service.userID)
 
 	case "folder-icons":
 		return form.NewReadOnlyLookupGroup(dataset.Icons()...)
@@ -116,7 +116,7 @@ func (service LookupProvider) Group(session data.Session, path string) form.Look
 		)
 
 	case "searchTag-groups":
-		return form.ReadOnlyLookupGroup(service.factory.SearchTag().ListGroups(session))
+		return form.ReadOnlyLookupGroup(service.factory.SearchTag().ListGroups(service.session))
 
 	case "sharing":
 		return form.NewReadOnlyLookupGroup(
@@ -182,7 +182,7 @@ func (service *LookupProvider) getSubscribableStreams(session data.Session) form
 	const location = "service.LookupProvider.getSubscribableStreams"
 
 	// Query all streams in the User's outbox that are subscribe-able
-	streams, err := service.factory.Stream().QuerySubscribable(session, service.userID)
+	streams, err := service.factory.Stream().QuerySubscribable(service.session, service.userID)
 
 	if err != nil {
 		derp.Report(derp.Wrap(err, location, "Error loading streams with products"))
@@ -208,7 +208,7 @@ func (service *LookupProvider) getMerchantAccounts(session data.Session) form.Lo
 	const location = "service.LookupProvider.getMerchantAccounts"
 
 	// Load the Merchant Accounts for this User
-	result, err := service.factory.MerchantAccount().QueryByUser(session, service.userID)
+	result, err := service.factory.MerchantAccount().QueryByUser(service.session, service.userID)
 
 	if err != nil {
 		derp.Report(derp.Wrap(err, location, "Error loading merchant accounts"))
@@ -228,7 +228,7 @@ func (service *LookupProvider) getMerchantAccountsAllProducts(session data.Sessi
 
 	const location = "service.LookupProvider.getMerchantAccountsAllProducts"
 
-	_, products, err := service.factory.Product().SyncRemoteProducts(session, service.userID)
+	_, products, err := service.factory.Product().SyncRemoteProducts(service.session, service.userID)
 
 	if err != nil {
 		derp.Report(derp.Wrap(err, location, "Error loading remote products for user", service.userID.Hex()))
