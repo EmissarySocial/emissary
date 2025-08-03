@@ -432,7 +432,7 @@ func startHTTPS(factory *server.Factory, e *echo.Echo, options ...config.Option)
 	if portString, ok := config.HTTPSPortString(); ok {
 
 		// Find all NON-LOCAL domain names.  We need AT LEAST ONE to get an SSL Certificate
-		domains := slice.Filter(config.DomainNames(), domain.NotLocalhost)
+		domains := slice.Filter(config.DomainNames(), dt.NotLocalhost)
 
 		if len(domains) == 0 {
 			log.Info().Msg("Skipping HTTPS server because there are no non-local domains.")
@@ -566,16 +566,16 @@ func errorHandler(err error, ctx echo.Context) {
 		return
 	}
 
-	fullURL := domain.AddProtocol(request.Host) + request.URL.String()
+	fullURL := dt.AddProtocol(request.Host) + request.URL.String()
 
 	// Write the error to the console (on production and local domains)
 	derp.Report(derp.Wrap(err, location, "Error generating web page", fullURL, ctx.Request().Header))
 
 	// Get the true hostname of the request.
-	hostname := domain.Hostname(request)
+	hostname := dt.Hostname(request)
 
 	// If this is a local server, then allow developers to see full error dump.
-	if domain.IsLocalhost(hostname) {
+	if dt.IsLocalhost(hostname) {
 		_ = ctx.JSONPretty(errorCode, err, "  ")
 		return
 	}
