@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/EmissarySocial/emissary/domain"
@@ -14,7 +13,6 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // WithFunc0 is a function signature for a continuation function that requires only the domain Factory
@@ -87,6 +85,60 @@ func WithDomain(serverFactory *server.Factory, fn WithFunc1[model.Domain]) echo.
 	})
 }
 
+// WithFactory handles boilerplate code for requests that require only the domain Factory
+func WithFactory(serverFactory *server.Factory, fn WithFunc0) echo.HandlerFunc {
+
+	const location = "handler.WithAuthenticatedUser"
+
+	return func(ctx echo.Context) error {
+
+		// Validate the domain name
+		factory, err := serverFactory.ByContext(ctx)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Unrecognized Domain")
+		}
+
+		/////////////////////////////////////////////////////////
+		// GET requests use a simple "read only" database session
+
+		// Call the continuation function
+		if ctx.Request().Method == http.MethodGet {
+
+			// Create a Read only database session
+			session, err := factory.Server().Session(ctx.Request().Context())
+
+			if err != nil {
+				return derp.Wrap(err, location, "Unable to open database session")
+			}
+
+			defer session.Close()
+
+			// Create a context that wraps this echo.Context and data.Session
+			sterankoContext := factory.Steranko().Context(ctx, session)
+
+			// Execute the *actual* handler (success alleged)
+			return fn(sterankoContext, factory, session)
+		}
+
+		/////////////////////////////////////////////////////
+		// POST requests are wrapped in a MongoDB transaction
+
+		// WCreate a database transaction and wrap the callback function in it.
+		err := factory.WithTransaction(ctx.Request().Context(), func(session data.Session) {
+			sterankoContext := factory.Steranko().Context(ctx, session)
+			return fn(sterankoContext, factory, session)
+		})
+
+		if err != nil {
+			return derp.Wrap(err, location, "Unable to open database session")
+		}
+
+		// Success alleged.
+		return nil
+	}
+}
+
 func WithFollowing(serverFactory *server.Factory, fn WithFunc1[model.Following]) echo.HandlerFunc {
 
 	const location = "handler.WithFollowing"
@@ -117,87 +169,6 @@ func WithFollowing(serverFactory *server.Factory, fn WithFunc1[model.Following])
 
 		return fn(ctx, factory, session, &following)
 	})
-}
-
-// WithFactory handles boilerplate code for requests that require only the domain Factory
-func WithFactory(serverFactory *server.Factory, fn WithFunc0) echo.HandlerFunc {
-
-	const location = "handler.WithAuthenticatedUser"
-
-	return func(ctx echo.Context) error {
-
-		// Cast the context to a Steranko Context
-		sterankoContext, ok := ctx.(*steranko.Context)
-
-		if !ok {
-			return derp.InternalError(location, "Context must be a Steranko Context")
-		}
-
-		// Validate the domain name
-		factory, err := serverFactory.ByContext(ctx)
-
-		if err != nil {
-			return derp.Wrap(err, location, "Unrecognized Domain")
-		}
-
-		session, err := factory.Server().Session(ctx.Request().Context())
-
-		if err != nil {
-			return derp.Wrap(err, location, "Unable to open database session")
-		}
-
-		defer session.Close()
-
-		////////////////////////////////////////////////////
-		// GET requests are tied to the HTTP request context
-
-		// Call the continuation function
-		if ctx.Request().Method == http.MethodGet {
-			return fn(sterankoContext, factory, session)
-		}
-
-		//////////////////////////////////////////////////
-		// POST requests are wrapped in a MongoDB session
-
-		// Start a Session
-		mongoSession, err := factory.Server().Client().StartSession()
-
-		if err != nil {
-			return derp.Wrap(err, location, "Unable to start database session")
-		}
-
-		defer mongoSession.EndSession(ctx.Request().Context())
-
-		// Put the session in a context to pass to database calls
-		sessionContext := mongo.NewSessionContext(ctx.Request().Context(), mongoSession)
-
-		session, err := factory.Server().Session(sessionContext)
-
-		if err != nil {
-			return derp.Wrap(err, location, "Unable to create database session")
-		}
-
-		// Begin the transaction
-		if err := mongoSession.StartTransaction(); err != nil {
-			return derp.Wrap(err, location, "Unable to start transaction")
-		}
-
-		// Call the continuation function
-		if err := fn(sterankoContext, factory, session); err != nil {
-			if err := mongoSession.AbortTransaction(context.Background()); err != nil {
-				return derp.Wrap(err, location, "Unable to abort transaction")
-			}
-			return derp.Wrap(err, location, "Unable to execute continuation function")
-		}
-
-		// Commit the transaction
-		if err := mongoSession.CommitTransaction(context.Background()); err != nil {
-			return derp.Wrap(err, location, "Unable to commit transaction")
-		}
-
-		// Success.
-		return nil
-	}
 }
 
 func WithIdentity(serverFactory *server.Factory, fn WithFunc1[model.Identity]) echo.HandlerFunc {
