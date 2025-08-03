@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/benpate/derp"
-	domaintools "github.com/benpate/domain"
+	dt "github.com/benpate/domain"
 	"github.com/benpate/re"
 	"github.com/labstack/echo/v4"
 )
@@ -26,7 +26,7 @@ func Debug() echo.MiddlewareFunc {
 			fmt.Println("")
 			fmt.Println("-- Debugger Middleware -------------------")
 			fmt.Println(request.Method + " " + request.URL.String() + " " + request.Proto)
-			fmt.Println("Host: " + domaintools.Hostname(request))
+			fmt.Println("Host: " + dt.Hostname(request))
 			for key, value := range request.Header {
 				fmt.Println(key + ": " + strings.Join(value, ", "))
 			}

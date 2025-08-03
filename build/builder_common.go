@@ -9,8 +9,7 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	"github.com/benpate/domain"
-	domaintools "github.com/benpate/domain"
+	dt "github.com/benpate/domain"
 	"github.com/benpate/exp"
 	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/form"
@@ -119,12 +118,12 @@ func (w Common) URL() string {
 
 // Protocol returns http:// or https:// used for this request
 func (w Common) Protocol() string {
-	return domain.Protocol(w.Hostname())
+	return dt.Protocol(w.Hostname())
 }
 
 // Hostname returns the configured hostname for this request
 func (w Common) Hostname() string {
-	return domaintools.Hostname(w._request)
+	return dt.Hostname(w._request)
 }
 
 // Path returns the HTTP Request path

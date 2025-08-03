@@ -4,7 +4,7 @@ import (
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
-	"github.com/benpate/domain"
+	dt "github.com/benpate/domain"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/steranko"
 )
@@ -240,5 +240,5 @@ func (service *DomainEmail) SendFollowerActivity(follower *model.Follower, activ
 }
 
 func (service *DomainEmail) host() string {
-	return domain.AddProtocol(service.hostname)
+	return dt.AddProtocol(service.hostname)
 }

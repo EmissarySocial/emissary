@@ -16,7 +16,7 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
-	"github.com/benpate/domain"
+	dt "github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/first"
@@ -809,7 +809,7 @@ func (service *User) WebFinger(session data.Session, token string) (digit.Resour
 	}
 
 	// Make a WebFinger resource for this user.
-	result := digit.NewResource("acct:"+user.Username+"@"+domain.NameOnly(service.host)).
+	result := digit.NewResource("acct:"+user.Username+"@"+dt.NameOnly(service.host)).
 		Alias(service.host+"/@"+user.Username).
 		Alias(service.host+"/@"+user.UserID.Hex()).
 		Link(digit.RelationTypeSelf, model.MimeTypeActivityPub, user.ActivityPubURL()).

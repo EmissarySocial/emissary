@@ -7,7 +7,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	"github.com/benpate/domain"
+	dt "github.com/benpate/domain"
 	"github.com/benpate/hannibal/sigs"
 )
 
@@ -256,7 +256,7 @@ func (service *Permission) getSignature(request *http.Request) (sigs.Signature, 
 	}
 
 	// If there's an error on production servers, then fail
-	if !domain.IsLocalhost(request.Host) {
+	if !dt.IsLocalhost(request.Host) {
 		return sigs.Signature{}, derp.Wrap(err, location, "Unable to verify signature for request")
 	}
 

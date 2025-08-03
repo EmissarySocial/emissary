@@ -7,7 +7,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	"github.com/benpate/domain"
+	dt "github.com/benpate/domain"
 	"github.com/benpate/rosetta/channel"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
@@ -72,7 +72,7 @@ func (service *SearchNotifier) Run() {
 		if len(resultsToNotify) == 0 {
 
 			// For development purposes, there's only a short delay for localhost.
-			if domain.IsLocalhost(service.host) {
+			if dt.IsLocalhost(service.host) {
 				time.Sleep(20 * time.Second)
 				continue
 			}

@@ -6,7 +6,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
-	d "github.com/benpate/domain"
+	dt "github.com/benpate/domain"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/steranko"
@@ -19,7 +19,7 @@ func ActorUsername(actor streams.Document) string {
 
 	// If we have a preferred username, then return it as @username@hostname
 	if username := actor.PreferredUsername(); username != "" {
-		return "@" + username + "@" + d.NameOnly(actor.ID())
+		return "@" + username + "@" + dt.NameOnly(actor.ID())
 	}
 
 	// Otherwise, try to "URL"

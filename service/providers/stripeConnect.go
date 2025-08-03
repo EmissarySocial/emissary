@@ -3,7 +3,7 @@ package providers
 import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
-	"github.com/benpate/domain"
+	dt "github.com/benpate/domain"
 	"github.com/benpate/form"
 	"github.com/benpate/remote"
 	"github.com/benpate/remote/options"
@@ -123,7 +123,7 @@ func (adapter StripeConnect) Connect(connection *model.Connection, vault mapof.S
 	const location = "providers.StripeConnect.Connect"
 
 	// RULE: Cannot set webhooks for local domains
-	if domain.IsLocalhost(host) {
+	if dt.IsLocalhost(host) {
 		return nil
 	}
 
@@ -138,7 +138,7 @@ func (adapter StripeConnect) Connect(connection *model.Connection, vault mapof.S
 		With(options.BearerAuth(vault.GetString("restrictedKey"))).
 		With(options.Debug()).
 		Query("url", host+"/.stripe-connect/webhook/checkout").
-		Query("description", domain.NameOnly(host)+" supscription updates").
+		Query("description", dt.NameOnly(host)+" supscription updates").
 		Query("enabled_events[]", "checkout.session.completed").
 		Query("enabled_events[]", "customer.subscription.created").
 		Query("enabled_events[]", "customer.subscription.deleted").

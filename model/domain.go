@@ -2,7 +2,7 @@ package model
 
 import (
 	"github.com/benpate/data/journal"
-	domainlib "github.com/benpate/domain"
+	dt "github.com/benpate/domain"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
@@ -102,7 +102,7 @@ func (domain *Domain) HasRegistrationForm() bool {
 
 // Host returns a usable URL for this domain, including the HTTP(S) protocol and hostname
 func (domain *Domain) Host() string {
-	return domainlib.Protocol(domain.Hostname) + domain.Hostname
+	return dt.Protocol(domain.Hostname) + domain.Hostname
 }
 
 func (domain *Domain) IconURL() string {

@@ -10,7 +10,7 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
-	"github.com/benpate/domain"
+	dt "github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/outbox"
 	"github.com/benpate/rosetta/mapof"
@@ -416,5 +416,5 @@ func (service *SearchQuery) WebFinger(session data.Session, token string) (digit
 }
 
 func (service *SearchQuery) Hostname() string {
-	return domain.NameOnly(service.host)
+	return dt.NameOnly(service.host)
 }

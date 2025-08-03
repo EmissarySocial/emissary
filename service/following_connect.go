@@ -7,7 +7,7 @@ import (
 	"github.com/EmissarySocial/emissary/tools/ascache"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	"github.com/benpate/domain"
+	dt "github.com/benpate/domain"
 	"github.com/benpate/hannibal/collections"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/channel"
@@ -117,7 +117,7 @@ func (service *Following) connect_PushServices(session data.Session, following *
 	log.Debug().Str("loc", location).Msg("Trying to connect to push services")
 
 	// Prevent attempts to connect to external domains from localhost. It won't work anyway.
-	if domain.IsLocalhost(service.host) && !domain.IsLocalhost(following.ProfileURL) {
+	if dt.IsLocalhost(service.host) && !dt.IsLocalhost(following.ProfileURL) {
 		log.Debug().Str("loc", location).Msg("Cannot connect to external push services from localhost")
 		return
 	}

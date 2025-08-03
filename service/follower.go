@@ -7,7 +7,7 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
-	"github.com/benpate/domain"
+	dt "github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
@@ -152,7 +152,7 @@ func (service *Follower) Delete(session data.Session, follower *model.Follower, 
 		task := queue.NewTask(
 			"DeleteEmptySearchQuery",
 			mapof.Any{
-				"host":          domain.NameOnly(service.host),
+				"host":          dt.NameOnly(service.host),
 				"searchQueryID": follower.ParentID,
 			},
 			queue.WithPriority(200),

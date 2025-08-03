@@ -6,7 +6,7 @@ import (
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	domaintools "github.com/benpate/domain"
+	dt "github.com/benpate/domain"
 	"github.com/benpate/steranko"
 	"github.com/yeqown/go-qrcode/v2"
 	"github.com/yeqown/go-qrcode/writer/standard"
@@ -16,8 +16,8 @@ import (
 func GetQRCode(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
 
 	// Get the URL from the request; strip "/qrcode" from the path
-	url := domaintools.Hostname(ctx.Request())
-	url = domaintools.AddProtocol(url)
+	url := dt.Hostname(ctx.Request())
+	url = dt.AddProtocol(url)
 	url = url + strings.TrimSuffix(ctx.Request().URL.String(), "/qrcode")
 
 	// Create a new QR code generator

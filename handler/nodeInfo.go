@@ -5,7 +5,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/benpate/data"
-	domaintools "github.com/benpate/domain"
+	dt "github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/steranko"
 )
@@ -15,8 +15,8 @@ import (
 // http://nodeinfo.diaspora.software/schema.html
 func GetNodeInfo(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
 
-	host := domaintools.Hostname(ctx.Request())
-	server := domaintools.AddProtocol(host)
+	host := dt.Hostname(ctx.Request())
+	server := dt.AddProtocol(host)
 
 	result := map[string]any{
 		"links": []map[string]any{

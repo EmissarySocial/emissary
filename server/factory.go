@@ -26,7 +26,7 @@ import (
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
 	"github.com/benpate/digital-dome/dome"
-	domaintools "github.com/benpate/domain"
+	dt "github.com/benpate/domain"
 	"github.com/benpate/icon"
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/remote"
@@ -582,7 +582,7 @@ func (factory *Factory) ByRequest(req *http.Request) (*domain.Factory, error) {
 
 	const location = "server.Factory.ByRequest"
 
-	hostname := domaintools.Hostname(req)
+	hostname := dt.Hostname(req)
 	result, err := factory.ByHostname(hostname)
 
 	if err != nil {
@@ -736,7 +736,7 @@ func (factory *Factory) port(domainConfig config.Domain) string {
 
 	// If not localhost, then use standard ports and assume the
 	// hosting environment will handle the port forwarding
-	if !domaintools.IsLocalhost(domainConfig.Hostname) {
+	if !dt.IsLocalhost(domainConfig.Hostname) {
 		return ""
 	}
 

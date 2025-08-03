@@ -8,7 +8,7 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
-	"github.com/benpate/domain"
+	dt "github.com/benpate/domain"
 	"github.com/benpate/hannibal/outbox"
 	"github.com/benpate/hannibal/sigs"
 )
@@ -24,7 +24,7 @@ func (service *Domain) Hostname() string {
 
 // ActorID returns the URL for this domain/actor
 func (service *Domain) ActorID() string {
-	return domain.AddProtocol(service.hostname) + "/@application"
+	return dt.AddProtocol(service.hostname) + "/@application"
 }
 
 // PublicKeyID returns the URL for the public key for this domain/actor

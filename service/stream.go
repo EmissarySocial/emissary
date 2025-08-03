@@ -15,7 +15,7 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
-	"github.com/benpate/domain"
+	dt "github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/mediaserver"
@@ -271,12 +271,12 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 
 	// Validate the value (using the global stream schema) before saving
 	if err := service.Schema().Validate(stream); err != nil {
-		return derp.Wrap(err, "service.Stream.Save", "Error validating Stream using StreamSchema", stream)
+		return derp.Wrap(err, location, "Error validating Stream using StreamSchema", stream)
 	}
 
 	// Validate the value (using the template-specific schema) before saving
 	if err := template.Schema.Validate(stream); err != nil {
-		return derp.Wrap(err, "service.Stream.Save", "Error validating Stream using TemplateSchema", stream)
+		return derp.Wrap(err, location, "Error validating Stream using TemplateSchema", stream)
 	}
 
 	// RULE: If this stream is not a profile stream and does not have ParentIDs, then calculate them now.
@@ -786,7 +786,7 @@ func (service *Stream) SetLocationOutbox(template *model.Template, stream *model
 	stream.TemplateID = template.TemplateID
 	stream.NavigationID = "profile"
 	stream.ParentID = userID
-	stream.ParentIDs = []primitive.ObjectID{}
+	stream.ParentIDs = make([]primitive.ObjectID, 0)
 	stream.ParentTemplateID = ""
 
 	return nil
@@ -922,7 +922,7 @@ func (service *Stream) MapByPrivileges(session data.Session, privileges ...model
 func (service *Stream) ParsePath(uri *url.URL) (string, string, error) {
 
 	// Verify the URL matches this service
-	if domain.AddProtocol(uri.Host) != service.host {
+	if dt.AddProtocol(uri.Host) != service.host {
 		return "", "", derp.BadRequestError("service.Stream.LoadByURL", "Hostname must match this server", uri.String())
 	}
 
@@ -976,6 +976,8 @@ func (service *Stream) ParseURL(session data.Session, streamURL string) (primiti
 // of all of this Stream's parents
 func (service *Stream) CalcParentIDs(session data.Session, stream *model.Stream) error {
 
+	const location = "service.Stream.CalcParentIDs"
+
 	// Rule: Notes are always stored under a user's profile, so they have no parents
 	if stream.SocialRole == vocab.ObjectTypeNote {
 		stream.ParentIDs = id.NewSlice()
@@ -991,19 +993,19 @@ func (service *Stream) CalcParentIDs(session data.Session, stream *model.Stream)
 	// Otherwise, load the Parent stream and try to use its parentIDs
 	parentStream := model.NewStream()
 	if err := service.LoadByID(session, stream.ParentID, &parentStream); err != nil {
-		return derp.Wrap(err, "service.Stream.CalcParentIDs", "Unable to load Parent stream", stream.ParentID)
+		return derp.Wrap(err, location, "Unable to load Parent stream", stream.ParentID)
 	}
 
 	// If the parent has no parentIDs, then try to calculate them
 	if len(parentStream.ParentIDs) == 0 {
 		if err := service.CalcParentIDs(session, &parentStream); err != nil {
-			return derp.Wrap(err, "service.Stream.CalcParentIDs", "Unable to calculate ParentIDs for Parent stream", stream.ParentID)
+			return derp.Wrap(err, location, "Unable to calculate ParentIDs for Parent stream", stream.ParentID)
 		}
 
 		// If the parent has been changed, then save that calculation.
 		if len(parentStream.ParentIDs) > 0 {
 			if err := service.Save(session, &parentStream, "CalcParentIDs"); err != nil {
-				return derp.Wrap(err, "service.Stream.CalcParentIDs", "Unable to save Parent stream", stream.ParentID)
+				return derp.Wrap(err, location, "Unable to save Parent stream", stream.ParentID)
 			}
 		}
 	}
@@ -1151,5 +1153,5 @@ func (service *Stream) SearchResult(stream *model.Stream) model.SearchResult {
 }
 
 func (service *Stream) Hostname() string {
-	return domain.NameOnly(service.host)
+	return dt.NameOnly(service.host)
 }

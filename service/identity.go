@@ -12,7 +12,7 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
-	"github.com/benpate/domain"
+	dt "github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/schema"
@@ -670,5 +670,5 @@ func (service *Identity) uniquify(session data.Session, identity *model.Identity
 }
 
 func (service *Identity) hostname() string {
-	return domain.NameOnly(service.host)
+	return dt.NameOnly(service.host)
 }

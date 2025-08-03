@@ -13,7 +13,7 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
-	"github.com/benpate/domain"
+	dt "github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
@@ -283,7 +283,7 @@ func (service *Domain) OAuthProvider(providerID string) (providers.OAuthProvider
 // IsLocalhost returns TRUE if the current domain is a local domain
 // (localhost, 127.0.0.1, *.local, etc.)
 func (service *Domain) IsLocalhost() bool {
-	return domain.IsLocalhost(service.hostname)
+	return dt.IsLocalhost(service.hostname)
 }
 
 /******************************************
@@ -376,7 +376,7 @@ func (service *Domain) OAuthExchange(session data.Session, providerID string, st
 
 // OAuthClientCallbackURL returns the specific callback URL to use for this host and provider.
 func (service *Domain) OAuthClientCallbackURL(providerID string) string {
-	return domain.Protocol(service.configuration.Hostname) + service.configuration.Hostname + "/oauth/connections/" + providerID + "/callback"
+	return dt.Protocol(service.configuration.Hostname) + service.configuration.Hostname + "/oauth/connections/" + providerID + "/callback"
 }
 
 // NewOAuthClient generates and returns a new OAuth state for the specified provider
@@ -470,7 +470,7 @@ func (service *Domain) LoadWebFinger(username string) (digit.Resource, error) {
 		return digit.Resource{}, derp.BadRequestError(location, "Invalid username", username)
 	}
 
-	profileURL := domain.AddProtocol(service.hostname) + "/@application"
+	profileURL := dt.AddProtocol(service.hostname) + "/@application"
 
 	// Make a WebFinger resource for this user.
 	result := digit.NewResource("acct:service@"+service.hostname).

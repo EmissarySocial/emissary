@@ -7,7 +7,7 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
-	"github.com/benpate/domain"
+	dt "github.com/benpate/domain"
 	"github.com/benpate/hannibal/outbox"
 	"github.com/benpate/turbine/queue"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -147,7 +147,7 @@ func (service *SearchDomain) WebFinger() digit.Resource {
 }
 
 func (service *SearchDomain) Hostname() string {
-	return domain.NameOnly(service.host)
+	return dt.NameOnly(service.host)
 }
 
 /******************************************

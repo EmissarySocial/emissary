@@ -16,7 +16,7 @@ import (
 	"github.com/benpate/data"
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
-	"github.com/benpate/domain"
+	dt "github.com/benpate/domain"
 	"github.com/benpate/form"
 	"github.com/benpate/icon"
 	"github.com/benpate/mediaserver"
@@ -594,7 +594,7 @@ func (factory *Factory) ID() string {
 
 // Host returns the domain name AND protocol (probably HTTPS) => e.g. "https://example.com"
 func (factory *Factory) Host() string {
-	return domain.Protocol(factory.config.Hostname) + factory.config.Hostname + factory.port
+	return dt.Protocol(factory.config.Hostname) + factory.config.Hostname + factory.port
 }
 
 // Hostname returns the domain name only (without a protocol) => e.g. "example.com
@@ -604,7 +604,7 @@ func (factory *Factory) Hostname() string {
 
 // IsLocalhost returns TRUE if this is a local domain (localhost, *.local, etc)
 func (factory *Factory) IsLocalhost() bool {
-	return domain.IsLocalhost(factory.Hostname())
+	return dt.IsLocalhost(factory.Hostname())
 }
 
 func (factory *Factory) Config() config.Domain {
@@ -951,9 +951,10 @@ func (factory *Factory) Registration() *service.Registration {
 }
 
 // Steranko returns a fully populated Steranko adapter for the User service.
-func (factory *Factory) Steranko() *steranko.Steranko {
+func (factory *Factory) Steranko(session data.Session) *steranko.Steranko {
 
 	return steranko.New(
+		session,
 		service.NewSterankoUserService(factory.Identity(), factory.User(), factory.Email()),
 		factory.JWT(),
 		steranko.WithPasswordHasher(hash.BCrypt(15), hash.Plaintext{}),
@@ -961,20 +962,14 @@ func (factory *Factory) Steranko() *steranko.Steranko {
 }
 
 // LookupProvider returns a fully populated LookupProvider service
-func (factory *Factory) LookupProvider(request *http.Request, userID primitive.ObjectID) form.LookupProvider {
+func (factory *Factory) LookupProvider(request *http.Request, session data.Session, userID primitive.ObjectID) form.LookupProvider {
+
+	const location = "domain.factory.LookupProvider"
+
 	return service.NewLookupProvider(
-		factory.Circle(),
-		factory.Domain(),
-		factory.Folder(),
-		factory.Group(),
-		factory.MerchantAccount(),
-		factory.Product(),
-		factory.Registration(),
-		factory.SearchTag(),
-		factory.Stream(),
-		factory.Template(),
-		factory.Theme(),
+		factory,
 		request,
+		session,
 		userID,
 	)
 }
