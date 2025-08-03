@@ -14,7 +14,7 @@ func SetRuleCount(userCollection data.Collection, ruleCollection data.Collection
 
 	// Count the rules for this User
 	criteria := exp.Equal("userId", userID).AndEqual("deleteDate", 0)
-	rulesCount, err := ruleCollection.Count(criteria)
+	rulesCount, err := ruleCollection.Count(session, criteria)
 
 	if err != nil {
 		return derp.Wrap(err, "queries.SetRulesCount", "Error counting rules records")

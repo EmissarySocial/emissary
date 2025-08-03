@@ -728,6 +728,10 @@ func (factory *Factory) CommonDatabase() *mongo.Database {
 	return factory.commonDatabase
 }
 
+/******************************************
+ * Helper Methods
+ ******************************************/
+
 func (factory *Factory) port(domainConfig config.Domain) string {
 
 	// If not localhost, then use standard ports and assume the

@@ -140,20 +140,19 @@ func WithFactory(serverFactory *server.Factory, fn WithFunc0) echo.HandlerFunc {
 			return derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
+		session, err := factory.Server().Session(ctx.Request().Context())
+
+		if err != nil {
+			return derp.Wrap(err, location, "Unable to open database session")
+		}
+
+		defer session.Close()
+
 		////////////////////////////////////////////////////
 		// GET requests are tied to the HTTP request context
 
+		// Call the continuation function
 		if ctx.Request().Method == http.MethodGet {
-
-			session, err := factory.Server().Session(ctx.Request().Context())
-
-			if err != nil {
-				return derp.Wrap(err, location, "Unable to open database session")
-			}
-
-			defer session.Close()
-
-			// Call the continuation function
 			return fn(sterankoContext, factory, session)
 		}
 

@@ -583,10 +583,6 @@ func (factory *Factory) Close() {
  * Domain Data Accessors
  ******************************************/
 
-func (factory *Factory) Server() mongodb.Server {
-	return factory.server
-}
-
 func (factory *Factory) Version() string {
 	return "0.8.0"
 }
@@ -613,6 +609,14 @@ func (factory *Factory) IsLocalhost() bool {
 
 func (factory *Factory) Config() config.Domain {
 	return factory.config
+}
+
+/******************************************
+ * Database Connection Methods
+ ******************************************/
+
+func (factory *Factory) Server() mongodb.Server {
+	return factory.server
 }
 
 /******************************************

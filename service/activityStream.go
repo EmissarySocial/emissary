@@ -106,10 +106,10 @@ func (service *ActivityStream) initClients(session data.Session) {
 	// factory.activityService.Refresh(readOnlyCache, mongodb.NewCollection(collection))
 }
 
-func (service *ActivityStream) getClient(session data.Session) streams.Client {
+func (service *ActivityStream) getClient() streams.Client {
 
 	if service.innerClient == nil {
-		service.initClients(session)
+		service.initClients()
 	}
 
 	return service.innerClient
@@ -265,7 +265,7 @@ func (service *ActivityStream) NewDocument(document map[string]any) streams.Docu
 	return streams.NewDocument(document, streams.WithClient(service))
 }
 
-func (service *ActivityStream) SearchActors(queryString string) ([]model.ActorSummary, error) {
+func (service *ActivityStream) SearchActors(session data.Session, queryString string) ([]model.ActorSummary, error) {
 
 	const location = "service.ActivityStream.SearchActors"
 
@@ -274,7 +274,7 @@ func (service *ActivityStream) SearchActors(queryString string) ([]model.ActorSu
 	if sherlock.IsValidAddress(queryString) {
 
 		// Try to load the actor directly from the Interwebs
-		if newActor, err := service.Load(queryString, sherlock.AsActor()); err == nil {
+		if newActor, err := service.Load(session, queryString, sherlock.AsActor()); err == nil {
 
 			// If this is a valid, but (previously) unknown actor, then add it to the results
 			// This will also automatically get cached/crawled for next time.
@@ -357,12 +357,12 @@ func (service *ActivityStream) SendMessage(session data.Session, args mapof.Any)
 	return nil
 }
 
-func (service *ActivityStream) GetRecipient(recipient string) (string, string, error) {
+func (service *ActivityStream) GetRecipient(session data.Session, recipient string) (string, string, error) {
 
 	const location = "service.ActivityStream.GetRecipient"
 
 	// Try to load the recipient as a JSON-LD document
-	document, err := service.Load(recipient, sherlock.AsActor())
+	document, err := service.Load(session, recipient, sherlock.AsActor())
 
 	if err != nil {
 		return "", "", derp.Wrap(err, location, "Error loading ActivityPub Actor", recipient)
