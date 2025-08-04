@@ -2,8 +2,11 @@ module github.com/EmissarySocial/emissary
 
 go 1.24.1
 
-replace github.com/benpate/data => ../../benpate/data 
+replace github.com/benpate/data => ../../benpate/data
+
 replace github.com/benpate/data-mongo => ../../benpate/data-mongo
+
+replace github.com/benpate/steranko => ../../benpate/steranko
 
 require (
 	github.com/PuerkitoBio/goquery v1.10.3
