@@ -1,7 +1,6 @@
 package consumer
 
 import (
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
@@ -12,7 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func SendSearchResultsGlobal(factory *domain.Factory, session data.Session, args mapof.Any) queue.Result {
+func SendSearchResultsGlobal(factory *service.Factory, session data.Session, args mapof.Any) queue.Result {
 
 	const location = "consumer.SendSearchResultsGlobal"
 

@@ -16,7 +16,7 @@ import (
 
 // Outbox manages all Outbox records for a User.  This includes Outbox and Outbox
 type Outbox struct {
-	factory         Factory
+	factory         *Factory
 	followerService *Follower
 	identityService *Identity
 	ruleService     *Rule
@@ -30,7 +30,7 @@ type Outbox struct {
 }
 
 // NewOutbox returns a fully populated Outbox service
-func NewOutbox(factory Factory) Outbox {
+func NewOutbox(factory *Factory) Outbox {
 	return Outbox{
 		factory: factory,
 		lock:    &sync.Mutex{},

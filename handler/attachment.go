@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/EmissarySocial/emissary/build"
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/list"
@@ -13,7 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func GetDomainAttachment(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func GetDomainAttachment(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.GetDomainAttachment"
 
@@ -55,7 +55,7 @@ func GetDomainAttachment(ctx *steranko.Context, factory *domain.Factory, session
 	return nil
 }
 
-func GetSearchTagAttachment(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func GetSearchTagAttachment(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.GetSearchTagAttachment"
 
@@ -98,7 +98,7 @@ func GetSearchTagAttachment(ctx *steranko.Context, factory *domain.Factory, sess
 	return nil
 }
 
-func GetStreamAttachment(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func GetStreamAttachment(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.GetAttachment"
 
@@ -158,7 +158,7 @@ func GetStreamAttachment(ctx *steranko.Context, factory *domain.Factory, session
 	return nil
 }
 
-func GetUserAttachment(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func GetUserAttachment(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.GetUserAttachment"
 

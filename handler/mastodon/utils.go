@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/EmissarySocial/emissary/service"
@@ -86,7 +85,7 @@ func queryExpression(queryPager txn.QueryPager) exp.Expression {
 // steps: 1) locate the domain from the provided Stream URL, 2) load the
 // requested stream from the database, and 3) return the Stream and corresponding
 // StreamService to the caller.
-func getStreamFromURL(serverFactory *server.Factory, streamURL string) (*domain.Factory, *service.Stream, model.Stream, error) {
+func getStreamFromURL(serverFactory *server.Factory, streamURL string) (*service.Factory, *service.Stream, model.Stream, error) {
 
 	const location = "handler.getStreamFromURI"
 

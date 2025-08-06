@@ -21,7 +21,7 @@ import (
 // Follower defines a service that tracks the (possibly external) accounts that are followers of an internal User
 
 type Follower struct {
-	factory       Factory
+	factory       *Factory
 	userService   *User
 	ruleService   *Rule
 	streamService *Stream
@@ -31,7 +31,7 @@ type Follower struct {
 }
 
 // NewFollower returns a fully initialized Follower service
-func NewFollower(factory Factory) Follower {
+func NewFollower(factory *Factory) Follower {
 	return Follower{
 		factory: factory,
 	}

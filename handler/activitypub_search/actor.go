@@ -1,15 +1,15 @@
 package activitypub_search
 
 import (
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/steranko"
 )
 
-func GetJSONLD(ctx *steranko.Context, factory *domain.Factory, session data.Session, template *model.Template, stream *model.Stream, searchQuery *model.SearchQuery) error {
+func GetJSONLD(ctx *steranko.Context, factory *service.Factory, session data.Session, template *model.Template, stream *model.Stream, searchQuery *model.SearchQuery) error {
 
 	const location = "handler.activitypub_search.GetJSONLD"
 

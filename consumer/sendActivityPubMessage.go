@@ -1,7 +1,7 @@
 package consumer
 
 import (
-	"github.com/EmissarySocial/emissary/domain"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
@@ -12,7 +12,7 @@ import (
 // `inboxURL` the URL to deliver the message to
 // `actorType` the type of actor that is sending the message (User, Stream, Search)
 // `message` the ActivityPub message to send
-func SendActivityPubMessage(factory *domain.Factory, session data.Session, args mapof.Any) queue.Result {
+func SendActivityPubMessage(factory *service.Factory, session data.Session, args mapof.Any) queue.Result {
 
 	const location = "consumer.SendActivityPubMessage"
 

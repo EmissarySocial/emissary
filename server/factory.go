@@ -13,10 +13,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/EmissarySocial/emissary/build"
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/consumer"
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/queries"
 	"github.com/EmissarySocial/emissary/service"
 	derpconsole "github.com/EmissarySocial/emissary/tools/derp-console"
@@ -71,7 +69,7 @@ type Factory struct {
 	queue               queue.Queue
 	digitalDome         dome.Dome
 
-	domains   map[string]*domain.Factory
+	domains   map[string]*service.Factory
 	httpCache httpcache.HTTPCache
 }
 
@@ -83,7 +81,7 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 	factory := Factory{
 		storage:       storage,
 		mutex:         sync.RWMutex{},
-		domains:       make(map[string]*domain.Factory),
+		domains:       make(map[string]*service.Factory),
 		embeddedFiles: embeddedFiles,
 		ready:         make(chan struct{}),
 		jwtService:    service.NewJWT(),
@@ -313,7 +311,7 @@ func (factory *Factory) refreshDomain(domainConfig config.Domain) error {
 	}
 
 	// Fall through means that the domain does not exist, so we need to create it
-	newDomain, err := domain.NewFactory(
+	newDomain, err := service.NewFactory(
 		factory,
 		mongodb.NewServer(factory.commonDatabase),
 		domainConfig,
@@ -453,9 +451,9 @@ func (factory *Factory) UpdateConfig(value config.Config) error {
  * Domain Methods
  ******************************************/
 
-func (factory *Factory) RangeDomains() iter.Seq[*domain.Factory] {
+func (factory *Factory) RangeDomains() iter.Seq[*service.Factory] {
 
-	return func(yield func(*domain.Factory) bool) {
+	return func(yield func(*service.Factory) bool) {
 		factory.mutex.RLock()
 		defer factory.mutex.RUnlock()
 
@@ -561,7 +559,7 @@ func (factory *Factory) DeleteDomain(domainID string) error {
  ******************************************/
 
 // ByDomainID retrieves a Domain factory using a DomainID
-func (factory *Factory) ByDomainID(domainID string) (config.Domain, *domain.Factory, error) {
+func (factory *Factory) ByDomainID(domainID string) (config.Domain, *service.Factory, error) {
 
 	const location = "server.Factory.ByDomainID"
 
@@ -583,11 +581,11 @@ func (factory *Factory) ByDomainID(domainID string) (config.Domain, *domain.Fact
 }
 
 // ByContext retrieves a Domain factory using an echo.Context
-func (factory *Factory) ByContext(ctx echo.Context) (*domain.Factory, error) {
+func (factory *Factory) ByContext(ctx echo.Context) (*service.Factory, error) {
 	return factory.ByRequest(ctx.Request())
 }
 
-func (factory *Factory) ByRequest(req *http.Request) (*domain.Factory, error) {
+func (factory *Factory) ByRequest(req *http.Request) (*service.Factory, error) {
 
 	const location = "server.Factory.ByRequest"
 
@@ -602,7 +600,7 @@ func (factory *Factory) ByRequest(req *http.Request) (*domain.Factory, error) {
 }
 
 // ByHostname retrieves a Domain factory using a Hostname
-func (factory *Factory) ByHostname(hostname string) (*domain.Factory, error) {
+func (factory *Factory) ByHostname(hostname string) (*service.Factory, error) {
 
 	const location = "server.Factory.ByHostname"
 
@@ -670,7 +668,7 @@ func (factory *Factory) Widget() *service.Widget {
 
 // FuncMap returns the global funcMap (used by all templates)
 func (factory *Factory) FuncMap() template.FuncMap {
-	return build.FuncMap(factory.Icons())
+	return service.FuncMap(factory.Icons())
 }
 
 // Icons returns the global icon collection

@@ -3,8 +3,8 @@ package activitypub_user
 import (
 	"net/http"
 
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/vocab"
@@ -12,7 +12,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func RenderProfileJSONLD(context echo.Context, factory *domain.Factory, session data.Session, user *model.User) error {
+func RenderProfileJSONLD(context echo.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.activitypub_user.RenderProfileJSONLD"
 

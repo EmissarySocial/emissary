@@ -3,7 +3,7 @@ package handler
 import (
 	"net/http"
 
-	"github.com/EmissarySocial/emissary/domain"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
@@ -11,7 +11,7 @@ import (
 	"github.com/benpate/turbine/queue"
 )
 
-func PostWebMention(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func PostWebMention(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.PostWebMention"
 

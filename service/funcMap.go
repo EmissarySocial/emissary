@@ -1,4 +1,4 @@
-package build
+package service
 
 import (
 	"html/template"

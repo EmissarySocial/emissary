@@ -1,7 +1,7 @@
 package consumer
 
 import (
-	"github.com/EmissarySocial/emissary/domain"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
@@ -11,7 +11,7 @@ import (
 
 // Shuffle task "shuffles" all stream and user records in the database,
 // by updating the "shuffle" field to a unique random value.
-func Shuffle(factory *domain.Factory, session data.Session, _ mapof.Any) queue.Result {
+func Shuffle(factory *service.Factory, session data.Session, _ mapof.Any) queue.Result {
 
 	const location = "consumer.Shuffle"
 

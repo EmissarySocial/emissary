@@ -3,22 +3,22 @@ package activitypub_user
 import (
 	"net/http"
 
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/steranko"
 )
 
-func GetFollowingCollection(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func GetFollowingCollection(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 	collectionID := fullURL(factory, ctx)
 	result := streams.NewOrderedCollection(collectionID)
 	ctx.Response().Header().Set("Content-Type", "application/activity+json")
 	return ctx.JSON(http.StatusOK, result)
 }
 
-func GetFollowingRecord(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func GetFollowingRecord(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.activitypub_user.GetFollowingRecord"
 

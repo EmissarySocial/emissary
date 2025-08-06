@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
@@ -18,7 +17,7 @@ import (
 	"github.com/stripe/stripe-go/v78/webhook"
 )
 
-func PostSignupWebhook(ctx *steranko.Context, factory *domain.Factory, session data.Session, domain *model.Domain) error {
+func PostSignupWebhook(ctx *steranko.Context, factory *service.Factory, session data.Session, domain *model.Domain) error {
 
 	const location = "handler.stripe.PostWebhook"
 
@@ -79,7 +78,7 @@ func PostSignupWebhook(ctx *steranko.Context, factory *domain.Factory, session d
 	return ctx.NoContent(http.StatusOK)
 }
 
-func finishWebhook(factory *domain.Factory, session data.Session, restrictedKey string, event stripe.Event) error {
+func finishWebhook(factory *service.Factory, session data.Session, restrictedKey string, event stripe.Event) error {
 
 	const location = "handler.stripe.finishWebhook"
 
@@ -152,7 +151,7 @@ func finishWebhook(factory *domain.Factory, session data.Session, restrictedKey 
 }
 
 // addGroups adds groups to the User's list, as specified by the Product metadata
-func addGroups(factory *domain.Factory, session data.Session, user *model.User, product *stripe.Product, token string) {
+func addGroups(factory *service.Factory, session data.Session, user *model.User, product *stripe.Product, token string) {
 
 	if user == nil {
 		return
@@ -174,7 +173,7 @@ func addGroups(factory *domain.Factory, session data.Session, user *model.User, 
 }
 
 // removeGroups removes groups from the User's list, as specified by the Product metadata
-func removeGroups(factory *domain.Factory, session data.Session, user *model.User, product *stripe.Product, token string) {
+func removeGroups(factory *service.Factory, session data.Session, user *model.User, product *stripe.Product, token string) {
 
 	if user == nil {
 		return

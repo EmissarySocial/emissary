@@ -6,9 +6,9 @@ import (
 	"net/http"
 
 	"github.com/EmissarySocial/emissary/config"
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
@@ -204,7 +204,7 @@ func SetupDomainUserDelete(serverFactory *server.Factory, templates *template.Te
 	}
 }
 
-func displayDomainUsersModal(ctx echo.Context, factory *domain.Factory, session data.Session, domainConfig config.Domain, templates *template.Template) error {
+func displayDomainUsersModal(ctx echo.Context, factory *service.Factory, session data.Session, domainConfig config.Domain, templates *template.Template) error {
 
 	const location = "handler.displayDomainUsersModal"
 

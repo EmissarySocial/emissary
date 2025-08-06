@@ -6,8 +6,8 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/service/providers"
 	"github.com/EmissarySocial/emissary/tools/httpcache"
 	"github.com/benpate/color"
@@ -22,7 +22,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func GetPhoto(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func GetPhoto(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.unsplash.GetPhoto"
 
@@ -81,7 +81,7 @@ func GetPhoto(ctx *steranko.Context, factory *domain.Factory, session data.Sessi
 	return displayPhoto(ctx, applicationName, photo)
 }
 
-func GetCollectionRandom(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func GetCollectionRandom(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.unsplash.GetCollectionRandom"
 

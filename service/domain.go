@@ -25,7 +25,7 @@ import (
 
 // Domain service manages all access to the singleton model.Domain in the database
 type Domain struct {
-	factory             Factory
+	factory             *Factory
 	configuration       config.Domain
 	connectionService   *Connection
 	providerService     *Provider
@@ -39,7 +39,7 @@ type Domain struct {
 }
 
 // NewDomain returns a fully initialized Domain service
-func NewDomain(factory Factory) Domain {
+func NewDomain(factory *Factory) Domain {
 	return Domain{
 		factory: factory,
 	}

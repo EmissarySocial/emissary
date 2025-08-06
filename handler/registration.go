@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/EmissarySocial/emissary/build"
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/honeypot"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
@@ -15,7 +15,7 @@ import (
 )
 
 // GetRegister generates an echo.HandlerFunc that handles GET /register requests
-func GetRegister(ctx *steranko.Context, factory *domain.Factory, session data.Session, domain *model.Domain, registration *model.Registration) error {
+func GetRegister(ctx *steranko.Context, factory *service.Factory, session data.Session, domain *model.Domain, registration *model.Registration) error {
 
 	const location = "handler.GetRegister"
 
@@ -41,7 +41,7 @@ func GetRegister(ctx *steranko.Context, factory *domain.Factory, session data.Se
 	return nil
 }
 
-func PostRegister(ctx *steranko.Context, factory *domain.Factory, session data.Session, domain *model.Domain, registration *model.Registration) error {
+func PostRegister(ctx *steranko.Context, factory *service.Factory, session data.Session, domain *model.Domain, registration *model.Registration) error {
 
 	const location = "handler.PostPreRegister"
 
@@ -86,7 +86,7 @@ func PostRegister(ctx *steranko.Context, factory *domain.Factory, session data.S
 }
 
 // GetCompleteRegistration finalizes a registration request by processing a JWT token passed from the confirmation email to the query string.
-func GetCompleteRegistration(ctx *steranko.Context, factory *domain.Factory, session data.Session, domain *model.Domain, registration *model.Registration) error {
+func GetCompleteRegistration(ctx *steranko.Context, factory *service.Factory, session data.Session, domain *model.Domain, registration *model.Registration) error {
 
 	const location = "handler.GetCompleteRegistration"
 
@@ -132,7 +132,7 @@ func GetCompleteRegistration(ctx *steranko.Context, factory *domain.Factory, ses
 }
 
 // PostUpdateRegistration generates an echo.HandlerFunc that handles POST /register requests
-func PostUpdateRegistration(ctx *steranko.Context, factory *domain.Factory, session data.Session, domain *model.Domain, registration *model.Registration) error {
+func PostUpdateRegistration(ctx *steranko.Context, factory *service.Factory, session data.Session, domain *model.Domain, registration *model.Registration) error {
 
 	const location = "handler.PostRegister"
 

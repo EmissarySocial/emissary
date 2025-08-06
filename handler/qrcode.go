@@ -3,7 +3,7 @@ package handler
 import (
 	"strings"
 
-	"github.com/EmissarySocial/emissary/domain"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	dt "github.com/benpate/domain"
@@ -13,7 +13,7 @@ import (
 )
 
 // GetQRCode generates a QR Code for the provided URL
-func GetQRCode(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func GetQRCode(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	// Get the URL from the request; strip "/qrcode" from the path
 	url := dt.Hostname(ctx.Request())

@@ -1,14 +1,14 @@
 package activitypub_domain
 
 import (
-	"github.com/EmissarySocial/emissary/domain"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/hannibal/outbox"
 )
 
 // Context includes all of the necessary objects to handle an ActivityPub request
 type Context struct {
-	factory *domain.Factory
+	factory *service.Factory
 	session data.Session
 }
 

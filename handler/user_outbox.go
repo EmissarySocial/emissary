@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/EmissarySocial/emissary/build"
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/formdata"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
@@ -17,21 +17,21 @@ import (
 )
 
 // ForwardMeURLs redirects the user to their own profile page
-func ForwardMeURLs(ctx *steranko.Context, factory *domain.Factory, session data.Session, user *model.User) error {
+func ForwardMeURLs(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 	return ctx.Redirect(http.StatusSeeOther, "/@"+user.Username)
 }
 
 // GetOutbox handles GET requests
-func GetOutbox(ctx *steranko.Context, factory *domain.Factory, session data.Session, user *model.User) error {
+func GetOutbox(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 	return buildOutbox(ctx, factory, session, user, build.ActionMethodGet)
 }
 
 // PostOutbox handles POST/DELETE requests
-func PostOutbox(ctx *steranko.Context, factory *domain.Factory, session data.Session, user *model.User) error {
+func PostOutbox(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 	return buildOutbox(ctx, factory, session, user, build.ActionMethodPost)
 }
 
-func GetProfileIcon(ctx *steranko.Context, factory *domain.Factory, session data.Session, user *model.User) error {
+func GetProfileIcon(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	filespec := mediaserver.FileSpec{
 		Extension: ".webp",
@@ -42,7 +42,7 @@ func GetProfileIcon(ctx *steranko.Context, factory *domain.Factory, session data
 	return getUserAttachment(ctx, factory, session, user, "iconId", filespec)
 }
 
-func GetProfileImage(ctx *steranko.Context, factory *domain.Factory, session data.Session, user *model.User) error {
+func GetProfileImage(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	filespec := mediaserver.FileSpec{
 		Extension: ".webp",
@@ -52,7 +52,7 @@ func GetProfileImage(ctx *steranko.Context, factory *domain.Factory, session dat
 	return getUserAttachment(ctx, factory, session, user, "imageId", filespec)
 }
 
-func PostProfileDelete(ctx *steranko.Context, factory *domain.Factory, session data.Session, user *model.User) error {
+func PostProfileDelete(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.PostProfileDelete"
 
@@ -77,7 +77,7 @@ func PostProfileDelete(ctx *steranko.Context, factory *domain.Factory, session d
 }
 
 // buildOutbox is the common Outbox handler for both GET and POST requests
-func buildOutbox(ctx *steranko.Context, factory *domain.Factory, session data.Session, user *model.User, actionMethod build.ActionMethod) error {
+func buildOutbox(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User, actionMethod build.ActionMethod) error {
 
 	const location = "handler.buildOutbox"
 
@@ -118,7 +118,7 @@ func buildOutbox(ctx *steranko.Context, factory *domain.Factory, session data.Se
 	return build.AsHTML(ctx, factory, builder, actionMethod)
 }
 
-func getUserAttachment(ctx *steranko.Context, factory *domain.Factory, session data.Session, user *model.User, field string, filespec mediaserver.FileSpec) error {
+func getUserAttachment(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User, field string, filespec mediaserver.FileSpec) error {
 
 	const location = "handler.outbox.getUserAttachment"
 

@@ -2,10 +2,10 @@ package handler
 
 import (
 	"github.com/EmissarySocial/emissary/build"
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/handler/activitypub_search"
 	"github.com/EmissarySocial/emissary/handler/activitypub_stream"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/steranko"
@@ -14,7 +14,7 @@ import (
 
 // GetStream handles GET requests with the default action.
 // This handler also responds to JSON-LD requests
-func GetStream(ctx *steranko.Context, factory *domain.Factory, session data.Session, template *model.Template, stream *model.Stream) error {
+func GetStream(ctx *steranko.Context, factory *service.Factory, session data.Session, template *model.Template, stream *model.Stream) error {
 
 	// Special case for JSON-LD requests.
 	if isJSONLDRequest(ctx) {
@@ -26,16 +26,16 @@ func GetStream(ctx *steranko.Context, factory *domain.Factory, session data.Sess
 }
 
 // GetStreamWithAction handles GET requests with a specified action
-func GetStreamWithAction(ctx *steranko.Context, factory *domain.Factory, session data.Session, template *model.Template, stream *model.Stream) error {
+func GetStreamWithAction(ctx *steranko.Context, factory *service.Factory, session data.Session, template *model.Template, stream *model.Stream) error {
 	return getStreamPipeline(ctx, factory, session, template, stream, build.ActionMethodGet)
 }
 
 // PostStreamWithAction handles POST requests with a specified action
-func PostStreamWithAction(ctx *steranko.Context, factory *domain.Factory, session data.Session, template *model.Template, stream *model.Stream) error {
+func PostStreamWithAction(ctx *steranko.Context, factory *service.Factory, session data.Session, template *model.Template, stream *model.Stream) error {
 	return getStreamPipeline(ctx, factory, session, template, stream, build.ActionMethodPost)
 }
 
-func getStreamJSONLD(ctx *steranko.Context, factory *domain.Factory, session data.Session, template *model.Template, stream *model.Stream) error {
+func getStreamJSONLD(ctx *steranko.Context, factory *service.Factory, session data.Session, template *model.Template, stream *model.Stream) error {
 
 	const location = "handler.getStreamJSONLD"
 
@@ -59,7 +59,7 @@ func getStreamJSONLD(ctx *steranko.Context, factory *domain.Factory, session dat
 }
 
 // getStreamPipeline is the common Stream handler for both GET and POST requests
-func getStreamPipeline(ctx *steranko.Context, factory *domain.Factory, session data.Session, template *model.Template, stream *model.Stream, actionMethod build.ActionMethod) error {
+func getStreamPipeline(ctx *steranko.Context, factory *service.Factory, session data.Session, template *model.Template, stream *model.Stream, actionMethod build.ActionMethod) error {
 
 	const location = "handler.getStreamPipeline"
 

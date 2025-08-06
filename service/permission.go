@@ -13,13 +13,13 @@ import (
 )
 
 type Permission struct {
-	factory          Factory
+	factory          *Factory
 	identityService  *Identity
 	privilegeService *Privilege
 	userService      *User
 }
 
-func NewPermission(factory Factory) Permission {
+func NewPermission(factory *Factory) Permission {
 	return Permission{
 		factory: factory,
 	}

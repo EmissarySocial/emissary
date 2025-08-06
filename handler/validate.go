@@ -3,7 +3,7 @@ package handler
 import (
 	"net/http"
 
-	"github.com/EmissarySocial/emissary/domain"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
@@ -11,7 +11,7 @@ import (
 )
 
 // GetValidateUsername validates a User.Username for uniqueness/availability
-func GetValidateUsername(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func GetValidateUsername(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	// This service can only validate the "username" field
 	if field := ctx.QueryParam("field"); field != "username" {
@@ -43,7 +43,7 @@ func GetValidateUsername(ctx *steranko.Context, factory *domain.Factory, session
 }
 
 // GetValidateStreamToken validates a Stream.Token for uniqueness/availability
-func GetValidateStreamToken(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func GetValidateStreamToken(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	/*
 		// This service can only validate the "username" field

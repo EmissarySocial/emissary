@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/first"
@@ -15,7 +15,7 @@ import (
 )
 
 // GetSignIn generates an echo.HandlerFunc that handles GET /signin requests
-func GetSignIn(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func GetSignIn(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	// Get the standard Signin page
 	template := factory.Domain().Theme().HTMLTemplate
@@ -38,7 +38,7 @@ func GetSignIn(ctx *steranko.Context, factory *domain.Factory, session data.Sess
 }
 
 // PostSignIn generates an echo.HandlerFunc that handles POST /signin requests
-func PostSignIn(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func PostSignIn(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	// Try to sign in using Steranko
 	user, err := factory.Steranko(session).SigninFormPost(ctx)
@@ -67,7 +67,7 @@ func PostSignIn(ctx *steranko.Context, factory *domain.Factory, session data.Ses
 }
 
 // PostSignOut generates an echo.HandlerFunc that handles POST /signout requests
-func PostSignOut(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func PostSignOut(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	s := factory.Steranko(session)
 
@@ -86,11 +86,11 @@ func PostSignOut(ctx *steranko.Context, factory *domain.Factory, session data.Se
 	return ctx.NoContent(http.StatusNoContent)
 }
 
-func GetResetPassword(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func GetResetPassword(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 	return executeDomainTemplate(ctx, factory, "reset-password")
 }
 
-func PostResetPassword(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func PostResetPassword(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.PostResetPassword"
 
@@ -123,7 +123,7 @@ func PostResetPassword(ctx *steranko.Context, factory *domain.Factory, session d
 }
 
 // GetResetCode displays a form (authenticated by the reset code) for resetting a user's password
-func GetResetCode(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func GetResetCode(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.GetResetCode"
 
@@ -185,7 +185,7 @@ func GetResetCode(ctx *steranko.Context, factory *domain.Factory, session data.S
 	return nil
 }
 
-func PostResetCode(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func PostResetCode(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	// Try to get the transaction data from the request body.
 	var txn struct {

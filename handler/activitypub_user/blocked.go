@@ -3,7 +3,6 @@ package activitypub_user
 import (
 	"net/http"
 
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/handler/activitypub"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
@@ -16,7 +15,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func GetBlockedCollection(ctx *steranko.Context, factory *domain.Factory, session data.Session, user *model.User) error {
+func GetBlockedCollection(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.activitypub_user.GetBlockedCollection"
 
@@ -57,7 +56,7 @@ func GetBlockedCollection(ctx *steranko.Context, factory *domain.Factory, sessio
 	return ctx.JSON(200, results)
 }
 
-func GetBlock(ctx *steranko.Context, factory *domain.Factory, session data.Session, user *model.User) error {
+func GetBlock(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.activitypub.ActivityPub_GetBlock"
 

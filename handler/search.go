@@ -3,7 +3,7 @@ package handler
 import (
 	"net/http"
 
-	"github.com/EmissarySocial/emissary/domain"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	dt "github.com/benpate/domain"
@@ -14,7 +14,7 @@ import (
 
 // IndexAllStreams is a handler function that triggers the IndexAllStreams queue task.
 // It can only be called by an authenticated administrator.
-func IndexAllStreams(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func IndexAllStreams(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	// Verify that this is an Administrator
 	authorization := getAuthorization(ctx)
@@ -39,7 +39,7 @@ func IndexAllStreams(ctx *steranko.Context, factory *domain.Factory, session dat
 
 // IndexAllUsers is a handler function that triggers the IndexAllUsers queue task.
 // It can only be called by an authenticated administrator.
-func IndexAllUsers(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func IndexAllUsers(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	// Verify that this is an Administrator
 	authorization := getAuthorization(ctx)
@@ -62,7 +62,7 @@ func IndexAllUsers(ctx *steranko.Context, factory *domain.Factory, session data.
 	return ctx.NoContent(http.StatusOK)
 }
 
-func PostSearchLookup(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func PostSearchLookup(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.PostSearchLookup"
 

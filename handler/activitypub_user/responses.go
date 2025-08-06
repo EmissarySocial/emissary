@@ -3,9 +3,9 @@ package activitypub_user
 import (
 	"net/http"
 
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/handler/activitypub"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
@@ -13,7 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func GetResponseCollection(ctx *steranko.Context, factory *domain.Factory, session data.Session, user *model.User) error {
+func GetResponseCollection(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.activitypub_user.GetResponseCollection"
 
@@ -57,7 +57,7 @@ func GetResponseCollection(ctx *steranko.Context, factory *domain.Factory, sessi
 	return ctx.JSON(http.StatusOK, result)
 }
 
-func GetResponse(ctx *steranko.Context, factory *domain.Factory, session data.Session, user *model.User) error {
+func GetResponse(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.activitypub.ActivityPub_GetUserResponse"
 

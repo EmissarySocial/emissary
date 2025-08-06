@@ -3,14 +3,14 @@ package handler
 import (
 	"net/http"
 
-	"github.com/EmissarySocial/emissary/domain"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/steranko"
 )
 
 // GetOAuth looks up the OAuth provider and forwards to the appropriate endpoint
-func GetOAuth(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func GetOAuth(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.GetOAuth"
 
@@ -26,7 +26,7 @@ func GetOAuth(ctx *steranko.Context, factory *domain.Factory, session data.Sessi
 	return ctx.Redirect(http.StatusTemporaryRedirect, redirectURL)
 }
 
-func GetOAuthCallback(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func GetOAuthCallback(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.OAuthCallback"
 
@@ -44,6 +44,6 @@ func GetOAuthCallback(ctx *steranko.Context, factory *domain.Factory, session da
 	return ctx.Redirect(http.StatusTemporaryRedirect, "/admin/connections")
 }
 
-func OAuthRedirect(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func OAuthRedirect(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 	return nil
 }

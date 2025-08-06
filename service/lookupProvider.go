@@ -15,13 +15,13 @@ import (
 )
 
 type LookupProvider struct {
-	factory Factory
+	factory *Factory
 	request *http.Request
 	session data.Session
 	userID  primitive.ObjectID
 }
 
-func NewLookupProvider(factory Factory, request *http.Request, session data.Session, userID primitive.ObjectID) LookupProvider {
+func NewLookupProvider(factory *Factory, request *http.Request, session data.Session, userID primitive.ObjectID) LookupProvider {
 	return LookupProvider{
 		factory: factory,
 		request: request,

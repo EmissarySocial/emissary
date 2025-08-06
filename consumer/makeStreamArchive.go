@@ -1,7 +1,6 @@
 package consumer
 
 import (
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
@@ -13,7 +12,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func MakeStreamArchive(factory *domain.Factory, session data.Session, _ *service.Stream, stream *model.Stream, args mapof.Any) queue.Result {
+func MakeStreamArchive(factory *service.Factory, session data.Session, _ *service.Stream, stream *model.Stream, args mapof.Any) queue.Result {
 
 	const location = "consumer.MakeStreamArchive"
 	log.Trace().Str("location", location).Str("stream", stream.StreamID.Hex()).Msg("Making Archive...")

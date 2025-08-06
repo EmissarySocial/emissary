@@ -3,8 +3,8 @@ package handler
 import (
 	"net/http"
 
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/remote"
@@ -14,7 +14,7 @@ import (
 )
 
 // GetStripeConnect initiates the Stripe connection process for a User.
-func GetStripeConnect(ctx *steranko.Context, factory *domain.Factory, session data.Session, user *model.User) error {
+func GetStripeConnect(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.GetStripeConnect"
 
@@ -84,7 +84,7 @@ func GetStripeConnect(ctx *steranko.Context, factory *domain.Factory, session da
 }
 
 // PostStripeConnectWebhook_Checkout processes inbound webhook events for a specific MerchantAccount
-func PostStripeConnectWebhook_Checkout(ctx *steranko.Context, factory *domain.Factory, session data.Session, connection *model.Connection) error {
+func PostStripeConnectWebhook_Checkout(ctx *steranko.Context, factory *service.Factory, session data.Session, connection *model.Connection) error {
 
 	const location = "handler.PostStripeConnectWebhook_Checkout"
 

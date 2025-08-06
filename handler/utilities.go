@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	dt "github.com/benpate/domain"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/mapof"
@@ -138,6 +138,6 @@ func closeModalAndRefreshPage(ctx echo.Context) error {
 }
 
 // fullURL returns the URL for a request that include the protocol, hostname, and path
-func fullURL(factory *domain.Factory, ctx echo.Context) string {
+func fullURL(factory *service.Factory, ctx echo.Context) string {
 	return factory.Host() + ctx.Request().URL.String()
 }

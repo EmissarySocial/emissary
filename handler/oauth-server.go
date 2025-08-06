@@ -5,8 +5,8 @@ import (
 	"net/url"
 
 	"github.com/EmissarySocial/emissary/build"
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/html"
@@ -15,7 +15,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func GetOAuthAuthorization(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func GetOAuthAuthorization(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.GetOAuthAuthorization"
 
@@ -43,7 +43,7 @@ func GetOAuthAuthorization(ctx *steranko.Context, factory *domain.Factory, sessi
 	return nil
 }
 
-func PostOAuthAuthorization(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func PostOAuthAuthorization(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.PostOAuthAuthorization"
 
@@ -156,7 +156,7 @@ func postOAuthAuthorization_token(ctx echo.Context, userToken model.OAuthUserTok
 	return ctx.Redirect(http.StatusFound, redirectURI.String())
 }
 
-func PostOAuthToken(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func PostOAuthToken(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.PostOAuthToken"
 
@@ -193,7 +193,7 @@ func PostOAuthToken(ctx *steranko.Context, factory *domain.Factory, session data
 	return ctx.JSON(http.StatusOK, userToken.JSONResponse())
 }
 
-func PostOAuthRevoke(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func PostOAuthRevoke(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.PostOAuthRevoke"
 

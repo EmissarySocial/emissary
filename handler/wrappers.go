@@ -3,10 +3,10 @@ package handler
 import (
 	"net/http"
 
-	"github.com/EmissarySocial/emissary/domain"
 	activitypub "github.com/EmissarySocial/emissary/handler/activitypub_user"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/steranko"
@@ -16,23 +16,23 @@ import (
 )
 
 // WithFunc0 is a function signature for a continuation function that requires only the domain Factory
-type WithFunc0 func(ctx *steranko.Context, factory *domain.Factory, session data.Session) error
+type WithFunc0 func(ctx *steranko.Context, factory *service.Factory, session data.Session) error
 
 // WithFunc1 is a function signature for a continuation function that requires the domain Factory and a single value
-type WithFunc1[T any] func(ctx *steranko.Context, factory *domain.Factory, session data.Session, value *T) error
+type WithFunc1[T any] func(ctx *steranko.Context, factory *service.Factory, session data.Session, value *T) error
 
 // WithFunc2 is a function signature for a continuation function that requires the domain Factory and two values
-type WithFunc2[T any, U any] func(ctx *steranko.Context, factory *domain.Factory, session data.Session, value *T, value2 *U) error
+type WithFunc2[T any, U any] func(ctx *steranko.Context, factory *service.Factory, session data.Session, value *T, value2 *U) error
 
 // WithFunc3 is a function signature for a continuation function that requires the domain Factory and three values
-type WithFunc3[T any, U any, V any] func(ctx *steranko.Context, factory *domain.Factory, session data.Session, value *T, value2 *U, value3 *V) error
+type WithFunc3[T any, U any, V any] func(ctx *steranko.Context, factory *service.Factory, session data.Session, value *T, value2 *U, value3 *V) error
 
 // WithAuthenticatedUser handles boilerplate code for requests that require a signed-in user
 func WithAuthenticatedUser(serverFactory *server.Factory, fn WithFunc1[model.User]) echo.HandlerFunc {
 
 	const location = "handler.WithAuthenticatedUser"
 
-	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 		// Guarantee that the user is signed in
 		authorization := getAuthorization(ctx)
@@ -57,7 +57,7 @@ func WithConnection(provider string, serverFactory *server.Factory, fn WithFunc1
 
 	const location = "handler.WithConnection"
 
-	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 		// Load the Connection from the database
 		connectionService := factory.Connection()
@@ -79,7 +79,7 @@ func WithConnection(provider string, serverFactory *server.Factory, fn WithFunc1
 // WithDomain handles boilerplate code for requests that load a domain object
 func WithDomain(serverFactory *server.Factory, fn WithFunc1[model.Domain]) echo.HandlerFunc {
 
-	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 		domain := factory.Domain().Get()
 		return fn(ctx, factory, session, domain)
 	})
@@ -143,7 +143,7 @@ func WithFollowing(serverFactory *server.Factory, fn WithFunc1[model.Following])
 
 	const location = "handler.WithFollowing"
 
-	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 		// Parse the UserID from the query string
 		userID, err := primitive.ObjectIDFromHex(ctx.Param("userId"))
@@ -175,7 +175,7 @@ func WithIdentity(serverFactory *server.Factory, fn WithFunc1[model.Identity]) e
 
 	const location = "handler.WithIdentity"
 
-	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 		identityService := factory.Identity()
 		identity := model.NewIdentity()
@@ -225,7 +225,7 @@ func WithMerchantAccount(serverFactory *server.Factory, fn WithFunc1[model.Merch
 
 	const location = "handler.WithMerchantAccount"
 
-	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 		// Load the MerchantAccount from the database
 		merchantAccountService := factory.MerchantAccount()
@@ -245,7 +245,7 @@ func WithMerchantAccountJWT(serverFactory *server.Factory, fn WithFunc2[model.Me
 
 	const location = "handler.WithProductJWT"
 
-	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 		// Parse the JWT token from the Request
 		jwtService := factory.JWT()
@@ -280,7 +280,7 @@ func WithPrivilege(serverFactory *server.Factory, fn WithFunc2[model.Identity, m
 
 	const location = "handler.WithPrivilege"
 
-	return WithIdentity(serverFactory, func(ctx *steranko.Context, factory *domain.Factory, session data.Session, identity *model.Identity) error {
+	return WithIdentity(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session, identity *model.Identity) error {
 
 		// Load the Privilege from the database
 		privilegeService := factory.Privilege()
@@ -306,7 +306,7 @@ func WithProduct(serverFactory *server.Factory, fn WithFunc2[model.MerchantAccou
 
 	const location = "handler.WithAuthenticatedUser"
 
-	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 		// Load the Product from the URL parameters
 		productService := factory.Product()
@@ -334,7 +334,7 @@ func WithRegistration(serverFactory *server.Factory, fn WithFunc2[model.Domain, 
 
 	const location = "handler.WithAuthenticatedUser"
 
-	return WithDomain(serverFactory, func(ctx *steranko.Context, factory *domain.Factory, session data.Session, domain *model.Domain) error {
+	return WithDomain(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session, domain *model.Domain) error {
 
 		// Require that a registration form has been defined
 		if !domain.HasRegistrationForm() {
@@ -363,7 +363,7 @@ func WithSearchQuery(serverFactory *server.Factory, fn WithFunc3[model.Template,
 
 	const location = "handler.WithAuthenticatedUser"
 
-	return WithTemplate(serverFactory, func(ctx *steranko.Context, factory *domain.Factory, session data.Session, template *model.Template, stream *model.Stream) error {
+	return WithTemplate(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session, template *model.Template, stream *model.Stream) error {
 
 		// Load the Stream from the database
 		searchQueryService := factory.SearchQuery()
@@ -400,7 +400,7 @@ func WithStream(serverFactory *server.Factory, fn WithFunc1[model.Stream]) echo.
 
 	const location = "handler.WithAuthenticatedUser"
 
-	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 		// Load the Stream from the database
 		streamService := factory.Stream()
@@ -440,7 +440,7 @@ func WithTemplate(serverFactory *server.Factory, fn WithFunc2[model.Template, mo
 
 	const location = "handler.WithAuthenticatedUser"
 
-	return WithStream(serverFactory, func(ctx *steranko.Context, factory *domain.Factory, session data.Session, stream *model.Stream) error {
+	return WithStream(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session, stream *model.Stream) error {
 
 		// Load the Stream from the database
 		template, err := factory.Template().Load(stream.TemplateID)
@@ -459,7 +459,7 @@ func WithUser(serverFactory *server.Factory, fn WithFunc1[model.User]) echo.Hand
 
 	const location = "handler.WithUser"
 
-	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 		// Load the User from the database
 		userService := factory.User()
@@ -485,7 +485,7 @@ func WithUserForwarding(serverFactory *server.Factory, fn WithFunc1[model.User])
 
 	const location = "handler.WithUserForwarding"
 
-	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 		// Load the User from the database
 		userService := factory.User()

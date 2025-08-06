@@ -12,9 +12,7 @@ import (
 )
 
 type ServerFactory interface {
-	ByHostname(hostname string) (DomainFactory, error)
-	JWT() *JWT
-	Steranko(session data.Session) *SterankoUserService
+	ByHostname(hostname string) (*Factory, error)
 }
 
 type DomainFactory interface {

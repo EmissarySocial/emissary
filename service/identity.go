@@ -26,7 +26,7 @@ import (
 
 // Identity defines a service that manages all content identitys created and imported by Users.
 type Identity struct {
-	factory          Factory
+	factory          *Factory
 	emailService     *DomainEmail
 	jwtService       *JWT
 	privilegeService *Privilege
@@ -35,7 +35,7 @@ type Identity struct {
 }
 
 // NewIdentity returns a fully initialized Identity service
-func NewIdentity(factory Factory) Identity {
+func NewIdentity(factory *Factory) Identity {
 	return Identity{
 		factory: factory,
 	}

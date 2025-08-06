@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"net/http"
 
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/hmac"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
@@ -22,7 +22,7 @@ type webSubConfirmation struct {
 }
 
 // GetWebSubClient is called by an external WebSub server to confirm a subscription request.
-func GetWebSubClient(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func GetWebSubClient(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.GetWebSubClient"
 
@@ -85,7 +85,7 @@ func GetWebSubClient(ctx *steranko.Context, factory *domain.Factory, session dat
 }
 
 // PostWebSubClient is called by an external WebSub server to notify us of a change.
-func PostWebSubClient(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func PostWebSubClient(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.GetWebSubClient"
 

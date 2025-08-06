@@ -3,7 +3,6 @@ package consumer
 import (
 	"context"
 
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
@@ -14,7 +13,7 @@ import (
 )
 
 // WithFactory wraps a consumer function, and uses the "host" argument to inject a Factory object into the function signature.
-func WithFactory(serverFactory ServerFactory, args mapof.Any, handler func(factory *domain.Factory, session data.Session, args mapof.Any) queue.Result) queue.Result {
+func WithFactory(serverFactory ServerFactory, args mapof.Any, handler func(factory *service.Factory, session data.Session, args mapof.Any) queue.Result) queue.Result {
 
 	const location = "consumer.WithFactory"
 
@@ -51,11 +50,11 @@ func WithFactory(serverFactory ServerFactory, args mapof.Any, handler func(facto
 }
 
 // WithStream wraps a consumer function, using the "streamId" argument to load a Stream object from the database.
-func WithStream(serverFactory ServerFactory, args mapof.Any, handler func(*domain.Factory, data.Session, *service.Stream, *model.Stream, mapof.Any) queue.Result) queue.Result {
+func WithStream(serverFactory ServerFactory, args mapof.Any, handler func(*service.Factory, data.Session, *service.Stream, *model.Stream, mapof.Any) queue.Result) queue.Result {
 
 	const location = "consumer.WithStream"
 
-	return WithFactory(serverFactory, args, func(factory *domain.Factory, session data.Session, args mapof.Any) queue.Result {
+	return WithFactory(serverFactory, args, func(factory *service.Factory, session data.Session, args mapof.Any) queue.Result {
 
 		streamService := factory.Stream()
 		stream := model.NewStream()

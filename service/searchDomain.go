@@ -15,7 +15,7 @@ import (
 
 // SearchDomain defines a service that manages the global domain search actor.
 type SearchDomain struct {
-	factory          Factory
+	factory          *Factory
 	domainService    *Domain
 	followerService  *Follower
 	ruleService      *Rule
@@ -25,7 +25,7 @@ type SearchDomain struct {
 }
 
 // NewSearchDomain returns a fully initialized SearchDomain service
-func NewSearchDomain(factory Factory) SearchDomain {
+func NewSearchDomain(factory *Factory) SearchDomain {
 	return SearchDomain{
 		factory: factory,
 	}

@@ -2,8 +2,8 @@ package handler
 
 import (
 	"github.com/EmissarySocial/emissary/build"
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/first"
@@ -13,16 +13,16 @@ import (
 )
 
 // GetAdmin handles GET requests
-func GetAdmin(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func GetAdmin(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 	return buildAdmin(ctx, factory, session, build.ActionMethodGet)
 }
 
 // PostAdmin handles POST/DELETE requests
-func PostAdmin(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func PostAdmin(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 	return buildAdmin(ctx, factory, session, build.ActionMethodPost)
 }
 
-func buildAdmin(ctx *steranko.Context, factory *domain.Factory, session data.Session, actionMethod build.ActionMethod) error {
+func buildAdmin(ctx *steranko.Context, factory *service.Factory, session data.Session, actionMethod build.ActionMethod) error {
 
 	const location = "handler.adminBuilder"
 
@@ -69,7 +69,7 @@ func buildAdmin_ParsePath(ctx echo.Context) (string, string, primitive.ObjectID)
 	return templateID, actionID, primitive.NilObjectID
 }
 
-func buildAdmin_GetBuilder(ctx *steranko.Context, factory *domain.Factory, session data.Session, template model.Template, actionID string, objectID primitive.ObjectID) (build.Builder, error) {
+func buildAdmin_GetBuilder(ctx *steranko.Context, factory *service.Factory, session data.Session, template model.Template, actionID string, objectID primitive.ObjectID) (build.Builder, error) {
 
 	const location = "handler.buildAdmin_GetBuilder"
 

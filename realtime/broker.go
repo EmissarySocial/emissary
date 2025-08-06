@@ -1,53 +1,46 @@
-package domain
+package realtime
 
 import (
-	"github.com/EmissarySocial/emissary/service"
-	"github.com/benpate/turbine/queue"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// RealtimeBroker is a singleton. It is responsible
+// realtime.Broker is a singleton. It is responsible
 // for keeping a list of which clients (browsers) are currently attached
 // and broadcasting events (messages) to those clients.
 //
 // TODO: MEDIUM: Should the realtime broker be a service?
 // Is there a reason to have multiple instances of the realtime broker, or should it be a GLOBAL service?
-type RealtimeBroker struct {
-
-	// FollowerService for WebSub notifications
-	followerService *service.Follower
-
-	queue *queue.Queue
+type Broker struct {
 
 	// map of realtime clients
-	clients map[primitive.ObjectID]*RealtimeClient
+	clients map[primitive.ObjectID]*Client
 
 	// map of streams being watched.
-	streams map[primitive.ObjectID]map[primitive.ObjectID]*RealtimeClient
+	streams map[primitive.ObjectID]map[primitive.ObjectID]*Client
 
 	// Channel that users/streams are pushed into when they change.
 	updateChannel chan primitive.ObjectID
 
 	// Channel into which new clients can be pushed
-	AddClient chan *RealtimeClient
+	AddClient chan *Client
 
 	// Channel into which disconnected clients should be pushed
-	RemoveClient chan *RealtimeClient
+	RemoveClient chan *Client
 
 	// Channel into which the broker should be closed
 	close chan bool
 }
 
-// NewRealtimeBroker generates a new stream broker
-func NewRealtimeBroker(factory *Factory, updateChannel chan primitive.ObjectID) RealtimeBroker {
+// NewBroker generates a new stream broker
+func NewBroker(updateChannel chan primitive.ObjectID) Broker {
 
-	result := RealtimeBroker{
-		clients:       make(map[primitive.ObjectID]*RealtimeClient),
-		streams:       make(map[primitive.ObjectID]map[primitive.ObjectID]*RealtimeClient),
+	result := Broker{
+		clients:       make(map[primitive.ObjectID]*Client),
+		streams:       make(map[primitive.ObjectID]map[primitive.ObjectID]*Client),
 		updateChannel: updateChannel,
 
-		AddClient:    make(chan *RealtimeClient),
-		RemoveClient: make(chan *RealtimeClient),
+		AddClient:    make(chan *Client),
+		RemoveClient: make(chan *Client),
 		close:        make(chan bool),
 	}
 
@@ -60,14 +53,12 @@ func NewRealtimeBroker(factory *Factory, updateChannel chan primitive.ObjectID) 
  * Lifecycle Methods
  ******************************************/
 
-// Refresh
-func (b *RealtimeBroker) Refresh(followerService *service.Follower, queue *queue.Queue) {
-	b.followerService = followerService
-	b.queue = queue
+// Refresh updates values in the broker that may have changed with the last config update.
+func (b *Broker) Refresh() {
 }
 
 // Stop closes the broker
-func (b *RealtimeBroker) Close() {
+func (b *Broker) Close() {
 	close(b.close)
 }
 
@@ -78,7 +69,7 @@ func (b *RealtimeBroker) Close() {
 // Listen handles the addition & removal of clients, as well as
 // the broadcasting of messages out to clients that are currently attached.
 // It is intended to be run in its own goroutine.
-func (b *RealtimeBroker) listen() {
+func (b *Broker) listen() {
 
 	for {
 
@@ -89,7 +80,7 @@ func (b *RealtimeBroker) listen() {
 		case client := <-b.AddClient:
 
 			if _, ok := b.streams[client.StreamID]; !ok {
-				b.streams[client.StreamID] = make(map[primitive.ObjectID]*RealtimeClient)
+				b.streams[client.StreamID] = make(map[primitive.ObjectID]*Client)
 			}
 
 			b.streams[client.StreamID][client.ClientID] = client
@@ -126,7 +117,7 @@ func (b *RealtimeBroker) listen() {
 }
 
 // notifySSE sends updates for every SEE client that is watching a given stream
-func (b *RealtimeBroker) notifySSE(streamID primitive.ObjectID) {
+func (b *Broker) notifySSE(streamID primitive.ObjectID) {
 
 	// Send realtime messages to SSE clients
 	for _, client := range b.streams[streamID] {

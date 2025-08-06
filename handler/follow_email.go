@@ -3,8 +3,8 @@ package handler
 import (
 	"net/http"
 
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/random"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
@@ -12,7 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func PostEmailFollower(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func PostEmailFollower(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.PostEmailFollower"
 

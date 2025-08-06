@@ -1,14 +1,14 @@
 package handler
 
 import (
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
 	"github.com/benpate/steranko"
 )
 
 // GetPayPalConnect initiates the PayPal connection process for a User.
-func GetPayPalConnect(ctx *steranko.Context, factory *domain.Factory, user *model.User) error {
+func GetPayPalConnect(ctx *steranko.Context, factory *service.Factory, user *model.User) error {
 
 	const location = "handler.GetPayPalConnect"
 
@@ -120,7 +120,7 @@ func GetPayPalConnect(ctx *steranko.Context, factory *domain.Factory, user *mode
 }
 
 // PostPayPalWebhook receives and processes PayPal webhook events.
-func PostPayPalWebhook(ctx *steranko.Context, factory *domain.Factory) error {
+func PostPayPalWebhook(ctx *steranko.Context, factory *service.Factory) error {
 
 	const location = "handler.PostPayPalWebhook"
 
@@ -145,7 +145,7 @@ func PostPayPalWebhook(ctx *steranko.Context, factory *domain.Factory) error {
 }
 
 /*
-func postPayPalWebhook_MerchantOnboardingCompleted(factory *domain.Factory, event mapof.Any) error {
+func postPayPalWebhook_MerchantOnboardingCompleted(factory *service.Factory, event mapof.Any) error {
 
 	const location = "handler.PostPaypalWebhook_MerchantOnboardingCompleted"
 

@@ -3,8 +3,8 @@ package handler
 import (
 	"net/http"
 
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/server"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/vocab"
@@ -13,7 +13,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func GetApplicationActor(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func GetApplicationActor(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.GetApplicationActor"
 
@@ -54,7 +54,7 @@ func GetApplicationActor(ctx *steranko.Context, factory *domain.Factory, session
 }
 
 // GetEmptyCollection returns an empty collection
-func GetEmptyCollection(ctx *steranko.Context, factory *domain.Factory, _ data.Session) error {
+func GetEmptyCollection(ctx *steranko.Context, factory *service.Factory, _ data.Session) error {
 
 	result := mapof.Any{
 		vocab.AtContext:          vocab.ContextTypeActivityStreams,

@@ -21,7 +21,7 @@ const followingMimeStack = "application/activity+json; q=1.0, text/html; q=0.9, 
 
 // Following manages all interactions with the Following collection
 type Following struct {
-	factory       Factory
+	factory       *Factory
 	streamService *Stream
 	userService   *User
 	inboxService  *Inbox
@@ -32,7 +32,7 @@ type Following struct {
 }
 
 // NewFollowing returns a fully populated Following service.
-func NewFollowing(factory Factory) Following {
+func NewFollowing(factory *Factory) Following {
 	return Following{
 		factory: factory,
 	}

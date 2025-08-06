@@ -1,8 +1,8 @@
 package consumer
 
 import (
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
@@ -10,7 +10,7 @@ import (
 )
 
 // DeleteEmptySearchQuery deletes the searchQuery IF is has no followers
-func DeleteEmptySearchQuery(factory *domain.Factory, session data.Session, args mapof.Any) queue.Result {
+func DeleteEmptySearchQuery(factory *service.Factory, session data.Session, args mapof.Any) queue.Result {
 	const location = "consumer.DeleteEmptySearchQuery"
 
 	// Try to find the existing SearchQuery

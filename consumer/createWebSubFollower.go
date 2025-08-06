@@ -4,8 +4,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/remote"
@@ -15,7 +15,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func CreateWebSubFollower(factory *domain.Factory, session data.Session, args mapof.Any) queue.Result {
+func CreateWebSubFollower(factory *service.Factory, session data.Session, args mapof.Any) queue.Result {
 
 	const location = "consumer.CreateWebSubFollower"
 
@@ -42,7 +42,7 @@ func CreateWebSubFollower(factory *domain.Factory, session data.Session, args ma
 }
 
 // subscribe creates/updates a follower record
-func createWebSubFollower_subscribe(factory *domain.Factory, session data.Session, objectType string, objectID primitive.ObjectID, format string, mode string, topic string, callback string, secret string, leaseSeconds int) queue.Result {
+func createWebSubFollower_subscribe(factory *service.Factory, session data.Session, objectType string, objectID primitive.ObjectID, format string, mode string, topic string, callback string, secret string, leaseSeconds int) queue.Result {
 
 	const location = "consumer.createWebSubFollower_subscribe"
 
@@ -89,7 +89,7 @@ func createWebSubFollower_subscribe(factory *domain.Factory, session data.Sessio
 }
 
 // unsubscribe removes a follower record
-func createWebSubFollower_unsubscribe(factory *domain.Factory, session data.Session, objectType string, objectID primitive.ObjectID, mode string, topic string, callback string, leaseSeconds int) queue.Result {
+func createWebSubFollower_unsubscribe(factory *service.Factory, session data.Session, objectType string, objectID primitive.ObjectID, mode string, topic string, callback string, leaseSeconds int) queue.Result {
 
 	const location = "consumer.createWebSubFollower_unsubscribe"
 
@@ -114,7 +114,7 @@ func createWebSubFollower_unsubscribe(factory *domain.Factory, session data.Sess
 }
 
 // validate verifies that the request is valid, for an object that we own, and that the callback server approves of the request.
-func createWebSubFollower_validate(factory *domain.Factory, session data.Session, follower *model.Follower, objectType string, objectID primitive.ObjectID, mode string, topic string, leaseSeconds int) queue.Result {
+func createWebSubFollower_validate(factory *service.Factory, session data.Session, follower *model.Follower, objectType string, objectID primitive.ObjectID, mode string, topic string, leaseSeconds int) queue.Result {
 
 	const location = "consumer.createWebSubFollower_validate"
 

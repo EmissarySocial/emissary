@@ -3,15 +3,15 @@ package activitypub_user
 import (
 	"net/http"
 
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/inbox"
 	"github.com/benpate/steranko"
 )
 
-func PostInbox(ctx *steranko.Context, factory *domain.Factory, session data.Session, user *model.User) error {
+func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.activitypub_user.PostInbox"
 

@@ -12,11 +12,11 @@ import (
 
 // Annotation manages all interactions with the Annotation collection
 type Annotation struct {
-	factory Factory
+	factory *Factory
 }
 
 // NewAnnotation returns a fully populated Annotation service
-func NewAnnotation(factory Factory) Annotation {
+func NewAnnotation(factory *Factory) Annotation {
 	return Annotation{
 		factory: factory,
 	}

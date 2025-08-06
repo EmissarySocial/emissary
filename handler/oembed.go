@@ -4,8 +4,8 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
@@ -13,7 +13,7 @@ import (
 )
 
 // GetOEmbed will provide an OEmbed service to be used exclusively by websites on this domain.
-func GetOEmbed(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func GetOEmbed(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.GetOEmbed"
 
@@ -47,7 +47,7 @@ func GetOEmbed(ctx *steranko.Context, factory *domain.Factory, session data.Sess
 	return ctx.JSON(200, result)
 }
 
-func getOEmbed_record(factory *domain.Factory, session data.Session, path string) (mapof.Any, error) {
+func getOEmbed_record(factory *service.Factory, session data.Session, path string) (mapof.Any, error) {
 
 	// Parse the path as either a Stream or a User
 	path = strings.TrimPrefix(path, "/")
@@ -67,7 +67,7 @@ func getOEmbed_record(factory *domain.Factory, session data.Session, path string
 	return getOEmbed_Stream(factory, session, path)
 }
 
-func getOEmbed_Domain(factory *domain.Factory) (mapof.Any, error) {
+func getOEmbed_Domain(factory *service.Factory) (mapof.Any, error) {
 
 	domain := factory.Domain().Get()
 
@@ -83,7 +83,7 @@ func getOEmbed_Domain(factory *domain.Factory) (mapof.Any, error) {
 	return result, nil
 }
 
-func getOEmbed_Stream(factory *domain.Factory, session data.Session, token string) (mapof.Any, error) {
+func getOEmbed_Stream(factory *service.Factory, session data.Session, token string) (mapof.Any, error) {
 
 	const location = "handler.getOEmbed_Stream"
 
@@ -155,7 +155,7 @@ func getOEmbed_Stream(factory *domain.Factory, session data.Session, token strin
 	return result, nil
 }
 
-func getOEmbed_User(factory *domain.Factory, session data.Session, token string) (mapof.Any, error) {
+func getOEmbed_User(factory *service.Factory, session data.Session, token string) (mapof.Any, error) {
 
 	const location = "handler.getOEmbed_User"
 

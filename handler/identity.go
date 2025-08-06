@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/EmissarySocial/emissary/build"
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/html"
@@ -16,17 +16,17 @@ import (
 )
 
 // GetIdentity handles GET request for the /@guest route
-func GetIdentity(ctx *steranko.Context, factory *domain.Factory, session data.Session, identity *model.Identity) error {
+func GetIdentity(ctx *steranko.Context, factory *service.Factory, session data.Session, identity *model.Identity) error {
 	return buildIdentity(ctx, factory, session, identity, build.ActionMethodGet)
 }
 
 // PostIdentity handles POST request for the /@guest route
-func PostIdentity(ctx *steranko.Context, factory *domain.Factory, session data.Session, identity *model.Identity) error {
+func PostIdentity(ctx *steranko.Context, factory *service.Factory, session data.Session, identity *model.Identity) error {
 	return buildIdentity(ctx, factory, session, identity, build.ActionMethodPost)
 }
 
 // buildIdentity is the common function that handles both GET and POSt requests for the /@guest route.
-func buildIdentity(ctx *steranko.Context, factory *domain.Factory, session data.Session, identity *model.Identity, actionMethod build.ActionMethod) error {
+func buildIdentity(ctx *steranko.Context, factory *service.Factory, session data.Session, identity *model.Identity, actionMethod build.ActionMethod) error {
 	const location = "handler.GetIdentity"
 
 	// Create a builder
@@ -45,7 +45,7 @@ func buildIdentity(ctx *steranko.Context, factory *domain.Factory, session data.
 	return ctx.NoContent(http.StatusOK)
 }
 
-func GetPrivilegeDelete(ctx *steranko.Context, factory *domain.Factory, session data.Session, identity *model.Identity, privilege *model.Privilege) error {
+func GetPrivilegeDelete(ctx *steranko.Context, factory *service.Factory, session data.Session, identity *model.Identity, privilege *model.Privilege) error {
 
 	if privilege.IsRecurring() {
 		b := html.New()
@@ -93,7 +93,7 @@ func GetPrivilegeDelete(ctx *steranko.Context, factory *domain.Factory, session 
 
 }
 
-func PostPrivilegeDelete(ctx *steranko.Context, factory *domain.Factory, session data.Session, identity *model.Identity, privilege *model.Privilege) error {
+func PostPrivilegeDelete(ctx *steranko.Context, factory *service.Factory, session data.Session, identity *model.Identity, privilege *model.Privilege) error {
 
 	const location = "handler.PostPrivilegeCancel"
 
@@ -111,7 +111,7 @@ func PostPrivilegeDelete(ctx *steranko.Context, factory *domain.Factory, session
 }
 
 // GetIdentitySignin displays the Signin page for guest Identities
-func GetIdentitySignin(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func GetIdentitySignin(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.GetIdentitySignin"
 
@@ -135,7 +135,7 @@ func GetIdentitySignin(ctx *steranko.Context, factory *domain.Factory, session d
 
 // PostIdentitySignin accepts POST from the guest Signin page, and sends
 // guest signin codes to the email/handle provided by the user.
-func PostIdentitySignin(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func PostIdentitySignin(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.PostIdentitySignin"
 
@@ -170,7 +170,7 @@ func PostIdentitySignin(ctx *steranko.Context, factory *domain.Factory, session 
 
 // GetIdentitySigninWithJWT receives JWT tokens from the request, and signs guests
 // into the website with their Identity.
-func GetIdentitySigninWithJWT(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func GetIdentitySigninWithJWT(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.GetIdentitySigninWithJWT"
 
@@ -245,7 +245,7 @@ func GetIdentitySigninWithJWT(ctx *steranko.Context, factory *domain.Factory, se
 }
 
 // PostIdentityIdentifier allows guests to edit the identifiers for their Identity.
-func PostIdentityIdentifier(ctx *steranko.Context, factory *domain.Factory, session data.Session, identity *model.Identity) error {
+func PostIdentityIdentifier(ctx *steranko.Context, factory *service.Factory, session data.Session, identity *model.Identity) error {
 
 	const location = "handler.PostIdentityEditIdentifier"
 	// Get the identifier type and value from the request

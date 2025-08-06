@@ -20,7 +20,7 @@ import (
 
 // SearchQuery defines a service that manages all searchable tags in a domain.
 type SearchQuery struct {
-	factory          Factory
+	factory          *Factory
 	domainService    *Domain
 	followerService  *Follower
 	ruleService      *Rule
@@ -30,7 +30,7 @@ type SearchQuery struct {
 }
 
 // NewSearchQuery returns a fully initialized SearchQuery service
-func NewSearchQuery(factory Factory) SearchQuery {
+func NewSearchQuery(factory *Factory) SearchQuery {
 	return SearchQuery{
 		factory: factory,
 	}

@@ -2,8 +2,8 @@ package handler
 
 import (
 	"github.com/EmissarySocial/emissary/build"
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/first"
@@ -11,17 +11,17 @@ import (
 )
 
 // GetSettings handles GET requests
-func GetSettings(ctx *steranko.Context, factory *domain.Factory, session data.Session, user *model.User) error {
+func GetSettings(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 	return buildSettings(ctx, factory, session, user, build.ActionMethodGet)
 }
 
 // PostSettings handles POST/DELETE requests
-func PostSettings(ctx *steranko.Context, factory *domain.Factory, session data.Session, user *model.User) error {
+func PostSettings(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 	return buildSettings(ctx, factory, session, user, build.ActionMethodPost)
 }
 
 // buildSettings is the common Settings handler for both GET and POST requests
-func buildSettings(ctx *steranko.Context, factory *domain.Factory, session data.Session, user *model.User, actionMethod build.ActionMethod) error {
+func buildSettings(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User, actionMethod build.ActionMethod) error {
 
 	const location = "handler.buildSettings"
 

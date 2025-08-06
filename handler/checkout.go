@@ -3,15 +3,15 @@ package handler
 import (
 	"net/http"
 
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/steranko"
 )
 
 // GetCheckout initiates a checkout session with the provided MerchantAccount and Product.
-func GetCheckout(ctx *steranko.Context, factory *domain.Factory, session data.Session, merchantAccount *model.MerchantAccount, product *model.Product) error {
+func GetCheckout(ctx *steranko.Context, factory *service.Factory, session data.Session, merchantAccount *model.MerchantAccount, product *model.Product) error {
 
 	const location = "handler.GetCheckout"
 
@@ -29,7 +29,7 @@ func GetCheckout(ctx *steranko.Context, factory *domain.Factory, session data.Se
 }
 
 // GetCheckoutResponse collects the confirmation data from a successful checkout and updates Guest/Purchase records accordingly.
-func GetCheckoutResponse(ctx *steranko.Context, factory *domain.Factory, session data.Session, merchantAccount *model.MerchantAccount, product *model.Product) error {
+func GetCheckoutResponse(ctx *steranko.Context, factory *service.Factory, session data.Session, merchantAccount *model.MerchantAccount, product *model.Product) error {
 
 	const location = "handler.GetCheckoutResponse"
 

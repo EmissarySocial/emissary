@@ -29,7 +29,7 @@ import (
 type ActivityStream struct {
 	commonDatabase data.Server   // Database connection for the commonDatabase
 	serverFactory  ServerFactory // SessionFactory that creates sessions in domain databases
-	factory        Factory
+	factory        *Factory
 	hostname       string
 	version        string
 
@@ -42,7 +42,7 @@ type ActivityStream struct {
  ******************************************/
 
 // NewActivityStream creates a new ActivityStream service
-func NewActivityStream(serverFactory ServerFactory, commonDatabase data.Server, factory Factory, hostname string, version string, actorType string, actorID primitive.ObjectID) ActivityStream {
+func NewActivityStream(serverFactory ServerFactory, commonDatabase data.Server, factory *Factory, hostname string, version string, actorType string, actorID primitive.ObjectID) ActivityStream {
 	return ActivityStream{
 		serverFactory:  serverFactory,
 		commonDatabase: commonDatabase,

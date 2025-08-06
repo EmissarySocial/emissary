@@ -1,7 +1,6 @@
 package consumer
 
 import (
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
@@ -10,7 +9,7 @@ import (
 	"github.com/benpate/turbine/queue"
 )
 
-func Geocode(factory *domain.Factory, session data.Session, streamService *service.Stream, stream *model.Stream, args mapof.Any) queue.Result {
+func Geocode(factory *service.Factory, session data.Session, streamService *service.Stream, stream *model.Stream, args mapof.Any) queue.Result {
 
 	const location = "consumer.Geocode"
 

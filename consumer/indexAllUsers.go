@@ -1,14 +1,14 @@
 package consumer
 
 import (
-	"github.com/EmissarySocial/emissary/domain"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
 )
 
-func IndexAllUsers(factory *domain.Factory, session data.Session, args mapof.Any) queue.Result {
+func IndexAllUsers(factory *service.Factory, session data.Session, args mapof.Any) queue.Result {
 
 	const location = "consumer.IndexAllUsers"
 

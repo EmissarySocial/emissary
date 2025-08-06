@@ -10,7 +10,7 @@ import (
 )
 
 type DomainEmail struct {
-	factory       Factory
+	factory       *Factory
 	serverEmail   *ServerEmail
 	domainService *Domain
 	smtp          config.SMTPConnection
@@ -19,7 +19,7 @@ type DomainEmail struct {
 	hostname      string
 }
 
-func NewDomainEmail(factory Factory, serverEmail *ServerEmail) DomainEmail {
+func NewDomainEmail(factory *Factory, serverEmail *ServerEmail) DomainEmail {
 	return DomainEmail{
 		factory:     factory,
 		serverEmail: serverEmail,

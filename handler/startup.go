@@ -4,14 +4,14 @@ import (
 	"net/http"
 
 	"github.com/EmissarySocial/emissary/build"
-	"github.com/EmissarySocial/emissary/domain"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/first"
 	"github.com/benpate/steranko"
 )
 
-func GetStartup(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func GetStartup(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.GetStartup"
 
@@ -48,7 +48,7 @@ func GetStartup(ctx *steranko.Context, factory *domain.Factory, session data.Ses
 	return ctx.HTML(http.StatusOK, string(result))
 }
 
-func PostStartup(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func PostStartup(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.PostStartup"
 

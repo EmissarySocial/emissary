@@ -2,8 +2,8 @@ package handler
 
 import (
 	"github.com/EmissarySocial/emissary/build"
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/first"
@@ -11,17 +11,17 @@ import (
 )
 
 // GetInbox handles GET requests
-func GetInbox(ctx *steranko.Context, factory *domain.Factory, session data.Session, user *model.User) error {
+func GetInbox(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 	return buildInbox(ctx, factory, session, user, build.ActionMethodGet)
 }
 
 // PostInbox handles POST/DELETE requests
-func PostInbox(ctx *steranko.Context, factory *domain.Factory, session data.Session, user *model.User) error {
+func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 	return buildInbox(ctx, factory, session, user, build.ActionMethodPost)
 }
 
 // buildInbox is the common Inbox handler for both GET and POST requests
-func buildInbox(ctx *steranko.Context, factory *domain.Factory, session data.Session, user *model.User, actionMethod build.ActionMethod) error {
+func buildInbox(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User, actionMethod build.ActionMethod) error {
 
 	const location = "handler.buildInbox"
 

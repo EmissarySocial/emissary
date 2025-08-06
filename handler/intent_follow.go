@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/camper"
 	"github.com/EmissarySocial/emissary/tools/formdata"
 	"github.com/benpate/data"
@@ -19,7 +19,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func GetIntent_Follow(ctx *steranko.Context, factory *domain.Factory, session data.Session, user *model.User) error {
+func GetIntent_Follow(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.GetIntent_Follow"
 
@@ -165,7 +165,7 @@ func getForm_FollowingIntent() form.Form {
 	}
 }
 
-func PostIntent_Follow(ctx *steranko.Context, factory *domain.Factory, session data.Session, user *model.User) error {
+func PostIntent_Follow(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.GetIntent_Follow"
 

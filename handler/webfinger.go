@@ -3,8 +3,8 @@ package handler
 import (
 	"net/http"
 
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/steranko"
@@ -13,7 +13,7 @@ import (
 // GetWebfinger returns public webfinger information for a designated user.
 // https://webfinger.net
 // WebFinger data based on https://docs.joinmastodon.org/spec/webfinger/
-func GetWebfinger(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func GetWebfinger(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.GetWebfinger"
 

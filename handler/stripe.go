@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/stripeapi"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
@@ -17,7 +17,7 @@ import (
 )
 
 // PostCheckoutWebhook processes inbound webhook events for a specific MerchantAccount
-func PostStripeWebhook_Checkout(ctx *steranko.Context, factory *domain.Factory, session data.Session, merchantAccount *model.MerchantAccount) error {
+func PostStripeWebhook_Checkout(ctx *steranko.Context, factory *service.Factory, session data.Session, merchantAccount *model.MerchantAccount) error {
 
 	const location = "handler.PostStripeWebhook_Checkout"
 
@@ -52,7 +52,7 @@ func PostStripeWebhook_Checkout(ctx *steranko.Context, factory *domain.Factory, 
 }
 
 // stripe_ProcessWebhook processes product webhook events from Stripe
-func stripe_ProcessWebhook(factory *domain.Factory, session data.Session, request *http.Request, webhookSecret string, liveMode bool) error {
+func stripe_ProcessWebhook(factory *service.Factory, session data.Session, request *http.Request, webhookSecret string, liveMode bool) error {
 
 	const location = "handler.stripe_ProcessWebhook"
 

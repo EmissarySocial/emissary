@@ -32,7 +32,7 @@ import (
 
 // User manages all interactions with the User collection
 type User struct {
-	factory           Factory
+	factory           *Factory
 	attachmentService *Attachment
 	emailService      *DomainEmail
 	domainService     *Domain
@@ -54,7 +54,7 @@ type User struct {
 }
 
 // NewUser returns a fully populated User service
-func NewUser(factory Factory) User {
+func NewUser(factory *Factory) User {
 	return User{
 		factory: factory,
 	}

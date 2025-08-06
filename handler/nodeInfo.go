@@ -3,7 +3,7 @@ package handler
 import (
 	"net/http"
 
-	"github.com/EmissarySocial/emissary/domain"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	dt "github.com/benpate/domain"
 	"github.com/benpate/exp"
@@ -13,7 +13,7 @@ import (
 // GetNodeInfo returns the discovery links for nodeInfo endpoints
 // http://nodeinfo.diaspora.software/protocol.html
 // http://nodeinfo.diaspora.software/schema.html
-func GetNodeInfo(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func GetNodeInfo(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	host := dt.Hostname(ctx.Request())
 	server := dt.AddProtocol(host)
@@ -41,7 +41,7 @@ func GetNodeInfo(ctx *steranko.Context, factory *domain.Factory, session data.Se
 // GetNodeInfo20 returns the nodeInfo 2.0 document for this server
 // http://nodeinfo.diaspora.software/ns/schema/2.0
 // http://nodeinfo.diaspora.software/docson/index.html#/ns/schema/2.0#$$expand
-func GetNodeInfo20(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func GetNodeInfo20(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	// Get the Domain
 	domain := factory.Domain().Get()
@@ -82,7 +82,7 @@ func GetNodeInfo20(ctx *steranko.Context, factory *domain.Factory, session data.
 // GetNodeInfo21 returns the nodeInfo 2.1 document for this server
 // http://nodeinfo.diaspora.software/ns/schema/2.1
 // http://nodeinfo.diaspora.software/docson/index.html#/ns/schema/2.1#$$expand
-func GetNodeInfo21(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
+func GetNodeInfo21(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	// Get the Domain
 	domain := factory.Domain().Get()

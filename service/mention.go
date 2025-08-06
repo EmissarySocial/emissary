@@ -35,14 +35,14 @@ import (
 
 // Mention defines a service that can send and receive mention data
 type Mention struct {
-	factory         Factory
+	factory         *Factory
 	ruleService     *Rule
 	activityService *ActivityStream
 	host            string
 }
 
 // NewMention returns a fully initialized Mention service
-func NewMention(factory Factory) Mention {
+func NewMention(factory *Factory) Mention {
 	return Mention{
 		factory: factory,
 	}

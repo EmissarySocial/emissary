@@ -32,7 +32,7 @@ import (
 
 // Stream manages all interactions with the Stream collection
 type Stream struct {
-	factory           Factory
+	factory           *Factory
 	circleService     *Circle
 	domainService     *Domain
 	searchTagService  *SearchTag
@@ -53,7 +53,7 @@ type Stream struct {
 }
 
 // NewStream returns a fully populated Stream service.
-func NewStream(factory Factory) Stream {
+func NewStream(factory *Factory) Stream {
 	return Stream{
 		factory: factory,
 	}

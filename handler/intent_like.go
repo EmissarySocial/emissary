@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/camper"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
@@ -15,7 +15,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func GetIntent_Like(ctx *steranko.Context, factory *domain.Factory, session data.Session, user *model.User) error {
+func GetIntent_Like(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.GetIntent_Like"
 
@@ -97,11 +97,11 @@ func GetIntent_Like(ctx *steranko.Context, factory *domain.Factory, session data
 	return ctx.HTML(http.StatusOK, b.String())
 }
 
-func PostIntent_Like(ctx *steranko.Context, factory *domain.Factory, session data.Session, user *model.User) error {
+func PostIntent_Like(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 	return postIntent_Response(ctx, factory, session, user, vocab.ActivityTypeLike)
 }
 
-func postIntent_Response(ctx *steranko.Context, factory *domain.Factory, session data.Session, user *model.User, responseType string) error {
+func postIntent_Response(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User, responseType string) error {
 
 	const location = "handler.GetIntent_Response"
 

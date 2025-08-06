@@ -4,16 +4,16 @@ import (
 	"math"
 	"net/http"
 
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/handler/activitypub"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/steranko"
 )
 
-func GetFollowersCollection(ctx *steranko.Context, factory *domain.Factory, session data.Session, template *model.Template, stream *model.Stream) error {
+func GetFollowersCollection(ctx *steranko.Context, factory *service.Factory, session data.Session, template *model.Template, stream *model.Stream) error {
 
 	const location = "handler.activitypub_stream.GetFollowersCollection"
 
