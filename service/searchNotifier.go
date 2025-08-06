@@ -1,7 +1,6 @@
 package service
 
 import (
-	"context"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -19,30 +18,25 @@ type SearchNotifier struct {
 	searchResultService *SearchResult
 	searchQueryService  *SearchQuery
 
-	host      string
-	processID primitive.ObjectID
-	context   context.Context
-	queue     *queue.Queue
+	host  string
+	queue *queue.Queue
 }
 
 func NewSearchNotifier() SearchNotifier {
-	return SearchNotifier{
-		processID: primitive.NewObjectID(),
-	}
+	return SearchNotifier{}
 }
 
-func (service *SearchNotifier) Refresh(searchDomainService *SearchDomain, searchResultService *SearchResult, searchQueryService *SearchQuery, queue *queue.Queue, host string, context context.Context) {
+func (service *SearchNotifier) Refresh(searchDomainService *SearchDomain, searchResultService *SearchResult, searchQueryService *SearchQuery, queue *queue.Queue, host string) {
 	service.searchDomainService = searchDomainService
 	service.searchResultService = searchResultService
 	service.searchQueryService = searchQueryService
 
 	service.queue = queue
 	service.host = host
-	service.context = context
 }
 
 // sendGlobalNotifications sends notifications to all Global Search followers
-func (service *SearchNotifier) sendGlobalNotifications(searchResults []model.SearchResult) error {
+func (service *SearchNotifier) SendGlobalNotifications(searchResults []model.SearchResult) error {
 
 	const location = "service.SearchNotifier.sendNotifications"
 
@@ -84,7 +78,7 @@ func (service *SearchNotifier) sendGlobalNotifications(searchResults []model.Sea
 
 // sendNotifications scans all SearchQueries in the database and sends notifications
 // for all that match the provided batch of SearchResults
-func (service *SearchNotifier) sendNotifications(session data.Session, searchResults []model.SearchResult) error {
+func (service *SearchNotifier) SendNotifications(session data.Session, searchResults []model.SearchResult) error {
 
 	const location = "service.SearchNotifier.sendNotifications"
 
@@ -134,7 +128,7 @@ func (service *SearchNotifier) sendNotifications(session data.Session, searchRes
 
 // markNotified marks all of the provided SearchResult records as being notified as of
 // the current epoch.  This prevents them from being sent as duplicates in the future.
-func (service *SearchNotifier) markNotified(session data.Session, searchResults []model.SearchResult) error {
+func (service *SearchNotifier) MarkNotified(session data.Session, searchResults []model.SearchResult) error {
 
 	const location = "service.SearchNotifier.sendNotifications"
 

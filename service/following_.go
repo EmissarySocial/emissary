@@ -309,12 +309,12 @@ func (service *Following) QueryByFolderAndExp(session data.Session, userID primi
 	return result, err
 }
 
-// ListPollable returns an iterator of all following that are ready to be polled
-func (service *Following) ListPollable(session data.Session) (data.Iterator, error) {
+// RangePollable returns an iterator of all following that are ready to be polled
+func (service *Following) RangePollable(session data.Session) (iter.Seq[model.Following], error) {
 	criteria := exp.LessThan("nextPoll", time.Now().Unix()).
 		AndNotEqual("method", model.FollowingMethodActivityPub) // Don't poll ActivityPub
 
-	return service.List(session, criteria, option.SortAsc("lastPolled"))
+	return service.Range(session, criteria, option.SortAsc("lastPolled"))
 }
 
 // RangeByUserID returns an iterator of all following for a given userID

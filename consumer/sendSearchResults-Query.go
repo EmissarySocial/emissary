@@ -11,7 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func SendSearchResults(factory *service.Factory, session data.Session, args mapof.Any) queue.Result {
+func SendSearchResults_Query(factory *service.Factory, session data.Session, args mapof.Any) queue.Result {
 
 	const location = "consumer.SendSearchResults"
 

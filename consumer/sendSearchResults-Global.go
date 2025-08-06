@@ -11,7 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func SendSearchResultsGlobal(factory *service.Factory, session data.Session, args mapof.Any) queue.Result {
+func SendSearchResults_Global(factory *service.Factory, session data.Session, args mapof.Any) queue.Result {
 
 	const location = "consumer.SendSearchResultsGlobal"
 
@@ -51,6 +51,7 @@ func SendSearchResultsGlobal(factory *service.Factory, session data.Session, arg
 			mapof.Any{
 				"host":      factory.Hostname(),
 				"actorType": model.FollowerTypeSearchDomain,
+				"actorID":   primitive.NilObjectID.Hex(),
 				"to":        follower.Actor.ProfileURL,
 				"message": mapof.Any{
 					vocab.PropertyActor:  actorURL,

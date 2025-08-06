@@ -35,10 +35,14 @@ func WithFactory(serverFactory ServerFactory, args mapof.Any, handler func(facto
 	}
 
 	// Execute the handler as a transaction
-	result, err := factory.Server().WithTransaction(context.TODO(), func(session data.Session) (any, error) {
+	result, err := factory.Server().WithTransaction(context.Background(), func(session data.Session) (any, error) {
 		result := handler(factory, session, args)
 		return result, result.Error
 	})
+
+	if err != nil {
+		return queue.Error(derp.Wrap(err, location, "Error executing transaction", args))
+	}
 
 	// Return the queue result
 	if result, isQueueResult := result.(queue.Result); isQueueResult {

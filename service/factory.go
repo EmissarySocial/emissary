@@ -402,7 +402,6 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 			factory.SearchQuery(),
 			factory.Queue(),
 			factory.Host(),
-			refreshContext,
 		)
 
 		// Populate the SearchQuery Service
@@ -740,6 +739,10 @@ func (factory *Factory) SearchDomain() *SearchDomain {
 // SearchResult returns a fully populated SearchResult service
 func (factory *Factory) SearchResult() *SearchResult {
 	return &factory.searchResultService
+}
+
+func (factory *Factory) SearchNotifier() *SearchNotifier {
+	return &factory.searchNotifierService
 }
 
 // SearchQuery returns a fully populated SearchQuery service

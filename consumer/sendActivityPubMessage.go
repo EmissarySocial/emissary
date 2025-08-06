@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // SendActivityPubMessage sends an ActivityPub message to a single recipient/inboxURL
@@ -16,11 +17,19 @@ func SendActivityPubMessage(factory *service.Factory, session data.Session, args
 
 	const location = "consumer.SendActivityPubMessage"
 
-	activityStreamService := factory.ActivityStream()
+	// Parse arguments
+	actorType := args.GetString("actorType")
+	actorIDHex := args.GetString("actorID")
+	actorID, _ := primitive.ObjectIDFromHex(actorIDHex)
 
+	// Get an ActivityStream service for the specified actor
+	activityStreamService := factory.ActivityStream(actorType, actorID)
+
+	// Send the ActivityPub message on the actor's behalf
 	if err := activityStreamService.SendMessage(session, args); err != nil {
 		return queue.Failure(derp.Wrap(err, location, "Error sending ActivityPub message"))
 	}
 
+	// There is only Woot.
 	return queue.Success()
 }

@@ -12,6 +12,8 @@ replace github.com/benpate/sherlock => ../../benpate/sherlock
 
 replace github.com/benpate/steranko => ../../benpate/steranko
 
+replace github.com/benpate/turbine => ../../benpate/turbine
+
 require (
 	github.com/PuerkitoBio/goquery v1.10.3
 	github.com/aws/aws-sdk-go v1.55.7
