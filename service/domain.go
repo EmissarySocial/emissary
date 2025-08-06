@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"html/template"
+	"time"
 
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
@@ -24,8 +25,8 @@ import (
 
 // Domain service manages all access to the singleton model.Domain in the database
 type Domain struct {
+	factory             Factory
 	configuration       config.Domain
-	activityStream      *ActivityStream
 	connectionService   *Connection
 	providerService     *Provider
 	registrationService *Registration
@@ -38,9 +39,9 @@ type Domain struct {
 }
 
 // NewDomain returns a fully initialized Domain service
-func NewDomain() Domain {
+func NewDomain(factory Factory) Domain {
 	return Domain{
-		domain: model.NewDomain(),
+		factory: factory,
 	}
 }
 
@@ -53,10 +54,9 @@ func (service *Domain) collection(session data.Session) data.Collection {
 }
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Domain) Refresh(configuration config.Domain, activityStream *ActivityStream, connectionService *Connection, providerService *Provider, registrationService *Registration, themeService *Theme, userService *User, funcMap template.FuncMap, hostname string) {
+func (service *Domain) Refresh(configuration config.Domain, connectionService *Connection, providerService *Provider, registrationService *Registration, themeService *Theme, userService *User, funcMap template.FuncMap, hostname string) {
 
 	service.configuration = configuration
-	service.activityStream = activityStream
 	service.connectionService = connectionService
 	service.providerService = providerService
 	service.registrationService = registrationService
@@ -69,16 +69,23 @@ func (service *Domain) Refresh(configuration config.Domain, activityStream *Acti
 }
 
 // Init domain guarantees that a domain record exists in the database.
-func (service *Domain) Start(session data.Session) error {
+func (service *Domain) Start() error {
 
 	const location = "service.Domain.Start"
 
-	// Try to load the domain model into memory
-	err := service.collection(session).Load(exp.All(), &service.domain)
+	session, cancel, err := service.factory.Session(10 * time.Minute)
 
-	// In this process, some errors (like 404's) are okay,
-	// so let's look at THIS error a little more closely.
 	if err != nil {
+		return derp.Wrap(err, location, "Unable to connect to database")
+	}
+
+	defer cancel()
+
+	// Try to load the domain model into memory
+	if err := service.collection(session).Load(exp.All(), &service.domain); err != nil {
+
+		// In this process, some errors (like 404's) are okay,
+		// so let's look at THIS error a little more closely.
 
 		// If it's a "real" error, then we can't continue.
 		if !derp.IsNotFound(err) {

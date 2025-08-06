@@ -2,13 +2,6 @@ package ascache
 
 type ClientOptionFunc func(*Client)
 
-// WithPurgeFrequency option sets the frequency that expired documents will be purged from the cache
-func WithPurgeFrequency(seconds int64) ClientOptionFunc {
-	return func(client *Client) {
-		client.purgeFrequency = seconds
-	}
-}
-
 // WithReadWrite option sets the client to read+write mode
 func WithReadWrite() ClientOptionFunc {
 	return func(client *Client) {

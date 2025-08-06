@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal"
+	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/rs/zerolog/log"
@@ -81,9 +82,11 @@ func (service *Stream) publish_outbox(session data.Session, user *model.User, st
 	// Create the Activity to send to the User's Outbox
 	object := service.JSONLD(session, stream)
 
+	activityService := service.factory.ActivityStream(model.ActorTypeUser, user.UserID)
+
 	// Save the object to the ActivityStream cache
-	service.activityStream.Put(
-		service.activityStream.NewDocument(object),
+	activityService.Put(
+		streams.NewDocument(object),
 	)
 
 	// If this has not been published yet, then `Create` activity. Otherwise, `Update`
@@ -144,7 +147,7 @@ func (service *Stream) publish_outbox_user(session data.Session, user *model.Use
 	objectType := activity.GetString(vocab.PropertyType)
 	log.Trace().Str("location", location).Str("objectId", objectID).Str("type", objectType).Msg("Publishing to User's outbox")
 
-	document := service.activityStream.NewDocument(activity)
+	document := streams.NewDocument(activity)
 
 	if err := service.outboxService.Publish(session, model.FollowerTypeUser, user.UserID, document, stream.DefaultAllow); err != nil {
 		return derp.Wrap(err, location, "Error publishing activity", activity)
@@ -184,7 +187,7 @@ func (service *Stream) publish_outbox_stream(session data.Session, stream *model
 		vocab.PropertyObject: activity,
 	}
 
-	document := service.activityStream.NewDocument(announce)
+	document := streams.NewDocument(announce)
 
 	// Try to publish via sendNotifications
 	log.Trace().Str("id", stream.URL).Msg("Publishing to parent Stream's outbox")

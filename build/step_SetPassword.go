@@ -37,7 +37,7 @@ func (step StepSetPassword) Post(builder Builder, _ io.Writer) PipelineBehavior 
 
 	// RULE: Users must be signed in, and can only change their own passwords.
 	factory := builder.factory()
-	steranko := factory.Steranko()
+	steranko := factory.Steranko(builder.session())
 	authorization := builder.authorization()
 
 	if !authorization.IsAuthenticated() {

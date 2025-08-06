@@ -155,7 +155,7 @@ func (service *Outbox) unpublish(session data.Session, actorType string, actorID
 	// but this will require additional function arguments.
 
 	// Make a streams.Document to represent the "Delete" activity
-	document := service.activityService.NewDocument(mapof.Any{
+	document := streams.NewDocument(mapof.Any{
 		vocab.PropertyActor:     actor.ActorID(),
 		vocab.PropertyType:      activityType,
 		vocab.PropertyObject:    objectID,

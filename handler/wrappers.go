@@ -115,7 +115,7 @@ func WithFactory(serverFactory *server.Factory, fn WithFunc0) echo.HandlerFunc {
 			defer session.Close()
 
 			// Create a context that wraps this echo.Context and data.Session
-			sterankoContext := factory.Steranko().Context(ctx, session)
+			sterankoContext := factory.Steranko(session).Context(ctx)
 
 			// Execute the *actual* handler (success alleged)
 			return fn(sterankoContext, factory, session)
@@ -125,9 +125,9 @@ func WithFactory(serverFactory *server.Factory, fn WithFunc0) echo.HandlerFunc {
 		// POST requests are wrapped in a MongoDB transaction
 
 		// WCreate a database transaction and wrap the callback function in it.
-		err := factory.WithTransaction(ctx.Request().Context(), func(session data.Session) {
-			sterankoContext := factory.Steranko().Context(ctx, session)
-			return fn(sterankoContext, factory, session)
+		_, err = factory.Server().WithTransaction(ctx.Request().Context(), func(session data.Session) (any, error) {
+			sterankoContext := factory.Steranko(session).Context(ctx)
+			return nil, fn(sterankoContext, factory, session)
 		})
 
 		if err != nil {

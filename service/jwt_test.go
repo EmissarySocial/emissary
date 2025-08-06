@@ -1,7 +1,6 @@
 package service
 
 import (
-	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
@@ -25,13 +24,8 @@ func TestJWTKeyServiceInterface(t *testing.T) {
 func TestJWT(t *testing.T) {
 
 	// Set up mock server and session
-	server := mockdb.New()
-	session, err := server.Session(context.TODO())
-	require.Nil(t, err)
-
-	collection := session.Collection("test")
 	service := NewJWT()
-	service.Refresh(collection, "0123456789ABCDEF0123456789ABCDE0123456789ABCDEF0123456789ABCDEFF")
+	service.Refresh(mockdb.New(), "0123456789ABCDEF0123456789ABCDE0123456789ABCDEF0123456789ABCDEFF")
 
 	// Create Key1
 	name1, value1, err := service.GetCurrentKey()
@@ -65,13 +59,8 @@ func TestJWT(t *testing.T) {
 func TestJWTCacheHit(t *testing.T) {
 
 	// Set up mock server and session
-	server := mockdb.New()
-	session, err := server.Session(context.TODO())
-	require.Nil(t, err)
-
-	collection := session.Collection("test")
 	service := NewJWT()
-	service.Refresh(collection, "0123456789ABCDEF0123456789ABCDE0123456789ABCDEF0123456789ABCDEFF")
+	service.Refresh(mockdb.New(), "0123456789ABCDEF0123456789ABCDE0123456789ABCDEF0123456789ABCDEFF")
 
 	// Create Key1
 	name1, value1, err := service.GetCurrentKey()
@@ -93,13 +82,8 @@ func TestJWTCacheHit(t *testing.T) {
 func TestJWTCacheMiss(t *testing.T) {
 
 	// Set up mock server and session
-	server := mockdb.New()
-	session, err := server.Session(context.TODO())
-	require.Nil(t, err)
-
-	collection := session.Collection("test")
 	service := NewJWT()
-	service.Refresh(collection, "0123456789ABCDEF0123456789ABCDE0123456789ABCDEF0123456789ABCDEFF")
+	service.Refresh(mockdb.New(), "0123456789ABCDEF0123456789ABCDE0123456789ABCDEF0123456789ABCDEFF")
 
 	spew.Dump(service.masterKey)
 
@@ -127,13 +111,8 @@ func TestJWTCacheMiss(t *testing.T) {
 func TestJWTEncryptDecrypt(t *testing.T) {
 
 	// Set up mock server and session
-	server := mockdb.New()
-	session, err := server.Session(context.TODO())
-	require.Nil(t, err)
-
-	collection := session.Collection("test")
 	service := NewJWT()
-	service.Refresh(collection, "0123456789ABCDEF0123456789ABCDE0123456789ABCDEF0123456789ABCDEFF")
+	service.Refresh(mockdb.New(), "0123456789ABCDEF0123456789ABCDE0123456789ABCDEF0123456789ABCDEFF")
 
 	original := []byte("This is a test.  It has to be very long because the encryption algorithms looked like they were cutting off after, idk, something like 32 bytes.  So this is mos/def more than 32 bytes.")
 	spew.Dump(original)

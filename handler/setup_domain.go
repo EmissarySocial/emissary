@@ -3,6 +3,7 @@ package handler
 import (
 	_ "embed"
 	"net/http"
+	"time"
 
 	"github.com/EmissarySocial/emissary/build"
 	"github.com/EmissarySocial/emissary/config"
@@ -24,7 +25,7 @@ func SetupDomainGet(factory *server.Factory) echo.HandlerFunc {
 		domain, err := factory.DomainByID(domainID)
 
 		if err != nil {
-			return derp.Wrap(err, "handler.SetupDomainGet", "Error loading configuration")
+			return derp.Wrap(err, "handler.SetupDomainGet", "Unable to load configuration")
 		}
 
 		header := "Edit Domain"
@@ -126,15 +127,24 @@ func SetupDomainSigninPost(fm *server.Factory) echo.HandlerFunc {
 		domain, err := fm.DomainByID(ctx.Param("domain"))
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error loading configuration")
+			return derp.Wrap(err, location, "Unable to load configuration")
 		}
 
 		// Get the real factory for this domain
 		factory, err := fm.ByHostname(domain.Hostname)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error loading Domain")
+			return derp.Wrap(err, location, "Unable to load Domain")
 		}
+
+		// Create a new database session
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Unable to open database session")
+		}
+
+		defer cancel()
 
 		// Create a fake "User" record for the system administrator and sign in
 		administrator := model.NewUser()
@@ -142,7 +152,7 @@ func SetupDomainSigninPost(fm *server.Factory) echo.HandlerFunc {
 		administrator.IsOwner = true
 
 		// Sign the Administrator into the system
-		if err := factory.Steranko().SigninUser(ctx, &administrator); err != nil {
+		if err := factory.Steranko(session).SigninUser(ctx, &administrator); err != nil {
 			return derp.Wrap(err, location, "Error signing in administrator")
 		}
 

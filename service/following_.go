@@ -2,7 +2,6 @@ package service
 
 import (
 	"iter"
-	"math/rand"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -22,19 +21,21 @@ const followingMimeStack = "application/activity+json; q=1.0, text/html; q=0.9, 
 
 // Following manages all interactions with the Following collection
 type Following struct {
-	streamService   *Stream
-	userService     *User
-	inboxService    *Inbox
-	folderService   *Folder
-	keyService      *EncryptionKey
-	activityService *ActivityStream
-	host            string
-	closed          chan bool
+	factory       Factory
+	streamService *Stream
+	userService   *User
+	inboxService  *Inbox
+	folderService *Folder
+	keyService    *EncryptionKey
+	host          string
+	closed        chan bool
 }
 
 // NewFollowing returns a fully populated Following service.
-func NewFollowing() Following {
-	return Following{}
+func NewFollowing(factory Factory) Following {
+	return Following{
+		factory: factory,
+	}
 }
 
 /******************************************
@@ -42,79 +43,18 @@ func NewFollowing() Following {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Following) Refresh(streamService *Stream, userService *User, inboxService *Inbox, folderService *Folder, keyService *EncryptionKey, activityService *ActivityStream, host string) {
+func (service *Following) Refresh(streamService *Stream, userService *User, inboxService *Inbox, folderService *Folder, keyService *EncryptionKey, host string) {
 	service.streamService = streamService
 	service.userService = userService
 	service.inboxService = inboxService
 	service.folderService = folderService
 	service.keyService = keyService
-	service.activityService = activityService
 	service.host = host
 }
 
 // Close stops the following service watcher
 func (service *Following) Close() {
 	close(service.closed)
-}
-
-// Start begins the background scheduler that checks each following
-// according to its own polling frequency
-// TODO: HIGH: Need to make this configurable on a per-physical-server basis so that
-// clusters can work together without hammering the Following collection.
-func (service *Following) Start(session data.Session) {
-
-	const location = "service.Following.Start"
-
-	// Wait until the service has booted up correctly.
-	for service.collection == nil {
-		time.Sleep(1 * time.Minute)
-	}
-
-	// query the database every minute, looking for following that should be loaded from the web.
-	for {
-
-		// If (for some reason) the service collection is still nil, then
-		// wait this one out.
-		if service.collection == nil {
-			continue
-		}
-
-		// Get a list of all following that can be polled
-		it, err := service.ListPollable(session)
-
-		if err != nil {
-			derp.Report(derp.Wrap(err, location, "Error listing pollable following"))
-			continue
-		}
-
-		following := model.NewFollowing()
-
-		for it.Next(&following) {
-			select {
-
-			// If we're done, we're done.
-			case <-service.closed:
-				return
-
-			default:
-
-				// Poll each following for new items.
-				if err := service.Connect(session, following); err != nil {
-					derp.Report(derp.Wrap(err, location, "Error connecting to remote server"))
-				}
-
-				// TODO: Reschedule this to run MUCH less frequently
-				// if err := service.PurgeInbox(following); err != nil {
-				//	derp.Report(derp.Wrap(err, location, "Error purghing inbox"))
-				// }
-			}
-
-			following = model.NewFollowing()
-		}
-
-		// Poll every 4 hours (plus 45 minute jitter)
-		time.Sleep(time.Duration(rand.Intn(45)+240) * time.Minute)
-	}
 }
 
 /******************************************
@@ -433,7 +373,8 @@ func (service *Following) GetFollowingID(session data.Session, userID primitive.
 	const location = "service.Following.IsFollowing"
 
 	// Load the ActivityStream document
-	document, err := service.activityService.Load(uri)
+	activityService := service.factory.ActivityStream(model.ActorTypeUser, userID)
+	document, err := activityService.Client().Load(uri)
 
 	if err != nil {
 		return "", derp.Wrap(err, location, "Error loading ActivityStream document", uri)

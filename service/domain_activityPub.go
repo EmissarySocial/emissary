@@ -11,6 +11,7 @@ import (
 	dt "github.com/benpate/domain"
 	"github.com/benpate/hannibal/outbox"
 	"github.com/benpate/hannibal/sigs"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 /******************************************
@@ -100,8 +101,14 @@ func (service *Domain) ActivityPubActor(session data.Session) (outbox.Actor, err
 		return outbox.Actor{}, derp.Wrap(err, location, "Error extracting private key")
 	}
 
+	activityService := service.factory.ActivityStream(model.ActorTypeApplication, primitive.NilObjectID)
+
 	// Return the ActivityPub Actor
-	actor := outbox.NewActor(service.ActorID(), privateKey, outbox.WithClient(service.activityStream))
+	actor := outbox.NewActor(
+		service.ActorID(),
+		privateKey,
+		outbox.WithClient(activityService.Client()),
+	)
 
 	return actor, nil
 }

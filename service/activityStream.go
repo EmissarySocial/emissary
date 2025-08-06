@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"crypto"
 	"net/http"
 	"strings"
 	"time"
@@ -14,7 +15,6 @@ import (
 	"github.com/EmissarySocial/emissary/tools/ashash"
 	"github.com/EmissarySocial/emissary/tools/asnormalizer"
 	"github.com/benpate/data"
-	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
@@ -22,21 +22,19 @@ import (
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/sherlock"
-	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // ActivityStream implements the Hannibal HTTP client interface, and provides a cache for ActivityStream documents.
 type ActivityStream struct {
-	domainService       *Domain
-	locatorService      *Locator
-	searchDomainService *SearchDomain
-	searchQueryService  *SearchQuery
-	streamService       *Stream
-	userService         *User
-	collection          *mongo.Collection
-	innerClient         streams.Client
-	cacheClient         *ascache.Client
-	hostname            string
+	commonDatabase data.Server   // Database connection for the commonDatabase
+	serverFactory  ServerFactory // SessionFactory that creates sessions in domain databases
+	factory        Factory
+	hostname       string
+	version        string
+
+	actorType string
+	actorID   primitive.ObjectID
 }
 
 /******************************************
@@ -44,41 +42,30 @@ type ActivityStream struct {
  ******************************************/
 
 // NewActivityStream creates a new ActivityStream service
-func NewActivityStream() ActivityStream {
-	return ActivityStream{}
+func NewActivityStream(serverFactory ServerFactory, commonDatabase data.Server, factory Factory, hostname string, version string, actorType string, actorID primitive.ObjectID) ActivityStream {
+	return ActivityStream{
+		serverFactory:  serverFactory,
+		commonDatabase: commonDatabase,
+		factory:        factory,
+		hostname:       hostname,
+		version:        version,
+
+		actorType: actorType,
+		actorID:   actorID,
+	}
 }
 
-// Refresh updates the ActivityStream service with new dependencies
-func (service *ActivityStream) Refresh(collection *mongo.Collection, domainService *Domain, locatorService *Locator, searchDomainService *SearchDomain, searchQueryService *SearchQuery, streamService *Stream, userService *User, hostname string) {
-	service.domainService = domainService
-	service.locatorService = locatorService
-	service.searchDomainService = searchDomainService
-	service.searchQueryService = searchQueryService
-	service.streamService = streamService
-	service.userService = userService
-	service.collection = collection
-	service.hostname = hostname
-	service.innerClient = nil
-	service.cacheClient = nil
+func (service *ActivityStream) Client() streams.Client {
+	return ashash.New(service.CacheClient())
 }
 
-func (service *ActivityStream) initClients(session data.Session) {
+func (service *ActivityStream) CacheClient() *ascache.Client {
 
 	// Build a new client stack
 	sherlockClient := sherlock.NewClient(
-		sherlock.WithUserAgent(service.hostname + " (emissary.social)"),
+		sherlock.WithUserAgent(service.hostname+" /Emissary@v"+service.version+" (https://emissary.social)"),
+		sherlock.WithKeyPairFunc(service.KeyPairFunc()),
 	)
-
-	// Try to attach a private key to this client
-	if privateKey, err := service.domainService.PrivateKey(session); err == nil {
-		publicKeyID := service.domainService.PublicKeyID()
-		sherlockClient.WithOptions(
-			sherlock.WithActor(publicKeyID, privateKey),
-		)
-
-	} else {
-		derp.Report(derp.Wrap(err, "service.ActivityStream.client", "Error loading private key"))
-	}
 
 	// enforce opinionated data formats
 	normalizerClient := asnormalizer.New(sherlockClient)
@@ -90,66 +77,12 @@ func (service *ActivityStream) initClients(session data.Session) {
 	cacheRulesClient := ascacherules.New(contextMakerClient)
 
 	// cache data in MongoDB
-	cacheClient := ascache.New(cacheRulesClient, service.collection, ascache.WithIgnoreHeaders())
-
-	// Traverse hash values within documents
-	hashClient := ashash.New(cacheClient)
-
-	// Save references to the final (hash) client and the cache client to the service.
-	service.innerClient = hashClient
-	service.cacheClient = cacheClient
-
-	// This is breaking somehow.  Test thoroughly before re-enabling.
-	// writableCache := ascache.New(contextMakerClient, collection, ascache.WithWriteOnly())
-	// crawlerClient := ascrawler.New(writableCache, ascrawler.WithMaxDepth(4))
-	// readOnlyCache := ascache.New(crawlerClient, collection, ascache.WithReadOnly())
-	// factory.activityService.Refresh(readOnlyCache, mongodb.NewCollection(collection))
-}
-
-func (service *ActivityStream) getClient() streams.Client {
-
-	if service.innerClient == nil {
-		service.initClients()
-	}
-
-	return service.innerClient
-}
-
-func (service *ActivityStream) CacheClient(session data.Session) *ascache.Client {
-
-	if service.cacheClient == nil {
-		service.initClients(session)
-	}
-
-	return service.cacheClient
+	return ascache.New(cacheRulesClient, service.commonDatabase, ascache.WithIgnoreHeaders())
 }
 
 /******************************************
  * Hannibal HTTP Client Interface
  ******************************************/
-
-// Load implements the Hannibal `Client` interface, and returns a streams.Document from the cache.
-func (service *ActivityStream) Load(url string, options ...any) (streams.Document, error) {
-
-	const location = "service.ActivityStream.Load"
-
-	if url == "" {
-		return streams.NilDocument(), derp.NotFoundError(location, "Empty URL", url)
-	}
-
-	// NPE Check
-	client := service.getClient()
-
-	// Forward request to inner client
-	result, err := client.Load(url, options...)
-
-	if err != nil {
-		return streams.NilDocument(), derp.Wrap(err, location, "Error loading document from inner client", url)
-	}
-
-	result.WithOptions(streams.WithClient(service))
-	return result, nil
-}
 
 // Put adds a single document to the ActivityStream cache
 func (service *ActivityStream) Put(document streams.Document) {
@@ -169,33 +102,11 @@ func (service *ActivityStream) Delete(url string) error {
 }
 
 /******************************************
- * Custom Behaviors
- ******************************************/
-
-// PurgeCache removes all expired documents from the cache
-func (service *ActivityStream) PurgeCache() error {
-
-	// NPE Check
-	if service.collection == nil {
-		return derp.InternalError("service.ActivityStream.PurgeCache", "Document Collection not initialized")
-	}
-
-	// Purge all expired Documents
-	criteria := exp.LessThan("expires", time.Now().Unix())
-	collection := mongodb.NewCollection(service.collection)
-	if err := collection.HardDelete(criteria); err != nil {
-		return derp.Wrap(err, "service.ActivityStream.PurgeCache", "Error purging documents")
-	}
-
-	return nil
-}
-
-/******************************************
  * Custom Query Methods
  ******************************************/
 
 // QueryRepliesBeforeDate returns a slice of streams.Document values that are replies to the specified document, and were published before the specified date.
-func (service *ActivityStream) queryByRelation(relationType string, relationHref string, cutType string, cutDate int64, done <-chan struct{}) <-chan streams.Document {
+func (service *ActivityStream) queryByRelation(ctx context.Context, relationType string, relationHref string, cutType string, cutDate int64, done <-chan struct{}) <-chan streams.Document {
 
 	const location = "service.ActivityStream.QueryRelated"
 
@@ -227,7 +138,7 @@ func (service *ActivityStream) queryByRelation(relationType string, relationHref
 		}
 
 		// Try to query the database
-		documents, err := service.documentIterator(criteria, sortOption)
+		documents, err := service.documentIterator(ctx, criteria, sortOption)
 
 		if err != nil {
 			derp.Report(derp.Wrap(err, location, "Error querying database"))
@@ -249,7 +160,7 @@ func (service *ActivityStream) queryByRelation(relationType string, relationHref
 					value.Object,
 					streams.WithHTTPHeader(value.HTTPHeader),
 					streams.WithStats(value.Statistics),
-					streams.WithClient(service),
+					streams.WithClient(service.Client()),
 				)
 			}
 
@@ -261,20 +172,34 @@ func (service *ActivityStream) queryByRelation(relationType string, relationHref
 
 }
 
-func (service *ActivityStream) NewDocument(document map[string]any) streams.Document {
-	return streams.NewDocument(document, streams.WithClient(service))
+// QueryRepliesBeforeDate returns a slice of streams.Document values that are replies to the specified document, and were published before the specified date.
+func (service *ActivityStream) QueryRepliesBeforeDate(ctx context.Context, inReplyTo string, maxDate int64, done <-chan struct{}) <-chan streams.Document {
+	return service.queryByRelation(ctx, "Reply", inReplyTo, "before", maxDate, done)
 }
 
-func (service *ActivityStream) SearchActors(session data.Session, queryString string) ([]model.ActorSummary, error) {
+// QueryRepliesAfterDate returns a slice of streams.Document values that are replies to the specified document, and were published after the specified date.
+func (service *ActivityStream) QueryRepliesAfterDate(ctx context.Context, inReplyTo string, minDate int64, done <-chan struct{}) <-chan streams.Document {
+	return service.queryByRelation(ctx, "Reply", inReplyTo, "after", minDate, done)
+}
 
-	const location = "service.ActivityStream.SearchActors"
+func (service *ActivityStream) QueryAnnouncesBeforeDate(ctx context.Context, relationHref string, maxDate int64, done <-chan struct{}) <-chan streams.Document {
+	return service.queryByRelation(ctx, vocab.ActivityTypeAnnounce, relationHref, "before", maxDate, done)
+}
+
+func (service *ActivityStream) QueryLikesBeforeDate(ctx context.Context, relationHref string, maxDate int64, done <-chan struct{}) <-chan streams.Document {
+	return service.queryByRelation(ctx, vocab.ActivityTypeLike, relationHref, "before", maxDate, done)
+}
+
+func (service *ActivityStream) QueryActors(queryString string) ([]model.ActorSummary, error) {
+
+	const location = "service.ActivityStream.QueryActors"
 
 	// If we think this is an address we can work with (because sherlock says so)
 	// the try to retrieve it directly.
 	if sherlock.IsValidAddress(queryString) {
 
 		// Try to load the actor directly from the Interwebs
-		if newActor, err := service.Load(session, queryString, sherlock.AsActor()); err == nil {
+		if newActor, err := service.Client().Load(queryString, sherlock.AsActor()); err == nil {
 
 			// If this is a valid, but (previously) unknown actor, then add it to the results
 			// This will also automatically get cached/crawled for next time.
@@ -291,32 +216,22 @@ func (service *ActivityStream) SearchActors(session data.Session, queryString st
 	}
 
 	// Fall through means that we can't find a perfect match, so fall back to a full-text search
-	collection := mongodb.NewCollection(service.collection)
-	result, err := queries.SearchActivityStreamActors(context.TODO(), collection, queryString)
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+
+	collection, err := service.collection(ctx)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Error querying database")
+		return nil, derp.Wrap(err, location, "Unable to connect to database")
+	}
+
+	result, err := queries.SearchActivityStreamActors(collection, queryString)
+
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Unable to query database")
 	}
 
 	return result, nil
-}
-
-// QueryRepliesBeforeDate returns a slice of streams.Document values that are replies to the specified document, and were published before the specified date.
-func (service *ActivityStream) QueryRepliesBeforeDate(inReplyTo string, maxDate int64, done <-chan struct{}) <-chan streams.Document {
-	return service.queryByRelation("Reply", inReplyTo, "before", maxDate, done)
-}
-
-// QueryRepliesAfterDate returns a slice of streams.Document values that are replies to the specified document, and were published after the specified date.
-func (service *ActivityStream) QueryRepliesAfterDate(inReplyTo string, minDate int64, done <-chan struct{}) <-chan streams.Document {
-	return service.queryByRelation("Reply", inReplyTo, "after", minDate, done)
-}
-
-func (service *ActivityStream) QueryAnnouncesBeforeDate(relationHref string, maxDate int64, done <-chan struct{}) <-chan streams.Document {
-	return service.queryByRelation(vocab.ActivityTypeAnnounce, relationHref, "before", maxDate, done)
-}
-
-func (service *ActivityStream) QueryLikesBeforeDate(relationHref string, maxDate int64, done <-chan struct{}) <-chan streams.Document {
-	return service.queryByRelation(vocab.ActivityTypeLike, relationHref, "before", maxDate, done)
 }
 
 // SendMessage sends an ActivityPub message to a single recipient/inboxURL
@@ -342,7 +257,8 @@ func (service *ActivityStream) SendMessage(session data.Session, args mapof.Any)
 	}
 
 	// Find ActivityPub Actor
-	actor, err := service.locatorService.GetActor(session, args.GetString("actorType"), args.GetString("actorID"))
+	locatorService := service.factory.Locator()
+	actor, err := locatorService.GetActor(session, args.GetString("actorType"), args.GetString("actorID"))
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error finding ActivityPub Actor")
@@ -357,12 +273,12 @@ func (service *ActivityStream) SendMessage(session data.Session, args mapof.Any)
 	return nil
 }
 
-func (service *ActivityStream) GetRecipient(session data.Session, recipient string) (string, string, error) {
+func (service *ActivityStream) GetRecipient(recipient string) (string, string, error) {
 
 	const location = "service.ActivityStream.GetRecipient"
 
 	// Try to load the recipient as a JSON-LD document
-	document, err := service.Load(session, recipient, sherlock.AsActor())
+	document, err := service.Client().Load(recipient, sherlock.AsActor())
 
 	if err != nil {
 		return "", "", derp.Wrap(err, location, "Error loading ActivityPub Actor", recipient)
@@ -382,7 +298,7 @@ func (service *ActivityStream) PublicKeyFinder(keyID string) (string, error) {
 
 	actorID, _, _ := strings.Cut(keyID, "#")
 
-	actor := service.NewDocument(mapof.Any{
+	actor := streams.NewDocument(mapof.Any{
 		vocab.PropertyID: actorID,
 	})
 
@@ -404,21 +320,76 @@ func (service *ActivityStream) PublicKeyFinder(keyID string) (string, error) {
 	return "", derp.NotFoundError(location, "Public Key not found", keyID)
 }
 
+// KeyPairFunc returns a function that will locate the public/private key pair
+// for the specidied URL.  This can only be used for local URLs
+func (service *ActivityStream) KeyPairFunc() sherlock.KeyPairFunc {
+
+	const location = "service.ActivityStream.KeyPairFunc"
+
+	return func() (string, crypto.PrivateKey) {
+
+		// Get the Domain Factory
+		domainFactory, err := service.serverFactory.ByHostname(service.hostname)
+
+		if err != nil {
+			derp.Report(derp.Wrap(err, location, "Invalid hostname. No database found."))
+			return "", nil
+		}
+
+		session, cancel, err := domainFactory.Session(10 * time.Second)
+		defer cancel()
+
+		if err != nil {
+			derp.Report(derp.Wrap(err, location, "Unable to connect to database"))
+			return "", nil
+		}
+
+		if session != nil {
+			return "", nil
+		}
+		return "", nil
+		/*
+			// USE service.actorType and service.actorID to retrieve the required PEM keys.
+			locatorService := domainFactory.Locator()
+			encryptionKeyService := domainFactory.EncryptionKey()
+
+			locatorService.GetActor(session, service.actorType, service.actorID)
+		*/
+	}
+}
+
 /******************************************
- * Internal Methods
+ * Helper Methods
  ******************************************/
 
 // iterator reads from the database and returns a data.Iterator with the result values.
-func (service *ActivityStream) documentIterator(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+func (service *ActivityStream) documentIterator(ctx context.Context, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 
 	const location = "service.ActivityStream.documentIterator"
 
-	// NPE Check
-	if service.collection == nil {
-		return nil, derp.InternalError(location, "Document Collection not initialized")
+	// Forward request to collection
+	collection, err := service.collection(ctx)
+
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Unable to query database", criteria)
 	}
 
-	// Forward request to collection
-	collection := mongodb.NewCollection(service.collection)
 	return collection.Iterator(criteria, options...)
+}
+
+func (service *ActivityStream) collection(ctx context.Context) (data.Collection, error) {
+
+	const location = "service.ActivityStream.collection"
+
+	if service.commonDatabase == nil {
+		return nil, derp.InternalError(location, "Service not initialized")
+	}
+
+	session, err := service.commonDatabase.Session(ctx)
+
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Unable to connect to database")
+	}
+
+	return session.Collection("Document"), nil
 }

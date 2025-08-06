@@ -12,12 +12,14 @@ import (
 
 // Annotation manages all interactions with the Annotation collection
 type Annotation struct {
-	activityService *ActivityStream
+	factory Factory
 }
 
 // NewAnnotation returns a fully populated Annotation service
-func NewAnnotation() Annotation {
-	return Annotation{}
+func NewAnnotation(factory Factory) Annotation {
+	return Annotation{
+		factory: factory,
+	}
 }
 
 /******************************************
@@ -25,13 +27,11 @@ func NewAnnotation() Annotation {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Annotation) Refresh(activityService *ActivityStream) {
-	service.activityService = activityService
+func (service *Annotation) Refresh() {
 }
 
 // Close stops any background processes controlled by this service
 func (service *Annotation) Close() {
-
 }
 
 /******************************************
@@ -75,8 +75,10 @@ func (service *Annotation) Save(session data.Session, annotation *model.Annotati
 
 	const location = "service.Annotation.Save"
 
+	activityService := service.factory.ActivityStream(model.ActorTypeUser, annotation.UserID)
+
 	// Copy values from the annotated document
-	document, err := service.activityService.Load(annotation.URL)
+	document, err := activityService.Client().Load(annotation.URL)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error loading annotated document", annotation.URL)

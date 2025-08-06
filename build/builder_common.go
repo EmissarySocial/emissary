@@ -41,7 +41,7 @@ type Common struct {
 func NewCommon(factory Factory, session data.Session, request *http.Request, response http.ResponseWriter) Common {
 
 	// Retrieve the user's authorization information
-	steranko := factory.Steranko()
+	steranko := factory.Steranko(session)
 	authorization := getAuthorization(steranko, request)
 
 	// Return a new Common builder
@@ -327,7 +327,8 @@ func (w Common) ActivityStream(url string) streams.Document {
 
 	const location = "build.Common.ActivityStream"
 	// Load the document from the Interwebs
-	result, err := w._factory.ActivityStream().Load(url)
+	activityService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
+	result, err := activityService.Client().Load(url)
 
 	if err != nil {
 		derp.Report(derp.Wrap(err, location, "Error loading ActivityStream"))
@@ -376,7 +377,8 @@ func (w Common) IsFollower(url string) model.Follower {
 // returned document uses Emissary's custom ActivityStream service, which uses
 // document values and rules from the server's shared cache.
 func (w Common) ActivityStreamActor(url string) streams.Document {
-	result, err := w._factory.ActivityStream().Load(url, sherlock.AsActor())
+	activityService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
+	result, err := activityService.Client().Load(url, sherlock.AsActor())
 
 	if err != nil {
 		derp.Report(err)
@@ -386,7 +388,8 @@ func (w Common) ActivityStreamActor(url string) streams.Document {
 }
 
 func (w Common) ActivityStreamActors(search string) ([]model.ActorSummary, error) {
-	return w._factory.ActivityStream().SearchActors(w._session, search)
+	activityService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
+	return activityService.QueryActors(search)
 }
 
 // IsMe returns TRUE if the provided URI is the profileURL of the current user
@@ -426,7 +429,7 @@ func (w Common) GetFollowingID(url string) string {
 // lookupProvider returns the LookupProvider service, which can return form.LookupGroups
 func (w Common) lookupProvider() form.LookupProvider {
 	userID := w.AuthenticatedID()
-	return w._factory.LookupProvider(w._request, userID)
+	return w._factory.LookupProvider(w._request, w._session, userID)
 }
 
 // Dataset returns a single form.LookupGroup from the LookupProvider
@@ -503,7 +506,7 @@ func (w Common) getUser() (*model.User, error) {
 
 	// Otherwise, try to load the User from the database
 	userService := w._factory.User()
-	steranko := w._factory.Steranko()
+	steranko := w._factory.Steranko(w._session)
 	authorization := getAuthorization(steranko, w._request)
 
 	user := model.NewUser()

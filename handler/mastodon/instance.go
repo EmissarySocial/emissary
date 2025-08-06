@@ -2,6 +2,7 @@ package mastodon
 
 import (
 	"crypto/sha256"
+	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
@@ -79,9 +80,17 @@ func GetInstance_DomainBlocks(serverFactory *server.Factory) func(model.Authoriz
 			return nil, derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return nil, derp.Wrap(err, location, "Unable to create session")
+		}
+
+		defer cancel()
 		// Get all Public, Global Blocks
 		ruleService := factory.Rule()
-		rules, err := ruleService.QueryDomainBlocks()
+		rules, err := ruleService.QueryDomainBlocks(session)
 
 		if err != nil {
 			return nil, derp.Wrap(err, location, "Error querying database")

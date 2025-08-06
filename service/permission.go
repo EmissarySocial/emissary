@@ -9,21 +9,23 @@ import (
 	"github.com/benpate/derp"
 	dt "github.com/benpate/domain"
 	"github.com/benpate/hannibal/sigs"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Permission struct {
-	activityStream   *ActivityStream
+	factory          Factory
 	identityService  *Identity
 	privilegeService *Privilege
 	userService      *User
 }
 
-func NewPermission() Permission {
-	return Permission{}
+func NewPermission(factory Factory) Permission {
+	return Permission{
+		factory: factory,
+	}
 }
 
-func (service *Permission) Refresh(activityStream *ActivityStream, identityService *Identity, privilegeService *Privilege, userService *User) {
-	service.activityStream = activityStream
+func (service *Permission) Refresh(identityService *Identity, privilegeService *Privilege, userService *User) {
 	service.identityService = identityService
 	service.privilegeService = privilegeService
 	service.userService = userService
@@ -249,7 +251,8 @@ func (service *Permission) getSignature(request *http.Request) (sigs.Signature, 
 	const location = "service.Permission.getSignature"
 
 	// First, try to verify the signature using the standard method
-	signature, err := sigs.Verify(request, service.activityStream.PublicKeyFinder)
+	activityStream := service.factory.ActivityStream(model.ActorTypeApplication, primitive.NilObjectID)
+	signature, err := sigs.Verify(request, activityStream.PublicKeyFinder)
 
 	if err == nil {
 		return signature, nil

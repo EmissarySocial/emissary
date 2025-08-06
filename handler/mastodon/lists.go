@@ -1,6 +1,8 @@
 package mastodon
 
 import (
+	"time"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
@@ -27,9 +29,17 @@ func GetLists(serverFactory *server.Factory) func(model.Authorization, txn.GetLi
 			return nil, derp.Wrap(err, location, "Invalid Domain Name", t.Host)
 		}
 
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return nil, derp.Wrap(err, location, "Unable to create session")
+		}
+
+		defer cancel()
 		// Get all folders
 		folderService := factory.Folder()
-		folders, err := folderService.QueryByUserID(auth.UserID)
+		folders, err := folderService.QueryByUserID(session, auth.UserID)
 
 		if err != nil {
 			return nil, derp.Wrap(err, location, "Error querying database")
@@ -60,11 +70,20 @@ func GetList(serverFactory *server.Factory) func(model.Authorization, txn.GetLis
 			return object.List{}, derp.Wrap(err, location, "Invalid Domain Name", t.Host)
 		}
 
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return object.List{}, derp.Wrap(err, location, "Unable to create session")
+		}
+
+		defer cancel()
+
 		// Get the Folder from the Database
 		folderService := factory.Folder()
 		folder := model.NewFolder()
 
-		if err := folderService.LoadByID(auth.UserID, folderID, &folder); err != nil {
+		if err := folderService.LoadByID(session, auth.UserID, folderID, &folder); err != nil {
 			return object.List{}, derp.Wrap(err, location, "Error loading folder")
 		}
 
@@ -87,6 +106,15 @@ func PostList(serverFactory *server.Factory) func(model.Authorization, txn.PostL
 			return object.List{}, derp.Wrap(err, location, "Invalid Domain Name", t.Host)
 		}
 
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return object.List{}, derp.Wrap(err, location, "Unable to create session")
+		}
+
+		defer cancel()
+
 		// Create a New Folder
 		folder := model.NewFolder()
 		folder.UserID = auth.UserID
@@ -94,7 +122,7 @@ func PostList(serverFactory *server.Factory) func(model.Authorization, txn.PostL
 
 		// Save it to the database
 		folderService := factory.Folder()
-		if err := folderService.Save(&folder, "Created via Mastodon API"); err != nil {
+		if err := folderService.Save(session, &folder, "Created via Mastodon API"); err != nil {
 			return object.List{}, derp.Wrap(err, location, "Error saving folder")
 		}
 
@@ -124,11 +152,20 @@ func PutList(serverFactory *server.Factory) func(model.Authorization, txn.PutLis
 			return object.List{}, derp.Wrap(err, location, "Invalid Domain Name", t.Host)
 		}
 
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return object.List{}, derp.Wrap(err, location, "Unable to create session")
+		}
+
+		defer cancel()
+
 		// Get the Folder from the Database
 		folderService := factory.Folder()
 		folder := model.NewFolder()
 
-		if err := folderService.LoadByID(auth.UserID, folderID, &folder); err != nil {
+		if err := folderService.LoadByID(session, auth.UserID, folderID, &folder); err != nil {
 			return object.List{}, derp.Wrap(err, location, "Error loading folder")
 		}
 
@@ -136,7 +173,7 @@ func PutList(serverFactory *server.Factory) func(model.Authorization, txn.PutLis
 		folder.Label = t.Title
 
 		// Save it to the database
-		if err := folderService.Save(&folder, "Created via Mastodon API"); err != nil {
+		if err := folderService.Save(session, &folder, "Created via Mastodon API"); err != nil {
 			return object.List{}, derp.Wrap(err, location, "Error saving folder")
 		}
 
@@ -165,16 +202,25 @@ func DeleteList(serverFactory *server.Factory) func(model.Authorization, txn.Del
 			return struct{}{}, derp.Wrap(err, location, "Invalid Domain Name", t.Host)
 		}
 
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return struct{}{}, derp.Wrap(err, location, "Unable to create session")
+		}
+
+		defer cancel()
+
 		// Load the Folder from the Database
 		folderService := factory.Folder()
 		folder := model.NewFolder()
 
-		if err := folderService.LoadByID(auth.UserID, folderID, &folder); err != nil {
+		if err := folderService.LoadByID(session, auth.UserID, folderID, &folder); err != nil {
 			return struct{}{}, derp.Wrap(err, location, "Error loading folder")
 		}
 
 		// Delete the Folder
-		if err := folderService.Delete(&folder, "Deleted via Mastodon API"); err != nil {
+		if err := folderService.Delete(session, &folder, "Deleted via Mastodon API"); err != nil {
 			return struct{}{}, derp.Wrap(err, location, "Error deleting folder")
 		}
 
@@ -204,10 +250,19 @@ func GetList_Accounts(serverFactory *server.Factory) func(model.Authorization, t
 			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Invalid Domain Name", t.Host)
 		}
 
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Unable to create session")
+		}
+
+		defer cancel()
+
 		// Query all Following records in this Folder
 		followingService := factory.Following()
 		criteria := queryExpression(t)
-		followingSummaries, err := followingService.QueryByFolderAndExp(auth.UserID, folderID, criteria)
+		followingSummaries, err := followingService.QueryByFolderAndExp(session, auth.UserID, folderID, criteria)
 
 		if err != nil {
 			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Error querying database")

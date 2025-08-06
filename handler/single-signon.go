@@ -51,7 +51,7 @@ func GetSingleSignOn(ctx *steranko.Context, factory *domain.Factory, session dat
 	}
 
 	// Create a sign-in session for the user
-	if err := factory.Steranko().SigninUser(ctx, &user); err != nil {
+	if err := factory.Steranko(session).SigninUser(ctx, &user); err != nil {
 		return derp.Wrap(err, location, "Error creating certificate")
 	}
 

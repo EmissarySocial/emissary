@@ -3,6 +3,7 @@ package mastodon
 import (
 	"net/url"
 	"strconv"
+	"time"
 
 	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
@@ -103,11 +104,20 @@ func getStreamFromURL(serverFactory *server.Factory, streamURL string) (*domain.
 		return nil, nil, model.Stream{}, derp.Wrap(err, location, "Unrecognized Domain")
 	}
 
+	// Get a database session for this request
+	session, cancel, err := factory.Session(time.Minute)
+
+	if err != nil {
+		return nil, nil, model.Stream{}, derp.Wrap(err, location, "Unable to create session")
+	}
+
+	defer cancel()
+
 	// Try to load the requested Stream using its URL
 	streamService := factory.Stream()
 	stream := model.NewStream()
 
-	if err := streamService.LoadByURL(streamURL, &stream); err != nil {
+	if err := streamService.LoadByURL(session, streamURL, &stream); err != nil {
 		return nil, nil, model.Stream{}, derp.Wrap(err, location, "Error loading stream")
 	}
 

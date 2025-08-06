@@ -16,7 +16,7 @@ import (
 
 // Outbox manages all Outbox records for a User.  This includes Outbox and Outbox
 type Outbox struct {
-	activityService *ActivityStream
+	factory         Factory
 	followerService *Follower
 	identityService *Identity
 	ruleService     *Rule
@@ -30,9 +30,10 @@ type Outbox struct {
 }
 
 // NewOutbox returns a fully populated Outbox service
-func NewOutbox() Outbox {
+func NewOutbox(factory Factory) Outbox {
 	return Outbox{
-		lock: &sync.Mutex{},
+		factory: factory,
+		lock:    &sync.Mutex{},
 	}
 }
 
@@ -41,8 +42,7 @@ func NewOutbox() Outbox {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Outbox) Refresh(activityService *ActivityStream, followerService *Follower, identityService *Identity, ruleService *Rule, streamService *Stream, templateService *Template, userService *User, domainEmail *DomainEmail, queue *queue.Queue, hostname string) {
-	service.activityService = activityService
+func (service *Outbox) Refresh(followerService *Follower, identityService *Identity, ruleService *Rule, streamService *Stream, templateService *Template, userService *User, domainEmail *DomainEmail, queue *queue.Queue, hostname string) {
 	service.followerService = followerService
 	service.identityService = identityService
 	service.ruleService = ruleService
@@ -122,8 +122,11 @@ func (service *Outbox) Save(session data.Session, outboxMessage *model.OutboxMes
 	}
 
 	// If this message has a valid URL, then try cache it into the activitystream service.
-	// nolint:errcheck
-	go service.activityService.Load(outboxMessage.ObjectID)
+	go func() {
+		activityService := service.factory.ActivityStream(outboxMessage.ActorType, outboxMessage.ActorID)
+		_, err := activityService.Client().Load(outboxMessage.ObjectID)
+		derp.Report(err)
+	}()
 
 	return nil
 }
@@ -141,7 +144,8 @@ func (service *Outbox) Delete(session data.Session, outboxMessage *model.OutboxM
 	}
 
 	// Delete the document from the cache
-	if err := service.activityService.Delete(outboxMessage.ObjectID); err != nil {
+	activityService := service.factory.ActivityStream(outboxMessage.ActorType, outboxMessage.ActorID)
+	if err := activityService.Delete(outboxMessage.ObjectID); err != nil {
 		return derp.Wrap(err, location, "Error deleting ActivityStream", outboxMessage, note)
 	}
 

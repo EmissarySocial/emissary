@@ -1,6 +1,7 @@
 package service
 
 import (
+	"crypto"
 	"iter"
 	"time"
 
@@ -28,7 +29,7 @@ func (service *Stream) JSONLDGetter(session data.Session, stream *model.Stream) 
 
 func (service *Stream) Activity(session data.Session, stream *model.Stream) streams.Document {
 	// Create a new ActivityPub Document for this Stream
-	return service.activityStream.NewDocument(service.JSONLD(session, stream))
+	return streams.NewDocument(service.JSONLD(session, stream))
 }
 
 // GetJSONLD returns a map document that conforms to the ActivityStreams 2.0 spec.
@@ -148,6 +149,28 @@ func (service *Stream) ActivityPubURL(streamID primitive.ObjectID) string {
 	return service.host + "/" + streamID.Hex()
 }
 
+func (service *Stream) PrivateKey(session data.Session, streamID primitive.ObjectID) (crypto.PrivateKey, error) {
+
+	const location = "service.Stream.PrivateKey"
+
+	// Try to load the user's keys from the database
+	encryptionKey := model.NewEncryptionKey()
+	if err := service.keyService.LoadByParentID(session, model.EncryptionKeyTypeStream, streamID, &encryptionKey); err != nil {
+		return nil, derp.Wrap(err, location, "Error loading encryption key", streamID)
+	}
+
+	// Extract the Private Key from the Encryption Key
+	privateKey, err := service.keyService.GetPrivateKey(&encryptionKey)
+
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Error extracting private key", encryptionKey)
+	}
+
+	// Success
+	return privateKey, nil
+
+}
+
 // ActivityPubActor returns an ActivityPub Actor object ** WHICH INCLUDES ENCRYPTION KEYS **
 // for the provided Stream.
 func (service *Stream) ActivityPubActor(session data.Session, streamID primitive.ObjectID) (outbox.Actor, error) {
@@ -167,12 +190,14 @@ func (service *Stream) ActivityPubActor(session data.Session, streamID primitive
 		return outbox.Actor{}, derp.Wrap(err, location, "Error extracting private key", encryptionKey)
 	}
 
+	activityService := service.factory.ActivityStream(model.ActorTypeStream, streamID)
+
 	// Return the ActivityPub Actor
 	actor := outbox.NewActor(
 		service.ActivityPubURL(streamID),
 		privateKey,
 		outbox.WithFollowers(service.RangeActivityPubFollowers(session, streamID)),
-		outbox.WithClient(service.activityStream),
+		outbox.WithClient(activityService.Client()),
 		// TODO: Restore Queue:: , outbox.WithQueue(service.queue))
 	)
 

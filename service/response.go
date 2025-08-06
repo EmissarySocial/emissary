@@ -17,11 +17,10 @@ import (
 
 // Response defines a service that can send and receive response data
 type Response struct {
-	activityService *ActivityStream
-	inboxService    *Inbox
-	outboxService   *Outbox
-	userService     *User
-	host            string
+	inboxService  *Inbox
+	outboxService *Outbox
+	userService   *User
+	host          string
 }
 
 // NewResponse returns a fully initialized Response service
@@ -34,8 +33,7 @@ func NewResponse() Response {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Response) Refresh(activityService *ActivityStream, inboxService *Inbox, outboxService *Outbox, userService *User, host string) {
-	service.activityService = activityService
+func (service *Response) Refresh(inboxService *Inbox, outboxService *Outbox, userService *User, host string) {
 	service.inboxService = inboxService
 	service.outboxService = outboxService
 	service.userService = userService
@@ -344,5 +342,5 @@ func (service *Response) UnsetResponse(session data.Session, user *model.User, u
 }
 
 func (service *Response) Activity(response model.Response) streams.Document {
-	return service.activityService.NewDocument(response.GetJSONLD())
+	return streams.NewDocument(response.GetJSONLD())
 }

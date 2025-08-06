@@ -6,13 +6,16 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/tools/cacheheader"
+	"github.com/benpate/data/journal"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Value struct {
+	ValueID primitive.ObjectID `bson:"_id"`
 
 	// Original HTTP Response
 	URLs       sliceof.String     `bson:"urls"`                 // One or more URLs used to retrieve this document
@@ -26,16 +29,23 @@ type Value struct {
 	Received    int64 `bson:"received"`    // Unix epoch seconds when this document was received by the cache
 	Expires     int64 `bson:"expires"`     // Unix epoch seconds when this document is expired. After this date, it must be revalidated from the source.
 	Revalidates int64 `bson:"revalidates"` // Unix epoch seconds when this document should be removed from the cache.
+
+	journal.Journal `bson:"-,inline"`
 }
 
 func NewValue() Value {
 	return Value{
+		ValueID:    primitive.NewObjectID(),
 		URLs:       make([]string, 0, 1),
 		Object:     make(mapof.Any),
 		HTTPHeader: make(http.Header),
 		Statistics: streams.NewStatistics(),
 		Metadata:   make(mapof.Any),
 	}
+}
+
+func (value Value) ID() string {
+	return value.ValueID.Hex()
 }
 
 // ShouldRevalidate returns TRUE if the "RevalidatesDate" is in the past.

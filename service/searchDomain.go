@@ -15,18 +15,20 @@ import (
 
 // SearchDomain defines a service that manages the global domain search actor.
 type SearchDomain struct {
+	factory          Factory
 	domainService    *Domain
 	followerService  *Follower
 	ruleService      *Rule
 	searchTagService *SearchTag
-	activityStream   *ActivityStream
 	queue            *queue.Queue
 	host             string
 }
 
 // NewSearchDomain returns a fully initialized SearchDomain service
-func NewSearchDomain() SearchDomain {
-	return SearchDomain{}
+func NewSearchDomain(factory Factory) SearchDomain {
+	return SearchDomain{
+		factory: factory,
+	}
 }
 
 /******************************************
@@ -34,12 +36,11 @@ func NewSearchDomain() SearchDomain {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *SearchDomain) Refresh(domainService *Domain, followerService *Follower, ruleService *Rule, searchTagService *SearchTag, activityStream *ActivityStream, queue *queue.Queue, host string) {
+func (service *SearchDomain) Refresh(domainService *Domain, followerService *Follower, ruleService *Rule, searchTagService *SearchTag, queue *queue.Queue, host string) {
 	service.domainService = domainService
 	service.followerService = followerService
 	service.ruleService = ruleService
 	service.searchTagService = searchTagService
-	service.activityStream = activityStream
 	service.queue = queue
 	service.host = host
 }
@@ -66,12 +67,14 @@ func (service *SearchDomain) ActivityPubActor(session data.Session) (outbox.Acto
 		return outbox.Actor{}, derp.Wrap(err, location, "Error getting private key")
 	}
 
+	activityService := service.factory.ActivityStream(model.ActorTypeSearchDomain, primitive.NilObjectID)
+
 	// Return the ActivityPub Actor
 	actor := outbox.NewActor(
 		service.ActivityPubURL(),
 		privateKey,
 		outbox.WithFollowers(service.rangeActivityPubFollowers(session)),
-		outbox.WithClient(service.activityStream),
+		outbox.WithClient(activityService.Client()),
 	)
 
 	return actor, nil

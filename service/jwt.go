@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"encoding/hex"
 	"net/http"
 	"strings"
@@ -17,12 +18,12 @@ import (
 	"github.com/maypok86/otter"
 )
 
-// JWT is a service that generates and validates JWT keys.
+// JWT is a SHARED SERVICE that generates and validates JWT keys.
 type JWT struct {
-	collection data.Collection             // Database collection where JWT keys are stored
-	cache      otter.Cache[string, []byte] // In-Memory cache for frequently used keys
-	hasCache   bool                        // Flag to indicate if the cache is enabled
-	masterKey  string                      // "Key Encrypting Key" used to encode/decode JWT keys that are stored in the collection
+	server    data.Server                 // Server instance for database access
+	cache     otter.Cache[string, []byte] // In-Memory cache for frequently used keys
+	hasCache  bool                        // Flag to indicate if the cache is enabled
+	masterKey string                      // "Key Encrypting Key" used to encode/decode JWT keys that are stored in the collection
 }
 
 func NewJWT() JWT {
@@ -33,9 +34,9 @@ func NewJWT() JWT {
  * Lifecycle Methods
  ******************************************/
 
-func (service *JWT) Refresh(masterKey string) {
+func (service *JWT) Refresh(server data.Server, masterKey string) {
 
-	service.collection = collection
+	service.server = server
 	service.masterKey = masterKey
 
 	builder := otter.MustBuilder[string, []byte](32).
@@ -45,7 +46,7 @@ func (service *JWT) Refresh(masterKey string) {
 		service.cache = cache
 		service.hasCache = true
 	} else {
-		derp.Report(derp.Wrap(err, "service.JWT.Refresh", "Error creating cache"))
+		derp.Report(derp.Wrap(err, "service.JWT.Refresh", "Unable to create memory cache"))
 		service.hasCache = false
 	}
 }
@@ -76,7 +77,7 @@ func (service *JWT) GetCurrentKey() (string, any, error) {
 	plaintext, err := service.create(keyName)
 
 	if err != nil {
-		return "", nil, derp.Wrap(err, location, "Failed Generating Key")
+		return "", nil, derp.Wrap(err, location, "Unable to create JWT key")
 	}
 
 	// Return the new key to the caller
@@ -96,7 +97,7 @@ func (service *JWT) FindKey(token *jwt.Token) (any, error) {
 	plaintext, err := service.load(keyName)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Error loading JWT Key", keyName)
+		return nil, derp.Wrap(err, location, "Unable to load JWT Key", keyName)
 	}
 
 	// Return the key plaintext
@@ -117,7 +118,7 @@ func (service *JWT) ParseString(tokenString string) (*jwt.Token, error) {
 
 	// RULE: JWT token must not be empty
 	if tokenString == "" {
-		return nil, derp.BadRequestError(location, "JWT token is empty")
+		return nil, derp.BadRequestError(location, "JWT token cannot be empty")
 	}
 
 	// Try to parse the JWT token
@@ -125,7 +126,7 @@ func (service *JWT) ParseString(tokenString string) (*jwt.Token, error) {
 	result, err := jwt.ParseWithClaims(tokenString, &claims, service.FindKey, steranko.JWTValidMethods())
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Error parsing JWT token", tokenString)
+		return nil, derp.Wrap(err, location, "Unable to parse JSON Web Token", tokenString)
 	}
 
 	// Success.
@@ -136,6 +137,19 @@ func (service *JWT) ParseString(tokenString string) (*jwt.Token, error) {
  * Database Methods
  ******************************************/
 
+func (service *JWT) collection(ctx context.Context) (data.Collection, error) {
+
+	const location = "service.JWT.collection"
+
+	session, err := service.server.Session(ctx)
+
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Unable to connect to database")
+	}
+
+	return session.Collection("JWT"), nil
+}
+
 // create creates a new plaintext jwt key
 func (service *JWT) create(keyName string) ([]byte, error) {
 
@@ -145,14 +159,14 @@ func (service *JWT) create(keyName string) ([]byte, error) {
 	plaintext, err := random.GenerateBytes(128)
 
 	if err != nil {
-		return []byte{}, derp.Wrap(err, location, "Error generating plaintext")
+		return []byte{}, derp.Wrap(err, location, "Unable to generate random bytes")
 	}
 
 	// Get encrypted value of the key
 	encrypted, err := service.encrypt(plaintext)
 
 	if err != nil {
-		return []byte{}, derp.Wrap(err, location, "Error encrypting JWT Key")
+		return []byte{}, derp.Wrap(err, location, "Unable to encrypt JWT key")
 	}
 
 	// Set the plaintext value of the key
@@ -166,11 +180,19 @@ func (service *JWT) create(keyName string) ([]byte, error) {
 		service.cache.Set(keyName, plaintext)
 	}
 
+	// Create a request context that times out after 30 seconds
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+
+	defer cancel()
+
 	// Save the key to the database
-	if err := service.collection.Save(&record, "New key created"); err != nil {
-		return []byte{}, derp.Wrap(err, location, "Error saving JWT Key")
+	collection, err := service.collection(ctx)
+
+	if err := collection.Save(&record, "New key created"); err != nil {
+		return []byte{}, derp.Wrap(err, location, "Unable to save JWT key")
 	}
 
+	// Return the plaintext value of the key
 	return plaintext, nil
 }
 
@@ -188,26 +210,32 @@ func (service *JWT) load(keyName string) ([]byte, error) {
 		}
 	}
 
+	// Create a request context that times out after 30 seconds
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+
+	defer cancel()
+
 	// Try to load the key from the database
+	collection, err := service.collection(ctx)
 	criteria := exp.Equal("keyName", keyName)
 	jwtKey := model.NewJWTKey()
 
-	if err := service.collection.Load(criteria, &jwtKey); err != nil {
-		return []byte{}, derp.Wrap(err, location, "Error loading JWT Key")
+	if err := collection.Load(criteria, &jwtKey); err != nil {
+		return []byte{}, derp.Wrap(err, location, "Unable to load JWT key")
 	}
 
 	// Decode Base64 text into a slice of bytes
 	encrypted, err := hex.DecodeString(jwtKey.Encrypted)
 
 	if err != nil {
-		return []byte{}, derp.Wrap(err, location, "Error decoding base64 key")
+		return []byte{}, derp.Wrap(err, location, "Unable to decode base64 key")
 	}
 
 	// Decrypt the encrypted value into a usable plaintext
 	plaintext, err := service.decrypt(encrypted)
 
 	if err != nil {
-		return []byte{}, derp.Wrap(err, location, "Error decrypting JWT Key")
+		return []byte{}, derp.Wrap(err, location, "Unable to decrypt JWT key")
 	}
 
 	// Save the plaintext in the memory cache
@@ -233,7 +261,7 @@ func (service *JWT) NewToken(claims jwt.Claims) (string, error) {
 	keyID, key, err := service.GetCurrentKey()
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Error getting JWT Key")
+		return "", derp.Wrap(err, location, "Unable to retrieve JWT key")
 	}
 
 	token.Header["kid"] = keyID
@@ -242,7 +270,7 @@ func (service *JWT) NewToken(claims jwt.Claims) (string, error) {
 	result, err := token.SignedString(key)
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Error Signing JWT Token")
+		return "", derp.Wrap(err, location, "Unable to sign JWT token")
 	}
 
 	// Return the encoded JWT
@@ -255,7 +283,7 @@ func (service *JWT) ParseToken(tokenString string, claims jwt.Claims) error {
 
 	// Try to parse the JWT token using this key service
 	if _, err := jwt.ParseWithClaims(tokenString, claims, service.FindKey, jwt.WithValidMethods([]string{"HS512"})); err != nil {
-		return derp.Wrap(err, location, "Error parsing JWT token", tokenString)
+		return derp.Wrap(err, location, "Unable to parse JSON Web Token", tokenString)
 	}
 
 	// You're so beautiful.

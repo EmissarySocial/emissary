@@ -41,7 +41,7 @@ func GetSignIn(ctx *steranko.Context, factory *domain.Factory, session data.Sess
 func PostSignIn(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
 
 	// Try to sign in using Steranko
-	user, err := factory.Steranko().SigninFormPost(ctx)
+	user, err := factory.Steranko(session).SigninFormPost(ctx)
 
 	if err != nil {
 		ctx.Response().Header().Add("HX-Trigger", "SigninError")
@@ -69,7 +69,7 @@ func PostSignIn(ctx *steranko.Context, factory *domain.Factory, session data.Ses
 // PostSignOut generates an echo.HandlerFunc that handles POST /signout requests
 func PostSignOut(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
 
-	s := factory.Steranko()
+	s := factory.Steranko(session)
 
 	// If there is a "next" parameter, then redirect to that URL.
 	hasBackupProfile := s.SignOut(ctx)

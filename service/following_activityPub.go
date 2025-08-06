@@ -52,7 +52,8 @@ func (service *Following) disconnect_ActivityPub(session data.Session, following
 
 	// Try to send the ActivityPub Undo request
 	followMap := service.AsJSONLD(following)
-	followDocument := streams.NewDocument(followMap, streams.WithClient(service.activityService))
+	activityService := service.factory.ActivityStream(model.ActorTypeUser, following.UserID)
+	followDocument := streams.NewDocument(followMap, streams.WithClient(activityService.Client()))
 	actor.SendUndo(followDocument)
 
 	return nil

@@ -22,8 +22,11 @@ func PostInbox(ctx *steranko.Context, factory *domain.Factory, session data.Sess
 		return derp.NotFoundError(location, "Actor not found")
 	}
 
+	// Get an ActivityStream service for the Stream
+	activityService := factory.ActivityStream(model.ActorTypeStream, stream.StreamID)
+
 	// Retrieve the activity from the request body
-	activity, err := inbox.ReceiveRequest(ctx.Request(), factory.ActivityStream())
+	activity, err := inbox.ReceiveRequest(ctx.Request(), activityService.Client())
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error parsing ActivityPub request")

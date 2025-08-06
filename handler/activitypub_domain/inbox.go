@@ -4,18 +4,22 @@ import (
 	"net/http"
 
 	"github.com/EmissarySocial/emissary/domain"
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/inbox"
 	"github.com/benpate/steranko"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func PostInbox(ctx *steranko.Context, factory *domain.Factory, session data.Session) error {
 
 	const location = "handler.activitypub_domain.PostInbox"
 
+	activityService := factory.ActivityStream(model.ActorTypeSearchDomain, primitive.NilObjectID)
+
 	// Retrieve the activity from the request body
-	activity, err := inbox.ReceiveRequest(ctx.Request(), factory.ActivityStream())
+	activity, err := inbox.ReceiveRequest(ctx.Request(), activityService.Client())
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error parsing ActivityPub request")

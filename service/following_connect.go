@@ -19,7 +19,8 @@ func (service *Following) RefreshAndConnect(session data.Session, following mode
 
 	// Try to refresh the Actor in the cache
 	// nolint:errcheck
-	service.activityService.Load(following.URL, sherlock.AsActor(), ascache.WithForceReload())
+	activityService := service.factory.ActivityStream(model.ActorTypeUser, following.UserID)
+	activityService.Client().Load(following.URL, sherlock.AsActor(), ascache.WithForceReload())
 
 	// Try to connect the Following record
 	if err := service.Connect(session, following); err != nil {
@@ -40,7 +41,8 @@ func (service *Following) Connect(session data.Session, following model.Followin
 
 	// Try to load the actor from the remote server.  Errors mean that this actor cannot
 	// be resolved, so we should mark the Following as a "Failure".
-	actor, err := service.activityService.Load(following.URL, sherlock.AsActor())
+	activityService := service.factory.ActivityStream(model.ActorTypeUser, following.UserID)
+	actor, err := activityService.Client().Load(following.URL, sherlock.AsActor())
 
 	if err != nil {
 		if innerError := service.SetStatusFailure(session, &following, err.Error()); innerError != nil {

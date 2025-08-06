@@ -34,8 +34,8 @@ func BoostAny(context Context, activity streams.Document) error {
 		}
 	}
 
-	// Rules for different activity types
-	activityService := context.factory.ActivityStream()
+	// Get an ActivityStream service for the Stream
+	activityService := context.factory.ActivityStream(model.ActorTypeStream, context.stream.StreamID)
 
 	switch activity.Type() {
 

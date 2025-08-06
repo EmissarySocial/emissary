@@ -27,11 +27,20 @@ func GetMarkers(serverFactory *server.Factory) func(model.Authorization, txn.Get
 			return nil, derp.Wrap(err, location, "Invalid Domain")
 		}
 
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return nil, derp.Wrap(err, location, "Unable to create session")
+		}
+
+		defer cancel()
+
 		// Get the last message in the Inbox
 		inboxService := factory.Inbox()
 		message := model.NewMessage()
 
-		if err := inboxService.LoadOldestUnread(auth.UserID, &message); err != nil {
+		if err := inboxService.LoadOldestUnread(session, auth.UserID, &message); err != nil {
 			return nil, derp.Wrap(err, location, "Error loading oldest unread message")
 		}
 
@@ -69,9 +78,18 @@ func PostMarker(serverFactory *server.Factory) func(model.Authorization, txn.Pos
 			return nil, derp.Wrap(err, location, "Invalid Domain")
 		}
 
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return nil, derp.Wrap(err, location, "Unable to create session")
+		}
+
+		defer cancel()
+
 		// Mark messages read by date
 		inboxService := factory.Inbox()
-		if err := inboxService.MarkReadByDate(auth.UserID, lastReadDate); err != nil {
+		if err := inboxService.MarkReadByDate(session, auth.UserID, lastReadDate); err != nil {
 			return nil, derp.Wrap(err, location, "Error marking messages read")
 		}
 

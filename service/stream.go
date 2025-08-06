@@ -32,7 +32,7 @@ import (
 
 // Stream manages all interactions with the Stream collection
 type Stream struct {
-	activityService   *ActivityStream
+	factory           Factory
 	circleService     *Circle
 	domainService     *Domain
 	searchTagService  *SearchTag
@@ -40,7 +40,6 @@ type Stream struct {
 	draftService      *StreamDraft
 	outboxService     *Outbox
 	attachmentService *Attachment
-	activityStream    *ActivityStream
 	contentService    *Content
 	keyService        *EncryptionKey
 	followerService   *Follower
@@ -54,8 +53,10 @@ type Stream struct {
 }
 
 // NewStream returns a fully populated Stream service.
-func NewStream() Stream {
-	return Stream{}
+func NewStream(factory Factory) Stream {
+	return Stream{
+		factory: factory,
+	}
 }
 
 /******************************************
@@ -63,8 +64,7 @@ func NewStream() Stream {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Stream) Refresh(activityService *ActivityStream, circleService *Circle, domainService *Domain, searchTagService *SearchTag, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, activityStream *ActivityStream, contentService *Content, keyService *EncryptionKey, followerService *Follower, ruleService *Rule, userService *User, webhookService *Webhook, mediaserver mediaserver.MediaServer, queue *queue.Queue, host string, sseUpdateChannel chan primitive.ObjectID) {
-	service.activityService = activityService
+func (service *Stream) Refresh(circleService *Circle, domainService *Domain, searchTagService *SearchTag, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, contentService *Content, keyService *EncryptionKey, followerService *Follower, ruleService *Rule, userService *User, webhookService *Webhook, mediaserver mediaserver.MediaServer, queue *queue.Queue, host string, sseUpdateChannel chan primitive.ObjectID) {
 	service.circleService = circleService
 	service.domainService = domainService
 	service.searchTagService = searchTagService
@@ -72,7 +72,6 @@ func (service *Stream) Refresh(activityService *ActivityStream, circleService *C
 	service.draftService = draftService
 	service.outboxService = outboxService
 	service.attachmentService = attachmentService
-	service.activityStream = activityStream
 	service.contentService = contentService
 	service.keyService = keyService
 	service.followerService = followerService
@@ -1041,7 +1040,8 @@ func (service *Stream) CalcContext(stream *model.Stream) {
 	// Load the "InReplyTo" document from the ActivityStream and use its
 	// context.  Note: this should have been calculated already via th
 	// ascontextmaker client.
-	document, _ := service.activityStream.Load(stream.InReplyTo)
+	activityService := service.factory.ActivityStream(model.ActorTypeStream, stream.StreamID)
+	document, _ := activityService.Client().Load(stream.InReplyTo)
 
 	if context := document.Context(); context != "" {
 		stream.Context = document.Context()

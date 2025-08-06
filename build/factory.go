@@ -23,7 +23,7 @@ type ServerFactory interface {
 type Factory interface {
 	// Model Services
 	Model(string) (service.ModelService, error)
-	ActivityStream() *service.ActivityStream
+	ActivityStream(actorType string, actorID primitive.ObjectID) service.ActivityStream
 	Annotation() *service.Annotation
 	Attachment() *service.Attachment
 	Circle() *service.Circle
@@ -68,10 +68,10 @@ type Factory interface {
 	MediaServer() mediaserver.MediaServer
 	ModelService(data.Object) service.ModelService
 	Locator() *service.Locator
-	LookupProvider(*http.Request, primitive.ObjectID) form.LookupProvider
+	LookupProvider(*http.Request, data.Session, primitive.ObjectID) form.LookupProvider
 	OAuthClient() *service.OAuthClient
 	OAuthUserToken() *service.OAuthUserToken
 	Queue() *queue.Queue
-	Steranko() *steranko.Steranko
+	Steranko(data.Session) *steranko.Steranko
 	SSEUpdateChannel() chan primitive.ObjectID
 }

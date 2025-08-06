@@ -221,7 +221,7 @@ func GetIdentitySigninWithJWT(ctx *steranko.Context, factory *domain.Factory, se
 		authorization.IdentityID = identity.IdentityID
 
 		// Create a new JWT token and return it as a cookie
-		if err := factory.Steranko().SetCookie(ctx, authorization); err != nil {
+		if err := factory.Steranko(session).SetCookie(ctx, authorization); err != nil {
 			return derp.Wrap(err, location, "Error setting authorization cookie")
 		}
 

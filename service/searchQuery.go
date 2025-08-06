@@ -20,18 +20,20 @@ import (
 
 // SearchQuery defines a service that manages all searchable tags in a domain.
 type SearchQuery struct {
+	factory          Factory
 	domainService    *Domain
 	followerService  *Follower
 	ruleService      *Rule
 	searchTagService *SearchTag
-	activityStream   *ActivityStream
 	queue            *queue.Queue
 	host             string
 }
 
 // NewSearchQuery returns a fully initialized SearchQuery service
-func NewSearchQuery() SearchQuery {
-	return SearchQuery{}
+func NewSearchQuery(factory Factory) SearchQuery {
+	return SearchQuery{
+		factory: factory,
+	}
 }
 
 /******************************************
@@ -39,12 +41,11 @@ func NewSearchQuery() SearchQuery {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *SearchQuery) Refresh(domainService *Domain, followerService *Follower, ruleService *Rule, searchTagService *SearchTag, activityStream *ActivityStream, queue *queue.Queue, host string) {
+func (service *SearchQuery) Refresh(domainService *Domain, followerService *Follower, ruleService *Rule, searchTagService *SearchTag, queue *queue.Queue, host string) {
 	service.domainService = domainService
 	service.followerService = followerService
 	service.ruleService = ruleService
 	service.searchTagService = searchTagService
-	service.activityStream = activityStream
 	service.queue = queue
 	service.host = host
 }
@@ -302,12 +303,14 @@ func (service *SearchQuery) ActivityPubActor(session data.Session, searchQueryID
 		return outbox.Actor{}, derp.Wrap(err, location, "Error getting private key")
 	}
 
+	activityService := service.factory.ActivityStream(model.ActorTypeSearchQuery, searchQueryID)
+
 	// Return the ActivityPub Actor
 	actor := outbox.NewActor(
 		service.ActivityPubURL(searchQueryID),
 		privateKey,
 		outbox.WithFollowers(service.rangeActivityPubFollowers(session, searchQueryID)),
-		outbox.WithClient(service.activityStream),
+		outbox.WithClient(activityService.Client()),
 		// TODO: Restore Queue:: , outbox.WithQueue(service.queue))
 	)
 

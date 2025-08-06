@@ -35,7 +35,7 @@ func PostMasquerade(ctx *steranko.Context, factory *domain.Factory, session data
 	}
 
 	// Create a masquerade certificate for the requested User
-	if err := factory.Steranko().SigninUser(ctx, &user); err != nil {
+	if err := factory.Steranko(session).SigninUser(ctx, &user); err != nil {
 		return derp.Wrap(err, location, "Error creating JWT certificate")
 	}
 

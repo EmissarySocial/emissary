@@ -36,8 +36,11 @@ func receiveLikeOrAnnounce(context Context, activity streams.Document) error {
 		activity.SetProperty(vocab.PropertyID, activitypub.FakeActivityID(activity))
 	}
 
+	// Get an ActivityStream service for the User
+	activityService := context.factory.ActivityStream(model.ActorTypeUser, context.user.UserID)
+
 	// Add the Announce/Like/Dislike into the ActivityStream cache
-	context.factory.ActivityStream().Put(activity)
+	activityService.Put(activity)
 
 	// Add the activity into the User's Inbox
 	if err := saveMessage(context, object, activity.Actor().ID(), getOriginType(activity.Type())); err != nil {

@@ -5,6 +5,8 @@ adapters for reading/writing from the filesystem or a mongodb database.
 package config
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"strconv"
 
 	"github.com/EmissarySocial/emissary/tools/set"
@@ -32,6 +34,7 @@ type Config struct {
 	MongoID             primitive.ObjectID           `json:"-" bson:"_id"`        // Used as unique key for MongoDB
 	Loggers             sliceof.Object[mapof.Any]    `json:"loggers"`             // Logging configuration for this server
 	LogSlowQueries      int                          `json:"logSlowQueries"`      // Log queries that take longer than this many milliseconds (0 = do not log)
+	MasterKey           string                       `json:"masterKey"`
 }
 
 // NewConfig returns a fully initialized (but empty) Config data structure.
@@ -51,6 +54,10 @@ func NewConfig() Config {
 // DefaultConfig return sthe default configuration for this application.
 func DefaultConfig() Config {
 
+	// Create a default master key as random 32-byte slice
+	masterKey := make([]byte, 32)
+	_, _ = rand.Reader.Read(masterKey)
+
 	return Config{
 		Domains: make(set.Slice[Domain], 0),
 
@@ -65,6 +72,7 @@ func DefaultConfig() Config {
 		Loggers:             sliceof.Object[mapof.Any]{{"type": "console"}},
 		HTTPPort:            8080,
 		HTTPSPort:           443,
+		MasterKey:           hex.EncodeToString(masterKey),
 	}
 }
 

@@ -3,24 +3,25 @@ package service
 import (
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	dt "github.com/benpate/domain"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/benpate/steranko"
 )
 
 type DomainEmail struct {
-	serverEmail     *ServerEmail
-	domainService   *Domain
-	sterankoService *steranko.Steranko
-	smtp            config.SMTPConnection
-	owner           config.Owner
-	label           string
-	hostname        string
+	factory       Factory
+	serverEmail   *ServerEmail
+	domainService *Domain
+	smtp          config.SMTPConnection
+	owner         config.Owner
+	label         string
+	hostname      string
 }
 
-func NewDomainEmail(serverEmail *ServerEmail) DomainEmail {
+func NewDomainEmail(factory Factory, serverEmail *ServerEmail) DomainEmail {
 	return DomainEmail{
+		factory:     factory,
 		serverEmail: serverEmail,
 	}
 }
@@ -29,9 +30,8 @@ func NewDomainEmail(serverEmail *ServerEmail) DomainEmail {
  * Lifecycle Methods
  ******************************************/
 
-func (service *DomainEmail) Refresh(configuration config.Domain, domainService *Domain, sterankoService *steranko.Steranko) {
+func (service *DomainEmail) Refresh(configuration config.Domain, domainService *Domain) {
 	service.domainService = domainService
-	service.sterankoService = sterankoService
 	service.smtp = configuration.SMTPConnection
 	service.owner = configuration.Owner
 	service.label = configuration.Label
@@ -44,12 +44,13 @@ func (service *DomainEmail) Refresh(configuration config.Domain, domainService *
 
 // SendWelcome sends a welcome email to the user.  This method
 // returns an error so that it CAN NOT be run asynchronously.
-func (service *DomainEmail) SendWelcome(txn model.RegistrationTxn) error {
+func (service *DomainEmail) SendWelcome(session data.Session, txn model.RegistrationTxn) error {
 
 	const location = "service.DomainEmail.SendWelcome"
 
 	// Create a JWT with the registration information, and populate it into the Token
-	token, err := service.sterankoService.CreateJWT(txn.Claims())
+	sterankoService := service.factory.Steranko(session)
+	token, err := sterankoService.CreateJWT(txn.Claims())
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error creating JWT")

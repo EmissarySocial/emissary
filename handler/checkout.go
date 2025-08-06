@@ -49,7 +49,7 @@ func GetCheckoutResponse(ctx *steranko.Context, factory *domain.Factory, session
 		// Fall through means we need to update their JWT/Cookie
 		authorization.IdentityID = privilege.IdentityID
 
-		if err := factory.Steranko().SetCookie(ctx, authorization); err != nil {
+		if err := factory.Steranko(session).SetCookie(ctx, authorization); err != nil {
 			return derp.Wrap(err, location, "Error setting guest authorization")
 		}
 	}

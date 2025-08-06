@@ -21,18 +21,20 @@ import (
 // Follower defines a service that tracks the (possibly external) accounts that are followers of an internal User
 
 type Follower struct {
-	userService     *User
-	ruleService     *Rule
-	streamService   *Stream
-	domainEmail     *DomainEmail
-	activityService *ActivityStream
-	queue           *queue.Queue // The server-wide queue for background tasks
-	host            string       // The HOST for this domain (protocol + hostname)
+	factory       Factory
+	userService   *User
+	ruleService   *Rule
+	streamService *Stream
+	domainEmail   *DomainEmail
+	queue         *queue.Queue // The server-wide queue for background tasks
+	host          string       // The HOST for this domain (protocol + hostname)
 }
 
 // NewFollower returns a fully initialized Follower service
-func NewFollower() Follower {
-	return Follower{}
+func NewFollower(factory Factory) Follower {
+	return Follower{
+		factory: factory,
+	}
 }
 
 /******************************************
@@ -40,12 +42,11 @@ func NewFollower() Follower {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Follower) Refresh(userService *User, streamService *Stream, ruleService *Rule, domainEmail *DomainEmail, activityService *ActivityStream, queue *queue.Queue, host string) {
+func (service *Follower) Refresh(userService *User, streamService *Stream, ruleService *Rule, domainEmail *DomainEmail, queue *queue.Queue, host string) {
 	service.userService = userService
 	service.streamService = streamService
 	service.ruleService = ruleService
 	service.domainEmail = domainEmail
-	service.activityService = activityService
 	service.queue = queue
 	service.host = host
 }
@@ -533,8 +534,10 @@ func (service *Follower) RemoteActor(session data.Session, follower *model.Follo
 		return streams.NilDocument(), derp.InternalError("service.Follower.RemoteActor", "Follower must use ActivityPub method", follower)
 	}
 
+	activityService := service.factory.ActivityStream(follower.ParentType, follower.ParentID)
+
 	// Return the remote Actor's profile document
-	return service.activityService.Load(follower.Actor.ProfileURL, sherlock.AsActor())
+	return activityService.Client().Load(follower.Actor.ProfileURL, sherlock.AsActor())
 }
 
 /******************************************

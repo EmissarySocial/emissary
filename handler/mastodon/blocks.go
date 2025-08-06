@@ -1,6 +1,8 @@
 package mastodon
 
 import (
+	"time"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
@@ -23,9 +25,17 @@ func GetBlocks(serverFactory *server.Factory) func(model.Authorization, txn.GetB
 			return []object.Account{}, toot.PageInfo{}, derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return []object.Account{}, toot.PageInfo{}, derp.Wrap(err, location, "Unable to create session")
+		}
+
+		defer cancel()
 		// Query the database
 		userService := factory.User()
-		users, err := userService.QueryBlockedActors(auth.UserID, queryExpression(t))
+		users, err := userService.QueryBlockedActors(session, auth.UserID, queryExpression(t))
 
 		if err != nil {
 			return []object.Account{}, toot.PageInfo{}, derp.Wrap(err, location, "Error querying database")

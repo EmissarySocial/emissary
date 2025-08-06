@@ -15,6 +15,16 @@ const FollowerTypeStream = "Stream"
 // FollowerTypeUser represents a Follower that is following a User
 const FollowerTypeUser = "User"
 
+const ActorTypeApplication = "Application"
+
+const ActorTypeSearchDomain = "SearchDomain"
+
+const ActorTypeSearchQuery = "Search"
+
+const ActorTypeStream = "Stream"
+
+const ActorTypeUser = "User"
+
 // FollowerMethodActivityPub represents a Follower subscription that
 // receives real-time updates via ActivityPub
 // https://www.w3.org/TR/activitypub/

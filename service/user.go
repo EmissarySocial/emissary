@@ -32,6 +32,7 @@ import (
 
 // User manages all interactions with the User collection
 type User struct {
+	factory           Factory
 	attachmentService *Attachment
 	emailService      *DomainEmail
 	domainService     *Domain
@@ -47,15 +48,16 @@ type User struct {
 	streamService     *Stream
 	templateService   *Template
 	webhookService    *Webhook
-	activityStream    *ActivityStream
 	queue             *queue.Queue
 	sseUpdateChannel  chan<- primitive.ObjectID
 	host              string
 }
 
 // NewUser returns a fully populated User service
-func NewUser() User {
-	return User{}
+func NewUser(factory Factory) User {
+	return User{
+		factory: factory,
+	}
 }
 
 /******************************************
@@ -81,7 +83,6 @@ func (service *User) Refresh(
 	webhookService *Webhook,
 	queue *queue.Queue,
 
-	activityStream *ActivityStream,
 	sseUpdateChannel chan<- primitive.ObjectID,
 	host string) {
 
@@ -99,7 +100,6 @@ func (service *User) Refresh(
 	service.streamService = streamService
 	service.templateService = templateService
 	service.webhookService = webhookService
-	service.activityStream = activityStream
 	service.sseUpdateChannel = sseUpdateChannel
 	service.queue = queue
 

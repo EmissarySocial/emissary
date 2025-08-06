@@ -639,9 +639,9 @@ func (w Stream) RepliesBefore(dateString string, maxRows int) sliceof.Object[str
 	done := make(channel.Done)
 
 	// Get all ActivityStreams that reply to the current Stream
-	activityStreamsService := w._factory.ActivityStream()
+	activityStreamsService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
 	maxDate := convert.Int64Default(dateString, math.MaxInt64)
-	replies := activityStreamsService.QueryRepliesBeforeDate(w._stream.URL, maxDate, done)
+	replies := activityStreamsService.QueryRepliesBeforeDate(w._request.Context(), w._stream.URL, maxDate, done)
 
 	// Filter results based on blocks
 	ruleService := w._factory.Rule()
@@ -660,9 +660,9 @@ func (w Stream) RepliesAfter(dateString string, maxRows int) sliceof.Object[stre
 	done := make(channel.Done)
 
 	// Get all ActivityStreams that REPLY TO the current Stream
-	activityStreamsService := w._factory.ActivityStream()
+	activityStreamsService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
 	minDate := convert.Int64(dateString)
-	replies := activityStreamsService.QueryRepliesAfterDate(w._stream.URL, minDate, done)
+	replies := activityStreamsService.QueryRepliesAfterDate(w._request.Context(), w._stream.URL, minDate, done)
 
 	// Filter results based on blocks
 	ruleService := w._factory.Rule()
@@ -682,9 +682,9 @@ func (w Stream) AnnouncesBefore(dateString string, maxRows int) sliceof.Object[s
 	done := make(channel.Done)
 
 	// Get all ActivityStreams that ANNOUNCE the current Stream
-	activityStreamsService := w._factory.ActivityStream()
+	activityStreamsService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
 	maxDate := convert.Int64Default(dateString, math.MaxInt64)
-	announces := activityStreamsService.QueryAnnouncesBeforeDate(w._stream.URL, maxDate, done)
+	announces := activityStreamsService.QueryAnnouncesBeforeDate(w._request.Context(), w._stream.URL, maxDate, done)
 
 	// Filter results based on blocks
 	ruleService := w._factory.Rule()
@@ -704,9 +704,9 @@ func (w Stream) LikesBefore(dateString string, maxRows int) sliceof.Object[strea
 	done := make(channel.Done)
 
 	// Query all ActivityStreams that LIKE the current Stream
-	activityStreamsService := w._factory.ActivityStream()
+	activityStreamsService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
 	maxDate := convert.Int64Default(dateString, math.MaxInt64)
-	likes := activityStreamsService.QueryLikesBeforeDate(w._stream.URL, maxDate, done)
+	likes := activityStreamsService.QueryLikesBeforeDate(w._request.Context(), w._stream.URL, maxDate, done)
 
 	// Filter results based on blocks
 	ruleService := w._factory.Rule()

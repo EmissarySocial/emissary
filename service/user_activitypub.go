@@ -1,6 +1,7 @@
 package service
 
 import (
+	"crypto"
 	"iter"
 	"net/url"
 	"strings"
@@ -69,11 +70,9 @@ func (service *User) ActivityPubPublicKeyURL(userID primitive.ObjectID) string {
 	return service.host + "/@" + userID.Hex() + "#main-key" // was "/pub/key"
 }
 
-// ActivityPubActor returns an ActivityPub Actor object ** WHICH INCLUDES ENCRYPTION KEYS **
-// for the provided User.
-func (service *User) ActivityPubActor(session data.Session, userID primitive.ObjectID) (outbox.Actor, error) {
+func (service *User) PrivateKey(session data.Session, userID primitive.ObjectID) (crypto.PrivateKey, error) {
 
-	const location = "service.Stream.ActivityPubActor"
+	const location = "service.User.PrivateKey"
 
 	// Try to load the user's keys from the database
 	encryptionKey := model.NewEncryptionKey()
@@ -88,12 +87,30 @@ func (service *User) ActivityPubActor(session data.Session, userID primitive.Obj
 		return outbox.Actor{}, derp.Wrap(err, location, "Error extracting private key", encryptionKey)
 	}
 
+	return privateKey, nil
+}
+
+// ActivityPubActor returns an ActivityPub Actor object ** WHICH INCLUDES ENCRYPTION KEYS **
+// for the provided User.
+func (service *User) ActivityPubActor(session data.Session, userID primitive.ObjectID) (outbox.Actor, error) {
+
+	const location = "service.User.ActivityPubActor"
+
+	// Extract the Private Key from the Encryption Key
+	privateKey, err := service.PrivateKey(session, userID)
+
+	if err != nil {
+		return outbox.Actor{}, derp.Wrap(err, location, "Could not retrieve private key")
+	}
+
+	activityService := service.factory.ActivityStream(model.ActorTypeUser, userID)
+
 	// Return the ActivityPub Actor
 	actor := outbox.NewActor(
 		service.ActivityPubURL(userID),
 		privateKey,
 		outbox.WithFollowers(service.rangeActivityPubFollowers(session, userID)),
-		outbox.WithClient(service.activityStream),
+		outbox.WithClient(activityService.Client()),
 		// TODO: Restore Queue:: , outbox.WithQueue(service.queue))
 	)
 

@@ -6,6 +6,10 @@ replace github.com/benpate/data => ../../benpate/data
 
 replace github.com/benpate/data-mongo => ../../benpate/data-mongo
 
+replace github.com/benpate/hannibal => ../../benpate/hannibal
+
+replace github.com/benpate/sherlock => ../../benpate/sherlock
+
 replace github.com/benpate/steranko => ../../benpate/steranko
 
 require (
@@ -42,7 +46,7 @@ require (
 	github.com/fatih/color v1.18.0
 	github.com/fclairamb/afero-s3 v0.3.1
 	github.com/fsnotify/fsnotify v1.9.0
-	github.com/golang-jwt/jwt/v5 v5.2.3
+	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/gorilla/feeds v1.2.0
 	github.com/hairyhenderson/go-fsimpl v0.3.1
 	github.com/hjson/hjson-go/v4 v4.5.0

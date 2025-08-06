@@ -16,6 +16,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/sherlock"
 	"github.com/benpate/steranko"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func GetIntent_Follow(ctx *steranko.Context, factory *domain.Factory, session data.Session, user *model.User) error {
@@ -32,8 +33,8 @@ func GetIntent_Follow(ctx *steranko.Context, factory *domain.Factory, session da
 	onCancel := firstOf(transaction.OnCancel, "/@me")
 
 	// Try to load the remote Actor to be followed
-	activityService := factory.ActivityStream()
-	actor, err := activityService.Load(transaction.Object, sherlock.AsActor())
+	activityService := factory.ActivityStream(model.ActorTypeApplication, primitive.NilObjectID)
+	actor, err := activityService.Client().Load(transaction.Object, sherlock.AsActor())
 
 	if err != nil {
 		return derp.Wrap(err, location, "Unable to load object", transaction)
@@ -49,7 +50,7 @@ func GetIntent_Follow(ctx *steranko.Context, factory *domain.Factory, session da
 	}
 
 	// Generate the input form as HTML
-	lookupProvider := factory.LookupProvider(ctx.Request(), user.UserID)
+	lookupProvider := factory.LookupProvider(ctx.Request(), session, user.UserID)
 	formStruct := getForm_FollowingIntent()
 	formHTML, err := formStruct.Editor(following, lookupProvider)
 
@@ -185,7 +186,7 @@ func PostIntent_Follow(ctx *steranko.Context, factory *domain.Factory, session d
 
 	// Update the Following with values from the user
 	form := getForm_FollowingIntent()
-	if err := form.SetURLValues(&following, transaction, factory.LookupProvider(ctx.Request(), user.UserID)); err != nil {
+	if err := form.SetURLValues(&following, transaction, factory.LookupProvider(ctx.Request(), session, user.UserID)); err != nil {
 		return derp.Wrap(err, location, "Error setting form values")
 	}
 

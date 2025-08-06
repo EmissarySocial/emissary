@@ -1,6 +1,7 @@
 package service
 
 import (
+	"crypto"
 	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -46,19 +47,19 @@ func (service *Locator) GetWebFingerResult(session data.Session, resource string
 
 	switch objectType {
 
-	case "Application":
+	case model.ActorTypeApplication:
 		return service.domainService.WebFinger(), nil
 
-	case "SearchDomain":
+	case model.ActorTypeSearchDomain:
 		return service.searchDomainService.WebFinger(), nil
 
-	case "SearchQuery":
+	case model.ActorTypeSearchQuery:
 		return service.searchQueryService.WebFinger(session, token)
 
-	case "Stream":
+	case model.ActorTypeStream:
 		return service.streamService.WebFinger(session, token)
 
-	case "User":
+	case model.ActorTypeUser:
 		return service.userService.WebFinger(session, token)
 
 	}
@@ -76,7 +77,16 @@ func (service *Locator) GetObjectFromURL(session data.Session, value string) (st
 	// Verify database records
 	switch objectType {
 
-	case "Stream":
+	case model.ActorTypeApplication:
+		return "", primitive.NilObjectID, derp.BadRequestError(location, "Invalid Object Type", objectType)
+
+	case model.ActorTypeSearchDomain:
+		return "", primitive.NilObjectID, derp.BadRequestError(location, "Invalid Object Type", objectType)
+
+	case model.ActorTypeSearchQuery:
+		return "", primitive.NilObjectID, derp.BadRequestError(location, "Invalid Object Type", objectType)
+
+	case model.ActorTypeStream:
 
 		stream := model.NewStream()
 
@@ -84,9 +94,9 @@ func (service *Locator) GetObjectFromURL(session data.Session, value string) (st
 			return "", primitive.NilObjectID, derp.Wrap(err, location, "Error loading stream", token)
 		}
 
-		return "Stream", stream.StreamID, nil
+		return model.ActorTypeStream, stream.StreamID, nil
 
-	case "User":
+	case model.ActorTypeUser:
 
 		user := model.NewUser()
 
@@ -94,8 +104,7 @@ func (service *Locator) GetObjectFromURL(session data.Session, value string) (st
 			return "", primitive.NilObjectID, derp.Wrap(err, location, "Error loading user", token)
 		}
 
-		return "User", user.UserID, nil
-
+		return model.ActorTypeUser, user.UserID, nil
 	}
 
 	// Fall through is failure.  Feel bad.
@@ -104,40 +113,61 @@ func (service *Locator) GetObjectFromURL(session data.Session, value string) (st
 
 func (service *Locator) GetActor(session data.Session, actorType string, actorID string) (outbox.Actor, error) {
 
+	const location = "service.Locator.GetActor"
+
 	switch actorType {
 
-	case "Application":
+	case model.ActorTypeApplication:
 		return service.domainService.ActivityPubActor(session)
 
-	case "SearchDomain":
+	case model.ActorTypeSearchDomain:
 		return service.searchDomainService.ActivityPubActor(session)
 
-	case "SearchQuery":
-
+	case model.ActorTypeSearchQuery:
 		if searchQueryID, err := primitive.ObjectIDFromHex(actorID); err == nil {
 			return service.searchQueryService.ActivityPubActor(session, searchQueryID)
-		} else {
-			return outbox.Actor{}, derp.Wrap(err, "service.Locator.GetActor", "Invalid SearchQueryID", actorID)
 		}
 
-	case "Stream":
-
+	case model.ActorTypeStream:
 		if streamID, err := primitive.ObjectIDFromHex(actorID); err == nil {
 			return service.streamService.ActivityPubActor(session, streamID)
-		} else {
-			return outbox.Actor{}, derp.Wrap(err, "service.Locator.GetActor", "Invalid StreamID", actorID)
 		}
 
-	case "User":
-
+	case model.ActorTypeUser:
 		if userID, err := primitive.ObjectIDFromHex(actorID); err == nil {
 			return service.userService.ActivityPubActor(session, userID)
-		} else {
-			return outbox.Actor{}, derp.Wrap(err, "service.Locator.GetActor", "Invalid UserID", actorID)
 		}
+
+	default:
+		return outbox.Actor{}, derp.BadRequestError(location, "Invalid Actor Type", actorType)
 	}
 
-	return outbox.Actor{}, derp.BadRequestError("service.Locator.GetActor", "Invalid Actor Type", actorType)
+	return outbox.Actor{}, derp.BadRequestError(location, "ActorID must be a valid ObjectID", actorType)
+}
+
+func (service *Locator) GetPrivateKey(session data.Session, actorType string, actorID primitive.ObjectID) (crypto.PrivateKey, error) {
+
+	const location = "service.locator.GetPrivateKey"
+
+	switch actorType {
+
+	case model.ActorTypeApplication:
+		return service.domainService.PrivateKey(session)
+
+	case model.ActorTypeSearchDomain:
+		return service.domainService.PrivateKey(session)
+
+	case model.ActorTypeSearchQuery:
+		return service.domainService.PrivateKey(session)
+
+	case model.ActorTypeStream:
+		return service.streamService.PrivateKey(session, actorID)
+
+	case model.ActorTypeUser:
+		return service.userService.PrivateKey(session, actorID)
+	}
+
+	return nil, derp.BadRequestError(location, "Invalid Actor Type", actorType)
 }
 
 // locateObjectFromURL parses a URL, determines what type of object it is,
@@ -157,21 +187,21 @@ func locateObjectFromURL(host string, value string) (string, string) {
 
 		// Special case for "Application" account
 		if value == "application" {
-			return "Application", ""
+			return model.ActorTypeApplication, ""
 		}
 
 		// Special case for Global Search actor
 		if value == "search" {
-			return "SearchDomain", ""
+			return model.ActorTypeSearchDomain, ""
 		}
 
 		// Special case for SearchQuery objects
 		if value, found := strings.CutPrefix(value, "search_"); found {
-			return "SearchQuery", value
+			return model.ActorTypeSearchQuery, value
 		}
 
 		// Otherwise, it's a User
-		return "User", value
+		return model.ActorTypeUser, value
 	}
 
 	// Identify URL-type values
@@ -184,31 +214,31 @@ func locateObjectFromURL(host string, value string) (string, string) {
 
 		// Special case for "Application" account
 		if value == "" {
-			return "Application", ""
+			return model.ActorTypeApplication, ""
 		}
 		// Special case for "Application" account
 		if value == "@application" {
-			return "Application", ""
+			return model.ActorTypeApplication, ""
 		}
 
 		// Identify Gloabl Search actor
 		if value == "@search" {
-			return "SearchDomain", ""
+			return model.ActorTypeSearchDomain, ""
 		}
 
 		// Identify SearchQuery URLs
 		if value, found := strings.CutPrefix(value, "@search_"); found {
-			return "SearchQuery", value
+			return model.ActorTypeSearchQuery, value
 		}
 
 		// Identify User URLs
 		if value, found := strings.CutPrefix(value, "@"); found {
 			value, _, _ = strings.Cut(value, "/")
-			return "User", value
+			return model.ActorTypeUser, value
 		}
 
 		// Trim off any trailing path data
-		return "Stream", value
+		return model.ActorTypeStream, value
 	}
 
 	return "", ""

@@ -33,7 +33,6 @@ import (
 	"github.com/benpate/rosetta/channel"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
-	"github.com/benpate/steranko"
 	"github.com/benpate/turbine/queue"
 	"github.com/benpate/turbine/queue_mongo"
 	"github.com/davidscottmills/goeditorjs"
@@ -55,14 +54,15 @@ type Factory struct {
 	ready   chan struct{}
 
 	// Server-level services
+	contentService      service.Content
+	emailService        service.ServerEmail
+	jwtService          service.JWT
 	registrationService service.Registration
 	themeService        service.Theme
 	templateService     service.Template
 	widgetService       service.Widget
-	contentService      service.Content
-	emailService        service.ServerEmail
-	embeddedFiles       embed.FS
 
+	embeddedFiles       embed.FS
 	attachmentOriginals afero.Fs
 	attachmentCache     afero.Fs
 	exportCache         afero.Fs
@@ -86,6 +86,7 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 		domains:       make(map[string]*domain.Factory),
 		embeddedFiles: embeddedFiles,
 		ready:         make(chan struct{}),
+		jwtService:    service.NewJWT(),
 	}
 
 	// Build the in-memory cache
@@ -136,6 +137,8 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 			http.StatusInternalServerError,
 		),
 	)
+
+	factory.jwtService = service.NewJWT()
 
 	factory.queue = queue.New()
 
@@ -218,6 +221,10 @@ func (factory *Factory) start() {
 		if factory.commonDatabase != nil {
 
 			log.Trace().Msg("Setting up Common Database")
+
+			// JWT Service configuration
+			server := mongodb.NewServer(factory.commonDatabase)
+			factory.jwtService.Refresh(server, config.MasterKey)
 
 			// Digital Dome configuration
 			collection := mongodb.NewCollection(factory.commonDatabase.Collection("DigitalDome"))
@@ -307,16 +314,18 @@ func (factory *Factory) refreshDomain(domainConfig config.Domain) error {
 
 	// Fall through means that the domain does not exist, so we need to create it
 	newDomain, err := domain.NewFactory(
+		factory,
+		mongodb.NewServer(factory.commonDatabase),
 		domainConfig,
 		factory.port(domainConfig),
-		factory.ActivityCollection(),
-		&factory.registrationService,
-		&factory.emailService,
-		&factory.themeService,
-		&factory.templateService,
-		&factory.widgetService,
 		&factory.contentService,
+		&factory.emailService,
+		&factory.jwtService,
 		&factory.queue,
+		&factory.registrationService,
+		&factory.templateService,
+		&factory.themeService,
+		&factory.widgetService,
 		factory.attachmentOriginals,
 		factory.attachmentCache,
 		factory.exportCache,
@@ -703,18 +712,20 @@ func (factory *Factory) ActivityCollection() *mongo.Collection {
 	return nil
 }
 
+/*
 // Steranko implements the steranko.Factory method, used for locating the specific
 // steranko instance used by a domain.
 func (factory *Factory) Steranko(ctx echo.Context) (*steranko.Steranko, error) {
 
-	result, err := factory.ByContext(ctx)
+		result, err := factory.ByContext(ctx)
 
-	if err != nil {
-		return nil, derp.Wrap(err, "server.Factory.Steranko", "Invalid hostname")
+		if err != nil {
+			return nil, derp.Wrap(err, "server.Factory.Steranko", "Invalid hostname")
+		}
+
+		return result.Steranko(), nil
 	}
-
-	return result.Steranko(), nil
-}
+*/
 
 func (factory *Factory) DigitalDome() *dome.Dome {
 	return &factory.digitalDome
@@ -724,8 +735,53 @@ func (factory *Factory) HTTPCache() *httpcache.HTTPCache {
 	return &factory.httpCache
 }
 
+// CommonDatabase returns a link to the common database server
 func (factory *Factory) CommonDatabase() *mongo.Database {
 	return factory.commonDatabase
+}
+
+func (factory *Factory) Server(hostname string) (data.Server, error) {
+
+	const location = "server.Factory.Server"
+
+	// Clean up the hostname before using it
+	hostname = factory.normalizeHostname(hostname)
+
+	// Read Lock the mutex to prevent concurrent writes
+	factory.mutex.RLock()
+	defer factory.mutex.RUnlock()
+
+	// Try to find the domain in the configuration
+	if domain, exists := factory.domains[hostname]; exists {
+		return domain.Server(), nil
+	}
+
+	// Failure.
+	return nil, derp.MisdirectedRequestError(location, "Invalid hostname", "hostname: "+hostname, maps.Keys(factory.domains))
+
+}
+
+// Session creates a new database session
+func (factory *Factory) Session(ctx context.Context, hostname string) (data.Session, error) {
+
+	const location = "server.factory.Session"
+
+	// Locate the server from the factory
+	server, err := factory.Server(hostname)
+
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Unable to retrieve database connection.", hostname)
+	}
+
+	// Create a database session with the server
+	session, err := server.Session(ctx)
+
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Unable to create database session for server", hostname)
+	}
+
+	// Return the session to the caller
+	return session, nil
 }
 
 /******************************************

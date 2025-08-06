@@ -66,7 +66,7 @@ func PostRegister(ctx *steranko.Context, factory *domain.Factory, session data.S
 	}
 
 	// Send Welcome Email that includes the user's registration token
-	if err := factory.Email().SendWelcome(txn); err != nil {
+	if err := factory.Email().SendWelcome(session, txn); err != nil {
 		return derp.Wrap(err, location, "Error sending welcome email")
 	}
 
@@ -124,7 +124,7 @@ func GetCompleteRegistration(ctx *steranko.Context, factory *domain.Factory, ses
 	}
 
 	// Try to sign-in with the new user's account
-	if err := factory.Steranko().SigninUser(ctx, &user); err != nil {
+	if err := factory.Steranko(session).SigninUser(ctx, &user); err != nil {
 		return derp.Wrap(err, location, "Error signing in user")
 	}
 

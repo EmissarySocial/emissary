@@ -1,8 +1,6 @@
 package queries
 
 import (
-	"context"
-
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
@@ -10,7 +8,7 @@ import (
 )
 
 // SearchActivityStreamActors full-text searches the ActivityStream cache for all Actors matching the search query.
-func SearchActivityStreamActors(ctx context.Context, collection data.Collection, text string) ([]model.ActorSummary, error) {
+func SearchActivityStreamActors(collection data.Collection, text string) ([]model.ActorSummary, error) {
 
 	const location = "queries.SearchActivityStreamActors"
 
@@ -38,5 +36,5 @@ func SearchActivityStreamActors(ctx context.Context, collection data.Collection,
 	}
 
 	// Execute the query and return
-	return Aggregate[model.ActorSummary](ctx, mongoCollection, pipeline)
+	return Aggregate[model.ActorSummary](collection.Context(), mongoCollection, pipeline)
 }

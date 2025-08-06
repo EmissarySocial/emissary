@@ -1,6 +1,8 @@
 package mastodon
 
 import (
+	"time"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
@@ -22,16 +24,25 @@ func DeleteProfile_Avatar(serverFactory *server.Factory) func(model.Authorizatio
 			return object.Account{}, derp.Wrap(err, location, "Invalid Domain Name", t.Host)
 		}
 
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return object.Account{}, derp.Wrap(err, location, "Unable to create session")
+		}
+
+		defer cancel()
+
 		// Load the current User
 		userService := factory.User()
 		user := model.NewUser()
 
-		if err := userService.LoadByID(auth.UserID, &user); err != nil {
+		if err := userService.LoadByID(session, auth.UserID, &user); err != nil {
 			return object.Account{}, derp.Wrap(err, location, "Error loading User", auth.UserID)
 		}
 
 		// Delete the user's Avatar
-		if err := userService.DeleteAvatar(&user, "Deleted via Mastodon API"); err != nil {
+		if err := userService.DeleteAvatar(session, &user, "Deleted via Mastodon API"); err != nil {
 			return object.Account{}, derp.Wrap(err, location, "Error deleting Avatar")
 		}
 
@@ -52,11 +63,20 @@ func DeleteProfile_Header(serverFactory *server.Factory) func(model.Authorizatio
 			return object.Account{}, derp.Wrap(err, location, "Invalid Domain Name", t.Host)
 		}
 
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return object.Account{}, derp.Wrap(err, location, "Unable to create session")
+		}
+
+		defer cancel()
+
 		// Load the current User
 		userService := factory.User()
 		user := model.NewUser()
 
-		if err := userService.LoadByID(auth.UserID, &user); err != nil {
+		if err := userService.LoadByID(session, auth.UserID, &user); err != nil {
 			return object.Account{}, derp.Wrap(err, location, "Error loading User", auth.UserID)
 		}
 
