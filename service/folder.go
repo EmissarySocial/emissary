@@ -71,10 +71,12 @@ func (service *Folder) Query(session data.Session, criteria exp.Expression, opti
 // Range returns an iterator containing all of the Folders that match the provided criteria
 func (service *Folder) Range(session data.Session, criteria exp.Expression, options ...option.Option) (iter.Seq[model.Folder], error) {
 
+	const location = "service.Folder.Range"
+
 	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.Folder.Range", "Error creating iterator", criteria)
+		return nil, derp.Wrap(err, location, "Error creating iterator", criteria)
 	}
 
 	return RangeFunc(iter, model.NewFolder), nil
@@ -88,8 +90,10 @@ func (service *Folder) List(session data.Session, criteria exp.Expression, optio
 // Load retrieves an Folder from the database
 func (service *Folder) Load(session data.Session, criteria exp.Expression, result *model.Folder) error {
 
+	const location = "service.Folder.Load"
+
 	if err := service.collection(session).Load(notDeleted(criteria), result); err != nil {
-		return derp.Wrap(err, "service.Folder.Load", "Error loading Folder", criteria)
+		return derp.Wrap(err, location, "Unable to load Folder", criteria)
 	}
 
 	return nil
@@ -98,14 +102,16 @@ func (service *Folder) Load(session data.Session, criteria exp.Expression, resul
 // Save adds/updates an Folder in the database
 func (service *Folder) Save(session data.Session, folder *model.Folder, note string) error {
 
+	const location = "service.Folder.Save"
+
 	// Validate the value before saving
 	if err := service.Schema().Validate(folder); err != nil {
-		return derp.Wrap(err, "service.Folder.Save", "Error validating Folder", folder)
+		return derp.Wrap(err, location, "Invalid Folder data", folder)
 	}
 
 	// Save the value to the database
 	if err := service.collection(session).Save(folder, note); err != nil {
-		return derp.Wrap(err, "service.Folder", "Error saving Folder", folder, note)
+		return derp.Wrap(err, location, "Unable to save Folder", folder, note)
 	}
 
 	return nil
@@ -114,13 +120,21 @@ func (service *Folder) Save(session data.Session, folder *model.Folder, note str
 // Delete removes an Folder from the database (virtual delete)
 func (service *Folder) Delete(session data.Session, folder *model.Folder, note string) error {
 
-	if err := service.inboxService.DeleteByFolder(session, folder.UserID, folder.FolderID); err != nil {
-		return derp.Wrap(err, "service.Folder", "Error deleting Folder activities", folder, note)
+	const location = "service.Folder.Delete"
+
+	// Delete the folder
+	if err := service.collection(session).Delete(folder, note); err != nil {
+		return derp.Wrap(err, location, "Unable to delete Folder", folder, note)
 	}
 
-	// Delete Folder record last.
-	if err := service.collection(session).Delete(folder, note); err != nil {
-		return derp.Wrap(err, "service.Folder", "Error deleting Folder", folder, note)
+	// Delete inbox items
+	if err := service.inboxService.DeleteByFolder(session, folder.UserID, folder.FolderID); err != nil {
+		return derp.Wrap(err, location, "Unable to delete related `Inbox Message` records.", folder, note)
+	}
+
+	// Delete any followings
+	if err := service.inboxService.DeleteByFolder(session, folder.UserID, folder.FolderID); err != nil {
+		return derp.Wrap(err, location, "Unable to delete related `Following` records.")
 	}
 
 	return nil
@@ -197,12 +211,12 @@ func (service *Folder) DeleteByUserID(session data.Session, userID primitive.Obj
 	rangeFunc, err := service.RangeByUserID(session, userID)
 
 	if err != nil {
-		return derp.Wrap(err, "service.Folder.DeleteByUserID", "Error listing folders", userID)
+		return derp.Wrap(err, "service.Folder.DeleteByUserID", "Unable to list folders", userID)
 	}
 
 	for folder := range rangeFunc {
 		if err := service.Delete(session, &folder, comment); err != nil {
-			return derp.Wrap(err, "service.Folder.DeleteByUserID", "Error deleting folder", folder)
+			return derp.Wrap(err, "service.Folder.DeleteByUserID", "Unable to delete folder", folder)
 		}
 	}
 
@@ -254,9 +268,11 @@ func (service *Folder) LoadByLabel(session data.Session, userID primitive.Object
  * Other Behaviors
  ******************************************/
 
-func (service *Folder) ReCalculateUnreadCountFromFolder(session data.Session, userID primitive.ObjectID, folderID primitive.ObjectID) error {
+// CalculateUnreadCount counts the number of items in a folder that were created AFTER the provided minRank,
+// then updates the folder's "unreadCount" and "readDate" fields
+func (service *Folder) CalculateUnreadCount(session data.Session, userID primitive.ObjectID, folderID primitive.ObjectID) error {
 
-	const location = "service.Folder.ReCalculateUnreadCountFromFolder"
+	const location = "service.Folder.CalculateUnreadCount"
 
 	if userID.IsZero() {
 		return derp.BadRequestError(location, "UserID cannot be empty", userID)
@@ -266,40 +282,16 @@ func (service *Folder) ReCalculateUnreadCountFromFolder(session data.Session, us
 		return derp.BadRequestError(location, "FolderID cannot be empty", folderID)
 	}
 
-	// Try to load the folder
-	folder := model.NewFolder()
-	if err := service.LoadByID(session, userID, folderID, &folder); err != nil {
-		return derp.Wrap(err, location, "Unable to load Folder")
-	}
-
-	// Recalculate unread counts
-	if err := service.CalculateUnreadCount(session, userID, folderID); err != nil {
-		return derp.Wrap(err, location, "Unable to update `Unread` count")
-	}
-
-	return nil
-}
-
-// CalculateUnreadCount counts the number of items in a folder that were created AFTER the provided minRank,
-// then updates the folder's "unreadCount" and "readDate" fields
-func (service *Folder) CalculateUnreadCount(session data.Session, userID primitive.ObjectID, folderID primitive.ObjectID) error {
-
 	unreadCount, err := service.inboxService.CountUnreadMessages(session, userID, folderID)
 
 	if err != nil {
-		return derp.Wrap(err, "service.Folder.CalculateUnreadCount", "Error counting unread messages", userID, folderID)
+		return derp.Wrap(err, location, "Unable to count unread messages", userID, folderID)
 	}
-
-	return service.SetUnreadCount(session, userID, folderID, unreadCount)
-}
-
-// SetUnreadCount uses an optimized query to update the the "readDate" and "unreadCount" of a particular folder
-func (service *Folder) SetUnreadCount(session data.Session, userID primitive.ObjectID, folderID primitive.ObjectID, unreadCount int) error {
 
 	collection := service.collection(session)
 
 	if err := queries.FolderSetUnreadCount(collection, userID, folderID, unreadCount); err != nil {
-		return derp.Wrap(err, "service.Folder", "Error updating folder read date", userID, folderID)
+		return derp.Wrap(err, "service.Folder", "Unable to update folder read date", userID, folderID)
 	}
 
 	return nil

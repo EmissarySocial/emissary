@@ -106,7 +106,7 @@ func (service *Following) connect_LoadMessages(session data.Session, following *
 	}
 
 	// Recalculate Folder unread counts
-	if err := service.folderService.ReCalculateUnreadCountFromFolder(session, following.UserID, following.FolderID); err != nil {
+	if err := service.folderService.CalculateUnreadCount(session, following.UserID, following.FolderID); err != nil {
 		derp.Report(derp.Wrap(err, location, "Unable to recalculate unread count"))
 	}
 }

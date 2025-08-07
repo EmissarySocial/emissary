@@ -370,8 +370,8 @@ func (service *Inbox) MarkRead(session data.Session, message *model.Message) err
 	}
 
 	// Recalculate statistics
-	if err := service.recalculateUnreadCounts(session, message); err != nil {
-		return derp.Wrap(err, location, "Unable to recalculate unread counts")
+	if err := service.folderService.CalculateUnreadCount(session, message.UserID, message.FolderID); err != nil {
+		return derp.Wrap(err, location, "Unable to set unread count")
 	}
 
 	// Lo hicimos!
@@ -394,8 +394,8 @@ func (service *Inbox) MarkUnread(session data.Session, message *model.Message) e
 	}
 
 	// Recalculate statistics
-	if err := service.recalculateUnreadCounts(session, message); err != nil {
-		return derp.Wrap(err, location, "Unable to recalculate unread counts")
+	if err := service.folderService.CalculateUnreadCount(session, message.UserID, message.FolderID); err != nil {
+		return derp.Wrap(err, location, "Unable to set unread count")
 	}
 
 	// Success
@@ -466,26 +466,6 @@ func (service *Inbox) setResponse(session data.Session, userID primitive.ObjectI
 	}
 
 	// Silence is GoLdEN.
-	return nil
-}
-
-func (service *Inbox) recalculateUnreadCounts(session data.Session, message *model.Message) error {
-
-	const location = "service.Inbox.recalculateUnreadCounts"
-
-	// Recalculate the "unread" count on the corresponding folder
-	unreadCount, err := service.CountUnreadMessages(session, message.UserID, message.FolderID)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Unable to count unread messages")
-	}
-
-	// Update the "unread" count for the Folder
-	if err := service.folderService.SetUnreadCount(session, message.UserID, message.FolderID, unreadCount); err != nil {
-		return derp.Wrap(err, location, "Unable to set unread count")
-	}
-
-	// Lo hicimos! we did it.
 	return nil
 }
 

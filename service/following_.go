@@ -214,7 +214,7 @@ func (service *Following) Delete(session data.Session, following *model.Followin
 	}
 
 	// Recalculate the unread count for this folder
-	if err := service.folderService.ReCalculateUnreadCountFromFolder(session, following.UserID, following.FolderID); err != nil {
+	if err := service.folderService.CalculateUnreadCount(session, following.UserID, following.FolderID); err != nil {
 		return derp.Wrap(err, location, "Unable to calculate Unread count")
 	}
 
