@@ -90,6 +90,7 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 			return Halt().WithError(derp.Wrap(err, location, "Error reading file from multi-part header", fileHeader))
 		}
 
+		//nolint:errcheck
 		defer source.Close()
 
 		// Create a new Attachment object

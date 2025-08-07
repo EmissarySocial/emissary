@@ -38,7 +38,5 @@ func (step StepSetHeader) setHeader(builder Builder) PipelineBehavior {
 		return Halt().WithError(derp.Wrap(err, "build.StepSetHeader.Post", "Error executing template", step.Value))
 	}
 
-	builder.response().Header().Set(step.HeaderName, value.String())
-
-	return nil
+	return Continue().WithHeader(step.HeaderName, value.String())
 }
