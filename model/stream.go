@@ -291,7 +291,7 @@ func (stream Stream) ActivityPubFollowersURL() string {
 }
 
 func (stream Stream) ActivityPubAnnouncedURL() string {
-	return stream.URL + "/pub/announced"
+	return stream.URL + "/pub/shared"
 }
 
 func (stream Stream) ActivityPubType() string {
