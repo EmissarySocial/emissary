@@ -1,14 +1,6 @@
 package upgrades
 
-import (
-	"context"
-
-	"github.com/benpate/derp"
-	"github.com/rs/zerolog/log"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-)
+/* REMOVED IN FAVOR OF INDEX SYNC FUNCTION
 
 // MakeIndex is a pretty interface to creating a standard index in MongoDB
 func MakeIndex(db *mongo.Database, collectionName string, indexName string, keyNames ...string) error {
@@ -73,3 +65,4 @@ func IndexExists(indexes mongo.IndexView, indexName string) (bool, error) {
 	// No match found
 	return false, nil
 }
+*/

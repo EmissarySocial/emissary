@@ -15,7 +15,7 @@ func Version19(ctx context.Context, session *mongo.Database) error {
 
 	fmt.Println("... Version 19")
 
-	ForEachRecord(session.Collection("Outbox"), func(record mapof.Any) error {
+	err := ForEachRecord(session.Collection("Outbox"), func(record mapof.Any) error {
 
 		if parentID, exists := record["parentId"]; exists {
 			record["actorId"] = parentID
@@ -42,6 +42,10 @@ func Version19(ctx context.Context, session *mongo.Database) error {
 		return nil
 	})
 
+	if err != nil {
+		return err
+	}
+
 	// Update all User Outbox records
 	{
 		cursor, err := session.Collection("User").Find(ctx, mapof.Any{"deleteDate": 0})
@@ -56,7 +60,7 @@ func Version19(ctx context.Context, session *mongo.Database) error {
 				return err
 			}
 
-			session.Collection("Outbox").UpdateMany(
+			_, err := session.Collection("Outbox").UpdateMany(
 				ctx,
 				bson.M{
 					"actorType": "User",
@@ -68,6 +72,10 @@ func Version19(ctx context.Context, session *mongo.Database) error {
 					},
 				},
 			)
+
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -85,7 +93,7 @@ func Version19(ctx context.Context, session *mongo.Database) error {
 				return err
 			}
 
-			session.Collection("Outbox").UpdateMany(
+			_, err := session.Collection("Outbox").UpdateMany(
 				ctx,
 				bson.M{
 					"actorType": "Stream",
@@ -97,6 +105,10 @@ func Version19(ctx context.Context, session *mongo.Database) error {
 					},
 				},
 			)
+
+			if err != nil {
+				return err
+			}
 		}
 	}
 
