@@ -43,6 +43,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "add":
 		return NewAddModelObject(stepInfo)
 
+	case "add-event":
+		return NewAddEvent(stepInfo)
+
 	case "add-stream":
 		return NewAddStream(stepInfo)
 
