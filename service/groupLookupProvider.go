@@ -13,9 +13,10 @@ type GroupLookupProvider struct {
 	session      data.Session
 }
 
-func NewGroupLookupProvider(groupService *Group) GroupLookupProvider {
+func NewGroupLookupProvider(session data.Session, groupService *Group) GroupLookupProvider {
 	return GroupLookupProvider{
 		groupService: groupService,
+		session:      session,
 	}
 }
 

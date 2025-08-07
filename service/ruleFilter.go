@@ -1,6 +1,8 @@
 package service
 
 import (
+	"time"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
@@ -83,12 +85,25 @@ func (filter *RuleFilter) Disallow(session data.Session, document *streams.Docum
 // Channel returns a channel of all documents that are allowed by User/Domain filters.
 // Documents may be modified by filters in the process, for instance, to add content warning labels.
 // Deprecated: this should be removed in favor of range function iterators.
-func (filter *RuleFilter) Channel(session data.Session, ch <-chan streams.Document) <-chan streams.Document {
+func (filter *RuleFilter) Channel(ch <-chan streams.Document) <-chan streams.Document {
 
+	const location = "service.RuleFilter.Channel"
 	result := make(chan streams.Document)
 
+	// TODO: CRITICAL: Make thread-safe session here...
+
 	go func() {
+
 		defer close(result)
+
+		session, cancel, err := filter.ruleService.factory.Session(time.Minute)
+
+		if err != nil {
+			derp.Report(derp.Wrap(err, location, "Unable to connect to database"))
+			return
+		}
+
+		defer cancel()
 
 		for document := range ch {
 			if filter.Allow(session, &document) {

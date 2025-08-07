@@ -1,6 +1,8 @@
 package service
 
 import (
+	"time"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
@@ -15,12 +17,15 @@ import (
 
 // Webhook service sends outbound webhooks
 type Webhook struct {
-	queue *queue.Queue
+	factory *Factory
+	queue   *queue.Queue
 }
 
 // NewWebhook returns a new instance of the Webhook service
-func NewWebhook() Webhook {
-	return Webhook{}
+func NewWebhook(factory *Factory) Webhook {
+	return Webhook{
+		factory: factory,
+	}
 }
 
 /******************************************
@@ -199,11 +204,25 @@ func (service *Webhook) QueryByEvent(session data.Session, event string) ([]mode
  ******************************************/
 
 // Send delivers the webhook to all the external webhook URLs that are listening to the given event
-func (service *Webhook) Send(session data.Session, getter model.WebhookDataGetter, events ...string) {
+func (service *Webhook) Send(getter model.WebhookDataGetter, events ...string) {
 
 	const location = "service.Webhook.Send"
 
+	if len(events) == 0 {
+		return
+	}
+
 	go func() {
+
+		// Create a new (thread-safe) database session
+		session, cancel, err := service.factory.Session(time.Minute)
+
+		if err != nil {
+			derp.Report(derp.Wrap(err, location, "Unable to connect to database"))
+			return
+		}
+
+		defer cancel()
 
 		for _, event := range events {
 

@@ -35,7 +35,7 @@ func (service *Stream) UnPublish(session data.Session, user *model.User, stream 
 		}
 
 		// Send stream:publish:undo Webhooks
-		service.webhookService.Send(session, stream, model.WebhookEventStreamPublishUndo)
+		service.webhookService.Send(stream, model.WebhookEventStreamPublishUndo)
 
 		// Send syndication:undo messages to all targets
 		if err := service.sendSyndicationMessages(stream, nil, nil, stream.Syndication.Values); err != nil {

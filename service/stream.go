@@ -297,17 +297,16 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 	}
 
 	// Send stream:create and stream:update Webhooks
-	if wasNew {
-		service.webhookService.Send(session, stream, model.WebhookEventStreamCreate)
-	} else {
-		service.webhookService.Send(session, stream, model.WebhookEventStreamUpdate)
-	}
+	eventName := iif(wasNew, model.WebhookEventStreamCreate, model.WebhookEventStreamUpdate)
+	service.webhookService.Send(stream, eventName)
 
-	// NON-BLOCKING: Notify other processes on this server that the stream has been updated
-	go func() {
-		service.sseUpdateChannel <- stream.StreamID
-		service.sseUpdateChannel <- stream.ParentID
-	}()
+	/*
+		// NON-BLOCKING: Notify other processes on this server that the stream has been updated
+		go func() {
+			service.sseUpdateChannel <- stream.StreamID
+			service.sseUpdateChannel <- stream.ParentID
+		}()
+	*/
 
 	// One milisecond delay prevents overlapping stream.CreateDates.  Deal with it.
 	// TODO: There has to be a better way than this...
@@ -326,41 +325,39 @@ func (service *Stream) Delete(session data.Session, stream *model.Stream, note s
 		return derp.Wrap(err, location, "Unable to delete Stream from database", stream, note)
 	}
 
-	// Delete related records -- this can happen in the background
+	// Send Webhooks (if configured)
+	service.webhookService.Send(stream, model.WebhookEventStreamDelete)
+
+	if stream.IsPublished() {
+		service.webhookService.Send(stream, model.WebhookEventStreamPublishUndo)
+
+		if err := service.sendSyndicationMessages(stream, nil, nil, stream.Syndication.Values); err != nil {
+			derp.Report(derp.Wrap(err, location, "Unable to send syndication messages", stream))
+		}
+	}
+
+	// RULE: Delete all related Children
+	if err := service.DeleteByParent(session, stream.StreamID, note); err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to delete child streams", stream, note))
+	}
+
+	// RULE: Delete all related Attachments
+	if err := service.attachmentService.DeleteAll(session, model.AttachmentObjectTypeStream, stream.StreamID, note); err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to delete attachments", stream, note))
+	}
+
+	// RULE: Delete all related Drafts
+	if err := service.draftService.Delete(session, stream, note); err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to delete drafts", stream, note))
+	}
+
+	// RULE: Delete Outbox Messages
+	if err := service.outboxService.DeleteByParentID(session, model.FollowerTypeStream, stream.StreamID); err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to delete outbox messages", stream, note))
+	}
+
+	// NON-BLOCKING: Notify other processes on this server that the stream has been updated
 	go func() {
-
-		// Send Webhooks (if configured)
-		service.webhookService.Send(session, stream, model.WebhookEventStreamDelete)
-
-		if stream.IsPublished() {
-			service.webhookService.Send(session, stream, model.WebhookEventStreamPublishUndo)
-
-			if err := service.sendSyndicationMessages(stream, nil, nil, stream.Syndication.Values); err != nil {
-				derp.Report(derp.Wrap(err, location, "Unable to send syndication messages", stream))
-			}
-		}
-
-		// RULE: Delete all related Children
-		if err := service.DeleteByParent(session, stream.StreamID, note); err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to delete child streams", stream, note))
-		}
-
-		// RULE: Delete all related Attachments
-		if err := service.attachmentService.DeleteAll(session, model.AttachmentObjectTypeStream, stream.StreamID, note); err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to delete attachments", stream, note))
-		}
-
-		// RULE: Delete all related Drafts
-		if err := service.draftService.Delete(session, stream, note); err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to delete drafts", stream, note))
-		}
-
-		// RULE: Delete Outbox Messages
-		if err := service.outboxService.DeleteByParentID(session, model.FollowerTypeStream, stream.StreamID); err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to delete outbox messages", stream, note))
-		}
-
-		// NON-BLOCKING: Notify other processes on this server that the stream has been updated
 		service.sseUpdateChannel <- stream.ParentID
 	}()
 
@@ -834,11 +831,21 @@ func (service *Stream) Shuffle(session data.Session) error {
 }
 
 // SetAttributedTo assigns a User to the "attributedTo" field of each Stream
-func (service *Stream) SetAttributedTo(session data.Session, user *model.User) {
+func (service *Stream) SetAttributedTo(user *model.User) {
 
 	const location = "service.Stream.SetAttributedTo"
 
+	// This is called asynchronously, so create a new database session
+	session, cancel, err := service.factory.Session(time.Minute)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to create database session"))
+	}
+
+	defer cancel()
+
 	collection := service.collection(session)
+
 	if err := queries.SetAttributedTo(session.Context(), collection, user.PersonLink()); err != nil {
 		derp.Report(derp.Wrap(err, location, "Error setting attributedTo"))
 	}

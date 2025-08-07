@@ -646,7 +646,7 @@ func (w Stream) RepliesBefore(dateString string, maxRows int) sliceof.Object[str
 	// Filter results based on blocks
 	ruleService := w._factory.Rule()
 	ruleFilter := ruleService.Filter(w.AuthenticatedID())
-	filteredResult := ruleFilter.Channel(w._session, replies)
+	filteredResult := ruleFilter.Channel(replies)
 
 	// Limit to `maxRows` records
 	limitedFilter := channel.Limit(maxRows, filteredResult, done)
@@ -667,7 +667,7 @@ func (w Stream) RepliesAfter(dateString string, maxRows int) sliceof.Object[stre
 	// Filter results based on blocks
 	ruleService := w._factory.Rule()
 	ruleFilter := ruleService.Filter(w.AuthenticatedID())
-	filteredResult := ruleFilter.Channel(w._session, replies)
+	filteredResult := ruleFilter.Channel(replies)
 
 	// Limit to `maxRows` records
 	limitedFilter := channel.Limit(maxRows, filteredResult, done)
@@ -689,7 +689,7 @@ func (w Stream) AnnouncesBefore(dateString string, maxRows int) sliceof.Object[s
 	// Filter results based on blocks
 	ruleService := w._factory.Rule()
 	ruleFilter := ruleService.Filter(w.AuthenticatedID())
-	filteredResult := ruleFilter.Channel(w._session, announces)
+	filteredResult := ruleFilter.Channel(announces)
 
 	// Limit to `maxRows` records
 	limitedFilter := channel.Limit(maxRows, filteredResult, done)
@@ -711,7 +711,7 @@ func (w Stream) LikesBefore(dateString string, maxRows int) sliceof.Object[strea
 	// Filter results based on blocks
 	ruleService := w._factory.Rule()
 	ruleFilter := ruleService.Filter(w.AuthenticatedID())
-	filteredResult := ruleFilter.Channel(w._session, likes)
+	filteredResult := ruleFilter.Channel(likes)
 
 	// Limit to `maxRows` records
 	limitedFilter := channel.Limit(maxRows, filteredResult, done)

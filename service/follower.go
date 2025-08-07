@@ -129,7 +129,7 @@ func (service *Follower) Save(session data.Session, follower *model.Follower, no
 	}
 
 	// Recalculate the follower count for this user
-	go service.userService.CalcFollowerCount(session, follower.ParentID)
+	service.userService.CalcFollowerCount(session, follower.ParentID)
 
 	return nil
 }

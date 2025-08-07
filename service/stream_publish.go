@@ -53,7 +53,7 @@ func (service *Stream) Publish(session data.Session, user *model.User, stream *m
 	}
 
 	// Send stream:publish Webhooks
-	service.webhookService.Send(session, stream, model.WebhookEventStreamPublish)
+	service.webhookService.Send(stream, model.WebhookEventStreamPublish)
 
 	// Send syndication messages to all targets
 	switch {

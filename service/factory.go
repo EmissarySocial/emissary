@@ -26,7 +26,6 @@ import (
 	"github.com/spf13/afero"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/writeconcern"
 )
 
 // Factory knows how to create an populate all services
@@ -159,7 +158,7 @@ func NewFactory(serverFactory ServerFactory, commonDatabase data.Server, domain 
 	factory.productService = NewProduct()
 	factory.providerService = NewProvider()
 	factory.responseService = NewResponse()
-	factory.ruleService = NewRule()
+	factory.ruleService = NewRule(&factory)
 	factory.searchDomainService = NewSearchDomain(&factory)
 	factory.searchNotifierService = NewSearchNotifier()
 	factory.searchQueryService = NewSearchQuery(&factory)
@@ -170,7 +169,7 @@ func NewFactory(serverFactory ServerFactory, commonDatabase data.Server, domain 
 	factory.streamDraftService = NewStreamDraft()
 	factory.privilegeService = NewPrivilege()
 	factory.userService = NewUser(&factory)
-	factory.webhookService = NewWebhook()
+	factory.webhookService = NewWebhook(&factory)
 
 	// Refresh the configuration with values that (may) change during the lifetime of the factory
 	if err := factory.Refresh(domain, attachmentOriginals, attachmentCache); err != nil {
@@ -200,11 +199,14 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 		// Fall through means we need to connect to the database
 
 		// Set Read/Write concerns to Majority to avoid stale reads/writes
-		journal := true
-		option := writeconcern.Majority()
-		option.Journal = &journal
-		option.WTimeout = 1 * time.Second
-		opt := options.Client().SetWriteConcern(option)
+		/*
+			journal := true
+			option := writeconcern.Majority()
+			option.Journal = &journal
+			option.WTimeout = 1 * time.Second
+			opt := options.Client().SetWriteConcern(option)
+		*/
+		opt := options.Client()
 
 		// Create a new server connection
 		server, err := mongodb.New(domain.ConnectString, domain.DatabaseName, opt)

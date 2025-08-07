@@ -575,7 +575,7 @@ func (w Inbox) RepliesBefore(url string, dateString string, maxRows int) sliceof
 	// Filter replies based on rules
 	ruleService := w._factory.Rule()
 	ruleFilter := ruleService.Filter(w.AuthenticatedID())
-	filteredReplies := ruleFilter.Channel(w._session, replies)
+	filteredReplies := ruleFilter.Channel(replies)
 
 	// Limit to maximum number of replies
 	// limitedReplies := channel.Limit(maxRows, filteredReplies, done)
@@ -598,7 +598,7 @@ func (w Inbox) RepliesAfter(url string, dateString string, maxRows int) sliceof.
 	// Filter replies based on rules
 	ruleService := w._factory.Rule()
 	ruleFilter := ruleService.Filter(w.AuthenticatedID())
-	filteredReplies := ruleFilter.Channel(w._session, replies)
+	filteredReplies := ruleFilter.Channel(replies)
 
 	// Limit to maximum number of replies
 	limitedReplies := channel.Limit(maxRows, filteredReplies, done)
@@ -620,7 +620,7 @@ func (w Inbox) AnnouncesBefore(url string, dateString string, maxRows int) slice
 	// Filter replies based on rules
 	ruleService := w._factory.Rule()
 	ruleFilter := ruleService.Filter(w.AuthenticatedID())
-	filteredAnnounces := ruleFilter.Channel(w._session, announces)
+	filteredAnnounces := ruleFilter.Channel(announces)
 
 	// Limit to maximum number of replies
 	limitedAnnounces := channel.Limit(maxRows, filteredAnnounces, done)
@@ -642,7 +642,7 @@ func (w Inbox) LikesBefore(url string, dateString string, maxRows int) sliceof.O
 	// Filter replies based on rules
 	ruleService := w._factory.Rule()
 	ruleFilter := ruleService.Filter(w.AuthenticatedID())
-	filteredLikes := ruleFilter.Channel(w._session, announces)
+	filteredLikes := ruleFilter.Channel(announces)
 
 	// Limit to maximum number of replies
 	limitedLikes := channel.Limit(maxRows, filteredLikes, done)

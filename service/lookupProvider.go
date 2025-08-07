@@ -64,7 +64,7 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 		return form.NewReadOnlyLookupGroup(dataset.Icons()...)
 
 	case "groups":
-		return NewGroupLookupProvider(service.factory.Group())
+		return NewGroupLookupProvider(service.session, service.factory.Group())
 
 	case "inbox-templates":
 		return form.ReadOnlyLookupGroup(service.factory.Template().ListByTemplateRole("user-inbox"))

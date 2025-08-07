@@ -112,13 +112,9 @@ func (service *OAuthClient) Delete(session data.Session, app *model.OAuthClient,
 	}
 
 	// Delete related records -- this can happen in the background
-	go func() {
-
-		// RULE: Delete all related Attachments
-		if err := service.oauthUserTokenService.DeleteByClient(session, app.ClientID, note); err != nil {
-			derp.Report(derp.Wrap(err, location, "Error deleting attachments", app, note))
-		}
-	}()
+	if err := service.oauthUserTokenService.DeleteByClient(session, app.ClientID, note); err != nil {
+		return derp.Wrap(err, location, "Error deleting attachments", app, note)
+	}
 
 	// Bueno!!
 	return nil

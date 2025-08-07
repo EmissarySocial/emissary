@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"iter"
 	"time"
 
@@ -165,17 +166,37 @@ func (service *Following) Save(session data.Session, following *model.Following,
 	}
 
 	// RULE: Update messages if requested by the UX
-	go service.inboxService.UpdateInboxFolders(session, following.UserID, following.FollowingID, following.FolderID)
+	if err := service.inboxService.UpdateInboxFolders(session, following.UserID, following.FollowingID, following.FolderID); err != nil {
+		return derp.Wrap(err, location, "Unable to update Inbox Folders")
+	}
 
 	// Recalculate the follower count for this user
-	go service.userService.CalcFollowingCount(session, following.UserID)
+	if err := service.userService.CalcFollowingCount(session, following.UserID); err != nil {
+		return derp.Wrap(err, location, "Unable to count `Following` records")
+	}
 
-	// Connect to external services and discover the best update method.
-	// This will also update the status again, soon.
-	go service.RefreshAndConnect(session, *following)
+	// Run follow-on tasks asynchronously (which means we don't get to keep this transaction session)
+	go service.save_async(*following)
 
 	// Win!
 	return nil
+}
+
+func (service *Following) save_async(following model.Following) {
+
+	const location = "service.Following.save_async"
+
+	ctx := context.Background()
+
+	// Create a new Database transaction session
+	service.factory.Server().WithTransaction(ctx, func(session data.Session) (any, error) {
+
+		// Connect to external services and discover the best update method.
+		// This will also update the status again, soon.
+		service.RefreshAndConnect(session, following)
+
+		return nil, nil
+	})
 }
 
 // Delete removes an Following from the database (virtual delete)
@@ -188,10 +209,14 @@ func (service *Following) Delete(session data.Session, following *model.Followin
 	}
 
 	// Recalculate the follower count for this user
-	go service.userService.CalcFollowingCount(session, following.UserID)
+	if err := service.userService.CalcFollowingCount(session, following.UserID); err != nil {
+		return derp.Wrap(err, location, "Unable to calculate Following count")
+	}
 
 	// Recalculate the unread count for this folder
-	go derp.Report(service.folderService.ReCalculateUnreadCountFromFolder(session, following.UserID, following.FolderID))
+	if err := service.folderService.ReCalculateUnreadCountFromFolder(session, following.UserID, following.FolderID); err != nil {
+		return derp.Wrap(err, location, "Unable to calculate Unread count")
+	}
 
 	return nil
 }

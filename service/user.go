@@ -257,15 +257,12 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 	// Denormalize User information into the Streams they own.
 	go func() {
 		service.sseUpdateChannel <- user.UserID
-		service.streamService.SetAttributedTo(session, user)
+		service.streamService.SetAttributedTo(user)
 	}()
 
 	// Send Webhooks (if configured)
-	if isNew {
-		service.webhookService.Send(session, user, model.WebhookEventUserCreate)
-	} else {
-		service.webhookService.Send(session, user, model.WebhookEventUserUpdate)
-	}
+	eventName := iif(isNew, model.WebhookEventUserCreate, model.WebhookEventUserUpdate)
+	service.webhookService.Send(user, eventName)
 
 	// Success!
 	return nil
@@ -329,7 +326,7 @@ func (service *User) Delete(session data.Session, user *model.User, note string)
 	}
 
 	// Send user:delete webhooks
-	service.webhookService.Send(session, user, model.WebhookEventUserDelete)
+	service.webhookService.Send(user, model.WebhookEventUserDelete)
 
 	return nil
 }
@@ -623,24 +620,25 @@ func (service *User) UsernameExists(session data.Session, userID primitive.Objec
 	return err == nil
 }
 
-func (service *User) CalcFollowerCount(session data.Session, userID primitive.ObjectID) {
+func (service *User) CalcFollowerCount(session data.Session, userID primitive.ObjectID) error {
 
 	const location = "service.User.CalcFollowerCount"
 
 	// RULE: UserID cannot be zero
 	if userID.IsZero() {
-		derp.Report(derp.BadRequestError(location, "UserID cannot be zero", userID))
-		return
+		return derp.BadRequestError(location, "UserID cannot be zero", userID)
 	}
 
 	userCollection := service.collection(session)
 	followersCollection := service.followerCollection(session)
 	if err := queries.SetFollowersCount(userCollection, followersCollection, userID); err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to set follower count", userID))
+		return derp.Wrap(err, location, "Unable to count `Follower` records", userID)
 	}
+
+	return nil
 }
 
-func (service *User) CalcFollowingCount(session data.Session, userID primitive.ObjectID) {
+func (service *User) CalcFollowingCount(session data.Session, userID primitive.ObjectID) error {
 
 	const location = "service.User.CalcFollowingCount"
 
@@ -648,26 +646,29 @@ func (service *User) CalcFollowingCount(session data.Session, userID primitive.O
 	followingCollection := service.followingCollection(session)
 
 	if err := queries.SetFollowingCount(userCollection, followingCollection, userID); err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to set following count", userID))
+		return derp.Wrap(err, location, "Unable to count `Following` records", userID)
 	}
+
+	return nil
 }
 
-func (service *User) CalcRuleCount(session data.Session, userID primitive.ObjectID) {
+func (service *User) CalcRuleCount(session data.Session, userID primitive.ObjectID) error {
 
 	const location = "service.User.CalcRuleCount"
 
 	// RULE: UserID cannot be zero
 	if userID.IsZero() {
-		derp.Report(derp.BadRequestError(location, "UserID cannot be zero", userID))
-		return
+		return derp.BadRequestError(location, "UserID cannot be zero", userID)
 	}
 
 	userCollection := service.collection(session)
 	rulesCollection := service.ruleCollection(session)
 
 	if err := queries.SetRuleCount(userCollection, rulesCollection, userID); err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to set rule count", userID))
+		return derp.Wrap(err, location, "Unable to count rules", userID)
 	}
+
+	return nil
 }
 
 func (service *User) SetOwner(session data.Session, owner config.Owner) error {

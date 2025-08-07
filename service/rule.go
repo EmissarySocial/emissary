@@ -18,6 +18,7 @@ import (
 
 // Rule defines a service that manages all content rules created and imported by Users.
 type Rule struct {
+	factory       *Factory
 	outboxService *Outbox
 	userService   *User
 	host          string
@@ -26,8 +27,10 @@ type Rule struct {
 }
 
 // NewRule returns a fully initialized Rule service
-func NewRule() Rule {
-	return Rule{}
+func NewRule(factory *Factory) Rule {
+	return Rule{
+		factory: factory,
+	}
 }
 
 /******************************************
@@ -156,7 +159,9 @@ func (service *Rule) Save(session data.Session, rule *model.Rule, note string) e
 	}
 
 	// Recalculate the rule count for this user
-	go service.userService.CalcRuleCount(session, rule.UserID)
+	if err := service.userService.CalcRuleCount(session, rule.UserID); err != nil {
+		return derp.Wrap(err, location, "Unable to calculate rule count")
+	}
 
 	return nil
 }
