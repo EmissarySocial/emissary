@@ -12,7 +12,7 @@ import (
 
 func User(ctx context.Context, database *mongo.Database) error {
 
-	log.Debug().Str("database", database.Name()).Str("collection", "User").Msg("COLLECTION:")
+	log.Trace().Str("database", database.Name()).Str("collection", "User").Msg("COLLECTION:")
 
 	return indexer.Sync(ctx, database.Collection("User"), indexer.IndexSet{
 

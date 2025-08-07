@@ -12,7 +12,7 @@ import (
 // Log synchronizes the Log collection in the SHARED DATABASE.
 func Log(ctx context.Context, database *mongo.Database) error {
 
-	log.Debug().Str("database", database.Name()).Str("collection", "Log").Msg("COLLECTION:")
+	log.Trace().Str("database", database.Name()).Str("collection", "Log").Msg("COLLECTION:")
 
 	return indexer.Sync(ctx, database.Collection("Log"), indexer.IndexSet{
 

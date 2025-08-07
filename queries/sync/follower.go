@@ -11,7 +11,7 @@ import (
 
 func Follower(ctx context.Context, database *mongo.Database) error {
 
-	log.Debug().Str("database", database.Name()).Str("collection", "Follower").Msg("COLLECTION:")
+	log.Trace().Str("database", database.Name()).Str("collection", "Follower").Msg("COLLECTION:")
 
 	return indexer.Sync(ctx, database.Collection("Follower"), indexer.IndexSet{
 

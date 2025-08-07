@@ -11,7 +11,7 @@ import (
 
 func MerchantAccount(ctx context.Context, database *mongo.Database) error {
 
-	log.Debug().Str("database", database.Name()).Str("collection", "MerchantAccount").Msg("COLLECTION:")
+	log.Trace().Str("database", database.Name()).Str("collection", "MerchantAccount").Msg("COLLECTION:")
 
 	return indexer.Sync(ctx, database.Collection("MerchantAccount"), indexer.IndexSet{
 

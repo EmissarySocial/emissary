@@ -13,7 +13,7 @@ import (
 // Document synchronizes the Document collection in the SHARED DATABASE.
 func Document(ctx context.Context, database *mongo.Database) error {
 
-	log.Debug().Str("database", database.Name()).Str("collection", "Document").Msg("COLLECTION:")
+	log.Trace().Str("database", database.Name()).Str("collection", "Document").Msg("COLLECTION:")
 
 	return indexer.Sync(ctx, database.Collection("Document"), indexer.IndexSet{
 

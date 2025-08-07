@@ -11,7 +11,7 @@ import (
 
 func Outbox(ctx context.Context, database *mongo.Database) error {
 
-	log.Debug().Str("database", database.Name()).Str("collection", "Outbox").Msg("COLLECTION:")
+	log.Trace().Str("database", database.Name()).Str("collection", "Outbox").Msg("COLLECTION:")
 
 	return indexer.Sync(ctx, database.Collection("Outbox"), indexer.IndexSet{
 

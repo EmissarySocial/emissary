@@ -12,7 +12,7 @@ import (
 // DigitalDome synchronizes the DigitalDome collection in the SHARED DATABASE.
 func DigitalDome(ctx context.Context, database *mongo.Database) error {
 
-	log.Debug().Str("database", database.Name()).Str("collection", "DigitalDome").Msg("COLLECTION:")
+	log.Trace().Str("database", database.Name()).Str("collection", "DigitalDome").Msg("COLLECTION:")
 
 	return indexer.Sync(ctx, database.Collection("DigitalDome"), indexer.IndexSet{
 

@@ -11,7 +11,7 @@ import (
 
 func EncryptionKey(ctx context.Context, database *mongo.Database) error {
 
-	log.Debug().Str("database", database.Name()).Str("collection", "EncryptionKey").Msg("COLLECTION:")
+	log.Trace().Str("database", database.Name()).Str("collection", "EncryptionKey").Msg("COLLECTION:")
 
 	return indexer.Sync(ctx, database.Collection("EncryptionKey"), indexer.IndexSet{
 

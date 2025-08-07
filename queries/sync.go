@@ -22,7 +22,7 @@ func SyncSharedIndexes(connectionString string, databaseName string) error {
 
 	session := client.Database(databaseName)
 
-	log.Debug().Msg("** BEGIN SYNCING SHARED INDEXES")
+	log.Trace().Msg("** BEGIN SYNCING SHARED INDEXES")
 
 	if err := sync.DigitalDome(ctx, session); err != nil {
 		derp.Report(err)
@@ -44,7 +44,7 @@ func SyncSharedIndexes(connectionString string, databaseName string) error {
 		derp.Report(err)
 	}
 
-	log.Debug().Msg("** DONE SYNCING SHARED INDEXES")
+	log.Trace().Msg("!! Finished syncing shared indexes")
 
 	return nil
 }
@@ -61,7 +61,7 @@ func SyncDomainIndexes(connectionString string, databaseName string) error {
 
 	session := client.Database(databaseName)
 
-	log.Debug().Msg("SYNC INDEXES FOR: " + databaseName)
+	log.Trace().Msg("Syncing indexes for: " + databaseName)
 
 	if err := sync.Annotation(ctx, session); err != nil {
 		derp.Report(err)
@@ -167,7 +167,7 @@ func SyncDomainIndexes(connectionString string, databaseName string) error {
 		derp.Report(err)
 	}
 
-	log.Debug().Msg("**** done syncing indexes for: " + databaseName)
+	log.Debug().Msg("Finished syncing indexes for: " + databaseName)
 
 	return nil
 }

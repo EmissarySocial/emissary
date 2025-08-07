@@ -12,7 +12,7 @@ import (
 
 func Rule(ctx context.Context, database *mongo.Database) error {
 
-	log.Debug().Str("database", database.Name()).Str("collection", "Rule").Msg("COLLECTION:")
+	log.Trace().Str("database", database.Name()).Str("collection", "Rule").Msg("COLLECTION:")
 
 	return indexer.Sync(ctx, database.Collection("Rule"), indexer.IndexSet{
 
