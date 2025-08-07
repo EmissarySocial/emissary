@@ -1,0 +1,32 @@
+# https://medium.com/workleap/the-only-local-mongodb-replica-set-with-docker-compose-guide-youll-ever-need-2f0b74dd8384
+# docker compose -f docker-compose-mongo.yml up -d
+
+name: mongodb_replicaset
+
+services:
+  server:
+    container_name: mongodb
+    image: mongo:latest
+    command: ["mongod", "--replSet", "rs0", "--port", "27017", "--bind_ip_all"]
+    ports:
+      - 27017:27017
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: echo "try { rs.status() } catch (err) { rs.initiate({_id:'rs0',members:[{_id:0,host:'host.docker.internal:27017'}]}) }" | mongosh --port 27017 --quiet
+      interval: 5s
+      timeout: 30s
+      start_period: 0s
+      start_interval: 1s
+      retries: 30      
+    networks:
+      - default
+    volumes:
+      - "mongo:/data/db"
+
+networks:
+  default:
+    driver: bridge
+
+volumes:
+  mongo:
