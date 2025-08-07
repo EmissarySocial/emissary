@@ -87,7 +87,7 @@ func main() {
 	commandLineArgs := config.GetCommandLineArgs()
 	configStorage := config.Load(&commandLineArgs)
 
-	factory := server.NewFactory(configStorage, embeddedFiles)
+	serverFactory := server.NewFactory(configStorage, embeddedFiles)
 
 	// Start and configure the Web server
 	e := echo.New()
@@ -102,10 +102,11 @@ func main() {
 	// TODO: MEDIUM: Implement Rate Limiter - https://echo.labstack.com/docs/middleware/rate-limiter
 	// TODO: LOW: Implement Timeout - https://echo.labstack.com/docs/middleware/timeout
 	// TODO: LOW: Implement GZip - https://echo.labstack.com/docs/middleware/gzip
+
 	e.Use(middleware.Recover())
 
 	// Wait for the first time the configuration is loaded
-	<-factory.Ready()
+	<-serverFactory.Ready()
 
 	if commandLineArgs.Setup {
 
@@ -113,21 +114,22 @@ func main() {
 		configOptions := commandLineArgs.ConfigOptions()
 
 		// Add routes for setup tool
-		makeSetupRoutes(factory, e)
+		makeSetupRoutes(serverFactory, e)
 
 		// When running the setup tool, wait a second, then open a browser window to the correct URL
-		openLocalhostBrowser(factory, configOptions...)
+		openLocalhostBrowser(serverFactory, configOptions...)
 
 		// Prepare HTTP (only) server using the new configuration
-		go startHTTP(factory, e, configOptions...)
+		go startHTTP(serverFactory, e, configOptions...)
 
 	} else {
+
 		// Add routes for standard web server
-		makeStandardRoutes(factory, e)
+		makeStandardRoutes(serverFactory, e)
 
 		// Prepare HTTP and HTTPS servers using the new configuration
-		go startHTTP(factory, e)
-		go startHTTPS(factory, e)
+		go startHTTP(serverFactory, e)
+		go startHTTPS(serverFactory, e)
 	}
 
 	// Listen to the OS SIGINT channel for an interrupt signal
@@ -276,7 +278,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/signin/reset", handler.WithFactory(factory, handler.PostResetPassword))
 	e.GET("/signin/reset-code", handler.WithFactory(factory, handler.GetResetCode))
 	e.POST("/signin/reset-code", handler.WithFactory(factory, handler.PostResetCode))
-	e.POST("/.masquerade", handler.WithFactory(factory, handler.PostMasquerade), mw.Owner)
+	e.POST("/.masquerade", handler.WithOwner(factory, handler.PostMasquerade))
 
 	// Domain Pages
 	e.GET("/.domain/attachments/:attachmentId", handler.WithFactory(factory, handler.GetDomainAttachment))
@@ -386,29 +388,29 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/:stream/pub/children", handler.WithFactory(factory, ap_stream.GetChildrenCollection))
 
 	// Domain Admin Pages
-	e.GET("/admin", handler.WithFactory(factory, handler.GetAdmin), mw.Owner)
-	e.GET("/admin/:param1", handler.WithFactory(factory, handler.GetAdmin), mw.Owner)
-	e.POST("/admin/:param1", handler.WithFactory(factory, handler.PostAdmin), mw.Owner)
-	e.GET("/admin/:param1/:param2", handler.WithFactory(factory, handler.GetAdmin), mw.Owner)
-	e.POST("/admin/:param1/:param2", handler.WithFactory(factory, handler.PostAdmin), mw.Owner)
-	e.GET("/admin/:param1/:param2/:param3", handler.WithFactory(factory, handler.GetAdmin), mw.Owner)
-	e.POST("/admin/:param1/:param2/:param3", handler.WithFactory(factory, handler.PostAdmin), mw.Owner)
-	e.POST("/admin/index-all-streams", handler.WithFactory(factory, handler.IndexAllStreams), mw.Owner)
-	e.POST("/admin/index-all-users", handler.WithFactory(factory, handler.IndexAllUsers), mw.Owner)
+	e.GET("/admin", handler.WithOwner(factory, handler.GetAdmin))
+	e.GET("/admin/:param1", handler.WithOwner(factory, handler.GetAdmin))
+	e.POST("/admin/:param1", handler.WithOwner(factory, handler.PostAdmin))
+	e.GET("/admin/:param1/:param2", handler.WithOwner(factory, handler.GetAdmin))
+	e.POST("/admin/:param1/:param2", handler.WithOwner(factory, handler.PostAdmin))
+	e.GET("/admin/:param1/:param2/:param3", handler.WithOwner(factory, handler.GetAdmin))
+	e.POST("/admin/:param1/:param2/:param3", handler.WithOwner(factory, handler.PostAdmin))
+	e.POST("/admin/index-all-streams", handler.WithOwner(factory, handler.IndexAllStreams))
+	e.POST("/admin/index-all-users", handler.WithOwner(factory, handler.IndexAllUsers))
 
 	// Startup Wizard
-	e.GET("/startup", handler.WithFactory(factory, handler.GetStartup), mw.Owner)
-	e.GET("/startup/:action", handler.WithFactory(factory, handler.GetStartup), mw.Owner)
-	e.POST("/startup", handler.WithFactory(factory, handler.PostStartup), mw.Owner)
+	e.GET("/startup", handler.WithOwner(factory, handler.GetStartup))
+	e.GET("/startup/:action", handler.WithOwner(factory, handler.GetStartup))
+	e.POST("/startup", handler.WithOwner(factory, handler.PostStartup))
 
 	// OAuth Client Connections
-	e.GET("/oauth/clients/:provider", handler.WithFactory(factory, handler.GetOAuth), mw.Owner)
-	e.GET("/oauth/clients/:provider/callback", handler.WithFactory(factory, handler.GetOAuthCallback), mw.AllowCSR, mw.Owner)
-	e.GET("/oauth/clients/redirect", handler.WithFactory(factory, handler.OAuthRedirect), mw.Owner)
+	e.GET("/oauth/clients/:provider", handler.WithOwner(factory, handler.GetOAuth))
+	e.GET("/oauth/clients/:provider/callback", handler.WithOwner(factory, handler.GetOAuthCallback), mw.AllowCSR)
+	e.GET("/oauth/clients/redirect", handler.WithOwner(factory, handler.OAuthRedirect))
 
 	// OAuth Server
-	e.GET("/oauth/authorize", handler.WithFactory(factory, handler.GetOAuthAuthorization), mw.Authenticated)
-	e.POST("/oauth/authorize", handler.WithFactory(factory, handler.PostOAuthAuthorization), mw.Authenticated)
+	e.GET("/oauth/authorize", handler.WithAuthenticatedUser(factory, handler.GetOAuthAuthorization))
+	e.POST("/oauth/authorize", handler.WithAuthenticatedUser(factory, handler.PostOAuthAuthorization))
 	e.POST("/oauth/token", handler.WithFactory(factory, handler.PostOAuthToken))
 	e.POST("/oauth/revoke", handler.WithFactory(factory, handler.PostOAuthRevoke))
 

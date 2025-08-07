@@ -15,7 +15,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func GetOAuthAuthorization(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
+func GetOAuthAuthorization(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.GetOAuthAuthorization"
 
@@ -43,7 +43,7 @@ func GetOAuthAuthorization(ctx *steranko.Context, factory *service.Factory, sess
 	return nil
 }
 
-func PostOAuthAuthorization(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
+func PostOAuthAuthorization(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.PostOAuthAuthorization"
 

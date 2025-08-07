@@ -1,11 +1,6 @@
 package middleware
 
-import (
-	"github.com/EmissarySocial/emissary/model"
-	"github.com/benpate/derp"
-	"github.com/benpate/steranko"
-	"github.com/labstack/echo/v4"
-)
+/* REMOVED BECAUSE MIDDLEWARE NO LONGER WORKS WITH STERANKO CONTEXTS
 
 // Owner middleware guarantees that the request is being performed by a website owner
 func Owner(next echo.HandlerFunc) echo.HandlerFunc {
@@ -36,10 +31,11 @@ func Owner(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 
 			// This should never happen
-			return derp.InternalError("middleware.Owner", "authorization.(*model.Authorization)", nil)
+			return derp.InternalError("middleware.Owner", "Authorization must be authorization.(*model.Authorization)")
 		}
 
 		// This should never happen
-		return derp.InternalError("middleware.Owner", "sterankoContext.Authorization", nil)
+		return derp.InternalError("middleware.Owner", "Context must be ctx.(*steranko.Context)")
 	}
 }
+*/

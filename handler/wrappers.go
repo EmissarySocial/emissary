@@ -276,6 +276,24 @@ func WithMerchantAccountJWT(serverFactory *server.Factory, fn WithFunc2[model.Me
 	})
 }
 
+func WithOwner(serverFactory *server.Factory, fn WithFunc0) echo.HandlerFunc {
+
+	const location = "handler.WithAdmin"
+
+	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
+
+		// Guarantee that the user is signed in
+		authorization := getAuthorization(ctx)
+
+		if !authorization.DomainOwner {
+			return derp.UnauthorizedError(location, "You must be an admin to perform this action")
+		}
+
+		// Call the continuation function
+		return fn(ctx, factory, session)
+	})
+}
+
 func WithPrivilege(serverFactory *server.Factory, fn WithFunc2[model.Identity, model.Privilege]) echo.HandlerFunc {
 
 	const location = "handler.WithPrivilege"

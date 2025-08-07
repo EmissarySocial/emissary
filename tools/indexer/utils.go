@@ -50,7 +50,6 @@ func compareModel(currentIndex mapof.Any, newIndex mongo.IndexModel) bool {
 	}
 
 	log.Trace().Msg("indexes do not match")
-	// spew.Dump(newIndex, newIndexMap, currentIndex)
 	return false
 }
 
@@ -149,7 +148,6 @@ func primitiveToMap(input any) mapof.Any {
 	}
 
 	log.Debug().Msg("primitiveToMap: Unrecognized input.. returning empty map.")
-	// spew.Dump(input)
 	return result
 }
 

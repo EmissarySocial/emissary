@@ -143,7 +143,6 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 	factory.workingDirectory = mediaserver.NewWorkingDirectory(os.TempDir(), 4*time.Minute, 10000)
 
 	go factory.start()
-
 	return &factory
 }
 
@@ -155,6 +154,25 @@ func (factory *Factory) start() {
 
 	// Read configuration files from the channel
 	for config := range factory.storage.Subscribe() {
+
+		if err := factory.refreshCommonDatabase(config.ActivityPubCache); err != nil {
+			derp.Report(derp.Wrap(err, "server.Factory.start", "WARNING: Could not refresh common database.  Important services (like queued tasks and ActivityPub caching) may not function correctly.", config.ActivityPubCache))
+		}
+
+		if factory.commonDatabase == nil {
+			errorMessage := "Halting. Common database not properly defined in configuration file."
+			derp.Report(derp.InternalError("server.factory.start", errorMessage))
+			log.Error().Msg(errorMessage)
+			os.Exit(1)
+		}
+
+		server := mongodb.NewServer(factory.commonDatabase)
+		session, err := server.Session(context.Background())
+
+		if err != nil {
+			derp.Report(derp.Wrap(err, "server.factory.start", "Unable to connect to common database."))
+			os.Exit(1)
+		}
 
 		// Set timeout threshold for slow queries
 		mongodb.SetLogTimeout(config.LogSlowQueries)
@@ -208,45 +226,34 @@ func (factory *Factory) start() {
 		// Refresh cached values in global services
 		factory.emailService.Refresh()
 		factory.templateService.Refresh(config.Templates)
-
-		if err := factory.refreshCommonDatabase(config.ActivityPubCache); err != nil {
-			derp.Report(derp.Wrap(err, "server.Factory.start", "WARNING: Could not refresh common database.  Important services (like queued tasks and ActivityPub caching) may not function correctly.", config.ActivityPubCache))
-		}
-
 		factory.refreshQueue()
 
-		// Add logging to the Silicon Dome WAF
-		if factory.commonDatabase != nil {
+		log.Trace().Msg("Setting up Common Database")
 
-			log.Trace().Msg("Setting up Common Database")
+		// JWT Service configuration
+		factory.jwtService.Refresh(server, config.MasterKey)
 
-			// JWT Service configuration
-			server := mongodb.NewServer(factory.commonDatabase)
-			factory.jwtService.Refresh(server, config.MasterKey)
+		// Digital Dome configuration
+		factory.digitalDome.With(dome.LogDatabase(session.Collection("DigitalDome")))
 
-			// Digital Dome configuration
-			collection := mongodb.NewCollection(factory.commonDatabase.Collection("DigitalDome"))
-			factory.digitalDome.With(dome.LogDatabase(collection))
+		// Derp configuration
+		derp.Plugins.Clear()
+		for _, logger := range config.Loggers {
 
-			// Derp configuration
-			derp.Plugins.Clear()
-			for _, logger := range config.Loggers {
+			switch logger.GetString("type") {
 
-				switch logger.GetString("type") {
+			case "console":
+				log.Trace().Msg("Adding console logger to DERP")
+				derp.Plugins.Add(derpconsole.New())
 
-				case "console":
-					log.Trace().Msg("Adding console logger to DERP")
-					derp.Plugins.Add(derpconsole.New())
+			case "mongo":
+				log.Trace().Msg("Adding mongo logger to DERP")
+				derp.Plugins.Add(derpmongo.New(
+					factory.commonDatabase.Collection("ErrorLog"),
+					logger))
 
-				case "mongo":
-					log.Trace().Msg("Adding mongo logger to DERP")
-					derp.Plugins.Add(derpmongo.New(
-						factory.commonDatabase.Collection("ErrorLog"),
-						logger))
-
-				default:
-					log.Error().Str("type", logger.GetString("type")).Msg("Unknown logging type")
-				}
+			default:
+				log.Error().Str("type", logger.GetString("type")).Msg("Unknown logging type")
 			}
 		}
 
@@ -715,14 +722,16 @@ func (factory *Factory) ActivityCollection() *mongo.Collection {
 // steranko instance used by a domain.
 func (factory *Factory) Steranko(ctx echo.Context) (*steranko.Steranko, error) {
 
-		result, err := factory.ByContext(ctx)
+	const location = "server.Factory.Steranko"
 
-		if err != nil {
-			return nil, derp.Wrap(err, "server.Factory.Steranko", "Invalid hostname")
-		}
+	result, err := factory.ByContext(ctx)
 
-		return result.Steranko(), nil
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Invalid hostname")
 	}
+
+	return result.Steranko(), nil
+}
 */
 
 func (factory *Factory) DigitalDome() *dome.Dome {
