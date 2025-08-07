@@ -54,18 +54,18 @@ func Sync(ctx context.Context, collection *mongo.Collection, newIndexes map[stri
 		delete(newIndexes, name)
 
 		if compareModel(currentIndex, newIndex) {
-			log.Debug().Str("database", database).Str("index", name).Msg("index in sync.")
+			log.Trace().Str("database", database).Str("index", name).Msg("index in sync.")
 			continue
 		}
 
-		log.Debug().Str("database", database).Str("index", name).Msg("deleting changed index...")
+		log.Trace().Str("database", database).Str("index", name).Msg("deleting changed index...")
 		if bsonRaw, err := collection.Indexes().DropOne(ctx, name); err != nil {
 			derp.Report(derp.Wrap(err, location, "Error updating index", "index", name, newIndex, bsonRaw))
 			continue
 		}
 
 		if exists {
-			log.Debug().Str("database", database).Str("index", name).Msg("recreating changed index...")
+			log.Trace().Str("database", database).Str("index", name).Msg("recreating changed index...")
 			if bsonRaw, err := collection.Indexes().CreateOne(ctx, newIndex); err != nil {
 				derp.Report(derp.Wrap(err, location, "Error creating index", "index", name, newIndex, bsonRaw))
 				continue
@@ -75,7 +75,7 @@ func Sync(ctx context.Context, collection *mongo.Collection, newIndexes map[stri
 
 	// Add new indexes that are not already in the collection
 	for indexName, newIndex := range newIndexes {
-		log.Debug().Str("database", database).Str("index", indexName).Msg("adding new index...")
+		log.Trace().Str("database", database).Str("index", indexName).Msg("adding new index...")
 		if bsonRaw, err := collection.Indexes().CreateOne(ctx, newIndex); err != nil {
 			derp.Report(derp.Wrap(err, location, "Error creating index", "index", indexName, newIndex, bsonRaw))
 			continue
