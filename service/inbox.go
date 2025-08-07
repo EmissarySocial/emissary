@@ -522,26 +522,27 @@ func (service *Inbox) CountUnreadMessages(session data.Session, userID primitive
 	return int(count), err
 }
 
-func (service *Inbox) UpdateInboxFolders(session data.Session, userID primitive.ObjectID, followingID primitive.ObjectID, folderID primitive.ObjectID) {
+func (service *Inbox) UpdateInboxFolders(session data.Session, userID primitive.ObjectID, followingID primitive.ObjectID, folderID primitive.ObjectID) error {
 
 	rangeFunc, err := service.RangeByFollowingID(session, userID, followingID)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "service.Inbox", "Unable to list Activities by following", userID, followingID))
-		return
+		return derp.Wrap(err, "service.Inbox", "Unable to list Activities by following", userID, followingID)
 	}
 
 	for message := range rangeFunc {
 		message.FolderID = folderID
 		if err := service.Save(session, &message, "UpdateInboxFolders"); err != nil {
-			derp.Report(derp.Wrap(err, "service.Inbox", "Unable to save Inbox Message", message))
+			return derp.Wrap(err, "service.Inbox", "Unable to save Inbox Message", message)
 		}
 	}
 
 	// Recalculate the "unread" count on the new folder
 	if err := service.folderService.CalculateUnreadCount(session, userID, folderID); err != nil {
-		derp.Report(derp.Wrap(err, "service.Inbox", "Unable to calculate unread count for new folder", userID, folderID))
+		return derp.Wrap(err, "service.Inbox", "Unable to calculate unread count for new folder", userID, folderID)
 	}
+
+	return nil
 }
 
 func (service *Inbox) DeleteByUserID(session data.Session, userID primitive.ObjectID, note string) error {

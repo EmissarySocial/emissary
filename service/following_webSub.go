@@ -10,7 +10,7 @@ import (
 
 func (service *Following) connect_WebSub(following *model.Following, hub string) (bool, error) {
 
-	const location = "service.Following.ConnectWebSub"
+	const location = "service.Following.connect_WebSub"
 
 	var success string
 	var failure string

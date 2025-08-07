@@ -24,7 +24,7 @@ func (service *Following) RefreshAndConnect(session data.Session, following mode
 
 	// Try to connect the Following record
 	if err := service.Connect(session, following); err != nil {
-		derp.Report(derp.Wrap(err, "service.Following.RefreshAndConnect", "Error connecting to actor"))
+		derp.Report(derp.Wrap(err, "service.Following.RefreshAndConnect", "Unable to connect to ActivityPub Actor"))
 		return
 	}
 }
@@ -36,7 +36,7 @@ func (service *Following) Connect(session data.Session, following model.Followin
 
 	// Update the following status
 	if err := service.SetStatusLoading(session, &following); err != nil {
-		return derp.Wrap(err, location, "Error updating following status", following)
+		return derp.Wrap(err, location, "Unable to set status to 'Loading'", following)
 	}
 
 	// Try to load the actor from the remote server.  Errors mean that this actor cannot
@@ -46,7 +46,7 @@ func (service *Following) Connect(session data.Session, following model.Followin
 
 	if err != nil {
 		if innerError := service.SetStatusFailure(session, &following, err.Error()); innerError != nil {
-			return derp.Wrap(innerError, location, "Error updating following status", following)
+			return derp.Wrap(innerError, location, "Unable to set status to 'Failure'", following)
 		}
 		return err
 	}
@@ -59,7 +59,7 @@ func (service *Following) Connect(session data.Session, following model.Followin
 
 	// ...and mark the status as "Success"
 	if err := service.SetStatusSuccess(session, &following); err != nil {
-		return derp.Wrap(err, location, "Error setting status", following)
+		return derp.Wrap(err, location, "Unable to set status", following)
 	}
 
 	// Try to load an initial list of messages from the actor's outbox
@@ -101,13 +101,13 @@ func (service *Following) connect_LoadMessages(session data.Session, following *
 
 		// Try to save the document to the database.
 		if err := service.SaveMessage(session, following, result, model.OriginTypePrimary); err != nil {
-			derp.Report(derp.Wrap(err, location, "Error saving document to Inbox", result.Value()))
+			derp.Report(derp.Wrap(err, location, "Unable to save document to Inbox", result.Value()))
 		}
 	}
 
 	// Recalculate Folder unread counts
 	if err := service.folderService.ReCalculateUnreadCountFromFolder(session, following.UserID, following.FolderID); err != nil {
-		derp.Report(derp.Wrap(err, location, "Error recalculating unread count"))
+		derp.Report(derp.Wrap(err, location, "Unable to recalculate unread count"))
 	}
 }
 
@@ -120,7 +120,7 @@ func (service *Following) connect_PushServices(session data.Session, following *
 
 	// Prevent attempts to connect to external domains from localhost. It won't work anyway.
 	if dt.IsLocalhost(service.host) && !dt.IsLocalhost(following.ProfileURL) {
-		log.Debug().Str("loc", location).Msg("Cannot connect to external push services from localhost")
+		log.Debug().Str("loc", location).Msg("Unable to connect to external push services from localhost")
 		return
 	}
 
@@ -129,7 +129,7 @@ func (service *Following) connect_PushServices(session data.Session, following *
 		if ok, err := service.connect_ActivityPub(session, following, actor); ok {
 			return
 		} else {
-			derp.Report(derp.Wrap(err, location, "Error connecting to ActivityPub"))
+			derp.Report(derp.Wrap(err, location, "Unable to connect to ActivityPub"))
 		}
 	}
 
@@ -139,7 +139,7 @@ func (service *Following) connect_PushServices(session data.Session, following *
 		if ok, err := service.connect_WebSub(following, hub); ok {
 			return
 		} else {
-			derp.Report(derp.Wrap(err, location, "Error connecting to WebSub"))
+			derp.Report(derp.Wrap(err, location, "Unable to connect to WebSub"))
 		}
 	}
 
