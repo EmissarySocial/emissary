@@ -227,15 +227,11 @@ func (service Outbox) sendNotification_WebSub(follower *model.Follower) {
 
 	const location = "service.Outbox.sendNotifications_WebSub"
 
-	task := queue.NewTask("SendWebSubMessage", mapof.Any{
+	service.queue.Enqueue <- queue.NewTask("SendWebSubMessage", mapof.Any{
 		"inboxUrl": follower.Actor.InboxURL,
 		"format":   follower.Format,
 		"secret":   follower.Data.GetString("secret"),
 	})
-
-	if err := service.queue.Publish(task); err != nil {
-		derp.Report(derp.Wrap(err, location, "Error publishing task", task))
-	}
 }
 
 // sendNotifications_Email sends email notifications to all "email" Followers
@@ -277,13 +273,9 @@ func (service *Outbox) sendNotifications_WebMention(activity mapof.Any) {
 	// Add background tasks to TRY sending webmentions to every link we found
 	for _, link := range links {
 
-		task := queue.NewTask("SendWebMention", mapof.Any{
+		service.queue.Enqueue <- queue.NewTask("SendWebMention", mapof.Any{
 			"source": id,
 			"target": link,
 		})
-
-		if err := service.queue.Publish(task); err != nil {
-			derp.Report(derp.Wrap(err, location, "Error publishing task", task))
-		}
 	}
 }

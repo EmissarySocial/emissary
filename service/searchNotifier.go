@@ -56,7 +56,7 @@ func (service *SearchNotifier) SendGlobalNotifications(searchResults []model.Sea
 			log.Trace().Str("URL", searchResult.URL).Msg("Sending global notification")
 
 			// Send notifications to all followers
-			task := queue.NewTask(
+			service.queue.Enqueue <- queue.NewTask(
 				"SendSearchResults-Global",
 				mapof.Any{
 					"host":  service.host,
@@ -65,10 +65,6 @@ func (service *SearchNotifier) SendGlobalNotifications(searchResults []model.Sea
 				},
 				queue.WithPriority(200),
 			)
-
-			if err := service.queue.Publish(task); err != nil {
-				return derp.Wrap(err, location, "Error publishing task")
-			}
 		}
 	}
 
@@ -104,7 +100,7 @@ func (service *SearchNotifier) SendNotifications(session data.Session, searchRes
 			if searchQuery.Match(searchResult) {
 				actorID := service.searchQueryService.ActivityPubURL(searchQuery.SearchQueryID)
 
-				task := queue.NewTask(
+				service.queue.Enqueue <- queue.NewTask(
 					"SendSearchResults-Query",
 					mapof.Any{
 						"host":          service.host,
@@ -114,10 +110,6 @@ func (service *SearchNotifier) SendNotifications(session data.Session, searchRes
 					},
 					queue.WithPriority(200),
 				)
-
-				if err := service.queue.Publish(task); err != nil {
-					return derp.Wrap(err, location, "Error publishing task")
-				}
 			}
 		}
 	}

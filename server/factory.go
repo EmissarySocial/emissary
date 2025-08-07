@@ -278,10 +278,7 @@ func (factory *Factory) start() {
 
 		// Bootstrap the "Scheduler" task.  Duplicates will be dropped.
 		// This task will be used to schedule all other daily/hourly tasks
-		task := queue.NewTask("Scheduler", mapof.NewAny())
-		if err := factory.queue.Publish(task); err != nil {
-			derp.Report(derp.Wrap(err, "server.Factory.start", "Error publishing Schedule task"))
-		}
+		factory.queue.Enqueue <- queue.NewTask("Scheduler", mapof.NewAny())
 
 		// If the "ready" channel is still open, then close it,
 		// which will unblock any waiting processes

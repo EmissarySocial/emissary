@@ -73,11 +73,7 @@ func (service Geocode) GeocodeAndQueue(session data.Session, stream *model.Strea
 		"streamId": stream.StreamID,
 	}
 
-	task := queue.NewTask("Geocode", args, queue.WithPriority(4), queue.WithDelaySeconds(30))
-
-	if err := service.queue.Publish(task); err != nil {
-		return derp.Wrap(err, location, "Error publishing geocode task")
-	}
+	service.queue.Enqueue <- queue.NewTask("Geocode", args, queue.WithPriority(4), queue.WithDelaySeconds(30))
 
 	return nil
 }
