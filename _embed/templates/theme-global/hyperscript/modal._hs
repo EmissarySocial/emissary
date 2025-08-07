@@ -20,8 +20,9 @@ behavior Modal
 		wait a tick then
 		add .ready to #modal
 
-		log #modal-body
-		if #modal-body is not null then
+		if the first <input,select,radio,checkbox /> in me is not null then
+			set firstElement to the first <input,select,radio,checkbox /> in me
+		else if #modal-body is not null then
 			set firstElement to the first <[tabindex]/> in the #modal-body
 		else
 			set firstElement to the first <[tabindex]/> in me
