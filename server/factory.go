@@ -85,6 +85,7 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 		embeddedFiles: embeddedFiles,
 		ready:         make(chan struct{}),
 		jwtService:    service.NewJWT(),
+		queue:         queue.New(),
 	}
 
 	// Build the in-memory cache
@@ -148,6 +149,8 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 
 func (factory *Factory) start() {
 
+	const location = "server.Factory.start"
+
 	log.Info().Msg("Factory: waiting for configuration...")
 
 	filesystemService := factory.Filesystem()
@@ -156,7 +159,7 @@ func (factory *Factory) start() {
 	for config := range factory.storage.Subscribe() {
 
 		if err := factory.refreshCommonDatabase(config.ActivityPubCache); err != nil {
-			derp.Report(derp.Wrap(err, "server.Factory.start", "WARNING: Could not refresh common database.  Important services (like queued tasks and ActivityPub caching) may not function correctly.", config.ActivityPubCache))
+			derp.Report(derp.Wrap(err, location, "WARNING: Could not refresh common database.  Important services (like queued tasks and ActivityPub caching) may not function correctly.", config.ActivityPubCache))
 		}
 
 		if factory.commonDatabase == nil {
@@ -201,19 +204,19 @@ func (factory *Factory) start() {
 		if attachmentOriginals, err := filesystemService.GetAfero(config.AttachmentOriginals); err == nil {
 			factory.attachmentOriginals = attachmentOriginals
 		} else {
-			derp.Report(derp.Wrap(err, "server.Factory.start", "Error getting attachment original directory", config))
+			derp.Report(derp.Wrap(err, location, "Error getting attachment original directory", config))
 		}
 
 		if attachmentCache, err := filesystemService.GetAfero(config.AttachmentCache); err == nil {
 			factory.attachmentCache = attachmentCache
 		} else {
-			derp.Report(derp.Wrap(err, "server.Factory.start", "Error getting attachment cache directory", config))
+			derp.Report(derp.Wrap(err, location, "Error getting attachment cache directory", config))
 		}
 
 		if exportCache, err := filesystemService.GetAfero(config.ExportCache); err == nil {
 			factory.exportCache = exportCache
 		} else {
-			derp.Report(derp.Wrap(err, "server.Factory.start", "Error getting export cache directory", config))
+			derp.Report(derp.Wrap(err, location, "Error getting export cache directory", config))
 		}
 
 		factory.config = config
@@ -262,7 +265,8 @@ func (factory *Factory) start() {
 
 			factory.mutex.Lock()
 			if err := factory.refreshDomain(domainConfig); err != nil {
-				derp.Report(derp.Wrap(err, "server.Factory.start", "Error refreshing domain", domainConfig.ID))
+				derp.Report(derp.Wrap(err, location, "Error refreshing domain", domainConfig.ID))
+				continue
 			}
 			factory.mutex.Unlock()
 		}
@@ -278,7 +282,9 @@ func (factory *Factory) start() {
 
 		// Bootstrap the "Scheduler" task.  Duplicates will be dropped.
 		// This task will be used to schedule all other daily/hourly tasks
-		factory.queue.Enqueue <- queue.NewTask("Scheduler", mapof.NewAny())
+		if err := factory.queue.Publish(queue.NewTask("Scheduler", mapof.NewAny())); err != nil {
+			derp.Report(derp.Wrap(err, location, "Error initializing scheduler"))
+		}
 
 		// If the "ready" channel is still open, then close it,
 		// which will unblock any waiting processes
