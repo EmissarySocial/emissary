@@ -260,7 +260,7 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 
 	// RULE: If unassigned, shuffle the stream after the first trillion other results (will reset in 1 hour)
 	if stream.Shuffle == 0 {
-		stream.Shuffle = math.MaxInt64 - int64(random.GenerateInt(0, 999_999_999_999))
+		stream.Shuffle = math.MaxInt64 - int64(random.GenerateInt(1, 999_999_999_999))
 	}
 
 	// RULE: Default Token
