@@ -86,7 +86,7 @@
 
 #modal-header + #modal-body {
 	padding-top: calc(var(--rhythm) * 1);
-	background-color: var(--gray03);
+	background-color: var(--gray10);
 }
 
 #modal-footer {

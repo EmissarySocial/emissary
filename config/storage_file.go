@@ -76,6 +76,8 @@ func NewFileStorage(args *CommandLineArgs) FileStorage {
 	// If we have a valid config, post it to the update channel
 	storage.updateChannel <- config
 
+	log.Info().Msg("Loading configuration from file")
+
 	// After the first load, watch for changes to the configuration file and post them to the update channel
 	go func() {
 

@@ -8,6 +8,8 @@ replace github.com/benpate/data-mongo => ../../benpate/data-mongo
 
 replace github.com/benpate/hannibal => ../../benpate/hannibal
 
+replace github.com/benpate/queue => ../../benpate/queue
+
 replace github.com/benpate/sherlock => ../../benpate/sherlock
 
 replace github.com/benpate/steranko => ../../benpate/steranko

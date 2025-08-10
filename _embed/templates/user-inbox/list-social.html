@@ -12,9 +12,7 @@
 			id="item_{{$message.ID}}" 
 			class="message"
 			style="max-width:640px"
-			script="
-				install listItem(messageId:'{{$message.ID}}')
-			">
+			script="install listItem(messageId:'{{$message.ID}}')">
 
 			{{- $document := $inboxBuilder.ActivityStream $message.URL -}}
 			{{- $image := $document.ImageOrIcon -}}

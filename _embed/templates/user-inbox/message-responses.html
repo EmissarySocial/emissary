@@ -20,6 +20,9 @@
 			Reply
 		</span>
 
+	<span hx-get="/@me/inbox/like-button?url={{$message.URL}}" hx-trigger="revealed" hx-target="this" hx-swap="outerHTML" hx-push-url="false"></span>
+
+<!--
 	{{- if $message.IsAnnounced -}}
 		<span 
 			id="announce-{{$message.ID}}" 
@@ -59,6 +62,7 @@
 			hx-vals='{"type":"Like", "url":"{{$url}}", "exists":true}'
 		>{{icon "like"}} Like</span>
 	{{- end -}}
+	-->
 
 	{{ if gt $stats.Replies 0 }}
 		<span

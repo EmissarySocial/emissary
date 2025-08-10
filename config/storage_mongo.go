@@ -23,6 +23,8 @@ type MongoStorage struct {
 // NewMongoStorage creates a fully initialized MongoStorage instance
 func NewMongoStorage(args *CommandLineArgs) MongoStorage {
 
+	const location = "config.NewMongoStorage"
+
 	// Create a new MongoDB database connection
 	connectOptions := options.Client().ApplyURI(args.Location)
 	client, err := mongo.Connect(context.Background(), connectOptions)
@@ -87,6 +89,8 @@ func NewMongoStorage(args *CommandLineArgs) MongoStorage {
 	// If we have a valid config, post it to the update channel
 	storage.updateChannel <- config
 
+	log.Info().Msgf("Loading configuration from mongodb")
+
 	// After the first load, watch for changes to the config record and post them to the update channel
 	go func() {
 
@@ -94,7 +98,7 @@ func NewMongoStorage(args *CommandLineArgs) MongoStorage {
 		cs, err := storage.collection.Watch(context, mongo.Pipeline{})
 
 		if err != nil {
-			derp.Report(derp.Wrap(err, "config.NewMongoStorage", "Unable to open Mongodb Change Stream"))
+			derp.Report(derp.Wrap(err, location, "Unable to open Mongodb Change Stream"))
 			return
 		}
 
@@ -103,12 +107,12 @@ func NewMongoStorage(args *CommandLineArgs) MongoStorage {
 			if config, err := storage.load(); err == nil {
 				storage.updateChannel <- config
 			} else {
-				derp.Report(derp.Wrap(err, "config.MongoStorage", "Error loading updated config from MongoDB"))
+				derp.Report(derp.Wrap(err, location, "Error loading updated config from MongoDB"))
 			}
 		}
 
 		if err := cs.Err(); err != nil {
-			derp.Report(derp.Wrap(err, "config.NewMongoStorage", "Error watching Mongodb Change Stream"))
+			derp.Report(derp.Wrap(err, location, "Error watching Mongodb Change Stream"))
 		}
 	}()
 

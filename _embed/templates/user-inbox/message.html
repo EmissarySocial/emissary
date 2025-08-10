@@ -44,80 +44,77 @@
 
 <div id="modal-body">
 
-	<div class="margin-bottom">
-		{{- if $inReplyTo.NotNil -}}
-			<div role="link" class="italics text-sm link" hx-get="/@me/inbox/message?messageId={{$message.ID}}&folderID={{$folderID}}&origin.followingId={{$followingID}}&url={{$inReplyTo.ID}}">
-				{{icon "reply-fill"}} Replying to {{$inReplyToAttributedTo.Name}}...
-			</div>
-		{{- else -}}
-			{{- template "message-origin" $message -}}
-		{{- end -}}
-	</div>
+	<div class="clickable card padding-vertical-sm padding-horizontal">
 
-	{{- if $attributedTo.NotEmpty -}}
-
-		<div hx-get="/@me/inbox/browse?url={{$attributedTo.ID}}" class="flex-row flex-align-center margin-bottom clickable">
-			{{- if $attributedTo.Icon.NotNil -}}
-				<img src="{{$attributedTo.Icon.Href}}" class="circle width-64">
+		<div class="margin-bottom">
+			{{- if $inReplyTo.NotNil -}}
+				<div role="link" class="italics text-sm link" hx-get="/@me/inbox/message?messageId={{$message.ID}}&folderID={{$folderID}}&origin.followingId={{$followingID}}&url={{$inReplyTo.ID}}">
+					{{icon "reply-fill"}} Replying to {{$inReplyToAttributedTo.Name}}...
+				</div>
+			{{- else -}}
+				{{- template "message-origin" $message -}}
 			{{- end -}}
-			<div>
-				<div class="text-plain text-lg bold margin-vertical-none">{{$attributedTo.Name}}</div>
-				<div class="text-light-gray margin-vertical-none">{{$attributedTo.UsernameOrID}}</div>
-			</div>
 		</div>
 
-	{{- end -}}
-
-	<div>
-				
 		{{- if ne "" $document.Name -}}
 			<h1 class="margin-top-sm margin-bottom-lg"><a href="{{$document.URLOrID}}" target="_blank" class="text-black">{{$document.Name}}</a></h1>
 		{{- end -}}
 
-		<div class="content">
+		{{- if $attributedTo.NotEmpty -}}
 
-			{{- if not (hasImage $document.Content) -}}
-				{{- $image := $document.ImageOrIcon -}}
-				{{- if $image.NotNil -}}
-					<div class="margin-bottom">
-						<a href="{{$document.URLOrID}}" target="_blank"><img src="{{$image.URL}}" class="width-100%" style="{{- if $image.HasDimensions}} aspect-ratio:{{$image.AspectRatio}};{{end}}"/></a>
-					</div>
+			<div hx-get="/@me/inbox/browse?url={{$attributedTo.ID}}" class="flex-row flex-align-center margin-bottom clickable">
+				{{- if $attributedTo.Icon.NotNil -}}
+					<img src="{{$attributedTo.Icon.Href}}" class="circle width-48">
 				{{- end -}}
-			{{- end -}}
+				<div>
+					<div class="text-plain text-lg bold margin-vertical-none">{{$attributedTo.Name}}</div>
+					<div class="text-light-gray margin-vertical-none">{{$attributedTo.UsernameOrID}}</div>
+				</div>
+			</div>
 
-			{{- if $document.HasContent -}}
-				<div>{{- $document.Content | html -}}</div>
-			{{- else if $document.HasSummary -}}
-				<div>{{- $document.Summary -}}</div>
-			{{- end -}}
+		{{- end -}}
 
-			<div class="margin-bottom text-sm text-light-gray">{{ $document.Published | shortDate -}}</div>
+		<div class="flex-row">
+					
+			<div>
 
-			{{- template "tags" $document -}}
+				<div class="content">
 
+					{{- if not (hasImage $document.Content) -}}
+						{{- $image := $document.ImageOrIcon -}}
+						{{- if $image.NotNil -}}
+							<div class="margin-bottom">
+								<a href="{{$document.URLOrID}}" target="_blank"><img src="{{$image.URL}}" class="width-100%" style="{{- if $image.HasDimensions}} aspect-ratio:{{$image.AspectRatio}};{{end}}"/></a>
+							</div>
+						{{- end -}}
+					{{- end -}}
+
+					{{- if $document.HasContent -}}
+						<div>{{- $document.Content | html -}}</div>
+					{{- else if $document.HasSummary -}}
+						<div>{{- $document.Summary -}}</div>
+					{{- end -}}
+
+					<div class="margin-bottom text-sm text-light-gray">{{ $document.Published | shortDate -}}</div>
+
+					<div class="text-xs margin-top">
+						{{.View "like-button"}}
+					</div>
+				</div>
+			</div>
+			
 		</div>
 
-		<div class="margin-top-lg text-xs">
-			{{.View "like-button"}}
-
-			<!--
-			{{- if .NotMe $attributedTo.ID -}}
-				<div hx-get="/@me/inbox/actor-button?url={{$attributedTo.ID}}&folderId={{$message.FolderID.Hex}}" hx-target="this" hx-swap="outerHTML" hx-trigger="modalReady from:window" hx-push-url="false"></div>
-			{{- end -}}
-			-->
-		</div>
-		
 	</div>
 
-	<div class="margin-left-md">
-		<div hx-get="/@me/inbox/responses-replies?messageId={{$message.ID}}&url={{$url}}" hx-trigger="load" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
-			{{- template "responses-menu" $document -}}
-			<span class="spin">{{icon "loading"}}</span> Loading Replies
-		</div>
+	<div hx-get="/@me/inbox/responses-replies?messageId={{$message.ID}}&url={{$url}}" hx-trigger="load" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
+		<!-- {{- template "responses-menu" $document -}} -->
+		<span class="spin">{{icon "loading"}}</span> Loading Replies
 	</div>
 
 </div>
 
+<!--pre>{{$document.Statistics | jsonIndent}}</pre>
 <div id="modal-footer">
 	{{.View "reply"}}
-</div>
+</div-->
