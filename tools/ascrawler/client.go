@@ -6,19 +6,26 @@ import (
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/channel"
+	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/turbine/queue"
+	"github.com/davecgh/go-spew/spew"
+	"github.com/rs/zerolog/log"
 )
 
 type Client struct {
+	queue       *queue.Queue
 	innerClient streams.Client
 	maxDepth    int
-	// TODO: This needs a composable queue runner...
+	hostname    string
 }
 
-func New(innerClient streams.Client, options ...ClientOption) Client {
+func New(queue *queue.Queue, innerClient streams.Client, hostname string, options ...ClientOption) Client {
 
 	result := Client{
+		queue:       queue,
 		innerClient: innerClient,
-		maxDepth:    3,
+		maxDepth:    4,
+		hostname:    hostname,
 	}
 
 	for _, option := range options {
@@ -30,56 +37,61 @@ func New(innerClient streams.Client, options ...ClientOption) Client {
 
 func (client Client) Load(uri string, options ...any) (streams.Document, error) {
 
+	const location = "tools.ascrawler.Load"
+
 	result, err := client.innerClient.Load(uri, options...)
 
 	if err != nil {
-		return result, derp.Wrap(err, "ascrawler.Load", "Error loading actor from inner client")
+		return result, derp.Wrap(err, location, "Error loading actor from inner client")
 	}
 
-	go client.crawl(result.Clone(), 0) // TODO: this should be a buffered enqueue operation
+	go client.crawl(result.Clone(), options...)
 
 	return result, nil
 }
 
 // crawl is the main recursive loop. It looks for crawl-able properties in the document
 // and loads them into the cache.
-func (client Client) crawl(document streams.Document, depth int) {
+func (client Client) crawl(document streams.Document, options ...any) {
+
+	const location = "tools.ascrawler.crawl"
+
+	spew.Dump(location, document.Value())
+
+	config := parseLoadConfig(options...)
 
 	// Prevent infinite loops....
-	if depth >= client.maxDepth {
+	if config.currentDepth >= client.maxDepth {
 		return
 	}
 
-	// If the document is already cached, then don't crawl it again.
-	if cached := document.HTTPHeader().Get("X-Hannibal-Cache"); cached == "true" {
-		return
-	}
+	log.Debug().Str("loc", location).Str("url", document.ID()).Msg("Loading related documents")
 
-	// Try to load the document then crawl it's linked data
-	if loaded, err := document.Load(); err == nil {
+	client.crawl_AttributedTo(document, config)
+	client.crawl_InReplyTo(document, config)
+	client.crawl_Replies(document, config)
+}
 
-		// Crawl Related Documents
-		client.crawlDocument(loaded, vocab.PropertyContext, depth)
-		client.crawlDocument(loaded, vocab.PropertyInReplyTo, depth)
-		client.crawlDocument(loaded, vocab.PropertyAttributedTo, depth)
+func (client Client) crawl_AttributedTo(document streams.Document, config loadConfig) {
 
-		// Crawl Related Collections
-		client.crawlCollection(loaded, vocab.PropertyReplies, depth)
+	for attributedTo := range document.AttributedTo().Range() {
+		if url := attributedTo.ID(); url != "" {
+			client.sendTask(url, config.currentDepth+1)
+		}
 	}
 }
 
-// crawlDocument searches for one or more documents in a single property that can be crawled
-func (client Client) crawlDocument(document streams.Document, propertyName string, depth int) {
-
-	// Iterate through (potential) multiple values in the property
-	for property := document.Get(propertyName); property.NotNil(); property = property.Tail() {
-		client.crawl(property.Head(), depth+1) // TODO: this should be a buffered enqueue operation
-		// TODO: Watch out for concurrency issues with maps. This caused a panic in dev (when I used a goroutine)
+func (client Client) crawl_InReplyTo(document streams.Document, config loadConfig) {
+	if inReplyTo := document.InReplyTo().ID(); inReplyTo != "" {
+		client.sendTask(inReplyTo, config.currentDepth)
 	}
 }
 
-// crawlCollection searches for all documents in a collection that can be crawled.
-func (client Client) crawlCollection(document streams.Document, propertyName string, depth int) {
+func (client Client) crawl_Replies(document streams.Document, config loadConfig) {
+	client.crawl_Collection(document, vocab.PropertyReplies, config)
+}
+
+func (client Client) crawl_Collection(document streams.Document, propertyName string, config loadConfig) {
 
 	// Get the designated property from the document
 	collection, err := document.Get(propertyName).Load()
@@ -95,6 +107,29 @@ func (client Client) crawlCollection(document streams.Document, propertyName str
 	documents2048 := channel.Limit(2048, documents, done)
 
 	for document := range documents2048 {
-		go client.crawl(document, depth+1) // TODO: this should be a buffered enqueue operation
+		if url := document.ID(); url != "" {
+			client.sendTask(url, config.currentDepth+1)
+		}
 	}
+}
+
+func (client Client) sendTask(url string, depth int) {
+
+	const location = "tools.ascrawler.sendTask"
+
+	task := queue.NewTask(
+		"CrawlActivityStreams",
+		mapof.Any{
+			"host":  client.hostname,
+			"url":   url,
+			"depth": depth,
+		},
+	)
+
+	if err := client.queue.Publish(task); err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to publish task to queue"))
+		return
+	}
+
+	log.Debug().Str("loc", location).Str("url", url).Int("depth", depth).Msg("Published task to queue")
 }

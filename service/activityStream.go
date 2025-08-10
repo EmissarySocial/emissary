@@ -12,8 +12,8 @@ import (
 	"github.com/EmissarySocial/emissary/tools/ascache"
 	"github.com/EmissarySocial/emissary/tools/ascacherules"
 	"github.com/EmissarySocial/emissary/tools/ascontextmaker"
+	"github.com/EmissarySocial/emissary/tools/ascrawler"
 	"github.com/EmissarySocial/emissary/tools/ashash"
-	"github.com/EmissarySocial/emissary/tools/asnormalizer"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -68,13 +68,20 @@ func (service *ActivityStream) CacheClient() *ascache.Client {
 	)
 
 	// enforce opinionated data formats
-	normalizerClient := asnormalizer.New(sherlockClient)
+	// normalizerClient := asnormalizer.New(sherlockClient)
 
 	// compute document context (if missing)
-	contextMakerClient := ascontextmaker.New(normalizerClient)
+	contextMakerClient := ascontextmaker.New(sherlockClient)
+
+	// crawler client will load related documents in the background
+	crawlerClient := ascrawler.New(
+		service.factory.Queue(),
+		contextMakerClient,
+		service.hostname,
+	)
 
 	// apply custom caching rules to documents
-	cacheRulesClient := ascacherules.New(contextMakerClient)
+	cacheRulesClient := ascacherules.New(crawlerClient)
 
 	// cache data in MongoDB
 	return ascache.New(cacheRulesClient, service.commonDatabase, ascache.WithIgnoreHeaders())
