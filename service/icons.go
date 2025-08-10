@@ -160,6 +160,10 @@ func (service Icons) Get(name string) string {
 		return service.get("flag")
 	case "flag-fill":
 		return service.get("flag-fill")
+	case "focus":
+		return service.get("crosshair")
+	case "focus-fill":
+		return service.get("crosshair2")
 	case "folder":
 		return service.get("folder")
 	case "folder-fill":
@@ -216,6 +220,10 @@ func (service Icons) Get(name string) string {
 		return service.get("arrow-clockwise")
 	case "login":
 		return service.get("box-arrow-in-right")
+	case "map":
+		return service.get("map")
+	case "map-fill":
+		return service.get("map-fill")
 	case "megaphone":
 		return service.get("megaphone")
 	case "megaphone-fill":
@@ -322,6 +330,10 @@ func (service Icons) Get(name string) string {
 		return service.get("hand-thumbs-up")
 	case "thumbs-up-fill":
 		return service.get("hand-thumbs-up-fill")
+	case "timeline":
+		return service.get("clock")
+	case "timeline-fill":
+		return service.get("clock-fill")
 	case "unlink":
 		return service.get("link-45deg")
 	case "upload":

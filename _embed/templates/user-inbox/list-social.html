@@ -62,7 +62,8 @@
 				</div>
 			{{- end -}}
 			
-			<div class="flex-row width-100% clickable margin-top-sm" script="install blockselect(link:#reply-{{$message.ID}})">
+			<div class="flex-row width-100% clickable margin-top-sm" script="install blockselect()">
+				<span hx-get="/@me/inbox/browse?url={{$document.ID}}" hidden></span>
 				<div class="width-48 flex-shrink-0 margin-right-sm noselect"></div>
 
 				<div class="flex-grow">
@@ -94,7 +95,9 @@
 						</div>
 					{{- end -}}
 
+					<!--
 					{{- template "message-responses" (array $message $document $folderID $internalID) -}}
+					-->
 				</div>
 
 			</div>

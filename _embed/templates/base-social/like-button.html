@@ -30,14 +30,14 @@
 	</a>
 
 	{{- if eq $stats.Replies 0 -}}
-		<span class="text-gray ma rgin-left">0 Replies</span>
+		<span class="text-gray margin-left-lg">0 Replies</span>
 	{{- else -}}
 		<span
 			role="button"
 			hx-get="/@me/inbox/browse?&url={{$url}}"
 			hx-push-url="false"
 			tabIndex="0"
-			class="text-gray margin-left">{{$stats.Replies}} {{pluralize $stats.Replies "Reply" "Replies"}}</span>
+			class="text-gray margin-left-lg">{{$stats.Replies}} {{pluralize $stats.Replies "Reply" "Replies"}}</span>
 	{{ end }}
 
 	{{ if gt $stats.Announces 0 }}

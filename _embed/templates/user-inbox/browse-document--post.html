@@ -1,0 +1,69 @@
+{{- $builder := index . 0 -}}
+{{- $document := index . 1 -}}
+
+{{- $attributedTo := $document.AttributedTo -}}
+{{- $inReplyTo := $document.InReplyTo -}}
+{{- $inReplyToAttributedTo := $inReplyTo.AttributedTo -}}
+
+<div class="padding card">
+
+	{{- if $inReplyTo.NotNil -}}
+		<div class="flex-row margin-bottom-sm">
+			<div role="link" class="italics text-sm link" hx-get="/@me/inbox/browse-document-focus?&url={{$inReplyTo.ID}}">
+				{{icon "reply-fill"}} Replying to {{$inReplyToAttributedTo.Name}}...
+			</div>
+		</div>
+	{{- end -}}
+
+	{{- if ne "" $document.Name -}}
+		<h1 class="margin-bottom padding-none">{{$document.Name}}</h1>
+	{{- end -}}
+
+	{{- if $attributedTo.NotEmpty -}}
+
+		<div class="margin-bottom-lg">
+			<span hx-get="/@me/inbox/browse?url={{$attributedTo.ID}}" class="flex-row flex-align-center clickable">
+				{{- if $attributedTo.Icon.NotNil -}}
+					<img src="{{$attributedTo.Icon.Href}}" class="circle width-48">
+				{{- end -}}
+				<div>
+					<div class="text-plain bold margin-vertical-none">{{$attributedTo.Name}}</div>
+					<div class="text-sm text-light-gray margin-vertical-none">{{$attributedTo.UsernameOrID}}</div>
+				</div>
+			</span>
+		</div>
+
+	{{- end -}}
+
+	<div>
+				
+		<div class="content">
+
+			{{- if not (hasImage $document.Content) -}}
+				{{- $image := $document.ImageOrIcon -}}
+				{{- if $image.NotNil -}}
+					<div class="margin-bottom">
+						<a href="{{$document.URLOrID}}" target="_blank"><img src="{{$image.URL}}" class="width-100%" style="{{- if $image.HasDimensions}} aspect-ratio:{{$image.AspectRatio}};{{end}}"/></a>
+					</div>
+				{{- end -}}
+			{{- end -}}
+
+			{{- if $document.HasContent -}}
+				<div>{{- $document.Content | html -}}</div>
+			{{- else if $document.HasSummary -}}
+				<div>{{- $document.Summary -}}</div>
+			{{- end -}}
+
+			<div class="margin-bottom text-sm text-light-gray">{{ $document.Published | shortDate -}}</div>
+
+			{{- template "tags" $document -}}
+
+		</div>
+
+		<div class="margin-top-lg text-xs">
+			{{$builder.View "like-button"}}
+		</div>
+		
+	</div>
+
+</div>
