@@ -8,7 +8,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -16,8 +15,6 @@ import (
 func CrawlActivityStreams(factory *service.Factory, session data.Session, args mapof.Any) queue.Result {
 
 	const location = "consumer.CrawlActivityStreams"
-
-	spew.Dump(location, args)
 
 	url := args.GetString("url")
 	depth := args.GetInt("depth")
@@ -27,6 +24,11 @@ func CrawlActivityStreams(factory *service.Factory, session data.Session, args m
 	activityService := factory.ActivityStream(model.ActorTypeApplication, primitive.NilObjectID)
 
 	if _, err := activityService.Client().Load(url, ascrawler.AtDepth(depth)); err != nil {
+
+		if derp.IsClientError(err) {
+			return queue.Failure(derp.Wrap(err, location, "Client error when loading ActivityStream"))
+		}
+
 		return queue.Error(derp.Wrap(err, location, "Unable to load ActivityStream"))
 	}
 
