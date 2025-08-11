@@ -44,6 +44,12 @@ func Document(ctx context.Context, database *mongo.Database) error {
 			},
 		},
 
+		"idx_Document_Context": mongo.IndexModel{
+			Keys: bson.D{
+				{Key: "object.context", Value: 1},
+			},
+		},
+
 		"idx_Document_URLs": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "urls", Value: 1},
