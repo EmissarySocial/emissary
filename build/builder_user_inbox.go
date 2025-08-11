@@ -3,6 +3,7 @@ package build
 import (
 	"bytes"
 	"html/template"
+	"iter"
 	"math"
 	"net/http"
 
@@ -19,6 +20,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -561,6 +563,14 @@ func (w Inbox) Message() model.Message {
 
 	// Otherwise, there was some error (likely 404 Not Found) so return the original message instead.
 	return message
+}
+
+func (w Inbox) RangeByContext(contextID string) iter.Seq[streams.Document] {
+
+	spew.Dump("RangeByContext", contextID)
+
+	activityService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
+	return activityService.RangeByContext(w._request.Context(), contextID)
 }
 
 func (w Inbox) RepliesBefore(url string, dateString string, maxRows int) sliceof.Object[streams.Document] {
