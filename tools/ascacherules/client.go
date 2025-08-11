@@ -9,13 +9,20 @@ type Client struct {
 	innerClient streams.Client
 }
 
-func New(innerClient streams.Client) Client {
-	return Client{
+func New(innerClient streams.Client) *Client {
+	result := &Client{
 		innerClient: innerClient,
 	}
+
+	result.innerClient.SetRootClient(result)
+	return result
 }
 
-func (client Client) Load(uri string, options ...any) (streams.Document, error) {
+func (client *Client) SetRootClient(rootClient streams.Client) {
+	client.innerClient.SetRootClient(rootClient)
+}
+
+func (client *Client) Load(uri string, options ...any) (streams.Document, error) {
 
 	// Retrieve the actual document from the inner client.
 	result, err := client.innerClient.Load(uri, options...)

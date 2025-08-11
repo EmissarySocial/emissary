@@ -23,7 +23,7 @@ type Client struct {
 func New(innerClient streams.Client, commonDatabase data.Server, options ...ClientOptionFunc) *Client {
 
 	// Create a default client
-	result := Client{
+	result := &Client{
 		commonDatabase: commonDatabase,
 		innerClient:    innerClient,
 		cacheMode:      CacheModeReadWrite,
@@ -32,8 +32,8 @@ func New(innerClient streams.Client, commonDatabase data.Server, options ...Clie
 
 	// Apply option functions to the client
 	result.WithOptions(options...)
-
-	return &result
+	result.innerClient.SetRootClient(result)
+	return result
 }
 
 func (client *Client) WithOptions(options ...ClientOptionFunc) {
@@ -45,6 +45,10 @@ func (client *Client) WithOptions(options ...ClientOptionFunc) {
 /******************************************
  * Hannibal HTTP Client Methods
  ******************************************/
+
+func (client *Client) SetRootClient(rootClient streams.Client) {
+	client.innerClient.SetRootClient(rootClient)
+}
 
 func (client *Client) Load(url string, options ...any) (streams.Document, error) {
 

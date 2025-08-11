@@ -3,31 +3,40 @@ package ascontextmaker
 import (
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // asContextMaker is a hannibal.Streams middleware that adds a "context" property to all documents
 // based on their "InReplyTo" property.  If a document does not have a context or inReplyTo, then
 // it is its own context, and is updated to reflect that.
 type Client struct {
+	rootClient  streams.Client
 	innerClient streams.Client
 	maxDepth    int // maxDepth prevents the client from recursing too deeply into a document tree
 }
 
 // New creates a new instance of asContextMaker
-func New(innerClient streams.Client, options ...ClientOption) Client {
-	result := Client{
+func New(innerClient streams.Client, options ...ClientOption) *Client {
+
+	// Create the Client
+	result := &Client{
 		innerClient: innerClient,
 		maxDepth:    16,
 	}
 
-	result.With(options...)
+	// Apply options
+	for _, option := range options {
+		option(result)
+	}
+
+	// Pass reference down into the innerClient
+	result.innerClient.SetRootClient(result)
 	return result
 }
 
-func (client *Client) With(options ...ClientOption) {
-	for _, option := range options {
-		option(client)
-	}
+func (client *Client) SetRootClient(rootClient streams.Client) {
+	client.rootClient = rootClient
+	client.innerClient.SetRootClient(rootClient)
 }
 
 // Load implements the streams.Client interface, and loads a document from the Interwebs.
@@ -42,16 +51,14 @@ func (client Client) Load(uri string, options ...any) (streams.Document, error) 
 		return result, err
 	}
 
-	// Check configuration rules (re: history and duplicates)
-	// If no more recursion is allowed, then simply stop here.
-	config := NewLoadConfig(options...)
-	if client.NotAllowed(uri, config) {
+	// Don't need to add context to Actors (only Documents)
+	if result.IsActor() {
 		return result, nil
 	}
 
-	// Don't need to add context to Actors (only Documents)
-	if result.IsActor() {
-		return result, err
+	// Don't need to add context to Collections (only Documents)
+	if result.IsCollection() {
+		return result, nil
 	}
 
 	// If the document already has a context property, then
@@ -66,28 +73,39 @@ func (client Client) Load(uri string, options ...any) (streams.Document, error) 
 		return result, nil
 	}
 
+	// Past here, we really WANT a context, so let's make a default to start with...
+	result.SetProperty(vocab.PropertyContext, "artificialcontext://"+result.ID())
+
+	// ... then try to find something better than this.
+
+	// Check configuration rules (re: history and duplicates)
+	// If no more recursion is allowed, then simply stop here.
+	config := NewLoadConfig(options...)
+
+	if client.NotAllowed(uri, config) {
+		return result, nil
+	}
+
+	spew.Dump("ascontextmaker.Load: checking InReplyTo")
+
 	// If we have an "inReplyTo" field, then try to load that value
 	// to use/generate its context
-	if inReplyTo := result.InReplyTo(); inReplyTo.IsNil() {
+	if result.InReplyTo().NotNil() {
+
+		spew.Dump(result.InReplyTo().Value())
 
 		options = append(options, WithHistory(uri))
 
-		for inReplyTo.NotNil() {
-			if parent, err := inReplyTo.Load(options...); err == nil {
+		for inReplyTo := result.InReplyTo(); inReplyTo.NotNil(); inReplyTo = inReplyTo.Tail() {
+			if parent, err := client.rootClient.Load(inReplyTo.ID(), options...); err == nil {
 				if context := parent.Context(); context != "" {
+
+					spew.Dump("FOUND CONTEXT:", context)
 					result.SetProperty(vocab.PropertyContext, context)
 					break
 				}
 			}
-
-			inReplyTo = inReplyTo.Tail()
 		}
-	}
-
-	// If the document STILL has no context, then it is ITS OWN CONTEXT
-	if context := result.Context(); context != "" {
-		result.SetProperty(vocab.PropertyContext, result.ID())
-		return result, nil
 	}
 
 	// Return modified document to the caller.
@@ -95,7 +113,7 @@ func (client Client) Load(uri string, options ...any) (streams.Document, error) 
 }
 
 // IsAllowed returns TRUE if the client rules allow the provided URI to be loaded
-func (client Client) IsAllowed(uri string, config LoadConfig) bool {
+func (client *Client) IsAllowed(uri string, config LoadConfig) bool {
 
 	// If the history is already too long, then stop no matter what
 	if len(config.history) >= client.maxDepth {
@@ -114,6 +132,6 @@ func (client Client) IsAllowed(uri string, config LoadConfig) bool {
 }
 
 // NotAllowed returns TRUE if the client rules DO NOT allow the provided URI to be loaded
-func (client Client) NotAllowed(uri string, config LoadConfig) bool {
+func (client *Client) NotAllowed(uri string, config LoadConfig) bool {
 	return !client.IsAllowed(uri, config)
 }

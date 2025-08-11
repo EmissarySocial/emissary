@@ -19,23 +19,32 @@ type Client struct {
 	hostname    string
 }
 
-func New(queue *queue.Queue, innerClient streams.Client, hostname string, options ...ClientOption) Client {
+func New(queue *queue.Queue, innerClient streams.Client, hostname string, options ...ClientOption) *Client {
 
-	result := Client{
+	// Create client
+	result := &Client{
 		queue:       queue,
 		innerClient: innerClient,
 		maxDepth:    4,
 		hostname:    hostname,
 	}
 
+	// Apply options
 	for _, option := range options {
-		option(&result)
+		option(result)
 	}
+
+	// Pass the root client down into the innerClient
+	result.innerClient.SetRootClient(result)
 
 	return result
 }
 
-func (client Client) Load(uri string, options ...any) (streams.Document, error) {
+func (client *Client) SetRootClient(rootClient streams.Client) {
+	client.innerClient.SetRootClient(rootClient)
+}
+
+func (client *Client) Load(uri string, options ...any) (streams.Document, error) {
 
 	const location = "tools.ascrawler.Load"
 
@@ -52,7 +61,7 @@ func (client Client) Load(uri string, options ...any) (streams.Document, error) 
 
 // crawl is the main recursive loop. It looks for crawl-able properties in the document
 // and loads them into the cache.
-func (client Client) crawl(document streams.Document, options ...any) {
+func (client *Client) crawl(document streams.Document, options ...any) {
 
 	const location = "tools.ascrawler.crawl"
 
@@ -68,6 +77,7 @@ func (client Client) crawl(document streams.Document, options ...any) {
 	log.Debug().Str("loc", location).Str("url", document.ID()).Msg("Loading related documents")
 
 	client.crawl_AttributedTo(document, config)
+	client.crawl_Context(document, config)
 	client.crawl_InReplyTo(document, config)
 	client.crawl_Replies(document, config)
 }
@@ -79,6 +89,10 @@ func (client Client) crawl_AttributedTo(document streams.Document, config loadCo
 			client.sendTask(url, config.currentDepth+1)
 		}
 	}
+}
+
+func (client Client) crawl_Context(document streams.Document, config loadConfig) {
+	client.crawl_Collection(document, vocab.PropertyContext, config)
 }
 
 func (client Client) crawl_InReplyTo(document streams.Document, config loadConfig) {

@@ -13,10 +13,18 @@ type Client struct {
 }
 
 // New creates a fully initialized Client object
-func New(innerClient streams.Client) Client {
-	return Client{
+func New(innerClient streams.Client) *Client {
+
+	result := &Client{
 		innerClient: innerClient,
 	}
+
+	result.innerClient.SetRootClient(result)
+	return result
+}
+
+func (client Client) SetRootClient(rootClient streams.Client) {
+	client.innerClient.SetRootClient(rootClient)
 }
 
 // Load retrieves a document from the underlying innerClient, then searches for hash values

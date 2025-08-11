@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"crypto"
+	"iter"
 	"net/http"
 	"strings"
 	"time"
@@ -14,6 +15,7 @@ import (
 	"github.com/EmissarySocial/emissary/tools/ascontextmaker"
 	"github.com/EmissarySocial/emissary/tools/ascrawler"
 	"github.com/EmissarySocial/emissary/tools/ashash"
+	"github.com/EmissarySocial/emissary/tools/asnormalizer"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -22,6 +24,7 @@ import (
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/sherlock"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -56,6 +59,8 @@ func NewActivityStream(serverFactory ServerFactory, commonDatabase data.Server, 
 }
 
 func (service *ActivityStream) Client() streams.Client {
+
+	// Final layer client looks up hashed values within documents
 	return ashash.New(service.CacheClient())
 }
 
@@ -68,10 +73,10 @@ func (service *ActivityStream) CacheClient() *ascache.Client {
 	)
 
 	// enforce opinionated data formats
-	// normalizerClient := asnormalizer.New(sherlockClient)
+	normalizerClient := asnormalizer.New(sherlockClient)
 
 	// compute document context (if missing)
-	contextMakerClient := ascontextmaker.New(sherlockClient)
+	contextMakerClient := ascontextmaker.New(normalizerClient)
 
 	// crawler client will load related documents in the background
 	crawlerClient := ascrawler.New(
@@ -84,7 +89,9 @@ func (service *ActivityStream) CacheClient() *ascache.Client {
 	cacheRulesClient := ascacherules.New(crawlerClient)
 
 	// cache data in MongoDB
-	return ascache.New(cacheRulesClient, service.commonDatabase, ascache.WithIgnoreHeaders())
+	cacheClient := ascache.New(cacheRulesClient, service.commonDatabase, ascache.WithIgnoreHeaders())
+
+	return cacheClient
 }
 
 /******************************************
@@ -111,6 +118,36 @@ func (service *ActivityStream) Delete(url string) error {
 /******************************************
  * Custom Query Methods
  ******************************************/
+
+func (service *ActivityStream) Range(ctx context.Context, criteria exp.Expression, options ...option.Option) iter.Seq[streams.Document] {
+
+	const location = "service.ActivityStream.Range"
+
+	return func(yield func(streams.Document) bool) {
+
+		if service.collection == nil {
+			derp.Report(derp.InternalError(location, "Document Collection not initialized"))
+			return
+		}
+
+		startTime := time.Now()
+		iterator, err := service.documentIterator(ctx, criteria, options...)
+
+		if err != nil {
+			derp.Report(derp.Wrap(err, location, "Unable to query database", criteria))
+		}
+
+		endTime := time.Now()
+		spew.Dump(location, startTime.Unix(), endTime.Unix(), startTime.Unix()-endTime.Unix())
+
+		for item := ascache.NewValue(); iterator.Next(&item); item = ascache.NewValue() {
+			spew.Dump("yield: " + item.Object.GetString("id"))
+			if !yield(streams.NewDocument(item.Object)) {
+				return
+			}
+		}
+	}
+}
 
 // QueryRepliesBeforeDate returns a slice of streams.Document values that are replies to the specified document, and were published before the specified date.
 func (service *ActivityStream) queryByRelation(ctx context.Context, relationType string, relationHref string, cutType string, cutDate int64, done <-chan struct{}) <-chan streams.Document {
@@ -177,6 +214,16 @@ func (service *ActivityStream) queryByRelation(ctx context.Context, relationType
 
 	return result
 
+}
+
+func (service *ActivityStream) RangeByContext(ctx context.Context, contextName string) iter.Seq[streams.Document] {
+
+	if contextName == "" {
+		return func(yield func(streams.Document) bool) {}
+	}
+
+	criteria := exp.Equal("object.context", contextName)
+	return service.Range(ctx, criteria, option.SortAsc("published"))
 }
 
 // QueryRepliesBeforeDate returns a slice of streams.Document values that are replies to the specified document, and were published before the specified date.
