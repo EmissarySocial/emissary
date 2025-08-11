@@ -1,0 +1,68 @@
+{{- $url := index . 0 -}}
+{{- $selected := index . 1 -}}
+
+<div id="modal-header" class="turboclick" hx-target="#modal-window" hx-swap="innerHTML transition:true" hx-push-url="false">
+
+	<div>
+		<div class="flex-row text-xs">
+
+			<div class="flex-grow-1">
+				<span class="button-group">
+
+					{{- if eq "map" $selected -}}
+						<button hx-get="/@me/inbox/browse-map?url={{$url}}" class="selected">
+							<span class="htmx-request-hide">{{icon "map-fill"}}</span>
+							<span class="htmx-request-show"><span class="spin">{{icon "loading"}}</span></span>
+							Map
+						</button>
+					{{- else -}}
+						<button hx-get="/@me/inbox/browse-map?url={{$url}}">
+							<span class="htmx-request-hide">{{icon "map"}}</span>
+							<span class="htmx-request-show"><span class="spin">{{icon "loading"}}</span></span>
+							Map
+						</button>
+					{{- end -}}
+
+					{{- if eq "timeline" $selected -}}
+						<button hx-get="/@me/inbox/browse-timeline?url={{$url}}" class="selected">
+							<span class="htmx-request-hide">{{icon "timeline-fill"}}</span>
+							<span class="htmx-request-show"><span class="spin">{{icon "loading"}}</span></span>
+							Timeline
+						</button>
+					{{- else -}}
+						<button hx-get="/@me/inbox/browse-timeline?url={{$url}}">
+							<span class="htmx-request-hide">{{icon "timeline"}}</span>
+							<span class="htmx-request-show"><span class="spin">{{icon "loading"}}</span></span>
+							Timeline
+						</button>
+					{{- end -}}
+
+					{{- if eq "focus" $selected -}}
+						<button hx-get="/@me/inbox/browse-focus?url={{$url}}" class="selected">
+							<span class="htmx-request-hide">{{icon "focus-fill"}}</span>
+							<span class="htmx-request-show"><span class="spin">{{icon "loading"}}</span></span>
+							Focus
+						</button>
+					{{- else -}}
+						<button hx-get="/@me/inbox/browse-focus?url={{$url}}">
+							<span class="htmx-request-hide">{{icon "focus"}}</span>
+							<span class="htmx-request-show"><span class="spin">{{icon "loading"}}</span></span>
+							Focus
+						</button>
+					{{- end -}}
+
+				</span>
+
+			</div>
+
+			<div>
+				<span class="button-group">	
+					<button script="on click send closeModal">Close</button>
+				</span>
+			</div>
+		
+		</div>
+
+	</div>
+
+</div>

@@ -1,0 +1,10 @@
+{{- $url := .QueryParam "url" -}}
+{{- $document := .ActivityStream $url -}}
+
+{{- template "browse-header" (array $url "map") -}}
+
+<div id="modal-body" class="turboclick padding-top" hx-target="#modal-window" hx-swap="innerHTML transition:true" hx-push-url="false">
+
+	MAP HERE...
+
+</div>

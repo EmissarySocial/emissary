@@ -1,13 +1,13 @@
-{{- $builder := index . 0 -}}
-{{- $actor := index . 1 -}}
+{{- $url := .QueryParam "url" -}}
+{{- $actor := .ActivityStream $url -}}
 
-{{- $following := $builder.AmFollowing $actor.ID -}}
-{{- $follower := $builder.IsFollower $actor.ID -}}
-{{- $search := $builder.QueryParam "search" -}}
-{{- $folderID := $builder.QueryParam "folderId" -}}
+{{- $following := .AmFollowing $actor.ID -}}
+{{- $follower := .IsFollower $actor.ID -}}
+{{- $search := .QueryParam "search" -}}
+{{- $folderID := .QueryParam "folderId" -}}
 {{- $url := $actor.ID -}}
 
-<div id="modal-header" class="flex-row">
+<div id="modal-header" class="turboclick" hx-target="#modal" hx-swap="innerHTML transition:true">
 	<div role="tablist" class="pills margin-bottom-none">
 
 		{{- if ne "" $search -}}
@@ -89,7 +89,7 @@
 
 	{{- $featured := $actor.Featured.String -}}
 	{{- if ne "" $featured -}}
-		{{- $featured := $builder.ActivityStream $featured -}}
+		{{- $featured := .ActivityStream $featured -}}
 		{{- if $featured.Items.NotEmpty -}}
 			<div class="margin-top bold">{{icon "pin-fill"}} Featured Posts</div>
 			{{- range $index, $item := $featured.Items.RangeWithIndex -}}

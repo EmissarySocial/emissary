@@ -386,5 +386,40 @@
 				]}
 			]
 		}
+
+		browse-actor: {
+			roles: ["self"]
+			steps: [
+				{do:"view-html"}
+			]
+		}
+
+		browse-focus: {
+			roles: ["self"]
+			steps: [
+				{do:"view-html"}
+			]
+		}
+
+		browse-map: {
+			roles: ["self"]
+			steps: [
+				{do:"view-html"}
+			]
+		}
+
+		browse-replies: {
+			roles: ["self"]
+			steps: [
+				{do:"view-html"}
+			]
+		}
+
+		browse-timeline: {
+			roles: ["self"]
+			steps: [
+				{do:"view-html"}
+			]
+		}
 	}
 }	

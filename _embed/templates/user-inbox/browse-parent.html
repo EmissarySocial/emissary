@@ -1,0 +1,9 @@
+{{- $builder := index . 0 -}}
+{{- $document := index . 1 -}}
+{{- $inReplyTo := $document.InReplyTo.ID -}}
+
+{{- if ne "" $inReplyTo -}}
+	{{- template "browse-parent" (array $builder $document.InReplyTo.Load) -}}
+{{- end -}}
+
+{{- template "browse-document" (array $builder $document) -}}

@@ -1,0 +1,20 @@
+{{- $url := .QueryParam "url" -}}
+{{- $document := .ActivityStream $url -}}
+{{- $timeline := .RangeByContext $document.Context -}}
+
+{{- template "browse-header" (array $url "timeline") -}}
+
+<div id="modal-body" class="turboclick padding-top" hx-target="#modal-window" hx-swap="innerHTML transition:true" hx-push-url="false">
+
+	{{- range $document := $timeline -}}
+		{{- $hash := ($document.Get "x-hash").String -}}
+		<div hx-get="/@me/inbox/browse-focus?url={{$document.ID}}" class="clickable card padding-sm margin-bottom-sm {{ if eq $url $document.ID}}selected{{end}}" style="view-transition-name:{{$hash}}">
+			<div class="flex-row flex-align-center">
+				<div class="padding-right-sm text-sm text-gray nowrap">{{$document.Published | tinyDate }}</div>
+				<img src="{{$document.AttributedTo.Icon.Href}}" class="circle width-32">
+				<div class="flex-grow text-sm text-gray ellipsis">{{$document.Content | textOnly | summary  | html }}</div>
+			</div>
+		</div>
+	{{- end -}}
+
+</div>

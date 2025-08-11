@@ -1,0 +1,22 @@
+{{- $url := .QueryParam "url" -}}
+{{- $document := .ActivityStream $url -}}
+{{- $hash := ($document.Get "x-hash").String -}}
+
+{{- template "browse-header" (array $url "focus") -}}
+
+<div id="modal-body" class="turboclick padding-top" hx-target="#modal-window" hx-swap="innerHTML transition:true" hx-push-url="false">
+
+	{{- template "browse-parent" (array . $document) -}}
+
+	<div class="text-gray text-xs">REPLIES</div>
+	<div hx-get="/@me/inbox/browse-replies?url={{$document.ID}}" hx-trigger="load" hx-target="this" hx-swap="innerHTML" hx-push-url="false">
+		<span class="spin">{{icon "loading"}}</span> Loading Replies
+	</div>
+
+	<span script="on load
+		set selectedNode to #id_{{$hash}} 
+		log the selectedNode
+		take .selected from .card for the selectedNode then
+		scrollIntoView() the selectedNode
+	">
+</div>

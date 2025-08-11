@@ -24,3 +24,8 @@
 .card.link:hover {
 	border:solid 1px var(--link-color);
 }
+
+.card.selected {
+	border: solid 2px var(--link-color);
+	margin:-1px;
+}

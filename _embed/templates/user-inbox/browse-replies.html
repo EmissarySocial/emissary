@@ -16,11 +16,14 @@
 {{- end -}}
 
 {{- range $index, $stream := $replies -}}
+	{{- $document := $stream.UnwrapActivity -}}
+	{{- template "browse-document" (array $builder $document) -}}
+{{- end -}}
 
-	{{- $object := $stream.UnwrapActivity -}}
+<!--
 	{{- $actor := $object.AttributedTo.Load -}}
 
-	<div class="card padding-vertical-sm padding-horizontal">
+	<div class="card padding-vertical-sm padding-horizontal margin-bottom">
 
 		<div role="link" class="margin-top">
 
@@ -41,25 +44,6 @@
 				</div>
 
 				<div class="align-right text-xs nowrap">
-					<!--
-					<span
-						hx-get="/@me/inbox/like-button?url={{$object.ID}}"
-						hx-target="this"
-						hx-trigger="load">
-					</span>
-					
-					{{- if $actor.NotNil -}}
-						{{- if $builder.IsMe $object.Actor.ID -}}
-							<span class="button" disabled>{{icon "more-horizontal"}}</span>
-						{{- else -}}
-							<span
-								hx-get="/@me/inbox/actor-button?url={{$object.Actor.ID}}&folderId={{$folderID}}"
-								hx-target="this"
-								hx-trigger="load">
-							</span>
-						{{- end -}}
-					{{- end -}}
-					-->
 					
 				</div>
 
@@ -123,3 +107,4 @@
 	</div>
 
 {{- end -}}
+-->

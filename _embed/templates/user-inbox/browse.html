@@ -1,9 +1,8 @@
 {{- $url := .QueryParam "url" -}}
 {{- $document := .ActivityStream $url -}}
-{{- $args := array . $document -}}
 
 {{- if $document.IsActor -}}
-	{{- template "browse-actor" $args -}}
-{{- else  -}}
-	{{ template "browse-document" $args -}}
+	{{- template "browse-actor" . -}}
+{{- else -}}
+	{{ template "browse-focus" . -}}
 {{- end -}}
