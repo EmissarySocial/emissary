@@ -1,11 +1,13 @@
 package asnormalizer
 
 import (
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/cespare/xxhash/v2"
 )
 
 // Object normalizes a regular document (Article, Note, etc)
@@ -30,6 +32,7 @@ func Object(document streams.Document) map[string]any {
 		vocab.PropertyActor:        actorID,
 		vocab.PropertyAttributedTo: first(actual.AttributedTo().ID(), actorID),
 		vocab.PropertyInReplyTo:    actual.InReplyTo().ID(),
+		vocab.PropertyReplies:      actual.Replies().ID(),
 		vocab.PropertyName:         actual.Name(),
 		vocab.PropertyContext:      Context(document),
 		vocab.PropertySummary:      actual.Summary(),
@@ -58,6 +61,10 @@ func Object(document streams.Document) map[string]any {
 	if icon := actual.Icon(); icon.NotNil() {
 		result[vocab.PropertyIcon] = Image(icon)
 	}
+
+	// Add a hashed representation of the ID for (easier?) lookups?
+	hashedID := xxhash.Sum64String(actual.ID())
+	result["x-hash"] = strconv.FormatUint(hashedID, 32)
 
 	return result
 }

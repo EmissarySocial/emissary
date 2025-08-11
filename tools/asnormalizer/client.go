@@ -12,9 +12,16 @@ type Client struct {
 }
 
 func New(innerClient streams.Client) *Client {
-	return &Client{
+	result := &Client{
 		innerClient: innerClient,
 	}
+
+	result.innerClient.SetRootClient(result)
+	return result
+}
+
+func (client *Client) SetRootClient(rootClient streams.Client) {
+	client.innerClient.SetRootClient(rootClient)
 }
 
 func (client *Client) Load(uri string, options ...any) (streams.Document, error) {
