@@ -2,6 +2,7 @@ package stripeapi
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/benpate/derp"
 	"github.com/benpate/remote"
@@ -20,56 +21,81 @@ func Prices(restrictedKey string, connectedAccountID string, priceIDs ...string)
 	response := stripe.PriceList{}
 	result := make([]stripe.Price, 0)
 
-	// Query the Stripe API for all Prices
-	txn := remote.Get("https://api.stripe.com/v1/prices?limit=100").
-		With(options.BearerAuth(restrictedKey)).
-		With(ConnectedAccount(connectedAccountID)).
-		Query("expand[]", "data.product").
-		Query("active", "true").
-		Result(&response)
+	last := ""
+	pageSize := 100
 
-	if err := txn.Send(); err != nil {
-		return nil, derp.Wrap(err, location, "Error connecting to Stripe API", derp.WithCode(http.StatusInternalServerError))
-	}
+	for {
 
-	// NPE check
-	if response.Data == nil {
-		return result, nil
-	}
+		// Query the Stripe API for all Prices
+		txn := remote.Get("https://api.stripe.com/v1/prices").
+			With(options.BearerAuth(restrictedKey)).
+			With(ConnectedAccount(connectedAccountID)).
+			Query("expand[]", "data.product").
+			Query("active", "true").
+			Query("limit", strconv.Itoa(pageSize)).
+			Result(&response)
 
-	// Find/Filter prices based on the provided priceIDs
-	// If no priceIDs are specified, return all prices
-	for _, price := range response.Data {
+		if last != "" {
+			txn = txn.Query("starting_after", last)
+		}
+
+		if err := txn.Send(); err != nil {
+			return nil, derp.Wrap(err, location, "Error connecting to Stripe API", derp.WithCode(http.StatusInternalServerError))
+		}
 
 		// NPE check
-		if price == nil {
-			continue
+		if response.Data == nil {
+			break
 		}
 
-		// Filter out inactive prices
-		if !price.Active {
-			continue
+		// If no prices found (this round) then return what we have processed so far
+		if len(response.Data) == 0 {
+			break
 		}
 
-		// NPE check for Product
-		if price.Product == nil {
-			continue
-		}
+		// Find/Filter prices based on the provided priceIDs
+		// If no priceIDs are specified, return all prices
+		for _, price := range response.Data {
 
-		// Filter out inactive products
-		if !price.Product.Active {
-			continue
-		}
-
-		// If priceIDs are provided then filter by priceIDs
-		if len(priceIDs) > 0 {
-			if slice.NotContains(priceIDs, price.ID) {
+			// NPE check
+			if price == nil {
 				continue
 			}
+
+			// Filter out inactive prices
+			if !price.Active {
+				continue
+			}
+
+			// NPE check for Product
+			if price.Product == nil {
+				continue
+			}
+
+			// Update the lastID for pagination
+			// Doing this BEFORE applying any other app-level filters
+			last = price.ID
+
+			// Filter out inactive products
+			if !price.Product.Active {
+				continue
+			}
+
+			// If priceIDs are provided then filter by priceIDs
+			if len(priceIDs) > 0 {
+				if slice.NotContains(priceIDs, price.ID) {
+					continue
+				}
+			}
+
+			// Result is valid; append to the result.
+			result = append(result, *price)
 		}
 
-		// Result is valid; append to the result.
-		result = append(result, *price)
+		if len(response.Data) < pageSize {
+			// If we received fewer results than the page size, then we are done
+			break
+		}
 	}
 
 	// Done.
