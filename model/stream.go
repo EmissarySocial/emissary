@@ -378,9 +378,9 @@ func (stream Stream) GetRank() int64 {
 
 func (stream Stream) DocumentLink() DocumentLink {
 	return DocumentLink{
-		ID:    stream.StreamID,
-		URL:   stream.URL,
-		Label: stream.Label,
+		ID:   stream.StreamID,
+		URL:  stream.URL,
+		Name: stream.Label,
 	}
 }
 

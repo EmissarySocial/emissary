@@ -23,6 +23,7 @@ import (
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/sherlock"
 	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -149,6 +150,16 @@ func (service *ActivityStream) Range(ctx context.Context, criteria exp.Expressio
 	}
 }
 
+func (service *ActivityStream) collection(ctx context.Context) (data.Collection, error) {
+	session, err := service.commonDatabase.Session(ctx)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "service.ActivityStream.collection", "Unable to connect to database")
+	}
+
+	return session.Collection("Document"), nil
+}
+
 // QueryRepliesBeforeDate returns a slice of streams.Document values that are replies to the specified document, and were published before the specified date.
 func (service *ActivityStream) queryByRelation(ctx context.Context, relationType string, relationHref string, cutType string, cutDate int64, done <-chan struct{}) <-chan streams.Document {
 
@@ -216,10 +227,10 @@ func (service *ActivityStream) queryByRelation(ctx context.Context, relationType
 
 }
 
-func (service *ActivityStream) RangeByContext(ctx context.Context, contextName string) iter.Seq[streams.Document] {
+func (service *ActivityStream) QueryByContext(ctx context.Context, contextName string) (sliceof.Object[model.DocumentLink], error) {
 
 	if contextName == "" {
-		return func(yield func(streams.Document) bool) {}
+		return sliceof.NewObject[model.DocumentLink](), nil
 	}
 
 	criteria := exp.Equal("object.context", contextName)

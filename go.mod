@@ -10,6 +10,8 @@ replace github.com/benpate/hannibal => ../../benpate/hannibal
 
 replace github.com/benpate/queue => ../../benpate/queue
 
+replace github.com/benpate/rosetta => ../../benpate/rosetta
+
 replace github.com/benpate/sherlock => ../../benpate/sherlock
 
 replace github.com/benpate/steranko => ../../benpate/steranko
@@ -42,6 +44,7 @@ require (
 	github.com/benpate/table v0.7.4
 	github.com/benpate/toot v0.3.0
 	github.com/benpate/turbine v0.3.2
+	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/codingsince1985/geo-golang v1.8.5
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/davidscottmills/goeditorjs v1.0.0
