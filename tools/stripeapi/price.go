@@ -21,7 +21,7 @@ func Prices(restrictedKey string, connectedAccountID string, priceIDs ...string)
 	result := make([]stripe.Price, 0)
 
 	// Query the Stripe API for all Prices
-	txn := remote.Get("https://api.stripe.com/v1/prices").
+	txn := remote.Get("https://api.stripe.com/v1/prices?limit=10").
 		With(options.BearerAuth(restrictedKey)).
 		With(ConnectedAccount(connectedAccountID)).
 		Query("expand[]", "data.product").
