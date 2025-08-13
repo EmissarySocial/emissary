@@ -9,8 +9,8 @@
 	{{- range $item := $tree -}}
 		<div 
 			hx-get="/@me/inbox/browse-focus?url={{$item.URL}}" 
-			class="clickable card text-sm text-gray padding-sm margin-bottom-sm {{ if eq $url $item.URL}}selected{{end}}" 
-			style="margin-left:{{multiply 8 $item.Depth}}px;; view-transition-name:{{$item.ID}};">
+			class="clickable card text-sm padding-sm margin-bottom-sm {{ if eq $url $item.URL}}selected{{end}}" 
+			style="margin-left:{{multiply 24 $item.Depth}}px;; view-transition-name:{{$item.ID}};">
 
 			<div class="flex-row flex-align-center">
 				<img src="{{$item.Icon}}" class="circle width-24">

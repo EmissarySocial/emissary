@@ -9,7 +9,7 @@
 	{{- range $document := $timeline -}}
 		<div 
 			hx-get="/@me/inbox/browse-focus?url={{$document.URL}}" 
-			class="clickable card text-sm text-gray padding-xs margin-bottom-sm {{ if eq $url $document.URL}}selected{{end}}" 
+			class="clickable card text-sm padding-xs margin-bottom-sm {{ if eq $url $document.URL}}selected{{end}}" 
 			style="view-transition-name:{{$document.ID}}">
 
 			<div class="flex-row flex-align-center">

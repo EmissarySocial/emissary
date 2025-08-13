@@ -26,6 +26,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/sherlock"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -171,12 +172,14 @@ func (service *ActivityStream) queryByRelation(ctx context.Context, relationType
 		var sortOption option.Option
 
 		if cutType == "before" {
-			criteria = criteria.AndLessThan("published", cutDate)
-			sortOption = option.SortDesc("published")
+			criteria = criteria.AndLessThan("object.published", time.Unix(cutDate, 0))
+			sortOption = option.SortDesc("object.published")
 		} else {
-			criteria = criteria.AndGreaterThan("published", cutDate)
-			sortOption = option.SortAsc("published")
+			criteria = criteria.AndGreaterThan("object.published", time.Unix(cutDate, 0))
+			sortOption = option.SortAsc("object.published")
 		}
+
+		spew.Dump(location, cutType, cutDate, criteria)
 
 		// Try to query the database
 		documents, err := service.documentIterator(ctx, criteria, sortOption)

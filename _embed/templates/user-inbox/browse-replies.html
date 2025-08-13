@@ -4,18 +4,25 @@
 {{- $followingID := .QueryParam "origin.followingId" -}}
 {{- $publishedDate := .QueryParam "published" -}}
 
-{{- $pageSize := 4 -}}
+{{- $pageSize := 6 -}}
 {{- $builder := . -}}
 
-{{- $replies := .RepliesBefore $url $publishedDate $pageSize -}}
-
-{{- if eq $replies.Length $pageSize -}}
-	<div class="margin-bottom" role="button" hx-get="{{.BasePath}}/responses-replies-list?url={{$url}}&published={{$replies.First.Published | epochDate}}" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
-		<span class="button text-xs">Show Older Replies</span>
-	</div>
-{{- end -}}
+{{- $replies := .RepliesAfter $url $publishedDate $pageSize -}}
 
 {{- range $index, $stream := $replies -}}
 	{{- $document := $stream.UnwrapActivity -}}
 	{{- template "browse-document" (array $builder $document "replies") -}}
 {{- end -}}
+
+{{- if eq $replies.Length $pageSize -}}
+	<div 
+		hx-get="{{.BasePath}}/browse-replies?published={{$replies.Last.Published | epochDate}}&url={{$url}}" 
+		hx-target="this" 
+		hx-trigger="intersect once"
+		hx-swap="outerHTML" 
+		hx-push-url="false">
+		<span class="spin">{{icon "loading"}}</span>
+		Loading More Replies
+	</div>
+{{- end -}}
+

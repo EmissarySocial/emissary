@@ -7,7 +7,7 @@
 {{- $pageSize := 6 -}}
 {{- $builder := . -}}
 
-{{- $replies := .RepliesBefore $url $publishedDate $pageSize -}}
+{{- $replies := .RepliesAfter $url "" $pageSize -}}
 
 {{- if $replies.NotEmpty -}}
 

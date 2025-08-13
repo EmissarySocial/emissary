@@ -41,13 +41,13 @@
 						<button hx-get="/@me/inbox/browse-map?url={{$url}}" class="selected">
 							<span class="htmx-request-hide">{{icon "map-fill"}}</span>
 							<span class="htmx-request-show"><span class="spin">{{icon "loading"}}</span></span>
-							Map
+							Nested
 						</button>
 					{{- else -}}
 						<button hx-get="/@me/inbox/browse-map?url={{$url}}">
 							<span class="htmx-request-hide">{{icon "map"}}</span>
 							<span class="htmx-request-show"><span class="spin">{{icon "loading"}}</span></span>
-							Map
+							Nested
 						</button>
 					{{- end -}}
 

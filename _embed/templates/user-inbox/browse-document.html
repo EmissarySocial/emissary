@@ -80,8 +80,8 @@
 	{{- end }}
 
 	<div class="pos-absolute-top-right text-xs" hx-target="#modal-window" hx-push-url="false" hx-swap="innerHTML transition:true">
-		<button hx-get="/@me/inbox/browse-map?url={{$document.ID}}" aria-label="View Map">{{icon "map"}}</button>
 		<button hx-get="/@me/inbox/browse-timeline?url={{$document.ID}}" aria-label="View Timeline">{{icon "timeline"}}</button>
+		<button hx-get="/@me/inbox/browse-map?url={{$document.ID}}" aria-label="View Map">{{icon "map"}}</button>
 	</div>
 	
 </div>
