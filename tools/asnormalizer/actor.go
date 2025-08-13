@@ -30,8 +30,6 @@ func Actor(document streams.Document) map[string]any {
 		vocab.PropertyFollowers:  document.Followers().String(),
 		vocab.PropertyFollowing:  document.Following().String(),
 		vocab.PropertyPublicKey:  document.PublicKey().Value(),
-
-		"x-original": document.Value(),
 	}
 
 	// Cryptography

@@ -1,10 +1,24 @@
 {{- $url := .QueryParam "url" -}}
 {{- $document := .ActivityStream $url -}}
+{{- $tree := .QueryByContext_Tree $document.Context -}}
 
 {{- template "browse-header" (array $url "map") -}}
 
 <div id="modal-body" class="turboclick padding-top" hx-target="#modal-window" hx-swap="innerHTML transition:true" hx-push-url="false">
 
-	MAP HERE...
+	{{- range $item := $tree -}}
+		<div 
+			hx-get="/@me/inbox/browse-focus?url={{$item.URL}}" 
+			class="clickable card text-sm text-gray padding-sm margin-bottom-sm {{ if eq $url $item.URL}}selected{{end}}" 
+			style="margin-left:{{multiply 8 $item.Depth}}px;; view-transition-name:{{$item.ID}};">
+
+			<div class="flex-row flex-align-center">
+				<img src="{{$item.Icon}}" class="circle width-24">
+				<div class="flex-grow ellipsis">
+					{{$item.Content | summary | html }}
+				</div>
+			</div>
+		</div>
+	{{- end -}}
 
 </div>

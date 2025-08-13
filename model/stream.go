@@ -376,14 +376,6 @@ func (stream Stream) GetRank() int64 {
  * Other Methods
  ******************************************/
 
-func (stream Stream) DocumentLink() DocumentLink {
-	return DocumentLink{
-		ID:   stream.StreamID,
-		URL:  stream.URL,
-		Name: stream.Label,
-	}
-}
-
 // HasParent returns TRUE if this Stream has a valid parentID
 func (stream Stream) HasParent() bool {
 	return !stream.ParentID.IsZero()

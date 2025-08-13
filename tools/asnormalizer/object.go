@@ -1,17 +1,18 @@
 package asnormalizer
 
 import (
-	"strconv"
 	"strings"
 	"time"
 
+	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
-	"github.com/cespare/xxhash/v2"
 )
 
 // Object normalizes a regular document (Article, Note, etc)
-func Object(document streams.Document) map[string]any {
+func Object(client streams.Client, document streams.Document) map[string]any {
+
+	const location = "asnormalizer.Object"
 
 	actual := document.UnwrapActivity()
 
@@ -39,7 +40,19 @@ func Object(document streams.Document) map[string]any {
 		vocab.PropertyContent:      actual.Content(),
 		vocab.PropertyPublished:    first(actual.Published(), time.Now()),
 		vocab.PropertyTag:          Tags(document.Tag()),
-		"x-original":               document.Value(),
+	}
+
+	// Expand the "AttributedTo" actor
+	if attributedToID := actual.AttributedTo().ID(); attributedToID != "" {
+
+		attributedTo, err := client.Load(attributedToID)
+
+		if err != nil {
+			derp.Report(derp.Wrap(err, location, "Unable to load attributedTo actor", attributedToID))
+		}
+
+		result[vocab.PropertyAttributedTo] = Actor(attributedTo)
+
 	}
 
 	if attachments := actual.Attachment(); attachments.NotNil() {
@@ -61,10 +74,6 @@ func Object(document streams.Document) map[string]any {
 	if icon := actual.Icon(); icon.NotNil() {
 		result[vocab.PropertyIcon] = Image(icon)
 	}
-
-	// Add a hashed representation of the ID for (easier?) lookups?
-	hashedID := xxhash.Sum64String(actual.ID())
-	result["x-hash"] = strconv.FormatUint(hashedID, 32)
 
 	return result
 }

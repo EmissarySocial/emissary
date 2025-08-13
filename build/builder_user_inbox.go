@@ -3,12 +3,12 @@ package build
 import (
 	"bytes"
 	"html/template"
-	"iter"
 	"math"
 	"net/http"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/treebuilder"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -20,7 +20,6 @@ import (
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -565,12 +564,16 @@ func (w Inbox) Message() model.Message {
 	return message
 }
 
-func (w Inbox) RangeByContext(contextID string) iter.Seq[streams.Document] {
-
-	spew.Dump("RangeByContext", contextID)
-
+func (w Inbox) QueryByContext(contextID string) (sliceof.Object[model.DocumentLink], error) {
 	activityService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
-	return activityService.RangeByContext(w._request.Context(), contextID)
+	return activityService.QueryByContext(w._request.Context(), contextID)
+}
+
+func (w Inbox) QueryByContext_Tree(contextID string) (sliceof.Object[*treebuilder.Item], error) {
+	activityService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
+	result, err := activityService.QueryByContext_Tree(w._request.Context(), contextID)
+
+	return result, err
 }
 
 func (w Inbox) RepliesBefore(url string, dateString string, maxRows int) sliceof.Object[streams.Document] {

@@ -9,17 +9,17 @@
 			<div class="flex-grow-1">
 				<span class="button-group">
 
-					{{- if eq "map" $selected -}}
-						<button hx-get="/@me/inbox/browse-map?url={{$url}}" class="selected">
-							<span class="htmx-request-hide">{{icon "map-fill"}}</span>
+					{{- if eq "focus" $selected -}}
+						<button hx-get="/@me/inbox/browse-focus?url={{$url}}" class="selected">
+							<span class="htmx-request-hide">{{icon "focus-fill"}}</span>
 							<span class="htmx-request-show"><span class="spin">{{icon "loading"}}</span></span>
-							Map
+							Focus
 						</button>
 					{{- else -}}
-						<button hx-get="/@me/inbox/browse-map?url={{$url}}">
-							<span class="htmx-request-hide">{{icon "map"}}</span>
+						<button hx-get="/@me/inbox/browse-focus?url={{$url}}">
+							<span class="htmx-request-hide">{{icon "focus"}}</span>
 							<span class="htmx-request-show"><span class="spin">{{icon "loading"}}</span></span>
-							Map
+							Focus
 						</button>
 					{{- end -}}
 
@@ -37,17 +37,17 @@
 						</button>
 					{{- end -}}
 
-					{{- if eq "focus" $selected -}}
-						<button hx-get="/@me/inbox/browse-focus?url={{$url}}" class="selected">
-							<span class="htmx-request-hide">{{icon "focus-fill"}}</span>
+					{{- if eq "map" $selected -}}
+						<button hx-get="/@me/inbox/browse-map?url={{$url}}" class="selected">
+							<span class="htmx-request-hide">{{icon "map-fill"}}</span>
 							<span class="htmx-request-show"><span class="spin">{{icon "loading"}}</span></span>
-							Focus
+							Map
 						</button>
 					{{- else -}}
-						<button hx-get="/@me/inbox/browse-focus?url={{$url}}">
-							<span class="htmx-request-hide">{{icon "focus"}}</span>
+						<button hx-get="/@me/inbox/browse-map?url={{$url}}">
+							<span class="htmx-request-hide">{{icon "map"}}</span>
 							<span class="htmx-request-show"><span class="spin">{{icon "loading"}}</span></span>
-							Focus
+							Map
 						</button>
 					{{- end -}}
 

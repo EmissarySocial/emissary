@@ -3,7 +3,6 @@ package ascontextmaker
 import (
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
-	"github.com/davecgh/go-spew/spew"
 )
 
 // asContextMaker is a hannibal.Streams middleware that adds a "context" property to all documents
@@ -86,21 +85,15 @@ func (client Client) Load(uri string, options ...any) (streams.Document, error) 
 		return result, nil
 	}
 
-	spew.Dump("ascontextmaker.Load: checking InReplyTo")
-
 	// If we have an "inReplyTo" field, then try to load that value
 	// to use/generate its context
 	if result.InReplyTo().NotNil() {
-
-		spew.Dump(result.InReplyTo().Value())
 
 		options = append(options, WithHistory(uri))
 
 		for inReplyTo := result.InReplyTo(); inReplyTo.NotNil(); inReplyTo = inReplyTo.Tail() {
 			if parent, err := client.rootClient.Load(inReplyTo.ID(), options...); err == nil {
 				if context := parent.Context(); context != "" {
-
-					spew.Dump("FOUND CONTEXT:", context)
 					result.SetProperty(vocab.PropertyContext, context)
 					break
 				}

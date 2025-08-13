@@ -1,0 +1,26 @@
+{{- $url := .QueryParam "url" -}}
+{{- $messageID := .QueryParam "messageId" -}}
+{{- $folderID := .QueryParam "folderId" -}}
+{{- $followingID := .QueryParam "origin.followingId" -}}
+{{- $publishedDate := .QueryParam "published" -}}
+
+{{- $pageSize := 6 -}}
+{{- $builder := . -}}
+
+{{- $replies := .RepliesBefore $url $publishedDate $pageSize -}}
+
+{{- if $replies.NotEmpty -}}
+
+	<div class="text-sm text-gray margin-bottom">TOP REPLIES</div>
+
+	{{- range $index, $stream := $replies -}}
+		{{- $document := $stream.UnwrapActivity -}}
+		{{- $hash := ($document.Get "x-hashed-id").String -}}
+
+		<div hx-get="/@me/inbox/browse-focus?url={{$document.ID}}" hx-target="#modal-window" class="clickable card padding-xs flex-row margin-bottom-xs" style="view-transition-name: {{$hash}};">
+			<img src="{{$document.AttributedTo.Image.Href}}" class="circle width-24"/>
+			<div class="text-xs text-gray ellipsis">{{$document.Content | summary | html}}</div>
+		</div>
+	{{- end -}}
+	
+{{- end -}}

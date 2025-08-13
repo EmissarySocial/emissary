@@ -1,13 +1,17 @@
 package asnormalizer
 
 import (
+	"strconv"
+
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/property"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/cespare/xxhash/v2"
 )
 
 type Client struct {
+	rootClient  streams.Client
 	innerClient streams.Client
 }
 
@@ -21,6 +25,7 @@ func New(innerClient streams.Client) *Client {
 }
 
 func (client *Client) SetRootClient(rootClient streams.Client) {
+	client.rootClient = rootClient
 	client.innerClient.SetRootClient(rootClient)
 }
 
@@ -35,16 +40,24 @@ func (client *Client) Load(uri string, options ...any) (streams.Document, error)
 		return streams.NilDocument(), derp.Wrap(err, location, "Error loading document from inner client", uri)
 	}
 
+	original := result.Clone().Map()
+
 	// Try to Normalize the document
-	if normalized := Normalize(result); normalized != nil {
+	if normalized := Normalize(client.rootClient, result); normalized != nil {
 		result.SetValue(property.Map(normalized))
 	}
+
+	// Add a hashed representation of the ID for (easier?) lookups?
+	hashedID := xxhash.Sum64String(result.ID())
+	hashedIDString := strconv.FormatUint(hashedID, 32)
+	result.SetString("x-hashed-id", hashedIDString)
+	result.SetProperty("x-original", original)
 
 	// Return the result
 	return result, nil
 }
 
-func Normalize(document streams.Document) map[string]any {
+func Normalize(client streams.Client, document streams.Document) map[string]any {
 
 	switch {
 
@@ -54,7 +67,7 @@ func Normalize(document streams.Document) map[string]any {
 
 	// Regular documents here (Article, Note, etc)
 	case document.IsObject():
-		return Object(document)
+		return Object(client, document)
 
 	// Collections (OrderedCollection, Collection, etc)
 	case document.IsCollection():
@@ -65,8 +78,9 @@ func Normalize(document streams.Document) map[string]any {
 
 	// Likes (treat EmojiReactions as likes)
 	case vocab.ActivityTypeLike,
-		"EmojiReact",
-		"EmojiReaction":
+		vocab.ActivityTypeEmojiReact,
+		vocab.ActivityTypeEmojiReactAlt:
+
 		return Like(document)
 
 	// Dislikes
@@ -78,7 +92,7 @@ func Normalize(document streams.Document) map[string]any {
 	case vocab.ActivityTypeCreate,
 		vocab.ActivityTypeUpdate:
 
-		return Object(document)
+		return Object(client, document)
 	}
 
 	// Unrecognized documents return nil, which will be ignored by the caller

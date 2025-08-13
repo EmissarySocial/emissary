@@ -8,7 +8,6 @@ import (
 	"github.com/benpate/rosetta/channel"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 )
 
@@ -64,8 +63,6 @@ func (client *Client) Load(uri string, options ...any) (streams.Document, error)
 func (client *Client) crawl(document streams.Document, options ...any) {
 
 	const location = "tools.ascrawler.crawl"
-
-	spew.Dump(location, document.Value())
 
 	config := parseLoadConfig(options...)
 

@@ -415,6 +415,13 @@
 			]
 		}
 
+		browse-replies-inline: {
+			roles: ["self"]
+			steps: [
+				{do:"view-html"}
+			]
+		}
+
 		browse-timeline: {
 			roles: ["self"]
 			steps: [

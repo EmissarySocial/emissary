@@ -248,11 +248,6 @@ func (w Stream) Token() string {
 	return w._stream.Token
 }
 
-// Document returns the DocumentLink record for this stream
-func (w Stream) Document() model.DocumentLink {
-	return w._stream.DocumentLink()
-}
-
 // Label returns the Label for the stream being built
 func (w Stream) Label() string {
 	return w._stream.Label

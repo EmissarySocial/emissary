@@ -16,6 +16,7 @@ import (
 	"github.com/EmissarySocial/emissary/tools/ascrawler"
 	"github.com/EmissarySocial/emissary/tools/ashash"
 	"github.com/EmissarySocial/emissary/tools/asnormalizer"
+	"github.com/EmissarySocial/emissary/tools/treebuilder"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -25,7 +26,6 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/sherlock"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -131,33 +131,19 @@ func (service *ActivityStream) Range(ctx context.Context, criteria exp.Expressio
 			return
 		}
 
-		startTime := time.Now()
 		iterator, err := service.documentIterator(ctx, criteria, options...)
 
 		if err != nil {
 			derp.Report(derp.Wrap(err, location, "Unable to query database", criteria))
+			return
 		}
 
-		endTime := time.Now()
-		spew.Dump(location, startTime.Unix(), endTime.Unix(), startTime.Unix()-endTime.Unix())
-
 		for item := ascache.NewValue(); iterator.Next(&item); item = ascache.NewValue() {
-			spew.Dump("yield: " + item.Object.GetString("id"))
 			if !yield(streams.NewDocument(item.Object)) {
 				return
 			}
 		}
 	}
-}
-
-func (service *ActivityStream) collection(ctx context.Context) (data.Collection, error) {
-	session, err := service.commonDatabase.Session(ctx)
-
-	if err != nil {
-		return nil, derp.Wrap(err, "service.ActivityStream.collection", "Unable to connect to database")
-	}
-
-	return session.Collection("Document"), nil
 }
 
 // QueryRepliesBeforeDate returns a slice of streams.Document values that are replies to the specified document, and were published before the specified date.
@@ -229,12 +215,44 @@ func (service *ActivityStream) queryByRelation(ctx context.Context, relationType
 
 func (service *ActivityStream) QueryByContext(ctx context.Context, contextName string) (sliceof.Object[model.DocumentLink], error) {
 
+	const location = "service.ActivityStream.QueryByContext"
+
+	// RULE: Do not query empty contexts
 	if contextName == "" {
 		return sliceof.NewObject[model.DocumentLink](), nil
 	}
 
+	// Query the database
 	criteria := exp.Equal("object.context", contextName)
-	return service.Range(ctx, criteria, option.SortAsc("published"))
+	documents := service.Range(ctx, criteria, option.SortAsc("object.published"))
+	result := sliceof.NewObject[model.DocumentLink]()
+
+	// Map into model.DocumentLink records
+	for document := range documents {
+		result = append(result, service.asDocumentLink(document))
+	}
+
+	return result, nil
+}
+
+func (service *ActivityStream) QueryByContext_Tree(ctx context.Context, contextName string) (sliceof.Object[*treebuilder.Item], error) {
+
+	// RULE: Do not query empty contexts
+	if contextName == "" {
+		return sliceof.NewObject[*treebuilder.Item](), nil
+	}
+
+	// Query the database
+	criteria := exp.Equal("object.context", contextName)
+	documents := service.Range(ctx, criteria, option.SortAsc("object.published"))
+	treeInput := sliceof.NewObject[treebuilder.Item]()
+
+	// Map into model.DocumentLink records
+	for document := range documents {
+		treeInput = append(treeInput, service.asTreeItem(document))
+	}
+
+	return treebuilder.ParseAndFormat(treeInput), nil
 }
 
 // QueryRepliesBeforeDate returns a slice of streams.Document values that are replies to the specified document, and were published before the specified date.
@@ -457,4 +475,40 @@ func (service *ActivityStream) collection(ctx context.Context) (data.Collection,
 	}
 
 	return session.Collection("Document"), nil
+}
+
+func (service *ActivityStream) asDocumentLink(document streams.Document) model.DocumentLink {
+
+	attributedTo := document.AttributedTo()
+
+	return model.DocumentLink{
+		ID:      document.Get("x-hashed-id").String(),
+		URL:     document.ID(),
+		Name:    document.Name(),
+		Icon:    document.Icon().Href(),
+		Summary: document.Summary(),
+		Content: document.Content(),
+		AttributedTo: model.PersonLink{
+			Username:   attributedTo.PreferredUsername(),
+			ProfileURL: attributedTo.ID(),
+			Name:       attributedTo.Name(),
+			IconURL:    attributedTo.Icon().Href(),
+		},
+		Published: document.Published().Unix(),
+	}
+}
+
+func (service *ActivityStream) asTreeItem(document streams.Document) treebuilder.Item {
+
+	result := treebuilder.NewItem()
+
+	result.ItemID = document.ID()
+	result.URL = document.ID()
+	result.ParentID = document.InReplyTo().ID()
+	result.Icon = document.AttributedTo().Icon().Href()
+	result.Name = document.Name()
+	result.Content = document.Content()
+	result.Published = document.Published().Unix()
+
+	return result
 }
