@@ -2,7 +2,8 @@ package model
 
 type DocumentLink struct {
 	ID           string     // ID of the record that is being linked (if different from its URL)
-	URL          string     // URL of the original document
+	InReplyTo    string     // ID of the document this one is replying to (if applicable)
+	Token        string     // Other token to use when identifying this document (like a hashed-id or URL slug)
 	Name         string     // Label/Title of the document
 	Icon         string     // URL of the icon image for this document
 	Summary      string     // Brief summary of the document
@@ -15,4 +16,12 @@ func NewDocumentLink() DocumentLink {
 	return DocumentLink{
 		AttributedTo: NewPersonLink(),
 	}
+}
+
+func (document DocumentLink) TreeID() string {
+	return document.ID
+}
+
+func (document DocumentLink) TreeParent() string {
+	return document.InReplyTo
 }

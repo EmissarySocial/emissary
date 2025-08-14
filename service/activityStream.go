@@ -485,12 +485,13 @@ func (service *ActivityStream) asDocumentLink(document streams.Document) model.D
 	attributedTo := document.AttributedTo()
 
 	return model.DocumentLink{
-		ID:      document.Get("x-hashed-id").String(),
-		URL:     document.ID(),
-		Name:    document.Name(),
-		Icon:    document.Icon().Href(),
-		Summary: document.Summary(),
-		Content: document.Content(),
+		ID:        document.ID(),
+		InReplyTo: document.InReplyTo().ID(),
+		Token:     document.Get("x-hashed-id").String(),
+		Name:      document.Name(),
+		Icon:      document.Icon().Href(),
+		Summary:   document.Summary(),
+		Content:   document.Content(),
 		AttributedTo: model.PersonLink{
 			Username:   attributedTo.PreferredUsername(),
 			ProfileURL: attributedTo.ID(),
