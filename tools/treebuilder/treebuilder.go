@@ -1,63 +1,71 @@
 package treebuilder
 
-import (
-	"github.com/davecgh/go-spew/spew"
-)
+import "github.com/benpate/derp"
 
-func ParseAndFormat(items []Item) []*Item {
+func ParseAndFormat[T TreeGetter](items []T) []*Tree[T] {
 
 	defer func() {
 		if err := recover(); err != nil {
-			spew.Dump(err)
+			derp.Report(derp.InternalError("treebuilder.ParseAndFormat", "Unknown panic in ParseAndFormat", err))
 		}
 	}()
 
 	tree := Parse(items)
-	result := make([]*Item, 0, len(items))
-	result = format(tree, result)
+	result := make([]*Tree[T], 0, len(items))
+	result = Format(tree, result)
 
 	return result
 }
 
-// Parse links all items in the slice, as `Children`
+// Parse links all trees in the slice, as `Children`
 // of the root node, returning the root node
-func Parse(items []Item) *Item {
+func Parse[T TreeGetter](items []T) *Tree[T] {
 
-	var rootNode *Item
+	var rootNode *Tree[T]
 
 	hash := hashmap(items)
 
-	for index, item := range items {
+	for _, item := range items {
 
-		if item.ParentID == "" {
-			if rootNode == nil {
-				items[index].Depth = 0
-				rootNode = &items[index]
-			} else {
-				spew.Dump("ParentID is empty... false root -------------------------", item)
-			}
+		treeID := item.TreeID()
+		parentID := item.TreeParent()
+
+		if parentID == "" {
+			hash[treeID] = NewTree(item)
+			rootNode = hash[treeID]
 			continue
 		}
 
-		if parent := hash[item.ParentID]; parent != nil {
-			items[index].Depth = parent.Depth + 1
-			parent.Children = append(parent.Children, &items[index])
-		} else {
-			spew.Dump("Parent not found -------------------------", item)
+		if parent := hash[parentID]; parent != nil {
+			hash[treeID] = NewTree(item)
+			hash[treeID].Depth = parent.Depth + 1
+			parent.Children = append(parent.Children, hash[treeID])
 		}
 	}
 
 	return rootNode
 }
 
-// format generates a new slice of pointers in tree order
-// that each identifies the next tree item to display
-func format(item *Item, result []*Item) []*Item {
+// Format generates a new slice of pointers in tree order
+// that each identifies the next tree tree to display
+func Format[T TreeGetter](tree *Tree[T], result []*Tree[T]) []*Tree[T] {
 
-	result = append(result, item)
+	result = append(result, tree)
 
-	for _, child := range item.Children {
-		result = format(child, result)
+	for _, child := range tree.Children {
+		result = Format(child, result)
+	}
+
+	return result
+}
+
+// Copy extracts the underlying items from the tree nodes
+func Copy[T TreeGetter](items []*Tree[T]) []T {
+
+	result := make([]T, 0, len(items))
+
+	for _, tree := range items {
+		result = append(result, tree.Getter)
 	}
 
 	return result

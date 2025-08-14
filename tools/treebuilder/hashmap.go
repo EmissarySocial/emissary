@@ -1,17 +1,13 @@
 package treebuilder
 
-import "github.com/davecgh/go-spew/spew"
-
 // hashmap makes a hash of items in the input slice
-func hashmap(items []Item) map[string]*Item {
-	result := make(map[string]*Item, len(items))
+func hashmap[T TreeGetter](items []T) map[string]*Tree[T] {
+	result := make(map[string]*Tree[T], len(items))
 
-	spew.Dump("hashmap ---------------------------------------")
-	for i := range items {
-		spew.Dump(items[i].ItemID)
-		result[items[i].ItemID] = &items[i]
+	for index := range items {
+		treeID := items[index].TreeID()
+		result[treeID] = NewTree(items[index])
 	}
-	spew.Dump("<<<<<<<<<<<")
 
 	return result
 }
