@@ -1,14 +1,14 @@
 package treebuilder
 
 type Tree[T TreeGetter] struct {
-	Getter   T
+	Item     T
 	Depth    int
 	Children []*Tree[T]
 }
 
-func NewTree[T TreeGetter](getter T) *Tree[T] {
+func NewTree[T TreeGetter](item T) *Tree[T] {
 	result := Tree[T]{
-		Getter:   getter,
+		Item:     item,
 		Children: make([]*Tree[T], 0),
 	}
 
@@ -16,9 +16,9 @@ func NewTree[T TreeGetter](getter T) *Tree[T] {
 }
 
 func (tree *Tree[T]) TreeID() string {
-	return tree.Getter.TreeID()
+	return tree.Item.TreeID()
 }
 
 func (tree *Tree[T]) ParentID() string {
-	return tree.Getter.TreeParent()
+	return tree.Item.TreeParent()
 }

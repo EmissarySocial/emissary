@@ -1,6 +1,8 @@
 package treebuilder
 
-import "github.com/benpate/derp"
+import (
+	"github.com/benpate/derp"
+)
 
 func ParseAndFormat[T TreeGetter](items []T) []*Tree[T] {
 
@@ -31,8 +33,10 @@ func Parse[T TreeGetter](items []T) *Tree[T] {
 		parentID := item.TreeParent()
 
 		if parentID == "" {
-			hash[treeID] = NewTree(item)
-			rootNode = hash[treeID]
+			if rootNode == nil {
+				hash[treeID] = NewTree(item)
+				rootNode = hash[treeID]
+			}
 			continue
 		}
 
@@ -54,18 +58,6 @@ func Format[T TreeGetter](tree *Tree[T], result []*Tree[T]) []*Tree[T] {
 
 	for _, child := range tree.Children {
 		result = Format(child, result)
-	}
-
-	return result
-}
-
-// Copy extracts the underlying items from the tree nodes
-func Copy[T TreeGetter](items []*Tree[T]) []T {
-
-	result := make([]T, 0, len(items))
-
-	for _, tree := range items {
-		result = append(result, tree.Getter)
 	}
 
 	return result
