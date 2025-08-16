@@ -9,22 +9,34 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/streams"
+	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/turbine/queue"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Client struct {
 	commonDatabase data.Server
+	enqueue        chan<- queue.Task
 	innerClient    streams.Client
+	hostname       string
+	actorType      string
+	actorID        primitive.ObjectID
 	obeyHeaders    bool
 }
 
 // New returns a fully initialized Client object
-func New(innerClient streams.Client, commonDatabase data.Server, options ...ClientOptionFunc) *Client {
+func New(innerClient streams.Client, enqueue chan<- queue.Task, commonDatabase data.Server, actorType string, actorID primitive.ObjectID, hostname string, options ...ClientOptionFunc) *Client {
 
 	// Create a default client
 	result := &Client{
 		commonDatabase: commonDatabase,
+		enqueue:        enqueue,
 		innerClient:    innerClient,
+		hostname:       hostname,
+		actorType:      actorType,
+		actorID:        actorID,
 		obeyHeaders:    true,
 	}
 
@@ -82,7 +94,17 @@ func (client *Client) Load(url string, options ...any) (streams.Document, error)
 
 			// If we're allowed to write to the cache, then do it.
 			if value.ShouldRevalidate() {
-				go derp.Report(client.Revalidate(url, options...)) // TODO: Should be queue consumer
+				client.enqueue <- queue.NewTask(
+					"LoadActivityStream",
+					mapof.Any{
+						"host":      client.hostname,
+						"actorType": client.actorType,
+						"actorID":   client.actorID,
+						"url":       url,
+					},
+					queue.WithSignature(url),
+					queue.WithPriority(128),
+				)
 			}
 
 			return client.asDocument(value), nil
@@ -108,7 +130,7 @@ func (client *Client) Load(url string, options ...any) (streams.Document, error)
 	value := asValue(result)
 
 	if err := client.save(session, url, &value); err != nil {
-		return result, derp.Wrap(err, location, "Error writing document to cache")
+		derp.Report(derp.Wrap(err, location, "Error writing document to cache"))
 	}
 
 	// Return the result (streams.Document) to the caller
@@ -262,7 +284,7 @@ func (client *Client) save(session data.Session, url string, value *Value) error
 	// doing this check HERE using the object.id field.
 
 	if err := client.removeDuplicates(session, value.URLs...); err != nil {
-		return derp.Wrap(err, location, "Error searching for duplicate document in cache")
+		return derp.Wrap(err, location, "Unable to search for duplicate document in cache")
 	}
 
 	// Create a new value
@@ -280,6 +302,7 @@ func (client *Client) save(session data.Session, url string, value *Value) error
 	// Try to upsert the document into the cache
 	collection := client.collection(session)
 	if err := collection.Save(value, "updated"); err != nil {
+		spew.Dump(location, value)
 		return derp.Wrap(err, location, "Unable to save cached value", url)
 	}
 

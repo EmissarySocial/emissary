@@ -41,7 +41,10 @@ func WithFactory(serverFactory ServerFactory, args mapof.Any, handler func(facto
 	})
 
 	if err != nil {
-		return queue.Error(derp.Wrap(err, location, "Error executing transaction", args))
+		if queueResult, isQueueResult := result.(queue.Result); isQueueResult {
+			return queueResult
+		}
+		return queue.Failure(derp.Wrap(err, location, "Handler failed, did not return a queue.Result.  This should never happen."))
 	}
 
 	// Return the queue result

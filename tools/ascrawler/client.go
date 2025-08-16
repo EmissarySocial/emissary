@@ -9,22 +9,27 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
 	"github.com/rs/zerolog/log"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Client struct {
-	queue       *queue.Queue
+	enqueue     chan<- queue.Task
 	innerClient streams.Client
 	maxDepth    int
+	actorType   string
+	actorID     primitive.ObjectID
 	hostname    string
 }
 
-func New(queue *queue.Queue, innerClient streams.Client, hostname string, options ...ClientOption) *Client {
+func New(enqueue chan<- queue.Task, innerClient streams.Client, actorType string, actorID primitive.ObjectID, hostname string, options ...ClientOption) *Client {
 
 	// Create client
 	result := &Client{
-		queue:       queue,
+		enqueue:     enqueue,
 		innerClient: innerClient,
 		maxDepth:    4,
+		actorType:   actorType,
+		actorID:     actorID,
 		hostname:    hostname,
 	}
 
@@ -53,30 +58,17 @@ func (client *Client) Load(uri string, options ...any) (streams.Document, error)
 		return result, derp.Wrap(err, location, "Error loading actor from inner client")
 	}
 
-	go client.crawl(result.Clone(), options...)
-
-	return result, nil
-}
-
-// crawl is the main recursive loop. It looks for crawl-able properties in the document
-// and loads them into the cache.
-func (client *Client) crawl(document streams.Document, options ...any) {
-
-	const location = "tools.ascrawler.crawl"
-
 	config := parseLoadConfig(options...)
 
-	// Prevent infinite loops....
-	if config.currentDepth >= client.maxDepth {
-		return
+	// Crawl parents, children, and related records if we're below the max depth
+	if config.currentDepth < client.maxDepth {
+		client.crawl_AttributedTo(result, config)
+		client.crawl_Context(result, config)
+		client.crawl_InReplyTo(result, config)
+		client.crawl_Replies(result, config)
 	}
 
-	log.Debug().Str("loc", location).Str("url", document.ID()).Msg("Loading related documents")
-
-	client.crawl_AttributedTo(document, config)
-	client.crawl_Context(document, config)
-	client.crawl_InReplyTo(document, config)
-	client.crawl_Replies(document, config)
+	return result, nil
 }
 
 func (client Client) crawl_AttributedTo(document streams.Document, config loadConfig) {
@@ -128,19 +120,18 @@ func (client Client) sendTask(url string, depth int) {
 
 	const location = "tools.ascrawler.sendTask"
 
-	task := queue.NewTask(
+	log.Debug().Str("loc", location).Str("url", url).Int("depth", depth).Msg("Queuing task")
+
+	client.enqueue <- queue.NewTask(
 		"CrawlActivityStreams",
 		mapof.Any{
-			"host":  client.hostname,
-			"url":   url,
-			"depth": depth,
+			"host":      client.hostname,
+			"actorType": client.actorType,
+			"actorID":   client.actorID,
+			"url":       url,
+			"depth":     depth,
 		},
+		queue.WithSignature(url),
+		queue.WithPriority(128),
 	)
-
-	if err := client.queue.Publish(task); err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to publish task to queue"))
-		return
-	}
-
-	log.Debug().Str("loc", location).Str("url", url).Int("depth", depth).Msg("Published task to queue")
 }

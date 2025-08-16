@@ -6,6 +6,8 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/turbine/queue"
 )
 
 // CalcAllRelationships counts all documents that are related to the current URL
@@ -66,7 +68,17 @@ func (client *Client) CalcRelationships(session data.Session, relationType strin
 
 		// If the cached value isn't found, then try to load it... later.
 		if derp.IsNotFound(err) {
-			go derp.Report(client.Revalidate(relationHref))
+			client.enqueue <- queue.NewTask(
+				"CrawlActivityStreams",
+				mapof.Any{
+					"host":      client.hostname,
+					"actorType": client.actorType,
+					"actorID":   client.actorID,
+					"url":       relationHref,
+				},
+				queue.WithPriority(64),
+				queue.WithSignature(relationHref),
+			)
 			return nil
 		}
 

@@ -12,7 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func CrawlActivityStreams(factory *service.Factory, session data.Session, args mapof.Any) queue.Result {
+func CrawlActivityStreams(factory *service.Factory, _ data.Session, args mapof.Any) queue.Result {
 
 	const location = "consumer.CrawlActivityStreams"
 

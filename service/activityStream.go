@@ -26,7 +26,6 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/sherlock"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -68,6 +67,8 @@ func (service *ActivityStream) Client() streams.Client {
 
 func (service *ActivityStream) CacheClient() *ascache.Client {
 
+	enqueue := service.factory.Queue().Enqueue
+
 	// Build a new client stack
 	sherlockClient := sherlock.NewClient(
 		sherlock.WithUserAgent(service.hostname+" /Emissary@v"+service.version+" (https://emissary.social)"),
@@ -82,8 +83,10 @@ func (service *ActivityStream) CacheClient() *ascache.Client {
 
 	// crawler client will load related documents in the background
 	crawlerClient := ascrawler.New(
-		service.factory.Queue(),
+		enqueue,
 		contextMakerClient,
+		service.actorType,
+		service.actorID,
 		service.hostname,
 	)
 
@@ -91,7 +94,15 @@ func (service *ActivityStream) CacheClient() *ascache.Client {
 	cacheRulesClient := ascacherules.New(crawlerClient)
 
 	// cache data in MongoDB
-	cacheClient := ascache.New(cacheRulesClient, service.commonDatabase, ascache.WithIgnoreHeaders())
+	cacheClient := ascache.New(
+		cacheRulesClient,
+		enqueue,
+		service.commonDatabase,
+		service.actorType,
+		service.actorID,
+		service.hostname,
+		ascache.WithIgnoreHeaders(),
+	)
 
 	return cacheClient
 }
@@ -257,8 +268,6 @@ func (service *ActivityStream) QueryByContext_Tree(ctx context.Context, contextN
 	for value := range values {
 		treeInput = append(treeInput, service.asDocumentLink(value))
 	}
-
-	spew.Dump("activityStream.QueryByContext_Tree ----------------", treeInput)
 
 	return treebuilder.ParseAndFormat(treeInput), nil
 }
