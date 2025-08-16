@@ -121,26 +121,31 @@ func (service *ActivityStream) Delete(url string) error {
  * Custom Query Methods
  ******************************************/
 
-func (service *ActivityStream) Range(ctx context.Context, criteria exp.Expression, options ...option.Option) iter.Seq[streams.Document] {
+func (service *ActivityStream) Range(ctx context.Context, criteria exp.Expression, options ...option.Option) iter.Seq[ascache.Value] {
 
 	const location = "service.ActivityStream.Range"
 
-	return func(yield func(streams.Document) bool) {
+	return func(yield func(ascache.Value) bool) {
 
-		if service.collection == nil {
-			derp.Report(derp.InternalError(location, "Document Collection not initialized"))
+		// Connect to the database
+		collection, err := service.collection(ctx)
+
+		if err != nil {
+			derp.Report(derp.Wrap(err, location, "Unable to connect to database"))
 			return
 		}
 
-		iterator, err := service.documentIterator(ctx, criteria, options...)
+		// Query the database
+		iterator, err := collection.Iterator(criteria, options...)
 
 		if err != nil {
 			derp.Report(derp.Wrap(err, location, "Unable to query database", criteria))
 			return
 		}
 
-		for item := ascache.NewValue(); iterator.Next(&item); item = ascache.NewValue() {
-			if !yield(streams.NewDocument(item.Object)) {
+		// Return results to caller one-by-one
+		for value := ascache.NewValue(); iterator.Next(&value); value = ascache.NewValue() {
+			if !yield(value) {
 				return
 			}
 		}
@@ -179,8 +184,6 @@ func (service *ActivityStream) queryByRelation(ctx context.Context, relationType
 			sortOption = option.SortAsc("object.published")
 		}
 
-		spew.Dump(location, cutType, cutDate, criteria)
-
 		// Try to query the database
 		documents, err := service.documentIterator(ctx, criteria, sortOption)
 
@@ -203,7 +206,7 @@ func (service *ActivityStream) queryByRelation(ctx context.Context, relationType
 				result <- streams.NewDocument(
 					value.Object,
 					streams.WithHTTPHeader(value.HTTPHeader),
-					streams.WithStats(value.Statistics),
+					streams.WithMetadata(value.Metadata),
 					streams.WithClient(service.Client()),
 				)
 			}
@@ -227,35 +230,42 @@ func (service *ActivityStream) QueryByContext(ctx context.Context, contextName s
 
 	// Query the database
 	criteria := exp.Equal("object.context", contextName)
-	documents := service.Range(ctx, criteria, option.SortAsc("object.published"))
+	values := service.Range(ctx, criteria, option.SortAsc("object.published"))
 	result := sliceof.NewObject[model.DocumentLink]()
 
 	// Map into model.DocumentLink records
-	for document := range documents {
-		result = append(result, service.asDocumentLink(document))
+	for value := range values {
+		result = append(result, service.asDocumentLink(value))
 	}
 
 	return result, nil
 }
 
-func (service *ActivityStream) QueryByContext_Tree(ctx context.Context, contextName string) (sliceof.Object[*treebuilder.Item], error) {
+func (service *ActivityStream) QueryByContext_Tree(ctx context.Context, contextName string) (sliceof.Object[*treebuilder.Tree[model.DocumentLink]], error) {
 
 	// RULE: Do not query empty contexts
 	if contextName == "" {
-		return sliceof.NewObject[*treebuilder.Item](), nil
+		return sliceof.NewObject[*treebuilder.Tree[model.DocumentLink]](), nil
 	}
 
 	// Query the database
 	criteria := exp.Equal("object.context", contextName)
-	documents := service.Range(ctx, criteria, option.SortAsc("object.published"))
-	treeInput := sliceof.NewObject[treebuilder.Item]()
+	values := service.Range(ctx, criteria, option.SortAsc("object.published"))
+	treeInput := sliceof.NewObject[model.DocumentLink]()
 
 	// Map into model.DocumentLink records
-	for document := range documents {
-		treeInput = append(treeInput, service.asTreeItem(document))
+	for value := range values {
+		treeInput = append(treeInput, service.asDocumentLink(value))
 	}
 
+	spew.Dump("activityStream.QueryByContext_Tree ----------------", treeInput)
+
 	return treebuilder.ParseAndFormat(treeInput), nil
+}
+
+// QueryReplies returns a slice of streams.Document values that are replies to the specified document, and were published before the specified date.
+func (service *ActivityStream) QueryReplies(ctx context.Context, inReplyTo string, done <-chan struct{}) <-chan streams.Document {
+	return service.queryByRelation(ctx, "Reply", inReplyTo, "after", 0, done)
 }
 
 // QueryRepliesBeforeDate returns a slice of streams.Document values that are replies to the specified document, and were published before the specified date.
@@ -480,14 +490,14 @@ func (service *ActivityStream) collection(ctx context.Context) (data.Collection,
 	return session.Collection("Document"), nil
 }
 
-func (service *ActivityStream) asDocumentLink(document streams.Document) model.DocumentLink {
+func (service *ActivityStream) asDocumentLink(value ascache.Value) model.DocumentLink {
 
+	document := streams.NewDocument(value.Object)
 	attributedTo := document.AttributedTo()
 
 	return model.DocumentLink{
 		ID:        document.ID(),
 		InReplyTo: document.InReplyTo().ID(),
-		Token:     document.Get("x-hashed-id").String(),
 		Name:      document.Name(),
 		Icon:      document.Icon().Href(),
 		Summary:   document.Summary(),
@@ -499,20 +509,6 @@ func (service *ActivityStream) asDocumentLink(document streams.Document) model.D
 			IconURL:    attributedTo.Icon().Href(),
 		},
 		Published: document.Published().Unix(),
+		Token:     value.Metadata.HashedID,
 	}
-}
-
-func (service *ActivityStream) asTreeItem(document streams.Document) treebuilder.Item {
-
-	result := treebuilder.NewItem()
-
-	result.ItemID = document.ID()
-	result.URL = document.ID()
-	result.ParentID = document.InReplyTo().ID()
-	result.Icon = document.AttributedTo().Icon().Href()
-	result.Name = document.Name()
-	result.Content = document.Content()
-	result.Published = document.Published().Unix()
-
-	return result
 }

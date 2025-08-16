@@ -1,5 +1,4 @@
-{{- $stream := .ActivityStream .Permalink -}}
-{{- $statistics := $stream.Statistics -}}
+{{- $document := .ActivityStream .Permalink -}}
 {{- $inReplyTo := .InReplyTo -}}
 
 <div class="page h-entry">
@@ -36,7 +35,7 @@
 					<div>
 						<div class="p-author text-xl bold margin-vertical-none">{{.Author.Name}}</div>
 						<div class="text-light-gray">
-							<span class="p-username">{{$stream.AttributedTo.UsernameOrID}}</span> &middot;
+							<span class="p-username">{{$document.AttributedTo.UsernameOrID}}</span> &middot;
 							<span class="dt-published" datetime="{{.PublishDate | isoDate}}">{{ .PublishDate | humanizeTime }}</span>
 						</div>
 					</div>

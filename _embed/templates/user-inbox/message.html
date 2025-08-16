@@ -108,13 +108,7 @@
 	</div>
 
 	<div hx-get="/@me/inbox/responses-replies?messageId={{$message.ID}}&url={{$url}}" hx-trigger="load" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
-		<!-- {{- template "responses-menu" $document -}} -->
 		<span class="spin">{{icon "loading"}}</span> Loading Replies
 	</div>
 
 </div>
-
-<!--pre>{{$document.Statistics | jsonIndent}}</pre>
-<div id="modal-footer">
-	{{.View "reply"}}
-</div-->

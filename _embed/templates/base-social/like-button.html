@@ -1,7 +1,7 @@
 {{- $url := .QueryParam "url" -}}
 {{- $responses := .GetResponseSummary $url -}}
 {{- $document := .ActivityStream $url -}}
-{{- $stats := $document.Statistics -}}
+{{- $metadata := $document.Metadata -}}
 
 <span hx-target="this" hx-swap="outerHTML" hx-push-url="false">
 
@@ -29,7 +29,7 @@
 		{{icon "globe"}} Website
 	</a>
 
-	{{- if eq $stats.Replies 0 -}}
+	{{- if eq $metadata.Replies 0 -}}
 		<span class="text-gray margin-left-lg">0 Replies</span>
 	{{- else -}}
 		<span
@@ -37,15 +37,15 @@
 			hx-get="/@me/inbox/browse?&url={{$url}}"
 			hx-push-url="false"
 			tabIndex="0"
-			class="text-gray margin-left-lg">{{$stats.Replies}} {{pluralize $stats.Replies "Reply" "Replies"}}</span>
+			class="text-gray margin-left-lg">{{$metadata.Replies}} {{pluralize $metadata.Replies "Reply" "Replies"}}</span>
 	{{ end }}
 
-	{{ if gt $stats.Announces 0 }}
-		<span class="text-gray margin-left">{{$stats.Announces}} {{pluralize $stats.Announces "Share" "Shares"}}</span>
+	{{ if gt $metadata.Announces 0 }}
+		<span class="text-gray margin-left">{{$metadata.Announces}} {{pluralize $metadata.Announces "Share" "Shares"}}</span>
 	{{ end }}
 
-	{{ if gt $stats.Likes 0 }}
-		<span class="text-gray margin-left">{{$stats.Likes}} {{pluralize $stats.Likes "Like" "Likes"}}</span>
+	{{ if gt $metadata.Likes 0 }}
+		<span class="text-gray margin-left">{{$metadata.Likes}} {{pluralize $metadata.Likes "Like" "Likes"}}</span>
 	{{ end }}
 
 

@@ -8,9 +8,9 @@
 
 	{{- range $document := $timeline -}}
 		<div 
-			hx-get="/@me/inbox/browse-focus?url={{$document.URL}}" 
-			class="clickable card text-sm padding-xs margin-bottom-sm {{ if eq $url $document.URL}}selected{{end}}" 
-			style="view-transition-name:{{$document.ID}}">
+			hx-get="/@me/inbox/browse-focus?url={{$document.ID}}" 
+			class="clickable card text-sm padding-xs margin-bottom-sm {{ if eq $url $document.ID}}selected{{end}}" 
+			style="view-transition-name:{{$document.Token}}">
 
 			<div class="flex-row flex-align-center">
 				<img src="{{$document.AttributedTo.IconURL}}" class="circle width-32">

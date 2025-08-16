@@ -569,7 +569,7 @@ func (w Inbox) QueryByContext(contextID string) (sliceof.Object[model.DocumentLi
 	return activityService.QueryByContext(w._request.Context(), contextID)
 }
 
-func (w Inbox) QueryByContext_Tree(contextID string) (sliceof.Object[*treebuilder.Item], error) {
+func (w Inbox) QueryByContext_Tree(contextID string) (sliceof.Object[*treebuilder.Tree[model.DocumentLink]], error) {
 	activityService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
 	result, err := activityService.QueryByContext_Tree(w._request.Context(), contextID)
 

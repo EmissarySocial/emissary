@@ -3,7 +3,7 @@
 {{- $folderID := index . 2 -}}
 {{- $internalID := index . 3 -}}
 
-{{- $stats := $document.Statistics -}}
+{{- $metadata := $document.Metadata -}}
 {{- $url := $document.ID -}}
 
 <div class="margin-top text-sm noselect" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
@@ -64,21 +64,21 @@
 	{{- end -}}
 	-->
 
-	{{ if gt $stats.Replies 0 }}
+	{{ if gt $metadata.Replies 0 }}
 		<span
 			role="button"
 			hx-get="/@me/inbox/message?messageId={{$message.ID}}&url={{$message.URL}}&folderId={{$folderID}}&origin.followingId={{$internalID}}"
 			hx-push-url="false"
 			tabIndex="0"
-			class="text-gray margin-left">{{$stats.Replies}} {{pluralize $stats.Replies "Reply" "Replies"}}</span>
+			class="text-gray margin-left">{{$metadata.Replies}} {{pluralize $metadata.Replies "Reply" "Replies"}}</span>
 	{{ end }}
 
-	{{ if gt $stats.Announces 0 }}
-		<span class="text-gray margin-left">{{$stats.Announces}} {{pluralize $stats.Announces "Share" "Shares"}}</span>
+	{{ if gt $metadata.Announces 0 }}
+		<span class="text-gray margin-left">{{$metadata.Announces}} {{pluralize $metadata.Announces "Share" "Shares"}}</span>
 	{{ end }}
 
-	{{ if gt $stats.Likes 0 }}
-		<span class="text-gray margin-left">{{$stats.Likes}} {{pluralize $stats.Likes "Like" "Likes"}}</span>
+	{{ if gt $metadata.Likes 0 }}
+		<span class="text-gray margin-left">{{$metadata.Likes}} {{pluralize $metadata.Likes "Like" "Likes"}}</span>
 	{{ end }}
 
 </div>

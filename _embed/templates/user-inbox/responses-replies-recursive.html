@@ -8,9 +8,9 @@
 
 {{- $replies := .RepliesAfter $url "0" $pageSize -}}
 
-{{- range $index, $stream := $replies -}}
+{{- range $index, $document := $replies -}}
 
-	{{- $object := $stream.UnwrapActivity -}}
+	{{- $object := $document.UnwrapActivity -}}
 	{{- $attributedTo := $object.AttributedTo.Load -}}
 
 	<div role="link" class="flex-row margin-top-xs">
@@ -66,31 +66,31 @@
 					<div class="margin-vertical"><img src="{{$object.Image.Href}}" class="width-100%"></div>
 				{{- end -}}
 			
-				<div>{{ template "tags" $stream }}</div>
+				<div>{{ template "tags" $document }}</div>
 				<div class="margin-top">{{$object.Content | html}}</div>
 			</div>
 
 			<div class="text-sm text-light-gray">
 				{{ $object.Published | tinyDate}} ago
-				{{- $stats := $stream.Statistics -}}
+				{{- $metadata := $document.Metadata -}}
 
-				{{ if $stats.HasReplies }}
+				{{ if $metadata.HasReplies }}
 					&middot;
 					<span 
 						role="link" 
 						hx-get="/@me/inbox/replies-recursive?url={{$object.ID}}"
 						hx-target="next .recursive-replies"
 						hx-swap="innerHTML">
-						{{$stats.Replies}} {{pluralize $stats.Replies "Reply" "Replies"}}
+						{{$metadata.Replies}} {{pluralize $metadata.Replies "Reply" "Replies"}}
 					</span>
 				{{ end }}
 
-				{{ if $stats.HasLikes }}
-					&middot; {{$stats.Likes}} {{pluralize $stats.Likes "Like" "Likes"}}
+				{{ if $metadata.HasLikes }}
+					&middot; {{$metadata.Likes}} {{pluralize $metadata.Likes "Like" "Likes"}}
 				{{ end }}
 
-				{{ if $stats.HasAnnounces }}
-					&middot; {{$stats.Announces}} {{pluralize $stats.Announces "Share" "Shares"}}
+				{{ if $metadata.HasAnnounces }}
+					&middot; {{$metadata.Announces}} {{pluralize $metadata.Announces "Share" "Shares"}}
 				{{ end }}
 
 			</div>

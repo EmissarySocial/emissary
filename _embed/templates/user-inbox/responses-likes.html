@@ -1,8 +1,8 @@
 {{- $url := .QueryParam "url" -}}
 {{- $publishedDate := .QueryParam "published" -}}
 
-{{- $stream := .ActivityStream $url -}}
-{{- $statistics := $stream.Statistics -}}
+{{- $document := .ActivityStream $url -}}
+{{- $metadata := $document.Metadata -}}
 
 {{- $pageSize := 128 -}}
 {{- $likes := .LikesBefore $url $publishedDate $pageSize -}}
@@ -14,17 +14,17 @@
 	<div role="tablist" class="pills">
 		<span role="tab" hx-get="/@me/inbox/responses-replies?url={{$url}}">
 			Replies 
-			<span class="pill">{{- $statistics.Replies }}</span>
+			<span class="pill">{{- $metadata.Replies }}</span>
 		</span>
 		
 		<span role="tab" hx-get="/@me/inbox/responses-announces?url={{$url}}">
 			Shares 
-			<span class="pill">{{- $statistics.Announces }}</span>
+			<span class="pill">{{- $metadata.Announces }}</span>
 		</span>
 
 		<span role="tab" aria-selected="true" hx-get="/@me/inbox/responses-likes?url={{$url}}">
 			Likes 
-			<span class="pill pill-blue">{{- $statistics.Likes }}</span>
+			<span class="pill pill-blue">{{- $metadata.Likes }}</span>
 		</span>
 
 	</div>
