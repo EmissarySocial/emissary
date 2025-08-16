@@ -40,7 +40,7 @@ func (client *Client) Load(uri string, options ...any) (streams.Document, error)
 		return streams.NilDocument(), derp.Wrap(err, location, "Error loading document from inner client", uri)
 	}
 
-	original := result.Clone().Map()
+	// original := result.Clone().Map()
 
 	// Try to Normalize the document
 	if normalized := Normalize(client.rootClient, result); normalized != nil {
@@ -50,8 +50,8 @@ func (client *Client) Load(uri string, options ...any) (streams.Document, error)
 	// Add a hashed representation of the ID for (easier?) lookups?
 	hashedID := xxhash.Sum64String(result.ID())
 	hashedIDString := strconv.FormatUint(hashedID, 32)
-	result.SetString("x-hashed-id", hashedIDString)
-	result.SetProperty("x-original", original)
+	result.Metadata().HashedID = hashedIDString
+	// result.SetProperty("x-original", original)
 
 	// Return the result
 	return result, nil
