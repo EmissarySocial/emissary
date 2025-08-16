@@ -36,7 +36,7 @@
 <div id="modal-body" class="pos-relative">
 
 	{{- if $actor.HasImage -}}
-		<div class="margin-bottom" xstyle="width:100%; margin-left:calc(0 - (var(--rhythm) * 2)); margin-right:calc(0 - (var(--rhythm) * 2)); margin-top:calc(0 - (var(--rhythm) * 2));">
+		<div class="margin-bottom">
 			<img src="{{$actor.Image.Href}}" class="width-100% object-fit-cover" style="max-height:240px">
 		</div>
 	{{- end -}}
@@ -75,7 +75,7 @@
 	{{- end -}}
 
 	{{- if $actor.Attachment.NotEmpty -}}
-		<table class="table">
+		<table class="table margin-vertical-lg">
 			{{range $attachment := $actor.Attachment.Range}}
 				{{- $attachmentValue := $attachment.Get "value" -}}
 				{{- $attachmentValue := $attachmentValue.String -}}

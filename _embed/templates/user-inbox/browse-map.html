@@ -7,14 +7,13 @@
 <div id="modal-body" class="turboclick padding-top" hx-target="#modal-window" hx-swap="innerHTML transition:true" hx-push-url="false">
 
 	{{- range $tree := $trees -}}
-		{{dump $tree.Item}}
 		<div 
 			hx-get="/@me/inbox/browse-focus?url={{$tree.Item.ID}}" 
-			class="clickable card text-sm padding-sm margin-bottom-sm {{ if eq $url $tree.Item.ID}}selected{{end}}" 
+			class="clickable card text-sm padding-xs margin-bottom-sm {{ if eq $url $tree.Item.ID}}selected{{end}}" 
 			style="margin-left:{{multiply 24 $tree.Depth}}px; view-transition-name:{{$tree.Item.Token}};">
 
 			<div class="flex-row flex-align-center">
-				<img src="{{$tree.Item.AttributedTo.IconURL}}" class="circle width-24">
+				<img src="{{$tree.Item.AttributedTo.IconURL}}" class="circle width-32">
 				<div class="flex-grow ellipsis">
 					{{$tree.Item.Content | summary | html }}
 				</div>
