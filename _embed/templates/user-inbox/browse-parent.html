@@ -4,7 +4,8 @@
 {{- $inReplyTo := $document.InReplyTo.ID -}}
 
 {{- if ne "" $inReplyTo -}}
-	{{- template "browse-parent" (array $builder $document.InReplyTo.Load "") -}}
+	{{- $parent := $builder.ActivityStream $inReplyTo -}}
+	{{- template "browse-parent" (array $builder $parent "") -}}
 {{- end -}}
 
 {{- template "browse-document" (array $builder $document $style) -}}

@@ -1,6 +1,5 @@
 {{- $url := .QueryParam "url" -}}
 {{- $document := .ActivityStream $url -}}
-{{- $hash := ($document.Get "x-hashed-id").String -}}
 
 {{- template "browse-header" (array $url "focus") -}}
 
@@ -14,7 +13,7 @@
 	</div>
 
 	<span script="on load
-		set selectedNode to #id_{{$hash}} 
+		set selectedNode to #id_{{$document.Metadata.HashedID}} 
 		log the selectedNode
 		take .selected from .card for the selectedNode then
 		scrollIntoView() the selectedNode

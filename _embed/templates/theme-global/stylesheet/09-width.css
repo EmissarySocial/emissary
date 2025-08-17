@@ -99,6 +99,7 @@
 
 /* All Screens */
 .width-auto {width:auto}
+.width-16 {width:16px;}
 .width-24 {width:24px}
 .width-32 {width:32px}
 .width-48 {width:48px}
@@ -113,6 +114,7 @@
 .width-640 {width:640px}
 
 .max-width-auto {max-width:auto}
+.max-width-16 {max-width:16px;}
 .max-width-24 {max-width:24px}
 .max-width-32 {max-width:32px}
 .max-width-48 {max-width:48px}
@@ -130,6 +132,7 @@
 @container (min-width: 640px) {
 
 	.sm\:width-auto {width:auto}
+	.sm\:width-16 {width:16px;}
 	.sm\:width-24 {width:24px}
 	.sm\:width-32 {width:32px}
 	.sm\:width-48 {width:48px}
@@ -144,6 +147,7 @@
 	.sm\:width-640 {width:640px}
 
 	.sm\:max-width-auto {max-width:auto}
+	.sm\:max-width-16 {max-width:16px}
 	.sm\:max-width-24 {max-width:24px}
 	.sm\:max-width-32 {max-width:32px}
 	.sm\:max-width-48 {max-width:48px}
@@ -283,6 +287,7 @@
 @container (min-width: 768px) {
 
 	.md\:width-auto {width:auto}
+	.md\:width-16 {width:16px}
 	.md\:width-24 {width:24px}
 	.md\:width-32 {width:32px}
 	.md\:width-48 {width:48px}
@@ -297,6 +302,7 @@
 	.md\:width-640 {width:640px}
 	
 	.md\:max-width-auto {max-width:auto}
+	.md\:max-width-16 {max-width:16px}
 	.md\:max-width-24 {max-width:24px}
 	.md\:max-width-32 {max-width:32px}
 	.md\:max-width-48 {max-width:48px}
@@ -434,6 +440,7 @@
 @container (min-width: 1024px) {
 
 	.lg\:width-auto {width:auto}
+	.lg\:
 	.lg\:width-24 {width:24px}
 	.lg\:width-32 {width:32px}
 	.lg\:width-48 {width:48px}
@@ -448,6 +455,7 @@
 	.lg\:width-640 {width:640px}
 
 	.lg\:max-width-auto {max-width:auto}
+	.lg\:max-width-16 {max-width:16px}
 	.lg\:max-width-24 {max-width:24px}
 	.lg\:max-width-32 {max-width:32px}
 	.lg\:max-width-48 {max-width:48px}

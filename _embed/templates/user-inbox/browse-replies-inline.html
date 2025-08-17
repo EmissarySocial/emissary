@@ -11,15 +11,28 @@
 
 {{- if $replies.NotEmpty -}}
 
-	<div class="text-sm text-gray margin-bottom">TOP REPLIES</div>
+	<div class="text-sm text-gray margin-bottom">Replies..</div>
 
 	{{- range $index, $stream := $replies -}}
 		{{- $document := $stream.UnwrapActivity -}}
-		{{- $hash := ($document.Get "x-hashed-id").String -}}
+		{{- $hash := $document.Metadata.HashedID -}}
 
-		<div hx-get="/@me/inbox/browse-focus?url={{$document.ID}}" hx-target="#modal-window" class="clickable card padding-xs flex-row margin-bottom-xs" style="view-transition-name: {{$hash}};">
-			<img src="{{$document.AttributedTo.Image.Href}}" class="circle width-24"/>
-			<div class="text-xs text-gray ellipsis">{{$document.Content | summary | html}}</div>
+		<div hx-get="/@me/inbox/browse-focus?url={{$document.ID}}" hx-target="#modal-window" class="clickable italics text-gray padding-vertical-xs flex-row flex-align-center">
+			<div class="flex-center">
+				<img src="{{$document.AttributedTo.Icon.Href}}" class="circle width-24"/>
+			</div>
+			<div class="margin-none ellipsis">&ldquo;{{$document.Content | summary | html}}</div>
+			<div>&rdquo;</div>
+		</div>
+	{{- end -}}
+
+	{{- if true  -}}
+
+		<div hx-get="/@me/inbox/browse-focus?url={{$url}}" hx-target="#modal-window" hx-swap="innerHTML" hx-push-url="false" class="clickable text-gray padding-vertical-xs flex-row flex-align-center">
+			<div class="flex-center">
+				<span style="font-size:24px;">{{icon "add-circle"}}</span>
+			</div>
+			<div>More Replies</div>
 		</div>
 	{{- end -}}
 	

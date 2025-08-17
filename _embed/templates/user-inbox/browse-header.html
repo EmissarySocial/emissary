@@ -11,43 +11,41 @@
 
 					{{- if eq "focus" $selected -}}
 						<button hx-get="/@me/inbox/browse-focus?url={{$url}}" class="selected">
-							<span class="htmx-request-hide">{{icon "focus-fill"}}</span>
-							<span class="htmx-request-show"><span class="spin">{{icon "loading"}}</span></span>
-							Focus
+							{{icon "focus-fill"}} Focus
 						</button>
 					{{- else -}}
 						<button hx-get="/@me/inbox/browse-focus?url={{$url}}">
-							<span class="htmx-request-hide">{{icon "focus"}}</span>
-							<span class="htmx-request-show"><span class="spin">{{icon "loading"}}</span></span>
-							Focus
+							{{icon "focus"}} Focus
 						</button>
 					{{- end -}}
 
 					{{- if eq "timeline" $selected -}}
 						<button hx-get="/@me/inbox/browse-timeline?url={{$url}}" class="selected">
-							<span class="htmx-request-hide">{{icon "timeline-fill"}}</span>
-							<span class="htmx-request-show"><span class="spin">{{icon "loading"}}</span></span>
-							Timeline
+							{{icon "timeline-fill"}} Timeline
 						</button>
 					{{- else -}}
 						<button hx-get="/@me/inbox/browse-timeline?url={{$url}}">
-							<span class="htmx-request-hide">{{icon "timeline"}}</span>
-							<span class="htmx-request-show"><span class="spin">{{icon "loading"}}</span></span>
-							Timeline
+							{{icon "timeline"}} Timeline
 						</button>
 					{{- end -}}
 
 					{{- if eq "map" $selected -}}
 						<button hx-get="/@me/inbox/browse-map?url={{$url}}" class="selected">
-							<span class="htmx-request-hide">{{icon "map-fill"}}</span>
-							<span class="htmx-request-show"><span class="spin">{{icon "loading"}}</span></span>
-							Nested
+							{{icon "map-fill"}} Nested
 						</button>
 					{{- else -}}
 						<button hx-get="/@me/inbox/browse-map?url={{$url}}">
-							<span class="htmx-request-hide">{{icon "map"}}</span>
-							<span class="htmx-request-show"><span class="spin">{{icon "loading"}}</span></span>
-							Nested
+							{{icon "map"}} Nested
+						</button>
+					{{- end -}}
+
+					{{- if eq "code" $selected -}}
+						<button hx-get="/@me/inbox/browse-code?url={{$url}}" class="selected">
+							{{icon "code-fill"}} Code
+						</button>
+					{{- else -}}
+						<button hx-get="/@me/inbox/browse-code?url={{$url}}">
+							{{icon "code"}} Code
 						</button>
 					{{- end -}}
 

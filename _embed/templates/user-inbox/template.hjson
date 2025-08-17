@@ -325,6 +325,7 @@
 				]}
 			]
 		}
+
 		message-set-response: {
 			roles:["self"]
 			steps:[
@@ -388,6 +389,13 @@
 		}
 
 		browse-actor: {
+			roles: ["self"]
+			steps: [
+				{do:"view-html"}
+			]
+		}
+
+		browse-code: {
 			roles: ["self"]
 			steps: [
 				{do:"view-html"}

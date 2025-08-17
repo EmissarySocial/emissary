@@ -431,6 +431,10 @@ func (service Icons) Get(name string) string {
 		return service.get("slash-circle")
 	case "block-fill":
 		return service.get("slash-circle-fill")
+	case "code":
+		return service.get("code-slash")
+	case "code-fill":
+		return service.get("code-slash")
 	case "collection":
 		return service.get("view-stacked")
 	case "forward":
