@@ -6,17 +6,17 @@
 
 	{{- $inboxBuilder := . -}}
 	{{- range $index, $message := $inbox -}}
-
 		<hr class="noselect">
 		<div 
 			id="item_{{$message.ID}}" 
 			class="message"
 			style="max-width:640px"
-			script="install listItem(messageId:'{{$message.ID}}')">
+			script="install blockselect() install listItem(messageId:'{{$message.ID}}')">
 
 			{{- $document := $inboxBuilder.ActivityStream $message.URL -}}
 			{{- $image := $document.ImageOrIcon -}}
 			{{- $attributedTo := $document.AttributedTo -}}
+			<span hx-get="/@me/inbox/browse?url={{$document.ID}}" hidden></span>
 
 			{{- if eq "NEW-REPLIES" $message.StateID -}}
 				<div class="flex-row">
@@ -42,7 +42,7 @@
 			{{- end -}}
 
 			{{- if $attributedTo.NotEmpty -}}
-				<div class="flex-row width-100%" hx-get="/@me/inbox/browse?url={{$attributedTo.ID}}">
+				<div class="flex-row">
 					<div class="width-48 flex-shrink-0 margin-right-sm noselect clickable">
 						{{- if $attributedTo.Icon.NotNil -}}
 							<img src="{{$attributedTo.Icon.Href}}" class="circle width-48">
@@ -62,8 +62,7 @@
 				</div>
 			{{- end -}}
 			
-			<div class="flex-row width-100% clickable margin-top-sm" script="install blockselect()">
-				<span hx-get="/@me/inbox/browse?url={{$document.ID}}" hidden></span>
+			<div class="flex-row width-100% clickable margin-top-sm">
 				<div class="width-48 flex-shrink-0 margin-right-sm noselect"></div>
 
 				<div class="flex-grow">
@@ -95,9 +94,6 @@
 						</div>
 					{{- end -}}
 
-					<!--
-					{{- template "message-responses" (array $message $document $folderID $internalID) -}}
-					-->
 				</div>
 
 			</div>
@@ -106,7 +102,6 @@
 		
 	{{- end -}}
 
-	<!-- Target zone to load additional pages once we scroll down this far -->
 	{{- $lastMessage := $inbox.Last -}}
 	<div 
 		hx-get="/@me/inbox/list?folderId={{$folderID}}&origin.followingId={{$internalID}}&rank=LT:{{$lastMessage.Rank}}&read=false&remote=true"
@@ -114,7 +109,7 @@
 		hx-trigger="intersect once" 
 		hx-target="this" 
 		hx-swap="outerHTML">
-		<div><span class="spin">{{icon "loading"}}</span> Loading...</div>
+		<div><button><span class="spin">{{icon "loading"}}</span> Loading...</button></div>
 	</div>
 
 {{- else -}}
