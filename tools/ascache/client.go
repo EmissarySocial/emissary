@@ -11,7 +11,6 @@ import (
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -296,13 +295,10 @@ func (client *Client) save(session data.Session, url string, value *Value) error
 	value.calcPublished()
 	value.calcExpires(cacheControl)
 	value.calcRevalidates(cacheControl)
-	value.calcDocumentCategory()
-	value.calcRelationType()
 
 	// Try to upsert the document into the cache
 	collection := client.collection(session)
 	if err := collection.Save(value, "updated"); err != nil {
-		spew.Dump(location, value)
 		return derp.Wrap(err, location, "Unable to save cached value", url)
 	}
 

@@ -17,7 +17,7 @@ func asValue(document streams.Document) Value {
 	result.URLs = append(result.URLs, document.ID())
 	result.Object = document.Map()
 	result.HTTPHeader = document.HTTPHeader()
-	result.Metadata = *document.Metadata()
+	result.Metadata = document.Metadata
 
 	return result
 }

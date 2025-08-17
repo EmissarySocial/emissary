@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/cespare/xxhash/v2"
+	"github.com/davecgh/go-spew/spew"
 )
 
 type Client struct {
@@ -47,11 +48,25 @@ func (client *Client) Load(uri string, options ...any) (streams.Document, error)
 		result.SetValue(property.Map(normalized))
 	}
 
-	// Add a hashed representation of the ID for (easier?) lookups?
-	hashedID := xxhash.Sum64String(result.ID())
-	hashedIDString := strconv.FormatUint(hashedID, 32)
-	result.Metadata().HashedID = hashedIDString
-	// result.SetProperty("x-original", original)
+	// NOW LETS CALCULATE SOME METADATA (OBJECTS ONLY)
+	if result.IsObject() {
+
+		// Calculate the HashedID
+		hashedID := xxhash.Sum64String(result.ID())
+		hashedIDString := strconv.FormatUint(hashedID, 32)
+		result.Metadata.HashedID = hashedIDString
+
+		// Calculate the Document Category
+		documentCategory := result.Type()
+		result.Metadata.DocumentCategory = streams.DocumentCategory(documentCategory)
+
+		// Calculate Relationships
+		relationType, relationHref := calcRelationType(result)
+		result.Metadata.RelationType = relationType
+		result.Metadata.RelationHref = relationHref
+
+		spew.Dump(location, result.ID(), result.Metadata)
+	}
 
 	// Return the result
 	return result, nil
@@ -97,4 +112,33 @@ func Normalize(client streams.Client, document streams.Document) map[string]any 
 
 	// Unrecognized documents return nil, which will be ignored by the caller
 	return nil
+}
+
+// calcRelationType calculates the "RelationType" and "RelationHref" metadata for this
+// cached document.
+func calcRelationType(document streams.Document) (string, string) {
+
+	// Get the document type
+	documentType := document.Type()
+
+	// Calculate RelationType
+	switch documentType {
+
+	// Announce, Like, and Dislike are written straight to the cache.
+	case vocab.ActivityTypeAnnounce,
+		vocab.ActivityTypeLike,
+		vocab.ActivityTypeDislike:
+
+		return documentType, document.Object().ID()
+
+	// Otherwise, see if this is a "Reply"
+	default:
+		unwrapped := document.UnwrapActivity()
+
+		if inReplyTo := unwrapped.InReplyTo(); inReplyTo.NotNil() {
+			return vocab.RelationTypeReply, inReplyTo.String()
+		}
+	}
+
+	return "", ""
 }
