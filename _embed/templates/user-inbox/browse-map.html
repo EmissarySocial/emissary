@@ -13,8 +13,8 @@
 			style="margin-left:{{multiply 24 $tree.Depth}}px; view-transition-name:{{$tree.Item.Token}};">
 
 			<div class="flex-row flex-align-center">
-				<img src="{{$tree.Item.AttributedTo.IconURL}}" class="circle width-32">
-				<div class="flex-grow ellipsis">
+				<img src="{{$tree.Item.AttributedTo.IconURL}}" class="circle width-32" style="view-transition-name:{{$tree.Item.Token}}_icon;">
+				<div class="flex-grow ellipsis" style="view-transition-name:{{$tree.Item.Token}}_summary">
 					{{$tree.Item.Content | summary | html }}
 				</div>
 			</div>

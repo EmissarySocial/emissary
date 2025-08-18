@@ -1,7 +1,4 @@
 {{- $url := .QueryParam "url" -}}
-{{- $messageID := .QueryParam "messageId" -}}
-{{- $folderID := .QueryParam "folderId" -}}
-{{- $followingID := .QueryParam "origin.followingId" -}}
 {{- $publishedDate := .QueryParam "published" -}}
 
 {{- $pageSize := 6 -}}
@@ -11,24 +8,38 @@
 
 {{- if $replies.NotEmpty -}}
 
-	<div class="text-sm text-gray margin-bottom">Replies..</div>
+	{{- range $index, $document := $replies -}}
+		{{- if lt $index 6 -}}
+			{{- $document := $document.UnwrapActivity -}}
+			{{- $hash := $document.Metadata.HashedID -}}
 
-	{{- range $index, $stream := $replies -}}
-		{{- $document := $stream.UnwrapActivity -}}
-		{{- $hash := $document.Metadata.HashedID -}}
+			<div 
+				class="clickable italics text-gray padding-vertical-xs flex-row flex-align-center"
+				hx-get="/@me/inbox/browse-focus?url={{$document.ID}}" 
+				hx-target="#modal-window"
+				hx-push-url="false">
 
-		<div hx-get="/@me/inbox/browse-focus?url={{$document.ID}}" hx-target="#modal-window" class="clickable italics text-gray padding-vertical-xs flex-row flex-align-center">
-			<div class="flex-center">
-				<img src="{{$document.AttributedTo.Icon.Href}}" class="circle width-24"/>
+				<div class="flex-center">
+					<img src="{{$document.AttributedTo.Icon.Href}}" class="circle width-24"/>
+				</div>
+				<div class="margin-none ellipsis">
+					&#10077;
+					{{$document.Content | summary | html}}
+				</div>
+				<div>&#10078;</div>
 			</div>
-			<div class="margin-none ellipsis">&ldquo;{{$document.Content | summary | html}}</div>
-			<div>&rdquo;</div>
-		</div>
+		{{- end -}}
 	{{- end -}}
 
-	{{- if true  -}}
+	{{- if $replies.IsLength 6 -}}
 
-		<div hx-get="/@me/inbox/browse-focus?url={{$url}}" hx-target="#modal-window" hx-swap="innerHTML" hx-push-url="false" class="clickable text-gray padding-vertical-xs flex-row flex-align-center">
+		<div  
+			class="clickable text-gray padding-vertical-xs flex-row flex-align-center"
+			hx-get="/@me/inbox/browse-focus?url={{$url}}" 
+			hx-target="#modal-window" 
+			hx-swap="innerHTML" 
+			hx-push-url="false">
+
 			<div class="flex-center">
 				<span style="font-size:24px;">{{icon "add-circle"}}</span>
 			</div>

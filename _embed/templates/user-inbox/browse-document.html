@@ -9,7 +9,7 @@
 	{{- $inReplyToAttributedTo := $inReplyTo.AttributedTo -}}
 	{{- $hash := $document.Metadata.HashedID -}}
 
-	<div id="id_{{$hash}}" class="clickable card padding margin-bottom pos-relative" style="view-transition-name:{{$hash}}">
+	<div id="id_{{$hash}}" class="clickable card padding margin-bottom pos-relative">
 
 		<span id="id_{{$hash}}_defaultLink" hx-target="#modal-window" hx-swap="innerHTML transition:true" hx-get="/@me/inbox/browse-focus?url={{$document.ID}}" hidden></span>
 
@@ -37,12 +37,11 @@
 						<div class="text-sm text-light-gray margin-vertical-none">{{$attributedTo.UsernameOrID}}</div>
 					</div>
 				</div>
-				<div class="flex-grow"></div>
+				<div class="flex-grow" script="on click send click to #id_{{$hash}}_defaultLink"></div>
 			</div>
 
 		{{- end -}}
-
-					
+	
 		<div class="content" script="install blockselect(link:#id_{{$hash}}_defaultLink)">
 
 			{{- if not (hasImage $document.Content) -}}
@@ -64,20 +63,31 @@
 
 		</div>
 
-		<div class="margin-top-lg text-xs">
-			{{$builder.View "like-button"}}
+		<div 
+			hx-get="/@me/inbox/like-button?url={{$document.ID}}" 
+			hx-trigger="intersect once"
+			hx-target="this" 
+			hx-swap="innerHTML" 
+			hx-push-url="false" 
+			class="margin-top-lg text-xs">
 		</div>
 
 		{{- if eq "replies" $style -}}
-			<div 
-				hx-get="/@me/inbox/browse-replies-inline?url={{$document.ID}}" 
-				hx-trigger="intersect once" 
-				hx-target="this" 
-				hx-swap="innerHTML" 
-				hx-push-url="false" 
-				class="margin-top-lg">
+			<div class="margin-top-lg">
+				<div class="text-gray margin-bottom">
+					{{$document.Metadata.Replies}}
+					{{pluralize $document.Metadata.Replies "Reply" "Replies"}}
+				</div>
 
-				<span class="spin">{{icon "loading"}}</span> Loading Replies
+				<div 
+					hx-get="/@me/inbox/browse-replies-inline?url={{$document.ID}}" 
+					hx-trigger="intersect once" 
+					hx-target="this" 
+					hx-swap="innerHTML" 
+					hx-push-url="false"
+					class="margin-left-lg">
+					<span class="spin">{{icon "loading"}}</span>
+				</div>
 			</div>
 		{{- end }}
 

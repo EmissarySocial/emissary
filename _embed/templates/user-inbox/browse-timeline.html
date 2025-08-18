@@ -13,9 +13,9 @@
 			style="view-transition-name:{{$document.Token}}">
 
 			<div class="flex-row flex-align-center">
-				<img src="{{$document.AttributedTo.IconURL}}" class="circle width-32">
+				<img src="{{$document.AttributedTo.IconURL}}" class="circle width-32" style="view-transition-name:{{$document.Token}}_icon">
 				<div class="padding-horizontal-xs nowrap">{{$document.Published | tinyDate }}</div>
-				<div class="flex-grow ellipsis">
+				<div class="flex-grow ellipsis" style="view-transition-name:{{$document.Token}}_summary">
 					{{$document.Content | summary | html }}
 				</div>
 			</div>
