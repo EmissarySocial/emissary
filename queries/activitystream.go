@@ -5,6 +5,7 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // SearchActivityStreamActors full-text searches the ActivityStream cache for all Actors matching the search query.
@@ -37,4 +38,28 @@ func SearchActivityStreamActors(collection data.Collection, text string) ([]mode
 
 	// Execute the query and return
 	return Aggregate[model.ActorSummary](collection.Context(), mongoCollection, pipeline)
+}
+
+func UpdateContext(collection *mongo.Collection, oldContext string, newContext string) error {
+
+	const location = "queries.UpdateContext"
+
+	// Create a thirty second context
+	ctx, cancel := timeoutContext(30)
+	defer cancel()
+
+	// Update all documents with the old context
+	_, err := collection.UpdateMany(
+		ctx,
+		bson.M{"object.context": oldContext},
+		bson.M{"$set": bson.M{"object.context": newContext}},
+	)
+
+	// Return errors
+	if err != nil {
+		return derp.Wrap(err, location, "Unable to update context in ActivityStream collection")
+	}
+
+	// Brilliant.
+	return nil
 }

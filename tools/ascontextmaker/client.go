@@ -1,8 +1,14 @@
 package ascontextmaker
 
 import (
+	"strings"
+
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/turbine/queue"
+	"github.com/davecgh/go-spew/spew"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // asContextMaker is a hannibal.Streams middleware that adds a "context" property to all documents
@@ -11,15 +17,17 @@ import (
 type Client struct {
 	rootClient  streams.Client
 	innerClient streams.Client
+	enqueue     chan<- queue.Task
 	maxDepth    int // maxDepth prevents the client from recursing too deeply into a document tree
 }
 
 // New creates a new instance of asContextMaker
-func New(innerClient streams.Client, options ...ClientOption) *Client {
+func New(innerClient streams.Client, enqueue chan<- queue.Task, options ...ClientOption) *Client {
 
 	// Create the Client
 	result := &Client{
 		innerClient: innerClient,
+		enqueue:     enqueue,
 		maxDepth:    16,
 	}
 
@@ -34,8 +42,8 @@ func New(innerClient streams.Client, options ...ClientOption) *Client {
 }
 
 func (client *Client) SetRootClient(rootClient streams.Client) {
-	client.rootClient = rootClient
 	client.innerClient.SetRootClient(rootClient)
+	client.rootClient = rootClient
 }
 
 // Load implements the streams.Client interface, and loads a document from the Interwebs.
@@ -60,46 +68,73 @@ func (client Client) Load(uri string, options ...any) (streams.Document, error) 
 		return result, nil
 	}
 
-	// If the document already has a context property, then
-	// there is nothing more to add
-	if context := result.Context(); context != "" {
-		return result, nil
+	// Calculate the best context to use for this document
+	spew.Dump("contextMaker.Load ---------------------------------")
+
+	myContext := client.getContext(result)
+	parentContext := client.getParentContext(result.InReplyTo().ID())
+
+	spew.Dump(result.InReplyTo().ID(), parentContext)
+	bestContext := client.getBestContext(myContext, parentContext)
+
+	// Update context(s) if necessary
+	if bestContext != parentContext {
+		client.enqueue <- queue.NewTask(
+			"UpdateContext",
+			mapof.Any{
+				"oldContext": parentContext,
+				"newContext": bestContext,
+			},
+			queue.WithPriority(128),
+		)
 	}
 
-	// If there is an ostatus:conversation property, then use that
-	if conversation := result.Get("conversation"); conversation.NotNil() {
-		result.SetProperty(vocab.PropertyContext, conversation)
-		return result, nil
+	if bestContext != myContext {
+		result.SetProperty(vocab.PropertyContext, bestContext)
 	}
 
-	// Past here, we really WANT a context, so let's make a default to start with...
-	result.SetProperty(vocab.PropertyContext, "artificialcontext://"+result.ID())
+	/*
+		// If the document already has a context property, then
+		// there is nothing more to add
+		if context := result.Context(); context != "" {
+			return result, nil
+		}
 
-	// ... then try to find something better than this.
+		// If there is an ostatus:conversation property, then use that
+		if conversation := result.Get("conversation"); conversation.NotNil() {
+			result.SetProperty(vocab.PropertyContext, conversation)
+			return result, nil
+		}
 
-	// Check configuration rules (re: history and duplicates)
-	// If no more recursion is allowed, then simply stop here.
-	config := NewLoadConfig(options...)
+		// Past here, we really WANT a context, so let's make a default to start with...
+		result.SetProperty(vocab.PropertyContext, "artificialcontext://"+result.ID())
 
-	if client.NotAllowed(uri, config) {
-		return result, nil
-	}
+		// ... then try to find something better than this.
 
-	// If we have an "inReplyTo" field, then try to load that value
-	// to use/generate its context
-	if result.InReplyTo().NotNil() {
+		// Check configuration rules (re: history and duplicates)
+		// If no more recursion is allowed, then simply stop here.
+		config := NewLoadConfig(options...)
 
-		options = append(options, WithHistory(uri))
+		if client.NotAllowed(uri, config) {
+			return result, nil
+		}
 
-		for inReplyTo := result.InReplyTo(); inReplyTo.NotNil(); inReplyTo = inReplyTo.Tail() {
-			if parent, err := client.rootClient.Load(inReplyTo.ID(), options...); err == nil {
-				if context := parent.Context(); context != "" {
-					result.SetProperty(vocab.PropertyContext, context)
-					break
+		// If we have an "inReplyTo" field, then try to load that value
+		// to use/generate its context
+		if result.InReplyTo().NotNil() {
+
+			options = append(options, WithHistory(uri))
+
+			for inReplyTo := result.InReplyTo(); inReplyTo.NotNil(); inReplyTo = inReplyTo.Tail() {
+				if parent, err := client.rootClient.Load(inReplyTo.ID(), options...); err == nil {
+					if context := parent.Context(); context != "" {
+						result.SetProperty(vocab.PropertyContext, context)
+						break
+					}
 				}
 			}
 		}
-	}
+	*/
 
 	// Return modified document to the caller.
 	return result, nil
@@ -127,4 +162,85 @@ func (client *Client) IsAllowed(uri string, config LoadConfig) bool {
 // NotAllowed returns TRUE if the client rules DO NOT allow the provided URI to be loaded
 func (client *Client) NotAllowed(uri string, config LoadConfig) bool {
 	return !client.IsAllowed(uri, config)
+}
+
+func (client *Client) getContext(document streams.Document) string {
+
+	// Use the context property if it exists
+	if context := document.Context(); context != "" {
+		return context
+	}
+
+	// Otherwise, none
+	return ""
+}
+
+func (client *Client) getParentContext(inReplyTo string) string {
+
+	// If this is a reply to another document...
+	if inReplyTo != "" {
+
+		// Try to load the parent...
+		if parent, err := client.rootClient.Load(inReplyTo); err == nil {
+
+			// And return its context (if any)
+			if context := parent.Context(); context != "" {
+				return context
+			}
+		}
+	}
+
+	// Last resort, generate an artificial context (just in case)
+	return protocol_artificial + primitive.NewObjectID().Hex()
+}
+
+func (client *Client) getBestContext(myContext string, parentContext string) string {
+
+	spew.Dump("contextMaker.getBestContext:::", myContext, parentContext)
+
+	// Shortcut if they're the same
+	if myContext == parentContext {
+		return myContext
+	}
+
+	// First, use any context that's an actual URL, preferring parent context first
+	if strings.HasPrefix(parentContext, protocol_https) {
+		return parentContext
+	}
+
+	if strings.HasPrefix(parentContext, protocol_http) {
+		return parentContext
+	}
+
+	if strings.HasPrefix(myContext, protocol_https) {
+		return myContext
+	}
+
+	if strings.HasPrefix(myContext, protocol_http) {
+		return myContext
+	}
+
+	// Next, choose ANYTHING BUT an artificial://
+	if strings.HasPrefix(myContext, protocol_artificial) {
+		if parentContext != "" {
+			return parentContext
+		}
+		return myContext
+	}
+
+	if strings.HasPrefix(parentContext, protocol_artificial) {
+		if myContext != "" {
+			return myContext
+		}
+		return parentContext
+	}
+
+	// If we have ANYTHING AT ALL in the "parent" context
+	// then prefer that over whatever is left in "my" context
+	if parentContext != "" {
+		return parentContext
+	}
+
+	// use "my" context, even if it's empty string.
+	return myContext
 }

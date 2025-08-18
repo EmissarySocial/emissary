@@ -79,7 +79,7 @@ func (service *ActivityStream) CacheClient() *ascache.Client {
 	normalizerClient := asnormalizer.New(sherlockClient)
 
 	// compute document context (if missing)
-	contextMakerClient := ascontextmaker.New(normalizerClient)
+	contextMakerClient := ascontextmaker.New(normalizerClient, enqueue)
 
 	// crawler client will load related documents in the background
 	crawlerClient := ascrawler.New(
