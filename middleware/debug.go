@@ -1,14 +1,9 @@
 package middleware
 
-import (
-	"fmt"
-	"strings"
-
-	"github.com/benpate/derp"
-	dt "github.com/benpate/domain"
-	"github.com/benpate/re"
-	"github.com/labstack/echo/v4"
-)
+/*
+THIS MIDDLEWARE IS FOR DEVELOPMENT ONLY.
+DISABLE IT BEFORE PUSHING TO GIT SO THAT IT
+IS NOT AVAILABLE TO PRODUCTION ENVIRONMENTS
 
 func Debug() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
@@ -38,3 +33,4 @@ func Debug() echo.MiddlewareFunc {
 		}
 	}
 }
+*/
