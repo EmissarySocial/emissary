@@ -24,7 +24,7 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 
 	case
 		"CrawlActivityStreams",
-		"LoadActivityStreams":
+		"LoadActivityStream":
 		return WithFactory(consumer.serverFactory, args, CrawlActivityStreams)
 
 	case "CreateWebSubFollower":
