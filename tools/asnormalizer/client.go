@@ -8,7 +8,6 @@ import (
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/cespare/xxhash/v2"
-	"github.com/davecgh/go-spew/spew"
 )
 
 type Client struct {
@@ -64,8 +63,6 @@ func (client *Client) Load(uri string, options ...any) (streams.Document, error)
 		relationType, relationHref := calcRelationType(result)
 		result.Metadata.RelationType = relationType
 		result.Metadata.RelationHref = relationHref
-
-		spew.Dump(location, result.ID(), result.Metadata)
 	}
 
 	// Return the result

@@ -56,6 +56,14 @@ func Format[T TreeGetter](tree *Tree[T], result []*Tree[T]) []*Tree[T] {
 
 	result = append(result, tree)
 
+	if tree == nil {
+		return result
+	}
+
+	if tree.Children == nil {
+		return result
+	}
+
 	for _, child := range tree.Children {
 		result = Format(child, result)
 	}

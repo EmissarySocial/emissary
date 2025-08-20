@@ -62,7 +62,7 @@
 
 		{{- if $attributedTo.NotEmpty -}}
 
-			<div hx-get="/@me/inbox/browse?url={{$attributedTo.ID}}" class="flex-row flex-align-center margin-bottom clickable">
+			<div hx-get="/@me/inbox/browse-actor?url={{$attributedTo.ID}}" class="flex-row flex-align-center margin-bottom clickable">
 				{{- if $attributedTo.Icon.NotNil -}}
 					<img src="{{$attributedTo.Icon.Href}}" class="circle width-48">
 				{{- end -}}

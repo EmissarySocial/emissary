@@ -79,7 +79,7 @@ func (service *ActivityStream) CacheClient() *ascache.Client {
 	normalizerClient := asnormalizer.New(sherlockClient)
 
 	// compute document context (if missing)
-	contextMakerClient := ascontextmaker.New(normalizerClient, enqueue)
+	contextMakerClient := ascontextmaker.New(normalizerClient, service.commonDatabase)
 
 	// crawler client will load related documents in the background
 	crawlerClient := ascrawler.New(
@@ -449,17 +449,16 @@ func (service *ActivityStream) KeyPairFunc() sherlock.KeyPairFunc {
 			return "", nil
 		}
 
-		if session != nil {
+		// USE service.actorType and service.actorID to retrieve the required PEM keys.
+		locatorService := domainFactory.Locator()
+		publicKeyID, privateKey, err := locatorService.GetPrivateKey(session, service.actorType, service.actorID)
+
+		if err != nil {
+			derp.Report(derp.Wrap(err, location, "Unable to retrieve private key"))
 			return "", nil
 		}
-		return "", nil
-		/*
-			// USE service.actorType and service.actorID to retrieve the required PEM keys.
-			locatorService := domainFactory.Locator()
-			encryptionKeyService := domainFactory.EncryptionKey()
 
-			locatorService.GetActor(session, service.actorType, service.actorID)
-		*/
+		return publicKeyID, privateKey
 	}
 }
 

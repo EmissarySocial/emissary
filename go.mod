@@ -6,6 +6,8 @@ replace github.com/benpate/data => ../../benpate/data
 
 replace github.com/benpate/data-mongo => ../../benpate/data-mongo
 
+replace github.com/benpate/derp => ../../benpate/derp
+
 replace github.com/benpate/hannibal => ../../benpate/hannibal
 
 replace github.com/benpate/queue => ../../benpate/queue
@@ -25,7 +27,7 @@ require (
 	github.com/benpate/data v0.30.0
 	github.com/benpate/data-mock v0.30.0
 	github.com/benpate/data-mongo v0.30.3
-	github.com/benpate/derp v0.32.5
+	github.com/benpate/derp v0.32.6
 	github.com/benpate/digit v0.13.5
 	github.com/benpate/digital-dome v0.2.5
 	github.com/benpate/domain v0.2.7

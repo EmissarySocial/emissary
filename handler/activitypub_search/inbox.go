@@ -29,6 +29,7 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 	// Create a new request context for the ActivityPub router
 	context := Context{
 		factory:     factory,
+		session:     session,
 		stream:      stream,
 		searchQuery: searchQuery,
 	}

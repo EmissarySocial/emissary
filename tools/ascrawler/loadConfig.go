@@ -1,13 +1,13 @@
 package ascrawler
 
 type loadConfig struct {
-	currentDepth int
+	history []string
 }
 
 func parseLoadConfig(options ...any) loadConfig {
 
 	result := loadConfig{
-		currentDepth: 0,
+		history: make([]string, 0),
 	}
 
 	for _, option := range options {

@@ -88,7 +88,7 @@ func (client *Client) CalcRelationships(session data.Session, relationType strin
 
 	value.Metadata.SetRelationCount(relationType, count)
 
-	if err := client.save(session, value.DocumentID(), &value); err != nil {
+	if err := client.save(session.Context(), value.DocumentID(), &value); err != nil {
 		return derp.Wrap(err, location, "Unable to save updated ActivityStream document", relationHref)
 	}
 

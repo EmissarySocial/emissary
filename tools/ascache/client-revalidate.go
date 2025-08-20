@@ -19,17 +19,12 @@ func (client *Client) Revalidate(url string, options ...any) error {
 	}
 
 	// Connect to the database
-	session, cancel, err := client.timeoutSession(60)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Error connecting to database", url)
-	}
-
+	ctx, cancel := timeoutContext(60)
 	defer cancel()
 
 	// Save the updated document to the database
 	value := asValue(result)
-	if err := client.save(session, url, &value); err != nil {
+	if err := client.save(ctx, url, &value); err != nil {
 		return derp.Wrap(err, location, "Unable to save revalidated document", url)
 	}
 

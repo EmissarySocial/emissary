@@ -22,7 +22,7 @@ func SetupDomainGet(factory *server.Factory) echo.HandlerFunc {
 
 		domainID := ctx.Param("domain")
 
-		domain, err := factory.DomainByID(domainID)
+		domain, err := factory.FindDomain(domainID)
 
 		if err != nil {
 			return derp.Wrap(err, "handler.SetupDomainGet", "Unable to load configuration")
@@ -60,23 +60,13 @@ func SetupDomainPost(serverFactory *server.Factory) echo.HandlerFunc {
 		domainID := ctx.Param("domain")
 
 		// Try to load the existing domain.  If it does not exist, then create a new one.
-		domain, _ := serverFactory.DomainByID(domainID)
-		_, factory, err := serverFactory.ByDomainID(domainID)
+		domain, _ := serverFactory.FindDomain(domainID)
 
 		input := mapof.Any{}
 
 		if err := (&echo.DefaultBinder{}).BindBody(ctx, &input); err != nil {
 			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, location, "Error binding form input"))
 		}
-
-		// Open a database session
-		session, err := factory.Server().Session(ctx.Request().Context())
-
-		if err != nil {
-			return derp.Wrap(err, location, "Unable to open database session")
-		}
-
-		defer session.Close()
 
 		// Update the domain configuration and save it to the domain storage (db/file/etc)
 		s := schema.New(config.DomainSchema())
@@ -89,7 +79,7 @@ func SetupDomainPost(serverFactory *server.Factory) echo.HandlerFunc {
 			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, location, "Error validating config values"))
 		}
 
-		if err := serverFactory.PutDomain(session, domain); err != nil {
+		if err := serverFactory.PutDomain(domain); err != nil {
 			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, location, "Error saving domain"))
 		}
 
@@ -117,21 +107,21 @@ func SetupDomainDelete(factory *server.Factory) echo.HandlerFunc {
 }
 
 // SetupDomainSigninPost signs you in to the requested domain as an administrator
-func SetupDomainSigninPost(fm *server.Factory) echo.HandlerFunc {
+func SetupDomainSigninPost(serverFactory *server.Factory) echo.HandlerFunc {
 
 	const location = "handler.SetupDomainSigninPost"
 
 	return func(ctx echo.Context) error {
 
 		// Get the domain config requested in the URL (by index)
-		domain, err := fm.DomainByID(ctx.Param("domain"))
+		domain, err := serverFactory.FindDomain(ctx.Param("domain"))
 
 		if err != nil {
 			return derp.Wrap(err, location, "Unable to load configuration")
 		}
 
 		// Get the real factory for this domain
-		factory, err := fm.ByHostname(domain.Hostname)
+		factory, err := serverFactory.ByHostname(domain.Hostname)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Unable to load Domain")

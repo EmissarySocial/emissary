@@ -96,10 +96,11 @@ func (client *Client) Load(url string, options ...any) (streams.Document, error)
 				client.enqueue <- queue.NewTask(
 					"LoadActivityStream",
 					mapof.Any{
-						"host":      client.hostname,
-						"actorType": client.actorType,
-						"actorID":   client.actorID,
-						"url":       url,
+						"host":         client.hostname,
+						"actorType":    client.actorType,
+						"actorID":      client.actorID,
+						"url":          url,
+						"revalidating": true,
 					},
 					queue.WithSignature(url),
 					queue.WithPriority(128),
@@ -118,18 +119,18 @@ func (client *Client) Load(url string, options ...any) (streams.Document, error)
 		// If the original document is gone, and we're forcing a reload, then remove the value from the cache
 		if derp.IsNotFound(err) && config.forceReload {
 			if err := client.Delete(url); err != nil {
-				return result, derp.Wrap(err, location, "Error removing document from cache", url)
+				return result, derp.Wrap(err, location, "Unable to remove document from cache", url)
 			}
 		}
 
-		return result, derp.Wrap(err, location, "Error loading document from inner client", url)
+		return result, derp.Wrap(err, location, "Unable to load document from inner client", url)
 	}
 
 	// Try to save the new value asynchronously
 	value := asValue(result)
 
-	if err := client.save(session, url, &value); err != nil {
-		derp.Report(derp.Wrap(err, location, "Error writing document to cache"))
+	if err := client.save(session.Context(), url, &value); err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to write document to cache.. continuing process.."))
 	}
 
 	// Return the result (streams.Document) to the caller
@@ -145,18 +146,13 @@ func (client *Client) Put(document streams.Document) error {
 	const location = "tools.ascache.client.Put"
 
 	// Get a new database session
-	session, cancel, err := client.timeoutSession(60)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Unable to connect to database")
-	}
-
+	ctx, cancel := timeoutContext(60)
 	defer cancel()
 
 	// Save the document/value to the database
 	value := asValue(document)
 
-	if err := client.save(session, document.ID(), &value); err != nil {
+	if err := client.save(ctx, document.ID(), &value); err != nil {
 		return derp.Wrap(err, location, "Unable to put document into cache")
 	}
 
@@ -207,18 +203,6 @@ func (client *Client) Delete(url string) error {
 	return nil
 }
 
-// removeDuplicates removes all valus that have duplicate URLs
-func (client *Client) removeDuplicates(session data.Session, urls ...string) error {
-
-	collection := client.collection(session)
-
-	if err := collection.HardDelete(exp.In("urls", urls)); err != nil {
-		return derp.Wrap(err, "ascache.Client.removeDuplicates", "Unable to remove duplicate documents from cache", urls)
-	}
-
-	return nil
-}
-
 /******************************************
  * Database Methods
  ******************************************/
@@ -260,56 +244,78 @@ func (client *Client) collection(session data.Session) data.Collection {
 }
 
 // save adds/updates a document in the cache
-func (client *Client) save(session data.Session, url string, value *Value) error {
+func (client *Client) save(ctx context.Context, url string, value *Value) error {
 
 	const location = "ascache.client.save"
 
-	// Write to trace log
-	log.Trace().Str("url", url).Msg(location)
+	_, err := client.commonDatabase.WithTransaction(ctx, func(session data.Session) (any, error) {
 
-	// Calculate caching rules and exit if cache is not allowed.
-	cacheControl := cacheheader.Parse(value.HTTPHeader)
-	if client.obeyHeaders && cacheControl.NotCacheAllowed() {
-		log.Trace().Str("url", url).Msg("Cache not allowed by HTTP headers. Skipping save method.")
-		return nil
-	}
+		// Write to trace log
+		log.Trace().Str("url", url).Msg(location)
 
-	// Make sure all relevant URLs are included in this value
-	value.AppendURL(value.Object.GetString("id"))
-	value.AppendURL(url)
-
-	// Try to load an existing/duplicate values using the object.id field.
-	// There may be multiple URLs that point to the same document, so we're
-	// doing this check HERE using the object.id field.
-
-	if err := client.removeDuplicates(session, value.URLs...); err != nil {
-		return derp.Wrap(err, location, "Unable to search for duplicate document in cache")
-	}
-
-	// Create a new value
-	value.HTTPHeader.Set(HeaderHannibalCache, "true")
-	value.HTTPHeader.Set(HeaderHannibalCacheDate, time.Now().Format(time.RFC3339))
-
-	// Some calculations before we save the value
-	value.Received = time.Now().Unix()
-	value.calcPublished()
-	value.calcExpires(cacheControl)
-	value.calcRevalidates(cacheControl)
-
-	// Try to upsert the document into the cache
-	collection := client.collection(session)
-	if err := collection.Save(value, "updated"); err != nil {
-		return derp.Wrap(err, location, "Unable to save cached value", url)
-	}
-
-	// Finally, try to recalculate statistics of linked documents
-	if value.Metadata.HasRelationship() {
-		if err := client.CalcRelationships(session, value.Metadata.RelationType, value.Metadata.RelationHref); err != nil {
-			return derp.Wrap(err, location, "Unable to calculate relationships", url)
+		// Calculate caching rules and exit if cache is not allowed.
+		cacheControl := cacheheader.Parse(value.HTTPHeader)
+		if client.obeyHeaders && cacheControl.NotCacheAllowed() {
+			log.Trace().Str("url", url).Msg("Cache not allowed by HTTP headers. Skipping save method.")
+			return nil, nil
 		}
+
+		// Make sure all relevant URLs are included in this value
+		value.AppendURL(value.Object.GetString("id"))
+		value.AppendURL(url)
+
+		// Try to load an existing/duplicate values using the object.id field.
+		// There may be multiple URLs that point to the same document, so we're
+		// doing this check HERE using the object.id field.
+
+		if err := client.removeDuplicates(session, value.URLs...); err != nil {
+			return nil, derp.Wrap(err, location, "Unable to search for duplicate document in cache")
+		}
+
+		// Create a new value
+		value.HTTPHeader.Set(HeaderHannibalCache, "true")
+		value.HTTPHeader.Set(HeaderHannibalCacheDate, time.Now().Format(time.RFC3339))
+
+		// Some calculations before we save the value
+		value.Received = time.Now().Unix()
+		value.calcPublished()
+		value.calcExpires(cacheControl)
+		value.calcRevalidates(cacheControl)
+
+		// Try to upsert the document into the cache
+		collection := client.collection(session)
+		if err := collection.Save(value, "updated"); err != nil {
+			return nil, derp.Wrap(err, location, "Unable to save cached value", url)
+		}
+
+		// Finally, try to recalculate statistics of linked documents
+		if value.Metadata.HasRelationship() {
+			if err := client.CalcRelationships(session, value.Metadata.RelationType, value.Metadata.RelationHref); err != nil {
+				return nil, derp.Wrap(err, location, "Unable to calculate relationships", url)
+			}
+		}
+
+		// Success.
+		return nil, nil
+	})
+
+	return err
+
+}
+
+// removeDuplicates removes all valus that have duplicate URLs
+func (client *Client) removeDuplicates(session data.Session, urls ...string) error {
+
+	const location = "ascache.Client.removeDuplicates"
+
+	collection := client.collection(session)
+
+	criteria := exp.In("urls", urls)
+
+	if err := collection.HardDelete(criteria); err != nil {
+		return derp.Wrap(err, location, "Unable to remove duplicate documents from cache", urls)
 	}
 
-	// Success.
 	return nil
 }
 

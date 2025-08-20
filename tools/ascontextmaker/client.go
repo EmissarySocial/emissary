@@ -1,13 +1,9 @@
 package ascontextmaker
 
 import (
-	"strings"
-
+	"github.com/benpate/data"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
-	"github.com/benpate/rosetta/mapof"
-	"github.com/benpate/turbine/queue"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -15,20 +11,20 @@ import (
 // based on their "InReplyTo" property.  If a document does not have a context or inReplyTo, then
 // it is its own context, and is updated to reflect that.
 type Client struct {
-	rootClient  streams.Client
-	innerClient streams.Client
-	enqueue     chan<- queue.Task
-	maxDepth    int // maxDepth prevents the client from recursing too deeply into a document tree
+	rootClient     streams.Client
+	innerClient    streams.Client
+	commonDatabase data.Server
+	maxDepth       int // maxDepth prevents the client from recursing too deeply into a document tree
 }
 
 // New creates a new instance of asContextMaker
-func New(innerClient streams.Client, enqueue chan<- queue.Task, options ...ClientOption) *Client {
+func New(innerClient streams.Client, commonDatabase data.Server, options ...ClientOption) *Client {
 
 	// Create the Client
 	result := &Client{
-		innerClient: innerClient,
-		enqueue:     enqueue,
-		maxDepth:    16,
+		innerClient:    innerClient,
+		commonDatabase: commonDatabase,
+		maxDepth:       16,
 	}
 
 	// Apply options
@@ -68,31 +64,39 @@ func (client Client) Load(uri string, options ...any) (streams.Document, error) 
 		return result, nil
 	}
 
-	// Calculate the best context to use for this document
-	spew.Dump("contextMaker.Load ---------------------------------")
+	parentContext := client.getParentContext(result)
+	result.SetProperty(vocab.PropertyContext, parentContext)
 
-	myContext := client.getContext(result)
-	parentContext := client.getParentContext(result.InReplyTo().ID())
+	/*
+		// Calculate the best context to use for this document
+		myContext := client.getContext(result)
+		parentContext := client.getParentContext(result.InReplyTo().ID())
 
-	spew.Dump(result.InReplyTo().ID(), parentContext)
-	bestContext := client.getBestContext(myContext, parentContext)
+		bestContext := client.getBestContext(myContext, parentContext)
 
-	// Update context(s) if necessary
-	if bestContext != parentContext {
-		client.enqueue <- queue.NewTask(
-			"UpdateContext",
-			mapof.Any{
-				"oldContext": parentContext,
-				"newContext": bestContext,
-			},
-			queue.WithPriority(128),
-		)
-	}
+		spew.Dump("contextMaker.Load -------------------------------------------------------------------")
+		spew.Dump(uri, myContext, parentContext, bestContext)
 
-	if bestContext != myContext {
-		result.SetProperty(vocab.PropertyContext, bestContext)
-	}
+		// Update context(s) if necessary
+		if bestContext != parentContext {
+			ctx := context.Background()
+			_, err := client.commonDatabase.WithTransaction(ctx, func(session data.Session) (any, error) {
+				collection := session.Collection("Document")
+				if err := queries.UpdateContext(collection, parentContext, bestContext); err != nil {
+					return nil, derp.Wrap(err, "asContextMaker.Load", "Unable to update context", parentContext, bestContext)
+				}
+				return nil, nil
+			})
 
+			if err != nil {
+				derp.Report(derp.Wrap(err, "asContextMaker.Load", "Unable to update context in database transacction"))
+			}
+		}
+
+		if bestContext != myContext {
+			result.SetProperty(vocab.PropertyContext, bestContext)
+		}
+	*/
 	/*
 		// If the document already has a context property, then
 		// there is nothing more to add
@@ -159,6 +163,31 @@ func (client *Client) IsAllowed(uri string, config LoadConfig) bool {
 	return true
 }
 
+func (client *Client) getParentContext(document streams.Document) string {
+
+	// If this is a reply to another document...
+	if inReplyTo := document.InReplyTo().ID(); inReplyTo != "" {
+
+		// Try to load the parent...
+		if parent, err := client.rootClient.Load(inReplyTo); err == nil {
+
+			// And return its context (if any)
+			if context := parent.Context(); context != "" {
+				return context
+			}
+		}
+	}
+
+	// If this document has a context, then let's use that
+	if context := document.Context(); context != "" {
+		return context
+	}
+
+	// Last resort, generate an artificial context (just in case)
+	return protocol_artificial + primitive.NewObjectID().Hex()
+}
+
+/*
 // NotAllowed returns TRUE if the client rules DO NOT allow the provided URI to be loaded
 func (client *Client) NotAllowed(uri string, config LoadConfig) bool {
 	return !client.IsAllowed(uri, config)
@@ -174,6 +203,7 @@ func (client *Client) getContext(document streams.Document) string {
 	// Otherwise, none
 	return ""
 }
+
 
 func (client *Client) getParentContext(inReplyTo string) string {
 
@@ -193,6 +223,7 @@ func (client *Client) getParentContext(inReplyTo string) string {
 	// Last resort, generate an artificial context (just in case)
 	return protocol_artificial + primitive.NewObjectID().Hex()
 }
+
 
 func (client *Client) getBestContext(myContext string, parentContext string) string {
 
@@ -244,3 +275,4 @@ func (client *Client) getBestContext(myContext string, parentContext string) str
 	// use "my" context, even if it's empty string.
 	return myContext
 }
+*/

@@ -31,7 +31,7 @@ func WithFactory(serverFactory ServerFactory, args mapof.Any, handler func(facto
 
 	if err != nil {
 		// If we can't load the factory, maybe we can in the future, so try again.
-		return queue.Failure(derp.Wrap(err, location, "Invalid 'host' argument.", hostname))
+		return queue.Error(derp.Wrap(err, location, "Invalid 'host' argument.", hostname))
 	}
 
 	// Execute the handler as a transaction

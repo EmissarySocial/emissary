@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/EmissarySocial/emissary/tools/cacheheader"
 	"github.com/benpate/hannibal/streams"
 )
 
@@ -18,6 +19,13 @@ func asValue(document streams.Document) Value {
 	result.Object = document.Map()
 	result.HTTPHeader = document.HTTPHeader()
 	result.Metadata = document.Metadata
+
+	// Calculate datetime metadata
+	result.Received = time.Now().Unix()
+	cacheControl := cacheheader.Parse(result.HTTPHeader)
+	result.calcPublished()
+	result.calcExpires(cacheControl)
+	result.calcRevalidates(cacheControl)
 
 	return result
 }

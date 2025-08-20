@@ -15,7 +15,7 @@
 			</span>
 		{{- end -}}
 
-		<button hx-get="/@me/inbox/browse?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}" role="tab">{{icon "person"}} Profile</button>
+		<button hx-get="/@me/inbox/browse-actor?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}" role="tab">{{icon "person"}} Profile</button>
 		<button role="tab" hx-get="/@me/inbox/annotation?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}">{{icon "note"}} Notes</button>
 
 		{{ if $following.IsNew -}}

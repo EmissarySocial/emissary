@@ -16,7 +16,7 @@
 			</span>
 		{{- end -}}
 
-		<button role="tab" hx-get="/@me/inbox/browse?url={{$url}}&search={{$search}}&folderId={{$folderID}}" aria-selected="true">{{icon "person"}} Profile</button>
+		<button role="tab" hx-get="/@me/inbox/browse-actor?url={{$url}}&search={{$search}}&folderId={{$folderID}}" aria-selected="true">{{icon "person"}} Profile</button>
 		<button role="tab" hx-get="/@me/inbox/annotation?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}">{{icon "note"}} Notes</button>
 
 		{{ if $following.IsNew -}}
@@ -56,7 +56,9 @@
 	<div class="flex-row">
 		<div class="width-64 flex-shrink-0"></div>
 		<div class="text-sm">
+			<!--
 			<button hx-get="/@me/inbox/message-new?url={{$actor.ID}}" class="primary">{{icon "chat"}} Direct Message</button>
+			-->
 			<a class="button outline" href="{{$actor.ID}}" target="_blank">{{icon "globe"}} Website</a>
 		</div>
 	</div>

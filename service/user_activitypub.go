@@ -66,8 +66,8 @@ func (service *User) ActivityPubURL(userID primitive.ObjectID) string {
 	return service.host + "/@" + userID.Hex()
 }
 
-func (service *User) ActivityPubPublicKeyURL(userID primitive.ObjectID) string {
-	return service.host + "/@" + userID.Hex() + "#main-key" // was "/pub/key"
+func (service *User) PublicKeyID(userID primitive.ObjectID) string {
+	return service.ActivityPubURL(userID) + "#main-key"
 }
 
 func (service *User) PrivateKey(session data.Session, userID primitive.ObjectID) (crypto.PrivateKey, error) {

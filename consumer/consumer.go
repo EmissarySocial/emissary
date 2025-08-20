@@ -99,8 +99,8 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 	case "syndication.create", "syndication.update", "syndication.delete":
 		return StreamSyndicate(name, args)
 
-	case "UpdateContext":
-		return UpdateContext(consumer.serverFactory, args)
+		// case "UpdateContext":
+		//	return UpdateContext(consumer.serverFactory, args)
 	}
 
 	return queue.Ignored()

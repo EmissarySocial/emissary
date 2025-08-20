@@ -4,7 +4,7 @@
 
 <div id="modal-header" class="flex-row">
 	<div role="tablist" class="pills margin-bottom-none">
-		<button role="tab" hx-get="/@me/inbox/browse?url={{$actor.ID}}">{{icon "person"}} Profile</button>
+		<button role="tab" hx-get="/@me/inbox/browse-actor?url={{$actor.ID}}">{{icon "person"}} Profile</button>
 		<button role="tab" hx-get="/@me/inbox/notes?followingId={{$following.ID}}">{{icon "note"}} Notes</button>
 
 		{{ if $following.IsNew -}}

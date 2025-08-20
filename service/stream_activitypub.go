@@ -149,6 +149,10 @@ func (service *Stream) ActivityPubURL(streamID primitive.ObjectID) string {
 	return service.host + "/" + streamID.Hex()
 }
 
+func (service *Stream) PublicKeyID(streamID primitive.ObjectID) string {
+	return service.ActivityPubURL(streamID) + "#main-key"
+}
+
 func (service *Stream) PrivateKey(session data.Session, streamID primitive.ObjectID) (crypto.PrivateKey, error) {
 
 	const location = "service.Stream.PrivateKey"

@@ -145,29 +145,39 @@ func (service *Locator) GetActor(session data.Session, actorType string, actorID
 	return outbox.Actor{}, derp.BadRequestError(location, "ActorID must be a valid ObjectID", actorType)
 }
 
-func (service *Locator) GetPrivateKey(session data.Session, actorType string, actorID primitive.ObjectID) (crypto.PrivateKey, error) {
+func (service *Locator) GetPrivateKey(session data.Session, actorType string, actorID primitive.ObjectID) (publicKeyID string, privateKey crypto.PrivateKey, err error) {
 
 	const location = "service.locator.GetPrivateKey"
 
 	switch actorType {
 
 	case model.ActorTypeApplication:
-		return service.domainService.PrivateKey(session)
+		publicKeyID := service.domainService.PublicKeyID()
+		privateKey, err := service.domainService.PrivateKey(session)
+		return publicKeyID, privateKey, err
 
 	case model.ActorTypeSearchDomain:
-		return service.domainService.PrivateKey(session)
+		publicKeyID := service.domainService.PublicKeyID()
+		privateKey, err := service.domainService.PrivateKey(session)
+		return publicKeyID, privateKey, err
 
 	case model.ActorTypeSearchQuery:
-		return service.domainService.PrivateKey(session)
+		publicKeyID := service.domainService.PublicKeyID()
+		privateKey, err := service.domainService.PrivateKey(session)
+		return publicKeyID, privateKey, err
 
 	case model.ActorTypeStream:
-		return service.streamService.PrivateKey(session, actorID)
+		publicKeyID := service.streamService.PublicKeyID(actorID)
+		privateKey, err := service.streamService.PrivateKey(session, actorID)
+		return publicKeyID, privateKey, err
 
 	case model.ActorTypeUser:
-		return service.userService.PrivateKey(session, actorID)
+		publicKeyID := service.userService.PublicKeyID(actorID)
+		privateKey, err := service.userService.PrivateKey(session, actorID)
+		return publicKeyID, privateKey, err
 	}
 
-	return nil, derp.BadRequestError(location, "Invalid Actor Type", actorType)
+	return "", nil, derp.BadRequestError(location, "Invalid Actor Type", actorType)
 }
 
 // locateObjectFromURL parses a URL, determines what type of object it is,

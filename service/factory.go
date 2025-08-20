@@ -580,6 +580,10 @@ func (factory *Factory) Session(timeout time.Duration) (data.Session, context.Ca
 	return session, cancel, err
 }
 
+func (factory *Factory) WithTransaction(ctx context.Context, callback data.TransactionCallbackFunc) (any, error) {
+	return factory.server.WithTransaction(ctx, callback)
+}
+
 /******************************************
  * Domain Model Services
  ******************************************/

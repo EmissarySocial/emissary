@@ -1,12 +1,6 @@
 package consumer
 
-import (
-	"github.com/EmissarySocial/emissary/queries"
-	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/mapof"
-	"github.com/benpate/turbine/queue"
-)
-
+/*
 func UpdateContext(serverFactory ServerFactory, args mapof.Any) queue.Result {
 
 	const location = "consumer.UpdateContext"
@@ -24,3 +18,4 @@ func UpdateContext(serverFactory ServerFactory, args mapof.Any) queue.Result {
 
 	return queue.Success()
 }
+*/
