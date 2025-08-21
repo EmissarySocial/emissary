@@ -152,7 +152,7 @@ func (w Rule) Label() string {
 }
 
 /******************************************
- * QUERY BUILDERS
+ * Query Builders
  ******************************************/
 
 func (w Rule) Rules() *QueryBuilder[model.Rule] {

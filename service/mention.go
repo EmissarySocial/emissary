@@ -21,7 +21,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-/*********************
+/******************************************
  * Mentions are a W3C standard for connecting conversations across the web.
  *
  * https://indieweb.org/Webmention
@@ -31,7 +31,7 @@ import (
  * - https://pkg.go.dev/regexp/syntax
  * - https://github.com/google/re2/wiki/Syntax
  *
- *********************/
+ ******************************************/
 
 // Mention defines a service that can send and receive mention data
 type Mention struct {

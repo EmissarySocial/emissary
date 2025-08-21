@@ -34,7 +34,7 @@ func NewQueryBuilder[T model.FieldLister](service service.ModelService, session 
 }
 
 /********************************
- * QUERY BUILDER
+ * Query Builder
  ********************************/
 
 func (builder QueryBuilder[T]) Top1() QueryBuilder[T] {
@@ -227,7 +227,7 @@ func (builder QueryBuilder[T]) CaseInsensitive() QueryBuilder[T] {
 }
 
 /********************************
- * ACTIONS
+ * Actions
  ********************************/
 
 // Slice returns the results of the query as a slice of objects
@@ -244,7 +244,7 @@ func (builder QueryBuilder[T]) Count() (int64, error) {
 }
 
 /********************************
- * MISC HELPERS
+ * Misc Helpers
  ********************************/
 
 func (builder QueryBuilder[T]) makeOptions() []option.Option {

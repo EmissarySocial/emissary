@@ -39,11 +39,7 @@ func NewSearchBuilder(searchTagService *service.SearchTag, searchResultService *
 }
 
 /********************************
- * CUSTOM QUERY ARGUMENTS
- ********************************/
-
-/********************************
- * QUERY BUILDER
+ * Query Builder
  ********************************/
 
 func (builder SearchBuilder) Top1() SearchBuilder {
@@ -191,7 +187,7 @@ func (builder SearchBuilder) Reverse() SearchBuilder {
 }
 
 /********************************
- * ACTIONS
+ * Actions
  ********************************/
 
 // Slice returns the results of the query as a slice of objects
@@ -213,7 +209,7 @@ func (builder SearchBuilder) Count() (int64, error) {
 }
 
 /********************************
- * MISC HELPERS
+ * Misc Helpers
  ********************************/
 
 func (builder SearchBuilder) assembleCriteria() exp.Expression {

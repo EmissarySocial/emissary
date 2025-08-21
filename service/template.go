@@ -93,7 +93,7 @@ func (service *Template) Refresh(locations sliceof.Object[mapof.String]) {
 }
 
 /******************************************
- * REAL-TIME UPDATES
+ * Real-Time Updates
  ******************************************/
 
 // watch must be run as a goroutine, and constantly monitors the

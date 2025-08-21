@@ -238,7 +238,3 @@ func (service *Annotation) LoadByURL(session data.Session, userID primitive.Obje
 	criteria := exp.Equal("userId", userID).AndEqual("url", url)
 	return service.Load(session, criteria, result)
 }
-
-/******************************************
- * Custom Behaviors
- ******************************************/

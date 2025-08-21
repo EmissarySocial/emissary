@@ -153,7 +153,7 @@ func (w SearchTag) Name() string {
 }
 
 /******************************************
- * QUERY BUILDERS
+ * Query Builders
  ******************************************/
 
 // SearchTags returns a query builder for all SearchTags in the datatabase.

@@ -299,6 +299,7 @@ func (service *JWT) encrypt(plaintext []byte) ([]byte, error) {
 
 	return plaintext, nil
 
+	// TODO: Restore Key-Encrypting-Key feature for JWT keys.
 	// The following commented code does not work because the AES algorithm
 	// only works with fixed-size blocks, so encrypted data was being truncated
 	// at the first block boundary. Instead,  need to use a GCM mode as described in:

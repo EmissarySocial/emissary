@@ -129,7 +129,7 @@ func (service *StreamDraft) Delete(session data.Session, draft *model.Stream, _n
 }
 
 /******************************************
- * GENERIC DATA FUNCTIONS
+ * Generic Data Functions
  ******************************************/
 
 // ObjectType returns the type of object that this service manages
@@ -195,7 +195,7 @@ func (service *StreamDraft) LoadByID(session data.Session, streamID primitive.Ob
 }
 
 /******************************************
- * CUSTOM ACTIONS
+ * Custom Actions
  ******************************************/
 
 func (service *StreamDraft) Promote(session data.Session, streamID primitive.ObjectID, stateID string) (model.Stream, error) {

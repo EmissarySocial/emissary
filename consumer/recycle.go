@@ -11,6 +11,7 @@ import (
 // "soft deleted" more than 30 days ago.
 func RecycleDomain(factory *service.Factory, session data.Session, _ mapof.Any) queue.Result {
 
+	// TODO: Restore Recycle functions
 	/* DISABLING RECYCLE FOR NOW BECAUSE I'M TERRIFIED OF BREAKING PRODUCTION.
 
 	const location = "consumer.Recycle"

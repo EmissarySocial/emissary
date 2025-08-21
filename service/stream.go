@@ -300,14 +300,6 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 	eventName := iif(wasNew, model.WebhookEventStreamCreate, model.WebhookEventStreamUpdate)
 	service.webhookService.Send(stream, eventName)
 
-	/*
-		// NON-BLOCKING: Notify other processes on this server that the stream has been updated
-		go func() {
-			service.sseUpdateChannel <- stream.StreamID
-			service.sseUpdateChannel <- stream.ParentID
-		}()
-	*/
-
 	// One milisecond delay prevents overlapping stream.CreateDates.  Deal with it.
 	// TODO: There has to be a better way than this...
 	time.Sleep(1 * time.Millisecond)

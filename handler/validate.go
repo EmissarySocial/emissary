@@ -46,7 +46,7 @@ func GetValidateUsername(ctx *steranko.Context, factory *service.Factory, sessio
 func GetValidateStreamToken(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	/*
-		// This service can only validate the "username" field
+		// This service can only validate the "token" field
 		if field := ctx.QueryParam("field"); field != "token" {
 			return ctx.JSON(http.StatusBadRequest, mapof.Any{
 				"valid":   false,

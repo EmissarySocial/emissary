@@ -187,7 +187,7 @@ func (w Stream) clone(action string) (Builder, error) {
 }
 
 /******************************************
- * ACTION SHORTCUTS
+ * Action Shortcuts
  ******************************************/
 
 // View executes a separate view for this Stream
@@ -207,7 +207,7 @@ func (w Stream) View(actionID string) (template.HTML, error) {
 }
 
 /******************************************
- * STREAM DATA
+ * Stream Data
  ******************************************/
 
 // StreamID returns the unique ID for the stream being built

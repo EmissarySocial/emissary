@@ -189,23 +189,13 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 	// If the database connect string has changed, then update the database connection
 	if (factory.config.ConnectString != domain.ConnectString) || (factory.config.DatabaseName != domain.DatabaseName) {
 
-		// If the connect string is empty, then we don't need to (re-)connect to a database
+		// If the connect string has not been changed, we don't need to (re-)connect to a database
 		if domain.ConnectString == "" {
 			factory.config = domain
 			return nil
 		}
 
-		///////////////////////////////
 		// Fall through means we need to connect to the database
-
-		// Set Read/Write concerns to Majority to avoid stale reads/writes
-		/*
-			journal := true
-			option := writeconcern.Majority()
-			option.Journal = &journal
-			option.WTimeout = 1 * time.Second
-			opt := options.Client().SetWriteConcern(option)
-		*/
 		opt := options.Client()
 
 		// Create a new server connection

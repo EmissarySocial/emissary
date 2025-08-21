@@ -132,7 +132,7 @@ func (w Group) clone(action string) (Builder, error) {
 }
 
 /******************************************
- * DATA ACCESSORS
+ * Data Accessors
  ******************************************/
 
 // IsAdminBuilder returns TRUE because Group is an admin route.

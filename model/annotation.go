@@ -72,7 +72,3 @@ func (annotation *Annotation) RolesToGroupIDs(roleIDs ...string) Permissions {
 func (annotation *Annotation) RolesToPrivilegeIDs(roleIDs ...string) Permissions {
 	return NewPermissions()
 }
-
-/******************************************
- * Other Data Accessors
- ******************************************/

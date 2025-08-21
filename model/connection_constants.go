@@ -2,8 +2,8 @@ package model
 
 /******************************************
  * Connection Types
- * defines that specific that a provider
- * performs.
+ * defines that specific roles that a
+ * provider fulfills.
  ******************************************/
 
 // ConnectionTypeGeocoder represents a provider that can geocode addresses

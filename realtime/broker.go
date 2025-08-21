@@ -63,7 +63,7 @@ func (b *Broker) Close() {
 }
 
 /******************************************
- * LISTEN/NOTIFY METHODS
+ * Listen/Modify Methods
  ******************************************/
 
 // Listen handles the addition & removal of clients, as well as

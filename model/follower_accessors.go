@@ -87,7 +87,3 @@ func (follower *Follower) SetString(name string, value string) bool {
 
 	return false
 }
-
-/******************************************
- * Tree Traversal
- ******************************************/
