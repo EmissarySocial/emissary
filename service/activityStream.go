@@ -163,6 +163,115 @@ func (service *ActivityStream) Range(ctx context.Context, criteria exp.Expressio
 	}
 }
 
+func (service *ActivityStream) QueryByContext(ctx context.Context, contextName string) (sliceof.Object[model.DocumentLink], error) {
+
+	const location = "service.ActivityStream.QueryByContext"
+
+	// RULE: Do not query empty contexts
+	if contextName == "" {
+		return sliceof.NewObject[model.DocumentLink](), nil
+	}
+
+	// Query the database
+	criteria := exp.Equal("object.context", contextName)
+	values := service.Range(ctx, criteria, option.SortAsc("object.published"))
+	result := sliceof.NewObject[model.DocumentLink]()
+
+	// Map into model.DocumentLink records
+	for value := range values {
+		result = append(result, service.asDocumentLink(value))
+	}
+
+	return result, nil
+}
+
+func (service *ActivityStream) QueryByContext_Tree(ctx context.Context, contextName string) (sliceof.Object[*treebuilder.Tree[model.DocumentLink]], error) {
+
+	// RULE: Do not query empty contexts
+	if contextName == "" {
+		return sliceof.NewObject[*treebuilder.Tree[model.DocumentLink]](), nil
+	}
+
+	// Query the database
+	criteria := exp.Equal("object.context", contextName)
+	values := service.Range(ctx, criteria, option.SortAsc("object.published"))
+	treeInput := sliceof.NewObject[model.DocumentLink]()
+
+	// Map into model.DocumentLink records
+	for value := range values {
+		treeInput = append(treeInput, service.asDocumentLink(value))
+	}
+
+	return treebuilder.ParseAndFormat(treeInput), nil
+}
+
+func (service *ActivityStream) QueryActors(queryString string) ([]model.ActorSummary, error) {
+
+	const location = "service.ActivityStream.QueryActors"
+
+	// If we think this is an address we can work with (because sherlock says so)
+	// the try to retrieve it directly.
+	if sherlock.IsValidAddress(queryString) {
+
+		// Try to load the actor directly from the Interwebs
+		if newActor, err := service.Client().Load(queryString, sherlock.AsActor()); err == nil {
+
+			// If this is a valid, but (previously) unknown actor, then add it to the results
+			// This will also automatically get cached/crawled for next time.
+			result := []model.ActorSummary{{
+				ID:       newActor.ID(),
+				Type:     newActor.Type(),
+				Name:     newActor.Name(),
+				Icon:     newActor.Icon().Href(),
+				Username: newActor.PreferredUsername(),
+			}}
+
+			return result, nil
+		}
+	}
+
+	// Fall through means that we can't find a perfect match, so fall back to a full-text search
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+
+	collection, err := service.collection(ctx)
+
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Unable to connect to database")
+	}
+
+	result, err := queries.SearchActivityStreamActors(collection, queryString)
+
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Unable to query database")
+	}
+
+	return result, nil
+}
+
+// QueryReplies returns a slice of streams.Document values that are replies to the specified document, and were published before the specified date.
+func (service *ActivityStream) QueryReplies(ctx context.Context, inReplyTo string, done <-chan struct{}) <-chan streams.Document {
+	return service.queryByRelation(ctx, "Reply", inReplyTo, "after", 0, done)
+}
+
+// QueryRepliesBeforeDate returns a slice of streams.Document values that are replies to the specified document, and were published before the specified date.
+func (service *ActivityStream) QueryRepliesBeforeDate(ctx context.Context, inReplyTo string, maxDate int64, done <-chan struct{}) <-chan streams.Document {
+	return service.queryByRelation(ctx, "Reply", inReplyTo, "before", maxDate, done)
+}
+
+// QueryRepliesAfterDate returns a slice of streams.Document values that are replies to the specified document, and were published after the specified date.
+func (service *ActivityStream) QueryRepliesAfterDate(ctx context.Context, inReplyTo string, minDate int64, done <-chan struct{}) <-chan streams.Document {
+	return service.queryByRelation(ctx, "Reply", inReplyTo, "after", minDate, done)
+}
+
+func (service *ActivityStream) QueryAnnouncesBeforeDate(ctx context.Context, relationHref string, maxDate int64, done <-chan struct{}) <-chan streams.Document {
+	return service.queryByRelation(ctx, vocab.ActivityTypeAnnounce, relationHref, "before", maxDate, done)
+}
+
+func (service *ActivityStream) QueryLikesBeforeDate(ctx context.Context, relationHref string, maxDate int64, done <-chan struct{}) <-chan streams.Document {
+	return service.queryByRelation(ctx, vocab.ActivityTypeLike, relationHref, "before", maxDate, done)
+}
+
 // QueryRepliesBeforeDate returns a slice of streams.Document values that are replies to the specified document, and were published before the specified date.
 func (service *ActivityStream) queryByRelation(ctx context.Context, relationType string, relationHref string, cutType string, cutDate int64, done <-chan struct{}) <-chan streams.Document {
 
@@ -227,117 +336,31 @@ func (service *ActivityStream) queryByRelation(ctx context.Context, relationType
 	}()
 
 	return result
-
 }
 
-func (service *ActivityStream) QueryByContext(ctx context.Context, contextName string) (sliceof.Object[model.DocumentLink], error) {
+// GetRecipient retrieves the recipient's ID and inbox URL
+func (service *ActivityStream) GetRecipient(recipient string) (string, string, error) {
 
-	const location = "service.ActivityStream.QueryByContext"
+	const location = "service.ActivityStream.GetRecipient"
 
-	// RULE: Do not query empty contexts
-	if contextName == "" {
-		return sliceof.NewObject[model.DocumentLink](), nil
-	}
-
-	// Query the database
-	criteria := exp.Equal("object.context", contextName)
-	values := service.Range(ctx, criteria, option.SortAsc("object.published"))
-	result := sliceof.NewObject[model.DocumentLink]()
-
-	// Map into model.DocumentLink records
-	for value := range values {
-		result = append(result, service.asDocumentLink(value))
-	}
-
-	return result, nil
-}
-
-func (service *ActivityStream) QueryByContext_Tree(ctx context.Context, contextName string) (sliceof.Object[*treebuilder.Tree[model.DocumentLink]], error) {
-
-	// RULE: Do not query empty contexts
-	if contextName == "" {
-		return sliceof.NewObject[*treebuilder.Tree[model.DocumentLink]](), nil
-	}
-
-	// Query the database
-	criteria := exp.Equal("object.context", contextName)
-	values := service.Range(ctx, criteria, option.SortAsc("object.published"))
-	treeInput := sliceof.NewObject[model.DocumentLink]()
-
-	// Map into model.DocumentLink records
-	for value := range values {
-		treeInput = append(treeInput, service.asDocumentLink(value))
-	}
-
-	return treebuilder.ParseAndFormat(treeInput), nil
-}
-
-// QueryReplies returns a slice of streams.Document values that are replies to the specified document, and were published before the specified date.
-func (service *ActivityStream) QueryReplies(ctx context.Context, inReplyTo string, done <-chan struct{}) <-chan streams.Document {
-	return service.queryByRelation(ctx, "Reply", inReplyTo, "after", 0, done)
-}
-
-// QueryRepliesBeforeDate returns a slice of streams.Document values that are replies to the specified document, and were published before the specified date.
-func (service *ActivityStream) QueryRepliesBeforeDate(ctx context.Context, inReplyTo string, maxDate int64, done <-chan struct{}) <-chan streams.Document {
-	return service.queryByRelation(ctx, "Reply", inReplyTo, "before", maxDate, done)
-}
-
-// QueryRepliesAfterDate returns a slice of streams.Document values that are replies to the specified document, and were published after the specified date.
-func (service *ActivityStream) QueryRepliesAfterDate(ctx context.Context, inReplyTo string, minDate int64, done <-chan struct{}) <-chan streams.Document {
-	return service.queryByRelation(ctx, "Reply", inReplyTo, "after", minDate, done)
-}
-
-func (service *ActivityStream) QueryAnnouncesBeforeDate(ctx context.Context, relationHref string, maxDate int64, done <-chan struct{}) <-chan streams.Document {
-	return service.queryByRelation(ctx, vocab.ActivityTypeAnnounce, relationHref, "before", maxDate, done)
-}
-
-func (service *ActivityStream) QueryLikesBeforeDate(ctx context.Context, relationHref string, maxDate int64, done <-chan struct{}) <-chan streams.Document {
-	return service.queryByRelation(ctx, vocab.ActivityTypeLike, relationHref, "before", maxDate, done)
-}
-
-func (service *ActivityStream) QueryActors(queryString string) ([]model.ActorSummary, error) {
-
-	const location = "service.ActivityStream.QueryActors"
-
-	// If we think this is an address we can work with (because sherlock says so)
-	// the try to retrieve it directly.
-	if sherlock.IsValidAddress(queryString) {
-
-		// Try to load the actor directly from the Interwebs
-		if newActor, err := service.Client().Load(queryString, sherlock.AsActor()); err == nil {
-
-			// If this is a valid, but (previously) unknown actor, then add it to the results
-			// This will also automatically get cached/crawled for next time.
-			result := []model.ActorSummary{{
-				ID:       newActor.ID(),
-				Type:     newActor.Type(),
-				Name:     newActor.Name(),
-				Icon:     newActor.Icon().Href(),
-				Username: newActor.PreferredUsername(),
-			}}
-
-			return result, nil
-		}
-	}
-
-	// Fall through means that we can't find a perfect match, so fall back to a full-text search
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
-	defer cancel()
-
-	collection, err := service.collection(ctx)
+	// Try to load the recipient as a JSON-LD document
+	document, err := service.Client().Load(recipient, sherlock.AsActor())
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Unable to connect to database")
+		return "", "", derp.Wrap(err, location, "Error loading ActivityPub Actor", recipient)
 	}
 
-	result, err := queries.SearchActivityStreamActors(collection, queryString)
-
-	if err != nil {
-		return nil, derp.Wrap(err, location, "Unable to query database")
+	if !document.IsActor() {
+		return "", "", derp.NotFoundError(location, "Recipient is not an ActivityPub Actor", recipient)
 	}
 
-	return result, nil
+	// Successssssssss.
+	return document.ID(), document.Inbox().String(), nil
 }
+
+/******************************************
+ * Custom Actions
+ ******************************************/
 
 // SendMessage sends an ActivityPub message to a single recipient/inboxURL
 // `inboxURL` the URL to deliver the message to
@@ -376,25 +399,6 @@ func (service *ActivityStream) SendMessage(session data.Session, args mapof.Any)
 
 	// Success!!
 	return nil
-}
-
-func (service *ActivityStream) GetRecipient(recipient string) (string, string, error) {
-
-	const location = "service.ActivityStream.GetRecipient"
-
-	// Try to load the recipient as a JSON-LD document
-	document, err := service.Client().Load(recipient, sherlock.AsActor())
-
-	if err != nil {
-		return "", "", derp.Wrap(err, location, "Error loading ActivityPub Actor", recipient)
-	}
-
-	if !document.IsActor() {
-		return "", "", derp.NotFoundError(location, "Recipient is not an ActivityPub Actor", recipient)
-	}
-
-	// Successssssssss.
-	return document.ID(), document.Inbox().String(), nil
 }
 
 func (service *ActivityStream) PublicKeyFinder(keyID string) (string, error) {
