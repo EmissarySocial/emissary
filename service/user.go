@@ -165,8 +165,8 @@ func (service *User) Query(session data.Session, criteria exp.Expression, option
 }
 
 // Load retrieves an User from the database
-func (service *User) Load(session data.Session, criteria exp.Expression, result *model.User) error {
-	if err := service.collection(session).Load(notDeleted(criteria), result); err != nil {
+func (service *User) Load(session data.Session, criteria exp.Expression, result *model.User, options ...option.Option) error {
+	if err := service.collection(session).Load(notDeleted(criteria), result, options...); err != nil {
 		return derp.Wrap(err, "service.User.Load", "Error loading User", criteria)
 	}
 
@@ -433,19 +433,19 @@ func (service *User) LoadByMapID(session data.Session, key string, value string,
 // LoadByProfileURL loads a single model.User object that matches the provided profile URL
 func (service *User) LoadByProfileURL(session data.Session, profileUrl string, result *model.User) error {
 	criteria := exp.Equal("profileUrl", profileUrl)
-	return service.Load(session, criteria, result)
+	return service.Load(session, criteria, result, option.CaseSensitive(false))
 }
 
 // LoadByUsername loads a single model.User object that matches the provided username
 func (service *User) LoadByUsername(session data.Session, username string, result *model.User) error {
 	criteria := exp.Equal("username", username)
-	return service.Load(session, criteria, result)
+	return service.Load(session, criteria, result, option.CaseSensitive(false))
 }
 
 // LoadByUsernameOrEmail loads a single model.User object that matches the provided username or email address
 func (service *User) LoadByUsernameOrEmail(session data.Session, usernameOrEmail string, result *model.User) error {
 	criteria := exp.Equal("username", usernameOrEmail).OrEqual("emailAddress", usernameOrEmail)
-	err := service.Load(session, criteria, result)
+	err := service.Load(session, criteria, result, option.CaseSensitive(false))
 
 	return err
 }
@@ -453,7 +453,7 @@ func (service *User) LoadByUsernameOrEmail(session data.Session, usernameOrEmail
 // LoadByEmail loads a single model.User object that matches the provided email address
 func (service *User) LoadByEmail(session data.Session, email string, result *model.User) error {
 	criteria := exp.Equal("emailAddress", email)
-	err := service.Load(session, criteria, result)
+	err := service.Load(session, criteria, result, option.CaseSensitive(false))
 
 	return err
 }
