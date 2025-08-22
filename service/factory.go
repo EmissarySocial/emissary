@@ -249,9 +249,10 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 
 		// Populate Folder Service
 		factory.folderService.Refresh(
-			factory.Theme(),
 			factory.Domain(),
+			factory.Following(),
 			factory.Inbox(),
+			factory.Theme(),
 		)
 
 		// Populate Follower Service

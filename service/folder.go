@@ -16,9 +16,10 @@ import (
 
 // Folder manages all interactions with a user's Folder
 type Folder struct {
-	themeService  *Theme
-	domainService *Domain
-	inboxService  *Inbox
+	domainService    *Domain
+	followingService *Following
+	inboxService     *Inbox
+	themeService     *Theme
 }
 
 // NewFolder returns a fully populated Folder service
@@ -32,10 +33,11 @@ func NewFolder() Folder {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Folder) Refresh(themeService *Theme, domainService *Domain, inboxService *Inbox) {
-	service.themeService = themeService
+func (service *Folder) Refresh(domainService *Domain, followingService *Following, inboxService *Inbox, themeService *Theme) {
 	service.domainService = domainService
+	service.followingService = followingService
 	service.inboxService = inboxService
+	service.themeService = themeService
 }
 
 // Close stops any background processes controlled by this service
@@ -100,7 +102,7 @@ func (service *Folder) Load(session data.Session, criteria exp.Expression, resul
 }
 
 // Save adds/updates an Folder in the database
-func (service *Folder) Save(session data.Session, folder *model.Folder, note string) error {
+func (service *Folder) Save(session data.Session, folder *model.Folder, comment string) error {
 
 	const location = "service.Folder.Save"
 
@@ -110,30 +112,30 @@ func (service *Folder) Save(session data.Session, folder *model.Folder, note str
 	}
 
 	// Save the value to the database
-	if err := service.collection(session).Save(folder, note); err != nil {
-		return derp.Wrap(err, location, "Unable to save Folder", folder, note)
+	if err := service.collection(session).Save(folder, comment); err != nil {
+		return derp.Wrap(err, location, "Unable to save Folder", folder, comment)
 	}
 
 	return nil
 }
 
 // Delete removes an Folder from the database (virtual delete)
-func (service *Folder) Delete(session data.Session, folder *model.Folder, note string) error {
+func (service *Folder) Delete(session data.Session, folder *model.Folder, comment string) error {
 
 	const location = "service.Folder.Delete"
 
 	// Delete the folder
-	if err := service.collection(session).Delete(folder, note); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Folder", folder, note)
+	if err := service.collection(session).Delete(folder, comment); err != nil {
+		return derp.Wrap(err, location, "Unable to delete Folder", folder, comment)
 	}
 
 	// Delete inbox items
 	if err := service.inboxService.DeleteByFolder(session, folder.UserID, folder.FolderID); err != nil {
-		return derp.Wrap(err, location, "Unable to delete related `Inbox Message` records.", folder, note)
+		return derp.Wrap(err, location, "Unable to delete related `Inbox Message` records.", folder, comment)
 	}
 
 	// Delete any followings
-	if err := service.inboxService.DeleteByFolder(session, folder.UserID, folder.FolderID); err != nil {
+	if err := service.followingService.DeleteByFolder(session, folder.UserID, folder.FolderID, comment); err != nil {
 		return derp.Wrap(err, location, "Unable to delete related `Following` records.")
 	}
 

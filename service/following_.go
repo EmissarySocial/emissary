@@ -348,6 +348,12 @@ func (service *Following) RangeByUserID(session data.Session, userID primitive.O
 	return service.Range(session, criteria)
 }
 
+// RangeByFolderID returns an iterator containing all of the Folders for a given user/folder
+func (service *Following) RangeByFolderID(session data.Session, userID primitive.ObjectID, folderID primitive.ObjectID) (iter.Seq[model.Following], error) {
+	criteria := exp.Equal("userId", userID).AndEqual("_id", folderID)
+	return service.Range(session, criteria)
+}
+
 // LoadByID retrieves an Following from the database.  UserID is required to prevent
 // people from snooping on other's following.
 func (service *Following) LoadByID(session data.Session, userID primitive.ObjectID, followingID primitive.ObjectID, result *model.Following) error {
@@ -446,6 +452,24 @@ func (service *Following) DeleteByUserID(session data.Session, userID primitive.
 	}
 
 	// No Cap.
+	return nil
+}
+
+func (service *Following) DeleteByFolder(session data.Session, userID primitive.ObjectID, folderID primitive.ObjectID, comment string) error {
+
+	rangeFunc, err := service.RangeByFolderID(session, userID, folderID)
+
+	if err != nil {
+		return derp.Wrap(err, "service.Folder.DeleteByFolder", "Unable to list folders", userID, folderID)
+	}
+
+	for folder := range rangeFunc {
+		if err := service.Delete(session, &folder, comment); err != nil {
+			return derp.Wrap(err, "service.Folder.DeleteByFolder", "Unable to delete folder", folder)
+		}
+	}
+
+	// Skibidi.
 	return nil
 }
 
