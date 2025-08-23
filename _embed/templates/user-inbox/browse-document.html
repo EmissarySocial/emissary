@@ -11,11 +11,11 @@
 
 	<div id="id_{{$hash}}" class="clickable card padding margin-bottom pos-relative">
 
-		<span id="id_{{$hash}}_defaultLink" hx-target="#modal-window" hx-swap="innerHTML transition:true" hx-get="/@me/inbox/browse-focus?url={{$document.ID}}" hidden></span>
+		<span id="id_{{$hash}}_defaultLink" hx-target="#modal-window" hx-swap="innerHTML transition:true" hx-get="/@me/inbox/browse-tree?url={{$document.ID}}" hidden></span>
 
 		{{- if $inReplyTo.NotNil -}}
 			<div class="flex-row margin-bottom-sm">
-				<div role="link" class="italics text-sm text-gray" hx-get="/@me/inbox/browse-focus?&url={{$inReplyTo.ID}}">
+				<div role="link" class="italics text-sm text-gray" hx-get="/@me/inbox/browse-tree?&url={{$inReplyTo.ID}}">
 					{{icon "reply-fill"}} Replying to {{$inReplyToAttributedTo.Name}}
 				</div>
 			</div>
@@ -93,7 +93,7 @@
 
 		<div class="pos-absolute-top-right text-xs" hx-target="#modal-window" hx-push-url="false" hx-swap="innerHTML transition:true">
 			<button hx-get="/@me/inbox/browse-timeline?url={{$document.ID}}" aria-label="View Timeline">{{icon "timeline"}}</button>
-			<button hx-get="/@me/inbox/browse-map?url={{$document.ID}}" aria-label="View Map">{{icon "map"}}</button>
+			<button hx-get="/@me/inbox/browse-tree?url={{$document.ID}}" aria-label="View Map">{{icon "map"}}</button>
 		</div>
 		
 	</div>

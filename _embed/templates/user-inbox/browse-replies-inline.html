@@ -15,7 +15,7 @@
 
 			<div 
 				class="clickable italics text-gray padding-vertical-xs flex-row flex-align-center"
-				hx-get="/@me/inbox/browse-focus?url={{$document.ID}}" 
+				hx-get="/@me/inbox/browse-tree?url={{$document.ID}}" 
 				hx-target="#modal-window"
 				hx-push-url="false">
 
@@ -35,7 +35,7 @@
 
 		<div  
 			class="clickable text-gray padding-vertical-xs flex-row flex-align-center"
-			hx-get="/@me/inbox/browse-focus?url={{$url}}" 
+			hx-get="/@me/inbox/browse-tree?url={{$url}}" 
 			hx-target="#modal-window" 
 			hx-swap="innerHTML" 
 			hx-push-url="false">

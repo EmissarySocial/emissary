@@ -411,7 +411,7 @@
 			]
 		}
 
-		browse-map: {
+		browse-tree: {
 			roles: ["self"]
 			steps: [
 				{do:"view-html"}
@@ -432,11 +432,19 @@
 			]
 		}
 
+		browse-replies-tree: {
+			roles: ["self"]
+			steps: [
+				{do:"view-html"}
+			]
+		}
+
 		browse-timeline: {
 			roles: ["self"]
 			steps: [
 				{do:"view-html"}
 			]
 		}
+
 	}
 }	

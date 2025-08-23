@@ -9,13 +9,13 @@
 			<div class="flex-grow-1">
 				<span class="button-group">
 
-					{{- if eq "focus" $selected -}}
-						<button hx-get="/@me/inbox/browse-focus?url={{$url}}" class="selected">
-							{{icon "focus-fill"}} Focus
+					{{- if eq "tree" $selected -}}
+						<button hx-get="/@me/inbox/browse-tree?url={{$url}}" class="selected">
+							{{icon "map-fill"}} Nested
 						</button>
 					{{- else -}}
-						<button hx-get="/@me/inbox/browse-focus?url={{$url}}">
-							{{icon "focus"}} Focus
+						<button hx-get="/@me/inbox/browse-tree?url={{$url}}">
+							{{icon "map"}} Nested
 						</button>
 					{{- end -}}
 
@@ -26,16 +26,6 @@
 					{{- else -}}
 						<button hx-get="/@me/inbox/browse-timeline?url={{$url}}">
 							{{icon "timeline"}} Timeline
-						</button>
-					{{- end -}}
-
-					{{- if eq "map" $selected -}}
-						<button hx-get="/@me/inbox/browse-map?url={{$url}}" class="selected">
-							{{icon "map-fill"}} Nested
-						</button>
-					{{- else -}}
-						<button hx-get="/@me/inbox/browse-map?url={{$url}}">
-							{{icon "map"}} Nested
 						</button>
 					{{- end -}}
 

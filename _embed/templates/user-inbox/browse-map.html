@@ -8,7 +8,7 @@
 
 	{{- range $tree := $trees -}}
 		<div 
-			hx-get="/@me/inbox/browse-focus?url={{$tree.Item.ID}}" 
+			hx-get="/@me/inbox/browse-tree?url={{$tree.Item.ID}}" 
 			class="clickable card text-sm padding-xs margin-bottom-sm {{ if eq $url $tree.Item.ID}}selected{{end}}" 
 			style="margin-left:{{multiply 24 $tree.Depth}}px; view-transition-name:{{$tree.Item.Token}};">
 

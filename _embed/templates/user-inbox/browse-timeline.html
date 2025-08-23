@@ -8,14 +8,13 @@
 
 	{{- range $document := $timeline -}}
 		<div 
-			hx-get="/@me/inbox/browse-focus?url={{$document.ID}}" 
-			class="clickable card text-sm padding-xs margin-bottom-sm {{ if eq $url $document.ID}}selected{{end}}" 
-			style="view-transition-name:{{$document.Token}}">
+			hx-get="/@me/inbox/browse-tree?url={{$document.ID}}" 
+			class="clickable card text-sm padding-xs margin-bottom-sm {{ if eq $url $document.ID}}selected{{end}}">
 
 			<div class="flex-row flex-align-center">
-				<img src="{{$document.AttributedTo.IconURL}}" class="circle width-32" style="view-transition-name:{{$document.Token}}_icon">
+				<img src="{{$document.AttributedTo.IconURL}}" class="circle width-32">
 				<div class="padding-horizontal-xs nowrap">{{$document.Published | tinyDate }}</div>
-				<div class="flex-grow ellipsis" style="view-transition-name:{{$document.Token}}_summary">
+				<div class="flex-grow ellipsis">
 					{{$document.Content | summary | html }}
 				</div>
 			</div>

@@ -9,9 +9,8 @@
 
 {{- $replies := .RepliesAfter $url $publishedDate $pageSize -}}
 
-{{- range $index, $stream := $replies -}}
-	{{- $document := $stream.UnwrapActivity -}}
-	{{- template "browse-document" (array $builder $document "replies") -}}
+{{- range $index, $value := $replies -}}
+	{{- template "browse-document" (array $builder $value "replies") -}}
 {{- end -}}
 
 {{- if eq $replies.Length $pageSize -}}
