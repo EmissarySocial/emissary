@@ -9,3 +9,11 @@ func WithHistory(uris ...string) LoadOption {
 		config.history = append(config.history, uris...)
 	}
 }
+
+// WithoutCrawler deactivates the crawler
+// for this operation
+func WithoutCrawler() LoadOption {
+	return func(config *loadConfig) {
+		config.useCrawler = false
+	}
+}

@@ -22,34 +22,38 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 
 	switch name {
 
-	case
-		"CrawlActivityStreams",
-		"LoadActivityStream":
-		return WithFactory(consumer.serverFactory, args, CrawlActivityStreams)
+	case "CrawlActivityStreams":
+		return WithSession(consumer.serverFactory, args, CrawlActivityStreams)
 
 	case "CreateWebSubFollower":
-		return WithFactory(consumer.serverFactory, args, CreateWebSubFollower)
+		return WithSession(consumer.serverFactory, args, CreateWebSubFollower)
+
+	case "CountRelatedDocuments":
+		return WithFactory(consumer.serverFactory, args, CountRelatedDocuments)
 
 	case "DeleteEmptySearchQuery":
-		return WithFactory(consumer.serverFactory, args, DeleteEmptySearchQuery)
+		return WithSession(consumer.serverFactory, args, DeleteEmptySearchQuery)
 
 	case "Geocode":
 		return WithStream(consumer.serverFactory, args, Geocode)
 
 	case "IndexAllStreams":
-		return WithFactory(consumer.serverFactory, args, IndexAllStreams)
+		return WithSession(consumer.serverFactory, args, IndexAllStreams)
 
 	case "IndexAllUsers":
-		return WithFactory(consumer.serverFactory, args, IndexAllUsers)
+		return WithSession(consumer.serverFactory, args, IndexAllUsers)
+
+	case "LoadActivityStream":
+		return WithSession(consumer.serverFactory, args, LoadActivityStream)
 
 	case "MakeStreamArchive":
 		return WithStream(consumer.serverFactory, args, MakeStreamArchive)
 
 	case "PollFollowing":
-		return WithFactory(consumer.serverFactory, args, PollFollowing)
+		return WithSession(consumer.serverFactory, args, PollFollowing)
 
 	case "ProcessMedia":
-		return WithFactory(consumer.serverFactory, args, ProcessMedia)
+		return WithSession(consumer.serverFactory, args, ProcessMedia)
 
 	case "PurgeActivityStreamCache":
 		return PurgeActivityStreamCache(consumer.serverFactory)
@@ -61,10 +65,10 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 		return PurgeDomeLog(consumer.serverFactory)
 
 	case "ReceiveWebMention":
-		return WithFactory(consumer.serverFactory, args, ReceiveWebMention)
+		return WithSession(consumer.serverFactory, args, ReceiveWebMention)
 
 	case "RecycleDomain":
-		return WithFactory(consumer.serverFactory, args, RecycleDomain)
+		return WithSession(consumer.serverFactory, args, RecycleDomain)
 
 	case "Scheduler":
 		return Scheduler(consumer.serverFactory)
@@ -76,16 +80,16 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 		return ScheduleHourly(consumer.serverFactory)
 
 	case "SendActivityPubMessage":
-		return WithFactory(consumer.serverFactory, args, SendActivityPubMessage)
+		return WithSession(consumer.serverFactory, args, SendActivityPubMessage)
 
 	case "SendSearchResults":
-		return WithFactory(consumer.serverFactory, args, SendSearchResults)
+		return WithSession(consumer.serverFactory, args, SendSearchResults)
 
 	case "SendSearchResults-Query":
-		return WithFactory(consumer.serverFactory, args, SendSearchResults_Query)
+		return WithSession(consumer.serverFactory, args, SendSearchResults_Query)
 
 	case "SendSearchResults-Global":
-		return WithFactory(consumer.serverFactory, args, SendSearchResults_Global)
+		return WithSession(consumer.serverFactory, args, SendSearchResults_Global)
 
 	case "SendWebMention":
 		return SendWebMention(args)
@@ -94,7 +98,7 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 		return SendWebSubMessage(args)
 
 	case "Shuffle":
-		return WithFactory(consumer.serverFactory, args, Shuffle)
+		return WithSession(consumer.serverFactory, args, Shuffle)
 
 	case "syndication.create", "syndication.update", "syndication.delete":
 		return StreamSyndicate(name, args)

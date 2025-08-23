@@ -31,7 +31,7 @@ import (
 // Factory knows how to create an populate all services
 type Factory struct {
 	serverFactory  ServerFactory
-	commonDatabase data.Server
+	commonDatabase mongodb.Server
 	server         mongodb.Server
 	config         config.Domain
 	port           string
@@ -98,7 +98,7 @@ type Factory struct {
 }
 
 // NewFactory creates a new factory tied to a MongoDB database
-func NewFactory(serverFactory ServerFactory, commonDatabase data.Server, domain config.Domain, port string, contentService *Content, emailService *ServerEmail, jwtService *JWT, queue *queue.Queue, registrationService *Registration, templateService *Template, themeService *Theme, widgetService *Widget, attachmentOriginals afero.Fs, attachmentCache afero.Fs, exportCache afero.Fs, httpCache *httpcache.HTTPCache, workingDirectory *mediaserver.WorkingDirectory) (*Factory, error) {
+func NewFactory(serverFactory ServerFactory, commonDatabase mongodb.Server, domain config.Domain, port string, contentService *Content, emailService *ServerEmail, jwtService *JWT, queue *queue.Queue, registrationService *Registration, templateService *Template, themeService *Theme, widgetService *Widget, attachmentOriginals afero.Fs, attachmentCache afero.Fs, exportCache afero.Fs, httpCache *httpcache.HTTPCache, workingDirectory *mediaserver.WorkingDirectory) (*Factory, error) {
 
 	log.Info().Msg("Starting domain: " + domain.Hostname)
 
@@ -560,6 +560,10 @@ func (factory *Factory) Config() config.Domain {
 /******************************************
  * Database Connection Methods
  ******************************************/
+
+func (factory *Factory) CommonDatabase() mongodb.Server {
+	return factory.commonDatabase
+}
 
 func (factory *Factory) Server() mongodb.Server {
 	return factory.server

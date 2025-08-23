@@ -25,7 +25,7 @@ func ScheduleDaily(serverFactory ServerFactory) queue.Result {
 	{
 		task := queue.NewTask(
 			"PurgeActivityStreamCache",
-			nil,
+			mapof.Any{},
 			queue.WithPriority(1000),
 		)
 
@@ -38,7 +38,7 @@ func ScheduleDaily(serverFactory ServerFactory) queue.Result {
 	{
 		task := queue.NewTask(
 			"PurgeErrors",
-			nil,
+			mapof.Any{},
 			queue.WithPriority(1000),
 		)
 
@@ -51,7 +51,7 @@ func ScheduleDaily(serverFactory ServerFactory) queue.Result {
 	{
 		task := queue.NewTask(
 			"PurgeDomeLog",
-			nil,
+			mapof.Any{},
 			queue.WithPriority(1000),
 		)
 

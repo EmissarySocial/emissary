@@ -104,7 +104,7 @@ func (service *Following) Range(session data.Session, criteria exp.Expression, o
 func (service *Following) Load(session data.Session, criteria exp.Expression, result *model.Following) error {
 
 	if err := service.collection(session).Load(notDeleted(criteria), result); err != nil {
-		return derp.Wrap(err, "service.Following.Load", "Error loading Following", criteria)
+		return derp.Wrap(err, "service.Following.Load", "Unable to loadFollowing", criteria)
 	}
 
 	return nil
@@ -358,11 +358,13 @@ func (service *Following) RangeByFolderID(session data.Session, userID primitive
 // people from snooping on other's following.
 func (service *Following) LoadByID(session data.Session, userID primitive.ObjectID, followingID primitive.ObjectID, result *model.Following) error {
 
+	const location = "service.Following.LoadByID"
+
 	criteria := exp.Equal("_id", followingID).
 		AndEqual("userId", userID)
 
 	if err := service.Load(session, criteria, result); err != nil {
-		return derp.Wrap(err, "service.Following.LoadByID", "Error loading Following", criteria)
+		return derp.Wrap(err, location, "Unable to load Following", criteria)
 	}
 
 	return nil
@@ -370,6 +372,8 @@ func (service *Following) LoadByID(session data.Session, userID primitive.Object
 
 // LoadByToken loads an individual following using a string version of the following ID
 func (service *Following) LoadByToken(session data.Session, userID primitive.ObjectID, token string, result *model.Following) error {
+
+	const location = "service.Following.LoadByToken"
 
 	if token == "new" {
 		*result = model.NewFollowing()
@@ -380,7 +384,7 @@ func (service *Following) LoadByToken(session data.Session, userID primitive.Obj
 	followingID, err := primitive.ObjectIDFromHex(token)
 
 	if err != nil {
-		return derp.Wrap(err, "service.Following.LoadByToken", "Error parsing followingId", token)
+		return derp.Wrap(err, location, "FollowingId must be a valid ObjectID", token)
 	}
 
 	return service.LoadByID(session, userID, followingID, result)
@@ -408,7 +412,7 @@ func (service *Following) GetFollowingID(session data.Session, userID primitive.
 	document, err := activityService.Client().Load(uri)
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Error loading ActivityStream document", uri)
+		return "", derp.Wrap(err, location, "Unable to loadActivityStream document", uri)
 	}
 
 	// If this document is not an Actor, then get the Actor of the document
@@ -428,7 +432,7 @@ func (service *Following) GetFollowingID(session data.Session, userID primitive.
 	} else if derp.IsNotFound(err) {
 		return "", nil
 	} else {
-		return "", derp.Wrap(err, location, "Error loading Following record", uri)
+		return "", derp.Wrap(err, location, "Unable to loadFollowing record", uri)
 	}
 }
 
@@ -441,7 +445,7 @@ func (service *Following) DeleteByUserID(session data.Session, userID primitive.
 	rangeFunc, err := service.RangeByUserID(session, userID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error loading following", userID)
+		return derp.Wrap(err, location, "Unable to loadfollowing", userID)
 	}
 
 	// Delete each Following record
@@ -591,7 +595,7 @@ func (service *Following) preventDuplicates(session data.Session, current *model
 		if derp.IsNotFound(err) {
 			return nil
 		}
-		return derp.Wrap(err, "service.Following.preventDuplicate", "Error loading Following", current)
+		return derp.Wrap(err, "service.Following.preventDuplicate", "Unable to loadFollowing", current)
 	}
 
 	// Delete the original record

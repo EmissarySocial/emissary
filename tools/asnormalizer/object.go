@@ -12,7 +12,7 @@ import (
 // Object normalizes a regular document (Article, Note, etc)
 func Object(client streams.Client, document streams.Document) map[string]any {
 
-	const location = "asnormalizer.Object"
+	const location = "tools.asnormalizer.Object"
 
 	actual := document.UnwrapActivity()
 
@@ -51,10 +51,10 @@ func Object(client streams.Client, document streams.Document) map[string]any {
 			derp.Report(derp.Wrap(err, location, "Unable to load attributedTo actor", attributedToID))
 		}
 
-		result[vocab.PropertyAttributedTo] = Actor(attributedTo)
-
+		result[vocab.PropertyAttributedTo] = ActorSummary(attributedTo)
 	}
 
+	// Normalize Attachments
 	if attachments := actual.Attachment(); attachments.NotNil() {
 
 		for attachment := attachments; attachment.NotNil(); attachment = attachment.Tail() {

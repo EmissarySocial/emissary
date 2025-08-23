@@ -67,7 +67,7 @@ func (service *MerchantAccount) stripe_getCheckoutURL(merchantAccount *model.Mer
 	checkoutMode := service.stripe_checkoutMode(price)
 
 	txn := remote.Post("https://api.stripe.com/v1/checkout/sessions").
-		With(options.BearerAuth(restrictedKey), options.Debug()).
+		With(options.BearerAuth(restrictedKey)).
 		With(stripeapi.ConnectedAccount(connectedAccountID)).
 		ContentType("application/x-www-form-urlencoded").
 		Form("mode", checkoutMode).

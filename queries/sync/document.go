@@ -21,6 +21,7 @@ func Document(ctx context.Context, database *mongo.Database) error {
 			Keys: bson.D{
 				{Key: "metadata.relationType", Value: 1},
 				{Key: "metadata.relationHref", Value: 1},
+				{Key: "published", Value: 1},
 			},
 		},
 
@@ -47,6 +48,7 @@ func Document(ctx context.Context, database *mongo.Database) error {
 		"idx_Document_Context": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "object.context", Value: 1},
+				{Key: "published", Value: 1},
 			},
 		},
 

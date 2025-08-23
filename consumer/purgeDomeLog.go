@@ -14,7 +14,7 @@ func PurgeDomeLog(factory ServerFactory) queue.Result {
 
 	log.Trace().Msg("Task: PurgeDomeLog")
 
-	// Purge old Error records from the error log
+	// Purge dome logs >1 month old
 	collection := factory.CommonDatabase().Collection("Log")
 
 	_, err := collection.DeleteMany(

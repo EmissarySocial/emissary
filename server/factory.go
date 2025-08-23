@@ -737,15 +737,6 @@ func (factory *Factory) EditorJS() *goeditorjs.HTMLEngine {
 	return result
 }
 
-func (factory *Factory) ActivityCollection() *mongo.Collection {
-
-	if factory.commonDatabase != nil {
-		return factory.commonDatabase.Collection("Document")
-	}
-
-	return nil
-}
-
 func (factory *Factory) DigitalDome() *dome.Dome {
 	return &factory.digitalDome
 }

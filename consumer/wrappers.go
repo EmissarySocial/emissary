@@ -13,7 +13,7 @@ import (
 )
 
 // WithFactory wraps a consumer function, and uses the "host" argument to inject a Factory object into the function signature.
-func WithFactory(serverFactory ServerFactory, args mapof.Any, handler func(factory *service.Factory, session data.Session, args mapof.Any) queue.Result) queue.Result {
+func WithFactory(serverFactory ServerFactory, args mapof.Any, handler func(factory *service.Factory, args mapof.Any) queue.Result) queue.Result {
 
 	const location = "consumer.WithFactory"
 
@@ -34,26 +34,37 @@ func WithFactory(serverFactory ServerFactory, args mapof.Any, handler func(facto
 		return queue.Error(derp.Wrap(err, location, "Invalid 'host' argument.", hostname))
 	}
 
-	// Execute the handler as a transaction
-	result, err := factory.Server().WithTransaction(context.Background(), func(session data.Session) (any, error) {
-		result := handler(factory, session, args)
-		return result, result.Error
-	})
+	return handler(factory, args)
+}
 
-	if err != nil {
-		if queueResult, isQueueResult := result.(queue.Result); isQueueResult {
-			return queueResult
+// WithFactoryAndSession wraps a consumer function, and uses the "host" argument to inject a Factory object into the function signature.
+func WithSession(serverFactory ServerFactory, args mapof.Any, handler func(factory *service.Factory, session data.Session, args mapof.Any) queue.Result) queue.Result {
+
+	const location = "consumer.WithFactoryAndSession"
+
+	return WithFactory(serverFactory, args, func(factory *service.Factory, args mapof.Any) queue.Result {
+
+		// Execute the handler as a transaction
+		result, err := factory.Server().WithTransaction(context.Background(), func(session data.Session) (any, error) {
+			result := handler(factory, session, args)
+			return result, result.Error
+		})
+
+		if err != nil {
+			if queueResult, isQueueResult := result.(queue.Result); isQueueResult {
+				return queueResult
+			}
+			return queue.Failure(derp.Wrap(err, location, "Handler failed, did not return a queue.Result.  This should never happen."))
 		}
-		return queue.Failure(derp.Wrap(err, location, "Handler failed, did not return a queue.Result.  This should never happen."))
-	}
 
-	// Return the queue result
-	if result, isQueueResult := result.(queue.Result); isQueueResult {
-		return result
-	}
+		// Return the queue result
+		if result, isQueueResult := result.(queue.Result); isQueueResult {
+			return result
+		}
 
-	// Guard against panics if developers do bad things.  This should never happen.
-	return queue.Failure(derp.InternalError(location, "Handler did not return a queue.Result.  This should never happen", result))
+		// Guard against panics if developers do bad things.  This should never happen.
+		return queue.Failure(derp.InternalError(location, "Handler did not return a queue.Result.  This should never happen", result))
+	})
 }
 
 // WithStream wraps a consumer function, using the "streamId" argument to load a Stream object from the database.
@@ -61,7 +72,7 @@ func WithStream(serverFactory ServerFactory, args mapof.Any, handler func(*servi
 
 	const location = "consumer.WithStream"
 
-	return WithFactory(serverFactory, args, func(factory *service.Factory, session data.Session, args mapof.Any) queue.Result {
+	return WithSession(serverFactory, args, func(factory *service.Factory, session data.Session, args mapof.Any) queue.Result {
 
 		streamService := factory.Stream()
 		stream := model.NewStream()

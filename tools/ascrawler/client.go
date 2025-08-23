@@ -62,15 +62,22 @@ func (client *Client) Load(uri string, options ...any) (streams.Document, error)
 		return result, derp.Wrap(err, location, "Error loading actor from inner client")
 	}
 
+	// Parse the load configuration and determine if we should crawl related records or not
 	config := parseLoadConfig(options...)
-	config.history = append(config.history, uri)
 
-	// Crawl parents, children, and related records if we're below the max depth
-	if len(config.history) < client.maxDepth {
-		client.crawl_AttributedTo(result, config)
-		client.crawl_Context(result, config)
-		client.crawl_InReplyTo(result, config)
-		client.crawl_Replies(result, config)
+	if config.useCrawler {
+
+		config.history = append(config.history, uri)
+
+		// Crawl related records if we're below the max depth
+		if len(config.history) < client.maxDepth {
+			client.crawl_AttributedTo(result, config)
+			client.crawl_InReplyTo(result, config)
+			client.crawl_Context(result, config)
+			client.crawl_Replies(result, config)
+			client.crawl_Likes(result, config)
+			client.crawl_Shares(result, config)
+		}
 	}
 
 	return result, nil
@@ -85,18 +92,26 @@ func (client Client) crawl_AttributedTo(document streams.Document, config loadCo
 	}
 }
 
-func (client Client) crawl_Context(document streams.Document, config loadConfig) {
-	client.crawl_Collection(document, vocab.PropertyContext, config)
-}
-
 func (client Client) crawl_InReplyTo(document streams.Document, config loadConfig) {
 	if inReplyTo := document.InReplyTo().ID(); inReplyTo != "" {
 		client.sendTask(inReplyTo, config)
 	}
 }
 
+func (client Client) crawl_Context(document streams.Document, config loadConfig) {
+	client.crawl_Collection(document, vocab.PropertyContext, config)
+}
+
 func (client Client) crawl_Replies(document streams.Document, config loadConfig) {
 	client.crawl_Collection(document, vocab.PropertyReplies, config)
+}
+
+func (client Client) crawl_Likes(document streams.Document, config loadConfig) {
+	client.crawl_Collection(document, vocab.PropertyLikes, config)
+}
+
+func (client Client) crawl_Shares(document streams.Document, config loadConfig) {
+	client.crawl_Collection(document, vocab.PropertyShares, config)
 }
 
 func (client Client) crawl_Collection(document streams.Document, propertyName string, config loadConfig) {
@@ -157,7 +172,7 @@ func (client Client) sendTask(url string, config loadConfig) {
 	// Queue the task
 	log.Debug().Str("loc", location).Str("url", url).Int("depth", len(config.history)).Msg("Queuing task")
 
-	task := queue.NewTask(
+	client.enqueue <- queue.NewTask(
 		"CrawlActivityStreams",
 		mapof.Any{
 			"host":      client.hostname,
@@ -169,6 +184,4 @@ func (client Client) sendTask(url string, config loadConfig) {
 		queue.WithSignature(url),
 		queue.WithPriority(128),
 	)
-
-	client.enqueue <- task
 }

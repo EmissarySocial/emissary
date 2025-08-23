@@ -42,3 +42,23 @@ func Actor(document streams.Document) map[string]any {
 
 	return result
 }
+
+// ActorSummary normalizes an Actor document to be embedded in other documents
+func ActorSummary(document streams.Document) map[string]any {
+
+	result := map[string]any{
+
+		// Profile
+		vocab.PropertyType:              document.Type(),
+		vocab.PropertyID:                document.ID(),
+		vocab.PropertyName:              document.Name(),
+		vocab.PropertyPreferredUsername: document.PreferredUsername(),
+		vocab.PropertySummary:           document.Summary(),
+		vocab.PropertyImage:             Image(document.Image()),
+		vocab.PropertyIcon:              Image(document.Icon()),
+		vocab.PropertyTag:               Tags(document.Tag()),
+		vocab.PropertyURL:               document.URL(),
+	}
+
+	return result
+}

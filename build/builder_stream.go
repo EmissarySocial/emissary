@@ -3,12 +3,12 @@ package build
 import (
 	"bytes"
 	"html/template"
-	"math"
 	"net/http"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/ascache"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -18,7 +18,6 @@ import (
 	"github.com/benpate/form"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
-	"github.com/benpate/rosetta/channel"
 	"github.com/benpate/rosetta/convert"
 	htmlconv "github.com/benpate/rosetta/html"
 	"github.com/benpate/rosetta/mapof"
@@ -628,6 +627,13 @@ func (w Stream) Mentions() ([]model.Mention, error) {
 	return mentionService.QueryByObjectID(w._session, w._stream.StreamID)
 }
 
+func (w Stream) RepliesAfter(dateString string, maxRows int) sliceof.Object[ascache.Value] {
+	activityStreamsService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
+	minDate := convert.Int64(dateString)
+	return activityStreamsService.QueryRepliesAfterDate(w._request.Context(), w._stream.URL, minDate, int64(maxRows))
+}
+
+/*
 // RepliesBefore returns a slice of all ActivityStreams before the specified date
 func (w Stream) RepliesBefore(dateString string, maxRows int) sliceof.Object[streams.Document] {
 
@@ -648,28 +654,6 @@ func (w Stream) RepliesBefore(dateString string, maxRows int) sliceof.Object[str
 	result := channel.Slice(limitedFilter)
 
 	return slice.Reverse(result)
-}
-
-func (w Stream) RepliesAfter(dateString string, maxRows int) sliceof.Object[streams.Document] {
-
-	done := make(channel.Done)
-
-	// Get all ActivityStreams that REPLY TO the current Stream
-	activityStreamsService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
-	minDate := convert.Int64(dateString)
-	replies := activityStreamsService.QueryRepliesAfterDate(w._request.Context(), w._stream.URL, minDate, done)
-
-	// Filter results based on blocks
-	ruleService := w._factory.Rule()
-	ruleFilter := ruleService.Filter(w.AuthenticatedID())
-	filteredResult := ruleFilter.Channel(replies)
-
-	// Limit to `maxRows` records
-	limitedFilter := channel.Limit(maxRows, filteredResult, done)
-	result := channel.Slice(limitedFilter)
-
-	// Success
-	return result
 }
 
 func (w Stream) AnnouncesBefore(dateString string, maxRows int) sliceof.Object[streams.Document] {
@@ -715,6 +699,7 @@ func (w Stream) LikesBefore(dateString string, maxRows int) sliceof.Object[strea
 	// Celebrate
 	return result
 }
+*/
 
 // Outbox returns a QueryBuilder for the current Stream's outbox
 func (w Stream) Outbox() (QueryBuilder[model.OutboxMessage], error) {

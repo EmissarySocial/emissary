@@ -260,8 +260,26 @@ func (service *ActivityStream) QueryRepliesBeforeDate(ctx context.Context, inRep
 }
 
 // QueryRepliesAfterDate returns a slice of streams.Document values that are replies to the specified document, and were published after the specified date.
-func (service *ActivityStream) QueryRepliesAfterDate(ctx context.Context, inReplyTo string, minDate int64, done <-chan struct{}) <-chan streams.Document {
-	return service.queryByRelation(ctx, "Reply", inReplyTo, "after", minDate, done)
+func (service *ActivityStream) QueryRepliesAfterDate(ctx context.Context, inReplyTo string, minDate int64, maxRows int64) sliceof.Object[ascache.Value] {
+
+	criteria := exp.Equal("metadata.relationType", vocab.RelationTypeReply).
+		AndEqual("metadata.relationHref", inReplyTo).
+		AndGreaterThan("object.published", time.Unix(minDate, 0))
+
+	result := sliceof.NewObject[ascache.Value]()
+
+	values := service.Range(
+		ctx,
+		criteria,
+		option.SortAsc("object.published"),
+		option.MaxRows(maxRows),
+	)
+
+	for value := range values {
+		result = append(result, value)
+	}
+
+	return result
 }
 
 func (service *ActivityStream) QueryAnnouncesBeforeDate(ctx context.Context, relationHref string, maxDate int64, done <-chan struct{}) <-chan streams.Document {

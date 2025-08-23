@@ -91,20 +91,8 @@ func (client *Client) Load(url string, options ...any) (streams.Document, error)
 
 		if err := client.loadByURL(session, url, &value); err == nil {
 
-			// If we're allowed to write to the cache, then do it.
 			if value.ShouldRevalidate() {
-				client.enqueue <- queue.NewTask(
-					"LoadActivityStream",
-					mapof.Any{
-						"host":         client.hostname,
-						"actorType":    client.actorType,
-						"actorID":      client.actorID,
-						"url":          url,
-						"revalidating": true,
-					},
-					queue.WithSignature(url),
-					queue.WithPriority(128),
-				)
+				client.revalidate(&value)
 			}
 
 			return client.asDocument(value), nil
@@ -132,6 +120,20 @@ func (client *Client) Load(url string, options ...any) (streams.Document, error)
 	if err := client.save(session.Context(), url, &value); err != nil {
 		derp.Report(derp.Wrap(err, location, "Unable to write document to cache.. continuing process.."))
 	}
+
+	// Schedule a follow-up to count related documents (in 30 seconds)
+	client.enqueue <- queue.NewTask(
+		"CountRelatedDocuments",
+		mapof.Any{
+			"url":       url,
+			"host":      client.hostname,
+			"actorType": client.actorType,
+			"actorID":   client.actorID,
+		},
+		queue.WithSignature(url+"#CountRelatedDocuments"),
+		queue.WithDelaySeconds(30),
+		queue.WithPriority(16),
+	)
 
 	// Return the result (streams.Document) to the caller
 	return result, nil
@@ -194,9 +196,11 @@ func (client *Client) Delete(url string) error {
 		return derp.Wrap(err, location, "Unable to delete", url)
 	}
 
-	// Recalculate statistics
-	if err := client.CalcRelationships(session, value.Metadata.RelationType, value.Metadata.RelationHref); err != nil {
-		return derp.Wrap(err, location, "Error calculating statistics", url)
+	// Maybe recalculate statistics
+	if value.Metadata.HasRelationship() {
+		if err := client.CalcParentRelationships(session, value.Metadata.RelationType, value.Metadata.RelationHref); err != nil {
+			return derp.Wrap(err, location, "Error calculating statistics", url)
+		}
 	}
 
 	// Success!
@@ -288,9 +292,9 @@ func (client *Client) save(ctx context.Context, url string, value *Value) error 
 			return nil, derp.Wrap(err, location, "Unable to save cached value", url)
 		}
 
-		// Finally, try to recalculate statistics of linked documents
+		// Maybe recalculate statistics
 		if value.Metadata.HasRelationship() {
-			if err := client.CalcRelationships(session, value.Metadata.RelationType, value.Metadata.RelationHref); err != nil {
+			if err := client.CalcParentRelationships(session, value.Metadata.RelationType, value.Metadata.RelationHref); err != nil {
 				return nil, derp.Wrap(err, location, "Unable to calculate relationships", url)
 			}
 		}
@@ -355,4 +359,26 @@ func (client *Client) load(session data.Session, criteria exp.Expression, value 
 // This value can match any of the URLs in the "urls" array.
 func (client *Client) loadByURL(session data.Session, url string, value *Value) error {
 	return client.load(session, exp.Equal("urls", url), value)
+}
+
+func (client *Client) revalidate(value *Value) {
+
+	// If we're allowed to write to the cache, then do it.
+	if value.ShouldRevalidate() {
+
+		documentID := value.DocumentID()
+
+		client.enqueue <- queue.NewTask(
+			"LoadActivityStream",
+			mapof.Any{
+				"host":         client.hostname,
+				"actorType":    client.actorType,
+				"actorID":      client.actorID,
+				"url":          documentID,
+				"revalidating": true,
+			},
+			queue.WithSignature(documentID),
+			queue.WithPriority(128),
+		)
+	}
 }

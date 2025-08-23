@@ -70,7 +70,7 @@ func (value *Value) AppendURL(url string) {
 
 // ShouldRevalidate returns TRUE if the "RevalidatesDate" is in the past.
 func (value Value) ShouldRevalidate() bool {
-	return value.Revalidates < time.Now().Unix()
+	return (value.Revalidates > 0) && (value.Revalidates < time.Now().Unix())
 }
 
 // calcPublished calculates the date that a document was sent/refreshed by the origin.
@@ -110,8 +110,8 @@ func (value *Value) calcExpires(cacheControl cacheheader.Header) {
 		}
 	}
 
-	// Zero is failure.
-	value.Expires = 0
+	// Fall back to caching the document for 1 week
+	value.Expires = time.Now().AddDate(0, 0, 7).Unix()
 }
 
 // calcRevalidates clculates the date that this document should be revalidated,

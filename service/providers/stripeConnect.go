@@ -136,7 +136,7 @@ func (adapter StripeConnect) Connect(connection *model.Connection, vault mapof.S
 	webhookResult := mapof.NewAny()
 	txn := remote.Post("https://api.stripe.com/v1/webhook_endpoints").
 		With(options.BearerAuth(vault.GetString("restrictedKey"))).
-		With(options.Debug()).
+		// With(options.Debug()).
 		Query("url", host+"/.stripe-connect/webhook/checkout").
 		Query("description", dt.NameOnly(host)+" supscription updates").
 		Query("enabled_events[]", "checkout.session.completed").
