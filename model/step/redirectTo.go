@@ -3,6 +3,7 @@ package step
 import (
 	"html/template"
 	"net/http"
+	"strings"
 
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
@@ -12,6 +13,7 @@ import (
 type RedirectTo struct {
 	StatusCode int
 	URL        *template.Template
+	Method     string
 }
 
 // NewRedirectTo returns a fully initialized RedirectTo object
@@ -25,9 +27,13 @@ func NewRedirectTo(stepInfo mapof.Any) (RedirectTo, error) {
 		return RedirectTo{}, derp.Wrap(err, location, "Invalid 'url' template", stepInfo)
 	}
 
+	method := first(stepInfo.GetString("method"), "both")
+	method = strings.ToLower(method)
+
 	return RedirectTo{
 		StatusCode: first(stepInfo.GetInt("status"), http.StatusTemporaryRedirect),
 		URL:        url,
+		Method:     method,
 	}, nil
 }
 

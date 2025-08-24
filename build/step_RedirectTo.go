@@ -12,15 +12,22 @@ import (
 type StepRedirectTo struct {
 	StatusCode int
 	URL        *template.Template
+	Method     string
 }
 
 func (step StepRedirectTo) Get(builder Builder, buffer io.Writer) PipelineBehavior {
-	return step.execute(builder)
+	if step.Method != "post" {
+		return step.execute(builder)
+	}
+	return nil
 }
 
 // Post updates the stream with approved data from the request body.
 func (step StepRedirectTo) Post(builder Builder, _ io.Writer) PipelineBehavior {
-	return step.execute(builder)
+	if step.Method != "get" {
+		return step.execute(builder)
+	}
+	return nil
 }
 
 // Redirect returns an HTTP 307 Temporary Redirect that works for both GET and POST methods
