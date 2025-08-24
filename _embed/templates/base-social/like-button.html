@@ -5,6 +5,10 @@
 
 <span hx-target="this" hx-swap="outerHTML" hx-push-url="false">
 
+	<button class="turboclick" hx-target="main" hx-swap="outerHTML" hx-get="/@me/inbox/browse-reply?url={{$url}}">
+		{{icon "reply"}} Reply
+	</button>
+
 	{{- if $responses.Announce -}}
 		<button 
 			class="turboclick selected" 

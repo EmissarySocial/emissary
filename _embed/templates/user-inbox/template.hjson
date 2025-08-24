@@ -391,7 +391,7 @@
 		browse-actor: {
 			roles: ["self"]
 			steps: [
-				{do:"as-modal", options:["xclass:large"], background:"inbox", steps:[
+				{do:"as-modal", background:"inbox", steps:[
 					{do: "view-html"}
 				]}
 			]
@@ -408,6 +408,15 @@
 			roles: ["self"]
 			steps: [
 				{do:"view-html"}
+			]
+		}
+
+		browse-reply: {
+			roles: ["self"]
+			steps: [
+				{do:"as-modal", options:["class:large"], steps:[
+					{do:"view-html"}
+				]}
 			]
 		}
 

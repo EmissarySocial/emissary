@@ -15,6 +15,7 @@
 {{- else -}}
 	{{- $parent := $builder.ActivityStream $inReplyTo -}}
 	{{- template "browse-parent" (array $builder $parent "") -}}
+	<div class="text-gray margin-vertical-sm">{{icon "reply"}} Replying to {{first $parent.AttributedTo.Name "..."}}</div>
 {{- end -}}
 
 {{- template "browse-document" (array $builder $document) -}}
