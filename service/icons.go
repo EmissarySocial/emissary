@@ -32,6 +32,8 @@ func (service Icons) Get(name string) string {
 		return service.get("plus-lg")
 	case "add-circle":
 		return service.get("plus-circle")
+	case "add-square":
+		return service.get("plus-square")
 	case "add-emoji":
 		return service.get("emoji-smile")
 	case "album":
@@ -208,6 +210,14 @@ func (service Icons) Get(name string) string {
 		return service.get("link-45deg")
 	case "link-outbound":
 		return service.get("box-arrow-up-right")
+	case "list":
+		return service.get("list")
+	case "list-fill":
+		return service.get("list")
+	case "list-nested":
+		return service.get("list-nested")
+	case "list-nested-fill":
+		return service.get("list-nested")
 	case "location":
 		return service.get("geo-alt")
 	case "location-fill":
@@ -220,10 +230,6 @@ func (service Icons) Get(name string) string {
 		return service.get("arrow-clockwise")
 	case "login":
 		return service.get("box-arrow-in-right")
-	case "map":
-		return service.get("list-nested")
-	case "map-fill":
-		return service.get("list-nested")
 	case "megaphone":
 		return service.get("megaphone")
 	case "megaphone-fill":
@@ -409,6 +415,8 @@ func (service Icons) Get(name string) string {
 		return service.get("instagram")
 	case "twitter":
 		return service.get("twitter")
+	case "remove-square":
+		return service.get("dash-square")
 	case "rss":
 		return service.get("rss")
 	case "rss-fill":

@@ -1,0 +1,115 @@
+{{- $url := .QueryParam "url" -}}
+{{- $publishedDate := .QueryParam "published" -}}
+{{- $pageSize := 6 -}}
+{{- $replies := .RepliesAfter $url $publishedDate $pageSize -}}
+
+{{- if $replies.NotEmpty -}}
+
+	{{- $builder := . -}}
+	{{- $replyCount := .QueryParam "replyCount" -}}
+	{{- $depth := add 1 (int (.QueryParam "depth")) -}}
+
+	<div style="display:flex; align-items:stretch;" script="install ToggleContainer()">
+
+		<div class="ToggleShow clickable text-sm flex-grow" style="display:none;">
+			{{ icon "add-square" }}
+			{{ $replyCount }}
+			{{ pluralize $replyCount "Reply" "Replies" }}
+		</div>
+
+		<div class="ToggleHide clickable text-sm margin-none" style="display:flex; flex-direction:column;">
+			<div>{{icon "remove-square"}}</div>
+			<div class="ToggleHide" style="
+				flex-grow:1; 
+				background-image: linear-gradient(#CCC, #CCC);
+				background-size: 1px 100%;
+				background-repeat: no-repeat;
+				background-position: center center;"></div>
+		</div>
+
+		<div class="ToggleContent flex-grow margin-left-sm">
+			{{- range $index, $value := $replies -}}
+				{{- $documentID := $value.DocumentID -}}
+				{{- $attributedTo := $value.Object.attributedTo -}}
+
+				<div class="margin-bottom-sm {{if eq $url $documentID}}selected{{end}}">
+
+					<div class="padding-vertical padding-horizontal-sm margin-bottom pos-relative"
+						style="background-color:var(--white);">
+
+						<div>
+
+							<div hx-get="/@me/inbox/browse-actor?url={{$attributedTo.id}}" class="clickable flex-row flex-align-center">
+								<img src="{{$attributedTo.icon.href}}" class="circle width-24 flex-shrink-0">
+								<div class="flex-grow nowrap">
+									<div>
+										<b>{{ $attributedTo.name }}</b>
+									</div>
+								</div>
+							</div>
+
+							<div script="install ShowMore(maxHeight:320)">
+								<div class="ShowMore-content">
+									{{- if ne "" $value.Object.image.href -}}
+										<img src="{{$value.Object.image.href}}" class="block width-100% margin-vertical">
+									{{- end -}}
+
+									{{ $value.Object.content | html }}
+								</div>
+
+								<div class="ShowMore-button padding-vertical" hidden>
+									<button class="text-xs">show more &rarr;</button>
+								</div>
+							</div>
+						</div>
+
+						<div 
+							hx-get="/@me/inbox/like-button?url={{$documentID}}" 
+							hx-trigger="intersect once"
+							hx-target="this" 
+							hx-swap="innerHTML" 
+							hx-push-url="false" 
+							class="margin-top-lg text-xs">
+						</div>
+
+						<div class="pos-absolute-top-right text-sm" hx-target="#modal-window" hx-push-url="false" hx-swap="innerHTML transition:true">
+							<span class="margin-right text-light-gray">{{ $value.Published | tinyDate }} ago</span>
+							<button hx-get="/@me/inbox/browse-tree?url={{$documentID}}" aria-label="Use Nested Layout">{{icon "list-nested"}}</button>
+							<button hx-get="/@me/inbox/browse-timeline?url={{$documentID}}" aria-label="Use Timeline Layout">{{icon "timeline"}}</button>
+							<button hx-get="/@me/inbox/browse-index?url={{$documentID}}" aria-label="Use Nested Layout">{{icon "list"}}</button>
+							<a href="{{$documentID}}" target="_blank" class="button" aria-label="Visit Original Website">{{icon "globe"}}</a>
+						</div>
+
+					</div>			
+
+					{{- if lt $depth 2 -}}
+						<div hx-get="/@me/inbox/browse-tree-replies?url={{$documentID}}&replyCount={{$value.Metadata.Replies}}&depth={{$depth}}" hx-trigger="intersect once" hx-target="this" hx-swap="outerHTML" hx-push-url="false"></div>
+					{{- else -}}
+						<div hx-get="/@me/inbox/browse-tree-replies?url={{$documentID}}&replyCount={{$value.Metadata.Replies}}" hx-target="this" hx-swap="outerHTML" hx-push-url="false" class="text-sm clickable">
+							<span class="htmx-request-hide">{{ icon "add-square" }} Load Replies</span>
+							<span class="htmx-request-show">
+								<span class="spin">{{ icon "loading" }}</span>
+								Loading
+							</span>
+						</div>
+					{{- end -}}
+
+				</div>
+
+			{{- end -}}
+		</div>
+	</div>
+
+	{{- if eq $replies.Length $pageSize -}}
+		<div 
+			hx-get="/@me/inbox/browse-tree-replies?published={{$replies.Last.Published | epochDate}}&url={{$url}}&depth={{$depth}}" 
+			hx-target="this" 
+			hx-trigger="intersect once"
+			hx-swap="outerHTML focus-scroll:false" 
+			hx-push-url="false">
+			<span class="spin">{{icon "loading"}}</span>
+			<span class="text-sm text-gray">Loading Replies</span>
+		</div>
+	{{- end -}}
+
+{{- end -}}

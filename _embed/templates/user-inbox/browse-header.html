@@ -10,12 +10,12 @@
 				<span class="button-group">
 
 					{{- if eq "tree" $selected -}}
-						<button hx-get="/@me/inbox/browse-tree?url={{$url}}" class="selected">
-							{{icon "map-fill"}} Nested
+						<button id="nestedButton" class="selected">
+							{{icon "list-nested-fill"}} Nested
 						</button>
 					{{- else -}}
 						<button hx-get="/@me/inbox/browse-tree?url={{$url}}">
-							{{icon "map"}} Nested
+							{{icon "list-nested"}} Nested
 						</button>
 					{{- end -}}
 
@@ -26,6 +26,16 @@
 					{{- else -}}
 						<button hx-get="/@me/inbox/browse-timeline?url={{$url}}">
 							{{icon "timeline"}} Timeline
+						</button>
+					{{- end -}}
+
+					{{- if eq "index" $selected -}}
+						<button hx-get="/@me/inbox/browse-index?url={{$url}}" class="selected">
+							{{icon "list-fill"}} Index
+						</button>
+					{{- else -}}
+						<button hx-get="/@me/inbox/browse-index?url={{$url}}">
+							{{icon "list"}} Index
 						</button>
 					{{- end -}}
 

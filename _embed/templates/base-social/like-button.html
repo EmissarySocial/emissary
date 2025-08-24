@@ -25,9 +25,11 @@
 		<button class="turboclick" hx-post="{{.BasePath}}/like-button?url={{$url}}" hx-vals='{"type":"Like", "url": "{{$url}}", "exists":true}'><span aria-hidden="true" class="margin-left-xs">{{icon "like"}}</span> Like</button>
 	{{- end -}}
 
+	<!--
 	<a href="{{$url}}" target="_blank" class="button">
 		{{icon "globe"}} Website
 	</a>
+	-->
 
 	<!--
 	{{- if eq $metadata.Replies 0 -}}

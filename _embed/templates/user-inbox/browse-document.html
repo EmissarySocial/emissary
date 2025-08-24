@@ -1,30 +1,23 @@
 {{- $builder := index . 0 -}}
 {{- $document := index . 1 -}}
-{{- $style := index . 2 -}}
 
 {{- if ne "" $document.ID -}}
 
-	{{- $attributedTo := $document.AttributedTo -}}
-	{{- $inReplyTo := $document.InReplyTo -}}
-	{{- $inReplyToAttributedTo := $inReplyTo.AttributedTo -}}
-	{{- $hash := $document.Metadata.HashedID -}}
+	<div id="id_{{$document.Metadata.HashedID}}" class="card padding margin-bottom pos-relative">
 
-	<div id="id_{{$hash}}" class="clickable card padding margin-bottom pos-relative">
-
-		<span id="id_{{$hash}}_defaultLink" hx-target="#modal-window" hx-swap="innerHTML transition:true" hx-get="/@me/inbox/browse-tree?url={{$document.ID}}" hidden></span>
-
+		<!-- REMOVED FOR PERFORMANCE REASONS...
+		{{- $inReplyTo := $document.InReplyTo -}}
 		{{- if $inReplyTo.NotNil -}}
+			{{- $inReplyToAttributedTo := $inReplyTo.AttributedTo -}}
 			<div class="flex-row margin-bottom-sm">
 				<div role="link" class="italics text-sm text-gray" hx-get="/@me/inbox/browse-tree?&url={{$inReplyTo.ID}}">
 					{{icon "reply-fill"}} Replying to {{$inReplyToAttributedTo.Name}}
 				</div>
 			</div>
 		{{- end -}}
+		-->
 		
-		{{- if ne "" $document.Name -}}
-			<h3 class="text-lg bold margin-none margin-bottom-lg padding-none" script="install blockselect(link:#id_{{$hash}}_defaultLink)">{{$document.Name}}</h3>
-		{{- end -}}
-
+		{{- $attributedTo := $document.AttributedTo -}}
 		{{- if $attributedTo.NotEmpty -}}
 
 			<div class="margin-bottom-lg flex-row">
@@ -37,29 +30,36 @@
 						<div class="text-sm text-light-gray margin-vertical-none">{{$attributedTo.UsernameOrID}}</div>
 					</div>
 				</div>
-				<div class="flex-grow" script="on click send click to #id_{{$hash}}_defaultLink"></div>
 			</div>
-
 		{{- end -}}
 	
-		<div class="content" script="install blockselect(link:#id_{{$hash}}_defaultLink)">
+		{{- if ne "" $document.Name -}}
+			<div class="text-lg bold margin-vertical padding-none">{{$document.Name}}</div>
+		{{- end -}}
 
-			{{- if not (hasImage $document.Content) -}}
-				{{- $image := $document.ImageOrIcon -}}
-				{{- if $image.NotNil -}}
-					<div class="margin-bottom">
-						<a href="{{$document.URLOrID}}" target="_blank"><img src="{{$image.URL}}" class="width-100%" style="{{- if $image.HasDimensions}} aspect-ratio:{{$image.AspectRatio}};{{end}}"/></a>
-					</div>
+		<div class="content" script="install ShowMore(maxHeight:240)">
+
+			<div>
+				{{- if not (hasImage $document.Content) -}}
+					{{- $image := $document.ImageOrIcon -}}
+					{{- if $image.NotNil -}}
+						<div class="margin-bottom">
+							<a href="{{$document.URLOrID}}" target="_blank"><img src="{{$image.URL}}" class="width-100%" style="{{- if $image.HasDimensions}} aspect-ratio:{{$image.AspectRatio}};{{end}}"/></a>
+						</div>
+					{{- end -}}
 				{{- end -}}
-			{{- end -}}
 
-			{{- if $document.HasContent -}}
-				<div>{{- $document.Content | html -}}</div>
-			{{- else if $document.HasSummary -}}
-				<div>{{- $document.Summary -}}</div>
-			{{- end -}}
+				{{- if $document.HasContent -}}
+					<div class="ShowMore-content">{{- $document.Content | html -}}</div>
+				{{- else if $document.HasSummary -}}
+					<div class="ShowMore-content">{{- $document.Summary -}}</div>
+				{{- end -}}
 
-			<div class="margin-bottom text-sm text-light-gray">{{ $document.Published | dateTime -}}</div>
+				<div class="ShowMore-button padding-vertical" hidden>
+					<button class="text-xs">show more &rarr;</button>
+				</div>
+			</div>
+
 
 		</div>
 
@@ -72,28 +72,12 @@
 			class="margin-top-lg text-xs">
 		</div>
 
-		{{- if eq "replies" $style -}}
-			<div class="margin-top-lg">
-				<div class="text-gray margin-bottom">
-					{{$document.Metadata.Replies}}
-					{{pluralize $document.Metadata.Replies "Reply" "Replies"}}
-				</div>
-
-				<div 
-					hx-get="/@me/inbox/browse-replies-inline?url={{$document.ID}}" 
-					hx-trigger="intersect once" 
-					hx-target="this" 
-					hx-swap="innerHTML" 
-					hx-push-url="false"
-					class="margin-left-lg">
-					<span class="spin">{{icon "loading"}}</span>
-				</div>
-			</div>
-		{{- end }}
-
 		<div class="pos-absolute-top-right text-xs" hx-target="#modal-window" hx-push-url="false" hx-swap="innerHTML transition:true">
-			<button hx-get="/@me/inbox/browse-timeline?url={{$document.ID}}" aria-label="View Timeline">{{icon "timeline"}}</button>
-			<button hx-get="/@me/inbox/browse-tree?url={{$document.ID}}" aria-label="View Map">{{icon "map"}}</button>
+			<span class="margin-right text-sm text-light-gray">{{ $document.Published | tinyDate }} ago</span>
+			<button hx-get="/@me/inbox/browse-tree?url={{$document.ID}}" aria-label="Use Nested Layout">{{icon "list-nested"}}</button>
+			<button hx-get="/@me/inbox/browse-timeline?url={{$document.ID}}" aria-label="Use Timeline Layout">{{icon "timeline"}}</button>
+			<button hx-get="/@me/inbox/browse-index?url={{$document.ID}}" aria-label="Use Nested Layout">{{icon "list"}}</button>
+			<a href="{{$document.ID}}" target="_blank" class="button" aria-label="Visit Original Website">{{icon "globe"}}</a>
 		</div>
 		
 	</div>

@@ -404,14 +404,7 @@
 			]
 		}
 
-		browse-focus: {
-			roles: ["self"]
-			steps: [
-				{do:"view-html"}
-			]
-		}
-
-		browse-tree: {
+		browse-index: {
 			roles: ["self"]
 			steps: [
 				{do:"view-html"}
@@ -432,7 +425,7 @@
 			]
 		}
 
-		browse-replies-tree: {
+		browse-tree-replies: {
 			roles: ["self"]
 			steps: [
 				{do:"view-html"}
@@ -440,6 +433,20 @@
 		}
 
 		browse-timeline: {
+			roles: ["self"]
+			steps: [
+				{do:"view-html"}
+			]
+		}
+
+		browse-timeline-list: {
+			roles: ["self"]
+			steps: [
+				{do:"view-html"}
+			]
+		}
+
+		browse-tree: {
 			roles: ["self"]
 			steps: [
 				{do:"view-html"}

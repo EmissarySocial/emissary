@@ -1,9 +1,9 @@
-behavior showMore(maxHeight)
+behavior ShowMore(maxHeight)
 
 	init
 
-		set :button to the first <.showMore-button /> in me
-		set :content to the first <.showMore-content /> in me
+		set :button to the first <.ShowMore-button /> in me
+		set :content to the first <.ShowMore-content /> in me
 
 		add .blockselect-ignore to :button
 
@@ -21,13 +21,13 @@ behavior showMore(maxHeight)
 		remove @hidden from the :button
 	end
 
-	on click from <.showMore-button /> in me
+	on click from <.ShowMore-button /> in me
 		trigger removeButton
 	end
 
 	on removeButton 
 		set :content.style.maxHeight to ""
-		remove .showMore-content from :button
+		remove .ShowMore-content from :button
 		remove :button
 	end
 

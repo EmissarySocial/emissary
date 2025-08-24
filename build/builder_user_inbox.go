@@ -565,9 +565,9 @@ func (w Inbox) Message() model.Message {
 	return message
 }
 
-func (w Inbox) QueryByContext(contextID string) (sliceof.Object[model.DocumentLink], error) {
+func (w Inbox) QueryByContext(contextID string, afterDate int64, maxRows int) (sliceof.Object[streams.Document], error) {
 	activityService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
-	result, err := activityService.QueryByContext(w._request.Context(), contextID)
+	result, err := activityService.QueryByContext(w._request.Context(), contextID, afterDate, maxRows)
 	return result, err
 }
 

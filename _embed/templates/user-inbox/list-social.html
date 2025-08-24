@@ -78,16 +78,16 @@
 								<div class="bold text-black">{{$document.Name}}</div>
 							{{- end -}}
 
-							<div class="margin-top" script="install showMore(maxHeight:240)">
-								<div class="showMore-content">
+							<div class="margin-top" script="install ShowMore(maxHeight:220)">
+								<div class="ShowMore-content">
 									{{- if $document.HasContent -}}
 										{{- $document.Content | htmlMinimal -}}
 									{{- else if $document.HasSummary -}}
 										{{- $document.Summary | htmlMinimal -}}
 									{{- end }}
 								</div>
-								<div class="margin-vertical">
-									<button class="text-xs showMore-button" hidden>Show More &hellip;</button>
+								<div class="ShowMore-button margin-vertical" hidden>
+									<button class="text-xs">show more &rarr;</button>
 								</div>
 							</div>
 

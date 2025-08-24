@@ -163,23 +163,23 @@ func (service *ActivityStream) Range(ctx context.Context, criteria exp.Expressio
 	}
 }
 
-func (service *ActivityStream) QueryByContext(ctx context.Context, contextName string) (sliceof.Object[model.DocumentLink], error) {
+func (service *ActivityStream) QueryByContext(ctx context.Context, contextName string, afterDate int64, maxRows int) (sliceof.Object[streams.Document], error) {
 
 	const location = "service.ActivityStream.QueryByContext"
 
 	// RULE: Do not query empty contexts
 	if contextName == "" {
-		return sliceof.NewObject[model.DocumentLink](), nil
+		return sliceof.NewObject[streams.Document](), nil
 	}
 
 	// Query the database
-	criteria := exp.Equal("object.context", contextName)
-	values := service.Range(ctx, criteria, option.SortAsc("object.published"))
-	result := sliceof.NewObject[model.DocumentLink]()
+	criteria := exp.Equal("object.context", contextName).AndGreaterThan("published", afterDate)
+	values := service.Range(ctx, criteria, option.SortAsc("published"), option.MaxRows(int64(maxRows)))
+	result := sliceof.NewObject[streams.Document]()
 
 	// Map into model.DocumentLink records
 	for value := range values {
-		result = append(result, service.asDocumentLink(value))
+		result = append(result, value.AsDocument())
 	}
 
 	return result, nil

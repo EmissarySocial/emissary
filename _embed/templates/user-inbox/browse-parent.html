@@ -1,11 +1,20 @@
 {{- $builder := index . 0 -}}
 {{- $document := index . 1 -}}
-{{- $style := index . 2 -}}
 {{- $inReplyTo := $document.InReplyTo.ID -}}
 
-{{- if ne "" $inReplyTo -}}
+{{- if eq "" $inReplyTo -}}
+	<div 
+		hx-get="/@me/inbox/browse-tree?url={{$document.ID}}"
+		hx-trigger="click from:#nestedButton"
+		hx-target="#modal-window" 
+		hx-swap="innerHTML transition:true" 
+		hx-push-url="false"
+		class="turboclick" 
+		style="display:none">
+	</div>
+{{- else -}}
 	{{- $parent := $builder.ActivityStream $inReplyTo -}}
 	{{- template "browse-parent" (array $builder $parent "") -}}
 {{- end -}}
 
-{{- template "browse-document" (array $builder $document $style) -}}
+{{- template "browse-document" (array $builder $document) -}}

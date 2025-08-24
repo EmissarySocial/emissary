@@ -7,21 +7,16 @@
 
 	{{- template "browse-parent" (array . $document "") -}}
 
-	{{- if gt $document.Metadata.Replies 0 -}}
-		<div class="margin-vertical-sm text-gray text-sm">
-			{{ $document.Metadata.Replies }}
-			{{ pluralize $document.Metadata.Replies "Reply" "Replies" }}
-		</div>
-	{{- end -}}
-
-	<div hx-get="/@me/inbox/browse-replies-tree?url={{$document.ID}}" hx-trigger="intersect once" hx-target="this" hx-swap="innerHTML" hx-push-url="false">
+	<div hx-get="/@me/inbox/browse-tree-replies?url={{$document.ID}}&replyCount={{$document.Metadata.Replies}}" hx-trigger="intersect once" hx-target="this" hx-swap="innerHTML" hx-push-url="false">
 		<span class="spin">{{icon "loading"}}</span> Loading Replies
 	</div>
 
-	<span script="on load
-		set selectedNode to #id_{{$document.Metadata.HashedID}} 
-		log the selectedNode
-		take .selected from .card for the selectedNode then
-		scrollIntoView() the selectedNode
-	"></span>
 </div>
+
+<script type="text/hyperscript">
+	init
+	set selectedNode to #id_{{$document.Metadata.HashedID}} 
+	take .selected from .card for the selectedNode then
+	scrollIntoView() the selectedNode
+</script>
+

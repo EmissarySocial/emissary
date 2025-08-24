@@ -54,6 +54,14 @@ func (value Value) DocumentID() string {
 	return value.URLs.First()
 }
 
+func (value Value) AsDocument() streams.Document {
+	return streams.NewDocument(
+		value.Object,
+		streams.WithHTTPHeader(value.HTTPHeader),
+		streams.WithMetadata(value.Metadata),
+	)
+}
+
 // appendURL (safely) adds a URL to the value's list of URLs, avoiding duplicates and empty strings.
 func (value *Value) AppendURL(url string) {
 
@@ -76,6 +84,11 @@ func (value Value) ShouldRevalidate() bool {
 // calcPublished calculates the date that a document was sent/refreshed by the origin.
 // This IS NOT the original create or publish date.
 func (value *Value) calcPublished() {
+
+	if published := value.Object.GetTime(vocab.PropertyPublished); !published.IsZero() {
+		value.Published = published.Unix()
+		return
+	}
 
 	value.Published = time.Now().Unix()
 
