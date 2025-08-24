@@ -1,8 +1,18 @@
-{{- $inbox := .Inbox.Top12.ByPublishDate.Reverse.Slice -}}
+{{- $inbox := .Inbox.Top6.ByPublishDate.Reverse.Slice -}}
 {{- $folderID := .QueryParam "folderId" -}}
 {{- $internalID := .QueryParam "origin.followingId" -}}
 
 {{- if $inbox.NotEmpty -}}
+
+	{{- if $inbox.IsLength 6 -}}
+		<div 
+			hx-get="/@me/inbox/list?folderId={{$folderID}}&origin.followingId={{$internalID}}&rank=LT:{{$inbox.Last.Rank}}&read=false&remote=true"
+			hx-push-url="false" 
+			hx-trigger="intersect once" 
+			hx-target="#social-load-more" 
+			hx-swap="outerHTML">
+		</div>
+	{{- end -}}
 
 	{{- $inboxBuilder := . -}}
 	{{- range $index, $message := $inbox -}}
@@ -121,15 +131,14 @@
 		
 	{{- end -}}
 
-	{{- $lastMessage := $inbox.Last -}}
-	<div 
-		hx-get="/@me/inbox/list?folderId={{$folderID}}&origin.followingId={{$internalID}}&rank=LT:{{$lastMessage.Rank}}&read=false&remote=true"
-		hx-push-url="false" 
-		hx-trigger="intersect once" 
-		hx-target="this" 
-		hx-swap="outerHTML">
-		<div class="margin-vertical-lg text-sm"><button><span class="spin">{{icon "loading"}}</span> Loading...</button></div>
-	</div>
+	{{- if $inbox.IsLength 6 -}}
+		<div id="social-load-more" class="margin-vertical-lg text-sm">
+			<button>
+				<span class="spin">{{icon "loading"}}</span> 
+				Loading...
+			</button>
+		</div>
+	{{- end -}}
 
 {{- else -}}
 

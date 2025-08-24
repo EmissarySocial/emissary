@@ -7,16 +7,9 @@
 
 	{{- template "browse-parent" (array . $document "") -}}
 
+	<div id="scroll-bottom" class="margin-top-lg" script="init scrollIntoView() me"></div>
 </div>
 
 <div id="modal-footer">
-	<hr>
-	REPLY GOES HERE
+	{{.View "reply"}}
 </div>
-
-<script type="text/hyperscript">
-	init
-	set selectedNode to #id_{{$document.Metadata.HashedID}} 
-	take .selected from .card for the selectedNode then
-</script>
-

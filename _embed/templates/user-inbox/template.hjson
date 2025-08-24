@@ -373,9 +373,7 @@
 				{do:"add-stream", style:"inline", roles:"outbox-reply", location:"outbox", with-data:{
 					inReplyTo:"{{.Permalink}}"
 				}}
-				{do:"set-header", name:"hx-retarget", value:"#responses"}
-				{do:"set-header", name:"hx-reswap", value:"outerHTML"}
-				{do:"view-html", method:"post", file:"responses-replies"}
+				{do:"redirect-to", method:"post", url:"/@me/inbox/browse-tree?url={{.Permalink}}"}
 			]
 		}
 
@@ -420,27 +418,6 @@
 			]
 		}
 
-		browse-replies: {
-			roles: ["self"]
-			steps: [
-				{do:"view-html"}
-			]
-		}
-
-		browse-replies-inline: {
-			roles: ["self"]
-			steps: [
-				{do:"view-html"}
-			]
-		}
-
-		browse-tree-replies: {
-			roles: ["self"]
-			steps: [
-				{do:"view-html"}
-			]
-		}
-
 		browse-timeline: {
 			roles: ["self"]
 			steps: [
@@ -456,6 +433,13 @@
 		}
 
 		browse-tree: {
+			roles: ["self"]
+			steps: [
+				{do:"view-html"}
+			]
+		}
+
+		browse-tree-replies: {
 			roles: ["self"]
 			steps: [
 				{do:"view-html"}

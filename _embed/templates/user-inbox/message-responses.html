@@ -7,18 +7,6 @@
 {{- $url := $document.ID -}}
 
 <div class="margin-top text-sm noselect" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
-	
-	<span
-		id="reply-{{$message.ID}}"
-		role="button"
-		hx-get="/@me/inbox/message?messageId={{$message.ID}}&url={{$url}}&folderId={{$folderID}}&origin.followingId={{$internalID}}"
-		hx-push-url="false"
-		tabIndex="0"
-		class="button" 
-		title="Reply to this item">
-			{{icon "reply"}}
-			Reply
-		</span>
 
 	<span hx-get="/@me/inbox/like-button?url={{$message.URL}}" hx-trigger="revealed" hx-target="this" hx-swap="outerHTML" hx-push-url="false"></span>
 
