@@ -7,10 +7,7 @@ behavior ShowMore(maxHeight)
 
 		add .blockselect-ignore to :button
 
-		log maxHeight
-		log :content
 		measure the :content's height
-		log height
 		if the height is less than maxHeight
 			trigger removeButton
 			exit

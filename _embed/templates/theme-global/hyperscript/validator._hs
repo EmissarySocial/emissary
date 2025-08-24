@@ -21,8 +21,6 @@ behavior validator(url)
 			remove yourself
 		end
 
-		log the result.message
-
 		if the result.valid is true then
 			me.setCustomValidity("")
 			put `<span class="green badge">&check;</span>` at the end of my parentNode
