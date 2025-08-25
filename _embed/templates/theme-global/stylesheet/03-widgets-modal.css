@@ -93,8 +93,8 @@
 	padding: calc(var(--rhythm) * 2);
 	padding-bottom:12px;
 	margin:0px;
-	border-top:solid 1px var(--gray20);
-	background-color: var(--gray10);
+	border-top:solid 1px var(--gray30);
+	background-color: var(--gray20);
 }
 
 /* Additional Sizes */

@@ -402,6 +402,13 @@
 			]
 		}
 
+		browse-document-detail: {
+			roles: ["self"]
+			steps: [
+				{do:"view-html"}
+			]
+		}
+
 		browse-index: {
 			roles: ["self"]
 			steps: [
