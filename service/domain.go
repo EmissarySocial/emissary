@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"crypto/sha256"
 	"html/template"
 
 	"github.com/EmissarySocial/emissary/config"
@@ -311,14 +312,13 @@ func (service *Domain) OAuthCodeURL(providerID string) (string, error) {
 	config := provider.OAuthConfig()
 
 	config.RedirectURL = service.OAuthClientCallbackURL(providerID)
-	/* TODO: MEDIUM: add hash value for challenge_method...
-	codeChallengeBytes := sha256.Sum256([]byte(connection.GetStringOK("code_challenge")))
+	codeChallengeBytes := sha256.Sum256([]byte(connection.Data.GetString("code_challenge")))
 	codeChallenge := oauth2.SetAuthURLParam("code_challenge", random.Base64URLEncode(codeChallengeBytes[:]))
 	codeChallengeMethod := oauth2.SetAuthURLParam("code_challenge_method", "S256")
-	*/
 
-	codeChallenge := oauth2.SetAuthURLParam("code_challenge", connection.Data.GetString("code_challenge"))
-	codeChallengeMethod := oauth2.SetAuthURLParam("code_challenge_method", "plain")
+	// INSECURE? Unhashed Code challenge method
+	// codeChallenge := oauth2.SetAuthURLParam("code_challenge", connection.Data.GetString("code_challenge"))
+	// codeChallengeMethod := oauth2.SetAuthURLParam("code_challenge_method", "plain")
 	authCodeURL := config.AuthCodeURL(connection.Data.GetString("state"), codeChallenge, codeChallengeMethod)
 
 	return authCodeURL, nil
