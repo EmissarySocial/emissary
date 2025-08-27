@@ -26,6 +26,6 @@
 }
 
 .card.selected {
-	border: solid 2px var(--link-color);
+	border: solid 2px var(--black);
 	margin:-1px;
 }

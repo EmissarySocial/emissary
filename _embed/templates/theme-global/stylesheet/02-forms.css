@@ -356,18 +356,18 @@ button.outline:hover,
 
 button.selected,
 .button.selected {
-	xxbackground-color: var(--gray40);
-	xxcolor: var(--gray05);
-	color: var(--button-primary-background);
+	background-color: var(--gray40);
+	color: var(--gray05);
+	xxcolor: var(--button-primary-background);
 }
 
 button.selected:hover,
 .button.selected:hover,
 button.selected:focus,
 .button.selected:focus {
-	xxbackground-color: var(--gray50);
-	xxcolor: var(--white);
-	color: var(--button-primary-background);
+	background-color: var(--gray50);
+	color: var(--white);
+	xxcolor: var(--button-primary-background);
 }
 
 button.warning,

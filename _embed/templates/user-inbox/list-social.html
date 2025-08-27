@@ -37,50 +37,54 @@
 
 					{{- if eq "NEW-REPLIES" $message.StateID -}}
 						<div class="flex-row">
-							<div class="width-48 flex-shrink-0 margin-right-sm"></div>
+							<div class="width-32 flex-shrink-0"></div>
 							<div class="bold italics text-green text-sm">
 								{{icon "chat-fill"}} New Replies
 							</div>
 						</div>
 					{{- else if eq "MUTED" $message.StateID -}}
 						<div class="flex-row">
-							<div class="width-48 flex-shrink-0 margin-right-sm"></div>
+							<div class="width-32 flex-shrink-0"></div>
 							<div class="bold italics text-gray text-sm">
 								{{icon "mute"}} Notifications Muted
 							</div>
 						</div>
 					{{- else if ne "PRIMARY" $message.Origin.Type -}}
 						<div class="flex-row">
-							<div class="width-48 flex-shrink-0 margin-right-sm"></div>
+							<div class="width-32 flex-shrink-0"></div>
 							<div class="margin-bottom-sm">
 								{{- template "message-origin" $message -}}
 							</div>
 						</div>
 					{{- end -}}
 
-					{{- if $attributedTo.NotEmpty -}}
-						<div class="flex-row">
-							<div class="width-48 flex-shrink-0 margin-right-sm noselect clickable">
-								{{- if $attributedTo.Icon.NotNil -}}
-									<img src="{{$attributedTo.Icon.Href}}" class="circle width-48">
-								{{- else -}}
-									<div class="circle width-48"></div>
-								{{- end -}}
-							</div>
+					<div class="flex-row">
+						<div class="width-32 flex-shrink-0 noselect">
+							{{- if $attributedTo.Icon.NotNil -}}
+								<img src="{{$attributedTo.Icon.Href}}" class="circle width-32">
+							{{- else -}}
+								<div class="circle width-32"></div>
+							{{- end -}}
+						</div>
 
-							<div class="flex-grow">
-								{{- if ne "" $attributedTo.Name -}}
-									<div class="bold text-black"><span class="clickable">{{$attributedTo.Name}}</span></div>
-									<div class="text-light-gray ellipsis">
-										<span class="clickable">{{$attributedTo.UsernameOrID}}</span>
-									</div>
-								{{- end -}}
+						<div class="flex-grow">
+							<div>
+								<span class="bold text-black">
+									{{- if ne "" $attributedTo.Name -}}
+										{{- $attributedTo.Name -}}
+									{{- else -}}
+										{{- $attributedTo.UsernameOrID -}}
+									{{- end -}}
+								</span>
+								<span class="margin-left-sm text-sm text-light-gray">
+									{{- $message.PublishDate | tinyDate -}}
+								</span>
 							</div>
 						</div>
-					{{- end -}}
+					</div>
 					
 					<div class="flex-row width-100% clickable margin-top-sm">
-						<div class="width-48 flex-shrink-0 margin-right-sm noselect"></div>
+						<div class="width-32 flex-shrink-0 noselect"></div>
 
 						<div class="flex-grow">
 
@@ -95,21 +99,18 @@
 									{{- else if $document.HasSummary -}}
 										{{- $document.Summary | htmlMinimal -}}
 									{{- end }}
+
+									{{- if $image.NotNil -}}
+										<div class="margin-vertical">
+											<img src="{{$image.Href}}" loading="lazy" class="rounded width-100% max-width-512" style="{{if $image.HasDimensions}}aspect-ratio:{{$image.AspectRatio}}{{end}}"/>
+										</div>
+									{{- end -}}
+
 								</div>
 								<div class="ShowMore-button margin-vertical" hidden>
-									<button class="text-xs">show more &rarr;</button>
+									<button class="text-xs">show more &downarrow;</button>
 								</div>
 							</div>
-
-							<div class="text-sm text-light-gray">
-								{{ $message.PublishDate | tinyDate }} ago
-							</div>
-
-							{{- if $image.NotNil -}}
-								<div class="margin-vertical">
-									<img src="{{$image.Href}}" loading="lazy" class="rounded width-100% max-width-512" style="{{if $image.HasDimensions}}aspect-ratio:{{$image.AspectRatio}}{{end}}"/>
-								</div>
-							{{- end -}}
 
 						</div>
 
@@ -118,7 +119,7 @@
 				</div>
 
 				<div class="flex-row">
-					<div class="width-48 flex-shrink-0 margin-right-sm"></div>
+					<div class="width-32 flex-shrink-0"></div>
 					<div>
 						{{- $args := array $message $document $folderID $internalID -}}
 						{{- template "message-responses" $args -}}

@@ -149,7 +149,7 @@ func (attachment Attachment) AspectRatio() string {
 		return ""
 	}
 
-	return strconv.Itoa(attachment.Height / attachment.Width)
+	return strconv.Itoa(attachment.Width / attachment.Height)
 }
 
 func (attachment Attachment) HasDimensions() bool {

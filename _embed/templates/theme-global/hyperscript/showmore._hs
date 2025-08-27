@@ -9,7 +9,7 @@ behavior ShowMore(maxHeight)
 
 		measure the :content's height
 		if the height is less than maxHeight
-			trigger removeButton
+			trigger showMore
 			exit
 		end
 
@@ -19,10 +19,11 @@ behavior ShowMore(maxHeight)
 	end
 
 	on click from <.ShowMore-button /> in me
-		trigger removeButton
+		halt the event
+		trigger showMore
 	end
 
-	on removeButton 
+	on showMore 
 		set :content.style.maxHeight to ""
 		remove .ShowMore-content from :button
 		remove :button

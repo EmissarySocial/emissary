@@ -18,8 +18,7 @@
 			</div>
 
 			<div class="text-xs nowrap">
-				<button hx-get="/@me/inbox/browse-tree?url={{$document.ID}}" aria-label="Use Nested Layout">{{icon "list-nested"}}</button>
-				<button hx-get="/@me/inbox/browse-timeline?url={{$document.ID}}" aria-label="Use Timeline Layout">{{icon "timeline"}}</button>
+				<a href="{{$document.AttributedTo.ID}}" target="_blank" class="button" aria-label="Visit Original Website">{{icon "person"}}</a>
 				<a href="{{$document.ID}}" target="_blank" class="button" aria-label="Visit Original Website">{{icon "globe"}}</a>
 			</div>
 		</div>

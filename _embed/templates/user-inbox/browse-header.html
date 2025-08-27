@@ -19,6 +19,7 @@
 						</button>
 					{{- end -}}
 
+					<!--
 					{{- if eq "timeline" $selected -}}
 						<button hx-get="/@me/inbox/browse-timeline?url={{$url}}" class="selected">
 							{{icon "timeline-fill"}} Timeline
@@ -28,6 +29,7 @@
 							{{icon "timeline"}} Timeline
 						</button>
 					{{- end -}}
+					-->
 
 					{{- if eq "index" $selected -}}
 						<button hx-get="/@me/inbox/browse-index?url={{$url}}" class="selected">

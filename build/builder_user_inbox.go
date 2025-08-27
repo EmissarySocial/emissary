@@ -602,7 +602,6 @@ func (w Inbox) RepliesBefore(url string, dateString string, maxRows int) sliceof
 }
 
 func (w Inbox) RepliesAfter(url string, dateString string, maxRows int) sliceof.Object[ascache.Value] {
-
 	activityService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
 	minDate := convert.Int64(dateString)
 	return activityService.QueryRepliesAfterDate(w._request.Context(), url, minDate, int64(maxRows))

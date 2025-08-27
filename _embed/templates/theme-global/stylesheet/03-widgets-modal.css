@@ -100,7 +100,7 @@
 /* Additional Sizes */
 
 #modal-window.large {
-	width: clamp(480px, 80%, 900px);}
+	width: clamp(480px, 96%, 1024px);}
 
 #modal-window.huge {
 	width:96%;

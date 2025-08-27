@@ -30,6 +30,7 @@ func Object(client streams.Client, document streams.Document) map[string]any {
 	result := map[string]any{
 		vocab.PropertyType:         actual.Type(),
 		vocab.PropertyID:           actual.ID(),
+		vocab.PropertyURL:          actual.URLOrID(),
 		vocab.PropertyActor:        actorID,
 		vocab.PropertyAttributedTo: first(actual.AttributedTo().ID(), actorID),
 		vocab.PropertyInReplyTo:    actual.InReplyTo().ID(),

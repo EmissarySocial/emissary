@@ -5,21 +5,8 @@
 
 	<div id="id_{{$document.Metadata.HashedID}}" class="card padding margin-bottom pos-relative">
 
-		<!-- REMOVED FOR PERFORMANCE REASONS...
-		{{- $inReplyTo := $document.InReplyTo -}}
-		{{- if $inReplyTo.NotNil -}}
-			{{- $inReplyToAttributedTo := $inReplyTo.AttributedTo -}}
-			<div class="flex-row margin-bottom-sm">
-				<div role="link" class="italics text-sm text-gray" hx-get="/@me/inbox/browse-tree?&url={{$inReplyTo.ID}}">
-					{{icon "reply-fill"}} Replying to {{$inReplyToAttributedTo.Name}}
-				</div>
-			</div>
-		{{- end -}}
-		-->
-		
 		{{- $attributedTo := $document.AttributedTo -}}
 		{{- if $attributedTo.NotEmpty -}}
-
 			<div class="margin-bottom-lg flex-row">
 				<div hx-get="/@me/inbox/browse-actor?url={{$attributedTo.ID}}" class="flex-shrink-0 flex-row flex-align-center clickable">
 					{{- if $attributedTo.Icon.NotNil -}}
@@ -37,32 +24,41 @@
 			<div class="text-lg bold margin-vertical padding-none">{{$document.Name}}</div>
 		{{- end -}}
 
-		<div id="id_{{$document.Metadata.HashedID}}_content" class="content" script="install ShowMore(maxHeight:240)">
+		<div id="id_{{$document.Metadata.HashedID}}_content" class="content">
 
-			<div>
-				{{- if not (hasImage $document.Content) -}}
+			{{- if $document.HasContent -}}
+				{{- $document.Content | html -}}
+			{{- else if $document.HasSummary -}}
+				{{- $document.Summary -}}
+			{{- end -}}
+
+			{{- if not (hasImage $document.Content) -}}
+
+				{{- if $document.Attachment.NotEmpty -}}
+
+					<div class="margin-top-lg cols-4">
+						{{- range $attachment := $document.Attachment.Range -}}
+							{{- if hasPrefix $attachment.MediaType "image/" -}}
+								<img src="{{$attachment.URL}}" 
+									class="clickable"
+									hx-get="/@me/inbox/browse-document-detail?url={{$document.ID}}&attachmentUrl={{$attachment.URL}}"
+									style="min-height:60px; max-height:240px; width:auto;"/>
+							{{- end -}}
+						{{- end -}}
+					</div>
+
+				{{- else -}}
+				
 					{{- $image := $document.ImageOrIcon -}}
 					{{- if $image.NotNil -}}
-						<div class="margin-bottom">
-							<a href="{{$document.URLOrID}}" target="_blank"><img src="{{$image.URL}}" class="width-100%" style="{{- if $image.HasDimensions}} aspect-ratio:{{$image.AspectRatio}};{{end}}"/></a>
+						<div class="margin-top-lg">
+							<img src="{{$image.URL}}" style="min-height:60px; max-height:240px; {{- if $image.HasDimensions}} aspect-ratio:{{$image.AspectRatio}};{{end}}"/>
 						</div>
 					{{- end -}}
 				{{- end -}}
-
-				{{- if $document.HasContent -}}
-					<div class="ShowMore-content">{{- $document.Content | html -}}</div>
-				{{- else if $document.HasSummary -}}
-					<div class="ShowMore-content">{{- $document.Summary -}}</div>
-				{{- end -}}
-
-				<div class="ShowMore-button padding-vertical" hidden>
-					<button class="text-xs">show more &rarr;</button>
-				</div>
-			</div>
-
+			{{- end -}}
 
 		</div>
-
 		<div 
 			hx-get="/@me/inbox/like-button?url={{$document.ID}}" 
 			hx-trigger="intersect once"
@@ -72,12 +68,17 @@
 			class="margin-top-lg text-xs">
 		</div>
 
-		<div class="pos-absolute-top-right text-xs" hx-target="#modal-window" hx-push-url="false" hx-swap="innerHTML transition:true">
-			<span class="margin-right text-sm text-light-gray">{{ $document.Published | tinyDate }} ago</span>
-			<button hx-get="/@me/inbox/browse-tree?url={{$document.ID}}" aria-label="Use Nested Layout">{{icon "list-nested"}}</button>
-			<button hx-get="/@me/inbox/browse-timeline?url={{$document.ID}}" aria-label="Use Timeline Layout">{{icon "timeline"}}</button>
-			<button hx-get="/@me/inbox/browse-index?url={{$document.ID}}" aria-label="Use Nested Layout">{{icon "list"}}</button>
-			<a href="{{$document.ID}}" target="_blank" class="button" aria-label="Visit Original Website">{{icon "globe"}}</a>
+		<div class="pos-absolute-top-right text-sm" hx-target="#modal-window" hx-push-url="false" hx-swap="innerHTML transition:true">
+			<span class="margin-right text-light-gray">{{ $document.Published | tinyDate }} ago</span>
+			{{ if eq $document.ID ($builder.QueryParam "url") }}
+				<button hx-get="/@me/inbox/browse-tree?url={{$document.ID}}" aria-label="Use Nested Layout" class="selected">{{icon "focus"}}</button>
+			{{else}}
+				<button hx-get="/@me/inbox/browse-tree?url={{$document.ID}}" aria-label="Use Nested Layout">{{icon "focus"}}</button>
+			{{end}}
+			<button hx-get="/@me/inbox/browse-index?url={{$document.ID}}" aria-label="Use Index Layout">{{icon "list"}}</button>
+			<span class="margin-horizontal-sm"></span>
+			<a href="{{$attributedTo.ID}}" target="_blank" class="button" aria-label="Visit Actor Profile">{{icon "person"}}</a>
+			<a href="{{$document.URL}}" target="_blank" class="button" aria-label="Visit Original Website">{{icon "globe"}}</a>
 		</div>
 		
 	</div>

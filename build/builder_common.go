@@ -331,7 +331,7 @@ func (w Common) ActivityStream(url string) streams.Document {
 	result, err := activityService.Client().Load(url)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Error loading ActivityStream"))
+		derp.Report(derp.Wrap(err, location, "Unable to load ActivityStream. Returning empty document to template."))
 	}
 
 	// Search for rules that might add a LABEL to this document.

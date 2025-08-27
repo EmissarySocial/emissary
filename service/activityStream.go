@@ -264,14 +264,14 @@ func (service *ActivityStream) QueryRepliesAfterDate(ctx context.Context, inRepl
 
 	criteria := exp.Equal("metadata.relationType", vocab.RelationTypeReply).
 		AndEqual("metadata.relationHref", inReplyTo).
-		AndGreaterThan("object.published", time.Unix(minDate, 0))
+		AndGreaterThan("published", minDate)
 
 	result := sliceof.NewObject[ascache.Value]()
 
 	values := service.Range(
 		ctx,
 		criteria,
-		option.SortAsc("object.published"),
+		option.SortAsc("published"),
 		option.MaxRows(maxRows),
 	)
 
