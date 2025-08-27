@@ -244,17 +244,16 @@ func (w Domain) Themes() []model.Theme {
 // Providers lists all available external services that can be connected to this domain
 func (w Domain) Providers() []form.LookupCode {
 	return dataset.Providers()
-
-}
-
-// Connection loads an external service connection from the database
-func (w Domain) AllConnections() mapof.Object[model.Connection] {
-	return w.factory().Connection().AllAsMap()
 }
 
 func (w Domain) Provider(providerID string) providers.Provider {
 	result, _ := w._provider.GetProvider(providerID)
 	return result
+}
+
+// Connection loads an external service connection from the database
+func (w Domain) AllConnections() mapof.Object[model.Connection] {
+	return w.factory().Connection().AllAsMap()
 }
 
 func (w Domain) debug() {

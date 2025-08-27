@@ -237,10 +237,12 @@ func (filesystem *Filesystem) watchOS(uri string, changes chan<- bool, done <-ch
 				changes <- true
 
 			case err := <-watcher.Errors:
-				derp.Report(derp.Wrap(err, "service.Filesystem.watchFile", "Error watching directory", uri))
+				derp.Report(derp.Wrap(err, location, "Error watching directory", uri))
 
 			case <-done:
-				watcher.Close()
+				if err := watcher.Close(); err != nil {
+					derp.Report(derp.Wrap(err, location, "Error closing watcher"))
+				}
 				return
 			}
 		}
