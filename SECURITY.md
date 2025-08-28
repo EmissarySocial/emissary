@@ -16,8 +16,4 @@ to upgrade to the latest release.
 
 ## Reporting a Vulnerability
 
-Please report security vulnerabilities via email at emissary@emissary.social
-
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+Please report security vulnerabilities by creating a new [GitHub security advisory](https://github.com/EmissarySocial/emissary/security/advisories/new).  Security issues are prioritized ahead of all other work, and will be addressed promptly.
