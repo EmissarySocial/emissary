@@ -4,7 +4,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/EmissarySocial/emissary/domain"
+	"github.com/EmissarySocial/emissary/service"
+	"github.com/benpate/data"
 	"github.com/benpate/digit"
 	"github.com/benpate/steranko"
 )
@@ -12,7 +13,7 @@ import (
 // PostOStatusDiscover looks up a user's profile using oStatus discovery.
 // If successful, it returns a redirect to the user's follow-request page.
 // If unsuccessful, it returns a 200 with an English-language error message.
-func PostOStatusDiscover(ctx *steranko.Context, factory *domain.Factory) error {
+func PostOStatusDiscover(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	var transaction struct {
 		LocalAccount  string `form:"localAccount"`

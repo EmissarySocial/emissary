@@ -1,33 +1,45 @@
 package ascontextmaker
 
 import (
+	"github.com/benpate/data"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // asContextMaker is a hannibal.Streams middleware that adds a "context" property to all documents
 // based on their "InReplyTo" property.  If a document does not have a context or inReplyTo, then
 // it is its own context, and is updated to reflect that.
 type Client struct {
-	innerClient streams.Client
-	maxDepth    int // maxDepth prevents the client from recursing too deeply into a document tree
+	rootClient     streams.Client
+	innerClient    streams.Client
+	commonDatabase data.Server
+	maxDepth       int // maxDepth prevents the client from recursing too deeply into a document tree
 }
 
 // New creates a new instance of asContextMaker
-func New(innerClient streams.Client, options ...ClientOption) Client {
-	result := Client{
-		innerClient: innerClient,
-		maxDepth:    16,
+func New(innerClient streams.Client, commonDatabase data.Server, options ...ClientOption) *Client {
+
+	// Create the Client
+	result := &Client{
+		innerClient:    innerClient,
+		commonDatabase: commonDatabase,
+		maxDepth:       16,
 	}
 
-	result.With(options...)
+	// Apply options
+	for _, option := range options {
+		option(result)
+	}
+
+	// Pass reference down into the innerClient
+	result.innerClient.SetRootClient(result)
 	return result
 }
 
-func (client *Client) With(options ...ClientOption) {
-	for _, option := range options {
-		option(client)
-	}
+func (client *Client) SetRootClient(rootClient streams.Client) {
+	client.innerClient.SetRootClient(rootClient)
+	client.rootClient = rootClient
 }
 
 // Load implements the streams.Client interface, and loads a document from the Interwebs.
@@ -42,78 +54,44 @@ func (client Client) Load(uri string, options ...any) (streams.Document, error) 
 		return result, err
 	}
 
-	// Check configuration rules (re: history and duplicates)
-	// If no more recursion is allowed, then simply stop here.
-	config := NewLoadConfig(options...)
-	if client.NotAllowed(uri, config) {
-		return result, nil
-	}
-
 	// Don't need to add context to Actors (only Documents)
 	if result.IsActor() {
-		return result, err
-	}
-
-	// If the document already has a context property, then
-	// there is nothing more to add
-	if context := result.Context(); context != "" {
 		return result, nil
 	}
 
-	// If there is an ostatus:conversation property, then use that
-	if conversation := result.Get("conversation"); conversation.NotNil() {
-		result.SetProperty(vocab.PropertyContext, conversation)
+	// Don't need to add context to Collections (only Documents)
+	if result.IsCollection() {
 		return result, nil
 	}
 
-	// If we have an "inReplyTo" field, then try to load that value
-	// to use/generate its context
-	if inReplyTo := result.InReplyTo(); inReplyTo.IsNil() {
-
-		options = append(options, WithHistory(uri))
-
-		for inReplyTo.NotNil() {
-			if parent, err := inReplyTo.Load(options...); err == nil {
-				if context := parent.Context(); context != "" {
-					result.SetProperty(vocab.PropertyContext, context)
-					break
-				}
-			}
-
-			inReplyTo = inReplyTo.Tail()
-		}
-	}
-
-	// If the document STILL has no context, then it is ITS OWN CONTEXT
-	if context := result.Context(); context != "" {
-		result.SetProperty(vocab.PropertyContext, result.ID())
-		return result, nil
-	}
+	// Use the Parent context in all cases (even if it's "better" than our context)
+	parentContext := client.getParentContext(result)
+	result.SetProperty(vocab.PropertyContext, parentContext)
 
 	// Return modified document to the caller.
 	return result, nil
 }
 
-// IsAllowed returns TRUE if the client rules allow the provided URI to be loaded
-func (client Client) IsAllowed(uri string, config LoadConfig) bool {
+func (client *Client) getParentContext(document streams.Document) string {
 
-	// If the history is already too long, then stop no matter what
-	if len(config.history) >= client.maxDepth {
-		return false
-	}
+	// If this is a reply to another document...
+	if inReplyTo := document.InReplyTo().ID(); inReplyTo != "" {
 
-	// Search the history for this URI.  If it's already been loaded, then stop.
-	for _, value := range config.history {
-		if value == uri {
-			return false
+		// Try to load the parent...
+		if parent, err := client.rootClient.Load(inReplyTo); err == nil {
+
+			// And return its context (if any)
+			if context := parent.Context(); context != "" {
+				return context
+			}
 		}
 	}
 
-	// This URI is allowed to be loaded
-	return true
-}
+	// If this document has a context, then let's use that
+	if context := document.Context(); context != "" {
+		return context
+	}
 
-// NotAllowed returns TRUE if the client rules DO NOT allow the provided URI to be loaded
-func (client Client) NotAllowed(uri string, config LoadConfig) bool {
-	return !client.IsAllowed(uri, config)
+	// Last resort, generate an artificial context (just in case)
+	return protocol_artificial + primitive.NewObjectID().Hex()
 }

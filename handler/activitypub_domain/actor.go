@@ -1,19 +1,20 @@
 package activitypub_domain
 
 import (
-	"github.com/EmissarySocial/emissary/domain"
+	"github.com/EmissarySocial/emissary/service"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/steranko"
 )
 
-func GetJSONLD(ctx *steranko.Context, factory *domain.Factory) error {
+func GetJSONLD(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.activitypub_domain.GetJSONLD"
 
 	// Retrieve the domain and Public Key
 	domainService := factory.Domain()
-	publicKeyPEM, err := domainService.PublicKeyPEM()
+	publicKeyPEM, err := domainService.PublicKeyPEM(session)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error getting public key PEM")

@@ -2,9 +2,9 @@ package handler
 
 import (
 	"github.com/EmissarySocial/emissary/build"
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/server"
+	"github.com/EmissarySocial/emissary/service"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/first"
 	"github.com/benpate/steranko"
@@ -13,56 +13,43 @@ import (
 )
 
 // GetAdmin handles GET requests
-func GetAdmin(factoryManager *server.Factory) echo.HandlerFunc {
-	return buildAdmin(factoryManager, build.ActionMethodGet)
+func GetAdmin(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
+	return buildAdmin(ctx, factory, session, build.ActionMethodGet)
 }
 
 // PostAdmin handles POST/DELETE requests
-func PostAdmin(factoryManager *server.Factory) echo.HandlerFunc {
-	return buildAdmin(factoryManager, build.ActionMethodPost)
+func PostAdmin(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
+	return buildAdmin(ctx, factory, session, build.ActionMethodPost)
 }
 
-func buildAdmin(factoryManager *server.Factory, actionMethod build.ActionMethod) echo.HandlerFunc {
+func buildAdmin(ctx *steranko.Context, factory *service.Factory, session data.Session, actionMethod build.ActionMethod) error {
 
 	const location = "handler.adminBuilder"
 
-	return func(ctx echo.Context) error {
-
-		// Authenticate the page request
-		sterankoContext := ctx.(*steranko.Context)
-
-		if !isOwner(sterankoContext.Authorization()) {
-			return derp.ForbiddenError(location, "Unauthorized")
-		}
-
-		// Try to get the factory from the Context
-		factory, err := factoryManager.ByContext(ctx)
-
-		if err != nil {
-			return derp.Wrap(err, location, "Unrecognized Domain")
-		}
-
-		// Parse admin parameters
-		templateID, actionID, objectID := buildAdmin_ParsePath(ctx)
-
-		// Try to load the Template
-		templateService := factory.Template()
-		template, err := templateService.LoadAdmin(templateID)
-
-		if err != nil {
-			return err
-		}
-
-		// Locate and populate the builder
-		builder, err := buildAdmin_GetBuilder(factory, sterankoContext, template, actionID, objectID)
-
-		if err != nil {
-			return derp.Wrap(err, location, "Error generating builder")
-		}
-
-		// Success!!
-		return build.AsHTML(factory, sterankoContext, builder, actionMethod)
+	if !isOwner(ctx.Authorization()) {
+		return derp.ForbiddenError(location, "Unauthorized")
 	}
+
+	// Parse admin parameters
+	templateID, actionID, objectID := buildAdmin_ParsePath(ctx)
+
+	// Try to load the Template
+	templateService := factory.Template()
+	template, err := templateService.LoadAdmin(templateID)
+
+	if err != nil {
+		return err
+	}
+
+	// Locate and populate the builder
+	builder, err := buildAdmin_GetBuilder(ctx, factory, session, template, actionID, objectID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error generating builder")
+	}
+
+	// Success!!
+	return build.AsHTML(ctx, factory, builder, actionMethod)
 }
 
 func buildAdmin_ParsePath(ctx echo.Context) (string, string, primitive.ObjectID) {
@@ -82,7 +69,7 @@ func buildAdmin_ParsePath(ctx echo.Context) (string, string, primitive.ObjectID)
 	return templateID, actionID, primitive.NilObjectID
 }
 
-func buildAdmin_GetBuilder(factory *domain.Factory, ctx *steranko.Context, template model.Template, actionID string, objectID primitive.ObjectID) (build.Builder, error) {
+func buildAdmin_GetBuilder(ctx *steranko.Context, factory *service.Factory, session data.Session, template model.Template, actionID string, objectID primitive.ObjectID) (build.Builder, error) {
 
 	const location = "handler.buildAdmin_GetBuilder"
 
@@ -90,22 +77,22 @@ func buildAdmin_GetBuilder(factory *domain.Factory, ctx *steranko.Context, templ
 	switch template.Model {
 
 	case "Domain", "Search", "SSO", "Followers", "Following":
-		return build.NewDomain(factory, ctx.Request(), ctx.Response(), template, actionID)
+		return build.NewDomain(factory, session, ctx.Request(), ctx.Response(), template, actionID)
 
 	case "Syndication":
-		return build.NewSyndication(factory, ctx.Request(), ctx.Response(), template, actionID)
+		return build.NewSyndication(factory, session, ctx.Request(), ctx.Response(), template, actionID)
 
 	case "Group":
 		group := model.NewGroup()
 
 		if !objectID.IsZero() {
 			service := factory.Group()
-			if err := service.LoadByID(objectID, &group); err != nil {
-				return nil, derp.Wrap(err, location, "Error loading Group", objectID)
+			if err := service.LoadByID(session, objectID, &group); err != nil {
+				return nil, derp.Wrap(err, location, "Unable to load Group", objectID)
 			}
 		}
 
-		return build.NewGroup(factory, ctx.Request(), ctx.Response(), template, &group, actionID)
+		return build.NewGroup(factory, session, ctx.Request(), ctx.Response(), template, &group, actionID)
 
 	case "Rule":
 
@@ -114,60 +101,60 @@ func buildAdmin_GetBuilder(factory *domain.Factory, ctx *steranko.Context, templ
 
 		if !objectID.IsZero() {
 			authorization := getAuthorization(ctx)
-			if err := ruleService.LoadByID(authorization.UserID, objectID, &rule); err != nil {
-				return nil, derp.Wrap(err, location, "Error loading Rule", objectID)
+			if err := ruleService.LoadByID(session, authorization.UserID, objectID, &rule); err != nil {
+				return nil, derp.Wrap(err, location, "Unable to load Rule", objectID)
 			}
 		}
 
-		return build.NewRule(factory, ctx.Request(), ctx.Response(), &rule, template, actionID)
+		return build.NewRule(factory, session, ctx.Request(), ctx.Response(), &rule, template, actionID)
 
 	case "Stream":
 		stream := model.NewStream()
 
 		if !objectID.IsZero() {
 			service := factory.Stream()
-			if err := service.LoadByID(objectID, &stream); err != nil {
-				return nil, derp.Wrap(err, location, "Error loading Navigation stream", objectID)
+			if err := service.LoadByID(session, objectID, &stream); err != nil {
+				return nil, derp.Wrap(err, location, "Unable to load Navigation stream", objectID)
 			}
 		}
 
-		return build.NewNavigation(factory, ctx.Request(), ctx.Response(), template, &stream, actionID)
+		return build.NewNavigation(factory, session, ctx.Request(), ctx.Response(), template, &stream, actionID)
 
 	case "Tag":
 		searchTag := model.NewSearchTag()
 
 		if !objectID.IsZero() {
 			service := factory.SearchTag()
-			if err := service.LoadByID(objectID, &searchTag); err != nil {
-				return nil, derp.Wrap(err, location, "Error loading Tag", searchTag)
+			if err := service.LoadByID(session, objectID, &searchTag); err != nil {
+				return nil, derp.Wrap(err, location, "Unable to load Tag", searchTag)
 			}
 		}
 
-		return build.NewSearchTag(factory, ctx.Request(), ctx.Response(), template, &searchTag, actionID)
+		return build.NewSearchTag(factory, session, ctx.Request(), ctx.Response(), template, &searchTag, actionID)
 
 	case "User":
 		user := model.NewUser()
 
 		if !objectID.IsZero() {
 			service := factory.User()
-			if err := service.LoadByID(objectID, &user); err != nil {
-				return nil, derp.Wrap(err, location, "Error loading User", objectID)
+			if err := service.LoadByID(session, objectID, &user); err != nil {
+				return nil, derp.Wrap(err, location, "Unable to load User", objectID)
 			}
 		}
 
-		return build.NewUser(factory, ctx.Request(), ctx.Response(), template, &user, actionID)
+		return build.NewUser(factory, session, ctx.Request(), ctx.Response(), template, &user, actionID)
 
 	case "Webhook":
 		webhook := model.NewWebhook()
 
 		if !objectID.IsZero() {
 			service := factory.Webhook()
-			if err := service.LoadByID(objectID, &webhook); err != nil {
-				return nil, derp.Wrap(err, location, "Error loading User", objectID)
+			if err := service.LoadByID(session, objectID, &webhook); err != nil {
+				return nil, derp.Wrap(err, location, "Unable to load Webhook", objectID)
 			}
 		}
 
-		return build.NewWebhook(factory, ctx.Request(), ctx.Response(), template, &webhook, actionID)
+		return build.NewWebhook(factory, session, ctx.Request(), ctx.Response(), template, &webhook, actionID)
 
 	default:
 		return nil, derp.NotFoundError(location, "Template MODEL must be one of: 'Rule', 'Domain', 'Syndication', 'Group', 'Stream', 'Tag', or 'User'", template.Model)

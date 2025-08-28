@@ -12,7 +12,7 @@ import (
 
 func Privilege(ctx context.Context, database *mongo.Database) error {
 
-	log.Debug().Str("database", database.Name()).Str("collection", "Privilege").Msg("COLLECTION:")
+	log.Trace().Str("database", database.Name()).Str("collection", "Privilege").Msg("COLLECTION:")
 
 	return indexer.Sync(ctx, database.Collection("Privilege"), indexer.IndexSet{
 

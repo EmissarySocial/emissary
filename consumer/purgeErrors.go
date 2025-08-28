@@ -14,7 +14,7 @@ func PurgeErrors(factory ServerFactory) queue.Result {
 
 	log.Trace().Msg("Task: PurgeErrors")
 
-	// Purge old Error records from the error log
+	// Purge error logs >7 days old
 	collection := factory.CommonDatabase().Collection("ErrorLog")
 
 	_, err := collection.DeleteMany(

@@ -30,7 +30,7 @@ type Identity struct {
  ******************************************/
 
 // NewIdentity returns a fully initialized `Identity` builder.
-func NewIdentity(factory Factory, request *http.Request, response http.ResponseWriter, identity *model.Identity, actionID string) (Identity, error) {
+func NewIdentity(factory Factory, session data.Session, request *http.Request, response http.ResponseWriter, identity *model.Identity, actionID string) (Identity, error) {
 
 	const location = "build.NewIdentity"
 
@@ -53,7 +53,7 @@ func NewIdentity(factory Factory, request *http.Request, response http.ResponseW
 	}
 
 	// Create a new CommonWithTemplate object, which will handle the common methods for this builder
-	common, err := NewCommonWithTemplate(factory, request, response, template, identity, actionID)
+	common, err := NewCommonWithTemplate(factory, session, request, response, template, identity, actionID)
 
 	if err != nil {
 		return Identity{}, derp.Wrap(err, "build.NewIdentity", "Error creating new model")
@@ -154,13 +154,13 @@ func (w Identity) Privileges() (QueryBuilder[model.Privilege], error) {
 	)
 
 	// Return the query builder
-	return NewQueryBuilder[model.Privilege](w._factory.Privilege(), criteria), nil
+	return NewQueryBuilder[model.Privilege](w._factory.Privilege(), w._session, criteria), nil
 }
 
 // PrivilegedStreams returns a map of the Streams that the
 // currently signed-in Identity has privileges for
 func (w Identity) PrivilegedStreams(privileges sliceof.Object[model.Privilege]) (mapof.Slices[primitive.ObjectID, primitive.ObjectID], error) {
-	return w._factory.Stream().MapByPrivileges(privileges...)
+	return w._factory.Stream().MapByPrivileges(w._session, privileges...)
 }
 
 /******************************************
@@ -235,7 +235,7 @@ func (w Identity) View(actionID string) (template.HTML, error) {
 	const location = "build.Identity.View"
 
 	// Create a new builder (this will also validate the user's permissions)
-	subStream, err := NewModel(w._factory, w._request, w._response, w._template, w._identity, actionID)
+	subStream, err := NewModel(w._factory, w._session, w._request, w._response, w._template, w._identity, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, location, "Error creating sub-builder")
@@ -250,7 +250,7 @@ func (w Identity) setState(stateID string) error {
 }
 
 func (w Identity) clone(action string) (Builder, error) {
-	return NewIdentity(w._factory, w._request, w._response, w._identity, action)
+	return NewIdentity(w._factory, w._session, w._request, w._response, w._identity, action)
 }
 
 func (w Identity) debug() {

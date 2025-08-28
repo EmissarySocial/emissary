@@ -4,8 +4,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/mapof"
@@ -14,7 +15,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func CreateWebSubFollower(factory *domain.Factory, args mapof.Any) queue.Result {
+func CreateWebSubFollower(factory *service.Factory, session data.Session, args mapof.Any) queue.Result {
 
 	const location = "consumer.CreateWebSubFollower"
 
@@ -31,17 +32,17 @@ func CreateWebSubFollower(factory *domain.Factory, args mapof.Any) queue.Result 
 	switch mode {
 
 	case "subscribe":
-		return createWebSubFollower_subscribe(factory, objectType, objectID, format, mode, topic, callback, secret, leaseSeconds)
+		return createWebSubFollower_subscribe(factory, session, objectType, objectID, format, mode, topic, callback, secret, leaseSeconds)
 
 	case "unsubscribe":
-		return createWebSubFollower_unsubscribe(factory, objectType, objectID, mode, topic, callback, leaseSeconds)
+		return createWebSubFollower_unsubscribe(factory, session, objectType, objectID, mode, topic, callback, leaseSeconds)
 	}
 
 	return queue.Failure(derp.InternalError(location, "Invalid mode", mode))
 }
 
 // subscribe creates/updates a follower record
-func createWebSubFollower_subscribe(factory *domain.Factory, objectType string, objectID primitive.ObjectID, format string, mode string, topic string, callback string, secret string, leaseSeconds int) queue.Result {
+func createWebSubFollower_subscribe(factory *service.Factory, session data.Session, objectType string, objectID primitive.ObjectID, format string, mode string, topic string, callback string, secret string, leaseSeconds int) queue.Result {
 
 	const location = "consumer.createWebSubFollower_subscribe"
 
@@ -59,7 +60,7 @@ func createWebSubFollower_subscribe(factory *domain.Factory, objectType string, 
 
 	// Create a new Follower record
 	followerService := factory.Follower()
-	follower, err := followerService.LoadOrCreateByWebSub(objectType, objectID, callback)
+	follower, err := followerService.LoadOrCreateByWebSub(session, objectType, objectID, callback)
 
 	if err != nil {
 		return queue.Error(derp.Wrap(err, location, "Error loading follower", objectID, callback))
@@ -74,12 +75,12 @@ func createWebSubFollower_subscribe(factory *domain.Factory, objectType string, 
 	}
 
 	// Validate the request with the client
-	if result := createWebSubFollower_validate(factory, &follower, objectType, objectID, mode, topic, leaseSeconds); result.NotSuccessful() {
+	if result := createWebSubFollower_validate(factory, session, &follower, objectType, objectID, mode, topic, leaseSeconds); result.NotSuccessful() {
 		return result
 	}
 
 	// Save the new/updated follower
-	if err := followerService.Save(&follower, "Created via WebSub"); err != nil {
+	if err := followerService.Save(session, &follower, "Created via WebSub"); err != nil {
 		return queue.Error(derp.Wrap(err, location, "Error saving follower", follower.ID))
 	}
 
@@ -88,24 +89,24 @@ func createWebSubFollower_subscribe(factory *domain.Factory, objectType string, 
 }
 
 // unsubscribe removes a follower record
-func createWebSubFollower_unsubscribe(factory *domain.Factory, objectType string, objectID primitive.ObjectID, mode string, topic string, callback string, leaseSeconds int) queue.Result {
+func createWebSubFollower_unsubscribe(factory *service.Factory, session data.Session, objectType string, objectID primitive.ObjectID, mode string, topic string, callback string, leaseSeconds int) queue.Result {
 
 	const location = "consumer.createWebSubFollower_unsubscribe"
 
 	// Load the existing follower record
 	followerService := factory.Follower()
 	follower := model.NewFollower()
-	if err := followerService.LoadByWebSub(objectType, objectID, callback, &follower); err != nil {
+	if err := followerService.LoadByWebSub(session, objectType, objectID, callback, &follower); err != nil {
 		return queue.Error(derp.Wrap(err, location, "Error loading follower", objectID, callback))
 	}
 
 	// Verify the request with the callback server
-	if result := createWebSubFollower_validate(factory, &follower, objectType, objectID, mode, topic, leaseSeconds); result.NotSuccessful() {
+	if result := createWebSubFollower_validate(factory, session, &follower, objectType, objectID, mode, topic, leaseSeconds); result.NotSuccessful() {
 		return result
 	}
 
 	// Remove the follower from the database.
-	if err := followerService.Delete(&follower, "unsubscribe"); err != nil {
+	if err := followerService.Delete(session, &follower, "unsubscribe"); err != nil {
 		return queue.Error(derp.Wrap(err, location, "Error deleting follower", follower.ID))
 	}
 
@@ -113,7 +114,7 @@ func createWebSubFollower_unsubscribe(factory *domain.Factory, objectType string
 }
 
 // validate verifies that the request is valid, for an object that we own, and that the callback server approves of the request.
-func createWebSubFollower_validate(factory *domain.Factory, follower *model.Follower, objectType string, objectID primitive.ObjectID, mode string, topic string, leaseSeconds int) queue.Result {
+func createWebSubFollower_validate(factory *service.Factory, session data.Session, follower *model.Follower, objectType string, objectID primitive.ObjectID, mode string, topic string, leaseSeconds int) queue.Result {
 
 	const location = "consumer.createWebSubFollower_validate"
 
@@ -138,7 +139,7 @@ func createWebSubFollower_validate(factory *domain.Factory, follower *model.Foll
 
 	// Validate the object in our own database
 	locatorService := factory.Locator()
-	foundObjectType, foundObjectID, err := locatorService.GetObjectFromURL(topic)
+	foundObjectType, foundObjectID, err := locatorService.GetObjectFromURL(session, topic)
 
 	if err != nil {
 		return queue.Failure(derp.Wrap(err, location, "Error parsing topic URL", follower.ID))

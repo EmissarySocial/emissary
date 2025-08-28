@@ -2,7 +2,6 @@ package service
 
 import (
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
 )
@@ -20,54 +19,59 @@ func (service *Stream) sendSyndicationMessages(stream *model.Stream, added []str
 
 		// Send syndication messages
 		for _, endpoint := range added {
-			if target.Value == endpoint {
 
-				task := queue.NewTask("syndication.create", mapof.Any{
+			if target.Value != endpoint {
+				continue
+			}
+
+			service.queue.Enqueue <- queue.NewTask(
+				"syndication.create",
+				mapof.Any{
 					"endpoint": target.Href,
 					"message": mapof.Any{
 						"type":   "Create",
 						"object": object,
 					},
-				})
-
-				if err := service.queue.Publish(task); err != nil {
-					return derp.Wrap(err, location, "Error publishing syndication undo task", task)
-				}
-			}
+				},
+			)
 		}
 
 		// Send syndication:undo messages
 		for _, endpoint := range changed {
-			if target.Value == endpoint {
-				task := queue.NewTask("syndication.update", mapof.Any{
+
+			if target.Value != endpoint {
+				continue
+			}
+
+			service.queue.Enqueue <- queue.NewTask(
+				"syndication.update",
+				mapof.Any{
 					"endpoint": target.Href,
 					"message": mapof.Any{
 						"type":   "Update",
 						"object": object,
 					},
-				})
-
-				if err := service.queue.Publish(task); err != nil {
-					return derp.Wrap(err, location, "Error publishing syndication undo task", task)
-				}
-			}
+				},
+			)
 		}
 
 		// Send syndication:undo messages
 		for _, endpoint := range removed {
-			if target.Value == endpoint {
-				task := queue.NewTask("syndication.delete", mapof.Any{
+
+			if target.Value != endpoint {
+				continue
+			}
+
+			service.queue.Enqueue <- queue.NewTask(
+				"syndication.delete",
+				mapof.Any{
 					"endpoint": target.Href,
 					"message": mapof.Any{
 						"type":   "Delete",
 						"object": object,
 					},
-				})
-
-				if err := service.queue.Publish(task); err != nil {
-					return derp.Wrap(err, location, "Error publishing syndication undo task", task)
-				}
-			}
+				},
+			)
 		}
 	}
 

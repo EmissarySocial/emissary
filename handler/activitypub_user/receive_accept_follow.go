@@ -31,7 +31,7 @@ func receive_AcceptFollow(context Context, activity streams.Document) error {
 	// Try to load the original "Following" record.
 	// If it doesn't already exist, then this message is invalid.
 	following := model.NewFollowing()
-	if err := followingService.LoadByID(userID, followingID, &following); err != nil {
+	if err := followingService.LoadByID(context.session, userID, followingID, &following); err != nil {
 		return derp.Wrap(err, location, "Error loading following record", userID, followingID)
 	}
 
@@ -55,7 +55,7 @@ func receive_AcceptFollow(context Context, activity streams.Document) error {
 	following.PollDuration = 30
 
 	// Save the "Following" record to the database
-	if err := followingService.SetStatusSuccess(&following); err != nil {
+	if err := followingService.SetStatusSuccess(context.session, &following); err != nil {
 		return derp.Wrap(err, location, "Error saving following", following)
 	}
 

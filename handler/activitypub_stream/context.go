@@ -1,19 +1,21 @@
 package activitypub_stream
 
 import (
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
+	"github.com/benpate/data"
 	"github.com/benpate/hannibal/outbox"
 )
 
 // Context includes all of the necessary objects to handle an ActivityPub request
 type Context struct {
-	factory *domain.Factory
+	factory *service.Factory
+	session data.Session
 	stream  *model.Stream
 	actor   *model.StreamActor
 }
 
 func (context Context) ActivityPubActor() (outbox.Actor, error) {
 
-	return context.factory.Stream().ActivityPubActor(context.stream.StreamID)
+	return context.factory.Stream().ActivityPubActor(context.session, context.stream.StreamID)
 }

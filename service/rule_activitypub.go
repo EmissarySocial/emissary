@@ -28,7 +28,7 @@ func (service *Rule) JSONLDGetter(rule model.Rule) RuleJSONLDGetter {
 }
 
 func (service *Rule) Activity(rule model.Rule) streams.Document {
-	return service.activityService.NewDocument(service.JSONLD(rule))
+	return streams.NewDocument(service.JSONLD(rule))
 }
 
 func (service *Rule) ActivityType(rule model.Rule) string {

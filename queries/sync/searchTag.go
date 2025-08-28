@@ -11,7 +11,7 @@ import (
 
 func SearchTag(ctx context.Context, database *mongo.Database) error {
 
-	log.Debug().Str("database", database.Name()).Str("collection", "SearchTag").Msg("COLLECTION:")
+	log.Trace().Str("database", database.Name()).Str("collection", "SearchTag").Msg("COLLECTION:")
 
 	return indexer.Sync(ctx, database.Collection("SearchTag"), indexer.IndexSet{
 

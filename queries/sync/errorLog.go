@@ -12,7 +12,7 @@ import (
 // ErrorLog synchronizes the ErrorLog collection in the SHARED DATABASE.
 func ErrorLog(ctx context.Context, database *mongo.Database) error {
 
-	log.Debug().Str("database", database.Name()).Str("collection", "ErrorLog").Msg("COLLECTION:")
+	log.Trace().Str("database", database.Name()).Str("collection", "ErrorLog").Msg("COLLECTION:")
 
 	return indexer.Sync(ctx, database.Collection("ErrorLog"), indexer.IndexSet{
 

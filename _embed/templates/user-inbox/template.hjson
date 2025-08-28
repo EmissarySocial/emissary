@@ -76,6 +76,25 @@
 				]}
 			]
 		}
+
+		annotation: {
+			roles: ["self"]
+			steps: [
+				{do: "with-annotation", steps: [
+					{do: "as-modal", options:["xclass:large"], steps: [
+						{do: "view-html"}
+						{do:"edit", form: {
+							type: layout-vertical
+							children:[
+								{type:"textarea", path:"content", description:"(PRIVATE) These notes are not shared with anyone", options:{rows:12, autocomplete:"off"}}
+							]
+						}}
+						{do: "save"}
+					]}
+				]}
+			]
+		}
+
 		folder-add: {
 			roles: ["self"]
 			steps: [
@@ -245,11 +264,20 @@
 		message: {
 			roles:["self"]
 			steps:[
+				{do:"as-modal", options:["xclass:large"], steps:[
+					{do:"view-html"}
+				]}
+			]
+		}
+		message-code: {
+			roles:["self"]
+			steps:[
 				{do:"as-modal", options:["class:large"], steps:[
 					{do:"view-html"}
 				]}
 			]
 		}
+
 		message-mute-button:{
 			roles:["self"]
 			steps:[
@@ -298,6 +326,16 @@
 			]
 		}
 
+		message-set-response: {
+			roles:["self"]
+			steps:[
+				{do:"with-message", steps: [
+					{do:"set-response"}
+					{do:"view-html", method:"both"}
+				]}
+			]
+		}
+
 		responses-announces:{
 			roles:["self"]
 			steps: [
@@ -335,10 +373,85 @@
 				{do:"add-stream", style:"inline", roles:"outbox-reply", location:"outbox", with-data:{
 					inReplyTo:"{{.Permalink}}"
 				}}
-				{do:"set-header", name:"hx-retarget", value:"#responses"}
-				{do:"set-header", name:"hx-reswap", value:"outerHTML"}
-				{do:"view-html", method:"post", file:"responses-replies"}
+				{do:"redirect-to", method:"post", url:"/@me/inbox/browse-tree?url={{.Permalink}}"}
 			]
 		}
+
+		browse: {
+			roles: ["self"]
+			steps: [
+				{do:"as-modal", options:["class:large"], background:"inbox", steps:[
+					{do: "view-html"}
+				]}
+			]
+		}
+
+		browse-actor: {
+			roles: ["self"]
+			steps: [
+				{do:"as-modal", background:"inbox", steps:[
+					{do: "view-html"}
+				]}
+			]
+		}
+
+		browse-code: {
+			roles: ["self"]
+			steps: [
+				{do:"view-html"}
+			]
+		}
+
+		browse-document-detail: {
+			roles: ["self"]
+			steps: [
+				{do:"view-html"}
+			]
+		}
+
+		browse-index: {
+			roles: ["self"]
+			steps: [
+				{do:"view-html"}
+			]
+		}
+
+		browse-reply: {
+			roles: ["self"]
+			steps: [
+				{do:"as-modal", options:["class:large"], steps:[
+					{do:"view-html"}
+				]}
+			]
+		}
+
+		browse-timeline: {
+			roles: ["self"]
+			steps: [
+				{do:"view-html"}
+			]
+		}
+
+		browse-timeline-list: {
+			roles: ["self"]
+			steps: [
+				{do:"view-html"}
+			]
+		}
+
+		browse-tree: {
+			roles: ["self"]
+			steps: [
+				{do:"view-html"}
+			]
+		}
+
+		browse-tree-replies: {
+			roles: ["self"]
+			steps: [
+				{do:"view-html"}
+			]
+		}
+
 	}
 }	

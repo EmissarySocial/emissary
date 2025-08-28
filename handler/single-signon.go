@@ -3,15 +3,16 @@ package handler
 import (
 	"net/http"
 
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/steranko"
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func GetSingleSignOn(ctx *steranko.Context, factory *domain.Factory, domain *model.Domain) error {
+func GetSingleSignOn(ctx *steranko.Context, factory *service.Factory, session data.Session, domain *model.Domain) error {
 	const location = "handler.GetSingleSignOn"
 
 	// RULE: Guarantee that the SSO is active
@@ -45,12 +46,12 @@ func GetSingleSignOn(ctx *steranko.Context, factory *domain.Factory, domain *mod
 	userService := factory.User()
 	user := model.NewUser()
 
-	if err := userService.LoadByUsername(username, &user); err != nil {
+	if err := userService.LoadByUsername(session, username, &user); err != nil {
 		return derp.Wrap(err, location, "Error loading user")
 	}
 
 	// Create a sign-in session for the user
-	if err := factory.Steranko().SigninUser(ctx, &user); err != nil {
+	if err := factory.Steranko(session).SigninUser(ctx, &user); err != nil {
 		return derp.Wrap(err, location, "Error creating certificate")
 	}
 

@@ -1,6 +1,8 @@
 package model
 
-import "github.com/benpate/domain"
+import (
+	dt "github.com/benpate/domain"
+)
 
 // ActorSummary is a record returned by the ActivityStream directory
 type ActorSummary struct {
@@ -15,7 +17,7 @@ type ActorSummary struct {
 // either the Actor' username, if it exists, or the Actor's ID
 func (actor ActorSummary) UsernameOrID() string {
 	if actor.Username != "" {
-		return "@" + actor.Username + "@" + domain.NameOnly(actor.ID)
+		return "@" + actor.Username + "@" + dt.NameOnly(actor.ID)
 	}
 
 	return actor.ID

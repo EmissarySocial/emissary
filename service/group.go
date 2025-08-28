@@ -15,7 +15,6 @@ import (
 
 // Group manages all interactions with the Group collection
 type Group struct {
-	collection data.Collection
 }
 
 // NewGroup returns a fully populated Group service
@@ -28,38 +27,40 @@ func NewGroup() Group {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Group) Refresh(collection data.Collection) {
-	service.collection = collection
+func (service *Group) Refresh() {
 }
 
 // Close stops any background processes controlled by this service
 func (service *Group) Close() {
-
 }
 
 /******************************************
  * Common Data Methods
  ******************************************/
 
-// Count returns the number of records that match the provided criteria
-func (service *Group) Count(criteria exp.Expression) (int64, error) {
-	return service.collection.Count(notDeleted(criteria))
+func (service *Group) collection(session data.Session) data.Collection {
+	return session.Collection("Group")
 }
 
-func (service *Group) Query(criteria exp.Expression, options ...option.Option) ([]model.Group, error) {
+// Count returns the number of records that match the provided criteria
+func (service *Group) Count(session data.Session, criteria exp.Expression) (int64, error) {
+	return service.collection(session).Count(notDeleted(criteria))
+}
+
+func (service *Group) Query(session data.Session, criteria exp.Expression, options ...option.Option) ([]model.Group, error) {
 	result := make([]model.Group, 0)
-	err := service.collection.Query(&result, notDeleted(criteria), options...)
+	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
 	return result, err
 }
 
 // List returns an iterator containing all of the Groups who match the provided criteria
-func (service *Group) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection.Iterator(notDeleted(criteria), options...)
+func (service *Group) List(session data.Session, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+	return service.collection(session).Iterator(notDeleted(criteria), options...)
 }
 
 // Load retrieves an Group from the database
-func (service *Group) Load(criteria exp.Expression, result *model.Group) error {
-	if err := service.collection.Load(notDeleted(criteria), result); err != nil {
+func (service *Group) Load(session data.Session, criteria exp.Expression, result *model.Group) error {
+	if err := service.collection(session).Load(notDeleted(criteria), result); err != nil {
 		return derp.Wrap(err, "service.Group.Load", "Error loading Group", criteria)
 	}
 
@@ -67,7 +68,7 @@ func (service *Group) Load(criteria exp.Expression, result *model.Group) error {
 }
 
 // Save adds/updates an Group in the database
-func (service *Group) Save(group *model.Group, note string) error {
+func (service *Group) Save(session data.Session, group *model.Group, note string) error {
 
 	// Validate the value before saving
 	if err := service.Schema().Validate(group); err != nil {
@@ -75,7 +76,7 @@ func (service *Group) Save(group *model.Group, note string) error {
 	}
 
 	// Save the value to the database
-	if err := service.collection.Save(group, note); err != nil {
+	if err := service.collection(session).Save(group, note); err != nil {
 		return derp.Wrap(err, "service.Group.Save", "Error saving Group", group, note)
 	}
 
@@ -83,9 +84,9 @@ func (service *Group) Save(group *model.Group, note string) error {
 }
 
 // Delete removes an Group from the database (virtual delete)
-func (service *Group) Delete(group *model.Group, note string) error {
+func (service *Group) Delete(session data.Session, group *model.Group, note string) error {
 
-	if err := service.collection.Delete(group, note); err != nil {
+	if err := service.collection(session).Delete(group, note); err != nil {
 		return derp.Wrap(err, "service.Group.Delete", "Error deleting Group", group, note)
 	}
 
@@ -119,26 +120,26 @@ func (service *Group) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
-func (service *Group) ObjectQuery(result any, criteria exp.Expression, options ...option.Option) error {
-	return service.collection.Query(result, notDeleted(criteria), options...)
+func (service *Group) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
+	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
-func (service *Group) ObjectLoad(criteria exp.Expression) (data.Object, error) {
+func (service *Group) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewGroup()
-	err := service.Load(criteria, &result)
+	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
-func (service *Group) ObjectSave(object data.Object, comment string) error {
+func (service *Group) ObjectSave(session data.Session, object data.Object, comment string) error {
 	if group, ok := object.(*model.Group); ok {
-		return service.Save(group, comment)
+		return service.Save(session, group, comment)
 	}
 	return derp.InternalError("service.Group.ObjectSave", "Invalid Object Type", object)
 }
 
-func (service *Group) ObjectDelete(object data.Object, comment string) error {
+func (service *Group) ObjectDelete(session data.Session, object data.Object, comment string) error {
 	if group, ok := object.(*model.Group); ok {
-		return service.Delete(group, comment)
+		return service.Delete(session, group, comment)
 	}
 	return derp.InternalError("service.Group.ObjectDelete", "Invalid Object Type", object)
 }
@@ -156,12 +157,12 @@ func (service *Group) Schema() schema.Schema {
  ******************************************/
 
 // LoadByID loads a single model.Group object that matches the provided groupID
-func (service *Group) LoadByID(groupID primitive.ObjectID, result *model.Group) error {
+func (service *Group) LoadByID(session data.Session, groupID primitive.ObjectID, result *model.Group) error {
 	criteria := exp.Equal("_id", groupID)
-	return service.Load(criteria, result)
+	return service.Load(session, criteria, result)
 }
 
-func (service *Group) ListByIDs(groupIDs ...primitive.ObjectID) ([]model.Group, error) {
+func (service *Group) ListByIDs(session data.Session, groupIDs ...primitive.ObjectID) ([]model.Group, error) {
 
 	result := make([]model.Group, len(groupIDs)+1)
 
@@ -178,7 +179,7 @@ func (service *Group) ListByIDs(groupIDs ...primitive.ObjectID) ([]model.Group, 
 	}
 
 	// Query the database for all matching groups
-	it, err := service.List(criteria, option.SortAsc("label"))
+	it, err := service.List(session, criteria, option.SortAsc("label"))
 
 	if err != nil {
 		return nil, derp.Wrap(err, "service.Group.ListbyIDs", "Error executing query", criteria)
@@ -198,33 +199,33 @@ func (service *Group) ListByIDs(groupIDs ...primitive.ObjectID) ([]model.Group, 
 }
 
 // LoadByToken loads a single Group object that matches the provided token
-func (service *Group) LoadByToken(token string, result *model.Group) error {
+func (service *Group) LoadByToken(session data.Session, token string, result *model.Group) error {
 
 	// Trim whitespace around the token
 	token = strings.Trim(token, " ")
 
 	// If the token *looks* like an ObjectID then try that first.  If it works, then return in triumph
 	if groupID, err := primitive.ObjectIDFromHex(token); err == nil {
-		if err := service.LoadByID(groupID, result); err == nil {
+		if err := service.LoadByID(session, groupID, result); err == nil {
 			return nil
 		}
 	}
 
 	// Otherwise, use the token as a groupID
 	criteria := exp.Equal("token", token)
-	return service.Load(criteria, result)
+	return service.Load(session, criteria, result)
 }
 
 // ListByGroup returns all groups that match a provided group name
-func (service *Group) ListByGroup(group string) (data.Iterator, error) {
-	return service.List(exp.Equal("groupId", group))
+func (service *Group) ListByGroup(session data.Session, group string) (data.Iterator, error) {
+	return service.List(session, exp.Equal("groupId", group))
 }
 
-func (service *Group) ListAsOptions() []form.LookupCode {
+func (service *Group) ListAsOptions(session data.Session) []form.LookupCode {
 
 	result := make([]form.LookupCode, 0)
 
-	it, err := service.List(exp.All(), option.SortAsc("label"))
+	it, err := service.List(session, exp.All(), option.SortAsc("label"))
 
 	if err != nil {
 		derp.Report(derp.Wrap(err, "service.Group.ListAsOptions", "Error listing Groups"))
@@ -247,10 +248,10 @@ func (service *Group) ListAsOptions() []form.LookupCode {
  * Custom Methods
  ******************************************/
 
-func (service *Group) Startup(theme *model.Theme) error {
+func (service *Group) Startup(session data.Session, theme *model.Theme) error {
 
 	// Try to count the number of existing groups in the database
-	count, err := service.Count(exp.All())
+	count, err := service.Count(session, exp.All())
 
 	if err != nil {
 		return derp.Wrap(err, "service.Theme.Startup", "Error counting groups")
@@ -272,7 +273,7 @@ func (service *Group) Startup(theme *model.Theme) error {
 			continue
 		}
 
-		if err := service.Save(&group, "Created by Startup"); err != nil {
+		if err := service.Save(session, &group, "Created by Startup"); err != nil {
 			derp.Report(derp.Wrap(err, "service.Theme.Startup", "Unable to save group", group))
 			continue
 		}

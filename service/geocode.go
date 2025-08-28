@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
@@ -30,11 +31,11 @@ func NewGeocode(hostname string, queue *queue.Queue, connectionService *Connecti
 
 // Geocode will attempt to geocode all Places in the provided Stream
 // and will return an error on any failure.
-func (service Geocode) Geocode(stream *model.Stream) error {
+func (service Geocode) Geocode(session data.Session, stream *model.Stream) error {
 
 	const location = "service.Geocode.GeocodeStream"
 
-	geocoder := service.getGeocoder()
+	geocoder := service.getGeocoder(session)
 
 	for index := range stream.Places {
 
@@ -57,12 +58,12 @@ func (service Geocode) Geocode(stream *model.Stream) error {
 
 // GeocodeAndQueue will attempt to geocode all Places in the provided Stream.
 // If there is a failure, it will queue up a task to retry the geocode in 30 seconds.
-func (service Geocode) GeocodeAndQueue(stream *model.Stream) error {
+func (service Geocode) GeocodeAndQueue(session data.Session, stream *model.Stream) error {
 
 	const location = "service.Geocode.GeocodeAndQueue"
 
 	// Try to Geocode all Places in this Stream
-	if err := service.Geocode(stream); err == nil {
+	if err := service.Geocode(session, stream); err == nil {
 		return nil
 	}
 
@@ -72,11 +73,7 @@ func (service Geocode) GeocodeAndQueue(stream *model.Stream) error {
 		"streamId": stream.StreamID,
 	}
 
-	task := queue.NewTask("Geocode", args, queue.WithPriority(4), queue.WithDelaySeconds(30))
-
-	if err := service.queue.Publish(task); err != nil {
-		return derp.Wrap(err, location, "Error publishing geocode task")
-	}
+	service.queue.Enqueue <- queue.NewTask("Geocode", args, queue.WithPriority(4), queue.WithDelaySeconds(30))
 
 	return nil
 }
@@ -129,12 +126,12 @@ func (service Geocode) geocode(geocoder geo.Geocoder, place *model.Place) error 
 
 // getGeocoder returns the geocoder configured for this domain.
 // If none is configured, then the "free" OpenStreetMap geocoder is used.
-func (service Geocode) getGeocoder() geo.Geocoder {
+func (service Geocode) getGeocoder(session data.Session) geo.Geocoder {
 
 	// Get the geocoder connction config
 	connection := model.NewConnection()
 
-	if err := service.connectionService.LoadActiveByType(model.ConnectionTypeGeocoder, &connection); err != nil {
+	if err := service.connectionService.LoadActiveByType(session, model.ConnectionTypeGeocoder, &connection); err != nil {
 		// const location = "service.Geocode.getGeocoder"
 		// derp.Report(derp.Wrap(err, location, "Error loading geocoder connection"))
 		return openstreetmap.Geocoder()

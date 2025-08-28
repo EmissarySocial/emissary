@@ -291,7 +291,7 @@ func (stream Stream) ActivityPubFollowersURL() string {
 }
 
 func (stream Stream) ActivityPubAnnouncedURL() string {
-	return stream.URL + "/pub/announced"
+	return stream.URL + "/pub/shared"
 }
 
 func (stream Stream) ActivityPubType() string {
@@ -375,14 +375,6 @@ func (stream Stream) GetRank() int64 {
 /******************************************
  * Other Methods
  ******************************************/
-
-func (stream Stream) DocumentLink() DocumentLink {
-	return DocumentLink{
-		ID:    stream.StreamID,
-		URL:   stream.URL,
-		Label: stream.Label,
-	}
-}
 
 // HasParent returns TRUE if this Stream has a valid parentID
 func (stream Stream) HasParent() bool {

@@ -6,6 +6,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/model/step"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -72,13 +73,13 @@ func (step StepWithFollower) execute(builder Builder, buffer io.Writer, actionMe
 
 		// Existing Follower records can be looked up if authenticated, or with a secret.
 		secret := builder.QueryParam("secret")
-		if err := step.load(followerService, token, userID, secret, &follower); err != nil {
+		if err := step.load(builder.session(), followerService, token, userID, secret, &follower); err != nil {
 			return Halt().WithError(derp.Wrap(err, location, "Unable to load Follower via ID", token))
 		}
 	}
 
 	// Create a new builder tied to the Follower record
-	subBuilder, err := NewFollower(factory, builder.request(), builder.response(), template, &follower, builder.actionID())
+	subBuilder, err := NewFollower(factory, builder.session(), builder.request(), builder.response(), template, &follower, builder.actionID())
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Unable to create sub-builder"))
@@ -91,7 +92,7 @@ func (step StepWithFollower) execute(builder Builder, buffer io.Writer, actionMe
 	return UseResult(result)
 }
 
-func (step StepWithFollower) load(followerService *service.Follower, token string, authenticatedID primitive.ObjectID, secret string, follower *model.Follower) error {
+func (step StepWithFollower) load(session data.Session, followerService *service.Follower, token string, authenticatedID primitive.ObjectID, secret string, follower *model.Follower) error {
 
 	const location = "build.StepWithFollower.load"
 
@@ -104,12 +105,12 @@ func (step StepWithFollower) load(followerService *service.Follower, token strin
 			return derp.Wrap(err, location, "Invalid follower ID", token)
 		}
 
-		return followerService.LoadBySecret(followerID, secret, follower)
+		return followerService.LoadBySecret(session, followerID, secret, follower)
 	}
 
 	// If the user is Authenticated, then use their Authentication to load the Follower record.
 	if !authenticatedID.IsZero() {
-		return followerService.LoadByToken(authenticatedID, token, follower)
+		return followerService.LoadByToken(session, authenticatedID, token, follower)
 	}
 
 	// Nope.  Not happening.

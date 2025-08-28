@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/steranko"
 	"github.com/golang-jwt/jwt/v5"
@@ -15,14 +16,16 @@ type SterankoUserService struct {
 	identityService *Identity
 	userService     *User
 	domainEmail     *DomainEmail
+	session         data.Session
 }
 
 // NewSterankoUserService returns a fully populated SterankoUserService.
-func NewSterankoUserService(identityService *Identity, userService *User, domainEmail *DomainEmail) SterankoUserService {
+func NewSterankoUserService(identityService *Identity, userService *User, domainEmail *DomainEmail, session data.Session) SterankoUserService {
 	return SterankoUserService{
 		identityService: identityService,
 		userService:     userService,
 		domainEmail:     domainEmail,
+		session:         session,
 	}
 }
 
@@ -43,7 +46,7 @@ func (service SterankoUserService) Load(username string, result steranko.User) e
 		return derp.InternalError(location, "Invalid result provided.  This should never happen")
 	}
 
-	if err := service.userService.LoadByUsernameOrEmail(username, user); err != nil {
+	if err := service.userService.LoadByUsernameOrEmail(service.session, username, user); err != nil {
 		return derp.Wrap(err, location, "Error loading user")
 	}
 
@@ -56,7 +59,7 @@ func (service SterankoUserService) Save(user steranko.User, comment string) erro
 	const location = "service.SterankoUserService.Save"
 
 	if user, ok := user.(*model.User); ok {
-		return service.userService.Save(user, comment)
+		return service.userService.Save(service.session, user, comment)
 	}
 
 	return derp.InternalError(location, "Steranko User is not a valid object.  This should never happen", user)
@@ -68,7 +71,7 @@ func (service SterankoUserService) Delete(user steranko.User, comment string) er
 	const location = "service.SterankoUserService.Delete"
 
 	if user, ok := user.(*model.User); ok {
-		return service.userService.Delete(user, comment)
+		return service.userService.Delete(service.session, user, comment)
 	}
 
 	return derp.InternalError(location, "Steranko User is not a valid object.  This should never happen", user)
@@ -104,7 +107,7 @@ func (service SterankoUserService) Claims(sterankoUser steranko.User) (jwt.Claim
 
 	// Look up the Identity for this User.  If missing, NBD..
 	identity := model.NewIdentity()
-	if err := service.identityService.LoadByEmailAddress(user.EmailAddress, &identity); !derp.IsNilOrNotFound(err) {
+	if err := service.identityService.LoadByEmailAddress(service.session, user.EmailAddress, &identity); !derp.IsNilOrNotFound(err) {
 		return nil, derp.Wrap(err, location, "Error loading identity for user")
 	}
 

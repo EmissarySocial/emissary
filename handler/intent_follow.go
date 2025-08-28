@@ -4,10 +4,11 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/camper"
 	"github.com/EmissarySocial/emissary/tools/formdata"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/html"
@@ -15,9 +16,10 @@ import (
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/sherlock"
 	"github.com/benpate/steranko"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func GetIntent_Follow(ctx *steranko.Context, factory *domain.Factory, user *model.User) error {
+func GetIntent_Follow(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.GetIntent_Follow"
 
@@ -31,8 +33,8 @@ func GetIntent_Follow(ctx *steranko.Context, factory *domain.Factory, user *mode
 	onCancel := firstOf(transaction.OnCancel, "/@me")
 
 	// Try to load the remote Actor to be followed
-	activityService := factory.ActivityStream()
-	actor, err := activityService.Load(transaction.Object, sherlock.AsActor())
+	activityService := factory.ActivityStream(model.ActorTypeApplication, primitive.NilObjectID)
+	actor, err := activityService.Client().Load(transaction.Object, sherlock.AsActor())
 
 	if err != nil {
 		return derp.Wrap(err, location, "Unable to load object", transaction)
@@ -41,14 +43,14 @@ func GetIntent_Follow(ctx *steranko.Context, factory *domain.Factory, user *mode
 	// Try to load an existing "Following" record (allow "NOT FOUND" errors)
 	followingService := factory.Following()
 	following := model.NewFollowing()
-	if err := followingService.LoadByURL(user.UserID, actor.ID(), &following); err != nil {
+	if err := followingService.LoadByURL(session, user.UserID, actor.ID(), &following); err != nil {
 		if !derp.IsNotFound(err) {
 			return derp.Wrap(err, location, "Error loading existing following")
 		}
 	}
 
 	// Generate the input form as HTML
-	lookupProvider := factory.LookupProvider(ctx.Request(), user.UserID)
+	lookupProvider := factory.LookupProvider(ctx.Request(), session, user.UserID)
 	formStruct := getForm_FollowingIntent()
 	formHTML, err := formStruct.Editor(following, lookupProvider)
 
@@ -163,7 +165,7 @@ func getForm_FollowingIntent() form.Form {
 	}
 }
 
-func PostIntent_Follow(ctx *steranko.Context, factory *domain.Factory, user *model.User) error {
+func PostIntent_Follow(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.GetIntent_Follow"
 
@@ -184,12 +186,12 @@ func PostIntent_Follow(ctx *steranko.Context, factory *domain.Factory, user *mod
 
 	// Update the Following with values from the user
 	form := getForm_FollowingIntent()
-	if err := form.SetURLValues(&following, transaction, factory.LookupProvider(ctx.Request(), user.UserID)); err != nil {
+	if err := form.SetURLValues(&following, transaction, factory.LookupProvider(ctx.Request(), session, user.UserID)); err != nil {
 		return derp.Wrap(err, location, "Error setting form values")
 	}
 
 	// Save the new Stream to the database
-	if err := followingService.Save(&following, "Created via Activity Intent"); err != nil {
+	if err := followingService.Save(session, &following, "Created via Activity Intent"); err != nil {
 		return derp.Wrap(err, location, "Error saving stream")
 	}
 

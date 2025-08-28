@@ -4,8 +4,9 @@ import (
 	"net/http"
 
 	"github.com/EmissarySocial/emissary/build"
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/html"
 	"github.com/benpate/rosetta/convert"
@@ -15,36 +16,36 @@ import (
 )
 
 // GetIdentity handles GET request for the /@guest route
-func GetIdentity(ctx *steranko.Context, factory *domain.Factory, identity *model.Identity) error {
-	return buildIdentity(ctx, factory, identity, build.ActionMethodGet)
+func GetIdentity(ctx *steranko.Context, factory *service.Factory, session data.Session, identity *model.Identity) error {
+	return buildIdentity(ctx, factory, session, identity, build.ActionMethodGet)
 }
 
 // PostIdentity handles POST request for the /@guest route
-func PostIdentity(ctx *steranko.Context, factory *domain.Factory, identity *model.Identity) error {
-	return buildIdentity(ctx, factory, identity, build.ActionMethodPost)
+func PostIdentity(ctx *steranko.Context, factory *service.Factory, session data.Session, identity *model.Identity) error {
+	return buildIdentity(ctx, factory, session, identity, build.ActionMethodPost)
 }
 
 // buildIdentity is the common function that handles both GET and POSt requests for the /@guest route.
-func buildIdentity(ctx *steranko.Context, factory *domain.Factory, identity *model.Identity, actionMethod build.ActionMethod) error {
+func buildIdentity(ctx *steranko.Context, factory *service.Factory, session data.Session, identity *model.Identity, actionMethod build.ActionMethod) error {
 	const location = "handler.GetIdentity"
 
 	// Create a builder
 	actionID := getActionID(ctx)
-	builder, err := build.NewIdentity(factory, ctx.Request(), ctx.Response(), identity, actionID)
+	builder, err := build.NewIdentity(factory, session, ctx.Request(), ctx.Response(), identity, actionID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error creating builder")
 	}
 
 	// Build the HTML response
-	if err := build.AsHTML(factory, ctx, builder, actionMethod); err != nil {
+	if err := build.AsHTML(ctx, factory, builder, actionMethod); err != nil {
 		return derp.Wrap(err, location, "Error building page")
 	}
 
 	return ctx.NoContent(http.StatusOK)
 }
 
-func GetPrivilegeDelete(ctx *steranko.Context, factory *domain.Factory, identity *model.Identity, privilege *model.Privilege) error {
+func GetPrivilegeDelete(ctx *steranko.Context, factory *service.Factory, session data.Session, identity *model.Identity, privilege *model.Privilege) error {
 
 	if privilege.IsRecurring() {
 		b := html.New()
@@ -71,7 +72,7 @@ func GetPrivilegeDelete(ctx *steranko.Context, factory *domain.Factory, identity
 	}
 
 	user := model.NewUser()
-	if err := factory.User().LoadByID(privilege.UserID, &user); err != nil {
+	if err := factory.User().LoadByID(session, privilege.UserID, &user); err != nil {
 		return derp.Wrap(err, "handler.GetPrivilegeDelete", "Error loading User for Privilege", privilege.PrivilegeID)
 	}
 
@@ -92,7 +93,7 @@ func GetPrivilegeDelete(ctx *steranko.Context, factory *domain.Factory, identity
 
 }
 
-func PostPrivilegeDelete(ctx *steranko.Context, factory *domain.Factory, identity *model.Identity, privilege *model.Privilege) error {
+func PostPrivilegeDelete(ctx *steranko.Context, factory *service.Factory, session data.Session, identity *model.Identity, privilege *model.Privilege) error {
 
 	const location = "handler.PostPrivilegeCancel"
 
@@ -101,7 +102,7 @@ func PostPrivilegeDelete(ctx *steranko.Context, factory *domain.Factory, identit
 	}
 
 	// Cancel the privilege
-	if err := factory.Privilege().Cancel(privilege); err != nil {
+	if err := factory.Privilege().Cancel(session, privilege); err != nil {
 		return derp.Wrap(err, location, "Error cancelling privilege", privilege.PrivilegeID)
 	}
 
@@ -110,7 +111,7 @@ func PostPrivilegeDelete(ctx *steranko.Context, factory *domain.Factory, identit
 }
 
 // GetIdentitySignin displays the Signin page for guest Identities
-func GetIdentitySignin(ctx *steranko.Context, factory *domain.Factory) error {
+func GetIdentitySignin(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.GetIdentitySignin"
 
@@ -134,7 +135,7 @@ func GetIdentitySignin(ctx *steranko.Context, factory *domain.Factory) error {
 
 // PostIdentitySignin accepts POST from the guest Signin page, and sends
 // guest signin codes to the email/handle provided by the user.
-func PostIdentitySignin(ctx *steranko.Context, factory *domain.Factory) error {
+func PostIdentitySignin(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.PostIdentitySignin"
 
@@ -148,7 +149,7 @@ func PostIdentitySignin(ctx *steranko.Context, factory *domain.Factory) error {
 	}
 
 	// Create and send a guest signin code
-	if err := identityService.SendGuestCode(nil, identifierType, identifier); err != nil {
+	if err := identityService.SendGuestCode(session, nil, identifierType, identifier); err != nil {
 
 		// Report the error for debugging...
 		derp.Report(derp.Wrap(err, location, "Error sending Guest Code"))
@@ -169,7 +170,7 @@ func PostIdentitySignin(ctx *steranko.Context, factory *domain.Factory) error {
 
 // GetIdentitySigninWithJWT receives JWT tokens from the request, and signs guests
 // into the website with their Identity.
-func GetIdentitySigninWithJWT(ctx *steranko.Context, factory *domain.Factory) error {
+func GetIdentitySigninWithJWT(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.GetIdentitySigninWithJWT"
 
@@ -210,7 +211,7 @@ func GetIdentitySigninWithJWT(ctx *steranko.Context, factory *domain.Factory) er
 	// If the JWT is not already linked to an Identity, then load or create one from scratch.
 	case primitive.NilObjectID:
 
-		identity, err := identityService.LoadOrCreate("", identifierType, identifier)
+		identity, err := identityService.LoadOrCreate(session, "", identifierType, identifier)
 
 		if err != nil {
 			return derp.InternalError(location, "Error loading/creating new Identity", identifier)
@@ -220,7 +221,7 @@ func GetIdentitySigninWithJWT(ctx *steranko.Context, factory *domain.Factory) er
 		authorization.IdentityID = identity.IdentityID
 
 		// Create a new JWT token and return it as a cookie
-		if err := factory.Steranko().SetCookie(ctx, authorization); err != nil {
+		if err := factory.Steranko(session).SetCookie(ctx, authorization); err != nil {
 			return derp.Wrap(err, location, "Error setting authorization cookie")
 		}
 
@@ -229,13 +230,13 @@ func GetIdentitySigninWithJWT(ctx *steranko.Context, factory *domain.Factory) er
 
 		identity := model.NewIdentity()
 
-		if err := identityService.LoadByID(authorization.IdentityID, &identity); err != nil {
+		if err := identityService.LoadByID(session, authorization.IdentityID, &identity); err != nil {
 			return derp.Wrap(err, location, "Error loading Identity by ID", authorization.IdentityID)
 		}
 
 		identity.SetIdentifier(identifierType, identifier)
 
-		if err := identityService.Save(&identity, "Added/Updated Identifier: "+identifierType); err != nil {
+		if err := identityService.Save(session, &identity, "Added/Updated Identifier: "+identifierType); err != nil {
 			return derp.Wrap(err, location, "Error saving Identity with new identifier", identity.IdentityID)
 		}
 	}
@@ -244,7 +245,7 @@ func GetIdentitySigninWithJWT(ctx *steranko.Context, factory *domain.Factory) er
 }
 
 // PostIdentityIdentifier allows guests to edit the identifiers for their Identity.
-func PostIdentityIdentifier(ctx *steranko.Context, factory *domain.Factory, identity *model.Identity) error {
+func PostIdentityIdentifier(ctx *steranko.Context, factory *service.Factory, session data.Session, identity *model.Identity) error {
 
 	const location = "handler.PostIdentityEditIdentifier"
 	// Get the identifier type and value from the request
@@ -255,7 +256,7 @@ func PostIdentityIdentifier(ctx *steranko.Context, factory *domain.Factory, iden
 	// If we're setting a new identifier, then send a guest code to the user
 	if identifierValue != "" {
 
-		if err := identityService.SendGuestCode(identity, identifierType, identifierValue); err != nil {
+		if err := identityService.SendGuestCode(session, identity, identifierType, identifierValue); err != nil {
 			derp.Report(derp.Wrap(err, location, "Error setting identifier on Identity"))
 			return inlineError(ctx, "Unable to send signin code.")
 		}
@@ -266,7 +267,7 @@ func PostIdentityIdentifier(ctx *steranko.Context, factory *domain.Factory, iden
 	// Fall through means we're deleting an existing identifier
 	identity.SetIdentifier(identifierType, "")
 
-	if err := identityService.Save(identity, "Removed identifier: "+identifierType); err != nil {
+	if err := identityService.Save(session, identity, "Removed identifier: "+identifierType); err != nil {
 		return derp.Wrap(err, location, "Error saving Identity", identity.IdentityID)
 	}
 

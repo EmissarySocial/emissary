@@ -5,11 +5,13 @@ import (
 	"crypto/rsa"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
-	"github.com/benpate/domain"
+	dt "github.com/benpate/domain"
 	"github.com/benpate/hannibal/outbox"
 	"github.com/benpate/hannibal/sigs"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 /******************************************
@@ -23,7 +25,7 @@ func (service *Domain) Hostname() string {
 
 // ActorID returns the URL for this domain/actor
 func (service *Domain) ActorID() string {
-	return domain.AddProtocol(service.hostname) + "/@application"
+	return dt.AddProtocol(service.hostname) + "/@application"
 }
 
 // PublicKeyID returns the URL for the public key for this domain/actor
@@ -32,10 +34,10 @@ func (service *Domain) PublicKeyID() string {
 }
 
 // PublicKeyPEM returns the PEM-encoded public key for this domain/actor
-func (service *Domain) PublicKeyPEM() (string, error) {
+func (service *Domain) PublicKeyPEM(session data.Session) (string, error) {
 
 	// Try to retrieve the private key for this domain
-	privateKey, err := service.PrivateKey()
+	privateKey, err := service.PrivateKey(session)
 
 	if err != nil {
 		return "", derp.Wrap(err, "service.Domain.PublicKeyPEM", "Error getting public key")
@@ -47,7 +49,7 @@ func (service *Domain) PublicKeyPEM() (string, error) {
 }
 
 // PrivateKey returns the private key for this domain/actor
-func (service *Domain) PrivateKey() (*rsa.PrivateKey, error) {
+func (service *Domain) PrivateKey(session data.Session) (*rsa.PrivateKey, error) {
 
 	const location = "service.Domain.PrivateKey"
 
@@ -78,7 +80,7 @@ func (service *Domain) PrivateKey() (*rsa.PrivateKey, error) {
 	// Save the new private key into the Domain record
 	domain.PrivateKey = sigs.EncodePrivatePEM(privateKey)
 
-	if err := service.Save(domain, "Generated Private Key"); err != nil {
+	if err := service.Save(session, domain, "Generated Private Key"); err != nil {
 		return nil, derp.Wrap(err, location, "Error saving new EncryptionKey")
 	}
 
@@ -88,19 +90,25 @@ func (service *Domain) PrivateKey() (*rsa.PrivateKey, error) {
 
 // ActivityPubActor returns an ActivityPub Actor object
 // ** WHICH INCLUDES ENCRYPTION KEYS ** for the provided User.
-func (service *Domain) ActivityPubActor() (outbox.Actor, error) {
+func (service *Domain) ActivityPubActor(session data.Session) (outbox.Actor, error) {
 
 	const location = "service.Domain.ActivityPubActor"
 
 	// Retrieve the Private Key from the Domain record
-	privateKey, err := service.PrivateKey()
+	privateKey, err := service.PrivateKey(session)
 
 	if err != nil {
 		return outbox.Actor{}, derp.Wrap(err, location, "Error extracting private key")
 	}
 
+	activityService := service.factory.ActivityStream(model.ActorTypeApplication, primitive.NilObjectID)
+
 	// Return the ActivityPub Actor
-	actor := outbox.NewActor(service.ActorID(), privateKey, outbox.WithClient(service.activityStream))
+	actor := outbox.NewActor(
+		service.ActorID(),
+		privateKey,
+		outbox.WithClient(activityService.Client()),
+	)
 
 	return actor, nil
 }

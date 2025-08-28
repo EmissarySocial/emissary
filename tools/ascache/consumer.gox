@@ -1,0 +1,9 @@
+package ascache
+
+
+Query/purge old documents (past cache expiration)
+
+Query for documents to revalidate (removed from client.Load)
+
+Load/Revalidate a single document
+

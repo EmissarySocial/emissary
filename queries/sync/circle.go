@@ -11,7 +11,7 @@ import (
 
 func Circle(ctx context.Context, database *mongo.Database) error {
 
-	log.Debug().Str("database", database.Name()).Str("collection", "Circle").Msg("COLLECTION:")
+	log.Trace().Str("database", database.Name()).Str("collection", "Circle").Msg("COLLECTION:")
 
 	return indexer.Sync(ctx, database.Collection("Circle"), indexer.IndexSet{
 

@@ -1,0 +1,127 @@
+{{- $url := .QueryParam "url" -}}
+{{- $publishedDate := .QueryParam "published" -}}
+{{- $pageSize := 6 -}}
+{{- $replies := .RepliesAfter $url $publishedDate $pageSize -}}
+
+{{- if $replies.NotEmpty -}}
+
+	{{- $builder := . -}}
+	{{- $replyCount := .QueryParam "replyCount" -}}
+	{{- $depth := add 1 (int (.QueryParam "depth")) -}}
+
+	{{- range $index, $value := $replies -}}
+		{{- $documentID := $value.DocumentID -}}
+		{{- $attributedTo := $value.Object.attributedTo -}}
+
+		<div script="install ToggleContainer()" class="margin-bottom-sm">
+
+			<div class="ToggleShow" style="display:none;">
+				<div class="card padding margin-bottom pos-relative">
+					<div class="clickable flex-row flex-align-center">
+						<div>{{ icon "add-square" }}</div>
+						<img src="{{$attributedTo.icon.href}}" class="circle width-24 flex-shrink-0">
+						<div class="flex-grow nowrap text-light-gray ellipsis">
+							<b class="text-nocolor">{{ $attributedTo.name }}</b>
+							<span class="margin-left">{{ $value.Object.content | summary | html }}</span>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="ToggleContent">
+
+				<div class="card padding margin-bottom pos-relative">
+
+					<div class="ToggleHide clickable flex-row flex-align-center margin-bottom-lg">
+						<div>{{icon "remove-square"}}</div>
+						<img src="{{$attributedTo.icon.href}}" class="circle width-24 flex-shrink-0">
+						<div class="flex-grow nowrap">
+							<b>{{ $attributedTo.name }}</b>
+							<span class="margin-left text-light-gray">{{ $value.Published | tinyDate }} ago</span>
+						</div>
+					</div>
+
+					<div script="install ShowMore(maxHeight:320)">
+						<div class="ShowMore-content">
+							{{ $value.Object.content | html }}
+
+							{{- if ne "" $value.Object.image.href -}}
+								<div class="margin-top-large">
+									<img src="{{$value.Object.image.href}}" class="block width-100%">
+								</div>
+							{{- end -}}
+						</div>
+
+						<div class="ShowMore-button padding-vertical" hidden>
+							<button class="text-xs">show more &downarrow;</button>
+						</div>
+
+						<div 
+							hx-get="/@me/inbox/like-button?url={{$documentID}}" 
+							hx-trigger="intersect once"
+							hx-target="this" 
+							hx-swap="innerHTML" 
+							hx-push-url="false" 
+							class="margin-top-lg text-xs">
+						</div>
+
+						<div class="pos-absolute-top-right text-sm" hx-target="#modal-window" hx-push-url="false" hx-swap="innerHTML transition:true">
+							<button hx-get="/@me/inbox/browse-tree?url={{$documentID}}" title="Focus on this post" aria-label="Focus on this post">{{icon "focus"}}</button>
+							<button hx-get="/@me/inbox/browse-index?url={{$documentID}}" title="Use Index Layout" aria-label="Use Index Layout">{{icon "list"}}</button>
+							<span class="margin-horizontal-sm"></span>
+							<button hx-get="/@me/inbox/browse-actor?url={{$attributedTo.id}}" title="View Profile" aria-label="View Profile">{{icon "person"}}</button>
+							<a href="{{$documentID}}" target="_blank" class="button" title="View Original Website" aria-label="Visit Original Website">{{icon "globe"}}</a>
+						</div>
+
+					</div>
+
+				</div>			
+
+				{{- if or true (gt $value.Metadata.Replies 0) -}}
+					<div class="flex-row">
+						<div style="
+							width:9px;
+							flex-shrink:0;
+							flex-grow:0;
+							background-image: linear-gradient(#CCC, #CCC);
+							background-size: 1px 100%;
+							background-repeat: no-repeat;
+							background-position: center center;">
+						</div>
+
+						<div class="flex-grow">
+							{{- if lt $depth 2 -}}
+								<div hx-get="/@me/inbox/browse-tree-replies?url={{$documentID}}&depth={{$depth}}" hx-trigger="intersect once" hx-target="this" hx-swap="outerHTML" hx-push-url="false"></div>
+							{{- else -}}
+								<div hx-get="/@me/inbox/browse-tree-replies?url={{$documentID}}" hx-target="this" hx-swap="outerHTML" hx-push-url="false" class="text-sm clickable">
+									<span class="htmx-request-hide">
+										{{ icon "add-square" }} 
+										{{$value.Metadata.Replies}} More
+										{{pluralize $value.Metadata.Replies "Reply" "Replies"}}
+									</span>
+									<span class="htmx-request-show">
+										<span class="spin">{{ icon "loading" }}</span>
+										Loading...
+									</span>
+								</div>
+							{{- end -}}
+						</div>
+					</div>
+				{{- end -}}
+			</div>
+		</div>
+	{{- end -}}
+
+	{{- if eq $replies.Length $pageSize -}}
+		<div 
+			hx-get="/@me/inbox/browse-tree-replies?published={{$replies.Last.Published | epochDate}}&url={{$url}}&depth={{$depth}}" 
+			hx-target="this" 
+			hx-trigger="intersect once"
+			hx-swap="outerHTML focus-scroll:false" 
+			hx-push-url="false">
+			<span class="spin">{{icon "loading"}}</span>
+			<span class="text-sm text-gray">Loading Replies</span>
+		</div>
+	{{- end -}}
+
+{{- end -}}

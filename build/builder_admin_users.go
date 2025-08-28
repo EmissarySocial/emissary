@@ -27,12 +27,12 @@ type User struct {
 }
 
 // NewUser returns a fully initialized `User` builder.
-func NewUser(factory Factory, request *http.Request, response http.ResponseWriter, template model.Template, user *model.User, actionID string) (User, error) {
+func NewUser(factory Factory, session data.Session, request *http.Request, response http.ResponseWriter, template model.Template, user *model.User, actionID string) (User, error) {
 
 	const location = "build.NewUser"
 
 	// Create the underlying Common builder
-	common, err := NewCommonWithTemplate(factory, request, response, template, user, actionID)
+	common, err := NewCommonWithTemplate(factory, session, request, response, template, user, actionID)
 
 	if err != nil {
 		return User{}, derp.Wrap(err, location, "Error creating common builder")
@@ -60,7 +60,7 @@ func (w User) Render() (template.HTML, error) {
 	var buffer bytes.Buffer
 
 	// Execute step (write HTML to buffer, update context)
-	status := Pipeline(w._action.Steps).Get(w.factory(), &w, &buffer)
+	status := Pipeline(w._action.Steps).Get(w._factory, &w, &buffer)
 
 	if status.Error != nil {
 		err := derp.Wrap(status.Error, "build.User.Render", "Error generating HTML")
@@ -76,7 +76,7 @@ func (w User) Render() (template.HTML, error) {
 // View executes a separate view for this User
 func (w User) View(actionID string) (template.HTML, error) {
 
-	builder, err := NewUser(w._factory, w._request, w._response, w._template, w._user, actionID)
+	builder, err := NewUser(w._factory, w._session, w._request, w._response, w._template, w._user, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, "build.User.View", "Error creating builder")
@@ -126,7 +126,7 @@ func (w User) service() service.ModelService {
 }
 
 func (w User) clone(action string) (Builder, error) {
-	return NewUser(w._factory, w._request, w._response, w._template, w._user, action)
+	return NewUser(w._factory, w._session, w._request, w._response, w._template, w._user, action)
 }
 
 /******************************************
@@ -185,7 +185,7 @@ func (w User) Users() *QueryBuilder[model.UserSummary] {
 		exp.Equal("deleteDate", 0),
 	)
 
-	result := NewQueryBuilder[model.UserSummary](w._factory.User(), criteria)
+	result := NewQueryBuilder[model.UserSummary](w._factory.User(), w._session, criteria)
 
 	return &result
 }
@@ -201,8 +201,8 @@ func (w User) IsAdminBuilder() bool {
 
 // Groups returns a slice of all Groups in the database
 func (w User) Groups() ([]form.LookupCode, error) {
-	groupService := w.factory().Group()
-	groups, err := groupService.Query(exp.All(), option.SortAsc("label"))
+	groupService := w._factory.Group()
+	groups, err := groupService.Query(w._session, exp.All(), option.SortAsc("label"))
 
 	if err != nil {
 		return nil, derp.Wrap(err, "build.User.Groups", "Error loading groups")
@@ -220,17 +220,17 @@ func (w User) Groups() ([]form.LookupCode, error) {
 
 // CountUsers returns the total number of users in the database
 func (w User) CountUsers() (int64, error) {
-	return w.factory().User().Count(exp.All())
+	return w._factory.User().Count(w._session, exp.All())
 }
 
 // CountPublicUsers returns the total number of users marked "isPublic"
 func (w User) CountPublicUsers() (int64, error) {
-	return w.factory().User().Count(exp.Equal("isPublic", true))
+	return w._factory.User().Count(w._session, exp.Equal("isPublic", true))
 }
 
 // CountIndexableUsers returns the total number of users marked "isIndexable"
 func (w User) CountIndexableUsers() (int64, error) {
-	return w.factory().User().Count(exp.And(exp.Equal("isPublic", true), exp.Equal("isIndexable", true)))
+	return w._factory.User().Count(w._session, exp.And(exp.Equal("isPublic", true), exp.Equal("isIndexable", true)))
 }
 
 // Registration returns the signup template selected for this domain
@@ -249,8 +249,8 @@ func (w User) Registration() model.Registration {
 
 // AssignedGroups lists all groups to which the current user is assigned.
 func (w User) AssignedGroups() ([]model.Group, error) {
-	groupService := w.factory().Group()
-	result, err := groupService.ListByIDs(w._user.GroupIDs...)
+	groupService := w._factory.Group()
+	result, err := groupService.ListByIDs(w._session, w._user.GroupIDs...)
 
 	return result, derp.Wrap(err, "build.User.AssignedGroups", "Error listing groups", w._user.GroupIDs)
 }

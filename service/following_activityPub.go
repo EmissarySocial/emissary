@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/rs/zerolog/log"
@@ -11,7 +12,7 @@ import (
 // It returns (TRUE, nil) if successful.
 // If there was an error connecting to the remote server, then it returns (FALSE, error)
 // If the remote server does not support ActivityPub, then it returns (FALSE, nil)
-func (service *Following) connect_ActivityPub(following *model.Following, remoteActor *streams.Document) (bool, error) {
+func (service *Following) connect_ActivityPub(session data.Session, following *model.Following, remoteActor *streams.Document) (bool, error) {
 
 	const location = "service.Following.connect_ActivityPub"
 
@@ -20,7 +21,7 @@ func (service *Following) connect_ActivityPub(following *model.Following, remote
 	following.StatusMessage = "Pending ActivityPub connection"
 
 	// Try to get the Actor (don't need Following channel)
-	localActor, err := service.userService.ActivityPubActor(following.UserID)
+	localActor, err := service.userService.ActivityPubActor(session, following.UserID)
 
 	if err != nil {
 		return false, derp.Wrap(err, location, "Error getting ActivityPub actor", following.UserID)
@@ -38,12 +39,12 @@ func (service *Following) connect_ActivityPub(following *model.Following, remote
 // disconnect_ActivityPub disconnects from an ActivityPub source by sending an "Undo" request
 // that references the original "Follow" request per spec.
 // https://www.w3.org/TR/activitypub/#undo-activity-outbox
-func (service *Following) disconnect_ActivityPub(following *model.Following) error {
+func (service *Following) disconnect_ActivityPub(session data.Session, following *model.Following) error {
 
 	const location = "service.Following.disconnect_ActivityPub"
 
 	// Try to get the local Actor (don't need Following channel)
-	actor, err := service.userService.ActivityPubActor(following.UserID)
+	actor, err := service.userService.ActivityPubActor(session, following.UserID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error getting ActivityPub actor", following.UserID)
@@ -51,7 +52,8 @@ func (service *Following) disconnect_ActivityPub(following *model.Following) err
 
 	// Try to send the ActivityPub Undo request
 	followMap := service.AsJSONLD(following)
-	followDocument := streams.NewDocument(followMap, streams.WithClient(service.activityService))
+	activityService := service.factory.ActivityStream(model.ActorTypeUser, following.UserID)
+	followDocument := streams.NewDocument(followMap, streams.WithClient(activityService.Client()))
 	actor.SendUndo(followDocument)
 
 	return nil

@@ -1,6 +1,8 @@
 package mastodon
 
 import (
+	"time"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
@@ -21,11 +23,20 @@ func PostEmailConfirmation(serverFactory *server.Factory) func(model.Authorizati
 			return struct{}{}, derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return struct{}{}, derp.Wrap(err, location, "Unable to create session")
+		}
+
+		defer cancel()
+
 		// Load the User from the database
 		userService := factory.User()
 		user := model.NewUser()
 
-		if err := userService.LoadByID(auth.UserID, &user); err != nil {
+		if err := userService.LoadByID(session, auth.UserID, &user); err != nil {
 			return struct{}{}, derp.Wrap(err, location, "Error loading user")
 		}
 

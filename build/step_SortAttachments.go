@@ -53,7 +53,7 @@ func (step StepSortAttachments) Post(builder Builder, _ io.Writer) PipelineBehav
 			AndEqual("deleteDate", 0)
 
 		// Try to load the attachment from the database
-		if err := attachmentService.Load(criteria, &attachment); err != nil {
+		if err := attachmentService.Load(builder.session(), criteria, &attachment); err != nil {
 			return Halt().WithError(derp.Wrap(err, location, "Error loading attachment with criteria: ", criteria))
 		}
 
@@ -65,7 +65,7 @@ func (step StepSortAttachments) Post(builder Builder, _ io.Writer) PipelineBehav
 		attachment.Rank = newRank
 
 		// Try to save back to the database
-		if err := attachmentService.Save(&attachment, step.Message); err != nil {
+		if err := attachmentService.Save(builder.session(), &attachment, step.Message); err != nil {
 			return Halt().WithError(derp.Wrap(err, location, "Error saving record tot he database", attachment))
 		}
 	}

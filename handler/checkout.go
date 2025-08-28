@@ -3,14 +3,15 @@ package handler
 import (
 	"net/http"
 
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/steranko"
 )
 
 // GetCheckout initiates a checkout session with the provided MerchantAccount and Product.
-func GetCheckout(ctx *steranko.Context, factory *domain.Factory, merchantAccount *model.MerchantAccount, product *model.Product) error {
+func GetCheckout(ctx *steranko.Context, factory *service.Factory, session data.Session, merchantAccount *model.MerchantAccount, product *model.Product) error {
 
 	const location = "handler.GetCheckout"
 
@@ -27,14 +28,14 @@ func GetCheckout(ctx *steranko.Context, factory *domain.Factory, merchantAccount
 	return ctx.Redirect(http.StatusTemporaryRedirect, checkoutURL)
 }
 
-// GetCheckoutResopnse collects the confirmation data from a successful checkout and updates Guest/Purchase records accordingly.
-func GetCheckoutResponse(ctx *steranko.Context, factory *domain.Factory, merchantAccount *model.MerchantAccount, product *model.Product) error {
+// GetCheckoutResponse collects the confirmation data from a successful checkout and updates Guest/Purchase records accordingly.
+func GetCheckoutResponse(ctx *steranko.Context, factory *service.Factory, session data.Session, merchantAccount *model.MerchantAccount, product *model.Product) error {
 
 	const location = "handler.GetCheckoutResponse"
 
 	// Verify the Checkout Session
 	merchantAccountService := factory.MerchantAccount()
-	privilege, err := merchantAccountService.ParseCheckoutResponse(merchantAccount, product, ctx.QueryParam("transactionId"), ctx.QueryParams())
+	privilege, err := merchantAccountService.ParseCheckoutResponse(session, merchantAccount, product, ctx.QueryParam("transactionId"), ctx.QueryParams())
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error retrieving checkout URL")
@@ -48,7 +49,7 @@ func GetCheckoutResponse(ctx *steranko.Context, factory *domain.Factory, merchan
 		// Fall through means we need to update their JWT/Cookie
 		authorization.IdentityID = privilege.IdentityID
 
-		if err := factory.Steranko().SetCookie(ctx, authorization); err != nil {
+		if err := factory.Steranko(session).SetCookie(ctx, authorization); err != nil {
 			return derp.Wrap(err, location, "Error setting guest authorization")
 		}
 	}

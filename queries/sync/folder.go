@@ -11,7 +11,7 @@ import (
 
 func Folder(ctx context.Context, database *mongo.Database) error {
 
-	log.Debug().Str("database", database.Name()).Str("collection", "Folder").Msg("COLLECTION:")
+	log.Trace().Str("database", database.Name()).Str("collection", "Folder").Msg("COLLECTION:")
 
 	return indexer.Sync(ctx, database.Collection("Folder"), indexer.IndexSet{
 

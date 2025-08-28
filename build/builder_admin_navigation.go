@@ -23,12 +23,12 @@ type Navigation struct {
 }
 
 // NewNavigation returns a fully initialized `Navigation` builder.
-func NewNavigation(factory Factory, request *http.Request, response http.ResponseWriter, template model.Template, stream *model.Stream, actionID string) (Navigation, error) {
+func NewNavigation(factory Factory, session data.Session, request *http.Request, response http.ResponseWriter, template model.Template, stream *model.Stream, actionID string) (Navigation, error) {
 
 	const location = "build.NewGroup"
 
 	// Create the underlying Common builder
-	common, err := NewCommonWithTemplate(factory, request, response, template, stream, actionID)
+	common, err := NewCommonWithTemplate(factory, session, request, response, template, stream, actionID)
 
 	if err != nil {
 		return Navigation{}, derp.Wrap(err, location, "Error creating common builder")
@@ -56,7 +56,7 @@ func (w Navigation) Render() (template.HTML, error) {
 	var buffer bytes.Buffer
 
 	// Execute step (write HTML to buffer, update context)
-	status := Pipeline(w._action.Steps).Get(w.factory(), &w, &buffer)
+	status := Pipeline(w._action.Steps).Get(w._factory, &w, &buffer)
 
 	if status.Error != nil {
 		err := derp.Wrap(status.Error, "build.Navigation.Render", "Error generating HTML")
@@ -74,7 +74,7 @@ func (w Navigation) View(actionID string) (template.HTML, error) {
 
 	const location = "build.Navigation.View"
 
-	builder, err := NewNavigation(w.factory(), w._request, w._response, w._template, w._stream, actionID)
+	builder, err := NewNavigation(w._factory, w._session, w._request, w._response, w._template, w._stream, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, location, "Error creating Group builder")
@@ -124,7 +124,7 @@ func (w Navigation) service() service.ModelService {
 }
 
 func (w Navigation) clone(action string) (Builder, error) {
-	return NewNavigation(w._factory, w._request, w._response, w._template, w._stream, action)
+	return NewNavigation(w._factory, w._session, w._request, w._response, w._template, w._stream, action)
 }
 
 func (w Navigation) debug() {

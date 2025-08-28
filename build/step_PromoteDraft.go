@@ -23,7 +23,7 @@ func (step StepStreamPromoteDraft) Post(builder Builder, _ io.Writer) PipelineBe
 	factory := builder.factory()
 
 	// Try to load the draft from the database, overwriting the stream already in the builder
-	stream, err := factory.StreamDraft().Promote(builder.objectID(), step.StateID)
+	stream, err := factory.StreamDraft().Promote(builder.session(), builder.objectID(), step.StateID)
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, "builder.StepStreamPromoteDraft.Post", "Error publishing draft"))

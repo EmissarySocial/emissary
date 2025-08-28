@@ -4,15 +4,16 @@ import (
 	"math"
 	"net/http"
 
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/handler/activitypub"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/steranko"
 )
 
-func GetOutboxCollection(ctx *steranko.Context, factory *domain.Factory, user *model.User) error {
+func GetOutboxCollection(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.activitypub_user.GetOutboxCollection"
 
@@ -31,7 +32,7 @@ func GetOutboxCollection(ctx *steranko.Context, factory *domain.Factory, user *m
 	}
 
 	// Retrieve permissions from the request signature
-	permissions := factory.Permission().ParseHTTPSignature(ctx.Request())
+	permissions := factory.Permission().ParseHTTPSignature(session, ctx.Request())
 
 	// Fall through means that we're looking for a specific page of the collection
 	publishedDate := convert.Int64Default(publishDateString, math.MaxInt64)
@@ -40,7 +41,7 @@ func GetOutboxCollection(ctx *steranko.Context, factory *domain.Factory, user *m
 	pageSize := 60
 
 	// Retrieve a page of messages from the database
-	messages, err := outboxService.QueryByParentAndDate(model.FollowerTypeUser, user.UserID, permissions, publishedDate, pageSize)
+	messages, err := outboxService.QueryByParentAndDate(session, model.FollowerTypeUser, user.UserID, permissions, publishedDate, pageSize)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error loading outbox messages")

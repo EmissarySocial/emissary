@@ -4,15 +4,16 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/steranko"
 )
 
 // GetOEmbed will provide an OEmbed service to be used exclusively by websites on this domain.
-func GetOEmbed(ctx *steranko.Context, factory *domain.Factory) error {
+func GetOEmbed(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.GetOEmbed"
 
@@ -32,7 +33,7 @@ func GetOEmbed(ctx *steranko.Context, factory *domain.Factory) error {
 	}
 
 	// Load the OEmbed result
-	result, err := getOEmbed_record(factory, parsedToken.Path)
+	result, err := getOEmbed_record(factory, session, parsedToken.Path)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error loading OEmbed record")
@@ -46,7 +47,7 @@ func GetOEmbed(ctx *steranko.Context, factory *domain.Factory) error {
 	return ctx.JSON(200, result)
 }
 
-func getOEmbed_record(factory *domain.Factory, path string) (mapof.Any, error) {
+func getOEmbed_record(factory *service.Factory, session data.Session, path string) (mapof.Any, error) {
 
 	// Parse the path as either a Stream or a User
 	path = strings.TrimPrefix(path, "/")
@@ -59,14 +60,14 @@ func getOEmbed_record(factory *domain.Factory, path string) (mapof.Any, error) {
 	// If the path begins with "@", then it is a User
 	if strings.HasPrefix(path, "@") {
 		path = strings.TrimPrefix(path, "@")
-		return getOEmbed_User(factory, path)
+		return getOEmbed_User(factory, session, path)
 	}
 
 	// Otherwise, the path is for a Stream
-	return getOEmbed_Stream(factory, path)
+	return getOEmbed_Stream(factory, session, path)
 }
 
-func getOEmbed_Domain(factory *domain.Factory) (mapof.Any, error) {
+func getOEmbed_Domain(factory *service.Factory) (mapof.Any, error) {
 
 	domain := factory.Domain().Get()
 
@@ -82,7 +83,7 @@ func getOEmbed_Domain(factory *domain.Factory) (mapof.Any, error) {
 	return result, nil
 }
 
-func getOEmbed_Stream(factory *domain.Factory, token string) (mapof.Any, error) {
+func getOEmbed_Stream(factory *service.Factory, session data.Session, token string) (mapof.Any, error) {
 
 	const location = "handler.getOEmbed_Stream"
 
@@ -90,7 +91,7 @@ func getOEmbed_Stream(factory *domain.Factory, token string) (mapof.Any, error) 
 	streamService := factory.Stream()
 	stream := model.NewStream()
 
-	if err := streamService.LoadByToken(token, &stream); err != nil {
+	if err := streamService.LoadByToken(session, token, &stream); err != nil {
 		return mapof.Any{}, derp.Wrap(err, location, "Error loading stream from database")
 	}
 
@@ -154,7 +155,7 @@ func getOEmbed_Stream(factory *domain.Factory, token string) (mapof.Any, error) 
 	return result, nil
 }
 
-func getOEmbed_User(factory *domain.Factory, token string) (mapof.Any, error) {
+func getOEmbed_User(factory *service.Factory, session data.Session, token string) (mapof.Any, error) {
 
 	const location = "handler.getOEmbed_User"
 
@@ -162,7 +163,7 @@ func getOEmbed_User(factory *domain.Factory, token string) (mapof.Any, error) {
 	userService := factory.User()
 	user := model.NewUser()
 
-	if err := userService.LoadByToken(token, &user); err != nil {
+	if err := userService.LoadByToken(session, token, &user); err != nil {
 		return mapof.Any{}, derp.Wrap(err, location, "Error loading user from database")
 	}
 

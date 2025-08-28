@@ -1,0 +1,26 @@
+{{- $url := .QueryParam "url" -}}
+{{- $context := .QueryParam "context" -}}
+
+{{- $after := int64 (.QueryParam "after") -}}
+{{- $maxRows := 12 -}}
+{{- $timeline := .QueryByContext $context $after $maxRows -}}
+
+{{- if $timeline.NotEmpty -}}
+
+	{{- if $timeline.IsLength $maxRows -}}
+		<div 
+			hx-get="/@me/inbox/browse-timeline-list?url={{$url}}&context={{$context}}&after={{$timeline.Last.Published.Unix}}" 
+			hx-trigger="intersect once"
+			hx-target="#timeline_ShowMore" 
+			hx-swap="outerHTML" 
+			hx-push-url="false">
+		</div>
+	{{- end -}}
+
+	{{- range $document := $timeline -}}
+		{{- template "browse-document" (array . $document) -}}
+	{{- end -}}
+
+	<div id="timeline_ShowMore"></div>
+
+{{- end -}}

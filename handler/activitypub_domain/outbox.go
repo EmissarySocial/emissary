@@ -4,9 +4,10 @@ import (
 	"math"
 	"net/http"
 
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/handler/activitypub"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
+	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
@@ -16,7 +17,7 @@ import (
 	"github.com/benpate/steranko"
 )
 
-func GetOutboxCollection(ctx *steranko.Context, factory *domain.Factory) error {
+func GetOutboxCollection(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.activitypub_domain.GetOutboxCollection"
 
@@ -45,7 +46,7 @@ func GetOutboxCollection(ctx *steranko.Context, factory *domain.Factory) error {
 		AndLessThan("createDate", publishedDate)
 
 	searchResultService := factory.SearchResult()
-	results, err := searchResultService.Query(criteria, option.SortDesc("createDate"), option.MaxRows(60))
+	results, err := searchResultService.Query(session, criteria, option.SortDesc("createDate"), option.MaxRows(60))
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error retrieving search results")

@@ -18,6 +18,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/dlclark/metaphone3"
+	"github.com/rs/zerolog"
 	"github.com/tdewolff/minify/v2"
 	"github.com/tdewolff/minify/v2/html"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -28,7 +29,7 @@ import (
 func RangeFunc[T any](it data.Iterator, new func() T) iter.Seq[T] {
 
 	return func(yield func(T) bool) {
-		defer it.Close()
+		defer derp.Report(it.Close())
 
 		if it == nil {
 			return
@@ -377,4 +378,19 @@ func iif[T any](condition bool, trueValue T, falseValue T) T {
 		return trueValue
 	}
 	return falseValue
+}
+
+// canTrace returns TRUE if zerolog is configured to allow Trace logs
+// nolint:unused
+func canTrace() bool {
+	return canLog(zerolog.TraceLevel)
+}
+
+// canLog is a silly zerolog helper that returns TRUE
+// if the provided log level would be allowed
+// (based on the global log level).
+// This makes it easier to execute expensive code conditionally,
+// for instance: marshalling a JSON object for logging.
+func canLog(level zerolog.Level) bool {
+	return zerolog.GlobalLevel() <= level
 }

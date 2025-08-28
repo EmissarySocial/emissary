@@ -62,7 +62,7 @@ func (step StepSort) Post(builder Builder, _ io.Writer) PipelineBehavior {
 		criteria := exp.Equal(step.Keys, objectID)
 
 		// Try to load the object from the database
-		object, err := modelService.ObjectLoad(criteria)
+		object, err := modelService.ObjectLoad(builder.session(), criteria)
 
 		if err != nil {
 			return Halt().WithError(derp.Wrap(err, location, "Error loading object with criteria: ", criteria))
@@ -74,7 +74,7 @@ func (step StepSort) Post(builder Builder, _ io.Writer) PipelineBehavior {
 		}
 
 		// Try to save back to the database
-		if err := modelService.ObjectSave(object, step.Message); err != nil {
+		if err := modelService.ObjectSave(builder.session(), object, step.Message); err != nil {
 			return Halt().WithError(derp.Wrap(err, location, "Error saving record tot he database", object))
 		}
 	}

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -14,7 +15,7 @@ import (
  ******************************************/
 
 // UnPublish marks this stream as "published"
-func (service *Stream) UnPublish(user *model.User, stream *model.Stream, stateID string, outbox bool) error {
+func (service *Stream) UnPublish(session data.Session, user *model.User, stream *model.Stream, stateID string, outbox bool) error {
 
 	const location = "service.Stream.UnPublish"
 
@@ -23,13 +24,13 @@ func (service *Stream) UnPublish(user *model.User, stream *model.Stream, stateID
 
 		// Send "Undo" activities to all User followers.
 		if !user.IsNew() {
-			if err := service.unpublish_outbox_user(user.UserID, stream); err != nil {
+			if err := service.unpublish_outbox_user(session, user.UserID, stream); err != nil {
 				return derp.Wrap(err, location, "Unable to unpublish from the User's outbox", stream)
 			}
 		}
 
 		// Send "Undo" activities to all Stream followers.
-		if err := service.unpublish_outbox_stream(stream); err != nil {
+		if err := service.unpublish_outbox_stream(session, stream); err != nil {
 			return derp.Wrap(err, location, "Unable to unpublish from parent Stream's outbox", stream)
 		}
 
@@ -47,7 +48,7 @@ func (service *Stream) UnPublish(user *model.User, stream *model.Stream, stateID
 	stream.UnPublishDate = time.Now().Unix()
 
 	// Re-save the Stream with the updated values.
-	if err := service.Save(stream, "UnPublish"); err != nil {
+	if err := service.Save(session, stream, "UnPublish"); err != nil {
 		return derp.Wrap(err, location, "Unable to save the Stream", stream)
 	}
 
@@ -56,20 +57,13 @@ func (service *Stream) UnPublish(user *model.User, stream *model.Stream, stateID
 }
 
 // publish_outbox_user publishes this stream to the User's outbox
-func (service *Stream) unpublish_outbox_user(userID primitive.ObjectID, stream *model.Stream) error {
+func (service *Stream) unpublish_outbox_user(session data.Session, userID primitive.ObjectID, stream *model.Stream) error {
 
 	const location = "service.Stream.unpublish_outbox_user"
 
-	// Load the Actor for this User
-	actor, err := service.userService.ActivityPubActor(userID)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Unable to load actor", userID)
-	}
-
 	// Try to publish via sendNotifications
 	log.Trace().Str("id", stream.URL).Msg("Publishing a DELETE from User's outbox")
-	if err := service.outboxService.DeleteActivity(&actor, model.FollowerTypeUser, userID, stream.URL, stream.DefaultAllow); err != nil {
+	if err := service.outboxService.DeleteActivity(session, model.FollowerTypeUser, userID, stream.URL, stream.DefaultAllow); err != nil {
 		return derp.Wrap(err, location, "Unable to unpublish activity", stream.URL)
 	}
 
@@ -78,7 +72,7 @@ func (service *Stream) unpublish_outbox_user(userID primitive.ObjectID, stream *
 }
 
 // publish_outbox_stream publishes this Stream to the parent Stream's outbox
-func (service *Stream) unpublish_outbox_stream(stream *model.Stream) error {
+func (service *Stream) unpublish_outbox_stream(session data.Session, stream *model.Stream) error {
 
 	const location = "service.Stream.unpublish_outbox_stream"
 
@@ -99,16 +93,8 @@ func (service *Stream) unpublish_outbox_stream(stream *model.Stream) error {
 		return nil
 	}
 
-	// Load the Actor for the parent Stream
-	actor, err := service.ActivityPubActor(stream.ParentID)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Unable to load parent actor")
-	}
-
 	// Try to publish via sendNotifications
-	log.Trace().Str("id", stream.URL).Msg("Deleting object from parent's outbox")
-	if err := service.outboxService.DeleteActivity(&actor, model.FollowerTypeStream, stream.ParentID, stream.ActivityPubURL(), stream.DefaultAllow); err != nil {
+	if err := service.outboxService.DeleteActivity(session, model.FollowerTypeStream, stream.ParentID, stream.ActivityPubURL(), stream.DefaultAllow); err != nil {
 		return derp.Wrap(err, location, "Unable to publish a DELETE activity for this Stream", stream)
 	}
 

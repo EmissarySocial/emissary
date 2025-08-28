@@ -1,28 +1,65 @@
 {{- $following := .Object -}}
+{{- $search := .QueryParam "search" -}}
+{{- $url := $following.URL -}}
+{{- $folderID := .QueryParam "folderId" -}}
 
-<div class="flex-row flex-align-start margin-bottom-lg">
-	<div class="margin-top-sm">
-		{{- if ne "" $following.IconURL -}}
-			<img src="{{$following.IconURL}}" class="circle width-64">
+{{- $actor := .ActivityStreamActor $url -}}
+{{- $follower := .IsFollower $actor.ID -}}
+
+<div id="modal-header" class="flex-row">
+	<div role="tablist" class="pills margin-bottom-none">
+
+		{{- if ne "" $search -}}
+			<span role="link" class="link margin-right" hx-get="/@me/settings/following-search?search={{$search}}&folderId={{$folderID}}">
+				&larr; Search
+			</span>
+		{{- end -}}
+
+		<button hx-get="/@me/inbox/browse-actor?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}" role="tab">{{icon "person"}} Profile</button>
+		<button role="tab" hx-get="/@me/inbox/annotation?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}">{{icon "note"}} Notes</button>
+
+		{{ if $following.IsNew -}}
+			<button aria-selected="true" role="tab" hx-get="/@me/settings/following-edit?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}">{{icon "add"}} Follow</button>
+		{{- else -}}
+			<button aria-selected="true" role="tab" hx-get="/@me/settings/following-edit?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}">{{icon "check"}} Following</button>
+		{{- end }}
+
+		{{ if $follower.IsNew -}}
+			<span class="text-light-gray margin-left" disabled>Doesn't Follow You</span>
+		{{- else -}}
+			<button role="tab" hx-get="/@me/settings/follower?followerId={{$follower.FollowerID.Hex}}&search={{$search}}&folderId={{$folderID}}">{{icon "check"}} Follows You</button>
+		{{- end }}
+	</div>
+</div>
+
+<div id="modal-body">
+
+	<div class="flex-row flex-align-center">
+		{{- if $actor.HasIcon -}}
+			<img src="{{$actor.Icon.Href}}" class="circle width-64">
 		{{- else -}}
 			<div class="circle width-64"></div>
 		{{- end -}}
+
+		<div class="flex-grow">
+			<div class="text-lg bold margin-none">{{$actor.Name}}</div>
+			<div class="text-light-gray">{{$actor.UsernameOrID}}</div>
+		</div>
+
 	</div>
 
-	<div>
-		<div class="text-xl bold margin-top-sm margin-bottom-none">{{$following.Label}}</div>
-		<div class="margin-vertical-none">
-			<a href="{{$following.URL}}" target="_blank" tabIndex="0" class="text-plain">
-				<span class="clickable text-light-gray">{{$following.UsernameOrID}}</span> &nbsp;
-				<span class="button text-sm">Go to Profile &rarr;</span>
-			</a>
+	{{- if not $following.IsNew -}}
+		<div class="flex-row">
+			<div class="width-64"></div>
+			<div class="text-green bold margin-top">
+				{{ if eq "ACTIVITYPUB" $following.Method -}}
+					{{icon "check-badge-fill"}} Following via ActivityPub
+				{{ else if eq "POLL" $following.Method -}}
+					{{icon "rss-fill"}} Following via RSS/Atom
+				{{- end -}}
+			</div>
 		</div>
-		<div class="text-green bold margin-top">
-			{{ if eq "ACTIVITYPUB" $following.Method -}}
-				{{icon "check-badge-fill"}} Following via ActivityPub
-			{{ else if eq "POLL" $following.Method -}}
-				{{icon "rss-fill"}} Following via RSS/Atom
-			{{- end -}}
-		</div>
-	</div>
-</div>
+	{{- end -}}
+
+	<div class="margin-bottom-lg"></div>
+	

@@ -13,7 +13,7 @@ import (
 // Queue synchronizes the Queue collection in the SHARED DATABASE.
 func Queue(ctx context.Context, database *mongo.Database) error {
 
-	log.Debug().Str("database", database.Name()).Str("collection", "Queue").Msg("COLLECTION:")
+	log.Trace().Str("database", database.Name()).Str("collection", "Queue").Msg("COLLECTION:")
 
 	return indexer.Sync(ctx, database.Collection("Queue"), indexer.IndexSet{
 

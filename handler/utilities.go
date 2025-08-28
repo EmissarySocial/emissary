@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
-	d "github.com/benpate/domain"
+	"github.com/EmissarySocial/emissary/service"
+	dt "github.com/benpate/domain"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/steranko"
@@ -19,7 +19,7 @@ func ActorUsername(actor streams.Document) string {
 
 	// If we have a preferred username, then return it as @username@hostname
 	if username := actor.PreferredUsername(); username != "" {
-		return "@" + username + "@" + d.NameOnly(actor.ID())
+		return "@" + username + "@" + dt.NameOnly(actor.ID())
 	}
 
 	// Otherwise, try to "URL"
@@ -138,6 +138,6 @@ func closeModalAndRefreshPage(ctx echo.Context) error {
 }
 
 // fullURL returns the URL for a request that include the protocol, hostname, and path
-func fullURL(factory *domain.Factory, ctx echo.Context) string {
+func fullURL(factory *service.Factory, ctx echo.Context) string {
 	return factory.Host() + ctx.Request().URL.String()
 }

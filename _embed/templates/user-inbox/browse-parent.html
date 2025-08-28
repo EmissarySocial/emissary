@@ -1,0 +1,21 @@
+{{- $builder := index . 0 -}}
+{{- $document := index . 1 -}}
+{{- $inReplyTo := $document.InReplyTo.ID -}}
+
+{{- if eq "" $inReplyTo -}}
+	<div 
+		hx-get="/@me/inbox/browse-tree?url={{$document.ID}}"
+		hx-trigger="click from:#nestedButton"
+		hx-target="#modal-window" 
+		hx-swap="innerHTML transition:true" 
+		hx-push-url="false"
+		class="turboclick" 
+		style="display:none">
+	</div>
+{{- else -}}
+	{{- $parent := $builder.ActivityStream $inReplyTo -}}
+	{{- template "browse-parent" (array $builder $parent "") -}}
+	<div class="text-xs text-gray margin-top margin-bottom-xs">{{icon "reply-fill"}} Replying to {{first $parent.AttributedTo.Name "..."}}</div>
+{{- end -}}
+
+{{- template "browse-document" (array $builder $document) -}}

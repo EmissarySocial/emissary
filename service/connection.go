@@ -16,7 +16,6 @@ import (
 
 // Connection manages all interactions with the Connection collection
 type Connection struct {
-	collection       data.Collection
 	providerService  *Provider
 	keyEncryptingKey string
 	host             string
@@ -32,8 +31,7 @@ func NewConnection() Connection {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Connection) Refresh(collection data.Collection, providerService *Provider, keyEncryptingKey string, host string) {
-	service.collection = collection
+func (service *Connection) Refresh(providerService *Provider, keyEncryptingKey string, host string) {
 	service.providerService = providerService
 	service.keyEncryptingKey = keyEncryptingKey
 	service.host = host
@@ -48,25 +46,29 @@ func (service *Connection) Close() {
  * Common Data Methods
  ******************************************/
 
-// Count returns the number of records that match the provided criteria
-func (service *Connection) Count(criteria exp.Expression) (int64, error) {
-	return service.collection.Count(notDeleted(criteria))
+func (service *Connection) collection(session data.Session) data.Collection {
+	return session.Collection("Connection")
 }
 
-func (service *Connection) Query(criteria exp.Expression, options ...option.Option) ([]model.Connection, error) {
+// Count returns the number of records that match the provided criteria
+func (service *Connection) Count(session data.Session, criteria exp.Expression) (int64, error) {
+	return service.collection(session).Count(notDeleted(criteria))
+}
+
+func (service *Connection) Query(session data.Session, criteria exp.Expression, options ...option.Option) ([]model.Connection, error) {
 	result := make([]model.Connection, 0)
-	err := service.collection.Query(&result, notDeleted(criteria), options...)
+	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
 	return result, err
 }
 
 // List returns an iterator containing all of the Connections who match the provided criteria
-func (service *Connection) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection.Iterator(notDeleted(criteria), options...)
+func (service *Connection) List(session data.Session, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+	return service.collection(session).Iterator(notDeleted(criteria), options...)
 }
 
 // Load retrieves an Connection from the database
-func (service *Connection) Load(criteria exp.Expression, result *model.Connection) error {
-	if err := service.collection.Load(notDeleted(criteria), result); err != nil {
+func (service *Connection) Load(session data.Session, criteria exp.Expression, result *model.Connection) error {
+	if err := service.collection(session).Load(notDeleted(criteria), result); err != nil {
 		return derp.Wrap(err, "service.Connection.Load", "Error loading Connection", criteria)
 	}
 
@@ -74,7 +76,7 @@ func (service *Connection) Load(criteria exp.Expression, result *model.Connectio
 }
 
 // Save adds/updates an Connection in the database
-func (service *Connection) Save(connection *model.Connection, note string) error {
+func (service *Connection) Save(session data.Session, connection *model.Connection, note string) error {
 
 	const location = "service.Connection.Save"
 
@@ -126,7 +128,7 @@ func (service *Connection) Save(connection *model.Connection, note string) error
 	}
 
 	// Save the value to the database
-	if err := service.collection.Save(connection, note); err != nil {
+	if err := service.collection(session).Save(connection, note); err != nil {
 		return derp.Wrap(err, location, "Error saving Connection", connection, note)
 	}
 
@@ -134,9 +136,9 @@ func (service *Connection) Save(connection *model.Connection, note string) error
 }
 
 // Delete removes an Connection from the database (virtual delete)
-func (service *Connection) Delete(connection *model.Connection, note string) error {
+func (service *Connection) Delete(session data.Session, connection *model.Connection, note string) error {
 
-	if err := service.collection.Delete(connection, note); err != nil {
+	if err := service.collection(session).Delete(connection, note); err != nil {
 		return derp.Wrap(err, "service.Connection.Delete", "Error deleting Connection", connection, note)
 	}
 
@@ -167,26 +169,26 @@ func (service *Connection) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
-func (service *Connection) ObjectQuery(result any, criteria exp.Expression, options ...option.Option) error {
-	return service.collection.Query(result, notDeleted(criteria), options...)
+func (service *Connection) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
+	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
-func (service *Connection) ObjectLoad(criteria exp.Expression) (data.Object, error) {
+func (service *Connection) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewConnection()
-	err := service.Load(criteria, &result)
+	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
-func (service *Connection) ObjectSave(object data.Object, comment string) error {
+func (service *Connection) ObjectSave(session data.Session, object data.Object, comment string) error {
 	if group, ok := object.(*model.Connection); ok {
-		return service.Save(group, comment)
+		return service.Save(session, group, comment)
 	}
 	return derp.InternalError("service.Connection.ObjectSave", "Invalid Object Type", object)
 }
 
-func (service *Connection) ObjectDelete(object data.Object, comment string) error {
+func (service *Connection) ObjectDelete(session data.Session, object data.Object, comment string) error {
 	if group, ok := object.(*model.Connection); ok {
-		return service.Delete(group, comment)
+		return service.Delete(session, group, comment)
 	}
 	return derp.InternalError("service.Connection.ObjectDelete", "Invalid Object Type", object)
 }
@@ -203,11 +205,11 @@ func (service *Connection) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
-func (service *Connection) QueryAll(options ...option.Option) ([]model.Connection, error) {
-	return service.Query(exp.All(), options...)
+func (service *Connection) QueryAll(session data.Session, options ...option.Option) ([]model.Connection, error) {
+	return service.Query(session, exp.All(), options...)
 }
 
-func (service *Connection) QueryActiveByType(typeID string, options ...option.Option) ([]model.Connection, error) {
+func (service *Connection) QueryActiveByType(session data.Session, typeID string, options ...option.Option) ([]model.Connection, error) {
 
 	const location = "service.Connection.QueryByType"
 
@@ -216,13 +218,13 @@ func (service *Connection) QueryActiveByType(typeID string, options ...option.Op
 		return nil, derp.InternalError(location, "Invalid Type ID", typeID)
 	}
 
-	return service.Query(exp.Equal("type", typeID).AndEqual("active", true), options...)
+	return service.Query(session, exp.Equal("type", typeID).AndEqual("active", true), options...)
 }
 
-func (service *Connection) AllAsMap() mapof.Object[model.Connection] {
+func (service *Connection) AllAsMap(session data.Session) mapof.Object[model.Connection] {
 	result := make(mapof.Object[model.Connection])
 
-	if query, err := service.QueryAll(); err == nil {
+	if query, err := service.QueryAll(session); err == nil {
 		for _, connection := range query {
 			result[connection.ProviderID] = connection
 		}
@@ -231,7 +233,7 @@ func (service *Connection) AllAsMap() mapof.Object[model.Connection] {
 	return result
 }
 
-func (service *Connection) LoadByID(connectionID primitive.ObjectID, connection *model.Connection) error {
+func (service *Connection) LoadByID(session data.Session, connectionID primitive.ObjectID, connection *model.Connection) error {
 
 	const location = "service.Connection.LoadByID"
 
@@ -242,14 +244,14 @@ func (service *Connection) LoadByID(connectionID primitive.ObjectID, connection 
 
 	criteria := exp.Equal("_id", connectionID)
 
-	if err := service.Load(criteria, connection); err != nil {
+	if err := service.Load(session, criteria, connection); err != nil {
 		return derp.Wrap(err, location, "Error loading Connection", connectionID)
 	}
 
 	return nil
 }
 
-func (service *Connection) LoadByToken(token string, connection *model.Connection) error {
+func (service *Connection) LoadByToken(session data.Session, token string, connection *model.Connection) error {
 
 	const location = "service.Connection.LoadByToken"
 
@@ -261,10 +263,10 @@ func (service *Connection) LoadByToken(token string, connection *model.Connectio
 	}
 
 	// Load the Connection by ID
-	return service.LoadByID(connectionID, connection)
+	return service.LoadByID(session, connectionID, connection)
 }
 
-func (service *Connection) LoadActiveByType(typeID string, connection *model.Connection) error {
+func (service *Connection) LoadActiveByType(session data.Session, typeID string, connection *model.Connection) error {
 
 	const location = "service.Connection.LoadActiveByType"
 
@@ -275,7 +277,7 @@ func (service *Connection) LoadActiveByType(typeID string, connection *model.Con
 
 	criteria := exp.Equal("type", typeID).AndEqual("active", true)
 
-	if err := service.Load(criteria, connection); err != nil {
+	if err := service.Load(session, criteria, connection); err != nil {
 		return derp.Wrap(err, location, "Error loading Connection", typeID)
 	}
 
@@ -283,7 +285,7 @@ func (service *Connection) LoadActiveByType(typeID string, connection *model.Con
 }
 
 // LoadByProvider loads a Connection that matches the given provider.
-func (service *Connection) LoadByProvider(providerID string, connection *model.Connection) error {
+func (service *Connection) LoadByProvider(session data.Session, providerID string, connection *model.Connection) error {
 
 	const location = "service.Connection.LoadByProvider"
 
@@ -294,7 +296,7 @@ func (service *Connection) LoadByProvider(providerID string, connection *model.C
 
 	criteria := exp.Equal("providerId", providerID)
 
-	if err := service.Load(criteria, connection); err != nil {
+	if err := service.Load(session, criteria, connection); err != nil {
 		return derp.Wrap(err, location, "Error loading Connection", providerID)
 	}
 
@@ -302,7 +304,7 @@ func (service *Connection) LoadByProvider(providerID string, connection *model.C
 }
 
 // LoadOrCreateByProvider loads a Connection that matches the given provider.  If no Connection is found, a new one is created.
-func (service *Connection) LoadOrCreateByProvider(providerID string) (model.Connection, error) {
+func (service *Connection) LoadOrCreateByProvider(session data.Session, providerID string) (model.Connection, error) {
 
 	const location = "service.Connection.LoadOrCreateByProvider"
 
@@ -315,7 +317,7 @@ func (service *Connection) LoadOrCreateByProvider(providerID string) (model.Conn
 
 	criteria := exp.Equal("providerId", providerID)
 
-	if err := service.Load(criteria, &result); err != nil {
+	if err := service.Load(session, criteria, &result); err != nil {
 
 		if derp.IsNotFound(err) {
 			result.ProviderID = providerID

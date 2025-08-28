@@ -53,7 +53,7 @@ func (step StepWithCircle) execute(builder Builder, buffer io.Writer, actionMeth
 			return Halt().WithError(derp.Wrap(err, location, "Invalid Circle ID", circleToken))
 		}
 
-		if err := circleService.LoadByID(builder.AuthenticatedID(), circleID, &circle); err != nil {
+		if err := circleService.LoadByID(builder.session(), builder.AuthenticatedID(), circleID, &circle); err != nil {
 			if actionMethod == ActionMethodGet {
 				return Halt().WithError(derp.Wrap(err, location, "Unable to load Circle", circleID))
 			}
@@ -62,7 +62,7 @@ func (step StepWithCircle) execute(builder Builder, buffer io.Writer, actionMeth
 	}
 
 	// Create a new builder tied to the Circle record
-	subBuilder, err := NewModel(factory, builder.request(), builder.response(), template, &circle, builder.actionID())
+	subBuilder, err := NewModel(factory, builder.session(), builder.request(), builder.response(), template, &circle, builder.actionID())
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Unable to create sub-builder"))

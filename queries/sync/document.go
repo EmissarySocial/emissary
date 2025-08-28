@@ -13,7 +13,7 @@ import (
 // Document synchronizes the Document collection in the SHARED DATABASE.
 func Document(ctx context.Context, database *mongo.Database) error {
 
-	log.Debug().Str("database", database.Name()).Str("collection", "Document").Msg("COLLECTION:")
+	log.Trace().Str("database", database.Name()).Str("collection", "Document").Msg("COLLECTION:")
 
 	return indexer.Sync(ctx, database.Collection("Document"), indexer.IndexSet{
 
@@ -21,6 +21,7 @@ func Document(ctx context.Context, database *mongo.Database) error {
 			Keys: bson.D{
 				{Key: "metadata.relationType", Value: 1},
 				{Key: "metadata.relationHref", Value: 1},
+				{Key: "published", Value: 1},
 			},
 		},
 
@@ -41,6 +42,13 @@ func Document(ctx context.Context, database *mongo.Database) error {
 		"idx_Document_Object": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "object.id", Value: 1},
+			},
+		},
+
+		"idx_Document_Context": mongo.IndexModel{
+			Keys: bson.D{
+				{Key: "object.context", Value: 1},
+				{Key: "published", Value: 1},
 			},
 		},
 

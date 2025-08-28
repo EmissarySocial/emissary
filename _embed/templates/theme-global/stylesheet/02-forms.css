@@ -358,6 +358,7 @@ button.selected,
 .button.selected {
 	background-color: var(--gray40);
 	color: var(--gray05);
+	xxcolor: var(--button-primary-background);
 }
 
 button.selected:hover,
@@ -366,6 +367,7 @@ button.selected:focus,
 .button.selected:focus {
 	background-color: var(--gray50);
 	color: var(--white);
+	xxcolor: var(--button-primary-background);
 }
 
 button.warning,
@@ -449,7 +451,8 @@ button.button-invisible {
 	display:inline-flex;
 }
 
-.button-group > button {
+.button-group > button,
+.button-group > .button {
 	margin:0px!important;
 	border-radius:0px;
 	border-top: solid 1px var(--gray20);
@@ -457,13 +460,15 @@ button.button-invisible {
 	border-bottom: solid 1px var(--gray20);
 }
 
-.button-group > button:first-child {
+.button-group > button:first-child,
+.button-group > .button:first-child {
 	border-top-left-radius:5px;
 	border-bottom-left-radius:5px;
 	border-left: solid 1px var(--gray20);
 }
 
-.button-group > button:last-child {
+.button-group > button:last-child,
+.button-group > .button:last-child {
 	border-top-right-radius:5px;
 	border-bottom-right-radius:5px;
 }

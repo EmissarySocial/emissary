@@ -119,9 +119,9 @@
 }
 
 [role="tablist"].pills > [role="tab"] {
-    background-color:rgba(0,0,0,0);
+    background-color:var(--gray10);
     border:none;
-    margin:0px;
+    margin:0px 4px 0px 0px;
     padding:8px 12px;
 
     cursor:pointer;
@@ -134,10 +134,10 @@
 [role="tablist"].pills > [role="tab"]:hover:not([disabled]),
 [role="tablist"].pills > [role="tab"]:focus:not([disabled]) {
     border:none;
-    margin:0px;
+    margin:0px 4px 0px 0px;
     padding:8px 12px;
 
-    background-color:var(--gray10);
+    background-color:var(--gray15);
     color:var(--black);
 }
 
@@ -151,11 +151,12 @@
 [role="tablist"].pills > [role="tab"].selected,
 [role="tablist"].pills > [role="tab"].selected:hover {
     border:none;
-    margin:0px;
+    margin:0px 4px 0px 0px;
     padding:8px 12px;
 
-    background-color:var(--blue60);
-    color:var(--white);
+    border: solid 1px var(--blue60);
+	background-color:var(--white);
+    color:var(--blue60);
 }
 
 

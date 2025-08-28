@@ -1,0 +1,68 @@
+{{- $url := index . 0 -}}
+{{- $selected := index . 1 -}}
+
+<div id="modal-header" class="turboclick" hx-target="#modal-window" hx-swap="innerHTML transition:true" hx-push-url="false">
+
+	<div>
+		<div class="flex-row text-xs">
+
+			<div class="flex-grow-1">
+				<span class="button-group">
+
+					{{- if eq "tree" $selected -}}
+						<button id="nestedButton" class="selected">
+							{{icon "list-nested-fill"}} Nested
+						</button>
+					{{- else -}}
+						<button hx-get="/@me/inbox/browse-tree?url={{$url}}">
+							{{icon "list-nested"}} Nested
+						</button>
+					{{- end -}}
+
+					<!--
+					{{- if eq "timeline" $selected -}}
+						<button hx-get="/@me/inbox/browse-timeline?url={{$url}}" class="selected">
+							{{icon "timeline-fill"}} Timeline
+						</button>
+					{{- else -}}
+						<button hx-get="/@me/inbox/browse-timeline?url={{$url}}">
+							{{icon "timeline"}} Timeline
+						</button>
+					{{- end -}}
+					-->
+
+					{{- if eq "index" $selected -}}
+						<button hx-get="/@me/inbox/browse-index?url={{$url}}" class="selected">
+							{{icon "list-fill"}} Index
+						</button>
+					{{- else -}}
+						<button hx-get="/@me/inbox/browse-index?url={{$url}}">
+							{{icon "list"}} Index
+						</button>
+					{{- end -}}
+
+					{{- if eq "code" $selected -}}
+						<button hx-get="/@me/inbox/browse-code?url={{$url}}" class="selected">
+							{{icon "code-fill"}} Code
+						</button>
+					{{- else -}}
+						<button hx-get="/@me/inbox/browse-code?url={{$url}}">
+							{{icon "code"}} Code
+						</button>
+					{{- end -}}
+
+				</span>
+
+			</div>
+
+			<div>
+				<span class="button-group margin-none">	
+					<button script="on click send closeModal">Close</button>
+				</span>
+			</div>
+		
+		</div>
+
+	</div>
+
+</div>

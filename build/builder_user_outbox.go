@@ -27,7 +27,7 @@ type Outbox struct {
 }
 
 // NewOutbox returns a fully initialized `Outbox` builder.
-func NewOutbox(factory Factory, request *http.Request, response http.ResponseWriter, user *model.User, actionID string) (Outbox, error) {
+func NewOutbox(factory Factory, session data.Session, request *http.Request, response http.ResponseWriter, user *model.User, actionID string) (Outbox, error) {
 
 	const location = "build.NewOutbox"
 
@@ -40,7 +40,7 @@ func NewOutbox(factory Factory, request *http.Request, response http.ResponseWri
 	}
 
 	// Create the underlying Common builder
-	common, err := NewCommonWithTemplate(factory, request, response, template, user, actionID)
+	common, err := NewCommonWithTemplate(factory, session, request, response, template, user, actionID)
 
 	if err != nil {
 		return Outbox{}, derp.Wrap(err, location, "Error creating common builder")
@@ -95,7 +95,7 @@ func (w Outbox) Render() (template.HTML, error) {
 // View executes a separate view for this Outbox
 func (w Outbox) View(actionID string) (template.HTML, error) {
 
-	builder, err := NewOutbox(w._factory, w._request, w._response, w._user, actionID)
+	builder, err := NewOutbox(w._factory, w._session, w._request, w._response, w._user, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, "build.Outbox.View", "Error creating Outbox builder")
@@ -153,7 +153,7 @@ func (w Outbox) templateRole() string {
 }
 
 func (w Outbox) clone(action string) (Builder, error) {
-	return NewOutbox(w._factory, w._request, w._response, w._user, action)
+	return NewOutbox(w._factory, w._session, w._request, w._response, w._user, action)
 }
 
 // IsMyself returns TRUE if the outbox record is owned
@@ -306,7 +306,7 @@ func (w Outbox) Outbox() QueryBuilder[model.StreamSummary] {
 		w.defaultAllowed(),
 	)
 
-	result := NewQueryBuilder[model.StreamSummary](w._factory.Stream(), criteria)
+	result := NewQueryBuilder[model.StreamSummary](w._factory.Stream(), w._session, criteria)
 
 	return result
 }
@@ -321,17 +321,17 @@ func (w Outbox) Circles() QueryBuilder[model.Circle] {
 		exp.Equal("userId", w.objectID()),
 	)
 
-	result := NewQueryBuilder[model.Circle](w._factory.Circle(), criteria)
+	result := NewQueryBuilder[model.Circle](w._factory.Circle(), w._session, criteria)
 
 	return result
 }
 
 func (w Outbox) HasProducts() (bool, error) {
-	return w._factory.Circle().HasProducts(w._user.UserID)
+	return w._factory.Circle().HasProducts(w._session, w._user.UserID)
 }
 
 func (w Outbox) ProductCount() (int, error) {
-	return w._factory.Circle().ProductCount(w._user.UserID)
+	return w._factory.Circle().ProductCount(w._session, w._user.UserID)
 }
 
 func (w Outbox) Products() (sliceof.Object[model.Product], error) {
@@ -339,7 +339,7 @@ func (w Outbox) Products() (sliceof.Object[model.Product], error) {
 	const location = "build.Outbox.Products"
 
 	// Get purchaseable products from all Featured Circles
-	productIDs, err := w._factory.Circle().AssignedProductIDs(w._user.UserID)
+	productIDs, err := w._factory.Circle().AssignedProductIDs(w._session, w._user.UserID)
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Error retrieving remote products for user", w._user.UserID.Hex())
@@ -351,7 +351,7 @@ func (w Outbox) Products() (sliceof.Object[model.Product], error) {
 	}
 
 	// Look up the products for this User using their IDs
-	products, err := w._factory.Product().QueryByIDs(w._user.UserID, productIDs...)
+	products, err := w._factory.Product().QueryByIDs(w._session, w._user.UserID, productIDs...)
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Error retrieving remote products for user", w._user.UserID.Hex())
@@ -371,7 +371,7 @@ func (w Outbox) Replies() QueryBuilder[model.StreamSummary] {
 		exp.NotEqual("inReplyTo", ""),
 	)
 
-	result := NewQueryBuilder[model.StreamSummary](w._factory.Stream(), criteria)
+	result := NewQueryBuilder[model.StreamSummary](w._factory.Stream(), w._session, criteria)
 
 	return result
 }
@@ -386,7 +386,7 @@ func (w Outbox) Responses() QueryBuilder[model.Response] {
 		exp.Equal("userId", w.objectID()),
 	)
 
-	result := NewQueryBuilder[model.Response](w._factory.Response(), criteria)
+	result := NewQueryBuilder[model.Response](w._factory.Response(), w._session, criteria)
 
 	return result
 }

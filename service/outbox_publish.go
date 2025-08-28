@@ -6,7 +6,9 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
+	dt "github.com/benpate/domain"
 	"github.com/benpate/hannibal"
 	"github.com/benpate/hannibal/outbox"
 	"github.com/benpate/hannibal/streams"
@@ -23,9 +25,21 @@ import (
  ******************************************/
 
 // Publish adds an OutboxMessage to the Actor's Outbox and sends notifications to all Followers.
-func (service *Outbox) Publish(actor *outbox.Actor, actorType string, actorID primitive.ObjectID, activity streams.Document, permissions model.Permissions) error {
+func (service *Outbox) Publish(session data.Session, actorType string, actorID primitive.ObjectID, activity streams.Document, permissions model.Permissions) error {
+
+	// TODO: This should become a background process.
 
 	const location = "service.Outbox.Publish"
+	if canTrace() {
+		log.Trace().Str("location", location).Str("id", activity.ID()).Str("actor", actorID.Hex()).Str("object", activity.Object().ID()).Msg("Publishing object to outbox")
+	}
+
+	// Generate an Actor for the Outbox
+	actor, err := service.getActor(session, actorType, actorID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Unable to get Actor", actorType, actorID)
+	}
 
 	// Write a new OutboxMessage to the database
 	outboxMessage := model.NewOutboxMessage()
@@ -33,36 +47,43 @@ func (service *Outbox) Publish(actor *outbox.Actor, actorType string, actorID pr
 	outboxMessage.ActorID = actorID
 	outboxMessage.ObjectID = activity.Object().ID()
 	outboxMessage.ActivityType = activity.Type()
+	outboxMessage.ActivityURL = activity.ID()
 	outboxMessage.Permissions = permissions
 
-	if err := service.Save(&outboxMessage, "Publishing"); err != nil {
+	if err := service.Save(session, &outboxMessage, "Publishing"); err != nil {
 		return derp.Wrap(err, location, "Error saving outbox message", outboxMessage)
 	}
 
-	log.Trace().Str("objectId", outboxMessage.ObjectID).Msg("Outbox Message saved.  Notifying Followers")
-
 	// Get All Followers for this Actor and Addressees
 	recipients := joinIterators(
-		service.followerService.RangeFollowers(actorType, actorID),
+		service.followerService.RangeFollowers(session, actorType, actorID),
 		service.addresseesAsFollowers(activity.RangeAddressees()),
 		service.addresseesAsFollowers(activity.RangeInReplyTo()),
 		// TODO: service.webMentionsAsFollowers(activity),
 	)
 
-	ruleFilter := service.ruleService.Filter(actorID, WithBlocksOnly())
 	activityMap := activity.Map()
 	activityMap[vocab.PropertyID] = outboxMessage.ActivityPubURL()
+	ruleFilter := service.ruleService.Filter(actorID, WithBlocksOnly())
+
+	isLocalhost := dt.IsLocalhost(service.hostname)
 
 	for follower := range recipients {
 
-		// Do not send to blocked Followers
-		if !ruleFilter.AllowSend(follower.Actor.ProfileURL) {
+		// RULE: Only deliver to Followers on the same network as the Actor
+		// (local can send to local, public can send to public, but local cannot send to public)
+		if dt.IsLocalhost(follower.Actor.InboxURL) != isLocalhost {
+			continue
+		}
+
+		// RULE: Do not send to blocked Followers
+		if !ruleFilter.AllowSend(session, follower.Actor.ProfileURL) {
 			log.Trace().Msg("Follower blocked by rule filter: " + follower.Actor.ProfileURL)
 			continue
 		}
 
-		// Do not send to Followers who do not have permissions to view this activity
-		if !service.identityService.HasPermissions(follower.Method, follower.Actor.ProfileURL, permissions) {
+		// RULE: Do not send to Followers who do not have permissions to view this activity
+		if !service.identityService.HasPermissions(session, follower.Method, follower.Actor.ProfileURL, permissions) {
 			log.Trace().Msg("Follower does not have permissions to view this activity: " + follower.Actor.ProfileURL)
 			continue
 		}
@@ -72,7 +93,7 @@ func (service *Outbox) Publish(actor *outbox.Actor, actorType string, actorID pr
 		switch follower.Method {
 
 		case model.FollowerMethodActivityPub:
-			service.sendNotification_ActivityPub(actor, &follower, activityMap)
+			service.sendNotification_ActivityPub(&actor, &follower, activityMap)
 
 		case model.FollowerMethodWebSub:
 			service.sendNotification_WebSub(&follower)
@@ -81,6 +102,7 @@ func (service *Outbox) Publish(actor *outbox.Actor, actorType string, actorID pr
 			service.sendNotification_Email(&follower, activityMap)
 
 		// TODO: Can we move WebMentions into this too?
+
 		default:
 			derp.Report(derp.InternalError(location, "Unknown Follower Method.  This should never happen", follower))
 		}
@@ -93,21 +115,28 @@ func (service *Outbox) Publish(actor *outbox.Actor, actorType string, actorID pr
 	return nil
 }
 
-func (service *Outbox) DeleteActivity(actor *outbox.Actor, actorType string, actorID primitive.ObjectID, objectID string, permissions model.Permissions) error {
-	return service.unpublish(actor, actorType, actorID, vocab.ActivityTypeDelete, objectID, permissions)
+func (service *Outbox) DeleteActivity(session data.Session, actorType string, actorID primitive.ObjectID, objectID string, permissions model.Permissions) error {
+	return service.unpublish(session, actorType, actorID, vocab.ActivityTypeDelete, objectID, permissions)
 }
 
-func (service *Outbox) UndoActivity(actor *outbox.Actor, actorType string, actorID primitive.ObjectID, objectID string, permissions model.Permissions) error {
-	return service.unpublish(actor, actorType, actorID, vocab.ActivityTypeUndo, objectID, permissions)
+func (service *Outbox) UndoActivity(session data.Session, actorType string, actorID primitive.ObjectID, objectID string, permissions model.Permissions) error {
+	return service.unpublish(session, actorType, actorID, vocab.ActivityTypeUndo, objectID, permissions)
 }
 
 // UnPublish deletes an OutboxMessage from the Outbox, and sends notifications to all Followers
-func (service *Outbox) unpublish(actor *outbox.Actor, actorType string, actorID primitive.ObjectID, activityType string, objectID string, permissions model.Permissions) error {
+func (service *Outbox) unpublish(session data.Session, actorType string, actorID primitive.ObjectID, activityType string, objectID string, permissions model.Permissions) error {
 
 	const location = "service.Outbox.unpublish"
 
+	// Generate an Actor for the Outbox
+	actor, err := service.getActor(session, actorType, actorID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Unable to get Actor", actorType, actorID)
+	}
+
 	// Find all activities in the outbox related to this activity
-	activities, err := service.RangeByObjectID(actorType, actorID, objectID)
+	activities, err := service.RangeByObjectID(session, actorType, actorID, objectID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Unable to load outbox activity", objectID)
@@ -117,7 +146,7 @@ func (service *Outbox) unpublish(actor *outbox.Actor, actorType string, actorID 
 	for activity := range activities {
 
 		// Delete the Activity from the User's Outbox
-		if err := service.Delete(&activity, "Un-Publishing"); err != nil {
+		if err := service.Delete(session, &activity, "Un-Publishing"); err != nil {
 			return derp.Wrap(err, location, "Unable to delete outbox activity", activity)
 		}
 	}
@@ -126,7 +155,7 @@ func (service *Outbox) unpublish(actor *outbox.Actor, actorType string, actorID 
 	// but this will require additional function arguments.
 
 	// Make a streams.Document to represent the "Delete" activity
-	document := service.activityService.NewDocument(mapof.Any{
+	document := streams.NewDocument(mapof.Any{
 		vocab.PropertyActor:     actor.ActorID(),
 		vocab.PropertyType:      activityType,
 		vocab.PropertyObject:    objectID,
@@ -134,11 +163,32 @@ func (service *Outbox) unpublish(actor *outbox.Actor, actorType string, actorID 
 	})
 
 	// Publish the "Delete" activity to the Outbox
-	if err := service.Publish(actor, actorType, actorID, document, permissions); err != nil {
+	if err := service.Publish(session, actorType, actorID, document, permissions); err != nil {
 		return derp.Wrap(err, location, "Unable to publish DELETE activity", objectID)
 	}
 
 	return nil
+}
+
+func (service *Outbox) getActor(session data.Session, actorType string, actorID primitive.ObjectID) (outbox.Actor, error) {
+
+	switch actorType {
+
+	case model.FollowerTypeUser:
+		return service.userService.ActivityPubActor(session, actorID)
+
+	case model.FollowerTypeStream:
+		return service.streamService.ActivityPubActor(session, actorID)
+
+	case model.FollowerTypeApplication:
+
+	case model.FollowerTypeSearch:
+
+	case model.FollowerTypeSearchDomain:
+
+	}
+
+	return outbox.Actor{}, derp.InternalError("service.Outbox.getActor", "Unknown Actor Type", actorType)
 }
 
 /******************************************
@@ -177,15 +227,11 @@ func (service Outbox) sendNotification_WebSub(follower *model.Follower) {
 
 	const location = "service.Outbox.sendNotifications_WebSub"
 
-	task := queue.NewTask("SendWebSubMessage", mapof.Any{
+	service.queue.Enqueue <- queue.NewTask("SendWebSubMessage", mapof.Any{
 		"inboxUrl": follower.Actor.InboxURL,
 		"format":   follower.Format,
 		"secret":   follower.Data.GetString("secret"),
 	})
-
-	if err := service.queue.Publish(task); err != nil {
-		derp.Report(derp.Wrap(err, location, "Error publishing task", task))
-	}
 }
 
 // sendNotifications_Email sends email notifications to all "email" Followers
@@ -227,13 +273,9 @@ func (service *Outbox) sendNotifications_WebMention(activity mapof.Any) {
 	// Add background tasks to TRY sending webmentions to every link we found
 	for _, link := range links {
 
-		task := queue.NewTask("SendWebMention", mapof.Any{
+		service.queue.Enqueue <- queue.NewTask("SendWebMention", mapof.Any{
 			"source": id,
 			"target": link,
 		})
-
-		if err := service.queue.Publish(task); err != nil {
-			derp.Report(derp.Wrap(err, location, "Error publishing task", task))
-		}
 	}
 }

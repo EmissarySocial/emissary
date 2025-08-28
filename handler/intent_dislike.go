@@ -4,16 +4,18 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/camper"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/html"
 	"github.com/benpate/steranko"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func GetIntent_Dislike(ctx *steranko.Context, factory *domain.Factory, user *model.User) error {
+func GetIntent_Dislike(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.GetIntent_Dislike"
 
@@ -26,8 +28,8 @@ func GetIntent_Dislike(ctx *steranko.Context, factory *domain.Factory, user *mod
 	// Default values here
 	onCancel := firstOf(transaction.OnCancel, "/@me")
 
-	activityStream := factory.ActivityStream()
-	object, err := activityStream.Load(transaction.Object)
+	activityStream := factory.ActivityStream(model.ActorTypeApplication, primitive.NilObjectID)
+	object, err := activityStream.Client().Load(transaction.Object)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Unable to load object", ctx.Request().URL.String(), ctx.Request().URL, transaction)
@@ -96,6 +98,6 @@ func GetIntent_Dislike(ctx *steranko.Context, factory *domain.Factory, user *mod
 	return ctx.HTML(http.StatusOK, b.String())
 }
 
-func PostIntent_Dislike(ctx *steranko.Context, factory *domain.Factory, user *model.User) error {
-	return postIntent_Response(ctx, factory, user, vocab.ActivityTypeLike)
+func PostIntent_Dislike(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
+	return postIntent_Response(ctx, factory, session, user, vocab.ActivityTypeDislike)
 }

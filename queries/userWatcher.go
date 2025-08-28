@@ -12,14 +12,20 @@ import (
 )
 
 // WatchUsers initiates a mongodb change stream to on every updates to User data objects
-func WatchUsers(ctx context.Context, collection data.Collection, result chan<- primitive.ObjectID) {
+func WatchUsers(ctx context.Context, server data.Server, result chan<- primitive.ObjectID) {
 
 	const location = "queries.WatchUsers"
 
-	log.Trace().Msg(location)
+	// Connect to the database for as long as our refresh context is active
+	session, err := server.Session(ctx)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to open database session"))
+		return
+	}
 
 	// Confirm that we're watching a mongo database
-	m := mongoCollection(collection)
+	m := mongoCollection(session.Collection("User"))
 
 	if m == nil {
 		return

@@ -1,0 +1,27 @@
+{{- $url := .QueryParam "url" -}}
+{{- $document := .ActivityStream $url -}}
+{{- $timeline := .QueryByContext $document.Context 0 256 -}}
+
+{{- template "browse-header" (array $url "index") -}}
+
+<div id="modal-body" class="turboclick padding-top" hx-target="#modal-window" hx-swap="innerHTML transition:true" hx-push-url="false">
+
+	{{- range $document := $timeline -}}
+		<div class="flex-row clickable card text-sm padding-xs margin-bottom-sm {{ if eq $url $document.ID}}selected{{end}}">
+
+			<div hx-get="/@me/inbox/browse-tree?url={{$document.ID}}" class="flex-row flex-grow flex-align-center">
+				<img src="{{$document.AttributedTo.Icon.Href}}" class="circle width-32">
+				<div class="padding-horizontal-xs nowrap">{{$document.Published | tinyDate }}</div>
+				<div class="flex-grow ellipsis-block" style="height:1.5em;">
+					{{$document.Content | summary | html }}
+				</div>
+			</div>
+
+			<div class="text-xs nowrap">
+				<a href="{{$document.AttributedTo.ID}}" target="_blank" class="button" aria-label="Visit Original Website">{{icon "person"}}</a>
+				<a href="{{$document.ID}}" target="_blank" class="button" aria-label="Visit Original Website">{{icon "globe"}}</a>
+			</div>
+		</div>
+	{{- end -}}
+
+</div>

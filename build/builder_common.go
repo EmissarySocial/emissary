@@ -7,9 +7,9 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	"github.com/benpate/domain"
-	domaintools "github.com/benpate/domain"
+	dt "github.com/benpate/domain"
 	"github.com/benpate/exp"
 	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/form"
@@ -25,6 +25,7 @@ import (
 // Common provides common building functions that are needed by ALL builders
 type Common struct {
 	_factory       Factory             // Factory interface is required for locating other services.
+	_session       data.Session        // Database session for all db requests
 	_request       *http.Request       // Pointer to the HTTP request we are serving
 	_response      http.ResponseWriter // ResponseWriter for this request
 	_authorization model.Authorization // Authorization information for the current website visitor
@@ -37,15 +38,16 @@ type Common struct {
 	domain model.Domain // This is a value because we expect to use it in every request.
 }
 
-func NewCommon(factory Factory, request *http.Request, response http.ResponseWriter) Common {
+func NewCommon(factory Factory, session data.Session, request *http.Request, response http.ResponseWriter) Common {
 
 	// Retrieve the user's authorization information
-	steranko := factory.Steranko()
+	steranko := factory.Steranko(session)
 	authorization := getAuthorization(steranko, request)
 
 	// Return a new Common builder
 	return Common{
 		_factory:       factory,
+		_session:       session,
 		_request:       request,
 		_response:      response,
 		_authorization: authorization,
@@ -63,14 +65,22 @@ func (w Common) factory() Factory {
 	return w._factory
 }
 
+// session returns the database session that this Builder is using.
+func (w Common) session() data.Session {
+	return w._session
+}
+
+// request returns the original http.Request that we are responding to.
 func (w Common) request() *http.Request {
 	return w._request
 }
 
+// response returns the original http.ResponseWriter that we are writing to.
 func (w Common) response() http.ResponseWriter {
 	return w._response
 }
 
+// authorization returns the user's authorization data from the context.
 func (w Common) authorization() model.Authorization {
 	return w._authorization
 }
@@ -108,12 +118,12 @@ func (w Common) URL() string {
 
 // Protocol returns http:// or https:// used for this request
 func (w Common) Protocol() string {
-	return domain.Protocol(w.Hostname())
+	return dt.Protocol(w.Hostname())
 }
 
 // Hostname returns the configured hostname for this request
 func (w Common) Hostname() string {
-	return domaintools.Hostname(w._request)
+	return dt.Hostname(w._request)
 }
 
 // Path returns the HTTP Request path
@@ -280,10 +290,13 @@ func (w Common) AuthenticatedID() primitive.ObjectID {
 
 // UserName returns the DisplayName of the user
 func (w Common) UserName() (string, error) {
+
+	const location = "build.Stream.UserName"
+
 	user, err := w.getUser()
 
 	if err != nil {
-		return "", derp.Wrap(err, "build.Stream.UserName", "Error loading User")
+		return "", derp.Wrap(err, location, "Error loading User")
 	}
 
 	return user.DisplayName, nil
@@ -291,10 +304,13 @@ func (w Common) UserName() (string, error) {
 
 // UserAvatar returns the avatar image of the user
 func (w Common) UserImage() (string, error) {
+
+	const location = "build.Stream.UserImage"
+
 	user, err := w.getUser()
 
 	if err != nil {
-		return "", derp.Wrap(err, "build.Stream.UserAvatar", "Error loading User")
+		return "", derp.Wrap(err, location, "Error loading User")
 	}
 
 	return user.ActivityPubIconURL(), nil
@@ -309,27 +325,60 @@ func (w Common) UserImage() (string, error) {
 // document values and rules from the server's shared cache.
 func (w Common) ActivityStream(url string) streams.Document {
 
+	const location = "build.Common.ActivityStream"
 	// Load the document from the Interwebs
-	result, err := w._factory.ActivityStream().Load(url)
+	activityService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
+	result, err := activityService.Client().Load(url)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "build.Common.ActivityStream", "Error loading ActivityStream"))
+		derp.Report(derp.Wrap(err, location, "Unable to load ActivityStream. Returning empty document to template."))
 	}
 
 	// Search for rules that might add a LABEL to this document.
 	ruleService := w._factory.Rule()
 	filter := ruleService.Filter(w.AuthenticatedID(), service.WithLabelsOnly())
-	filter.Allow(&result)
+	filter.Allow(w._session, &result)
 
 	// Return the result
 	return result
+}
+
+// AmFollowing returns a Following record for the current user and the given URL
+// If the user is not authenticated, or the URL is not valid, then an empty Following record is returned.
+// The UX uses this to label "mutual" follows
+func (w Common) AmFollowing(url string) model.Following {
+
+	if !w._authorization.IsAuthenticated() {
+		return model.NewFollowing()
+	}
+
+	// Get following service and new following record
+	followingService := w._factory.Following()
+	following := model.NewFollowing()
+
+	// Retrieve following record. Discard errors
+	// nolint:errcheck
+	_ = followingService.LoadByURL(w._session, w._authorization.UserID, url, &following)
+
+	// Return the (possibly empty) Following record
+	return following
+}
+
+func (w Common) IsFollower(url string) model.Follower {
+
+	followerService := w._factory.Follower()
+	follower := model.NewFollower()
+
+	_ = followerService.LoadByActor(w._session, w.AuthenticatedID(), url, &follower)
+	return follower
 }
 
 // ActivityStreamActor returns an ActivityStream actor document for the provided URL.  The
 // returned document uses Emissary's custom ActivityStream service, which uses
 // document values and rules from the server's shared cache.
 func (w Common) ActivityStreamActor(url string) streams.Document {
-	result, err := w._factory.ActivityStream().Load(url, sherlock.AsActor())
+	activityService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
+	result, err := activityService.Client().Load(url, sherlock.AsActor())
 
 	if err != nil {
 		derp.Report(err)
@@ -339,7 +388,8 @@ func (w Common) ActivityStreamActor(url string) streams.Document {
 }
 
 func (w Common) ActivityStreamActors(search string) ([]model.ActorSummary, error) {
-	return w._factory.ActivityStream().SearchActors(search)
+	activityService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
+	return activityService.QueryActors(search)
 }
 
 // IsMe returns TRUE if the provided URI is the profileURL of the current user
@@ -363,11 +413,13 @@ func (w Common) NotMe(url string) bool {
 // document at a specific URI (or the actor who created the document)
 func (w Common) GetFollowingID(url string) string {
 
+	const location = "build.Common.GetFollowingID"
+
 	followingService := w._factory.Following()
-	result, err := followingService.GetFollowingID(w.AuthenticatedID(), url)
+	result, err := followingService.GetFollowingID(w._session, w.AuthenticatedID(), url)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "build.Common.GetFollowingID", "Error getting following status", url))
+		derp.Report(derp.Wrap(err, location, "Error getting following status", url))
 		return ""
 	}
 
@@ -377,7 +429,7 @@ func (w Common) GetFollowingID(url string) string {
 // lookupProvider returns the LookupProvider service, which can return form.LookupGroups
 func (w Common) lookupProvider() form.LookupProvider {
 	userID := w.AuthenticatedID()
-	return w._factory.LookupProvider(w._request, userID)
+	return w._factory.LookupProvider(w._request, w._session, userID)
 }
 
 // Dataset returns a single form.LookupGroup from the LookupProvider
@@ -410,6 +462,8 @@ func (w Common) withinPublishDate() exp.Expression {
 // group authorizations of the currently signed in user.
 func (w Common) defaultAllowed() exp.Expression {
 
+	const location = "build.Common.defaultAllowed"
+
 	var result exp.Expression = exp.Equal("deleteDate", 0) // Stream must not be deleted
 
 	// If the user IS NOT a domain owner, then we must also
@@ -427,7 +481,7 @@ func (w Common) defaultAllowed() exp.Expression {
 	identity, err := w.getIdentity()
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "build.Common.defaultAllowed", "Error loading Identity"))
+		derp.Report(derp.Wrap(err, location, "Error loading Identity"))
 	}
 
 	// Get the access list for this user
@@ -443,6 +497,8 @@ func (w Common) defaultAllowed() exp.Expression {
 // getUser loads/caches the currently-signed-in user to be used by other functions in this builder
 func (w Common) getUser() (*model.User, error) {
 
+	const location = "build.Common.getUser"
+
 	// If we already have a cached User, then return that
 	if w._user != nil {
 		return w._user, nil
@@ -450,12 +506,12 @@ func (w Common) getUser() (*model.User, error) {
 
 	// Otherwise, try to load the User from the database
 	userService := w._factory.User()
-	steranko := w._factory.Steranko()
+	steranko := w._factory.Steranko(w._session)
 	authorization := getAuthorization(steranko, w._request)
 
 	user := model.NewUser()
-	if err := userService.LoadByID(authorization.UserID, &user); err != nil {
-		return nil, derp.Wrap(err, "build.Common.getUser", "Error loading user from database", authorization.UserID)
+	if err := userService.LoadByID(w._session, authorization.UserID, &user); err != nil {
+		return nil, derp.Wrap(err, location, "Error loading user from database", authorization.UserID)
 	}
 
 	// Save the User in the builder to use it later
@@ -466,6 +522,8 @@ func (w Common) getUser() (*model.User, error) {
 }
 
 func (w Common) getIdentity() (*model.Identity, error) {
+
+	const location = "build.Common.getIdentity"
 
 	// If no Identity is provided, then return nil
 	if !w._authorization.IsIdentity() {
@@ -479,8 +537,8 @@ func (w Common) getIdentity() (*model.Identity, error) {
 
 	// Otherwise, try to load the Identity from the database
 	identity := model.NewIdentity()
-	if err := w._factory.Identity().LoadByID(w._authorization.IdentityID, &identity); err != nil {
-		return nil, derp.Wrap(err, "build.Common.getIdentity", "Error loading Identity from database", w._authorization.IdentityID)
+	if err := w._factory.Identity().LoadByID(w._session, w._authorization.IdentityID, &identity); err != nil {
+		return nil, derp.Wrap(err, location, "Error loading Identity from database", w._authorization.IdentityID)
 	}
 
 	// Save the Identity in the builder to use it later
@@ -500,7 +558,7 @@ func (w Common) Navigation() (sliceof.Object[model.StreamSummary], error) {
 		And(w.withinPublishDate()).
 		AndEqual("parentId", primitive.NilObjectID)
 
-	builder := NewQueryBuilder[model.StreamSummary](w._factory.Stream(), criteria)
+	builder := NewQueryBuilder[model.StreamSummary](w._factory.Stream(), w._session, criteria)
 
 	result, err := builder.Top60().ByRank().Slice()
 	return result, err
@@ -521,7 +579,7 @@ func (w Common) GetResponseID(responseType string, url string) string {
 	responseService := w._factory.Response()
 	response := model.NewResponse()
 
-	if err := responseService.LoadByUserAndObject(w.AuthenticatedID(), url, responseType, &response); err == nil {
+	if err := responseService.LoadByUserAndObject(w._session, w.AuthenticatedID(), url, responseType, &response); err == nil {
 		return response.ResponseID.Hex()
 	}
 
@@ -544,7 +602,7 @@ func (w Common) GetResponseSummary(url string) model.UserResponseSummary {
 	// If the user is signed in, then we need to check the database to see if they've responded.
 	responseService := w._factory.Response()
 
-	if responses, err := responseService.QueryByUserAndObject(w.AuthenticatedID(), url); err == nil {
+	if responses, err := responseService.QueryByUserAndObject(w._session, w.AuthenticatedID(), url); err == nil {
 		for _, response := range responses {
 			result.SetResponse(response.Type, true)
 		}
@@ -555,7 +613,7 @@ func (w Common) GetResponseSummary(url string) model.UserResponseSummary {
 
 func (w Common) AvailableMerchantAccounts() (sliceof.Object[form.LookupCode], error) {
 	merchantAccountService := w._factory.MerchantAccount()
-	return merchantAccountService.AvailableMerchantAccounts()
+	return merchantAccountService.AvailableMerchantAccounts(w._session)
 }
 
 /******************************************
@@ -578,15 +636,17 @@ func (w Common) Search() SearchBuilder {
 	criteria := b.Evaluate(w._request.URL.Query())
 
 	// Create the SearchBuilder for this request
-	return NewSearchBuilder(searchTagService, searchResultService, criteria, textQuery)
+	return NewSearchBuilder(searchTagService, searchResultService, w._session, criteria, textQuery)
 }
 
 func (w Common) SearchTag(tagName string) model.SearchTag {
 
+	const location = "build.Common.SearchTag"
+
 	result := model.NewSearchTag()
 
-	if err := w._factory.SearchTag().LoadByValue(tagName, &result); err != nil {
-		derp.Report(derp.Wrap(err, "build.Common.SearchTag", "Error loading SearchTag", tagName))
+	if err := w._factory.SearchTag().LoadByValue(w._session, tagName, &result); err != nil {
+		derp.Report(derp.Wrap(err, location, "Error loading SearchTag", tagName))
 	}
 
 	return result
@@ -594,7 +654,7 @@ func (w Common) SearchTag(tagName string) model.SearchTag {
 
 func (w Common) MerchantAccount(merchantAccountID string) (model.MerchantAccount, error) {
 	result := model.NewMerchantAccount()
-	err := w._factory.MerchantAccount().LoadByToken(merchantAccountID, &result)
+	err := w._factory.MerchantAccount().LoadByToken(w._session, merchantAccountID, &result)
 	return result, err
 }
 
@@ -605,7 +665,7 @@ func (w Common) FeaturedSearchTags() *QueryBuilder[model.SearchTag] {
 		exp.Equal("deleteDate", 0),
 	)
 
-	result := NewQueryBuilder[model.SearchTag](w._factory.SearchTag(), criteria)
+	result := NewQueryBuilder[model.SearchTag](w._factory.SearchTag(), w._session, criteria)
 	result.CaseInsensitive()
 	result.ByRank()
 
@@ -625,7 +685,7 @@ func (w Common) AllowedSearchTags() *QueryBuilder[model.SearchTag] {
 		exp.Equal("deleteDate", 0),
 	)
 
-	result := NewQueryBuilder[model.SearchTag](w._factory.SearchTag(), criteria)
+	result := NewQueryBuilder[model.SearchTag](w._factory.SearchTag(), w._session, criteria)
 	result.CaseInsensitive()
 	result.ByName()
 

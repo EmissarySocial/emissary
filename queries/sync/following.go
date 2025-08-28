@@ -12,7 +12,7 @@ import (
 
 func Following(ctx context.Context, database *mongo.Database) error {
 
-	log.Debug().Str("database", database.Name()).Str("collection", "Following").Msg("COLLECTION:")
+	log.Trace().Str("database", database.Name()).Str("collection", "Following").Msg("COLLECTION:")
 
 	return indexer.Sync(ctx, database.Collection("Following"), indexer.IndexSet{
 

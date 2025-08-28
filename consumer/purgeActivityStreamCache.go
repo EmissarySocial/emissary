@@ -14,19 +14,18 @@ func PurgeActivityStreamCache(factory ServerFactory) queue.Result {
 
 	log.Trace().Msg("Task: PurgeActivityStreamCache")
 
-	// Purge old Error records from the error log
+	// Purge documents that expired >2 days ago
 	collection := factory.CommonDatabase().Collection("Document")
 
 	_, err := collection.DeleteMany(
 		context.Background(),
 		bson.M{
-			"expires": bson.M{"$lt": time.Now().AddDate(0, -2, 0)},
+			"expires": bson.M{"$lt": time.Now().AddDate(0, 0, -2).Unix()},
 		},
 	)
 
 	// Handle error when purging errors
 	if err != nil {
-		log.Error().Err(err).Msg("Unable to purge old ActivityStream cache documents")
 		return queue.Error(err)
 	}
 

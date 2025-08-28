@@ -5,8 +5,10 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal"
+	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/rs/zerolog/log"
@@ -17,7 +19,7 @@ import (
  ******************************************/
 
 // Publish marks this stream as "published"
-func (service *Stream) Publish(user *model.User, stream *model.Stream, stateID string, outbox bool, republish bool) error {
+func (service *Stream) Publish(session data.Session, user *model.User, stream *model.Stream, stateID string, outbox bool, republish bool) error {
 
 	const location = "service.Stream.Publish"
 
@@ -39,13 +41,13 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream, stateID s
 	stream.StateID = stateID
 
 	// Re-save the Stream with the updated values.
-	if err := service.Save(stream, "Publishing"); err != nil {
+	if err := service.Save(session, stream, "Publishing"); err != nil {
 		return derp.Wrap(err, location, "Error saving stream", stream)
 	}
 
 	// Publish to user/stream outboxes
 	if outbox {
-		if err := service.publish_outbox(user, stream, wasPublished); err != nil {
+		if err := service.publish_outbox(session, user, stream, wasPublished); err != nil {
 			return derp.Wrap(err, location, "Error publishing to outbox", stream)
 		}
 	}
@@ -73,16 +75,18 @@ func (service *Stream) Publish(user *model.User, stream *model.Stream, stateID s
 	return nil
 }
 
-func (service *Stream) publish_outbox(user *model.User, stream *model.Stream, wasPublished bool) error {
+func (service *Stream) publish_outbox(session data.Session, user *model.User, stream *model.Stream, wasPublished bool) error {
 
 	const location = "service.Stream.publish_outbox"
 
 	// Create the Activity to send to the User's Outbox
-	object := service.JSONLD(stream)
+	object := service.JSONLD(session, stream)
+
+	activityService := service.factory.ActivityStream(model.ActorTypeUser, user.UserID)
 
 	// Save the object to the ActivityStream cache
-	service.activityStream.Put(
-		service.activityStream.NewDocument(object),
+	activityService.Put(
+		streams.NewDocument(object),
 	)
 
 	// If this has not been published yet, then `Create` activity. Otherwise, `Update`
@@ -111,12 +115,12 @@ func (service *Stream) publish_outbox(user *model.User, stream *model.Stream, wa
 	}
 
 	// Publish to the User's outbox
-	if err := service.publish_outbox_user(user, stream, activity); err != nil {
+	if err := service.publish_outbox_user(session, user, stream, activity); err != nil {
 		return derp.Wrap(err, location, "Error publishing to User's outbox")
 	}
 
 	// Publish to the parent Stream's outbox
-	if err := service.publish_outbox_stream(stream, activity); err != nil {
+	if err := service.publish_outbox_stream(session, stream, activity); err != nil {
 		return derp.Wrap(err, location, "Error publishing to parent Stream's outbox")
 	}
 
@@ -124,7 +128,7 @@ func (service *Stream) publish_outbox(user *model.User, stream *model.Stream, wa
 }
 
 // publish_outbox_user publishes this stream to the User's outbox
-func (service *Stream) publish_outbox_user(user *model.User, stream *model.Stream, activity mapof.Any) error {
+func (service *Stream) publish_outbox_user(session data.Session, user *model.User, stream *model.Stream, activity mapof.Any) error {
 
 	const location = "service.Stream.publish_outbox_user"
 
@@ -138,21 +142,14 @@ func (service *Stream) publish_outbox_user(user *model.User, stream *model.Strea
 		return nil
 	}
 
-	// Load the Actor for this User
-	actor, err := service.userService.ActivityPubActor(user.UserID)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Error loading actor", user.UserID)
-	}
-
 	// Try to publish via sendNotifications
 	objectID := activity.GetString(vocab.PropertyID)
 	objectType := activity.GetString(vocab.PropertyType)
 	log.Trace().Str("location", location).Str("objectId", objectID).Str("type", objectType).Msg("Publishing to User's outbox")
 
-	document := service.activityStream.NewDocument(activity)
+	document := streams.NewDocument(activity)
 
-	if err := service.outboxService.Publish(&actor, model.FollowerTypeUser, user.UserID, document, stream.DefaultAllow); err != nil {
+	if err := service.outboxService.Publish(session, model.FollowerTypeUser, user.UserID, document, stream.DefaultAllow); err != nil {
 		return derp.Wrap(err, location, "Error publishing activity", activity)
 	}
 
@@ -161,7 +158,7 @@ func (service *Stream) publish_outbox_user(user *model.User, stream *model.Strea
 }
 
 // publish_outbox_stream publishes this Stream to the parent Stream's outbox
-func (service *Stream) publish_outbox_stream(stream *model.Stream, activity mapof.Any) error {
+func (service *Stream) publish_outbox_stream(session data.Session, stream *model.Stream, activity mapof.Any) error {
 
 	const location = "service.Stream.publish_outbox_stream"
 
@@ -182,13 +179,6 @@ func (service *Stream) publish_outbox_stream(stream *model.Stream, activity mapo
 		return nil
 	}
 
-	// Load the Actor for the parent Stream
-	actor, err := service.ActivityPubActor(stream.ParentID)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Error loading parent actor")
-	}
-
 	// Make a new "Announce/Boost" activity so that our encryption keys are correct.
 	announce := mapof.Any{
 		vocab.AtContext:      vocab.ContextTypeActivityStreams,
@@ -197,11 +187,11 @@ func (service *Stream) publish_outbox_stream(stream *model.Stream, activity mapo
 		vocab.PropertyObject: activity,
 	}
 
-	document := service.activityStream.NewDocument(announce)
+	document := streams.NewDocument(announce)
 
 	// Try to publish via sendNotifications
 	log.Trace().Str("id", stream.URL).Msg("Publishing to parent Stream's outbox")
-	if err := service.outboxService.Publish(&actor, model.FollowerTypeStream, stream.ParentID, document, stream.DefaultAllow); err != nil {
+	if err := service.outboxService.Publish(session, model.FollowerTypeStream, stream.ParentID, document, stream.DefaultAllow); err != nil {
 		return derp.Wrap(err, location, "Error publishing activity", activity)
 	}
 

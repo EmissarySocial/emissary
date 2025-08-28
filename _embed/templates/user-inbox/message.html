@@ -4,9 +4,9 @@
 {{- $folderID := .QueryParam "folderId" -}}
 {{- $followingID := .QueryParam "origin.followingId" -}}
 
-{{- $stream := .ActivityStream $url -}}
-{{- $attributedTo := $stream.AttributedTo -}}
-{{- $inReplyTo := $stream.InReplyTo -}}
+{{- $document := .ActivityStream $url -}}
+{{- $attributedTo := $document.AttributedTo -}}
+{{- $inReplyTo := $document.InReplyTo -}}
 {{- $inReplyToAttributedTo := $inReplyTo.AttributedTo -}}
 
 <div id="modal-header">
@@ -16,20 +16,17 @@
 
 			<div class="flex-grow-1">
 				<span class="button-group" script="install message(messageId:'{{$message.ID}}')">
-					<button id="previous" hx-get="/@me/inbox/message?messageId={{$message.ID}}&sibling=prev&followingId={{$followingID}}">&laquo; Prev</button>
-					<button id="next" hx-get="/@me/inbox/message?messageId={{$message.ID}}&sibling=next&followingId={{$followingID}}">Next &raquo;</button>
+					<button id="previous" hx-get="/@me/inbox/message?messageId={{$message.ID}}&sibling=prev&followingId={{$followingID}}&folderId={{$folderID}}" script="install hotkey" aria-key-shortcuts="ArrowLeft">&laquo; Prev</button>
+					<button id="next" hx-get="/@me/inbox/message?messageId={{$message.ID}}&sibling=next&followingId={{$followingID}}&folderId={{$folderID}}" script="install hotkey" aria-key-shortcuts="ArrowLeft">Next &raquo;</button>
 				</span>
 
 				<span class="button-group">
-					<button script="on click go to url '{{$message.URL}}' in new window">Original Post</button>
-					{{- if $attributedTo.NotNil -}}
-						<button script="on click go to url '{{$attributedTo.ID}}' in new window">Profile</button>
-					{{- else -}}
-						<button disabled>Profile</button>
-					{{- end -}}
-					<button hx-get="/@me/settings/following-edit?followingId={{$message.Origin.FollowingID.Hex}}">Edit Follow Settings</button>
-
 					{{.View "message-mute-button"}}
+				</span>
+
+				<span class="button-group">
+					<a href="{{$message.URL}}" target="_blank" class="button">{{icon "globe"}} Website</a>
+					<a hx-get="/@me/inbox/message-code?messageId={{$message.ID}}&followingId={{$followingID}}" class="button">{{icon "braces"}} Code</a>
 				</span>
 			</div>
 
@@ -45,105 +42,73 @@
 
 </div>
 
-<div id="modal-body" class="padding-top">
+<div id="modal-body">
 
-	{{- if $inReplyTo.NotNil -}}
-		<div class="flex-row margin-bottom">
-			<div role="link" class="italics text-sm link" hx-get="/@me/inbox/message?messageId={{$message.ID}}&folderID={{$folderID}}&origin.followingId={{$followingID}}&url={{$inReplyTo.ID}}">
-				{{icon "reply-fill"}} Replying to {{$inReplyToAttributedTo.Name}}...
-			</div>
+	<div class="clickable card padding-vertical-sm padding-horizontal">
+
+		<div class="margin-bottom">
+			{{- if $inReplyTo.NotNil -}}
+				<div role="link" class="italics text-sm link" hx-get="/@me/inbox/message?messageId={{$message.ID}}&folderID={{$folderID}}&origin.followingId={{$followingID}}&url={{$inReplyTo.ID}}">
+					{{icon "reply-fill"}} Replying to {{$inReplyToAttributedTo.Name}}...
+				</div>
+			{{- else -}}
+				{{- template "message-origin" $message -}}
+			{{- end -}}
 		</div>
-	{{- else -}}
 
-		{{- if ne "DIRECT" $message.Origin.Type -}}
-		
-			<div class="float-right text-sm text-gray bold">
-				{{- if eq "LIKE" $message.Origin.Type -}}
-					{{icon "thumbs-up"}} Liked by
-					<a class="text-gray" href="/@me/inbox?folderId={{$message.FolderID.Hex}}&origin.followingId={{$message.Origin.FollowingID.Hex}}">{{$message.Origin.Label}}</a> 
-
-				{{- else if eq	"DISLIKE" $message.Origin.Type -}}
-					{{icon "thumbs-down"}} Disliked by.
-					<a class="text-gray" href="/@me/inbox?folderId={{$message.FolderID.Hex}}&origin.followingId={{$message.Origin.FollowingID.Hex}}">{{$message.Origin.Label}}</a>
-					
-				{{- else if eq "ANNOUNCE" $message.Origin.Type -}}
-					{{icon "rocket"}} Boosted by
-					<a class="text-gray" href="/@me/inbox?folderId={{$message.FolderID.Hex}}&origin.followingId={{$message.Origin.FollowingID.Hex}}">{{$message.Origin.Label}}</a>
-		
-				{{- else if eq "REPLY" $message.Origin.Type -}}
-					{{icon "reply"}}
-					<a class="text-gray" href="/@me/inbox?folderId={{$message.FolderID.Hex}}&origin.followingId={{$message.Origin.FollowingID.Hex}}">{{$message.Origin.Label}}</a>
-					replied to this post.
-
-				{{- end -}}
-			</div>
-
+		{{- if ne "" $document.Name -}}
+			<h1 class="margin-top-sm margin-bottom-lg"><a href="{{$document.URLOrID}}" target="_blank" class="text-black">{{$document.Name}}</a></h1>
 		{{- end -}}
 
-	{{- end -}}
+		{{- if $attributedTo.NotEmpty -}}
 
-	{{- if $attributedTo.NotNil -}}
-
-		<div class="flex-row margin-bottom">
-			<a class="flex-grow-1 flex-row flex-align-center text-plain" href="{{$attributedTo.ID}}">
+			<div hx-get="/@me/inbox/browse-actor?url={{$attributedTo.ID}}" class="flex-row flex-align-center margin-bottom clickable">
 				{{- if $attributedTo.Icon.NotNil -}}
-					<img src="{{$attributedTo.Icon.Href}}" class="circle width-64">
+					<img src="{{$attributedTo.Icon.Href}}" class="circle width-48">
 				{{- end -}}
 				<div>
 					<div class="text-plain text-lg bold margin-vertical-none">{{$attributedTo.Name}}</div>
 					<div class="text-light-gray margin-vertical-none">{{$attributedTo.UsernameOrID}}</div>
 				</div>
-			</a>
+			</div>
 
-		</div>
-
-	{{- end -}}
-
-	<div>
-				
-		{{- if ne "" $stream.Name -}}
-			<h1 class="margin-top-sm margin-bottom-lg"><a href="{{$stream.URLOrID}}" target="_blank" class="text-black">{{$stream.Name}}</a></h1>
 		{{- end -}}
 
-		<div class="content">
+		<div class="flex-row">
+					
+			<div>
 
-			{{- if not (hasImage $stream.Content) -}}
-				{{- $image := $stream.ImageOrIcon -}}
-				{{- if $image.NotNil -}}
-					<div class="margin-bottom">
-						<a href="{{$stream.URLOrID}}" target="_blank"><img src="{{$image.URL}}" class="width-100%" style="{{- if $image.HasDimensions}} aspect-ratio:{{$image.AspectRatio}};{{end}}"/></a>
+				<div class="content">
+
+					{{- if not (hasImage $document.Content) -}}
+						{{- $image := $document.ImageOrIcon -}}
+						{{- if $image.NotNil -}}
+							<div class="margin-bottom">
+								<a href="{{$document.URLOrID}}" target="_blank"><img src="{{$image.URL}}" class="width-100%" style="{{- if $image.HasDimensions}} aspect-ratio:{{$image.AspectRatio}};{{end}}"/></a>
+							</div>
+						{{- end -}}
+					{{- end -}}
+
+					{{- if $document.HasContent -}}
+						<div>{{- $document.Content | html -}}</div>
+					{{- else if $document.HasSummary -}}
+						<div>{{- $document.Summary -}}</div>
+					{{- end -}}
+
+					<div class="margin-bottom text-sm text-light-gray">{{ $document.Published | shortDate -}}</div>
+
+					<div class="text-xs margin-top">
+						{{.View "like-button"}}
 					</div>
-				{{- end -}}
-			{{- end -}}
-
-			{{- if $stream.HasContent -}}
-				<div>{{- $stream.Content | html -}}</div>
-			{{- else if $stream.HasSummary -}}
-				<div>{{- $stream.Summary -}}</div>
-			{{- end -}}
-
-			<div class="margin-bottom text-sm text-light-gray">{{ $stream.Published | shortDate -}}</div>
-
-			{{- template "tags" $stream -}}
-
+				</div>
+			</div>
+			
 		</div>
 
-		<div class="margin-top-lg text-xs">
-			{{.View "like-button"}}
-
-			{{- if .NotMe $attributedTo.ID -}}
-				<div hx-get="/@me/inbox/actor-button?url={{$attributedTo.ID}}&folderId={{$message.FolderID.Hex}}" hx-target="this" hx-swap="outerHTML" hx-trigger="modalReady from:window" hx-push-url="false"></div>
-			{{- end -}}
-		</div>
-		
 	</div>
 
-	<div class="margin-left-md">
-		{{.View "responses-replies"}}
+	<div hx-get="/@me/inbox/responses-replies?messageId={{$message.ID}}&url={{$url}}" hx-trigger="load" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
+		<span class="spin">{{icon "loading"}}</span> Loading Replies
 	</div>
 
-</div>
-
-<div id="modal-footer">
-	{{.View "reply"}}
 </div>

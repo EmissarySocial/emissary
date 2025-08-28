@@ -21,8 +21,7 @@ const encryptionKeyBits = 2048
 
 // EncryptionKey defines a service that tracks the (possibly external) accounts an internal User is encryptionKey.
 type EncryptionKey struct {
-	collection data.Collection
-	host       string
+	host string
 }
 
 // NewEncryptionKey returns a fully initialized EncryptionKey service
@@ -35,8 +34,7 @@ func NewEncryptionKey() EncryptionKey {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *EncryptionKey) Refresh(collection data.Collection, host string) {
-	service.collection = collection
+func (service *EncryptionKey) Refresh(host string) {
 	service.host = host
 }
 
@@ -49,20 +47,24 @@ func (service *EncryptionKey) Close() {
  * Common Data Methods
  ******************************************/
 
+func (service *EncryptionKey) collection(session data.Session) data.Collection {
+	return session.Collection("EncryptionKey")
+}
+
 // Count returns the number of records that match the provided criteria
-func (service *EncryptionKey) Count(criteria exp.Expression) (int64, error) {
-	return service.collection.Count(notDeleted(criteria))
+func (service *EncryptionKey) Count(session data.Session, criteria exp.Expression) (int64, error) {
+	return service.collection(session).Count(notDeleted(criteria))
 }
 
 // List returns an iterator containing all of the EncryptionKeys who match the provided criteria
-func (service *EncryptionKey) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection.Iterator(notDeleted(criteria), options...)
+func (service *EncryptionKey) List(session data.Session, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+	return service.collection(session).Iterator(notDeleted(criteria), options...)
 }
 
 // Range returns an iterator containing all of the EncryptionKeys that match the provided criteria
-func (service *EncryptionKey) Range(criteria exp.Expression, options ...option.Option) (iter.Seq[model.EncryptionKey], error) {
+func (service *EncryptionKey) Range(session data.Session, criteria exp.Expression, options ...option.Option) (iter.Seq[model.EncryptionKey], error) {
 
-	iter, err := service.List(criteria, options...)
+	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
 		return nil, derp.Wrap(err, "service.EncryptionKey.Range", "Error creating iterator", criteria)
@@ -72,9 +74,9 @@ func (service *EncryptionKey) Range(criteria exp.Expression, options ...option.O
 }
 
 // Load retrieves an EncryptionKey from the database
-func (service *EncryptionKey) Load(criteria exp.Expression, encryptionKey *model.EncryptionKey) error {
+func (service *EncryptionKey) Load(session data.Session, criteria exp.Expression, encryptionKey *model.EncryptionKey) error {
 
-	if err := service.collection.Load(notDeleted(criteria), encryptionKey); err != nil {
+	if err := service.collection(session).Load(notDeleted(criteria), encryptionKey); err != nil {
 		return derp.Wrap(err, "service.EncryptionKey.Load", "Error loading EncryptionKey", criteria)
 	}
 
@@ -82,9 +84,9 @@ func (service *EncryptionKey) Load(criteria exp.Expression, encryptionKey *model
 }
 
 // Save adds/updates an EncryptionKey in the database
-func (service *EncryptionKey) Save(encryptionKey *model.EncryptionKey, note string) error {
+func (service *EncryptionKey) Save(session data.Session, encryptionKey *model.EncryptionKey, note string) error {
 
-	if err := service.collection.Save(encryptionKey, note); err != nil {
+	if err := service.collection(session).Save(encryptionKey, note); err != nil {
 		return derp.Wrap(err, "service.EncryptionKey.Save", "Error saving EncryptionKey", encryptionKey, note)
 	}
 
@@ -92,10 +94,10 @@ func (service *EncryptionKey) Save(encryptionKey *model.EncryptionKey, note stri
 }
 
 // Delete removes an EncryptionKey from the database (virtual delete)
-func (service *EncryptionKey) Delete(encryptionKey *model.EncryptionKey, note string) error {
+func (service *EncryptionKey) Delete(session data.Session, encryptionKey *model.EncryptionKey, note string) error {
 
 	// Delete this EncryptionKey
-	if err := service.collection.Delete(encryptionKey, note); err != nil {
+	if err := service.collection(session).Delete(encryptionKey, note); err != nil {
 		return derp.Wrap(err, "service.EncryptionKey.Delete", "Error deleting EncryptionKey", encryptionKey, note)
 	}
 
@@ -106,16 +108,16 @@ func (service *EncryptionKey) Delete(encryptionKey *model.EncryptionKey, note st
  * Custom Queries
  ******************************************/
 
-func (service *EncryptionKey) RangeByParentID(parentID primitive.ObjectID) (iter.Seq[model.EncryptionKey], error) {
-	return service.Range(exp.Equal("parentId", parentID))
+func (service *EncryptionKey) RangeByParentID(session data.Session, parentID primitive.ObjectID) (iter.Seq[model.EncryptionKey], error) {
+	return service.Range(session, exp.Equal("parentId", parentID))
 }
 
 // LoadByID tries to load the EncryptionKey from the database.  If no key
 // exists for the designated user, then a new one is generated.
-func (service *EncryptionKey) LoadByParentID(parentType string, parentID primitive.ObjectID, encryptionKey *model.EncryptionKey) error {
+func (service *EncryptionKey) LoadByParentID(session data.Session, parentType string, parentID primitive.ObjectID, encryptionKey *model.EncryptionKey) error {
 
 	// Try to load the encryption key from the database
-	err := service.Load(exp.Equal("parentType", parentType).AndEqual("parentId", parentID), encryptionKey)
+	err := service.Load(session, exp.Equal("parentType", parentType).AndEqual("parentId", parentID), encryptionKey)
 
 	// If there is no error, then return in success
 	if err == nil {
@@ -128,7 +130,7 @@ func (service *EncryptionKey) LoadByParentID(parentType string, parentID primiti
 	}
 
 	// Fall through means it's a "Not Found" error, so create a new key
-	newKey, err := service.Create(parentType, parentID)
+	newKey, err := service.Create(session, parentType, parentID)
 
 	if err != nil {
 		return derp.Wrap(err, "service.EncryptionKey.LoadByID", "Error creating new EncryptionKey", parentID)
@@ -143,7 +145,7 @@ func (service *EncryptionKey) LoadByParentID(parentType string, parentID primiti
  * Custom Actions
  ******************************************/
 
-func (service *EncryptionKey) Create(parentType string, parentID primitive.ObjectID) (model.EncryptionKey, error) {
+func (service *EncryptionKey) Create(session data.Session, parentType string, parentID primitive.ObjectID) (model.EncryptionKey, error) {
 
 	// Create new model object
 	encryptionKey := model.NewEncryptionKey()
@@ -161,25 +163,25 @@ func (service *EncryptionKey) Create(parentType string, parentID primitive.Objec
 	encryptionKey.PrivatePEM = sigs.EncodePrivatePEM(privateKey)
 	encryptionKey.PublicPEM = sigs.EncodePublicPEM(privateKey)
 
-	if err := service.Save(&encryptionKey, "Created"); err != nil {
+	if err := service.Save(session, &encryptionKey, "Created"); err != nil {
 		return model.EncryptionKey{}, derp.Wrap(err, "model.CreateEncryptionKey", "Error saving new EncryptionKey", parentType, parentID)
 	}
 
 	return encryptionKey, nil
 }
 
-func (service *EncryptionKey) DeleteByParentID(parentID primitive.ObjectID, note string) error {
+func (service *EncryptionKey) DeleteByParentID(session data.Session, parentID primitive.ObjectID, note string) error {
 
 	const location = "service.EncryptionKey.DeleteByParentID"
 
-	rangeFunc, err := service.RangeByParentID(parentID)
+	rangeFunc, err := service.RangeByParentID(session, parentID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error loading keys", parentID)
 	}
 
 	for encryptionKey := range rangeFunc {
-		if err := service.Delete(&encryptionKey, note); err != nil {
+		if err := service.Delete(session, &encryptionKey, note); err != nil {
 			return derp.Wrap(err, location, "Error deleting key", encryptionKey)
 		}
 	}

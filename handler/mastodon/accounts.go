@@ -1,6 +1,8 @@
 package mastodon
 
 import (
+	"time"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/data/option"
@@ -28,6 +30,15 @@ func PostAccount(serverFactory *server.Factory) func(model.Authorization, txn.Po
 			return object.Token{}, derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return object.Token{}, derp.Wrap(err, location, "Unable to create session")
+		}
+
+		defer cancel()
+
 		// Confirm that the domain is accepting new users
 		domainService := factory.Domain()
 
@@ -48,16 +59,16 @@ func PostAccount(serverFactory *server.Factory) func(model.Authorization, txn.Po
 		user.SignupNote = t.Reason
 		user.SetPassword(t.Password)
 
-		if err := userService.Save(&user, "Created via Mastodon API"); err != nil {
+		if err := userService.Save(session, &user, "Created via Mastodon API"); err != nil {
 			return object.Token{}, derp.Wrap(err, location, "Error saving user")
 		}
 
 		// Create a new OAuth token
 		oauthUserTokenService := factory.OAuthUserToken()
-		token, err := oauthUserTokenService.CreateFromUser(&user, auth.ClientID, auth.Scope)
+		token, err := oauthUserTokenService.CreateFromUser(session, &user, auth.ClientID, auth.Scope)
 
 		if err != nil {
-			return object.Token{}, derp.Wrap(err, location, "Error creating OAuth token")
+			return object.Token{}, derp.Wrap(err, location, "Unable to create OAuth token")
 		}
 
 		return token.Toot(), nil
@@ -77,11 +88,20 @@ func GetAccount_VerifyCredentials(serverFactory *server.Factory) func(model.Auth
 			return object.Account{}, derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return object.Account{}, derp.Wrap(err, location, "Unable to create session")
+		}
+
+		defer cancel()
+
 		// Load the User
 		userService := factory.User()
 		user := model.NewUser()
 
-		if err := userService.LoadByID(auth.UserID, &user); err != nil {
+		if err := userService.LoadByID(session, auth.UserID, &user); err != nil {
 			return object.Account{}, derp.Wrap(err, location, "Unrecognized User")
 		}
 
@@ -103,11 +123,20 @@ func PatchAccount_UpdateCredentials(serverFactory *server.Factory) func(model.Au
 			return object.Account{}, derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return object.Account{}, derp.Wrap(err, location, "Unable to create session")
+		}
+
+		defer cancel()
+
 		// Load the User
 		userService := factory.User()
 		user := model.NewUser()
 
-		if err := userService.LoadByID(auth.UserID, &user); err != nil {
+		if err := userService.LoadByID(session, auth.UserID, &user); err != nil {
 			return object.Account{}, derp.Wrap(err, location, "Unrecognized User")
 		}
 
@@ -116,7 +145,7 @@ func PatchAccount_UpdateCredentials(serverFactory *server.Factory) func(model.Au
 		user.Note = t.Note
 		user.IsPublic = t.Discoverable
 
-		if err := userService.Save(&user, "Updated via Mastodon API"); err != nil {
+		if err := userService.Save(session, &user, "Updated via Mastodon API"); err != nil {
 			return object.Account{}, derp.Wrap(err, location, "Error saving user")
 		}
 
@@ -138,11 +167,20 @@ func GetAccount(serverFactory *server.Factory) func(model.Authorization, txn.Get
 			return object.Account{}, derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return object.Account{}, derp.Wrap(err, location, "Unable to create session")
+		}
+
+		defer cancel()
+
 		// Load the User
 		userService := factory.User()
 		user := model.NewUser()
 
-		if err := userService.LoadByProfileURL(t.ID, &user); err != nil {
+		if err := userService.LoadByProfileURL(session, t.ID, &user); err != nil {
 			return object.Account{}, derp.Wrap(err, location, "Unrecognized User")
 		}
 
@@ -164,17 +202,26 @@ func GetAccount_Statuses(serverFactory *server.Factory) func(model.Authorization
 			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Unable to create session")
+		}
+
+		defer cancel()
+
 		// Load the requested User
 		userService := factory.User()
 		user := model.NewUser()
 
-		if err := userService.LoadByProfileURL(t.ID, &user); err != nil {
+		if err := userService.LoadByProfileURL(session, t.ID, &user); err != nil {
 			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Unrecognized User")
 		}
 
 		// Query all posts by this user
 		streamService := factory.Stream()
-		streams, err := streamService.QueryByUser(user.UserID, queryExpression(t), option.MaxRows(t.Limit))
+		streams, err := streamService.QueryByUser(session, user.UserID, queryExpression(t), option.MaxRows(t.Limit))
 
 		if err != nil {
 			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Error querying streams")
@@ -227,6 +274,15 @@ func PostAccount_Follow(serverFactory *server.Factory) func(model.Authorization,
 			return object.Relationship{}, derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return object.Relationship{}, derp.Wrap(err, location, "Unable to create session")
+		}
+
+		defer cancel()
+
 		// Create a new "Following" record
 		followingService := factory.Following()
 		following := model.NewFollowing()
@@ -234,7 +290,7 @@ func PostAccount_Follow(serverFactory *server.Factory) func(model.Authorization,
 		following.URL = t.ID
 
 		// Save the record and begin following the remote user.
-		if err := followingService.Save(&following, "Created via Mastodon API"); err != nil {
+		if err := followingService.Save(session, &following, "Created via Mastodon API"); err != nil {
 			return object.Relationship{}, derp.Wrap(err, location, "Error saving following")
 		}
 
@@ -256,16 +312,25 @@ func PostAccount_Unfollow(serverFactory *server.Factory) func(model.Authorizatio
 			return object.Relationship{}, derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return object.Relationship{}, derp.Wrap(err, location, "Unable to create session")
+		}
+
+		defer cancel()
+
 		// Load the "Following" record
 		followingService := factory.Following()
 		following := model.NewFollowing()
 
-		if err := followingService.LoadByURL(auth.UserID, t.ID, &following); err != nil {
+		if err := followingService.LoadByURL(session, auth.UserID, t.ID, &following); err != nil {
 			return object.Relationship{}, derp.Wrap(err, location, "Error loading following")
 		}
 
 		// Delete the "Following" record
-		if err := followingService.Delete(&following, "Deleted by Mastodon API"); err != nil {
+		if err := followingService.Delete(session, &following, "Deleted by Mastodon API"); err != nil {
 			return object.Relationship{}, derp.Wrap(err, location, "Error deleting following")
 		}
 
@@ -286,6 +351,15 @@ func PostAccount_Block(serverFactory *server.Factory) func(model.Authorization, 
 			return object.Relationship{}, derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return object.Relationship{}, derp.Wrap(err, location, "Unable to create session")
+		}
+
+		defer cancel()
+
 		// Create a new Rule record
 		ruleService := factory.Rule()
 		rule := model.NewRule()
@@ -293,7 +367,7 @@ func PostAccount_Block(serverFactory *server.Factory) func(model.Authorization, 
 		rule.Type = model.RuleTypeActor
 		rule.Trigger = t.ID
 
-		if err := ruleService.Save(&rule, "Created via Mastodon API"); err != nil {
+		if err := ruleService.Save(session, &rule, "Created via Mastodon API"); err != nil {
 			return object.Relationship{}, derp.Wrap(err, location, "Error saving rule")
 		}
 
@@ -315,16 +389,25 @@ func PostAccount_Unblock(serverFactory *server.Factory) func(model.Authorization
 			return object.Relationship{}, derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return object.Relationship{}, derp.Wrap(err, location, "Unable to create session")
+		}
+
+		defer cancel()
+
 		// Locate the rule record
 		ruleService := factory.Rule()
 		rule := model.NewRule()
 
-		if err := ruleService.LoadByTrigger(auth.UserID, model.RuleTypeActor, t.ID, &rule); err != nil {
+		if err := ruleService.LoadByTrigger(session, auth.UserID, model.RuleTypeActor, t.ID, &rule); err != nil {
 			return object.Relationship{}, derp.Wrap(err, location, "Error loading rule")
 		}
 
 		// Delete the rule record
-		if err := ruleService.Delete(&rule, "Deleted by Mastodon API"); err != nil {
+		if err := ruleService.Delete(session, &rule, "Deleted by Mastodon API"); err != nil {
 			return object.Relationship{}, derp.Wrap(err, location, "Error deleting rule")
 		}
 
@@ -346,6 +429,15 @@ func PostAccount_Mute(serverFactory *server.Factory) func(model.Authorization, t
 			return object.Relationship{}, derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return object.Relationship{}, derp.Wrap(err, location, "Unable to create session")
+		}
+
+		defer cancel()
+
 		// Create a new Rule record
 		ruleService := factory.Rule()
 		rule := model.NewRule()
@@ -353,7 +445,7 @@ func PostAccount_Mute(serverFactory *server.Factory) func(model.Authorization, t
 		rule.Type = model.RuleTypeActor
 		rule.Trigger = t.ID
 
-		if err := ruleService.Save(&rule, "Created via Mastodon API"); err != nil {
+		if err := ruleService.Save(session, &rule, "Created via Mastodon API"); err != nil {
 			return object.Relationship{}, derp.Wrap(err, location, "Error saving rule")
 		}
 
@@ -375,16 +467,25 @@ func PostAccount_Unmute(serverFactory *server.Factory) func(model.Authorization,
 			return object.Relationship{}, derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return object.Relationship{}, derp.Wrap(err, location, "Unable to create session")
+		}
+
+		defer cancel()
+
 		// Locate the rule record
 		ruleService := factory.Rule()
 		rule := model.NewRule()
 
-		if err := ruleService.LoadByTrigger(auth.UserID, model.RuleTypeActor, t.ID, &rule); err != nil {
+		if err := ruleService.LoadByTrigger(session, auth.UserID, model.RuleTypeActor, t.ID, &rule); err != nil {
 			return object.Relationship{}, derp.Wrap(err, location, "Error loading rule")
 		}
 
 		// Delete the rule record
-		if err := ruleService.Delete(&rule, "Deleted by Mastodon API"); err != nil {
+		if err := ruleService.Delete(session, &rule, "Deleted by Mastodon API"); err != nil {
 			return object.Relationship{}, derp.Wrap(err, location, "Error deleting rule")
 		}
 
@@ -463,8 +564,8 @@ func GetAccount_Lookup(serverFactory *server.Factory) func(model.Authorization, 
 		}
 
 		// Load the Account as an ActivityStream
-		activityStreamsService := factory.ActivityStream()
-		document, err := activityStreamsService.Load(t.Acct)
+		activityStreamsService := factory.ActivityStream(model.ActorTypeUser, auth.UserID)
+		document, err := activityStreamsService.Client().Load(t.Acct)
 
 		if err != nil {
 			return object.Account{}, derp.Wrap(err, location, "Error loading document")

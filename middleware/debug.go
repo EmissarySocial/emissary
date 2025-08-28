@@ -1,14 +1,9 @@
 package middleware
 
-import (
-	"fmt"
-	"strings"
-
-	"github.com/benpate/derp"
-	domaintools "github.com/benpate/domain"
-	"github.com/benpate/re"
-	"github.com/labstack/echo/v4"
-)
+/*
+THIS MIDDLEWARE IS FOR DEVELOPMENT ONLY.
+DISABLE IT BEFORE PUSHING TO GIT SO THAT IT
+IS NOT AVAILABLE TO PRODUCTION ENVIRONMENTS
 
 func Debug() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
@@ -26,7 +21,7 @@ func Debug() echo.MiddlewareFunc {
 			fmt.Println("")
 			fmt.Println("-- Debugger Middleware -------------------")
 			fmt.Println(request.Method + " " + request.URL.String() + " " + request.Proto)
-			fmt.Println("Host: " + domaintools.Hostname(request))
+			fmt.Println("Host: " + dt.Hostname(request))
 			for key, value := range request.Header {
 				fmt.Println(key + ": " + strings.Join(value, ", "))
 			}
@@ -38,3 +33,4 @@ func Debug() echo.MiddlewareFunc {
 		}
 	}
 }
+*/

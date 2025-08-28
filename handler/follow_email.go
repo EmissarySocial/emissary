@@ -3,15 +3,16 @@ package handler
 import (
 	"net/http"
 
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/random"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/steranko"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func PostEmailFollower(ctx *steranko.Context, factory *domain.Factory) error {
+func PostEmailFollower(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.PostEmailFollower"
 
@@ -38,7 +39,7 @@ func PostEmailFollower(ctx *steranko.Context, factory *domain.Factory) error {
 	// Create the new "Follower" record.
 	// Save the follower
 	followerService := factory.Follower()
-	follower, err := followerService.LoadOrCreate(transaction.ParentID, transaction.Email)
+	follower, err := followerService.LoadOrCreate(session, transaction.ParentID, transaction.Email)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error saving follower")
@@ -60,11 +61,11 @@ func PostEmailFollower(ctx *steranko.Context, factory *domain.Factory) error {
 		follower.StateID = model.FollowerStatePending
 	}
 
-	if err := followerService.Save(&follower, "Email Follower signup"); err != nil {
+	if err := followerService.Save(session, &follower, "Email Follower signup"); err != nil {
 		return derp.Wrap(err, location, "Error saving follower")
 	}
 
-	if err := followerService.SendFollowConfirmation(&follower); err != nil {
+	if err := followerService.SendFollowConfirmation(session, &follower); err != nil {
 		return derp.Wrap(err, location, "Error sending confirmation email")
 	}
 

@@ -1,8 +1,8 @@
 package service
 
 import (
+	"context"
 	"iter"
-	"math/rand"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -22,20 +22,21 @@ const followingMimeStack = "application/activity+json; q=1.0, text/html; q=0.9, 
 
 // Following manages all interactions with the Following collection
 type Following struct {
-	collection      data.Collection
-	streamService   *Stream
-	userService     *User
-	inboxService    *Inbox
-	folderService   *Folder
-	keyService      *EncryptionKey
-	activityService *ActivityStream
-	host            string
-	closed          chan bool
+	factory       *Factory
+	streamService *Stream
+	userService   *User
+	inboxService  *Inbox
+	folderService *Folder
+	keyService    *EncryptionKey
+	host          string
+	closed        chan bool
 }
 
 // NewFollowing returns a fully populated Following service.
-func NewFollowing() Following {
-	return Following{}
+func NewFollowing(factory *Factory) Following {
+	return Following{
+		factory: factory,
+	}
 }
 
 /******************************************
@@ -43,14 +44,12 @@ func NewFollowing() Following {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Following) Refresh(collection data.Collection, streamService *Stream, userService *User, inboxService *Inbox, folderService *Folder, keyService *EncryptionKey, activityService *ActivityStream, host string) {
-	service.collection = collection
+func (service *Following) Refresh(streamService *Stream, userService *User, inboxService *Inbox, folderService *Folder, keyService *EncryptionKey, host string) {
 	service.streamService = streamService
 	service.userService = userService
 	service.inboxService = inboxService
 	service.folderService = folderService
 	service.keyService = keyService
-	service.activityService = activityService
 	service.host = host
 }
 
@@ -59,69 +58,13 @@ func (service *Following) Close() {
 	close(service.closed)
 }
 
-// Start begins the background scheduler that checks each following
-// according to its own polling frequency
-// TODO: HIGH: Need to make this configurable on a per-physical-server basis so that
-// clusters can work together without hammering the Following collection.
-func (service *Following) Start() {
-
-	const location = "service.Following.Start"
-
-	// Wait until the service has booted up correctly.
-	for service.collection == nil {
-		time.Sleep(1 * time.Minute)
-	}
-
-	// query the database every minute, looking for following that should be loaded from the web.
-	for {
-
-		// If (for some reason) the service collection is still nil, then
-		// wait this one out.
-		if service.collection == nil {
-			continue
-		}
-
-		// Get a list of all following that can be polled
-		it, err := service.ListPollable()
-
-		if err != nil {
-			derp.Report(derp.Wrap(err, location, "Error listing pollable following"))
-			continue
-		}
-
-		following := model.NewFollowing()
-
-		for it.Next(&following) {
-			select {
-
-			// If we're done, we're done.
-			case <-service.closed:
-				return
-
-			default:
-
-				// Poll each following for new items.
-				if err := service.Connect(following); err != nil {
-					derp.Report(derp.Wrap(err, location, "Error connecting to remote server"))
-				}
-
-				// TODO: Reschedule this to run MUCH less frequently
-				// if err := service.PurgeInbox(following); err != nil {
-				//	derp.Report(derp.Wrap(err, location, "Error purghing inbox"))
-				// }
-			}
-
-			following = model.NewFollowing()
-		}
-
-		// Poll every 4 hours (plus 45 minute jitter)
-		time.Sleep(time.Duration(rand.Intn(45)+240) * time.Minute)
-	}
-}
-
 /******************************************
  * Common Data Methods
  ******************************************/
+
+func (service *Following) collection(session data.Session) data.Collection {
+	return session.Collection("Following")
+}
 
 // New creates a newly initialized Following that is ready to use
 func (service *Following) New() model.Following {
@@ -129,26 +72,26 @@ func (service *Following) New() model.Following {
 }
 
 // Count returns the number of records that match the provided criteria
-func (service *Following) Count(criteria exp.Expression) (int64, error) {
-	return service.collection.Count(notDeleted(criteria))
+func (service *Following) Count(session data.Session, criteria exp.Expression) (int64, error) {
+	return service.collection(session).Count(notDeleted(criteria))
 }
 
 // Query returns an iterator containing all of the Following who match the provided criteria
-func (service *Following) Query(criteria exp.Expression, options ...option.Option) ([]model.Following, error) {
+func (service *Following) Query(session data.Session, criteria exp.Expression, options ...option.Option) ([]model.Following, error) {
 	result := make([]model.Following, 0)
-	err := service.collection.Query(&result, notDeleted(criteria), options...)
+	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
 	return result, err
 }
 
 // List returns an iterator containing all of the Following who match the provided criteria
-func (service *Following) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection.Iterator(notDeleted(criteria), options...)
+func (service *Following) List(session data.Session, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+	return service.collection(session).Iterator(notDeleted(criteria), options...)
 }
 
 // Range returns a Go 1.23 RangeFunc that iterates over the Following records that match the provided criteria
-func (service *Following) Range(criteria exp.Expression, options ...option.Option) (iter.Seq[model.Following], error) {
+func (service *Following) Range(session data.Session, criteria exp.Expression, options ...option.Option) (iter.Seq[model.Following], error) {
 
-	iter, err := service.List(criteria, options...)
+	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
 		return nil, derp.Wrap(err, "service.Following.Range", "Error creating iterator", criteria)
@@ -158,17 +101,17 @@ func (service *Following) Range(criteria exp.Expression, options ...option.Optio
 }
 
 // Load retrieves an Following from the database
-func (service *Following) Load(criteria exp.Expression, result *model.Following) error {
+func (service *Following) Load(session data.Session, criteria exp.Expression, result *model.Following) error {
 
-	if err := service.collection.Load(notDeleted(criteria), result); err != nil {
-		return derp.Wrap(err, "service.Following.Load", "Error loading Following", criteria)
+	if err := service.collection(session).Load(notDeleted(criteria), result); err != nil {
+		return derp.Wrap(err, "service.Following.Load", "Unable to loadFollowing", criteria)
 	}
 
 	return nil
 }
 
 // Save adds/updates an Following in the database
-func (service *Following) Save(following *model.Following, note string) error {
+func (service *Following) Save(session data.Session, following *model.Following, note string) error {
 
 	const location = "service.Following.Save"
 
@@ -207,49 +150,73 @@ func (service *Following) Save(following *model.Following, note string) error {
 	}
 
 	// Prevent duplicate following records
-	if err := service.preventDuplicates(following); err != nil {
+	if err := service.preventDuplicates(session, following); err != nil {
 		return derp.Wrap(err, location, "Error preventing duplicate", following)
 	}
 
 	// RULE: Set the Folder Name
 	folder := model.NewFolder()
-	if err := service.folderService.LoadByID(following.UserID, following.FolderID, &folder); err == nil {
+	if err := service.folderService.LoadByID(session, following.UserID, following.FolderID, &folder); err == nil {
 		following.Folder = folder.Label
 	}
 
 	// Save the following to the database
-	if err := service.collection.Save(following, note); err != nil {
+	if err := service.collection(session).Save(following, note); err != nil {
 		return derp.Wrap(err, location, "Error saving Following", following, note)
 	}
 
 	// RULE: Update messages if requested by the UX
-	go service.inboxService.UpdateInboxFolders(following.UserID, following.FollowingID, following.FolderID)
+	if err := service.inboxService.UpdateInboxFolders(session, following.UserID, following.FollowingID, following.FolderID); err != nil {
+		return derp.Wrap(err, location, "Unable to update Inbox Folders")
+	}
 
 	// Recalculate the follower count for this user
-	go service.userService.CalcFollowingCount(following.UserID)
+	if err := service.userService.CalcFollowingCount(session, following.UserID); err != nil {
+		return derp.Wrap(err, location, "Unable to count `Following` records")
+	}
 
-	// Connect to external services and discover the best update method.
-	// This will also update the status again, soon.
-	go service.RefreshAndConnect(*following)
+	// Run follow-on tasks asynchronously (which means we don't get to keep this transaction session)
+	go service.save_async(*following)
 
 	// Win!
 	return nil
 }
 
+func (service *Following) save_async(following model.Following) {
+
+	const location = "service.Following.save_async"
+
+	ctx := context.Background()
+
+	// Create a new Database transaction session
+	service.factory.Server().WithTransaction(ctx, func(session data.Session) (any, error) {
+
+		// Connect to external services and discover the best update method.
+		// This will also update the status again, soon.
+		service.RefreshAndConnect(session, following)
+
+		return nil, nil
+	})
+}
+
 // Delete removes an Following from the database (virtual delete)
-func (service *Following) Delete(following *model.Following, note string) error {
+func (service *Following) Delete(session data.Session, following *model.Following, note string) error {
 
 	const location = "service.Following.Delete"
 
-	if err := service.deleteNoStats(following, note); err != nil {
+	if err := service.deleteNoStats(session, following, note); err != nil {
 		return derp.Wrap(err, location, "Error deleting Following", following, note)
 	}
 
 	// Recalculate the follower count for this user
-	go service.userService.CalcFollowingCount(following.UserID)
+	if err := service.userService.CalcFollowingCount(session, following.UserID); err != nil {
+		return derp.Wrap(err, location, "Unable to calculate Following count")
+	}
 
 	// Recalculate the unread count for this folder
-	go derp.Report(service.folderService.ReCalculateUnreadCountFromFolder(following.UserID, following.FolderID))
+	if err := service.folderService.CalculateUnreadCount(session, following.UserID, following.FolderID); err != nil {
+		return derp.Wrap(err, location, "Unable to calculate Unread count")
+	}
 
 	return nil
 }
@@ -258,22 +225,22 @@ func (service *Following) Delete(following *model.Following, note string) error 
 // but DOES NOT recompute statistics for parent records.  This is useful when
 // cascading deletes, because there's no reason to recompute statistics for
 // records that will be deleted.
-func (service *Following) deleteNoStats(following *model.Following, comment string) error {
+func (service *Following) deleteNoStats(session data.Session, following *model.Following, comment string) error {
 
 	const location = "service.Following.deleteNoStats"
 
 	// Remove the Following record
-	if err := service.collection.Delete(following, comment); err != nil {
+	if err := service.collection(session).Delete(following, comment); err != nil {
 		return derp.Wrap(err, location, "Error deleting Following", following, comment)
 	}
 
 	// Remove any messages received from this Following
-	if err := service.inboxService.DeleteByOrigin(following.FollowingID, "Parent record deleted"); err != nil {
+	if err := service.inboxService.DeleteByOrigin(session, following.FollowingID, "Parent record deleted"); err != nil {
 		return derp.Wrap(err, location, "Error deleting streams for Following", following)
 	}
 
 	// Disconnect from external services (if necessary)
-	service.Disconnect(following)
+	service.Disconnect(session, following)
 
 	return nil
 }
@@ -303,26 +270,26 @@ func (service *Following) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
-func (service *Following) ObjectQuery(result any, criteria exp.Expression, options ...option.Option) error {
-	return service.collection.Query(result, notDeleted(criteria), options...)
+func (service *Following) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
+	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
-func (service *Following) ObjectLoad(criteria exp.Expression) (data.Object, error) {
+func (service *Following) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewFollowing()
-	err := service.Load(criteria, &result)
+	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
-func (service *Following) ObjectSave(object data.Object, note string) error {
+func (service *Following) ObjectSave(session data.Session, object data.Object, note string) error {
 	if following, ok := object.(*model.Following); ok {
-		return service.Save(following, note)
+		return service.Save(session, following, note)
 	}
 	return derp.InternalError("service.Following.ObjectSave", "Invalid object type", object)
 }
 
-func (service *Following) ObjectDelete(object data.Object, note string) error {
+func (service *Following) ObjectDelete(session data.Session, object data.Object, note string) error {
 	if following, ok := object.(*model.Following); ok {
-		return service.Delete(following, note)
+		return service.Delete(session, following, note)
 	}
 	return derp.InternalError("service.Following.ObjectDelete", "Invalid object type", object)
 }
@@ -340,63 +307,73 @@ func (service *Following) Schema() schema.Schema {
  ******************************************/
 
 // QueryByUser returns a slice of all following for a given user
-func (service *Following) QueryByUser(userID primitive.ObjectID) ([]model.FollowingSummary, error) {
+func (service *Following) QueryByUser(session data.Session, userID primitive.ObjectID) ([]model.FollowingSummary, error) {
 	result := make([]model.FollowingSummary, 0)
 	criteria := exp.Equal("userId", userID)
-	err := service.collection.Query(&result, notDeleted(criteria), option.Fields(model.FollowingSummaryFields()...), option.SortAsc("label"))
+	err := service.collection(session).Query(&result, notDeleted(criteria), option.Fields(model.FollowingSummaryFields()...), option.SortAsc("label"))
 	return result, err
 }
 
 // QueryByFolder returns a slice of all following for a given user
-func (service *Following) QueryByFolder(userID primitive.ObjectID, folderID primitive.ObjectID) ([]model.FollowingSummary, error) {
+func (service *Following) QueryByFolder(session data.Session, userID primitive.ObjectID, folderID primitive.ObjectID) ([]model.FollowingSummary, error) {
 	result := make([]model.FollowingSummary, 0)
 	criteria := exp.Equal("userId", userID).AndEqual("folderId", folderID)
-	err := service.collection.Query(&result, notDeleted(criteria), option.Fields(model.FollowingSummaryFields()...), option.SortAsc("label"))
+	err := service.collection(session).Query(&result, notDeleted(criteria), option.Fields(model.FollowingSummaryFields()...), option.SortAsc("label"))
 	return result, err
 }
 
 // QueryByFolderAndExp returns a slice of all following for a given user
-func (service *Following) QueryByFolderAndExp(userID primitive.ObjectID, folderID primitive.ObjectID, criteria exp.Expression) ([]model.FollowingSummary, error) {
+func (service *Following) QueryByFolderAndExp(session data.Session, userID primitive.ObjectID, folderID primitive.ObjectID, criteria exp.Expression) ([]model.FollowingSummary, error) {
 
 	result := make([]model.FollowingSummary, 0)
 	criteria = criteria.
 		AndEqual("userId", userID).
 		AndEqual("folderId", folderID)
 
-	err := service.collection.Query(&result, notDeleted(criteria), option.Fields(model.FollowingSummaryFields()...), option.SortAsc("label"))
+	err := service.collection(session).Query(&result, notDeleted(criteria), option.Fields(model.FollowingSummaryFields()...), option.SortAsc("label"))
 	return result, err
 }
 
-// ListPollable returns an iterator of all following that are ready to be polled
-func (service *Following) ListPollable() (data.Iterator, error) {
+// RangePollable returns an iterator of all following that are ready to be polled
+func (service *Following) RangePollable(session data.Session) (iter.Seq[model.Following], error) {
 	criteria := exp.LessThan("nextPoll", time.Now().Unix()).
 		AndNotEqual("method", model.FollowingMethodActivityPub) // Don't poll ActivityPub
 
-	return service.List(criteria, option.SortAsc("lastPolled"))
+	return service.Range(session, criteria, option.SortAsc("lastPolled"))
 }
 
 // RangeByUserID returns an iterator of all following for a given userID
-func (service *Following) RangeByUserID(userID primitive.ObjectID) (iter.Seq[model.Following], error) {
+func (service *Following) RangeByUserID(session data.Session, userID primitive.ObjectID) (iter.Seq[model.Following], error) {
 	criteria := exp.Equal("userId", userID)
-	return service.Range(criteria)
+	return service.Range(session, criteria)
+}
+
+// RangeByFolderID returns an iterator containing all of the Folders for a given user/folder
+func (service *Following) RangeByFolderID(session data.Session, userID primitive.ObjectID, folderID primitive.ObjectID) (iter.Seq[model.Following], error) {
+	criteria := exp.Equal("userId", userID).AndEqual("_id", folderID)
+	return service.Range(session, criteria)
 }
 
 // LoadByID retrieves an Following from the database.  UserID is required to prevent
 // people from snooping on other's following.
-func (service *Following) LoadByID(userID primitive.ObjectID, followingID primitive.ObjectID, result *model.Following) error {
+func (service *Following) LoadByID(session data.Session, userID primitive.ObjectID, followingID primitive.ObjectID, result *model.Following) error {
+
+	const location = "service.Following.LoadByID"
 
 	criteria := exp.Equal("_id", followingID).
 		AndEqual("userId", userID)
 
-	if err := service.Load(criteria, result); err != nil {
-		return derp.Wrap(err, "service.Following.LoadByID", "Error loading Following", criteria)
+	if err := service.Load(session, criteria, result); err != nil {
+		return derp.Wrap(err, location, "Unable to load Following", criteria)
 	}
 
 	return nil
 }
 
 // LoadByToken loads an individual following using a string version of the following ID
-func (service *Following) LoadByToken(userID primitive.ObjectID, token string, result *model.Following) error {
+func (service *Following) LoadByToken(session data.Session, userID primitive.ObjectID, token string, result *model.Following) error {
+
+	const location = "service.Following.LoadByToken"
 
 	if token == "new" {
 		*result = model.NewFollowing()
@@ -407,34 +384,35 @@ func (service *Following) LoadByToken(userID primitive.ObjectID, token string, r
 	followingID, err := primitive.ObjectIDFromHex(token)
 
 	if err != nil {
-		return derp.Wrap(err, "service.Following.LoadByToken", "Error parsing followingId", token)
+		return derp.Wrap(err, location, "FollowingId must be a valid ObjectID", token)
 	}
 
-	return service.LoadByID(userID, followingID, result)
+	return service.LoadByID(session, userID, followingID, result)
 }
 
 // LoadByURL loads an individual following using the target URL that is being followed
-func (service *Following) LoadByURL(userID primitive.ObjectID, profileUrl string, result *model.Following) error {
+func (service *Following) LoadByURL(session data.Session, userID primitive.ObjectID, profileUrl string, result *model.Following) error {
 
 	criteria := exp.Equal("userId", userID).
 		AndEqual("profileUrl", profileUrl)
 
-	return service.Load(criteria, result)
+	return service.Load(session, criteria, result)
 }
 
 /******************************************
  * Custom Actions
  ******************************************/
 
-func (service *Following) GetFollowingID(userID primitive.ObjectID, uri string) (string, error) {
+func (service *Following) GetFollowingID(session data.Session, userID primitive.ObjectID, uri string) (string, error) {
 
 	const location = "service.Following.IsFollowing"
 
 	// Load the ActivityStream document
-	document, err := service.activityService.Load(uri)
+	activityService := service.factory.ActivityStream(model.ActorTypeUser, userID)
+	document, err := activityService.Client().Load(uri)
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Error loading ActivityStream document", uri)
+		return "", derp.Wrap(err, location, "Unable to loadActivityStream document", uri)
 	}
 
 	// If this document is not an Actor, then get the Actor of the document
@@ -449,30 +427,30 @@ func (service *Following) GetFollowingID(userID primitive.ObjectID, uri string) 
 	// Look for the Actor in the Following collection
 	following := model.NewFollowing()
 
-	if err := service.LoadByURL(userID, document.ID(), &following); err == nil {
+	if err := service.LoadByURL(session, userID, document.ID(), &following); err == nil {
 		return following.ID(), nil
 	} else if derp.IsNotFound(err) {
 		return "", nil
 	} else {
-		return "", derp.Wrap(err, location, "Error loading Following record", uri)
+		return "", derp.Wrap(err, location, "Unable to loadFollowing record", uri)
 	}
 }
 
 // DeleteByUserID removes all Following records for the provided userID
-func (service *Following) DeleteByUserID(userID primitive.ObjectID, comment string) error {
+func (service *Following) DeleteByUserID(session data.Session, userID primitive.ObjectID, comment string) error {
 
 	const location = "service.Following.DeleteByUserID"
 
 	// Load all Following for the provided userID
-	rangeFunc, err := service.RangeByUserID(userID)
+	rangeFunc, err := service.RangeByUserID(session, userID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error loading following", userID)
+		return derp.Wrap(err, location, "Unable to loadfollowing", userID)
 	}
 
 	// Delete each Following record
 	for following := range rangeFunc {
-		if err := service.deleteNoStats(&following, comment); err != nil {
+		if err := service.deleteNoStats(session, &following, comment); err != nil {
 			return derp.Wrap(err, location, "Error deleting following", following)
 		}
 	}
@@ -481,14 +459,32 @@ func (service *Following) DeleteByUserID(userID primitive.ObjectID, comment stri
 	return nil
 }
 
+func (service *Following) DeleteByFolder(session data.Session, userID primitive.ObjectID, folderID primitive.ObjectID, comment string) error {
+
+	rangeFunc, err := service.RangeByFolderID(session, userID, folderID)
+
+	if err != nil {
+		return derp.Wrap(err, "service.Folder.DeleteByFolder", "Unable to list folders", userID, folderID)
+	}
+
+	for folder := range rangeFunc {
+		if err := service.Delete(session, &folder, comment); err != nil {
+			return derp.Wrap(err, "service.Folder.DeleteByFolder", "Unable to delete folder", folder)
+		}
+	}
+
+	// Skibidi.
+	return nil
+}
+
 // PurgeInbox removes all inbox items that are past their expiration date.
 // TODO: HIGH: This should be rescheduled to run less frequently
-func (service *Following) PurgeInbox(following model.Following) error {
+func (service *Following) PurgeInbox(session data.Session, following model.Following) error {
 
 	const location = "service.Following.PurgeFollowing"
 
 	// Check each following for expired items.
-	messages, err := service.inboxService.RangePurgeable(&following)
+	messages, err := service.inboxService.RangePurgeable(session, &following)
 
 	// If there was an error querying for purgeable items, log it and exit.
 	if err != nil {
@@ -497,7 +493,7 @@ func (service *Following) PurgeInbox(following model.Following) error {
 
 	// Purge each item that has expired
 	for message := range messages {
-		if err := service.inboxService.Delete(&message, "Purged"); err != nil {
+		if err := service.inboxService.Delete(session, &message, "Purged"); err != nil {
 			return derp.Wrap(err, location, "Error purging message", message)
 		}
 	}
@@ -510,7 +506,7 @@ func (service *Following) PurgeInbox(following model.Following) error {
  ******************************************/
 
 // SetStatusLoading updates a Following record with the "Loading" status
-func (service *Following) SetStatusLoading(following *model.Following) error {
+func (service *Following) SetStatusLoading(session data.Session, following *model.Following) error {
 
 	// Update Following state
 	following.Status = model.FollowingStatusLoading
@@ -518,12 +514,12 @@ func (service *Following) SetStatusLoading(following *model.Following) error {
 	following.LastPolled = time.Now().Unix()
 
 	// Save the Following to the database
-	return service.collection.Save(following, "Updating status")
+	return service.collection(session).Save(following, "Updating status")
 }
 
 // SetStatusSuccess updates a Following record with the "Success" status and
 // resets the error count to zero.
-func (service *Following) SetStatusSuccess(following *model.Following) error {
+func (service *Following) SetStatusSuccess(session data.Session, following *model.Following) error {
 
 	// Update Following state
 	following.Status = model.FollowingStatusSuccess
@@ -533,12 +529,12 @@ func (service *Following) SetStatusSuccess(following *model.Following) error {
 	following.ErrorCount = 0
 
 	// Save the Following to the database
-	return service.collection.Save(following, "Updating status")
+	return service.collection(session).Save(following, "Updating status")
 }
 
 // SetStatusFailure updates a Following record to the "Failure" status and
 // increments the error count.
-func (service *Following) SetStatusFailure(following *model.Following, statusMessage string) error {
+func (service *Following) SetStatusFailure(session data.Session, following *model.Following, statusMessage string) error {
 
 	// Update Following state
 	following.Status = model.FollowingStatusFailure
@@ -558,7 +554,7 @@ func (service *Following) SetStatusFailure(following *model.Following, statusMes
 	following.NextPoll = time.Now().Add(time.Duration(errorBackoff) * time.Minute).Unix()
 
 	// Save the Following to the database
-	return service.collection.Save(following, "Updating status")
+	return service.collection(session).Save(following, "Updating status")
 }
 
 /******************************************
@@ -591,19 +587,19 @@ func (service *Following) AsJSONLD(following *model.Following) mapof.Any {
  * Helper Methods
  ******************************************/
 
-func (service *Following) preventDuplicates(current *model.Following) error {
+func (service *Following) preventDuplicates(session data.Session, current *model.Following) error {
 
 	// Search the database for the original record
 	original := model.NewFollowing()
-	if err := service.LoadByURL(current.UserID, current.URL, &original); err != nil {
+	if err := service.LoadByURL(session, current.UserID, current.URL, &original); err != nil {
 		if derp.IsNotFound(err) {
 			return nil
 		}
-		return derp.Wrap(err, "service.Following.preventDuplicate", "Error loading Following", current)
+		return derp.Wrap(err, "service.Following.preventDuplicate", "Unable to loadFollowing", current)
 	}
 
 	// Delete the original record
-	if err := service.Delete(&original, "removing duplicate"); err != nil {
+	if err := service.Delete(session, &original, "removing duplicate"); err != nil {
 		return derp.Wrap(err, "service.Following.preventDuplicate", "Error deleting original", original)
 	}
 

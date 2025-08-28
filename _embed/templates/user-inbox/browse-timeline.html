@@ -1,0 +1,17 @@
+{{- $url := .QueryParam "url" -}}
+{{- $document := .ActivityStream $url -}}
+{{- .SetQueryParam "context" $document.Context -}}
+
+{{- template "browse-header" (array $url "timeline") -}}
+
+<div id="modal-body" class="turboclick padding-top" hx-target="#modal-window" hx-swap="innerHTML transition:true" hx-push-url="false">
+	{{- template "browse-timeline-list" . -}}
+</div>
+
+<script type="text/hyperscript">
+	init
+	set selectedNode to #id_{{$document.Metadata.HashedID}} 
+	take .selected from .card for the selectedNode then
+	scrollIntoView() the selectedNode
+</script>
+

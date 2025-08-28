@@ -1,5 +1,5 @@
-{{- $stream := .ActivityStream .Permalink -}}
-{{- $statistics := $stream.Statistics -}}
+{{- $document := .ActivityStream .Permalink -}}
+{{- $metadata := $document.Metadata -}}
 
 <div id="responses" class="margin-top" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
 
@@ -7,15 +7,15 @@
 
 	<div>
 		<span hx-get="{{.BasePath}}/responses-replies?url={{.Permalink}}" role="button" class="margin-right-xs clickable bold">
-			{{- $statistics.Replies }} {{pluralize $statistics.Replies "Reply" "Replies" -}}
+			{{- $metadata.Replies }} {{pluralize $metadata.Replies "Reply" "Replies" -}}
 		</span>
 		&middot;
 		<span hx-get="{{.BasePath}}/responses-likes?url={{.Permalink}}" role="button" class="margin-horizontal-xs clickable">
-			{{- $statistics.Likes }} {{pluralize $statistics.Likes "Like" "Likes" -}}
+			{{- $metadata.Likes }} {{pluralize $metadata.Likes "Like" "Likes" -}}
 		</span>
 		&middot;
 		<span hx-get="{{.BasePath}}/responses-announces?url={{.Permalink}}" role="button" class="margin-horizontal-xs clickable">
-			{{- $statistics.Announces }} {{pluralize $statistics.Announces "Share" "Shares" -}}
+			{{- $metadata.Announces }} {{pluralize $metadata.Announces "Share" "Shares" -}}
 		</span>
 	</div>
 

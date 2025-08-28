@@ -54,6 +54,7 @@ type Builder interface {
 	SetContent(string)
 
 	factory() Factory                      // The service factory
+	session() data.Session                 // The database session that this Builder is using
 	request() *http.Request                // The original http.Request that we are responding to
 	response() http.ResponseWriter         // The original http.ResponseWriter that we are responding to
 	authorization() model.Authorization    // The user's authorization data from the context

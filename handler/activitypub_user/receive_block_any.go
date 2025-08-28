@@ -21,7 +21,7 @@ func receive_BlockAny(context Context, activity streams.Document) error {
 	following := model.NewFollowing()
 
 	// If the "Following" record cannot be found, then halt
-	if err := followingService.LoadByURL(context.user.UserID, activity.Actor().ID(), &following); err != nil {
+	if err := followingService.LoadByURL(context.session, context.user.UserID, activity.Actor().ID(), &following); err != nil {
 		return nil
 	}
 
@@ -34,7 +34,7 @@ func receive_BlockAny(context Context, activity streams.Document) error {
 	rule := ruleFromActivity(&following, activity)
 
 	// Try to save the new rule to the database (with de-duplication)
-	if err := context.factory.Rule().Save(&rule, "Received via ActivityPub"); err != nil {
+	if err := context.factory.Rule().Save(context.session, &rule, "Received via ActivityPub"); err != nil {
 		return derp.Wrap(err, location, "Error saving rule", activity.Value(), rule)
 	}
 

@@ -156,7 +156,7 @@ func (step StepAddStream) getInline(builder Builder, buffer io.Writer) error {
 	}
 
 	// Create a new child builder
-	childBuilder, err := NewStream(factory, builder.request(), builder.response(), newTemplate, &child, "create")
+	childBuilder, err := NewStream(factory, builder.session(), builder.request(), builder.response(), newTemplate, &child, "create")
 	childBuilder.setArguments(builder.getArguments())
 
 	if err != nil {
@@ -222,7 +222,7 @@ func (step StepAddStream) Post(builder Builder, buffer io.Writer) PipelineBehavi
 	}
 
 	// Create a builder for the new Stream
-	newBuilder, err := NewStream(factory, builder.request(), builder.response(), template, &newStream, "create")
+	newBuilder, err := NewStream(factory, builder.session(), builder.request(), builder.response(), template, &newStream, "create")
 	newBuilder.setArguments(builder.getArguments())
 
 	if err != nil {

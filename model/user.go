@@ -5,7 +5,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data/journal"
-	"github.com/benpate/domain"
+	dt "github.com/benpate/domain"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
@@ -408,10 +408,10 @@ func (user User) Host() string {
 
 	hostname := user.Hostname()
 
-	return domain.Protocol(hostname) + hostname
+	return dt.Protocol(hostname) + hostname
 }
 
 func (user User) Hostname() string {
 
-	return domain.NameOnly(user.ProfileURL)
+	return dt.NameOnly(user.ProfileURL)
 }

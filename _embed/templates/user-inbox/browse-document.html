@@ -1,0 +1,72 @@
+{{- $builder := index . 0 -}}
+{{- $document := index . 1 -}}
+
+{{- if ne "" $document.ID -}}
+
+	<div id="id_{{$document.Metadata.HashedID}}" class="card padding margin-bottom pos-relative">
+
+		{{- $attributedTo := $document.AttributedTo -}}
+		{{- if $attributedTo.NotEmpty -}}
+			<div class="margin-bottom-lg flex-row">
+				<div hx-get="/@me/inbox/browse-actor?url={{$attributedTo.ID}}" class="flex-shrink-0 flex-row flex-align-center clickable">
+					{{- if $attributedTo.Icon.NotNil -}}
+						<img src="{{$attributedTo.Icon.Href}}" class="circle width-48">
+					{{- end -}}
+					<div class="flex-shrink">
+						<div class="text-plain bold margin-vertical-none">{{$attributedTo.Name}}</div>
+						<div class="text-sm text-light-gray margin-vertical-none">{{$attributedTo.UsernameOrID}}</div>
+					</div>
+				</div>
+			</div>
+		{{- end -}}
+	
+		{{- if ne "" $document.Name -}}
+			<div class="text-lg bold margin-vertical padding-none">{{$document.Name}}</div>
+		{{- end -}}
+
+		<div id="id_{{$document.Metadata.HashedID}}_content" class="content">
+
+			{{- if $document.HasContent -}}
+				{{- $document.Content | html -}}
+			{{- else if $document.HasSummary -}}
+				{{- $document.Summary -}}
+			{{- end -}}
+
+			{{- if not (hasImage $document.Content) -}}
+				{{- template "browse-attachments" $document -}}
+			{{- end -}}
+
+		</div>
+		<div 
+			hx-get="/@me/inbox/like-button?url={{$document.ID}}" 
+			hx-trigger="intersect once"
+			hx-target="this" 
+			hx-swap="innerHTML" 
+			hx-push-url="false" 
+			class="margin-top-lg text-xs">
+		</div>
+
+		<div class="pos-absolute-top-right text-sm" hx-target="#modal-window" hx-push-url="false" hx-swap="innerHTML transition:true">
+			<span class="margin-right text-light-gray">{{ $document.Published | tinyDate }} ago</span>
+			{{ if eq $document.ID ($builder.QueryParam "url") }}
+				<button hx-get="/@me/inbox/browse-tree?url={{$document.ID}}" aria-label="Use Nested Layout" class="selected">{{icon "focus"}}</button>
+			{{else}}
+				<button hx-get="/@me/inbox/browse-tree?url={{$document.ID}}" aria-label="Use Nested Layout">{{icon "focus"}}</button>
+			{{end}}
+			<button hx-get="/@me/inbox/browse-index?url={{$document.ID}}" aria-label="Use Index Layout">{{icon "list"}}</button>
+			<span class="margin-horizontal-sm"></span>
+			<a href="{{$attributedTo.ID}}" target="_blank" class="button" aria-label="Visit Actor Profile">{{icon "person"}}</a>
+			<a href="{{$document.URL}}" target="_blank" class="button" aria-label="Visit Original Website">{{icon "globe"}}</a>
+		</div>
+		
+	</div>
+
+{{- else -}}
+
+	<div class="card padding margin-bottom pos-relative">
+		<div class="pos-absolute-four-corners bg-stripes flex-center"></div>
+		<div class="bold">Document Not Found</div>
+		<div class="text-sm">This document may have been deleted or is no longer available.</div>
+	</div>
+
+{{- end -}}

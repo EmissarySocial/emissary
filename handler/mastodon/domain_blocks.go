@@ -1,6 +1,8 @@
 package mastodon
 
 import (
+	"time"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/data/option"
@@ -24,10 +26,18 @@ func GetDomainBlocks(serverFactory *server.Factory) func(model.Authorization, tx
 			return []string{}, toot.PageInfo{}, derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return []string{}, toot.PageInfo{}, derp.Wrap(err, location, "Unable to create session")
+		}
+
+		defer cancel()
 		// Query the database
 		ruleService := factory.Rule()
 		criteria := queryExpression(t)
-		rules, err := ruleService.QueryByTypeDomain(auth.UserID, criteria, option.Fields("trigger"))
+		rules, err := ruleService.QueryByTypeDomain(session, auth.UserID, criteria, option.Fields("trigger"))
 
 		if err != nil {
 			return []string{}, toot.PageInfo{}, derp.Wrap(err, location, "Error querying database")
@@ -55,6 +65,14 @@ func PostDomainBlock(serverFactory *server.Factory) func(model.Authorization, tx
 			return struct{}{}, derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return struct{}{}, derp.Wrap(err, location, "Unable to create session")
+		}
+
+		defer cancel()
 		// Create the new "Domain Rule"
 		rule := model.NewRule()
 		rule.UserID = auth.UserID
@@ -63,7 +81,7 @@ func PostDomainBlock(serverFactory *server.Factory) func(model.Authorization, tx
 
 		// Save it to the database
 		ruleService := factory.Rule()
-		if err := ruleService.Save(&rule, "Created via Mastodon API"); err != nil {
+		if err := ruleService.Save(session, &rule, "Created via Mastodon API"); err != nil {
 			return struct{}{}, derp.Wrap(err, location, "Error saving rule")
 		}
 
@@ -84,16 +102,24 @@ func DeleteDomainBlock(serverFactory *server.Factory) func(model.Authorization, 
 			return struct{}{}, derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return struct{}{}, derp.Wrap(err, location, "Unable to create session")
+		}
+
+		defer cancel()
 		// Try to find the Rule in the database
 		ruleService := factory.Rule()
 		rule := model.NewRule()
 
-		if err := ruleService.LoadByTrigger(auth.UserID, model.RuleTypeDomain, t.Domain, &rule); err != nil {
+		if err := ruleService.LoadByTrigger(session, auth.UserID, model.RuleTypeDomain, t.Domain, &rule); err != nil {
 			return struct{}{}, derp.Wrap(err, location, "Error loading rule")
 		}
 
 		// Delete the Rule from the database
-		if err := ruleService.Delete(&rule, "Deleted via Mastodon API"); err != nil {
+		if err := ruleService.Delete(session, &rule, "Deleted via Mastodon API"); err != nil {
 			return struct{}{}, derp.Wrap(err, location, "Error deleting rule")
 		}
 

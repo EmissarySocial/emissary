@@ -10,6 +10,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/counter"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/rosetta/list"
@@ -94,7 +95,7 @@ func (service *StreamArchive) ExistsTemp(streamID primitive.ObjectID, token stri
 
 // Create makes a ZIP archive of a stream (and potentially its descendants)
 // and saves it to the export cache
-func (service *StreamArchive) Create(stream *model.Stream, options StreamArchiveOptions) error {
+func (service *StreamArchive) Create(session data.Session, stream *model.Stream, options StreamArchiveOptions) error {
 
 	const location = "service.StreamArchive.Create"
 
@@ -126,7 +127,7 @@ func (service *StreamArchive) Create(stream *model.Stream, options StreamArchive
 
 	defer zipWriter.Close()
 
-	if err := service.writeToZip(zipWriter, nil, stream, "", options); err != nil {
+	if err := service.writeToZip(session, zipWriter, nil, stream, "", options); err != nil {
 		// if the write fails, then remove the file before exiting.
 		derp.Report(service.exportCache.Remove(filename))
 		return derp.Wrap(err, location, "Error writing ZIP archive")
@@ -204,7 +205,7 @@ func (service *StreamArchive) Delete(streamID primitive.ObjectID, token string) 
 // WriteZip exports a stream (and potentially its descendents) into a ZIP archive.
 // The `depth` parameter indicates how many levels to traverse.
 // The `pipelines` parameter provides rosetta.translate mappings for attachment metadata.
-func (service *StreamArchive) writeToZip(zipWriter *zip.Writer, parent *model.Stream, stream *model.Stream, prefix string, options StreamArchiveOptions) error {
+func (service *StreamArchive) writeToZip(session data.Session, zipWriter *zip.Writer, parent *model.Stream, stream *model.Stream, prefix string, options StreamArchiveOptions) error {
 
 	const location = "service.StreamArchive.ExportZip"
 
@@ -218,7 +219,7 @@ func (service *StreamArchive) writeToZip(zipWriter *zip.Writer, parent *model.St
 	}
 
 	if options.JSON {
-		streamData := service.streamService.JSONLD(stream)
+		streamData := service.streamService.JSONLD(session, stream)
 
 		// EXPORT A JSON FILE
 		filenameJSON := filename.PushTail("json")
@@ -247,7 +248,7 @@ func (service *StreamArchive) writeToZip(zipWriter *zip.Writer, parent *model.St
 	if options.Attachments {
 
 		// Get all attachments for this Stream
-		attachments, err := service.attachmentService.QueryByObjectID(model.AttachmentObjectTypeStream, stream.StreamID)
+		attachments, err := service.attachmentService.QueryByObjectID(session, model.AttachmentObjectTypeStream, stream.StreamID)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error listing attachments")
@@ -332,7 +333,7 @@ func (service *StreamArchive) writeToZip(zipWriter *zip.Writer, parent *model.St
 
 	// Export children, if requested
 	if options.HasNext() {
-		children, err := service.streamService.RangeByParent(stream.StreamID)
+		children, err := service.streamService.RangeByParent(session, stream.StreamID)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Error listing children")
@@ -349,7 +350,7 @@ func (service *StreamArchive) writeToZip(zipWriter *zip.Writer, parent *model.St
 				prefix = prefix + "/" // For deeper nesting, create a new directory
 			}
 
-			if err := service.writeToZip(zipWriter, stream, &child, prefix, nextOptions); err != nil {
+			if err := service.writeToZip(session, zipWriter, stream, &child, prefix, nextOptions); err != nil {
 				return derp.Wrap(err, location, "Error exporting child")
 			}
 

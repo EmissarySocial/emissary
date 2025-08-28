@@ -2,16 +2,17 @@ package service
 
 import (
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 )
 
-func (service *Following) Disconnect(following *model.Following) {
+func (service *Following) Disconnect(session data.Session, following *model.Following) {
 
 	switch following.Method {
 
 	case model.FollowingMethodActivityPub:
 
-		if err := service.disconnect_ActivityPub(following); err != nil {
+		if err := service.disconnect_ActivityPub(session, following); err != nil {
 			derp.Report(derp.Wrap(err, "emissary.service.Following.Disconnect", "Error disconnecting from ActivityPub service"))
 		}
 

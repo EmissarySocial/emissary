@@ -33,7 +33,7 @@ type Registration struct {
 }
 
 // NewRegistration returns a fully initialized `Registration` builder.
-func NewRegistration(factory Factory, request *http.Request, response http.ResponseWriter, registration *model.Registration, actionID string) (Registration, error) {
+func NewRegistration(factory Factory, session data.Session, request *http.Request, response http.ResponseWriter, registration *model.Registration, actionID string) (Registration, error) {
 
 	const location = "build.NewRegistration"
 
@@ -53,7 +53,7 @@ func NewRegistration(factory Factory, request *http.Request, response http.Respo
 		_registration: registration,
 		_user:         model.NewUser(),
 
-		Common: NewCommon(factory, request, response),
+		Common: NewCommon(factory, session, request, response),
 	}
 
 	return result, nil
@@ -87,7 +87,7 @@ func (w Registration) View(actionID string) (template.HTML, error) {
 
 	const location = "build.Registration.View"
 
-	builder, err := NewRegistration(w._factory, w._request, w._response, w._registration, actionID)
+	builder, err := NewRegistration(w._factory, w._session, w._request, w._response, w._registration, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, location, "Error creating Group builder")
@@ -178,7 +178,7 @@ func (w Registration) RegistrationData(key string) string {
 }
 
 func (w Registration) clone(action string) (Builder, error) {
-	return NewRegistration(w._factory, w._request, w._response, w._registration, action)
+	return NewRegistration(w._factory, w._session, w._request, w._response, w._registration, action)
 }
 
 /******************************************
@@ -203,7 +203,7 @@ func (w Registration) Providers() []form.LookupCode {
 
 // Connection loads an external service connection from the database
 func (w Registration) AllConnections() mapof.Object[model.Connection] {
-	return w.factory().Connection().AllAsMap()
+	return w._factory.Connection().AllAsMap(w._session)
 }
 
 func (w Registration) Provider(providerID string) providers.Provider {

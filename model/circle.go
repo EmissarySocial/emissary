@@ -33,7 +33,7 @@ func CircleFields() []string {
 	return []string{"_id", "name", "icon", "color", "description", "productIds", "memberCount", "isFeatured"}
 }
 
-func (userSummary Circle) Fields() []string {
+func (circle Circle) Fields() []string {
 	return CircleFields()
 }
 

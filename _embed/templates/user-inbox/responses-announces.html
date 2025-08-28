@@ -1,8 +1,8 @@
 {{- $url := .QueryParam "url" -}}
 {{- $publishedDate := .QueryParam "published" -}}
 
-{{- $stream := .ActivityStream $url -}}
-{{- $statistics := $stream.Statistics -}}
+{{- $document := .ActivityStream $url -}}
+{{- $metadata := $document.Metadata -}}
 
 {{- $pageSize := 128 -}}
 {{- $announces := .AnnouncesBefore $url $publishedDate $pageSize -}}
@@ -11,21 +11,22 @@
 
 	<hr class="margin-bottom-sm"/>
 
-	<div>
-		<span hx-get="{{.BasePath}}/responses-replies?url={{$url}}" role="button" class="margin-right-xs clickable">
-			{{- $statistics.Replies }} {{pluralize $statistics.Replies "Reply" "Replies" -}}
+	<div class="pills" role="tablist">
+		<span role="tab" hx-get="/@me/inbox/responses-replies?url={{$url}}">
+			Replies 
+			<span class="pill">{{- $metadata.Replies }}</span>
 		</span>
-		&middot;
-		<span hx-get="{{.BasePath}}/responses-likes?url={{$url}}" role="button" class="margin-horizontal-xs clickable">
-			{{- $statistics.Likes }} {{pluralize $statistics.Likes "Like" "Likes" -}}
+
+		<span role="tab" aria-selected="true" hx-get="/@me/inbox/responses-announces?url={{$url}}">
+			Shares
+			<span class="pill pill-blue">{{- $metadata.Announces }}</span>
 		</span>
-		&middot;
-		<span hx-get="{{.BasePath}}/responses-announces?url={{$url}}" role="button" class="margin-horizontal-xs clickable bold">
-			{{- $statistics.Announces }} {{pluralize $statistics.Announces "Share" "Shares" -}}
+
+		<span role="tab" hx-get="/@me/inbox/responses-likes?url={{$url}}">
+			Likes
+			<span class="pill">{{- $metadata.Likes }}</span>
 		</span>
 	</div>
-
-	<hr class="margin-top-sm"/>
 
 	{{- template "responses-list" (array $announces "Shared by") -}}
 

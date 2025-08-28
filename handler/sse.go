@@ -6,8 +6,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/realtime"
+	"github.com/EmissarySocial/emissary/service"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/steranko"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -15,7 +17,7 @@ import (
 
 // ServerSentEvent generates an echo.HandlerFunc that listens for requests for
 // SSE following.
-func ServerSentEvent(ctx *steranko.Context, factory *domain.Factory) error {
+func ServerSentEvent(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	// Close SSE connections that remain open after 15 minutes
 	timeoutContext, cancel := context.WithTimeout(ctx.Request().Context(), 15*time.Minute)
@@ -40,8 +42,7 @@ func ServerSentEvent(ctx *steranko.Context, factory *domain.Factory) error {
 		return derp.Wrap(err, "handler.ServerSentEvent", "Invalid StreamID", token)
 	}
 
-	httpRequest := domain.NewHTTPRequest(ctx)
-	client := domain.NewRealtimeClient(httpRequest, streamID)
+	client := realtime.NewClient(ctx.Request(), streamID)
 
 	// Add this client to the map of those that should
 	// receive updates

@@ -1,3 +1,65 @@
+{{- $url := .Actor.ProfileURL -}}
+{{- $search := .QueryParam "search" -}}
+{{- $folderID := .QueryParam "folderId" -}}
+{{- $following := .AmFollowing $url -}}
+{{- $actor := .ActivityStreamActor $url -}}
+
+<div id="modal-header" class="flex-row">
+	<div role="tablist" class="pills margin-bottom-none">
+
+		{{- if ne "" $search -}}
+			<span role="link" class="link margin-right" hx-get="/@me/settings/following-search?search={{$search}}&folderId={{$folderID}}">
+				&larr; Search
+			</span>
+		{{- end -}}
+
+		<button role="tab" hx-get="/@me/inbox/browse-actor?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}">{{icon "person"}} Profile</button>
+		<button role="tab" hx-get="/@me/inbox/annotation?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}">{{icon "note"}} Notes</button>
+
+		{{ if $following.IsNew -}}
+			<button role="tab" hx-get="/@me/settings/following-edit?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}">{{icon "add"}} Follow</button>
+		{{- else -}}
+			<button role="tab" hx-get="/@me/settings/following-edit?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}">{{icon "check"}} Following</button>
+		{{- end }}
+
+		<button role="tab" aria-selected="true">{{icon "check"}} Follows You</button>
+	</div>
+</div>
+
+<div id="modal-body" class="pos-relative">
+
+	<div class="flex-row flex-align-center">
+		{{- if $actor.HasIcon -}}
+			<img src="{{$actor.Icon.Href}}" class="circle width-64">
+		{{- else -}}
+			<div class="circle width-64"></div>
+		{{- end -}}
+
+		<div class="flex-grow">
+			<div class="text-lg bold margin-none">{{$actor.Name}}</div>
+			<div class="text-light-gray">{{$actor.UsernameOrID}}</div>
+		</div>
+
+	</div>
+
+	<div class="flex-row margin-bottom-lg">
+		<div class="width-64"></div>
+		<div class="text-green bold margin-top">
+			{{icon "check-badge-fill"}} Follows You via ActivityPub
+		</div>
+	</div>
+
+    <div class="flex-row">
+        <button script="on click trigger closeModal">Close Window</button>
+
+		<div class="flex-grow-1 align-right">
+			<button hx-get="/@me/settings/follower-delete?followerId={{.FollowerID.Hex}}" class="text-red">Remove Follower</button>
+		</div>
+	</div>
+    
+</div>
+
+<!---
 {{- if eq "ACTIVITYPUB" .Method -}}
 	{{- template "follower-activitypub" . -}}
 {{- else if eq "EMAIL" .Method -}}
@@ -5,5 +67,6 @@
 {{- else if eq "WEBSUB" -}}
 	{{- template "follower-websub" . -}}
 {{- else -}}
-	There is a problem with this "Follower" record that prevents it from being displayed.
+	There is a problem with this record that prevents it from being displayed.
 {{- end -}}
+--->

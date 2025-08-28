@@ -22,7 +22,7 @@ func (step StepEditConnection) Get(builder Builder, buffer io.Writer) PipelineBe
 	providerID := builder.QueryParam("providerId")
 	adapter := domainBuilder.Provider(providerID)
 
-	connection, err := connectionService.LoadOrCreateByProvider(providerID)
+	connection, err := connectionService.LoadOrCreateByProvider(builder.session(), providerID)
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error loading connection", providerID))
@@ -69,7 +69,7 @@ func (step StepEditConnection) Post(builder Builder, _ io.Writer) PipelineBehavi
 	connectionService := factory.Connection()
 	adapter := domainBuilder.Provider(providerID)
 
-	connection, err := connectionService.LoadOrCreateByProvider(providerID)
+	connection, err := connectionService.LoadOrCreateByProvider(builder.session(), providerID)
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error loading connection", providerID))
@@ -97,7 +97,7 @@ func (step StepEditConnection) Post(builder Builder, _ io.Writer) PipelineBehavi
 	}
 
 	// Try to save the domain object back to the database
-	if err := connectionService.Save(&connection, "Updated by Administrator"); err != nil {
+	if err := connectionService.Save(builder.session(), &connection, "Updated by Administrator"); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error saving domain object"))
 	}
 

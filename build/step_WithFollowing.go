@@ -32,24 +32,6 @@ func (step StepWithFollowing) execute(builder Builder, buffer io.Writer, actionM
 		return Halt().WithError(derp.UnauthorizedError(location, "Anonymous user is not authorized to perform this action"))
 	}
 
-	var userID primitive.ObjectID
-	switch builder.IsAdminBuilder() {
-
-	// Admin routes use zeroes for "Following" parents
-	case true:
-
-		// Must be an owner to use the admin route
-		if !builder.IsOwner() {
-			return Halt().WithError(derp.ForbiddenError(location, "User must be an owner to complete this action"))
-		}
-
-		userID = primitive.NilObjectID
-
-	// Non-admin routes use the authenticated user's ID
-	case false:
-		userID = builder.AuthenticatedID()
-	}
-
 	// Try to find the Template for this builder.
 	// This *should* work for all builders that use CommonWithTemplate
 	template, exists := getTemplate(builder)
@@ -60,23 +42,14 @@ func (step StepWithFollowing) execute(builder Builder, buffer io.Writer, actionM
 
 	// Collect required services and values
 	factory := builder.factory()
-	followingService := factory.Following()
-	token := builder.QueryParam("followingId")
-	following := model.NewFollowing()
-	following.UserID = userID
+	following, err := step.getFollowing(builder)
 
-	// If we have a real ID, then try to load the following from the database
-	if (token != "") && (token != "new") {
-		if err := followingService.LoadByToken(userID, token, &following); err != nil {
-			if actionMethod == ActionMethodGet {
-				return Halt().WithError(derp.Wrap(err, location, "Unable to load Following", token))
-			}
-			// Fall through for POSTS..  we're just creating a new following.
-		}
+	if err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Unable to get Following record"))
 	}
 
 	// Create a new builder tied to the Following record
-	subBuilder, err := NewModel(factory, builder.request(), builder.response(), template, &following, builder.actionID())
+	subBuilder, err := NewModel(factory, builder.session(), builder.request(), builder.response(), template, &following, builder.actionID())
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Unable to create sub-builder"))
@@ -90,4 +63,64 @@ func (step StepWithFollowing) execute(builder Builder, buffer io.Writer, actionM
 	}
 
 	return UseResult(result)
+}
+
+func (step StepWithFollowing) getFollowing(builder Builder) (model.Following, error) {
+
+	const location = "build.StepWithFollowing.getFollowing"
+
+	// Locate the User ID for this request
+	userID, err := step.getUserID(builder)
+
+	if err != nil {
+		return model.NewFollowing(), derp.Wrap(err, location, "Unable to locate User ID")
+	}
+
+	// Collect required services and values
+	factory := builder.factory()
+	followingService := factory.Following()
+	following := model.NewFollowing()
+	following.UserID = userID
+
+	// If a `url` query parameter is provided, then use it to load the Following record
+	if url := builder.QueryParam("url"); url != "" {
+
+		if err := followingService.LoadByURL(builder.session(), userID, url, &following); !derp.IsNilOrNotFound(err) {
+			return model.NewFollowing(), derp.Wrap(err, location, "Unable to load Following by URL", url)
+		}
+
+		following.URL = url
+		return following, nil
+	}
+
+	// Otherwise, use the `followingId` query aprameter to load the Following record
+	token := builder.QueryParam("followingId")
+
+	// Finally, try to load the Following record from the database.
+	if err := followingService.LoadByToken(builder.session(), userID, token, &following); err != nil {
+		return following, derp.Wrap(err, location, "Unable to load Following", token)
+	}
+
+	// Success.
+	return following, nil
+}
+
+func (step StepWithFollowing) getUserID(builder Builder) (primitive.ObjectID, error) {
+
+	const location = "build.StepWithFollowing.getUserID"
+
+	// Admin routes use zeroes for "Following" parents
+	if builder.IsAdminBuilder() {
+
+		// Must be an owner to use the admin route
+		if !builder.IsOwner() {
+			return primitive.NilObjectID, derp.ForbiddenError(location, "User must be an owner to complete this action")
+		}
+
+		return primitive.NilObjectID, nil
+	}
+
+	// Non-admin routes use the authenticated user's ID
+	return builder.AuthenticatedID(), nil
+
 }

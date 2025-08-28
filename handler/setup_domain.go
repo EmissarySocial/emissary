@@ -3,6 +3,7 @@ package handler
 import (
 	_ "embed"
 	"net/http"
+	"time"
 
 	"github.com/EmissarySocial/emissary/build"
 	"github.com/EmissarySocial/emissary/config"
@@ -21,10 +22,10 @@ func SetupDomainGet(factory *server.Factory) echo.HandlerFunc {
 
 		domainID := ctx.Param("domain")
 
-		domain, err := factory.DomainByID(domainID)
+		domain, err := factory.FindDomain(domainID)
 
 		if err != nil {
-			return derp.Wrap(err, "handler.SetupDomainGet", "Error loading configuration")
+			return derp.Wrap(err, "handler.SetupDomainGet", "Unable to load configuration")
 		}
 
 		header := "Edit Domain"
@@ -50,33 +51,36 @@ func SetupDomainGet(factory *server.Factory) echo.HandlerFunc {
 }
 
 // SetupDomainPost updates/creates a domain
-func SetupDomainPost(factory *server.Factory) echo.HandlerFunc {
+func SetupDomainPost(serverFactory *server.Factory) echo.HandlerFunc {
+
+	const location = "handler.SetupDomainPost"
 
 	return func(ctx echo.Context) error {
 
 		domainID := ctx.Param("domain")
 
 		// Try to load the existing domain.  If it does not exist, then create a new one.
-		domain, _ := factory.DomainByID(domainID)
+		domain, _ := serverFactory.FindDomain(domainID)
 
 		input := mapof.Any{}
 
 		if err := (&echo.DefaultBinder{}).BindBody(ctx, &input); err != nil {
-			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, "handler.SetupDomainPost", "Error binding form input"))
+			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, location, "Error binding form input"))
 		}
 
+		// Update the domain configuration and save it to the domain storage (db/file/etc)
 		s := schema.New(config.DomainSchema())
 
 		if err := s.SetAll(&domain, input); err != nil {
-			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, "handler.SetupDomainPost", "Error setting config values"))
+			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, location, "Error setting config values"))
 		}
 
 		if err := s.Validate(&domain); err != nil {
-			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, "handler.SetupDomainPost", "Error validating config values"))
+			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, location, "Error validating config values"))
 		}
 
-		if err := factory.PutDomain(domain); err != nil {
-			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, "handler.SetupDomainPost", "Error saving domain"))
+		if err := serverFactory.PutDomain(domain); err != nil {
+			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, location, "Error saving domain"))
 		}
 
 		build.CloseModal(ctx)
@@ -103,25 +107,34 @@ func SetupDomainDelete(factory *server.Factory) echo.HandlerFunc {
 }
 
 // SetupDomainSigninPost signs you in to the requested domain as an administrator
-func SetupDomainSigninPost(fm *server.Factory) echo.HandlerFunc {
+func SetupDomainSigninPost(serverFactory *server.Factory) echo.HandlerFunc {
 
 	const location = "handler.SetupDomainSigninPost"
 
 	return func(ctx echo.Context) error {
 
 		// Get the domain config requested in the URL (by index)
-		domain, err := fm.DomainByID(ctx.Param("domain"))
+		domain, err := serverFactory.FindDomain(ctx.Param("domain"))
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error loading configuration")
+			return derp.Wrap(err, location, "Unable to load configuration")
 		}
 
 		// Get the real factory for this domain
-		factory, err := fm.ByHostname(domain.Hostname)
+		factory, err := serverFactory.ByHostname(domain.Hostname)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error loading Domain")
+			return derp.Wrap(err, location, "Unable to load Domain")
 		}
+
+		// Create a new database session
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Unable to open database session")
+		}
+
+		defer cancel()
 
 		// Create a fake "User" record for the system administrator and sign in
 		administrator := model.NewUser()
@@ -129,7 +142,7 @@ func SetupDomainSigninPost(fm *server.Factory) echo.HandlerFunc {
 		administrator.IsOwner = true
 
 		// Sign the Administrator into the system
-		if err := factory.Steranko().SigninUser(ctx, &administrator); err != nil {
+		if err := factory.Steranko(session).SigninUser(ctx, &administrator); err != nil {
 			return derp.Wrap(err, location, "Error signing in administrator")
 		}
 

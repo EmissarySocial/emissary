@@ -48,7 +48,7 @@ func (step StepWithFolder) execute(builder Builder, buffer io.Writer, actionMeth
 
 	// If we have a real ID, then try to load the folder from the database
 	if (folderToken != "") && (folderToken != "new") {
-		if err := folderService.LoadByToken(builder.AuthenticatedID(), folderToken, &folder); err != nil {
+		if err := folderService.LoadByToken(builder.session(), builder.AuthenticatedID(), folderToken, &folder); err != nil {
 			if actionMethod == ActionMethodGet {
 				return Halt().WithError(derp.Wrap(err, location, "Unable to load Folder", folderToken))
 			}
@@ -57,7 +57,7 @@ func (step StepWithFolder) execute(builder Builder, buffer io.Writer, actionMeth
 	}
 
 	// Create a new builder tied to the Folder record
-	subBuilder, err := NewModel(factory, builder.request(), builder.response(), template, &folder, builder.actionID())
+	subBuilder, err := NewModel(factory, builder.session(), builder.request(), builder.response(), template, &folder, builder.actionID())
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Unable to create sub-builder"))

@@ -1,0 +1,22 @@
+{{- $url := .QueryParam "url" -}}
+{{- $document := .ActivityStream $url -}}
+
+{{- template "browse-header" (array $url "reply") -}}
+
+<div id="modal-body" class="turboclick padding-top" hx-target="#modal-window" hx-swap="innerHTML transition:true" hx-push-url="false">
+
+	{{- template "browse-parent" (array . $document "") -}}
+
+	<div id="scroll-bottom" class="margin-top-lg" script="init scrollIntoView() me"></div>
+</div>
+
+<div id="modal-footer">
+	{{.View "reply"}}
+</div>
+
+<script type="text/hyperscript">
+	init
+	set selectedNode to #id_{{$document.Metadata.HashedID}} 
+	take .selected from .card for the selectedNode then
+	scrollIntoView() the selectedNode
+</script>

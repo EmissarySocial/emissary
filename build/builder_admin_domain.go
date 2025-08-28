@@ -32,7 +32,7 @@ type Domain struct {
 }
 
 // NewDomain returns a fully initialized `Domain` builder.
-func NewDomain(factory Factory, request *http.Request, response http.ResponseWriter, template model.Template, actionID string) (Domain, error) {
+func NewDomain(factory Factory, session data.Session, request *http.Request, response http.ResponseWriter, template model.Template, actionID string) (Domain, error) {
 
 	const location = "build.NewDomain"
 
@@ -40,7 +40,7 @@ func NewDomain(factory Factory, request *http.Request, response http.ResponseWri
 	domain := factory.Domain().Get()
 
 	// Create the common Builder
-	common, err := NewCommonWithTemplate(factory, request, response, template, domain, actionID)
+	common, err := NewCommonWithTemplate(factory, session, request, response, template, domain, actionID)
 
 	if err != nil {
 		return Domain{}, derp.Wrap(err, location, "Error creating common builder")
@@ -89,7 +89,7 @@ func (w Domain) View(actionID string) (template.HTML, error) {
 
 	const location = "build.Domain.View"
 
-	builder, err := NewDomain(w._factory, w._request, w._response, w._template, actionID)
+	builder, err := NewDomain(w._factory, w._session, w._request, w._response, w._template, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, location, "Error creating Group builder")
@@ -143,7 +143,7 @@ func (w Domain) PageTitle() string {
 }
 
 func (w Domain) clone(action string) (Builder, error) {
-	return NewDomain(w._factory, w._request, w._response, w._template, action)
+	return NewDomain(w._factory, w._session, w._request, w._response, w._template, action)
 }
 
 /******************************************
@@ -208,7 +208,7 @@ func (w Domain) Followers() QueryBuilder[model.FollowerSummary] {
 		exp.Equal("deleteDate", 0),
 	)
 
-	return NewQueryBuilder[model.FollowerSummary](w._factory.Follower(), criteria)
+	return NewQueryBuilder[model.FollowerSummary](w._factory.Follower(), w._session, criteria)
 }
 
 func (w Domain) Following() QueryBuilder[model.FollowingSummary] {
@@ -223,7 +223,7 @@ func (w Domain) Following() QueryBuilder[model.FollowingSummary] {
 		exp.Equal("deleteDate", 0),
 	)
 
-	return NewQueryBuilder[model.FollowingSummary](w._factory.Following(), criteria)
+	return NewQueryBuilder[model.FollowingSummary](w._factory.Following(), w._session, criteria)
 }
 
 /******************************************
@@ -249,7 +249,7 @@ func (w Domain) Providers() []form.LookupCode {
 
 // Connection loads an external service connection from the database
 func (w Domain) AllConnections() mapof.Object[model.Connection] {
-	return w.factory().Connection().AllAsMap()
+	return w._factory.Connection().AllAsMap(w._session)
 }
 
 func (w Domain) Provider(providerID string) providers.Provider {

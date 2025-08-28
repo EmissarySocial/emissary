@@ -7,7 +7,6 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -51,7 +50,6 @@ func compareModel(currentIndex mapof.Any, newIndex mongo.IndexModel) bool {
 	}
 
 	log.Trace().Msg("indexes do not match")
-	spew.Dump(newIndex, newIndexMap, currentIndex)
 	return false
 }
 
@@ -150,7 +148,6 @@ func primitiveToMap(input any) mapof.Any {
 	}
 
 	log.Debug().Msg("primitiveToMap: Unrecognized input.. returning empty map.")
-	spew.Dump(input)
 	return result
 }
 

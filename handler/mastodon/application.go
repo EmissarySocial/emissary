@@ -2,6 +2,7 @@ package mastodon
 
 import (
 	"strings"
+	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
@@ -24,6 +25,15 @@ func PostApplication(serverFactory *server.Factory) func(model.Authorization, tx
 			return object.Application{}, derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return object.Application{}, derp.Wrap(err, location, "Unable to create session")
+		}
+
+		defer cancel()
+
 		// Collect OAuth Application from the request
 		oauthClient := model.NewOAuthClient()
 		oauthClient.Name = t.ClientName
@@ -33,7 +43,7 @@ func PostApplication(serverFactory *server.Factory) func(model.Authorization, tx
 
 		// Save the application to the database
 		oauthClientService := factory.OAuthClient()
-		if err := oauthClientService.Save(&oauthClient, "Created via Mastodon API"); err != nil {
+		if err := oauthClientService.Save(session, &oauthClient, "Created via Mastodon API"); err != nil {
 			return object.Application{}, derp.Wrap(err, location, "Error saving application")
 		}
 
@@ -55,12 +65,20 @@ func GetApplication_VerifyCredentials(serverFactory *server.Factory) func(model.
 			return object.Application{}, derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return object.Application{}, derp.Wrap(err, location, "Unable to create session")
+		}
+
+		defer cancel()
 		// Get the Application from the database
 		oauthClientService := factory.OAuthClient()
 		result := model.NewOAuthClient()
 
 		// Try to load the client record from the database
-		if err := oauthClientService.LoadByClientID(auth.ClientID, &result); err != nil {
+		if err := oauthClientService.LoadByClientID(session, auth.ClientID, &result); err != nil {
 			return object.Application{}, derp.Wrap(err, location, "Error loading application")
 		}
 

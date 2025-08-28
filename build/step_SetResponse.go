@@ -37,9 +37,9 @@ func (step StepSetResponse) Post(builder Builder, _ io.Writer) PipelineBehavior 
 	responseService := builder.factory().Response()
 
 	// Create/Update the response
-	if convert.Bool(transaction.Exists) {
+	if transaction.Exists {
 
-		if err := responseService.SetResponse(user, transaction.URL, transaction.Type, transaction.Content); err != nil {
+		if err := responseService.SetResponse(builder.session(), user, transaction.URL, transaction.Type, transaction.Content); err != nil {
 			return Halt().WithError(derp.Wrap(err, location, "Error setting response"))
 		}
 
@@ -47,7 +47,7 @@ func (step StepSetResponse) Post(builder Builder, _ io.Writer) PipelineBehavior 
 	}
 
 	// Fall through means DELETE the Response
-	if err := responseService.UnsetResponse(user, transaction.URL, transaction.Type); err != nil {
+	if err := responseService.UnsetResponse(builder.session(), user, transaction.URL, transaction.Type); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error setting response"))
 	}
 
@@ -59,23 +59,35 @@ type txnStepSetResponse struct {
 	URL     string // The URL of the object being responded to
 	Type    string // The Response.Type (Like, Dislike, etc)
 	Content string // Addional Value (for Emoji, etc)
-	Exists  string // If TRUE, then create/update the response.  If FALSE, remove it.
+	Exists  bool   // If TRUE, then create/update the response.  If FALSE, remove it.
 }
 
 func (txn *txnStepSetResponse) Bind(request *http.Request) error {
+
+	const location = "build.txnStepSetResponse.Bind"
 
 	// Parse values from Form
 	values, err := formdata.Parse(request)
 
 	if err != nil {
-		return derp.Wrap(err, "build.txnStepSetResponse.Bind", "Error parsing form values")
+		return derp.Wrap(err, location, "Error parsing form values")
 	}
 
 	// Populate data
-	txn.URL = values.Get("url")
-	txn.Type = values.Get("type")
+	if url := values.Get("url"); url == "" {
+		return derp.ValidationError("The 'url' field cannot be empty.")
+	} else {
+		txn.URL = url
+	}
+
+	if responseType := values.Get("type"); responseType == "" {
+		return derp.ValidationError("The 'type' field cannot be empty.")
+	} else {
+		txn.Type = responseType
+	}
+
 	txn.Content = values.Get("content")
-	txn.Exists = values.Get("exists")
+	txn.Exists = convert.Bool(values.Get("exists"))
 
 	return nil
 }

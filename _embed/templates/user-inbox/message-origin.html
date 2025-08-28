@@ -1,0 +1,37 @@
+{{- $message := . -}}
+
+{{- if eq "PRIMARY" $message.Origin.Type -}}
+	
+	<span class="clickable text-gray text-xs" hx-get="/@me/settings/following-edit?url={{$message.Origin.URL}}">
+		{{- icon "person"}} You follow
+		{{$message.Origin.Label -}}
+	</span>
+
+{{- else if eq "LIKE" $message.Origin.Type -}}
+	
+	<span class="clickable text-gray text-xs" hx-get="/@me/inbox/browse-actor?url={{$message.Origin.URL}}">
+		{{- icon "like"}} Liked by
+		{{$message.Origin.Label -}}
+	</span>
+
+{{- else if eq "DISLIKE" $message.Origin.Type -}}
+
+	<span class="clickable text-gray text-xs" hx-get="/@me/inbox/browse-actor?url={{$message.Origin.URL}}">
+		{{- icon "dislike"}} Disliked by
+		{{$message.Origin.Label -}}
+	</span>
+	
+{{- else if eq "ANNOUNCE" $message.Origin.Type -}}
+	
+	<span class="clickable text-gray text-xs" hx-get="/@me/inbox/browse-actor?url={{$message.Origin.URL}}">
+		{{- icon "share"}} Shared by
+		{{$message.Origin.Label -}}
+	</span>
+
+{{- else if eq "REPLY" $message.Origin.Type -}}
+	
+	<span class="clickable text-gray text-xs" hx-get="/@me/inbox/browse-actor?url={{$message.Origin.URL}}">
+		{{icon "reply"}} {{$message.Origin.Label}} replied to this
+	</span>
+
+{{- end -}}

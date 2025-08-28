@@ -20,7 +20,6 @@ import (
 
 // SearchResult defines a service that manages all searchable pages in a domain.
 type SearchResult struct {
-	collection       data.Collection
 	searchTagService *SearchTag
 	host             string
 }
@@ -35,8 +34,7 @@ func NewSearchResult() SearchResult {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *SearchResult) Refresh(collection data.Collection, searchTagService *SearchTag, host string) {
-	service.collection = collection
+func (service *SearchResult) Refresh(searchTagService *SearchTag, host string) {
 	service.searchTagService = searchTagService
 	service.host = host
 }
@@ -50,30 +48,34 @@ func (service *SearchResult) Close() {
  * Common Data Methods
  ******************************************/
 
-func (service *SearchResult) Count(criteria exp.Expression) (int64, error) {
-	return service.collection.Count(criteria)
+func (service *SearchResult) collection(session data.Session) data.Collection {
+	return session.Collection("SearchResult")
+}
+
+func (service *SearchResult) Count(session data.Session, criteria exp.Expression) (int64, error) {
+	return service.collection(session).Count(criteria)
 }
 
 // Query returns an slice of allthe SearchResults that match the provided criteria
-func (service *SearchResult) Query(criteria exp.Expression, options ...option.Option) ([]model.SearchResult, error) {
+func (service *SearchResult) Query(session data.Session, criteria exp.Expression, options ...option.Option) ([]model.SearchResult, error) {
 	result := make([]model.SearchResult, 0)
-	err := service.collection.Query(&result, criteria, options...)
+	err := service.collection(session).Query(&result, criteria, options...)
 
 	return result, err
 }
 
 // QueryIDsOnly returns an slice of allthe SearchResults that match the provided criteria
-func (service *SearchResult) QueryIDsOnly(criteria exp.Expression, options ...option.Option) ([]model.IDOnly, error) {
+func (service *SearchResult) QueryIDsOnly(session data.Session, criteria exp.Expression, options ...option.Option) ([]model.IDOnly, error) {
 	result := make([]model.IDOnly, 0)
 	options = append(options, option.Fields("_id"))
-	err := service.collection.Query(&result, criteria, options...)
+	err := service.collection(session).Query(&result, criteria, options...)
 
 	return result, err
 }
 
 // Range returns a Go RangeFunc that iterates over the SearchResults that match the provided criteria
-func (service *SearchResult) Range(criteria exp.Expression, options ...option.Option) (iter.Seq[model.SearchResult], error) {
-	it, err := service.collection.Iterator(criteria, options...)
+func (service *SearchResult) Range(session data.Session, criteria exp.Expression, options ...option.Option) (iter.Seq[model.SearchResult], error) {
+	it, err := service.collection(session).Iterator(criteria, options...)
 
 	if err != nil {
 		return nil, derp.Wrap(err, "service.Search.Range", "Error creating iterator", criteria)
@@ -83,9 +85,9 @@ func (service *SearchResult) Range(criteria exp.Expression, options ...option.Op
 }
 
 // Load retrieves an SearchResult from the database
-func (service *SearchResult) Load(criteria exp.Expression, searchResult *model.SearchResult) error {
+func (service *SearchResult) Load(session data.Session, criteria exp.Expression, searchResult *model.SearchResult) error {
 
-	if err := service.collection.Load(criteria, searchResult); err != nil {
+	if err := service.collection(session).Load(criteria, searchResult); err != nil {
 		return derp.Wrap(err, "service.Search.Load", "Error loading Search", criteria)
 	}
 
@@ -93,7 +95,7 @@ func (service *SearchResult) Load(criteria exp.Expression, searchResult *model.S
 }
 
 // Save adds/updates an SearchResult in the database
-func (service *SearchResult) Save(searchResult *model.SearchResult, note string) error {
+func (service *SearchResult) Save(session data.Session, searchResult *model.SearchResult, note string) error {
 
 	const location = "service.Search.Save"
 
@@ -108,7 +110,7 @@ func (service *SearchResult) Save(searchResult *model.SearchResult, note string)
 	}
 
 	// Normalize Tags
-	_, tagValues, err := service.searchTagService.NormalizeTags(searchResult.Tags...)
+	_, tagValues, err := service.searchTagService.NormalizeTags(session, searchResult.Tags...)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error normalizing tags", searchResult)
@@ -127,12 +129,12 @@ func (service *SearchResult) Save(searchResult *model.SearchResult, note string)
 	searchResult.ReIndexDate = time.Now().Add(time.Hour * 24 * 30).Unix()
 
 	// Save the searchResult to the database
-	if err := service.collection.Save(searchResult, note); err != nil {
+	if err := service.collection(session).Save(searchResult, note); err != nil {
 		return derp.Wrap(err, location, "Error saving Search", searchResult, note)
 	}
 
 	for _, tagName := range searchResult.Tags {
-		if err := service.searchTagService.Upsert(tagName); err != nil {
+		if err := service.searchTagService.Upsert(session, tagName); err != nil {
 			return derp.Wrap(err, location, "Error saving SearchTag", searchResult, tagName)
 		}
 	}
@@ -141,11 +143,11 @@ func (service *SearchResult) Save(searchResult *model.SearchResult, note string)
 }
 
 // Delete removes an Search from the database (HARD DELETE)
-func (service *SearchResult) Delete(searchResult *model.SearchResult, note string) error {
+func (service *SearchResult) Delete(session data.Session, searchResult *model.SearchResult, note string) error {
 
 	// Use HARD DELETE for search results.  No need to clutter up our indexes with "deleted" data.
 	criteria := exp.Equal("_id", searchResult.SearchResultID)
-	if err := service.collection.HardDelete(criteria); err != nil {
+	if err := service.collection(session).HardDelete(criteria); err != nil {
 		return derp.Wrap(err, "service.Search.Delete", "Error deleting Search", searchResult, note)
 	}
 
@@ -158,22 +160,22 @@ func (service *SearchResult) Delete(searchResult *model.SearchResult, note strin
 
 // LoadByURL returns a single SearchResult that matches the provided URL
 
-func (service *SearchResult) LoadByURL(url string, searchResult *model.SearchResult) error {
-	return service.Load(exp.Equal("url", url), searchResult)
+func (service *SearchResult) LoadByURL(session data.Session, url string, searchResult *model.SearchResult) error {
+	return service.Load(session, exp.Equal("url", url), searchResult)
 }
 
 /******************************************
  * Custom Methods
  ******************************************/
 
-func (service *SearchResult) Sync(searchResult model.SearchResult) error {
+func (service *SearchResult) Sync(session data.Session, searchResult model.SearchResult) error {
 
 	const location = "service.Search.Sync"
 
 	// If the SearchResult is marked as deleted, then remove it from the database
 	if searchResult.IsDeleted() {
 
-		if err := service.DeleteByURL(searchResult.URL); err != nil {
+		if err := service.DeleteByURL(session, searchResult.URL); err != nil {
 			return derp.Wrap(err, location, "Error deleting Search", searchResult)
 		}
 
@@ -182,7 +184,7 @@ func (service *SearchResult) Sync(searchResult model.SearchResult) error {
 
 	// Try to load the original SearchResult
 	original := model.NewSearchResult()
-	err := service.LoadByURL(searchResult.URL, &original)
+	err := service.LoadByURL(session, searchResult.URL, &original)
 
 	// If the SearchResult exists in the database, then update it
 	if err == nil {
@@ -195,7 +197,7 @@ func (service *SearchResult) Sync(searchResult model.SearchResult) error {
 		}
 
 		// Save the updated SearchResult...
-		if err := service.Save(&original, "updated"); err != nil {
+		if err := service.Save(session, &original, "updated"); err != nil {
 			return derp.Wrap(err, location, "Error adding Search", searchResult)
 		}
 
@@ -204,7 +206,7 @@ func (service *SearchResult) Sync(searchResult model.SearchResult) error {
 
 	// If the SearchResult is NOT FOUND, then insert it.
 	if derp.IsNotFound(err) {
-		if err := service.Save(&searchResult, "added"); err != nil {
+		if err := service.Save(session, &searchResult, "added"); err != nil {
 			return derp.Wrap(err, location, "Error adding Search", searchResult)
 		}
 
@@ -215,8 +217,8 @@ func (service *SearchResult) Sync(searchResult model.SearchResult) error {
 	return derp.Wrap(err, location, "Error loading Search", searchResult)
 }
 
-// eleteByURL removes a SearchResult from the database that matches the provided URL
-func (service *SearchResult) DeleteByURL(url string) error {
+// DeleteByURL removes a SearchResult from the database that matches the provided URL
+func (service *SearchResult) DeleteByURL(session data.Session, url string) error {
 
 	const location = "service.Search.DeleteByURL"
 
@@ -228,7 +230,7 @@ func (service *SearchResult) DeleteByURL(url string) error {
 	// Try to find the SearchResult that matches this URL
 	searchResult := model.NewSearchResult()
 
-	if err := service.LoadByURL(url, &searchResult); err != nil {
+	if err := service.LoadByURL(session, url, &searchResult); err != nil {
 
 		if derp.IsNotFound(err) {
 			return nil
@@ -238,15 +240,17 @@ func (service *SearchResult) DeleteByURL(url string) error {
 	}
 
 	// Delete the SearchResult
-	return service.Delete(&searchResult, "deleted from search index")
+	return service.Delete(session, &searchResult, "deleted from search index")
 }
 
 // Shuffle updates the "shuffle" field for all SearchResults that match the provided tags
-func (service *SearchResult) Shuffle() error {
+func (service *SearchResult) Shuffle(session data.Session) error {
 
 	const location = "service.Search.Shuffle"
 
-	if err := queries.Shuffle(context.Background(), service.collection); err != nil {
+	collection := service.collection(session)
+
+	if err := queries.Shuffle(session.Context(), collection); err != nil {
 		return derp.Wrap(err, location, "Error shuffling SearchResults")
 	}
 
@@ -254,16 +258,16 @@ func (service *SearchResult) Shuffle() error {
 }
 
 // GetResultsToNotify locks a batch of SearchResults and returns it to the caller.
-func (service *SearchResult) GetResultsToNotify(lockID primitive.ObjectID) ([]model.SearchResult, error) {
+func (service *SearchResult) GetResultsToNotify(session data.Session, lockID primitive.ObjectID) ([]model.SearchResult, error) {
 
 	const location = "service.Search.GetLockedResults"
 
 	// Make a timeout context for this request
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(session.Context(), 30*time.Second)
 	defer cancel()
 
 	// Find a batch of UNLOCKED search results
-	searchResultIDs, err := service.QueryUnnotifiedAndUnlocked()
+	searchResultIDs, err := service.QueryUnnotifiedAndUnlocked(session)
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Error loading search results to lock")
@@ -275,23 +279,24 @@ func (service *SearchResult) GetResultsToNotify(lockID primitive.ObjectID) ([]mo
 	}
 
 	// Try to lock a batch of search results (up to 32, maybe less)
-	if err := queries.LockSearchResults(ctx, service.collection, searchResultIDs, lockID); err != nil {
+	collection := service.collection(session)
+	if err := queries.LockSearchResults(ctx, collection, searchResultIDs, lockID); err != nil {
 		return nil, derp.Wrap(err, location, "Error locking search results", searchResultIDs)
 	}
 
 	// Load all of the search results that are locked by this process (up to 32, maybe less)
 	criteria := exp.Equal("lockId", lockID)
-	return service.Query(criteria)
+	return service.Query(session, criteria)
 }
 
 // QueryUnnotifiedandUnlocked returns the IDs of the first 32 SearchResults that have NOT been notified, and are NOT locked.
-func (service *SearchResult) QueryUnnotifiedAndUnlocked() ([]primitive.ObjectID, error) {
+func (service *SearchResult) QueryUnnotifiedAndUnlocked(session data.Session) ([]primitive.ObjectID, error) {
 
 	const location = "service.Search.QueryUnnotifiedAndUnlocked"
 
 	result, err := service.QueryIDsOnly(
-		exp.Equal("notifiedDate", 0).
-			AndLessThan("timeoutDate", time.Now().Unix()),
+		session,
+		exp.Equal("notifiedDate", 0).AndLessThan("timeoutDate", time.Now().Unix()),
 		option.MaxRows(32),
 	)
 

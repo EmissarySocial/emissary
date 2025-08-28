@@ -3,22 +3,21 @@ package build
 import (
 	"bytes"
 	"html/template"
-	"math"
 	"net/http"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/ascache"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
-	domaintools "github.com/benpate/domain"
+	dt "github.com/benpate/domain"
 	"github.com/benpate/exp"
 	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/form"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
-	"github.com/benpate/rosetta/channel"
 	"github.com/benpate/rosetta/convert"
 	htmlconv "github.com/benpate/rosetta/html"
 	"github.com/benpate/rosetta/mapof"
@@ -41,12 +40,12 @@ type Stream struct {
  ******************************************/
 
 // NewStream creates a new object that can generate HTML for a specific stream/view
-func NewStream(factory Factory, request *http.Request, response http.ResponseWriter, template model.Template, stream *model.Stream, actionID string) (Stream, error) {
+func NewStream(factory Factory, session data.Session, request *http.Request, response http.ResponseWriter, template model.Template, stream *model.Stream, actionID string) (Stream, error) {
 
 	const location = "build.NewStream"
 
 	// Create the underlying Common builder
-	common, err := NewCommonWithTemplate(factory, request, response, template, stream, actionID)
+	common, err := NewCommonWithTemplate(factory, session, request, response, template, stream, actionID)
 
 	if err != nil {
 		return Stream{}, derp.Wrap(err, location, "Unable to create common builder")
@@ -72,7 +71,7 @@ func NewStream(factory Factory, request *http.Request, response http.ResponseWri
 }
 
 // NewStreamWithoutTemplate creates a new object that can generate HTML for a specific stream/view
-func NewStreamWithoutTemplate(factory Factory, request *http.Request, response http.ResponseWriter, stream *model.Stream, actionID string) (Stream, error) {
+func NewStreamWithoutTemplate(factory Factory, session data.Session, request *http.Request, response http.ResponseWriter, stream *model.Stream, actionID string) (Stream, error) {
 
 	const location = "build.NewStreamWithoutTemplate"
 
@@ -85,7 +84,7 @@ func NewStreamWithoutTemplate(factory Factory, request *http.Request, response h
 	}
 
 	// Return a fully populated service
-	result, err := NewStream(factory, request, response, template, stream, actionID)
+	result, err := NewStream(factory, session, request, response, template, stream, actionID)
 
 	if err != nil {
 		return Stream{}, derp.Wrap(err, location, "Error creating Stream builder")
@@ -96,11 +95,11 @@ func NewStreamWithoutTemplate(factory Factory, request *http.Request, response h
 
 // NewStreamFromURI creates a new Stream builder for the provided request context.
 // IMPORTANT: The stream parameter is expected to be an empty stream in the caller's scope that will be populated by this function.
-func NewStreamFromURI(serverFactory ServerFactory, request *http.Request, response http.ResponseWriter, stream *model.Stream, actionID string) (Stream, error) {
+func NewStreamFromURI(serverFactory ServerFactory, session data.Session, request *http.Request, response http.ResponseWriter, stream *model.Stream, actionID string) (Stream, error) {
 
 	const location = "build.NewStreamFromURI"
 
-	hostname := domaintools.Hostname(request)
+	hostname := dt.Hostname(request)
 
 	// Locate the requested domain name
 	factory, err := serverFactory.ByDomainName(hostname)
@@ -118,7 +117,7 @@ func NewStreamFromURI(serverFactory ServerFactory, request *http.Request, respon
 	}
 
 	// Try to load the Stream from the database
-	if err := streamService.LoadByToken(token, stream); err != nil {
+	if err := streamService.LoadByToken(session, token, stream); err != nil {
 		return Stream{}, derp.Wrap(err, location, "Error loading stream")
 	}
 
@@ -128,7 +127,7 @@ func NewStreamFromURI(serverFactory ServerFactory, request *http.Request, respon
 	}
 
 	// Create and return a new builder
-	return NewStreamWithoutTemplate(factory, request, response, stream, actionID)
+	return NewStreamWithoutTemplate(factory, session, request, response, stream, actionID)
 }
 
 /******************************************
@@ -183,11 +182,11 @@ func (w Stream) templateRole() string {
 }
 
 func (w Stream) clone(action string) (Builder, error) {
-	return NewStream(w._factory, w._request, w._response, w._template, w._stream, action)
+	return NewStream(w._factory, w._session, w._request, w._response, w._template, w._stream, action)
 }
 
 /******************************************
- * ACTION SHORTCUTS
+ * Action Shortcuts
  ******************************************/
 
 // View executes a separate view for this Stream
@@ -196,7 +195,7 @@ func (w Stream) View(actionID string) (template.HTML, error) {
 	const location = "build.Stream.View"
 
 	// Create a new builder (this will also validate the user's permissions)
-	subStream, err := NewStream(w.factory(), w._request, w._response, w._template, w._stream, actionID)
+	subStream, err := NewStream(w._factory, w._session, w._request, w._response, w._template, w._stream, actionID)
 
 	if err != nil {
 		return template.HTML(""), derp.Wrap(err, location, "Error creating sub-builder")
@@ -207,7 +206,7 @@ func (w Stream) View(actionID string) (template.HTML, error) {
 }
 
 /******************************************
- * STREAM DATA
+ * Stream Data
  ******************************************/
 
 // StreamID returns the unique ID for the stream being built
@@ -246,11 +245,6 @@ func (w Stream) TemplateID() string {
 // Token returns the unique URL token for the stream being built
 func (w Stream) Token() string {
 	return w._stream.Token
-}
-
-// Document returns the DocumentLink record for this stream
-func (w Stream) Document() model.DocumentLink {
-	return w._stream.DocumentLink()
 }
 
 // Label returns the Label for the stream being built
@@ -522,13 +516,13 @@ func (w Stream) ParentOutbox(actionID string) (Outbox, error) {
 
 	var user model.User
 
-	userService := w.factory().User()
+	userService := w._factory.User()
 
-	if err := userService.LoadByID(w._stream.ParentID, &user); err != nil {
+	if err := userService.LoadByID(w._session, w._stream.ParentID, &user); err != nil {
 		return Outbox{}, derp.Wrap(err, location, "Error loading Parent")
 	}
 
-	builder, err := NewOutbox(w.factory(), w._request, w._response, &user, actionID)
+	builder, err := NewOutbox(w._factory, w._session, w._request, w._response, &user, actionID)
 
 	if err != nil {
 		return Outbox{}, derp.Wrap(err, location, "Unable to create new Stream")
@@ -544,13 +538,13 @@ func (w Stream) Parent(actionID string) (Stream, error) {
 
 	var parent model.Stream
 
-	streamService := w.factory().Stream()
+	streamService := w._factory.Stream()
 
-	if err := streamService.LoadByID(w._stream.ParentID, &parent); err != nil {
+	if err := streamService.LoadByID(w._session, w._stream.ParentID, &parent); err != nil {
 		return Stream{}, derp.Wrap(err, location, "Error loading Parent")
 	}
 
-	builder, err := NewStreamWithoutTemplate(w.factory(), w._request, w._response, &parent, actionID)
+	builder, err := NewStreamWithoutTemplate(w._factory, w._session, w._request, w._response, &parent, actionID)
 
 	if err != nil {
 		return Stream{}, derp.Wrap(err, location, "Unable to create new Stream")
@@ -607,8 +601,8 @@ func (w Stream) getFirstStream(criteria exp.Expression, sortOption option.Option
 		And(w.defaultAllowed()).
 		And(w.withinPublishDate())
 
-	streamService := w.factory().Stream()
-	iterator, err := streamService.List(criteria, sortOption, option.FirstRow())
+	streamService := w._factory.Stream()
+	iterator, err := streamService.List(w._session, criteria, sortOption, option.FirstRow())
 
 	if err != nil {
 		derp.Report(derp.Wrap(err, "build.Stream.NextSibling", "Database error"))
@@ -618,7 +612,7 @@ func (w Stream) getFirstStream(criteria exp.Expression, sortOption option.Option
 	var first model.Stream
 
 	if iterator.Next(&first) {
-		if result, err := NewStreamWithoutTemplate(w.factory(), w._request, w._response, &first, actionID); err == nil {
+		if result, err := NewStreamWithoutTemplate(w._factory, w._session, w._request, w._response, &first, actionID); err == nil {
 			return result
 		}
 	}
@@ -629,19 +623,26 @@ func (w Stream) getFirstStream(criteria exp.Expression, sortOption option.Option
 
 // Mentions returns a slice of all Mentions for this Stream
 func (w Stream) Mentions() ([]model.Mention, error) {
-	mentionService := w.factory().Mention()
-	return mentionService.QueryByObjectID(w._stream.StreamID)
+	mentionService := w._factory.Mention()
+	return mentionService.QueryByObjectID(w._session, w._stream.StreamID)
 }
 
+func (w Stream) RepliesAfter(dateString string, maxRows int) sliceof.Object[ascache.Value] {
+	activityStreamsService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
+	minDate := convert.Int64(dateString)
+	return activityStreamsService.QueryRepliesAfterDate(w._request.Context(), w._stream.URL, minDate, int64(maxRows))
+}
+
+/*
 // RepliesBefore returns a slice of all ActivityStreams before the specified date
 func (w Stream) RepliesBefore(dateString string, maxRows int) sliceof.Object[streams.Document] {
 
 	done := make(channel.Done)
 
 	// Get all ActivityStreams that reply to the current Stream
-	activityStreamsService := w._factory.ActivityStream()
+	activityStreamsService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
 	maxDate := convert.Int64Default(dateString, math.MaxInt64)
-	replies := activityStreamsService.QueryRepliesBeforeDate(w._stream.URL, maxDate, done)
+	replies := activityStreamsService.QueryRepliesBeforeDate(w._request.Context(), w._stream.URL, maxDate, done)
 
 	// Filter results based on blocks
 	ruleService := w._factory.Rule()
@@ -655,36 +656,14 @@ func (w Stream) RepliesBefore(dateString string, maxRows int) sliceof.Object[str
 	return slice.Reverse(result)
 }
 
-func (w Stream) RepliesAfter(dateString string, maxRows int) sliceof.Object[streams.Document] {
-
-	done := make(channel.Done)
-
-	// Get all ActivityStreams that REPLY TO the current Stream
-	activityStreamsService := w._factory.ActivityStream()
-	minDate := convert.Int64(dateString)
-	replies := activityStreamsService.QueryRepliesAfterDate(w._stream.URL, minDate, done)
-
-	// Filter results based on blocks
-	ruleService := w._factory.Rule()
-	ruleFilter := ruleService.Filter(w.AuthenticatedID())
-	filteredResult := ruleFilter.Channel(replies)
-
-	// Limit to `maxRows` records
-	limitedFilter := channel.Limit(maxRows, filteredResult, done)
-	result := channel.Slice(limitedFilter)
-
-	// Success
-	return result
-}
-
 func (w Stream) AnnouncesBefore(dateString string, maxRows int) sliceof.Object[streams.Document] {
 
 	done := make(channel.Done)
 
 	// Get all ActivityStreams that ANNOUNCE the current Stream
-	activityStreamsService := w._factory.ActivityStream()
+	activityStreamsService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
 	maxDate := convert.Int64Default(dateString, math.MaxInt64)
-	announces := activityStreamsService.QueryAnnouncesBeforeDate(w._stream.URL, maxDate, done)
+	announces := activityStreamsService.QueryAnnouncesBeforeDate(w._request.Context(), w._stream.URL, maxDate, done)
 
 	// Filter results based on blocks
 	ruleService := w._factory.Rule()
@@ -704,9 +683,9 @@ func (w Stream) LikesBefore(dateString string, maxRows int) sliceof.Object[strea
 	done := make(channel.Done)
 
 	// Query all ActivityStreams that LIKE the current Stream
-	activityStreamsService := w._factory.ActivityStream()
+	activityStreamsService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
 	maxDate := convert.Int64Default(dateString, math.MaxInt64)
-	likes := activityStreamsService.QueryLikesBeforeDate(w._stream.URL, maxDate, done)
+	likes := activityStreamsService.QueryLikesBeforeDate(w._request.Context(), w._stream.URL, maxDate, done)
 
 	// Filter results based on blocks
 	ruleService := w._factory.Rule()
@@ -720,6 +699,7 @@ func (w Stream) LikesBefore(dateString string, maxRows int) sliceof.Object[strea
 	// Celebrate
 	return result
 }
+*/
 
 // Outbox returns a QueryBuilder for the current Stream's outbox
 func (w Stream) Outbox() (QueryBuilder[model.OutboxMessage], error) {
@@ -738,7 +718,7 @@ func (w Stream) Outbox() (QueryBuilder[model.OutboxMessage], error) {
 		w.defaultAllowed(),
 	)
 
-	return NewQueryBuilder[model.OutboxMessage](w._factory.Outbox(), criteria), nil
+	return NewQueryBuilder[model.OutboxMessage](w._factory.Outbox(), w._session, criteria), nil
 }
 
 /******************************************
@@ -746,18 +726,18 @@ func (w Stream) Outbox() (QueryBuilder[model.OutboxMessage], error) {
  ******************************************/
 
 func (w Stream) Streams() QueryBuilder[model.StreamSummary] {
-	streamService := w.factory().Stream()
+	streamService := w._factory.Stream()
 
 	criteria := w.defaultAllowed().
 		And(w.withinPublishDate())
 
-	return NewQueryBuilder[model.StreamSummary](streamService, criteria)
+	return NewQueryBuilder[model.StreamSummary](streamService, w._session, criteria)
 }
 
 func (w Stream) Users() QueryBuilder[model.UserSummary] {
-	userService := w.factory().User()
+	userService := w._factory.User()
 	criteria := exp.Equal("isPublic", true)
-	return NewQueryBuilder[model.UserSummary](userService, criteria)
+	return NewQueryBuilder[model.UserSummary](userService, w._session, criteria)
 }
 
 /******************************************
@@ -770,18 +750,16 @@ func (w Stream) Breadcrumbs() ([]model.StreamSummary, error) {
 		And(w.defaultAllowed()).
 		And(w.withinPublishDate())
 
-	return w.factory().Stream().QuerySummary(criteria,
-		option.SortAsc("depth"),
-	)
+	return w._factory.Stream().QuerySummary(w._session, criteria, option.SortAsc("depth"))
 }
 
 // Ancestors returns all Streams that have the same "parent" as the current Stream's parent
 func (w Stream) Ancestors() QueryBuilder[model.StreamSummary] {
 	var parent model.Stream
 
-	streamService := w.factory().Stream()
+	streamService := w._factory.Stream()
 
-	if err := streamService.LoadByID(w._stream.ParentID, &parent); err != nil {
+	if err := streamService.LoadByID(w._session, w._stream.ParentID, &parent); err != nil {
 		derp.Report(derp.Wrap(err, "build.Stream.Ancestors", "Error loading parent"))
 	}
 
@@ -820,7 +798,7 @@ func (w Stream) makeStreamQueryBuilder(criteria exp.Expression) QueryBuilder[mod
 		And(w.defaultAllowed()).
 		And(w.withinPublishDate())
 
-	result := NewQueryBuilder[model.StreamSummary](w._factory.Stream(), criteria)
+	result := NewQueryBuilder[model.StreamSummary](w._factory.Stream(), w._session, criteria)
 	result.By(w._template.ChildSortType)
 	if w._template.ChildSortDirection == "desc" {
 		result.Reverse()
@@ -835,17 +813,17 @@ func (w Stream) makeStreamQueryBuilder(criteria exp.Expression) QueryBuilder[mod
 
 // Reference to the first file attached to this stream
 func (w Stream) Attachment() (model.Attachment, error) {
-	return w.factory().Attachment().LoadFirstByObjectID(model.AttachmentObjectTypeStream, w._stream.StreamID)
+	return w._factory.Attachment().LoadFirstByObjectID(w._session, model.AttachmentObjectTypeStream, w._stream.StreamID)
 }
 
 // Attachments lists all attachments for this stream.
 func (w Stream) Attachments() (sliceof.Object[model.Attachment], error) {
-	return w.factory().Attachment().QueryByObjectID(model.AttachmentObjectTypeStream, w._stream.StreamID)
+	return w._factory.Attachment().QueryByObjectID(w._session, model.AttachmentObjectTypeStream, w._stream.StreamID)
 }
 
 // AttachmentByType lists all attachments for this stream.
 func (w Stream) AttachmentsByCategory(category string) (sliceof.Object[model.Attachment], error) {
-	return w.factory().Attachment().QueryByCategory(model.AttachmentObjectTypeStream, w._stream.StreamID, category)
+	return w._factory.Attachment().QueryByCategory(w._session, model.AttachmentObjectTypeStream, w._stream.StreamID, category)
 }
 
 /******************************************
@@ -867,13 +845,14 @@ func (w Stream) MerchantAccounts() QueryBuilder[model.MerchantAccount] {
 		exp.Equal("userId", w._stream.AttributedTo.UserID),
 	)
 
-	return NewQueryBuilder[model.MerchantAccount](w._factory.MerchantAccount(), criteria)
+	return NewQueryBuilder[model.MerchantAccount](w._factory.MerchantAccount(), w._session, criteria)
 }
 
 // Products returns all Remote Products that (when purchased) provide privileges for this Stream.
 func (w Stream) Products() (sliceof.Object[model.Product], error) {
 
 	return w._factory.Product().QueryByIDs(
+		w._session,
 		w._stream.AttributedTo.UserID,
 		w._stream.ProductIDs()...,
 	)
@@ -894,14 +873,14 @@ func (w Stream) IsPublic() bool {
 
 // Followers returns all Followers of this Stream
 func (w Stream) Followers() ([]model.Follower, error) {
-	followerService := w.factory().Follower()
-	return followerService.QueryByParent(model.FollowerTypeStream, w._stream.StreamID)
+	followerService := w._factory.Follower()
+	return followerService.QueryByParent(w._session, model.FollowerTypeStream, w._stream.StreamID)
 }
 
 // CanCreate returns all of the templates that can be created underneath
 // the current stream.
 func (w Stream) CanCreate() []form.LookupCode {
-	templateService := w.factory().Template()
+	templateService := w._factory.Template()
 	return templateService.ListByContainer(w._template.TemplateID)
 }
 
@@ -920,10 +899,10 @@ func (w Stream) Template(templateID string) (model.Template, error) {
 func (w Stream) draftBuilder() (Stream, error) {
 
 	var draft model.Stream
-	draftService := w.factory().StreamDraft()
+	draftService := w._factory.StreamDraft()
 
 	// Load the draft of the object
-	if err := draftService.LoadByID(w._stream.StreamID, &draft); err != nil {
+	if err := draftService.LoadByID(w._session, w._stream.StreamID, &draft); err != nil {
 		return Stream{}, derp.Wrap(err, "build.Stream.draftBuilder", "Error loading draft")
 	}
 

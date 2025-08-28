@@ -5,31 +5,34 @@ import (
 	"net/http"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	"github.com/benpate/domain"
+	dt "github.com/benpate/domain"
 	"github.com/benpate/hannibal/sigs"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Permission struct {
-	activityStream   *ActivityStream
+	factory          *Factory
 	identityService  *Identity
 	privilegeService *Privilege
 	userService      *User
 }
 
-func NewPermission() Permission {
-	return Permission{}
+func NewPermission(factory *Factory) Permission {
+	return Permission{
+		factory: factory,
+	}
 }
 
-func (service *Permission) Refresh(activityStream *ActivityStream, identityService *Identity, privilegeService *Privilege, userService *User) {
-	service.activityStream = activityStream
+func (service *Permission) Refresh(identityService *Identity, privilegeService *Privilege, userService *User) {
 	service.identityService = identityService
 	service.privilegeService = privilegeService
 	service.userService = userService
 }
 
 // UserCan returns TRUE if this action is permitted on a stream (using the provided authorization)
-func (service *Permission) UserCan(authorization *model.Authorization, template *model.Template, accessLister model.AccessLister, actionID string) (bool, error) {
+func (service *Permission) UserCan(session data.Session, authorization *model.Authorization, template *model.Template, accessLister model.AccessLister, actionID string) (bool, error) {
 
 	const location = "service.Permission.UserCan"
 
@@ -73,7 +76,7 @@ func (service *Permission) UserCan(authorization *model.Authorization, template 
 	// These checks are only valid if the request includes an IdentityID
 	if authorization.IsIdentity() {
 
-		hasRole, err := service.hasPrivilege(authorization, accessLister, accessList...)
+		hasRole, err := service.hasPrivilege(session, authorization, accessLister, accessList...)
 
 		if err != nil {
 			return false, derp.Wrap(err, location, "Unable to check user roles")
@@ -89,7 +92,7 @@ func (service *Permission) UserCan(authorization *model.Authorization, template 
 }
 
 // UserHasRole returns TRUE if the user has access to the specified role
-func (service *Permission) UserHasRole(authorization *model.Authorization, accessLister model.AccessLister, role string) (bool, error) {
+func (service *Permission) UserHasRole(session data.Session, authorization *model.Authorization, accessLister model.AccessLister, role string) (bool, error) {
 
 	const location = "service.Permission.UserHasRole"
 
@@ -126,7 +129,7 @@ func (service *Permission) UserHasRole(authorization *model.Authorization, acces
 	if authorization.IsIdentity() {
 
 		// See if this Identity has privileges for the specified role
-		hasPrivilege, err := service.hasPrivilege(authorization, accessLister, role)
+		hasPrivilege, err := service.hasPrivilege(session, authorization, accessLister, role)
 
 		if err != nil {
 			return false, derp.Wrap(err, location, "Unable to check user roles")
@@ -141,7 +144,7 @@ func (service *Permission) UserHasRole(authorization *model.Authorization, acces
 }
 
 // HasPrivilege returns TRUE if the user has privileges for the specified role
-func (service *Permission) hasPrivilege(authorization *model.Authorization, accessLister model.AccessLister, requiredRoles ...string) (bool, error) {
+func (service *Permission) hasPrivilege(session data.Session, authorization *model.Authorization, accessLister model.AccessLister, requiredRoles ...string) (bool, error) {
 
 	const location = "service.Permission.HasPrivilege"
 
@@ -159,7 +162,7 @@ func (service *Permission) hasPrivilege(authorization *model.Authorization, acce
 
 	// Locate the authorized Identity
 	identity := model.NewIdentity()
-	if err := service.identityService.LoadByID(authorization.IdentityID, &identity); err != nil {
+	if err := service.identityService.LoadByID(session, authorization.IdentityID, &identity); err != nil {
 		return false, derp.Wrap(err, location, "Error loading Identity for user")
 	}
 
@@ -202,7 +205,7 @@ func (service *Permission) Permissions(authorization *model.Authorization, ident
 	return result
 }
 
-func (service *Permission) ParseHTTPSignature(request *http.Request) model.Permissions {
+func (service *Permission) ParseHTTPSignature(session data.Session, request *http.Request) model.Permissions {
 
 	result := model.NewAnonymousPermissions()
 
@@ -220,7 +223,7 @@ func (service *Permission) ParseHTTPSignature(request *http.Request) model.Permi
 
 	// Find an Identity based on the signature
 	identity := model.NewIdentity()
-	if err := service.identityService.LoadByActivityPubActor(signature.ActorID(), &identity); err != nil {
+	if err := service.identityService.LoadByActivityPubActor(session, signature.ActorID(), &identity); err != nil {
 		return result
 	}
 
@@ -233,7 +236,7 @@ func (service *Permission) ParseHTTPSignature(request *http.Request) model.Permi
 
 	// If the Identity DOES have an email address, then look for a User, too
 	user := model.NewUser()
-	if err := service.userService.LoadByEmail(identity.EmailAddress, &user); err != nil {
+	if err := service.userService.LoadByEmail(session, identity.EmailAddress, &user); err != nil {
 		return result
 	}
 
@@ -248,14 +251,15 @@ func (service *Permission) getSignature(request *http.Request) (sigs.Signature, 
 	const location = "service.Permission.getSignature"
 
 	// First, try to verify the signature using the standard method
-	signature, err := sigs.Verify(request, service.activityStream.PublicKeyFinder)
+	activityStream := service.factory.ActivityStream(model.ActorTypeApplication, primitive.NilObjectID)
+	signature, err := sigs.Verify(request, activityStream.PublicKeyFinder)
 
 	if err == nil {
 		return signature, nil
 	}
 
 	// If there's an error on production servers, then fail
-	if !domain.IsLocalhost(request.Host) {
+	if !dt.IsLocalhost(request.Host) {
 		return sigs.Signature{}, derp.Wrap(err, location, "Unable to verify signature for request")
 	}
 

@@ -17,7 +17,7 @@ func init() {
 		following := model.NewFollowing()
 
 		// If the "Following" record cannot be found, then halt
-		if err := followingService.LoadByURL(context.user.UserID, activity.Actor().ID(), &following); err != nil {
+		if err := followingService.LoadByURL(context.session, context.user.UserID, activity.Actor().ID(), &following); err != nil {
 			return nil
 		}
 
@@ -30,7 +30,7 @@ func init() {
 		ruleService := context.factory.Rule()
 		rule := ruleFromActivity(&following, activity.Object())
 
-		if err := ruleService.LoadByFollowing(context.user.UserID, following.FollowingID, rule.Type, rule.Trigger, &rule); err != nil {
+		if err := ruleService.LoadByFollowing(context.session, context.user.UserID, following.FollowingID, rule.Type, rule.Trigger, &rule); err != nil {
 			if derp.IsNotFound(err) {
 				return nil
 			}
@@ -38,7 +38,7 @@ func init() {
 		}
 
 		// Remove the Rule
-		if err := ruleService.Delete(&rule, "Removed via ActivityPub"); err != nil {
+		if err := ruleService.Delete(context.session, &rule, "Removed via ActivityPub"); err != nil {
 			return derp.Wrap(err, location, "Error deleting rule", activity.Value())
 		}
 

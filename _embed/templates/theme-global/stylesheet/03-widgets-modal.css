@@ -86,21 +86,21 @@
 
 #modal-header + #modal-body {
 	padding-top: calc(var(--rhythm) * 1);
-	background-color: var(--gray03);
+	background-color: var(--gray10);
 }
 
 #modal-footer {
 	padding: calc(var(--rhythm) * 2);
 	padding-bottom:12px;
 	margin:0px;
-	border-top:solid 1px var(--gray20);
-	background-color: var(--gray10);
+	border-top:solid 1px var(--gray30);
+	background-color: var(--gray20);
 }
 
 /* Additional Sizes */
 
 #modal-window.large {
-	width: clamp(480px, 80%, 900px);}
+	width: clamp(480px, 96%, 1024px);}
 
 #modal-window.huge {
 	width:96%;

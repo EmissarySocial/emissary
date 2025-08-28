@@ -5,8 +5,9 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/ascache"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	"github.com/benpate/domain"
+	dt "github.com/benpate/domain"
 	"github.com/benpate/hannibal/collections"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/channel"
@@ -14,36 +15,38 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func (service *Following) RefreshAndConnect(following model.Following) {
+func (service *Following) RefreshAndConnect(session data.Session, following model.Following) {
 
 	// Try to refresh the Actor in the cache
 	// nolint:errcheck
-	service.activityService.Load(following.URL, sherlock.AsActor(), ascache.WithForceReload())
+	activityService := service.factory.ActivityStream(model.ActorTypeUser, following.UserID)
+	activityService.Client().Load(following.URL, sherlock.AsActor(), ascache.WithForceReload())
 
 	// Try to connect the Following record
-	if err := service.Connect(following); err != nil {
-		derp.Report(derp.Wrap(err, "service.Following.RefreshAndConnect", "Error connecting to actor"))
+	if err := service.Connect(session, following); err != nil {
+		derp.Report(derp.Wrap(err, "service.Following.RefreshAndConnect", "Unable to connect to ActivityPub Actor"))
 		return
 	}
 }
 
 // Connect attempts to connect to a new URL and determines how to follow it.
-func (service *Following) Connect(following model.Following) error {
+func (service *Following) Connect(session data.Session, following model.Following) error {
 
 	const location = "service.Following.Connect"
 
 	// Update the following status
-	if err := service.SetStatusLoading(&following); err != nil {
-		return derp.Wrap(err, location, "Error updating following status", following)
+	if err := service.SetStatusLoading(session, &following); err != nil {
+		return derp.Wrap(err, location, "Unable to set status to 'Loading'", following)
 	}
 
 	// Try to load the actor from the remote server.  Errors mean that this actor cannot
 	// be resolved, so we should mark the Following as a "Failure".
-	actor, err := service.activityService.Load(following.URL, sherlock.AsActor())
+	activityService := service.factory.ActivityStream(model.ActorTypeUser, following.UserID)
+	actor, err := activityService.Client().Load(following.URL, sherlock.AsActor())
 
 	if err != nil {
-		if innerError := service.SetStatusFailure(&following, err.Error()); innerError != nil {
-			return derp.Wrap(innerError, location, "Error updating following status", following)
+		if innerError := service.SetStatusFailure(session, &following, err.Error()); innerError != nil {
+			return derp.Wrap(innerError, location, "Unable to set status to 'Failure'", following)
 		}
 		return err
 	}
@@ -55,21 +58,21 @@ func (service *Following) Connect(following model.Following) error {
 	following.Username = actor.UsernameOrID()
 
 	// ...and mark the status as "Success"
-	if err := service.SetStatusSuccess(&following); err != nil {
-		return derp.Wrap(err, location, "Error setting status", following)
+	if err := service.SetStatusSuccess(session, &following); err != nil {
+		return derp.Wrap(err, location, "Unable to set status", following)
 	}
 
 	// Try to load an initial list of messages from the actor's outbox
-	service.connect_LoadMessages(&following, &actor)
+	service.connect_LoadMessages(session, &following, &actor)
 
 	// Try to connect to push services (WebSub, ActivityPub, etc)
-	service.connect_PushServices(&following, &actor)
+	service.connect_PushServices(session, &following, &actor)
 
 	// Kool-Aid man says "ooooohhh yeah!"
 	return nil
 }
 
-func (service *Following) connect_LoadMessages(following *model.Following, actor *streams.Document) {
+func (service *Following) connect_LoadMessages(session data.Session, following *model.Following, actor *streams.Document) {
 
 	const location = "service.Following.connect_LoadMessages"
 
@@ -97,36 +100,36 @@ func (service *Following) connect_LoadMessages(following *model.Following, actor
 		result, _ := document.Load(sherlock.WithDefaultValue(document.Map()))
 
 		// Try to save the document to the database.
-		if err := service.SaveMessage(following, result, model.OriginTypePrimary); err != nil {
-			derp.Report(derp.Wrap(err, location, "Error saving document to Inbox", result.Value()))
+		if err := service.SaveMessage(session, following, result, model.OriginTypePrimary); err != nil {
+			derp.Report(derp.Wrap(err, location, "Unable to save document to Inbox", result.Value()))
 		}
 	}
 
 	// Recalculate Folder unread counts
-	if err := service.folderService.ReCalculateUnreadCountFromFolder(following.UserID, following.FolderID); err != nil {
-		derp.Report(derp.Wrap(err, location, "Error recalculating unread count"))
+	if err := service.folderService.CalculateUnreadCount(session, following.UserID, following.FolderID); err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to recalculate unread count"))
 	}
 }
 
 // connect_PushServices tries to connect to the best available push service
-func (service *Following) connect_PushServices(following *model.Following, actor *streams.Document) {
+func (service *Following) connect_PushServices(session data.Session, following *model.Following, actor *streams.Document) {
 
 	const location = "service.Following.connect_PushServices"
 
 	log.Debug().Str("loc", location).Msg("Trying to connect to push services")
 
 	// Prevent attempts to connect to external domains from localhost. It won't work anyway.
-	if domain.IsLocalhost(service.host) && !domain.IsLocalhost(following.ProfileURL) {
-		log.Debug().Str("loc", location).Msg("Cannot connect to external push services from localhost")
+	if dt.IsLocalhost(service.host) && !dt.IsLocalhost(following.ProfileURL) {
+		log.Debug().Str("loc", location).Msg("Unable to connect to external push services from localhost")
 		return
 	}
 
 	// If this actor has an ActivityPub inbox, then try to via ActivityPub
 	if inbox := actor.Inbox(); inbox.NotNil() {
-		if ok, err := service.connect_ActivityPub(following, actor); ok {
+		if ok, err := service.connect_ActivityPub(session, following, actor); ok {
 			return
 		} else {
-			derp.Report(derp.Wrap(err, location, "Error connecting to ActivityPub"))
+			derp.Report(derp.Wrap(err, location, "Unable to connect to ActivityPub"))
 		}
 	}
 
@@ -136,7 +139,7 @@ func (service *Following) connect_PushServices(following *model.Following, actor
 		if ok, err := service.connect_WebSub(following, hub); ok {
 			return
 		} else {
-			derp.Report(derp.Wrap(err, location, "Error connecting to WebSub"))
+			derp.Report(derp.Wrap(err, location, "Unable to connect to WebSub"))
 		}
 	}
 

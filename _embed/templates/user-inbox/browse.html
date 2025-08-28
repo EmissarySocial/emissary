@@ -1,0 +1,8 @@
+{{- $url := .QueryParam "url" -}}
+{{- $document := .ActivityStream $url -}}
+
+{{- if $document.IsActor -}}
+	{{- template "browse-actor" . -}}
+{{- else -}}
+	{{ template "browse-tree" . -}}
+{{- end -}}

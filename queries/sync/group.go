@@ -11,7 +11,7 @@ import (
 
 func Group(ctx context.Context, database *mongo.Database) error {
 
-	log.Debug().Str("database", database.Name()).Str("collection", "Group").Msg("COLLECTION:")
+	log.Trace().Str("database", database.Name()).Str("collection", "Group").Msg("COLLECTION:")
 
 	return indexer.Sync(ctx, database.Collection("Group"), indexer.IndexSet{
 

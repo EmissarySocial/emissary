@@ -1,9 +1,9 @@
 package consumer
 
 import (
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
@@ -12,7 +12,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func MakeStreamArchive(factory *domain.Factory, _ *service.Stream, stream *model.Stream, args mapof.Any) queue.Result {
+func MakeStreamArchive(factory *service.Factory, session data.Session, _ *service.Stream, stream *model.Stream, args mapof.Any) queue.Result {
 
 	const location = "consumer.MakeStreamArchive"
 	log.Trace().Str("location", location).Str("stream", stream.StreamID.Hex()).Msg("Making Archive...")
@@ -43,7 +43,7 @@ func MakeStreamArchive(factory *domain.Factory, _ *service.Stream, stream *model
 	// Create the StreamArchive
 	streamArchiveService := factory.StreamArchive()
 
-	if err := streamArchiveService.Create(stream, streamArchiveOptions); err != nil {
+	if err := streamArchiveService.Create(session, stream, streamArchiveOptions); err != nil {
 		return queue.Error(derp.Wrap(err, location, "Error creating archive"))
 	}
 

@@ -57,7 +57,7 @@ func (step StepDelete) Post(builder Builder, _ io.Writer) PipelineBehavior {
 	}
 
 	// Delete the object via the model service.
-	if err := builder.service().ObjectDelete(builder.object(), "Deleted"); err != nil {
+	if err := builder.service().ObjectDelete(builder.session(), builder.object(), "Deleted"); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error deleting object"))
 	}
 
@@ -67,7 +67,7 @@ func (step StepDelete) Post(builder Builder, _ io.Writer) PipelineBehavior {
 		searchResultService := builder.factory().SearchResult()
 
 		// Delete step here
-		if err := searchResultService.Delete(&searchResult, "unpublished"); err != nil {
+		if err := searchResultService.Delete(builder.session(), &searchResult, "unpublished"); err != nil {
 			return Halt().WithError(derp.Wrap(err, location, "Error deleting search result", searchResult))
 		}
 	}

@@ -1,6 +1,8 @@
 package mastodon
 
 import (
+	"time"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
@@ -42,9 +44,18 @@ func GetTimeline_Home(serverFactory *server.Factory) func(model.Authorization, t
 			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Invalid Domain")
 		}
 
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Unable to create session")
+		}
+
+		defer cancel()
+
 		// Get Inbox items from the database
 		inboxService := factory.Inbox()
-		messages, err := inboxService.QueryByUserID(auth.UserID, queryExpression(t))
+		messages, err := inboxService.QueryByUserID(session, auth.UserID, queryExpression(t))
 
 		if err != nil {
 			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Error retrieving messages")
@@ -75,11 +86,20 @@ func GetTimeline_List(serverFactory *server.Factory) func(model.Authorization, t
 			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Invalid Domain")
 		}
 
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Unable to create session")
+		}
+
+		defer cancel()
+
 		// Get Inbox items from the database
 		inboxService := factory.Inbox()
 		criteria := queryExpression(t).AndEqual("folderId", folderID)
 
-		messages, err := inboxService.QueryByUserID(auth.UserID, criteria)
+		messages, err := inboxService.QueryByUserID(session, auth.UserID, criteria)
 
 		if err != nil {
 			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Error retrieving messages")

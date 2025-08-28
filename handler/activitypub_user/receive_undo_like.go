@@ -2,6 +2,7 @@ package activitypub_user
 
 import (
 	"github.com/EmissarySocial/emissary/handler/activitypub"
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
@@ -42,8 +43,11 @@ func undoResponse(context Context, activity streams.Document) error {
 		originalActivityID = activitypub.FakeActivityID(originalActivity)
 	}
 
+	// Get an ActivityStream service for the User
+	activityService := context.factory.ActivityStream(model.ActorTypeUser, context.user.UserID)
+
 	// Remove the original activity from the database.
-	if err := context.factory.ActivityStream().Delete(originalActivityID); err != nil {
+	if err := activityService.Delete(originalActivityID); err != nil {
 		return derp.Wrap(err, location, "Error deleting original activity", originalActivity)
 	}
 

@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/hjson/hjson-go/v4"
@@ -117,7 +118,9 @@ func (service *Registration) Load(registrationID string) (model.Registration, er
  * User Registration
  ******************************************/
 
-func (service *Registration) Validate(userService *User, domain *model.Domain, txn model.RegistrationTxn) error {
+func (service *Registration) Validate(session data.Session, userService *User, domain *model.Domain, txn model.RegistrationTxn) error {
+
+	// TODO: Once we have a single "factory" architecture, we should remove userService as an argument to this function
 
 	const location = "service.Registration.Validate"
 
@@ -131,12 +134,13 @@ func (service *Registration) Validate(userService *User, domain *model.Domain, t
 	// UserID must not already exist in the database
 	if userID, err := primitive.ObjectIDFromHex(txn.UserID); err != nil {
 		return derp.BadRequestError(location, "Invalid UserID", txn.UserID)
-	} else if err := userService.LoadByID(userID, &user); !derp.IsNotFound(err) {
+
+	} else if err := userService.LoadByID(session, userID, &user); !derp.IsNotFound(err) {
 		return derp.BadRequestError(location, "UserID already exists. Please sign up again.")
 	}
 
 	// Username must not already exist in the database
-	if err := userService.LoadByUsername(txn.Username, &user); !derp.IsNotFound(err) {
+	if err := userService.LoadByUsername(session, txn.Username, &user); !derp.IsNotFound(err) {
 		return derp.BadRequestError(location, "Username taken. Please choose again.")
 	}
 
@@ -144,7 +148,7 @@ func (service *Registration) Validate(userService *User, domain *model.Domain, t
 	return nil
 }
 
-func (service *Registration) Register(groupService *Group, userService *User, domain *model.Domain, txn model.RegistrationTxn) (model.User, error) {
+func (service *Registration) Register(session data.Session, groupService *Group, userService *User, domain *model.Domain, txn model.RegistrationTxn) (model.User, error) {
 
 	const location = "service.Registration.Register"
 
@@ -160,13 +164,13 @@ func (service *Registration) Register(groupService *Group, userService *User, do
 	}
 
 	// Validate the transaction
-	if err := service.Validate(userService, domain, txn); err != nil {
+	if err := service.Validate(session, userService, domain, txn); err != nil {
 		return model.User{}, derp.Wrap(err, location, "Invalid Registration Transaction")
 	}
 
 	// Copy Transaction data into a new User object
 	user := model.NewUser()
-	if err := service.setUserData(groupService, domain, &user, txn, registration.AllowedFields); err != nil {
+	if err := service.setUserData(session, groupService, domain, &user, txn, registration.AllowedFields); err != nil {
 		return model.User{}, derp.Wrap(err, location, "Error setting user data")
 	}
 
@@ -181,7 +185,7 @@ func (service *Registration) Register(groupService *Group, userService *User, do
 	}
 
 	// Try to save the User to the database
-	if err := userService.Save(&user, "Created by Online Registration"); err != nil {
+	if err := userService.Save(session, &user, "Created by Online Registration"); err != nil {
 		return model.User{}, derp.Wrap(err, location, "Error creating new User")
 	}
 
@@ -190,7 +194,7 @@ func (service *Registration) Register(groupService *Group, userService *User, do
 }
 
 // UpdateRegistration updates an existing User with new data from a Registration Transaction
-func (service *Registration) UpdateRegistration(groupService *Group, userService *User, domain *model.Domain, source string, sourceID string, txn model.RegistrationTxn) error {
+func (service *Registration) UpdateRegistration(session data.Session, groupService *Group, userService *User, domain *model.Domain, source string, sourceID string, txn model.RegistrationTxn) error {
 
 	const location = "service.Registration.UpdateRegistration"
 
@@ -214,11 +218,11 @@ func (service *Registration) UpdateRegistration(groupService *Group, userService
 
 	// Try to locate the user from their remote ID
 	user := model.NewUser()
-	err = userService.LoadByMapID(source, sourceID, &user)
+	err = userService.LoadByMapID(session, source, sourceID, &user)
 
 	// If not found, then create a new User
 	if derp.IsNotFound(err) {
-		_, err := service.Register(groupService, userService, domain, txn)
+		_, err := service.Register(session, groupService, userService, domain, txn)
 		return err
 	}
 
@@ -228,12 +232,12 @@ func (service *Registration) UpdateRegistration(groupService *Group, userService
 	}
 
 	// Update user data from the transaction
-	if err := service.setUserData(groupService, domain, &user, txn, registration.AllowedFields); err != nil {
+	if err := service.setUserData(session, groupService, domain, &user, txn, registration.AllowedFields); err != nil {
 		return derp.Wrap(err, location, "Error setting user data")
 	}
 
 	// Try to save the User to the database
-	if err := userService.Save(&user, "Created by Online Registration"); err != nil {
+	if err := userService.Save(session, &user, "Created by Online Registration"); err != nil {
 		return derp.Wrap(err, location, "Error creating new User")
 	}
 
@@ -242,7 +246,7 @@ func (service *Registration) UpdateRegistration(groupService *Group, userService
 }
 
 // setUserData copies all allowed fields from the Transaction into the User, and silently warns if any field names are not recognized
-func (service *Registration) setUserData(groupService *Group, domain *model.Domain, user *model.User, txn model.RegistrationTxn, allowedFields []string) error {
+func (service *Registration) setUserData(session data.Session, groupService *Group, domain *model.Domain, user *model.User, txn model.RegistrationTxn, allowedFields []string) error {
 
 	const location = "service.Registration.setUserData"
 
@@ -293,12 +297,12 @@ func (service *Registration) setUserData(groupService *Group, domain *model.Doma
 			}
 
 		case "addGroups":
-			if err := service.addGroups(groupService, user, txn.AddGroups); err != nil {
+			if err := service.addGroups(session, groupService, user, txn.AddGroups); err != nil {
 				return derp.Wrap(err, location, "Error adding user to group", txn.AddGroups)
 			}
 
 		case "removeGroups":
-			if err := service.removeGroups(groupService, user, txn.RemoveGroups); err != nil {
+			if err := service.removeGroups(session, groupService, user, txn.RemoveGroups); err != nil {
 				return derp.Wrap(err, location, "Error adding user to group", txn.RemoveGroups)
 			}
 
@@ -322,13 +326,13 @@ func (service *Registration) setUserData(groupService *Group, domain *model.Doma
 	}
 
 	if addGroups := domain.RegistrationData.GetString("addGroups"); addGroups != "" {
-		if err := service.addGroups(groupService, user, addGroups); err != nil {
+		if err := service.addGroups(session, groupService, user, addGroups); err != nil {
 			return derp.Wrap(err, location, "Error adding user to group", addGroups)
 		}
 	}
 
 	if removeGroups := domain.RegistrationData.GetString("removeGroups"); removeGroups != "" {
-		if err := service.removeGroups(groupService, user, removeGroups); err != nil {
+		if err := service.removeGroups(session, groupService, user, removeGroups); err != nil {
 			return derp.Wrap(err, location, "Error adding user to group", removeGroups)
 		}
 	}
@@ -337,7 +341,7 @@ func (service *Registration) setUserData(groupService *Group, domain *model.Doma
 }
 
 // addGroup adds a User to a Group (using either the group.GroupID or the group.Token)
-func (service *Registration) addGroups(groupService *Group, user *model.User, groupIDs string) error {
+func (service *Registration) addGroups(session data.Session, groupService *Group, user *model.User, groupIDs string) error {
 
 	const location = "service.Registration.addGroup"
 
@@ -350,7 +354,7 @@ func (service *Registration) addGroups(groupService *Group, user *model.User, gr
 		// Locate the Group using ID or Token
 		token = strings.TrimSpace(token)
 		group := model.NewGroup()
-		if err := groupService.LoadByToken(token, &group); err != nil {
+		if err := groupService.LoadByToken(session, token, &group); err != nil {
 			return derp.Wrap(err, location, "Error loading group", token)
 		}
 
@@ -362,7 +366,7 @@ func (service *Registration) addGroups(groupService *Group, user *model.User, gr
 }
 
 // removeGroup removes a User from a Group (using either the group.GroupID or the group.Token)
-func (service *Registration) removeGroups(groupService *Group, user *model.User, groupIDs string) error {
+func (service *Registration) removeGroups(session data.Session, groupService *Group, user *model.User, groupIDs string) error {
 
 	const location = "service.Registration.removeGroup"
 
@@ -375,7 +379,7 @@ func (service *Registration) removeGroups(groupService *Group, user *model.User,
 		// Locate the Group using ID or Token
 		token = strings.TrimSpace(token)
 		group := model.NewGroup()
-		if err := groupService.LoadByToken(token, &group); err != nil {
+		if err := groupService.LoadByToken(session, token, &group); err != nil {
 			return derp.Wrap(err, location, "Error loading group", token)
 		}
 

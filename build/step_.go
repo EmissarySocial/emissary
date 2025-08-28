@@ -20,6 +20,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 
 	switch s := stepInfo.(type) {
 
+	case step.AddEvent:
+		return StepAddEvent(s)
+
 	case step.AddModelObject:
 		return StepAddModelObject(s)
 
@@ -199,6 +202,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 
 	case step.WebSub:
 		return StepWebSub(s)
+
+	case step.WithAnnotation:
+		return StepWithAnnotation(s)
 
 	case step.WithAttachment:
 		return StepWithAttachment(s)

@@ -37,13 +37,13 @@ func undoFollow(context Context, activity streams.Document) error {
 	// Collect data from the original follow
 	actorURL := originalFollow.Actor().ID()   // The "actor" of the original follow is our follower.actor.ProfileURL
 	streamURL := originalFollow.Object().ID() // The "object" of the original follow is our local StreamURL
-	streamID, err := context.factory.Stream().ParseURL(streamURL)
+	streamID, err := context.factory.Stream().ParseURL(context.session, streamURL)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Invalid User URL", streamURL)
 	}
 
-	if err := followerService.LoadByActivityPubFollower(model.FollowerTypeStream, streamID, actorURL, &follower); err != nil {
+	if err := followerService.LoadByActivityPubFollower(context.session, model.FollowerTypeStream, streamID, actorURL, &follower); err != nil {
 
 		if derp.IsNotFound(err) {
 			return nil
@@ -53,7 +53,7 @@ func undoFollow(context Context, activity streams.Document) error {
 	}
 
 	// Try to delete the existing follower record
-	if err := followerService.Delete(&follower, "Removed by remote client"); err != nil {
+	if err := followerService.Delete(context.session, &follower, "Removed by remote client"); err != nil {
 		return derp.Wrap(err, location, "Error deleting follower", follower)
 	}
 

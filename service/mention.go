@@ -21,7 +21,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-/*********************
+/******************************************
  * Mentions are a W3C standard for connecting conversations across the web.
  *
  * https://indieweb.org/Webmention
@@ -31,19 +31,21 @@ import (
  * - https://pkg.go.dev/regexp/syntax
  * - https://github.com/google/re2/wiki/Syntax
  *
- *********************/
+ ******************************************/
 
 // Mention defines a service that can send and receive mention data
 type Mention struct {
-	collection      data.Collection
+	factory         *Factory
 	ruleService     *Rule
 	activityService *ActivityStream
 	host            string
 }
 
 // NewMention returns a fully initialized Mention service
-func NewMention() Mention {
-	return Mention{}
+func NewMention(factory *Factory) Mention {
+	return Mention{
+		factory: factory,
+	}
 }
 
 /******************************************
@@ -51,10 +53,8 @@ func NewMention() Mention {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Mention) Refresh(collection data.Collection, ruleService *Rule, activityService *ActivityStream, host string) {
-	service.collection = collection
+func (service *Mention) Refresh(ruleService *Rule, host string) {
 	service.ruleService = ruleService
-	service.activityService = activityService
 	service.host = host
 }
 
@@ -67,27 +67,31 @@ func (service *Mention) Close() {
  * Common Data Methods
  ******************************************/
 
+func (service *Mention) collection(session data.Session) data.Collection {
+	return session.Collection("Mention")
+}
+
 // Count returns the number of records that match the provided criteria
-func (service *Mention) Count(criteria exp.Expression) (int64, error) {
-	return service.collection.Count(notDeleted(criteria))
+func (service *Mention) Count(session data.Session, criteria exp.Expression) (int64, error) {
+	return service.collection(session).Count(notDeleted(criteria))
 }
 
 // Query returns a slice containing all of the Mentions that match the provided criteria
-func (service *Mention) Query(criteria exp.Expression, options ...option.Option) ([]model.Mention, error) {
+func (service *Mention) Query(session data.Session, criteria exp.Expression, options ...option.Option) ([]model.Mention, error) {
 	result := make([]model.Mention, 0)
-	err := service.collection.Query(&result, notDeleted(criteria), options...)
+	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
 	return result, err
 }
 
 // List returns an iterator containing all of the Mentions that match the provided criteria
-func (service *Mention) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection.Iterator(notDeleted(criteria), options...)
+func (service *Mention) List(session data.Session, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+	return service.collection(session).Iterator(notDeleted(criteria), options...)
 }
 
 // Load retrieves an Mention from the database
-func (service *Mention) Load(criteria exp.Expression, mention *model.Mention) error {
+func (service *Mention) Load(session data.Session, criteria exp.Expression, mention *model.Mention) error {
 
-	if err := service.collection.Load(notDeleted(criteria), mention); err != nil {
+	if err := service.collection(session).Load(notDeleted(criteria), mention); err != nil {
 		return derp.Wrap(err, "service.Mention.Load", "Error loading Mention", criteria)
 	}
 
@@ -95,7 +99,7 @@ func (service *Mention) Load(criteria exp.Expression, mention *model.Mention) er
 }
 
 // Save adds/updates an Mention in the database
-func (service *Mention) Save(mention *model.Mention, note string) error {
+func (service *Mention) Save(session data.Session, mention *model.Mention, note string) error {
 
 	// Validate the value before saving
 	if err := service.Schema().Validate(mention); err != nil {
@@ -103,7 +107,7 @@ func (service *Mention) Save(mention *model.Mention, note string) error {
 	}
 
 	// Save the value to the database
-	if err := service.collection.Save(mention, note); err != nil {
+	if err := service.collection(session).Save(mention, note); err != nil {
 		return derp.Wrap(err, "service.Mention.Save", "Error saving Mention", mention, note)
 	}
 
@@ -111,12 +115,12 @@ func (service *Mention) Save(mention *model.Mention, note string) error {
 }
 
 // Delete removes an Mention from the database (virtual delete)
-func (service *Mention) Delete(mention *model.Mention, note string) error {
+func (service *Mention) Delete(session data.Session, mention *model.Mention, note string) error {
 
 	criteria := exp.Equal("_id", mention.MentionID)
 
 	// Delete this Mention
-	if err := service.collection.HardDelete(criteria); err != nil {
+	if err := service.collection(session).HardDelete(criteria); err != nil {
 		return derp.Wrap(err, "service.Mention.Delete", "Error deleting Mention", criteria)
 	}
 
@@ -147,26 +151,26 @@ func (service *Mention) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
-func (service *Mention) ObjectQuery(result any, criteria exp.Expression, options ...option.Option) error {
-	return service.collection.Query(result, notDeleted(criteria), options...)
+func (service *Mention) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
+	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
-func (service *Mention) ObjectLoad(criteria exp.Expression) (data.Object, error) {
+func (service *Mention) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewMention()
-	err := service.Load(criteria, &result)
+	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
-func (service *Mention) ObjectSave(object data.Object, comment string) error {
+func (service *Mention) ObjectSave(session data.Session, object data.Object, comment string) error {
 	if mention, ok := object.(*model.Mention); ok {
-		return service.Save(mention, comment)
+		return service.Save(session, mention, comment)
 	}
 	return derp.InternalError("service.Mention.ObjectSave", "Invalid Object Type", object)
 }
 
-func (service *Mention) ObjectDelete(object data.Object, comment string) error {
+func (service *Mention) ObjectDelete(session data.Session, object data.Object, comment string) error {
 	if mention, ok := object.(*model.Mention); ok {
-		return service.Delete(mention, comment)
+		return service.Delete(session, mention, comment)
 	}
 	return derp.InternalError("service.Mention.ObjectDelete", "Invalid Object Type", object)
 }
@@ -184,20 +188,20 @@ func (service *Mention) Schema() schema.Schema {
  ******************************************/
 
 // LoadByOrigin loads an existing Mention by its type/objectID/origin URL
-func (service *Mention) LoadByOrigin(objectType string, objectID primitive.ObjectID, originURL string, result *model.Mention) error {
+func (service *Mention) LoadByOrigin(session data.Session, objectType string, objectID primitive.ObjectID, originURL string, result *model.Mention) error {
 
 	criteria := exp.Equal("type", objectType).
 		AndEqual("objectId", objectID).
 		AndEqual("origin.url", originURL)
 
-	return service.Load(criteria, result)
+	return service.Load(session, criteria, result)
 }
 
 // LoadOrCreate loads an existing Mention or creates a new one if it doesn't exist
-func (service *Mention) LoadOrCreate(objectType string, objectID primitive.ObjectID, originURL string) (model.Mention, error) {
+func (service *Mention) LoadOrCreate(session data.Session, objectType string, objectID primitive.ObjectID, originURL string) (model.Mention, error) {
 
 	result := model.NewMention()
-	err := service.LoadByOrigin(objectType, objectID, originURL, &result)
+	err := service.LoadByOrigin(session, objectType, objectID, originURL, &result)
 
 	// No error means the record was found
 	if err == nil {
@@ -216,8 +220,8 @@ func (service *Mention) LoadOrCreate(objectType string, objectID primitive.Objec
 	return result, derp.Wrap(err, "service.Mention.LoadOrCreate", "Error loading Mention", objectType, objectID, originURL)
 }
 
-func (service *Mention) QueryByObjectID(objectID primitive.ObjectID, options ...option.Option) ([]model.Mention, error) {
-	return service.Query(exp.Equal("objectId", objectID), options...)
+func (service *Mention) QueryByObjectID(session data.Session, objectID primitive.ObjectID, options ...option.Option) ([]model.Mention, error) {
+	return service.Query(session, exp.Equal("objectId", objectID), options...)
 }
 
 /******************************************
@@ -390,8 +394,10 @@ func (service *Mention) GetPageInfo(body *bytes.Buffer, originURL string, mentio
 
 	const location = "service.Mention.GetPageInfo"
 
+	activityService := service.factory.ActivityStream(model.ActorTypeApplication, primitive.NilObjectID)
+
 	// Inspect the source document for metadata (microformats, opengraph, etc.)
-	document, err := service.activityService.Load(originURL, sherlock.AsDocument())
+	document, err := activityService.Client().Load(originURL, sherlock.AsDocument())
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error retrieving page", originURL)

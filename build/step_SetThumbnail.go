@@ -25,7 +25,7 @@ func (step StepSetThumbnail) Post(builder Builder, _ io.Writer) PipelineBehavior
 	objectID := builder.objectID()
 	object := builder.object()
 
-	attachments, err := factory.Attachment().QueryByObjectID(objectType, objectID)
+	attachments, err := factory.Attachment().QueryByObjectID(builder.session(), objectType, objectID)
 
 	if err != nil {
 		return Halt().WithError(derp.BadRequestError("build.StepSetThumbnail.Post", "Error listing attachments"))

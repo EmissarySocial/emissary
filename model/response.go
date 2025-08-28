@@ -84,7 +84,7 @@ func (response Response) ActivityPubURL() string {
 
 	// Default: vocab.ActivityTypeAnnounce
 	default:
-		return response.Actor + "/pub/announced/" + response.ResponseID.Hex()
+		return response.Actor + "/pub/shared/" + response.ResponseID.Hex()
 	}
 }
 

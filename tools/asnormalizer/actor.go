@@ -22,14 +22,14 @@ func Actor(document streams.Document) map[string]any {
 		vocab.PropertyURL:               document.URL(),
 
 		// Collections
-		vocab.PropertyInbox:     document.Inbox().String(),
-		vocab.PropertyOutbox:    document.Outbox().Value(), // using raw outbox value because RSS feeds stuff data in here.
-		vocab.PropertyLiked:     document.Liked().String(),
-		vocab.PropertyFollowers: document.Followers().String(),
-		vocab.PropertyFollowing: document.Following().String(),
-		vocab.PropertyPublicKey: document.PublicKey().Value(),
-
-		"x-original": document.Value(),
+		vocab.PropertyAttachment: document.Attachment().Value(),
+		vocab.PropertyInbox:      document.Inbox().String(),
+		vocab.PropertyOutbox:     document.Outbox().Value(), // using raw outbox value because RSS feeds stuff data in here.
+		vocab.PropertyLiked:      document.Liked().String(),
+		vocab.PropertyFeatured:   document.Featured().String(),
+		vocab.PropertyFollowers:  document.Followers().String(),
+		vocab.PropertyFollowing:  document.Following().String(),
+		vocab.PropertyPublicKey:  document.PublicKey().Value(),
 	}
 
 	// Cryptography
@@ -38,6 +38,26 @@ func Actor(document streams.Document) map[string]any {
 			vocab.PropertyID:           publicKey.ID(),
 			vocab.PropertyPublicKeyPEM: publicKey.PublicKeyPEM(),
 		}
+	}
+
+	return result
+}
+
+// ActorSummary normalizes an Actor document to be embedded in other documents
+func ActorSummary(document streams.Document) map[string]any {
+
+	result := map[string]any{
+
+		// Profile
+		vocab.PropertyType:              document.Type(),
+		vocab.PropertyID:                document.ID(),
+		vocab.PropertyName:              document.Name(),
+		vocab.PropertyPreferredUsername: document.PreferredUsername(),
+		vocab.PropertySummary:           document.Summary(),
+		vocab.PropertyImage:             Image(document.Image()),
+		vocab.PropertyIcon:              Image(document.Icon()),
+		vocab.PropertyTag:               Tags(document.Tag()),
+		vocab.PropertyURL:               document.URL(),
 	}
 
 	return result

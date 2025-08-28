@@ -13,26 +13,24 @@ import (
 	"sync"
 	"time"
 
-	"github.com/EmissarySocial/emissary/build"
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/consumer"
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/queries"
 	"github.com/EmissarySocial/emissary/service"
 	derpconsole "github.com/EmissarySocial/emissary/tools/derp-console"
 	derpmongo "github.com/EmissarySocial/emissary/tools/derp-mongo"
 	"github.com/EmissarySocial/emissary/tools/httpcache"
+	"github.com/benpate/data"
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
 	"github.com/benpate/digital-dome/dome"
-	domaintools "github.com/benpate/domain"
+	dt "github.com/benpate/domain"
 	"github.com/benpate/icon"
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/channel"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
-	"github.com/benpate/steranko"
 	"github.com/benpate/turbine/queue"
 	"github.com/benpate/turbine/queue_mongo"
 	"github.com/davidscottmills/goeditorjs"
@@ -54,14 +52,15 @@ type Factory struct {
 	ready   chan struct{}
 
 	// Server-level services
+	contentService      service.Content
+	emailService        service.ServerEmail
+	jwtService          service.JWT
 	registrationService service.Registration
 	themeService        service.Theme
 	templateService     service.Template
 	widgetService       service.Widget
-	contentService      service.Content
-	emailService        service.ServerEmail
-	embeddedFiles       embed.FS
 
+	embeddedFiles       embed.FS
 	attachmentOriginals afero.Fs
 	attachmentCache     afero.Fs
 	exportCache         afero.Fs
@@ -70,7 +69,7 @@ type Factory struct {
 	queue               queue.Queue
 	digitalDome         dome.Dome
 
-	domains   map[string]*domain.Factory
+	domains   map[string]*service.Factory
 	httpCache httpcache.HTTPCache
 }
 
@@ -82,9 +81,11 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 	factory := Factory{
 		storage:       storage,
 		mutex:         sync.RWMutex{},
-		domains:       make(map[string]*domain.Factory),
+		domains:       make(map[string]*service.Factory),
 		embeddedFiles: embeddedFiles,
 		ready:         make(chan struct{}),
+		jwtService:    service.NewJWT(),
+		queue:         queue.New(),
 	}
 
 	// Build the in-memory cache
@@ -136,16 +137,19 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 		),
 	)
 
+	factory.jwtService = service.NewJWT()
+
 	factory.queue = queue.New()
 
 	factory.workingDirectory = mediaserver.NewWorkingDirectory(os.TempDir(), 4*time.Minute, 10000)
 
 	go factory.start()
-
 	return &factory
 }
 
 func (factory *Factory) start() {
+
+	const location = "server.Factory.start"
 
 	log.Info().Msg("Factory: waiting for configuration...")
 
@@ -153,6 +157,25 @@ func (factory *Factory) start() {
 
 	// Read configuration files from the channel
 	for config := range factory.storage.Subscribe() {
+
+		if err := factory.refreshCommonDatabase(config.ActivityPubCache); err != nil {
+			derp.Report(derp.Wrap(err, location, "WARNING: Could not refresh common database.  Important services (like queued tasks and ActivityPub caching) may not function correctly.", config.ActivityPubCache))
+		}
+
+		if factory.commonDatabase == nil {
+			errorMessage := "Halting. Common database not properly defined in configuration file."
+			derp.Report(derp.InternalError("server.factory.start", errorMessage))
+			log.Error().Msg(errorMessage)
+			os.Exit(1)
+		}
+
+		server := mongodb.NewServer(factory.commonDatabase)
+		session, err := server.Session(context.Background())
+
+		if err != nil {
+			derp.Report(derp.Wrap(err, "server.factory.start", "Unable to connect to common database."))
+			os.Exit(1)
+		}
 
 		// Set timeout threshold for slow queries
 		mongodb.SetLogTimeout(config.LogSlowQueries)
@@ -181,19 +204,19 @@ func (factory *Factory) start() {
 		if attachmentOriginals, err := filesystemService.GetAfero(config.AttachmentOriginals); err == nil {
 			factory.attachmentOriginals = attachmentOriginals
 		} else {
-			derp.Report(derp.Wrap(err, "server.Factory.start", "Error getting attachment original directory", config))
+			derp.Report(derp.Wrap(err, location, "Unable to get `attachment original` directory", config))
 		}
 
 		if attachmentCache, err := filesystemService.GetAfero(config.AttachmentCache); err == nil {
 			factory.attachmentCache = attachmentCache
 		} else {
-			derp.Report(derp.Wrap(err, "server.Factory.start", "Error getting attachment cache directory", config))
+			derp.Report(derp.Wrap(err, location, "Unable to get `attachment cache` directory", config))
 		}
 
 		if exportCache, err := filesystemService.GetAfero(config.ExportCache); err == nil {
 			factory.exportCache = exportCache
 		} else {
-			derp.Report(derp.Wrap(err, "server.Factory.start", "Error getting export cache directory", config))
+			derp.Report(derp.Wrap(err, location, "Unable to get `export cache` directory", config))
 		}
 
 		factory.config = config
@@ -206,41 +229,34 @@ func (factory *Factory) start() {
 		// Refresh cached values in global services
 		factory.emailService.Refresh()
 		factory.templateService.Refresh(config.Templates)
-
-		if err := factory.refreshCommonDatabase(config.ActivityPubCache); err != nil {
-			derp.Report(derp.Wrap(err, "server.Factory.start", "WARNING: Could not refresh common database.  Important services (like queued tasks and ActivityPub caching) may not function correctly.", config.ActivityPubCache))
-		}
-
 		factory.refreshQueue()
 
-		// Add logging to the Silicon Dome WAF
-		if factory.commonDatabase != nil {
+		log.Trace().Msg("Setting up Common Database")
 
-			log.Trace().Msg("Setting up Common Database")
+		// JWT Service configuration
+		factory.jwtService.Refresh(server, config.MasterKey)
 
-			// Digital Dome configuration
-			collection := mongodb.NewCollection(factory.commonDatabase.Collection("DigitalDome"))
-			factory.digitalDome.With(dome.LogDatabase(collection))
+		// Digital Dome configuration
+		factory.digitalDome.With(dome.LogDatabase(session.Collection("DigitalDome")))
 
-			// Derp configuration
-			derp.Plugins.Clear()
-			for _, logger := range config.Loggers {
+		// Derp configuration
+		derp.Plugins.Clear()
+		for _, logger := range config.Loggers {
 
-				switch logger.GetString("type") {
+			switch logger.GetString("type") {
 
-				case "console":
-					log.Trace().Msg("Adding console logger to DERP")
-					derp.Plugins.Add(derpconsole.New())
+			case "console":
+				log.Trace().Msg("Adding console logger to DERP")
+				derp.Plugins.Add(derpconsole.New())
 
-				case "mongo":
-					log.Trace().Msg("Adding mongo logger to DERP")
-					derp.Plugins.Add(derpmongo.New(
-						factory.commonDatabase.Collection("ErrorLog"),
-						logger))
+			case "mongo":
+				log.Trace().Msg("Adding mongo logger to DERP")
+				derp.Plugins.Add(derpmongo.New(
+					factory.commonDatabase.Collection("ErrorLog"),
+					logger))
 
-				default:
-					log.Error().Str("type", logger.GetString("type")).Msg("Unknown logging type")
-				}
+			default:
+				log.Error().Str("type", logger.GetString("type")).Msg("Unknown logging type")
 			}
 		}
 
@@ -249,7 +265,8 @@ func (factory *Factory) start() {
 
 			factory.mutex.Lock()
 			if err := factory.refreshDomain(domainConfig); err != nil {
-				derp.Report(derp.Wrap(err, "server.Factory.start", "Error refreshing domain", domainConfig.ID))
+				derp.Report(derp.Wrap(err, location, "Unable to refresh domain", domainConfig.ID))
+				continue
 			}
 			factory.mutex.Unlock()
 		}
@@ -265,9 +282,8 @@ func (factory *Factory) start() {
 
 		// Bootstrap the "Scheduler" task.  Duplicates will be dropped.
 		// This task will be used to schedule all other daily/hourly tasks
-		task := queue.NewTask("Scheduler", mapof.NewAny())
-		if err := factory.queue.Publish(task); err != nil {
-			derp.Report(derp.Wrap(err, "server.Factory.start", "Error publishing Schedule task"))
+		if err := factory.queue.Publish(queue.NewTask("Scheduler", mapof.NewAny())); err != nil {
+			derp.Report(derp.Wrap(err, location, "Unable to initialize scheduler"))
 		}
 
 		// If the "ready" channel is still open, then close it,
@@ -298,24 +314,26 @@ func (factory *Factory) refreshDomain(domainConfig config.Domain) error {
 
 		// Try to refresh the domain
 		if err := existing.Refresh(domainConfig, factory.attachmentOriginals, factory.attachmentCache); err != nil {
-			return derp.Wrap(err, location, "Error refreshing domain", domainConfig.Hostname)
+			return derp.Wrap(err, location, "Unable to refresh domain", domainConfig.Hostname)
 		}
 
 		return nil
 	}
 
 	// Fall through means that the domain does not exist, so we need to create it
-	newDomain, err := domain.NewFactory(
+	newDomain, err := service.NewFactory(
+		factory,
+		mongodb.NewServer(factory.commonDatabase),
 		domainConfig,
 		factory.port(domainConfig),
-		factory.ActivityCollection(),
-		&factory.registrationService,
-		&factory.emailService,
-		&factory.themeService,
-		&factory.templateService,
-		&factory.widgetService,
 		&factory.contentService,
+		&factory.emailService,
+		&factory.jwtService,
 		&factory.queue,
+		&factory.registrationService,
+		&factory.templateService,
+		&factory.themeService,
+		&factory.widgetService,
 		factory.attachmentOriginals,
 		factory.attachmentCache,
 		factory.exportCache,
@@ -344,12 +362,12 @@ func (factory *Factory) refreshCommonDatabase(connection mapof.String) error {
 
 	// RULE: Must have URI
 	if uri == "" {
-		return derp.InternalError(location, "Must have a URI for the common database")
+		return derp.InternalError(location, "Common database must have a URI")
 	}
 
 	// RULE: Must have a database name
 	if database == "" {
-		return derp.InternalError(location, "Must have a database name for the common database")
+		return derp.InternalError(location, "Common database must have a database name")
 	}
 
 	// If there is already a cache connection in place, then close it before we open a new one
@@ -412,10 +430,6 @@ func (factory *Factory) refreshQueue() {
  * Server Config Methods
  ******************************************/
 
-func (factory *Factory) Version() string {
-	return "0.4.0"
-}
-
 // Config returns the current configuration for the Factory
 func (factory *Factory) Config() config.Config {
 
@@ -430,6 +444,8 @@ func (factory *Factory) Config() config.Config {
 // UpdateConfig updates the configuration for the Factory
 func (factory *Factory) UpdateConfig(value config.Config) error {
 
+	const location = "server.factory.UpdateConfig"
+
 	// Write lock the mutex
 	factory.mutex.Lock()
 	defer factory.mutex.Unlock()
@@ -437,7 +453,7 @@ func (factory *Factory) UpdateConfig(value config.Config) error {
 	factory.config = value
 
 	if err := factory.storage.Write(value); err != nil {
-		return derp.Wrap(err, "server.factory.UpdateConfig", "Error writing configuration", value)
+		return derp.Wrap(err, location, "Unable to write configuration", value)
 	}
 
 	return nil
@@ -447,9 +463,9 @@ func (factory *Factory) UpdateConfig(value config.Config) error {
  * Domain Methods
  ******************************************/
 
-func (factory *Factory) RangeDomains() iter.Seq[*domain.Factory] {
+func (factory *Factory) RangeDomains() iter.Seq[*service.Factory] {
 
-	return func(yield func(*domain.Factory) bool) {
+	return func(yield func(*service.Factory) bool) {
 		factory.mutex.RLock()
 		defer factory.mutex.RUnlock()
 
@@ -469,9 +485,11 @@ func (factory *Factory) ListDomains() []config.Domain {
 // PutDomain adds a domain to the Factory
 func (factory *Factory) PutDomain(configuration config.Domain) error {
 
+	const location = "server.Factory.PutDomain"
+
 	// Save the domain info ant write a new configuration to the storage service
 	if err := factory.putDomain(configuration); err != nil {
-		return derp.Wrap(err, "server.Factory.PutDomain", "Error adding domain", configuration)
+		return derp.Wrap(err, location, "Unable to add domain", configuration)
 	}
 
 	// The storage service will trigger a new configuration via the Subscrbe() channel,
@@ -480,12 +498,28 @@ func (factory *Factory) PutDomain(configuration config.Domain) error {
 	domainFactory, err := factory.ByHostname(configuration.Hostname)
 
 	if err != nil {
-		return derp.Wrap(err, "server.Factory.PutDomain", "Error getting domain factory", configuration.Hostname)
+		return derp.Wrap(err, location, "Unable to get domain factory", configuration.Hostname)
 	}
 
-	userService := domainFactory.User()
-	if err := userService.SetOwner(configuration.Owner); err != nil {
-		return derp.Wrap(err, "server.Factory.PutDomain", "Error setting owner", configuration.Owner)
+	// If the config includes a database owner, then guarantee they're written into the database
+	if !configuration.Owner.IsEmpty() {
+
+		ctx, cancel := timeoutContext(30)
+		defer cancel()
+
+		_, err = domainFactory.Server().WithTransaction(ctx, func(session data.Session) (any, error) {
+			userService := domainFactory.User()
+			if err := userService.SetOwner(session, configuration.Owner); err != nil {
+				return nil, derp.Wrap(err, location, "Unable to set owner", configuration.Owner)
+			}
+			return nil, nil
+		})
+
+		if err != nil {
+			return derp.Wrap(err, location, "Unable to write database owner")
+		}
+
+		return nil
 	}
 
 	return nil
@@ -493,6 +527,8 @@ func (factory *Factory) PutDomain(configuration config.Domain) error {
 
 // putDomain is a helper for PutDomain that manages the locking
 func (factory *Factory) putDomain(configuration config.Domain) error {
+
+	const location = "server.Factory.putDomain"
 
 	factory.mutex.Lock()
 	defer factory.mutex.Unlock()
@@ -502,19 +538,21 @@ func (factory *Factory) putDomain(configuration config.Domain) error {
 
 	// Try to write the configuration to the storage service
 	if err := factory.storage.Write(factory.config); err != nil {
-		return derp.Wrap(err, "server.Factory.putDomain", "Error writing configuration")
+		return derp.Wrap(err, location, "Unable to write configuration")
 	}
 
 	// Try to update the domain in the in-memory cache
 	if err := factory.refreshDomain(configuration); err != nil {
-		return derp.Wrap(err, "server.Factory.putDomain", "Error refreshing domain", configuration)
+		return derp.Wrap(err, location, "Unable to refresh domain", configuration)
 	}
 
 	return nil
 }
 
-// DomainByID finds a domain in the configuration by its ID
-func (factory *Factory) DomainByID(domainID string) (config.Domain, error) {
+// FindDomain finds a domain in the configuration by its ID
+func (factory *Factory) FindDomain(domainID string) (config.Domain, error) {
+
+	const location = "server.Factory.FindDomain"
 
 	factory.mutex.RLock()
 	defer factory.mutex.RUnlock()
@@ -530,11 +568,13 @@ func (factory *Factory) DomainByID(domainID string) (config.Domain, error) {
 	}
 
 	// Not found, so return an error
-	return config.NewDomain(), derp.NotFoundError("server.Factory.DomainByID", "DomainID not found", domainID)
+	return config.NewDomain(), derp.NotFoundError(location, "Unable to find Domain", domainID)
 }
 
 // DeleteDomain removes a domain from the Factory
 func (factory *Factory) DeleteDomain(domainID string) error {
+
+	const location = "server.Factory.DeleteDomain"
 
 	factory.mutex.Lock()
 	defer factory.mutex.Unlock()
@@ -544,7 +584,7 @@ func (factory *Factory) DeleteDomain(domainID string) error {
 
 	// Write changes to the storage engine.
 	if err := factory.storage.Write(factory.config); err != nil {
-		return derp.Wrap(err, "server.Factory.DeleteDomain", "Error saving configuration")
+		return derp.Wrap(err, location, "Unable to save configuration")
 	}
 
 	return nil
@@ -555,48 +595,48 @@ func (factory *Factory) DeleteDomain(domainID string) error {
  ******************************************/
 
 // ByDomainID retrieves a Domain factory using a DomainID
-func (factory *Factory) ByDomainID(domainID string) (config.Domain, *domain.Factory, error) {
+func (factory *Factory) ByDomainID(domainID string) (config.Domain, *service.Factory, error) {
 
 	const location = "server.Factory.ByDomainID"
 
 	// Look up the domain name for this domainID
-	domainConfig, err := factory.DomainByID(domainID)
+	domainConfig, err := factory.FindDomain(domainID)
 
 	if err != nil {
-		return config.Domain{}, nil, derp.Wrap(err, location, "Invalid domain", domainID)
+		return config.Domain{}, nil, derp.Wrap(err, location, "Domain is invalid", domainID)
 	}
 
 	// Return the domain
 	result, err := factory.ByHostname(domainConfig.Hostname)
 
 	if err != nil {
-		return config.Domain{}, nil, derp.Wrap(err, location, "Invalid hostname", domainConfig.Hostname)
+		return config.Domain{}, nil, derp.Wrap(err, location, "Hostname is invalid", domainConfig.Hostname)
 	}
 
 	return domainConfig, result, nil
 }
 
 // ByContext retrieves a Domain factory using an echo.Context
-func (factory *Factory) ByContext(ctx echo.Context) (*domain.Factory, error) {
+func (factory *Factory) ByContext(ctx echo.Context) (*service.Factory, error) {
 	return factory.ByRequest(ctx.Request())
 }
 
-func (factory *Factory) ByRequest(req *http.Request) (*domain.Factory, error) {
+func (factory *Factory) ByRequest(req *http.Request) (*service.Factory, error) {
 
 	const location = "server.Factory.ByRequest"
 
-	hostname := domaintools.Hostname(req)
+	hostname := dt.Hostname(req)
 	result, err := factory.ByHostname(hostname)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Invalid hostname", "hostname: "+hostname)
+		return nil, derp.Wrap(err, location, "Hostname is invalid", "hostname: "+hostname)
 	}
 
 	return result, nil
 }
 
 // ByHostname retrieves a Domain factory using a Hostname
-func (factory *Factory) ByHostname(hostname string) (*domain.Factory, error) {
+func (factory *Factory) ByHostname(hostname string) (*service.Factory, error) {
 
 	const location = "server.Factory.ByHostname"
 
@@ -613,7 +653,7 @@ func (factory *Factory) ByHostname(hostname string) (*domain.Factory, error) {
 	}
 
 	// Failure.
-	return nil, derp.MisdirectedRequestError(location, "Invalid hostname", "hostname: "+hostname, maps.Keys(factory.domains))
+	return nil, derp.MisdirectedRequestError(location, "Hostname is invalid", "hostname: "+hostname, maps.Keys(factory.domains))
 }
 
 // normalizeHostname removes inconsistencies in host names so that they
@@ -664,7 +704,7 @@ func (factory *Factory) Widget() *service.Widget {
 
 // FuncMap returns the global funcMap (used by all templates)
 func (factory *Factory) FuncMap() template.FuncMap {
-	return build.FuncMap(factory.Icons())
+	return service.FuncMap(factory.Icons())
 }
 
 // Icons returns the global icon collection
@@ -697,28 +737,6 @@ func (factory *Factory) EditorJS() *goeditorjs.HTMLEngine {
 	return result
 }
 
-func (factory *Factory) ActivityCollection() *mongo.Collection {
-
-	if factory.commonDatabase != nil {
-		return factory.commonDatabase.Collection("Document")
-	}
-
-	return nil
-}
-
-// Steranko implements the steranko.Factory method, used for locating the specific
-// steranko instance used by a domain.
-func (factory *Factory) Steranko(ctx echo.Context) (*steranko.Steranko, error) {
-
-	result, err := factory.ByContext(ctx)
-
-	if err != nil {
-		return nil, derp.Wrap(err, "server.Factory.Steranko", "Invalid hostname")
-	}
-
-	return result.Steranko(), nil
-}
-
 func (factory *Factory) DigitalDome() *dome.Dome {
 	return &factory.digitalDome
 }
@@ -727,15 +745,64 @@ func (factory *Factory) HTTPCache() *httpcache.HTTPCache {
 	return &factory.httpCache
 }
 
+// CommonDatabase returns a link to the common database server
 func (factory *Factory) CommonDatabase() *mongo.Database {
 	return factory.commonDatabase
 }
+
+func (factory *Factory) Server(hostname string) (data.Server, error) {
+
+	const location = "server.Factory.Server"
+
+	// Clean up the hostname before using it
+	hostname = factory.normalizeHostname(hostname)
+
+	// Read Lock the mutex to prevent concurrent writes
+	factory.mutex.RLock()
+	defer factory.mutex.RUnlock()
+
+	// Try to find the domain in the configuration
+	if domain, exists := factory.domains[hostname]; exists {
+		return domain.Server(), nil
+	}
+
+	// Failure.
+	return nil, derp.MisdirectedRequestError(location, "Hostname is invalid", "hostname: "+hostname, maps.Keys(factory.domains))
+
+}
+
+// Session creates a new database session
+func (factory *Factory) Session(ctx context.Context, hostname string) (data.Session, error) {
+
+	const location = "server.factory.Session"
+
+	// Locate the server from the factory
+	server, err := factory.Server(hostname)
+
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Unable to retrieve database connection.", hostname)
+	}
+
+	// Create a database session with the server
+	session, err := server.Session(ctx)
+
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Unable to create database session for server", hostname)
+	}
+
+	// Return the session to the caller
+	return session, nil
+}
+
+/******************************************
+ * Helper Methods
+ ******************************************/
 
 func (factory *Factory) port(domainConfig config.Domain) string {
 
 	// If not localhost, then use standard ports and assume the
 	// hosting environment will handle the port forwarding
-	if !domaintools.IsLocalhost(domainConfig.Hostname) {
+	if !dt.IsLocalhost(domainConfig.Hostname) {
 		return ""
 	}
 
@@ -743,6 +810,7 @@ func (factory *Factory) port(domainConfig config.Domain) string {
 	switch factory.config.HTTPPort {
 	case 0, 80:
 		return ""
+
 	default:
 		return ":" + strconv.Itoa(factory.config.HTTPPort)
 	}

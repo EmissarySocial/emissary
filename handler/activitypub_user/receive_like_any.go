@@ -36,8 +36,11 @@ func receiveLikeOrAnnounce(context Context, activity streams.Document) error {
 		activity.SetProperty(vocab.PropertyID, activitypub.FakeActivityID(activity))
 	}
 
+	// Get an ActivityStream service for the User
+	activityService := context.factory.ActivityStream(model.ActorTypeUser, context.user.UserID)
+
 	// Add the Announce/Like/Dislike into the ActivityStream cache
-	context.factory.ActivityStream().Put(activity)
+	activityService.Put(activity)
 
 	// Add the activity into the User's Inbox
 	if err := saveMessage(context, object, activity.Actor().ID(), getOriginType(activity.Type())); err != nil {
@@ -58,7 +61,7 @@ func saveMessage(context Context, activity streams.Document, actorID string, ori
 	following := model.NewFollowing()
 
 	// If the "Following" record cannot be found, then do not add a message
-	if err := followingService.LoadByURL(context.user.UserID, actorID, &following); err != nil {
+	if err := followingService.LoadByURL(context.session, context.user.UserID, actorID, &following); err != nil {
 
 		if derp.IsNotFound(err) {
 			return nil
@@ -68,7 +71,7 @@ func saveMessage(context Context, activity streams.Document, actorID string, ori
 	}
 
 	// Try to save the message to the database (with de-duplication)
-	if err := followingService.SaveMessage(&following, activity, originType); err != nil {
+	if err := followingService.SaveMessage(context.session, &following, activity, originType); err != nil {
 		return derp.Wrap(err, location, "Error saving message", context.user.UserID, activity.Value())
 	}
 

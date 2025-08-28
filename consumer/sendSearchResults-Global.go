@@ -1,9 +1,9 @@
 package consumer
 
 import (
-	"github.com/EmissarySocial/emissary/domain"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
@@ -11,7 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func SendSearchResultsGlobal(factory *domain.Factory, args mapof.Any) queue.Result {
+func SendSearchResults_Global(factory *service.Factory, session data.Session, args mapof.Any) queue.Result {
 
 	const location = "consumer.SendSearchResultsGlobal"
 
@@ -34,14 +34,14 @@ func SendSearchResultsGlobal(factory *domain.Factory, args mapof.Any) queue.Resu
 	}
 
 	// Get all Followers from the database
-	followers := followerService.RangeByGlobalSearch()
+	followers := followerService.RangeByGlobalSearch(session)
 	ruleFilter := factory.Rule().Filter(primitive.NilObjectID, service.WithBlocksOnly())
 
 	// Send ActivityPub messages to each follower
 	for follower := range followers {
 
 		// Do not send to blocked followers
-		if !ruleFilter.AllowSend(follower.Actor.ProfileURL) {
+		if !ruleFilter.AllowSend(session, follower.Actor.ProfileURL) {
 			continue
 		}
 
@@ -51,6 +51,7 @@ func SendSearchResultsGlobal(factory *domain.Factory, args mapof.Any) queue.Resu
 			mapof.Any{
 				"host":      factory.Hostname(),
 				"actorType": model.FollowerTypeSearchDomain,
+				"actorID":   primitive.NilObjectID.Hex(),
 				"to":        follower.Actor.ProfileURL,
 				"message": mapof.Any{
 					vocab.PropertyActor:  actorURL,

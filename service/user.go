@@ -1,7 +1,6 @@
 package service
 
 import (
-	"context"
 	"iter"
 	"strconv"
 	"strings"
@@ -17,7 +16,7 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
-	"github.com/benpate/domain"
+	dt "github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/first"
@@ -33,10 +32,7 @@ import (
 
 // User manages all interactions with the User collection
 type User struct {
-	collection        data.Collection
-	followers         data.Collection
-	following         data.Collection
-	rules             data.Collection
+	factory           *Factory
 	attachmentService *Attachment
 	emailService      *DomainEmail
 	domainService     *Domain
@@ -52,15 +48,16 @@ type User struct {
 	streamService     *Stream
 	templateService   *Template
 	webhookService    *Webhook
-	activityStream    *ActivityStream
 	queue             *queue.Queue
 	sseUpdateChannel  chan<- primitive.ObjectID
 	host              string
 }
 
 // NewUser returns a fully populated User service
-func NewUser() User {
-	return User{}
+func NewUser(factory *Factory) User {
+	return User{
+		factory: factory,
+	}
 }
 
 /******************************************
@@ -69,10 +66,6 @@ func NewUser() User {
 
 // Refresh updates any stateful data that is cached inside this service.
 func (service *User) Refresh(
-	userCollection data.Collection,
-	followerCollection data.Collection,
-	followingCollection data.Collection,
-	ruleCollection data.Collection,
 	attachmentService *Attachment,
 	domainService *Domain,
 	emailService *DomainEmail,
@@ -90,15 +83,8 @@ func (service *User) Refresh(
 	webhookService *Webhook,
 	queue *queue.Queue,
 
-	activityStream *ActivityStream,
 	sseUpdateChannel chan<- primitive.ObjectID,
 	host string) {
-
-	service.collection = userCollection
-	service.searchTagService = searchTagService
-	service.followers = followerCollection
-	service.following = followingCollection
-	service.rules = ruleCollection
 
 	service.attachmentService = attachmentService
 	service.domainService = domainService
@@ -114,7 +100,6 @@ func (service *User) Refresh(
 	service.streamService = streamService
 	service.templateService = templateService
 	service.webhookService = webhookService
-	service.activityStream = activityStream
 	service.sseUpdateChannel = sseUpdateChannel
 	service.queue = queue
 
@@ -130,20 +115,40 @@ func (service *User) Close() {
  * Common Data Methods
  ******************************************/
 
+func (service *User) collection(session data.Session) data.Collection {
+	return session.Collection("User")
+}
+
+func (service *User) searchTagCollection(session data.Session) data.Collection {
+	return session.Collection("SearchTag")
+}
+
+func (service *User) followerCollection(session data.Session) data.Collection {
+	return session.Collection("Follower")
+}
+
+func (service *User) followingCollection(session data.Session) data.Collection {
+	return session.Collection("Following")
+}
+
+func (service *User) ruleCollection(session data.Session) data.Collection {
+	return session.Collection("Rule")
+}
+
 // Count returns the number of Users who match the provided criteria
-func (service User) Count(criteria exp.Expression) (int64, error) {
-	return service.collection.Count(notDeleted(criteria))
+func (service User) Count(session data.Session, criteria exp.Expression) (int64, error) {
+	return service.collection(session).Count(notDeleted(criteria))
 }
 
 // List returns an iterator containing all of the Users who match the provided criteria
-func (service *User) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection.Iterator(notDeleted(criteria), options...)
+func (service *User) List(session data.Session, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+	return service.collection(session).Iterator(notDeleted(criteria), options...)
 }
 
 // Range returns an iterator containing all of the Users who match the provided criteria
-func (service *User) Range(criteria exp.Expression, options ...option.Option) (iter.Seq[model.User], error) {
+func (service *User) Range(session data.Session, criteria exp.Expression, options ...option.Option) (iter.Seq[model.User], error) {
 
-	iter, err := service.List(criteria, options...)
+	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
 		return nil, derp.Wrap(err, "service.User.Range", "Error creating iterator", criteria)
@@ -153,15 +158,15 @@ func (service *User) Range(criteria exp.Expression, options ...option.Option) (i
 }
 
 // Query returns an slice containing all of the Users who match the provided criteria
-func (service *User) Query(criteria exp.Expression, options ...option.Option) ([]model.User, error) {
+func (service *User) Query(session data.Session, criteria exp.Expression, options ...option.Option) ([]model.User, error) {
 	result := make([]model.User, 0)
-	err := service.collection.Query(&result, notDeleted(criteria), options...)
+	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
 	return result, err
 }
 
 // Load retrieves an User from the database
-func (service *User) Load(criteria exp.Expression, result *model.User) error {
-	if err := service.collection.Load(notDeleted(criteria), result); err != nil {
+func (service *User) Load(session data.Session, criteria exp.Expression, result *model.User, options ...option.Option) error {
+	if err := service.collection(session).Load(notDeleted(criteria), result, options...); err != nil {
 		return derp.Wrap(err, "service.User.Load", "Error loading User", criteria)
 	}
 
@@ -169,7 +174,7 @@ func (service *User) Load(criteria exp.Expression, result *model.User) error {
 }
 
 // Save adds/updates an User in the database
-func (service *User) Save(user *model.User, note string) error {
+func (service *User) Save(session data.Session, user *model.User, note string) error {
 
 	const location = "service.User.Save"
 
@@ -207,13 +212,13 @@ func (service *User) Save(user *model.User, note string) error {
 		}
 
 		// RULE: If the username is empty, then try to automatically generate one
-		if err := service.CalcNewUsername(user); err != nil {
+		if err := service.CalcNewUsername(session, user); err != nil {
 			return derp.Wrap(err, location, "Error calculating username", user)
 		}
 	}
 
 	// Guarantee that the username is unique, and fits formatting rules.
-	if err := service.ValidateUsername(user.UserID, user.Username); err != nil {
+	if err := service.ValidateUsername(session, user.UserID, user.Username); err != nil {
 		return derp.Wrap(err, location, "Username is invalid", user)
 	}
 
@@ -231,7 +236,7 @@ func (service *User) Save(user *model.User, note string) error {
 	}
 
 	// Try to save the User record to the database
-	if err := service.collection.Save(user, note); err != nil {
+	if err := service.collection(session).Save(user, note); err != nil {
 		return derp.Wrap(err, location, "Error saving User", user, note)
 	}
 
@@ -239,12 +244,12 @@ func (service *User) Save(user *model.User, note string) error {
 	if isNew {
 
 		// RULE: Create a new encryption key for this user
-		if _, err := service.keyService.Create(model.EncryptionKeyTypeUser, user.UserID); err != nil {
+		if _, err := service.keyService.Create(session, model.EncryptionKeyTypeUser, user.UserID); err != nil {
 			return derp.Wrap(err, location, "Error creating encryption key for User", user, note)
 		}
 
 		// RULE: Create default folders for this user
-		if err := service.folderService.CreateDefaultFolders(user.UserID); err != nil {
+		if err := service.folderService.CreateDefaultFolders(session, user.UserID); err != nil {
 			return derp.Wrap(err, location, "Error creating default folders for User", user, note)
 		}
 	}
@@ -256,69 +261,68 @@ func (service *User) Save(user *model.User, note string) error {
 	}()
 
 	// Send Webhooks (if configured)
-	if isNew {
-		service.webhookService.Send(user, model.WebhookEventUserCreate)
-	} else {
-		service.webhookService.Send(user, model.WebhookEventUserUpdate)
-	}
+	eventName := iif(isNew, model.WebhookEventUserCreate, model.WebhookEventUserUpdate)
+	service.webhookService.Send(user, eventName)
 
 	// Success!
 	return nil
 }
 
 // Delete removes an User from the database (virtual delete)
-func (service *User) Delete(user *model.User, note string) error {
+func (service *User) Delete(session data.Session, user *model.User, note string) error {
+
+	const location = "service.User.Delete"
 
 	// Delete related Folders
-	if err := service.folderService.DeleteByUserID(user.UserID, "Deleted with owner"); err != nil {
-		return derp.Wrap(err, "service.User.Delete", "Error deleting User's folders", user, note)
+	if err := service.folderService.DeleteByUserID(session, user.UserID, "Deleted with owner"); err != nil {
+		return derp.Wrap(err, location, "Error deleting User's folders", user, note)
 	}
 
 	// Delete related Followers
-	if err := service.followerService.DeleteByUserID(user.UserID, "Deleted with owner"); err != nil {
-		return derp.Wrap(err, "service.User.Delete", "Error deleting User's followers", user, note)
+	if err := service.followerService.DeleteByUserID(session, user.UserID, "Deleted with owner"); err != nil {
+		return derp.Wrap(err, location, "Error deleting User's followers", user, note)
 	}
 
 	// Delete related Following
-	if err := service.followingService.DeleteByUserID(user.UserID, "Deleted with owner"); err != nil {
-		return derp.Wrap(err, "service.User.Delete", "Error deleting User's followers", user, note)
+	if err := service.followingService.DeleteByUserID(session, user.UserID, "Deleted with owner"); err != nil {
+		return derp.Wrap(err, location, "Error deleting User's followers", user, note)
 	}
 
 	// TODO: Delete related mentions
 
 	// Delete related Encryption Keys messages
-	if err := service.keyService.DeleteByParentID(user.UserID, "Deleted with owner"); err != nil {
-		return derp.Wrap(err, "service.User.Delete", "Error deleting User's encryption keys", user, note)
+	if err := service.keyService.DeleteByParentID(session, user.UserID, "Deleted with owner"); err != nil {
+		return derp.Wrap(err, location, "Error deleting User's encryption keys", user, note)
 	}
 
 	// Delete related Inbox messages
-	if err := service.inboxService.DeleteByUserID(user.UserID, "Deleted with owner"); err != nil {
-		return derp.Wrap(err, "service.User.Delete", "Error deleting User's inbox messages", user, note)
+	if err := service.inboxService.DeleteByUserID(session, user.UserID, "Deleted with owner"); err != nil {
+		return derp.Wrap(err, location, "Error deleting User's inbox messages", user, note)
 	}
 
 	// Delete related Outbox messages
-	if err := service.outboxService.DeleteByParentID(model.FollowerTypeUser, user.UserID); err != nil {
-		return derp.Wrap(err, "service.User.Delete", "Error deleting User's outbox messages", user, note)
+	if err := service.outboxService.DeleteByParentID(session, model.FollowerTypeUser, user.UserID); err != nil {
+		return derp.Wrap(err, location, "Error deleting User's outbox messages", user, note)
 	}
 
 	// Delete related Responses
-	if err := service.responseService.DeleteByUserID(user.UserID, "Deleted with owner"); err != nil {
-		return derp.Wrap(err, "service.User.Delete", "Error deleting User's responses", user, note)
+	if err := service.responseService.DeleteByUserID(session, user.UserID, "Deleted with owner"); err != nil {
+		return derp.Wrap(err, location, "Error deleting User's responses", user, note)
 	}
 
 	// TODO: Delete related Rules
-	if err := service.ruleService.DeleteByUserID(user.UserID, "Deleted with owner"); err != nil {
-		return derp.Wrap(err, "service.User.Delete", "Error deleting User's rules", user, note)
+	if err := service.ruleService.DeleteByUserID(session, user.UserID, "Deleted with owner"); err != nil {
+		return derp.Wrap(err, location, "Error deleting User's rules", user, note)
 	}
 
 	// Delete related Streams
-	if err := service.streamService.DeleteByParent(user.UserID, "Deleted with owner"); err != nil {
-		return derp.Wrap(err, "service.User.Delete", "Error deleting User's streams", user, note)
+	if err := service.streamService.DeleteByParent(session, user.UserID, "Deleted with owner"); err != nil {
+		return derp.Wrap(err, location, "Error deleting User's streams", user, note)
 	}
 
 	// Delete the User from the database
-	if err := service.collection.Delete(user, note); err != nil {
-		return derp.Wrap(err, "service.User.Delete", "Error deleting User", user, note)
+	if err := service.collection(session).Delete(user, note); err != nil {
+		return derp.Wrap(err, location, "Error deleting User", user, note)
 	}
 
 	// Send user:delete webhooks
@@ -351,26 +355,26 @@ func (service *User) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
-func (service *User) ObjectQuery(result any, criteria exp.Expression, options ...option.Option) error {
-	return service.collection.Query(result, notDeleted(criteria), options...)
+func (service *User) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
+	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
-func (service *User) ObjectLoad(criteria exp.Expression) (data.Object, error) {
+func (service *User) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewUser()
-	err := service.Load(criteria, &result)
+	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
-func (service *User) ObjectSave(object data.Object, note string) error {
+func (service *User) ObjectSave(session data.Session, object data.Object, note string) error {
 	if user, ok := object.(*model.User); ok {
-		return service.Save(user, note)
+		return service.Save(session, user, note)
 	}
 	return derp.InternalError("service.User.ObjectSave", "Invalid object type", object)
 }
 
-func (service *User) ObjectDelete(object data.Object, note string) error {
+func (service *User) ObjectDelete(session data.Session, object data.Object, note string) error {
 	if user, ok := object.(*model.User); ok {
-		return service.Delete(user, note)
+		return service.Delete(session, user, note)
 	}
 	return derp.InternalError("service.User.ObjectDelete", "Invalid object type", object)
 }
@@ -387,69 +391,69 @@ func (service *User) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
-func (service *User) RangeAll() (iter.Seq[model.User], error) {
-	return service.Range(exp.All())
+func (service *User) RangeAll(session data.Session) (iter.Seq[model.User], error) {
+	return service.Range(session, exp.All())
 }
 
-func (service *User) ListUsernameOrOwner(username string) (data.Iterator, error) {
-	return service.List(exp.Equal("isOwner", true).OrEqual("username", username))
+func (service *User) ListUsernameOrOwner(session data.Session, username string) (data.Iterator, error) {
+	return service.List(session, exp.Equal("isOwner", true).OrEqual("username", username))
 }
 
-func (service *User) ListOwners() (data.Iterator, error) {
-	return service.List(exp.Equal("isOwner", true))
+func (service *User) ListOwners(session data.Session) (data.Iterator, error) {
+	return service.List(session, exp.Equal("isOwner", true))
 }
 
-func (service *User) ListOwnersAsSlice() []model.UserSummary {
-	it, _ := service.ListOwners()
+func (service *User) ListOwnersAsSlice(session data.Session) []model.UserSummary {
+	it, _ := service.ListOwners(session)
 	return iterator.Slice(it, model.NewUserSummary)
 }
 
 // ListByIdentities returns all users that appear in the list of identities
-func (service *User) ListByIdentities(identities []string) (data.Iterator, error) {
-	return service.List(exp.In("identities", identities))
+func (service *User) ListByIdentities(session data.Session, identities []string) (data.Iterator, error) {
+	return service.List(session, exp.In("identities", identities))
 }
 
 // ListByGroup returns all users that match a provided group name
-func (service *User) ListByGroup(group string) (data.Iterator, error) {
-	return service.List(exp.Equal("groupId", group))
+func (service *User) ListByGroup(session data.Session, group string) (data.Iterator, error) {
+	return service.List(session, exp.Equal("groupId", group))
 }
 
 // LoadByID loads a single model.User object that matches the provided userID
-func (service *User) LoadByID(userID primitive.ObjectID, result *model.User) error {
+func (service *User) LoadByID(session data.Session, userID primitive.ObjectID, result *model.User) error {
 	criteria := exp.Equal("_id", userID)
-	return service.Load(criteria, result)
+	return service.Load(session, criteria, result)
 }
 
 // LoadByMapID loads a single model.User object that matches the provided mapID key/value
-func (service *User) LoadByMapID(key string, value string, result *model.User) error {
+func (service *User) LoadByMapID(session data.Session, key string, value string, result *model.User) error {
 	criteria := exp.Equal("mapIds."+key, value)
-	return service.Load(criteria, result)
+	return service.Load(session, criteria, result)
 }
 
 // LoadByProfileURL loads a single model.User object that matches the provided profile URL
-func (service *User) LoadByProfileURL(profileUrl string, result *model.User) error {
+func (service *User) LoadByProfileURL(session data.Session, profileUrl string, result *model.User) error {
 	criteria := exp.Equal("profileUrl", profileUrl)
-	return service.Load(criteria, result)
+	return service.Load(session, criteria, result, option.CaseSensitive(false))
 }
 
 // LoadByUsername loads a single model.User object that matches the provided username
-func (service *User) LoadByUsername(username string, result *model.User) error {
+func (service *User) LoadByUsername(session data.Session, username string, result *model.User) error {
 	criteria := exp.Equal("username", username)
-	return service.Load(criteria, result)
+	return service.Load(session, criteria, result, option.CaseSensitive(false))
 }
 
 // LoadByUsernameOrEmail loads a single model.User object that matches the provided username or email address
-func (service *User) LoadByUsernameOrEmail(usernameOrEmail string, result *model.User) error {
+func (service *User) LoadByUsernameOrEmail(session data.Session, usernameOrEmail string, result *model.User) error {
 	criteria := exp.Equal("username", usernameOrEmail).OrEqual("emailAddress", usernameOrEmail)
-	err := service.Load(criteria, result)
+	err := service.Load(session, criteria, result, option.CaseSensitive(false))
 
 	return err
 }
 
 // LoadByEmail loads a single model.User object that matches the provided email address
-func (service *User) LoadByEmail(email string, result *model.User) error {
+func (service *User) LoadByEmail(session data.Session, email string, result *model.User) error {
 	criteria := exp.Equal("emailAddress", email)
-	err := service.Load(criteria, result)
+	err := service.Load(session, criteria, result, option.CaseSensitive(false))
 
 	return err
 }
@@ -457,25 +461,25 @@ func (service *User) LoadByEmail(email string, result *model.User) error {
 // LoadByUsername loads a single model.User object that matches the provided token.
 // If the "token" is a valid ObjectID, then it attempts to load by that userID.
 // If the "token" is not a valid ObjectID (or if the first attempt fails), then it tries to load by username.
-func (service *User) LoadByToken(token string, result *model.User) error {
+func (service *User) LoadByToken(session data.Session, token string, result *model.User) error {
 
 	// If the token *looks* like an ObjectID then try that first.  If it works, then return in triumph
 	if userID, err := primitive.ObjectIDFromHex(token); err == nil {
-		if err := service.LoadByID(userID, result); err == nil {
+		if err := service.LoadByID(session, userID, result); err == nil {
 			return nil
 		}
 	}
 
 	// Otherwise, use the token as a username
-	return service.LoadByUsername(token, result)
+	return service.LoadByUsername(session, token, result)
 }
 
-func (service *User) LoadByResetCode(userID string, code string, user *model.User) error {
+func (service *User) LoadByResetCode(session data.Session, userID string, code string, user *model.User) error {
 
 	const location = "service.User.LoadByResetCode"
 
 	// Try to find the user by ID
-	if err := service.LoadByToken(userID, user); err != nil {
+	if err := service.LoadByToken(session, userID, user); err != nil {
 		return derp.Wrap(err, location, "Error loading User by ID", userID)
 	}
 
@@ -490,12 +494,12 @@ func (service *User) LoadByResetCode(userID string, code string, user *model.Use
 
 // TODO: MEDIUM: this function is wickedly inefficient
 // Should probably use a RuleFilter here.
-func (service *User) QueryBlockedActors(userID primitive.ObjectID, criteria exp.Expression) ([]model.User, error) {
+func (service *User) QueryBlockedActors(session data.Session, userID primitive.ObjectID, criteria exp.Expression) ([]model.User, error) {
 
 	const location = "service.User.QueryBlockedUsers"
 
 	// Query all rules
-	rules, err := service.ruleService.QueryBlockedActors(userID)
+	rules, err := service.ruleService.QueryBlockedActors(session, userID)
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Error querying rules")
@@ -507,7 +511,7 @@ func (service *User) QueryBlockedActors(userID primitive.ObjectID, criteria exp.
 	})
 
 	// Query all users
-	return service.Query(criteria.AndEqual("_id", blockedUserIDs), option.SortAsc("createDate"))
+	return service.Query(session, criteria.AndEqual("_id", blockedUserIDs), option.SortAsc("createDate"))
 }
 
 /******************************************
@@ -515,16 +519,17 @@ func (service *User) QueryBlockedActors(userID primitive.ObjectID, criteria exp.
  ******************************************/
 
 // Shuffle assigns a unique random number to the "shuffle" field of each User
-func (service *User) Shuffle() error {
+func (service *User) Shuffle(session data.Session) error {
 
-	if err := queries.Shuffle(context.Background(), service.collection); err != nil {
+	collection := service.collection(session)
+	if err := queries.Shuffle(session.Context(), collection); err != nil {
 		return derp.Wrap(err, "service.User.Shuffle", "Error shuffling users")
 	}
 
 	return nil
 }
 
-func (service *User) CalcNewUsername(user *model.User) error {
+func (service *User) CalcNewUsername(session data.Session, user *model.User) error {
 
 	// If the User has a valid username, then there's nothing to do.
 	if user.Username != "" {
@@ -539,7 +544,7 @@ func (service *User) CalcNewUsername(user *model.User) error {
 	base, _, _ = strings.Cut(base, "@")
 
 	// Try to use the preferred username with no slug
-	if !service.UsernameExists(user.UserID, base) {
+	if !service.UsernameExists(session, user.UserID, base) {
 		user.Username = base
 		return nil
 	}
@@ -549,7 +554,7 @@ func (service *User) CalcNewUsername(user *model.User) error {
 		slug := random.GenerateInt(1000, 9999)
 		username := base + strconv.Itoa(slug)
 
-		if !service.UsernameExists(user.UserID, username) {
+		if !service.UsernameExists(session, user.UserID, username) {
 			user.Username = username
 			return nil
 		}
@@ -559,7 +564,7 @@ func (service *User) CalcNewUsername(user *model.User) error {
 	return derp.InternalError("service.User.CalcUsername", "Unable to generate a unique username", user)
 }
 
-func (service *User) ValidateUsername(userID primitive.ObjectID, username string) error {
+func (service *User) ValidateUsername(session data.Session, userID primitive.ObjectID, username string) error {
 
 	const location = "service.User.ValidateUsername"
 
@@ -574,6 +579,7 @@ func (service *User) ValidateUsername(userID primitive.ObjectID, username string
 		"admin",
 		"administrator",
 		"application",
+		"guest",
 		"identity",
 		"me",
 		"owner",
@@ -593,7 +599,7 @@ func (service *User) ValidateUsername(userID primitive.ObjectID, username string
 	}
 
 	// RULE: Username must be unique
-	if service.UsernameExists(userID, username) {
+	if service.UsernameExists(session, userID, username) {
 		return derp.BadRequestError(location, "Username is already in use", username)
 	}
 
@@ -601,38 +607,73 @@ func (service *User) ValidateUsername(userID primitive.ObjectID, username string
 }
 
 // UsernameExists returns TRUE if the provided username is already in use by another user
-func (service *User) UsernameExists(userID primitive.ObjectID, username string) bool {
+func (service *User) UsernameExists(session data.Session, userID primitive.ObjectID, username string) bool {
 	user := model.NewUser()
 
 	criteria := exp.Equal("username", username).
 		AndNotEqual("_id", userID)
 
 	// Try to find a User with the same username and a different ID
-	err := service.Load(criteria, &user)
+	err := service.Load(session, criteria, &user)
 
 	// If found, return TRUE.  If NOT found, return FALSE.
 	return err == nil
 }
 
-func (service *User) CalcFollowerCount(userID primitive.ObjectID) {
-	if err := queries.SetFollowersCount(service.collection, service.followers, userID); err != nil {
-		derp.Report(derp.Wrap(err, "service.User.CalcFollowerCount", "Error setting follower count", userID))
+func (service *User) CalcFollowerCount(session data.Session, userID primitive.ObjectID) error {
+
+	const location = "service.User.CalcFollowerCount"
+
+	// RULE: UserID cannot be zero
+	if userID.IsZero() {
+		return derp.BadRequestError(location, "UserID cannot be zero", userID)
 	}
+
+	userCollection := service.collection(session)
+	followersCollection := service.followerCollection(session)
+	if err := queries.SetFollowersCount(userCollection, followersCollection, userID); err != nil {
+		return derp.Wrap(err, location, "Unable to count `Follower` records", userID)
+	}
+
+	return nil
 }
 
-func (service *User) CalcFollowingCount(userID primitive.ObjectID) {
-	if err := queries.SetFollowingCount(service.collection, service.following, userID); err != nil {
-		derp.Report(derp.Wrap(err, "service.User.CalcFollowingCount", "Error setting following count", userID))
+func (service *User) CalcFollowingCount(session data.Session, userID primitive.ObjectID) error {
+
+	const location = "service.User.CalcFollowingCount"
+
+	userCollection := service.collection(session)
+	followingCollection := service.followingCollection(session)
+
+	if err := queries.SetFollowingCount(userCollection, followingCollection, userID); err != nil {
+		return derp.Wrap(err, location, "Unable to count `Following` records", userID)
 	}
+
+	return nil
 }
 
-func (service *User) CalcRuleCount(userID primitive.ObjectID) {
-	if err := queries.SetRuleCount(service.collection, service.rules, userID); err != nil {
-		derp.Report(derp.Wrap(err, "service.User.CalcRuleCount", "Error setting rule count", userID))
+func (service *User) CalcRuleCount(session data.Session, userID primitive.ObjectID) error {
+
+	const location = "service.User.CalcRuleCount"
+
+	// RULE: UserID cannot be zero
+	if userID.IsZero() {
+		return derp.BadRequestError(location, "UserID cannot be zero", userID)
 	}
+
+	userCollection := service.collection(session)
+	rulesCollection := service.ruleCollection(session)
+
+	if err := queries.SetRuleCount(userCollection, rulesCollection, userID); err != nil {
+		return derp.Wrap(err, location, "Unable to count rules", userID)
+	}
+
+	return nil
 }
 
-func (service *User) SetOwner(owner config.Owner) error {
+func (service *User) SetOwner(session data.Session, owner config.Owner) error {
+
+	const location = "service.User.SetOwner"
 
 	// If there is no owner data, then do not create/update an owner record.
 	if owner.IsEmpty() {
@@ -640,10 +681,10 @@ func (service *User) SetOwner(owner config.Owner) error {
 	}
 
 	// Try to read the owner from the database
-	users, err := service.ListUsernameOrOwner(owner.Username)
+	users, err := service.ListUsernameOrOwner(session, owner.Username)
 
 	if err != nil {
-		return derp.Wrap(err, "service.User.SetOwner", "Error loading owners")
+		return derp.Wrap(err, location, "Error loading owners")
 	}
 
 	user := model.NewUser()
@@ -663,8 +704,8 @@ func (service *User) SetOwner(owner config.Owner) error {
 		if user.IsOwner != isOwner {
 			user.IsOwner = isOwner
 
-			if err := service.Save(&user, "AssertOwner"); err != nil {
-				return derp.Wrap(err, "service.User.SetOwner", "Error saving user", user)
+			if err := service.Save(session, &user, "Set Owner"); err != nil {
+				return derp.Wrap(err, location, "Error saving user", user)
 			}
 		}
 
@@ -680,15 +721,17 @@ func (service *User) SetOwner(owner config.Owner) error {
 		user.Username = owner.Username
 		user.IsOwner = true
 
-		if err := service.Save(&user, "CreateOwner"); err != nil {
-			return derp.Wrap(err, "service.User.SetOwner", "Error saving user", user)
+		if err := service.Save(session, &user, "CreateOwner"); err != nil {
+			return derp.Wrap(err, location, "Error saving user", user)
 		}
 	}
 
 	return nil
 }
 
-func (service *User) DeleteAvatar(user *model.User, note string) error {
+func (service *User) DeleteAvatar(session data.Session, user *model.User, note string) error {
+
+	const location = "service.User.DeleteAvatar"
 
 	// If there is no image, then there's nothing more to do.
 	if user.IconID.IsZero() {
@@ -696,14 +739,14 @@ func (service *User) DeleteAvatar(user *model.User, note string) error {
 	}
 
 	// Delete the existing Avatar file
-	if err := service.attachmentService.DeleteByID(model.AttachmentObjectTypeUser, user.UserID, user.IconID, note); err != nil {
-		return derp.Wrap(err, "service.User.DeleteAvatar", "Error deleting avatar", user)
+	if err := service.attachmentService.DeleteByID(session, model.AttachmentObjectTypeUser, user.UserID, user.IconID, note); err != nil {
+		return derp.Wrap(err, location, "Unable to delete avatar attachment", user)
 	}
 
 	// Clear the reference in the User object
 	user.IconID = primitive.NilObjectID
-	if err := service.Save(user, note); err != nil {
-		return derp.Wrap(err, "service.User.DeleteAvatar", "Error saving user", user)
+	if err := service.Save(session, user, note); err != nil {
+		return derp.Wrap(err, location, "Unable to save User", user)
 	}
 
 	return nil
@@ -715,22 +758,24 @@ func (service *User) DeleteAvatar(user *model.User, note string) error {
 
 // SendPasswordResetEmail generates a new password reset code and sends a welcome email to a new user.
 // If there is a problem sending the email, then the new code is not saved.
-func (service *User) SendPasswordResetEmail(user *model.User) {
+func (service *User) SendPasswordResetEmail(session data.Session, user *model.User) {
 
-	if err := service.MakeNewPasswordResetCode(user); err != nil {
-		derp.Report(derp.Wrap(err, "service.User.SendPasswordResetEmail", "Error making password reset", user))
+	const location = "service.User.SendPasswordResetEmail"
+
+	if err := service.MakeNewPasswordResetCode(session, user); err != nil {
+		derp.Report(derp.Wrap(err, location, "Error making password reset", user))
 		return
 	}
 
 	// Try to send the welcome email.  If it fails, then don't save the new password reset code.
 	if err := service.emailService.SendPasswordReset(user); err != nil {
-		derp.Report(derp.Wrap(err, "service.User.SendPasswordResetEmail", "Error sending password reset", user))
+		derp.Report(derp.Wrap(err, location, "Error sending password reset", user))
 		return
 	}
 }
 
 // MakeNewPasswordResetCode generates a new password reset code for the provided user.
-func (service *User) MakeNewPasswordResetCode(user *model.User) error {
+func (service *User) MakeNewPasswordResetCode(session data.Session, user *model.User) error {
 
 	// If the PasswordReset IS NOT active then
 	// create a new password reset code for this user
@@ -743,7 +788,7 @@ func (service *User) MakeNewPasswordResetCode(user *model.User) error {
 	user.PasswordReset.RefreshExpireDate()
 
 	// Try to save the user with the new password reset code.
-	if err := service.Save(user, "Create Password Reset Code"); err != nil {
+	if err := service.Save(session, user, "Create Password Reset Code"); err != nil {
 		return derp.Wrap(err, "service.User.MakeNewPasswordResetCode", "Error saving user", user)
 	}
 
@@ -754,18 +799,18 @@ func (service *User) MakeNewPasswordResetCode(user *model.User) error {
  * WebFinger Behavior
  ******************************************/
 
-func (service *User) WebFinger(token string) (digit.Resource, error) {
+func (service *User) WebFinger(session data.Session, token string) (digit.Resource, error) {
 
 	const location = "service.User.WebFinger"
 
 	// Try to load the user from the database
 	user := model.NewUser()
-	if err := service.LoadByToken(token, &user); err != nil {
+	if err := service.LoadByToken(session, token, &user); err != nil {
 		return digit.Resource{}, derp.Wrap(err, location, "Error loading user", token)
 	}
 
 	// Make a WebFinger resource for this user.
-	result := digit.NewResource("acct:"+user.Username+"@"+domain.NameOnly(service.host)).
+	result := digit.NewResource("acct:"+user.Username+"@"+dt.NameOnly(service.host)).
 		Alias(service.host+"/@"+user.Username).
 		Alias(service.host+"/@"+user.UserID.Hex()).
 		Link(digit.RelationTypeSelf, model.MimeTypeActivityPub, user.ActivityPubURL()).
@@ -801,7 +846,7 @@ func (service *User) LikeIntentURL() string {
 	return service.host + "/@me/intent/like?object={object}&on-success={on-success}&on-cancel={on-cancel}"
 }
 
-func (service *User) CalculateTags(user *model.User) {
+func (service *User) CalculateTags(session data.Session, user *model.User) {
 
 	const location = "service.User.CalculateTags"
 
@@ -829,7 +874,7 @@ func (service *User) CalculateTags(user *model.User) {
 	}
 
 	// Look up normalized hashtag names in the database
-	hashtagNames, _, err := service.searchTagService.NormalizeTags(hashtags...)
+	hashtagNames, _, err := service.searchTagService.NormalizeTags(session, hashtags...)
 
 	if err != nil {
 		derp.Report(derp.Wrap(err, location, "Error normalizing tags", hashtags))

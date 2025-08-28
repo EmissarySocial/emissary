@@ -12,7 +12,7 @@
 
 {{- range $replies -}}
 
-	{{- $statistics := .Statistics -}}
+	{{- $metadata := .Metadata -}}
 	{{- $object := .UnwrapActivity -}}
 	{{- $actor := $object.AttributedTo.Load -}}
 
@@ -47,21 +47,21 @@
 				<div class="margin-bottom">{{$object.Content | html}}</div>
 				<div class="text-sm">
 					<span class="text-light-gray">
-						{{- if gt $statistics.Replies 0 -}}
+						{{- if gt $metadata.Replies 0 -}}
 							<span class="margin-right-sm">
-								{{$statistics.Replies}} {{pluralize $statistics.Replies "Reply" "Replies"}}
+								{{$metadata.Replies}} {{pluralize $metadata.Replies "Reply" "Replies"}}
 							</span>
 						{{- end -}}
 
-						{{- if gt $statistics.Likes 0 -}}
+						{{- if gt $metadata.Likes 0 -}}
 							<span class="margin-right-sm">
-								{{$statistics.Likes}} {{pluralize $statistics.Likes "Like" "Likes"}}
+								{{$metadata.Likes}} {{pluralize $metadata.Likes "Like" "Likes"}}
 							</span>
 						{{- end -}}
 
-						{{- if gt $statistics.Announces 0 -}}
+						{{- if gt $metadata.Announces 0 -}}
 							<span class="margin-right-sm">
-								{{$statistics.Announces}} {{pluralize $statistics.Announces "Boost" "Boosts"}}
+								{{$metadata.Announces}} {{pluralize $metadata.Announces "Boost" "Boosts"}}
 							</span>
 						{{- end -}}
 					</span>

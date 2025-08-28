@@ -12,7 +12,7 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
-	"github.com/benpate/domain"
+	dt "github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/schema"
@@ -26,8 +26,7 @@ import (
 
 // Identity defines a service that manages all content identitys created and imported by Users.
 type Identity struct {
-	collection       data.Collection
-	activityService  *ActivityStream
+	factory          *Factory
 	emailService     *DomainEmail
 	jwtService       *JWT
 	privilegeService *Privilege
@@ -36,8 +35,10 @@ type Identity struct {
 }
 
 // NewIdentity returns a fully initialized Identity service
-func NewIdentity() Identity {
-	return Identity{}
+func NewIdentity(factory *Factory) Identity {
+	return Identity{
+		factory: factory,
+	}
 }
 
 /******************************************
@@ -45,9 +46,7 @@ func NewIdentity() Identity {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Identity) Refresh(collection data.Collection, activityService *ActivityStream, emailService *DomainEmail, jwtService *JWT, privilegeService *Privilege, queue *queue.Queue, host string) {
-	service.collection = collection
-	service.activityService = activityService
+func (service *Identity) Refresh(emailService *DomainEmail, jwtService *JWT, privilegeService *Privilege, queue *queue.Queue, host string) {
 	service.emailService = emailService
 	service.jwtService = jwtService
 	service.privilegeService = privilegeService
@@ -64,29 +63,33 @@ func (service *Identity) Close() {
  * Common Data Methods
  ******************************************/
 
-func (service *Identity) Count(criteria exp.Expression) (int64, error) {
-	return service.collection.Count(notDeleted(criteria))
+func (service *Identity) collection(session data.Session) data.Collection {
+	return session.Collection("Identity")
+}
+
+func (service *Identity) Count(session data.Session, criteria exp.Expression) (int64, error) {
+	return service.collection(session).Count(notDeleted(criteria))
 }
 
 // Query returns an slice of allthe Identitys that match the provided criteria
-func (service *Identity) Query(criteria exp.Expression, options ...option.Option) ([]model.Identity, error) {
+func (service *Identity) Query(session data.Session, criteria exp.Expression, options ...option.Option) ([]model.Identity, error) {
 	result := make([]model.Identity, 0)
-	err := service.collection.Query(&result, notDeleted(criteria), options...)
+	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
 
 	return result, err
 }
 
 // List returns an iterator containing all of the Identitys that match the provided criteria
-func (service *Identity) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection.Iterator(notDeleted(criteria), options...)
+func (service *Identity) List(session data.Session, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+	return service.collection(session).Iterator(notDeleted(criteria), options...)
 }
 
 // Range returns a Go 1.23 RangeFunc that iterates over the Identity records that match the provided criteria
-func (service *Identity) Range(criteria exp.Expression, options ...option.Option) (iter.Seq[model.Identity], error) {
+func (service *Identity) Range(session data.Session, criteria exp.Expression, options ...option.Option) (iter.Seq[model.Identity], error) {
 
 	const location = "service.Identity.Range"
 
-	iter, err := service.List(criteria, options...)
+	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Error creating iterator", criteria)
@@ -96,11 +99,11 @@ func (service *Identity) Range(criteria exp.Expression, options ...option.Option
 }
 
 // Load retrieves an Identity from the database
-func (service *Identity) Load(criteria exp.Expression, identity *model.Identity) error {
+func (service *Identity) Load(session data.Session, criteria exp.Expression, identity *model.Identity) error {
 
 	const location = "service.Identity.Load"
 
-	if err := service.collection.Load(notDeleted(criteria), identity); err != nil {
+	if err := service.collection(session).Load(notDeleted(criteria), identity); err != nil {
 		return derp.Wrap(err, location, "Error loading Identity", criteria)
 	}
 
@@ -108,7 +111,7 @@ func (service *Identity) Load(criteria exp.Expression, identity *model.Identity)
 }
 
 // Save adds/updates an Identity in the database
-func (service *Identity) Save(identity *model.Identity, note string) error {
+func (service *Identity) Save(session data.Session, identity *model.Identity, note string) error {
 
 	const location = "service.Identity.Save"
 
@@ -128,23 +131,23 @@ func (service *Identity) Save(identity *model.Identity, note string) error {
 	}
 
 	// Save the identity to the database
-	if err := service.collection.Save(identity, note); err != nil {
+	if err := service.collection(session).Save(identity, note); err != nil {
 		return derp.Wrap(err, location, "Unable to save Identity", identity, note)
 	}
 
 	// Remove duplicate identifiers from other identities
-	if err := service.uniquify(identity); err != nil {
+	if err := service.uniquify(session, identity); err != nil {
 		return derp.Wrap(err, location, "Unable to uniquify Identity", identity)
 	}
 
 	// Recalculate the privileges linked to this Identity
-	if err := service.privilegeService.refreshIdentity(identity); err != nil {
+	if err := service.privilegeService.refreshIdentity(session, identity); err != nil {
 		return derp.Wrap(err, location, "Unable to remove Privileges granted by email", identity)
 	}
 
 	// Recalculates privilegeIDs stored in Identity.  This probably duplicates
 	// logic from above, but this is a more comprehensive/idempotent calculation.
-	if err := service.refreshPrivileges(identity); err != nil {
+	if err := service.refreshPrivileges(session, identity); err != nil {
 		return derp.Wrap(err, location, "Unable to recalculate privileges for Identity", identity)
 	}
 
@@ -152,10 +155,10 @@ func (service *Identity) Save(identity *model.Identity, note string) error {
 }
 
 // Delete removes an Identity from the database (virtual delete)
-func (service *Identity) Delete(identity *model.Identity, note string) error {
+func (service *Identity) Delete(session data.Session, identity *model.Identity, note string) error {
 
 	// Delete this Identity
-	if err := service.collection.Delete(identity, note); err != nil {
+	if err := service.collection(session).Delete(identity, note); err != nil {
 		return derp.Wrap(err, "service.Identity.Delete", "Error deleting Identity", identity, note)
 	}
 
@@ -164,7 +167,7 @@ func (service *Identity) Delete(identity *model.Identity, note string) error {
 
 // SaveOrDelete saves the Identity if it is not empty, otherwise deletes it.
 // No other business logic is applied to this method.
-func (service *Identity) SaveOrDelete(identity *model.Identity, note string) error {
+func (service *Identity) SaveOrDelete(session data.Session, identity *model.Identity, note string) error {
 
 	const location = "service.Identity.SaveOrDelete"
 
@@ -172,7 +175,7 @@ func (service *Identity) SaveOrDelete(identity *model.Identity, note string) err
 	if identity.IsEmpty() {
 
 		// Delete the identity directly from the datbase (no business logic applied)
-		if err := service.collection.Delete(identity, note); err != nil {
+		if err := service.collection(session).Delete(identity, note); err != nil {
 			return derp.Wrap(err, location, "Unable to delete empty Identity", identity, note)
 		}
 
@@ -180,7 +183,7 @@ func (service *Identity) SaveOrDelete(identity *model.Identity, note string) err
 	}
 
 	// Otherwise, save the Identity directly to the DB (no business logic applied)
-	if err := service.collection.Save(identity, note); err != nil {
+	if err := service.collection(session).Save(identity, note); err != nil {
 		return derp.Wrap(err, location, "Unable to save Identity", identity, note)
 	}
 
@@ -211,26 +214,26 @@ func (service *Identity) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
-func (service *Identity) ObjectQuery(result any, criteria exp.Expression, options ...option.Option) error {
-	return service.collection.Query(result, notDeleted(criteria), options...)
+func (service *Identity) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
+	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
-func (service *Identity) ObjectLoad(criteria exp.Expression) (data.Object, error) {
+func (service *Identity) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewIdentity()
-	err := service.Load(criteria, &result)
+	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
-func (service *Identity) ObjectSave(object data.Object, comment string) error {
+func (service *Identity) ObjectSave(session data.Session, object data.Object, comment string) error {
 	if identity, ok := object.(*model.Identity); ok {
-		return service.Save(identity, comment)
+		return service.Save(session, identity, comment)
 	}
 	return derp.InternalError("service.Identity.ObjectSave", "Invalid Object Type", object)
 }
 
-func (service *Identity) ObjectDelete(object data.Object, comment string) error {
+func (service *Identity) ObjectDelete(session data.Session, object data.Object, comment string) error {
 	if identity, ok := object.(*model.Identity); ok {
-		return service.Delete(identity, comment)
+		return service.Delete(session, identity, comment)
 	}
 	return derp.InternalError("service.Identity.ObjectDelete", "Invalid Object Type", object)
 }
@@ -248,7 +251,7 @@ func (service *Identity) Schema() schema.Schema {
  ******************************************/
 
 // LoadByID retrieves a single Identity using the provided IdentityID.
-func (service *Identity) LoadByID(identityID primitive.ObjectID, identity *model.Identity) error {
+func (service *Identity) LoadByID(session data.Session, identityID primitive.ObjectID, identity *model.Identity) error {
 
 	const location = "service.Identity.LoadByID"
 
@@ -257,11 +260,11 @@ func (service *Identity) LoadByID(identityID primitive.ObjectID, identity *model
 	}
 
 	criteria := exp.Equal("_id", identityID)
-	return service.Load(criteria, identity)
+	return service.Load(session, criteria, identity)
 }
 
 // LoadByToken retrieves a single Identity using the string representation of their IdentityID.
-func (service *Identity) LoadByToken(token string, identity *model.Identity) error {
+func (service *Identity) LoadByToken(session data.Session, token string, identity *model.Identity) error {
 
 	const location = "service.Identity.LoadByToken"
 
@@ -271,13 +274,13 @@ func (service *Identity) LoadByToken(token string, identity *model.Identity) err
 		return derp.BadRequestError(location, "Invalid IdentityID", token)
 	}
 
-	return service.LoadByID(identityID, identity)
+	return service.LoadByID(session, identityID, identity)
 }
 
 // LoadOrCreateByEmail searches for a Guest with the provided emailAddress.
 // If a matching record is found, it updates the record with the new values (if necessary).
 // If no matching record is found, it creates a new record with the provided values.
-func (service *Identity) LoadOrCreate(name string, identifierType string, identifierValue string) (model.Identity, error) {
+func (service *Identity) LoadOrCreate(session data.Session, name string, identifierType string, identifierValue string) (model.Identity, error) {
 
 	const location = "service.Identity.LoadOrCreate"
 
@@ -293,7 +296,7 @@ func (service *Identity) LoadOrCreate(name string, identifierType string, identi
 
 	// Try to load the Identity using the provided identifier
 	identity := model.NewIdentity()
-	err := service.LoadByIdentifier(identifierType, identifierValue, &identity)
+	err := service.LoadByIdentifier(session, identifierType, identifierValue, &identity)
 
 	// If the identity was found, then just return it...
 	if err == nil {
@@ -316,7 +319,7 @@ func (service *Identity) LoadOrCreate(name string, identifierType string, identi
 	}
 
 	// Save the Identity to the database
-	if err := service.Save(&identity, "Updated"); err != nil {
+	if err := service.Save(session, &identity, "Updated"); err != nil {
 		return model.Identity{}, derp.Wrap(err, location, "Error saving identity", identity)
 	}
 
@@ -324,43 +327,43 @@ func (service *Identity) LoadOrCreate(name string, identifierType string, identi
 	return identity, nil
 }
 
-func (service *Identity) LoadByIdentifier(identifierType string, identifierValue string, identity *model.Identity) error {
+func (service *Identity) LoadByIdentifier(session data.Session, identifierType string, identifierValue string, identity *model.Identity) error {
 
 	switch identifierType {
 
 	case model.IdentifierTypeEmail:
-		return service.LoadByEmailAddress(identifierValue, identity)
+		return service.LoadByEmailAddress(session, identifierValue, identity)
 
 	case model.IdentifierTypeActivityPub:
-		return service.LoadByActivityPubActor(identifierValue, identity)
+		return service.LoadByActivityPubActor(session, identifierValue, identity)
 
 	case model.IdentifierTypeWebfinger:
-		return service.LoadByWebfingerUsername(identifierValue, identity)
+		return service.LoadByWebfingerUsername(session, identifierValue, identity)
 	}
 
 	return derp.InternalError("service.Identity.LoadByAddress", "Invalid Identity Type", identifierType)
 }
 
 // LoadByEmail retrieves a single Identity from the database using the provided email address
-func (service *Identity) LoadByEmailAddress(emailAddress string, identity *model.Identity) error {
+func (service *Identity) LoadByEmailAddress(session data.Session, emailAddress string, identity *model.Identity) error {
 	criteria := exp.Equal("emailAddress", emailAddress)
-	return service.Load(criteria, identity)
+	return service.Load(session, criteria, identity)
 }
 
 // LoadByActivityPubActor retrieves a single Identity from the database using the provided WebFinger handle
-func (service *Identity) LoadByActivityPubActor(actorID string, identity *model.Identity) error {
+func (service *Identity) LoadByActivityPubActor(session data.Session, actorID string, identity *model.Identity) error {
 	criteria := exp.Equal("activityPubActor", actorID)
-	return service.Load(criteria, identity)
+	return service.Load(session, criteria, identity)
 }
 
 // LoadByWebfingerUsername retrieves a single Identity from the database using the provided WebFinger handle
-func (service *Identity) LoadByWebfingerUsername(username string, identity *model.Identity) error {
+func (service *Identity) LoadByWebfingerUsername(session data.Session, username string, identity *model.Identity) error {
 	criteria := exp.Equal("webfingerUsername", username)
-	return service.Load(criteria, identity)
+	return service.Load(session, criteria, identity)
 }
 
 // RangeByIdentifiers returns an iterator containing all of the Identities that match ANY of the provided identifiers.
-func (service *Identity) RangeByIdentifiers(emailAddress string, webfingerUsername string, activityPubActor string) (iter.Seq[model.Identity], error) {
+func (service *Identity) RangeByIdentifiers(session data.Session, emailAddress string, webfingerUsername string, activityPubActor string) (iter.Seq[model.Identity], error) {
 
 	// Create a criteria to find the Identity by any of the identifiers
 	criteria := exp.Or(
@@ -370,28 +373,28 @@ func (service *Identity) RangeByIdentifiers(emailAddress string, webfingerUserna
 	)
 
 	// Return query as a RangeFunc
-	return service.Range(criteria)
+	return service.Range(session, criteria)
 }
 
 // RefreshPrivileges recalculates the privileges for the provided IdentityID by
 // loading all privileges and collecting the list of unique CircleIDs and ProductIDs.
-func (service *Identity) RefreshPrivileges(identityID primitive.ObjectID) error {
+func (service *Identity) RefreshPrivileges(session data.Session, identityID primitive.ObjectID) error {
 
 	const location = "service.Identity.RefreshPrivileges"
 
 	// Load the Identity from the database
 	identity := model.NewIdentity()
-	if err := service.LoadByID(identityID, &identity); err != nil {
+	if err := service.LoadByID(session, identityID, &identity); err != nil {
 		return derp.Wrap(err, location, "Unable to load identity", identityID)
 	}
 
 	// Recalculate the privileges for this Identity
-	if err := service.refreshPrivileges(&identity); err != nil {
+	if err := service.refreshPrivileges(session, &identity); err != nil {
 		return derp.Wrap(err, location, "Unable to refresh privileges", identity.IdentityID)
 	}
 
 	// Save changes (with no additional business logic)
-	if err := service.collection.Save(&identity, "Refreshed Privileges"); err != nil {
+	if err := service.collection(session).Save(&identity, "Refreshed Privileges"); err != nil {
 		return derp.Wrap(err, location, "Unable to save identity", identity)
 	}
 
@@ -399,12 +402,12 @@ func (service *Identity) RefreshPrivileges(identityID primitive.ObjectID) error 
 	return nil
 }
 
-func (service *Identity) refreshPrivileges(identity *model.Identity) error {
+func (service *Identity) refreshPrivileges(session data.Session, identity *model.Identity) error {
 
 	const location = "service.Identity.refreshPrivileges"
 
 	// Get all privileges for this Identity
-	privileges, err := service.privilegeService.RangeByIdentity(identity.IdentityID)
+	privileges, err := service.privilegeService.RangeByIdentity(session, identity.IdentityID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Unable to load privileges for identity", identity.IdentityID)
@@ -434,24 +437,9 @@ func (service *Identity) refreshPrivileges(identity *model.Identity) error {
 	return nil
 }
 
-func (service *Identity) SendGuestCode(identity *model.Identity, identifierType string, identifierValue string) error {
+func (service *Identity) SendGuestCode(session data.Session, identity *model.Identity, identifierType string, identifierValue string) error {
 
 	const location = "service.Identity.SendGuestCode"
-
-	// Find the correct sender function based on the identifier type
-	var sender func(string, string) error
-
-	switch identifierType {
-
-	case model.IdentifierTypeEmail:
-		sender = service.emailService.SendGuestCode
-
-	case model.IdentifierTypeWebfinger, model.IdentifierTypeActivityPub:
-		sender = service.sendGuestCode_ActivityPub
-
-	default:
-		return derp.BadRequestError(location, "Unrecognized Identifier Type", identifierType)
-	}
 
 	// Create a new Guest Code for the identifier :)
 	guestCode, err := service.makeGuestCode(nil, identifierType, identifierValue)
@@ -460,17 +448,35 @@ func (service *Identity) SendGuestCode(identity *model.Identity, identifierType 
 		return derp.Wrap(err, location, "Error creating Guest Code", identifierValue)
 	}
 
-	// Send the Guest Code to the
-	if err := sender(identifierValue, guestCode); err != nil {
-		return derp.Wrap(err, location, "Error sending Guest Code", identifierValue, guestCode)
+	switch identifierType {
+
+	// Send the Guest Code to an Email Address
+	case model.IdentifierTypeEmail:
+
+		if err := service.emailService.SendGuestCode(identifierValue, guestCode); err != nil {
+			return derp.Wrap(err, location, "Error sending Guest Code", identifierValue, guestCode)
+		}
+
+		return nil
+
+	// Send the Guest Code to an ActivityPub actor
+	case model.IdentifierTypeWebfinger, model.IdentifierTypeActivityPub:
+
+		// Send the Guest Code to the
+		if err := service.sendGuestCode_ActivityPub(session, identifierValue, guestCode); err != nil {
+			return derp.Wrap(err, location, "Error sending Guest Code", identifierValue, guestCode)
+		}
+
+		return nil
+
 	}
 
-	// Looky here. I *am* a Fortunate Son!
-	return nil
+	// Unrecognized identifier type
+	return derp.BadRequestError(location, "Unrecognized Identifier Type", identifierType)
 }
 
 // HasPermissions returns TRUE if the provided identifier has any of the required permissions
-func (service *Identity) HasPermissions(identifierType string, identifierValue string, permissions model.Permissions) bool {
+func (service *Identity) HasPermissions(session data.Session, identifierType string, identifierValue string, permissions model.Permissions) bool {
 
 	// RULE: If permissions include "anonymous" then anyone can view this item.
 	if permissions.IsAnonymous() {
@@ -479,7 +485,7 @@ func (service *Identity) HasPermissions(identifierType string, identifierValue s
 
 	// Otherwise, look for the Identity and check it's Privileges
 	identity := model.NewIdentity()
-	if err := service.LoadByIdentifier(identifierType, identifierValue, &identity); err != nil {
+	if err := service.LoadByIdentifier(session, identifierType, identifierValue, &identity); err != nil {
 		return false
 	}
 
@@ -595,7 +601,9 @@ func (service *Identity) calcName(identity *model.Identity) error {
 	// If we have an ActivityPub Actor, then look up the name from their profile
 	if identity.HasActivityPubActor() {
 
-		actor, err := service.activityService.Load(identity.ActivityPubActor, sherlock.AsActor())
+		activityService := service.factory.ActivityStream(model.ActorTypeApplication, primitive.NilObjectID)
+
+		actor, err := activityService.Client().Load(identity.ActivityPubActor, sherlock.AsActor())
 
 		if err != nil {
 			return derp.Wrap(err, "service.Identity.calcName", "Error loading ActivityPub Actor", identity.ActivityPubActor)
@@ -620,12 +628,12 @@ func (service *Identity) calcName(identity *model.Identity) error {
 
 // uniquify takes duplicate Identitifiers from any other Identities
 // and merges their privileges with the provided Identity.
-func (service *Identity) uniquify(identity *model.Identity) error {
+func (service *Identity) uniquify(session data.Session, identity *model.Identity) error {
 
 	const location = "service.Identity.uniquify"
 
 	// Take Privileges that match my Identifiers from other
-	privileges, err := service.privilegeService.RangeByIdentifiers(identity.EmailAddress, identity.WebfingerUsername, identity.ActivityPubActor)
+	privileges, err := service.privilegeService.RangeByIdentifiers(session, identity.EmailAddress, identity.WebfingerUsername, identity.ActivityPubActor)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Unable to load Privileges", identity)
@@ -634,13 +642,13 @@ func (service *Identity) uniquify(identity *model.Identity) error {
 	// Link the current identity to each Privilege listed
 	for privilege := range privileges {
 
-		if err := service.privilegeService.maybeSetIdentity(&privilege, identity); err != nil {
+		if err := service.privilegeService.maybeSetIdentity(session, &privilege, identity); err != nil {
 			return derp.Wrap(err, location, "Unable to link Identity to this Privilege", privilege)
 		}
 	}
 
 	// Remove my Identifiers from other Identities
-	identities, err := service.RangeByIdentifiers(identity.EmailAddress, identity.WebfingerUsername, identity.ActivityPubActor)
+	identities, err := service.RangeByIdentifiers(session, identity.EmailAddress, identity.WebfingerUsername, identity.ActivityPubActor)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Unable to load Identities", identity)
@@ -656,7 +664,7 @@ func (service *Identity) uniquify(identity *model.Identity) error {
 		other.RemoveIdentifier(model.IdentifierTypeEmail, identity.EmailAddress)
 		other.RemoveIdentifier(model.IdentifierTypeWebfinger, identity.WebfingerUsername)
 
-		if err := service.SaveOrDelete(&other, "Removed identity"); err != nil {
+		if err := service.SaveOrDelete(session, &other, "Removed identity"); err != nil {
 			derp.Report(derp.Wrap(err, location, "Error uniquifying Identity", other))
 		}
 	}
@@ -665,5 +673,5 @@ func (service *Identity) uniquify(identity *model.Identity) error {
 }
 
 func (service *Identity) hostname() string {
-	return domain.NameOnly(service.host)
+	return dt.NameOnly(service.host)
 }

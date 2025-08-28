@@ -4,6 +4,8 @@ import "github.com/benpate/hannibal/streams"
 
 type testInnerClient struct{}
 
+func (client testInnerClient) SetRootClient(rootClient streams.Client) {}
+
 func (client testInnerClient) Load(url string, options ...any) (streams.Document, error) {
 
 	switch url {

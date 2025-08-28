@@ -1,6 +1,8 @@
 package service
 
 import (
+	"time"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
@@ -15,27 +17,32 @@ import (
 
 // Webhook service sends outbound webhooks
 type Webhook struct {
-	collection data.Collection
-	queue      *queue.Queue
+	factory *Factory
+	queue   *queue.Queue
 }
 
 // NewWebhook returns a new instance of the Webhook service
-func NewWebhook() Webhook {
-	return Webhook{}
+func NewWebhook(factory *Factory) Webhook {
+	return Webhook{
+		factory: factory,
+	}
 }
 
 /******************************************
  * Lifecycle Methods
  ******************************************/
 
-func (service *Webhook) Refresh(collection data.Collection, queue *queue.Queue) {
-	service.collection = collection
+func (service *Webhook) Refresh(queue *queue.Queue) {
 	service.queue = queue
 }
 
 /******************************************
  * Common Methods
  ******************************************/
+
+func (service *Webhook) collection(session data.Session) data.Collection {
+	return session.Collection("Webhook")
+}
 
 // New returns a new Webhook that uses the named template.
 func (service *Webhook) New() model.Webhook {
@@ -44,26 +51,26 @@ func (service *Webhook) New() model.Webhook {
 }
 
 // Count returns the number of records that match the provided criteria
-func (service *Webhook) Count(criteria exp.Expression) (int64, error) {
-	return service.collection.Count(notDeleted(criteria))
+func (service *Webhook) Count(session data.Session, criteria exp.Expression) (int64, error) {
+	return service.collection(session).Count(notDeleted(criteria))
 }
 
 // Query returns an slice containing all of the Webhooks that match the provided criteria
-func (service *Webhook) Query(criteria exp.Expression, options ...option.Option) ([]model.Webhook, error) {
+func (service *Webhook) Query(session data.Session, criteria exp.Expression, options ...option.Option) ([]model.Webhook, error) {
 	result := make([]model.Webhook, 0)
-	err := service.collection.Query(&result, notDeleted(criteria), options...)
+	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
 	return result, err
 }
 
 // List returns an iterator containing all of the Webhooks that match the provided criteria
-func (service *Webhook) List(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection.Iterator(notDeleted(criteria), options...)
+func (service *Webhook) List(session data.Session, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+	return service.collection(session).Iterator(notDeleted(criteria), options...)
 }
 
 // Load retrieves an Webhook from the database
-func (service *Webhook) Load(criteria exp.Expression, webhook *model.Webhook) error {
+func (service *Webhook) Load(session data.Session, criteria exp.Expression, webhook *model.Webhook) error {
 
-	if err := service.collection.Load(notDeleted(criteria), webhook); err != nil {
+	if err := service.collection(session).Load(notDeleted(criteria), webhook); err != nil {
 		return derp.Wrap(err, "service.Webhook.Load", "Error loading Webhook", criteria)
 	}
 
@@ -71,17 +78,17 @@ func (service *Webhook) Load(criteria exp.Expression, webhook *model.Webhook) er
 }
 
 // Save adds/updates an Webhook in the database
-func (service *Webhook) Save(webhook *model.Webhook, note string) error {
+func (service *Webhook) Save(session data.Session, webhook *model.Webhook, note string) error {
 
 	const location = "service.Webhook.Save"
 
 	// Validate the value (using the global webhook schema) before saving
 	if err := service.Schema().Validate(webhook); err != nil {
-		return derp.Wrap(err, "service.Webhook.Save", "Error validating Webhook using WebhookSchema", webhook)
+		return derp.Wrap(err, location, "Error validating Webhook using WebhookSchema", webhook)
 	}
 
 	// Try to save the Webhook to the database
-	if err := service.collection.Save(webhook, note); err != nil {
+	if err := service.collection(session).Save(webhook, note); err != nil {
 		return derp.Wrap(err, location, "Error saving Webhook", webhook, note)
 	}
 
@@ -90,10 +97,10 @@ func (service *Webhook) Save(webhook *model.Webhook, note string) error {
 }
 
 // Delete removes an Webhook from the database (virtual delete)
-func (service *Webhook) Delete(webhook *model.Webhook, note string) error {
+func (service *Webhook) Delete(session data.Session, webhook *model.Webhook, note string) error {
 
 	// Delete this Webhook
-	if err := service.collection.Delete(webhook, note); err != nil {
+	if err := service.collection(session).Delete(webhook, note); err != nil {
 		return derp.Wrap(err, "service.Webhook.Delete", "Error deleting Webhook", webhook, note)
 	}
 
@@ -102,19 +109,21 @@ func (service *Webhook) Delete(webhook *model.Webhook, note string) error {
 }
 
 // DeleteMany removes all child webhooks from the provided webhook (virtual delete)
-func (service *Webhook) DeleteMany(criteria exp.Expression, note string) error {
+func (service *Webhook) DeleteMany(session data.Session, criteria exp.Expression, note string) error {
 
-	it, err := service.List(notDeleted(criteria))
+	const location = "service.Webhook.DeleteMany"
+
+	it, err := service.List(session, notDeleted(criteria))
 
 	if err != nil {
-		return derp.Wrap(err, "service.Webhook.Delete", "Error listing webhooks to delete", criteria)
+		return derp.Wrap(err, location, "Error listing webhooks to delete", criteria)
 	}
 
 	webhook := model.NewWebhook()
 
 	for it.Next(&webhook) {
-		if err := service.Delete(&webhook, note); err != nil {
-			return derp.Wrap(err, "service.Webhook.Delete", "Error deleting webhook", webhook)
+		if err := service.Delete(session, &webhook, note); err != nil {
+			return derp.Wrap(err, location, "Error deleting webhook", webhook)
 		}
 		webhook = model.NewWebhook()
 	}
@@ -146,26 +155,26 @@ func (service *Webhook) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
-func (service *Webhook) ObjectQuery(result any, criteria exp.Expression, options ...option.Option) error {
-	return service.collection.Query(result, notDeleted(criteria), options...)
+func (service *Webhook) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
+	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
-func (service *Webhook) ObjectLoad(criteria exp.Expression) (data.Object, error) {
+func (service *Webhook) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewWebhook()
-	err := service.Load(criteria, &result)
+	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
-func (service *Webhook) ObjectSave(object data.Object, note string) error {
+func (service *Webhook) ObjectSave(session data.Session, object data.Object, note string) error {
 	if user, ok := object.(*model.Webhook); ok {
-		return service.Save(user, note)
+		return service.Save(session, user, note)
 	}
 	return derp.InternalError("service.Webhook.ObjectSave", "Invalid object type", object)
 }
 
-func (service *Webhook) ObjectDelete(object data.Object, note string) error {
+func (service *Webhook) ObjectDelete(session data.Session, object data.Object, note string) error {
 	if user, ok := object.(*model.Webhook); ok {
-		return service.Delete(user, note)
+		return service.Delete(session, user, note)
 	}
 	return derp.InternalError("service.Webhook.ObjectDelete", "Invalid object type", object)
 }
@@ -182,12 +191,12 @@ func (service *Webhook) Schema() schema.Schema {
  * Common Queries
  ******************************************/
 
-func (service *Webhook) LoadByID(webhookID primitive.ObjectID, result *model.Webhook) error {
-	return service.Load(exp.Equal("_id", webhookID), result)
+func (service *Webhook) LoadByID(session data.Session, webhookID primitive.ObjectID, result *model.Webhook) error {
+	return service.Load(session, exp.Equal("_id", webhookID), result)
 }
 
-func (service *Webhook) QueryByEvent(event string) ([]model.Webhook, error) {
-	return service.Query(exp.Equal("events", event))
+func (service *Webhook) QueryByEvent(session data.Session, event string) ([]model.Webhook, error) {
+	return service.Query(session, exp.Equal("events", event))
 }
 
 /******************************************
@@ -199,11 +208,25 @@ func (service *Webhook) Send(getter model.WebhookDataGetter, events ...string) {
 
 	const location = "service.Webhook.Send"
 
+	if len(events) == 0 {
+		return
+	}
+
 	go func() {
+
+		// Create a new (thread-safe) database session
+		session, cancel, err := service.factory.Session(time.Minute)
+
+		if err != nil {
+			derp.Report(derp.Wrap(err, location, "Unable to connect to database"))
+			return
+		}
+
+		defer cancel()
 
 		for _, event := range events {
 
-			webhooks, err := service.QueryByEvent(event)
+			webhooks, err := service.QueryByEvent(session, event)
 
 			if err != nil {
 				derp.Report(derp.Wrap(err, location, "Error querying webhooks", event))

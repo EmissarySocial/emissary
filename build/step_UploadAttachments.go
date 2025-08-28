@@ -74,7 +74,7 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 	}
 
 	// Make room for new attachments
-	if err := attachmentService.MakeRoom(objectType, objectID, step.Category, step.Action, step.Maximum, len(files)); err != nil {
+	if err := attachmentService.MakeRoom(builder.session(), objectType, objectID, step.Category, step.Action, step.Maximum, len(files)); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error making room for new Attachments"))
 	}
 
@@ -90,6 +90,7 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 			return Halt().WithError(derp.Wrap(err, location, "Error reading file from multi-part header", fileHeader))
 		}
 
+		//nolint:errcheck
 		defer source.Close()
 
 		// Create a new Attachment object
@@ -121,7 +122,7 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 		attachment.SetRules(step.RuleWidth, step.RuleHeight, step.RuleTypes)
 
 		// Try to save the Attachment
-		if err := attachmentService.Save(&attachment, "Uploaded file: "+fileHeader.Filename); err != nil {
+		if err := attachmentService.Save(builder.session(), &attachment, "Uploaded file: "+fileHeader.Filename); err != nil {
 			return Halt().WithError(derp.Wrap(err, location, "Error saving attachment", attachment))
 		}
 

@@ -3,7 +3,8 @@ package handler
 import (
 	"net/http"
 
-	"github.com/EmissarySocial/emissary/domain"
+	"github.com/EmissarySocial/emissary/service"
+	"github.com/benpate/data"
 	"github.com/benpate/html"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
@@ -11,7 +12,7 @@ import (
 
 // GetOutboundIntent translates an intent+account into a URL where we forward the
 // user to complete the intent on their home server.
-func GetOutboundIntent(ctx *steranko.Context, factory *domain.Factory) error {
+func GetOutboundIntent(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	// Load the template for this account/intent
 	camper := factory.Camper()

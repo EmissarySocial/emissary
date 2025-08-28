@@ -5,19 +5,19 @@
 		{{icon "fediverse"}}
 		Add/Edit Fediverse Accounts
 	{{- else if eq "announce" $intent -}}
-		{{icon "rocket"}}
-		Boost on the Fediverse
-		{{- else if eq "create" $intent -}}
+		{{icon "announce"}}
+		Share on the Fediverse
+	{{- else if eq "create" $intent -}}
 		{{icon "share"}}
 		Share on the Fediverse
 	{{- else if eq "dislike" $intent -}}
-		{{icon "thumbs-down"}}
+		{{icon "dislike"}}
 		Dislike on the Fediverse
 	{{- else if eq "follow" $intent -}}
 		{{icon "fediverse"}}
 		Follow for Updates
 	{{- else if eq "like" $intent -}}
-		{{icon "thumbs-up"}}
+		{{icon "like"}}
 		Like on the Fediverse
 	{{- else -}}
 		{{icon "info"}}

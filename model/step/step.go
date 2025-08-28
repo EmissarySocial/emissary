@@ -43,6 +43,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "add":
 		return NewAddModelObject(stepInfo)
 
+	case "add-event":
+		return NewAddEvent(stepInfo)
+
 	case "add-stream":
 		return NewAddStream(stepInfo)
 
@@ -219,6 +222,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 
 	case "websub":
 		return NewWebSub(stepInfo)
+
+	case "with-annotation":
+		return NewWithAnnotation(stepInfo)
 
 	case "with-attachment":
 		return NewWithAttachment(stepInfo)

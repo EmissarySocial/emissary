@@ -1,16 +1,15 @@
 package model
 
-import (
-	"go.mongodb.org/mongo-driver/bson/primitive"
-)
-
 type DocumentLink struct {
-	ID           primitive.ObjectID `json:"id,omitempty"            bson:"id,omitempty"`           // Internal ID of the record that is being linked
-	URL          string             `json:"url,omitempty"           bson:"url,omitempty"`          // URL of the original document
-	Label        string             `json:"label,omitempty"         bson:"label,omitempty"`        // Label/Title of the document
-	Summary      string             `json:"summary,omitempty"       bson:"summary,omitempty"`      // Brief summary of the document
-	IconURL      string             `json:"iconUrl,omitempty"      bson:"iconUrl,omitempty"`       // URL of the icon image for this document
-	AttributedTo PersonLink         `json:"attributedTo,omitempty"  bson:"attributedTo,omitempty"` // Person that this document is attributed to
+	ID           string     // ID of the record that is being linked (if different from its URL)
+	InReplyTo    string     // ID of the document this one is replying to (if applicable)
+	Token        string     // Other token to use when identifying this document (like a hashed-id or URL slug)
+	Name         string     // Label/Title of the document
+	Icon         string     // URL of the icon image for this document
+	Summary      string     // Brief summary of the document
+	Content      string     // Full content of the document
+	AttributedTo PersonLink // Person that this document is attributed to
+	Published    int64      // Timestamp of when the document was published
 }
 
 func NewDocumentLink() DocumentLink {
@@ -19,29 +18,10 @@ func NewDocumentLink() DocumentLink {
 	}
 }
 
-// IsEmpty returns TRUE if this record does not link to an internal
-// or external document (if both the InternalID and the URL are empty)
-func (doc DocumentLink) IsEmpty() bool {
-	return doc.URL == ""
+func (document DocumentLink) TreeID() string {
+	return document.ID
 }
 
-func (doc *DocumentLink) IsComplete() bool {
-
-	if doc.URL == "" {
-		return false
-	}
-
-	if doc.Label == "" {
-		return false
-	}
-
-	if doc.Summary == "" {
-		return false
-	}
-
-	if doc.IconURL == "" {
-		return false
-	}
-
-	return true
+func (document DocumentLink) TreeParent() string {
+	return document.InReplyTo
 }

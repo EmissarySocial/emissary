@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
 )
@@ -10,13 +11,13 @@ import (
  * WebFinger Behavior
  ******************************************/
 
-func (service *Stream) WebFinger(token string) (digit.Resource, error) {
+func (service *Stream) WebFinger(session data.Session, token string) (digit.Resource, error) {
 
 	const location = "service.User.WebFinger"
 
 	// Load the stream from the database
 	stream := model.NewStream()
-	if service.LoadByToken(token, &stream) != nil {
+	if service.LoadByToken(session, token, &stream) != nil {
 		return digit.Resource{}, derp.BadRequestError(location, "Invalid Token", token)
 	}
 

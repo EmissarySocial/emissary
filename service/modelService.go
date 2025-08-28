@@ -14,11 +14,11 @@ type ModelService interface {
 	ObjectType() string
 	ObjectID(data.Object) primitive.ObjectID
 	ObjectNew() data.Object
-	ObjectQuery(any, exp.Expression, ...option.Option) error
-	ObjectLoad(exp.Expression) (data.Object, error)
-	ObjectSave(data.Object, string) error
-	ObjectDelete(data.Object, string) error
+	ObjectQuery(data.Session, any, exp.Expression, ...option.Option) error
+	ObjectLoad(data.Session, exp.Expression) (data.Object, error)
+	ObjectSave(data.Session, data.Object, string) error
+	ObjectDelete(data.Session, data.Object, string) error
 	ObjectUserCan(data.Object, model.Authorization, string) error
-	Count(exp.Expression) (int64, error)
+	Count(data.Session, exp.Expression) (int64, error)
 	Schema() schema.Schema
 }

@@ -3,12 +3,12 @@ package handler
 import (
 	"bytes"
 
-	"github.com/EmissarySocial/emissary/domain"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
 	"github.com/benpate/steranko"
 )
 
-func executeDomainTemplate(ctx *steranko.Context, factory *domain.Factory, templateName string) error {
+func executeDomainTemplate(ctx *steranko.Context, factory *service.Factory, templateName string) error {
 
 	const location = "handler.executeDomainTemplate"
 

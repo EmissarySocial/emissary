@@ -83,5 +83,15 @@
 	color:var(--white);
 }
 
+.pill.pill-blue {
+	background-color:var(--blue60);
+	color:var(--white);
+}
+
+button > .pill,
+.button > .pill {
+	position:unset;
+	background-color:var(--gray20);
+}
 
 i.bi {min-width:calc(1.5 * var(--rhythm))px;}

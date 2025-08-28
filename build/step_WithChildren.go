@@ -28,7 +28,7 @@ func (step StepWithChildren) Post(builder Builder, buffer io.Writer) PipelineBeh
 		return Halt().WithError(derp.InternalError(location, "This step can only be used by Stream builders"))
 	}
 
-	children, err := factory.Stream().RangeByParent(streamBuilder._stream.ParentID)
+	children, err := factory.Stream().RangeByParent(builder.session(), streamBuilder._stream.ParentID)
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error listing children"))
@@ -40,7 +40,7 @@ func (step StepWithChildren) Post(builder Builder, buffer io.Writer) PipelineBeh
 
 		// Make a builder with the new child stream
 		// TODO: LOW: Is "view" really the best action to use here?
-		childStream, err := NewStreamWithoutTemplate(streamBuilder.factory(), streamBuilder.request(), streamBuilder.response(), &child, "view")
+		childStream, err := NewStreamWithoutTemplate(streamBuilder.factory(), streamBuilder.session(), streamBuilder.request(), streamBuilder.response(), &child, "view")
 
 		if err != nil {
 			return Halt().WithError(derp.Wrap(err, location, "Error creating builder for child"))

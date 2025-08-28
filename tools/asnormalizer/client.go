@@ -1,20 +1,32 @@
 package asnormalizer
 
 import (
+	"strconv"
+
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/property"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/cespare/xxhash/v2"
 )
 
 type Client struct {
+	rootClient  streams.Client
 	innerClient streams.Client
 }
 
 func New(innerClient streams.Client) *Client {
-	return &Client{
+	result := &Client{
 		innerClient: innerClient,
 	}
+
+	result.innerClient.SetRootClient(result)
+	return result
+}
+
+func (client *Client) SetRootClient(rootClient streams.Client) {
+	client.rootClient = rootClient
+	client.innerClient.SetRootClient(rootClient)
 }
 
 func (client *Client) Load(uri string, options ...any) (streams.Document, error) {
@@ -28,16 +40,36 @@ func (client *Client) Load(uri string, options ...any) (streams.Document, error)
 		return streams.NilDocument(), derp.Wrap(err, location, "Error loading document from inner client", uri)
 	}
 
+	// original := result.Clone().Map()
+
 	// Try to Normalize the document
-	if normalized := Normalize(result); normalized != nil {
+	if normalized := Normalize(client.rootClient, result); normalized != nil {
 		result.SetValue(property.Map(normalized))
+	}
+
+	// NOW LETS CALCULATE SOME METADATA (OBJECTS ONLY)
+	if result.IsObject() {
+
+		// Calculate the HashedID
+		hashedID := xxhash.Sum64String(result.ID())
+		hashedIDString := strconv.FormatUint(hashedID, 32)
+		result.Metadata.HashedID = hashedIDString
+
+		// Calculate the Document Category
+		documentCategory := result.Type()
+		result.Metadata.DocumentCategory = streams.DocumentCategory(documentCategory)
+
+		// Calculate Relationships
+		relationType, relationHref := calcRelationType(result)
+		result.Metadata.RelationType = relationType
+		result.Metadata.RelationHref = relationHref
 	}
 
 	// Return the result
 	return result, nil
 }
 
-func Normalize(document streams.Document) map[string]any {
+func Normalize(rootClient streams.Client, document streams.Document) map[string]any {
 
 	switch {
 
@@ -47,7 +79,7 @@ func Normalize(document streams.Document) map[string]any {
 
 	// Regular documents here (Article, Note, etc)
 	case document.IsObject():
-		return Object(document)
+		return Object(rootClient, document)
 
 	// Collections (OrderedCollection, Collection, etc)
 	case document.IsCollection():
@@ -58,8 +90,9 @@ func Normalize(document streams.Document) map[string]any {
 
 	// Likes (treat EmojiReactions as likes)
 	case vocab.ActivityTypeLike,
-		"EmojiReact",
-		"EmojiReaction":
+		vocab.ActivityTypeEmojiReact,
+		vocab.ActivityTypeEmojiReactAlt:
+
 		return Like(document)
 
 	// Dislikes
@@ -71,9 +104,38 @@ func Normalize(document streams.Document) map[string]any {
 	case vocab.ActivityTypeCreate,
 		vocab.ActivityTypeUpdate:
 
-		return Object(document)
+		return Object(rootClient, document)
 	}
 
 	// Unrecognized documents return nil, which will be ignored by the caller
 	return nil
+}
+
+// calcRelationType calculates the "RelationType" and "RelationHref" metadata for this
+// cached document.
+func calcRelationType(document streams.Document) (string, string) {
+
+	// Get the document type
+	documentType := document.Type()
+
+	// Calculate RelationType
+	switch documentType {
+
+	// Announce, Like, and Dislike are written straight to the cache.
+	case vocab.ActivityTypeAnnounce,
+		vocab.ActivityTypeLike,
+		vocab.ActivityTypeDislike:
+
+		return documentType, document.Object().ID()
+
+	// Otherwise, see if this is a "Reply"
+	default:
+		unwrapped := document.UnwrapActivity()
+
+		if inReplyTo := unwrapped.InReplyTo(); inReplyTo.NotNil() {
+			return vocab.RelationTypeReply, inReplyTo.String()
+		}
+	}
+
+	return "", ""
 }

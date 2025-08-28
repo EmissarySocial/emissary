@@ -36,7 +36,7 @@ func NewFilesystem(embedded fs.FS) Filesystem {
 }
 
 /******************************************
- * READ ONLY METHODS
+ * Read-Only Methods
  ******************************************/
 
 // GetFS returns a READONLY Filesystem.  It works with embed:// and file:// URIs
@@ -89,7 +89,7 @@ func (filesystem *Filesystem) GetFSs(folders ...mapof.String) []fs.FS {
 }
 
 /******************************************
- * READ/WRITE METHODS
+ * Read/Write Methods
  ******************************************/
 
 // GetAfero returns READ/WRITE a filesystem.  It works with file:// URIs
@@ -163,8 +163,10 @@ func (filesystem *Filesystem) GetAferos(folders ...mapof.String) []afero.Fs {
 }
 
 /******************************************
- * REAL TIME WATCHING
+ * Real-Time Filesystem Watcher
  ******************************************/
+
+// TODO: There should be an option to disable this feature on production systems.
 
 // Watch listens to changes to this filesystem with implementation-specific adapters.  Currently only supports file:// URIs
 func (filesystem *Filesystem) Watch(folder mapof.String, changes chan<- bool, done <-chan channel.Done) error {
