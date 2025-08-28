@@ -14,6 +14,8 @@ func (service Icons) Get(name string) string {
 		return service.get("plus-lg")
 	case "add-circle":
 		return service.get("plus-circle")
+	case "add-square":
+		return service.get("plus-square")
 	case "add-emoji":
 		return service.get("emoji-smile")
 	case "album":
@@ -24,6 +26,10 @@ func (service Icons) Get(name string) string {
 		return service.get("exclamation-triangle")
 	case "alert-fill":
 		return service.get("exclamation-triangle-fill")
+	case "announce":
+		return service.get("rocket-takeoff")
+	case "announce-fill":
+		return service.get("rocket-takeoff-fill")
 	case "archive":
 		return service.get("archive")
 	case "archive-fill":
@@ -36,6 +42,8 @@ func (service Icons) Get(name string) string {
 		return service.get("bell")
 	case "bell-fill":
 		return service.get("bell-fill")
+	case "braces":
+		return service.get("braces")
 	case "book":
 		return service.get("book")
 	case "book-fill":
@@ -114,6 +122,10 @@ func (service Icons) Get(name string) string {
 		return service.get("x-lg")
 	case "delete-fill":
 		return service.get("x-lg")
+	case "dislike":
+		return service.get("thumbs-down")
+	case "dislike-fill":
+		return service.get("thumbs-down-fill")
 	case "drag-handle":
 		return service.get("grip-vertical")
 	case "edit":
@@ -140,6 +152,10 @@ func (service Icons) Get(name string) string {
 		return service.get("flag")
 	case "flag-fill":
 		return service.get("flag-fill")
+	case "focus":
+		return service.get("crosshair")
+	case "focus-fill":
+		return service.get("crosshair2")
 	case "folder":
 		return service.get("folder")
 	case "folder-fill":
@@ -180,10 +196,22 @@ func (service Icons) Get(name string) string {
 		return service.get("key")
 	case "key-fill":
 		return service.get("key-fill")
+	case "like":
+		return service.get("heart")
+	case "like-fill":
+		return service.get("heart-fill")
 	case "link":
 		return service.get("link-45deg")
 	case "link-outbound":
 		return service.get("box-arrow-up-right")
+	case "list":
+		return service.get("list")
+	case "list-fill":
+		return service.get("list")
+	case "list-nested":
+		return service.get("list-nested")
+	case "list-nested-fill":
+		return service.get("list-nested")
 	case "location":
 		return service.get("geo-alt")
 	case "location-fill":
@@ -218,6 +246,14 @@ func (service Icons) Get(name string) string {
 		return service.get("newspaper")
 	case "none":
 		return service.get("ban")
+	case "note":
+		return service.get("sticky")
+	case "note-fill":
+		return service.get("sticky-fill")
+	case "notes":
+		return service.get("stickies")
+	case "notes-fill":
+		return service.get("stickies-fill")
 	case "pause":
 		return service.get("pause")
 	case "pause-fill":
@@ -300,6 +336,10 @@ func (service Icons) Get(name string) string {
 		return service.get("hand-thumbs-up")
 	case "thumbs-up-fill":
 		return service.get("hand-thumbs-up-fill")
+	case "timeline":
+		return service.get("clock")
+	case "timeline-fill":
+		return service.get("clock-fill")
 	case "unlink":
 		return service.get("link-45deg")
 	case "upload":
@@ -375,6 +415,8 @@ func (service Icons) Get(name string) string {
 		return service.get("instagram")
 	case "twitter":
 		return service.get("twitter")
+	case "remove-square":
+		return service.get("dash-square")
 	case "rss":
 		return service.get("rss")
 	case "rss-fill":
@@ -397,6 +439,10 @@ func (service Icons) Get(name string) string {
 		return service.get("slash-circle")
 	case "block-fill":
 		return service.get("slash-circle-fill")
+	case "code":
+		return service.get("code-slash")
+	case "code-fill":
+		return service.get("code-slash")
 	case "collection":
 		return service.get("view-stacked")
 	case "forward":
