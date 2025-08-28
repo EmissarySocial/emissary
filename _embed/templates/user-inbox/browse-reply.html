@@ -13,3 +13,10 @@
 <div id="modal-footer">
 	{{.View "reply"}}
 </div>
+
+<script type="text/hyperscript">
+	init
+	set selectedNode to #id_{{$document.Metadata.HashedID}} 
+	take .selected from .card for the selectedNode then
+	scrollIntoView() the selectedNode
+</script>
