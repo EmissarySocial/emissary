@@ -1,0 +1,44 @@
+{{- $document := . -}}
+{{- if $document.Attachment.NotEmpty -}}
+
+	<!-- Preview Panel -->
+	<div id="id_{{$document.Metadata.HashedID}}_preview" class="pos-relative hover-trigger" style="border:solid 1px var(--gray40); display:none;" 
+		script="
+		on click 
+			transition my *opacity to 0 over 100ms then
+			hide me
+
+		on showImageDetail(url) from window
+			set image to the first <img/> in me
+			set my *opacity to 0
+			set image.src to url
+			show me then
+			transition my *opacity to 1 over 200ms
+		">
+		<img class="width-100% margin-vertical">
+		<div class="pos-absolute-top-right text-xs hover-reveal">
+			<button>Hide</button>
+		</div>
+	</div>
+
+	<div class="margin-top-lg cols-6">
+		{{- range $attachment := $document.Attachment.Range -}}
+			{{- if hasPrefix $attachment.MediaType "image/" -}}
+				<img src="{{$attachment.URL}}" 
+					class="clickable"
+					style="min-height:60px; max-height:240px; aspect-ratio:{{$attachment.AspectRatio}};"
+					script="on click send showImageDetail(url:my src) to #id_{{$document.Metadata.HashedID}}_preview"/>
+			{{- end -}}
+		{{- end -}}
+	</div>
+
+{{- else -}}
+
+	{{- $image := $document.ImageOrIcon -}}
+	{{- if $image.NotNil -}}
+		<div class="margin-top-lg">
+			<img src="{{$image.URL}}" style="min-height:60px; max-height:240px; {{- if $image.HasDimensions}} aspect-ratio:{{$image.AspectRatio}};{{end}}"/>
+		</div>
+	{{- end -}}
+
+{{- end -}}

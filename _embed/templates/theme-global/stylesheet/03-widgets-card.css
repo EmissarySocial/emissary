@@ -4,6 +4,7 @@
 
 .card {
 	display: block;
+	container-type:inline-size;
 	border: solid 1px var(--gray30);
 	background-color: var(--gray00);
 	border-radius:4px;

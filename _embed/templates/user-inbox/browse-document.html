@@ -33,29 +33,7 @@
 			{{- end -}}
 
 			{{- if not (hasImage $document.Content) -}}
-
-				{{- if $document.Attachment.NotEmpty -}}
-
-					<div class="margin-top-lg cols-4">
-						{{- range $attachment := $document.Attachment.Range -}}
-							{{- if hasPrefix $attachment.MediaType "image/" -}}
-								<img src="{{$attachment.URL}}" 
-									class="clickable"
-									hx-get="/@me/inbox/browse-document-detail?url={{$document.ID}}&attachmentUrl={{$attachment.URL}}"
-									style="min-height:60px; max-height:240px; width:auto;"/>
-							{{- end -}}
-						{{- end -}}
-					</div>
-
-				{{- else -}}
-				
-					{{- $image := $document.ImageOrIcon -}}
-					{{- if $image.NotNil -}}
-						<div class="margin-top-lg">
-							<img src="{{$image.URL}}" style="min-height:60px; max-height:240px; {{- if $image.HasDimensions}} aspect-ratio:{{$image.AspectRatio}};{{end}}"/>
-						</div>
-					{{- end -}}
-				{{- end -}}
+				{{- template "browse-attachments" $document -}}
 			{{- end -}}
 
 		</div>
