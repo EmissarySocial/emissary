@@ -10,7 +10,7 @@ import (
 )
 
 // Object normalizes a regular document (Article, Note, etc)
-func Object(client streams.Client, document streams.Document) map[string]any {
+func Object(rootClient streams.Client, document streams.Document) map[string]any {
 
 	const location = "tools.asnormalizer.Object"
 
@@ -46,7 +46,7 @@ func Object(client streams.Client, document streams.Document) map[string]any {
 	// Expand the "AttributedTo" actor
 	if attributedToID := actual.AttributedTo().ID(); attributedToID != "" {
 
-		attributedTo, err := client.Load(attributedToID)
+		attributedTo, err := rootClient.Load(attributedToID)
 
 		if err != nil {
 			derp.Report(derp.Wrap(err, location, "Unable to load attributedTo actor", attributedToID))

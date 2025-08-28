@@ -69,7 +69,7 @@ func (client *Client) Load(uri string, options ...any) (streams.Document, error)
 	return result, nil
 }
 
-func Normalize(client streams.Client, document streams.Document) map[string]any {
+func Normalize(rootClient streams.Client, document streams.Document) map[string]any {
 
 	switch {
 
@@ -79,7 +79,7 @@ func Normalize(client streams.Client, document streams.Document) map[string]any 
 
 	// Regular documents here (Article, Note, etc)
 	case document.IsObject():
-		return Object(client, document)
+		return Object(rootClient, document)
 
 	// Collections (OrderedCollection, Collection, etc)
 	case document.IsCollection():
@@ -104,7 +104,7 @@ func Normalize(client streams.Client, document streams.Document) map[string]any 
 	case vocab.ActivityTypeCreate,
 		vocab.ActivityTypeUpdate:
 
-		return Object(client, document)
+		return Object(rootClient, document)
 	}
 
 	// Unrecognized documents return nil, which will be ignored by the caller
