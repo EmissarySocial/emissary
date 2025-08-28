@@ -20,9 +20,9 @@
 					<div class="clickable flex-row flex-align-center">
 						<div>{{ icon "add-square" }}</div>
 						<img src="{{$attributedTo.icon.href}}" class="circle width-24 flex-shrink-0">
-						<div class="flex-grow nowrap">
-							<b>{{ $attributedTo.name }}</b>
-							<span class="margin-left text-light-gray">{{ $value.Published | tinyDate }} ago</span>
+						<div class="flex-grow nowrap text-light-gray ellipsis">
+							<b class="text-nocolor">{{ $attributedTo.name }}</b>
+							<span class="margin-left">{{ $value.Object.content | summary | html }}</span>
 						</div>
 					</div>
 				</div>
