@@ -9,7 +9,6 @@ import (
 )
 
 func SetupGetConfig(factory *server.Factory) func(c echo.Context) error {
-	const location = "handler.SetupGetConfig"
 
 	return func(c echo.Context) error {
 

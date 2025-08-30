@@ -77,7 +77,7 @@ func getResource(filesystem fs.FS, filename string, response *echo.Response) err
 		return derp.Wrap(err, location, "Error opening resource", filename)
 	}
 
-	defer file.Close()
+	defer derp.Report(file.Close())
 
 	// Prepare response headers
 	extension := "." + list.Last(filename, '.')

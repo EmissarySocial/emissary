@@ -30,7 +30,7 @@ func GetHostMeta(serverFactory *server.Factory) echo.HandlerFunc {
 			<Link rel="lrdd" template="` + factory.Host() + `/.well-known/webfinger?resource={uri}"/>
 		</XRD>`
 
-		result = strings.Replace(result, "\t", "", -1)
+		result = strings.ReplaceAll(result, "\t", "")
 		resultBytes := []byte(result)
 
 		response := ctx.Response()
