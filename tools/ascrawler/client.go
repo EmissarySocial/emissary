@@ -181,7 +181,8 @@ func (client Client) sendTask(url string, config loadConfig) {
 			"url":       url,
 			"history":   config.history,
 		},
-		queue.WithSignature(url),
-		queue.WithPriority(128),
+		queue.WithPriority(128),   // low priority background process
+		queue.WithDelayMinutes(1), // wait one minute (to catch duplicates and prevent spam)
+		queue.WithSignature(url),  // URL helps prevent duplicate calls
 	)
 }
