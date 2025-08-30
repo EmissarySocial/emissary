@@ -1,7 +1,6 @@
 package service
 
 import (
-	"context"
 	"iter"
 	"time"
 
@@ -175,13 +174,16 @@ func (service *Following) Save(session data.Session, following *model.Following,
 		return derp.Wrap(err, location, "Unable to count `Following` records")
 	}
 
-	// Run follow-on tasks asynchronously (which means we don't get to keep this transaction session)
-	go service.save_async(*following)
+	// Run follow-on tasks asynchronously
+	if err := service.RefreshAndConnect(session, *following); err != nil {
+		return derp.Wrap(err, location, "Unable to initiate external service connection")
+	}
 
 	// Win!
 	return nil
 }
 
+/*
 func (service *Following) save_async(following model.Following) {
 
 	const location = "service.Following.save_async"
@@ -198,6 +200,7 @@ func (service *Following) save_async(following model.Following) {
 		return nil, nil
 	})
 }
+*/
 
 // Delete removes an Following from the database (virtual delete)
 func (service *Following) Delete(session data.Session, following *model.Following, note string) error {

@@ -12,11 +12,13 @@ import (
 // FolderSetUnreadCount updates the "readDate" field on a folder, if the new value is greater than the existing value.
 func FolderSetUnreadCount(collection data.Collection, userID primitive.ObjectID, folderID primitive.ObjectID, unreadCount int) error {
 
+	const location = "queries.FolderSetUnreadCount"
+
 	// Guarantee that we're using MongoDB
 	mongo := mongoCollection(collection)
 
 	if mongo == nil {
-		return derp.InternalError("queries.FolderSetUnreadCount", "Database must be MongoDB")
+		return derp.InternalError(location, "Database must be MongoDB")
 	}
 
 	// Create filter and update statements
@@ -35,7 +37,7 @@ func FolderSetUnreadCount(collection data.Collection, userID primitive.ObjectID,
 	result := mongo.FindOneAndUpdate(context.Background(), filter, update)
 
 	if err := result.Err(); err != nil {
-		return derp.Wrap(err, "queries.FolderSetUnreadCount", "Error updating folder read date", userID, folderID, unreadCount)
+		derp.Report(derp.Wrap(err, location, "Unable to update folder `unreadCount`", userID, folderID, unreadCount))
 	}
 
 	// Woot.

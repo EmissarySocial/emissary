@@ -39,7 +39,7 @@ func GetProfileIcon(ctx *steranko.Context, factory *service.Factory, session dat
 		Width:     300,
 	}
 
-	return getUserAttachment(ctx, factory, session, user, "iconId", filespec)
+	return getUserAttachment(ctx, factory, user, "iconId", filespec)
 }
 
 func GetProfileImage(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
@@ -49,7 +49,7 @@ func GetProfileImage(ctx *steranko.Context, factory *service.Factory, session da
 		Width:     2400,
 	}
 
-	return getUserAttachment(ctx, factory, session, user, "imageId", filespec)
+	return getUserAttachment(ctx, factory, user, "imageId", filespec)
 }
 
 func PostProfileDelete(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
@@ -118,7 +118,7 @@ func buildOutbox(ctx *steranko.Context, factory *service.Factory, session data.S
 	return build.AsHTML(ctx, factory, builder, actionMethod)
 }
 
-func getUserAttachment(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User, field string, filespec mediaserver.FileSpec) error {
+func getUserAttachment(ctx *steranko.Context, factory *service.Factory, user *model.User, field string, filespec mediaserver.FileSpec) error {
 
 	const location = "handler.outbox.getUserAttachment"
 

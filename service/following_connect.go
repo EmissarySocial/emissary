@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"sort"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -15,18 +16,28 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func (service *Following) RefreshAndConnect(session data.Session, following model.Following) {
+func (service *Following) RefreshAndConnect(session data.Session, following model.Following) error {
+
+	const location = "service.Following.RefreshAndConnect"
 
 	// Try to refresh the Actor in the cache
-	// nolint:errcheck
 	activityService := service.factory.ActivityStream(model.ActorTypeUser, following.UserID)
-	activityService.Client().Load(following.URL, sherlock.AsActor(), ascache.WithForceReload())
+	actor, err := activityService.Client().Load(following.URL, sherlock.AsActor(), ascache.WithForceReload())
+
+	if err != nil {
+		if err := service.markFailure(following); err != nil {
+			return derp.Wrap(err, location, "Unable to refresh ActivityPub Actor; Unable to mark `Following` record as `Failure`")
+		}
+		return derp.Wrap(err, location, "Unable to refresh ActivityPub Actor")
+	}
 
 	// Try to connect the Following record
-	if err := service.Connect(session, following); err != nil {
-		derp.Report(derp.Wrap(err, "service.Following.RefreshAndConnect", "Unable to connect to ActivityPub Actor"))
-		return
+	if err := service.connect(session, actor, following); err != nil {
+		return derp.Wrap(err, location, "Unable to connect to ActivityPub Actor")
 	}
+
+	// Success
+	return nil
 }
 
 // Connect attempts to connect to a new URL and determines how to follow it.
@@ -34,22 +45,26 @@ func (service *Following) Connect(session data.Session, following model.Followin
 
 	const location = "service.Following.Connect"
 
-	// Update the following status
-	if err := service.SetStatusLoading(session, &following); err != nil {
-		return derp.Wrap(err, location, "Unable to set status to 'Loading'", following)
-	}
-
-	// Try to load the actor from the remote server.  Errors mean that this actor cannot
-	// be resolved, so we should mark the Following as a "Failure".
+	// Try to load the Actor in the cache (allow cached values)
 	activityService := service.factory.ActivityStream(model.ActorTypeUser, following.UserID)
-	actor, err := activityService.Client().Load(following.URL, sherlock.AsActor())
+	actor, err := activityService.Client().Load(following.URL, sherlock.AsActor(), ascache.WithForceReload())
 
 	if err != nil {
-		if innerError := service.SetStatusFailure(session, &following, err.Error()); innerError != nil {
-			return derp.Wrap(innerError, location, "Unable to set status to 'Failure'", following)
-		}
-		return err
+		return derp.Wrap(err, location, "Unable to load ActivityPub Actor")
 	}
+
+	// Try to connect the Following record
+	if err := service.connect(session, actor, following); err != nil {
+		return derp.Wrap(err, location, "Unable to connect to ActivityPub Actor")
+	}
+
+	return nil
+}
+
+// Connect attempts to connect to a new URL and determines how to follow it.
+func (service *Following) connect(session data.Session, actor streams.Document, following model.Following) error {
+
+	const location = "service.Following.connect"
 
 	// Set values in the Following record...
 	following.Label = actor.Name()
@@ -57,22 +72,52 @@ func (service *Following) Connect(session data.Session, following model.Followin
 	following.IconURL = actor.IconOrImage().URL()
 	following.Username = actor.UsernameOrID()
 
-	// ...and mark the status as "Success"
-	if err := service.SetStatusSuccess(session, &following); err != nil {
-		return derp.Wrap(err, location, "Unable to set status", following)
+	// Update the following status
+	if err := service.SetStatusLoading(session, &following); err != nil {
+		return derp.Wrap(err, location, "Unable to set `Following` status to `Loading`", following)
 	}
 
-	// Try to load an initial list of messages from the actor's outbox
-	service.connect_LoadMessages(session, &following, &actor)
+	//
+	// TODO: Should the following async functions be moved to the task queue?
+	//
 
 	// Try to connect to push services (WebSub, ActivityPub, etc)
-	service.connect_PushServices(session, &following, &actor)
+	go service.connect_PushServices(&following, &actor)
+
+	// Try to load an initial list of messages from the actor's outbox
+	go service.connect_LoadMessages(&following, &actor)
 
 	// Kool-Aid man says "ooooohhh yeah!"
 	return nil
 }
 
-func (service *Following) connect_LoadMessages(session data.Session, following *model.Following, actor *streams.Document) {
+// markFailure marks a `Following` record as failed when we are unable to connect to the
+// ActivityPub actor
+func (service *Following) markFailure(following model.Following) error {
+
+	const location = "service.Following.markFailure"
+
+	ctx, cancel := timeoutContext(1)
+	defer cancel()
+
+	_, err := service.factory.Server().WithTransaction(ctx, func(session data.Session) (any, error) {
+
+		// Update the following status
+		if err := service.SetStatusFailure(session, &following, "Unable to connect to ActivityPub Actor"); err != nil {
+			return nil, derp.Wrap(err, location, "Unable to set `Following` status to `Failure`", following)
+		}
+
+		return nil, nil
+	})
+
+	if err != nil {
+		return derp.Wrap(err, location, "Unable to mark `Following` record as `Failure`")
+	}
+
+	return nil
+}
+
+func (service *Following) connect_LoadMessages(following *model.Following, actor *streams.Document) {
 
 	const location = "service.Following.connect_LoadMessages"
 
@@ -88,7 +133,7 @@ func (service *Following) connect_LoadMessages(session data.Session, following *
 		return documents[a].Published().Before(documents[b].Published())
 	})
 
-	// Try to add each message into the database unitl done
+	// Try to add each message into the database until done
 	for _, document := range documents {
 
 		// RULE: For RSS feeds, push this document down the stack once more, to:
@@ -99,20 +144,35 @@ func (service *Following) connect_LoadMessages(session data.Session, following *
 		// nolint:errcheck
 		result, _ := document.Load(sherlock.WithDefaultValue(document.Map()))
 
-		// Try to save the document to the database.
-		if err := service.SaveMessage(session, following, result, model.OriginTypePrimary); err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to save document to Inbox", result.Value()))
+		// Unique transaction to save the document to the database.
+		_, err := service.factory.Server().WithTransaction(context.Background(), func(session data.Session) (any, error) {
+
+			if err := service.SaveMessage(session, following, result, model.OriginTypePrimary); err != nil {
+				return nil, derp.Wrap(err, location, "Unable to save `Message` to Inbox", result.Value())
+			}
+			return nil, nil
+		})
+
+		if err != nil {
+			derp.Report(err)
 		}
 	}
 
 	// Recalculate Folder unread counts
-	if err := service.folderService.CalculateUnreadCount(session, following.UserID, following.FolderID); err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to recalculate unread count"))
+	_, err := service.factory.Server().WithTransaction(context.Background(), func(session data.Session) (any, error) {
+		if err := service.folderService.CalculateUnreadCount(session, following.UserID, following.FolderID); err != nil {
+			return nil, derp.Wrap(err, location, "Unable to recalculate unread count")
+		}
+		return nil, nil
+	})
+
+	if err != nil {
+		derp.Report(err)
 	}
 }
 
 // connect_PushServices tries to connect to the best available push service
-func (service *Following) connect_PushServices(session data.Session, following *model.Following, actor *streams.Document) {
+func (service *Following) connect_PushServices(following *model.Following, actor *streams.Document) {
 
 	const location = "service.Following.connect_PushServices"
 
@@ -124,25 +184,29 @@ func (service *Following) connect_PushServices(session data.Session, following *
 		return
 	}
 
-	// If this actor has an ActivityPub inbox, then try to via ActivityPub
-	if inbox := actor.Inbox(); inbox.NotNil() {
-		if ok, err := service.connect_ActivityPub(session, following, actor); ok {
-			return
-		} else {
-			derp.Report(derp.Wrap(err, location, "Unable to connect to ActivityPub"))
-		}
-	}
+	// Create a new database transaction (for those about to rock)
+	_, err := service.factory.Server().WithTransaction(context.Background(), func(session data.Session) (any, error) {
 
-	// If a WebSub hub is defined, then use that.
-	if hub := actor.Endpoints().Get("websub").String(); hub != "" {
-		// TODO: LOW: Implement Fat Pings
-		if ok, err := service.connect_WebSub(following, hub); ok {
-			return
-		} else {
-			derp.Report(derp.Wrap(err, location, "Unable to connect to WebSub"))
+		// If this actor has an ActivityPub inbox, then try to via ActivityPub
+		if inbox := actor.Inbox(); inbox.NotNil() {
+			if ok, err := service.connect_ActivityPub(session, following, actor); ok {
+				return nil, nil
+			} else {
+				return nil, derp.Wrap(err, location, "Unable to connect to ActivityPub")
+			}
 		}
-	}
 
-	// RSSCloud is TBD because WebSub seems to have won the war.
-	// TODO: LOW: RSSCloud
+		// If a WebSub hub is defined, then use that.
+		if hub := actor.Endpoints().Get("websub").String(); hub != "" {
+			if ok, err := service.connect_WebSub(following, hub); ok {
+				return nil, nil
+			} else {
+				return nil, derp.Wrap(err, location, "Unable to connect to WebSub")
+			}
+		}
+
+		return nil, nil
+	})
+
+	derp.Report(err)
 }

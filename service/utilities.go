@@ -1,11 +1,13 @@
 package service
 
 import (
+	"context"
 	"html/template"
 	"io/fs"
 	"iter"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/id"
@@ -370,6 +372,10 @@ func flatten(original mapof.Object[id.Slice]) id.Slice {
 	}
 
 	return result
+}
+
+func timeoutContext(seconds int) (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.Background(), time.Duration(seconds)*time.Second)
 }
 
 // Don't judge me.
