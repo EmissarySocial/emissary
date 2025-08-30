@@ -26,6 +26,8 @@ func NewFolder() Folder {
 	return Folder{
 		FolderID: primitive.NewObjectID(),
 		Icon:     "folder",
+		Label:    "New Folder",
+		Layout:   "SOCIAL",
 	}
 }
 

@@ -25,38 +25,38 @@ func receive_AcceptFollow(context Context, activity streams.Document) error {
 	userID, followingID, err := service.ParseProfileURL_AsFollowing(activity.Object().ID())
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error parsing followingID", activity.Object().ID())
+		return derp.Wrap(err, location, "Unable to parse followingID", activity.Object().ID())
 	}
 
-	// Try to load the original "Following" record.
+	// Try to load the original `Following` record.
 	// If it doesn't already exist, then this message is invalid.
 	following := model.NewFollowing()
 	if err := followingService.LoadByID(context.session, userID, followingID, &following); err != nil {
-		return derp.Wrap(err, location, "Error loading following record", userID, followingID)
+		return derp.Wrap(err, location, "Unable to load `Following` record", userID, followingID)
 	}
 
-	// RULE: Validate that the Following record matches the Accept
+	// RULE: Validate that the `Following` actor matches the `Accept` actor
 	if following.ProfileURL != activity.Actor().ID() {
-		return derp.ForbiddenError(location, "Invalid Accept", following.ProfileURL, activity.Actor().ID())
+		return derp.ForbiddenError(location, "Invalid `Accept` transaction", following.ProfileURL, activity.Actor().ID())
 	}
 
-	// Populate our "Following" record with the NAME and AVATAR of the remote Actor
+	// Populate our `Following` record with the NAME and AVATAR of the remote actor
 	remoteActor, err := activity.Actor().Load()
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error parsing remote actor", activity.Actor())
+		return derp.Wrap(err, location, "Unable to load remote actor", activity.Actor())
 	}
 
-	// Upgrade the "Following" record to ActivityPub
+	// Upgrade the `Following` record to ActivityPub
 	following.Label = remoteActor.Name()
 	following.IconURL = first.String(remoteActor.IconOrImage().URL(), following.IconURL)
 	following.Method = model.FollowingMethodActivityPub
 	following.Secret = ""
 	following.PollDuration = 30
 
-	// Save the "Following" record to the database
+	// Save the `Following` record to the database
 	if err := followingService.SetStatusSuccess(context.session, &following); err != nil {
-		return derp.Wrap(err, location, "Error saving following", following)
+		return derp.Wrap(err, location, "Unable to save `Following` document.", following)
 	}
 
 	return nil

@@ -20,14 +20,14 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 		return derp.NotFoundError(location, "")
 	}
 
-	// Get an ActivityStream service for the User
+	// Get ActivityStream service for this User
 	activityService := factory.ActivityStream(model.ActorTypeUser, user.UserID)
 
 	// Retrieve the activity from the request body
 	activity, err := inbox.ReceiveRequest(ctx.Request(), activityService.Client())
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error parsing ActivityPub request")
+		return derp.Wrap(err, location, "Unable to parse ActivityPub request")
 	}
 
 	// Create a new Context
@@ -39,7 +39,7 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 
 	// Handle the ActivityPub request
 	if err := inboxRouter.Handle(context, activity); err != nil {
-		return derp.Wrap(err, location, "Error handling ActivityPub request")
+		return derp.Wrap(err, location, "Unable to handle ActivityPub request")
 	}
 
 	// Send the response to the client

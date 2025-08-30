@@ -5,6 +5,7 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // saveToInbox adds/updates an individual Message based on an RSS item.  It returns TRUE if a new record was created
@@ -18,7 +19,35 @@ func (service *Following) SaveMessage(session data.Session, following *model.Fol
 	}
 
 	// Convert the document into a message (and traverse responses if necessary)
-	message := getMessage(following, document, originType)
+	message := getMessage(following.UserID, document)
+	message.FollowingID = following.FollowingID
+	message.FolderID = following.FolderID
+	message.AddReference(following.Origin(originType))
+
+	// Try to save a unique version of this message to the database (always collapse duplicates)
+	if err := service.saveUniqueMessage(session, message); err != nil {
+		return derp.Wrap(err, location, "Error saving message")
+	}
+
+	// Yee. Haw.
+	return nil
+}
+
+// saveToInbox adds/updates an individual Message based on an RSS item.  It returns TRUE if a new record was created
+func (service *Following) SaveDirectMessage(session data.Session, user *model.User, document streams.Document) error {
+
+	const location = "service.Following.SaveDirectMessage"
+
+	attributedTo := document.AttributedTo()
+
+	// Convert the document into a message (and traverse responses if necessary)
+	message := getMessage(user.UserID, document)
+	message.Origin = model.OriginLink{
+		Type:    model.OriginTypeMention,
+		Label:   attributedTo.Name(),
+		URL:     attributedTo.ID(),
+		IconURL: attributedTo.Icon().Href(),
+	}
 
 	// Try to save a unique version of this message to the database (always collapse duplicates)
 	if err := service.saveUniqueMessage(session, message); err != nil {
@@ -106,17 +135,14 @@ func getPrimaryPost(document streams.Document, originType string) (streams.Docum
 }
 
 // getMessage returns an inbox Message object based on the provided arguments.
-func getMessage(following *model.Following, document streams.Document, originType string) model.Message {
+func getMessage(userID primitive.ObjectID, document streams.Document) model.Message {
 
 	result := model.NewMessage()
-	result.UserID = following.UserID
-	result.FollowingID = following.FollowingID
-	result.FolderID = following.FolderID
+	result.UserID = userID
 	result.SocialRole = document.Type()
 	result.URL = document.ID()
 	result.InReplyTo = document.InReplyTo().ID()
 	result.PublishDate = document.Published().Unix()
-	result.AddReference(following.Origin(originType))
 
 	return result
 }

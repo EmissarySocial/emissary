@@ -14,3 +14,6 @@ const OriginTypeLike = "LIKE"
 
 // OriginTypeBoost identifies a link that was retrieved because of a "Dislike" of an existing post
 const OriginTypeDislike = "DISLIKE"
+
+// OriginTypeMention identifies a link that was retrieved because the user is "Mentioned" in the post
+const OriginTypeMention = "MENTION"
