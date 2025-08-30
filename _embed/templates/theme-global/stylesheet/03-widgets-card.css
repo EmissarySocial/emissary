@@ -7,7 +7,7 @@
 	container-type:inline-size;
 	border: solid 1px var(--gray30);
 	background-color: var(--gray00);
-	border-radius:4px;
+	border-radius:calc(var(--rhythm) * 0.75);
 	position:relative;
 	text-overflow: ellipsis;
 	margin:0px;

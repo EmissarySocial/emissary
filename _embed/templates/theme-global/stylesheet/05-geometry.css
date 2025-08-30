@@ -52,17 +52,17 @@
 }
 
 .rounded {
-	border-radius: calc(var(--rhythm) * 1.5);
+	border-radius: calc(var(--rhythm) * 0.75);
 }
 
 .rounded-top {
-	border-top-left-radius: calc(var(--rhythm) * 1.5);
-	border-top-right-radius: calc(var(--rhythm) * 1.5);
+	border-top-left-radius: calc(var(--rhythm) * 0.75);
+	border-top-right-radius: calc(var(--rhythm) * 0.75);
 }
 
 .rounded-bottom {
-	border-bottom-left-radius: calc(var(--rhythm) * 1.5);
-	border-bottom-right-radius: calc(var(--rhythm) * 1.5);
+	border-bottom-left-radius: calc(var(--rhythm) * 0.75);
+	border-bottom-right-radius: calc(var(--rhythm) * 0.75);
 }
 /******************************************
  * Lines
