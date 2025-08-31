@@ -334,7 +334,7 @@ func (client *Client) countRelatedDocuments(document streams.Document) {
 		},
 		queue.WithSignature(url+"#CountRelatedDocuments"),
 		queue.WithDelaySeconds(30),
-		queue.WithPriority(16),
+		queue.WithPriority(8),
 	)
 }
 
@@ -393,7 +393,7 @@ func (client *Client) revalidate(value *Value) {
 				"revalidating": true,
 			},
 			queue.WithSignature(documentID),
-			queue.WithPriority(256),
+			queue.WithPriority(512),
 		)
 	}
 }

@@ -26,7 +26,7 @@ func ScheduleDaily(serverFactory ServerFactory) queue.Result {
 		task := queue.NewTask(
 			"PurgeActivityStreamCache",
 			mapof.Any{},
-			queue.WithPriority(1000),
+			queue.WithPriority(1024),
 		)
 
 		if err := serverFactory.Queue().Publish(task); err != nil {
@@ -39,7 +39,7 @@ func ScheduleDaily(serverFactory ServerFactory) queue.Result {
 		task := queue.NewTask(
 			"PurgeErrors",
 			mapof.Any{},
-			queue.WithPriority(1000),
+			queue.WithPriority(1024),
 		)
 
 		if err := serverFactory.Queue().Publish(task); err != nil {
@@ -52,7 +52,7 @@ func ScheduleDaily(serverFactory ServerFactory) queue.Result {
 		task := queue.NewTask(
 			"PurgeDomeLog",
 			mapof.Any{},
-			queue.WithPriority(1000),
+			queue.WithPriority(1024),
 		)
 
 		if err := serverFactory.Queue().Publish(task); err != nil {
@@ -67,7 +67,7 @@ func ScheduleDaily(serverFactory ServerFactory) queue.Result {
 		task := queue.NewTask(
 			"RecycleDomain",
 			mapof.Any{"host": factory.Hostname()},
-			queue.WithPriority(300),
+			queue.WithPriority(1024),
 		)
 
 		if err := serverFactory.Queue().Publish(task); err != nil {

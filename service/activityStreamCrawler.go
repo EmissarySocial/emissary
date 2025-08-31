@@ -209,8 +209,7 @@ func (service *ActivityStreamCrawler) sendTask(url string, history []string) {
 	}
 
 	// Calculate delay based on history length (in seconds)
-	// 0, 30, 60, 90, etc...
-	delay := max(len(history)-1, 0) * 30
+	delay, priority := service.calcDelayAndPriority(len(history))
 
 	service.enqueue <- queue.NewTask(
 		"CrawlActivityStreams",
@@ -221,11 +220,35 @@ func (service *ActivityStreamCrawler) sendTask(url string, history []string) {
 			"url":       url,
 			"history":   history,
 		},
-		queue.WithPriority(128),       // low priority background process
+		queue.WithPriority(priority),  // medium priority background process
 		queue.WithDelaySeconds(delay), // wait one minute (to catch duplicates and prevent spam)
 		queue.WithSignature(url),      // URL helps prevent duplicate calls
 	)
 
 	// Done!
 	log.Debug().Str("loc", location).Str("url", url).Int("depth", len(history)).Msg("Task queued")
+}
+
+func (service *ActivityStreamCrawler) calcDelayAndPriority(historyLength int) (delaySeconds int, priority int) {
+
+	switch historyLength {
+
+	case 0:
+		return 0, 8 // Run immediately (if possible) high priority
+
+	case 1:
+		return 0, 16 // Run immediately (if possible) medium priority
+
+	case 2:
+		return 20, 32 // Wait 20 seconds, medium priority
+
+	case 3:
+		return 40, 64 // Wait 40 seconds, medium priority
+
+	case 4:
+		return 60, 128 // Wait 1 minute, low priority
+
+	default:
+		return 180, 256 // Wait 1.5 minutes, low priority
+	}
 }

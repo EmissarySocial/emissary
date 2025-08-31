@@ -66,7 +66,7 @@ func SendSearchResults_Query(factory *service.Factory, session data.Session, arg
 					vocab.PropertyObject: url,
 				},
 			},
-			queue.WithPriority(200),
+			queue.WithPriority(256),
 		)
 
 		// Send the message to the queue

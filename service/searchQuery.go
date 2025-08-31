@@ -139,7 +139,7 @@ func (service *SearchQuery) Save(session data.Session, searchQuery *model.Search
 				"host":          service.host,
 				"searchQueryID": searchQuery.SearchQueryID.Hex(),
 			},
-			queue.WithPriority(600),
+			queue.WithPriority(1024),
 			queue.WithDelayHours(1),
 		)
 	}

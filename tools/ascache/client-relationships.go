@@ -37,7 +37,7 @@ func (client *Client) CalcParentRelationships(session data.Session, relationType
 					"actorID":   client.actorID,
 					"url":       relationHref,
 				},
-				queue.WithPriority(64),
+				queue.WithPriority(8),
 				queue.WithSignature(relationHref),
 			)
 			return nil

@@ -63,7 +63,7 @@ func (service *SearchNotifier) SendGlobalNotifications(searchResults []model.Sea
 					"actor": actorID,
 					"url":   searchResult.URL,
 				},
-				queue.WithPriority(200),
+				queue.WithPriority(256),
 			)
 		}
 	}
@@ -108,7 +108,7 @@ func (service *SearchNotifier) SendNotifications(session data.Session, searchRes
 						"searchQueryID": searchQuery.SearchQueryID,
 						"url":           searchResult.URL,
 					},
-					queue.WithPriority(200),
+					queue.WithPriority(256),
 				)
 			}
 		}

@@ -59,7 +59,7 @@ func SendSearchResults_Global(factory *service.Factory, session data.Session, ar
 					vocab.PropertyObject: url,
 				},
 			},
-			queue.WithPriority(200),
+			queue.WithPriority(256),
 		)
 
 		// Send the message to the queue

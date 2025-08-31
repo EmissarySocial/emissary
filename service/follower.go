@@ -156,7 +156,7 @@ func (service *Follower) Delete(session data.Session, follower *model.Follower, 
 				"host":          dt.NameOnly(service.host),
 				"searchQueryID": follower.ParentID,
 			},
-			queue.WithPriority(200),
+			queue.WithPriority(1024),
 		)
 	}
 

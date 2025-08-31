@@ -72,8 +72,8 @@ func (client *Client) Load(uri string, options ...any) (streams.Document, error)
 			"actorID":   client.actorID,
 			"url":       uri,
 		},
-		queue.WithPriority(128),  // low priority background process
-		queue.WithSignature(uri), // URL helps prevent duplicate calls
+		queue.WithPriority(16),   // medium priority background process
+		queue.WithSignature(uri), // URL prevents duplicate calls
 	)
 
 	// Return the result to the caller

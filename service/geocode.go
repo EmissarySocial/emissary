@@ -73,7 +73,12 @@ func (service Geocode) GeocodeAndQueue(session data.Session, stream *model.Strea
 		"streamId": stream.StreamID,
 	}
 
-	service.queue.Enqueue <- queue.NewTask("Geocode", args, queue.WithPriority(4), queue.WithDelaySeconds(30))
+	service.queue.Enqueue <- queue.NewTask(
+		"Geocode",
+		args,
+		queue.WithPriority(512),
+		queue.WithDelaySeconds(30),
+	)
 
 	return nil
 }
