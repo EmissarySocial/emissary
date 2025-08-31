@@ -3,8 +3,10 @@ package service
 import (
 	"iter"
 	"sync"
+	"time"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/ascache"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -95,7 +97,7 @@ func (service *Outbox) Range(session data.Session, criteria exp.Expression, opti
 	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.Outbox.Range", "Error creating iterator", criteria)
+		return nil, derp.Wrap(err, "service.Outbox.Range", "Unable to create iterator", criteria)
 	}
 
 	return RangeFunc(iter, model.NewOutboxMessage), nil
@@ -105,7 +107,7 @@ func (service *Outbox) Range(session data.Session, criteria exp.Expression, opti
 func (service *Outbox) Load(session data.Session, criteria exp.Expression, result *model.OutboxMessage) error {
 
 	if err := service.collection(session).Load(notDeleted(criteria), result); err != nil {
-		return derp.Wrap(err, "service.Outbox.Load", "Error loading Outbox Message", criteria)
+		return derp.Wrap(err, "service.Outbox.Load", "Unable to load Outbox message", criteria)
 	}
 
 	return nil
@@ -118,17 +120,21 @@ func (service *Outbox) Save(session data.Session, outboxMessage *model.OutboxMes
 
 	// Save the value to the database
 	if err := service.collection(session).Save(outboxMessage, note); err != nil {
-		return derp.Wrap(err, location, "Error saving Outbox", outboxMessage, note)
+		return derp.Wrap(err, location, "Unable to save Outbox message", outboxMessage, note)
 	}
 
-	// If this message has a valid URL, then try cache it into the activitystream service.
-	go func() {
-		activityService := service.factory.ActivityStream(outboxMessage.ActorType, outboxMessage.ActorID)
-		_, err := activityService.Client().Load(outboxMessage.ObjectID)
-		derp.Report(err)
-	}()
+	// (async) guarantee the message.Object is loaded into the ActivityStream cache
+	go service.cacheMessage(outboxMessage)
 
 	return nil
+}
+
+func (service *Outbox) cacheMessage(outboxMessage *model.OutboxMessage) {
+	time.Sleep(1 * time.Second)
+	activityService := service.factory.ActivityStream(outboxMessage.ActorType, outboxMessage.ActorID)
+	_, err := activityService.Client().Load(outboxMessage.ObjectID, ascache.WithForceReload())
+	derp.Report(err)
+
 }
 
 // Delete removes an Outbox from the database (virtual delete)
@@ -140,13 +146,13 @@ func (service *Outbox) Delete(session data.Session, outboxMessage *model.OutboxM
 	criteria := exp.Equal("_id", outboxMessage.OutboxMessageID)
 
 	if err := service.collection(session).HardDelete(criteria); err != nil {
-		return derp.Wrap(err, location, "Error deleting Outbox", outboxMessage, note)
+		return derp.Wrap(err, location, "Unable to delete Outbox message", outboxMessage, note)
 	}
 
 	// Delete the document from the cache
 	activityService := service.factory.ActivityStream(outboxMessage.ActorType, outboxMessage.ActorID)
 	if err := activityService.Delete(outboxMessage.ObjectID); err != nil {
-		return derp.Wrap(err, location, "Error deleting ActivityStream", outboxMessage, note)
+		return derp.Wrap(err, location, "Unable to delete ActivityStream", outboxMessage, note)
 	}
 
 	return nil
@@ -263,12 +269,12 @@ func (service *Outbox) DeleteByParentID(session data.Session, actorType string, 
 	rangeFunc, err := service.RangeByParentID(session, actorType, actorID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error querying Outbox Messages", actorType, actorID)
+		return derp.Wrap(err, location, "Error querying Outbox messages", actorType, actorID)
 	}
 
 	for message := range rangeFunc {
 		if err := service.Delete(session, &message, "Deleted"); err != nil {
-			derp.Report(derp.Wrap(err, location, "Error deleting Outbox Message", message))
+			derp.Report(derp.Wrap(err, location, "Unable to delete Outbox message", message))
 		}
 	}
 

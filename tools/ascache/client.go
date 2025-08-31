@@ -69,7 +69,7 @@ func (client *Client) SetRootClient(rootClient streams.Client) {
 // Load retrieves a URL from the cache/interweb, returning it as a streams.Document
 func (client *Client) Load(url string, options ...any) (streams.Document, error) {
 
-	const location = "ascache.client.Load"
+	const location = "ascache.Client.Load"
 
 	// Get load config
 	config := NewLoadConfig(options...)
@@ -95,6 +95,11 @@ func (client *Client) Load(url string, options ...any) (streams.Document, error)
 				client.revalidate(&value)
 			}
 
+			// Mark this values as "cached"
+			value.HTTPHeader.Set(HeaderHannibalCache, "true")
+			value.HTTPHeader.Set(HeaderHannibalCacheDate, time.Now().Format(time.RFC3339))
+
+			// Return cached document to the caller (no HTTP call required)
 			return client.asDocument(value), nil
 		}
 	}
@@ -121,31 +126,15 @@ func (client *Client) Load(url string, options ...any) (streams.Document, error)
 		derp.Report(derp.Wrap(err, location, "Unable to write document to cache.. continuing process.."))
 	}
 
-	// Schedule a follow-up to count related documents (in 30 seconds)
-	client.enqueue <- queue.NewTask(
-		"CountRelatedDocuments",
-		mapof.Any{
-			"url":       url,
-			"host":      client.hostname,
-			"actorType": client.actorType,
-			"actorID":   client.actorID,
-		},
-		queue.WithSignature(url+"#CountRelatedDocuments"),
-		queue.WithDelaySeconds(30),
-		queue.WithPriority(16),
-	)
+	client.countRelatedDocuments(result)
 
 	// Return the result (streams.Document) to the caller
 	return result, nil
 }
 
-/******************************************
- * Other Cache Management Methods
- ******************************************/
+func (client *Client) Save(document streams.Document) error {
 
-func (client *Client) Put(document streams.Document) error {
-
-	const location = "tools.ascache.client.Put"
+	const location = "ascache.Client.Save"
 
 	// Get a new database session
 	ctx, cancel := timeoutContext(60)
@@ -213,7 +202,7 @@ func (client *Client) Delete(url string) error {
 
 func (client *Client) session(ctx context.Context) (data.Session, error) {
 
-	const location = "ascache.client.session"
+	const location = "ascache.Client.session"
 
 	if client.commonDatabase == nil {
 		return nil, derp.InternalError(location, "Common Database is not initialized")
@@ -230,7 +219,7 @@ func (client *Client) session(ctx context.Context) (data.Session, error) {
 
 func (client *Client) timeoutSession(seconds int) (data.Session, context.CancelFunc, error) {
 
-	const location = "ascache.client.timeoutSession"
+	const location = "ascache.Client.timeoutSession"
 
 	ctx, cancel := timeoutContext(seconds)
 
@@ -250,7 +239,7 @@ func (client *Client) collection(session data.Session) data.Collection {
 // save adds/updates a document in the cache
 func (client *Client) save(ctx context.Context, url string, value *Value) error {
 
-	const location = "ascache.client.save"
+	const location = "ascache.Client.save"
 
 	_, err := client.commonDatabase.WithTransaction(ctx, func(session data.Session) (any, error) {
 
@@ -275,10 +264,6 @@ func (client *Client) save(ctx context.Context, url string, value *Value) error 
 		if err := client.removeDuplicates(session, value.URLs...); err != nil {
 			return nil, derp.Wrap(err, location, "Unable to search for duplicate document in cache")
 		}
-
-		// Create a new value
-		value.HTTPHeader.Set(HeaderHannibalCache, "true")
-		value.HTTPHeader.Set(HeaderHannibalCacheDate, time.Now().Format(time.RFC3339))
 
 		// Some calculations before we save the value
 		value.Received = time.Now().Unix()
@@ -321,6 +306,36 @@ func (client *Client) removeDuplicates(session data.Session, urls ...string) err
 	}
 
 	return nil
+}
+
+// countRelatedDocuments triggers a follow-up task to count related documents.
+func (client *Client) countRelatedDocuments(document streams.Document) {
+
+	// Do not count related documents for Actors
+	if document.IsActor() {
+		return
+	}
+
+	// Do not count related documents for Collections
+	if document.IsCollection() {
+		return
+	}
+
+	url := document.ID()
+
+	// Schedule a follow-up to count related documents (in 30 seconds)
+	client.enqueue <- queue.NewTask(
+		"CountRelatedDocuments",
+		mapof.Any{
+			"url":       url,
+			"host":      client.hostname,
+			"actorType": client.actorType,
+			"actorID":   client.actorID,
+		},
+		queue.WithSignature(url+"#CountRelatedDocuments"),
+		queue.WithDelaySeconds(30),
+		queue.WithPriority(16),
+	)
 }
 
 // asDocument converts a Document into a fully-populated streams.Document
@@ -378,7 +393,7 @@ func (client *Client) revalidate(value *Value) {
 				"revalidating": true,
 			},
 			queue.WithSignature(documentID),
-			queue.WithPriority(128),
+			queue.WithPriority(256),
 		)
 	}
 }

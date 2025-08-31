@@ -112,20 +112,13 @@ func (service *ActivityStream) CacheClient() *ascache.Client {
  ******************************************/
 
 // Put adds a single document to the ActivityStream cache
-func (service *ActivityStream) Put(document streams.Document) {
-	service.CacheClient().Put(document)
+func (service *ActivityStream) Save(document streams.Document) error {
+	return service.Client().Save(document)
 }
 
 // Delete removes a single document from the database by its URL
 func (service *ActivityStream) Delete(url string) error {
-
-	const location = "service.ActivityStream.Delete"
-
-	if err := service.CacheClient().Delete(url); err != nil {
-		return derp.Wrap(err, location, "Error deleting document from cache", url)
-	}
-
-	return nil
+	return service.Client().Delete(url)
 }
 
 /******************************************

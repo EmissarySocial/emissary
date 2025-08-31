@@ -76,3 +76,11 @@ func (client *Client) Load(uri string, options ...any) (streams.Document, error)
 	// Return the result
 	return result, nil
 }
+
+func (client *Client) Save(document streams.Document) error {
+	return client.innerClient.Save(document)
+}
+
+func (client *Client) Delete(documentID string) error {
+	return client.innerClient.Delete(documentID)
+}

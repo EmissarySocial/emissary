@@ -92,7 +92,7 @@
 						<div class="flex-grow">
 							{{- if lt $depth 2 -}}
 								<div hx-get="/@me/inbox/browse-tree-replies?url={{$documentID}}&depth={{$depth}}" hx-trigger="intersect once" hx-target="this" hx-swap="outerHTML" hx-push-url="false"></div>
-							{{- else -}}
+							{{- else if ne 0 $value.Metadata.Replies -}}
 								<div hx-get="/@me/inbox/browse-tree-replies?url={{$documentID}}" hx-target="this" hx-swap="outerHTML" hx-push-url="false" class="text-sm clickable">
 									<span class="htmx-request-hide">
 										{{ icon "add-square" }} 

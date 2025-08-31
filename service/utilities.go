@@ -346,6 +346,16 @@ func pointerTo[T any](value T) *T {
 	return &value
 }
 
+func isValidURL(uri string) bool {
+
+	if strings.HasPrefix(uri, "https") || strings.HasPrefix(uri, "http") {
+		_, err := url.ParseRequestURI(uri)
+		return err == nil
+	}
+
+	return false
+}
+
 func mapProductsToLookupCodes(remoteProducts ...model.Product) sliceof.Object[form.LookupCode] {
 
 	result := make(sliceof.Object[form.LookupCode], len(remoteProducts))

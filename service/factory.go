@@ -638,6 +638,20 @@ func (factory *Factory) ActivityStream(actorType string, actorID primitive.Objec
 	)
 }
 
+func (factory *Factory) ActivityStreamCrawler(actorType string, actorID primitive.ObjectID) ActivityStreamCrawler {
+
+	activityStreamService := factory.ActivityStream(actorType, actorID)
+
+	return NewActivityStreamCrawler(
+		activityStreamService.Client(),
+		factory.Queue().Enqueue,
+		factory.Hostname(),
+		actorType,
+		actorID,
+		4,
+	)
+}
+
 // Annotation returns a fully populated Annotation service
 func (factory *Factory) Annotation() *Annotation {
 	return &factory.annotationService

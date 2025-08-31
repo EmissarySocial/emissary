@@ -193,7 +193,7 @@ func (service *Stream) Range(session data.Session, criteria exp.Expression, opti
 	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.Stream.Range", "Error creating iterator", criteria)
+		return nil, derp.Wrap(err, "service.Stream.Range", "Unable to create iterator", criteria)
 	}
 
 	return RangeFunc(iter, model.NewStream), nil
@@ -205,7 +205,7 @@ func (service *Stream) RangeSummary(session data.Session, criteria exp.Expressio
 	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.Stream.Range", "Error creating iterator", criteria)
+		return nil, derp.Wrap(err, "service.Stream.Range", "Unable to create iterator", criteria)
 	}
 
 	return RangeFunc(iter, model.NewStreamSummary), nil
@@ -220,7 +220,7 @@ func (service *Stream) List(session data.Session, criteria exp.Expression, optio
 func (service *Stream) Load(session data.Session, criteria exp.Expression, stream *model.Stream) error {
 
 	if err := service.collection(session).Load(notDeleted(criteria), stream); err != nil {
-		return derp.Wrap(err, "service.Stream.Load", "Error loading Stream", criteria)
+		return derp.Wrap(err, "service.Stream.Load", "Unable to load Stream", criteria)
 	}
 
 	return nil
@@ -253,7 +253,7 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 		maxRank, err := service.MaxRank(session, stream.ParentID)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error calculating max rank")
+			return derp.Wrap(err, location, "Unable to calculate max rank")
 		}
 		stream.Rank = maxRank
 	}
@@ -270,18 +270,18 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 
 	// Validate the value (using the global stream schema) before saving
 	if err := service.Schema().Validate(stream); err != nil {
-		return derp.Wrap(err, location, "Error validating Stream using StreamSchema", stream)
+		return derp.Wrap(err, location, "Invalid Stream: using StreamSchema", stream)
 	}
 
 	// Validate the value (using the template-specific schema) before saving
 	if err := template.Schema.Validate(stream); err != nil {
-		return derp.Wrap(err, location, "Error validating Stream using TemplateSchema", stream)
+		return derp.Wrap(err, location, "Invalid Stream: using TemplateSchema", stream)
 	}
 
 	// RULE: If this stream is not a profile stream and does not have ParentIDs, then calculate them now.
 	if (stream.NavigationID != "profile") && (len(stream.ParentIDs) == 0) {
 		if err := service.CalcParentIDs(session, stream); err != nil {
-			return derp.Wrap(err, location, "Error calculating parent IDs", stream)
+			return derp.Wrap(err, location, "Unable to calculate parent IDs", stream)
 		}
 	}
 
@@ -299,10 +299,6 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 	// Send stream:create and stream:update Webhooks
 	eventName := iif(wasNew, model.WebhookEventStreamCreate, model.WebhookEventStreamUpdate)
 	service.webhookService.Send(stream, eventName)
-
-	// One milisecond delay prevents overlapping stream.CreateDates.  Deal with it.
-	// TODO: There has to be a better way than this...
-	time.Sleep(1 * time.Millisecond)
 
 	return nil
 }
@@ -365,12 +361,12 @@ func (service *Stream) DeleteMany(session data.Session, criteria exp.Expression,
 	it, err := service.List(session, criteria)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error listing streams to delete", criteria)
+		return derp.Wrap(err, location, "Unable to list streams to delete", criteria)
 	}
 
 	for stream := model.NewStream(); it.Next(&stream); stream = model.NewStream() {
 		if err := service.Delete(session, &stream, note); err != nil {
-			return derp.Wrap(err, location, "Error deleting stream", stream)
+			return derp.Wrap(err, location, "Unable to delete stream", stream)
 		}
 	}
 
@@ -698,7 +694,7 @@ func (service *Stream) LoadPrevSibling(session data.Session, parentID primitive.
 		return service.LoadLastSibling(session, parentID, result)
 	}
 
-	return derp.Wrap(err, location, "Error loading Previous Sibling")
+	return derp.Wrap(err, location, "Unable to load Previous Sibling")
 }
 
 func (service *Stream) LoadNextSibling(session data.Session, parentID primitive.ObjectID, rank int, result *model.Stream) error {
@@ -717,7 +713,7 @@ func (service *Stream) LoadNextSibling(session data.Session, parentID primitive.
 		return service.LoadFirstSibling(session, parentID, result)
 	}
 
-	return derp.Wrap(err, location, "Error loading Next Sibling")
+	return derp.Wrap(err, location, "Unable to load Next Sibling")
 }
 
 func (service *Stream) LoadLastSibling(session data.Session, parentID primitive.ObjectID, result *model.Stream) error {
@@ -900,7 +896,7 @@ func (service *Stream) MapByPrivileges(session data.Session, privileges ...model
 	streams, err := service.RangeByPrivileges(session, privilegeIDs...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Error loading streams", privilegeIDs)
+		return nil, derp.Wrap(err, location, "Unable to load streams", privilegeIDs)
 	}
 
 	// Translate the range of Streams into a map of privilegeID => streamIDs

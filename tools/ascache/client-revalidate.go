@@ -15,7 +15,7 @@ func (client *Client) Revalidate(url string, options ...any) error {
 	result, err := client.innerClient.Load(url, options...)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error loading document from inner client", url)
+		return derp.Wrap(err, location, "Unable to load document from inner client", url)
 	}
 
 	// Connect to the database

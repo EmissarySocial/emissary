@@ -53,7 +53,9 @@ func receiveLikeOrAnnounce(context Context, activity streams.Document) error {
 	activityService := context.factory.ActivityStream(model.ActorTypeUser, context.user.UserID)
 
 	// Add the Announce/Like/Dislike into the ActivityStream cache (for statistics)
-	activityService.Put(activity)
+	if err := activityService.Save(activity); err != nil {
+		return derp.Wrap(err, location, "Unable to save activity", activity.ID())
+	}
 
 	originType := getOriginType(activity.Type())
 

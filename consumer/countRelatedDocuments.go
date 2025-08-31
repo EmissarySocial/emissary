@@ -72,7 +72,7 @@ func CountRelatedDocuments(factory *service.Factory, args mapof.Any) queue.Resul
 
 		// If values have changed, then update the database now
 		if changed {
-			if err := cacheClient.Put(document); err != nil {
+			if err := cacheClient.Save(document); err != nil {
 				return nil, derp.Wrap(err, location, "Unable to save document", documentID)
 			}
 		}

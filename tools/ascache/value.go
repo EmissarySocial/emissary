@@ -112,7 +112,7 @@ func (value *Value) calcExpires(cacheControl cacheheader.Header) {
 
 	// If we have a Max-Age value, then use that.
 	if cacheControl.MaxAge > 0 {
-		value.Expires = value.Published + cacheControl.MaxAge
+		value.Expires = value.Received + cacheControl.MaxAge
 		return
 	}
 
@@ -133,7 +133,7 @@ func (value *Value) calcRevalidates(cacheControl cacheheader.Header) {
 
 	// If we have a "Stale-While-Revalidate" header, then use that.
 	if cacheControl.StaleWhileRevalidate > 0 {
-		value.Revalidates = value.Published + cacheControl.StaleWhileRevalidate
+		value.Revalidates = value.Received + cacheControl.StaleWhileRevalidate
 		return
 	}
 

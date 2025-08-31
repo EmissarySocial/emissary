@@ -72,6 +72,14 @@ func (client Client) Load(uri string, options ...any) (streams.Document, error) 
 	return result, nil
 }
 
+func (client *Client) Save(document streams.Document) error {
+	return client.innerClient.Save(document)
+}
+
+func (client *Client) Delete(documentID string) error {
+	return client.innerClient.Delete(documentID)
+}
+
 func (client *Client) getParentContext(document streams.Document) string {
 
 	// If this is a reply to another document...

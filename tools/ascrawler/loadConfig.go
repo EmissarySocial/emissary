@@ -1,14 +1,12 @@
 package ascrawler
 
 type loadConfig struct {
-	history    []string
 	useCrawler bool
 }
 
 func parseLoadConfig(options ...any) loadConfig {
 
 	result := loadConfig{
-		history:    make([]string, 0),
 		useCrawler: true,
 	}
 

@@ -31,3 +31,11 @@ func (client testInnerClient) Load(url string, options ...any) (streams.Document
 	}
 	return streams.NilDocument(), nil
 }
+
+func (client testInnerClient) Save(document streams.Document) error {
+	return nil
+}
+
+func (client testInnerClient) Delete(documentID string) error {
+	return nil
+}

@@ -41,22 +41,29 @@ func BoostAny(context Context, activity streams.Document) error {
 
 	case vocab.ActivityTypeCreate:
 		object := activity.Object()
-		activityService.Put(object)
+		if err := activityService.Save(object); err != nil {
+			return derp.Wrap(err, location, "Unable to save object", object.ID())
+		}
 		return announce(context, object)
 
 	case vocab.ActivityTypeUpdate:
 		object := activity.Object()
-		activityService.Put(object)
+		if err := activityService.Save(object); err != nil {
+			return derp.Wrap(err, location, "Unable to save object", object.ID())
+		}
 		return nil
 
 	case vocab.ActivityTypeAnnounce:
-		activityService.Put(activity)
 		object := activity.Object()
-		activityService.Put(object)
+		if err := activityService.Save(object); err != nil {
+			return derp.Wrap(err, location, "Unable to save object", object.ID())
+		}
 		return announce(context, object)
 
 	default:
-		activityService.Put(activity)
+		if err := activityService.Save(activity); err != nil {
+			return derp.Wrap(err, location, "Unable to save activity", activity.ID())
+		}
 		return announce(context, activity)
 	}
 }

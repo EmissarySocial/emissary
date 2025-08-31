@@ -59,3 +59,11 @@ func (client Client) Load(url string, options ...any) (streams.Document, error) 
 	// Not found.
 	return streams.NilDocument(), derp.NotFoundError("ashash.Client.Load", "Hash value not found in document", baseURL, hash, result.Value())
 }
+
+func (client *Client) Save(document streams.Document) error {
+	return client.innerClient.Save(document)
+}
+
+func (client *Client) Delete(documentID string) error {
+	return client.innerClient.Delete(documentID)
+}
