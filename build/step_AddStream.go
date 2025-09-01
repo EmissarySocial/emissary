@@ -2,6 +2,7 @@ package build
 
 import (
 	"io"
+	"net/http"
 	"text/template"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -20,6 +21,7 @@ type StepAddStream struct {
 	TemplateID    string                        // ID of the template to use.  If empty, then template roles are used.
 	TemplateRoles []string                      // List of acceptable Template Roles that can be used to make a stream.  If empty, then all template for this container are valid.
 	WithData      map[string]*template.Template // Map of values to preset in the new stream
+	RedirectTo    *template.Template            // Optional URL to redirect to after the stream is created.  If empty, then the action will continue processing as normal
 }
 
 /******************************************
@@ -115,7 +117,7 @@ func (step StepAddStream) getInline(builder Builder, buffer io.Writer) error {
 
 	// Build the HTML for the "embed" widget
 	b := html.New()
-	b.Div().Data("hx-target", "this").Data("hx-swap", "outerHTML").Data("hx-push-url", "false").EndBracket()
+	// b.Div().Data("hx-target", "this").Data("hx-swap", "outerHTML").Data("hx-push-url", "false").EndBracket()
 
 	if len(optionTemplates) > 1 {
 		b.Div()
@@ -152,7 +154,7 @@ func (step StepAddStream) getInline(builder Builder, buffer io.Writer) error {
 
 	// Apply custom stream data from the "with-data" map
 	if err := step.setStreamData(builder, &child); err != nil {
-		return derp.Wrap(err, location, "Error setting stream data")
+		return derp.Wrap(err, location, "Unable to set stream data")
 	}
 
 	// Create a new child builder
@@ -160,12 +162,12 @@ func (step StepAddStream) getInline(builder Builder, buffer io.Writer) error {
 	childBuilder.setArguments(builder.getArguments())
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error creating new child stream builder")
+		return derp.Wrap(err, location, "Unable to create new child stream builder")
 	}
 
 	widgetHTML, err := childBuilder.Render()
 	if err != nil {
-		return derp.Wrap(err, location, "Error building new child stream")
+		return derp.Wrap(err, location, "Unable to build new child stream")
 	}
 
 	b.WriteString(string(widgetHTML))
@@ -173,9 +175,9 @@ func (step StepAddStream) getInline(builder Builder, buffer io.Writer) error {
 	// Close the container
 	b.Close()
 
-	// Write the whole widget back to the outpub buffer
+	// Write the whole widget back to the output buffer
 	if _, err := buffer.Write(b.Bytes()); err != nil {
-		return derp.Wrap(err, location, "Error writing inline HTML to buffer")
+		return derp.Wrap(err, location, "Unable to write inline HTML to buffer")
 	}
 
 	return nil
@@ -218,7 +220,7 @@ func (step StepAddStream) Post(builder Builder, buffer io.Writer) PipelineBehavi
 
 	// Apply custom stream data from the "with-data" map
 	if err := step.setStreamData(builder, &newStream); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error setting stream data"))
+		return Halt().WithError(derp.Wrap(err, location, "Unable to set stream data"))
 	}
 
 	// Create a builder for the new Stream
@@ -226,12 +228,25 @@ func (step StepAddStream) Post(builder Builder, buffer io.Writer) PipelineBehavi
 	newBuilder.setArguments(builder.getArguments())
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error creating builder", newStream))
+		return Halt().WithError(derp.Wrap(err, location, "Unable to create builder", newStream))
 	}
 
 	// Run the "create" action for the new stream's template, if possible
 	result := Pipeline(newBuilder.action().Steps).Post(factory, newBuilder, buffer)
 	result.Error = derp.Wrap(result.Error, location, "Unable to execute 'create' action on stream")
+
+	if result.Error != nil {
+		return Halt().WithError(result.Error)
+	}
+
+	// If this step includes a redirect, then do that.
+	if step.RedirectTo != nil {
+		redirectURL := executeTemplate(step.RedirectTo, newBuilder)
+		if err := redirect(builder.response(), http.StatusSeeOther, redirectURL); err != nil {
+			return Halt().WithError(derp.Wrap(err, location, "Unable to redirect to", redirectURL))
+		}
+		return Halt().AsFullPage()
+	}
 
 	// For "inline" styles, use the result from the child's "create" action
 	// to determine what happens next.
@@ -259,7 +274,7 @@ func (step StepAddStream) setLocation(builder Builder, template *model.Template,
 
 		userID := builder.AuthenticatedID()
 		if err := streamService.SetLocationOutbox(template, newStream, userID); err != nil {
-			return derp.Wrap(err, location, "Error setting location for outbox")
+			return derp.Wrap(err, location, "Unable to set location for outbox")
 		}
 		return nil
 
@@ -267,7 +282,7 @@ func (step StepAddStream) setLocation(builder Builder, template *model.Template,
 	case "top":
 
 		if err := streamService.SetLocationTop(template, newStream); err != nil {
-			return derp.Wrap(err, location, "Error setting location for top")
+			return derp.Wrap(err, location, "Unable to set location for top")
 		}
 		return nil
 
@@ -283,7 +298,7 @@ func (step StepAddStream) setLocation(builder Builder, template *model.Template,
 
 		parent := streamBuilder._stream
 		if err := streamService.SetLocationChild(template, newStream, parent); err != nil {
-			return derp.Wrap(err, step.Location, "Error setting location for child")
+			return derp.Wrap(err, step.Location, "Unable to set location for child")
 		}
 		return nil
 	}
@@ -301,7 +316,7 @@ func (step StepAddStream) setStreamData(builder Builder, stream *model.Stream) e
 	for key, valueTemplate := range step.WithData {
 		value := executeTemplate(valueTemplate, builder)
 		if err := s.Set(stream, key, value); err != nil {
-			return derp.Wrap(err, "build.StepAddStream.setStreamData", "Error setting stream data", key, value)
+			return derp.Wrap(err, "build.StepAddStream.setStreamData", "Unable to set stream data", key, value)
 		}
 	}
 

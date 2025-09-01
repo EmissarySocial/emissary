@@ -22,6 +22,7 @@ type AddStream struct {
 	TemplateID    string                        // ID of the template to use.  If empty, then template roles are used.
 	TemplateRoles []string                      // List of acceptable Template Roles that can be used to make a stream.  If empty, then all template for this container are valid.
 	WithData      map[string]*template.Template // Map of values to preset in the new stream
+	RedirectTo    *template.Template            // Optional URL to redirect to after the stream is created.  If empty, then the action will continue processing as normal
 }
 
 // NewAddStream returns a fully initialized AddStream record
@@ -53,6 +54,14 @@ func NewAddStream(stepInfo mapof.Any) (AddStream, error) {
 		WithData:      withDataMap,
 	}
 
+	if redirectTo := stepInfo.GetString("redirect-to"); redirectTo != "" {
+		redirectTemplate, err := template.New("redirect-to").Parse(redirectTo)
+		result.RedirectTo = redirectTemplate
+
+		if err != nil {
+			return AddStream{}, derp.Wrap(err, "model.step.NewAddStream", "Error parsing redirect-to template", redirectTo)
+		}
+	}
 	return result, nil
 }
 
