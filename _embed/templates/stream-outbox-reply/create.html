@@ -1,7 +1,7 @@
 <!-- Arguments collected from builder data -->
 {{- $postTo := .GetString "postTo" | addQueryParams "templateId=outbox-reply" -}}
 
-<form id="outbox-message" hx-post="{{$postTo}}" hx-push-url="false" hx-indicator="#outbox-message" data-script="
+<form id="outbox-reply" hx-post="{{$postTo}}" hx-push-url="false" hx-indicator="#outbox-reply" data-script="
 	on htmx:configRequest(parameters)
 		set contentHtml to the first <[contenteditable=true]/> in me
 		set parameters['content'] to contentHtml.innerHTML

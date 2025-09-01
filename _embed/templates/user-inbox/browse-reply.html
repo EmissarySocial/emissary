@@ -10,7 +10,7 @@
 	<div id="scroll-bottom" class="margin-top-lg" script="init scrollIntoView() me"></div>
 </div>
 
-<div id="modal-footer">
+<div id="modal-footer" hx-target="#modal-window" hx-swap="innerHTML transition:true" hx-push-url="false">
 	{{.View "reply"}}
 </div>
 

@@ -370,10 +370,15 @@
 			roles:["self"]
 			steps:[
 				{do:"set-args", postTo:"/@me/inbox/reply?url={{.Permalink}}"}
-				{do:"add-stream", style:"inline", roles:"outbox-reply", location:"outbox", with-data:{
-					inReplyTo:"{{.Permalink}}"
-				}}
-				{do:"redirect-to", method:"post", url:"/@me/inbox/browse-tree?url={{.Permalink}}"}
+				{do:"add-stream", 
+					style:"inline", 
+					roles:"outbox-reply", 
+					location:"outbox", 
+					with-data:{
+						inReplyTo:"{{.Permalink}}"
+					},
+					redirect-to:"/@me/inbox/browse-tree?url={{.Permalink}}"
+				}
 			]
 		}
 

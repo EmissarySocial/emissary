@@ -105,9 +105,7 @@
 			roles:["authenticated"]
 			steps:[
 				{do:"set-args", path:"/{{.StreamID}}", replies:"{{.StreamID}}/reply", postTo:"/{{.StreamID}}/reply"}
-				{do:"add-stream", style:"inline", roles:["outbox-reply"], location:"outbox", with-data:{
-					inReplyTo:"{{.Permalink}}"
-				}}
+				{do:"add-stream", style:"inline", roles:["outbox-reply"], location:"outbox", with-data:{inReplyTo:"{{.Permalink}}"}}
 				{do:"set-header", method:"post", name:"hx-retarget", value:"#responses"}
 				{do:"set-header", method:"post", name:"hx-reswap", value:"outerHTML"}
 				{do:"view-html", method:"post", file:"responses-replies"}
