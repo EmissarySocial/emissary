@@ -74,10 +74,10 @@ func getResource(filesystem fs.FS, filename string, response *echo.Response) err
 	file, err := filesystem.Open(filename)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error opening resource", filename)
+		return derp.Wrap(err, location, "Unable to open resource", filename)
 	}
 
-	defer derp.Report(file.Close())
+	defer derp.ReportFunc(file.Close)
 
 	// Prepare response headers
 	extension := "." + list.Last(filename, '.')
@@ -91,7 +91,7 @@ func getResource(filesystem fs.FS, filename string, response *echo.Response) err
 
 	// Write the file to the client
 	if _, err := io.Copy(response, file); err != nil {
-		return derp.Wrap(err, location, "Error writing resource content to client", filename)
+		return derp.Wrap(err, location, "Unable to write resource content to client", filename)
 	}
 
 	// [Station](https://billandted.fandom.com/wiki/Station)

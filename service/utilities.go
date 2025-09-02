@@ -31,7 +31,8 @@ import (
 func RangeFunc[T any](it data.Iterator, new func() T) iter.Seq[T] {
 
 	return func(yield func(T) bool) {
-		defer derp.Report(it.Close())
+
+		defer derp.ReportFunc(it.Close)
 
 		if it == nil {
 			return

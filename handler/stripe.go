@@ -104,7 +104,7 @@ func stripe_UnmarshalEvent(request *http.Request, webhookSecret string, liveMode
 		return stripe.Event{}, derp.Wrap(err, location, "Error reading request body")
 	}
 
-	defer derp.Report(request.Body.Close())
+	defer derp.ReportFunc(request.Body.Close)
 
 	// For regular LIVE requests, use the Stripe library to validate the event
 	if liveMode {
