@@ -19,9 +19,9 @@
 				<div class="card padding margin-bottom pos-relative">
 					<div class="clickable flex-row flex-align-center">
 						<div>{{ icon "add-square" }}</div>
-						<img src="{{$attributedTo.icon.href}}" class="circle width-24 flex-shrink-0">
+						<img src="{{$attributedTo.Icon.Href}}" class="circle width-24 flex-shrink-0">
 						<div class="flex-grow nowrap text-light-gray ellipsis">
-							<b class="text-nocolor">{{ $attributedTo.name }}</b>
+							<b class="text-nocolor">{{ $attributedTo.Name }}</b>
 							<span class="margin-left">{{ $value.Object.content | summary | html }}</span>
 						</div>
 					</div>
@@ -34,9 +34,9 @@
 
 					<div class="ToggleHide clickable flex-row flex-align-center margin-bottom-lg">
 						<div>{{icon "remove-square"}}</div>
-						<img src="{{$attributedTo.icon.href}}" class="circle width-24 flex-shrink-0">
+						<img src="{{$attributedTo.Icon.Href}}" class="circle width-24 flex-shrink-0">
 						<div class="flex-grow nowrap">
-							<b>{{ $attributedTo.name }}</b>
+							<b>{{ $attributedTo.Name }}</b>
 							<span class="margin-left text-light-gray">{{ $value.Published | tinyDate }} ago</span>
 						</div>
 					</div>
@@ -69,7 +69,7 @@
 							<button hx-get="/@me/inbox/browse-tree?url={{$documentID}}" title="Focus on this post" aria-label="Focus on this post">{{icon "focus"}}</button>
 							<button hx-get="/@me/inbox/browse-index?url={{$documentID}}" title="Use Index Layout" aria-label="Use Index Layout">{{icon "list"}}</button>
 							<span class="margin-horizontal-sm"></span>
-							<button hx-get="/@me/inbox/browse-actor?url={{$attributedTo.id}}" title="View Profile" aria-label="View Profile">{{icon "person"}}</button>
+							<button hx-get="/@me/inbox/browse-actor?url={{$attributedTo.ID}}" title="View Profile" aria-label="View Profile">{{icon "person"}}</button>
 							<a href="{{$documentID}}" target="_blank" class="button" title="View Original Website" aria-label="Visit Original Website">{{icon "globe"}}</a>
 						</div>
 
