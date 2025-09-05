@@ -1,0 +1,47 @@
+<!-- Arguments collected from builder data -->
+{{- $postTo := .GetString "postTo" | addQueryParams "templateId=outbox-direct" -}}
+
+<h1>{{icon "chat"}} Start a Conversation</h1>
+
+<form id="outbox-reply" hx-post="{{$postTo}}" hx-push-url="false" hx-indicator="#outbox-reply" data-script="
+	on htmx:configRequest(parameters)
+		set contentHtml to the first <[contenteditable=true]/> in me
+		set parameters['content'] to contentHtml.innerHTML
+		focus() the contentHtml
+
+	on htmx:afterRequest
+		set contentHtml to the first <[contenteditable=true]/> in me
+		set contentHtml.innerHTML to ''
+	">
+
+	<div class="layout layout-vertical">
+		<div class="layout-elements">
+
+			<div class="layout-element">
+				<label for="to">Recipient(s)</label>
+				<input id="to" type="text" name="to" value="{{.Data `to`}}" script="on load focus() me" />
+			</div>
+
+			<div class="layout-element">
+				<label for="content">Message</label>
+				<div id="content" role="input" contenteditable="true" tabIndex="0" style="min-height:16em;">
+					{{.ContentHTML}}
+				</div>
+			</div>
+		</div>
+
+		<div class="margin-top">
+			{{- if .IsNew -}}
+				<button type="submit" class="primary htmx-request-hide">Send Direct Message</button>
+				<button type="button" class="primary htmx-request-show" disabled>Sending...</button>
+				<button type="button" script="on click trigger closeModal">Cancel</button>
+			{{- else -}}
+				<span hx-get="/{{.StreamID}}/delete" class="clickable float-right text-red">Delete</span>
+				<button type="submit" class="primary htmx-request-hide">Edit Message</button>
+				<button type="button" class="primary htmx-request-show" disabled>Saving Changes...</button>
+				<button type="button" script="on click trigger closeModal">Cancel</button>
+			{{- end -}}
+		</div>
+	</div>
+
+</form>

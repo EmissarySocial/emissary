@@ -1,0 +1,87 @@
+{{- .SetQueryParam "folderId" "000000000000000000000000" -}}
+{{- $sidebar := .QueryParam "sidebar" -}}
+{{- $folders := .FoldersWithSelection}}
+{{- $conversations := .Conversations.Top12.ByUpdateDate.Reverse.Slice -}}
+{{- .DefaultQueryParam "conversationId" $conversations.First.ConversationID.Hex -}}
+{{- $conversationID := .QueryParam "conversationId" -}}
+
+<div class="app" script="on load take .selected from .nav-item for #nav-inbox">
+
+	<link rel="stylesheet" href="/.templates/user-inbox/stylesheet">
+
+	<!-- Sidebar Content -->
+	{{- if eq "collapse" $sidebar -}}
+		{{- template "sidebar-collapsed" $folders -}}
+	{{- else -}}
+		{{- template "sidebar-expanded" $folders -}}
+	{{- end -}}
+
+	<div class="table no-top-border width-25% flex-shrink-0 scroll-vertical" style="background-color:var(--gray10); view-transition-name:second-sidebar;">
+
+		<div
+			role="button"
+			hx-get="/@me/inbox/conversation-new"
+			class="link conversation-selector pos-relative padding-horizontal-sm flex-row flex-align-center">
+
+			<div class="width-32 flex-shrink-0 flex-center">
+				<div class="circle width-32 flex-shrink-0 flex-center" style="font-size:24px;background-color:var(--blue50);color:var(--white);">{{icon "plus"}}</div>
+			</div>
+			<div class="ellipsis-block" style="max-height:3em;">New Conversation</div>
+		</div>
+
+		{{- range $index, $conversation := $conversations -}}
+			<div 
+				role="button" 
+				class="conversation-selector hover-trigger pos-relative padding-horizontal-sm flex-row flex-align-center {{if eq $conversation.ConversationID.Hex $conversationID}}selected{{end}}"
+				script="on click take .selected from .conversation-selector"
+
+				hx-get="/@me/inbox/conversation?conversationId={{$conversation.ConversationID.Hex}}"
+				hx-target="#app-content"
+				hx-swap="innerHTML"
+				hx-push-url="false">
+
+				<div class="width-32 flex-shrink-0">
+					{{- if eq "" $conversation.Icon -}}
+						<div class="circle width-32 flex-shrink-0" style="background-color:var(--gray30);"></div>
+					{{- else -}}
+						<img src="{{$conversation.Icon}}" class="circle width-32">
+					{{- end -}}
+				</div>
+				<div class="ellipsis-block" style="max-height:3em;">{{$conversation.Name}}</div>
+				<div class="pos-absolute-top-right hover-show text-xs">
+					<button hx-get="/@me/inbox/conversation-edit?conversationId={{$conversation.ConversationID.Hex}}">&hellip;</button>
+				</div>
+			</div>
+		{{- end -}}
+	</div>
+
+	<!-- Main App Content -->
+	<div 
+		id="app-content" 
+		class="app-content flex-column"
+		hx-get="/@me/inbox/conversation?conversationId={{$conversationID}}"
+		hx-trigger="load"
+		hx-target="this"
+		hx-swap="innerHTML"
+		hx-push-url="false"
+		></div>
+
+	<div
+		hx-get="{{.URL}}" 
+		hx-trigger="refreshPage from:window"
+		hx-target="#main"
+		hx-swap="innerHTML"
+		hx-push-url="false">
+	</div>
+	
+	<style>
+		.conversation-item {
+			display:flex;
+			padding: calc(var(--rhythm) * 2);
+			margin:calc(var(--rhythm) * 2) 0px;
+			background-color:var(--gray10);
+			border-radius: calc(var(--rhythm) * 2);
+
+		}
+	</style>
+</div>

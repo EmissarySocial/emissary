@@ -1,0 +1,19 @@
+<div id="conversation-items" style="height:100%; overflow-y:scroll;">
+	<div hx-get="http://localhost/missing-url-here" hx-trigger="intersect once" hx-target="this" hx-swap="outerHTML" hx-push-url="true"></div>
+	{{.View "conversation-list"}}
+	<div id="conversation-bottom"><br></div>
+</div>
+
+<div class="padding-top" style="background-color:var(--white);">
+	<div style="min-height:124px; border-top:1px solid var(--gray40);">
+
+		<div class="padding text-center" style="line-height:50px; color:var(--gray50);">
+			Let's make a direct message here.
+		</div>
+
+	</div>
+</div>
+
+<script>
+	window.document.getElementById("conversation-bottom").scrollIntoView({block:"end"})
+</script>

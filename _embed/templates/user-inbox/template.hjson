@@ -44,116 +44,6 @@
 	}
 	actions: {
 
-		inbox: {
-			roles: ["self"]
-			steps:[
-				{do: "view-html"}
-			]
-		}
-		sidebar: {
-			roles: ["self"]
-			steps:[
-				{do: "view-html", file: "sidebar-remote"}
-			]
-		}
-		list: {
-			roles: ["self"]
-			steps: [
-				{do: "view-html"}
-			]
-		}
-		list-before: {
-			roles: ["self"]
-			steps:[
-				{do: "view-html"}
-			]
-		}
-		filter: {
-			roles: ["self"]
-			steps: [
-				{do: "as-modal", steps: [
-					{do: "view-html"}
-				]}
-			]
-		}
-
-		annotation: {
-			roles: ["self"]
-			steps: [
-				{do: "with-annotation", steps: [
-					{do: "as-modal", options:["xclass:large"], steps: [
-						{do: "view-html"}
-						{do:"edit", form: {
-							type: layout-vertical
-							children:[
-								{type:"textarea", path:"content", description:"(PRIVATE) These notes are not shared with anyone", options:{rows:12, autocomplete:"off"}}
-							]
-						}}
-						{do: "save"}
-					]}
-				]}
-			]
-		}
-
-		folder-add: {
-			roles: ["self"]
-			steps: [
-				{do: "set-query-param", folderId: "new"}
-				{do: "with-folder", steps: [
-					{do: "as-modal", steps: [
-						{do: "edit", form: {
-							type: layout-vertical
-							label: Add a Folder
-							children: [
-								{type: "text", path: "label", label: "Name", options:{autocomplete:"off"}}
-								{type: "select", path: "icon", label: "Icon", options: {provider: "folder-icons"}}
-								{type: "select", path: "layout", label: "Layout", options: {enum: "SOCIAL,NEWSPAPER,MAGAZINE"}}
-							]}
-						}
-						{do: "save"}
-					]}
-					{do: "refresh-page"}
-				]}
-			]
-		}
-		folder-edit: {
-			roles: ["self"]
-			steps: [
-				{do: "with-folder", steps: [
-					{do: "as-modal", steps: [
-						{do:"edit", options:["delete:/@me/inbox/folder-delete?folderId={{.ObjectID}}"], form:{
-							type: layout-vertical
-							label: Folder Settings
-							children:[
-								{type:"text", path:"label", label:"Name"}
-								{type:"select", path:"icon", label:"Icon", options:{provider:"folder-icons"}}
-								{type:"select", path:"layout", label:"Layout", options:{enum:"SOCIAL,NEWSPAPER,MAGAZINE"}}
-							]}
-						}
-						{do:"save"}
-					]}
-					{do:"refresh-page"}
-				]}
-			]
-		}
-		folder-delete:{
-			roles:["self"]
-			steps:[
-				{do:"with-folder", steps: [
-					{do:"delete", title:"Delete Folder: {{.Label}}?", message:"Deleting this folder will also remove all inbox items inside it."}
-					{do:"forward-to", url:"/@me/inbox"}
-				]}
-			]
-		}
-		folder-sort:{
-			roles:["self"]
-			steps:[
-				{do:"with-folder", steps:[
-					{do:"sort"}
-				]}
-			]
-		}
-		
 		actor-button: {
 			roles:["self"]
 			steps: [
@@ -174,6 +64,7 @@
 				]}
 			]
 		}
+
 		actor-button-follow-update: {
 			roles:["self"]
 			steps:[
@@ -185,6 +76,7 @@
 				]}
 			]
 		}
+
 		actor-button-unfollow: {
 			roles:["self"]
 			steps:[
@@ -196,6 +88,7 @@
 				{do:"remove-event", event:"closeModal"}
 			]
 		}
+
 		actor-button-mute:{
 			roles:["self"]
 			steps:[
@@ -207,6 +100,7 @@
 				]}
 			]
 		}
+
 		actor-button-unmute:{
 			roles:["self"]
 			steps:[
@@ -218,6 +112,7 @@
 				{do:"remove-event", event:"closeModal"}
 			]
 		}
+
 		actor-button-block:{
 			roles:["self"]
 			steps:[
@@ -229,6 +124,7 @@
 				]}
 			]
 		}
+
 		actor-button-block-update: {
 			roles:["self"]
 			steps:[
@@ -240,6 +136,7 @@
 				]}
 			]
 		}
+
 		actor-button-unblock:{
 			roles:["self"]
 			steps:[
@@ -252,133 +149,21 @@
 			]
 		}
 
-		profile: {
-			roles:["self"]
-			steps:[
-				{do:"as-modal", steps:[
-					{do:"view-html"}
-				]}
-			]
-		}
-
-		message: {
-			roles:["self"]
-			steps:[
-				{do:"as-modal", options:["xclass:large"], steps:[
-					{do:"view-html"}
-				]}
-			]
-		}
-		message-code: {
-			roles:["self"]
-			steps:[
-				{do:"as-modal", options:["class:large"], steps:[
-					{do:"view-html"}
-				]}
-			]
-		}
-
-		message-mute-button:{
-			roles:["self"]
-			steps:[
-				{do:"with-message", steps:[
-					{do:"view-html"}
-				]}
-			]
-		}
-		message-mute:{
-			roles:["self"]
-			steps:[
-				{do:"with-message", steps:[
-					{do:"set-state", state:"MUTED"}
-					{do:"save"}
-					{do:"view-html", method:"both", file:"message-mute-button"}
-				]}
-			]
-		}
-		message-unmute:{
-			roles:["self"]
-			steps:[
-				{do:"with-message", steps:[
-					{do:"set-state", state:"UNMUTED"}
-					{do:"save"}
-					{do:"view-html", method:"both", file:"message-mute-button"}
-				]}
-			]
-		}
-		message-delete: {
+		annotation: {
 			roles: ["self"]
 			steps: [
-				{do:"with-message", steps:[
-					{do:"delete", title:"Delete Message?", message:"Are you sure you want to delete this message?"}
-					{do:"reload-page"}
+				{do: "with-annotation", steps: [
+					{do: "as-modal", options:["xclass:large"], steps: [
+						{do: "view-html"}
+						{do:"edit", form: {
+							type: layout-vertical
+							children:[
+								{type:"textarea", path:"content", description:"(PRIVATE) These notes are not shared with anyone", options:{rows:12, autocomplete:"off"}}
+							]
+						}}
+						{do: "save"}
+					]}
 				]}
-			]
-		}
-		message-read:{
-			roles:["self"]
-			steps:[
-				{do:"with-message", steps:[
-					{do:"set-state", state:"READ"}
-					{do:"save"}
-					{do:"trigger-event", event:"refreshSidebar"}
-				]}
-			]
-		}
-
-		message-set-response: {
-			roles:["self"]
-			steps:[
-				{do:"with-message", steps: [
-					{do:"set-response"}
-					{do:"view-html", method:"both"}
-				]}
-			]
-		}
-
-		responses-announces:{
-			roles:["self"]
-			steps: [
-				{do:"view-html"}
-			]
-		}
-		responses-likes:{
-			roles:["self"]
-			steps: [
-				{do:"view-html"}
-			]
-		}
-		responses-replies:{
-			roles:["self"]
-			steps: [
-				{do:"view-html"}
-			]
-		}
-		responses-replies-list:{
-			roles:["self"]
-			steps:[
-				{do:"view-html"}
-			]
-		}
-		responses-replies-recursive:{
-			roles:["self"]
-			steps:[
-				{do:"view-html"}
-			]
-		}
-		reply:{
-			roles:["self"]
-			steps:[
-				{do:"set-args", postTo:"/@me/inbox/reply?url={{.Permalink}}"}
-				{do:"add-stream", 
-					style:"inline", 
-					roles:"outbox-reply", 
-					location:"outbox", 
-					with-data:{
-						inReplyTo:"{{.Permalink}}"
-					},
-					redirect-to:"/@me/inbox/browse-tree?url={{.Permalink}}"
-				}
 			]
 		}
 
@@ -458,5 +243,308 @@
 			]
 		}
 
+		conversations: {
+			roles: ["self"]
+			steps: [
+				{do:"view-html"}
+			]
+		}
+
+		conversations-list: {
+			roles: ["self"]
+			steps: [
+				{do:"view-html"}
+			]
+		}
+
+		conversation: {
+			roles: ["self"]
+			steps: [
+				{do:"view-html"}
+			]
+		}
+
+		conversation-list: {
+			roles: ["self"]
+			steps: [
+				{do:"view-html"}
+			]
+		}
+
+		conversation-new: {
+			roles:["self"]
+			steps: [
+				{do:"as-modal", background:"conversations", steps:[
+					{
+						do:"add-stream", 
+						style:"inline", 
+						location:"outbox", 
+						template:"outbox-direct",
+					}
+				]}
+			]
+		}
+
+		conversation-edit: {
+			roles: ["self"]
+			steps:[
+				{do:"with-conversation", steps:[
+					{do:"as-modal", steps:[
+						{do:"edit", form:{
+							type:"layout-tabs",
+							label:"Edit Conversation"
+							children:[
+								{
+									type:"layout-vertical",
+									label:"Edit Conversation"
+									children:[
+										{type:"text", path:"name", label:"Conversation Name", description:"(PRIVATE) Not shared with anyone"}
+										{type:"select", path:"icon", label:"Icon", options:{provider:"folder-icons"}}
+									]
+								}
+								{
+									type:"layout-vertical",
+									label:"Notes"
+									children:[
+										{type:"textarea", path:"notes", description:"(PRIVATE) Not shared with anyone", options:{rows:12}}
+									]
+								}
+							]
+						}}
+						{do:"save"}
+					]}
+				]}
+			]
+		}
+
+		filter: {
+			roles: ["self"]
+			steps: [
+				{do: "as-modal", steps: [
+					{do: "view-html"}
+				]}
+			]
+		}
+
+		folder-add: {
+			roles: ["self"]
+			steps: [
+				{do: "set-query-param", folderId: "new"}
+				{do: "with-folder", steps: [
+					{do: "as-modal", steps: [
+						{do: "edit", form: {
+							type: layout-vertical
+							label: Add a Folder
+							children: [
+								{type: "text", path: "label", label: "Name", options:{autocomplete:"off"}}
+								{type: "select", path: "icon", label: "Icon", options: {provider: "folder-icons"}}
+								{type: "select", path: "layout", label: "Layout", options: {enum: "SOCIAL,NEWSPAPER,MAGAZINE"}}
+							]}
+						}
+						{do: "save"}
+					]}
+					{do: "refresh-page"}
+				]}
+			]
+		}
+
+		folder-edit: {
+			roles: ["self"]
+			steps: [
+				{do: "with-folder", steps: [
+					{do: "as-modal", steps: [
+						{do:"edit", options:["delete:/@me/inbox/folder-delete?folderId={{.ObjectID}}"], form:{
+							type: layout-vertical
+							label: Folder Settings
+							children:[
+								{type:"text", path:"label", label:"Name", options:{autocomplete:"off"}}
+								{type:"select", path:"icon", label:"Icon", options:{provider:"folder-icons"}}
+								{type:"select", path:"layout", label:"Layout", options:{enum:"SOCIAL,NEWSPAPER,MAGAZINE"}}
+							]}
+						}
+						{do:"save"}
+					]}
+					{do:"refresh-page"}
+				]}
+			]
+		}
+
+		folder-delete:{
+			roles:["self"]
+			steps:[
+				{do:"with-folder", steps: [
+					{do:"delete", title:"Delete Folder: {{.Label}}?", message:"Deleting this folder will also remove all inbox items inside it."}
+					{do:"forward-to", url:"/@me/inbox"}
+				]}
+			]
+		}
+		
+		folder-sort:{
+			roles:["self"]
+			steps:[
+				{do:"with-folder", steps:[
+					{do:"sort"}
+				]}
+			]
+		}
+		
+		inbox: {
+			roles: ["self"]
+			steps:[
+				{do: "view-html"}
+			]
+		}
+
+		list: {
+			roles: ["self"]
+			steps: [
+				{do: "view-html"}
+			]
+		}
+
+		list-before: {
+			roles: ["self"]
+			steps:[
+				{do: "view-html"}
+			]
+		}
+
+		message: {
+			roles:["self"]
+			steps:[
+				{do:"as-modal", options:["xclass:large"], steps:[
+					{do:"view-html"}
+				]}
+			]
+		}
+
+		message-code: {
+			roles:["self"]
+			steps:[
+				{do:"as-modal", options:["class:large"], steps:[
+					{do:"view-html"}
+				]}
+			]
+		}
+
+		message-mute-button:{
+			roles:["self"]
+			steps:[
+				{do:"with-message", steps:[
+					{do:"view-html"}
+				]}
+			]
+		}
+
+		message-mute:{
+			roles:["self"]
+			steps:[
+				{do:"with-message", steps:[
+					{do:"set-state", state:"MUTED"}
+					{do:"save"}
+					{do:"view-html", method:"both", file:"message-mute-button"}
+				]}
+			]
+		}
+
+		message-unmute:{
+			roles:["self"]
+			steps:[
+				{do:"with-message", steps:[
+					{do:"set-state", state:"UNMUTED"}
+					{do:"save"}
+					{do:"view-html", method:"both", file:"message-mute-button"}
+				]}
+			]
+		}
+
+		message-delete: {
+			roles: ["self"]
+			steps: [
+				{do:"with-message", steps:[
+					{do:"delete", title:"Delete Message?", message:"Are you sure you want to delete this message?"}
+					{do:"reload-page"}
+				]}
+			]
+		}
+
+		message-read:{
+			roles:["self"]
+			steps:[
+				{do:"with-message", steps:[
+					{do:"set-state", state:"READ"}
+					{do:"save"}
+					{do:"trigger-event", event:"refreshSidebar"}
+				]}
+			]
+		}
+
+		message-set-response: {
+			roles:["self"]
+			steps:[
+				{do:"with-message", steps: [
+					{do:"set-response"}
+					{do:"view-html", method:"both"}
+				]}
+			]
+		}
+
+		responses-announces:{
+			roles:["self"]
+			steps: [
+				{do:"view-html"}
+			]
+		}
+
+		responses-likes:{
+			roles:["self"]
+			steps: [
+				{do:"view-html"}
+			]
+		}
+
+		responses-replies:{
+			roles:["self"]
+			steps: [
+				{do:"view-html"}
+			]
+		}
+
+		responses-replies-list:{
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
+		responses-replies-recursive:{
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
+		reply:{
+			roles:["self"]
+			steps:[
+				{do:"set-args", postTo:"/@me/inbox/reply?url={{.Permalink}}"}
+				{do:"add-stream", 
+					style:"inline", 
+					roles:"outbox-reply", 
+					location:"outbox", 
+					with-data:{
+						inReplyTo:"{{.Permalink}}"
+					},
+					redirect-to:"/@me/inbox/browse-tree?url={{.Permalink}}"
+				}
+			]
+		}
+
+		sidebar: {
+			roles: ["self"]
+			steps:[
+				{do: "view-html", file: "sidebar"}
+			]
+		}
 	}
 }	
