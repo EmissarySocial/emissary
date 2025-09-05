@@ -8,7 +8,6 @@ import (
 	"github.com/benpate/remote"
 	"github.com/benpate/remote/options"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/benpate/rosetta/null"
 	"github.com/benpate/rosetta/schema"
 )
 
@@ -35,7 +34,7 @@ func (adapter StripeConnect) ManualConfig() form.Form {
 					"data": schema.Object{
 						Properties: schema.ElementMap{
 							"clientId": schema.String{Required: true},
-							"liveMode": schema.Boolean{Default: null.NewBool(false)},
+							"liveMode": schema.String{Enum: []string{"false", "true"}},
 						},
 					},
 					"vault": schema.Object{
@@ -91,7 +90,7 @@ func (adapter StripeConnect) ManualConfig() form.Form {
 				},
 				{
 					Type:  "select",
-					Path:  "liveMode",
+					Path:  "data.liveMode",
 					Label: "Live Mode?",
 					Options: mapof.Any{
 						"enum": []form.LookupCode{
