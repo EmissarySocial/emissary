@@ -345,6 +345,32 @@ func (w Inbox) IsInboxEmpty(inbox []model.Message) bool {
 	return true
 }
 
+// Conversations returns a QueryBuilder for current User's conversations
+func (w Inbox) Conversations() (QueryBuilder[model.Conversation], error) {
+
+	// Collect the currently authenticated user
+	userID := w.AuthenticatedID()
+
+	if userID.IsZero() {
+		return QueryBuilder[model.Conversation]{}, derp.UnauthorizedError("build.Inbox.Conversations", "Must be signed in to view conversations")
+	}
+
+	queryString := w._request.URL.Query()
+
+	expBuilder := builder.NewBuilder().
+		Int("updateDate")
+
+	criteria := exp.And(
+		exp.Equal("userId", w.AuthenticatedID()),
+		exp.Equal("deleteDate", 0),
+		expBuilder.Evaluate(queryString),
+	)
+
+	conversationService := w._factory.Conversation()
+
+	return NewQueryBuilder[model.Conversation](&conversationService, w._session, criteria), nil
+}
+
 func (w Inbox) Privileges() QueryBuilder[model.Privilege] {
 
 	expressionBuilder := builder.NewBuilder().
@@ -423,16 +449,18 @@ func (w Inbox) Folders() (model.FolderList, error) {
 
 func (w Inbox) FoldersWithSelection() (model.FolderList, error) {
 
+	const location = "build.Inbox.FoldersWithSelection"
+
 	// Get Folder List
 	result, err := w.Folders()
 
 	if err != nil {
-		return result, derp.Wrap(err, "build.Inbox.FoldersWithSelection", "Error loading folders")
+		return result, derp.Wrap(err, location, "Error loading folders")
 	}
 
 	// Guarantee that we have at least one folder
 	if len(result.Folders) == 0 {
-		return result, derp.InternalError("build.Inbox.FoldersWithSelection", "No folders found", nil)
+		return result, derp.InternalError(location, "No folders found", nil)
 	}
 
 	// Find/Mark the Selected FolderID

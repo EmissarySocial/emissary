@@ -215,6 +215,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.WithCircle:
 		return StepWithCircle(s)
 
+	case step.WithConversation:
+		return StepWithConversation(s)
+
 	case step.WithDraft:
 		return StepWithDraft(s)
 

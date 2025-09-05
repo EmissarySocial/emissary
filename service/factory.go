@@ -597,6 +597,9 @@ func (factory *Factory) Model(name string) (ModelService, error) {
 	case "circle":
 		return factory.Circle(), nil
 
+	case "conversation":
+		return factory.Conversation(), nil
+
 	case "folder":
 		return factory.Folder(), nil
 
@@ -680,6 +683,11 @@ func (factory *Factory) Circle() *Circle {
 // Connection returns a fully populated Connection service
 func (factory *Factory) Connection() *Connection {
 	return &factory.connectionService
+}
+
+// Conversation returns a fully populated Conversation service
+func (factory *Factory) Conversation() Conversation {
+	return NewConversation()
 }
 
 // EncryptionKey returns a fully populated EncryptionKey service
@@ -983,6 +991,9 @@ func (factory *Factory) ModelService(object data.Object) ModelService {
 
 	case *model.Circle:
 		return factory.Circle()
+
+	case *model.Conversation:
+		return factory.Conversation()
 
 	case *model.Folder:
 		return factory.Folder()

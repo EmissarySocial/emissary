@@ -28,6 +28,7 @@ type Factory interface {
 	Attachment() *service.Attachment
 	Circle() *service.Circle
 	Connection() *service.Connection
+	Conversation() service.Conversation
 	Folder() *service.Folder
 	Following() *service.Following
 	Follower() *service.Follower
