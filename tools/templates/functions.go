@@ -86,7 +86,11 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 		return value
 	}
 
-	result["newObjectId"] = func() string {
+	result["nilObjectID"] = func() primitive.ObjectID {
+		return primitive.NilObjectID
+	}
+
+	result["newObjectID"] = func() string {
 		return primitive.NewObjectID().Hex()
 	}
 
