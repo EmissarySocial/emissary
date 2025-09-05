@@ -146,6 +146,18 @@ func (w Common) SetQueryParam(name string, value string) string {
 	return ""
 }
 
+func (w Common) DefaultQueryParam(name string, value string) string {
+	query := w._request.URL.Query()
+
+	if query.Get(name) != "" {
+		return ""
+	}
+
+	query.Set(name, value)
+	w._request.URL.RawQuery = query.Encode()
+	return ""
+}
+
 // Returns the designated request parameter.  If there are
 // multiple values for the parameter, then only the first
 // value is returned.

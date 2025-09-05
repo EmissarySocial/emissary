@@ -21,25 +21,26 @@ type Builder interface {
 	View(string) (template.HTML, error) // Render function outputs an HTML template
 
 	// COMMON API METHODS
-	Protocol() string                    // String representation of the HTTP protocol to use when addressing this record (http:// or https://)
-	Host() string                        // String representation of the protocol + hostname
-	Hostname() string                    // Hostname for this server
-	Token() string                       // URL Token of the record being built
-	NavigationID() string                // ID of the Top-Level item to highlight in the navigation.
-	PageTitle() string                   // Human-friendly title to put at the top of the page.
-	Summary() string                     // Human-friendly summary to put at the top of the page (maybe)
-	Permalink() string                   // Permanent link to the record being built
-	BasePath() string                    // URL Path of the root of this object, without any additional actions.
-	URL() string                         // Complete URL of the requested page
-	QueryParam(string) string            // Query parameter of the requested page
-	SetQueryParam(string, string) string // Sets a queryString parameter
-	IsAuthenticated() bool               // Returns TRUE if the user is signed in
-	IsOwner() bool                       // Returns TRUE if the signed-in user is the owner of this object
-	IsAdminBuilder() bool                // Returns TRUE if this is an admin route
-	IsPartialRequest() bool              // Returns TRUE if this is an HTMX request for a page fragment
-	UserCan(string) bool                 // Returns TRUE if the signed-in user has access to the named action
-	AuthenticatedID() primitive.ObjectID // Returns the ID of the signed-in user (or zero if not signed in)
-	Search() SearchBuilder               // Returns a SearchBuilder for this Builder
+	Protocol() string                        // String representation of the HTTP protocol to use when addressing this record (http:// or https://)
+	Host() string                            // String representation of the protocol + hostname
+	Hostname() string                        // Hostname for this server
+	Token() string                           // URL Token of the record being built
+	NavigationID() string                    // ID of the Top-Level item to highlight in the navigation.
+	PageTitle() string                       // Human-friendly title to put at the top of the page.
+	Summary() string                         // Human-friendly summary to put at the top of the page (maybe)
+	Permalink() string                       // Permanent link to the record being built
+	BasePath() string                        // URL Path of the root of this object, without any additional actions.
+	URL() string                             // Complete URL of the requested page
+	QueryParam(string) string                // Query parameter of the requested page
+	SetQueryParam(string, string) string     // Sets a queryString parameter
+	DefaultQueryParam(string, string) string // Sets a queryString parameter if it does not already exist
+	IsAuthenticated() bool                   // Returns TRUE if the user is signed in
+	IsOwner() bool                           // Returns TRUE if the signed-in user is the owner of this object
+	IsAdminBuilder() bool                    // Returns TRUE if this is an admin route
+	IsPartialRequest() bool                  // Returns TRUE if this is an HTMX request for a page fragment
+	UserCan(string) bool                     // Returns TRUE if the signed-in user has access to the named action
+	AuthenticatedID() primitive.ObjectID     // Returns the ID of the signed-in user (or zero if not signed in)
+	Search() SearchBuilder                   // Returns a SearchBuilder for this Builder
 
 	getArguments() map[string]string // Returns the arguments passed to the action
 	GetBool(name string) bool
