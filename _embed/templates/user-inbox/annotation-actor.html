@@ -37,6 +37,8 @@
 	<div class="flex-grow flex-row flex-align-center margin-bottom text-plain">
 		{{- if $actor.Icon.NotNil -}}
 			<img src="{{$actor.Icon.Href}}" class="circle width-64">
+		{{- else -}}
+			<div class="circle width-64"></div>
 		{{- end -}}
 		<div>
 			<div class="text-plain text-lg bold margin-vertical-none">{{$actor.Name}}</div>

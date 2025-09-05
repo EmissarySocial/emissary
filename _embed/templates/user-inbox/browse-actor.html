@@ -45,6 +45,8 @@
 		<div class="flex-grow flex-row flex-align-center text-plain">
 			{{- if $actor.Icon.NotNil -}}
 				<img src="{{$actor.Icon.Href}}" class="circle width-64">
+			{{- else -}}
+				<div class="circle width-64"></div>
 			{{- end -}}
 			<div>
 				<div class="text-plain text-lg bold margin-vertical-none">{{$actor.Name}}</div>
@@ -57,7 +59,7 @@
 		<div class="width-64 flex-shrink-0"></div>
 		<div class="text-sm">
 			<!--
-			<button hx-get="/@me/inbox/message-new?url={{$actor.ID}}" class="primary">{{icon "chat"}} Direct Message</button>
+			<button hx-get="/@me/inbox/conversation-new?actorId={{$actor.ID}}" class="primary">{{icon "chat"}} Direct Message</button>
 			-->
 			<a class="button outline" href="{{$actor.ID}}" target="_blank">{{icon "globe"}} Website</a>
 		</div>
