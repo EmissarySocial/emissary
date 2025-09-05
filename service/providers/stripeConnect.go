@@ -94,8 +94,8 @@ func (adapter StripeConnect) ManualConfig() form.Form {
 					Label: "Live Mode?",
 					Options: mapof.Any{
 						"enum": []form.LookupCode{
-							{Value: "false", Label: "Sandbox (Use for Tests Only)"},
-							{Value: "true", Label: "Live. (Use for Real Payments)"},
+							{Value: "SANDBOX", Label: "Sandbox (Use for Tests Only)"},
+							{Value: "LIVE", Label: "Live. (Use for Real Payments)"},
 						},
 					},
 				},
