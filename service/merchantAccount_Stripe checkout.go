@@ -7,7 +7,6 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/random"
 	"github.com/EmissarySocial/emissary/tools/stripeapi"
-	api "github.com/EmissarySocial/emissary/tools/stripeapi"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/remote"
@@ -29,7 +28,7 @@ func (service *MerchantAccount) stripe_getCheckoutURL(merchantAccount *model.Mer
 	connectedAccountID := service.stripe_getConnectedAccountID(merchantAccount)
 
 	// Load the Price/Prooduct from the Stripe API
-	price, err := api.Price(restrictedKey, connectedAccountID, product.RemoteID)
+	price, err := stripeapi.Price(restrictedKey, connectedAccountID, product.RemoteID)
 
 	if err != nil {
 		return "", derp.Wrap(err, location, "Error retrieving price from Stripe")
@@ -112,7 +111,7 @@ func (service *MerchantAccount) stripe_getPrivilegeFromCheckoutResponse(session 
 	connectedAccountID := service.stripe_getConnectedAccountID(merchantAccount)
 
 	// Load the Checkout session from the Stripe API so that we can validate it and retrieve the customer details
-	checkoutSession, err := api.CheckoutSession(restrictedKey, connectedAccountID, checkoutSessionID)
+	checkoutSession, err := stripeapi.CheckoutSession(restrictedKey, connectedAccountID, checkoutSessionID)
 	if err != nil {
 		return model.Privilege{}, derp.Wrap(err, location, "Error loading checkout session from Stripe")
 	}
@@ -191,7 +190,7 @@ func (service *MerchantAccount) stripe_CancelPrivilege(merchantAccount *model.Me
 	connectedAccountID := service.stripe_getConnectedAccountID(merchantAccount)
 
 	// Call the Stripe API to cancel the subscription
-	if err := api.SubscriptionCancel(restrictedKey, connectedAccountID, privilege.RemotePurchaseID); err != nil {
+	if err := stripeapi.SubscriptionCancel(restrictedKey, connectedAccountID, privilege.RemotePurchaseID); err != nil {
 		return derp.Wrap(err, location, "Error canceling subscription")
 	}
 

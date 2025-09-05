@@ -17,6 +17,7 @@ func TestConnection(t *testing.T) {
 		{"providerId", "GIPHY", nil},
 		{"type", "USER-PAYMENT", nil},
 		{"data.random", "Any Value", nil},
+		{"data.liveMode", "true", nil},
 		{"active", "true", true},
 	}
 
