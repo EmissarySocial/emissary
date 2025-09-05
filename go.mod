@@ -2,11 +2,7 @@ module github.com/EmissarySocial/emissary
 
 go 1.24.1
 
-replace github.com/benpate/data => ../../benpate/data
-
 replace github.com/benpate/data-mongo => ../../benpate/data-mongo
-
-replace github.com/benpate/derp => ../../benpate/derp
 
 replace github.com/benpate/hannibal => ../../benpate/hannibal
 
@@ -24,14 +20,14 @@ require (
 	github.com/PuerkitoBio/goquery v1.10.3
 	github.com/aws/aws-sdk-go v1.55.7
 	github.com/benpate/color v0.1.0
-	github.com/benpate/data v0.30.0
-	github.com/benpate/data-mock v0.30.0
+	github.com/benpate/data v0.31.0
+	github.com/benpate/data-mock v0.31.0
 	github.com/benpate/data-mongo v0.30.3
-	github.com/benpate/derp v0.32.6
+	github.com/benpate/derp v0.32.7
 	github.com/benpate/digit v0.13.5
 	github.com/benpate/digital-dome v0.2.5
 	github.com/benpate/domain v0.2.7
-	github.com/benpate/exp v0.8.5
+	github.com/benpate/exp v0.8.6
 	github.com/benpate/exp-builder v0.10.2
 	github.com/benpate/form v0.24.1
 	github.com/benpate/hannibal v0.13.3
@@ -40,7 +36,7 @@ require (
 	github.com/benpate/mediaserver v0.15.5
 	github.com/benpate/re v0.3.2
 	github.com/benpate/remote v0.17.4
-	github.com/benpate/rosetta v0.25.14
+	github.com/benpate/rosetta v0.25.15
 	github.com/benpate/sherlock v0.8.11
 	github.com/benpate/steranko v0.22.0
 	github.com/benpate/table v0.7.4

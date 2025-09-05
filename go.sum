@@ -28,8 +28,6 @@ github.com/aymerick/douceur v0.2.0 h1:Mv+mAeH1Q+n9Fr+oyamOlAkUNPWPlA8PPGR0QAaYuP
 github.com/aymerick/douceur v0.2.0/go.mod h1:wlT5vV2O3h55X9m7iVYN0TBM0NH/MmbLnd30/FjWUq4=
 github.com/benpate/color v0.1.0 h1:xmcaLZuT12qnJaip1Es8TekriZvpjMV7KSPfM5JElyY=
 github.com/benpate/color v0.1.0/go.mod h1:Km/PvPrT0Y68RQ8mtwJqbyPF63ANyJx/gXJNu3YuraA=
-github.com/benpate/data-mock v0.30.0 h1:DcL/JH72qx8FFu8HJNkIhXwt/YsiFsSxIOtr+ARvv5k=
-github.com/benpate/data-mock v0.30.0/go.mod h1:de0fCkujbm6Qvg26TfklEhqrzFHG6FlZYDA/g5H1luo=
 github.com/benpate/digit v0.13.5 h1:FDHtTR8OlUZWs7w0/AayMJfROzeMaz7NvSxOw8BOmrI=
 github.com/benpate/digit v0.13.5/go.mod h1:I+OjcPmhkmBx5IIEzp51fr5ErK6o7w/2x6b7KwmPods=
 github.com/benpate/digital-dome v0.2.5 h1:MWZNHxo16/aHKy5UcqPtujJ3a1gwtY9risMMcc3E6UQ=
