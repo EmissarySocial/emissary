@@ -2,46 +2,32 @@ module github.com/EmissarySocial/emissary
 
 go 1.24.1
 
-replace github.com/benpate/data-mongo => ../../benpate/data-mongo
-
-replace github.com/benpate/hannibal => ../../benpate/hannibal
-
-replace github.com/benpate/queue => ../../benpate/queue
-
-replace github.com/benpate/rosetta => ../../benpate/rosetta
-
-replace github.com/benpate/sherlock => ../../benpate/sherlock
-
-replace github.com/benpate/steranko => ../../benpate/steranko
-
-replace github.com/benpate/turbine => ../../benpate/turbine
-
 require (
 	github.com/PuerkitoBio/goquery v1.10.3
-	github.com/aws/aws-sdk-go v1.55.7
+	github.com/aws/aws-sdk-go v1.55.8
 	github.com/benpate/color v0.1.0
 	github.com/benpate/data v0.31.0
 	github.com/benpate/data-mock v0.31.0
-	github.com/benpate/data-mongo v0.30.3
-	github.com/benpate/derp v0.32.7
-	github.com/benpate/digit v0.13.5
-	github.com/benpate/digital-dome v0.2.5
-	github.com/benpate/domain v0.2.7
+	github.com/benpate/data-mongo v0.30.4
+	github.com/benpate/derp v0.32.8
+	github.com/benpate/digit v0.13.6
+	github.com/benpate/digital-dome v0.2.6
+	github.com/benpate/domain v0.2.8
 	github.com/benpate/exp v0.8.6
-	github.com/benpate/exp-builder v0.10.2
-	github.com/benpate/form v0.24.1
-	github.com/benpate/hannibal v0.13.3
-	github.com/benpate/html v0.16.12
+	github.com/benpate/exp-builder v0.10.3
+	github.com/benpate/form v0.25.0
+	github.com/benpate/hannibal v0.14.0
+	github.com/benpate/html v0.16.13
 	github.com/benpate/icon v0.4.0
-	github.com/benpate/mediaserver v0.15.5
-	github.com/benpate/re v0.3.2
-	github.com/benpate/remote v0.17.4
+	github.com/benpate/mediaserver v0.15.6
+	github.com/benpate/re v0.3.3
+	github.com/benpate/remote v0.17.5
 	github.com/benpate/rosetta v0.25.15
-	github.com/benpate/sherlock v0.8.11
-	github.com/benpate/steranko v0.22.0
-	github.com/benpate/table v0.7.4
+	github.com/benpate/sherlock v0.8.12
+	github.com/benpate/steranko v0.22.1
+	github.com/benpate/table v0.7.5
 	github.com/benpate/toot v0.3.0
-	github.com/benpate/turbine v0.3.2
+	github.com/benpate/turbine v0.3.3
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/codingsince1985/geo-golang v1.8.5
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
@@ -65,12 +51,12 @@ require (
 	github.com/relvacode/iso8601 v1.6.0
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/afero v1.14.0
-	github.com/spf13/pflag v1.0.7
-	github.com/stretchr/testify v1.10.0
+	github.com/spf13/pflag v1.0.10
+	github.com/stretchr/testify v1.11.1
 	github.com/stripe/stripe-go/v78 v78.12.0
-	github.com/tdewolff/minify/v2 v2.23.10
+	github.com/tdewolff/minify/v2 v2.24.2
 	github.com/timewasted/go-accept-headers v0.0.0-20130320203746-c78f304b1b09
-	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
+	github.com/tomnomnom/linkheader v0.0.0-20250811210735-e5fe3b51442e
 	github.com/xhit/go-simple-mail/v2 v2.16.0
 	github.com/yeqown/go-qrcode/v2 v2.2.5
 	github.com/yeqown/go-qrcode/writer/standard v1.3.0
@@ -79,7 +65,7 @@ require (
 	go.abhg.dev/goldmark/anchor v0.2.0
 	go.mongodb.org/mongo-driver v1.17.4
 	golang.org/x/crypto v0.41.0
-	golang.org/x/exp v0.0.0-20250718183923-645b1fa84792
+	golang.org/x/exp v0.0.0-20250819193227-8b4c13bb791b
 	golang.org/x/oauth2 v0.30.0
 	willnorris.com/go/microformats v1.2.0
 	willnorris.com/go/webmention v0.0.0-20250531043116-33a44c5fb605
@@ -89,7 +75,7 @@ require (
 	dario.cat/mergo v1.0.2 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/ProtonMail/go-crypto v1.3.0 // indirect
-	github.com/alecthomas/chroma/v2 v2.19.0 // indirect
+	github.com/alecthomas/chroma/v2 v2.20.0 // indirect
 	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/cloudflare/ahocorasick v0.0.0-20240916140611-054963ec9396 // indirect
@@ -112,20 +98,21 @@ require (
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/kevinburke/ssh_config v1.2.0 // indirect
+	github.com/kevinburke/ssh_config v1.4.0 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
+	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mmcdole/goxpp v1.1.1 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/montanaflynn/stats v0.7.1 // indirect
-	github.com/pjbgf/sha1cd v0.4.0 // indirect
+	github.com/pjbgf/sha1cd v0.5.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/sergi/go-diff v1.4.0 // indirect
 	github.com/skeema/knownhosts v1.3.1 // indirect
-	github.com/tdewolff/parse/v2 v2.8.1 // indirect
+	github.com/tdewolff/parse/v2 v2.8.3 // indirect
 	github.com/toorop/go-dkim v0.0.0-20250226130143-9025cce95817 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
@@ -135,7 +122,7 @@ require (
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/yeqown/reedsolomon v1.0.0 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
-	golang.org/x/image v0.29.0 // indirect
+	golang.org/x/image v0.30.0 // indirect
 	golang.org/x/net v0.43.0 // indirect
 	golang.org/x/sync v0.16.0 // indirect
 	golang.org/x/sys v0.35.0 // indirect
