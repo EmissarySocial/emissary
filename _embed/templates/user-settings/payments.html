@@ -64,13 +64,13 @@
 						<div hx-get="/@me/settings/merchantAccount-edit-{{$type}}?merchantAccountId={{$merchantAccount.ID}}" class="flex-row flex-grow">
 							<div>{{- icon $merchantAccount.Icon -}}</div>
 							<div class="flex-grow">{{$merchantAccount.Name}}</div>
-							<div>
+							<!--div>
 								{{- if $merchantAccount.LiveMode -}}
 									<span class="text-green">Live</span>
 								{{- else -}}
 									<span class="text-gray">Sandbox</span>
 								{{- end -}}
-							</div>
+							</div-->
 						</div>
 					</div>
 				{{- end -}}
