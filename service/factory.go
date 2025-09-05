@@ -665,16 +665,6 @@ func (factory *Factory) Attachment() *Attachment {
 	return &factory.attachmentService
 }
 
-// Rule returns a fully populated Rule service
-func (factory *Factory) Rule() *Rule {
-	return &factory.ruleService
-}
-
-// Domain returns a fully populated Domain service
-func (factory *Factory) Domain() *Domain {
-	return &factory.domainService
-}
-
 // Circle returns a fully populated Circle service
 func (factory *Factory) Circle() *Circle {
 	return &factory.circleService
@@ -688,6 +678,11 @@ func (factory *Factory) Connection() *Connection {
 // Conversation returns a fully populated Conversation service
 func (factory *Factory) Conversation() Conversation {
 	return NewConversation()
+}
+
+// Domain returns a fully populated Domain service
+func (factory *Factory) Domain() *Domain {
+	return &factory.domainService
 }
 
 // EncryptionKey returns a fully populated EncryptionKey service
@@ -753,6 +748,11 @@ func (factory *Factory) OAuthUserToken() *OAuthUserToken {
 // Outbox returns a fully populated Outbox service
 func (factory *Factory) Outbox() *Outbox {
 	return &factory.outboxService
+}
+
+// Rule returns a fully populated Rule service
+func (factory *Factory) Rule() *Rule {
+	return &factory.ruleService
 }
 
 // SearchDomain returns a fully populated SearchDomain service
