@@ -6,28 +6,33 @@
 	box-sizing: border-box;
 }
 
-html, body {
-	/* https://tetralogical.com/blog/2023/06/08/focus-in-view/ */
-	scroll-padding-top: 56px;
-	max-width: 100%;
-	-overflow-x: hidden;
-	-overflow-y: scroll;
-	overscroll-behavior-y: none;
-}
-
-
 body {
+	display:flex;
+	flex-direction:column;
 	background-color: var(--body-background);
 	color: var(--text-color);
 	margin:0px;
-	min-height:100vh;
-	width:100%;
 }
-
 
 nav {
 	display: flex;
+	align-items:stretch;
 	justify-content: center;
+
+	color: var(--gray80);
+	font-weight:400;
+	font-size:14px;
+	background-color: var(--white);
+	height:48px;
+	flex-shrink:0;
+	flex-grow:0;
+	padding-left:16px;
+	padding-right:16px;
+	overflow-x:auto;
+	overflow-y:hidden;
+	overscroll-behavior: none;
+
+	/*
 
 	position:fixed;
 	bottom:0px;
@@ -35,17 +40,30 @@ nav {
 	right: 0px;
 	z-index:1000;
 
-    color: var(--gray80);
-	font-weight:400;
-	background-color: var(--white);
 	border-top: solid 1px var(--gray15);
-	overflow-y:hidden;
-	overflow-x:auto;
+	*/
 }
+
+@media screen and (min-width:640px) {
+
+	nav {
+		border-bottom: solid 1px var(--gray15);
+	}
+}
+
 
 nav .framed {
 	display: flex;
 	justify-content: space-evenly;
+}
+
+@media screen and (min-width:640px) {
+
+	nav .framed {
+		display: flex;
+		flex-grow:1;
+		justify-content: center;
+	}
 }
 
 nav a,
@@ -56,10 +74,9 @@ nav button {
 
     color: var(--gray80);
 	background-color: var(--white);
-	padding:8px 16px;
+	padding:6px 12px;
 	border-radius: var(--border-radius);
-	margin:8px 0px;
-	overflow-y:hidden;
+	margin:6px 0px;
 	white-space: nowrap;
 	text-overflow: ellipsis;
 }
@@ -109,27 +126,28 @@ main {
 	display: flex;
 	flex-direction:row;
 	justify-content: center;
-	padding-bottom:128px;
-	min-height:100vh;
-	overscroll-behavior-y: none;
 	container-type:inline-size;
+	-overflow-x:hidden;
+	-overflow-y:auto;
+	overscroll-behavior: none;
+}
+
+body:has(> main > .app) {
+	height:100dvh;
+	width:100dvw;
+	overflow-x:hidden;
+	overflow-y:hidden;
+	overscroll-behavior: none;
+}
+
+main:has(> .app) {
+	height:100%;
+	overflow-x:hidden;
+	overflow-y:hidden;
+	overscroll-behavior:none;
 }
 
 @media screen and (min-width:640px) {
-
-	nav {
-		position:sticky;
-		top:0px;
-		bottom:unset;
-		border-top:none;
-		border-bottom: solid 1px var(--gray15);
-	}
-
-	nav .framed {
-		display: flex;
-		flex-grow:1;
-		justify-content: center;
-	}
 
 	nav a {
 		display:inline;
@@ -150,9 +168,4 @@ main {
 		display:unset;
 		flex-grow:1;
 	}
-
-	main{
-		padding-bottom:0px;
-	}
-
 }

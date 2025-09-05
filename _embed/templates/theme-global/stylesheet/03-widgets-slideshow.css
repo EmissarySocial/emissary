@@ -5,12 +5,12 @@
 .slideshow {
 	display:flex;
 	flex-direction:row;
-	overflow-x: auto;
-	overflow-y: hidden;
 	scroll-snap-type: x mandatory;
-	-webkit-overflow-scrolling: touch;
 	scroll-behavior: smooth;
 	width:100%;
+	overflow-x: auto;
+	overflow-y: hidden;
+	-webkit-overflow-scrolling: touch;
 }
 
 .slideshow::-webkit-scrollbar {

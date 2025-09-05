@@ -76,8 +76,30 @@ div.table > .clickable:focus {
 	cursor:pointer;
 }
 
+div.table > .selected {
+	background-color:var(--blue50);
+	color:var(--white);
+}
+
+div.table > .selected:hover,
+div.table > .selected:focus {
+	background-color:var(--blue60);
+	color:var(--white);
+}
+
+
 div.table + div.table {
 	border-top: none;
+}
+
+/** Some Modifiers ***********************/
+
+.table.no-top-border > :first-child {
+	border-top: none;
+}
+
+.table.no-bottom-border {
+	border-bottom: none;
 }
 
 /** EDITABLE GRIDS ***********************/
@@ -163,5 +185,3 @@ td.grid-controls > button {
 	font-size: calc(var(--rhythm) * 2);
 	line-height: calc(var(--rhythm) * 2);
 }
-
-

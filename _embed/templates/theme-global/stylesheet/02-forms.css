@@ -184,8 +184,9 @@ label.checkbutton input[type=checkbox] {
 	border-radius:calc(var(--rhythm) * 0.75);
 	background-color: var(--input-background);
 	height:auto;
-	overflow-y:auto;
 	overflow-x:hidden;
+	overflow-y:auto;
+	overscroll-behavior:none;
 }
 
 .multiselect > .options > label {

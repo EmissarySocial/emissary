@@ -21,7 +21,7 @@
 	/* Opacity updated by animations */
 	opacity: 0;
 	transition:opacity;
-	transition-duration:120ms;
+	transition-duration:180ms;
 	transition-timing-function: ease;
 }
 
@@ -35,7 +35,10 @@
 	left: 0px;
 	right: 0px;
 	background-color: #444;
-	opacity: 0.8;
+	opacity: 0;
+	transition:opacity;
+	transition-duration:180ms;
+	transition-timing-function: ease;
 }
 
 #modal-window {
@@ -46,7 +49,9 @@
 
 	/* Scrolling behavior */
 	display:flow-root;
-	overflow-y: auto;
+	overflow-x:hidden;
+	overflow-y:auto;
+	overscroll-behavior:none;
 
 	/* Display properties for visible dialog */
 	position:relative;
@@ -58,9 +63,10 @@
 	line-height: 150%;
 	margin-top:24px;
 
-	transform:scale(0.9);
-	transition:transform;
-	transition-duration:120ms;
+	opacity:0;
+	transform:scale(0.8);
+	transition:transform, opacity;
+	transition-duration:180ms;
 	transition-timing-function: ease
 }
 
@@ -79,9 +85,11 @@
 }
 
 #modal-body {
-	overflow-y:scroll;
 	flex-grow:1;
 	padding: calc(var(--rhythm) * 2);
+	overflow-x:hidden;
+	overflow-y:auto;
+	overscroll-behavior:none;
 }
 
 #modal-header + #modal-body {
@@ -118,10 +126,18 @@
 }
 
 #modal.ready #modal-window {
+	opacity:1;
 	transform:scale(1);
-	transition:transform;
+	transition:transform, opacity;
 	transition-duration:180ms;
 	transition-timing-function: ease
+}
+
+#modal.ready #modal-underlay {
+	opacity:0.7;
+	transition:opacity;
+	transition-duration:180ms;
+	transition-timing-function: ease;
 }
 
 #modal .layout-title,

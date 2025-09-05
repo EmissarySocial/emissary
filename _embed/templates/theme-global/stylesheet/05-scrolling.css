@@ -1,0 +1,87 @@
+.scroll-none {
+	overflow: hidden;
+	overscroll-behavior:none;
+}
+
+.scroll-vertical {
+	overflow-y: auto;
+	overflow-x: hidden;
+	overscroll-behavior:none;
+	-webkit-overflow-scrolling: touch;
+}
+
+.scroll-horizontal {
+	overflow-x: auto;
+	overflow-y: hidden;
+	overscroll-behavior:none;
+	-webkit-overflow-scrolling: touch;
+}
+
+.scroll-both {
+	overflow:auto;
+	overscroll-behavior:none;
+	-webkit-overflow-scrolling: touch;
+}
+
+@container (min-width:640px) {
+
+	.sm\:scroll-none {
+		overflow: hidden;
+	}
+
+	.sm\:scroll-vertical {
+		overflow-y: auto;
+		overflow-x: hidden;
+	}
+
+	.sm\:scroll-horizontal {
+		overflow-x: auto;
+		overflow-y: hidden;
+	}
+
+	.sm\:scroll-both {
+		overflow:auto;
+	}
+}
+
+@container (min-width:768px) {
+
+	.md\:scroll-none {
+		overflow: hidden;
+	}
+
+	.md\:scroll-vertical {
+		overflow-y: auto;
+		overflow-x: hidden;
+	}
+
+	.md\:scroll-horizontal {
+		overflow-x: auto;
+		overflow-y: hidden;
+	}
+
+	.md\:scroll-both {
+		overflow:auto;
+	}
+}
+
+@container (min-width:1024px) {
+
+	.lg\:scroll-none {
+		overflow: hidden;
+	}
+
+	.lg\:scroll-vertical {
+		overflow-y: auto;
+		overflow-x: hidden;
+	}
+
+	.lg\:scroll-horizontal {
+		overflow-x: auto;
+		overflow-y: hidden;
+	}
+
+	.lg\:scroll-both {
+		overflow:auto;
+	}
+}
