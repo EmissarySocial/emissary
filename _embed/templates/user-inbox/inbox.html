@@ -1,3 +1,4 @@
+{{- $sidebar := .QueryParam "sidebar" -}}
 {{- $folders := .FoldersWithSelection}}
 {{- $folder := $folders.Selected -}}
 {{- $filter := .FilteredByFollowing -}}
@@ -5,17 +6,22 @@
 {{- $folderID := $folder.FolderID.Hex -}}
 {{- $followingID := .QueryParam "origin.followingId" -}}
 
-<div class="page app flex-row" script="on load take .selected from .nav-item for #nav-inbox">
+<div class="app width-100%" script="on load take .selected from .nav-item for #nav-inbox">
 
 	<link rel="stylesheet" href="/.templates/user-inbox/stylesheet">
 
 	<!-- Sidebar Content -->
-	{{- template "sidebar" $folders -}}
+	{{- if eq "collapse" $sidebar -}}
+		{{- template "sidebar-collapsed" $folders -}}
+	{{- else -}}
+		{{- template "sidebar-expanded" $folders -}}
+	{{- end -}}
 
 	<!-- Main App Content -->
-	<div class="app-content">
+	<div class="app-content padding-top">
 
-		<div class="text-sm nowrap margin-top-sm pos-sticky" style="float:right; top:56px; padding:16px 0px 16px 16px; border-radius:4px; background-color:var(--page-background);">
+		<!-- Floating Menu Bar -->
+		<div class="text-sm margin-none nowrap pos-sticky float-right" style="top:0px; padding:4px 0px 8px 16px; border-radius:4px; background-color:var(--page-background); view-transition-name:sticky-buttons">
 			<button hx-get="/@me/settings/following-search?folderId={{$folderID}}" class="primary turboclick">{{icon "add"}} Source</button>
 			{{- if $filter.IsZero -}}
 				<button hx-get="/@me/inbox/filter?folderId={{$folderID}}" class="turboclick">{{icon "filter"}} Filter</button>
@@ -25,12 +31,12 @@
 			<button hx-get="/@me/inbox/folder-edit?folderId={{$folderID}}" class="turboclick">{{icon "settings"}} Folder Settings</button>
 		</div>
 
-		<div class="flex-row">
+		<div class="flex-row margin-bottom-lg">
 
 			{{- if $filter.NotZero -}}
 				{{- $following := .FollowingByToken $followingID -}}
 				<div class="flex-grow-1 margin-top-sm">
-					<div class="bold"><a href="/@me/inbox?folderId={{$folderID}}" hx-get="/@me/inbox?folderId={{$folderID}}">{{icon $folder.Icon}} {{$folder.Label}}</a></div>
+					<div class="bold"><a href="/@me/inbox?folderId={{$folderID}}" hx-get="/@me/inbox?folderId={{$folderID}}">{{iconFilled $folder.Icon}} {{$folder.Label}}</a></div>
 					<div class="flex-row margin-vertical">
 						{{- if ne "" $following.IconURL -}}
 							<div class="margin-top-xs">
@@ -52,7 +58,7 @@
 					</div>
 				</div>
 			{{- else -}}
-				<h1 class="margin-top-sm margin-bottom flex-grow-1">{{icon $folder.Icon}} {{$folder.Label}}</h1>
+				<h1 class="text-xl bold margin-none flex-grow">{{iconFilled $folder.Icon}} {{$folder.Label}}</h1>
 			{{- end -}}
 		</div>
 
