@@ -14,7 +14,6 @@ import (
 
 // Attachment manages all interactions with the Attachment collection
 type Attachment struct {
-	server      data.Server
 	mediaServer mediaserver.MediaServer
 	host        string
 }
