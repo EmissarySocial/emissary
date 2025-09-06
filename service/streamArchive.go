@@ -118,14 +118,14 @@ func (service *StreamArchive) Create(session data.Session, stream *model.Stream,
 		return derp.Wrap(err, location, "Error opening file", filename)
 	}
 
-	defer file.Close()
+	defer derp.ReportFunc(file.Close)
 
 	log.Trace().Str("location", location).Str("filename", filename).Msg("Writing to ZIP file in export cache...")
 
 	// Write the ZIP archive to the cached file
 	zipWriter := zip.NewWriter(file)
 
-	defer zipWriter.Close()
+	defer derp.ReportFunc(zipWriter.Close)
 
 	if err := service.writeToZip(session, zipWriter, nil, stream, "", options); err != nil {
 		// if the write fails, then remove the file before exiting.
@@ -153,7 +153,7 @@ func (service *StreamArchive) Read(streamID primitive.ObjectID, token string, wr
 		return derp.Wrap(err, location, "Error opening file", filename)
 	}
 
-	defer file.Close()
+	defer derp.ReportFunc(file.Close)
 
 	// Copy the file to the destination
 	if _, err = io.Copy(writer, file); err != nil {

@@ -225,8 +225,6 @@ func (service Outbox) sendNotification_ActivityPub(actor *outbox.Actor, follower
 // TODO: HIGH: Thoroughly re-test WebSub notifications.  They've been rebuilt from scratch.
 func (service Outbox) sendNotification_WebSub(follower *model.Follower) {
 
-	const location = "service.Outbox.sendNotifications_WebSub"
-
 	service.queue.Enqueue <- queue.NewTask("SendWebSubMessage", mapof.Any{
 		"inboxUrl": follower.Actor.InboxURL,
 		"format":   follower.Format,

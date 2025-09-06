@@ -226,7 +226,7 @@ func (service *StreamDraft) Promote(session data.Session, streamID primitive.Obj
 	stream.AttributedTo = draft.AttributedTo
 	stream.InReplyTo = draft.InReplyTo
 	stream.StateID = stateID
-	stream.Journal.DeleteDate = 0 // just in case...
+	stream.DeleteDate = 0 // just in case...
 
 	// Try to save the updated stream back to the database
 	if err := service.streamService.Save(session, &stream, "published"); err != nil {

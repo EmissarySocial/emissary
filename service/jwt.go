@@ -188,6 +188,10 @@ func (service *JWT) create(keyName string) ([]byte, error) {
 	// Save the key to the database
 	collection, err := service.collection(ctx)
 
+	if err != nil {
+		return []byte{}, derp.Wrap(err, location, "Unable to connect to JWT collection")
+	}
+
 	if err := collection.Save(&record, "New key created"); err != nil {
 		return []byte{}, derp.Wrap(err, location, "Unable to save JWT key")
 	}
@@ -217,6 +221,11 @@ func (service *JWT) load(keyName string) ([]byte, error) {
 
 	// Try to load the key from the database
 	collection, err := service.collection(ctx)
+
+	if err != nil {
+		return []byte{}, derp.Wrap(err, location, "Unable to connect to JWT collection")
+	}
+
 	criteria := exp.Equal("keyName", keyName)
 	jwtKey := model.NewJWTKey()
 

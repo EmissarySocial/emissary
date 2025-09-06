@@ -55,7 +55,7 @@ func (rss RSS) Feed(session data.Session, criteria ...exp.Expression) (*feeds.JS
 func (rss RSS) Item(stream model.Stream) *feeds.JSONItem {
 
 	publishDate := time.Unix(stream.PublishDate, 0)
-	modifiedDate := time.Unix(stream.Journal.UpdateDate, 0)
+	modifiedDate := time.Unix(stream.UpdateDate, 0)
 
 	result := &feeds.JSONItem{
 		Id:            stream.Permalink(),

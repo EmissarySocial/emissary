@@ -60,8 +60,6 @@ func (service Geocode) Geocode(session data.Session, stream *model.Stream) error
 // If there is a failure, it will queue up a task to retry the geocode in 30 seconds.
 func (service Geocode) GeocodeAndQueue(session data.Session, stream *model.Stream) error {
 
-	const location = "service.Geocode.GeocodeAndQueue"
-
 	// Try to Geocode all Places in this Stream
 	if err := service.Geocode(session, stream); err == nil {
 		return nil

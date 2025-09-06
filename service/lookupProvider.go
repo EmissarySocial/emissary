@@ -70,10 +70,10 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 		return form.ReadOnlyLookupGroup(service.factory.Template().ListByTemplateRole("user-inbox"))
 
 	case "merchantAccounts":
-		return service.getMerchantAccounts(service.session)
+		return service.getMerchantAccounts()
 
 	case "merchantAccounts-all-products":
-		return service.getMerchantAccountsAllProducts(service.session)
+		return service.getMerchantAccountsAllProducts()
 
 	case "outbox-templates":
 		return form.ReadOnlyLookupGroup(service.factory.Template().ListByTemplateRole("user-outbox"))
@@ -129,7 +129,7 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 		return form.ReadOnlyLookupGroup(service.factory.Registration().List())
 
 	case "streams-with-products":
-		return service.getSubscribableStreams(service.session)
+		return service.getSubscribableStreams()
 
 	case "syndication-targets":
 		domain := service.factory.Domain().Get()
@@ -177,7 +177,7 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
  ******************************************/
 
 // getSubscribableStreams returns all streams that have subscribe-able content
-func (service *LookupProvider) getSubscribableStreams(session data.Session) form.LookupGroup {
+func (service *LookupProvider) getSubscribableStreams() form.LookupGroup {
 
 	const location = "service.LookupProvider.getSubscribableStreams"
 
@@ -203,7 +203,7 @@ func (service *LookupProvider) getSubscribableStreams(session data.Session) form
 }
 
 // getMerchantAccounts returns all merchant accounts for the current user
-func (service *LookupProvider) getMerchantAccounts(session data.Session) form.LookupGroup {
+func (service *LookupProvider) getMerchantAccounts() form.LookupGroup {
 
 	const location = "service.LookupProvider.getMerchantAccounts"
 
@@ -224,7 +224,7 @@ func (service *LookupProvider) getMerchantAccounts(session data.Session) form.Lo
 }
 
 // getMerchantAccountsAllProducts returns all products defined by the selected merchant account
-func (service *LookupProvider) getMerchantAccountsAllProducts(session data.Session) form.LookupGroup {
+func (service *LookupProvider) getMerchantAccountsAllProducts() form.LookupGroup {
 
 	const location = "service.LookupProvider.getMerchantAccountsAllProducts"
 

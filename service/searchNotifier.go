@@ -38,8 +38,6 @@ func (service *SearchNotifier) Refresh(searchDomainService *SearchDomain, search
 // sendGlobalNotifications sends notifications to all Global Search followers
 func (service *SearchNotifier) SendGlobalNotifications(searchResults []model.SearchResult) error {
 
-	const location = "service.SearchNotifier.sendNotifications"
-
 	// If there are no search results, then don't load search queries
 	if len(searchResults) == 0 {
 		return nil

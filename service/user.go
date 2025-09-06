@@ -119,10 +119,6 @@ func (service *User) collection(session data.Session) data.Collection {
 	return session.Collection("User")
 }
 
-func (service *User) searchTagCollection(session data.Session) data.Collection {
-	return session.Collection("SearchTag")
-}
-
 func (service *User) followerCollection(session data.Session) data.Collection {
 	return session.Collection("Follower")
 }

@@ -512,9 +512,3 @@ func (service *MerchantAccount) CancelPrivilege(session data.Session, privilege 
 
 	return derp.InternalError(location, "Invalid MerchantAccount Type", merchantAccount.Type)
 }
-
-func mapProductRemoteIDs(products []model.Product) []string {
-	return slice.Map(products, func(product model.Product) string {
-		return product.RemoteID
-	})
-}

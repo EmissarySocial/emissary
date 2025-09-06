@@ -10,8 +10,6 @@ import (
 // whenever a stream is added or removed from syndication
 func (service *Stream) sendSyndicationMessages(stream *model.Stream, added []string, changed []string, removed []string) error {
 
-	const location = "service.Stream.sendSyndicationMessages"
-
 	domain := service.domainService.Get()
 	object := stream.GetWebhookData()
 

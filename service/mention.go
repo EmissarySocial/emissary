@@ -35,10 +35,9 @@ import (
 
 // Mention defines a service that can send and receive mention data
 type Mention struct {
-	factory         *Factory
-	ruleService     *Rule
-	activityService *ActivityStream
-	host            string
+	factory     *Factory
+	ruleService *Rule
+	host        string
 }
 
 // NewMention returns a fully initialized Mention service
