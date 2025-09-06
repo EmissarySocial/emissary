@@ -23,6 +23,14 @@ func ReindexActivityStream(factory *service.Factory, args mapof.Any) queue.Resul
 	// Configure crawler options to persist depth and history
 	if _, err := activityService.Client().Load(url, ascache.WithForceReload()); err != nil {
 
+		// If the ActivityStream no longer exists, then remove it from the cache
+		if shouldDeleteActivityStream(err) {
+			activityStreamService := factory.ActivityStream(model.ActorTypeApplication, primitive.NilObjectID)
+			if err := activityStreamService.Delete(url); err != nil {
+				return queue.Error(derp.Wrap(err, location, "Unable to deleting ActivityStream", url))
+			}
+		}
+
 		if derp.IsClientError(err) {
 			return queue.Failure(derp.Wrap(err, location, "Client error when loading ActivityStream"))
 		}

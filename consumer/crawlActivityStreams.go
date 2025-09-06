@@ -40,7 +40,7 @@ func CrawlActivityStreams(factory *service.Factory, _ data.Session, args mapof.A
 	if shouldDeleteActivityStream(err) {
 		activityStreamService := factory.ActivityStream(actorType, actorID)
 		if err := activityStreamService.Delete(url); err != nil {
-			return queue.Error(derp.Wrap(err, location, "Unable to deleting ActivityStream", history))
+			return queue.Error(derp.Wrap(err, location, "Unable to deleting ActivityStream", url))
 		}
 	}
 
