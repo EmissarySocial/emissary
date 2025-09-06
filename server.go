@@ -395,6 +395,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/admin/:param1/:param2", handler.WithOwner(factory, handler.PostAdmin))
 	e.GET("/admin/:param1/:param2/:param3", handler.WithOwner(factory, handler.GetAdmin))
 	e.POST("/admin/:param1/:param2/:param3", handler.WithOwner(factory, handler.PostAdmin))
+	e.POST("/admin/reindex-activitystream-cache", handler.WithOwner(factory, handler.ReIndexActivityStreamCache))
 	e.POST("/admin/index-all-streams", handler.WithOwner(factory, handler.IndexAllStreams))
 	e.POST("/admin/index-all-users", handler.WithOwner(factory, handler.IndexAllUsers))
 

@@ -70,6 +70,9 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 	case "RecycleDomain":
 		return WithSession(consumer.serverFactory, args, RecycleDomain)
 
+	case "ReindexActivityStream":
+		return WithFactory(consumer.serverFactory, args, ReindexActivityStream)
+
 	case "Scheduler":
 		return Scheduler(consumer.serverFactory)
 

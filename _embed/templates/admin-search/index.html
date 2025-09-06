@@ -6,8 +6,16 @@
    	
 	{{template "menubar" .}}
 
-	<button hx-post="/admin/index-all-streams" hx-swap="none" hx-push-url="false">Re-Index All Streams</button>
-	<button hx-post="/admin/index-all-users" hx-swap="none" hx-push-url="false">Re-Index All Users</button>
+
+	<div class="margin-bottom-xs">
+		<button hx-post="/admin/index-all-streams" hx-swap="none" hx-push-url="false">Re-Index All Streams</button>
+	</div>
+	<div class="margin-bottom-xs">
+		<button hx-post="/admin/index-all-users" hx-swap="none" hx-push-url="false">Re-Index All Users</button>
+	</div>
+	<div class="margin-bottom-xs">
+		<button hx-post="/admin/reindex-activitystream-cache" hx-swap="none" hx-push-url="false">Re-Index ActivityStream Cache</button>
+	</div>
 
 	<div 
 		hx-get="/admin/tags/index" 
