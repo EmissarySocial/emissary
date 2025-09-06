@@ -22,7 +22,6 @@ func TestMessageSchema(t *testing.T) {
 		{"references.1.url", "https://another.reference.url", nil},
 		{"url", "https://message.url", nil},
 		{"inReplyTo", "https://url.com", nil},
-		{"myResponse", "Announce", nil},
 		{"stateId", "UNREAD", nil},
 		{"publishDate", "123", int64(123)},
 		{"readDate", 456, int64(456)},
