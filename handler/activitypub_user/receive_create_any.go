@@ -47,6 +47,7 @@ func receive_CreateOrUpdate(context Context, activity streams.Document) error {
 	// Gonna need the followingService in a hot sec..
 	followingService := context.factory.Following()
 
+	/* TEMPORARILY REMOVING "DIRECT MESSAGES" BECUASE THE UX IS NOT READY.
 	// If the user is "mentioned" then save the message to their direct messages
 	if userIsMentioned(context.user, document) {
 
@@ -55,6 +56,7 @@ func receive_CreateOrUpdate(context Context, activity streams.Document) error {
 		}
 		return nil
 	}
+	*/
 
 	// Verify that this message comes from a valid "Following" object.
 	following := model.NewFollowing()
