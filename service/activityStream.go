@@ -158,8 +158,6 @@ func (service *ActivityStream) Range(ctx context.Context, criteria exp.Expressio
 
 func (service *ActivityStream) QueryByContext(ctx context.Context, contextName string, afterDate int64, maxRows int) (sliceof.Object[streams.Document], error) {
 
-	const location = "service.ActivityStream.QueryByContext"
-
 	// RULE: Do not query empty contexts
 	if contextName == "" {
 		return sliceof.NewObject[streams.Document](), nil
@@ -294,12 +292,6 @@ func (service *ActivityStream) queryByRelation(ctx context.Context, relationType
 
 		defer close(result)
 
-		// NPE Check
-		if service.collection == nil {
-			derp.Report(derp.InternalError(location, "Document Collection not initialized"))
-			return
-		}
-
 		// Build the query
 		criteria := exp.
 			Equal("metadata.relationType", relationType).
@@ -323,7 +315,7 @@ func (service *ActivityStream) queryByRelation(ctx context.Context, relationType
 			return
 		}
 
-		defer documents.Close()
+		defer derp.ReportFunc(documents.Close)
 
 		// Write documents into the result channel until done (or done)
 		value := ascache.NewValue()
