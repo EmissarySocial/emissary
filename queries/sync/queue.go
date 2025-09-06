@@ -19,17 +19,22 @@ func Queue(ctx context.Context, database *mongo.Database) error {
 
 		"idx_Queue_NotifiedDate": mongo.IndexModel{
 			Keys: bson.D{
-				{Key: "timeoutDate", Value: 1},
+				{Key: "startDate", Value: 1},
 			},
-			Options: options.Index().SetPartialFilterExpression(bson.M{
-				"notifiedDate": 0,
-			}),
 		},
 
 		"idx_Queue_Signature": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "signature", Value: 1},
 			},
+			Options: options.Index().SetSparse(true),
+		},
+
+		"idx_Queue_LockID": mongo.IndexModel{
+			Keys: bson.D{
+				{Key: "lockId", Value: 1},
+			},
+			Options: options.Index().SetSparse(true),
 		},
 	})
 }
