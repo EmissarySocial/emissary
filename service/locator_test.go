@@ -23,7 +23,7 @@ func TestLocator(t *testing.T) {
 	do("https://example.com/token/", "Stream", "token")      // Stream by token (with trailing slash)
 	do("https://example.com/token/route", "Stream", "token") // Stream by token (with trailing route)
 
-	do("https://example.com/@search_1234", "SearchQuery", "1234") // SearchQuery by ID
+	do("https://example.com/@search_1234", "Search", "1234") // Search by ID
 
 	do("https://example.com/@1234", "User", "1234")                      // User by ID
 	do("https://example.com/@username", "User", "username")              // User by username
@@ -35,10 +35,10 @@ func TestLocator(t *testing.T) {
 	do("@benpate@example.com", "User", "benpate")      // Username with leading @
 	do("acct:@benpate@example.com", "User", "benpate") // Username with acct: and leading @
 
-	do("acct:search_12345678@example.com", "SearchQuery", "12345678")  // SearchQuery with acct: prefix
-	do("search_12345678@example.com", "SearchQuery", "12345678")       // SearchQuery without acct: prefix
-	do("@search_12345678@example.com", "SearchQuery", "12345678")      // SearchQuery with leading @
-	do("acct:@search_12345678@example.com", "SearchQuery", "12345678") // SearchQuery with acct: and leading @
+	do("acct:search_12345678@example.com", "Search", "12345678")  // Search with acct: prefix
+	do("search_12345678@example.com", "Search", "12345678")       // Search without acct: prefix
+	do("@search_12345678@example.com", "Search", "12345678")      // Search with leading @
+	do("acct:@search_12345678@example.com", "Search", "12345678") // Search with acct: and leading @
 
 	do("application@example.com", "Application", "")  // Service account
 	do("@application@example.com", "Application", "") // Service account with leading @
