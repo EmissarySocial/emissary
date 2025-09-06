@@ -94,7 +94,7 @@ func (service *Follower) Range(session data.Session, criteria exp.Expression, op
 			return
 		}
 
-		defer followers.Close()
+		defer derp.ReportFunc(followers.Close)
 
 		// Yield each follower to the caller one-by-one
 		for follower := model.NewFollower(); followers.Next(&follower); follower = model.NewFollower() {
@@ -118,18 +118,22 @@ func (service *Follower) Load(session data.Session, criteria exp.Expression, fol
 // Save adds/updates an Follower in the database
 func (service *Follower) Save(session data.Session, follower *model.Follower, note string) error {
 
+	const location = "service.Follower.Save"
+
 	// Validate the value before saving
 	if err := service.Schema().Validate(follower); err != nil {
-		return derp.Wrap(err, "service.Follower.Save", "Error validating Follower", follower)
+		return derp.Wrap(err, location, "Invalid Follower record", follower)
 	}
 
 	// Save the follower to the database
 	if err := service.collection(session).Save(follower, note); err != nil {
-		return derp.Wrap(err, "service.Follower.Save", "Error saving Follower", follower, note)
+		return derp.Wrap(err, location, "Unable to save Follower", follower, note)
 	}
 
 	// Recalculate the follower count for this user
-	service.userService.CalcFollowerCount(session, follower.ParentID)
+	if err := service.userService.CalcFollowerCount(session, follower.ParentID); err != nil {
+		return derp.Wrap(err, location, "Unable to re-calculate follower count", follower)
+	}
 
 	return nil
 }
@@ -144,7 +148,7 @@ func (service *Follower) Delete(session data.Session, follower *model.Follower, 
 
 	// Delete this Follower
 	if err := service.collection(session).Delete(follower, note); err != nil {
-		return derp.Wrap(err, location, "Error deleting Follower", follower, note)
+		return derp.Wrap(err, location, "Unable to delete Follower", follower, note)
 	}
 
 	// Maybe delete the SearchQuery if it's no longer needed
@@ -504,7 +508,7 @@ func (service *Follower) NewActivityPubFollower(session data.Session, parentType
 
 	// Try to save the new follower to the database
 	if err := service.Save(session, follower, "New Follower via ActivityPub"); err != nil {
-		return derp.Wrap(err, "handler.activityPub_HandleRequest_Follow", "Error saving new follower", follower)
+		return derp.Wrap(err, "handler.activityPub_HandleRequest_Follow", "Unable to save new follower", follower)
 	}
 
 	// Salút!
