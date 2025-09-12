@@ -1031,6 +1031,44 @@ func (factory *Factory) ModelService(object data.Object) ModelService {
 	}
 }
 
+func (factory *Factory) Collections() []string {
+
+	return []string{
+		"Annotation",
+		"Attachment",
+		"Circle",
+		"Connection",
+		"Conversation",
+		"Domain",
+		"EncryptionKey",
+		"Folder",
+		"Follower",
+		"Following",
+		"Group",
+		"Identity",
+		"Inbox",
+		"JWT",
+		"Mention",
+		"MerchantAccount",
+		"Rule",
+		"OAuthClient",
+		"OAuthUserToken",
+		"Outbox",
+		"Privilege",
+		"Product",
+		"Response",
+		"Rule",
+		"SearchQuery",
+		"SearchResult",
+		"SearchTag",
+		"Stream",
+		"StreamDraft",
+		"StreamOutbox",
+		"User",
+		"Webhook",
+	}
+}
+
 func (factory *Factory) newRefreshContext() context.Context {
 
 	if factory.refreshContext != nil {
