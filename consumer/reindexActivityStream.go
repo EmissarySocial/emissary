@@ -29,6 +29,7 @@ func ReindexActivityStream(factory *service.Factory, args mapof.Any) queue.Resul
 			if err := activityStreamService.Delete(url); err != nil {
 				return queue.Error(derp.Wrap(err, location, "Unable to deleting ActivityStream", url))
 			}
+			return queue.Success()
 		}
 
 		if derp.IsClientError(err) {
