@@ -1,0 +1,72 @@
+behavior Slider
+
+	init
+		if my @value is empty then
+			set my @value to 0
+		end
+
+		put "<div class='track'><div class='progress'></div><div class='handle'></div></div>" into me
+
+		set :track to the first <.track /> in me
+		set :progress to the first <.progress /> in me
+		set :handle to the first <.handle /> in me
+		set :state to "none"
+
+		set the :track's *cursor to "grab"
+		set the :track's *height to "10px"	
+		set the :track's *display to "flex"
+
+		set the :progress's *width to my.value + "%"
+		set the :progress's *background-color to "rgba(0,0,0,0.3)"
+		set the :handle's *width to "10px"
+		set the :handle's *backgroundColor to "white"
+	end
+
+	on mousedown(clientX)
+		set :state to "dragging"
+		set the :track's *cursor to "grabbing"
+
+		trigger calcHandle(clientX:clientX)
+		trigger DragStart
+	end
+
+	on mousemove(clientX) from window
+		if :state is not "dragging" then
+			exit
+		end
+
+		trigger calcHandle(clientX:clientX)
+	end
+
+	on mouseup(clientX) from window
+		if :state is not "dragging" then
+			exit
+		end
+
+		trigger calcHandle(clientX:clientX)
+
+		set :state to "none"
+		set the :track's *cursor to "grab"
+		trigger DragEnd
+	end
+
+	on calcHandle(clientX) 
+		measure the :track's left, width
+		set relativeX to clientX - left
+		set percent to (relativeX / width) * 100
+
+		if percent < 0 then
+			set percent to 0
+		else if percent > 100 then
+			set percent to 100
+		end
+				
+		trigger MoveHandle(percent:percent)
+	end
+
+	on MoveHandle(percent)
+		set the :progress's *width to percent + "%"
+		set my @value to percent
+	end
+
+end

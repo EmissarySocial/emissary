@@ -1,0 +1,198 @@
+behavior MediaPlayer
+
+	init
+		set :trackNumber to 0
+		set :playButton to the first <.player-Play /> in me
+		set :pauseButton to the first <.player-Pause /> in me
+		set :nextButton to the first <.player-Next /> in me
+		set :prevButton to the first <.player-Prev /> in me
+		set :loopButton to the first <.player-Loop /> in me
+		set :progressBar to the first <.player-Progress /> in me
+
+		remove @hidden from :playButton
+		set :media to the first <audio,video /> in me
+	end
+
+	on click from <.player-Play /> in me
+		trigger Play
+	end
+
+	on click from <.player-Pause /> in me
+		trigger Pause
+	end
+
+	on click from <.player-Prev /> in me
+		trigger Prev
+	end
+
+	on click from <.player-Next /> in me
+		trigger Next
+	end
+
+	on DragStart from <.player-Progress /> in me
+		pause() the :media
+	end
+
+	on DragEnd from <.player-Progress /> in me
+		set percent to the :progressBar's @value
+		trigger Seek(percent:percent)
+		play() the :media
+	end
+
+	on timeupdate from <audio /> in me or
+		timeupdate from <video /> in me
+
+		if :media.duration is undefined then
+			exit
+		end
+
+		if :progressBar is undefined then
+			exit
+		end
+
+		set percent to (:media.currentTime / :media.duration) * 100
+		send MoveHandle(percent:percent) to :progressBar
+	end
+
+	on ended from <audio /> in me or
+		ended from <video /> in me
+
+		set nextTrackNumber to :trackNumber + 1
+		if nextTrackNumber < :tracks.length then
+			trigger Play(trackNumber:nextTrackNumber)
+			exit
+		end
+
+		set :trackNumber to 0
+		trigger Pause
+	end
+
+	on Play(trackNumber)
+
+		set tracks to <[data-track-url] /> in me
+
+		if trackNumber is empty then 
+			set trackNumber to :trackNumber
+		end
+
+		if trackNumber < 0 then 
+
+			if :loopButton is undefined then
+				trigger Pause
+				exit
+			end
+
+			if not :loopButton.classlist.contains("selected") then
+				trigger Pause
+				exit
+			end
+
+			set trackNumber to tracks.length - 1
+
+		else if trackNumber >= tracks.length then
+
+			if :loopButton is undefined then
+				trigger Pause
+				exit
+			end
+
+			if not :loopButton.classlist.contains("selected") then
+				trigger Pause
+				exit
+			end
+
+			set trackNumber to 0
+		end
+
+		set :trackNumber to trackNumber
+		set trackElement to tracks[trackNumber]
+		set url to the trackElement's @data-track-url
+
+		if url is empty then
+			exit
+		end
+
+		if :playButton is not undefined then
+			add @hidden to :playButton
+		end
+
+		if :pauseButton is not undefined then
+			remove @hidden from :pauseButton
+		end
+
+		if :nextButton is not undefined then
+			remove @hidden from :nextButton
+		end
+
+		if :prevButton is not undefined then
+			remove @hidden from :prevButton
+		end
+
+		if :progressBar is not undefined then
+			remove @hidden from :progressBar
+		end
+
+		if url is not equal to :media's @src then
+			set :media.src to url
+		end
+
+		play() the :media
+
+		take .playing from tracks for trackElement
+	end
+
+	on Seek(percent)
+		if :media.duration is undefined then
+			exit
+		end
+
+		set :media.currentTime to (:media.duration * (percent / 100))
+	end
+
+	on Pause
+
+		pause() the :media
+
+		if :playButton is not undefined then
+			remove @hidden from :playButton
+		end
+
+		if :pauseButton is not undefined then
+			add @hidden to :pauseButton
+		end
+
+		if :nextButton is not undefined then
+			add @hidden to :nextButton
+		end
+
+		if :prevButton is not undefined then
+			add @hidden to :prevButton
+		end
+
+		if :progressBar is not undefined then
+			add @hidden to :progressBar
+		end
+
+		for trackElement in <[data-track-url] /> in me
+			remove .playing from trackElement
+		end
+	end
+
+	on Prev
+		set nextTrackNumber to :trackNumber - 1
+		trigger Play(trackNumber:nextTrackNumber)
+	end
+
+	on Next
+		set nextTrackNumber to :trackNumber + 1
+		trigger Play(trackNumber:nextTrackNumber)
+	end
+
+	on SetProgress(percent) from <audio /> in me
+		
+		if :media.duration is not undefined then
+			set :media.currentTime to (:media.duration * (percent / 100))
+		end
+	end
+
+end
