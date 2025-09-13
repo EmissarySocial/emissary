@@ -234,21 +234,18 @@ func (service *ActivityStreamCrawler) calcDelayAndPriority(historyLength int) (d
 	switch historyLength {
 
 	case 0:
-		return 0, 8 // Run immediately (if possible) high priority
+		return 0, 32 // Run immediately but write to the database first
 
 	case 1:
-		return 0, 16 // Run immediately (if possible) medium priority
+		return 0, 64 // Run immediately but write to the database first
 
 	case 2:
-		return 20, 32 // Wait 20 seconds, medium priority
+		return 20, 128 // Wait 20 seconds, low priority
 
 	case 3:
-		return 40, 64 // Wait 40 seconds, medium priority
-
-	case 4:
-		return 60, 128 // Wait 1 minute, low priority
+		return 40, 256 // Wait 40 seconds, low priority
 
 	default:
-		return 180, 256 // Wait 1.5 minutes, low priority
+		return 60, 512 // Wait 1 minute, low priority
 	}
 }
