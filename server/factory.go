@@ -28,7 +28,6 @@ import (
 	"github.com/benpate/icon"
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/remote"
-	"github.com/benpate/rosetta/channel"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/turbine/queue"
@@ -49,7 +48,6 @@ type Factory struct {
 	storage config.Storage
 	config  config.Config
 	mutex   sync.RWMutex
-	ready   chan struct{}
 
 	// Server-level services
 	contentService      service.Content
@@ -71,19 +69,21 @@ type Factory struct {
 
 	domains   map[string]*service.Factory
 	httpCache httpcache.HTTPCache
+	setup     bool // If TRUE, then the factory is in setup mode. This value cannot be changed
 }
 
 // NewFactory uses the provided configuration data to generate a new Factory
 // if there are any errors connecting to a domain's datasource, NewFactory will derp.Report
 // the error, but will continue loading without those domains.
-func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
+func NewFactory(commandLineArgs *config.CommandLineArgs, embeddedFiles embed.FS) *Factory {
+
+	storage := config.Load(commandLineArgs)
 
 	factory := Factory{
 		storage:       storage,
 		mutex:         sync.RWMutex{},
 		domains:       make(map[string]*service.Factory),
 		embeddedFiles: embeddedFiles,
-		ready:         make(chan struct{}),
 		jwtService:    service.NewJWT(),
 		queue:         queue.New(),
 	}
@@ -142,166 +142,184 @@ func NewFactory(storage config.Storage, embeddedFiles embed.FS) *Factory {
 	factory.queue = queue.New()
 
 	factory.workingDirectory = mediaserver.NewWorkingDirectory(os.TempDir(), 4*time.Minute, 10000)
+	factory.setup = commandLineArgs.Setup
 
-	go factory.start()
+	// Subscribe to configuration changes
+	subscription := factory.storage.Subscribe()
+
+	// Wait for the first "read" of the config file before we continue
+	log.Info().Msg("Factory: reading configuration file (first time)")
+	factory.readConfig(<-subscription)
+
+	if factory.IsLiveMode() {
+		if !factory.IsReadyForDomains() {
+			log.Warn().Msg("Factory: Server config is not complete. Switching to `setup` mode.")
+			factory.setup = true
+		}
+	}
+
+	// All other updates to configuration are handled asynchronously in the future
+	if factory.IsLiveMode() {
+		go factory.start(subscription)
+	}
+
 	return &factory
 }
 
-func (factory *Factory) start() {
-
-	const location = "server.Factory.start"
-
-	log.Info().Msg("Factory: waiting for configuration...")
-
-	filesystemService := factory.Filesystem()
+func (factory *Factory) start(subscription <-chan config.Config) {
 
 	// Read configuration files from the channel
-	for config := range factory.storage.Subscribe() {
-
-		if err := factory.refreshCommonDatabase(config.ActivityPubCache); err != nil {
-			derp.Report(derp.Wrap(err, location, "WARNING: Could not refresh common database.  Important services (like queued tasks and ActivityPub caching) may not function correctly.", config.ActivityPubCache))
-		}
-
-		if factory.commonDatabase == nil {
-			errorMessage := "Halting. Common database not properly defined in configuration file."
-			derp.Report(derp.InternalError("server.factory.start", errorMessage))
-			log.Error().Msg(errorMessage)
-			os.Exit(1)
-		}
-
-		server := mongodb.NewServer(factory.commonDatabase)
-		session, err := server.Session(context.Background())
-
-		if err != nil {
-			derp.Report(derp.Wrap(err, "server.factory.start", "Unable to connect to common database."))
-			os.Exit(1)
-		}
-
-		// Set timeout threshold for slow queries
-		mongodb.SetLogTimeout(config.LogSlowQueries)
-
-		// Set logging level from the configuration file
-		switch config.DebugLevel {
-
-		case "Trace":
-			zerolog.SetGlobalLevel(zerolog.TraceLevel)
-		case "Debug":
-			zerolog.SetGlobalLevel(zerolog.DebugLevel)
-		case "Info":
-			zerolog.SetGlobalLevel(zerolog.InfoLevel)
-		case "Error":
-			zerolog.SetGlobalLevel(zerolog.ErrorLevel)
-		case "Fatal":
-			zerolog.SetGlobalLevel(zerolog.FatalLevel)
-		case "Panic":
-			zerolog.SetGlobalLevel(zerolog.PanicLevel)
-		default:
-			zerolog.SetGlobalLevel(zerolog.Disabled)
-		}
-
-		log.Info().Msg("Factory: received new configuration...")
-
-		if attachmentOriginals, err := filesystemService.GetAfero(config.AttachmentOriginals); err == nil {
-			factory.attachmentOriginals = attachmentOriginals
-		} else {
-			derp.Report(derp.Wrap(err, location, "Unable to get `attachment original` directory", config))
-		}
-
-		if attachmentCache, err := filesystemService.GetAfero(config.AttachmentCache); err == nil {
-			factory.attachmentCache = attachmentCache
-		} else {
-			derp.Report(derp.Wrap(err, location, "Unable to get `attachment cache` directory", config))
-		}
-
-		if exportCache, err := filesystemService.GetAfero(config.ExportCache); err == nil {
-			factory.exportCache = exportCache
-		} else {
-			derp.Report(derp.Wrap(err, location, "Unable to get `export cache` directory", config))
-		}
-
-		factory.config = config
-
-		// Mark all domains for deletion (then unmark them later)
-		for index := range factory.domains {
-			factory.domains[index].MarkForDeletion = true
-		}
-
-		// Refresh cached values in global services
-		factory.emailService.Refresh()
-		factory.templateService.Refresh(config.Templates)
-		factory.refreshQueue()
-
-		log.Trace().Msg("Setting up Common Database")
-
-		// JWT Service configuration
-		factory.jwtService.Refresh(server, config.MasterKey)
-
-		// Digital Dome configuration
-		factory.digitalDome.With(dome.LogDatabase(session.Collection("DigitalDome")))
-
-		// Derp configuration
-		derp.Plugins.Clear()
-		for _, logger := range config.Loggers {
-
-			switch logger.GetString("type") {
-
-			case "console":
-				log.Trace().Msg("Adding console logger to DERP")
-				derp.Plugins.Add(derpconsole.New())
-
-			case "mongo":
-				log.Trace().Msg("Adding mongo logger to DERP")
-				derp.Plugins.Add(derpmongo.New(
-					factory.commonDatabase.Collection("ErrorLog"),
-					logger))
-
-			default:
-				log.Error().Str("type", logger.GetString("type")).Msg("Unknown logging type")
-			}
-		}
-
-		// Insert/Update a factory for each domain in the configuration
-		for _, domainConfig := range config.Domains {
-
-			factory.mutex.Lock()
-			if err := factory.refreshDomain(domainConfig); err != nil {
-				derp.Report(derp.Wrap(err, location, "Unable to refresh domain", domainConfig.ID))
-				continue
-			}
-			factory.mutex.Unlock()
-		}
-
-		// Remove any domains that are still marked for deletion
-		for domainID := range factory.domains {
-			factory.mutex.Lock()
-			if factory.domains[domainID].MarkForDeletion {
-				delete(factory.domains, domainID)
-			}
-			factory.mutex.Unlock()
-		}
-
-		// Bootstrap the "Scheduler" task.  Duplicates will be dropped.
-		// This task will be used to schedule all other daily/hourly tasks
-		if err := factory.queue.Publish(queue.NewTask("Scheduler", mapof.NewAny())); err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to initialize scheduler"))
-		}
-
-		// If the "ready" channel is still open, then close it,
-		// which will unblock any waiting processes
-		if !channel.Closed(factory.ready) {
-			close(factory.ready)
-		}
+	for config := range subscription {
+		log.Info().Msg("Factory: configuration file (updated)")
+		factory.readConfig(config)
 	}
 }
 
-// Ready returns a channel that is held open while the Factory is still initializing
-// and is closed (unblocking waiting processes) once the Factory is ready to use
-func (factory *Factory) Ready() <-chan struct{} {
-	return factory.ready
+func (factory *Factory) readConfig(config config.Config) {
+
+	const location = "server.Factory.readConfig"
+
+	// Update the configuration with the latest values.
+	factory.config = config
+
+	// Refresh these global services with values we'll always need.
+	factory.emailService.Refresh()
+	factory.templateService.Refresh(config.Templates)
+
+	// RULE: If we're running the setup console, then
+	// do not run the remaining updates
+	if factory.IsSetupMode() {
+		return
+	}
+
+	filesystemService := factory.Filesystem()
+
+	if err := factory.refreshCommonDatabase(config.ActivityPubCache); err != nil {
+		derp.Report(derp.Wrap(err, location, "WARNING: Could not refresh common database.  Important services (like queued tasks and ActivityPub caching) may not function correctly.", config.ActivityPubCache))
+	}
+
+	if factory.commonDatabase == nil {
+		errorMessage := "Halting. Common database not properly defined in configuration file."
+		derp.Report(derp.InternalError("server.factory.start", errorMessage))
+		log.Error().Msg(errorMessage)
+		os.Exit(1)
+	}
+
+	server := mongodb.NewServer(factory.commonDatabase)
+	session, err := server.Session(context.Background())
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, "server.factory.start", "Unable to connect to common database."))
+		os.Exit(1)
+	}
+
+	// Set timeout threshold for slow queries
+	mongodb.SetLogTimeout(config.LogSlowQueries)
+
+	// Set logging level from the configuration file
+	switch config.DebugLevel {
+
+	case "Trace":
+		zerolog.SetGlobalLevel(zerolog.TraceLevel)
+	case "Debug":
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	case "Info":
+		zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	case "Error":
+		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+	case "Fatal":
+		zerolog.SetGlobalLevel(zerolog.FatalLevel)
+	case "Panic":
+		zerolog.SetGlobalLevel(zerolog.PanicLevel)
+	default:
+		zerolog.SetGlobalLevel(zerolog.Disabled)
+	}
+
+	log.Info().Msg("Factory: received new configuration...")
+
+	if attachmentOriginals, err := filesystemService.GetAfero(config.AttachmentOriginals); err == nil {
+		factory.attachmentOriginals = attachmentOriginals
+	} else {
+		derp.Report(derp.Wrap(err, location, "Unable to get `attachment original` directory", config))
+	}
+
+	if attachmentCache, err := filesystemService.GetAfero(config.AttachmentCache); err == nil {
+		factory.attachmentCache = attachmentCache
+	} else {
+		derp.Report(derp.Wrap(err, location, "Unable to get `attachment cache` directory", config))
+	}
+
+	if exportCache, err := filesystemService.GetAfero(config.ExportCache); err == nil {
+		factory.exportCache = exportCache
+	} else {
+		derp.Report(derp.Wrap(err, location, "Unable to get `export cache` directory", config))
+	}
+
+	// Mark all domains for deletion (then unmark them later)
+	for index := range factory.domains {
+		factory.domains[index].MarkForDeletion = true
+	}
+
+	factory.refreshQueue()
+
+	log.Trace().Msg("Setting up Common Database")
+
+	// JWT Service configuration
+	factory.jwtService.Refresh(server, config.MasterKey)
+
+	// Digital Dome configuration
+	factory.digitalDome.With(dome.LogDatabase(session.Collection("DigitalDome")))
+
+	// Derp configuration
+	derp.Plugins.Clear()
+	for _, logger := range config.Loggers {
+
+		switch logger.GetString("type") {
+
+		case "console":
+			log.Trace().Msg("Adding console logger to DERP")
+			derp.Plugins.Add(derpconsole.New())
+
+		case "mongo":
+			log.Trace().Msg("Adding mongo logger to DERP")
+			derp.Plugins.Add(derpmongo.New(
+				factory.commonDatabase.Collection("ErrorLog"),
+				logger))
+
+		default:
+			log.Error().Str("type", logger.GetString("type")).Msg("Unknown logging type")
+		}
+	}
+
+	// Insert/Update a factory for each domain in the configuration
+	for _, domainConfig := range config.Domains {
+
+		factory.mutex.Lock()
+		if err := factory.refreshDomain(domainConfig); err != nil {
+			derp.Report(derp.Wrap(err, location, "Unable to refresh domain", domainConfig.ID))
+			continue
+		}
+		factory.mutex.Unlock()
+	}
+
+	// Remove any domains that are still marked for deletion
+	for domainID := range factory.domains {
+		factory.mutex.Lock()
+		if factory.domains[domainID].MarkForDeletion {
+			delete(factory.domains, domainID)
+		}
+		factory.mutex.Unlock()
+	}
+
+	// Bootstrap the "Scheduler" task.  Duplicates will be dropped.
+	// This task will be used to schedule all other daily/hourly tasks
+	if err := factory.queue.Publish(queue.NewTask("Scheduler", mapof.NewAny())); err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to initialize scheduler"))
+	}
 }
 
 // refreshDomain attempts to refresh an existing domain, or creates a new one if it doesn't exist
-// CALLS TO THIS MUST BE LOCKED
+// CALLS TO THIS METHOD MUST BE LOCKED
 func (factory *Factory) refreshDomain(domainConfig config.Domain) error {
 
 	const location = "server.factory.refreshDomain"
@@ -792,6 +810,22 @@ func (factory *Factory) Session(ctx context.Context, hostname string) (data.Sess
 
 	// Return the session to the caller
 	return session, nil
+}
+
+// IsLiveMode returns TRUE if the server is serving real websites, and not the setup mode.
+func (factory *Factory) IsLiveMode() bool {
+	return !factory.setup
+}
+
+// IsSetupMode returns TRUE if the server is in setup mode, and is not serving real websites.
+func (factory *Factory) IsSetupMode() bool {
+	return factory.setup
+}
+
+// IsSetupComplete returns TRUE if the basic server config is done
+// and is ready for domains to be added to the server.
+func (factory *Factory) IsReadyForDomains() bool {
+	return factory.config.IsReadyForDomains()
 }
 
 /******************************************

@@ -1,16 +1,19 @@
+{{ $selected := index . 0 }}
+{{ $isReadyForDomains := index . 1 }}
+
 <nav>
 	<div class="framed">
-		<a href="/" hx-boost="true" {{if eq `index` . }}class="selected"{{ end }}>Emissary Setup</a>
-		<a href="/server" hx-boost="true" {{if eq `server` . }}class="selected"{{ end }}>Server Settings</a>
-		<a href="/domains" hx-boost="true" {{if eq `domains` . }}class="selected"{{ end }}>Domains</a>
+		<a href="/" hx-boost="true" {{if eq `index` $selected }}class="selected"{{ end }}>Emissary Setup</a>
+		<a href="/server" hx-boost="true" {{if eq `server` $selected }}class="selected"{{ end }}>Server Settings</a>
+		<a href="/domains" hx-boost="true" {{if eq `domains` $selected }}class="selected"{{ end }}>Domains</a>
 		<a href="https://emissary.dev/setup-console" hx-boost="true" target="_blank">Help</a>
-		<!--a href="/oauth" hx-boost="true" {{if eq `oauth` . }}class="selected"{{ end }}>Connectors</a-->
-		<!--a href="/" hx-boost="true" {{if eq "index" . }}class="selected"{{ end }}>Configuration</a-->
+		<!--a href="/oauth" hx-boost="true" {{if eq `oauth` $selected }}class="selected"{{ end }}>Connectors</a-->
+		<!--a href="/" hx-boost="true" {{if eq "index" $selected }}class="selected"{{ end }}>Configuration</a-->
 	</div>
 </nav>
 
 <div 
-	hx-get="/{{.}}" 
+	hx-get="/{{$selected}}" 
 	hx-trigger="refreshPage from:window"
 	hx-target="#main" 
 	hx-swap="innerHTML"

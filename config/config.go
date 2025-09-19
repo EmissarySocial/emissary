@@ -13,6 +13,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
+	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -130,6 +131,43 @@ func (config Config) IsEmpty() bool {
 	}
 
 	if len(config.Domains) > 0 {
+		return false
+	}
+
+	return true
+}
+
+// IsReadyForDomains returns TRUE if the configuration has the minimum amount of
+// data required to add domains to the server.
+func (config Config) IsReadyForDomains() bool {
+
+	if config.Templates.IsEmpty() {
+		log.Info().Msg("Config: No templates configured")
+		return false
+	}
+
+	if config.ActivityPubCache.IsEmpty() {
+		log.Info().Msg("Config: No ActivityPub cache configured")
+		return false
+	}
+
+	if config.AttachmentCache.IsEmpty() {
+		log.Info().Msg("Config: No attachment cache configured")
+		return false
+	}
+
+	if config.AttachmentOriginals.IsEmpty() {
+		log.Info().Msg("Config: No attachment originals configured")
+		return false
+	}
+
+	if config.ExportCache.IsEmpty() {
+		log.Info().Msg("Config: No export cache configured")
+		return false
+	}
+
+	if config.Certificates.IsEmpty() {
+		log.Info().Msg("Config: No certificates configured")
 		return false
 	}
 

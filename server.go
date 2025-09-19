@@ -85,9 +85,7 @@ func main() {
 
 	// Locate the configuration file and populate the server factory
 	commandLineArgs := config.GetCommandLineArgs()
-	configStorage := config.Load(&commandLineArgs)
-
-	serverFactory := server.NewFactory(configStorage, embeddedFiles)
+	serverFactory := server.NewFactory(&commandLineArgs, embeddedFiles)
 
 	// Start and configure the Web server
 	e := echo.New()
@@ -105,10 +103,7 @@ func main() {
 
 	e.Use(middleware.Recover())
 
-	// Wait for the first time the configuration is loaded
-	<-serverFactory.Ready()
-
-	if commandLineArgs.Setup {
+	if serverFactory.IsSetupMode() {
 
 		// Get config modifiers from the command line (like HTTP PORT)
 		configOptions := commandLineArgs.ConfigOptions()

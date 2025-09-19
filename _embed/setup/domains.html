@@ -1,41 +1,63 @@
 {{template "_header.html" "index"}}
-{{template "_navigation.html" "domains"}}
+{{template "_navigation.html" (array "domains" .IsReadyForDomains) }}
 
-<main>
-	<div class="framed page">
-		<h1>
-			<img src="/.themes/global/resources/emissary/Emissary-Icon-Black.svg" class="dark-mode-hide" style="height:1em;">
-			<img src="/.themes/global/resources/emissary/Emissary-Icon-White.svg" class="dark-mode-show" style="height:1em;">
-			Domains on this Server
-		</h1>
-		
-		<p>Manage domains configured on this server.  <a href="https://emissary.dev/domains" target="_blank">View Help Docs</a>.</p>
+{{- if not .IsReadyForDomains -}}
 
-		<!-- List existing domains -->
-		<table class="table">
+	<main>
+		<div class="framed page">
 
-			<!--  First row is "Add" link -->
-			<tr hx-get="/domains/new" role="button"><td colspan="3" class="link">
-				{{icon "add"}} Add a Domain
-			</td></tr>
+			<h1>
+				<img src="/.themes/global/resources/emissary/Emissary-Icon-Black.svg" class="dark-mode-hide" style="height:1em;">
+				<img src="/.themes/global/resources/emissary/Emissary-Icon-White.svg" class="dark-mode-show" style="height:1em;">
+				Domains on this Server
+			</h1>
 
-			{{$empty := true}}
-			{{- range .Domains -}}
-				<tr>
-					<td hx-get="/domains/{{.DomainID}}" role="button" nowrap>
-						{{icon "server"}} {{ .Label }}
-					</td>
-					<td hx-get="/domains/{{.DomainID}}" role="button"><div class="md:hide">{{.Hostname}}</div></td>
-					<td class="align-right" nowrap>
-						<button hx-get="/domains/{{.DomainID}}">Edit <span class="sm:hide">Domain</span></button>
-						<button hx-get="/domains/{{.DomainID}}/users"><span class="sm:hide">Edit</span> Owners</button>
-						<span style="min-width:20px">&nbsp;&nbsp;</span>
-						<button class="text-red" hx-delete="/domains/{{.DomainID}}" hx-confirm="Are you sure you want to DELETE this domain?  There is NO UNDO.">{{icon "delete"}} <span class="sm:hide">Delete</span></button>
-					</td>
-				</tr>
-			{{- end -}}
-		</table>
-	</div>
-</main>
+			You must finish configuring the server before you can set up a domains.
+			<br><br>
+			<a href="/server">&larr; return to server settings</a> 
+			to complete the setup.
+		</div>
+	</main>
+
+{{- else -}}
+
+	<main>
+		<div class="framed page">
+			<h1>
+				<img src="/.themes/global/resources/emissary/Emissary-Icon-Black.svg" class="dark-mode-hide" style="height:1em;">
+				<img src="/.themes/global/resources/emissary/Emissary-Icon-White.svg" class="dark-mode-show" style="height:1em;">
+				Domains on this Server
+			</h1>
+			
+			<p>Manage domains configured on this server.  <a href="https://emissary.dev/domains" target="_blank">View Help Docs</a>.</p>
+
+			<!-- List existing domains -->
+			<table class="table">
+
+				<!--  First row is "Add" link -->
+				<tr hx-get="/domains/new" role="button"><td colspan="3" class="link">
+					{{icon "add"}} Add a Domain
+				</td></tr>
+
+				{{$empty := true}}
+				{{- range .Domains -}}
+					<tr>
+						<td hx-get="/domains/{{.DomainID}}" role="button" nowrap>
+							{{icon "server"}} {{ .Label }}
+						</td>
+						<td hx-get="/domains/{{.DomainID}}" role="button"><div class="md:hide">{{.Hostname}}</div></td>
+						<td class="align-right" nowrap>
+							<button hx-get="/domains/{{.DomainID}}">Edit <span class="sm:hide">Domain</span></button>
+							<button hx-get="/domains/{{.DomainID}}/users"><span class="sm:hide">Edit</span> Owners</button>
+							<span style="min-width:20px">&nbsp;&nbsp;</span>
+							<button class="text-red" hx-delete="/domains/{{.DomainID}}" hx-confirm="Are you sure you want to DELETE this domain?  There is NO UNDO.">{{icon "delete"}} <span class="sm:hide">Delete</span></button>
+						</td>
+					</tr>
+				{{- end -}}
+			</table>
+		</div>
+	</main>
+
+{{- end -}}
 
 {{template "_footer.html" "index"}}
