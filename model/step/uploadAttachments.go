@@ -11,10 +11,11 @@ type UploadAttachments struct {
 	AttachmentPath string // Path name to store the AttachmentID
 	DownloadPath   string // Path name to store the download URL
 	FilenamePath   string // Path name to store the original filename
-	AcceptType     string // Mime Type(s) to accept (e.g. "image/*")
-	Category       string // Category to apply to the Attachment
-	Maximum        int    // Maximum number of uploads to allow (Default: 1)
-	JSONResult     bool   // If TRUE, return a JSON structure with result data. This forces Maximum=1
+
+	AcceptType string // Mime Type(s) to accept (e.g. "image/*")
+	Category   string // Category to apply to the Attachment
+	Maximum    int    // Maximum number of uploads to allow (Default: 1)
+	JSONResult bool   // If TRUE, return a JSON structure with result data. This forces Maximum=1
 
 	Label                string // Value to set as the attachment.label
 	LabelFieldname       string // Form field that defines the attachment label

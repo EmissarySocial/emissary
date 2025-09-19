@@ -11,6 +11,7 @@ import (
 	"github.com/benpate/hannibal/outbox"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
@@ -99,6 +100,7 @@ func (service *Stream) JSONLD(session data.Session, stream *model.Stream) mapof.
 					vocab.PropertyType:      vocab.CoreTypeLink,
 					vocab.PropertyHref:      stream.ActivityPubURL() + "/attachments/" + attachment.AttachmentID.Hex() + ".mpg",
 					vocab.PropertyMediaType: "audio/mpeg",
+					vocab.PropertyName:      first.String(attachment.Description, attachment.Label, attachment.Category),
 				})
 			}
 

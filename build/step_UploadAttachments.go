@@ -18,10 +18,11 @@ type StepUploadAttachments struct {
 	AttachmentPath string // Path name to store the AttachmentID
 	DownloadPath   string // Path name to store the download URL
 	FilenamePath   string // Path name to store the original filename
-	AcceptType     string // Mime Type(s) to accept (e.g. "image/*")
-	Category       string // Category to apply to the Attachment
-	Maximum        int    // Maximum number of uploads to allow (Default: 1)
-	JSONResult     bool   // If TRUE, return a JSON structure with result data. This forces Maximum=1
+
+	AcceptType string // Mime Type(s) to accept (e.g. "image/*")
+	Category   string // Category to apply to the Attachment
+	Maximum    int    // Maximum number of uploads to allow (Default: 1)
+	JSONResult bool   // If TRUE, return a JSON structure with result data. This forces Maximum=1
 
 	Label                string // Value to set as the attachment.label
 	LabelFieldname       string // Form field that defines the attachment label
@@ -128,7 +129,6 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 
 		// Try to put the the attachmentId into the object
 		if step.AttachmentPath != "" {
-			log.Trace().Str("AttachmentPath", step.AttachmentPath).Str("Value", attachment.AttachmentID.Hex()).Msg("Setting attachment path")
 			if err := builder.schema().Set(object, step.AttachmentPath, attachment.AttachmentID.Hex()); err != nil {
 				return Halt().WithError(derp.Wrap(err, location, "Error setting attachment path", attachment))
 			}
@@ -136,7 +136,6 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 
 		// Try to put the the downloadUrl into the object
 		if step.DownloadPath != "" {
-			log.Trace().Str("DownloadPath", step.DownloadPath).Str("Value", attachment.URL).Msg("Setting download path")
 			if err := builder.schema().Set(object, step.DownloadPath, attachment.URL); err != nil {
 				return Halt().WithError(derp.Wrap(err, location, "Error setting download path", attachment))
 			}
@@ -144,7 +143,6 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 
 		// Try to put the original filename into the object
 		if step.FilenamePath != "" {
-			log.Trace().Str("FilenamePath", step.FilenamePath).Str("Value", attachment.Original).Msg("Setting filename path")
 			if err := builder.schema().Set(object, step.FilenamePath, attachment.Original); err != nil {
 				return Halt().WithError(derp.Wrap(err, location, "Error setting filename path", attachment))
 			}

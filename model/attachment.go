@@ -181,7 +181,7 @@ func (attachment Attachment) JSONLD() map[string]any {
 		vocab.PropertyType:      vocab.ObjectTypeDocument, // TODO: Expand this to videos, audios, etc?
 		vocab.PropertyMediaType: attachment.DownloadMimeType(),
 		vocab.PropertyURL:       attachment.URL,
-		vocab.PropertyName:      first.String(attachment.Label, attachment.Description, attachment.Category),
+		vocab.PropertyName:      first.String(attachment.Description, attachment.Label, attachment.Category),
 	}
 
 	if attachment.HasDimensions() {
