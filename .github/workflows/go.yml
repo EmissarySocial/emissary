@@ -19,13 +19,18 @@ jobs:
       with:
         go-version: '1.23'
 
-    - name: Test
+    - name: Test Coverage
       run: go test -race -coverprofile=coverage.txt -covermode=atomic -v ./...
+
+    - name: Nilaway
+      uses: qbaware/nilaway-action@v0
+      with:
+        package-to-scan: ./...		
 
     - name: Report Code Coverage
       uses: codecov/codecov-action@v5
       with:
-        fail_ci_if_error: true 
+        fail_ci_if_error: false 
         flags: unittests
         token: ${{ secrets.CODECOV_TOKEN }}
         verbose: true
@@ -40,3 +45,16 @@ jobs:
         # skip-cache: true
         # skip-pkg-cache: true
         # skip-build-cache: true
+
+#  static-analysis:
+#    needs: build
+#    runs-on: ubuntu-latest
+#    steps:
+#    - name: Checkout repository
+#      uses: actions/checkout@v4
+#
+#    - name: Nil panic checks
+#      uses: qbaware/nilaway-action@v0
+#      with:
+#        package-to-scan: ./...		
+#
