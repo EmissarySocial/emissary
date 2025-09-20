@@ -5,6 +5,6 @@ package ascontextmaker
 // ActivityStream documents.
 const protocol_artificial = "artificial://"
 
-const protocol_http = "http://"
-
-const protocol_https = "https://"
+// Don't think we need these yet...
+// const protocol_http = "http://"
+// const protocol_https = "https://"
