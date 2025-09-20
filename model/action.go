@@ -63,6 +63,11 @@ func (action *Action) calcAccessListForStateAndRole(stateID string) sliceof.Stri
 	result := sliceof.NewString()
 	allowedRoles := append(action.Roles, action.StateRoles[stateID]...)
 
+	// Nilaway guard
+	if allowedRoles == nil {
+		allowedRoles = sliceof.NewString()
+	}
+
 	// Special case for Anonymous users overrides all other roles
 	if allowedRoles.Contains(MagicRoleAnonymous) {
 		result = []string{MagicRoleAnonymous}

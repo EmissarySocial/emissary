@@ -81,6 +81,10 @@ func (client *Client) Load(url string, options ...any) (streams.Document, error)
 		return streams.NilDocument(), derp.Wrap(err, location, "Unable to connect to database")
 	}
 
+	if session == nil {
+		return streams.NilDocument(), derp.InternalError(location, "Database session is nil.  This should never happen")
+	}
+
 	defer cancel()
 
 	// If we're not forcing the cache to reload, then try to load from the cache first
@@ -227,6 +231,10 @@ func (client *Client) timeoutSession(seconds int) (data.Session, context.CancelF
 
 	if err != nil {
 		return nil, nil, derp.Wrap(err, location, "Unable to connect to common database")
+	}
+
+	if session == nil {
+		return nil, nil, derp.InternalError(location, "Database session is nil.  This should never happen.")
 	}
 
 	return session, cancel, nil
