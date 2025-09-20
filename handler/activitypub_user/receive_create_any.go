@@ -74,6 +74,7 @@ func receive_CreateOrUpdate(context Context, activity streams.Document) error {
 	return nil
 }
 
+/*
 // userIsMentioned returns TRUE if this user is tagged in the document
 func userIsMentioned(user *model.User, document streams.Document) bool {
 
@@ -90,3 +91,4 @@ func userIsMentioned(user *model.User, document streams.Document) bool {
 
 	return false
 }
+*/
