@@ -11,17 +11,21 @@ import (
 	"github.com/benpate/rosetta/channel"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/fsnotify/fsnotify"
+	"github.com/hairyhenderson/go-fsimpl/gitfs"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 
-	//lint:ignore SA1019 don't worry about deprecation warnings for now
+	// nolint:staticcheck
+	// SA1019 ignore deprecation warnings
 	"github.com/aws/aws-sdk-go/aws"
-	//lint:ignore SA1019 don't worry about deprecation warnings for now
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	//lint:ignore SA1019 don't worry about deprecation warnings for now
-	"github.com/aws/aws-sdk-go/aws/session"
 
-	"github.com/hairyhenderson/go-fsimpl/gitfs"
+	// nolint:staticcheck
+	// SA1019 ignore deprecation warnings
+	"github.com/aws/aws-sdk-go/aws/credentials"
+
+	// nolint:staticcheck
+	// SA1019 ignore deprecation warnings
+	"github.com/aws/aws-sdk-go/aws/session"
 
 	s3 "github.com/fclairamb/afero-s3"
 )
