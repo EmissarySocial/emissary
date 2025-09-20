@@ -147,6 +147,10 @@ func (service *JWT) collection(ctx context.Context) (data.Collection, error) {
 		return nil, derp.Wrap(err, location, "Unable to connect to database")
 	}
 
+	if session == nil {
+		return nil, derp.InternalError(location, "Database session is nil. This should never happen.")
+	}
+
 	return session.Collection("JWT"), nil
 }
 

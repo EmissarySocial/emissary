@@ -12,6 +12,11 @@ func SearchActivityStreamActors(collection data.Collection, text string) ([]mode
 
 	const location = "queries.SearchActivityStreamActors"
 
+	// NILCHECK: Collection cannot be nil
+	if collection == nil {
+		return nil, derp.InternalError(location, "Collection cannot be nil.  This should never happen.")
+	}
+
 	// Get direct access to Mongo
 	mongoCollection := mongoCollection(collection)
 

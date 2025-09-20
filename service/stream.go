@@ -202,25 +202,65 @@ func (service *Stream) Range(session data.Session, criteria exp.Expression, opti
 // RangeSummary returns a Go 1.23 RangeFunc that iterates over the Stream Summaries that match the provided criteria
 func (service *Stream) RangeSummary(session data.Session, criteria exp.Expression, options ...option.Option) (iter.Seq[model.StreamSummary], error) {
 
+	const location = "service.Stream.RangeSummary"
+
+	// NILCHECK: Service cannot be nil
+	if service == nil {
+		return nil, derp.InternalError(location, "Service cannot be nil. This should never happen.")
+	}
+
+	// NILCHECK: Session cannot be nil
+	if session == nil {
+		return nil, derp.BadRequestError(location, "Session cannot be nil. This should never happen.")
+	}
+
+	// Get an iterator from the database
 	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.Stream.Range", "Unable to create iterator", criteria)
+		return nil, derp.Wrap(err, location, "Unable to create iterator", criteria)
 	}
 
+	// Convert it into a RangeFunc
 	return RangeFunc(iter, model.NewStreamSummary), nil
 }
 
 // List returns an iterator containing all of the Streams that match the provided criteria
 func (service *Stream) List(session data.Session, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+
+	const location = "service.Stream.List"
+
+	// NILCHECK: Service cannot be nil
+	if service == nil {
+		return nil, derp.InternalError(location, "Service cannot be nil. This should never happen.")
+	}
+
+	// NILCHECK: Session cannot be nil
+	if session == nil {
+		return nil, derp.BadRequestError(location, "Session cannot be nil. This should never happen.")
+	}
+
 	return service.collection(session).Iterator(notDeleted(criteria), options...)
 }
 
 // Load retrieves an Stream from the database
 func (service *Stream) Load(session data.Session, criteria exp.Expression, stream *model.Stream) error {
 
+	const location = "service.Stream.Load"
+
+	// NILCHECK: Service cannot be nil
+	if service == nil {
+		return derp.InternalError(location, "Service cannot be nil. This should never happen.")
+	}
+
+	// NILCHECK: Stream cannot be nil
+	if session == nil {
+		return derp.BadRequestError(location, "Session cannot be nil. This should never happen.")
+	}
+
+	// Load the Stream from the database
 	if err := service.collection(session).Load(notDeleted(criteria), stream); err != nil {
-		return derp.Wrap(err, "service.Stream.Load", "Unable to load Stream", criteria)
+		return derp.Wrap(err, location, "Unable to load Stream", criteria)
 	}
 
 	return nil
@@ -231,6 +271,22 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 
 	const location = "service.Stream.Save"
 
+	// NILCHECK: Service cannot be nil
+	if service == nil {
+		return derp.InternalError(location, "Service cannot be nil. This should never happen.")
+	}
+
+	// NILCHECK: Stream cannot be nil
+	if session == nil {
+		return derp.BadRequestError(location, "Session cannot be nil. This should never happen.")
+	}
+
+	// NILCHECK: Stream cannot be nil
+	if stream == nil {
+		return derp.BadRequestError(location, "Stream cannot be nil. This should never happen.")
+	}
+
+	// Load the template used by this Stream
 	template, err := service.templateService.Load(stream.TemplateID)
 
 	if err != nil {
@@ -972,7 +1028,7 @@ func (service *Stream) CalcParentIDs(session data.Session, stream *model.Stream)
 
 	const location = "service.Stream.CalcParentIDs"
 
-	// Rule: Notes are always stored under a user's profile, so they have no parents
+	// RULE: Notes are always stored under a user's profile, so they have no parents
 	if stream.SocialRole == vocab.ObjectTypeNote {
 		stream.ParentIDs = id.NewSlice()
 		return nil
@@ -1011,12 +1067,25 @@ func (service *Stream) CalcParentIDs(session data.Session, stream *model.Stream)
 
 func (service *Stream) calcDefaultAllow(template *model.Template, stream *model.Stream) {
 
+	// NILCHECK: Template cannot be empty
+	if template == nil {
+		return
+	}
+
+	// NILCHECK: Stream cannot be empty
+	if stream == nil {
+		return
+	}
+
+	// Find the default action/roles for this Stream
 	defaultAction := template.Default()
 	defaultRoles := defaultAction.AllowedRoles(stream.StateID)
 
+	// Calculate the GroupIDs and PrivilegeIDs for these roles
 	groupIDs := stream.RolesToGroupIDs(defaultRoles...)
 	privilegeIDs := stream.RolesToPrivilegeIDs(defaultRoles...)
 
+	// Update the Stream wtih the calculated values
 	result := append(groupIDs, privilegeIDs...)
 	result = result.Compact()
 	stream.DefaultAllow = result

@@ -121,6 +121,12 @@ func (template *Template) CanBeContainedBy(templateRoles ...string) bool {
 }
 
 func (template *Template) IsValidWidgetLocation(location string) bool {
+
+	// NILCHECK: Template cannot be nil
+	if template == nil {
+		return false
+	}
+
 	return slice.Contains(template.WidgetLocations, location)
 }
 
@@ -148,6 +154,12 @@ func (template *Template) IsValidRole(roleID string) bool {
 
 // IsValidState returns TRUE if the provided stateID is valid for this Template
 func (template *Template) IsValidState(stateID string) bool {
+
+	// NILCHECK: Template cannot be nil
+	if template == nil {
+		return false
+	}
+
 	if _, ok := template.States[stateID]; !ok {
 		return false
 	}
@@ -158,24 +170,42 @@ func (template *Template) IsValidState(stateID string) bool {
 // If found, it is returned along with a TRUE
 // If not found, an empty state is returned along with a FALSE
 func (template *Template) State(stateID string) (State, bool) {
+
+	// NILCHECK: Template cannot be nil
+	if template == nil {
+		return State{}, false
+	}
+
 	state, ok := template.States[stateID]
 	return state, ok
 }
 
 // Action returns the action object for a specified name
 func (template *Template) Action(actionID string) (Action, bool) {
+
+	// NILCHECK: Template cannot be nil
+	if template == nil {
+		return Action{}, false
+	}
+
 	action, ok := template.Actions[actionID]
 	return action, ok
 }
 
 // Default returns the default Action for this Template.
 func (template *Template) Default() Action {
+
+	// NILCHECK: Template cannot be nil
+	if template == nil {
+		return Action{}
+	}
+
 	return template.Actions[template.DefaultAction]
 }
 
 func (template *Template) Inherit(parent *Template) {
 
-	// Null check.
+	// NILCHECK: Parent cannot be nil
 	if parent == nil {
 		return
 	}

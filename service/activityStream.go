@@ -492,16 +492,24 @@ func (service *ActivityStream) collection(ctx context.Context) (data.Collection,
 
 	const location = "service.ActivityStream.collection"
 
+	// NILCHECK: commonDatabase must be populated
 	if service.commonDatabase == nil {
 		return nil, derp.InternalError(location, "Service not initialized")
 	}
 
+	// Connect to the database
 	session, err := service.commonDatabase.Session(ctx)
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Unable to connect to database")
 	}
 
+	// NILCHECK: session cannot be nil.
+	if session == nil {
+		return nil, derp.InternalError(location, "Database session is nil. This should never happen.")
+	}
+
+	// Return the collection
 	return session.Collection("Document"), nil
 }
 
