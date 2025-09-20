@@ -485,6 +485,10 @@ func (service *ActivityStream) documentIterator(ctx context.Context, criteria ex
 		return nil, derp.Wrap(err, location, "Unable to query database", criteria)
 	}
 
+	if collection == nil {
+		return nil, derp.InternalError(location, "Collection cannot be nil. This should never happen.")
+	}
+
 	return collection.Iterator(criteria, options...)
 }
 

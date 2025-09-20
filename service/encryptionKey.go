@@ -195,16 +195,24 @@ func (service *EncryptionKey) DeleteByParentID(session data.Session, parentID pr
 
 func (service *EncryptionKey) GetPublicKey(encryptionKey *model.EncryptionKey) (*rsa.PublicKey, error) {
 
+	const location = "service.EncryptionKey.PublicKey"
+
 	privateKey, err := service.GetPrivateKey(encryptionKey)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "model.EncryptionKey.PublicKey", "Error getting private key", encryptionKey.EncryptionKeyID)
+		return nil, derp.Wrap(err, location, "Unable to get private key", encryptionKey.EncryptionKeyID)
+	}
+
+	if privateKey == nil {
+		return nil, derp.InternalError(location, "Private key cannot be nil")
 	}
 
 	return &privateKey.PublicKey, nil
 }
 
 func (service *EncryptionKey) GetPrivateKey(encryptionKey *model.EncryptionKey) (*rsa.PrivateKey, error) {
+
+	const location = "service.EncryptionKey.GetPrivateKey"
 
 	// Decode PEM block
 	block, _ := pem.Decode([]byte(encryptionKey.PrivatePEM))
@@ -213,7 +221,11 @@ func (service *EncryptionKey) GetPrivateKey(encryptionKey *model.EncryptionKey) 
 	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "model.EncryptionKey.PrivateKey", "Error parsing private key", encryptionKey.EncryptionKeyID)
+		return nil, derp.Wrap(err, location, "Unable to parse private key", encryptionKey.EncryptionKeyID)
+	}
+
+	if privateKey == nil {
+		return nil, derp.Wrap(err, location, "Private key cannot be nil")
 	}
 
 	return privateKey, nil
@@ -224,7 +236,7 @@ func (service *EncryptionKey) Sign(message []byte, encryptionKey *model.Encrypti
 	privateKey, err := service.GetPrivateKey(encryptionKey)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "model.EncryptionKey.Sign", "Error getting private key", encryptionKey.EncryptionKeyID)
+		return nil, derp.Wrap(err, "model.EncryptionKey.Sign", "Unable to get private key", encryptionKey.EncryptionKeyID)
 	}
 
 	return rsa.SignPKCS1v15(rand.Reader, privateKey, 0, message)
@@ -235,7 +247,7 @@ func (service *EncryptionKey) Verify(message []byte, signature []byte, encryptio
 	publicKey, err := service.GetPublicKey(encryptionKey)
 
 	if err != nil {
-		return derp.Wrap(err, "model.EncryptionKey.Validate", "Error getting public key", encryptionKey.EncryptionKeyID)
+		return derp.Wrap(err, "model.EncryptionKey.Validate", "Unable to get public key", encryptionKey.EncryptionKeyID)
 	}
 
 	return rsa.VerifyPKCS1v15(publicKey, 0, message, signature)

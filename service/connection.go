@@ -359,6 +359,21 @@ func (service *Connection) GetAccessToken(connection *model.Connection) (oauth2.
 
 	const location = "service.Connection.GetAccessToken"
 
+	// NILCHECK: service cannot be nil
+	if service == nil {
+		return oauth2.Token{}, derp.InternalError(location, "Service cannot be nil")
+	}
+
+	// NILCHECK: connection cannot not be nil
+	if connection == nil {
+		return oauth2.Token{}, derp.InternalError(location, "Connection cannot be nil")
+	}
+
+	// NILCHECK: connection.Token cannot be nil
+	if connection.Token == nil {
+		return oauth2.Token{}, derp.InternalError(location, "Connection.Token cannot be nil", connection.ConnectionID)
+	}
+
 	// If the token is valid, then return it immediately
 	if connection.Token.Valid() {
 		return *connection.Token, nil
