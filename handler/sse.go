@@ -19,6 +19,8 @@ import (
 // SSE following.
 func ServerSentEvent(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
+	const location = "handler.ServerSentEvent"
+
 	// Close SSE connections that remain open after 15 minutes
 	timeoutContext, cancel := context.WithTimeout(ctx.Request().Context(), 15*time.Minute)
 	defer cancel()
@@ -31,7 +33,7 @@ func ServerSentEvent(ctx *steranko.Context, factory *service.Factory, session da
 	f, ok := w.(http.Flusher)
 
 	if !ok {
-		return derp.InternalError("handler.ServerSentEvent", "Streaming Not Supported")
+		return derp.InternalError(location, "Streaming Not Supported")
 	}
 
 	token := ctx.Param("objectId")
@@ -39,7 +41,7 @@ func ServerSentEvent(ctx *steranko.Context, factory *service.Factory, session da
 	streamID, err := primitive.ObjectIDFromHex(token)
 
 	if err != nil {
-		return derp.Wrap(err, "handler.ServerSentEvent", "Invalid StreamID", token)
+		return derp.Wrap(err, location, "Invalid StreamID", token)
 	}
 
 	client := realtime.NewClient(ctx.Request(), streamID)
@@ -78,8 +80,13 @@ func ServerSentEvent(ctx *steranko.Context, factory *service.Factory, session da
 			}
 
 			// Write to the ResponseWriter, `w`.
-			fmt.Fprintf(w, "event: %s\n", streamID.Hex())
-			fmt.Fprintf(w, "data: updated\n\n")
+			if _, err := fmt.Fprintf(w, "event: %s\n", streamID.Hex()); err != nil {
+				return derp.Wrap(err, location, "Unable to write event to response")
+			}
+
+			if _, err := fmt.Fprintf(w, "data: updated\n\n"); err != nil {
+				return derp.Wrap(err, location, "Unable to write data to response")
+			}
 
 			// Flush the response.  This is only possible if the response supports streaming.
 			f.Flush()
