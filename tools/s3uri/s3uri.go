@@ -220,9 +220,10 @@ func parse(s3u *S3URI, s any) (*S3URI, error) {
 
 	// An S3 bucket can be either accelerated or website endpoint,
 	// but not both.
-	if usage == accelerated {
+	switch usage {
+	case accelerated:
 		s3u.Accelerated = Bool(true)
-	} else if usage == website {
+	case website:
 		s3u.Website = Bool(true)
 	}
 
