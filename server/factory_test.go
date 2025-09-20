@@ -8,11 +8,6 @@ import (
 )
 
 func TestServerFactory(t *testing.T) {
-
-	var factory service.ServerFactory
-
-	factory = &Factory{}
-
+	var factory service.ServerFactory = &Factory{}
 	require.NotNil(t, factory)
-
 }
