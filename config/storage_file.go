@@ -88,9 +88,7 @@ func NewFileStorage(args *CommandLineArgs) FileStorage {
 			panic(err)
 		}
 
-		defer watcher.Close()
-
-		// log.Debug().Str("loc", location).Msg("*** Watching for changes to configuration file: " + fileLocation)
+		defer derp.ReportFunc(watcher.Close)
 
 		if err := watcher.Add(storage.location); err != nil {
 			derp.Report(derp.Wrap(err, location, "Unable to watch for changes to configuration: ", fileLocation))
