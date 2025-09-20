@@ -14,11 +14,11 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 
-	// lint:ignore SA1019 // Ignore deprecation warning for now
+	//lint:ignore SA1019 don't worry about deprecation warnings for now
 	"github.com/aws/aws-sdk-go/aws"
-	// lint:ignore SA1019 // Ignore deprecation warning for now
+	//lint:ignore SA1019 don't worry about deprecation warnings for now
 	"github.com/aws/aws-sdk-go/aws/credentials"
-	// lint:ignore SA1019 // Ignore deprecation warning for now
+	//lint:ignore SA1019 don't worry about deprecation warnings for now
 	"github.com/aws/aws-sdk-go/aws/session"
 
 	"github.com/hairyhenderson/go-fsimpl/gitfs"
