@@ -22,11 +22,6 @@ jobs:
     - name: Test Coverage
       run: go test -race -coverprofile=coverage.txt -covermode=atomic -v ./...
 
-    - name: Nilaway
-      uses: qbaware/nilaway-action@v0
-      with:
-        package-to-scan: ./...		
-
     - name: Report Code Coverage
       uses: codecov/codecov-action@v5
       with:
@@ -40,3 +35,9 @@ jobs:
       with:
         version: latest
         skip-cache: true
+
+    - name: Nilaway
+      uses: qbaware/nilaway-action@v0
+      with:
+        package-to-scan: ./...		
+
