@@ -150,7 +150,7 @@ func (dt DateTime) ToTime() time.Time {
 }
 
 func (dt DateTime) DateOnly() time.Time {
-	return dt.Time.Truncate(24 * time.Hour)
+	return dt.Truncate(24 * time.Hour)
 }
 
 func (dt DateTime) TimeOnly() time.Time {
