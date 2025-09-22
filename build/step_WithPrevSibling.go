@@ -47,6 +47,6 @@ func (step StepWithPrevSibling) execute(builder Builder, buffer io.Writer, actio
 
 	// Execute the POST build pipeline on the parent
 	result := Pipeline(step.SubSteps).Execute(factory, &siblingBuilder, buffer, actionMethod)
-	result.Error = derp.Wrap(result.Error, location, "Error executing steps for parent")
+	result.Error = derp.WrapIF(result.Error, location, "Error executing steps for parent")
 	return UseResult(result)
 }

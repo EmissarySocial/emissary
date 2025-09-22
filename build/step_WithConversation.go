@@ -70,7 +70,7 @@ func (step StepWithConversation) execute(builder Builder, buffer io.Writer, acti
 
 	// Execute the POST build pipeline on the child
 	result := Pipeline(step.SubSteps).Execute(factory, subBuilder, buffer, actionMethod)
-	result.Error = derp.Wrap(result.Error, location, "Error executing steps for child")
+	result.Error = derp.WrapIF(result.Error, location, "Error executing steps for child")
 
 	return UseResult(result)
 }

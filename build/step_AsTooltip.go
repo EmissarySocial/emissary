@@ -22,7 +22,7 @@ func (step StepAsTooltip) Get(builder Builder, buffer io.Writer) PipelineBehavio
 	var tooltipBuffer bytes.Buffer
 
 	result := Pipeline(step.SubSteps).Get(builder.factory(), builder, &tooltipBuffer)
-	result.Error = derp.Wrap(result.Error, location, "Error executing subSteps")
+	result.Error = derp.WrapIF(result.Error, location, "Error executing subSteps")
 
 	if result.Halt {
 		return UseResult(result)
@@ -47,7 +47,7 @@ func (step StepAsTooltip) Post(builder Builder, buffer io.Writer) PipelineBehavi
 
 	// Write inner items
 	result := Pipeline(step.SubSteps).Post(builder.factory(), builder, buffer)
-	result.Error = derp.Wrap(result.Error, "build.StepAsTooltip.Post", "Error executing subSteps")
+	result.Error = derp.WrapIF(result.Error, "build.StepAsTooltip.Post", "Error executing subSteps")
 
 	return UseResult(result).WithEvent("closeTooltip", "true")
 }

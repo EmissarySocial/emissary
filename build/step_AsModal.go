@@ -99,7 +99,7 @@ func (step StepAsModal) Post(builder Builder, buffer io.Writer) PipelineBehavior
 
 	// Write inner items
 	result := Pipeline(step.SubSteps).Post(builder.factory(), builder, buffer)
-	result.Error = derp.Wrap(result.Error, "build.StepAsModal.Post", "Error executing subSteps")
+	result.Error = derp.WrapIF(result.Error, "build.StepAsModal.Post", "Error executing subSteps")
 
 	return UseResult(result).WithEvent("closeModal", "true")
 }

@@ -42,12 +42,13 @@ func (step StepIfCondition) execute(builder Builder, buffer io.Writer, method Ac
 
 	if condition {
 		result := Pipeline(step.Then).Execute(factory, builder, buffer, method)
-		result.Error = derp.Wrap(result.Error, location, "Error executing 'then' sub-steps")
+		result.Error = derp.WrapIF(result.Error, location, "Error executing 'then' sub-steps")
+
 		return UseResult(result)
 	}
 
 	result := Pipeline(step.Otherwise).Execute(factory, builder, buffer, method)
-	result.Error = derp.Wrap(result.Error, location, "Error executing 'otherwise' sub-steps")
+	result.Error = derp.WrapIF(result.Error, location, "Error executing 'otherwise' sub-steps")
 	return UseResult(result)
 }
 

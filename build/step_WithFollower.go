@@ -87,7 +87,7 @@ func (step StepWithFollower) execute(builder Builder, buffer io.Writer, actionMe
 
 	// Execute the build pipeline on the Follower record
 	result := Pipeline(step.SubSteps).Execute(factory, subBuilder, buffer, actionMethod)
-	result.Error = derp.Wrap(result.Error, location, "Error executing steps for child")
+	result.Error = derp.WrapIF(result.Error, location, "Error executing steps for child")
 
 	return UseResult(result)
 }

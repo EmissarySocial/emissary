@@ -30,7 +30,12 @@ func WrapInlineSuccess(response http.ResponseWriter, message any) error {
 	response.WriteHeader(http.StatusOK)
 
 	_, err := response.Write([]byte(`<span class="text-green">` + convert.String(message) + `</span>`))
-	return derp.Wrap(err, "build.WrapInlineSuccess", "Error writing response", message)
+
+	if err != nil {
+		return derp.Wrap(err, "build.WrapInlineSuccess", "Error writing response", message)
+	}
+
+	return nil
 }
 
 // WrapInlineError sends an error message to the #htmx-response-message element
