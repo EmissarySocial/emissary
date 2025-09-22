@@ -7,27 +7,27 @@ require (
 	github.com/aws/aws-sdk-go v1.55.8
 	github.com/benpate/color v0.1.0
 	github.com/benpate/data v0.31.0
-	github.com/benpate/data-mock v0.31.0
-	github.com/benpate/data-mongo v0.30.4
-	github.com/benpate/derp v0.32.8
-	github.com/benpate/digit v0.13.6
-	github.com/benpate/digital-dome v0.2.6
-	github.com/benpate/domain v0.2.8
+	github.com/benpate/data-mock v0.31.1
+	github.com/benpate/data-mongo v0.30.5
+	github.com/benpate/derp v0.33.0
+	github.com/benpate/digit v0.13.7
+	github.com/benpate/digital-dome v0.2.7
+	github.com/benpate/domain v0.2.9
 	github.com/benpate/exp v0.8.6
-	github.com/benpate/exp-builder v0.10.3
-	github.com/benpate/form v0.25.0
-	github.com/benpate/hannibal v0.14.0
+	github.com/benpate/exp-builder v0.10.4
+	github.com/benpate/form v0.25.1
+	github.com/benpate/hannibal v0.14.1
 	github.com/benpate/html v0.16.13
 	github.com/benpate/icon v0.4.0
-	github.com/benpate/mediaserver v0.15.6
-	github.com/benpate/re v0.3.3
-	github.com/benpate/remote v0.17.5
-	github.com/benpate/rosetta v0.25.16
-	github.com/benpate/sherlock v0.8.12
-	github.com/benpate/steranko v0.22.1
-	github.com/benpate/table v0.7.5
+	github.com/benpate/mediaserver v0.15.7
+	github.com/benpate/re v0.3.4
+	github.com/benpate/remote v0.17.6
+	github.com/benpate/rosetta v0.25.18
+	github.com/benpate/sherlock v0.8.13
+	github.com/benpate/steranko v0.22.2
+	github.com/benpate/table v0.7.6
 	github.com/benpate/toot v0.3.0
-	github.com/benpate/turbine v0.3.4
+	github.com/benpate/turbine v0.3.5
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/codingsince1985/geo-golang v1.8.5
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
@@ -48,13 +48,13 @@ require (
 	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/mmcdole/gofeed v1.3.0
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
-	github.com/relvacode/iso8601 v1.6.0
+	github.com/relvacode/iso8601 v1.7.0
 	github.com/rs/zerolog v1.34.0
-	github.com/spf13/afero v1.14.0
+	github.com/spf13/afero v1.15.0
 	github.com/spf13/pflag v1.0.10
 	github.com/stretchr/testify v1.11.1
 	github.com/stripe/stripe-go/v78 v78.12.0
-	github.com/tdewolff/minify/v2 v2.24.2
+	github.com/tdewolff/minify/v2 v2.24.3
 	github.com/timewasted/go-accept-headers v0.0.0-20130320203746-c78f304b1b09
 	github.com/tomnomnom/linkheader v0.0.0-20250811210735-e5fe3b51442e
 	github.com/xhit/go-simple-mail/v2 v2.16.0
@@ -64,9 +64,9 @@ require (
 	github.com/yuin/goldmark-highlighting/v2 v2.0.0-20230729083705-37449abec8cc
 	go.abhg.dev/goldmark/anchor v0.2.0
 	go.mongodb.org/mongo-driver v1.17.4
-	golang.org/x/crypto v0.41.0
-	golang.org/x/exp v0.0.0-20250819193227-8b4c13bb791b
-	golang.org/x/oauth2 v0.30.0
+	golang.org/x/crypto v0.42.0
+	golang.org/x/exp v0.0.0-20250911091902-df9299821621
+	golang.org/x/oauth2 v0.31.0
 	willnorris.com/go/microformats v1.2.0
 	willnorris.com/go/webmention v0.0.0-20250531043116-33a44c5fb605
 )
@@ -122,12 +122,12 @@ require (
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/yeqown/reedsolomon v1.0.0 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
-	golang.org/x/image v0.30.0 // indirect
-	golang.org/x/net v0.43.0 // indirect
-	golang.org/x/sync v0.16.0 // indirect
-	golang.org/x/sys v0.35.0 // indirect
-	golang.org/x/text v0.28.0 // indirect
-	golang.org/x/time v0.12.0 // indirect
+	golang.org/x/image v0.31.0 // indirect
+	golang.org/x/net v0.44.0 // indirect
+	golang.org/x/sync v0.17.0 // indirect
+	golang.org/x/sys v0.36.0 // indirect
+	golang.org/x/text v0.29.0 // indirect
+	golang.org/x/time v0.13.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
