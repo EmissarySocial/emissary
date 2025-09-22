@@ -257,6 +257,12 @@ func (factory *Factory) readConfig(config config.Config) {
 
 	// Mark all domains for deletion (then unmark them later)
 	for index := range factory.domains {
+
+		// NILCHECK: Guard against nil pointer dereference
+		if factory.domains[index] == nil {
+			derp.Report(derp.Internal(location, "Domain is nil. This should never happen.", index))
+			continue
+		}
 		factory.domains[index].MarkForDeletion = true
 	}
 
@@ -305,8 +311,12 @@ func (factory *Factory) readConfig(config config.Config) {
 	// Remove any domains that are still marked for deletion
 	for domainID := range factory.domains {
 		factory.mutex.Lock()
-		if factory.domains[domainID].MarkForDeletion {
-			delete(factory.domains, domainID)
+		if factory.domains[domainID] == nil {
+			derp.Report(derp.Internal(location, "Domain is nil. This should never happen.", domainID))
+		} else {
+			if factory.domains[domainID].MarkForDeletion {
+				delete(factory.domains, domainID)
+			}
 		}
 		factory.mutex.Unlock()
 	}

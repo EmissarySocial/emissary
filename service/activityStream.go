@@ -16,7 +16,6 @@ import (
 	"github.com/EmissarySocial/emissary/tools/ascrawler"
 	"github.com/EmissarySocial/emissary/tools/ashash"
 	"github.com/EmissarySocial/emissary/tools/asnormalizer"
-	"github.com/EmissarySocial/emissary/tools/treebuilder"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -176,6 +175,7 @@ func (service *ActivityStream) QueryByContext(ctx context.Context, contextName s
 	return result, nil
 }
 
+/*
 func (service *ActivityStream) QueryByContext_Tree(ctx context.Context, contextName string) (sliceof.Object[*treebuilder.Tree[model.DocumentLink]], error) {
 
 	// RULE: Do not query empty contexts
@@ -195,6 +195,7 @@ func (service *ActivityStream) QueryByContext_Tree(ctx context.Context, contextN
 
 	return treebuilder.ParseAndFormat(treeInput), nil
 }
+*/
 
 func (service *ActivityStream) QueryActors(queryString string) ([]model.ActorSummary, error) {
 

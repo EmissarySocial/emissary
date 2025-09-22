@@ -884,6 +884,7 @@ func (service *Stream) SetAttributedTo(user *model.User) {
 
 	if err != nil {
 		derp.Report(derp.Wrap(err, location, "Unable to create database session"))
+		return
 	}
 
 	defer cancel()

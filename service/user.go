@@ -185,7 +185,7 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 		if user.Username != "" {
 			user.DisplayName = user.Username
 		} else if user.EmailAddress != "" {
-			user.DisplayName = strings.Split(user.EmailAddress, "@")[0]
+			user.DisplayName, _, _ = strings.Cut(user.EmailAddress, "@")
 		} else {
 			user.DisplayName = "New User"
 		}

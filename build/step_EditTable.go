@@ -119,6 +119,16 @@ func (step StepTableEditor) getTargetURL(builder Builder) string {
 	originalPath := builder.request().URL.Path
 	actionID := builder.actionID()
 	pathSlice := strings.Split(originalPath, "/")
-	pathSlice[len(pathSlice)-1] = actionID
+
+	if pathSlice == nil {
+		return ""
+	}
+
+	pathSliceLength := len(pathSlice)
+	if pathSliceLength < 1 {
+		return ""
+	}
+
+	pathSlice[pathSliceLength-1] = actionID
 	return strings.Join(pathSlice, "/")
 }

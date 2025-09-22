@@ -573,6 +573,11 @@ func (factory *Factory) Server() mongodb.Server {
 func (factory *Factory) Session(timeout time.Duration) (data.Session, context.CancelFunc, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	session, err := factory.Server().Session(ctx)
+
+	if session == nil {
+		err = derp.InternalError("domain.Factory.Session", "Database session is nil")
+	}
+
 	return session, cancel, err
 }
 
