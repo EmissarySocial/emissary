@@ -3,7 +3,6 @@ package model
 import (
 	"testing"
 
-	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/schema"
 	"github.com/stretchr/testify/require"
 )
@@ -26,12 +25,10 @@ func tableTest_Schema(t *testing.T, s *schema.Schema, object any, table []tableT
 
 		// Try to set the property
 		err := s.Set(object, test.property, test.input)
-		err = derp.Wrap(err, "model.tableTest_Schema", "Error setting property", test.property)
 		require.Nil(t, err)
 
 		// Try to get the property
 		result, err := s.Get(object, test.property)
-		err = derp.Wrap(err, "model.tableTest_Schema", "Error getting property", test.property)
 		require.Nil(t, err)
 
 		// Property values should be equal

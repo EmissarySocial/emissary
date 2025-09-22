@@ -228,7 +228,7 @@ func (service *Attachment) LoadFirstByCategory(session data.Session, objectType 
 		return attachment, err
 	}
 
-	return model.Attachment{}, derp.Wrap(err, location, "No attachments found", objectType, objectID)
+	return model.Attachment{}, derp.NotFoundError(location, "No attachments found", objectType, objectID)
 }
 
 func (service *Attachment) LoadFirstByObjectID(session data.Session, objectType string, objectID primitive.ObjectID) (model.Attachment, error) {
@@ -247,7 +247,7 @@ func (service *Attachment) LoadFirstByObjectID(session data.Session, objectType 
 		return attachment, err
 	}
 
-	return model.Attachment{}, derp.Wrap(err, "service.Attachment", "No attachments found", objectType, objectID)
+	return model.Attachment{}, derp.NotFoundError("service.Attachment", "No attachments found", objectType, objectID)
 }
 
 func (service *Attachment) LoadByID(session data.Session, objectType string, objectID primitive.ObjectID, attachmentID primitive.ObjectID, result *model.Attachment) error {

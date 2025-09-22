@@ -196,6 +196,10 @@ func (service *JWT) create(keyName string) ([]byte, error) {
 		return []byte{}, derp.Wrap(err, location, "Unable to connect to JWT collection")
 	}
 
+	if collection == nil {
+		return []byte{}, derp.InternalError(location, "JWT collection is nil. This should never happen.")
+	}
+
 	if err := collection.Save(&record, "New key created"); err != nil {
 		return []byte{}, derp.Wrap(err, location, "Unable to save JWT key")
 	}

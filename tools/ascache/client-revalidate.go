@@ -1,8 +1,6 @@
 package ascache
 
-import (
-	"github.com/benpate/derp"
-)
+import "github.com/benpate/derp"
 
 // Revalidate reloads a document from the source even if it has not yet expired.
 // This potentially updates the cache timeout value, keeping the document

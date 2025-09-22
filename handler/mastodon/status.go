@@ -468,7 +468,7 @@ func PutStatus(serverFactory *server.Factory) func(model.Authorization, txn.PutS
 
 		// Validate authorization
 		if !stream.IsMyself(auth.UserID) {
-			return object.Status{}, derp.Wrap(err, location, "User is not authorized to edit this stream", derp.WithForbidden())
+			return object.Status{}, derp.UnauthorizedError(location, "User is not authorized to edit this stream", derp.WithForbidden())
 		}
 
 		// Edit stream values

@@ -50,12 +50,19 @@ func NewFilesystem(embedded fs.FS) Filesystem {
 // GetFS returns a READONLY Filesystem.  It works with embed:// and file:// URIs
 func (filesystem *Filesystem) GetFS(folder mapof.String) (fs.FS, error) {
 
+	const location = "service.Filesystem.GetFS"
+
 	switch folder["adapter"] {
 
 	// Detect embedded file system
 	case config.FolderAdapterEmbed:
 		result, err := fs.Sub(filesystem.embedded, "_embed/"+folder["location"])
-		return result, derp.Wrap(err, "service.Filesystem.GetFS", "Error getting filesystem", folder)
+
+		if err != nil {
+			return nil, derp.Wrap(err, location, "Error getting embedded filesystem", folder)
+		}
+
+		return result, nil
 
 	// Detect filesystem type
 	case config.FolderAdapterFile:
@@ -65,7 +72,7 @@ func (filesystem *Filesystem) GetFS(folder mapof.String) (fs.FS, error) {
 		locationURL, err := url.Parse(folder["location"])
 
 		if err != nil {
-			return nil, derp.Wrap(err, "service.Filesystem.GetFS", "Error parsing Git URL", folder)
+			return nil, derp.Wrap(err, location, "Error parsing Git URL", folder)
 		}
 
 		return gitfs.New(locationURL)
@@ -77,7 +84,7 @@ func (filesystem *Filesystem) GetFS(folder mapof.String) (fs.FS, error) {
 	}
 
 	// Otherwise, fail.  Unrecognized filesystem type
-	return nil, derp.InternalError("service.filesystem.GetFS", "Unsupported filesystem adapter", folder)
+	return nil, derp.InternalError(location, "Unsupported filesystem adapter", folder)
 }
 
 // GetFSs returns multiple fs.FS filesystems

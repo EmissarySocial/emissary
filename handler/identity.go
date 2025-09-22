@@ -189,7 +189,7 @@ func GetIdentitySigninWithJWT(ctx *steranko.Context, factory *service.Factory, s
 	}
 
 	if !token.Valid {
-		return derp.Wrap(err, location, "Invalid JWT Token")
+		return derp.UnauthorizedError(location, "Invalid JWT Token")
 	}
 
 	// Collect the identifier and identifier type from the JWT claims

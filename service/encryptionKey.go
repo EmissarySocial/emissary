@@ -217,6 +217,10 @@ func (service *EncryptionKey) GetPrivateKey(encryptionKey *model.EncryptionKey) 
 	// Decode PEM block
 	block, _ := pem.Decode([]byte(encryptionKey.PrivatePEM))
 
+	if block == nil {
+		return nil, derp.InternalError(location, "Unable to decode private key PEM", encryptionKey.EncryptionKeyID)
+	}
+
 	// Parse the key
 	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 

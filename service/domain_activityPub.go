@@ -61,27 +61,29 @@ func (service *Domain) PrivateKey(session data.Session) (*rsa.PrivateKey, error)
 
 		privateKey, err := sigs.DecodePrivatePEM(domain.PrivateKey)
 
-		if rsaKey, ok := privateKey.(*rsa.PrivateKey); ok {
-			return rsaKey, nil
+		if err == nil {
+			if rsaKey, ok := privateKey.(*rsa.PrivateKey); ok {
+				return rsaKey, nil
+			}
 		}
 
 		// Fall through means that we have a value for "domain.PrivateKey" but it's not
 		// valid.  So, let's log the error and try to make a new one.
-		derp.Report(derp.Wrap(err, location, "Error decoding private key. Creating a new key"))
+		derp.Report(derp.Wrap(err, location, "Unable to decode private key. Creating a new key"))
 	}
 
 	// Otherwise, create a new private key, save it, and return it to the caller.
 	privateKey, err := rsa.GenerateKey(rand.Reader, encryptionKeyBits)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Error generating RSA key")
+		return nil, derp.Wrap(err, location, "Unable to generate RSA key")
 	}
 
 	// Save the new private key into the Domain record
 	domain.PrivateKey = sigs.EncodePrivatePEM(privateKey)
 
 	if err := service.Save(session, domain, "Generated Private Key"); err != nil {
-		return nil, derp.Wrap(err, location, "Error saving new EncryptionKey")
+		return nil, derp.Wrap(err, location, "Unable to save new EncryptionKey")
 	}
 
 	// Success??

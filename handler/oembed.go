@@ -110,13 +110,15 @@ func getOEmbed_Stream(factory *service.Factory, session data.Session, token stri
 		"provider_url":  domain.Host(),
 	}
 
-	if iconURL := stream.IconURL; iconURL != "" {
+	iconURL := firstOf(stream.IconURL, stream.Data.GetString("bannerUrl"))
+
+	if iconURL != "" {
 		result["thumbnail_url"] = iconURL + ".webp?height=300&width=300"
 		result["thumbnail_height"] = 300
 		result["thumbnail_width"] = 300
 	}
 
-	/* This works great, but I'm removing it for not because Mastodon doesn't
+	/* This works great, but I'm removing it for now because Mastodon doesn't
 	   support "rich" style oEmbed.
 
 	// Special case for Templates that define HTML content of OEmbed
