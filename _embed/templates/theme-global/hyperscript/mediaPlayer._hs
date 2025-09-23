@@ -1,14 +1,6 @@
 behavior MediaPlayer
 
 	init
-		set :trackNumber to 0
-		set :playButton to the first <.media-Play /> in me
-		set :pauseButton to the first <.media-Pause /> in me
-		set :nextButton to the first <.media-Next /> in me
-		set :prevButton to the first <.media-Prev /> in me
-		set :loopButton to the first <.media-Loop /> in me
-		set :progressBar to the first <.media-Progress /> in me
-		set :media to the first <audio,video /> in me
 
 		tell <.media-show-when-playing /> in me
 			hide yourself
@@ -18,6 +10,31 @@ behavior MediaPlayer
 			show yourself
 		end
 
+		set :trackNumber to 0
+		set :playButton to the first <.media-Play /> in me
+		set :pauseButton to the first <.media-Pause /> in me
+		set :nextButton to the first <.media-Next /> in me
+		set :prevButton to the first <.media-Prev /> in me
+		set :loopButton to the first <.media-Loop /> in me
+		set :progressBar to the first <.media-Progress /> in me
+		set :media to the first <audio,video /> in me
+
+		-- save original values for the name, artist, and image
+		set :name to the first <.media-Name /> in me
+		set :artist to the first <.media-Artist /> in me
+		set :image to the first <.media-Image /> in me
+
+		if the :name is not null then
+			set the :name's @data-original to the :name's innerText
+		end
+
+		if the :artist is not null then
+			set the :artist's @data-original to the :artist's innerText
+		end
+
+		if the :image is not null then
+			set the :image's @data-original to the :image's @src
+		end
 	end
 
 	on click from <.media-Play /> in me
@@ -84,6 +101,8 @@ behavior MediaPlayer
 
 		if trackNumber < 0 then 
 
+			set :trackNumber to 0
+
 			if :loopButton is undefined then
 				trigger Pause
 				exit
@@ -93,11 +112,11 @@ behavior MediaPlayer
 				trigger Pause
 				exit
 			end
-
-			set trackNumber to tracks.length - 1
 
 		else if trackNumber >= tracks.length then
 
+			set :trackNumber to 0
+
 			if :loopButton is undefined then
 				trigger Pause
 				exit
@@ -108,10 +127,10 @@ behavior MediaPlayer
 				exit
 			end
 
-			set trackNumber to 0
+		else 
+			set :trackNumber to trackNumber
 		end
 
-		set :trackNumber to trackNumber
 		set trackElement to tracks[trackNumber]
 		set url to the trackElement's @data-track-url
 
@@ -133,6 +152,18 @@ behavior MediaPlayer
 
 		tell <.media-show-when-paused /> in me
 			hide yourself
+		end
+
+		if :name is not undefined then
+			set the :name's innerText to (the trackElement's @data-track-name or the :name's @data-original)
+		end
+
+		if :artist is not undefined then
+			set the :artist's innerText to (the trackElement's @data-track-artist or the :artist's @data-original)
+		end
+
+		if :image is not undefined then
+			set the :image's @src to (the trackElement's @data-track-image or the :image's @data-original)
 		end
 
 	end
@@ -161,6 +192,17 @@ behavior MediaPlayer
 			show yourself
 		end
 
+		if the :name is not null then
+			set the :name's innerText to the :name's @data-original
+		end
+
+		if the :artist is not null then
+			set the :artist's innerText to the :artist's @data-original
+		end
+
+		if the :image is not null then
+			set the :image's @src to the :image's @data-original
+		end
 	end
 
 	on Prev
