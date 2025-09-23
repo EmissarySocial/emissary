@@ -107,6 +107,10 @@ func (stream Stream) ID() string {
  * Other Data Accessors
  ******************************************/
 
+func (stream Stream) Name() string {
+	return stream.Label
+}
+
 func (stream Stream) Permalink() string {
 	return stream.URL
 }

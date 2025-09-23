@@ -62,6 +62,10 @@ func (summary StreamSummary) ID() string {
 	return summary.ObjectID.Hex()
 }
 
+func (summary StreamSummary) Name() string {
+	return summary.Label
+}
+
 func (summary StreamSummary) Author() PersonLink {
 	return summary.AttributedTo
 }
