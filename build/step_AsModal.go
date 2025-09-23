@@ -112,7 +112,7 @@ func (step StepAsModal) getModalContent(builder Builder) (string, PipelineResult
 	var buffer bytes.Buffer
 
 	result := Pipeline(step.SubSteps).Get(builder.factory(), builder, &buffer)
-	result.Error = derp.Wrap(result.Error, location, "Error executing subSteps")
+	result.Error = derp.WrapIF(result.Error, location, "Error executing subSteps")
 
 	if result.Halt {
 		return "", result
