@@ -358,8 +358,7 @@ button.outline:hover,
 button.selected,
 .button.selected {
 	background-color: var(--gray40);
-	color: var(--gray05);
-	xxcolor: var(--button-primary-background);
+	color: var(--black);
 }
 
 button.selected:hover,
@@ -367,8 +366,7 @@ button.selected:hover,
 button.selected:focus,
 .button.selected:focus {
 	background-color: var(--gray50);
-	color: var(--white);
-	xxcolor: var(--button-primary-background);
+	color: var(--black);
 }
 
 button.warning,
