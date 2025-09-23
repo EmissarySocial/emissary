@@ -33,6 +33,7 @@
 		</div>
 
 		<div class="align-right text-xs nowrap">
+			{{template "reply-button" $object.ID }}
 			<span
 				hx-get="/@me/inbox/like-button?url={{$object.ID}}"
 				hx-target="this"

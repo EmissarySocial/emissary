@@ -11,9 +11,9 @@
 
 	actions:{
 
-		follow-button: {
+		reply-button: {
 			roles:["authenticated"]
-			steps: [
+			steps:[
 				{do:"view-html"}
 			]
 		}
@@ -22,6 +22,7 @@
 			roles:["authenticated"]
 			steps:[
 				{do:"set-response"}
+				{do:"set-data", params:{"show-reply":true}}
 				{do:"view-html", "method":"both"}
 			]
 		}

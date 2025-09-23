@@ -56,13 +56,15 @@
 							<button class="text-xs">show more &downarrow;</button>
 						</div>
 
-						<div 
-							hx-get="/@me/inbox/like-button?url={{$documentID}}" 
-							hx-trigger="intersect once"
-							hx-target="this" 
-							hx-swap="innerHTML" 
-							hx-push-url="false" 
-							class="margin-top-lg text-xs">
+						<div class="margin-top-lg text-xs">
+							{{template "reply-button" $documentID }}
+							<span 
+								hx-get="/@me/inbox/like-button?url={{$documentID}}" 
+								hx-trigger="intersect once"
+								hx-target="this" 
+								hx-swap="innerHTML" 
+								hx-push-url="false">
+							</span>
 						</div>
 
 						<div class="pos-absolute-top-right text-sm" hx-target="#modal-window" hx-push-url="false" hx-swap="innerHTML transition:true">

@@ -98,6 +98,7 @@
 					<div class="margin-bottom text-sm text-light-gray">{{ $document.Published | shortDate -}}</div>
 
 					<div class="text-xs margin-top">
+						{{ template "reply-button" $document.ID }}
 						{{.View "like-button"}}
 					</div>
 				</div>

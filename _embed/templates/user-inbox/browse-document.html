@@ -37,13 +37,15 @@
 			{{- end -}}
 
 		</div>
-		<div 
-			hx-get="/@me/inbox/like-button?url={{$document.ID}}" 
-			hx-trigger="intersect once"
-			hx-target="this" 
-			hx-swap="innerHTML" 
-			hx-push-url="false" 
-			class="margin-top-lg text-xs">
+		<div class="margin-top-lg text-xs">
+			{{template "reply-button" $document.ID }}
+			<span 
+				hx-get="/@me/inbox/like-button?url={{$document.ID}}" 
+				hx-trigger="intersect once"
+				hx-target="this" 
+				hx-swap="innerHTML" 
+				hx-push-url="false">
+			</span>
 		</div>
 
 		<div class="pos-absolute-top-right text-sm" hx-target="#modal-window" hx-push-url="false" hx-swap="innerHTML transition:true">

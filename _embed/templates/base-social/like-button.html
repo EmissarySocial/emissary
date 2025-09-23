@@ -1,13 +1,9 @@
-{{- $url := .QueryParam "url" -}}
+{{- $url := first (.QueryParam "url") .Permalink -}}
 {{- $responses := .GetResponseSummary $url -}}
 {{- $document := .ActivityStream $url -}}
 {{- $metadata := $document.Metadata -}}
 
 <span hx-target="this" hx-swap="outerHTML" hx-push-url="false">
-
-	<button class="turboclick" hx-target="main" hx-swap="outerHTML" hx-get="/@me/inbox/browse-reply?url={{$url}}">
-		{{icon "reply"}} Reply
-	</button>
 
 	{{- if $responses.Announce -}}
 		<button 
@@ -24,36 +20,17 @@
 	{{- end -}}
 
 	{{- if $responses.Like -}}
-		<button class="turboclick selected" hx-post="{{.BasePath}}/like-button?url={{$url}}" hx-vals='{"type":"Like", "url":"{{$url}}", "exists":false}'><span aria-hidden="true" class="margin-left-xs">{{icon "like-fill"}}</span> Liked</button>
+		<button 
+			class="turboclick selected" 
+			hx-post="{{.BasePath}}/like-button?url={{$url}}" 
+			hx-vals='{"type":"Like", "url":"{{$url}}", "exists":false}'
+			><span aria-hidden="true" class="margin-left-xs">{{icon "like-fill"}}</span> Liked</button>
 	{{- else -}}
-		<button class="turboclick" hx-post="{{.BasePath}}/like-button?url={{$url}}" hx-vals='{"type":"Like", "url": "{{$url}}", "exists":true}'><span aria-hidden="true" class="margin-left-xs">{{icon "like"}}</span> Like</button>
+		<button 
+			class="turboclick" 
+			hx-post="{{.BasePath}}/like-button?url={{$url}}" 
+			hx-vals='{"type":"Like", "url": "{{$url}}", "exists":true}'
+			><span aria-hidden="true" class="margin-left-xs">{{icon "like"}}</span> Like</button>
 	{{- end -}}
-
-	<!--
-	<a href="{{$url}}" target="_blank" class="button">
-		{{icon "globe"}} Website
-	</a>
-	-->
-
-	<!--
-	{{- if eq $metadata.Replies 0 -}}
-		<span class="text-gray margin-left-lg">0 Replies</span>
-	{{- else -}}
-		<span
-			role="button"
-			hx-get="/@me/inbox/browse?&url={{$url}}"
-			hx-push-url="false"
-			tabIndex="0"
-			class="text-gray margin-left-lg">{{$metadata.Replies}} {{pluralize $metadata.Replies "Reply" "Replies"}}</span>
-	{{ end }}
-
-	{{ if gt $metadata.Announces 0 }}
-		<span class="text-gray margin-left">{{$metadata.Announces}} {{pluralize $metadata.Announces "Share" "Shares"}}</span>
-	{{ end }}
-
-	{{ if gt $metadata.Likes 0 }}
-		<span class="text-gray margin-left">{{$metadata.Likes}} {{pluralize $metadata.Likes "Like" "Likes"}}</span>
-	{{ end }}
-	-->
 
 </span>

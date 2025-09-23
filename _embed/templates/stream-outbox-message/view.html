@@ -49,7 +49,7 @@
 						{{.View "like-button"}}
 					{{- else -}}
 						<button hx-get="/{{.StreamID}}/intent?intent=like&object={{.Permalink}}"><span aria-hidden="true" class="margin-left-xs">{{icon "thumbs-up"}}</span> Like</button>
-						<button hx-get="/{{.StreamID}}/intent?intent=dislike&object={{.Permalink}}"><span aria-hidden="true" class="margin-left-xs">{{icon "thumbs-down"}}</span> Dislike</button>
+						<!--button hx-get="/{{.StreamID}}/intent?intent=dislike&object={{.Permalink}}"><span aria-hidden="true" class="margin-left-xs">{{icon "thumbs-down"}}</span> Dislike</button-->
 						<button hx-get="/{{.StreamID}}/intent?intent=create&content={{.Label | queryEscape}} {{.Permalink}}"><span aria-hidden="true" class="margin-left-xs">{{icon "share"}}</span> Share</button>
 						<button hx-get="/{{.StreamID}}/intent" aria-label="Manage Accounts">{{icon "more-horizontal"}}</button>
 					{{- end -}}
