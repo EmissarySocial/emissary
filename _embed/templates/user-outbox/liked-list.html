@@ -49,9 +49,6 @@
 			<div class="flex-row">
 				<div class="flex-shrink-0" style="width:80px;"></div>
 				<div class="text-sm">
-					<!--{{- if $isMyself -}}
-						<span class="margin-right-xs" hx-get="/@me/like-button?url={{$document.ID}}" hx-target="this" hx-trigger="load" hx-swap="innerHTML" hx-push-url="false"></span>
-					{{- end -}}-->
 					<span class="text-gray">
 						{{- if not $isMyself -}}
 							<span class="p-content">{{.Content}}</span>
