@@ -22,7 +22,7 @@
 		{{- end -}}
 		
 		<h1 class="p-name margin-none">{{.DisplayName}}</h1>
-		<div script="install selectText" class="text-sm gray50 ellipsis">@{{.Username}}@{{.Hostname}}</div>
+		<div script="install SelectText" class="text-sm gray50 ellipsis">@{{.Username}}@{{.Hostname}}</div>
 		{{- if not .Myself -}}
 			<div class="margin-top">
 				<button type="button" class="primary width-100% ellipsis" hx-get="/@{{.UserID}}/intent?intent=follow&object={{.Permalink}}">{{icon "add-circle"}} Follow {{.DisplayName}}</button>

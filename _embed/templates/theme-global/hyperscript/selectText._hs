@@ -1,4 +1,4 @@
-behavior selectText
+behavior SelectText
 
     init
         set my *cursor to "pointer"
