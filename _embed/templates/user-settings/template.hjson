@@ -433,7 +433,7 @@
 			steps:[
 				{do:"with-following", steps:[
 					{do:"delete", title:"Stop Following {{.Label}}", message:"Are you sure you want to stop following this source?"}
-					{do:"trigger-event", event:"refreshSection"}
+					{do:"refresh-page"}
 				]}
 			]
 		}
