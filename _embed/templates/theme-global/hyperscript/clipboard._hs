@@ -1,0 +1,28 @@
+behavior Clipboard
+
+	on click from <.clipboard-copy-button /> in me
+
+		set textElement to the first <.clipboard-text /> in me
+		if textElement is null then
+			exit
+		end
+
+		set the clippedValue to the textElement's innerText
+		call navigator.clipboard.writeText(clippedValue)
+
+		tell <.clipboard-copy-button /> in me
+			hide yourself
+		end
+
+		tell <.clipboard-copy-feedback /> in me
+			show yourself
+			wait 1.5s
+			hide yourself
+		end
+
+		tell <.clipboard-copy-button /> in me
+			show yourself
+		end
+	end
+
+end
