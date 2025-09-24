@@ -151,14 +151,17 @@ func (service *Outbox) unpublish(session data.Session, actorType string, actorID
 		}
 	}
 
-	// TODO: This should also support "Undo" activities in the future,
-	// but this will require additional function arguments.
-
 	// Make a streams.Document to represent the "Delete" activity
 	document := streams.NewDocument(mapof.Any{
-		vocab.PropertyActor:     actor.ActorID(),
-		vocab.PropertyType:      activityType,
-		vocab.PropertyObject:    objectID,
+		vocab.AtContext:     vocab.ContextTypeActivityStreams,
+		vocab.PropertyID:    objectID + "#delete",
+		vocab.PropertyActor: actor.ActorID(),
+		vocab.PropertyType:  activityType,
+		vocab.PropertyTo:    vocab.NamespaceActivityStreamsPublic,
+		vocab.PropertyObject: mapof.Any{
+			vocab.PropertyID:   objectID,
+			vocab.PropertyType: vocab.ObjectTypeTombstone,
+		},
 		vocab.PropertyPublished: hannibal.TimeFormat(time.Now()),
 	})
 
