@@ -518,6 +518,7 @@ func (service *ActivityStream) collection(ctx context.Context) (data.Collection,
 	return session.Collection("Document"), nil
 }
 
+/*
 func (service *ActivityStream) asDocumentLink(value ascache.Value) model.DocumentLink {
 
 	document := streams.NewDocument(value.Object)
@@ -540,3 +541,4 @@ func (service *ActivityStream) asDocumentLink(value ascache.Value) model.Documen
 		Token:     value.Metadata.HashedID,
 	}
 }
+*/
