@@ -2,33 +2,31 @@
 {{- $members := .CircleMembers.Slice -}}
 {{- $icon := concat $circle.Icon "-fill" -}}
 
-<div class="page app flex-row" script="on load take .selected from .nav-item for #nav-settings">
+<div class="app" script="on load take .selected from .nav-item for #nav-settings">
 	<title> {{.Name}} | Circles</title>
 
 	<div id="app-sidebar" class="expanded" hx-swap="innerHTML show:window:top">
 
-		<div class="pos-sticky" style="top:96px;">
-	
-			<div class="bold text-xl margin-none margin-bottom">Settings</div>
-
-			<a href="/@me/settings/following" hx-boost="true" class="turboclick menu-item ellipsis">{{icon "star"}} Following</a>
-			<a href="/@me/settings/followers" hx-boost="true" class="turboclick menu-item ellipsis">{{icon "person"}} Followers</a>
-			<a href="/@me/settings/circles" hx-boost="true" class="turboclick menu-item ellipsis selected">{{icon "circle-fill"}} Circles</a>
-			<a href="/@me/settings/payments" hx-boost="true" class="turboclick menu-item ellipsis">{{icon "credit-card"}} Payments</a>
-			<a href="/@me/settings/rules" hx-boost="true" class="turboclick menu-item ellipsis">{{icon "rule"}} Rules</a>
-			<a href="/@guest" class="turboclick menu-item ellipsis">{{icon "user"}} Guest Profile</a>
-			<hr>
-			<a hx-post="/signout" class="button text-xs">Sign Out</a>
-		</div>
-	
+		<a href="/@me/settings/following" hx-boost="true" class="turboclick menu-item ellipsis">{{icon "star"}} Following</a>
+		<a href="/@me/settings/followers" hx-boost="true" class="turboclick menu-item ellipsis">{{icon "person"}} Followers</a>
+		<a href="/@me/settings/circles" hx-boost="true" class="turboclick menu-item ellipsis selected">{{icon "circle-fill"}} Circles</a>
+		<a href="/@me/settings/payments" hx-boost="true" class="turboclick menu-item ellipsis">{{icon "credit-card"}} Payments</a>
+		<a href="/@me/settings/rules" hx-boost="true" class="turboclick menu-item ellipsis">{{icon "rule"}} Rules</a>
+		<a href="/@guest" class="turboclick menu-item ellipsis">{{icon "user"}} Guest Profile</a>
+		<hr>
+		<a hx-post="/signout" class="button text-xs">Sign Out</a>
 	</div>
 	
-	<div class="app-content">
-		<h1 class="text-xl bold margin-none">
-			<a href="/@me/settings/circles" hx-boost="true">Circles</a> 
-			&middot; 
-			{{.Name}}
-		</h1>
+	<div class="app-content padding">
+
+		<div class="flex-row flex-align-center margin-bottom-lg">
+			<h1 class="text-xl bold margin-none flex-grow">
+				<a href="/@me/settings/circles" hx-boost="true">Circles</a> 
+				&middot; 
+				{{.Name}}
+			</h1>
+			<a href="https://emissary.dev/circles" target="_blank">{{icon "help"}} Help with Circles</a>
+		</div>
 
 		<div class="md:flex-row width-100% margin-top margin-bottom-lg">
 
