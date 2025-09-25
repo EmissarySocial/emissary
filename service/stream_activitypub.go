@@ -37,6 +37,8 @@ func (service *Stream) Activity(session data.Session, stream *model.Stream) stre
 // This map will still need to be marshalled into JSON
 func (service *Stream) JSONLD(session data.Session, stream *model.Stream) mapof.Any {
 
+	const location = "service.Stream.JSONLD"
+
 	result := mapof.Any{
 		vocab.AtContext:         sliceof.Any{vocab.ContextTypeActivityStreams, vocab.ContextTypeSecurity, vocab.ContextTypeToot},
 		vocab.PropertyID:        stream.ActivityPubURL(),
@@ -131,8 +133,9 @@ func (service *Stream) JSONLD(session data.Session, stream *model.Stream) mapof.
 	if template, err := service.templateService.Load(stream.TemplateID); err == nil {
 		result[vocab.PropertyType] = template.SocialRole
 		if template.SocialRules.NotEmpty() {
-			err := template.SocialRules.Execute(schma, stream, schma, &result)
-			derp.Report(err)
+			if err := template.SocialRules.Execute(schma, stream, schma, &result); err != nil {
+				derp.Report(derp.Wrap(err, location, "Unable to apply social rules to stream", stream.StreamID, template.SocialRules))
+			}
 		}
 	}
 
