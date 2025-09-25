@@ -493,6 +493,7 @@ func (service *ActivityStream) documentIterator(ctx context.Context, criteria ex
 	return collection.Iterator(criteria, options...)
 }
 
+// collection creates a new mongodb Session and returns the mongodb Collection that stores ActivityStream documents
 func (service *ActivityStream) collection(ctx context.Context) (data.Collection, error) {
 
 	const location = "service.ActivityStream.collection"

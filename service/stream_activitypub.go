@@ -36,6 +36,7 @@ func (service *Stream) Activity(session data.Session, stream *model.Stream) stre
 // GetJSONLD returns a map document that conforms to the ActivityStreams 2.0 spec.
 // This map will still need to be marshalled into JSON
 func (service *Stream) JSONLD(session data.Session, stream *model.Stream) mapof.Any {
+
 	result := mapof.Any{
 		vocab.AtContext:         sliceof.Any{vocab.ContextTypeActivityStreams, vocab.ContextTypeSecurity, vocab.ContextTypeToot},
 		vocab.PropertyID:        stream.ActivityPubURL(),
