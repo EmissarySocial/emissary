@@ -61,8 +61,6 @@ func main() {
 	fmt.Println("                                      |___/ ")
 	fmt.Println("")
 
-	go waitForSigInt()
-
 	// Derp configuration (rewritten once we have a shared database)
 	derp.Plugins.Clear()
 	derp.Plugins.Add(derpconsole.New())
