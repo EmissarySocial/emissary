@@ -64,7 +64,7 @@ type Factory struct {
 	exportCache         afero.Fs
 	commonDatabase      *mongo.Database
 	workingDirectory    mediaserver.WorkingDirectory
-	queue               queue.Queue
+	queue               *queue.Queue
 	digitalDome         dome.Dome
 
 	domains   map[string]*service.Factory
@@ -152,17 +152,19 @@ func NewFactory(commandLineArgs *config.CommandLineArgs, embeddedFiles embed.FS)
 	factory.readConfig(<-subscription)
 
 	if factory.IsLiveMode() {
-		if !factory.IsReadyForDomains() {
+
+		// If the Factory is ready for domains, then start the configuration listener
+		if factory.IsReadyForDomains() {
+			go factory.start(subscription)
+
+		} else {
+			// Otherwise, force setup mode
 			log.Warn().Msg("Factory: Server config is not complete. Switching to `setup` mode.")
 			factory.setup = true
 		}
 	}
 
-	// All other updates to configuration are handled asynchronously in the future
-	if factory.IsLiveMode() {
-		go factory.start(subscription)
-	}
-
+	// Done configuring the factory
 	return &factory
 }
 
@@ -178,43 +180,6 @@ func (factory *Factory) start(subscription <-chan config.Config) {
 func (factory *Factory) readConfig(config config.Config) {
 
 	const location = "server.Factory.readConfig"
-
-	// Update the configuration with the latest values.
-	factory.config = config
-
-	// Refresh these global services with values we'll always need.
-	factory.emailService.Refresh()
-	factory.templateService.Refresh(config.Templates)
-
-	// RULE: If we're running the setup console, then
-	// do not run the remaining updates
-	if factory.IsSetupMode() {
-		return
-	}
-
-	filesystemService := factory.Filesystem()
-
-	if err := factory.refreshCommonDatabase(config.ActivityPubCache); err != nil {
-		derp.Report(derp.Wrap(err, location, "WARNING: Could not refresh common database.  Important services (like queued tasks and ActivityPub caching) may not function correctly.", config.ActivityPubCache))
-	}
-
-	if factory.commonDatabase == nil {
-		errorMessage := "Halting. Common database not properly defined in configuration file."
-		derp.Report(derp.InternalError("server.factory.start", errorMessage))
-		log.Error().Msg(errorMessage)
-		os.Exit(1)
-	}
-
-	server := mongodb.NewServer(factory.commonDatabase)
-	session, err := server.Session(context.Background())
-
-	if err != nil {
-		derp.Report(derp.Wrap(err, "server.factory.start", "Unable to connect to common database."))
-		os.Exit(1)
-	}
-
-	// Set timeout threshold for slow queries
-	mongodb.SetLogTimeout(config.LogSlowQueries)
 
 	// Set logging level from the configuration file
 	switch config.DebugLevel {
@@ -237,6 +202,44 @@ func (factory *Factory) readConfig(config config.Config) {
 
 	log.Info().Msg("Factory: received new configuration...")
 
+	// Update the configuration with the latest values.
+	factory.config = config
+
+	// Refresh these global services with values we'll always need.
+	factory.emailService.Refresh()
+	factory.templateService.Refresh(config.Templates)
+
+	// RULE: If we're running the setup console, then
+	// do not run the remaining updates
+	if factory.IsSetupMode() {
+		log.Trace().Msg("Factory.readConfig: In setup mode, so skipping domain updates")
+		return
+	}
+
+	filesystemService := factory.Filesystem()
+
+	if err := factory.refreshCommonDatabase(config.ActivityPubCache); err != nil {
+		derp.Report(derp.Wrap(err, location, "WARNING: Could not refresh common database.  Important services (like queued tasks and ActivityPub caching) may not function correctly.", config.ActivityPubCache))
+	}
+
+	if factory.commonDatabase == nil {
+		errorMessage := "Halting. Common database not properly defined in configuration file."
+		derp.Report(derp.InternalError(location, errorMessage))
+		log.Error().Msg(errorMessage)
+		os.Exit(1)
+	}
+
+	server := mongodb.NewServer(factory.commonDatabase)
+	session, err := server.Session(context.Background())
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to connect to common database."))
+		os.Exit(1)
+	}
+
+	// Set timeout threshold for slow queries
+	mongodb.SetLogTimeout(config.LogSlowQueries)
+
 	if attachmentOriginals, err := filesystemService.GetAfero(config.AttachmentOriginals); err == nil {
 		factory.attachmentOriginals = attachmentOriginals
 	} else {
@@ -257,7 +260,6 @@ func (factory *Factory) readConfig(config config.Config) {
 
 	// Mark all domains for deletion (then unmark them later)
 	for index := range factory.domains {
-
 		// NILCHECK: Guard against nil pointer dereference
 		if factory.domains[index] == nil {
 			derp.Report(derp.Internal(location, "Domain is nil. This should never happen.", index))
@@ -268,7 +270,7 @@ func (factory *Factory) readConfig(config config.Config) {
 
 	factory.refreshQueue()
 
-	log.Trace().Msg("Setting up Common Database")
+	log.Trace().Msg("Factory.readConfig: Setting up Common Database")
 
 	// JWT Service configuration
 	factory.jwtService.Refresh(server, config.MasterKey)
@@ -293,7 +295,7 @@ func (factory *Factory) readConfig(config config.Config) {
 				logger))
 
 		default:
-			log.Error().Str("type", logger.GetString("type")).Msg("Unknown logging type")
+			log.Error().Str("type", logger.GetString("type")).Msg("Factory.readConfig: Unknown logging type")
 		}
 	}
 
@@ -301,6 +303,7 @@ func (factory *Factory) readConfig(config config.Config) {
 	for _, domainConfig := range config.Domains {
 
 		factory.mutex.Lock()
+		log.Trace().Str("domain", domainConfig.Hostname).Msg("Factory.readConfig: Refreshing domain")
 		if err := factory.refreshDomain(domainConfig); err != nil {
 			derp.Report(derp.Wrap(err, location, "Unable to refresh domain", domainConfig.ID))
 			continue
@@ -315,6 +318,7 @@ func (factory *Factory) readConfig(config config.Config) {
 			derp.Report(derp.Internal(location, "Domain is nil. This should never happen.", domainID))
 		} else {
 			if factory.domains[domainID].MarkForDeletion {
+				log.Trace().Str("domain", domainID).Msg("Factory.readConfig: Removing domain")
 				delete(factory.domains, domainID)
 			}
 		}
@@ -323,6 +327,7 @@ func (factory *Factory) readConfig(config config.Config) {
 
 	// Bootstrap the "Scheduler" task.  Duplicates will be dropped.
 	// This task will be used to schedule all other daily/hourly tasks
+	log.Trace().Msg("Factory.readConfig: Bootstrapping Scheduler")
 	if err := factory.queue.Publish(queue.NewTask("Scheduler", mapof.NewAny())); err != nil {
 		derp.Report(derp.Wrap(err, location, "Unable to initialize scheduler"))
 	}
@@ -357,7 +362,7 @@ func (factory *Factory) refreshDomain(domainConfig config.Domain) error {
 		&factory.contentService,
 		&factory.emailService,
 		&factory.jwtService,
-		&factory.queue,
+		factory.queue,
 		&factory.registrationService,
 		&factory.templateService,
 		&factory.themeService,
@@ -707,7 +712,7 @@ func (factory *Factory) Content() *service.Content {
 
 // Queue returns the gloabl message queue service
 func (factory *Factory) Queue() *queue.Queue {
-	return &factory.queue
+	return factory.queue
 }
 
 // Registration returns the global template service
