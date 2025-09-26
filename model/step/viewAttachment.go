@@ -2,6 +2,7 @@ package step
 
 import (
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/rosetta/translate"
@@ -15,6 +16,7 @@ type ViewAttachment struct {
 	Heights    sliceof.Int        // The height(s) of the attachment (if image or video)
 	Bitrates   sliceof.Int        // The bitrate(s) of the attachment (if audio or video)
 	Metadata   translate.Pipeline // Mapping to use when generating metadata
+	Cache      bool
 }
 
 // NewViewAttachment generates a fully initialized ViewAttachment step.
@@ -44,6 +46,7 @@ func NewViewAttachment(stepInfo mapof.Any) (ViewAttachment, error) {
 		Widths:     stepInfo.GetSliceOfInt("width"),
 		Bitrates:   stepInfo.GetSliceOfInt("bitrate"),
 		Metadata:   metadata,
+		Cache:      convert.BoolDefault(stepInfo.GetString("cache"), true),
 	}, nil
 }
 
