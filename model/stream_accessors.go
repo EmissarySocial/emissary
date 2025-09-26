@@ -26,7 +26,9 @@ func StreamSchema() schema.Element {
 			"circles":          permissionSchema(),
 			"products":         permissionSchema(),
 			"url":              schema.String{Format: "url"},
+			"name":             schema.String{MaxLength: 128},
 			"label":            schema.String{MaxLength: 128},
+			"description":      schema.String{MaxLength: 2048},
 			"summary":          schema.String{MaxLength: 2048},
 			"icon":             schema.String{},
 			"iconUrl":          schema.String{Format: "url"},
@@ -93,8 +95,14 @@ func (stream *Stream) GetPointer(name string) (any, bool) {
 	case "url":
 		return &stream.URL, true
 
+	case "name":
+		return &stream.Label, true
+
 	case "label":
 		return &stream.Label, true
+
+	case "description":
+		return &stream.Summary, true
 
 	case "summary":
 		return &stream.Summary, true
