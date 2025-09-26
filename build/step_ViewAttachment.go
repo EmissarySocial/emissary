@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/rosetta/convert"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/rosetta/translate"
@@ -22,6 +23,7 @@ type StepViewAttachment struct {
 	Heights    sliceof.Int        // The height(s) of the attachment (if image or video)
 	Bitrates   sliceof.Int        // The bitrate(s) of the attachment (if audio or video)
 	Metadata   translate.Pipeline // Mapping to use when generating metadata
+	Cache      bool
 }
 
 // Get builds the Stream HTML to the context
@@ -82,7 +84,7 @@ func (step StepViewAttachment) Get(builder Builder, buffer io.Writer) PipelineBe
 
 	// Retrieve the file from the mediaserver
 	ms := factory.MediaServer()
-	filespec, err := step.makeFileSpec(streamBuilder.request(), streamBuilder._stream, &attachment)
+	filespec, err := step.makeFileSpec(&streamBuilder, streamBuilder._stream, &attachment)
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error generating file spec"))
@@ -100,12 +102,15 @@ func (step StepViewAttachment) Post(streamBuilder Builder, buffer io.Writer) Pip
 }
 
 // makeFileSpec generates a FileSpec for the given attachment based on the rules in this step and query parameters in the request
-func (step StepViewAttachment) makeFileSpec(request *http.Request, stream *model.Stream, attachment *model.Attachment) (mediaserver.FileSpec, error) {
+func (step StepViewAttachment) makeFileSpec(builder *Stream, stream *model.Stream, attachment *model.Attachment) (mediaserver.FileSpec, error) {
 
 	const location = "build.StepViewAttachment.makeFileSpec"
 
+	query := builder.request().URL.Query()
 	result := mediaserver.NewFileSpec()
-	query := request.URL.Query()
+	result.Filename = attachment.AttachmentID.Hex()
+	result.OriginalExtension = attachment.OriginalExtension()
+	result.Cache = step.Cache
 
 	// Calculate generated file type
 	if format := query.Get("format"); step.Formats.Contains(format) {
@@ -142,22 +147,32 @@ func (step StepViewAttachment) makeFileSpec(request *http.Request, stream *model
 	}
 
 	// Calculate metadata (if present)
+	// https://wiki.multimedia.cx/index.php/FFmpeg_Metadata
 	if len(step.Metadata) > 0 {
 
-		inSchema := schema.New(model.StreamSchema())
+		data := mapof.Any{
+			"stream": stream,
+		}
+
+		if parentBuilder, err := builder.Parent("view"); err == nil {
+			data["parent"] = parentBuilder._stream
+		}
+
+		inSchema := schema.New(schema.Object{
+			Properties: schema.ElementMap{
+				"stream": model.StreamSchema(),
+				"parent": model.StreamSchema(),
+			},
+		})
+
 		outSchema := schema.New(schema.Object{
 			Wildcard: schema.String{},
 		})
 
-		if err := step.Metadata.Execute(inSchema, stream, outSchema, &result.Metadata); err != nil {
-			return result, derp.Wrap(err, location, "Error executing metadata pipeline")
+		if err := step.Metadata.Execute(inSchema, data, outSchema, &result.Metadata); err != nil {
+			derp.Report(derp.Wrap(err, location, "Error executing metadata pipeline"))
 		}
 	}
-
-	// Set other properties
-	result.Filename = attachment.AttachmentID.Hex()
-	result.OriginalExtension = attachment.OriginalExtension()
-	result.Cache = true
 
 	return result, nil
 }
