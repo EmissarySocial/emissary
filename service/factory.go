@@ -656,7 +656,6 @@ func (factory *Factory) ActivityStreamCrawler(actorType string, actorID primitiv
 		factory.Hostname(),
 		actorType,
 		actorID,
-		2,
 	)
 }
 

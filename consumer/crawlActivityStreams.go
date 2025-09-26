@@ -1,8 +1,6 @@
 package consumer
 
 import (
-	"net/http"
-
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
@@ -19,7 +17,6 @@ func CrawlActivityStreams(factory *service.Factory, _ data.Session, args mapof.A
 	actorType := args.GetString("actorType")
 	actorToken := args.GetString("actorID")
 	url := args.GetString("url")
-	history := args.GetSliceOfString("history")
 
 	// Parse actorID
 	actorID, err := primitive.ObjectIDFromHex(actorToken)
@@ -28,41 +25,29 @@ func CrawlActivityStreams(factory *service.Factory, _ data.Session, args mapof.A
 		return queue.Failure(derp.Wrap(err, location, "Invalid actorID"))
 	}
 
-	// Ok fam, it's about to get real.
+	// Try to crawl the ActivityStream
 	activityStreamCrawler := factory.ActivityStreamCrawler(actorType, actorID)
-	err = activityStreamCrawler.Crawl(url, history)
 
-	if err == nil {
-		return queue.Success()
-	}
+	if err := activityStreamCrawler.Crawl(url); err != nil {
 
-	// If the ActivityStream no longer exists, then remove it from the cache
-	if shouldDeleteActivityStream(err) {
-		activityStreamService := factory.ActivityStream(actorType, actorID)
-		if err := activityStreamService.Delete(url); err != nil {
-			return queue.Error(derp.Wrap(err, location, "Unable to deleting ActivityStream", url))
+		// If the ActivityStream no longer exists, then remove it from the cache
+		if derp.IsNotFoundOrGone(err) {
+			activityService := factory.ActivityStream(actorType, actorID)
+			if err := activityService.Delete(url); err != nil {
+				return queue.Error(derp.Wrap(err, location, "Unable to deleting ActivityStream", url))
+			}
+			return queue.Success()
 		}
-		return queue.Success()
+
+		// If it's "our fault" then we can't retry
+		if derp.IsClientError(err) {
+			return queue.Failure(derp.Wrap(err, location, "Client error when loading ActivityStream", url))
+		}
+
+		// Otherwise, it's "their fault" and it's worth retrying
+		return queue.Error(derp.Wrap(err, location, "Unable to load ActivityStream"))
 	}
 
-	// Client errors should not be retried.
-	if derp.IsClientError(err) {
-		return queue.Failure(derp.Wrap(err, location, "Client error when loading ActivityStream", history))
-	}
-
-	// Server errors should be retried
-	return queue.Error(derp.Wrap(err, location, "Unable to load ActivityStream"))
-}
-
-func shouldDeleteActivityStream(err error) bool {
-
-	if derp.IsNotFound(err) {
-		return true
-	}
-
-	if derp.ErrorCode(err) == http.StatusGone {
-		return true
-	}
-
-	return false
+	// No error => success!
+	return queue.Success()
 }

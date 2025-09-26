@@ -260,6 +260,7 @@ func (factory *Factory) readConfig(config config.Config) {
 
 	// Mark all domains for deletion (then unmark them later)
 	for index := range factory.domains {
+
 		// NILCHECK: Guard against nil pointer dereference
 		if factory.domains[index] == nil {
 			derp.Report(derp.Internal(location, "Domain is nil. This should never happen.", index))
