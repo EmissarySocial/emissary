@@ -451,8 +451,10 @@ func (w Settings) HasRule(ruleType string, trigger string) model.Rule {
 
 	// Retrieve rule record.  "Not Found" is acceptable, but "legitimate" errors are not.
 	// In either case, do not halt the request
-	if err := ruleService.LoadByTrigger(w._session, w._user.UserID, ruleType, trigger, &rule); !derp.IsNilOrNotFound(err) {
-		derp.Report(derp.Wrap(err, "build.Settings.HasRule", "Error loading rule", ruleType, trigger))
+	if err := ruleService.LoadByTrigger(w._session, w._user.UserID, ruleType, trigger, &rule); err != nil {
+		if !derp.IsNotFound(err) {
+			derp.Report(derp.Wrap(err, "build.Settings.HasRule", "Unable to load rule", ruleType, trigger))
+		}
 	}
 
 	// Return the (possibly empty) Rule record

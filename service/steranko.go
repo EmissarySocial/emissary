@@ -47,7 +47,7 @@ func (service SterankoUserService) Load(username string, result steranko.User) e
 	}
 
 	if err := service.userService.LoadByUsernameOrEmail(service.session, username, user); err != nil {
-		return derp.Wrap(err, location, "Error loading user")
+		return derp.Wrap(err, location, "Unable to load user")
 	}
 
 	return nil
@@ -107,8 +107,10 @@ func (service SterankoUserService) Claims(sterankoUser steranko.User) (jwt.Claim
 
 	// Look up the Identity for this User.  If missing, NBD..
 	identity := model.NewIdentity()
-	if err := service.identityService.LoadByEmailAddress(service.session, user.EmailAddress, &identity); !derp.IsNilOrNotFound(err) {
-		return nil, derp.Wrap(err, location, "Error loading identity for user")
+	if err := service.identityService.LoadByEmailAddress(service.session, user.EmailAddress, &identity); err != nil {
+		if !derp.IsNotFound(err) {
+			return nil, derp.Wrap(err, location, "Unable to load Identity for User")
+		}
 	}
 
 	identityID := iif(identity.IsNew(), primitive.NilObjectID, identity.IdentityID)

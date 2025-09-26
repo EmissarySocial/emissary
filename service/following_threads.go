@@ -26,7 +26,7 @@ func (service *Following) SaveMessage(session data.Session, following *model.Fol
 
 	// Try to save a unique version of this message to the database (always collapse duplicates)
 	if err := service.saveUniqueMessage(session, message); err != nil {
-		return derp.Wrap(err, location, "Error saving message")
+		return derp.Wrap(err, location, "Unable to save message", message)
 	}
 
 	// Yee. Haw.
@@ -51,7 +51,7 @@ func (service *Following) SaveDirectMessage(session data.Session, user *model.Us
 
 	// Try to save a unique version of this message to the database (always collapse duplicates)
 	if err := service.saveUniqueMessage(session, message); err != nil {
-		return derp.Wrap(err, location, "Error saving message")
+		return derp.Wrap(err, location, "Unable to save message")
 	}
 
 	// Yee. Haw.
@@ -68,15 +68,17 @@ func (service *Following) saveUniqueMessage(session data.Session, message model.
 	// Search for a previous UNREAD message with our same UserID and URL.
 	previousMessage := model.Message{}
 
-	if err := service.inboxService.LoadByURL(session, message.UserID, message.URL, &previousMessage); !derp.IsNilOrNotFound(err) {
-		return derp.Wrap(err, location, "Error searching for duplicate message", message)
+	if err := service.inboxService.LoadByURL(session, message.UserID, message.URL, &previousMessage); err != nil {
+		if !derp.IsNotFound(err) {
+			return derp.Wrap(err, location, "Unable to search for duplicate message", message)
+		}
 	}
 
 	// If no previous message was found, then save the current message as is
 	if previousMessage.IsNew() {
 
 		if err := service.inboxService.Save(session, &message, "Created"); err != nil {
-			return derp.Wrap(err, location, "Error saving new message", message)
+			return derp.Wrap(err, location, "Unable to save new message", message)
 		}
 
 		return nil
@@ -97,7 +99,7 @@ func (service *Following) saveUniqueMessage(session data.Session, message model.
 	// if the message was updated (from AddReference or MarkNewReplies) then save it.
 	if isReferenceUpdated || isStatusUpdated {
 		if err := service.inboxService.Save(session, &previousMessage, "Message Imported"); err != nil {
-			return derp.Wrap(err, location, "Error updating previous message with new origin and status", previousMessage)
+			return derp.Wrap(err, location, "Unable to update previous message with new origin and status", previousMessage)
 		}
 	}
 

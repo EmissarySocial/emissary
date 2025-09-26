@@ -71,8 +71,10 @@ func (step StepWithAnnotation) getAnnotation(builder Builder) (model.Annotation,
 	// If a `url` query parameter is provided, then use it to load the Annotation record
 	if url := builder.QueryParam("url"); url != "" {
 
-		if err := annotationService.LoadByURL(builder.session(), userID, url, &annotation); !derp.IsNilOrNotFound(err) {
-			return model.NewAnnotation(), derp.Wrap(err, location, "Unable to load Annotation by URL", url)
+		if err := annotationService.LoadByURL(builder.session(), userID, url, &annotation); err != nil {
+			if !derp.IsNotFound(err) {
+				return model.NewAnnotation(), derp.Wrap(err, location, "Unable to load Annotation by URL", url)
+			}
 		}
 
 		annotation.URL = url

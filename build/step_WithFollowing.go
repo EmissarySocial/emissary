@@ -85,8 +85,10 @@ func (step StepWithFollowing) getFollowing(builder Builder) (model.Following, er
 	// If a `url` query parameter is provided, then use it to load the Following record
 	if url := builder.QueryParam("url"); url != "" {
 
-		if err := followingService.LoadByURL(builder.session(), userID, url, &following); !derp.IsNilOrNotFound(err) {
-			return model.NewFollowing(), derp.Wrap(err, location, "Unable to load Following by URL", url)
+		if err := followingService.LoadByURL(builder.session(), userID, url, &following); err != nil {
+			if !derp.IsNotFound(err) {
+				return model.NewFollowing(), derp.Wrap(err, location, "Unable to load Following by URL", url)
+			}
 		}
 
 		following.URL = url
