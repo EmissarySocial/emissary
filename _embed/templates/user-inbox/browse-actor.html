@@ -7,7 +7,7 @@
 {{- $folderID := .QueryParam "folderId" -}}
 {{- $url := $actor.ID -}}
 
-<div id="modal-header" class="turboclick" hx-target="#modal" hx-swap="innerHTML transition:true">
+<div id="modal-header" class="turboclick" hx-target="#modal" hx-swap="innerHTML">
 	<div role="tablist" class="pills margin-bottom-none">
 
 		{{- if ne "" $search -}}

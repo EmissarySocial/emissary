@@ -48,7 +48,7 @@
 			</span>
 		</div>
 
-		<div class="pos-absolute-top-right text-sm" hx-target="#modal-window" hx-push-url="false" hx-swap="innerHTML transition:true">
+		<div class="pos-absolute-top-right text-sm" hx-target="#modal-window" hx-push-url="false" hx-swap="innerHTML">
 			<span class="margin-right text-light-gray">{{ $document.Published | tinyDate }} ago</span>
 			{{ if eq $document.ID ($builder.QueryParam "url") }}
 				<button hx-get="/@me/inbox/browse-tree?url={{$document.ID}}" aria-label="Use Nested Layout" class="selected">{{icon "focus"}}</button>

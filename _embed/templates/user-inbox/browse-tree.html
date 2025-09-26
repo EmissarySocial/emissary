@@ -3,7 +3,7 @@
 
 {{- template "browse-header" (array $url "tree") -}}
 
-<div id="modal-body" class="turboclick padding-top" hx-target="#modal-window" hx-swap="innerHTML transition:true" hx-push-url="false">
+<div id="modal-body" class="turboclick padding-top" hx-target="#modal-window" hx-swap="innerHTML" hx-push-url="false">
 
 	{{- template "browse-parent" (array . $document "") -}}
 
