@@ -19,15 +19,15 @@ require (
 	github.com/benpate/hannibal v0.14.1
 	github.com/benpate/html v0.16.13
 	github.com/benpate/icon v0.4.0
-	github.com/benpate/mediaserver v0.15.7
+	github.com/benpate/mediaserver v0.15.8
 	github.com/benpate/re v0.3.4
 	github.com/benpate/remote v0.17.6
-	github.com/benpate/rosetta v0.25.18
+	github.com/benpate/rosetta v0.25.19
 	github.com/benpate/sherlock v0.8.13
 	github.com/benpate/steranko v0.22.2
 	github.com/benpate/table v0.7.6
 	github.com/benpate/toot v0.3.0
-	github.com/benpate/turbine v0.3.5
+	github.com/benpate/turbine v0.4.0
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/codingsince1985/geo-golang v1.8.5
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
@@ -80,7 +80,7 @@ require (
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/cloudflare/ahocorasick v0.0.0-20240916140611-054963ec9396 // indirect
 	github.com/cloudflare/circl v1.6.1 // indirect
-	github.com/cyphar/filepath-securejoin v0.4.1 // indirect
+	github.com/cyphar/filepath-securejoin v0.5.0 // indirect
 	github.com/dlclark/regexp2 v1.11.5 // indirect
 	github.com/dolthub/maphash v0.1.0 // indirect
 	github.com/dyatlov/go-opengraph/opengraph v0.0.0-20220524092352-606d7b1e5f8a // indirect
@@ -113,6 +113,7 @@ require (
 	github.com/sergi/go-diff v1.4.0 // indirect
 	github.com/skeema/knownhosts v1.3.1 // indirect
 	github.com/tdewolff/parse/v2 v2.8.3 // indirect
+	github.com/tiendc/go-deepcopy v1.7.1 // indirect
 	github.com/toorop/go-dkim v0.0.0-20250226130143-9025cce95817 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
