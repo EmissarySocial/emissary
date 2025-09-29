@@ -247,9 +247,19 @@ func (w Stream) Token() string {
 	return w._stream.Token
 }
 
+// Name returns the Name for the stream being built (alias of .Label)
+func (w Stream) Name() string {
+	return w._stream.Label
+}
+
 // Label returns the Label for the stream being built
 func (w Stream) Label() string {
 	return w._stream.Label
+}
+
+// Description returns the description of the stream being built (alias of .Summary)
+func (w Stream) Description() string {
+	return w._stream.Summary
 }
 
 // Summary returns the description of the stream being built
