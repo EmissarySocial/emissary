@@ -201,6 +201,9 @@ func (w Stream) View(actionID string) (template.HTML, error) {
 		return template.HTML(""), derp.Wrap(err, location, "Error creating sub-builder")
 	}
 
+	// copy render data from parent to child
+	subStream.arguments = w.arguments
+
 	// Generate HTML template
 	return subStream.Render()
 }
