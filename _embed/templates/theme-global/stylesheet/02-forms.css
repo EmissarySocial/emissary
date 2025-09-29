@@ -346,12 +346,19 @@ button.highlight:hover,
 
 
 button.outline,
+.button.outline {
+	background-color: rgba(0,0,0,0);
+	color: var(--button-primary-background);
+	border:solid 1px var(--button-primary-background);
+}
+
+button.outline,
 button.outline:hover,
 .button.outline,
 .button.outline:hover {
 	background-color: rgba(0,0,0,0);
-	color: var(--button-primary-background);
-	border:solid 1px var(--button-primary-background);
+	color: var(--button-primary-background-hover);
+	border:solid 1px var(--button-primary-background-hover);
 }
 
 
