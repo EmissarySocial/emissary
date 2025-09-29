@@ -80,15 +80,7 @@ behavior MediaPlayer
 
 	on ended from <audio /> in me or
 		ended from <video /> in me
-
-		set nextTrackNumber to :trackNumber + 1
-		if nextTrackNumber < :tracks.length then
-			trigger Play(trackNumber:nextTrackNumber)
-			exit
-		end
-
-		set :trackNumber to 0
-		trigger Pause
+		trigger Next
 	end
 
 	on Play(trackNumber)
