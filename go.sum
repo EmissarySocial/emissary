@@ -34,8 +34,8 @@ github.com/benpate/data-mock v0.31.1 h1:lwPkZrCKBex7pF48yj7IgLbBaW5dKGuFmt9cwmUS
 github.com/benpate/data-mock v0.31.1/go.mod h1:FIUmbcCT7Y+gwjmCGVxzAwSxttjnP1bSSdpcQaGv/Qo=
 github.com/benpate/data-mongo v0.30.5 h1:TS4ydIhRWVkFCHNwx8yCwP9ZMFOkcdr+xc1/xeLu5CI=
 github.com/benpate/data-mongo v0.30.5/go.mod h1:xXxRs0QkFMwujJTf/lD59NGYeTBsyUBB84Guw9okoD4=
-github.com/benpate/derp v0.33.0 h1:T/zzyuYlqkYfWDoaFcdlP4h7ChfJZViqeASSVEi0ilw=
-github.com/benpate/derp v0.33.0/go.mod h1:eWyOubqTrcUKVPnBoQBw9J9GdpCxupkMO56mGGvjCtI=
+github.com/benpate/derp v0.34.0 h1:Eg54jS1g6IRfdUHVCm3Fp77UsqEPwzHbc8losID1HwI=
+github.com/benpate/derp v0.34.0/go.mod h1:eWyOubqTrcUKVPnBoQBw9J9GdpCxupkMO56mGGvjCtI=
 github.com/benpate/digit v0.13.7 h1:XjmvgSMCqXpg6OSZO1tGRE60AUlMMgQQYgwJ0WeAyxc=
 github.com/benpate/digit v0.13.7/go.mod h1:2/5Kbcx62wQphSglDCAZuAcq99sQnwIZzm6sxxXDT/Y=
 github.com/benpate/digital-dome v0.2.7 h1:R56v9etmg4iSGYs45l9vSeAi9dxsD8Hs8Evnvff6mLo=
