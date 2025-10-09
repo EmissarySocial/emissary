@@ -134,7 +134,7 @@
 			roles: ["author", "editor"]
 			steps: [
 				{do:"with-draft", steps: [
-					{do:"upload-attachments", fieldname:"image", json-result:true, category:"image", accept-type:"image/*"}
+					{do:"upload-attachments", maximum:60, fieldname:"image", json-result:true, category:"image", accept-type:"image/*"}
 				]}
 			]
 		}
