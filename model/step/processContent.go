@@ -15,9 +15,9 @@ type ProcessContent struct {
 // NewProcessContent returns a fully initialized ProcessContent record
 func NewProcessContent(stepInfo mapof.Any) (ProcessContent, error) {
 	return ProcessContent{
-		RemoveHTML: convert.BoolDefault(stepInfo["remove-html"], true),
-		AddTags:    convert.BoolDefault(stepInfo["add-tags"], true),
-		AddLinks:   convert.BoolDefault(stepInfo["add-links"], true),
+		RemoveHTML: convert.BoolDefault(stepInfo["remove-html"], false),
+		AddTags:    convert.BoolDefault(stepInfo["add-tags"], false),
+		AddLinks:   convert.BoolDefault(stepInfo["add-links"], false),
 	}, nil
 }
 
