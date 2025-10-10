@@ -235,6 +235,8 @@ func (service Icons) Get(name string) string {
 		return service.get("megaphone-fill")
 	case "mention":
 		return service.get("at")
+	case "menu":
+		return service.get("list")
 	case "more-horizontal":
 		return service.get("three-dots")
 	case "more-vertical":
