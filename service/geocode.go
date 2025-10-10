@@ -33,7 +33,7 @@ func NewGeocode(hostname string, queue *queue.Queue, connectionService *Connecti
 // and will return an error on any failure.
 func (service Geocode) Geocode(session data.Session, stream *model.Stream) error {
 
-	const location = "service.Geocode.GeocodeStream"
+	const location = "service.Geocode.Geocode"
 
 	geocoder := service.getGeocoder(session)
 
