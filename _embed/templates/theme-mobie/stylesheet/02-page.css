@@ -8,7 +8,7 @@
     position:relative;
 	line-height:150%;
 	border: none;
-	padding: calc(var(--rhythm) * 2);
+	padding: 0px;
 	font-weight:400;
 	width:100%;
 	margin:0px;
