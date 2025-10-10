@@ -1,0 +1,171 @@
+/******************************************
+ * PAGE LAYOUT CLASSES
+ ******************************************/
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	display:flex;
+	flex-direction:column;
+	background-color: var(--body-background);
+	color: var(--text-color);
+	margin:0px;
+}
+
+nav {
+	display: flex;
+	align-items:stretch;
+	justify-content: center;
+
+	color: var(--gray80);
+	font-weight:400;
+	font-size:14px;
+	background-color: var(--white);
+	height:48px;
+	flex-shrink:0;
+	flex-grow:0;
+	padding-left:16px;
+	padding-right:16px;
+	overflow-x:auto;
+	overflow-y:hidden;
+	overscroll-behavior: none;
+
+	/*
+
+	position:fixed;
+	bottom:0px;
+	left: 0px;
+	right: 0px;
+	z-index:1000;
+
+	border-top: solid 1px var(--gray15);
+	*/
+}
+
+@media screen and (min-width:640px) {
+
+	nav {
+		border-bottom: solid 1px var(--gray15);
+	}
+}
+
+
+nav .framed {
+	display: flex;
+	justify-content: space-evenly;
+}
+
+@media screen and (min-width:640px) {
+
+	nav .framed {
+		display: flex;
+		flex-grow:1;
+		justify-content: center;
+	}
+}
+
+nav a,
+nav button {
+	display:flex;
+	flex-direction:column;
+	align-items:center;
+
+    color: var(--gray80);
+	background-color: var(--white);
+	padding:6px 12px;
+	border-radius: var(--border-radius);
+	margin:6px 0px;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+nav a > .icon {
+	font-size:24px;
+}
+
+nav a > .label {
+	font-size:10px;
+	line-height:14px;
+}
+
+nav .spacer {
+	display:none;
+}
+
+nav b {
+	display:inline-block;
+	color: var(--black);
+	font-weight: 700;
+	padding: 8px 0px;
+	margin:10px 10px 10px 0px;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+nav a:hover,
+nav a:focus,
+nav button:hover,
+nav button:focus {
+    color: var(--gray90);
+    background-color:var(--gray10);
+}
+
+nav a.selected,
+nav a.selected:hover,
+nav a.selected:focus,
+nav button.selected,
+nav button.selected:hover
+nav button.selected:focus {
+	background-color: var(--gray20);
+	color: var(--black);
+}
+
+main {
+	display: flex;
+	flex-direction:row;
+	justify-content: center;
+	container-type:inline-size;
+	-overflow-x:hidden;
+	-overflow-y:auto;
+	overscroll-behavior: none;
+}
+
+body:has(> main > .app) {
+	height:100dvh;
+	width:100dvw;
+	overflow-x:hidden;
+	overflow-y:hidden;
+	overscroll-behavior: none;
+}
+
+main:has(> .app) {
+	height:100%;
+	overflow-x:hidden;
+	overflow-y:hidden;
+	overscroll-behavior:none;
+}
+
+@media screen and (min-width:640px) {
+
+	nav a {
+		display:inline;
+	}
+
+	nav a > .icon {
+		display:unset;
+		font-size:unset;
+	}
+	
+	nav a > .label {
+		display:unset;
+		font-size:unset;
+		line-height:unset;
+	}
+
+	nav .spacer {
+		display:unset;
+		flex-grow:1;
+	}
+}
