@@ -10,6 +10,7 @@ import (
 // StepProcessContent is an action step that adds tags to a stream, either by scanning the content, or by
 // calculating template values
 type StepProcessContent struct {
+	Format     string
 	RemoveHTML bool
 	AddTags    bool
 	AddLinks   bool
@@ -36,6 +37,10 @@ func (step StepProcessContent) Post(builder Builder, buffer io.Writer) PipelineB
 	contentService := factory.Content()
 
 	stream := streamBuilder._stream
+
+	if step.Format != "" {
+		stream.Content = contentService.New(step.Format, stream.Content.Raw)
+	}
 
 	if step.RemoveHTML {
 		stream.Content.HTML = html.RemoveAnchors(stream.Content.HTML)
