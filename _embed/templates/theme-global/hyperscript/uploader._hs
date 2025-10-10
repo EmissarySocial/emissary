@@ -1,27 +1,27 @@
 behavior DropToUpload
 
-on dragenter
-	halt the event
-	add .highlight to me
-end
+	on dragenter
+		halt the event
+		add .highlight to me
+	end
 
-on dragover
-	halt the event
-	add .highlight to me
-end
+	on dragover
+		halt the event
+		add .highlight to me
+	end
 
-on dragleave
-	halt the event
-	remove .highlight from me
-end
+	on dragleave
+		halt the event
+		remove .highlight from me
+	end
 
-on drop(dataTransfer)
-	halt the event
-	remove .highlight from me
+	on drop(dataTransfer)
+		halt the event
+		remove .highlight from me
 
-	set input to the first <input[type="file"]/> in me
-	set the input's files to the dataTransfer's files
-	send change to the input
-end
+		set input to the first <input[type="file"]/> in me
+		set the input's files to the dataTransfer's files
+		send change to the input
+	end
 
 end
