@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"github.com/benpate/derp"
+	"github.com/benpate/hannibal/collections"
 	"github.com/benpate/hannibal/property"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
@@ -63,6 +64,22 @@ func (client *Client) Load(uri string, options ...any) (streams.Document, error)
 		relationType, relationHref := calcRelationType(result)
 		result.Metadata.RelationType = relationType
 		result.Metadata.RelationHref = relationHref
+
+		// Count `Likes`
+		if likes, err := collections.CountItems(result.Likes()); err == nil {
+			result.Metadata.SetRelationCount(vocab.PropertyLikes, int64(likes))
+		}
+
+		// Count `Replies`
+		if replies, err := collections.CountItems(result.Replies()); err == nil {
+			result.Metadata.SetRelationCount(vocab.PropertyReplies, int64(replies))
+		}
+
+		// Count `Shares`
+		if shares, err := collections.CountItems(result.Shares()); err == nil {
+			result.Metadata.SetRelationCount(vocab.PropertyShares, int64(shares))
+		}
+
 	}
 
 	// Return the result
