@@ -31,7 +31,7 @@
 			roles:["self"]
 			steps: [
 				{do:"edit-content", file:"create", format:"HTML"}
-				{do:"process-content"}
+				{do:"process-content", remove-html:true, add-links:true, add-tags:true}
 				{do:"save-and-publish", state:"default", outbox:"true"}
 			]
 		}
@@ -41,7 +41,7 @@
 				{do:"as-modal", steps:[
 					{do:"set-args", postTo:"/{{.StreamID}}/edit"}
 					{do:"edit-content", file:"edit", format:"HTML"}
-					{do:"process-content"}
+					{do:"process-content", remove-html:true, add-links:true, add-tags:true}
 					{do:"save-and-publish", state:"default", outbox:"true"}
 					{do:"refresh-page"}
 				]}
