@@ -8,9 +8,7 @@
 
 <body hx-target="main" hx-swap="innerHTML transition:true show:window:top" hx-push-url="true" hx-ext="a11y">
 
-	<nav>
-		{{template "navigation" . }}
-	</nav>
+	{{template "navigation" . }}
 
 	<main id="main">
 		{{- .GetContent -}}

@@ -1,50 +1,59 @@
-<div hx-push-url="true" hx-swap="transition:true" class="framed">
-	<button class="circle" style="padding:10px; background-color:black; color:white;" aria-label="Show Navigation">{{icon "menu"}}</button>
-		
-	<!--
-	<a href="#main" class="hide-visual">Skip navigation</a>
-	{{- range .Navigation -}}
-		<a href="/{{.Token}}" id="nav-{{.StreamID}}" class="nav-item turboclick" aria-label="{{.Label}}">
-			{{- $icon := .Icon -}}
-			{{- if ne "" $icon -}}
-				<span class="icon selected-hide">{{icon $icon}}</span>
-				<span class="icon selected-show">{{icon (join $icon "-fill")}}</span>
-			{{- end }}
-			<span class="label">{{.Label}}</span>
-		</a>
-	{{- end -}}
-	<span class="spacer"></span>
-	{{- if .IsAuthenticated -}}
-		<a href="/@me" id="nav-outbox" class="nav-item turboclick" aria-label="Profile">
-			<span class="icon selected-hide">{{icon "user"}}</span>
-			<span class="icon selected-show">{{icon "user-fill"}}</span>
-		</a>
+<nav script="install ToggleContainer">
 
-		<a href="/@me/inbox" id="nav-inbox" class="nav-item turboclick" aria-label="Inbox">
-			<span class="icon selected-hide">{{icon "inbox"}}</span>
-			<span class="icon selected-show">{{icon "inbox-fill"}}</span>
-		</a>
+	<button class="ToggleShow circle" style="padding:10px; background-color:black; color:white;" aria-label="Show Navigation">{{icon "menu"}}</button>
 
-		<a href="/@me/settings" id="nav-settings" class="nav-item turboclick" aria-label="Settings">
-			<span class="icon selected-hide">{{icon "settings"}}</span>
-			<span class="icon selected-show">{{icon "settings-fill"}}</span>
-		</a>
+	<div class="ToggleContent flex-column" hx-push-url="true" hx-swap="transition:true" class="framed" style="display:none;">
 
-		{{- if .IsOwner -}}
-			<a href="/admin/domain" id="nav-admin" class="nav-item turboclick" aria-label="Server Admin">
-				<span class="icon selected-hide">{{icon "server"}}</span>
-				<span class="icon selected-show">{{icon "server-fill"}}</span>
-			</a>
-		{{- end -}}
-	{{- else if .IsIdentity -}}
-		<a href="/@guest" id="nav-settings" class="nav-item turboclick" aria-label="Profile">
-			<span class="icon selected-hide">{{icon "user"}}</span>
-		</a>
-	{{- else -}}
-		<a href="/signin" id="nav-signin" class="nav-item turboclick" aria-label="Sign In">
-			<span class="icon">{{icon "user"}}</span>
-			<span class="label">Sign In</span>
-		</a>
-	{{- end -}}
-	--->
-</div>
+		<button class="ToggleHide circle" style="padding:10px; background-color:black; color:white;" aria-label="Hide Navigation">{{icon "cancel"}}</button>
+
+		<div class="flex-grow">
+			{{- range .Navigation -}}
+				<a href="/{{.Token}}" id="nav-{{.StreamID}}" class="nav-item turboclick" aria-label="{{.Label}}">
+					{{- $icon := .Icon -}}
+					{{- if ne "" $icon -}}
+						<span class="icon selected-hide">{{icon $icon}}</span>
+						<span class="icon selected-show">{{icon (join $icon "-fill")}}</span>
+					{{- end }}
+					<span class="label">{{.Label}}</span>
+				</a>
+			{{- end -}}
+		</div>
+
+		<div>
+			{{- if .IsAuthenticated -}}
+				<a href="/@me" id="nav-outbox" class="nav-item turboclick" aria-label="Profile">
+					<span class="icon">{{icon "user"}}</span>
+					<span class="label">My Profile</span>
+				</a>
+
+				<a href="/@me/inbox" id="nav-inbox" class="nav-item turboclick" aria-label="Inbox">
+					<span class="icon">{{icon "inbox"}}</span>
+					<span class="label">My Inbox</span>
+				</a>
+
+				<a href="/@me/settings" id="nav-settings" class="nav-item turboclick" aria-label="Settings">
+					<span class="icon">{{icon "settings"}}</span>
+					<span class="label">My Settings</span>
+				</a>
+
+				{{- if .IsOwner -}}
+					<a href="/admin/domain" id="nav-admin" class="nav-item turboclick" aria-label="Server Admin">
+						<span class="icon">{{icon "server"}}</span>
+						<span class="label">Server Settings</span>
+					</a>
+				{{- end -}}
+			{{- else if .IsIdentity -}}
+				<a href="/@guest" id="nav-settings" class="nav-item turboclick" aria-label="Profile">
+					<span class="icon">{{icon "user"}}</span>
+					<span class="label">My Profile</span>
+				</a>
+			{{- else -}}
+				<a href="/signin" id="nav-signin" class="nav-item turboclick" aria-label="Sign In">
+					<span class="icon">{{icon "user"}}</span>
+					<span class="label">Sign In</span>
+				</a>
+			{{- end -}}
+		</div>
+
+	</div>
+</nav>

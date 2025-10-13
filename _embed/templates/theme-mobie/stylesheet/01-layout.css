@@ -14,29 +14,6 @@ body {
 	margin:0px;
 }
 
-nav {
-	position:fixed;
-	top:8px;
-	left:8px;
-	z-index:10000;
-
-	font-weight:400;
-	overflow-x:auto;
-	overflow-y:hidden;
-	overscroll-behavior: none;
-
-	/*
-
-	position:fixed;
-	bottom:0px;
-	left: 0px;
-	right: 0px;
-	z-index:1000;
-
-	border-top: solid 1px var(--gray15);
-	*/
-}
-
 main {
 	display: flex;
 	flex-direction:row;
