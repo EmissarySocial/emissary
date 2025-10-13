@@ -30,11 +30,6 @@ func (service Icons) Get(name string) string {
 		return service.get("arrow-up-right-square")
 	case "announce-fill":
 		return service.get("arrow-up-right-square-fill")
-		/*
-			case "announce":
-				return service.get("rocket-takeoff")
-			case "announce-fill":
-				return service.get("rocket-takeoff-fill")*/
 	case "archive":
 		return service.get("archive")
 	case "archive-fill":
