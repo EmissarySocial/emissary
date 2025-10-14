@@ -122,6 +122,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.SaveAndPublish:
 		return StepSaveAndPublish(s)
 
+	case step.ScheduleDelete:
+		return StepScheduleDelete(s)
+
 	case step.SearchIndex:
 		return StepSearchIndex(s)
 

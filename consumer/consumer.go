@@ -34,6 +34,9 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 	case "DeleteEmptySearchQuery":
 		return WithSession(consumer.serverFactory, args, DeleteEmptySearchQuery)
 
+	case "DeleteStream":
+		return WithSession(consumer.serverFactory, args, DeleteStream)
+
 	case "Geocode":
 		return WithStream(consumer.serverFactory, args, Geocode)
 

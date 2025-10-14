@@ -148,6 +148,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "save-and-publish":
 		return NewSaveAndPublish(stepInfo)
 
+	case "schedule-delete":
+		return NewScheduleDelete(stepInfo)
+
 	case "search-index":
 		return NewSearchIndex(stepInfo)
 
