@@ -2,7 +2,7 @@ nav {
 	position:fixed;
 	top:0px;
 	left:0px;
-	z-index:10000;
+	z-index:999;
 
 	font-weight:400;
 	overflow-x:auto;
@@ -12,8 +12,8 @@ nav {
 	& .ToggleShow,
 	& .ToggleHide {
 		position:fixed;
-		top:calc(var(--rhythm) * 2);
-		right:calc(var(--rhythm) * 2);
+		top:calc(var(--rhythm) * 2.5);
+		right:calc(var(--rhythm) * 2.5);
 	}
 
 	& > .ToggleContent {

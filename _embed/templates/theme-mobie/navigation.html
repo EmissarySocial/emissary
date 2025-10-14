@@ -39,9 +39,10 @@
 				{{- if .IsOwner -}}
 					<a href="/admin/domain" id="nav-admin" class="nav-item turboclick" aria-label="Server Admin">
 						<span class="icon">{{icon "server"}}</span>
-						<span class="label">Server Settings</span>
+						<span class="label">Server Config</span>
 					</a>
 				{{- end -}}
+				
 			{{- else if .IsIdentity -}}
 				<a href="/@guest" id="nav-settings" class="nav-item turboclick" aria-label="Profile">
 					<span class="icon">{{icon "user"}}</span>
