@@ -19,10 +19,10 @@ type ProcessContent struct {
 func NewProcessContent(stepInfo mapof.Any) (ProcessContent, error) {
 
 	format := stepInfo.GetString("format")
-	allowed := sliceof.String{"MARKDOWN", "EDITORJS", "HTML"}
+	allowed := sliceof.String{"", "MARKDOWN", "EDITORJS", "HTML"}
 
 	if !allowed.Contains(format) {
-		return ProcessContent{}, derp.ValidationError("format must be one of [MARKDOWN, EDITORJS, HTML]")
+		return ProcessContent{}, derp.ValidationError("Format must be one of [MARKDOWN, EDITORJS, HTML]")
 	}
 
 	return ProcessContent{
