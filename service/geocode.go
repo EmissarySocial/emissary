@@ -2,8 +2,10 @@ package service
 
 import (
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/service/geocode"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
 	"github.com/codingsince1985/geo-golang"
@@ -156,4 +158,80 @@ func (service Geocode) getGeocoder(session data.Session) geo.Geocoder {
 	}
 
 	return openstreetmap.Geocoder()
+}
+
+func (service Geocode) GeocodeIP(session data.Session, ipAddress string) (latitude float64, longitude float64, err error) {
+
+	const location = "service.Geocode.GeocodeIP"
+
+	// Get IP geocoder
+	geocoder := service.getGeocoderIP(session)
+
+	// Get coordinates for this IP address
+	latitude, longitude, err = geocoder.GeocodeIP(ipAddress)
+
+	if err != nil {
+		return latitude, longitude, derp.Wrap(err, location, "Error geocoding IP address", ipAddress)
+	}
+
+	// Success
+	return latitude, longitude, nil
+}
+
+// getGeocoder returns the geocoder configured for this domain.
+// If none is configured, then the "free" OpenStreetMap geocoder is used.
+func (service Geocode) getGeocoderIP(session data.Session) geocode.Geocoder {
+
+	// Get the geocoder connction config
+	connection := model.NewConnection()
+
+	if err := service.connectionService.LoadActiveByType(session, model.ConnectionTypeGeocoderIP, &connection); err == nil {
+
+		latitude := connection.Data.GetString("latitude")
+		longitude := connection.Data.GetString("longitude")
+
+		switch connection.ProviderID {
+
+		case model.ConnectionProviderFREEIPAPICOM:
+
+			return geocode.NewFREEIPAPICOM(
+				connection.Data.GetString("apiKey"),
+				convert.Float(latitude),
+				convert.Float(longitude),
+			)
+
+		case model.ConnectionProviderIPAPICO:
+
+			return geocode.NewIPAPICO(
+				connection.Data.GetString("apiKey"),
+				convert.Float(latitude),
+				convert.Float(longitude),
+			)
+
+		case model.ConnectionProviderIPAPICOM:
+
+			return geocode.NewIPAPICOM(
+				connection.Data.GetString("apiKey"),
+				convert.Float(latitude),
+				convert.Float(longitude),
+			)
+
+		case model.ConnectionProviderStaticGeocoderIP:
+
+			return geocode.NewStatic(
+				convert.Float(latitude),
+				convert.Float(longitude),
+			)
+
+		}
+
+	} else {
+		derp.Report(err)
+	}
+
+	// Default to static geocoder for Kansas City, MO
+	return geocode.NewStatic(
+		39.0997,
+		94.5786,
+	)
 }

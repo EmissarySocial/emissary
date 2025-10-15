@@ -34,14 +34,26 @@ func (service *Provider) GetProvider(providerID string) (providers.Provider, boo
 	case providers.ProviderTypeArcGIS:
 		return providers.NewArcGIS(), true
 
+	case providers.ProviderTypeFREEIPAPICOM:
+		return providers.NewFREEIPAPICOM(), true
+
 	case providers.ProviderTypeGiphy:
 		return providers.NewGiphy(), true
 
 	case providers.ProviderTypeGoogleMaps:
 		return providers.NewGoogleMaps(), true
 
+	case providers.ProviderTypeIPAPICO:
+		return providers.NewIPAPICO(), true
+
+	case providers.ProviderTypeIPAPICOM:
+		return providers.NewIPAPICOM(), true
+
 	case providers.ProviderTypeOpenStreetMap:
 		return providers.NewOpenStreetMap(), true
+
+	case providers.ProviderTypeStaticGeocoderIP:
+		return providers.NewStaticGeocoder(), true
 
 	case providers.ProviderTypePayPal:
 		return providers.NewPayPal(), true

@@ -9,6 +9,8 @@ package model
 // ConnectionTypeGeocoder represents a provider that can geocode addresses
 const ConnectionTypeGeocoder = "GEOCODER"
 
+const ConnectionTypeGeocoderIP = "GEOCODER-IP"
+
 // ConnectionTypeImage represents a provider/connection that can be used to generate images
 const ConnectionTypeImage = "IMAGE"
 
@@ -24,19 +26,33 @@ const ConnectionTypeUserPayment = "USER-PAYMENT"
 // ConnectionProviderArcGIS represents an API connection to the https://www.arcgis.com service
 const ConnectionProviderArcGIS = "ARCGIS"
 
+// ConnectionProviderBing represents an API to the Bing Geocoding service
 const ConnectionProviderBing = "BING"
 
-// ConnectionProviderGoogleMaps represents an API connection to the https://maps.google.com service
-const ConnectionProviderGoogleMaps = "GOOGLE-MAPS"
-
-// ConnectionProviderOpenStreetMap represents an API connection to the https://openstreetmap.org service
-const ConnectionProviderOpenStreetMap = "OPENSTREETMAP"
-
-const ConnectionProviderTomTom = "TOMTOM"
+// ConnectionProviderFREEIPAPICOM represents an API connection to the https://freeipapi.com service
+const ConnectionProviderFREEIPAPICOM = "FREEIPAPI.COM"
 
 // ConnectionProviderGiphy represents an API connection to the https://giphy.com service
 // for generating animated GIFs.
 const ConnectionProviderGiphy = "GIPHY"
+
+// ConnectionProviderGoogleMaps represents an API connection to the https://maps.google.com service
+const ConnectionProviderGoogleMaps = "GOOGLE-MAPS"
+
+// ConnectionProviderIPAPICO represents an API connection to the https://ipapi.co service
+const ConnectionProviderIPAPICO = "IPAPI.CO"
+
+// ConnectionProviderIPAPICOM represents an API connection to the https://ipapi.com service
+const ConnectionProviderIPAPICOM = "IP-API.COM"
+
+// ConnectionProviderOpenStreetMap represents an API connection to the https://openstreetmap.org service
+const ConnectionProviderOpenStreetMap = "OPENSTREETMAP"
+
+// ConnectionproviderStaticGeocoder represents a static geocoding value that is always the same
+const ConnectionProviderStaticGeocoderIP = "STATIC-GEOCODER-IP"
+
+// ConnectionProviderTomTom represents an API connection to the https://tomtom.com mapping service
+const ConnectionProviderTomTom = "TOMTOM"
 
 // ConnectionProviderPayPal represents an API connection to the https://paypal.com service
 // for processing payments.
