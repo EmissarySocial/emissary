@@ -135,7 +135,7 @@ func WrapForm(endpoint string, content string, encoding string, options ...strin
 	// Controls
 	submitLabel := first.String(optionMap.GetString("submit-label"), "Save Changes")
 
-	b.Div().Class("flex-row")
+	b.Div().Class("flex-row", "flex-align-center")
 	b.Div().Class("flex-grow")
 	{
 		b.Button().Type("submit").ID("inline-save-button").Class("primary").TabIndex("0").Script("install SaveButton").InnerText(submitLabel).Close()
