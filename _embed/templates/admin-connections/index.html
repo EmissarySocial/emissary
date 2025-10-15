@@ -14,6 +14,7 @@
 				<div class="card align-center" script="install blockselect()">
 					<div class="text-3xl">{{icon .Icon}}</div>
 					<div class="margin-bottom text-lg bold">{{.Label}}</div>
+					<div class="margin-bottom text-gray" style="height:3em; overflow-y:hidden;">{{.Description}}</div>
 					<div class="margin-bottom">
 						{{- if $connection.Active -}}
 							<a href="/admin/connections/edit?providerId={{.Value}}" hx-boost="true" class="button success">{{icon "check"}} Enabled</a>
