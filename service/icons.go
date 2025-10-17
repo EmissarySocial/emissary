@@ -224,6 +224,8 @@ func (service Icons) Get(name string) string {
 		return service.get("arrow-clockwise")
 	case "login":
 		return service.get("box-arrow-in-right")
+	case "logout":
+		return service.get("box-arrow-right")
 	case "megaphone":
 		return service.get("megaphone")
 	case "megaphone-fill":
