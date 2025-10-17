@@ -1,12 +1,12 @@
 behavior ToggleContainer
 
-	on click from .ToggleShow in me
+	on ToggleShow or click from .ToggleShow in me
 		tell the first <.ToggleShow /> in me hide end
 		tell the first <.ToggleHide /> in me show end
 		tell the first <.ToggleContent /> in me show end
 	end
 
-	on click from .ToggleHide in me
+	on ToggleHide or click from .ToggleHide in me
 		tell the first <.ToggleShow /> in me show end
 		tell the first <.ToggleHide /> in me hide end
 		tell the first <.ToggleContent /> in me hide end
