@@ -66,7 +66,7 @@ func Providers() []form.LookupCode {
 		},
 		{
 			Value:       model.ConnectionProviderStaticGeocoderIP,
-			Label:       "Static IP Geocoding",
+			Label:       "Static Geocoder",
 			Icon:        "globe",
 			Description: "Return a fixed location for all IP address geocoding requests.",
 			Group:       "MANUAL",
