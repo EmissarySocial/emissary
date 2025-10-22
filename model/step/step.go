@@ -223,6 +223,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "view-html":
 		return NewViewHTML(stepInfo)
 
+	case "view-json":
+		return NewViewJSON(stepInfo)
+
 	case "websub":
 		return NewWebSub(stepInfo)
 
