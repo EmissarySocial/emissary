@@ -2,7 +2,6 @@ package step
 
 import (
 	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
 )
@@ -11,8 +10,9 @@ import (
 type ProcessContent struct {
 	Format     string
 	RemoveHTML bool
-	AddTags    bool
 	AddLinks   bool
+	AddTags    bool
+	TagPath    string
 }
 
 // NewProcessContent returns a fully initialized ProcessContent record
@@ -27,9 +27,10 @@ func NewProcessContent(stepInfo mapof.Any) (ProcessContent, error) {
 
 	return ProcessContent{
 		Format:     format,
-		RemoveHTML: convert.BoolDefault(stepInfo["remove-html"], false),
-		AddTags:    convert.BoolDefault(stepInfo["add-tags"], false),
-		AddLinks:   convert.BoolDefault(stepInfo["add-links"], false),
+		RemoveHTML: stepInfo.GetBool("remove-html"),
+		AddLinks:   stepInfo.GetBool("add-links"),
+		AddTags:    stepInfo.GetBool("add-tags"),
+		TagPath:    stepInfo.GetString("tag-path"),
 	}, nil
 }
 

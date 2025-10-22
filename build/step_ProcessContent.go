@@ -12,8 +12,9 @@ import (
 type StepProcessContent struct {
 	Format     string
 	RemoveHTML bool
-	AddTags    bool
 	AddLinks   bool
+	AddTags    bool
+	TagPath    string
 }
 
 // Get builds the HTML for this step - either a modal template selector, or the embedded edit form
@@ -52,7 +53,10 @@ func (step StepProcessContent) Post(builder Builder, buffer io.Writer) PipelineB
 
 	if step.AddTags {
 		streamService.CalculateTags(builder.session(), stream)
-		contentService.ApplyTags(&stream.Content, "/search?q=%23", stream.Hashtags)
+
+		if step.TagPath != "" {
+			contentService.ApplyTags(&stream.Content, step.TagPath, stream.Hashtags)
+		}
 	}
 
 	return Continue()
