@@ -3,10 +3,10 @@ package service
 import (
 	"bytes"
 	"regexp"
-	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
 	blocks "github.com/EmissarySocial/emissary/tools/editorjs-blocks"
+	"github.com/EmissarySocial/emissary/tools/replace"
 	"github.com/benpate/derp"
 	"github.com/davidscottmills/goeditorjs"
 	"github.com/microcosm-cc/bluemonday"
@@ -164,12 +164,15 @@ func (service *Content) ApplyTags(content *model.Content, base string, tags []st
 		return
 	}
 
+	// Add a "hash"
+	base = base + "%23"
+
 	// Last, apply tags back into the Content as links
 	for _, tag := range tags {
 		if tag == "" {
 			continue
 		}
 
-		content.HTML = strings.ReplaceAll(content.HTML, tag, `<a href="`+base+tag+`" target="_blank">`+tag+`</a>`)
+		content.HTML = replace.Content(content.HTML, "#"+tag, `<a href="`+base+tag+`" target="_blank">#`+tag+`</a>`)
 	}
 }
