@@ -76,6 +76,18 @@ func (service *Stream) JSONLD(session data.Session, stream *model.Stream) mapof.
 		result[vocab.PropertyTag] = slice.Map(stream.Hashtags, service.HashtagAsJSONLD)
 	}
 
+	switch len(stream.Places) {
+	case 0: // Do nothing
+	case 1:
+		result[vocab.PropertyLocation] = stream.Places[0].JSONLD()
+	default:
+		locations := make([]mapof.Any, 0, len(stream.Places))
+		for _, place := range stream.Places {
+			locations = append(locations, place.JSONLD())
+		}
+		result[vocab.PropertyLocation] = locations
+	}
+
 	// NOTE: According to Mastodon ActivityPub guide (https://docs.joinmastodon.org/spec/activitypub/)
 	// putting as:public in the To field means that this mesage is public, and "listed"
 	// putting as:public in the Cc field means that this message is public, but "unlisted"
