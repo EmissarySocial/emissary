@@ -15,6 +15,7 @@ import (
 
 // StepSetCircleSharing represents an action that can edit a top-level folder in the Domain
 type StepSetCircleSharing struct {
+	Method  string
 	Title   string
 	Message string
 	Button  string
@@ -24,6 +25,10 @@ type StepSetCircleSharing struct {
 func (step StepSetCircleSharing) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 
 	const location = "build.StepSetCircleSharing.Get"
+
+	if step.Method == "post" {
+		return Continue()
+	}
 
 	streamBuilder, isStreamBuilder := builder.(Stream)
 
@@ -74,6 +79,10 @@ func (step StepSetCircleSharing) Get(builder Builder, buffer io.Writer) Pipeline
 func (step StepSetCircleSharing) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
 	const location = "build.StepSetCircleSharing.Post"
+
+	if step.Method == "get" {
+		return Continue()
+	}
 
 	// Guarantee that we have a Stream builder
 	streamBuilder, isStreamBuilder := builder.(Stream)

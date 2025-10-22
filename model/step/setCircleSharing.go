@@ -1,12 +1,15 @@
 package step
 
 import (
+	"strings"
+
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 )
 
 // SetCircleSharing represents an action that can edit a top-level folder in the Domain
 type SetCircleSharing struct {
+	Method  string
 	Title   string
 	Message string
 	Button  string
@@ -23,6 +26,7 @@ func NewSetCircleSharing(stepInfo mapof.Any) (SetCircleSharing, error) {
 	}
 
 	return SetCircleSharing{
+		Method:  strings.ToLower(first(stepInfo.GetString("method"), "both")),
 		Title:   first(stepInfo.GetString("title"), "Sharing Settings"),
 		Message: first(stepInfo.GetString("message"), "Public Settings"),
 		Button:  first(stepInfo.GetString("button"), "Save Changes"),
