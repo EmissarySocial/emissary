@@ -12,27 +12,27 @@ import (
 
 // SearchResult represents a value in the search index
 type SearchResult struct {
-	SearchResultID primitive.ObjectID `bson:"_id"`                    // SearchResultID is the unique identifier for a SearchResult.
-	LockID         primitive.ObjectID `bson:"lockId"`                 // Unique identifier for the worker that is currently processing this task
-	Type           string             `bson:"type"`                   // Type is the ActivityPub object type (Person, Article, etc)
-	URL            string             `bson:"url"`                    // URL is the URL of the SearchResult.
-	AttributedTo   string             `bson:"attributedTo,omitempty"` // AttributedTo is the name (or username) of the creator of this SearchResult.
-	Name           string             `bson:"name"`                   // Name is the name of the SearchResult.
-	IconURL        string             `bson:"iconUrl,omitempty"`      // IconURL is the URL of the icon for the SearchResult.
-	Summary        string             `bson:"summary,omitempty"`      // Summary is a short description of the SearchResult.
-	Text           string             `bson:"text,omitempty"`         // Text is the searchable text of this SearchResult.  It is used to build the index value.
-	Date           time.Time          `bson:"date,omitempty"`         // Date is the date that this SearchResult was created.
-	Place          mapof.Any          `bson:"place,omitempty"`        // Place is the location (encoded with GeoJSON) of the SearchResult.
-	Tags           sliceof.String     `bson:"tags,omitempty"`         // Tags is a machine-readable list of tag values that are associated with this SearchResult.
-	Index          sliceof.String     `bson:"index,omitempty"`        // Index is a list of words (encoded via metaphone) that are used to index this SearchResult.
-	TimeoutDate    int64              `bson:"timeoutDate"`            // Unix epoch seconds when this task will "time out" and can be reclaimed by another process
-	ReIndexDate    int64              `bson:"reindexDate"`            // ReIndexDate is the date that this SearchResult should be reindexed.
-	NotifiedDate   int64              `bson:"notifiedDate"`           // NotifiedDate is the data that followers were notified of this SearchResult.
-	Rank           int64              `bson:"rank"`                   // Rank is the rank of this SearchResult in the search index.
-	Shuffle        int64              `bson:"shuffle"`                // Shuffle is a random number used to shuffle the search results.
-	Local          bool               `bson:"local"`                  // Local is true if this SearchResult originates on the local server.  Only local SearchResults will be syndicated to external servers.
+	SearchResultID primitive.ObjectID `json:"-"            bson:"_id"`                    // SearchResultID is the unique identifier for a SearchResult.
+	LockID         primitive.ObjectID `json:"-"            bson:"lockId"`                 // Unique identifier for the worker that is currently processing this task
+	Type           string             `json:"type"         bson:"type"`                   // Type is the ActivityPub object type (Person, Article, etc)
+	URL            string             `json:"url"          bson:"url"`                    // URL is the URL of the SearchResult.
+	AttributedTo   string             `json:"attributedTo" bson:"attributedTo,omitempty"` // AttributedTo is the name (or username) of the creator of this SearchResult.
+	Name           string             `json:"name"         bson:"name"`                   // Name is the name of the SearchResult.
+	IconURL        string             `json:"iconUrl"      bson:"iconUrl,omitempty"`      // IconURL is the URL of the icon for the SearchResult.
+	Summary        string             `json:"summary"      bson:"summary,omitempty"`      // Summary is a short description of the SearchResult.
+	Text           string             `json:"text"         bson:"text,omitempty"`         // Text is the searchable text of this SearchResult.  It is used to build the index value.
+	Date           time.Time          `json:"date"         bson:"date,omitempty"`         // Date is the date that this SearchResult was created.
+	Place          mapof.Any          `json:"place"        bson:"place,omitempty"`        // Place is the location (encoded with GeoJSON) of the SearchResult.
+	Tags           sliceof.String     `json:"tags"         bson:"tags,omitempty"`         // Tags is a machine-readable list of tag values that are associated with this SearchResult.
+	Index          sliceof.String     `json:"-"            bson:"index,omitempty"`        // Index is a list of words (encoded via metaphone) that are used to index this SearchResult.
+	TimeoutDate    int64              `json:"-"            bson:"timeoutDate"`            // Unix epoch seconds when this task will "time out" and can be reclaimed by another process
+	ReIndexDate    int64              `json:"-"            bson:"reindexDate"`            // ReIndexDate is the date that this SearchResult should be reindexed.
+	NotifiedDate   int64              `json:"-"            bson:"notifiedDate"`           // NotifiedDate is the data that followers were notified of this SearchResult.
+	Rank           int64              `json:"-"            bson:"rank"`                   // Rank is the rank of this SearchResult in the search index.
+	Shuffle        int64              `json:"-"            bson:"shuffle"`                // Shuffle is a random number used to shuffle the search results.
+	Local          bool               `json:"-"            bson:"local"`                  // Local is true if this SearchResult originates on the local server.  Only local SearchResults will be syndicated to external servers.
 
-	journal.Journal `bson:",inline"`
+	journal.Journal `json:"-" bson:",inline"`
 }
 
 func NewSearchResult() SearchResult {
@@ -153,6 +153,8 @@ func (searchResult SearchResult) Fields() []string {
 		"iconUrl",
 		"summary",
 		"date",
+		"tags",
+		"place",
 		"shuffle",
 		"createDate",
 	}
