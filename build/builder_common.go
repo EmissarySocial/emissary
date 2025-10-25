@@ -19,6 +19,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/sherlock"
+	"github.com/benpate/sniff"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -402,6 +403,11 @@ func (w Common) ActivityStreamActor(url string) streams.Document {
 func (w Common) ActivityStreamActors(search string) ([]model.ActorSummary, error) {
 	activityService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
 	return activityService.QueryActors(search)
+}
+
+// IsMobile returns TRUE if the request was made by a mobile device
+func (w Common) IsMobile() bool {
+	return sniff.IsMobile(w.request().UserAgent())
 }
 
 // IsMe returns TRUE if the provided URI is the profileURL of the current user
