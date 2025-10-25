@@ -11,7 +11,7 @@ import (
 	dt "github.com/benpate/domain"
 	"github.com/benpate/hannibal/collections"
 	"github.com/benpate/hannibal/streams"
-	"github.com/benpate/rosetta/channel"
+	"github.com/benpate/rosetta/ranges"
 	"github.com/benpate/sherlock"
 	"github.com/rs/zerolog/log"
 )
@@ -122,11 +122,10 @@ func (service *Following) connect_LoadMessages(following *model.Following, actor
 	const location = "service.Following.connect_LoadMessages"
 
 	// Create a channel from this outbox...
-	done := make(chan struct{})
 	outbox := actor.Outbox()
-	documentChan := collections.Documents(outbox, done)  // start reading documents from the outbox
-	documentChan = channel.Limit(12, documentChan, done) // Limit to last 12 documents
-	documents := channel.Slice(documentChan)             // Convert the channel into a slice
+	documentRangeFunc := collections.RangeDocuments(outbox) // start reading documents from the outbox
+	documentRangeFunc = ranges.Limit(12, documentRangeFunc) // Limit to last 12 documents
+	documents := ranges.Slice(documentRangeFunc)            // Convert the channel into a slice
 
 	// Sort the collection chronologically so that they're imported in the correct order.
 	sort.Slice(documents, func(a int, b int) bool {

@@ -11,7 +11,6 @@ import (
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
-	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -94,7 +93,6 @@ func (client *Client) Load(url string, options ...any) (streams.Document, error)
 		value := NewValue()
 
 		if err := client.loadByURL(session, url, &value); err == nil {
-
 			if value.ShouldRevalidate() {
 				client.revalidate(&value)
 			}
@@ -226,14 +224,15 @@ func (client *Client) timeoutSession(seconds int) (data.Session, context.CancelF
 	const location = "ascache.Client.timeoutSession"
 
 	ctx, cancel := timeoutContext(seconds)
-
 	session, err := client.session(ctx)
 
 	if err != nil {
+		cancel()
 		return nil, nil, derp.Wrap(err, location, "Unable to connect to common database")
 	}
 
 	if session == nil {
+		cancel()
 		return nil, nil, derp.InternalError(location, "Database session is nil.  This should never happen.")
 	}
 
@@ -252,12 +251,10 @@ func (client *Client) save(ctx context.Context, url string, value *Value) error 
 	_, err := client.commonDatabase.WithTransaction(ctx, func(session data.Session) (any, error) {
 
 		// Write to trace log
-		log.Trace().Str("url", url).Msg(location)
 
 		// Calculate caching rules and exit if cache is not allowed.
 		cacheControl := cacheheader.Parse(value.HTTPHeader)
 		if client.obeyHeaders && cacheControl.NotCacheAllowed() {
-			log.Trace().Str("url", url).Msg("Cache not allowed by HTTP headers. Skipping save method.")
 			return nil, nil
 		}
 

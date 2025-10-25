@@ -8,9 +8,9 @@ import (
 	"github.com/benpate/color"
 	"github.com/benpate/hannibal/collections"
 	"github.com/benpate/hannibal/streams"
-	"github.com/benpate/rosetta/channel"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/funcmap"
+	"github.com/benpate/rosetta/ranges"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/dustin/go-humanize"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -53,9 +53,8 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 	result["collection"] = func(max int, collection streams.Document) (sliceof.Object[streams.Document], error) {
 
 		// Make a channel of the first N documents
-		done := make(chan struct{})
-		ch := collections.Documents(collection, done)
-		ch = channel.Limit(max, ch, done)
+		ch := collections.RangeDocuments(collection)
+		ch = ranges.Limit(max, ch)
 
 		// Read all of the documents from the channel
 		result := make([]streams.Document, 0, max)

@@ -34,6 +34,12 @@ func (client *Client) Load(uri string, options ...any) (streams.Document, error)
 
 	const location = "asnormalizer.Client.Load"
 
+	defer func() {
+		if err := recover(); err != nil {
+			derp.Report(derp.Internal(location, "Recovered error", err, uri))
+		}
+	}()
+
 	// Forward request to inner client
 	result, err := client.innerClient.Load(uri, options...)
 
@@ -79,7 +85,6 @@ func (client *Client) Load(uri string, options ...any) (streams.Document, error)
 		if shares, err := collections.CountItems(result.Shares()); err == nil {
 			result.Metadata.SetRelationCount(vocab.PropertyShares, int64(shares))
 		}
-
 	}
 
 	// Return the result
