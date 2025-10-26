@@ -9,8 +9,8 @@
  * Font Stack
  ******************************************/
 :root {
-	--rhythm: 10px;
-    --weight:400;
+	--rhythm: 8px;
+    --weight:300;
 }
 
 @media (prefers-color-scheme:dark) {
@@ -38,6 +38,13 @@
 @media screen and (min-width:1280px) {
 	:root {
 		--rhythm: 9px;
+	}
+}
+
+.mobile {
+	:root {
+		--rhythm: 10px;
+		--weight: 400;
 	}
 }
     

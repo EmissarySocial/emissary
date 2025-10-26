@@ -96,3 +96,18 @@
 
 	.lg\:object-fit-cover {object-fit:cover}
 }
+
+.desktop {
+
+	.show-mobile,
+	.hide-desktop {
+		display:none;
+	}
+}
+
+.mobile {
+	.show-desktop,
+	.hide-mobile {
+		display:none;
+	}
+}
