@@ -7,8 +7,6 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
-const ProviderTypeGoogleMaps = "GOOGLE-MAPS"
-
 type GoogleMaps struct{}
 
 func NewGoogleMaps() GoogleMaps {

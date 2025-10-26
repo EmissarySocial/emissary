@@ -7,8 +7,6 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
-const ProviderTypeFREEIPAPICOM = "FREEIPAPI.COM"
-
 type FREEIPAPICOM struct{}
 
 func NewFREEIPAPICOM() FREEIPAPICOM {

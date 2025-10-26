@@ -7,8 +7,6 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
-const ProviderTypeStaticGeocoderIP = "STATIC-GEOCODER-IP"
-
 type StaticGeocoder struct{}
 
 func NewStaticGeocoder() StaticGeocoder {

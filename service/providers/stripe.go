@@ -7,8 +7,6 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
-const ProviderTypeStripe = "STRIPE"
-
 type Stripe struct{}
 
 func NewStripe() Stripe {

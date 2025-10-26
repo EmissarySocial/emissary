@@ -15,8 +15,6 @@ import (
 	"golang.org/x/oauth2"
 )
 
-const ProviderTypePayPal = "PAYPAL"
-
 type PayPal struct{}
 
 func NewPayPal() PayPal {

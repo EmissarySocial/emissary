@@ -7,8 +7,6 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
-const ProviderTypeIPAPICO = "IPAPI.CO"
-
 type IPAPICO struct{}
 
 func NewIPAPICO() IPAPICO {

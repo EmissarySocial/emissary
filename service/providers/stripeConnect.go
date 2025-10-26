@@ -11,8 +11,6 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
-const ProviderTypeStripeConnect = "STRIPE-CONNECT"
-
 type StripeConnect struct{}
 
 func NewStripeConnect() StripeConnect {

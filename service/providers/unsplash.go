@@ -7,8 +7,6 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
-const ProviderTypeUnsplash = "UNSPLASH"
-
 type Unsplash struct{}
 
 func NewUnsplash() Unsplash {

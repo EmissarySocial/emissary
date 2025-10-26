@@ -7,8 +7,6 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
-const ProviderTypeOpenStreetMap = "OPENSTREETMAP"
-
 type OpenStreetMap struct{}
 
 func NewOpenStreetMap() OpenStreetMap {

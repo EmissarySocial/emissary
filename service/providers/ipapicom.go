@@ -7,8 +7,6 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
-const ProviderTypeIPAPICOM = "IP-API.COM"
-
 type IPAPICOM struct{}
 
 func NewIPAPICOM() IPAPICOM {

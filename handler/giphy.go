@@ -25,7 +25,7 @@ func GetGiphyWidget(ctx *steranko.Context, factory *service.Factory, session dat
 	connectionService := factory.Connection()
 	giphy := model.NewConnection()
 
-	if err := connectionService.LoadByProvider(session, providers.ProviderTypeGiphy, &giphy); err != nil {
+	if err := connectionService.LoadByProvider(session, model.ConnectionProviderGiphy, &giphy); err != nil {
 		return derp.Wrap(err, "handler.GetGiphyImages", "Giphy is not configured for this domain")
 	}
 

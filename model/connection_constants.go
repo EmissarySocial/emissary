@@ -6,15 +6,19 @@ package model
  * provider fulfills.
  ******************************************/
 
-// ConnectionTypeGeocoder represents a provider that can geocode addresses
+// ConnectionTypeGeocoder represents a connection that geocodes individual physical addresses (and often place names)
 const ConnectionTypeGeocoder = "GEOCODER"
 
+// ConnectionTypeGeocoderID represents a connection that geocodes individual IP addresses
 const ConnectionTypeGeocoderIP = "GEOCODER-IP"
 
-// ConnectionTypeImage represents a provider/connection that can be used to generate images
+// ConnectionTypeGoeSearch represents a connection that searches addresses / place names
+const ConnectionTypeGeoSearch = "GEOSEARCH"
+
+// ConnectionTypeImage represents a connection that can be used to generate images
 const ConnectionTypeImage = "IMAGE"
 
-// ConnectionTypeUserUserPayment represents a provider that can take payments for users
+// ConnectionTypeUserUserPayment represents a connection that can take payments for users
 const ConnectionTypeUserPayment = "USER-PAYMENT"
 
 /******************************************

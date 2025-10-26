@@ -7,8 +7,6 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
-const ProviderTypeGiphy = "GIPHY"
-
 const Giphy_APIKey = "apiKey"
 
 type Giphy struct{}

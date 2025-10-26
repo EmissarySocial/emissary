@@ -7,8 +7,6 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
-const ProviderTypeArcGIS = "ARCGIS"
-
 type ArcGIS struct{}
 
 func NewArcGIS() ArcGIS {

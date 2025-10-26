@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service/providers"
 )
 
@@ -31,40 +32,37 @@ func (service *Provider) GetProvider(providerID string) (providers.Provider, boo
 	// Create an adapter for known providers
 	switch providerID {
 
-	case providers.ProviderTypeArcGIS:
+	case model.ConnectionProviderArcGIS:
 		return providers.NewArcGIS(), true
 
-	case providers.ProviderTypeFREEIPAPICOM:
+	case model.ConnectionProviderFREEIPAPICOM:
 		return providers.NewFREEIPAPICOM(), true
 
-	case providers.ProviderTypeGiphy:
+	case model.ConnectionProviderGiphy:
 		return providers.NewGiphy(), true
 
-	case providers.ProviderTypeGoogleMaps:
+	case model.ConnectionProviderGoogleMaps:
 		return providers.NewGoogleMaps(), true
 
-	case providers.ProviderTypeIPAPICO:
+	case model.ConnectionProviderIPAPICO:
 		return providers.NewIPAPICO(), true
 
-	case providers.ProviderTypeIPAPICOM:
+	case model.ConnectionProviderIPAPICOM:
 		return providers.NewIPAPICOM(), true
 
-	case providers.ProviderTypeOpenStreetMap:
+	case model.ConnectionProviderOpenStreetMap:
 		return providers.NewOpenStreetMap(), true
 
-	case providers.ProviderTypeStaticGeocoderIP:
+	case model.ConnectionProviderStaticGeocoderIP:
 		return providers.NewStaticGeocoder(), true
 
-	case providers.ProviderTypePayPal:
-		return providers.NewPayPal(), true
-
-	case providers.ProviderTypeStripe:
+	case model.ConnectionProviderStripe:
 		return providers.NewStripe(), true
 
-	case providers.ProviderTypeStripeConnect:
+	case model.ConnectionProviderStripeConnect:
 		return providers.NewStripeConnect(), true
 
-	case providers.ProviderTypeUnsplash:
+	case model.ConnectionProviderUnsplash:
 		return providers.NewUnsplash(), true
 	}
 
