@@ -1,0 +1,9 @@
+behavior SelectNav
+
+	on SelectNav(id)
+		set node to document.getElementById('nav-' + id)
+		if node is null then exit end
+		take .selected from .nav-item for node
+	end
+
+end

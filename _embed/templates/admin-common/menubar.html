@@ -1,5 +1,5 @@
 
-<div id="menu-bar" hx-push-url="true"  script="on load take .selected from .nav-item for #nav-admin">
+<div id="menu-bar" hx-push-url="true" script="init send SelectNav(id:'admin')">
 	<div class="center">
 		<a href="/admin/domain/index" hx-boost="true" class="turboclick {{if eq .Token `domain`}}selected{{end}}">
 			General

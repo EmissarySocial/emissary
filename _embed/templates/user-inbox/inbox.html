@@ -6,7 +6,7 @@
 {{- $folderID := $folder.FolderID.Hex -}}
 {{- $followingID := .QueryParam "origin.followingId" -}}
 
-<div class="app width-100%" script="on load take .selected from .nav-item for #nav-inbox">
+<div class="app width-100%" script="init send SelectNav(id:'inbox')">
 
 	<link rel="stylesheet" href="/.templates/user-inbox/stylesheet">
 

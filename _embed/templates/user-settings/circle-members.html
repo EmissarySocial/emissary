@@ -2,7 +2,7 @@
 {{- $members := .CircleMembers.Slice -}}
 {{- $icon := concat $circle.Icon "-fill" -}}
 
-<div class="app" script="on load take .selected from .nav-item for #nav-settings">
+<div class="app" script="init send SelectNav(id:'settings')">
 	<title> {{.Name}} | Circles</title>
 
 	<div id="app-sidebar" class="expanded" hx-swap="innerHTML show:window:top">

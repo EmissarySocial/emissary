@@ -2,7 +2,7 @@
 {{- $hasWebfingerUsername := .HasWebfingerUsername -}}
 {{- $webfingerUsername := .WebfingerUsername -}}
 
-<div class="app" script="on load take .selected from .nav-item for #nav-settings">
+<div class="app" script="init send SelectNav(id:'settings')">
 
 	{{- if .IsAuthenticated -}}
 		<div id="app-sidebar" class="expanded">
