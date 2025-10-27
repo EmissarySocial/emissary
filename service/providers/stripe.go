@@ -23,7 +23,7 @@ func (adapter Stripe) ManualConfig() form.Form {
 		Schema: schema.Schema{
 			Element: schema.Object{
 				Properties: schema.ElementMap{
-					"type":   schema.String{Enum: []string{"PAYMENT"}},
+					"type":   schema.String{Enum: []string{model.ConnectionTypeUserPayment}},
 					"active": schema.Boolean{},
 					"data": schema.Object{
 						Properties: schema.ElementMap{
@@ -41,7 +41,7 @@ func (adapter Stripe) ManualConfig() form.Form {
 				{
 					Type:    "hidden",
 					Path:    "type",
-					Options: mapof.Any{"value": "USER-PAYMENT"},
+					Options: mapof.Any{"value": model.ConnectionTypeUserPayment},
 				},
 				{
 					Type:  "toggle",

@@ -23,7 +23,7 @@ func (adapter Unsplash) ManualConfig() form.Form {
 		Schema: schema.Schema{
 			Element: schema.Object{
 				Properties: schema.ElementMap{
-					"type":   schema.String{Enum: []string{"IMAGE"}},
+					"type":   schema.String{Enum: []string{model.ConnectionTypeImage}},
 					"active": schema.Boolean{},
 					"data": schema.Object{
 						Properties: schema.ElementMap{
@@ -44,7 +44,7 @@ func (adapter Unsplash) ManualConfig() form.Form {
 				{
 					Type:    "hidden",
 					Path:    "type",
-					Options: mapof.Any{"value": "IMAGE"},
+					Options: mapof.Any{"value": model.ConnectionTypeImage},
 				},
 				{
 					Type:    "text",

@@ -32,7 +32,7 @@ func (provider PayPal) ManualConfig() form.Form {
 		Schema: schema.Schema{
 			Element: schema.Object{
 				Properties: schema.ElementMap{
-					"type":   schema.String{Enum: []string{"USER-PAYMENT"}},
+					"type":   schema.String{Enum: []string{model.ConnectionTypeUserPayment}},
 					"active": schema.Boolean{},
 					"data": schema.Object{
 						Properties: schema.ElementMap{
@@ -57,7 +57,7 @@ func (provider PayPal) ManualConfig() form.Form {
 				{
 					Type:    "hidden",
 					Path:    "type",
-					Options: mapof.Any{"value": "USER-PAYMENT"},
+					Options: mapof.Any{"value": model.ConnectionTypeUserPayment},
 				},
 				{
 					Type:        "text",

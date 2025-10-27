@@ -23,7 +23,7 @@ func (adapter FREEIPAPICOM) ManualConfig() form.Form {
 		Schema: schema.Schema{
 			Element: schema.Object{
 				Properties: schema.ElementMap{
-					"type":   schema.String{Enum: []string{"GEOCODER-IP"}},
+					"type":   schema.String{Enum: []string{model.ConnectionTypeGeocoderIP}},
 					"active": schema.Boolean{},
 					"data": schema.Object{
 						Properties: schema.ElementMap{
@@ -50,7 +50,7 @@ func (adapter FREEIPAPICOM) ManualConfig() form.Form {
 						{
 							Type:    "hidden",
 							Path:    "type",
-							Options: mapof.Any{"value": "GEOCODER-IP"},
+							Options: mapof.Any{"value": model.ConnectionTypeGeocoderIP},
 						},
 						{
 							Type:        "text",

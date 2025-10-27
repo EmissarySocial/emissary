@@ -23,7 +23,7 @@ func (adapter ArcGIS) ManualConfig() form.Form {
 		Schema: schema.Schema{
 			Element: schema.Object{
 				Properties: schema.ElementMap{
-					"type":   schema.String{Enum: []string{"GEOCODER"}},
+					"type":   schema.String{Enum: []string{model.ConnectionTypeGeocoder}},
 					"active": schema.Boolean{},
 					"data": schema.Object{
 						Properties: schema.ElementMap{
@@ -41,7 +41,7 @@ func (adapter ArcGIS) ManualConfig() form.Form {
 				{
 					Type:    "hidden",
 					Path:    "type",
-					Options: mapof.Any{"value": "GEOCODER"},
+					Options: mapof.Any{"value": model.ConnectionTypeGeocoder},
 				},
 				{
 					Type:    "text",
