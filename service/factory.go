@@ -714,6 +714,11 @@ func (factory *Factory) Geocode() Geocode {
 	return NewGeocode(factory.Hostname(), factory.Queue(), factory.Connection())
 }
 
+// Geosearch returns a fully populated Geosearch service
+func (factory *Factory) Geosearch() Geosearch {
+	return NewGeosearch(factory.Connection(), factory.Hostname())
+}
+
 // Group returns a fully populated Group service
 func (factory *Factory) Group() *Group {
 	return &factory.groupService

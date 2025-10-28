@@ -21,15 +21,14 @@ type Place struct {
 	Longitude   float64 `json:"longitude"   bson:"longitude"`   // Longitude of the place
 	Radius      float64 `json:"radius"      bson:"radius"`      // Radius of the place (in meters)
 	Units       string  `json:"units"       bson:"units"`       // Units of measurement for the radius (meters, miles, etc.)
-	IsGeocoded  bool    `json:"isGeocoded"  bson:"isGeocoded"`  // True if this place has been geocoded
 }
 
 func NewPlace() Place {
 	return Place{}
 }
 
-// ResetGeocode clears all geocoding information from this Place
-func (place *Place) ResetGeocode() {
+// Reset clears all geocoding information from this Place
+func (place *Place) Reset() {
 	place.Street1 = ""
 	place.Street2 = ""
 	place.Locality = ""
@@ -40,7 +39,6 @@ func (place *Place) ResetGeocode() {
 	place.Longitude = 0
 	place.Radius = 0
 	place.Units = ""
-	place.IsGeocoded = false
 }
 
 // JSONLD returns a JSON-LD representation of this object
@@ -135,15 +133,63 @@ func (place Place) HasParsedAddress() bool {
 }
 
 func (place Place) IsEmpty() bool {
-	return place.FullAddress == ""
+	if place.Latitude != 0 {
+		return false
+	}
+
+	if place.Longitude != 0 {
+		return false
+	}
+
+	if place.FullAddress != "" {
+		return false
+	}
+
+	return true
 }
 
 func (place Place) NotEmpty() bool {
 	return !place.IsEmpty()
 }
 
+// HasGeocode returns TRUE if this Place has ANY Lat/Long information
 func (place Place) HasGeocode() bool {
-	return (place.Latitude != 0) && (place.Longitude != 0)
+
+	if place.Latitude != 0 {
+		return true
+	}
+
+	if place.Longitude != 0 {
+		return true
+	}
+
+	return false
+}
+
+// HasAddress returns TRUE if this Place has ANY street adsress information
+func (place Place) HasAddress() bool {
+
+	if place.Country != "" {
+		return true
+	}
+
+	if place.PostalCode != "" {
+		return true
+	}
+
+	if place.Region != "" {
+		return true
+	}
+
+	if place.Locality != "" {
+		return true
+	}
+
+	if place.Street1 != "" {
+		return true
+	}
+
+	return false
 }
 
 // https://www.mongodb.com/docs/manual/reference/geojson/

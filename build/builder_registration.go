@@ -16,6 +16,7 @@ import (
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -197,7 +198,7 @@ func (w Registration) Template() model.Registration {
  ******************************************/
 
 // Providers lists all available external services that can be connected to this domain
-func (w Registration) Providers() []form.LookupCode {
+func (w Registration) Providers() sliceof.Object[form.LookupCode] {
 	return dataset.Providers()
 }
 

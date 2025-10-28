@@ -4,30 +4,40 @@
 
 	{{template "menubar" .}}
 
-	<div class="cols-4">
+	{{- $builder := . -}}
+	{{- $connections := $builder.AllConnections -}}
+	{{- $providers := .Providers -}}
+	{{- $groupBy := $providers.GroupBy "group" -}}
 
-		{{- $builder := . -}}
-		{{- $connections := $builder.AllConnections -}}
+	{{- range $index, $provider := $providers -}}
 
-		{{- range .Providers -}}
-			{{ $connection := index $connections .Value }}
-				<div class="card align-center" script="install blockselect()">
-					<div class="text-3xl">{{icon .Icon}}</div>
-					<div class="margin-bottom text-lg bold">{{.Label}}</div>
-					<div class="margin-bottom text-gray" style="height:3em; overflow-y:hidden;">{{.Description}}</div>
-					<div class="margin-bottom">
-						{{- if $connection.Active -}}
-							<a href="/admin/connections/edit?providerId={{.Value}}" hx-boost="true" class="button success">{{icon "check"}} Enabled</a>
-						{{- else if eq .Group "OAUTH" -}}
-							<a href="/oauth/clients/{{.Value}}" hx-boost="true" class="button">Connect</a>
-						{{- else if eq .Group "MANUAL" -}}
-							<a href="/admin/connections/edit?providerId={{.Value}}" hx-boost="true" class="button">Connect</a>
-						{{- end -}}
-					</div>
-				</div>
+		{{- if $groupBy.IsHeader $index -}}
+			<h2>{{icon $provider.Icon}} {{$provider.Group}}</h2>
+			<div class="table margin-bottom-xl">
 		{{- end -}}
 
-	</div>
+		{{ $connection := index $connections .Value }}
+		<div hx-get="/admin/connections/edit?providerId={{.Value}}" script="install blockselect()" role="link">
+			<div class="flex-row">
+				<div class="flex-grow">
+					<div class="bold">{{.Label}}</div>
+					<div class="text-light-gray">{{.Description}}</div>
+				</div>
+				<div>
+					{{- if $connection.Active -}}
+						<button class="success">{{icon "check"}} Connected</button>
+					{{- else -}}
+						<button>Connect Now</button>
+					{{- end -}}
+				</div>
+			</div>
+		</div>
+
+		{{- if $groupBy.IsFooter $index -}}
+			</div>
+		{{- end -}}
+
+	{{- end -}}
 	
 	<div
 		hx-get="/admin/connections/index" 

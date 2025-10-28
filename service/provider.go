@@ -38,11 +38,17 @@ func (service *Provider) GetProvider(providerID string) (providers.Provider, boo
 	case model.ConnectionProviderFREEIPAPICOM:
 		return providers.NewFREEIPAPICOM(), true
 
+	case model.ConnectionProviderGeoapify:
+		return providers.NewGeoapify(), true
+
 	case model.ConnectionProviderGiphy:
 		return providers.NewGiphy(), true
 
 	case model.ConnectionProviderGoogleMaps:
 		return providers.NewGoogleMaps(), true
+
+	case model.ConnectionProviderNominatim:
+		return providers.NewNominatim(), true
 
 	case model.ConnectionProviderIPAPICO:
 		return providers.NewIPAPICO(), true

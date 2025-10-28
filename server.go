@@ -221,6 +221,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.checkout/response", handler.WithMerchantAccountJWT(factory, handler.GetCheckoutResponse))
 	e.POST("/.follower/new", handler.WithFactory(factory, handler.PostEmailFollower))
 	e.GET("/.geocode/ip", handler.WithFactory(factory, handler.GetGeocodeIP))
+	e.GET("/.geosearch/options", handler.WithFactory(factory, handler.GetGeosearchAsOptions))
 	e.GET("/.giphy", handler.WithFactory(factory, handler.GetGiphyWidget))
 	e.GET("/.intents/discover", handler.WithFactory(factory, handler.GetIntentInfo))
 	e.GET("/.intents/:intent", handler.WithFactory(factory, handler.GetOutboundIntent))

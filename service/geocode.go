@@ -44,11 +44,6 @@ func (service Geocode) Geocode(session data.Session, stream *model.Stream) error
 		// Get a pointer to the item in the slice
 		place := &stream.Places[index]
 
-		// If the place is already geocoded, then skip it
-		if place.IsGeocoded {
-			continue
-		}
-
 		// Try to geocode this place
 		if err := service.geocode(geocoder, place); err != nil {
 			return derp.Wrap(err, location, "Error geocoding place", place)
@@ -87,44 +82,56 @@ func (service Geocode) GeocodeAndQueue(session data.Session, stream *model.Strea
 func (service Geocode) geocode(geocoder geo.Geocoder, place *model.Place) error {
 
 	const location = "service.Connection.Geocode"
-	place.ResetGeocode()
 
-	// Try to get the coordinates for this place
-	coordinates, err := geocoder.Geocode(place.FullAddress)
+	if !place.HasGeocode() {
 
-	log.Trace().Msg("Geocoding place: " + place.FullAddress)
+		// Try to get the coordinates for this place
+		coordinates, err := geocoder.Geocode(place.FullAddress)
 
-	if err != nil {
-		return derp.Wrap(err, location, "Error geocoding address", place)
+		log.Trace().Msg("Geocoding place: " + place.FullAddress)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Error geocoding address", place)
+		}
+
+		if coordinates == nil {
+			return nil
+		}
+
+		// Set the coordinates
+		place.Latitude = coordinates.Lat
+		place.Longitude = coordinates.Lng
+
 	}
 
-	place.IsGeocoded = true
+	if !place.HasAddress() {
 
-	if coordinates == nil {
-		return nil
+		// Try to find the address from the coordinates
+		parsedAddress, err := geocoder.ReverseGeocode(place.Latitude, place.Longitude)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Error reverse geocoding location", place)
+		}
+
+		if parsedAddress == nil {
+			return nil
+		}
+
+		// Set the address fields
+		place.Street1 = parsedAddress.HouseNumber + " " + parsedAddress.Street
+		place.Locality = parsedAddress.City
+		place.Region = parsedAddress.State
+		place.PostalCode = parsedAddress.Postcode
+		place.Country = parsedAddress.Country
+
+		if place.FullAddress == "" {
+			place.FullAddress = parsedAddress.FormattedAddress
+		}
+
+		if place.Name == "" {
+			place.Name = parsedAddress.FormattedAddress
+		}
 	}
-
-	// Set the coordinates
-	place.Latitude = coordinates.Lat
-	place.Longitude = coordinates.Lng
-
-	// Try to find the address from the coordinates
-	parsedAddress, err := geocoder.ReverseGeocode(coordinates.Lat, coordinates.Lng)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Error reverse geocoding location", coordinates)
-	}
-
-	if parsedAddress == nil {
-		return nil
-	}
-
-	// Set the address fields
-	place.Street1 = parsedAddress.HouseNumber + " " + parsedAddress.Street
-	place.Locality = parsedAddress.City
-	place.Region = parsedAddress.State
-	place.PostalCode = parsedAddress.Postcode
-	place.Country = parsedAddress.Country
 
 	return nil
 }

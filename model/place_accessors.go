@@ -28,6 +28,50 @@ func PlaceSchema() schema.Element {
  * Getters
  ******************************************/
 
+func (place *Place) GetPointer(name string) (any, bool) {
+
+	switch name {
+
+	case "name":
+		return place.Name, true
+
+	case "fullAddress":
+		return place.FullAddress, true
+
+	case "street1":
+		return place.Street1, true
+
+	case "street2":
+		return place.Street2, true
+
+	case "locality":
+		return place.Locality, true
+
+	case "region":
+		return place.Region, true
+
+	case "postalCode":
+		return place.PostalCode, true
+
+	case "country":
+		return place.Country, true
+
+	case "latitude":
+		return place.Latitude, true
+
+	case "longitude":
+		return place.Longitude, true
+
+	case "radius":
+		return place.Radius, true
+
+	case "units":
+		return place.Units, true
+	}
+
+	return nil, false
+}
+
 func (place *Place) GetStringOK(name string) (string, bool) {
 
 	switch name {
@@ -63,7 +107,7 @@ func (place *Place) GetStringOK(name string) (string, bool) {
 	return "", false
 }
 
-func (place *Place) GetNumber(name string) (float64, bool) {
+func (place *Place) GetFloat(name string) (float64, bool) {
 
 	switch name {
 
@@ -78,17 +122,6 @@ func (place *Place) GetNumber(name string) (float64, bool) {
 	}
 
 	return 0, false
-}
-
-func (place *Place) GetBool(name string) (bool, bool) {
-
-	switch name {
-
-	case "isGeocoded":
-		return place.IsGeocoded, true
-	}
-
-	return false, false
 }
 
 /******************************************
@@ -106,8 +139,28 @@ func (place *Place) SetString(name string, value string) bool {
 	case "fullAddress":
 		if value != place.FullAddress {
 			place.FullAddress = value
-			place.ResetGeocode()
+			place.Reset()
 		}
+		return true
+	}
+
+	return false
+}
+
+func (place *Place) SetFloat(name string, value float64) bool {
+
+	switch name {
+
+	case "latitude":
+		place.Latitude = value
+		return true
+
+	case "longitude":
+		place.Longitude = value
+		return true
+
+	case "radius":
+		place.Radius = value
 		return true
 	}
 
