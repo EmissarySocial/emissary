@@ -1,0 +1,70 @@
+behavior PlaceSelect
+
+	init
+		set :search to the first <input.PlaceSelectSearch /> in me
+		set :fullAddress to the first <input.PlaceSelectFullAddress /> in me
+		set :latitude to the first <input.PlaceSelectLatitude /> in me
+		set :longitude to the first <input.PlaceSelectLongitude /> in me
+		set :menu to the first <[role=menu] /> in me
+		set :icon to the first <.PlaceSelectIcon /> in me
+
+		if navigator.geolocation is not null then
+			show the :icon
+		end
+	end
+
+	on click from <.PlaceSelectIcon /> in me
+		set position to getCurrentPositionPromise()
+		set coords to the position's coords
+		log coords
+		log coords.longitude
+		log coords.latitude
+		set the :search's value to "My Current Location"
+		set the :latitude's value to coords.latitude
+		set the :longitude's value to coords.longitude
+		
+		hide the :menu
+	end
+
+	on input from <input /> in me
+		set the :fullAddress's value to ""
+		set the :latitude's value to ""
+		set the :longitude's value to ""
+
+		if :search.value is "" then
+			hide the :menu
+		else
+			show the :menu
+		end
+	end
+
+	on blur from <input /> in me
+		wait 100ms
+		hide the :menu
+	end
+
+	on Select
+		set place to the event.target
+
+		set the :search's value to the place's innerText
+		set the :fullAddress's value to the place's innerText
+		set the :latitude's value to the place's @data-latitude
+		set the :longitude's value to the place's @data-longitude
+		hide the :menu
+	end
+
+	on keypress[keyCode==Enter] in me
+		log "got it??"		
+		halt the event
+	end
+
+end
+
+
+js
+function getCurrentPositionPromise() {
+	return new Promise((resolve, reject) => {
+		navigator.geolocation.getCurrentPosition(resolve, reject);
+	});
+}
+end
