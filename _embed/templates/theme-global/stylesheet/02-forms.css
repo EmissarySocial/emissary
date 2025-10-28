@@ -629,7 +629,7 @@ button.button-invisible {
  .spin {
 	display:inline-block;
 	animation-name: spin;
-	animation-duration: 800ms;
+	animation-duration: 700ms;
 	animation-iteration-count: infinite;
 	animation-timing-function: linear;
 }

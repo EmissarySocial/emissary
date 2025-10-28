@@ -7,24 +7,29 @@
 	text-align: left;
 	margin: 0px;
 	white-space: normal;
+
+	&.border {
+		border:solid 1px var(--input-border);
+	}
+
+	& > [role=menuitem] {
+		padding: calc(var(--rhythm) / 2) var(--rhythm);
+		border-top: solid 1px var(--gray20);
+		cursor: pointer;
+	}
+
+	& > [role=menuitem]:first-child {
+		border-top: none;
+	}
+
+	&:not(:has([aria-selected=true])) > [role=menuitem]:hover,
+	& > [role=menuitem][aria-selected=true] {
+		background-color: var(--button-primary-background-hover);
+		color: var(--button-primary-color-hover);
+	}
+
+	.popUp-content & {
+		padding: 0px;
+	}	
 }
 
-.menu > [role=menuitem] {
-	padding: calc(var(--rhythm) / 2) var(--rhythm);
-	border-top: solid 1px var(--gray20);
-	cursor: pointer;
-}
-
-.menu > [role=menuitem]:first-child {
-	border-top: none;
-}
-
-.menu:not(:has([aria-selected=true])) > [role=menuitem]:hover,
-.menu > [role=menuitem][aria-selected=true] {
-	background-color: var(--button-primary-background-hover);
-	color: var(--button-primary-color-hover);
-}
-
-.popUp-content:has(.menu) {
-	padding: 0px;
-}
