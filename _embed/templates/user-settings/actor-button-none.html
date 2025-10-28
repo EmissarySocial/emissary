@@ -3,8 +3,8 @@
 
 <span script="install popUp(position:'center')" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
 	<button class="popUp-button">{{icon "more-horizontal"}}</button>
-	<div class="popUp-content width-320" script="install menu()">
-		<div class="menu">
+	<div class="popUp-content width-320" script="install Menu()">
+		<div role="menu" class="menu">
 
 			<div class="clickable flex-row" role="menuitem" hx-post="/@me/settings/actor-button-follow?url={{$url}}&folderId={{$folderID}}">
 				<div class="text-xl margin-none">{{icon "add"}}</div>

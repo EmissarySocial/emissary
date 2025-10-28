@@ -1,4 +1,4 @@
-behavior menu(input)
+behavior Menu(input)
 
 	on load
 		trigger selectFirst
