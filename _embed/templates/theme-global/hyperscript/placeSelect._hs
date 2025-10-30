@@ -39,13 +39,12 @@ behavior PlaceSelect
 	end
 
 	on blur from <input /> in me
-		wait 100ms
+		wait 500ms
 		hide the :menu
 	end
 
 	on Select
 		set place to the event.target
-
 		set the :search's value to the place's innerText
 		set the :fullAddress's value to the place's innerText
 		set the :latitude's value to the place's @data-latitude
