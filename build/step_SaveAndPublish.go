@@ -38,7 +38,7 @@ func (step StepSaveAndPublish) Post(builder Builder, _ io.Writer) PipelineBehavi
 
 	if builder.IsAuthenticated() {
 		if err := userService.LoadByID(builder.session(), streamBuilder.AuthenticatedID(), &user); err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Error loading user", streamBuilder.AuthenticatedID()))
+			return Halt().WithError(derp.Wrap(err, location, "Unable to load user", streamBuilder.AuthenticatedID()))
 		}
 	}
 
@@ -49,12 +49,12 @@ func (step StepSaveAndPublish) Post(builder Builder, _ io.Writer) PipelineBehavi
 	// Try to geocode any Places in this Stream. If there are Geocoder errors,
 	// then a task will be queued to retry the geocode in 30 seconds.
 	if err := geocoder.GeocodeAndQueue(builder.session(), stream); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error geocoding stream", streamBuilder._stream))
+		return Halt().WithError(derp.Wrap(err, location, "Unable to geocode stream", streamBuilder._stream))
 	}
 
 	// Publish the Stream to the ActivityPub Outbox
 	if err := streamService.Publish(builder.session(), &user, stream, step.StateID, step.Outbox, step.Republish); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error publishing stream", streamBuilder._stream))
+		return Halt().WithError(derp.Wrap(err, location, "Unable to publish Stream", streamBuilder._stream))
 	}
 
 	return nil
