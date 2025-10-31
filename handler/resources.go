@@ -74,7 +74,7 @@ func getResource(filesystem fs.FS, filename string, response *echo.Response) err
 	file, err := filesystem.Open(filename)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to open resource", filename)
+		return derp.NotFound(location, "Unable to open resource", filename, err.Error())
 	}
 
 	defer derp.ReportFunc(file.Close)
