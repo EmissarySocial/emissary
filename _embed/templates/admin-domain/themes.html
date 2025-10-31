@@ -4,7 +4,7 @@
 <h1>Select a Theme</h1>
 
 <div class="flex-row" script="install TabContainer">
-	<div role="tablist" class="vertical width-1-5">
+	<div role="tablist" class="vertical width-1-4">
 		{{- range $themes -}}
 			{{- if eq .ThemeID $themeID -}}
 				<div role="tab" aria-controls="theme-{{.ThemeID}}" aria-selected="true">{{.Label}}</div>
