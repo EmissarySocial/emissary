@@ -239,6 +239,6 @@ func (service Geocode) getGeocoderIP(session data.Session) geocode.Geocoder {
 	// Default to static geocoder for Kansas City, MO
 	return geocode.NewStatic(
 		39.0997,
-		94.5786,
+		-94.5786,
 	)
 }
