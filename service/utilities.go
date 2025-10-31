@@ -265,37 +265,40 @@ const DefinitionTheme = "THEME"
 // DefinitionWidget marks a filesystem that contains a Widget definition.
 const DefinitionWidget = "WIDGET"
 
+// DefinitionNotFound is returned when no definition file exists in the directory.
+const DefinitionNotFound = "NOT-FOUND"
+
 // findDefinition locates a definition JSON file and returns its type and contents
-func findDefinition(filesystem fs.FS) (string, []byte, error) {
+func findDefinition(filesystem fs.FS) (string, []byte) {
 
 	// If this directory contains a "theme.json" file, then it's a theme.
 	if file, err := readJSON(filesystem, "theme"); err == nil {
-		return DefinitionTheme, file, nil
+		return DefinitionTheme, file
 	}
 
 	// If this directory contains a "template.json" file, then it's a template.
 	if file, err := readJSON(filesystem, "template"); err == nil {
-		return DefinitionTemplate, file, nil
+		return DefinitionTemplate, file
 	}
 
 	// If this directory contains a "widget.json" file, then it's a widget.
 	if file, err := readJSON(filesystem, "widget"); err == nil {
-		return DefinitionWidget, file, nil
+		return DefinitionWidget, file
 	}
 
 	// If this directory contains a "register.json" file, then it's a registration form.
 	if file, err := readJSON(filesystem, "registration"); err == nil {
-		return DefinitionRegistration, file, nil
+		return DefinitionRegistration, file
 	}
 
 	// If this directory contains an "email.json" file, then it's an email.
 	if file, err := readJSON(filesystem, "email"); err == nil {
-		return DefinitionEmail, file, nil
+		return DefinitionEmail, file
 	}
 
 	// TODO: LOW: Add DefinitionEmail to this.  Will need a *.json file in the email directory.
 
-	return "", nil, derp.InternalError("service.findDefinition", "No definition file found")
+	return DefinitionNotFound, nil
 }
 
 // readJSON looks for JSON and HJSON files.

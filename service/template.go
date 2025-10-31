@@ -170,12 +170,7 @@ func (service *Template) loadTemplates() error {
 				continue
 			}
 
-			definitionType, file, err := findDefinition(subdirectory)
-
-			if err != nil {
-				derp.Report(derp.Wrap(err, location, "Invalid definition", fileLocation, directoryName))
-				continue
-			}
+			definitionType, file := findDefinition(subdirectory)
 
 			switch definitionType {
 
@@ -205,7 +200,7 @@ func (service *Template) loadTemplates() error {
 				}
 
 			default:
-				derp.Report(derp.InternalError(location, "Unrecognized definition type", fileLocation, definitionType))
+				log.Debug().Str("location", fileLocation.GetString("location")).Str("directory", directoryName).Msg("No definition file found. Skipping directory.")
 			}
 		}
 	}
