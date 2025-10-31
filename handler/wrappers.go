@@ -88,7 +88,7 @@ func WithDomain(serverFactory *server.Factory, fn WithFunc1[model.Domain]) echo.
 // WithFactory handles boilerplate code for requests that require only the domain Factory
 func WithFactory(serverFactory *server.Factory, fn WithFunc0) echo.HandlerFunc {
 
-	const location = "handler.WithAuthenticatedUser"
+	const location = "handler.WithFactory"
 
 	return func(ctx echo.Context) error {
 
@@ -322,7 +322,7 @@ func WithPrivilege(serverFactory *server.Factory, fn WithFunc2[model.Identity, m
 // WithProduct handles boilerplate code for requests that use a Product object
 func WithProduct(serverFactory *server.Factory, fn WithFunc2[model.MerchantAccount, model.Product]) echo.HandlerFunc {
 
-	const location = "handler.WithAuthenticatedUser"
+	const location = "handler.WithProduct"
 
 	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
@@ -350,7 +350,7 @@ func WithProduct(serverFactory *server.Factory, fn WithFunc2[model.MerchantAccou
 // WithRegistration handles boilerplate code for requests that use a Registration object
 func WithRegistration(serverFactory *server.Factory, fn WithFunc2[model.Domain, model.Registration]) echo.HandlerFunc {
 
-	const location = "handler.WithAuthenticatedUser"
+	const location = "handler.WithRegistration"
 
 	return WithDomain(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session, domain *model.Domain) error {
 
@@ -379,7 +379,7 @@ func WithRegistration(serverFactory *server.Factory, fn WithFunc2[model.Domain, 
 // WithSearchQuery handles boilerplate code for requests that load a search query
 func WithSearchQuery(serverFactory *server.Factory, fn WithFunc3[model.Template, model.Stream, model.SearchQuery]) echo.HandlerFunc {
 
-	const location = "handler.WithAuthenticatedUser"
+	const location = "handler.WithSearchQuery"
 
 	return WithTemplate(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session, template *model.Template, stream *model.Stream) error {
 
@@ -416,7 +416,7 @@ func WithSearchQuery(serverFactory *server.Factory, fn WithFunc3[model.Template,
 // WithStream handles boilerplate code for requests that load a Stream
 func WithStream(serverFactory *server.Factory, fn WithFunc1[model.Stream]) echo.HandlerFunc {
 
-	const location = "handler.WithAuthenticatedUser"
+	const location = "handler.WithStream"
 
 	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
@@ -456,7 +456,7 @@ func WithStream(serverFactory *server.Factory, fn WithFunc1[model.Stream]) echo.
 // WithTemplate handles boilerplate code for requests that load a Stream and its corresponding Template
 func WithTemplate(serverFactory *server.Factory, fn WithFunc2[model.Template, model.Stream]) echo.HandlerFunc {
 
-	const location = "handler.WithAuthenticatedUser"
+	const location = "handler.WithTemplate"
 
 	return WithStream(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session, stream *model.Stream) error {
 
