@@ -110,6 +110,9 @@ func (service *Stream) Startup(session data.Session, theme *model.Theme) error {
 			continue
 		}
 
+		// Set this Stream as "Published"
+		stream.PublishDate = 0
+
 		// If we have default content, then add that too.
 		if content, ok := data["content"].(model.Content); ok {
 			stream.Content = content
