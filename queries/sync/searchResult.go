@@ -66,5 +66,11 @@ func SearchResult(ctx context.Context, database *mongo.Database) error {
 				{Key: "shuffle", Value: 1},
 			},
 		},
+
+		"idx_SearchResult_Location": mongo.IndexModel{
+			Keys: bson.D{
+				{Key: "place.location", Value: "2dsphere"},
+			},
+		},
 	})
 }
