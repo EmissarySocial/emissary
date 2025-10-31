@@ -6,29 +6,29 @@ require (
 	github.com/PuerkitoBio/goquery v1.10.3
 	github.com/aws/aws-sdk-go v1.55.8
 	github.com/benpate/color v0.1.0
-	github.com/benpate/data v0.31.0
-	github.com/benpate/data-mock v0.31.2
-	github.com/benpate/data-mongo v0.30.6
+	github.com/benpate/data v0.31.1
+	github.com/benpate/data-mock v0.31.3
+	github.com/benpate/data-mongo v0.30.7
 	github.com/benpate/derp v0.34.0
-	github.com/benpate/digit v0.13.8
-	github.com/benpate/digital-dome v0.2.8
+	github.com/benpate/digit v0.13.11
+	github.com/benpate/digital-dome v0.2.9
 	github.com/benpate/domain v0.2.9
-	github.com/benpate/exp v0.8.6
-	github.com/benpate/exp-builder v0.10.5
-	github.com/benpate/form v0.25.2
-	github.com/benpate/hannibal v0.14.2
+	github.com/benpate/exp v0.8.7
+	github.com/benpate/exp-builder v0.10.6
+	github.com/benpate/form v0.25.3
+	github.com/benpate/hannibal v0.14.4
 	github.com/benpate/html v0.16.14
 	github.com/benpate/icon v0.4.0
-	github.com/benpate/mediaserver v0.15.9
+	github.com/benpate/mediaserver v0.15.10
 	github.com/benpate/re v0.3.5
-	github.com/benpate/remote v0.17.7
-	github.com/benpate/rosetta v0.25.20
-	github.com/benpate/sherlock v0.8.14
+	github.com/benpate/remote v0.17.9
+	github.com/benpate/rosetta v0.25.21
+	github.com/benpate/sherlock v0.8.16
 	github.com/benpate/sniff v0.1.0
-	github.com/benpate/steranko v0.22.3
-	github.com/benpate/table v0.7.7
+	github.com/benpate/steranko v0.22.5
+	github.com/benpate/table v0.7.9
 	github.com/benpate/toot v0.3.0
-	github.com/benpate/turbine v0.4.1
+	github.com/benpate/turbine v0.4.2
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/codingsince1985/geo-golang v1.8.5
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
