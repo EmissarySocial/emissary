@@ -1,8 +1,84 @@
-{{- $sidebar := .QueryParam "sidebar" -}}
-{{- $folders := .FoldersWithSelection}}
+{{- $selectedID := .SelectedID -}}
 
-{{- if eq "collapse" $sidebar -}}
-	{{- template "sidebar-collapsed" $folders -}}
-{{- else -}}
-	{{- template "sidebar-expanded" $folders -}}
-{{- end -}}
+<div id="app-sidebar" class="expanded" hx-target="main" hx-push-url="true">
+
+	<!-- Hiding DM controls for now -->
+	<div class="margin-bottom-lg">
+		{{- if eq $selectedID nilObjectID -}}
+			<div role="link" hx-get="/@me/inbox/conversations?sidebar=collapse" hx-trigger="click" hx-push-url="true" class="turboclick menu-item ellipsis hover-trigger folder selected">
+				<span style="view-transition-name:app-sidebar-dm-icon;">{{- icon "chat-fill" }}</span>
+				<span style="view-transition-name:app-sidebar-dm-label">Direct Messages</span>
+			</div>
+		{{- else -}}
+			<div role="link" hx-get="/@me/inbox/conversations?sidebar=collapse" hx-trigger="click" hx-push-url="true" class="turboclick menu-item ellipsis hover-trigger folder">
+				<span style="view-transition-name:app-sidebar-dm-icon;">{{- icon "chat" }}</span>
+				<span style="view-transition-name:app-sidebar-dm-label">Direct Messages</span>
+			</div>
+		{{- end -}}
+
+		<div role="link" hx-get="/@me/inbox/alerts?sidebar=collapse" hx-trigger="click" hx-push-url="true" class="turboclick menu-item ellipsis hover-trigger folder">
+			<span style="view-transition-name:app-sidebar-bell-icon;">{{- icon "bell" }}</span>
+			<span style="view-transition-name:app-sidebar-bell-label">Notifications</span>
+		</div>
+	</div>
+
+	<hr>
+
+	<form class="sortable" hx-post="/@me/inbox/folder-sort" hx-push-url="false" hx-trigger="end">
+
+		{{- range .Folders -}}
+			{{- $folderID := .FolderID.Hex -}}
+			<div role="link" hx-get="/@me/inbox/inbox?folderId={{$folderID}}" hx-trigger="click" hx-push-url="true" class="turboclick menu-item ellipsis hover-trigger folder {{if eq $selectedID .FolderID}}selected{{end}}">
+				<span  style="view-transition-name:folder-{{$folderID}}-icon;">
+					{{- if eq $selectedID .FolderID -}}
+						{{- iconFilled .Icon -}}
+					{{- else -}}
+						{{- icon .Icon -}}
+					{{- end }}
+				</span>
+				<span  style="view-transition-name:folder-{{$folderID}}-label;">{{.Label}}</span>
+				<span class="folder-handle">
+					<span id="folder-unread-{{$folderID}}"
+					class="text-sm
+						{{- if ne $selectedID .FolderID}} text-light-gray{{- end -}}
+						{{- if eq .UnreadCount 0 }} hide{{- end -}}
+					"
+					>&#9679;</span>
+					<span class="hover-visible">
+						{{icon "drag-handle"}}
+					</span>
+				</span>
+				<input type="hidden" name="keys" value="{{$folderID}}">
+			</div>
+		{{- end -}}
+
+	</form>
+
+	<hr>
+	<div role="button" hx-get="/@me/inbox/folder-add" class="menu-item link turboclick">
+		<span style="view-transition-name:app-sidebar-add-folder-icon;">{{icon "add"}}</span>
+		<span style="view-transition-name:app-sidebar-add-folder-label">Add a Folder</span>
+	</div>
+
+	<!--div 
+		hx-get="/@me/inbox/sidebar?folderId={{$selectedID.Hex}}" 
+		hx-swap="outerHTML" 
+		hx-trigger="refreshSidebar from:window, every 600s" 
+		hx-push-url="false" 
+		hx-target="#app-sidebar">
+	</div-->
+
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
+	<script>
+        var sortables = document.querySelectorAll(".sortable");
+        for (var node of sortables) {
+            new Sortable(node, {
+                animation: 150,
+				handle: '.folder-handle',
+                whisperClass: 'folder-whisper'
+            });
+        }
+    </script>
+
+</div>

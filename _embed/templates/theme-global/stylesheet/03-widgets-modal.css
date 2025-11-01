@@ -44,7 +44,7 @@
 #modal-window {
 	/* Sizing for visible dialog */
 	width:600px;
-	max-width:99vw;
+	max-width:95vw;
 	max-height:99vh;
 
 	/* Scrolling behavior */

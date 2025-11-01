@@ -489,6 +489,13 @@
 			]
 		}
 
+		mobile: {
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
 		responses-announces:{
 			roles:["self"]
 			steps: [

@@ -1,6 +1,11 @@
 {{- $search := .QueryParam "search" -}}
 {{- $folderID := .QueryParam "folderId" -}}
-<h2 class="margin-bottom-lg">{{icon "add"}} Follow a Person or Website</h2>
+<h2 class="margin-bottom-lg">{{icon "add"}} Add a Source</h2>
+
+<div class="text-gray margin-vertical">
+	Follow a <b>Person</b> or <b>Website</b>
+	by entering their name, @username or URL in the box below
+</div>
 
 <div script="install Menu(input:#following-search-input)" id="following-search">
 
@@ -11,7 +16,6 @@
 			type="text" 
 			name="search" 
 			class="flex-grow-1" 
-			placeholder="Enter a Name, @Username, or Website Address"
 			tabIndex="0"
 			value="{{attr $search}}"
 			style="border:none; padding:0;" 

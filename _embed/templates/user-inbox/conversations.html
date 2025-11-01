@@ -1,5 +1,4 @@
 {{- .SetQueryParam "folderId" "000000000000000000000000" -}}
-{{- $sidebar := .QueryParam "sidebar" -}}
 {{- $folders := .FoldersWithSelection}}
 {{- $conversations := .Conversations.Top12.ByUpdateDate.Reverse.Slice -}}
 {{- .DefaultQueryParam "conversationId" $conversations.First.ConversationID.Hex -}}
@@ -10,11 +9,7 @@
 	<link rel="stylesheet" href="/.templates/user-inbox/stylesheet">
 
 	<!-- Sidebar Content -->
-	{{- if eq "collapse" $sidebar -}}
-		{{- template "sidebar-collapsed" $folders -}}
-	{{- else -}}
-		{{- template "sidebar-expanded" $folders -}}
-	{{- end -}}
+	{{- template "sidebar" $folders -}}
 
 	<div class="table no-top-border width-25% flex-shrink-0 scroll-vertical" style="background-color:var(--gray10); view-transition-name:second-sidebar;">
 

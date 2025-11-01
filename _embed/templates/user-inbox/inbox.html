@@ -1,4 +1,5 @@
-{{- $sidebar := .QueryParam "sidebar" -}}
+{{- $isMobile := .IsMobile -}}
+{{- $isDesktop := not $isMobile -}}
 {{- $folders := .FoldersWithSelection}}
 {{- $folder := $folders.Selected -}}
 {{- $filter := .FilteredByFollowing -}}
@@ -11,24 +12,22 @@
 	<link rel="stylesheet" href="/.templates/user-inbox/stylesheet">
 
 	<!-- Sidebar Content -->
-	{{- if eq "collapse" $sidebar -}}
-		{{- template "sidebar-collapsed" $folders -}}
-	{{- else -}}
-		{{- template "sidebar-expanded" $folders -}}
+	{{- if $isDesktop -}}
+		{{- template "sidebar" $folders -}}
 	{{- end -}}
 
 	<!-- Main App Content -->
 	<div class="app-content padding-top">
 
 		<!-- Floating Menu Bar -->
-		<div class="text-sm margin-none nowrap pos-sticky float-right" style="top:0px; padding:4px 0px 8px 16px; border-radius:4px; background-color:var(--page-background); view-transition-name:sticky-buttons">
-			<button hx-get="/@me/settings/following-search?folderId={{$folderID}}" class="primary turboclick">{{icon "add"}} Source</button>
+		<div class="{{if $isDesktop}}text-sm{{end}} margin-none nowrap pos-sticky float-right" style="top:0px; padding:0px 0px 8px 16px; border-radius:4px; background-color:var(--page-background); view-transition-name:sticky-buttons; z-index:1000">
+			<button hx-get="/@me/settings/following-search?folderId={{$folderID}}" class="primary turboclick">{{icon "add"}}{{if $isDesktop}} Source{{end}}</button>
 			{{- if $filter.IsZero -}}
-				<button hx-get="/@me/inbox/filter?folderId={{$folderID}}" class="turboclick">{{icon "filter"}} Filter</button>
+				<button hx-get="/@me/inbox/filter?folderId={{$folderID}}" class="turboclick">{{icon "filter"}}{{if $isDesktop}} Filter{{end}}</button>
 			{{- else -}}
-				<button hx-get="/@me/inbox/filter?folderId={{$folderID}}&followingId={{$followingID}}" class="selected ellipsis turboclick" style="max-width:160px;">{{icon "filter-fill"}} {{$filter.Label}}</button>
+				<button hx-get="/@me/inbox/filter?folderId={{$folderID}}&followingId={{$followingID}}" class="selected ellipsis turboclick" style="max-width:160px;">{{icon "filter-fill"}}{{- if $isDesktop }} {{$filter.Label}}{{end}}</button>
 			{{- end -}}
-			<button hx-get="/@me/inbox/folder-edit?folderId={{$folderID}}" class="turboclick">{{icon "settings"}} Folder Settings</button>
+			<button hx-get="/@me/inbox/folder-edit?folderId={{$folderID}}" class="turboclick">{{icon "settings"}}{{ if $isDesktop }} Folder Settings{{end}}</button>
 		</div>
 
 		<div class="flex-row margin-bottom-lg">
@@ -58,7 +57,14 @@
 					</div>
 				</div>
 			{{- else -}}
-				<h1 class="text-xl bold margin-none flex-grow">{{iconFilled $folder.Icon}} {{$folder.Label}}</h1>
+				<h1 class="text-xl bold margin-none flex-grow">
+					{{- if $isMobile -}}
+						<a href="/@me/inbox/mobile">{{icon "back"}}</a>
+					{{- else -}}
+						{{iconFilled $folder.Icon}} 
+					{{- end }}
+					{{$folder.Label}}
+				</h1>
 			{{- end -}}
 		</div>
 
