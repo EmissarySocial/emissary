@@ -410,6 +410,11 @@ func (w Common) IsMobile() bool {
 	return sniff.IsMobile(w.request().UserAgent())
 }
 
+// IsDesktop returns TRUE if the request was made by a desktop device
+func (w Common) IsDesktop() bool {
+	return !sniff.IsMobile(w.request().UserAgent())
+}
+
 // IsMe returns TRUE if the provided URI is the profileURL of the current user
 func (w Common) IsMe(url string) bool {
 	if user, err := w.getUser(); err == nil {

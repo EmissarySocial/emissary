@@ -1,0 +1,32 @@
+<div class="page padding">
+	<h1 class="text-xl bold">My Settings</h1>
+	{{- template "menu" "" -}}
+</div>
+
+<style>
+	.page {
+
+		min-height: 100dvh;
+
+		.menu-item {
+			display:block;
+			font-size: calc(var(--rhythm) * 2.5);
+			padding: calc(var(--rhythm) * 2) 0;
+			color: var(--gray80);
+			border-bottom: solid 1px var(--gray20);
+
+			&:last-child{
+				border-bottom:none;
+			}
+
+			i {
+				color: var(--link-color);
+			}
+		}
+
+		hr {
+			display:none;
+		}
+	}
+
+</style>

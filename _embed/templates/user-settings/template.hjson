@@ -26,6 +26,13 @@
 	}
 	actions: {
 
+		mobile: {
+			roles: ["self"]
+			steps: [
+				{do:"view-html"}
+			]
+		}
+
 		actor-button-follow-update: {
 			roles:["self"]
 			steps:[

@@ -1,0 +1,9 @@
+<a href="/@me/settings/following" hx-boost="true" class="turboclick menu-item ellipsis {{if eq . `following`}}selected{{end}}" style="view-transition-name:nav-following;">{{icon "star"}} Following</a>
+<a href="/@me/settings/followers" hx-boost="true" class="turboclick menu-item ellipsis  {{if eq . `followers`}}selected{{end}}" style="view-transition-name:nav-followers;">{{icon "person-fill"}} Followers</a>
+<a href="/@me/settings/circles" hx-boost="true" class="turboclick menu-item ellipsis {{if eq . `circles`}}selected{{end}}" style="view-transition-name:nav-circles;">{{icon "circle"}} Circles</a>
+<a href="/@me/settings/payments" hx-boost="true" class="turboclick menu-item ellipsis {{if eq . `payments`}}selected{{end}}" style="view-transition-name:nav-payments;">{{icon "credit-card"}} Payments</a>
+<a href="/@me/settings/rules" hx-boost="true" class="turboclick menu-item ellipsis {{if eq . `rules`}}selected{{end}}" style="view-transition-name:nav-rules;">{{icon "rule"}} Rules</a>
+<a href="/@guest" class="turboclick menu-item ellipsis {{if eq . `guest`}}selected{{end}}" style="view-transition-name:nav-guest;">{{icon "user"}} Guest Profile</a>
+<br>
+<a hx-post="/signout" class="menu-item ellipsis">{{icon "logout"}} Sign Out</a>
+

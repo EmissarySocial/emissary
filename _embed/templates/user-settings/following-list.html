@@ -2,7 +2,7 @@
 {{- $following := .Following.Top12.ByLabel.Slice -}}
 
 {{- range $following -}}
-	<div hx-get="/@me/inbox?folderId={{.FolderID.Hex}}&origin.followingId={{.FollowingID.Hex}}" hx-swap="outerHTML show:window:top" hx-push-url="true" class="flex-row flex-align-center" role="button" tabIndex="0">
+	<div  hx-get="/@me/settings/following-edit?followingId={{.FollowingID.Hex}}" class="flex-row flex-align-center" role="button" tabIndex="0">
 
 		<div class="flex-row flex-grow-1">
 
@@ -27,7 +27,7 @@
 				{{- end -}}
 			</div>
 			<div class="width-2-5">
-				<div><a hx-get="/@me/settings/inbox?folderId={{.FolderID.Hex}}" class="text-black bold" script="on click halt the event">{{.Folder}}</a></div>
+				<div class="text-black bold">{{.Folder}}</div>
 				<div class="text-sm text-light-gray margin-none">
 					{{ if eq "SUCCESS" .Status -}}
 						{{ icon .Icon }} 
@@ -40,10 +40,6 @@
 					{{- end -}}
 				</div>
 			</div>
-		</div>
-
-		<div class="align-right" hx-push-url="false">
-			<button class="text-sm" hx-get="/@me/settings/following-edit?followingId={{.FollowingID.Hex}}" script="on click halt the event">Edit Source</button>
 		</div>
 	</div>
 {{- end -}}

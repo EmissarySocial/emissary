@@ -1,10 +1,11 @@
+{{- $isDesktop := .IsDesktop -}}
 {{- $privileges := .Privileges.ByCreateDate.Reverse.Slice -}}
 {{- $hasWebfingerUsername := .HasWebfingerUsername -}}
 {{- $webfingerUsername := .WebfingerUsername -}}
 
 <div class="app" script="init send SelectNav(id:'settings')">
 
-	{{- if .IsAuthenticated -}}
+	{{- if and $isDesktop .IsAuthenticated -}}
 		<div id="app-sidebar" class="expanded">
 			<a href="/@me/settings/following" hx-boost="true" class="turboclick menu-item ellipsis">{{icon "star"}} Following</a>
 			<a href="/@me/settings/followers" hx-boost="true" class="turboclick menu-item ellipsis">{{icon "person"}} Followers</a>
@@ -18,7 +19,12 @@
 	{{- end -}}
 
 	<div class="app-content padding">
-		<h1 class="text-xl bold margin-none">Guest Profile</h1>
+		<h1 class="flex-row text-xl margin-none margin-bottom-lg">
+			{{- if not $isDesktop -}}
+				<a href="/@me/settings/mobile">{{icon "back"}}</a>
+			{{- end -}}
+			<span class="flex-grow bold">Guest Profile</span>
+		</h1>
 
 		<div class="margin-top rounded card padding flex-row flex-align-start" style="overflow-x:hidden; max-width:600px;">
 			<div class="margin-horizontal">
@@ -28,7 +34,9 @@
 			<div class="flex-column flex-align-stretch flex-grow table">
 				<div hx-get="/@guest/edit" class="clickable flex-row flex-align-center">
 					<div class="flex-grow text-lg bold margin-none margin-right-sm">{{.Name}}</div>
-					<span class="button text-xs">change</span>
+					{{- if $isDesktop -}}
+						<span class="button text-xs">change</span>
+					{{- end -}}
 				</div>
 
 				<div hx-get="/@guest/webfinger" class="clickable flex-row flex-align-center">
@@ -40,13 +48,15 @@
 							<span class="text-green">Add Your Fediverse Handle</span>
 						{{- end -}}
 					</div>
+					{{- if $isDesktop -}}
 					<span class="button text-xs">
 						{{- if $hasWebfingerUsername -}}
 							change
 						{{- else -}}
 							connect
 						{{- end -}}
-					</span>					
+					</span>
+					{{- end -}}		
 				</div>
 
 				<div hx-get="/@guest/email" class="clickable flex-row flex-align-center">
@@ -59,13 +69,15 @@
 						{{- end -}}
 					</div>
 
-					<span class="button text-xs">
-						{{- if .HasEmailAddress -}}
-							change
-						{{- else -}}
-							connect
-						{{- end -}}							
-					</span>
+					{{- if $isDesktop -}}
+						<span class="button text-xs">
+							{{- if .HasEmailAddress -}}
+								change
+							{{- else -}}
+								connect
+							{{- end -}}							
+						</span>
+					{{- end -}}
 				</div>
 
 				{{- if not .IsAuthenticated -}}

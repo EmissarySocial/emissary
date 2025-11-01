@@ -38,6 +38,8 @@ func (service Icons) Get(name string) string {
 		return service.get("at")
 	case "at-fill":
 		return service.get("at")
+	case "back":
+		return service.get("chevron-left")
 	case "bell":
 		return service.get("bell")
 	case "bell-fill":
