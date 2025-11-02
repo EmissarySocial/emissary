@@ -27,7 +27,7 @@
 
 	actions: {
 		create:{
-			roles:["self"]
+			roles:["authenticated"]
 			steps: [
 				{do:"edit-content", file:"create", format:"HTML"}
 				{do:"process-content", remove-html:true, add-links:true, add-tags:true}
