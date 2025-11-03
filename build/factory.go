@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/EmissarySocial/emissary/config"
+	"github.com/EmissarySocial/emissary/realtime"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/httpcache"
 	"github.com/benpate/data"
@@ -74,5 +75,5 @@ type Factory interface {
 	OAuthUserToken() *service.OAuthUserToken
 	Queue() *queue.Queue
 	Steranko(data.Session) *steranko.Steranko
-	SSEUpdateChannel() chan primitive.ObjectID
+	SSEUpdateChannel() chan realtime.Message
 }

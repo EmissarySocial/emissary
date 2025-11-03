@@ -15,9 +15,25 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+func ServerSentEvent(ctx *steranko.Context, factory *service.Factory, _ data.Session) error {
+	return serverSentEvent(ctx, factory, realtime.TopicAll)
+}
+
+func ServerSentEvent_Updated(ctx *steranko.Context, factory *service.Factory, _ data.Session) error {
+	return serverSentEvent(ctx, factory, realtime.TopicUpdated)
+}
+
+func ServerSentEvent_ChildUpdated(ctx *steranko.Context, factory *service.Factory, _ data.Session) error {
+	return serverSentEvent(ctx, factory, realtime.TopicChildUpdated)
+}
+
+func ServerSentEvent_NewReplies(ctx *steranko.Context, factory *service.Factory, _ data.Session) error {
+	return serverSentEvent(ctx, factory, realtime.TopicNewReplies)
+}
+
 // ServerSentEvent generates an echo.HandlerFunc that listens for requests for
 // SSE following.
-func ServerSentEvent(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
+func serverSentEvent(ctx *steranko.Context, factory *service.Factory, topic int) error {
 
 	const location = "handler.ServerSentEvent"
 
@@ -44,7 +60,7 @@ func ServerSentEvent(ctx *steranko.Context, factory *service.Factory, session da
 		return derp.Wrap(err, location, "Invalid StreamID", token)
 	}
 
-	client := realtime.NewClient(ctx.Request(), streamID)
+	client := realtime.NewClient(ctx.Request(), streamID, topic)
 
 	// Add this client to the map of those that should
 	// receive updates

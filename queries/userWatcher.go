@@ -4,15 +4,15 @@ import (
 	"context"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/realtime"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/rs/zerolog/log"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // WatchUsers initiates a mongodb change stream to on every updates to User data objects
-func WatchUsers(ctx context.Context, server data.Server, result chan<- primitive.ObjectID) {
+func WatchUsers(ctx context.Context, server data.Server, result chan<- realtime.Message) {
 
 	const location = "queries.WatchUsers"
 
@@ -70,6 +70,6 @@ func WatchUsers(ctx context.Context, server data.Server, result chan<- primitive
 			continue
 		}
 
-		result <- event.User.UserID
+		result <- realtime.NewMessage_Updated(event.User.UserID)
 	}
 }

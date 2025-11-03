@@ -1,8 +1,6 @@
 package service
 
 import (
-	"strings"
-
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
@@ -15,13 +13,17 @@ func (service *Following) SaveMessage(session data.Session, following *model.Fol
 
 	const location = "service.Following.SaveMessage"
 
+	// Unwrap activities like `Create` and `Update`
+	document = document.UnwrapActivity()
+	original := document.Clone()
+
 	// If collapseThreads is set, then traverse "inReplyTo" values back to the primary document
 	if following.CollapseThreads {
-		document, originType = getPrimaryPost(document, originType)
+		original, originType = getPrimaryPost(document, originType)
 	}
 
 	// Convert the document into a message (and traverse responses if necessary)
-	message := getMessage(following.UserID, document)
+	message := getMessage(following.UserID, original)
 	message.FollowingID = following.FollowingID
 	message.FolderID = following.FolderID
 	message.AddReference(following.Origin(originType))
@@ -31,9 +33,7 @@ func (service *Following) SaveMessage(session data.Session, following *model.Fol
 		return derp.Wrap(err, location, "Unable to save message", message)
 	}
 
-	if err := service.notifyInReplyTo(session, document.InReplyTo().ID()); err != nil {
-		return derp.Wrap(err, location, "Unable to notify 'inReplyTo' streams")
-	}
+	service.streamService.NotifyInReplyTo(session, document.InReplyTo().ID())
 
 	// Yee. Haw.
 	return nil
@@ -44,6 +44,8 @@ func (service *Following) SaveDirectMessage(session data.Session, user *model.Us
 
 	const location = "service.Following.SaveDirectMessage"
 
+	// Unwrap activities like `Create` and `Update`
+	document = document.UnwrapActivity()
 	attributedTo := document.AttributedTo()
 
 	// Convert the document into a message (and traverse responses if necessary)
@@ -60,9 +62,7 @@ func (service *Following) SaveDirectMessage(session data.Session, user *model.Us
 		return derp.Wrap(err, location, "Unable to save message")
 	}
 
-	if err := service.notifyInReplyTo(session, document.InReplyTo().ID()); err != nil {
-		return derp.Wrap(err, location, "Unable to notify 'inReplyTo' streams")
-	}
+	service.streamService.NotifyInReplyTo(session, document.InReplyTo().ID())
 
 	// Yee. Haw. Deux.
 	return nil
@@ -117,39 +117,6 @@ func (service *Following) saveUniqueMessage(session data.Session, message model.
 	return nil
 }
 
-func (service *Following) notifyInReplyTo(session data.Session, inReplyTo string) error {
-
-	const location = "service.Following.notifyInReplyTo"
-
-	// If this is not a reply, then skip
-	if inReplyTo == "" {
-		return nil
-	}
-
-	// If the "inReplyTo" is not on this server, then skip
-	if !strings.HasPrefix(inReplyTo, service.host) {
-		return nil
-	}
-
-	// Get the 'token' part of the URL
-	_, token, _ := strings.Cut(inReplyTo, "/")
-
-	stream := model.NewStream()
-	if err := service.streamService.LoadByToken(session, token, &stream); err != nil {
-
-		derp.Report(derp.Wrap(err, location, "Unable to locate 'InReplyTo' stream", inReplyTo))
-		// If the "inReplyTo" stream cannot be loaded, then log
-		// the error but do not fail the rest of the transaction
-		return nil
-	}
-
-	// Notify the `inReplyTo` stream
-	service.sseUpdateChannel <- stream.StreamID
-
-	// Glory to Rome.
-	return nil
-}
-
 /******************************************
  * Helper Functions
  ******************************************/
@@ -158,9 +125,6 @@ func (service *Following) notifyInReplyTo(session data.Session, inReplyTo string
 // If there are one or more replies in the chain, then the returned originType is "REPLY"
 // TODO: LOW: In the future, the "context" value may be useful in traversing this list.
 func getPrimaryPost(document streams.Document, originType string) (streams.Document, string) {
-
-	// Unwrap "activity" documents
-	document = document.UnwrapActivity()
 
 	if inReplyTo := document.InReplyTo(); inReplyTo.NotNil() {
 

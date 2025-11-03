@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/realtime"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -27,7 +28,7 @@ type Following struct {
 	inboxService     *Inbox
 	folderService    *Folder
 	keyService       *EncryptionKey
-	sseUpdateChannel chan<- primitive.ObjectID
+	sseUpdateChannel chan<- realtime.Message
 	host             string
 	closed           chan bool
 }
@@ -44,7 +45,7 @@ func NewFollowing(factory *Factory) Following {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Following) Refresh(streamService *Stream, userService *User, inboxService *Inbox, folderService *Folder, keyService *EncryptionKey, sseUpdateChannel chan<- primitive.ObjectID, host string) {
+func (service *Following) Refresh(streamService *Stream, userService *User, inboxService *Inbox, folderService *Folder, keyService *EncryptionKey, sseUpdateChannel chan<- realtime.Message, host string) {
 	service.streamService = streamService
 	service.userService = userService
 	service.inboxService = inboxService

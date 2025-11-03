@@ -9,6 +9,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/queries"
+	"github.com/EmissarySocial/emissary/realtime"
 	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/EmissarySocial/emissary/tools/parse"
 	"github.com/EmissarySocial/emissary/tools/random"
@@ -49,7 +50,7 @@ type Stream struct {
 	host              string
 	mediaserver       mediaserver.MediaServer
 	queue             *queue.Queue
-	sseUpdateChannel  chan<- primitive.ObjectID
+	sseUpdateChannel  chan<- realtime.Message
 }
 
 // NewStream returns a fully populated Stream service.
@@ -64,7 +65,7 @@ func NewStream(factory *Factory) Stream {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Stream) Refresh(circleService *Circle, domainService *Domain, searchTagService *SearchTag, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, contentService *Content, keyService *EncryptionKey, followerService *Follower, ruleService *Rule, userService *User, webhookService *Webhook, mediaserver mediaserver.MediaServer, queue *queue.Queue, host string, sseUpdateChannel chan primitive.ObjectID) {
+func (service *Stream) Refresh(circleService *Circle, domainService *Domain, searchTagService *SearchTag, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, contentService *Content, keyService *EncryptionKey, followerService *Follower, ruleService *Rule, userService *User, webhookService *Webhook, mediaserver mediaserver.MediaServer, queue *queue.Queue, sseUpdateChannel chan<- realtime.Message, host string) {
 	service.circleService = circleService
 	service.domainService = domainService
 	service.searchTagService = searchTagService
@@ -355,6 +356,9 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 		return derp.Wrap(err, location, "Error saving Stream", stream, note)
 	}
 
+	// Send SSE notifications to `InReplyTo` streams (if possible)
+	service.NotifyInReplyTo(session, stream.InReplyTo)
+
 	// Send stream:create and stream:update Webhooks
 	eventName := iif(wasNew, model.WebhookEventStreamCreate, model.WebhookEventStreamUpdate)
 	service.webhookService.Send(stream, eventName)
@@ -405,7 +409,7 @@ func (service *Stream) Delete(session data.Session, stream *model.Stream, note s
 
 	// NON-BLOCKING: Notify other processes on this server that the stream has been updated
 	go func() {
-		service.sseUpdateChannel <- stream.ParentID
+		service.sseUpdateChannel <- realtime.NewMessage_ChildUpdated(stream.ParentID)
 	}()
 
 	// Bueno!!
@@ -1165,6 +1169,40 @@ func (service *Stream) CalculateTags(session data.Session, stream *model.Stream)
 
 	// Apply the #hashtags back to the Stream
 	stream.Hashtags = hashtagNames
+}
+
+func (service *Stream) NotifyInReplyTo(session data.Session, inReplyTo string) {
+
+	const location = "service.Following.notifyInReplyTo"
+
+	// If this is not a reply, then skip
+	if inReplyTo == "" {
+		return
+	}
+
+	// If the "inReplyTo" is not on this server, then skip
+	if !strings.HasPrefix(inReplyTo, service.host) {
+		return
+	}
+
+	inReplyTo, _ = strings.CutPrefix(inReplyTo, service.host)
+
+	// Get the 'token' part of the URL
+	_, token, _ := strings.Cut(inReplyTo, "/")
+
+	stream := model.NewStream()
+	if err := service.LoadByToken(session, token, &stream); err != nil {
+
+		derp.Report(derp.Wrap(err, location, "Unable to locate 'InReplyTo' stream", inReplyTo))
+		// If the "inReplyTo" stream cannot be loaded, then log
+		// the error but do not fail the rest of the transaction
+		return
+	}
+
+	// Notify the `inReplyTo` stream
+	service.sseUpdateChannel <- realtime.NewMessage_NewReplies(stream.StreamID)
+
+	// Glory to Rome.
 }
 
 /******************************************

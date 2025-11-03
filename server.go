@@ -289,7 +289,11 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/:stream/attachments/:attachmentId", handler.WithFactory(factory, handler.GetStreamAttachment))
 	e.GET("/:stream/qrcode", handler.WithFactory(factory, handler.GetQRCode))
 	e.GET("/:objectId/sse", handler.WithFactory(factory, handler.ServerSentEvent))
+	e.GET("/:objectId/sse/updated", handler.WithFactory(factory, handler.ServerSentEvent_Updated))
+	e.GET("/:objectId/sse/child-updated", handler.WithFactory(factory, handler.ServerSentEvent_ChildUpdated))
+	e.GET("/:objectId/sse/new-replies", handler.WithFactory(factory, handler.ServerSentEvent_NewReplies))
 	e.GET("/@:objectId/sse", handler.WithFactory(factory, handler.ServerSentEvent))
+	e.GET("/@:objectId/sse/updated", handler.WithFactory(factory, handler.ServerSentEvent_Updated))
 
 	// ActivityPub pages for the application actor
 	e.GET("/@application", handler.WithFactory(factory, handler.GetApplicationActor))

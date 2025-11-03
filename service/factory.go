@@ -92,7 +92,7 @@ type Factory struct {
 
 	// real-time watchers
 	refreshContext   context.CancelFunc
-	sseUpdateChannel chan primitive.ObjectID
+	sseUpdateChannel chan realtime.Message
 
 	MarkForDeletion bool
 }
@@ -119,7 +119,7 @@ func NewFactory(serverFactory ServerFactory, commonDatabase mongodb.Server, doma
 		attachmentOriginals: attachmentOriginals,
 		attachmentCache:     attachmentCache,
 		exportCache:         exportCache,
-		sseUpdateChannel:    make(chan primitive.ObjectID, 1000),
+		sseUpdateChannel:    make(chan realtime.Message, 256),
 		port:                port,
 	}
 
@@ -437,8 +437,8 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 			factory.Webhook(),
 			factory.MediaServer(),
 			factory.Queue(),
-			factory.Host(),
 			factory.SSEUpdateChannel(),
+			factory.Host(),
 		)
 
 		// Populate StreamArchive Service
@@ -863,7 +863,7 @@ func (factory *Factory) RealtimeBroker() *realtime.Broker {
 }
 
 // SSEUpdateChannel initializes a background watcher and returns a channel containing any streams that have changed.
-func (factory *Factory) SSEUpdateChannel() chan primitive.ObjectID {
+func (factory *Factory) SSEUpdateChannel() chan realtime.Message {
 	return factory.sseUpdateChannel
 }
 

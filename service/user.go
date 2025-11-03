@@ -9,6 +9,7 @@ import (
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/queries"
+	"github.com/EmissarySocial/emissary/realtime"
 	"github.com/EmissarySocial/emissary/tools/camper"
 	"github.com/EmissarySocial/emissary/tools/parse"
 	"github.com/EmissarySocial/emissary/tools/random"
@@ -49,7 +50,7 @@ type User struct {
 	templateService   *Template
 	webhookService    *Webhook
 	queue             *queue.Queue
-	sseUpdateChannel  chan<- primitive.ObjectID
+	sseUpdateChannel  chan<- realtime.Message
 	host              string
 }
 
@@ -83,7 +84,7 @@ func (service *User) Refresh(
 	webhookService *Webhook,
 	queue *queue.Queue,
 
-	sseUpdateChannel chan<- primitive.ObjectID,
+	sseUpdateChannel chan<- realtime.Message,
 	host string) {
 
 	service.attachmentService = attachmentService
@@ -250,11 +251,8 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 		}
 	}
 
-	// Denormalize User information into the Streams they own.
-	go func() {
-		service.sseUpdateChannel <- user.UserID
-		service.streamService.SetAttributedTo(user)
-	}()
+	service.streamService.SetAttributedTo(user)
+	service.sseUpdateChannel <- realtime.NewMessage_Updated(user.UserID)
 
 	// Send Webhooks (if configured)
 	eventName := iif(isNew, model.WebhookEventUserCreate, model.WebhookEventUserUpdate)

@@ -1,6 +1,8 @@
 package realtime
 
 import (
+	"time"
+
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -19,7 +21,7 @@ type Broker struct {
 	streams map[primitive.ObjectID]map[primitive.ObjectID]*Client
 
 	// Channel that users/streams are pushed into when they change.
-	updateChannel chan primitive.ObjectID
+	updateChannel chan Message
 
 	// Channel into which new clients can be pushed
 	AddClient chan *Client
@@ -32,7 +34,7 @@ type Broker struct {
 }
 
 // NewBroker generates a new stream broker
-func NewBroker(updateChannel chan primitive.ObjectID) Broker {
+func NewBroker(updateChannel chan Message) Broker {
 
 	result := Broker{
 		clients:       make(map[primitive.ObjectID]*Client),
@@ -101,14 +103,9 @@ func (b *Broker) listen() {
 
 			// log.Println("Removed client")
 
-		case streamID := <-b.updateChannel:
+		case message := <-b.updateChannel:
 
-			// Send an update to every client that has subscribed to this stream
-			if streamID.IsZero() {
-				continue
-			}
-
-			go b.notifySSE(streamID)
+			go b.notifySSE(message)
 
 		case <-b.close:
 			return
@@ -117,10 +114,23 @@ func (b *Broker) listen() {
 }
 
 // notifySSE sends updates for every SEE client that is watching a given stream
-func (b *Broker) notifySSE(streamID primitive.ObjectID) {
+func (b *Broker) notifySSE(message Message) {
+
+	// If the object is empty, then there's nothing to do
+	if message.ObjectID.IsZero() {
+		return
+	}
+
+	// Delay before sending updates on new replies
+	// (wait for new items to settle in the database)
+	if message.Topic == TopicNewReplies {
+		time.Sleep(2 * time.Second)
+	}
 
 	// Send realtime messages to SSE clients
-	for _, client := range b.streams[streamID] {
-		client.WriteChannel <- streamID
+	for _, client := range b.streams[message.ObjectID] {
+		if (client.Topic == TopicAll) || (client.Topic == message.Topic) {
+			client.WriteChannel <- message.ObjectID
+		}
 	}
 }

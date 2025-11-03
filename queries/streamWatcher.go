@@ -4,14 +4,14 @@ import (
 	"context"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/realtime"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // WatchStreams initiates a mongodb change stream to on every updates to Stream data objects
-func WatchStreams(ctx context.Context, server data.Server, result chan<- primitive.ObjectID) {
+func WatchStreams(ctx context.Context, server data.Server, result chan<- realtime.Message) {
 
 	// Connect to the database for as long as our refresh context is active
 	session, err := server.Session(ctx)
@@ -61,7 +61,7 @@ func WatchStreams(ctx context.Context, server data.Server, result chan<- primiti
 			continue
 		}
 
-		result <- event.Stream.StreamID
-		result <- event.Stream.ParentID
+		result <- realtime.NewMessage_Updated(event.Stream.StreamID)
+		result <- realtime.NewMessage_ChildUpdated(event.Stream.ParentID)
 	}
 }
