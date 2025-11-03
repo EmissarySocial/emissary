@@ -1,0 +1,62 @@
+{{- $url := .Permalink -}}
+
+{{- if .IsAuthenticated -}}
+
+	{{- $responses := .GetResponseSummary $url -}}
+	{{- $document := .ActivityStream $url -}}
+	{{- $metadata := $document.Metadata -}}
+
+	<span hx-target="this" hx-swap="outerHTML" hx-push-url="false">
+
+		<button class="turboclick outline" hx-target="main" hx-swap="outerHTML" hx-get="/@me/inbox/browse-reply?url={{$url}}">
+			{{icon "reply"}} Reply
+		</button>
+
+		{{- if $responses.Announce -}}
+			<button 
+				class="turboclick outline"
+				hx-post="{{.BasePath}}/btn-social-outline?url={{$url}}" 
+				hx-vals='{"type":"Announce", "url":"{{$url}}", "exists":false}'
+			><span aria-hidden="true" class="margin-left-xs">{{icon "announce-fill"}}</span> Shared</button>
+		{{- else -}}
+			<button 
+				class="turboclick outline" 
+				hx-post="{{.BasePath}}/btn-social-outline?url={{$url}}" 
+				hx-vals='{"type":"Announce", "url": "{{$url}}", "exists":true}'
+				><span aria-hidden="true" class="margin-left-xs">{{icon "announce"}}</span> Share</button>
+		{{- end -}}
+
+		{{- if $responses.Like -}}
+			<button 
+				class="turboclick outline" 
+				hx-post="{{.BasePath}}/btn-social-outline?url={{$url}}" 
+				hx-vals='{"type":"Like", "url":"{{$url}}", "exists":false}'
+				><span aria-hidden="true" class="margin-left-xs">{{icon "like-fill"}}</span> Liked</button>
+		{{- else -}}
+			<button 
+				class="turboclick outline" 
+				hx-post="{{.BasePath}}/btn-social-outline?url={{$url}}" 
+				hx-vals='{"type":"Like", "url": "{{$url}}", "exists":true}'
+				><span aria-hidden="true" class="margin-left-xs">{{icon "like"}}</span> Like</button>
+		{{- end -}}
+
+	</span>
+
+{{- else -}}
+
+	<button class="outline" hx-get="/{{.StreamID}}/intent?intent=create&inReplyTo={{$url}}">
+		{{icon "reply"}}
+		<span class="show-desktop">Reply</span>
+	</button>
+	
+	<button class="outline" hx-get="/{{.StreamID}}/intent?intent=announce&object={{$url}}">
+		{{icon "share"}}
+		<span class="show-desktop">Share</span>
+	</button>
+	
+	<button class="outline" hx-get="/{{.StreamID}}/intent?intent=like&object={{$url}}">
+		{{icon "like"}}
+		<span class="show-desktop">Like</span>
+	</button>
+
+{{- end -}}

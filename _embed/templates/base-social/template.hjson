@@ -26,5 +26,14 @@
 				{do:"view-html", "method":"both"}
 			]
 		}
+
+		btn-social-outline: {
+			roles:["anonymous"]
+			steps:[
+				{do:"set-response"}
+				{do:"set-data", params:{"show-reply":true}}
+				{do:"view-html", "method":"both"}
+			]
+		}
 	}
 }
