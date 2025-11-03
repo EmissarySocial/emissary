@@ -21,14 +21,15 @@ const followingMimeStack = "application/activity+json; q=1.0, text/html; q=0.9, 
 
 // Following manages all interactions with the Following collection
 type Following struct {
-	factory       *Factory
-	streamService *Stream
-	userService   *User
-	inboxService  *Inbox
-	folderService *Folder
-	keyService    *EncryptionKey
-	host          string
-	closed        chan bool
+	factory          *Factory
+	streamService    *Stream
+	userService      *User
+	inboxService     *Inbox
+	folderService    *Folder
+	keyService       *EncryptionKey
+	sseUpdateChannel chan<- primitive.ObjectID
+	host             string
+	closed           chan bool
 }
 
 // NewFollowing returns a fully populated Following service.
@@ -43,12 +44,13 @@ func NewFollowing(factory *Factory) Following {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Following) Refresh(streamService *Stream, userService *User, inboxService *Inbox, folderService *Folder, keyService *EncryptionKey, host string) {
+func (service *Following) Refresh(streamService *Stream, userService *User, inboxService *Inbox, folderService *Folder, keyService *EncryptionKey, sseUpdateChannel chan<- primitive.ObjectID, host string) {
 	service.streamService = streamService
 	service.userService = userService
 	service.inboxService = inboxService
 	service.folderService = folderService
 	service.keyService = keyService
+	service.sseUpdateChannel = sseUpdateChannel
 	service.host = host
 }
 

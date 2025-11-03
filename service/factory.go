@@ -272,6 +272,7 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 			factory.Inbox(),
 			factory.Folder(),
 			factory.EncryptionKey(),
+			factory.SSEUpdateChannel(),
 			factory.Host(),
 		)
 

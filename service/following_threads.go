@@ -1,6 +1,8 @@
 package service
 
 import (
+	"strings"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
@@ -29,6 +31,10 @@ func (service *Following) SaveMessage(session data.Session, following *model.Fol
 		return derp.Wrap(err, location, "Unable to save message", message)
 	}
 
+	if err := service.notifyInReplyTo(session, document.InReplyTo().ID()); err != nil {
+		return derp.Wrap(err, location, "Unable to notify 'inReplyTo' streams")
+	}
+
 	// Yee. Haw.
 	return nil
 }
@@ -54,7 +60,11 @@ func (service *Following) SaveDirectMessage(session data.Session, user *model.Us
 		return derp.Wrap(err, location, "Unable to save message")
 	}
 
-	// Yee. Haw.
+	if err := service.notifyInReplyTo(session, document.InReplyTo().ID()); err != nil {
+		return derp.Wrap(err, location, "Unable to notify 'inReplyTo' streams")
+	}
+
+	// Yee. Haw. Deux.
 	return nil
 }
 
@@ -104,6 +114,39 @@ func (service *Following) saveUniqueMessage(session data.Session, message model.
 	}
 
 	// Successfully updated the message, or not.  But still, it's good.
+	return nil
+}
+
+func (service *Following) notifyInReplyTo(session data.Session, inReplyTo string) error {
+
+	const location = "service.Following.notifyInReplyTo"
+
+	// If this is not a reply, then skip
+	if inReplyTo == "" {
+		return nil
+	}
+
+	// If the "inReplyTo" is not on this server, then skip
+	if !strings.HasPrefix(inReplyTo, service.host) {
+		return nil
+	}
+
+	// Get the 'token' part of the URL
+	_, token, _ := strings.Cut(inReplyTo, "/")
+
+	stream := model.NewStream()
+	if err := service.streamService.LoadByToken(session, token, &stream); err != nil {
+
+		derp.Report(derp.Wrap(err, location, "Unable to locate 'InReplyTo' stream", inReplyTo))
+		// If the "inReplyTo" stream cannot be loaded, then log
+		// the error but do not fail the rest of the transaction
+		return nil
+	}
+
+	// Notify the `inReplyTo` stream
+	service.sseUpdateChannel <- stream.StreamID
+
+	// Glory to Rome.
 	return nil
 }
 
