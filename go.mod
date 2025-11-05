@@ -22,7 +22,7 @@ require (
 	github.com/benpate/mediaserver v0.15.10
 	github.com/benpate/re v0.3.5
 	github.com/benpate/remote v0.17.9
-	github.com/benpate/rosetta v0.25.21
+	github.com/benpate/rosetta v0.25.22
 	github.com/benpate/sherlock v0.8.16
 	github.com/benpate/sniff v0.1.0
 	github.com/benpate/steranko v0.22.5
