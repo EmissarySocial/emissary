@@ -55,7 +55,6 @@ func SendSearchResult(factory *service.Factory, session data.Session, args mapof
 				"SendSearchResult-SearchQuery",
 				mapof.Any{
 					"host":          factory.Hostname(),
-					"activity":      args.GetString("activity"),
 					"searchQueryId": searchQuery.SearchQueryID,
 					"url":           searchResult.URL,
 				},
