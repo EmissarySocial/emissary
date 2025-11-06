@@ -84,6 +84,7 @@ func SetupDomainPost(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		build.CloseModal(ctx)
+		build.RefreshPage(ctx)
 		return ctx.NoContent(http.StatusOK)
 	}
 }

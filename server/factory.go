@@ -209,23 +209,10 @@ func (factory *Factory) readConfig(config config.Config) {
 	factory.emailService.Refresh()
 	factory.templateService.Refresh(config.Templates)
 
-	// RULE: If we're running the setup console, then
-	// do not run the remaining updates
-	if factory.IsSetupMode() {
-		log.Trace().Msg("Factory.readConfig: In setup mode, so skipping domain updates")
-		return
-	}
-
-	filesystemService := factory.Filesystem()
-
+	// RULE: MUST be able to connect to the common database
 	if err := factory.refreshCommonDatabase(config.ActivityPubCache); err != nil {
-		derp.Report(derp.Wrap(err, location, "WARNING: Could not refresh common database.  Important services (like queued tasks and ActivityPub caching) may not function correctly.", config.ActivityPubCache))
-	}
-
-	if factory.commonDatabase == nil {
 		errorMessage := "Halting. Common database not properly defined in configuration file."
 		derp.Report(derp.InternalError(location, errorMessage))
-		log.Error().Msg(errorMessage)
 		os.Exit(1)
 	}
 
@@ -239,6 +226,8 @@ func (factory *Factory) readConfig(config config.Config) {
 
 	// Set timeout threshold for slow queries
 	mongodb.SetLogTimeout(config.LogSlowQueries)
+
+	filesystemService := factory.Filesystem()
 
 	if attachmentOriginals, err := filesystemService.GetAfero(config.AttachmentOriginals); err == nil {
 		factory.attachmentOriginals = attachmentOriginals
@@ -258,6 +247,15 @@ func (factory *Factory) readConfig(config config.Config) {
 		derp.Report(derp.Wrap(err, location, "Unable to get `export cache` directory", config))
 	}
 
+	factory.refreshQueue()
+
+	// RULE: If we're running the setup console, then
+	// do not run the remaining updates
+	if factory.IsSetupMode() {
+		log.Trace().Msg("Factory.readConfig: In setup mode, so skipping domain updates")
+		return
+	}
+
 	// Mark all domains for deletion (then unmark them later)
 	for index := range factory.domains {
 
@@ -268,8 +266,6 @@ func (factory *Factory) readConfig(config config.Config) {
 		}
 		factory.domains[index].MarkForDeletion = true
 	}
-
-	factory.refreshQueue()
 
 	log.Trace().Msg("Factory.readConfig: Setting up Common Database")
 
@@ -404,23 +400,26 @@ func (factory *Factory) refreshCommonDatabase(connection mapof.String) error {
 		return derp.InternalError(location, "Common database must have a database name")
 	}
 
-	// If there is already a cache connection in place, then close it before we open a new one
-	if factory.commonDatabase != nil {
-		log.Trace().Str("database", database).Msg("Resetting common database")
-		if err := factory.commonDatabase.Client().Disconnect(context.Background()); err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to disconnect from database"))
-		}
-	}
+	// Make a copy of the commonDatabase (pointer) so we can close it after we
+	// set up a new one
+	commonDatabaseCopy := factory.commonDatabase
 
 	// Try to connect to the cache database
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(uri))
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to connect to database", uri)
+		return derp.Wrap(err, location, "Unable to connect to common database", uri)
 	}
 
 	log.Trace().Msg("Connected to common database")
 	factory.commonDatabase = client.Database(database)
+
+	// If there is already a cache connection in place, then close it before we open a new one
+	if commonDatabaseCopy != nil {
+		if err := commonDatabaseCopy.Client().Disconnect(context.Background()); err != nil {
+			derp.Report(derp.Wrap(err, location, "Unable to disconnect from database"))
+		}
+	}
 
 	// Update indexes asynchronously
 	log.Trace().Str("database", factory.commonDatabase.Name()).Msg("Synchronizing common database indexes")
@@ -443,18 +442,14 @@ func (factory *Factory) refreshQueue() {
 		queue.WithRunImmediatePriority(32),
 	}
 
-	// If we have a common database configured, then use it for queue storage
-	if factory.commonDatabase != nil {
+	// Configure the queue to use the common database
+	mongoStorage := queue_mongo.New(factory.commonDatabase, 16, 8)
 
-		// Set up Queue storage
-		mongoStorage := queue_mongo.New(factory.commonDatabase, 32, 32)
-
-		// Apply the storage to the queue
-		options = append(options,
-			queue.WithStorage(mongoStorage),
-			queue.WithPollStorage(true),
-		)
-	}
+	// Apply the storage to the queue
+	options = append(options,
+		queue.WithStorage(mongoStorage),
+		queue.WithPollStorage(true),
+	)
 
 	// Create a new queue object with consumers, storage, and polling
 	factory.queue = queue.New(options...)
