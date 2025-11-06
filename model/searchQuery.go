@@ -99,7 +99,7 @@ func (searchQuery SearchQuery) Expression() exp.Expression {
 	}
 
 	if searchQuery.Polygon.NotZero() {
-		result = result.And(exp.GeoWithin("place", searchQuery.Polygon))
+		result = result.And(exp.GeoWithin("location", searchQuery.Polygon))
 	}
 
 	return result

@@ -5,32 +5,29 @@ import (
 	"time"
 
 	"github.com/benpate/data/journal"
-	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/geo"
 	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // SearchResult represents a value in the search index
 type SearchResult struct {
-	SearchResultID primitive.ObjectID `json:"-"            bson:"_id"`                    // SearchResultID is the unique identifier for a SearchResult.
-	LockID         primitive.ObjectID `json:"-"            bson:"lockId"`                 // Unique identifier for the worker that is currently processing this task
-	Type           string             `json:"type"         bson:"type"`                   // Type is the ActivityPub object type (Person, Article, etc)
-	URL            string             `json:"url"          bson:"url"`                    // URL is the URL of the SearchResult.
-	AttributedTo   string             `json:"attributedTo" bson:"attributedTo,omitempty"` // AttributedTo is the name (or username) of the creator of this SearchResult.
-	Name           string             `json:"name"         bson:"name"`                   // Name is the name of the SearchResult.
-	IconURL        string             `json:"iconUrl"      bson:"iconUrl,omitempty"`      // IconURL is the URL of the icon for the SearchResult.
-	Summary        string             `json:"summary"      bson:"summary,omitempty"`      // Summary is a short description of the SearchResult.
-	Text           string             `json:"text"         bson:"text,omitempty"`         // Text is the searchable text of this SearchResult.  It is used to build the index value.
-	Date           time.Time          `json:"date"         bson:"date,omitempty"`         // Date is the date that this SearchResult was created.
-	Place          mapof.Any          `json:"place"        bson:"place,omitempty"`        // Place is the location (encoded with GeoJSON) of the SearchResult.
-	Tags           sliceof.String     `json:"tags"         bson:"tags,omitempty"`         // Tags is a machine-readable list of tag values that are associated with this SearchResult.
-	Index          sliceof.String     `json:"-"            bson:"index,omitempty"`        // Index is a list of words (encoded via metaphone) that are used to index this SearchResult.
-	TimeoutDate    int64              `json:"-"            bson:"timeoutDate"`            // Unix epoch seconds when this task will "time out" and can be reclaimed by another process
-	ReIndexDate    int64              `json:"-"            bson:"reindexDate"`            // ReIndexDate is the date that this SearchResult should be reindexed.
-	NotifiedDate   int64              `json:"-"            bson:"notifiedDate"`           // NotifiedDate is the data that followers were notified of this SearchResult.
-	Rank           int64              `json:"-"            bson:"rank"`                   // Rank is the rank of this SearchResult in the search index.
-	Shuffle        int64              `json:"-"            bson:"shuffle"`                // Shuffle is a random number used to shuffle the search results.
-	Local          bool               `json:"-"            bson:"local"`                  // Local is true if this SearchResult originates on the local server.  Only local SearchResults will be syndicated to external servers.
+	SearchResultID primitive.ObjectID `json:"-"                 bson:"_id"`                    // SearchResultID is the unique identifier for a SearchResult.
+	Type           string             `json:"type"              bson:"type"`                   // Type is the ActivityPub object type (Person, Article, etc)
+	URL            string             `json:"url"               bson:"url"`                    // URL is the URL of the SearchResult.
+	AttributedTo   string             `json:"attributedTo"      bson:"attributedTo,omitempty"` // AttributedTo is the name (or username) of the creator of this SearchResult.
+	Name           string             `json:"name"              bson:"name"`                   // Name is the name of the SearchResult.
+	Summary        string             `json:"summary,omitzero"  bson:"summary,omitempty"`      // Summary is a short description of the SearchResult.
+	IconURL        string             `json:"iconUrl,omitzero"  bson:"iconUrl,omitempty"`      // IconURL is the URL of the icon for the SearchResult.
+	Date           time.Time          `json:"date,omitzero"     bson:"date,omitempty"`         // Date is the datetime related to this SearchResult.
+	Location       geo.Point          `json:"location,omitzero" bson:"location,omitempty"`     // GeoJSON Point (longitude,latitude) related to this SearchResult
+	Tags           sliceof.String     `json:"tags"              bson:"tags,omitempty"`         // Tags is a machine-readable list of tag values that are associated with this SearchResult.
+	Text           string             `json:"-"                 bson:"text,omitempty"`         // Text is the searchable text of this SearchResult.  It is used to build the index value.
+	Index          sliceof.String     `json:"-"                 bson:"index,omitempty"`        // Index is a list of words (encoded via metaphone) that are used to index this SearchResult.
+	ReIndexDate    int64              `json:"-"                 bson:"reindexDate"`            // ReIndexDate is the date that this SearchResult should be reindexed.
+	Rank           int64              `json:"-"                 bson:"rank"`                   // Rank is the rank of this SearchResult in the search index.
+	Shuffle        int64              `json:"-"                 bson:"shuffle"`                // Shuffle is a random number used to shuffle the search results.
+	Local          bool               `json:"-"                 bson:"local"`                  // Local is true if this SearchResult originates on the local server.  Only local SearchResults will be syndicated to external servers.
 
 	journal.Journal `json:"-" bson:",inline"`
 }
@@ -38,7 +35,7 @@ type SearchResult struct {
 func NewSearchResult() SearchResult {
 	return SearchResult{
 		SearchResultID: primitive.NewObjectID(),
-		Place:          mapof.NewAny(),
+		Location:       geo.NewPoint(0, 0),
 		Tags:           make(sliceof.String, 0),
 		Index:          make(sliceof.String, 0),
 		Shuffle:        rand.Int64(),
@@ -76,18 +73,13 @@ func (searchResult *SearchResult) Update(other SearchResult) bool {
 		changed = true
 	}
 
-	if searchResult.IconURL != other.IconURL {
-		searchResult.IconURL = other.IconURL
-		changed = true
-	}
-
 	if searchResult.Summary != other.Summary {
 		searchResult.Summary = other.Summary
 		changed = true
 	}
 
-	if searchResult.Text != other.Text {
-		searchResult.Text = other.Text
+	if searchResult.IconURL != other.IconURL {
+		searchResult.IconURL = other.IconURL
 		changed = true
 	}
 
@@ -96,8 +88,13 @@ func (searchResult *SearchResult) Update(other SearchResult) bool {
 		changed = true
 	}
 
-	if searchResult.Place.NotEqual(other.Place) {
-		searchResult.Place = other.Place
+	if searchResult.Location != other.Location {
+		searchResult.Location = other.Location
+		changed = true
+	}
+
+	if searchResult.Text != other.Text {
+		searchResult.Text = other.Text
 		changed = true
 	}
 
@@ -111,23 +108,8 @@ func (searchResult *SearchResult) Update(other SearchResult) bool {
 		changed = true
 	}
 
-	if searchResult.LockID != other.LockID {
-		searchResult.LockID = other.LockID
-		changed = true
-	}
-
-	if searchResult.TimeoutDate != other.TimeoutDate {
-		searchResult.TimeoutDate = other.TimeoutDate
-		changed = true
-	}
-
 	if searchResult.ReIndexDate != other.ReIndexDate {
 		searchResult.ReIndexDate = other.ReIndexDate
-		changed = true
-	}
-
-	if searchResult.NotifiedDate != other.NotifiedDate {
-		searchResult.NotifiedDate = other.NotifiedDate
 		changed = true
 	}
 
@@ -154,7 +136,7 @@ func (searchResult SearchResult) Fields() []string {
 		"summary",
 		"date",
 		"tags",
-		"place",
+		"location",
 		"shuffle",
 		"createDate",
 	}

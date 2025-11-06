@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/benpate/geo"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 )
@@ -65,14 +66,14 @@ func (place Place) JSONLD() mapof.Any {
 		}
 	}
 
-	if address := place.ParsedAddress(); len(address) > 0 {
+	if address := place.MarshalAddress(); address.NotEmpty() {
 		result["address"] = address
 	}
 
 	return result
 }
 
-func (place Place) ParsedAddress() mapof.String {
+func (place Place) MarshalAddress() mapof.String {
 
 	result := mapof.String{}
 
@@ -105,31 +106,6 @@ func (place Place) ParsedAddress() mapof.String {
 	}
 
 	return result
-}
-
-func (place Place) HasParsedAddress() bool {
-
-	if place.Street1 != "" {
-		return true
-	}
-
-	if place.Locality != "" {
-		return true
-	}
-
-	if place.Region != "" {
-		return true
-	}
-
-	if place.PostalCode != "" {
-		return true
-	}
-
-	if place.Country != "" {
-		return true
-	}
-
-	return false
 }
 
 func (place Place) IsEmpty() bool {
@@ -192,14 +168,21 @@ func (place Place) HasAddress() bool {
 	return false
 }
 
+/******************************************
+ * Conversion Functions
+ ******************************************/
+
+// GeoJSON returns a GeoJSON object that matches the
+// geo.GeoJSONer interface
 // https://www.mongodb.com/docs/manual/reference/geojson/
 func (place Place) GeoJSON() mapof.Any {
 	return mapof.Any{
-		"name":        place.Name,
-		"fullAddress": place.FullAddress,
-		"location": mapof.Any{
-			"type":        "Point",
-			"coordinates": []float64{place.Longitude, place.Latitude},
-		},
+		geo.PropertyType:        geo.PropertyTypePoint,
+		geo.PropertyCoordinates: []float64{place.Longitude, place.Latitude},
 	}
+}
+
+// GeoPoint returns a geo.Point representation of this place
+func (place Place) GeoPoint() geo.Point {
+	return geo.NewPoint(place.Longitude, place.Latitude)
 }

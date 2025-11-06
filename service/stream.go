@@ -1238,7 +1238,7 @@ func (service *Stream) SearchResult(stream *model.Stream) model.SearchResult {
 					result.Local = true
 
 					if place := stream.Places.First(); place.NotEmpty() {
-						result.Place = place.GeoJSON()
+						result.Location = place.GeoPoint()
 					}
 
 					if tagString := template.SearchOptions.Execute("tags", stream); tagString != "" {
