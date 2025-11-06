@@ -11,23 +11,25 @@ import (
 	"github.com/EmissarySocial/emissary/tools/sorted"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/exp"
+	"github.com/benpate/geo"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/dlclark/metaphone3"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // SearchQuery represents a saved query that visitors can follow
 type SearchQuery struct {
-	SearchQueryID primitive.ObjectID `bson:"_id"`       // SearchQueryID is the unique identifier for a SearchQuery
-	URL           string             `bson:"url"`       // The URL where this search query originated
-	Types         sliceof.String     `bson:"types"`     // The types of results that this query is interested in (Person, Article, Album, Audio, etc)
-	Query         string             `bson:"query"`     // The original string used in the search query
-	Index         sliceof.String     `bson:"index"`     // The parsed (and normalized) index of values in the search query
-	Tags          sliceof.String     `bson:"tags"`      // The parsed (and normalized) tag values
-	StartDate     string             `bson:"startDate"` // The start date of the search query
-	Location      string             `bson:"location"`  // The location of the search query
-	Signature     string             `bson:"signature"` // The hash of this search query
+	SearchQueryID primitive.ObjectID `bson:"_id"`               // SearchQueryID is the unique identifier for a SearchQuery
+	URL           string             `bson:"url"`               // The URL where this search query originated
+	Types         sliceof.String     `bson:"types"`             // The types of results that this query is interested in (Person, Article, Album, Audio, etc)
+	Query         string             `bson:"query"`             // The original string used in the search query
+	Index         sliceof.String     `bson:"index"`             // The parsed (and normalized) index of values in the search query
+	Tags          sliceof.String     `bson:"tags"`              // The parsed (and normalized) tag values
+	StartDate     string             `bson:"startDate"`         // The start date of the search query
+	Polygon       geo.Polygon        `bson:"polygon,omitempty"` // Polygon to search within
+	Signature     string             `bson:"signature"`         // The hash of this search query
 
 	journal.Journal `bson:",inline"`
 }
@@ -38,6 +40,7 @@ func NewSearchQuery() SearchQuery {
 		Types:         make(sliceof.String, 0),
 		Index:         make(sliceof.String, 0),
 		Tags:          make(sliceof.String, 0),
+		Polygon:       geo.NewPolygon(),
 	}
 }
 
@@ -66,7 +69,7 @@ func (searchQuery SearchQuery) IsEmpty() bool {
 		return false
 	}
 
-	if searchQuery.Location != "" {
+	if !searchQuery.Polygon.IsZero() {
 		return false
 	}
 
@@ -81,9 +84,11 @@ func (searchQuery SearchQuery) NotEmpty() bool {
 // Expression returns the criteria in this SearchQuery as an exp.Expression
 func (searchQuery SearchQuery) Expression() exp.Expression {
 
-	var result exp.Expression
+	var result exp.Expression = exp.And()
 
-	result = exp.In("type", searchQuery.Types)
+	if searchQuery.Types.NotEmpty() {
+		result = result.AndIn("type", searchQuery.Types)
+	}
 
 	for _, tag := range searchQuery.Tags {
 		result = result.AndEqual("tags", tag)
@@ -93,37 +98,57 @@ func (searchQuery SearchQuery) Expression() exp.Expression {
 		result = result.AndEqual("index", index)
 	}
 
-	// TODO: Geosearch by Location and Radius
-
-	// TODO: Time-Based Search (might not be possible)
+	if searchQuery.Polygon.NotZero() {
+		result = result.And(exp.GeoWithin("place", searchQuery.Polygon))
+	}
 
 	return result
 
 }
 
-// Match returns TRUE if this query matches the provided SearchResult
-func (searchQuery SearchQuery) Match(searchResult SearchResult) bool {
+func (searchQuery SearchQuery) Match(searchResult *SearchResult) bool {
 
-	// Match Types
-	if !sorted.Contains(searchQuery.Types, searchResult.Type) {
-		return false
+	spew.Dump("Match::", searchQuery, searchResult)
+
+	// Match Type(s)
+	if searchQuery.Types.NotEmpty() {
+		if !sorted.Contains(searchQuery.Types, searchResult.Type) {
+			spew.Dump("NO. Types don't match")
+			return false
+		}
 	}
 
 	// Match Tags
-	if !sorted.ContainsAll(searchQuery.Tags, searchResult.Tags) {
-		return false
+	if searchQuery.Tags.NotEmpty() {
+		if !sorted.ContainsAll(searchQuery.Tags, searchResult.Tags) {
+			spew.Dump("NO. Tags don't match")
+			return false
+		}
 	}
 
 	// Match Text Index
-	if !sorted.ContainsAll(searchQuery.Index, searchResult.Index) {
-		return false
+	if searchQuery.Index.NotEmpty() {
+		if !sorted.ContainsAll(searchQuery.Index, searchResult.Index) {
+			spew.Dump("NO. Index doesn't match")
+			return false
+		}
 	}
 
-	// TODO: Geosearch by Location and Radius
+	// Skipping "Polygon" because this is more efficiently handled in the
+	// database.
 
-	// TODO: Time-Based Search (might not be possible)
+	// Skipping "StartDate" because I'm not sure how to do this right now.
+	// We HAVE defined relative time args (in exp-builder) but consider:
+	//
+	// An event falls outside of that range when the search record is first
+	// created. But, how would we re-run the query once the "present time"
+	// catches up, and is now within the relative time range?
+	//
+	// If there are any queries OUTSIDE of the target range, we'll probably
+	// have to set a queue task in the future to re-evaluate this search
+	// at some strategic point in the future. (how?)
 
-	// Otherwise, return true
+	spew.Dump("YES.")
 	return true
 }
 
@@ -195,9 +220,9 @@ func (searchQuery *SearchQuery) MakeSignature() {
 		plaintext.WriteString("\n")
 	}
 
-	if searchQuery.Location != "" {
-		plaintext.WriteString("LOC:")
-		plaintext.WriteString(searchQuery.Location)
+	if searchQuery.Polygon.NotZero() {
+		plaintext.WriteString("PGN:")
+		plaintext.WriteString(searchQuery.Polygon.String())
 		plaintext.WriteString("\n")
 	}
 

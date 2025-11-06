@@ -167,6 +167,24 @@ func (service *SearchQuery) RangeAll(session data.Session) (iter.Seq[model.Searc
 	return service.Range(session, exp.All())
 }
 
+// RangeNearMatches searces for SearchQueries that *might* match the provided SearchResult. It queries
+// easily matchable values, but it is not thorough, so it WILL return false positives. This at least
+// partially limits the number of SearchQueries that need to be scanned by the application server.
+func (service *SearchQuery) RangeNearMatches(session data.Session, searchResult *model.SearchResult) (iter.Seq[model.SearchQuery], error) {
+
+	var criteria exp.Expression = exp.And()
+
+	// searchQuery.Type is "" or matches searchResult
+	criteria = criteria.And(
+		exp.Or(
+			exp.Equal("type", ""),
+			exp.Equal("type", searchResult.Type),
+		),
+	)
+
+	return service.Range(session, criteria)
+}
+
 // LoadByID retrieves a SearchQuery using the provided ID
 func (service *SearchQuery) LoadByID(session data.Session, searchQueryID primitive.ObjectID, searchQuery *model.SearchQuery) error {
 

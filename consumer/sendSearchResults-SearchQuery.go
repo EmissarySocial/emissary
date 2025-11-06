@@ -11,9 +11,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func SendSearchResults_Query(factory *service.Factory, session data.Session, args mapof.Any) queue.Result {
+func SendSearchResult_SearchQuery(factory *service.Factory, session data.Session, args mapof.Any) queue.Result {
 
-	const location = "consumer.SendSearchResults"
+	const location = "consumer.SendSearchResults_Query"
 
 	// Collect services to use
 	followerService := factory.Follower()
@@ -26,34 +26,25 @@ func SendSearchResults_Query(factory *service.Factory, session data.Session, arg
 		return queue.Failure(derp.InternalError(location, "'url' is required."))
 	}
 
-	// Parse ActorID
-	actorURL := args.GetString("actor")
-
-	if actorURL == "" {
-		return queue.Failure(derp.InternalError(location, "'actor' is required."))
-	}
-
 	// Parse SearchQueryID
-	searchQueryID, err := primitive.ObjectIDFromHex(args.GetString("searchQueryID"))
+	searchQueryID, err := primitive.ObjectIDFromHex(args.GetString("searchQueryId"))
 
 	if err != nil {
-		return queue.Failure(derp.Wrap(err, location, "'searchQueryID' must be a valid ObjectID"))
+		return queue.Failure(derp.Wrap(err, location, "'searchQueryId' must be a valid ObjectID"))
 	}
+
+	// Calculate the ActorURL
+	searchQueryService := factory.SearchQuery()
+	actorURL := searchQueryService.ActivityPubURL(searchQueryID)
 
 	// Get all Followers from the database
 	followers := followerService.RangeBySearch(session, searchQueryID)
-	ruleFilter := factory.Rule().Filter(primitive.NilObjectID, service.WithBlocksOnly())
 
 	// Send ActivityPub messages to each follower
 	for follower := range followers {
 
-		// Do not send to blocked followers
-		if !ruleFilter.AllowSend(session, follower.Actor.ProfileURL) {
-			continue
-		}
-
 		// Create a new queue message for each follower
-		task := queue.NewTask(
+		queueService.NewTask(
 			"SendActivityPubMessage",
 			mapof.Any{
 				"host":      factory.Hostname(),
@@ -68,11 +59,6 @@ func SendSearchResults_Query(factory *service.Factory, session data.Session, arg
 			},
 			queue.WithPriority(256),
 		)
-
-		// Send the message to the queue
-		if err := queueService.Publish(task); err != nil {
-			return queue.Error(derp.Wrap(err, location, "Error sending message to queue"))
-		}
 	}
 
 	// Woot woot!

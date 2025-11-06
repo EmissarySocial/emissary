@@ -91,14 +91,11 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 	case "SendActivityPubMessage":
 		return WithSession(consumer.serverFactory, args, SendActivityPubMessage)
 
-	case "SendSearchResults":
-		return WithSession(consumer.serverFactory, args, SendSearchResults)
+	case "SendSearchResult":
+		return WithSession(consumer.serverFactory, args, SendSearchResult)
 
-	case "SendSearchResults-Query":
-		return WithSession(consumer.serverFactory, args, SendSearchResults_Query)
-
-	case "SendSearchResults-Global":
-		return WithSession(consumer.serverFactory, args, SendSearchResults_Global)
+	case "SendSearchResult-SearchQuery":
+		return WithSession(consumer.serverFactory, args, SendSearchResult_SearchQuery)
 
 	case "SendWebMention":
 		return SendWebMention(args)

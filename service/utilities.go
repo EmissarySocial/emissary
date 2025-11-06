@@ -11,7 +11,6 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/id"
-	"github.com/EmissarySocial/emissary/tools/parse"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
@@ -72,17 +71,15 @@ func iterateFollowerAddresses(followers iter.Seq[model.Follower]) iter.Seq[strin
 	}
 }
 
-func TextIndex(value string) sliceof.String {
+func textIndex(tokens ...string) sliceof.String {
 
 	// RULE: Exit early on empty strings (why would you do this? Who hurt you?)
-	if value == "" {
+	if len(tokens) == 0 {
 		return make(sliceof.String, 0)
 	}
 
 	// Split the value into words (strips hashtags and special characters)
-	tokens := parse.Split(value)
 	result := make([]string, 0, len(tokens))
-
 	encoder := metaphone3.Encoder{}
 
 	for _, token := range tokens {

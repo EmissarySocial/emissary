@@ -9,19 +9,24 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/queries"
+	"github.com/EmissarySocial/emissary/tools/parse"
 	"github.com/EmissarySocial/emissary/tools/random"
 	"github.com/EmissarySocial/emissary/tools/sorted"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/turbine/queue"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // SearchResult defines a service that manages all searchable pages in a domain.
 type SearchResult struct {
 	searchTagService *SearchTag
-	host             string
+	queue            *queue.Queue
+	hostname         string
 }
 
 // NewSearchResult returns a fully initialized Search service
@@ -34,9 +39,10 @@ func NewSearchResult() SearchResult {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *SearchResult) Refresh(searchTagService *SearchTag, host string) {
+func (service *SearchResult) Refresh(searchTagService *SearchTag, queue *queue.Queue, hostname string) {
 	service.searchTagService = searchTagService
-	service.host = host
+	service.queue = queue
+	service.hostname = hostname
 }
 
 // Close stops any background processes controlled by this service
@@ -116,12 +122,17 @@ func (service *SearchResult) Save(session data.Session, searchResult *model.Sear
 		return derp.Wrap(err, location, "Error normalizing tags", searchResult)
 	}
 
+	wasNew := searchResult.IsNew()
+
 	// Make Tags Index
 	slices.Sort(tagValues)
 	searchResult.Tags = sorted.Unique(tagValues)
 
-	// Make Text Index
-	textIndex := TextIndex(searchResult.Text)
+	textTokens := parse.Split(searchResult.Text)
+	textTokens = append(textTokens, searchResult.Tags...)
+
+	// Make Text Index (which includes tags)
+	textIndex := textIndex(textTokens...)
 	slices.Sort(textIndex)
 	searchResult.Index = sorted.Unique(textIndex)
 
@@ -138,6 +149,15 @@ func (service *SearchResult) Save(session data.Session, searchResult *model.Sear
 			return derp.Wrap(err, location, "Error saving SearchTag", searchResult, tagName)
 		}
 	}
+
+	service.queue.NewTask(
+		"SendSearchResult",
+		mapof.Any{
+			"host":           service.hostname,
+			"activity":       iif(wasNew, vocab.ActivityTypeCreate, vocab.ActivityTypeUpdate),
+			"searchResultId": searchResult.SearchResultID,
+		},
+	)
 
 	return nil
 }
@@ -158,8 +178,12 @@ func (service *SearchResult) Delete(session data.Session, searchResult *model.Se
  * Custom Queries
  ******************************************/
 
-// LoadByURL returns a single SearchResult that matches the provided URL
+// LoadByID returns a single SearchResult that matches the provided searchResultID
+func (service *SearchResult) LoadByID(session data.Session, searchResultID primitive.ObjectID, searchResult *model.SearchResult) error {
+	return service.Load(session, exp.Equal("_id", searchResultID), searchResult)
+}
 
+// LoadByURL returns a single SearchResult that matches the provided URL
 func (service *SearchResult) LoadByURL(session data.Session, url string, searchResult *model.SearchResult) error {
 	return service.Load(session, exp.Equal("url", url), searchResult)
 }

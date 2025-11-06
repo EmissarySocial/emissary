@@ -16,13 +16,6 @@ func ScheduleHourly(serverFactory ServerFactory) queue.Result {
 	// Hourly tasks for each domain
 	for factory := range serverFactory.RangeDomains() {
 
-		// Schedule "SendSearchResults" tasks every hour
-		q.Enqueue <- queue.NewTask(
-			"SendSearchResults",
-			mapof.Any{"host": factory.Hostname()},
-			queue.WithPriority(512),
-		)
-
 		// Schedule "Shuffle" tasks
 		q.Enqueue <- queue.NewTask(
 			"Shuffle",

@@ -78,7 +78,6 @@ type Factory struct {
 	responseService        Response
 	ruleService            Rule
 	searchDomainService    SearchDomain
-	searchNotifierService  SearchNotifier
 	searchQueryService     SearchQuery
 	searchTagService       SearchTag
 	searchResultService    SearchResult
@@ -160,7 +159,6 @@ func NewFactory(serverFactory ServerFactory, commonDatabase mongodb.Server, doma
 	factory.responseService = NewResponse()
 	factory.ruleService = NewRule(&factory)
 	factory.searchDomainService = NewSearchDomain(&factory)
-	factory.searchNotifierService = NewSearchNotifier()
 	factory.searchQueryService = NewSearchQuery(&factory)
 	factory.searchResultService = NewSearchResult()
 	factory.searchTagService = NewSearchTag()
@@ -390,15 +388,6 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 			factory.Host(),
 		)
 
-		// Populate the Search Notifier Service
-		factory.searchNotifierService.Refresh(
-			factory.SearchDomain(),
-			factory.SearchResult(),
-			factory.SearchQuery(),
-			factory.Queue(),
-			factory.Host(),
-		)
-
 		// Populate the SearchQuery Service
 		factory.searchQueryService.Refresh(
 			factory.Domain(),
@@ -412,7 +401,8 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 		// Populate the Search Service
 		factory.searchResultService.Refresh(
 			factory.SearchTag(),
-			factory.Host(),
+			factory.Queue(),
+			factory.Hostname(),
 		)
 
 		// Populate the SearchTag Service
@@ -773,10 +763,6 @@ func (factory *Factory) SearchDomain() *SearchDomain {
 // SearchResult returns a fully populated SearchResult service
 func (factory *Factory) SearchResult() *SearchResult {
 	return &factory.searchResultService
-}
-
-func (factory *Factory) SearchNotifier() *SearchNotifier {
-	return &factory.searchNotifierService
 }
 
 // SearchQuery returns a fully populated SearchQuery service
