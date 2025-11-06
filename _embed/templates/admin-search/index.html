@@ -7,14 +7,24 @@
 	{{template "menubar" .}}
 
 
-	<div class="margin-bottom-xs">
-		<button hx-post="/admin/index-all-streams" hx-swap="none" hx-push-url="false">Re-Index All Streams</button>
+	<div class="margin-bottom">
+		<button hx-post="/admin/index-all-streams" hx-swap="none" hx-push-url="false">
+			<span class="htmx-request-show"><span class="spin">{{icon "loading"}}</span> Reindexing...</span>
+			<span class="htmx-request-hide">Re-Index All Streams</span>
+		</button>
 	</div>
-	<div class="margin-bottom-xs">
-		<button hx-post="/admin/index-all-users" hx-swap="none" hx-push-url="false">Re-Index All Users</button>
+	<div class="margin-bottom">
+		<button hx-post="/admin/index-all-users" hx-swap="none" hx-push-url="false">
+			<span class="htmx-request-show"><span class="spin">{{icon "loading"}}</span> Reindexing...</span>
+			<span class="htmx-request-hide">Re-Index All Users</span>
+		</button>
 	</div>
-	<div class="margin-bottom-xs">
-		<button hx-post="/admin/reindex-activitystream-cache" hx-swap="none" hx-push-url="false">Re-Index ActivityStream Cache</button>
+	<div class="margin-bottom">
+		<button hx-post="/admin/reindex-activitystream-cache" hx-swap="none" hx-push-url="false">
+			<span class="htmx-request-show"><span class="spin">{{icon "loading"}}</span> Reindexing...</span>
+			<span class="htmx-request-hide">Re-Index ActivityStream Cache</span>
+	</button>
+
 	</div>
 
 	<div 
