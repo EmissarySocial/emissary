@@ -40,12 +40,6 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 	case "Geocode":
 		return WithStream(consumer.serverFactory, args, Geocode)
 
-	case "IndexAllStreams":
-		return WithSession(consumer.serverFactory, args, IndexAllStreams)
-
-	case "IndexAllUsers":
-		return WithSession(consumer.serverFactory, args, IndexAllUsers)
-
 	case "LoadActivityStream":
 		return WithSession(consumer.serverFactory, args, LoadActivityStream)
 
