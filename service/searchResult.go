@@ -1,7 +1,6 @@
 package service
 
 import (
-	"context"
 	"iter"
 	"math"
 	"slices"
@@ -16,7 +15,6 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -122,8 +120,6 @@ func (service *SearchResult) Save(session data.Session, searchResult *model.Sear
 		return derp.Wrap(err, location, "Error normalizing tags", searchResult)
 	}
 
-	wasNew := searchResult.IsNew()
-
 	// Make Tags Index
 	slices.Sort(tagValues)
 	searchResult.Tags = sorted.Unique(tagValues)
@@ -154,7 +150,6 @@ func (service *SearchResult) Save(session data.Session, searchResult *model.Sear
 		"SendSearchResult",
 		mapof.Any{
 			"host":           service.hostname,
-			"activity":       iif(wasNew, vocab.ActivityTypeCreate, vocab.ActivityTypeUpdate),
 			"searchResultId": searchResult.SearchResultID,
 		},
 	)
@@ -165,10 +160,13 @@ func (service *SearchResult) Save(session data.Session, searchResult *model.Sear
 // Delete removes an Search from the database (HARD DELETE)
 func (service *SearchResult) Delete(session data.Session, searchResult *model.SearchResult, note string) error {
 
-	// Use HARD DELETE for search results.  No need to clutter up our indexes with "deleted" data.
+	const location = "service.SearchResult.Delete"
+
 	criteria := exp.Equal("_id", searchResult.SearchResultID)
+
+	// Use HARD DELETE for search results.  No need to clutter up our indexes with "deleted" data.
 	if err := service.collection(session).HardDelete(criteria); err != nil {
-		return derp.Wrap(err, "service.Search.Delete", "Error deleting Search", searchResult, note)
+		return derp.Wrap(err, location, "Unable to delete SearchResult", searchResult, note)
 	}
 
 	return nil
@@ -192,15 +190,17 @@ func (service *SearchResult) LoadByURL(session data.Session, url string, searchR
  * Custom Methods
  ******************************************/
 
+// Sync matches the provided SearchResult with the URL of a record in the database
+// and inserts/updates/deletes the database to match the provided value.
 func (service *SearchResult) Sync(session data.Session, searchResult model.SearchResult) error {
 
-	const location = "service.Search.Sync"
+	const location = "service.SearchResult.Sync"
 
 	// If the SearchResult is marked as deleted, then remove it from the database
 	if searchResult.IsDeleted() {
 
 		if err := service.DeleteByURL(session, searchResult.URL); err != nil {
-			return derp.Wrap(err, location, "Error deleting Search", searchResult)
+			return derp.Wrap(err, location, "Unable to delete SearchResult", searchResult)
 		}
 
 		return nil
@@ -213,16 +213,15 @@ func (service *SearchResult) Sync(session data.Session, searchResult model.Searc
 	// If the SearchResult exists in the database, then update it
 	if err == nil {
 
-		// If the original SearchResult has been updated, then also reset the NotifiedDate.
-		changed := original.Update(searchResult)
-
-		if changed {
-			original.NotifiedDate = 0
+		// If the result is the same as what we already have
+		// in the database, then exit here.
+		if changed := original.Update(searchResult); !changed {
+			return nil
 		}
 
 		// Save the updated SearchResult...
 		if err := service.Save(session, &original, "updated"); err != nil {
-			return derp.Wrap(err, location, "Error adding Search", searchResult)
+			return derp.Wrap(err, location, "Unable to update SearchResult", searchResult)
 		}
 
 		return nil
@@ -230,15 +229,16 @@ func (service *SearchResult) Sync(session data.Session, searchResult model.Searc
 
 	// If the SearchResult is NOT FOUND, then insert it.
 	if derp.IsNotFound(err) {
+
 		if err := service.Save(session, &searchResult, "added"); err != nil {
-			return derp.Wrap(err, location, "Error adding Search", searchResult)
+			return derp.Wrap(err, location, "Unable to insert SearchResult", searchResult)
 		}
 
 		return nil
 	}
 
 	// Return legitimate errors to the caller
-	return derp.Wrap(err, location, "Error loading Search", searchResult)
+	return derp.Wrap(err, location, "Unable to query SearchResult", searchResult)
 }
 
 // DeleteByURL removes a SearchResult from the database that matches the provided URL
@@ -260,7 +260,7 @@ func (service *SearchResult) DeleteByURL(session data.Session, url string) error
 			return nil
 		}
 
-		return derp.Wrap(err, location, "Error loading Search", url)
+		return derp.Wrap(err, location, "Unable to query SearchResult", url)
 	}
 
 	// Delete the SearchResult
@@ -279,54 +279,4 @@ func (service *SearchResult) Shuffle(session data.Session) error {
 	}
 
 	return nil
-}
-
-// GetResultsToNotify locks a batch of SearchResults and returns it to the caller.
-func (service *SearchResult) GetResultsToNotify(session data.Session, lockID primitive.ObjectID) ([]model.SearchResult, error) {
-
-	const location = "service.Search.GetLockedResults"
-
-	// Make a timeout context for this request
-	ctx, cancel := context.WithTimeout(session.Context(), 30*time.Second)
-	defer cancel()
-
-	// Find a batch of UNLOCKED search results
-	searchResultIDs, err := service.QueryUnnotifiedAndUnlocked(session)
-
-	if err != nil {
-		return nil, derp.Wrap(err, location, "Error loading search results to lock")
-	}
-
-	// If there are no matching results, then exit early
-	if len(searchResultIDs) == 0 {
-		return make([]model.SearchResult, 0), nil
-	}
-
-	// Try to lock a batch of search results (up to 32, maybe less)
-	collection := service.collection(session)
-	if err := queries.LockSearchResults(ctx, collection, searchResultIDs, lockID); err != nil {
-		return nil, derp.Wrap(err, location, "Error locking search results", searchResultIDs)
-	}
-
-	// Load all of the search results that are locked by this process (up to 32, maybe less)
-	criteria := exp.Equal("lockId", lockID)
-	return service.Query(session, criteria)
-}
-
-// QueryUnnotifiedandUnlocked returns the IDs of the first 32 SearchResults that have NOT been notified, and are NOT locked.
-func (service *SearchResult) QueryUnnotifiedAndUnlocked(session data.Session) ([]primitive.ObjectID, error) {
-
-	const location = "service.Search.QueryUnnotifiedAndUnlocked"
-
-	result, err := service.QueryIDsOnly(
-		session,
-		exp.Equal("notifiedDate", 0).AndLessThan("timeoutDate", time.Now().Unix()),
-		option.MaxRows(32),
-	)
-
-	if err != nil {
-		return nil, derp.Wrap(err, location, "Error loading search results to lock")
-	}
-
-	return model.GetIDOnly(result), nil
 }
