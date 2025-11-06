@@ -215,7 +215,13 @@ func (builder SearchBuilder) Count() (int64, error) {
 func (builder SearchBuilder) assembleCriteria() exp.Expression {
 
 	result := builder.criteria
-	encoder := metaphone3.Encoder{}
+
+	// If there's no query, then exit early.
+	if builder.textQuery == "" {
+		return result
+	}
+
+	// Add criteria for #hashtags
 	hashtags, remainder := parse.HashtagsAndRemainder(builder.textQuery)
 
 	for _, hashtag := range hashtags {
@@ -223,22 +229,17 @@ func (builder SearchBuilder) assembleCriteria() exp.Expression {
 		result = result.AndEqual("tags", tagToken)
 	}
 
-	tokens := parse.Split(remainder)
+	// Add criteria for any additional text values
+	if remainder != "" {
 
-	for _, token := range tokens {
-		tagToken := model.ToToken(token)
+		encoder := metaphone3.Encoder{}
+		tokens := parse.Split(remainder)
 
-		textToken, _ := encoder.Encode(token)
-
-		if textToken == "" {
-			result = result.AndEqual("tags", tagToken)
-			continue
+		for _, token := range tokens {
+			if textToken, _ := encoder.Encode(token); textToken != "" {
+				result = result.AndEqual("index", textToken)
+			}
 		}
-
-		result = result.And(exp.Or(
-			exp.Equal("tags", tagToken),
-			exp.Equal("index", textToken),
-		))
 	}
 
 	return result
