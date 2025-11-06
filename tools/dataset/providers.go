@@ -69,7 +69,7 @@ func Providers() sliceof.Object[form.LookupCode] {
 			Value:       model.ConnectionProviderGeoapify,
 			Label:       "Geoapify",
 			Icon:        "globe",
-			Description: "Commercia Geo-Search Service with Free Tier",
+			Description: "Commercial Geo-Search Service with Free Tier",
 			Group:       "Geo-Search",
 		},
 		{
