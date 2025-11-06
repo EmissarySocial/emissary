@@ -7,30 +7,47 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	dt "github.com/benpate/domain"
-	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/steranko"
-	"github.com/benpate/turbine/queue"
 )
 
 // IndexAllStreams is a handler function that triggers the IndexAllStreams queue task.
 // It can only be called by an authenticated administrator.
 func IndexAllStreams(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
-	// Verify that this is an Administrator
-	authorization := getAuthorization(ctx)
+	const location = "handler.IndexAllStreams"
 
-	if !authorization.DomainOwner {
-		return derp.ForbiddenError("handler.IndexAllStreams", "Only administrators can call this method")
+	// Collect required services
+	searchService := factory.SearchResult()
+	streamService := factory.Stream()
+
+	// Get a RangeFunc containing all Streams in the database
+	streams, err := streamService.RangePublished(session)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error retrieving Streams")
 	}
 
-	// Create the Index task
-	task := queue.NewTask("IndexAllStreams", mapof.Any{
-		"host": dt.Hostname(ctx.Request()),
-	})
+	// Index each Stream in the range
+	for stream := range streams {
 
-	// Execute the task in the background
-	if err := factory.Queue().Publish(task); err != nil {
-		return derp.Wrap(err, "handler.IndexAllStreams", "Error publishing task")
+		// Recompute Hashtags
+		originalHashtags := stream.Hashtags
+		streamService.CalculateTags(session, &stream)
+
+		// If necessary, re-save the Stream
+		if !slice.Equal(stream.Hashtags, originalHashtags) {
+			if err := streamService.Save(session, &stream, "Updating Hashtags"); err != nil {
+				derp.Report(derp.Wrap(err, location, "Error saving Stream"))
+			}
+		}
+
+		// Create a new SearchResult from the (updated?) Stream
+		searchResult := streamService.SearchResult(&stream)
+
+		if err := searchService.Sync(session, searchResult); err != nil {
+			derp.Report(derp.Wrap(err, location, "Error saving SearchResult"))
+		}
 	}
 
 	// Success.
@@ -41,21 +58,24 @@ func IndexAllStreams(ctx *steranko.Context, factory *service.Factory, session da
 // It can only be called by an authenticated administrator.
 func IndexAllUsers(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
-	// Verify that this is an Administrator
-	authorization := getAuthorization(ctx)
+	const location = "handler.IndexAllUsers"
 
-	if !authorization.DomainOwner {
-		return derp.ForbiddenError("handler.IndexAllUsers", "Only administrators can call this method")
+	searchService := factory.SearchResult()
+	userService := factory.User()
+
+	allUsers, err := userService.RangeAll(session)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Unable to query Users")
 	}
 
-	// Create the Index task
-	task := queue.NewTask("IndexAllUsers", mapof.Any{
-		"host": dt.Hostname(ctx.Request()),
-	})
+	for user := range allUsers {
 
-	// Execute the task in the background
-	if err := factory.Queue().Publish(task); err != nil {
-		return derp.Wrap(err, "handler.IndexAllUsers", "Error publishing task")
+		searchResult := userService.SearchResult(&user)
+
+		if err := searchService.Sync(session, searchResult); err != nil {
+			derp.Report(derp.Wrap(err, location, "Unable to save SearchResult"))
+		}
 	}
 
 	// Success.
