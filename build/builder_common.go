@@ -654,7 +654,7 @@ func (w Common) Search() SearchBuilder {
 	b := builder.NewBuilder().
 		String("tags", builder.WithFilter(model.ToToken)).
 		Time("date").
-		GeoPolygon("place", builder.WithAlias("place.location"))
+		Polygon("place", builder.WithAlias("place.location"))
 
 	criteria := b.Evaluate(w._request.URL.Query())
 
