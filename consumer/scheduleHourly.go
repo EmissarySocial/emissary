@@ -20,7 +20,6 @@ func ScheduleHourly(serverFactory ServerFactory) queue.Result {
 		q.Enqueue <- queue.NewTask(
 			"Shuffle",
 			mapof.Any{"host": factory.Hostname()},
-			queue.WithPriority(512),
 		)
 
 		// Schedule "PollFollowing" tasks every four hours, starting at 1am.
@@ -29,7 +28,6 @@ func ScheduleHourly(serverFactory ServerFactory) queue.Result {
 			q.Enqueue <- queue.NewTask(
 				"PollFollowing",
 				mapof.Any{"host": factory.Hostname()},
-				queue.WithPriority(512),
 			)
 		}
 	}

@@ -58,9 +58,6 @@ func SendSearchResult(factory *service.Factory, session data.Session, args mapof
 					"searchQueryId": searchQuery.SearchQueryID,
 					"url":           searchResult.URL,
 				},
-
-				// Run immediately, if possible
-				queue.WithPriority(32),
 			)
 		}
 	}
@@ -91,7 +88,6 @@ func SendSearchResult(factory *service.Factory, session data.Session, args mapof
 					vocab.PropertyObject: searchResult.URL,
 				},
 			},
-			queue.WithPriority(256),
 		)
 	}
 

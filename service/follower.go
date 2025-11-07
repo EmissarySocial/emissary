@@ -154,13 +154,12 @@ func (service *Follower) Delete(session data.Session, follower *model.Follower, 
 	// Maybe delete the SearchQuery if it's no longer needed
 	if follower.ParentType == model.FollowerTypeSearch {
 
-		service.queue.Enqueue <- queue.NewTask(
+		service.queue.NewTask(
 			"DeleteEmptySearchQuery",
 			mapof.Any{
 				"host":          dt.NameOnly(service.host),
 				"searchQueryID": follower.ParentID,
 			},
-			queue.WithPriority(1024),
 		)
 	}
 

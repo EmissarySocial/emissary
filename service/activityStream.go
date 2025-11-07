@@ -66,8 +66,6 @@ func (service *ActivityStream) Client() streams.Client {
 
 func (service *ActivityStream) CacheClient() *ascache.Client {
 
-	enqueue := service.factory.Queue().Enqueue
-
 	// Build a new client stack
 	sherlockClient := sherlock.NewClient(
 		sherlock.WithUserAgent(service.hostname+" /Emissary@v"+service.version+" (https://emissary.social)"),
@@ -82,7 +80,7 @@ func (service *ActivityStream) CacheClient() *ascache.Client {
 
 	// crawler client will load related documents in the background
 	crawlerClient := ascrawler.New(
-		enqueue,
+		service.factory.Queue(),
 		contextMakerClient,
 		service.actorType,
 		service.actorID,
@@ -95,7 +93,7 @@ func (service *ActivityStream) CacheClient() *ascache.Client {
 	// cache data in MongoDB
 	cacheClient := ascache.New(
 		cacheRulesClient,
-		enqueue,
+		service.factory.Queue(),
 		service.commonDatabase,
 		service.actorType,
 		service.actorID,

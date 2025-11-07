@@ -140,20 +140,24 @@ func (service *SearchResult) Save(session data.Session, searchResult *model.Sear
 		return derp.Wrap(err, location, "Unable to save Search", searchResult, note)
 	}
 
+	// Guarantee every tag exists in the domains SearchTag index
 	for _, tagName := range searchResult.Tags {
 		if err := service.searchTagService.Upsert(session, tagName); err != nil {
 			return derp.Wrap(err, location, "Unable to save SearchTag", searchResult, tagName)
 		}
 	}
 
+	// Async wait 1s, then send this SearchResult to all listeners
 	service.queue.NewTask(
 		"SendSearchResult",
 		mapof.Any{
 			"host":           service.hostname,
 			"searchResultId": searchResult.SearchResultID,
 		},
+		queue.WithAsyncDelay(1000),
 	)
 
+	// Syccess
 	return nil
 }
 

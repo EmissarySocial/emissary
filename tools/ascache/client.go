@@ -16,7 +16,7 @@ import (
 
 type Client struct {
 	commonDatabase data.Server
-	enqueue        chan<- queue.Task
+	queue          *queue.Queue
 	innerClient    streams.Client
 	hostname       string
 	actorType      string
@@ -25,12 +25,12 @@ type Client struct {
 }
 
 // New returns a fully initialized Client object
-func New(innerClient streams.Client, enqueue chan<- queue.Task, commonDatabase data.Server, actorType string, actorID primitive.ObjectID, hostname string, options ...ClientOptionFunc) *Client {
+func New(innerClient streams.Client, queue *queue.Queue, commonDatabase data.Server, actorType string, actorID primitive.ObjectID, hostname string, options ...ClientOptionFunc) *Client {
 
 	// Create a default client
 	result := &Client{
 		commonDatabase: commonDatabase,
-		enqueue:        enqueue,
+		queue:          queue,
 		innerClient:    innerClient,
 		hostname:       hostname,
 		actorType:      actorType,
@@ -328,7 +328,7 @@ func (client *Client) countRelatedDocuments(document streams.Document) {
 	url := document.ID()
 
 	// Schedule a follow-up to count related documents (in 30 seconds)
-	client.enqueue <- queue.NewTask(
+	client.queue.NewTask(
 		"CountRelatedDocuments",
 		mapof.Any{
 			"url":       url,
@@ -338,7 +338,6 @@ func (client *Client) countRelatedDocuments(document streams.Document) {
 		},
 		queue.WithSignature(url+"#CountRelatedDocuments"),
 		queue.WithDelaySeconds(30),
-		queue.WithPriority(8),
 	)
 }
 
@@ -387,7 +386,7 @@ func (client *Client) revalidate(value *Value) {
 
 		documentID := value.DocumentID()
 
-		client.enqueue <- queue.NewTask(
+		client.queue.NewTask(
 			"LoadActivityStream",
 			mapof.Any{
 				"host":         client.hostname,
@@ -397,7 +396,6 @@ func (client *Client) revalidate(value *Value) {
 				"revalidating": true,
 			},
 			queue.WithSignature(documentID),
-			queue.WithPriority(512),
 		)
 	}
 }

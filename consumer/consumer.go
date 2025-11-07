@@ -102,9 +102,6 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 
 	case "syndication.create", "syndication.update", "syndication.delete":
 		return StreamSyndicate(name, args)
-
-	case "TestThroughput":
-		return TestThroughput(name, args)
 	}
 
 	return queue.Ignored()

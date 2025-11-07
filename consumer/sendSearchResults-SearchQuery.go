@@ -57,7 +57,6 @@ func SendSearchResult_SearchQuery(factory *service.Factory, session data.Session
 					vocab.PropertyObject: url,
 				},
 			},
-			queue.WithPriority(256),
 		)
 	}
 

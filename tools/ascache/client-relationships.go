@@ -29,7 +29,7 @@ func (client *Client) CalcParentRelationships(session data.Session, relationType
 
 		// If the "parent" doesn't exist in the cache, then try to load it... later.
 		if derp.IsNotFound(err) {
-			client.enqueue <- queue.NewTask(
+			client.queue.NewTask(
 				"CrawlActivityStreams",
 				mapof.Any{
 					"host":      client.hostname,
@@ -37,7 +37,6 @@ func (client *Client) CalcParentRelationships(session data.Session, relationType
 					"actorID":   client.actorID,
 					"url":       relationHref,
 				},
-				queue.WithPriority(8),
 				queue.WithSignature(relationHref),
 			)
 			return nil

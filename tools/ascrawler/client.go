@@ -9,7 +9,7 @@ import (
 )
 
 type Client struct {
-	enqueue     chan<- queue.Task
+	queue       *queue.Queue
 	rootClient  streams.Client
 	innerClient streams.Client
 	maxDepth    int
@@ -18,11 +18,11 @@ type Client struct {
 	hostname    string
 }
 
-func New(enqueue chan<- queue.Task, innerClient streams.Client, actorType string, actorID primitive.ObjectID, hostname string, options ...ClientOption) *Client {
+func New(queue *queue.Queue, innerClient streams.Client, actorType string, actorID primitive.ObjectID, hostname string, options ...ClientOption) *Client {
 
 	// Create client
 	result := &Client{
-		enqueue:     enqueue,
+		queue:       queue,
 		innerClient: innerClient,
 		maxDepth:    4,
 		actorType:   actorType,
@@ -64,7 +64,7 @@ func (client *Client) Load(uri string, options ...any) (streams.Document, error)
 		return result, nil
 	}
 
-	client.enqueue <- queue.NewTask(
+	client.queue.NewTask(
 		"CrawlActivityStreams",
 		mapof.Any{
 			"host":      client.hostname,
@@ -72,7 +72,6 @@ func (client *Client) Load(uri string, options ...any) (streams.Document, error)
 			"actorID":   client.actorID,
 			"url":       uri,
 		},
-		queue.WithPriority(64),   // medium priority background process
 		queue.WithSignature(uri), // URL prevents duplicate calls
 	)
 

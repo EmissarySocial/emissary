@@ -133,13 +133,12 @@ func (service *SearchQuery) Save(session data.Session, searchQuery *model.Search
 
 	// Add a queue task to delete this SearchQuery if it has no followers after 12 hour.
 	if wasNew {
-		service.queue.Enqueue <- queue.NewTask(
+		service.queue.NewTask(
 			"DeleteEmptySearchQuery",
 			mapof.Any{
 				"host":          service.host,
 				"searchQueryID": searchQuery.SearchQueryID.Hex(),
 			},
-			queue.WithPriority(1024),
 			queue.WithDelayHours(1),
 		)
 	}

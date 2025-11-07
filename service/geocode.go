@@ -62,16 +62,13 @@ func (service Geocode) GeocodeAndQueue(session data.Session, stream *model.Strea
 		return nil
 	}
 
-	// Queue up a geocode task for this place
-	args := mapof.Any{
-		"host":     service.hostname,
-		"streamId": stream.StreamID,
-	}
-
-	service.queue.Enqueue <- queue.NewTask(
+	// If there is an error, then try again in 30 seconds
+	service.queue.NewTask(
 		"Geocode",
-		args,
-		queue.WithPriority(512),
+		mapof.Any{
+			"host":     service.hostname,
+			"streamId": stream.StreamID,
+		},
 		queue.WithDelaySeconds(30),
 	)
 
