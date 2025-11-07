@@ -344,7 +344,7 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 			factory.User(),
 			factory.Email(),
 			factory.Queue(),
-			factory.Hostname(),
+			factory.Host(),
 		)
 
 		// Populate Permission Service

@@ -618,9 +618,9 @@ func (service *User) CalcFollowerCount(session data.Session, userID primitive.Ob
 
 	const location = "service.User.CalcFollowerCount"
 
-	// RULE: UserID cannot be zero
+	// RULE: If UserID is zero, this is a domain actor that doesn't need to be calc'ed
 	if userID.IsZero() {
-		return derp.BadRequestError(location, "UserID cannot be zero", userID)
+		return nil
 	}
 
 	userCollection := service.collection(session)

@@ -28,7 +28,7 @@ type Outbox struct {
 	domainEmail     *DomainEmail
 	lock            *sync.Mutex
 	queue           *queue.Queue
-	hostname        string
+	host            string
 }
 
 // NewOutbox returns a fully populated Outbox service
@@ -44,7 +44,7 @@ func NewOutbox(factory *Factory) Outbox {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Outbox) Refresh(followerService *Follower, identityService *Identity, ruleService *Rule, streamService *Stream, templateService *Template, userService *User, domainEmail *DomainEmail, queue *queue.Queue, hostname string) {
+func (service *Outbox) Refresh(followerService *Follower, identityService *Identity, ruleService *Rule, streamService *Stream, templateService *Template, userService *User, domainEmail *DomainEmail, queue *queue.Queue, host string) {
 	service.followerService = followerService
 	service.identityService = identityService
 	service.ruleService = ruleService
@@ -53,7 +53,7 @@ func (service *Outbox) Refresh(followerService *Follower, identityService *Ident
 	service.userService = userService
 	service.domainEmail = domainEmail
 	service.queue = queue
-	service.hostname = hostname
+	service.host = host
 }
 
 // Close stops any background processes controlled by this service
@@ -117,6 +117,9 @@ func (service *Outbox) Load(session data.Session, criteria exp.Expression, resul
 func (service *Outbox) Save(session data.Session, outboxMessage *model.OutboxMessage, note string) error {
 
 	const location = "service.Outbox.Save"
+
+	// Calculate the ActivityURL for this message
+	outboxMessage.ActivityURL = service.calcActivityURL(outboxMessage)
 
 	// Save the value to the database
 	if err := service.collection(session).Save(outboxMessage, note); err != nil {
@@ -197,13 +200,16 @@ func (service *Outbox) ObjectSave(session data.Session, object data.Object, note
 	if message, ok := object.(*model.OutboxMessage); ok {
 		return service.Save(session, message, note)
 	}
+
 	return derp.InternalError("service.Outbox.ObjectSave", "Invalid object type", object)
 }
 
 func (service *Outbox) ObjectDelete(session data.Session, object data.Object, note string) error {
+
 	if message, ok := object.(*model.OutboxMessage); ok {
 		return service.Delete(session, message, note)
 	}
+
 	return derp.InternalError("service.Outbox.ObjectDelete", "Invalid object type", object)
 }
 
@@ -261,6 +267,11 @@ func (service *Outbox) RangeByObjectID(session data.Session, actorType string, a
 	return service.Range(session, criteria)
 }
 
+func (service *Outbox) LoadByID(session data.Session, outboxMessageID primitive.ObjectID, outboxMessage *model.OutboxMessage) error {
+	criteria := exp.Equal("_id", outboxMessageID)
+	return service.Load(session, criteria, outboxMessage)
+}
+
 func (service *Outbox) DeleteByParentID(session data.Session, actorType string, actorID primitive.ObjectID) error {
 
 	const location = "service.Outbox.DeleteByParent"
@@ -279,4 +290,28 @@ func (service *Outbox) DeleteByParentID(session data.Session, actorType string, 
 	}
 
 	return nil
+}
+
+func (service *Outbox) calcActivityURL(outboxMessage *model.OutboxMessage) string {
+
+	switch outboxMessage.ActorType {
+
+	case model.ActorTypeApplication:
+		return service.host + "/@application/pub/outbox/" + outboxMessage.OutboxMessageID.Hex()
+
+	case model.ActorTypeSearchDomain:
+		return service.host + "/@search/pub/outbox/" + outboxMessage.OutboxMessageID.Hex()
+
+	case model.ActorTypeSearchQuery:
+		return service.host + "/@search_" + outboxMessage.ActorID.Hex() + "/pub/outbox/" + outboxMessage.OutboxMessageID.Hex()
+
+	case model.ActorTypeStream:
+		return service.host + "/" + outboxMessage.ActorID.Hex() + "/pub/outbox/" + outboxMessage.OutboxMessageID.Hex()
+
+	case model.ActorTypeUser:
+		return service.host + "/@" + outboxMessage.ActorID.Hex() + "/pub/outbox/" + outboxMessage.OutboxMessageID.Hex()
+
+	default:
+		return ""
+	}
 }

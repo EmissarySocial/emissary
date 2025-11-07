@@ -47,7 +47,6 @@ func (service *Outbox) Publish(session data.Session, actorType string, actorID p
 	outboxMessage.ActorID = actorID
 	outboxMessage.ObjectID = activity.Object().ID()
 	outboxMessage.ActivityType = activity.Type()
-	outboxMessage.ActivityURL = activity.ID()
 	outboxMessage.Permissions = permissions
 
 	if err := service.Save(session, &outboxMessage, "Publishing"); err != nil {
@@ -66,7 +65,7 @@ func (service *Outbox) Publish(session data.Session, actorType string, actorID p
 	activityMap[vocab.PropertyID] = outboxMessage.ActivityPubURL()
 	ruleFilter := service.ruleService.Filter(actorID, WithBlocksOnly())
 
-	isLocalhost := dt.IsLocalhost(service.hostname)
+	isLocalhost := dt.IsLocalhost(service.host)
 
 	for follower := range recipients {
 

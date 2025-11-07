@@ -296,10 +296,7 @@ func (service *Follower) LoadBySecret(session data.Session, followerID primitive
 // LoadByActor retrieves an Follower from the database by parentID and actorID
 func (service *Follower) LoadByActor(session data.Session, parentID primitive.ObjectID, actorID string, follower *model.Follower) error {
 
-	// RULE: The parentID must not be zero
-	if parentID.IsZero() {
-		return derp.ValidationError("ParentID cannot be zero", parentID)
-	}
+	// RULE: Allow parentID to be zero.  This means it's the "@search" actor
 
 	// RULE: The actorID must not be empty
 	if actorID == "" {
