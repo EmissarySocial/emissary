@@ -344,6 +344,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/@search/pub/following", handler.WithFactory(factory, handler.GetEmptyCollection))
 	e.POST("/@search/pub/inbox", handler.WithFactory(factory, ap_domain.PostInbox))
 	e.GET("/@search/pub/outbox", handler.WithFactory(factory, ap_domain.GetOutboxCollection))
+	e.GET("/@search/pub/outbox/:searchResultId", handler.WithFactory(factory, ap_domain.GetOutboxMessage))
 
 	// Search Query Routes (ActivityPub)
 	e.POST("/.searchQuery", handler.WithFactory(factory, handler.PostSearchLookup))
@@ -353,6 +354,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@search_:searchId/pub/inbox", handler.WithFactory(factory, handler.GetEmptyCollection))
 	e.POST("/@search_:searchId/pub/inbox", handler.WithSearchQuery(factory, ap_search.PostInbox))
 	e.GET("/@search_:searchId/pub/outbox", handler.WithSearchQuery(factory, ap_search.GetOutboxCollection))
+	e.GET("/@search_:searchId/pub/outbox/:searchResultId", handler.WithSearchQuery(factory, ap_search.GetOutboxMessage))
 
 	// Routes for Users
 	e.GET("/@:userId", handler.WithUserForwarding(factory, handler.GetOutbox))
@@ -366,6 +368,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@:userId/pub", handler.WithUser(factory, handler.GetOutbox))
 	e.POST("/@:userId/pub/inbox", handler.WithUser(factory, ap_user.PostInbox))
 	e.GET("/@:userId/pub/outbox", handler.WithUser(factory, ap_user.GetOutboxCollection))
+	e.GET("/@:userId/pub/outbox/:messageId", handler.WithUser(factory, ap_user.GetOutboxActivity))
 	e.GET("/@:userId/pub/featured", handler.WithUser(factory, ap_user.GetFeaturedCollection))
 	e.GET("/@:userId/pub/followers", handler.WithFactory(factory, ap_user.GetFollowersCollection))
 	e.GET("/@:userId/pub/following", handler.WithFactory(factory, ap_user.GetFollowingCollection))

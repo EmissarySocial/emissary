@@ -15,6 +15,7 @@ import (
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/steranko"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func GetOutboxCollection(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
@@ -58,6 +59,35 @@ func GetOutboxCollection(ctx *steranko.Context, factory *service.Factory, sessio
 	ctx.Response().Header().Set("Content-Type", vocab.ContentTypeActivityPub)
 	result := activitypub.CollectionPage(pageID, outboxURL, pageSize, activities)
 	return ctx.JSON(http.StatusOK, result)
+}
+
+func GetOutboxMessage(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
+
+	const location = "handler.activitypub_domain.GetOutboxMessage"
+
+	// Collect the messageID from the URL path
+	searchResultToken := ctx.Param("searchResultId")
+	searchResultID, err := primitive.ObjectIDFromHex(searchResultToken)
+
+	if err != nil {
+		return derp.Wrap(err, location, "SearchResultID must be a valid ObjectID", searchResultToken)
+	}
+
+	// Load the SearchResult from the database
+	searchResultService := factory.SearchResult()
+	searchResult := model.NewSearchResult()
+
+	if err := searchResultService.LoadByID(session, searchResultID, &searchResult); err != nil {
+		return derp.Wrap(err, location, "Unable to load SearchResult", searchResultID)
+	}
+
+	searchDomainService := factory.SearchDomain()
+	actorID := searchDomainService.ActivityPubURL()
+	jsonld := mapSearchResult(actorID)(searchResult)
+
+	// Return the SearchResult as a JSON-LD document
+	ctx.Response().Header().Set("Content-Type", vocab.ContentTypeActivityPub)
+	return ctx.JSON(http.StatusOK, jsonld)
 }
 
 func mapSearchResult(actorID string) func(r model.SearchResult) model.JSONLD {
