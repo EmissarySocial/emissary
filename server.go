@@ -287,7 +287,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 
 	// Hard-coded routes for additional stream services
 	e.GET("/:stream/attachments/:attachmentId", handler.WithFactory(factory, handler.GetStreamAttachment))
-	e.GET("/:stream/qrcode", handler.WithFactory(factory, handler.GetQRCode))
+	e.GET("/:stream/qrcode", handler.WithStream(factory, handler.GetQRCode_Stream))
 	e.GET("/:objectId/sse", handler.WithFactory(factory, handler.ServerSentEvent))
 	e.GET("/:objectId/sse/updated", handler.WithFactory(factory, handler.ServerSentEvent_Updated))
 	e.GET("/:objectId/sse/child-updated", handler.WithFactory(factory, handler.ServerSentEvent_ChildUpdated))
@@ -362,7 +362,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@:userId/:action", handler.WithUser(factory, handler.GetOutbox))
 	e.POST("/@:userId/:action", handler.WithUser(factory, handler.PostOutbox))
 	e.GET("/@:userId/attachments/:attachmentId", handler.WithFactory(factory, handler.GetUserAttachment))
-	e.GET("/@:userId/qrcode", handler.WithFactory(factory, handler.GetQRCode))
+	e.GET("/@:userId/qrcode", handler.WithUser(factory, handler.GetQRCode_User))
 
 	// ActivityPub Routes for Users
 	e.GET("/@:userId/pub", handler.WithUser(factory, handler.GetOutbox))
