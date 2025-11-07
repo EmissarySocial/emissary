@@ -27,7 +27,7 @@ func SendSearchResult(factory *service.Factory, session data.Session, args mapof
 	searchResult := model.NewSearchResult()
 
 	if err := searchResultService.LoadByID(session, searchResultID, &searchResult); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Unable to retrieve SearchResult"))
+		return queue.Error(derp.Wrap(err, location, "Unable to retrieve SearchResult", args))
 	}
 
 	// PART 1:

@@ -669,7 +669,7 @@ func (w Common) SearchTag(tagName string) model.SearchTag {
 	result := model.NewSearchTag()
 
 	if err := w._factory.SearchTag().LoadByValue(w._session, tagName, &result); err != nil {
-		derp.Report(derp.Wrap(err, location, "Error loading SearchTag", tagName))
+		derp.Report(derp.Wrap(err, location, "Unable to load SearchTag", tagName))
 	}
 
 	return result

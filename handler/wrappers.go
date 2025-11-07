@@ -404,7 +404,7 @@ func WithSearchQuery(serverFactory *server.Factory, fn WithFunc3[model.Template,
 		default:
 			searchQuery := model.NewSearchQuery()
 			if err := searchQueryService.LoadByToken(session, token, &searchQuery); err != nil {
-				return derp.Wrap(err, location, "Error loading search query from database")
+				return derp.Wrap(err, location, "Unable to load search query from database")
 			}
 
 			// Call the continuation function

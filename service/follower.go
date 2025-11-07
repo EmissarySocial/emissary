@@ -484,10 +484,12 @@ func (service *Follower) ListActivityPub(session data.Session, parentID primitiv
 
 func (service *Follower) NewActivityPubFollower(session data.Session, parentType string, parentID primitive.ObjectID, actor streams.Document, follower *model.Follower) error {
 
+	const location = "service.Follower.NewActivityPubFollower"
+
 	// Try to find an existing follower record
 	if err := service.LoadByActor(session, parentID, actor.ID(), follower); err != nil {
 		if !derp.IsNotFound(err) {
-			return derp.Wrap(err, "handler.activityPub_HandleRequest_Follow", "Error loading existing follower", actor)
+			return derp.Wrap(err, location, "Unable to load existing follower", actor)
 		}
 	}
 
@@ -508,7 +510,7 @@ func (service *Follower) NewActivityPubFollower(session data.Session, parentType
 
 	// Try to save the new follower to the database
 	if err := service.Save(session, follower, "New Follower via ActivityPub"); err != nil {
-		return derp.Wrap(err, "handler.activityPub_HandleRequest_Follow", "Unable to save new follower", follower)
+		return derp.Wrap(err, location, "Unable to save new follower", follower)
 	}
 
 	// Salút!

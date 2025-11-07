@@ -47,7 +47,7 @@ func getStreamJSONLD(ctx *steranko.Context, factory *service.Factory, session da
 		searchQuery, err := searchQueryService.LoadOrCreate(session, ctx.QueryParams())
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error loading SearchQuery")
+			return derp.Wrap(err, location, "Unable to load SearchQuery")
 		}
 
 		// Return JSON-LD for this search query

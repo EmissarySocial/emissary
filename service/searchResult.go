@@ -82,7 +82,7 @@ func (service *SearchResult) Range(session data.Session, criteria exp.Expression
 	it, err := service.collection(session).Iterator(criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.Search.Range", "Error creating iterator", criteria)
+		return nil, derp.Wrap(err, "service.SearchResult.Range", "Error creating iterator", criteria)
 	}
 
 	return RangeFunc(it, model.NewSearchResult), nil
@@ -92,7 +92,7 @@ func (service *SearchResult) Range(session data.Session, criteria exp.Expression
 func (service *SearchResult) Load(session data.Session, criteria exp.Expression, searchResult *model.SearchResult) error {
 
 	if err := service.collection(session).Load(criteria, searchResult); err != nil {
-		return derp.Wrap(err, "service.Search.Load", "Error loading Search", criteria)
+		return derp.Wrap(err, "service.SearchResult.Load", "Unable to load SearchResult", criteria)
 	}
 
 	return nil
@@ -101,7 +101,7 @@ func (service *SearchResult) Load(session data.Session, criteria exp.Expression,
 // Save adds/updates an SearchResult in the database
 func (service *SearchResult) Save(session data.Session, searchResult *model.SearchResult, note string) error {
 
-	const location = "service.Search.Save"
+	const location = "service.SearchResult.Save"
 
 	// RULE: Do not save empty SearchResults
 	if searchResult.SearchResultID.IsZero() {
@@ -244,7 +244,7 @@ func (service *SearchResult) Sync(session data.Session, searchResult model.Searc
 // DeleteByURL removes a SearchResult from the database that matches the provided URL
 func (service *SearchResult) DeleteByURL(session data.Session, url string) error {
 
-	const location = "service.Search.DeleteByURL"
+	const location = "service.SearchResult.DeleteByURL"
 
 	// RULE: If the URL is empty, then there's nothing to delete
 	if url == "" {
@@ -270,7 +270,7 @@ func (service *SearchResult) DeleteByURL(session data.Session, url string) error
 // Shuffle updates the "shuffle" field for all SearchResults that match the provided tags
 func (service *SearchResult) Shuffle(session data.Session) error {
 
-	const location = "service.Search.Shuffle"
+	const location = "service.SearchResult.Shuffle"
 
 	collection := service.collection(session)
 

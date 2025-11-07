@@ -42,7 +42,7 @@ func DeleteAny(context Context, activity streams.Document) error {
 	actor, err := context.ActivityPubActor()
 
 	if err != nil {
-		return derp.Wrap(err, "handler.activityPub_HandleRequest_Follow", "Error loading actor", context.stream)
+		return derp.Wrap(err, "handler.activityPub_stream.DeleteAny", "Unable to load actor", context.stream)
 	}
 
 	// Announce the deleted object

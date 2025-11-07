@@ -13,7 +13,7 @@ import (
 
 func SendSearchResult_SearchQuery(factory *service.Factory, session data.Session, args mapof.Any) queue.Result {
 
-	const location = "consumer.SendSearchResults_Query"
+	const location = "consumer.SendSearchResult_SearchQuery"
 
 	// Collect services to use
 	followerService := factory.Follower()
