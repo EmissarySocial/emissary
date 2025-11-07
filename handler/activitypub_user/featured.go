@@ -23,7 +23,7 @@ func GetFeaturedCollection(ctx *steranko.Context, factory *service.Factory, sess
 	streams, err := streamService.QueryFeaturedByUser(session, user.UserID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error loading streams")
+		return derp.Wrap(err, location, "Unable to load streams")
 	}
 
 	// Extract *just* the URL to include in the collection.

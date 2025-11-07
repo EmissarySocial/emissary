@@ -46,17 +46,17 @@ func (service *Registration) Add(registrationID string, filesystem fs.FS, defini
 
 	// Unmarshal the file into the schema.
 	if err := hjson.Unmarshal(definition, &registration); err != nil {
-		return derp.Wrap(err, location, "Error loading Schema", registrationID)
+		return derp.Wrap(err, location, "Unable to load Schema", registrationID)
 	}
 
 	// Load all HTML templates from the filesystem
 	if err := loadHTMLTemplateFromFilesystem(filesystem, registration.HTMLTemplate, service.funcMap); err != nil {
-		return derp.Wrap(err, location, "Error loading Registration", registrationID)
+		return derp.Wrap(err, location, "Unable to load Registration", registrationID)
 	}
 
 	// Load all Bundles from the filesystem
 	if err := populateBundles(registration.Bundles, filesystem); err != nil {
-		return derp.Wrap(err, location, "Error loading Bundles", registrationID)
+		return derp.Wrap(err, location, "Unable to load Bundles", registrationID)
 	}
 
 	// Keep a pointer to the filesystem resources (if present)
@@ -156,7 +156,7 @@ func (service *Registration) Register(session data.Session, groupService *Group,
 	registration, err := service.Load(domain.RegistrationID)
 
 	if err != nil {
-		return model.User{}, derp.Wrap(err, location, "Error loading registration")
+		return model.User{}, derp.Wrap(err, location, "Unable to load registration")
 	}
 
 	if registration.IsZero() {
@@ -186,7 +186,7 @@ func (service *Registration) Register(session data.Session, groupService *Group,
 
 	// Try to save the User to the database
 	if err := userService.Save(session, &user, "Created by Online Registration"); err != nil {
-		return model.User{}, derp.Wrap(err, location, "Error creating new User")
+		return model.User{}, derp.Wrap(err, location, "Unable to create new User")
 	}
 
 	// Word to your mother.
@@ -202,7 +202,7 @@ func (service *Registration) UpdateRegistration(session data.Session, groupServi
 	registration, err := service.Load(domain.RegistrationID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error loading registration")
+		return derp.Wrap(err, location, "Unable to load registration")
 	}
 
 	if registration.IsZero() {
@@ -228,7 +228,7 @@ func (service *Registration) UpdateRegistration(session data.Session, groupServi
 
 	// Squalk all other errors
 	if err != nil {
-		return derp.Wrap(err, location, "Error loading user", source, sourceID)
+		return derp.Wrap(err, location, "Unable to load user", source, sourceID)
 	}
 
 	// Update user data from the transaction
@@ -238,7 +238,7 @@ func (service *Registration) UpdateRegistration(session data.Session, groupServi
 
 	// Try to save the User to the database
 	if err := userService.Save(session, &user, "Created by Online Registration"); err != nil {
-		return derp.Wrap(err, location, "Error creating new User")
+		return derp.Wrap(err, location, "Unable to create new User")
 	}
 
 	// Word to your mother.
@@ -355,7 +355,7 @@ func (service *Registration) addGroups(session data.Session, groupService *Group
 		token = strings.TrimSpace(token)
 		group := model.NewGroup()
 		if err := groupService.LoadByToken(session, token, &group); err != nil {
-			return derp.Wrap(err, location, "Error loading group", token)
+			return derp.Wrap(err, location, "Unable to load group", token)
 		}
 
 		// Add the User to the Group
@@ -380,7 +380,7 @@ func (service *Registration) removeGroups(session data.Session, groupService *Gr
 		token = strings.TrimSpace(token)
 		group := model.NewGroup()
 		if err := groupService.LoadByToken(session, token, &group); err != nil {
-			return derp.Wrap(err, location, "Error loading group", token)
+			return derp.Wrap(err, location, "Unable to load group", token)
 		}
 
 		// Remove the User from the Group

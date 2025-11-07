@@ -145,7 +145,7 @@ func (service Geocode) getGeocoder(session data.Session) geo.Geocoder {
 
 	if err := service.connectionService.LoadActiveByType(session, model.ConnectionTypeGeocoder, &connection); err != nil {
 		// const location = "service.Geocode.getGeocoder"
-		// derp.Report(derp.Wrap(err, location, "Error loading geocoder connection"))
+		// derp.Report(derp.Wrap(err, location, "Unable to load geocoder connection"))
 		return openstreetmap.Geocoder()
 	}
 

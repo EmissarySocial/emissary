@@ -90,7 +90,7 @@ func (service *Follower) Range(session data.Session, criteria exp.Expression, op
 
 		// Soft fail.  Report, but do not crash.
 		if err != nil {
-			derp.Report(derp.Wrap(err, "service.Follower.Range", "Error creating iterator", criteria))
+			derp.Report(derp.Wrap(err, "service.Follower.Range", "Unable to create iterator", criteria))
 			return
 		}
 
@@ -109,7 +109,7 @@ func (service *Follower) Range(session data.Session, criteria exp.Expression, op
 func (service *Follower) Load(session data.Session, criteria exp.Expression, follower *model.Follower) error {
 
 	if err := service.collection(session).Load(notDeleted(criteria), follower); err != nil {
-		return derp.Wrap(err, "service.Follower.Load", "Error loading Follower", criteria)
+		return derp.Wrap(err, "service.Follower.Load", "Unable to load Follower", criteria)
 	}
 
 	return nil
@@ -251,7 +251,7 @@ func (service *Follower) LoadOrCreate(session data.Session, parentID primitive.O
 	}
 
 	// Other error is bad.  Return the error
-	return result, derp.Wrap(err, "service.Follower.LoadOrCreate", "Error loading Follower", parentID, actorID)
+	return result, derp.Wrap(err, "service.Follower.LoadOrCreate", "Unable to load Follower", parentID, actorID)
 }
 
 // LoadByToken loads a follower using either the FollowerID (if an ObjectID is passed) or the Actor's ProfileURL
@@ -281,7 +281,7 @@ func (service *Follower) LoadBySecret(session data.Session, followerID primitive
 	// Load the Follower using the FollowerID
 	criteria := exp.Equal("_id", followerID)
 	if err := service.Load(session, criteria, follower); err != nil {
-		return derp.Wrap(err, location, "Error loading follower", followerID)
+		return derp.Wrap(err, location, "Unable to load follower", followerID)
 	}
 
 	// Verify that the secret matches
@@ -428,7 +428,7 @@ func (service *Follower) LoadOrCreateByWebSub(session data.Session, objectType s
 	}
 
 	// If REAL ERROR, then derp
-	return result, derp.Wrap(err, "service.Follower.LoadByWebSub", "Error loading follower", parentID, callback)
+	return result, derp.Wrap(err, "service.Follower.LoadByWebSub", "Unable to load follower", parentID, callback)
 }
 
 func (service *Follower) LoadParentActor(session data.Session, follower *model.Follower) (model.PersonLink, error) {
@@ -439,7 +439,7 @@ func (service *Follower) LoadParentActor(session data.Session, follower *model.F
 
 		user := model.NewUser()
 		if err := service.userService.LoadByID(session, follower.ParentID, &user); err != nil {
-			return model.PersonLink{}, derp.Wrap(err, "service.Follower.LoadParentActor", "Error loading parent user", follower)
+			return model.PersonLink{}, derp.Wrap(err, "service.Follower.LoadParentActor", "Unable to load parent user", follower)
 		}
 
 		return user.PersonLink(), nil
@@ -448,7 +448,7 @@ func (service *Follower) LoadParentActor(session data.Session, follower *model.F
 
 		stream := model.NewStream()
 		if err := service.streamService.LoadByID(session, follower.ParentID, &stream); err != nil {
-			return model.PersonLink{}, derp.Wrap(err, "service.Follower.LoadParentActor", "Error loading parent stream", follower)
+			return model.PersonLink{}, derp.Wrap(err, "service.Follower.LoadParentActor", "Unable to load parent stream", follower)
 		}
 
 		return stream.ActorLink(), nil
@@ -593,7 +593,7 @@ func (service *Follower) SendFollowConfirmation(session data.Session, follower *
 	actor, err := service.LoadParentActor(session, follower)
 
 	if err != nil {
-		return derp.Wrap(err, "service.Follower.SendFollowConfirmation", "Error loading parent actor", follower)
+		return derp.Wrap(err, "service.Follower.SendFollowConfirmation", "Unable to load parent actor", follower)
 	}
 
 	if err := service.domainEmail.SendFollowerConfirmation(actor, follower); err != nil {

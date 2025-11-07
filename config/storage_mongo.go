@@ -107,7 +107,7 @@ func NewMongoStorage(args *CommandLineArgs) MongoStorage {
 			if config, err := storage.load(); err == nil {
 				storage.updateChannel <- config
 			} else {
-				derp.Report(derp.Wrap(err, location, "Error loading updated config from MongoDB"))
+				derp.Report(derp.Wrap(err, location, "Unable to load updated config from MongoDB"))
 			}
 		}
 
@@ -136,7 +136,7 @@ func (storage MongoStorage) load() (Config, error) {
 	if err := storage.collection.FindOne(context.Background(), bson.M{}).Decode(&result); err != nil {
 
 		if err == mongo.ErrNoDocuments {
-			return Config{}, derp.NotFoundError("config.MongoStorage", "Error loading config from MongoDB", err.Error())
+			return Config{}, derp.NotFoundError("config.MongoStorage", "Unable to load config from MongoDB", err.Error())
 		}
 
 		return Config{}, derp.Wrap(err, "config.MongoStorage", "Error decoding config from MongoDB")

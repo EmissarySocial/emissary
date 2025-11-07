@@ -37,7 +37,7 @@ func GetIntentInfo(ctx *steranko.Context, factory *service.Factory, session data
 	actor, err := activityService.Client().Load(accountID, sherlock.AsActor())
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error loading account from ActivityService")
+		return derp.Wrap(err, location, "Unable to load account from ActivityService")
 	}
 
 	// Return the account information to the client

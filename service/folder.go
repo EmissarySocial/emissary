@@ -78,7 +78,7 @@ func (service *Folder) Range(session data.Session, criteria exp.Expression, opti
 	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Error creating iterator", criteria)
+		return nil, derp.Wrap(err, location, "Unable to create iterator", criteria)
 	}
 
 	return RangeFunc(iter, model.NewFolder), nil

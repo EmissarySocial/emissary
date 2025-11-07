@@ -57,7 +57,7 @@ func GetWebSubClient(ctx *steranko.Context, factory *service.Factory, session da
 	following := model.NewFollowing()
 
 	if err := followingService.LoadByID(session, userID, followingID, &following); err != nil {
-		return derp.Wrap(err, location, "Error loading following record", userID, followingID, transaction)
+		return derp.Wrap(err, location, "Unable to load following record", userID, followingID, transaction)
 	}
 
 	// RULE: Require that this Following uses WebSub
@@ -114,7 +114,7 @@ func PostWebSubClient(ctx *steranko.Context, factory *service.Factory, session d
 	following := model.NewFollowing()
 
 	if err := followingService.LoadByID(session, userID, followingID, &following); err != nil {
-		return derp.Wrap(err, location, "Error loading following record", userID, followingID)
+		return derp.Wrap(err, location, "Unable to load following record", userID, followingID)
 	}
 
 	// Validate the request (B)

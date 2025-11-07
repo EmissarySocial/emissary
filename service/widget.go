@@ -41,17 +41,17 @@ func (service *Widget) Add(widgetID string, filesystem fs.FS, definition []byte)
 
 	// Unmarshal the file into the schema.
 	if err := hjson.Unmarshal(definition, &widget); err != nil {
-		return derp.Wrap(err, location, "Error loading Schema", widgetID)
+		return derp.Wrap(err, location, "Unable to load Schema", widgetID)
 	}
 
 	// Load all HTML widgets from the filesystem
 	if err := loadHTMLTemplateFromFilesystem(filesystem, widget.HTMLTemplate, service.funcMap); err != nil {
-		return derp.Wrap(err, location, "Error loading Widget", widgetID)
+		return derp.Wrap(err, location, "Unable to load Widget", widgetID)
 	}
 
 	// Load all Bundles from the filesystem
 	if err := populateBundles(widget.Bundles, filesystem); err != nil {
-		return derp.Wrap(err, location, "Error loading Bundles", widgetID)
+		return derp.Wrap(err, location, "Unable to load Bundles", widgetID)
 	}
 
 	// Keep a pointer to the filesystem resources (if present)

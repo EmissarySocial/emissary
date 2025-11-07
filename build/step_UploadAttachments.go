@@ -116,7 +116,7 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 		// Add the document into the media server.
 		// If it's an image or video, then save the dimensions as well.
 		if err := factory.MediaServer().Put(attachment.AttachmentID.Hex(), source); err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Error saving attachment to mediaserver", attachment))
+			return Halt().WithError(derp.Wrap(err, location, "Unable to save attachment to mediaserver", attachment))
 		}
 
 		// Apply rules to Attachment
@@ -124,7 +124,7 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 
 		// Try to save the Attachment
 		if err := attachmentService.Save(builder.session(), &attachment, "Uploaded file: "+fileHeader.Filename); err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Error saving attachment", attachment))
+			return Halt().WithError(derp.Wrap(err, location, "Unable to save attachment", attachment))
 		}
 
 		// Try to put the the attachmentId into the object

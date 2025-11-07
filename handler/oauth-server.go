@@ -69,7 +69,7 @@ func PostOAuthAuthorization(ctx *steranko.Context, factory *service.Factory, ses
 	application := model.NewOAuthClient()
 
 	if err := clientService.LoadByClientID(session, clientID, &application); err != nil {
-		return derp.Wrap(err, location, "Error loading OAuth Application")
+		return derp.Wrap(err, location, "Unable to load OAuth Application")
 	}
 
 	// Validate the transaction
@@ -82,7 +82,7 @@ func PostOAuthAuthorization(ctx *steranko.Context, factory *service.Factory, ses
 	userToken, err := userTokenService.Create(session, application, authorization, transaction)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error creating OAuthUserToken")
+		return derp.Wrap(err, location, "Unable to create OAuthUserToken")
 	}
 
 	// Complete the transaction based on the grant type
@@ -186,7 +186,7 @@ func PostOAuthToken(ctx *steranko.Context, factory *service.Factory, session dat
 	userToken := model.NewOAuthUserToken()
 
 	if err := userTokenService.LoadByClientAndCode(session, userTokenID, clientID, transaction.ClientSecret, &userToken); err != nil {
-		return derp.Wrap(err, location, "Error loading OAuthUserToken")
+		return derp.Wrap(err, location, "Unable to load OAuthUserToken")
 	}
 
 	// Return the Token as JSON
@@ -222,7 +222,7 @@ func PostOAuthRevoke(ctx *steranko.Context, factory *service.Factory, session da
 	}
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error loading OAuthUserToken")
+		return derp.Wrap(err, location, "Unable to load OAuthUserToken")
 	}
 
 	if err := userTokenService.Delete(session, &userToken, "Revoked by Client"); err != nil {

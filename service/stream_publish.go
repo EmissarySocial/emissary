@@ -42,7 +42,7 @@ func (service *Stream) Publish(session data.Session, user *model.User, stream *m
 
 	// Re-save the Stream with the updated values.
 	if err := service.Save(session, stream, "Publishing"); err != nil {
-		return derp.Wrap(err, location, "Error saving stream", stream)
+		return derp.Wrap(err, location, "Unable to save stream", stream)
 	}
 
 	// Publish to user/stream outboxes

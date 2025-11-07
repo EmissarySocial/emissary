@@ -67,7 +67,7 @@ func (service *EncryptionKey) Range(session data.Session, criteria exp.Expressio
 	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.EncryptionKey.Range", "Error creating iterator", criteria)
+		return nil, derp.Wrap(err, "service.EncryptionKey.Range", "Unable to create iterator", criteria)
 	}
 
 	return RangeFunc(iter, model.NewEncryptionKey), nil
@@ -77,7 +77,7 @@ func (service *EncryptionKey) Range(session data.Session, criteria exp.Expressio
 func (service *EncryptionKey) Load(session data.Session, criteria exp.Expression, encryptionKey *model.EncryptionKey) error {
 
 	if err := service.collection(session).Load(notDeleted(criteria), encryptionKey); err != nil {
-		return derp.Wrap(err, "service.EncryptionKey.Load", "Error loading EncryptionKey", criteria)
+		return derp.Wrap(err, "service.EncryptionKey.Load", "Unable to load EncryptionKey", criteria)
 	}
 
 	return nil
@@ -87,7 +87,7 @@ func (service *EncryptionKey) Load(session data.Session, criteria exp.Expression
 func (service *EncryptionKey) Save(session data.Session, encryptionKey *model.EncryptionKey, note string) error {
 
 	if err := service.collection(session).Save(encryptionKey, note); err != nil {
-		return derp.Wrap(err, "service.EncryptionKey.Save", "Error saving EncryptionKey", encryptionKey, note)
+		return derp.Wrap(err, "service.EncryptionKey.Save", "Unable to save EncryptionKey", encryptionKey, note)
 	}
 
 	return nil
@@ -126,14 +126,14 @@ func (service *EncryptionKey) LoadByParentID(session data.Session, parentType st
 
 	// If this is a legitimate error, then return it
 	if !derp.IsNotFound(err) {
-		return derp.Wrap(err, "service.EncryptionKey.LoadByID", "Error loading EncryptionKey", parentID)
+		return derp.Wrap(err, "service.EncryptionKey.LoadByID", "Unable to load EncryptionKey", parentID)
 	}
 
 	// Fall through means it's a "Not Found" error, so create a new key
 	newKey, err := service.Create(session, parentType, parentID)
 
 	if err != nil {
-		return derp.Wrap(err, "service.EncryptionKey.LoadByID", "Error creating new EncryptionKey", parentID)
+		return derp.Wrap(err, "service.EncryptionKey.LoadByID", "Unable to create new EncryptionKey", parentID)
 	}
 
 	// Return the key if successful
@@ -164,7 +164,7 @@ func (service *EncryptionKey) Create(session data.Session, parentType string, pa
 	encryptionKey.PublicPEM = sigs.EncodePublicPEM(privateKey)
 
 	if err := service.Save(session, &encryptionKey, "Created"); err != nil {
-		return model.EncryptionKey{}, derp.Wrap(err, "model.CreateEncryptionKey", "Error saving new EncryptionKey", parentType, parentID)
+		return model.EncryptionKey{}, derp.Wrap(err, "model.CreateEncryptionKey", "Unable to save new EncryptionKey", parentType, parentID)
 	}
 
 	return encryptionKey, nil
@@ -177,7 +177,7 @@ func (service *EncryptionKey) DeleteByParentID(session data.Session, parentID pr
 	rangeFunc, err := service.RangeByParentID(session, parentID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error loading keys", parentID)
+		return derp.Wrap(err, location, "Unable to load keys", parentID)
 	}
 
 	for encryptionKey := range rangeFunc {

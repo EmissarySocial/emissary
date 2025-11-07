@@ -66,7 +66,7 @@ func (service *OAuthClient) Iterator(session data.Session, criteria exp.Expressi
 func (service *OAuthClient) Load(session data.Session, criteria exp.Expression, application *model.OAuthClient) error {
 
 	if err := service.collection(session).Load(notDeleted(criteria), application); err != nil {
-		return derp.Wrap(err, "service.OAuthClient", "Error loading OAuthClient", criteria)
+		return derp.Wrap(err, "service.OAuthClient", "Unable to load OAuthClient", criteria)
 	}
 
 	return nil
@@ -95,7 +95,7 @@ func (service *OAuthClient) Save(session data.Session, app *model.OAuthClient, n
 
 	// Try to save the OAuthClient to the database
 	if err := service.collection(session).Save(app, note); err != nil {
-		return derp.Wrap(err, location, "Error saving OAuthClient", app, note)
+		return derp.Wrap(err, location, "Unable to save OAuthClient", app, note)
 	}
 
 	return nil
@@ -146,7 +146,7 @@ func (service *OAuthClient) ValidateClientSecret(session data.Session, clientID 
 	// Try to load the client to confirm its secret
 	client := model.NewOAuthClient()
 	if err := service.LoadByClientID(session, clientID, &client); err != nil {
-		return derp.Wrap(err, location, "Error loading client", clientID)
+		return derp.Wrap(err, location, "Unable to load client", clientID)
 	}
 
 	// Confirm the client.Secret

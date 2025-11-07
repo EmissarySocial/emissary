@@ -135,7 +135,7 @@ func GetResetCode(ctx *steranko.Context, factory *service.Factory, session data.
 	resetCode := ctx.QueryParam("code")
 
 	if err := userService.LoadByToken(session, userID, &user); err != nil {
-		return derp.Wrap(err, location, "Error loading user")
+		return derp.Wrap(err, location, "Unable to load user")
 	}
 
 	// Get the template that will build the HTML response
@@ -210,14 +210,14 @@ func PostResetCode(ctx *steranko.Context, factory *service.Factory, session data
 	user := model.NewUser()
 
 	if err := userService.LoadByResetCode(session, txn.UserID, txn.Code, &user); err != nil {
-		return derp.Wrap(err, "handler.GetResetCode", "Error loading user")
+		return derp.Wrap(err, "handler.GetResetCode", "Unable to load user")
 	}
 
 	// Update the user with the new password
 	user.SetPassword(txn.Password)
 
 	if err := userService.Save(session, &user, "Updated Password"); err != nil {
-		return derp.Wrap(err, "handler.GetResetCode", "Error saving user")
+		return derp.Wrap(err, "handler.GetResetCode", "Unable to save user")
 	}
 
 	// Forward to the sign-in page with a success message

@@ -47,7 +47,7 @@ func GetResponseCollection(ctx *steranko.Context, factory *service.Factory, sess
 	responses, err := responseService.QueryByObjectAndDate(session, stream.Permalink(), responseType, publishedDate, pageSize)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error loading responses")
+		return derp.Wrap(err, location, "Unable to load responses")
 	}
 
 	// Return a JSON-LD document

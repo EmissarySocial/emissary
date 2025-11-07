@@ -178,7 +178,7 @@ func (service *Stream) PrivateKey(session data.Session, streamID primitive.Objec
 	// Try to load the user's keys from the database
 	encryptionKey := model.NewEncryptionKey()
 	if err := service.keyService.LoadByParentID(session, model.EncryptionKeyTypeStream, streamID, &encryptionKey); err != nil {
-		return nil, derp.Wrap(err, location, "Error loading encryption key", streamID)
+		return nil, derp.Wrap(err, location, "Unable to load encryption key", streamID)
 	}
 
 	// Extract the Private Key from the Encryption Key
@@ -202,7 +202,7 @@ func (service *Stream) ActivityPubActor(session data.Session, streamID primitive
 	// Try to load the user's keys from the database
 	encryptionKey := model.NewEncryptionKey()
 	if err := service.keyService.LoadByParentID(session, model.EncryptionKeyTypeStream, streamID, &encryptionKey); err != nil {
-		return outbox.Actor{}, derp.Wrap(err, location, "Error loading encryption key", streamID)
+		return outbox.Actor{}, derp.Wrap(err, location, "Unable to load encryption key", streamID)
 	}
 
 	// Extract the Private Key from the Encryption Key

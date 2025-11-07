@@ -32,7 +32,7 @@ func DeleteStream(factory *service.Factory, session data.Session, args mapof.Any
 			return queue.Success()
 		}
 
-		return queue.Error(derp.Wrap(err, location, "Error loading stream", token))
+		return queue.Error(derp.Wrap(err, location, "Unable to load stream", token))
 	}
 
 	// Delete the Stream

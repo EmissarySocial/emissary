@@ -49,7 +49,7 @@ func (step StepSetPassword) Post(builder Builder, _ io.Writer) PipelineBehavior 
 	user := model.NewUser()
 
 	if err := userService.LoadByID(builder.session(), authorization.UserID, &user); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error loading user"))
+		return Halt().WithError(derp.Wrap(err, location, "Unable to load user"))
 	}
 
 	// Update the User's password using Steranko's default password hashing algorithm
@@ -59,7 +59,7 @@ func (step StepSetPassword) Post(builder Builder, _ io.Writer) PipelineBehavior 
 
 	// Save the User back to the database
 	if err := userService.Save(builder.session(), &user, "Password changed"); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error saving user"))
+		return Halt().WithError(derp.Wrap(err, location, "Unable to save user"))
 	}
 
 	// Silence is AU-some

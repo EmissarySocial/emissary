@@ -45,7 +45,7 @@ func GetIntent_Follow(ctx *steranko.Context, factory *service.Factory, session d
 	following := model.NewFollowing()
 	if err := followingService.LoadByURL(session, user.UserID, actor.ID(), &following); err != nil {
 		if !derp.IsNotFound(err) {
-			return derp.Wrap(err, location, "Error loading existing following")
+			return derp.Wrap(err, location, "Unable to load existing following")
 		}
 	}
 
@@ -192,7 +192,7 @@ func PostIntent_Follow(ctx *steranko.Context, factory *service.Factory, session 
 
 	// Save the new Stream to the database
 	if err := followingService.Save(session, &following, "Created via Activity Intent"); err != nil {
-		return derp.Wrap(err, location, "Error saving stream")
+		return derp.Wrap(err, location, "Unable to save stream")
 	}
 
 	// Return the "on-success" response

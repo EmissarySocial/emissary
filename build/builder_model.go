@@ -32,7 +32,7 @@ func NewModel(factory Factory, session data.Session, request *http.Request, resp
 	common, err := NewCommonWithTemplate(factory, session, request, response, template, object, actionID)
 
 	if err != nil {
-		return Model{}, derp.Wrap(err, location, "Error creating common builder")
+		return Model{}, derp.Wrap(err, location, "Unable to create common builder")
 	}
 
 	// Enforce permissions on the requested action
@@ -174,7 +174,7 @@ func (w Model) View(actionID string) (template.HTML, error) {
 	subStream, err := NewModel(w._factory, w._session, w._request, w._response, w._template, w._object, actionID)
 
 	if err != nil {
-		return template.HTML(""), derp.Wrap(err, location, "Error creating sub-builder")
+		return template.HTML(""), derp.Wrap(err, location, "Unable to create sub-builder")
 	}
 
 	// Generate HTML template
@@ -199,7 +199,7 @@ func (w Model) Identity(identityID primitive.ObjectID) (model.Identity, error) {
 	identity := model.NewIdentity()
 
 	if err := w._factory.Identity().LoadByID(w._session, identityID, &identity); err != nil {
-		return model.Identity{}, derp.Wrap(err, location, "Error loading identity by token")
+		return model.Identity{}, derp.Wrap(err, location, "Unable to load identity by token")
 	}
 
 	// Everything is groovy!

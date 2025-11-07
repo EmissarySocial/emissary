@@ -46,7 +46,7 @@ func (service Geosearch) getProvider(session data.Session, referer string) geose
 	connection := model.NewConnection()
 
 	if err := service.connectionService.LoadActiveByType(session, model.ConnectionTypeGeosearch, &connection); err != nil {
-		derp.Report(derp.Wrap(err, location, "Error loading provider connection"))
+		derp.Report(derp.Wrap(err, location, "Unable to load provider connection"))
 		return geosearch.Nil()
 	}
 

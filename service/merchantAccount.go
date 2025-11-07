@@ -92,7 +92,7 @@ func (service *MerchantAccount) Range(session data.Session, criteria exp.Express
 	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.MerchantAccount.Range", "Error creating iterator", criteria)
+		return nil, derp.Wrap(err, "service.MerchantAccount.Range", "Unable to create iterator", criteria)
 	}
 
 	return RangeFunc(iter, model.NewMerchantAccount), nil
@@ -102,7 +102,7 @@ func (service *MerchantAccount) Range(session data.Session, criteria exp.Express
 func (service *MerchantAccount) Load(session data.Session, criteria exp.Expression, merchantAccount *model.MerchantAccount) error {
 
 	if err := service.collection(session).Load(notDeleted(criteria), merchantAccount); err != nil {
-		return derp.Wrap(err, "service.MerchantAccount.Load", "Error loading MerchantAccount", criteria)
+		return derp.Wrap(err, "service.MerchantAccount.Load", "Unable to load MerchantAccount", criteria)
 	}
 
 	return nil
@@ -137,7 +137,7 @@ func (service *MerchantAccount) Save(session data.Session, merchantAccount *mode
 
 	// Save the merchantAccount to the database
 	if err := service.collection(session).Save(merchantAccount, note); err != nil {
-		return derp.Wrap(err, location, "Error saving MerchantAccount", merchantAccount, note)
+		return derp.Wrap(err, location, "Unable to save MerchantAccount", merchantAccount, note)
 	}
 
 	return nil
@@ -222,7 +222,7 @@ func (service *MerchantAccount) AvailableMerchantAccounts(session data.Session) 
 	connections, err := service.connectionService.QueryActiveByType(session, model.ConnectionTypeUserPayment)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Error loading connections")
+		return nil, derp.Wrap(err, location, "Unable to load connections")
 	}
 
 	// Map the connections to LookupCodes
@@ -249,7 +249,7 @@ func (service *MerchantAccount) QueryByUser(session data.Session, userID primiti
 	result, err := service.Query(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Error loading merchant accounts")
+		return nil, derp.Wrap(err, location, "Unable to load merchant accounts")
 	}
 
 	return result, nil
@@ -449,7 +449,7 @@ func (service *MerchantAccount) RemoteProductsByUser(session data.Session, userI
 	merchantAccounts, err := service.QueryByUser(session, userID)
 
 	if err != nil {
-		return nil, nil, derp.Wrap(err, location, "Error loading merchant accounts")
+		return nil, nil, derp.Wrap(err, location, "Unable to load merchant accounts")
 	}
 
 	result := sliceof.NewObject[model.Product]()
@@ -459,7 +459,7 @@ func (service *MerchantAccount) RemoteProductsByUser(session data.Session, userI
 		remoteProducts, err := service.getRemoteProducts(&merchantAccount)
 
 		if err != nil {
-			return nil, nil, derp.Wrap(err, location, "Error loading products for merchant account", merchantAccount)
+			return nil, nil, derp.Wrap(err, location, "Unable to load products for merchant account", merchantAccount)
 		}
 
 		result = append(result, remoteProducts...)
@@ -499,7 +499,7 @@ func (service *MerchantAccount) CancelPrivilege(session data.Session, privilege 
 	merchantAccount := model.NewMerchantAccount()
 
 	if err := service.LoadByID(session, privilege.MerchantAccountID, &merchantAccount); err != nil {
-		return derp.Wrap(err, "service.MerchantAccount.CancelPrivilege", "Error loading MerchantAccount for Privilege", privilege.PrivilegeID)
+		return derp.Wrap(err, "service.MerchantAccount.CancelPrivilege", "Unable to load MerchantAccount for Privilege", privilege.PrivilegeID)
 	}
 
 	switch merchantAccount.Type {

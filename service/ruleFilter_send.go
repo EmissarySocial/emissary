@@ -33,7 +33,7 @@ func (filter *RuleFilter) AllowSend(session data.Session, actorID string) bool {
 		rules, err := filter.ruleService.QueryByActorAndActions(session, filter.userID, actorID, allowedActions...)
 
 		if err != nil {
-			derp.Report(derp.Wrap(err, location, "Error loading rules"))
+			derp.Report(derp.Wrap(err, location, "Unable to load rules"))
 			return false
 		}
 

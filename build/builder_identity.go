@@ -56,7 +56,7 @@ func NewIdentity(factory Factory, session data.Session, request *http.Request, r
 	common, err := NewCommonWithTemplate(factory, session, request, response, template, identity, actionID)
 
 	if err != nil {
-		return Identity{}, derp.Wrap(err, "build.NewIdentity", "Error creating new model")
+		return Identity{}, derp.Wrap(err, "build.NewIdentity", "Unable to create new model")
 	}
 
 	// Create the Identity builder
@@ -238,7 +238,7 @@ func (w Identity) View(actionID string) (template.HTML, error) {
 	subStream, err := NewModel(w._factory, w._session, w._request, w._response, w._template, w._identity, actionID)
 
 	if err != nil {
-		return template.HTML(""), derp.Wrap(err, location, "Error creating sub-builder")
+		return template.HTML(""), derp.Wrap(err, location, "Unable to create sub-builder")
 	}
 
 	// Generate HTML template

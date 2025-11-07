@@ -43,7 +43,7 @@ func (step StepWithChildren) Post(builder Builder, buffer io.Writer) PipelineBeh
 		childStream, err := NewStreamWithoutTemplate(streamBuilder.factory(), streamBuilder.session(), streamBuilder.request(), streamBuilder.response(), &child, "view")
 
 		if err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Error creating builder for child"))
+			return Halt().WithError(derp.Wrap(err, location, "Unable to create builder for child"))
 		}
 
 		// Execute the POST build pipeline on the child

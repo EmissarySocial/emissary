@@ -37,7 +37,7 @@ func (rss RSS) Feed(session data.Session, criteria ...exp.Expression) (*feeds.JS
 	stream := model.NewStream()
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.rss.Feed", "Error loading streams")
+		return nil, derp.Wrap(err, "service.rss.Feed", "Unable to load streams")
 	}
 
 	result := feeds.JSONFeed{

@@ -91,7 +91,7 @@ func (service *Locator) GetObjectFromURL(session data.Session, value string) (st
 		stream := model.NewStream()
 
 		if err := service.streamService.LoadByToken(session, token, &stream); err != nil {
-			return "", primitive.NilObjectID, derp.Wrap(err, location, "Error loading stream", token)
+			return "", primitive.NilObjectID, derp.Wrap(err, location, "Unable to load stream", token)
 		}
 
 		return model.ActorTypeStream, stream.StreamID, nil
@@ -101,7 +101,7 @@ func (service *Locator) GetObjectFromURL(session data.Session, value string) (st
 		user := model.NewUser()
 
 		if err := service.userService.LoadByToken(session, token, &user); err != nil {
-			return "", primitive.NilObjectID, derp.Wrap(err, location, "Error loading user", token)
+			return "", primitive.NilObjectID, derp.Wrap(err, location, "Unable to load user", token)
 		}
 
 		return model.ActorTypeUser, user.UserID, nil

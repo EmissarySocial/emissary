@@ -30,7 +30,7 @@ func GetRegister(ctx *steranko.Context, factory *service.Factory, session data.S
 	b, err := build.NewRegistration(factory, session, ctx.Request(), ctx.Response(), registration, actionID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error creating Builder")
+		return derp.Wrap(err, location, "Unable to create Builder")
 	}
 
 	// Return a response to the client
@@ -74,7 +74,7 @@ func PostRegister(ctx *steranko.Context, factory *service.Factory, session data.
 	b, err := build.NewRegistration(factory, session, ctx.Request(), ctx.Response(), registration, "confirm")
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error creating Builder")
+		return derp.Wrap(err, location, "Unable to create Builder")
 	}
 
 	if err := build.AsHTML(ctx, factory, b, build.ActionMethodGet); err != nil {

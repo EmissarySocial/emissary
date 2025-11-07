@@ -38,7 +38,7 @@ func IndexAllStreams(ctx *steranko.Context, factory *service.Factory, session da
 		// If necessary, re-save the Stream
 		if !slice.Equal(stream.Hashtags, originalHashtags) {
 			if err := streamService.Save(session, &stream, "Updating Hashtags"); err != nil {
-				derp.Report(derp.Wrap(err, location, "Error saving Stream"))
+				derp.Report(derp.Wrap(err, location, "Unable to save Stream"))
 			}
 		}
 
@@ -46,7 +46,7 @@ func IndexAllStreams(ctx *steranko.Context, factory *service.Factory, session da
 		searchResult := streamService.SearchResult(&stream)
 
 		if err := searchService.Sync(session, searchResult); err != nil {
-			derp.Report(derp.Wrap(err, location, "Error saving SearchResult"))
+			derp.Report(derp.Wrap(err, location, "Unable to save SearchResult"))
 		}
 	}
 
@@ -102,7 +102,7 @@ func PostSearchLookup(ctx *steranko.Context, factory *service.Factory, session d
 	searchQuery, err := searchQueryService.LoadOrCreate(session, ctx.QueryParams())
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error creating search query token")
+		return derp.Wrap(err, location, "Unable to create search query token")
 	}
 
 	// Set the referer/URL if it's not already set

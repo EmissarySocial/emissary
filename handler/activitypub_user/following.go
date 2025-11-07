@@ -27,7 +27,7 @@ func GetFollowingRecord(ctx *steranko.Context, factory *service.Factory, session
 	user := model.NewUser()
 
 	if err := userService.LoadByToken(session, ctx.Param("userId"), &user); err != nil {
-		return derp.Wrap(err, location, "Error loading user")
+		return derp.Wrap(err, location, "Unable to load user")
 	}
 
 	// Confirm that the user is visible
@@ -40,7 +40,7 @@ func GetFollowingRecord(ctx *steranko.Context, factory *service.Factory, session
 	following := model.NewFollowing()
 
 	if err := followingService.LoadByToken(session, user.UserID, ctx.Param("followingId"), &following); err != nil {
-		return derp.Wrap(err, location, "Error loading following")
+		return derp.Wrap(err, location, "Unable to load following")
 	}
 
 	result := followingService.AsJSONLD(&following)

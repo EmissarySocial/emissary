@@ -50,7 +50,7 @@ func (service *Outbox) Publish(session data.Session, actorType string, actorID p
 	outboxMessage.Permissions = permissions
 
 	if err := service.Save(session, &outboxMessage, "Publishing"); err != nil {
-		return derp.Wrap(err, location, "Error saving outbox message", outboxMessage)
+		return derp.Wrap(err, location, "Unable to save outbox message", outboxMessage)
 	}
 
 	// Get All Followers for this Actor and Addressees

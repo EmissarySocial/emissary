@@ -40,7 +40,7 @@ func PostStatus(serverFactory *server.Factory) func(model.Authorization, txn.Pos
 		user := model.NewUser()
 
 		if err := userSerivce.LoadByID(session, authorization.UserID, &user); err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Error loading user")
+			return object.Status{}, derp.Wrap(err, location, "Unable to load user")
 		}
 
 		// Create the stream for the new mastodon "Status"
@@ -63,7 +63,7 @@ func PostStatus(serverFactory *server.Factory) func(model.Authorization, txn.Pos
 		// Save the stream
 		streamService := factory.Stream()
 		if err := streamService.Save(session, &stream, "Created via Mastodon API"); err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Error saving stream")
+			return object.Status{}, derp.Wrap(err, location, "Unable to save stream")
 		}
 
 		// Publish the Stream to the User's outbox
@@ -86,7 +86,7 @@ func GetStatus(serverFactory *server.Factory) func(model.Authorization, txn.GetS
 		factory, _, stream, err := getStreamFromURL(serverFactory, transaction.ID)
 
 		if err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Error loading stream")
+			return object.Status{}, derp.Wrap(err, location, "Unable to load stream")
 		}
 
 		// Get a database session for this request
@@ -103,7 +103,7 @@ func GetStatus(serverFactory *server.Factory) func(model.Authorization, txn.GetS
 		template, err := templateService.Load(stream.TemplateID)
 
 		if err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Error loading template")
+			return object.Status{}, derp.Wrap(err, location, "Unable to load template")
 		}
 
 		// Validate permissions on this Stream/Template
@@ -132,7 +132,7 @@ func DeleteStatus(serverFactory *server.Factory) func(model.Authorization, txn.D
 		factory, streamService, stream, err := getStreamFromURL(serverFactory, transaction.ID)
 
 		if err != nil {
-			return struct{}{}, derp.Wrap(err, location, "Error loading stream")
+			return struct{}{}, derp.Wrap(err, location, "Unable to load stream")
 		}
 
 		if !stream.IsMyself(authorization.UserID) {
@@ -177,7 +177,7 @@ func PostStatus_Translate(serverFactory *server.Factory) func(model.Authorizatio
 		_, _, stream, err := getStreamFromURL(serverFactory, t.ID)
 
 		if err != nil {
-			return object.Translation{}, derp.Wrap(err, location, "Error loading stream")
+			return object.Translation{}, derp.Wrap(err, location, "Unable to load stream")
 		}
 
 		result := object.Translation{
@@ -233,7 +233,7 @@ func PostStatus_Favourite(serverFactory *server.Factory) func(model.Authorizatio
 		userService := factory.User()
 		user := model.NewUser()
 		if err := userService.LoadByID(session, auth.UserID, &user); err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Error loading user")
+			return object.Status{}, derp.Wrap(err, location, "Unable to load user")
 		}
 
 		// Load the inbox idem being favorited
@@ -241,7 +241,7 @@ func PostStatus_Favourite(serverFactory *server.Factory) func(model.Authorizatio
 		message := model.NewMessage()
 
 		if err := inboxService.LoadByURL(session, auth.UserID, t.ID, &message); err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Error loading message")
+			return object.Status{}, derp.Wrap(err, location, "Unable to load message")
 		}
 
 		// Create the new response
@@ -252,7 +252,7 @@ func PostStatus_Favourite(serverFactory *server.Factory) func(model.Authorizatio
 		response.Object = message.URL
 		response.Type = vocab.ActivityTypeLike
 		if err := responseService.Save(session, &response, "Created via Mastodon API"); err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Error saving response")
+			return object.Status{}, derp.Wrap(err, location, "Unable to save response")
 		}
 
 		return response.Toot(), nil
@@ -294,7 +294,7 @@ func PostStatus_Unfavourite(serverFactory *server.Factory) func(model.Authorizat
 			}
 
 			// Otherwise, return a legitimate error
-			return object.Status{}, derp.Wrap(err, location, "Error loading response")
+			return object.Status{}, derp.Wrap(err, location, "Unable to load response")
 		}
 
 		// Fall through means a response exists.  Delete it
@@ -482,7 +482,7 @@ func PutStatus(serverFactory *server.Factory) func(model.Authorization, txn.PutS
 
 		// Save the stream to the database
 		if err := streamService.Save(session, &stream, "Edited via Mastodon API"); err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Error saving stream")
+			return object.Status{}, derp.Wrap(err, location, "Unable to save stream")
 		}
 
 		return stream.Toot(), nil

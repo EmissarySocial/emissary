@@ -33,7 +33,7 @@ func (step StepSearchIndex) Post(builder Builder, _ io.Writer) PipelineBehavior 
 
 	// Add/Update/Delete the searchResult here
 	if err := searchResultService.Sync(builder.session(), searchResult); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error saving search result", searchResult))
+		return Halt().WithError(derp.Wrap(err, location, "Unable to save search result", searchResult))
 	}
 
 	return Continue()

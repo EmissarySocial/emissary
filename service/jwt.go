@@ -328,7 +328,7 @@ func (service *JWT) encrypt(plaintext []byte) ([]byte, error) {
 		cipher, err := aes.NewCipher(service.keyEncryptingKey)
 
 		if err != nil {
-			return []byte{}, derp.Wrap(err, location, "Error creating AES cipher")
+			return []byte{}, derp.Wrap(err, location, "Unable to create AES cipher")
 		}
 
 		// Encrypt the plaintext
@@ -350,7 +350,7 @@ func (service *JWT) decrypt(encrypted []byte) ([]byte, error) {
 		cipher, err := aes.NewCipher(service.keyEncryptingKey)
 
 		if err != nil {
-			return []byte{}, derp.Wrap(err, location, "Error creating AES cipher")
+			return []byte{}, derp.Wrap(err, location, "Unable to create AES cipher")
 		}
 
 		// Decrypt the key in memory

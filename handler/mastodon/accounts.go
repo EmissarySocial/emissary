@@ -60,7 +60,7 @@ func PostAccount(serverFactory *server.Factory) func(model.Authorization, txn.Po
 		user.SetPassword(t.Password)
 
 		if err := userService.Save(session, &user, "Created via Mastodon API"); err != nil {
-			return object.Token{}, derp.Wrap(err, location, "Error saving user")
+			return object.Token{}, derp.Wrap(err, location, "Unable to save user")
 		}
 
 		// Create a new OAuth token
@@ -146,7 +146,7 @@ func PatchAccount_UpdateCredentials(serverFactory *server.Factory) func(model.Au
 		user.IsPublic = t.Discoverable
 
 		if err := userService.Save(session, &user, "Updated via Mastodon API"); err != nil {
-			return object.Account{}, derp.Wrap(err, location, "Error saving user")
+			return object.Account{}, derp.Wrap(err, location, "Unable to save user")
 		}
 
 		// Return updated JSON
@@ -291,7 +291,7 @@ func PostAccount_Follow(serverFactory *server.Factory) func(model.Authorization,
 
 		// Save the record and begin following the remote user.
 		if err := followingService.Save(session, &following, "Created via Mastodon API"); err != nil {
-			return object.Relationship{}, derp.Wrap(err, location, "Error saving following")
+			return object.Relationship{}, derp.Wrap(err, location, "Unable to save following")
 		}
 
 		// Return the "Following" record as a Toot
@@ -326,7 +326,7 @@ func PostAccount_Unfollow(serverFactory *server.Factory) func(model.Authorizatio
 		following := model.NewFollowing()
 
 		if err := followingService.LoadByURL(session, auth.UserID, t.ID, &following); err != nil {
-			return object.Relationship{}, derp.Wrap(err, location, "Error loading following")
+			return object.Relationship{}, derp.Wrap(err, location, "Unable to load following")
 		}
 
 		// Delete the "Following" record
@@ -368,7 +368,7 @@ func PostAccount_Block(serverFactory *server.Factory) func(model.Authorization, 
 		rule.Trigger = t.ID
 
 		if err := ruleService.Save(session, &rule, "Created via Mastodon API"); err != nil {
-			return object.Relationship{}, derp.Wrap(err, location, "Error saving rule")
+			return object.Relationship{}, derp.Wrap(err, location, "Unable to save rule")
 		}
 
 		// Return the Rule record as a Toot
@@ -403,7 +403,7 @@ func PostAccount_Unblock(serverFactory *server.Factory) func(model.Authorization
 		rule := model.NewRule()
 
 		if err := ruleService.LoadByTrigger(session, auth.UserID, model.RuleTypeActor, t.ID, &rule); err != nil {
-			return object.Relationship{}, derp.Wrap(err, location, "Error loading rule")
+			return object.Relationship{}, derp.Wrap(err, location, "Unable to load rule")
 		}
 
 		// Delete the rule record
@@ -446,7 +446,7 @@ func PostAccount_Mute(serverFactory *server.Factory) func(model.Authorization, t
 		rule.Trigger = t.ID
 
 		if err := ruleService.Save(session, &rule, "Created via Mastodon API"); err != nil {
-			return object.Relationship{}, derp.Wrap(err, location, "Error saving rule")
+			return object.Relationship{}, derp.Wrap(err, location, "Unable to save rule")
 		}
 
 		// Return the Rule record as a Toot
@@ -481,7 +481,7 @@ func PostAccount_Unmute(serverFactory *server.Factory) func(model.Authorization,
 		rule := model.NewRule()
 
 		if err := ruleService.LoadByTrigger(session, auth.UserID, model.RuleTypeActor, t.ID, &rule); err != nil {
-			return object.Relationship{}, derp.Wrap(err, location, "Error loading rule")
+			return object.Relationship{}, derp.Wrap(err, location, "Unable to load rule")
 		}
 
 		// Delete the rule record
@@ -568,7 +568,7 @@ func GetAccount_Lookup(serverFactory *server.Factory) func(model.Authorization, 
 		document, err := activityStreamsService.Client().Load(t.Acct)
 
 		if err != nil {
-			return object.Account{}, derp.Wrap(err, location, "Error loading document")
+			return object.Account{}, derp.Wrap(err, location, "Unable to load document")
 		}
 
 		// Map the ActivityStream to a Mastodon Account

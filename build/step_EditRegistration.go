@@ -60,7 +60,7 @@ func (step StepEditRegistration) Get(builder Builder, buffer io.Writer) Pipeline
 	registration, err := registrationService.Load(registrationID)
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error loading registration template", registrationID))
+		return Halt().WithError(derp.Wrap(err, location, "Unable to load registration template", registrationID))
 	}
 
 	if registration.IsZero() {
@@ -119,7 +119,7 @@ func (step StepEditRegistration) Post(builder Builder, _ io.Writer) PipelineBeha
 	registration, err := factory.Registration().Load(registrationID)
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error loading template", registrationID))
+		return Halt().WithError(derp.Wrap(err, location, "Unable to load template", registrationID))
 	}
 
 	// Bind to the form POST data

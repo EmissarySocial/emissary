@@ -42,7 +42,7 @@ func PostEmailFollower(ctx *steranko.Context, factory *service.Factory, session 
 	follower, err := followerService.LoadOrCreate(session, transaction.ParentID, transaction.Email)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error saving follower")
+		return derp.Wrap(err, location, "Unable to save follower")
 	}
 
 	follower.ParentType = transaction.Type
@@ -62,7 +62,7 @@ func PostEmailFollower(ctx *steranko.Context, factory *service.Factory, session 
 	}
 
 	if err := followerService.Save(session, &follower, "Email Follower signup"); err != nil {
-		return derp.Wrap(err, location, "Error saving follower")
+		return derp.Wrap(err, location, "Unable to save follower")
 	}
 
 	if err := followerService.SendFollowConfirmation(session, &follower); err != nil {

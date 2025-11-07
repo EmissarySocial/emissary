@@ -82,7 +82,7 @@ func PostDomainBlock(serverFactory *server.Factory) func(model.Authorization, tx
 		// Save it to the database
 		ruleService := factory.Rule()
 		if err := ruleService.Save(session, &rule, "Created via Mastodon API"); err != nil {
-			return struct{}{}, derp.Wrap(err, location, "Error saving rule")
+			return struct{}{}, derp.Wrap(err, location, "Unable to save rule")
 		}
 
 		return struct{}{}, nil
@@ -115,7 +115,7 @@ func DeleteDomainBlock(serverFactory *server.Factory) func(model.Authorization, 
 		rule := model.NewRule()
 
 		if err := ruleService.LoadByTrigger(session, auth.UserID, model.RuleTypeDomain, t.Domain, &rule); err != nil {
-			return struct{}{}, derp.Wrap(err, location, "Error loading rule")
+			return struct{}{}, derp.Wrap(err, location, "Unable to load rule")
 		}
 
 		// Delete the Rule from the database

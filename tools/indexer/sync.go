@@ -67,7 +67,7 @@ func Sync(ctx context.Context, collection *mongo.Collection, newIndexes map[stri
 		if exists {
 			log.Trace().Str("database", database).Str("index", name).Msg("recreating changed index...")
 			if bsonRaw, err := collection.Indexes().CreateOne(ctx, newIndex); err != nil {
-				derp.Report(derp.Wrap(err, location, "Error creating index", "index", name, newIndex, bsonRaw))
+				derp.Report(derp.Wrap(err, location, "Unable to create index", "index", name, newIndex, bsonRaw))
 				continue
 			}
 		}
@@ -77,7 +77,7 @@ func Sync(ctx context.Context, collection *mongo.Collection, newIndexes map[stri
 	for indexName, newIndex := range newIndexes {
 		log.Trace().Str("database", database).Str("index", indexName).Msg("adding new index...")
 		if bsonRaw, err := collection.Indexes().CreateOne(ctx, newIndex); err != nil {
-			derp.Report(derp.Wrap(err, location, "Error creating index", "index", indexName, newIndex, bsonRaw))
+			derp.Report(derp.Wrap(err, location, "Unable to create index", "index", indexName, newIndex, bsonRaw))
 			continue
 		}
 	}

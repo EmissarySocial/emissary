@@ -121,12 +121,12 @@ func (service *Theme) Add(themeID string, filesystem fs.FS, definition []byte) e
 
 	// Load HTML templates into the theme
 	if err := loadHTMLTemplateFromFilesystem(filesystem, theme.HTMLTemplate, service.funcMap); err != nil {
-		return derp.Wrap(err, "service.theme.loadFromFilesystem", "Error loading Template", themeID)
+		return derp.Wrap(err, "service.theme.loadFromFilesystem", "Unable to load Template", themeID)
 	}
 
 	// Load all Bundles from the filesystem
 	if err := populateBundles(theme.Bundles, filesystem); err != nil {
-		return derp.Wrap(err, "service.template.loadFromFilesystem", "Error loading Bundles", themeID)
+		return derp.Wrap(err, "service.template.loadFromFilesystem", "Unable to load Bundles", themeID)
 	}
 
 	// Keep a pointer to the filesystem resources (if present)

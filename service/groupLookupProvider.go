@@ -38,7 +38,7 @@ func (service GroupLookupProvider) Add(name string) (string, error) {
 	group.Label = name
 
 	if err := service.groupService.Save(service.session, &group, "created"); err != nil {
-		return "", derp.Wrap(err, "service.GroupLookupProvider.Add", "Error saving group", name)
+		return "", derp.Wrap(err, "service.GroupLookupProvider.Add", "Unable to save group", name)
 	}
 
 	return group.ID(), nil

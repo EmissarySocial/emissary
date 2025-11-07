@@ -71,7 +71,7 @@ func (service *Webhook) List(session data.Session, criteria exp.Expression, opti
 func (service *Webhook) Load(session data.Session, criteria exp.Expression, webhook *model.Webhook) error {
 
 	if err := service.collection(session).Load(notDeleted(criteria), webhook); err != nil {
-		return derp.Wrap(err, "service.Webhook.Load", "Error loading Webhook", criteria)
+		return derp.Wrap(err, "service.Webhook.Load", "Unable to load Webhook", criteria)
 	}
 
 	return nil
@@ -89,7 +89,7 @@ func (service *Webhook) Save(session data.Session, webhook *model.Webhook, note 
 
 	// Try to save the Webhook to the database
 	if err := service.collection(session).Save(webhook, note); err != nil {
-		return derp.Wrap(err, location, "Error saving Webhook", webhook, note)
+		return derp.Wrap(err, location, "Unable to save Webhook", webhook, note)
 	}
 
 	// Success

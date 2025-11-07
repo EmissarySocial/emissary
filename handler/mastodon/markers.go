@@ -41,7 +41,7 @@ func GetMarkers(serverFactory *server.Factory) func(model.Authorization, txn.Get
 		message := model.NewMessage()
 
 		if err := inboxService.LoadOldestUnread(session, auth.UserID, &message); err != nil {
-			return nil, derp.Wrap(err, location, "Error loading oldest unread message")
+			return nil, derp.Wrap(err, location, "Unable to load oldest unread message")
 		}
 
 		result := map[string]object.Marker{

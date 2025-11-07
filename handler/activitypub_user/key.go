@@ -25,7 +25,7 @@ func GetPublicKey(ctx *steranko.Context, factory *service.Factory, session data.
 	key := model.NewEncryptionKey()
 
 	if err := keyService.LoadByParentID(session, model.EncryptionKeyTypeUser, user.UserID, &key); err != nil {
-		return derp.Wrap(err, location, "Error loading encryption key for user", user.UserID)
+		return derp.Wrap(err, location, "Unable to load encryption key for user", user.UserID)
 	}
 
 	// Return the key as JSON-LD

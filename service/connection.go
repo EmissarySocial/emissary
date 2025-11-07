@@ -69,7 +69,7 @@ func (service *Connection) List(session data.Session, criteria exp.Expression, o
 // Load retrieves an Connection from the database
 func (service *Connection) Load(session data.Session, criteria exp.Expression, result *model.Connection) error {
 	if err := service.collection(session).Load(notDeleted(criteria), result); err != nil {
-		return derp.Wrap(err, "service.Connection.Load", "Error loading Connection", criteria)
+		return derp.Wrap(err, "service.Connection.Load", "Unable to load Connection", criteria)
 	}
 
 	return nil
@@ -129,7 +129,7 @@ func (service *Connection) Save(session data.Session, connection *model.Connecti
 
 	// Save the value to the database
 	if err := service.collection(session).Save(connection, note); err != nil {
-		return derp.Wrap(err, location, "Error saving Connection", connection, note)
+		return derp.Wrap(err, location, "Unable to save Connection", connection, note)
 	}
 
 	return nil
@@ -245,7 +245,7 @@ func (service *Connection) LoadByID(session data.Session, connectionID primitive
 	criteria := exp.Equal("_id", connectionID)
 
 	if err := service.Load(session, criteria, connection); err != nil {
-		return derp.Wrap(err, location, "Error loading Connection", connectionID)
+		return derp.Wrap(err, location, "Unable to load Connection", connectionID)
 	}
 
 	return nil
@@ -278,7 +278,7 @@ func (service *Connection) LoadActiveByType(session data.Session, typeID string,
 	criteria := exp.Equal("type", typeID).AndEqual("active", true)
 
 	if err := service.Load(session, criteria, connection); err != nil {
-		return derp.Wrap(err, location, "Error loading Connection", typeID)
+		return derp.Wrap(err, location, "Unable to load Connection", typeID)
 	}
 
 	return nil
@@ -297,7 +297,7 @@ func (service *Connection) LoadByProvider(session data.Session, providerID strin
 	criteria := exp.Equal("providerId", providerID)
 
 	if err := service.Load(session, criteria, connection); err != nil {
-		return derp.Wrap(err, location, "Error loading Connection", providerID)
+		return derp.Wrap(err, location, "Unable to load Connection", providerID)
 	}
 
 	return nil
@@ -324,7 +324,7 @@ func (service *Connection) LoadOrCreateByProvider(session data.Session, provider
 			return result, nil
 		}
 
-		return result, derp.Wrap(err, location, "Error loading Connection", providerID)
+		return result, derp.Wrap(err, location, "Unable to load Connection", providerID)
 	}
 
 	return result, nil

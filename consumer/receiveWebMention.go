@@ -63,7 +63,7 @@ func ReceiveWebMention(factory *service.Factory, session data.Session, args mapo
 	mention, err := mentionService.LoadOrCreate(session, objectType, objectID, source)
 
 	if err != nil {
-		return queue.Error(derp.Wrap(err, location, "Error loading mention", objectType, token))
+		return queue.Error(derp.Wrap(err, location, "Unable to load mention", objectType, token))
 	}
 
 	// Parse the WebMention source into the Mention object
@@ -73,7 +73,7 @@ func ReceiveWebMention(factory *service.Factory, session data.Session, args mapo
 
 	// Try to save the mention to the database
 	if err := mentionService.Save(session, &mention, "Created"); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Error saving mention"))
+		return queue.Error(derp.Wrap(err, location, "Unable to save mention"))
 	}
 
 	return queue.Success()

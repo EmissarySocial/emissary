@@ -34,7 +34,7 @@ func buildIdentity(ctx *steranko.Context, factory *service.Factory, session data
 	builder, err := build.NewIdentity(factory, session, ctx.Request(), ctx.Response(), identity, actionID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error creating builder")
+		return derp.Wrap(err, location, "Unable to create builder")
 	}
 
 	// Build the HTML response
@@ -73,7 +73,7 @@ func GetPrivilegeDelete(ctx *steranko.Context, factory *service.Factory, session
 
 	user := model.NewUser()
 	if err := factory.User().LoadByID(session, privilege.UserID, &user); err != nil {
-		return derp.Wrap(err, "handler.GetPrivilegeDelete", "Error loading User for Privilege", privilege.PrivilegeID)
+		return derp.Wrap(err, "handler.GetPrivilegeDelete", "Unable to load User for Privilege", privilege.PrivilegeID)
 	}
 
 	b := html.New()
@@ -214,7 +214,7 @@ func GetIdentitySigninWithJWT(ctx *steranko.Context, factory *service.Factory, s
 		identity, err := identityService.LoadOrCreate(session, "", identifierType, identifier)
 
 		if err != nil {
-			return derp.InternalError(location, "Error loading/creating new Identity", identifier)
+			return derp.InternalError(location, "Unable to load/creating new Identity", identifier)
 		}
 
 		// Update the Authorization with the (new?) IdentityID
@@ -231,13 +231,13 @@ func GetIdentitySigninWithJWT(ctx *steranko.Context, factory *service.Factory, s
 		identity := model.NewIdentity()
 
 		if err := identityService.LoadByID(session, authorization.IdentityID, &identity); err != nil {
-			return derp.Wrap(err, location, "Error loading Identity by ID", authorization.IdentityID)
+			return derp.Wrap(err, location, "Unable to load Identity by ID", authorization.IdentityID)
 		}
 
 		identity.SetIdentifier(identifierType, identifier)
 
 		if err := identityService.Save(session, &identity, "Added/Updated Identifier: "+identifierType); err != nil {
-			return derp.Wrap(err, location, "Error saving Identity with new identifier", identity.IdentityID)
+			return derp.Wrap(err, location, "Unable to save Identity with new identifier", identity.IdentityID)
 		}
 	}
 
@@ -268,7 +268,7 @@ func PostIdentityIdentifier(ctx *steranko.Context, factory *service.Factory, ses
 	identity.SetIdentifier(identifierType, "")
 
 	if err := identityService.Save(session, identity, "Removed identifier: "+identifierType); err != nil {
-		return derp.Wrap(err, location, "Error saving Identity", identity.IdentityID)
+		return derp.Wrap(err, location, "Unable to save Identity", identity.IdentityID)
 	}
 
 	return closeModalAndRefreshPage(ctx)

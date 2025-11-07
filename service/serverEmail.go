@@ -60,7 +60,7 @@ func (service *ServerEmail) Add(filesystem fs.FS, definition []byte) error {
 	// Unmarshal the file into the schema.
 	temp := mapof.NewAny()
 	if err := hjson.Unmarshal(definition, &temp); err != nil {
-		return derp.Wrap(err, location, "Error loading Schema")
+		return derp.Wrap(err, location, "Unable to load Schema")
 	}
 
 	email := model.NewEmail(temp.GetString("emailId"), service.funcMap)

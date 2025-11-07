@@ -171,7 +171,7 @@ func NewFactory(serverFactory ServerFactory, commonDatabase mongodb.Server, doma
 
 	// Refresh the configuration with values that (may) change during the lifetime of the factory
 	if err := factory.Refresh(domain, attachmentOriginals, attachmentCache); err != nil {
-		return nil, derp.Wrap(err, "domain.NewFactory", "Error creating factory", domain)
+		return nil, derp.Wrap(err, "domain.NewFactory", "Unable to create factory", domain)
 	}
 
 	// Success!
@@ -883,7 +883,7 @@ func (factory *Factory) getSubFolder(base afero.Fs, path string) afero.Fs {
 
 	// Try to make a new subfolder at the chosen path (returns nil if already exists)
 	if err := base.MkdirAll(path, 0777); err != nil {
-		derp.Report(derp.Wrap(err, "domain.factory.getSubFolder", "Error creating subfolder", path))
+		derp.Report(derp.Wrap(err, "domain.factory.getSubFolder", "Unable to create subfolder", path))
 		// panic(err)
 	}
 

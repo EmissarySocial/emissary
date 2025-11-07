@@ -353,7 +353,7 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 
 	// Try to save the Stream to the database
 	if err := service.collection(session).Save(stream, note); err != nil {
-		return derp.Wrap(err, location, "Error saving Stream", stream, note)
+		return derp.Wrap(err, location, "Unable to save Stream", stream, note)
 	}
 
 	// Send SSE notifications to `InReplyTo` streams (if possible)

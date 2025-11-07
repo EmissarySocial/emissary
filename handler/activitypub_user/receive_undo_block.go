@@ -34,7 +34,7 @@ func init() {
 			if derp.IsNotFound(err) {
 				return nil
 			}
-			return derp.Wrap(err, location, "Error loading rule", activity.Value())
+			return derp.Wrap(err, location, "Unable to load rule", activity.Value())
 		}
 
 		// Remove the Rule

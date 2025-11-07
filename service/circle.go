@@ -68,7 +68,7 @@ func (service *Circle) Load(session data.Session, criteria exp.Expression, resul
 	const location = "service.Circle.Load"
 
 	if err := service.collection(session).Load(notDeleted(criteria), result); err != nil {
-		return derp.Wrap(err, location, "Error loading Circle", criteria)
+		return derp.Wrap(err, location, "Unable to load Circle", criteria)
 	}
 
 	return nil
@@ -86,7 +86,7 @@ func (service *Circle) Save(session data.Session, circle *model.Circle, note str
 
 	// Save the value to the database
 	if err := service.collection(session).Save(circle, note); err != nil {
-		return derp.Wrap(err, location, "Error saving Circle", circle, note)
+		return derp.Wrap(err, location, "Unable to save Circle", circle, note)
 	}
 
 	// Recalculate privileges based on new Circle settings.
@@ -195,7 +195,7 @@ func (service *Circle) QueryByIDs(session data.Session, userID primitive.ObjectI
 	result, err := service.Query(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Error loading merchant accounts")
+		return nil, derp.Wrap(err, location, "Unable to load merchant accounts")
 	}
 
 	return result, nil
@@ -306,7 +306,7 @@ func (service *Circle) AssignedProductIDs(session data.Session, userID primitive
 	circles, err := service.QueryFeaturedByUser(session, userID)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Error loading remote products for User", userID)
+		return nil, derp.Wrap(err, location, "Unable to load remote products for User", userID)
 	}
 
 	// Collect all of the Remote Product IDs from the Circles
@@ -355,7 +355,7 @@ func (service *Circle) RefreshMemberCounts(session data.Session, userID primitiv
 		if derp.IsNotFound(err) {
 			return nil
 		}
-		return derp.Wrap(err, location, "Error loading Circle", circleID)
+		return derp.Wrap(err, location, "Unable to load Circle", circleID)
 	}
 
 	// Count the number of privileges for this Circle
@@ -376,7 +376,7 @@ func (service *Circle) RefreshMemberCounts(session data.Session, userID primitiv
 	// Save the value to the database
 	// Saving directly to the Collection to bypass other validation and business logic.
 	if err := service.collection(session).Save(&circle, "Refreshing Member Count"); err != nil {
-		return derp.Wrap(err, location, "Error saving Circle", circle)
+		return derp.Wrap(err, location, "Unable to save Circle", circle)
 	}
 
 	// We have survived another day

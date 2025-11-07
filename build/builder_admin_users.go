@@ -35,7 +35,7 @@ func NewUser(factory Factory, session data.Session, request *http.Request, respo
 	common, err := NewCommonWithTemplate(factory, session, request, response, template, user, actionID)
 
 	if err != nil {
-		return User{}, derp.Wrap(err, location, "Error creating common builder")
+		return User{}, derp.Wrap(err, location, "Unable to create common builder")
 	}
 
 	// Verify that the user is a Domain Owner
@@ -79,7 +79,7 @@ func (w User) View(actionID string) (template.HTML, error) {
 	builder, err := NewUser(w._factory, w._session, w._request, w._response, w._template, w._user, actionID)
 
 	if err != nil {
-		return template.HTML(""), derp.Wrap(err, "build.User.View", "Error creating builder")
+		return template.HTML(""), derp.Wrap(err, "build.User.View", "Unable to create builder")
 	}
 
 	return builder.Render()
@@ -205,7 +205,7 @@ func (w User) Groups() ([]form.LookupCode, error) {
 	groups, err := groupService.Query(w._session, exp.All(), option.SortAsc("label"))
 
 	if err != nil {
-		return nil, derp.Wrap(err, "build.User.Groups", "Error loading groups")
+		return nil, derp.Wrap(err, "build.User.Groups", "Unable to load groups")
 	}
 
 	result := slice.Map(groups, func(group model.Group) form.LookupCode {

@@ -25,7 +25,7 @@ func GetStartup(ctx *steranko.Context, factory *service.Factory, session data.Se
 	template, err := templateService.LoadAdmin("startup")
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error loading template")
+		return derp.Wrap(err, location, "Unable to load template")
 	}
 
 	actionID := first.String(ctx.Param("action"), "page")
@@ -34,7 +34,7 @@ func GetStartup(ctx *steranko.Context, factory *service.Factory, session data.Se
 	builder, err := build.NewDomain(factory, session, ctx.Request(), ctx.Response(), template, actionID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error creating builder")
+		return derp.Wrap(err, location, "Unable to create builder")
 	}
 
 	// Render the HTML page.

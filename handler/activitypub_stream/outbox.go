@@ -46,7 +46,7 @@ func GetOutboxCollection(ctx *steranko.Context, factory *service.Factory, sessio
 	messages, err := outboxService.QueryByParentAndDate(session, model.FollowerTypeStream, stream.StreamID, permissions, publishedDate, 60)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error loading outbox messages")
+		return derp.Wrap(err, location, "Unable to load outbox messages")
 	}
 
 	// Return results as an OrderedCollectionPage

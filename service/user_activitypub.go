@@ -56,7 +56,7 @@ func (service *User) ParseProfileURL(session data.Session, value string) (primit
 	user := model.NewUser()
 
 	if err := service.LoadByUsername(session, username, &user); err != nil {
-		return primitive.NilObjectID, derp.Wrap(err, location, "Error loading user by username", username)
+		return primitive.NilObjectID, derp.Wrap(err, location, "Unable to load user by username", username)
 	}
 
 	return user.UserID, nil
@@ -77,7 +77,7 @@ func (service *User) PrivateKey(session data.Session, userID primitive.ObjectID)
 	// Try to load the user's keys from the database
 	encryptionKey := model.NewEncryptionKey()
 	if err := service.keyService.LoadByParentID(session, model.EncryptionKeyTypeUser, userID, &encryptionKey); err != nil {
-		return outbox.Actor{}, derp.Wrap(err, location, "Error loading encryption key", userID)
+		return outbox.Actor{}, derp.Wrap(err, location, "Unable to load encryption key", userID)
 	}
 
 	// Extract the Private Key from the Encryption Key

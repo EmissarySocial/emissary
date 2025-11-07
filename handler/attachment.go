@@ -36,7 +36,7 @@ func GetDomainAttachment(ctx *steranko.Context, factory *service.Factory, sessio
 
 	attachment := model.NewAttachment(model.AttachmentObjectTypeDomain, domain.DomainID)
 	if err := attachmentService.LoadByID(session, model.AttachmentObjectTypeDomain, domain.DomainID, attachmentID, &attachment); err != nil {
-		return derp.Wrap(err, location, "Error loading attachment")
+		return derp.Wrap(err, location, "Unable to load attachment")
 	}
 
 	// Retrieve the file from the mediaserver
@@ -126,7 +126,7 @@ func GetStreamAttachment(ctx *steranko.Context, factory *service.Factory, sessio
 
 	attachment := model.NewAttachment(model.AttachmentObjectTypeStream, streamID)
 	if err := attachmentService.LoadByID(session, model.AttachmentObjectTypeStream, streamID, attachmentID, &attachment); err != nil {
-		return derp.Wrap(err, location, "Error loading attachment")
+		return derp.Wrap(err, location, "Unable to load attachment")
 	}
 
 	// Load Stream (to verify permissions?)
@@ -134,7 +134,7 @@ func GetStreamAttachment(ctx *steranko.Context, factory *service.Factory, sessio
 	streamService := factory.Stream()
 
 	if err := streamService.LoadByID(session, streamID, &stream); err != nil {
-		return derp.Wrap(err, location, "Error loading Stream", streamID)
+		return derp.Wrap(err, location, "Unable to load Stream", streamID)
 	}
 
 	// Try to find the action requested by the user.  This also enforces user permissions...
@@ -186,7 +186,7 @@ func GetUserAttachment(ctx *steranko.Context, factory *service.Factory, session 
 
 	attachment := model.NewAttachment(model.AttachmentObjectTypeUser, userID)
 	if err := attachmentService.LoadByID(session, model.AttachmentObjectTypeUser, userID, attachmentID, &attachment); err != nil {
-		return derp.Wrap(err, location, "Error loading attachment")
+		return derp.Wrap(err, location, "Unable to load attachment")
 	}
 
 	// Retrieve the file from the mediaserver

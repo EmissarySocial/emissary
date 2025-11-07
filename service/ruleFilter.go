@@ -58,7 +58,7 @@ func (filter *RuleFilter) Allow(session data.Session, document *streams.Document
 		rules, err := filter.ruleService.QueryByActorAndActions(session, filter.userID, actorID, allowedActions...)
 
 		if err != nil {
-			derp.Report(derp.Wrap(err, "emissary.RuleFilter.FilterOne", "Error loading rules"))
+			derp.Report(derp.Wrap(err, "emissary.RuleFilter.FilterOne", "Unable to load rules"))
 			return false
 		}
 

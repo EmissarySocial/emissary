@@ -37,7 +37,7 @@ func PostEmailConfirmation(serverFactory *server.Factory) func(model.Authorizati
 		user := model.NewUser()
 
 		if err := userService.LoadByID(session, auth.UserID, &user); err != nil {
-			return struct{}{}, derp.Wrap(err, location, "Error loading user")
+			return struct{}{}, derp.Wrap(err, location, "Unable to load user")
 		}
 
 		// (Re-)send a welcome email to the User

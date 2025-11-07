@@ -113,7 +113,7 @@ func (service *MerchantAccount) stripe_getPrivilegeFromCheckoutResponse(session 
 	// Load the Checkout session from the Stripe API so that we can validate it and retrieve the customer details
 	checkoutSession, err := stripeapi.CheckoutSession(restrictedKey, connectedAccountID, checkoutSessionID)
 	if err != nil {
-		return model.Privilege{}, derp.Wrap(err, location, "Error loading checkout session from Stripe")
+		return model.Privilege{}, derp.Wrap(err, location, "Unable to load checkout session from Stripe")
 	}
 
 	// RULE: transaction id must match the checkout session
@@ -142,7 +142,7 @@ func (service *MerchantAccount) stripe_getPrivilegeFromCheckoutResponse(session 
 	)
 
 	if err != nil {
-		return model.Privilege{}, derp.Wrap(err, location, "Error saving Identity", identity)
+		return model.Privilege{}, derp.Wrap(err, location, "Unable to save Identity", identity)
 	}
 
 	// Create a privilege for this Identity
@@ -169,7 +169,7 @@ func (service *MerchantAccount) stripe_getPrivilegeFromCheckoutResponse(session 
 	privilege.IsVisible = true
 
 	if err := service.privilegeService.Save(session, &privilege, "Created via Stripe Checkout"); err != nil {
-		return model.Privilege{}, derp.Wrap(err, location, "Error saving Privilege", privilege)
+		return model.Privilege{}, derp.Wrap(err, location, "Unable to save Privilege", privilege)
 	}
 
 	// Success.

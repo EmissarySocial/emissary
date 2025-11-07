@@ -39,7 +39,7 @@ func NewOAuthAuthorization(factory Factory, session data.Session, request model.
 
 	// Try to load the OAuthClient object
 	if err := result._service.LoadByClientID(session, clientID, &result._client); err != nil {
-		return OAuthAuthorization{}, derp.Wrap(err, location, "Error loading OAuth Application")
+		return OAuthAuthorization{}, derp.Wrap(err, location, "Unable to load OAuth Application")
 	}
 
 	// Validate the transaction

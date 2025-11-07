@@ -84,7 +84,7 @@ func (service *Template) Refresh(locations sliceof.Object[mapof.String]) {
 
 	// Load all templates from the filesystem
 	if err := service.loadTemplates(); err != nil {
-		derp.Report(derp.Wrap(err, "service.Template.Refresh", "Error loading templates from filesystem"))
+		derp.Report(derp.Wrap(err, "service.Template.Refresh", "Unable to load templates from filesystem"))
 		return
 	}
 
@@ -116,7 +116,7 @@ func (service *Template) watch() {
 
 		case <-changes:
 			if err := service.loadTemplates(); err != nil {
-				derp.Report(derp.Wrap(err, "service.template.Watch", "Error loading templates from filesystem"))
+				derp.Report(derp.Wrap(err, "service.template.Watch", "Unable to load templates from filesystem"))
 			}
 
 		case <-service.refresh:
@@ -254,7 +254,7 @@ func (service *Template) Add(templateID string, filesystem fs.FS, definition []b
 
 	// Unmarshal the file into the schema.
 	if err := hjson.Unmarshal(definition, &result); err != nil {
-		return derp.Wrap(err, location, "Error loading Schema", templateID)
+		return derp.Wrap(err, location, "Unable to load Schema", templateID)
 	}
 
 	// All template schemas (except kludged registrations) also inherit from the main stream schema
@@ -264,12 +264,12 @@ func (service *Template) Add(templateID string, filesystem fs.FS, definition []b
 
 	// Load all HTML templates from the filesystem
 	if err := loadHTMLTemplateFromFilesystem(filesystem, result.HTMLTemplate, service.funcMap); err != nil {
-		return derp.Wrap(err, location, "Error loading Template", templateID)
+		return derp.Wrap(err, location, "Unable to load Template", templateID)
 	}
 
 	// Load all Bundles from the filesystem
 	if err := populateBundles(result.Bundles, filesystem); err != nil {
-		return derp.Wrap(err, location, "Error loading Bundles", templateID)
+		return derp.Wrap(err, location, "Unable to load Bundles", templateID)
 	}
 
 	// Keep a pointer to the filesystem resources (if present)

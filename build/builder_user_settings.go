@@ -33,14 +33,14 @@ func NewSettings(factory Factory, session data.Session, request *http.Request, r
 	template, err := templateService.Load("user-settings") // TODO: Users should get to select their inbox template
 
 	if err != nil {
-		return Settings{}, derp.Wrap(err, location, "Error loading template")
+		return Settings{}, derp.Wrap(err, location, "Unable to load template")
 	}
 
 	// Create the underlying Common builder
 	common, err := NewCommonWithTemplate(factory, session, request, response, template, user, actionID)
 
 	if err != nil {
-		return Settings{}, derp.Wrap(err, location, "Error creating common builder")
+		return Settings{}, derp.Wrap(err, location, "Unable to create common builder")
 	}
 
 	return Settings{
@@ -76,7 +76,7 @@ func (w Settings) View(actionID string) (template.HTML, error) {
 	builder, err := NewSettings(w._factory, w._session, w._request, w._response, w._user, actionID)
 
 	if err != nil {
-		return template.HTML(""), derp.Wrap(err, "build.Settings.View", "Error creating Settings builder")
+		return template.HTML(""), derp.Wrap(err, "build.Settings.View", "Unable to create Settings builder")
 	}
 
 	return builder.Render()
@@ -184,7 +184,7 @@ func (w Settings) Stream(token string) (model.Stream, error) {
 	stream := model.NewStream()
 
 	if err := streamService.LoadByToken(w._session, token, &stream); err != nil {
-		return model.Stream{}, derp.Wrap(err, "build.Settings.Stream", "Error loading stream", token)
+		return model.Stream{}, derp.Wrap(err, "build.Settings.Stream", "Unable to load stream", token)
 	}
 
 	// RULE: Stream must be owned by the current user
@@ -280,7 +280,7 @@ func (w Settings) FollowingByToken(followingToken string) (model.Following, erro
 	following := model.NewFollowing()
 
 	if err := followingService.LoadByToken(w._session, userID, followingToken, &following); err != nil {
-		return model.Following{}, derp.Wrap(err, "build.Settings.FollowingByID", "Error loading following")
+		return model.Following{}, derp.Wrap(err, "build.Settings.FollowingByID", "Unable to load following")
 	}
 
 	return following, nil
@@ -307,7 +307,7 @@ func (w Settings) RuleByToken(token string) model.Rule {
 	rule := model.NewRule()
 
 	if err := ruleService.LoadByToken(w._session, w.AuthenticatedID(), token, &rule); err != nil {
-		derp.Report(derp.Wrap(err, "build.Settings.RuleByToken", "Error loading rule", token))
+		derp.Report(derp.Wrap(err, "build.Settings.RuleByToken", "Unable to load rule", token))
 	}
 
 	return rule
@@ -352,7 +352,7 @@ func (w Settings) RemoteProducts() (sliceof.Object[model.Product], error) {
 	_, remoteProducts, err := w._factory.Product().SyncRemoteProducts(w._session, w._user.UserID)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "build.Common.Products", "Error loading products for user", w._user.UserID)
+		return nil, derp.Wrap(err, "build.Common.Products", "Unable to load products for user", w._user.UserID)
 	}
 
 	return remoteProducts, nil
@@ -410,7 +410,7 @@ func (w Settings) SubBuilder(object any) (Builder, error) {
 	}
 
 	if err != nil {
-		err = derp.Wrap(err, "build.Common.SubBuilder", "Error creating sub-builder for object", object)
+		err = derp.Wrap(err, "build.Common.SubBuilder", "Unable to create sub-builder for object", object)
 		derp.Report(err)
 	}
 

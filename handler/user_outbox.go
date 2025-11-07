@@ -85,7 +85,7 @@ func buildOutbox(ctx *steranko.Context, factory *service.Factory, session data.S
 	username, err := profileUsername(ctx)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error loading user ID")
+		return derp.Wrap(err, location, "Unable to load user ID")
 	}
 
 	if !isUserVisible(ctx, user) {
@@ -111,7 +111,7 @@ func buildOutbox(ctx *steranko.Context, factory *service.Factory, session data.S
 	builder, err := build.NewOutbox(factory, session, ctx.Request(), ctx.Response(), user, actionID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error creating builder")
+		return derp.Wrap(err, location, "Unable to create builder")
 	}
 
 	// Forward to the standard page builder to complete the job

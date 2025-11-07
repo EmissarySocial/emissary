@@ -91,7 +91,7 @@ func (service *Mention) List(session data.Session, criteria exp.Expression, opti
 func (service *Mention) Load(session data.Session, criteria exp.Expression, mention *model.Mention) error {
 
 	if err := service.collection(session).Load(notDeleted(criteria), mention); err != nil {
-		return derp.Wrap(err, "service.Mention.Load", "Error loading Mention", criteria)
+		return derp.Wrap(err, "service.Mention.Load", "Unable to load Mention", criteria)
 	}
 
 	return nil
@@ -107,7 +107,7 @@ func (service *Mention) Save(session data.Session, mention *model.Mention, note 
 
 	// Save the value to the database
 	if err := service.collection(session).Save(mention, note); err != nil {
-		return derp.Wrap(err, "service.Mention.Save", "Error saving Mention", mention, note)
+		return derp.Wrap(err, "service.Mention.Save", "Unable to save Mention", mention, note)
 	}
 
 	return nil
@@ -216,7 +216,7 @@ func (service *Mention) LoadOrCreate(session data.Session, objectType string, ob
 	}
 
 	// Other error is bad.  Return the error
-	return result, derp.Wrap(err, "service.Mention.LoadOrCreate", "Error loading Mention", objectType, objectID, originURL)
+	return result, derp.Wrap(err, "service.Mention.LoadOrCreate", "Unable to load Mention", objectType, objectID, originURL)
 }
 
 func (service *Mention) QueryByObjectID(session data.Session, objectID primitive.ObjectID, options ...option.Option) ([]model.Mention, error) {

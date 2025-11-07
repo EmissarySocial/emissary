@@ -228,7 +228,7 @@ func (service *StreamArchive) writeToZip(session data.Session, zipWriter *zip.Wr
 		fileWriter, err := zipWriter.Create(filenameJSON.String())
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error creating JSON-LD file")
+			return derp.Wrap(err, location, "Unable to create JSON-LD file")
 		}
 
 		// Marshal the Stream data into JSON
@@ -320,7 +320,7 @@ func (service *StreamArchive) writeToZip(session data.Session, zipWriter *zip.Wr
 			fileWriter, err := zipWriter.CreateHeader(&fileHeader)
 
 			if err != nil {
-				return derp.Wrap(err, location, "Error creating attachment file")
+				return derp.Wrap(err, location, "Unable to create attachment file")
 			}
 
 			// Send the output from the MediaServer through FFmpeg one more time

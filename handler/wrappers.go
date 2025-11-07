@@ -46,7 +46,7 @@ func WithAuthenticatedUser(serverFactory *server.Factory, fn WithFunc1[model.Use
 		user := model.NewUser()
 
 		if err := userService.LoadByID(session, authorization.UserID, &user); err != nil {
-			return derp.Wrap(err, location, "Error loading User")
+			return derp.Wrap(err, location, "Unable to load User")
 		}
 
 		// Call the continuation function
@@ -68,7 +68,7 @@ func WithConnection(provider string, serverFactory *server.Factory, fn WithFunc1
 		}
 
 		if err := connectionService.LoadByProvider(session, provider, &connection); err != nil {
-			return derp.Wrap(err, location, "Error loading Connection")
+			return derp.Wrap(err, location, "Unable to load Connection")
 		}
 
 		// Call the continuation function
@@ -164,7 +164,7 @@ func WithFollowing(serverFactory *server.Factory, fn WithFunc1[model.Following])
 		following := model.NewFollowing()
 
 		if err := followingService.LoadByID(session, userID, followingID, &following); err != nil {
-			return derp.Wrap(err, location, "Error loading following record", userID, followingID)
+			return derp.Wrap(err, location, "Unable to load following record", userID, followingID)
 		}
 
 		return fn(ctx, factory, session, &following)
@@ -193,14 +193,14 @@ func WithIdentity(serverFactory *server.Factory, fn WithFunc1[model.Identity]) e
 				user := model.NewUser()
 
 				if err := userService.LoadByID(session, authorization.UserID, &user); err != nil {
-					return derp.Wrap(err, location, "Error loading signed-in user")
+					return derp.Wrap(err, location, "Unable to load signed-in user")
 				}
 
 				// Load/Create an Identity for the signed-in User
 				identity, err := identityService.LoadOrCreate(session, user.DisplayName, model.IdentifierTypeEmail, user.EmailAddress)
 
 				if err != nil {
-					return derp.Wrap(err, location, "Error loading/creating Identity")
+					return derp.Wrap(err, location, "Unable to load/creating Identity")
 				}
 
 				// TODO: update the signed-in authorization so we don't
@@ -213,7 +213,7 @@ func WithIdentity(serverFactory *server.Factory, fn WithFunc1[model.Identity]) e
 		}
 
 		if err := identityService.LoadByID(session, authorization.IdentityID, &identity); err != nil {
-			return derp.Wrap(err, location, "Error loading Identity")
+			return derp.Wrap(err, location, "Unable to load Identity")
 		}
 
 		// Call the continuation function
@@ -233,7 +233,7 @@ func WithMerchantAccount(serverFactory *server.Factory, fn WithFunc1[model.Merch
 		merchantAccountToken := ctx.QueryParam("merchantAccountId")
 
 		if err := merchantAccountService.LoadByToken(session, merchantAccountToken, &merchantAccount); err != nil {
-			return derp.Wrap(err, location, "Error loading MerchantAccount")
+			return derp.Wrap(err, location, "Unable to load MerchantAccount")
 		}
 
 		// Call the continuation function
@@ -311,7 +311,7 @@ func WithPrivilege(serverFactory *server.Factory, fn WithFunc2[model.Identity, m
 		}
 
 		if err := privilegeService.LoadByIdentity(session, identity.IdentityID, privilegeID, &privilege); err != nil {
-			return derp.Wrap(err, location, "Error loading Privilege")
+			return derp.Wrap(err, location, "Unable to load Privilege")
 		}
 
 		// Call the continuation function
@@ -331,7 +331,7 @@ func WithProduct(serverFactory *server.Factory, fn WithFunc2[model.MerchantAccou
 		product := model.NewProduct()
 
 		if err := productService.LoadByToken(session, ctx.QueryParam("productId"), &product); err != nil {
-			return derp.Wrap(err, location, "Error loading Product")
+			return derp.Wrap(err, location, "Unable to load Product")
 		}
 
 		// Load the MerchantAccount used for the Product
@@ -339,7 +339,7 @@ func WithProduct(serverFactory *server.Factory, fn WithFunc2[model.MerchantAccou
 		merchantAccount := model.NewMerchantAccount()
 
 		if err := merchantAccountService.LoadByID(session, product.MerchantAccountID, &merchantAccount); err != nil {
-			return derp.Wrap(err, location, "Error loading MerchantAccount")
+			return derp.Wrap(err, location, "Unable to load MerchantAccount")
 		}
 
 		// Call the continuation function
@@ -364,7 +364,7 @@ func WithRegistration(serverFactory *server.Factory, fn WithFunc2[model.Domain, 
 		registration, err := registrationService.Load(domain.RegistrationID)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error loading Registration")
+			return derp.Wrap(err, location, "Unable to load Registration")
 		}
 
 		if registration.IsZero() {
@@ -394,7 +394,7 @@ func WithSearchQuery(serverFactory *server.Factory, fn WithFunc3[model.Template,
 			searchQuery, err := searchQueryService.LoadOrCreate(session, ctx.QueryParams())
 
 			if err != nil {
-				return derp.Wrap(err, location, "Error creating search query token")
+				return derp.Wrap(err, location, "Unable to create search query token")
 			}
 
 			// Call the continuation function
@@ -434,7 +434,7 @@ func WithStream(serverFactory *server.Factory, fn WithFunc1[model.Stream]) echo.
 
 		// Anything but a "Not Found" error is a problem
 		if !derp.IsNotFound(err) {
-			return derp.Wrap(err, location, "Error loading stream from database")
+			return derp.Wrap(err, location, "Unable to load stream from database")
 		}
 
 		// If the "home" page is requested but not found, then we're in "startup" mode
@@ -489,7 +489,7 @@ func WithUser(serverFactory *server.Factory, fn WithFunc1[model.User]) echo.Hand
 		}
 
 		if err := userService.LoadByToken(session, userID, &user); err != nil {
-			return derp.Wrap(err, location, "Error loading User")
+			return derp.Wrap(err, location, "Unable to load User")
 		}
 
 		// Call the continuation function
@@ -515,7 +515,7 @@ func WithUserForwarding(serverFactory *server.Factory, fn WithFunc1[model.User])
 		}
 
 		if err := userService.LoadByToken(session, userID, &user); err != nil {
-			return derp.Wrap(err, location, "Error loading user from database")
+			return derp.Wrap(err, location, "Unable to load user from database")
 		}
 
 		// If this is a JSON-LD request, then skip the forwarding and just return the User

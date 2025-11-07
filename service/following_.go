@@ -96,7 +96,7 @@ func (service *Following) Range(session data.Session, criteria exp.Expression, o
 	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.Following.Range", "Error creating iterator", criteria)
+		return nil, derp.Wrap(err, "service.Following.Range", "Unable to create iterator", criteria)
 	}
 
 	return RangeFunc(iter, model.NewFollowing), nil
@@ -164,7 +164,7 @@ func (service *Following) Save(session data.Session, following *model.Following,
 
 	// Save the following to the database
 	if err := service.collection(session).Save(following, note); err != nil {
-		return derp.Wrap(err, location, "Error saving Following", following, note)
+		return derp.Wrap(err, location, "Unable to save Following", following, note)
 	}
 
 	// RULE: Update messages if requested by the UX

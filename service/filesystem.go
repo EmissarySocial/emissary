@@ -139,7 +139,7 @@ func (filesystem *Filesystem) GetAfero(folder mapof.String) (afero.Fs, error) {
 		session, err := session.NewSession(&config)
 
 		if err != nil {
-			return nil, derp.Wrap(err, "service.Filesystem.GetAfero", "Error creating AWS session", folder)
+			return nil, derp.Wrap(err, "service.Filesystem.GetAfero", "Unable to create AWS session", folder)
 		}
 
 		// Create an S3 filesystem
@@ -215,7 +215,7 @@ func (filesystem *Filesystem) watchOS(uri string, changes chan<- bool, done <-ch
 	watcher, err := fsnotify.NewWatcher()
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error creating watcher", uri)
+		return derp.Wrap(err, location, "Unable to create watcher", uri)
 	}
 
 	// Watch the top-level directory

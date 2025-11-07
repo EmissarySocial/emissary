@@ -163,7 +163,7 @@ func (service *Permission) hasPrivilege(session data.Session, authorization *mod
 	// Locate the authorized Identity
 	identity := model.NewIdentity()
 	if err := service.identityService.LoadByID(session, authorization.IdentityID, &identity); err != nil {
-		return false, derp.Wrap(err, location, "Error loading Identity for user")
+		return false, derp.Wrap(err, location, "Unable to load Identity for user")
 	}
 
 	// Return TRUE if the identity includes one or more of the required privileges

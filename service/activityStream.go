@@ -351,7 +351,7 @@ func (service *ActivityStream) GetRecipient(recipient string) (string, string, e
 	document, err := service.Client().Load(recipient, sherlock.AsActor())
 
 	if err != nil {
-		return "", "", derp.Wrap(err, location, "Error loading ActivityPub Actor", recipient)
+		return "", "", derp.Wrap(err, location, "Unable to load ActivityPub Actor", recipient)
 	}
 
 	if !document.IsActor() {

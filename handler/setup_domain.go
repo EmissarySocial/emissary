@@ -80,7 +80,7 @@ func SetupDomainPost(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		if err := serverFactory.PutDomain(domain); err != nil {
-			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, location, "Error saving domain"))
+			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, location, "Unable to save domain"))
 		}
 
 		build.CloseModal(ctx)

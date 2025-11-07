@@ -31,12 +31,12 @@ func PostMasquerade(ctx *steranko.Context, factory *service.Factory, session dat
 	user := model.NewUser()
 	userService := factory.User()
 	if err := userService.LoadByID(session, userID, &user); err != nil {
-		return derp.Wrap(err, location, "Error loading User", derp.WithCode(http.StatusBadRequest))
+		return derp.Wrap(err, location, "Unable to load User", derp.WithCode(http.StatusBadRequest))
 	}
 
 	// Create a masquerade certificate for the requested User
 	if err := factory.Steranko(session).SigninUser(ctx, &user); err != nil {
-		return derp.Wrap(err, location, "Error creating JWT certificate")
+		return derp.Wrap(err, location, "Unable to create JWT certificate")
 	}
 
 	// Forward to the user's profile page

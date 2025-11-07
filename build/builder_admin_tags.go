@@ -33,7 +33,7 @@ func NewSearchTag(factory Factory, session data.Session, request *http.Request, 
 	common, err := NewCommonWithTemplate(factory, session, request, response, template, searchTag, actionID)
 
 	if err != nil {
-		return SearchTag{}, derp.Wrap(err, location, "Error creating common builder")
+		return SearchTag{}, derp.Wrap(err, location, "Unable to create common builder")
 	}
 
 	// Verify that the user is a Domain Owner
@@ -79,7 +79,7 @@ func (w SearchTag) View(actionID string) (template.HTML, error) {
 	builder, err := NewSearchTag(w._factory, w._session, w._request, w._response, w._template, w._searchTag, actionID)
 
 	if err != nil {
-		return template.HTML(""), derp.Wrap(err, location, "Error creating SearchTag builder")
+		return template.HTML(""), derp.Wrap(err, location, "Unable to create SearchTag builder")
 	}
 
 	return builder.Render()

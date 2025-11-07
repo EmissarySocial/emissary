@@ -38,7 +38,7 @@ func DeleteProfile_Avatar(serverFactory *server.Factory) func(model.Authorizatio
 		user := model.NewUser()
 
 		if err := userService.LoadByID(session, auth.UserID, &user); err != nil {
-			return object.Account{}, derp.Wrap(err, location, "Error loading User", auth.UserID)
+			return object.Account{}, derp.Wrap(err, location, "Unable to load User", auth.UserID)
 		}
 
 		// Delete the user's Avatar
@@ -77,7 +77,7 @@ func DeleteProfile_Header(serverFactory *server.Factory) func(model.Authorizatio
 		user := model.NewUser()
 
 		if err := userService.LoadByID(session, auth.UserID, &user); err != nil {
-			return object.Account{}, derp.Wrap(err, location, "Error loading User", auth.UserID)
+			return object.Account{}, derp.Wrap(err, location, "Unable to load User", auth.UserID)
 		}
 
 		// Nothing to do right now because Emissary doesn't track Header images.

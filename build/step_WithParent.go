@@ -44,7 +44,7 @@ func (step StepWithParent) Post(builder Builder, buffer io.Writer) PipelineBehav
 	parentStream, err := NewStreamWithoutTemplate(streamBuilder.factory(), streamBuilder.session(), streamBuilder.request(), streamBuilder.response(), &parent, "")
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error creating builder for parent"))
+		return Halt().WithError(derp.Wrap(err, location, "Unable to create builder for parent"))
 	}
 
 	// Execute the POST build pipeline on the parent
@@ -74,7 +74,7 @@ func (step StepWithParent) postUser(streamBuilder Stream, buffer io.Writer) Pipe
 	outbox, err := NewOutbox(streamBuilder.factory(), streamBuilder.session(), streamBuilder.request(), streamBuilder.response(), &user, "view")
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error creating builder for parent"))
+		return Halt().WithError(derp.Wrap(err, location, "Unable to create builder for parent"))
 	}
 
 	// Execute the POST build pipeline on the parent

@@ -47,7 +47,7 @@ func ForEachRecord(collection *mongo.Collection, fn func(value mapof.Any) error)
 		_, err = collection.ReplaceOne(ctx, bson.M{"_id": value["_id"]}, value)
 
 		if err != nil {
-			derp.Report(derp.Wrap(err, "queries.upgrades.EachRecord", "Error saving record", value))
+			derp.Report(derp.Wrap(err, "queries.upgrades.EachRecord", "Unable to save record", value))
 			continue
 		}
 

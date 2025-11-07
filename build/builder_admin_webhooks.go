@@ -32,7 +32,7 @@ func NewWebhook(factory Factory, session data.Session, request *http.Request, re
 	common, err := NewCommonWithTemplate(factory, session, request, response, template, webhook, actionID)
 
 	if err != nil {
-		return Webhook{}, derp.Wrap(err, location, "Error creating common builder")
+		return Webhook{}, derp.Wrap(err, location, "Unable to create common builder")
 	}
 
 	// Verify that the webhook is a Domain Owner
@@ -76,7 +76,7 @@ func (w Webhook) View(actionID string) (template.HTML, error) {
 	builder, err := NewWebhook(w._factory, w._session, w._request, w._response, w._template, w._webhook, actionID)
 
 	if err != nil {
-		return template.HTML(""), derp.Wrap(err, "build.Webhook.View", "Error creating builder")
+		return template.HTML(""), derp.Wrap(err, "build.Webhook.View", "Unable to create builder")
 	}
 
 	return builder.Render()

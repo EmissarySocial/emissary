@@ -125,7 +125,7 @@ func postIntent_Response(ctx *steranko.Context, factory *service.Factory, sessio
 
 	// Save the Response to the database
 	if err := responseService.Save(session, &response, "Created via Activity Intent"); err != nil {
-		return derp.Wrap(err, location, "Error saving response", transaction)
+		return derp.Wrap(err, location, "Unable to save response", transaction)
 	}
 
 	// Return the "on-success" response

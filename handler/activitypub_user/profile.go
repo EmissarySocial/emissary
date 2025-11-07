@@ -21,7 +21,7 @@ func RenderProfileJSONLD(context echo.Context, factory *service.Factory, session
 	key := model.NewEncryptionKey()
 
 	if err := keyService.LoadByParentID(session, model.EncryptionKeyTypeUser, user.UserID, &key); err != nil {
-		return derp.Wrap(err, location, "Error loading encryption key for user", user.UserID)
+		return derp.Wrap(err, location, "Unable to load encryption key for user", user.UserID)
 	}
 
 	// Combine the Profile and the EncryptionKey

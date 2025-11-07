@@ -309,7 +309,7 @@ func (w Common) UserName() (string, error) {
 	user, err := w.getUser()
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Error loading User")
+		return "", derp.Wrap(err, location, "Unable to load User")
 	}
 
 	return user.DisplayName, nil
@@ -323,7 +323,7 @@ func (w Common) UserImage() (string, error) {
 	user, err := w.getUser()
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Error loading User")
+		return "", derp.Wrap(err, location, "Unable to load User")
 	}
 
 	return user.ActivityPubIconURL(), nil
@@ -504,7 +504,7 @@ func (w Common) defaultAllowed() exp.Expression {
 	identity, err := w.getIdentity()
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Error loading Identity"))
+		derp.Report(derp.Wrap(err, location, "Unable to load Identity"))
 	}
 
 	// Get the access list for this user
@@ -534,7 +534,7 @@ func (w Common) getUser() (*model.User, error) {
 
 	user := model.NewUser()
 	if err := userService.LoadByID(w._session, authorization.UserID, &user); err != nil {
-		return nil, derp.Wrap(err, location, "Error loading user from database", authorization.UserID)
+		return nil, derp.Wrap(err, location, "Unable to load user from database", authorization.UserID)
 	}
 
 	// Save the User in the builder to use it later
@@ -561,7 +561,7 @@ func (w Common) getIdentity() (*model.Identity, error) {
 	// Otherwise, try to load the Identity from the database
 	identity := model.NewIdentity()
 	if err := w._factory.Identity().LoadByID(w._session, w._authorization.IdentityID, &identity); err != nil {
-		return nil, derp.Wrap(err, location, "Error loading Identity from database", w._authorization.IdentityID)
+		return nil, derp.Wrap(err, location, "Unable to load Identity from database", w._authorization.IdentityID)
 	}
 
 	// Save the Identity in the builder to use it later

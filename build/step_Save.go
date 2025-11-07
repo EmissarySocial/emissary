@@ -43,7 +43,7 @@ func (step StepSave) do(builder Builder) PipelineBehavior {
 
 	// Try to update the stream
 	if err := modelService.ObjectSave(builder.session(), object, comment); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error saving model object"))
+		return Halt().WithError(derp.Wrap(err, location, "Unable to save model object"))
 	}
 
 	return Continue()

@@ -108,7 +108,7 @@ func (vault *Vault) Encrypt(encryptionKey []byte) error {
 	block, err := aes.NewCipher(encryptionKey)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error creating AES block cipher")
+		return derp.Wrap(err, location, "Unable to create AES block cipher")
 	}
 
 	// Create GCM
@@ -145,7 +145,7 @@ func (vault Vault) Decrypt(encryptionKey []byte, values ...string) (mapof.String
 	block, err := aes.NewCipher(encryptionKey)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Error creating AES block cipher")
+		return nil, derp.Wrap(err, location, "Unable to create AES block cipher")
 	}
 
 	// Create GCM

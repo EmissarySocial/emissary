@@ -22,7 +22,7 @@ func GetChildrenCollection(ctx *steranko.Context, factory *service.Factory, sess
 	// Load the parent stream information
 	parent := model.NewStream()
 	if err := streamService.LoadByToken(session, token, &parent); err != nil {
-		return derp.Wrap(err, location, "Error loading stream")
+		return derp.Wrap(err, location, "Unable to load stream")
 	}
 
 	// Get an iterator of all child streams
@@ -30,7 +30,7 @@ func GetChildrenCollection(ctx *steranko.Context, factory *service.Factory, sess
 	children, err := streamService.RangeByParent(session, parent.StreamID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error loading children")
+		return derp.Wrap(err, location, "Unable to load children")
 	}
 
 	// Map each child into JSON and stuff it into the collection's OrderedItems

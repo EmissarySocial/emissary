@@ -64,14 +64,14 @@ func (service *StreamDraft) Load(session data.Session, criteria exp.Expression, 
 	if err := service.collection(session).Load(criteria, result); err == nil {
 		return nil
 	} else if !derp.IsNotFound(err) {
-		derp.Report(derp.Wrap(err, location, "Error loading StreamDraft"))
+		derp.Report(derp.Wrap(err, location, "Unable to load StreamDraft"))
 	}
 
 	// Fall through means we could not load a draft (probably 404 not found)
 
 	// Try to locate the original stream
 	if err := service.streamService.Load(session, criteria, result); err != nil {
-		return derp.Wrap(err, location, "Error loading original stream")
+		return derp.Wrap(err, location, "Unable to load original stream")
 	}
 
 	// Reset the journal so that this item can be saved in the new collection.
@@ -79,7 +79,7 @@ func (service *StreamDraft) Load(session data.Session, criteria exp.Expression, 
 
 	// Save a draft copy of the original stream
 	if err := service.Save(session, result, "create draft record"); err != nil {
-		return derp.Wrap(err, location, "Error saving draft", criteria)
+		return derp.Wrap(err, location, "Unable to save draft", criteria)
 	}
 
 	// Return the original stream as a new draft to use.
@@ -109,7 +109,7 @@ func (service *StreamDraft) Save(session data.Session, draft *model.Stream, note
 	}
 
 	if err := service.collection(session).Save(draft, note); err != nil {
-		return derp.Wrap(err, location, "Error saving draft", draft, note)
+		return derp.Wrap(err, location, "Unable to save draft", draft, note)
 	}
 
 	return nil
@@ -205,12 +205,12 @@ func (service *StreamDraft) Promote(session data.Session, streamID primitive.Obj
 
 	// Try to load the draft
 	if err := service.LoadByID(session, streamID, &draft); err != nil {
-		return model.Stream{}, derp.Wrap(err, "service.StreamDraft.Publish", "Error loading draft")
+		return model.Stream{}, derp.Wrap(err, "service.StreamDraft.Publish", "Unable to load draft")
 	}
 
 	// Try to load the production stream
 	if err := service.streamService.LoadByID(session, streamID, &stream); err != nil {
-		return model.Stream{}, derp.Wrap(err, "service.StreamDraft.Publish", "Error loading draft")
+		return model.Stream{}, derp.Wrap(err, "service.StreamDraft.Publish", "Unable to load draft")
 	}
 
 	// Copy data from draft to production

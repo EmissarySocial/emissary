@@ -66,7 +66,7 @@ func SetupServerGet(factory *server.Factory) echo.HandlerFunc {
 		result, err := widget.Editor(&config, nil)
 
 		if err != nil {
-			return derp.Wrap(err, "setup.serverTable", "Error creating form")
+			return derp.Wrap(err, "setup.serverTable", "Unable to create form")
 		}
 
 		// Return the form
@@ -104,7 +104,7 @@ func SetupServerPost(factory *server.Factory) echo.HandlerFunc {
 
 			// Apply the changes to the configuration
 			if err := widget.Do(ctx.Request().URL, convert.MapOfAny(data)); err != nil {
-				return build.WrapInlineError(ctx.Response(), derp.Wrap(err, "setup.serverTable", "Error saving form data"))
+				return build.WrapInlineError(ctx.Response(), derp.Wrap(err, "setup.serverTable", "Unable to save form data"))
 			}
 
 			// Try to save the configuration to the persistent storage
@@ -121,7 +121,7 @@ func SetupServerPost(factory *server.Factory) echo.HandlerFunc {
 
 		// Apply the changes to the configuration
 		if err := form.SetURLValues(&config, data, nil); err != nil {
-			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, "setup.serverPost", "Error saving form data", data))
+			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, "setup.serverPost", "Unable to save form data", data))
 		}
 
 		// Try to save the configuration to the persistent storage

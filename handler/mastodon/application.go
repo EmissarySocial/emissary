@@ -44,7 +44,7 @@ func PostApplication(serverFactory *server.Factory) func(model.Authorization, tx
 		// Save the application to the database
 		oauthClientService := factory.OAuthClient()
 		if err := oauthClientService.Save(session, &oauthClient, "Created via Mastodon API"); err != nil {
-			return object.Application{}, derp.Wrap(err, location, "Error saving application")
+			return object.Application{}, derp.Wrap(err, location, "Unable to save application")
 		}
 
 		// Success
@@ -79,7 +79,7 @@ func GetApplication_VerifyCredentials(serverFactory *server.Factory) func(model.
 
 		// Try to load the client record from the database
 		if err := oauthClientService.LoadByClientID(session, auth.ClientID, &result); err != nil {
-			return object.Application{}, derp.Wrap(err, location, "Error loading application")
+			return object.Application{}, derp.Wrap(err, location, "Unable to load application")
 		}
 
 		return result.Toot(), nil

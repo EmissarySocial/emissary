@@ -77,7 +77,7 @@ func stripe_ProcessWebhook(factory *service.Factory, session data.Session, reque
 	// Load the Privilege associated with this Stripe Subscription.
 	privilege := model.NewPrivilege()
 	if err := factory.Privilege().LoadByRemotePurchaseID(session, subscription.ID, &privilege); err != nil {
-		return derp.Wrap(err, location, "Error loading privilege")
+		return derp.Wrap(err, location, "Unable to load privilege")
 	}
 
 	// If the underlying Subscription is no longer active, then remove the Privilege

@@ -84,7 +84,7 @@ func GetList(serverFactory *server.Factory) func(model.Authorization, txn.GetLis
 		folder := model.NewFolder()
 
 		if err := folderService.LoadByID(session, auth.UserID, folderID, &folder); err != nil {
-			return object.List{}, derp.Wrap(err, location, "Error loading folder")
+			return object.List{}, derp.Wrap(err, location, "Unable to load folder")
 		}
 
 		// Reply with a Toot!
@@ -123,7 +123,7 @@ func PostList(serverFactory *server.Factory) func(model.Authorization, txn.PostL
 		// Save it to the database
 		folderService := factory.Folder()
 		if err := folderService.Save(session, &folder, "Created via Mastodon API"); err != nil {
-			return object.List{}, derp.Wrap(err, location, "Error saving folder")
+			return object.List{}, derp.Wrap(err, location, "Unable to save folder")
 		}
 
 		// Return a Toot!
@@ -166,7 +166,7 @@ func PutList(serverFactory *server.Factory) func(model.Authorization, txn.PutLis
 		folder := model.NewFolder()
 
 		if err := folderService.LoadByID(session, auth.UserID, folderID, &folder); err != nil {
-			return object.List{}, derp.Wrap(err, location, "Error loading folder")
+			return object.List{}, derp.Wrap(err, location, "Unable to load folder")
 		}
 
 		// Update Folder Data
@@ -174,7 +174,7 @@ func PutList(serverFactory *server.Factory) func(model.Authorization, txn.PutLis
 
 		// Save it to the database
 		if err := folderService.Save(session, &folder, "Created via Mastodon API"); err != nil {
-			return object.List{}, derp.Wrap(err, location, "Error saving folder")
+			return object.List{}, derp.Wrap(err, location, "Unable to save folder")
 		}
 
 		// Return a Toot!
@@ -216,7 +216,7 @@ func DeleteList(serverFactory *server.Factory) func(model.Authorization, txn.Del
 		folder := model.NewFolder()
 
 		if err := folderService.LoadByID(session, auth.UserID, folderID, &folder); err != nil {
-			return struct{}{}, derp.Wrap(err, location, "Error loading folder")
+			return struct{}{}, derp.Wrap(err, location, "Unable to load folder")
 		}
 
 		// Delete the Folder

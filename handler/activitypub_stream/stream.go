@@ -39,7 +39,7 @@ func GetJSONLD(ctx *steranko.Context, factory *service.Factory, session data.Ses
 	keyService := factory.EncryptionKey()
 	key := model.NewEncryptionKey()
 	if err := keyService.LoadByParentID(session, model.EncryptionKeyTypeStream, stream.StreamID, &key); err != nil {
-		return derp.Wrap(err, location, "Error loading Public Key", stream.StreamID)
+		return derp.Wrap(err, location, "Unable to load Public Key", stream.StreamID)
 	}
 
 	// Combine the Actor and the Public Key

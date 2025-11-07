@@ -49,7 +49,7 @@ func undoFollow(context Context, activity streams.Document) error {
 			return nil
 		}
 
-		return derp.Wrap(err, location, "Error loading Follower", activity.Value(), streamID, actorURL)
+		return derp.Wrap(err, location, "Unable to load Follower", activity.Value(), streamID, actorURL)
 	}
 
 	// Try to delete the existing follower record

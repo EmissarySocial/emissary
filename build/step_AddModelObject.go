@@ -77,7 +77,7 @@ func (step StepAddModelObject) Post(builder Builder, buffer io.Writer) PipelineB
 
 	// Save the object to the database
 	if err := builder.service().ObjectSave(builder.session(), object, "Created"); err != nil {
-		return Halt().WithError(derp.Wrap(err, "build.StepAddModelObject.Post", "Error saving model object to database"))
+		return Halt().WithError(derp.Wrap(err, "build.StepAddModelObject.Post", "Unable to save model object to database"))
 	}
 
 	// Success!

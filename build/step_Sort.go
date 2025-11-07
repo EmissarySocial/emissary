@@ -43,7 +43,7 @@ func (step StepSort) Post(builder Builder, _ io.Writer) PipelineBehavior {
 		modelService, err = builder.factory().Model(step.Model)
 
 		if err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Error loading model service", step.Model))
+			return Halt().WithError(derp.Wrap(err, location, "Unable to load model service", step.Model))
 		}
 	}
 
@@ -65,7 +65,7 @@ func (step StepSort) Post(builder Builder, _ io.Writer) PipelineBehavior {
 		object, err := modelService.ObjectLoad(builder.session(), criteria)
 
 		if err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Error loading object with criteria: ", criteria))
+			return Halt().WithError(derp.Wrap(err, location, "Unable to load object with criteria: ", criteria))
 		}
 
 		// Use the object schema to set the new sort rank
@@ -75,7 +75,7 @@ func (step StepSort) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
 		// Try to save back to the database
 		if err := modelService.ObjectSave(builder.session(), object, step.Message); err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Error saving record tot he database", object))
+			return Halt().WithError(derp.Wrap(err, location, "Unable to save record tot he database", object))
 		}
 	}
 

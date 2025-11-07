@@ -366,7 +366,7 @@ func (step StepAddStream) getBestTemplate_result(templateService *service.Templa
 	template, err := templateService.Load(templateID)
 
 	if err != nil {
-		return []form.LookupCode{}, model.Template{}, derp.Wrap(err, location, "Error loading Template selected by User", eligible, templateID)
+		return []form.LookupCode{}, model.Template{}, derp.Wrap(err, location, "Unable to load Template selected by User", eligible, templateID)
 	}
 
 	return eligible, template, nil

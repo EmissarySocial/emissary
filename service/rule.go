@@ -90,7 +90,7 @@ func (service *Rule) Range(session data.Session, criteria exp.Expression, option
 	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.Rule.Range", "Error creating iterator", criteria)
+		return nil, derp.Wrap(err, "service.Rule.Range", "Unable to create iterator", criteria)
 	}
 
 	return RangeFunc(iter, model.NewRule), nil
@@ -100,7 +100,7 @@ func (service *Rule) Range(session data.Session, criteria exp.Expression, option
 func (service *Rule) Load(session data.Session, criteria exp.Expression, rule *model.Rule) error {
 
 	if err := service.collection(session).Load(notDeleted(criteria), rule); err != nil {
-		return derp.Wrap(err, "service.Rule.Load", "Error loading Rule", criteria)
+		return derp.Wrap(err, "service.Rule.Load", "Unable to load Rule", criteria)
 	}
 
 	return nil
@@ -155,7 +155,7 @@ func (service *Rule) Save(session data.Session, rule *model.Rule, note string) e
 
 	// Save the rule to the database
 	if err := service.collection(session).Save(rule, note); err != nil {
-		return derp.Wrap(err, location, "Error saving Rule", rule, note)
+		return derp.Wrap(err, location, "Unable to save Rule", rule, note)
 	}
 
 	// Recalculate the rule count for this user

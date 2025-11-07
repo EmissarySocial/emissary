@@ -92,7 +92,7 @@ func (service *Identity) Range(session data.Session, criteria exp.Expression, op
 	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Error creating iterator", criteria)
+		return nil, derp.Wrap(err, location, "Unable to create iterator", criteria)
 	}
 
 	return RangeFunc(iter, model.NewIdentity), nil
@@ -104,7 +104,7 @@ func (service *Identity) Load(session data.Session, criteria exp.Expression, ide
 	const location = "service.Identity.Load"
 
 	if err := service.collection(session).Load(notDeleted(criteria), identity); err != nil {
-		return derp.Wrap(err, location, "Error loading Identity", criteria)
+		return derp.Wrap(err, location, "Unable to load Identity", criteria)
 	}
 
 	return nil
@@ -305,7 +305,7 @@ func (service *Identity) LoadOrCreate(session data.Session, name string, identif
 
 	// If the error was anything but "not found", then return the error
 	if !derp.IsNotFound(err) {
-		return model.Identity{}, derp.Wrap(err, location, "Error loading identity", identifierType, identifierValue)
+		return model.Identity{}, derp.Wrap(err, location, "Unable to load identity", identifierType, identifierValue)
 	}
 
 	// Otherwise, populate the identifier into the Identity object
@@ -320,7 +320,7 @@ func (service *Identity) LoadOrCreate(session data.Session, name string, identif
 
 	// Save the Identity to the database
 	if err := service.Save(session, &identity, "Updated"); err != nil {
-		return model.Identity{}, derp.Wrap(err, location, "Error saving identity", identity)
+		return model.Identity{}, derp.Wrap(err, location, "Unable to save identity", identity)
 	}
 
 	// Done.
@@ -445,7 +445,7 @@ func (service *Identity) SendGuestCode(session data.Session, identity *model.Ide
 	guestCode, err := service.makeGuestCode(nil, identifierType, identifierValue)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error creating Guest Code", identifierValue)
+		return derp.Wrap(err, location, "Unable to create Guest Code", identifierValue)
 	}
 
 	switch identifierType {
@@ -544,7 +544,7 @@ func (service *Identity) makeGuestCode(identity *model.Identity, identifierType 
 	token, err := service.jwtService.NewToken(claims)
 
 	if err != nil {
-		return "", derp.Wrap(err, "service.Identity.makeGuestCode", "Error creating JWT token for Guest Code", identifier)
+		return "", derp.Wrap(err, "service.Identity.makeGuestCode", "Unable to create JWT token for Guest Code", identifier)
 	}
 
 	// Fantastic.
@@ -606,7 +606,7 @@ func (service *Identity) calcName(identity *model.Identity) error {
 		actor, err := activityService.Client().Load(identity.ActivityPubActor, sherlock.AsActor())
 
 		if err != nil {
-			return derp.Wrap(err, "service.Identity.calcName", "Error loading ActivityPub Actor", identity.ActivityPubActor)
+			return derp.Wrap(err, "service.Identity.calcName", "Unable to load ActivityPub Actor", identity.ActivityPubActor)
 		}
 
 		identity.Name = actor.Name()

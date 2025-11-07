@@ -66,7 +66,7 @@ func (service FolderLookupProvider) Add(name string) (string, error) {
 		folder.UserID = service.userID
 
 		if err := service.folderService.Save(service.session, &folder, "created"); err != nil {
-			return "", derp.Wrap(err, location, "Error saving folder", name)
+			return "", derp.Wrap(err, location, "Unable to save folder", name)
 		}
 
 		return folder.ID(), nil

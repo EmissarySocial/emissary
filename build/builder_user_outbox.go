@@ -36,14 +36,14 @@ func NewOutbox(factory Factory, session data.Session, request *http.Request, res
 	template, err := templateService.Load(user.OutboxTemplate) // Users should get to choose their own outbox template
 
 	if err != nil {
-		return Outbox{}, derp.Wrap(err, location, "Error loading template")
+		return Outbox{}, derp.Wrap(err, location, "Unable to load template")
 	}
 
 	// Create the underlying Common builder
 	common, err := NewCommonWithTemplate(factory, session, request, response, template, user, actionID)
 
 	if err != nil {
-		return Outbox{}, derp.Wrap(err, location, "Error creating common builder")
+		return Outbox{}, derp.Wrap(err, location, "Unable to create common builder")
 	}
 
 	// Verify that the User's profile is visible
@@ -98,7 +98,7 @@ func (w Outbox) View(actionID string) (template.HTML, error) {
 	builder, err := NewOutbox(w._factory, w._session, w._request, w._response, w._user, actionID)
 
 	if err != nil {
-		return template.HTML(""), derp.Wrap(err, "build.Outbox.View", "Error creating Outbox builder")
+		return template.HTML(""), derp.Wrap(err, "build.Outbox.View", "Unable to create Outbox builder")
 	}
 
 	return builder.Render()

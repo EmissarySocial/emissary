@@ -91,7 +91,7 @@ func (w Registration) View(actionID string) (template.HTML, error) {
 	builder, err := NewRegistration(w._factory, w._session, w._request, w._response, w._registration, actionID)
 
 	if err != nil {
-		return template.HTML(""), derp.Wrap(err, location, "Error creating Group builder")
+		return template.HTML(""), derp.Wrap(err, location, "Unable to create Group builder")
 	}
 
 	return builder.Render()

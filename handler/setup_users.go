@@ -27,7 +27,7 @@ func SetupDomainUsersGet(serverFactory *server.Factory, templates *template.Temp
 		domainConfig, factory, err := serverFactory.ByDomainID(domainID)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error loading factory")
+			return derp.Wrap(err, location, "Unable to load factory")
 		}
 
 		// Open a database session
@@ -67,7 +67,7 @@ func SetupDomainUserPost(serverFactory *server.Factory, templates *template.Temp
 		domainConfig, factory, err := serverFactory.ByDomainID(domainID)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error loading factory")
+			return derp.Wrap(err, location, "Unable to load factory")
 		}
 
 		// Open a database session
@@ -90,7 +90,7 @@ func SetupDomainUserPost(serverFactory *server.Factory, templates *template.Temp
 			if userID, err := primitive.ObjectIDFromHex(ctx.QueryParam("userId")); err == nil {
 
 				if err := userService.LoadByID(session, userID, &user); err != nil {
-					return derp.Wrap(err, location, "Error loading user")
+					return derp.Wrap(err, location, "Unable to load user")
 				}
 			}
 
@@ -111,7 +111,7 @@ func SetupDomainUserPost(serverFactory *server.Factory, templates *template.Temp
 
 		// Try to save the new user record
 		if err := userService.Save(session, &user, "Created by Server Admin"); err != nil {
-			return derp.Wrap(err, location, "Error saving user")
+			return derp.Wrap(err, location, "Unable to save user")
 		}
 
 		// Set the query parameter to display the updated user
@@ -132,7 +132,7 @@ func SetupDomainUserInvite(serverFactory *server.Factory, templates *template.Te
 		_, factory, err := serverFactory.ByDomainID(domainID)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error loading factory")
+			return derp.Wrap(err, location, "Unable to load factory")
 		}
 
 		// Open a database session
@@ -150,7 +150,7 @@ func SetupDomainUserInvite(serverFactory *server.Factory, templates *template.Te
 		userService := factory.User()
 
 		if err := userService.LoadByToken(session, userID, &user); err != nil {
-			return derp.Wrap(err, location, "Error loading user")
+			return derp.Wrap(err, location, "Unable to load user")
 		}
 
 		// Try to (re?)send the email invitation
@@ -174,7 +174,7 @@ func SetupDomainUserDelete(serverFactory *server.Factory, templates *template.Te
 		domainConfig, factory, err := serverFactory.ByDomainID(domainID)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error loading factory")
+			return derp.Wrap(err, location, "Unable to load factory")
 		}
 
 		// Open a database session
@@ -191,7 +191,7 @@ func SetupDomainUserDelete(serverFactory *server.Factory, templates *template.Te
 		userService := factory.User()
 
 		if err := userService.LoadByToken(session, ctx.Param("user"), &user); err != nil {
-			return derp.Wrap(err, location, "Error loading user")
+			return derp.Wrap(err, location, "Unable to load user")
 		}
 
 		// Try to delete the user record

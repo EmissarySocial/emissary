@@ -108,7 +108,7 @@ func NewFileStorage(args *CommandLineArgs) FileStorage {
 					}
 					storage.updateChannel <- config
 				} else {
-					derp.Report(derp.Wrap(err, location, "Error loading the updated config from ", fileLocation))
+					derp.Report(derp.Wrap(err, location, "Unable to load the updated config from ", fileLocation))
 				}
 
 			case err := <-watcher.Errors:

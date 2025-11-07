@@ -25,7 +25,7 @@ func (step StepEditConnection) Get(builder Builder, buffer io.Writer) PipelineBe
 	connection, err := connectionService.LoadOrCreateByProvider(builder.session(), providerID)
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error loading connection", providerID))
+		return Halt().WithError(derp.Wrap(err, location, "Unable to load connection", providerID))
 	}
 
 	// Try to find a Manual Provider for this Provider
@@ -72,7 +72,7 @@ func (step StepEditConnection) Post(builder Builder, _ io.Writer) PipelineBehavi
 	connection, err := connectionService.LoadOrCreateByProvider(builder.session(), providerID)
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error loading connection", providerID))
+		return Halt().WithError(derp.Wrap(err, location, "Unable to load connection", providerID))
 	}
 
 	// To manually configure a connection, it must be a "ManualProvider".  Other types,
@@ -98,7 +98,7 @@ func (step StepEditConnection) Post(builder Builder, _ io.Writer) PipelineBehavi
 
 	// Try to save the domain object back to the database
 	if err := connectionService.Save(builder.session(), &connection, "Updated by Administrator"); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error saving domain object"))
+		return Halt().WithError(derp.Wrap(err, location, "Unable to save domain object"))
 	}
 
 	return Halt().WithEvent("closeModal", "").WithEvent("refreshPage", "").AsFullPage()

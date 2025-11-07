@@ -44,7 +44,7 @@ func NewDomain(factory Factory, session data.Session, request *http.Request, res
 	common, err := NewCommonWithTemplate(factory, session, request, response, template, domain, actionID)
 
 	if err != nil {
-		return Domain{}, derp.Wrap(err, location, "Error creating common builder")
+		return Domain{}, derp.Wrap(err, location, "Unable to create common builder")
 	}
 
 	// Verify that the user is a Domain Owner
@@ -93,7 +93,7 @@ func (w Domain) View(actionID string) (template.HTML, error) {
 	builder, err := NewDomain(w._factory, w._session, w._request, w._response, w._template, actionID)
 
 	if err != nil {
-		return template.HTML(""), derp.Wrap(err, location, "Error creating Group builder")
+		return template.HTML(""), derp.Wrap(err, location, "Unable to create Group builder")
 	}
 
 	return builder.Render()

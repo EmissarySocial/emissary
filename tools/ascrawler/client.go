@@ -54,7 +54,7 @@ func (client *Client) Load(uri string, options ...any) (streams.Document, error)
 	result, err := client.innerClient.Load(uri, options...)
 
 	if err != nil {
-		return result, derp.Wrap(err, location, "Error loading actor from inner client")
+		return result, derp.Wrap(err, location, "Unable to load actor from inner client")
 	}
 
 	// Determined if we should crawl related records (default=yes)

@@ -36,7 +36,7 @@ func GetOEmbed(ctx *steranko.Context, factory *service.Factory, session data.Ses
 	result, err := getOEmbed_record(factory, session, parsedToken.Path)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error loading OEmbed record")
+		return derp.Wrap(err, location, "Unable to load OEmbed record")
 	}
 
 	// Return the result in the requested format
@@ -92,7 +92,7 @@ func getOEmbed_Stream(factory *service.Factory, session data.Session, token stri
 	stream := model.NewStream()
 
 	if err := streamService.LoadByToken(session, token, &stream); err != nil {
-		return mapof.Any{}, derp.Wrap(err, location, "Error loading stream from database")
+		return mapof.Any{}, derp.Wrap(err, location, "Unable to load stream from database")
 	}
 
 	// Export the stream as an OEmbed object
@@ -166,7 +166,7 @@ func getOEmbed_User(factory *service.Factory, session data.Session, token string
 	user := model.NewUser()
 
 	if err := userService.LoadByToken(session, token, &user); err != nil {
-		return mapof.Any{}, derp.Wrap(err, location, "Error loading user from database")
+		return mapof.Any{}, derp.Wrap(err, location, "Unable to load user from database")
 	}
 
 	// Get the domain

@@ -40,14 +40,14 @@ func NewInbox(factory Factory, session data.Session, request *http.Request, resp
 	template, err := templateService.Load(user.InboxTemplate)
 
 	if err != nil {
-		return Inbox{}, derp.Wrap(err, location, "Error loading template")
+		return Inbox{}, derp.Wrap(err, location, "Unable to load template")
 	}
 
 	// Create the underlying Common builder
 	common, err := NewCommonWithTemplate(factory, session, request, response, template, user, actionID)
 
 	if err != nil {
-		return Inbox{}, derp.Wrap(err, location, "Error creating common builder")
+		return Inbox{}, derp.Wrap(err, location, "Unable to create common builder")
 	}
 
 	// Enforce user permissions on the requested action
@@ -92,7 +92,7 @@ func (w Inbox) View(actionID string) (template.HTML, error) {
 	builder, err := NewInbox(w._factory, w._session, w._request, w._response, w._user, actionID)
 
 	if err != nil {
-		return template.HTML(""), derp.Wrap(err, "build.Inbox.View", "Error creating Inbox builder")
+		return template.HTML(""), derp.Wrap(err, "build.Inbox.View", "Unable to create Inbox builder")
 	}
 
 	return builder.Render()
@@ -262,7 +262,7 @@ func (w Inbox) FollowingByToken(followingToken string) (model.Following, error) 
 	following := model.NewFollowing()
 
 	if err := followingService.LoadByToken(w._session, userID, followingToken, &following); err != nil {
-		return model.Following{}, derp.Wrap(err, "build.Inbox.FollowingByID", "Error loading following")
+		return model.Following{}, derp.Wrap(err, "build.Inbox.FollowingByID", "Unable to load following")
 	}
 
 	return following, nil
@@ -289,7 +289,7 @@ func (w Inbox) RuleByToken(token string) model.Rule {
 	rule := model.NewRule()
 
 	if err := ruleService.LoadByToken(w._session, w.AuthenticatedID(), token, &rule); err != nil {
-		derp.Report(derp.Wrap(err, "build.Inbox.RuleByToken", "Error loading rule", token))
+		derp.Report(derp.Wrap(err, "build.Inbox.RuleByToken", "Unable to load rule", token))
 	}
 
 	return rule
@@ -439,7 +439,7 @@ func (w Inbox) Folders() (model.FolderList, error) {
 	folders, err := folderService.QueryByUserID(w._session, w.AuthenticatedID())
 
 	if err != nil {
-		return result, derp.Wrap(err, "build.Inbox.Folders", "Error loading folders")
+		return result, derp.Wrap(err, "build.Inbox.Folders", "Unable to load folders")
 	}
 
 	result.Folders = folders
@@ -454,7 +454,7 @@ func (w Inbox) FoldersWithSelection() (model.FolderList, error) {
 	result, err := w.Folders()
 
 	if err != nil {
-		return result, derp.Wrap(err, location, "Error loading folders")
+		return result, derp.Wrap(err, location, "Unable to load folders")
 	}
 
 	// Guarantee that we have at least one folder
@@ -508,7 +508,7 @@ func (w Inbox) SubBuilder(object any) (Builder, error) {
 	}
 
 	if err != nil {
-		err = derp.Wrap(err, "build.Common.SubBuilder", "Error creating sub-builder for object", object)
+		err = derp.Wrap(err, "build.Common.SubBuilder", "Unable to create sub-builder for object", object)
 		derp.Report(err)
 	}
 
@@ -540,7 +540,7 @@ func (w Inbox) Message() model.Message {
 	message := model.NewMessage()
 
 	if err := inboxService.LoadByID(w._session, w.AuthenticatedID(), messageID, &message); err != nil {
-		derp.Report(derp.Wrap(err, location, "Error loading message", messageID))
+		derp.Report(derp.Wrap(err, location, "Unable to load message", messageID))
 		return model.NewMessage()
 	}
 

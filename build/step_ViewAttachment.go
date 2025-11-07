@@ -60,7 +60,7 @@ func (step StepViewAttachment) Get(builder Builder, buffer io.Writer) PipelineBe
 		attachment, err = attachmentService.LoadFirstByCategory(builder.session(), model.AttachmentObjectTypeStream, objectID, step.Categories)
 
 		if err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Error loading attachment", model.AttachmentObjectTypeStream, objectID, step.Categories))
+			return Halt().WithError(derp.Wrap(err, location, "Unable to load attachment", model.AttachmentObjectTypeStream, objectID, step.Categories))
 		}
 
 		// Search for a specific attachment
@@ -73,7 +73,7 @@ func (step StepViewAttachment) Get(builder Builder, buffer io.Writer) PipelineBe
 
 		// Load the attachment record to verify that it is valid for this parent object
 		if err := attachmentService.LoadByID(builder.session(), model.AttachmentObjectTypeStream, objectID, attachmentID, &attachment); err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Error loading attachment", model.AttachmentObjectTypeStream, objectID, attachmentID))
+			return Halt().WithError(derp.Wrap(err, location, "Unable to load attachment", model.AttachmentObjectTypeStream, objectID, attachmentID))
 		}
 	}
 

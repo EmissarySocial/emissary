@@ -30,7 +30,7 @@ func NewAttachment(factory Factory, session data.Session, request *http.Request,
 	common, err := NewCommonWithTemplate(factory, session, request, response, template, attachment, actionID)
 
 	if err != nil {
-		return Attachment{}, derp.Wrap(err, "build.NewAttachment", "Error creating new model")
+		return Attachment{}, derp.Wrap(err, "build.NewAttachment", "Unable to create new model")
 	}
 
 	builder := Attachment{
@@ -206,7 +206,7 @@ func (w Attachment) View(actionID string) (template.HTML, error) {
 	subStream, err := NewModel(w._factory, w._session, w._request, w._response, w._template, w._attachment, actionID)
 
 	if err != nil {
-		return template.HTML(""), derp.Wrap(err, location, "Error creating sub-builder")
+		return template.HTML(""), derp.Wrap(err, location, "Unable to create sub-builder")
 	}
 
 	// Generate HTML template

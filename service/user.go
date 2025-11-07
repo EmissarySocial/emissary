@@ -148,7 +148,7 @@ func (service *User) Range(session data.Session, criteria exp.Expression, option
 	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.User.Range", "Error creating iterator", criteria)
+		return nil, derp.Wrap(err, "service.User.Range", "Unable to create iterator", criteria)
 	}
 
 	return RangeFunc(iter, model.NewUser), nil
@@ -164,7 +164,7 @@ func (service *User) Query(session data.Session, criteria exp.Expression, option
 // Load retrieves an User from the database
 func (service *User) Load(session data.Session, criteria exp.Expression, result *model.User, options ...option.Option) error {
 	if err := service.collection(session).Load(notDeleted(criteria), result, options...); err != nil {
-		return derp.Wrap(err, "service.User.Load", "Error loading User", criteria)
+		return derp.Wrap(err, "service.User.Load", "Unable to load User", criteria)
 	}
 
 	return nil
@@ -234,7 +234,7 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 
 	// Try to save the User record to the database
 	if err := service.collection(session).Save(user, note); err != nil {
-		return derp.Wrap(err, location, "Error saving User", user, note)
+		return derp.Wrap(err, location, "Unable to save User", user, note)
 	}
 
 	// RULE: Take these actions when setting up a new user
@@ -242,12 +242,12 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 
 		// RULE: Create a new encryption key for this user
 		if _, err := service.keyService.Create(session, model.EncryptionKeyTypeUser, user.UserID); err != nil {
-			return derp.Wrap(err, location, "Error creating encryption key for User", user, note)
+			return derp.Wrap(err, location, "Unable to create encryption key for User", user, note)
 		}
 
 		// RULE: Create default folders for this user
 		if err := service.folderService.CreateDefaultFolders(session, user.UserID); err != nil {
-			return derp.Wrap(err, location, "Error creating default folders for User", user, note)
+			return derp.Wrap(err, location, "Unable to create default folders for User", user, note)
 		}
 	}
 
@@ -474,7 +474,7 @@ func (service *User) LoadByResetCode(session data.Session, userID string, code s
 
 	// Try to find the user by ID
 	if err := service.LoadByToken(session, userID, user); err != nil {
-		return derp.Wrap(err, location, "Error loading User by ID", userID)
+		return derp.Wrap(err, location, "Unable to load User by ID", userID)
 	}
 
 	// If the password reset is not valid, then return an "Unauthorized" error
@@ -678,7 +678,7 @@ func (service *User) SetOwner(session data.Session, owner config.Owner) error {
 	users, err := service.ListUsernameOrOwner(session, owner.Username)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error loading owners")
+		return derp.Wrap(err, location, "Unable to load owners")
 	}
 
 	user := model.NewUser()
@@ -699,7 +699,7 @@ func (service *User) SetOwner(session data.Session, owner config.Owner) error {
 			user.IsOwner = isOwner
 
 			if err := service.Save(session, &user, "Set Owner"); err != nil {
-				return derp.Wrap(err, location, "Error saving user", user)
+				return derp.Wrap(err, location, "Unable to save user", user)
 			}
 		}
 
@@ -716,7 +716,7 @@ func (service *User) SetOwner(session data.Session, owner config.Owner) error {
 		user.IsOwner = true
 
 		if err := service.Save(session, &user, "CreateOwner"); err != nil {
-			return derp.Wrap(err, location, "Error saving user", user)
+			return derp.Wrap(err, location, "Unable to save user", user)
 		}
 	}
 
@@ -783,7 +783,7 @@ func (service *User) MakeNewPasswordResetCode(session data.Session, user *model.
 
 	// Try to save the user with the new password reset code.
 	if err := service.Save(session, user, "Create Password Reset Code"); err != nil {
-		return derp.Wrap(err, "service.User.MakeNewPasswordResetCode", "Error saving user", user)
+		return derp.Wrap(err, "service.User.MakeNewPasswordResetCode", "Unable to save user", user)
 	}
 
 	return nil
@@ -800,7 +800,7 @@ func (service *User) WebFinger(session data.Session, token string) (digit.Resour
 	// Try to load the user from the database
 	user := model.NewUser()
 	if err := service.LoadByToken(session, token, &user); err != nil {
-		return digit.Resource{}, derp.Wrap(err, location, "Error loading user", token)
+		return digit.Resource{}, derp.Wrap(err, location, "Unable to load user", token)
 	}
 
 	// Make a WebFinger resource for this user.
@@ -848,7 +848,7 @@ func (service *User) CalculateTags(session data.Session, user *model.User) {
 	template, err := service.templateService.Load(user.OutboxTemplate)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Error loading template", user.OutboxTemplate))
+		derp.Report(derp.Wrap(err, location, "Unable to load template", user.OutboxTemplate))
 		return
 	}
 

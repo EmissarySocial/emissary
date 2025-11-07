@@ -44,14 +44,14 @@ func init() {
 		followerService := context.factory.Follower()
 		follower := model.NewFollower()
 		if err := followerService.NewActivityPubFollower(context.session, model.FollowerTypeUser, context.user.UserID, document, &follower); err != nil {
-			return derp.Wrap(err, location, "Error creating new follower", context.user)
+			return derp.Wrap(err, location, "Unable to create new follower", context.user)
 		}
 
 		// Try to load the Actor for this user
 		actor, err := userService.ActivityPubActor(context.session, context.user.UserID)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error loading actor", context.user)
+			return derp.Wrap(err, location, "Unable to load actor", context.user)
 		}
 
 		// Sen the "Accept" message to the Requester

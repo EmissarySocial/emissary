@@ -61,7 +61,7 @@ func (service *Group) List(session data.Session, criteria exp.Expression, option
 // Load retrieves an Group from the database
 func (service *Group) Load(session data.Session, criteria exp.Expression, result *model.Group) error {
 	if err := service.collection(session).Load(notDeleted(criteria), result); err != nil {
-		return derp.Wrap(err, "service.Group.Load", "Error loading Group", criteria)
+		return derp.Wrap(err, "service.Group.Load", "Unable to load Group", criteria)
 	}
 
 	return nil
@@ -77,7 +77,7 @@ func (service *Group) Save(session data.Session, group *model.Group, note string
 
 	// Save the value to the database
 	if err := service.collection(session).Save(group, note); err != nil {
-		return derp.Wrap(err, "service.Group.Save", "Error saving Group", group, note)
+		return derp.Wrap(err, "service.Group.Save", "Unable to save Group", group, note)
 	}
 
 	return nil

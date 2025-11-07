@@ -65,7 +65,7 @@ func (service Conversation) Range(session data.Session, criteria exp.Expression,
 	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.User.Range", "Error creating iterator", criteria)
+		return nil, derp.Wrap(err, "service.User.Range", "Unable to create iterator", criteria)
 	}
 
 	return RangeFunc(iter, model.NewConversation), nil
@@ -75,7 +75,7 @@ func (service Conversation) Range(session data.Session, criteria exp.Expression,
 func (service Conversation) Load(session data.Session, criteria exp.Expression, conversation *model.Conversation) error {
 
 	if err := service.collection(session).Load(notDeleted(criteria), conversation); err != nil {
-		return derp.Wrap(err, "service.Conversation.Load", "Error loading Conversation", criteria)
+		return derp.Wrap(err, "service.Conversation.Load", "Unable to load Conversation", criteria)
 	}
 
 	return nil
@@ -93,7 +93,7 @@ func (service Conversation) Save(session data.Session, conversation *model.Conve
 
 	// Save the value to the database
 	if err := service.collection(session).Save(conversation, note); err != nil {
-		return derp.Wrap(err, location, "Error saving Conversation", conversation, note)
+		return derp.Wrap(err, location, "Unable to save Conversation", conversation, note)
 	}
 
 	return nil

@@ -64,7 +64,7 @@ func (service *Annotation) Load(session data.Session, criteria exp.Expression, r
 	const location = "service.Annotation.Load"
 
 	if err := service.collection(session).Load(notDeleted(criteria), result); err != nil {
-		return derp.Wrap(err, location, "Error loading Annotation", criteria)
+		return derp.Wrap(err, location, "Unable to load Annotation", criteria)
 	}
 
 	return nil
@@ -81,7 +81,7 @@ func (service *Annotation) Save(session data.Session, annotation *model.Annotati
 	document, err := activityService.Client().Load(annotation.URL)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error loading annotated document", annotation.URL)
+		return derp.Wrap(err, location, "Unable to load annotated document", annotation.URL)
 	}
 
 	annotation.Name = document.Name()
@@ -94,7 +94,7 @@ func (service *Annotation) Save(session data.Session, annotation *model.Annotati
 
 	// Save the value to the database
 	if err := service.collection(session).Save(annotation, note); err != nil {
-		return derp.Wrap(err, location, "Error saving Annotation", annotation, note)
+		return derp.Wrap(err, location, "Unable to save Annotation", annotation, note)
 	}
 
 	return nil

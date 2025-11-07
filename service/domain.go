@@ -90,14 +90,14 @@ func (service *Domain) Start() error {
 
 		// If it's a "real" error, then we can't continue.
 		if !derp.IsNotFound(err) {
-			return derp.Wrap(err, location, "Error loading domain record")
+			return derp.Wrap(err, location, "Unable to load domain record")
 		}
 
 		// If "Not Found", then this is the first run.  Create a new domain record.
 		service.domain.Label = service.configuration.Label
 
 		if err := service.Save(session, service.domain, "Created Domain Record"); err != nil {
-			return derp.Wrap(err, location, "Error creating new domain record")
+			return derp.Wrap(err, location, "Unable to create new domain record")
 		}
 
 		// If this is a localhost server with "createOwner" set, then create a new owner
@@ -114,7 +114,7 @@ func (service *Domain) Start() error {
 			admin.IsPublic = true
 
 			if err := service.userService.Save(session, &admin, "Create admin user for local host"); err != nil {
-				return derp.Wrap(err, "service.Domain.Save", "Error creating admin user for local host")
+				return derp.Wrap(err, "service.Domain.Save", "Unable to create admin user for local host")
 			}
 
 			log.Trace().Msg("Added admin user for local host")
@@ -167,7 +167,7 @@ func (service *Domain) Save(session data.Session, domain model.Domain, note stri
 
 	// Try to save the value to the database
 	if err := service.collection(session).Save(&domain, note); err != nil {
-		return derp.Wrap(err, location, "Error saving Domain")
+		return derp.Wrap(err, location, "Unable to save Domain")
 	}
 
 	// Update the in-memory cache
@@ -374,7 +374,7 @@ func (service *Domain) OAuthExchange(session data.Session, providerID string, st
 	connection.Active = true
 
 	if service.connectionService.Save(session, &connection, "OAuth Exchange") != nil {
-		return derp.InternalError(location, "Error saving domain")
+		return derp.InternalError(location, "Unable to save domain")
 	}
 
 	// Success!
@@ -413,7 +413,7 @@ func (service *Domain) NewOAuthClient(session data.Session, providerID string) (
 
 	// Save the domain
 	if err := service.connectionService.Save(session, &connection, "New OAuth State"); err != nil {
-		return model.Connection{}, derp.Wrap(err, location, "Error saving domain")
+		return model.Connection{}, derp.Wrap(err, location, "Unable to save domain")
 	}
 
 	return connection, nil
@@ -457,7 +457,7 @@ func (service *Domain) GetOAuthToken(session data.Session, providerID string) (m
 	if token.AccessToken != newToken.AccessToken {
 		connection.Token = newToken
 		if err := service.connectionService.Save(session, &connection, "Refresh OAuth Token"); err != nil {
-			return model.Connection{}, token, derp.Wrap(err, "service.Domain.GetOAuthToken", "Error saving refreshed Token")
+			return model.Connection{}, token, derp.Wrap(err, "service.Domain.GetOAuthToken", "Unable to save refreshed Token")
 		}
 	}
 

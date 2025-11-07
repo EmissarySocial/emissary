@@ -114,7 +114,7 @@ func finishWebhook(factory *service.Factory, session data.Session, restrictedKey
 
 		// Try to load/create the user
 		if err := loadOrCreateUser(userService, session, restrictedKey, subscription.Customer, &user); err != nil {
-			return derp.Wrap(err, location, "Error creating customer", subscription.Customer)
+			return derp.Wrap(err, location, "Unable to create customer", subscription.Customer)
 		}
 
 		// Add the user to the designated groups
@@ -143,7 +143,7 @@ func finishWebhook(factory *service.Factory, session data.Session, restrictedKey
 
 	// Save the new User to the database.  Yay!
 	if err := userService.Save(session, &user, "Created by Stripe Webhook"); err != nil {
-		return derp.Wrap(err, location, "Error saving user record")
+		return derp.Wrap(err, location, "Unable to save user record")
 	}
 
 	// Success!
@@ -231,7 +231,7 @@ func loadUser(userService *service.User, session data.Session, customer *stripe.
 
 	// Try to load the user by their email address
 	if err := userService.LoadByMapID(session, model.UserMapIDStripe, customer.ID, user); err != nil {
-		return derp.Wrap(err, "handler.stripe.loadUser", "Error loading user record")
+		return derp.Wrap(err, "handler.stripe.loadUser", "Unable to load user record")
 	}
 
 	return nil
@@ -248,7 +248,7 @@ func loadOrCreateUser(userService *service.User, session data.Session, apiKey st
 	if derp.IsNotFound(err) {
 
 		if err := loadStripeCustomer(apiKey, customer); err != nil {
-			return derp.Wrap(err, "handler.stripe.loadOrCreateUser", "Error loading customer from Stripe API")
+			return derp.Wrap(err, "handler.stripe.loadOrCreateUser", "Unable to load customer from Stripe API")
 		}
 
 		if customer.Name != "" {
@@ -263,7 +263,7 @@ func loadOrCreateUser(userService *service.User, session data.Session, apiKey st
 		return nil
 	}
 
-	return derp.Wrap(err, "handler.stripe.loadOrCreateUser", "Error loading user record")
+	return derp.Wrap(err, "handler.stripe.loadOrCreateUser", "Unable to load user record")
 }
 
 func loadStripeCustomer(apiKey string, customer *stripe.Customer) error {
@@ -287,7 +287,7 @@ func loadStripeCustomer(apiKey string, customer *stripe.Customer) error {
 	value, err := stripeClient.Customers.Get(customer.ID, &params)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error loading customer from Stripe API")
+		return derp.Wrap(err, location, "Unable to load customer from Stripe API")
 	}
 
 	// Copy the value from the API call into the original customer
@@ -318,7 +318,7 @@ func loadStripeProduct(apiKey string, product *stripe.Product) error {
 	value, err := stripeClient.Products.Get(product.ID, &params)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error loading product from Stripe API")
+		return derp.Wrap(err, location, "Unable to load product from Stripe API")
 	}
 
 	// Copy the value from the API call into the original product

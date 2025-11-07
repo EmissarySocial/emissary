@@ -71,7 +71,7 @@ func (service *SearchTag) List(session data.Session, criteria exp.Expression, op
 func (service *SearchTag) Load(session data.Session, criteria exp.Expression, searchTag *model.SearchTag) error {
 
 	if err := service.collection(session).Load(notDeleted(criteria), searchTag); err != nil {
-		return derp.Wrap(err, "service.SearchTag.Load", "Error loading SearchTag", criteria)
+		return derp.Wrap(err, "service.SearchTag.Load", "Unable to load SearchTag", criteria)
 	}
 
 	return nil
@@ -114,7 +114,7 @@ func (service *SearchTag) Save(session data.Session, searchTag *model.SearchTag,
 
 	// Save the searchTag to the database
 	if err := service.collection(session).Save(searchTag, note); err != nil {
-		return derp.Wrap(err, location, "Error saving SearchTag", searchTag, note)
+		return derp.Wrap(err, location, "Unable to save SearchTag", searchTag, note)
 	}
 
 	return nil
@@ -222,14 +222,14 @@ func (service *SearchTag) Upsert(session data.Session, tagName string) error {
 		searchTag.Name = tagName
 
 		if err := service.Save(session, &searchTag, "Found New SearchTag"); err != nil {
-			return derp.Wrap(err, "service.SearchTag.Upsert", "Error saving SearchTag", value)
+			return derp.Wrap(err, "service.SearchTag.Upsert", "Unable to save SearchTag", value)
 		}
 
 		return nil
 	}
 
 	// Otherwise, return the error to the caller. (This should never happen)
-	return derp.Wrap(err, "service.SearchTag.Upsert", "Error loading SearchTag", value)
+	return derp.Wrap(err, "service.SearchTag.Upsert", "Unable to load SearchTag", value)
 }
 
 // ListGroups returns a distinct list of all the groups that are used by SearchTags

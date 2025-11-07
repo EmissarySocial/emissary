@@ -28,7 +28,7 @@ func MakeStreamArchive(factory *service.Factory, session data.Session, _ *servic
 	metadata, err := translate.NewSliceOfPipelines(metadataSlice)
 
 	if err != nil {
-		return queue.Failure(derp.Wrap(err, location, "Error creating pipeline", metadata))
+		return queue.Failure(derp.Wrap(err, location, "Unable to create pipeline", metadata))
 	}
 
 	// Assemble StreamArchiveOptions
@@ -44,7 +44,7 @@ func MakeStreamArchive(factory *service.Factory, session data.Session, _ *servic
 	streamArchiveService := factory.StreamArchive()
 
 	if err := streamArchiveService.Create(session, stream, streamArchiveOptions); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Error creating archive"))
+		return queue.Error(derp.Wrap(err, location, "Unable to create archive"))
 	}
 
 	// Done.

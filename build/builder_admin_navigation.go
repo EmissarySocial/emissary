@@ -31,7 +31,7 @@ func NewNavigation(factory Factory, session data.Session, request *http.Request,
 	common, err := NewCommonWithTemplate(factory, session, request, response, template, stream, actionID)
 
 	if err != nil {
-		return Navigation{}, derp.Wrap(err, location, "Error creating common builder")
+		return Navigation{}, derp.Wrap(err, location, "Unable to create common builder")
 	}
 
 	// Verify that the user is a Domain Owner
@@ -77,7 +77,7 @@ func (w Navigation) View(actionID string) (template.HTML, error) {
 	builder, err := NewNavigation(w._factory, w._session, w._request, w._response, w._template, w._stream, actionID)
 
 	if err != nil {
-		return template.HTML(""), derp.Wrap(err, location, "Error creating Group builder")
+		return template.HTML(""), derp.Wrap(err, location, "Unable to create Group builder")
 	}
 
 	return builder.Render()

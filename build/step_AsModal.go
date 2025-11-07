@@ -55,7 +55,7 @@ func (step StepAsModal) Get(builder Builder, buffer io.Writer) PipelineBehavior 
 	fullPageBuilder, err := builder.clone(step.Background)
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error creating fullPageBuilder"))
+		return Halt().WithError(derp.Wrap(err, location, "Unable to create fullPageBuilder"))
 	}
 
 	// Execute the action pipeline

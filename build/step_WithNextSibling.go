@@ -42,7 +42,7 @@ func (step StepWithNextSibling) execute(builder Builder, buffer io.Writer, actio
 	siblingBuilder, err := NewStreamWithoutTemplate(streamBuilder.factory(), builder.session(), streamBuilder.request(), streamBuilder.response(), &sibling, "view")
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error creating builder for sibling"))
+		return Halt().WithError(derp.Wrap(err, location, "Unable to create builder for sibling"))
 	}
 
 	// execute the POST build pipeline on the parent

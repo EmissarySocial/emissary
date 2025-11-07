@@ -46,7 +46,7 @@ func (service CircleLookupProvider) Add(name string) (string, error) {
 	circle.UserID = service.userID
 
 	if err := service.circleService.Save(service.session, &circle, "created"); err != nil {
-		return "", derp.Wrap(err, "service.CircleLookupProvider.Add", "Error saving circle", name)
+		return "", derp.Wrap(err, "service.CircleLookupProvider.Add", "Unable to save circle", name)
 	}
 
 	return circle.ID(), nil

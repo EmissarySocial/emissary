@@ -117,7 +117,7 @@ func getStreamFromURL(serverFactory *server.Factory, streamURL string) (*service
 	stream := model.NewStream()
 
 	if err := streamService.LoadByURL(session, streamURL, &stream); err != nil {
-		return nil, nil, model.Stream{}, derp.Wrap(err, location, "Error loading stream")
+		return nil, nil, model.Stream{}, derp.Wrap(err, location, "Unable to load stream")
 	}
 
 	// Return values to the caller.

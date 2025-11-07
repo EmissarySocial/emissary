@@ -42,7 +42,7 @@ func GetBlockedCollection(ctx *steranko.Context, factory *service.Factory, sessi
 	rules, err := ruleService.QueryPublic(session, user.UserID, publishDate, option.MaxRows(int64(pageSize)))
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error loading rules")
+		return derp.Wrap(err, location, "Unable to load rules")
 	}
 
 	// Convert the slice of rules into JSONLDGetters
@@ -77,7 +77,7 @@ func GetBlock(ctx *steranko.Context, factory *service.Factory, session data.Sess
 	rule := model.NewRule()
 
 	if err := ruleService.LoadByID(session, user.UserID, ruleID, &rule); err != nil {
-		return derp.Wrap(err, location, "Error loading rule")
+		return derp.Wrap(err, location, "Unable to load rule")
 	}
 
 	// Return the rule as JSON-LD

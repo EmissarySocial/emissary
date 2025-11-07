@@ -63,7 +63,7 @@ func createWebSubFollower_subscribe(factory *service.Factory, session data.Sessi
 	follower, err := followerService.LoadOrCreateByWebSub(session, objectType, objectID, callback)
 
 	if err != nil {
-		return queue.Error(derp.Wrap(err, location, "Error loading follower", objectID, callback))
+		return queue.Error(derp.Wrap(err, location, "Unable to load follower", objectID, callback))
 	}
 
 	// Set additional properties that are not handled by LoadOrCreateByWebSub
@@ -81,7 +81,7 @@ func createWebSubFollower_subscribe(factory *service.Factory, session data.Sessi
 
 	// Save the new/updated follower
 	if err := followerService.Save(session, &follower, "Created via WebSub"); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Error saving follower", follower.ID))
+		return queue.Error(derp.Wrap(err, location, "Unable to save follower", follower.ID))
 	}
 
 	// Oh yeah...
@@ -97,7 +97,7 @@ func createWebSubFollower_unsubscribe(factory *service.Factory, session data.Ses
 	followerService := factory.Follower()
 	follower := model.NewFollower()
 	if err := followerService.LoadByWebSub(session, objectType, objectID, callback, &follower); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Error loading follower", objectID, callback))
+		return queue.Error(derp.Wrap(err, location, "Unable to load follower", objectID, callback))
 	}
 
 	// Verify the request with the callback server

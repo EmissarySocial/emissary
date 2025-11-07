@@ -80,7 +80,7 @@ func (service *SearchQuery) Range(session data.Session, criteria exp.Expression,
 	it, err := service.collection(session).Iterator(notDeleted(criteria), options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.SearchQuery.Range", "Error creating iterator", criteria)
+		return nil, derp.Wrap(err, "service.SearchQuery.Range", "Unable to create iterator", criteria)
 	}
 
 	return RangeFunc(it, model.NewSearchQuery), nil
@@ -92,7 +92,7 @@ func (service *SearchQuery) LoadWithSoftDeletes(session data.Session, criteria e
 	const location = "service.SearchQuery.LoadWithSoftDeletes"
 
 	if err := service.collection(session).Load(criteria, searchQuery); err != nil {
-		return derp.Wrap(err, location, "Error loading SearchQuery", criteria)
+		return derp.Wrap(err, location, "Unable to load SearchQuery", criteria)
 	}
 
 	// If the SearchQuery has been deleted, then restore it before returning
@@ -128,7 +128,7 @@ func (service *SearchQuery) Save(session data.Session, searchQuery *model.Search
 
 	// Save the searchQuery to the database
 	if err := service.collection(session).Save(searchQuery, note); err != nil {
-		return derp.Wrap(err, location, "Error saving SearchQuery", searchQuery, note)
+		return derp.Wrap(err, location, "Unable to save SearchQuery", searchQuery, note)
 	}
 
 	// Add a queue task to delete this SearchQuery if it has no followers after 12 hour.
@@ -193,7 +193,7 @@ func (service *SearchQuery) LoadByID(session data.Session, searchQueryID primiti
 	criteria := exp.Equal("_id", searchQueryID)
 
 	if err := service.LoadWithSoftDeletes(session, criteria, searchQuery); err != nil {
-		return derp.Wrap(err, location, "Error loading SearchQuery", searchQueryID)
+		return derp.Wrap(err, location, "Unable to load SearchQuery", searchQueryID)
 	}
 
 	return nil
@@ -243,7 +243,7 @@ func (service *SearchQuery) LoadOrCreate(session data.Session, queryValues url.V
 	if derp.IsNotFound(err) {
 
 		if err := service.Save(session, &newSearchQuery, "LoadOrCreate"); err != nil {
-			return model.NewSearchQuery(), derp.Wrap(err, location, "Error saving SearchQuery", newSearchQuery)
+			return model.NewSearchQuery(), derp.Wrap(err, location, "Unable to save SearchQuery", newSearchQuery)
 		}
 
 		return newSearchQuery, nil
@@ -411,7 +411,7 @@ func (service *SearchQuery) WebFinger(session data.Session, token string) (digit
 		searchQuery, err = service.LoadOrCreate(session, queryValues)
 
 		if err != nil {
-			return digit.Resource{}, derp.Wrap(err, location, "Error loading SearchQuery", queryValues)
+			return digit.Resource{}, derp.Wrap(err, location, "Unable to load SearchQuery", queryValues)
 		}
 
 	} else {

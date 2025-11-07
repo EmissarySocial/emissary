@@ -82,7 +82,7 @@ func (service *SearchResult) Range(session data.Session, criteria exp.Expression
 	it, err := service.collection(session).Iterator(criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.SearchResult.Range", "Error creating iterator", criteria)
+		return nil, derp.Wrap(err, "service.SearchResult.Range", "Unable to create iterator", criteria)
 	}
 
 	return RangeFunc(it, model.NewSearchResult), nil
@@ -137,12 +137,12 @@ func (service *SearchResult) Save(session data.Session, searchResult *model.Sear
 
 	// Save the searchResult to the database
 	if err := service.collection(session).Save(searchResult, note); err != nil {
-		return derp.Wrap(err, location, "Error saving Search", searchResult, note)
+		return derp.Wrap(err, location, "Unable to save Search", searchResult, note)
 	}
 
 	for _, tagName := range searchResult.Tags {
 		if err := service.searchTagService.Upsert(session, tagName); err != nil {
-			return derp.Wrap(err, location, "Error saving SearchTag", searchResult, tagName)
+			return derp.Wrap(err, location, "Unable to save SearchTag", searchResult, tagName)
 		}
 	}
 

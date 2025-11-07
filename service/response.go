@@ -76,7 +76,7 @@ func (service *Response) Range(session data.Session, criteria exp.Expression, op
 	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.User.Range", "Error creating iterator", criteria)
+		return nil, derp.Wrap(err, "service.User.Range", "Unable to create iterator", criteria)
 	}
 
 	return RangeFunc(iter, model.NewResponse), nil
@@ -86,7 +86,7 @@ func (service *Response) Range(session data.Session, criteria exp.Expression, op
 func (service *Response) Load(session data.Session, criteria exp.Expression, response *model.Response) error {
 
 	if err := service.collection(session).Load(notDeleted(criteria), response); err != nil {
-		return derp.Wrap(err, "service.Response.Load", "Error loading Response", criteria)
+		return derp.Wrap(err, "service.Response.Load", "Unable to load Response", criteria)
 	}
 
 	return nil
@@ -104,7 +104,7 @@ func (service *Response) Save(session data.Session, response *model.Response, no
 
 	// Save the value to the database
 	if err := service.collection(session).Save(response, note); err != nil {
-		return derp.Wrap(err, location, "Error saving Response", response, note)
+		return derp.Wrap(err, location, "Unable to save Response", response, note)
 	}
 
 	// Try to update the inbox message being responded to
@@ -268,7 +268,7 @@ func (service *Response) DeleteByUserID(session data.Session, userID primitive.O
 	rangeFunc, err := service.RangeByUserID(session, userID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error loading responses by user", userID)
+		return derp.Wrap(err, location, "Unable to load responses by user", userID)
 	}
 
 	for response := range rangeFunc {
@@ -301,7 +301,7 @@ func (service *Response) SetResponse(session data.Session, user *model.User, url
 
 	// Save the Response to the database (response service will automatically publish to ActivityPub and beyond)
 	if err := service.Save(session, &response, "Set Response"); err != nil {
-		return derp.Wrap(err, location, "Error saving response", response)
+		return derp.Wrap(err, location, "Unable to save response", response)
 	}
 
 	activity := service.Activity(response)
@@ -329,7 +329,7 @@ func (service *Response) UnsetResponse(session data.Session, user *model.User, u
 	}
 
 	if derp.NotNil(err) {
-		return derp.Wrap(err, location, "Error loading original response", user.UserID, url, responseType)
+		return derp.Wrap(err, location, "Unable to load original response", user.UserID, url, responseType)
 	}
 
 	// Otherwise, delete the old Response

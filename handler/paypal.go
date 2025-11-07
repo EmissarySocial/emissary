@@ -20,14 +20,14 @@ func GetPayPalConnect(ctx *steranko.Context, factory *service.Factory, user *mod
 		connection := model.NewConnection()
 
 		if err := connectionService.LoadByProvider(model.ConnectionProviderPayPal, &connection); err != nil {
-			return derp.Wrap(err, location, "Error loading PayPal Connection")
+			return derp.Wrap(err, location, "Unable to load PayPal Connection")
 		}
 
 		// Get the Access Token for this Connection
 		token, err := connectionService.GetAccessToken(&connection)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error loading Access Token")
+			return derp.Wrap(err, location, "Unable to load Access Token")
 		}
 
 		// Create a MerchantAccount for this User
@@ -111,7 +111,7 @@ func GetPayPalConnect(ctx *steranko.Context, factory *service.Factory, user *mod
 
 		// Save the MerchantAccount
 		if err := factory.MerchantAccount().Save(&merchantAccount, "Linked by User"); err != nil {
-			return derp.Wrap(err, location, "Error creating MerchantAccount")
+			return derp.Wrap(err, location, "Unable to create MerchantAccount")
 		}
 
 		// Forward the User to PayPal to complete the connection.
@@ -160,7 +160,7 @@ func postPayPalWebhook_MerchantOnboardingCompleted(factory *service.Factory, eve
 		// Retrieve the MerchantAccount
 		merchantAccount := model.NewMerchantAccount()
 		if err := factory.MerchantAccount().LoadByToken(trackingID, &merchantAccount); err != nil {
-			return derp.Wrap(err, location, "Error loading MerchantAccount")
+			return derp.Wrap(err, location, "Unable to load MerchantAccount")
 		}
 
 		// Update the MerchantAccount with the new information
@@ -168,7 +168,7 @@ func postPayPalWebhook_MerchantOnboardingCompleted(factory *service.Factory, eve
 		merchantAccount.Plaintext.SetString("merchantId", merchantID)
 
 		if err := factory.MerchantAccount().Save(&merchantAccount, "Onboarding Completed"); err != nil {
-			return derp.Wrap(err, location, "Error saving MerchantAccount")
+			return derp.Wrap(err, location, "Unable to save MerchantAccount")
 		}
 
 		return nil

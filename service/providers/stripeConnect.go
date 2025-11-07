@@ -146,7 +146,7 @@ func (adapter StripeConnect) Connect(connection *model.Connection, vault mapof.S
 		Result(&webhookResult)
 
 	if err := txn.Send(); err != nil {
-		return derp.Wrap(err, location, "Error creating WebHook via Stripe API")
+		return derp.Wrap(err, location, "Unable to create WebHook via Stripe API")
 	}
 
 	// Save the webhook data into the MerchantAccount

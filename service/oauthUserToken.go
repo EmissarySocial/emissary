@@ -68,7 +68,7 @@ func (service *OAuthUserToken) Iterator(session data.Session, criteria exp.Expre
 func (service *OAuthUserToken) Load(session data.Session, criteria exp.Expression, application *model.OAuthUserToken) error {
 
 	if err := service.collection(session).Load(notDeleted(criteria), application); err != nil {
-		return derp.Wrap(err, "service.OAuthUserToken", "Error loading OAuthUserToken", criteria)
+		return derp.Wrap(err, "service.OAuthUserToken", "Unable to load OAuthUserToken", criteria)
 	}
 
 	return nil
@@ -86,7 +86,7 @@ func (service *OAuthUserToken) Save(session data.Session, application *model.OAu
 
 	// Try to save the OAuthUserToken to the database
 	if err := service.collection(session).Save(application, note); err != nil {
-		return derp.Wrap(err, location, "Error saving OAuthUserToken", application, note)
+		return derp.Wrap(err, location, "Unable to save OAuthUserToken", application, note)
 	}
 
 	return nil
@@ -178,7 +178,7 @@ func (service *OAuthUserToken) CreateFromUser(session data.Session, user *model.
 	// Load the client from the database
 	client := model.NewOAuthClient()
 	if err := service.oauthClientService.LoadByClientID(session, clientID, &client); err != nil {
-		return model.OAuthUserToken{}, derp.Wrap(err, "service.OAuthUserToken.CreateFromUser", "Error loading client", clientID)
+		return model.OAuthUserToken{}, derp.Wrap(err, "service.OAuthUserToken.CreateFromUser", "Unable to load client", clientID)
 	}
 
 	// Create the JWT authorization
@@ -236,7 +236,7 @@ func (service *OAuthUserToken) Create(session data.Session, client model.OAuthCl
 
 	// Save the result to the database
 	if err := service.Save(session, &result, "Create"); err != nil {
-		return model.OAuthUserToken{}, derp.Wrap(err, location, "Error saving OAuthUserToken", result)
+		return model.OAuthUserToken{}, derp.Wrap(err, location, "Unable to save OAuthUserToken", result)
 	}
 
 	return result, nil
@@ -264,7 +264,7 @@ func (service *OAuthUserToken) JWT(userID primitive.ObjectID, scopes string) (st
 	keyName, keyValue, err := service.jwtService.GetCurrentKey()
 
 	if err != nil {
-		return "", derp.Wrap(err, "service.OAuthUserToken.JWT", "Error creating new JWT key")
+		return "", derp.Wrap(err, "service.OAuthUserToken.JWT", "Unable to create new JWT key")
 	}
 
 	result.Header["kid"] = keyName

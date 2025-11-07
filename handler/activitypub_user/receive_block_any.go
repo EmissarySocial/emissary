@@ -35,7 +35,7 @@ func receive_BlockAny(context Context, activity streams.Document) error {
 
 	// Try to save the new rule to the database (with de-duplication)
 	if err := context.factory.Rule().Save(context.session, &rule, "Received via ActivityPub"); err != nil {
-		return derp.Wrap(err, location, "Error saving rule", activity.Value(), rule)
+		return derp.Wrap(err, location, "Unable to save rule", activity.Value(), rule)
 	}
 
 	// Success.

@@ -76,7 +76,7 @@ func (service *Attachment) Query(session data.Session, criteria exp.Expression, 
 func (service *Attachment) Load(session data.Session, criteria exp.Expression, result *model.Attachment) error {
 
 	if err := service.collection(session).Load(notDeleted(criteria), result); err != nil {
-		return derp.Wrap(err, "service.Attachment", "Error loading Attachment", criteria)
+		return derp.Wrap(err, "service.Attachment", "Unable to load Attachment", criteria)
 	}
 
 	return nil
@@ -95,7 +95,7 @@ func (service *Attachment) Save(session data.Session, attachment *model.Attachme
 
 	// Save the record to the database
 	if err := service.collection(session).Save(attachment, note); err != nil {
-		return derp.Wrap(err, "service.Attachment", "Error saving Attachment", attachment, note)
+		return derp.Wrap(err, "service.Attachment", "Unable to save Attachment", attachment, note)
 	}
 
 	return nil
@@ -221,7 +221,7 @@ func (service *Attachment) LoadFirstByCategory(session data.Session, objectType 
 		option.SortAsc("rank"), option.FirstRow())
 
 	if err != nil {
-		return model.Attachment{}, derp.Wrap(err, location, "Error loading first attachment", objectType, objectID)
+		return model.Attachment{}, derp.Wrap(err, location, "Unable to load first attachment", objectType, objectID)
 	}
 
 	for _, attachment := range attachments {
@@ -240,7 +240,7 @@ func (service *Attachment) LoadFirstByObjectID(session data.Session, objectType 
 		option.SortAsc("rank"), option.FirstRow())
 
 	if err != nil {
-		return model.Attachment{}, derp.Wrap(err, "service.Attachment.LoadFirstByObjectID", "Error loading first attachment", objectType, objectID)
+		return model.Attachment{}, derp.Wrap(err, "service.Attachment.LoadFirstByObjectID", "Unable to load first attachment", objectType, objectID)
 	}
 
 	for _, attachment := range attachments {
@@ -257,7 +257,7 @@ func (service *Attachment) LoadByID(session data.Session, objectType string, obj
 		AndEqual("objectId", objectID)
 
 	if err := service.Load(session, criteria, result); err != nil {
-		return derp.Wrap(err, "service.Attachment.LoadByID", "Error loading attachment", objectType, objectID, attachmentID)
+		return derp.Wrap(err, "service.Attachment.LoadByID", "Unable to load attachment", objectType, objectID, attachmentID)
 	}
 
 	return nil
@@ -270,7 +270,7 @@ func (service *Attachment) DeleteByID(session data.Session, objectType string, o
 	// Load the Attachment from the database
 	attachment := model.NewAttachment(objectType, objectID)
 	if err := service.LoadByID(session, objectType, objectID, attachmentID, &attachment); err != nil {
-		return derp.Wrap(err, location, "Error loading attachment")
+		return derp.Wrap(err, location, "Unable to load attachment")
 	}
 
 	// Delete the attachment

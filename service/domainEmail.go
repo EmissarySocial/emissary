@@ -53,7 +53,7 @@ func (service *DomainEmail) SendWelcome(session data.Session, txn model.Registra
 	token, err := sterankoService.CreateJWT(txn.Claims())
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error creating JWT")
+		return derp.Wrap(err, location, "Unable to create JWT")
 	}
 
 	// Get the domain information from the DomainService
