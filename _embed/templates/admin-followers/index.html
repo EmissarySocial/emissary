@@ -8,6 +8,7 @@
    	
 	{{template "menubar" .}}
 
+
 	{{- if $followers.IsEmpty -}}
 
 		<div class="margin-horizontal-auto align-center" style="max-width:600px;">
@@ -25,31 +26,9 @@
 			Others may download the data via RSS or JSON.
 		</div>
 
-		<pre>{{$followers | jsonIndent}}</pre>
-
-		<table class="table">
-			{{- range $followers -}}
-				<tr class="clickable">
-					<td style="width:1em;">
-						{{icon "database"}}
-					</td>
-					<td>
-						<div>{{.Actor.Name}}</div>
-						<div class="text-light-gray">{{.Actor.ProfileURL}}</div>
-					</td>
-					<td class="align-right">{{icon .Icon}} {{.Method}}</td>
-				</tr>
-			{{- end -}}
-		</table>
-
-		<div class="text-xs text-light-gray">
-			Purchases: {{$followers.Length}} {{pluralize $followers.Length "Sources" "Sources"}}
-		</div>
-
 	{{- end -}}
 
-
-	<div class="margin-top-xl flex-row margin-horizontal-auto align-center" style="max-width:600px;">
+	<div class="margin-bottom-xl flex-row margin-horizontal-auto align-center" style="max-width:600px;">
 
 		<div class="card padding width-50%">
 			<div style="font-size:60px;">{{icon "activitypub"}}</div>
@@ -66,6 +45,25 @@
 		</div>
 
 	</div>
+
+	{{- if $followers.NotEmpty -}}
+
+		<table class="table">
+			{{- range $followers -}}
+				<tr class="clickable">
+					<td style="width:1em;">
+						{{icon "database"}}
+					</td>
+					<td>
+						<div>{{.Actor.Name}}</div>
+						<div class="text-light-gray">{{.Actor.ProfileURL}}</div>
+					</td>
+					<td class="align-right">{{icon .Icon}} {{.Method}}</td>
+				</tr>
+			{{- end -}}
+		</table>
+
+	{{- end -}}
 
 	<div 
 		hx-get="/admin/followers/index" 
