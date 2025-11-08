@@ -18,6 +18,7 @@ func GetOutboundIntent(ctx *steranko.Context, factory *service.Factory, session 
 	camper := factory.Camper()
 	intent := ctx.Param("intent")
 	account := ctx.QueryParam("account")
+
 	template := camper.GetTemplate(intent, account)
 
 	if template == "" {
