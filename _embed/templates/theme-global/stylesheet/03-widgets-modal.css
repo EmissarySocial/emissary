@@ -21,7 +21,7 @@
 	/* Opacity updated by animations */
 	opacity: 0;
 	transition:opacity;
-	transition-duration:180ms;
+	transition-duration:240ms;
 	transition-timing-function: ease;
 }
 
@@ -34,10 +34,10 @@
 	bottom: 0px;
 	left: 0px;
 	right: 0px;
-	background-color: #444;
+	background-color: #000;
 	opacity: 0;
 	transition:opacity;
-	transition-duration:180ms;
+	transition-duration:240ms;
 	transition-timing-function: ease;
 }
 
@@ -66,7 +66,7 @@
 	opacity:0;
 	transform:scale(0.8);
 	transition:transform, opacity;
-	transition-duration:180ms;
+	transition-duration:240ms;
 	transition-timing-function: ease
 }
 
@@ -121,7 +121,7 @@
 #modal.ready {
 	opacity: 1;
 	transition:opacity;
-	transition-duration:180ms;
+	transition-duration:240ms;
 	transition-timing-function: ease
 }
 
@@ -129,14 +129,14 @@
 	opacity:1;
 	transform:scale(1);
 	transition:transform, opacity;
-	transition-duration:180ms;
+	transition-duration:240ms;
 	transition-timing-function: ease
 }
 
 #modal.ready #modal-underlay {
-	opacity:0.7;
+	opacity:0.6;
 	transition:opacity;
-	transition-duration:180ms;
+	transition-duration:240ms;
 	transition-timing-function: ease;
 }
 
