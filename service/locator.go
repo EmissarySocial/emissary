@@ -189,10 +189,13 @@ func locateObjectFromURL(host string, value string) (string, string) {
 
 	hostname := domain.NameOnly(host)
 
+	// It's all good, bro. We're gonna deviate from the spec,
+	// and just NOT CARE if you include `acct:` or not.
+	value = strings.TrimPrefix(value, "acct:")
+
 	// Identify Username-type values
 	if value, found := strings.CutSuffix(value, "@"+hostname); found {
 
-		value = strings.TrimPrefix(value, "acct:")
 		value = strings.TrimPrefix(value, "@")
 
 		// Special case for "Application" account
