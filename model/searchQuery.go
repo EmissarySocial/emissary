@@ -14,7 +14,6 @@ import (
 	"github.com/benpate/geo"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/dlclark/metaphone3"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -108,12 +107,9 @@ func (searchQuery SearchQuery) Expression() exp.Expression {
 
 func (searchQuery SearchQuery) Match(searchResult *SearchResult) bool {
 
-	spew.Dump("Match::", searchQuery, searchResult)
-
 	// Match Type(s)
 	if searchQuery.Types.NotEmpty() {
 		if !sorted.Contains(searchQuery.Types, searchResult.Type) {
-			spew.Dump("NO. Types don't match")
 			return false
 		}
 	}
@@ -121,7 +117,6 @@ func (searchQuery SearchQuery) Match(searchResult *SearchResult) bool {
 	// Match Tags
 	if searchQuery.Tags.NotEmpty() {
 		if !sorted.ContainsAll(searchQuery.Tags, searchResult.Tags) {
-			spew.Dump("NO. Tags don't match")
 			return false
 		}
 	}
@@ -129,7 +124,6 @@ func (searchQuery SearchQuery) Match(searchResult *SearchResult) bool {
 	// Match Text Index
 	if searchQuery.Index.NotEmpty() {
 		if !sorted.ContainsAll(searchQuery.Index, searchResult.Index) {
-			spew.Dump("NO. Index doesn't match")
 			return false
 		}
 	}
@@ -148,7 +142,6 @@ func (searchQuery SearchQuery) Match(searchResult *SearchResult) bool {
 	// have to set a queue task in the future to re-evaluate this search
 	// at some strategic point in the future. (how?)
 
-	spew.Dump("YES.")
 	return true
 }
 
