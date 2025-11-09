@@ -15,6 +15,7 @@ NO DEPENDENTS
 
 FEW DEPENDENTS
 
+- geo
 - toot
 - hannibal
 - domain
