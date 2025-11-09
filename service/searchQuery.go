@@ -12,6 +12,7 @@ import (
 	"github.com/benpate/digit"
 	dt "github.com/benpate/domain"
 	"github.com/benpate/exp"
+	"github.com/benpate/geo"
 	"github.com/benpate/hannibal/outbox"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
@@ -173,14 +174,45 @@ func (service *SearchQuery) RangeNearMatches(session data.Session, searchResult 
 
 	var criteria exp.Expression = exp.And()
 
-	// searchQuery.Type is "" or matches searchResult
+	// Find SearchQueries that might match this SearchResult.Type
 	criteria = criteria.And(
 		exp.Or(
-			exp.Equal("type", ""),
-			exp.Equal("type", searchResult.Type),
+			exp.NotExists("types"),
+			exp.Equal("types", searchResult.Type),
 		),
 	)
 
+	// Find SearchQueries that might match this SearchResult.Tags
+	if searchResult.Tags.IsEmpty() {
+		criteria = criteria.And(
+			exp.NotExists("tags"),
+		)
+	} else {
+		criteria = criteria.And(
+			exp.Or(
+				exp.NotExists("tags"),
+				exp.In("tags", searchResult.Tags),
+			),
+		)
+	}
+
+	// Find SearchQueries that might match this SearchResult.Polygon
+	if searchResult.Location.IsZero() {
+		criteria = criteria.And(exp.NotExists("polygon"))
+	} else {
+		criteria = criteria.And(
+			exp.Or(
+				exp.NotExists("polygon"),
+				exp.GeoIntersects("polygon", searchResult.Location),
+			),
+		)
+	}
+
+	// This is not the greatest reverse search in the world;
+	// This is just a tribute. We'll need to take a second pass
+	// at each of these values.  Both Index and Tags are not complete
+	// searches, but this should help narrow down the number of records
+	// we need to scan in the app server.
 	return service.Range(session, criteria)
 }
 
@@ -272,13 +304,14 @@ func (service *SearchQuery) parseQueryValues(queryValues url.Values) (model.Sear
 		result.AppendTags(tags...)
 	}
 
-	// if startDate := queryString.Get("startDate"); startDate != "" {
-	//	result.StartDate = startDate
-	// }
+	// Parse "polygon" into the SearchQuery
+	if location := queryValues.Get("location"); location != "" {
+		result.Polygon = geo.NewPolygonFromString(location)
+	}
 
-	// if location := queryString.Get("location"); location != "" {
-	//	result.Location = location
-	// }
+	// NOT INCLUDING START DATE IN THIS QUERY BECAUSE IT'S MORE COMPLICATED
+	// THAN THIS. NOT SURE IF WE CAN DO IT WITHOUT USING A SOPHISTICATED
+	// QUEUE/SCHEDULER SITUATION.
 
 	// Create the "signature" value for this SearchQuery
 	result.MakeSignature()

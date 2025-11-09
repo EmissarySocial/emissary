@@ -20,15 +20,15 @@ import (
 
 // SearchQuery represents a saved query that visitors can follow
 type SearchQuery struct {
-	SearchQueryID primitive.ObjectID `bson:"_id"`               // SearchQueryID is the unique identifier for a SearchQuery
-	URL           string             `bson:"url"`               // The URL where this search query originated
-	Types         sliceof.String     `bson:"types"`             // The types of results that this query is interested in (Person, Article, Album, Audio, etc)
-	Query         string             `bson:"query"`             // The original string used in the search query
-	Index         sliceof.String     `bson:"index"`             // The parsed (and normalized) index of values in the search query
-	Tags          sliceof.String     `bson:"tags"`              // The parsed (and normalized) tag values
-	StartDate     string             `bson:"startDate"`         // The start date of the search query
-	Polygon       geo.Polygon        `bson:"polygon,omitempty"` // Polygon to search within
-	Signature     string             `bson:"signature"`         // The hash of this search query
+	SearchQueryID primitive.ObjectID `bson:"_id"`              // SearchQueryID is the unique identifier for a SearchQuery
+	URL           string             `bson:"url"`              // The URL where this search query originated
+	Query         string             `bson:"query"`            // The original string used in the search query
+	Types         sliceof.String     `bson:"types,omitempty"`  // The types of results that this query is interested in (Person, Article, Album, Audio, etc)
+	Index         sliceof.String     `bson:"index,omitempty"`  // The parsed (and normalized) index of values in the search query
+	Tags          sliceof.String     `bson:"tags,omitempty"`   // The parsed (and normalized) tag values
+	Polygon       geo.Polygon        `bson:"polygon,omitzero"` // Polygon to search within
+	StartDate     string             `bson:"startDate"`        // The start date of the search query
+	Signature     string             `bson:"signature"`        // The hash of this search query
 
 	journal.Journal `bson:",inline"`
 }
