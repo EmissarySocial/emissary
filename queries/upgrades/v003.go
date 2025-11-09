@@ -39,7 +39,7 @@ func Version3(ctx context.Context, session *mongo.Database) error {
 		privateKey, err := rsa.GenerateKey(rand.Reader, 512)
 
 		if err != nil {
-			return derp.Wrap(err, "model.CreateEncryptionKey", "Error generating RSA key")
+			return derp.Wrap(err, "model.CreateEncryptionKey", "Unable to generate RSA key")
 		}
 
 		record["privatePEM"] = sigs.EncodePrivatePEM(privateKey)

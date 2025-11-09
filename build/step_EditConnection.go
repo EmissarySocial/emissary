@@ -42,7 +42,7 @@ func (step StepEditConnection) Get(builder Builder, buffer io.Writer) PipelineBe
 	formHTML, err := form.Editor(&connection, nil)
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error generating form editor"))
+		return Halt().WithError(derp.Wrap(err, location, "Unable to generate form editor"))
 	}
 
 	// Wrap the form as a ModalForm and return

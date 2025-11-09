@@ -115,7 +115,7 @@ func (vault *Vault) Encrypt(encryptionKey []byte) error {
 	aesgcm, err := cipher.NewGCM(block)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error generating GCM cipher")
+		return derp.Wrap(err, location, "Unable to generate GCM cipher")
 	}
 
 	// If not present, Create (and save) a randome n-once
@@ -152,7 +152,7 @@ func (vault Vault) Decrypt(encryptionKey []byte, values ...string) (mapof.String
 	aesgcm, err := cipher.NewGCM(block)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Error generating GCM cipher")
+		return nil, derp.Wrap(err, location, "Unable to generate GCM cipher")
 	}
 
 	// Retrieve the N-Once
@@ -229,7 +229,7 @@ func (vault *Vault) getNonce(aesgcm cipher.AEAD) ([]byte, error) {
 		nonce := make([]byte, aesgcm.NonceSize())
 
 		if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
-			return nil, derp.Wrap(err, location, "Error generating nonce")
+			return nil, derp.Wrap(err, location, "Unable to generate nonce")
 		}
 
 		vault.Nonce = hex.EncodeToString(nonce)

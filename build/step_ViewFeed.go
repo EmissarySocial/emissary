@@ -93,7 +93,7 @@ func (step StepViewFeed) Get(builder Builder, buffer io.Writer) PipelineBehavior
 		}
 
 		if err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Error generating feed. This should never happen"))
+			return Halt().WithError(derp.Wrap(err, location, "Unable to generate feed. This should never happen"))
 		}
 
 		if _, err := buffer.Write([]byte(xml)); err != nil {
@@ -159,7 +159,7 @@ func (step StepViewFeed) asJSONFeed(builder Builder, buffer io.Writer, children 
 	bytes, err := json.Marshal(feed)
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error generating JSONFeed"))
+		return Halt().WithError(derp.Wrap(err, location, "Unable to generate JSONFeed"))
 	}
 
 	if _, err := buffer.Write(bytes); err != nil {

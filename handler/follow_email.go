@@ -33,7 +33,7 @@ func PostEmailFollower(ctx *steranko.Context, factory *service.Factory, session 
 	secret, err := random.GenerateString(64)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error generating secret")
+		return derp.Wrap(err, location, "Unable to generate secret")
 	}
 
 	// Create the new "Follower" record.

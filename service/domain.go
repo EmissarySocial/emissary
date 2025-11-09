@@ -314,7 +314,7 @@ func (service *Domain) OAuthCodeURL(session data.Session, providerID string) (st
 	connection, err := service.NewOAuthClient(session, providerID)
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Error generating new OAuth connection")
+		return "", derp.Wrap(err, location, "Unable to generate new OAuth connection")
 	}
 
 	// Generate and return the AuthCodeURL
@@ -398,13 +398,13 @@ func (service *Domain) NewOAuthClient(session data.Session, providerID string) (
 	newState, err := random.GenerateString(32)
 
 	if err != nil {
-		return model.Connection{}, derp.Wrap(err, location, "Error generating random string")
+		return model.Connection{}, derp.Wrap(err, location, "Unable to generate random string")
 	}
 
 	codeChallenge, err := random.GenerateString(64)
 
 	if err != nil {
-		return model.Connection{}, derp.Wrap(err, location, "Error generating random string")
+		return model.Connection{}, derp.Wrap(err, location, "Unable to generate random string")
 	}
 
 	// Assign the state to the connection and put into the domain

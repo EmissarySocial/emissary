@@ -42,7 +42,7 @@ func (step StepEditModelObject) Get(builder Builder, buffer io.Writer) PipelineB
 	result, err := form.Editor(schema, element, builder.object(), builder.lookupProvider(), optionStrings...)
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error generating form"))
+		return Halt().WithError(derp.Wrap(err, location, "Unable to generate form"))
 	}
 
 	// Wrap the form layout in a <form> element

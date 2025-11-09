@@ -42,7 +42,7 @@ func GenerateString(s int) (string, error) {
 	b, err := GenerateBytes(s)
 
 	if err != nil {
-		return "", derp.Wrap(err, "random.GenerateString", "Error generating random bytes")
+		return "", derp.Wrap(err, "random.GenerateString", "Unable to generate random bytes")
 	}
 
 	str := Base64URLEncode(b)

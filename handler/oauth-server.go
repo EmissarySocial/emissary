@@ -30,7 +30,7 @@ func GetOAuthAuthorization(ctx *steranko.Context, factory *service.Factory, sess
 	builder, err := build.NewOAuthAuthorization(factory, session, transaction)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error Generating Builder")
+		return derp.Wrap(err, location, "Unable to generate Builder")
 	}
 
 	// Render the template

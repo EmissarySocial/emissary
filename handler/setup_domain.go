@@ -41,7 +41,7 @@ func SetupDomainGet(factory *server.Factory) echo.HandlerFunc {
 		formHTML, err := form.Editor(s, domainEditForm, &domain, nil)
 
 		if err != nil {
-			return derp.Wrap(err, "handler.SetupDomainGet", "Error generating form")
+			return derp.Wrap(err, "handler.SetupDomainGet", "Unable to generate form")
 		}
 
 		result := build.WrapModalForm(ctx.Response(), "/domains/"+domain.DomainID, formHTML, domainEditForm.Encoding())

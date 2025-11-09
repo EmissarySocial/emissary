@@ -33,7 +33,7 @@ func (step StepAddModelObject) Get(builder Builder, buffer io.Writer) PipelineBe
 	formHTML, err := form.Editor(schema, step.Form, object, builder.lookupProvider())
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, "build.StepAddModelObject.Get", "Error generating form"))
+		return Halt().WithError(derp.Wrap(err, "build.StepAddModelObject.Get", "Unable to generate form"))
 	}
 
 	formHTML = WrapForm(builder.URL(), formHTML, step.Form.Encoding())

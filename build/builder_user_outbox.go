@@ -82,7 +82,7 @@ func (w Outbox) Render() (template.HTML, error) {
 	status := Pipeline(w._action.Steps).Get(w._factory, &w, &buffer)
 
 	if status.Error != nil {
-		err := derp.Wrap(status.Error, "build.Outbox.Render", "Error generating HTML", w._request.URL.String())
+		err := derp.Wrap(status.Error, "build.Outbox.Render", "Unable to generate HTML", w._request.URL.String())
 		derp.Report(err)
 		return "", err
 	}

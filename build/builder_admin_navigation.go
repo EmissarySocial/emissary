@@ -59,7 +59,7 @@ func (w Navigation) Render() (template.HTML, error) {
 	status := Pipeline(w._action.Steps).Get(w._factory, &w, &buffer)
 
 	if status.Error != nil {
-		err := derp.Wrap(status.Error, "build.Navigation.Render", "Error generating HTML")
+		err := derp.Wrap(status.Error, "build.Navigation.Render", "Unable to generate HTML")
 		derp.Report(err)
 		return "", err
 	}

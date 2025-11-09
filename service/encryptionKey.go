@@ -157,7 +157,7 @@ func (service *EncryptionKey) Create(session data.Session, parentType string, pa
 	privateKey, err := rsa.GenerateKey(rand.Reader, encryptionKeyBits)
 
 	if err != nil {
-		return model.EncryptionKey{}, derp.Wrap(err, "model.CreateEncryptionKey", "Error generating RSA key", parentType, parentID)
+		return model.EncryptionKey{}, derp.Wrap(err, "model.CreateEncryptionKey", "Unable to generate RSA key", parentType, parentID)
 	}
 
 	encryptionKey.PrivatePEM = sigs.EncodePrivatePEM(privateKey)

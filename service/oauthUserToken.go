@@ -224,7 +224,7 @@ func (service *OAuthUserToken) Create(session data.Session, client model.OAuthCl
 	token, err := service.JWT(authorization.UserID, transaction.Scope)
 
 	if err != nil {
-		return model.OAuthUserToken{}, derp.Wrap(err, location, "Error generating random token")
+		return model.OAuthUserToken{}, derp.Wrap(err, location, "Unable to generate random token")
 	}
 
 	// Copy data from the authorization

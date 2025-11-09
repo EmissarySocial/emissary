@@ -39,7 +39,7 @@ func (service *MerchantAccount) stripe_getCheckoutURL(merchantAccount *model.Mer
 	transactionID, err := random.GenerateString(32)
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Error generating transaction ID")
+		return "", derp.Wrap(err, location, "Unable to generate transaction ID")
 	}
 
 	// Wrap the parameters in a JWT token
@@ -58,7 +58,7 @@ func (service *MerchantAccount) stripe_getCheckoutURL(merchantAccount *model.Mer
 	token, err := service.jwtService.NewToken(claims)
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Error generating JWT token")
+		return "", derp.Wrap(err, location, "Unable to generate JWT token")
 	}
 
 	// Create a new Stripe Checkout Session

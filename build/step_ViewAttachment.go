@@ -87,7 +87,7 @@ func (step StepViewAttachment) Get(builder Builder, buffer io.Writer) PipelineBe
 	filespec, err := step.makeFileSpec(&streamBuilder, streamBuilder._stream, &attachment)
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error generating file spec"))
+		return Halt().WithError(derp.Wrap(err, location, "Unable to generate file spec"))
 	}
 
 	if err := ms.Serve(streamBuilder.response(), streamBuilder.request(), filespec); err != nil {

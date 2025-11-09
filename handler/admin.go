@@ -45,7 +45,7 @@ func buildAdmin(ctx *steranko.Context, factory *service.Factory, session data.Se
 	builder, err := buildAdmin_GetBuilder(ctx, factory, session, template, actionID, objectID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error generating builder")
+		return derp.Wrap(err, location, "Unable to generate builder")
 	}
 
 	// Success!!

@@ -63,7 +63,7 @@ func (w User) Render() (template.HTML, error) {
 	status := Pipeline(w._action.Steps).Get(w._factory, &w, &buffer)
 
 	if status.Error != nil {
-		err := derp.Wrap(status.Error, "build.User.Render", "Error generating HTML")
+		err := derp.Wrap(status.Error, "build.User.Render", "Unable to generate HTML")
 		derp.Report(err)
 		return "", err
 	}

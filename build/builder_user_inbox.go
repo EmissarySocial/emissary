@@ -78,7 +78,7 @@ func (w Inbox) Render() (template.HTML, error) {
 	status := Pipeline(w._action.Steps).Get(w._factory, &w, &buffer)
 
 	if status.Error != nil {
-		return "", derp.Wrap(status.Error, "build.Inbox.Render", "Error generating HTML", w._request.URL.String())
+		return "", derp.Wrap(status.Error, "build.Inbox.Render", "Unable to generate HTML", w._request.URL.String())
 	}
 
 	// Success!

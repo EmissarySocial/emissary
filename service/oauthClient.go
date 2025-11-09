@@ -87,7 +87,7 @@ func (service *OAuthClient) Save(session data.Session, app *model.OAuthClient, n
 		secret, err := random.GenerateString(64)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error generating client secret")
+			return derp.Wrap(err, location, "Unable to generate client secret")
 		}
 
 		app.ClientSecret = secret
