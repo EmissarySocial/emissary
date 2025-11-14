@@ -18,7 +18,7 @@ require (
 	github.com/benpate/form v0.25.4
 	github.com/benpate/geo v0.0.1
 	github.com/benpate/hannibal v0.14.4
-	github.com/benpate/html v0.16.14
+	github.com/benpate/html v0.16.15
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.15.11
 	github.com/benpate/re v0.3.5
