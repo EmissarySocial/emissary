@@ -32,35 +32,20 @@ func (service *Provider) GetProvider(providerID string) (providers.Provider, boo
 	// Create an adapter for known providers
 	switch providerID {
 
-	case model.ConnectionProviderArcGIS:
-		return providers.NewArcGIS(), true
+	case model.ConnectionProviderGeocodeAddress:
+		return providers.NewGeocodeAddress(), true
 
-	case model.ConnectionProviderFREEIPAPICOM:
-		return providers.NewFREEIPAPICOM(), true
+	case model.ConnectionProviderGeocodeAutocomplete:
+		return providers.NewGeocodeAutocomplete(), true
 
-	case model.ConnectionProviderGeoapify:
-		return providers.NewGeoapify(), true
+	case model.ConnectionProviderGeocodeNetwork:
+		return providers.NewGeocodeNetwork(), true
+
+	case model.ConnectionProviderGeocodeTiles:
+		return providers.NewGeocodeTiles(), true
 
 	case model.ConnectionProviderGiphy:
 		return providers.NewGiphy(), true
-
-	case model.ConnectionProviderGoogleMaps:
-		return providers.NewGoogleMaps(), true
-
-	case model.ConnectionProviderNominatim:
-		return providers.NewNominatim(), true
-
-	case model.ConnectionProviderIPAPICO:
-		return providers.NewIPAPICO(), true
-
-	case model.ConnectionProviderIPAPICOM:
-		return providers.NewIPAPICOM(), true
-
-	case model.ConnectionProviderOpenStreetMap:
-		return providers.NewOpenStreetMap(), true
-
-	case model.ConnectionProviderStaticGeocoderIP:
-		return providers.NewStaticGeocoder(), true
 
 	case model.ConnectionProviderStripe:
 		return providers.NewStripe(), true

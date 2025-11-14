@@ -15,17 +15,18 @@ func Version11(ctx context.Context, session *mongo.Database) error {
 	fmt.Println("... Version 11")
 
 	for _, collection := range []string{"Stream", "StreamSummary", "Inbox"} {
-		err := ForEachRecord(session.Collection(collection), func(record mapof.Any) error {
+		err := ForEachRecord(session.Collection(collection), func(record mapof.Any) bool {
 			if attributedTo, ok := record["attributedTo"]; ok {
 				if attributedToSlice, ok := attributedTo.([]any); ok {
 					if len(attributedToSlice) > 0 {
 						record["attributedTo"] = attributedToSlice[0]
-						return nil
+						return true
 					}
 				}
 				record["attributedTo"] = model.NewPersonLink()
+				return true
 			}
-			return nil
+			return false
 		})
 
 		if err != nil {

@@ -33,7 +33,11 @@ type Factory interface {
 	Folder() *service.Folder
 	Following() *service.Following
 	Follower() *service.Follower
-	Geocode() service.Geocode
+	GeocodeAddress() service.GeocodeAddress
+	GeocodeAutocomplete() service.GeocodeAutocomplete
+	GeocodeNetwork() service.GeocodeNetwork
+	GeocodeTiles() service.GeocodeTiles
+	GeocodeTimezone() service.GeocodeTimezone
 	Group() *service.Group
 	Identity() *service.Identity
 	Inbox() *service.Inbox

@@ -58,8 +58,8 @@ func TestStreamSchema(t *testing.T) {
 		{"content.raw", "TEST_RAWCONTENT", nil},
 		{"content.html", "TEST_HTML", nil},
 
-		{"places.0.name", "The Whiskey-a-Go-Go", nil},
-		{"places.0.fullAddress", "8901 Sunset Blvd, West Hollywood, CA 90069", nil},
+		{"location.name", "The Whiskey-a-Go-Go", nil},
+		{"location.formatted", "8901 Sunset Blvd, West Hollywood, CA 90069", nil},
 
 		{"startDate.date", "2021-01-02", nil},
 		{"startDate.time", "15:04", nil},

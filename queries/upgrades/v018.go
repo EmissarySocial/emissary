@@ -18,7 +18,7 @@ func Version18(ctx context.Context, session *mongo.Database) error {
 
 	fmt.Println("... Version 18")
 
-	return ForEachRecord(session.Collection("Stream"), func(record mapof.Any) error {
+	return ForEachRecord(session.Collection("Stream"), func(record mapof.Any) bool {
 
 		result := mapof.NewObject[id.Slice]()
 		permissions := record.GetMap("permissions")
@@ -44,6 +44,6 @@ func Version18(ctx context.Context, session *mongo.Database) error {
 		// Write the result into the original record.
 		record["groups"] = result
 		// delete(record, "permissions")
-		return nil
+		return true
 	})
 }

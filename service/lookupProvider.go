@@ -60,6 +60,10 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 			form.LookupCode{Value: "BLOCK", Label: "BLOCK senders and prevent followers who are blocked by this source (two-way block)"},
 		)
 
+	case "geocode-tiles":
+		result := form.NewReadOnlyLookupGroup(dataset.GeocodeTiles()...)
+		return result
+
 	case "group-icons":
 		return form.NewReadOnlyLookupGroup(dataset.Icons()...)
 

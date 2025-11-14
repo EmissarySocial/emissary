@@ -14,10 +14,10 @@ func Geocode(factory *service.Factory, session data.Session, streamService *serv
 	const location = "consumer.Geocode"
 
 	// Try to geocode the Places in this Stream
-	geocodeService := factory.Geocode()
+	geocodeService := factory.GeocodeAddress()
 
 	if err := geocodeService.Geocode(session, stream); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Cannot geocode stream", stream))
+		return queue.Error(derp.Wrap(err, location, "Cannot geocode location", stream))
 	}
 
 	// Try to save the Stream

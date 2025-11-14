@@ -16,14 +16,14 @@ require (
 	github.com/benpate/exp v0.9.0
 	github.com/benpate/exp-builder v0.10.7
 	github.com/benpate/form v0.25.4
-	github.com/benpate/geo v0.0.1
+	github.com/benpate/geo v0.0.2
 	github.com/benpate/hannibal v0.14.4
-	github.com/benpate/html v0.16.14
+	github.com/benpate/html v0.16.15
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.15.11
 	github.com/benpate/re v0.3.5
 	github.com/benpate/remote v0.17.10
-	github.com/benpate/rosetta v0.25.23
+	github.com/benpate/rosetta v0.25.24
 	github.com/benpate/sherlock v0.8.17
 	github.com/benpate/sniff v0.1.0
 	github.com/benpate/steranko v0.22.6
@@ -66,8 +66,8 @@ require (
 	github.com/yuin/goldmark-highlighting/v2 v2.0.0-20230729083705-37449abec8cc
 	go.abhg.dev/goldmark/anchor v0.2.0
 	go.mongodb.org/mongo-driver v1.17.6
-	golang.org/x/crypto v0.43.0
-	golang.org/x/exp v0.0.0-20251023183803-a4bb9ffd2546
+	golang.org/x/crypto v0.44.0
+	golang.org/x/exp v0.0.0-20251113190631-e25ba8c21ef6
 	golang.org/x/oauth2 v0.33.0
 	willnorris.com/go/microformats v1.2.0
 	willnorris.com/go/webmention v0.0.0-20250531043116-33a44c5fb605
@@ -95,6 +95,7 @@ require (
 	github.com/go-test/deep v1.1.1 // indirect
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect
+	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/golang/snappy v1.0.0 // indirect
 	github.com/gorilla/css v1.0.1 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
@@ -125,12 +126,13 @@ require (
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/yeqown/reedsolomon v1.0.0 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
-	golang.org/x/image v0.32.0 // indirect
-	golang.org/x/net v0.46.0 // indirect
+	golang.org/x/image v0.33.0 // indirect
+	golang.org/x/net v0.47.0 // indirect
 	golang.org/x/sync v0.18.0 // indirect
 	golang.org/x/sys v0.38.0 // indirect
-	golang.org/x/text v0.30.0 // indirect
+	golang.org/x/text v0.31.0 // indirect
 	golang.org/x/time v0.14.0 // indirect
+	google.golang.org/protobuf v1.36.10 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

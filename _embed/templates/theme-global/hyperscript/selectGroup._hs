@@ -1,0 +1,43 @@
+behavior SelectGroup(children, options, value)
+
+	on load
+		wait a tick
+		log children
+		set :linkedSelect to the first <select[name="${children}"] />
+		log linkedSelect
+
+		set :options to JSON.parse(options)
+		if :options is null then
+			log "cannot parse options JSON"
+			log options
+			exit
+		end
+
+		call selectGroup_setLinkedOptions(:linkedSelect, :options, my value)
+
+		for option in :options
+			if option.value == value then
+				set :linkedSelect.value to value
+				break
+			end
+		end
+
+	end
+
+	on change
+		call selectGroup_setLinkedOptions(:linkedSelect, :options, my value)
+	end
+
+end
+
+def selectGroup_setLinkedOptions(linkedSelect, options, value)
+
+	set linkedSelect.innerHTML to ""
+
+	for option in options
+		if option.group == value then
+			put `<option value="${option.value}">${option.label}</option>` at the end of linkedSelect
+		end
+	end
+
+end

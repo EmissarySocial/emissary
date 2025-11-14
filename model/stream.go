@@ -9,6 +9,7 @@ import (
 	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/data/journal"
+	"github.com/benpate/geo"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/delta"
 	"github.com/benpate/rosetta/mapof"
@@ -47,7 +48,7 @@ type Stream struct {
 	Content          Content                 `bson:"content,omitempty"`      // Body content object for this Stream.
 	Widgets          set.Slice[StreamWidget] `bson:"widgets,omitempty"`      // Additional widgets to include when building this Stream.
 	Hashtags         sliceof.String          `bson:"hashtags,omitempty"`     // List of hashtags that are associated with this document
-	Places           sliceof.Object[Place]   `bson:"places,omitempty"`       // List of locations that are associated with this document
+	Location         geo.Address             `bson:"location,omitempty"`     // Location assigned to this stream
 	Data             mapof.Any               `bson:"data,omitempty"`         // Set of data to populate into the Template.  This is validated by the JSON-Schema of the Template.
 	StartDate        datetime.DateTime       `bson:"startDate,omitempty"`    // Date/Time to publish as a "start date" for this Stream (semantics are dependent on the Template)
 	EndDate          datetime.DateTime       `bson:"endDate,omitempty"`      // Date/Time to publish as an "end date" for this Stream (semantics are dependent on the Template)
@@ -78,6 +79,7 @@ func NewStream() Stream {
 		Groups:        mapof.NewObject[id.Slice](),
 		Circles:       mapof.NewObject[id.Slice](),
 		Products:      mapof.NewObject[id.Slice](),
+		Location:      geo.NewAddress(),
 		DefaultAllow:  NewPermissions(),
 		PrivilegeIDs:  NewPermissions(),
 		Widgets:       NewStreamWidgets(),
@@ -463,8 +465,8 @@ func (stream Stream) GetWebhookData() mapof.Any {
 	}
 }
 
-// CopyFrom sets all values in this Stream to match the values in the provided Stream
-func (stream *Stream) CopyFrom(other Stream) {
+// Update sets all values in this Stream to match the values in the provided Stream
+func (stream *Stream) Update(other Stream) {
 	stream.StreamID = other.StreamID
 	stream.ParentID = other.ParentID
 	stream.ParentIDs = other.ParentIDs

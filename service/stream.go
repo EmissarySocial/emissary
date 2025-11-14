@@ -47,6 +47,7 @@ type Stream struct {
 	ruleService       *Rule
 	userService       *User
 	webhookService    *Webhook
+	geocodeService    GeocodeAddress
 	host              string
 	mediaserver       mediaserver.MediaServer
 	queue             *queue.Queue
@@ -65,7 +66,7 @@ func NewStream(factory *Factory) Stream {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Stream) Refresh(circleService *Circle, domainService *Domain, searchTagService *SearchTag, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, contentService *Content, keyService *EncryptionKey, followerService *Follower, ruleService *Rule, userService *User, webhookService *Webhook, mediaserver mediaserver.MediaServer, queue *queue.Queue, sseUpdateChannel chan<- realtime.Message, host string) {
+func (service *Stream) Refresh(circleService *Circle, domainService *Domain, searchTagService *SearchTag, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, contentService *Content, keyService *EncryptionKey, followerService *Follower, ruleService *Rule, userService *User, webhookService *Webhook, geocodeService GeocodeAddress, mediaserver mediaserver.MediaServer, queue *queue.Queue, sseUpdateChannel chan<- realtime.Message, host string) {
 	service.circleService = circleService
 	service.domainService = domainService
 	service.searchTagService = searchTagService
@@ -79,6 +80,7 @@ func (service *Stream) Refresh(circleService *Circle, domainService *Domain, sea
 	service.ruleService = ruleService
 	service.userService = userService
 	service.webhookService = webhookService
+	service.geocodeService = geocodeService
 	service.mediaserver = mediaserver
 	service.queue = queue
 
@@ -326,6 +328,13 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 	// RULE: Default Token
 	if stream.Token == "" {
 		stream.Token = stream.StreamID.Hex()
+	}
+
+	// Geocode the Location (if needed)
+	if stream.Location.NotZero() {
+		if err := service.geocodeService.GeocodeAndQueue(session, stream); err != nil {
+			return derp.Wrap(err, location, "Unable to geocode stream", stream.Location)
+		}
 	}
 
 	// Validate the value (using the global stream schema) before saving
@@ -1237,8 +1246,8 @@ func (service *Stream) SearchResult(stream *model.Stream) model.SearchResult {
 					result.Date = stream.StartDate.Time
 					result.Local = true
 
-					if place := stream.Places.First(); place.NotEmpty() {
-						result.Location = place.GeoPoint()
+					if stream.Location.NotZero() {
+						result.Location = stream.Location.GeoPoint()
 					}
 
 					if tagString := template.SearchOptions.Execute("tags", stream); tagString != "" {

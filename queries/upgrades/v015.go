@@ -15,13 +15,14 @@ func Version15(ctx context.Context, session *mongo.Database) error {
 
 	fmt.Println("... Version 15")
 	{
-		err := ForEachRecord(session.Collection("Follower"), func(record mapof.Any) error {
+		err := ForEachRecord(session.Collection("Follower"), func(record mapof.Any) bool {
 
 			if record.GetString("stateId") == "" {
 				record["stateId"] = model.FollowerStateActive
+				return true
 			}
 
-			return nil
+			return false
 		})
 
 		if err != nil {

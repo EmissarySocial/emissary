@@ -22,3 +22,4 @@ config-env.json
 .emissary
 /emissary
 config.json
+/service/geocoder/apikeys_test.go

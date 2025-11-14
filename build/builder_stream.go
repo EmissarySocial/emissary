@@ -16,6 +16,7 @@ import (
 	"github.com/benpate/exp"
 	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/form"
+	"github.com/benpate/geo"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/convert"
@@ -338,8 +339,8 @@ func (w Stream) ContentHTML() template.HTML {
 	return template.HTML(w._stream.Content.HTML)
 }
 
-func (w Stream) Places() sliceof.Object[model.Place] {
-	return w._stream.Places
+func (w Stream) Location() geo.Address {
+	return w._stream.Location
 }
 
 func (w Stream) StartDate() time.Time {

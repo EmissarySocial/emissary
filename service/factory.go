@@ -425,6 +425,7 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 			factory.Rule(),
 			factory.User(),
 			factory.Webhook(),
+			factory.GeocodeAddress(),
 			factory.MediaServer(),
 			factory.Queue(),
 			factory.SSEUpdateChannel(),
@@ -700,14 +701,29 @@ func (factory *Factory) Folder() *Folder {
 	return &factory.folderService
 }
 
-// Geocode returns a fully populated Geocode service
-func (factory *Factory) Geocode() Geocode {
-	return NewGeocode(factory.Hostname(), factory.Queue(), factory.Connection())
+// GeocodeAddress returns a fully populated Geocode service
+func (factory *Factory) GeocodeAddress() GeocodeAddress {
+	return NewGeocodeAddress(factory.Hostname(), factory.Queue(), factory.Connection())
 }
 
-// Geosearch returns a fully populated Geosearch service
-func (factory *Factory) Geosearch() Geosearch {
-	return NewGeosearch(factory.Connection(), factory.Hostname())
+// GeocodeAutocomplete returns a fully populated Geocode service
+func (factory *Factory) GeocodeAutocomplete() GeocodeAutocomplete {
+	return NewGeocodeAutocomplete(factory.Connection(), factory.Hostname())
+}
+
+// GeocodeNetwork returns a fully populated Geocode service
+func (factory *Factory) GeocodeNetwork() GeocodeNetwork {
+	return NewGeocodeNetwork(factory.Connection(), factory.Queue(), factory.Hostname())
+}
+
+// GeocodeTiles returns a fully populated Geocode service
+func (factory *Factory) GeocodeTiles() GeocodeTiles {
+	return NewGeocodeTiles(factory.Connection(), factory.Hostname())
+}
+
+// GeocodeTimezone returns a fully populated Geocode service
+func (factory *Factory) GeocodeTimezone() GeocodeTimezone {
+	return NewGeocodeTimezone(factory.Connection(), factory.Hostname())
 }
 
 // Group returns a fully populated Group service

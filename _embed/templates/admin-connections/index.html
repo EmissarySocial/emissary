@@ -12,24 +12,23 @@
 	{{- range $index, $provider := $providers -}}
 
 		{{- if $groupBy.IsHeader $index -}}
-			<h2>{{icon $provider.Icon}} {{$provider.Group}}</h2>
+			<h2>{{$provider.Group}}</h2>
 			<div class="table margin-bottom-xl">
 		{{- end -}}
 
 		{{ $connection := index $connections .Value }}
-		<div hx-get="/admin/connections/edit?providerId={{.Value}}" script="install blockselect()" role="link">
-			<div class="flex-row">
-				<div class="flex-grow">
-					<div class="bold">{{.Label}}</div>
-					<div class="text-light-gray">{{.Description}}</div>
-				</div>
-				<div>
-					{{- if $connection.Active -}}
-						<button class="success">{{icon "check"}} Connected</button>
-					{{- else -}}
-						<button>Connect Now</button>
-					{{- end -}}
-				</div>
+		<div hx-get="/admin/connections/edit?providerId={{.Value}}" script="install blockselect()" role="link" class="flex-row">
+			<div class="text-lg text-gray margin-none">{{icon $provider.Icon}}</div>
+			<div class="flex-grow">
+				<div class="bold">{{.Label}}</div>
+				<div class="text-sm margin-none text-light-gray">{{.Description}}</div>
+			</div>
+			<div class="text-sm">
+				{{- if $connection.Active -}}
+					<button class="success">{{icon "check"}} Connected</button>
+				{{- else -}}
+					<button>Connect</button>
+				{{- end -}}
 			</div>
 		</div>
 

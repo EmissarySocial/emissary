@@ -14,34 +14,36 @@ func Version10(ctx context.Context, session *mongo.Database) error {
 
 	fmt.Println("... Version 10")
 
-	err := ForEachRecord(session.Collection("Stream"), func(record mapof.Any) error {
+	err := ForEachRecord(session.Collection("Stream"), func(record mapof.Any) bool {
 		if attributedTo, ok := record["attributedTo"]; ok {
 			if attributedToSlice, ok := attributedTo.([]any); ok {
 				if len(attributedToSlice) > 0 {
 					record["attributedTo"] = attributedToSlice[0]
-					return nil
+					return true
 				}
 			}
 			record["attributedTo"] = model.NewPersonLink()
+			return true
 		}
-		return nil
+		return false
 	})
 
 	if err != nil {
 		return err
 	}
 
-	return ForEachRecord(session.Collection("Inbox"), func(record mapof.Any) error {
+	return ForEachRecord(session.Collection("Inbox"), func(record mapof.Any) bool {
 		if attributedTo, ok := record["attributedTo"]; ok {
 			if attributedToSlice, ok := attributedTo.([]any); ok {
 				if len(attributedToSlice) > 0 {
 					record["attributedTo"] = attributedToSlice[0]
-					return nil
+					return true
 				}
 			}
 			record["attributedTo"] = model.NewPersonLink()
+			return true
 		}
 
-		return nil
+		return false
 	})
 }

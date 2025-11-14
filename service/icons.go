@@ -38,6 +38,8 @@ func (service Icons) Get(name string) string {
 		return service.get("at")
 	case "at-fill":
 		return service.get("at")
+	case "autocomplete":
+		return service.get("menu-down")
 	case "back":
 		return service.get("chevron-left")
 	case "bell":
@@ -162,6 +164,8 @@ func (service Icons) Get(name string) string {
 		return service.get("folder")
 	case "folder-fill":
 		return service.get("folder-fill")
+	case "geolocate":
+		return service.get("pin-map")
 	case "globe":
 		return service.get("globe2")
 	case "globe-fill":
@@ -228,6 +232,8 @@ func (service Icons) Get(name string) string {
 		return service.get("box-arrow-in-right")
 	case "logout":
 		return service.get("box-arrow-right")
+	case "map":
+		return service.get("map")
 	case "megaphone":
 		return service.get("megaphone")
 	case "megaphone-fill":
@@ -246,6 +252,8 @@ func (service Icons) Get(name string) string {
 		return service.get("mic-mute")
 	case "mute-fill":
 		return service.get("mic-mute-fill")
+	case "network":
+		return service.get("diagram-2")
 	case "new-window":
 		return service.get("arrow-up-right-square")
 	case "newspaper":

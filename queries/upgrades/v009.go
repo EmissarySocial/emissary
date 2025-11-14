@@ -14,12 +14,13 @@ func Version9(ctx context.Context, session *mongo.Database) error {
 
 	fmt.Println("... Version 9")
 
-	return ForEachRecord(session.Collection("Stream"), func(record mapof.Any) error {
+	return ForEachRecord(session.Collection("Stream"), func(record mapof.Any) bool {
 		if content, ok := record["content"]; ok {
 			if contentMap, ok := content.(mapof.Any); ok {
 				contentMap["contentType"] = strings.ToUpper(contentMap.GetString("type"))
+				return true
 			}
 		}
-		return nil
+		return false
 	})
 }

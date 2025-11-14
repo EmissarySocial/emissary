@@ -2,7 +2,7 @@ behavior PlaceSelect
 
 	init
 		set :search to the first <input.PlaceSelectSearch /> in me
-		set :fullAddress to the first <input.PlaceSelectFullAddress /> in me
+		set :formatted to the first <input.PlaceSelectFormatted /> in me
 		set :latitude to the first <input.PlaceSelectLatitude /> in me
 		set :longitude to the first <input.PlaceSelectLongitude /> in me
 		set :menu to the first <[role=menu] /> in me
@@ -27,7 +27,7 @@ behavior PlaceSelect
 	end
 
 	on input from <input /> in me
-		set the :fullAddress's value to ""
+		set the :formatted's value to ""
 		set the :latitude's value to ""
 		set the :longitude's value to ""
 
@@ -46,7 +46,7 @@ behavior PlaceSelect
 	on Select
 		set place to the event.target
 		set the :search's value to the place's innerText
-		set the :fullAddress's value to the place's innerText
+		set the :formatted's value to the place's innerText
 		set the :latitude's value to the place's @data-latitude
 		set the :longitude's value to the place's @data-longitude
 		hide the :menu

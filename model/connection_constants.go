@@ -6,14 +6,20 @@ package model
  * provider fulfills.
  ******************************************/
 
-// ConnectionTypeGeocoder represents a connection that geocodes individual physical addresses (and often place names)
-const ConnectionTypeGeocoder = "GEOCODER"
+// ConnectionTypeGeocodeAddress represents a connection that geocodes individual physical addresses (and often place names)
+const ConnectionTypeGeocodeAddress = "GEOCODE-ADDRESS"
 
-// ConnectionTypeGeocoderID represents a connection that geocodes individual IP addresses
-const ConnectionTypeGeocoderIP = "GEOCODER-IP"
+// ConnectionTypeGeocodeAutocomplete represents a connection that searches addresses / place names
+const ConnectionTypeGeocodeAutocomplete = "GEOCODE-AUTOCOMPLETE"
 
-// ConnectionTypeGoesearch represents a connection that searches addresses / place names
-const ConnectionTypeGeosearch = "GEOSEARCH"
+// ConnectionTypeGeocodeNetwork represents a connection that geocodes individual IP addresses
+const ConnectionTypeGeocodeNetwork = "GEOCODER-NETWORK"
+
+// ConnectionTypeGeocodeTiles represents an API connection to a map tile provider
+const ConnectionTypeGeocodeTiles = "GEOCODE-TILES"
+
+// ConnectionTypeGeocodeTimezone represents an API connection to a timezone provider
+const ConnectionTypeGeocodeTimezone = "GEOCODE-TIMEZONE"
 
 // ConnectionTypeImage represents a connection that can be used to generate images
 const ConnectionTypeImage = "IMAGE"
@@ -27,43 +33,24 @@ const ConnectionTypeUserPayment = "USER-PAYMENT"
  * been implemented in the system.
  ******************************************/
 
-// ConnectionProviderArcGIS represents an API connection to the https://www.arcgis.com service
-const ConnectionProviderArcGIS = "ARCGIS"
+// ConnectionProviderGeocodeAddress represents an API connection to a physical address geocoder
+const ConnectionProviderGeocodeAddress = "GEOCODE-ADDRESS"
 
-// ConnectionProviderBing represents an API to the Bing Geocoding service
-const ConnectionProviderBing = "BING"
+// ConnectionProviderGeocodeAutocomplete represents and API connection to a geocode autocomplete provider
+const ConnectionProviderGeocodeAutocomplete = "GEOCODE-AUTOCOMPLETE"
 
-// ConnectionProviderFREEIPAPICOM represents an API connection to the https://freeipapi.com service
-const ConnectionProviderFREEIPAPICOM = "FREEIPAPI.COM"
+// ConnectionProviderGeocodeNetwork represents a connection to an IP address geocoder.
+const ConnectionProviderGeocodeNetwork = "GEOCODE-NETWORK"
 
-// ConnectionProviderGeoapify represents an API connection to a https://geoapify server.
-const ConnectionProviderGeoapify = "GEOAPIFY"
+// ConnectionProviderGeocodeTimezone represents a connection to a timezone geocoder.
+const ConnectionProviderGeocodeTimezone = "GEOCODE-TIMEZONE"
+
+// ConnectionProviderGeocodeTiles represents a connection to a map tile provider.
+const ConnectionProviderGeocodeTiles = "GEOCODE-TILES"
 
 // ConnectionProviderGiphy represents an API connection to the https://giphy.com service
 // for generating animated GIFs.
 const ConnectionProviderGiphy = "GIPHY"
-
-// ConnectionProviderGoogleMaps represents an API connection to the https://maps.google.com service
-const ConnectionProviderGoogleMaps = "GOOGLE-MAPS"
-
-// ConnectionProviderIPAPICO represents an API connection to the https://ipapi.co service
-const ConnectionProviderIPAPICO = "IPAPI.CO"
-
-// ConnectionProviderIPAPICOM represents an API connection to the https://ipapi.com service
-const ConnectionProviderIPAPICOM = "IP-API.COM"
-
-// ConnectionProviderNominatim represents an API connection to a https://nominatum.org server.
-// This is an open source server that can be self-hosted
-const ConnectionProviderNominatim = "NOMINATIM"
-
-// ConnectionProviderOpenStreetMap represents an API connection to the https://openstreetmap.org service
-const ConnectionProviderOpenStreetMap = "OPENSTREETMAP"
-
-// ConnectionproviderStaticGeocoder represents a static geocoding value that is always the same
-const ConnectionProviderStaticGeocoderIP = "STATIC-GEOCODER-IP"
-
-// ConnectionProviderTomTom represents an API connection to the https://tomtom.com mapping service
-const ConnectionProviderTomTom = "TOMTOM"
 
 // ConnectionProviderStripe represents an API connection to the https://stripe.com service
 // for processing payments, using direct API keys.

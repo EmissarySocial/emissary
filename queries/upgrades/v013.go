@@ -10,15 +10,18 @@ import (
 // Version13 updates User's InboxTemplate and OutboxTemplate values
 func Version13(ctx context.Context, session *mongo.Database) error {
 
-	return ForEachRecord(session.Collection("User"), func(record mapof.Any) error {
+	return ForEachRecord(session.Collection("User"), func(record mapof.Any) bool {
+		changed := false
 		if _, ok := record["inboxTemplate"]; !ok {
 			record["inboxTemplate"] = "user-inbox"
+			changed = true
 		}
 
 		if _, ok := record["outboxTemplate"]; !ok {
 			record["outboxTemplate"] = "user-outbox"
+			changed = true
 		}
 
-		return nil
+		return changed
 	})
 }

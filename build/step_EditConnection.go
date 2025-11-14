@@ -39,7 +39,14 @@ func (step StepEditConnection) Get(builder Builder, buffer io.Writer) PipelineBe
 	form := manualProvider.ManualConfig()
 
 	// Write the form data
-	formHTML, err := form.Editor(&connection, nil)
+	formHTML, err := form.Editor(
+		&connection,
+		factory.LookupProvider(
+			builder.request(),
+			builder.session(),
+			builder.AuthenticatedID(),
+		),
+	)
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Unable to generate form editor"))

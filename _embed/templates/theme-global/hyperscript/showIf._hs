@@ -116,6 +116,11 @@ function parseOperator(value) {
 function evaluateExpression(exp, object) {
 	var value = object[exp.field]
 
+	// Special code for empty values
+	if (exp.value == "(null)") {
+		exp.value = ""
+	}
+
 	switch (exp.operator) {
 
 	case "=":

@@ -2,6 +2,7 @@ package model
 
 import (
 	"github.com/EmissarySocial/emissary/tools/datetime"
+	"github.com/benpate/geo"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/null"
 	"github.com/benpate/rosetta/schema"
@@ -40,7 +41,7 @@ func StreamSchema() schema.Element {
 			"startDate":        datetime.Schema(),
 			"endDate":          datetime.Schema(),
 			"hashtags":         schema.Array{Items: schema.String{Format: "token"}},
-			"places":           schema.Array{Items: PlaceSchema()},
+			"location":         geo.AddressSchema(),
 			"data":             schema.Object{Wildcard: schema.Any{}},
 			"publishDate":      schema.Integer{BitSize: 64},
 			"unpublishDate":    schema.Integer{BitSize: 64},
@@ -119,8 +120,8 @@ func (stream *Stream) GetPointer(name string) (any, bool) {
 	case "widgets":
 		return &stream.Widgets, true
 
-	case "places":
-		return &stream.Places, true
+	case "location":
+		return &stream.Location, true
 
 	case "data":
 		return &stream.Data, true

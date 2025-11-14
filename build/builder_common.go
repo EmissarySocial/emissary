@@ -675,6 +675,10 @@ func (w Common) SearchTag(tagName string) model.SearchTag {
 	return result
 }
 
+func (w Common) MapTiles() form.LookupCode {
+	return w.factory().GeocodeTiles().GetTileURL(w.session())
+}
+
 func (w Common) MerchantAccount(merchantAccountID string) (model.MerchantAccount, error) {
 	result := model.NewMerchantAccount()
 	err := w._factory.MerchantAccount().LoadByToken(w._session, merchantAccountID, &result)

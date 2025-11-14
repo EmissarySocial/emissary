@@ -15,7 +15,7 @@ func Version19(ctx context.Context, session *mongo.Database) error {
 
 	fmt.Println("... Version 19")
 
-	err := ForEachRecord(session.Collection("Outbox"), func(record mapof.Any) error {
+	err := ForEachRecord(session.Collection("Outbox"), func(record mapof.Any) bool {
 
 		if parentID, exists := record["parentId"]; exists {
 			record["actorId"] = parentID
@@ -39,7 +39,7 @@ func Version19(ctx context.Context, session *mongo.Database) error {
 
 		record["permissions"] = model.NewAnonymousPermissions()
 
-		return nil
+		return true
 	})
 
 	if err != nil {

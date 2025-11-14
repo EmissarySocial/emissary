@@ -44,13 +44,6 @@ func (step StepSaveAndPublish) Post(builder Builder, _ io.Writer) PipelineBehavi
 
 	// Try to Publish the Stream to ActivityPub
 	streamService := factory.Stream()
-	geocoder := factory.Geocode()
-
-	// Try to geocode any Places in this Stream. If there are Geocoder errors,
-	// then a task will be queued to retry the geocode in 30 seconds.
-	if err := geocoder.GeocodeAndQueue(builder.session(), stream); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to geocode stream", streamBuilder._stream))
-	}
 
 	// Publish the Stream to the ActivityPub Outbox
 	if err := streamService.Publish(builder.session(), &user, stream, step.StateID, step.Outbox, step.Republish); err != nil {
