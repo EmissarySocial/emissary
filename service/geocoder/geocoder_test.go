@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/benpate/geo"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/require"
 )
 
@@ -85,7 +84,7 @@ func testAutocompleteAddress(t *testing.T, geocoder AddressAutocompleter) {
 		require.Nil(t, err)
 		require.NotZero(t, addresses.Length())
 
-		spew.Dump("---", location, addresses)
+		// ("---", location, addresses)
 	}
 
 	// Test Result from Geoapify.com
