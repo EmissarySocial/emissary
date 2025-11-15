@@ -1,6 +1,8 @@
 package model
 
 import (
+	"time"
+
 	"github.com/EmissarySocial/emissary/tools/datetime"
 	"github.com/benpate/geo"
 	"github.com/benpate/rosetta/convert"
@@ -217,6 +219,12 @@ func (stream *Stream) GetStringOK(name string) (string, bool) {
 	case "parentId":
 		return stream.ParentID.Hex(), true
 
+	case "startDate":
+		return stream.StartDate.String(), true
+
+	case "endDate":
+		return stream.StartDate.String(), true
+
 	default:
 		return "", false
 	}
@@ -240,6 +248,18 @@ func (stream *Stream) SetString(name string, value string) bool {
 	case "isFeatured":
 		stream.IsFeatured = convert.Bool(value)
 		return true
+
+	case "startDate":
+		if dateTime, ok := convert.TimeOk(value, time.Time{}); ok {
+			stream.StartDate.Time = dateTime
+			return true
+		}
+
+	case "endDate":
+		if dateTime, ok := convert.TimeOk(value, time.Time{}); ok {
+			stream.EndDate.Time = dateTime
+			return true
+		}
 	}
 
 	return false
