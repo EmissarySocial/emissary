@@ -15,15 +15,15 @@ require (
 	github.com/benpate/domain v0.2.9
 	github.com/benpate/exp v0.9.0
 	github.com/benpate/exp-builder v0.10.7
-	github.com/benpate/form v0.25.4
-	github.com/benpate/geo v0.0.2
+	github.com/benpate/form v0.25.7
+	github.com/benpate/geo v0.0.3
 	github.com/benpate/hannibal v0.14.4
 	github.com/benpate/html v0.16.15
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.15.11
 	github.com/benpate/re v0.3.5
 	github.com/benpate/remote v0.17.10
-	github.com/benpate/rosetta v0.25.24
+	github.com/benpate/rosetta v0.25.25
 	github.com/benpate/sherlock v0.8.17
 	github.com/benpate/sniff v0.1.0
 	github.com/benpate/steranko v0.22.6
@@ -95,7 +95,6 @@ require (
 	github.com/go-test/deep v1.1.1 // indirect
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect
-	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/golang/snappy v1.0.0 // indirect
 	github.com/gorilla/css v1.0.1 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
@@ -132,7 +131,6 @@ require (
 	golang.org/x/sys v0.38.0 // indirect
 	golang.org/x/text v0.31.0 // indirect
 	golang.org/x/time v0.14.0 // indirect
-	google.golang.org/protobuf v1.36.10 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
