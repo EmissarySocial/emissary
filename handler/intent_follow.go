@@ -26,7 +26,7 @@ func GetIntent_Follow(ctx *steranko.Context, factory *service.Factory, session d
 	// Collect values from the QueryString
 	var transaction camper.FollowIntent
 	if err := ctx.Bind(&transaction); err != nil {
-		return derp.Wrap(err, location, "Error reading form data")
+		return derp.Wrap(err, location, "Unable to read form data")
 	}
 
 	// Default values here
@@ -173,7 +173,7 @@ func PostIntent_Follow(ctx *steranko.Context, factory *service.Factory, session 
 	transaction, err := formdata.Parse(ctx.Request())
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error reading form data")
+		return derp.Wrap(err, location, "Unable to read form data")
 	}
 
 	// Default values here

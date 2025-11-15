@@ -33,7 +33,7 @@ func pipeline(ctx context.Context, collection data.Collection, result any, pipel
 
 	// Execute the query.  Results returned in "result" pointer
 	if err := cursor.All(ctx, result); err != nil {
-		return derp.Wrap(err, location, "Error reading results")
+		return derp.Wrap(err, location, "Unable to read results")
 	}
 
 	// Success!

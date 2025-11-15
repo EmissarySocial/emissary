@@ -92,7 +92,7 @@ func PostWebSubClient(ctx *steranko.Context, factory *service.Factory, session d
 	var body bytes.Buffer
 
 	if err := ctx.Bind(&body); err != nil {
-		return derp.Wrap(err, location, "Error reading request body")
+		return derp.Wrap(err, location, "Unable to read request body")
 	}
 
 	// Parse the UserID from the query string

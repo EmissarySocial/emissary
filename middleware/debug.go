@@ -14,7 +14,7 @@ func Debug() echo.MiddlewareFunc {
 			body, err := re.ReadRequestBody(request)
 
 			if err != nil {
-				return derp.Wrap(err, "middleware.Debug", "Error reading body from request")
+				return derp.Wrap(err, "middleware.Debug", "Unable to read body from request")
 			}
 
 			// Dump Request

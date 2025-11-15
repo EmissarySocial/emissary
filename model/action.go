@@ -167,7 +167,7 @@ func (action *Action) UnmarshalMap(data map[string]any) error {
 	if pipeline, err := step.NewPipeline(stepsInfo); err == nil {
 		action.Steps = pipeline
 	} else {
-		return derp.Wrap(err, location, "Error reading steps", stepsInfo)
+		return derp.Wrap(err, location, "Unable to read steps", stepsInfo)
 	}
 
 	// intentionally ignoring validation errors here

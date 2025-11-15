@@ -17,7 +17,7 @@ func Validate(request *http.Request, bannedFields ...string) error {
 	body, err := re.ReadRequestBody(request)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error reading request body")
+		return derp.Wrap(err, location, "Unable to read request body")
 	}
 
 	// Parse the form data

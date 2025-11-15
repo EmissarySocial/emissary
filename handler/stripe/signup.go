@@ -47,7 +47,7 @@ func PostSignupWebhook(ctx *steranko.Context, factory *service.Factory, session 
 	payload, err := io.ReadAll(ctx.Request().Body)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error reading request body")
+		return derp.Wrap(err, location, "Unable to read request body")
 	}
 
 	// Verify the WebHook signature

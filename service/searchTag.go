@@ -241,7 +241,7 @@ func (service *SearchTag) ListGroups(session data.Session) []form.LookupCode {
 	groups, err := queries.SearchTags_Groups(collection)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Error reading distinct groups"))
+		derp.Report(derp.Wrap(err, location, "Unable to read distinct groups"))
 		return []form.LookupCode{}
 	}
 

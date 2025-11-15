@@ -100,7 +100,7 @@ func PostResetPassword(ctx *steranko.Context, factory *service.Factory, session 
 
 	// Try to get the POST transaction data from the request body
 	if err := ctx.Bind(&transaction); err != nil {
-		return derp.Wrap(err, location, "Error reading form data")
+		return derp.Wrap(err, location, "Unable to read form data")
 	}
 
 	// Try to load the user by username.  If the user cannot be found, the response
@@ -196,7 +196,7 @@ func PostResetCode(ctx *steranko.Context, factory *service.Factory, session data
 	}
 
 	if err := ctx.Bind(&txn); err != nil {
-		return derp.Wrap(err, "handler.PostResetCode", "Error reading form data")
+		return derp.Wrap(err, "handler.PostResetCode", "Unable to read form data")
 	}
 
 	// RULE: Ensure that passwords match

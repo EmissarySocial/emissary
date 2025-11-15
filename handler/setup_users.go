@@ -59,7 +59,7 @@ func SetupDomainUserPost(serverFactory *server.Factory, templates *template.Temp
 		}
 
 		if err := ctx.Bind(&data); err != nil {
-			return derp.Wrap(err, location, "Error reading form data")
+			return derp.Wrap(err, location, "Unable to read form data")
 		}
 
 		// Try to load the requested domain

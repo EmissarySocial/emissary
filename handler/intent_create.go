@@ -22,7 +22,7 @@ func GetIntent_Create(ctx *steranko.Context, factory *service.Factory, session d
 	var transaction camper.CreateIntent
 
 	if err := ctx.Bind(&transaction); err != nil {
-		return derp.Wrap(err, location, "Error reading form data")
+		return derp.Wrap(err, location, "Unable to read form data")
 	}
 
 	// Default values here
@@ -69,7 +69,7 @@ func PostIntent_Create(ctx *steranko.Context, factory *service.Factory, session 
 	// Collect values from the Form post
 	var transaction camper.CreateIntent
 	if err := ctx.Bind(&transaction); err != nil {
-		return derp.Wrap(err, location, "Error reading form data")
+		return derp.Wrap(err, location, "Unable to read form data")
 	}
 
 	// Default values here

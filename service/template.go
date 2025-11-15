@@ -146,7 +146,7 @@ func (service *Template) loadTemplates() error {
 		directories, err := fs.ReadDir(filesystem, ".")
 
 		if err != nil {
-			derp.Report(derp.Wrap(err, location, "Error reading directory", fileLocation))
+			derp.Report(derp.Wrap(err, location, "Unable to read directory", fileLocation))
 			continue
 		}
 

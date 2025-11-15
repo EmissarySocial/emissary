@@ -141,7 +141,7 @@ func (storage FileStorage) load() (Config, error) {
 	data, err := os.ReadFile(storage.location)
 
 	if err != nil {
-		return Config{}, derp.Wrap(err, "config.FileStorage.load", "Error reading configuration", derp.WithNotFound())
+		return Config{}, derp.Wrap(err, "config.FileStorage.load", "Unable to read configuration", derp.WithNotFound())
 	}
 
 	if err := hjson.Unmarshal(data, &result); err != nil {

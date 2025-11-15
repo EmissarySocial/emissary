@@ -101,7 +101,7 @@ func stripe_UnmarshalEvent(request *http.Request, webhookSecret string, liveMode
 	body, err := io.ReadAll(reader)
 
 	if err != nil {
-		return stripe.Event{}, derp.Wrap(err, location, "Error reading request body")
+		return stripe.Event{}, derp.Wrap(err, location, "Unable to read request body")
 	}
 
 	defer derp.ReportFunc(request.Body.Close)

@@ -29,7 +29,7 @@ func SearchTags_Groups(collection data.Collection) ([]string, error) {
 	sliceOfInterface, err := m.Distinct(ctx, "group", criteria)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Error reading distinct groups")
+		return nil, derp.Wrap(err, location, "Unable to read distinct groups")
 	}
 
 	return convert.SliceOfString(sliceOfInterface), nil

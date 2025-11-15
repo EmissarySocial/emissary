@@ -46,7 +46,7 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 	form, err := multipartForm(builder.request())
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error reading multipart form."))
+		return Halt().WithError(derp.Wrap(err, location, "Unable to read multipart form."))
 	}
 
 	// Retrieve upload files from the POST
@@ -88,7 +88,7 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 		source, err := fileHeader.Open()
 
 		if err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Error reading file from multi-part header", fileHeader))
+			return Halt().WithError(derp.Wrap(err, location, "Unable to read file from multi-part header", fileHeader))
 		}
 
 		//nolint:errcheck

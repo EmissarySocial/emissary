@@ -50,7 +50,7 @@ func (step StepEditContent) Post(builder Builder, _ io.Writer) PipelineBehavior 
 		var buffer bytes.Buffer
 
 		if _, err := io.Copy(&buffer, builder.request().Body); err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Error reading request data"))
+			return Halt().WithError(derp.Wrap(err, location, "Unable to read request data"))
 		}
 
 		rawContent = buffer.String()

@@ -433,7 +433,7 @@ func (service *Domain) GetOAuthToken(session data.Session, providerID string) (m
 	// Try to load the Connection config
 	connection := model.NewConnection()
 	if err := service.connectionService.LoadByProvider(session, providerID, &connection); err != nil {
-		return model.Connection{}, nil, derp.BadRequestError("service.Domain.GetOAuthToken", "Error reading OAuth connection")
+		return model.Connection{}, nil, derp.BadRequestError("service.Domain.GetOAuthToken", "Unable to read OAuth connection")
 	}
 
 	// Retrieve the Token from the connection

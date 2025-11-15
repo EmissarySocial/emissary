@@ -208,7 +208,7 @@ func (filesystem *Filesystem) watchOS(uri string, changes chan<- bool, done <-ch
 	entries, err := os.ReadDir(uri)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error reading directory", uri)
+		return derp.Wrap(err, location, "Unable to read directory", uri)
 	}
 
 	// Create a new directory watcher

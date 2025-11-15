@@ -22,7 +22,7 @@ func GetIntent_Like(ctx *steranko.Context, factory *service.Factory, session dat
 	// Collect values from the QueryString
 	var transaction camper.LikeIntent
 	if err := ctx.Bind(&transaction); err != nil {
-		return derp.Wrap(err, location, "Error reading form data")
+		return derp.Wrap(err, location, "Unable to read form data")
 	}
 
 	// Default values here
@@ -108,7 +108,7 @@ func postIntent_Response(ctx *steranko.Context, factory *service.Factory, sessio
 	// Collect values from the Form post
 	var transaction camper.LikeIntent
 	if err := ctx.Bind(&transaction); err != nil {
-		return derp.Wrap(err, location, "Error reading form data")
+		return derp.Wrap(err, location, "Unable to read form data")
 	}
 
 	// Default values here
