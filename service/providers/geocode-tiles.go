@@ -37,7 +37,7 @@ func (adapter GeocodeTiles) ManualConfig() form.Form {
 		},
 		Element: form.Element{
 			Type:  "layout-vertical",
-			Label: "Map Tiles",
+			Label: "<i class='bi bi-map'></i> Map Tiles",
 			Children: []form.Element{
 				{
 					Type:        "html",
@@ -88,27 +88,6 @@ func (adapter GeocodeTiles) ManualConfig() form.Form {
 						"show-if": "data.provider == Custom",
 					},
 				},
-				/*
-					{
-						Type:        "text",
-						Path:        "data.href",
-						Label:       "XYZ Tile URL",
-						Description: "Looks like: https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-						Options: mapof.Any{
-							"show-if":      "data.provider == CUSTOM",
-							"autocomplete": "off",
-						},
-					},
-					{
-						Type:  "text",
-						Path:  "data.apiKey",
-						Label: "API Key",
-						Options: mapof.Any{
-							"show-if":      "data.provider != CUSTOM",
-							"autocomplete": "off",
-						},
-					},
-				*/
 				{
 					Type:  "toggle",
 					Path:  "active",

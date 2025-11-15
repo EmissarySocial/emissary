@@ -36,7 +36,7 @@ func (adapter Giphy) ManualConfig() form.Form {
 		},
 		Element: form.Element{
 			Type:        "layout-vertical",
-			Label:       "Giphy Setup",
+			Label:       "<i class='bi bi-film'></i> Giphy Setup",
 			Description: "Sign into your Giphy account and create an API key.  Then, paste the API key into the field below.",
 			Children: []form.Element{
 				{

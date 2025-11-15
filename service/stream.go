@@ -349,16 +349,16 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 
 	// RULE: If this stream is not a profile stream and does not have ParentIDs, then calculate them now.
 	if (stream.NavigationID != "profile") && (len(stream.ParentIDs) == 0) {
-		if err := service.CalcParentIDs(session, stream); err != nil {
+		if err := service.calcParentIDs(session, stream); err != nil {
 			return derp.Wrap(err, location, "Unable to calculate parent IDs", stream)
 		}
 	}
 
 	// RULE: Calculate the stream context
-	service.CalcContext(stream)
+	service.calcContext(stream)
 
 	// RULE: Calculate privileges for this stream
-	service.CalcPrivilegeIDs(stream)
+	service.calcPrivilegeIDs(stream)
 
 	// Try to save the Stream to the database
 	if err := service.collection(session).Save(stream, note); err != nil {
@@ -1039,11 +1039,11 @@ func (service *Stream) ParseURL(session data.Session, streamURL string) (primiti
 	return stream.StreamID, nil
 }
 
-// CalcParentIDs scans the parent chain of a stream and generates a "breadcrumbs" slice
+// calcParentIDs scans the parent chain of a stream and generates a "breadcrumbs" slice
 // of all of this Stream's parents
-func (service *Stream) CalcParentIDs(session data.Session, stream *model.Stream) error {
+func (service *Stream) calcParentIDs(session data.Session, stream *model.Stream) error {
 
-	const location = "service.Stream.CalcParentIDs"
+	const location = "service.Stream.calcParentIDs"
 
 	// RULE: Notes are always stored under a user's profile, so they have no parents
 	if stream.SocialRole == vocab.ObjectTypeNote {
@@ -1065,13 +1065,13 @@ func (service *Stream) CalcParentIDs(session data.Session, stream *model.Stream)
 
 	// If the parent has no parentIDs, then try to calculate them
 	if len(parentStream.ParentIDs) == 0 {
-		if err := service.CalcParentIDs(session, &parentStream); err != nil {
+		if err := service.calcParentIDs(session, &parentStream); err != nil {
 			return derp.Wrap(err, location, "Unable to calculate ParentIDs for Parent stream", stream.ParentID)
 		}
 
 		// If the parent has been changed, then save that calculation.
 		if len(parentStream.ParentIDs) > 0 {
-			if err := service.Save(session, &parentStream, "CalcParentIDs"); err != nil {
+			if err := service.Save(session, &parentStream, "calcParentIDs"); err != nil {
 				return derp.Wrap(err, location, "Unable to save Parent stream", stream.ParentID)
 			}
 		}
@@ -1110,7 +1110,7 @@ func (service *Stream) calcDefaultAllow(template *model.Template, stream *model.
 
 // CalcContext calculates the conversational context for a given stream,
 // IF it can be determined.
-func (service *Stream) CalcContext(stream *model.Stream) {
+func (service *Stream) calcContext(stream *model.Stream) {
 
 	// If this is an original stream (not a reply) then its context is itself.
 	if stream.InReplyTo == "" {
@@ -1136,7 +1136,7 @@ func (service *Stream) CalcContext(stream *model.Stream) {
 // CalcPrivileges denormalizes all privileges (CircleIDs and ProductIDs)
 // for a Stream into a single data structure that can be scanned
 // easily by MongoDB.
-func (service *Stream) CalcPrivilegeIDs(stream *model.Stream) {
+func (service *Stream) calcPrivilegeIDs(stream *model.Stream) {
 	circles := flatten(stream.Circles)
 	privileges := flatten(stream.Products)
 	stream.PrivilegeIDs = model.Permissions(append(circles, privileges...))

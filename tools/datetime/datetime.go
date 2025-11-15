@@ -5,7 +5,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/schema"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/bsontype"
 )
@@ -33,6 +35,19 @@ func Schema() schema.Element {
 /******************************************
  * Getters
  ******************************************/
+
+func (dt DateTime) GetValue() any {
+	return dt.String()
+}
+
+func (dt DateTime) String() string {
+
+	if dt.IsZero() {
+		return ""
+	}
+
+	return dt.Format(time.RFC3339)
+}
 
 func (dt DateTime) GetStringOK(property string) (string, bool) {
 
@@ -79,6 +94,11 @@ func (dt DateTime) GetInt64OK(property string) (int64, bool) {
 	return 0, false
 }
 
+func (dt DateTime) Timezone() string {
+	result, _ := dt.Time.Zone()
+	return result
+}
+
 /******************************************
  * Setters
  ******************************************/
@@ -123,11 +143,7 @@ func (dt *DateTime) SetString(property string, value string) bool {
 		}
 
 	case "timezone":
-
-		if location, err := time.LoadLocation(value); err == nil {
-			dt.Time = time.Date(dt.Year(), dt.Month(), dt.Day(), dt.Hour(), dt.Minute(), dt.Second(), dt.Nanosecond(), location)
-			return true
-		}
+		return dt.SetTimezone(value) == nil
 	}
 
 	return false
@@ -144,6 +160,40 @@ func (dt *DateTime) SetInt64(property string, value int64) bool {
 
 	return false
 }
+
+func (dt *DateTime) SetDatetime(value time.Time) error {
+	dt.Time = value
+	return nil
+}
+
+func (dt *DateTime) SetDate(value time.Time) error {
+	dt.Time = time.Date(value.Year(), value.Month(), value.Day(), dt.Hour(), dt.Minute(), dt.Second(), dt.Nanosecond(), value.Location())
+	return nil
+}
+
+func (dt *DateTime) SetTime(value time.Time) error {
+	dt.Time = time.Date(dt.Year(), dt.Month(), dt.Day(), value.Hour(), value.Minute(), value.Second(), value.Nanosecond(), dt.Location())
+	return nil
+}
+
+func (dt *DateTime) SetTimezone(timezone string) error {
+
+	const location = "datetime.SetTimezone"
+
+	newLocation, err := time.LoadLocation(timezone)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Unable to set timezone", timezone)
+	}
+
+	dt.Time = time.Date(dt.Year(), dt.Month(), dt.Day(), dt.Hour(), dt.Minute(), dt.Second(), dt.Nanosecond(), newLocation)
+
+	return nil
+}
+
+/******************************************
+ * Conversion Methods
+ ******************************************/
 
 func (dt DateTime) ToTime() time.Time {
 	return dt.Time
@@ -175,6 +225,17 @@ func (dt DateTime) IsMidnight() bool {
 
 func (dt DateTime) NotMidnight() bool {
 	return !dt.IsMidnight()
+}
+func (dt DateTime) NotZero() bool {
+	return !dt.IsZero()
+}
+
+func (dt DateTime) MissingTimezone() bool {
+	if dt.IsZero() {
+		return false
+	}
+
+	return dt.Timezone() == ""
 }
 
 func splitTime(value string) (hours int, minutes int, seconds int) {
@@ -229,6 +290,8 @@ func (dt DateTime) MarshalBSONValue() (bsontype.Type, []byte, error) {
 	return bson.MarshalValue(dt.Time)
 }
 
-func (dt *DateTime) UnmarshalBSONValue(bsonType bsontype.Type, data []byte) error {
-	return bson.UnmarshalValue(bson.TypeDateTime, data, &dt.Time)
+func (dt *DateTime) UnmarshalBSONValue(t bsontype.Type, data []byte) error {
+	err := bson.UnmarshalValue(t, data, &dt.Time)
+
+	return err
 }

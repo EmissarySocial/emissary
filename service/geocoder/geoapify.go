@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/geo"
 	"github.com/benpate/remote"
+	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
@@ -47,17 +48,18 @@ func (geocoder Geoapify) GeocodeAddress(address string) (geo.Address, error) {
 	return result, nil
 }
 
-func (geocoder Geoapify) GeocodeTimezone(address string) (string, error) {
+func (geocoder Geoapify) GeocodeTimezone(address *geo.Address) error {
 
 	const location = "service.geocoder.Geoapify.GeocodeTimezone"
 
-	result, err := geocoder.GeocodeAddress(address)
+	result, err := geocoder.GeocodeAddress(address.Formatted)
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Unable to retrieve timezone information")
+		return derp.Wrap(err, location, "Unable to retrieve timezone information")
 	}
 
-	return result.Timezone, nil
+	address.Timezone = result.Timezone
+	return nil
 }
 
 func (geocoder Geoapify) GeocodeNetwork(ip string) (point geo.Point, err error) {
@@ -82,7 +84,7 @@ func (geocoder Geoapify) GeocodeNetwork(ip string) (point geo.Point, err error) 
 	return geo.NewPoint(longitude, latitude), nil
 }
 
-func (geocoder Geoapify) AutocompleteAddress(query string) (sliceof.Object[geo.Address], error) {
+func (geocoder Geoapify) AutocompleteAddress(query string, bias geo.Point) (sliceof.Object[geo.Address], error) {
 
 	const location = "service.geocoder.Geoapify.AutocompleteAddress"
 
@@ -92,6 +94,10 @@ func (geocoder Geoapify) AutocompleteAddress(query string) (sliceof.Object[geo.A
 		Query("text", query).
 		Query("apiKey", geocoder.apiKey).
 		Result(&response)
+
+	if bias.NotZero() {
+		txn.Query("bias", "proximity:"+bias.LonLat())
+	}
 
 	if err := txn.Send(); err != nil {
 		return nil, derp.Wrap(err, location, "Unable to retrieve search results")
@@ -108,7 +114,7 @@ func mapGeoapifyAddress(feature mapof.Any) geo.Address {
 	properties := feature.GetMap("properties")
 
 	return geo.Address{
-		Name:       properties.GetString("name"),
+		Name:       first.String(properties.GetString("name"), properties.GetString("formatted")),
 		Formatted:  properties.GetString("formatted"),
 		Street1:    strings.TrimSpace(properties.GetString("housenumber") + " " + properties.GetString("street")),
 		Locality:   properties.GetString("city"),

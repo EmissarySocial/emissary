@@ -35,7 +35,7 @@ func (adapter Stripe) ManualConfig() form.Form {
 		},
 		Element: form.Element{
 			Type:        "layout-vertical",
-			Label:       "Stripe Setup",
+			Label:       "<i class='bi bi-stripe'></i> Stripe Setup",
 			Description: "Allows users to accept payments by entering Stripe API keys directly.",
 			Children: []form.Element{
 				{

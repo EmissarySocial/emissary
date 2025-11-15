@@ -13,10 +13,10 @@ type NetworkGeocoder interface {
 	GeocodeNetwork(ipAddress string) (geo.Point, error)
 }
 
-type TimezomeGeocoder interface {
-	GeocodeTimezone(string) (string, error)
+type TimezoneGeocoder interface {
+	GeocodeTimezone(*geo.Address) error
 }
 
 type AddressAutocompleter interface {
-	AutocompleteAddress(address string) (sliceof.Object[geo.Address], error)
+	AutocompleteAddress(query string, bias geo.Point) (sliceof.Object[geo.Address], error)
 }

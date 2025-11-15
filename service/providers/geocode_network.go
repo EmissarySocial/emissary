@@ -38,7 +38,7 @@ func (adapter GeocodeNetwork) ManualConfig() form.Form {
 		},
 		Element: form.Element{
 			Type:  "layout-vertical",
-			Label: "Network Geocoder",
+			Label: "<i class='bi bi-diagram-2'></i> Network Geocoder",
 			Children: []form.Element{
 				{
 					Type:        "html",
@@ -54,11 +54,10 @@ func (adapter GeocodeNetwork) ManualConfig() form.Form {
 					Path:  "data.provider",
 					Label: "Service Provider",
 					Options: mapof.Any{"enum": []form.LookupCode{
-						{Value: "", Label: "(select one)"},
-						{Value: "GEOAPIFY", Label: "Geoapify"},
-						{Value: "FREEIPAPI", Label: "FreeIPAPI.com"},
-						{Value: "IPAPICOM", Label: "IP-API.COM"},
-						{Value: "STATIC", Label: "Static Location"},
+						{Group: "Recommended", Value: "GEOAPIFY", Label: "Geoapify"},
+						{Group: "Supported", Value: "FREEIPAPI", Label: "FreeIPAPI.com"},
+						{Group: "Supported", Value: "IPAPICOM", Label: "IP-API.COM"},
+						{Group: "Supported", Value: "STATIC", Label: "Static Location"},
 					}},
 				},
 				{

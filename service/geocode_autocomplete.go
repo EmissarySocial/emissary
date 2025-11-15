@@ -22,12 +22,12 @@ func NewGeocodeAutocomplete(connectionService *Connection, hostname string) Geoc
 }
 
 // Search retrieves all values matching the query parameter, as returned by the available search service.
-func (service GeocodeAutocomplete) Search(session data.Session, query string, referer string) (sliceof.Object[geo.Address], error) {
+func (service GeocodeAutocomplete) Search(session data.Session, query string, bias geo.Point) (sliceof.Object[geo.Address], error) {
 
 	const location = "service.GeocodeAutocomplete.GeocodeAutocomplete"
 
 	geocoder := service.getGeocoder(session)
-	result, err := geocoder.AutocompleteAddress(query)
+	result, err := geocoder.AutocompleteAddress(query, bias)
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Unable to retrieve search results")
@@ -38,7 +38,7 @@ func (service GeocodeAutocomplete) Search(session data.Session, query string, re
 
 // getGeocoder returns the provider configured for this domain.
 // If none is configured, then the "free" OpenStreetMap provider is used.
-func (service GeocodeAutocomplete) getGeocoder(session data.Session) AddressAutocompleter {
+func (service GeocodeAutocomplete) getGeocoder(session data.Session) geocoder.AddressAutocompleter {
 
 	const location = "service.GeocodeAutocommplete.getGeocoder"
 
@@ -51,8 +51,14 @@ func (service GeocodeAutocomplete) getGeocoder(session data.Session) AddressAuto
 
 	switch connection.Data.GetString("provider") {
 
+	case "HERE":
+		return geocoder.NewHere(connection.Data.GetString("apiID"), connection.Data.GetString("apiKey"))
+
 	case "GEOAPIFY":
 		return geocoder.NewGeoapify(connection.Data.GetString("apiKey"))
+
+	case "GOOGLE-MAPS":
+		return geocoder.NewGoogleMaps(connection.Data.GetString("apiKey"))
 
 	case "MAPTILER":
 		return geocoder.NewMaptiler(connection.Data.GetString("apiKey"))

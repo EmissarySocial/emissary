@@ -13,13 +13,15 @@ type GeocodeAddress struct {
 	hostname          string
 	queue             *queue.Queue
 	connectionService *Connection
+	timezoneService   GeocodeTimezone
 }
 
-func NewGeocodeAddress(hostname string, queue *queue.Queue, connectionService *Connection) GeocodeAddress {
+func NewGeocodeAddress(hostname string, queue *queue.Queue, connectionService *Connection, timezoneService GeocodeTimezone) GeocodeAddress {
 	return GeocodeAddress{
 		hostname:          hostname,
 		queue:             queue,
 		connectionService: connectionService,
+		timezoneService:   timezoneService,
 	}
 }
 
@@ -28,19 +30,18 @@ func NewGeocodeAddress(hostname string, queue *queue.Queue, connectionService *C
 func (service GeocodeAddress) GeocodeAndQueue(session data.Session, stream *model.Stream) error {
 
 	// Try to GeocodeAddress all Places in this Stream
-	if err := service.Geocode(session, stream); err == nil {
-		return nil
-	}
+	if err := service.Geocode(session, stream); err != nil {
 
-	// If there is an error, then try again in 30 seconds
-	service.queue.NewTask(
-		"GeocodeAddress",
-		mapof.Any{
-			"host":     service.hostname,
-			"streamId": stream.StreamID,
-		},
-		queue.WithDelaySeconds(30),
-	)
+		// If there is an error, then enqueue a Task to retru in 30 seconds
+		service.queue.NewTask(
+			"GeocodeAddress",
+			mapof.Any{
+				"host":     service.hostname,
+				"streamId": stream.StreamID,
+			},
+			queue.WithDelaySeconds(30),
+		)
+	}
 
 	return nil
 }
@@ -66,6 +67,11 @@ func (service GeocodeAddress) Geocode(session data.Session, stream *model.Stream
 		return derp.Wrap(err, location, "Error geocoding address", stream.Location.Formatted)
 	}
 
+	// Locate the timezone, too, if we don't already have it.
+	if err := service.timezoneService.Geocode(session, &address); err != nil {
+		return derp.Wrap(err, location, "Unable to get timezone for location", stream.Location)
+	}
+
 	// Populate the Stream with the newly geocoded address
 	stream.Location = address
 	return nil
@@ -73,7 +79,7 @@ func (service GeocodeAddress) Geocode(session data.Session, stream *model.Stream
 
 // getGeocoder returns the geocoder configured for this domain.
 // If none is configured, then the "free" OpenStreetMap geocoder is used.
-func (service GeocodeAddress) getGeocoder(session data.Session) AddressGeocoder {
+func (service GeocodeAddress) getGeocoder(session data.Session) geocoder.AddressGeocoder {
 
 	const location = "service.GeocodeAutocommplete.getGeocoder"
 
@@ -88,8 +94,14 @@ func (service GeocodeAddress) getGeocoder(session data.Session) AddressGeocoder 
 
 	switch connection.Data.GetString("provider") {
 
+	case "HERE":
+		return geocoder.NewHere(connection.Data.GetString("apiID"), apiKey)
+
 	case "GEOAPIFY":
 		return geocoder.NewGeoapify(apiKey)
+
+	case "GEOCODIO":
+		return geocoder.NewGeocodio(apiKey)
 
 	case "GOOGLE-MAPS":
 		return geocoder.NewGoogleMaps(apiKey)

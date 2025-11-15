@@ -23,3 +23,8 @@ func TestGeoapify_Network(t *testing.T) {
 	encoder := NewGeoapify(testGeoapifyAPIKey)
 	testGeocodeNetwork(t, encoder)
 }
+
+func TestGeoapify_Timezone(t *testing.T) {
+	encoder := NewGeoapify(testGeoapifyAPIKey)
+	testGeocodeTimezone(t, encoder)
+}

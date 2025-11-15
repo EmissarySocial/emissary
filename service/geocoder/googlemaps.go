@@ -1,6 +1,9 @@
 package geocoder
 
 import (
+	"strconv"
+	"time"
+
 	"github.com/benpate/derp"
 	"github.com/benpate/geo"
 	"github.com/benpate/remote"
@@ -49,42 +52,76 @@ func (geocoder GoogleMaps) GeocodeAddress(query string) (geo.Address, error) {
 	return address, nil
 }
 
-func (geocoder GoogleMaps) AutocompleteAddress(query string) (sliceof.Object[geo.Address], error) {
+func (geocoder GoogleMaps) GeocodeTimezone(address *geo.Address) error {
+
+	const location = "service.geocoder.GoogleMaps.GeocodeTimestamp"
+
+	latLong := address.GetString("latitude") + "," + address.GetString("longitude")
+	timestamp := strconv.FormatInt(time.Now().Unix(), 10)
+
+	// Connect to Google to Retrieve Address Information
+	response := mapof.NewAny()
+	txn := remote.Get("https://maps.googleapis.com/maps/api/timezone/json").
+		Query("location", latLong).
+		Query("timestamp", timestamp).
+		Query("key", geocoder.apiKey).
+		Result(&response)
+
+	if err := txn.Send(); err != nil {
+		return derp.Wrap(err, location, "Unable to load results from Google Timezone API", address)
+	}
+
+	address.Timezone = response.GetString("timeZoneId")
+	return nil
+}
+
+func (geocoder GoogleMaps) AutocompleteAddress(query string, bias geo.Point) (sliceof.Object[geo.Address], error) {
 
 	const location = "service.geocoder.GoogleMaps.AutocompleteAddress"
 
-	body := mapof.String{
-		"textQuery": query,
+	body := mapof.Any{
+		"input": query,
+	}
+
+	// Add location bias (if present)
+	if bias.NotZero() {
+		body["locationBias"] = mapof.Any{
+			"circle": mapof.Any{
+				"center": mapof.Any{
+					"longitude": bias.Longitude,
+					"latitude":  bias.Latitude,
+				},
+				"radius": 100.0,
+			},
+		}
 	}
 
 	response := mapof.NewAny()
 
-	txn := remote.Post("https://places.googleapis.com/v1/places:searchText").
+	txn := remote.Post("https://places.googleapis.com/v1/places:autocomplete").
 		JSON(body).
 		ContentType("application/json").
 		Header("X-Goog-Api-Key", geocoder.apiKey).
-		Header("X-Goog-Fieldmask", "places.formattedAddress,places.location,places.types").
+		Header("X-Goog-Fieldmask", "suggestions.placePrediction.text.text").
 		Result(&response)
 
 	if err := txn.Send(); err != nil {
 		return nil, derp.Wrap(err, location, "Unable to load results from Google Places API", query)
 	}
 
-	places := response.GetSliceOfMap("places")
-	addresses := slice.Map(places, mapGoogleAddress)
+	suggestions := response.GetSliceOfMap("suggestions")
+	addresses := slice.Map(suggestions, mapGooglePlaceSuggestion)
 	return addresses, nil
 }
 
-func mapGoogleAddress(place mapof.Any) geo.Address {
+func mapGooglePlaceSuggestion(suggestion mapof.Any) geo.Address {
 
-	location := place.GetMap("location")
-	longitude := location.GetFloat("longitude")
-	latitude := location.GetFloat("latitude")
+	placePrediction := suggestion.GetMap("placePrediction")
+	text := placePrediction.GetMap("text")
 
 	return geo.Address{
-		Name:      place.GetString("formattedAddress"),
-		Longitude: longitude,
-		Latitude:  latitude,
+		Name:      text.GetString("text"),
+		Formatted: text.GetString("text"),
 	}
 }
 

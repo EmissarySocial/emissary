@@ -7,23 +7,23 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
-type GeocodeAutocomplete struct{}
+type GeocodeTimezone struct{}
 
-func NewGeocodeAutocomplete() GeocodeAutocomplete {
-	return GeocodeAutocomplete{}
+func NewGeocodeTimezone() GeocodeTimezone {
+	return GeocodeTimezone{}
 }
 
 /******************************************
  * Setup / Configuration Methods
  ******************************************/
 
-func (adapter GeocodeAutocomplete) ManualConfig() form.Form {
+func (adapter GeocodeTimezone) ManualConfig() form.Form {
 
 	return form.Form{
 		Schema: schema.Schema{
 			Element: schema.Object{
 				Properties: schema.ElementMap{
-					"type":   schema.String{Enum: []string{model.ConnectionTypeGeocodeAutocomplete}},
+					"type":   schema.String{Enum: []string{model.ConnectionProviderGeocodeTimezone}},
 					"active": schema.Boolean{},
 					"data": schema.Object{
 						Properties: schema.ElementMap{
@@ -37,16 +37,16 @@ func (adapter GeocodeAutocomplete) ManualConfig() form.Form {
 		},
 		Element: form.Element{
 			Type:  "layout-vertical",
-			Label: "<i class='bi bi-menu-down'></i> Address Search",
+			Label: "<i class='bi bi-clock'></i> Timezone Geocoder",
 			Children: []form.Element{
 				{
 					Type:        "html",
-					Description: "Configure this service to show autocomplete search hits when entering addresses. <a href=https://emissary.social/geocode-autocomplete target=_blank>Learn More &rarr;</a>",
+					Description: "Discover timezone information from an address or map coordinates. Required for accurate event times. <a href=https://emissary.social/geocode-timezone target=_blank>Learn More &rarr;</a>",
 				},
 				{
 					Type:    "hidden",
 					Path:    "type",
-					Options: mapof.Any{"value": model.ConnectionTypeGeocodeAutocomplete},
+					Options: mapof.Any{"value": model.ConnectionTypeGeocodeTimezone},
 				},
 				{
 					Type:  "select",
@@ -56,28 +56,28 @@ func (adapter GeocodeAutocomplete) ManualConfig() form.Form {
 						"enum": []form.LookupCode{
 							{Group: "Recommended", Value: "GEOAPIFY", Label: "Geoapify"},
 							{Group: "Recommended", Value: "HERE", Label: "Here"},
-							{Group: "Supported", Value: "GOOGLE-MAPS", Label: "Google Maps"},
-							{Group: "Supported", Value: "MAPTILER", Label: "Maptiler"},
-							// {Group: "Supported", Value: "NOMINATIM", Label: "Nominatim"},
+							{Group: "Supported", Value: "GEOCODIO", Label: "Geocodio (US Only)"},
+							{Group: "Supported", Value: "GOOGLE", Label: "Google Maps"},
 						},
 					},
 				},
 				{
 					Type:  "text",
-					Path:  "data.apiID",
 					Label: "API ID",
+					Path:  "data.apiID",
 					Options: mapof.Any{
-						"show-if":      "data.provider == HERE",
-						"autocomplete": "off",
+						"show-if":     "data.provider == HERE",
+						"autocorrect": "false",
+						"spellcheck":  "false",
 					},
 				},
 				{
 					Type:  "text",
-					Path:  "data.apiKey",
 					Label: "API Key",
+					Path:  "data.apiKey",
 					Options: mapof.Any{
-						"show-if":      "data.provider != (null)",
-						"autocomplete": "off",
+						"autocorrect": "false",
+						"spellcheck":  "false",
 					},
 				},
 				{
@@ -95,16 +95,16 @@ func (adapter GeocodeAutocomplete) ManualConfig() form.Form {
  ******************************************/
 
 // Connect applies any extra changes to the database after this Adapter is activated.
-func (adapter GeocodeAutocomplete) Connect(connection *model.Connection, vault mapof.String, host string) error {
+func (adapter GeocodeTimezone) Connect(connection *model.Connection, vault mapof.String, host string) error {
 	return nil
 }
 
 // Refresh updates this connection if it has changed or is out of date
-func (adapter GeocodeAutocomplete) Refresh(connection *model.Connection, vault mapof.String) error {
+func (adapter GeocodeTimezone) Refresh(connection *model.Connection, vault mapof.String) error {
 	return nil
 }
 
 // Disconnect applies any extra changes to the database when this Adapter is disconnected
-func (adapter GeocodeAutocomplete) Disconnect(connection *model.Connection, vault mapof.String) error {
+func (adapter GeocodeTimezone) Disconnect(connection *model.Connection, vault mapof.String) error {
 	return nil
 }

@@ -46,7 +46,7 @@ func (adapter StripeConnect) ManualConfig() form.Form {
 		},
 		Element: form.Element{
 			Type:        "layout-vertical",
-			Label:       "Stripe Connect Setup",
+			Label:       "<i class='bi bi-stripe'></i> Stripe Connect Setup",
 			Description: "Allows users to use their own Stripe accounts via OAuth. This application must be registered with Stripe Connect.",
 			Children: []form.Element{
 				{

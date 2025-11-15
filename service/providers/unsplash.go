@@ -38,7 +38,7 @@ func (adapter Unsplash) ManualConfig() form.Form {
 		},
 		Element: form.Element{
 			Type:        "layout-vertical",
-			Label:       "Unsplash Setup",
+			Label:       "<i class='bi bi-image'></i> Unsplash Setup",
 			Description: "Sign into your Unsplash account and create an API key.  Then, paste the API key into the field below.",
 			Children: []form.Element{
 				{

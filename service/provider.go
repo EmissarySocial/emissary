@@ -44,6 +44,9 @@ func (service *Provider) GetProvider(providerID string) (providers.Provider, boo
 	case model.ConnectionProviderGeocodeTiles:
 		return providers.NewGeocodeTiles(), true
 
+	case model.ConnectionProviderGeocodeTimezone:
+		return providers.NewGeocodeTimezone(), true
+
 	case model.ConnectionProviderGiphy:
 		return providers.NewGiphy(), true
 

@@ -703,7 +703,7 @@ func (factory *Factory) Folder() *Folder {
 
 // GeocodeAddress returns a fully populated Geocode service
 func (factory *Factory) GeocodeAddress() GeocodeAddress {
-	return NewGeocodeAddress(factory.Hostname(), factory.Queue(), factory.Connection())
+	return NewGeocodeAddress(factory.Hostname(), factory.Queue(), factory.Connection(), factory.GeocodeTimezone())
 }
 
 // GeocodeAutocomplete returns a fully populated Geocode service

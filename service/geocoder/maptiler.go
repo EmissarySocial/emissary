@@ -50,7 +50,7 @@ func (geocoder Maptiler) GeocodeAddress(address string) (point geo.Address, err 
 	return mapMaptilerAddress(features.First()), nil
 }
 
-func (geocoder Maptiler) AutocompleteAddress(query string) (sliceof.Object[geo.Address], error) {
+func (geocoder Maptiler) AutocompleteAddress(query string, bias geo.Point) (sliceof.Object[geo.Address], error) {
 
 	const location = "service.geocoder.Maptiler.AutocompleteAddress"
 
@@ -60,7 +60,12 @@ func (geocoder Maptiler) AutocompleteAddress(query string) (sliceof.Object[geo.A
 
 	txn := remote.Get(endpoint).
 		Query("key", geocoder.apiKey).
+		Query("types", "address,place").
 		Result(&response)
+
+	if bias.NotZero() {
+		txn.Query("proximity", bias.LonLat())
+	}
 
 	if err := txn.Send(); err != nil {
 		return nil, derp.Wrap(err, location, "Error returned by Maptiler")
@@ -68,7 +73,6 @@ func (geocoder Maptiler) AutocompleteAddress(query string) (sliceof.Object[geo.A
 
 	// Map "features" from the result into geo.Address
 	features := response.GetSliceOfMap("features")
-	features = slice.Filter(features, filterMaptilerAddress)
 	result := slice.Map(features, mapMaptilerAddress)
 	return result, nil
 }
@@ -78,10 +82,6 @@ MAPTILER Network lookups are disabled, because they can
 only return the location of the SERVER, and not the
 location of the USER'S machine.  Sooo close :(
 */
-
-func filterMaptilerAddress(feature mapof.Any) bool {
-	return feature.GetString("place_type") == "address"
-}
 
 func mapMaptilerAddress(feature mapof.Any) geo.Address {
 

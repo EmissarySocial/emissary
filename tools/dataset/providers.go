@@ -45,17 +45,17 @@ func Providers() sliceof.Object[form.LookupCode] {
 			Group:       "Mapping Services",
 		},
 		{
-			Value:       model.ConnectionProviderGeocodeTimezone,
-			Label:       "Timezone Geocoder",
-			Icon:        "clock",
-			Description: "Look up local timezones for specific addresses",
-			Group:       "Mapping Services",
-		},
-		{
 			Value:       model.ConnectionProviderGeocodeTiles,
 			Label:       "Map Tiles",
 			Icon:        "map",
 			Description: "Display custom map layers",
+			Group:       "Mapping Services",
+		},
+		{
+			Value:       model.ConnectionProviderGeocodeTimezone,
+			Label:       "Timezone Geocoder",
+			Icon:        "clock",
+			Description: "Look up local timezones for specific addresses",
 			Group:       "Mapping Services",
 		},
 		{

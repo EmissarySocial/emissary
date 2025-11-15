@@ -32,7 +32,7 @@ func NewNominatim(searchURL string, apiKey string, userAgent string, referer str
 	}
 }
 
-func (geocoder Nominatim) GeocodeAddress(address string) (point geo.Address, err error) {
+func (geocoder Nominatim) GeocodeAddress(query string) (point geo.Address, err error) {
 
 	const location = "service.ggeocoder.Nominatim.AutocompleteAddress"
 
@@ -41,7 +41,7 @@ func (geocoder Nominatim) GeocodeAddress(address string) (point geo.Address, err
 	txn := remote.Get(geocoder.searchURL+"/search").
 		UserAgent(geocoder.userAgent).
 		Header("Referer", geocoder.referer).
-		Query("q", address).
+		Query("q", query).
 		Query("format", "jsonv2").
 		Result(&response)
 
@@ -50,20 +50,16 @@ func (geocoder Nominatim) GeocodeAddress(address string) (point geo.Address, err
 	}
 
 	if response.IsZero() {
-		return geo.Address{}, derp.NotFound(location, "Address not found", address)
+		return geo.Address{}, derp.NotFound(location, "Address not found", query)
 	}
 
 	place := response.First()
 
-	// Map addresses into interface format and return
-	return geo.Address{
-		Formatted: address,
-		Longitude: place.GetFloat("lon"),
-		Latitude:  place.GetFloat("lat"),
-	}, nil
+	// Map address into interface format and return
+	return mapNominatimAddress(place), nil
 }
 
-func (geocoder Nominatim) AutocompleteAddress(query string) (sliceof.Object[geo.Address], error) {
+func (geocoder Nominatim) AutocompleteAddress(query string, bias geo.Point) (sliceof.Object[geo.Address], error) {
 
 	const location = "service.ggeocoder.Nominatim.AutocompleteAddress"
 

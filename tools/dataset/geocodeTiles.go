@@ -29,6 +29,9 @@ func GeocodeTiles() []form.LookupCode {
 			Href:        "https://tile.openstreetmap.de/{z}/{x}/{y}.png",
 		},
 
+		// HERE also provides map tiles, but the API is complex:
+		// https://www.here.com/docs/bundle/raster-tile-api-v3-api-reference/page/index.html
+
 		// https://apidocs.geoapify.com/docs/maps/geocode-tiles/
 		{
 			Group:       "Geoapify",

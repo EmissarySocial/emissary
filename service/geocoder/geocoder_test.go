@@ -4,6 +4,7 @@ import (
 	"math"
 	"testing"
 
+	"github.com/benpate/geo"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/require"
 )
@@ -18,7 +19,6 @@ func testGeocodeAddress(t *testing.T, geocoder AddressGeocoder) {
 
 	run := func(location testLocation) {
 		address, err := geocoder.GeocodeAddress(location.query)
-		spew.Dump(address)
 
 		require.Nil(t, err)
 		require.True(t, closeEnough(t, location.longitude, address.Longitude))
@@ -45,6 +45,15 @@ func testGeocodeAddress(t *testing.T, geocoder AddressGeocoder) {
 		longitude: -104.98484674529767,
 		latitude:  39.739211499999996,
 	})
+
+	// Test Address from Microsoft
+
+	run(testLocation{
+		query:     "1124 Pike St, Seattle",
+		longitude: -122.32820,
+		latitude:  47.61403,
+	})
+
 }
 
 func testGeocodeNetwork(t *testing.T, geocoder NetworkGeocoder) {
@@ -71,10 +80,12 @@ func testGeocodeNetwork(t *testing.T, geocoder NetworkGeocoder) {
 func testAutocompleteAddress(t *testing.T, geocoder AddressAutocompleter) {
 
 	run := func(location string) {
-		addresses, err := geocoder.AutocompleteAddress(location)
+		addresses, err := geocoder.AutocompleteAddress(location, geo.Point{})
 
 		require.Nil(t, err)
 		require.NotZero(t, addresses.Length())
+
+		spew.Dump("---", location, addresses)
 	}
 
 	// Test Result from Geoapify.com
@@ -83,6 +94,27 @@ func testAutocompleteAddress(t *testing.T, geocoder AddressAutocompleter) {
 
 	// Test Value from Google
 	run("1600 Amphitheatre Pkwy, Mountain View, CA 94043, USA")
+}
+
+func testGeocodeTimezone(t *testing.T, geocoder TimezoneGeocoder) {
+
+	run := func(streetAddress string, timezone string) {
+
+		address := geo.Address{
+			Formatted: streetAddress,
+		}
+
+		err := geocoder.GeocodeTimezone(&address)
+
+		require.Nil(t, err)
+		require.Equal(t, timezone, address.Timezone)
+	}
+
+	// Test Result from Geoapify.com
+	run("Great Russell St, London WC1B 3DG, United Kingdom", "Europe/London")
+	run("650 Jefferson Drive SW, Washington, DC 20560", "America/New_York")
+	run("18300 W Alameda Pkwy, Morrison, CO 80465", "America/Denver")
+	run("6925 Hollywood Blvd, Hollywood CA, USA", "America/Los_Angeles")
 }
 
 // closeEnough compares two floats, returning TRUE if they
