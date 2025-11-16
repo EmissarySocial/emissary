@@ -50,6 +50,7 @@ require (
 	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/mmcdole/gofeed v1.3.0
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
+	github.com/puzpuzpuz/xsync/v4 v4.2.0
 	github.com/relvacode/iso8601 v1.7.0
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/afero v1.15.0
