@@ -182,11 +182,6 @@ func setupDomainForm(header string) form.Element {
 				Path:        "databaseName",
 				Label:       "MongoDB Database Name",
 				Description: "Name of the database to use on the server",
-			}, {
-				Type:        "text",
-				Path:        "masterKey",
-				Label:       "Master Key",
-				Description: "64 Hexadecimal Characters",
 			}},
 		}, {
 			Label: "Account Owner",
@@ -246,6 +241,15 @@ func setupDomainForm(header string) form.Element {
 				Type:  "toggle",
 				Path:  "smtp.tls",
 				Label: "Use TLS?",
+			}},
+		}, {
+			Label: "Master Key",
+			Type:  "layout-vertical",
+			Children: []form.Element{{
+				Type:        "text",
+				Path:        "masterKey",
+				Label:       "64 Cryptographically Random Hexadecimal Characters.",
+				Description: "Used for encrypting certain sensitive fields",
 			}},
 		}},
 	}
