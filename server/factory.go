@@ -5,12 +5,10 @@ import (
 	"embed"
 	"html/template"
 	"iter"
-	"maps"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/EmissarySocial/emissary/config"
@@ -35,6 +33,7 @@ import (
 	"github.com/davidscottmills/goeditorjs"
 	"github.com/labstack/echo/v4"
 	"github.com/maypok86/otter"
+	"github.com/puzpuzpuz/xsync/v4"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
@@ -47,7 +46,6 @@ import (
 type Factory struct {
 	storage config.Storage
 	config  config.Config
-	mutex   sync.RWMutex
 
 	// Server-level services
 	contentService      service.Content
@@ -67,7 +65,7 @@ type Factory struct {
 	queue               *queue.Queue
 	digitalDome         dome.Dome
 
-	domains   map[string]*service.Factory
+	domains   *xsync.Map[string, *service.Factory]
 	httpCache httpcache.HTTPCache
 	setup     bool // If TRUE, then the factory is in setup mode. This value cannot be changed
 }
@@ -81,8 +79,7 @@ func NewFactory(commandLineArgs *config.CommandLineArgs, embeddedFiles embed.FS)
 
 	factory := Factory{
 		storage:       storage,
-		mutex:         sync.RWMutex{},
-		domains:       make(map[string]*service.Factory),
+		domains:       xsync.NewMap[string, *service.Factory](),
 		embeddedFiles: embeddedFiles,
 		jwtService:    service.NewJWT(),
 		queue:         queue.New(),
@@ -247,33 +244,9 @@ func (factory *Factory) readConfig(config config.Config) {
 		derp.Report(derp.Wrap(err, location, "Unable to get `export cache` directory", config))
 	}
 
+	// Use new Queue configuration
+	log.Trace().Str("loc", location).Msg("Setting up queue...")
 	factory.refreshQueue()
-
-	// RULE: If we're running the setup console, then
-	// do not run the remaining updates
-	if factory.IsSetupMode() {
-		log.Trace().Msg("Factory.readConfig: In setup mode, so skipping domain updates")
-		return
-	}
-
-	// Mark all domains for deletion (then unmark them later)
-	for index := range factory.domains {
-
-		// NILCHECK: Guard against nil pointer dereference
-		if factory.domains[index] == nil {
-			derp.Report(derp.Internal(location, "Domain is nil. This should never happen.", index))
-			continue
-		}
-		factory.domains[index].MarkForDeletion = true
-	}
-
-	log.Trace().Msg("Factory.readConfig: Setting up Common Database")
-
-	// JWT Service configuration
-	factory.jwtService.Refresh(server, config.MasterKey)
-
-	// Digital Dome configuration
-	factory.digitalDome.With(dome.LogDatabase(session.Collection("DigitalDome")))
 
 	// Derp configuration
 	derp.Plugins.Clear()
@@ -282,68 +255,83 @@ func (factory *Factory) readConfig(config config.Config) {
 		switch logger.GetString("type") {
 
 		case "console":
-			log.Trace().Msg("Adding console logger to DERP")
+			log.Trace().Msg("Adding console logger to DERP...")
 			derp.Plugins.Add(derpconsole.New())
 
 		case "mongo":
-			log.Trace().Msg("Adding mongo logger to DERP")
+			log.Trace().Msg("Adding mongo logger to DERP...")
 			derp.Plugins.Add(derpmongo.New(
 				factory.commonDatabase.Collection("ErrorLog"),
 				logger))
 
 		default:
-			log.Error().Str("type", logger.GetString("type")).Msg("Factory.readConfig: Unknown logging type")
+			log.Error().Str("loc", location).Str("type", logger.GetString("type")).Msg("Unknown logging type")
 		}
 	}
 
+	//
+	// Insert/Update/Delete Domains
+	// in the domain list
+
+	// First, mark ALL for deletion
+	factory.domains.Range(func(key string, domain *service.Factory) bool {
+		domain.MarkForDeletion = true
+		return true
+	})
+
 	// Insert/Update a factory for each domain in the configuration
+	// removing MarkForDeletion on every domain we touch
 	for _, domainConfig := range config.Domains {
 
-		factory.mutex.Lock()
-		log.Trace().Str("domain", domainConfig.Hostname).Msg("Factory.readConfig: Refreshing domain")
+		log.Trace().Str("loc", location).Str("domain", domainConfig.Hostname).Msg("Refreshing domain...")
 		if err := factory.refreshDomain(domainConfig); err != nil {
 			derp.Report(derp.Wrap(err, location, "Unable to refresh domain", domainConfig.ID))
 			continue
 		}
-		factory.mutex.Unlock()
 	}
 
-	// Remove any domains that are still marked for deletion
-	for domainID := range factory.domains {
-		factory.mutex.Lock()
-		if factory.domains[domainID] == nil {
-			derp.Report(derp.Internal(location, "Domain is nil. This should never happen.", domainID))
-		} else {
-			if factory.domains[domainID].MarkForDeletion {
-				log.Trace().Str("domain", domainID).Msg("Factory.readConfig: Removing domain")
-				delete(factory.domains, domainID)
-			}
+	// Actually delete any domains that are still MarkForDeletion
+	factory.domains.Range(func(key string, domain *service.Factory) bool {
+		if domain.MarkForDeletion {
+			factory.domains.Delete(key)
 		}
-		factory.mutex.Unlock()
+		return true
+	})
+
+	// RULE: If we're running the setup console, then
+	// do not run the remaining updates
+	if factory.IsSetupMode() {
+		log.Trace().Msg("Factory.readConfig: In setup mode, so skipping domain updates")
+		return
 	}
+
+	// JWT Service configuration
+	factory.jwtService.Refresh(server, config.MasterKey)
+
+	// Digital Dome configuration
+	factory.digitalDome.With(dome.LogDatabase(session.Collection("DigitalDome")))
 
 	// Bootstrap the "Scheduler" task.  Duplicates will be dropped.
 	// This task will be used to schedule all other daily/hourly tasks
-	log.Trace().Msg("Factory.readConfig: Bootstrapping Scheduler")
+	log.Trace().Str("loc", location).Msg("Starting Task Scheduler")
 	if err := factory.queue.Publish(queue.NewTask("Scheduler", mapof.NewAny())); err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to initialize scheduler"))
+		derp.Report(derp.Wrap(err, location, "Unable to start scheduler"))
 	}
 }
 
 // refreshDomain attempts to refresh an existing domain, or creates a new one if it doesn't exist
-// CALLS TO THIS METHOD MUST BE LOCKED
 func (factory *Factory) refreshDomain(domainConfig config.Domain) error {
 
 	const location = "server.factory.refreshDomain"
 
 	// Try to find the domain
-	if existing := factory.domains[domainConfig.Hostname]; existing != nil {
+	if domain, exists := factory.domains.Load(domainConfig.Hostname); exists {
 
 		// Even if there's an error "refreshing" the domain, we don't want to delete it
-		existing.MarkForDeletion = false
+		domain.MarkForDeletion = false
 
 		// Try to refresh the domain
-		if err := existing.Refresh(domainConfig, factory.attachmentOriginals, factory.attachmentCache); err != nil {
+		if err := domain.Refresh(domainConfig, factory.attachmentOriginals, factory.attachmentCache); err != nil {
 			return derp.Wrap(err, location, "Unable to refresh domain", domainConfig.Hostname)
 		}
 
@@ -376,7 +364,7 @@ func (factory *Factory) refreshDomain(domainConfig config.Domain) error {
 	}
 
 	// If there are no errors, then add the domain to the list.
-	factory.domains[newDomain.Hostname()] = newDomain
+	factory.domains.Store(newDomain.Hostname(), newDomain)
 
 	return nil
 }
@@ -442,14 +430,18 @@ func (factory *Factory) refreshQueue() {
 		queue.WithRunImmediatePriority(32),
 	}
 
-	// Configure the queue to use the common database
-	mongoStorage := queue_mongo.New(factory.commonDatabase, 16, 8)
+	// If we're in LIVE mode, then it's okay to read/write tasks to the
+	// database. But we don't want to do this in SETUP mode because
+	// the setup tool should not run queued tasks from production.
+	if factory.IsLiveMode() {
+		mongoStorage := queue_mongo.New(factory.commonDatabase, 16, 8)
 
-	// Apply the storage to the queue
-	options = append(options,
-		queue.WithStorage(mongoStorage),
-		queue.WithPollStorage(true),
-	)
+		// Apply the storage to the queue
+		options = append(options,
+			queue.WithStorage(mongoStorage),
+			queue.WithPollStorage(true),
+		)
+	}
 
 	// Create a new queue object with consumers, storage, and polling
 	factory.queue = queue.New(options...)
@@ -461,11 +453,6 @@ func (factory *Factory) refreshQueue() {
 
 // Config returns the current configuration for the Factory
 func (factory *Factory) Config() config.Config {
-
-	// Read lock the mutex
-	factory.mutex.RLock()
-	defer factory.mutex.RUnlock()
-
 	result := factory.config
 	return result
 }
@@ -474,10 +461,6 @@ func (factory *Factory) Config() config.Config {
 func (factory *Factory) UpdateConfig(value config.Config) error {
 
 	const location = "server.factory.UpdateConfig"
-
-	// Write lock the mutex
-	factory.mutex.Lock()
-	defer factory.mutex.Unlock()
 
 	factory.config = value
 
@@ -495,14 +478,10 @@ func (factory *Factory) UpdateConfig(value config.Config) error {
 func (factory *Factory) RangeDomains() iter.Seq[*service.Factory] {
 
 	return func(yield func(*service.Factory) bool) {
-		factory.mutex.RLock()
-		defer factory.mutex.RUnlock()
 
-		for _, domain := range factory.domains {
-			if !yield(domain) {
-				return
-			}
-		}
+		factory.domains.Range(func(key string, domain *service.Factory) bool {
+			return yield(domain)
+		})
 	}
 }
 
@@ -559,9 +538,6 @@ func (factory *Factory) putDomain(configuration config.Domain) error {
 
 	const location = "server.Factory.putDomain"
 
-	factory.mutex.Lock()
-	defer factory.mutex.Unlock()
-
 	// Add the domain to the collection
 	factory.config.Domains.Put(configuration)
 
@@ -583,9 +559,6 @@ func (factory *Factory) FindDomain(domainID string) (config.Domain, error) {
 
 	const location = "server.Factory.FindDomain"
 
-	factory.mutex.RLock()
-	defer factory.mutex.RUnlock()
-
 	// If "new" then create a new domain
 	if strings.ToLower(domainID) == "new" {
 		return config.NewDomain(), nil
@@ -605,8 +578,8 @@ func (factory *Factory) DeleteDomain(domainID string) error {
 
 	const location = "server.Factory.DeleteDomain"
 
-	factory.mutex.Lock()
-	defer factory.mutex.Unlock()
+	// Remove the domain from the cache
+	factory.domains.Delete(domainID)
 
 	// Delete the domain from the collection
 	factory.config.Domains.Delete(domainID)
@@ -672,17 +645,13 @@ func (factory *Factory) ByHostname(hostname string) (*service.Factory, error) {
 	// Clean up the hostname before using it
 	hostname = factory.normalizeHostname(hostname)
 
-	// Read Lock the mutex to prevent concurrent writes
-	factory.mutex.RLock()
-	defer factory.mutex.RUnlock()
-
 	// Try to find the domain in the configuration
-	if domain, exists := factory.domains[hostname]; exists {
+	if domain, exists := factory.domains.Load(hostname); exists {
 		return domain, nil
 	}
 
 	// Failure.
-	return nil, derp.MisdirectedRequestError(location, "Hostname is invalid", "hostname: "+hostname, maps.Keys(factory.domains))
+	return nil, derp.MisdirectedRequestError(location, "Hostname is invalid", "hostname: "+hostname)
 }
 
 // normalizeHostname removes inconsistencies in host names so that they
@@ -786,17 +755,13 @@ func (factory *Factory) Server(hostname string) (data.Server, error) {
 	// Clean up the hostname before using it
 	hostname = factory.normalizeHostname(hostname)
 
-	// Read Lock the mutex to prevent concurrent writes
-	factory.mutex.RLock()
-	defer factory.mutex.RUnlock()
-
 	// Try to find the domain in the configuration
-	if domain, exists := factory.domains[hostname]; exists {
+	if domain, exists := factory.domains.Load(hostname); exists {
 		return domain.Server(), nil
 	}
 
 	// Failure.
-	return nil, derp.MisdirectedRequestError(location, "Hostname is invalid", "hostname: "+hostname, maps.Keys(factory.domains))
+	return nil, derp.MisdirectedRequestError(location, "Hostname is invalid", "hostname: "+hostname)
 
 }
 
@@ -833,7 +798,7 @@ func (factory *Factory) IsSetupMode() bool {
 	return factory.setup
 }
 
-// IsSetupComplete returns TRUE if the basic server config is done
+// IsReadyForDomains returns TRUE if the basic server config is done
 // and is ready for domains to be added to the server.
 func (factory *Factory) IsReadyForDomains() bool {
 	return factory.config.IsReadyForDomains()
