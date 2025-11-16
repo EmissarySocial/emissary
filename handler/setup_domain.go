@@ -18,6 +18,9 @@ import (
 
 // SetupDomainGet displays the form for creating/editing a domain.
 func SetupDomainGet(factory *server.Factory) echo.HandlerFunc {
+
+	const location = "handler.SetupDomainGet"
+
 	return func(ctx echo.Context) error {
 
 		domainID := ctx.Param("domain")
@@ -25,7 +28,7 @@ func SetupDomainGet(factory *server.Factory) echo.HandlerFunc {
 		domain, err := factory.FindDomain(domainID)
 
 		if err != nil {
-			return derp.Wrap(err, "handler.SetupDomainGet", "Unable to load configuration")
+			return derp.Wrap(err, location, "Unable to load configuration", domainID)
 		}
 
 		header := "Edit Domain"
@@ -41,7 +44,7 @@ func SetupDomainGet(factory *server.Factory) echo.HandlerFunc {
 		formHTML, err := form.Editor(s, domainEditForm, &domain, nil)
 
 		if err != nil {
-			return derp.Wrap(err, "handler.SetupDomainGet", "Unable to generate form")
+			return derp.Wrap(err, location, "Unable to generate form")
 		}
 
 		result := build.WrapModalForm(ctx.Response(), "/domains/"+domain.DomainID, formHTML, domainEditForm.Encoding())
