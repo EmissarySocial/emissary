@@ -180,10 +180,19 @@ func (dt *DateTime) SetTimezone(timezone string) error {
 
 	const location = "datetime.SetTimezone"
 
-	newLocation, err := time.LoadLocation(timezone)
+	var newLocation *time.Location
 
-	if err != nil {
-		return derp.Wrap(err, location, "Unable to set timezone", timezone)
+	if timezone == "" {
+		newLocation = time.UTC
+	} else {
+
+		var err error
+
+		newLocation, err = time.LoadLocation(timezone)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Unable to set timezone", timezone)
+		}
 	}
 
 	dt.Time = time.Date(dt.Year(), dt.Month(), dt.Day(), dt.Hour(), dt.Minute(), dt.Second(), dt.Nanosecond(), newLocation)
