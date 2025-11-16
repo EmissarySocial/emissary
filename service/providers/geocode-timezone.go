@@ -56,8 +56,8 @@ func (adapter GeocodeTimezone) ManualConfig() form.Form {
 						"enum": []form.LookupCode{
 							{Group: "Recommended", Value: "GEOAPIFY", Label: "Geoapify"},
 							{Group: "Recommended", Value: "HERE", Label: "Here"},
-							{Group: "Supported", Value: "GEOCODIO", Label: "Geocodio (US Only)"},
 							{Group: "Supported", Value: "GOOGLE", Label: "Google Maps"},
+							{Group: "Supported", Value: "GEOCODIO", Label: "Geocodio (US/Canada)"},
 						},
 					},
 				},

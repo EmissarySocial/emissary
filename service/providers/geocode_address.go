@@ -60,6 +60,7 @@ func (adapter GeocodeAddress) ManualConfig() form.Form {
 						{Group: "Supported", Value: "GOOGLE-MAPS", Label: "Google Maps"},
 						{Group: "Supported", Value: "MAPTILER", Label: "Maptiler"},
 						{Group: "Supported", Value: "OPEN-STREET-MAP", Label: "Open Street Map"},
+						{Group: "Supported", Value: "GEOCODIO", Label: "Geocodio (US/Canada)"},
 					}},
 				},
 				{
