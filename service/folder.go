@@ -309,7 +309,7 @@ func (service *Folder) CreateDefaultFolders(session data.Session, userID primiti
 		folder.UserID = userID
 		folder.Rank = index
 		folder.Label = data.GetString("label")
-		folder.Layout = first.String(data.GetString("layout"), model.FolderLayoutNewspaper)
+		folder.Layout = first.String(data.GetString("layout"), model.FolderLayoutSocial)
 		folder.Icon = first.String(data.GetString("icon"), "folder")
 
 		if err := service.Save(session, &folder, "Create default folder"); err != nil {
