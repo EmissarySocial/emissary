@@ -148,6 +148,7 @@
 		top:var(--rhythm);
 		left:var(--rhythm);
 		right: var(--rhythm);
+		bottom:unset;
 	}
 	
 	.sm\:pos-absolute-top-0 {
@@ -156,6 +157,7 @@
 		top:0px;
 		left:0px;
 		right:0px;
+		bottom:unset;
 	}
 	
 	.sm\:pos-absolute-top-left {
@@ -163,6 +165,8 @@
 		position:absolute;
 		top:var(--rhythm);
 		left:var(--rhythm);
+		bottom:unset;
+		right:unset;
 	}
 	
 	.sm\:pos-absolute-top-left-0 {
@@ -170,6 +174,8 @@
 		position:absolute;
 		top:0px;
 		left:0px;
+		bottom:unset;
+		right:unset;
 	}
 	
 	.sm\:pos-absolute-top-right {
@@ -177,6 +183,8 @@
 		position:absolute;
 		top:var(--rhythm);
 		right:var(--rhythm);
+		bottom:unset;
+		left:unset;
 	}
 	
 	.sm\:pos-absolute-top-right-0 {
@@ -184,11 +192,14 @@
 		position:absolute;
 		top:0px;
 		right:0px;
+		bottom:unset;
+		left:unset;
 	}
 	
 	.sm\:pos-absolute-bottom {
 		-webkit-position:absolute;
 		position:absolute;
+		top:unset;
 		bottom:var(--rhythm);
 		left:var(--rhythm);
 		right: var(--rhythm);
@@ -197,6 +208,7 @@
 	.sm\:pos-absolute-bottom-0 {
 		-webkit-position:absolute;
 		position:absolute;
+		top:unset;
 		bottom:0px;
 		left:0px;
 		right:0px;
@@ -207,6 +219,8 @@
 		position:absolute;
 		bottom:var(--rhythm);
 		left:var(--rhythm);
+		top:unset;
+		right:unset;
 	}
 	
 	.sm\:pos-absolute-bottom-left-0 {
@@ -214,6 +228,8 @@
 		position:absolute;
 		bottom:0px;
 		left:0px;
+		top:unset;
+		right:unset;
 	}
 	
 	.sm\:pos-absolute-bottom-right {
@@ -221,6 +237,8 @@
 		position:absolute;
 		bottom:var(--rhythm);
 		right:var(--rhythm);
+		top:unset;
+		left:unset;
 	}
 	
 	.sm\:pos-absolute-bottom-right-0 {
@@ -228,6 +246,8 @@
 		position:absolute;
 		bottom:0px;
 		right:0px;
+		top:unset;
+		left:unset;
 	}
 	
 	.sm\:pos-absolute-four-corners {
@@ -237,8 +257,7 @@
 		right:0px;
 		bottom:0px;
 		left:0px;
-	}
-		
+	}		
 }
 
 
@@ -270,6 +289,7 @@
 		top:var(--rhythm);
 		left:var(--rhythm);
 		right: var(--rhythm);
+		bottom:unset;
 	}
 	
 	.md\:pos-absolute-top-0 {
@@ -278,6 +298,7 @@
 		top:0px;
 		left:0px;
 		right:0px;
+		bottom:unset;
 	}
 	
 	.md\:pos-absolute-top-left {
@@ -285,6 +306,8 @@
 		position:absolute;
 		top:var(--rhythm);
 		left:var(--rhythm);
+		bottom:unset;
+		right:unset;
 	}
 	
 	.md\:pos-absolute-top-left-0 {
@@ -292,6 +315,8 @@
 		position:absolute;
 		top:0px;
 		left:0px;
+		bottom:unset;
+		right:unset;
 	}
 	
 	.md\:pos-absolute-top-right {
@@ -299,6 +324,8 @@
 		position:absolute;
 		top:var(--rhythm);
 		right:var(--rhythm);
+		bottom:unset;
+		left:unset;
 	}
 	
 	.md\:pos-absolute-top-right-0 {
@@ -306,6 +333,8 @@
 		position:absolute;
 		top:0px;
 		right:0px;
+		bottom:unset;
+		left:unset;
 	}
 	
 	.md\:pos-absolute-bottom {
@@ -314,6 +343,7 @@
 		bottom:var(--rhythm);
 		left:var(--rhythm);
 		right: var(--rhythm);
+		top:unset;
 	}
 	
 	.md\:pos-absolute-bottom-0 {
@@ -322,6 +352,7 @@
 		bottom:0px;
 		left:0px;
 		right:0px;
+		top:unset;
 	}
 	
 	.md\:pos-absolute-bottom-left {
@@ -329,6 +360,8 @@
 		position:absolute;
 		bottom:var(--rhythm);
 		left:var(--rhythm);
+		top:unset;
+		right:unset;
 	}
 	
 	.md\:pos-absolute-bottom-left-0 {
@@ -336,6 +369,8 @@
 		position:absolute;
 		bottom:0px;
 		left:0px;
+		top:unset;
+		right:unset;
 	}
 	
 	.md\:pos-absolute-bottom-right {
@@ -343,6 +378,8 @@
 		position:absolute;
 		bottom:var(--rhythm);
 		right:var(--rhythm);
+		top:unset;
+		left:unset;
 	}
 	
 	.md\:pos-absolute-bottom-right-0 {
@@ -350,6 +387,8 @@
 		position:absolute;
 		bottom:0px;
 		right:0px;
+		top:unset;
+		left:unset;
 	}
 	
 	.md\:pos-absolute-four-corners {
@@ -391,6 +430,7 @@
 		top:var(--rhythm);
 		left:var(--rhythm);
 		right: var(--rhythm);
+		bottom:unset;
 	}
 	
 	.lg\:pos-absolute-top-0 {
@@ -399,6 +439,7 @@
 		top:0px;
 		left:0px;
 		right:0px;
+		bottom:unset;
 	}
 	
 	.lg\:pos-absolute-top-left {
@@ -406,6 +447,8 @@
 		position:absolute;
 		top:var(--rhythm);
 		left:var(--rhythm);
+		bottom:unset;
+		right:unset;
 	}
 	
 	.lg\:pos-absolute-top-left-0 {
@@ -413,6 +456,8 @@
 		position:absolute;
 		top:0px;
 		left:0px;
+		bottom:unset;
+		right:unset;
 	}
 	
 	.lg\:pos-absolute-top-right {
@@ -420,6 +465,8 @@
 		position:absolute;
 		top:var(--rhythm);
 		right:var(--rhythm);
+		bottom:unset;
+		left:unset;
 	}
 	
 	.lg\:pos-absolute-top-right-0 {
@@ -427,6 +474,8 @@
 		position:absolute;
 		top:0px;
 		right:0px;
+		bottom:unset;
+		left:unset;
 	}
 	
 	.lg\:pos-absolute-bottom {
@@ -435,6 +484,7 @@
 		bottom:var(--rhythm);
 		left:var(--rhythm);
 		right: var(--rhythm);
+		top:unset;
 	}
 	
 	.lg\:pos-absolute-bottom-0 {
@@ -443,6 +493,7 @@
 		bottom:0px;
 		left:0px;
 		right:0px;
+		top:unset;
 	}
 	
 	.lg\:pos-absolute-bottom-left {
@@ -450,6 +501,8 @@
 		position:absolute;
 		bottom:var(--rhythm);
 		left:var(--rhythm);
+		top:unset;
+		right:unset;
 	}
 	
 	.lg\:pos-absolute-bottom-left-0 {
@@ -457,6 +510,8 @@
 		position:absolute;
 		bottom:0px;
 		left:0px;
+		top:unset;
+		right:unset;
 	}
 	
 	.lg\:pos-absolute-bottom-right {
@@ -464,6 +519,8 @@
 		position:absolute;
 		bottom:var(--rhythm);
 		right:var(--rhythm);
+		top:unset;
+		left:unset;
 	}
 	
 	.lg\:pos-absolute-bottom-right-0 {
@@ -471,6 +528,8 @@
 		position:absolute;
 		bottom:0px;
 		right:0px;
+		top:unset;
+		left:unset;
 	}
 	
 	.lg\:pos-absolute-four-corners {

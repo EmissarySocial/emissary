@@ -63,6 +63,9 @@ func GetIntent_Follow(ctx *steranko.Context, factory *service.Factory, session d
 
 	b.HTML()
 	b.Head()
+	b.Empty("meta").Attr("charset", "utf-8")
+	b.Empty("meta").Name("viewport").Attr("content", "width-device-width, initial-scale=1")
+	b.Empty("meta").Name("generator").Attr("content", "https://emissary.social")
 	b.Link("stylesheet", "/.themes/global/stylesheet").Close()
 	b.Link("stylesheet", "/.themes/default/stylesheet").Close()
 	b.Script().Src("/.themes/global/resources/htmx/htmx.min.js").Close()
@@ -85,7 +88,7 @@ func GetIntent_Follow(ctx *steranko.Context, factory *service.Factory, session d
 				b.Img(actor.Icon().Href()).Class("circle width-48", "flex-shrink-0").Close()
 				b.Div().Class("flex-grow")
 				{
-					b.Div().Class("text-lg", "bold", "margin-none").InnerText("Follow " + actor.Name())
+					b.Div().Class("text-lg", "bold", "margin-none").InnerText(`Follow "` + actor.Name() + `"`)
 					b.Div().Class("text-gray")
 					b.A(actor.URL()).InnerText(ActorUsername(actor))
 					b.Close()
@@ -102,7 +105,7 @@ func GetIntent_Follow(ctx *steranko.Context, factory *service.Factory, session d
 
 		b.Div().Class("margin-top")
 		{
-			b.Button().Type("submit").Class("primary").TabIndex("0").InnerText("Follow " + actor.Name()).Close()
+			b.Button().Type("submit").Class("primary").TabIndex("0").InnerText("Follow").Close()
 			b.A("/@me/intent/continue?url=" + url.QueryEscape(onCancel)).Class("button").TabIndex("0").InnerText("Cancel")
 		}
 	}
