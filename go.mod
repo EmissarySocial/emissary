@@ -15,7 +15,7 @@ require (
 	github.com/benpate/domain v0.2.9
 	github.com/benpate/exp v0.9.0
 	github.com/benpate/exp-builder v0.10.7
-	github.com/benpate/form v0.25.7
+	github.com/benpate/form v0.25.9
 	github.com/benpate/geo v0.0.3
 	github.com/benpate/hannibal v0.14.4
 	github.com/benpate/html v0.16.15
