@@ -2,7 +2,8 @@ package model
 
 import "go.mongodb.org/mongo-driver/bson/primitive"
 
-// FolderList contains a group of folders and the currently selected folder
+// FolderList contains a group of folders and the currently selected folder.
+// This is used by the Inbox templates to display all folders for a User.
 type FolderList struct {
 	Folders    []Folder `json:"folders"`
 	SelectedID primitive.ObjectID
