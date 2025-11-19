@@ -347,12 +347,8 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 		return derp.Wrap(err, location, "Invalid Stream: using TemplateSchema", stream)
 	}
 
-	// RULE: If this stream is not a profile stream and does not have ParentIDs, then calculate them now.
-	if (stream.NavigationID != "profile") && (len(stream.ParentIDs) == 0) {
-		if err := service.calcParentIDs(session, stream); err != nil {
-			return derp.Wrap(err, location, "Unable to calculate parent IDs", stream)
-		}
-	}
+	// RULE: calculate Parent IDs
+	service.calcParentIDs(session, stream)
 
 	// RULE: Calculate the stream context
 	service.calcContext(stream)
@@ -1041,45 +1037,23 @@ func (service *Stream) ParseURL(session data.Session, streamURL string) (primiti
 
 // calcParentIDs scans the parent chain of a stream and generates a "breadcrumbs" slice
 // of all of this Stream's parents
-func (service *Stream) calcParentIDs(session data.Session, stream *model.Stream) error {
-
-	const location = "service.Stream.calcParentIDs"
-
-	// RULE: Notes are always stored under a user's profile, so they have no parents
-	if stream.SocialRole == vocab.ObjectTypeNote {
-		stream.ParentIDs = id.NewSlice()
-		return nil
-	}
+func (service *Stream) calcParentIDs(session data.Session, stream *model.Stream) {
 
 	// If this stream has no parent, then it has no parent IDs
 	if stream.ParentID == primitive.NilObjectID {
 		stream.ParentIDs = id.NewSlice()
-		return nil
+		return
 	}
 
 	// Otherwise, load the Parent stream and try to use its parentIDs
-	parentStream := model.NewStream()
-	if err := service.LoadByID(session, stream.ParentID, &parentStream); err != nil {
-		return derp.Wrap(err, location, "Unable to load Parent stream", stream.ParentID)
+	maybeParentStream := model.NewStream()
+	if err := service.LoadByID(session, stream.ParentID, &maybeParentStream); err == nil {
+		stream.ParentIDs = append(maybeParentStream.ParentIDs, stream.ParentID)
+		return
 	}
 
-	// If the parent has no parentIDs, then try to calculate them
-	if len(parentStream.ParentIDs) == 0 {
-		if err := service.calcParentIDs(session, &parentStream); err != nil {
-			return derp.Wrap(err, location, "Unable to calculate ParentIDs for Parent stream", stream.ParentID)
-		}
-
-		// If the parent has been changed, then save that calculation.
-		if len(parentStream.ParentIDs) > 0 {
-			if err := service.Save(session, &parentStream, "calcParentIDs"); err != nil {
-				return derp.Wrap(err, location, "Unable to save Parent stream", stream.ParentID)
-			}
-		}
-	}
-
-	// Save the ParentIDs to the current stream
-	stream.ParentIDs = append(parentStream.ParentIDs, parentStream.StreamID)
-	return nil
+	// Fall through: Just use the Parent (probably a User)
+	stream.ParentIDs = []primitive.ObjectID{stream.ParentID}
 }
 
 func (service *Stream) calcDefaultAllow(template *model.Template, stream *model.Stream) {
