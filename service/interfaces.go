@@ -9,6 +9,8 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
+	"github.com/benpate/rosetta/mapof"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type ServerFactory interface {
@@ -33,4 +35,9 @@ type MerchantAccountAdapter interface {
 	ParseCheckoutResponse(url.Values) (model.Privilege, error)
 	ParseCheckoutWebhook(http.Header, []byte) error
 	SubscriptionCancelURL(string) (string, error)
+}
+
+type Exportable interface {
+	ExportCollection(data.Session, primitive.ObjectID) ([]model.IDOnly, error)
+	ExportRecord(data.Session, primitive.ObjectID, primitive.ObjectID) (mapof.Any, error)
 }

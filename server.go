@@ -362,6 +362,11 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@:userId/attachments/:attachmentId", handler.WithFactory(factory, handler.GetUserAttachment))
 	e.GET("/@:userId/qrcode", handler.WithUser(factory, handler.GetQRCode_User))
 
+	// Export Routes for Users
+	e.GET("/@:userId/export", handler.NotFound)
+	e.GET("/@:userId/export/:collection", handler.WithUser(factory, handler.GetUserExportCollection))
+	e.GET("/@:userId/export/:collection/:recordId", handler.WithUser(factory, handler.GetUserExportRecord))
+
 	// ActivityPub Routes for Users
 	e.GET("/@:userId/pub", handler.WithUser(factory, handler.GetOutbox))
 	e.POST("/@:userId/pub/inbox", handler.WithUser(factory, ap_user.PostInbox))

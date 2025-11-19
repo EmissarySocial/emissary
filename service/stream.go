@@ -18,7 +18,6 @@ import (
 	"github.com/benpate/derp"
 	dt "github.com/benpate/domain"
 	"github.com/benpate/exp"
-	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/html"
@@ -189,6 +188,13 @@ func (service *Stream) Query(session data.Session, criteria exp.Expression, opti
 // QuerySummary returns an slice containing StreamSummaries for all of the Streams that match the provided criteria
 func (service *Stream) QuerySummary(session data.Session, criteria exp.Expression, options ...option.Option) ([]model.StreamSummary, error) {
 	result := make([]model.StreamSummary, 0)
+	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
+	return result, err
+}
+
+func (service *Stream) QueryIDOnly(session data.Session, criteria exp.Expression, options ...option.Option) ([]model.IDOnly, error) {
+	result := make([]model.IDOnly, 0)
+	options = append(options, option.Fields("_id"))
 	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
 	return result, err
 }

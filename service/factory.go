@@ -927,6 +927,10 @@ func (factory *Factory) Email() *DomainEmail {
 	return &factory.emailService
 }
 
+func (factory *Factory) Export() Export {
+	return NewExport(factory)
+}
+
 // Key returns an instance of the Key Manager Service (KMS)
 func (factory *Factory) JWT() *JWT {
 	return factory.jwtService
