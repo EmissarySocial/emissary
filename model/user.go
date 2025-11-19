@@ -212,6 +212,8 @@ func (user User) GetJSONLD() mapof.Any {
 		vocab.ContextTypeToot,
 	}
 
+	exportURL := user.ActivityPubURL() + "/export"
+
 	result := mapof.Any{
 		vocab.AtContext:                 contextList,
 		vocab.PropertyID:                user.ActivityPubURL(),
@@ -230,6 +232,34 @@ func (user User) GetJSONLD() mapof.Any {
 		// Removing "Featured" until I can sort out how to use it for Bandwagon "featured" posts
 		// WITHOUT making all of the posts "pinned" --> https://mastodon.me.uk/@delanthear/114873976765234644
 		// vocab.PropertyFeatured:          user.ActivityPubFeaturedURL(),
+
+		vocab.PropertyEndpoints: mapof.String{
+			vocab.EndpointOAuthMigration: exportURL,
+		},
+
+		vocab.PropertyMigration: mapof.String{
+			"outbox":                   exportURL + "/outbox",
+			"content":                  exportURL + "/content",
+			"following":                exportURL + "/following",
+			"blocked":                  exportURL + "/blocked",
+			"emissary:annotation":      exportURL + "/emissary-annotation",
+			"emissary:attachment":      exportURL + "/emissary-attachment",
+			"emissary:circle":          exportURL + "/emissary-circle",
+			"emissary:conversaion":     exportURL + "/emissary-conversation",
+			"emissary:folder":          exportURL + "/emissary-folder",
+			"emissary:follower":        exportURL + "/emissary-follower",
+			"emissary:following":       exportURL + "/emissary-following",
+			"emissary:mention":         exportURL + "/emissary-mention",
+			"emissary:merchantAccount": exportURL + "/emissary-merchantAccount",
+			"emissary:message":         exportURL + "/emissary-message",
+			"emissary:outboxMessage":   exportURL + "/emissary-outboxMessage",
+			"emissary:privilege":       exportURL + "/emissary-privilege",
+			"emissary:product":         exportURL + "/emissary-product",
+			"emissary:response":        exportURL + "/emissary-response",
+			"emissary:rule":            exportURL + "/emissary-rule",
+			"emissary:stream":          exportURL + "/emissary-stream",
+			"emissary:streamWidget":    exportURL + "/emissary-streamWidget",
+		},
 	}
 
 	if user.StatusMessage != "" {
