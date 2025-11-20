@@ -4,6 +4,7 @@ import (
 	"io"
 	"text/template"
 
+	"github.com/EmissarySocial/emissary/model/step"
 	"github.com/benpate/derp"
 )
 
@@ -11,29 +12,30 @@ import (
 type StepSave struct {
 	Comment *template.Template
 	Method  string
+	OnError []step.Step
 }
 
-func (step StepSave) Get(builder Builder, _ io.Writer) PipelineBehavior {
+func (step StepSave) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 
 	if (step.Method == "get") || (step.Method == "both") {
-		return step.do(builder)
+		return step.do(builder, buffer, ActionMethodGet)
 	}
 
 	return Continue()
 }
 
 // Post saves the object to the database
-func (step StepSave) Post(builder Builder, _ io.Writer) PipelineBehavior {
+func (step StepSave) Post(builder Builder, buffer io.Writer) PipelineBehavior {
 
 	if (step.Method == "post") || (step.Method == "both") {
-		return step.do(builder)
+		return step.do(builder, buffer, ActionMethodPost)
 	}
 
 	return Continue()
 }
 
 // Post saves the object to the database
-func (step StepSave) do(builder Builder) PipelineBehavior {
+func (step StepSave) do(builder Builder, buffer io.Writer, actionMethod ActionMethod) PipelineBehavior {
 
 	const location = "build.StepSave.Post"
 
@@ -42,9 +44,21 @@ func (step StepSave) do(builder Builder) PipelineBehavior {
 	comment := executeTemplate(step.Comment, builder)
 
 	// Try to update the stream
-	if err := modelService.ObjectSave(builder.session(), object, comment); err != nil {
+	err := modelService.ObjectSave(builder.session(), object, comment)
+
+	// If success, then success
+	if err == nil {
+		return Continue()
+	}
+
+	// If there's no "on-error" pipeline, then fail in failure.
+	if len(step.OnError) == 0 {
 		return Halt().WithError(derp.Wrap(err, location, "Unable to save model object"))
 	}
 
-	return Continue()
+	// Otherwise, execute the "on-error" pipeline instead of failing.
+	result := Pipeline(step.OnError).Execute(builder.factory(), builder, buffer, actionMethod)
+	result.Error = derp.WrapIF(result.Error, location, "Error executing steps for child")
+
+	return UseResult(result)
 }

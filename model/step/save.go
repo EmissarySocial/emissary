@@ -4,6 +4,7 @@ import (
 	"text/template"
 
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 )
@@ -12,27 +13,37 @@ import (
 type Save struct {
 	Comment *template.Template
 	Method  string
+	OnError []Step
 }
 
 // NewSave returns a fully initialized Save object
 func NewSave(stepInfo mapof.Any) (Save, error) {
 
+	const location = "model.step.NewSave"
+
 	// Validate the step configuration
 	if err := StepSaveSchema().Validate(stepInfo); err != nil {
-		return Save{}, derp.Wrap(err, "model.step.NewSave", "Invalid step configuration", stepInfo)
+		return Save{}, derp.Wrap(err, location, "Invalid step configuration", stepInfo)
 	}
 
 	// Get the "comment" template
 	comment, err := template.New("").Parse(stepInfo.GetString("comment"))
 
 	if err != nil {
-		return Save{}, derp.Wrap(err, "model.step.NewSave", "Error parsing comment template")
+		return Save{}, derp.Wrap(err, location, "Error parsing comment template")
+	}
+
+	onError, err := NewPipeline(convert.SliceOfMap(stepInfo["on-error"]))
+
+	if err != nil {
+		return Save{}, derp.Wrap(err, location, "Invalid 'steps'")
 	}
 
 	// Create the new Save step
 	return Save{
 		Comment: comment,
 		Method:  first(stepInfo.GetString("method"), "post"),
+		OnError: onError,
 	}, nil
 }
 
