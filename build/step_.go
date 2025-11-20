@@ -236,6 +236,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.WithFollowing:
 		return StepWithFollowing(s)
 
+	case step.WithImport:
+		return StepWithImport(s)
+
 	case step.WithMerchantAccount:
 		return StepWithMerchantAccount(s)
 

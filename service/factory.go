@@ -927,8 +927,10 @@ func (factory *Factory) Email() *DomainEmail {
 	return &factory.emailService
 }
 
-func (factory *Factory) Export() Export {
-	return NewExport(factory)
+// Export returns the Export service, which can export user records to other systems
+func (factory *Factory) Export() *Export {
+	result := NewExport(factory)
+	return &result
 }
 
 // Key returns an instance of the Key Manager Service (KMS)
@@ -940,6 +942,14 @@ func (factory *Factory) JWT() *JWT {
 // aliases for icons in the UI
 func (factory *Factory) Icons() icon.Provider {
 	return Icons{}
+}
+
+// Import returns the Import service, which imports user records from other systems
+func (factory *Factory) Import() *Import {
+	result := NewImport(
+		factory.ActivityStream(model.ActorTypeApplication, primitive.NilObjectID),
+	)
+	return &result
 }
 
 // Locator returns the locator service, which locates records based on their URLs
@@ -1022,6 +1032,9 @@ func (factory *Factory) ModelService(object data.Object) ModelService {
 
 	case *model.Identity:
 		return factory.Identity()
+
+	case *model.Import:
+		return factory.Import()
 
 	case *model.MerchantAccount:
 		return factory.MerchantAccount()

@@ -30,6 +30,7 @@ type Factory interface {
 	Circle() *service.Circle
 	Connection() *service.Connection
 	Conversation() service.Conversation
+	Export() *service.Export
 	Folder() *service.Folder
 	Following() *service.Following
 	Follower() *service.Follower
@@ -40,6 +41,7 @@ type Factory interface {
 	GeocodeTimezone() service.GeocodeTimezone
 	Group() *service.Group
 	Identity() *service.Identity
+	Import() *service.Import
 	Inbox() *service.Inbox
 	Mention() *service.Mention
 	MerchantAccount() *service.MerchantAccount
