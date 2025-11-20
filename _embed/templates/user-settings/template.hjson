@@ -751,11 +751,13 @@
 								]
 							}
 						}
-						{do:"save", on-error:[
+						{do:"save"}
+						{do:"if", condition:"{{eq `AUTHORIZING` .Object.StateID}}", then:[
+							{do:"forward-to", url:"{{.SourceOAuthURL}}"}
+						], else: [
 							{do:"trigger-event", event:"closeModal"}
 							{do:"refresh-page"}
 						]}
-						{do:"forward-to", url:"{{.Object.SourceOAuthURL}}"}
 					]}
 				]}
 			]

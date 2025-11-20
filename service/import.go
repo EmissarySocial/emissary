@@ -10,6 +10,7 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/sherlock"
 	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -17,12 +18,14 @@ import (
 // Import service helps exports user data to another server
 type Import struct {
 	activityService ActivityStream
+	host            string
 }
 
 // NewImport returns a fully populated Import service
-func NewImport(activityService ActivityStream) Import {
+func NewImport(activityService ActivityStream, host string) Import {
 	return Import{
 		activityService: activityService,
+		host:            host,
 	}
 }
 
@@ -90,8 +93,6 @@ func (service *Import) Save(session data.Session, record *model.Import, note str
 
 	const location = "service.Import.Save"
 
-	spew.Dump(location, record)
-
 	// Validate the value before saving
 	if err := service.Schema().Validate(record); err != nil {
 		return derp.Wrap(err, location, "Invalid Import record", record)
@@ -99,7 +100,6 @@ func (service *Import) Save(session data.Session, record *model.Import, note str
 
 	// Execute state changes
 	service.calcStateChange(record)
-	spew.Dump("after-state", record)
 
 	// Save the import to the database
 	if err := service.collection(session).Save(record, note); err != nil {
@@ -229,12 +229,12 @@ func (service *Import) doAuthorize(record *model.Import) {
 
 	// Find the remote actor identified as the Source account
 	client := service.activityService.Client()
-	actor, err := client.Load(record.SourceID)
+	actor, err := client.Load(record.SourceID, sherlock.AsActor())
 
 	if err != nil {
 		record.StateID = model.ImportStateAuthorizationError
 		record.StateDescription = "The account you entered (" + record.SourceID + ") could not be found. Please enter a different account."
-		spew.Dump(record)
+		spew.Dump(err)
 		return
 	}
 
@@ -242,24 +242,28 @@ func (service *Import) doAuthorize(record *model.Import) {
 	if actor.Type() != vocab.ActorTypePerson {
 		record.StateID = model.ImportStateAuthorizationError
 		record.StateDescription = "The account you entered (" + record.SourceID + ") is not valid because it is a '" + actor.Type() + "' type record. You can only import from 'Person' accounts."
-		spew.Dump(record)
+		spew.Dump(err)
 		return
 	}
 
 	// Locate the migration endpoint
+	spew.Dump(actor.Value())
 	record.SourceOAuthURL = actor.Endpoints().Get(vocab.EndpointOAuthMigration).String()
 
 	if record.SourceOAuthURL == "" {
 		record.StateID = model.ImportStateAuthorizationError
 		record.StateDescription = "The account you entered (" + record.SourceID + ") does not support account migration.  Actors must define an OAuth migration endpoint to be compatible."
-		spew.Dump(record)
 		return
 	}
 
 	// SUCCESS (for now)
 	record.StateID = model.ImportStateAuthorizing
 	record.StateDescription = ""
-	spew.Dump(record)
+
+	record.SourceOAuthURL += "?response_type=code"
+	record.SourceOAuthURL += "&client_id=" + service.host + "/@application"
+	record.SourceOAuthURL += "&redirect_uri=" + service.host + "/@me/settings/migration"
+	record.SourceOAuthURL += "&state=" + record.SourceOAuthState
 }
 
 // doImport manages the transient state change from "DO-IMPORT"

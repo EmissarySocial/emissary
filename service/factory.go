@@ -948,6 +948,7 @@ func (factory *Factory) Icons() icon.Provider {
 func (factory *Factory) Import() *Import {
 	result := NewImport(
 		factory.ActivityStream(model.ActorTypeApplication, primitive.NilObjectID),
+		factory.Host(),
 	)
 	return &result
 }

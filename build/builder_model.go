@@ -233,6 +233,15 @@ func (w Model) CircleMembers() (QueryBuilder[model.Identity], error) {
 	return NewQueryBuilder[model.Identity](w._factory.Identity(), w._session, criteria), nil
 }
 
+func (w Model) SourceOAuthURL() string {
+
+	if record, isImport := w.object().(*model.Import); isImport {
+		return record.SourceOAuthURL
+	}
+
+	return ""
+}
+
 /******************************************
  * Helper functions
  ******************************************/

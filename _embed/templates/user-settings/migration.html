@@ -29,31 +29,57 @@
 
 		<div class="margin-bottom-xl">
 			<div class="card padding" style="max-width:600px">
+				
+				{{- $import := $imports.First -}}
 				{{- if $imports.IsEmpty -}}
+
 					You can import profile data directly from other Fediverse servers that support
 					online account migration. To begin, you'll need to enter the account address that
 					you are migrating FROM, then authenticate with that server.
 					<br>
 					<br>
 					<button hx-get="/@me/settings/import-authenticate" class="primary">Start an Import...</button>
-				{{- else -}}
-					{{- $import := $imports.First -}}
-					{{- if eq "AUTHORIZATION-ERROR" $import.StateID -}}
 
-						<div class="flex-row flex-align-start">
-							<div class="text-lg text-red">{{icon "alert"}}</div>
-							<div>
-								<div class="bold text-red text-lg">Your Import Could Not Be Started</div>
-								<div>{{$import.StateDescription}}</div>
-								<div class="margin-top">
-									<button class="primary" hx-get="/@me/settings/import-authenticate?importId={{$import.ID}}">Edit Account</button>
-									<button hx-get="/@me/settings/import-delete?importId={{$import.ID}}">Cancel Import</button>
-								</div>
+				{{- else if eq "AUTHORIZATION-ERROR" $import.StateID -}}
+
+					<div class="flex-row flex-align-start">
+						<div class="text-lg text-red">{{icon "alert"}}</div>
+						<div>
+							<div class="bold text-red text-lg">Your Import Could Not Be Started</div>
+							<div>{{$import.StateDescription}}</div>
+							<div class="margin-top">
+								<button class="primary" hx-get="/@me/settings/import-authenticate?importId={{$import.ID}}">Edit Account</button>
+								<button hx-get="/@me/settings/import-delete?importId={{$import.ID}}">Cancel Import</button>
 							</div>
 						</div>
+					</div>
 
-					{{- end -}}
+				{{- else if eq "AUTHORIZING" $import.StateID -}}
 
+					{{- $source := .ActivityStream $import.SourceID -}}
+					
+					<div class="text-lg bold">Waiting for Approval</div>
+					<div class="margin-bottom">
+						We have not received approval from remote account yet. This can happen when you cancel
+						the authentication process on your remote account. To continue, please reconnect to 
+						the remote server.
+					</div>
+					<div class="margin-bottom-lg flex-row">
+						<div>
+							<img src="{{$source.Icon.Href}}" class="width-48 circle">
+						</div>
+						<div>
+							<div class="text-bold">{{$source.Name}}</div>
+							<div class="text-gray">{{$source.Username}}</div>
+						</div>
+					</div>
+					<div>
+						<a href="{{$import.SourceOAuthURL}}" class="button primary">Approve Now</a>
+						<button hx-get="/@me/settings/import-delete?importId={{$import.ID}}">Cancel Import</button>
+					</div>
+
+				{{- else -}}
+					<pre>{{$import |jsonIndent}}</pre>
 				{{- end -}}
 			</div>
 		</div>
