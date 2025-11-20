@@ -2,8 +2,8 @@ package build
 
 import (
 	"bytes"
-	"html/template"
 	"io"
+	"text/template"
 
 	"github.com/benpate/derp"
 )
