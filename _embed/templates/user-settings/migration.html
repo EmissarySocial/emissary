@@ -1,0 +1,81 @@
+{{- $isDesktop := .IsDesktop -}}
+{{- $imports := .Imports -}}
+
+<div class="app" script="init send SelectNav(id:'settings')">
+	<title>Import/Export | {{.DisplayName}}</title>
+
+	{{- if $isDesktop -}}
+		<div id="app-sidebar" class="expanded">
+			{{- template "menu" "migration" -}}
+		</div>
+	{{- end -}}
+	
+	<div class="app-content padding">
+
+		{{- if $isDesktop -}}
+			<div class="flex-row flex-align-center margin-bottom-lg">
+				<h1 class="text-xl bold margin-none flex-grow">Import Profile</h1>
+				<a href="https://emissary.dev/migration" target="_blank">
+					{{icon "help"}} Help with Data Migration
+				</a>
+			</div>
+		{{- else -}}
+			<div class="flex-row flex-align-center text-xl margin-none margin-bottom-lg">
+				<a href="/@me/settings/mobile">{{icon "back"}}</a>
+				<div class="flex-grow bold">Import Profile</div>
+				<a href="https://emissary.dev/migration" target="_blank">{{icon "help"}}</a>
+			</div>
+		{{- end -}}
+
+		<div class="margin-bottom-xl">
+			<div class="card padding" style="max-width:600px">
+				{{- if $imports.IsEmpty -}}
+					You can import profile data directly from other Fediverse servers that support
+					online account migration. To begin, you'll need to enter the account address that
+					you are migrating FROM, then authenticate with that server.
+					<br>
+					<br>
+					<button hx-get="/@me/settings/import-authenticate" class="primary">Start an Import...</button>
+				{{- else -}}
+					{{- $import := $imports.First -}}
+					{{- if eq "AUTHORIZATION-ERROR" $import.StateID -}}
+
+						<div class="flex-row flex-align-start">
+							<div class="text-lg text-red">{{icon "alert"}}</div>
+							<div>
+								<div class="bold text-red text-lg">Your Import Could Not Be Started</div>
+								<div>{{$import.StateDescription}}</div>
+								<div class="margin-top">
+									<button class="primary" hx-get="/@me/settings/import-authenticate?importId={{$import.ID}}">Edit Account</button>
+									<button hx-get="/@me/settings/import-delete?importId={{$import.ID}}">Cancel Import</button>
+								</div>
+							</div>
+						</div>
+
+					{{- end -}}
+
+				{{- end -}}
+			</div>
+		</div>
+				
+		{{- if $isDesktop -}}
+			<div class="flex-row flex-align-center margin-bottom-lg">
+				<h1 class="text-xl bold margin-none flex-grow">Export Data</h1>
+			</div>
+		{{- else -}}
+			<div class="flex-row flex-align-center text-xl margin-none margin-bottom-lg">
+				<div class="flex-grow bold">Export Data</div>
+			</div>
+		{{- end -}}
+
+	</div>
+
+	<div 
+		hx-get="{{.URL}}" 
+		hx-trigger="refreshPage from:window" 
+		hx-target="main"
+		hx-swap="innerHTML"
+		hx-push-url="false">
+	</div>
+
+</div>

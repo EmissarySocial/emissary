@@ -728,5 +728,48 @@
 			]
 		}
 
+		migration: {
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
+		import-authenticate: {
+			roles:["self"]
+			steps:[
+				{do:"with-import", steps:[
+					{do:"as-modal", steps:[
+						{do:"view-html"}
+						{do:"edit", 
+							options:["submit-label:Import from this Account"]
+							form:{
+								"type":"layout-vertical",
+								children:[
+									{type:"text", path:"sourceId"}
+									{type:"hidden", path:"stateId", options:{value:"DO-AUTHORIZE"}}
+								]
+							}
+						}
+						{do:"save", on-error:[
+							{do:"trigger-event", event:"closeModal"}
+							{do:"refresh-page"}
+						]}
+						{do:"forward-to", url:"{{.Object.SourceOAuthURL}}"}
+					]}
+				]}
+			]
+		}
+		
+		import-delete: {
+			roles:["self"]
+			steps:[
+				{do:"with-import", steps:[
+					{do:"delete", title:"Cancel this Import?", message:"If you cancel this import, all records associated with it will be removed.", submit:"Cancel Import", cancel:"Keep Import"}
+					{do:"refresh-page"}
+				]}
+			]
+		}
+
 	}
 }	
