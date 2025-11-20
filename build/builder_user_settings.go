@@ -313,6 +313,11 @@ func (w Settings) RuleByToken(token string) model.Rule {
 	return rule
 }
 
+func (w Settings) Imports() (sliceof.Object[model.Import], error) {
+	importService := w._factory.Import()
+	return importService.QueryByUser(w._session, w.AuthenticatedID())
+}
+
 func (w Settings) Privileges() QueryBuilder[model.Privilege] {
 
 	expressionBuilder := builder.NewBuilder().
