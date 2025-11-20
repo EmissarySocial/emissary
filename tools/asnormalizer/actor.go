@@ -20,6 +20,7 @@ func Actor(document streams.Document) map[string]any {
 		vocab.PropertyIcon:              Image(document.Icon()),
 		vocab.PropertyTag:               Tags(document.Tag()),
 		vocab.PropertyURL:               document.URL(),
+		vocab.PropertyEndpoints:         document.Endpoints().Value(),
 
 		// Collections
 		vocab.PropertyAttachment: document.Attachment().Value(),
