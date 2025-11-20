@@ -146,7 +146,7 @@ func (service *ActivityStreamCrawler) crawl_CollectionDocument(collection stream
 		document := service.load(item.ID())
 
 		// If we've found an item that's already in the cache, then we've reached
-		// the end of the "new" items in this collection. So we can stop here.
+		// the end of the new items in this collection. So we can stop here.
 		if document.HTTPHeader().Get(ascache.HeaderHannibalCache) == "true" {
 			break
 		}
