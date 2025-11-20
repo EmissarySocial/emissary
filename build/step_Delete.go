@@ -13,6 +13,7 @@ type StepDelete struct {
 	Title   *template.Template
 	Message *template.Template
 	Submit  string
+	Cancel  string
 	Method  string
 }
 
@@ -35,7 +36,7 @@ func (step StepDelete) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 		InnerText(step.Submit).
 		Close()
 
-	b.Button().Script("on click trigger closeModal").InnerText("Cancel").Close()
+	b.Button().Script("on click trigger closeModal").InnerText(step.Cancel).Close()
 	b.CloseAll()
 
 	modalHTML := WrapModal(builder.response(), b.String())

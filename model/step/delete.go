@@ -13,6 +13,7 @@ type Delete struct {
 	Title   *template.Template
 	Message *template.Template
 	Submit  string
+	Cancel  string
 	Method  string
 }
 
@@ -44,6 +45,7 @@ func NewDelete(stepInfo mapof.Any) (Delete, error) {
 		Title:   titleTemplate,
 		Message: messageTemplate,
 		Submit:  first(stepInfo.GetString("submit"), "Delete"),
+		Cancel:  first(stepInfo.GetString("cancel"), "Cancel"),
 		Method:  first(stepInfo.GetString("method"), "both"),
 	}, nil
 }
