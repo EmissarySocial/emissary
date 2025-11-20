@@ -467,6 +467,8 @@ func (service Icons) Get(name string) string {
 		return service.get("code-slash")
 	case "html-fill":
 		return service.get("code-slash")
+	case "import-export":
+		return service.get("arrow-left-right")
 	case "inbox":
 		return service.get("inbox")
 	case "inbox-fill":
