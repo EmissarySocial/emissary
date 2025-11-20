@@ -213,6 +213,8 @@ func (user User) GetJSONLD() mapof.Any {
 	}
 
 	exportURL := user.ActivityPubURL() + "/export"
+	oauthURL := dt.NameOnly(user.ProfileURL)
+	oauthURL = dt.Protocol(oauthURL) + oauthURL + "/oauth/authorize"
 
 	result := mapof.Any{
 		vocab.AtContext:                 contextList,
@@ -234,7 +236,8 @@ func (user User) GetJSONLD() mapof.Any {
 		// vocab.PropertyFeatured:          user.ActivityPubFeaturedURL(),
 
 		vocab.PropertyEndpoints: mapof.String{
-			vocab.EndpointOAuthMigration: exportURL,
+			vocab.EndpointOAuthAuthorization: oauthURL,
+			vocab.EndpointOAuthMigration:     oauthURL,
 		},
 
 		vocab.PropertyMigration: mapof.String{
