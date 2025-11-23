@@ -728,7 +728,14 @@
 			]
 		}
 
-		migration: {
+		export: {
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
+		import: {
 			roles:["self"]
 			steps:[
 				{do:"view-html"}
@@ -753,12 +760,23 @@
 						}
 						{do:"save"}
 						{do:"if", condition:"{{eq `AUTHORIZING` .Object.StateID}}", then:[
-							{do:"forward-to", url:"{{.SourceOAuthURL}}"}
+							{do:"forward-to", url:"{{.OAuthCodeURL}}"}
 						], else: [
 							{do:"trigger-event", event:"closeModal"}
 							{do:"refresh-page"}
 						]}
 					]}
+				]}
+			]
+		}
+
+		import-start: {
+			roles:["self"]
+			steps:[
+				{do:"with-import", steps:[
+					{do:"set-data", values:{"stateId": "DO-IMPORT"}}
+					{do:"save"}
+					{do:"refresh-page"}
 				]}
 			]
 		}

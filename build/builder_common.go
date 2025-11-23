@@ -124,7 +124,7 @@ func (w Common) Protocol() string {
 
 // Hostname returns the configured hostname for this request
 func (w Common) Hostname() string {
-	return dt.Hostname(w._request)
+	return dt.TrueHostname(w._request)
 }
 
 // Path returns the HTTP Request path

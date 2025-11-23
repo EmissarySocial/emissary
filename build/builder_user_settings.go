@@ -11,6 +11,8 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	builder "github.com/benpate/exp-builder"
+	"github.com/benpate/form"
+	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/rs/zerolog/log"
@@ -318,6 +320,11 @@ func (w Settings) Imports() (sliceof.Object[model.Import], error) {
 	return importService.QueryByUser(w._session, w.AuthenticatedID())
 }
 
+// ImportPlan generates an import plan for a given actor.
+func (w Settings) ImportPlan(actor streams.Document) sliceof.Object[form.LookupCode] {
+	return w.factory().Import().CalcImportPlan(actor)
+}
+
 func (w Settings) Privileges() QueryBuilder[model.Privilege] {
 
 	expressionBuilder := builder.NewBuilder().
@@ -329,7 +336,6 @@ func (w Settings) Privileges() QueryBuilder[model.Privilege] {
 	)
 
 	return NewQueryBuilder[model.Privilege](w._factory.Privilege(), w._session, criteria)
-
 }
 
 func (w Settings) MerchantAccounts() QueryBuilder[model.MerchantAccount] {

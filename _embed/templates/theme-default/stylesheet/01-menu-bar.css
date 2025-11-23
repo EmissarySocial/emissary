@@ -78,6 +78,14 @@
 	color: var(--red60);
 }
 
+#menu-bar a.link {
+	color:var(--link-color);
+}
+
+#menu-bar a.link:hover {
+	background-color: unset;
+}
+
 /******************************************
  * Sub-Menu Bar
  ******************************************/

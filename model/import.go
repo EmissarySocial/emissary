@@ -1,29 +1,32 @@
 package model
 
 import (
+	"crypto/sha256"
+
+	"github.com/EmissarySocial/emissary/tools/random"
 	"github.com/benpate/data/journal"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/oauth2"
 )
 
 type Import struct {
-	ImportID         primitive.ObjectID `bson:"_id"`              // Unique identifier for this Import record
-	UserID           primitive.ObjectID `bson:"userId"`           // User profile that we're importing INTO
-	StateID          string             `bson:"stateId"`          // Current state of this import process
-	SourceID         string             `bson:"sourceId"`         // URL or Handle of the account being migrated
-	SourceOAuthURL   string             `bson:"sourceOAuthURL"`   // OAuth 2.0 Authorization Endpoint to use when authorizing this import.
-	SourceOAuthState string             `bson:"sourceOAuthState"` // State value passed to the OAuth server
-	StateDescription string             `bson:"stateDescription"` // Human-friendly description of an error that has stopped this import.
-	OAuthToken       oauth2.Token
+	ImportID       primitive.ObjectID `bson:"_id"`          // Unique identifier for this Import record
+	UserID         primitive.ObjectID `bson:"userId"`       // User profile that we're importing INTO
+	SourceID       string             `bson:"sourceId"`     // URL or Handle of the account being migrated
+	StateID        string             `bson:"stateId"`      // Current state of this import process
+	ErrorMessage   string             `bson:"errorMessage"` // Human-friendly description of an error that has stopped this import.
+	OAuthConfig    oauth2.Config      `bson:"oauthConfig"`  // OAuth 2.0 configuration information
+	OAuthToken     *oauth2.Token      `bson:"oauthToken"`   // OAuth token provided by the source server
+	OAuthChallenge []byte             `bson:"oauthChallenge"`
 
 	journal.Journal `bson:",inline"`
 }
 
 func NewImport() Import {
 	return Import{
-		ImportID:         primitive.NewObjectID(),
-		StateID:          ImportStateNew,
-		SourceOAuthState: primitive.NewObjectID().Hex(),
+		ImportID: primitive.NewObjectID(),
+		StateID:  ImportStateNew,
 	}
 }
 
@@ -41,30 +44,45 @@ func (record Import) ID() string {
 
 // State returns the current state of this Following.
 // It is part of the AccessLister interface
-func (record *Import) State() string {
+func (record Import) State() string {
 	return "default"
 }
 
 // IsAuthor returns TRUE if the provided UserID the author of this Following
 // It is part of the AccessLister interface
-func (record *Import) IsAuthor(authorID primitive.ObjectID) bool {
+func (record Import) IsAuthor(authorID primitive.ObjectID) bool {
 	return false
 }
 
 // IsMyself returns TRUE if this object directly represents the provided UserID
 // It is part of the AccessLister interface
-func (record *Import) IsMyself(userID primitive.ObjectID) bool {
+func (record Import) IsMyself(userID primitive.ObjectID) bool {
 	return !userID.IsZero() && userID == record.UserID
 }
 
 // RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.
 // It is part of the AccessLister interface
-func (record *Import) RolesToGroupIDs(roleIDs ...string) Permissions {
+func (record Import) RolesToGroupIDs(roleIDs ...string) Permissions {
 	return defaultRolesToGroupIDs(record.UserID, roleIDs...)
 }
 
 // RolesToPrivilegeIDs returns a slice of Privileges that grant access to any of the requested roles.
 // It is part of the AccessLister interface
-func (record *Import) RolesToPrivilegeIDs(roleIDs ...string) Permissions {
+func (record Import) RolesToPrivilegeIDs(roleIDs ...string) Permissions {
 	return NewPermissions()
+}
+
+/******************************************
+ * Other Methods
+ ******************************************/
+
+// OAuthCodeURL generates a new (unique) OAuth state and AuthCodeURL for the specified provider
+func (record Import) OAuthCodeURL() string {
+	codeChallengeBytes := sha256.Sum256(record.OAuthChallenge)
+	codeChallenge := oauth2.SetAuthURLParam("code_challenge", random.Base64URLEncode(codeChallengeBytes[:]))
+	codeChallengeMethod := oauth2.SetAuthURLParam("code_challenge_method", "S256")
+	authCodeURL := record.OAuthConfig.AuthCodeURL(record.ImportID.Hex(), codeChallenge, codeChallengeMethod)
+
+	spew.Dump("OAuthCodeURL", record, authCodeURL)
+	return authCodeURL
 }

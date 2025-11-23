@@ -627,7 +627,7 @@ func (factory *Factory) ByRequest(req *http.Request) (*service.Factory, error) {
 
 	const location = "server.Factory.ByRequest"
 
-	hostname := dt.Hostname(req)
+	hostname := dt.TrueHostname(req)
 	result, err := factory.ByHostname(hostname)
 
 	if err != nil {

@@ -11,6 +11,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/html"
 	"github.com/benpate/steranko"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -25,6 +26,8 @@ func GetOAuthAuthorization(ctx *steranko.Context, factory *service.Factory, sess
 	if err := ctx.Bind(&transaction); err != nil {
 		return derp.Wrap(err, location, "Error binding query parameters")
 	}
+
+	spew.Dump(location, transaction)
 
 	// Load the OAuth Builder
 	builder, err := build.NewOAuthAuthorization(factory, session, transaction)
@@ -122,6 +125,7 @@ func postOAuthAuthorization_code(ctx echo.Context, userToken model.OAuthUserToke
 	// Add the code to the URI
 	queryString := redirectURI.Query()
 	queryString.Set("code", userToken.Code())
+	queryString.Set("state", transaction.State)
 	redirectURI.RawQuery = queryString.Encode()
 
 	return ctx.Redirect(http.StatusFound, redirectURI.String())
@@ -150,7 +154,9 @@ func postOAuthAuthorization_token(ctx echo.Context, userToken model.OAuthUserTok
 		return derp.Wrap(err, location, "Error parsing redirect_uri")
 	}
 
-	redirectURI.Fragment = "access_token=" + userToken.Token + "&token_type=Bearer"
+	redirectURI.Fragment = "access_token=" + userToken.Token +
+		"&state=" + transaction.State +
+		"&token_type=Bearer"
 
 	// Otherwise, we redirect to the redirect_uri
 	return ctx.Redirect(http.StatusFound, redirectURI.String())
@@ -167,26 +173,27 @@ func PostOAuthToken(ctx *steranko.Context, factory *service.Factory, session dat
 		return derp.Wrap(err, location, "Invalid form parameters")
 	}
 
-	// Convert client ID
-	clientID, err := primitive.ObjectIDFromHex(transaction.ClientID)
+	// Load the OAuth Client (from ID or from ActorID)
+	oauthClientService := factory.OAuthClient()
+	oauthClient := model.NewOAuthClient()
 
-	if err != nil {
-		return derp.Wrap(err, location, "Invalid client_id")
+	if err := oauthClientService.LoadByToken(session, transaction.ClientID, &oauthClient); err != nil {
+		return derp.Wrap(err, location, "Invalid client_id", transaction.ClientID)
 	}
 
 	// Convert transaction.Code => userToken
 	userTokenID, err := primitive.ObjectIDFromHex(transaction.Code)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Invalid code")
+		return derp.Wrap(err, location, "Invalid code", transaction)
 	}
 
 	// Load the UserToken
 	userTokenService := factory.OAuthUserToken()
 	userToken := model.NewOAuthUserToken()
 
-	if err := userTokenService.LoadByClientAndCode(session, userTokenID, clientID, transaction.ClientSecret, &userToken); err != nil {
-		return derp.Wrap(err, location, "Unable to load OAuthUserToken")
+	if err := userTokenService.LoadByClientAndCode(session, userTokenID, oauthClient.ClientID, transaction.ClientSecret, &userToken); err != nil {
+		return derp.Wrap(err, location, "Unable to load OAuthUserToken", transaction)
 	}
 
 	// Return the Token as JSON

@@ -365,7 +365,7 @@ func (service *Domain) OAuthExchange(session data.Session, providerID string, st
 		oauth2.SetAuthURLParam("redirect_uri", service.OAuthClientCallbackURL(providerID)))
 
 	if err != nil {
-		return derp.InternalError(location, "Error exchanging OAuth code for token", err.Error())
+		return derp.InternalError(location, "Unable to exchange OAuth code for token", err.Error())
 	}
 
 	// Try to update the connection with the new token
@@ -450,7 +450,7 @@ func (service *Domain) GetOAuthToken(session data.Session, providerID string) (m
 	newToken, err := source.Token()
 
 	if err != nil {
-		return model.Connection{}, token, derp.Wrap(err, "service.Domain.GetOAuthToken", "Error refreshing OAuth token")
+		return model.Connection{}, token, derp.Wrap(err, "service.Domain.GetOAuthToken", "Unable to refresh OAuth token")
 	}
 
 	// If the token has changed, save it

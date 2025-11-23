@@ -160,7 +160,7 @@ func (service *OAuthUserToken) LoadByClientAndToken(session data.Session, client
 
 	// RULE: must have a valid clientSecret to load this record
 	if err := service.oauthClientService.ValidateClientSecret(session, clientID, clientSecret); err != nil {
-		return derp.Wrap(err, "service.OAuthUserToken.LoadByClientAndToken", "Invalid client secret")
+		return derp.Wrap(err, "service.OAuthUserToken.LoadByClientAndToken", "Invalid client secret", clientID, clientSecret, token)
 	}
 
 	criteria := exp.Equal("clientId", clientID).

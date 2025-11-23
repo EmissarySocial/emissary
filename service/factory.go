@@ -324,6 +324,7 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 		// Populate OAuthClient
 		factory.oauthClient.Refresh(
 			factory.OAuthUserToken(),
+			factory.ActivityStream(model.ActorTypeApplication, primitive.NilObjectID),
 			factory.Host(),
 		)
 

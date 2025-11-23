@@ -3,6 +3,7 @@ package asnormalizer
 import (
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/convert"
 )
 
 // Actor normalizes an Actor document
@@ -39,6 +40,16 @@ func Actor(document streams.Document) map[string]any {
 			vocab.PropertyID:           publicKey.ID(),
 			vocab.PropertyPublicKeyPEM: publicKey.PublicKeyPEM(),
 		}
+	}
+
+	// OAuth 2.0 Redirect URIs
+	if redirectURI := document.RedirectURI(); len(redirectURI) > 0 {
+		result[vocab.PropertyRedirectURI] = redirectURI
+	}
+
+	// Migration Data
+	if migration := document.Get(vocab.PropertyMigration); migration.NotNil() {
+		result[vocab.PropertyMigration] = convert.MapOfString(migration.Value())
 	}
 
 	return result

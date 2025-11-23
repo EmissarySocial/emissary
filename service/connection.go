@@ -397,7 +397,7 @@ func (service *Connection) GetAccessToken(connection *model.Connection) (oauth2.
 
 	// Refresh the Access Token according to the provider's rules
 	if err := provider.Refresh(connection, vault); err != nil {
-		return oauth2.Token{}, derp.Wrap(err, location, "Error refreshing access token", connection.ProviderID)
+		return oauth2.Token{}, derp.Wrap(err, location, "Unable to refresh access token", connection.ProviderID)
 	}
 
 	// Triumphantly return the access token

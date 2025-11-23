@@ -26,8 +26,8 @@ func ImportSchema() schema.Element {
 					ImportStateDone,
 				},
 				Required: true},
-			"sourceId":         schema.String{},
-			"stateDescription": schema.String{},
+			"sourceId":     schema.String{},
+			"errorMessage": schema.String{},
 		},
 	}
 }
@@ -46,8 +46,8 @@ func (record *Import) GetPointer(name string) (any, bool) {
 	case "sourceId":
 		return &record.SourceID, true
 
-	case "stateDescription":
-		return &record.StateDescription, true
+	case "errorMessage":
+		return &record.ErrorMessage, true
 	}
 
 	return nil, false

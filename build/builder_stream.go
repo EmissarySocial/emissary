@@ -100,7 +100,7 @@ func NewStreamFromURI(serverFactory ServerFactory, session data.Session, request
 
 	const location = "build.NewStreamFromURI"
 
-	hostname := dt.Hostname(request)
+	hostname := dt.TrueHostname(request)
 
 	// Locate the requested domain name
 	factory, err := serverFactory.ByDomainName(hostname)

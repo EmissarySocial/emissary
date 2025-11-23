@@ -15,7 +15,7 @@ import (
 // http://nodeinfo.diaspora.software/schema.html
 func GetNodeInfo(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
-	host := dt.Hostname(ctx.Request())
+	host := dt.TrueHostname(ctx.Request())
 	server := dt.AddProtocol(host)
 
 	result := map[string]any{

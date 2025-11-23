@@ -48,7 +48,9 @@ func GetApplicationActor(ctx *steranko.Context, factory *service.Factory, sessio
 			vocab.PropertyPublicKeyPEM: publicKeyPEM,
 		},
 
-		vocab.PropertyRedirectURI: actorID + "/oauth/redirect",
+		vocab.PropertyRedirectURI: []string{
+			factory.Host() + "/oauth/clients/import/callback",
+		},
 	}
 
 	ctx.Response().Header().Set("Content-Type", vocab.ContentTypeActivityPub)

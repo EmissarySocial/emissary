@@ -241,7 +241,7 @@ func (service *Product) SyncRemoteProducts(session data.Session, userID primitiv
 			changed, err := currentProduct.Refresh(remoteProduct)
 
 			if err != nil {
-				return nil, nil, derp.Wrap(err, location, "Error refreshing remote product", remoteProduct)
+				return nil, nil, derp.Wrap(err, location, "Unable to refresh remote product", remoteProduct)
 			}
 
 			if changed {

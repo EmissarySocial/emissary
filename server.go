@@ -413,6 +413,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/oauth/clients/:provider", handler.WithOwner(factory, handler.GetOAuth))
 	e.GET("/oauth/clients/:provider/callback", handler.WithOwner(factory, handler.GetOAuthCallback), mw.AllowCSR)
 	e.GET("/oauth/clients/redirect", handler.WithOwner(factory, handler.OAuthRedirect))
+	e.GET("/oauth/clients/import/callback", handler.WithAuthenticatedUser(factory, handler.GetOAuthImportCallback))
 
 	// OAuth Server
 	e.GET("/oauth/authorize", handler.WithAuthenticatedUser(factory, handler.GetOAuthAuthorization))
@@ -580,7 +581,7 @@ func errorHandler(err error, ctx echo.Context) {
 	derp.Report(derp.Wrap(err, location, "Unable to generate web page", fullURL, ctx.Request().Header))
 
 	// Get the true hostname of the request.
-	hostname := dt.Hostname(request)
+	hostname := dt.TrueHostname(request)
 
 	// If this is a local server, then allow developers to see full error dump.
 	if dt.IsLocalhost(hostname) {

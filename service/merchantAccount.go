@@ -336,7 +336,7 @@ func (service *MerchantAccount) DecryptVault(merchantAccount *model.MerchantAcco
 		FOR NOW, STRIPE DOESN'T REQUIRE US TO RENEW API KEYS, SO LET'S JUST NOT.
 		// Before retrieving the API keys, make sure they are up to date
 		if err := service.RefreshAPIKeys(merchantAccount); err != nil {
-			return nil, derp.Wrap(err, location, "Error refreshing API keys")
+			return nil, derp.Wrap(err, location, "Unable to refresh API keys")
 		}
 	*/
 

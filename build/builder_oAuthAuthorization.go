@@ -7,7 +7,6 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // OAuthAuthorization is a lightweight builder that
@@ -30,15 +29,8 @@ func NewOAuthAuthorization(factory Factory, session data.Session, request model.
 		_request: request,
 	}
 
-	// Convert clientID
-	clientID, err := primitive.ObjectIDFromHex(request.ClientID)
-
-	if err != nil {
-		return OAuthAuthorization{}, derp.Wrap(err, location, "Invalid ClientID")
-	}
-
 	// Try to load the OAuthClient object
-	if err := result._service.LoadByClientID(session, clientID, &result._client); err != nil {
+	if err := result._service.LoadOrCreateByClientToken(session, request.ClientID, &result._client); err != nil {
 		return OAuthAuthorization{}, derp.Wrap(err, location, "Unable to load OAuth Application")
 	}
 
@@ -82,4 +74,8 @@ func (r OAuthAuthorization) Scopes() []string {
 	}
 
 	return strings.Split(r._request.Scope, " ")
+}
+
+func (r OAuthAuthorization) State() string {
+	return r._request.State
 }

@@ -23,8 +23,7 @@ func GetJSONLD(ctx *steranko.Context, factory *service.Factory, session data.Ses
 	searchDomainService := factory.SearchDomain()
 	actorID := searchDomainService.ActivityPubURL()
 
-	// Build the actor description
-	summary := `This is an automated search query on the server: ` + factory.Hostname() + ` that announces new search results as they are received.  <a href="` + searchDomainService.ActivityPubProfileURL() + `">View the full collection on ` + factory.Hostname() + `</a>.`
+	host := factory.Host()
 
 	// Return the result as a JSON-LD document
 	result := map[string]any{
@@ -34,7 +33,6 @@ func GetJSONLD(ctx *steranko.Context, factory *service.Factory, session data.Ses
 		vocab.PropertyURL:               searchDomainService.ActivityPubProfileURL(),
 		vocab.PropertyPreferredUsername: searchDomainService.ActivityPubUsername(),
 		vocab.PropertyName:              searchDomainService.ActivityPubName(),
-		vocab.PropertySummary:           summary,
 		vocab.PropertyInbox:             searchDomainService.ActivityPubInboxURL(),
 		vocab.PropertyOutbox:            searchDomainService.ActivityPubOutboxURL(),
 		vocab.PropertyFollowers:         searchDomainService.ActivityPubFollowersURL(),
@@ -46,6 +44,10 @@ func GetJSONLD(ctx *steranko.Context, factory *service.Factory, session data.Ses
 			vocab.PropertyID:           actorID + "#main-key",
 			vocab.PropertyOwner:        actorID,
 			vocab.PropertyPublicKeyPEM: publicKeyPEM,
+		},
+
+		vocab.PropertyRedirectURI: []string{
+			host + "/oauth/clients/import/redirect",
 		},
 	}
 

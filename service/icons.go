@@ -209,7 +209,7 @@ func (service Icons) Get(name string) string {
 	case "link":
 		return service.get("link-45deg")
 	case "link-outbound":
-		return service.get("box-arrow-up-right")
+		return service.get("arrow-up-right-square")
 	case "list":
 		return service.get("list")
 	case "list-fill":

@@ -4,15 +4,20 @@ import (
 	"iter"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/random"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/form"
+	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/sherlock"
 	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"golang.org/x/oauth2"
 )
 
 // Import service helps exports user data to another server
@@ -99,7 +104,9 @@ func (service *Import) Save(session data.Session, record *model.Import, note str
 	}
 
 	// Execute state changes
-	service.calcStateChange(record)
+	if err := service.calcStateChange(record); err != nil {
+		return derp.Wrap(err, location, "Unable to calculate state change")
+	}
 
 	// Save the import to the database
 	if err := service.collection(session).Save(record, note); err != nil {
@@ -183,16 +190,19 @@ func (service *Import) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
+// QueryByUser queries all Import records that match the provided UserID
 func (service *Import) QueryByUser(session data.Session, userID primitive.ObjectID) ([]model.Import, error) {
 	criteria := exp.Equal("userId", userID)
 	return service.Query(session, criteria)
 }
 
+// LoadByID loads a single Import record based on the provided UserID and ImportID
 func (service *Import) LoadByID(session data.Session, userID primitive.ObjectID, importID primitive.ObjectID, record *model.Import) error {
 	criteria := exp.Equal("_id", importID).AndEqual("userId", userID)
 	return service.Load(session, criteria, record)
 }
 
+// LoadByToken loads a single Import record based on the provided UserID and (string formatted ImportID)
 func (service *Import) LoadByToken(session data.Session, userID primitive.ObjectID, token string, record *model.Import) error {
 
 	importID, err := primitive.ObjectIDFromHex(token)
@@ -208,24 +218,31 @@ func (service *Import) LoadByToken(session data.Session, userID primitive.Object
  * State Machine
  ******************************************/
 
-func (service *Import) calcStateChange(record *model.Import) {
+// calcStateChange performs additional actions on "transient" states that must be resolved into
+// static states before saving
+func (service *Import) calcStateChange(record *model.Import) error {
 
 	switch record.StateID {
 
 	case model.ImportStateDoAuthorize:
-		service.doAuthorize(record)
+		return service.doAuthorize(record)
 
 	case model.ImportStateDoImport:
-		service.doImport(record)
+		return service.doImport(record)
 
 	case model.ImportStateDoMove:
-		service.doMove(record)
+		return service.doMove(record)
 	}
+
+	return nil
 }
 
 // doAuthorize manages the transient state change from "DO-AUTHORIZE"
 // to "AUTHORIZING".
-func (service *Import) doAuthorize(record *model.Import) {
+func (service *Import) doAuthorize(record *model.Import) error {
+
+	const location = "service.Import.doAuthorize"
+	var err error
 
 	// Find the remote actor identified as the Source account
 	client := service.activityService.Client()
@@ -233,45 +250,299 @@ func (service *Import) doAuthorize(record *model.Import) {
 
 	if err != nil {
 		record.StateID = model.ImportStateAuthorizationError
-		record.StateDescription = "The account you entered (" + record.SourceID + ") could not be found. Please enter a different account."
-		spew.Dump(err)
-		return
+		record.ErrorMessage = "The account you provided could not be found. Please enter a different account."
+		return nil
 	}
 
 	// RULE: Require that the remote actor is a "Person"
 	if actor.Type() != vocab.ActorTypePerson {
 		record.StateID = model.ImportStateAuthorizationError
-		record.StateDescription = "The account you entered (" + record.SourceID + ") is not valid because it is a '" + actor.Type() + "' type record. You can only import from 'Person' accounts."
-		spew.Dump(err)
-		return
+		record.ErrorMessage = "The account you provided is not valid because it is a '" + actor.Type() + "' type record. You can only import from 'Person' accounts."
+		return nil
 	}
 
-	// Locate the migration endpoint
-	spew.Dump(actor.Value())
-	record.SourceOAuthURL = actor.Endpoints().Get(vocab.EndpointOAuthMigration).String()
+	// Generate random OAuth "challenge" data
+	record.OAuthChallenge, err = random.GenerateBytes(64)
 
-	if record.SourceOAuthURL == "" {
-		record.StateID = model.ImportStateAuthorizationError
-		record.StateDescription = "The account you entered (" + record.SourceID + ") does not support account migration.  Actors must define an OAuth migration endpoint to be compatible."
-		return
+	if err != nil {
+		return derp.Wrap(err, location, "Unable to generate random string")
 	}
 
-	// SUCCESS (for now)
+	// Populate the Import record with the new OAuth configuration data
 	record.StateID = model.ImportStateAuthorizing
-	record.StateDescription = ""
+	record.ErrorMessage = ""
 
-	record.SourceOAuthURL += "?response_type=code"
-	record.SourceOAuthURL += "&client_id=" + service.host + "/@application"
-	record.SourceOAuthURL += "&redirect_uri=" + service.host + "/@me/settings/migration"
-	record.SourceOAuthURL += "&state=" + record.SourceOAuthState
+	spew.Dump(
+		actor.Value(),
+		actor.Endpoints().Value(),
+		actor.Endpoints().Get(vocab.EndpointOAuthAuthorization).Value(),
+		actor.Endpoints().Get(vocab.EndpointOAuthToken).Value(),
+	)
+
+	record.OAuthConfig = oauth2.Config{
+		ClientID:    service.host + "/@application",
+		RedirectURL: service.OAuthClientCallbackURL(),
+		Scopes:      []string{"read:export", "write:move"},
+		Endpoint: oauth2.Endpoint{
+			AuthURL:  actor.Endpoints().Get(vocab.EndpointOAuthAuthorization).String(),
+			TokenURL: actor.Endpoints().Get(vocab.EndpointOAuthToken).String(),
+		},
+	}
+
+	// RULE: AuthURL cannot be empty
+	if record.OAuthConfig.Endpoint.AuthURL == "" {
+		record.StateID = model.ImportStateAuthorizationError
+		record.ErrorMessage = "The account you provided does not support account migration.  Actors must define an OAuth endpoint to be compatible. (AuthURL missing)"
+		return nil
+	}
+
+	// RULE: TokenURL cannot be empty
+	if record.OAuthConfig.Endpoint.TokenURL == "" {
+		record.StateID = model.ImportStateAuthorizationError
+		record.ErrorMessage = "The account you provided does not support account migration.  Actors must define an OAuth endpoint to be compatible. (TokenURL missing)"
+		return nil
+	}
+
+	// Success
+	return nil
 }
 
 // doImport manages the transient state change from "DO-IMPORT"
 // to "IMPORTING"
-func (service *Import) doImport(record *model.Import) {
+func (service *Import) doImport(record *model.Import) error {
+	return nil
 }
 
 // doMove manages the transient state change from "DO-MOVE"
 // to "MOVING"
-func (service *Import) doMove(record *model.Import) {
+func (service *Import) doMove(record *model.Import) error {
+	return nil
+}
+
+/******************************************
+ * Other Calculations
+ ******************************************/
+
+// CalcImportPlan locates the best collection to import for each kind of data
+// that Emissary supports
+func (service *Import) CalcImportPlan(actor streams.Document) sliceof.Object[form.LookupCode] {
+
+	result := sliceof.NewObject[form.LookupCode]()
+	migration := actor.Get(vocab.PropertyMigration)
+
+	spew.Dump(actor.Value(), migration.Value())
+
+	if collection := migration.Get("emissary:stream"); collection.NotNil() {
+		result.Append(form.LookupCode{
+			Group:       "Native",
+			Icon:        "patch-check-fill",
+			Label:       "Content (Streams)",
+			Description: "High-fidelity import of Emissary posts. Should retain all data.",
+			Value:       "emissary:stream",
+			Href:        collection.String(),
+		})
+	} else if collection := migration.Get("content"); collection.NotNil() {
+		result.Append(form.LookupCode{
+			Group:       "ActivityPub",
+			Icon:        "activitypub",
+			Label:       "Content",
+			Description: "ActivityPub-compatible format. May lose some details in translation",
+			Value:       "content",
+			Href:        collection.String(),
+		})
+	}
+
+	if collection := migration.Get("emissary:outboxMessage"); collection.NotNil() {
+		result.Append(form.LookupCode{
+			Group:       "Native",
+			Icon:        "patch-check-fill",
+			Label:       "Outbox",
+			Description: "High-fidelity import of Emissary outbox. Should retain all data.",
+			Value:       "emissary:outboxMessage",
+			Href:        collection.String(),
+		})
+	} else if collection := migration.Get("outbox"); collection.NotNil() {
+		result.Append(form.LookupCode{
+			Group:       "ActivityPub",
+			Icon:        "activitypub",
+			Label:       "Outbox",
+			Description: "ActivityPub-compatible format. May lose some details in translation",
+			Value:       "outbox",
+			Href:        collection.String(),
+		})
+	}
+
+	if collection := migration.Get("emissary:following"); collection.NotNil() {
+		result.Append(form.LookupCode{
+			Group:       "Native",
+			Icon:        "patch-check-fill",
+			Label:       "Following",
+			Description: "Some accounts may require approval before allowing follow from a new account.",
+			Value:       "emissary:following",
+			Href:        collection.String(),
+		})
+	} else if collection := migration.Get("following"); collection.NotNil() {
+		result.Append(form.LookupCode{
+			Group:       "ActivityPub",
+			Icon:        "activitypub",
+			Label:       "Following",
+			Description: "Some accounts may require approval before allowing follow from a new account.",
+			Value:       "following",
+			Href:        collection.String(),
+		})
+	}
+
+	if collection := migration.Get("emissary:rule"); collection.NotNil() {
+		result.Append(form.LookupCode{
+			Group:       "Native",
+			Icon:        "patch-check-fill",
+			Label:       "Inbox Rules",
+			Description: "High-fidelity import of all inbox rules",
+			Value:       "emissary:rule",
+			Href:        collection.String(),
+		})
+	} else if collection := migration.Get("blocked"); collection.NotNil() {
+		result.Append(form.LookupCode{
+			Group:       "ActivityPub",
+			Icon:        "activitypub",
+			Label:       "Blocked Collection",
+			Description: "Publicly available BLOCKS will be imported",
+			Value:       "blocked",
+			Href:        collection.String(),
+		})
+	}
+
+	if collection := migration.Get("emissary:follower"); collection.NotNil() {
+		result.Append(form.LookupCode{
+			Group:       "Native",
+			Icon:        "patch-check-fill",
+			Label:       "Followers",
+			Description: "Followers will be notified, but may not choose to re-follow your new account.",
+			Value:       "emissary:follower",
+			Href:        collection.String(),
+		})
+	}
+
+	if collection := migration.Get("emissary:annotation"); collection.NotNil() {
+		result.Append(form.LookupCode{
+			Group:       "Native",
+			Icon:        "patch-check-fill",
+			Label:       "Notes",
+			Description: "High-fidelity import of all Notes/Annotations",
+			Value:       "emissary:annotation",
+			Href:        collection.String(),
+		})
+	}
+
+	if collection := migration.Get("emissary:attachment"); collection.NotNil() {
+		result.Append(form.LookupCode{
+			Group:       "Native",
+			Icon:        "patch-check-fill",
+			Label:       "Attachments",
+			Description: "High-fidelity import of all uploaded files",
+			Value:       "emissary:attachment",
+			Href:        collection.String(),
+		})
+	}
+
+	if collection := migration.Get("emissary:circle"); collection.NotNil() {
+		result.Append(form.LookupCode{
+			Group:       "Native",
+			Icon:        "patch-check-fill",
+			Label:       "Circles",
+			Description: "High-fidelity import of all custom circles",
+			Value:       "emissary:circle",
+			Href:        collection.String(),
+		})
+	}
+
+	if collection := migration.Get("emissary:conversaion"); collection.NotNil() {
+		result.Append(form.LookupCode{
+			Group:       "Native",
+			Icon:        "patch-check-fill",
+			Label:       "Direct Messages",
+			Description: "High-fidelity import of all direct message conversations",
+			Value:       "emissary:conversation",
+			Href:        collection.String(),
+		})
+	}
+
+	if collection := migration.Get("emissary:folder"); collection.NotNil() {
+		result.Append(form.LookupCode{
+			Group:       "Native",
+			Icon:        "patch-check-fill",
+			Label:       "Inbox Folders",
+			Description: "High-fidelity import of all inbox folders",
+			Value:       "emissary:folder",
+			Href:        collection.String(),
+		})
+	}
+
+	if collection := migration.Get("emissary:mention"); collection.NotNil() {
+		result.Append(form.LookupCode{
+			Group:       "Native",
+			Icon:        "patch-check-fill",
+			Label:       "Mentions",
+			Description: "High-fidelity import of all mentions",
+			Value:       "emissary:mention",
+			Href:        collection.String(),
+		})
+	}
+
+	if collection := migration.Get("emissary:merchantAccount"); collection.NotNil() {
+		result.Append(form.LookupCode{
+			Group:       "Native",
+			Icon:        "patch-check-fill",
+			Label:       "Merchant Accounts",
+			Description: "High-fidelity import of all Merchant Account settings",
+			Value:       "emissary:merchantAccount",
+			Href:        collection.String(),
+		})
+	}
+
+	if collection := migration.Get("emissary:message"); collection.NotNil() {
+		result.Append(form.LookupCode{
+			Group:       "Native",
+			Icon:        "patch-check-fill",
+			Label:       "Inbox Messages",
+			Description: "High-fidelity import of your Emissary inbox",
+			Value:       "emissary:message",
+			Href:        collection.String(),
+		})
+	}
+
+	if collection := migration.Get("emissary:privilege"); collection.NotNil() {
+		result.Append(form.LookupCode{
+			Group:       "Native",
+			Icon:        "patch-check-fill",
+			Label:       "Privileges",
+			Description: "High-fidelity import of all privileges/purchases",
+			Value:       "emissary:privilege",
+			Href:        collection.String(),
+		})
+	}
+
+	if collection := migration.Get("emissary:product"); collection.NotNil() {
+		result.Append(form.LookupCode{
+			Group:       "Native",
+			Icon:        "patch-check-fill",
+			Label:       "Products",
+			Description: "High-fideltiy import of all products",
+			Value:       "emissary:product",
+			Href:        collection.String(),
+		})
+	}
+
+	if collection := migration.Get("emissary:response"); collection.NotNil() {
+		result.Append(form.LookupCode{
+			Group:       "Native",
+			Icon:        "patch-check-fill",
+			Label:       "Responses",
+			Description: "High-fidelity import of all responses received",
+			Value:       "emissary:response",
+			Href:        collection.String(),
+		})
+	}
+
+	return result
 }

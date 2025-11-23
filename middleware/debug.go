@@ -21,7 +21,7 @@ func Debug() echo.MiddlewareFunc {
 			fmt.Println("")
 			fmt.Println("-- Debugger Middleware -------------------")
 			fmt.Println(request.Method + " " + request.URL.String() + " " + request.Proto)
-			fmt.Println("Host: " + dt.Hostname(request))
+			fmt.Println("Host: " + dt.TrueHostname(request))
 			for key, value := range request.Header {
 				fmt.Println(key + ": " + strings.Join(value, ", "))
 			}

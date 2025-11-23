@@ -38,7 +38,7 @@ func GetOAuthCallback(ctx *steranko.Context, factory *service.Factory, session d
 	state := ctx.QueryParam("state")
 
 	if err := domainService.OAuthExchange(session, providerID, state, code); err != nil {
-		return derp.Wrap(err, location, "Error exchanging code for token", providerID, code)
+		return derp.Wrap(err, location, "Unable to exchange code for token", providerID, code)
 	}
 
 	return ctx.Redirect(http.StatusTemporaryRedirect, "/admin/connections")

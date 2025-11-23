@@ -1,0 +1,42 @@
+{{- $isDesktop := .IsDesktop -}}
+{{- $imports := .Imports -}}
+
+<div class="app" script="init send SelectNav(id:'settings')">
+	<title>Import/Export | {{.DisplayName}}</title>
+
+	{{- if $isDesktop -}}
+		<div id="app-sidebar" class="expanded">
+			{{- template "menu" "migration" -}}
+		</div>
+	{{- end -}}
+	
+	<div class="app-content padding">
+				
+
+		<div id="menu-bar">
+			<div class="left">
+				{{ if not $isDesktop }}
+					<a href="/@me/settings/mobile">{{icon "back"}}</a>
+				{{ end }}
+				<a href="/@me/settings/import">Import</a>
+				<a href="/@me/settings/export" class="selected">Export</a>
+			</div>
+			<div class="right">
+				<a href="https://emissary.dev/migration" target="_blank" class="link">
+					{{icon "help"}}
+					{{ if $isDesktop }} Help with Data Migration {{ end }}
+				</a>
+			</div>
+		</div>
+
+	</div>
+
+	<div 
+		hx-get="{{.URL}}" 
+		hx-trigger="refreshPage from:window" 
+		hx-target="main"
+		hx-swap="innerHTML"
+		hx-push-url="false">
+	</div>
+
+</div>

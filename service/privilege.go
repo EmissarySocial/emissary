@@ -119,14 +119,14 @@ func (service *Privilege) Save(session data.Session, privilege *model.Privilege,
 		if derp.IsNotFound(err) {
 			privilege.IdentityID = primitive.NilObjectID
 		} else {
-			return derp.Wrap(err, location, "Error refreshing privileges", privilege.IdentityID)
+			return derp.Wrap(err, location, "Unable to refresh privileges", privilege.IdentityID)
 		}
 	}
 
 	// Recalculate member counts for the Circle, if applicable
 	if !privilege.CircleID.IsZero() {
 		if err := service.circleService.RefreshMemberCounts(session, privilege.UserID, privilege.CircleID); err != nil {
-			return derp.Wrap(err, location, "Error refreshing Circle member counts", privilege.CircleID)
+			return derp.Wrap(err, location, "Unable to refresh Circle member counts", privilege.CircleID)
 		}
 	}
 
@@ -145,13 +145,13 @@ func (service *Privilege) Delete(session data.Session, privilege *model.Privileg
 
 	// Recalculate the privileges for the identityID
 	if err := service.identityService.RefreshPrivileges(session, privilege.IdentityID); err != nil {
-		return derp.Wrap(err, location, "Error refreshing privileges", privilege.IdentityID)
+		return derp.Wrap(err, location, "Unable to refresh privileges", privilege.IdentityID)
 	}
 
 	// Recalculate member counts for the Circle, if applicable
 	if !privilege.CircleID.IsZero() {
 		if err := service.circleService.RefreshMemberCounts(session, privilege.UserID, privilege.CircleID); err != nil {
-			return derp.Wrap(err, location, "Error refreshing Circle member counts", privilege.CircleID)
+			return derp.Wrap(err, location, "Unable to refresh Circle member counts", privilege.CircleID)
 		}
 	}
 
@@ -557,7 +557,7 @@ func (service *Privilege) RefreshCircleInfo(session data.Session, circle *model.
 			if privilege.SetCircleInfo(circle) {
 
 				if err := service.Save(session, &privilege, "Updating Circle settings"); err != nil {
-					return derp.Wrap(err, location, "Error refreshing Privilege", circle.CircleID)
+					return derp.Wrap(err, location, "Unable to refresh Privilege", circle.CircleID)
 				}
 			}
 		}
@@ -577,7 +577,7 @@ func (service *Privilege) RefreshCircleInfo(session data.Session, circle *model.
 			privilege.CircleID = primitive.NilObjectID
 
 			if err := service.Save(session, &privilege, "Updating Circle settings"); err != nil {
-				return derp.Wrap(err, location, "Error refreshing Privilege", circle)
+				return derp.Wrap(err, location, "Unable to refresh Privilege", circle)
 			}
 
 			continue
@@ -586,7 +586,7 @@ func (service *Privilege) RefreshCircleInfo(session data.Session, circle *model.
 		// If the Circle info has changed, then update the Privilege
 		if privilege.SetCircleInfo(circle) {
 			if err := service.Save(session, &privilege, "Updating Circle settings"); err != nil {
-				return derp.Wrap(err, location, "Error refreshing Privilege", circle)
+				return derp.Wrap(err, location, "Unable to refresh Privilege", circle)
 			}
 		}
 	}
