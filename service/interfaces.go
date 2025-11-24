@@ -42,5 +42,5 @@ type Exportable interface {
 }
 
 type Importable interface {
-	Import(data.Session, *model.User, []byte) error
+	Import(data.Session, *model.ImportItem, *model.User, []byte) error
 }

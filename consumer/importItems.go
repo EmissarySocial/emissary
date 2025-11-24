@@ -73,7 +73,7 @@ func ImportItems(factory *service.Factory, session data.Session, user *model.Use
 		return closeTask(model.ImportItemStateError, "Unrecognized collection type: "+importItem.Type)
 	}
 
-	// Retrieve the document to be imported from the remote server (kinda generics FTW)
+	// Retrieve the document to be imported from the remote server
 	document := make([]byte, 0)
 	txn := remote.Get(importItem.URL).
 		With(options.BearerAuth(record.OAuthToken.AccessToken)).
@@ -84,8 +84,8 @@ func ImportItems(factory *service.Factory, session data.Session, user *model.Use
 		return closeTask(model.ImportItemStateError, "Unable to retrieve document from source server")
 	}
 
-	// Save the document to the local database (kinda generics FTW)
-	if err := importable.Import(session, user, document); err != nil {
+	// Save the document to the local database
+	if err := importable.Import(session, &importItem, user, document); err != nil {
 		return closeTask(model.ImportItemStateError, "Unable to process document: "+err.Error())
 	}
 
