@@ -781,15 +781,25 @@
 			]
 		}
 		
-		import-delete: {
+		import-cancel: {
 			roles:["self"]
 			steps:[
 				{do:"with-import", steps:[
-					{do:"delete", title:"Cancel this Import?", message:"If you cancel this import, all records associated with it will be removed.", submit:"Cancel Import", cancel:"Keep Import"}
+					{do:"delete", title:"Cancel this Import?", message:"If you cancel, no data will be imported into your profile.", submit:"Cancel Import", cancel:"Keep Import"}
 					{do:"refresh-page"}
 				]}
 			]
 		}
 
+		import-undo: {
+			roles:["self"]
+			steps:[
+				{do:"with-import", steps:[
+					{do:"set-data", values:{stateId:"DO-UNDO"}}
+					{do:"delete", title:"Undo this Import?", message:"If you UNDO this import, all records associated with it will be removed from your profile.", submit:"Undo Import", cancel:"Keep Import"}
+					{do:"refresh-page"}
+				]}
+			]
+		}
 	}
 }	
