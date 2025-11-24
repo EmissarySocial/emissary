@@ -377,6 +377,20 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 	return nil
 }
 
+// HardDeleteByID removes a specific Stream record, without applying any additional business rules
+func (service *Stream) HardDeleteByID(session data.Session, streamID primitive.ObjectID) error {
+
+	const location = "service.Stream.HardDeleteByID"
+
+	criteria := exp.Equal("_id", streamID)
+
+	if err := service.collection(session).HardDelete(criteria); err != nil {
+		return derp.Wrap(err, location, "Unable to delete Stream")
+	}
+
+	return nil
+}
+
 // Delete removes an Stream from the database (virtual delete)
 func (service *Stream) Delete(session data.Session, stream *model.Stream, note string) error {
 

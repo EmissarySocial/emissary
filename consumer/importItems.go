@@ -67,7 +67,8 @@ func ImportItems(factory *service.Factory, session data.Session, user *model.Use
 	}
 
 	// Get the importable service that can handle this type of item
-	importable, err := factory.ImportableService(importItem.Type)
+	locator := factory.ImportableLocator()
+	importable, err := locator(importItem.Type)
 
 	if err != nil {
 		return closeTask(model.ImportItemStateError, "Unrecognized collection type: "+importItem.Type)

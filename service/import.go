@@ -2,6 +2,7 @@ package service
 
 import (
 	"iter"
+	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/random"
@@ -26,15 +27,17 @@ import (
 type Import struct {
 	activityService   ActivityStream
 	importItemService *ImportItem
+	locator           ImportableLocator
 	queue             *queue.Queue
 	host              string
 }
 
 // NewImport returns a fully populated Import service
-func NewImport(activityService ActivityStream, importItemService *ImportItem, queue *queue.Queue, host string) Import {
+func NewImport(activityService ActivityStream, importItemService *ImportItem, locator ImportableLocator, queue *queue.Queue, host string) Import {
 	return Import{
 		activityService:   activityService,
 		importItemService: importItemService,
+		locator:           locator,
 		queue:             queue,
 		host:              host,
 	}
@@ -110,7 +113,7 @@ func (service *Import) Save(session data.Session, record *model.Import, note str
 	}
 
 	// Execute state changes
-	if err := service.calcStateChange(record); err != nil {
+	if err := service.calcStateChange(session, record); err != nil {
 		return derp.Wrap(err, location, "Unable to calculate state change")
 	}
 
@@ -127,9 +130,21 @@ func (service *Import) Delete(session data.Session, record *model.Import, note s
 
 	const location = "service.Import.Delete"
 
-	// Delete related ImportItem records
-	if err := service.importItemService.DeleteByImportID(session, record.UserID, record.ImportID); err != nil {
-		return derp.Wrap(err, location, "Unable to delete related records", record.ImportID)
+	switch record.StateID {
+
+	// If this is an "UNDO", then remove all records associated with this Import
+	case model.ImportStateDoUndo:
+
+		if err := service.doUndo(session, record); err != nil {
+			return derp.Wrap(err, location, "Unable to undo Import")
+		}
+
+	// Otherwise, just remove the import and its items, but not imported records
+	default:
+
+		if err := service.importItemService.DeleteByImportID(session, record.UserID, record.ImportID); err != nil {
+			return derp.Wrap(err, location, "Unable to delete related records", record.ImportID)
+		}
 	}
 
 	// Delete this Import
@@ -247,7 +262,7 @@ func (service *Import) SetState(session data.Session, record *model.Import, stat
 
 // calcStateChange performs additional actions on "transient" states that must be resolved into
 // static states before saving
-func (service *Import) calcStateChange(record *model.Import) error {
+func (service *Import) calcStateChange(session data.Session, record *model.Import) error {
 
 	switch record.StateID {
 
@@ -259,6 +274,9 @@ func (service *Import) calcStateChange(record *model.Import) error {
 
 	case model.ImportStateDoMove:
 		return service.doMove(record)
+
+	case model.ImportStateDoUndo:
+		return service.doUndo(session, record)
 	}
 
 	return nil
@@ -350,6 +368,46 @@ func (service *Import) doImport(record *model.Import) error {
 // doMove manages the transient state change from "DO-MOVE"
 // to "MOVING"
 func (service *Import) doMove(record *model.Import) error {
+	return nil
+}
+
+// doUndo manages the transient state change from "DO-UNDO"
+// to deleted
+func (service *Import) doUndo(session data.Session, record *model.Import) error {
+
+	const location = "service.Import.doUndo"
+
+	// Retrieve all ImportItems to undo
+	items, err := service.importItemService.RangeByImportID(session, record.UserID, record.ImportID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Unable to range over ImportItems", record.ImportID)
+	}
+
+	// Undo each ImportItem record...
+	for item := range items {
+
+		// If this ImportItem was successful, then UNDO the imported record
+		if item.StateID == model.ImportItemStateDone {
+
+			if importable, err := service.locator(item.Type); err == nil {
+
+				if err := importable.UndoImport(session, &item); err != nil {
+					derp.Report(derp.Wrap(err, location, "Unable to undo imported record"))
+				}
+			}
+		}
+
+		// Delete the ImportItem
+		if err := service.importItemService.Delete(session, &item, "Undo"); err != nil {
+			derp.Report(derp.Wrap(err, location, "Umable to delete import item", item))
+		}
+	}
+
+	// Mark this record as "deleted"
+	record.DeleteDate = time.Now().Unix()
+
+	// Success!
 	return nil
 }
 

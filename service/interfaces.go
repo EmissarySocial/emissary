@@ -36,11 +36,17 @@ type MerchantAccountAdapter interface {
 	SubscriptionCancelURL(string) (string, error)
 }
 
+// Exportable is a service that can export records
 type Exportable interface {
 	ExportCollection(data.Session, primitive.ObjectID) ([]model.IDOnly, error)
 	ExportDocument(data.Session, primitive.ObjectID, primitive.ObjectID) (string, error)
 }
 
+// Importable is a service that can import records
 type Importable interface {
 	Import(data.Session, *model.ImportItem, *model.User, []byte) error
+	UndoImport(data.Session, *model.ImportItem) error
 }
+
+// ImportableLocator is a function that can locate Importable services
+type ImportableLocator func(string) (Importable, error)

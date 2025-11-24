@@ -67,3 +67,9 @@ const ImportStateMoveError = "MOVE-ERROR"
 // ImportStateDone represents an Import record that has been completed,
 // and all of it's records have been moved to their new locations successfully
 const ImportStateDone = "DONE"
+
+// ImportStateDoUndo represents an Import record that the user wishes to "undo"
+// This is a transient state that is set by the UX and will be processed by
+// the Import service, resolving with this Import record being deleted
+// along with all of its ImportItems and imported profile records
+const ImportStateDoUndo = "DO-UNDO"
