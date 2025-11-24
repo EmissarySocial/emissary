@@ -23,34 +23,20 @@
 			<div class="right">
 				<a href="https://emissary.dev/migration" target="_blank" class="link">
 					{{icon "help"}}
-					{{ if $isDesktop }} Help with Data Migration {{ end }}
+					{{ if $isDesktop }} Help with Account Migration {{ end }}
 				</a>
 			</div>
 		</div>
 
 		<div class="margin-bottom-xl">
-			<div class="card padding" style="max-width:600px">
+			<div class="card padding" style="max-width:800px">
 				
 				{{- $import := $imports.First -}}
 				{{- $source := .ActivityStream $import.SourceID -}}
 
-				{{- if $source.NotNil -}}
-					
-					<div class="text-lg bold margin-top-none margin-bottom-sm">Importing From</div>
-					<div class="margin-bottom-lg flex-row">
-						<div>
-							<img src="{{$source.Icon.Href}}" class="width-48 circle">
-						</div>
-						<div>
-							<div class="text-bold">{{$source.Name}} (@{{$source.Username}})</div>
-							<div><a href="{{$source.URL}}" class="text-nocolor text-gray" target="_blank">{{$source.URL}} &nbsp;{{icon "link-outbound"}}</a></div>
-						</div>
-					</div>
-				{{- end -}}
-
 				{{- if $imports.IsEmpty -}}
 
-					<div class="text-lg bold">{{icon "cloud"}} Online Profile Import</div>
+					<div class="text-lg bold">Account Import</div>
 
 					<div>
 						You can import all of your profile data directly another Fediverse server.
@@ -77,7 +63,7 @@
 						<div class="text-lg text-red">{{icon "alert"}}</div>
 						<div>
 							<div class="bold text-red text-lg">Your Import Could Not Be Started</div>
-							<div>{{$import.ErrorMessage}}</div>
+							<div>{{$import.Message}}</div>
 							<div class="margin-top">
 								<button class="primary" hx-get="/@me/settings/import-authenticate?importId={{$import.ID}}">Edit Account</button>
 								<button hx-get="/@me/settings/import-delete?importId={{$import.ID}}">Cancel Import</button>
@@ -86,6 +72,8 @@
 					</div>
 
 				{{- else if eq "AUTHORIZING" $import.StateID -}}
+
+					{{template "import-source" $source}}
 
 					<div class="text-lg bold">Waiting for Approval</div>
 					<div class="margin-bottom">
@@ -99,6 +87,8 @@
 					</div>
 
 				{{- else if eq "AUTHORIZED" $import.StateID -}}
+
+					{{template "import-source" $source}}
 
 					{{- $importPlan := .ImportPlan $source -}}
 
@@ -134,8 +124,8 @@
 							moving your account to this server.
 						</div>
 						<div>
-							<button hx-post="/@me/settings/import-start?importId={{$import.ID}}" class="primary success">Start Import</button>
-							<button hx-get="/@me/settings/import-delete?importId={{$import.ID}}">Cancel Import</button>
+							<button hx-post="/@me/settings/import-start?importId={{$import.ID}}" hx-push-url="false" class="primary success">Start Import</button>
+							<button hx-get="/@me/settings/import-delete?importId={{$import.ID}}" hx-push-url="false">Cancel Import</button>
 						</div>
 
 					{{- else -}}
@@ -149,7 +139,47 @@
 						</div>
 					{{- end -}}
 
+				{{- else if eq "IMPORTING" $import.StateID -}}
+					{{template "import-source" $source}}
+
+					<div class="text-lg bold">Importing <span class="spin">{{icon "loading"}}</span></div>
+					<div class="margin-bottom">
+						We are importing records from your old profile now...
+					</div>
+
+				{{- else if eq "REVIEWING" $import.StateID -}}
+
+						{{template "import-source" $source}}
+
+						<div class="text-lg text-green bold">Import Complete</div>
+						<div class="margin-bottom">
+							We have finished importing records from your remote profile.  
+							Please check this work by viewing your new profile contents 
+							and reviewing the logs details.
+						</div>
+						
+<pre>{{$import.TotalItems}} Processed. 
+{{subtract $import.TotalItems $import.CompleteItems}} Errors.</pre>
+
+						<details class="margin-bottom-lg">
+							<summary class="clickable">(View Details)</summary>
+							<div class="table">
+
+							</div>
+						</details>
+
+						<div class="text-lg bold">Next Step: Move Your Account</div>
+						<div class="margin-bottom">
+							Once you have verified that the information is correct, you can finalize this step by
+							sending a "Move" notification to your followers on the network.
+						</div>
+						<div>
+							<button hx-get="/@me/settings/import-move?importId={{$import.ID}}" class="primary">Move Your Account</button>
+							<button hx-get="/@me/settings/import-delete?importId={{$import.ID}}">Undo Import</button>
+						</div>
+						
 				{{- else -}}
+					{{template "import-source" $source}}
 					<pre>{{$import |jsonIndent}}</pre>
 				{{- end -}}
 			</div>

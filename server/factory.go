@@ -208,8 +208,8 @@ func (factory *Factory) readConfig(config config.Config) {
 
 	// RULE: MUST be able to connect to the common database
 	if err := factory.refreshCommonDatabase(config.ActivityPubCache); err != nil {
-		errorMessage := "Halting. Common database not properly defined in configuration file."
-		derp.Report(derp.InternalError(location, errorMessage))
+		message := "Halting. Common database not properly defined in configuration file."
+		derp.Report(derp.InternalError(location, message))
 		os.Exit(1)
 	}
 

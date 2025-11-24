@@ -21,6 +21,9 @@ func PreProcessor(task *queue.Task) error {
 		task.Priority = 8
 
 	// (16) Realtime User Notifications
+	case "ImportStartup":
+		task.Priority = 16
+
 	case "SendActivityPubMessage":
 		task.Priority = 16
 
@@ -39,6 +42,9 @@ func PreProcessor(task *queue.Task) error {
 		task.Priority = 64
 
 	case "Geocode":
+		task.Priority = 64
+
+	case "ImportItem":
 		task.Priority = 64
 
 	// (256) Background Notifications

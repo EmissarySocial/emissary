@@ -35,43 +35,43 @@ func (o OAuthUserTokenRequest) Scopes() []string {
 
 // Validate confirms that a request is valid based on the settings in the OAuthClient.
 // This method MAY update the request if certain values are missing.
-func (req *OAuthUserTokenRequest) Validate(app OAuthClient) error {
+func (req *OAuthUserTokenRequest) Validate(client OAuthClient) error {
 
 	const location = "model.OAuthUserTokenRequest.Validate"
 
-	// RULE: ClientID must match the application
-	if req.ClientID != app.ClientID.Hex() {
-		return derp.BadRequestError(location, "Invalid client_id", app, req)
+	// RULE: ClientID must match the client application
+	if (req.ClientID != client.ClientID.Hex()) && (req.ClientID != client.ActorID) {
+		return derp.BadRequestError(location, "Invalid client_id", client, req)
 	}
 
-	// RULE: ClientSecret must match the application
-	if req.ClientSecret != app.ClientSecret {
-		return derp.BadRequestError(location, "Invalid client_secret", app, req)
+	// RULE: ClientSecret must match the client application
+	if req.ClientSecret != client.ClientSecret {
+		return derp.BadRequestError(location, "Invalid client_secret", client, req)
 	}
 
 	// RULE: Client must have at least one redirect_uri
-	if len(app.RedirectURIs) == 0 {
+	if len(client.RedirectURIs) == 0 {
 		return derp.InternalError(location, "Client must have at least one redirect_uri")
 	}
 
 	// RULE: If missing, use default value for RedirectURI
 	if req.RedirectURI == "" {
-		req.RedirectURI = app.RedirectURIs[0]
+		req.RedirectURI = client.RedirectURIs[0]
 	}
 
 	// RULE: Verify that redirect URI is valid
-	if !slice.Contains(app.RedirectURIs, req.RedirectURI) {
-		return derp.BadRequestError(location, "Invalid redirect_uri", app, req)
+	if !slice.Contains(client.RedirectURIs, req.RedirectURI) {
+		return derp.BadRequestError(location, "Invalid redirect_uri", client, req)
 	}
 
 	// RULE: If missing, use default value for Scope
 	if req.Scope == "" {
-		req.Scope = strings.Join(app.Scopes, " ")
+		req.Scope = strings.Join(client.Scopes, " ")
 	}
 
 	// RULE: Verify that scope is valid
 	for _, scope := range req.Scopes() {
-		if !slice.Contains(app.Scopes, scope) {
+		if !slice.Contains(client.Scopes, scope) {
 			return derp.BadRequestError(location, "Invalid scope", scope)
 		}
 	}

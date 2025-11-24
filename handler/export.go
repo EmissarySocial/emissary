@@ -24,8 +24,10 @@ func GetUserExportCollection(ctx *steranko.Context, factory *service.Factory, se
 	collection := ctx.Param("collection")
 	service, err := exportService.FindService(collection)
 
+	// If we can't locate the service, then just return a 404 with an empty collection
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to find export service", collection)
+		ctx.Response().Header().Set("Content-Type", "application/activity+json")
+		return ctx.JSON(http.StatusNotFound, streams.NewOrderedCollection(requestURL))
 	}
 
 	// Generate the export collection for this service
@@ -37,7 +39,6 @@ func GetUserExportCollection(ctx *steranko.Context, factory *service.Factory, se
 
 	// Return the result to the caller as a JSON-LD Collection
 	ctx.Response().Header().Set("Content-Type", "application/activity+json")
-
 	result := streams.NewOrderedCollection(requestURL)
 	result.TotalItems = len(records)
 	result.OrderedItems = slice.Map(records, func(recordID model.IDOnly) any {
@@ -47,9 +48,9 @@ func GetUserExportCollection(ctx *steranko.Context, factory *service.Factory, se
 	return ctx.JSON(http.StatusOK, result)
 }
 
-func GetUserExportRecord(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
+func GetUserExportDocument(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
-	const location = "handler.GetUserExportRecord"
+	const location = "handler.GetUserExportDocument"
 
 	// Locate the service to use
 	exportService := factory.Export()
@@ -67,7 +68,7 @@ func GetUserExportRecord(ctx *steranko.Context, factory *service.Factory, sessio
 	}
 
 	// Generate the export collection for this service
-	record, err := service.ExportRecord(session, user.UserID, recordID)
+	record, err := service.ExportDocument(session, user.UserID, recordID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Uable to retrieve exportable record", collection, recordID)
@@ -75,6 +76,6 @@ func GetUserExportRecord(ctx *steranko.Context, factory *service.Factory, sessio
 
 	// Return the result to the caller as a JSON-LD Collection
 	ctx.Response().Header().Set("Content-Type", "application/activity+json")
-	return ctx.JSON(http.StatusOK, record)
+	return ctx.String(http.StatusOK, record)
 
 }

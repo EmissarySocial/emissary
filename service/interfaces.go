@@ -9,7 +9,6 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
-	"github.com/benpate/rosetta/mapof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -39,5 +38,9 @@ type MerchantAccountAdapter interface {
 
 type Exportable interface {
 	ExportCollection(data.Session, primitive.ObjectID) ([]model.IDOnly, error)
-	ExportRecord(data.Session, primitive.ObjectID, primitive.ObjectID) (mapof.Any, error)
+	ExportDocument(data.Session, primitive.ObjectID, primitive.ObjectID) (string, error)
+}
+
+type Importable interface {
+	Import(data.Session, *model.User, []byte) error
 }

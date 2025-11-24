@@ -1,11 +1,16 @@
 package model
 
 import (
+	"encoding/json"
+	"strings"
 	"testing"
+	"time"
 
+	"github.com/EmissarySocial/emissary/tools/datetime"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
+	"github.com/stretchr/testify/require"
 )
 
 func TestStreamSchema(t *testing.T) {
@@ -103,4 +108,25 @@ func TestPermissionSchema(t *testing.T) {
 	}
 
 	tableTest_Schema(t, &s, &m, table)
+}
+
+func TestStream_JSON(t *testing.T) {
+
+	test := func(stream Stream, expected ...string) {
+		marshaled, err := json.Marshal(stream)
+		marshaledString := string(marshaled)
+		require.Nil(t, err)
+
+		for _, value := range expected {
+			require.True(t, strings.Contains(marshaledString, value))
+		}
+	}
+
+	test(Stream{
+		StartDate: datetime.DateTime{Time: time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC)},
+	}, `"startDate":"2009-11-17T20:34:58.651387237Z"`)
+
+	test(Stream{
+		EndDate: datetime.DateTime{Time: time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC)},
+	}, `"endDate":"2009-11-17T20:34:58.651387237Z"`)
 }

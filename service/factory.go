@@ -737,6 +737,23 @@ func (factory *Factory) Identity() *Identity {
 	return &factory.identityService
 }
 
+// Import returns the Import service, which imports user records from other systems
+func (factory *Factory) Import() *Import {
+	result := NewImport(
+		factory.ActivityStream(model.ActorTypeApplication, primitive.NilObjectID),
+		factory.ImportItem(),
+		factory.Queue(),
+		factory.Host(),
+	)
+	return &result
+}
+
+// Import returns the ImportItem service, which manages individual records to be imported
+func (factory *Factory) ImportItem() *ImportItem {
+	result := NewImportItem()
+	return &result
+}
+
 // Inbox returns a fully populated Inbox service
 func (factory *Factory) Inbox() *Inbox {
 	return &factory.inboxService
@@ -945,15 +962,6 @@ func (factory *Factory) Icons() icon.Provider {
 	return Icons{}
 }
 
-// Import returns the Import service, which imports user records from other systems
-func (factory *Factory) Import() *Import {
-	result := NewImport(
-		factory.ActivityStream(model.ActorTypeApplication, primitive.NilObjectID),
-		factory.Host(),
-	)
-	return &result
-}
-
 // Locator returns the locator service, which locates records based on their URLs
 func (factory *Factory) Locator() *Locator {
 	return &factory.locatorService
@@ -1008,6 +1016,82 @@ func (factory *Factory) RSS() *RSS {
 /******************************************
  * Helper Utilities
  ******************************************/
+
+func (factory *Factory) ImportableService(name string) (Importable, error) {
+
+	switch name {
+
+	case "emissary:stream":
+		return factory.Stream(), nil
+
+		/*
+			case "outbox":
+				return NilImporter(), nil
+
+			case "content":
+				return NilImporter(), nil
+
+			case "following":
+				return NilImporter(), nil
+
+			case "blocked":
+				return NilImporter(), nil
+
+			case "emissary:annotation":
+				return NilImporter(), nil
+
+			case "emissary:attachment":
+				return NilImporter(), nil
+
+			case "emissary:circle":
+				return NilImporter(), nil
+
+			case "emissary:conversaion":
+				return NilImporter(), nil
+
+			case "emissary:folder":
+				return NilImporter(), nil
+
+			case "emissary:follower":
+				return NilImporter(), nil
+
+			case "emissary:following":
+				return NilImporter(), nil
+
+			case "emissary:mention":
+				return NilImporter(), nil
+
+			case "emissary:merchantAccount":
+				return NilImporter(), nil
+
+			case "emissary:message":
+				return NilImporter(), nil
+
+			case "emissary:outboxMessage":
+				return NilImporter(), nil
+
+			case "emissary:privilege":
+				return NilImporter(), nil
+
+			case "emissary:product":
+				return NilImporter(), nil
+
+			case "emissary:response":
+				return NilImporter(), nil
+
+			case "emissary:rule":
+				return NilImporter(), nil
+
+			case "emissary:stream":
+				return NilImporter(), nil
+
+			case "emissary:streamWidget":
+				return NilImporter(), nil
+		*/
+	}
+
+	return nil, derp.Internal("service.Import.Importable", "Unrecognized service name. This should never happen", name)
+}
 
 // ModelService returns the correct service to use for this particular Model object
 func (factory *Factory) ModelService(object data.Object) ModelService {

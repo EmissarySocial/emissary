@@ -5,20 +5,21 @@ import (
 
 	"github.com/EmissarySocial/emissary/tools/random"
 	"github.com/benpate/data/journal"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/oauth2"
 )
 
 type Import struct {
-	ImportID       primitive.ObjectID `bson:"_id"`          // Unique identifier for this Import record
-	UserID         primitive.ObjectID `bson:"userId"`       // User profile that we're importing INTO
-	SourceID       string             `bson:"sourceId"`     // URL or Handle of the account being migrated
-	StateID        string             `bson:"stateId"`      // Current state of this import process
-	ErrorMessage   string             `bson:"errorMessage"` // Human-friendly description of an error that has stopped this import.
-	OAuthConfig    oauth2.Config      `bson:"oauthConfig"`  // OAuth 2.0 configuration information
-	OAuthToken     *oauth2.Token      `bson:"oauthToken"`   // OAuth token provided by the source server
-	OAuthChallenge []byte             `bson:"oauthChallenge"`
+	ImportID       primitive.ObjectID `bson:"_id"`            // Unique identifier for this Import record
+	UserID         primitive.ObjectID `bson:"userId"`         // User profile that we're importing INTO
+	SourceID       string             `bson:"sourceId"`       // URL or Handle of the account being migrated
+	StateID        string             `bson:"stateId"`        // Current state of this import process
+	Message        string             `bson:"message"`        // Human-friendly description of the status of this import process
+	OAuthConfig    oauth2.Config      `bson:"oauthConfig"`    // OAuth 2.0 configuration information
+	OAuthToken     *oauth2.Token      `bson:"oauthToken"`     // OAuth token provided by the source server
+	OAuthChallenge []byte             `bson:"oauthChallenge"` // OAuth challenge token used of PKCE
+	TotalItems     int                `bson:"totalItems"`     // The total number of items to be imported (available after the import plan is made)
+	CompleteItems  int                `bson:"completeItems"`  // The number of items that have completed
 
 	journal.Journal `bson:",inline"`
 }
@@ -83,6 +84,5 @@ func (record Import) OAuthCodeURL() string {
 	codeChallengeMethod := oauth2.SetAuthURLParam("code_challenge_method", "S256")
 	authCodeURL := record.OAuthConfig.AuthCodeURL(record.ImportID.Hex(), codeChallenge, codeChallengeMethod)
 
-	spew.Dump("OAuthCodeURL", record, authCodeURL)
 	return authCodeURL
 }

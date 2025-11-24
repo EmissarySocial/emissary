@@ -365,7 +365,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	// Export Routes for Users
 	e.GET("/@:userId/export", handler.NotFound)
 	e.GET("/@:userId/export/:collection", handler.WithUser(factory, handler.GetUserExportCollection))
-	e.GET("/@:userId/export/:collection/:recordId", handler.WithUser(factory, handler.GetUserExportRecord))
+	e.GET("/@:userId/export/:collection/:recordId", handler.WithUser(factory, handler.GetUserExportDocument))
 
 	// ActivityPub Routes for Users
 	e.GET("/@:userId/pub", handler.WithUser(factory, handler.GetOutbox))

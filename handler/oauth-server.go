@@ -11,7 +11,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/html"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -26,8 +25,6 @@ func GetOAuthAuthorization(ctx *steranko.Context, factory *service.Factory, sess
 	if err := ctx.Bind(&transaction); err != nil {
 		return derp.Wrap(err, location, "Error binding query parameters")
 	}
-
-	spew.Dump(location, transaction)
 
 	// Load the OAuth Builder
 	builder, err := build.NewOAuthAuthorization(factory, session, transaction)
@@ -178,7 +175,7 @@ func PostOAuthToken(ctx *steranko.Context, factory *service.Factory, session dat
 	oauthClient := model.NewOAuthClient()
 
 	if err := oauthClientService.LoadByToken(session, transaction.ClientID, &oauthClient); err != nil {
-		return derp.Wrap(err, location, "Invalid client_id", transaction.ClientID)
+		return derp.Wrap(err, location, "Invalid client_id", transaction)
 	}
 
 	// Convert transaction.Code => userToken

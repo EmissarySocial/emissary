@@ -71,7 +71,7 @@ func (service *OAuthClient) Iterator(session data.Session, criteria exp.Expressi
 func (service *OAuthClient) Load(session data.Session, criteria exp.Expression, client *model.OAuthClient) error {
 
 	if err := service.collection(session).Load(notDeleted(criteria), client); err != nil {
-		return derp.Wrap(err, "service.OAuthClient", "Unable to load OAuthClient", criteria)
+		return derp.Wrap(err, "service.OAuthClient.Load", "Unable to load OAuthClient", criteria)
 	}
 
 	return nil

@@ -8,29 +8,35 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
+	dt "github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/form"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/sherlock"
-	"github.com/davecgh/go-spew/spew"
+	"github.com/benpate/turbine/queue"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/oauth2"
 )
 
 // Import service helps exports user data to another server
 type Import struct {
-	activityService ActivityStream
-	host            string
+	activityService   ActivityStream
+	importItemService *ImportItem
+	queue             *queue.Queue
+	host              string
 }
 
 // NewImport returns a fully populated Import service
-func NewImport(activityService ActivityStream, host string) Import {
+func NewImport(activityService ActivityStream, importItemService *ImportItem, queue *queue.Queue, host string) Import {
 	return Import{
-		activityService: activityService,
-		host:            host,
+		activityService:   activityService,
+		importItemService: importItemService,
+		queue:             queue,
+		host:              host,
 	}
 }
 
@@ -121,11 +127,17 @@ func (service *Import) Delete(session data.Session, record *model.Import, note s
 
 	const location = "service.Import.Delete"
 
+	// Delete related ImportItem records
+	if err := service.importItemService.DeleteByImportID(session, record.UserID, record.ImportID); err != nil {
+		return derp.Wrap(err, location, "Unable to delete related records", record.ImportID)
+	}
+
 	// Delete this Import
 	if err := service.collection(session).Delete(record, note); err != nil {
 		return derp.Wrap(err, location, "Unable to delete Import", record, note)
 	}
 
+	// Hallelujah
 	return nil
 }
 
@@ -215,6 +227,21 @@ func (service *Import) LoadByToken(session data.Session, userID primitive.Object
 }
 
 /******************************************
+ * Custom Actions
+ ******************************************/
+
+func (service *Import) SetMessage(session data.Session, record *model.Import, message string) error {
+	record.Message = message
+	return service.Save(session, record, "Update message")
+}
+
+func (service *Import) SetState(session data.Session, record *model.Import, stateID string) error {
+	record.StateID = stateID
+	record.Message = ""
+	return service.Save(session, record, "Update state")
+}
+
+/******************************************
  * State Machine
  ******************************************/
 
@@ -250,14 +277,14 @@ func (service *Import) doAuthorize(record *model.Import) error {
 
 	if err != nil {
 		record.StateID = model.ImportStateAuthorizationError
-		record.ErrorMessage = "The account you provided could not be found. Please enter a different account."
+		record.Message = "The account you provided could not be found. Please enter a different account."
 		return nil
 	}
 
 	// RULE: Require that the remote actor is a "Person"
 	if actor.Type() != vocab.ActorTypePerson {
 		record.StateID = model.ImportStateAuthorizationError
-		record.ErrorMessage = "The account you provided is not valid because it is a '" + actor.Type() + "' type record. You can only import from 'Person' accounts."
+		record.Message = "The account you provided is not valid because it is a '" + actor.Type() + "' type record. You can only import from 'Person' accounts."
 		return nil
 	}
 
@@ -270,14 +297,7 @@ func (service *Import) doAuthorize(record *model.Import) error {
 
 	// Populate the Import record with the new OAuth configuration data
 	record.StateID = model.ImportStateAuthorizing
-	record.ErrorMessage = ""
-
-	spew.Dump(
-		actor.Value(),
-		actor.Endpoints().Value(),
-		actor.Endpoints().Get(vocab.EndpointOAuthAuthorization).Value(),
-		actor.Endpoints().Get(vocab.EndpointOAuthToken).Value(),
-	)
+	record.Message = ""
 
 	record.OAuthConfig = oauth2.Config{
 		ClientID:    service.host + "/@application",
@@ -292,14 +312,14 @@ func (service *Import) doAuthorize(record *model.Import) error {
 	// RULE: AuthURL cannot be empty
 	if record.OAuthConfig.Endpoint.AuthURL == "" {
 		record.StateID = model.ImportStateAuthorizationError
-		record.ErrorMessage = "The account you provided does not support account migration.  Actors must define an OAuth endpoint to be compatible. (AuthURL missing)"
+		record.Message = "The account you provided does not support account migration.  Actors must define an OAuth endpoint to be compatible. (AuthURL missing)"
 		return nil
 	}
 
 	// RULE: TokenURL cannot be empty
 	if record.OAuthConfig.Endpoint.TokenURL == "" {
 		record.StateID = model.ImportStateAuthorizationError
-		record.ErrorMessage = "The account you provided does not support account migration.  Actors must define an OAuth endpoint to be compatible. (TokenURL missing)"
+		record.Message = "The account you provided does not support account migration.  Actors must define an OAuth endpoint to be compatible. (TokenURL missing)"
 		return nil
 	}
 
@@ -310,6 +330,20 @@ func (service *Import) doAuthorize(record *model.Import) error {
 // doImport manages the transient state change from "DO-IMPORT"
 // to "IMPORTING"
 func (service *Import) doImport(record *model.Import) error {
+
+	// Start a background task to count all
+	service.queue.NewTask(
+		"ImportStartup",
+		mapof.Any{
+			"host":     dt.NameOnly(service.host),
+			"userId":   record.UserID,
+			"importId": record.ImportID,
+		},
+	)
+
+	// This message will display in the UX
+	record.Message = "Counting Importable Items..."
+	record.StateID = model.ImportStateImporting
 	return nil
 }
 
@@ -329,8 +363,6 @@ func (service *Import) CalcImportPlan(actor streams.Document) sliceof.Object[for
 
 	result := sliceof.NewObject[form.LookupCode]()
 	migration := actor.Get(vocab.PropertyMigration)
-
-	spew.Dump(actor.Value(), migration.Value())
 
 	if collection := migration.Get("emissary:stream"); collection.NotNil() {
 		result.Append(form.LookupCode{

@@ -10,6 +10,7 @@ func ImportSchema() schema.Element {
 		Properties: schema.ElementMap{
 			"importId": schema.String{Format: "objectId", Required: true},
 			"userId":   schema.String{Format: "objectId", Required: true},
+			"sourceId": schema.String{},
 			"stateId": schema.String{
 				Enum: []string{
 					ImportStateNew,
@@ -20,14 +21,16 @@ func ImportSchema() schema.Element {
 					ImportStateDoImport,
 					ImportStateImporting,
 					ImportStateImportError,
+					ImportStateReviewing,
 					ImportStateDoMove,
 					ImportStateMoving,
 					ImportStateMoveError,
 					ImportStateDone,
 				},
 				Required: true},
-			"sourceId":     schema.String{},
-			"errorMessage": schema.String{},
+			"message":       schema.String{},
+			"totalItems":    schema.Integer{},
+			"completeItems": schema.Integer{},
 		},
 	}
 }
@@ -46,8 +49,15 @@ func (record *Import) GetPointer(name string) (any, bool) {
 	case "sourceId":
 		return &record.SourceID, true
 
-	case "errorMessage":
-		return &record.ErrorMessage, true
+	case "message":
+		return &record.Message, true
+
+	case "totalItems":
+		return &record.TotalItems, true
+
+	case "completeItems":
+		return &record.CompleteItems, true
+
 	}
 
 	return nil, false

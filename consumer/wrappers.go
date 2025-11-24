@@ -10,6 +10,7 @@ import (
 	dt "github.com/benpate/domain"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // WithFactory wraps a consumer function, and uses the "host" argument to inject a Factory object into the function signature.
@@ -35,6 +36,34 @@ func WithFactory(serverFactory ServerFactory, args mapof.Any, handler func(facto
 	}
 
 	return handler(factory, args)
+}
+
+// WithImport wraps a consumer function, using the "streamId" argument to load a Import object from the database.
+func WithImport(serverFactory ServerFactory, args mapof.Any, handler func(*service.Factory, data.Session, *model.User, *model.Import, mapof.Any) queue.Result) queue.Result {
+
+	const location = "consumer.WithImport"
+
+	return WithUser(serverFactory, args, func(factory *service.Factory, session data.Session, user *model.User, args mapof.Any) queue.Result {
+
+		importService := factory.Import()
+		record := model.NewImport()
+		importToken := args.GetString("importId")
+
+		// Parse the UserID
+		userToken := args.GetString("userId")
+		userID, err := primitive.ObjectIDFromHex(userToken)
+
+		if err != nil {
+			return queue.Failure(derp.Wrap(err, location, "Unable to parse userID", userToken))
+		}
+
+		// Load the Import record
+		if err := importService.LoadByToken(session, userID, importToken, &record); err != nil {
+			return queue.Error(derp.Wrap(err, location, "Cannot load import", args))
+		}
+
+		return handler(factory, session, user, &record, args)
+	})
 }
 
 // WithFactoryAndSession wraps a consumer function, and uses the "host" argument to inject a Factory object into the function signature.
@@ -82,5 +111,23 @@ func WithStream(serverFactory ServerFactory, args mapof.Any, handler func(*servi
 		}
 
 		return handler(factory, session, streamService, &stream, args)
+	})
+}
+
+// WithUser wraps a consumer function, using the "userId" argument to load a User object from the database.
+func WithUser(serverFactory ServerFactory, args mapof.Any, handler func(*service.Factory, data.Session, *model.User, mapof.Any) queue.Result) queue.Result {
+
+	const location = "consumer.WithUser"
+
+	return WithSession(serverFactory, args, func(factory *service.Factory, session data.Session, args mapof.Any) queue.Result {
+
+		userService := factory.User()
+		user := model.NewUser()
+
+		if err := userService.LoadByToken(session, args.GetString("userId"), &user); err != nil {
+			return queue.Error(derp.Wrap(err, location, "Cannot load user", args))
+		}
+
+		return handler(factory, session, &user, args)
 	})
 }
