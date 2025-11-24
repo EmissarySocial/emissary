@@ -26,7 +26,7 @@
 	actions: {
 		
 		create:{
-			roles:["self"]
+			roles:["author"]
 			steps: [
 				{do:"edit-content", file:"create", format:"HTML"}
 				{do:"process-content", remove-html:true, add-links:true, add-tags:true}
@@ -47,7 +47,7 @@
 		}
 		
 		edit: {
-			roles:["self"]
+			roles:["author"]
 			steps: [
 				{do:"as-modal", steps:[
 					{do:"set-args", postTo:"/{{.StreamID}}/edit"}
@@ -61,7 +61,7 @@
 		}
 		
 		delete: {
-			roles:["self"]
+			roles:["author"]
 			steps: [
 				{do:"unpublish", state:"default", outbox:"true"}
 				{do:"delete", title:"Delete this Post?", message:"If you continue, this post will be permanently removed from your profile.  There is NO UNDO."}
