@@ -423,6 +423,7 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 			factory.Content(),
 			factory.EncryptionKey(),
 			factory.Follower(),
+			factory.ImportItem(),
 			factory.Rule(),
 			factory.User(),
 			factory.Webhook(),
@@ -482,6 +483,11 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 		factory.webhookService.Refresh(
 			factory.Queue(),
 		)
+
+		// REALTIME WATCHERS
+
+		// Watch for updates to Import records
+		go queries.WatchImports(refreshContext, factory.server, factory.sseUpdateChannel)
 
 		// Watch for updates to Stream records
 		go queries.WatchStreams(refreshContext, factory.server, factory.sseUpdateChannel)
@@ -1026,6 +1032,9 @@ func (factory *Factory) ImportableLocator() ImportableLocator {
 
 		case "emissary:stream":
 			return factory.Stream(), nil
+
+		case "emissary:user":
+			return factory.User(), nil
 
 			/*
 				case "outbox":

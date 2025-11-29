@@ -320,7 +320,7 @@ func (service *Import) doAuthorize(record *model.Import) error {
 	record.OAuthConfig = oauth2.Config{
 		ClientID:    service.host + "/@application",
 		RedirectURL: service.OAuthClientCallbackURL(),
-		Scopes:      []string{"read:export", "write:move"},
+		Scopes:      []string{"activitypub_account_portability"},
 		Endpoint: oauth2.Endpoint{
 			AuthURL:  actor.Endpoints().Get(vocab.EndpointOAuthAuthorization).String(),
 			TokenURL: actor.Endpoints().Get(vocab.EndpointOAuthToken).String(),
@@ -422,6 +422,19 @@ func (service *Import) CalcImportPlan(actor streams.Document) sliceof.Object[for
 	result := sliceof.NewObject[form.LookupCode]()
 	migration := actor.Get(vocab.PropertyMigration)
 
+	// First, try to retrieve the main User profile information
+	if collection := migration.Get("emissary:user"); collection.NotNil() {
+		result.Append(form.LookupCode{
+			Group:       "Native",
+			Icon:        "patch-check-fill",
+			Label:       "User Profile",
+			Description: "High-fidelity import of Emissary User Account. Should retain all data.",
+			Value:       "emissary:user",
+			Href:        collection.String(),
+		})
+	}
+
+	// Retrieve all posts
 	if collection := migration.Get("emissary:stream"); collection.NotNil() {
 		result.Append(form.LookupCode{
 			Group:       "Native",

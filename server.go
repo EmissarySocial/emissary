@@ -290,6 +290,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/:objectId/sse/updated", handler.WithFactory(factory, handler.ServerSentEvent_Updated))
 	e.GET("/:objectId/sse/child-updated", handler.WithFactory(factory, handler.ServerSentEvent_ChildUpdated))
 	e.GET("/:objectId/sse/new-replies", handler.WithFactory(factory, handler.ServerSentEvent_NewReplies))
+	e.GET("/:objectId/sse/import-progress", handler.WithFactory(factory, handler.ServerSentEvent_ImportProgress))
 	e.GET("/@:objectId/sse", handler.WithFactory(factory, handler.ServerSentEvent))
 	e.GET("/@:objectId/sse/updated", handler.WithFactory(factory, handler.ServerSentEvent_Updated))
 

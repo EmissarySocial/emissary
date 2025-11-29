@@ -27,3 +27,10 @@ func NewMessage_NewReplies(objectID primitive.ObjectID) Message {
 		Topic:    TopicNewReplies,
 	}
 }
+
+func NewMessage_ImportProgress(objectID primitive.ObjectID) Message {
+	return Message{
+		ObjectID: objectID,
+		Topic:    TopicImportProgress,
+	}
+}

@@ -444,7 +444,19 @@ button[disabled].barberpole
 		var(--blue70) 2rem
 	)!important;
   background-size: 200% 200%;
-  animation: barberpole 3s linear infinite;
+  animation: barberpole 0.4s linear infinite;
+}
+
+.barberpole {
+	background-image: repeating-linear-gradient(
+		-45deg, 
+		var(--gray20), 
+		var(--gray20) 1rem,
+		var(--gray30) 1rem,
+		var(--gray30) 2rem
+	)!important;
+  background-size: 200% 200%;
+  animation: barberpole 10s linear infinite;
 }
 
 .button.button-invisible,

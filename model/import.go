@@ -5,6 +5,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/tools/random"
 	"github.com/benpate/data/journal"
+	"github.com/benpate/rosetta/convert"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/oauth2"
 )
@@ -85,4 +86,9 @@ func (record Import) OAuthCodeURL() string {
 	authCodeURL := record.OAuthConfig.AuthCodeURL(record.ImportID.Hex(), codeChallenge, codeChallengeMethod)
 
 	return authCodeURL
+}
+
+func (record Import) PercentComplete() int {
+	ratio := convert.Float(record.CompleteItems) / convert.Float(record.TotalItems) * 100
+	return convert.Int(ratio)
 }

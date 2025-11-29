@@ -33,20 +33,21 @@ import (
 // Stream manages all interactions with the Stream collection
 type Stream struct {
 	factory           *Factory
+	attachmentService *Attachment
 	circleService     *Circle
+	contentService    *Content
 	domainService     *Domain
+	draftService      *StreamDraft
+	geocodeService    GeocodeAddress
+	importItemService *ImportItem
+	keyService        *EncryptionKey
+	outboxService     *Outbox
 	searchTagService  *SearchTag
 	templateService   *Template
-	draftService      *StreamDraft
-	outboxService     *Outbox
-	attachmentService *Attachment
-	contentService    *Content
-	keyService        *EncryptionKey
 	followerService   *Follower
 	ruleService       *Rule
 	userService       *User
 	webhookService    *Webhook
-	geocodeService    GeocodeAddress
 	host              string
 	mediaserver       mediaserver.MediaServer
 	queue             *queue.Queue
@@ -65,7 +66,7 @@ func NewStream(factory *Factory) Stream {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Stream) Refresh(circleService *Circle, domainService *Domain, searchTagService *SearchTag, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, contentService *Content, keyService *EncryptionKey, followerService *Follower, ruleService *Rule, userService *User, webhookService *Webhook, geocodeService GeocodeAddress, mediaserver mediaserver.MediaServer, queue *queue.Queue, sseUpdateChannel chan<- realtime.Message, host string) {
+func (service *Stream) Refresh(circleService *Circle, domainService *Domain, searchTagService *SearchTag, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, contentService *Content, keyService *EncryptionKey, followerService *Follower, importItemService *ImportItem, ruleService *Rule, userService *User, webhookService *Webhook, geocodeService GeocodeAddress, mediaserver mediaserver.MediaServer, queue *queue.Queue, sseUpdateChannel chan<- realtime.Message, host string) {
 	service.circleService = circleService
 	service.domainService = domainService
 	service.searchTagService = searchTagService
@@ -76,6 +77,7 @@ func (service *Stream) Refresh(circleService *Circle, domainService *Domain, sea
 	service.contentService = contentService
 	service.keyService = keyService
 	service.followerService = followerService
+	service.importItemService = importItemService
 	service.ruleService = ruleService
 	service.userService = userService
 	service.webhookService = webhookService

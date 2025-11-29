@@ -186,7 +186,7 @@ func (service *OAuthClient) LoadOrCreateByClientToken(session data.Session, toke
 	client.RedirectURIs = convert.SliceOfString(actor.Get(vocab.PropertyRedirectURI).Value())
 	client.IconURL = actor.Icon().Href()
 	client.Summary = actor.Summary()
-	client.Scopes = []string{"read:export", "write:move"}
+	client.Scopes = []string{"activitypub_account_portability"}
 
 	// Save the new Client
 	if err := service.Save(session, client, "Created via ActivityPub actor"); err != nil {

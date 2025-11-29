@@ -1,0 +1,35 @@
+{{- $totalItems := .Object.TotalItems -}}
+{{- $completeItems := .Object.CompleteItems -}}
+
+{{- if eq 0 $completeItems -}}
+
+	<!-- Display "indeterminate" -->
+	<div id="progress-bar" class="barberpole"></div>
+
+{{- else -}}
+
+	<!-- Display progress -->
+	{{- $ratio := divide .Object.PercentComplete 2 -}}
+	{{- $steps := seq 50 -}}
+
+	<div id="progress-bar">
+		{{- range $index := $steps -}}
+			<div {{- if lt $index $ratio}} class="done"{{- end -}}></div>
+		{{- end -}}
+	</div>
+
+	<!-- Reload the page to display the "Complete" page -->
+	{{- if eq $completeItems $totalItems -}}
+		<div 
+			hx-get="/@me/settings/import" 
+			hx-trigger="load"
+			hx-target="main" 
+			hx-swap="innerHTML"
+			hx-push-url="false">
+		</div>
+	{{- end -}}
+
+{{- end -}}
+
+<!-- Display the status message -->
+<div class="margin-top-sm text-xs text-gray">{{.Object.Message}}</div>

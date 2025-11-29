@@ -801,5 +801,14 @@
 				]}
 			]
 		}
+
+		import-progress-bar: {
+			roles:["self"]
+			steps:[
+				{do:"with-import", steps:[
+					{do:"view-html"}
+				]}
+			]
+		}
 	}
 }	

@@ -260,7 +260,7 @@ func (user User) GetJSONLD() mapof.Any {
 			"emissary:response":        exportURL + "/emissary-response",
 			"emissary:rule":            exportURL + "/emissary-rule",
 			"emissary:stream":          exportURL + "/emissary-stream",
-			"emissary:streamWidget":    exportURL + "/emissary-streamWidget",
+			"emissary:user":            exportURL + "/emissary-user",
 		},
 	}
 

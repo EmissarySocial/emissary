@@ -3,10 +3,12 @@ package consumer
 import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/ascache"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/collections"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/sherlock"
 	"github.com/benpate/turbine/queue"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -20,7 +22,7 @@ func ImportStartup(factory *service.Factory, session data.Session, user *model.U
 	// Load the actor so we can make an import plan
 	activityService := factory.ActivityStream(model.ActorTypeApplication, primitive.NilObjectID)
 	client := activityService.Client()
-	actor, err := client.Load(record.SourceID)
+	actor, err := client.Load(record.SourceID, sherlock.AsActor(), ascache.WithForceReload())
 
 	// We have already loaded the actor when starting the Import process.
 	// If we cannot load the actor now, then just abandon the whole damned thing.
@@ -45,7 +47,7 @@ func ImportStartup(factory *service.Factory, session data.Session, user *model.U
 	for _, planItem := range plan {
 
 		// Load the collection
-		collection, err := client.Load(planItem.Href)
+		collection, err := client.Load(planItem.Href, ascache.WithForceReload())
 
 		if err != nil {
 			derp.Report(derp.Wrap(err, location, "Unable to load import collection", planItem))

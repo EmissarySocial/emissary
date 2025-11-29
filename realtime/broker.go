@@ -18,7 +18,7 @@ type Broker struct {
 	clients map[primitive.ObjectID]*Client
 
 	// map of streams being watched.
-	streams map[primitive.ObjectID]map[primitive.ObjectID]*Client
+	objects map[primitive.ObjectID]map[primitive.ObjectID]*Client
 
 	// Channel that users/streams are pushed into when they change.
 	updateChannel chan Message
@@ -38,7 +38,7 @@ func NewBroker(updateChannel chan Message) Broker {
 
 	result := Broker{
 		clients:       make(map[primitive.ObjectID]*Client),
-		streams:       make(map[primitive.ObjectID]map[primitive.ObjectID]*Client),
+		objects:       make(map[primitive.ObjectID]map[primitive.ObjectID]*Client),
 		updateChannel: updateChannel,
 
 		AddClient:    make(chan *Client),
@@ -81,11 +81,11 @@ func (b *Broker) listen() {
 
 		case client := <-b.AddClient:
 
-			if _, ok := b.streams[client.StreamID]; !ok {
-				b.streams[client.StreamID] = make(map[primitive.ObjectID]*Client)
+			if _, ok := b.objects[client.StreamID]; !ok {
+				b.objects[client.StreamID] = make(map[primitive.ObjectID]*Client)
 			}
 
-			b.streams[client.StreamID][client.ClientID] = client
+			b.objects[client.StreamID][client.ClientID] = client
 			b.clients[client.ClientID] = client
 
 			// log.Println("Added new client")
@@ -93,10 +93,10 @@ func (b *Broker) listen() {
 		case client := <-b.RemoveClient:
 
 			delete(b.clients, client.ClientID)
-			delete(b.streams[client.StreamID], client.ClientID)
+			delete(b.objects[client.StreamID], client.ClientID)
 
-			if len(b.streams[client.StreamID]) == 0 {
-				delete(b.streams, client.StreamID)
+			if len(b.objects[client.StreamID]) == 0 {
+				delete(b.objects, client.StreamID)
 			}
 
 			close(client.WriteChannel)
@@ -128,7 +128,7 @@ func (b *Broker) notifySSE(message Message) {
 	}
 
 	// Send realtime messages to SSE clients
-	for _, client := range b.streams[message.ObjectID] {
+	for _, client := range b.objects[message.ObjectID] {
 		if (client.Topic == TopicAll) || (client.Topic == message.Topic) {
 			client.WriteChannel <- message.ObjectID
 		}

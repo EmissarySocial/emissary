@@ -176,6 +176,12 @@ func (service *ImportItem) LoadByID(session data.Session, itemID primitive.Objec
 	return service.Load(session, criteria, result)
 }
 
+// LoadByRemoteID loads a single Import record based on the provided UserID and RemoteID
+func (service *ImportItem) LoadByRemoteID(session data.Session, userID primitive.ObjectID, remoteID primitive.ObjectID, record *model.ImportItem) error {
+	criteria := exp.Equal("remoteId", remoteID).AndEqual("userId", userID)
+	return service.Load(session, criteria, record)
+}
+
 // LoadNext retrieves the next "NEW" ImportItem from the database
 func (service *ImportItem) LoadNext(session data.Session, userID primitive.ObjectID, importID primitive.ObjectID, result *model.ImportItem) error {
 
@@ -218,5 +224,23 @@ func (service *ImportItem) DeleteByImportID(session data.Session, userID primiti
 	}
 
 	// Success.
+	return nil
+}
+
+// MapSourceID looks up the ID of an imported record and returns the local ID
+func (service *ImportItem) mapRemoteID(session data.Session, userID primitive.ObjectID, value *primitive.ObjectID) error {
+
+	const location = "service.ImportItem.mapRemoteID"
+
+	importItem := model.NewImportItem()
+
+	// Load the ImportItem using the value as the sourceID
+	if err := service.LoadByRemoteID(session, userID, *value, &importItem); err != nil {
+		return derp.Wrap(err, location, "Unable to load Import Item", "userID: "+userID.Hex(), "remoteID: "+value.Hex())
+	}
+
+	// Set the value to the localID
+	*value = importItem.LocalID
+
 	return nil
 }

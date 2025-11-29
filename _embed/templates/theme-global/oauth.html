@@ -1,3 +1,4 @@
+{{- $name := .Name -}}
 <!DOCTYPE html>
 <html>
 <head>
@@ -20,12 +21,19 @@
 				<input type="hidden" name="state" value="{{.State}}">
 				<input type="hidden" name="response_type" value="{{.ResponseType}}">
 
-				<div class="text-lg"><b>{{.Name}}</b> is requesting permission to:</div>
+				<div class="text-lg"><b>{{$name}}</b> is requesting permission to:</div>
 
 				<div>
 					<ul>
 						{{- range .Scopes -}}
-							<li>{{.}}</li>
+							{{- if eq . "activitypub_account_portability" -}}
+								<li>
+									<div class="bold text-red">Export ALL of your profile data.</div>
+									<div>Only approve this request if you are MOVING TO <b>{{$name}}</b></div>
+								</li>
+							{{- else -}}
+								<li>{{.}}</li>
+							{{- end -}}
 						{{- end -}}
 					</ul>
 				</div>

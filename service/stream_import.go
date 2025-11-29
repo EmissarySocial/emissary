@@ -6,6 +6,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/convert"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -14,27 +15,36 @@ func (service *Stream) Import(session data.Session, importItem *model.ImportItem
 
 	const location = "service.Stream.Import"
 
+	// Unmarshal the JSON document into a new Stream
 	stream := model.NewStream()
-
-	// Unmarshal the document into the new Stream
 	if err := json.Unmarshal(document, &stream); err != nil {
 		return derp.Wrap(err, location, "Unable to parse remote document", document)
 	}
 
+	// Update mapping values in the importItem
 	importItem.RemoteID = stream.StreamID
 	importItem.LocalID = primitive.NewObjectID()
 
 	// Map values from the original Stream into the new, local Stream
-
 	stream.StreamID = importItem.LocalID    // Use the new localID for this record
-	stream.ParentID = user.UserID           // Associate the Stream with the LOCAL user
-	stream.ParentIDs[0] = user.UserID       // Associate the Stream with the LOCAL user
 	stream.AttributedTo = user.PersonLink() // Associate the Stream with the LOCAL user
 	stream.URL = ""                         // This will be recalculated by the StreamService.Save
 	stream.CreateDate = 0                   // Reset the createDate so that we will INSERT the record
 
+	// Map the ParentID
+	if err := service.importItemService.mapRemoteID(session, user.UserID, &stream.ParentID); err != nil {
+		return derp.ReportAndReturn(derp.Wrap(err, location, "Unable to map ParentID. UserID: "+user.UserID.Hex()+", ParentID: "+stream.ParentID.Hex()))
+	}
+
+	// Map ParentIDs
+	for index, parentID := range stream.ParentIDs {
+		if err := service.importItemService.mapRemoteID(session, user.UserID, &stream.ParentIDs[index]); err != nil {
+			return derp.Wrap(err, location, "Unable to map ParentIDs", "index: "+convert.String(index), "ParentID: "+parentID.Hex())
+		}
+	}
+
 	// TODO: These values must be rewritten
-	stream.IconURL = ""
+	// stream.IconURL = ""
 
 	// Save the Stream to the database
 	if err := service.Save(session, &stream, "Imported"); err != nil {

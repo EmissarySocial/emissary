@@ -43,36 +43,9 @@ func (service *Export) FindService(collectionName string) (Exportable, error) {
 	case "emissary-stream":
 		return service.factory.Stream(), nil
 
-	case "emissary-streamWidget":
+	case "emissary-user":
+		return service.factory.User(), nil
 	}
 
 	return nil, derp.NotFound(location, "Collection not found", collectionName)
 }
-
-/*
-Model Objects tied to Users:
-----------------------------
-
-Annotation
-Circle
-Conversation (still building)
-Folder
-Follower (via ParentID)
-Following
-MerchantAccount
-Message
-OutboxMessage
-Privilege
--> Identity (may require tricky merge)
-Product
-Response (still used?)
-Rule
-
-Stream (via ParentIDs)
--> Attachment
--> Mention
--> StreamWidget
-
-User (obv.)
-
-*/

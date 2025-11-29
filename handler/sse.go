@@ -31,6 +31,10 @@ func ServerSentEvent_NewReplies(ctx *steranko.Context, factory *service.Factory,
 	return serverSentEvent(ctx, factory, realtime.TopicNewReplies)
 }
 
+func ServerSentEvent_ImportProgress(ctx *steranko.Context, factory *service.Factory, _ data.Session) error {
+	return serverSentEvent(ctx, factory, realtime.TopicImportProgress)
+}
+
 // ServerSentEvent generates an echo.HandlerFunc that listens for requests for
 // SSE following.
 func serverSentEvent(ctx *steranko.Context, factory *service.Factory, topic int) error {

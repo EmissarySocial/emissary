@@ -31,9 +31,6 @@
 		<div class="margin-bottom-xl">
 			<div class="card padding" style="max-width:800px">
 				
-				{{- $import := $imports.First -}}
-				{{- $source := .ActivityStream $import.SourceID -}}
-
 				{{- if $imports.IsEmpty -}}
 
 					<div class="text-lg bold">Account Import</div>
@@ -57,133 +54,174 @@
 
 					<button hx-get="/@me/settings/import-authenticate" class="primary">Start an Import...</button>
 
-				{{- else if eq "AUTHORIZATION-ERROR" $import.StateID -}}
+				{{- else -}}
+				
+					{{- $import := $imports.First -}}
+					{{- $source := .ActivityStream $import.SourceID -}}
 
-					<div class="flex-row flex-align-start">
-						<div class="text-lg text-red">{{icon "alert"}}</div>
-						<div>
-							<div class="bold text-red text-lg">Your Import Could Not Be Started</div>
-							<div>{{$import.Message}}</div>
-							<div class="margin-top">
-								<button class="primary" hx-get="/@me/settings/import-authenticate?importId={{$import.ID}}">Edit Account</button>
-								<button hx-get="/@me/settings/import-cancel?importId={{$import.ID}}">Cancel Import</button>
+					{{- if eq "AUTHORIZATION-ERROR" $import.StateID -}}
+
+						<div class="flex-row flex-align-start">
+							<div class="text-lg text-red">{{icon "alert"}}</div>
+							<div>
+								<div class="bold text-red text-lg">Your Import Could Not Be Started</div>
+								<div>{{$import.Message}}</div>
+								<div class="margin-top">
+									<button class="primary" hx-get="/@me/settings/import-authenticate?importId={{$import.ID}}">Edit Account</button>
+									<button hx-get="/@me/settings/import-cancel?importId={{$import.ID}}">Cancel Import</button>
+								</div>
 							</div>
 						</div>
-					</div>
 
-				{{- else if eq "AUTHORIZING" $import.StateID -}}
-
-					{{template "import-source" $source}}
-
-					<div class="text-lg bold">Waiting for Approval</div>
-					<div class="margin-bottom">
-						We have not received approval from remote account yet. This can happen when you cancel
-						the authentication process on your remote account. To continue, please reconnect to 
-						the remote server.
-					</div>
-					<div>
-						<a href="{{$import.OAuthCodeURL}}" class="button primary">Approve Now</a>
-						<button hx-get="/@me/settings/import-cancel?importId={{$import.ID}}">Cancel Import</button>
-					</div>
-
-				{{- else if eq "AUTHORIZED" $import.StateID -}}
-
-					{{template "import-source" $source}}
-
-					{{- $importPlan := .ImportPlan $source -}}
-
-					{{- if $importPlan.NotEmpty -}}
-
-						<div class="text-lg text-green bold">Ready to Import</div>
-						<div class="margin-bottom">
-							Click the button below to start importing your profile information from {{$source.URL | domainOnly}}.
-							Here are all of the records we are able to import:
-						</div>
-						<table class="table">
-							{{- range $index, $item := $importPlan -}}
-								<tr>
-									<td class="text-green text-lg margin-none">{{icon $item.Icon}}</td>
-									<td>
-										<div>
-											<span class="bold margin-right-sm">{{$item.Label}}</span>
-											<span class="text-xs text-gray text-bold text-uppercase">
-												
-												{{$item.Group}}
-											</span>
-										</div>
-										<div>{{$item.Description}}</div>
-										
-									</td>
-								</tr>
-							{{- end -}}
-						</table>
-
-						<div class="margin-bottom-lg">
-							Once this process is complete, you will have the opportunity 
-							to review your imported profile data <i>before</i> permanently 
-							moving your account to this server.
-						</div>
-						<div>
-							<button hx-post="/@me/settings/import-start?importId={{$import.ID}}" hx-push-url="false" class="primary success">Start Import</button>
-							<button hx-get="/@me/settings/import-cancel?importId={{$import.ID}}" hx-push-url="false">Cancel Import</button>
-						</div>
-
-					{{- else -}}
-						<div class="text-lg bold">No Importable Data</div>
-						<div class="margin-bottom">
-							This account does not publish any data that we can import.
-							Contact your system administrator for assistance.
-						</div>
-						<div>
-							<button hx-get="/@me/settings/import-cancel?importId={{$import.ID}}">Cancel Import</button>
-						</div>
-					{{- end -}}
-
-				{{- else if eq "IMPORTING" $import.StateID -}}
-					{{template "import-source" $source}}
-
-					<div class="text-lg bold">Importing <span class="spin">{{icon "loading"}}</span></div>
-					<div class="margin-bottom">
-						We are importing records from your old profile now...
-					</div>
-
-				{{- else if eq "REVIEWING" $import.StateID -}}
+					{{- else if eq "AUTHORIZING" $import.StateID -}}
 
 						{{template "import-source" $source}}
 
-						<div class="text-lg text-green bold">Import Complete ({{$import.CompleteItems}} Records Processed)</div>
+						<div class="text-lg bold">Waiting for Approval</div>
 						<div class="margin-bottom">
-							We have finished importing records from your remote profile.  
-							Please check this work by viewing your new profile contents 
-							and reviewing the logs details.
-						</div>
-						
-						<details class="margin-bottom-lg">
-							<summary class="clickable">(View Details)</summary>
-							<div class="table">
-
-							</div>
-						</details>
-
-						<div class="text-lg bold">Next Step: Move Your Account</div>
-						<div class="margin-bottom">
-							Once you have verified that the information is correct, you can finalize this step by
-							sending a "Move" notification to your followers on the network.
+							We have not received approval from remote account yet. This can happen when you cancel
+							the authentication process on your remote account. To continue, please reconnect to 
+							the remote server.
 						</div>
 						<div>
-							<button hx-get="/@me/settings/import-move?importId={{$import.ID}}" class="primary">Move Your Account</button>
-							<button hx-get="/@me/settings/import-undo?importId={{$import.ID}}">Undo Import</button>
+							<a href="{{$import.OAuthCodeURL}}" class="button primary">Approve Now</a>
+							<button hx-get="/@me/settings/import-cancel?importId={{$import.ID}}">Cancel Import</button>
 						</div>
-						
-				{{- else -}}
-					{{template "import-source" $source}}
-					<pre>{{$import |jsonIndent}}</pre>
+
+					{{- else if eq "AUTHORIZED" $import.StateID -}}
+
+						{{template "import-source" $source}}
+
+						{{- $importPlan := .ImportPlan $source -}}
+
+						{{- if $importPlan.NotEmpty -}}
+
+							<div class="text-lg text-green bold">Ready to Import</div>
+							<div class="margin-bottom">
+								Click the button below to start importing your profile information from {{$source.URL | domainOnly}}.
+								Here are all of the records we are able to import:
+							</div>
+							<table class="table">
+								{{- range $index, $item := $importPlan -}}
+									<tr>
+										<td class="text-green text-lg margin-none">{{icon $item.Icon}}</td>
+										<td>
+											<div>
+												<span class="bold margin-right-sm">{{$item.Label}}</span>
+												<span class="text-xs text-gray text-bold text-uppercase">
+													
+													{{$item.Group}}
+												</span>
+											</div>
+											<div>{{$item.Description}}</div>
+											
+										</td>
+									</tr>
+								{{- end -}}
+							</table>
+
+							<div class="margin-bottom-lg">
+								Once this process is complete, you will have the opportunity 
+								to review your imported profile data <i>before</i> permanently 
+								moving your account to this server.
+							</div>
+							<div>
+								<button hx-post="/@me/settings/import-start?importId={{$import.ID}}" hx-push-url="false" class="primary success">Start Import</button>
+								<button hx-get="/@me/settings/import-cancel?importId={{$import.ID}}" hx-push-url="false">Cancel Import</button>
+							</div>
+
+						{{- else -}}
+							<div class="text-lg bold">No Importable Data</div>
+							<div class="margin-bottom">
+								This account does not publish any data that we can import.
+								Contact your system administrator for assistance.
+							</div>
+							<div>
+								<button hx-get="/@me/settings/import-cancel?importId={{$import.ID}}">Cancel Import</button>
+							</div>
+						{{- end -}}
+
+					{{- else if eq "IMPORTING" $import.StateID -}}
+						{{template "import-source" $source}}
+
+						<div class="text-lg bold">Importing</div>
+						<div class="margin-bottom">
+							We are importing records from your old profile now...
+						</div>
+
+						<div
+							hx-ext="sse" 
+							sse-connect="/{{$import.ImportID.Hex}}/sse/import-progress">
+
+							<div 
+								hx-get="/@me/settings/import-progress-bar?importId={{$import.ImportID.Hex}}" 
+								hx-trigger="load, sse:{{$import.ImportID.Hex}}" 
+								hx-target="this"
+								hx-swap="innerHTML"
+								hx-push-url="false">
+							</div>
+						</div>
+
+						<style>
+							#progress-bar {
+								display:flex;
+								flex-direction: row;
+								gap: 2px;
+								height:16px;
+
+								& > div {
+									height:16px;
+									flex-grow:1;
+									background-color: var(--gray20);
+								}
+
+								& > div.done {
+									background-color: var(--green70);
+								}
+							}
+						</style>
+
+					{{- else if eq "REVIEWING" $import.StateID -}}
+
+							{{template "import-source" $source}}
+
+							<div class="text-lg text-green bold">Import Complete ({{$import.CompleteItems}} Records Processed)</div>
+							<div class="margin-bottom">
+								We have finished importing records from your remote profile.  
+								Please check this work by viewing your new profile contents 
+								and reviewing the logs details.
+							</div>
+							
+							<details class="margin-bottom-lg">
+								<summary class="clickable">(View Details)</summary>
+								<div class="table">
+
+								</div>
+							</details>
+
+							<div class="text-lg bold">Next Step: Move Your Account</div>
+							<div class="margin-bottom">
+								Once you have verified that the information is correct, you can finalize this step by
+								sending a "Move" notification to your followers on the network.
+							</div>
+							<div>
+								<button hx-get="/@me/settings/import-move?importId={{$import.ID}}" class="primary">Move Your Account</button>
+								<button hx-get="/@me/settings/import-undo?importId={{$import.ID}}">Undo Import</button>
+							</div>
+							
+					{{- else -}}
+						{{template "import-source" $source}}
+						<pre>{{$import |jsonIndent}}</pre>
+					{{- end -}}
+					
 				{{- end -}}
 			</div>
 		</div>
 				
 	</div>
 
+
+	<!-- Reload page on "refreshPage" -->
 	<div 
 		hx-get="{{.URL}}" 
 		hx-trigger="refreshPage from:window" 
