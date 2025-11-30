@@ -367,7 +367,7 @@ func (w Inbox) Conversations() (QueryBuilder[model.Conversation], error) {
 
 	conversationService := w._factory.Conversation()
 
-	return NewQueryBuilder[model.Conversation](&conversationService, w._session, criteria), nil
+	return NewQueryBuilder[model.Conversation](conversationService, w._session, criteria), nil
 }
 
 func (w Inbox) Privileges() QueryBuilder[model.Privilege] {
