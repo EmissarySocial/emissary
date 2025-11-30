@@ -1,8 +1,6 @@
 package consumer
 
 import (
-	"time"
-
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
@@ -39,8 +37,6 @@ func ImportItems(factory *service.Factory, session data.Session, user *model.Use
 		if err := importService.Save(session, importRecord, "Increment counter"); err != nil {
 			derp.Report(derp.Wrap(err, location, "Unable to increment item counter"))
 		}
-
-		time.Sleep(300 * time.Millisecond)
 
 		// Requeue this task to locate the next importRecord in the chain
 		return queue.Requeue(0)
