@@ -9,11 +9,13 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Conversation defines a service that can send and receive conversation data
 type Conversation struct {
+	importItemService *ImportItem
 }
 
 // NewConversation returns a fully initialized Conversation service
@@ -26,7 +28,8 @@ func NewConversation() Conversation {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service Conversation) Refresh() {
+func (service Conversation) Refresh(importItemService *ImportItem) {
+	service.importItemService = importItemService
 }
 
 // Close stops any background processes controlled by this service
@@ -107,6 +110,32 @@ func (service Conversation) Delete(session data.Session, conversation *model.Con
 	// Delete this Conversation
 	if err := service.collection(session).HardDelete(exp.Equal("_id", conversation.ConversationID)); err != nil {
 		return derp.Wrap(err, location, "Unable to delete Conversation", conversation)
+	}
+
+	return nil
+}
+
+/******************************************
+ * Special Case Methods
+ ******************************************/
+
+// QueryIDOnly returns a slice of IDOnly records that match the provided criteria
+func (service *Conversation) QueryIDOnly(session data.Session, criteria exp.Expression, options ...option.Option) (sliceof.Object[model.IDOnly], error) {
+	result := make([]model.IDOnly, 0)
+	options = append(options, option.Fields("_id"))
+	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
+	return result, err
+}
+
+// HardDeleteByID removes a specific Conversation record, without applying any additional business rules
+func (service *Conversation) HardDeleteByID(session data.Session, userID primitive.ObjectID, conversationID primitive.ObjectID) error {
+
+	const location = "service.Conversation.HardDeleteByID"
+
+	criteria := exp.Equal("userId", userID).AndEqual("_id", conversationID)
+
+	if err := service.collection(session).HardDelete(criteria); err != nil {
+		return derp.Wrap(err, location, "Unable to delete Conversation", "userID: "+userID.Hex(), "conversationID: "+conversationID.Hex())
 	}
 
 	return nil

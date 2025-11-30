@@ -13,7 +13,7 @@ import (
 	"github.com/benpate/turbine/queue"
 )
 
-func ImportItems(factory *service.Factory, session data.Session, user *model.User, record *model.Import, args mapof.Any) queue.Result {
+func ImportItems(factory *service.Factory, session data.Session, user *model.User, importRecord *model.Import, args mapof.Any) queue.Result {
 
 	const location = "consumer.ImportItems"
 
@@ -34,26 +34,26 @@ func ImportItems(factory *service.Factory, session data.Session, user *model.Use
 		}
 
 		// Increment the CompleteItems counter and save the Import
-		record.CompleteItems = record.CompleteItems + 1
+		importRecord.CompleteItems = importRecord.CompleteItems + 1
 
-		if err := importService.Save(session, record, "Increment counter"); err != nil {
+		if err := importService.Save(session, importRecord, "Increment counter"); err != nil {
 			derp.Report(derp.Wrap(err, location, "Unable to increment item counter"))
 		}
 
 		time.Sleep(300 * time.Millisecond)
 
-		// Requeue this task to locate the next record in the chain
+		// Requeue this task to locate the next importRecord in the chain
 		return queue.Requeue(0)
 	}
 
 	// Okay. Let's do this.
 	// Load the next importable item from the database
-	err := importItemService.LoadNext(session, record.UserID, record.ImportID, &importItem)
+	err := importItemService.LoadNext(session, importRecord.UserID, importRecord.ImportID, &importItem)
 
-	// If no "next" record is found, then the import is complete
+	// If no "next" importRecord is found, then the import is complete
 	if derp.IsNotFound(err) {
-		if err := importService.SetState(session, record, model.ImportStateReviewing); err != nil {
-			return queue.Error(derp.Wrap(err, location, "Unable to update import record"))
+		if err := importService.SetState(session, importRecord, model.ImportStateReviewing); err != nil {
+			return queue.Error(derp.Wrap(err, location, "Unable to update import importRecord"))
 		}
 		return queue.Success()
 	}
@@ -66,8 +66,8 @@ func ImportItems(factory *service.Factory, session data.Session, user *model.Use
 	// Success! Let's process the next importable item
 
 	// Update the display to show the URL that we're currently working on
-	if err := importService.SetMessage(session, record, importItem.URL); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Unable to update Import status message", record))
+	if err := importService.SetMessage(session, importRecord, importItem.URL); err != nil {
+		return queue.Error(derp.Wrap(err, location, "Unable to update Import status message", importRecord))
 	}
 
 	// Get the importable service that can handle this type of item
@@ -81,7 +81,7 @@ func ImportItems(factory *service.Factory, session data.Session, user *model.Use
 	// Retrieve the document to be imported from the remote server
 	document := make([]byte, 0)
 	txn := remote.Get(importItem.URL).
-		With(options.BearerAuth(record.OAuthToken.AccessToken)).
+		With(options.BearerAuth(importRecord.OAuthToken.AccessToken)).
 		With(options.Debug()).
 		Result(&document)
 
@@ -90,8 +90,8 @@ func ImportItems(factory *service.Factory, session data.Session, user *model.Use
 	}
 
 	// Save the document to the local database
-	if err := importable.Import(session, &importItem, user, document); err != nil {
-		return closeTask(model.ImportItemStateError, "Unable to process document: "+err.Error())
+	if err := importable.Import(session, importRecord, &importItem, user, document); err != nil {
+		return closeTask(model.ImportItemStateError, "Unable to import document: "+err.Error())
 	}
 
 	// Success! Increment the complete items counter and exit the task

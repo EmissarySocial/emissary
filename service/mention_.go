@@ -186,6 +186,14 @@ func (service *Mention) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
+func (service *Mention) LoadByID(session data.Session, objectType string, objectID primitive.ObjectID, mentionID primitive.ObjectID, result *model.Mention) error {
+	criteria := exp.Equal("type", objectType).
+		AndEqual("objectId", objectID).
+		AndEqual("_id", mentionID)
+
+	return service.Load(session, criteria, result)
+}
+
 // LoadByOrigin loads an existing Mention by its type/objectID/origin URL
 func (service *Mention) LoadByOrigin(session data.Session, objectType string, objectID primitive.ObjectID, originURL string, result *model.Mention) error {
 

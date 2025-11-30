@@ -9,6 +9,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/sliceof"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -17,6 +18,7 @@ import (
 type Privilege struct {
 	circleService          *Circle
 	identityService        *Identity
+	importItemService      *ImportItem
 	merchantAccountService *MerchantAccount
 }
 
@@ -30,9 +32,10 @@ func NewPrivilege() Privilege {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Privilege) Refresh(circleService *Circle, identityService *Identity, merchantAccountService *MerchantAccount) {
+func (service *Privilege) Refresh(circleService *Circle, identityService *Identity, importItemService *ImportItem, merchantAccountService *MerchantAccount) {
 	service.circleService = circleService
 	service.identityService = identityService
+	service.importItemService = importItemService
 	service.merchantAccountService = merchantAccountService
 }
 
@@ -58,6 +61,13 @@ func (service *Privilege) Query(session data.Session, criteria exp.Expression, o
 	result := make([]model.Privilege, 0)
 	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
 
+	return result, err
+}
+
+func (service *Privilege) QueryIDOnly(session data.Session, criteria exp.Expression, options ...option.Option) (sliceof.Object[model.IDOnly], error) {
+	result := make([]model.IDOnly, 0)
+	options = append(options, option.Fields("_id"))
+	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
 	return result, err
 }
 
@@ -153,6 +163,20 @@ func (service *Privilege) Delete(session data.Session, privilege *model.Privileg
 		if err := service.circleService.RefreshMemberCounts(session, privilege.UserID, privilege.CircleID); err != nil {
 			return derp.Wrap(err, location, "Unable to refresh Circle member counts", privilege.CircleID)
 		}
+	}
+
+	return nil
+}
+
+// HardDeleteByID removes a specific Privilege record, without applying any additional business rules
+func (service *Privilege) HardDeleteByID(session data.Session, userID primitive.ObjectID, privilegeID primitive.ObjectID) error {
+
+	const location = "service.Privilege.HardDeleteByID"
+
+	criteria := exp.Equal("userId", userID).AndEqual("_id", privilegeID)
+
+	if err := service.collection(session).HardDelete(criteria); err != nil {
+		return derp.Wrap(err, location, "Unable to delete Privilege", "userID: "+userID.Hex(), "privilegeID: "+privilegeID.Hex())
 	}
 
 	return nil

@@ -20,7 +20,7 @@ type Connection struct {
 	Token        *oauth2.Token      `bson:"token"`      // OAuth2 Token (if necessary)
 	Active       bool               `bson:"active"`     // Is this credential active?
 
-	journal.Journal `bson:",inline"`
+	journal.Journal `json:"-" bson:",inline"`
 }
 
 // NewConnection returns a fully initialized Connection object.

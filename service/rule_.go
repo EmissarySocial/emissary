@@ -11,6 +11,7 @@ import (
 	dt "github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/turbine/queue"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -18,10 +19,11 @@ import (
 
 // Rule defines a service that manages all content rules created and imported by Users.
 type Rule struct {
-	factory       *Factory
-	outboxService *Outbox
-	userService   *User
-	host          string
+	factory           *Factory
+	importItemService *ImportItem
+	outboxService     *Outbox
+	userService       *User
+	host              string
 
 	queue *queue.Queue
 }
@@ -38,7 +40,8 @@ func NewRule(factory *Factory) Rule {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Rule) Refresh(outboxService *Outbox, userService *User, queue *queue.Queue, host string) {
+func (service *Rule) Refresh(importItemService *ImportItem, outboxService *Outbox, userService *User, queue *queue.Queue, host string) {
+	service.importItemService = importItemService
 	service.outboxService = outboxService
 	service.userService = userService
 	service.queue = queue
@@ -176,6 +179,32 @@ func (service *Rule) Delete(session data.Session, rule *model.Rule, note string)
 
 	if rule.IsPublic {
 		go derp.Report(service.unpublish(session, *rule))
+	}
+
+	return nil
+}
+
+/******************************************
+ * Special Case Methods
+ ******************************************/
+
+// QueryIDOnly returns a slice of IDOnly records that match the provided criteria
+func (service *Rule) QueryIDOnly(session data.Session, criteria exp.Expression, options ...option.Option) (sliceof.Object[model.IDOnly], error) {
+	result := make([]model.IDOnly, 0)
+	options = append(options, option.Fields("_id"))
+	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
+	return result, err
+}
+
+// HardDeleteByID removes a specific Rule record, without applying any additional business rules
+func (service *Rule) HardDeleteByID(session data.Session, userID primitive.ObjectID, ruleID primitive.ObjectID) error {
+
+	const location = "service.Rule.HardDeleteByID"
+
+	criteria := exp.Equal("userId", userID).AndEqual("_id", ruleID)
+
+	if err := service.collection(session).HardDelete(criteria); err != nil {
+		return derp.Wrap(err, location, "Unable to delete Rule", "userID: "+userID.Hex(), "ruleID: "+ruleID.Hex())
 	}
 
 	return nil

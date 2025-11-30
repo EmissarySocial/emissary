@@ -16,13 +16,13 @@ type MerchantAccount struct {
 	Type                 string             `bson:"type"`                 // Internal identifier of the payment processor (STRIPE, PAYPAL, etc.)
 	Name                 string             `bson:"name"`                 // Human-friendly name for the payment processor account
 	Description          string             `bson:"description"`          // Human-friendly Description of the payment processor account
-	Vault                Vault              `bson:"vault" json:"-"`       // Vault data that is stored in the database (encrypted)
+	Vault                Vault              `bson:"vault"`                // Vault data that is stored in the database (encrypted)
 	Plaintext            mapof.String       `bson:"plaintext"`            // Plaintext data that is stored in the database (not encrypted)
 	APIKeyExpirationDate int64              `bson:"apiKeyExpirationDate"` // Expiration date of the API key
 	LiveMode             bool               `bson:"liveMode"`             // True if this is a live account, false if it is a test/sandbox account
 
 	// Embed journal to track changes
-	journal.Journal `bson:",inline"`
+	journal.Journal `json:"-" bson:",inline"`
 }
 
 // NewMerchantAccount returns a fully initialized MerchantAccount object

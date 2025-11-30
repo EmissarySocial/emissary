@@ -465,6 +465,16 @@ func (stream Stream) GetWebhookData() mapof.Any {
 	}
 }
 
+func (stream *Stream) UpdateAttachmentURLs(remoteURL string, localURL string) bool {
+
+	if stream.IconURL == remoteURL {
+		stream.IconURL = localURL
+		return true
+	}
+
+	return false
+}
+
 // Update sets all values in this Stream to match the values in the provided Stream
 func (stream *Stream) Update(other Stream) {
 	stream.StreamID = other.StreamID

@@ -43,11 +43,18 @@ const FollowerMethodWebSub = "WEBSUB"
 // receiving updates from the Stream
 const FollowerStateActive = "ACTIVE"
 
-// FollowerStatePending represents an inactive Follower who has yet
-// to confirm their subscription status (e.g. via email confirmation)
-const FollowerStatePending = "PENDING"
-
 // FollowerStateDeleted represents an inacti e Follower record that has been
 // deleted.  The canonical value for this is still the `DeleteDate` field,
 // but this value is also used for convenience.
 const FollowerStateDeleted = "DELETED"
+
+// FollowerStateImportPending represents a Follower who has followed
+// this User on a previous server, and whose record has been Imported.
+// This Follower will not receive notifications until the Import is
+// finalized with a `Move` announcement, at which point it will be up
+// to the Follower's server to re-follow the newly imported account.
+const FollowerStateImportPending = "IMPORT-PENDING"
+
+// FollowerStatePending represents an inactive Follower who has yet
+// to confirm their subscription status (e.g. via email confirmation)
+const FollowerStatePending = "PENDING"

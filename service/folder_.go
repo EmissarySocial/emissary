@@ -11,15 +11,17 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Folder manages all interactions with a user's Folder
 type Folder struct {
-	domainService    *Domain
-	followingService *Following
-	inboxService     *Inbox
-	themeService     *Theme
+	domainService     *Domain
+	followingService  *Following
+	inboxService      *Inbox
+	importItemService *ImportItem
+	themeService      *Theme
 }
 
 // NewFolder returns a fully populated Folder service
@@ -33,9 +35,10 @@ func NewFolder() Folder {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Folder) Refresh(domainService *Domain, followingService *Following, inboxService *Inbox, themeService *Theme) {
+func (service *Folder) Refresh(domainService *Domain, followingService *Following, importItemService *ImportItem, inboxService *Inbox, themeService *Theme) {
 	service.domainService = domainService
 	service.followingService = followingService
+	service.importItemService = importItemService
 	service.inboxService = inboxService
 	service.themeService = themeService
 }
@@ -137,6 +140,32 @@ func (service *Folder) Delete(session data.Session, folder *model.Folder, commen
 	// Delete any followings
 	if err := service.followingService.DeleteByFolder(session, folder.UserID, folder.FolderID, comment); err != nil {
 		return derp.Wrap(err, location, "Unable to delete related `Following` records.")
+	}
+
+	return nil
+}
+
+/******************************************
+ * Special Case Methods
+ ******************************************/
+
+// QueryIDOnly returns a slice of IDOnly records that match the provided criteria
+func (service *Folder) QueryIDOnly(session data.Session, criteria exp.Expression, options ...option.Option) (sliceof.Object[model.IDOnly], error) {
+	result := make([]model.IDOnly, 0)
+	options = append(options, option.Fields("_id"))
+	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
+	return result, err
+}
+
+// HardDeleteByID removes a specific Folder record, without applying any additional business rules
+func (service *Folder) HardDeleteByID(session data.Session, userID primitive.ObjectID, folderID primitive.ObjectID) error {
+
+	const location = "service.Folder.HardDeleteByID"
+
+	criteria := exp.Equal("userId", userID).AndEqual("_id", folderID)
+
+	if err := service.collection(session).HardDelete(criteria); err != nil {
+		return derp.Wrap(err, location, "Unable to delete Folder", "userID: "+userID.Hex(), "folderID: "+folderID.Hex())
 	}
 
 	return nil

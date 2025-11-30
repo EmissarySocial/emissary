@@ -12,23 +12,25 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/turbine/queue"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Outbox manages all Outbox records for a User.  This includes Outbox and Outbox
 type Outbox struct {
-	factory         *Factory
-	followerService *Follower
-	identityService *Identity
-	ruleService     *Rule
-	streamService   *Stream
-	templateService *Template
-	userService     *User
-	domainEmail     *DomainEmail
-	lock            *sync.Mutex
-	queue           *queue.Queue
-	host            string
+	factory           *Factory
+	followerService   *Follower
+	identityService   *Identity
+	importItemService *ImportItem
+	ruleService       *Rule
+	streamService     *Stream
+	templateService   *Template
+	userService       *User
+	domainEmail       *DomainEmail
+	lock              *sync.Mutex
+	queue             *queue.Queue
+	host              string
 }
 
 // NewOutbox returns a fully populated Outbox service
@@ -44,9 +46,10 @@ func NewOutbox(factory *Factory) Outbox {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Outbox) Refresh(followerService *Follower, identityService *Identity, ruleService *Rule, streamService *Stream, templateService *Template, userService *User, domainEmail *DomainEmail, queue *queue.Queue, host string) {
+func (service *Outbox) Refresh(followerService *Follower, identityService *Identity, importItemService *ImportItem, ruleService *Rule, streamService *Stream, templateService *Template, userService *User, domainEmail *DomainEmail, queue *queue.Queue, host string) {
 	service.followerService = followerService
 	service.identityService = identityService
+	service.importItemService = importItemService
 	service.ruleService = ruleService
 	service.streamService = streamService
 	service.templateService = templateService
@@ -138,6 +141,32 @@ func (service *Outbox) cacheMessage(outboxMessage *model.OutboxMessage) {
 	_, err := activityService.Client().Load(outboxMessage.ObjectID, ascache.WithForceReload())
 	derp.Report(err)
 
+}
+
+/******************************************
+ * Special Case Methods
+ ******************************************/
+
+// QueryIDOnly returns a slice of IDOnly records that match the provided criteria
+func (service *Outbox) QueryIDOnly(session data.Session, criteria exp.Expression, options ...option.Option) (sliceof.Object[model.IDOnly], error) {
+	result := make([]model.IDOnly, 0)
+	options = append(options, option.Fields("_id"))
+	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
+	return result, err
+}
+
+// HardDeleteByID removes a specific Folder record, without applying any additional business rules
+func (service *Outbox) HardDeleteByID(session data.Session, userID primitive.ObjectID, outboxMessageID primitive.ObjectID) error {
+
+	const location = "service.Outbox.HardDeleteByID"
+
+	criteria := exp.Equal("actorId", userID).AndEqual("_id", outboxMessageID)
+
+	if err := service.collection(session).HardDelete(criteria); err != nil {
+		return derp.Wrap(err, location, "Unable to delete Outbox Message", "userID: "+userID.Hex(), "outboxMessageID: "+outboxMessageID.Hex())
+	}
+
+	return nil
 }
 
 // Delete removes an Outbox from the database (virtual delete)
@@ -267,8 +296,8 @@ func (service *Outbox) RangeByObjectID(session data.Session, actorType string, a
 	return service.Range(session, criteria)
 }
 
-func (service *Outbox) LoadByID(session data.Session, outboxMessageID primitive.ObjectID, outboxMessage *model.OutboxMessage) error {
-	criteria := exp.Equal("_id", outboxMessageID)
+func (service *Outbox) LoadByID(session data.Session, userID primitive.ObjectID, outboxMessageID primitive.ObjectID, outboxMessage *model.OutboxMessage) error {
+	criteria := exp.Equal("actorId", userID).AndEqual("_id", outboxMessageID)
 	return service.Load(session, criteria, outboxMessage)
 }
 

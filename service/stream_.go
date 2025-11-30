@@ -39,6 +39,7 @@ type Stream struct {
 	domainService     *Domain
 	draftService      *StreamDraft
 	geocodeService    GeocodeAddress
+	importService     *Import
 	importItemService *ImportItem
 	keyService        *EncryptionKey
 	outboxService     *Outbox
@@ -66,22 +67,23 @@ func NewStream(factory *Factory) Stream {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Stream) Refresh(circleService *Circle, domainService *Domain, searchTagService *SearchTag, templateService *Template, draftService *StreamDraft, outboxService *Outbox, attachmentService *Attachment, contentService *Content, keyService *EncryptionKey, followerService *Follower, importItemService *ImportItem, ruleService *Rule, userService *User, webhookService *Webhook, geocodeService GeocodeAddress, mediaserver mediaserver.MediaServer, queue *queue.Queue, sseUpdateChannel chan<- realtime.Message, host string) {
+func (service *Stream) Refresh(attachmentService *Attachment, circleService *Circle, contentService *Content, domainService *Domain, draftService *StreamDraft, followerService *Follower, geocodeService GeocodeAddress, importService *Import, importItemService *ImportItem, keyService *EncryptionKey, outboxService *Outbox, ruleService *Rule, searchTagService *SearchTag, templateService *Template, userService *User, webhookService *Webhook, mediaserver mediaserver.MediaServer, queue *queue.Queue, sseUpdateChannel chan<- realtime.Message, host string) {
+	service.attachmentService = attachmentService
 	service.circleService = circleService
+	service.contentService = contentService
 	service.domainService = domainService
+	service.draftService = draftService
+	service.followerService = followerService
+	service.geocodeService = geocodeService
+	service.importService = importService
+	service.importItemService = importItemService
+	service.keyService = keyService
+	service.outboxService = outboxService
+	service.ruleService = ruleService
 	service.searchTagService = searchTagService
 	service.templateService = templateService
-	service.draftService = draftService
-	service.outboxService = outboxService
-	service.attachmentService = attachmentService
-	service.contentService = contentService
-	service.keyService = keyService
-	service.followerService = followerService
-	service.importItemService = importItemService
-	service.ruleService = ruleService
 	service.userService = userService
 	service.webhookService = webhookService
-	service.geocodeService = geocodeService
 	service.mediaserver = mediaserver
 	service.queue = queue
 

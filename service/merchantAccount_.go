@@ -23,10 +23,11 @@ import (
 
 // MerchantAccount defines a service that manages all content merchantAccounts created and imported by Users.
 type MerchantAccount struct {
+	circleService     *Circle
 	connectionService *Connection
 	jwtService        *JWT
-	circleService     *Circle
 	identityService   *Identity
+	importItemService *ImportItem
 	privilegeService  *Privilege
 	productService    *Product
 	userService       *User
@@ -44,11 +45,12 @@ func NewMerchantAccount() MerchantAccount {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *MerchantAccount) Refresh(circleService *Circle, connectionService *Connection, jwtService *JWT, identityService *Identity, privilegeService *Privilege, productService *Product, userService *User, masterKey string, host string) {
+func (service *MerchantAccount) Refresh(circleService *Circle, connectionService *Connection, identityService *Identity, importItemService *ImportItem, jwtService *JWT, privilegeService *Privilege, productService *Product, userService *User, masterKey string, host string) {
 	service.circleService = circleService
 	service.connectionService = connectionService
-	service.jwtService = jwtService
 	service.identityService = identityService
+	service.importItemService = importItemService
+	service.jwtService = jwtService
 	service.privilegeService = privilegeService
 	service.productService = productService
 	service.userService = userService
@@ -154,6 +156,17 @@ func (service *MerchantAccount) Delete(session data.Session, merchantAccount *mo
 	return nil
 }
 
+// HardDeleteByID removes an MerchantAccount from the database
+func (service *MerchantAccount) HardDeleteByID(session data.Session, userID primitive.ObjectID, merchantAccountID primitive.ObjectID) error {
+
+	criteria := exp.Equal("userId", userID).AndEqual("_id", merchantAccountID)
+	if err := service.collection(session).HardDelete(criteria); err != nil {
+		return derp.Wrap(err, "service.MerchantAccount.Delete", "Unable to hard delete MerchantAccount", "userID: "+userID.Hex(), "merchantAccountID: "+merchantAccountID.Hex())
+	}
+
+	return nil
+}
+
 /******************************************
  * Model Service Methods
  ******************************************/
@@ -232,6 +245,13 @@ func (service *MerchantAccount) AvailableMerchantAccounts(session data.Session) 
 
 	// Done.
 	return result, nil
+}
+
+func (service *MerchantAccount) QueryIDOnly(session data.Session, criteria exp.Expression, options ...option.Option) (sliceof.Object[model.IDOnly], error) {
+	result := make([]model.IDOnly, 0)
+	options = append(options, option.Fields("_id"))
+	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
+	return result, err
 }
 
 func (service *MerchantAccount) QueryByUser(session data.Session, userID primitive.ObjectID, options ...option.Option) (sliceof.Object[model.MerchantAccount], error) {

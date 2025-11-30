@@ -25,21 +25,46 @@ func (service *Export) FindService(collectionName string) (Exportable, error) {
 	case "content":
 	case "following":
 	case "blocked":
+
 	case "emissary-annotation":
-	case "emissary-attachment":
+		return service.factory.Annotation(), nil
+
 	case "emissary-circle":
+		return service.factory.Circle(), nil
+
 	case "emissary-conversation":
+		return service.factory.Conversation(), nil
+
 	case "emissary-folder":
+		return service.factory.Folder(), nil
+
 	case "emissary-follower":
+		return service.factory.Follower(), nil
+
 	case "emissary-following":
-	case "emissary-mention":
+		return service.factory.Following(), nil
+
+	case "emissary-inboxMessage":
+		return service.factory.Inbox(), nil
+
 	case "emissary-merchantAccount":
-	case "emissary-message":
+		return service.factory.MerchantAccount(), nil
+
 	case "emissary-outboxMessage":
+		return service.factory.Outbox(), nil
+
 	case "emissary-privilege":
+		return service.factory.Privilege(), nil
+
 	case "emissary-product":
+		return service.factory.Product(), nil
+
 	case "emissary-response":
+		return service.factory.Response(), nil
+
 	case "emissary-rule":
+		return service.factory.Rule(), nil
+
 	case "emissary-stream":
 		return service.factory.Stream(), nil
 

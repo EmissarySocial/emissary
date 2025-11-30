@@ -7,12 +7,12 @@ import (
 
 // Annotation is a grouping of people that is created/defined by a single UserID.
 type Annotation struct {
-	AnnotationID primitive.ObjectID `json:"annotationId"    bson:"_id"` // Unique identifier assigned by the database
-	UserID       primitive.ObjectID `json:"userId"      bson:"userId"`  // UserID of owner of this Annotation
-	URL          string             `json:"url"         bson:"url"`     // URL of this Annotation.
-	Name         string             `json:"name"        bson:"name"`    // Name of the document being annotated.
-	Icon         string             `json:"icon"        bson:"icon"`    // Icon of the document being annotated.
-	Content      string             `json:"content"     bson:"content"` // Content of this Annotation
+	AnnotationID primitive.ObjectID `bson:"_id"`     // Unique identifier assigned by the database
+	UserID       primitive.ObjectID `bson:"userId"`  // UserID of owner of this Annotation
+	URL          string             `bson:"url"`     // URL of this Annotation.
+	Name         string             `bson:"name"`    // Name of the document being annotated.
+	Icon         string             `bson:"icon"`    // Icon of the document being annotated.
+	Content      string             `bson:"content"` // Content of this Annotation
 
 	journal.Journal `json:"-" bson:",inline"`
 }

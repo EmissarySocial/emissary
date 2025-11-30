@@ -35,6 +35,27 @@ type AccessLister interface {
 	RolesToPrivilegeIDs(...string) Permissions
 }
 
+// ActivityPubURLGetter wraps the ActivityPubURL and Created methods. It is used
+// when creating ActivityPub Collections
+type ActivityPubURLGetter interface {
+
+	// ActivityPubURL returns the URL the contains the ActivityStreams Object for this record
+	ActivityPubURL() string
+
+	// Created returns the CreateDate for this record
+	Created() int64
+}
+
+// AttachmentURLUpdater wraps the `UpdateAttachmentURLs` method, which replaces partial
+// URLs containing attachmentIDs with new IDs.  This is used by the import process to map
+// old Attachments into their new locations
+type AttachmentURLUpdater interface {
+
+	// UpdateAttachmentURLs replaces partial URL strings with new values.
+	// It returns TRUE if any part of the original has been changed.
+	UpdateAttachmentURLs(string, string) bool
+}
+
 // FieldLister wraps the Files() method, which provides the list of fields
 // to query from a database
 type FieldLister interface {
@@ -47,11 +68,6 @@ type FieldLister interface {
 // which lets a model object return its data formatted in JSON-LD
 type JSONLDGetter interface {
 	GetJSONLD() mapof.Any
-	Created() int64
-}
-
-type ActivityPubURLGetter interface {
-	ActivityPubURL() string
 	Created() int64
 }
 

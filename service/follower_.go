@@ -13,6 +13,7 @@ import (
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/sherlock"
 	"github.com/benpate/turbine/queue"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -21,13 +22,14 @@ import (
 // Follower defines a service that tracks the (possibly external) accounts that are followers of an internal User
 
 type Follower struct {
-	factory       *Factory
-	userService   *User
-	ruleService   *Rule
-	streamService *Stream
-	domainEmail   *DomainEmail
-	queue         *queue.Queue // The server-wide queue for background tasks
-	host          string       // The HOST for this domain (protocol + hostname)
+	factory           *Factory
+	domainEmail       *DomainEmail
+	importItemService *ImportItem
+	ruleService       *Rule
+	streamService     *Stream
+	userService       *User
+	queue             *queue.Queue // The server-wide queue for background tasks
+	host              string       // The HOST for this domain (protocol + hostname)
 }
 
 // NewFollower returns a fully initialized Follower service
@@ -42,11 +44,12 @@ func NewFollower(factory *Factory) Follower {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Follower) Refresh(userService *User, streamService *Stream, ruleService *Rule, domainEmail *DomainEmail, queue *queue.Queue, host string) {
-	service.userService = userService
-	service.streamService = streamService
-	service.ruleService = ruleService
+func (service *Follower) Refresh(domainEmail *DomainEmail, importItemService *ImportItem, ruleService *Rule, streamService *Stream, userService *User, queue *queue.Queue, host string) {
 	service.domainEmail = domainEmail
+	service.importItemService = importItemService
+	service.ruleService = ruleService
+	service.streamService = streamService
+	service.userService = userService
 	service.queue = queue
 	service.host = host
 }
@@ -167,6 +170,32 @@ func (service *Follower) Delete(session data.Session, follower *model.Follower, 
 }
 
 /******************************************
+ * Special Case Methods
+ ******************************************/
+
+// QueryIDOnly returns a slice of IDOnly records that match the provided criteria
+func (service *Follower) QueryIDOnly(session data.Session, criteria exp.Expression, options ...option.Option) (sliceof.Object[model.IDOnly], error) {
+	result := make([]model.IDOnly, 0)
+	options = append(options, option.Fields("_id"))
+	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
+	return result, err
+}
+
+// HardDeleteByID removes a specific Follower record, without applying any additional business rules
+func (service *Follower) HardDeleteByID(session data.Session, userID primitive.ObjectID, followerID primitive.ObjectID) error {
+
+	const location = "service.Follower.HardDeleteByID"
+
+	criteria := exp.Equal("userId", userID).AndEqual("_id", followerID)
+
+	if err := service.collection(session).HardDelete(criteria); err != nil {
+		return derp.Wrap(err, location, "Unable to delete Follower", "userID: "+userID.Hex(), "followerID: "+followerID.Hex())
+	}
+
+	return nil
+}
+
+/******************************************
  * Model Service Methods
  ******************************************/
 
@@ -253,13 +282,20 @@ func (service *Follower) LoadOrCreate(session data.Session, parentID primitive.O
 	return result, derp.Wrap(err, "service.Follower.LoadOrCreate", "Unable to load Follower", parentID, actorID)
 }
 
+// LoadByID loads a follower using the FollowerID
+func (service *Follower) LoadByID(session data.Session, parentID primitive.ObjectID, followerID primitive.ObjectID, follower *model.Follower) error {
+
+	// If the token is an ObjectID then load the follower by FollowerID
+	criteria := exp.Equal("_id", followerID).AndEqual("parentId", parentID)
+	return service.Load(session, criteria, follower)
+}
+
 // LoadByToken loads a follower using either the FollowerID (if an ObjectID is passed) or the Actor's ProfileURL
 func (service *Follower) LoadByToken(session data.Session, parentID primitive.ObjectID, token string, follower *model.Follower) error {
 
 	// If the token is an ObjectID then load the follower by FollowerID
 	if followerID, err := primitive.ObjectIDFromHex(token); err == nil {
-		criteria := exp.Equal("_id", followerID).AndEqual("parentId", parentID)
-		return service.Load(session, criteria, follower)
+		return service.LoadByID(session, parentID, followerID, follower)
 	}
 
 	// Otherwise, load the Follower by the Actor's ProfileURL

@@ -74,7 +74,7 @@ func GetOutboxActivity(ctx *steranko.Context, factory *service.Factory, session 
 	// Load the Outbox Message
 	outboxService := factory.Outbox()
 	outboxMessage := model.NewOutboxMessage()
-	if err := outboxService.LoadByID(session, outboxMessageID, &outboxMessage); err != nil {
+	if err := outboxService.LoadByID(session, user.UserID, outboxMessageID, &outboxMessage); err != nil {
 		return derp.Wrap(err, location, "Unable to load outbox message", outboxMessageID)
 	}
 

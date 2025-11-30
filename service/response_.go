@@ -12,15 +12,17 @@ import (
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Response defines a service that can send and receive response data
 type Response struct {
-	inboxService  *Inbox
-	outboxService *Outbox
-	userService   *User
-	host          string
+	importItemService *ImportItem
+	inboxService      *Inbox
+	outboxService     *Outbox
+	userService       *User
+	host              string
 }
 
 // NewResponse returns a fully initialized Response service
@@ -33,7 +35,8 @@ func NewResponse() Response {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Response) Refresh(inboxService *Inbox, outboxService *Outbox, userService *User, host string) {
+func (service *Response) Refresh(importItemService *ImportItem, inboxService *Inbox, outboxService *Outbox, userService *User, host string) {
+	service.importItemService = importItemService
 	service.inboxService = inboxService
 	service.outboxService = outboxService
 	service.userService = userService
@@ -139,6 +142,32 @@ func (service *Response) Delete(session data.Session, response *model.Response, 
 }
 
 /******************************************
+ * Special Case Methods
+ ******************************************/
+
+// QueryIDOnly returns a slice of IDOnly documents that match the provided criteria
+func (service *Response) QueryIDOnly(session data.Session, criteria exp.Expression, options ...option.Option) (sliceof.Object[model.IDOnly], error) {
+	result := make([]model.IDOnly, 0)
+	options = append(options, option.Fields("_id"))
+	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
+	return result, err
+}
+
+// HardDeleteByID removes a specific Response record, without applying any additional business rules
+func (service *Response) HardDeleteByID(session data.Session, userID primitive.ObjectID, responseID primitive.ObjectID) error {
+
+	const location = "service.Response.HardDeleteByID"
+
+	criteria := exp.Equal("userId", userID).AndEqual("_id", responseID)
+
+	if err := service.collection(session).HardDelete(criteria); err != nil {
+		return derp.Wrap(err, location, "Unable to delete Response", "userID: "+userID.Hex(), "responseID: "+responseID.Hex())
+	}
+
+	return nil
+}
+
+/******************************************
  * Generic Data Methods
  ******************************************/
 
@@ -215,8 +244,9 @@ func (service *Response) QueryByObjectAndDate(session data.Session, objectID str
 	return service.Query(session, criteria, options...)
 }
 
-func (service *Response) LoadByID(session data.Session, responseID primitive.ObjectID, response *model.Response) error {
-	return service.Load(session, exp.Equal("_id", responseID), response)
+func (service *Response) LoadByID(session data.Session, userID primitive.ObjectID, responseID primitive.ObjectID, response *model.Response) error {
+	criteria := exp.Equal("userId", userID).AndEqual("_id", responseID)
+	return service.Load(session, criteria, response)
 }
 
 func (service *Response) RangeByUserID(session data.Session, userID primitive.ObjectID, options ...option.Option) (iter.Seq[model.Response], error) {

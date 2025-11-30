@@ -44,7 +44,7 @@ type Exportable interface {
 
 // Importable is a service that can import records
 type Importable interface {
-	Import(data.Session, *model.ImportItem, *model.User, []byte) error
+	Import(data.Session, *model.Import, *model.ImportItem, *model.User, []byte) error
 	UndoImport(data.Session, *model.ImportItem) error
 }
 

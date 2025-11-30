@@ -16,7 +16,8 @@ import (
 
 // Circle manages all interactions with the Circle collection
 type Circle struct {
-	privilegeService *Privilege
+	importItemService *ImportItem
+	privilegeService  *Privilege
 }
 
 // NewCircle returns a fully populated Circle service
@@ -29,7 +30,8 @@ func NewCircle() Circle {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Circle) Refresh(privilegeService *Privilege) {
+func (service *Circle) Refresh(importItemService *ImportItem, privilegeService *Privilege) {
+	service.importItemService = importItemService
 	service.privilegeService = privilegeService
 }
 
@@ -51,6 +53,7 @@ func (service *Circle) Count(session data.Session, criteria exp.Expression) (int
 	return service.collection(session).Count(notDeleted(criteria))
 }
 
+// Query returns a slice of Circles that match the provided criteria
 func (service *Circle) Query(session data.Session, criteria exp.Expression, options ...option.Option) ([]model.Circle, error) {
 	result := make([]model.Circle, 0)
 	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
@@ -111,6 +114,32 @@ func (service *Circle) Delete(session data.Session, circle *model.Circle, note s
 	}
 
 	// TODO: HIGH: Also remove connections to Streams that still use this Circle
+
+	return nil
+}
+
+/******************************************
+ * Special Case Methods
+ ******************************************/
+
+// QueryIDOnly returns a slice of IDOnly records that match the provided criteria
+func (service *Circle) QueryIDOnly(session data.Session, criteria exp.Expression, options ...option.Option) (sliceof.Object[model.IDOnly], error) {
+	result := make([]model.IDOnly, 0)
+	options = append(options, option.Fields("_id"))
+	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
+	return result, err
+}
+
+// HardDeleteByID removes a specific Circle record, without applying any additional business rules
+func (service *Circle) HardDeleteByID(session data.Session, userID primitive.ObjectID, circleID primitive.ObjectID) error {
+
+	const location = "service.Circle.HardDeleteByID"
+
+	criteria := exp.Equal("userId", userID).AndEqual("_id", circleID)
+
+	if err := service.collection(session).HardDelete(criteria); err != nil {
+		return derp.Wrap(err, location, "Unable to delete Circle", "userID: "+userID.Hex(), "circleID: "+circleID.Hex())
+	}
 
 	return nil
 }

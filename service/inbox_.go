@@ -12,16 +12,18 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Inbox manages all Inbox records for a User.  This includes Inbox and Outbox
 type Inbox struct {
-	ruleService   *Rule
-	folderService *Folder
-	host          string
-	counter       int
-	mutex         *sync.Mutex
+	importItemService *ImportItem
+	folderService     *Folder
+	ruleService       *Rule
+	host              string
+	counter           int
+	mutex             *sync.Mutex
 }
 
 // NewInbox returns a fully populated Inbox service
@@ -36,9 +38,10 @@ func NewInbox() Inbox {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Inbox) Refresh(ruleService *Rule, folderService *Folder, host string) {
-	service.ruleService = ruleService
+func (service *Inbox) Refresh(importItemService *ImportItem, folderService *Folder, ruleService *Rule, host string) {
+	service.importItemService = importItemService
 	service.folderService = folderService
+	service.ruleService = ruleService
 	service.host = host
 }
 
@@ -153,6 +156,32 @@ func (service *Inbox) DeleteMany(session data.Session, criteria exp.Expression, 
 		if err := service.Delete(session, &message, note); err != nil {
 			return derp.Wrap(err, "service.Inbox.DeleteMany", "Unable to delete message", message)
 		}
+	}
+
+	return nil
+}
+
+/******************************************
+ * Special Case Methods
+ ******************************************/
+
+// QueryIDOnly returns a slice of IDOnly records that match the provided criteria
+func (service *Inbox) QueryIDOnly(session data.Session, criteria exp.Expression, options ...option.Option) (sliceof.Object[model.IDOnly], error) {
+	result := make([]model.IDOnly, 0)
+	options = append(options, option.Fields("_id"))
+	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
+	return result, err
+}
+
+// HardDeleteByID removes a specific Inbox record, without applying any additional business rules
+func (service *Inbox) HardDeleteByID(session data.Session, userID primitive.ObjectID, messageID primitive.ObjectID) error {
+
+	const location = "service.Inbox.HardDeleteByID"
+
+	criteria := exp.Equal("userId", userID).AndEqual("_id", messageID)
+
+	if err := service.collection(session).HardDelete(criteria); err != nil {
+		return derp.Wrap(err, location, "Unable to delete Inbox", "userID: "+userID.Hex(), "messageID: "+messageID.Hex())
 	}
 
 	return nil

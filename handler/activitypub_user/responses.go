@@ -77,7 +77,7 @@ func GetResponse(ctx *steranko.Context, factory *service.Factory, session data.S
 	responseService := factory.Response()
 	response := model.NewResponse()
 
-	if err := responseService.LoadByID(session, responseID, &response); err != nil {
+	if err := responseService.LoadByID(session, user.UserID, responseID, &response); err != nil {
 		return derp.Wrap(err, location, "Unable to load response")
 	}
 

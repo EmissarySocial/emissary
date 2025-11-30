@@ -17,6 +17,12 @@ const FollowingStatusNew = "NEW"
 // FollowingStatusLoading represents a following that is being loaded for the first time
 const FollowingStatusLoading = "LOADING"
 
+// FollowingStatusImportPending represents a following that has been imported from a remote server,
+// but the import has not been finalized.  This is a placeholder record until the user
+// finalized the migration with a "Move" announcement.  At that point, the server will send
+// a "Follow" request to the
+const FollowingStatusImportPending = "IMPORT-PENDING"
+
 // FollowingStatusSuccess represents a following that has successfully loaded
 const FollowingStatusSuccess = "SUCCESS"
 

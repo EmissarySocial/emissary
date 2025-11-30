@@ -29,7 +29,7 @@ type Factory interface {
 	Attachment() *service.Attachment
 	Circle() *service.Circle
 	Connection() *service.Connection
-	Conversation() service.Conversation
+	Conversation() *service.Conversation
 	Export() *service.Export
 	Folder() *service.Folder
 	Following() *service.Following

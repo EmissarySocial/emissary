@@ -21,7 +21,7 @@ type Product struct {
 	Icon              string             `bson:"icon"`              // The icon of the Product as defined by the Merchant Account
 	AdminHref         string             `bson:"adminHref"`         // URL to the Merchant Account's admin page for this Product
 
-	journal.Journal `bson:",inline"`
+	journal.Journal `json:"-" bson:",inline"`
 }
 
 func NewProduct() Product {

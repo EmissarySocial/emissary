@@ -13,6 +13,7 @@ import (
 
 // Product manages all interactions with the Product collection
 type Product struct {
+	importItemService      *ImportItem
 	merchantAccountService *MerchantAccount
 }
 
@@ -26,7 +27,8 @@ func NewProduct() Product {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Product) Refresh(merchantAccountService *MerchantAccount) {
+func (service *Product) Refresh(importItemService *ImportItem, merchantAccountService *MerchantAccount) {
+	service.importItemService = importItemService
 	service.merchantAccountService = merchantAccountService
 }
 
@@ -48,6 +50,7 @@ func (service *Product) Count(session data.Session, criteria exp.Expression) (in
 	return service.collection(session).Count(notDeleted(criteria))
 }
 
+// Query returns a slice of Products that match the provided criteria
 func (service *Product) Query(session data.Session, criteria exp.Expression, options ...option.Option) ([]model.Product, error) {
 	result := make([]model.Product, 0)
 	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
@@ -91,6 +94,32 @@ func (service *Product) Delete(session data.Session, product *model.Product, not
 
 	if err := service.collection(session).Delete(product, note); err != nil {
 		return derp.Wrap(err, "service.Product.Delete", "Error deleting Product", product, note)
+	}
+
+	return nil
+}
+
+/******************************************
+ * Special Case Methods
+ ******************************************/
+
+// QueryIDOnly returns a slice of IDOnly documents that match the provided criteria
+func (service *Product) QueryIDOnly(session data.Session, criteria exp.Expression, options ...option.Option) (sliceof.Object[model.IDOnly], error) {
+	result := make([]model.IDOnly, 0)
+	options = append(options, option.Fields("_id"))
+	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
+	return result, err
+}
+
+// HardDeleteByID removes a specific Product record, without applying any additional business rules
+func (service *Product) HardDeleteByID(session data.Session, userID primitive.ObjectID, productID primitive.ObjectID) error {
+
+	const location = "service.Product.HardDeleteByID"
+
+	criteria := exp.Equal("userId", userID).AndEqual("_id", productID)
+
+	if err := service.collection(session).HardDelete(criteria); err != nil {
+		return derp.Wrap(err, location, "Unable to delete Product", "userID: "+userID.Hex(), "productID: "+productID.Hex())
 	}
 
 	return nil
@@ -159,6 +188,12 @@ func (service *Product) Schema() schema.Schema {
 // LoadByID loads a single model.Product object that matches the provided productID
 func (service *Product) LoadByID(session data.Session, productID primitive.ObjectID, result *model.Product) error {
 	criteria := exp.Equal("_id", productID)
+	return service.Load(session, criteria, result)
+}
+
+// LoadByUserAndID loads a single model.Product object that matches the provided userID and productID
+func (service *Product) LoadByUserAndID(session data.Session, userID primitive.ObjectID, productID primitive.ObjectID, result *model.Product) error {
+	criteria := exp.Equal("userID", userID).AndEqual("_id", productID)
 	return service.Load(session, criteria, result)
 }
 

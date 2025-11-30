@@ -16,20 +16,20 @@ import (
 
 // Attachment represents a file that has been uploaded to the software
 type Attachment struct {
-	AttachmentID primitive.ObjectID `bson:"_id"`         // ID of this Attachment
-	ObjectID     primitive.ObjectID `bson:"objectId"`    // ID of the object that owns this Attachment
-	ObjectType   string             `bson:"objectType"`  // Type of object that owns this Attachment
-	Original     string             `bson:"original"`    // Original filename uploaded by user
-	Category     string             `bson:"category"`    // Category of the file (defined by the Template)
-	Label        string             `bson:"label"`       // User-defined label for the attachment
-	Description  string             `bson:"description"` // User-defined description for the attachment
-	URL          string             `bson:"url"`         // URL where the file is stored
-	Status       string             `bson:"status"`      // Status of the attachment (READY, WORKING)
-	Rules        AttachmentRules    `bson:"rules"`       // Rules for downloading this attachment
-	Height       int                `bson:"height"`      // Height of the media file (if applicable)
-	Width        int                `bson:"width"`       // Width of the media file (if applicable)
-	Duration     int                `bbson:"duration"`   // Duration of the media file (if applicable)
-	Rank         int                `bson:"rank"`        // The sort order to display the attachments in.
+	AttachmentID primitive.ObjectID `bson:"_id"`               // ID of this Attachment
+	ObjectID     primitive.ObjectID `bson:"objectId"`          // ID of the object that owns this Attachment
+	ObjectType   string             `bson:"objectType"`        // Type of object that owns this Attachment
+	Original     string             `bson:"original"`          // Original filename uploaded by user
+	Category     string             `bson:"category"`          // Category of the file (defined by the Template)
+	Label        string             `bson:"label"`             // User-defined label for the attachment
+	Description  string             `bson:"description"`       // User-defined description for the attachment
+	URL          string             `bson:"url"`               // URL where the file is stored
+	Status       string             `bson:"status"`            // Status of the attachment (READY, WORKING)
+	Rules        AttachmentRules    `bson:"rules"`             // Rules for downloading this attachment
+	Height       int                `bson:"height,omitzero"`   // Height of the media file (if applicable)
+	Width        int                `bson:"width,omitzero"`    // Width of the media file (if applicable)
+	Duration     int                `bson:"duration,omitzero"` // Duration of the media file (if applicable)
+	Rank         int                `bson:"rank,omitzero"`     // The sort order to display the attachments in.
 
 	journal.Journal `json:"-" bson:",inline"` // Journal entry for fetch compatability
 }

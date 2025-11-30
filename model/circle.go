@@ -9,16 +9,16 @@ import (
 
 // Circle is a grouping of people that is created/defined by a single UserID.
 type Circle struct {
-	CircleID    primitive.ObjectID `json:"circleId"    bson:"_id"`         // Unique identifier assigned by the database
-	UserID      primitive.ObjectID `json:"userId"      bson:"userId"`      // UserID of owner of this Circle
-	Name        string             `json:"name"        bson:"name"`        // Human-readable name for this circle.
-	Color       string             `json:"color"       bson:"color"`       // Color of this Circle, used to color the circle icon
-	Icon        string             `json:"icon"        bson:"icon"`        // Icon of this Circle, used to display the circle icon
-	Description string             `json:"description" bson:"description"` // Human-readable description of this Circle
-	ProductIDs  id.Slice           `json:"productIds"  bson:"productIds"`  // List of remote ProductIDs that can purchase membership in this Circle
-	MemberCount int64              `json:"memberCount" bson:"memberCount"` // Number of members in this Circle
-	IsVisible   bool               `json:"isVisible"   bson:"isVisible"`   // TRUE if members of this Circle can see that they're in this Circle.
-	IsFeatured  bool               `json:"isFeatured"  bson:"isFeatured"`  // TRUE if this Circle should be featured on the User's profile page.
+	CircleID    primitive.ObjectID `bson:"_id"`         // Unique identifier assigned by the database
+	UserID      primitive.ObjectID `bson:"userId"`      // UserID of owner of this Circle
+	Name        string             `bson:"name"`        // Human-readable name for this circle.
+	Color       string             `bson:"color"`       // Color of this Circle, used to color the circle icon
+	Icon        string             `bson:"icon"`        // Icon of this Circle, used to display the circle icon
+	Description string             `bson:"description"` // Human-readable description of this Circle
+	ProductIDs  id.Slice           `bson:"productIds"`  // List of remote ProductIDs that can purchase membership in this Circle
+	MemberCount int64              `bson:"memberCount"` // Number of members in this Circle
+	IsVisible   bool               `bson:"isVisible"`   // TRUE if members of this Circle can see that they're in this Circle.
+	IsFeatured  bool               `bson:"isFeatured"`  // TRUE if this Circle should be featured on the User's profile page.
 
 	journal.Journal `json:"-" bson:",inline"`
 }

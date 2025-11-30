@@ -208,16 +208,21 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 
 		// REFRESH CACHED SERVICES
 
-		factory.annotationService.Refresh()
+		// Populate the Annotation Service
+		factory.annotationService.Refresh(
+			factory.ImportItem(),
+		)
 
 		// Populate Attachment Service
 		factory.attachmentService.Refresh(
+			factory.ImportItem(),
 			factory.MediaServer(),
 			factory.Host(),
 		)
 
 		// Populate Circle Service
 		factory.circleService.Refresh(
+			factory.ImportItem(),
 			factory.Privilege(),
 		)
 
@@ -249,27 +254,30 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 		factory.folderService.Refresh(
 			factory.Domain(),
 			factory.Following(),
+			factory.ImportItem(),
 			factory.Inbox(),
 			factory.Theme(),
 		)
 
 		// Populate Follower Service
 		factory.followerService.Refresh(
-			factory.User(),
-			factory.Stream(),
-			factory.Rule(),
 			factory.Email(),
+			factory.ImportItem(),
+			factory.Rule(),
+			factory.Stream(),
+			factory.User(),
 			factory.Queue(),
 			factory.Host(),
 		)
 
 		// Populate Following Service
 		factory.followingService.Refresh(
-			factory.Stream(),
-			factory.User(),
-			factory.Inbox(),
 			factory.Folder(),
 			factory.EncryptionKey(),
+			factory.ImportItem(),
+			factory.Inbox(),
+			factory.Stream(),
+			factory.User(),
 			factory.SSEUpdateChannel(),
 			factory.Host(),
 		)
@@ -287,8 +295,9 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 
 		// Populate Inbox Service
 		factory.inboxService.Refresh(
-			factory.Rule(),
+			factory.ImportItem(),
 			factory.Folder(),
+			factory.Rule(),
 			factory.Host(),
 		)
 
@@ -312,8 +321,9 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 		factory.merchantAccountService.Refresh(
 			factory.Circle(),
 			factory.Connection(),
-			factory.JWT(),
 			factory.Identity(),
+			factory.ImportItem(),
+			factory.JWT(),
 			factory.Privilege(),
 			factory.Product(),
 			factory.User(),
@@ -339,6 +349,7 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 		factory.outboxService.Refresh(
 			factory.Follower(),
 			factory.Identity(),
+			factory.ImportItem(),
 			factory.Rule(),
 			factory.Stream(),
 			factory.Template(),
@@ -357,6 +368,7 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 
 		// Populate Product Service
 		factory.productService.Refresh(
+			factory.ImportItem(),
 			factory.MerchantAccount(),
 		)
 
@@ -365,6 +377,7 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 
 		// Populate the Response Service
 		factory.responseService.Refresh(
+			factory.ImportItem(),
 			factory.Inbox(),
 			factory.Outbox(),
 			factory.User(),
@@ -373,6 +386,7 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 
 		// Populate the Rule Service
 		factory.ruleService.Refresh(
+			factory.ImportItem(),
 			factory.Outbox(),
 			factory.User(),
 			factory.Queue(),
@@ -413,21 +427,22 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 
 		// Populate Stream Service
 		factory.streamService.Refresh(
+			factory.Attachment(),
 			factory.Circle(),
+			factory.Content(),
 			factory.Domain(),
+			factory.StreamDraft(),
+			factory.Follower(),
+			factory.GeocodeAddress(),
+			factory.Import(),
+			factory.ImportItem(),
+			factory.EncryptionKey(),
+			factory.Outbox(),
+			factory.Rule(),
 			factory.SearchTag(),
 			factory.Template(),
-			factory.StreamDraft(),
-			factory.Outbox(),
-			factory.Attachment(),
-			factory.Content(),
-			factory.EncryptionKey(),
-			factory.Follower(),
-			factory.ImportItem(),
-			factory.Rule(),
 			factory.User(),
 			factory.Webhook(),
-			factory.GeocodeAddress(),
 			factory.MediaServer(),
 			factory.Queue(),
 			factory.SSEUpdateChannel(),
@@ -454,6 +469,7 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 		factory.privilegeService.Refresh(
 			factory.Circle(),
 			factory.Identity(),
+			factory.ImportItem(),
 			factory.MerchantAccount(),
 		)
 
@@ -679,8 +695,9 @@ func (factory *Factory) Connection() *Connection {
 }
 
 // Conversation returns a fully populated Conversation service
-func (factory *Factory) Conversation() Conversation {
-	return NewConversation()
+func (factory *Factory) Conversation() *Conversation {
+	result := NewConversation()
+	return &result
 }
 
 // Domain returns a fully populated Domain service
@@ -747,6 +764,7 @@ func (factory *Factory) Identity() *Identity {
 func (factory *Factory) Import() *Import {
 	result := NewImport(
 		factory.ActivityStream(model.ActorTypeApplication, primitive.NilObjectID),
+		factory.Attachment(),
 		factory.ImportItem(),
 		factory.ImportableLocator(),
 		factory.Queue(),
@@ -1030,76 +1048,65 @@ func (factory *Factory) ImportableLocator() ImportableLocator {
 
 		switch name {
 
+		/*
+			case "outbox":
+				return NilImporter(), nil
+
+			case "content":
+				return NilImporter(), nil
+
+			case "following":
+				return NilImporter(), nil
+
+			case "blocked":
+				return NilImporter(), nil
+		*/
+
+		case "emissary:annotation":
+			return factory.Annotation(), nil
+
+		case "emissary:circle":
+			return factory.Circle(), nil
+
+		case "emissary:conversaion":
+			return factory.Conversation(), nil
+
+		case "emissary:folder":
+			return factory.Folder(), nil
+
+		case "emissary:follower":
+			return factory.Follower(), nil
+
+		case "emissary:following":
+			return factory.Following(), nil
+
+		case "emissary:inboxMessage":
+			return factory.Inbox(), nil
+
+		case "emissary:merchantAccount":
+			return factory.MerchantAccount(), nil
+
+		case "emissary:outboxMessage":
+			return factory.Outbox(), nil
+
+		case "emissary:privilege":
+			return factory.Privilege(), nil
+
+		case "emissary:product":
+			return factory.Product(), nil
+
+		case "emissary:response":
+			return factory.Response(), nil
+
+		case "emissary:rule":
+			return factory.Rule(), nil
+
 		case "emissary:stream":
 			return factory.Stream(), nil
 
 		case "emissary:user":
 			return factory.User(), nil
 
-			/*
-				case "outbox":
-					return NilImporter(), nil
-
-				case "content":
-					return NilImporter(), nil
-
-				case "following":
-					return NilImporter(), nil
-
-				case "blocked":
-					return NilImporter(), nil
-
-				case "emissary:annotation":
-					return NilImporter(), nil
-
-				case "emissary:attachment":
-					return NilImporter(), nil
-
-				case "emissary:circle":
-					return NilImporter(), nil
-
-				case "emissary:conversaion":
-					return NilImporter(), nil
-
-				case "emissary:folder":
-					return NilImporter(), nil
-
-				case "emissary:follower":
-					return NilImporter(), nil
-
-				case "emissary:following":
-					return NilImporter(), nil
-
-				case "emissary:mention":
-					return NilImporter(), nil
-
-				case "emissary:merchantAccount":
-					return NilImporter(), nil
-
-				case "emissary:message":
-					return NilImporter(), nil
-
-				case "emissary:outboxMessage":
-					return NilImporter(), nil
-
-				case "emissary:privilege":
-					return NilImporter(), nil
-
-				case "emissary:product":
-					return NilImporter(), nil
-
-				case "emissary:response":
-					return NilImporter(), nil
-
-				case "emissary:rule":
-					return NilImporter(), nil
-
-				case "emissary:stream":
-					return NilImporter(), nil
-
-				case "emissary:streamWidget":
-					return NilImporter(), nil
-			*/
 		}
 
 		return nil, derp.Internal("service.Import.Importable", "Unrecognized service name. This should never happen", name)

@@ -7,12 +7,14 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Annotation manages all interactions with the Annotation collection
 type Annotation struct {
-	factory *Factory
+	factory           *Factory
+	importItemService *ImportItem
 }
 
 // NewAnnotation returns a fully populated Annotation service
@@ -27,7 +29,8 @@ func NewAnnotation(factory *Factory) Annotation {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Annotation) Refresh() {
+func (service *Annotation) Refresh(importItemService *ImportItem) {
+	service.importItemService = importItemService
 }
 
 // Close stops any background processes controlled by this service
@@ -107,6 +110,32 @@ func (service *Annotation) Delete(session data.Session, annotation *model.Annota
 
 	if err := service.collection(session).Delete(annotation, note); err != nil {
 		return derp.Wrap(err, location, "Error deleting Annotation", annotation, note)
+	}
+
+	return nil
+}
+
+/******************************************
+ * Special Case Methods
+ ******************************************/
+
+// QueryIDOnly returns a slice of IDOnly records that match the provided criteria
+func (service *Annotation) QueryIDOnly(session data.Session, criteria exp.Expression, options ...option.Option) (sliceof.Object[model.IDOnly], error) {
+	result := make([]model.IDOnly, 0)
+	options = append(options, option.Fields("_id"))
+	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
+	return result, err
+}
+
+// HardDeleteByID removes a specific Annotation record, without applying any additional business rules
+func (service *Annotation) HardDeleteByID(session data.Session, userID primitive.ObjectID, annotationID primitive.ObjectID) error {
+
+	const location = "service.Annotation.HardDeleteByID"
+
+	criteria := exp.Equal("userId", userID).AndEqual("_id", annotationID)
+
+	if err := service.collection(session).HardDelete(criteria); err != nil {
+		return derp.Wrap(err, location, "Unable to delete Annotation", "userID: "+userID.Hex(), "annotationID: "+annotationID.Hex())
 	}
 
 	return nil

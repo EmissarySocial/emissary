@@ -14,6 +14,7 @@ import (
 
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -22,15 +23,16 @@ const followingMimeStack = "application/activity+json; q=1.0, text/html; q=0.9, 
 
 // Following manages all interactions with the Following collection
 type Following struct {
-	factory          *Factory
-	streamService    *Stream
-	userService      *User
-	inboxService     *Inbox
-	folderService    *Folder
-	keyService       *EncryptionKey
-	sseUpdateChannel chan<- realtime.Message
-	host             string
-	closed           chan bool
+	factory           *Factory
+	importItemService *ImportItem
+	streamService     *Stream
+	userService       *User
+	inboxService      *Inbox
+	folderService     *Folder
+	keyService        *EncryptionKey
+	sseUpdateChannel  chan<- realtime.Message
+	host              string
+	closed            chan bool
 }
 
 // NewFollowing returns a fully populated Following service.
@@ -45,12 +47,13 @@ func NewFollowing(factory *Factory) Following {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Following) Refresh(streamService *Stream, userService *User, inboxService *Inbox, folderService *Folder, keyService *EncryptionKey, sseUpdateChannel chan<- realtime.Message, host string) {
-	service.streamService = streamService
-	service.userService = userService
-	service.inboxService = inboxService
+func (service *Following) Refresh(folderService *Folder, keyService *EncryptionKey, importItemService *ImportItem, inboxService *Inbox, streamService *Stream, userService *User, sseUpdateChannel chan<- realtime.Message, host string) {
 	service.folderService = folderService
 	service.keyService = keyService
+	service.importItemService = importItemService
+	service.inboxService = inboxService
+	service.streamService = streamService
+	service.userService = userService
 	service.sseUpdateChannel = sseUpdateChannel
 	service.host = host
 }
@@ -186,25 +189,6 @@ func (service *Following) Save(session data.Session, following *model.Following,
 	return nil
 }
 
-/*
-func (service *Following) save_async(following model.Following) {
-
-	const location = "service.Following.save_async"
-
-	ctx := context.Background()
-
-	// Create a new Database transaction session
-	service.factory.Server().WithTransaction(ctx, func(session data.Session) (any, error) {
-
-		// Connect to external services and discover the best update method.
-		// This will also update the status again, soon.
-		service.RefreshAndConnect(session, following)
-
-		return nil, nil
-	})
-}
-*/
-
 // Delete removes an Following from the database (virtual delete)
 func (service *Following) Delete(session data.Session, following *model.Following, note string) error {
 
@@ -247,6 +231,32 @@ func (service *Following) deleteNoStats(session data.Session, following *model.F
 
 	// Disconnect from external services (if necessary)
 	service.Disconnect(session, following)
+
+	return nil
+}
+
+/******************************************
+ * Special Case Methods
+ ******************************************/
+
+// QueryIDOnly returns a slice of IDOnly records that match the provided criteria
+func (service *Following) QueryIDOnly(session data.Session, criteria exp.Expression, options ...option.Option) (sliceof.Object[model.IDOnly], error) {
+	result := make([]model.IDOnly, 0)
+	options = append(options, option.Fields("_id"))
+	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
+	return result, err
+}
+
+// HardDeleteByID removes a specific Following record, without applying any additional business rules
+func (service *Following) HardDeleteByID(session data.Session, userID primitive.ObjectID, followingID primitive.ObjectID) error {
+
+	const location = "service.Following.HardDeleteByID"
+
+	criteria := exp.Equal("userId", userID).AndEqual("_id", followingID)
+
+	if err := service.collection(session).HardDelete(criteria); err != nil {
+		return derp.Wrap(err, location, "Unable to delete Following", "userID: "+userID.Hex(), "followingID: "+followingID.Hex())
+	}
 
 	return nil
 }

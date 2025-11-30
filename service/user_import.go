@@ -9,7 +9,7 @@ import (
 )
 
 // ImportSave is a part of the "Importable" interface, and saves an imported User to the new profile.
-func (service *User) Import(session data.Session, importItem *model.ImportItem, user *model.User, document []byte) error {
+func (service *User) Import(session data.Session, _ *model.Import, importItem *model.ImportItem, user *model.User, document []byte) error {
 
 	const location = "service.User.Import"
 

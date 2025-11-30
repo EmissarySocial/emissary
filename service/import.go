@@ -12,8 +12,11 @@ import (
 	dt "github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/form"
+	"github.com/benpate/hannibal/collections"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/remote"
+	"github.com/benpate/remote/options"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
@@ -26,6 +29,7 @@ import (
 // Import service helps exports user data to another server
 type Import struct {
 	activityService   ActivityStream
+	attachmentService *Attachment
 	importItemService *ImportItem
 	locator           ImportableLocator
 	queue             *queue.Queue
@@ -33,9 +37,10 @@ type Import struct {
 }
 
 // NewImport returns a fully populated Import service
-func NewImport(activityService ActivityStream, importItemService *ImportItem, locator ImportableLocator, queue *queue.Queue, host string) Import {
+func NewImport(activityService ActivityStream, attachmentService *Attachment, importItemService *ImportItem, locator ImportableLocator, queue *queue.Queue, host string) Import {
 	return Import{
 		activityService:   activityService,
+		attachmentService: attachmentService,
 		importItemService: importItemService,
 		locator:           locator,
 		queue:             queue,
@@ -412,6 +417,56 @@ func (service *Import) doUndo(session data.Session, record *model.Import) error 
 }
 
 /******************************************
+ * Import Attachments
+ ******************************************/
+
+func (service *Import) ImportAttachments(session data.Session, importRecord *model.Import, importItem *model.ImportItem, object model.AttachmentURLUpdater) error {
+
+	const location = "consumer.importItems_Attachments"
+
+	// Load the /attachments collection
+	client := service.activityService.Client()
+	collection, err := client.Load(importItem.URL + "/attachments")
+
+	if err != nil {
+		return derp.Wrap(err, location, "Unable to load Attachments")
+	}
+
+	// Import each attachment in the collection
+	for attachment := range collections.RangeDocuments(collection) {
+
+		document := make([]byte, 0)
+		txn := remote.Get(attachment.ID()).
+			With(options.BearerAuth(importRecord.OAuthToken.AccessToken)).
+			With(options.Debug()).
+			Result(&document)
+
+		if err := txn.Send(); err != nil {
+			return derp.Wrap(err, location, "Unable to retrieve document from source server")
+		}
+
+		// Import that attachment
+		remoteURL, localURL, err := service.attachmentService.Import(
+			session,
+			importRecord,
+			importItem,
+			importItem.LocalID,
+			document,
+		)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Unable to import document")
+		}
+
+		// Update mappings IF this attachment is named in the containing object
+		object.UpdateAttachmentURLs(remoteURL, localURL)
+	}
+
+	// Success
+	return nil
+}
+
+/******************************************
  * Other Calculations
  ******************************************/
 
@@ -439,12 +494,15 @@ func (service *Import) CalcImportPlan(actor streams.Document) sliceof.Object[for
 		result.Append(form.LookupCode{
 			Group:       "Native",
 			Icon:        "patch-check-fill",
-			Label:       "Content (Streams)",
+			Label:       "Content",
 			Description: "High-fidelity import of Emissary posts. Should retain all data.",
 			Value:       "emissary:stream",
 			Href:        collection.String(),
 		})
+
 	} else if collection := migration.Get("content"); collection.NotNil() {
+
+		// If we don't have emissary:streams, then try to import standard ActivityPub content
 		result.Append(form.LookupCode{
 			Group:       "ActivityPub",
 			Icon:        "activitypub",
@@ -455,6 +513,7 @@ func (service *Import) CalcImportPlan(actor streams.Document) sliceof.Object[for
 		})
 	}
 
+	// Try native Outbox Messages
 	if collection := migration.Get("emissary:outboxMessage"); collection.NotNil() {
 		result.Append(form.LookupCode{
 			Group:       "Native",
@@ -475,6 +534,7 @@ func (service *Import) CalcImportPlan(actor streams.Document) sliceof.Object[for
 		})
 	}
 
+	// Import Following records
 	if collection := migration.Get("emissary:following"); collection.NotNil() {
 		result.Append(form.LookupCode{
 			Group:       "Native",
@@ -484,6 +544,43 @@ func (service *Import) CalcImportPlan(actor streams.Document) sliceof.Object[for
 			Value:       "emissary:following",
 			Href:        collection.String(),
 		})
+
+		// Import Emissary Inbox Folders
+		if collection := migration.Get("emissary:folder"); collection.NotNil() {
+			result.Append(form.LookupCode{
+				Group:       "Native",
+				Icon:        "patch-check-fill",
+				Label:       "Inbox Folders",
+				Description: "High-fidelity import of all inbox folders",
+				Value:       "emissary:folder",
+				Href:        collection.String(),
+			})
+
+			// Import Emissary Inbox Messsages IF we have Inbox Folders
+			if collection := migration.Get("emissary:inboxMessage"); collection.NotNil() {
+				result.Append(form.LookupCode{
+					Group:       "Native",
+					Icon:        "patch-check-fill",
+					Label:       "Inbox Messages",
+					Description: "High-fidelity import of your Emissary inbox",
+					Value:       "emissary:inboxMessage",
+					Href:        collection.String(),
+				})
+			}
+
+			// Import Direct Messages IF we have Folders
+			if collection := migration.Get("emissary:conversaion"); collection.NotNil() {
+				result.Append(form.LookupCode{
+					Group:       "Native",
+					Icon:        "patch-check-fill",
+					Label:       "Direct Messages",
+					Description: "High-fidelity import of all direct message conversations",
+					Value:       "emissary:conversation",
+					Href:        collection.String(),
+				})
+			}
+		}
+
 	} else if collection := migration.Get("following"); collection.NotNil() {
 		result.Append(form.LookupCode{
 			Group:       "ActivityPub",
@@ -537,48 +634,52 @@ func (service *Import) CalcImportPlan(actor streams.Document) sliceof.Object[for
 		})
 	}
 
-	if collection := migration.Get("emissary:attachment"); collection.NotNil() {
+	// Import Emissay Merchant Accounts
+	if collection := migration.Get("emissary:merchantAccount"); collection.NotNil() {
 		result.Append(form.LookupCode{
 			Group:       "Native",
 			Icon:        "patch-check-fill",
-			Label:       "Attachments",
-			Description: "High-fidelity import of all uploaded files",
-			Value:       "emissary:attachment",
+			Label:       "Merchant Accounts",
+			Description: "High-fidelity import of all Merchant Account settings",
+			Value:       "emissary:merchantAccount",
 			Href:        collection.String(),
 		})
-	}
 
-	if collection := migration.Get("emissary:circle"); collection.NotNil() {
-		result.Append(form.LookupCode{
-			Group:       "Native",
-			Icon:        "patch-check-fill",
-			Label:       "Circles",
-			Description: "High-fidelity import of all custom circles",
-			Value:       "emissary:circle",
-			Href:        collection.String(),
-		})
-	}
+		// Products can be imported IF we have MerchantAccounts
+		if collection := migration.Get("emissary:product"); collection.NotNil() {
+			result.Append(form.LookupCode{
+				Group:       "Native",
+				Icon:        "patch-check-fill",
+				Label:       "Products",
+				Description: "High-fideltiy import of all products",
+				Value:       "emissary:product",
+				Href:        collection.String(),
+			})
 
-	if collection := migration.Get("emissary:conversaion"); collection.NotNil() {
-		result.Append(form.LookupCode{
-			Group:       "Native",
-			Icon:        "patch-check-fill",
-			Label:       "Direct Messages",
-			Description: "High-fidelity import of all direct message conversations",
-			Value:       "emissary:conversation",
-			Href:        collection.String(),
-		})
-	}
+			// Circles can be imported IF we have Products
+			if collection := migration.Get("emissary:circle"); collection.NotNil() {
+				result.Append(form.LookupCode{
+					Group:       "Native",
+					Icon:        "patch-check-fill",
+					Label:       "Circles",
+					Description: "High-fidelity import of all custom circles",
+					Value:       "emissary:circle",
+					Href:        collection.String(),
+				})
 
-	if collection := migration.Get("emissary:folder"); collection.NotNil() {
-		result.Append(form.LookupCode{
-			Group:       "Native",
-			Icon:        "patch-check-fill",
-			Label:       "Inbox Folders",
-			Description: "High-fidelity import of all inbox folders",
-			Value:       "emissary:folder",
-			Href:        collection.String(),
-		})
+				// Privileges can be imported IF we have Circles
+				if collection := migration.Get("emissary:privilege"); collection.NotNil() {
+					result.Append(form.LookupCode{
+						Group:       "Native",
+						Icon:        "patch-check-fill",
+						Label:       "Privileges",
+						Description: "High-fidelity import of all privileges/purchases",
+						Value:       "emissary:privilege",
+						Href:        collection.String(),
+					})
+				}
+			}
+		}
 	}
 
 	if collection := migration.Get("emissary:mention"); collection.NotNil() {
@@ -592,50 +693,7 @@ func (service *Import) CalcImportPlan(actor streams.Document) sliceof.Object[for
 		})
 	}
 
-	if collection := migration.Get("emissary:merchantAccount"); collection.NotNil() {
-		result.Append(form.LookupCode{
-			Group:       "Native",
-			Icon:        "patch-check-fill",
-			Label:       "Merchant Accounts",
-			Description: "High-fidelity import of all Merchant Account settings",
-			Value:       "emissary:merchantAccount",
-			Href:        collection.String(),
-		})
-	}
-
-	if collection := migration.Get("emissary:message"); collection.NotNil() {
-		result.Append(form.LookupCode{
-			Group:       "Native",
-			Icon:        "patch-check-fill",
-			Label:       "Inbox Messages",
-			Description: "High-fidelity import of your Emissary inbox",
-			Value:       "emissary:message",
-			Href:        collection.String(),
-		})
-	}
-
-	if collection := migration.Get("emissary:privilege"); collection.NotNil() {
-		result.Append(form.LookupCode{
-			Group:       "Native",
-			Icon:        "patch-check-fill",
-			Label:       "Privileges",
-			Description: "High-fidelity import of all privileges/purchases",
-			Value:       "emissary:privilege",
-			Href:        collection.String(),
-		})
-	}
-
-	if collection := migration.Get("emissary:product"); collection.NotNil() {
-		result.Append(form.LookupCode{
-			Group:       "Native",
-			Icon:        "patch-check-fill",
-			Label:       "Products",
-			Description: "High-fideltiy import of all products",
-			Value:       "emissary:product",
-			Href:        collection.String(),
-		})
-	}
-
+	// Import Emissary Responses
 	if collection := migration.Get("emissary:response"); collection.NotNil() {
 		result.Append(form.LookupCode{
 			Group:       "Native",

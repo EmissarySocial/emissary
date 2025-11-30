@@ -553,3 +553,47 @@ func WithUserForwarding(serverFactory *server.Factory, fn WithFunc1[model.User])
 		return fn(ctx, factory, session, &user)
 	})
 }
+
+// WithUserStream handles boilerplate code for requests that load both a User and a Stream,
+// and validates that the Stream is a profile post of the User
+func WithUserStream(serverFactory *server.Factory, fn WithFunc2[model.User, model.Stream]) echo.HandlerFunc {
+
+	const location = "handler.WithUser"
+
+	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
+
+		// Load the User from the database
+		userService := factory.User()
+		user := model.NewUser()
+		userID, err := primitive.ObjectIDFromHex(ctx.Param("userId"))
+
+		if err != nil {
+			return derp.Wrap(err, location, "Invalid Username", ctx.Param("userId"))
+		}
+
+		if err := userService.LoadByID(session, userID, &user); err != nil {
+			return derp.Wrap(err, location, "Unable to load User", userID)
+		}
+
+		// Load the Stream from the database
+		streamService := factory.Stream()
+		stream := model.NewStream()
+		streamID, err := primitive.ObjectIDFromHex(ctx.Param("streamId"))
+
+		if err != nil {
+			return derp.Wrap(err, location, "Invalid StreamID", ctx.Param("streamId"))
+		}
+
+		if err := streamService.LoadByID(session, streamID, &stream); err != nil {
+			return derp.Wrap(err, location, "Unable to load Stream", streamID)
+		}
+
+		// RULE: Require that this Stream is a part of this User's profile
+		if stream.ParentIDs.First() != user.UserID {
+			return derp.Forbidden(location, "Stream must be owned by this User")
+		}
+
+		// Call the continuation function
+		return fn(ctx, factory, session, &user, &stream)
+	})
+}

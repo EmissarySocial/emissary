@@ -11,7 +11,7 @@ import (
 )
 
 // ImportSave is a part of the "Importable" interface, and saves an imported Stream to the new profile.
-func (service *Stream) Import(session data.Session, importItem *model.ImportItem, user *model.User, document []byte) error {
+func (service *Stream) Import(session data.Session, importRecord *model.Import, importItem *model.ImportItem, user *model.User, document []byte) error {
 
 	const location = "service.Stream.Import"
 
@@ -43,8 +43,8 @@ func (service *Stream) Import(session data.Session, importItem *model.ImportItem
 		}
 	}
 
-	// TODO: These values must be rewritten
-	// stream.IconURL = ""
+	// Import Attachments
+	service.importService.ImportAttachments(session, importRecord, importItem, &stream)
 
 	// Save the Stream to the database
 	if err := service.Save(session, &stream, "Imported"); err != nil {

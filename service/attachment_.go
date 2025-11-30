@@ -8,14 +8,16 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Attachment manages all interactions with the Attachment collection
 type Attachment struct {
-	mediaServer mediaserver.MediaServer
-	host        string
+	importItemService *ImportItem
+	mediaServer       mediaserver.MediaServer
+	host              string
 }
 
 // NewAttachment returns a fully populated Attachment service
@@ -28,7 +30,8 @@ func NewAttachment() Attachment {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Attachment) Refresh(mediaServer mediaserver.MediaServer, host string) {
+func (service *Attachment) Refresh(importItemService *ImportItem, mediaServer mediaserver.MediaServer, host string) {
+	service.importItemService = importItemService
 	service.mediaServer = mediaServer
 	service.host = host
 }
@@ -113,6 +116,32 @@ func (service *Attachment) Delete(session data.Session, attachment *model.Attach
 	// Delete Attachment record last.
 	if err := service.collection(session).Delete(attachment, note); err != nil {
 		return derp.Wrap(err, "service.Attachment", "Error deleting Attachment", attachment, note)
+	}
+
+	return nil
+}
+
+/******************************************
+ * Special Case Methods
+ ******************************************/
+
+// QueryIDOnly returns a slice of IDOnly records that match the provided criteria
+func (service *Attachment) QueryIDOnly(session data.Session, criteria exp.Expression, options ...option.Option) (sliceof.Object[model.IDOnly], error) {
+	result := make([]model.IDOnly, 0)
+	options = append(options, option.Fields("_id"))
+	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
+	return result, err
+}
+
+// HardDeleteByID removes a specific Attachment record, without applying any additional business rules
+func (service *Attachment) HardDeleteByID(session data.Session, userID primitive.ObjectID, attachmentID primitive.ObjectID) error {
+
+	const location = "service.Attachment.HardDeleteByID"
+
+	criteria := exp.Equal("userId", userID).AndEqual("_id", attachmentID)
+
+	if err := service.collection(session).HardDelete(criteria); err != nil {
+		return derp.Wrap(err, location, "Unable to delete Attachment", "userID: "+userID.Hex(), "attachmentID: "+attachmentID.Hex())
 	}
 
 	return nil
