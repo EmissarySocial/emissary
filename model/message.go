@@ -14,20 +14,20 @@ import (
 
 // Message represents a single item in a User's inbox.
 type Message struct {
-	MessageID   primitive.ObjectID         `json:"messageId"    bson:"_id"`                   // Unique ID of the Message
-	UserID      primitive.ObjectID         `json:"userId"       bson:"userId"`                // Unique ID of the User who owns this Message
-	FollowingID primitive.ObjectID         `json:"followingId"  bson:"followingId,omitempty"` // Unique ID of the Following record that generated this Message
-	FolderID    primitive.ObjectID         `json:"folderId"     bson:"folderId,omitempty"`    // Unique ID of the Folder where this Message is stored
-	SocialRole  string                     `json:"socialRole"   bson:"socialRole,omitempty"`  // Role this message plays in social integrations ("Article", "Note", etc)
-	Origin      OriginLink                 `json:"origin"       bson:"origin,omitempty"`      // Link to the original source of this Message (the following and website that originally published it)
-	References  sliceof.Object[OriginLink] `json:"references"   bson:"references,omitempty"`  // Links to other references to this Message - likes, reposts, or comments that informed us of its existence
-	URL         string                     `json:"url"          bson:"url"`                   // URL of this Message
-	InReplyTo   string                     `json:"inReplyTo"    bson:"inReplyTo,omitempty"`   // URL this message is in reply to
-	Response    id.Map                     `json:"response"     bson:"response,omitempty"`    // Map of responses: Like, Dislike, Announce, etc.
-	StateID     string                     `json:"stateId"      bson:"stateId"`               // StateID of this message (UNREAD,READ,MUTED,NEW-REPLIES)
-	PublishDate int64                      `json:"publishDate"  bson:"publishDate,omitempty"` // Unix timestamp of the date/time when this Message was published
-	ReadDate    int64                      `json:"readDate"     bson:"readDate"`              // Unix timestamp of the date/time when this Message was read.  If unread, this is MaxInt64.
-	Rank        int64                      `json:"rank"         bson:"rank"`                  // Sort rank for this message (publishDate * 1000 + sequence number)
+	MessageID   primitive.ObjectID         `bson:"_id"`                   // Unique ID of the Message
+	UserID      primitive.ObjectID         `bson:"userId"`                // Unique ID of the User who owns this Message
+	FollowingID primitive.ObjectID         `bson:"followingId,omitempty"` // Unique ID of the Following record that generated this Message
+	FolderID    primitive.ObjectID         `bson:"folderId,omitempty"`    // Unique ID of the Folder where this Message is stored
+	SocialRole  string                     `bson:"socialRole,omitempty"`  // Role this message plays in social integrations ("Article", "Note", etc)
+	Origin      OriginLink                 `bson:"origin,omitempty"`      // Link to the original source of this Message (the following and website that originally published it)
+	References  sliceof.Object[OriginLink] `bson:"references,omitempty"`  // Links to other references to this Message - likes, reposts, or comments that informed us of its existence
+	URL         string                     `bson:"url"`                   // URL of this Message
+	InReplyTo   string                     `bson:"inReplyTo,omitempty"`   // URL this message is in reply to
+	Response    id.Map                     `bson:"response,omitempty"`    // Map of responses: Like, Dislike, Announce, etc.
+	StateID     string                     `bson:"stateId"`               // StateID of this message (UNREAD,READ,MUTED,NEW-REPLIES)
+	PublishDate int64                      `bson:"publishDate,omitempty"` // Unix timestamp of the date/time when this Message was published
+	ReadDate    int64                      `bson:"readDate"`              // Unix timestamp of the date/time when this Message was read.  If unread, this is MaxInt64.
+	Rank        int64                      `bson:"rank"`                  // Sort rank for this message (publishDate * 1000 + sequence number)
 
 	journal.Journal `json:"-" bson:",inline"`
 }

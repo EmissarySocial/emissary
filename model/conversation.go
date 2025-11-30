@@ -16,7 +16,7 @@ type Conversation struct {
 	Icon           string                     `bson:"icon"`         // Icon of the folder
 	StateID        string                     `bson:"stateId"`      // Current state of this conversation (UNREAD, READ, ARCHIVED)
 
-	journal.Journal `bson:"journal" json:"-"`
+	journal.Journal `json:"-" bson:"journal"`
 }
 
 // NewConversation returns a fully initialized Conversation object

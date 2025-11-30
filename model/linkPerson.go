@@ -9,13 +9,13 @@ import (
 )
 
 type PersonLink struct {
-	UserID       primitive.ObjectID `json:"userId,omitempty"       bson:"userId,omitempty"`       // Internal ID of the person (if they exist in this database)
-	Name         string             `json:"name,omitempty"         bson:"name,omitempty"`         // Name of the person
-	Username     string             `json:"username,omitempty"     bson:"username,omitempty"`     // Username of the person (e.g. @user@domain.social)
-	ProfileURL   string             `json:"profileUrl,omitempty"   bson:"profileUrl,omitempty"`   // URL of the person's profile
-	InboxURL     string             `json:"inboxUrl,omitempty"     bson:"inboxUrl,omitempty"`     // URL of the person's inbox
-	EmailAddress string             `json:"emailAddress,omitempty" bson:"emailAddress,omitempty"` // Email address of the person
-	IconURL      string             `json:"iconUrl,omitempty"      bson:"iconUrl,omitempty"`      // URL of the person's avatar/icon image
+	UserID       primitive.ObjectID `bson:"userId,omitempty"`       // Internal ID of the person (if they exist in this database)
+	Name         string             `bson:"name,omitempty"`         // Name of the person
+	Username     string             `bson:"username,omitempty"`     // Username of the person (e.g. @user@domain.social)
+	ProfileURL   string             `bson:"profileUrl,omitempty"`   // URL of the person's profile
+	InboxURL     string             `bson:"inboxUrl,omitempty"`     // URL of the person's inbox
+	EmailAddress string             `bson:"emailAddress,omitempty"` // Email address of the person
+	IconURL      string             `bson:"iconUrl,omitempty"`      // URL of the person's avatar/icon image
 }
 
 func NewPersonLink() PersonLink {

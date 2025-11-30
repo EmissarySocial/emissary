@@ -8,15 +8,15 @@ import (
 )
 
 type OAuthClient struct {
-	ClientID     primitive.ObjectID `json:"clientId"     bson:"_id"`          // Unique identifier for this Client record
-	ClientSecret string             `json:"clientSecret" bson:"clientSecret"` // Shared secret used to retrieve OAuth Tokens
-	ActorID      string             `json:"actorId"      bson:"actorId"`      // ActivityPub URL of the actor that created this Client
-	Name         string             `json:"name"         bson:"name"`         // Human-friendly name of the Client
-	Summary      string             `json:"summary"      bson:"summary"`      // Human-friendly summary/description of the Client
-	IconURL      string             `json:"iconUrl"      bson:"iconUrl"`      // URL of an icon image to display with the Client's name
-	Website      string             `json:"website"      bson:"website"`      // Human-friendly website URL for the Client
-	RedirectURIs sliceof.String     `json:"redirectUris" bson:"redirectUris"` // Slice of URLs that the Client is allowed to redirect Users to
-	Scopes       sliceof.String     `json:"scopes"       bson:"scopes"`       // OAuth authorization scopes approved for use by this Client
+	ClientID     primitive.ObjectID `bson:"_id"`          // Unique identifier for this Client record
+	ClientSecret string             `bson:"clientSecret"` // Shared secret used to retrieve OAuth Tokens
+	ActorID      string             `bson:"actorId"`      // ActivityPub URL of the actor that created this Client
+	Name         string             `bson:"name"`         // Human-friendly name of the Client
+	Summary      string             `bson:"summary"`      // Human-friendly summary/description of the Client
+	IconURL      string             `bson:"iconUrl"`      // URL of an icon image to display with the Client's name
+	Website      string             `bson:"website"`      // Human-friendly website URL for the Client
+	RedirectURIs sliceof.String     `bson:"redirectUris"` // Slice of URLs that the Client is allowed to redirect Users to
+	Scopes       sliceof.String     `bson:"scopes"`       // OAuth authorization scopes approved for use by this Client
 
 	journal.Journal `json:"-" bson:",inline"`
 }

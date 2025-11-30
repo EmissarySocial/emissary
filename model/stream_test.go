@@ -124,9 +124,9 @@ func TestStream_JSON(t *testing.T) {
 
 	test(Stream{
 		StartDate: datetime.DateTime{Time: time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC)},
-	}, `"startDate":"2009-11-17T20:34:58.651387237Z"`)
+	}, `"StartDate":"2009-11-17T20:34:58.651387237Z"`)
 
 	test(Stream{
 		EndDate: datetime.DateTime{Time: time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC)},
-	}, `"endDate":"2009-11-17T20:34:58.651387237Z"`)
+	}, `"EndDate":"2009-11-17T20:34:58.651387237Z"`)
 }

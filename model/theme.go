@@ -14,7 +14,7 @@ import (
 // Theme represents an HTML template used for building all hard-coded application elements (but not dynamic streams)
 type Theme struct {
 	ThemeID        string                  `json:"themeID"        bson:"themeID"`        // Internal name/token other objects (like streams) will use to reference this Theme.
-	Extends        []string                `json:"extends" bson:"extends"`               // List of other themes that this theme extends
+	Extends        []string                `json:"extends"        bson:"extends"`        // List of other themes that this theme extends
 	Category       string                  `json:"category"       bson:"category"`       // Category of this theme (for grouping)
 	Label          string                  `json:"label"          bson:"label"`          // Human-readable label for this theme
 	Description    string                  `json:"description"    bson:"description"`    // Human-readable description for this theme

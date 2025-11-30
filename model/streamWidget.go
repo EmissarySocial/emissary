@@ -6,15 +6,15 @@ import (
 )
 
 type StreamWidget struct {
-	StreamWidgetID primitive.ObjectID `json:"streamWidgetId" bson:"streamWidgetId"`
-	Type           string             `json:"type"           bson:"type"`
-	Location       string             `json:"location"       bson:"location"`
-	Label          string             `json:"label"          bson:"label"`
-	Data           mapof.Any          `json:"data"           bson:"data"`
+	StreamWidgetID primitive.ObjectID `bson:"streamWidgetId"`
+	Type           string             `bson:"type"`
+	Location       string             `bson:"location"`
+	Label          string             `bson:"label"`
+	Data           mapof.Any          `bson:"data"`
 
 	// These values are not stored in the database, but injected during building
-	Stream *Stream `json:"-" bson:"-"`
-	Widget Widget  `json:"-" bson:"-"`
+	Stream *Stream `bson:"-"`
+	Widget Widget  `bson:"-"`
 }
 
 func NewStreamWidget(widgetType string, label string, location string) StreamWidget {

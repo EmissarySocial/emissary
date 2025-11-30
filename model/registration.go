@@ -13,19 +13,19 @@ import (
 
 // Registration represents an HTML registration used for building Streams
 type Registration struct {
-	RegistrationID string               `json:"registrationId"     bson:"registrationId"` // Internal name/token other objects (like streams) will use to reference this Registration.
-	Extends        sliceof.String       `json:"extends"            bson:"extends"`        // List of registrations that this registration extends.  The first registration in the list is the most important, and the last registration in the list is the least important.
-	Label          string               `json:"label"              bson:"label"`          // Human-readable label used in management UI.
-	Description    string               `json:"description"        bson:"description"`    // Human-readable long-description text used in management UI.
-	Icon           string               `json:"icon"               bson:"icon"`           // Icon image used in management UI.
-	Sort           int                  `json:"sort"               bson:"sort"`           // Sort order used in management UI.
-	Form           form.Element         `json:"form"               bson:"form"`           // Form used to edit custom data
-	Schema         schema.Schema        `json:"schema"             bson:"schema"`         // JSON Schema that describes the data required to populate this Registration.
-	Actions        mapof.Object[Action] `json:"actions"            bson:"actions"`        // Map of actions that can be performed on streams of this Registration
-	HTMLTemplate   *template.Template   `json:"-"                  bson:"-"`              // Compiled HTML template
-	Bundles        mapof.Object[Bundle] `json:"bundles"            bson:"bundles"`        // Additional resources (JS, HS, CSS) reqired tp remder this Registration.
-	Resources      fs.FS                `json:"-"                  bson:"-"`              // File system containing the registration resources
-	AllowedFields  []string             `json:"allowedFields"      bson:"allowedFields"`  // List of fields that are allowed to be set by the user
+	RegistrationID string               `bson:"registrationId"` // Internal name/token other objects (like streams) will use to reference this Registration.
+	Extends        sliceof.String       `bson:"extends"`        // List of registrations that this registration extends.  The first registration in the list is the most important, and the last registration in the list is the least important.
+	Label          string               `bson:"label"`          // Human-readable label used in management UI.
+	Description    string               `bson:"description"`    // Human-readable long-description text used in management UI.
+	Icon           string               `bson:"icon"`           // Icon image used in management UI.
+	Sort           int                  `bson:"sort"`           // Sort order used in management UI.
+	Form           form.Element         `bson:"form"`           // Form used to edit custom data
+	Schema         schema.Schema        `bson:"schema"`         // JSON Schema that describes the data required to populate this Registration.
+	Actions        mapof.Object[Action] `bson:"actions"`        // Map of actions that can be performed on streams of this Registration
+	HTMLTemplate   *template.Template   `bson:"-"`              // Compiled HTML template
+	Bundles        mapof.Object[Bundle] `bson:"bundles"`        // Additional resources (JS, HS, CSS) reqired tp remder this Registration.
+	Resources      fs.FS                `bson:"-"`              // File system containing the registration resources
+	AllowedFields  []string             `bson:"allowedFields"`  // List of fields that are allowed to be set by the user
 }
 
 // NewRegistration creates a new, fully initialized Registration object

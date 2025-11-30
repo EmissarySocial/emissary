@@ -15,36 +15,36 @@ import (
 
 // User represents a person or machine account that can own pages and sections.
 type User struct {
-	UserID          primitive.ObjectID         `json:"userId"          bson:"_id"`                  // Unique identifier for this user.
-	MapIDs          mapof.String               `json:"mapIds"          bson:"mapIds"`               // Map of IDs for this user on other web services.
-	GroupIDs        id.Slice                   `json:"groupIds"        bson:"groupIds"`             // Slice of IDs for the groups that this user belongs to.
-	IconID          primitive.ObjectID         `json:"iconId"          bson:"iconId"`               // AttachmentID of this user's avatar/icon image.
-	ImageID         primitive.ObjectID         `json:"imageId"         bson:"imageId"`              // AttachmentID of this user's banner image.
-	DisplayName     string                     `json:"displayName"     bson:"displayName"`          // Name to be displayed for this user
-	StatusMessage   string                     `json:"statusMessage"   bson:"statusMessage"`        // Status summary for this user
-	Location        string                     `json:"location"        bson:"location"`             // Human-friendly description of this user's physical location.
-	ProfileURL      string                     `json:"profileUrl"      bson:"profileUrl"`           // Fully Qualified profile URL for this user (including domain name)
-	EmailAddress    string                     `json:"emailAddress"    bson:"emailAddress"`         // Email address for this user
-	Username        string                     `json:"username"        bson:"username"`             // This is the primary public identifier for the user.
-	Password        string                     `json:"-"               bson:"password"`             // This password should be encrypted with BCrypt.
-	Locale          string                     `json:"locale"          bson:"locale"`               // Language code for this user's preferred language.
-	SignupNote      string                     `json:"signupNote"      bson:"signupNote,omitempty"` // Note that was included when this user signed up.
-	StateID         string                     `json:"stateId"         bson:"stateId"`              // State ID for this user
-	InboxTemplate   string                     `json:"inboxTemplate"   bson:"inboxTemplate"`        // Template for the user's inbox
-	OutboxTemplate  string                     `json:"outboxTemplate"  bson:"outboxTemplate"`       // Template for the user's outbox
-	NoteTemplate    string                     `json:"noteTemplate"    bson:"noteTemplate"`         // Template for generically created notes
-	Hashtags        sliceof.String             `json:"hashtags"        bson:"hashtags"`             // Slice of tags that can be used to categorize this user.
-	Links           sliceof.Object[PersonLink] `json:"links"           bson:"links"`                // Slice of links to profiles on other web services.
-	PasswordReset   PasswordReset              `json:"-"               bson:"passwordReset"`        // Most recent password reset information.
-	Data            mapof.String               `json:"data"            bson:"data"`                 // Custom profile data that can be stored with this User.
+	UserID          primitive.ObjectID         `bson:"_id"`                  // Unique identifier for this user.
+	MapIDs          mapof.String               `bson:"mapIds"`               // Map of IDs for this user on other web services.
+	GroupIDs        id.Slice                   `bson:"groupIds"`             // Slice of IDs for the groups that this user belongs to.
+	IconID          primitive.ObjectID         `bson:"iconId"`               // AttachmentID of this user's avatar/icon image.
+	ImageID         primitive.ObjectID         `bson:"imageId"`              // AttachmentID of this user's banner image.
+	DisplayName     string                     `bson:"displayName"`          // Name to be displayed for this user
+	StatusMessage   string                     `bson:"statusMessage"`        // Status summary for this user
+	Location        string                     `bson:"location"`             // Human-friendly description of this user's physical location.
+	ProfileURL      string                     `bson:"profileUrl"`           // Fully Qualified profile URL for this user (including domain name)
+	EmailAddress    string                     `bson:"emailAddress"`         // Email address for this user
+	Username        string                     `bson:"username"`             // This is the primary public identifier for the user.
+	Password        string                     `bson:"password"`             // This password should be encrypted with BCrypt.
+	Locale          string                     `bson:"locale"`               // Language code for this user's preferred language.
+	SignupNote      string                     `bson:"signupNote,omitempty"` // Note that was included when this user signed up.
+	StateID         string                     `bson:"stateId"`              // State ID for this user
+	InboxTemplate   string                     `bson:"inboxTemplate"`        // Template for the user's inbox
+	OutboxTemplate  string                     `bson:"outboxTemplate"`       // Template for the user's outbox
+	NoteTemplate    string                     `bson:"noteTemplate"`         // Template for generically created notes
+	Hashtags        sliceof.String             `bson:"hashtags"`             // Slice of tags that can be used to categorize this user.
+	Links           sliceof.Object[PersonLink] `bson:"links"`                // Slice of links to profiles on other web services.
+	PasswordReset   PasswordReset              `bson:"passwordReset"`        // Most recent password reset information.
+	Data            mapof.String               `bson:"data"`                 // Custom profile data that can be stored with this User.
 	journal.Journal `json:"-" bson:",inline"`
 
-	FollowerCount  int  `json:"followerCount"   bson:"followerCount"`  // Number of followers for this user
-	FollowingCount int  `json:"followingCount"  bson:"followingCount"` // Number of actors that this user is following
-	RuleCount      int  `json:"ruleCount"       bson:"ruleCount"`      // Number of rules (blocks) that this user has implemented
-	IsOwner        bool `json:"isOwner"         bson:"isOwner"`        // If TRUE, then this user is a website owner with FULL privileges.
-	IsPublic       bool `json:"isPublic"        bson:"isPublic"`       // If TRUE, then this user's profile is publicly visible
-	IsIndexable    bool `json:"isIndexable"     bson:"isIndexable"`    // If TRUE, then this user's profile can be indexed by search engines.
+	FollowerCount  int  `bson:"followerCount"`  // Number of followers for this user
+	FollowingCount int  `bson:"followingCount"` // Number of actors that this user is following
+	RuleCount      int  `bson:"ruleCount"`      // Number of rules (blocks) that this user has implemented
+	IsOwner        bool `bson:"isOwner"`        // If TRUE, then this user is a website owner with FULL privileges.
+	IsPublic       bool `bson:"isPublic"`       // If TRUE, then this user's profile is publicly visible
+	IsIndexable    bool `bson:"isIndexable"`    // If TRUE, then this user's profile can be indexed by search engines.
 }
 
 // NewUser returns a fully initialized User object.

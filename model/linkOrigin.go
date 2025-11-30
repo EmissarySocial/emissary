@@ -7,11 +7,11 @@ import (
 // OriginLink represents the original source of a stream that has been imported into Emissary.
 // This could be an external ActivityPub server, RSS Feed, or Tweet.
 type OriginLink struct {
-	Type        string             `json:"type"        bson:"type,omitempty"`        // The type of message that this document (DIRECT, LIKE, DISLIKE, REPLY, ANNOUNCE)
-	FollowingID primitive.ObjectID `json:"followingId" bson:"followingId,omitempty"` // Unique ID of a document in this database
-	Label       string             `json:"label"       bson:"label,omitempty"`       // Human-friendly label of the origin
-	URL         string             `json:"url"         bson:"url,omitempty"`         // Public URL of the origin
-	IconURL     string             `json:"iconUrl"     bson:"iconUrl,omitempty"`     // URL of the a avatar/icon image for this origin
+	Type        string             `bson:"type,omitempty"`        // The type of message that this document (DIRECT, LIKE, DISLIKE, REPLY, ANNOUNCE)
+	FollowingID primitive.ObjectID `bson:"followingId,omitempty"` // Unique ID of a document in this database
+	Label       string             `bson:"label,omitempty"`       // Human-friendly label of the origin
+	URL         string             `bson:"url,omitempty"`         // Public URL of the origin
+	IconURL     string             `bson:"iconUrl,omitempty"`     // URL of the a avatar/icon image for this origin
 }
 
 // NewOriginLink returns a fully initialized OriginLink

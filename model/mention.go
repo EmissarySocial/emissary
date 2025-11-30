@@ -8,12 +8,12 @@ import (
 // Mention represents a single hyperlink from an external source to an internal object.
 // Mentions are created by WebMentions or by ActivityPub "Mention" records
 type Mention struct {
-	MentionID primitive.ObjectID `json:"mentionId" bson:"_id"`      // Unique ID for this record
-	ObjectID  primitive.ObjectID `json:"objectId"  bson:"objectId"` // Unique ID of the internal object that was mentioned
-	Type      string             `json:"type"      bson:"type"`     // Type of object that was mentioned (Stream, User)
-	StateID   string             `json:"stateId"   bson:"stateId"`  // State of this mention (Validated, Pending, Invalid)
-	Origin    OriginLink         `json:"origin"    bson:"origin"`   // Origin information of the site that mentions this object
-	Author    PersonLink         `json:"author"    bson:"author"`   // Author information of the person who mentioned this object
+	MentionID primitive.ObjectID `bson:"_id"`      // Unique ID for this record
+	ObjectID  primitive.ObjectID `bson:"objectId"` // Unique ID of the internal object that was mentioned
+	Type      string             `bson:"type"`     // Type of object that was mentioned (Stream, User)
+	StateID   string             `bson:"stateId"`  // State of this mention (Validated, Pending, Invalid)
+	Origin    OriginLink         `bson:"origin"`   // Origin information of the site that mentions this object
+	Author    PersonLink         `bson:"author"`   // Author information of the person who mentioned this object
 
 	journal.Journal `json:"-" bson:",inline"`
 }

@@ -14,13 +14,13 @@ import (
 // Reponse defines a single Actor's response to an Object.  The actor may be a local or remote user, and the
 // Object may be a local stream or an inbox message.
 type Response struct {
-	ResponseID primitive.ObjectID `json:"responseId" bson:"_id"`               // Unique identifier for this Response
-	UserID     primitive.ObjectID `json:"userId"     bson:"userId"`            // ID of the User who made this response
-	Actor      string             `json:"actor"      bson:"actor"`             // ActivityPubURL of the User who made the response
-	Object     string             `json:"object"     bson:"object"`            // ActivityPubURL of the Object that the actor responded to
-	Type       string             `json:"type"       bson:"type"`              // Type of Response (e.g. "Announce", "Bookmark", "Like", "Dislike", etc...)
-	Summary    string             `json:"summary"    bson:"summary,omitempty"` // Summary of the response (e.g. "I liked this post because...")
-	Content    string             `json:"content"    bson:"content,omitempty"` // Custom value assigned to the response (emoji, vote, etc.)
+	ResponseID primitive.ObjectID `bson:"_id"`               // Unique identifier for this Response
+	UserID     primitive.ObjectID `bson:"userId"`            // ID of the User who made this response
+	Actor      string             `bson:"actor"`             // ActivityPubURL of the User who made the response
+	Object     string             `bson:"object"`            // ActivityPubURL of the Object that the actor responded to
+	Type       string             `bson:"type"`              // Type of Response (e.g. "Announce", "Bookmark", "Like", "Dislike", etc...)
+	Summary    string             `bson:"summary,omitempty"` // Summary of the response (e.g. "I liked this post because...")
+	Content    string             `bson:"content,omitempty"` // Custom value assigned to the response (emoji, vote, etc.)
 
 	journal.Journal `json:"-" bson:",inline"`
 }
