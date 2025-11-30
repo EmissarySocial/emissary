@@ -25,7 +25,8 @@ func (service *Folder) Import(session data.Session, _ *model.Import, importItem 
 	importItem.LocalID = primitive.NewObjectID()
 
 	// Map values from the original Folder into the new, local Folder
-	folder.FolderID = importItem.LocalID // Use the new localID for this record
+	folder.FolderID = importItem.LocalID        // Use the new localID for this record
+	folder.Label = folder.Label + " (imported)" // Label imported Folders
 
 	// Map the UserID
 	if err := service.importItemService.mapRemoteID(session, user.UserID, &folder.UserID); err != nil {
