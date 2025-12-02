@@ -10,6 +10,7 @@ import (
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/sherlock"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -134,6 +135,12 @@ func (service *OAuthClient) Schema() schema.Schema {
 /******************************************
  * Custom Queries
  ******************************************/
+
+// QueryByUserID returns a slice of OAuthClients
+func (service *OAuthClient) QueryByUserID(session data.Session, userID primitive.ObjectID) (sliceof.Object[model.OAuthClient], error) {
+	criteria := exp.Equal("userId", userID)
+	return service.Query(session, criteria, option.Fields("_id", "name", "summary", "iconUrl", "website"))
+}
 
 // LoadByClientID loads a single OAuth client using the "client_id" field (which is just a stringified ObjectID)
 func (service *OAuthClient) LoadByClientID(session data.Session, clientID primitive.ObjectID, client *model.OAuthClient) error {

@@ -51,6 +51,10 @@ func (r OAuthAuthorization) Name() string {
 	return r._client.Name
 }
 
+func (r OAuthAuthorization) IconURL() string {
+	return r._client.IconURL
+}
+
 func (r OAuthAuthorization) Website() string {
 	return r._client.Website
 }

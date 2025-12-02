@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/queries"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
@@ -286,6 +287,17 @@ func (w Settings) FollowingByToken(followingToken string) (model.Following, erro
 	}
 
 	return following, nil
+}
+
+func (w Settings) OAuthClients() (sliceof.Object[model.OAuthClient], error) {
+	userID := w.AuthenticatedID()
+	oauthClientService := w._factory.OAuthClient()
+	return oauthClientService.QueryByUserID(w._session, userID)
+}
+
+func (w Settings) OAuthUserTokens() (sliceof.MapOfAny, error) {
+	userID := w.AuthenticatedID()
+	return queries.OAuthUserTokens(w._session, userID)
 }
 
 func (w Settings) Rules() QueryBuilder[model.Rule] {

@@ -248,6 +248,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.WithNextSibling:
 		return StepWithNextSibling(s)
 
+	case step.WithOAuthToken:
+		return StepWithOAuthToken(s)
+
 	case step.WithParent:
 		return StepWithParent(s)
 

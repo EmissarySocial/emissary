@@ -23,6 +23,7 @@ type OAuthUserToken struct {
 	journal.Journal `json:"-" bson:",inline"`
 }
 
+// NewOAuthUserToken returns a fully initialized OAuthUserToken
 func NewOAuthUserToken() OAuthUserToken {
 	return OAuthUserToken{
 		OAuthUserTokenID: primitive.NewObjectID(),
@@ -30,9 +31,51 @@ func NewOAuthUserToken() OAuthUserToken {
 	}
 }
 
+/******************************************
+ * data.Object Interface
+ ******************************************/
+
 func (token OAuthUserToken) ID() string {
 	return token.OAuthUserTokenID.Hex()
 }
+
+/******************************************
+ * AccessLister Interface
+ ******************************************/
+
+// State returns the current state of this Stream.
+// It is part of the AccessLister interface
+func (token OAuthUserToken) State() string {
+	return "DEFAULT"
+}
+
+// IsAuthor returns TRUE if the provided UserID the author of this Stream
+// It is part of the AccessLister interface
+func (token OAuthUserToken) IsAuthor(_ primitive.ObjectID) bool {
+	return false
+}
+
+// IsMyself returns TRUE if this object directly represents the provided UserID
+// It is part of the AccessLister interface
+func (token OAuthUserToken) IsMyself(userID primitive.ObjectID) bool {
+	return userID == token.UserID
+}
+
+// RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.
+// It is part of the AccessLister interface
+func (token OAuthUserToken) RolesToGroupIDs(roles ...string) Permissions {
+	return defaultRolesToGroupIDs(token.UserID, roles...)
+}
+
+// RolesToPrivilegeIDs returns a slice of Privileges that grant access to any of the requested roles.
+// It is part of the AccessLister interface
+func (token OAuthUserToken) RolesToPrivilegeIDs(roleIDs ...string) Permissions {
+	return NewPermissions()
+}
+
+/******************************************
+ * Other Methods
+ ******************************************/
 
 // Code returns the OAuth2 code that is used to request an access token.
 // This is just the string version of the ID.
@@ -40,6 +83,7 @@ func (token OAuthUserToken) Code() string {
 	return token.OAuthUserTokenID.Hex()
 }
 
+// JSONResponse returns the token as a map suitable for JSON API responses.
 func (token OAuthUserToken) JSONResponse() map[string]any {
 
 	return map[string]any{
@@ -50,6 +94,7 @@ func (token OAuthUserToken) JSONResponse() map[string]any {
 	}
 }
 
+// Toot returns the token as a Toot ActivityPub object.Token.
 func (token OAuthUserToken) Toot() object.Token {
 	return object.Token{
 		AccessToken: token.Token,

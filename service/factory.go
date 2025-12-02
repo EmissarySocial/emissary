@@ -604,51 +604,6 @@ func (factory *Factory) WithTransaction(ctx context.Context, callback data.Trans
  * Domain Model Services
  ******************************************/
 
-func (factory *Factory) Model(name string) (ModelService, error) {
-
-	switch strings.ToLower(name) {
-
-	case "activity":
-		return factory.Inbox(), nil
-
-	case "annotation":
-		return factory.Annotation(), nil
-
-	case "circle":
-		return factory.Circle(), nil
-
-	case "conversation":
-		return factory.Conversation(), nil
-
-	case "folder":
-		return factory.Folder(), nil
-
-	case "follower":
-		return factory.Follower(), nil
-
-	case "following":
-		return factory.Following(), nil
-
-	case "identity":
-		return factory.Identity(), nil
-
-	case "merchantAccount":
-		return factory.MerchantAccount(), nil
-
-	case "privilege":
-		return factory.Privilege(), nil
-
-	case "stream":
-		return factory.Stream(), nil
-
-	case "user":
-		return factory.User(), nil
-
-	}
-
-	return nil, derp.InternalError("domain.Factory.Model", "Unknown model", name)
-}
-
 func (factory *Factory) ActivityStream(actorType string, actorID primitive.ObjectID) ActivityStream {
 	return NewActivityStream(
 		factory.serverFactory,
@@ -1113,6 +1068,54 @@ func (factory *Factory) ImportableLocator() ImportableLocator {
 	}
 }
 
+func (factory *Factory) Model(name string) (ModelService, error) {
+
+	switch strings.ToLower(name) {
+
+	case "activity":
+		return factory.Inbox(), nil
+
+	case "annotation":
+		return factory.Annotation(), nil
+
+	case "circle":
+		return factory.Circle(), nil
+
+	case "conversation":
+		return factory.Conversation(), nil
+
+	case "folder":
+		return factory.Folder(), nil
+
+	case "follower":
+		return factory.Follower(), nil
+
+	case "following":
+		return factory.Following(), nil
+
+	case "identity":
+		return factory.Identity(), nil
+
+	case "merchantAccount":
+		return factory.MerchantAccount(), nil
+
+	case "oauthUserToken":
+		return factory.OAuthUserToken(), nil
+
+	case "privilege":
+		return factory.Privilege(), nil
+
+	case "stream":
+		return factory.Stream(), nil
+
+	case "user":
+		return factory.User(), nil
+
+	}
+
+	return nil, derp.InternalError("domain.Factory.Model", "Unknown model", name)
+}
+
 // ModelService returns the correct service to use for this particular Model object
 func (factory *Factory) ModelService(object data.Object) ModelService {
 
@@ -1147,6 +1150,9 @@ func (factory *Factory) ModelService(object data.Object) ModelService {
 
 	case *model.Message:
 		return factory.Inbox()
+
+	case *model.OAuthUserToken:
+		return factory.OAuthUserToken()
 
 	case *model.Response:
 		return factory.Response()

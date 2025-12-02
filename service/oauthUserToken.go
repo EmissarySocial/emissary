@@ -127,6 +127,58 @@ func (service *OAuthUserToken) DeleteMany(session data.Session, criteria exp.Exp
 	return nil
 }
 
+/******************************************
+ * Model Service Methods
+ ******************************************/
+
+// ObjectType returns the type of object that this service manages
+func (service *OAuthUserToken) ObjectType() string {
+	return "OAuthUserToken"
+}
+
+// New returns a fully initialized model.OAuthUserToken as a data.Object.
+func (service *OAuthUserToken) ObjectNew() data.Object {
+	result := model.NewOAuthUserToken()
+	return &result
+}
+
+func (service *OAuthUserToken) ObjectID(object data.Object) primitive.ObjectID {
+
+	if folder, ok := object.(*model.OAuthUserToken); ok {
+		return folder.OAuthUserTokenID
+	}
+
+	return primitive.NilObjectID
+}
+
+func (service *OAuthUserToken) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
+	return service.collection(session).Query(result, notDeleted(criteria), options...)
+}
+
+func (service *OAuthUserToken) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
+	result := model.NewOAuthUserToken()
+	err := service.Load(session, criteria, &result)
+	return &result, err
+}
+
+func (service *OAuthUserToken) ObjectSave(session data.Session, object data.Object, comment string) error {
+	if folder, ok := object.(*model.OAuthUserToken); ok {
+		return service.Save(session, folder, comment)
+	}
+	return derp.InternalError("service.OAuthUserToken.ObjectSave", "Invalid object type", object)
+}
+
+func (service *OAuthUserToken) ObjectDelete(session data.Session, object data.Object, comment string) error {
+	if folder, ok := object.(*model.OAuthUserToken); ok {
+		return service.Delete(session, folder, comment)
+	}
+	return derp.InternalError("service.OAuthUserToken.ObjectDelete", "Invalid object type", object)
+}
+
+func (service *OAuthUserToken) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
+	return derp.UnauthorizedError("service.OAuthUserToken", "Not Authorized")
+}
+
 func (service *OAuthUserToken) Schema() schema.Schema {
 	return schema.New(model.OAuthUserTokenSchema())
 }
@@ -134,6 +186,15 @@ func (service *OAuthUserToken) Schema() schema.Schema {
 /******************************************
  * Custom Queries
  ******************************************/
+
+// LoadByID retrieves an OAuthUserToken using its ID and the ID of the User who owns it
+func (service *OAuthUserToken) LoadByID(session data.Session, userID primitive.ObjectID, oauthUserTokenID primitive.ObjectID, result *model.OAuthUserToken) error {
+
+	criteria := exp.Equal("userId", userID).
+		AndEqual("_id", oauthUserTokenID)
+
+	return service.Load(session, criteria, result)
+}
 
 func (service *OAuthUserToken) LoadByUserAndClient(session data.Session, userID primitive.ObjectID, clientID primitive.ObjectID, result *model.OAuthUserToken) error {
 

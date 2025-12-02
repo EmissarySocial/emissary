@@ -268,6 +268,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "with-next-sibling":
 		return NewWithNextSibling(stepInfo)
 
+	case "with-oauth-token":
+		return NewWithOAuthToken(stepInfo)
+
 	case "with-parent":
 		return NewWithParent(stepInfo)
 
