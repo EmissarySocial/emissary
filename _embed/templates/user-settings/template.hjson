@@ -9,7 +9,9 @@
 	schema: {
 		title: User Settings
 		type: object
-		properties: {}
+		properties:{
+
+		}
 	}
 
 	states: {
@@ -141,13 +143,13 @@
 									type:layout-vertical
 									label:Description
 									children: [
-										{type:"textarea", path:"description", label:"Description", options:{rows:8}}
+										{type:"textarea", description:"Displays to visitors when they see this circle.", options:{rows:8}}
 									]
 								}
 								{
 									type: layout-vertical
 									label: Products
-									description: Link this Circle to the products in your merchant account and guests will be able to purchase membership in this Circle. <a href="https://emissary.dev/circles" target="_blank"><i class="bi bi-question-circle"></i> Help with Circles</a>
+									description: <div class="alert-gray">Link this Circle to the products in your merchant account and guests will be able to purchase membership in this Circle.</div>
 									children:[
 										{type:"multiselect", path:"productIds",description:"<a href='/@me/settings/payments'>Manage Products &rarr;</a>",  options:{provider:"merchantAccounts-all-products"}}
 										{type:"toggle", path:"isFeatured", options:{false-text:"Available to Purchase?", true-text:"Available to Purchase.  This circle is visible from my profile page."}}
@@ -435,6 +437,7 @@
 				{do:"refresh-page"}
 			]
 		}
+
 		following-delete:{
 			roles:["self"]
 			steps:[
@@ -442,6 +445,81 @@
 					{do:"delete", title:"Stop Following {{.Label}}", message:"Are you sure you want to stop following this source?"}
 					{do:"refresh-page"}
 				]}
+			]
+		}
+
+		general: {
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
+		general-form: {
+			roles:["self"]
+			steps:[
+				{do:"edit", 
+				options:["cancel-button:hide"]
+				form:{
+					type:layout-vertical
+					children:[
+						{type:"text", path:"displayName", label:"Name", description:"Displayed wherever someone sees your profile. (PUBLIC)"}
+						{type:"text", path:"username", label:"Username", description:"How others will identify you online. (PUBLIC)", options:{autocomplete:"off", validator:"/.validate/username"}}
+						{type:"text", path:"emailAddress", label:"Email Address", description:"Used to sign in and support your account. Not shared. (PRIVATE)"}
+						{type:"textarea", path:"statusMessage", label:"About Me", description:"Displayed on your profile page. Markdown is allowed. (PUBLIC)", options:{rows:4, showLimit:true}}
+						{type:"text", path:"location", label:"Location", description:"City, State, or whatever you want. (PUBLIC)"}
+						{type:"text", path:"data.tags", label:"Hashtags", description:"Enter #Hashtags separated by spaces.  (PUBLIC)"}
+					]	
+				}}
+				{do:"save"}
+				{do: "inline-save-button"}
+			]
+		}
+
+		images: {
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
+		images-form: {
+			roles:["self"]
+			steps:[
+				{do:"edit", 
+				options:["cancel-button:hide"]
+				form:{
+					type:layout-vertical
+					children:[
+						{type:"upload", path:"iconUrl", label:"Avatar Image", description:"Displayed next to your name as an icon. (PUBLIC)", options:{accept:"image/*", delete:"/@me/delete-icon"}}
+						{type:"upload", path:"imageUrl", label:"Banner Image", description:"Displays at the top of your profile page. (PUBLIC)", options:{accept:"image/*", delete:"/@me/delete-image"}}
+					]	
+				}}
+				{do:"upload-attachments", category:"icon", fieldname:"iconUrl", attachment-path:"iconId", rules:{width:400, height:400, types:["webp"]}}
+				{do:"upload-attachments", category:"image", fieldname:"imageUrl", attachment-path:"imageId", rules:{types:["webp"]}}
+				{do:"save"}
+				{do: "refresh-page"}
+			]
+		}
+
+		links: {
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
+		links-form: {
+			roles: ["self"]
+			steps: [
+				{do:"edit-table", path:"links", form: {
+					type:"layout-table"
+					children: [
+						{type:"text", path:"name", label:"Label"}
+						{type:"text", path:"profileUrl", label:"URL"}
+					]
+				}}
+				{do:"save", comment:"Links updated by me"}
 			]
 		}
 
@@ -545,6 +623,48 @@
 					{do:"delete", title:"Disconnect Merchant Account?", message:"Are you sure you want to disconnect this account? Your account will remain at your merchant processor, but will be disconnected form this app."}
 					{do:"refresh-page"}
 				]}
+			]
+		}
+
+		oauth: {
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
+		oauth-token-delete: {
+			roles:["self"]
+			steps:[
+				{do:"as-modal", steps:[
+					{do:"with-oauth-token", steps:[
+						{do:"delete", title:"Disconnect this Client?", message:"This client's access keys will be revoked, and it will lose access to your profile data."}
+						{do:"refresh-page"}
+					]}
+				]}
+			]
+		}
+
+		password: {
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
+		password-form: {
+			roles:["self"]
+			steps:[
+				{do:"edit", 
+				options:["cancel-button:hide"]
+				form:{
+					type:layout-vertical
+					children:[
+						{type:"password", path:"new_password", label:"Change Password", description:"At least 8 characters. Please use a Password Manager. (PRIVATE)"}
+					]	
+				}}
+				{do:"set-password"}
+				{do: "inline-save-button"}
 			]
 		}
 
@@ -705,6 +825,35 @@
 				]}
 			]
 		}
+
+		visibility: {
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
+		visibility-form: {
+			roles:["self"]
+			steps:[
+				{do:"edit", 
+				options:["cancel-button:hide"]
+				form:{
+					type:layout-vertical
+					children:[
+						{type:"html", description:"<b>Make Your Profile Public?</b><br>When you enable this option, your profile will be visible to everyone on the Internet.  If you disable this option, others will not be able to see or interact with you here."}
+						{type:"toggle", path:"isPublic", options:{true-text:"YES. Profile is visible to everyone", false-text:"NO. Profile is only visible to me."}}
+						{type:"html", description:"&nbsp;"}
+						{type:"html", description:"<b>Allow Search Engines to Index Your Profile?</b><br>When you enable this option, you are requesting that your profile be included in search results. If you disable this option, you are requesting that search engines do not index your profile. NOTE: Not all search engines will obey this request, so your profile may still show up on some search engines."}
+						{type:"toggle", path:"isIndexable", options:{true-text:"YES. Please index my profile", false-text:"NO. Please DO NOT index my profile."}}
+						{type:"html", description:"&nbsp;"}
+					]	
+				}}
+				{do:"save"}
+				{do: "inline-save-button"}
+			]
+		}
+
 
 
 		actor-button: {

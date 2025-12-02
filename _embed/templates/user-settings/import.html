@@ -6,7 +6,7 @@
 
 	{{- if $isDesktop -}}
 		<div id="app-sidebar" class="expanded">
-			{{- template "menu" "migration" -}}
+			{{- template "menu" "general" -}}
 		</div>
 	{{- end -}}
 	
@@ -15,15 +15,17 @@
 		<div id="menu-bar">
 			<div class="left">
 				{{ if not $isDesktop }}
-					<a href="/@me/settings/mobile">{{icon "back"}}</a>
+					<a href="/@me/settings/mobile" class="turboclick" hx-boost="true">{{icon "back"}}</a>
 				{{ end }}
-				<a href="/@me/settings/import" class="selected">Import</a>
-				<a href="/@me/settings/export">Export</a>
+				<a href="/@me/settings/general" class="turboclick" hx-boost="true">General</a>
+				<a href="/@me/settings/images" class="turboclick" hx-boost="true">Images</a>
+				<a href="/@me/settings/links" class="turboclick" hx-boost="true">Links</a>
+				<a href="/@me/settings/import" class="turboclick selected" hx-boost="true">Import</a>
 			</div>
 			<div class="right">
 				<a href="https://emissary.dev/migration" target="_blank" class="link">
 					{{icon "help"}}
-					{{ if $isDesktop }} Help with Account Migration {{ end }}
+					{{ if $isDesktop }} Help with Import {{ end }}
 				</a>
 			</div>
 		</div>
@@ -33,7 +35,7 @@
 				
 				{{- if $imports.IsEmpty -}}
 
-					<div class="text-lg bold">Account Import</div>
+					<div class="text-lg bold">Import from Another Server</div>
 
 					<div>
 						You can import all of your profile data directly another Fediverse server.
@@ -46,13 +48,13 @@
 						<li>Officially &quot;Move&quot; your account and announce to your followers</li>
 					</ol>
 
-					<div class="margin-bottom">
+					<div class="margin-bottom-lg">
 						<i>Note: online account migration is new, and very few servers support
 						this action right now.</i>
-						<a href="https://emissary.dev/migration" target="_blank">Learn More {{icon "link-outbound"}}</a>
+						<a href="https://emissary.dev/migration" target="_blank" class="nowrap">Learn More {{icon "link-outbound"}}</a>
 					</div>
 
-					<button hx-get="/@me/settings/import-authenticate" class="primary">Start an Import...</button>
+					<button hx-get="/@me/settings/import-authenticate" class="primary">Import My Data...</button>
 
 				{{- else -}}
 				
@@ -104,17 +106,15 @@
 							<table class="table">
 								{{- range $index, $item := $importPlan -}}
 									<tr>
-										<td class="text-green text-lg margin-none">{{icon $item.Icon}}</td>
 										<td>
-											<div>
-												<span class="bold margin-right-sm">{{$item.Label}}</span>
-												<span class="text-xs text-gray text-bold text-uppercase">
-													
-													{{$item.Group}}
-												</span>
-											</div>
-											<div>{{$item.Description}}</div>
-											
+											<span class="margin-right-sm">{{icon $item.Icon}}</span>
+											<span class="bold">{{$item.Label}}</span>
+										</td>
+										<td>
+											<span class="text-xs text-gray">{{$item.Description}}</span>
+										</td>
+										<td>
+											<span class="text-xs text-gray text-bold text-uppercase">{{$item.Group}}</span>
 										</td>
 									</tr>
 								{{- end -}}

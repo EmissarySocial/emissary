@@ -16,10 +16,10 @@
 		<div id="menu-bar">
 			<div class="left">
 				{{ if not $isDesktop }}
-					<a href="/@me/settings/mobile">{{icon "back"}}</a>
+					<a href="/@me/settings/mobile" hx-boost="true">{{icon "back"}}</a>
 				{{ end }}
-				<a href="/@me/settings/import">Import</a>
-				<a href="/@me/settings/export" class="selected">Export</a>
+				<a href="/@me/settings/import" hx-boost="true">Import</a>
+				<a href="/@me/settings/export" class="selected" hx-boost="true">Export</a>
 			</div>
 			<div class="right">
 				<a href="https://emissary.dev/migration" target="_blank" class="link">

@@ -1,0 +1,69 @@
+{{- $isDesktop := .IsDesktop -}}
+{{- $tokens := .OAuthUserTokens -}}
+
+<div class="app" script="init send SelectNav(id:'settings')">
+	<title>General | {{.DisplayName}}</title>
+
+	{{- if $isDesktop -}}
+		<div id="app-sidebar" class="expanded">
+			{{- template "menu" "security" -}}
+		</div>
+	{{- end -}}
+	
+	<div class="app-content padding">
+
+		<div id="menu-bar">
+			<div class="left">
+				{{ if not $isDesktop }}
+					<a href="/@me/settings/mobile" hx-boost="true">{{icon "back"}}</a>
+				{{ end }}
+				<a href="/@me/settings/visibility" hx-boost="true">Visibility</a>
+				<a href="/@me/settings/password" hx-boost="true">Change Password</a>
+				<a href="/@me/settings/oauth" class="selected" hx-boost="true">Connected Clients</a>
+			</div>
+			<div class="right">
+				<a href="https://emissary.dev/user-profile" target="_blank" class="link">
+					{{icon "help"}}
+					{{ if $isDesktop }} Help with My Profile {{ end }}
+				</a>
+			</div>
+		</div>
+
+		{{- if $tokens.IsEmpty -}}
+			<div class="margin-bottom">
+				There are <b>no clients</b> connected to your profile
+			</div>
+
+			<div>
+				Client applications use <a href="https://oauth.net/2/">OAuth</a> to access the data in your profile
+				that you allow.  When you connect a client (like mobile apps, and some other websites) it will appear
+				here. You can revoke clients' access at any time.
+			</div>
+
+		{{- else -}}
+			<div class="margin-bottom">
+				{{- if $tokens.IsLength 1 -}}
+					There is <b>1 client</b> connected to your profile
+				{{- else -}}
+					There are <b>{{$tokens.Length}} clients</b> connected to your profile
+				{{- end -}}
+			</div>
+			
+			<table class="table">
+				{{- range $index, $token := $tokens -}}
+					<tr>
+						<td class="width-48"><img src="{{$token.iconUrl}}" class="circle width-48"></td>
+						<td class="width-100%">
+							{{$token.name}}<br>
+							{{$token.website}}
+						</td>
+						<td><button hx-get="/@me/settings/oauth-token-delete?oauthUserTokenId={{$token.oauthUserTokenId.Hex}}" class="text-xs text-red">Remove</button>
+					</tr>
+				{{- end -}}
+			</table>
+			
+		{{- end -}}
+
+	</div>
+
+</div>

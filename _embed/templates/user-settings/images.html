@@ -1,0 +1,42 @@
+{{- $isDesktop := .IsDesktop -}}
+
+<div class="app" script="init send SelectNav(id:'settings')">
+	<title>General | {{.DisplayName}}</title>
+
+	{{- if $isDesktop -}}
+		<div id="app-sidebar" class="expanded">
+			{{- template "menu" "general" -}}
+		</div>
+	{{- end -}}
+	
+	<div class="app-content padding">
+
+		<div id="menu-bar">
+			<div class="left">
+				{{ if not $isDesktop }}
+					<a href="/@me/settings/mobile" class="turboclick" hx-boost="true">{{icon "back"}}</a>
+				{{ end }}
+				<a href="/@me/settings/general" class="turboclick" hx-boost="true">General</a>
+				<a href="/@me/settings/images" class="turboclick selected" hx-boost="true">Images</a>
+				<a href="/@me/settings/links" class="turboclick" hx-boost="true">Links</a>
+				<a href="/@me/settings/import" class="turboclick" hx-boost="true">Import</a>
+			</div>
+			<div class="right">
+				<a href="https://emissary.dev/user-profile" target="_blank" class="link">
+					{{icon "help"}}
+					{{ if $isDesktop }} Help with My Profile {{ end }}
+				</a>
+			</div>
+		</div>
+
+		<div
+			hx-get="/@me/settings/images-form"
+			hx-trigger="load, refreshPage from:window"
+			hx-target="this"
+			hx-swap="innerHTML"
+			hx-push-url="false">
+		</div>
+
+	</div>
+
+</div>

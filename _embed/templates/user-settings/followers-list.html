@@ -1,4 +1,5 @@
 {{- $search := .QueryParam "search" -}}
+{{- $isFirstPage := eq "" (.QueryParam "name") -}}
 {{- $followers := .Followers.Top12.By "actor.name" -}}
 {{- $followers := $followers.Slice -}}
 
@@ -18,13 +19,24 @@
 			<div class="bold">{{$actor.Name}}</div>
 			<div class="text-light-gray">{{$actor.UsernameOrID}}</div>
 		</div>
-		<!--div class="align-right">
-			<button class="text-red">Block</button>
-		</div-->
 	</div>
 {{ end }}
 
-{{- if eq 12 $followers.Length -}}
+{{- if $followers.IsEmpty -}}
+	{{- if $isFirstPage -}}
+		{{- if eq "" $search -}}
+			<div class="text-lg bold">
+				You do not have any followers.
+			</div>
+		{{- else -}}
+			<div class="text-lg bold">
+				No followers match your search.
+			</div>
+		{{- end -}}
+
+	{{- end -}}
+
+{{- else if $followers.IsLength 12 -}}
 	{{- $last := $followers.Last -}}
 	<div hx-get="/@me/settings/followers-list?search={{$search}}&name=GT:{{$last.Actor.Name}}" hx-target="this" hx-trigger="revealed" hx-swap="outerHTML" hx-push-url="false"></div>
 {{- end -}}

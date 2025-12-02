@@ -21,24 +21,37 @@
 				<input type="hidden" name="state" value="{{.State}}">
 				<input type="hidden" name="response_type" value="{{.ResponseType}}">
 
-				<div class="text-lg"><b>{{$name}}</b> is requesting permission to:</div>
-
-				<div>
-					<ul>
-						{{- range .Scopes -}}
-							{{- if eq . "activitypub_account_portability" -}}
-								<li>
-									<div class="bold text-red">Export ALL of your profile data.</div>
-									<div>Only approve this request if you are MOVING TO <b>{{$name}}</b></div>
-								</li>
-							{{- else -}}
-								<li>{{.}}</li>
-							{{- end -}}
-						{{- end -}}
-					</ul>
+				<div class="text-xl flex-row flex-align-center margin-bottom-xl">
+					<img src="{{.IconURL}}" class="circle width-48">
+					<span>
+						<b>{{$name}}</b> is requesting permission to:
+					</span>
 				</div>
 
-				<div class="margin-top">
+				{{- range .Scopes -}}
+					{{- if eq . "activitypub_account_portability" -}}
+						<div class="margin-top">
+							<div class="text-lg margin-none bold text-red">{{icon "alert"}} Export All of Your Data</div>
+							<div class="margin-bottom">
+								Allow {{$name}} to access all of your profile data
+								(including your private keys)
+							</div>
+						</div>
+						<div class="margin-top">
+							<div class="text-lg margin-none bold text-red">{{icon "alert"}} Move Your Account</div>
+							<div class="margin-bottom">
+								Allow {{$name}} to move close your account on this server and move it to {{$name}}
+							</div>
+						</div>
+						<div class="margin-top">
+							<div class="bold text-red">You should only approve this request if you are <i>backing up or migrating your profile</i> to {{$name}}</div>
+						</div>
+					{{- else -}}
+						<div class="margin-top">{{.}}</div>
+					{{- end -}}
+				{{- end -}}
+
+				<div class="margin-top-lg">
 					<span class="htmx-request-show">
 						<button disabled class="primary">
 							{{icon "loading"}} Working On It...

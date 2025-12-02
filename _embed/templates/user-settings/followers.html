@@ -5,28 +5,29 @@
 
 	{{- if $isDesktop -}}
 		<div id="app-sidebar" class="expanded">
-			{{- template "menu" "followers" -}}
+			{{- template "menu" "social" -}}
 		</div>
 	{{- end -}}
 	
 	<div class="app-content padding">
 
-		{{- if $isDesktop -}}
-			<div class="flex-row flex-align-center margin-bottom-lg">			
-				<h1 class="text-xl bold margin-none flex-grow">Followers</h1>
-				<a href="https://emissary.dev/followers" target="_blank">
-					{{icon "help"}} Help with Followers
+		<div id="menu-bar">
+			<div class="left">
+				{{ if not $isDesktop }}
+					<a href="/@me/settings/mobile" hx-boost="true">{{icon "back"}}</a>
+				{{ end }}
+				<a href="/@me/settings/following" hx-boost="true">Following</a>
+				<a href="/@me/settings/followers" class="selected" hx-boost="true">Followers</a>
+				<a href="/@me/settings/circles" hx-boost="true">Circles</a>
+				<a href="/@me/settings/rules" hx-boost="true">Rules</a>
+			</div>
+			<div class="right">
+				<a href="https://emissary.dev/followers" target="_blank" class="link">
+					{{icon "help"}}
+					{{ if $isDesktop }} Help with Followers {{ end }}
 				</a>
 			</div>
-		{{- else -}}
-			<div class="flex-row flex-align-center text-xl margin-none margin-bottom-lg">			
-				<a href="/@me/settings/mobile">{{icon "back"}}</a>
-				<div class="bold flex-grow">
-					Followers
-				</div>
-				<a href="https://emissary.dev/followers" target="_blank">{{icon "help"}}</a>
-			</div>
-		{{- end -}}
+		</div>
 
 		<div>
 			<input

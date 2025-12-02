@@ -28,11 +28,18 @@
 			</div>
 			<div class="width-2-5">
 				<div class="text-black bold">{{.Folder}}</div>
-				<div class="text-sm text-light-gray margin-none">
+				<div class="text-sm margin-none">
 					{{ if eq "SUCCESS" .Status -}}
-						{{ icon .Icon }} 
-						{{.Method}}
-						{{ .LastPolled | tinyDate }}
+						<span class="text-light-gray">
+							{{ icon .Icon }} 
+							{{.Method}}
+							{{ .LastPolled | tinyDate }}
+						</span>
+					{{- else if eq "IMPORT-PENDING" .Status -}}
+						<span class="text-light-gray">
+							{{icon "import"}}
+							Imported
+						</span>
 					{{- else if eq "ERROR" .Status -}}
 						<span class="text-red">{{.Status}}</span>
 					{{- else -}}

@@ -6,24 +6,36 @@
 
 	{{- if $isDesktop -}}
 		<div id="app-sidebar" class="expanded">
-			{{- template "menu" "circles" -}}
+			{{- template "menu" "social" -}}
 		</div>
 	{{- end -}}
 	
 	<div class="app-content padding">
 
-		{{- if $isDesktop -}}
-			<div class="flex-row flex-align-center margin-bottom-lg">
-				<h1 class="text-xl bold margin-none flex-grow">Circles</h1>
-				<a href="https://emissary.dev/circles" target="_blank">{{icon "help"}} Help with Circles</a>
+		<div id="menu-bar">
+			<div class="left">
+				{{ if not $isDesktop }}
+					<a href="/@me/settings/mobile" hx-boost="true">{{icon "back"}}</a>
+				{{ end }}
+				<a href="/@me/settings/following" hx-boost="true">Following</a>
+				<a href="/@me/settings/followers" hx-boost="true">Followers</a>
+				<a href="/@me/settings/circles" class="selected" hx-boost="true">Circles</a>
+				<a href="/@me/settings/rules" hx-boost="true">Rules</a>
 			</div>
-		{{- else -}}
-			<div class="flex-row flex-align-center text-xl margin-none margin-bottom-lg">
-				<a href="/@me/settings/mobile">{{icon "back"}}</a>
-				<div class="bold flex-grow">Circles</div>
-				<a href="https://emissary.dev/circles" target="_blank">{{icon "help"}}</a>
+			<div class="right">
+				<a href="https://emissary.dev/circles" target="_blank" class="link">
+					{{icon "help"}}
+					{{ if $isDesktop }} Help with Circles {{ end }}
+				</a>
 			</div>
-		{{- end -}}
+		</div>
+
+		<div class="alert-gray">
+			Circles enable you to limit the visibility of your posts. Every post can be public (visible to everyone), 
+			or limited to the people in the circles you select.<br><br>
+			You can add people to circles manually, or <a href="/@me/settings/payments" class="nowrap">set up payments</a>
+			to charge for access to circles.
+		</div>
 
 		<table class="table">
 			<tr hx-get="/@me/settings/circle-add" role="button"><td class="link" colspan="5">

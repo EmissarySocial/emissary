@@ -19,7 +19,7 @@
 			{{- if $connections.IsEmpty -}}
 
 				{{- if $isDesktop -}}
-					<h1 class="text-xl bold">
+					<h1 class="text-xl bold margin-none">
 						Payments Not Available
 					</h1>
 				{{- else -}}
@@ -29,7 +29,7 @@
 					</div>
 				{{- end -}}
 				
-				<div class="margin-bottom-lg  md:width-80% lg:width-60%">
+				<div class="margin-top margin-bottom-lg md:width-80% lg:width-60%">
 					This server has not been configured to support payments. Please ask your server administrator
 					to enable one or more payment processors, and  you to accept payments for your posts.
 				</div>

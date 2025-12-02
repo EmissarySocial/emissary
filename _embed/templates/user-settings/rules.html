@@ -6,26 +6,36 @@
 
 	{{- if $isDesktop -}}
 		<div id="app-sidebar" class="expanded">
-			{{- template "menu" "rules" -}}
+			{{- template "menu" "social" -}}
 		</div>
 	{{- end -}}
 	
 	<div class="app-content padding">
 
-		{{- if $isDesktop -}}
-			<div class="flex-row flex-align-center margin-bottom-lg">
-				<h1 class="text-xl bold margin-none flex-grow">Rules</h1>
-				<a href="https://emissary.dev/rules" target="_blank">
-					{{icon "help"}} Help with Rules
+		<div id="menu-bar">
+			<div class="left">
+				{{ if not $isDesktop }}
+					<a href="/@me/settings/mobile" hx-boost="true">{{icon "back"}}</a>
+				{{ end }}
+				<a href="/@me/settings/following" hx-boost="true">Following</a>
+				<a href="/@me/settings/followers" hx-boost="true">Followers</a>
+				<a href="/@me/settings/circles" hx-boost="true">Circles</a>
+				<a href="/@me/settings/rules" class="selected" hx-boost="true">Rules</a>
+			</div>
+			<div class="right">
+				<a href="https://emissary.dev/rules" target="_blank" class="link">
+					{{icon "help"}}
+					{{ if $isDesktop }} Help with Rules {{ end }}
 				</a>
 			</div>
-		{{- else -}}
-			<div class="flex-row flex-align-center text-xl margin-none margin-bottom-lg">
-				<a href="/@me/settings/mobile">{{icon "back"}}</a>
-				<div class="bold flex-grow">Rules</div>
-				<a href="https://emissary.dev/rules" target="_blank">{{icon "help"}}</a>
-			</div>
-		{{- end -}}
+		</div>
+
+		<div class="alert-gray margin-bottom">
+			Rules let you limit the messages you receive from others. 
+			Filter messages based on the sender, the server it originates from, 
+			or the message content, then choose to 
+			<b>block</b> or <b>label</b> messages that match that rule.
+		</div>
 
 		<div>
 			<input
