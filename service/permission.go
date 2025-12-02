@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	"math"
 	"net/http"
 
@@ -89,6 +90,88 @@ func (service *Permission) UserCan(session data.Session, authorization *model.Au
 
 	// The user does not have permission to perform this action
 	return false, nil
+}
+
+// UserCan returns TRUE if this action is permitted on a stream (using the provided authorization)
+func (service *Permission) TraceUserCan(session data.Session, authorization *model.Authorization, template *model.Template, accessLister model.AccessLister, actionID string) []string {
+
+	result := []string{"service.Permission.UserCan"}
+
+	// Find the action in the Template
+	action, exists := template.Actions[actionID]
+
+	if !exists {
+		result = append(result, "Action not found in template", "ActionID: "+actionID, "TemplateID: "+template.TemplateID)
+		result = append(result, "FAILURE")
+		return result
+	}
+
+	result = append(result, "action.AccessList:")
+	for key, value := range action.AccessList {
+		result = append(result, key+": "+value.Join(","))
+	}
+
+	// Get a list of the valid roles for this action
+	accessList := action.AccessList[accessLister.State()]
+	result = append(result, "AccessLister.State: "+accessLister.State())
+	result = append(result, "AccessList:")
+	result = append(result, accessList...)
+
+	// Map the list of allowed roles to a list of GroupIDs
+	permissions := accessLister.RolesToGroupIDs(accessList...)
+
+	permissionsJSON, _ := json.Marshal(permissions)
+	result = append(result, "Permissions: "+string(permissionsJSON))
+
+	if permissions.IsAnonymous() {
+		result = append(result, "Allow Anonymous", "SUCCESS")
+	}
+
+	// These checks are only valid if the request includes a UserID
+	if authorization.IsAuthenticated() {
+
+		result = append(result, "Authenticated User: "+authorization.UserID.Hex())
+
+		// If the user is a domain owner, then they can do anything
+		if authorization.DomainOwner {
+			result = append(result, "Allow Domain Owner", "SUCCESS")
+			return result
+		}
+
+		// If the permissions require an "authenticated" user, then allow the request
+		if permissions.IsAuthenticated() {
+			result = append(result, "Allow Authenticated", "SUCCESS")
+			return result
+		}
+
+		// Otherwise, check if the authorization includes one of the required permissions
+		if authorization.IsGroupMember(permissions...) {
+			result = append(result, "Allow Group Member", "SUCCESS")
+			return result
+		}
+	}
+
+	// These checks are only valid if the request includes an IdentityID
+	if authorization.IsIdentity() {
+
+		result = append(result, "Identity: "+authorization.IdentityID.Hex())
+
+		hasRole, err := service.hasPrivilege(session, authorization, accessLister, accessList...)
+
+		if err != nil {
+			result = append(result, "Error reading Privileges: "+err.Error())
+			result = append(result, "FAILURE")
+			return result
+		}
+
+		if hasRole {
+			result = append(result, "Allow Identity with role", "SUCCESS")
+			return result
+		}
+	}
+
+	result = append(result, "User is not a Group Member or a Permitted Identity")
+	return result
 }
 
 // UserHasRole returns TRUE if the user has access to the specified role

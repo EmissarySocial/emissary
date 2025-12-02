@@ -37,10 +37,14 @@ func NewModel(factory Factory, session data.Session, request *http.Request, resp
 
 	// Enforce permissions on the requested action
 	if !common.UserCan(actionID) {
+
+		var traceInfo = "Uncomment the TraceUserCan function for debugging info."
+		// traceInfo := common.TraceUserCan(actionID)
+
 		if common._authorization.IsAuthenticated() {
-			return Model{}, derp.ForbiddenError(location, "Forbidden", "User is authenticated, but this action is not allowed", actionID)
+			return Model{}, derp.ForbiddenError(location, "Forbidden", "User is authenticated, but this action is not allowed", object, actionID, traceInfo)
 		} else {
-			return Model{}, derp.UnauthorizedError(location, "Anonymous user is not authorized to perform this action", actionID)
+			return Model{}, derp.UnauthorizedError(location, "Anonymous user is not authorized to perform this action", actionID, traceInfo)
 		}
 	}
 

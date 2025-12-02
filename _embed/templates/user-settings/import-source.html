@@ -1,10 +1,20 @@
-<div class="text-lg bold margin-top-none margin-bottom-sm">Importing Profile</div>
-<div class="margin-bottom-lg flex-row">
-	<div>
-		<img src="{{.Icon.Href}}" class="width-48 circle">
+{{- if ne "" .Name -}}
+
+	<div class="text-lg bold margin-top-none margin-bottom-sm">Importing Profile</div>
+	<div class="margin-bottom-lg flex-row">
+		<div>
+			<img src="{{.Icon.Href}}" class="width-48 circle">
+		</div>
+		<div>
+			<div class="text-bold">
+				{{.Name}} 
+				{{- if ne "" .Username }} (@{{.Username}}) {{- end -}}
+			</div>
+
+			{{- if ne "" .URL -}}
+				<div><a href="{{.URL}}" class="text-nocolor text-gray" target="_blank">{{.URL}} &nbsp;{{icon "link-outbound"}}</a></div>
+			{{- end -}}
+		</div>
 	</div>
-	<div>
-		<div class="text-bold">{{.Name}} (@{{.Username}})</div>
-		<div><a href="{{.URL}}" class="text-nocolor text-gray" target="_blank">{{.URL}} &nbsp;{{icon "link-outbound"}}</a></div>
-	</div>
-</div>
+
+{{- end -}}

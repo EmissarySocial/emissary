@@ -141,3 +141,9 @@ func (builder CommonWithTemplate) UserCan(actionID string) bool {
 
 	return result
 }
+
+// UserCan returns TRUE if this action is permitted on a stream (using the provided authorization)
+func (builder CommonWithTemplate) TraceUserCan(actionID string) []string {
+	permissionService := builder._factory.Permission()
+	return permissionService.TraceUserCan(builder._session, &builder._authorization, &builder._template, builder._accessLister, actionID)
+}

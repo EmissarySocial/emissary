@@ -30,14 +30,17 @@
 		</div>
 
 		{{- if $tokens.IsEmpty -}}
-			<div class="margin-bottom">
-				There are <b>no clients</b> connected to your profile
-			</div>
 
-			<div>
-				Client applications use <a href="https://oauth.net/2/">OAuth</a> to access the data in your profile
-				that you allow.  When you connect a client (like mobile apps, and some other websites) it will appear
-				here. You can revoke clients' access at any time.
+			<div class="card padding" style="max-width:600px;">
+				<div class="text-lg margin-bottom">
+					There are <b>no clients</b> connected to your profile
+				</div>
+
+				<div>
+					Client applications use <a href="https://oauth.net/2/">OAuth</a> to access the data in your profile
+					that you allow.  When you connect a client (like mobile apps, and some other websites) it will appear
+					here. You'll be able to revoke clients' access at any time.
+				</div>
 			</div>
 
 		{{- else -}}
@@ -53,17 +56,27 @@
 				{{- range $index, $token := $tokens -}}
 					<tr>
 						<td class="width-48"><img src="{{$token.iconUrl}}" class="circle width-48"></td>
-						<td class="width-100%">
+						<td class="width-50%">
 							{{$token.name}}<br>
 							{{$token.website}}
 						</td>
-						<td><button hx-get="/@me/settings/oauth-token-delete?oauthUserTokenId={{$token.oauthUserTokenId.Hex}}" class="text-xs text-red">Remove</button>
+						<td class="width-50%">Created: {{$token.createDate | shortDate }}</td>
+						<td><button hx-get="/@me/settings/oauth-token-delete?oauthUserTokenId={{$token.oauthUserTokenId.Hex}}" class="text-xs text-red">Disconnect</button>
 					</tr>
 				{{- end -}}
 			</table>
 			
 		{{- end -}}
 
+	</div>
+
+	<!-- Reload page on "refreshPage" -->
+	<div 
+		hx-get="/@me/settings/oauth" 
+		hx-trigger="refreshPage from:window" 
+		hx-target="main"
+		hx-swap="innerHTML"
+		hx-push-url="false">
 	</div>
 
 </div>

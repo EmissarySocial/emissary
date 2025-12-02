@@ -638,7 +638,7 @@
 			steps:[
 				{do:"as-modal", steps:[
 					{do:"with-oauth-token", steps:[
-						{do:"delete", title:"Disconnect this Client?", message:"This client's access keys will be revoked, and it will lose access to your profile data."}
+						{do:"delete", title:"Disconnect this Client?", message:"This client's access keys will be revoked, and it will lose access to your profile data.", submit:"Disconnect"}
 						{do:"refresh-page"}
 					]}
 				]}
