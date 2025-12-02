@@ -11,25 +11,25 @@ require (
 	github.com/benpate/data-mongo v0.30.8
 	github.com/benpate/derp v0.34.0
 	github.com/benpate/digit v0.13.12
-	github.com/benpate/digital-dome v0.2.10
-	github.com/benpate/domain v0.2.9
+	github.com/benpate/digital-dome v0.2.11
+	github.com/benpate/domain v0.2.10
 	github.com/benpate/exp v0.9.0
 	github.com/benpate/exp-builder v0.10.7
 	github.com/benpate/form v0.25.9
 	github.com/benpate/geo v0.0.3
-	github.com/benpate/hannibal v0.14.4
+	github.com/benpate/hannibal v0.14.5
 	github.com/benpate/html v0.16.15
 	github.com/benpate/icon v0.4.0
-	github.com/benpate/mediaserver v0.15.11
+	github.com/benpate/mediaserver v0.15.12
 	github.com/benpate/re v0.3.5
-	github.com/benpate/remote v0.17.10
-	github.com/benpate/rosetta v0.25.25
+	github.com/benpate/remote v0.17.11
+	github.com/benpate/rosetta v0.25.26
 	github.com/benpate/sherlock v0.8.17
 	github.com/benpate/sniff v0.1.0
 	github.com/benpate/steranko v0.22.6
 	github.com/benpate/table v0.7.10
 	github.com/benpate/toot v0.3.0
-	github.com/benpate/turbine v0.4.3
+	github.com/benpate/turbine v0.4.4
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/codingsince1985/geo-golang v1.8.5
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
@@ -67,7 +67,7 @@ require (
 	github.com/yuin/goldmark-highlighting/v2 v2.0.0-20230729083705-37449abec8cc
 	go.abhg.dev/goldmark/anchor v0.2.0
 	go.mongodb.org/mongo-driver v1.17.6
-	golang.org/x/crypto v0.44.0
+	golang.org/x/crypto v0.45.0
 	golang.org/x/exp v0.0.0-20251113190631-e25ba8c21ef6
 	golang.org/x/oauth2 v0.33.0
 	willnorris.com/go/microformats v1.2.0
@@ -102,7 +102,7 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kevinburke/ssh_config v1.4.0 // indirect
-	github.com/klauspost/compress v1.18.1 // indirect
+	github.com/klauspost/compress v1.18.2 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
@@ -122,7 +122,7 @@ require (
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
-	github.com/xdg-go/scram v1.1.2 // indirect
+	github.com/xdg-go/scram v1.2.0 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/yeqown/reedsolomon v1.0.0 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
