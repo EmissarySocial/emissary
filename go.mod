@@ -9,7 +9,7 @@ require (
 	github.com/benpate/data v0.31.2
 	github.com/benpate/data-mock v0.31.4
 	github.com/benpate/data-mongo v0.30.8
-	github.com/benpate/derp v0.34.0
+	github.com/benpate/derp v0.34.1
 	github.com/benpate/digit v0.13.12
 	github.com/benpate/digital-dome v0.2.11
 	github.com/benpate/domain v0.2.10
@@ -17,7 +17,7 @@ require (
 	github.com/benpate/exp-builder v0.10.7
 	github.com/benpate/form v0.25.9
 	github.com/benpate/geo v0.0.3
-	github.com/benpate/hannibal v0.14.5
+	github.com/benpate/hannibal v0.14.6
 	github.com/benpate/html v0.16.15
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.15.12
