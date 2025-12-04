@@ -5,7 +5,7 @@
 	label: Default Inbox
 	description: A simple inbox with a sidebar for folders and several feed layouts
 	icon: inbox
-	extends: ["base-social"]
+	extends: ["base-social", "user-mls"]
 	containedBy: []
 	schema: {
 		title: User Profile

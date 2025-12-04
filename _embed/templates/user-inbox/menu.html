@@ -1,6 +1,6 @@
 {{- $selectedID := .SelectedID -}}
 
-<!-- Hiding DM controls for now -->
+<!-- Direct Messages -->
 <!--
 {{- if eq $selectedID nilObjectID -}}
 	<div role="link" hx-get="/@me/inbox/conversations?sidebar=collapse" hx-trigger="click" hx-push-url="true" class="turboclick menu-item ellipsis hover-trigger folder selected">
@@ -13,14 +13,29 @@
 		<span style="view-transition-name:app-sidebar-dm-label">Direct Messages</span>
 	</div>
 {{- end -}}
+-->
 
+<!--
 <div role="link" hx-get="/@me/inbox/alerts?sidebar=collapse" hx-trigger="click" hx-push-url="true" class="turboclick menu-item ellipsis hover-trigger folder">
 	<span style="view-transition-name:app-sidebar-bell-icon;">{{- icon "bell" }}</span>
 	<span style="view-transition-name:app-sidebar-bell-label">Notifications</span>
 </div>
-
-<div class="margin-vertical-xl"></div>
 -->
+
+<!-- Encrypted Messages -->
+{{- if $selectedID.IsZero -}}
+	<a href="/@me/inbox/mls" class="turboclick menu-item ellipsis hover-trigger folder selected">
+		<span style="view-transition-name:app-sidebar-mls-icon;">{{- icon "lock-fill" }}</span>
+		<span style="view-transition-name:app-sidebar-mls-label">Secure Messages</span>
+	</a>
+{{- else -}}
+	<a href="/@me/inbox/mls" class="turboclick menu-item ellipsis hover-trigger folder">
+		<span style="view-transition-name:app-sidebar-mls-icon;">{{- icon "lock" }}</span>
+		<span style="view-transition-name:app-sidebar-mls-label">Secure Messages</span>
+	</a>
+{{- end -}}
+
+<div class="margin-vertical"></div>
 
 <form class="sortable" hx-post="/@me/inbox/folder-sort" hx-push-url="false" hx-trigger="end">
 
@@ -50,10 +65,9 @@
 		</div>
 	{{- end -}}
 
-	<div class="margin-vertical-xl fixed"></div>
-
 </form>
 
+<div class="margin-vertical"></div>
 
 <div role="button" hx-get="/@me/inbox/folder-add" class="menu-item link turboclick" style="border:none;">
 	<span style="view-transition-name:app-sidebar-add-folder-icon;">{{icon "add"}}</span>

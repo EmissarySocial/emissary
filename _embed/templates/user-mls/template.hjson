@@ -1,0 +1,24 @@
+{
+	templateId: user-mls
+	model: Inbox
+	label: MLS Encrypted Inbox
+	description: Inbox app for E2EE messages (using Message Layer Security)
+	icon: inbox
+	extends: []
+	containedBy: []
+	states: {
+		default: {
+			label: Inbox only has default state
+		}
+	}
+	roles: {}
+	bundles: {}
+	actions: {
+		mls: {
+			roles:["self"]
+			steps: [
+				{do:"view-html"}
+			]
+		}
+	}
+}	
