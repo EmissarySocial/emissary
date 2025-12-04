@@ -1,8 +1,6 @@
 package service
 
 import (
-	"net/http"
-
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
@@ -29,7 +27,7 @@ func (service *Import) OAuthExchange(session data.Session, record *model.Import,
 		oauth2.SetAuthURLParam("redirect_uri", service.OAuthClientCallbackURL()))
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to exchange OAuth code for token", derp.WithCode(http.StatusInternalServerError))
+		return derp.Wrap(err, location, "Unable to exchange OAuth code for token", derp.WithInternalError())
 	}
 
 	// Update the record with the new OAuth token and "Authorized" status

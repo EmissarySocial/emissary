@@ -22,7 +22,7 @@ func GetWebfinger(ctx *steranko.Context, factory *service.Factory, session data.
 	resource, err := factory.Locator().GetWebFingerResult(session, resourceID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error retrieving WebFinger resource", derp.WithCode(http.StatusBadRequest))
+		return derp.Wrap(err, location, "Error retrieving WebFinger resource", derp.WithBadRequest())
 	}
 
 	// If relation is specified, then limit links to that type only

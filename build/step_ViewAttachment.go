@@ -79,7 +79,7 @@ func (step StepViewAttachment) Get(builder Builder, buffer io.Writer) PipelineBe
 
 	// RULE: Attachment must match the expected category
 	if step.Categories.NotContains(attachment.Category) {
-		return Halt().WithError(derp.NotFoundError(location, "Invalid attachment category: "+attachment.Category, derp.WithCode(http.StatusNotFound)))
+		return Halt().WithError(derp.NotFoundError(location, "Invalid attachment category: "+attachment.Category, derp.WithNotFound()))
 	}
 
 	// Retrieve the file from the mediaserver

@@ -1,7 +1,6 @@
 package stripeapi
 
 import (
-	"net/http"
 	"strconv"
 
 	"github.com/benpate/derp"
@@ -40,7 +39,7 @@ func Prices(restrictedKey string, connectedAccountID string, priceIDs ...string)
 		}
 
 		if err := txn.Send(); err != nil {
-			return nil, derp.Wrap(err, location, "Error connecting to Stripe API", derp.WithCode(http.StatusInternalServerError))
+			return nil, derp.Wrap(err, location, "Error connecting to Stripe API", derp.WithInternalError())
 		}
 
 		// NPE check
@@ -117,7 +116,7 @@ func Price(restrictedKey string, connectedAccountID string, priceID string) (str
 		Result(&price)
 
 	if err := txn.Send(); err != nil {
-		return stripe.Price{}, derp.Wrap(err, location, "Error connecting to Stripe API", derp.WithCode(http.StatusInternalServerError))
+		return stripe.Price{}, derp.Wrap(err, location, "Error connecting to Stripe API", derp.WithInternalError())
 	}
 
 	return price, nil

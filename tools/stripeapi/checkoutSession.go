@@ -1,8 +1,6 @@
 package stripeapi
 
 import (
-	"net/http"
-
 	"github.com/benpate/derp"
 	"github.com/benpate/remote"
 	"github.com/benpate/remote/options"
@@ -29,7 +27,7 @@ func CheckoutSession(restrictedKey string, connectedAccountID string, sessionID 
 
 	// Send the transaction
 	if err := txn.Send(); err != nil {
-		return stripe.CheckoutSession{}, derp.Wrap(err, location, "Error connecting to Stripe API", derp.WithCode(http.StatusInternalServerError))
+		return stripe.CheckoutSession{}, derp.Wrap(err, location, "Error connecting to Stripe API", derp.WithInternalError())
 	}
 
 	// Success
