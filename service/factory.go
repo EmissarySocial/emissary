@@ -66,6 +66,7 @@ type Factory struct {
 	groupService           Group
 	identityService        Identity
 	inboxService           Inbox
+	keyPackageService      KeyPackage
 	locatorService         Locator
 	mentionService         Mention
 	merchantAccountService MerchantAccount
@@ -147,6 +148,7 @@ func NewFactory(serverFactory ServerFactory, commonDatabase mongodb.Server, doma
 	factory.groupService = NewGroup()
 	factory.identityService = NewIdentity(&factory)
 	factory.inboxService = NewInbox()
+	factory.keyPackageService = NewKeyPackage()
 	factory.locatorService = NewLocator()
 	factory.mentionService = NewMention(&factory)
 	factory.merchantAccountService = NewMerchantAccount()
@@ -298,6 +300,11 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 			factory.ImportItem(),
 			factory.Folder(),
 			factory.Rule(),
+			factory.Host(),
+		)
+
+		// Populage KeyPackage Service
+		factory.keyPackageService.Refresh(
 			factory.Host(),
 		)
 
@@ -737,6 +744,11 @@ func (factory *Factory) ImportItem() *ImportItem {
 // Inbox returns a fully populated Inbox service
 func (factory *Factory) Inbox() *Inbox {
 	return &factory.inboxService
+}
+
+// KeyPackage returns a fully populated KeyPackage service
+func (factory *Factory) KeyPackage() *KeyPackage {
+	return &factory.keyPackageService
 }
 
 // MerchantAccount returns a fully populated MerchantAccount service
