@@ -9,6 +9,7 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
+	"github.com/benpate/hannibal/inbox"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/steranko"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -81,4 +82,46 @@ func GetOutboxActivity(ctx *steranko.Context, factory *service.Factory, session 
 	// Return results as an OrderedCollectionPage
 	ctx.Response().Header().Set("Content-Type", "application/activity+json")
 	return ctx.JSON(http.StatusOK, outboxMessage.GetJSONLD())
+}
+
+// PostOutbox allows an Authenticated User to POST messages to their outbox, to be delivered to the
+// network according to the message's delivery
+func PostOutbox(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
+
+	const location = "handler.activitypub_user.PostOutbox"
+
+	// Get ActivityStream service for this User
+	activityService := factory.ActivityStream(model.ActorTypeUser, user.UserID)
+
+	// Retrieve the activity from the request body
+	activity, err := inbox.ReceiveRequest(ctx.Request(), activityService.Client())
+
+	if err != nil {
+		return derp.Wrap(err, location, "Unable to parse ActivityPub request")
+	}
+
+	// Create a new Context
+	context := Context{
+		factory: factory,
+		session: session,
+		user:    user,
+	}
+
+	// RULE: The actor must match the authenticated user
+	if activity.Actor().ID() != context.user.ActivityPubURL() {
+		return derp.ForbiddenError(
+			location,
+			"Actor must match authenticated user",
+			"actor: "+activity.Actor().ID(),
+			"user: "+context.user.ActivityPubURL(),
+		)
+	}
+
+	// Handle the ActivityPub request
+	if err := outboxRouter.Handle(context, activity); err != nil {
+		return derp.Wrap(err, location, "Unable to handle ActivityPub request")
+	}
+
+	// Send the response to the client
+	return ctx.String(http.StatusOK, "")
 }

@@ -146,7 +146,7 @@ func (service *KeyPackage) GetJSONLD(keyPackage *model.KeyPackage) mapof.Any {
 		},
 		vocab.PropertyType:         []string{vocab.CoreTypeObject, vocab.ObjectTypeKeyPackage},
 		vocab.PropertyID:           service.ActivityPubURL(keyPackage),
-		vocab.PropertyAttributedTo: service.ActivityPubAttributedToURL(keyPackage),
+		vocab.PropertyAttributedTo: service.ActivityPubAttributedToURL(keyPackage.UserID),
 		vocab.PropertyTo:           vocab.NamespaceActivityStreamsPublic,
 		vocab.PropertySummary:      "A binary-encoded cryptographic key",
 		vocab.PropertyMediaType:    keyPackage.MediaType,
@@ -156,14 +156,19 @@ func (service *KeyPackage) GetJSONLD(keyPackage *model.KeyPackage) mapof.Any {
 	}
 }
 
-// ActivityPubURL returns the ActivityPub "ObjectID" for this KeyPackage
-func (service *KeyPackage) ActivityPubURL(keyPackage *model.KeyPackage) string {
-	return service.host + "/@" + keyPackage.UserID.Hex() + "/pub/keyPackages/" + keyPackage.KeyPackageID.Hex()
+// ActivityPubAttributedToURL returns the ActivityPubURL for the User who owns this KeyPackage
+func (service *KeyPackage) ActivityPubAttributedToURL(userID primitive.ObjectID) string {
+	return service.host + "/@" + userID.Hex()
 }
 
-// ActivityPubAttributedToURL returns the ActivityPubURL for the User who owns this KeyPackage
-func (service *KeyPackage) ActivityPubAttributedToURL(keyPackage *model.KeyPackage) string {
-	return service.host + "/@" + keyPackage.UserID.Hex()
+// ActivityPubCollectionURL returns the ActivityPub ID for the collection of keyPackages
+func (service *KeyPackage) ActivityPubCollectionURL(userID primitive.ObjectID) string {
+	return service.ActivityPubAttributedToURL(userID) + "/pub/keyPackages"
+}
+
+// ActivityPubURL returns the ActivityPub "ObjectID" for this KeyPackage
+func (service *KeyPackage) ActivityPubURL(keyPackage *model.KeyPackage) string {
+	return service.ActivityPubCollectionURL(keyPackage.UserID) + "/" + keyPackage.KeyPackageID.Hex()
 }
 
 /******************************************

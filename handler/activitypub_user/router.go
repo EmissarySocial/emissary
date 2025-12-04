@@ -9,6 +9,8 @@ import (
 
 var inboxRouter inbox.Router[Context] = inbox.NewRouter[Context]()
 
+var outboxRouter inbox.Router[Context] = inbox.NewRouter[Context]()
+
 type Context struct {
 	factory *service.Factory
 	session data.Session

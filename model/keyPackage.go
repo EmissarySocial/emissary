@@ -12,6 +12,7 @@ type KeyPackage struct {
 	Encoding     string             `bson:"encoding"`
 	Content      string             `bson:"content"`
 	Generator    string             `bson:"generator"`
+	IsPublic     bool               `bson:"isPublic"`
 
 	journal.Journal `json:"-" bson:",inline"`
 }
@@ -28,4 +29,16 @@ func NewKeyPackage() KeyPackage {
 
 func (keyPackage *KeyPackage) ID() string {
 	return keyPackage.KeyPackageID.Hex()
+}
+
+/******************************
+ * Other Data Accessors
+ ******************************/
+
+func (keyPackage *KeyPackage) SetPublic() {
+	keyPackage.IsPublic = true
+}
+
+func (keyPackage *KeyPackage) SetPrivate() {
+	keyPackage.IsPublic = false
 }
