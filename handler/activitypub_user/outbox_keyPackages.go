@@ -1,6 +1,7 @@
 package activitypub_user
 
 import (
+	"net/http"
 	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -25,7 +26,7 @@ func outbox_CreateKeyPackage(context Context, activity streams.Document) error {
 
 	// RULE: The object must be attributed to the actor
 	if object.AttributedTo().ID() != activity.Actor().ID() {
-		return derp.ForbiddenError(location, "KeyPackage must be attributed to the actor")
+		return derp.ForbiddenError(location, "KeyPackage must be attributed to the actor", activity.Value())
 	}
 
 	// Populate the new KeyPackage
@@ -43,7 +44,12 @@ func outbox_CreateKeyPackage(context Context, activity streams.Document) error {
 		return derp.Wrap(err, location, "Unable to save KeyPackage")
 	}
 
-	// In Vino veritas
+	// Write the response to the context
+	if err := context.context.JSON(http.StatusCreated, keyPackageService.GetJSONLD(&keyPackage)); err != nil {
+		return derp.Wrap(err, location, "Unable to send response")
+	}
+
+	// Success
 	return nil
 }
 

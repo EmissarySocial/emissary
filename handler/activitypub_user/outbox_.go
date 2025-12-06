@@ -10,6 +10,7 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/inbox"
+	"github.com/benpate/hannibal/validator"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/steranko"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -94,7 +95,11 @@ func PostOutbox(ctx *steranko.Context, factory *service.Factory, session data.Se
 	activityService := factory.ActivityStream(model.ActorTypeUser, user.UserID)
 
 	// Retrieve the activity from the request body
-	activity, err := inbox.ReceiveRequest(ctx.Request(), activityService.Client())
+	activity, err := inbox.ReceiveRequest(
+		ctx.Request(),
+		activityService.Client(),
+		inbox.WithValidators(validator.NewAlreadyValidated()), // Request is protected via Authentication middleware
+	)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Unable to parse ActivityPub request")
@@ -102,6 +107,7 @@ func PostOutbox(ctx *steranko.Context, factory *service.Factory, session data.Se
 
 	// Create a new Context
 	context := Context{
+		context: ctx,
 		factory: factory,
 		session: session,
 		user:    user,
@@ -119,9 +125,9 @@ func PostOutbox(ctx *steranko.Context, factory *service.Factory, session data.Se
 
 	// Handle the ActivityPub request
 	if err := outboxRouter.Handle(context, activity); err != nil {
-		return derp.Wrap(err, location, "Unable to handle ActivityPub request")
+		return derp.ReportAndReturn(derp.Wrap(err, location, "Unable to handle ActivityPub request"))
 	}
 
-	// Send the response to the client
-	return ctx.String(http.StatusOK, "")
+	// Handler writes its response directly to the context
+	return nil
 }

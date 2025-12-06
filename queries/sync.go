@@ -119,6 +119,10 @@ func SyncDomainIndexes(connectionString string, databaseName string) error {
 		derp.Report(err)
 	}
 
+	if err := sync.KeyPackage(ctx, session); err != nil {
+		derp.Report(err)
+	}
+
 	if err := sync.Mention(ctx, session); err != nil {
 		derp.Report(err)
 	}
