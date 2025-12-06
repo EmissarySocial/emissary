@@ -12,7 +12,7 @@ require (
 	github.com/benpate/derp v0.34.0
 	github.com/benpate/digit v0.13.12
 	github.com/benpate/digital-dome v0.2.10
-	github.com/benpate/domain v0.2.9
+	github.com/benpate/domain v0.2.10
 	github.com/benpate/exp v0.9.0
 	github.com/benpate/exp-builder v0.10.7
 	github.com/benpate/form v0.25.9

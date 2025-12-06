@@ -40,8 +40,8 @@ github.com/benpate/digit v0.13.12 h1:RSUT8DdbSDz7st6f8pM8Ptt/G+UZ1N8i8ug7zleIXwI
 github.com/benpate/digit v0.13.12/go.mod h1:3w5U1UprfNIzMDOidLGdL0TzDPvtV2ox5hqSBQt+d5Q=
 github.com/benpate/digital-dome v0.2.10 h1:XYhppVC15fMWOKkjegAX/wbAGBVsIBIyaIFW94ZQCTc=
 github.com/benpate/digital-dome v0.2.10/go.mod h1:m9Fq6KwB/3nTG7yT3OBGE91yZWW6NA3alRlXgURx/cI=
-github.com/benpate/domain v0.2.9 h1:2LLxNtXG9cukk3uTR83xDS+b47EQKT4rujZQNW4LmSE=
-github.com/benpate/domain v0.2.9/go.mod h1:L4izRt2ma1OJXXtN90NqC4IvBJScyG7WzVCm/QzSYcc=
+github.com/benpate/domain v0.2.10 h1:D7Owi5OxdqXQSx9cfLyL7pb4PTXmYocDd2iP+MXJAUs=
+github.com/benpate/domain v0.2.10/go.mod h1:L4izRt2ma1OJXXtN90NqC4IvBJScyG7WzVCm/QzSYcc=
 github.com/benpate/exp v0.9.0 h1:rlYLchy1u4ChQ9oYFi4zOQAKb+yRsrvMivcrcF18irI=
 github.com/benpate/exp v0.9.0/go.mod h1:OPDLAVhPZvz/G43bX3JFAEP02OTIRvZNwNRduV44RoU=
 github.com/benpate/exp-builder v0.10.7 h1:pillm6wj8hHJR4LVkn+gMUH3uuTusPSNyCeEeYWIJwc=
