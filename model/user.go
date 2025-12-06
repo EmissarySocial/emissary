@@ -1,6 +1,7 @@
 package model
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/EmissarySocial/emissary/tools/id"
@@ -8,6 +9,7 @@ import (
 	dt "github.com/benpate/domain"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/toot/object"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -210,6 +212,11 @@ func (user User) GetJSONLD() mapof.Any {
 		vocab.ContextTypeActivityStreams,
 		vocab.ContextTypeSecurity,
 		vocab.ContextTypeToot,
+		mapof.Any{
+			"schema":        "http://schema.org#",
+			"PropertyValue": "schema:PropertyValue",
+			"value":         "schema:value",
+		},
 	}
 
 	result := mapof.Any{
@@ -233,7 +240,7 @@ func (user User) GetJSONLD() mapof.Any {
 	}
 
 	if user.StatusMessage != "" {
-		result[vocab.PropertySummary] = user.StatusMessage
+		result[vocab.PropertySummary] = markdownToHTML(user.StatusMessage)
 	}
 
 	if iconURL := user.ActivityPubIconURL(); iconURL != "" {
@@ -250,6 +257,26 @@ func (user User) GetJSONLD() mapof.Any {
 			vocab.PropertyMediaType: "image/webp",
 			vocab.PropertyURL:       user.ActivityPubImageURL(),
 		}
+	}
+
+	if user.Hashtags.NotEmpty() {
+		result[vocab.PropertyTag] = slice.Map(user.Hashtags, func(tag string) mapof.Any {
+			return mapof.Any{
+				vocab.PropertyType: vocab.LinkTypeHashtag,
+				vocab.PropertyName: "#" + tag,
+				// vocab.PropertyHref: fmt.Sprintf("%s/tags/%s", user.Host(), tag), // Omitting this because we don't have a tag page yet.
+			}
+		})
+	}
+
+	if user.Links.NotEmpty() {
+		result[vocab.PropertyAttachment] = slice.Map(user.Links, func(link PersonLink) mapof.Any {
+			return mapof.Any{
+				vocab.PropertyType: "schema:PropertyValue",
+				vocab.PropertyName: link.Name,
+				"value":            fmt.Sprintf(`<a href="%s" rel="me nofollow noopener" translate="no">%s</a>`, link.ProfileURL, link.ProfileURL),
+			}
+		})
 	}
 
 	return result
