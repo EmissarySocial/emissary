@@ -381,6 +381,8 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@:userId/pub/followers", handler.WithFactory(factory, ap_user.GetFollowersCollection))
 	e.GET("/@:userId/pub/following", handler.WithFactory(factory, ap_user.GetFollowingCollection))
 	e.GET("/@:userId/pub/following/:followingId", handler.WithFactory(factory, ap_user.GetFollowingRecord))
+	e.GET("/@:userId/pub/keyPackages", handler.WithUser(factory, ap_user.GetKeyPackageCollection))
+	e.GET("/@:userId/pub/keyPackages/:keyPackageId", handler.WithUser(factory, ap_user.GetKeyPackageRecord))
 	e.GET("/@:userId/pub/shared", handler.WithUser(factory, ap_user.GetResponseCollection))
 	e.GET("/@:userId/pub/shared/:response", handler.WithUser(factory, ap_user.GetResponse))
 	e.GET("/@:userId/pub/liked", handler.WithUser(factory, ap_user.GetResponseCollection))

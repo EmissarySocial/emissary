@@ -11,6 +11,7 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -68,6 +69,13 @@ func (service *KeyPackage) Range(session data.Session, criteria exp.Expression, 
 	return RangeFunc(iter, model.NewKeyPackage), nil
 }
 
+// Query returns a slice of KeyPackages that match the provided criteria
+func (service *KeyPackage) Query(session data.Session, criteria exp.Expression, options ...option.Option) (sliceof.Object[model.KeyPackage], error) {
+	result := make([]model.KeyPackage, 0)
+	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
+	return result, err
+}
+
 // Load retrieves an KeyPackage from the database
 func (service *KeyPackage) Load(session data.Session, criteria exp.Expression, keyPackage *model.KeyPackage) error {
 
@@ -100,11 +108,29 @@ func (service *KeyPackage) Delete(session data.Session, keyPackage *model.KeyPac
 }
 
 /******************************************
+ * Special Case Methods
+ ******************************************/
+
+// QueryIDOnly returns a slice of IDOnly records that match the provided criteria
+func (service *KeyPackage) QueryIDOnly(session data.Session, criteria exp.Expression, options ...option.Option) (sliceof.Object[model.IDOnly], error) {
+	result := make([]model.IDOnly, 0)
+	options = append(options, option.Fields("_id"))
+	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
+	return result, err
+}
+
+/******************************************
  * Custom Queries
  ******************************************/
 
+// RangeByUser returns an iterator containing all KeyPackages for the specified user
 func (service *KeyPackage) RangeByUser(session data.Session, userID primitive.ObjectID) (iter.Seq[model.KeyPackage], error) {
 	return service.Range(session, exp.Equal("userId", userID))
+}
+
+// QueryIDOnlyByUser returns an iterator containing all KeyPackages for the specified user
+func (service *KeyPackage) QueryIDOnlyByUser(session data.Session, userID primitive.ObjectID) (sliceof.Object[model.IDOnly], error) {
+	return service.QueryIDOnly(session, exp.Equal("userId", userID))
 }
 
 // LoadByID tries to load the KeyPackage from the database.  If no key
@@ -114,6 +140,23 @@ func (service *KeyPackage) LoadByID(session data.Session, userID primitive.Objec
 	return service.Load(session, criteria, keyPackage)
 }
 
+// LoadByToken tries to load the KeyPackage from the database
+// by converting the provided string into a primitive.ObjectID.
+func (service *KeyPackage) LoadByToken(session data.Session, userID primitive.ObjectID, keyPackageToken string, keyPackage *model.KeyPackage) error {
+
+	const location = "service.KeyPackage.LoadByToken"
+
+	keyPackageID, err := primitive.ObjectIDFromHex(keyPackageToken)
+
+	if err != nil {
+		return derp.Wrap(err, location, "KeyPackageToken must be a valid ObjectID", keyPackageToken)
+	}
+
+	return service.LoadByID(session, userID, keyPackageID, keyPackage)
+}
+
+// LoadByURL tries to load the KeyPackage from the database
+// by parsing the provided ActivityPub URL.
 func (service *KeyPackage) LoadByURL(session data.Session, url string, keyPackage *model.KeyPackage) error {
 
 	const location = "service.KeyPackage.LoadByURL"
@@ -145,7 +188,7 @@ func (service *KeyPackage) GetJSONLD(keyPackage *model.KeyPackage) mapof.Any {
 			vocab.ContextTypeSocialWebMLS,
 		},
 		vocab.PropertyType:         []string{vocab.CoreTypeObject, vocab.ObjectTypeKeyPackage},
-		vocab.PropertyID:           service.ActivityPubURL(keyPackage),
+		vocab.PropertyID:           service.ActivityPubURL(keyPackage.UserID, keyPackage.KeyPackageID),
 		vocab.PropertyAttributedTo: service.ActivityPubAttributedToURL(keyPackage.UserID),
 		vocab.PropertyTo:           vocab.NamespaceASPublic,
 		vocab.PropertySummary:      "A binary-encoded cryptographic key",
@@ -167,8 +210,8 @@ func (service *KeyPackage) ActivityPubCollectionURL(userID primitive.ObjectID) s
 }
 
 // ActivityPubURL returns the ActivityPub "ObjectID" for this KeyPackage
-func (service *KeyPackage) ActivityPubURL(keyPackage *model.KeyPackage) string {
-	return service.ActivityPubCollectionURL(keyPackage.UserID) + "/" + keyPackage.KeyPackageID.Hex()
+func (service *KeyPackage) ActivityPubURL(userID primitive.ObjectID, keyPackageID primitive.ObjectID) string {
+	return service.ActivityPubCollectionURL(userID) + "/" + keyPackageID.Hex()
 }
 
 /******************************************
