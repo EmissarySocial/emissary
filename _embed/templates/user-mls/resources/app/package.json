@@ -7,10 +7,13 @@
 	"type": "module",
 	"main": "app.js",
 	"scripts": {
-		"start": "esbuild src/**/* --bundle --outdir=./dist --jsx-factory=m --jsx-fragment='\"[\"' --watch",
+		"start": "esbuild src/app.ts --bundle --minify --sourcemap --outdir=./dist --jsx-factory=m --jsx-fragment='\"[\"' --watch",
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
 	"dependencies": {
+		"@noble/curves": "^2.0.1",
+		"@noble/hashes": "^2.0.1",
+		"idb": "^8.0.3",
 		"mithril": "^2.3.8",
 		"ts-mls": "^1.4.2"
 	},

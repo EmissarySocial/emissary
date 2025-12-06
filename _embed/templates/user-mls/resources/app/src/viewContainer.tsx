@@ -1,6 +1,15 @@
 import m from "mithril"
+import { type ServiceFactory} from "./service/factory"
 
 export class ViewContainer {
+
+	// All class #properties are PRIVATE
+	#factory: ServiceFactory
+
+	constructor(factory:ServiceFactory) {
+		console.log(factory)
+		this.#factory = factory
+	}
 
 	public view() {
 		return <div class="flex-row">
@@ -20,7 +29,7 @@ export class ViewContainer {
 				<div>Convo 2</div>
 				<div>Convo 3</div>
 			</div>
-			<div class="width-75%" style="background-color:yellow">
+			<div class="width-75%">
 				Here be details...
 			</div>
 		</div>
