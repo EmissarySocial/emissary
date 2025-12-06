@@ -156,7 +156,7 @@ func (service *Outbox) unpublish(session data.Session, actorType string, actorID
 		vocab.PropertyID:    objectID + "#delete",
 		vocab.PropertyActor: actor.ActorID(),
 		vocab.PropertyType:  activityType,
-		vocab.PropertyTo:    vocab.NamespaceActivityStreamsPublic,
+		vocab.PropertyTo:    vocab.NamespaceASPublic,
 		vocab.PropertyObject: mapof.Any{
 			vocab.PropertyID:   objectID,
 			vocab.PropertyType: vocab.ObjectTypeTombstone,
