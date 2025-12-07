@@ -446,7 +446,7 @@ func (w Inbox) Folders() (model.FolderList, error) {
 	return result, nil
 }
 
-func (w Inbox) FoldersWithSelection() (model.FolderList, error) {
+func (w Inbox) FoldersWithSelection(section string) (model.FolderList, error) {
 
 	const location = "build.Inbox.FoldersWithSelection"
 
@@ -457,9 +457,20 @@ func (w Inbox) FoldersWithSelection() (model.FolderList, error) {
 		return result, derp.Wrap(err, location, "Unable to load folders")
 	}
 
-	// Guarantee that we have at least one folder
-	if len(result.Folders) == 0 {
-		return result, derp.InternalError(location, "No folders found", nil)
+	// If the "Conversations" section is selected, then we are done.
+	if section == model.FolderListSectionConversations {
+		result.Section = section
+		return result, nil
+	}
+
+	// Otherwise, we are in the "Folder" section
+	result.Section = model.FolderListSectionFolder
+
+	// If we don't have any folders, then we MUST be looking at
+	// the "All Folders" view.
+	if result.Folders.IsEmpty() {
+		result.SelectedID = primitive.NilObjectID
+		return result, nil
 	}
 
 	// Find/Mark the Selected FolderID

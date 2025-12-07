@@ -1,8 +1,8 @@
 {
-	templateId: user-mls
+	templateId: user-conversations
 	model: Inbox
 	label: MLS Encrypted Inbox
-	description: Inbox app for E2EE messages (using Message Layer Security)
+	description: Conversations include plaintext and E2EE messages (using Message Layer Security)
 	icon: inbox
 	extends: []
 	containedBy: []

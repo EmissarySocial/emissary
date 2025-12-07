@@ -1,5 +1,5 @@
 import { openDB, deleteDB, wrap, unwrap, type IDBPDatabase, type IDBPObjectStore } from "idb";
-import { type APKeyPackage, type IDBKeyPackage, NewAPKeyPackage } from "../type/keyPackage"
+import { type APKeyPackage, type IDBKeyPackage, NewAPKeyPackage } from "../model/keyPackage"
 
 import { 
 	type Credential,
@@ -86,16 +86,12 @@ export class KeyPackageService {
 			return 
 		}
 
-		console.log(remotePackage)
-
 		// Create a new LOCAL record for this KeyPackage
 		const localPackage: IDBKeyPackage = {
 			id: remotePackage.id,
 			privatePackage: newPackage.privatePackage,
 			publicPackage: newPackage.publicPackage,
 		}
-
-		console.log(localPackage)
 
 		// Add the KeyPackage to the IndexedDB
 		this.#database.add("KeyPackage", localPackage, localPackage.id)

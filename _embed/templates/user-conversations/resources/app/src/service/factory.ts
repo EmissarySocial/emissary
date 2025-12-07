@@ -1,6 +1,6 @@
 import { ActivityPubService } from "./activityPub"
 import { KeyPackageService } from "./keyPackage"
-import { type APActor } from "../type/actor"
+import { type APActor } from "../model/actor"
 
 export class ServiceFactory {
 

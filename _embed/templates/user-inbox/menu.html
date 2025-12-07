@@ -1,4 +1,6 @@
+{{- $section := .Section -}}
 {{- $selectedID := .SelectedID -}}
+{{- $allFolders := and ($selectedID.IsZero) (eq "FOLDER" $section) -}}
 
 <!-- Direct Messages -->
 <!--
@@ -23,25 +25,36 @@
 -->
 
 <!-- Encrypted Messages -->
-{{- if $selectedID.IsZero -}}
+{{- if eq "CONVERSATIONS" $section -}}
 	<a href="/@me/inbox/mls" class="turboclick menu-item ellipsis hover-trigger folder selected">
-		<span style="view-transition-name:app-sidebar-mls-icon;">{{- icon "lock-fill" }}</span>
-		<span style="view-transition-name:app-sidebar-mls-label">Secure Messages</span>
+		<span>{{- icon "chat-fill" }}</span>
+		<span>Conversations</span>
 	</a>
 {{- else -}}
 	<a href="/@me/inbox/mls" class="turboclick menu-item ellipsis hover-trigger folder">
-		<span style="view-transition-name:app-sidebar-mls-icon;">{{- icon "lock" }}</span>
-		<span style="view-transition-name:app-sidebar-mls-label">Secure Messages</span>
+		<span>{{- icon "chat" }}</span>
+		<span>Conversations</span>
 	</a>
 {{- end -}}
 
 <div class="margin-vertical"></div>
 
-<form class="sortable" hx-post="/@me/inbox/folder-sort" hx-push-url="false" hx-trigger="end">
+	<a href="/@me/inbox/inbox?folderId={{nilObjectID.Hex}}" class="turboclick menu-item ellipsis hover-trigger folder {{if $allFolders}}selected{{end}}">
+		<span>
+			{{- if $allFolders -}}
+				{{- iconFilled "folder" -}}
+			{{- else -}}
+				{{- icon "folder" -}}
+			{{- end }}
+		</span>
+		<span>All Folders</span>
+	</a>
+
+	<form class="sortable" hx-post="/@me/inbox/folder-sort" hx-push-url="false" hx-trigger="end">
 
 	{{- range .Folders -}}
 		{{- $folderID := .FolderID.Hex -}}
-		<div role="link" hx-get="/@me/inbox/inbox?folderId={{$folderID}}" hx-trigger="click" hx-push-url="true" class="turboclick menu-item ellipsis hover-trigger folder {{if eq $selectedID .FolderID}}selected{{end}}">
+		<a href="/@me/inbox/inbox?folderId={{$folderID}}" class="turboclick menu-item ellipsis hover-trigger folder {{if eq $selectedID .FolderID}}selected{{end}}">
 			<span>
 				{{- if eq $selectedID .FolderID -}}
 					{{- iconFilled .Icon -}}
@@ -62,7 +75,7 @@
 				</span>
 			</span>
 			<input type="hidden" name="keys" value="{{$folderID}}">
-		</div>
+		</a>
 	{{- end -}}
 
 </form>

@@ -1,7 +1,7 @@
 import m from "mithril"
 
 import { ServiceFactory } from "./service/factory"
-import { ViewContainer } from "./viewContainer"
+import { Main } from "./component/main"
 
 class Application {
 
@@ -14,13 +14,12 @@ class Application {
 		var factory = new ServiceFactory()
 		await factory.start()
 
-		var viewContainer = new ViewContainer(factory)
-		m.mount(root, viewContainer)
+		var viewContainer = new Main(factory)
+		m.mount(root, Main)
 	}
 }
 
 // Start the Application
-var app: Application
 var root = document.getElementById("mls")
 
 if (root != undefined) {

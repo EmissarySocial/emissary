@@ -1,5 +1,4 @@
-{{- .SetQueryParam "folderId" "000000000000000000000000" -}}
-{{- $folders := .FoldersWithSelection}}
+{{- $folders := .FoldersWithSelection "CONVERSATIONS" }}
 {{- $conversations := .Conversations.Top12.ByUpdateDate.Reverse.Slice -}}
 {{- .DefaultQueryParam "conversationId" $conversations.First.ConversationID.Hex -}}
 {{- $conversationID := .QueryParam "conversationId" -}}

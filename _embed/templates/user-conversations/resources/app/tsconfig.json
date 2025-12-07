@@ -35,6 +35,8 @@
 
 		// Recommended Options
 		"strict": true,
+		"noImplicitThis": true,
+		"noImplicitReturns": true,
 		"jsx": "react",
 		"jsxFactory": "m",
 		"jsxFragmentFactory": "m.Fragment",

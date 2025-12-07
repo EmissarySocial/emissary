@@ -1,18 +1,22 @@
 package model
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"github.com/benpate/rosetta/sliceof"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 // FolderList contains a group of folders and the currently selected folder.
 // This is used by the Inbox templates to display all folders for a User.
 type FolderList struct {
-	Folders    []Folder `json:"folders"`
-	SelectedID primitive.ObjectID
+	Folders    sliceof.Object[Folder] `json:"folders"`
+	Section    string                 `json:"section"`
+	SelectedID primitive.ObjectID     `json:"selectedId"`
 }
 
 // NewFolderList returns a fully initialized FolderList object
 func NewFolderList() FolderList {
 	return FolderList{
-		Folders: make([]Folder, 0),
+		Folders: sliceof.NewObject[Folder](),
 	}
 }
 
