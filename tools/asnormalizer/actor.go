@@ -40,6 +40,11 @@ func Actor(document streams.Document) map[string]any {
 		}
 	}
 
+	// MLS KeyPackages
+	if keyPackages := document.KeyPackages(); keyPackages.NotNil() {
+		result[vocab.PropertyKeyPackages] = keyPackages.ID()
+	}
+
 	return result
 }
 
