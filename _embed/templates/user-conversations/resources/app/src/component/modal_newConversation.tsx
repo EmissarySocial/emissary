@@ -31,7 +31,7 @@ export class NewConversation {
 					</div>
 					<div class="layout-element">
 						<label>Message</label>
-						<textarea></textarea>
+						<textarea rows="8"></textarea>
 						<div class="text-sm text-gray"></div>
 					</div>
 				</div>

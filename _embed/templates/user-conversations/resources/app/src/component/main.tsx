@@ -28,17 +28,17 @@ export class Main {
 					<div role="button" class="flex-row flex-align-center padding hover-trigger">
 						<img class="circle width-32"/> 
 						<span class="flex-grow nowrap ellipsis">Direct Message 1</span>
-						<button class="text-xs hover-show">&hellip;</button>
+						<button class="text-xs hover-show">&#8943;</button>
 					</div>
 					<div role="button" class="flex-row flex-align-center padding hover-trigger">
 						<span class="width-32 circle flex-center"><i class="bi bi-lock-fill"></i></span>
 						<span class="flex-grow nowrap ellipsis">Encrypted Conversation</span>
-						<button class="text-xs hover-show">&hellip;</button>
+						<button class="text-xs hover-show">&#8943;</button>
 					</div>
 					<div role="button" class="flex-row flex-align-center padding hover-trigger">
 						<span class="width-32 circle flex-center"><i class="bi bi-lock-fill"></i></span>
 						<span class="flex-grow nowrap ellipsis">Encrypted Conversation</span>
-						<button class="text-xs hover-show">&hellip;</button>
+						<button class="text-xs hover-show">&#8943;</button>
 					</div>
 				</div>
 				<div class="width-75%">
