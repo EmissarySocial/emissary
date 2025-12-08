@@ -161,9 +161,12 @@ func convertMapValue(value any) any {
 		return typedValue
 	case bool:
 		return typedValue
+	case bson.M:
+		return primitiveToMap(typedValue)
 	}
 
 	// Fallback for other types
 	log.Debug().Msg("Unrecognized type in primitive map: " + reflect.TypeOf(value).String())
+
 	return value
 }
