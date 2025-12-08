@@ -1,6 +1,7 @@
 import  m from "mithril";
 import {type Vnode, type VnodeDOM, type Component } from "mithril";
 import {Modal} from "./modal"
+import {ActorSearch} from "./actorSearch"
 
 type NewConversationVnode = Vnode<NewConversationArgs, {}>
 
@@ -20,11 +21,26 @@ export class NewConversation {
 
 		return (
 		<Modal close={vnode.attrs.close}>
-			<div>Hello World!</div>
-			<div>
+
+			<div class="layout layout-vertical">
+				<div class="layout-title">{this.label(vnode)}</div>
+				<div class="layout-elements">
+					<div class="layout-element">
+						<label for="">Participants</label>
+						<ActorSearch name="actorIds"></ActorSearch>
+					</div>
+					<div class="layout-element">
+						<label>Message</label>
+						<textarea></textarea>
+						<div class="text-sm text-gray"></div>
+					</div>
+				</div>
+			</div>
+			<div class="margin-top">
 				<button onclick={this.submit(vnode)} class="primary">Start Conversation</button>
 				<button onclick={vnode.attrs.close}>Close</button>
 			</div>
+
 		</Modal>)		
 	}
 
@@ -33,5 +49,9 @@ export class NewConversation {
 			console.log("submit...")
 			vnode.attrs.close()
 		}
+	}
+
+	label(vnode: NewConversationVnode) {
+		return "+ New Conversation"
 	}
 }

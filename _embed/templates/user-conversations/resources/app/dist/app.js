@@ -1064,9 +1064,9 @@
         var path = template.slice(0, pathEnd);
         var query = {};
         Object.assign(query, params);
-        var resolved = path.replace(/:([^\/\.-]+)(\.{3})?/g, function(m5, key, variadic) {
+        var resolved = path.replace(/:([^\/\.-]+)(\.{3})?/g, function(m6, key, variadic) {
           delete query[key];
-          if (params[key] == null) return m5;
+          if (params[key] == null) return m6;
           return variadic ? params[key] : encodeURIComponent(String(params[key]));
         });
         var newQueryIndex = resolved.indexOf("?");
@@ -1343,8 +1343,8 @@
           // don't also accidentally escape `-` and make it harder to detect it to
           // ban it from template parameters.
           /:([^\/.-]+)(\.{3}|\.(?!\.)|-)?|[\\^$*+.()|\[\]{}]/g,
-          function(m5, key, extra) {
-            if (key == null) return "\\" + m5;
+          function(m6, key, extra) {
+            if (key == null) return "\\" + m6;
             keys.push({ k: key, r: extra === "..." });
             if (extra === "...") return "(.*)";
             if (extra === ".") return "([^/]+)\\.";
@@ -1597,26 +1597,26 @@
       var mountRedraw = require_mount_redraw2();
       var request = require_request2();
       var router = require_route();
-      var m5 = function m6() {
+      var m6 = function m7() {
         return hyperscript.apply(this, arguments);
       };
-      m5.m = hyperscript;
-      m5.trust = hyperscript.trust;
-      m5.fragment = hyperscript.fragment;
-      m5.Fragment = "[";
-      m5.mount = mountRedraw.mount;
-      m5.route = router;
-      m5.render = require_render2();
-      m5.redraw = mountRedraw.redraw;
-      m5.request = request.request;
-      m5.parseQueryString = require_parse();
-      m5.buildQueryString = require_build();
-      m5.parsePathname = require_parse2();
-      m5.buildPathname = require_build2();
-      m5.vnode = require_vnode();
-      m5.censor = require_censor();
-      m5.domFor = require_domFor();
-      module.exports = m5;
+      m6.m = hyperscript;
+      m6.trust = hyperscript.trust;
+      m6.fragment = hyperscript.fragment;
+      m6.Fragment = "[";
+      m6.mount = mountRedraw.mount;
+      m6.route = router;
+      m6.render = require_render2();
+      m6.redraw = mountRedraw.redraw;
+      m6.request = request.request;
+      m6.parseQueryString = require_parse();
+      m6.buildQueryString = require_build();
+      m6.parsePathname = require_parse2();
+      m6.buildPathname = require_build2();
+      m6.vnode = require_vnode();
+      m6.censor = require_censor();
+      m6.domFor = require_domFor();
+      module.exports = m6;
     }
   });
 
@@ -3426,9 +3426,9 @@
     while (a !== _0n3) {
       const q = b / a;
       const r = b % a;
-      const m5 = x - u * q;
+      const m6 = x - u * q;
       const n = y - v * q;
-      b = a, a = r, x = u, y = v, u = m5, v = n;
+      b = a, a = r, x = u, y = v, u = m6, v = n;
     }
     const gcd = b;
     if (gcd !== _1n3)
@@ -4659,13 +4659,13 @@
       k: "number",
       hash: "function"
     });
-    const { p, k, m: m5, hash, expand, DST } = options;
+    const { p, k, m: m6, hash, expand, DST } = options;
     asafenumber(hash.outputLen, "valid hash");
     abytes3(msg);
     asafenumber(count);
     const log2p = p.toString(2).length;
     const L = Math.ceil((log2p + k) / 8);
-    const len_in_bytes = count * m5 * L;
+    const len_in_bytes = count * m6 * L;
     let prb;
     if (expand === "xmd") {
       prb = expand_message_xmd(msg, DST, len_in_bytes, hash);
@@ -4678,9 +4678,9 @@
     }
     const u = new Array(count);
     for (let i = 0; i < count; i++) {
-      const e = new Array(m5);
-      for (let j = 0; j < m5; j++) {
-        const elm_offset = L * (j + i * m5);
+      const e = new Array(m6);
+      for (let j = 0; j < m6; j++) {
+        const elm_offset = L * (j + i * m6);
         const tv = prb.subarray(elm_offset, elm_offset + L);
         e[j] = mod2(os2ip(tv), p);
       }
@@ -5042,8 +5042,8 @@
       evaluate: (secretKey, input) => evaluate(ctxVOPRF, secretKey, input)
     };
     const poprf = (info) => {
-      const m5 = hashToScalarPrefixed(encode2("Info", info), ctxPOPRF);
-      const T = Point.BASE.multiply(m5);
+      const m6 = hashToScalarPrefixed(encode2("Info", info), ctxPOPRF);
+      const T = Point.BASE.multiply(m6);
       return {
         generateKeyPair,
         deriveKeyPair: (seed, keyInfo) => deriveKeyPair(ctxPOPRF, seed, keyInfo),
@@ -5067,7 +5067,7 @@
           if (!Array.isArray(blinded))
             throw new Error("expected array");
           const skS = Fn3.fromBytes(secretKey);
-          const t = Fn3.add(skS, m5);
+          const t = Fn3.add(skS, m6);
           const invT = Fn3.inv(t);
           const blindedPoints = blinded.map(Point.fromBytes);
           const evalPoints = blindedPoints.map((i) => i.multiply(invT));
@@ -5098,7 +5098,7 @@
           const inputPoint = hashToGroup(input, ctxPOPRF);
           if (inputPoint.equals(Point.ZERO))
             throw new Error("Input point at infinity");
-          const t = Fn3.add(skS, m5);
+          const t = Fn3.add(skS, m6);
           const invT = Fn3.inv(t);
           const unblinded = inputPoint.multiply(invT).toBytes();
           return hashInput(input, info, unblinded);
@@ -6909,7 +6909,7 @@
         seedArgs.push(abytes3(e, void 0, "extraEntropy"));
       }
       const seed = concatBytes2(...seedArgs);
-      const m5 = h1int;
+      const m6 = h1int;
       function k2sig(kBytes) {
         const k = bits2int(kBytes);
         if (!Fn3.isValidNot0(k))
@@ -6919,7 +6919,7 @@
         const r = Fn3.create(q.x);
         if (r === _0n9)
           return;
-        const s = Fn3.create(ik * Fn3.create(m5 + r * d));
+        const s = Fn3.create(ik * Fn3.create(m6 + r * d));
         if (s === _0n9)
           return;
         let recovery = (q.x === r ? 0 : 2) | Number(q.y & _1n10);
@@ -6995,8 +6995,8 @@
       init_modular();
       divNearest = (num, den) => (num + (num >= 0 ? den : -den) / _2n8) / den;
       DERErr = class extends Error {
-        constructor(m5 = "") {
-          super(m5);
+        constructor(m6 = "") {
+          super(m6);
         }
       };
       DER = {
@@ -7237,7 +7237,7 @@
   });
 
   // src/app.ts
-  var import_mithril5 = __toESM(require_mithril(), 1);
+  var import_mithril7 = __toESM(require_mithril(), 1);
 
   // src/service/activityPub.ts
   var ActivityPubService = class {
@@ -12218,11 +12218,11 @@
   };
 
   // src/component/main.tsx
-  var import_mithril4 = __toESM(require_mithril(), 1);
+  var import_mithril6 = __toESM(require_mithril(), 1);
 
   // src/component/modal_newConversation.tsx
-  var import_mithril2 = __toESM(require_mithril(), 1);
-  var import_mithril3 = __toESM(require_mithril(), 1);
+  var import_mithril4 = __toESM(require_mithril(), 1);
+  var import_mithril5 = __toESM(require_mithril(), 1);
 
   // src/component/modal.tsx
   var import_mithril = __toESM(require_mithril(), 1);
@@ -12254,13 +12254,28 @@
     }
   };
 
+  // src/component/actorSearch.tsx
+  var import_mithril2 = __toESM(require_mithril(), 1);
+  var import_mithril3 = __toESM(require_mithril(), 1);
+  var ActorSearch = class {
+    view(vnode) {
+      const { name } = vnode.attrs;
+      return /* @__PURE__ */ (0, import_mithril2.default)("div", { class: "pos-relative" }, /* @__PURE__ */ (0, import_mithril2.default)("div", { class: "input" }, /* @__PURE__ */ (0, import_mithril2.default)("input", { name, onkeyup: (evt) => {
+        this.search(evt);
+      }, style: "border:none; field-sizing:content" })), /* @__PURE__ */ (0, import_mithril2.default)("div", { class: "pos-absolute padding-sm width-100%", style: "border:solid 1px var(--gray40); background-color:var(--gray10)" }, "Search results will go here..."));
+    }
+    search(event) {
+      console.log(event?.target);
+    }
+  };
+
   // src/component/modal_newConversation.tsx
   var NewConversation = class {
     view(vnode) {
       if (vnode.attrs.modal != "NEW-CONVERSATION") {
         return null;
       }
-      return /* @__PURE__ */ (0, import_mithril2.default)(Modal, { close: vnode.attrs.close }, /* @__PURE__ */ (0, import_mithril2.default)("div", null, "Hello World!"), /* @__PURE__ */ (0, import_mithril2.default)("div", null, /* @__PURE__ */ (0, import_mithril2.default)("button", { onclick: this.submit(vnode), class: "primary" }, "Start Conversation"), /* @__PURE__ */ (0, import_mithril2.default)("button", { onclick: vnode.attrs.close }, "Close")));
+      return /* @__PURE__ */ (0, import_mithril4.default)(Modal, { close: vnode.attrs.close }, /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "layout layout-vertical" }, /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "layout-title" }, this.label(vnode)), /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "layout-elements" }, /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "layout-element" }, /* @__PURE__ */ (0, import_mithril4.default)("label", { for: "" }, "Participants"), /* @__PURE__ */ (0, import_mithril4.default)(ActorSearch, { name: "actorIds" })), /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "layout-element" }, /* @__PURE__ */ (0, import_mithril4.default)("label", null, "Message"), /* @__PURE__ */ (0, import_mithril4.default)("textarea", null), /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "text-sm text-gray" })))), /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "margin-top" }, /* @__PURE__ */ (0, import_mithril4.default)("button", { onclick: this.submit(vnode), class: "primary" }, "Start Conversation"), /* @__PURE__ */ (0, import_mithril4.default)("button", { onclick: vnode.attrs.close }, "Close")));
     }
     submit(vnode) {
       return () => {
@@ -12268,35 +12283,38 @@
         vnode.attrs.close();
       };
     }
+    label(vnode) {
+      return "+ New Conversation";
+    }
   };
 
   // src/component/main.tsx
   var Main = class {
     constructor(vnode) {
-      // State Changes
-      this.showModalNewConversation = () => {
-        this.modal = "NEW-CONVERSATION";
-      };
-      this.closeModal = () => {
-        document.getElementById("modal")?.classList.remove("ready");
-        window.setTimeout(() => {
-          this.modal = "";
-          import_mithril4.default.redraw();
-        }, 240);
-      };
       this.modal = "";
     }
     view() {
-      return /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "flex-row" }, /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "table no-top-border width-25% flex-shrink-0 scroll-vertical", style: "background-color:var(--gray10);" }, /* @__PURE__ */ (0, import_mithril4.default)(
+      return /* @__PURE__ */ (0, import_mithril6.default)("div", { class: "flex-row flex-grow" }, /* @__PURE__ */ (0, import_mithril6.default)("div", { class: "table no-top-border width-50% md:width-40% lg:width-30% flex-shrink-0 scroll-vertical", style: "background-color:var(--gray10);" }, /* @__PURE__ */ (0, import_mithril6.default)(
         "div",
         {
           role: "button",
-          class: "link conversation-selector pos-relative padding-horizontal-sm flex-row flex-align-center",
-          onclick: this.showModalNewConversation
+          class: "link conversation-selector padding flex-row flex-align-center",
+          onclick: () => this.showModal("NEW-CONVERSATION")
         },
-        /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "width-32 flex-shrink-0 flex-center" }, /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "circle width-32 flex-shrink-0 flex-center margin-none", style: "font-size:24px;background-color:var(--blue50);color:var(--white);" }, "+")),
-        /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "ellipsis-block", style: "max-height:3em;" }, "New Conversation")
-      ), /* @__PURE__ */ (0, import_mithril4.default)("div", null, "Direct Message 1"), /* @__PURE__ */ (0, import_mithril4.default)("div", null, "Encrypted (2)"), /* @__PURE__ */ (0, import_mithril4.default)("div", null, "Encrypted (3)")), /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "width-75%" }, "Here be details... [", this.modal, "]"), /* @__PURE__ */ (0, import_mithril4.default)(NewConversation, { modal: this.modal, close: this.closeModal }));
+        /* @__PURE__ */ (0, import_mithril6.default)("div", { class: "circle width-32 flex-shrink-0 flex-center margin-none", style: "font-size:24px;background-color:var(--blue50);color:var(--white);" }, /* @__PURE__ */ (0, import_mithril6.default)("i", { class: "bi bi-plus" })),
+        /* @__PURE__ */ (0, import_mithril6.default)("div", { class: "ellipsis-block", style: "max-height:3em;" }, "New Conversation")
+      ), /* @__PURE__ */ (0, import_mithril6.default)("div", { role: "button", class: "flex-row flex-align-center padding hover-trigger" }, /* @__PURE__ */ (0, import_mithril6.default)("img", { class: "circle width-32" }), /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "flex-grow nowrap ellipsis" }, "Direct Message 1"), /* @__PURE__ */ (0, import_mithril6.default)("button", { class: "text-xs hover-show" }, "\u2026")), /* @__PURE__ */ (0, import_mithril6.default)("div", { role: "button", class: "flex-row flex-align-center padding hover-trigger" }, /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "width-32 circle flex-center" }, /* @__PURE__ */ (0, import_mithril6.default)("i", { class: "bi bi-lock-fill" })), /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "flex-grow nowrap ellipsis" }, "Encrypted Conversation"), /* @__PURE__ */ (0, import_mithril6.default)("button", { class: "text-xs hover-show" }, "\u2026")), /* @__PURE__ */ (0, import_mithril6.default)("div", { role: "button", class: "flex-row flex-align-center padding hover-trigger" }, /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "width-32 circle flex-center" }, /* @__PURE__ */ (0, import_mithril6.default)("i", { class: "bi bi-lock-fill" })), /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "flex-grow nowrap ellipsis" }, "Encrypted Conversation"), /* @__PURE__ */ (0, import_mithril6.default)("button", { class: "text-xs hover-show" }, "\u2026"))), /* @__PURE__ */ (0, import_mithril6.default)("div", { class: "width-75%" }, "Here be details..."), /* @__PURE__ */ (0, import_mithril6.default)(NewConversation, { modal: this.modal, close: () => this.closeModal() }));
+    }
+    showModal(name) {
+      this.modal = name;
+    }
+    // Global Modal Snowball
+    closeModal() {
+      document.getElementById("modal")?.classList.remove("ready");
+      window.setTimeout(() => {
+        this.modal = "";
+        import_mithril6.default.redraw();
+      }, 240);
     }
   };
 
@@ -12309,7 +12327,7 @@
       var factory = new ServiceFactory();
       await factory.start();
       var viewContainer = new Main(factory);
-      import_mithril5.default.mount(root3, Main);
+      import_mithril7.default.mount(root3, Main);
     }
   };
   var root2 = document.getElementById("mls");
