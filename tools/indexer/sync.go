@@ -34,48 +34,35 @@ func Sync(ctx context.Context, collection *mongo.Collection, newIndexes map[stri
 
 	database := collection.Database().Name()
 
-	// Scan all existing indexes to Update or Delete
+	// Scan all existing indexes to Delete any that are no longer used
 	for currentIndex := range rangeFunc[mapof.Any](ctx, cursor) {
 
 		name := currentIndex.GetString("name")
 
-		// Skip the default _id index, as it cannot be removed or modified
+		// Skip the default _id_ index, as it cannot be removed or modified
 		if name == "_id_" {
 			continue
 		}
 
-		// See if the index already exists in the new set
-		newIndex, exists := newIndexes[name]
+		// See if the indexes match.  If so, then there's nothing to delete
+		if newIndex, exists := newIndexes[name]; exists {
 
-		if !exists {
-			continue
-		}
-
-		delete(newIndexes, name)
-
-		if compareModel(currentIndex, newIndex) {
-			log.Trace().Str("database", database).Str("index", name).Msg("index in sync.")
-			continue
-		}
-
-		log.Trace().Str("database", database).Str("index", name).Msg("deleting changed index...")
-		if bsonRaw, err := collection.Indexes().DropOne(ctx, name); err != nil {
-			derp.Report(derp.Wrap(err, location, "Error updating index", "index", name, newIndex, bsonRaw))
-			continue
-		}
-
-		if exists {
-			log.Trace().Str("database", database).Str("index", name).Msg("recreating changed index...")
-			if bsonRaw, err := collection.Indexes().CreateOne(ctx, newIndex); err != nil {
-				derp.Report(derp.Wrap(err, location, "Unable to create index", "index", name, newIndex, bsonRaw))
+			if compareModel(currentIndex, newIndex) {
+				log.Trace().Str("database", database).Str("index", name).Msg("index in sync.")
+				delete(newIndexes, name)
 				continue
 			}
+		}
+
+		// Fall through means that the index has been changed or deleted.  Drop the old index
+		if bsonRaw, err := collection.Indexes().DropOne(ctx, name); err != nil {
+			derp.Report(derp.Wrap(err, location, "Error dropping index", "index", name, bsonRaw))
 		}
 	}
 
 	// Add new indexes that are not already in the collection
 	for indexName, newIndex := range newIndexes {
-		log.Trace().Str("database", database).Str("index", indexName).Msg("adding new index...")
+		log.Trace().Str("database", database).Str("index", indexName).Msg("Creating added/changed index...")
 		if bsonRaw, err := collection.Indexes().CreateOne(ctx, newIndex); err != nil {
 			derp.Report(derp.Wrap(err, location, "Unable to create index", "index", indexName, newIndex, bsonRaw))
 			continue

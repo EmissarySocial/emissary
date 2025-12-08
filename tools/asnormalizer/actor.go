@@ -42,6 +42,11 @@ func Actor(document streams.Document) map[string]any {
 		}
 	}
 
+	// MLS KeyPackages
+	if keyPackages := document.KeyPackages(); keyPackages.NotNil() {
+		result[vocab.PropertyKeyPackages] = keyPackages.ID()
+	}
+
 	// OAuth 2.0 Redirect URIs
 	if redirectURI := document.RedirectURI(); len(redirectURI) > 0 {
 		result[vocab.PropertyRedirectURI] = redirectURI

@@ -400,7 +400,7 @@ func (w Common) ActivityStreamActor(url string) streams.Document {
 	return result
 }
 
-func (w Common) ActivityStreamActors(search string) ([]model.ActorSummary, error) {
+func (w Common) ActivityStreamActors(search string) (sliceof.Object[model.ActorSummary], error) {
 	activityService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
 	return activityService.QueryActors(search)
 }

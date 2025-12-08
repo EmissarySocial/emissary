@@ -208,11 +208,12 @@ func (service *ActivityStream) QueryActors(queryString string) ([]model.ActorSum
 			// If this is a valid, but (previously) unknown actor, then add it to the results
 			// This will also automatically get cached/crawled for next time.
 			result := []model.ActorSummary{{
-				ID:       newActor.ID(),
-				Type:     newActor.Type(),
-				Name:     newActor.Name(),
-				Icon:     newActor.Icon().Href(),
-				Username: newActor.PreferredUsername(),
+				ID:          newActor.ID(),
+				Type:        newActor.Type(),
+				Name:        newActor.Name(),
+				Icon:        newActor.Icon().Href(),
+				Username:    newActor.PreferredUsername(),
+				KeyPackages: newActor.KeyPackages().ID(),
 			}}
 
 			return result, nil
@@ -220,7 +221,7 @@ func (service *ActivityStream) QueryActors(queryString string) ([]model.ActorSum
 	}
 
 	// Fall through means that we can't find a perfect match, so fall back to a full-text search
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	ctx, cancel := timeoutContext(2)
 	defer cancel()
 
 	collection, err := service.collection(ctx)
