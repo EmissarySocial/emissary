@@ -221,7 +221,7 @@ func (service *ActivityStream) QueryActors(queryString string) ([]model.ActorSum
 	}
 
 	// Fall through means that we can't find a perfect match, so fall back to a full-text search
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	ctx, cancel := timeoutContext(2)
 	defer cancel()
 
 	collection, err := service.collection(ctx)
