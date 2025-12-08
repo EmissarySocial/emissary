@@ -575,7 +575,7 @@ func errorHandler(err error, ctx echo.Context) {
 	derp.Report(derp.Wrap(err, location, "Unable to generate web page", fullURL, ctx.Request().Header))
 
 	// Get the true hostname of the request.
-	hostname := dt.Hostname(request)
+	hostname := dt.TrueHostname(request)
 
 	// If this is a local server, then allow developers to see full error dump.
 	if dt.IsLocalhost(hostname) {

@@ -12,7 +12,7 @@ import (
 func write_intent_header(ctx *steranko.Context, b *html.Builder, user *model.User) {
 
 	currentURL := ctx.Request().URL.String()
-	hostname := dt.Hostname(ctx.Request())
+	hostname := dt.TrueHostname(ctx.Request())
 	hostname = dt.NameOnly(hostname)
 
 	b.Div().Class("flex-shrink-0", "flex-row", "flex-align-stretch", "margin-bottom")

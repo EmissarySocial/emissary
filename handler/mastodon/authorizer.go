@@ -21,7 +21,7 @@ func Authorizer(serverFactory *server.Factory) toot.Authorizer[model.Authorizati
 	return func(request *http.Request) (model.Authorization, error) {
 
 		// Get the factory for this domain
-		hostname := dt.Hostname(request)
+		hostname := dt.TrueHostname(request)
 		factory, err := serverFactory.ByHostname(hostname)
 
 		if err != nil {
