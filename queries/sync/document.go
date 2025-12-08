@@ -25,25 +25,19 @@ func Document(ctx context.Context, database *mongo.Database) error {
 			},
 		},
 
-		"idx_Document_FullText": mongo.IndexModel{
+		"idx_Document_ActorFullText": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "_fts", Value: "text"},
 				{Key: "_ftsx", Value: 1},
 			},
 			Options: options.Index().SetWeights(bson.M{
-				"object.content":           1,
 				"object.name":              1,
 				"object.preferredUsername": 1,
 				"object.summary":           1,
 				"urls":                     1,
+			}).SetPartialFilterExpression(bson.M{
+				"metadata.documentCategory": "Actor",
 			}),
-		},
-
-		"idx_Document_Context": mongo.IndexModel{
-			Keys: bson.D{
-				{Key: "object.context", Value: 1},
-				{Key: "published", Value: 1},
-			},
 		},
 
 		"idx_Document_URLs": mongo.IndexModel{
