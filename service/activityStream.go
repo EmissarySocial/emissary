@@ -209,11 +209,12 @@ func (service *ActivityStream) QueryActors(queryString string) ([]model.ActorSum
 			// If this is a valid, but (previously) unknown actor, then add it to the results
 			// This will also automatically get cached/crawled for next time.
 			result := []model.ActorSummary{{
-				ID:       newActor.ID(),
-				Type:     newActor.Type(),
-				Name:     newActor.Name(),
-				Icon:     newActor.Icon().Href(),
-				Username: newActor.PreferredUsername(),
+				ID:          newActor.ID(),
+				Type:        newActor.Type(),
+				Name:        newActor.Name(),
+				Icon:        newActor.Icon().Href(),
+				Username:    newActor.PreferredUsername(),
+				KeyPackages: newActor.KeyPackages().ID(),
 			}}
 
 			return result, nil

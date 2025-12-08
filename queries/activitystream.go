@@ -31,12 +31,13 @@ func SearchActivityStreamActors(collection data.Collection, text string) ([]mode
 		{"$limit": 6},
 		{"$replaceWith": "$object"},
 		{"$project": bson.M{
-			"_id":      false,
-			"id":       true,
-			"type":     true,
-			"name":     true,
-			"icon":     "$icon.href",
-			"username": "$preferredUsername",
+			"_id":         false,
+			"id":          true,
+			"type":        true,
+			"name":        true,
+			"icon":        "$icon.href",
+			"username":    "$preferredUsername",
+			"keyPackages": true,
 		}},
 	}
 

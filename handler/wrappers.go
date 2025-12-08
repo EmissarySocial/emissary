@@ -27,6 +27,25 @@ type WithFunc2[T any, U any] func(ctx *steranko.Context, factory *service.Factor
 // WithFunc3 is a function signature for a continuation function that requires the domain Factory and three values
 type WithFunc3[T any, U any, V any] func(ctx *steranko.Context, factory *service.Factory, session data.Session, value *T, value2 *U, value3 *V) error
 
+// WithAuthenticatedAPI handles boilerplate code for requests that require a signed-in user (but does not load the User from the database)
+func WithAuthenticatedAPI(serverFactory *server.Factory, fn WithFunc0) echo.HandlerFunc {
+
+	const location = "handler.WithAuthenticatedUser"
+
+	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
+
+		// Guarantee that the user is signed in
+		authorization := getAuthorization(ctx)
+
+		if !authorization.IsAuthenticated() {
+			return derp.UnauthorizedError(location, "You must be signed in to perform this action")
+		}
+
+		// Call the continuation function
+		return fn(ctx, factory, session)
+	})
+}
+
 // WithAuthenticatedUser handles boilerplate code for requests that require a signed-in user
 func WithAuthenticatedUser(serverFactory *server.Factory, fn WithFunc1[model.User]) echo.HandlerFunc {
 
@@ -53,6 +72,7 @@ func WithAuthenticatedUser(serverFactory *server.Factory, fn WithFunc1[model.Use
 		return fn(ctx, factory, session, &user)
 	})
 }
+
 func WithConnection(provider string, serverFactory *server.Factory, fn WithFunc1[model.Connection]) echo.HandlerFunc {
 
 	const location = "handler.WithConnection"
