@@ -12322,7 +12322,7 @@
           id: "idActorSearch",
           name: vnode.attrs.name,
           class: "padding-none",
-          style: "border:none; field-sizing:content",
+          style: "min-width:200px;",
           value: vnode.state.search,
           tabindex: "0",
           onkeydown: async (event) => {
