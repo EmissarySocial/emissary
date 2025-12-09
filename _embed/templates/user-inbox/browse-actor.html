@@ -83,9 +83,9 @@
 			{{range $attachment := $actor.Attachment.Range}}
 				{{- $attachmentValue := $attachment.Get "value" -}}
 				{{- $attachmentValue := $attachmentValue.String -}}
-				<tr>
+				<tr role="link" script="on click go to url {{$attachmentValue}} in new window">
 					<td nowrap>{{$attachment.Name}}</td>
-					<td style="width:100%">{{$attachmentValue | html}}</td>
+					<td style="width:100%">{{$attachmentValue}}</td>
 				</tr>
 			{{end}}
 		</table>
@@ -93,21 +93,14 @@
 
 	{{- $featured := $actor.Featured.String -}}
 	{{- if ne "" $featured -}}
-		{{- $featured := .ActivityStream $featured -}}
-		{{- if $featured.Items.NotEmpty -}}
-			<div class="margin-top bold">{{icon "pin-fill"}} Featured Posts</div>
-			{{- range $index, $item := $featured.Items.RangeWithIndex -}}
-				<div class="card padding margin-top" script="install blockselect(link:#featured-{{$index}})">
-
-					<div class="bold">{{$item.Name}}</div>
-					<div>{{$item.Content | htmlMinimal}}</div>
-					<div class="flex-row text-sm">
-						<span class="flex-grow text-light-gray margin-right">{{- $item.Published | shortDate -}}</span>
-						<span id="featured-{{$index}}" hx-get="/@me/inbox/browse?url={{$item.ID}}" class="link">View Full Post &rarr;</span>
-					</div>
-				</div>
-			{{- end -}}
-		{{- end -}}
+		<div
+			hx-get="/@me/inbox/browse-actor-featured?collection={{$featured}}"
+			hx-trigger="load"
+			hx-target="this"
+			hx-swap="outerHTML"
+			hx-push-url="false">
+			<div class="margin-top bold"><span class="spin">{{icon "loading"}}</span> Loading Featured Posts...</div>
+		</div>
 	{{- end -}}
 	
 </div>
