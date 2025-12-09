@@ -1,14 +1,22 @@
-import m, { type ChildArrayOrPrimitive, type Vnode } from "mithril"
+import m, { type ChildArrayOrPrimitive, type VnodeDOM } from "mithril"
 
 interface ModalAttrs {
 	close: () => void
 }
 
-type ModalVnode = Vnode<ModalAttrs, {}>
+type ModalVnode = VnodeDOM<ModalAttrs, {}>
 
 // Adapted from: https://mithril-by-examples.js.org/examples/modal-2/#modal.js
 export class Modal {
 
+	oncreate(vnode: ModalVnode) {
+		requestAnimationFrame(() => {
+			document.getElementById("modal")?.classList.add("ready")
+			m.redraw()
+		})
+	}
+
+	/*
 	oncreate(vnode: ModalVnode) {
 
 		// Locate the <aside> tag where we'll mount the modal
@@ -21,12 +29,6 @@ export class Modal {
 
 		const widget = {
 			view: () => 
-			<div id="modal">
-				<div id="modal-underlay" onclick={vnode.attrs.close}></div>
-				<div id="modal-window">
-					{vnode.children}
-				</div>
-			</div>
 		}
 
 		// Append a container to the <aside> tag
@@ -52,7 +54,17 @@ export class Modal {
 
 		m.mount(aside, null)
 	}
+	*/
 
-	view(v: ModalVnode) {
+	view(vnode: ModalVnode) {
+		console.log("modal.view...")
+		return (
+			<div id="modal">
+				<div id="modal-underlay" onclick={vnode.attrs.close}></div>
+				<div id="modal-window">
+					{vnode.children}
+				</div>
+			</div>
+		)
 	}
 }

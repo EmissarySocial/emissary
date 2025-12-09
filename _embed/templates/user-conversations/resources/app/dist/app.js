@@ -7237,7 +7237,7 @@
   });
 
   // src/app.ts
-  var import_mithril7 = __toESM(require_mithril(), 1);
+  var import_mithril8 = __toESM(require_mithril(), 1);
 
   // src/service/activityPub.ts
   var ActivityPubService = class {
@@ -12219,58 +12219,91 @@
 
   // src/component/main.tsx
   var import_mithril6 = __toESM(require_mithril(), 1);
-
-  // src/component/modal_newConversation.tsx
-  var import_mithril4 = __toESM(require_mithril(), 1);
-  var import_mithril5 = __toESM(require_mithril(), 1);
+  var import_mithril7 = __toESM(require_mithril(), 1);
 
   // src/component/modal.tsx
   var import_mithril = __toESM(require_mithril(), 1);
   var Modal = class {
     oncreate(vnode) {
-      const aside = document.getElementsByTagName("aside").item(0);
-      if (aside == null) {
-        console.log("Tag <aside> must be defined to render this dialog.");
-        return;
-      }
-      const widget = {
-        view: () => /* @__PURE__ */ (0, import_mithril.default)("div", { id: "modal" }, /* @__PURE__ */ (0, import_mithril.default)("div", { id: "modal-underlay", onclick: vnode.attrs.close }), /* @__PURE__ */ (0, import_mithril.default)("div", { id: "modal-window" }, vnode.children))
-      };
-      import_mithril.default.mount(aside, widget);
-      requestAnimationFrame(() => document.getElementById("modal")?.classList.add("ready"));
+      requestAnimationFrame(() => {
+        document.getElementById("modal")?.classList.add("ready");
+        import_mithril.default.redraw();
+      });
     }
-    onbeforeremove(v) {
-      document.getElementById("modal")?.classList.remove("ready");
-    }
-    onremove(v) {
-      const aside = document.getElementsByTagName("aside").item(0);
-      if (aside == null) {
-        console.log("Tag <aside> must be defined to render this dialog.");
-        return;
-      }
-      import_mithril.default.mount(aside, null);
-    }
-    view(v) {
+    /*
+    	oncreate(vnode: ModalVnode) {
+    
+    		// Locate the <aside> tag where we'll mount the modal
+    		const aside = document.getElementsByTagName("aside").item(0)
+    
+    		if (aside == null) {
+    			console.log("Tag <aside> must be defined to render this dialog.")
+    			return 
+    		}
+    
+    		const widget = {
+    			view: () => 
+    		}
+    
+    		// Append a container to the <aside> tag
+    		m.mount(aside, widget)
+    
+    		// Wait one tick, then add "ready" to the modal
+    		requestAnimationFrame(() => document.getElementById("modal")?.classList.add("ready"))
+    	}
+    
+    	onbeforeremove(v: ModalVnode) {
+    		document.getElementById("modal")?.classList.remove("ready")
+    	}
+    
+    	onremove(v: ModalVnode) {
+    
+    		// Locate the <aside> tag where we'll mount the modal
+    		const aside = document.getElementsByTagName("aside").item(0)
+    
+    		if (aside == null) {
+    			console.log("Tag <aside> must be defined to render this dialog.")
+    			return 
+    		}
+    
+    		m.mount(aside, null)
+    	}
+    	*/
+    view(vnode) {
+      console.log("modal.view...");
+      return /* @__PURE__ */ (0, import_mithril.default)("div", { id: "modal" }, /* @__PURE__ */ (0, import_mithril.default)("div", { id: "modal-underlay", onclick: vnode.attrs.close }), /* @__PURE__ */ (0, import_mithril.default)("div", { id: "modal-window" }, vnode.children));
     }
   };
+
+  // src/component/modal_newConversation.tsx
+  var import_mithril4 = __toESM(require_mithril(), 1);
+  var import_mithril5 = __toESM(require_mithril(), 1);
 
   // src/component/actorSearch.tsx
   var import_mithril2 = __toESM(require_mithril(), 1);
   var import_mithril3 = __toESM(require_mithril(), 1);
   var ActorSearch = class {
-    view(vnode) {
-      const { name } = vnode.attrs;
-      return /* @__PURE__ */ (0, import_mithril2.default)("div", { class: "pos-relative" }, /* @__PURE__ */ (0, import_mithril2.default)("div", { class: "input" }, /* @__PURE__ */ (0, import_mithril2.default)("input", { name, onkeyup: (evt) => {
-        this.search(evt);
-      }, style: "padding:0px; border:none; field-sizing:content" })));
+    oninit(vnode) {
+      vnode.state.actors = [];
     }
-    /*
-    <div class="pos-absolute padding-sm width-100%" style="border:solid 1px var(--gray40); background-color:var(--gray10)">
-    	Search results will go here...
-    </div>
-    */
-    search(event) {
-      console.log(event?.target);
+    view(vnode) {
+      return /* @__PURE__ */ (0, import_mithril2.default)("div", { class: "pos-relative" }, /* @__PURE__ */ (0, import_mithril2.default)("div", { class: "input" }, /* @__PURE__ */ (0, import_mithril2.default)(
+        "input",
+        {
+          name: vnode.attrs.name,
+          class: "padding-none",
+          style: "border:none; field-sizing:content",
+          autofocus: true,
+          onkeyup: (evt) => {
+            const target = evt.target;
+            import_mithril2.default.request("/.api/actors?q=" + target.value).then((actors) => {
+              vnode.state.actors = actors;
+            });
+          }
+        }
+      )), vnode.state.actors.length ? /* @__PURE__ */ (0, import_mithril2.default)("div", { role: "menu", style: "position:absolute; width:100%; border:solid 1px black; background-color:white; padding:4px;" }, vnode.state.actors.map(
+        (value) => /* @__PURE__ */ (0, import_mithril2.default)("div", { role: "menuitem" }, value.name)
+      )) : null);
     }
   };
 
@@ -12295,29 +12328,34 @@
 
   // src/component/main.tsx
   var Main = class {
-    constructor(vnode) {
-      this.modal = "";
+    oninit(vnode) {
+      vnode.state.modal = "";
     }
-    view() {
+    view(vnode) {
       return /* @__PURE__ */ (0, import_mithril6.default)("div", { class: "flex-row flex-grow" }, /* @__PURE__ */ (0, import_mithril6.default)("div", { class: "table no-top-border width-50% md:width-40% lg:width-30% flex-shrink-0 scroll-vertical", style: "background-color:var(--gray10);" }, /* @__PURE__ */ (0, import_mithril6.default)(
         "div",
         {
           role: "button",
           class: "link conversation-selector padding flex-row flex-align-center",
-          onclick: () => this.showModal("NEW-CONVERSATION")
+          onclick: () => {
+            vnode.state.modal = "NEW-CONVERSATION";
+          }
         },
         /* @__PURE__ */ (0, import_mithril6.default)("div", { class: "circle width-32 flex-shrink-0 flex-center margin-none", style: "font-size:24px;background-color:var(--blue50);color:var(--white);" }, /* @__PURE__ */ (0, import_mithril6.default)("i", { class: "bi bi-plus" })),
         /* @__PURE__ */ (0, import_mithril6.default)("div", { class: "ellipsis-block", style: "max-height:3em;" }, "New Conversation")
-      ), /* @__PURE__ */ (0, import_mithril6.default)("div", { role: "button", class: "flex-row flex-align-center padding hover-trigger" }, /* @__PURE__ */ (0, import_mithril6.default)("img", { class: "circle width-32" }), /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "flex-grow nowrap ellipsis" }, "Direct Message 1"), /* @__PURE__ */ (0, import_mithril6.default)("button", { class: "text-xs hover-show" }, "\u22EF")), /* @__PURE__ */ (0, import_mithril6.default)("div", { role: "button", class: "flex-row flex-align-center padding hover-trigger" }, /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "width-32 circle flex-center" }, /* @__PURE__ */ (0, import_mithril6.default)("i", { class: "bi bi-lock-fill" })), /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "flex-grow nowrap ellipsis" }, "Encrypted Conversation"), /* @__PURE__ */ (0, import_mithril6.default)("button", { class: "text-xs hover-show" }, "\u22EF")), /* @__PURE__ */ (0, import_mithril6.default)("div", { role: "button", class: "flex-row flex-align-center padding hover-trigger" }, /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "width-32 circle flex-center" }, /* @__PURE__ */ (0, import_mithril6.default)("i", { class: "bi bi-lock-fill" })), /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "flex-grow nowrap ellipsis" }, "Encrypted Conversation"), /* @__PURE__ */ (0, import_mithril6.default)("button", { class: "text-xs hover-show" }, "\u22EF"))), /* @__PURE__ */ (0, import_mithril6.default)("div", { class: "width-75%" }, "Here be details..."), /* @__PURE__ */ (0, import_mithril6.default)(NewConversation, { modal: this.modal, close: () => this.closeModal() }));
-    }
-    showModal(name) {
-      this.modal = name;
+      ), /* @__PURE__ */ (0, import_mithril6.default)("div", { role: "button", class: "flex-row flex-align-center padding hover-trigger" }, /* @__PURE__ */ (0, import_mithril6.default)("img", { class: "circle width-32" }), /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "flex-grow nowrap ellipsis" }, "Direct Message 1"), /* @__PURE__ */ (0, import_mithril6.default)("button", { class: "text-xs hover-show" }, "\u22EF")), /* @__PURE__ */ (0, import_mithril6.default)("div", { role: "button", class: "flex-row flex-align-center padding hover-trigger" }, /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "width-32 circle flex-center" }, /* @__PURE__ */ (0, import_mithril6.default)("i", { class: "bi bi-lock-fill" })), /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "flex-grow nowrap ellipsis" }, "Encrypted Conversation"), /* @__PURE__ */ (0, import_mithril6.default)("button", { class: "text-xs hover-show" }, "\u22EF")), /* @__PURE__ */ (0, import_mithril6.default)("div", { role: "button", class: "flex-row flex-align-center padding hover-trigger" }, /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "width-32 circle flex-center" }, /* @__PURE__ */ (0, import_mithril6.default)("i", { class: "bi bi-lock-fill" })), /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "flex-grow nowrap ellipsis" }, "Encrypted Conversation"), /* @__PURE__ */ (0, import_mithril6.default)("button", { class: "text-xs hover-show" }, "\u22EF"))), /* @__PURE__ */ (0, import_mithril6.default)("div", { class: "width-75%" }, "Here be details..."), /* @__PURE__ */ (0, import_mithril6.default)(
+        NewConversation,
+        {
+          modal: vnode.state.modal,
+          close: () => this.closeModal(vnode)
+        }
+      ));
     }
     // Global Modal Snowball
-    closeModal() {
+    closeModal(vnode) {
       document.getElementById("modal")?.classList.remove("ready");
       window.setTimeout(() => {
-        this.modal = "";
+        vnode.state.modal = "";
         import_mithril6.default.redraw();
       }, 240);
     }
@@ -12332,7 +12370,7 @@
       var factory = new ServiceFactory();
       await factory.start();
       var viewContainer = new Main(factory);
-      import_mithril7.default.mount(root3, Main);
+      import_mithril8.default.mount(root3, Main);
     }
   };
   var root2 = document.getElementById("mls");

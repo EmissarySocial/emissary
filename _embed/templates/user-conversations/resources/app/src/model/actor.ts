@@ -7,6 +7,8 @@ import { type APCollection } from "./collection"
 export type APActor = {
 	id: string
 	name: string
+	username: string
+	icon: string
 	inbox: string
 	keyPackages: APCollection
 }

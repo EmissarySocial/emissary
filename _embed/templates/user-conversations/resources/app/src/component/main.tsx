@@ -1,16 +1,22 @@
 import m from "mithril"
+import { type Vnode } from "mithril"
 import { type ServiceFactory} from "../service/factory"
+import { Modal } from "./modal"
 import { NewConversation } from "./modal_newConversation"
+
+type MainVnode = Vnode<{}, MainState>
+
+type MainState = {
+	modal: string
+}
 
 export class Main {
 
-	modal: string 
-
-	constructor(vnode:any) {
-		this.modal = ""
+	oninit(vnode: MainVnode) {
+		vnode.state.modal = ""
 	}
 
-	public view() {
+	view(vnode: MainVnode) {
 
 		return (
 			<div class="flex-row flex-grow">
@@ -19,7 +25,7 @@ export class Main {
 					<div
 						role="button"
 						class="link conversation-selector padding flex-row flex-align-center"
-						onclick={() => this.showModal('NEW-CONVERSATION')}>
+						onclick={() => {vnode.state.modal = 'NEW-CONVERSATION'}}>
 
 						<div class="circle width-32 flex-shrink-0 flex-center margin-none" style="font-size:24px;background-color:var(--blue50);color:var(--white);"><i class="bi bi-plus"></i></div>
 						<div class="ellipsis-block" style="max-height:3em;">New Conversation</div>
@@ -45,23 +51,21 @@ export class Main {
 					Here be details...
 				</div>
 
-				{/* Modal Dialog Boxes */}
-				<NewConversation modal={this.modal} close={() => this.closeModal()}></NewConversation>
+				<NewConversation 
+					modal={vnode.state.modal} 
+					close={() => this.closeModal(vnode)}>	
+				</NewConversation>
 
 			</div>
 		)
 	}
 
-	showModal(name:string) {
-		this.modal = name
-	}
-
 	// Global Modal Snowball
-	closeModal() {
+	closeModal(vnode: MainVnode) {
 		document.getElementById("modal")?.classList.remove("ready")
 	
 		window.setTimeout(() => {
-			this.modal = ""
+			vnode.state.modal = ""
 			m.redraw()
 		}, 240)
 	}
