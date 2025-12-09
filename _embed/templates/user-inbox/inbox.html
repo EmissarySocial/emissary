@@ -68,7 +68,35 @@
 			{{- end -}}
 		</div>
 
-		{{- template "list" . -}}
+		<div 
+			hx-get="/@me/inbox/list?folderId={{$folderID}}&origin.followingId={{$followingID}}"
+			hx-trigger="revealed"
+			hx-target="this"
+			hx-swap="outerHTML"
+			hx-push-url="false">
+
+			<div class="flex-row flex-align-center padding margin-bottom" style="background-color:var(--gray10)">
+				<div class="width-32">
+					<div class="circle width-32 flex-center">
+						<span class="spin">{{icon "loading"}}</span>
+					</div>
+				</div>
+				<div class="bold">Loading...</div>
+			</div>
+			<div class="flex-row flex-align-center padding margin-bottom" style="background-color:var(--gray10)">
+				<div class="width-32">
+					<div class="circle width-32"></div>
+				</div>
+				<div>...</div>
+			</div>
+			<div class="flex-row flex-align-center padding margin-bottom" style="background-color:var(--gray10)">
+				<div class="width-32">
+					<div class="circle width-32"></div>
+				</div>
+				<div>...</div>
+			</div>
+
+		</div>
 	
 	</div>
 
