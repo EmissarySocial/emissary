@@ -51,10 +51,7 @@ export class Main {
 					Here be details...
 				</div>
 
-				<NewConversation 
-					modal={vnode.state.modal} 
-					close={() => this.closeModal(vnode)}>	
-				</NewConversation>
+				<NewConversation modal={vnode.state.modal} close={() => this.closeModal(vnode)}></NewConversation> 
 
 			</div>
 		)

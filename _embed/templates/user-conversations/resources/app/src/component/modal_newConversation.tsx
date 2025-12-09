@@ -1,16 +1,27 @@
 import  m from "mithril";
+import { type APActor } from "../model/actor";
 import {type Vnode, type VnodeDOM, type Component } from "mithril";
 import {Modal} from "./modal"
 import {ActorSearch} from "./actorSearch"
 
-type NewConversationVnode = Vnode<NewConversationArgs, {}>
+type NewConversationVnode = Vnode<NewConversationArgs, NewConversationState>
 
 interface NewConversationArgs {
 	modal: string
 	close: () => void
 }
 
+interface NewConversationState {
+	actors: APActor[]
+	encrypted: boolean
+}
+
+
 export class NewConversation {
+
+	oninit(vnode: NewConversationVnode) {
+		vnode.state.actors = []
+	}
 
 	view(vnode: NewConversationVnode) {
 
@@ -23,35 +34,79 @@ export class NewConversation {
 		<Modal close={vnode.attrs.close}>
 
 			<div class="layout layout-vertical">
-				<div class="layout-title">{this.label(vnode)}</div>
+				{this.header(vnode)}
 				<div class="layout-elements">
 					<div class="layout-element">
 						<label for="">Participants</label>
-						<ActorSearch name="actorIds"></ActorSearch>
+						<ActorSearch name="actorIds" endpoint="/.api/actors" onselect={(actors:APActor[])=>this.selectActors(vnode, actors)}></ActorSearch>
 					</div>
 					<div class="layout-element">
 						<label>Message</label>
 						<textarea rows="8"></textarea>
-						<div class="text-sm text-gray"></div>
+						<div class="text-sm text-gray">{this.description(vnode)}</div>
 					</div>
 				</div>
 			</div>
 			<div class="margin-top">
-				<button onclick={this.submit(vnode)} class="primary">Start Conversation</button>
-				<button onclick={vnode.attrs.close}>Close</button>
+				{this.submitButton(vnode)}
+				<button onclick={vnode.attrs.close} tabIndex="0">Close</button>
 			</div>
 
 		</Modal>)		
 	}
 
-	submit(vnode: NewConversationVnode) {
-		return () => {
-			console.log("submit...")
-			vnode.attrs.close()
+	header(vnode: NewConversationVnode): JSX.Element {
+
+		if (vnode.state.actors.length == 0) {
+			return <div class="layout-title"><i class="bi bi-plus"></i> Start a Conversation</div>
+		}
+
+		if (vnode.state.encrypted) {
+			return <div class="layout-title"><i class="bi bi-shield-lock"></i> Encrypted Message</div>
+		}
+
+		return <div class="layout-title"><i class="bi bi-envelope-open"></i> Direct Message</div>
+	}
+
+	description(vnode:NewConversationVnode): JSX.Element {
+		if (vnode.state.actors.length == 0)  {
+			return <span></span>
+		}
+
+		if (vnode.state.encrypted) {
+			return <div>This will be encrypted before it leaves this device, and will not be readable by anyone other than the recipients.</div>
+		}
+
+		return <div><i class="bi bi-exclamation-triangle-fill"></i> One or more of your recipients cannot receive encrypted messages. Others on the Internet may be able to read this message.</div>
+	}
+
+	submitButton(vnode: NewConversationVnode): JSX.Element {
+
+		if (vnode.state.actors.length == 0) {
+			return <button class="primary" disabled>Start a Conversation</button>
+		}
+
+		if (vnode.state.encrypted) {
+			return <button class="primary" tabindex="0" onclick={(event:MouseEvent)=>this.onsubmit(vnode)}><i class="bi bi-lock"></i> Send Encrypted</button>
+		}
+
+		return <button class="selected" disabled>Send Direct Message</button>
+		// return <button class="selected" tabindex="0" onclick={(event:MouseEvent)=>this.onsubmit(vnode)}>Send Direct Message</button>
+	}
+
+	selectActors(vnode: NewConversationVnode, actors:APActor[]) {
+		vnode.state.actors = actors
+
+		if (actors.some((actor)=>actor.keyPackages == "")) {
+			vnode.state.encrypted = false
+		} else {
+			vnode.state.encrypted = true
 		}
 	}
 
-	label(vnode: NewConversationVnode) {
-		return "+ New Conversation"
+	onsubmit(vnode: NewConversationVnode) {
+		return () => {
+			vnode.attrs.close()
+		}
 	}
 }

@@ -22,6 +22,7 @@
 	background-color: var(--gray10);
 	border-radius: calc(var(--rhythm) / 2);
 	color:var(--gray90)!important;
+	cursor:default;
 	display:inline-block;
 	font-size:calc(var(--rhythm) * 1.5);
 	line-height:calc(var(--rhythm) * 2);
@@ -30,16 +31,26 @@
 	margin-right: calc(var(--rhythm) / 2);
 	padding:calc(var(--rhythm) / 2) var(--rhythm);
 	text-decoration:none;
+
+	&:hover {
+		background-color:var(--gray30);
+		color:var(--black)!important;
+	}
+
+	&.warning,
+	&.warning:hover {
+		background-color:var(--red50);
+		border:none;
+		color:var(--white)!important;
+	}
+
+	&.blue {
+		color:white!important;
+		background-color:var(--blue50);
+
+		&:hover {
+			background-color:var(--blue60);
+		}
+	}
 }
 
-.tag:hover {
-	background-color:var(--gray30);
-	color:var(--black)!important;
-}
-
-.tag.warning,
-.tag.warning:hover {
-	background-color:var(--red50);
-	border:none;
-	color:var(--white)!important;
-}
