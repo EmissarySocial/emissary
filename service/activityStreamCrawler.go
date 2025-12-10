@@ -1,13 +1,7 @@
 package service
 
 import (
-	"github.com/EmissarySocial/emissary/tools/ascache"
-	"github.com/EmissarySocial/emissary/tools/ascrawler"
-	"github.com/benpate/derp"
-	"github.com/benpate/hannibal/collections"
 	"github.com/benpate/hannibal/streams"
-	"github.com/benpate/hannibal/vocab"
-	"github.com/benpate/rosetta/ranges"
 	"github.com/benpate/turbine/queue"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -35,71 +29,78 @@ func NewActivityStreamCrawler(client streams.Client, enqueue chan<- queue.Task, 
 // a queued task.
 func (service *ActivityStreamCrawler) Crawl(url string) error {
 
-	const location = "service.ActivityStreamCrawler.Crawl"
-
-	// RULE: URL must not be empty
-	if url == "" {
-		return nil
-	}
-
-	// RULE: URL must be a valid URL
-	if !isValidURL(url) {
-		return nil
-	}
-
-	// Load the document from the Interwebs
-	document, err := service.client.Load(url, ascrawler.WithoutCrawler())
-
-	if err != nil {
-		return derp.Wrap(err, location, "Unable to load ActivityStreams document")
-	}
-
-	// If this is an "Actor" then do not crawl anything else
-	// (no "outbox" or "featured" collections)
-	if streams.IsActor(document.Type()) {
-		return nil
-	}
-
-	// If this is an "Activity" then just load the `actor` and `object` properties.
-	if streams.IsActivity(document.Type()) {
-		service.load(document.Actor().ID())
-		service.load(document.Object().ID())
-		return nil
-	}
-
-	// If this is a collection, then crawl it directly.
-	if streams.IsCollection(document.Type()) {
-		service.crawl_CollectionDocument(document)
-		return nil
-	}
-
-	// Otherwise, we're going to crawl a Document (Note, Article, etc.)
-
-	// Load actor(s) from `AttributedTo` property
-	for attributedTo := range document.AttributedTo().Range() {
-		service.load(attributedTo.ID())
-	}
-
-	// Crawl document from `InReplyTo` property
-	// This is *probably* also handled by contextMaker, but let's put
-	// it here, too, just in case that is removed/changed some day.
-	service.load(document.InReplyTo().ID())
-
-	// Crawl `Context` property
-	service.crawl_Collection(document, vocab.PropertyContext)
-
-	// Crawl `Replies` property
-	service.crawl_Collection(document, vocab.PropertyReplies)
-
-	// Crawl `Likes` property
-	service.crawl_Collection(document, vocab.PropertyLikes)
-
-	// Crawl `Shares` property
-	service.crawl_Collection(document, vocab.PropertyShares)
-
+	// Emergency removing crawler.  Will re-implement later.
 	return nil
+
+	/*
+		const location = "service.ActivityStreamCrawler.Crawl"
+
+		// RULE: URL must not be empty
+		if url == "" {
+			return nil
+		}
+
+		// RULE: URL must be a valid URL
+		if !isValidURL(url) {
+			return nil
+		}
+
+		// Load the document from the Interwebs
+		document, err := service.client.Load(url, ascrawler.WithoutCrawler())
+
+		if err != nil {
+			return derp.Wrap(err, location, "Unable to load ActivityStreams document")
+		}
+
+		// If this is an "Actor" then do not crawl anything else
+		// (no "outbox" or "featured" collections)
+		if streams.IsActor(document.Type()) {
+			return nil
+		}
+
+		// If this is an "Activity" then just load the `actor` and `object` properties.
+		if streams.IsActivity(document.Type()) {
+			service.load(document.Actor().ID())
+			service.load(document.Object().ID())
+			return nil
+		}
+
+		// If this is a collection, then crawl it directly.
+		if streams.IsCollection(document.Type()) {
+			service.crawl_CollectionDocument(document)
+			return nil
+		}
+
+		// Otherwise, we're going to crawl a Document (Note, Article, etc.)
+
+		// Load actor(s) from `AttributedTo` property
+		for attributedTo := range document.AttributedTo().Range() {
+			service.load(attributedTo.ID())
+		}
+
+		// Crawl document from `InReplyTo` property
+		// This is *probably* also handled by contextMaker, but let's put
+		// it here, too, just in case that is removed/changed some day.
+		service.load(document.InReplyTo().ID())
+
+		// Crawl `Context` property
+		service.crawl_Collection(document, vocab.PropertyContext)
+
+		// Crawl `Replies` property
+		service.crawl_Collection(document, vocab.PropertyReplies)
+
+		// Crawl `Likes` property
+		service.crawl_Collection(document, vocab.PropertyLikes)
+
+		// Crawl `Shares` property
+		service.crawl_Collection(document, vocab.PropertyShares)
+
+		return nil
+
+	*/
 }
 
+/*
 // crawl_Collection loads/caches all documents in a collection, continuing until a
 // previously-cached value is found.  Because of this, it must load each document
 // sequentially, and therefore may take a long time to complete.
@@ -179,3 +180,4 @@ func (service *ActivityStreamCrawler) load(url string) streams.Document {
 
 	return document
 }
+*/
