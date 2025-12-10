@@ -1,6 +1,8 @@
 package consumer
 
 import (
+	"time"
+
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
@@ -27,6 +29,27 @@ func SendActivityPubMessage(factory *service.Factory, session data.Session, args
 
 	// Send the ActivityPub message on the actor's behalf
 	if err := activityStreamService.SendMessage(session, args); err != nil {
+
+		// If it is a certain kind of HTTP error, then maybe retry it...
+		if httpError := derp.UnwrapHTTPError(err); httpError != nil {
+
+			// Retry HTTP 429 (Too Many Requests) errors
+			if derp.IsTooManyRequests(err) {
+
+				// See how long we should wait before retrying
+				// +2 minutes because everyone needs two extra minutes. UwU
+				if retryAfter := httpError.RetryAfter(); retryAfter > 0 {
+					retryDuration := time.Duration(retryAfter+120) * time.Second
+					return queue.Requeue(retryDuration)
+				}
+
+				// If not retry-after duration is given, use 15 minutes as a default
+				retryDuration := 15 * time.Minute
+				return queue.Requeue(retryDuration)
+			}
+		}
+
+		// Otherwise, this is our fault and can't be retried. Fail accordingly.
 		return queue.Failure(derp.Wrap(err, location, "Error sending ActivityPub message"))
 	}
 

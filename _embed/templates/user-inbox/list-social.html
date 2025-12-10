@@ -92,8 +92,8 @@
 								<div class="bold text-black">{{$document.Name}}</div>
 							{{- end -}}
 
-							<div class="margin-top" script="install ShowMore(maxHeight:220)">
-								<div class="ShowMore-content">
+							<div class="margin-top" script="install ShowMore">
+								<div class="ShowMore-content" style="max-height:220px; overflow-y:hidden;">
 									{{- if $document.HasContent -}}
 										{{- $document.Content | htmlMinimal -}}
 									{{- else if $document.HasSummary -}}

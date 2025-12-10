@@ -1,4 +1,4 @@
-behavior ShowMore(maxHeight)
+behavior ShowMore
 
 	init
 
@@ -14,7 +14,6 @@ behavior ShowMore(maxHeight)
 		end
 
 		set :content.style.overflowY to "hidden"
-		set :content.style.maxHeight to maxHeight px
 		remove @hidden from the :button
 	end
 

@@ -250,6 +250,13 @@
 			]
 		}
 
+		browse-tree-reply: {
+			roles: ["self"]
+			steps: [
+				{do:"view-html"}
+			]
+		}
+
 		conversations: {
 			roles: ["self"]
 			steps: [

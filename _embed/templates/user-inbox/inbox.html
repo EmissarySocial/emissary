@@ -73,27 +73,17 @@
 			hx-trigger="revealed"
 			hx-target="this"
 			hx-swap="outerHTML"
-			hx-push-url="false">
+			hx-push-url="false"
+			script="init wait 1s then show me"
+			style="display:none;">
 
-			<div class="flex-row flex-align-center padding margin-bottom" style="background-color:var(--gray10)">
+			<div class="card padding flex-row flex-align-center">
 				<div class="width-32">
 					<div class="circle width-32 flex-center">
 						<span class="spin">{{icon "loading"}}</span>
 					</div>
 				</div>
-				<div class="bold">Loading...</div>
-			</div>
-			<div class="flex-row flex-align-center padding margin-bottom" style="background-color:var(--gray10)">
-				<div class="width-32">
-					<div class="circle width-32"></div>
-				</div>
-				<div>...</div>
-			</div>
-			<div class="flex-row flex-align-center padding margin-bottom" style="background-color:var(--gray10)">
-				<div class="width-32">
-					<div class="circle width-32"></div>
-				</div>
-				<div>...</div>
+				<div>Loading Messages...</div>
 			</div>
 
 		</div>
