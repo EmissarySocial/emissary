@@ -195,7 +195,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.Use(middleware.CORS())
 
 	// TODO: Commonly accessed routest that we should serve
-	e.GET("/robots.txt", handler.TBD)                       // https://developers.google.com/search/docs/advanced/robots/create-robots-txt
+	e.GET("/robots.txt", handler.RobotsTxt)                 // https://developers.google.com/search/docs/advanced/robots/create-robots-txt
 	e.GET("/sitemap.xml", handler.TBD)                      // https://developers.google.com/search/docs/advanced/sitemaps/build-sitemap
 	e.GET("/humans.txt", handler.TBD)                       // http://humanstxt.org/
 	e.GET("/ads.txt", handler.TBD)                          // https://iabtechlab.com/standards/ads-txt/

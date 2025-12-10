@@ -246,7 +246,7 @@ func (service *Following) deleteNoStats(session data.Session, following *model.F
 	}
 
 	// Disconnect from external services (if necessary)
-	service.Disconnect(session, following)
+	go service.Disconnect(session, following)
 
 	return nil
 }
