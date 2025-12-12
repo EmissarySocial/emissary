@@ -370,39 +370,6 @@ func (w Inbox) Conversations() (QueryBuilder[model.Conversation], error) {
 	return NewQueryBuilder[model.Conversation](conversationService, w._session, criteria), nil
 }
 
-func (w Inbox) Privileges() QueryBuilder[model.Privilege] {
-
-	expressionBuilder := builder.NewBuilder().
-		String("search", builder.WithAlias("emailAddress"), builder.WithDefaultOpBeginsWith())
-
-	criteria := exp.And(
-		expressionBuilder.Evaluate(w._request.URL.Query()),
-		exp.Equal("userId", w._user.UserID),
-	)
-
-	return NewQueryBuilder[model.Privilege](w._factory.Privilege(), w._session, criteria)
-
-}
-
-func (w Inbox) MerchantAccount(merchantAccountID string) (model.MerchantAccount, error) {
-	result := model.NewMerchantAccount()
-	err := w._factory.MerchantAccount().LoadByUserAndToken(w._session, w._user.UserID, merchantAccountID, &result)
-	return result, err
-}
-
-func (w Inbox) MerchantAccounts() QueryBuilder[model.MerchantAccount] {
-
-	expressionBuilder := builder.NewBuilder().
-		String("search", builder.WithAlias("name"), builder.WithDefaultOpBeginsWith())
-
-	criteria := exp.And(
-		expressionBuilder.Evaluate(w._request.URL.Query()),
-		exp.Equal("userId", w._user.UserID),
-	)
-
-	return NewQueryBuilder[model.MerchantAccount](w._factory.MerchantAccount(), w._session, criteria)
-}
-
 // FIlteredByFollowing returns the Following record that is being used to filter the Inbox
 func (w Inbox) FilteredByFollowing() model.Following {
 

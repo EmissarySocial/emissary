@@ -195,7 +195,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.Use(middleware.CORS())
 
 	// TODO: Commonly accessed routest that we should serve
-	e.GET("/robots.txt", handler.TBD)                       // https://developers.google.com/search/docs/advanced/robots/create-robots-txt
+	e.GET("/robots.txt", handler.RobotsTxt)                 // https://developers.google.com/search/docs/advanced/robots/create-robots-txt
 	e.GET("/sitemap.xml", handler.TBD)                      // https://developers.google.com/search/docs/advanced/sitemaps/build-sitemap
 	e.GET("/humans.txt", handler.TBD)                       // http://humanstxt.org/
 	e.GET("/ads.txt", handler.TBD)                          // https://iabtechlab.com/standards/ads-txt/
@@ -217,6 +217,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/nodeinfo/2.1.json", handler.WithFactory(factory, handler.GetNodeInfo21))
 
 	// Built-In Service Routes
+	e.GET("/.api/actors", handler.WithAuthenticatedAPI(factory, handler.GetAPIActors))
 	e.GET("/.checkout", handler.WithProduct(factory, handler.GetCheckout))
 	e.GET("/.checkout/response", handler.WithMerchantAccountJWT(factory, handler.GetCheckoutResponse))
 	e.POST("/.follower/new", handler.WithFactory(factory, handler.PostEmailFollower))
@@ -520,24 +521,6 @@ func openLocalhostBrowser(factory *server.Factory, options ...config.Option) {
 	}
 }
 
-func waitForSigInt() {
-
-	// Listen to the OS SIGINT channel for an interrupt signal
-	// Use a buffered channel to avoid missing signals as recommended for signal.Notify
-	// https://golang.org/pkg/os/signal/#Notify
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt)
-
-	// Wait for an interrupt signal from the OS
-	<-quit
-
-	// Shut down the echo server gracefully
-	// gracefulShutdown(e)
-
-	// Exit the program (forcefully)
-	os.Exit(0)
-}
-
 // gracefulShutdown listens for a SIGINT signal, then shuts down the server gracefully
 func gracefulShutdown(e *echo.Echo) {
 
@@ -560,11 +543,8 @@ func errorHandler(err error, ctx echo.Context) {
 	// Special handling of permisssion errors
 	request := ctx.Request()
 
-	errorCode := derp.ErrorCode(err)
-
-	switch errorCode {
-
-	case http.StatusUnauthorized:
+	// Forward "Unauthorized" requests to the signin page
+	if derp.IsUnauthorized((err)) {
 
 		uri := request.URL
 
@@ -574,21 +554,28 @@ func errorHandler(err error, ctx echo.Context) {
 			return
 		}
 
-		_ = ctx.String(errorCode, derp.Message(err))
+		_ = ctx.String(derp.ErrorCode(err), derp.Message(err))
 		return
 	}
 
-	fullURL := dt.AddProtocol(request.Host) + request.URL.String()
-
 	// Write the error to the console (on production and local domains)
-	derp.Report(derp.Wrap(err, location, "Unable to generate web page", fullURL, ctx.Request().Header))
+	derp.Report(
+		derp.Wrap(
+			err,
+			location,
+			"Unable to generate web page",
+			"url: "+dt.AddProtocol(request.Host)+request.URL.String(),
+			"method: "+request.Method,
+			ctx.Request().Header,
+		),
+	)
 
 	// Get the true hostname of the request.
 	hostname := dt.TrueHostname(request)
 
-	// If this is a local server, then allow developers to see full error dump.
+	// Show developers a full error dump (local servers only)
 	if dt.IsLocalhost(hostname) {
-		_ = ctx.JSONPretty(errorCode, err, "  ")
+		_ = ctx.JSONPretty(derp.ErrorCode(err), err, "  ")
 		return
 	}
 

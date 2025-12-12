@@ -1,0 +1,18 @@
+{{- $collection := .QueryParam "collection" -}}
+{{- if ne "" $collection -}}
+	{{- $collection := .ActivityStream $collection -}}
+	{{- if $collection.Items.NotEmpty -}}
+		<div class="margin-top bold">{{icon "pin-fill"}} Featured Posts</div>
+		{{- range $index, $item := $collection.Items.RangeWithIndex -}}
+			<div class="card padding margin-top" script="install blockselect(link:#featured-{{$index}})">
+
+				<div class="bold">{{$item.Name}}</div>
+				<div>{{$item.Content | htmlMinimal}}</div>
+				<div class="flex-row text-sm">
+					<span class="flex-grow text-light-gray margin-right">{{- $item.Published | shortDate -}}</span>
+					<span id="featured-{{$index}}" hx-get="/@me/inbox/browse?url={{$item.ID}}" class="link">View Full Post &rarr;</span>
+				</div>
+			</div>
+		{{- end -}}
+	{{- end -}}
+{{- end -}}

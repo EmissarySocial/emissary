@@ -52,6 +52,11 @@ func Actor(document streams.Document) map[string]any {
 		result[vocab.PropertyMigration] = convert.MapOfString(migration.Value())
 	}
 
+	// MLS KeyPackages
+	if keyPackages := document.KeyPackages(); keyPackages.NotNil() {
+		result[vocab.PropertyKeyPackages] = keyPackages.ID()
+	}
+
 	return result
 }
 

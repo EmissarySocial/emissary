@@ -1,0 +1,20 @@
+@media print {
+	.print-hide {display:none;}
+	.screen-show {display:none;}
+}
+
+@media screen {
+	
+	.print-show {display:none;}
+	.screen-hide {display:none;}
+
+	@media (width < 640px) {
+		.mobile-hide {display:none;}
+		.desktop-show {display:none;}
+	}
+
+	@media (width >= 640px) {
+		.mobile-show {display:none;}
+		.desktop-hide {display:none;}
+	}
+}

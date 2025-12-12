@@ -50,6 +50,7 @@ func compareModel(currentIndex mapof.Any, newIndex mongo.IndexModel) bool {
 	}
 
 	log.Trace().Msg("indexes do not match")
+	// spew.Dump(newIndex, newIndexMap, currentIndex)
 	return false
 }
 
@@ -82,6 +83,10 @@ func convertModelToMap(newIndex mongo.IndexModel) mapof.Any {
 		result["v"] = int32(*version)
 	} else {
 		result["v"] = int32(2)
+	}
+
+	if sphereIndexVersion := newIndex.Options.SphereVersion; sphereIndexVersion != nil {
+		result["2dsphereIndexVersion"] = int32(*sphereIndexVersion)
 	}
 
 	if weights := newIndex.Options.Weights; weights != nil {
@@ -161,9 +166,12 @@ func convertMapValue(value any) any {
 		return typedValue
 	case bool:
 		return typedValue
+	case bson.M:
+		return primitiveToMap(typedValue)
 	}
 
 	// Fallback for other types
 	log.Debug().Msg("Unrecognized type in primitive map: " + reflect.TypeOf(value).String())
+
 	return value
 }

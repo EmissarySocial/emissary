@@ -1,7 +1,6 @@
 package consumer
 
 import (
-	"context"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -20,9 +19,11 @@ func isHour(modulo int, startHour int) bool {
 	return startHour == (currentHour % modulo)
 }
 
+/* Unused function
 func timeoutContext(seconds int) (context.Context, context.CancelFunc) {
 	return context.WithTimeout(
 		context.Background(),
 		time.Duration(seconds)*time.Second,
 	)
 }
+*/

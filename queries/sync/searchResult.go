@@ -71,6 +71,7 @@ func SearchResult(ctx context.Context, database *mongo.Database) error {
 			Keys: bson.D{
 				{Key: "place.location", Value: "2dsphere"},
 			},
+			Options: options.Index().SetSphereVersion(3),
 		},
 	})
 }

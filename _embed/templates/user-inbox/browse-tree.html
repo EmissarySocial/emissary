@@ -5,11 +5,22 @@
 
 <div id="modal-body" class="turboclick padding-top" hx-target="#modal-window" hx-swap="innerHTML" hx-push-url="false">
 
+	<!-- Displays this record and all of its parents -->
 	{{- template "browse-parent" (array . $document "") -}}
 
-	<div hx-get="/@me/inbox/browse-tree-replies?url={{$document.ID}}&replyCount={{$document.Metadata.Replies}}" hx-trigger="intersect once" hx-target="this" hx-swap="innerHTML" hx-push-url="false">
-		<span class="spin">{{icon "loading"}}</span> Loading Replies
-	</div>
+	{{- $repliesURL := $document.Replies.ID -}}
+	{{- if ne "" $repliesURL -}}
+		<div 
+			hx-get="/@me/inbox/browse-tree-replies?url={{$repliesURL}}" 
+			hx-trigger="intersect once" 
+			hx-target="this" 
+			hx-swap="outerHTML" 
+			hx-push-url="false"
+			class="card padding margin-bottom text-light-gray">
+
+			<span class="spin">{{icon "loading"}}</span> Searching for Replies
+		</div>
+	{{- end -}}
 
 </div>
 

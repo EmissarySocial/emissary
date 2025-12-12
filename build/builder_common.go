@@ -13,6 +13,7 @@ import (
 	"github.com/benpate/exp"
 	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/form"
+	"github.com/benpate/hannibal/collections"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/list"
@@ -339,6 +340,7 @@ func (w Common) UserImage() (string, error) {
 func (w Common) ActivityStream(url string) streams.Document {
 
 	const location = "build.Common.ActivityStream"
+
 	// Load the document from the Interwebs
 	activityService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
 	result, err := activityService.Client().Load(url)
@@ -354,6 +356,47 @@ func (w Common) ActivityStream(url string) streams.Document {
 
 	// Return the result
 	return result
+}
+
+func (w Common) ActivityStreamCollection(url string) sliceof.String {
+
+	const location = "build.Common.ActivityStreamCollection"
+
+	// Load the collection from the Interwebs
+	activityService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
+	object, err := activityService.Client().Load(url)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to load ActivityStream. Returning empty collection to template."))
+		return sliceof.NewString()
+	}
+
+	// Copy item IDs into the result slice
+	result := sliceof.NewString()
+	for item := range collections.RangeDocuments(object) {
+		result = append(result, item.ID())
+	}
+
+	return result
+}
+
+// ActivityStreamActor returns an ActivityStream actor document for the provided URL.  The
+// returned document uses Emissary's custom ActivityStream service, which uses
+// document values and rules from the server's shared cache.
+func (w Common) ActivityStreamActor(url string) streams.Document {
+	activityService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
+	result, err := activityService.Client().Load(url, sherlock.AsActor())
+
+	if err != nil {
+		derp.Report(err)
+	}
+
+	return result
+}
+
+func (w Common) ActivityStreamActors(search string) (sliceof.Object[model.ActorSummary], error) {
+	activityService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
+	return activityService.QueryActors(search)
 }
 
 // AmFollowing returns a Following record for the current user and the given URL
@@ -386,24 +429,9 @@ func (w Common) IsFollower(url string) model.Follower {
 	return follower
 }
 
-// ActivityStreamActor returns an ActivityStream actor document for the provided URL.  The
-// returned document uses Emissary's custom ActivityStream service, which uses
-// document values and rules from the server's shared cache.
-func (w Common) ActivityStreamActor(url string) streams.Document {
-	activityService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
-	result, err := activityService.Client().Load(url, sherlock.AsActor())
-
-	if err != nil {
-		derp.Report(err)
-	}
-
-	return result
-}
-
-func (w Common) ActivityStreamActors(search string) ([]model.ActorSummary, error) {
-	activityService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
-	return activityService.QueryActors(search)
-}
+/******************************************
+ * Misc Helper Methods
+ ******************************************/
 
 // IsMobile returns TRUE if the request was made by a mobile device
 func (w Common) IsMobile() bool {
@@ -427,10 +455,6 @@ func (w Common) IsMe(url string) bool {
 func (w Common) NotMe(url string) bool {
 	return !w.IsMe(url)
 }
-
-/******************************************
- * Misc Helper Methods
- ******************************************/
 
 // IsFollowing returns TRUE if the curren user is following the
 // document at a specific URI (or the actor who created the document)

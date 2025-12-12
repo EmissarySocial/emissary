@@ -185,6 +185,13 @@
 			]
 		}
 
+		browse-actor-featured: {
+			roles: ["self"]
+			steps: [
+				{do: "view-html"}
+			]
+		}
+
 		browse-code: {
 			roles: ["self"]
 			steps: [
@@ -237,6 +244,13 @@
 		}
 
 		browse-tree-replies: {
+			roles: ["self"]
+			steps: [
+				{do:"view-html"}
+			]
+		}
+
+		browse-tree-reply: {
 			roles: ["self"]
 			steps: [
 				{do:"view-html"}

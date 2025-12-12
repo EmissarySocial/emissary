@@ -12,8 +12,6 @@ import (
 	"github.com/EmissarySocial/emissary/queries"
 	"github.com/EmissarySocial/emissary/tools/ascache"
 	"github.com/EmissarySocial/emissary/tools/ascacherules"
-	"github.com/EmissarySocial/emissary/tools/ascontextmaker"
-	"github.com/EmissarySocial/emissary/tools/ascrawler"
 	"github.com/EmissarySocial/emissary/tools/ashash"
 	"github.com/EmissarySocial/emissary/tools/asnormalizer"
 	"github.com/benpate/data"
@@ -75,20 +73,25 @@ func (service *ActivityStream) CacheClient() *ascache.Client {
 	// enforce opinionated data formats
 	normalizerClient := asnormalizer.New(sherlockClient)
 
+	// Emergency remove context maker. Will re-implement later.
 	// compute document context (if missing)
-	contextMakerClient := ascontextmaker.New(normalizerClient, service.commonDatabase)
+	// contextMakerClient := ascontextmaker.New(normalizerClient, service.commonDatabase)
 
+	// Emergency remove crawler. Will re-implement later.
 	// crawler client will load related documents in the background
-	crawlerClient := ascrawler.New(
-		service.factory.Queue(),
-		contextMakerClient,
-		service.actorType,
-		service.actorID,
-		service.hostname,
-	)
+	/*
+		crawlerClient := ascrawler.New(
+			service.factory.Queue(),
+			contextMakerClient,
+			service.actorType,
+			service.actorID,
+			service.hostname,
+		)
+	*/
 
 	// apply custom caching rules to documents
-	cacheRulesClient := ascacherules.New(crawlerClient)
+	// cacheRulesClient := ascacherules.New(crawlerClient)
+	cacheRulesClient := ascacherules.New(normalizerClient)
 
 	// cache data in MongoDB
 	cacheClient := ascache.New(
@@ -209,11 +212,12 @@ func (service *ActivityStream) QueryActors(queryString string) ([]model.ActorSum
 			// If this is a valid, but (previously) unknown actor, then add it to the results
 			// This will also automatically get cached/crawled for next time.
 			result := []model.ActorSummary{{
-				ID:       newActor.ID(),
-				Type:     newActor.Type(),
-				Name:     newActor.Name(),
-				Icon:     newActor.Icon().Href(),
-				Username: newActor.PreferredUsername(),
+				ID:          newActor.ID(),
+				Type:        newActor.Type(),
+				Name:        newActor.Name(),
+				Icon:        newActor.Icon().Href(),
+				Username:    newActor.PreferredUsername(),
+				KeyPackages: newActor.KeyPackages().ID(),
 			}}
 
 			return result, nil
@@ -221,7 +225,7 @@ func (service *ActivityStream) QueryActors(queryString string) ([]model.ActorSum
 	}
 
 	// Fall through means that we can't find a perfect match, so fall back to a full-text search
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	ctx, cancel := timeoutContext(2)
 	defer cancel()
 
 	collection, err := service.collection(ctx)

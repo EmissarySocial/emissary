@@ -1,0 +1,135 @@
+{{- $url := .QueryParam "url" -}}
+{{- $document := .ActivityStream $url -}}
+
+{{- if $document.NotNil -}}
+
+	{{- $documentID := $document.ID -}}
+	{{- $attributedTo := $document.AttributedTo -}}
+
+	<div script="install ToggleContainer()">
+
+		<div class="ToggleShow" style="display:none;">
+			<div class="card padding margin-bottom pos-relative">
+				<div class="clickable flex-row flex-align-center">
+					<div>{{ icon "add-square" }}</div>
+					<img src="{{$attributedTo.Icon.Href}}" class="circle width-24 flex-shrink-0">
+					<div class="flex-grow nowrap text-light-gray ellipsis">
+						<b class="text-nocolor">{{ $attributedTo.Name }}</b>
+						<span class="margin-left">{{ $document.Content | summary | html }}</span>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="ToggleContent">
+
+			<div class="card padding margin-bottom pos-relative">
+
+				<div class="ToggleHide clickable flex-row flex-align-center margin-bottom-lg">
+					<div>{{icon "remove-square"}}</div>
+					<img src="{{$attributedTo.Icon.Href}}" class="circle width-24 flex-shrink-0">
+					<div class="flex-grow nowrap">
+						<b>{{ $attributedTo.Name }}</b>
+						<span class="margin-left text-light-gray">{{ $document.Published | tinyDate }} ago</span>
+					</div>
+				</div>
+
+				<div script="install ShowMore">
+					<div class="ShowMore-content" style="max-height:320px; overflow-y:hidden;">
+						{{ $document.Content | html }}
+
+						{{- if ne "" $document.Image.Href -}}
+							<div class="margin-top-large">
+								<img src="{{$document.Image.Href}}" class="block width-100%">
+							</div>
+						{{- end -}}
+					</div>
+
+					<div class="ShowMore-button padding-vertical" hidden>
+						<button class="text-xs">show more &downarrow;</button>
+					</div>
+
+					<div class="margin-top-lg text-xs">
+						{{template "reply-button" $documentID }}
+						<span 
+							hx-get="/@me/inbox/like-button?url={{$documentID}}" 
+							hx-trigger="intersect once"
+							hx-target="this" 
+							hx-swap="innerHTML" 
+							hx-push-url="false">
+						</span>
+					</div>
+
+					<div class="pos-absolute-top-right text-sm" hx-target="#modal-window" hx-push-url="false" hx-swap="innerHTML">
+						<button hx-get="/@me/inbox/browse-tree?url={{$documentID}}" title="Focus on this post" aria-label="Focus on this post">{{icon "focus"}}</button>
+						<button hx-get="/@me/inbox/browse-index?url={{$documentID}}" title="Use Index Layout" aria-label="Use Index Layout">{{icon "list"}}</button>
+						<span class="margin-horizontal-sm"></span>
+						<button hx-get="/@me/inbox/browse-actor?url={{$attributedTo.ID}}" title="View Profile" aria-label="View Profile">{{icon "person"}}</button>
+						<a href="{{$documentID}}" target="_blank" class="button" title="View Original Website" aria-label="Visit Original Website">{{icon "globe"}}</a>
+					</div>
+
+				</div>
+			</div>
+
+			<div class="flex-row margin-vertical">
+
+				<div style="
+					width:11px;
+					flex-shrink:0;
+					flex-grow:0;
+					background-image: linear-gradient(#CCC, #CCC);
+					background-size: 1px 100%;
+					background-repeat: no-repeat;
+					background-position: center center;">
+				</div>
+
+				<div class="flex-grow">
+					<!-- If there are any replies, then show placeholders for them here -->
+					{{- $repliesURL := $document.Replies.ID -}}
+					{{- $replies := .ActivityStreamCollection $repliesURL -}}
+					{{- if $replies.NotEmpty -}}
+						<div script="install ToggleContainer">
+							<div class="ToggleShow clickable">
+								{{ icon "add-square" }} &nbsp;
+								{{$replies.Length}} 
+								{{pluralize $replies.Length "Reply" "Replies"}}
+							</div>
+							
+							<div class="ToggleContent" style="display:none;">
+								{{- range $index, $replyURL := $replies -}}
+									<div 
+										hx-get="/@me/inbox/browse-tree-reply?url={{$replyURL}}"
+										hx-trigger="intersect once"
+										hx-target="this"
+										hx-swap="outerHTML"
+										hx-push-url="false"
+										class="card padding margin-bottom">
+
+										{{- if eq 0 $index -}}
+											<span class="spin">{{ icon "loading" }}</span> Loading...
+										{{- else -}}
+											&nbsp; {{$index}}: {{$replyURL}}
+										{{- end -}}
+									</div>
+								{{- end -}}
+							</div>
+							
+						</div>
+
+					{{- end -}}
+				</div>
+			</div>
+		</div>
+
+	</div>
+{{- else -}}
+
+	<div class="card padding margin-bottom pos-relative">
+		<div class="flex-row">
+		<div class="flex-grow margin-none text-light-gray">Could Not Load Message</div>
+		<div>
+			<a href="{{$url}}" class="button text-xs margin-none" target="_blank">{{icon "globe"}}</a>
+		</div>
+	</div>
+
+{{- end -}}
