@@ -153,7 +153,7 @@ func (w Domain) clone(action string) (Builder, error) {
 
 // IsAdminBuilder returns TRUE because Domain is an admin route.
 func (w Domain) IsAdminBuilder() bool {
-	return false
+	return true
 }
 
 func (w Domain) ThemeID() string {

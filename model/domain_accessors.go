@@ -11,7 +11,9 @@ func DomainSchema() schema.Element {
 		Properties: schema.ElementMap{
 			"domainId":         schema.String{Format: "objectId"},
 			"iconId":           schema.String{Format: "objectId"},
+			"imageId":          schema.String{Format: "objectId"},
 			"iconUrl":          schema.String{Format: "url"}, // virtual field
+			"imageUrl":         schema.String{Format: "url"}, // virtual field
 			"themeId":          schema.String{MaxLength: 128},
 			"registrationId":   schema.String{MaxLength: 128},
 			"inboxId":          schema.String{MaxLength: 128},
@@ -82,8 +84,14 @@ func (domain Domain) GetStringOK(name string) (string, bool) {
 	case "iconId":
 		return domain.IconID.Hex(), true
 
+	case "imageId":
+		return domain.ImageID.Hex(), true
+
 	case "iconUrl":
 		return domain.IconURL(), true
+
+	case "imageUrl":
+		return domain.ImageURL(), true
 	}
 
 	return "", false
@@ -104,13 +112,32 @@ func (domain *Domain) SetString(name string, value string) bool {
 		}
 
 	case "iconId":
+		if value == "" {
+			domain.IconID = primitive.NilObjectID
+			return true
+		}
+
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
 			domain.IconID = objectID
 			return true
 		}
 
+	case "imageId":
+		if value == "" {
+			domain.ImageID = primitive.NilObjectID
+			return true
+		}
+
+		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
+			domain.ImageID = objectID
+			return true
+		}
+
 	case "iconUrl":
-		return true
+		return true // Virtual fields can't be set, but don't return an error if someone tries
+
+	case "imageUrl":
+		return true // Virtual fields can't be set, but don't return an error if someone tries
 	}
 
 	return false

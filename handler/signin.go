@@ -24,10 +24,11 @@ func GetSignIn(ctx *steranko.Context, factory *service.Factory, session data.Ses
 
 	// Get a clean version of the URL query parameters
 	data := cleanQueryParams(ctx.QueryParams())
-	data["domainName"] = domain.Label
-	data["domainIcon"] = domain.IconURL()
-	data["hasRegistrationForm"] = factory.Domain().HasRegistrationForm()
-	data["next"] = url.QueryEscape(data.GetString("next"))
+	data["DomainName"] = domain.Label
+	data["DomainIcon"] = domain.IconURL()
+	data["DomainImage"] = domain.ImageURL()
+	data["HasRegistrationForm"] = factory.Domain().HasRegistrationForm()
+	data["Next"] = url.QueryEscape(data.GetString("next"))
 
 	// Render the template
 	if err := template.ExecuteTemplate(ctx.Response(), "user-signin", data); err != nil {

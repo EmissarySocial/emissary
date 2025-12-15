@@ -135,7 +135,7 @@ func (w SearchTag) clone(action string) (Builder, error) {
 
 // IsAdminBuilder returns TRUE because SearchTag is an admin route.
 func (w SearchTag) IsAdminBuilder() bool {
-	return false
+	return true
 }
 
 func (w SearchTag) SearchTagID() string {

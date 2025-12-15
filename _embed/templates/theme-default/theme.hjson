@@ -21,7 +21,8 @@
 		type: layout-vertical
 		children: [
 			{type: "text", label: "Website Name", path: "label", description: "Title of this website and domain."}
-			{type: "upload", label: "Logo Image", path: "iconUrl", description: "Image to display on signin pages and emails. Roughly 16:9 works best.", options:{accept:"image/*"}}
+			{type: "upload", label: "Icon", path: "iconUrl", description: "Icon for this website. Must be square. Often cropped to be a circle.", options:{accept:"image/*", delete:"/admin/domain/delete-icon"}}
+			{type: "upload", label: "Image", path: "imageUrl", description: "Image to display on signin pages and emails. Roughly 16:9 works best.", options:{accept:"image/*", delete:"/admin/domain/delete-image"}}
 			{type: "textarea", label: "Description", path: "description", options:{rows:5}}
 		]
 	}

@@ -137,5 +137,5 @@ func (w Navigation) debug() {
 
 // IsAdminBuilder returns TRUE because Navigation is an admin route.
 func (w Navigation) IsAdminBuilder() bool {
-	return false
+	return true
 }

@@ -615,22 +615,24 @@ func (service *Template) ListByContainerLimited(containedByRole string, limitRol
 
 func (service *Template) LoadAdmin(templateID string) (model.Template, error) {
 
+	const location = "service.Template.LoadAdmin"
+
 	templateID = "admin-" + templateID
 
 	// Try to load the template
 	template, err := service.Load(templateID)
 
 	if err != nil {
-		return template, derp.Wrap(err, "service.Template.LoadAdmin", "Unable to load admin template", templateID)
+		return template, derp.Wrap(err, location, "Unable to load admin template", templateID)
 	}
 
 	// RULE: Validate Template ContainedBy
 	if template.TemplateRole != "admin" {
-		return template, derp.InternalError("service.Template.LoadAdmin", "Template must have 'admin' role.", template.TemplateID, template.TemplateRole)
+		return template, derp.InternalError(location, "Template must have 'admin' role.", template.TemplateID, template.TemplateRole)
 	}
 
 	if !template.ContainedBy.Equal([]string{"admin"}) {
-		return template, derp.InternalError("service.Template.LoadAdmin", "Template must be contained by 'admin'", template.TemplateID, template.ContainedBy)
+		return template, derp.InternalError(location, "Template must be contained by 'admin'", template.TemplateID, template.ContainedBy)
 	}
 
 	// Success!

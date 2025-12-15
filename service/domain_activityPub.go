@@ -11,6 +11,8 @@ import (
 	dt "github.com/benpate/domain"
 	"github.com/benpate/hannibal/outbox"
 	"github.com/benpate/hannibal/sigs"
+	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/mapof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -21,6 +23,57 @@ import (
 // Hostname returns the domain-only name (no protocol)
 func (service *Domain) Hostname() string {
 	return service.hostname
+}
+
+// Host returns the host (with protocol)
+func (service *Domain) Host() string {
+	return dt.AddProtocol(service.hostname)
+}
+
+func (service *Domain) GetJSONLD(session data.Session) (mapof.Any, error) {
+
+	const location = "service.Domain.GetJSONLD"
+
+	// Load the public key PEM
+	publicKeyPEM, err := service.PublicKeyPEM(session)
+
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Unable to load public key PEM")
+	}
+
+	actorID := service.ActorID()
+
+	domain := service.Get()
+
+	// Return the result as a JSON-LD document
+	result := map[string]any{
+		vocab.AtContext:                 []any{vocab.ContextTypeActivityStreams, vocab.ContextTypeSecurity, vocab.ContextTypeToot},
+		vocab.PropertyType:              vocab.ActorTypeApplication,
+		vocab.PropertyID:                actorID,
+		vocab.PropertyPreferredUsername: "application",
+		vocab.PropertyName:              service.Hostname(),
+		vocab.PropertyIcon:              domain.IconURL(),
+		vocab.PropertyImage:             domain.IconURL(),
+		vocab.PropertyFollowing:         actorID + "/following",
+		vocab.PropertyFollowers:         actorID + "/followers",
+		vocab.PropertyLiked:             actorID + "/liked",
+		vocab.PropertyOutbox:            actorID + "/outbox",
+		vocab.PropertyInbox:             actorID + "/inbox",
+		vocab.PropertyTootDiscoverable:  false,
+		vocab.PropertyTootIndexable:     false,
+
+		vocab.PropertyPublicKey: mapof.Any{
+			vocab.PropertyID:           service.PublicKeyID(),
+			vocab.PropertyOwner:        actorID,
+			vocab.PropertyPublicKeyPEM: publicKeyPEM,
+		},
+
+		vocab.PropertyRedirectURI: []string{
+			service.Host() + "/oauth/clients/import/callback",
+		},
+	}
+
+	return result, nil
 }
 
 // ActorID returns the URL for this domain/actor

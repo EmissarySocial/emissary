@@ -265,6 +265,14 @@ func (w Common) DomainLabel() string {
 	return w._factory.Domain().Get().Label
 }
 
+func (w Common) DomainIcon() string {
+	return w._factory.Domain().Get().IconURL()
+}
+
+func (w Common) DomainImage() string {
+	return w._factory.Domain().Get().ImageURL()
+}
+
 func (w Common) DomainHasRegistrationForm() bool {
 	return w._factory.Domain().Get().HasRegistrationForm()
 }

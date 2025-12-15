@@ -122,8 +122,9 @@ func GetIdentitySignin(ctx *steranko.Context, factory *service.Factory, session 
 
 	// Get a clean version of the URL query parameters
 	data := cleanQueryParams(ctx.QueryParams())
-	data["domainName"] = domain.Label
-	data["domainIcon"] = domain.IconURL()
+	data["DomainName"] = domain.Label
+	data["DomainIcon"] = domain.IconURL()
+	data["DomainImage"] = domain.ImageURL()
 
 	// Render the template
 	if err := template.ExecuteTemplate(ctx.Response(), "guest-signin", data); err != nil {

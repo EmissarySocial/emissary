@@ -9,6 +9,8 @@ import (
 	"github.com/benpate/digit"
 	dt "github.com/benpate/domain"
 	"github.com/benpate/hannibal/outbox"
+	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -53,6 +55,50 @@ func (service *SearchDomain) Close() {
 /******************************************
  * ActivityPub Methods
  ******************************************/
+
+func (service *SearchDomain) GetJSONLD(session data.Session) (mapof.Any, error) {
+
+	const location = "service.SearchDomain.GetJSONLD"
+
+	// Retrieve the domain and Public Key
+	publicKeyPEM, err := service.domainService.PublicKeyPEM(session)
+
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Unable to load public key PEM")
+	}
+
+	// Return the result as a JSON-LD document
+	actorID := service.ActivityPubURL()
+	domain := service.domainService.Get()
+	result := map[string]any{
+		vocab.AtContext:                 []any{vocab.ContextTypeActivityStreams, vocab.ContextTypeSecurity, vocab.ContextTypeToot},
+		vocab.PropertyType:              vocab.ActorTypeService,
+		vocab.PropertyID:                service.ActivityPubURL(),
+		vocab.PropertyURL:               service.ActivityPubProfileURL(),
+		vocab.PropertyPreferredUsername: service.ActivityPubUsername(),
+		vocab.PropertyName:              service.ActivityPubName(),
+		vocab.PropertyIcon:              domain.IconURL(),
+		vocab.PropertyImage:             domain.ImageURL(),
+		vocab.PropertyInbox:             service.ActivityPubInboxURL(),
+		vocab.PropertyOutbox:            service.ActivityPubOutboxURL(),
+		vocab.PropertyFollowers:         service.ActivityPubFollowersURL(),
+		vocab.PropertyFollowing:         service.ActivityPubFollowingURL(),
+		vocab.PropertyTootDiscoverable:  false,
+		vocab.PropertyTootIndexable:     false,
+
+		vocab.PropertyPublicKey: map[string]any{
+			vocab.PropertyID:           actorID + "#main-key",
+			vocab.PropertyOwner:        actorID,
+			vocab.PropertyPublicKeyPEM: publicKeyPEM,
+		},
+
+		vocab.PropertyRedirectURI: []string{
+			service.host + "/oauth/clients/import/redirect",
+		},
+	}
+
+	return result, nil
+}
 
 // ActivityPubActor returns an ActivityPub Actor object ** WHICH INCLUDES ENCRYPTION KEYS **
 // for the provided Stream.

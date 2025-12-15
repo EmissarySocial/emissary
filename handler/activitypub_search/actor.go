@@ -13,44 +13,15 @@ func GetJSONLD(ctx *steranko.Context, factory *service.Factory, session data.Ses
 
 	const location = "handler.activitypub_search.GetJSONLD"
 
-	// Retrieve the domain and Public Key
-	domainService := factory.Domain()
-	publicKeyPEM, err := domainService.PublicKeyPEM(session)
+	// Retrieve the JSON-LD for this SearchQuery
+	searchQueryService := factory.SearchQuery()
+	result, err := searchQueryService.GetJSONLD(session, searchQuery)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error getting public key PEM")
+		return derp.Wrap(err, location, "Unable to generate JSON-LD for search query actor")
 	}
 
-	searchQueryService := factory.SearchQuery()
-	searchQueryID := searchQuery.SearchQueryID
-	actorID := searchQueryService.ActivityPubURL(searchQueryID)
-
-	// Build the actor description
-	summary := `This is an automated search query on the server: ` + factory.Hostname() + ` that announces new search results as they are received.  <a href="` + searchQueryService.ActivityPubProfileURL(searchQuery) + `">View the full collection on ` + factory.Hostname() + `</a>.`
-
-	// Return the result as a JSON-LD document
-	result := map[string]any{
-		vocab.AtContext:                 []any{vocab.ContextTypeActivityStreams, vocab.ContextTypeSecurity, vocab.ContextTypeToot},
-		vocab.PropertyType:              vocab.ActorTypeService,
-		vocab.PropertyID:                searchQueryService.ActivityPubURL(searchQueryID),
-		vocab.PropertyURL:               searchQueryService.ActivityPubProfileURL(searchQuery),
-		vocab.PropertyPreferredUsername: searchQueryService.ActivityPubUsername(searchQueryID),
-		vocab.PropertyName:              searchQueryService.ActivityPubName(searchQuery),
-		vocab.PropertySummary:           summary,
-		vocab.PropertyInbox:             searchQueryService.ActivityPubInboxURL(searchQueryID),
-		vocab.PropertyOutbox:            searchQueryService.ActivityPubOutboxURL(searchQueryID),
-		vocab.PropertyFollowers:         searchQueryService.ActivityPubFollowersURL(searchQueryID),
-		vocab.PropertyFollowing:         searchQueryService.ActivityPubFollowingURL(searchQueryID),
-		vocab.PropertyTootDiscoverable:  false,
-		vocab.PropertyTootIndexable:     false,
-
-		vocab.PropertyPublicKey: map[string]any{
-			vocab.PropertyID:           actorID + "#main-key",
-			vocab.PropertyOwner:        actorID,
-			vocab.PropertyPublicKeyPEM: publicKeyPEM,
-		},
-	}
-
+	// Return the JSON-LD to the caller
 	ctx.Response().Header().Set("Content-Type", vocab.ContentTypeActivityPub)
 	return ctx.JSON(200, result)
 }

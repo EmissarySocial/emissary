@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Sign In &middot; {{.domainName}}</title>
+	<title>Sign In &middot; {{.DomainName}}</title>
 	{{- template "includes-head" . -}}
 </head>
 
@@ -11,7 +11,7 @@
 
 		<div class="card" style="width:clamp(540px, 50%, 720px); margin:auto; padding:16px 32px; line-height:150%;">
 			
-			<form hx-post="/signin?next={{.next}}" hx-trigger="submit" hx-target="#message">
+			<form hx-post="/signin?next={{.Next}}" hx-trigger="submit" hx-target="#message">
 
 				<div class="layout-vertical margin-bottom">
 
@@ -40,7 +40,6 @@
 				</div>
 
 				<div>
-
 					<button id="submitButton" type="submit" class="primary htmx-request-hide" tabIndex="0">
 						Sign In
 					</button>
@@ -53,7 +52,7 @@
 
 					<a href="/signin/reset" class="margin-left">Forgot Password?</a>
 
-					{{- if .hasRegistrationForm -}}
+					{{- if .HasRegistrationForm -}}
 						<div class="margin-top-xl">
 							<h2>Need an Account?</h2>
 							<a href="/register" class="button">Register Now &rarr;</a>

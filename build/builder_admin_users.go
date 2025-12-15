@@ -196,7 +196,7 @@ func (w User) Users() *QueryBuilder[model.UserSummary] {
 
 // IsAdminBuilder returns TRUE because User is an admin route.
 func (w User) IsAdminBuilder() bool {
-	return false
+	return true
 }
 
 // Groups returns a slice of all Groups in the database

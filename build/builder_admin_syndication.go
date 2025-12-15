@@ -143,6 +143,6 @@ func (w Syndication) debug() {
  ******************************************/
 
 // IsAdminBuilder returns TRUE because Syndication is an admin route.
-func (w Syndication) IsSyndication() bool {
-	return false
+func (w Syndication) IsAdminBuilder() bool {
+	return true
 }

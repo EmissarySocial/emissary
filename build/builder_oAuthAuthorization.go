@@ -12,9 +12,10 @@ import (
 // OAuthAuthorization is a lightweight builder that
 // displays UI pages for an OAuth Application.
 type OAuthAuthorization struct {
-	_service *service.OAuthClient
-	_client  model.OAuthClient
-	_request model.OAuthAuthorizationRequest
+	_service       *service.OAuthClient
+	_domainService *service.Domain
+	_client        model.OAuthClient
+	_request       model.OAuthAuthorizationRequest
 }
 
 // NewOAuthAuthorization returns a fully initialized/loaded `OAuthAuthorization` builder
@@ -24,9 +25,10 @@ func NewOAuthAuthorization(factory Factory, session data.Session, request model.
 
 	// Create the result object
 	result := OAuthAuthorization{
-		_service: factory.OAuthClient(),
-		_client:  model.NewOAuthClient(),
-		_request: request,
+		_service:       factory.OAuthClient(),
+		_domainService: factory.Domain(),
+		_client:        model.NewOAuthClient(),
+		_request:       request,
 	}
 
 	// Try to load the OAuthClient object
@@ -43,43 +45,47 @@ func NewOAuthAuthorization(factory Factory, session data.Session, request model.
 	return result, nil
 }
 
-func (r OAuthAuthorization) ClientID() string {
-	return r._client.ClientID.Hex()
+func (builder OAuthAuthorization) Domain() model.DomainSummary {
+	return builder._domainService.Get().Summary()
 }
 
-func (r OAuthAuthorization) Name() string {
-	return r._client.Name
+func (builder OAuthAuthorization) ClientID() string {
+	return builder._client.ClientID.Hex()
 }
 
-func (r OAuthAuthorization) IconURL() string {
-	return r._client.IconURL
+func (builder OAuthAuthorization) Name() string {
+	return builder._client.Name
 }
 
-func (r OAuthAuthorization) Website() string {
-	return r._client.Website
+func (builder OAuthAuthorization) IconURL() string {
+	return builder._client.IconURL
 }
 
-func (r OAuthAuthorization) RedirectURI() string {
-	return r._request.RedirectURI
+func (builder OAuthAuthorization) Website() string {
+	return builder._client.Website
 }
 
-func (r OAuthAuthorization) ResponseType() string {
-	return r._request.ResponseType
+func (builder OAuthAuthorization) RedirectURI() string {
+	return builder._request.RedirectURI
 }
 
-func (r OAuthAuthorization) Scope() string {
-	return r._request.Scope
+func (builder OAuthAuthorization) ResponseType() string {
+	return builder._request.ResponseType
 }
 
-func (r OAuthAuthorization) Scopes() []string {
+func (builder OAuthAuthorization) Scope() string {
+	return builder._request.Scope
+}
 
-	if r._request.Scope == "" {
+func (builder OAuthAuthorization) Scopes() []string {
+
+	if builder._request.Scope == "" {
 		return []string{"read"}
 	}
 
-	return strings.Split(r._request.Scope, " ")
+	return strings.Split(builder._request.Scope, " ")
 }
 
-func (r OAuthAuthorization) State() string {
-	return r._request.State
+func (builder OAuthAuthorization) State() string {
+	return builder._request.State
 }

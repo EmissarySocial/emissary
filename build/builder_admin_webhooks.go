@@ -155,7 +155,7 @@ func (w Webhook) TargetURL() string {
 
 // IsAdminBuilder returns TRUE because Webhook is an admin route.
 func (w Webhook) IsAdminBuilder() bool {
-	return false
+	return true
 }
 
 /******************************************

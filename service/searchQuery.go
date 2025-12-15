@@ -14,6 +14,7 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/geo"
 	"github.com/benpate/hannibal/outbox"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -375,6 +376,50 @@ func (service *SearchQuery) rangeActivityPubFollowers(session data.Session, sear
 			}
 		}
 	}
+}
+
+// GetJSONLD generates JSON-LD for the provided SearchQuery
+func (service *SearchQuery) GetJSONLD(session data.Session, searchQuery *model.SearchQuery) (mapof.Any, error) {
+
+	const location = "service.SearchQuery.GetJSONLD"
+
+	// Retrieve the domain and Public Key
+	publicKeyPEM, err := service.domainService.PublicKeyPEM(session)
+
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Error getting public key PEM")
+	}
+
+	searchQueryID := searchQuery.SearchQueryID
+	actorID := service.ActivityPubURL(searchQueryID)
+
+	// Build the actor description
+	summary := `This is an automated search query on the server: ` + service.Hostname() + ` that announces new search results as they are received.  <a href="` + service.ActivityPubProfileURL(searchQuery) + `">View the full collection on ` + service.Hostname() + `</a>.`
+
+	// Return the result as a JSON-LD document
+	result := map[string]any{
+		vocab.AtContext:                 []any{vocab.ContextTypeActivityStreams, vocab.ContextTypeSecurity, vocab.ContextTypeToot},
+		vocab.PropertyType:              vocab.ActorTypeService,
+		vocab.PropertyID:                service.ActivityPubURL(searchQueryID),
+		vocab.PropertyURL:               service.ActivityPubProfileURL(searchQuery),
+		vocab.PropertyPreferredUsername: service.ActivityPubUsername(searchQueryID),
+		vocab.PropertyName:              service.ActivityPubName(searchQuery),
+		vocab.PropertySummary:           summary,
+		vocab.PropertyInbox:             service.ActivityPubInboxURL(searchQueryID),
+		vocab.PropertyOutbox:            service.ActivityPubOutboxURL(searchQueryID),
+		vocab.PropertyFollowers:         service.ActivityPubFollowersURL(searchQueryID),
+		vocab.PropertyFollowing:         service.ActivityPubFollowingURL(searchQueryID),
+		vocab.PropertyTootDiscoverable:  false,
+		vocab.PropertyTootIndexable:     false,
+
+		vocab.PropertyPublicKey: map[string]any{
+			vocab.PropertyID:           actorID + "#main-key",
+			vocab.PropertyOwner:        actorID,
+			vocab.PropertyPublicKeyPEM: publicKeyPEM,
+		},
+	}
+
+	return result, nil
 }
 
 func (service *SearchQuery) ActivityPubUsername(searchQueryID primitive.ObjectID) string {
