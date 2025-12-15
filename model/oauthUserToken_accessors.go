@@ -30,6 +30,9 @@ func (userToken *OAuthUserToken) GetPointer(name string) (any, bool) {
 
 	case "apiUser":
 		return &userToken.APIUser, true
+
+	case "data":
+		return &userToken.Data, true
 	}
 
 	return nil, false

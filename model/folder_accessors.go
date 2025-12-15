@@ -56,7 +56,7 @@ func (folder *Folder) GetStringOK(name string) (string, bool) {
 }
 
 /******************************************
- * Getter Interfaces
+ * Setter Interfaces
  ******************************************/
 
 func (folder *Folder) SetInt(name string, value int) bool {

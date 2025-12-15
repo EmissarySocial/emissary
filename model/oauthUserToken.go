@@ -14,12 +14,13 @@ import (
 // UserOAuthToken represents an application-specific token that
 // a remote API can use to access a user's account on their behalf
 type OAuthUserToken struct {
-	OAuthUserTokenID primitive.ObjectID `json:"-" bson:"_id"`
-	ClientID         primitive.ObjectID `json:"C" bson:"clientId"`
-	UserID           primitive.ObjectID `json:"U" bson:"userId"`
-	Token            string             `json:"T" bson:"token"`
-	APIUser          bool               `json:"A" bson:"apiUser"`
-	Scopes           sliceof.String     `json:"S" bson:"scopes"`
+	OAuthUserTokenID primitive.ObjectID `json:"-" bson:"_id"`      // Unique identifier for this OAuthUserToken
+	ClientID         primitive.ObjectID `json:"C" bson:"clientId"` // Unique identifier of the OAuthClient that created this token
+	UserID           primitive.ObjectID `json:"U" bson:"userId"`   // Unique identifier of the User that authorized this token
+	Token            string             `json:"T" bson:"token"`    // The actual OAuth2 access token
+	APIUser          bool               `json:"A" bson:"apiUser"`  // TRUE if this token represents an API user (as opposed to a human user)
+	Scopes           sliceof.String     `json:"S" bson:"scopes"`   // The OAuth2 scopes that were authorized for this token
+	Data             sliceof.Any        `json:"-" bson:"data"`     // Additional data associated with this token
 
 	journal.Journal `json:"-" bson:",inline"`
 }

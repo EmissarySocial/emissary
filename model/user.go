@@ -244,6 +244,8 @@ func (user User) GetJSONLD() mapof.Any {
 		vocab.PropertyEndpoints: mapof.String{
 			vocab.EndpointOAuthAuthorization: serverURL + "/oauth/authorize",
 			vocab.EndpointOAuthToken:         serverURL + "/oauth/token",
+			vocab.EndpointStartMigration:     serverURL + "/@" + user.UserID.Hex() + "/export/start",
+			vocab.EndpointFinishMigration:    serverURL + "/@me/settings/export",
 		},
 
 		vocab.PropertyMigration: mapof.String{

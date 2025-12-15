@@ -11,7 +11,7 @@
 
 	{{- if $followers.IsEmpty -}}
 
-		<div class="margin-horizontal-auto align-center" style="max-width:600px;">
+		<div class="margin-horizontal-auto align-center max-width-640">
 			<div class="text-lg bold margin-bottom">
 				No other servers have subscribed to this search index.
 				If another server subscribes, it will appear here.
@@ -28,7 +28,7 @@
 
 	{{- end -}}
 
-	<div class="margin-bottom-xl flex-row margin-horizontal-auto align-center" style="max-width:600px;">
+	<div class="margin-bottom-xl flex-row margin-horizontal-auto align-center max-width-640">
 
 		<div class="card padding width-50%">
 			<div style="font-size:60px;">{{icon "activitypub"}}</div>

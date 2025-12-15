@@ -1,5 +1,5 @@
 {{- $isDesktop := .IsDesktop -}}
-{{- $imports := .Imports -}}
+{{- $oauthUserTokens := .OAuthUserTokensForExports -}}
 
 <div class="app" script="init send SelectNav(id:'settings')">
 	<title>Import/Export | {{.DisplayName}}</title>
@@ -11,23 +11,77 @@
 	{{- end -}}
 	
 	<div class="app-content padding">
-				
 
 		<div id="menu-bar">
 			<div class="left">
 				{{ if not $isDesktop }}
-					<a href="/@me/settings/mobile" hx-boost="true">{{icon "back"}}</a>
+					<a href="/@me/settings/mobile" class="turboclick" hx-boost="true">{{icon "back"}}</a>
 				{{ end }}
-				<a href="/@me/settings/import" hx-boost="true">Import</a>
-				<a href="/@me/settings/export" class="selected" hx-boost="true">Export</a>
+				<a href="/@me/settings/general" class="turboclick" hx-boost="true">General</a>
+				<a href="/@me/settings/images" class="turboclick" hx-boost="true">Images</a>
+				<a href="/@me/settings/links" class="turboclick" hx-boost="true">Links</a>
+				<a href="/@me/settings/import" class="turboclick" hx-boost="true">Import</a>
+				<a href="/@me/settings/export" class="turboclick selected" hx-boost="true">Export</a>
 			</div>
 			<div class="right">
 				<a href="https://emissary.dev/migration" target="_blank" class="link">
 					{{icon "help"}}
-					{{ if $isDesktop }} Help with Account Migration {{ end }}
+					{{ if $isDesktop }} Help with Exports {{ end }}
 				</a>
 			</div>
 		</div>
+
+
+		{{- if $oauthUserTokens.IsEmpty -}}
+
+			<div class="card padding max-width-640">
+				<div class="text-lg bold">Export to Other Servers</div>
+
+				<div>
+					Emissary can export all of your data to other servers that support the 
+					W3C standard "Live Online Account Portability".  
+					<br>
+					<br>
+					<b>There are no currently active exports for your account</b><br>
+					<br>
+					To begin, you'll need to sign into the account you want to 
+					migrate to and <b class="nowrap">begin an import from there</b>.
+					Once you start the import on your new server, you'll be able to monitor
+					and manage your export progress from here.
+				</div>
+
+				<div class="margin-top">
+					<i>Note: online account migration is new, and very few servers support
+					this action right now.</i>
+					<a href="https://emissary.dev/migration" target="_blank" class="nowrap">Learn More {{icon "link-outbound"}}</a>
+				</div>
+			</div>
+
+		{{- else -}}
+
+			<div class="text-lg bold margin-bottom">
+				Exporting to 
+				{{$oauthUserTokens.Length}}
+				{{pluralize $oauthUserTokens.Length "other server" "other servers"}}
+			</div>
+
+			{{- range $index, $oauthUserToken := $oauthUserTokens -}}
+				<div class="card padding max-width-640 margin-bottom align-center" role="link">
+					<div class="margin-top">
+						<img src="{$oauthUserToken.iconUrl}" class="circle width-64">
+					</div>
+					<div class="margin-bottom-lg">
+						<div class="bold">{{$oauthUserToken.name}}</div>
+						<div class="text-sm text-gray">{{$oauthUserToken.summary}}</div>
+					</div>
+					<div>
+						<button hx-get="/@me/settings/oauth-token-complete?oauthUserTokenId={{$oauthUserToken.oauthUserTokenId.Hex}}" class="primary margin-bottom">Complete Migration</button>
+						<button hx-get="/@me/settings/oauth-token-delete?oauthUserTokenId={{$oauthUserToken.oauthUserTokenId.Hex}}" class="text-red margin-bottom">Disconnect</button>
+					</div>
+				</div>
+			{{- end -}}
+
+		{{- end -}}
 
 	</div>
 

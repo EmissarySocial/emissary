@@ -21,17 +21,19 @@
 				<a href="/@me/settings/images" class="turboclick" hx-boost="true">Images</a>
 				<a href="/@me/settings/links" class="turboclick" hx-boost="true">Links</a>
 				<a href="/@me/settings/import" class="turboclick selected" hx-boost="true">Import</a>
+				<a href="/@me/settings/export" class="turboclick" hx-boost="true">Export</a>
 			</div>
 			<div class="right">
 				<a href="https://emissary.dev/migration" target="_blank" class="link">
 					{{icon "help"}}
-					{{ if $isDesktop }} Help with Import {{ end }}
+					{{ if $isDesktop }} Help with Imports {{ end }}
 				</a>
 			</div>
 		</div>
 
 		<div class="margin-bottom-xl">
-			<div class="card padding" style="max-width:800px">
+
+			<div class="card padding max-width-640">
 				
 				{{- if $imports.IsEmpty -}}
 
@@ -183,6 +185,13 @@
 
 					{{- else if eq "REVIEWING" $import.StateID -}}
 
+							{{- $actor := .ActivityStream $import.SourceID -}}
+							{{- $endpoints := $actor.Endpoints.Value -}}
+							{{- $finishURL := index $endpoints "finishMigration" -}}
+							{{- if eq "" $finishURL -}}
+								{{- $finishURL = $actor.URLOrID -}}
+							{{- end -}}
+
 							{{template "import-source" $source}}
 
 							<div class="text-lg text-green bold">Import Complete ({{$import.CompleteItems}} Records Processed)</div>
@@ -201,11 +210,13 @@
 
 							<div class="text-lg bold">Next Step: Move Your Account</div>
 							<div class="margin-bottom">
-								Once you have verified that the information is correct, you can finalize this step by
-								sending a "Move" notification to your followers on the network.
+								Once you have verified that the information is correct, you'll need to
+								finish this process on your original server.  Click the button below to
+								return to your original server and send "Move" notifications 
+								to your followers on the network.
 							</div>
 							<div>
-								<button hx-get="/@me/settings/import-move?importId={{$import.ID}}" class="primary">Move Your Account</button>
+								<a href="{{$finishURL}}" class="button primary">Move Your Account</a>
 								<button hx-get="/@me/settings/import-undo?importId={{$import.ID}}">Undo Import</button>
 							</div>
 							

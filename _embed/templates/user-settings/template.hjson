@@ -35,6 +35,27 @@
 			]
 		}
 
+		actor-button: {
+			roles:["self"]
+			steps: [
+				{do:"view-html"}
+				{do:"set-header", name:"hx-reswap", value:"outerHTML"}
+				{do:"set-header", name:"hx-push-url", value:"false"}
+			]
+		}
+
+		actor-button-follow: {
+			roles:["self"]
+			steps:[
+				{do:"with-following", steps:[
+					{do:"set-data", from-url:["folderId", "url"], values: {behavior:"POSTS+REPLIES",collapseThreads: "true"}}
+					{do:"save"}
+					{do:"trigger-event", event:"refreshPeers"}
+					{do:"view-html", method:"post", file:"actor-button-follow"}
+				]}
+			]
+		}
+
 		actor-button-follow-update: {
 			roles:["self"]
 			steps:[
@@ -288,6 +309,13 @@
 			]
 		}
 
+		export: {
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
 		followers: {
 			roles:["self"]
 			steps:[
@@ -469,7 +497,7 @@
 						{type:"textarea", path:"statusMessage", label:"About Me", description:"Displayed on your profile page. Markdown is allowed. (PUBLIC)", options:{rows:4, showLimit:true}}
 						{type:"text", path:"location", label:"Location", description:"City, State, or whatever you want. (PUBLIC)"}
 						{type:"text", path:"data.tags", label:"Hashtags", description:"Enter #Hashtags separated by spaces.  (PUBLIC)"}
-					]	
+					]
 				}}
 				{do:"save"}
 				{do: "inline-save-button"}
@@ -499,6 +527,82 @@
 				{do:"upload-attachments", category:"image", fieldname:"imageUrl", attachment-path:"imageId", rules:{types:["webp"]}}
 				{do:"save"}
 				{do: "refresh-page"}
+			]
+		}
+
+		import: {
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
+		import-authenticate: {
+			roles:["self"]
+			steps:[
+				{do:"with-import", steps:[
+					{do:"as-modal", steps:[
+						{do:"view-html"}
+						{do:"edit", 
+							options:["submit-label:Import from this Account"]
+							form:{
+								"type":"layout-vertical",
+								children:[
+									{type:"text", path:"sourceId"}
+									{type:"hidden", path:"stateId", options:{value:"DO-AUTHORIZE"}}
+								]
+							}
+						}
+						{do:"save"}
+						{do:"if", condition:"{{eq `AUTHORIZING` .Object.StateID}}", then:[
+							{do:"forward-to", url:"{{.OAuthCodeURL}}"}
+						], else: [
+							{do:"trigger-event", event:"closeModal"}
+							{do:"refresh-page"}
+						]}
+					]}
+				]}
+			]
+		}
+
+		import-start: {
+			roles:["self"]
+			steps:[
+				{do:"with-import", steps:[
+					{do:"set-data", values:{"stateId": "DO-IMPORT"}}
+					{do:"save"}
+					{do:"refresh-page"}
+				]}
+			]
+		}
+		
+		import-cancel: {
+			roles:["self"]
+			steps:[
+				{do:"with-import", steps:[
+					{do:"delete", title:"Cancel this Import?", message:"If you cancel, no data will be imported into your profile.", submit:"Cancel Import", cancel:"Keep Import"}
+					{do:"refresh-page"}
+				]}
+			]
+		}
+		
+		import-undo: {
+			roles:["self"]
+			steps:[
+				{do:"with-import", steps:[
+					{do:"set-data", values:{stateId:"DO-UNDO"}}
+					{do:"delete", title:"Undo this Import?", message:"If you UNDO this import, all records associated with it will be removed from your profile.", submit:"Undo Import", cancel:"Keep Import"}
+					{do:"refresh-page"}
+				]}
+			]
+		}
+
+		import-progress-bar: {
+			roles:["self"]
+			steps:[
+				{do:"with-import", steps:[
+					{do:"view-html"}
+				]}
 			]
 		}
 
@@ -851,112 +955,6 @@
 				}}
 				{do:"save"}
 				{do: "inline-save-button"}
-			]
-		}
-
-
-
-		actor-button: {
-			roles:["self"]
-			steps: [
-				{do:"view-html"}
-				{do:"set-header", name:"hx-reswap", value:"outerHTML"}
-				{do:"set-header", name:"hx-push-url", value:"false"}
-			]
-		}
-
-		actor-button-follow: {
-			roles:["self"]
-			steps:[
-				{do:"with-following", steps:[
-					{do:"set-data", from-url:["folderId", "url"], values: {behavior:"POSTS+REPLIES",collapseThreads: "true"}}
-					{do:"save"}
-					{do:"trigger-event", event:"refreshPeers"}
-					{do:"view-html", method:"post", file:"actor-button-follow"}
-				]}
-			]
-		}
-
-		export: {
-			roles:["self"]
-			steps:[
-				{do:"view-html"}
-			]
-		}
-
-		import: {
-			roles:["self"]
-			steps:[
-				{do:"view-html"}
-			]
-		}
-
-		import-authenticate: {
-			roles:["self"]
-			steps:[
-				{do:"with-import", steps:[
-					{do:"as-modal", steps:[
-						{do:"view-html"}
-						{do:"edit", 
-							options:["submit-label:Import from this Account"]
-							form:{
-								"type":"layout-vertical",
-								children:[
-									{type:"text", path:"sourceId"}
-									{type:"hidden", path:"stateId", options:{value:"DO-AUTHORIZE"}}
-								]
-							}
-						}
-						{do:"save"}
-						{do:"if", condition:"{{eq `AUTHORIZING` .Object.StateID}}", then:[
-							{do:"forward-to", url:"{{.OAuthCodeURL}}"}
-						], else: [
-							{do:"trigger-event", event:"closeModal"}
-							{do:"refresh-page"}
-						]}
-					]}
-				]}
-			]
-		}
-
-		import-start: {
-			roles:["self"]
-			steps:[
-				{do:"with-import", steps:[
-					{do:"set-data", values:{"stateId": "DO-IMPORT"}}
-					{do:"save"}
-					{do:"refresh-page"}
-				]}
-			]
-		}
-		
-		import-cancel: {
-			roles:["self"]
-			steps:[
-				{do:"with-import", steps:[
-					{do:"delete", title:"Cancel this Import?", message:"If you cancel, no data will be imported into your profile.", submit:"Cancel Import", cancel:"Keep Import"}
-					{do:"refresh-page"}
-				]}
-			]
-		}
-
-		import-undo: {
-			roles:["self"]
-			steps:[
-				{do:"with-import", steps:[
-					{do:"set-data", values:{stateId:"DO-UNDO"}}
-					{do:"delete", title:"Undo this Import?", message:"If you UNDO this import, all records associated with it will be removed from your profile.", submit:"Undo Import", cancel:"Keep Import"}
-					{do:"refresh-page"}
-				]}
-			]
-		}
-
-		import-progress-bar: {
-			roles:["self"]
-			steps:[
-				{do:"with-import", steps:[
-					{do:"view-html"}
-				]}
 			]
 		}
 	}

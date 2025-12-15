@@ -14,6 +14,7 @@ import (
 	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/form"
 	"github.com/benpate/hannibal/streams"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/rs/zerolog/log"
@@ -298,6 +299,22 @@ func (w Settings) OAuthClients() (sliceof.Object[model.OAuthClient], error) {
 func (w Settings) OAuthUserTokens() (sliceof.MapOfAny, error) {
 	userID := w.AuthenticatedID()
 	return queries.OAuthUserTokens(w._session, userID)
+}
+
+func (w Settings) OAuthUserTokensForExports() (sliceof.MapOfAny, error) {
+	userID := w.AuthenticatedID()
+	result, err := queries.OAuthUserTokens(w._session, userID)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "build.Settings.OAuthUserTokensForExports", "Unable to load OAuth user tokens")
+	}
+
+	result = result.Filter(func(m mapof.Any) bool {
+		var scopes sliceof.String = m.GetSliceOfString("scopes")
+		return scopes.Contains(model.OAuthUserTokenScopeActivityPubPortability)
+	})
+
+	return result, nil
 }
 
 func (w Settings) Rules() QueryBuilder[model.Rule] {
