@@ -204,6 +204,23 @@ func (service *OAuthUserToken) LoadByUserAndClient(session data.Session, userID 
 	return service.Load(session, criteria, result)
 }
 
+func (service *OAuthUserToken) LoadByUserAndToken(session data.Session, userID primitive.ObjectID, token string, result *model.OAuthUserToken) error {
+
+	criteria := exp.Equal("userId", userID).
+		AndEqual("token", token)
+
+	return service.Load(session, criteria, result)
+}
+
+// LoadByUserAndScope returns all OAUthUserTokens for the provided UserID that match the provided scope
+func (service *OAuthUserToken) LoadByUserAndScope(session data.Session, userID primitive.ObjectID, scope string, result *model.OAuthUserToken) error {
+
+	criteria := exp.Equal("userId", userID).
+		AndIn("scopes", scope)
+
+	return service.Load(session, criteria, result)
+}
+
 func (service *OAuthUserToken) LoadByClientAndCode(session data.Session, userTokenID primitive.ObjectID, clientID primitive.ObjectID, clientSecret string, result *model.OAuthUserToken) error {
 
 	// RULE: must have a valid clientSecret to load this record

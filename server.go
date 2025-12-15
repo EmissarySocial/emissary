@@ -366,10 +366,11 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 
 	// Export Routes for Users
 	e.GET("/@:userId/export", handler.NotFound)
-	e.GET("/@:userId/export/:collection", handler.WithUser(factory, handler.GetUserExportCollection))
-	e.GET("/@:userId/export/:collection/:recordId", handler.WithUser(factory, handler.GetUserExportDocument))
-	e.GET("/@:userId/export/emissary-stream/:streamId/attachments", handler.WithUserStream(factory, handler.GetAttachmentsExportCollection))
-	e.GET("/@:userId/export/emissary-stream/:streamId/attachments/:recordId", handler.WithUserStream(factory, handler.GetAttachmentsExportDocument))
+	e.POST("/@userId/export/start", handler.WithOAuthUser(factory, handler.PostUserExportStart))
+	e.GET("/@:userId/export/:collection", handler.WithOAuthUser(factory, handler.GetUserExportCollection))
+	e.GET("/@:userId/export/:collection/:recordId", handler.WithOAuthUser(factory, handler.GetUserExportDocument))
+	e.GET("/@:userId/export/emissary-stream/:streamId/attachments", handler.WithOAuthUserStream(factory, handler.GetAttachmentsExportCollection))
+	e.GET("/@:userId/export/emissary-stream/:streamId/attachments/:recordId", handler.WithOAuthUserStream(factory, handler.GetAttachmentsExportDocument))
 
 	// ActivityPub Routes for Users
 	e.GET("/@:userId/pub", handler.WithUser(factory, handler.GetOutbox))

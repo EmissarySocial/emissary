@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strings"
 
 	activitypub "github.com/EmissarySocial/emissary/handler/activitypub_user"
 	"github.com/EmissarySocial/emissary/model"
@@ -296,6 +297,30 @@ func WithMerchantAccountJWT(serverFactory *server.Factory, fn WithFunc2[model.Me
 	})
 }
 
+// WithOAuthUser handles boilerplate code for requests that load a user from an OAuth token
+func WithOAuthUser(serverFactory *server.Factory, fn WithFunc2[model.OAuthUserToken, model.User]) echo.HandlerFunc {
+
+	return WithAuthenticatedUser(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
+
+		const location = "handler.WithOAuthUser"
+
+		// Locate the OAuth Bearer token in the request
+		bearerToken := ctx.Request().Header.Get("Authorization")
+		bearerToken = strings.TrimPrefix(bearerToken, "Bearer ")
+
+		// Load the OAuthUserToken from the database
+		oauthUserTokenService := factory.OAuthUserToken()
+		oauthUserToken := model.NewOAuthUserToken()
+
+		if err := oauthUserTokenService.LoadByUserAndToken(session, user.UserID, bearerToken, &oauthUserToken); err != nil {
+			return derp.Wrap(err, location, "Unable to load OAuthUserToken")
+		}
+
+		// Call the continuation function
+		return fn(ctx, factory, session, &oauthUserToken, user)
+	})
+}
+
 func WithOwner(serverFactory *server.Factory, fn WithFunc0) echo.HandlerFunc {
 
 	const location = "handler.WithAdmin"
@@ -574,25 +599,17 @@ func WithUserForwarding(serverFactory *server.Factory, fn WithFunc1[model.User])
 	})
 }
 
-// WithUserStream handles boilerplate code for requests that load both a User and a Stream,
+// WithOAuthUserStream handles boilerplate code for requests that load both a User and a Stream,
 // and validates that the Stream is a profile post of the User
-func WithUserStream(serverFactory *server.Factory, fn WithFunc2[model.User, model.Stream]) echo.HandlerFunc {
+func WithOAuthUserStream(serverFactory *server.Factory, fn WithFunc3[model.OAuthUserToken, model.User, model.Stream]) echo.HandlerFunc {
 
 	const location = "handler.WithUser"
 
-	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
+	return WithOAuthUser(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session, oauthUserToken *model.OAuthUserToken, user *model.User) error {
 
-		// Load the User from the database
-		userService := factory.User()
-		user := model.NewUser()
-		userID, err := primitive.ObjectIDFromHex(ctx.Param("userId"))
-
-		if err != nil {
-			return derp.Wrap(err, location, "Invalid Username", ctx.Param("userId"))
-		}
-
-		if err := userService.LoadByID(session, userID, &user); err != nil {
-			return derp.Wrap(err, location, "Unable to load User", userID)
+		// RULE: Can only request routes with the validated UserID
+		if ctx.Param("userId") != user.UserID.Hex() {
+			return derp.Forbidden(location, "UserID in URL must match authenticated User")
 		}
 
 		// Load the Stream from the database
@@ -614,6 +631,6 @@ func WithUserStream(serverFactory *server.Factory, fn WithFunc2[model.User, mode
 		}
 
 		// Call the continuation function
-		return fn(ctx, factory, session, &user, &stream)
+		return fn(ctx, factory, session, oauthUserToken, user, &stream)
 	})
 }
