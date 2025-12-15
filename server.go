@@ -414,6 +414,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/startup", handler.WithOwner(factory, handler.PostStartup))
 
 	// OAuth Client Connections
+	e.GET("/oauth/metadata", handler.WithFactory(factory, handler.GetOAuthMetadata))
 	e.GET("/oauth/clients/:provider", handler.WithOwner(factory, handler.GetOAuth))
 	e.GET("/oauth/clients/:provider/callback", handler.WithOwner(factory, handler.GetOAuthCallback), mw.AllowCSR)
 	e.GET("/oauth/clients/redirect", handler.WithOwner(factory, handler.OAuthRedirect))

@@ -4,8 +4,10 @@ import (
 	"net/http"
 
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/cimd"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/steranko"
 )
 
@@ -42,6 +44,26 @@ func GetOAuthCallback(ctx *steranko.Context, factory *service.Factory, session d
 	}
 
 	return ctx.Redirect(http.StatusTemporaryRedirect, "/admin/connections")
+}
+
+// GetOAuthMetadata returns OAuth metadata for this domain
+// https://client.dev
+func GetOAuthMetadata(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
+
+	domain := factory.Domain().Get()
+
+	metadata := cimd.Metadata{
+		ClientID:   domain.Host() + "/oauth/metadata",
+		ClientName: domain.Label,
+		ClientURI:  domain.Host(),
+		LogoURI:    domain.IconURL(),
+		RedirectURIs: sliceof.String{
+			domain.Host() + "/oauth/clients/import/redirect",
+		},
+	}
+
+	// Success!!
+	return ctx.JSON(http.StatusOK, metadata)
 }
 
 func OAuthRedirect(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
