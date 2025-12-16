@@ -50,7 +50,6 @@ func compareModel(currentIndex mapof.Any, newIndex mongo.IndexModel) bool {
 	}
 
 	log.Trace().Msg("indexes do not match")
-	// spew.Dump(newIndex, newIndexMap, currentIndex)
 	return false
 }
 

@@ -42,11 +42,6 @@ func Actor(document streams.Document) map[string]any {
 		}
 	}
 
-	// OAuth 2.0 Redirect URIs
-	if redirectURI := document.RedirectURI(); len(redirectURI) > 0 {
-		result[vocab.PropertyRedirectURI] = redirectURI
-	}
-
 	// Migration Data
 	if migration := document.Get(vocab.PropertyMigration); migration.NotNil() {
 		result[vocab.PropertyMigration] = convert.MapOfString(migration.Value())

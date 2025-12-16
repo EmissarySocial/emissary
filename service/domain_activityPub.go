@@ -67,10 +67,6 @@ func (service *Domain) GetJSONLD(session data.Session) (mapof.Any, error) {
 			vocab.PropertyOwner:        actorID,
 			vocab.PropertyPublicKeyPEM: publicKeyPEM,
 		},
-
-		vocab.PropertyRedirectURI: []string{
-			service.Host() + "/oauth/clients/import/callback",
-		},
 	}
 
 	return result, nil
