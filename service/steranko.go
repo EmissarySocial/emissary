@@ -40,17 +40,23 @@ func (service SterankoUserService) Load(username string, result steranko.User) e
 
 	const location = "service.SterankoUserService.Load"
 
-	user, ok := result.(*model.User)
+	// Confirm that we have been sent a User pointer
+	if user, isUser := result.(*model.User); isUser {
 
-	if !ok {
-		return derp.InternalError(location, "Invalid result provided.  This should never happen")
+		// Load the user from the database
+		if err := service.userService.LoadByUsernameOrEmail(service.session, username, user); err != nil {
+			return derp.Wrap(err, location, "Unable to load user")
+		}
+
+		// If the User has moved to a new server, then they cannot sign in
+		if user.MovedTo != "" {
+			return derp.Forbidden(location, "User moved to new server", user.MovedTo)
+		}
+
+		return nil
 	}
 
-	if err := service.userService.LoadByUsernameOrEmail(service.session, username, user); err != nil {
-		return derp.Wrap(err, location, "Unable to load user")
-	}
-
-	return nil
+	return derp.InternalError(location, "Invalid result provided.  This should never happen")
 }
 
 // Save inserts/updates a single User in the database

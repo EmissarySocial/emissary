@@ -69,6 +69,11 @@ func WithAuthenticatedUser(serverFactory *server.Factory, fn WithFunc1[model.Use
 			return derp.Wrap(err, location, "Unable to load User")
 		}
 
+		// If this user has moved, then do not allow them access to this server anymore
+		if user.MovedTo != "" {
+			return derp.Forbidden(location, "User moved to new server", user.MovedTo)
+		}
+
 		// Call the continuation function
 		return fn(ctx, factory, session, &user)
 	})
