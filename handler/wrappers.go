@@ -152,7 +152,7 @@ func WithFactory(serverFactory *server.Factory, fn WithFunc0) echo.HandlerFunc {
 		})
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unable to open database session")
+			return derp.Wrap(err, location, "Unable to execute inner handler function")
 		}
 
 		// Success alleged.

@@ -6,7 +6,7 @@
 
 	{{- if $isDesktop -}}
 		<div id="app-sidebar" class="expanded">
-			{{- template "menu" "migration" -}}
+			{{- template "menu" "general" -}}
 		</div>
 	{{- end -}}
 	
@@ -31,21 +31,30 @@
 			</div>
 		</div>
 
+		<div class="flex-row flex-align-center margin-bottom">
+			<div class="width-32">
+				<img src="{{.IconURL}}" class="circle width-100%">
+			</div>
+			<div class="flex-grow">
+				<div class="text-xs text-gray">You're signed in to <b>{{.Hostname}}</b> as:</div>
+				<div class="text-sm bold">
+					<a href="/@me">@{{.Username}}@{{.Hostname}}</a>
+				</div>
+			</div>
+		</div>
 
 		{{- if $oauthUserTokens.IsEmpty -}}
 
 			<div class="card padding max-width-640">
-				<div class="text-lg bold">Export to Other Servers</div>
+				<div class="text-lg bold"><i class="bi bi-cloud-upload"></i> Export to Other Servers</div>
 
 				<div>
-					Emissary can export all of your data to other servers that support the 
-					W3C standard "Live Online Account Portability".  
+					You can export all of your profile data to other Fediverse
+					servers that support the W3C standard "Live Online Account Portability".
 					<br>
 					<br>
-					<b>There are no currently active exports for your account</b><br>
-					<br>
-					To begin, you'll need to sign into the account you want to 
-					migrate to and <b class="nowrap">begin an import from there</b>.
+					<b>To begin:</b> you'll need to sign into the account you want to 
+					migrate to and begin an import from there.
 					Once you start the import on your new server, you'll be able to monitor
 					and manage your export progress from here.
 				</div>
@@ -59,26 +68,68 @@
 
 		{{- else -}}
 
-			<div class="text-lg bold margin-bottom">
-				Exporting to 
-				{{$oauthUserTokens.Length}}
-				{{pluralize $oauthUserTokens.Length "other server" "other servers"}}
-			</div>
-
+			{{- $scope := . -}}
 			{{- range $index, $oauthUserToken := $oauthUserTokens -}}
-				<div class="card padding max-width-640 margin-bottom align-center" role="link">
-					<div class="margin-top">
-						<img src="{$oauthUserToken.iconUrl}" class="circle width-64">
+
+				{{- $actorID := $oauthUserToken.data.actor -}}
+				{{- $actor := $scope.ActivityStream $actorID -}}
+				{{- $startDate := $oauthUserToken.data.startDate -}}
+
+				<div class="card padding max-width-640 margin-bottom" role="link">
+				
+					<div class="flex-row margin-bottom-lg">
+						<div class="flex-grow">
+							<div class="text-lg bold margin-top-none margin-bottom-lg">
+								<i class="bi bi-database-up"></i> 
+								<!--i class="bi bi-cloud-upload"></i--> 
+								Exporting to {{$oauthUserToken.name}}
+							</div>
+
+							<div class="flex-row">
+								<div class="width-64">
+									<img src="{{$actor.Icon.Href}}" class="circle width-100%">
+								</div>
+								<div>
+									<div class="bold">{{$actor.Name}}</div>
+									<div class="text-sm">
+										<a href="{{$actor.ID}}" class="text-nocolor text-gray" target="_blank">{{$actor.UsernameOrID}} {{icon "link-outbound"}}</a>
+									</div>
+									<div class="text-sm text-gray">export date: {{$startDate | shortDate}}</div>
+								</div>
+							</div>
+						</div>
+						<div>
+							<img src="{{$oauthUserToken.iconUrl}}" class="width-128">
+						</div>
 					</div>
-					<div class="margin-bottom-lg">
-						<div class="bold">{{$oauthUserToken.name}}</div>
-						<div class="text-sm text-gray">{{$oauthUserToken.summary}}</div>
-					</div>
+
+					<hr class="margin-vertical-lg">
+
 					<div>
-						<button hx-get="/@me/settings/oauth-token-complete?oauthUserTokenId={{$oauthUserToken.oauthUserTokenId.Hex}}" class="primary margin-bottom">Complete Migration</button>
-						<button hx-get="/@me/settings/oauth-token-delete?oauthUserTokenId={{$oauthUserToken.oauthUserTokenId.Hex}}" class="text-red margin-bottom">Disconnect</button>
+						<div class="text-lg bold">Last Step: Close and Move Account</div>
+						<div class="margin-bottom">
+							If you have double-checked your new profile and are ready to move your profile to your new server,
+							use this button to close this account and notify your followers.
+						</div>
+						<button hx-get="/@me/settings/export-complete?oauthUserTokenId={{$oauthUserToken.oauthUserTokenId.Hex}}" class="primary">Move Permanently</button>
+					</div>
+
+					<hr class="margin-vertical-lg">
+					<div>
+						<div class="text-lg bold">Or: Revoke Access</div>
+						<div class="margin-bottom">
+							You can revoke the access you've granted to <b>{{domainOnly $actorID}}</b>
+							if you no longer want to migrate to that server. This will not erase the data
+							that has already been exported, but it will prevent {{domainOnly $actorID}}
+							from accessing any more data.
+						</div>
+
+						<button hx-get="/@me/settings/oauth-token-delete?oauthUserTokenId={{$oauthUserToken.oauthUserTokenId.Hex}}" class="text-red">Disconnect Client</button>
 					</div>
 				</div>
+
+				<!--pre>{{$oauthUserToken | jsonIndent}}</pre-->
+	
 			{{- end -}}
 
 		{{- end -}}

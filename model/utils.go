@@ -116,3 +116,18 @@ func markdownToHTML(value string, options ...goldmark.Extender) string {
 	return buffer.String()
 
 }
+
+// oneOf returns TRUE if the value matches any of the provided options
+func oneOf[T comparable](value T, options ...T) bool {
+	for _, option := range options {
+		if value == option {
+			return true
+		}
+	}
+	return false
+}
+
+// notOneOf returns TRUE if the value does NOT match any of the provided options
+func notOneOf[T comparable](value T, options ...T) bool {
+	return !oneOf(value, options...)
+}

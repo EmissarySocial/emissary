@@ -29,14 +29,15 @@ func UserSchema() schema.Element {
 			"stateId":        schema.String{},
 			"inboxTemplate":  schema.String{MaxLength: 128},
 			"outboxTemplate": schema.String{MaxLength: 128},
+			"hashtags":       schema.Array{Items: schema.String{Format: "token"}},
+			"data":           schema.Object{Wildcard: schema.String{}},
+			"movedTo":        schema.String{Format: "url"},
 			"followerCount":  schema.Integer{},
 			"followingCount": schema.Integer{},
 			"ruleCount":      schema.Integer{},
 			"isPublic":       schema.Boolean{},
 			"isOwner":        schema.Boolean{},
 			"isIndexable":    schema.Boolean{},
-			"data":           schema.Object{Wildcard: schema.String{}},
-			"hashtags":       schema.Array{Items: schema.String{Format: "token"}},
 		},
 	}
 }
@@ -111,6 +112,9 @@ func (user *User) GetPointer(name string) (any, bool) {
 
 	case "data":
 		return &user.Data, true
+
+	case "movedTo":
+		return &user.MovedTo, true
 
 	case "hashtags":
 		return &user.Hashtags, true

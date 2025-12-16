@@ -1,5 +1,7 @@
 {{- $name := .Name -}}
 {{- $domain := .Domain -}}
+{{- $user := .User -}}
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -9,12 +11,27 @@
 
 <body hx-target="main" hx-swap="innerHTML" hx-push-url="false" hx-ext="preload">
 
-	<main style="display:flex; height:clamp(400px, 100vh, 1000px); justify-content: center; align-items: center;">
+	<main>
 
-		<div style="width:clamp(540px, 50%, 720px); margin:auto;">
+		<div class="margin-horizontal-auto" style="width:clamp(540px, 50%, 720px);">
 
-			<div class="align-center">
-				<img src="{{$domain.ImageURL}}" style="max-height:200px;">
+			<div class="margin-vertical-lg">
+				<img src="{{$domain.ImageURL}}" style="max-width:50%; max-height:64px;">
+			</div>
+
+			<div class="flex-row flex-align-center margin-bottom">
+				<div class="width-32">
+					<img src="{{$user.IconURL}}" class="circle width-100%">
+				</div>
+				<div class="flex-grow">
+					<div class="text-xs text-gray">Signed In As:</div>
+					<div class="text-sm bold">
+						<a href="/@me">@{{$user.Username}}@{{$domain.Host}}</a>
+					</div>
+				</div>
+				<div class="text-sm">
+					<a hx-post="/signout" class="text-nocolor">Sign Out</a>
+				</div>
 			</div>
 
 			<div class="card" style="padding:16px 32px; line-height:150%;">
@@ -28,30 +45,23 @@
 					<input type="hidden" name="state" value="{{.State}}">
 					<input type="hidden" name="response_type" value="{{.ResponseType}}">
 
-					<div class="text-xl flex-row flex-align-center margin-bottom-xl">
-						<img src="{{.IconURL}}" class="circle width-48">
-						<span>
-							<b>{{$name}}</b> is requesting permission to:
-						</span>
+					<div class="flex-row flex-align-center margin-top margin-bottom-lg">
+						{{- if ne "" .IconURL -}}
+							<img src="{{.IconURL}}" class="circle width-64">
+						{{- end -}}
+						<div class="flex-grow">
+							<div class="text-lg bold margin-none">{{$name}}</div>
+							<div class="text-sm margin-none"><a href="{{.Website}}" target="_blank">{{.Website }} {{icon "link-outbound"}}</a></div>
+						</div>
 					</div>
 
 					{{- range .Scopes -}}
 						{{- if eq . "activitypub_account_portability" -}}
 							<div class="margin-top">
-								<div class="text-lg margin-none bold text-red">{{icon "alert"}} Export All of Your Data</div>
-								<div class="margin-bottom">
-									Allow {{$name}} to access all of your profile data
-									(including your private keys)
+								<div class="text-lg margin-none">Is asking to <b>Export All of Your Data</b></div>
+								<div class="margin-bottom text-red">
+									{{icon "alert"}}  Do not approve unless you are <b>migrating your profile</b>
 								</div>
-							</div>
-							<div class="margin-top">
-								<div class="text-lg margin-none bold text-red">{{icon "alert"}} Move Your Account</div>
-								<div class="margin-bottom">
-									Allow {{$name}} to move close your account on this server and move it to {{$name}}
-								</div>
-							</div>
-							<div class="margin-top">
-								<div class="bold text-red">You should only approve this request if you are <i>backing up or migrating your profile</i> to {{$name}}</div>
 							</div>
 						{{- else -}}
 							<div class="margin-top">{{.}}</div>
@@ -65,13 +75,12 @@
 							</button>
 						</span>
 						<span class="htmx-request-hide">
-							<button id="submitButton" type="submit" class="primary">
-								Allow Access
+							<button type="submit" class="primary">
+								Yes. Allow Access
 							</button>
 						</span>
 
-						<button script="on click back() the window's history">Cancel</button>
-
+						<button script="on click halt the event then window.history.back()">Cancel</button>
 						<span id="message" class="text-red" hidden></span>
 
 					</div>

@@ -14,6 +14,7 @@ func OAuthUserTokenSchema() schema.Element {
 			"token":            schema.String{},
 			"clientSecret":     schema.String{},
 			"scopes":           schema.Array{Items: schema.String{}},
+			"data":             schema.Object{Wildcard: schema.Any{}},
 			"apiUser":          schema.Boolean{},
 		},
 	}

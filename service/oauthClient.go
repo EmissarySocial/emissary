@@ -2,16 +2,15 @@ package service
 
 import (
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/cimd"
 	"github.com/EmissarySocial/emissary/tools/random"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
+	dt "github.com/benpate/domain"
 	"github.com/benpate/exp"
-	"github.com/benpate/hannibal/vocab"
-	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
-	"github.com/benpate/sherlock"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -88,8 +87,8 @@ func (service *OAuthClient) Save(session data.Session, client *model.OAuthClient
 		return derp.Wrap(err, location, "Error validating OAuthClient using OAuthClientSchema", client)
 	}
 
-	// If this is a new record and NOT an ActivityPub client
-	if client.IsNew() && (client.ActorID == "") {
+	// Generate secrets for new clients that weren't created via "Client ID Metadata Documents"
+	if client.IsNew() && (client.ClientURL == "") {
 
 		// Generate a new ClientSecret
 		secret, err := random.GenerateString(64)
@@ -159,7 +158,7 @@ func (service *OAuthClient) LoadByToken(session data.Session, token string, clie
 	}
 
 	// Load the client using the ActorID instead
-	criteria := exp.Equal("actorId", token)
+	criteria := exp.Equal("clientUrl", token)
 	return service.Load(session, criteria, client)
 }
 
@@ -168,35 +167,34 @@ func (service *OAuthClient) LoadOrCreateByClientToken(session data.Session, toke
 
 	const location = "service.OAuthClient.LoadOrCreateByClientToken"
 
-	// If the token is an ObjectID, then just use that.  It's not possible
-	// to look up Actors from an ObjectID, so if this fails, it just fails.
-	if clientID, err := primitive.ObjectIDFromHex(token); err == nil {
-		return service.LoadByClientID(session, clientID, client)
-	}
+	// First, try to load the client using the token
+	err := service.LoadByToken(session, token, client)
 
-	// Try to load the client using the ActorID, if success then success
-	criteria := exp.Equal("actorId", token)
-	if err := service.Load(session, criteria, client); err == nil {
+	if err == nil {
 		return nil
 	}
 
-	// Otherwise, create a new Client by looking up the ActivityPub actor
-	actor, err := service.activityService.Client().Load(token, sherlock.AsActor())
+	if !derp.IsNotFound(err) {
+		return derp.Wrap(err, location, "Unable to load OAuthClient", token)
+	}
+
+	// Otherwise, create a new Client by looking up the "Client ID Metadata Document"
+	metadata, err := cimd.GetMetadata(service.host, token)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to find Client by Token", token)
+		return derp.Wrap(err, location, "Unable to load Client ID Metadata Document", token)
 	}
 
 	// Populate the new Client from the Actor's data
-	client.ActorID = token
-	client.Name = actor.Name()
-	client.RedirectURIs = convert.SliceOfString(actor.Get(vocab.PropertyRedirectURI).Value())
-	client.IconURL = actor.Icon().Href()
-	client.Summary = actor.Summary()
-	client.Scopes = []string{"activitypub_account_portability"}
+	client.ClientURL = token
+	client.Name = metadata.ClientName
+	client.RedirectURIs = metadata.RedirectURIs
+	client.IconURL = metadata.LogoURI
+	client.RedirectURIs = metadata.RedirectURIs
+	client.Website = dt.NameOnly(metadata.ClientURI)
 
 	// Save the new Client
-	if err := service.Save(session, client, "Created via ActivityPub actor"); err != nil {
+	if err := service.Save(session, client, "Created via Client ID Metadata Document"); err != nil {
 		return derp.Wrap(err, location, "Unable to save client")
 	}
 

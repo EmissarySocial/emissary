@@ -10,7 +10,7 @@ func OAuthClientSchema() schema.Element {
 		Properties: schema.ElementMap{
 			"clientId":     schema.String{Format: "objectId", Required: true},
 			"clientSecret": schema.String{},
-			"actorId":      schema.String{},
+			"clientUrl":    schema.String{Format: "url", Required: false},
 			"name":         schema.String{Required: true},
 			"summary":      schema.String{},
 			"iconUrl":      schema.String{Format: "url"},
@@ -24,8 +24,8 @@ func OAuthClientSchema() schema.Element {
 func (client *OAuthClient) GetPointer(name string) (any, bool) {
 	switch name {
 
-	case "actorId":
-		return &client.ActorID, true
+	case "clientUrl":
+		return &client.ClientURL, true
 
 	case "name":
 		return &client.Name, true

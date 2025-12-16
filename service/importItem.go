@@ -177,9 +177,15 @@ func (service *ImportItem) LoadByID(session data.Session, itemID primitive.Objec
 }
 
 // LoadByRemoteID loads a single Import record based on the provided UserID and RemoteID
-func (service *ImportItem) LoadByRemoteID(session data.Session, userID primitive.ObjectID, remoteID primitive.ObjectID, record *model.ImportItem) error {
+func (service *ImportItem) LoadByRemoteID(session data.Session, userID primitive.ObjectID, remoteID primitive.ObjectID, result *model.ImportItem) error {
 	criteria := exp.Equal("remoteId", remoteID).AndEqual("userId", userID)
-	return service.Load(session, criteria, record)
+	return service.Load(session, criteria, result)
+}
+
+// LoadByURL loads a single Import record based on the original URL from the remote server
+func (service *ImportItem) LoadByRemoteURL(session data.Session, remoteURL string, result *model.ImportItem) error {
+	criteria := exp.Equal("remoteUrl", remoteURL)
+	return service.Load(session, criteria, result)
 }
 
 // LoadNext retrieves the next "NEW" ImportItem from the database

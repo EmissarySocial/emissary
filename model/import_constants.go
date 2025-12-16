@@ -73,3 +73,7 @@ const ImportStateDone = "DONE"
 // the Import service, resolving with this Import record being deleted
 // along with all of its ImportItems and imported profile records
 const ImportStateDoUndo = "DO-UNDO"
+
+// ImportStateDeleted represents an Import record that has been canceled
+// or un-done by the user.  No further processing will occur.
+const ImportStateDeleted = "DELETED"

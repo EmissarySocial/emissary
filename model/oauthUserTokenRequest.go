@@ -40,7 +40,8 @@ func (req *OAuthUserTokenRequest) Validate(client OAuthClient) error {
 	const location = "model.OAuthUserTokenRequest.Validate"
 
 	// RULE: ClientID must match the client application
-	if (req.ClientID != client.ClientID.Hex()) && (req.ClientID != client.ActorID) {
+
+	if notOneOf(req.ClientID, client.ClientURL, client.ClientID.Hex()) {
 		return derp.BadRequestError(location, "Invalid client_id", client, req)
 	}
 

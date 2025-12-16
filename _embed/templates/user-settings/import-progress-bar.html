@@ -33,3 +33,7 @@
 
 <!-- Display the status message -->
 <div class="margin-top-sm text-xs text-gray">{{.Object.Message}}</div>
+
+<div class="margin-top-lg">
+	<button hx-get="/@me/settings/import-undo?importId={{.Object.ImportID.Hex}}">Cancel Import</button>
+</div>

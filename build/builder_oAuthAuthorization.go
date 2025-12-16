@@ -7,6 +7,7 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
+	dt "github.com/benpate/domain"
 )
 
 // OAuthAuthorization is a lightweight builder that
@@ -16,10 +17,11 @@ type OAuthAuthorization struct {
 	_domainService *service.Domain
 	_client        model.OAuthClient
 	_request       model.OAuthAuthorizationRequest
+	_user          *model.User
 }
 
 // NewOAuthAuthorization returns a fully initialized/loaded `OAuthAuthorization` builder
-func NewOAuthAuthorization(factory Factory, session data.Session, request model.OAuthAuthorizationRequest) (OAuthAuthorization, error) {
+func NewOAuthAuthorization(factory Factory, session data.Session, request model.OAuthAuthorizationRequest, user *model.User) (OAuthAuthorization, error) {
 
 	const location = "build.NewOAuthAuthorization"
 
@@ -29,6 +31,7 @@ func NewOAuthAuthorization(factory Factory, session data.Session, request model.
 		_domainService: factory.Domain(),
 		_client:        model.NewOAuthClient(),
 		_request:       request,
+		_user:          user,
 	}
 
 	// Try to load the OAuthClient object
@@ -45,8 +48,14 @@ func NewOAuthAuthorization(factory Factory, session data.Session, request model.
 	return result, nil
 }
 
+// Domain returns a summary of the current Domain
 func (builder OAuthAuthorization) Domain() model.DomainSummary {
 	return builder._domainService.Get().Summary()
+}
+
+// User returns a summary of the Authenticated User
+func (builder OAuthAuthorization) User() model.UserSummary {
+	return builder._user.Summary()
 }
 
 func (builder OAuthAuthorization) ClientID() string {
@@ -62,7 +71,15 @@ func (builder OAuthAuthorization) IconURL() string {
 }
 
 func (builder OAuthAuthorization) Website() string {
-	return builder._client.Website
+	if website := builder._client.Website; website != "" {
+		return dt.AddProtocol(website)
+	}
+
+	if clientURL := dt.NameOnly(builder._client.ClientURL); clientURL != "" {
+		return dt.AddProtocol(clientURL)
+	}
+
+	return ""
 }
 
 func (builder OAuthAuthorization) RedirectURI() string {

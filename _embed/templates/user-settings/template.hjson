@@ -316,6 +316,17 @@
 			]
 		}
 
+		export-complete: {
+			roles:["self"]
+			steps:[
+				{do:"with-oauth-token", steps:[
+					{do:"as-modal", steps:[
+						{do:"view-html"}
+					]}
+				]}
+			]
+		}
+
 		followers: {
 			roles:["self"]
 			steps:[

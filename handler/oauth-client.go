@@ -58,7 +58,10 @@ func GetOAuthMetadata(ctx *steranko.Context, factory *service.Factory, session d
 		ClientURI:  domain.Host(),
 		LogoURI:    domain.IconURL(),
 		RedirectURIs: sliceof.String{
-			domain.Host() + "/oauth/clients/import/redirect",
+			domain.Host() + "/oauth/clients/import/callback",
+		},
+		GrantTypes: sliceof.String{
+			"authorization_code",
 		},
 	}
 

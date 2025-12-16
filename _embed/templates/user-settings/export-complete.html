@@ -1,0 +1,88 @@
+
+<h1>{{icon "alert"}} Close and Move My Account</h1>
+
+<div class="margin-bottom">
+	This action will permanently close your account on this server, 
+	and move your profile to <b>[NEW ADDRESS]</b>.
+	<a href="https://emissary.dev/migration" target="_blank" class="nowrap">Learn More {{icon "link-outbound"}}</a>
+</div>
+
+<div class="margin-bottom">By continuing, I understand that:</div>
+<hr>
+
+<form id="move-form" hx-post="/@{{.Object.UserID.Hex}}/export/finish?oauthUserTokenId={{.Object.OAuthUserTokenID.Hex}}">
+	<div class="margin-bottom-lg">
+
+		<div class="flex-row margin-vertical">
+			<div>
+				<input id="move-terms-1" type="checkbox" class="move-terms">
+			</div>
+			<label for="move-terms-1" class="margin-left-sm flex-grow">
+				My account on this server wil be closed and I will be logged out.  I will not be able to sign in here again.
+			</label>
+		</div>
+
+		<div class="flex-row margin-vertical">
+			<div>
+				<input id="move-terms-2" type="checkbox" class="move-terms">
+			</div>
+			<label for="move-terms-2" class="margin-left-sm flex-grow">
+				My followers will be <b>notified of this change</b>, though some may not choose to re-follow my new profile.
+			</label>
+		</div>
+
+		<div class="flex-row margin-vertical">
+			<div>
+				<input id="move-terms-3" type="checkbox" class="move-terms">
+			</div>
+			<label for="move-terms-3" class="margin-left-sm flex-grow">
+				Requests to my profile and posts will be forwarded to their new locations for up to one year.
+			</label>
+		</div>
+
+		<div class="flex-row margin-vertical">
+			<div>
+				<input id="move-terms-4" type="checkbox" class="move-terms">
+			</div>
+			<label for="move-terms-4" class="margin-left-sm flex-grow">
+				This action is <b>permanent and irreversible</b>.  It cannot be undone.
+			</label>
+		</div>
+
+		<hr>
+	</div>
+
+	<button id="btn-move" type="submit" class="primary" disabled>Move to ...</button>
+	<button script="on click trigger closeModal">Cancel</button>
+</form>
+
+<style>
+	input[type="checkbox"].move-terms {
+		transform:scale(2,2);
+	}
+</style>
+
+<script type="text/hyperscript">
+	on change from #move-form
+		set #btn-move.disabled to true
+	
+		if #move-terms-1.checked is false then
+			exit
+		end
+		
+		if #move-terms-2.checked is false then
+			exit
+		end
+		
+		if #move-terms-3.checked is false then
+			exit
+		end
+		
+		if #move-terms-4.checked is false then
+			exit
+		end
+
+		set #btn-move.disabled to false
+
+	end
+</script>

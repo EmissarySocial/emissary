@@ -1,19 +1,19 @@
 {{- if ne "" .Name -}}
 
-	<div class="text-lg bold margin-top-none margin-bottom-sm">Importing Profile</div>
+	<div class="text-lg bold margin-top-none margin-bottom-lg">
+		<i class="bi bi-database-down"></i>
+		<!--i class="bi bi-cloud-download"></i-->
+		Importing From {{domainOnly .URL}}
+	</div>
 	<div class="margin-bottom-lg flex-row">
 		<div>
-			<img src="{{.Icon.Href}}" class="width-48 circle">
+			<img src="{{.Icon.Href}}" class="width-64 circle">
 		</div>
 		<div>
-			<div class="text-bold">
-				{{.Name}} 
-				{{- if ne "" .Username }} (@{{.Username}}) {{- end -}}
+			<div class="bold">{{.Name}}</div>
+			<div class="text-sm">
+				<a href="{{.ID}}" class="text-nocolor text-gray" target="_blank">{{.UsernameOrID}} {{icon "link-outbound"}}</a>
 			</div>
-
-			{{- if ne "" .URL -}}
-				<div><a href="{{.URL}}" class="text-nocolor text-gray" target="_blank">{{.URL}} &nbsp;{{icon "link-outbound"}}</a></div>
-			{{- end -}}
 		</div>
 	</div>
 

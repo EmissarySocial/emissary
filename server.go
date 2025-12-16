@@ -224,6 +224,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.geocode/network", handler.WithFactory(factory, handler.GetGeocodeNetwork))
 	e.GET("/.geocode/autocomplete", handler.WithFactory(factory, handler.GetGeocodeAutocomplete))
 	e.GET("/.giphy", handler.WithFactory(factory, handler.GetGiphyWidget))
+	e.GET("/.imported", handler.WithFactory(factory, handler.GetImportedURL))
 	e.GET("/.intents/discover", handler.WithFactory(factory, handler.GetIntentInfo))
 	e.GET("/.intents/:intent", handler.WithFactory(factory, handler.GetOutboundIntent))
 	e.GET("/.oembed", handler.WithFactory(factory, handler.GetOEmbed))
@@ -258,6 +259,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.well-known/nodeinfo", handler.WithFactory(factory, handler.GetNodeInfo))
 	e.GET("/.well-known/nodeinfo/2.0", handler.WithFactory(factory, handler.GetNodeInfo20))
 	e.GET("/.well-known/nodeinfo/2.1", handler.WithFactory(factory, handler.GetNodeInfo21))
+	e.GET("/.well-known/oauth-authorization-server", handler.TBD)
 
 	// Authentication Pages
 	e.GET("/signin", handler.WithFactory(factory, handler.GetSignIn))
@@ -366,7 +368,8 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 
 	// Export Routes for Users
 	e.GET("/@:userId/export", handler.NotFound)
-	e.POST("/@userId/export/start", handler.WithOAuthUser(factory, handler.PostUserExportStart))
+	e.POST("/@:userId/export/start", handler.WithOAuthUser(factory, handler.PostUserExportStart))
+	e.POST("/@:userId/export/finish", handler.WithAuthenticatedUser(factory, handler.PostUserExportFinish))
 	e.GET("/@:userId/export/:collection", handler.WithOAuthUser(factory, handler.GetUserExportCollection))
 	e.GET("/@:userId/export/:collection/:recordId", handler.WithOAuthUser(factory, handler.GetUserExportDocument))
 	e.GET("/@:userId/export/emissary-stream/:streamId/attachments", handler.WithOAuthUserStream(factory, handler.GetAttachmentsExportCollection))
@@ -418,8 +421,8 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/oauth/metadata", handler.WithFactory(factory, handler.GetOAuthMetadata))
 	e.GET("/oauth/clients/:provider", handler.WithOwner(factory, handler.GetOAuth))
 	e.GET("/oauth/clients/:provider/callback", handler.WithOwner(factory, handler.GetOAuthCallback), mw.AllowCSR)
-	e.GET("/oauth/clients/redirect", handler.WithOwner(factory, handler.OAuthRedirect))
 	e.GET("/oauth/clients/import/callback", handler.WithAuthenticatedUser(factory, handler.GetOAuthImportCallback))
+	e.GET("/oauth/clients/redirect", handler.WithOwner(factory, handler.OAuthRedirect))
 
 	// OAuth Server
 	e.GET("/oauth/authorize", handler.WithAuthenticatedUser(factory, handler.GetOAuthAuthorization))

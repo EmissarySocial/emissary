@@ -152,6 +152,9 @@ func (service *Import) Delete(session data.Session, record *model.Import, note s
 		}
 	}
 
+	// Mark this as "DELETED"
+	record.StateID = model.ImportStateDeleted
+
 	// Delete this Import
 	if err := service.collection(session).Delete(record, note); err != nil {
 		return derp.Wrap(err, location, "Unable to delete Import", record, note)
@@ -323,12 +326,13 @@ func (service *Import) doAuthorize(record *model.Import) error {
 	record.Message = ""
 
 	record.OAuthConfig = oauth2.Config{
-		ClientID:    service.host + "/@application",
+		ClientID:    service.host + "/oauth/metadata", // use new CIMD format (https://cimd.dev)
 		RedirectURL: service.OAuthClientCallbackURL(),
 		Scopes:      []string{"activitypub_account_portability"},
 		Endpoint: oauth2.Endpoint{
-			AuthURL:  actor.Endpoints().Get(vocab.EndpointOAuthAuthorization).String(),
-			TokenURL: actor.Endpoints().Get(vocab.EndpointOAuthToken).String(),
+			AuthURL:   actor.Endpoints().Get(vocab.EndpointOAuthAuthorization).String(),
+			TokenURL:  actor.Endpoints().Get(vocab.EndpointOAuthToken).String(),
+			AuthStyle: oauth2.AuthStyleInParams,
 		},
 	}
 
@@ -426,7 +430,7 @@ func (service *Import) ImportAttachments(session data.Session, importRecord *mod
 
 	// Load the /attachments collection
 	client := service.activityService.Client()
-	collection, err := client.Load(importItem.URL + "/attachments")
+	collection, err := client.Load(importItem.ImportURL + "/attachments")
 
 	if err != nil {
 		return derp.Wrap(err, location, "Unable to load Attachments")
@@ -483,7 +487,7 @@ func (service *Import) CalcImportPlan(actor streams.Document) sliceof.Object[for
 			Group:       "Native",
 			Icon:        "patch-check-fill",
 			Label:       "User Profile",
-			Description: "High-fidelity import of Emissary User Account. Should retain all data.",
+			Description: "High-fidelity import of Emissary User Account.",
 			Value:       "emissary:user",
 			Href:        collection.String(),
 		})
@@ -495,7 +499,7 @@ func (service *Import) CalcImportPlan(actor streams.Document) sliceof.Object[for
 			Group:       "Native",
 			Icon:        "patch-check-fill",
 			Label:       "Content",
-			Description: "High-fidelity import of Emissary posts. Should retain all data.",
+			Description: "High-fidelity import of Emissary posts.",
 			Value:       "emissary:stream",
 			Href:        collection.String(),
 		})
@@ -519,7 +523,7 @@ func (service *Import) CalcImportPlan(actor streams.Document) sliceof.Object[for
 			Group:       "Native",
 			Icon:        "patch-check-fill",
 			Label:       "Outbox",
-			Description: "High-fidelity import of Emissary outbox. Should retain all data.",
+			Description: "High-fidelity import of Emissary Outbox.",
 			Value:       "emissary:outboxMessage",
 			Href:        collection.String(),
 		})
@@ -551,7 +555,7 @@ func (service *Import) CalcImportPlan(actor streams.Document) sliceof.Object[for
 				Group:       "Native",
 				Icon:        "patch-check-fill",
 				Label:       "Inbox Folders",
-				Description: "High-fidelity import of all inbox folders",
+				Description: "High-fidelity import of all inbox Folders",
 				Value:       "emissary:folder",
 				Href:        collection.String(),
 			})
@@ -562,7 +566,7 @@ func (service *Import) CalcImportPlan(actor streams.Document) sliceof.Object[for
 					Group:       "Native",
 					Icon:        "patch-check-fill",
 					Label:       "Inbox Messages",
-					Description: "High-fidelity import of your Emissary inbox",
+					Description: "High-fidelity import of your Emissary Inbox",
 					Value:       "emissary:inboxMessage",
 					Href:        collection.String(),
 				})
@@ -597,7 +601,7 @@ func (service *Import) CalcImportPlan(actor streams.Document) sliceof.Object[for
 			Group:       "Native",
 			Icon:        "patch-check-fill",
 			Label:       "Inbox Rules",
-			Description: "High-fidelity import of all inbox rules",
+			Description: "High-fidelity import of all custom inbox Rules",
 			Value:       "emissary:rule",
 			Href:        collection.String(),
 		})
@@ -651,7 +655,7 @@ func (service *Import) CalcImportPlan(actor streams.Document) sliceof.Object[for
 				Group:       "Native",
 				Icon:        "patch-check-fill",
 				Label:       "Products",
-				Description: "High-fideltiy import of all products",
+				Description: "High-fideltiy import of all Products",
 				Value:       "emissary:product",
 				Href:        collection.String(),
 			})
@@ -662,7 +666,7 @@ func (service *Import) CalcImportPlan(actor streams.Document) sliceof.Object[for
 					Group:       "Native",
 					Icon:        "patch-check-fill",
 					Label:       "Circles",
-					Description: "High-fidelity import of all custom circles",
+					Description: "High-fidelity import of all custom Circles",
 					Value:       "emissary:circle",
 					Href:        collection.String(),
 				})
@@ -673,7 +677,7 @@ func (service *Import) CalcImportPlan(actor streams.Document) sliceof.Object[for
 						Group:       "Native",
 						Icon:        "patch-check-fill",
 						Label:       "Privileges",
-						Description: "High-fidelity import of all privileges/purchases",
+						Description: "High-fidelity import of all Privileges/Purchases",
 						Value:       "emissary:privilege",
 						Href:        collection.String(),
 					})
@@ -687,7 +691,7 @@ func (service *Import) CalcImportPlan(actor streams.Document) sliceof.Object[for
 			Group:       "Native",
 			Icon:        "patch-check-fill",
 			Label:       "Mentions",
-			Description: "High-fidelity import of all mentions",
+			Description: "High-fidelity import of all Mentions",
 			Value:       "emissary:mention",
 			Href:        collection.String(),
 		})
@@ -699,7 +703,7 @@ func (service *Import) CalcImportPlan(actor streams.Document) sliceof.Object[for
 			Group:       "Native",
 			Icon:        "patch-check-fill",
 			Label:       "Responses",
-			Description: "High-fidelity import of all responses received",
+			Description: "High-fidelity import of all Responses received",
 			Value:       "emissary:response",
 			Href:        collection.String(),
 		})

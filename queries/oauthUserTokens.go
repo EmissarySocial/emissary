@@ -43,6 +43,7 @@ func OAuthUserTokens(session data.Session, userID primitive.ObjectID) (sliceof.M
 			"clientId":         1,
 			"createDate":       1,
 			"scopes":           1,
+			"data":             1,
 			"actorId":          bson.M{"$arrayElemAt": bson.A{"$client.actorId", 0}},
 			"name":             bson.M{"$arrayElemAt": bson.A{"$client.name", 0}},
 			"iconUrl":          bson.M{"$arrayElemAt": bson.A{"$client.iconUrl", 0}},

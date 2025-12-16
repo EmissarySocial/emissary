@@ -7,6 +7,9 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/collections"
+	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/remote"
+	"github.com/benpate/remote/options"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/sherlock"
 	"github.com/benpate/turbine/queue"
@@ -19,12 +22,15 @@ func ImportStartup(factory *service.Factory, session data.Session, user *model.U
 
 	importService := factory.Import()
 
-	// Load the actor so we can make an import plan
+	// We'll need to authenticated using BEARER tokens (not HTTP signatures)
 	activityService := factory.ActivityStream(model.ActorTypeApplication, primitive.NilObjectID)
+	withBearerAuth := sherlock.WithRemoteOptions(options.BearerAuth(record.OAuthToken.AccessToken))
 	client := activityService.Client()
-	actor, err := client.Load(record.SourceID, sherlock.AsActor(), ascache.WithForceReload())
 
-	// We have already loaded the actor when starting the Import process.
+	// Load the actor so we can make an import plan
+	actor, err := client.Load(record.SourceID, sherlock.AsActor(), ascache.WithForceReload(), withBearerAuth)
+
+	// We should have already loaded the actor when starting the Import process.
 	// If we cannot load the actor now, then just abandon the whole damned thing.
 	if err != nil {
 
@@ -38,6 +44,19 @@ func ImportStartup(factory *service.Factory, session data.Session, user *model.U
 		return queue.Failure(derp.Wrap(err, location, "Unable to load ActivityPub actor", record.SourceID))
 	}
 
+	// Call the Actor's "startMigration" endpoint to tell the source server where we're importing the data to.
+	if startEndpoint := actor.Endpoints().Get(vocab.EndpointStartMigration).String(); startEndpoint != "" {
+
+		txn := remote.Post(startEndpoint).
+			Form("actor", user.ActivityPubURL()).
+			Form("oracle", factory.Host()+"/.exported").
+			With(options.BearerAuth(record.OAuthToken.AccessToken))
+
+		if err := txn.Send(); err != nil {
+			return queue.Error(derp.Wrap(err, location, "Unable to call startMigration endpoint", startEndpoint))
+		}
+	}
+
 	// Import plan contains all of the collections that we can import from this actor
 	plan := importService.CalcImportPlan(actor)
 	importItemService := factory.ImportItem()
@@ -47,7 +66,7 @@ func ImportStartup(factory *service.Factory, session data.Session, user *model.U
 	for _, planItem := range plan {
 
 		// Load the collection
-		collection, err := client.Load(planItem.Href, ascache.WithForceReload())
+		collection, err := client.Load(planItem.Href, ascache.WithForceReload(), withBearerAuth)
 
 		if err != nil {
 			derp.Report(derp.Wrap(err, location, "Unable to load import collection", planItem))
@@ -62,7 +81,7 @@ func ImportStartup(factory *service.Factory, session data.Session, user *model.U
 			importItem.ImportID = record.ImportID
 			importItem.UserID = record.UserID
 			importItem.Type = planItem.Value
-			importItem.URL = document.ID()
+			importItem.ImportURL = document.ID()
 			importItem.StateID = model.ImportItemStateNew
 
 			// Save the ImportItem to the task list

@@ -27,7 +27,7 @@ func GetOAuthAuthorization(ctx *steranko.Context, factory *service.Factory, sess
 	}
 
 	// Load the OAuth Builder
-	builder, err := build.NewOAuthAuthorization(factory, session, transaction)
+	builder, err := build.NewOAuthAuthorization(factory, session, transaction, user)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Unable to generate Builder")
@@ -159,6 +159,7 @@ func postOAuthAuthorization_token(ctx echo.Context, userToken model.OAuthUserTok
 	return ctx.Redirect(http.StatusFound, redirectURI.String())
 }
 
+// PostUOAuthToken handles the OAuth token exchange (exchanging code for token)
 func PostOAuthToken(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.PostOAuthToken"

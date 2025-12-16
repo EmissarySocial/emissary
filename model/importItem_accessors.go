@@ -12,8 +12,10 @@ func ImportItemSchema() schema.Element {
 			"importId":     schema.String{Format: "objectId", Required: true},
 			"userId":       schema.String{Format: "objectId", Required: true},
 			"localId":      schema.String{Format: "objectId", Required: true},
+			"importUrl":    schema.String{Format: "url", Required: true},
+			"remoteUrl":    schema.String{Format: "url", Required: false},
+			"localUrl":     schema.String{Format: "url", Required: false},
 			"type":         schema.String{Required: true},
-			"url":          schema.String{Required: true},
 			"stateId":      schema.String{Required: true},
 			"message":      schema.String{},
 		},
@@ -31,8 +33,14 @@ func (item *ImportItem) GetPointer(name string) (any, bool) {
 	case "type":
 		return &item.Type, true
 
-	case "url":
-		return &item.URL, true
+	case "importUrl":
+		return &item.ImportURL, true
+
+	case "remoteUrl":
+		return &item.RemoteURL, true
+
+	case "localUrl":
+		return &item.LocalURL, true
 
 	case "stateId":
 		return &item.StateID, true

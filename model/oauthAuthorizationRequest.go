@@ -62,9 +62,11 @@ func (req *OAuthAuthorizationRequest) Validate(client OAuthClient) error {
 	}
 
 	// RULE: Verify that scope is valid
-	for _, scope := range req.Scopes() {
-		if !slice.Contains(client.Scopes, scope) {
-			return derp.BadRequestError(location, "Invalid scope", "provided: "+scope, "allowed: "+strings.Join(client.Scopes, ","))
+	if client.Scopes.NotEmpty() {
+		for _, scope := range req.Scopes() {
+			if !slice.Contains(client.Scopes, scope) {
+				return derp.BadRequestError(location, "Invalid scope", "provided: "+scope, "allowed: "+strings.Join(client.Scopes, ","))
+			}
 		}
 	}
 

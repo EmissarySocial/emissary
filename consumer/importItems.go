@@ -62,7 +62,7 @@ func ImportItems(factory *service.Factory, session data.Session, user *model.Use
 	// Success! Let's process the next importable item
 
 	// Update the display to show the URL that we're currently working on
-	if err := importService.SetMessage(session, importRecord, importItem.URL); err != nil {
+	if err := importService.SetMessage(session, importRecord, importItem.ImportURL); err != nil {
 		return queue.Error(derp.Wrap(err, location, "Unable to update Import status message", importRecord))
 	}
 
@@ -76,7 +76,7 @@ func ImportItems(factory *service.Factory, session data.Session, user *model.Use
 
 	// Retrieve the document to be imported from the remote server
 	document := make([]byte, 0)
-	txn := remote.Get(importItem.URL).
+	txn := remote.Get(importItem.ImportURL).
 		With(options.BearerAuth(importRecord.OAuthToken.AccessToken)).
 		With(options.Debug()).
 		Result(&document)

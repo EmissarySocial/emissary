@@ -9,7 +9,6 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
-	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/steranko"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -19,19 +18,24 @@ func PostUserExportStart(ctx *steranko.Context, factory *service.Factory, sessio
 
 	const location = "handler.PostUserExportStart"
 
+	// Define the parameters we're expecting to receive from the client
+	txn := struct {
+		Actor  string `form:"actor"`  // The TARGET actor that is receiving this export
+		Oracle string `form:"oracle"` // The oracle where we can look up object URLs after they've been exported
+	}{}
+
 	// Collect parameters from form post
-	oauthUserTokenService := factory.OAuthUserToken()
-	txn := mapof.NewString()
 	if err := ctx.Bind(&txn); err != nil {
 		return derp.Wrap(err, location, "Unable to parse request")
 	}
 
-	// Populate the OAuthUserToken Data with export parameters
-	oauthUserToken.Data.SetString("actor", txn.GetString("actor"))
-	oauthUserToken.Data.SetString("oracle", txn.GetString("oracle"))
+	// Populate the OAuthUserToken Data with values from the client
+	oauthUserToken.Data.SetString("actor", txn.Actor)
+	oauthUserToken.Data.SetString("oracle", txn.Oracle)
 	oauthUserToken.Data.SetInt64("startDate", time.Now().Unix())
 
 	// Save the updated OAuthUserToken
+	oauthUserTokenService := factory.OAuthUserToken()
 	if err := oauthUserTokenService.Save(session, oauthUserToken, "Starting Export via OAuth"); err != nil {
 		return derp.Wrap(err, location, "Unable to save OAuthUserToken", "oauthUserTokenID", oauthUserToken.OAuthUserTokenID)
 	}
@@ -181,4 +185,31 @@ func GetAttachmentsExportOriginal(ctx *steranko.Context, factory *service.Factor
 	ctx.Response().Header().Set("Content-Type", "application/activity+json")
 	return ctx.String(http.StatusOK, record)
 
+}
+
+func PostUserExportFinish(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
+
+	const location = "handler.PostUserExportFinish"
+
+	// RULE: Validate the UserID matches the authenticated user
+	if ctx.Param("userId") != user.UserID.Hex() {
+		return derp.Forbidden(location, "Cannot finish export for another user")
+	}
+
+	// Parse the OAuthUserTokenID
+	oauthUserTokenID, err := primitive.ObjectIDFromHex(ctx.Param("oauthUserTokenId"))
+
+	if err != nil {
+		return derp.Wrap(err, location, "Invalid OAuthUserTokenID", ctx.Param("oauthUserTokenId"))
+	}
+
+	oauthUserTokenService := factory.OAuthUserToken()
+	oauthUserToken := model.NewOAuthUserToken()
+
+	if err := oauthUserTokenService.LoadByID(session, user.UserID, oauthUserTokenID, &oauthUserToken); err != nil {
+		return derp.Wrap(err, location, "Unable to load OAuthUserToken", oauthUserTokenID)
+	}
+
+	// Return an empty 200 OK response
+	return ctx.NoContent(http.StatusOK)
 }
