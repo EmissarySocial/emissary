@@ -1,6 +1,8 @@
 package service
 
 import (
+	"iter"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
@@ -56,9 +58,21 @@ func (service *Annotation) Query(session data.Session, criteria exp.Expression, 
 	return result, err
 }
 
-// List returns an iterator containing all of the Annotations who match the provided criteria
+// List returns an iterator containing all of the Annotations that match the provided criteria
 func (service *Annotation) List(session data.Session, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.collection(session).Iterator(notDeleted(criteria), options...)
+}
+
+// Range returns an iterator containing all of the Annotations that match the provided criteria
+func (service *Annotation) Range(session data.Session, criteria exp.Expression, options ...option.Option) (iter.Seq[model.Annotation], error) {
+
+	iter, err := service.List(session, criteria, options...)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "service.User.Range", "Unable to create iterator", criteria)
+	}
+
+	return RangeFunc(iter, model.NewAnnotation), nil
 }
 
 // Load retrieves an Annotation from the database
@@ -266,4 +280,33 @@ func (service *Annotation) LoadByURL(session data.Session, userID primitive.Obje
 	// Query the database
 	criteria := exp.Equal("userId", userID).AndEqual("url", url)
 	return service.Load(session, criteria, result)
+}
+
+// RangeByUserID returns a RangeFunc that yields all Annotations owned by the provided UserID
+func (service *Annotation) RangeByUserID(session data.Session, userID primitive.ObjectID) (iter.Seq[model.Annotation], error) {
+	criteria := exp.Equal("userId", userID)
+	return service.Range(session, criteria)
+}
+
+// DeleteByUserID deletes all Annotations owned by the provided UserID
+func (service *Annotation) DeleteByUserID(session data.Session, userID primitive.ObjectID, note string) error {
+
+	const location = "service.Annotation.DeleteByUserID"
+
+	// Retrieve all Annotations
+	annotations, err := service.RangeByUserID(session, userID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Unable to query annotations by UserID", userID)
+	}
+
+	// Delete each annotation
+	for annotation := range annotations {
+		if err := service.Delete(session, &annotation, note); err != nil {
+			return derp.Wrap(err, location, "Unable to delete Annotation", annotation)
+		}
+	}
+
+	// Success
+	return nil
 }

@@ -638,7 +638,7 @@ func (w Stream) getFirstStream(criteria exp.Expression, sortOption option.Option
 // Mentions returns a slice of all Mentions for this Stream
 func (w Stream) Mentions() ([]model.Mention, error) {
 	mentionService := w._factory.Mention()
-	return mentionService.QueryByObjectID(w._session, w._stream.StreamID)
+	return mentionService.QueryByObjectID(w._session, model.MentionTypeStream, w._stream.StreamID)
 }
 
 func (w Stream) RepliesAfter(dateString string, maxRows int) sliceof.Object[ascache.Value] {

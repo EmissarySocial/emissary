@@ -573,7 +573,7 @@ func (service *Import) CalcImportPlan(actor streams.Document) sliceof.Object[for
 			}
 
 			// Import Direct Messages IF we have Folders
-			if collection := migration.Get("emissary:conversaion"); collection.NotNil() {
+			if collection := migration.Get("emissary:conversation"); collection.NotNil() {
 				result.Append(form.LookupCode{
 					Group:       "Native",
 					Icon:        "patch-check-fill",

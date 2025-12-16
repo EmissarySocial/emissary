@@ -9,6 +9,8 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
+	"github.com/benpate/html"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/steranko"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -187,6 +189,8 @@ func GetAttachmentsExportOriginal(ctx *steranko.Context, factory *service.Factor
 
 }
 
+// PostUserExportFinish initiates the background process to `MOVE` a user to their new server, and
+// sign them out of this server.
 func PostUserExportFinish(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.PostUserExportFinish"
@@ -203,6 +207,7 @@ func PostUserExportFinish(ctx *steranko.Context, factory *service.Factory, sessi
 		return derp.Wrap(err, location, "Invalid OAuthUserTokenID", ctx.Param("oauthUserTokenId"))
 	}
 
+	// Load the OAuthUserToken
 	oauthUserTokenService := factory.OAuthUserToken()
 	oauthUserToken := model.NewOAuthUserToken()
 
@@ -210,6 +215,38 @@ func PostUserExportFinish(ctx *steranko.Context, factory *service.Factory, sessi
 		return derp.Wrap(err, location, "Unable to load OAuthUserToken", oauthUserTokenID)
 	}
 
+	actor := oauthUserToken.Data.GetString("actor")
+	oracle := oauthUserToken.Data.GetString("oracle")
+
+	// Mark the User as "Moved"
+	if err := factory.User().Move(session, user, actor); err != nil {
+		return derp.Wrap(err, location, "Unable to mark User as 'Moved'", user, actor)
+	}
+
+	// Queue a task to delete records and send notifications.
+	factory.Queue().NewTask("MoveUser", mapof.Any{
+		"host":   factory.Hostname(),
+		"userId": user.UserID.Hex(),
+		"actor":  actor,
+		"oracle": oracle,
+	})
+
+	// Sign the user out of this website.
+	factory.Steranko(session).SignOut(ctx)
+
 	// Return an empty 200 OK response
-	return ctx.NoContent(http.StatusOK)
+	return ctx.Redirect(http.StatusTemporaryRedirect, "/@"+user.UserID.Hex()+"/export/complete")
+}
+
+// This displays a message to users that their profile has been exported.
+func GetUserExportComplete(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
+
+	b := html.New()
+	b.HTML()
+	b.Body()
+	b.H1().InnerText("Your Profile Has Been Moved, and You Have Been Signed Out.")
+	b.Button().Attr("onclick", "window.close()").InnerText("Close this Window")
+	b.CloseAll()
+
+	return ctx.HTML(http.StatusOK, b.String())
 }

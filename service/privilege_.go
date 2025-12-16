@@ -357,6 +357,35 @@ func (service *Privilege) RangeByProducts(session data.Session, productIDs ...pr
 	return service.Range(session, criteria)
 }
 
+// RangeByUserID returns a RangeFunc that yields all Privileges owned by the provided UserID
+func (service *Privilege) RangeByUserID(session data.Session, userID primitive.ObjectID) (iter.Seq[model.Privilege], error) {
+	criteria := exp.Equal("userId", userID)
+	return service.Range(session, criteria)
+}
+
+// DeleteByUserID deletes all Privileges owned by the provided UserID
+func (service *Privilege) DeleteByUserID(session data.Session, userID primitive.ObjectID, note string) error {
+
+	const location = "service.Privilege.DeleteByUserID"
+
+	// Retrieve all Privileges
+	privileges, err := service.RangeByUserID(session, userID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Unable to query Privileges by UserID", userID)
+	}
+
+	// Delete each privilege
+	for privilege := range privileges {
+		if err := service.Delete(session, &privilege, note); err != nil {
+			return derp.Wrap(err, location, "Unable to delete Privilege", privilege)
+		}
+	}
+
+	// Success
+	return nil
+}
+
 func (service *Privilege) QueryByIdentity(session data.Session, identityID primitive.ObjectID, options ...option.Option) ([]model.Privilege, error) {
 
 	const location = "service.Privilege.QueryByIdentity"

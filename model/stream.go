@@ -53,9 +53,10 @@ type Stream struct {
 	StartDate        datetime.DateTime       `bson:"startDate,omitempty"`    // Date/Time to publish as a "start date" for this Stream (semantics are dependent on the Template)
 	EndDate          datetime.DateTime       `bson:"endDate,omitempty"`      // Date/Time to publish as an "end date" for this Stream (semantics are dependent on the Template)
 	Syndication      delta.Slice[string]     `bson:"syndication,omitempty"`  // List of external services that this Stream has been syndicated to.
+	MovedTo          string                  `bson:"movedTo,omitempty"`      // If present, then this stream has been moved to a new location.
 	Shuffle          int64                   `bson:"shuffle"`                // Random number used to shuffle the order of Streams in a list.
 	PublishDate      int64                   `bson:"publishDate"`            // Unix timestamp of the date/time when this document is/was/will be first available on the domain.
-	UnPublishDate    int64                   `bson:"unpublishDate"`          // Unix timestemp of the date/time when this document will no longer be available on the domain.
+	UnPublishDate    int64                   `bson:"unpublishDate"`          // Unix timestamp of the date/time when this document will no longer be available on the domain.
 	IsFeatured       bool                    `bson:"isFeatured"`             // TRUE if this Stream is featured by its parent container.
 	IsSubscribable   bool                    `bson:"isSubscribable"`         // TRUE if this Stream uses the Products service to determine access rights.
 

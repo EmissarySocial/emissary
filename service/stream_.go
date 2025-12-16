@@ -10,16 +10,20 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/queries"
 	"github.com/EmissarySocial/emissary/realtime"
+	"github.com/EmissarySocial/emissary/tools/datetime"
 	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/EmissarySocial/emissary/tools/parse"
 	"github.com/EmissarySocial/emissary/tools/random"
+	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	dt "github.com/benpate/domain"
 	"github.com/benpate/exp"
+	"github.com/benpate/geo"
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/rosetta/convert"
+	"github.com/benpate/rosetta/delta"
 	"github.com/benpate/rosetta/html"
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
@@ -42,6 +46,7 @@ type Stream struct {
 	importService     *Import
 	importItemService *ImportItem
 	keyService        *EncryptionKey
+	mentionService    *Mention
 	outboxService     *Outbox
 	searchTagService  *SearchTag
 	templateService   *Template
@@ -67,7 +72,7 @@ func NewStream(factory *Factory) Stream {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Stream) Refresh(attachmentService *Attachment, circleService *Circle, contentService *Content, domainService *Domain, draftService *StreamDraft, followerService *Follower, geocodeService GeocodeAddress, importService *Import, importItemService *ImportItem, keyService *EncryptionKey, outboxService *Outbox, ruleService *Rule, searchTagService *SearchTag, templateService *Template, userService *User, webhookService *Webhook, mediaserver mediaserver.MediaServer, queue *queue.Queue, sseUpdateChannel chan<- realtime.Message, host string) {
+func (service *Stream) Refresh(attachmentService *Attachment, circleService *Circle, contentService *Content, domainService *Domain, draftService *StreamDraft, followerService *Follower, geocodeService GeocodeAddress, importService *Import, importItemService *ImportItem, keyService *EncryptionKey, mentionService *Mention, outboxService *Outbox, ruleService *Rule, searchTagService *SearchTag, templateService *Template, userService *User, webhookService *Webhook, mediaserver mediaserver.MediaServer, queue *queue.Queue, sseUpdateChannel chan<- realtime.Message, host string) {
 	service.attachmentService = attachmentService
 	service.circleService = circleService
 	service.contentService = contentService
@@ -78,6 +83,7 @@ func (service *Stream) Refresh(attachmentService *Attachment, circleService *Cir
 	service.importService = importService
 	service.importItemService = importItemService
 	service.keyService = keyService
+	service.mentionService = mentionService
 	service.outboxService = outboxService
 	service.ruleService = ruleService
 	service.searchTagService = searchTagService
@@ -549,6 +555,11 @@ func (service *Stream) ListNavigation(session data.Session) (data.Iterator, erro
 // RangeByParent returns an iterator that contains all child streams of the provided parentID
 func (service *Stream) RangeByParent(session data.Session, parentID primitive.ObjectID) (iter.Seq[model.Stream], error) {
 	return service.Range(session, exp.Equal("parentId", parentID))
+}
+
+// RangeByParentIDs returns an iterator that contains a descendant (at any level) of the provided parentID
+func (service *Stream) RangeByParentIDs(session data.Session, parentID primitive.ObjectID) (iter.Seq[model.Stream], error) {
+	return service.Range(session, exp.Equal("parentIds", parentID))
 }
 
 func (service *Stream) RangeByPrivileges(session data.Session, privileges ...primitive.ObjectID) (iter.Seq[model.Stream], error) {
@@ -1210,6 +1221,95 @@ func (service *Stream) NotifyInReplyTo(session data.Session, inReplyTo string) {
 	service.sseUpdateChannel <- realtime.NewMessage_NewReplies(stream.StreamID)
 
 	// Glory to Rome.
+}
+
+/******************************************
+ * Migration Methods
+ ******************************************/
+
+// Move locates all Streams inside the profile of the provided UserID, and moves them
+// using the 'movedTo' forwarding address
+func (service *Stream) MoveByUserID(session data.Session, userID primitive.ObjectID, movedTo string) error {
+
+	const location = "service.Stream.MoveByUserID"
+
+	// Range over all Streams that match this User
+	streams, err := service.RangeByParentIDs(session, userID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Unable to query streams", userID)
+	}
+
+	// Move each stream one-by-one
+	for stream := range streams {
+
+		if err := service.Move(session, &stream, movedTo); err != nil {
+			return derp.Wrap(err, location, "Unable to move Stream", stream)
+		}
+	}
+
+	// Success!
+	return nil
+}
+
+func (service *Stream) Move(session data.Session, stream *model.Stream, movedTo string) error {
+
+	const location = "service.Stream.Move"
+
+	// Set the `MovedTo` value to forward to the Oracle on the new server
+	stream.MovedTo = movedTo
+
+	// Zero out (almost) all other fields in this stream
+	stream.TemplateID = ""
+	stream.ParentTemplateID = ""
+	stream.StateID = ""
+	stream.SocialRole = ""
+	stream.Groups = mapof.NewObject[id.Slice]()
+	stream.Circles = mapof.NewObject[id.Slice]()
+	stream.Products = mapof.NewObject[id.Slice]()
+	stream.PrivilegeIDs = model.NewPermissions()
+	stream.DefaultAllow = model.Permissions{model.MagicGroupIDAnonymous}
+	stream.Label = ""
+	stream.Summary = ""
+	stream.Icon = ""
+	stream.IconURL = ""
+	stream.Context = ""
+	stream.InReplyTo = ""
+	stream.Content = model.NewContent()
+	stream.Widgets = set.NewSlice[model.StreamWidget]()
+	stream.Hashtags = sliceof.NewString()
+	stream.Location = geo.NewAddress()
+	stream.Data = mapof.NewAny()
+	stream.StartDate = datetime.New()
+	stream.EndDate = datetime.New()
+	stream.Syndication = delta.NewSlice[string]()
+	stream.Shuffle = 0
+	stream.UnPublishDate = time.Now().Unix()
+	stream.IsFeatured = false
+	stream.IsSubscribable = false
+
+	// Keep these original values
+	// stream.URL
+	// stream.Token
+	// stream.AttributedTo
+	// stream.PublishDate
+
+	// Update the Stream with the new "movedTo" value
+	if err := service.Save(session, stream, "moved"); err != nil {
+		return derp.Wrap(err, location, "Unable to save Stream")
+	}
+
+	// Delete any related Attachments
+	if err := service.attachmentService.DeleteByCriteria(session, "Stream", stream.StreamID, exp.All(), "moved"); err != nil {
+		return derp.Wrap(err, location, "Unable to delete Attachments")
+	}
+
+	// Delete any related Mentions
+	if err := service.mentionService.DeleteByObjectID(session, model.MentionTypeStream, stream.StreamID, "moved"); err != nil {
+		return derp.Wrap(err, location, "Unable to delete Mentions")
+	}
+
+	return nil
 }
 
 /******************************************

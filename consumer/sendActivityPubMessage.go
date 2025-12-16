@@ -22,7 +22,11 @@ func SendActivityPubMessage(factory *service.Factory, session data.Session, args
 	// Parse arguments
 	actorType := args.GetString("actorType")
 	actorIDHex := args.GetString("actorID")
-	actorID, _ := primitive.ObjectIDFromHex(actorIDHex)
+	actorID, err := primitive.ObjectIDFromHex(actorIDHex)
+
+	if err != nil {
+		return queue.Failure(derp.Wrap(err, location, "Invalid ActorID", actorIDHex))
+	}
 
 	// Get an ActivityStream service for the specified actor
 	activityStreamService := factory.ActivityStream(actorType, actorID)

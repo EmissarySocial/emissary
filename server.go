@@ -370,6 +370,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@:userId/export", handler.NotFound)
 	e.POST("/@:userId/export/start", handler.WithOAuthUser(factory, handler.PostUserExportStart))
 	e.POST("/@:userId/export/finish", handler.WithAuthenticatedUser(factory, handler.PostUserExportFinish))
+	e.GET("/@:userId/export/complete", handler.WithFactory(factory, handler.GetUserExportComplete))
 	e.GET("/@:userId/export/:collection", handler.WithOAuthUser(factory, handler.GetUserExportCollection))
 	e.GET("/@:userId/export/:collection/:recordId", handler.WithOAuthUser(factory, handler.GetUserExportDocument))
 	e.GET("/@:userId/export/emissary-stream/:streamId/attachments", handler.WithOAuthUserStream(factory, handler.GetAttachmentsExportCollection))

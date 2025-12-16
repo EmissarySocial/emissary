@@ -44,6 +44,10 @@ func NewAttachment(objectType string, objectID primitive.ObjectID) Attachment {
 	}
 }
 
+func NewEmptyAttachment() Attachment {
+	return Attachment{}
+}
+
 /******************************************
  * data.Object Interface
  ******************************************/

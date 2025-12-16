@@ -343,6 +343,35 @@ func (service *MerchantAccount) LoadByUserAndToken(session data.Session, userID 
 	return service.LoadByUserAndID(session, userID, merchantAccountID, merchantAccount)
 }
 
+// RangeByUserID returns a RangeFunc that yields all MerchantAccounts owned by the provided UserID
+func (service *MerchantAccount) RangeByUserID(session data.Session, userID primitive.ObjectID) (iter.Seq[model.MerchantAccount], error) {
+	criteria := exp.Equal("userId", userID)
+	return service.Range(session, criteria)
+}
+
+// DeleteByUserID deletes all MerchantAccounts owned by the provided UserID
+func (service *MerchantAccount) DeleteByUserID(session data.Session, userID primitive.ObjectID, note string) error {
+
+	const location = "service.MerchantAccount.DeleteByUserID"
+
+	// Retrieve all MerchantAccounts
+	merchantAccounts, err := service.RangeByUserID(session, userID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Unable to query merchantAccounts by UserID", userID)
+	}
+
+	// Delete each merchantAccount
+	for merchantAccount := range merchantAccounts {
+		if err := service.Delete(session, &merchantAccount, note); err != nil {
+			return derp.Wrap(err, location, "Unable to delete MerchantAccount", merchantAccount)
+		}
+	}
+
+	// Success
+	return nil
+}
+
 /******************************************
  * Custom Actions
  ******************************************/

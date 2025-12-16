@@ -3,6 +3,7 @@ package service
 import (
 	"bytes"
 	"io"
+	"iter"
 	"net/url"
 	"strings"
 
@@ -85,6 +86,18 @@ func (service *Mention) Query(session data.Session, criteria exp.Expression, opt
 // List returns an iterator containing all of the Mentions that match the provided criteria
 func (service *Mention) List(session data.Session, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.collection(session).Iterator(notDeleted(criteria), options...)
+}
+
+// Range returns a Go 1.23 RangeFunc that iterates over the Mention records that match the provided criteria
+func (service *Mention) Range(session data.Session, criteria exp.Expression, options ...option.Option) (iter.Seq[model.Mention], error) {
+
+	iter, err := service.List(session, criteria, options...)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "service.Mention.Range", "Unable to create iterator", criteria)
+	}
+
+	return RangeFunc(iter, model.NewMention), nil
 }
 
 // Load retrieves an Mention from the database
@@ -227,8 +240,35 @@ func (service *Mention) LoadOrCreate(session data.Session, objectType string, ob
 	return result, derp.Wrap(err, "service.Mention.LoadOrCreate", "Unable to load Mention", objectType, objectID, originURL)
 }
 
-func (service *Mention) QueryByObjectID(session data.Session, objectID primitive.ObjectID, options ...option.Option) ([]model.Mention, error) {
-	return service.Query(session, exp.Equal("objectId", objectID), options...)
+func (service *Mention) QueryByObjectID(session data.Session, objectType string, objectID primitive.ObjectID, options ...option.Option) ([]model.Mention, error) {
+	return service.Query(session, exp.Equal("objectId", objectID).AndEqual("type", objectType), options...)
+}
+
+func (service *Mention) RangeByObjectID(session data.Session, objectType string, objectID primitive.ObjectID, options ...option.Option) (iter.Seq[model.Mention], error) {
+	return service.Range(session, exp.Equal("objectId", objectID).AndEqual("type", objectType), options...)
+}
+
+// DeleteByUserID deletes all Mentions owned by the provided UserID
+func (service *Mention) DeleteByObjectID(session data.Session, objectType string, objectID primitive.ObjectID, note string) error {
+
+	const location = "service.Mention.DeleteByUserID"
+
+	// Retrieve all Mentions
+	mentions, err := service.RangeByObjectID(session, objectType, objectID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Unable to query Mentions by UserID", objectType, objectID)
+	}
+
+	// Delete each mention
+	for mention := range mentions {
+		if err := service.Delete(session, &mention, note); err != nil {
+			return derp.Wrap(err, location, "Unable to delete Mention", mention)
+		}
+	}
+
+	// Success
+	return nil
 }
 
 /******************************************

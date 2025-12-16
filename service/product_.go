@@ -1,6 +1,8 @@
 package service
 
 import (
+	"iter"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
@@ -60,6 +62,18 @@ func (service *Product) Query(session data.Session, criteria exp.Expression, opt
 // List returns an iterator containing all of the Products who match the provided criteria
 func (service *Product) List(session data.Session, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.collection(session).Iterator(notDeleted(criteria), options...)
+}
+
+// Range returns a Go 1.23 RangeFunc that iterates over the Products that match the provided criteria
+func (service *Product) Range(session data.Session, criteria exp.Expression, options ...option.Option) (iter.Seq[model.Product], error) {
+
+	iter, err := service.List(session, criteria, options...)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "service.Product.Range", "Unable to create iterator", criteria)
+	}
+
+	return RangeFunc(iter, model.NewProduct), nil
 }
 
 // Load retrieves an Product from the database
@@ -230,6 +244,35 @@ func (service *Product) QueryByIDs(session data.Session, userID primitive.Object
 		AndIn("_id", productIDs)
 
 	return service.Query(session, criteria, option.SortAsc("name"), option.SortAsc("price"))
+}
+
+// RangeByUserID returns a RangeFunc that yields all Products owned by the provided UserID
+func (service *Product) RangeByUserID(session data.Session, userID primitive.ObjectID) (iter.Seq[model.Product], error) {
+	criteria := exp.Equal("userId", userID)
+	return service.Range(session, criteria)
+}
+
+// DeleteByUserID deletes all Products owned by the provided UserID
+func (service *Product) DeleteByUserID(session data.Session, userID primitive.ObjectID, note string) error {
+
+	const location = "service.Product.DeleteByUserID"
+
+	// Retrieve all Products
+	products, err := service.RangeByUserID(session, userID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Unable to query products by UserID", userID)
+	}
+
+	// Delete each product
+	for product := range products {
+		if err := service.Delete(session, &product, note); err != nil {
+			return derp.Wrap(err, location, "Unable to delete Product", product)
+		}
+	}
+
+	// Success
+	return nil
 }
 
 /******************************************

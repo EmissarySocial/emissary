@@ -1,6 +1,8 @@
 package service
 
 import (
+	"iter"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data"
@@ -63,6 +65,18 @@ func (service *Circle) Query(session data.Session, criteria exp.Expression, opti
 // List returns an iterator containing all of the Circles who match the provided criteria
 func (service *Circle) List(session data.Session, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.collection(session).Iterator(notDeleted(criteria), options...)
+}
+
+// Range returns a Go 1.23 RangeFunc that iterates over the Circles that match the provided criteria
+func (service *Circle) Range(session data.Session, criteria exp.Expression, options ...option.Option) (iter.Seq[model.Circle], error) {
+
+	iter, err := service.List(session, criteria, options...)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "service.Circle.Range", "Unable to create iterator", criteria)
+	}
+
+	return RangeFunc(iter, model.NewCircle), nil
 }
 
 // Load retrieves an Circle from the database
@@ -285,6 +299,35 @@ func (service *Circle) LoadByProductID(session data.Session, userID primitive.Ob
 
 	criteria := exp.Equal("userId", userID).AndEqual("productIds", productID)
 	return service.Load(session, criteria, result)
+}
+
+// RangeByUserID returns a RangeFunc that yields all Circles owned by the provided UserID
+func (service *Circle) RangeByUserID(session data.Session, userID primitive.ObjectID) (iter.Seq[model.Circle], error) {
+	criteria := exp.Equal("userId", userID)
+	return service.Range(session, criteria)
+}
+
+// DeleteByUserID deletes all Circles owned by the provided UserID
+func (service *Circle) DeleteByUserID(session data.Session, userID primitive.ObjectID, note string) error {
+
+	const location = "service.Circle.DeleteByUserID"
+
+	// Retrieve all Circles
+	circles, err := service.RangeByUserID(session, userID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Unable to query Circles by UserID", userID)
+	}
+
+	// Delete each circle
+	for circle := range circles {
+		if err := service.Delete(session, &circle, note); err != nil {
+			return derp.Wrap(err, location, "Unable to delete Circle", circle)
+		}
+	}
+
+	// Success
+	return nil
 }
 
 func (service *Circle) HasProducts(session data.Session, userID primitive.ObjectID) (bool, error) {

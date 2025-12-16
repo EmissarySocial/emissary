@@ -437,6 +437,7 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 			factory.Import(),
 			factory.ImportItem(),
 			factory.EncryptionKey(),
+			factory.Mention(),
 			factory.Outbox(),
 			factory.Rule(),
 			factory.SearchTag(),

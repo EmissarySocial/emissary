@@ -1,6 +1,8 @@
 package service
 
 import (
+	"iter"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
@@ -62,6 +64,18 @@ func (service *Attachment) Count(session data.Session, criteria exp.Expression) 
 // List returns an iterator containing all of the Attachments who match the provided criteria
 func (service *Attachment) List(session data.Session, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.collection(session).Iterator(notDeleted(criteria), options...)
+}
+
+// Range returns a Go 1.23 RangeFunc that iterates over the Streams that match the provided criteria
+func (service *Attachment) Range(session data.Session, criteria exp.Expression, options ...option.Option) (iter.Seq[model.Attachment], error) {
+
+	iter, err := service.List(session, criteria, options...)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "service.Attachment.Range", "Unable to create iterator", criteria)
+	}
+
+	return RangeFunc(iter, model.NewEmptyAttachment), nil
 }
 
 func (service *Attachment) Query(session data.Session, criteria exp.Expression, options ...option.Option) ([]model.Attachment, error) {

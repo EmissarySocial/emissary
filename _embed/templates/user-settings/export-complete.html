@@ -1,9 +1,11 @@
+{{- $actorID := .Object.Data.actor -}}
+{{- $actorDomain  := domainOnly $actorID -}}
 
 <h1>{{icon "alert"}} Close and Move My Account</h1>
 
 <div class="margin-bottom">
 	This action will permanently close your account on this server, 
-	and move your profile to <b>[NEW ADDRESS]</b>.
+	and move your profile to <b>{{$actorDomain}}</b>.
 	<a href="https://emissary.dev/migration" target="_blank" class="nowrap">Learn More {{icon "link-outbound"}}</a>
 </div>
 
@@ -52,9 +54,11 @@
 		<hr>
 	</div>
 
-	<button id="btn-move" type="submit" class="primary" disabled>Move to ...</button>
+	<button id="btn-move" type="submit" class="primary" disabled>Move to <b>{{$actorDomain}}</b></button>
 	<button script="on click trigger closeModal">Cancel</button>
 </form>
+
+<!--pre>{{.Object | jsonIndent}}</pre-->
 
 <style>
 	input[type="checkbox"].move-terms {

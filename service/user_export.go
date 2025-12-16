@@ -35,3 +35,22 @@ func (service *User) ExportDocument(session data.Session, userID primitive.Objec
 	// Success
 	return string(result), nil
 }
+
+// Move marks a User as "Moved" to the new actor location.  All requests from this User
+// after this point should be rejected
+func (service *User) Move(session data.Session, user *model.User, actor string) error {
+
+	const location = "service.User.Move"
+
+	if actor == "" {
+		return derp.BadRequest(location, "New actor URL must not be empty")
+	}
+
+	user.MovedTo = actor
+
+	if err := service.Save(session, user, "Moved"); err != nil {
+		return derp.Wrap(err, location, "Unable to save user")
+	}
+
+	return nil
+}
