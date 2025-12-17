@@ -8,7 +8,7 @@ import (
 
 func TestImportItemSchema(t *testing.T) {
 
-	group := NewImportItem()
+	importItem := NewImportItem()
 	s := schema.New(ImportItemSchema())
 
 	table := []tableTestItem{
@@ -17,10 +17,12 @@ func TestImportItemSchema(t *testing.T) {
 		{"userId", "5e5e5e5e5e5e5e5e5e5e5e5b", nil},
 		{"localId", "5e5e5e5e5e5e5e5e5e5e5e5e", nil},
 		{"type", "Stream", nil},
-		{"url", "http://test.com/", nil},
+		{"importUrl", "http://test.com/", nil},
+		{"remoteUrl", "http://test.com/", nil},
+		{"localUrl", "http://test.com/", nil},
 		{"stateId", "AUTHORIZING", nil},
 		{"message", "does eat oats", nil},
 	}
 
-	tableTest_Schema(t, &s, &group, table)
+	tableTest_Schema(t, &s, &importItem, table)
 }
