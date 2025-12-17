@@ -53,14 +53,14 @@ func GetStripeConnect(ctx *steranko.Context, factory *service.Factory, session d
 		Result(&stripeAccount)
 
 	if err := accountTransaction.Send(); err != nil {
-		return derp.Wrap(err, location, "Unable to create account on Stripe", derp.WithCode(http.StatusInternalServerError))
+		return derp.Wrap(err, location, "Unable to create account on Stripe", derp.WithInternalError())
 	}
 
 	// Save the new MerchantAccount (including Stripe Account ID)
 	merchantAccount.Plaintext.SetString("accountId", stripeAccount.ID)
 
 	if err := merchantAccountService.Save(session, &merchantAccount, "Linked by User"); err != nil {
-		return derp.Wrap(err, location, "Unable to create MerchantAccount", derp.WithCode(http.StatusInternalServerError))
+		return derp.Wrap(err, location, "Unable to create MerchantAccount", derp.WithInternalError())
 	}
 
 	// Create a new ACCOUNT LINK on Stripe
@@ -77,7 +77,7 @@ func GetStripeConnect(ctx *steranko.Context, factory *service.Factory, session d
 		Result(&accountLink)
 
 	if err := accountLinkTransaction.Send(); err != nil {
-		return derp.Wrap(err, location, "Unable to create account link on Stripe", derp.WithCode(http.StatusInternalServerError))
+		return derp.Wrap(err, location, "Unable to create account link on Stripe", derp.WithInternalError())
 	}
 
 	return ctx.Redirect(http.StatusFound, accountLink.URL)

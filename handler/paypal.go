@@ -92,7 +92,7 @@ func GetPayPalConnect(ctx *steranko.Context, factory *service.Factory, user *mod
 			Result(&result)
 
 		if err := txn.Send(); err != nil {
-			return derp.Wrap(err, location, "Error sending referral to PayPal", derp.WithCode(http.StatusInternalServerError))
+			return derp.Wrap(err, location, "Error sending referral to PayPal", derp.WithInternalError())
 		}
 
 		// Find the "action_url" in the response

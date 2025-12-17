@@ -249,6 +249,8 @@ func (user User) GetJSONLD() mapof.Any {
 			vocab.EndpointFinishMigration:    serverURL + "/@me/settings/export",
 		},
 
+		vocab.PropertyKeyPackages: user.ActivityPubKeyPackagesURL(),
+
 		vocab.PropertyMigration: mapof.String{
 			"outbox":                   exportURL + "/outbox",
 			"content":                  exportURL + "/content",
@@ -382,6 +384,14 @@ func (user *User) ActivityPubFeaturedURL() string {
 	}
 
 	return user.ProfileURL + "/pub/featured"
+}
+
+func (user *User) ActivityPubKeyPackagesURL() string {
+	if user.ProfileURL == "" {
+		return ""
+	}
+
+	return user.ProfileURL + "/pub/keyPackages"
 }
 
 func (user *User) ActivityPubOutboxURL() string {

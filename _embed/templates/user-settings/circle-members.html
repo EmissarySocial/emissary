@@ -1,3 +1,4 @@
+{{- $isDesktop := .IsDesktop -}}
 {{- $circle := .Object -}}
 {{- $members := .CircleMembers.Slice -}}
 {{- $icon := concat $circle.Icon "-fill" -}}
@@ -5,28 +6,36 @@
 <div class="app" script="init send SelectNav(id:'settings')">
 	<title> {{.Name}} | Circles</title>
 
-	<div id="app-sidebar" class="expanded" hx-swap="innerHTML show:window:top">
+	{{- if $isDesktop -}}
+		<div id="app-sidebar" class="expanded">
+			{{- template "menu" "social" -}}
+		</div>
+	{{- end -}}
 
-		<a href="/@me/settings/following" hx-boost="true" class="turboclick menu-item ellipsis">{{icon "star"}} Following</a>
-		<a href="/@me/settings/followers" hx-boost="true" class="turboclick menu-item ellipsis">{{icon "person"}} Followers</a>
-		<a href="/@me/settings/circles" hx-boost="true" class="turboclick menu-item ellipsis selected">{{icon "circle-fill"}} Circles</a>
-		<a href="/@me/settings/payments" hx-boost="true" class="turboclick menu-item ellipsis">{{icon "credit-card"}} Payments</a>
-		<a href="/@me/settings/rules" hx-boost="true" class="turboclick menu-item ellipsis">{{icon "rule"}} Rules</a>
-		<a href="/@guest" class="turboclick menu-item ellipsis">{{icon "user"}} Guest Profile</a>
-		<hr>
-		<a hx-post="/signout" class="button text-xs">Sign Out</a>
-	</div>
-	
 	<div class="app-content padding">
 
-		<div class="flex-row flex-align-center margin-bottom-lg">
-			<h1 class="text-xl bold margin-none flex-grow">
-				<a href="/@me/settings/circles" hx-boost="true">Circles</a> 
-				&middot; 
-				{{.Name}}
-			</h1>
-			<a href="https://emissary.dev/circles" target="_blank">{{icon "help"}} Help with Circles</a>
+		<div id="menu-bar">
+			<div class="left">
+				{{ if not $isDesktop }}
+					<a href="/@me/settings/mobile" hx-boost="true">{{icon "back"}}</a>
+				{{ end }}
+				<a href="/@me/settings/following" hx-boost="true">Following</a>
+				<a href="/@me/settings/followers" hx-boost="true">Followers</a>
+				<a href="/@me/settings/circles" class="selected" hx-boost="true">Circles</a>
+				<a href="/@me/settings/rules" hx-boost="true">Rules</a>
+			</div>
+			<div class="right">
+				<a href="https://emissary.dev/circles" target="_blank" class="link">
+					{{icon "help"}}
+					{{ if $isDesktop }} Help with Circles {{ end }}
+				</a>
+			</div>
 		</div>
+
+		<h1 class="text-md bold margin-none margin-bottom flex-grow">
+			<a href="/@me/settings/circles" hx-boost="true">All Circles</a>  &middot;
+			{{.Name}}
+		</h1>
 
 		<div class="md:flex-row width-100% margin-top margin-bottom-lg">
 

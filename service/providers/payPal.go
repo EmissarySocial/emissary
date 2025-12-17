@@ -1,7 +1,6 @@
 package providers
 
 import (
-	"net/http"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -99,7 +98,7 @@ func (provider PayPal) ManualConfig() form.Form {
 func (provider PayPal) Connect(connection *model.Connection, vault mapof.String, host string) error {
 
 	if err := provider.Refresh(connection, vault); err != nil {
-		return derp.Wrap(err, "service.providers.PayPal", "Unable to refresh access token", derp.WithCode(http.StatusInternalServerError))
+		return derp.Wrap(err, "service.providers.PayPal", "Unable to refresh access token", derp.WithInternalError())
 	}
 
 	return nil

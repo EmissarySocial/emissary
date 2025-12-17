@@ -1,6 +1,6 @@
 {{- $isMobile := .IsMobile -}}
 {{- $isDesktop := not $isMobile -}}
-{{- $folders := .FoldersWithSelection}}
+{{- $folders := .FoldersWithSelection "FOLDER" }}
 {{- $folder := $folders.Selected -}}
 {{- $filter := .FilteredByFollowing -}}
 

@@ -2,7 +2,6 @@ package build
 
 import (
 	"io"
-	"net/http"
 	"text/template"
 
 	"github.com/EmissarySocial/emissary/tools/formdata"
@@ -34,7 +33,7 @@ func (step StepSetData) Get(builder Builder, buffer io.Writer) PipelineBehavior 
 	for key, value := range step.Values {
 		valueString := executeTemplate(value, builder)
 		if err := schema.Set(object, key, valueString); err != nil {
-			result := derp.Wrap(err, location, "Error setting value from template.json", key, derp.WithCode(http.StatusBadRequest))
+			result := derp.Wrap(err, location, "Error setting value from template.json", key, derp.WithBadRequest())
 			return Halt().WithError(result)
 		}
 	}
@@ -44,7 +43,7 @@ func (step StepSetData) Get(builder Builder, buffer io.Writer) PipelineBehavior 
 		currentValue, _ := schema.Get(builder, name)
 		if compare.IsZero(currentValue) {
 			if err := schema.Set(object, name, value); err != nil {
-				result := derp.Wrap(err, location, "Error setting default value", name, value, derp.WithCode(http.StatusBadRequest))
+				result := derp.Wrap(err, location, "Error setting default value", name, value, derp.WithBadRequest())
 				return Halt().WithError(result)
 			}
 		}
@@ -71,14 +70,14 @@ func (step StepSetData) Post(builder Builder, _ io.Writer) PipelineBehavior {
 		transaction, err := formdata.Parse(builder.request())
 
 		if err != nil {
-			result := derp.Wrap(err, location, "Error binding body", derp.WithCode(http.StatusBadRequest))
+			result := derp.Wrap(err, location, "Error binding body", derp.WithBadRequest())
 			return Halt().WithError(result)
 		}
 
 		// Put approved form data into the stream
 		for _, p := range step.FromForm {
 			if err := schema.Set(object, p, transaction[p]); err != nil {
-				result := derp.Wrap(err, location, "Error seting value from user input", transaction, p, derp.WithCode(http.StatusBadRequest))
+				result := derp.Wrap(err, location, "Error seting value from user input", transaction, p, derp.WithBadRequest())
 				return Halt().WithError(result)
 			}
 		}
@@ -88,7 +87,7 @@ func (step StepSetData) Post(builder Builder, _ io.Writer) PipelineBehavior {
 	for key, value := range step.Values {
 		valueString := executeTemplate(value, builder)
 		if err := schema.Set(object, key, valueString); err != nil {
-			result := derp.Wrap(err, location, "Error setting value from template.json", key, derp.WithCode(http.StatusBadRequest))
+			result := derp.Wrap(err, location, "Error setting value from template.json", key, derp.WithBadRequest())
 			return Halt().WithError(result)
 		}
 	}
@@ -98,7 +97,7 @@ func (step StepSetData) Post(builder Builder, _ io.Writer) PipelineBehavior {
 		currentValue, _ := schema.Get(builder, name)
 		if compare.IsZero(currentValue) {
 			if err := schema.Set(object, name, value); err != nil {
-				result := derp.Wrap(err, location, "Error setting default value", name, value, derp.WithCode(http.StatusBadRequest))
+				result := derp.Wrap(err, location, "Error setting default value", name, value, derp.WithBadRequest())
 				return Halt().WithError(result)
 			}
 		}
@@ -117,7 +116,7 @@ func (step StepSetData) setURLPaths(builder Builder) error {
 		for _, path := range step.FromURL {
 			if value := query.Get(path); value != "" {
 				if err := schema.Set(object, path, value); err != nil {
-					result := derp.Wrap(err, "build.StepSetData.setURLPaths", "Error setting data from URL", derp.WithCode(http.StatusBadRequest))
+					result := derp.Wrap(err, "build.StepSetData.setURLPaths", "Error setting data from URL", derp.WithBadRequest())
 					return result
 				}
 			}

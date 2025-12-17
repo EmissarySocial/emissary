@@ -3,7 +3,7 @@
 {{- if gt (len $inbox) 0 -}}
 
 	{{- $firstMessage := $inbox.First -}}
-	{{- $folders := .FoldersWithSelection}}
+	{{- $folders := .FoldersWithSelection "FOLDER"}}
 	{{- $folder := $folders.Selected}}
 	{{- $folderID := $folder.FolderID.Hex -}}
 

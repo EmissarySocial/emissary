@@ -318,6 +318,8 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/@me/settings", handler.WithAuthenticatedUser(factory, handler.PostSettings))
 	e.GET("/@me/settings/:action", handler.WithAuthenticatedUser(factory, handler.GetSettings))
 	e.POST("/@me/settings/:action", handler.WithAuthenticatedUser(factory, handler.PostSettings))
+	e.GET("/@me/outbox", handler.WithAuthenticatedUser(factory, ap_user.GetOutboxCollection))
+	e.POST("/@me/outbox", handler.WithAuthenticatedUser(factory, ap_user.PostOutbox))
 
 	e.GET("/@me/intent/create", handler.WithAuthenticatedUser(factory, handler.GetIntent_Create))
 	e.POST("/@me/intent/create", handler.WithAuthenticatedUser(factory, handler.PostIntent_Create))
@@ -385,6 +387,8 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@:userId/pub/followers", handler.WithUser(factory, ap_user.GetFollowersCollection))
 	e.GET("/@:userId/pub/following", handler.WithUser(factory, ap_user.GetFollowingCollection))
 	e.GET("/@:userId/pub/following/:followingId", handler.WithUser(factory, ap_user.GetFollowingRecord))
+	e.GET("/@:userId/pub/keyPackages", handler.WithUser(factory, ap_user.GetKeyPackageCollection))
+	e.GET("/@:userId/pub/keyPackages/:keyPackageId", handler.WithUser(factory, ap_user.GetKeyPackageRecord))
 	e.GET("/@:userId/pub/shared", handler.WithUser(factory, ap_user.GetResponseCollection))
 	e.GET("/@:userId/pub/shared/:response", handler.WithUser(factory, ap_user.GetResponse))
 	e.GET("/@:userId/pub/liked", handler.WithUser(factory, ap_user.GetResponseCollection))

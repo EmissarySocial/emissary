@@ -17,6 +17,9 @@
 # System files for macOS 
 .DS_Store
 
+# Node OMG
+node_modules/
+
 # Application config info
 config-env.json
 .emissary

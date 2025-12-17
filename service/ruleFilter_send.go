@@ -21,7 +21,7 @@ func (filter *RuleFilter) AllowSend(session data.Session, actorID string) bool {
 	}
 
 	// We don't actually send messages to the public namespace
-	if actorID == vocab.NamespaceActivityStreamsPublic {
+	if actorID == vocab.NamespaceASPublic {
 		log.Trace().Str("loc", location).Msg("Ignore Public Namespace")
 		return false
 	}

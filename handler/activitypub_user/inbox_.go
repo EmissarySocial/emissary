@@ -32,6 +32,7 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 
 	// Create a new Context
 	context := Context{
+		context: ctx,
 		factory: factory,
 		session: session,
 		user:    user,

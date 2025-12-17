@@ -1,8 +1,6 @@
 package stripeapi
 
 import (
-	"net/http"
-
 	"github.com/benpate/derp"
 	"github.com/benpate/remote"
 	"github.com/benpate/remote/options"
@@ -24,7 +22,7 @@ func Subscription(restrictedKey string, connectedAccountID string, subscriptionI
 
 	// Send the transaction
 	if err := txn.Send(); err != nil {
-		return stripe.Subscription{}, derp.Wrap(err, location, "Error connecting to Stripe API", derp.WithCode(http.StatusInternalServerError))
+		return stripe.Subscription{}, derp.Wrap(err, location, "Error connecting to Stripe API", derp.WithInternalError())
 	}
 
 	// Success
@@ -56,7 +54,7 @@ func SubscriptionCancel(restrictedKey string, connectedAccountID string, subscri
 		With(ConnectedAccount(connectedAccountID))
 
 	if err := txn.Send(); err != nil {
-		return derp.Wrap(err, location, "Error canceling subscription", derp.WithCode(http.StatusInternalServerError))
+		return derp.Wrap(err, location, "Error canceling subscription", derp.WithInternalError())
 	}
 
 	return nil

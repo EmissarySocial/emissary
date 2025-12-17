@@ -9,8 +9,8 @@ type ActorSummary struct {
 	ID          string `json:"actorId"     bson:"id"`
 	Type        string `json:"type"        bson:"type"`
 	Name        string `json:"name"        bson:"name"`
-	Icon        string `json:"icon"        bson:"icon"`
 	Username    string `json:"username"    bson:"username"`
+	Icon        string `json:"icon"        bson:"icon"`
 	KeyPackages string `json:"keyPackages" bson:"keyPackages"`
 }
 

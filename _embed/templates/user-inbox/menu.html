@@ -1,6 +1,8 @@
+{{- $section := .Section -}}
 {{- $selectedID := .SelectedID -}}
+{{- $allFolders := and ($selectedID.IsZero) (eq "FOLDER" $section) -}}
 
-<!-- Hiding DM controls for now -->
+<!-- Direct Messages -->
 <!--
 {{- if eq $selectedID nilObjectID -}}
 	<div role="link" hx-get="/@me/inbox/conversations?sidebar=collapse" hx-trigger="click" hx-push-url="true" class="turboclick menu-item ellipsis hover-trigger folder selected">
@@ -13,20 +15,46 @@
 		<span style="view-transition-name:app-sidebar-dm-label">Direct Messages</span>
 	</div>
 {{- end -}}
+-->
 
+<!--
 <div role="link" hx-get="/@me/inbox/alerts?sidebar=collapse" hx-trigger="click" hx-push-url="true" class="turboclick menu-item ellipsis hover-trigger folder">
 	<span style="view-transition-name:app-sidebar-bell-icon;">{{- icon "bell" }}</span>
 	<span style="view-transition-name:app-sidebar-bell-label">Notifications</span>
 </div>
-
-<div class="margin-vertical-xl"></div>
 -->
 
-<form class="sortable" hx-post="/@me/inbox/folder-sort" hx-push-url="false" hx-trigger="end">
+<!-- Encrypted Messages -->
+{{- if eq "CONVERSATIONS" $section -}}
+	<a href="/@me/inbox/mls" class="turboclick menu-item ellipsis hover-trigger folder selected">
+		<span>{{- icon "chat-fill" }}</span>
+		<span>Conversations</span>
+	</a>
+{{- else -}}
+	<a href="/@me/inbox/mls" class="turboclick menu-item ellipsis hover-trigger folder">
+		<span>{{- icon "chat" }}</span>
+		<span>Conversations</span>
+	</a>
+{{- end -}}
+
+<div class="margin-vertical"></div>
+
+	<a href="/@me/inbox/inbox?folderId={{nilObjectID.Hex}}" class="turboclick menu-item ellipsis hover-trigger folder {{if $allFolders}}selected{{end}}">
+		<span>
+			{{- if $allFolders -}}
+				{{- iconFilled "folder" -}}
+			{{- else -}}
+				{{- icon "folder" -}}
+			{{- end }}
+		</span>
+		<span>All Folders</span>
+	</a>
+
+	<form class="sortable" hx-post="/@me/inbox/folder-sort" hx-push-url="false" hx-trigger="end">
 
 	{{- range .Folders -}}
 		{{- $folderID := .FolderID.Hex -}}
-		<div role="link" hx-get="/@me/inbox/inbox?folderId={{$folderID}}" hx-trigger="click" hx-push-url="true" class="turboclick menu-item ellipsis hover-trigger folder {{if eq $selectedID .FolderID}}selected{{end}}">
+		<a href="/@me/inbox/inbox?folderId={{$folderID}}" class="turboclick menu-item ellipsis hover-trigger folder {{if eq $selectedID .FolderID}}selected{{end}}">
 			<span>
 				{{- if eq $selectedID .FolderID -}}
 					{{- iconFilled .Icon -}}
@@ -47,13 +75,12 @@
 				</span>
 			</span>
 			<input type="hidden" name="keys" value="{{$folderID}}">
-		</div>
+		</a>
 	{{- end -}}
-
-	<div class="margin-vertical-xl fixed"></div>
 
 </form>
 
+<div class="margin-vertical"></div>
 
 <div role="button" hx-get="/@me/inbox/folder-add" class="menu-item link turboclick" style="border:none;">
 	<span style="view-transition-name:app-sidebar-add-folder-icon;">{{icon "add"}}</span>

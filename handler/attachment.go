@@ -49,7 +49,7 @@ func GetDomainAttachment(ctx *steranko.Context, factory *service.Factory, sessio
 	header.Set("Cache-Control", "public, max-age=86400") // Store in public caches for 1 day
 
 	if err := ms.Serve(ctx.Response().Writer, ctx.Request(), filespec); err != nil {
-		return derp.Wrap(err, location, "Error accessing attachment file", derp.WithCode(http.StatusInternalServerError))
+		return derp.Wrap(err, location, "Error accessing attachment file", derp.WithInternalError())
 	}
 
 	return nil
@@ -91,7 +91,7 @@ func GetSearchTagAttachment(ctx *steranko.Context, factory *service.Factory, ses
 	filespec := attachment.FileSpec(ctx.Request().URL)
 
 	if err := ms.Serve(ctx.Response().Writer, ctx.Request(), filespec); err != nil {
-		return derp.Wrap(err, location, "Unable to access attachment file", derp.WithCode(http.StatusInternalServerError))
+		return derp.Wrap(err, location, "Unable to access attachment file", derp.WithInternalError())
 	}
 
 	return nil

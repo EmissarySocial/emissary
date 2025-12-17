@@ -1,4 +1,4 @@
-{{- $folders := .FoldersWithSelection -}}
+{{- $folders := .FoldersWithSelection "FOLDER" -}}
 {{- $folder := $folders.Selected -}}
 
 {{- if eq "SOCIAL" $folder.Layout -}}

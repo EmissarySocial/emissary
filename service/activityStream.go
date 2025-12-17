@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto"
 	"iter"
-	"net/http"
 	"strings"
 	"time"
 
@@ -400,7 +399,7 @@ func (service *ActivityStream) SendMessage(session data.Session, args mapof.Any)
 
 	// Send the message to the recipientID
 	if err := actor.SendOne(recipientID, message); err != nil {
-		return derp.Wrap(err, location, "Error sending message", message, derp.WithCode(http.StatusInternalServerError))
+		return derp.Wrap(err, location, "Error sending message", message, derp.WithInternalError())
 	}
 
 	// Success!!

@@ -86,7 +86,7 @@ func (service *Stream) JSONLD(session data.Session, stream *model.Stream) mapof.
 	// and leaving as:public out entirely means that this message is "private" -- for whatever that's worth...
 
 	if stream.DefaultAllowAnonymous() {
-		result[vocab.PropertyTo] = []string{vocab.NamespaceActivityStreamsPublic}
+		result[vocab.PropertyTo] = []string{vocab.NamespaceASPublic}
 	}
 
 	// Custom behaviors for different stream types

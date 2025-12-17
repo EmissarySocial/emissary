@@ -166,7 +166,7 @@ func profileUsername(context echo.Context) (string, error) {
 		userID, err := authenticatedID(context)
 
 		if err != nil {
-			return "", derp.Wrap(err, location, "Cannot use 'me' when not authenticated", derp.WithCode(http.StatusUnauthorized))
+			return "", derp.Wrap(err, location, "Cannot use 'me' when not authenticated", derp.WithUnauthorized())
 		}
 
 		return userID.Hex(), nil
