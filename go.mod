@@ -24,7 +24,7 @@ require (
 	github.com/benpate/re v0.3.5
 	github.com/benpate/remote v0.17.12
 	github.com/benpate/rosetta v0.25.26
-	github.com/benpate/sherlock v0.8.17
+	github.com/benpate/sherlock v0.8.18
 	github.com/benpate/sniff v0.1.0
 	github.com/benpate/steranko v0.22.6
 	github.com/benpate/table v0.7.10

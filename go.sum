@@ -64,8 +64,8 @@ github.com/benpate/remote v0.17.12 h1:dLzhtuiMr29H8nKOcd8JmNOD09dPe8KwDtEL8bUIt3
 github.com/benpate/remote v0.17.12/go.mod h1:XJgvUF+qAV6PTHIfQ7oA5PqgcSaATZ2A06jAysM8gWE=
 github.com/benpate/rosetta v0.25.26 h1:SryxDnYnf81LUWMPYM6pCzu91h62vlN+BiPhVeYVo5M=
 github.com/benpate/rosetta v0.25.26/go.mod h1:R/DoGl8xsn/Wmd7Tea4dmSS+ModfxItX4A6+1JEjaCg=
-github.com/benpate/sherlock v0.8.17 h1:kVu6QnMgNyswhbPBPwlALZUITyUsY+7GPSxbG8zHxvg=
-github.com/benpate/sherlock v0.8.17/go.mod h1:R6HyCL/v69yLkO8Xxcy+c+vrVnvYyaR2aZay9GOrgDU=
+github.com/benpate/sherlock v0.8.18 h1:/v2ETsRwY9zc3cGRl38mUGnOOJE/PcYMd9IM+cVCBX0=
+github.com/benpate/sherlock v0.8.18/go.mod h1:R6HyCL/v69yLkO8Xxcy+c+vrVnvYyaR2aZay9GOrgDU=
 github.com/benpate/sniff v0.1.0 h1:ismWhuuMErMErCYHIX6uc/nCly9IHKVD+q+zPivU8kY=
 github.com/benpate/sniff v0.1.0/go.mod h1:186e1Ad6PdFBuDneBgFarsP3h8se8WZSgXonrBkOZLI=
 github.com/benpate/steranko v0.22.6 h1:eodxQR7L459hHFkO7bkU7OHTEYBTcHpV8KX+TX8MBvY=
