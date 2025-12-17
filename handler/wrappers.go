@@ -476,30 +476,42 @@ func WithStream(serverFactory *server.Factory, fn WithFunc1[model.Stream]) echo.
 		token := getStreamToken(ctx)
 
 		// Try to load the Stream using a Token
-		err := streamService.LoadByToken(session, token, &stream)
+		if err := streamService.LoadByToken(session, token, &stream); err != nil {
 
-		if err == nil {
-			return fn(ctx, factory, session, &stream)
+			// Anything but a "Not Found" error is a problem
+			if !derp.IsNotFound(err) {
+				return derp.Wrap(err, location, "Unable to load stream from database")
+			}
+
+			// If the "home" page is requested but not found, then we're in "startup" mode
+			if token == "home" {
+				return ctx.Redirect(http.StatusTemporaryRedirect, "/startup")
+			}
+
+			// Maybe you want a User, but didn't type the "@" prefix?
+			user := model.NewUser()
+			if err := factory.User().LoadByUsername(session, token, &user); err == nil {
+
+				// If the user has moved, then forward to the Oracle
+				if user.MovedTo != "" {
+					return ctx.Redirect(http.StatusSeeOther, user.MovedTo)
+				}
+
+				// Forward to the User's page (with the correct URL)
+				return ctx.Redirect(http.StatusSeeOther, "/@"+user.Username)
+			}
+
+			// I give up, man..
+			return ctx.NoContent(http.StatusNotFound)
 		}
 
-		// Anything but a "Not Found" error is a problem
-		if !derp.IsNotFound(err) {
-			return derp.Wrap(err, location, "Unable to load stream from database")
+		// If this Stream has been moved, then redirect to the Oracle
+		if stream.MovedTo != "" {
+			return ctx.Redirect(http.StatusMovedPermanently, stream.MovedTo)
 		}
 
-		// If the "home" page is requested but not found, then we're in "startup" mode
-		if token == "home" {
-			return ctx.Redirect(http.StatusTemporaryRedirect, "/startup")
-		}
-
-		// Maybe we're looking for a User, but forgot the "@" prefix?
-		user := model.NewUser()
-		if err := factory.User().LoadByUsername(session, token, &user); err == nil {
-			return ctx.Redirect(http.StatusSeeOther, "/@"+user.Username)
-		}
-
-		// I give up, man..
-		return ctx.NoContent(http.StatusNotFound)
+		// Otherwise, continue rendering the Stream
+		return fn(ctx, factory, session, &stream)
 	})
 }
 
@@ -529,17 +541,23 @@ func WithUser(serverFactory *server.Factory, fn WithFunc1[model.User]) echo.Hand
 
 	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
-		// Load the User from the database
-		userService := factory.User()
-		user := model.NewUser()
+		// Parse/Validate the Username/UserID
 		userID, err := profileUsername(ctx)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Invalid Username")
 		}
 
+		// Try to load the User from the database
+		userService := factory.User()
+		user := model.NewUser()
 		if err := userService.LoadByToken(session, userID, &user); err != nil {
 			return derp.Wrap(err, location, "Unable to load User")
+		}
+
+		// Handle redirects for Users who have moved away.
+		if user.MovedTo != "" {
+			return ctx.Redirect(http.StatusMovedPermanently, user.MovedTo)
 		}
 
 		// Call the continuation function
@@ -553,24 +571,18 @@ func WithUserForwarding(serverFactory *server.Factory, fn WithFunc1[model.User])
 
 	const location = "handler.WithUserForwarding"
 
-	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
+	return WithUser(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
-		// Load the User from the database
-		userService := factory.User()
-		user := model.NewUser()
+		// Parse/Validate the Username/UserID
 		userID, err := profileUsername(ctx)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Invalid Username")
 		}
 
-		if err := userService.LoadByToken(session, userID, &user); err != nil {
-			return derp.Wrap(err, location, "Unable to load user from database")
-		}
-
 		// If this is a JSON-LD request, then skip the forwarding and just return the User
 		if isJSONLDRequest(ctx) {
-			return activitypub.RenderProfileJSONLD(ctx, factory, session, &user)
+			return activitypub.RenderProfileJSONLD(ctx, factory, session, user)
 		}
 
 		// If this is actually an objectID/userID
@@ -600,7 +612,7 @@ func WithUserForwarding(serverFactory *server.Factory, fn WithFunc1[model.User])
 		}
 
 		// Execute the continuation function
-		return fn(ctx, factory, session, &user)
+		return fn(ctx, factory, session, user)
 	})
 }
 

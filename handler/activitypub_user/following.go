@@ -11,27 +11,19 @@ import (
 	"github.com/benpate/steranko"
 )
 
-func GetFollowingCollection(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
+func GetFollowingCollection(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 	collectionID := fullURL(factory, ctx)
 	result := streams.NewOrderedCollection(collectionID)
 	ctx.Response().Header().Set("Content-Type", "application/activity+json")
 	return ctx.JSON(http.StatusOK, result)
 }
 
-func GetFollowingRecord(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
+func GetFollowingRecord(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.activitypub_user.GetFollowingRecord"
 
-	// Load the user from the database
-	userService := factory.User()
-	user := model.NewUser()
-
-	if err := userService.LoadByToken(session, ctx.Param("userId"), &user); err != nil {
-		return derp.Wrap(err, location, "Unable to load user")
-	}
-
 	// Confirm that the user is visible
-	if !isUserVisible(ctx, &user) {
+	if !isUserVisible(ctx, user) {
 		return ctx.NoContent(http.StatusNotFound)
 	}
 

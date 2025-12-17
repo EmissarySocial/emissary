@@ -306,6 +306,19 @@ func (service *Attachment) LoadByID(session data.Session, objectType string, obj
 	return nil
 }
 
+func (service *Attachment) LoadByToken(session data.Session, objectType string, objectID primitive.ObjectID, token string, result *model.Attachment) error {
+
+	const location = "service.Attachment.LoadByToken"
+
+	attachmentID, err := primitive.ObjectIDFromHex(token)
+
+	if err != nil {
+		return derp.NotFound(location, "AttachmentID must be a valid ObjectID", token)
+	}
+
+	return service.LoadByID(session, objectType, objectID, attachmentID, result)
+}
+
 func (service *Attachment) DeleteByID(session data.Session, objectType string, objectID primitive.ObjectID, attachmentID primitive.ObjectID, note string) error {
 
 	const location = "service.Attachment.DeleteByID"

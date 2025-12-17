@@ -227,6 +227,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.imported", handler.WithFactory(factory, handler.GetImportedURL))
 	e.GET("/.intents/discover", handler.WithFactory(factory, handler.GetIntentInfo))
 	e.GET("/.intents/:intent", handler.WithFactory(factory, handler.GetOutboundIntent))
+	e.POST("/.masquerade", handler.WithOwner(factory, handler.PostMasquerade))
 	e.GET("/.oembed", handler.WithFactory(factory, handler.GetOEmbed))
 	e.POST("/.ostatus/discover", handler.WithFactory(factory, handler.PostOStatusDiscover))
 	e.GET("/.ostatus/tunnel", handler.GetFollowingTunnel)
@@ -274,7 +275,6 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/signin/reset", handler.WithFactory(factory, handler.PostResetPassword))
 	e.GET("/signin/reset-code", handler.WithFactory(factory, handler.GetResetCode))
 	e.POST("/signin/reset-code", handler.WithFactory(factory, handler.PostResetCode))
-	e.POST("/.masquerade", handler.WithOwner(factory, handler.PostMasquerade))
 
 	// Domain Pages
 	e.GET("/.domain/attachments/:attachmentId", handler.WithFactory(factory, handler.GetDomainAttachment))
@@ -287,7 +287,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.DELETE("/:stream", handler.WithTemplate(factory, handler.PostStreamWithAction))
 
 	// Hard-coded routes for additional stream services
-	e.GET("/:stream/attachments/:attachmentId", handler.WithFactory(factory, handler.GetStreamAttachment))
+	e.GET("/:stream/attachments/:attachmentId", handler.WithStream(factory, handler.GetStreamAttachment))
 	e.GET("/:stream/qrcode", handler.WithStream(factory, handler.GetQRCode_Stream))
 	e.GET("/:objectId/sse", handler.WithFactory(factory, handler.ServerSentEvent))
 	e.GET("/:objectId/sse/updated", handler.WithFactory(factory, handler.ServerSentEvent_Updated))
@@ -363,7 +363,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/@:userId", handler.WithUser(factory, handler.PostOutbox))
 	e.GET("/@:userId/:action", handler.WithUser(factory, handler.GetOutbox))
 	e.POST("/@:userId/:action", handler.WithUser(factory, handler.PostOutbox))
-	e.GET("/@:userId/attachments/:attachmentId", handler.WithFactory(factory, handler.GetUserAttachment))
+	e.GET("/@:userId/attachments/:attachmentId", handler.WithUser(factory, handler.GetUserAttachment))
 	e.GET("/@:userId/qrcode", handler.WithUser(factory, handler.GetQRCode_User))
 
 	// Export Routes for Users
@@ -382,9 +382,9 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@:userId/pub/outbox", handler.WithUser(factory, ap_user.GetOutboxCollection))
 	e.GET("/@:userId/pub/outbox/:messageId", handler.WithUser(factory, ap_user.GetOutboxActivity))
 	e.GET("/@:userId/pub/featured", handler.WithUser(factory, ap_user.GetFeaturedCollection))
-	e.GET("/@:userId/pub/followers", handler.WithFactory(factory, ap_user.GetFollowersCollection))
-	e.GET("/@:userId/pub/following", handler.WithFactory(factory, ap_user.GetFollowingCollection))
-	e.GET("/@:userId/pub/following/:followingId", handler.WithFactory(factory, ap_user.GetFollowingRecord))
+	e.GET("/@:userId/pub/followers", handler.WithUser(factory, ap_user.GetFollowersCollection))
+	e.GET("/@:userId/pub/following", handler.WithUser(factory, ap_user.GetFollowingCollection))
+	e.GET("/@:userId/pub/following/:followingId", handler.WithUser(factory, ap_user.GetFollowingRecord))
 	e.GET("/@:userId/pub/shared", handler.WithUser(factory, ap_user.GetResponseCollection))
 	e.GET("/@:userId/pub/shared/:response", handler.WithUser(factory, ap_user.GetResponse))
 	e.GET("/@:userId/pub/liked", handler.WithUser(factory, ap_user.GetResponseCollection))
@@ -399,7 +399,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/:stream/pub/inbox", handler.WithTemplate(factory, ap_stream.PostInbox))
 	e.GET("/:stream/pub/outbox", handler.WithTemplate(factory, ap_stream.GetOutboxCollection))
 	e.GET("/:stream/pub/followers", handler.WithTemplate(factory, ap_stream.GetFollowersCollection))
-	e.GET("/:stream/pub/children", handler.WithFactory(factory, ap_stream.GetChildrenCollection))
+	e.GET("/:stream/pub/children", handler.WithStream(factory, ap_stream.GetChildrenCollection))
 
 	// Domain Admin Pages
 	e.GET("/admin", handler.WithOwner(factory, handler.GetAdmin))

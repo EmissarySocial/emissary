@@ -3,6 +3,7 @@ package activitypub_user
 import (
 	"net/http"
 
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/hannibal/streams"
@@ -10,7 +11,7 @@ import (
 	"github.com/benpate/steranko"
 )
 
-func GetFollowersCollection(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
+func GetFollowersCollection(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 	collectionID := fullURL(factory, ctx)
 	result := streams.NewOrderedCollection(collectionID)
 	ctx.Response().Header().Set("Content-Type", vocab.ContentTypeActivityPub)

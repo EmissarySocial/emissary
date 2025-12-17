@@ -12,21 +12,12 @@ import (
 )
 
 // GetChildrenCollection returns a collection of all child streams for a given parent stream
-func GetChildrenCollection(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
+func GetChildrenCollection(ctx *steranko.Context, factory *service.Factory, session data.Session, parent *model.Stream) error {
 
 	const location = "handler.activitypub_stream.GetChildrenCollection"
 
-	streamService := factory.Stream()
-	token := ctx.Param("stream")
-
-	// Load the parent stream information
-	parent := model.NewStream()
-	if err := streamService.LoadByToken(session, token, &parent); err != nil {
-		return derp.Wrap(err, location, "Unable to load stream")
-	}
-
 	// Get an iterator of all child streams
-	result := activitypub.Collection(parent.ActivityPubChildrenURL())
+	streamService := factory.Stream()
 	children, err := streamService.RangeByParent(session, parent.StreamID)
 
 	if err != nil {
@@ -34,6 +25,7 @@ func GetChildrenCollection(ctx *steranko.Context, factory *service.Factory, sess
 	}
 
 	// Map each child into JSON and stuff it into the collection's OrderedItems
+	result := activitypub.Collection(parent.ActivityPubChildrenURL())
 	count := 0
 	for child := range children {
 		childJSON := streamService.JSONLD(session, &child)

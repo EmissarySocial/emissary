@@ -11,7 +11,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// GetAPIActors returns a list of actors that match the provided search criteria
+// GetAPIActors returns a list of actors that match the provided search criteria.
+// This is used in the E2EE service, as well as other actor lookups
 func GetAPIActors(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.GetAPIActors"
