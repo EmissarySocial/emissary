@@ -306,12 +306,6 @@ func (w Inbox) Inbox() (QueryBuilder[model.Message], error) {
 
 	queryString := w._request.URL.Query()
 
-	folderID, err := primitive.ObjectIDFromHex(queryString.Get("folderId"))
-
-	if err != nil {
-		return QueryBuilder[model.Message]{}, derp.Wrap(err, "build.Inbox.Inbox", "Invalid folderId", queryString.Get("folderId"))
-	}
-
 	expBuilder := builder.NewBuilder().
 		ObjectID("origin.followingId").
 		ObjectID("followingId", builder.WithAlias("origin.followingId")).
@@ -319,12 +313,19 @@ func (w Inbox) Inbox() (QueryBuilder[model.Message], error) {
 		Int("readDate").
 		Int("createDate")
 
-	criteria := exp.And(
+	var criteria exp.Expression = exp.And(
 		exp.Equal("userId", w.AuthenticatedID()),
-		exp.Equal("folderId", folderID),
 		exp.Equal("deleteDate", 0),
 		expBuilder.Evaluate(queryString),
 	)
+
+	// If we have a NON-ZERO folderID, then include it in the criteria
+	if folderID, err := primitive.ObjectIDFromHex(queryString.Get("folderId")); err == nil {
+
+		if !folderID.IsZero() {
+			criteria = criteria.AndEqual("folderId", folderID)
+		}
+	}
 
 	return NewQueryBuilder[model.Message](w._factory.Inbox(), w._session, criteria), nil
 }

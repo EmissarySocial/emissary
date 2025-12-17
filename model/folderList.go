@@ -22,13 +22,23 @@ func NewFolderList() FolderList {
 
 // Selected returns the currently selected folder
 func (list FolderList) Selected() Folder {
-	for _, folder := range list.Folders {
-		if folder.FolderID == list.SelectedID {
-			return folder
+
+	// Try to find the folder in the available list
+	if !list.SelectedID.IsZero() {
+		for _, folder := range list.Folders {
+			if folder.FolderID == list.SelectedID {
+				return folder
+			}
 		}
 	}
 
-	return NewFolder()
+	// Otherwise, make a synthetic "All Folders" result.
+	all := NewFolder()
+	all.FolderID = primitive.NilObjectID
+	all.Label = "All Folders"
+	all.Icon = "folder"
+	all.Layout = "SOCIAL"
+	return all
 }
 
 // HasSelection returns TRUE if a folder is currently selected
