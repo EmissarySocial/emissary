@@ -29,9 +29,9 @@
 			</div>
 		</div>
 
-		{{- if $tokens.IsEmpty -}}
+		<div class="card padding max-width-640 transition-main-card">
+			{{- if $tokens.IsEmpty -}}
 
-			<div class="card padding max-width-640">
 				<div class="text-lg margin-bottom">
 					There are <b>no clients</b> connected to your profile
 				</div>
@@ -41,33 +41,32 @@
 					that you allow.  When you connect a client (like mobile apps, and some other websites) it will appear
 					here. You'll be able to revoke clients' access at any time.
 				</div>
-			</div>
 
-		{{- else -}}
-			<div class="margin-bottom">
-				{{- if $tokens.IsLength 1 -}}
-					There is <b>1 client</b> connected to your profile
-				{{- else -}}
-					There are <b>{{$tokens.Length}} clients</b> connected to your profile
-				{{- end -}}
-			</div>
-			
-			<table class="table">
-				{{- range $index, $token := $tokens -}}
-					<tr>
-						<td class="width-48"><img src="{{$token.iconUrl}}" class="circle width-48"></td>
-						<td class="width-50%">
-							{{$token.name}}<br>
-							{{$token.website}}
-						</td>
-						<td class="width-50%">Created: {{$token.createDate | shortDate }}</td>
-						<td><button hx-get="/@me/settings/oauth-token-delete?oauthUserTokenId={{$token.oauthUserTokenId.Hex}}" class="text-xs text-red">Disconnect</button>
-					</tr>
-				{{- end -}}
-			</table>
-			
-		{{- end -}}
-
+			{{- else -}}
+				<div class="margin-bottom">
+					{{- if $tokens.IsLength 1 -}}
+						There is <b>1 client</b> connected to your profile
+					{{- else -}}
+						There are <b>{{$tokens.Length}} clients</b> connected to your profile
+					{{- end -}}
+				</div>
+				
+				<table class="table">
+					{{- range $index, $token := $tokens -}}
+						<tr>
+							<td class="width-48"><img src="{{$token.iconUrl}}" class="circle width-48"></td>
+							<td class="width-50%">
+								{{$token.name}}<br>
+								{{$token.website}}
+							</td>
+							<td class="width-50%">Created: {{$token.createDate | shortDate }}</td>
+							<td><button hx-get="/@me/settings/oauth-token-delete?oauthUserTokenId={{$token.oauthUserTokenId.Hex}}" class="text-xs text-red">Disconnect</button>
+						</tr>
+					{{- end -}}
+				</table>
+				
+			{{- end -}}
+		</div>
 	</div>
 
 	<!-- Reload page on "refreshPage" -->

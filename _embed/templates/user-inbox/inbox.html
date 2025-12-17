@@ -20,15 +20,17 @@
 	<div class="app-content padding-top">
 
 		<!-- Floating Menu Bar -->
-		<div class="{{if $isDesktop}}text-sm{{end}} margin-none nowrap pos-sticky float-right" style="top:0px; padding:0px 0px 8px 16px; border-radius:4px; background-color:var(--page-background); view-transition-name:sticky-buttons; z-index:1000">
-			<button hx-get="/@me/settings/following-search?folderId={{$folderID}}" class="primary turboclick">{{icon "add"}}{{if $isDesktop}} Source{{end}}</button>
-			{{- if $filter.IsZero -}}
-				<button hx-get="/@me/inbox/filter?folderId={{$folderID}}" class="turboclick">{{icon "filter"}}{{if $isDesktop}} Filter{{end}}</button>
-			{{- else -}}
-				<button hx-get="/@me/inbox/filter?folderId={{$folderID}}&followingId={{$followingID}}" class="selected ellipsis turboclick" style="max-width:160px;">{{icon "filter-fill"}}{{- if $isDesktop }} {{$filter.Label}}{{end}}</button>
-			{{- end -}}
-			<button hx-get="/@me/inbox/folder-edit?folderId={{$folderID}}" class="turboclick">{{icon "settings"}}{{ if $isDesktop }} Folder Settings{{end}}</button>
-		</div>
+		 {{- if ne $folderID nilObjectID.Hex -}}
+			<div class="{{if $isDesktop}}text-sm{{end}} margin-none nowrap pos-sticky float-right" style="top:0px; padding:0px 0px 8px 16px; border-radius:4px; background-color:var(--page-background); view-transition-name:sticky-buttons; z-index:1000">
+				<button hx-get="/@me/settings/following-search?folderId={{$folderID}}" class="primary turboclick">{{icon "add"}}{{if $isDesktop}} Source{{end}}</button>
+				{{- if $filter.IsZero -}}
+					<button hx-get="/@me/inbox/filter?folderId={{$folderID}}" class="turboclick">{{icon "filter"}}{{if $isDesktop}} Filter{{end}}</button>
+				{{- else -}}
+					<button hx-get="/@me/inbox/filter?folderId={{$folderID}}&followingId={{$followingID}}" class="selected ellipsis turboclick" style="max-width:160px;">{{icon "filter-fill"}}{{- if $isDesktop }} {{$filter.Label}}{{end}}</button>
+				{{- end -}}
+				<button hx-get="/@me/inbox/folder-edit?folderId={{$folderID}}" class="turboclick">{{icon "settings"}}{{ if $isDesktop }} Folder Settings{{end}}</button>
+			</div>
+		{{- end -}}
 
 		<div class="flex-row margin-bottom-lg">
 

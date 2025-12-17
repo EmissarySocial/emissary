@@ -1,3 +1,19 @@
-@view-transition {
-  navigation: auto;
+/* Only use view transitions if the user has NOT selected "prefers reduced motion" */
+@media (prefers-reduced-motion: no-preference) {
+
+	@view-transition {
+		navigation: auto;
+	}
+
+	.transition-main-card {
+		view-transition-name: main-card;
+	}
+
+	/* 
+	This ensures the snapshots fill the entire height of the group,
+	which is automatically animating its height/width.
+	::view-transition-new(main-card) {
+		height: 100%; 
+	}
+	*/
 }

@@ -2,29 +2,7 @@
 {{- $selectedID := .SelectedID -}}
 {{- $allFolders := and ($selectedID.IsZero) (eq "FOLDER" $section) -}}
 
-<!-- Direct Messages -->
-<!--
-{{- if eq $selectedID nilObjectID -}}
-	<div role="link" hx-get="/@me/inbox/conversations?sidebar=collapse" hx-trigger="click" hx-push-url="true" class="turboclick menu-item ellipsis hover-trigger folder selected">
-		<span style="view-transition-name:app-sidebar-dm-icon;">{{- icon "chat-fill" }}</span>
-		<span style="view-transition-name:app-sidebar-dm-label">Direct Messages</span>
-	</div>
-{{- else -}}
-	<div role="link" hx-get="/@me/inbox/conversations?sidebar=collapse" hx-trigger="click" hx-push-url="true" class="turboclick menu-item ellipsis hover-trigger folder">
-		<span style="view-transition-name:app-sidebar-dm-icon;">{{- icon "chat" }}</span>
-		<span style="view-transition-name:app-sidebar-dm-label">Direct Messages</span>
-	</div>
-{{- end -}}
--->
-
-<!--
-<div role="link" hx-get="/@me/inbox/alerts?sidebar=collapse" hx-trigger="click" hx-push-url="true" class="turboclick menu-item ellipsis hover-trigger folder">
-	<span style="view-transition-name:app-sidebar-bell-icon;">{{- icon "bell" }}</span>
-	<span style="view-transition-name:app-sidebar-bell-label">Notifications</span>
-</div>
--->
-
-<!-- Encrypted Messages -->
+<!-- Encrypted Messages
 {{- if eq "CONVERSATIONS" $section -}}
 	<a href="/@me/inbox/mls" class="turboclick menu-item ellipsis hover-trigger folder selected">
 		<span>{{- icon "chat-fill" }}</span>
@@ -36,6 +14,7 @@
 		<span>Conversations</span>
 	</a>
 {{- end -}}
+--->
 
 <div class="margin-vertical"></div>
 
