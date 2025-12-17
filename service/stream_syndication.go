@@ -3,7 +3,6 @@ package service
 import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/benpate/turbine/queue"
 )
 
 // sendSyndicationMessages sends messages to syndication targets
@@ -22,7 +21,7 @@ func (service *Stream) sendSyndicationMessages(stream *model.Stream, added []str
 				continue
 			}
 
-			service.queue.Enqueue <- queue.NewTask(
+			service.queue.NewTask(
 				"syndication.create",
 				mapof.Any{
 					"endpoint": target.Href,
@@ -41,7 +40,7 @@ func (service *Stream) sendSyndicationMessages(stream *model.Stream, added []str
 				continue
 			}
 
-			service.queue.Enqueue <- queue.NewTask(
+			service.queue.NewTask(
 				"syndication.update",
 				mapof.Any{
 					"endpoint": target.Href,
@@ -60,7 +59,7 @@ func (service *Stream) sendSyndicationMessages(stream *model.Stream, added []str
 				continue
 			}
 
-			service.queue.Enqueue <- queue.NewTask(
+			service.queue.NewTask(
 				"syndication.delete",
 				mapof.Any{
 					"endpoint": target.Href,

@@ -17,7 +17,7 @@ func ScheduleHourly(serverFactory ServerFactory) queue.Result {
 	for factory := range serverFactory.RangeDomains() {
 
 		// Schedule "Shuffle" tasks
-		q.Enqueue <- queue.NewTask(
+		q.NewTask(
 			"Shuffle",
 			mapof.Any{"host": factory.Hostname()},
 		)
@@ -25,7 +25,7 @@ func ScheduleHourly(serverFactory ServerFactory) queue.Result {
 		// Schedule "PollFollowing" tasks every four hours, starting at 1am.
 		if isHour(4, 1) {
 
-			q.Enqueue <- queue.NewTask(
+			q.NewTask(
 				"PollFollowing",
 				mapof.Any{"host": factory.Hostname()},
 			)

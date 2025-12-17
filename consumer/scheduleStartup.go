@@ -11,12 +11,11 @@ func ScheduleStartup(serverFactory ServerFactory) queue.Result {
 		log.Trace().Str("location", location).Msg("Running Startup Tasks...")
 
 		time.Sleep(5 * time.Second) // Give the server a few seconds to finish starting up
-		enqueue := serverFactory.Queue().Enqueue
 
 		// Throughput test. Do not check in.
 		{
 			for i := range 6000 {
-				enqueue <- queue.NewTask(
+				sererFactory.Queue().NewTask(
 					"TestThroughput",
 					mapof.Any{"value": i},
 				)

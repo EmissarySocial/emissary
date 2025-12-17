@@ -8,7 +8,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/steranko"
-	"github.com/benpate/turbine/queue"
 )
 
 func PostWebMention(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
@@ -27,16 +26,11 @@ func PostWebMention(ctx *steranko.Context, factory *service.Factory, session dat
 	}
 
 	// Prepare a task to process the webmention asynchronously
-	task := queue.NewTask("ReceiveWebMention", mapof.Any{
+	factory.Queue().NewTask("ReceiveWebMention", mapof.Any{
 		"host":   factory.Hostname(),
 		"source": body.Source,
 		"target": body.Target,
 	})
-
-	// Push the new task onto the background queue.
-	if err := factory.Queue().Publish(task); err != nil {
-		return derp.Wrap(err, location, "Error queuing task", task)
-	}
 
 	// Success!  Return 201/Accepted to indicate that this request has been queued (which is true)
 	return ctx.String(http.StatusAccepted, "Accepted")

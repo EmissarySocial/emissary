@@ -14,7 +14,6 @@ import (
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/benpate/turbine/queue"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"willnorris.com/go/webmention"
@@ -227,7 +226,7 @@ func (service Outbox) sendNotification_ActivityPub(actor *outbox.Actor, follower
 // TODO: HIGH: Thoroughly re-test WebSub notifications.  They've been rebuilt from scratch.
 func (service Outbox) sendNotification_WebSub(follower *model.Follower) {
 
-	service.queue.Enqueue <- queue.NewTask("SendWebSubMessage", mapof.Any{
+	service.queue.NewTask("SendWebSubMessage", mapof.Any{
 		"inboxUrl": follower.Actor.InboxURL,
 		"format":   follower.Format,
 		"secret":   follower.Data.GetString("secret"),
@@ -273,7 +272,7 @@ func (service *Outbox) sendNotifications_WebMention(activity mapof.Any) {
 	// Add background tasks to TRY sending webmentions to every link we found
 	for _, link := range links {
 
-		service.queue.Enqueue <- queue.NewTask("SendWebMention", mapof.Any{
+		service.queue.NewTask("SendWebMention", mapof.Any{
 			"source": id,
 			"target": link,
 		})

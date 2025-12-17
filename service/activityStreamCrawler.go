@@ -8,16 +8,16 @@ import (
 
 type ActivityStreamCrawler struct {
 	client    streams.Client
-	enqueue   chan<- queue.Task
+	queue     *queue.Queue
 	hostname  string
 	actorType string
 	actorID   primitive.ObjectID
 }
 
-func NewActivityStreamCrawler(client streams.Client, enqueue chan<- queue.Task, hostname string, actorType string, actorID primitive.ObjectID) ActivityStreamCrawler {
+func NewActivityStreamCrawler(client streams.Client, queue *queue.Queue, hostname string, actorType string, actorID primitive.ObjectID) ActivityStreamCrawler {
 	return ActivityStreamCrawler{
 		client:    client,
-		enqueue:   enqueue,
+		queue:     queue,
 		hostname:  hostname,
 		actorType: actorType,
 		actorID:   actorID,

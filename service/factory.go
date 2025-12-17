@@ -623,7 +623,7 @@ func (factory *Factory) ActivityStreamCrawler(actorType string, actorID primitiv
 
 	return NewActivityStreamCrawler(
 		activityStreamService.Client(),
-		factory.Queue().Enqueue,
+		factory.Queue(),
 		factory.Hostname(),
 		actorType,
 		actorID,

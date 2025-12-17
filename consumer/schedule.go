@@ -15,7 +15,7 @@ func Scheduler(serverFactory ServerFactory) queue.Result {
 	log.Trace().Str("location", location).Msg("Initializing Scheduler...")
 
 	// Run "startup" tasks only once, when the server starts
-	serverFactory.Queue().Enqueue <- queue.NewTask("ScheduleStartup", mapof.NewAny())
+	serverFactory.Queue().NewTask("ScheduleStartup", mapof.NewAny())
 
 	// Schedule the next batch of daily tasks
 	if err := scheduler_MakeDailyTasks(serverFactory); err != nil {

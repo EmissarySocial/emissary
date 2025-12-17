@@ -9,7 +9,6 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/steranko"
-	"github.com/benpate/turbine/queue"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -21,15 +20,13 @@ func ReIndexActivityStreamCache(ctx *steranko.Context, factory *service.Factory,
 	activityStreamService := factory.ActivityStream(model.ActorTypeApplication, primitive.NilObjectID)
 	iterator := activityStreamService.Range(context.Background(), exp.All())
 
-	enqueue := factory.Queue().Enqueue
-
 	for cachedValue := range iterator {
 
 		url := cachedValue.URLs.First()
 
 		log.Debug().Str("url", url).Msg("Re-indexing ActivityStream")
 
-		enqueue <- queue.NewTask(
+		factory.Queue().NewTask(
 			"ReindexActivityStream",
 			mapof.Any{
 				"host": factory.Hostname(),
