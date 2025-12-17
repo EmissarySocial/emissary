@@ -18,7 +18,7 @@ func GetDomainAttachment(ctx *steranko.Context, factory *service.Factory, sessio
 	const location = "handler.GetDomainAttachment"
 
 	// Check ETags to see if the browser already has a copy of this
-	if matchHeader := ctx.Request().Header.Get("If-None-Match"); matchHeader == "1" {
+	if matchHeader := ctx.Request().Header.Get("If-None-Match"); matchHeader == "IMMUTABLE" {
 		return ctx.NoContent(http.StatusNotModified)
 	}
 
@@ -45,7 +45,7 @@ func GetDomainAttachment(ctx *steranko.Context, factory *service.Factory, sessio
 
 	header := ctx.Response().Header()
 	header.Set("Content-Type", filespec.MimeType())
-	header.Set("ETag", "1")
+	header.Set("ETag", "IMMUTABLE")
 	header.Set("Cache-Control", "public, max-age=86400") // Store in public caches for 1 day
 
 	if err := ms.Serve(ctx.Response().Writer, ctx.Request(), filespec); err != nil {
@@ -60,11 +60,9 @@ func GetSearchTagAttachment(ctx *steranko.Context, factory *service.Factory, ses
 	const location = "handler.GetSearchTagAttachment"
 
 	// Check ETags to see if the browser already has a copy of this
-	if matchHeader := ctx.Request().Header.Get("If-None-Match"); matchHeader == "1" {
+	if matchHeader := ctx.Request().Header.Get("If-None-Match"); matchHeader == "IMMUTABLE" {
 		return ctx.NoContent(http.StatusNotModified)
 	}
-
-	attachmentService := factory.Attachment()
 
 	// Locate the SearchTagID
 	searchTagID, err := primitive.ObjectIDFromHex(ctx.Param("searchTagId"))
@@ -81,6 +79,7 @@ func GetSearchTagAttachment(ctx *steranko.Context, factory *service.Factory, ses
 	}
 
 	// Load the Attachment record from the database
+	attachmentService := factory.Attachment()
 	attachment := model.NewAttachment(model.AttachmentObjectTypeSearchTag, searchTagID)
 
 	if err := attachmentService.LoadByID(session, model.AttachmentObjectTypeSearchTag, searchTagID, attachmentID, &attachment); err != nil {
@@ -98,48 +97,27 @@ func GetSearchTagAttachment(ctx *steranko.Context, factory *service.Factory, ses
 	return nil
 }
 
-func GetStreamAttachment(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
+func GetStreamAttachment(ctx *steranko.Context, factory *service.Factory, session data.Session, stream *model.Stream) error {
 
 	const location = "handler.GetAttachment"
 
 	// Check ETags to see if the browser already has a copy of this
-	if matchHeader := ctx.Request().Header.Get("If-None-Match"); matchHeader == "1" {
+	if matchHeader := ctx.Request().Header.Get("If-None-Match"); matchHeader == "IMMUTABLE" {
 		return ctx.NoContent(http.StatusNotModified)
 	}
 
-	// Get StreamID from the request
-	streamID, err := primitive.ObjectIDFromHex(ctx.Param("stream"))
-
-	if err != nil {
-		return derp.Wrap(err, location, "Invalid streamID", ctx.Param("stream"))
+	// Try to find the action requested by the user.  This also enforces user permissions...
+	if _, err := build.NewStreamWithoutTemplate(factory, session, ctx.Request(), ctx.Response(), stream, "view"); err != nil {
+		return derp.Wrap(err, location, "Cannot create builder", stream)
 	}
 
 	// Load the attachment in order to verify that it is valid for this stream
 	// TODO: LOW: This might be more efficient as a single query...
 	attachmentService := factory.Attachment()
-	attachmentIDString := list.Dot(ctx.Param("attachmentId")).First()
-	attachmentID, err := primitive.ObjectIDFromHex(attachmentIDString)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Invalid attachmentID", attachmentIDString)
-	}
-
-	attachment := model.NewAttachment(model.AttachmentObjectTypeStream, streamID)
-	if err := attachmentService.LoadByID(session, model.AttachmentObjectTypeStream, streamID, attachmentID, &attachment); err != nil {
+	attachmentToken := list.Dot(ctx.Param("attachmentId")).First()
+	attachment := model.NewEmptyAttachment()
+	if err := attachmentService.LoadByToken(session, model.AttachmentObjectTypeStream, stream.StreamID, attachmentToken, &attachment); err != nil {
 		return derp.Wrap(err, location, "Unable to load attachment")
-	}
-
-	// Load Stream (to verify permissions?)
-	var stream model.Stream
-	streamService := factory.Stream()
-
-	if err := streamService.LoadByID(session, streamID, &stream); err != nil {
-		return derp.Wrap(err, location, "Unable to load Stream", streamID)
-	}
-
-	// Try to find the action requested by the user.  This also enforces user permissions...
-	if _, err := build.NewStreamWithoutTemplate(factory, session, ctx.Request(), ctx.Response(), &stream, "view"); err != nil {
-		return derp.Wrap(err, location, "Cannot create builder", &stream, &attachment)
 	}
 
 	// Retrieve the file from the mediaserver
@@ -158,34 +136,26 @@ func GetStreamAttachment(ctx *steranko.Context, factory *service.Factory, sessio
 	return nil
 }
 
-func GetUserAttachment(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
+func GetUserAttachment(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.GetUserAttachment"
 
 	// Check ETags to see if the browser already has a copy of this
-	if matchHeader := ctx.Request().Header.Get("If-None-Match"); matchHeader == "1" {
+	if matchHeader := ctx.Request().Header.Get("If-None-Match"); matchHeader == "IMMUTABLE" {
 		return ctx.NoContent(http.StatusNotModified)
 	}
 
-	// Get StreamID from the request
-	userID, err := primitive.ObjectIDFromHex(ctx.Param("userId"))
-
-	if err != nil {
-		return derp.Wrap(err, location, "Invalid userID", ctx.Param("userId"))
+	// IF the website visitor cannot see this User, then they cannot see this User's attachments.
+	if !isUserVisible(ctx, user) {
+		return derp.Forbidden(location, "Cannot view attachments for an unpublished user")
 	}
 
-	// Load the attachment in order to verify that it is valid for this stream
-	// TODO: LOW: This might be more efficient as a single query...
+	// Load the attachment from the database
 	attachmentService := factory.Attachment()
-	attachmentIDString := list.Dot(ctx.Param("attachmentId")).First()
-	attachmentID, err := primitive.ObjectIDFromHex(attachmentIDString)
+	token := list.Dot(ctx.Param("attachmentId")).First()
+	attachment := model.NewEmptyAttachment()
 
-	if err != nil {
-		return derp.Wrap(err, location, "Invalid attachmentID", attachmentIDString)
-	}
-
-	attachment := model.NewAttachment(model.AttachmentObjectTypeUser, userID)
-	if err := attachmentService.LoadByID(session, model.AttachmentObjectTypeUser, userID, attachmentID, &attachment); err != nil {
+	if err := attachmentService.LoadByToken(session, model.AttachmentObjectTypeUser, user.UserID, token, &attachment); err != nil {
 		return derp.Wrap(err, location, "Unable to load attachment")
 	}
 
@@ -197,5 +167,6 @@ func GetUserAttachment(ctx *steranko.Context, factory *service.Factory, session 
 		return derp.Wrap(err, location, "Error accessing attachment file")
 	}
 
+	// Successfully delivered the Attachments
 	return nil
 }
