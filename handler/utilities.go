@@ -63,6 +63,12 @@ func getAuthorization(ctx echo.Context) model.Authorization {
 
 func isUserVisible(context *steranko.Context, user *model.User) bool {
 
+	// If the User is public, then their profile is always visible
+	if user.IsPublic {
+		return true
+	}
+
+	// Otherwise, we need to check your signed-in privileges
 	authorization := getAuthorization(context)
 
 	// Domain owners can see everything
@@ -70,13 +76,13 @@ func isUserVisible(context *steranko.Context, user *model.User) bool {
 		return true
 	}
 
-	// Signed-in users can see themselves
+	// Signed-in Users can see themselves
 	if authorization.UserID == user.UserID {
 		return true
 	}
 
-	// Otherwise, access depends on the user's profile being public
-	return user.IsPublic
+	// Otherwise, the User is not visible
+	return false
 }
 
 // isOnwer returns TRUE if the JWT Claim is from a domain owner.
