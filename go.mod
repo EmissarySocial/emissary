@@ -15,21 +15,21 @@ require (
 	github.com/benpate/domain v0.2.10
 	github.com/benpate/exp v0.9.0
 	github.com/benpate/exp-builder v0.10.7
-	github.com/benpate/form v0.25.9
+	github.com/benpate/form v0.25.10
 	github.com/benpate/geo v0.0.3
-	github.com/benpate/hannibal v0.14.8
+	github.com/benpate/hannibal v0.14.9
 	github.com/benpate/html v0.16.15
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.15.12
 	github.com/benpate/re v0.3.5
 	github.com/benpate/remote v0.17.12
-	github.com/benpate/rosetta v0.25.26
-	github.com/benpate/sherlock v0.8.17
+	github.com/benpate/rosetta v0.25.27
+	github.com/benpate/sherlock v0.8.18
 	github.com/benpate/sniff v0.1.0
-	github.com/benpate/steranko v0.22.6
+	github.com/benpate/steranko v0.22.7
 	github.com/benpate/table v0.7.10
 	github.com/benpate/toot v0.3.0
-	github.com/benpate/turbine v0.4.4
+	github.com/benpate/turbine v0.4.5
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/codingsince1985/geo-golang v1.8.5
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
