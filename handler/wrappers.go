@@ -69,9 +69,11 @@ func WithAuthenticatedUser(serverFactory *server.Factory, fn WithFunc1[model.Use
 			return derp.Wrap(err, location, "Unable to load User")
 		}
 
-		// If this user has moved, then do not allow them access to this server anymore
+		// If this user has moved, then they cannot access to this server anymore.
+		// Send them to their new server instead.
 		if user.MovedTo != "" {
-			return derp.Forbidden(location, "User moved to new server", user.MovedTo)
+			ctx.Response().Header().Set("HX-Redirect", user.MovedTo)
+			return ctx.Redirect(http.StatusMovedPermanently, user.MovedTo)
 		}
 
 		// Call the continuation function
@@ -494,6 +496,7 @@ func WithStream(serverFactory *server.Factory, fn WithFunc1[model.Stream]) echo.
 
 				// If the user has moved, then forward to the Oracle
 				if user.MovedTo != "" {
+					ctx.Response().Header().Set("HX-Redirect", user.MovedTo)
 					return ctx.Redirect(http.StatusSeeOther, user.MovedTo)
 				}
 
@@ -507,7 +510,9 @@ func WithStream(serverFactory *server.Factory, fn WithFunc1[model.Stream]) echo.
 
 		// If this Stream has been moved, then redirect to the Oracle
 		if stream.MovedTo != "" {
-			return ctx.Redirect(http.StatusMovedPermanently, stream.MovedTo)
+			newURL := stream.MovedTo + "?url=" + stream.ActivityPubURL()
+			ctx.Response().Header().Set("HX-Redirect", newURL)
+			return ctx.Redirect(http.StatusMovedPermanently, newURL)
 		}
 
 		// Otherwise, continue rendering the Stream
@@ -557,6 +562,7 @@ func WithUser(serverFactory *server.Factory, fn WithFunc1[model.User]) echo.Hand
 
 		// Handle redirects for Users who have moved away.
 		if user.MovedTo != "" {
+			ctx.Response().Header().Set("HX-Redirect", user.MovedTo)
 			return ctx.Redirect(http.StatusMovedPermanently, user.MovedTo)
 		}
 

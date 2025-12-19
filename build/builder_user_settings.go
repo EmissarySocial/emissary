@@ -34,7 +34,7 @@ func NewSettings(factory Factory, session data.Session, request *http.Request, r
 
 	// Load the Template
 	templateService := factory.Template()
-	template, err := templateService.Load("user-settings") // TODO: Users should get to select their inbox template
+	template, err := templateService.Load("user-settings")
 
 	if err != nil {
 		return Settings{}, derp.Wrap(err, location, "Unable to load template")
@@ -354,6 +354,12 @@ func (w Settings) ImportPlan(actor streams.Document) sliceof.Object[form.LookupC
 	return w.factory().Import().CalcImportPlan(actor)
 }
 
+// ImportErrors returns all errored ImportItems for this Import
+func (w Settings) ImportErrors(importID primitive.ObjectID) (sliceof.Object[model.ImportItem], error) {
+	return w.factory().ImportItem().RangeErrorsByImportID(w._session, w.AuthenticatedID(), importID)
+}
+
+// Privileges returns a QueryBuilder for Privileges owned by the current user
 func (w Settings) Privileges() QueryBuilder[model.Privilege] {
 
 	expressionBuilder := builder.NewBuilder().
@@ -367,6 +373,7 @@ func (w Settings) Privileges() QueryBuilder[model.Privilege] {
 	return NewQueryBuilder[model.Privilege](w._factory.Privilege(), w._session, criteria)
 }
 
+// MerchantAccounts returns a QueryBuilder for MerchantAccounts owned by the current user
 func (w Settings) MerchantAccounts() QueryBuilder[model.MerchantAccount] {
 
 	expressionBuilder := builder.NewBuilder().
@@ -380,6 +387,7 @@ func (w Settings) MerchantAccounts() QueryBuilder[model.MerchantAccount] {
 	return NewQueryBuilder[model.MerchantAccount](w._factory.MerchantAccount(), w._session, criteria)
 }
 
+// MerchantAccount returns the MerchantAccount with the provided ID
 func (w Settings) MerchantAccount(merchantAccountID string) (model.MerchantAccount, error) {
 	result := model.NewMerchantAccount()
 	err := w._factory.MerchantAccount().LoadByUserAndToken(w._session, w._user.UserID, merchantAccountID, &result)
@@ -457,6 +465,7 @@ func (w Settings) SubBuilder(object any) (Builder, error) {
 	return result, err
 }
 
+// AmFollowing returns the Following record for the provided URL
 func (w Settings) AmFollowing(url string) model.Following {
 
 	// Get following service and new following record
@@ -501,6 +510,7 @@ func (w Settings) HasRule(ruleType string, trigger string) model.Rule {
 	return rule
 }
 
+// debug is a required part of the Builder interface
 func (w Settings) debug() {
 	log.Debug().Interface("object", w.object()).Msg("builder_Settings")
 }

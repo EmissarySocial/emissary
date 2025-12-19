@@ -428,8 +428,8 @@ func (service *Import) ImportAttachments(session data.Session, importRecord *mod
 
 	const location = "consumer.importItems_Attachments"
 
-	// Load the /attachments collection
-	client := service.activityService.Client()
+	// Load the /attachments collection using a default (un-cached) client
+	client := streams.NewDefaultClient(options.BearerAuth(importRecord.OAuthToken.AccessToken))
 	collection, err := client.Load(importItem.ImportURL + "/attachments")
 
 	if err != nil {
@@ -684,17 +684,6 @@ func (service *Import) CalcImportPlan(actor streams.Document) sliceof.Object[for
 				}
 			}
 		}
-	}
-
-	if collection := migration.Get("emissary:mention"); collection.NotNil() {
-		result.Append(form.LookupCode{
-			Group:       "Native",
-			Icon:        "patch-check-fill",
-			Label:       "Mentions",
-			Description: "High-fidelity import of all Mentions",
-			Value:       "emissary:mention",
-			Href:        collection.String(),
-		})
 	}
 
 	// Import Emissary Responses

@@ -42,6 +42,7 @@ type Factory interface {
 	Group() *service.Group
 	Identity() *service.Identity
 	Import() *service.Import
+	ImportItem() *service.ImportItem
 	Inbox() *service.Inbox
 	Mention() *service.Mention
 	MerchantAccount() *service.MerchantAccount

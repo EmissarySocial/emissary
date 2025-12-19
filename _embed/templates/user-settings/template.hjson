@@ -316,7 +316,7 @@
 			]
 		}
 
-		export-complete: {
+		export-finish: {
 			roles:["self"]
 			steps:[
 				{do:"with-oauth-token", steps:[

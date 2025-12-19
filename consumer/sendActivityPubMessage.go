@@ -53,8 +53,12 @@ func SendActivityPubMessage(factory *service.Factory, session data.Session, args
 			}
 		}
 
-		// Otherwise, this is our fault and can't be retried. Fail accordingly.
-		return queue.Failure(derp.Wrap(err, location, "Error sending ActivityPub message"))
+		// If this is our fault then it can't be retried. Fail accordingly.
+		if derp.IsClientError(err) {
+			return queue.Failure(derp.Wrap(err, location, "Unable to deliver ActivityPub message (Client Error cannot be retried)"))
+		} else {
+			return queue.Error(derp.Wrap(err, location, "Unable to deliver ActivityPub message (Server Error can be retried)"))
+		}
 	}
 
 	// There is only Woot.

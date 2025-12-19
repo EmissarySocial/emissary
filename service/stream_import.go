@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -52,6 +53,8 @@ func (service *Stream) Import(session data.Session, importRecord *model.Import, 
 	if err := service.Save(session, &stream, "Imported"); err != nil {
 		return derp.Wrap(err, location, "Unable to save imported Stream")
 	}
+
+	spew.Dump(location, stream)
 
 	// A Man, A Plan, A Canal. Panama.
 	return nil

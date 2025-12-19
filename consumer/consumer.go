@@ -52,6 +52,9 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 	case "MakeStreamArchive":
 		return WithStream(consumer.serverFactory, args, MakeStreamArchive)
 
+	case "MoveUser":
+		return WithUser(consumer.serverFactory, args, MoveUser)
+
 	case "PollFollowing":
 		return WithSession(consumer.serverFactory, args, PollFollowing)
 

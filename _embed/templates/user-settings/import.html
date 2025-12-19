@@ -209,6 +209,8 @@
 								{{- $finishURL = $actor.URLOrID -}}
 							{{- end -}}
 
+							{{- $importErrors := .ImportErrors $import.ImportID -}}
+
 							{{template "import-source" $source}}
 
 							<div class="text-lg text-green bold">Import Complete: {{$import.CompleteItems}} Records Processed</div>
@@ -217,13 +219,26 @@
 								Please check this work by viewing your new profile contents 
 								and reviewing the logs details.
 							</div>
-							
-							<!--details class="margin-bottom-lg">
-								<summary class="clickable">(View Details)</summary>
-								<div class="table">
 
-								</div>
-							</details-->
+							{{- if $importErrors.IsEmpty -}}
+								<div class="margin-bottom-lg bold">No Errors.</div>
+							{{- else -}}
+							
+								<details class="margin-bottom-lg">
+									<summary class="clickable">Error Summary ({{$importErrors.Length}} {{pluralize $importErrors.Length "Error" "Errors"}})</summary>
+									<div class="table scroll-horizontal">
+										{{- range $importItem := $importErrors -}}
+											<div class="text-sm">
+												<div class="bold nowrap">{{$importItem.Message}}</div>
+												<div class="nowrap">URL: {{$importItem.ImportURL}}</div>
+												<div class="nowrap">Record Type: {{$importItem.Type}}</div>
+												<div class="nowrap">Tracking ID: {{$importItem.ImportItemID.Hex}}</div>
+											</div>
+										{{- end -}}
+									</div>
+								</details>
+
+							{{- end -}}
 
 							<hr class="margin-top-lg">
 							<div class="text-lg bold">Next Step: Move Your Account</div>

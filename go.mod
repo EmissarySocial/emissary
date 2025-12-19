@@ -2,13 +2,17 @@ module github.com/EmissarySocial/emissary
 
 go 1.25.1
 
+replace github.com/benpate/derp => ../../benpate/derp
+replace github.com/benpate/remote => ../../benpate/remote
+
+
 require (
 	github.com/PuerkitoBio/goquery v1.11.0
 	github.com/aws/aws-sdk-go v1.55.8
 	github.com/benpate/color v0.1.0
 	github.com/benpate/data v0.31.2
 	github.com/benpate/data-mock v0.31.4
-	github.com/benpate/data-mongo v0.30.8
+	github.com/benpate/data-mongo v0.30.9
 	github.com/benpate/derp v0.34.2
 	github.com/benpate/digit v0.13.12
 	github.com/benpate/digital-dome v0.2.11

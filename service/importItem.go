@@ -9,6 +9,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -203,6 +204,16 @@ func (service *ImportItem) LoadNext(session data.Session, userID primitive.Objec
 func (service *ImportItem) RangeByImportID(session data.Session, userID primitive.ObjectID, importID primitive.ObjectID) (iter.Seq[model.ImportItem], error) {
 	criteria := exp.Equal("userId", userID).AndEqual("importId", importID)
 	return service.Range(session, criteria)
+}
+
+// RangeErrorsByImportID returns an iterator for all ImportItems that match the provided UserID and ImportID
+func (service *ImportItem) RangeErrorsByImportID(session data.Session, userID primitive.ObjectID, importID primitive.ObjectID) (sliceof.Object[model.ImportItem], error) {
+
+	criteria := exp.Equal("userId", userID).
+		AndEqual("importId", importID).
+		AndEqual("stateId", model.ImportItemStateError)
+
+	return service.Query(session, criteria)
 }
 
 // DeleteByImportID deletes all ImportItems that match the provided UserID and ImportID

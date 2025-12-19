@@ -376,13 +376,14 @@ func (service *ActivityStream) SendMessage(session data.Session, args mapof.Any)
 
 	const location = "service.ActivityStream.SendMessage"
 
-	// Collect arguments
+	// Collect the Actor to receive the message
 	recipientID := args.GetString("to")
 
 	if recipientID == "" {
 		return derp.NotFoundError(location, "Recipient ID is required", recipientID)
 	}
 
+	// Collect the message to be sent
 	message := args.GetMap("message")
 
 	if message.IsEmpty() {

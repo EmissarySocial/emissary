@@ -6,6 +6,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/mapof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -38,7 +39,7 @@ func (service *User) ExportDocument(session data.Session, userID primitive.Objec
 
 // Move marks a User as "Moved" to the new actor location.  All requests from this User
 // after this point should be rejected
-func (service *User) Move(session data.Session, user *model.User, actor string) error {
+func (service *User) Move(session data.Session, user *model.User, actor string, oracle string) error {
 
 	const location = "service.User.Move"
 
@@ -51,6 +52,14 @@ func (service *User) Move(session data.Session, user *model.User, actor string) 
 	if err := service.Save(session, user, "Moved"); err != nil {
 		return derp.Wrap(err, location, "Unable to save user")
 	}
+
+	// Background task to delete records and send `Move` notifications to followers.
+	service.queue.NewTask("MoveUser", mapof.Any{
+		"host":   service.Hostname(),
+		"userId": user.UserID.Hex(),
+		"actor":  actor,
+		"oracle": oracle,
+	})
 
 	return nil
 }

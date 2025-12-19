@@ -10,12 +10,15 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/html"
-	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/steranko"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// PostExportStart is a part of the Data Portability process.  It is called by the "target" server when it
+// begins a migration, in order to tell the "source" server where the exported data is going -- passing the
+// `actor` and `oracle` values to the "source" server for use at the end of the process.
 func PostUserExportStart(ctx *steranko.Context, factory *service.Factory, session data.Session, oauthUserToken *model.OAuthUserToken, user *model.User) error {
 
 	const location = "handler.PostUserExportStart"
@@ -46,6 +49,7 @@ func PostUserExportStart(ctx *steranko.Context, factory *service.Factory, sessio
 	return ctx.NoContent(http.StatusOK)
 }
 
+// GetUserExportCollection is a part of the Data Portability process.  It retrieves a single collection
 func GetUserExportCollection(ctx *steranko.Context, factory *service.Factory, session data.Session, oauthUserToken *model.OAuthUserToken, user *model.User) error {
 
 	const location = "handler.GetUserExportCollection"
@@ -189,11 +193,13 @@ func GetAttachmentsExportOriginal(ctx *steranko.Context, factory *service.Factor
 
 }
 
-// PostUserExportFinish initiates the background process to `MOVE` a user to their new server, and
-// sign them out of this server.
+// PostUserExportFinish is a part of the Data Portability process.  It initiates
+// the background process to `MOVE` a user to their new server, and sign them out of this server.
 func PostUserExportFinish(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.PostUserExportFinish"
+
+	spew.Dump(location, ctx.Param("userId"), user)
 
 	// RULE: Validate the UserID matches the authenticated user
 	if ctx.Param("userId") != user.UserID.Hex() {
@@ -201,7 +207,7 @@ func PostUserExportFinish(ctx *steranko.Context, factory *service.Factory, sessi
 	}
 
 	// Parse the OAuthUserTokenID
-	oauthUserTokenID, err := primitive.ObjectIDFromHex(ctx.Param("oauthUserTokenId"))
+	oauthUserTokenID, err := primitive.ObjectIDFromHex(ctx.QueryParam("oauthUserTokenId"))
 
 	if err != nil {
 		return derp.Wrap(err, location, "Invalid OAuthUserTokenID", ctx.Param("oauthUserTokenId"))
@@ -219,17 +225,9 @@ func PostUserExportFinish(ctx *steranko.Context, factory *service.Factory, sessi
 	oracle := oauthUserToken.Data.GetString("oracle")
 
 	// Mark the User as "Moved"
-	if err := factory.User().Move(session, user, actor); err != nil {
+	if err := factory.User().Move(session, user, actor, oracle); err != nil {
 		return derp.Wrap(err, location, "Unable to mark User as 'Moved'", user, actor)
 	}
-
-	// Queue a task to delete records and send notifications.
-	factory.Queue().NewTask("MoveUser", mapof.Any{
-		"host":   factory.Hostname(),
-		"userId": user.UserID.Hex(),
-		"actor":  actor,
-		"oracle": oracle,
-	})
 
 	// Sign the user out of this website.
 	factory.Steranko(session).SignOut(ctx)

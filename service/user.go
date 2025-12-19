@@ -112,6 +112,16 @@ func (service *User) Close() {
 
 }
 
+// Hostname returns the domain-only name (no protocol)
+func (service *User) Hostname() string {
+	return dt.NameOnly(service.host)
+}
+
+// Host returns the host (with protocol)
+func (service *User) Host() string {
+	return service.host
+}
+
 /******************************************
  * Common Data Methods
  ******************************************/
