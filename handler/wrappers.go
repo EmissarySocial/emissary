@@ -72,8 +72,8 @@ func WithAuthenticatedUser(serverFactory *server.Factory, fn WithFunc1[model.Use
 		// If this user has moved, then they cannot access to this server anymore.
 		// Send them to their new server instead.
 		if user.MovedTo != "" {
-			ctx.Response().Header().Set("HX-Redirect", user.MovedTo)
-			return ctx.Redirect(http.StatusMovedPermanently, user.MovedTo)
+			factory.Steranko(session).SignOut(ctx)
+			return ctx.Redirect(http.StatusMovedPermanently, "/")
 		}
 
 		// Call the continuation function

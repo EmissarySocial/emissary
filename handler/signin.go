@@ -72,25 +72,34 @@ func PostSignOut(ctx *steranko.Context, factory *service.Factory, session data.S
 
 	s := factory.Steranko(session)
 
-	// If there is a "next" parameter, then redirect to that URL.
-	hasBackupProfile := s.SignOut(ctx)
-
-	if next := ctx.QueryParam("next"); next != "" {
-		ctx.Response().Header().Add("Hx-Redirect", "/signin?next="+url.QueryEscape(next))
-	} else if hasBackupProfile {
+	// If we have an admin "backup profile" then return to the admin section
+	if hasBackupProfile := s.SignOut(ctx); hasBackupProfile {
 		ctx.Response().Header().Add("HX-Redirect", "/admin/users")
-	} else {
-		ctx.Response().Header().Add("HX-Redirect", "/")
+		return ctx.NoContent(http.StatusNoContent)
 	}
 
-	// Forward the user back to the home page of the website.
+	// If there's a "next" parameter, then try to redirect there
+	if next := ctx.QueryParam("next"); next != "" {
+
+		// If this is a valiid URL, then redirect to the path portion only (to avoid open redirects)
+		if nextURL, err := url.Parse(next); err == nil {
+			ctx.Response().Header().Add("Hx-Redirect", "/signin?next="+url.QueryEscape(nextURL.Path))
+			return ctx.NoContent(http.StatusNoContent)
+		}
+	}
+
+	// Otherwise, just redirect to the home page.
+	ctx.Response().Header().Add("HX-Redirect", "/")
 	return ctx.NoContent(http.StatusNoContent)
 }
 
+// GetResetPassword displays the "reset password" form
 func GetResetPassword(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 	return executeDomainTemplate(ctx, factory, "reset-password")
 }
 
+// PostResetPassword processes the "reset password" form.  If the user enters a valid email address,
+// then a password reset email is sent to that address.
 func PostResetPassword(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.PostResetPassword"
@@ -186,7 +195,11 @@ func GetResetCode(ctx *steranko.Context, factory *service.Factory, session data.
 	return nil
 }
 
+// PostResetCode processes the "reset code" form to update the user's password.
+// If the reset code is valid, then the user's password is updated.
 func PostResetCode(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
+
+	const location = "handler.PostResetCode"
 
 	// Try to get the transaction data from the request body.
 	var txn struct {
@@ -197,12 +210,12 @@ func PostResetCode(ctx *steranko.Context, factory *service.Factory, session data
 	}
 
 	if err := ctx.Bind(&txn); err != nil {
-		return derp.Wrap(err, "handler.PostResetCode", "Unable to read form data")
+		return derp.Wrap(err, location, "Unable to read form data")
 	}
 
 	// RULE: Ensure that passwords match
 	if txn.Password != txn.Password2 {
-		return derp.BadRequestError("handler.PostResetCode", "Passwords do not match")
+		return derp.BadRequestError(location, "Passwords do not match")
 	}
 
 	// Try to load the user by userID and resetCode
@@ -211,14 +224,14 @@ func PostResetCode(ctx *steranko.Context, factory *service.Factory, session data
 	user := model.NewUser()
 
 	if err := userService.LoadByResetCode(session, txn.UserID, txn.Code, &user); err != nil {
-		return derp.Wrap(err, "handler.GetResetCode", "Unable to load user")
+		return derp.Wrap(err, location, "Unable to load user")
 	}
 
 	// Update the user with the new password
 	user.SetPassword(txn.Password)
 
 	if err := userService.Save(session, &user, "Updated Password"); err != nil {
-		return derp.Wrap(err, "handler.GetResetCode", "Unable to save user")
+		return derp.Wrap(err, location, "Unable to save user")
 	}
 
 	// Forward to the sign-in page with a success message
