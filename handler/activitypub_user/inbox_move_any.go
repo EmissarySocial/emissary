@@ -17,8 +17,6 @@ func init() {
 
 func MoveAny(context Context, document streams.Document) error {
 
-	const location = "activitypub_user.Inbox.Move/Any"
-
 	// Locate/Move local actors
 	locator := context.factory.Locator()
 
