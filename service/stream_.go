@@ -308,23 +308,8 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 		return derp.BadRequestError(location, "Stream cannot be nil. This should never happen.")
 	}
 
-	// Load the template used by this Stream
-	template, err := service.templateService.Load(stream.TemplateID)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Invalid Template", stream.TemplateID)
-	}
-
 	// Track changes to key status fields
 	wasNew := stream.IsNew()
-
-	// Copy default values from the Template
-	stream.SocialRole = template.SocialRole
-	stream.IsSubscribable = template.IsSubscribable()
-	stream.URL = service.host + "/" + stream.StreamID.Hex()
-
-	// RULE: Calculate "defaultAllow" groups for this stream.
-	service.calcDefaultAllow(&template, stream)
 
 	// RULE: Calculate rank
 	if stream.Rank == 0 {
@@ -353,14 +338,33 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 		}
 	}
 
+	// If this stream has anything but a NIL templateID
+	if stream.TemplateID != "" {
+
+		// Load the template used by this Stream
+		template, err := service.templateService.Load(stream.TemplateID)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Unable to load template", stream.TemplateID)
+		}
+
+		// Copy default values from the Template
+		stream.SocialRole = template.SocialRole
+		stream.IsSubscribable = template.IsSubscribable()
+		stream.URL = service.host + "/" + stream.StreamID.Hex()
+
+		// RULE: Calculate "defaultAllow" groups for this stream.
+		service.calcDefaultAllow(&template, stream)
+
+		// Validate the value (using the template-specific schema) before saving
+		if err := template.Schema.Validate(stream); err != nil {
+			return derp.Wrap(err, location, "Invalid Stream: using TemplateSchema", stream)
+		}
+	}
+
 	// Validate the value (using the global stream schema) before saving
 	if err := service.Schema().Validate(stream); err != nil {
 		return derp.Wrap(err, location, "Invalid Stream: using StreamSchema", stream)
-	}
-
-	// Validate the value (using the template-specific schema) before saving
-	if err := template.Schema.Validate(stream); err != nil {
-		return derp.Wrap(err, location, "Invalid Stream: using TemplateSchema", stream)
 	}
 
 	// RULE: calculate Parent IDs
@@ -1294,8 +1298,8 @@ func (service *Stream) Move(session data.Session, stream *model.Stream, movedTo 
 	// stream.AttributedTo
 	// stream.PublishDate
 
-	// Update the Stream with the new "movedTo" value
-	if err := service.Save(session, stream, "moved"); err != nil {
+	// Update the Stream with the new "movedTo" value but skip all other business rules.
+	if err := service.collection(session).Save(stream, "moved"); err != nil {
 		return derp.Wrap(err, location, "Unable to save Stream")
 	}
 

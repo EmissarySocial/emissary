@@ -22,6 +22,7 @@ import (
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/sherlock"
 	"github.com/benpate/turbine/queue"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/oauth2"
 )
@@ -249,6 +250,12 @@ func (service *Import) LoadByToken(session data.Session, userID primitive.Object
 	return service.LoadByID(session, userID, importID, record)
 }
 
+// LoadBySourceURL loads a single Import record based on the provided User and SourceURL
+func (service *Import) LoadBySourceURL(session data.Session, userID primitive.ObjectID, sourceURL string, record *model.Import) error {
+	criteria := exp.Equal("sourceUrl", sourceURL).AndEqual("userId", userID)
+	return service.Load(session, criteria, record)
+}
+
 /******************************************
  * Custom Actions
  ******************************************/
@@ -377,6 +384,13 @@ func (service *Import) doImport(record *model.Import) error {
 // doMove manages the transient state change from "DO-MOVE"
 // to "MOVING"
 func (service *Import) doMove(record *model.Import) error {
+
+	// Delete OAuth tokens since they're no longer valid
+	record.ClearOAuthToken()
+
+	// Update the state to "DONE"
+	record.StateID = model.ImportStateDone
+
 	return nil
 }
 
@@ -436,6 +450,8 @@ func (service *Import) ImportAttachments(session data.Session, importRecord *mod
 		return derp.Wrap(err, location, "Unable to load Attachments")
 	}
 
+	spew.Dump(location, collection.Value())
+
 	// Import each attachment in the collection
 	for attachment := range collections.RangeDocuments(collection) {
 
@@ -450,7 +466,7 @@ func (service *Import) ImportAttachments(session data.Session, importRecord *mod
 		}
 
 		// Import that attachment
-		remoteURL, localURL, err := service.attachmentService.Import(
+		remoteID, remoteURL, localID, localURL, err := service.attachmentService.Import(
 			session,
 			importRecord,
 			importItem,
@@ -459,7 +475,7 @@ func (service *Import) ImportAttachments(session data.Session, importRecord *mod
 		)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unable to import document")
+			return derp.Wrap(err, location, "Unable to import document", remoteID, remoteURL, localID, localURL)
 		}
 
 		// Update mappings IF this attachment is named in the containing object
@@ -487,7 +503,7 @@ func (service *Import) CalcImportPlan(actor streams.Document) sliceof.Object[for
 			Group:       "Native",
 			Icon:        "patch-check-fill",
 			Label:       "User Profile",
-			Description: "High-fidelity import of Emissary User Account.",
+			Description: "Maps your old Emissary profile to your new address.",
 			Value:       "emissary:user",
 			Href:        collection.String(),
 		})
@@ -498,8 +514,8 @@ func (service *Import) CalcImportPlan(actor streams.Document) sliceof.Object[for
 		result.Append(form.LookupCode{
 			Group:       "Native",
 			Icon:        "patch-check-fill",
-			Label:       "Content",
-			Description: "High-fidelity import of Emissary posts.",
+			Label:       "Posts",
+			Description: "High-fidelity import of all posts and content uploaded to your Emissary profile.",
 			Value:       "emissary:stream",
 			Href:        collection.String(),
 		})
@@ -517,46 +533,37 @@ func (service *Import) CalcImportPlan(actor streams.Document) sliceof.Object[for
 		})
 	}
 
-	// Try native Outbox Messages
-	if collection := migration.Get("emissary:outboxMessage"); collection.NotNil() {
+	// Import Follower records
+	if collection := migration.Get("emissary:follower"); collection.NotNil() {
 		result.Append(form.LookupCode{
 			Group:       "Native",
 			Icon:        "patch-check-fill",
-			Label:       "Outbox",
-			Description: "High-fidelity import of Emissary Outbox.",
-			Value:       "emissary:outboxMessage",
-			Href:        collection.String(),
-		})
-	} else if collection := migration.Get("outbox"); collection.NotNil() {
-		result.Append(form.LookupCode{
-			Group:       "ActivityPub",
-			Icon:        "activitypub",
-			Label:       "Outbox",
-			Description: "ActivityPub-compatible format. May lose some details in translation",
-			Value:       "outbox",
+			Label:       "Followers",
+			Description: "Followers will be notified of this 'Move' but may not choose to re-follow your new account.",
+			Value:       "emissary:follower",
 			Href:        collection.String(),
 		})
 	}
 
-	// Import Following records
-	if collection := migration.Get("emissary:following"); collection.NotNil() {
+	// Import Emissary Inbox Folders
+	if collection := migration.Get("emissary:folder"); collection.NotNil() {
 		result.Append(form.LookupCode{
 			Group:       "Native",
 			Icon:        "patch-check-fill",
-			Label:       "Following",
-			Description: "Some accounts may require approval before allowing follow from a new account.",
-			Value:       "emissary:following",
+			Label:       "Inbox Folders",
+			Description: "High-fidelity import of all inbox Folders",
+			Value:       "emissary:folder",
 			Href:        collection.String(),
 		})
 
-		// Import Emissary Inbox Folders
-		if collection := migration.Get("emissary:folder"); collection.NotNil() {
+		// Import Following records
+		if collection := migration.Get("emissary:following"); collection.NotNil() {
 			result.Append(form.LookupCode{
 				Group:       "Native",
 				Icon:        "patch-check-fill",
-				Label:       "Inbox Folders",
-				Description: "High-fidelity import of all inbox Folders",
-				Value:       "emissary:folder",
+				Label:       "Following",
+				Description: "Some accounts may require approval before accepting follow requests from your new account.",
+				Value:       "emissary:following",
 				Href:        collection.String(),
 			})
 
@@ -590,8 +597,29 @@ func (service *Import) CalcImportPlan(actor streams.Document) sliceof.Object[for
 			Group:       "ActivityPub",
 			Icon:        "activitypub",
 			Label:       "Following",
-			Description: "Some accounts may require approval before allowing follow from a new account.",
+			Description: "Some accounts may require approval before accepting follow requests from your new account.",
 			Value:       "following",
+			Href:        collection.String(),
+		})
+	}
+
+	// Try native Outbox Messages
+	if collection := migration.Get("emissary:outboxMessage"); collection.NotNil() {
+		result.Append(form.LookupCode{
+			Group:       "Native",
+			Icon:        "patch-check-fill",
+			Label:       "Outbox",
+			Description: "High-fidelity import of Emissary Outbox.",
+			Value:       "emissary:outboxMessage",
+			Href:        collection.String(),
+		})
+	} else if collection := migration.Get("outbox"); collection.NotNil() {
+		result.Append(form.LookupCode{
+			Group:       "ActivityPub",
+			Icon:        "activitypub",
+			Label:       "Outbox",
+			Description: "ActivityPub-compatible format. May lose some details in translation",
+			Value:       "outbox",
 			Href:        collection.String(),
 		})
 	}
@@ -612,17 +640,6 @@ func (service *Import) CalcImportPlan(actor streams.Document) sliceof.Object[for
 			Label:       "Blocked Collection",
 			Description: "Publicly available BLOCKS will be imported",
 			Value:       "blocked",
-			Href:        collection.String(),
-		})
-	}
-
-	if collection := migration.Get("emissary:follower"); collection.NotNil() {
-		result.Append(form.LookupCode{
-			Group:       "Native",
-			Icon:        "patch-check-fill",
-			Label:       "Followers",
-			Description: "Followers will be notified, but may not choose to re-follow your new account.",
-			Value:       "emissary:follower",
 			Href:        collection.String(),
 		})
 	}

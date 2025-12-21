@@ -300,7 +300,7 @@ func (service *Attachment) LoadByID(session data.Session, objectType string, obj
 		AndEqual("objectId", objectID)
 
 	if err := service.Load(session, criteria, result); err != nil {
-		return derp.Wrap(err, "service.Attachment.LoadByID", "Unable to load attachment", objectType, objectID, attachmentID)
+		return derp.Wrap(err, "service.Attachment.LoadByID", "Unable to load attachment", "objectType: "+objectType, "objectID: "+objectID.Hex(), "attachmentID: "+attachmentID.Hex())
 	}
 
 	return nil

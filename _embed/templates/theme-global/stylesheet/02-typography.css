@@ -330,6 +330,10 @@ i, em, .italics {
 	font-style:italic;
 }
 
+.line-through {
+	text-decoration: line-through;
+}
+
 p:last-child {
     margin:0px;
 }

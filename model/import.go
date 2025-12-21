@@ -14,6 +14,7 @@ type Import struct {
 	ImportID       primitive.ObjectID `bson:"_id"`            // Unique identifier for this Import record
 	UserID         primitive.ObjectID `bson:"userId"`         // User profile that we're importing INTO
 	SourceID       string             `bson:"sourceId"`       // URL or Handle of the account being migrated
+	SourceURL      string             `bson:"sourceUrl"`      // URL (ActivityPub ID) of the source account being migrated
 	StateID        string             `bson:"stateId"`        // Current state of this import process
 	Message        string             `bson:"message"`        // Human-friendly description of the status of this import process
 	OAuthConfig    oauth2.Config      `bson:"oauthConfig"`    // OAuth 2.0 configuration information
@@ -75,7 +76,7 @@ func (record Import) RolesToPrivilegeIDs(roleIDs ...string) Permissions {
 }
 
 /******************************************
- * Other Methods
+ * OAuth Methods
  ******************************************/
 
 // OAuthCodeURL generates a new (unique) OAuth state and AuthCodeURL for the specified provider
@@ -87,6 +88,16 @@ func (record Import) OAuthCodeURL() string {
 
 	return authCodeURL
 }
+
+// ClearOAuthToken erases the OAuth token from this Import record
+func (record *Import) ClearOAuthToken() {
+	record.OAuthToken = nil
+	record.OAuthChallenge = make([]byte, 0)
+}
+
+/******************************************
+ * Other Methods
+ ******************************************/
 
 func (record Import) PercentComplete() int {
 	ratio := convert.Float(record.CompleteItems) / convert.Float(record.TotalItems) * 100

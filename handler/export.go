@@ -203,7 +203,7 @@ func PostUserExportFinish(ctx *steranko.Context, factory *service.Factory, sessi
 
 	// RULE: Validate the UserID matches the authenticated user
 	if ctx.Param("userId") != user.UserID.Hex() {
-		return derp.Forbidden(location, "Cannot finish export for another user")
+		return derp.Forbidden(location, "Cannot finish export for another user", "url userId: "+ctx.Param("userId"), "authenticated userId: "+user.UserID.Hex())
 	}
 
 	// Parse the OAuthUserTokenID

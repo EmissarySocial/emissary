@@ -6,26 +6,48 @@
 
     <tbody hx-trigger="revealed" hx-get="/admin/users/list?groupId={{$groupID}}&amp;search={{$search}}&amp;displayName=gt:{{ $users.Last.DisplayName }}" hx-target="#users" hx-swap="beforeend" hx-push-url="false">
         {{- range $index, $user := $users -}}
-            <tr class="clickable">
-                <td role="link" hx-get="/admin/users/{{$user.UserID.Hex}}/edit" class="flex-row width-100%">
-                    {{- $iconURL := $user.IconURL -}}
-                    {{- if ne "" $iconURL -}}
-                        <img src="{{$iconURL}}" class="circle width-32">
-                    {{- else -}}
-                        <span class="circle width-32"></span>
-                    {{- end }} 
-                    <span class="ellipsis">{{highlight $user.DisplayName $search}}</span>
-                </td>
-                <td nowrap class="text-xs width-128 text-align-right">
-					<div class="hide md:show">
-						<a href="/@{{$user.Username}}" class="button" tabIndex="0">View Profile</a>
-						<form action="/.masquerade?userId={{.UserID.Hex}}" method="post" class="inline-block">
-							<button type="submit">{{icon "user-secret"}} Sign In &rarr;</button>
-						</form>
-					</div>
-                </td>
-            </tr>
-        {{- end -}}
+
+			{{- if eq "" $user.MovedTo -}}
+				<tr class="clickable">
+					<td role="link" hx-get="/admin/users/{{$user.UserID.Hex}}/edit" class="flex-row width-100%">
+						{{- $iconURL := $user.IconURL -}}
+						{{- if ne "" $iconURL -}}
+							<img src="{{$iconURL}}" class="circle width-32">
+						{{- else -}}
+							<span class="circle width-32"></span>
+						{{- end }} 
+						<span class="ellipsis">{{highlight $user.DisplayName $search}}</span>
+					</td>
+					<td nowrap class="text-xs width-128 text-align-right">
+						<div class="hide md:show">
+
+							{{- if eq "" $user.MovedTo -}}
+								<form action="/.masquerade?userId={{.UserID.Hex}}" method="post" class="inline-block">
+									<a href="/@{{$user.Username}}" class="button" tabIndex="0">View Profile</a>
+									<button type="submit">{{icon "user-secret"}} Sign In &rarr;</button>
+								</form>
+							{{- else -}}
+								<a href="{{$user.MovedTo}}" class="button">New Profile &rarr;</a>
+							{{- end -}}
+						</div>
+					</td>
+				</tr>
+			{{- else -}}
+
+				<tr class="clickable">
+					<td role="link" hx-get="/admin/users/{{$user.UserID.Hex}}/edit" class="flex-row width-100%">
+						<span class="circle width-32"></span>
+						<span class="ellipsis"><span class="line-through">{{highlight $user.DisplayName $search}}</span> (MOVED)</span>
+					</td>
+					<td nowrap class="text-xs width-128 text-align-right">
+						<div class="hide md:show">
+							<a href="{{$user.MovedTo}}" target="_blank" class="button">New Profile &rarr;</a>
+						</div>
+					</td>
+				</tr>
+			{{- end -}}
+
+		{{- end -}}
     </tbody>
 
 {{- end -}}

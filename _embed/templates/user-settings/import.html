@@ -49,7 +49,7 @@
 
 				{{- if $imports.IsEmpty -}}
 
-					<div class="text-lg bold"><i class="bi bi-cloud-download"></i> Import from Another Server</div>
+					<div class="text-lg bold"><i class="bi bi-database-down"></i> Import from Another Server</div>
 
 					<div>
 						You can import all of your profile data from other Fediverse
@@ -94,7 +94,7 @@
 
 						{{template "import-source" $source}}
 
-						<div class="text-lg bold"><i class="bi bi-cloud-download"></i> Waiting for Your Approval</div>
+						<div class="text-lg bold">Waiting for Your Approval</div>
 						<div class="margin-bottom">
 							We have not received approval from remote account yet. This can happen when you cancel
 							the authentication process on your remote account. To continue, please reconnect to 
@@ -261,6 +261,24 @@
 								<button hx-get="/@me/settings/import-undo?importId={{$import.ID}}">Undo Import</button>
 							</div>
 
+					{{- else if eq "DONE" $import.StateID -}}
+
+						<div class="text-lg bold text-green">Import Complete {{icon "thumbs-up"}}</div>
+						<table class="text-lg">
+							<tr>
+								<td class="padding-right">From</td>
+								<td class="bold">{{$import.SourceID}}</td>
+							</tr>
+							<tr>
+								<td class="padding-right">Date</td>
+								<td>{{$import.UpdateDate | shortDate}}</td>
+							</tr>
+							<tr>
+								<td class="padding-right">Count</td>
+								<td>{{$import.CompleteItems}} {{pluralize $import.CompleteItems "Record" "Records"}}</td>
+							</tr>
+						</table>
+							
 					{{- else -}}
 						{{template "import-source" $source}}
 						<pre>{{$import |jsonIndent}}</pre>

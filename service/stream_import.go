@@ -7,7 +7,6 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -25,6 +24,7 @@ func (service *Stream) Import(session data.Session, importRecord *model.Import, 
 	// Update mapping values in the importItem
 	importItem.RemoteID = stream.StreamID
 	importItem.LocalID = primitive.NewObjectID()
+	importItem.RemoteURL = stream.URL
 
 	// Map values from the original Stream into the new, local Stream
 	stream.StreamID = importItem.LocalID    // Use the new localID for this record
@@ -54,7 +54,9 @@ func (service *Stream) Import(session data.Session, importRecord *model.Import, 
 		return derp.Wrap(err, location, "Unable to save imported Stream")
 	}
 
-	spew.Dump(location, stream)
+	// The stream.URL is recalculated in the service.Save method.
+	// Set the new (local) URL to the freshly-calculated URL for the new Stream record.
+	importItem.LocalURL = stream.URL
 
 	// A Man, A Plan, A Canal. Panama.
 	return nil

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>You Have Been Signed Out &middot; {{.DomainName}}</title>
+	{{- template "includes-head" . -}}
+</head>
+
+<body hx-target="main" hx-swap="innerHTML" hx-push-url="false" hx-ext="a11y">
+
+	<main class="flex-justify-center flex-align-center" style="display:flex; height:clamp(400px, 100vh, 1000px);">
+
+		<div class="card align-center" style="width:clamp(540px, 50%, 720px); margin:auto; padding:16px 32px; line-height:150%;">
+			
+			<div class="margin-vertical-xl">
+				{{- if ne "" .domainImage -}}
+					<img src="{{.DomainImage}}" style="width:60%; margin:0px auto; display:block;">
+				{{- else -}}
+					<div class="bold text-gray text-lg margin-none">{{.domainName}}</div>
+				{{- end -}}
+			</div>
+	
+			<h1 class="text-lg bold margin-vertical-xl">You have been signed out</h1>
+
+			<div class="margin-vertical">
+				<a href="/home" class="button">&larr; Return to Home Page</a>
+				or
+				<a href="/signin" class="button">Sign In Again &rarr;</a>
+			</div>
+
+		</div>
+
+	</main>
+
+	{{ template "includes-foot" . }}
+	
+</body>
+</html>

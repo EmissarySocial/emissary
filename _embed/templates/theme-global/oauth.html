@@ -50,7 +50,7 @@
 							<img src="{{.IconURL}}" class="circle width-64">
 						{{- end -}}
 						<div class="flex-grow">
-							<div class="text-lg bold margin-none">{{$name}}</div>
+							<div class="margin-none"><span class="text-lg bold">{{$name}}</span> is requesting permission to:</div>
 							<div class="text-sm margin-none"><a href="{{.Website}}" target="_blank">{{.Website }} {{icon "link-outbound"}}</a></div>
 						</div>
 					</div>
@@ -58,9 +58,9 @@
 					{{- range .Scopes -}}
 						{{- if eq . "activitypub_account_portability" -}}
 							<div class="margin-top">
-								<div class="text-lg margin-none">Is asking to <b>Export All of Your Data</b></div>
+								<div class="text-red text-lg">{{icon "alert"}} <b>Export All of Your Data</b></div>
 								<div class="margin-bottom text-red">
-									{{icon "alert"}}  Do not approve unless you are <b>migrating your profile</b>
+									Do not approve this request unless you are <b>migrating your profile.</b>
 								</div>
 							</div>
 						{{- else -}}
@@ -80,7 +80,7 @@
 							</button>
 						</span>
 
-						<button script="on click halt the event then window.history.back()">Cancel</button>
+						<button script="on click halt the event then window.history.back()">No. Cancel this Request</button>
 						<span id="message" class="text-red" hidden></span>
 
 					</div>

@@ -13,19 +13,23 @@ import (
 )
 
 // ImportSave is a part of the "Importable" interface, and saves an imported Attachment to the new profile.
-func (service *Attachment) Import(session data.Session, record *model.Import, importItem *model.ImportItem, objectID primitive.ObjectID, document []byte) (string, string, error) {
+func (service *Attachment) Import(session data.Session, record *model.Import, importItem *model.ImportItem, objectID primitive.ObjectID, document []byte) (remoteID primitive.ObjectID, remoteURL string, localID primitive.ObjectID, localURL string, err error) {
 
 	const location = "service.Attachment.Import"
 
 	// Unmarshal the JSON document into a new Attachment
 	attachment := model.NewAttachment("", primitive.NilObjectID)
 	if err := json.Unmarshal(document, &attachment); err != nil {
-		return "", "", derp.Wrap(err, location, "Unable to parse remote document", document)
+		return primitive.NilObjectID, "",
+			primitive.NilObjectID, "",
+			derp.Wrap(err, location, "Unable to parse remote document", document)
 	}
 
 	// Get mapping IDs
-	remoteID := attachment.AttachmentID
-	localID := primitive.NewObjectID()
+	remoteID = attachment.AttachmentID
+	remoteURL = attachment.URL
+	localID = primitive.NewObjectID()
+	localURL = "" // to be calculated below
 
 	// Get the original file over HTTP
 	var buffer bytes.Buffer
@@ -34,12 +38,16 @@ func (service *Attachment) Import(session data.Session, record *model.Import, im
 		Result(&buffer)
 
 	if err := txn.Send(); err != nil {
-		return "", "", derp.Wrap(err, location, "Unable to retrieve original attachment file")
+		return primitive.NilObjectID, "",
+			primitive.NilObjectID, "",
+			derp.Wrap(err, location, "Unable to retrieve original attachment file")
 	}
 
 	// Save the original file to the mediaserver
 	if err := service.mediaServer.Put(localID.Hex(), &buffer); err != nil {
-		return "", "", derp.Wrap(err, location, "Umable to save original document")
+		return primitive.NilObjectID, "",
+			primitive.NilObjectID, "",
+			derp.Wrap(err, location, "Umable to save original document")
 	}
 
 	// Map values from the original Attachment into the new, local Attachment
@@ -49,11 +57,15 @@ func (service *Attachment) Import(session data.Session, record *model.Import, im
 
 	// Save the Attachment to the database
 	if err := service.Save(session, &attachment, "Imported"); err != nil {
-		return "", "", derp.Wrap(err, location, "Unable to save imported Attachment")
+		return primitive.NilObjectID, "",
+			primitive.NilObjectID, "",
+			derp.Wrap(err, location, "Unable to save imported Attachment")
 	}
 
+	localURL = attachment.URL
+
 	// A Man, A Plan, A Canal. Panama.
-	return remoteID.Hex(), localID.Hex(), nil
+	return remoteID, remoteURL, localID, localURL, nil
 }
 
 // UndoImport is a part of the "Importable" interface, and deletes imported Attachment from the database

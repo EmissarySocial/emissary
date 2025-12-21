@@ -49,7 +49,7 @@ func ImportStartup(factory *service.Factory, session data.Session, user *model.U
 
 		txn := remote.Post(startEndpoint).
 			Form("actor", user.ActivityPubURL()).
-			Form("oracle", factory.Host()+"/.exported").
+			Form("oracle", factory.Host()+"/.imported").
 			With(options.BearerAuth(record.OAuthToken.AccessToken))
 
 		if err := txn.Send(); err != nil {
@@ -98,6 +98,7 @@ func ImportStartup(factory *service.Factory, session data.Session, user *model.U
 	// Update the Import record with new expectations
 	record.TotalItems = totalItems
 	record.CompleteItems = 0
+	record.SourceURL = actor.ID()
 
 	if err := importService.Save(session, record, "Updating item count"); err != nil {
 		return queue.Error(derp.Wrap(err, location, "Unable to update import record", record))

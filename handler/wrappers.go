@@ -73,7 +73,8 @@ func WithAuthenticatedUser(serverFactory *server.Factory, fn WithFunc1[model.Use
 		// Send them to their new server instead.
 		if user.MovedTo != "" {
 			factory.Steranko(session).SignOut(ctx)
-			return ctx.Redirect(http.StatusMovedPermanently, "/")
+			ctx.Response().Header().Set("HX-Redirect", "/signout")
+			return ctx.Redirect(http.StatusMovedPermanently, "/signout")
 		}
 
 		// Call the continuation function
@@ -310,6 +311,11 @@ func WithOAuthUser(serverFactory *server.Factory, fn WithFunc2[model.OAuthUserTo
 	return WithAuthenticatedUser(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 		const location = "handler.WithOAuthUser"
+
+		// RULE: Can only request routes that match the authenticated UserID
+		if ctx.Param("userId") != user.UserID.Hex() {
+			return derp.NotFound(location, "UserID in URL must match authenticated User")
+		}
 
 		// Locate the OAuth Bearer token in the request
 		bearerToken := ctx.Request().Header.Get("Authorization")
@@ -629,11 +635,6 @@ func WithOAuthUserStream(serverFactory *server.Factory, fn WithFunc3[model.OAuth
 	const location = "handler.WithUser"
 
 	return WithOAuthUser(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session, oauthUserToken *model.OAuthUserToken, user *model.User) error {
-
-		// RULE: Can only request routes with the validated UserID
-		if ctx.Param("userId") != user.UserID.Hex() {
-			return derp.Forbidden(location, "UserID in URL must match authenticated User")
-		}
 
 		// Load the Stream from the database
 		streamService := factory.Stream()

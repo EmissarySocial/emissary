@@ -34,12 +34,12 @@ table.table tr.edit td {
 	border: solid 1px var(--blue20);
 }
 
-table.table [role=link]:hover td,
-table.table [role=link]:focus td,
-table.table [role=button]:hover td,
-table.table [role=button]:focus td,
-table.table .clickable:hover td,
-table.table .clickable:focus td {
+table.table tr[role=link]:hover td,
+table.table tr[role=link]:focus td,
+table.table tr[role=button]:hover td,
+table.table tr[role=button]:focus td,
+table.table tr.clickable:hover td,
+table.table tr.clickable:focus td {
 	background-color:var(--gray10);
 	cursor:pointer;
 }

@@ -302,7 +302,7 @@ button.text-sm,
 button.text-xs,
 .button.text-xs {
 	font-size: calc(var(--rhythm) * 1.5);
-	padding: calc(var(--rhythm) * 0.25) calc(var(--rhythm) * 0.5);
+	padding: calc(var(--rhythm) * 0.5) calc(var(--rhythm) * 0.75);
 }
 
 button:hover,

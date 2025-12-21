@@ -46,7 +46,7 @@
 		{{- if $oauthUserTokens.IsEmpty -}}
 
 			<div class="card padding max-width-640 transition-main-card">
-				<div class="text-lg bold"><i class="bi bi-cloud-upload"></i> Export to Other Servers</div>
+				<div class="text-lg bold"><i class="bi bi-database-up"></i> Export to Other Servers</div>
 
 				<div>
 					You can export all of your profile data to other Fediverse
@@ -75,13 +75,12 @@
 				{{- $actor := $scope.ActivityStream $actorID -}}
 				{{- $startDate := $oauthUserToken.data.startDate -}}
 
-				<div class="card padding max-width-640 margin-bottom" role="link">
+				<div class="card padding max-width-640 margin-bottom transition-main-card" role="link">
 				
 					<div class="flex-row margin-bottom-lg">
 						<div class="flex-grow">
 							<div class="text-lg bold margin-top-none margin-bottom-lg">
 								<i class="bi bi-database-up"></i> 
-								<!--i class="bi bi-cloud-upload"></i--> 
 								Exporting to {{$oauthUserToken.name}}
 							</div>
 

@@ -8,9 +8,10 @@ import (
 func ImportSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"importId": schema.String{Format: "objectId", Required: true},
-			"userId":   schema.String{Format: "objectId", Required: true},
-			"sourceId": schema.String{},
+			"importId":  schema.String{Format: "objectId", Required: true},
+			"userId":    schema.String{Format: "objectId", Required: true},
+			"sourceId":  schema.String{},
+			"sourceUrl": schema.String{Format: "uri"},
 			"stateId": schema.String{
 				Enum: []string{
 					ImportStateNew,
@@ -23,8 +24,6 @@ func ImportSchema() schema.Element {
 					ImportStateImportError,
 					ImportStateReviewing,
 					ImportStateDoMove,
-					ImportStateMoving,
-					ImportStateMoveError,
 					ImportStateDone,
 				},
 				Required: true},
@@ -48,6 +47,9 @@ func (record *Import) GetPointer(name string) (any, bool) {
 
 	case "sourceId":
 		return &record.SourceID, true
+
+	case "sourceUrl":
+		return &record.SourceURL, true
 
 	case "message":
 		return &record.Message, true

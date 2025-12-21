@@ -265,6 +265,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	// Authentication Pages
 	e.GET("/signin", handler.WithFactory(factory, handler.GetSignIn))
 	e.POST("/signin", handler.WithFactory(factory, handler.PostSignIn))
+	e.GET("/signout", handler.WithFactory(factory, handler.GetSignOut))
 	e.POST("/signout", handler.WithFactory(factory, handler.PostSignOut))
 	e.GET("/register", handler.WithRegistration(factory, handler.GetRegister))
 	e.GET("/register/:action", handler.WithRegistration(factory, handler.GetRegister))

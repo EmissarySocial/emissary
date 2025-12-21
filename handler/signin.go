@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
 	"net/url"
@@ -12,6 +13,7 @@ import (
 	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/steranko"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // GetSignIn generates an echo.HandlerFunc that handles GET /signin requests
@@ -67,6 +69,37 @@ func PostSignIn(ctx *steranko.Context, factory *service.Factory, session data.Se
 	return ctx.NoContent(http.StatusNoContent)
 }
 
+// GetSignOut displays an HTML response page when a user has been signed out of the system.
+func GetSignOut(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
+
+	spew.Dump("SignOut Template")
+
+	// Get the standard Signin page
+	template := factory.Domain().Theme().HTMLTemplate
+
+	domain := factory.Domain().Get()
+
+	// Get a clean version of the URL query parameters
+	data := cleanQueryParams(ctx.QueryParams())
+	data["DomainName"] = domain.Label
+	data["DomainIcon"] = domain.IconURL()
+	data["DomainImage"] = domain.ImageURL()
+	data["HasRegistrationForm"] = factory.Domain().HasRegistrationForm()
+	data["Next"] = url.QueryEscape(data.GetString("next"))
+	spew.Dump(data)
+
+	var buf bytes.Buffer
+
+	// Render the template
+	if err := template.ExecuteTemplate(&buf, "user-signout", data); err != nil {
+		return derp.Wrap(err, "handler.GetSignIn", "Error executing template")
+	}
+
+	spew.Dump(buf.String())
+
+	return ctx.HTML(http.StatusOK, buf.String())
+}
+
 // PostSignOut generates an echo.HandlerFunc that handles POST /signout requests
 func PostSignOut(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
@@ -89,7 +122,7 @@ func PostSignOut(ctx *steranko.Context, factory *service.Factory, session data.S
 	}
 
 	// Otherwise, just redirect to the home page.
-	ctx.Response().Header().Add("HX-Redirect", "/")
+	ctx.Response().Header().Add("HX-Redirect", "/signout")
 	return ctx.NoContent(http.StatusNoContent)
 }
 
