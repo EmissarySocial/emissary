@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/first"
+	dt "github.com/benpate/domain"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/steranko"
 )
@@ -51,7 +52,7 @@ func PostSignIn(ctx *steranko.Context, factory *service.Factory, session data.Se
 	}
 
 	// If there is a "next" parameter, then redirect to that URL.  Otherwise, redirect to the user's profile.
-	next := first.String(ctx.QueryParam("next"), "/@me")
+	next := calcNextURL(ctx.QueryParam("next"))
 	ctx.Response().Header().Add("Hx-Redirect", next)
 
 	// Add user's Activity Intent data to the response.
@@ -68,14 +69,43 @@ func PostSignIn(ctx *steranko.Context, factory *service.Factory, session data.Se
 	return ctx.NoContent(http.StatusNoContent)
 }
 
+func calcNextURL(next string) string {
+
+	// If "next" is empty, then redirect to the user's profile
+	if next == "" {
+		return "/@me"
+	}
+
+	// Otherwise, trim the hostname so we don't have open redirects to other servers
+	next = dt.TrimHostname(next)
+
+	// Do not allow redirect loops
+	if strings.HasPrefix(next, "/signin") {
+		return "/@me"
+	}
+
+	// Do not allow redirect loops
+	if strings.HasPrefix(next, "/signout") {
+		return "/@me"
+	}
+
+	// Allow this "next" URL redirect
+	return next
+}
+
 // GetSignOut displays an HTML response page when a user has been signed out of the system.
 func GetSignOut(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
-	spew.Dump("SignOut Template")
+	s := factory.Steranko(session)
+
+	// "sign all the way out" -- if we have an admin "backup profile"
+	// then sign out again.
+	if hasBackupProfile := s.SignOut(ctx); hasBackupProfile {
+		s.SignOut(ctx)
+	}
 
 	// Get the standard Signin page
 	template := factory.Domain().Theme().HTMLTemplate
-
 	domain := factory.Domain().Get()
 
 	// Get a clean version of the URL query parameters
@@ -85,7 +115,6 @@ func GetSignOut(ctx *steranko.Context, factory *service.Factory, session data.Se
 	data["DomainImage"] = domain.ImageURL()
 	data["HasRegistrationForm"] = factory.Domain().HasRegistrationForm()
 	data["Next"] = url.QueryEscape(data.GetString("next"))
-	spew.Dump(data)
 
 	var buf bytes.Buffer
 
@@ -93,8 +122,6 @@ func GetSignOut(ctx *steranko.Context, factory *service.Factory, session data.Se
 	if err := template.ExecuteTemplate(&buf, "user-signout", data); err != nil {
 		return derp.Wrap(err, "handler.GetSignIn", "Error executing template")
 	}
-
-	spew.Dump(buf.String())
 
 	return ctx.HTML(http.StatusOK, buf.String())
 }

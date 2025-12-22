@@ -74,7 +74,7 @@ func WithAuthenticatedUser(serverFactory *server.Factory, fn WithFunc1[model.Use
 		if user.MovedTo != "" {
 			factory.Steranko(session).SignOut(ctx)
 			ctx.Response().Header().Set("HX-Redirect", "/signout")
-			return ctx.Redirect(http.StatusMovedPermanently, "/signout")
+			return ctx.Redirect(http.StatusTemporaryRedirect, "/signout")
 		}
 
 		// Call the continuation function
@@ -518,7 +518,7 @@ func WithStream(serverFactory *server.Factory, fn WithFunc1[model.Stream]) echo.
 		if stream.MovedTo != "" {
 			newURL := stream.MovedTo + "?url=" + stream.ActivityPubURL()
 			ctx.Response().Header().Set("HX-Redirect", newURL)
-			return ctx.Redirect(http.StatusMovedPermanently, newURL)
+			return ctx.Redirect(http.StatusPermanentRedirect, newURL)
 		}
 
 		// Otherwise, continue rendering the Stream
@@ -569,7 +569,7 @@ func WithUser(serverFactory *server.Factory, fn WithFunc1[model.User]) echo.Hand
 		// Handle redirects for Users who have moved away.
 		if user.MovedTo != "" {
 			ctx.Response().Header().Set("HX-Redirect", user.MovedTo)
-			return ctx.Redirect(http.StatusMovedPermanently, user.MovedTo)
+			return ctx.Redirect(http.StatusPermanentRedirect, user.MovedTo)
 		}
 
 		// Call the continuation function

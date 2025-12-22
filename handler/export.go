@@ -229,8 +229,9 @@ func PostUserExportFinish(ctx *steranko.Context, factory *service.Factory, sessi
 	// Sign the user out of this website.
 	factory.Steranko(session).SignOut(ctx)
 
-	// Return an empty 200 OK response
-	return ctx.Redirect(http.StatusTemporaryRedirect, "/@"+user.UserID.Hex()+"/export/complete")
+	// Return an empty 200 OK response that redirectst he browser to the signout page
+	ctx.Response().Header().Set("HX-Redirect", "/signout")
+	return ctx.NoContent(http.StatusOK)
 }
 
 // This displays a message to users that their profile has been exported.
