@@ -16,7 +16,6 @@ import (
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/toot/object"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -471,8 +470,6 @@ func (stream *Stream) UpdateAttachmentURLs(remoteURL string, localURL string) bo
 
 	changed := false
 
-	spew.Dump("stream.UpdateAttachmentURLs ---", remoteURL, localURL, stream.IconURL)
-
 	for key := range stream.Data {
 		if value := stream.Data.GetString(key); value == remoteURL {
 			stream.Data.SetString(key, localURL)
@@ -485,7 +482,6 @@ func (stream *Stream) UpdateAttachmentURLs(remoteURL string, localURL string) bo
 		changed = true
 	}
 
-	spew.Dump(changed)
 	return changed
 }
 

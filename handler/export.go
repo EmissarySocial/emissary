@@ -12,7 +12,6 @@ import (
 	"github.com/benpate/html"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -198,8 +197,6 @@ func GetAttachmentsExportOriginal(ctx *steranko.Context, factory *service.Factor
 func PostUserExportFinish(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.PostUserExportFinish"
-
-	spew.Dump(location, ctx.Param("userId"), user)
 
 	// RULE: Validate the UserID matches the authenticated user
 	if ctx.Param("userId") != user.UserID.Hex() {

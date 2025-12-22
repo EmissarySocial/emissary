@@ -22,7 +22,6 @@ import (
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/sherlock"
 	"github.com/benpate/turbine/queue"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/oauth2"
 )
@@ -449,8 +448,6 @@ func (service *Import) ImportAttachments(session data.Session, importRecord *mod
 	if err != nil {
 		return derp.Wrap(err, location, "Unable to load Attachments")
 	}
-
-	spew.Dump(location, collection.Value())
 
 	// Import each attachment in the collection
 	for attachment := range collections.RangeDocuments(collection) {

@@ -13,7 +13,6 @@ import (
 	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
 )
 
 // GetSignIn generates an echo.HandlerFunc that handles GET /signin requests
