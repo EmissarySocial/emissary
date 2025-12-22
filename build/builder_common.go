@@ -375,7 +375,7 @@ func (w Common) ActivityStreamCollection(url string) sliceof.String {
 	object, err := activityService.Client().Load(url)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to load ActivityStream. Returning empty collection to template."))
+		derp.Report(derp.Wrap(err, location, "Unable to load ActivityStream Collection. Returning empty collection to template."))
 		return sliceof.NewString()
 	}
 
