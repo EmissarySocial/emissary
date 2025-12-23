@@ -322,6 +322,7 @@
 				{do:"with-oauth-token", steps:[
 					{do:"as-modal", steps:[
 						{do:"view-html"}
+						{do:"forward-to", url:"/signout", method:"post"}
 					]}
 				]}
 			]

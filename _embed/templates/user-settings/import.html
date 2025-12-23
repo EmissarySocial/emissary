@@ -213,19 +213,15 @@
 
 							{{template "import-source" $source}}
 
-							<div class="text-lg text-green bold">Import Complete: {{$import.CompleteItems}} Records Processed</div>
-							<div class="margin-bottom">
-								We have finished importing records from your remote profile.  
-								Please check this work by viewing your new profile contents 
-								and reviewing the logs details.
-							</div>
+							<div class="text-lg text-green bold">Import Complete</div>
+							<div>Processed: {{$import.CompleteItems}} {{pluralize $import.CompleteItems "Record" "Records"}}</div>
 
 							{{- if $importErrors.IsEmpty -}}
-								<div class="margin-bottom-lg bold">No Errors.</div>
+								<div class="margin-bottom-lg">Errors: None {{icon "thumbs-up"}}</div>
 							{{- else -}}
 							
 								<details class="margin-bottom-lg">
-									<summary class="clickable">Error Summary ({{$importErrors.Length}} {{pluralize $importErrors.Length "Error" "Errors"}})</summary>
+									<summary class="clickable">Errors: {{$importErrors.Length}}</summary>
 									<div class="table scroll-horizontal">
 										{{- range $importItem := $importErrors -}}
 											<div class="text-sm">
@@ -240,6 +236,17 @@
 
 							{{- end -}}
 
+							<hr class="margin-top-lg">
+							<div class="text-lg bold">First Step: Check Your Profile</div>
+							<div class="margin-bottom">
+								We have finished importing records from your remote profile.  
+								Please check this work by viewing your new profile contents 
+								and reviewing the logs details. When you are satisfied with 
+								the import, return to this page to finalize the migration.
+							</div>
+							<div>
+								<a href="/@me">View My Profile &rarr;</a>
+							</div>
 							<hr class="margin-top-lg">
 							<div class="text-lg bold">Next Step: Move Your Account</div>
 							<div class="margin-bottom">

@@ -71,7 +71,7 @@
 			{{- $scope := . -}}
 			{{- range $index, $oauthUserToken := $oauthUserTokens -}}
 
-				{{- $actorID := $oauthUserToken.data.actor -}}
+				{{- $actorID := $oauthUserToken.data.GetString "actor" -}}
 				{{- $actor := $scope.ActivityStream $actorID -}}
 				{{- $startDate := $oauthUserToken.data.startDate -}}
 
@@ -81,7 +81,7 @@
 						<div class="flex-grow">
 							<div class="text-lg bold margin-top-none margin-bottom-lg">
 								<i class="bi bi-database-up"></i> 
-								Exporting to {{$oauthUserToken.name}}
+								Exporting to: {{$oauthUserToken.name}}
 							</div>
 
 							<div class="flex-row">

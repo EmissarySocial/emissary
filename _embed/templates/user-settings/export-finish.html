@@ -54,11 +54,9 @@
 		<hr>
 	</div>
 
-	<button id="btn-move" type="submit" class="primary" disabled>Move to <b>{{$actorDomain}}</b></button>
-	<button script="on click trigger closeModal">Cancel</button>
+	<button type="submit" id="btn-move" class="primary" disabled>Move to <b>{{$actorDomain}}</b></button>
+	<button script="on click halt the event then trigger closeModal">Cancel</button>
 </form>
-
-<!--pre>{{.Object | jsonIndent}}</pre-->
 
 <style>
 	input[type="checkbox"].move-terms {
@@ -87,6 +85,6 @@
 		end
 
 		set #btn-move.disabled to false
-
 	end
+	
 </script>
