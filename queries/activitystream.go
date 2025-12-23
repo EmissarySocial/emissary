@@ -52,7 +52,7 @@ func UpdateContext(collection data.Collection, oldContext string, newContext str
 	mongoCollection := mongoCollection(collection)
 
 	// Update all documents with the old context
-	_, err := mongoCollection.UpdateMany(
+	_, err := mongoCollection.UpdateMany( // nolint:scopeguard
 		collection.Context(),
 		bson.M{"object.context": oldContext},
 		bson.M{"$set": bson.M{"object.context": newContext}},

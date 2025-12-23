@@ -83,7 +83,6 @@ func main() {
 
 	// Locate the configuration file and populate the server factory
 	commandLineArgs := config.GetCommandLineArgs()
-	serverFactory := server.NewFactory(&commandLineArgs, embeddedFiles)
 
 	// Start and configure the Web server
 	e := echo.New()
@@ -101,7 +100,7 @@ func main() {
 
 	e.Use(middleware.Recover())
 
-	if serverFactory.IsSetupMode() {
+	if serverFactory := server.NewFactory(&commandLineArgs, embeddedFiles); serverFactory.IsSetupMode() {
 
 		// Get config modifiers from the command line (like HTTP PORT)
 		configOptions := commandLineArgs.ConfigOptions()
@@ -581,11 +580,8 @@ func errorHandler(err error, ctx echo.Context) {
 		),
 	)
 
-	// Get the true hostname of the request.
-	hostname := dt.TrueHostname(request)
-
-	// Show developers a full error dump (local servers only)
-	if dt.IsLocalhost(hostname) {
+	// If this is a local request, then show developers a full error dump
+	if hostname := dt.TrueHostname(request); dt.IsLocalhost(hostname) {
 		_ = ctx.JSONPretty(derp.ErrorCode(err), err, "  ")
 		return
 	}

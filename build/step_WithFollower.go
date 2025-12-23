@@ -57,7 +57,6 @@ func (step StepWithFollower) execute(builder Builder, buffer io.Writer, actionMe
 
 	// Collect required services and values
 	factory := builder.factory()
-	followerService := factory.Follower()
 	token := builder.QueryParam("followerId")
 	follower := model.NewFollower()
 	follower.ParentID = userID // TODO: Make this generic enough to work with Content Actors...
@@ -72,6 +71,7 @@ func (step StepWithFollower) execute(builder Builder, buffer io.Writer, actionMe
 	} else {
 
 		// Existing Follower records can be looked up if authenticated, or with a secret.
+		followerService := factory.Follower()
 		secret := builder.QueryParam("secret")
 		if err := step.load(builder.session(), followerService, token, userID, secret, &follower); err != nil {
 			return Halt().WithError(derp.Wrap(err, location, "Unable to load Follower via ID", token))

@@ -36,9 +36,7 @@ func (step StepGetArchive) Get(builder Builder, writer io.Writer) PipelineBehavi
 
 	log.Trace().Str("location", location).Msg("Locating archive in cache...")
 
-	exists, ready := streamArchiveService.Exists(streamID, step.Token)
-
-	if !ready {
+	if exists, ready := streamArchiveService.Exists(streamID, step.Token); !ready {
 
 		if !exists {
 

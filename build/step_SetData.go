@@ -40,8 +40,7 @@ func (step StepSetData) Get(builder Builder, buffer io.Writer) PipelineBehavior 
 
 	// Set default values (only if no value already exists)
 	for name, value := range step.Defaults {
-		currentValue, _ := schema.Get(builder, name)
-		if compare.IsZero(currentValue) {
+		if currentValue, _ := schema.Get(builder, name); compare.IsZero(currentValue) {
 			if err := schema.Set(object, name, value); err != nil {
 				result := derp.Wrap(err, location, "Error setting default value", name, value, derp.WithBadRequest())
 				return Halt().WithError(result)

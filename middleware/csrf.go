@@ -16,10 +16,9 @@ func AllowCSR(next echo.HandlerFunc) echo.HandlerFunc {
 
 			// Get the current URL
 			url := ctx.Request().URL
-			query := url.Query()
 
 			// If we don't already have the flag value
-			if query.Get("__AllowCSR__") == "" {
+			if query := url.Query(); query.Get("__AllowCSR__") == "" {
 
 				// Add the flag to the query string
 				query.Set("__AllowCSR__", "true")

@@ -32,11 +32,10 @@ func Contains(values []string, target string) bool {
 // If either slice is unsorted, the result will be inaccurate.
 func ContainsAll(subset []string, superset []string) bool {
 
-	subsetIndex := 0
-	subsetLength := len(subset)
-
-	supersetIndex := 0
-	supersetLength := len(superset)
+	subsetIndex := 0                // nolint:scopeguard
+	subsetLength := len(subset)     // nolint:scopeguard
+	supersetIndex := 0              // nolint:scopeguard
+	supersetLength := len(superset) // nolint:scopeguard
 
 	for {
 

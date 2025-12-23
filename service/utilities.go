@@ -37,12 +37,10 @@ func RangeFunc[T any](it data.Iterator, new func() T) iter.Seq[T] {
 			return
 		}
 
-		value := new()
-		for it.Next(&value) {
+		for value := new(); it.Next(&value); value = new() {
 			if !yield(value) {
 				break
 			}
-			value = new()
 		}
 	}
 }

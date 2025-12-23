@@ -194,7 +194,6 @@ func GetIdentitySigninWithJWT(ctx *steranko.Context, factory *service.Factory, s
 	}
 
 	// Collect the identifier and identifier type from the JWT claims
-	identityService := factory.Identity()
 	identifier := convert.String(claims["A"])
 	identifierType := convert.String(claims["T"])
 
@@ -212,6 +211,7 @@ func GetIdentitySigninWithJWT(ctx *steranko.Context, factory *service.Factory, s
 	// If the JWT is not already linked to an Identity, then load or create one from scratch.
 	case primitive.NilObjectID:
 
+		identityService := factory.Identity()
 		identity, err := identityService.LoadOrCreate(session, "", identifierType, identifier)
 
 		if err != nil {
@@ -229,6 +229,7 @@ func GetIdentitySigninWithJWT(ctx *steranko.Context, factory *service.Factory, s
 	// Otherwise, add/update the identifier in the existing Identity
 	default:
 
+		identityService := factory.Identity()
 		identity := model.NewIdentity()
 
 		if err := identityService.LoadByID(session, authorization.IdentityID, &identity); err != nil {

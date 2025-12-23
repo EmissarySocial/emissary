@@ -41,7 +41,6 @@ func (step StepWithCircle) execute(builder Builder, buffer io.Writer, actionMeth
 
 	// Collect required services and values
 	factory := builder.factory()
-	circleService := factory.Circle()
 	circleToken := builder.QueryParam("circleId")
 	circle := model.NewCircle()
 	circle.UserID = builder.AuthenticatedID()
@@ -53,7 +52,7 @@ func (step StepWithCircle) execute(builder Builder, buffer io.Writer, actionMeth
 			return Halt().WithError(derp.Wrap(err, location, "Invalid Circle ID", circleToken))
 		}
 
-		if err := circleService.LoadByID(builder.session(), builder.AuthenticatedID(), circleID, &circle); err != nil {
+		if err := factory.Circle().LoadByID(builder.session(), builder.AuthenticatedID(), circleID, &circle); err != nil {
 			if actionMethod == ActionMethodGet {
 				return Halt().WithError(derp.Wrap(err, location, "Unable to load Circle", circleID))
 			}

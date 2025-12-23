@@ -320,10 +320,11 @@ func (service *ActivityStream) queryByRelation(ctx context.Context, relationType
 		defer derp.ReportFunc(documents.Close)
 
 		// Write documents into the result channel until done (or done)
-		value := ascache.NewValue()
-		for documents.Next(&value) {
+
+		for value := ascache.NewValue(); documents.Next(&value); value = ascache.NewValue() {
 
 			select {
+
 			case <-done:
 				return
 
@@ -335,8 +336,6 @@ func (service *ActivityStream) queryByRelation(ctx context.Context, relationType
 					streams.WithClient(service.Client()),
 				)
 			}
-
-			value = ascache.NewValue()
 		}
 	}()
 

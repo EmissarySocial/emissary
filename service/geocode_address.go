@@ -90,7 +90,7 @@ func (service GeocodeAddress) getGeocoder(session data.Session) geocoder.Address
 		derp.Report(derp.Wrap(err, location, "Unable to load geocoder"))
 	}
 
-	apiKey := connection.Data.GetString("apiKey")
+	apiKey := connection.Data.GetString("apiKey") // nolint:scopeguard
 
 	switch connection.Data.GetString("provider") {
 

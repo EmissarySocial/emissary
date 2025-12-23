@@ -45,10 +45,9 @@ func ParseString(value string, options ...HeaderOption) Header {
 	items := strings.Split(value, ",")
 
 	for _, item := range items {
-		item = strings.TrimSpace(item)
-		directive, argument, _ := strings.Cut(item, "=")
 
-		switch directive {
+		item = strings.TrimSpace(item)
+		switch directive, argument, _ := strings.Cut(item, "="); directive {
 
 		case DirectiveMaxAge:
 			if maxAge, err := strconv.ParseInt(argument, 10, 64); err == nil {

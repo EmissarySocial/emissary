@@ -43,9 +43,7 @@ func rangeFunc[T any](ctx context.Context, cursor *mongo.Cursor) iter.Seq[T] {
 // compareModel returns TRUE if the index and model are identical
 func compareModel(currentIndex mapof.Any, newIndex mongo.IndexModel) bool {
 
-	newIndexMap := convertModelToMap(newIndex)
-
-	if reflect.DeepEqual(currentIndex, newIndexMap) {
+	if newIndexMap := convertModelToMap(newIndex); reflect.DeepEqual(currentIndex, newIndexMap) {
 		return true
 	}
 

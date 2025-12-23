@@ -556,9 +556,8 @@ func (service *User) CalcNewUsername(session data.Session, user *model.User) err
 	// Otherwise, try slug values until we find a unique username (max 32)
 	for i := 1; i < 32; i++ {
 		slug := random.GenerateInt(1000, 9999)
-		username := base + strconv.Itoa(slug)
 
-		if !service.UsernameExists(session, user.UserID, username) {
+		if username := base + strconv.Itoa(slug); !service.UsernameExists(session, user.UserID, username) {
 			user.Username = username
 			return nil
 		}
@@ -691,10 +690,9 @@ func (service *User) SetOwner(session data.Session, owner config.Owner) error {
 		return derp.Wrap(err, location, "Unable to load owners")
 	}
 
-	user := model.NewUser()
 	found := false
 
-	for users.Next(&user) {
+	for user := model.NewUser(); users.Next(&user); user = model.NewUser() {
 
 		// See if this user is the "owner" being added/updated
 		isOwner := (user.Username == owner.Username)
@@ -712,9 +710,6 @@ func (service *User) SetOwner(session data.Session, owner config.Owner) error {
 				return derp.Wrap(err, location, "Unable to save user", user)
 			}
 		}
-
-		// Reset the user object
-		user = model.NewUser()
 	}
 
 	// If we didn't find an owner above, then we need to create one.

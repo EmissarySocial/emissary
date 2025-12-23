@@ -166,8 +166,7 @@ func (searchQuery *SearchQuery) SetQuery(queryString string) {
 func (searchQuery *SearchQuery) AppendTags(tags ...string) {
 	for _, tag := range tags {
 		if tag != "" {
-			values := parse.Split(tag)
-			if len(values) > 0 {
+			if values := parse.Split(tag); len(values) > 0 {
 				searchQuery.Tags = append(searchQuery.Tags, values...)
 			}
 		}

@@ -16,17 +16,15 @@ func init() {
 
 		// Look up the requested search query
 		searchDomainService := context.factory.SearchDomain()
+		ruleService := context.factory.Rule()
 
 		// RULE: Require that the search query in the document matches the search query inbox.
-		actorURL := searchDomainService.ActivityPubURL()
-
-		if activity.Object().ID() != actorURL {
+		if actorURL := searchDomainService.ActivityPubURL(); actorURL != activity.Object().ID() {
 			return derp.InternalError(location, "Invalid Search Query ID", actorURL, activity.Object().ID())
 		}
 
 		// RULE: Do not allow new "Follows" of any blocked Actors
-		ruleFilter := context.factory.Rule().Filter(primitive.NilObjectID, service.WithBlocksOnly())
-		if ruleFilter.Disallow(context.session, &activity) {
+		if filter := ruleService.Filter(primitive.NilObjectID, service.WithBlocksOnly()); filter.Disallow(context.session, &activity) {
 			return derp.ForbiddenError(location, "Blocked by rule", activity.Object().ID())
 		}
 

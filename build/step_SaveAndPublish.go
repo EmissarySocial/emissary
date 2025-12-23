@@ -23,6 +23,11 @@ func (step StepSaveAndPublish) Post(builder Builder, _ io.Writer) PipelineBehavi
 
 	const location = "build.StepSaveAndPublish.Post"
 
+	// RULE: Require authentication to publish content
+	if !builder.IsAuthenticated() {
+		return Halt().WithError(derp.Unauthorized(location, "User must be authenticated to publish content"))
+	}
+
 	streamBuilder, ok := builder.(Stream)
 
 	if !ok {
@@ -36,10 +41,8 @@ func (step StepSaveAndPublish) Post(builder Builder, _ io.Writer) PipelineBehavi
 	userService := factory.User()
 	user := model.NewUser()
 
-	if builder.IsAuthenticated() {
-		if err := userService.LoadByID(builder.session(), streamBuilder.AuthenticatedID(), &user); err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Unable to load user", streamBuilder.AuthenticatedID()))
-		}
+	if err := userService.LoadByID(builder.session(), streamBuilder.AuthenticatedID(), &user); err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Unable to load user", streamBuilder.AuthenticatedID()))
 	}
 
 	// Try to Publish the Stream to ActivityPub

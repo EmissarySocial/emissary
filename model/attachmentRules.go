@@ -68,9 +68,6 @@ func (rules AttachmentRules) FileSpec(address *url.URL, originalExtension string
 		bitrate = rules.Bitrate
 	}
 
-	originalType := mime.TypeByExtension(originalExtension)
-	originalCategory := list.Slash(originalType).First()
-
 	// Map duplicate extensions to the canonical value
 	switch extension {
 	case "jpg":
@@ -80,7 +77,9 @@ func (rules AttachmentRules) FileSpec(address *url.URL, originalExtension string
 	// Calculate default types if none is provided
 	if len(rules.Extensions) == 0 {
 
-		switch originalCategory {
+		originalType := mime.TypeByExtension(originalExtension)
+
+		switch originalCategory := list.Slash(originalType).First(); originalCategory {
 
 		case "image":
 			rules.Extensions = []string{"webp", "png", "jpeg", "gif"}

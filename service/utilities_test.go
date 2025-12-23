@@ -10,7 +10,6 @@ import (
 func TestParsePath(t *testing.T) {
 
 	id1, _ := primitive.ObjectIDFromHex("123456789012345678901234")
-	id2, _ := primitive.ObjectIDFromHex("234567890123456789012345")
 
 	{
 		urlValue, userID, objectType, objectID, err := ParseProfileURL("https://example.com/@123456789012345678901234")
@@ -39,6 +38,8 @@ func TestParsePath(t *testing.T) {
 	}
 
 	{
+		id2, _ := primitive.ObjectIDFromHex("234567890123456789012345")
+
 		urlValue, userID, objectType, objectID, err := ParseProfileURL("https://example.com/@123456789012345678901234/pub/followers/234567890123456789012345")
 		require.Nil(t, err)
 		require.NotNil(t, urlValue)

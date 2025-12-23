@@ -35,10 +35,8 @@ func WithAuthenticatedAPI(serverFactory *server.Factory, fn WithFunc0) echo.Hand
 
 	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
-		// Guarantee that the user is signed in
-		authorization := getAuthorization(ctx)
-
-		if !authorization.IsAuthenticated() {
+		// IF the user is NOT signed in, then stop here
+		if authorization := getAuthorization(ctx); authorization.NotAuthenticated() {
 			return derp.UnauthorizedError(location, "You must be signed in to perform this action")
 		}
 
@@ -443,23 +441,9 @@ func WithSearchQuery(serverFactory *server.Factory, fn WithFunc3[model.Template,
 
 		// Load the Stream from the database
 		searchQueryService := factory.SearchQuery()
-		token := ctx.Param("searchId")
-
-		switch token {
-
-		// If there is no token, make a new token using the URL parameters provided
-		case "":
-			searchQuery, err := searchQueryService.LoadOrCreate(session, ctx.QueryParams())
-
-			if err != nil {
-				return derp.Wrap(err, location, "Unable to create search query token")
-			}
-
-			// Call the continuation function
-			return fn(ctx, factory, session, template, stream, &searchQuery)
 
 		// If we have a valid token, then use it to  look up the search query
-		default:
+		if token := ctx.Param("searchId"); token != "" {
 			searchQuery := model.NewSearchQuery()
 			if err := searchQueryService.LoadByToken(session, token, &searchQuery); err != nil {
 				return derp.Wrap(err, location, "Unable to load search query from database")
@@ -468,6 +452,16 @@ func WithSearchQuery(serverFactory *server.Factory, fn WithFunc3[model.Template,
 			// Call the continuation function
 			return fn(ctx, factory, session, template, stream, &searchQuery)
 		}
+
+		// Otherwise, make a new token using the URL parameters provided
+		searchQuery, err := searchQueryService.LoadOrCreate(session, ctx.QueryParams())
+
+		if err != nil {
+			return derp.Wrap(err, location, "Unable to create search query token")
+		}
+
+		// Call the continuation function
+		return fn(ctx, factory, session, template, stream, &searchQuery)
 	})
 }
 

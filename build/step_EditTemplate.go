@@ -74,11 +74,8 @@ func (step StepEditTemplate) Post(builder Builder, _ io.Writer) PipelineBehavior
 	// Multiple Templates may be specified.  So, for each new value...
 	for _, path := range step.Paths {
 
-		// Find the new TemplateID
-		newTemplateID := transaction.Get(path)
-
 		// Scan all allowed records
-		if step.isTemplateAllowed(builder, path, newTemplateID) {
+		if newTemplateID := transaction.Get(path); step.isTemplateAllowed(builder, path, newTemplateID) {
 			if err := schema.Set(object, path, newTemplateID); err != nil {
 				return Halt().WithError(derp.Wrap(err, location, "Error setting template", path))
 			}
@@ -121,13 +118,12 @@ func (step StepEditTemplate) isTemplateAllowed(builder Builder, path string, tem
 
 func (step StepEditTemplate) listTemplates(builder Builder, path string) []form.LookupCode {
 
-	templateService := builder.factory().Template()
-
 	switch path {
 
 	case "templateId":
 		if stream, ok := builder.object().(*model.Stream); ok {
 
+			templateService := builder.factory().Template()
 			parentTemplateID := stream.ParentTemplateID
 
 			if parentTemplate, err := templateService.Load(parentTemplateID); err == nil {
@@ -136,10 +132,10 @@ func (step StepEditTemplate) listTemplates(builder Builder, path string) []form.
 		}
 
 	case "inboxTemplate":
-		return templateService.ListByTemplateRole("user-inbox")
+		return builder.factory().Template().ListByTemplateRole("user-inbox")
 
 	case "outboxTemplate":
-		return templateService.ListByTemplateRole("user-outbox")
+		return builder.factory().Template().ListByTemplateRole("user-outbox")
 	}
 
 	return make([]form.LookupCode, 0)

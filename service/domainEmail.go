@@ -97,7 +97,7 @@ func (service *DomainEmail) SendPasswordReset(user *model.User) error {
 	domain := service.domainService.Get()
 
 	// Send the password reset email
-	err := service.serverEmail.Send(
+	err := service.serverEmail.Send( // nolint: scopeguard
 		service.smtp,
 		service.owner,
 		"user-password-reset",
@@ -205,7 +205,7 @@ func (service *DomainEmail) SendFollowerActivity(follower *model.Follower, activ
 	domain := service.domainService.Get()
 
 	// Send the activity email
-	err := service.serverEmail.Send(
+	err := service.serverEmail.Send( // noline: scopeguard
 		service.smtp,
 		service.owner,
 		"follower-activity",

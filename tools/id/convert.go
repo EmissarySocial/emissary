@@ -32,11 +32,11 @@ func ConvertSlice(original []string) ([]primitive.ObjectID, error) {
 
 		objectID, err := primitive.ObjectIDFromHex(value)
 
-		if err == nil {
-			result = append(result, objectID)
-		} else {
+		if err != nil {
 			return nil, derp.Wrap(err, "id.ConvertSlice", "Error converting string to ObjectID", value, index)
 		}
+
+		result = append(result, objectID)
 	}
 
 	return result, nil

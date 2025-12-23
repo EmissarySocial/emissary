@@ -12,13 +12,11 @@ func TestSchema(t *testing.T) {
 	s := schema.New(SliceSchema())
 	value := NewSlice()
 
-	{
-		require.Nil(t, s.Set(&value, "0", "123456123456123456123456"))
-		result, err := s.Get(&value, "0")
-		require.Nil(t, err)
-		require.Equal(t, "123456123456123456123456", result)
+	require.Nil(t, s.Set(&value, "0", "123456123456123456123456"))
+	result, err := s.Get(&value, "0")
+	require.Nil(t, err)
+	require.Equal(t, "123456123456123456123456", result)
 
-	}
 }
 
 func TestSort(t *testing.T) {

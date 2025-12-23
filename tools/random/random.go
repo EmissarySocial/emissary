@@ -23,9 +23,9 @@ import (
 // case the caller should not continue.
 func GenerateBytes(n int) ([]byte, error) {
 	b := make([]byte, n)
-	_, err := rand.Read(b)
+
 	// Note that err == nil only if we read len(b) bytes.
-	if err != nil {
+	if _, err := rand.Read(b); err != nil {
 		return nil, err
 	}
 

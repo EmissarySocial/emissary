@@ -26,7 +26,7 @@ func GetIntent_Like(ctx *steranko.Context, factory *service.Factory, session dat
 	}
 
 	// Default values here
-	onCancel := firstOf(transaction.OnCancel, "/@me")
+	onCancel := firstOf(transaction.OnCancel, "/@me") // notlint:scopeguard
 
 	activityStream := factory.ActivityStream(model.ActorTypeApplication, primitive.NilObjectID)
 	object, err := activityStream.Client().Load(transaction.Object)

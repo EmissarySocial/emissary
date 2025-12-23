@@ -43,7 +43,7 @@ func (service *Locator) GetWebFingerResult(session data.Session, resource string
 
 	const location = "service.Locator.GetWebFingerResult"
 
-	objectType, token := locateObjectFromURL(service.host, resource)
+	objectType, token := locateObjectFromURL(service.host, resource) // nolint:scopeguard
 
 	switch objectType {
 

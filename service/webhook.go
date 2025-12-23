@@ -113,19 +113,19 @@ func (service *Webhook) DeleteMany(session data.Session, criteria exp.Expression
 
 	const location = "service.Webhook.DeleteMany"
 
+	// Get an iterator for every Webhook that matches the criteria
 	it, err := service.List(session, notDeleted(criteria))
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error listing webhooks to delete", criteria)
 	}
 
-	webhook := model.NewWebhook()
+	// Delete every webhook in the Iterator
+	for webhook := model.NewWebhook(); it.Next(&webhook); webhook = model.NewWebhook() {
 
-	for it.Next(&webhook) {
 		if err := service.Delete(session, &webhook, note); err != nil {
 			return derp.Wrap(err, location, "Error deleting webhook", webhook)
 		}
-		webhook = model.NewWebhook()
 	}
 
 	return nil

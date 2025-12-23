@@ -45,6 +45,11 @@ func (authorization Authorization) IsAuthenticated() bool {
 	return !authorization.UserID.IsZero()
 }
 
+// NotAuthenticated returns TRUE if this authorization is NOT valid and has a zero UserID
+func (authorization Authorization) NotAuthenticated() bool {
+	return authorization.UserID.IsZero()
+}
+
 // IsIdentity returns TRUE if this authorization is valid and has a non-zero IdentityID
 func (authorization Authorization) IsIdentity() bool {
 	return !authorization.IdentityID.IsZero()

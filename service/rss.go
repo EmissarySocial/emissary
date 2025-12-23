@@ -34,7 +34,6 @@ func (rss RSS) Feed(session data.Session, criteria ...exp.Expression) (*feeds.JS
 	filter := exp.And(criteria...)
 
 	streams, err := rss.streamService.List(session, filter, option.SortDesc("publishDate"))
-	stream := model.NewStream()
 
 	if err != nil {
 		return nil, derp.Wrap(err, "service.rss.Feed", "Unable to load streams")
@@ -44,7 +43,7 @@ func (rss RSS) Feed(session data.Session, criteria ...exp.Expression) (*feeds.JS
 		Items: []*feeds.JSONItem{},
 	}
 
-	for streams.Next(&stream) {
+	for stream := model.NewStream(); streams.Next(&stream); stream = model.NewStream() {
 		result.Items = append(result.Items, rss.Item(stream))
 	}
 

@@ -15,9 +15,7 @@ type StepDump struct {
 // Get displays a customizable confirmation form for the delete
 func (step StepDump) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 
-	value := executeTemplate(step.Value, builder)
-
-	if value == "" {
+	if value := executeTemplate(step.Value, builder); value == "" {
 		spew.Dump(builder.object())
 	} else {
 		spew.Dump(value)
@@ -29,9 +27,7 @@ func (step StepDump) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 // Post removes the object from the database (likely using a soft-delete, though)
 func (step StepDump) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
-	value := executeTemplate(step.Value, builder)
-
-	if value == "" {
+	if value := executeTemplate(step.Value, builder); value == "" {
 		spew.Dump(builder.object())
 	} else {
 		spew.Dump(value)

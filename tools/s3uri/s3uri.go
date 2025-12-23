@@ -183,12 +183,14 @@ func parse(s3u *S3URI, s any) (*S3URI, error) {
 		if u.Path != "" && u.Path != "/" {
 			u.Path = u.Path[1:len(u.Path)]
 
-			index := strings.Index(u.Path, "/")
-			switch {
+			switch index := strings.Index(u.Path, "/"); {
+
 			case index == -1:
 				s3u.Bucket = String(u.Path)
+
 			case index == len(u.Path)-1:
 				s3u.Bucket = String(u.Path[:index])
+
 			default:
 				s3u.Bucket = String(u.Path[:index])
 				s3u.Key = String(u.Path[index+1:])
