@@ -216,28 +216,16 @@ func (service *ImportItem) RangeErrorsByImportID(session data.Session, userID pr
 	return service.Query(session, criteria)
 }
 
-// DeleteByImportID deletes all ImportItems that match the provided UserID and ImportID
+// DeleteByImportID HARD DELETEs all ImportItems that match the provided UserID and ImportID
 func (service *ImportItem) DeleteByImportID(session data.Session, userID primitive.ObjectID, importID primitive.ObjectID) error {
 
 	const location = "service.ImportItem.DeleteByImportID"
 
-	// Range over all ImportItems in the provided Import
-	iterator, err := service.RangeByImportID(session, userID, importID)
+	criteria := exp.Equal("importId", importID).
+		AndEqual("userId", userID)
 
-	if err != nil {
-		return derp.Wrap(err, location, "Unable to retrieve ImportItems")
-	}
-
-	// Delete each ImportItem
-	for importItem := range iterator {
-
-		criteria := exp.Equal("_id", importItem.ImportItemID).
-			AndEqual("importId", importItem.ImportID).
-			AndEqual("userId", importItem.UserID)
-
-		if err := service.collection(session).HardDelete(criteria); err != nil {
-			return derp.Wrap(err, location, "Unable to delete ImportItem", importItem)
-		}
+	if err := service.collection(session).HardDelete(criteria); err != nil {
+		return derp.Wrap(err, location, "Unable to delete ImportItems", criteria)
 	}
 
 	// Success.
