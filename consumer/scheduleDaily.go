@@ -21,54 +21,23 @@ func ScheduleDaily(serverFactory ServerFactory) queue.Result {
 		return queue.Error(err)
 	}
 
-	// Add a "Purge ActivityStream Cache" task to the queue
-	{
-		task := queue.NewTask(
-			"PurgeActivityStreamCache",
-			mapof.Any{},
-		)
+	q := serverFactory.Queue()
 
-		if err := serverFactory.Queue().Publish(task); err != nil {
-			return queue.Error(err)
-		}
-	}
+	// Add a "Purge ActivityStream Cache" task to the queue
+	q.NewTask("PurgeActivityStreamCache", mapof.Any{})
 
 	// Add a "Purge Errors" task to the queue
-	{
-		task := queue.NewTask(
-			"PurgeErrors",
-			mapof.Any{},
-		)
-
-		if err := serverFactory.Queue().Publish(task); err != nil {
-			return queue.Error(err)
-		}
-	}
+	q.NewTask("PurgeErrors", mapof.Any{})
 
 	// Add a "Purge Dome Log" task to the queue
-	{
-		task := queue.NewTask(
-			"PurgeDomeLog",
-			mapof.Any{},
-		)
-
-		if err := serverFactory.Queue().Publish(task); err != nil {
-			return queue.Error(err)
-		}
-	}
+	q.NewTask("PurgeDomeLog", mapof.Any{})
 
 	// Daily tasks for each domain
 	for factory := range serverFactory.RangeDomains() {
 
 		// Add "Recylce" tasks to the queue
-		task := queue.NewTask(
-			"RecycleDomain",
-			mapof.Any{"host": factory.Hostname()},
-		)
+		q.NewTask("RecycleDomain", mapof.Any{"host": factory.Hostname()})
 
-		if err := serverFactory.Queue().Publish(task); err != nil {
-			return queue.Error(err)
-		}
 	}
 
 	// Stupendous.

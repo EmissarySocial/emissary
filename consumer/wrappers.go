@@ -66,7 +66,7 @@ func WithImport(serverFactory ServerFactory, args mapof.Any, handler func(*servi
 	})
 }
 
-// WithFactoryAndSession wraps a consumer function, and uses the "host" argument to inject a Factory object into the function signature.
+// WithSession wraps a queue consumer function, and creates new database transaction that is passed to the wrapped handler
 func WithSession(serverFactory ServerFactory, args mapof.Any, handler func(factory *service.Factory, session data.Session, args mapof.Any) queue.Result) queue.Result {
 
 	const location = "consumer.WithFactoryAndSession"
