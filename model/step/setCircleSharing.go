@@ -19,9 +19,7 @@ type SetCircleSharing struct {
 // NewSetCircleSharing returns a fully parsed SetCircleSharing object
 func NewSetCircleSharing(stepInfo mapof.Any) (SetCircleSharing, error) {
 
-	role := stepInfo.GetString("role")
-
-	if role == "" {
+	if role := stepInfo.GetString("role"); role == "" {
 		return SetCircleSharing{}, derp.ValidationError("Role is required")
 	}
 

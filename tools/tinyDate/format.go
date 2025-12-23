@@ -29,8 +29,7 @@ func FormatDiff(firstTime time.Time, secondTime time.Time) string {
 	}
 
 	// If days, say "1d"
-	days := hours / 24
-	if days < 30 {
+	if days := hours / 24; days < 30 {
 		return strconv.Itoa(int(days)) + "d"
 	}
 

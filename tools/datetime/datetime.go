@@ -249,9 +249,7 @@ func (dt DateTime) MissingTimezone() bool {
 
 func splitTime(value string) (hours int, minutes int, seconds int) {
 
-	timeParts := strings.Split(value, ":")
-
-	if len(timeParts) > 0 {
+	if timeParts := strings.Split(value, ":"); len(timeParts) > 0 {
 
 		hours, _ = strconv.Atoi(timeParts[0])
 
