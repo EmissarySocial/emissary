@@ -231,6 +231,13 @@ func (service *Import) QueryByUser(session data.Session, userID primitive.Object
 	return service.Query(session, criteria)
 }
 
+// RangePurgable returns a Go 1.23 RangeFunc that iterates over all Import records
+// that have passed their PurgeDate
+func (service *Import) RangePurgable(session data.Session) iter.Seq[model.Import] {
+	criteria := exp.LessThan("purgeDate", time.Now().Unix())
+	return service.Range(session, criteria)
+}
+
 // LoadByID loads a single Import record based on the provided UserID and ImportID
 func (service *Import) LoadByID(session data.Session, userID primitive.ObjectID, importID primitive.ObjectID, record *model.Import) error {
 	criteria := exp.Equal("_id", importID).AndEqual("userId", userID)
@@ -253,6 +260,12 @@ func (service *Import) LoadByToken(session data.Session, userID primitive.Object
 func (service *Import) LoadBySourceURL(session data.Session, userID primitive.ObjectID, sourceURL string, record *model.Import) error {
 	criteria := exp.Equal("sourceUrl", sourceURL).AndEqual("userId", userID)
 	return service.Load(session, criteria, record)
+}
+
+// HardDeleteByID HARD DELETEs a single Import record based on the provided UserID and ImportID
+func (service *Import) HardDeleteByID(session data.Session, userID primitive.ObjectID, importID primitive.ObjectID) error {
+	criteria := exp.Equal("_id", importID).AndEqual("userId", userID)
+	return service.collection(session).HardDelete(criteria)
 }
 
 /******************************************
@@ -389,6 +402,9 @@ func (service *Import) doMove(record *model.Import) error {
 
 	// Update the state to "DONE"
 	record.StateID = model.ImportStateDone
+
+	// Set the purge date to 6 months from now
+	record.PurgeDate = time.Now().AddDate(0, 6, 0).Unix()
 
 	return nil
 }

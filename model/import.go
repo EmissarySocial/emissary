@@ -2,6 +2,7 @@ package model
 
 import (
 	"crypto/sha256"
+	"math"
 
 	"github.com/EmissarySocial/emissary/tools/random"
 	"github.com/benpate/data/journal"
@@ -22,14 +23,16 @@ type Import struct {
 	OAuthChallenge []byte             `bson:"oauthChallenge"` // OAuth challenge token used of PKCE
 	TotalItems     int                `bson:"totalItems"`     // The total number of items to be imported (available after the import plan is made)
 	CompleteItems  int                `bson:"completeItems"`  // The number of items that have completed
+	PurgeDate      int64              `bson:"purgeDate"`      // The Unix epoch (in seconds) when this Import can be purged along with all of its items.
 
 	journal.Journal `bson:",inline"`
 }
 
 func NewImport() Import {
 	return Import{
-		ImportID: primitive.NewObjectID(),
-		StateID:  ImportStateNew,
+		ImportID:  primitive.NewObjectID(),
+		StateID:   ImportStateNew,
+		PurgeDate: math.MaxInt64,
 	}
 }
 

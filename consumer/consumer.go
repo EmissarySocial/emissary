@@ -70,6 +70,9 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 	case "PurgeDomeLog":
 		return PurgeDomeLog(consumer.serverFactory)
 
+	case "PurgeImports":
+		return WithSession(consumer.serverFactory, args, PurgeImports)
+
 	case "ReceiveWebMention":
 		return WithSession(consumer.serverFactory, args, ReceiveWebMention)
 
