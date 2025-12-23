@@ -15,11 +15,6 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 
 	const location = "handler.activitypub_user.PostInbox"
 
-	// RULE: Only public users can be queried
-	if !user.IsPublic {
-		return derp.NotFoundError(location, "")
-	}
-
 	// Get ActivityStream service for this User
 	activityService := factory.ActivityStream(model.ActorTypeUser, user.UserID)
 
