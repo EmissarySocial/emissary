@@ -3,8 +3,6 @@
 {{- if .IsAuthenticated -}}
 
 	{{- $responses := .GetResponseSummary $url -}}
-	{{- $document := .ActivityStream $url -}}
-	{{- $metadata := $document.Metadata -}}
 
 	<span hx-target="this" hx-swap="outerHTML" hx-push-url="false">
 
