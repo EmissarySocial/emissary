@@ -2,10 +2,6 @@ module github.com/EmissarySocial/emissary
 
 go 1.25.1
 
-replace github.com/benpate/derp => ../../benpate/derp
-replace github.com/benpate/remote => ../../benpate/remote
-
-
 require (
 	github.com/PuerkitoBio/goquery v1.11.0
 	github.com/aws/aws-sdk-go v1.55.8
@@ -13,10 +9,10 @@ require (
 	github.com/benpate/data v0.31.2
 	github.com/benpate/data-mock v0.31.4
 	github.com/benpate/data-mongo v0.30.9
-	github.com/benpate/derp v0.34.2
+	github.com/benpate/derp v0.34.3
 	github.com/benpate/digit v0.13.12
 	github.com/benpate/digital-dome v0.2.11
-	github.com/benpate/domain v0.2.10
+	github.com/benpate/domain v0.2.11
 	github.com/benpate/exp v0.9.0
 	github.com/benpate/exp-builder v0.10.7
 	github.com/benpate/form v0.25.10
@@ -26,7 +22,7 @@ require (
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.15.12
 	github.com/benpate/re v0.3.5
-	github.com/benpate/remote v0.17.12
+	github.com/benpate/remote v0.17.13
 	github.com/benpate/rosetta v0.25.27
 	github.com/benpate/sherlock v0.8.18
 	github.com/benpate/sniff v0.1.0
@@ -72,7 +68,7 @@ require (
 	go.abhg.dev/goldmark/anchor v0.2.0
 	go.mongodb.org/mongo-driver v1.17.6
 	golang.org/x/crypto v0.46.0
-	golang.org/x/exp v0.0.0-20251209150349-8475f28825e9
+	golang.org/x/exp v0.0.0-20251219203646-944ab1f22d93
 	golang.org/x/oauth2 v0.34.0
 	willnorris.com/go/microformats v1.2.0
 	willnorris.com/go/webmention v0.0.0-20250531043116-33a44c5fb605
@@ -82,11 +78,11 @@ require (
 	dario.cat/mergo v1.0.2 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/ProtonMail/go-crypto v1.3.0 // indirect
-	github.com/alecthomas/chroma/v2 v2.21.0 // indirect
+	github.com/alecthomas/chroma/v2 v2.21.1 // indirect
 	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/cloudflare/ahocorasick v0.0.0-20240916140611-054963ec9396 // indirect
-	github.com/cloudflare/circl v1.6.1 // indirect
+	github.com/cloudflare/circl v1.6.2 // indirect
 	github.com/cyphar/filepath-securejoin v0.6.1 // indirect
 	github.com/dlclark/regexp2 v1.11.5 // indirect
 	github.com/dolthub/maphash v0.1.0 // indirect
