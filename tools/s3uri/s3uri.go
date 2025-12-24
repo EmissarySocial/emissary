@@ -173,8 +173,8 @@ func parse(s3u *S3URI, s any) (*S3URI, error) {
 		return nil, ErrInvalidS3Endpoint
 	}
 
-	prefix := matches[1]
-	usage := matches[2] // Type of the S3 bucket.
+	prefix := matches[1] // nolint:scopeguard
+	usage := matches[2]  // Type of the S3 bucket.
 	region := matches[3]
 
 	if prefix == "" {

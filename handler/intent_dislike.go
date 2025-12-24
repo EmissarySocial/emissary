@@ -26,7 +26,7 @@ func GetIntent_Dislike(ctx *steranko.Context, factory *service.Factory, session 
 	}
 
 	// Default values here
-	onCancel := firstOf(transaction.OnCancel, "/@me")
+	onCancel := firstOf(transaction.OnCancel, "/@me") // nolint:scopeguard
 
 	activityStream := factory.ActivityStream(model.ActorTypeApplication, primitive.NilObjectID)
 	object, err := activityStream.Client().Load(transaction.Object)
@@ -37,7 +37,6 @@ func GetIntent_Dislike(ctx *steranko.Context, factory *service.Factory, session 
 
 	// Buiild HTML response
 	b := html.New()
-	icons := factory.Icons()
 
 	b.HTML()
 	b.Head()
@@ -88,6 +87,7 @@ func GetIntent_Dislike(ctx *steranko.Context, factory *service.Factory, session 
 
 		b.Div().Class("margin-top")
 		{
+			icons := factory.Icons()
 			b.Button().Type("submit").Class("primary").InnerHTML(icons.Get("thumbs-down-fill") + " Dislike This").Close()
 			b.A("/@me/intent/continue?url=" + url.QueryEscape(onCancel)).Class("button").TabIndex("0").InnerText("Cancel")
 		}

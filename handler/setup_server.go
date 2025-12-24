@@ -89,7 +89,6 @@ func SetupServerPost(factory *server.Factory) echo.HandlerFunc {
 		config := factory.Config()
 		schema := config.Schema()
 		section := ctx.Param("section")
-		uri := "/server/" + section
 
 		// Find the correct form for this section (or fail)
 		element, asTable, err := getSetupForm(section)
@@ -100,6 +99,7 @@ func SetupServerPost(factory *server.Factory) echo.HandlerFunc {
 
 		// Write Table-formatted forms.
 		if asTable {
+			uri := "/server/" + section
 			widget := table.New(&schema, &element, &config, section, factory.Icons(), uri)
 
 			// Apply the changes to the configuration

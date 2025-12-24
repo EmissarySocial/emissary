@@ -31,8 +31,8 @@ func GetGeocodeAutocomplete(ctx *steranko.Context, factory *service.Factory, ses
 
 		if latitudeString := ctx.QueryParam("latitude"); latitudeString != "" {
 
-			longitude := convert.Float(longitudeString)
-			latitude := convert.Float(latitudeString)
+			longitude := convert.Float(longitudeString) // nolint:scopeguard
+			latitude := convert.Float(latitudeString)   // nolint:scopeguard
 
 			if (longitude != 0) || (latitude != 0) {
 				bias.Longitude = longitude

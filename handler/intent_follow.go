@@ -30,7 +30,7 @@ func GetIntent_Follow(ctx *steranko.Context, factory *service.Factory, session d
 	}
 
 	// Default values here
-	onCancel := firstOf(transaction.OnCancel, "/@me")
+	onCancel := firstOf(transaction.OnCancel, "/@me") // nolint:scopeguard
 
 	// Try to load the remote Actor to be followed
 	activityService := factory.ActivityStream(model.ActorTypeApplication, primitive.NilObjectID)

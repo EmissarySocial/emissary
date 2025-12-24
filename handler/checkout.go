@@ -41,10 +41,8 @@ func GetCheckoutResponse(ctx *steranko.Context, factory *service.Factory, sessio
 		return derp.Wrap(err, location, "Error retrieving checkout URL")
 	}
 
-	authorization := getAuthorization(ctx)
-
 	// If the guest is not already logged in, then lets log them in now
-	if authorization.IdentityID != privilege.IdentityID {
+	if authorization := getAuthorization(ctx); authorization.IdentityID != privilege.IdentityID {
 
 		// Fall through means we need to update their JWT/Cookie
 		authorization.IdentityID = privilege.IdentityID

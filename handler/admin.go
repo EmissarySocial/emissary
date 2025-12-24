@@ -96,12 +96,11 @@ func buildAdmin_GetBuilder(ctx *steranko.Context, factory *service.Factory, sess
 
 	case "Rule":
 
-		ruleService := factory.Rule()
 		rule := model.NewRule()
 
 		if !objectID.IsZero() {
 			authorization := getAuthorization(ctx)
-			if err := ruleService.LoadByID(session, authorization.UserID, objectID, &rule); err != nil {
+			if err := factory.Rule().LoadByID(session, authorization.UserID, objectID, &rule); err != nil {
 				return nil, derp.Wrap(err, location, "Unable to load Rule", objectID)
 			}
 		}
@@ -112,8 +111,7 @@ func buildAdmin_GetBuilder(ctx *steranko.Context, factory *service.Factory, sess
 		stream := model.NewStream()
 
 		if !objectID.IsZero() {
-			service := factory.Stream()
-			if err := service.LoadByID(session, objectID, &stream); err != nil {
+			if err := factory.Stream().LoadByID(session, objectID, &stream); err != nil {
 				return nil, derp.Wrap(err, location, "Unable to load Navigation stream", objectID)
 			}
 		}
@@ -124,8 +122,7 @@ func buildAdmin_GetBuilder(ctx *steranko.Context, factory *service.Factory, sess
 		searchTag := model.NewSearchTag()
 
 		if !objectID.IsZero() {
-			service := factory.SearchTag()
-			if err := service.LoadByID(session, objectID, &searchTag); err != nil {
+			if err := factory.SearchTag().LoadByID(session, objectID, &searchTag); err != nil {
 				return nil, derp.Wrap(err, location, "Unable to load Tag", searchTag)
 			}
 		}
@@ -136,8 +133,7 @@ func buildAdmin_GetBuilder(ctx *steranko.Context, factory *service.Factory, sess
 		user := model.NewUser()
 
 		if !objectID.IsZero() {
-			service := factory.User()
-			if err := service.LoadByID(session, objectID, &user); err != nil {
+			if err := factory.User().LoadByID(session, objectID, &user); err != nil {
 				return nil, derp.Wrap(err, location, "Unable to load User", objectID)
 			}
 		}
@@ -148,8 +144,7 @@ func buildAdmin_GetBuilder(ctx *steranko.Context, factory *service.Factory, sess
 		webhook := model.NewWebhook()
 
 		if !objectID.IsZero() {
-			service := factory.Webhook()
-			if err := service.LoadByID(session, objectID, &webhook); err != nil {
+			if err := factory.Webhook().LoadByID(session, objectID, &webhook); err != nil {
 				return nil, derp.Wrap(err, location, "Unable to load Webhook", objectID)
 			}
 		}

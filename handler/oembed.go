@@ -18,8 +18,8 @@ func GetOEmbed(ctx *steranko.Context, factory *service.Factory, session data.Ses
 	const location = "handler.GetOEmbed"
 
 	// Verify that the URL is valid
+	format := ctx.QueryParam("format") // nolint:scopeguard
 	token := ctx.QueryParam("url")
-	format := ctx.QueryParam("format")
 
 	parsedToken, err := url.Parse(token)
 
@@ -110,9 +110,7 @@ func getOEmbed_Stream(factory *service.Factory, session data.Session, token stri
 		"provider_url":  domain.Host(),
 	}
 
-	iconURL := firstOf(stream.IconURL, stream.Data.GetString("bannerUrl"))
-
-	if iconURL != "" {
+	if iconURL := firstOf(stream.IconURL, stream.Data.GetString("bannerUrl")); iconURL != "" {
 		result["thumbnail_url"] = iconURL + ".webp?height=300&width=300"
 		result["thumbnail_height"] = 300
 		result["thumbnail_width"] = 300

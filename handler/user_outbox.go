@@ -155,13 +155,15 @@ func profileUsername(context echo.Context) (string, error) {
 
 	const location = "handler.profileUserID"
 
-	userIDString := context.Param("userId")
+	userIDstring := context.Param("userId")
 
-	switch userIDString {
+	switch userIDstring {
 
+	// RULE: userID must not be empty
 	case "":
 		return "", derp.BadRequestError(location, "Missing UserID")
 
+	// If userID is "me", then return the currently authenticated user's ID
 	case "me":
 		userID, err := authenticatedID(context)
 
@@ -170,20 +172,17 @@ func profileUsername(context echo.Context) (string, error) {
 		}
 
 		return userID.Hex(), nil
-
-	default:
-		return userIDString, nil
 	}
 
+	// Otherwise, usethe userID from the URL
+	return userIDstring, nil
 }
 
 // AuthenticatedID returns the UserID of the currently authenticated user.
 // If the user is not signed in, then this function returns an error.
 func authenticatedID(ctx echo.Context) (primitive.ObjectID, error) {
 
-	authorization := getAuthorization(ctx)
-
-	if authorization.IsAuthenticated() {
+	if authorization := getAuthorization(ctx); authorization.IsAuthenticated() {
 		return authorization.UserID, nil
 	}
 

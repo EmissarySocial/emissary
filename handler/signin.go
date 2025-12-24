@@ -201,7 +201,6 @@ func GetResetCode(ctx *steranko.Context, factory *service.Factory, session data.
 
 	user := model.NewUser()
 	userID := ctx.QueryParam("userId")
-	resetCode := ctx.QueryParam("code")
 
 	if err := userService.LoadByToken(session, userID, &user); err != nil {
 		return derp.Wrap(err, location, "Unable to load user")
@@ -223,7 +222,7 @@ func GetResetCode(ctx *steranko.Context, factory *service.Factory, session data.
 	}
 
 	// Is the reset code is valid, then display the form to reset the password
-	if user.PasswordReset.IsValid(resetCode) {
+	if resetCode := ctx.QueryParam("code"); user.PasswordReset.IsValid(resetCode) {
 
 		object["userId"] = userID
 		object["username"] = user.Username

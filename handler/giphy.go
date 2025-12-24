@@ -15,9 +15,7 @@ import (
 func GetGiphyWidget(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	// Verify authorization
-	authorization := getAuthorization(ctx)
-
-	if !authorization.IsAuthenticated() {
+	if getAuthorization(ctx).NotAuthenticated() {
 		return derp.UnauthorizedError("handler.GetGiphyImages", "You must be logged in to use this feature")
 	}
 

@@ -47,7 +47,7 @@ func serverSentEvent(ctx *steranko.Context, factory *service.Factory, topic int)
 
 	b := factory.RealtimeBroker()
 	w := ctx.Response().Writer
-	done := timeoutContext.Done()
+	done := timeoutContext.Done() // nolint:scopeguard
 
 	// Make sure that the writer supports flushing.
 	f, ok := w.(http.Flusher)

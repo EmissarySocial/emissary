@@ -40,9 +40,7 @@ func PostAccount(serverFactory *server.Factory) func(model.Authorization, txn.Po
 		defer cancel()
 
 		// Confirm that the domain is accepting new users
-		domainService := factory.Domain()
-
-		if !domainService.HasRegistrationForm() {
+		if !factory.Domain().HasRegistrationForm() {
 			return object.Token{}, derp.ForbiddenError(location, "Signup is not allowed on this domain")
 		}
 

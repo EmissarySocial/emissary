@@ -25,8 +25,8 @@ func (console Console) Report(err error) {
 
 func (console Console) report(err error) {
 
-	red := color.New(color.FgRed, color.Bold)
-	blue := color.New(color.FgBlue, color.Bold)
+	red := color.New(color.FgRed, color.Bold)   // nolint:scopeguard
+	blue := color.New(color.FgBlue, color.Bold) // nolint:scopeguard
 
 	wrappedError := errors.Unwrap(err)
 

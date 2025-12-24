@@ -26,7 +26,7 @@ func GetIntent_Like(ctx *steranko.Context, factory *service.Factory, session dat
 	}
 
 	// Default values here
-	onCancel := firstOf(transaction.OnCancel, "/@me") // notlint:scopeguard
+	onCancel := firstOf(transaction.OnCancel, "/@me") // nolint:scopeguard
 
 	activityStream := factory.ActivityStream(model.ActorTypeApplication, primitive.NilObjectID)
 	object, err := activityStream.Client().Load(transaction.Object)
@@ -37,7 +37,6 @@ func GetIntent_Like(ctx *steranko.Context, factory *service.Factory, session dat
 
 	// Buiild HTML response
 	b := html.New()
-	icons := factory.Icons()
 
 	b.HTML()
 	b.Head()
@@ -88,6 +87,7 @@ func GetIntent_Like(ctx *steranko.Context, factory *service.Factory, session dat
 
 		b.Div().Class("margin-top")
 		{
+			icons := factory.Icons()
 			b.Button().Type("submit").Class("primary").InnerHTML(icons.Get("thumbs-up-fill") + " Like This").Close()
 			b.A("/@me/intent/continue?url=" + url.QueryEscape(onCancel)).Class("button").TabIndex("0").InnerText("Cancel")
 		}

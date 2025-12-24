@@ -388,9 +388,8 @@ func (factory *Factory) refreshCommonDatabase(connection mapof.String) error {
 		return derp.InternalError(location, "Common database must have a database name")
 	}
 
-	// Make a copy of the commonDatabase (pointer) so we can close it after we
-	// set up a new one
-	commonDatabaseCopy := factory.commonDatabase
+	// Make a copy of the commonDatabase (pointer) so we can close it after we set up a new one
+	commonDatabaseCopy := factory.commonDatabase // nolint:scopeguard
 
 	// Try to connect to the cache database
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(uri))

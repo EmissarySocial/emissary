@@ -18,11 +18,9 @@ func GetIntentInfo(ctx *steranko.Context, factory *service.Factory, session data
 
 	const location = "handler.GetIntentInfo"
 
-	// Collect intentType
-	intentType := ctx.QueryParam("intent")
-
-	if intentType == "" {
-		return derp.BadRequestError(location, "You must specify an intent")
+	// RULE: IntentType must not be empty
+	if ctx.QueryParam("intent") == "" {
+		return derp.BadRequestError(location, "Intent must not be empty")
 	}
 
 	// Collect accountID

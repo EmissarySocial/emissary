@@ -11,7 +11,7 @@ import (
 
 func write_intent_header(ctx *steranko.Context, b *html.Builder, user *model.User) {
 
-	currentURL := ctx.Request().URL.String()
+	currentURL := ctx.Request().URL.String() // nolint:scopeguard
 	hostname := dt.TrueHostname(ctx.Request())
 	hostname = dt.NameOnly(hostname)
 

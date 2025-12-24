@@ -32,7 +32,7 @@ func IndexAllStreams(ctx *steranko.Context, factory *service.Factory, session da
 	for stream := range streams {
 
 		// Recompute Hashtags
-		originalHashtags := stream.Hashtags
+		originalHashtags := stream.Hashtags // nolint:scopeguard (caching value about to be changed)
 		streamService.CalculateTags(session, &stream)
 
 		// If necessary, re-save the Stream

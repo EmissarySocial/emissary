@@ -41,9 +41,8 @@ func getSliceOfToots[In tootGetter[Out], Out any](slice []In) []Out {
 func getPageInfo[In rankGetter](slice []In) toot.PageInfo {
 
 	result := toot.PageInfo{}
-	length := len(slice)
 
-	if length > 0 {
+	if length := len(slice); length > 0 {
 		last := length - 1
 		result.MaxID = strconv.FormatInt(slice[last].GetRank(), 10)
 		result.MinID = strconv.FormatInt(slice[0].GetRank(), 10)

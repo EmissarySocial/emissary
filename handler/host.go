@@ -13,8 +13,7 @@ func GetHostMeta(serverFactory *server.Factory) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 
 		// Use JSON respone if requested
-		request := ctx.Request()
-		if request.Header.Get("Accept") == "application/json" {
+		if ctx.Request().Header.Get("Accept") == "application/json" {
 			return GetHostMetaJSON(serverFactory)(ctx)
 		}
 

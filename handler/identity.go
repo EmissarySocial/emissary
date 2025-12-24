@@ -194,8 +194,8 @@ func GetIdentitySigninWithJWT(ctx *steranko.Context, factory *service.Factory, s
 	}
 
 	// Collect the identifier and identifier type from the JWT claims
-	identifier := convert.String(claims["A"])
-	identifierType := convert.String(claims["T"])
+	identifier := convert.String(claims["A"])     // nolint:scopeguard
+	identifierType := convert.String(claims["T"]) // nolint:scopeguard
 
 	// If the JWT token has an IdentityID, then set this in the Authorization
 	// (overriding a pre-existing IdentityID, if any)
@@ -250,9 +250,10 @@ func GetIdentitySigninWithJWT(ctx *steranko.Context, factory *service.Factory, s
 func PostIdentityIdentifier(ctx *steranko.Context, factory *service.Factory, session data.Session, identity *model.Identity) error {
 
 	const location = "handler.PostIdentityEditIdentifier"
+
 	// Get the identifier type and value from the request
 	identifierType := ctx.FormValue("identifierType")
-	identifierValue := ctx.FormValue("identifier")
+	identifierValue := ctx.FormValue("identifier") // nolint:scopeguard
 	identityService := factory.Identity()
 
 	// If we're setting a new identifier, then send a guest code to the user

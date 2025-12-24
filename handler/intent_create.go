@@ -26,7 +26,7 @@ func GetIntent_Create(ctx *steranko.Context, factory *service.Factory, session d
 	}
 
 	// Default values here
-	onCancel := firstOf(transaction.OnCancel, "/@me")
+	onCancel := firstOf(transaction.OnCancel, "/@me") // nolint:scopeguard
 
 	// Buiild HTML response
 	b := html.New()

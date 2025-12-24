@@ -15,8 +15,8 @@ func GetOAuthImportCallback(ctx *steranko.Context, factory *service.Factory, ses
 	const location = "handler.OAuthImportCallback"
 
 	// Collect URL arguents
-	providerID := ctx.Param("provider")
-	code := ctx.QueryParam("code")
+	providerID := ctx.Param("provider") // nolint:scopeguard
+	code := ctx.QueryParam("code")      // nolint:scopeguard
 	state := ctx.QueryParam("state")
 
 	// Load the currently active Import record
