@@ -34,7 +34,6 @@ func (service *Folder) Import(session data.Session, _ *model.Import, importItem 
 	// Fall through means we're going to create a new Folder.
 	// Map values from the original Folder into the new, local Folder
 	folder.FolderID = primitive.NewObjectID() // Use the new localID for this record
-	folder.Label = folder.Label               // Label imported Folders
 	importItem.LocalID = folder.FolderID      // Update the ImportItem with the new LocalID
 
 	// Map the UserID
@@ -47,7 +46,7 @@ func (service *Folder) Import(session data.Session, _ *model.Import, importItem 
 		return derp.Wrap(err, location, "Unable to save imported Folder")
 	}
 
-	// A Man, A Plan, A Canal. Pañama.
+	// A Man, A Plan, A Canal. Paama.
 	return nil
 }
 
