@@ -41,19 +41,17 @@ func (step StepWithConversation) execute(builder Builder, buffer io.Writer, acti
 
 	// Collect required services and values
 	factory := builder.factory()
-	conversationService := factory.Conversation()
-	conversationToken := builder.QueryParam("conversationId")
 	conversation := model.NewConversation()
 	conversation.UserID = builder.AuthenticatedID()
 
-	if (conversationToken != "") && (conversationToken != "new") {
+	if token := builder.QueryParam("conversationId"); isNewOrEmpty(token) {
 
-		conversationID, err := primitive.ObjectIDFromHex(conversationToken)
+		conversationID, err := primitive.ObjectIDFromHex(token)
 		if err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Invalid Conversation ID", conversationToken))
+			return Halt().WithError(derp.Wrap(err, location, "Invalid Conversation ID", token))
 		}
 
-		if err := conversationService.LoadByID(builder.session(), builder.AuthenticatedID(), conversationID, &conversation); err != nil {
+		if err := factory.Conversation().LoadByID(builder.session(), builder.AuthenticatedID(), conversationID, &conversation); err != nil {
 			if actionMethod == ActionMethodGet {
 				return Halt().WithError(derp.Wrap(err, location, "Unable to load Conversation", conversationID))
 			}

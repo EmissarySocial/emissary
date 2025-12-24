@@ -189,7 +189,7 @@ func (service *Theme) setStartupContent(theme *model.Theme, filesystem fs.FS) {
 
 		// Search for a StartupStream with a matching filename
 		for index := range theme.StartupStreams {
-			filename, extension := list.Split(entry.Name(), '.')
+			filename, extension := list.Split(entry.Name(), '.') // nolint:scopeguard (readability)
 			if theme.StartupStreams[index].GetString("token") == filename {
 
 				// If there is a match, then load the file into the StartupStream

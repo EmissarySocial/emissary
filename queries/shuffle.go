@@ -61,7 +61,7 @@ func shuffleA(ctx context.Context, collection *mongo.Collection) error {
 		}
 
 		// Set a new random value for the "shuffle" field
-		_, err := collection.UpdateOne(
+		_, err := collection.UpdateOne( // nolint:scopeguard (readability)
 			ctx,
 			bson.M{"_id": result["_id"]},
 			bson.M{"$set": bson.M{"shuffle": rand.Int64()}},
@@ -106,7 +106,7 @@ func shuffleB(ctx context.Context, collection *mongo.Collection) error {
 
 		// Set a sequential value for the "shuffle" field
 		shuffle++
-		_, err := collection.UpdateOne(
+		_, err := collection.UpdateOne( // nolint:scopeguard (readability)
 			ctx,
 			bson.M{"_id": result["_id"]},
 			bson.M{"$set": bson.M{"shuffle": shuffle}},

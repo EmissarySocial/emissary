@@ -495,9 +495,7 @@ func (w Common) Dataset(name string) form.LookupGroup {
 // DatasetValue returns a single form.LookupCode from the LookupProvider
 func (w Common) DatasetValue(name string, value string) form.LookupCode {
 
-	dataset := w.Dataset(name)
-
-	if dataset != nil {
+	if dataset := w.Dataset(name); dataset != nil {
 		for _, item := range dataset.Get() {
 			if item.Value == value {
 				return item

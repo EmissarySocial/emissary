@@ -28,9 +28,7 @@ func Version8(ctx context.Context, session *mongo.Database) error {
 			return derp.Wrap(err, location, "Error retrieving streams iterator")
 		}
 
-		record := mapof.NewAny()
-
-		for cursor.Next(ctx) {
+		for record := mapof.NewAny(); cursor.Next(ctx); record = mapof.NewAny() {
 
 			// Read the record from the database
 			if err := cursor.Decode(&record); err != nil {
@@ -54,7 +52,6 @@ func Version8(ctx context.Context, session *mongo.Database) error {
 			}
 
 			fmt.Print(".")
-			record = mapof.NewAny()
 		}
 	}
 

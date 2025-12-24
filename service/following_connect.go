@@ -100,7 +100,7 @@ func (service *Following) markFailure(following model.Following) error {
 	ctx, cancel := timeoutContext(1)
 	defer cancel()
 
-	_, err := service.factory.Server().WithTransaction(ctx, func(session data.Session) (any, error) {
+	_, err := service.factory.Server().WithTransaction(ctx, func(session data.Session) (any, error) { // nolint:scopeguard
 
 		// Update the following status
 		if err := service.SetStatusFailure(session, &following, "Unable to connect to ActivityPub Actor"); err != nil {
@@ -144,7 +144,7 @@ func (service *Following) connect_LoadMessages(following *model.Following, actor
 		result, _ := document.Load(sherlock.WithDefaultValue(document.Map()))
 
 		// Unique transaction to save the document to the database.
-		_, err := service.factory.Server().WithTransaction(context.Background(), func(session data.Session) (any, error) {
+		_, err := service.factory.Server().WithTransaction(context.Background(), func(session data.Session) (any, error) { // nolint:scopeguard (readability)
 
 			if err := service.SaveMessage(session, following, result, model.OriginTypePrimary); err != nil {
 				return nil, derp.Wrap(err, location, "Unable to save `Message` to Inbox", result.Value())
@@ -158,7 +158,7 @@ func (service *Following) connect_LoadMessages(following *model.Following, actor
 	}
 
 	// Recalculate Folder unread counts
-	_, err := service.factory.Server().WithTransaction(context.Background(), func(session data.Session) (any, error) {
+	_, err := service.factory.Server().WithTransaction(context.Background(), func(session data.Session) (any, error) { // nolint:scopeguard
 		if err := service.folderService.CalculateUnreadCount(session, following.UserID, following.FolderID); err != nil {
 			return nil, derp.Wrap(err, location, "Unable to recalculate unread count")
 		}

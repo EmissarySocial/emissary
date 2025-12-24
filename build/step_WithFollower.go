@@ -57,12 +57,11 @@ func (step StepWithFollower) execute(builder Builder, buffer io.Writer, actionMe
 
 	// Collect required services and values
 	factory := builder.factory()
-	token := builder.QueryParam("followerId")
 	follower := model.NewFollower()
 	follower.ParentID = userID // TODO: Make this generic enough to work with Content Actors...
 
 	// Only authenticated users can create new Follower records
-	if (token == "") || (token == "new") {
+	if token := builder.QueryParam("followerId"); isNewOrEmpty(token) {
 
 		if !builder.IsAuthenticated() {
 			return Halt().WithError(derp.ForbiddenError(location, "Anonymous user is not authorized to perform this action"))

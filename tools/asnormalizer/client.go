@@ -144,10 +144,9 @@ func Normalize(rootClient streams.Client, document streams.Document) map[string]
 func calcRelationType(document streams.Document) (string, string) {
 
 	// Get the document type
-	documentType := document.Type()
 
 	// Calculate RelationType
-	switch documentType {
+	switch documentType := document.Type(); documentType {
 
 	// Announce, Like, and Dislike are written straight to the cache.
 	case vocab.ActivityTypeAnnounce,

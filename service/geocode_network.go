@@ -55,8 +55,8 @@ func (service GeocodeNetwork) getGeocoder(session data.Session) geocoder.Network
 		derp.Report(derp.Wrap(err, location, "Unable to load geocoder"))
 	}
 
-	latitude := connection.Data.GetString("latitude")
-	longitude := connection.Data.GetString("longitude")
+	latitude := connection.Data.GetString("latitude")   // nolint:scopeguard (readability)
+	longitude := connection.Data.GetString("longitude") // nolint:scopeguard (readability)
 
 	switch connection.Data.GetString("provider") {
 

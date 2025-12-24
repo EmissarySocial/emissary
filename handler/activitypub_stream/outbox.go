@@ -19,9 +19,7 @@ func GetOutboxCollection(ctx *steranko.Context, factory *service.Factory, sessio
 	const location = "handler.activitypub_stream.GetOutboxCollection"
 
 	// Verify the stream is an ActivityPub actor
-	actor := template.Actor
-
-	if actor.IsNil() {
+	if template.Actor.IsNil() {
 		return derp.NotFoundError(location, "Actor not found")
 	}
 

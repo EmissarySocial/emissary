@@ -20,14 +20,14 @@ func CreateWebSubFollower(factory *service.Factory, session data.Session, args m
 	const location = "consumer.CreateWebSubFollower"
 
 	// Collect Arguments
-	objectType := args.GetString("objectType")
-	objectID := objectID(args.GetString("objectId"))
-	format := args.GetString("format")
-	mode := args.GetString("mode")
-	topic := args.GetString("topic")
-	callback := args.GetString("callback")
-	secret := args.GetString("secret")
-	leaseSeconds := args.GetInt("leaseSeconds")
+	objectType := args.GetString("objectType")       // nolint:scopeguard
+	objectID := objectID(args.GetString("objectId")) // nolint:scopeguard
+	format := args.GetString("format")               // nolint:scopeguard
+	mode := args.GetString("mode")                   // nolint:scopeguard
+	topic := args.GetString("topic")                 // nolint:scopeguard
+	callback := args.GetString("callback")           // nolint:scopeguard
+	secret := args.GetString("secret")               // nolint:scopeguard
+	leaseSeconds := args.GetInt("leaseSeconds")      // nolint:scopeguard
 
 	switch mode {
 
@@ -47,8 +47,8 @@ func createWebSubFollower_subscribe(factory *service.Factory, session data.Sessi
 	const location = "consumer.createWebSubFollower_subscribe"
 
 	// Calculate lease time (within bounds)
-	minLeaseSeconds := 60 * 60 * 24 * 1  // Minimum lease is 1 day
-	maxLeaseSeconds := 60 * 60 * 24 * 30 // Maximum lease is 30 days
+	minLeaseSeconds := 60 * 60 * 24 * 1  // nolint:scopeguard // Minimum lease is 1 day
+	maxLeaseSeconds := 60 * 60 * 24 * 30 // nolint:scopeguard // Maximum lease is 30 days
 
 	if leaseSeconds < minLeaseSeconds {
 		leaseSeconds = minLeaseSeconds

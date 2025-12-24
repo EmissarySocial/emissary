@@ -12,8 +12,8 @@ func SendWebMention(args mapof.Any) queue.Result {
 
 	const location = "consumer.SendWebMention"
 
-	source := args.GetString("source")
-	target := args.GetString("target")
+	source := args.GetString("source") // nolint:scopeguard
+	target := args.GetString("target") // nolint:scopeguard
 
 	// Create a new HTTP client to send the webmentions
 	client := webmention.New(nil)

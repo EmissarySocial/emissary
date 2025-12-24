@@ -19,7 +19,7 @@ func SendWebSubMessage(args mapof.Any) queue.Result {
 	// Collect task parameters
 	inboxURL := args.GetString("inboxUrl")
 	format := args.GetString("format")
-	secret := args.GetString("secret")
+	secret := args.GetString("secret") // nolint:scopeguard
 
 	var body []byte
 

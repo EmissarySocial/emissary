@@ -324,11 +324,8 @@ func (service *Inbox) LoadSibling(session data.Session, folderID primitive.Objec
 		return model.Message{}, derp.Wrap(err, location, "Unable to retrieve siblings")
 	}
 
-	// Try to read the results
-	result := model.NewMessage()
-
 	// This *should* read the prev/next message into the pointer and be done.
-	if it.Next(&result) {
+	if result := model.NewMessage(); it.Next(&result) {
 		return result, nil
 	}
 
@@ -369,8 +366,8 @@ func (service *Inbox) MarkReadByDate(session data.Session, userID primitive.Obje
 		return derp.Wrap(err, location, "Unable to list messages")
 	}
 
-	message := model.NewMessage()
-	for it.Next(&message) {
+	// Loop through every message and mark it as read
+	for message := model.NewMessage(); it.Next(&message); message = model.NewMessage() {
 		if err := service.MarkRead(session, &message); err != nil {
 			return derp.Wrap(err, location, "Unable to mark message as read")
 		}

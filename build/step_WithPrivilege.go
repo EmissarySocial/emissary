@@ -42,7 +42,6 @@ func (step StepWithPrivilege) execute(builder Builder, buffer io.Writer, actionM
 	// Collect required services and values
 	factory := builder.factory()
 	privilegeService := factory.Privilege()
-	privilegeToken := builder.QueryParam("privilegeId")
 	privilege := model.NewPrivilege()
 	privilege.UserID = builder.AuthenticatedID()
 
@@ -53,11 +52,11 @@ func (step StepWithPrivilege) execute(builder Builder, buffer io.Writer, actionM
 		}
 	}
 
-	if (privilegeToken != "") && (privilegeToken != "new") {
+	if token := builder.QueryParam("privilegeId"); isNewOrEmpty(token) {
 
-		privilegeID, err := primitive.ObjectIDFromHex(privilegeToken)
+		privilegeID, err := primitive.ObjectIDFromHex(token)
 		if err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Invalid Privilege ID", privilegeToken))
+			return Halt().WithError(derp.Wrap(err, location, "Invalid Privilege ID", token))
 		}
 
 		if err := privilegeService.LoadByID(builder.session(), builder.AuthenticatedID(), privilegeID, &privilege); err != nil {

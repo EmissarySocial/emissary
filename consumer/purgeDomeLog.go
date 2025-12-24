@@ -17,7 +17,7 @@ func PurgeDomeLog(factory ServerFactory) queue.Result {
 	// Purge dome logs >1 month old
 	collection := factory.CommonDatabase().Collection("Log")
 
-	_, err := collection.DeleteMany(
+	_, err := collection.DeleteMany( // nolint:scopeguard
 		context.Background(),
 		bson.M{
 			"createDate": bson.M{"$lt": time.Now().AddDate(0, -1, 0)},

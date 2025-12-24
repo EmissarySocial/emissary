@@ -34,7 +34,6 @@ func (step StepProcessContent) Post(builder Builder, buffer io.Writer) PipelineB
 	}
 
 	factory := streamBuilder.factory()
-	streamService := factory.Stream()
 	contentService := factory.Content()
 
 	stream := streamBuilder._stream
@@ -52,7 +51,7 @@ func (step StepProcessContent) Post(builder Builder, buffer io.Writer) PipelineB
 	}
 
 	if step.AddTags {
-		streamService.CalculateTags(builder.session(), stream)
+		factory.Stream().CalculateTags(builder.session(), stream)
 
 		if step.TagPath != "" {
 			contentService.ApplyTags(&stream.Content, step.TagPath, stream.Hashtags)

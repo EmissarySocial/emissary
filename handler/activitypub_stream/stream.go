@@ -19,17 +19,15 @@ func GetJSONLD(ctx *steranko.Context, factory *service.Factory, session data.Ses
 
 	// Verify permissions by checking the required permissions (stream.DefaultAllow) against the permissions in the request signature
 	permissionService := factory.Permission()
-	permissions := permissionService.ParseHTTPSignature(session, ctx.Request())
+	permissions := permissionService.ParseHTTPSignature(session, ctx.Request()) // nolint:scopeguard
 
 	if !slice.ContainsAny(stream.DefaultAllow, permissions...) {
 		return derp.ForbiddenError(location, "You do not have permission to view this content")
 	}
 
-	streamService := factory.Stream()
-
 	// If this Stream is not an Actor, then just return a standard JSON-LD response.
 	if template.Actor.IsNil() {
-		jsonld := streamService.JSONLD(session, stream)
+		jsonld := factory.Stream().JSONLD(session, stream)
 		ctx.Response().Header().Set("Content-Type", vocab.ContentTypeActivityPub)
 		return ctx.JSON(http.StatusOK, jsonld)
 	}

@@ -58,9 +58,7 @@ func (client *Client) Load(uri string, options ...any) (streams.Document, error)
 	}
 
 	// Determined if we should crawl related records (default=yes)
-	config := parseLoadConfig(options...)
-
-	if !config.useCrawler {
+	if config := parseLoadConfig(options...); !config.useCrawler {
 		return result, nil
 	}
 

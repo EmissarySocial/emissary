@@ -298,10 +298,11 @@ func (w Inbox) RuleByToken(token string) model.Rule {
 // Inbox returns a QueryBuilder for current User's inbox
 func (w Inbox) Inbox() (QueryBuilder[model.Message], error) {
 
-	userID := w.AuthenticatedID()
+	const location = "build.Inbox.Inbox"
 
-	if userID.IsZero() {
-		return QueryBuilder[model.Message]{}, derp.UnauthorizedError("build.Inbox.Inbox", "Must be signed in to view inbox")
+	// Must be signed in to view inbox
+	if w.AuthenticatedID().IsZero() {
+		return QueryBuilder[model.Message]{}, derp.UnauthorizedError(location, "Must be signed in to view inbox")
 	}
 
 	queryString := w._request.URL.Query()
@@ -348,10 +349,8 @@ func (w Inbox) IsInboxEmpty(inbox []model.Message) bool {
 // Conversations returns a QueryBuilder for current User's conversations
 func (w Inbox) Conversations() (QueryBuilder[model.Conversation], error) {
 
-	// Collect the currently authenticated user
-	userID := w.AuthenticatedID()
-
-	if userID.IsZero() {
+	// Required that the user is signed in
+	if w.AuthenticatedID().IsZero() {
 		return QueryBuilder[model.Conversation]{}, derp.UnauthorizedError("build.Inbox.Conversations", "Must be signed in to view conversations")
 	}
 
@@ -544,7 +543,12 @@ func (w Inbox) Message() model.Message {
 		}
 
 		// Get results from the database
-		result, _ := inboxService.Query(w._session, criteria, options...)
+		result, err := inboxService.Query(w._session, criteria, options...)
+
+		if err != nil {
+			derp.Report(derp.Wrap(err, location, "Unable to query sibling message", sibling, message.MessageID))
+			return model.NewMessage()
+		}
 
 		// If we have (a) result, then return it.
 		if len(result) > 0 {

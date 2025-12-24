@@ -109,19 +109,18 @@ func (service *OAuthUserToken) DeleteMany(session data.Session, criteria exp.Exp
 
 	const location = "service.OAuthUserToken.DeleteMany"
 
+	// Get an iterator of all OAuthUserTokens that match the criteria
 	it, err := service.Iterator(session, criteria)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error listing streams to delete", criteria)
 	}
 
-	userToken := model.NewOAuthUserToken()
-
-	for it.Next(&userToken) {
+	// Loop over each OAuthUserToken and delete it
+	for userToken := model.NewOAuthUserToken(); it.Next(&userToken); userToken = model.NewOAuthUserToken() {
 		if err := service.Delete(session, &userToken, note); err != nil {
 			return derp.Wrap(err, location, "Error deleting stream", userToken)
 		}
-		userToken = model.NewOAuthUserToken()
 	}
 
 	return nil

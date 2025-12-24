@@ -28,9 +28,7 @@ func (console Console) report(err error) {
 	red := color.New(color.FgRed, color.Bold)   // nolint:scopeguard
 	blue := color.New(color.FgBlue, color.Bold) // nolint:scopeguard
 
-	wrappedError := errors.Unwrap(err)
-
-	if wrappedError == nil {
+	if wrappedError := errors.Unwrap(err); wrappedError == nil {
 		_, _ = red.Println("ROOT ERROR: ", derp.Message(err))
 
 	} else {

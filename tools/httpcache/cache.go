@@ -112,9 +112,7 @@ func (cache *HTTPCache) getVariesValues(request *http.Request, metadata url.Valu
 
 func (cache *HTTPCache) getTTL(response *http.Response) time.Duration {
 
-	header := cacheheader.ParseString(response.Header.Get("Cache-Control"))
-
-	if header.MaxAge > 0 {
+	if header := cacheheader.ParseString(response.Header.Get("Cache-Control")); header.MaxAge > 0 {
 		return time.Duration(header.MaxAge) * time.Second
 	}
 

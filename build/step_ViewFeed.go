@@ -26,8 +26,6 @@ func (step StepViewFeed) Get(builder Builder, buffer io.Writer) PipelineBehavior
 
 	const location = "build.StepViewFeed.Get"
 
-	factory := builder.factory()
-
 	mimeType := step.detectMimeType(builder)
 
 	// Initialize the result RSS feed
@@ -39,14 +37,13 @@ func (step StepViewFeed) Get(builder Builder, buffer io.Writer) PipelineBehavior
 		Created:     time.Now(),
 	}
 
-	isSearchBuilder := len(step.SearchTypes) > 0
+	switch len(step.SearchTypes) > 0 {
 
-	switch isSearchBuilder {
-
+	// This is NOT a search builder
 	case false:
 
 		// Get all child streams from the database
-		children, err := factory.Stream().ListPublishedByParent(builder.session(), builder.objectID())
+		children, err := builder.factory().Stream().ListPublishedByParent(builder.session(), builder.objectID())
 
 		if err != nil {
 			return Halt().WithError(derp.Wrap(err, location, "Error querying child streams"))
@@ -59,6 +56,7 @@ func (step StepViewFeed) Get(builder Builder, buffer io.Writer) PipelineBehavior
 
 		result.Items = slice.Map(iterator.Slice(children, model.NewStream), convert.StreamToGorillaFeed)
 
+	// This IS a search builder
 	case true:
 
 		queryResults, err := builder.Search().

@@ -14,7 +14,7 @@ func Version10(ctx context.Context, session *mongo.Database) error {
 
 	fmt.Println("... Version 10")
 
-	err := ForEachRecord(session.Collection("Stream"), func(record mapof.Any) bool {
+	err := ForEachRecord(session.Collection("Stream"), func(record mapof.Any) bool { // nolint:scopeguard (readability)
 		if attributedTo, ok := record["attributedTo"]; ok {
 			if attributedToSlice, ok := attributedTo.([]any); ok {
 				if len(attributedToSlice) > 0 {

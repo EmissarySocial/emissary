@@ -34,13 +34,14 @@ func BoostAny(context Context, activity streams.Document) error {
 		}
 	}
 
-	// Get an ActivityStream service for the Stream
-	activityService := context.factory.ActivityStream(model.ActorTypeStream, context.stream.StreamID)
+	activityService := context.factory.ActivityStream(model.ActorTypeStream, context.stream.StreamID) // nolint:scopeguard (readability)
 
 	switch activity.Type() {
 
 	case vocab.ActivityTypeCreate:
+
 		object := activity.Object()
+
 		if err := activityService.Save(object); err != nil {
 			return derp.Wrap(err, location, "Unable to insert object", object.ID())
 		}

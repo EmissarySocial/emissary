@@ -15,7 +15,7 @@ func Version19(ctx context.Context, session *mongo.Database) error {
 
 	fmt.Println("... Version 19")
 
-	err := ForEachRecord(session.Collection("Outbox"), func(record mapof.Any) bool {
+	err := ForEachRecord(session.Collection("Outbox"), func(record mapof.Any) bool { // nolint:scopeguard (readability)
 
 		if parentID, exists := record["parentId"]; exists {
 			record["actorId"] = parentID
@@ -60,7 +60,7 @@ func Version19(ctx context.Context, session *mongo.Database) error {
 				return err
 			}
 
-			_, err := session.Collection("Outbox").UpdateMany(
+			_, err := session.Collection("Outbox").UpdateMany( // nolint:scopeguard (readability)
 				ctx,
 				bson.M{
 					"actorType": "User",
@@ -93,7 +93,7 @@ func Version19(ctx context.Context, session *mongo.Database) error {
 				return err
 			}
 
-			_, err := session.Collection("Outbox").UpdateMany(
+			_, err := session.Collection("Outbox").UpdateMany( // nolint:scopeguard (readability)
 				ctx,
 				bson.M{
 					"actorType": "Stream",

@@ -58,7 +58,7 @@ func (roundTripper RoundTripper) RoundTrip(request *http.Request) (*http.Respons
 	}
 
 	// Check the cache for a response
-	response, found := roundTripper.cache.getResponse(request) // noline:scopeguard
+	response, found := roundTripper.cache.getResponse(request) // nolint:scopeguard
 
 	if found {
 		log.Trace().Str("url", request.URL.String()).Msg("HTTPCache: Cache HIT")

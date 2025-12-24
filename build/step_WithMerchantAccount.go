@@ -40,15 +40,13 @@ func (step StepWithMerchantAccount) execute(builder Builder, buffer io.Writer, a
 
 	// Collect required services and values
 	factory := builder.factory()
-	merchantAccountService := factory.MerchantAccount()
-	merchantAccountToken := builder.QueryParam("merchantAccountId")
 	merchantAccount := model.NewMerchantAccount()
 	merchantAccount.UserID = builder.AuthenticatedID()
 
-	if (merchantAccountToken != "") && (merchantAccountToken != "new") {
-		if err := merchantAccountService.LoadByUserAndToken(builder.session(), builder.AuthenticatedID(), merchantAccountToken, &merchantAccount); err != nil {
+	if token := builder.QueryParam("merchantAccountId"); isNewOrEmpty(token) {
+		if err := factory.MerchantAccount().LoadByUserAndToken(builder.session(), builder.AuthenticatedID(), token, &merchantAccount); err != nil {
 			if actionMethod == ActionMethodGet {
-				return Halt().WithError(derp.Wrap(err, location, "Unable to load MerchantAccount", merchantAccountToken))
+				return Halt().WithError(derp.Wrap(err, location, "Unable to load MerchantAccount", token))
 			}
 			// Fall through for POSTS..  we're just creating a new merchantAccount.
 		}

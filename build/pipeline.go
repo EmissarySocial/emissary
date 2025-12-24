@@ -27,9 +27,7 @@ func (pipeline Pipeline) Get(factory Factory, builder Builder, buffer io.Writer)
 	for _, step := range pipeline {
 
 		// Execute the step and collect the results in the pipeline status
-		resultFn := ExecutableStep(step).Get(builder, buffer)
-
-		if resultFn != nil {
+		if resultFn := ExecutableStep(step).Get(builder, buffer); resultFn != nil {
 			resultFn(&status)
 		}
 
@@ -49,9 +47,8 @@ func (pipeline Pipeline) Post(factory Factory, builder Builder, buffer io.Writer
 	// Execute all of the steps of the requested action
 	for _, step := range pipeline {
 
-		resultFn := ExecutableStep(step).Post(builder, buffer)
-
-		if resultFn != nil {
+		// Execute the step and collect the results in the pipeline status
+		if resultFn := ExecutableStep(step).Post(builder, buffer); resultFn != nil {
 			resultFn(&status)
 		}
 

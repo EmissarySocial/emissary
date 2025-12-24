@@ -133,10 +133,10 @@ func (service *Stream) JSONLD(session data.Session, stream *model.Stream) mapof.
 	}
 
 	// Try to apply the "social mapping" to the stream
-	schma := service.activityStreamSchema()
 	if template, err := service.templateService.Load(stream.TemplateID); err == nil {
 		result[vocab.PropertyType] = template.SocialRole
 		if template.SocialRules.NotEmpty() {
+			schma := service.activityStreamSchema()
 			if err := template.SocialRules.Execute(schma, stream, schma, &result); err != nil {
 				derp.Report(derp.Wrap(err, location, "Unable to apply social rules to stream", stream.StreamID, template.SocialRules))
 			}

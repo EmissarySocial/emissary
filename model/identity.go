@@ -221,9 +221,7 @@ func (identity *Identity) RemovePrivilegeID(privilegeID primitive.ObjectID) {
 	}
 
 	// Remove the privilegeID from the Identity
-	index := identity.PrivilegeIDs.IndexOf(privilegeID)
-
-	if index >= 0 {
+	if index := identity.PrivilegeIDs.IndexOf(privilegeID); index >= 0 {
 		identity.PrivilegeIDs = append(identity.PrivilegeIDs[:index], identity.PrivilegeIDs[index+1:]...)
 	}
 }

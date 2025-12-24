@@ -314,18 +314,20 @@ func (service *Mention) ParseURL(target string) (objectType string, token string
 
 func (service *Mention) FindLinks(body string) []string {
 
-	result := make([]string, 0)
-
+	// Try to read the body as HTML
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(body))
 
 	if err != nil {
-		return result
+		return make([]string, 0)
 	}
 
+	// Find all links in the body
 	links := doc.Find("a[href]").Map(getHrefFromNode)
 
+	// Filter links for external hrefs only
 	links = slice.Filter(links, isExternalHref)
 
+	// Success
 	return links
 }
 

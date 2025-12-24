@@ -15,7 +15,7 @@ func Version15(ctx context.Context, session *mongo.Database) error {
 
 	fmt.Println("... Version 15")
 	{
-		err := ForEachRecord(session.Collection("Follower"), func(record mapof.Any) bool {
+		err := ForEachRecord(session.Collection("Follower"), func(record mapof.Any) bool { // nolint:scopeguard (readability)
 
 			if record.GetString("stateId") == "" {
 				record["stateId"] = model.FollowerStateActive

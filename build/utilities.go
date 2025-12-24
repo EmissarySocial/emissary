@@ -29,10 +29,8 @@ func WrapInlineSuccess(response http.ResponseWriter, message any) error {
 	response.Header().Set("HX-Retarget", "#htmx-response-message")
 	response.WriteHeader(http.StatusOK)
 
-	_, err := response.Write([]byte(`<span class="text-green">` + convert.String(message) + `</span>`))
-
-	if err != nil {
-		return derp.Wrap(err, "build.WrapInlineSuccess", "Error writing response", message)
+	if _, err := response.Write([]byte(`<span class="text-green">` + convert.String(message) + `</span>`)); err != nil {
+		return derp.Wrap(err, "build.WrapInlineSuccess", "Unable to write response. This should never happen", message)
 	}
 
 	return nil
@@ -133,11 +131,10 @@ func WrapForm(endpoint string, content string, encoding string, options ...strin
 	b.WriteString(content)
 
 	// Controls
-	submitLabel := first.String(optionMap.GetString("submit-label"), "Save Changes")
-
 	b.Div().Class("flex-row", "flex-align-center")
 	b.Div().Class("flex-grow")
 	{
+		submitLabel := first.String(optionMap.GetString("submit-label"), "Save Changes")
 		b.Button().Type("submit").ID("inline-save-button").Class("primary").TabIndex("0").Script("install SaveButton").InnerText(submitLabel).Close()
 
 		if cancelButton := optionMap.GetString("cancel-button"); cancelButton != "hide" {
@@ -233,6 +230,21 @@ func executeTemplate(template TemplateLike, data any) string {
 	}
 
 	return buffer.String()
+}
+
+// Returns TRUE if the value is either empty or "new" (case insensitive)
+func isNewOrEmpty(value string) bool {
+	if value == "" {
+		return true
+	}
+
+	if len(value) == 3 {
+		if strings.ToLower(value) == "new" {
+			return true
+		}
+	}
+
+	return false
 }
 
 // AsHTML collects the logic to build complete vs. partial HTML pages.

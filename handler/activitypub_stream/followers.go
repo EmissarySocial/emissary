@@ -18,9 +18,7 @@ func GetFollowersCollection(ctx *steranko.Context, factory *service.Factory, ses
 	const location = "handler.activitypub_stream.GetFollowersCollection"
 
 	// Verify the stream is an ActivityPub actor
-	actor := template.Actor
-
-	if actor.IsNil() {
+	if template.Actor.IsNil() {
 		return derp.NotFoundError(location, "Actor not found")
 	}
 

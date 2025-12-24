@@ -207,8 +207,7 @@ func loadHTMLTemplateFromFilesystem(filesystem fs.FS, t *template.Template, func
 	for _, file := range files {
 
 		filename := file.Name()
-		actionBytes, extension := list.Dot(filename).SplitTail()
-		actionID := actionBytes.String()
+		actionBytes, extension := list.Dot(filename).SplitTail() // nolint:scopeguard (readability)
 
 		// Only HTML files beyond this point...
 		if extension == "html" {
@@ -228,6 +227,7 @@ func loadHTMLTemplateFromFilesystem(filesystem fs.FS, t *template.Template, func
 			}
 
 			// Try to compile the minified content into a Go Template
+			actionID := actionBytes.String()
 			contentTemplate, err := template.New(actionID).Funcs(funcMap).Parse(contentString)
 
 			if err != nil {

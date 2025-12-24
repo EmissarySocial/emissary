@@ -170,7 +170,7 @@ func (service *Template) loadTemplates() error {
 				continue
 			}
 
-			definitionType, file := findDefinition(subdirectory)
+			definitionType, file := findDefinition(subdirectory) // nolint:scopeguard (readability)
 
 			switch definitionType {
 
@@ -292,10 +292,27 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 
 	errors := make(sliceof.Object[derp.Error], 0)
 
+	allowedModels := sliceof.String{ // nolint:scopeguard (readability)
+		"None",
+		"Domain",
+		"Followers",
+		"Following",
+		"Group",
+		"Identity",
+		"Inbox",
+		"Outbox",
+		"Rule",
+		"Search",
+		"Settings",
+		"Stream",
+		"Syndication",
+		"Tag",
+		"User",
+		"Webhook",
+	}
+
 	// Scan all Templates in the prep area
 	for templateID, template := range service.templatePrep {
-
-		allowedModels := sliceof.String{"None", "Domain", "Followers", "Following", "Group", "Identity", "Inbox", "Outbox", "Rule", "Search", "Settings", "Stream", "Syndication", "Tag", "User", "Webhook"}
 
 		if !allowedModels.Contains(template.Model) {
 			errors.Append(derp.ValidationError(

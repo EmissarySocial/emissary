@@ -201,7 +201,7 @@ func (service *Permission) UserHasRole(session data.Session, authorization *mode
 	if authorization.GroupIDs.NotEmpty() {
 
 		// See if any of these roles are associated with the Groups from the Authorization
-		groupIDs := accessLister.RolesToGroupIDs(role)
+		groupIDs := accessLister.RolesToGroupIDs(role) // nolint:scopeguard (readability)
 
 		if authorization.IsGroupMember(groupIDs...) {
 			return true, nil

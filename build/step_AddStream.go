@@ -110,8 +110,6 @@ func (step StepAddStream) getInline(builder Builder, buffer io.Writer) error {
 		return derp.Wrap(err, location, "Error getting best template")
 	}
 
-	iconService := builder.factory().Icons()
-
 	path := builder.request().URL.Path
 	path = replaceActionID(path, builder.actionID())
 
@@ -126,6 +124,8 @@ func (step StepAddStream) getInline(builder Builder, buffer io.Writer) error {
 			b.A("").Data("hx-get", path+"?templateId="+optionTemplate.Value).Class("align-center", "inline-block", "margin-right-md").EndBracket()
 
 			b.Div().Class("text-lg", "margin-vertical-none").EndBracket()
+
+			iconService := builder.factory().Icons() // nolint:scopeguard
 			if newTemplate.TemplateID == optionTemplate.Value {
 				iconService.Write(optionTemplate.Icon+"-fill", b)
 			} else {
@@ -265,7 +265,7 @@ func (step StepAddStream) setLocation(builder Builder, template *model.Template,
 
 	const location = "build.StepAddStream.setLocation"
 
-	streamService := builder.factory().Stream()
+	streamService := builder.factory().Stream() // nolint:scopeguard
 
 	switch step.Location {
 

@@ -41,12 +41,10 @@ func (step StepWithAttachment) execute(builder Builder, buffer io.Writer, action
 
 	// Collect required services and values
 	factory := builder.factory()
-	attachmentService := factory.Attachment()
 	attachment := model.NewAttachment(objectType, objectID)
-	token := builder.QueryParam("attachmentId")
 
 	// Only authenticated users can create new Attachment records
-	if (token == "") || (token == "new") {
+	if token := builder.QueryParam("attachmentId"); isNewOrEmpty(token) {
 
 		if !builder.IsAuthenticated() {
 			return Halt().WithError(derp.ForbiddenError(location, "Anonymous user is not authorized to perform this action"))
@@ -54,7 +52,7 @@ func (step StepWithAttachment) execute(builder Builder, buffer io.Writer, action
 
 	} else if attachmentID, err := primitive.ObjectIDFromHex(token); err == nil {
 
-		if err := attachmentService.LoadByID(builder.session(), objectType, objectID, attachmentID, &attachment); err != nil {
+		if err := factory.Attachment().LoadByID(builder.session(), objectType, objectID, attachmentID, &attachment); err != nil {
 			return Halt().WithError(derp.Wrap(err, location, "Unable to load Attachment via ID", token))
 		}
 	}

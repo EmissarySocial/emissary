@@ -126,7 +126,7 @@ func (service *SearchQuery) Save(session data.Session, searchQuery *model.Search
 
 	// Normalize all slices and make query signature
 	searchQuery.MakeSignature()
-	wasNew := searchQuery.IsNew()
+	wasNew := searchQuery.IsNew() // nolint:scopeguard (cached value is updated before being read)
 
 	// Save the searchQuery to the database
 	if err := service.collection(session).Save(searchQuery, note); err != nil {

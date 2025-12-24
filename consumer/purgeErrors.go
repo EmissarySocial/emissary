@@ -17,15 +17,11 @@ func PurgeErrors(factory ServerFactory) queue.Result {
 	// Purge error logs >7 days old
 	collection := factory.CommonDatabase().Collection("ErrorLog")
 
-	_, err := collection.DeleteMany(
-		context.Background(),
-		bson.M{
-			"createDate": bson.M{"$lt": time.Now().AddDate(0, 0, -7)},
-		},
-	)
+	criteria := bson.M{
+		"createDate": bson.M{"$lt": time.Now().AddDate(0, 0, -7)},
+	}
 
-	// Handle error when purging errors
-	if err != nil {
+	if _, err := collection.DeleteMany(context.Background(), criteria); err != nil {
 		log.Error().Err(err).Msg("Unable to purge old error records")
 		return queue.Error(err)
 	}

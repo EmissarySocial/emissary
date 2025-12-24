@@ -325,7 +325,7 @@ func (service *SearchTag) NormalizeTags(session data.Session, tagNames ...string
 		tagValue := tagValues[tagIndex]
 
 		// Search for the tagValue in the database results
-		dbTag, found := dbTags.Find(func(tag model.SearchTag) bool {
+		dbTag, found := dbTags.Find(func(tag model.SearchTag) bool { // nolint:scopeguard (readability)
 			return tag.Value == tagValue
 		})
 

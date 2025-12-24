@@ -186,14 +186,8 @@ func (service *Group) ListByIDs(session data.Session, groupIDs ...primitive.Obje
 	}
 
 	// Read the iterator into a result array
-	index := 0
-
-	for it.Next(&(result[index])) {
-		index++
+	for index := 0; it.Next(&(result[index])); index++ {
 	}
-
-	// Trim the results just in case one of the groupIDs was not valid.
-	// result = result[:index]
 
 	return result, nil
 }

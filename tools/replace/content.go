@@ -30,7 +30,7 @@ func Content(originalString string, matchString string, replaceString string) st
 	// Scan the whole original
 	for index := 0; index < len(original); index++ {
 
-		char := original[index]
+		char := original[index] // nolint:scopeguard (readability)
 
 		switch state {
 

@@ -40,15 +40,13 @@ func (step StepWithRule) execute(builder Builder, buffer io.Writer, actionMethod
 
 	// Collect required services and values
 	factory := builder.factory()
-	ruleService := factory.Rule()
-	ruleToken := builder.QueryParam("ruleId")
 	rule := model.NewRule()
 	rule.UserID = builder.AuthenticatedID()
 
-	if (ruleToken != "") && (ruleToken != "new") {
-		if err := ruleService.LoadByToken(builder.session(), builder.AuthenticatedID(), ruleToken, &rule); err != nil {
+	if token := builder.QueryParam("ruleId"); isNewOrEmpty(token) {
+		if err := factory.Rule().LoadByToken(builder.session(), builder.AuthenticatedID(), token, &rule); err != nil {
 			if actionMethod == ActionMethodGet {
-				return Halt().WithError(derp.Wrap(err, location, "Unable to load Rule", ruleToken))
+				return Halt().WithError(derp.Wrap(err, location, "Unable to load Rule", token))
 			}
 			// Fall through for POSTS..  we're just creating a new rule.
 		}

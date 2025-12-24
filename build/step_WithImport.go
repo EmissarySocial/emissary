@@ -79,12 +79,7 @@ func (step StepWithImport) getImport(builder Builder) (model.Import, error) {
 	token := builder.QueryParam("importId")
 
 	// If token is empty, then create a new `Import` record
-	if token == "" {
-		return record, nil
-	}
-
-	// If the token is "new" then create a new `Import` record
-	if token == "new" {
+	if isNewOrEmpty(token) {
 		return record, nil
 	}
 

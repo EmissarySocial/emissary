@@ -97,7 +97,7 @@ func (service *Following) saveUniqueMessage(session data.Session, message model.
 	// Fall through means that we have a duplicate message.
 
 	// Try to update the previousMessage with a new origin (a new reply, like, etc)
-	isReferenceUpdated := previousMessage.AddReference(message.Origin)
+	isReferenceUpdated := previousMessage.AddReference(message.Origin) // nolint:scopeguard (readability)
 	isStatusUpdated := false
 
 	// Update the message status to "NEW-REPLIES" so that previously

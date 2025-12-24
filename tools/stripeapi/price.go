@@ -17,13 +17,13 @@ func Prices(restrictedKey string, connectedAccountID string, priceIDs ...string)
 
 	const location = "tools.stripeapi.Products"
 
-	response := stripe.PriceList{}
 	result := make([]stripe.Price, 0)
-
-	last := ""
-	pageSize := 100
+	last := ""                               // nolint:scopeguard (state used between loop iterations)
+	pageSize := 100                          // nolint:scopeguard (define once for loop)
+	pageSizeString := strconv.Itoa(pageSize) // nolint:scopeguard (define once for loop)
 
 	for {
+		response := stripe.PriceList{}
 
 		// Query the Stripe API for all Prices
 		txn := remote.Get("https://api.stripe.com/v1/prices").
@@ -31,7 +31,7 @@ func Prices(restrictedKey string, connectedAccountID string, priceIDs ...string)
 			With(ConnectedAccount(connectedAccountID)).
 			Query("expand[]", "data.product").
 			Query("active", "true").
-			Query("limit", strconv.Itoa(pageSize)).
+			Query("limit", pageSizeString).
 			Result(&response)
 
 		if last != "" {

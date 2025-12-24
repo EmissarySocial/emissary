@@ -20,7 +20,7 @@ func init() {
 		}
 
 		// Apply rules to filter out unwanted follow activities
-		ruleFilter := context.factory.Rule().Filter(primitive.NilObjectID, service.WithBlocksOnly())
+		ruleFilter := context.factory.Rule().Filter(primitive.NilObjectID, service.WithBlocksOnly()) // nolint:scopeguard (readability)
 		if ruleFilter.Disallow(context.session, &activity) {
 			return derp.ForbiddenError(location, "Blocked by rule", activity.Object().ID())
 		}

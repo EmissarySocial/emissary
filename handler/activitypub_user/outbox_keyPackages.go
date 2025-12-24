@@ -58,8 +58,8 @@ func outbox_DeleteKeyPackage(context Context, activity streams.Document) error {
 
 	const location = "handler.activitypub_user.outbox_DeleteKeyPackage"
 
-	actor := activity.Actor()
-	object := activity.Object()
+	actor := activity.Actor()   // nolint:scopeguard
+	object := activity.Object() // nolint:scopeguard
 
 	// RULE: The actor must own the keyPackage
 	if !strings.HasPrefix(object.ID(), actor.ID()) {
@@ -105,8 +105,8 @@ func outbox_SetKeyPackageVisibility(context Context, activity streams.Document, 
 
 	// Collect values from the activity
 	actor := activity.Actor()
-	object := activity.Object()
-	target := activity.Target()
+	object := activity.Object() // nolint:scopeguard
+	target := activity.Target() // nolint:scopeguard
 
 	// RULE: The actor must own the target (keyPackage collection)
 	if !strings.HasPrefix(target.ID(), actor.ID()) {

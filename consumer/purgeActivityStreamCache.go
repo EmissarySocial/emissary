@@ -17,15 +17,11 @@ func PurgeActivityStreamCache(factory ServerFactory) queue.Result {
 	// Purge documents that expired >2 days ago
 	collection := factory.CommonDatabase().Collection("Document")
 
-	_, err := collection.DeleteMany(
-		context.Background(),
-		bson.M{
-			"expires": bson.M{"$lt": time.Now().AddDate(0, 0, -2).Unix()},
-		},
-	)
+	criteria := bson.M{
+		"expires": bson.M{"$lt": time.Now().AddDate(0, 0, -2).Unix()},
+	}
 
-	// Handle error when purging errors
-	if err != nil {
+	if _, err := collection.DeleteMany(context.Background(), criteria); err != nil {
 		return queue.Error(err)
 	}
 

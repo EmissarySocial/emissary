@@ -42,16 +42,14 @@ func (step StepWithResponse) execute(builder Builder, buffer io.Writer, actionMe
 
 	// Collect required services and values
 	factory := builder.factory()
-	responseService := factory.Response()
-	responseToken := builder.QueryParam("responseId")
 	response := model.NewResponse()
 
 	// If we have a real ID, then try to load the response from the database
-	if (responseToken != "") && (responseToken != "new") {
-		if responseID, err := primitive.ObjectIDFromHex(responseToken); err == nil {
-			if err := responseService.LoadByID(builder.session(), builder.AuthenticatedID(), responseID, &response); err != nil {
+	if token := builder.QueryParam("responseId"); isNewOrEmpty(token) {
+		if responseID, err := primitive.ObjectIDFromHex(token); err == nil {
+			if err := factory.Response().LoadByID(builder.session(), builder.AuthenticatedID(), responseID, &response); err != nil {
 				if actionMethod == ActionMethodGet {
-					return Halt().WithError(derp.Wrap(err, location, "Unable to load Response", responseToken))
+					return Halt().WithError(derp.Wrap(err, location, "Unable to load Response", token))
 				}
 				// Fall through for POSTS..  we're just creating a new response.
 			}

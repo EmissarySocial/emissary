@@ -14,7 +14,7 @@ func Version14(ctx context.Context, session *mongo.Database) error {
 
 	fmt.Println("... Version 14")
 	{
-		err := ForEachRecord(session.Collection("Follower"), func(record mapof.Any) bool {
+		err := ForEachRecord(session.Collection("Follower"), func(record mapof.Any) bool { // nolint:scopeguard (readability)
 
 			if actor := record.GetMap("actor"); actor.NotEmpty() {
 				if actorImageURL, ok := actor["imageUrl"]; ok {
@@ -33,7 +33,7 @@ func Version14(ctx context.Context, session *mongo.Database) error {
 		}
 	}
 	{
-		err := ForEachRecord(session.Collection("Following"), func(record mapof.Any) bool {
+		err := ForEachRecord(session.Collection("Following"), func(record mapof.Any) bool { // nolint:scopeguard (readability)
 
 			if imageURL, ok := record["imageUrl"]; ok {
 				record["iconUrl"] = imageURL
@@ -50,7 +50,7 @@ func Version14(ctx context.Context, session *mongo.Database) error {
 	}
 
 	{
-		err := ForEachRecord(session.Collection("Message"), func(record mapof.Any) bool {
+		err := ForEachRecord(session.Collection("Message"), func(record mapof.Any) bool { // nolint:scopeguard (readability)
 
 			if origin := record.GetMap("origin"); origin.NotEmpty() {
 				if originImageURL, ok := origin["imageUrl"]; ok {
@@ -70,7 +70,7 @@ func Version14(ctx context.Context, session *mongo.Database) error {
 	}
 
 	{
-		err := ForEachRecord(session.Collection("Stream"), func(record mapof.Any) bool {
+		err := ForEachRecord(session.Collection("Stream"), func(record mapof.Any) bool { // nolint:scopeguard (readability)
 
 			changed := false
 			if imageURL, ok := record["imageUrl"]; ok {

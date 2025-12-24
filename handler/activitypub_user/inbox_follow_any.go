@@ -28,7 +28,7 @@ func init() {
 		}
 
 		// RULE: Do not allow new "Follows" of any blocked Actors
-		ruleFilter := context.factory.Rule().Filter(context.user.UserID, service.WithBlocksOnly())
+		ruleFilter := context.factory.Rule().Filter(context.user.UserID, service.WithBlocksOnly()) // nolint:scopeguard
 		if ruleFilter.Disallow(context.session, &activity) {
 			return derp.ForbiddenError(location, "Blocked by rule", activity.Object().ID())
 		}

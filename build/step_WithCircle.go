@@ -41,15 +41,14 @@ func (step StepWithCircle) execute(builder Builder, buffer io.Writer, actionMeth
 
 	// Collect required services and values
 	factory := builder.factory()
-	circleToken := builder.QueryParam("circleId")
 	circle := model.NewCircle()
 	circle.UserID = builder.AuthenticatedID()
 
-	if (circleToken != "") && (circleToken != "new") {
+	if token := builder.QueryParam("circleId"); isNewOrEmpty(token) {
 
-		circleID, err := primitive.ObjectIDFromHex(circleToken)
+		circleID, err := primitive.ObjectIDFromHex(token)
 		if err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Invalid Circle ID", circleToken))
+			return Halt().WithError(derp.Wrap(err, location, "Invalid Circle ID", token))
 		}
 
 		if err := factory.Circle().LoadByID(builder.session(), builder.AuthenticatedID(), circleID, &circle); err != nil {
