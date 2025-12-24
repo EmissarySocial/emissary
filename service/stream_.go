@@ -1256,6 +1256,8 @@ func (service *Stream) MoveByUserID(session data.Session, userID primitive.Objec
 	return nil
 }
 
+// Move updates a Stream to indicate that it has been moved to another server,
+// and deletes all related Attachments and Mentions.
 func (service *Stream) Move(session data.Session, stream *model.Stream, movedTo string) error {
 
 	const location = "service.Stream.Move"
@@ -1369,6 +1371,7 @@ func (service *Stream) SearchResult(stream *model.Stream) model.SearchResult {
 	return result
 }
 
+// Hostname returns the hostname (domain only) for this service
 func (service *Stream) Hostname() string {
 	return dt.NameOnly(service.host)
 }
