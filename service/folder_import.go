@@ -20,13 +20,22 @@ func (service *Folder) Import(session data.Session, _ *model.Import, importItem 
 		return derp.Wrap(err, location, "Unable to parse remote document", document)
 	}
 
-	// Update mapping values in the importItem
+	// Update the ImportItem with the RemoteID
 	importItem.RemoteID = folder.FolderID
-	importItem.LocalID = primitive.NewObjectID()
 
+	// If we already have a folder with the same label, then don't make a new record,
+	// just map to the existing one
+	existingFolder := model.NewFolder()
+	if err := service.LoadByLabel(session, user.UserID, folder.Label, &existingFolder); err == nil {
+		importItem.LocalID = existingFolder.FolderID
+		return nil
+	}
+
+	// Fall through means we're going to create a new Folder.
 	// Map values from the original Folder into the new, local Folder
-	folder.FolderID = importItem.LocalID        // Use the new localID for this record
-	folder.Label = folder.Label + " (imported)" // Label imported Folders
+	folder.FolderID = primitive.NewObjectID() // Use the new localID for this record
+	folder.Label = folder.Label               // Label imported Folders
+	importItem.LocalID = folder.FolderID      // Update the ImportItem with the new LocalID
 
 	// Map the UserID
 	if err := service.importItemService.mapRemoteID(session, user.UserID, &folder.UserID); err != nil {
@@ -38,7 +47,7 @@ func (service *Folder) Import(session data.Session, _ *model.Import, importItem 
 		return derp.Wrap(err, location, "Unable to save imported Folder")
 	}
 
-	// A Man, A Plan, A Canal. Panama.
+	// A Man, A Plan, A Canal. Pañama.
 	return nil
 }
 

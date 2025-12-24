@@ -285,7 +285,7 @@ func (service *Folder) LoadByToken(session data.Session, userID primitive.Object
 	return derp.BadRequestError("service.Folder", "Invalid token", token)
 }
 
-// LoadByLabel loads a single stream that matches the provided label
+// LoadByLabel loads a single Folder that matches the provided label
 func (service *Folder) LoadByLabel(session data.Session, userID primitive.ObjectID, label string, result *model.Folder) error {
 
 	criteria := exp.
