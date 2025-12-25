@@ -44,7 +44,7 @@ func (step StepWithConversation) execute(builder Builder, buffer io.Writer, acti
 	conversation := model.NewConversation()
 	conversation.UserID = builder.AuthenticatedID()
 
-	if token := builder.QueryParam("conversationId"); isNewOrEmpty(token) {
+	if token := builder.QueryParam("conversationId"); notNewOrEmpty(token) {
 
 		conversationID, err := primitive.ObjectIDFromHex(token)
 		if err != nil {

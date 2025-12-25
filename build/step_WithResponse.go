@@ -45,7 +45,7 @@ func (step StepWithResponse) execute(builder Builder, buffer io.Writer, actionMe
 	response := model.NewResponse()
 
 	// If we have a real ID, then try to load the response from the database
-	if token := builder.QueryParam("responseId"); isNewOrEmpty(token) {
+	if token := builder.QueryParam("responseId"); notNewOrEmpty(token) {
 		if responseID, err := primitive.ObjectIDFromHex(token); err == nil {
 			if err := factory.Response().LoadByID(builder.session(), builder.AuthenticatedID(), responseID, &response); err != nil {
 				if actionMethod == ActionMethodGet {

@@ -44,7 +44,7 @@ func (step StepWithCircle) execute(builder Builder, buffer io.Writer, actionMeth
 	circle := model.NewCircle()
 	circle.UserID = builder.AuthenticatedID()
 
-	if token := builder.QueryParam("circleId"); isNewOrEmpty(token) {
+	if token := builder.QueryParam("circleId"); notNewOrEmpty(token) {
 
 		circleID, err := primitive.ObjectIDFromHex(token)
 		if err != nil {

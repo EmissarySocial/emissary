@@ -43,7 +43,7 @@ func (step StepWithRule) execute(builder Builder, buffer io.Writer, actionMethod
 	rule := model.NewRule()
 	rule.UserID = builder.AuthenticatedID()
 
-	if token := builder.QueryParam("ruleId"); isNewOrEmpty(token) {
+	if token := builder.QueryParam("ruleId"); notNewOrEmpty(token) {
 		if err := factory.Rule().LoadByToken(builder.session(), builder.AuthenticatedID(), token, &rule); err != nil {
 			if actionMethod == ActionMethodGet {
 				return Halt().WithError(derp.Wrap(err, location, "Unable to load Rule", token))

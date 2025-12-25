@@ -39,6 +39,13 @@ func TestParseMultipartForm(t *testing.T) {
 	require.Equal(t, []string{"http://localhost/6692c69bfe80a9aacf125b0d/attachments/6723b7b74aa88ca07dc8614e"}, values["iconUrl"])
 }
 
+func TestIsNewOrEmpty(t *testing.T) {
+	require.True(t, isNewOrEmpty(""))
+	require.True(t, isNewOrEmpty("new"))
+	require.True(t, isNewOrEmpty("NEW"))
+	require.False(t, isNewOrEmpty("1234567890abcdef12345678"))
+}
+
 // getTestRequest mocks an HTTP request with a multipart form body
 func getTestRequest() (*http.Request, error) {
 

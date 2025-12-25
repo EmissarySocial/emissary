@@ -52,7 +52,7 @@ func (step StepWithPrivilege) execute(builder Builder, buffer io.Writer, actionM
 		}
 	}
 
-	if token := builder.QueryParam("privilegeId"); isNewOrEmpty(token) {
+	if token := builder.QueryParam("privilegeId"); notNewOrEmpty(token) {
 
 		privilegeID, err := primitive.ObjectIDFromHex(token)
 		if err != nil {

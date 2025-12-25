@@ -45,7 +45,7 @@ func (step StepWithFolder) execute(builder Builder, buffer io.Writer, actionMeth
 	folder.UserID = builder.AuthenticatedID()
 
 	// If we have a real ID, then try to load the folder from the database
-	if token := builder.QueryParam("folderId"); isNewOrEmpty(token) {
+	if token := builder.QueryParam("folderId"); notNewOrEmpty(token) {
 		if err := factory.Folder().LoadByToken(builder.session(), builder.AuthenticatedID(), token, &folder); err != nil {
 			if actionMethod == ActionMethodGet {
 				return Halt().WithError(derp.Wrap(err, location, "Unable to load Folder", token))

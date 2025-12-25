@@ -234,6 +234,7 @@ func executeTemplate(template TemplateLike, data any) string {
 
 // Returns TRUE if the value is either empty or "new" (case insensitive)
 func isNewOrEmpty(value string) bool {
+
 	if value == "" {
 		return true
 	}
@@ -245,6 +246,11 @@ func isNewOrEmpty(value string) bool {
 	}
 
 	return false
+}
+
+// Returns TRUE if the value is neither empty nor "new" (case insensitive)
+func notNewOrEmpty(value string) bool {
+	return !isNewOrEmpty(value)
 }
 
 // AsHTML collects the logic to build complete vs. partial HTML pages.
