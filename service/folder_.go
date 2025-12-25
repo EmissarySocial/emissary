@@ -239,15 +239,17 @@ func (service *Folder) RangeByUserID(session data.Session, userID primitive.Obje
 // DeleteByUserID removes all folders for a given user
 func (service *Folder) DeleteByUserID(session data.Session, userID primitive.ObjectID, comment string) error {
 
+	const location = "service.Folder.DeleteByUserID"
+
 	rangeFunc, err := service.RangeByUserID(session, userID)
 
 	if err != nil {
-		return derp.Wrap(err, "service.Folder.DeleteByUserID", "Unable to list folders", userID)
+		return derp.Wrap(err, location, "Unable to list folders", userID)
 	}
 
 	for folder := range rangeFunc {
 		if err := service.Delete(session, &folder, comment); err != nil {
-			return derp.Wrap(err, "service.Folder.DeleteByUserID", "Unable to delete folder", folder)
+			return derp.Wrap(err, location, "Unable to delete folder", folder)
 		}
 	}
 
@@ -272,17 +274,14 @@ func (service *Folder) LoadByID(session data.Session, userID primitive.ObjectID,
 // LoadByToken loads a single stream that matches the provided token
 func (service *Folder) LoadByToken(session data.Session, userID primitive.ObjectID, token string, result *model.Folder) error {
 
-	if folderID, err := primitive.ObjectIDFromHex(token); err == nil {
+	// Convert the token to an ObjectID
+	folderID, err := primitive.ObjectIDFromHex(token)
 
-		criteria := exp.And(
-			exp.Equal("_id", folderID),
-			exp.Equal("userId", userID),
-		)
-
-		return service.Load(session, criteria, result)
+	if err != nil {
+		return derp.BadRequestError("service.Folder", "Invalid token", token)
 	}
 
-	return derp.BadRequestError("service.Folder", "Invalid token", token)
+	return service.LoadByID(session, userID, folderID, result)
 }
 
 // LoadByLabel loads a single Folder that matches the provided label
@@ -322,7 +321,7 @@ func (service *Folder) CalculateUnreadCount(session data.Session, userID primiti
 	collection := service.collection(session)
 
 	if err := queries.FolderSetUnreadCount(collection, userID, folderID, unreadCount); err != nil {
-		return derp.Wrap(err, "service.Folder", "Unable to update folder read date", userID, folderID)
+		return derp.Wrap(err, location, "Unable to update folder read date", userID, folderID)
 	}
 
 	return nil
