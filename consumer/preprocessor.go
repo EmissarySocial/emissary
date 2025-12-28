@@ -38,6 +38,11 @@ func PreProcessor(task *queue.Task) error {
 	case "SendSearchResult-SearchQuery":
 		task.Priority = 16
 
+	case "ReceiveActivityPub-Move":
+		task.Priority = 16
+
+	// (32) User-Affecting Tasks That Should Complete Very Quickly
+
 	///////////////////////////////////////////////////
 	// Tasks below this line are ALWAYS written to the
 	// database, and are NOT executed immediately
@@ -97,6 +102,9 @@ func PreProcessor(task *queue.Task) error {
 		task.Priority = 512
 
 	case "Shuffle":
+		task.Priority = 512
+
+	case "ReceiveActivityPub-Delete":
 		task.Priority = 512
 
 	// 1024: Daily/Hourly Tasks that can happen whenever it's convenient

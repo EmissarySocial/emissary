@@ -17,18 +17,24 @@ func init() {
 
 func MoveAny(context Context, document streams.Document) error {
 
+	const location = "activitypub_user.Inbox.MoveAny"
+
 	// Locate/Move local actors
 	locator := context.factory.Locator()
 
 	if objectType, objectID, err := locator.GetObjectFromURL(context.session, document.Target().ID()); err == nil {
 
 		if objectType == model.ActorTypeUser {
-			return moveLocalUser(context, document, objectID)
+
+			if err := moveLocalUser(context, document, objectID); err != nil {
+				return derp.Wrap(err, location, "Unable to move local User", "userID", objectID)
+			}
 		}
 	}
 
 	// For all other remote objects, schedule a background task
 	context.factory.Queue().NewTask("ReceiveActivityPub-Move", mapof.Any{
+		"host":   context.factory.Host(),
 		"actor":  document.Actor().ID(),
 		"object": document.Object().ID(),
 		"target": document.Target().ID(),
@@ -57,11 +63,13 @@ func moveLocalUser(context Context, document streams.Document, userID primitive.
 	record := model.NewImport()
 
 	if err := importService.LoadBySourceURL(context.session, user.UserID, document.Actor().ID(), &record); err != nil {
+
 		return derp.Wrap(err, location, "Unable to load Import record", "userID", user.UserID, "sourceID", document.Actor().ID())
 	}
 
 	// RULE: Do not allow `Move` if the record is not in REVIEWING state
 	if record.StateID != model.ImportStateReviewing {
+
 		return derp.BadRequest(location, "Import record must be in REVIEWING state to accept a `Move` request.")
 	}
 
@@ -70,6 +78,7 @@ func moveLocalUser(context Context, document streams.Document, userID primitive.
 	record.StateID = model.ImportStateDoMove
 
 	if err := importService.Save(context.session, &record, "Finalizing Import"); err != nil {
+
 		return derp.Wrap(err, location, "Unable to save Import record")
 	}
 

@@ -64,7 +64,7 @@ func WithAuthenticatedUser(serverFactory *server.Factory, fn WithFunc1[model.Use
 		user := model.NewUser()
 
 		if err := userService.LoadByID(session, authorization.UserID, &user); err != nil {
-			return derp.Wrap(err, location, "Unable to load User")
+			return derp.Wrap(err, location, "Unable to load User", derp.WithUnauthorized())
 		}
 
 		// If this user has moved, then they cannot access to this server anymore.

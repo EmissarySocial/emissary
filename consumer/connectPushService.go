@@ -1,8 +1,6 @@
 package consumer
 
 import (
-	"time"
-
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
@@ -11,17 +9,12 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/sherlock"
 	"github.com/benpate/turbine/queue"
-	"github.com/davecgh/go-spew/spew"
 )
 
 // ConnectPushService polls an individual Following record for new post from its outbox (or RSS feed)
 func ConnectPushService(factory *service.Factory, session data.Session, user *model.User, following *model.Following, args mapof.Any) queue.Result {
 
 	const location = "consumer.ConnectPushService"
-
-	spew.Dump(location)
-	time.Sleep(3 * time.Second)
-	spew.Dump(location + " - after sleep")
 
 	// RULE: Only connect if both the host and following URL are on the same network.
 	// Only local servers can connect to local actors, and only public-facing servers can

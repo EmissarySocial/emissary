@@ -41,12 +41,7 @@ func ServerSentEvent_NewReplies(ctx *steranko.Context, factory *service.Factory,
 	return serverSentEvent(ctx, factory, realtime.TopicNewReplies)
 }
 
-func ServerSentEvent_ImportProgress(ctx *steranko.Context, factory *service.Factory, _ data.Session, user *model.User) error {
-
-	if user.UserID.Hex() != ctx.Param("objectId") {
-		return derp.Forbidden("handler.ServerSentEvent_FollowingUpdated", "You do not have permission to access this resource")
-	}
-
+func ServerSentEvent_ImportProgress(ctx *steranko.Context, factory *service.Factory, _ data.Session, _ *model.User) error {
 	return serverSentEvent(ctx, factory, realtime.TopicImportProgress)
 }
 

@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -22,6 +23,8 @@ func ReceiveActivityPubMove(factory *service.Factory, session data.Session, args
 	objectURL := args.GetString("object")
 	targetURL := args.GetString("target")
 
+	spew.Dump(location, actorURL, objectURL, targetURL)
+
 	// RULE: The Actor and Object must be the same URL
 	if actorURL != objectURL {
 		return queue.Failure(derp.BadRequest(location, "Actors can only `Move` themselves.", "actor: "+actorURL, "object: "+objectURL))
@@ -34,6 +37,8 @@ func ReceiveActivityPubMove(factory *service.Factory, session data.Session, args
 	if err != nil {
 		return queue.Error(derp.Wrap(err, location, "Unable to load Target document", "target: "+targetURL))
 	}
+
+	spew.Dump("Target Document:", target)
 
 	// RULE: The targe document must be an Actor
 	if !target.IsActor() {
