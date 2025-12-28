@@ -280,6 +280,7 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 			factory.Inbox(),
 			factory.Stream(),
 			factory.User(),
+			factory.Queue(),
 			factory.SSEUpdateChannel(),
 			factory.Host(),
 		)

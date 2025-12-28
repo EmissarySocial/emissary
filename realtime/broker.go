@@ -75,8 +75,6 @@ func (b *Broker) listen() {
 
 	for {
 
-		// Block until we receive from one of the
-		// three following channels.
 		select {
 
 		case client := <-b.AddClient:
@@ -87,8 +85,6 @@ func (b *Broker) listen() {
 
 			b.objects[client.StreamID][client.ClientID] = client
 			b.clients[client.ClientID] = client
-
-			// log.Println("Added new client")
 
 		case client := <-b.RemoveClient:
 
@@ -101,10 +97,14 @@ func (b *Broker) listen() {
 
 			close(client.WriteChannel)
 
-			// log.Println("Removed client")
-
 		case message := <-b.updateChannel:
 
+			// Do not work on empty messages
+			if message.ObjectID.IsZero() {
+				break
+			}
+
+			// Otherwise, notify listeners
 			go b.notifySSE(message)
 
 		case <-b.close:
@@ -116,12 +116,7 @@ func (b *Broker) listen() {
 // notifySSE sends updates for every SEE client that is watching a given stream
 func (b *Broker) notifySSE(message Message) {
 
-	// If the object is empty, then there's nothing to do
-	if message.ObjectID.IsZero() {
-		return
-	}
-
-	// Delay before sending updates on new replies
+	// RULE: Delay before sending updates on "New Replies"
 	// (wait for new items to settle in the database)
 	if message.Topic == TopicNewReplies {
 		time.Sleep(2 * time.Second)

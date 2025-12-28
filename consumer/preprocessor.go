@@ -1,14 +1,16 @@
 package consumer
 
 import (
-	"github.com/benpate/derp"
 	"github.com/benpate/turbine/queue"
 )
 
 // PreProcessor defines global rules for all tasks in the system
 func PreProcessor(task *queue.Task) error {
 
-	const location = "consumer.PrePreprocessor"
+	// If the priority has already been set, then leave it alone
+	if task.Priority != -1 {
+		return nil
+	}
 
 	switch task.Name {
 
@@ -17,6 +19,9 @@ func PreProcessor(task *queue.Task) error {
 	// immediately IF the queue is not already busy
 
 	// (8) User-Facing Tasks that affect UX
+	case "ConnectPushService":
+		task.Priority = 8
+
 	case "CreateWebSubFollower":
 		task.Priority = 8
 
@@ -70,7 +75,10 @@ func PreProcessor(task *queue.Task) error {
 	case "LoadActivityStream":
 		task.Priority = 512
 
-	case "PollFollowing":
+	case "PollFollowing-Index":
+		task.Priority = 512
+
+	case "PollFollowing-Record":
 		task.Priority = 512
 
 	case "ReindexActivityStream":
@@ -106,14 +114,6 @@ func PreProcessor(task *queue.Task) error {
 
 	case "RecycleDomain":
 		task.Priority = 1024
-
-	// Blocked Tasks
-	case "CountRelatedDocuments":
-		return derp.NotImplemented(location, "CountRelatedDocuments task has been disabled")
-
-	case "ProcessMedia":
-		return derp.NotImplemented(location, "ProcessMedia task has not been implemented")
-
 	}
 
 	return nil

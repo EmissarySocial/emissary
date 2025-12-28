@@ -86,8 +86,8 @@ func (client *Client) Load(url string, options ...any) (streams.Document, error)
 
 	defer cancel()
 
-	// If we're not forcing the cache to reload, then try to load from the cache first
-	if config.isCacheAllowed() {
+	// If we're allowdd to READ from the cache, then try to load from the cache first
+	if config.isReadAllowed() {
 
 		// Search the cache for the document
 		value := NewValue()
@@ -112,7 +112,7 @@ func (client *Client) Load(url string, options ...any) (streams.Document, error)
 	if err != nil {
 
 		// If the original document is gone, and we're forcing a reload, then remove the value from the cache
-		if derp.IsNotFound(err) && config.forceReload {
+		if derp.IsNotFound(err) && config.isWriteAllowed() {
 			if err := client.Delete(url); err != nil {
 				return result, derp.Wrap(err, location, "Unable to remove document from cache", url)
 			}
@@ -121,14 +121,17 @@ func (client *Client) Load(url string, options ...any) (streams.Document, error)
 		return result, derp.Wrap(err, location, "Unable to load document from inner client", url)
 	}
 
-	// Try to save the new value asynchronously
-	value := asValue(result)
+	// If we're allowed to write to the cache, then try to update it here
 
-	if err := client.save(session.Context(), url, &value); err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to write document to cache.. continuing process.."))
+	if config.isWriteAllowed() {
+		value := asValue(result)
+
+		if err := client.save(session.Context(), url, &value); err != nil {
+			derp.Report(derp.Wrap(err, location, "Unable to write document to cache.. continuing process.."))
+		}
+
+		client.countRelatedDocuments(result)
 	}
-
-	client.countRelatedDocuments(result)
 
 	// Return the result (streams.Document) to the caller
 	return result, nil
@@ -315,30 +318,34 @@ func (client *Client) removeDuplicates(session data.Session, urls ...string) err
 // countRelatedDocuments triggers a follow-up task to count related documents.
 func (client *Client) countRelatedDocuments(document streams.Document) {
 
-	// Do not count related documents for Actors
-	if document.IsActor() {
-		return
-	}
+	// DISABLING THIS FUNCTION UNTIL WE HAVE A MORE EFFICIENT WAY TO DO THIS.
 
-	// Do not count related documents for Collections
-	if document.IsCollection() {
-		return
-	}
+	/*
+		// Do not count related documents for Actors
+		if document.IsActor() {
+			return
+		}
 
-	url := document.ID()
+		// Do not count related documents for Collections
+		if document.IsCollection() {
+			return
+		}
 
-	// Schedule a follow-up to count related documents (in 30 seconds)
-	client.queue.NewTask(
-		"CountRelatedDocuments",
-		mapof.Any{
-			"url":       url,
-			"host":      client.hostname,
-			"actorType": client.actorType,
-			"actorID":   client.actorID,
-		},
-		queue.WithSignature(url+"#CountRelatedDocuments"),
-		queue.WithDelaySeconds(30),
-	)
+		url := document.ID()
+
+		// Schedule a follow-up to count related documents (in 30 seconds)
+		client.queue.NewTask(
+			"CountRelatedDocuments",
+			mapof.Any{
+				"url":       url,
+				"host":      client.hostname,
+				"actorType": client.actorType,
+				"actorID":   client.actorID,
+			},
+			queue.WithSignature(url+"#CountRelatedDocuments"),
+			queue.WithDelaySeconds(30),
+		)
+	*/
 }
 
 // asDocument converts a Document into a fully-populated streams.Document

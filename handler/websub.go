@@ -135,7 +135,7 @@ func PostWebSubClient(ctx *steranko.Context, factory *service.Factory, session d
 	// inspecting the body and parsing any additional data that's been "Fat Ping-ed" to us.
 
 	// Connect to the the WebSub server
-	if err := followingService.Connect(session, following); err != nil {
+	if err := followingService.Connect(session, &following); err != nil {
 		return derp.Wrap(err, location, "Error connecting to following", following)
 	}
 

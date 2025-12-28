@@ -28,7 +28,7 @@ func ImportStartup(factory *service.Factory, session data.Session, user *model.U
 	client := activityService.Client()
 
 	// Load the actor so we can make an import plan
-	actor, err := client.Load(record.SourceID, sherlock.AsActor(), ascache.WithForceReload(), withBearerAuth)
+	actor, err := client.Load(record.SourceID, sherlock.AsActor(), ascache.WithWriteOnly(), withBearerAuth)
 
 	// We should have already loaded the actor when starting the Import process.
 	// If we cannot load the actor now, then just abandon the whole damned thing.
@@ -66,7 +66,7 @@ func ImportStartup(factory *service.Factory, session data.Session, user *model.U
 	for _, planItem := range plan {
 
 		// Load the collection
-		collection, err := client.Load(planItem.Href, ascache.WithForceReload(), withBearerAuth)
+		collection, err := client.Load(planItem.Href, ascache.WithWriteOnly(), withBearerAuth)
 
 		if err != nil {
 			derp.Report(derp.Wrap(err, location, "Unable to load import collection", planItem))

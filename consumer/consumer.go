@@ -22,14 +22,18 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 
 	switch name {
 
+	case "ConnectPushService":
+		return WithFollowing(consumer.serverFactory, args, ConnectPushService)
+
 	case "CrawlActivityStreams":
 		return WithSession(consumer.serverFactory, args, CrawlActivityStreams)
 
 	case "CreateWebSubFollower":
 		return WithSession(consumer.serverFactory, args, CreateWebSubFollower)
 
-	case "CountRelatedDocuments":
-		return WithFactory(consumer.serverFactory, args, CountRelatedDocuments)
+	// Blocked
+	// case "CountRelatedDocuments":
+	//	return WithFactory(consumer.serverFactory, args, CountRelatedDocuments)
 
 	case "DeleteEmptySearchQuery":
 		return WithSession(consumer.serverFactory, args, DeleteEmptySearchQuery)
@@ -55,11 +59,15 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 	case "MoveUser":
 		return WithUser(consumer.serverFactory, args, MoveUser)
 
-	case "PollFollowing":
-		return WithSession(consumer.serverFactory, args, PollFollowing)
+	case "PollFollowing-Index":
+		return WithSession(consumer.serverFactory, args, PollFollowing_Index)
 
-	case "ProcessMedia":
-		return WithSession(consumer.serverFactory, args, ProcessMedia)
+	case "PollFollowing-Record":
+		return WithFollowing(consumer.serverFactory, args, PollFollowing_Record)
+
+	// Blocked
+	// case "ProcessMedia":
+	//	return WithSession(consumer.serverFactory, args, ProcessMedia)
 
 	case "PurgeActivityStreamCache":
 		return PurgeActivityStreamCache(consumer.serverFactory)
@@ -72,6 +80,12 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 
 	case "PurgeImports":
 		return WithSession(consumer.serverFactory, args, PurgeImports)
+
+	case "ReceiveActivityPub-Delete":
+		return WithSession(consumer.serverFactory, args, ReceiveActivityPubDelete)
+
+	case "ReceiveActivityPub-Move":
+		return WithSession(consumer.serverFactory, args, ReceiveActivityPubMove)
 
 	case "ReceiveWebMention":
 		return WithSession(consumer.serverFactory, args, ReceiveWebMention)

@@ -22,11 +22,11 @@ func ScheduleHourly(serverFactory ServerFactory) queue.Result {
 			mapof.Any{"host": factory.Hostname()},
 		)
 
-		// Schedule "PollFollowing" tasks every four hours, starting at 1am.
+		// Schedule "PollFollowing-Index" tasks every four hours, starting at 1am.
 		if isHour(4, 1) {
 
 			q.NewTask(
-				"PollFollowing",
+				"PollFollowing-Index",
 				mapof.Any{"host": factory.Hostname()},
 			)
 		}

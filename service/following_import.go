@@ -34,7 +34,7 @@ func (service *Following) Import(session data.Session, _ *model.Import, importIt
 	}
 
 	// Map the FolderID
-	if err := service.importItemService.mapRemoteID(session, user.UserID, &following.FolderID); err != nil {
+	if err := service.importItemService.mapRemoteID(session, user.UserID, following.FolderID.Pointer()); err != nil {
 		return derp.ReportAndReturn(derp.Wrap(err, location, "Unable to map FolderID", "UserID: "+user.UserID.Hex()+", FollowingID: "+following.FollowingID.Hex()))
 	}
 

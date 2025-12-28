@@ -5,6 +5,7 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
+	"github.com/benpate/hannibal/vocab"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -13,19 +14,18 @@ func (service *Following) SaveMessage(session data.Session, following *model.Fol
 
 	const location = "service.Following.SaveMessage"
 
-	// Unwrap activities like `Create` and `Update`
-	document = document.UnwrapActivity()
-	original := document.Clone()
+	// Traverse `Create` and `Update` activities, as well as `inReplyTo`` values back to the primary document
+	original, originType := getPrimaryPost(document, originType)
 
-	// If collapseThreads is set, then traverse "inReplyTo" values back to the primary document
-	if following.CollapseThreads {
-		original, originType = getPrimaryPost(document, originType)
+	// Do nothing with `Delete` or `Undo` activities
+	if original.IsNil() {
+		return nil
 	}
 
 	// Convert the document into a message (and traverse responses if necessary)
 	message := getMessage(following.UserID, original)
 	message.FollowingID = following.FollowingID
-	message.FolderID = following.FolderID
+	message.FolderID = following.FolderID.Value()
 	message.AddReference(following.Origin(originType))
 
 	// Try to save a unique version of this message to the database (always collapse duplicates)
@@ -126,6 +126,35 @@ func (service *Following) saveUniqueMessage(session data.Session, message model.
 // TODO: LOW: In the future, the "context" value may be useful in traversing this list.
 func getPrimaryPost(document streams.Document, originType string) (streams.Document, string) {
 
+	// Special cases for Activities we receive
+	switch document.Type() {
+
+	case vocab.ActivityTypeAnnounce:
+		return getPrimaryPost(document.Object().LoadLink(), model.OriginTypeAnnounce)
+
+	case vocab.ActivityTypeCreate:
+		return getPrimaryPost(document.Object().LoadLink(), originType)
+
+	case vocab.ActivityTypeDelete:
+		return streams.NilDocument(), ""
+
+	case vocab.ActivityTypeDislike:
+		return getPrimaryPost(document.Object().LoadLink(), model.OriginTypeDislike)
+
+	case vocab.ActivityTypeLike:
+		return getPrimaryPost(document.Object().LoadLink(), model.OriginTypeLike)
+
+	case vocab.ActivityTypeUndo:
+		return streams.NilDocument(), ""
+
+	case vocab.ActivityTypeUpdate:
+		return getPrimaryPost(document.Object().LoadLink(), originType)
+
+	}
+
+	// Fall through means we (should) have an Object, not an Activity
+
+	// If this is a reply to a previous post, then traverse up the tree
 	if inReplyTo := document.InReplyTo(); inReplyTo.NotNil() {
 
 		// Change origin type from PRIMARY to REPLY without affecting
@@ -140,6 +169,7 @@ func getPrimaryPost(document streams.Document, originType string) (streams.Docum
 		}
 	}
 
+	// Otherwise, return the document and the accumulated origiin type
 	return document, originType
 }
 

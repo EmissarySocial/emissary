@@ -292,10 +292,11 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/:objectId/sse", handler.WithFactory(factory, handler.ServerSentEvent))
 	e.GET("/:objectId/sse/updated", handler.WithFactory(factory, handler.ServerSentEvent_Updated))
 	e.GET("/:objectId/sse/child-updated", handler.WithFactory(factory, handler.ServerSentEvent_ChildUpdated))
-	e.GET("/:objectId/sse/new-replies", handler.WithFactory(factory, handler.ServerSentEvent_NewReplies))
-	e.GET("/:objectId/sse/import-progress", handler.WithFactory(factory, handler.ServerSentEvent_ImportProgress))
+	e.GET("/:objectId/sse/new-replies", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_NewReplies))
+	e.GET("/:objectId/sse/import-progress", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_ImportProgress))
 	e.GET("/@:objectId/sse", handler.WithFactory(factory, handler.ServerSentEvent))
 	e.GET("/@:objectId/sse/updated", handler.WithFactory(factory, handler.ServerSentEvent_Updated))
+	e.GET("/@:objectId/sse/following-updated", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_FollowingUpdated))
 
 	// ActivityPub pages for the application actor
 	e.GET("/@application", handler.WithFactory(factory, handler.GetApplicationActor))

@@ -138,7 +138,7 @@ func (service *Outbox) Save(session data.Session, outboxMessage *model.OutboxMes
 func (service *Outbox) cacheMessage(outboxMessage *model.OutboxMessage) {
 	time.Sleep(1 * time.Second)
 	activityService := service.factory.ActivityStream(outboxMessage.ActorType, outboxMessage.ActorID)
-	_, err := activityService.Client().Load(outboxMessage.ObjectID, ascache.WithForceReload())
+	_, err := activityService.Client().Load(outboxMessage.ObjectID, ascache.WithWriteOnly())
 	derp.Report(err)
 
 }

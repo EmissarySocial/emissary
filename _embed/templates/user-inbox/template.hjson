@@ -47,9 +47,10 @@
 		actor-button: {
 			roles:["self"]
 			steps: [
+				{do:"set-header", name:"Cache-Control", value:"no-store"}
+				{do:"set-header", name:"Hx-Reswap", value:"outerHTML"}
+				{do:"set-header", name:"Hx-Push-Url", value:"false"}
 				{do:"view-html"}
-				{do:"set-header", name:"hx-reswap", value:"outerHTML"}
-				{do:"set-header", name:"hx-push-url", value:"false"}
 			]
 		}
 
@@ -57,7 +58,7 @@
 			roles:["self"]
 			steps:[
 				{do:"with-following", steps:[
-					{do:"set-data", from-url:["folderId", "url"], values: {behavior:"POSTS+REPLIES",collapseThreads: "true"}}
+					{do:"set-data", from-url:["folderId", "url"], values: {behavior:"POSTS+REPLIES"}}
 					{do:"save"}
 					{do:"trigger-event", event:"refreshPeers"}
 					{do:"view-html", method:"post", file:"actor-button-follow"}
@@ -69,7 +70,7 @@
 			roles:["self"]
 			steps:[
 				{do:"with-following", steps:[
-					{do:"set-data", from-form:["behavior", "collapseThreads", "isPublic"]}
+					{do:"set-data", from-form:["behavior", "isPublic"]}
 					{do:"save"}
 					{do:"trigger-event", event:"refreshPeers"}
 					{do:"inline-success", message:"Saved"}
@@ -171,6 +172,7 @@
 			roles: ["self"]
 			steps: [
 				{do:"as-modal", options:["class:large"], background:"inbox", steps:[
+					{do:"set-header", name:"Cache-Control", value:"no-store"}
 					{do: "view-html"}
 				]}
 			]
@@ -180,6 +182,7 @@
 			roles: ["self"]
 			steps: [
 				{do:"as-modal", background:"inbox", steps:[
+					{do:"set-header", name:"Cache-Control", value:"no-store"}
 					{do: "view-html"}
 				]}
 			]
@@ -188,6 +191,7 @@
 		browse-actor-featured: {
 			roles: ["self"]
 			steps: [
+				{do:"set-header", name:"Cache-Control", value:"no-store"}
 				{do: "view-html"}
 			]
 		}
@@ -195,6 +199,7 @@
 		browse-code: {
 			roles: ["self"]
 			steps: [
+				{do:"set-header", name:"Cache-Control", value:"no-store"}
 				{do:"view-html"}
 			]
 		}
@@ -202,6 +207,7 @@
 		browse-document-detail: {
 			roles: ["self"]
 			steps: [
+				{do:"set-header", name:"Cache-Control", value:"no-store"}
 				{do:"view-html"}
 			]
 		}
@@ -209,6 +215,7 @@
 		browse-index: {
 			roles: ["self"]
 			steps: [
+				{do:"set-header", name:"Cache-Control", value:"no-store"}
 				{do:"view-html"}
 			]
 		}
@@ -412,6 +419,7 @@
 		list: {
 			roles: ["self"]
 			steps: [
+				{do:"set-header", name:"Cache-Control", value:"no-store"}
 				{do: "view-html"}
 			]
 		}
@@ -419,6 +427,7 @@
 		list-before: {
 			roles: ["self"]
 			steps:[
+				{do:"set-header", name:"Cache-Control", value:"no-store"}
 				{do: "view-html"}
 			]
 		}
@@ -427,6 +436,7 @@
 			roles:["self"]
 			steps:[
 				{do:"as-modal", options:["xclass:large"], steps:[
+					{do:"set-header", name:"Cache-Control", value:"no-store"}
 					{do:"view-html"}
 				]}
 			]

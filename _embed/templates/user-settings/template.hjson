@@ -39,8 +39,9 @@
 			roles:["self"]
 			steps: [
 				{do:"view-html"}
-				{do:"set-header", name:"hx-reswap", value:"outerHTML"}
-				{do:"set-header", name:"hx-push-url", value:"false"}
+				{do:"set-header", name:"Cache-Control", value:"no-store"}
+				{do:"set-header", name:"Hx-Reswap", value:"outerHTML"}
+				{do:"set-header", name:"Hx-Push-Url", value:"false"}
 			]
 		}
 
@@ -48,7 +49,8 @@
 			roles:["self"]
 			steps:[
 				{do:"with-following", steps:[
-					{do:"set-data", from-url:["folderId", "url"], values: {behavior:"POSTS+REPLIES",collapseThreads: "true"}}
+					{do:"set-header", name:"Cache-Control", value:"no-store"}
+					{do:"set-data", from-url:["folderId", "url"], values: {behavior:"POSTS+REPLIES"}}
 					{do:"save"}
 					{do:"trigger-event", event:"refreshPeers"}
 					{do:"view-html", method:"post", file:"actor-button-follow"}
@@ -60,7 +62,8 @@
 			roles:["self"]
 			steps:[
 				{do:"with-following", steps:[
-					{do:"set-data", from-form:["behavior", "collapseThreads", "isPublic"]}
+					{do:"set-header", name:"Cache-Control", value:"no-store"}
+					{do:"set-data", from-form:["behavior", "isPublic"]}
 					{do:"save"}
 					{do:"trigger-event", event:"refreshPeers"}
 					{do:"inline-success", message:"Saved"}
@@ -70,6 +73,7 @@
 		actor-button-unfollow: {
 			roles:["self"]
 			steps:[
+				{do:"set-header", name:"Cache-Control", value:"no-store"}
 				{do:"with-following", steps:[
 					{do:"delete"}
 				]}
@@ -83,6 +87,7 @@
 			steps:[
 				{do:"with-rule", steps:[
 					{do:"set-data", values: {type:"ACTOR", action: "MUTE", trigger:"{{.QueryParam `url`}}"}}
+					{do:"set-header", name:"Cache-Control", value:"no-store"}
 					{do:"save"}
 					{do:"trigger-event", event:"refreshPeers"}
 					{do:"view-html", method:"post", file:"actor-button-mute"}
@@ -95,6 +100,7 @@
 				{do:"with-rule", steps:[
 					{do:"delete"}
 				]}
+				{do:"set-header", name:"Cache-Control", value:"no-store"}
 				{do:"view-html", method:"post", file:"actor-button-none"}
 				{do:"trigger-event", event:"refreshPeers"}
 				{do:"remove-event", event:"closeModal"}
@@ -105,6 +111,7 @@
 			steps:[
 				{do:"with-rule", steps:[
 					{do:"set-data", values: {type:"ACTOR", action: "BLOCK", trigger: "{{.QueryParam `url`}}"}}
+					{do:"set-header", name:"Cache-Control", value:"no-store"}
 					{do:"save"}
 					{do:"trigger-event", event:"refreshPeers"}
 					{do:"view-html", method:"post", file:"actor-button-block"}
@@ -116,6 +123,7 @@
 			steps:[
 				{do:"with-rule", steps:[
 					{do:"set-data", from-form:["comment", "isPublic"]}
+					{do:"set-header", name:"Cache-Control", value:"no-store"}
 					{do:"save"}
 					{do:"trigger-event", event:"refreshPeers"}
 					{do:"inline-success", message:"Saved"}
@@ -125,6 +133,7 @@
 		actor-button-unblock:{
 			roles:["self"]
 			steps:[
+				{do:"set-header", name:"Cache-Control", value:"no-store"}
 				{do:"with-rule", steps:[
 					{do:"delete"}
 				]}
@@ -338,6 +347,7 @@
 		followers-list: {
 			roles:["self"]
 			steps:[
+				{do:"set-header", name:"Cache-Control", value:"no-store"}
 				{do:"view-html"}
 			]
 		}
@@ -390,6 +400,7 @@
 		following-list: {
 			roles: ["self"]
 			steps:[
+				{do:"set-header", name:"Cache-Control", value:"no-store"}
 				{do:"view-html"}
 			]
 		}
@@ -448,15 +459,6 @@
 										path:"ruleAction", 
 										description:"How should blocks from this source be handled?"
 										options:{provider:"following-rule-actions"}
-									}
-									{
-										type:"toggle"
-										path:"collapseThreads"
-										default:true
-										options:{
-											true-text:"Group messages into a single thread"
-											false-text:"Show all messages separately"
-										}
 									}
 									{
 										type:"toggle"

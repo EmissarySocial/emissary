@@ -10,7 +10,6 @@ import (
 	dt "github.com/benpate/domain"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // WithFactory wraps a consumer function, and uses the "host" argument to inject a Factory object into the function signature.
@@ -38,6 +37,27 @@ func WithFactory(serverFactory ServerFactory, args mapof.Any, handler func(facto
 	return handler(factory, args)
 }
 
+// WithFollowing wraps a consumer function, using the "userId" and "followingId" arguments to load a Following object from the database.
+func WithFollowing(serverFactory ServerFactory, args mapof.Any, handler func(*service.Factory, data.Session, *model.User, *model.Following, mapof.Any) queue.Result) queue.Result {
+
+	const location = "consumer.WithFollowing"
+
+	return WithUser(serverFactory, args, func(factory *service.Factory, session data.Session, user *model.User, args mapof.Any) queue.Result {
+
+		// Collect arguments
+		followingService := factory.Following()
+		following := model.NewFollowing()
+		followingToken := args.GetString("followingId")
+
+		// Load the Following record
+		if err := followingService.LoadByToken(session, user.UserID, followingToken, &following); err != nil {
+			return queue.Error(derp.Wrap(err, location, "Cannot load following", args))
+		}
+
+		return handler(factory, session, user, &following, args)
+	})
+}
+
 // WithImport wraps a consumer function, using the "streamId" argument to load a Import object from the database.
 func WithImport(serverFactory ServerFactory, args mapof.Any, handler func(*service.Factory, data.Session, *model.User, *model.Import, mapof.Any) queue.Result) queue.Result {
 
@@ -45,20 +65,13 @@ func WithImport(serverFactory ServerFactory, args mapof.Any, handler func(*servi
 
 	return WithUser(serverFactory, args, func(factory *service.Factory, session data.Session, user *model.User, args mapof.Any) queue.Result {
 
+		// Collect arguments
 		importService := factory.Import()
 		record := model.NewImport()
 		importToken := args.GetString("importId")
 
-		// Parse the UserID
-		userToken := args.GetString("userId")
-		userID, err := primitive.ObjectIDFromHex(userToken)
-
-		if err != nil {
-			return queue.Failure(derp.Wrap(err, location, "Unable to parse userID", userToken))
-		}
-
 		// Load the Import record
-		if err := importService.LoadByToken(session, userID, importToken, &record); err != nil {
+		if err := importService.LoadByToken(session, user.UserID, importToken, &record); err != nil {
 			return queue.Error(derp.Wrap(err, location, "Cannot load import", args))
 		}
 

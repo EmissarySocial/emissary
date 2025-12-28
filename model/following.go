@@ -2,6 +2,7 @@ package model
 
 import (
 	"github.com/benpate/data/journal"
+	"github.com/benpate/delta"
 	"github.com/benpate/digit"
 	"github.com/benpate/toot/object"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -10,30 +11,29 @@ import (
 // Following is a model object that represents a user's following to an external data feed.
 // Currently, the only supported feed types are: RSS, Atom, and JSON Feed.  Others may be added in the future.
 type Following struct {
-	FollowingID     primitive.ObjectID `bson:"_id"`             // Unique Identifier of this record
-	UserID          primitive.ObjectID `bson:"userId"`          // ID of the stream that owns this "following"
-	FolderID        primitive.ObjectID `bson:"folderId"`        // ID of the folder to put new messages into
-	Folder          string             `bson:"folder"`          // Name of the folder to put new messages into
-	Label           string             `bson:"label"`           // Label of this "following" record
-	Notes           string             `bson:"notes"`           // Notes about this "following" record, entered by the user.
-	URL             string             `bson:"url"`             // Human-Facing URL that is being followed.
-	Username        string             `bson:"username"`        // Username of the actor that is being followed (@username@server.social).
-	ProfileURL      string             `bson:"profileUrl"`      // Updated, computer-facing URL that is being followed.
-	IconURL         string             `bson:"iconUrl"`         // URL of an the avatar/icon image that represents this "following"
-	Behavior        string             `bson:"behavior"`        // Behavior determines the types of records to import from this Actor [POSTS+REPLIES]
-	RuleAction      string             `bson:"ruleAction"`      // RuleAction determines the types of records to rule from this Actor [IGNORE, LABEL, MUTE, BLOCK ]
-	CollapseThreads bool               `bson:"collapseThreads"` // If TRUE, traverse responses and import the initial post that initiated a thread
-	IsPublic        bool               `bson:"isPublic"`        // If TRUE, this following is visible to the public
-	Links           digit.LinkSet      `bson:"links"`           // List of links can be used to update this following.
-	Method          string             `bson:"method"`          // Method used to update this feed (POLL, WEBSUB, RSS-CLOUD, ACTIVITYPUB)
-	Secret          string             `bson:"secret"`          // Secret used to authenticate this feed (if required)
-	Status          string             `bson:"status"`          // Status of the last poll of Following (NEW, CONNECTING, POLLING, SUCCESS, FAILURE)
-	StatusMessage   string             `bson:"statusMessage"`   // Optional message describing the status of the last poll
-	LastPolled      int64              `bson:"lastPolled"`      // Unix Timestamp of the last date that this resource was retrieved.
-	PollDuration    int                `bson:"pollDuration"`    // Time (in hours) to wait between polling this resource.
-	NextPoll        int64              `bson:"nextPoll"`        // Unix Timestamp of the next time that this resource should be polled.
-	PurgeDuration   int                `bson:"purgeDuration"`   // Time (in days) to wait before purging old messages
-	ErrorCount      int                `bson:"errorCount"`      // Number of times that this "following" has failed to load (for exponential backoff)
+	FollowingID   primitive.ObjectID `bson:"_id"`           // Unique Identifier of this record
+	UserID        primitive.ObjectID `bson:"userId"`        // ID of the stream that owns this "following"
+	FolderID      delta.ObjectID     `bson:"folderId"`      // ID of the folder to put new messages into
+	Folder        string             `bson:"folder"`        // Name of the folder to put new messages into
+	Label         string             `bson:"label"`         // Label of this "following" record
+	Notes         string             `bson:"notes"`         // Notes about this "following" record, entered by the user.
+	URL           string             `bson:"url"`           // Human-Facing URL that is being followed.
+	Username      string             `bson:"username"`      // Username of the actor that is being followed (@username@server.social).
+	ProfileURL    string             `bson:"profileUrl"`    // Updated, computer-facing URL that is being followed.
+	IconURL       string             `bson:"iconUrl"`       // URL of an the avatar/icon image that represents this "following"
+	Behavior      string             `bson:"behavior"`      // Behavior determines the types of records to import from this Actor [POSTS+REPLIES]
+	RuleAction    string             `bson:"ruleAction"`    // RuleAction determines the types of records to rule from this Actor [IGNORE, LABEL, MUTE, BLOCK ]
+	IsPublic      bool               `bson:"isPublic"`      // If TRUE, this following is visible to the public
+	Links         digit.LinkSet      `bson:"links"`         // List of links can be used to update this following.
+	Method        string             `bson:"method"`        // Method used to update this feed (POLL, WEBSUB, RSS-CLOUD, ACTIVITYPUB)
+	Secret        string             `bson:"secret"`        // Secret used to authenticate this feed (if required)
+	Status        string             `bson:"status"`        // Status of the last poll of Following (NEW, CONNECTING, POLLING, SUCCESS, FAILURE)
+	StatusMessage string             `bson:"statusMessage"` // Optional message describing the status of the last poll
+	LastPolled    int64              `bson:"lastPolled"`    // Unix Timestamp of the last date that this resource was retrieved.
+	PollDuration  int                `bson:"pollDuration"`  // Time (in hours) to wait between polling this resource.
+	NextPoll      int64              `bson:"nextPoll"`      // Unix Timestamp of the next time that this resource should be polled.
+	PurgeDuration int                `bson:"purgeDuration"` // Time (in days) to wait before purging old messages
+	ErrorCount    int                `bson:"errorCount"`    // Number of times that this "following" has failed to load (for exponential backoff)
 
 	journal.Journal `json:"-" bson:",inline"`
 }
@@ -41,15 +41,14 @@ type Following struct {
 // NewFollowing returns a fully initialized Following object
 func NewFollowing() Following {
 	return Following{
-		FollowingID:     primitive.NewObjectID(),
-		Status:          FollowingStatusNew,
-		Method:          FollowingMethodPoll,
-		Behavior:        FollowingBehaviorPostsAndReplies,
-		RuleAction:      RuleActionLabel,
-		Links:           make(digit.LinkSet, 0),
-		CollapseThreads: true, // default behavior is to collapse threads
-		PollDuration:    24,   // default poll interval is 24 hours
-		PurgeDuration:   14,   // default purge interval is 14 days
+		FollowingID:   primitive.NewObjectID(),
+		Status:        FollowingStatusNew,
+		Method:        "",
+		Behavior:      FollowingBehaviorPostsAndReplies,
+		RuleAction:    RuleActionLabel,
+		Links:         make(digit.LinkSet, 0),
+		PollDuration:  24, // default poll interval is 24 hours
+		PurgeDuration: 14, // default purge interval is 14 days
 	}
 }
 
@@ -134,10 +133,12 @@ func (following *Following) SetLinks(newLinks ...digit.Link) {
 	}
 }
 
+// IsZero returns TRUE if this Following is a zero value
 func (following Following) IsZero() bool {
-	return (following.UserID == primitive.NilObjectID) && (following.FolderID == primitive.NilObjectID)
+	return following.UserID.IsZero() && following.FolderID.IsZero()
 }
 
+// NotZero returns TRUE if this Following is NOT a zero value
 func (following Following) NotZero() bool {
 	return !following.IsZero()
 }

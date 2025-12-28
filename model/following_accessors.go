@@ -10,27 +10,26 @@ import (
 func FollowingSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"followingId":     schema.String{Format: "objectId"},
-			"userId":          schema.String{Format: "objectId"},
-			"folderId":        schema.String{Format: "objectId", Required: true},
-			"label":           schema.String{MaxLength: 128},
-			"notes":           schema.String{MaxLength: 1024},
-			"username":        schema.String{MaxLength: 128},
-			"url":             schema.String{Required: true, MaxLength: 1024},
-			"profileUrl":      schema.String{Format: "url", MaxLength: 1024},
-			"iconUrl":         schema.String{Format: "url", MaxLength: 1024},
-			"behavior":        schema.String{Enum: []string{FollowingBehaviorPosts, FollowingBehaviorPostsAndReplies}, Default: FollowingBehaviorPostsAndReplies, Required: true},
-			"ruleAction":      schema.String{Enum: []string{FollowingRuleActionIgnore, RuleActionMute, RuleActionLabel, RuleActionBlock}, Default: RuleActionLabel, Required: true},
-			"collapseThreads": schema.Boolean{Default: null.NewBool(true)},
-			"isPublic":        schema.Boolean{Default: null.NewBool(false)},
-			"method":          schema.String{Enum: []string{FollowingMethodPoll, FollowingMethodWebSub, FollowingMethodActivityPub}},
-			"status":          schema.String{Enum: []string{FollowingStatusNew, FollowingStatusLoading, FollowingStatusSuccess, FollowingStatusFailure}},
-			"statusMessage":   schema.String{MaxLength: 1024},
-			"lastPolled":      schema.Integer{Minimum: null.NewInt64(0), BitSize: 64},
-			"pollDuration":    schema.Integer{Minimum: null.NewInt64(1)},
-			"purgeDuration":   schema.Integer{Minimum: null.NewInt64(0)},
-			"nextPoll":        schema.Integer{Minimum: null.NewInt64(0), BitSize: 64},
-			"errorCount":      schema.Integer{Minimum: null.NewInt64(0)},
+			"followingId":   schema.String{Format: "objectId"},
+			"userId":        schema.String{Format: "objectId"},
+			"folderId":      schema.String{Format: "objectId", Required: true},
+			"label":         schema.String{MaxLength: 128},
+			"notes":         schema.String{MaxLength: 1024},
+			"username":      schema.String{MaxLength: 128},
+			"url":           schema.String{Required: true, MaxLength: 1024},
+			"profileUrl":    schema.String{Format: "url", MaxLength: 1024},
+			"iconUrl":       schema.String{Format: "url", MaxLength: 1024},
+			"behavior":      schema.String{Enum: []string{FollowingBehaviorPosts, FollowingBehaviorPostsAndReplies}, Default: FollowingBehaviorPostsAndReplies, Required: true},
+			"ruleAction":    schema.String{Enum: []string{FollowingRuleActionIgnore, RuleActionMute, RuleActionLabel, RuleActionBlock}, Default: RuleActionLabel, Required: true},
+			"isPublic":      schema.Boolean{Default: null.NewBool(false)},
+			"method":        schema.String{Enum: []string{FollowingMethodPoll, FollowingMethodWebSub, FollowingMethodActivityPub}},
+			"status":        schema.String{Enum: []string{FollowingStatusNew, FollowingStatusLoading, FollowingStatusSuccess, FollowingStatusFailure}},
+			"statusMessage": schema.String{MaxLength: 1024},
+			"lastPolled":    schema.Integer{Minimum: null.NewInt64(0), BitSize: 64},
+			"pollDuration":  schema.Integer{Minimum: null.NewInt64(1)},
+			"purgeDuration": schema.Integer{Minimum: null.NewInt64(0)},
+			"nextPoll":      schema.Integer{Minimum: null.NewInt64(0), BitSize: 64},
+			"errorCount":    schema.Integer{Minimum: null.NewInt64(0)},
 		},
 	}
 }
@@ -66,9 +65,6 @@ func (following *Following) GetPointer(name string) (any, bool) {
 	case "ruleAction":
 		return &following.RuleAction, true
 
-	case "collapseThreads":
-		return &following.CollapseThreads, true
-
 	case "isPublic":
 		return &following.IsPublic, true
 
@@ -77,7 +73,6 @@ func (following *Following) GetPointer(name string) (any, bool) {
 
 	case "secret":
 		// Do not allow access to "secret" field
-		// return &following.Secret, true
 		return nil, false
 
 	case "status":
@@ -144,7 +139,7 @@ func (following *Following) SetString(name string, value string) bool {
 
 	case "folderId":
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
-			following.FolderID = objectID
+			following.FolderID.Set(objectID)
 			return true
 		}
 	}

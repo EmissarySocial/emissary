@@ -164,9 +164,7 @@
 							We are importing records from your old profile now...
 						</div>
 
-						<div
-							hx-ext="sse" 
-							sse-connect="/{{$import.ImportID.Hex}}/sse/import-progress">
+						<div hx-ext="sse" sse-connect="/{{$import.ImportID.Hex}}/sse/import-progress">
 
 							<div 
 								hx-get="/@me/settings/import-progress-bar?importId={{$import.ImportID.Hex}}" 

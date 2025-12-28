@@ -21,6 +21,13 @@ func NewMessage_ChildUpdated(objectID primitive.ObjectID) Message {
 	}
 }
 
+func NewMessage_FollowingUpdated(objectID primitive.ObjectID) Message {
+	return Message{
+		ObjectID: objectID,
+		Topic:    TopicFollowingUpdated,
+	}
+}
+
 func NewMessage_NewReplies(objectID primitive.ObjectID) Message {
 	return Message{
 		ObjectID: objectID,

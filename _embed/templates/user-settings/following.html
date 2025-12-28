@@ -56,9 +56,22 @@
 				
 	</div>
 
+	<!-- Reload when refreshPage event is received -->
 	<div 
 		hx-get="{{.URL}}" 
 		hx-trigger="refreshPage from:window" 
+		hx-target="main"
+		hx-swap="innerHTML"
+		hx-push-url="false">
+	</div>
+
+	<!-- Reload when SSE message is received -->
+	<div 
+		hx-ext="sse" 
+		sse-connect="/@{{.AuthenticatedID.Hex}}/sse/following-updated"
+
+		hx-get="{{.URL}}" 
+		hx-trigger="sse:{{.AuthenticatedID.Hex}}" 
 		hx-target="main"
 		hx-swap="innerHTML"
 		hx-push-url="false">

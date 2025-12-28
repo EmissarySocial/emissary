@@ -27,7 +27,7 @@ func SetupPageGet(factory *server.Factory, templates *template.Template, templat
 
 		header := ctx.Response().Header()
 		header.Set("Content-Type", model.MimeTypeHTML)
-		header.Set("Cache-Control", "no-cache")
+		header.Set("Cache-Control", "no-store")
 
 		if err := templates.ExecuteTemplate(ctx.Response().Writer, templateID, config); err != nil {
 			derp.Report(build.WrapInlineError(ctx.Response(), derp.Wrap(err, "setup.getIndex", "Error building index page")))

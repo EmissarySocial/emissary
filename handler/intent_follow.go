@@ -149,14 +149,6 @@ func getForm_FollowingIntent() form.Form {
 				},
 				{
 					Type: "toggle",
-					Path: "collapseThreads",
-					Options: mapof.Any{
-						"true-text":  "Group messages into a single thread",
-						"false-text": "Show all messages separately",
-					},
-				},
-				{
-					Type: "toggle",
 					Path: "isPublic",
 					Options: mapof.Any{
 						"true-text":  "Public: This 'Follow' is visible on my profile",

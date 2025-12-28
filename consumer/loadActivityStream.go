@@ -29,7 +29,7 @@ func LoadActivityStream(factory *service.Factory, _ data.Session, args mapof.Any
 	activityService := factory.ActivityStream(actorType, actorID)
 
 	// Configure crawler options to persist depth and history
-	if _, err := activityService.Client().Load(url, ascache.WithForceReload(), ascrawler.WithoutCrawler()); err != nil {
+	if _, err := activityService.Client().Load(url, ascache.WithWriteOnly(), ascrawler.WithoutCrawler()); err != nil {
 
 		if derp.IsClientError(err) {
 			return queue.Failure(derp.Wrap(err, location, "Client error when loading ActivityStream"))

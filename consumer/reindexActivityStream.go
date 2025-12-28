@@ -22,7 +22,7 @@ func ReindexActivityStream(factory *service.Factory, args mapof.Any) queue.Resul
 	activityService := factory.ActivityStream(model.ActorTypeApplication, primitive.NilObjectID)
 
 	// Try to load the ActivityStream. Skip the cache, and to not re-trigger the crawler.
-	if _, err := activityService.Client().Load(url, ascache.WithForceReload(), ascrawler.WithoutCrawler()); err != nil {
+	if _, err := activityService.Client().Load(url, ascache.WithWriteOnly(), ascrawler.WithoutCrawler()); err != nil {
 
 		// If the ActivityStream no longer exists, then remove it from the cache
 		if derp.IsNotFoundOrGone(err) {

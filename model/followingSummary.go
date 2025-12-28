@@ -34,17 +34,22 @@ func (summary FollowingSummary) Icon() string {
 
 	case FollowingMethodActivityPub:
 		icon = "activitypub"
+
 	case FollowingMethodPoll:
 		icon = "rss"
+
 	case FollowingMethodWebSub:
 		icon = "websub"
 	}
 
 	switch summary.Status {
+
 	case FollowingStatusLoading:
 		return "loading"
+
 	case FollowingStatusSuccess:
 		return icon + "-fill"
+
 	default:
 		return icon
 	}
@@ -53,12 +58,16 @@ func (summary FollowingSummary) Icon() string {
 func (summary FollowingSummary) StatusClass() string {
 
 	switch summary.Status {
+
 	case FollowingStatusLoading:
 		return "spin"
+
 	case FollowingStatusFailure:
 		return "red"
+
 	case FollowingStatusSuccess:
 		return "green"
+
 	default:
 		return ""
 	}
