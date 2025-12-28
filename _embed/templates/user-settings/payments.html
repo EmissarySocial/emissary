@@ -3,7 +3,7 @@
 {{- $merchantAccounts := .MerchantAccounts.Slice -}}
 
 <div class="app" script="init send SelectNav(id:'settings')">
-
+	<title>Payments</title>
 	{{- if $isDesktop -}}
 		<div id="app-sidebar" class="expanded">
 			{{- template "menu" "payments" -}}	

@@ -1,7 +1,7 @@
 {{- $isDesktop := .IsDesktop -}}
 
 <div class="app" script="init send SelectNav(id:'settings')">
-	<title>{{.FollowingCount}} Following | {{.DisplayName}}</title>
+	<title>Social | Following ({{.FollowingCount}})</title>
 
 	{{- if $isDesktop -}}
 	<div id="app-sidebar" class="expanded">
