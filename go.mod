@@ -1,6 +1,6 @@
 module github.com/EmissarySocial/emissary
 
-go 1.25.1
+go 1.25.4
 
 require (
 	github.com/PuerkitoBio/goquery v1.11.0
@@ -9,6 +9,7 @@ require (
 	github.com/benpate/data v0.31.2
 	github.com/benpate/data-mock v0.31.4
 	github.com/benpate/data-mongo v0.30.9
+	github.com/benpate/delta v0.0.1
 	github.com/benpate/derp v0.34.3
 	github.com/benpate/digit v0.13.12
 	github.com/benpate/digital-dome v0.2.11
