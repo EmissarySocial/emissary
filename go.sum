@@ -70,8 +70,8 @@ github.com/benpate/sherlock v0.8.18 h1:/v2ETsRwY9zc3cGRl38mUGnOOJE/PcYMd9IM+cVCB
 github.com/benpate/sherlock v0.8.18/go.mod h1:R6HyCL/v69yLkO8Xxcy+c+vrVnvYyaR2aZay9GOrgDU=
 github.com/benpate/sniff v0.1.0 h1:ismWhuuMErMErCYHIX6uc/nCly9IHKVD+q+zPivU8kY=
 github.com/benpate/sniff v0.1.0/go.mod h1:186e1Ad6PdFBuDneBgFarsP3h8se8WZSgXonrBkOZLI=
-github.com/benpate/steranko v0.22.7 h1:7wNScGE/tdiaEZSFRFQglncSS/YvBPy7fcZZoJ7FtMo=
-github.com/benpate/steranko v0.22.7/go.mod h1:LNyi80Wjnf37d5deH9xbp6GTz3ByIYYtPBZjnXPYJHg=
+github.com/benpate/steranko v0.22.8 h1:dxtq2AkHgw1PWbADqfOnGmzVrD5FooROgoyiClAoAQM=
+github.com/benpate/steranko v0.22.8/go.mod h1:LNyi80Wjnf37d5deH9xbp6GTz3ByIYYtPBZjnXPYJHg=
 github.com/benpate/table v0.7.10 h1:H4sTfEaVvDeDhFkLcjuy9/4Th7X0FPDDltvc26QcV+0=
 github.com/benpate/table v0.7.10/go.mod h1:t+mmvwx2XuhA9USKzTbSyyQ9Z0K7QDt/HvU3NKwHG00=
 github.com/benpate/toot v0.3.0 h1:Nv64oUTJo9yNQnrWVdEQRIBWi/exvwOUYo4PBdjJg9w=
