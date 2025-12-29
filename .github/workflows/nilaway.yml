@@ -21,12 +21,9 @@ jobs:
       with:
         fetch-depth: 0
    
-    - name: Set up Go 1.25.4
-      uses: actions/setup-go@v6
-      with:
-        go-version: '1.25.4'
-
     - name: Nil panic checks
       uses: qbaware/nilaway-action@v0
+      env:
+        GOTOOLCHAIN: go1.25.5
       with:
         package-to-scan: ./...
