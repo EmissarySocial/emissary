@@ -25,7 +25,6 @@ import (
 	dt "github.com/benpate/domain"
 	"github.com/benpate/icon"
 	"github.com/benpate/mediaserver"
-	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/turbine/queue"
@@ -425,7 +424,7 @@ func (factory *Factory) refreshQueue() {
 	consumer := consumer.New(factory)
 
 	options := []queue.QueueOption{
-		queue.WithConsumers(consumer.Run, remote.Consumer()),
+		queue.WithConsumers(consumer.Run),
 		queue.WithRunImmediatePriority(32),
 	}
 
