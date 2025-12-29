@@ -86,7 +86,7 @@ func (service *ImportItem) Save(session data.Session, item *model.ImportItem, no
 
 	// Validate the value before saving
 	if err := service.Schema().Validate(item); err != nil {
-		return derp.Wrap(err, "service.ImportItem.Save", "Error validating ImportItem", item)
+		return derp.Wrap(err, "service.ImportItem.Save", "Unable to validate ImportItem", item)
 	}
 
 	// Save the value to the database

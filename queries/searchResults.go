@@ -42,7 +42,7 @@ func LockSearchResults(ctx context.Context, collection data.Collection, searchRe
 	}
 
 	if _, err := mongo.UpdateMany(ctx, criteria, update); err != nil {
-		return derp.Wrap(err, location, "Error updating search results", criteria, update)
+		return derp.Wrap(err, location, "Unable to update search results", criteria, update)
 	}
 
 	return nil

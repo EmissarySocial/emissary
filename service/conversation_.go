@@ -91,7 +91,7 @@ func (service *Conversation) Save(session data.Session, conversation *model.Conv
 
 	// Validate the value before saving
 	if err := service.Schema().Validate(conversation); err != nil {
-		return derp.Wrap(err, location, "Error validating Conversation", conversation)
+		return derp.Wrap(err, location, "Unable to validate Conversation", conversation)
 	}
 
 	// Save the value to the database

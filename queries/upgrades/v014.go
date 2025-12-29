@@ -29,7 +29,7 @@ func Version14(ctx context.Context, session *mongo.Database) error {
 		})
 
 		if err != nil {
-			return derp.Wrap(err, "queries.upgrades.Version14", "Error updating Following collection")
+			return derp.Wrap(err, "queries.upgrades.Version14", "Unable to update Following collection")
 		}
 	}
 	{
@@ -45,7 +45,7 @@ func Version14(ctx context.Context, session *mongo.Database) error {
 		})
 
 		if err != nil {
-			return derp.Wrap(err, "queries.upgrades.Version14", "Error updating Following collection")
+			return derp.Wrap(err, "queries.upgrades.Version14", "Unable to update Following collection")
 		}
 	}
 
@@ -65,7 +65,7 @@ func Version14(ctx context.Context, session *mongo.Database) error {
 		})
 
 		if err != nil {
-			return derp.Wrap(err, "queries.upgrades.Version14", "Error updating Stream collection")
+			return derp.Wrap(err, "queries.upgrades.Version14", "Unable to update Stream collection")
 		}
 	}
 
@@ -92,7 +92,7 @@ func Version14(ctx context.Context, session *mongo.Database) error {
 		})
 
 		if err != nil {
-			return derp.Wrap(err, "queries.upgrades.Version14", "Error updating Stream collection")
+			return derp.Wrap(err, "queries.upgrades.Version14", "Unable to update Stream collection")
 		}
 	}
 

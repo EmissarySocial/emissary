@@ -23,7 +23,7 @@ func (step StepSetData) Get(builder Builder, buffer io.Writer) PipelineBehavior 
 	const location = "build.StepSetData.Get"
 
 	if err := step.setURLPaths(builder); err != nil {
-		return Halt().WithError(derp.Wrap(err, "build.StepSetData.Get", "Error setting data from URL"))
+		return Halt().WithError(derp.Wrap(err, "build.StepSetData.Get", "Unable to set data from URL"))
 	}
 
 	object := builder.object()
@@ -33,7 +33,7 @@ func (step StepSetData) Get(builder Builder, buffer io.Writer) PipelineBehavior 
 	for key, value := range step.Values {
 		valueString := executeTemplate(value, builder)
 		if err := schema.Set(object, key, valueString); err != nil {
-			result := derp.Wrap(err, location, "Error setting value from template.json", key, derp.WithBadRequest())
+			result := derp.Wrap(err, location, "Unable to set value from template.json", key, derp.WithBadRequest())
 			return Halt().WithError(result)
 		}
 	}
@@ -42,7 +42,7 @@ func (step StepSetData) Get(builder Builder, buffer io.Writer) PipelineBehavior 
 	for name, value := range step.Defaults {
 		if currentValue, _ := schema.Get(builder, name); compare.IsZero(currentValue) {
 			if err := schema.Set(object, name, value); err != nil {
-				result := derp.Wrap(err, location, "Error setting default value", name, value, derp.WithBadRequest())
+				result := derp.Wrap(err, location, "Unable to set default value", name, value, derp.WithBadRequest())
 				return Halt().WithError(result)
 			}
 		}
@@ -57,7 +57,7 @@ func (step StepSetData) Post(builder Builder, _ io.Writer) PipelineBehavior {
 	const location = "build.StepSetData.Post"
 
 	if err := step.setURLPaths(builder); err != nil {
-		return Halt().WithError(derp.Wrap(err, "build.StepSetData.Get", "Error setting data from URL"))
+		return Halt().WithError(derp.Wrap(err, "build.StepSetData.Get", "Unable to set data from URL"))
 	}
 
 	object := builder.object()
@@ -86,7 +86,7 @@ func (step StepSetData) Post(builder Builder, _ io.Writer) PipelineBehavior {
 	for key, value := range step.Values {
 		valueString := executeTemplate(value, builder)
 		if err := schema.Set(object, key, valueString); err != nil {
-			result := derp.Wrap(err, location, "Error setting value from template.json", key, derp.WithBadRequest())
+			result := derp.Wrap(err, location, "Unable to set value from template.json", key, derp.WithBadRequest())
 			return Halt().WithError(result)
 		}
 	}
@@ -95,7 +95,7 @@ func (step StepSetData) Post(builder Builder, _ io.Writer) PipelineBehavior {
 	for name, value := range step.Defaults {
 		if currentValue, _ := schema.Get(builder, name); compare.IsZero(currentValue) {
 			if err := schema.Set(object, name, value); err != nil {
-				result := derp.Wrap(err, location, "Error setting default value", name, value, derp.WithBadRequest())
+				result := derp.Wrap(err, location, "Unable to set default value", name, value, derp.WithBadRequest())
 				return Halt().WithError(result)
 			}
 		}
@@ -114,7 +114,7 @@ func (step StepSetData) setURLPaths(builder Builder) error {
 		for _, path := range step.FromURL {
 			if value := query.Get(path); value != "" {
 				if err := schema.Set(object, path, value); err != nil {
-					result := derp.Wrap(err, "build.StepSetData.setURLPaths", "Error setting data from URL", derp.WithBadRequest())
+					result := derp.Wrap(err, "build.StepSetData.setURLPaths", "Unable to set data from URL", derp.WithBadRequest())
 					return result
 				}
 			}

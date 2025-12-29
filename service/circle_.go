@@ -98,7 +98,7 @@ func (service *Circle) Save(session data.Session, circle *model.Circle, note str
 
 	// Validate the value before saving
 	if err := service.Schema().Validate(circle); err != nil {
-		return derp.Wrap(err, location, "Error validating Circle", circle)
+		return derp.Wrap(err, location, "Unable to validate Circle", circle)
 	}
 
 	// Save the value to the database

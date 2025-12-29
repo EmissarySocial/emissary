@@ -102,7 +102,7 @@ func (service *Response) Save(session data.Session, response *model.Response, no
 
 	// Validate the value before saving
 	if err := service.Schema().Validate(response); err != nil {
-		return derp.Wrap(err, location, "Error validating Response", response)
+		return derp.Wrap(err, location, "Unable to validate Response", response)
 	}
 
 	// Save the value to the database

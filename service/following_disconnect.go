@@ -58,7 +58,7 @@ func (service *Following) disconnect_WebSub(following *model.Following) {
 				Form("hub.callback", service.websubCallbackURL(following))
 
 			if err := transaction.Send(); err != nil {
-				derp.Report(derp.Wrap(err, "service.Following.DisconnectWebSub", "Error sending WebSub unsubscribe request", link.Href))
+				derp.Report(derp.Wrap(err, "service.Following.DisconnectWebSub", "Unable to send WebSub unsubscribe request", link.Href))
 			}
 		}
 	}

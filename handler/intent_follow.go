@@ -182,7 +182,7 @@ func PostIntent_Follow(ctx *steranko.Context, factory *service.Factory, session 
 	// Update the Following with values from the user
 	form := getForm_FollowingIntent()
 	if err := form.SetURLValues(&following, transaction, factory.LookupProvider(ctx.Request(), session, user.UserID)); err != nil {
-		return derp.Wrap(err, location, "Error setting form values")
+		return derp.Wrap(err, location, "Unable to set form values")
 	}
 
 	// Save the new Stream to the database

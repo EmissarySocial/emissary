@@ -83,7 +83,7 @@ func UpgradeMongoDB(connectionString string, databaseName string, domain *model.
 		update := bson.M{"$set": bson.M{"databaseVersion": index}}
 
 		if _, err := domainCollection.UpdateOne(ctx, filter, update); err != nil {
-			return derp.Wrap(err, location, "Error updating domain record")
+			return derp.Wrap(err, location, "Unable to update domain record")
 		}
 	}
 

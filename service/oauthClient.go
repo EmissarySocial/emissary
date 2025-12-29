@@ -84,7 +84,7 @@ func (service *OAuthClient) Save(session data.Session, client *model.OAuthClient
 
 	// Validate the value (using the global OAuthClient schema) before saving
 	if err := service.Schema().Validate(client); err != nil {
-		return derp.Wrap(err, location, "Error validating OAuthClient using OAuthClientSchema", client)
+		return derp.Wrap(err, location, "Unable to validate OAuthClient using OAuthClientSchema", client)
 	}
 
 	// Generate secrets for new clients that weren't created via "Client ID Metadata Documents"

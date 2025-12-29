@@ -69,7 +69,7 @@ func (step StepTableEditor) Post(builder Builder, _ io.Writer) PipelineBehavior 
 			path := step.Path + "." + edit + "." + field.Path
 
 			if err := s.Set(object, path, body.Get(field.Path)); err != nil {
-				return Halt().WithError(derp.Wrap(err, location, "Error setting value in table", object, field.Path, path, body[field.Path]))
+				return Halt().WithError(derp.Wrap(err, location, "Unable to set value in table", object, field.Path, path, body[field.Path]))
 			}
 		}
 

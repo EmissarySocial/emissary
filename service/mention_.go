@@ -115,7 +115,7 @@ func (service *Mention) Save(session data.Session, mention *model.Mention, note 
 
 	// Validate the value before saving
 	if err := service.Schema().Validate(mention); err != nil {
-		return derp.Wrap(err, "service.Mention.Save", "Error validating Mention", mention)
+		return derp.Wrap(err, "service.Mention.Save", "Unable to validate Mention", mention)
 	}
 
 	// Save the value to the database
@@ -349,7 +349,7 @@ func (service *Mention) Send(source string, target string) error {
 		Form("target", target)
 
 	if err := txn.Send(); err != nil {
-		return derp.Wrap(err, location, "Error sending mention", source, target)
+		return derp.Wrap(err, location, "Unable to send mention", source, target)
 	}
 
 	// Silence means success

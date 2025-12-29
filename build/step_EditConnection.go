@@ -100,7 +100,7 @@ func (step StepEditConnection) Post(builder Builder, _ io.Writer) PipelineBehavi
 
 	// Apply the form data to the domain object
 	if err := form.SetURLValues(&connection, builder.request().Form, nil); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error updating domain object with form data"))
+		return Halt().WithError(derp.Wrap(err, location, "Unable to update domain object with form data"))
 	}
 
 	// Try to save the domain object back to the database

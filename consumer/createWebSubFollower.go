@@ -130,7 +130,7 @@ func createWebSubFollower_validate(factory *service.Factory, session data.Sessio
 		Result(&body)
 
 	if err := transaction.Send(); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Error sending verification request", follower.ID))
+		return queue.Error(derp.Wrap(err, location, "Unable to send verification request", follower.ID))
 	}
 
 	if body != challenge {

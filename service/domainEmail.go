@@ -81,7 +81,7 @@ func (service *DomainEmail) SendWelcome(session data.Session, txn model.Registra
 	)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error sending welcome email to user", txn.EmailAddress)
+		return derp.Wrap(err, location, "Unable to send welcome email to user", txn.EmailAddress)
 	}
 
 	// Woot!
@@ -120,7 +120,7 @@ func (service *DomainEmail) SendPasswordReset(user *model.User) error {
 	)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error sending password reset email to user", user.Username)
+		return derp.Wrap(err, location, "Unable to send password reset email to user", user.Username)
 	}
 
 	return nil
@@ -154,7 +154,7 @@ func (service *DomainEmail) SendGuestCode(identifier string, token string) error
 	)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error sending guest code to: "+identifier)
+		return derp.Wrap(err, location, "Unable to send guest code to: "+identifier)
 	}
 
 	// Woot!
@@ -192,7 +192,7 @@ func (service *DomainEmail) SendFollowerConfirmation(actor model.PersonLink, fol
 	)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error sending follow confirmation email to user", follower.Actor.EmailAddress)
+		return derp.Wrap(err, location, "Unable to send follow confirmation email to user", follower.Actor.EmailAddress)
 	}
 
 	return nil
@@ -234,7 +234,7 @@ func (service *DomainEmail) SendFollowerActivity(follower *model.Follower, activ
 	)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error sending follower email to user", follower.Actor.EmailAddress)
+		return derp.Wrap(err, location, "Unable to send follower email to user", follower.Actor.EmailAddress)
 	}
 
 	return nil

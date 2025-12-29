@@ -104,7 +104,7 @@ func (service *Attachment) Save(session data.Session, attachment *model.Attachme
 
 	// Validate the value before saving
 	if err := service.Schema().Validate(attachment); err != nil {
-		return derp.Wrap(err, "service.Attachment.Save", "Error validating Attachment", attachment)
+		return derp.Wrap(err, "service.Attachment.Save", "Unable to validate Attachment", attachment)
 	}
 
 	// Calculate the URL
@@ -389,7 +389,7 @@ func (service *Attachment) MakeRoom(session data.Session, objectType string, obj
 	attachments, err := service.QueryByCategory(session, objectType, objectID, category)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error finding existing attachments", objectType, objectID)
+		return derp.Wrap(err, location, "Unable to find existing attachments", objectType, objectID)
 	}
 
 	currentCount := len(attachments)

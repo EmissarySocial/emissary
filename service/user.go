@@ -768,7 +768,7 @@ func (service *User) SendPasswordResetEmail(session data.Session, user *model.Us
 
 	// Try to send the welcome email.  If it fails, then don't save the new password reset code.
 	if err := service.emailService.SendPasswordReset(user); err != nil {
-		derp.Report(derp.Wrap(err, location, "Error sending password reset", user))
+		derp.Report(derp.Wrap(err, location, "Unable to send password reset", user))
 		return
 	}
 }

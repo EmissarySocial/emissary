@@ -119,7 +119,7 @@ func (service *MerchantAccount) Save(session data.Session, merchantAccount *mode
 	encryptionKey, err := hex.DecodeString(service.encryptionKey)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error decoding encryption key")
+		return derp.Wrap(err, location, "Unable to decode encryption key")
 	}
 
 	// Encrypt plaintext values in vault
@@ -129,7 +129,7 @@ func (service *MerchantAccount) Save(session data.Session, merchantAccount *mode
 
 	// Validate the value before saving
 	if err := service.Schema().Validate(merchantAccount); err != nil {
-		return derp.Wrap(err, location, "Error validating MerchantAccount")
+		return derp.Wrap(err, location, "Unable to validate MerchantAccount")
 	}
 
 	// Refresh OAuth connections (if necessary)
@@ -392,7 +392,7 @@ func (service *MerchantAccount) DecryptVault(merchantAccount *model.MerchantAcco
 	// Decode the encryption key (this should never fail)
 	encryptionKey, err := hex.DecodeString(service.encryptionKey)
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Error decoding encryption key")
+		return nil, derp.Wrap(err, location, "Unable to decode encryption key")
 	}
 
 	// Open the Vault to get the clientID and secret key

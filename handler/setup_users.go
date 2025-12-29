@@ -97,7 +97,7 @@ func SetupDomainUserPost(serverFactory *server.Factory, templates *template.Temp
 			// Allow admins to set passwords
 			if password := data.Password; password != "" {
 				if err := factory.Steranko(session).SetPassword(&user, password); err != nil {
-					return derp.Wrap(err, location, "Error setting password")
+					return derp.Wrap(err, location, "Unable to set password")
 				}
 			}
 		}
@@ -156,7 +156,7 @@ func SetupDomainUserInvite(serverFactory *server.Factory, templates *template.Te
 		// Try to (re?)send the email invitation
 		domainEmailService := factory.Email()
 		if err := domainEmailService.SendPasswordReset(&user); err != nil {
-			return derp.Wrap(err, "handler.SetupDomainUserInvite", "Error sending email")
+			return derp.Wrap(err, "handler.SetupDomainUserInvite", "Unable to send email")
 		}
 
 		return nil

@@ -24,7 +24,7 @@ func (step StepSetState) Post(builder Builder, _ io.Writer) PipelineBehavior {
 		// This action may still fail (for instance) if the builder wraps
 		// a model object that is not a `model.StateSetter`
 		if err := setter.setState(step.State); err != nil {
-			return Halt().WithError(derp.Wrap(err, "build.stepSetState.Post", "Error setting state"))
+			return Halt().WithError(derp.Wrap(err, "build.stepSetState.Post", "Unable to set state"))
 		}
 
 		// Success

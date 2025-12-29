@@ -30,7 +30,7 @@ func Version3(ctx context.Context, session *mongo.Database) error {
 	for record := mapof.NewAny(); cursor.Next(ctx); record = mapof.NewAny() {
 
 		if err := cursor.Decode(&record); err != nil {
-			return derp.Wrap(err, location, "Error decoding stream record")
+			return derp.Wrap(err, location, "Unable to decode stream record")
 		}
 
 		// Create an actual encryption key
@@ -47,7 +47,7 @@ func Version3(ctx context.Context, session *mongo.Database) error {
 		filter := bson.M{"_id": record["_id"]}
 
 		if _, err := streamCollection.ReplaceOne(ctx, filter, record); err != nil {
-			return derp.Wrap(err, location, "Error updating stream record")
+			return derp.Wrap(err, location, "Unable to update stream record")
 		}
 
 		fmt.Print(".")

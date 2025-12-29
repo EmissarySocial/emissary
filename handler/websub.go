@@ -76,7 +76,7 @@ func GetWebSubClient(ctx *steranko.Context, factory *service.Factory, session da
 
 	// Update the record status and save.
 	if err := followingService.SetStatusSuccess(session, &following); err != nil {
-		return derp.Wrap(err, "handler.getWebSubClient_subscribe", "Error updating following status", following)
+		return derp.Wrap(err, "handler.getWebSubClient_subscribe", "Unable to update following status", following)
 	}
 
 	// Win!

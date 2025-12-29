@@ -153,7 +153,7 @@ func PostIdentitySignin(ctx *steranko.Context, factory *service.Factory, session
 	if err := identityService.SendGuestCode(session, nil, identifierType, identifier); err != nil {
 
 		// Report the error for debugging...
-		derp.Report(derp.Wrap(err, location, "Error sending Guest Code"))
+		derp.Report(derp.Wrap(err, location, "Unable to send Guest Code"))
 
 		// Report errors to the caller
 		return inlineError(ctx, "Can't send guest code. Please double check your address.")
@@ -223,7 +223,7 @@ func GetIdentitySigninWithJWT(ctx *steranko.Context, factory *service.Factory, s
 
 		// Create a new JWT token and return it as a cookie
 		if err := factory.Steranko(session).SetCookie(ctx, authorization); err != nil {
-			return derp.Wrap(err, location, "Error setting authorization cookie")
+			return derp.Wrap(err, location, "Unable to set authorization cookie")
 		}
 
 	// Otherwise, add/update the identifier in the existing Identity
@@ -260,7 +260,7 @@ func PostIdentityIdentifier(ctx *steranko.Context, factory *service.Factory, ses
 	if identifierValue != "" {
 
 		if err := identityService.SendGuestCode(session, identity, identifierType, identifierValue); err != nil {
-			derp.Report(derp.Wrap(err, location, "Error setting identifier on Identity"))
+			derp.Report(derp.Wrap(err, location, "Unable to set identifier on Identity"))
 			return inlineError(ctx, "Unable to send signin code.")
 		}
 

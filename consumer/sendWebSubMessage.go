@@ -50,7 +50,7 @@ func SendWebSubMessage(args mapof.Any) queue.Result {
 
 	// Try to send the transaction to the remote WebSub client
 	if err := transaction.Send(); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Error sending WebSub message"))
+		return queue.Error(derp.Wrap(err, location, "Unable to send WebSub message"))
 	}
 
 	// Woot woot!

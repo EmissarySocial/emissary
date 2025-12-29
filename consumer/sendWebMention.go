@@ -32,7 +32,7 @@ func SendWebMention(args mapof.Any) queue.Result {
 		}
 
 		if response, err := client.SendWebmention(endpoint, source, target); err != nil {
-			return queue.Error(derp.Wrap(err, location, "Error sending webmention", source, target, response))
+			return queue.Error(derp.Wrap(err, location, "Unable to send webmention", source, target, response))
 		}
 	}
 

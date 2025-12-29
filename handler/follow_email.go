@@ -66,7 +66,7 @@ func PostEmailFollower(ctx *steranko.Context, factory *service.Factory, session 
 	}
 
 	if err := followerService.SendFollowConfirmation(session, &follower); err != nil {
-		return derp.Wrap(err, location, "Error sending confirmation email")
+		return derp.Wrap(err, location, "Unable to send confirmation email")
 	}
 
 	// Forward the user to the confirmation page

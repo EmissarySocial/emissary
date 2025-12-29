@@ -171,7 +171,7 @@ func (service *Registration) Register(session data.Session, groupService *Group,
 	// Copy Transaction data into a new User object
 	user := model.NewUser()
 	if err := service.setUserData(session, groupService, domain, &user, txn, registration.AllowedFields); err != nil {
-		return model.User{}, derp.Wrap(err, location, "Error setting user data")
+		return model.User{}, derp.Wrap(err, location, "Unable to set user data")
 	}
 
 	// If defined in the registration data, set the User's Inbox Template
@@ -235,7 +235,7 @@ func (service *Registration) UpdateRegistration(session data.Session, groupServi
 
 	// Update user data from the transaction
 	if err := service.setUserData(session, groupService, domain, &user, txn, registration.AllowedFields); err != nil {
-		return derp.Wrap(err, location, "Error setting user data")
+		return derp.Wrap(err, location, "Unable to set user data")
 	}
 
 	// Try to save the User to the database

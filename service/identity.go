@@ -454,7 +454,7 @@ func (service *Identity) SendGuestCode(session data.Session, identity *model.Ide
 	case model.IdentifierTypeEmail:
 
 		if err := service.emailService.SendGuestCode(identifierValue, guestCode); err != nil {
-			return derp.Wrap(err, location, "Error sending Guest Code", identifierValue, guestCode)
+			return derp.Wrap(err, location, "Unable to send Guest Code", identifierValue, guestCode)
 		}
 
 		return nil
@@ -464,7 +464,7 @@ func (service *Identity) SendGuestCode(session data.Session, identity *model.Ide
 
 		// Send the Guest Code to the
 		if err := service.sendGuestCode_ActivityPub(session, identifierValue, guestCode); err != nil {
-			return derp.Wrap(err, location, "Error sending Guest Code", identifierValue, guestCode)
+			return derp.Wrap(err, location, "Unable to send Guest Code", identifierValue, guestCode)
 		}
 
 		return nil

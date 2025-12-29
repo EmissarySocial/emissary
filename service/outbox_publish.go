@@ -219,7 +219,7 @@ func (service *Outbox) addresseesAsFollowers(addressees iter.Seq[string]) iter.S
 // TODO: HIGH: This should be a background task with retries, just like sendNotification_WebSub
 func (service Outbox) sendNotification_ActivityPub(actor *outbox.Actor, follower *model.Follower, activity mapof.Any) {
 	if err := actor.SendOne(follower.Actor.ProfileURL, activity); err != nil {
-		derp.Report(derp.Wrap(err, "service.Outbox.sendNotifications_ActivityPub", "Error sending ActivityPub notification", follower.Actor.ProfileURL))
+		derp.Report(derp.Wrap(err, "service.Outbox.sendNotifications_ActivityPub", "Unable to send ActivityPub notification", follower.Actor.ProfileURL))
 	}
 }
 
@@ -239,7 +239,7 @@ func (service *Outbox) sendNotification_Email(follower *model.Follower, activity
 	const location = "service.Outbox.sendNotifications_Email"
 
 	if err := service.domainEmail.SendFollowerActivity(follower, activity); err != nil {
-		derp.Report(derp.Wrap(err, location, "Error sending email", follower))
+		derp.Report(derp.Wrap(err, location, "Unable to send email", follower))
 	}
 }
 

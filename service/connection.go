@@ -90,7 +90,7 @@ func (service *Connection) Save(session data.Session, connection *model.Connecti
 	encryptionKey, err := hex.DecodeString(service.keyEncryptingKey)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error decoding encryption key")
+		return derp.Wrap(err, location, "Unable to decode encryption key")
 	}
 
 	// Encrypt plaintext values in vault
@@ -100,7 +100,7 @@ func (service *Connection) Save(session data.Session, connection *model.Connecti
 
 	// Validate the value before saving
 	if err := service.Schema().Validate(connection); err != nil {
-		return derp.Wrap(err, location, "Error validating Connection", connection)
+		return derp.Wrap(err, location, "Unable to validate Connection", connection)
 	}
 
 	// Decrypt the vault data
@@ -342,7 +342,7 @@ func (service *Connection) DecryptVault(connection *model.Connection, values ...
 	encryptionKey, err := hex.DecodeString(service.keyEncryptingKey)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Error decoding encryption key")
+		return nil, derp.Wrap(err, location, "Unable to decode encryption key")
 	}
 
 	// Decrypt the vault

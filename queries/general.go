@@ -21,7 +21,7 @@ func RawUpdate(ctx context.Context, collection data.Collection, criteria exp.Exp
 
 	// Update the database
 	if _, err := mongo.UpdateMany(ctx, mongodb.ExpressionToBSON(criteria), update); err != nil {
-		return derp.Wrap(err, "queries.RawUpdate", "Error updating records", criteria, update)
+		return derp.Wrap(err, "queries.RawUpdate", "Unable to update records", criteria, update)
 	}
 
 	// Silence is golden.

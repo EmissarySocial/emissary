@@ -116,7 +116,7 @@ func (service *Rule) Save(session data.Session, rule *model.Rule, note string) e
 
 	// Validate the value before saving
 	if err := service.Schema().Validate(rule); err != nil {
-		return derp.Wrap(err, location, "Error validating Rule", rule)
+		return derp.Wrap(err, location, "Unable to validate Rule", rule)
 	}
 
 	// If this is a duplicate rule, then halt

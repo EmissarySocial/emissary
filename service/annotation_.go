@@ -106,7 +106,7 @@ func (service *Annotation) Save(session data.Session, annotation *model.Annotati
 
 	// Validate the value before saving
 	if err := service.Schema().Validate(annotation); err != nil {
-		return derp.Wrap(err, location, "Error validating Annotation", annotation)
+		return derp.Wrap(err, location, "Unable to validate Annotation", annotation)
 	}
 
 	// Save the value to the database

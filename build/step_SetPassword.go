@@ -54,7 +54,7 @@ func (step StepSetPassword) Post(builder Builder, _ io.Writer) PipelineBehavior 
 
 	// Update the User's password using Steranko's default password hashing algorithm
 	if err := steranko.SetPassword(&user, newPassword); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error setting password"))
+		return Halt().WithError(derp.Wrap(err, location, "Unable to set password"))
 	}
 
 	// Save the User back to the database

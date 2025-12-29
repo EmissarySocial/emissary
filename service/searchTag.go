@@ -109,7 +109,7 @@ func (service *SearchTag) Save(session data.Session, searchTag *model.SearchTag,
 
 	// Validate the value before saving
 	if err := service.Schema().Validate(searchTag); err != nil {
-		return derp.Wrap(err, location, "Error validating SearchTag", searchTag)
+		return derp.Wrap(err, location, "Unable to validate SearchTag", searchTag)
 	}
 
 	// Save the searchTag to the database

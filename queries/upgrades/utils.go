@@ -33,7 +33,7 @@ func ForEachRecord(collection *mongo.Collection, fn ForEachFunc) error {
 
 		// Try to read the next record from the cursor
 		if err := cursor.Decode(&value); err != nil {
-			derp.Report(derp.Wrap(err, location, "Error decoding record"))
+			derp.Report(derp.Wrap(err, location, "Unable to decode record"))
 			continue
 		}
 

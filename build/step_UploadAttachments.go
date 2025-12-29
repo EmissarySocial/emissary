@@ -130,21 +130,21 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 		// Try to put the the attachmentId into the object
 		if step.AttachmentPath != "" {
 			if err := builder.schema().Set(object, step.AttachmentPath, attachment.AttachmentID.Hex()); err != nil {
-				return Halt().WithError(derp.Wrap(err, location, "Error setting attachment path", attachment))
+				return Halt().WithError(derp.Wrap(err, location, "Unable to set attachment path", attachment))
 			}
 		}
 
 		// Try to put the the downloadUrl into the object
 		if step.DownloadPath != "" {
 			if err := builder.schema().Set(object, step.DownloadPath, attachment.URL); err != nil {
-				return Halt().WithError(derp.Wrap(err, location, "Error setting download path", attachment))
+				return Halt().WithError(derp.Wrap(err, location, "Unable to set download path", attachment))
 			}
 		}
 
 		// Try to put the original filename into the object
 		if step.FilenamePath != "" {
 			if err := builder.schema().Set(object, step.FilenamePath, attachment.Original); err != nil {
-				return Halt().WithError(derp.Wrap(err, location, "Error setting filename path", attachment))
+				return Halt().WithError(derp.Wrap(err, location, "Unable to set filename path", attachment))
 			}
 		}
 

@@ -632,7 +632,7 @@ func (service *Follower) SendFollowConfirmation(session data.Session, follower *
 	}
 
 	if err := service.domainEmail.SendFollowerConfirmation(actor, follower); err != nil {
-		return derp.Wrap(err, "service.Follower.SendFollowConfirmation", "Error sending follow confirmation email", follower)
+		return derp.Wrap(err, "service.Follower.SendFollowConfirmation", "Unable to send follow confirmation email", follower)
 	}
 
 	return nil

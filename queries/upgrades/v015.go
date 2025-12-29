@@ -26,7 +26,7 @@ func Version15(ctx context.Context, session *mongo.Database) error {
 		})
 
 		if err != nil {
-			return derp.Wrap(err, "queries.upgrades.Version15", "Error updating Following collection")
+			return derp.Wrap(err, "queries.upgrades.Version15", "Unable to update Following collection")
 		}
 	}
 	return nil

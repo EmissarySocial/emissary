@@ -59,7 +59,7 @@ func (step StepSetThumbnail) Post(builder Builder, _ io.Writer) PipelineBehavior
 
 	// Fall through means that we can't find any images.  Set the Thumbnail to an empty string.
 	if err := schema.Set(object, step.Path, ""); err != nil {
-		return Halt().WithError(derp.Wrap(err, "build.StepSetThumbnail.Post", "Error setting thumbnail"))
+		return Halt().WithError(derp.Wrap(err, "build.StepSetThumbnail.Post", "Unable to set thumbnail"))
 	}
 
 	// Success!

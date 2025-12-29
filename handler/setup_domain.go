@@ -75,11 +75,11 @@ func SetupDomainPost(serverFactory *server.Factory) echo.HandlerFunc {
 		s := schema.New(config.DomainSchema())
 
 		if err := s.SetAll(&domain, input); err != nil {
-			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, location, "Error setting config values"))
+			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, location, "Unable to set config values"))
 		}
 
 		if err := s.Validate(&domain); err != nil {
-			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, location, "Error validating config values"))
+			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, location, "Unable to validate config values"))
 		}
 
 		if err := serverFactory.PutDomain(domain); err != nil {

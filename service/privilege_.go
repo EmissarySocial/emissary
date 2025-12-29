@@ -105,7 +105,7 @@ func (service *Privilege) Save(session data.Session, privilege *model.Privilege,
 
 	// Validate the value before saving
 	if err := service.Schema().Validate(privilege); err != nil {
-		return derp.Wrap(err, location, "Error validating Privilege", privilege)
+		return derp.Wrap(err, location, "Unable to validate Privilege", privilege)
 	}
 
 	// If the Identity does not exists, then creat a new Identity for this Privilege
@@ -115,7 +115,7 @@ func (service *Privilege) Save(session data.Session, privilege *model.Privilege,
 
 	// RULE: Validate the CircleID for this Privilege
 	if err := service.validateCircle(session, privilege); err != nil {
-		return derp.Wrap(err, location, "Error validating Circle for Privilege", privilege)
+		return derp.Wrap(err, location, "Unable to validate Circle for Privilege", privilege)
 	}
 
 	// Save the privilege to the database

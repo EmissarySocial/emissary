@@ -84,7 +84,7 @@ func (service *Webhook) Save(session data.Session, webhook *model.Webhook, note 
 
 	// Validate the value (using the global webhook schema) before saving
 	if err := service.Schema().Validate(webhook); err != nil {
-		return derp.Wrap(err, location, "Error validating Webhook using WebhookSchema", webhook)
+		return derp.Wrap(err, location, "Unable to validate Webhook using WebhookSchema", webhook)
 	}
 
 	// Try to save the Webhook to the database
@@ -243,10 +243,10 @@ func (service *Webhook) Send(getter model.WebhookDataGetter, events ...string) {
 
 			for _, webhook := range webhooks {
 
-				// Add the webhook transaction to the Queue, with low priority (32)
-				txn := remote.Post(webhook.TargetURL).JSON(data).Queue(service.queue)
+				txn := remote.Post(webhook.TargetURL).JSON(data)
+
 				if err := txn.Send(); err != nil {
-					derp.Report(derp.Wrap(err, location, "Error sending webhook", webhook, data))
+					derp.Report(derp.Wrap(err, location, "Unable to send webhook", webhook, data))
 					continue
 				}
 

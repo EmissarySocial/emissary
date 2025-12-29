@@ -943,7 +943,7 @@ func (service *Stream) SetAttributedTo(user *model.User) {
 	collection := service.collection(session)
 
 	if err := queries.SetAttributedTo(session.Context(), collection, user.PersonLink()); err != nil {
-		derp.Report(derp.Wrap(err, location, "Error setting attributedTo"))
+		derp.Report(derp.Wrap(err, location, "Unable to set attributedTo"))
 	}
 }
 

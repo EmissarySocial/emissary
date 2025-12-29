@@ -81,7 +81,7 @@ func (service *OAuthUserToken) Save(session data.Session, application *model.OAu
 
 	// Validate the value (using the global application schema) before saving
 	if err := service.Schema().Validate(application); err != nil {
-		return derp.Wrap(err, location, "Error validating OAuthUserToken using OAuthUserTokenSchema", application)
+		return derp.Wrap(err, location, "Unable to validate OAuthUserToken using OAuthUserTokenSchema", application)
 	}
 
 	// Try to save the OAuthUserToken to the database

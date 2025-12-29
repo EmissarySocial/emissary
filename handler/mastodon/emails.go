@@ -43,7 +43,7 @@ func PostEmailConfirmation(serverFactory *server.Factory) func(model.Authorizati
 		// (Re-)send a welcome email to the User
 		emailService := factory.Email()
 		if err := emailService.SendPasswordReset(&user); err != nil {
-			return struct{}{}, derp.Wrap(err, location, "Error sending welcome email")
+			return struct{}{}, derp.Wrap(err, location, "Unable to send welcome email")
 		}
 
 		// Success!

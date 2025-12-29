@@ -61,14 +61,14 @@ func (service *Stream) Publish(session data.Session, user *model.User, stream *m
 	// If the stream is being published for the first time, then only send "Create" activities
 	case !wasPublished:
 		if err := service.sendSyndicationMessages(stream, stream.Syndication.Values, nil, nil); err != nil {
-			return derp.Wrap(err, location, "Error sending syndication messages", stream)
+			return derp.Wrap(err, location, "Unable to send syndication messages", stream)
 		}
 
 	// If the syndication settings have been changed (or is being republished) then send "Update" activities
 	case stream.Syndication.IsChanged() || republish:
 
 		if err := service.sendSyndicationMessages(stream, stream.Syndication.Added, stream.Syndication.Unchanged(), stream.Syndication.Deleted); err != nil {
-			return derp.Wrap(err, location, "Error sending syndication messages", stream)
+			return derp.Wrap(err, location, "Unable to send syndication messages", stream)
 		}
 	}
 

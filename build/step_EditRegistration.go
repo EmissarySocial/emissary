@@ -131,7 +131,7 @@ func (step StepEditRegistration) Post(builder Builder, _ io.Writer) PipelineBeha
 	// Use the schema to set the form inputs into a new map
 	data := mapof.NewString()
 	if err := registration.Schema.SetURLValues(&data, inputs); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error updating domain object form"))
+		return Halt().WithError(derp.Wrap(err, location, "Unable to update domain object form"))
 	}
 
 	if data.GetString("secret") == "" {

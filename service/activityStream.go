@@ -394,12 +394,12 @@ func (service *ActivityStream) SendMessage(session data.Session, args mapof.Any)
 	actor, err := locatorService.GetActor(session, args.GetString("actorType"), args.GetString("actorID"))
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error finding ActivityPub Actor")
+		return derp.Wrap(err, location, "Unable to find ActivityPub Actor")
 	}
 
 	// Send the message to the recipientID
 	if err := actor.SendOne(recipientID, message); err != nil {
-		return derp.Wrap(err, location, "Error sending message", message, derp.WithInternalError())
+		return derp.Wrap(err, location, "Unable to send message", message, derp.WithInternalError())
 	}
 
 	// Success!!

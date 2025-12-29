@@ -77,7 +77,7 @@ func (step StepEditTemplate) Post(builder Builder, _ io.Writer) PipelineBehavior
 		// Scan all allowed records
 		if newTemplateID := transaction.Get(path); step.isTemplateAllowed(builder, path, newTemplateID) {
 			if err := schema.Set(object, path, newTemplateID); err != nil {
-				return Halt().WithError(derp.Wrap(err, location, "Error setting template", path))
+				return Halt().WithError(derp.Wrap(err, location, "Unable to set template", path))
 			}
 		}
 	}

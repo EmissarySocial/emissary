@@ -61,13 +61,13 @@ func PostRegister(ctx *steranko.Context, factory *service.Factory, session data.
 
 	// Validate the transaction
 	if err := factory.Registration().Validate(session, factory.User(), domain, txn); err != nil {
-		derp.Report(derp.Wrap(err, location, "Error validating registration"))
+		derp.Report(derp.Wrap(err, location, "Unable to validate registration"))
 		return inlineError(ctx, derp.Message(derp.Unwrap(err)))
 	}
 
 	// Send Welcome Email that includes the user's registration token
 	if err := factory.Email().SendWelcome(session, txn); err != nil {
-		return derp.Wrap(err, location, "Error sending welcome email")
+		return derp.Wrap(err, location, "Unable to send welcome email")
 	}
 
 	// Build confirmation response
@@ -109,7 +109,7 @@ func GetCompleteRegistration(ctx *steranko.Context, factory *service.Factory, se
 
 	// Validate the registration transaction
 	if err := factory.Registration().Validate(session, factory.User(), domain, txn); err != nil {
-		return derp.Wrap(err, location, "Error validating registration")
+		return derp.Wrap(err, location, "Unable to validate registration")
 	}
 
 	// Register the new User
@@ -168,7 +168,7 @@ func PostUpdateRegistration(ctx *steranko.Context, factory *service.Factory, ses
 	registrationService := factory.Registration()
 
 	if err := registrationService.UpdateRegistration(session, factory.Group(), factory.User(), domain, userInfo.Source, userInfo.SourceID, txn); err != nil {
-		return derp.Wrap(err, location, "Error updating user registration")
+		return derp.Wrap(err, location, "Unable to update user registration")
 	}
 
 	return ctx.NoContent(200)

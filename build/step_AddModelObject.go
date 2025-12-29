@@ -72,7 +72,7 @@ func (step StepAddModelObject) Post(builder Builder, buffer io.Writer) PipelineB
 	// Try to set each path from the Form into the builder.  Note: schema.Set also converts and validated inputs before setting.
 	for key, value := range request.Form {
 		if err := schema.Set(object, key, value); err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Error setting path value", key, value))
+			return Halt().WithError(derp.Wrap(err, location, "Unable to set path value", key, value))
 		}
 	}
 

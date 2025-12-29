@@ -70,7 +70,7 @@ func (step StepSort) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
 		// Use the object schema to set the new sort rank
 		if err := modelService.Schema().Set(object, step.Values, newRank); err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Error setting new rank", objectID, step.Values, newRank))
+			return Halt().WithError(derp.Wrap(err, location, "Unable to set new rank", objectID, step.Values, newRank))
 		}
 
 		// Try to save back to the database

@@ -23,7 +23,7 @@ func (service *Identity) sendGuestCode_ActivityPub(session data.Session, identif
 	recipientID, _, err := activityService.GetRecipient(identifier)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error finding recipient inbox", identifier)
+		return derp.Wrap(err, location, "Unable to find recipient inbox", identifier)
 	}
 
 	// Create the outbound message
@@ -77,7 +77,7 @@ func (service *Identity) sendGuestCode_ActivityPub(session data.Session, identif
 
 	// Because we want a real-time response, we're going to run this queue task inline
 	if err := activityService.SendMessage(session, message); err != nil {
-		return derp.Wrap(err, location, "Error sending guest code to WebFinger identifier", identifier)
+		return derp.Wrap(err, location, "Unable to send guest code to WebFinger identifier", identifier)
 	}
 
 	return nil

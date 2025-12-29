@@ -139,7 +139,7 @@ func (storage MongoStorage) load() (Config, error) {
 			return Config{}, derp.NotFoundError("config.MongoStorage", "Unable to load config from MongoDB", err.Error())
 		}
 
-		return Config{}, derp.Wrap(err, "config.MongoStorage", "Error decoding config from MongoDB")
+		return Config{}, derp.Wrap(err, "config.MongoStorage", "Unable to decode config from MongoDB")
 	}
 
 	result.Source = storage.source

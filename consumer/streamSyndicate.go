@@ -18,7 +18,7 @@ func StreamSyndicate(name string, args mapof.Any) queue.Result {
 	txn := remote.Post(endpoint).JSON(message)
 
 	if err := txn.Send(); err != nil {
-		return queue.Error(derp.Wrap(err, "consumer.StreamSyndicate", "Error sending syndication message"))
+		return queue.Error(derp.Wrap(err, "consumer.StreamSyndicate", "Unable to send syndication message"))
 	}
 
 	// Success!

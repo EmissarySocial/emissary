@@ -40,7 +40,7 @@ func (service *MerchantAccount) paypal_refreshMerchantAccount(merchantAccount *m
 		encryptionKey, err := hex.DecodeString(service.encryptionKey)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error decoding encryption key")
+			return derp.Wrap(err, location, "Unable to decode encryption key")
 		}
 
 		// Open the Vault to get the clientID and secret key

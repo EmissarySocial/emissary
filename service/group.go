@@ -72,7 +72,7 @@ func (service *Group) Save(session data.Session, group *model.Group, note string
 
 	// Validate the value before saving
 	if err := service.Schema().Validate(group); err != nil {
-		return derp.Wrap(err, "service.Group.Save", "Error validating Group", group)
+		return derp.Wrap(err, "service.Group.Save", "Unable to validate Group", group)
 	}
 
 	// Save the value to the database

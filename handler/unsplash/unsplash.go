@@ -68,7 +68,7 @@ func GetPhoto(ctx *steranko.Context, factory *service.Factory, session data.Sess
 		Result(&photo)
 
 	if err := txn.Send(); err != nil {
-		return derp.Wrap(err, location, "Error sending request to Unsplash API")
+		return derp.Wrap(err, location, "Unable to send request to Unsplash API")
 	}
 
 	// If this is a JSON request, then return nicely formatted JSON

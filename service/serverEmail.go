@@ -197,7 +197,7 @@ func (service *ServerEmail) Send(smtpConnection config.SMTPConnection, owner con
 
 	// Try to send the email
 	if err := message.Send(client); err != nil {
-		return derp.Wrap(err, location, "Error sending email", emailID, data)
+		return derp.Wrap(err, location, "Unable to send email", emailID, data)
 	}
 
 	return nil

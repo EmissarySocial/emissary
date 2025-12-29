@@ -57,7 +57,7 @@ func shuffleA(ctx context.Context, collection *mongo.Collection) error {
 		// Decode the result (just the ID)
 		result := mapof.NewAny()
 		if err := cursor.Decode(&result); err != nil {
-			return derp.Wrap(err, location, "Error decoding record", pipeline)
+			return derp.Wrap(err, location, "Unable to decode record", pipeline)
 		}
 
 		// Set a new random value for the "shuffle" field
@@ -68,7 +68,7 @@ func shuffleA(ctx context.Context, collection *mongo.Collection) error {
 		)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error updating record", result)
+			return derp.Wrap(err, location, "Unable to update record", result)
 		}
 	}
 
@@ -101,7 +101,7 @@ func shuffleB(ctx context.Context, collection *mongo.Collection) error {
 		// Decode the result
 		result := mapof.NewAny()
 		if err := cursor.Decode(&result); err != nil {
-			return derp.Wrap(err, location, "Error decoding record", pipeline)
+			return derp.Wrap(err, location, "Unable to decode record", pipeline)
 		}
 
 		// Set a sequential value for the "shuffle" field
@@ -113,7 +113,7 @@ func shuffleB(ctx context.Context, collection *mongo.Collection) error {
 		)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error updating record", result)
+			return derp.Wrap(err, location, "Unable to update record", result)
 		}
 	}
 

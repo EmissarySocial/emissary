@@ -48,7 +48,7 @@ func GetCheckoutResponse(ctx *steranko.Context, factory *service.Factory, sessio
 		authorization.IdentityID = privilege.IdentityID
 
 		if err := factory.Steranko(session).SetCookie(ctx, authorization); err != nil {
-			return derp.Wrap(err, location, "Error setting guest authorization")
+			return derp.Wrap(err, location, "Unable to set guest authorization")
 		}
 	}
 
