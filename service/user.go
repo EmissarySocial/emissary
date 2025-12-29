@@ -467,11 +467,9 @@ func (service *User) LoadByEmail(session data.Session, email string, result *mod
 // If the "token" is not a valid ObjectID (or if the first attempt fails), then it tries to load by username.
 func (service *User) LoadByToken(session data.Session, token string, result *model.User) error {
 
-	// If the token *looks* like an ObjectID then try that first.  If it works, then return in triumph
+	// If the token is an ObjectID then try that first.
 	if userID, err := primitive.ObjectIDFromHex(token); err == nil {
-		if err := service.LoadByID(session, userID, result); err == nil {
-			return nil
-		}
+		return service.LoadByID(session, userID, result)
 	}
 
 	// Otherwise, use the token as a username
