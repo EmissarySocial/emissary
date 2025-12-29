@@ -493,6 +493,7 @@ func (service *Import) ImportAttachments(session data.Session, importRecord *mod
 
 		// Update mappings IF this attachment is named in the containing object
 		object.UpdateAttachmentURLs(remoteURL, localURL)
+		object.UpdateAttachmentURLs(remoteID.Hex(), localID.Hex())
 	}
 
 	// Success
