@@ -58,8 +58,8 @@ func ImportItems(factory *service.Factory, session data.Session, user *model.Use
 
 	// If no "next" importRecord is found, then the import is complete
 	if derp.IsNotFound(err) {
-		if err := importService.SetState(session, importRecord, model.ImportStateReviewing); err != nil {
-			return queue.Error(derp.Wrap(err, location, "Unable to update import importRecord"))
+		if inner := importService.SetState(session, importRecord, model.ImportStateReviewing); inner != nil {
+			return queue.Error(derp.Wrap(inner, location, "Unable to update import importRecord"))
 		}
 		return queue.Success()
 	}

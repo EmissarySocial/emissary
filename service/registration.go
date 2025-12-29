@@ -222,8 +222,10 @@ func (service *Registration) UpdateRegistration(session data.Session, groupServi
 
 	// If not found, then create a new User
 	if derp.IsNotFound(err) {
-		_, err := service.Register(session, groupService, userService, domain, txn)
-		return err
+		if _, inner := service.Register(session, groupService, userService, domain, txn); inner != nil {
+			return derp.Wrap(inner, location, "Unable to create new User from registration transaction")
+		}
+		return nil
 	}
 
 	// Squalk all other errors

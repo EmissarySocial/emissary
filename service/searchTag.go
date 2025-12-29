@@ -221,8 +221,8 @@ func (service *SearchTag) Upsert(session data.Session, tagName string) error {
 		// Set default values for the new SearchTag
 		searchTag.Name = tagName
 
-		if err := service.Save(session, &searchTag, "Found New SearchTag"); err != nil {
-			return derp.Wrap(err, "service.SearchTag.Upsert", "Unable to save SearchTag", value)
+		if inner := service.Save(session, &searchTag, "Found New SearchTag"); inner != nil {
+			return derp.Wrap(inner, "service.SearchTag.Upsert", "Unable to save SearchTag", value)
 		}
 
 		return nil

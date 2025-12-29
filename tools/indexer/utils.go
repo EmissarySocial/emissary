@@ -130,7 +130,6 @@ func primitiveToMap(input any) mapof.Any {
 
 	// Convert bson.D into a mapof.Any
 	if primitiveD, isPrimitiveD := input.(bson.D); isPrimitiveD {
-		result := mapof.NewAny()
 
 		for _, primitiveE := range primitiveD {
 			result[primitiveE.Key] = convertMapValue(primitiveE.Value)

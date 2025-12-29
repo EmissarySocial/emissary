@@ -204,9 +204,6 @@ func WithIdentity(serverFactory *server.Factory, fn WithFunc1[model.Identity]) e
 
 	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
-		identityService := factory.Identity()
-		identity := model.NewIdentity()
-
 		authorization := getAuthorization(ctx)
 
 		if authorization.IdentityID.IsZero() {
@@ -224,6 +221,7 @@ func WithIdentity(serverFactory *server.Factory, fn WithFunc1[model.Identity]) e
 				}
 
 				// Load/Create an Identity for the signed-in User
+				identityService := factory.Identity()
 				identity, err := identityService.LoadOrCreate(session, user.DisplayName, model.IdentifierTypeEmail, user.EmailAddress)
 
 				if err != nil {
@@ -238,6 +236,10 @@ func WithIdentity(serverFactory *server.Factory, fn WithFunc1[model.Identity]) e
 
 			return ctx.Redirect(http.StatusSeeOther, "/@guest/signin")
 		}
+
+		// Otherwise, load the Identity directly from the database
+		identityService := factory.Identity()
+		identity := model.NewIdentity()
 
 		if err := identityService.LoadByID(session, authorization.IdentityID, &identity); err != nil {
 			return derp.Wrap(err, location, "Unable to load Identity")

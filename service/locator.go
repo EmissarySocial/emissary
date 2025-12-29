@@ -209,8 +209,8 @@ func locateObjectFromURL(host string, value string) (string, string) {
 		}
 
 		// Special case for SearchQuery objects
-		if value, found := strings.CutPrefix(value, "search_"); found {
-			return model.ActorTypeSearchQuery, value
+		if searchQueryID, found := strings.CutPrefix(value, "search_"); found {
+			return model.ActorTypeSearchQuery, searchQueryID
 		}
 
 		// Otherwise, it's a User
@@ -240,14 +240,14 @@ func locateObjectFromURL(host string, value string) (string, string) {
 		}
 
 		// Identify SearchQuery URLs
-		if value, found := strings.CutPrefix(value, "@search_"); found {
-			return model.ActorTypeSearchQuery, value
+		if searchID, found := strings.CutPrefix(value, "@search_"); found {
+			return model.ActorTypeSearchQuery, searchID
 		}
 
 		// Identify User URLs
-		if value, found := strings.CutPrefix(value, "@"); found {
-			value, _, _ = strings.Cut(value, "/")
-			return model.ActorTypeUser, value
+		if userID, found := strings.CutPrefix(value, "@"); found {
+			userID, _, _ = strings.Cut(userID, "/")
+			return model.ActorTypeUser, userID
 		}
 
 		// Trim off any trailing path data

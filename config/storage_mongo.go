@@ -70,9 +70,9 @@ func NewMongoStorage(args *CommandLineArgs) MongoStorage {
 		config.Source = storage.source
 		config.Location = storage.location
 
-		if err := storage.Write(config); err != nil {
+		if inner := storage.Write(config); inner != nil {
 			log.Error().Msg("Error writing new configuration file to the Mongo database")
-			log.Error().Err(err).Send()
+			log.Error().Err(inner).Send()
 			os.Exit(1)
 		}
 

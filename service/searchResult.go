@@ -224,8 +224,8 @@ func (service *SearchResult) Sync(session data.Session, searchResult model.Searc
 		}
 
 		// Save the updated SearchResult...
-		if err := service.Save(session, &original, "updated"); err != nil {
-			return derp.Wrap(err, location, "Unable to update SearchResult", searchResult)
+		if inner := service.Save(session, &original, "updated"); inner != nil {
+			return derp.Wrap(inner, location, "Unable to update SearchResult", searchResult)
 		}
 
 		return nil
@@ -234,8 +234,8 @@ func (service *SearchResult) Sync(session data.Session, searchResult model.Searc
 	// If the SearchResult is NOT FOUND, then insert it.
 	if derp.IsNotFound(err) {
 
-		if err := service.Save(session, &searchResult, "added"); err != nil {
-			return derp.Wrap(err, location, "Unable to insert SearchResult", searchResult)
+		if inner := service.Save(session, &searchResult, "added"); inner != nil {
+			return derp.Wrap(inner, location, "Unable to insert SearchResult", searchResult)
 		}
 
 		return nil

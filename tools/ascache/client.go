@@ -113,8 +113,8 @@ func (client *Client) Load(url string, options ...any) (streams.Document, error)
 
 		// If the original document is gone, and we're forcing a reload, then remove the value from the cache
 		if derp.IsNotFound(err) && config.isWriteAllowed() {
-			if err := client.Delete(url); err != nil {
-				return result, derp.Wrap(err, location, "Unable to remove document from cache", url)
+			if inner := client.Delete(url); inner != nil {
+				return result, derp.Wrap(inner, location, "Unable to remove document from cache", url)
 			}
 		}
 

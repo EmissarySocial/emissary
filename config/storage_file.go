@@ -59,9 +59,9 @@ func NewFileStorage(args *CommandLineArgs) FileStorage {
 		config.Location = storage.location
 
 		// Save the config to disk
-		if err := storage.Write(config); err != nil {
-			derp.Report(derp.Wrap(err, "config.FileStorage", "Error initializing MongoDB config"))
-			log.Error().Msg("Error initializing File config: " + err.Error())
+		if inner := storage.Write(config); inner != nil {
+			derp.Report(derp.Wrap(inner, "config.FileStorage", "Error initializing MongoDB config"))
+			log.Error().Msg("Error initializing File config: " + inner.Error())
 			os.Exit(1)
 		}
 

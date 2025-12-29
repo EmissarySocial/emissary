@@ -30,8 +30,8 @@ func (service *Following) Connect(session data.Session, following *model.Followi
 	actor, err := activityService.Client().Load(following.URL, sherlock.AsActor(), ascache.WithWriteOnly())
 
 	if err != nil {
-		if err := service.SetStatusFailure(session, following, "Unable to connect to ActivityPub Actor"); err != nil {
-			return derp.Wrap(err, location, "Unable to refresh ActivityPub Actor; Unable to mark `Following` record as `Failure`")
+		if inner := service.SetStatusFailure(session, following, "Unable to connect to ActivityPub Actor"); inner != nil {
+			return derp.Wrap(inner, location, "Unable to refresh ActivityPub Actor; Unable to mark `Following` record as `Failure`", err)
 		}
 		return derp.Wrap(err, location, "Unable to refresh ActivityPub Actor")
 	}

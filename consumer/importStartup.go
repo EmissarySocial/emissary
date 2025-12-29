@@ -37,8 +37,8 @@ func ImportStartup(factory *service.Factory, session data.Session, user *model.U
 		record.StateID = model.ImportStateImportError
 		record.Message = "Unable to load ActivityPub Actor: " + err.Error()
 
-		if err := importService.Save(session, record, "Import Error"); err != nil {
-			return queue.Failure(derp.Wrap(err, location, "Unable to save import failure", record))
+		if inner := importService.Save(session, record, "Import Error"); inner != nil {
+			return queue.Failure(derp.Wrap(inner, location, "Unable to save import failure", record))
 		}
 
 		return queue.Failure(derp.Wrap(err, location, "Unable to load ActivityPub actor", record.SourceID))
