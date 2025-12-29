@@ -95,7 +95,7 @@ func (dt DateTime) GetInt64OK(property string) (int64, bool) {
 }
 
 func (dt DateTime) Timezone() string {
-	result, _ := dt.Time.Zone()
+	result, _ := dt.Zone()
 	return result
 }
 

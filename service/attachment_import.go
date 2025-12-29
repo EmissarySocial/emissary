@@ -29,7 +29,7 @@ func (service *Attachment) Import(session data.Session, record *model.Import, im
 	remoteID = attachment.AttachmentID
 	remoteURL = attachment.URL
 	localID = primitive.NewObjectID()
-	localURL = "" // to be calculated below
+	// localURL is calculated below
 
 	// Get the original file over HTTP
 	var buffer bytes.Buffer

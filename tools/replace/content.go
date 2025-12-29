@@ -13,8 +13,8 @@ import (
 func Content(originalString string, matchString string, replaceString string) string {
 
 	var result bytes.Buffer // Final result to return to the caller
-	var state int = stateReady
 
+	state := stateReady
 	original := []rune(originalString)
 	originalNoCase := toLower(original)
 	matchNoCase := toLower([]rune(matchString))

@@ -345,16 +345,7 @@ func pointerTo[T any](value T) *T {
 	return &value
 }
 
-func isValidURL(uri string) bool {
-
-	if strings.HasPrefix(uri, "https") || strings.HasPrefix(uri, "http") {
-		_, err := url.ParseRequestURI(uri)
-		return err == nil
-	}
-
-	return false
-}
-
+// mapProductsToLookupCodes converts a slice of Products into a slice of LookupCodes
 func mapProductsToLookupCodes(remoteProducts ...model.Product) sliceof.Object[form.LookupCode] {
 
 	result := make(sliceof.Object[form.LookupCode], len(remoteProducts))
@@ -366,6 +357,7 @@ func mapProductsToLookupCodes(remoteProducts ...model.Product) sliceof.Object[fo
 	return result
 }
 
+// flatten converts a map of slices into a single slice
 func flatten(original mapof.Object[id.Slice]) id.Slice {
 
 	length := len(original)
@@ -383,11 +375,12 @@ func flatten(original mapof.Object[id.Slice]) id.Slice {
 	return result
 }
 
+// timeoutContext creates a context with a timeout in seconds
 func timeoutContext(seconds int) (context.Context, context.CancelFunc) {
 	return context.WithTimeout(context.Background(), time.Duration(seconds)*time.Second)
 }
 
-// Don't judge me.
+// iif is a generic inline-if helper function
 func iif[T any](condition bool, trueValue T, falseValue T) T {
 	if condition {
 		return trueValue
