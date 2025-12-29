@@ -362,6 +362,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@search_:searchId/pub/outbox/:searchResultId", handler.WithSearchQuery(factory, ap_search.GetOutboxMessage))
 
 	// Routes for Users
+	e.HEAD("/@:userId", handler.WithUser(factory, handler.HeadOutbox))
 	e.GET("/@:userId", handler.WithUserForwarding(factory, handler.GetOutbox))
 	e.POST("/@:userId", handler.WithUser(factory, handler.PostOutbox))
 	e.GET("/@:userId/:action", handler.WithUser(factory, handler.GetOutbox))

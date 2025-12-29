@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/EmissarySocial/emissary/build"
 	"github.com/EmissarySocial/emissary/model"
@@ -9,16 +10,45 @@ import (
 	"github.com/EmissarySocial/emissary/tools/formdata"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/rosetta/first"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
+	accept "github.com/timewasted/go-accept-headers"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // ForwardMeURLs redirects the user to their own profile page
 func ForwardMeURLs(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 	return ctx.Redirect(http.StatusSeeOther, "/@"+user.Username)
+}
+
+// HeadOutbox handles HEAD requests
+func HeadOutbox(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
+
+	if !isUserVisible(ctx, user) {
+		return derp.NotFoundError("handler.buildOutbox", "User not found")
+	}
+
+	allowedContentTypes := []string{
+		vocab.ContentTypeHTML,
+		vocab.ContentTypeActivityPub,
+		vocab.ContentTypeJSONLDWithProfile,
+		vocab.ContentTypeJSONLD,
+		vocab.ContentTypeJSON,
+	}
+
+	if result, err := accept.Negotiate(ctx.Request().Header.Get("Accept"), allowedContentTypes...); err == nil {
+		ctx.Response().Header().Set("Content-Type", result)
+	} else {
+		ctx.Response().Header().Set("Content-Type", vocab.ContentTypeHTML)
+	}
+
+	ctx.Response().Header().Set("Last-Modified", time.UnixMilli(user.UpdateDate).Format(http.TimeFormat))
+	ctx.Response().Header().Set("ETag", user.ETag())
+
+	return ctx.NoContent(http.StatusOK)
 }
 
 // GetOutbox handles GET requests
