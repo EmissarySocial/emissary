@@ -35,7 +35,7 @@ func GetRegister(ctx *steranko.Context, factory *service.Factory, session data.S
 
 	// Return a response to the client
 	if err := build.AsHTML(ctx, factory, b, build.ActionMethodGet); err != nil {
-		return derp.Wrap(err, location, "Error building HTML")
+		return derp.Wrap(err, location, "Unable to build HTML")
 	}
 
 	return nil
@@ -78,7 +78,7 @@ func PostRegister(ctx *steranko.Context, factory *service.Factory, session data.
 	}
 
 	if err := build.AsHTML(ctx, factory, b, build.ActionMethodGet); err != nil {
-		return derp.Wrap(err, location, "Error building HTML")
+		return derp.Wrap(err, location, "Unable to build HTML")
 	}
 
 	// Report success to the client

@@ -31,7 +31,7 @@ func (step StepTableEditor) Get(builder Builder, buffer io.Writer) PipelineBehav
 	requestURL := builder.request().URL
 
 	if err := t.Draw(requestURL, buffer); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error building HTML"))
+		return Halt().WithError(derp.Wrap(err, location, "Unable to build HTML"))
 	}
 
 	return Continue().WithHeader("Hx-Push-Url", "false")
@@ -108,7 +108,7 @@ func (step StepTableEditor) Post(builder Builder, _ io.Writer) PipelineBehavior 
 	t.AllowAll()
 
 	if err := t.DrawView(builder.response()); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error building HTML"))
+		return Halt().WithError(derp.Wrap(err, location, "Unable to build HTML"))
 	}
 
 	return Continue().WithHeader("Hx-Push-Url", "false")

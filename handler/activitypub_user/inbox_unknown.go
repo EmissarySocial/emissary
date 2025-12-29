@@ -2,10 +2,10 @@ package activitypub_user
 
 import (
 	"github.com/benpate/hannibal/streams"
-	"github.com/davecgh/go-spew/spew"
+	"github.com/rs/zerolog/log"
 )
 
 func receive_Unknown(context Context, activity streams.Document) error {
-	spew.Dump("RECEIVED UNRECOGNIZED ACTIVITYPUB MESSAGE", activity.Value())
+	log.Trace().Str("domain", context.factory.Host()).Str("activityType", activity.Type()).Msg("Received unrecognized ActivityPub activity")
 	return nil
 }

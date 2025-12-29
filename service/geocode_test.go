@@ -1,10 +1,11 @@
 package service
 
 import (
+	"math"
 	"testing"
 
 	"github.com/codingsince1985/geo-golang/openstreetmap"
-	"github.com/davecgh/go-spew/spew"
+	"github.com/stretchr/testify/require"
 )
 
 func TestOpenStreetMap(t *testing.T) {
@@ -13,5 +14,7 @@ func TestOpenStreetMap(t *testing.T) {
 
 	coordinates, err := coder.Geocode("1600 Amphitheatre Parkway, Mountain View, CA 94043")
 
-	spew.Dump(coordinates, err)
+	require.NoError(t, err)
+	require.Equal(t, float64(3742), math.Floor(coordinates.Lat*100))
+	require.Equal(t, float64(-12209), math.Floor(coordinates.Lng*100))
 }

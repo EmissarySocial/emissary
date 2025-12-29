@@ -39,7 +39,7 @@ func buildIdentity(ctx *steranko.Context, factory *service.Factory, session data
 
 	// Build the HTML response
 	if err := build.AsHTML(ctx, factory, builder, actionMethod); err != nil {
-		return derp.Wrap(err, location, "Error building page")
+		return derp.Wrap(err, location, "Unable to build page")
 	}
 
 	return ctx.NoContent(http.StatusOK)

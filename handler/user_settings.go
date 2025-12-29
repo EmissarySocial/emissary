@@ -29,7 +29,7 @@ func buildSettings(ctx *steranko.Context, factory *service.Factory, session data
 	actionID := first.String(ctx.Param("action"), "general")
 
 	if ok, err := handleJSONLD(ctx, user); ok {
-		return derp.Wrap(err, location, "Error building JSON-LD")
+		return derp.Wrap(err, location, "Unable to build JSON-LD")
 	}
 
 	builder, err := build.NewSettings(factory, session, ctx.Request(), ctx.Response(), user, actionID)

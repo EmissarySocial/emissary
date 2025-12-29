@@ -116,7 +116,7 @@ func (step StepSetPrivileges) Get(builder Builder, buffer io.Writer) PipelineBeh
 	)
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, "build.StepSetPrivileges.Get", "Error building form"))
+		return Halt().WithError(derp.Wrap(err, "build.StepSetPrivileges.Get", "Unable to build form"))
 	}
 
 	// Write the rest of the HTML that contains the form

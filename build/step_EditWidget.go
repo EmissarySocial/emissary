@@ -24,7 +24,7 @@ func (step StepEditWidget) Get(builder Builder, buffer io.Writer) PipelineBehavi
 	formHTML, err := form.Editor(widget.Schema, widget.Form, streamWidget.Data, nil)
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, "build.StepEditWidget.Get", "Error building form"))
+		return Halt().WithError(derp.Wrap(err, "build.StepEditWidget.Get", "Unable to build form"))
 	}
 
 	// Wrap the form as a modal and return it to the client

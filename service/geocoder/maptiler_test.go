@@ -24,7 +24,6 @@ location of the USER'S machine.  Sooo close :(
 func TestMaptiler_Network(t *testing.T) {
 	encoder := NewMaptiler(testMaptilerAPIKey)
 	result, err := encoder.GeocodeNetwork("172.66.0.96")
-	spew.Dump(result, err)
-	// testGeocodeNetwork(t, encoder)
+	testGeocodeNetwork(t, encoder)
 }
 */

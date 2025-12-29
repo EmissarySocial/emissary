@@ -29,7 +29,7 @@ func buildInbox(ctx *steranko.Context, factory *service.Factory, session data.Se
 	actionID := first.String(ctx.Param("action"), "inbox")
 
 	if ok, err := handleJSONLD(ctx, user); ok {
-		return derp.Wrap(err, location, "Error building JSON-LD")
+		return derp.Wrap(err, location, "Unable to build JSON-LD")
 	}
 
 	builder, err := build.NewInbox(factory, session, ctx.Request(), ctx.Response(), user, actionID)

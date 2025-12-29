@@ -55,7 +55,7 @@ func GetIntent_Follow(ctx *steranko.Context, factory *service.Factory, session d
 	formHTML, err := formStruct.Editor(following, lookupProvider)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error building form")
+		return derp.Wrap(err, location, "Unable to build form")
 	}
 
 	// Buiild HTML response

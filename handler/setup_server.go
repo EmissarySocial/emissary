@@ -30,7 +30,7 @@ func SetupPageGet(factory *server.Factory, templates *template.Template, templat
 		header.Set("Cache-Control", "no-store")
 
 		if err := templates.ExecuteTemplate(ctx.Response().Writer, templateID, config); err != nil {
-			derp.Report(build.WrapInlineError(ctx.Response(), derp.Wrap(err, "setup.getIndex", "Error building index page")))
+			derp.Report(build.WrapInlineError(ctx.Response(), derp.Wrap(err, "setup.getIndex", "Unable to build index page")))
 		}
 
 		return nil

@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/benpate/rosetta/convert"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -43,6 +42,5 @@ func Test_ConvertPrimitive(t *testing.T) {
 	}
 
 	actual := convert.SliceOfMap(value)
-	spew.Dump(expected, actual)
 	require.Equal(t, expected, actual)
 }

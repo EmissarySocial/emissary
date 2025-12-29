@@ -9,7 +9,6 @@ import (
 	"github.com/benpate/remote"
 	"github.com/benpate/remote/options"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/require"
 )
 
@@ -30,7 +29,9 @@ func TestPayPal_OAuth(t *testing.T) {
 		require.Nil(t, err)
 	}
 
-	spew.Dump(response)
+	require.NotEmpty(t, response.GetString("access_token"))
+	require.NotEmpty(t, response.GetString("app_id"))
+	require.NotEmpty(t, response.GetFloat("expires_in"))
 }
 
 func TestPayPal_API(t *testing.T) {
@@ -38,7 +39,7 @@ func TestPayPal_API(t *testing.T) {
 	clientID := "ASJSNmgI1_3dOc5THh5pWfYVMjdwGtEBANUilgF5IjxilefFuLmJIcEZNab80_k63kQdPDjRvbAHpKgv"
 	secretKey := "EDlVV8lWh-4li56gtBu-aRALCynj6Brd_Lh8k3WqvZkd38zpDEr2-hvPqdAGNE-nL972AKw9V3ocivxT"
 
-	spew.Dump(clientID, secretKey)
+	require.NotNil(t, clientID)
+	require.NotNil(t, secretKey)
 	// remote.Get("https://sandbox.paypel.com/v1/billing/plans")
-
 }

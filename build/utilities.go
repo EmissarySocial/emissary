@@ -274,7 +274,7 @@ func AsHTML(ctx echo.Context, factory Factory, b Builder, actionMethod ActionMet
 	// Partial page requests can be completed here.
 	if b.IsPartialRequest() || status.FullPage {
 		if err := ctx.HTML(status.GetStatusCode(), partialPage.String()); err != nil {
-			return derp.Wrap(err, location, "Error building partial-page content", status.GetStatusCode())
+			return derp.Wrap(err, location, "Unable to build partial-page content", status.GetStatusCode())
 		}
 
 		return nil
@@ -286,7 +286,7 @@ func AsHTML(ctx echo.Context, factory Factory, b Builder, actionMethod ActionMet
 	var fullPage bytes.Buffer
 
 	if err := htmlTemplate.ExecuteTemplate(&fullPage, "page", b); err != nil {
-		return derp.Wrap(err, location, "Error building full-page content")
+		return derp.Wrap(err, location, "Unable to build full-page content")
 	}
 
 	return ctx.HTML(http.StatusOK, fullPage.String())

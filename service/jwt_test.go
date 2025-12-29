@@ -9,7 +9,6 @@ import (
 
 	mockdb "github.com/benpate/data-mock"
 	"github.com/benpate/steranko"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/require"
 )
@@ -85,8 +84,6 @@ func TestJWTCacheMiss(t *testing.T) {
 	service := NewJWT()
 	service.Refresh(mockdb.New(), "0123456789ABCDEF0123456789ABCDE0123456789ABCDEF0123456789ABCDEFF")
 
-	spew.Dump(service.masterKey)
-
 	// Create Key1
 	name1, value1, err := service.GetCurrentKey()
 	require.Nil(t, err)
@@ -115,15 +112,12 @@ func TestJWTEncryptDecrypt(t *testing.T) {
 	service.Refresh(mockdb.New(), "0123456789ABCDEF0123456789ABCDE0123456789ABCDEF0123456789ABCDEFF")
 
 	original := []byte("This is a test.  It has to be very long because the encryption algorithms looked like they were cutting off after, idk, something like 32 bytes.  So this is mos/def more than 32 bytes.")
-	spew.Dump(original)
 
 	ciphertext, err := service.encrypt(original)
 	require.Nil(t, err)
-	spew.Dump(ciphertext)
 
 	plaintext, err := service.decrypt(ciphertext)
 	require.Nil(t, err)
-	spew.Dump(plaintext)
 	require.Equal(t, original, plaintext)
 }
 

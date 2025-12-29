@@ -42,7 +42,7 @@ func (step StepSetCircleSharing) Get(builder Builder, buffer io.Writer) Pipeline
 	element, err := step.form()
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error building form for StepSetCircleSharing"))
+		return Halt().WithError(derp.Wrap(err, location, "Unable to build form for StepSetCircleSharing"))
 	}
 
 	f := form.New(schema, element)

@@ -76,7 +76,7 @@ func (step StepEditRegistration) Get(builder Builder, buffer io.Writer) Pipeline
 		formHTML, err := f.Editor(domainBuilder._domain.RegistrationData, lookupProvider)
 
 		if err != nil {
-			return Halt().WithError(derp.Wrap(err, "builder.StepEditRegistration", "Error building registration form"))
+			return Halt().WithError(derp.Wrap(err, "builder.StepEditRegistration", "Unable to build registration form"))
 		}
 
 		result += WrapForm("/admin/domain/signup?registrationId="+registrationID, formHTML, "")

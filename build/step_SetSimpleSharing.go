@@ -36,7 +36,7 @@ func (step StepSetSimpleSharing) Get(builder Builder, buffer io.Writer) Pipeline
 	element, err := step.form()
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error building form for StepSetSimpleSharing"))
+		return Halt().WithError(derp.Wrap(err, location, "Unable to build form for StepSetSimpleSharing"))
 	}
 
 	form := form.New(schema, element)

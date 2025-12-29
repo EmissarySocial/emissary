@@ -41,7 +41,7 @@ func GetStartup(ctx *steranko.Context, factory *service.Factory, session data.Se
 	result, err := builder.Render()
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error building page")
+		return derp.Wrap(err, location, "Unable to build page")
 	}
 
 	// Return the HTML page to the browser
