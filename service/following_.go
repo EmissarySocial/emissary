@@ -209,7 +209,7 @@ func (service *Following) Delete(session data.Session, following *model.Followin
 	const location = "service.Following.Delete"
 
 	if err := service.deleteNoStats(session, following, note); err != nil {
-		return derp.Wrap(err, location, "Error deleting Following", following, note)
+		return derp.Wrap(err, location, "Unable to delete Following", following, note)
 	}
 
 	// Recalculate the follower count for this user
@@ -235,12 +235,12 @@ func (service *Following) deleteNoStats(session data.Session, following *model.F
 
 	// Remove the Following record
 	if err := service.collection(session).Delete(following, comment); err != nil {
-		return derp.Wrap(err, location, "Error deleting Following", following, comment)
+		return derp.Wrap(err, location, "Unable to delete Following", following, comment)
 	}
 
 	// Remove any messages received from this Following
 	if err := service.inboxService.DeleteByOrigin(session, following.FollowingID, "Parent record deleted"); err != nil {
-		return derp.Wrap(err, location, "Error deleting streams for Following", following)
+		return derp.Wrap(err, location, "Unable to delete streams for Following", following)
 	}
 
 	// Disconnect from external services (if necessary)
@@ -488,7 +488,7 @@ func (service *Following) DeleteByUserID(session data.Session, userID primitive.
 	// Delete each Following record
 	for following := range rangeFunc {
 		if err := service.deleteNoStats(session, &following, comment); err != nil {
-			return derp.Wrap(err, location, "Error deleting following", following)
+			return derp.Wrap(err, location, "Unable to delete following", following)
 		}
 	}
 

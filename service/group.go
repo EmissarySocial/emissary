@@ -87,7 +87,7 @@ func (service *Group) Save(session data.Session, group *model.Group, note string
 func (service *Group) Delete(session data.Session, group *model.Group, note string) error {
 
 	if err := service.collection(session).Delete(group, note); err != nil {
-		return derp.Wrap(err, "service.Group.Delete", "Error deleting Group", group, note)
+		return derp.Wrap(err, "service.Group.Delete", "Unable to delete Group", group, note)
 	}
 
 	// TODO: HIGH: Also remove connections to Users that still use this Group
@@ -222,7 +222,7 @@ func (service *Group) ListAsOptions(session data.Session) []form.LookupCode {
 	it, err := service.List(session, exp.All(), option.SortAsc("label"))
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "service.Group.ListAsOptions", "Error listing Groups"))
+		derp.Report(derp.Wrap(err, "service.Group.ListAsOptions", "Unable to list Groups"))
 		return result
 	}
 

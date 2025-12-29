@@ -250,7 +250,7 @@ func (w User) AssignedGroups() ([]model.Group, error) {
 	groupService := w._factory.Group()
 	result, err := groupService.ListByIDs(w._session, w._user.GroupIDs...)
 
-	return result, derp.Wrap(err, "build.User.AssignedGroups", "Error listing groups", w._user.GroupIDs)
+	return result, derp.Wrap(err, "build.User.AssignedGroups", "Unable to list groups", w._user.GroupIDs)
 }
 
 func (w User) debug() {

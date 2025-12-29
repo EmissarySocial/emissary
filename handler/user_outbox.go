@@ -70,7 +70,7 @@ func PostProfileDelete(ctx *steranko.Context, factory *service.Factory, session 
 	userService := factory.User()
 
 	if err := userService.Delete(session, user, "Deleted by User"); err != nil {
-		return derp.Wrap(err, "handler.PostProfileDelete", "Error deleting user")
+		return derp.Wrap(err, "handler.PostProfileDelete", "Unable to delete user")
 	}
 
 	return ctx.Redirect(http.StatusTemporaryRedirect, "/signout")

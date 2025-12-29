@@ -964,7 +964,7 @@ func (service *Stream) DeleteRelatedDuplicate(session data.Session, parentID pri
 	criteria := exp.Equal("parentId", parentID).AndEqual("data.originalStreamId", originalStreamID)
 
 	if err := service.collection(session).HardDelete(criteria); err != nil {
-		return derp.Wrap(err, "service.Stream.DeleteRelatedDuplicate", "Error deleting related duplicate")
+		return derp.Wrap(err, "service.Stream.DeleteRelatedDuplicate", "Unable to delete related duplicate")
 	}
 
 	return nil

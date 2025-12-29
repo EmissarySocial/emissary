@@ -120,7 +120,7 @@ func DeleteDomainBlock(serverFactory *server.Factory) func(model.Authorization, 
 
 		// Delete the Rule from the database
 		if err := ruleService.Delete(session, &rule, "Deleted via Mastodon API"); err != nil {
-			return struct{}{}, derp.Wrap(err, location, "Error deleting rule")
+			return struct{}{}, derp.Wrap(err, location, "Unable to delete rule")
 		}
 
 		return struct{}{}, nil

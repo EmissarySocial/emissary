@@ -150,7 +150,7 @@ func (service *MerchantAccount) Delete(session data.Session, merchantAccount *mo
 
 	// Delete this MerchantAccount
 	if err := service.collection(session).Delete(merchantAccount, note); err != nil {
-		return derp.Wrap(err, "service.MerchantAccount.Delete", "Error deleting MerchantAccount", merchantAccount, note)
+		return derp.Wrap(err, "service.MerchantAccount.Delete", "Unable to delete MerchantAccount", merchantAccount, note)
 	}
 
 	return nil

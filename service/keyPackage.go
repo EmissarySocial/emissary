@@ -101,7 +101,7 @@ func (service *KeyPackage) Delete(session data.Session, keyPackage *model.KeyPac
 
 	// Delete this KeyPackage
 	if err := service.collection(session).Delete(keyPackage, note); err != nil {
-		return derp.Wrap(err, "service.KeyPackage.Delete", "Error deleting KeyPackage", keyPackage, note)
+		return derp.Wrap(err, "service.KeyPackage.Delete", "Unable to delete KeyPackage", keyPackage, note)
 	}
 
 	return nil

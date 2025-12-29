@@ -29,7 +29,7 @@ func Recycle(session data.Session, collectionName string) error {
 	}
 
 	if _, err := collection.DeleteMany(timeout, filter); err != nil {
-		return derp.Wrap(err, location, "Error deleting records", filter)
+		return derp.Wrap(err, location, "Unable to delete records", filter)
 	}
 
 	// Done.

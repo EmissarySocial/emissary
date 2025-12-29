@@ -139,7 +139,7 @@ func (service *Connection) Save(session data.Session, connection *model.Connecti
 func (service *Connection) Delete(session data.Session, connection *model.Connection, note string) error {
 
 	if err := service.collection(session).Delete(connection, note); err != nil {
-		return derp.Wrap(err, "service.Connection.Delete", "Error deleting Connection", connection, note)
+		return derp.Wrap(err, "service.Connection.Delete", "Unable to delete Connection", connection, note)
 	}
 
 	return nil

@@ -107,7 +107,7 @@ func (service *Product) Save(session data.Session, product *model.Product, note 
 func (service *Product) Delete(session data.Session, product *model.Product, note string) error {
 
 	if err := service.collection(session).Delete(product, note); err != nil {
-		return derp.Wrap(err, "service.Product.Delete", "Error deleting Product", product, note)
+		return derp.Wrap(err, "service.Product.Delete", "Unable to delete Product", product, note)
 	}
 
 	return nil
@@ -345,7 +345,7 @@ func (service *Product) SyncRemoteProducts(session data.Session, userID primitiv
 	// Remove local Product records that are no longer in the remote products list
 	for _, product := range productIndex {
 		if err := service.Delete(session, &product, "Removed from merchant account"); err != nil {
-			return nil, nil, derp.Wrap(err, location, "Error deleting local product", product)
+			return nil, nil, derp.Wrap(err, location, "Unable to delete local product", product)
 		}
 	}
 

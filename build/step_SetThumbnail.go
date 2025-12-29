@@ -28,7 +28,7 @@ func (step StepSetThumbnail) Post(builder Builder, _ io.Writer) PipelineBehavior
 	attachments, err := factory.Attachment().QueryByObjectID(builder.session(), objectType, objectID)
 
 	if err != nil {
-		return Halt().WithError(derp.BadRequestError("build.StepSetThumbnail.Post", "Error listing attachments"))
+		return Halt().WithError(derp.BadRequestError("build.StepSetThumbnail.Post", "Unable to list attachments"))
 	}
 
 	// Scan all attachments and use the first one that is an image.

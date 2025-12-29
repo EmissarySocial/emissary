@@ -231,7 +231,7 @@ func PostOAuthRevoke(ctx *steranko.Context, factory *service.Factory, session da
 	}
 
 	if err := userTokenService.Delete(session, &userToken, "Revoked by Client"); err != nil {
-		return derp.Wrap(err, location, "Error deleting OAuthUserToken")
+		return derp.Wrap(err, location, "Unable to delete OAuthUserToken")
 	}
 
 	return ctx.JSON(http.StatusOK, map[string]any{})

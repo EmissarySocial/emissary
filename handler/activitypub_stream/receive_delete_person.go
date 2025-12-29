@@ -22,7 +22,7 @@ func init() {
 
 		// Delete from the cache
 		if err := activityService.Delete(activity.Object().ID()); err != nil {
-			return derp.Wrap(err, location, "Error deleting stream", activity.Object().ID())
+			return derp.Wrap(err, location, "Unable to delete stream", activity.Object().ID())
 		}
 
 		// Voila!

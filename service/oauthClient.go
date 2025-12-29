@@ -115,12 +115,12 @@ func (service *OAuthClient) Delete(session data.Session, client *model.OAuthClie
 
 	// Delete this OAuthClient
 	if err := service.collection(session).Delete(client, note); err != nil {
-		return derp.Wrap(err, location, "Error deleting OAuthClient", client, note)
+		return derp.Wrap(err, location, "Unable to delete OAuthClient", client, note)
 	}
 
 	// Delete related records -- this can happen in the background
 	if err := service.oauthUserTokenService.DeleteByClient(session, client.ClientID, note); err != nil {
-		return derp.Wrap(err, location, "Error deleting attachments", client, note)
+		return derp.Wrap(err, location, "Unable to delete attachments", client, note)
 	}
 
 	// Bueno!!

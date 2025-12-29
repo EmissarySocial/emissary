@@ -101,7 +101,7 @@ func SetupDomainDelete(factory *server.Factory) echo.HandlerFunc {
 
 		// Delete the domain
 		if err := factory.DeleteDomain(domainID); err != nil {
-			return derp.Wrap(err, "handler.SetupDomainDelete", "Error deleting domain")
+			return derp.Wrap(err, "handler.SetupDomainDelete", "Unable to delete domain")
 		}
 
 		// Close the modal and return OK

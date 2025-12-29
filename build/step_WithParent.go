@@ -36,7 +36,7 @@ func (step StepWithParent) Post(builder Builder, buffer io.Writer) PipelineBehav
 
 	// Try to load the parent Stream
 	if err := factory.Stream().LoadByID(builder.session(), streamBuilder._stream.ParentID, &parent); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error listing parent"))
+		return Halt().WithError(derp.Wrap(err, location, "Unable to list parent"))
 	}
 
 	// Make a builder with the new parent stream
@@ -66,7 +66,7 @@ func (step StepWithParent) postUser(streamBuilder Stream, buffer io.Writer) Pipe
 
 	// Try to load the parent Stream
 	if err := factory.User().LoadByID(streamBuilder.session(), streamBuilder._stream.ParentID, &user); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error listing parent"))
+		return Halt().WithError(derp.Wrap(err, location, "Unable to list parent"))
 	}
 
 	// Make a builder with the new parent stream

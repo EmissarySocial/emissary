@@ -98,7 +98,7 @@ func (service *EncryptionKey) Delete(session data.Session, encryptionKey *model.
 
 	// Delete this EncryptionKey
 	if err := service.collection(session).Delete(encryptionKey, note); err != nil {
-		return derp.Wrap(err, "service.EncryptionKey.Delete", "Error deleting EncryptionKey", encryptionKey, note)
+		return derp.Wrap(err, "service.EncryptionKey.Delete", "Unable to delete EncryptionKey", encryptionKey, note)
 	}
 
 	return nil
@@ -182,7 +182,7 @@ func (service *EncryptionKey) DeleteByParentID(session data.Session, parentID pr
 
 	for encryptionKey := range rangeFunc {
 		if err := service.Delete(session, &encryptionKey, note); err != nil {
-			return derp.Wrap(err, location, "Error deleting key", encryptionKey)
+			return derp.Wrap(err, location, "Unable to delete key", encryptionKey)
 		}
 	}
 

@@ -122,7 +122,7 @@ func (service *StreamDraft) Delete(session data.Session, draft *model.Stream, _n
 
 	// Use a hard delete to remove drafts permanently.
 	if err := service.collection(session).HardDelete(criteria); err != nil {
-		return derp.Wrap(err, "service.StreamDraft.Delete", "Error deleting draft", criteria)
+		return derp.Wrap(err, "service.StreamDraft.Delete", "Unable to delete draft", criteria)
 	}
 
 	return nil
@@ -235,7 +235,7 @@ func (service *StreamDraft) Promote(session data.Session, streamID primitive.Obj
 
 	// Try to save the updated stream back to the database
 	if err := service.Delete(session, &draft, "published"); err != nil {
-		return model.Stream{}, derp.Wrap(err, "service.StreamDraft.Publish", "Error deleting draft")
+		return model.Stream{}, derp.Wrap(err, "service.StreamDraft.Publish", "Unable to delete draft")
 	}
 
 	return stream, nil

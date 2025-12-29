@@ -44,7 +44,7 @@ func (service *Stream) Import(session data.Session, importRecord *model.Import, 
 		}
 	}
 
-	// Import Attachments
+	// Import and Map Attachments
 	if err := service.importService.ImportAttachments(session, importRecord, importItem, &stream); err != nil {
 		return derp.Wrap(err, location, "Unable to import Attachments")
 	}

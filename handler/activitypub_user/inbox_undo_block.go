@@ -39,7 +39,7 @@ func init() {
 
 		// Remove the Rule
 		if err := ruleService.Delete(context.session, &rule, "Removed via ActivityPub"); err != nil {
-			return derp.Wrap(err, location, "Error deleting rule", activity.Value())
+			return derp.Wrap(err, location, "Unable to delete rule", activity.Value())
 		}
 
 		// Success.

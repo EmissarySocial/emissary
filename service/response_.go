@@ -303,7 +303,7 @@ func (service *Response) DeleteByUserID(session data.Session, userID primitive.O
 
 	for response := range rangeFunc {
 		if err := service.Delete(session, &response, note); err != nil {
-			return derp.Wrap(err, location, "Error deleting response", response)
+			return derp.Wrap(err, location, "Unable to delete response", response)
 		}
 	}
 
@@ -318,7 +318,7 @@ func (service *Response) SetResponse(session data.Session, user *model.User, url
 
 	// Remove previous Response (if it exists)
 	if service.UnsetResponse(session, user, url, responseType) != nil {
-		return derp.Wrap(nil, location, "Error removing previous response", user.UserID, url, responseType)
+		return derp.Wrap(nil, location, "Unable to remove previous response", user.UserID, url, responseType)
 	}
 
 	// Create a new Response object
@@ -364,7 +364,7 @@ func (service *Response) UnsetResponse(session data.Session, user *model.User, u
 
 	// Otherwise, delete the old Response
 	if err := service.Delete(session, &previousResponse, ""); err != nil {
-		return derp.Wrap(err, location, "Error deleting old response", previousResponse)
+		return derp.Wrap(err, location, "Unable to delete old response", previousResponse)
 	}
 
 	// Success!!

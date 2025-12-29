@@ -31,7 +31,7 @@ func (step StepWithChildren) Post(builder Builder, buffer io.Writer) PipelineBeh
 	children, err := factory.Stream().RangeByParent(builder.session(), streamBuilder._stream.ParentID)
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error listing children"))
+		return Halt().WithError(derp.Wrap(err, location, "Unable to list children"))
 	}
 
 	result := NewPipelineResult()

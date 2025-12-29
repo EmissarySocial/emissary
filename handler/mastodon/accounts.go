@@ -329,7 +329,7 @@ func PostAccount_Unfollow(serverFactory *server.Factory) func(model.Authorizatio
 
 		// Delete the "Following" record
 		if err := followingService.Delete(session, &following, "Deleted by Mastodon API"); err != nil {
-			return object.Relationship{}, derp.Wrap(err, location, "Error deleting following")
+			return object.Relationship{}, derp.Wrap(err, location, "Unable to delete following")
 		}
 
 		return following.Toot(), nil
@@ -406,7 +406,7 @@ func PostAccount_Unblock(serverFactory *server.Factory) func(model.Authorization
 
 		// Delete the rule record
 		if err := ruleService.Delete(session, &rule, "Deleted by Mastodon API"); err != nil {
-			return object.Relationship{}, derp.Wrap(err, location, "Error deleting rule")
+			return object.Relationship{}, derp.Wrap(err, location, "Unable to delete rule")
 		}
 
 		// Return success
@@ -484,7 +484,7 @@ func PostAccount_Unmute(serverFactory *server.Factory) func(model.Authorization,
 
 		// Delete the rule record
 		if err := ruleService.Delete(session, &rule, "Deleted by Mastodon API"); err != nil {
-			return object.Relationship{}, derp.Wrap(err, location, "Error deleting rule")
+			return object.Relationship{}, derp.Wrap(err, location, "Unable to delete rule")
 		}
 
 		// Return success

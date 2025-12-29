@@ -174,7 +174,7 @@ func (service *Rule) Delete(session data.Session, rule *model.Rule, note string)
 
 	// Delete this Rule
 	if err := service.collection(session).Delete(rule, note); err != nil {
-		return derp.Wrap(err, "service.Rule.Delete", "Error deleting Rule", rule, note)
+		return derp.Wrap(err, "service.Rule.Delete", "Unable to delete Rule", rule, note)
 	}
 
 	if rule.IsPublic {
@@ -451,7 +451,7 @@ func (service *Rule) DeleteByUserID(session data.Session, userID primitive.Objec
 
 	for rule := range rangeFunc {
 		if err := service.Delete(session, &rule, comment); err != nil {
-			return derp.Wrap(err, location, "Error deleting rule", rule)
+			return derp.Wrap(err, location, "Unable to delete rule", rule)
 		}
 	}
 

@@ -196,7 +196,7 @@ func SetupDomainUserDelete(serverFactory *server.Factory, templates *template.Te
 
 		// Try to delete the user record
 		if err := userService.Delete(session, &user, "Deleted by Server Admin"); err != nil {
-			return derp.Wrap(err, location, "Error deleting user")
+			return derp.Wrap(err, location, "Unable to delete user")
 		}
 
 		// Display the modal's NEW inner contents

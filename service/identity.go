@@ -159,7 +159,7 @@ func (service *Identity) Delete(session data.Session, identity *model.Identity, 
 
 	// Delete this Identity
 	if err := service.collection(session).Delete(identity, note); err != nil {
-		return derp.Wrap(err, "service.Identity.Delete", "Error deleting Identity", identity, note)
+		return derp.Wrap(err, "service.Identity.Delete", "Unable to delete Identity", identity, note)
 	}
 
 	return nil

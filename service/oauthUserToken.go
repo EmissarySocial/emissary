@@ -97,7 +97,7 @@ func (service *OAuthUserToken) Delete(session data.Session, application *model.O
 
 	// Delete this OAuthUserToken
 	if err := service.collection(session).Delete(application, note); err != nil {
-		return derp.Wrap(err, "service.OAuthUserToken.Delete", "Error deleting OAuthUserToken", application, note)
+		return derp.Wrap(err, "service.OAuthUserToken.Delete", "Unable to delete OAuthUserToken", application, note)
 	}
 
 	// Bueno!!
@@ -113,13 +113,13 @@ func (service *OAuthUserToken) DeleteMany(session data.Session, criteria exp.Exp
 	it, err := service.Iterator(session, criteria)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error listing streams to delete", criteria)
+		return derp.Wrap(err, location, "Unable to list streams to delete", criteria)
 	}
 
 	// Loop over each OAuthUserToken and delete it
 	for userToken := model.NewOAuthUserToken(); it.Next(&userToken); userToken = model.NewOAuthUserToken() {
 		if err := service.Delete(session, &userToken, note); err != nil {
-			return derp.Wrap(err, location, "Error deleting stream", userToken)
+			return derp.Wrap(err, location, "Unable to delete stream", userToken)
 		}
 	}
 

@@ -34,7 +34,7 @@ func DeleteAny(context Context, activity streams.Document) error {
 	for activity := range activities {
 
 		if err := outboxService.Delete(context.session, &activity, "Removed via ActivityPub"); err != nil {
-			return derp.Wrap(err, location, "Error deleting message", activity)
+			return derp.Wrap(err, location, "Unable to delete message", activity)
 		}
 	}
 

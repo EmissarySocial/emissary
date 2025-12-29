@@ -125,7 +125,7 @@ func (service *SearchTag) Delete(session data.Session, searchTag *model.SearchTa
 
 	// Delete this SearchTag
 	if err := service.collection(session).Delete(searchTag, note); err != nil {
-		return derp.Wrap(err, "service.SearchTag.Delete", "Error deleting SearchTag", searchTag, note)
+		return derp.Wrap(err, "service.SearchTag.Delete", "Unable to delete SearchTag", searchTag, note)
 	}
 
 	return nil

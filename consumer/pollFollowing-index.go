@@ -19,7 +19,7 @@ func PollFollowing_Index(factory *service.Factory, session data.Session, args ma
 	followings, err := followingService.RangePollable(session)
 
 	if err != nil {
-		return queue.Error(derp.Wrap(err, location, "Error listing pollable Rollowing records"))
+		return queue.Error(derp.Wrap(err, location, "Unable to list pollable Rollowing records"))
 	}
 
 	for following := range followings {

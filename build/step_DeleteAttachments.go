@@ -80,7 +80,7 @@ func (step StepDeleteAttachments) Post(builder Builder, _ io.Writer) PipelineBeh
 
 	// Delete the attachments that match the object and criteria
 	if err := attachmentService.DeleteByCriteria(builder.session(), objectType, objectID, criteria, "Deleted by Workflow Step"); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error deleting all attachments"))
+		return Halt().WithError(derp.Wrap(err, location, "Unable to delete all attachments"))
 	}
 
 	// Notify the client

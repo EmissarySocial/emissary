@@ -123,7 +123,7 @@ func (service *Annotation) Delete(session data.Session, annotation *model.Annota
 	const location = "service.Annotation.Delete"
 
 	if err := service.collection(session).Delete(annotation, note); err != nil {
-		return derp.Wrap(err, location, "Error deleting Annotation", annotation, note)
+		return derp.Wrap(err, location, "Unable to delete Annotation", annotation, note)
 	}
 
 	return nil

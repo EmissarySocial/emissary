@@ -43,7 +43,7 @@ func DeleteProfile_Avatar(serverFactory *server.Factory) func(model.Authorizatio
 
 		// Delete the user's Avatar
 		if err := userService.DeleteAvatar(session, &user, "Deleted via Mastodon API"); err != nil {
-			return object.Account{}, derp.Wrap(err, location, "Error deleting Avatar")
+			return object.Account{}, derp.Wrap(err, location, "Unable to delete Avatar")
 		}
 
 		return user.Toot(), nil

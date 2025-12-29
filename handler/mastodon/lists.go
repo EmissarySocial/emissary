@@ -221,7 +221,7 @@ func DeleteList(serverFactory *server.Factory) func(model.Authorization, txn.Del
 
 		// Delete the Folder
 		if err := folderService.Delete(session, &folder, "Deleted via Mastodon API"); err != nil {
-			return struct{}{}, derp.Wrap(err, location, "Error deleting folder")
+			return struct{}{}, derp.Wrap(err, location, "Unable to delete folder")
 		}
 
 		// Return a successful response

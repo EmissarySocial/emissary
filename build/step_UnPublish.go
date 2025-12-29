@@ -34,7 +34,7 @@ func (step StepUnPublish) Post(builder Builder, _ io.Writer) PipelineBehavior {
 	searchResultService := factory.SearchResult()
 
 	if err := searchResultService.DeleteByURL(builder.session(), streamBuilder._stream.URL); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error deleting search result", streamBuilder._stream.URL))
+		return Halt().WithError(derp.Wrap(err, location, "Unable to delete search result", streamBuilder._stream.URL))
 	}
 
 	// Try to load the User from the Database

@@ -150,7 +150,7 @@ func (service *Privilege) Delete(session data.Session, privilege *model.Privileg
 
 	// Delete this Privilege
 	if err := service.collection(session).Delete(privilege, note); err != nil {
-		return derp.Wrap(err, location, "Error deleting Privilege", privilege, note)
+		return derp.Wrap(err, location, "Unable to delete Privilege", privilege, note)
 	}
 
 	// Recalculate the privileges for the identityID
@@ -435,14 +435,14 @@ func (service *Privilege) DeleteByCircle(session data.Session, circleID primitiv
 		if privilege.RemotePurchaseID != "" {
 			privilege.CircleID = primitive.NilObjectID // Remove the CircleID so that it is not counted in the future
 			if err := service.collection(session).Save(&privilege, note); err != nil {
-				return derp.Wrap(err, location, "Error removing CircleID from Privilege", privilege.ID(), note)
+				return derp.Wrap(err, location, "Unable to remove CircleID from Privilege", privilege.ID(), note)
 			}
 			continue
 		}
 
 		// Otherwise, it's OK to delete an empty Privilege directly (no additional business logic)
 		if err := service.collection(session).Delete(&privilege, note); err != nil {
-			return derp.Wrap(err, location, "Error deleting Privilege", privilege.ID(), note)
+			return derp.Wrap(err, location, "Unable to delete Privilege", privilege.ID(), note)
 		}
 	}
 
@@ -742,7 +742,7 @@ func (service *Privilege) Cancel(session data.Session, privilege *model.Privileg
 	}
 
 	if err := service.Delete(session, privilege, "Canceled by User"); err != nil {
-		return derp.Wrap(err, location, "Error deleting Privilege after canceling subscription", privilege.PrivilegeID)
+		return derp.Wrap(err, location, "Unable to delete Privilege after canceling subscription", privilege.PrivilegeID)
 	}
 
 	return nil

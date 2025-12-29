@@ -107,7 +107,7 @@ func createWebSubFollower_unsubscribe(factory *service.Factory, session data.Ses
 
 	// Remove the follower from the database.
 	if err := followerService.Delete(session, &follower, "unsubscribe"); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Error deleting follower", follower.ID))
+		return queue.Error(derp.Wrap(err, location, "Unable to delete follower", follower.ID))
 	}
 
 	return queue.Success()

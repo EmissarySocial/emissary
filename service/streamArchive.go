@@ -183,7 +183,7 @@ func (service *StreamArchive) Delete(streamID primitive.ObjectID, token string) 
 
 	// Remove the file from the exportCache
 	if err := service.exportCache.Remove(filename); err != nil {
-		return derp.Wrap(err, location, "Error deleting file", filename)
+		return derp.Wrap(err, location, "Unable to delete file", filename)
 	}
 
 	// Great success
@@ -251,7 +251,7 @@ func (service *StreamArchive) writeToZip(session data.Session, zipWriter *zip.Wr
 		attachments, err := service.attachmentService.QueryByObjectID(session, model.AttachmentObjectTypeStream, stream.StreamID)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error listing attachments")
+			return derp.Wrap(err, location, "Unable to list attachments")
 		}
 
 		c := counter.NewCounter()
@@ -336,7 +336,7 @@ func (service *StreamArchive) writeToZip(session data.Session, zipWriter *zip.Wr
 		children, err := service.streamService.RangeByParent(session, stream.StreamID)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error listing children")
+			return derp.Wrap(err, location, "Unable to list children")
 		}
 
 		index := 1

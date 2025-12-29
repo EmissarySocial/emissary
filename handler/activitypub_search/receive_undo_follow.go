@@ -41,7 +41,7 @@ func undoFollow(context Context, activity streams.Document) error {
 			return nil
 		}
 
-		return derp.Wrap(err, location, "Error deleting follower", follower)
+		return derp.Wrap(err, location, "Unable to delete follower", follower)
 	}
 
 	// Voila!

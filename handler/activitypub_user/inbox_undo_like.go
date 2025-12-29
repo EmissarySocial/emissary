@@ -48,7 +48,7 @@ func undoResponse(context Context, activity streams.Document) error {
 
 	// Remove the original activity from the database.
 	if err := activityService.Delete(originalActivityID); err != nil {
-		return derp.Wrap(err, location, "Error deleting original activity", originalActivity)
+		return derp.Wrap(err, location, "Unable to delete original activity", originalActivity)
 	}
 
 	return nil

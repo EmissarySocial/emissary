@@ -101,7 +101,7 @@ func (service *Webhook) Delete(session data.Session, webhook *model.Webhook, not
 
 	// Delete this Webhook
 	if err := service.collection(session).Delete(webhook, note); err != nil {
-		return derp.Wrap(err, "service.Webhook.Delete", "Error deleting Webhook", webhook, note)
+		return derp.Wrap(err, "service.Webhook.Delete", "Unable to delete Webhook", webhook, note)
 	}
 
 	// Bueno!!
@@ -117,14 +117,14 @@ func (service *Webhook) DeleteMany(session data.Session, criteria exp.Expression
 	it, err := service.List(session, notDeleted(criteria))
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error listing webhooks to delete", criteria)
+		return derp.Wrap(err, location, "Unable to list webhooks to delete", criteria)
 	}
 
 	// Delete every webhook in the Iterator
 	for webhook := model.NewWebhook(); it.Next(&webhook); webhook = model.NewWebhook() {
 
 		if err := service.Delete(session, &webhook, note); err != nil {
-			return derp.Wrap(err, location, "Error deleting webhook", webhook)
+			return derp.Wrap(err, location, "Unable to delete webhook", webhook)
 		}
 	}
 

@@ -54,7 +54,7 @@ func undoFollow(context Context, activity streams.Document) error {
 
 	// Try to delete the existing follower record
 	if err := followerService.Delete(context.session, &follower, "Removed by remote client"); err != nil {
-		return derp.Wrap(err, location, "Error deleting follower", follower)
+		return derp.Wrap(err, location, "Unable to delete follower", follower)
 	}
 
 	// Voila!

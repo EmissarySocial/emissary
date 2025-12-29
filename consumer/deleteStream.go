@@ -37,7 +37,7 @@ func DeleteStream(factory *service.Factory, session data.Session, args mapof.Any
 
 	// Delete the Stream
 	if err := streamService.Delete(session, &stream, "Scheduled delete"); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Error deleting stream", stream))
+		return queue.Error(derp.Wrap(err, location, "Unable to delete stream", stream))
 	}
 
 	// Woot.

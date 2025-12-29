@@ -398,7 +398,7 @@ func (service *Follower) DeleteByUserID(session data.Session, userID primitive.O
 	for follower := range service.RangeByUserID(session, userID) {
 
 		if err := service.Delete(session, &follower, comment); err != nil {
-			return derp.Wrap(err, location, "Error deleting follower", follower)
+			return derp.Wrap(err, location, "Unable to delete follower", follower)
 		}
 	}
 

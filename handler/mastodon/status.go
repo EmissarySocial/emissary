@@ -149,7 +149,7 @@ func DeleteStatus(serverFactory *server.Factory) func(model.Authorization, txn.D
 		defer cancel()
 
 		if err := streamService.Delete(session, &stream, "Deleted via Mastodon API"); err != nil {
-			return struct{}{}, derp.Wrap(err, location, "Error deleting stream")
+			return struct{}{}, derp.Wrap(err, location, "Unable to delete stream")
 		}
 
 		return struct{}{}, nil
@@ -299,7 +299,7 @@ func PostStatus_Unfavourite(serverFactory *server.Factory) func(model.Authorizat
 
 		// Fall through means a response exists.  Delete it
 		if err := responseService.Delete(session, &response, "Deleted via Mastodon API"); err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Error deleting response")
+			return object.Status{}, derp.Wrap(err, location, "Unable to delete response")
 		}
 
 		// Return success

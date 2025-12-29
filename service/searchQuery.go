@@ -153,7 +153,7 @@ func (service *SearchQuery) Delete(session data.Session, searchQuery *model.Sear
 
 	// Delete this SearchQuery
 	if err := service.collection(session).Delete(searchQuery, note); err != nil {
-		return derp.Wrap(err, "service.SearchQuery.Delete", "Error deleting SearchQuery", searchQuery, note)
+		return derp.Wrap(err, "service.SearchQuery.Delete", "Unable to delete SearchQuery", searchQuery, note)
 	}
 
 	return nil

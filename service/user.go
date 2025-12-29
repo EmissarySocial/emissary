@@ -279,54 +279,54 @@ func (service *User) Delete(session data.Session, user *model.User, note string)
 
 	// Delete related Folders
 	if err := service.folderService.DeleteByUserID(session, user.UserID, "Deleted with owner"); err != nil {
-		return derp.Wrap(err, location, "Error deleting User's folders", user, note)
+		return derp.Wrap(err, location, "Unable to delete User's folders", user, note)
 	}
 
 	// Delete related Followers
 	if err := service.followerService.DeleteByUserID(session, user.UserID, "Deleted with owner"); err != nil {
-		return derp.Wrap(err, location, "Error deleting User's followers", user, note)
+		return derp.Wrap(err, location, "Unable to delete User's followers", user, note)
 	}
 
 	// Delete related Following
 	if err := service.followingService.DeleteByUserID(session, user.UserID, "Deleted with owner"); err != nil {
-		return derp.Wrap(err, location, "Error deleting User's followers", user, note)
+		return derp.Wrap(err, location, "Unable to delete User's followers", user, note)
 	}
 
 	// TODO: Delete related mentions
 
 	// Delete related Encryption Keys messages
 	if err := service.keyService.DeleteByParentID(session, user.UserID, "Deleted with owner"); err != nil {
-		return derp.Wrap(err, location, "Error deleting User's encryption keys", user, note)
+		return derp.Wrap(err, location, "Unable to delete User's encryption keys", user, note)
 	}
 
 	// Delete related Inbox messages
 	if err := service.inboxService.DeleteByUserID(session, user.UserID, "Deleted with owner"); err != nil {
-		return derp.Wrap(err, location, "Error deleting User's inbox messages", user, note)
+		return derp.Wrap(err, location, "Unable to delete User's inbox messages", user, note)
 	}
 
 	// Delete related Outbox messages
 	if err := service.outboxService.DeleteByParentID(session, model.FollowerTypeUser, user.UserID); err != nil {
-		return derp.Wrap(err, location, "Error deleting User's outbox messages", user, note)
+		return derp.Wrap(err, location, "Unable to delete User's outbox messages", user, note)
 	}
 
 	// Delete related Responses
 	if err := service.responseService.DeleteByUserID(session, user.UserID, "Deleted with owner"); err != nil {
-		return derp.Wrap(err, location, "Error deleting User's responses", user, note)
+		return derp.Wrap(err, location, "Unable to delete User's responses", user, note)
 	}
 
 	// TODO: Delete related Rules
 	if err := service.ruleService.DeleteByUserID(session, user.UserID, "Deleted with owner"); err != nil {
-		return derp.Wrap(err, location, "Error deleting User's rules", user, note)
+		return derp.Wrap(err, location, "Unable to delete User's rules", user, note)
 	}
 
 	// Delete related Streams
 	if err := service.streamService.DeleteByParent(session, user.UserID, "Deleted with owner"); err != nil {
-		return derp.Wrap(err, location, "Error deleting User's streams", user, note)
+		return derp.Wrap(err, location, "Unable to delete User's streams", user, note)
 	}
 
 	// Delete the User from the database
 	if err := service.collection(session).Delete(user, note); err != nil {
-		return derp.Wrap(err, location, "Error deleting User", user, note)
+		return derp.Wrap(err, location, "Unable to delete User", user, note)
 	}
 
 	// Send user:delete webhooks

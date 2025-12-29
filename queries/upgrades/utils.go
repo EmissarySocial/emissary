@@ -25,7 +25,7 @@ func ForEachRecord(collection *mongo.Collection, fn ForEachFunc) error {
 	cursor, err := collection.Find(ctx, bson.M{})
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error listing records")
+		return derp.Wrap(err, location, "Unable to list records")
 	}
 
 	for cursor.Next(ctx) {

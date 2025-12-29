@@ -133,7 +133,7 @@ func (service *Mention) Delete(session data.Session, mention *model.Mention, not
 
 	// Delete this Mention
 	if err := service.collection(session).HardDelete(criteria); err != nil {
-		return derp.Wrap(err, "service.Mention.Delete", "Error deleting Mention", criteria)
+		return derp.Wrap(err, "service.Mention.Delete", "Unable to delete Mention", criteria)
 	}
 
 	return nil

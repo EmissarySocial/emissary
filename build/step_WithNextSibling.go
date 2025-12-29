@@ -34,7 +34,7 @@ func (step StepWithNextSibling) execute(builder Builder, buffer io.Writer, actio
 	stream := streamBuilder._stream
 
 	if err := factory.Stream().LoadNextSibling(builder.session(), stream.ParentID, stream.Rank, &sibling); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error listing parent"))
+		return Halt().WithError(derp.Wrap(err, location, "Unable to list parent"))
 	}
 
 	// Make a builder with the new parent stream

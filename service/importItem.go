@@ -101,7 +101,7 @@ func (service *ImportItem) Save(session data.Session, item *model.ImportItem, no
 func (service *ImportItem) Delete(session data.Session, item *model.ImportItem, note string) error {
 
 	if err := service.collection(session).Delete(item, note); err != nil {
-		return derp.Wrap(err, "service.ImportItem.Delete", "Error deleting ImportItem", item, note)
+		return derp.Wrap(err, "service.ImportItem.Delete", "Unable to delete ImportItem", item, note)
 	}
 
 	// TODO: HIGH: Also remove connections to Users that still use this ImportItem
