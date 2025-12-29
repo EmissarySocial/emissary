@@ -1,4 +1,4 @@
-// go:build localonly
+//go:build localonly
 
 package geocoder
 
