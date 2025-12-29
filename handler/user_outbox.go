@@ -28,7 +28,7 @@ func ForwardMeURLs(ctx *steranko.Context, factory *service.Factory, session data
 func HeadOutbox(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	if !isUserVisible(ctx, user) {
-		return derp.NotFoundError("handler.buildOutbox", "User not found")
+		return derp.NotFoundError("handler.HeadOutbox", "User not found")
 	}
 
 	allowedContentTypes := []string{

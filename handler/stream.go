@@ -1,6 +1,9 @@
 package handler
 
 import (
+	"net/http"
+	"time"
+
 	"github.com/EmissarySocial/emissary/build"
 	"github.com/EmissarySocial/emissary/handler/activitypub_search"
 	"github.com/EmissarySocial/emissary/handler/activitypub_stream"
@@ -8,9 +11,34 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
+	accept "github.com/timewasted/go-accept-headers"
 )
+
+// HeadStream handles HEAD requests
+func HeadStream(ctx *steranko.Context, factory *service.Factory, session data.Session, stream *model.Stream) error {
+
+	allowedContentTypes := []string{
+		vocab.ContentTypeHTML,
+		vocab.ContentTypeActivityPub,
+		vocab.ContentTypeJSONLDWithProfile,
+		vocab.ContentTypeJSONLD,
+		vocab.ContentTypeJSON,
+	}
+
+	if result, err := accept.Negotiate(ctx.Request().Header.Get("Accept"), allowedContentTypes...); err == nil {
+		ctx.Response().Header().Set("Content-Type", result)
+	} else {
+		ctx.Response().Header().Set("Content-Type", vocab.ContentTypeHTML)
+	}
+
+	ctx.Response().Header().Set("Last-Modified", time.UnixMilli(stream.UpdateDate).Format(http.TimeFormat))
+	ctx.Response().Header().Set("ETag", stream.ETag())
+
+	return ctx.NoContent(http.StatusOK)
+}
 
 // GetStream handles GET requests with the default action.
 // This handler also responds to JSON-LD requests

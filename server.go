@@ -280,6 +280,8 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.domain/attachments/:attachmentId", handler.WithFactory(factory, handler.GetDomainAttachment))
 
 	// Stream Pages
+	e.HEAD("/", handler.WithStream(factory, handler.HeadStream))
+	e.HEAD("/:stream", handler.WithStream(factory, handler.HeadStream))
 	e.GET("/", handler.WithTemplate(factory, handler.GetStream))
 	e.GET("/:stream", handler.WithTemplate(factory, handler.GetStream))
 	e.GET("/:stream/:action", handler.WithTemplate(factory, handler.GetStreamWithAction))
@@ -306,6 +308,15 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@application/following", handler.WithFactory(factory, handler.GetEmptyCollection))
 	e.GET("/@application/followers", handler.WithFactory(factory, handler.GetEmptyCollection))
 	e.GET("/@application/liked", handler.WithFactory(factory, handler.GetEmptyCollection))
+
+	// Aliases for @service even though we use @application instead
+	e.GET("/@service", handler.WithFactory(factory, handler.GetApplicationActor))
+	e.POST("/@service/inbox", handler.PostApplicationActor_Inbox(factory))
+	e.GET("/@service/inbox", handler.WithFactory(factory, handler.GetEmptyCollection))
+	e.GET("/@service/outbox", handler.WithFactory(factory, handler.GetEmptyCollection))
+	e.GET("/@service/following", handler.WithFactory(factory, handler.GetEmptyCollection))
+	e.GET("/@service/followers", handler.WithFactory(factory, handler.GetEmptyCollection))
+	e.GET("/@service/liked", handler.WithFactory(factory, handler.GetEmptyCollection))
 
 	// Profile Pages for "me" only routes
 	e.GET("/@me", handler.WithAuthenticatedUser(factory, handler.ForwardMeURLs))
