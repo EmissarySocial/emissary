@@ -23,7 +23,7 @@ require (
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.15.12
 	github.com/benpate/re v0.3.5
-	github.com/benpate/remote v0.17.13
+	github.com/benpate/remote v0.18.0
 	github.com/benpate/rosetta v0.25.27
 	github.com/benpate/sherlock v0.8.18
 	github.com/benpate/sniff v0.1.0

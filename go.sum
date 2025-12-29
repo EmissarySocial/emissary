@@ -62,8 +62,8 @@ github.com/benpate/mediaserver v0.15.12 h1:yvrc9f+pkjZllltoVXAsov7IHLru9mI83FnfJ
 github.com/benpate/mediaserver v0.15.12/go.mod h1:g8y6naU7cw299q6pY3PbTQMg8gJeGwWJbdpxJ9z74Eo=
 github.com/benpate/re v0.3.5 h1:7v4jQfrzCqnhy1+6rG+AaJUyxh4R7atLJEZN3vhQtNA=
 github.com/benpate/re v0.3.5/go.mod h1:8qidRUQ9+HgSU0ETyzWSXqajR8D/ZZvMXMAs9rxlJWc=
-github.com/benpate/remote v0.17.13 h1:oxRPz1ejyPzc7zPtTkpMzW7LVf6mbVJ3VT60lbueSlc=
-github.com/benpate/remote v0.17.13/go.mod h1:XJgvUF+qAV6PTHIfQ7oA5PqgcSaATZ2A06jAysM8gWE=
+github.com/benpate/remote v0.18.0 h1:Rrm3Iam2zEfyPKNXubBXY7lr267V7/f4bWqs4wRocA8=
+github.com/benpate/remote v0.18.0/go.mod h1:nM+T4v6NgIcLRRYmgNbXykMPL2qJEG6EjhOZD9P/3r4=
 github.com/benpate/rosetta v0.25.27 h1:QhZbYwPdiX5+JqGGppoewENLk4FQcmZB3I0MI1w6Fvg=
 github.com/benpate/rosetta v0.25.27/go.mod h1:3TCv02rfyGaW+b55AQxFssYP1iCD0ms1Wn6gj2NIaVg=
 github.com/benpate/sherlock v0.8.18 h1:/v2ETsRwY9zc3cGRl38mUGnOOJE/PcYMd9IM+cVCBX0=
