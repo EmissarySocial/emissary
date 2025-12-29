@@ -2,6 +2,7 @@ module github.com/EmissarySocial/emissary
 
 go 1.25.4
 
+
 require (
 	github.com/PuerkitoBio/goquery v1.11.0
 	github.com/aws/aws-sdk-go v1.55.8
@@ -21,7 +22,7 @@ require (
 	github.com/benpate/hannibal v0.14.9
 	github.com/benpate/html v0.16.15
 	github.com/benpate/icon v0.4.0
-	github.com/benpate/mediaserver v0.15.12
+	github.com/benpate/mediaserver v0.15.13
 	github.com/benpate/re v0.3.5
 	github.com/benpate/remote v0.18.0
 	github.com/benpate/rosetta v0.25.27
