@@ -67,8 +67,22 @@ func (service *Stream) UndoImport(session data.Session, importItem *model.Import
 
 	const location = "service.Stream.UndoImport"
 
+	// Remove all Attachments
+	attachments, err := service.attachmentService.QueryByObjectID(session, model.AttachmentObjectTypeStream, importItem.LocalID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Unable to list Attachments for Stream", importItem.LocalID)
+	}
+
+	for _, attachment := range attachments {
+		if err := service.attachmentService.UndoImport(session, importItem.UserID, attachment.AttachmentID); err != nil {
+			derp.Report(derp.Wrap(err, location, "Unable to delete Stream", attachment.AttachmentID))
+		}
+	}
+
+	// Remove the Stream
 	if err := service.HardDeleteByID(session, importItem.LocalID); err != nil {
-		return derp.Wrap(err, location, "Unable to delete record", importItem.LocalID)
+		return derp.Wrap(err, location, "Unable to delete Stream", importItem.LocalID)
 	}
 
 	return nil
