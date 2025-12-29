@@ -1,3 +1,5 @@
+//go:build localonly
+
 package geocoder
 
 import (

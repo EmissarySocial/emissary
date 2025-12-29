@@ -6,9 +6,6 @@ import (
 	"testing"
 )
 
-// To test, put a real API key here
-var testMaptilerAPIKey string
-
 func TestMaptiler_Address(t *testing.T) {
 	encoder := NewMaptiler(testMaptilerAPIKey)
 	testGeocodeAddress(t, encoder)

@@ -6,8 +6,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var testGeocodioAPIKey string
-
 // Geocodio only works in the US, so this international test is failing.
 func TestGeocodio_Address(t *testing.T) {
 	require.NotEmpty(t, testGeocodioAPIKey)

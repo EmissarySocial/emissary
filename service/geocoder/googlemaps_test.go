@@ -9,9 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// To test, put a real API key here
-var testGoogleMapsAPIKey string
-
 func TestGoogleMaps_Address(t *testing.T) {
 	encoder := NewGoogleMaps(testGoogleMapsAPIKey)
 	testGeocodeAddress(t, encoder)

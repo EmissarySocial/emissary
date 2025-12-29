@@ -6,9 +6,6 @@ import (
 	"testing"
 )
 
-var testHereAPIID string
-var testHereAPIKey string
-
 func TestHere_Address(t *testing.T) {
 	encoder := NewHere(testHereAPIID, testHereAPIKey)
 	testGeocodeAddress(t, encoder)

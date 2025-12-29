@@ -6,9 +6,6 @@ import (
 	"testing"
 )
 
-// To test, put a real API key here
-var testGeoapifyAPIKey string
-
 func TestGeoapify_Address(t *testing.T) {
 	encoder := NewGeoapify(testGeoapifyAPIKey)
 	testGeocodeAddress(t, encoder)
