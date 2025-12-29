@@ -377,7 +377,8 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@:userId/export/:collection", handler.WithOAuthUser(factory, handler.GetUserExportCollection))
 	e.GET("/@:userId/export/:collection/:recordId", handler.WithOAuthUser(factory, handler.GetUserExportDocument))
 	e.GET("/@:userId/export/emissary-stream/:streamId/attachments", handler.WithOAuthUserStream(factory, handler.GetAttachmentsExportCollection))
-	e.GET("/@:userId/export/emissary-stream/:streamId/attachments/:recordId", handler.WithOAuthUserStream(factory, handler.GetAttachmentsExportDocument))
+	e.GET("/@:userId/export/emissary-stream/:streamId/attachments/:attachmentId", handler.WithOAuthUserStream(factory, handler.GetAttachmentsExportDocument))
+	e.GET("/@:userId/export/emissary-stream/:streamId/attachments/:attachmentId/original", handler.WithOAuthUserStream(factory, handler.GetAttachmentsExportOriginal))
 
 	// ActivityPub Routes for Users
 	e.GET("/@:userId/pub", handler.WithUser(factory, handler.GetOutbox))

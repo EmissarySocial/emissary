@@ -1,6 +1,7 @@
 package model
 
 import (
+	"fmt"
 	"math"
 	"net/url"
 	"time"
@@ -466,23 +467,21 @@ func (stream Stream) GetWebhookData() mapof.Any {
 	}
 }
 
-func (stream *Stream) UpdateAttachmentURLs(remoteURL string, localURL string) bool {
+// UpdateAttachmentURLs updates values in the Stream that match the remoteURL to the localURL
+func (stream *Stream) UpdateAttachmentURLs(remoteURL string, localURL string) {
 
-	changed := false
-
+	// Replace matching values in the Data
 	for key := range stream.Data {
 		if value := stream.Data.GetString(key); value == remoteURL {
-			stream.Data.SetString(key, localURL)
-			changed = true
+			fmt.Println("- " + key + ":" + remoteURL + " match!!")
+			stream.Data[key] = localURL
 		}
 	}
 
+	// Replace matching values in IconURL
 	if stream.IconURL == remoteURL {
 		stream.IconURL = localURL
-		changed = true
 	}
-
-	return changed
 }
 
 // Update sets all values in this Stream to match the values in the provided Stream

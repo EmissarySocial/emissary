@@ -28,12 +28,17 @@ func (service *Attachment) Import(session data.Session, record *model.Import, im
 	// Get mapping IDs
 	remoteID = attachment.AttachmentID
 	remoteURL = attachment.URL
-	localID = primitive.NewObjectID()
+
+	attachment.AttachmentID = primitive.NewObjectID()
+	attachment.ObjectID = objectID // Use the new parent ID for this record
+	localID = attachment.AttachmentID
 	// localURL is calculated below
+
+	originalURL := importItem.ImportURL + "/attachments/" + remoteID.Hex() + "/original"
 
 	// Get the original file over HTTP
 	var buffer bytes.Buffer
-	txn := remote.Get(attachment.URL).
+	txn := remote.Get(originalURL).
 		With(options.BearerAuth(record.OAuthToken.AccessToken)).
 		Result(&buffer)
 
@@ -49,11 +54,6 @@ func (service *Attachment) Import(session data.Session, record *model.Import, im
 			primitive.NilObjectID, "",
 			derp.Wrap(err, location, "Umable to save original document")
 	}
-
-	// Map values from the original Attachment into the new, local Attachment
-	attachment.ObjectID = objectID    // Use the new parent ID for this record
-	attachment.AttachmentID = localID // Use the new localID for this record
-	attachment.URL = ""               // This will be recalculated on save
 
 	// Save the Attachment to the database
 	if err := service.Save(session, &attachment, "Imported"); err != nil {
@@ -79,7 +79,7 @@ func (service *Attachment) UndoImport(session data.Session, userID primitive.Obj
 
 	// Delete uploaded files from MediaServer
 	if err := service.mediaServer.Delete(attachmentID.Hex()); err != nil {
-		derp.Report(derp.Wrap(err, "service.Attachment", "Error deleting attached files", attachmentID))
+		derp.Report(derp.Wrap(err, "service.Attachment", "Unable to delete attached files", attachmentID))
 		// Fail loudly, but do not stop.
 	}
 

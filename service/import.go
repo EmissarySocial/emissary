@@ -453,7 +453,7 @@ func (service *Import) doUndo(session data.Session, record *model.Import) error 
  * Import Attachments
  ******************************************/
 
-func (service *Import) ImportAttachments(session data.Session, importRecord *model.Import, importItem *model.ImportItem, object model.AttachmentURLUpdater) error {
+func (service *Import) ImportAttachments(session data.Session, importRecord *model.Import, importItem *model.ImportItem, stream *model.Stream) error {
 
 	const location = "consumer.importItems_Attachments"
 
@@ -491,9 +491,9 @@ func (service *Import) ImportAttachments(session data.Session, importRecord *mod
 			return derp.Wrap(err, location, "Unable to import document", remoteID, remoteURL, localID, localURL)
 		}
 
-		// Update mappings IF this attachment is named in the containing object
-		object.UpdateAttachmentURLs(remoteURL, localURL)
-		object.UpdateAttachmentURLs(remoteID.Hex(), localID.Hex())
+		// Update mappings IF this attachment is named in the containing stream
+		stream.UpdateAttachmentURLs(remoteURL, localURL)
+		stream.UpdateAttachmentURLs(remoteID.Hex(), localID.Hex())
 	}
 
 	// Success

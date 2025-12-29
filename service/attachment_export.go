@@ -12,18 +12,20 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func (service *Attachment) ExportCollection(session data.Session, objectID primitive.ObjectID) ([]model.IDOnly, error) {
-	criteria := exp.Equal("objectType", model.AttachmentObjectTypeStream).AndEqual("objectId", objectID)
+// ExportCollection retrieves a list of Attachment IDs associated with a particular object
+func (service *Attachment) ExportCollection(session data.Session, objectType string, objectID primitive.ObjectID) ([]model.IDOnly, error) {
+	criteria := exp.Equal("objectType", objectType).AndEqual("objectId", objectID)
 	return service.QueryIDOnly(session, criteria, option.SortAsc("createDate"))
 }
 
-func (service *Attachment) ExportDocument(session data.Session, objectID primitive.ObjectID, attachmentID primitive.ObjectID) (string, error) {
+// ExportDocument retrieves a single Attachment as a JSON string
+func (service *Attachment) ExportDocument(session data.Session, objectType string, objectID primitive.ObjectID, attachmentID primitive.ObjectID) (string, error) {
 
 	const location = "service.Attachment.ExportDocument"
 
 	// Load the Attachment
-	attachment := model.NewAttachment("", primitive.NilObjectID)
-	if err := service.LoadByID(session, model.AttachmentObjectTypeStream, objectID, attachmentID, &attachment); err != nil {
+	attachment := model.NewAttachment(objectType, objectID)
+	if err := service.LoadByID(session, objectType, objectID, attachmentID, &attachment); err != nil {
 		return "", derp.Wrap(err, location, "Unable to load Attachment")
 	}
 
@@ -38,13 +40,13 @@ func (service *Attachment) ExportDocument(session data.Session, objectID primiti
 	return string(result), nil
 }
 
+// ExportOriginal serves the original file associated with the Attachment via HTTP
 func (service *Attachment) ExportOriginal(session data.Session, objectType string, objectID primitive.ObjectID, attachmentID primitive.ObjectID, request *http.Request, writer http.ResponseWriter) error {
 
 	const location = "service.Attachment.ExportOriginal"
 
-	// Load the Attachment from the database
+	// Load the Attachment
 	attachment := model.NewAttachment(objectType, objectID)
-
 	if err := service.LoadByID(session, objectType, objectID, attachmentID, &attachment); err != nil {
 		return derp.Wrap(err, location, "Unable to load Attachment", attachmentID)
 	}
@@ -54,6 +56,6 @@ func (service *Attachment) ExportOriginal(session data.Session, objectType strin
 		return derp.Wrap(err, location, "Unable to serve original file", attachment.AttachmentID)
 	}
 
-	// Sucksess
+	// This was harder than it looks.
 	return nil
 }

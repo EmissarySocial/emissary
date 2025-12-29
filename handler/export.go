@@ -116,15 +116,14 @@ func GetUserExportDocument(ctx *steranko.Context, factory *service.Factory, sess
 
 }
 
+// GetAttachmentsExportDocument returns an OrderedCollection of all
+// Attachments associated with the provided objectType and objectID.
 func GetAttachmentsExportCollection(ctx *steranko.Context, factory *service.Factory, session data.Session, oauthUserToken *model.OAuthUserToken, user *model.User, stream *model.Stream) error {
 
 	const location = "handler.GetAttachmentsExportCollection"
 
-	requestURL := fullURL(factory, ctx)
-
 	// Generate the export collection for this service
-	attachmentService := factory.Attachment()
-	records, err := attachmentService.ExportCollection(session, stream.StreamID)
+	records, err := factory.Attachment().ExportCollection(session, model.AttachmentObjectTypeStream, stream.StreamID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Unable to retrieve exportable attachments")
@@ -132,64 +131,62 @@ func GetAttachmentsExportCollection(ctx *steranko.Context, factory *service.Fact
 
 	// Return the result to the caller as a JSON-LD Collection
 	ctx.Response().Header().Set("Content-Type", "application/activity+json")
+	requestURL := fullURL(factory, ctx)
 	result := streams.NewOrderedCollection(requestURL)
 	result.TotalItems = len(records)
 	result.OrderedItems = slice.Map(records, func(recordID model.IDOnly) any {
 		return requestURL + "/" + recordID.ID.Hex()
 	})
 
+	// Return JSON
 	return ctx.JSON(http.StatusOK, result)
 }
 
+// GetAttachmentsExportDocument retrieves a single Attachment as a JSON string
 func GetAttachmentsExportDocument(ctx *steranko.Context, factory *service.Factory, session data.Session, oauthUserToken *model.OAuthUserToken, user *model.User, stream *model.Stream) error {
 
 	const location = "handler.GetAttachmentsExportDocument"
 
-	// Locate the service to use
-	attachmentService := factory.Attachment()
-
-	recordID, err := primitive.ObjectIDFromHex(ctx.Param("recordId"))
+	// Collect the AttachmentID from the URL
+	attachmentID, err := primitive.ObjectIDFromHex(ctx.Param("attachmentId"))
 
 	if err != nil {
-		return derp.Wrap(err, location, "Invalid RecordID", ctx.Param("recordId"))
+		return derp.Wrap(err, location, "AttachmentID must be a valid ObjectID", ctx.Param("attachmentId"))
 	}
 
 	// Generate the export collection for this service
-	record, err := attachmentService.ExportDocument(session, stream.StreamID, recordID)
+	attachmentService := factory.Attachment()
+	attachmentJSON, err := attachmentService.ExportDocument(session, model.AttachmentObjectTypeStream, stream.StreamID, attachmentID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Uable to retrieve exportable Attachment", recordID)
+		return derp.Wrap(err, location, "Uable to retrieve exportable Attachment", attachmentID)
 	}
 
 	// Return the result to the caller as a JSON-LD Collection
 	ctx.Response().Header().Set("Content-Type", "application/activity+json")
-	return ctx.String(http.StatusOK, record)
+	return ctx.String(http.StatusOK, attachmentJSON)
 }
 
+// GetAttachmentsExportOriginal serves the original file associated with the Attachment via HTTP
 func GetAttachmentsExportOriginal(ctx *steranko.Context, factory *service.Factory, session data.Session, oauthUserToken *model.OAuthUserToken, user *model.User, stream *model.Stream) error {
 
 	const location = "handler.GetAttachmentsExportDocument"
 
-	// Locate the service to use
+	// Collect the AttachmentID from the URL
+	attachmentID, err := primitive.ObjectIDFromHex(ctx.Param("attachmentId"))
+
+	if err != nil {
+		return derp.Wrap(err, location, "Import record ID must be a valid ObjectID", ctx.Param("attachmentId"))
+	}
+
+	// Serve the original file directly to the HTTP response writer
 	attachmentService := factory.Attachment()
-
-	recordID, err := primitive.ObjectIDFromHex(ctx.Param("recordId"))
-
-	if err != nil {
-		return derp.Wrap(err, location, "Invalid RecordID", ctx.Param("recordId"))
+	if err := attachmentService.ExportOriginal(session, model.AttachmentObjectTypeStream, stream.StreamID, attachmentID, ctx.Request(), ctx.Response().Writer); err != nil {
+		return derp.Wrap(err, location, "Uable to serve original file", attachmentID)
 	}
 
-	// Generate the export collection for this service
-	record, err := attachmentService.ExportDocument(session, stream.StreamID, recordID)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Uable to retrieve exportable Attachment", recordID)
-	}
-
-	// Return the result to the caller as a JSON-LD Collection
-	ctx.Response().Header().Set("Content-Type", "application/activity+json")
-	return ctx.String(http.StatusOK, record)
-
+	// Done.
+	return nil
 }
 
 // PostUserExportFinish is a part of the Data Portability process.  It initiates
@@ -200,14 +197,14 @@ func PostUserExportFinish(ctx *steranko.Context, factory *service.Factory, sessi
 
 	// RULE: Validate the UserID matches the authenticated user
 	if ctx.Param("userId") != user.UserID.Hex() {
-		return derp.Forbidden(location, "Cannot finish export for another user", "url userId: "+ctx.Param("userId"), "authenticated userId: "+user.UserID.Hex())
+		return derp.Forbidden(location, "Forbidden from finishing export for another user", "url userId: "+ctx.Param("userId"), "authenticated userId: "+user.UserID.Hex())
 	}
 
 	// Parse the OAuthUserTokenID
 	oauthUserTokenID, err := primitive.ObjectIDFromHex(ctx.QueryParam("oauthUserTokenId"))
 
 	if err != nil {
-		return derp.Wrap(err, location, "Invalid OAuthUserTokenID", ctx.Param("oauthUserTokenId"))
+		return derp.Wrap(err, location, "OAuthUserTokenID must be a valid ObjectID", ctx.Param("oauthUserTokenId"))
 	}
 
 	// Load the OAuthUserToken
