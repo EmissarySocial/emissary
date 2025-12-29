@@ -46,7 +46,7 @@ func (step StepViewFeed) Get(builder Builder, buffer io.Writer) PipelineBehavior
 		children, err := builder.factory().Stream().ListPublishedByParent(builder.session(), builder.objectID())
 
 		if err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Error querying child streams"))
+			return Halt().WithError(derp.Wrap(err, location, "Unable to query child streams"))
 		}
 
 		// Special case for JSONFeed
@@ -67,7 +67,7 @@ func (step StepViewFeed) Get(builder Builder, buffer io.Writer) PipelineBehavior
 			Slice()
 
 		if err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Error querying search queryResults"))
+			return Halt().WithError(derp.Wrap(err, location, "Unable to query search queryResults"))
 		}
 
 		result.Items = slice.Map(queryResults, convert.SearchResultToGorillaFeed)

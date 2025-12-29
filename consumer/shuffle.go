@@ -19,12 +19,12 @@ func Shuffle(factory *service.Factory, session data.Session, _ mapof.Any) queue.
 
 	// Shuffle all Stream records
 	if err := factory.Stream().Shuffle(session); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Error shuffling Stream records"))
+		return queue.Error(derp.Wrap(err, location, "Unable to shuffle Stream records"))
 	}
 
 	// Shuffle all SearchResult records
 	if err := factory.SearchResult().Shuffle(session); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Error shuffling SearchResult records"))
+		return queue.Error(derp.Wrap(err, location, "Unable to shuffle SearchResult records"))
 	}
 
 	return queue.Success()

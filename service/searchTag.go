@@ -273,7 +273,7 @@ func (service *SearchTag) FindAllowedTags(session data.Session, query string) ([
 	searchTags, err := service.Query(session, criteria, option.Fields("value"))
 
 	if err != nil {
-		return []string{}, derp.Wrap(err, location, "Error querying SearchTags", criteria)
+		return []string{}, derp.Wrap(err, location, "Unable to query SearchTags", criteria)
 	}
 
 	// Map the results into a single string value
@@ -311,7 +311,7 @@ func (service *SearchTag) NormalizeTags(session data.Session, tagNames ...string
 	dbTags, err := service.QueryByValue(session, tagValues, option.SortAsc("value"))
 
 	if err != nil {
-		return sliceof.NewString(), sliceof.NewString(), derp.Wrap(err, location, "Error querying existing tags")
+		return sliceof.NewString(), sliceof.NewString(), derp.Wrap(err, location, "Unable to query existing tags")
 	}
 
 	// Initialize Result values

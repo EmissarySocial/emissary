@@ -279,7 +279,7 @@ func (service *SearchResult) Shuffle(session data.Session) error {
 	collection := service.collection(session)
 
 	if err := queries.Shuffle(session.Context(), collection); err != nil {
-		return derp.Wrap(err, location, "Error shuffling SearchResults")
+		return derp.Wrap(err, location, "Unable to shuffle SearchResults")
 	}
 
 	return nil

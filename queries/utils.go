@@ -28,7 +28,7 @@ func pipeline(ctx context.Context, collection data.Collection, result any, pipel
 	cursor, err := mongo.Aggregate(ctx, pipeline, opts...)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error querying database")
+		return derp.Wrap(err, location, "Unable to query database")
 	}
 
 	// Execute the query.  Results returned in "result" pointer

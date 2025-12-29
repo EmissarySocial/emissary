@@ -504,7 +504,7 @@ func (service *User) QueryBlockedActors(session data.Session, userID primitive.O
 	rules, err := service.ruleService.QueryBlockedActors(session, userID)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Error querying rules")
+		return nil, derp.Wrap(err, location, "Unable to query rules")
 	}
 
 	// Extract the blocked userIDs
@@ -525,7 +525,7 @@ func (service *User) Shuffle(session data.Session) error {
 
 	collection := service.collection(session)
 	if err := queries.Shuffle(session.Context(), collection); err != nil {
-		return derp.Wrap(err, "service.User.Shuffle", "Error shuffling users")
+		return derp.Wrap(err, "service.User.Shuffle", "Unable to shuffle users")
 	}
 
 	return nil

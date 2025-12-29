@@ -40,7 +40,7 @@ func GetDomainBlocks(serverFactory *server.Factory) func(model.Authorization, tx
 		rules, err := ruleService.QueryByTypeDomain(session, auth.UserID, criteria, option.Fields("trigger"))
 
 		if err != nil {
-			return []string{}, toot.PageInfo{}, derp.Wrap(err, location, "Error querying database")
+			return []string{}, toot.PageInfo{}, derp.Wrap(err, location, "Unable to query database")
 		}
 
 		// Extract *just* the domain trigger...

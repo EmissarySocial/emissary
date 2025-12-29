@@ -281,7 +281,7 @@ func (service *Outbox) QueryByParentAndDate(session data.Session, actorType stri
 	result := make([]model.OutboxMessage, 0, maxRows)
 
 	if err := service.collection(session).Query(&result, criteria, options...); err != nil {
-		return nil, derp.Wrap(err, location, "Error querying outbox", actorID, maxDate)
+		return nil, derp.Wrap(err, location, "Unable to query outbox", actorID, maxDate)
 	}
 
 	return result, nil
@@ -309,7 +309,7 @@ func (service *Outbox) DeleteByParentID(session data.Session, actorType string, 
 	rangeFunc, err := service.RangeByParentID(session, actorType, actorID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error querying Outbox messages", actorType, actorID)
+		return derp.Wrap(err, location, "Unable to query Outbox messages", actorType, actorID)
 	}
 
 	for message := range rangeFunc {

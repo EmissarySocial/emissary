@@ -29,7 +29,7 @@ func GetMutes(serverFactory *server.Factory) func(model.Authorization, txn.GetMu
 			rules, err := ruleService.QueryActiveByUser(auth.UserID, model.RuleTypeActor)
 
 			if err != nil {
-				return nil, derp.Wrap(err, location, "Error querying rules")
+				return nil, derp.Wrap(err, location, "Unable to query rules")
 			}
 
 			return getSliceOfToots[model.Rule, object.Account](rules), getPageInfo(rules), nil

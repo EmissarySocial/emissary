@@ -38,7 +38,7 @@ func GetBlocks(serverFactory *server.Factory) func(model.Authorization, txn.GetB
 		users, err := userService.QueryBlockedActors(session, auth.UserID, queryExpression(t))
 
 		if err != nil {
-			return []object.Account{}, toot.PageInfo{}, derp.Wrap(err, location, "Error querying database")
+			return []object.Account{}, toot.PageInfo{}, derp.Wrap(err, location, "Unable to query database")
 		}
 
 		// Convert the results to a slice of objects

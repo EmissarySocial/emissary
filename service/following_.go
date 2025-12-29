@@ -525,7 +525,7 @@ func (service *Following) PurgeInbox(session data.Session, following model.Follo
 	messages, err := service.inboxService.RangePurgeable(session, &following)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error querying purgeable items", following)
+		return derp.Wrap(err, location, "Unable to query purgeable items", following)
 	}
 
 	// Purge each item that has expired

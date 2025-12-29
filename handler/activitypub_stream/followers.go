@@ -41,7 +41,7 @@ func GetFollowersCollection(ctx *steranko.Context, factory *service.Factory, ses
 	followers, err := followerService.QueryByParentAndDate(session, model.FollowerTypeStream, stream.StreamID, model.FollowerMethodActivityPub, publishedDate, pageSize)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error querying followers")
+		return derp.Wrap(err, location, "Unable to query followers")
 	}
 
 	ctx.Response().Header().Set("Content-Type", "application/activity+json")

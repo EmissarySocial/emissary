@@ -42,7 +42,7 @@ func GetLists(serverFactory *server.Factory) func(model.Authorization, txn.GetLi
 		folders, err := folderService.QueryByUserID(session, auth.UserID)
 
 		if err != nil {
-			return nil, derp.Wrap(err, location, "Error querying database")
+			return nil, derp.Wrap(err, location, "Unable to query database")
 		}
 
 		return getSliceOfToots(folders), nil
@@ -265,7 +265,7 @@ func GetList_Accounts(serverFactory *server.Factory) func(model.Authorization, t
 		followingSummaries, err := followingService.QueryByFolderAndExp(session, auth.UserID, folderID, criteria)
 
 		if err != nil {
-			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Error querying database")
+			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Unable to query database")
 		}
 
 		// Convert the results to a slice of objects

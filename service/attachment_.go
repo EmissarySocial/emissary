@@ -87,7 +87,7 @@ func (service *Attachment) Query(session data.Session, criteria exp.Expression, 
 	result := make([]model.Attachment, 0)
 
 	if err := service.collection(session).Query(&result, notDeleted(criteria), options...); err != nil {
-		return result, derp.Wrap(err, location, "Error querying Attachments", criteria, options)
+		return result, derp.Wrap(err, location, "Unable to query Attachments", criteria, options)
 	}
 
 	return result, nil

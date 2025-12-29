@@ -222,7 +222,7 @@ func GetAccount_Statuses(serverFactory *server.Factory) func(model.Authorization
 		streams, err := streamService.QueryByUser(session, user.UserID, queryExpression(t), option.MaxRows(t.Limit))
 
 		if err != nil {
-			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Error querying streams")
+			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Unable to query streams")
 		}
 
 		// TODO: HIGH: Work out how to set response headers here for additional pagination

@@ -229,7 +229,7 @@ func (service *Webhook) Send(getter model.WebhookDataGetter, events ...string) {
 			webhooks, err := service.QueryByEvent(session, event)
 
 			if err != nil {
-				derp.Report(derp.Wrap(err, location, "Error querying webhooks", event))
+				derp.Report(derp.Wrap(err, location, "Unable to query webhooks", event))
 				continue
 			}
 

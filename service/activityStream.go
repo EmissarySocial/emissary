@@ -313,7 +313,7 @@ func (service *ActivityStream) queryByRelation(ctx context.Context, relationType
 		documents, err := service.documentIterator(ctx, criteria, sortOption)
 
 		if err != nil {
-			derp.Report(derp.Wrap(err, location, "Error querying database"))
+			derp.Report(derp.Wrap(err, location, "Unable to query database"))
 			return
 		}
 

@@ -919,7 +919,7 @@ func (service *Stream) Shuffle(session data.Session) error {
 
 	collection := service.collection(session)
 	if err := queries.Shuffle(session.Context(), collection); err != nil {
-		return derp.Wrap(err, "service.Stream.Shuffle", "Error shuffling users")
+		return derp.Wrap(err, "service.Stream.Shuffle", "Unable to shuffle users")
 	}
 
 	return nil

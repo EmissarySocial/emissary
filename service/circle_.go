@@ -405,7 +405,7 @@ func (service *Circle) QueryByUserAsLookupCode(session data.Session, userID prim
 	// Query for all Circles owned by the user
 	circles, err := service.QueryByUser(session, userID, options...)
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Error querying Circles by User", userID)
+		return nil, derp.Wrap(err, location, "Unable to query Circles by User", userID)
 	}
 
 	// Convert the Circles to a slice of lookup codes
