@@ -39,7 +39,6 @@
 	transition:opacity, backdrop-filter;
 	transition-duration:240ms;
 	transition-timing-function: ease;
-	backdrop-filter:blur(0px);
 }
 
 #modal-window {
