@@ -37,7 +37,7 @@ func NewRule(factory Factory, session data.Session, request *http.Request, respo
 
 	// Verify that the user is a Domain Owner
 	if !common._authorization.DomainOwner {
-		return Rule{}, derp.ForbiddenError(location, "Must be domain owner to continue")
+		return Rule{}, derp.Forbidden(location, "Must be domain owner to continue")
 	}
 
 	// Return the Rule builder

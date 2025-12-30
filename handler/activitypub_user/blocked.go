@@ -21,7 +21,7 @@ func GetBlockedCollection(ctx *steranko.Context, factory *service.Factory, sessi
 
 	// RULE: Only public users can be queried
 	if !user.IsPublic {
-		return derp.NotFoundError(location, "User not found")
+		return derp.NotFound(location, "User not found")
 	}
 
 	publishDateString := ctx.QueryParam("publishDate")
@@ -64,12 +64,12 @@ func GetBlock(ctx *steranko.Context, factory *service.Factory, session data.Sess
 	ruleID, err := primitive.ObjectIDFromHex(ctx.Param("ruleId"))
 
 	if err != nil {
-		return derp.NotFoundError(location, "Invalid Rule ID", err)
+		return derp.NotFound(location, "Invalid Rule ID", err)
 	}
 
 	// RULE: Only public users can be queried
 	if !user.IsPublic {
-		return derp.NotFoundError(location, "User not found")
+		return derp.NotFound(location, "User not found")
 	}
 
 	// Try to load the Rule from the database

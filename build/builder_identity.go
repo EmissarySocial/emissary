@@ -44,12 +44,12 @@ func NewIdentity(factory Factory, session data.Session, request *http.Request, r
 
 	// RULE: The template must use the templateRole: "guest"
 	if template.TemplateRole != "guest" {
-		return Identity{}, derp.InternalError(location, "Identity template must use the TemplateRole `guest`", template.TemplateRole)
+		return Identity{}, derp.Internal(location, "Identity template must use the TemplateRole `guest`", template.TemplateRole)
 	}
 
 	// RULE: The template must use the model: "identity"
 	if template.Model != "Identity" {
-		return Identity{}, derp.InternalError(location, "Identity template must use the Model `identity`", template.Model)
+		return Identity{}, derp.Internal(location, "Identity template must use the Model `identity`", template.Model)
 	}
 
 	// Create a new CommonWithTemplate object, which will handle the common methods for this builder

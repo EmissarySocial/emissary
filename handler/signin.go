@@ -273,7 +273,7 @@ func PostResetCode(ctx *steranko.Context, factory *service.Factory, session data
 
 	// RULE: Ensure that passwords match
 	if txn.Password != txn.Password2 {
-		return derp.BadRequestError(location, "Passwords do not match")
+		return derp.BadRequest(location, "Passwords do not match")
 	}
 
 	// Try to load the user by userID and resetCode

@@ -96,8 +96,10 @@ func (service *Inbox) Range(session data.Session, criteria exp.Expression, optio
 // Load retrieves an Inbox from the database
 func (service *Inbox) Load(session data.Session, criteria exp.Expression, result *model.Message) error {
 
+	const location = "service.Inbox.Load"
+
 	if err := service.collection(session).Load(notDeleted(criteria), result); err != nil {
-		return derp.Wrap(err, "service.Inbox.Load", "Unable to load Inbox message", criteria)
+		return derp.Wrap(err, location, "Unable to load Inbox message", criteria)
 	}
 
 	return nil
@@ -225,18 +227,18 @@ func (service *Inbox) ObjectSave(session data.Session, object data.Object, note 
 	if message, ok := object.(*model.Message); ok {
 		return service.Save(session, message, note)
 	}
-	return derp.InternalError("service.Inbox.ObjectSave", "Invalid Object Type", object)
+	return derp.Internal("service.Inbox.ObjectSave", "Invalid Object Type", object)
 }
 
 func (service *Inbox) ObjectDelete(session data.Session, object data.Object, note string) error {
 	if message, ok := object.(*model.Message); ok {
 		return service.Delete(session, message, note)
 	}
-	return derp.InternalError("service.Inbox.ObjectDelete", "Invalid Object Type", object)
+	return derp.Internal("service.Inbox.ObjectDelete", "Invalid Object Type", object)
 }
 
 func (service *Inbox) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.UnauthorizedError("service.Inbox.ObjectUserCan", "Not Authorized")
+	return derp.Unauthorized("service.Inbox.ObjectUserCan", "Not Authorized")
 }
 
 func (service *Inbox) Schema() schema.Schema {
@@ -330,7 +332,7 @@ func (service *Inbox) LoadSibling(session data.Session, folderID primitive.Objec
 	}
 
 	// No results.  Shame! Shame!
-	return model.Message{}, derp.NotFoundError(location, "Sibling record not found")
+	return model.Message{}, derp.NotFound(location, "Sibling record not found")
 }
 
 func (service *Inbox) LoadOldestUnread(session data.Session, userID primitive.ObjectID, message *model.Message) error {
@@ -350,7 +352,7 @@ func (service *Inbox) LoadOldestUnread(session data.Session, userID primitive.Ob
 		return nil
 	}
 
-	return derp.NotFoundError(location, "No unread messages")
+	return derp.NotFound(location, "No unread messages")
 }
 
 func (service *Inbox) MarkReadByDate(session data.Session, userID primitive.ObjectID, rank int64) error {

@@ -28,7 +28,7 @@ func (step StepSetPrivileges) Get(builder Builder, buffer io.Writer) PipelineBeh
 	streamBuilder, isStreamBuilder := builder.(Stream)
 
 	if !isStreamBuilder {
-		return Halt().WithError(derp.BadRequestError(location, "Invalid builder type"))
+		return Halt().WithError(derp.BadRequest(location, "Invalid builder type"))
 	}
 
 	// Collect prerequisites
@@ -151,7 +151,7 @@ func (step StepSetPrivileges) Post(builder Builder, _ io.Writer) PipelineBehavio
 	// This step can only be used with a Stream builder
 	streamBuilder, isStreamBuilder := builder.(Stream)
 	if !isStreamBuilder {
-		return Halt().WithError(derp.BadRequestError(location, "Invalid builder type"))
+		return Halt().WithError(derp.BadRequest(location, "Invalid builder type"))
 	}
 
 	// Try to parse the form input
@@ -178,7 +178,7 @@ func (step StepSetPrivileges) Post(builder Builder, _ io.Writer) PipelineBehavio
 		property, role, _ := strings.Cut(key, ".")
 
 		if role == "" {
-			return Halt().WithError(derp.BadRequestError(location, "Role must not be empty", key, values))
+			return Halt().WithError(derp.BadRequest(location, "Role must not be empty", key, values))
 		}
 
 		switch property {
@@ -190,7 +190,7 @@ func (step StepSetPrivileges) Post(builder Builder, _ io.Writer) PipelineBehavio
 			stream.Products[role] = valueIDs
 
 		default:
-			return Halt().WithError(derp.BadRequestError(location, "Property must be 'circles' or 'products'", key, values))
+			return Halt().WithError(derp.BadRequest(location, "Property must be 'circles' or 'products'", key, values))
 		}
 	}
 

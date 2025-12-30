@@ -98,7 +98,7 @@ func PostPrivilegeDelete(ctx *steranko.Context, factory *service.Factory, sessio
 	const location = "handler.PostPrivilegeCancel"
 
 	if !privilege.IsRecurring() {
-		return derp.BadRequestError(location, "Privilege is not recurring", privilege.PrivilegeID)
+		return derp.BadRequest(location, "Privilege is not recurring", privilege.PrivilegeID)
 	}
 
 	// Cancel the privilege
@@ -146,7 +146,7 @@ func PostIdentitySignin(ctx *steranko.Context, factory *service.Factory, session
 	identifierType := identityService.GuessIdentifierType(identifier)
 
 	if identifierType == "" {
-		return derp.BadRequestError(location, "Unrecognized Identifier Type", identifierType)
+		return derp.BadRequest(location, "Unrecognized Identifier Type", identifierType)
 	}
 
 	// Create and send a guest signin code
@@ -190,7 +190,7 @@ func GetIdentitySigninWithJWT(ctx *steranko.Context, factory *service.Factory, s
 	}
 
 	if !token.Valid {
-		return derp.UnauthorizedError(location, "Invalid JWT Token")
+		return derp.Unauthorized(location, "Invalid JWT Token")
 	}
 
 	// Collect the identifier and identifier type from the JWT claims
@@ -215,7 +215,7 @@ func GetIdentitySigninWithJWT(ctx *steranko.Context, factory *service.Factory, s
 		identity, err := identityService.LoadOrCreate(session, "", identifierType, identifier)
 
 		if err != nil {
-			return derp.InternalError(location, "Unable to load/creating new Identity", identifier)
+			return derp.Internal(location, "Unable to load/creating new Identity", identifier)
 		}
 
 		// Update the Authorization with the (new?) IdentityID

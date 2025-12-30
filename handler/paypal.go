@@ -12,7 +12,7 @@ func GetPayPalConnect(ctx *steranko.Context, factory *service.Factory, user *mod
 
 	const location = "handler.GetPayPalConnect"
 
-	return derp.NotImplementedError(location, "PayPal Connect is not implemented")
+	return derp.NotImplemented(location, "PayPal Connect is not implemented")
 
 	/*
 		// Load the Connection from the database
@@ -106,7 +106,7 @@ func GetPayPalConnect(ctx *steranko.Context, factory *service.Factory, user *mod
 		}
 
 		if actionURL == "" {
-			return derp.InternalError(location, "PayPal referral action URL not found", result)
+			return derp.Internal(location, "PayPal referral action URL not found", result)
 		}
 
 		// Save the MerchantAccount
@@ -124,7 +124,7 @@ func PostPayPalWebhook(ctx *steranko.Context, factory *service.Factory) error {
 
 	const location = "handler.PostPayPalWebhook"
 
-	return derp.NotImplementedError(location, "PayPal webhook is not implemented")
+	return derp.NotImplemented(location, "PayPal webhook is not implemented")
 
 	/*
 
@@ -140,7 +140,7 @@ func PostPayPalWebhook(ctx *steranko.Context, factory *service.Factory) error {
 			return postPayPalWebhook_MerchantOnboardingCompleted(factory, event)
 		}
 
-		return derp.NotImplementedError(location, "PayPal webhook event not implemented", event)
+		return derp.NotImplemented(location, "PayPal webhook event not implemented", event)
 	*/
 }
 
@@ -149,7 +149,7 @@ func postPayPalWebhook_MerchantOnboardingCompleted(factory *service.Factory, eve
 
 	const location = "handler.PostPaypalWebhook_MerchantOnboardingCompleted"
 
-	return derp.NotImplementedError(location, "PayPal Merchant Onboarding Completed webhook is not implemented")
+	return derp.NotImplemented(location, "PayPal Merchant Onboarding Completed webhook is not implemented")
 
 		// Collect values from the webhook event
 		resource := event.GetMap("resource")

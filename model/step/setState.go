@@ -15,7 +15,7 @@ func NewSetState(stepInfo mapof.Any) (SetState, error) {
 	stateID := stepInfo.GetString("state")
 
 	if stateID == "" {
-		return SetState{}, derp.InternalError("build.step.SetState.NewSetState", "Missing required 'state' parameter")
+		return SetState{}, derp.Internal("build.step.SetState.NewSetState", "Missing required 'state' parameter")
 	}
 
 	return SetState{

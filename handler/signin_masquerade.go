@@ -16,7 +16,7 @@ func PostMasquerade(ctx *steranko.Context, factory *service.Factory, session dat
 	const location = "handler.PostMasquerade"
 
 	if !isOwner(ctx.Authorization()) {
-		return derp.ForbiddenError(location, "Unauthorized")
+		return derp.Forbidden(location, "Unauthorized")
 	}
 
 	// Collect the userID from the Request

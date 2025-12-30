@@ -228,18 +228,18 @@ func (service *Identity) ObjectSave(session data.Session, object data.Object, co
 	if identity, ok := object.(*model.Identity); ok {
 		return service.Save(session, identity, comment)
 	}
-	return derp.InternalError("service.Identity.ObjectSave", "Invalid Object Type", object)
+	return derp.Internal("service.Identity.ObjectSave", "Invalid Object Type", object)
 }
 
 func (service *Identity) ObjectDelete(session data.Session, object data.Object, comment string) error {
 	if identity, ok := object.(*model.Identity); ok {
 		return service.Delete(session, identity, comment)
 	}
-	return derp.InternalError("service.Identity.ObjectDelete", "Invalid Object Type", object)
+	return derp.Internal("service.Identity.ObjectDelete", "Invalid Object Type", object)
 }
 
 func (service *Identity) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.UnauthorizedError("service.Identity.ObjectUserCan", "Not Authorized")
+	return derp.Unauthorized("service.Identity.ObjectUserCan", "Not Authorized")
 }
 
 func (service *Identity) Schema() schema.Schema {
@@ -256,7 +256,7 @@ func (service *Identity) LoadByID(session data.Session, identityID primitive.Obj
 	const location = "service.Identity.LoadByID"
 
 	if identityID.IsZero() {
-		return derp.BadRequestError(location, "IdentityID cannot be empty", identityID)
+		return derp.BadRequest(location, "IdentityID cannot be empty", identityID)
 	}
 
 	criteria := exp.Equal("_id", identityID)
@@ -271,7 +271,7 @@ func (service *Identity) LoadByToken(session data.Session, token string, identit
 	identityID, err := primitive.ObjectIDFromHex(token)
 
 	if err != nil {
-		return derp.BadRequestError(location, "Invalid IdentityID", token)
+		return derp.BadRequest(location, "Invalid IdentityID", token)
 	}
 
 	return service.LoadByID(session, identityID, identity)
@@ -286,12 +286,12 @@ func (service *Identity) LoadOrCreate(session data.Session, name string, identif
 
 	// RULE: Identifier Type must be provided
 	if identifierType == "" {
-		return model.Identity{}, derp.InternalError(location, "Identifier type cannot be empty")
+		return model.Identity{}, derp.Internal(location, "Identifier type cannot be empty")
 	}
 
 	// RULE: Identifier Value must be provided
 	if identifierValue == "" {
-		return model.Identity{}, derp.InternalError(location, "Identifier value cannot be empty")
+		return model.Identity{}, derp.Internal(location, "Identifier value cannot be empty")
 	}
 
 	// Try to load the Identity using the provided identifier
@@ -310,7 +310,7 @@ func (service *Identity) LoadOrCreate(session data.Session, name string, identif
 
 	// Otherwise, populate the identifier into the Identity object
 	if ok := identity.SetIdentifier(identifierType, identifierValue); !ok {
-		return model.Identity{}, derp.BadRequestError(location, "Invalid Identifier Type", identifierType)
+		return model.Identity{}, derp.BadRequest(location, "Invalid Identifier Type", identifierType)
 	}
 
 	// Set a default name if the Identity doesn't already have one
@@ -341,7 +341,7 @@ func (service *Identity) LoadByIdentifier(session data.Session, identifierType s
 		return service.LoadByWebfingerUsername(session, identifierValue, identity)
 	}
 
-	return derp.InternalError("service.Identity.LoadByAddress", "Invalid Identity Type", identifierType)
+	return derp.Internal("service.Identity.LoadByAddress", "Invalid Identity Type", identifierType)
 }
 
 // LoadByEmail retrieves a single Identity from the database using the provided email address
@@ -472,7 +472,7 @@ func (service *Identity) SendGuestCode(session data.Session, identity *model.Ide
 	}
 
 	// Unrecognized identifier type
-	return derp.BadRequestError(location, "Unrecognized Identifier Type", identifierType)
+	return derp.BadRequest(location, "Unrecognized Identifier Type", identifierType)
 }
 
 // HasPermissions returns TRUE if the provided identifier has any of the required permissions
@@ -588,7 +588,7 @@ func (service *Identity) calcActivityPubActor(identity *model.Identity) error {
 	}
 
 	// uwuuwuwuuwuwuwuwuwuwuwuwuwuwuwuwuwu
-	return derp.BadRequestError(location, "WebFinger record does not include an ActivityPub address", identity.WebfingerUsername)
+	return derp.BadRequest(location, "WebFinger record does not include an ActivityPub address", identity.WebfingerUsername)
 }
 
 func (service *Identity) calcName(identity *model.Identity) error {

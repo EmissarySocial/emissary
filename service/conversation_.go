@@ -180,18 +180,18 @@ func (service *Conversation) ObjectSave(session data.Session, object data.Object
 	if conversation, ok := object.(*model.Conversation); ok {
 		return service.Save(session, conversation, note)
 	}
-	return derp.InternalError("service.Conversation.ObjectSave", "Invalid object type", object)
+	return derp.Internal("service.Conversation.ObjectSave", "Invalid object type", object)
 }
 
 func (service *Conversation) ObjectDelete(session data.Session, object data.Object, note string) error {
 	if conversation, ok := object.(*model.Conversation); ok {
 		return service.Delete(session, conversation, note)
 	}
-	return derp.InternalError("service.Conversation.ObjectDelete", "Invalid object type", object)
+	return derp.Internal("service.Conversation.ObjectDelete", "Invalid object type", object)
 }
 
 func (service *Conversation) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.UnauthorizedError("service.Conversation", "Not Authorized")
+	return derp.Unauthorized("service.Conversation", "Not Authorized")
 }
 
 // Schema returns the validating schema for all Conversation records

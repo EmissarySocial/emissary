@@ -29,7 +29,7 @@ func GetOEmbed(ctx *steranko.Context, factory *service.Factory, session data.Ses
 
 	// Verify that the URL is on this domain
 	if parsedToken.Host != factory.Hostname() {
-		return derp.NotFoundError(location, "Invalid URL", "URL does not match domain")
+		return derp.NotFound(location, "Invalid URL", "URL does not match domain")
 	}
 
 	// Load the OEmbed result

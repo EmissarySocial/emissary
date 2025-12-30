@@ -15,7 +15,7 @@ func (service *MerchantAccount) stripe_getRestrictedKey(merchantAccount *model.M
 	const location = "service.MerchantAccount.stripe_getRestrictedKey"
 
 	if merchantAccount == nil {
-		return "", derp.InternalError(location, "MerchantAccount cannot be nil")
+		return "", derp.Internal(location, "MerchantAccount cannot be nil")
 	}
 
 	apiKeys, err := service.DecryptVault(merchantAccount, "restrictedKey")

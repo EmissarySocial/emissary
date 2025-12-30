@@ -37,7 +37,7 @@ func populateBundle(bundleID string, bundle *model.Bundle, filesystem fs.FS) err
 
 	// NILCHECK: Bundle cannot be nil
 	if bundle == nil {
-		return derp.InternalError(location, "Bundle cannot be nil. This should never happen.", bundleID)
+		return derp.Internal(location, "Bundle cannot be nil. This should never happen.", bundleID)
 	}
 
 	// RULE: Default Caching value to public / 1 hour
@@ -102,7 +102,7 @@ func minifyContent(contentType string, content *bytes.Buffer) ([]byte, error) {
 
 	// NILCHECK: Content cannot be nil
 	if content == nil {
-		return nil, derp.InternalError(location, "Content cannot be nil. This should never happen.")
+		return nil, derp.Internal(location, "Content cannot be nil. This should never happen.")
 	}
 
 	switch contentType {

@@ -14,7 +14,7 @@ func (service *MerchantAccount) paypal_getServerAddress(merchantAccount *model.M
 func (service *MerchantAccount) paypal_processWebhook(header http.Header, body []byte, merchantAccount *model.MerchantAccount) error {
 
 	const location = "service.MerchantAccount.paypal_processWebhook"
-	return derp.NotImplementedError(location)
+	return derp.NotImplemented(location)
 }
 
 // paypal_refreshMerchantAccount connects/refreshes the PayPal merchant account data
@@ -22,7 +22,7 @@ func (service *MerchantAccount) paypal_refreshMerchantAccount(merchantAccount *m
 
 	const location = "service.MerchantAccount.paypal_refreshMerchantAccount"
 
-	return derp.BadRequestError(location, "PayPal is not implemented")
+	return derp.BadRequest(location, "PayPal is not implemented")
 
 		// RULE: Vault MUST have clientId to proceed.  Otherwise,
 		// this MMerchantAccount is not fully configured yet.
@@ -86,7 +86,7 @@ func (service *MerchantAccount) paypal_getProducts(merchantAccount *model.Mercha
 
 	const location = "service.MerchantAccount.paypal_getProducts"
 
-	return nil, derp.NotImplementedError(location, "service.MerchantAccount.paypal_getProducts is not implemented")
+	return nil, derp.NotImplemented(location, "service.MerchantAccount.paypal_getProducts is not implemented")
 
 		// Load the PayPal connection
 		connection := model.NewConnection()
@@ -117,7 +117,7 @@ func (service *MerchantAccount) paypal_getCheckoutURL(merchantAccount *model.Mer
 
 	const location = "service.MerchantAccount.paypal_getCheckoutURL"
 
-	return "", derp.NotImplementedError(location, "PayPal is not implemented")
+	return "", derp.NotImplemented(location, "PayPal is not implemented")
 
 		// Get API Keys from the vault
 		apiKeys, err := service.DecryptVault(merchantAccount, "accessToken")
@@ -143,6 +143,6 @@ func (service *MerchantAccount) paypal_getCheckoutURL(merchantAccount *model.Mer
 }
 
 func (service *MerchantAccount) paypal_getPrivilegeFromCheckoutResponse(queryParams url.Values, merchantAccount *model.MerchantAccount) (model.Privilege, error) {
-	return model.Privilege{}, derp.NotImplementedError("service.MerchantAccount.paypal_getIdentityFromCheckoutResponse")
+	return model.Privilege{}, derp.NotImplemented("service.MerchantAccount.paypal_getIdentityFromCheckoutResponse")
 }
 */

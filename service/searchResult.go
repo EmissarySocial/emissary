@@ -105,7 +105,7 @@ func (service *SearchResult) Save(session data.Session, searchResult *model.Sear
 
 	// RULE: Do not save empty SearchResults
 	if searchResult.SearchResultID.IsZero() {
-		return derp.InternalError(location, "SearchResultID is required", searchResult)
+		return derp.Internal(location, "SearchResultID is required", searchResult)
 	}
 
 	// RULE: If unassigned, shuffle the searchResult after the first trillion other results (will reset in 1 hour)

@@ -84,7 +84,7 @@ func (filesystem *Filesystem) GetFS(folder mapof.String) (fs.FS, error) {
 	}
 
 	// Otherwise, fail.  Unrecognized filesystem type
-	return nil, derp.InternalError(location, "Unsupported filesystem adapter", folder)
+	return nil, derp.Internal(location, "Unsupported filesystem adapter", folder)
 }
 
 // GetFSs returns multiple fs.FS filesystems
@@ -158,7 +158,7 @@ func (filesystem *Filesystem) GetAfero(folder mapof.String) (afero.Fs, error) {
 	// * Azure?
 	// * etc...
 
-	return nil, derp.InternalError("service.filesystem.GetAfero", "Unsupported filesystem adapter", folder)
+	return nil, derp.Internal("service.filesystem.GetAfero", "Unsupported filesystem adapter", folder)
 }
 
 // GetAferos returns multiple afero filesystems

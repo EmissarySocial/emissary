@@ -24,13 +24,13 @@ func init() {
 		}
 
 		if userID != context.user.UserID {
-			return derp.InternalError(location, "Invalid User ID", userID, context.user.UserID)
+			return derp.Internal(location, "Invalid User ID", userID, context.user.UserID)
 		}
 
 		// RULE: Do not allow new "Follows" of any blocked Actors
 		ruleFilter := context.factory.Rule().Filter(context.user.UserID, service.WithBlocksOnly()) // nolint:scopeguard
 		if ruleFilter.Disallow(context.session, &activity) {
-			return derp.ForbiddenError(location, "Blocked by rule", activity.Object().ID())
+			return derp.Forbidden(location, "Blocked by rule", activity.Object().ID())
 		}
 
 		// Try to look up the complete actor record from the activity

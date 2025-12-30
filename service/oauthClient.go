@@ -218,7 +218,7 @@ func (service *OAuthClient) ValidateClientSecret(session data.Session, clientID 
 
 	// Confirm the client.Secret
 	if client.ClientSecret != clientSecret {
-		return derp.BadRequestError(location, "Invalid client_secret")
+		return derp.BadRequest(location, "Invalid client_secret")
 	}
 
 	// Success!

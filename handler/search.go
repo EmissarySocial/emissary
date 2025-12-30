@@ -90,11 +90,11 @@ func PostSearchLookup(ctx *steranko.Context, factory *service.Factory, session d
 	referer := ctx.Request().Header.Get("referer")
 
 	if referer == "" {
-		return derp.ForbiddenError(location, "No referer", referer)
+		return derp.Forbidden(location, "No referer", referer)
 	}
 
 	if dt.NameOnly(referer) != factory.Hostname() {
-		return derp.ForbiddenError(location, "Invalid referer", referer)
+		return derp.Forbidden(location, "Invalid referer", referer)
 	}
 
 	// Load the Stream from the database

@@ -22,7 +22,7 @@ func GetOutboxCollection(ctx *steranko.Context, factory *service.Factory, sessio
 
 	// RULE: Only public users can be queried
 	if !user.IsPublic {
-		return derp.NotFoundError(location, "User not found")
+		return derp.NotFound(location, "User not found")
 	}
 
 	// If the request is for the collection itself, then return a summary and the URL of the first page
@@ -62,7 +62,7 @@ func GetOutboxActivity(ctx *steranko.Context, factory *service.Factory, session 
 
 	// RULE: Only public users can be queried
 	if !user.IsPublic {
-		return derp.NotFoundError(location, "User not found")
+		return derp.NotFound(location, "User not found")
 	}
 
 	// Get the OutboxMessageID from the context
@@ -115,7 +115,7 @@ func PostOutbox(ctx *steranko.Context, factory *service.Factory, session data.Se
 
 	// RULE: The actor must match the authenticated user
 	if activity.Actor().ID() != context.user.ActivityPubURL() {
-		return derp.ForbiddenError(
+		return derp.Forbidden(
 			location,
 			"Actor must match authenticated user",
 			"actor: "+activity.Actor().ID(),

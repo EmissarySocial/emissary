@@ -83,7 +83,7 @@ func (service *Connection) Save(session data.Session, connection *model.Connecti
 	provider, isValidProvider := service.providerService.GetProvider(connection.ProviderID)
 
 	if !isValidProvider {
-		return derp.InternalError(location, "Invalid Provider", connection.ProviderID)
+		return derp.Internal(location, "Invalid Provider", connection.ProviderID)
 	}
 
 	// Decode the EncryptionKey
@@ -183,18 +183,18 @@ func (service *Connection) ObjectSave(session data.Session, object data.Object, 
 	if group, ok := object.(*model.Connection); ok {
 		return service.Save(session, group, comment)
 	}
-	return derp.InternalError("service.Connection.ObjectSave", "Invalid Object Type", object)
+	return derp.Internal("service.Connection.ObjectSave", "Invalid Object Type", object)
 }
 
 func (service *Connection) ObjectDelete(session data.Session, object data.Object, comment string) error {
 	if group, ok := object.(*model.Connection); ok {
 		return service.Delete(session, group, comment)
 	}
-	return derp.InternalError("service.Connection.ObjectDelete", "Invalid Object Type", object)
+	return derp.Internal("service.Connection.ObjectDelete", "Invalid Object Type", object)
 }
 
 func (service *Connection) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.UnauthorizedError("service.Connection", "Not Authorized")
+	return derp.Unauthorized("service.Connection", "Not Authorized")
 }
 
 func (service *Connection) Schema() schema.Schema {
@@ -215,7 +215,7 @@ func (service *Connection) QueryActiveByType(session data.Session, typeID string
 
 	// RULE: typeID must not be empty
 	if typeID == "" {
-		return nil, derp.InternalError(location, "Invalid Type ID", typeID)
+		return nil, derp.Internal(location, "Invalid Type ID", typeID)
 	}
 
 	return service.Query(session, exp.Equal("type", typeID).AndEqual("active", true), options...)
@@ -239,7 +239,7 @@ func (service *Connection) LoadByID(session data.Session, connectionID primitive
 
 	// RULE: connectionID must not be empty
 	if connectionID.IsZero() {
-		return derp.InternalError(location, "Invalid Connection ID", connectionID)
+		return derp.Internal(location, "Invalid Connection ID", connectionID)
 	}
 
 	criteria := exp.Equal("_id", connectionID)
@@ -272,7 +272,7 @@ func (service *Connection) LoadActiveByType(session data.Session, typeID string,
 
 	// RULE: typeID must not be empty
 	if typeID == "" {
-		return derp.InternalError(location, "Invalid Type ID", typeID)
+		return derp.Internal(location, "Invalid Type ID", typeID)
 	}
 
 	criteria := exp.Equal("type", typeID).AndEqual("active", true)
@@ -291,7 +291,7 @@ func (service *Connection) LoadByProvider(session data.Session, providerID strin
 
 	// RULE: providerID must not be empty
 	if providerID == "" {
-		return derp.InternalError(location, "Invalid Provider ID", providerID)
+		return derp.Internal(location, "Invalid Provider ID", providerID)
 	}
 
 	criteria := exp.Equal("providerId", providerID)
@@ -310,7 +310,7 @@ func (service *Connection) LoadOrCreateByProvider(session data.Session, provider
 
 	// RULE: providerID must not be empty
 	if providerID == "" {
-		return model.Connection{}, derp.InternalError(location, "Invalid Provider ID", providerID)
+		return model.Connection{}, derp.Internal(location, "Invalid Provider ID", providerID)
 	}
 
 	result := model.NewConnection()
@@ -335,7 +335,7 @@ func (service *Connection) DecryptVault(connection *model.Connection, values ...
 
 	// RULE: connection must not be nil
 	if connection == nil {
-		return nil, derp.InternalError(location, "Connection is nil")
+		return nil, derp.Internal(location, "Connection is nil")
 	}
 
 	// Decode the EncryptionKey
@@ -361,17 +361,17 @@ func (service *Connection) GetAccessToken(connection *model.Connection) (oauth2.
 
 	// NILCHECK: service cannot be nil
 	if service == nil {
-		return oauth2.Token{}, derp.InternalError(location, "Service cannot be nil")
+		return oauth2.Token{}, derp.Internal(location, "Service cannot be nil")
 	}
 
 	// NILCHECK: connection cannot not be nil
 	if connection == nil {
-		return oauth2.Token{}, derp.InternalError(location, "Connection cannot be nil")
+		return oauth2.Token{}, derp.Internal(location, "Connection cannot be nil")
 	}
 
 	// NILCHECK: connection.Token cannot be nil
 	if connection.Token == nil {
-		return oauth2.Token{}, derp.InternalError(location, "Connection.Token cannot be nil", connection.ConnectionID)
+		return oauth2.Token{}, derp.Internal(location, "Connection.Token cannot be nil", connection.ConnectionID)
 	}
 
 	// If the token is valid, then return it immediately
@@ -385,7 +385,7 @@ func (service *Connection) GetAccessToken(connection *model.Connection) (oauth2.
 	provider, isValidProvider := service.providerService.GetProvider(connection.ProviderID)
 
 	if !isValidProvider {
-		return oauth2.Token{}, derp.InternalError(location, "Invalid Provider", connection.ProviderID)
+		return oauth2.Token{}, derp.Internal(location, "Invalid Provider", connection.ProviderID)
 	}
 
 	// Decrypt the vault (access keys will be in here)

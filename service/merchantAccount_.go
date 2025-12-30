@@ -205,18 +205,18 @@ func (service *MerchantAccount) ObjectSave(session data.Session, object data.Obj
 	if merchantAccount, ok := object.(*model.MerchantAccount); ok {
 		return service.Save(session, merchantAccount, comment)
 	}
-	return derp.InternalError("service.MerchantAccount.ObjectSave", "Invalid Object Type", object)
+	return derp.Internal("service.MerchantAccount.ObjectSave", "Invalid Object Type", object)
 }
 
 func (service *MerchantAccount) ObjectDelete(session data.Session, object data.Object, comment string) error {
 	if merchantAccount, ok := object.(*model.MerchantAccount); ok {
 		return service.Delete(session, merchantAccount, comment)
 	}
-	return derp.InternalError("service.MerchantAccount.ObjectDelete", "Invalid Object Type", object)
+	return derp.Internal("service.MerchantAccount.ObjectDelete", "Invalid Object Type", object)
 }
 
 func (service *MerchantAccount) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.UnauthorizedError("service.MerchantAccount.ObjectUserCan", "Not Authorized")
+	return derp.Unauthorized("service.MerchantAccount.ObjectUserCan", "Not Authorized")
 }
 
 func (service *MerchantAccount) Schema() schema.Schema {
@@ -260,7 +260,7 @@ func (service *MerchantAccount) QueryByUser(session data.Session, userID primiti
 
 	// RULE: Require a valid UserID
 	if userID.IsZero() {
-		return nil, derp.ValidationError("UserID cannot be zero")
+		return nil, derp.Validation("UserID cannot be zero")
 	}
 
 	criteria := exp.Equal("userId", userID)
@@ -279,7 +279,7 @@ func (service *MerchantAccount) LoadByID(session data.Session, merchantAccountID
 
 	// RULE: Require a valid MerchantAccountID
 	if merchantAccountID.IsZero() {
-		return derp.ValidationError("MerchantAccountID cannot be zero")
+		return derp.Validation("MerchantAccountID cannot be zero")
 	}
 
 	criteria := exp.Equal("_id", merchantAccountID)
@@ -290,12 +290,12 @@ func (service *MerchantAccount) LoadByUserAndID(session data.Session, userID pri
 
 	// RULE: Require a valid UserID
 	if userID.IsZero() {
-		return derp.ValidationError("UserID cannot be zero")
+		return derp.Validation("UserID cannot be zero")
 	}
 
 	// RULE: Require a valid MerchantAccountID
 	if merchantAccountID.IsZero() {
-		return derp.ValidationError("MerchantAccountID cannot be zero")
+		return derp.Validation("MerchantAccountID cannot be zero")
 	}
 
 	criteria := exp.Equal("_id", merchantAccountID).AndEqual("userId", userID)
@@ -308,7 +308,7 @@ func (service *MerchantAccount) LoadByToken(session data.Session, token string, 
 
 	// RULE: Require a valid Token
 	if token == "" {
-		return derp.ValidationError("Token cannot be empty")
+		return derp.Validation("Token cannot be empty")
 	}
 
 	merchantAccountID, err := primitive.ObjectIDFromHex(token)
@@ -326,12 +326,12 @@ func (service *MerchantAccount) LoadByUserAndToken(session data.Session, userID 
 
 	// RULE: Require a valid UserID
 	if userID.IsZero() {
-		return derp.ValidationError("UserID cannot be zero")
+		return derp.Validation("UserID cannot be zero")
 	}
 
 	// RULE: Require a valid Token
 	if token == "" {
-		return derp.ValidationError("Token cannot be empty")
+		return derp.Validation("Token cannot be empty")
 	}
 
 	merchantAccountID, err := primitive.ObjectIDFromHex(token)
@@ -423,7 +423,7 @@ func (service *MerchantAccount) GetCheckoutURL(merchantAccount *model.MerchantAc
 		return service.stripe_getCheckoutURL(merchantAccount, product, returnURL)
 	}
 
-	return "", derp.BadRequestError("service.MerchantAccount.GetCheckoutURL", "Invalid MerchantAccount Type", merchantAccount.Type)
+	return "", derp.BadRequest("service.MerchantAccount.GetCheckoutURL", "Invalid MerchantAccount Type", merchantAccount.Type)
 }
 
 func (service *MerchantAccount) ParseCheckoutResponse(session data.Session, merchantAccount *model.MerchantAccount, product *model.Product, transactionID string, queryParams url.Values) (model.Privilege, error) {
@@ -445,7 +445,7 @@ func (service *MerchantAccount) ParseCheckoutResponse(session data.Session, merc
 		getter = service.stripe_getPrivilegeFromCheckoutResponse
 
 	default:
-		return model.Privilege{}, derp.BadRequestError(location, "MerchantAccount must be PAYPAL or STRIPE", merchantAccount.Type)
+		return model.Privilege{}, derp.BadRequest(location, "MerchantAccount must be PAYPAL or STRIPE", merchantAccount.Type)
 	}
 
 	// Retrieve the Privilege record from the checkout response
@@ -480,7 +480,7 @@ func (service *MerchantAccount) Connect(merchantAccount *model.MerchantAccount) 
 		return service.stripeConnect_Connect(merchantAccount)
 	}
 
-	return derp.InternalError("service.MerchantAccount.RefreshMerchantAccount", "Invalid MerchantAccount Type", merchantAccount.Type)
+	return derp.Internal("service.MerchantAccount.RefreshMerchantAccount", "Invalid MerchantAccount Type", merchantAccount.Type)
 
 }
 
@@ -491,7 +491,7 @@ func (service *MerchantAccount) RemoteProductsByUser(session data.Session, userI
 
 	// RULE: Require a valid UserID
 	if userID.IsZero() {
-		return nil, nil, derp.ValidationError("UserID cannot be zero")
+		return nil, nil, derp.Validation("UserID cannot be zero")
 	}
 
 	// Get all MerchantAccounts for this User
@@ -538,7 +538,7 @@ func (service *MerchantAccount) getRemoteProducts(merchantAccount *model.Merchan
 	}
 
 	// If we get here, the merchant account type is not supported
-	return nil, derp.InternalError(location, "Invalid MerchantAccount Type", merchantAccount.Type)
+	return nil, derp.Internal(location, "Invalid MerchantAccount Type", merchantAccount.Type)
 }
 
 func (service *MerchantAccount) CancelPrivilege(session data.Session, privilege *model.Privilege) error {
@@ -559,5 +559,5 @@ func (service *MerchantAccount) CancelPrivilege(session data.Session, privilege 
 		return service.stripe_CancelPrivilege(&merchantAccount, privilege)
 	}
 
-	return derp.InternalError(location, "Invalid MerchantAccount Type", merchantAccount.Type)
+	return derp.Internal(location, "Invalid MerchantAccount Type", merchantAccount.Type)
 }

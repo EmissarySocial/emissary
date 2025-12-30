@@ -193,7 +193,7 @@ func (w Settings) Stream(token string) (model.Stream, error) {
 
 	// RULE: Stream must be owned by the current user
 	if stream.AttributedTo.UserID != w._user.UserID {
-		return model.Stream{}, derp.UnauthorizedError("build.Settings.Stream", "You do not have permission to view this stream")
+		return model.Stream{}, derp.Unauthorized("build.Settings.Stream", "You do not have permission to view this stream")
 	}
 
 	// uWu
@@ -260,7 +260,7 @@ func (w Settings) FollowingByFolder(token string) ([]model.FollowingSummary, err
 	userID := w.AuthenticatedID()
 
 	if userID.IsZero() {
-		return nil, derp.UnauthorizedError("build.Settings.FollowingByFolder", "Must be signed in to view following")
+		return nil, derp.Unauthorized("build.Settings.FollowingByFolder", "Must be signed in to view following")
 	}
 
 	// Get the followingID from the token
@@ -454,7 +454,7 @@ func (w Settings) SubBuilder(object any) (Builder, error) {
 		result, err = NewStream(w._factory, w._session, w._request, w._response, w._template, &typed, w._actionID)
 
 	default:
-		result, err = nil, derp.InternalError("build.Common.SubBuilder", "Invalid object type", object)
+		result, err = nil, derp.Internal("build.Common.SubBuilder", "Invalid object type", object)
 	}
 
 	if err != nil {

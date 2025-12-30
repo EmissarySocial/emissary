@@ -14,7 +14,7 @@ func MessageMarkRead(inboxCollection data.Collection, userID primitive.ObjectID,
 	mongo := mongoCollection(inboxCollection)
 
 	if mongo == nil {
-		return derp.InternalError("queries.MessageMarkRead", "Database must be MongoDB")
+		return derp.Internal("queries.MessageMarkRead", "Database must be MongoDB")
 	}
 
 	criteria := bson.M{

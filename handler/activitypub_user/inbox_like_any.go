@@ -31,7 +31,7 @@ func receiveLikeOrAnnounce(context Context, activity streams.Document) error {
 	actorID := activity.Actor().ID()
 
 	if actorID == "" {
-		return derp.BadRequestError(location, "Activity must have an ActorID", activity.Value())
+		return derp.BadRequest(location, "Activity must have an ActorID", activity.Value())
 	}
 
 	// Verify that this message comes from an actor that we're "Following"

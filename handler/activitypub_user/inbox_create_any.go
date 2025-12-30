@@ -31,7 +31,7 @@ func receive_CreateOrUpdate(context Context, activity streams.Document) error {
 	actorID := activity.Actor().ID()
 
 	if actorID == "" {
-		return derp.BadRequestError(location, "Activity must have an ActorID", activity.Value())
+		return derp.BadRequest(location, "Activity must have an ActorID", activity.Value())
 	}
 
 	// Load the actual document into the ActivityStream cache

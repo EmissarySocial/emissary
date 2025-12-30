@@ -28,7 +28,7 @@ func NewViewAttachment(stepInfo mapof.Any) (ViewAttachment, error) {
 	formats := stepInfo.GetSliceOfString("format")
 
 	if len(formats) == 0 {
-		return ViewAttachment{}, derp.InternalError(location, "At least one format is required")
+		return ViewAttachment{}, derp.Internal(location, "At least one format is required")
 	}
 
 	// Compile the metadata pipeline

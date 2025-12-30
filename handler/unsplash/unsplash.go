@@ -37,21 +37,21 @@ func GetPhoto(ctx *steranko.Context, factory *service.Factory, session data.Sess
 	applicationName := unsplash.Data.GetString("applicationName")
 
 	if applicationName == "" {
-		return derp.NotFoundError(location, "Unsplash API ApplicationName cannot be empty", nil)
+		return derp.NotFound(location, "Unsplash API ApplicationName cannot be empty", nil)
 	}
 
 	// Collect AccessKey
 	accessKey := unsplash.Data.GetString("accessKey")
 
 	if accessKey == "" {
-		return derp.NotFoundError(location, "Unsplash API AccessKey cannot be empty", nil)
+		return derp.NotFound(location, "Unsplash API AccessKey cannot be empty", nil)
 	}
 
 	// Collect Photo ID
 	photoID := ctx.Param("photo")
 
 	if photoID == "" {
-		return derp.BadRequestError(location, "Photo ID is required", nil)
+		return derp.BadRequest(location, "Photo ID is required", nil)
 	}
 
 	asJSON := false
@@ -95,19 +95,19 @@ func GetCollectionRandom(ctx *steranko.Context, factory *service.Factory, sessio
 	applicationName := unsplash.Data.GetString("applicationName")
 
 	if applicationName == "" {
-		return derp.NotFoundError(location, "Unsplash API ApplicationName cannot be empty", nil)
+		return derp.NotFound(location, "Unsplash API ApplicationName cannot be empty", nil)
 	}
 
 	accessKey := unsplash.Data.GetString("accessKey")
 
 	if accessKey == "" {
-		return derp.NotFoundError(location, "Unsplash API AccessKey cannot be empty", nil)
+		return derp.NotFound(location, "Unsplash API AccessKey cannot be empty", nil)
 	}
 
 	collectionID := ctx.Param("collection")
 
 	if collectionID == "" {
-		return derp.BadRequestError(location, "Photo ID is required", nil)
+		return derp.BadRequest(location, "Photo ID is required", nil)
 	}
 
 	// Get the first 64 photos from the collection
@@ -122,7 +122,7 @@ func GetCollectionRandom(ctx *steranko.Context, factory *service.Factory, sessio
 	}
 
 	if len(photos) == 0 {
-		return derp.NotFoundError(location, "Collection is empty", collectionID)
+		return derp.NotFound(location, "Collection is empty", collectionID)
 	}
 
 	// Select a random photo from the collection

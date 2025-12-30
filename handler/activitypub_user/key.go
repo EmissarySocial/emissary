@@ -17,7 +17,7 @@ func GetPublicKey(ctx *steranko.Context, factory *service.Factory, session data.
 
 	// RULE: Only public users can be queried
 	if !user.IsPublic {
-		return derp.NotFoundError(location, "")
+		return derp.NotFound(location, "")
 	}
 
 	// Try to load the key from the Datbase

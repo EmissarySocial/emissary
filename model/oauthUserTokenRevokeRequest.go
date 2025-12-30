@@ -21,11 +21,11 @@ func (req *OAuthUserTokenRevokeRequest) Validate(app OAuthClient) error {
 	const location = "model.OAuthUserTokenRevokeRequest.Validate"
 
 	if req.ClientID != app.ClientID.Hex() {
-		return derp.BadRequestError(location, "Invalid client_iD")
+		return derp.BadRequest(location, "Invalid client_iD")
 	}
 
 	if req.ClientSecret != app.ClientSecret {
-		return derp.BadRequestError(location, "Invalid client_secret")
+		return derp.BadRequest(location, "Invalid client_secret")
 	}
 
 	return nil

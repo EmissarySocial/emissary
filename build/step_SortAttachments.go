@@ -30,7 +30,7 @@ func (step StepSortAttachments) Post(builder Builder, _ io.Writer) PipelineBehav
 	transaction, err := formdata.Parse(builder.request())
 
 	if err != nil {
-		return Halt().WithError(derp.BadRequestError(location, "Error binding body"))
+		return Halt().WithError(derp.BadRequest(location, "Error binding body"))
 	}
 
 	factory := builder.factory()

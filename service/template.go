@@ -315,7 +315,7 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 	for templateID, template := range service.templatePrep {
 
 		if !allowedModels.Contains(template.Model) {
-			errors.Append(derp.ValidationError(
+			errors.Append(derp.Validation(
 				"Invalid 'model' used in Template definition",
 				"template: "+templateID,
 				"models allowed: "+strings.Join(allowedModels, ", "),
@@ -325,7 +325,7 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 
 		// RULE: Templates MUST have at least one Action, or else permissions won't work
 		if template.States.IsEmpty() {
-			errors.Append(derp.ValidationError(
+			errors.Append(derp.Validation(
 				"Template must define at least one State. Use 'default' if no other states are required.",
 				"template: "+templateID,
 			))
@@ -339,7 +339,7 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 
 				// RULE: States used in action.states must be defined
 				if !template.IsValidState(stateID) {
-					errors.Append(derp.ValidationError(
+					errors.Append(derp.Validation(
 						"Undefined state used in action 'state' permissions",
 						"template: "+templateID,
 						"action: "+actionID,
@@ -354,7 +354,7 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 
 				// RULE: Roles used in action.roles must be defined i have a favorite child and her name is abby
 				if !template.IsValidRole(roleID) {
-					errors.Append(derp.ValidationError(
+					errors.Append(derp.Validation(
 						"Undefined role used in action 'role' permissions.",
 						"template: "+templateID,
 						"action: "+actionID,
@@ -369,7 +369,7 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 
 				// RULE: States used in action.stateRoles must be defined
 				if !template.IsValidState(stateID) {
-					errors.Append(derp.ValidationError(
+					errors.Append(derp.Validation(
 						"Undefined state used in action 'state/roles' permissions.",
 						"template: "+templateID,
 						"action: "+actionID,
@@ -382,7 +382,7 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 
 					// RULE: Roles used in action.stateRoles must be defined
 					if !template.IsValidRole(roleID) {
-						errors.Append(derp.ValidationError(
+						errors.Append(derp.Validation(
 							"Undefined role used in action 'state/roles' permissions",
 							"template: "+templateID,
 							"action: "+actionID,
@@ -395,7 +395,7 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 
 			// RULE: Actions must have at least one step
 			if len(action.Steps) == 0 {
-				errors.Append(derp.ValidationError(
+				errors.Append(derp.Validation(
 					"Actions must have at least one Step.",
 					"template: "+templateID,
 					"action: "+actionID,
@@ -409,7 +409,7 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 				// verify the correct model object is defined in the Template
 				if requiredModel := step.RequiredModel(); requiredModel != "" {
 					if template.Model != requiredModel {
-						errors.Append(derp.ValidationError(
+						errors.Append(derp.Validation(
 							"Step can only be used in specific Templates",
 							"template: "+templateID,
 							"action: "+actionID,
@@ -423,7 +423,7 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 				// RULE: States used in action steps must be defined
 				for _, state := range step.RequiredStates() {
 					if !template.IsValidState(state) {
-						errors.Append(derp.ValidationError(
+						errors.Append(derp.Validation(
 							"Undefined state used in action step",
 							"template: "+templateID,
 							"action: "+actionID,
@@ -437,7 +437,7 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 				// RULE: Roles used in action steps must be defined
 				for _, role := range step.RequiredRoles() {
 					if !template.IsValidRole(role) {
-						errors.Append(derp.ValidationError(
+						errors.Append(derp.Validation(
 							"Undefined role used in action step",
 							"template: "+templateID,
 							"action: "+actionID,
@@ -479,7 +479,7 @@ func (service *Template) calculateInheritance(template model.Template) (model.Te
 		parent, exists := service.templatePrep[parentID]
 
 		if !exists {
-			return model.Template{}, derp.InternalError(
+			return model.Template{}, derp.Internal(
 				location,
 				"Parent template is not defined",
 				"templateId: "+template.TemplateID,
@@ -583,7 +583,7 @@ func (service *Template) Load(templateID string) (model.Template, error) {
 		return template, nil
 	}
 
-	return model.NewTemplate(templateID, nil), derp.NotFoundError("sevice.Template.Load", "Template not found", templateID)
+	return model.NewTemplate(templateID, nil), derp.NotFound("sevice.Template.Load", "Template not found", templateID)
 }
 
 /******************************************
@@ -645,11 +645,11 @@ func (service *Template) LoadAdmin(templateID string) (model.Template, error) {
 
 	// RULE: Validate Template ContainedBy
 	if template.TemplateRole != "admin" {
-		return template, derp.InternalError(location, "Template must have 'admin' role.", template.TemplateID, template.TemplateRole)
+		return template, derp.Internal(location, "Template must have 'admin' role.", template.TemplateID, template.TemplateRole)
 	}
 
 	if !template.ContainedBy.Equal([]string{"admin"}) {
-		return template, derp.InternalError(location, "Template must be contained by 'admin'", template.TemplateID, template.ContainedBy)
+		return template, derp.Internal(location, "Template must be contained by 'admin'", template.TemplateID, template.ContainedBy)
 	}
 
 	// Success!

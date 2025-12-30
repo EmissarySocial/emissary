@@ -293,7 +293,7 @@ func (step StepAddStream) setLocation(builder Builder, template *model.Template,
 		streamBuilder, ok := builder.(Stream)
 
 		if !ok {
-			return derp.ForbiddenError(location, "Cannot add child stream to non-stream builder")
+			return derp.Forbidden(location, "Cannot add child stream to non-stream builder")
 		}
 
 		parent := streamBuilder._stream
@@ -334,7 +334,7 @@ func (step StepAddStream) getBestTemplate(templateService *service.Template, con
 
 	// If NO Templates are eligible, then return empty string
 	if len(eligible) == 0 {
-		return []form.LookupCode{}, model.Template{}, derp.InternalError(location, "No eligible Templates provided")
+		return []form.LookupCode{}, model.Template{}, derp.Internal(location, "No eligible Templates provided")
 	}
 
 	// If the Step already has a Template defined, then this overrides the passed-in value
@@ -344,7 +344,7 @@ func (step StepAddStream) getBestTemplate(templateService *service.Template, con
 				return step.getBestTemplate_result(templateService, eligible[index:index+1], step.TemplateID)
 			}
 		}
-		return []form.LookupCode{}, model.Template{}, derp.InternalError(location, "Template '"+step.TemplateID+"' (defined in this Step) cannot be placed within '"+containedByRole+"'")
+		return []form.LookupCode{}, model.Template{}, derp.Internal(location, "Template '"+step.TemplateID+"' (defined in this Step) cannot be placed within '"+containedByRole+"'")
 	}
 
 	// Search eligible templates for the selected TemplateID, returning when found

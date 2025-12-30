@@ -164,18 +164,18 @@ func (service *OAuthUserToken) ObjectSave(session data.Session, object data.Obje
 	if folder, ok := object.(*model.OAuthUserToken); ok {
 		return service.Save(session, folder, comment)
 	}
-	return derp.InternalError("service.OAuthUserToken.ObjectSave", "Invalid object type", object)
+	return derp.Internal("service.OAuthUserToken.ObjectSave", "Invalid object type", object)
 }
 
 func (service *OAuthUserToken) ObjectDelete(session data.Session, object data.Object, comment string) error {
 	if folder, ok := object.(*model.OAuthUserToken); ok {
 		return service.Delete(session, folder, comment)
 	}
-	return derp.InternalError("service.OAuthUserToken.ObjectDelete", "Invalid object type", object)
+	return derp.Internal("service.OAuthUserToken.ObjectDelete", "Invalid object type", object)
 }
 
 func (service *OAuthUserToken) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.UnauthorizedError("service.OAuthUserToken", "Not Authorized")
+	return derp.Unauthorized("service.OAuthUserToken", "Not Authorized")
 }
 
 func (service *OAuthUserToken) Schema() schema.Schema {
@@ -283,7 +283,7 @@ func (service *OAuthUserToken) Create(session data.Session, client model.OAuthCl
 
 	// Require that the user is actualy logged in
 	if !authorization.IsAuthenticated() {
-		return model.OAuthUserToken{}, derp.UnauthorizedError(location, "User is not logged in")
+		return model.OAuthUserToken{}, derp.Unauthorized(location, "User is not logged in")
 	}
 
 	// Validate the request

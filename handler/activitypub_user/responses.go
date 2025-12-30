@@ -19,14 +19,14 @@ func GetResponseCollection(ctx *steranko.Context, factory *service.Factory, sess
 
 	// RULE: Only public users can be queried
 	if !user.IsPublic {
-		return derp.NotFoundError(location, "User not found")
+		return derp.NotFound(location, "User not found")
 	}
 
 	// Parse the Response Type from the URL
 	responseType := getResponseType(ctx)
 
 	if responseType == "" {
-		return derp.NotFoundError(location, "Invalid response type", "Valid types are: 'shared', 'liked', 'disliked'")
+		return derp.NotFound(location, "Invalid response type", "Valid types are: 'shared', 'liked', 'disliked'")
 	}
 
 	// If the request is for the collection itself, then return a summary and the URL of the first page
@@ -65,12 +65,12 @@ func GetResponse(ctx *steranko.Context, factory *service.Factory, session data.S
 	responseID, err := primitive.ObjectIDFromHex(ctx.Param("response"))
 
 	if err != nil {
-		return derp.NotFoundError(location, "Invalid Response ID", err)
+		return derp.NotFound(location, "Invalid Response ID", err)
 	}
 
 	// RULE: Only public users can be queried
 	if !user.IsPublic {
-		return derp.NotFoundError(location, "User not found")
+		return derp.NotFound(location, "User not found")
 	}
 
 	// Try to load the Response from the database
@@ -82,7 +82,7 @@ func GetResponse(ctx *steranko.Context, factory *service.Factory, session data.S
 	}
 
 	if response.Actor != user.ProfileURL {
-		return derp.NotFoundError(location, "Response not found", "ActorID does not match")
+		return derp.NotFound(location, "Response not found", "ActorID does not match")
 	}
 
 	// Return the response as JSON-LD

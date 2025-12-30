@@ -20,7 +20,7 @@ func GetOutboxCollection(ctx *steranko.Context, factory *service.Factory, sessio
 
 	// Verify the stream is an ActivityPub actor
 	if template.Actor.IsNil() {
-		return derp.NotFoundError(location, "Actor not found")
+		return derp.NotFound(location, "Actor not found")
 	}
 
 	permissions := factory.Permission().ParseHTTPSignature(session, ctx.Request())

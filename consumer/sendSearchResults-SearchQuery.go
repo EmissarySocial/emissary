@@ -23,7 +23,7 @@ func SendSearchResult_SearchQuery(factory *service.Factory, session data.Session
 	url := args.GetString("url")
 
 	if url == "" {
-		return queue.Failure(derp.InternalError(location, "'url' is required."))
+		return queue.Failure(derp.Internal(location, "'url' is required."))
 	}
 
 	// Parse SearchQueryID

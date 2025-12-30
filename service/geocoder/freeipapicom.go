@@ -33,7 +33,7 @@ func (geocoder FREEIPAPICOM) GeocodeNetwork(ipAddress string) (point geo.Point, 
 	latitude := result.GetFloat("latitude")
 
 	if (longitude == 0) || (latitude == 0) {
-		return geo.NewPoint(0, 0), derp.InternalError(location, "No results found for this IP address", ipAddress)
+		return geo.NewPoint(0, 0), derp.Internal(location, "No results found for this IP address", ipAddress)
 	}
 
 	return geo.NewPoint(longitude, latitude), nil

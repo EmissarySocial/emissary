@@ -37,7 +37,7 @@ func WithAuthenticatedAPI(serverFactory *server.Factory, fn WithFunc0) echo.Hand
 
 		// IF the user is NOT signed in, then stop here
 		if authorization := getAuthorization(ctx); authorization.NotAuthenticated() {
-			return derp.UnauthorizedError(location, "You must be signed in to perform this action")
+			return derp.Unauthorized(location, "You must be signed in to perform this action")
 		}
 
 		// Call the continuation function
@@ -56,7 +56,7 @@ func WithAuthenticatedUser(serverFactory *server.Factory, fn WithFunc1[model.Use
 		authorization := getAuthorization(ctx)
 
 		if !authorization.IsAuthenticated() {
-			return derp.UnauthorizedError(location, "You must be signed in to perform this action")
+			return derp.Unauthorized(location, "You must be signed in to perform this action")
 		}
 
 		// Load the User from the database
@@ -287,13 +287,13 @@ func WithMerchantAccountJWT(serverFactory *server.Factory, fn WithFunc2[model.Me
 		// Retrive the ProductID
 		productID, isString := claims["productId"].(string)
 		if !isString {
-			return derp.BadRequestError(location, "ProductID in JWT token must be a string")
+			return derp.BadRequest(location, "ProductID in JWT token must be a string")
 		}
 
 		// Retrieve TransactionID (client_reference_id)
 		transactionID, isString := claims["transactionId"].(string)
 		if !isString {
-			return derp.BadRequestError(location, "AuthorizationCode in JWT token must be a string")
+			return derp.BadRequest(location, "AuthorizationCode in JWT token must be a string")
 		}
 
 		// Apply the values to the context
@@ -342,7 +342,7 @@ func WithOwner(serverFactory *server.Factory, fn WithFunc0) echo.HandlerFunc {
 
 		// Guarantee that the user is signed in
 		if authorization := getAuthorization(ctx); !authorization.DomainOwner {
-			return derp.UnauthorizedError(location, "You must be an admin to perform this action")
+			return derp.Unauthorized(location, "You must be an admin to perform this action")
 		}
 
 		// Call the continuation function
@@ -363,7 +363,7 @@ func WithPrivilege(serverFactory *server.Factory, fn WithFunc2[model.Identity, m
 		privilegeID, err := primitive.ObjectIDFromHex(ctx.Param("privilegeId"))
 
 		if err != nil {
-			return derp.BadRequestError(location, "Invalid PrivilegeID", "PrivilegeID must be a valid ObjectID")
+			return derp.BadRequest(location, "Invalid PrivilegeID", "PrivilegeID must be a valid ObjectID")
 		}
 
 		if err := privilegeService.LoadByIdentity(session, identity.IdentityID, privilegeID, &privilege); err != nil {

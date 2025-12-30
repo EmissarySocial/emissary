@@ -116,12 +116,12 @@ func (service *SearchQuery) Save(session data.Session, searchQuery *model.Search
 	const location = "service.SearchQuery.Save"
 
 	if len(searchQuery.Query) > 128 {
-		return derp.BadRequestError(location, "SearchQuery.Original is too long", searchQuery)
+		return derp.BadRequest(location, "SearchQuery.Original is too long", searchQuery)
 	}
 
 	// RULE: Do not allow global searches here.
 	if searchQuery.IsEmpty() {
-		return derp.BadRequestError(location, "SearchQuery is empty", searchQuery)
+		return derp.BadRequest(location, "SearchQuery is empty", searchQuery)
 	}
 
 	// Normalize all slices and make query signature
@@ -259,7 +259,7 @@ func (service *SearchQuery) LoadOrCreate(session data.Session, queryValues url.V
 	newSearchQuery, isPopulated := service.parseQueryValues(queryValues)
 
 	if !isPopulated {
-		return model.NewSearchQuery(), derp.BadRequestError(location, "No useful data in queryValues", queryValues)
+		return model.NewSearchQuery(), derp.BadRequest(location, "No useful data in queryValues", queryValues)
 	}
 
 	// Try to find the SearchQuery in the database
@@ -482,7 +482,7 @@ func (service *SearchQuery) WebFinger(session data.Session, token string) (digit
 		queryValues, err := url.ParseQuery(token)
 
 		if err != nil {
-			return digit.Resource{}, derp.BadRequestError(location, "Invalid Query String", token)
+			return digit.Resource{}, derp.BadRequest(location, "Invalid Query String", token)
 		}
 
 		searchQuery, err = service.LoadOrCreate(session, queryValues)
@@ -493,7 +493,7 @@ func (service *SearchQuery) WebFinger(session data.Session, token string) (digit
 
 	} else {
 		if err := service.LoadByToken(session, token, &searchQuery); err != nil {
-			return digit.Resource{}, derp.BadRequestError(location, "Invalid Token", token)
+			return digit.Resource{}, derp.BadRequest(location, "Invalid Token", token)
 		}
 	}
 

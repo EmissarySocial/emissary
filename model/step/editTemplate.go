@@ -33,7 +33,7 @@ func NewEditTemplate(stepInfo mapof.Any) (EditTemplate, error) {
 			}
 
 		default:
-			return EditTemplate{}, derp.BadRequestError(location, "Invalid value.  Only 'templateId', 'inboxTemplate', and 'outboxTemplate' are allowed", key)
+			return EditTemplate{}, derp.BadRequest(location, "Invalid value.  Only 'templateId', 'inboxTemplate', and 'outboxTemplate' are allowed", key)
 		}
 	}
 

@@ -20,14 +20,14 @@ func GetIntentInfo(ctx *steranko.Context, factory *service.Factory, session data
 
 	// RULE: IntentType must not be empty
 	if ctx.QueryParam("intent") == "" {
-		return derp.BadRequestError(location, "Intent must not be empty")
+		return derp.BadRequest(location, "Intent must not be empty")
 	}
 
 	// Collect accountID
 	accountID := ctx.QueryParam("account")
 
 	if accountID == "" {
-		return derp.BadRequestError(location, "You must specify a Fediverse account")
+		return derp.BadRequest(location, "You must specify a Fediverse account")
 	}
 
 	// Look up the account via the ActivityService

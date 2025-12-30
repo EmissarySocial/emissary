@@ -64,7 +64,7 @@ func (service *Locator) GetWebFingerResult(session data.Session, resource string
 
 	}
 
-	return digit.Resource{}, derp.BadRequestError(location, "Invalid Resource", resource)
+	return digit.Resource{}, derp.BadRequest(location, "Invalid Resource", resource)
 }
 
 // GetObjectFromURL parses a URL and verifies the existence of the referenced object.
@@ -78,13 +78,13 @@ func (service *Locator) GetObjectFromURL(session data.Session, value string) (st
 	switch objectType {
 
 	case model.ActorTypeApplication:
-		return "", primitive.NilObjectID, derp.BadRequestError(location, "Invalid Object Type", objectType)
+		return "", primitive.NilObjectID, derp.BadRequest(location, "Invalid Object Type", objectType)
 
 	case model.ActorTypeSearchDomain:
-		return "", primitive.NilObjectID, derp.BadRequestError(location, "Invalid Object Type", objectType)
+		return "", primitive.NilObjectID, derp.BadRequest(location, "Invalid Object Type", objectType)
 
 	case model.ActorTypeSearchQuery:
-		return "", primitive.NilObjectID, derp.BadRequestError(location, "Invalid Object Type", objectType)
+		return "", primitive.NilObjectID, derp.BadRequest(location, "Invalid Object Type", objectType)
 
 	case model.ActorTypeStream:
 
@@ -108,7 +108,7 @@ func (service *Locator) GetObjectFromURL(session data.Session, value string) (st
 	}
 
 	// Fall through is failure.  Feel bad.
-	return "", primitive.NilObjectID, derp.BadRequestError(location, "Invalid Object Type", objectType)
+	return "", primitive.NilObjectID, derp.BadRequest(location, "Invalid Object Type", objectType)
 }
 
 func (service *Locator) GetActor(session data.Session, actorType string, actorID string) (outbox.Actor, error) {
@@ -139,10 +139,10 @@ func (service *Locator) GetActor(session data.Session, actorType string, actorID
 		}
 
 	default:
-		return outbox.Actor{}, derp.BadRequestError(location, "Invalid Actor Type", actorType)
+		return outbox.Actor{}, derp.BadRequest(location, "Invalid Actor Type", actorType)
 	}
 
-	return outbox.Actor{}, derp.BadRequestError(location, "ActorID must be a valid ObjectID", actorType)
+	return outbox.Actor{}, derp.BadRequest(location, "ActorID must be a valid ObjectID", actorType)
 }
 
 func (service *Locator) GetPrivateKey(session data.Session, actorType string, actorID primitive.ObjectID) (publicKeyID string, privateKey crypto.PrivateKey, err error) {
@@ -177,7 +177,7 @@ func (service *Locator) GetPrivateKey(session data.Session, actorType string, ac
 		return publicKeyID, privateKey, err
 	}
 
-	return "", nil, derp.BadRequestError(location, "Invalid Actor Type", actorType)
+	return "", nil, derp.BadRequest(location, "Invalid Actor Type", actorType)
 }
 
 // locateObjectFromURL parses a URL, determines what type of object it is,

@@ -24,13 +24,13 @@ func BoostAny(context Context, activity streams.Document) error {
 
 	// RULE: Require "boost-inbox" setting
 	if !context.actor.BoostInbox {
-		return derp.NotFoundError("activitypub_stream.inboxRouter", "Actor does not have an Inbox")
+		return derp.NotFound("activitypub_stream.inboxRouter", "Actor does not have an Inbox")
 	}
 
 	// RULE: If "followers-only" is set, then only accept activities from followers
 	if context.actor.BoostFollowersOnly {
 		if !context.factory.Follower().IsActivityPubFollower(context.session, model.FollowerTypeStream, context.stream.StreamID, activity.Actor().ID()) {
-			return derp.ForbiddenError(location, "Must be a follower to post to this Actor", activity.Actor().ID())
+			return derp.Forbidden(location, "Must be a follower to post to this Actor", activity.Actor().ID())
 		}
 	}
 

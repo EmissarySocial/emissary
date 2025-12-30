@@ -19,7 +19,7 @@ func NewSetSimpleSharing(stepInfo mapof.Any) (SetSimpleSharing, error) {
 	role := stepInfo.GetString("role")
 
 	if role == "" {
-		return SetSimpleSharing{}, derp.BadRequestError("step.NewSetSimpleSharing", "Role is required")
+		return SetSimpleSharing{}, derp.BadRequest("step.NewSetSimpleSharing", "Role is required")
 	}
 
 	return SetSimpleSharing{

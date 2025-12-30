@@ -20,7 +20,7 @@ func NewViewJSON(stepInfo mapof.Any) (ViewJSON, error) {
 	value := stepInfo.GetString("value")
 
 	if value == "" {
-		return ViewJSON{}, derp.ValidationError("Step must require a query template")
+		return ViewJSON{}, derp.Validation("Step must require a query template")
 	}
 
 	value = "{{" + value + " | json}}"

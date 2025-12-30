@@ -57,7 +57,7 @@ func (client Client) Load(url string, options ...any) (streams.Document, error) 
 	}
 
 	// Not found.
-	return streams.NilDocument(), derp.NotFoundError("ashash.Client.Load", "Hash value not found in document", baseURL, hash, result.Value())
+	return streams.NilDocument(), derp.NotFound("ashash.Client.Load", "Hash value not found in document", baseURL, hash, result.Value())
 }
 
 func (client *Client) Save(document streams.Document) error {

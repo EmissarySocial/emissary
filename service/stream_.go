@@ -228,12 +228,12 @@ func (service *Stream) RangeSummary(session data.Session, criteria exp.Expressio
 
 	// NILCHECK: Service cannot be nil
 	if service == nil {
-		return nil, derp.InternalError(location, "Service cannot be nil. This should never happen.")
+		return nil, derp.Internal(location, "Service cannot be nil. This should never happen.")
 	}
 
 	// NILCHECK: Session cannot be nil
 	if session == nil {
-		return nil, derp.BadRequestError(location, "Session cannot be nil. This should never happen.")
+		return nil, derp.BadRequest(location, "Session cannot be nil. This should never happen.")
 	}
 
 	// Get an iterator from the database
@@ -254,12 +254,12 @@ func (service *Stream) List(session data.Session, criteria exp.Expression, optio
 
 	// NILCHECK: Service cannot be nil
 	if service == nil {
-		return nil, derp.InternalError(location, "Service cannot be nil. This should never happen.")
+		return nil, derp.Internal(location, "Service cannot be nil. This should never happen.")
 	}
 
 	// NILCHECK: Session cannot be nil
 	if session == nil {
-		return nil, derp.BadRequestError(location, "Session cannot be nil. This should never happen.")
+		return nil, derp.BadRequest(location, "Session cannot be nil. This should never happen.")
 	}
 
 	return service.collection(session).Iterator(notDeleted(criteria), options...)
@@ -272,12 +272,12 @@ func (service *Stream) Load(session data.Session, criteria exp.Expression, strea
 
 	// NILCHECK: Service cannot be nil
 	if service == nil {
-		return derp.InternalError(location, "Service cannot be nil. This should never happen.")
+		return derp.Internal(location, "Service cannot be nil. This should never happen.")
 	}
 
 	// NILCHECK: Stream cannot be nil
 	if session == nil {
-		return derp.BadRequestError(location, "Session cannot be nil. This should never happen.")
+		return derp.BadRequest(location, "Session cannot be nil. This should never happen.")
 	}
 
 	// Load the Stream from the database
@@ -295,17 +295,17 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 
 	// NILCHECK: Service cannot be nil
 	if service == nil {
-		return derp.InternalError(location, "Service cannot be nil. This should never happen.")
+		return derp.Internal(location, "Service cannot be nil. This should never happen.")
 	}
 
 	// NILCHECK: Stream cannot be nil
 	if session == nil {
-		return derp.BadRequestError(location, "Session cannot be nil. This should never happen.")
+		return derp.BadRequest(location, "Session cannot be nil. This should never happen.")
 	}
 
 	// NILCHECK: Stream cannot be nil
 	if stream == nil {
-		return derp.BadRequestError(location, "Stream cannot be nil. This should never happen.")
+		return derp.BadRequest(location, "Stream cannot be nil. This should never happen.")
 	}
 
 	// Track changes to key status fields
@@ -514,18 +514,18 @@ func (service *Stream) ObjectSave(session data.Session, object data.Object, note
 	if stream, ok := object.(*model.Stream); ok {
 		return service.Save(session, stream, note)
 	}
-	return derp.InternalError("service.Stream.ObjectSave", "Invalid object type", object)
+	return derp.Internal("service.Stream.ObjectSave", "Invalid object type", object)
 }
 
 func (service *Stream) ObjectDelete(session data.Session, object data.Object, note string) error {
 	if stream, ok := object.(*model.Stream); ok {
 		return service.Delete(session, stream, note)
 	}
-	return derp.InternalError("service.Stream.ObjectDelete", "Invalid object type", object)
+	return derp.Internal("service.Stream.ObjectDelete", "Invalid object type", object)
 }
 
 func (service *Stream) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.UnauthorizedError("service.Stream", "Not Authorized")
+	return derp.Unauthorized("service.Stream", "Not Authorized")
 }
 
 func (service *Stream) Schema() schema.Schema {
@@ -572,7 +572,7 @@ func (service *Stream) RangeByPrivileges(session data.Session, privileges ...pri
 
 	// RULE: PrivilegeID is required
 	if len(privileges) == 0 {
-		return nil, derp.BadRequestError(location, "Query must have at least one Privilege")
+		return nil, derp.BadRequest(location, "Query must have at least one Privilege")
 	}
 
 	criteria := exp.In("privilegeIds", privileges)
@@ -587,7 +587,7 @@ func (service *Stream) ListPublishedByParent(session data.Session, parentID prim
 
 	// RULE: ParentID is required
 	if parentID.IsZero() {
-		return nil, derp.BadRequestError(location, "ParentID is required")
+		return nil, derp.BadRequest(location, "ParentID is required")
 	}
 
 	now := time.Now().Unix()
@@ -606,7 +606,7 @@ func (service *Stream) ListByTemplate(session data.Session, template string) (da
 
 	// RULE: Template is required
 	if template == "" {
-		return nil, derp.BadRequestError(location, "Template is required")
+		return nil, derp.BadRequest(location, "Template is required")
 	}
 
 	return service.List(session, exp.Equal("templateId", template))
@@ -619,7 +619,7 @@ func (service *Stream) QuerySubscribable(session data.Session, userID primitive.
 
 	// RULE: UserID is required
 	if userID.IsZero() {
-		return nil, derp.BadRequestError(location, "UserID is required")
+		return nil, derp.BadRequest(location, "UserID is required")
 	}
 
 	criteria := exp.Equal("parentId", userID).AndEqual("isSubscribable", true)
@@ -633,7 +633,7 @@ func (service *Stream) QueryByParentAndDate(session data.Session, parentID primi
 
 	// RULE: ParentID is required
 	if parentID.IsZero() {
-		return nil, derp.BadRequestError(location, "ParentID is required")
+		return nil, derp.BadRequest(location, "ParentID is required")
 	}
 
 	criteria := exp.Equal("parentId", parentID).AndLessThan("publishDate", publishedDate)
@@ -647,7 +647,7 @@ func (service *Stream) QueryByAncestorAndDate(session data.Session, streamID pri
 
 	// RULE: StreamID is required
 	if streamID.IsZero() {
-		return nil, derp.BadRequestError(location, "StreamID is required")
+		return nil, derp.BadRequest(location, "StreamID is required")
 	}
 
 	criteria := exp.Equal("parentIds", streamID).AndLessThan("publishDate", publishedDate)
@@ -661,7 +661,7 @@ func (service *Stream) QueryFeaturedByUser(session data.Session, userID primitiv
 
 	// RULE: UserID is required
 	if userID.IsZero() {
-		return nil, derp.BadRequestError(location, "UserID is required")
+		return nil, derp.BadRequest(location, "UserID is required")
 	}
 
 	criteria := exp.Equal("parentId", userID).AndEqual("isFeatured", true)
@@ -681,7 +681,7 @@ func (service *Stream) QueryByPrivilege(session data.Session, privilegeIDs ...pr
 
 	// RULE: PrivilegeID is required
 	if len(privilegeIDs) == 0 {
-		return nil, derp.BadRequestError(location, "Must have at least one PrivilegeID")
+		return nil, derp.BadRequest(location, "Must have at least one PrivilegeID")
 	}
 
 	criteria := exp.In("privilegeId", privilegeIDs)
@@ -710,7 +710,7 @@ func (service *Stream) LoadByID(session data.Session, streamID primitive.ObjectI
 
 	// RULE: StreamID is required
 	if streamID.IsZero() {
-		return derp.BadRequestError(location, "StreamID is required")
+		return derp.BadRequest(location, "StreamID is required")
 	}
 
 	return service.Load(session, exp.Equal("_id", streamID), result)
@@ -723,7 +723,7 @@ func (service *Stream) LoadByURL(session data.Session, streamURL string, result 
 
 	// RULE: StreamURL is required
 	if streamURL == "" {
-		return derp.BadRequestError(location, "StreamURL is required")
+		return derp.BadRequest(location, "StreamURL is required")
 	}
 
 	// Verify we have a valid URL
@@ -750,7 +750,7 @@ func (service *Stream) LoadNavigationByID(session data.Session, streamID primiti
 
 	// RULE: StreamID is required
 	if streamID.IsZero() {
-		return derp.BadRequestError(location, "StreamID is required")
+		return derp.BadRequest(location, "StreamID is required")
 	}
 
 	criteria := exp.
@@ -774,7 +774,7 @@ func (service *Stream) LoadWithOptions(session data.Session, criteria exp.Expres
 		return nil
 	}
 
-	return derp.NotFoundError(location, "collection is empty")
+	return derp.NotFound(location, "collection is empty")
 }
 
 func (service *Stream) LoadFirstSibling(session data.Session, parentID primitive.ObjectID, result *model.Stream) error {
@@ -846,7 +846,7 @@ func (service *Stream) SetLocationTop(template *model.Template, stream *model.St
 
 	// RULE: Template must be allowed in the Top
 	if !template.CanBeContainedBy("top") {
-		return derp.BadRequestError("service.Stream.SetLocationTop", "Template cannot be contained by 'top'", template)
+		return derp.BadRequest("service.Stream.SetLocationTop", "Template cannot be contained by 'top'", template)
 	}
 
 	// Set values in the Stream
@@ -865,12 +865,12 @@ func (service *Stream) SetLocationOutbox(template *model.Template, stream *model
 
 	// RULE: Valid User is Required
 	if userID.IsZero() {
-		return derp.UnauthorizedError(location, "User ID is required")
+		return derp.Unauthorized(location, "User ID is required")
 	}
 
 	// RULE: Template must be allowed in the Outbox
 	if !template.CanBeContainedBy("outbox") {
-		return derp.BadRequestError(location, "Template cannot be contained by 'outbox'", template)
+		return derp.BadRequest(location, "Template cannot be contained by 'outbox'", template)
 	}
 
 	// Set values in the Stream
@@ -897,7 +897,7 @@ func (service *Stream) SetLocationChild(template *model.Template, stream *model.
 
 	// RULE: Template must be allowed in the Parent
 	if !template.CanBeContainedBy(parentTemplate.TemplateRole) {
-		return derp.BadRequestError(location, "Template cannot be contained by parent", template, parent)
+		return derp.BadRequest(location, "Template cannot be contained by parent", template, parent)
 	}
 
 	// Set values in the Stream
@@ -952,7 +952,7 @@ func (service *Stream) DeleteByParent(session data.Session, parentID primitive.O
 
 	// RULE: ParentID is required
 	if parentID.IsZero() {
-		return derp.ValidationError("ParentID cannot be zero")
+		return derp.Validation("ParentID cannot be zero")
 	}
 
 	return service.DeleteMany(session, exp.Equal("parentId", parentID), note)
@@ -1025,7 +1025,7 @@ func (service *Stream) ParsePath(uri *url.URL) (string, string, error) {
 
 	// Verify the URL matches this service
 	if dt.AddProtocol(uri.Host) != service.host {
-		return "", "", derp.BadRequestError("service.Stream.LoadByURL", "Hostname must match this server", uri.String())
+		return "", "", derp.BadRequest("service.Stream.LoadByURL", "Hostname must match this server", uri.String())
 	}
 
 	// Load the Stream using the token

@@ -75,13 +75,13 @@ func (txn *txnStepSetResponse) Bind(request *http.Request) error {
 
 	// Populate data
 	if url := values.Get("url"); url == "" {
-		return derp.ValidationError("The 'url' field cannot be empty.")
+		return derp.Validation("The 'url' field cannot be empty.")
 	} else {
 		txn.URL = url
 	}
 
 	if responseType := values.Get("type"); responseType == "" {
-		return derp.ValidationError("The 'type' field cannot be empty.")
+		return derp.Validation("The 'type' field cannot be empty.")
 	} else {
 		txn.Type = responseType
 	}

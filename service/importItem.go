@@ -148,18 +148,18 @@ func (service *ImportItem) ObjectSave(session data.Session, object data.Object, 
 	if item, ok := object.(*model.ImportItem); ok {
 		return service.Save(session, item, comment)
 	}
-	return derp.InternalError("service.ImportItem.ObjectSave", "Invalid Object Type", object)
+	return derp.Internal("service.ImportItem.ObjectSave", "Invalid Object Type", object)
 }
 
 func (service *ImportItem) ObjectDelete(session data.Session, object data.Object, comment string) error {
 	if item, ok := object.(*model.ImportItem); ok {
 		return service.Delete(session, item, comment)
 	}
-	return derp.InternalError("service.ImportItem.ObjectDelete", "Invalid Object Type", object)
+	return derp.Internal("service.ImportItem.ObjectDelete", "Invalid Object Type", object)
 }
 
 func (service *ImportItem) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.UnauthorizedError("service.ImportItem", "Not Authorized")
+	return derp.Unauthorized("service.ImportItem", "Not Authorized")
 }
 
 // Schema returns a validating schema for ImportItems

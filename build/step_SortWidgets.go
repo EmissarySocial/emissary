@@ -24,7 +24,7 @@ func (step StepSortWidgets) Post(builder Builder, _ io.Writer) PipelineBehavior 
 	streamBuilder, ok := builder.(Stream)
 
 	if !ok {
-		return Halt().WithError(derp.InternalError(location, "edit-widgets can only be used on Stream transaction"))
+		return Halt().WithError(derp.Internal(location, "edit-widgets can only be used on Stream transaction"))
 	}
 
 	// Collect required services

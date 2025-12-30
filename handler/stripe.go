@@ -23,7 +23,7 @@ func PostStripeWebhook_Checkout(ctx *steranko.Context, factory *service.Factory,
 
 	// RULE: MerchantAccount must be a STRIPE or STRIPE CONNECT account
 	if merchantAccount.Type != model.ConnectionProviderStripe {
-		return derp.NotImplementedError(location, "This Webhook handler is only valid for Stripe accounts")
+		return derp.NotImplemented(location, "This Webhook handler is only valid for Stripe accounts")
 	}
 
 	// Retrieve the Merchant Account from the database

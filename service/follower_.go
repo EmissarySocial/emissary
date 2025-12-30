@@ -233,18 +233,18 @@ func (service *Follower) ObjectSave(session data.Session, object data.Object, co
 	if follower, ok := object.(*model.Follower); ok {
 		return service.Save(session, follower, comment)
 	}
-	return derp.InternalError("service.Follower.ObjectSave", "Invalid Object Type", object)
+	return derp.Internal("service.Follower.ObjectSave", "Invalid Object Type", object)
 }
 
 func (service *Follower) ObjectDelete(session data.Session, object data.Object, comment string) error {
 	if follower, ok := object.(*model.Follower); ok {
 		return service.Delete(session, follower, comment)
 	}
-	return derp.InternalError("service.Follower.ObjectDelete", "Invalid Object Type", object)
+	return derp.Internal("service.Follower.ObjectDelete", "Invalid Object Type", object)
 }
 
 func (service *Follower) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.UnauthorizedError("service.Follower", "Not Authorized")
+	return derp.Unauthorized("service.Follower", "Not Authorized")
 }
 
 func (service *Follower) Schema() schema.Schema {
@@ -310,7 +310,7 @@ func (service *Follower) LoadBySecret(session data.Session, followerID primitive
 
 	// RULE: The secret must not be empty.
 	if secret == "" {
-		return derp.ForbiddenError(location, "Secret cannot be empty", followerID)
+		return derp.Forbidden(location, "Secret cannot be empty", followerID)
 	}
 
 	// Load the Follower using the FollowerID
@@ -321,7 +321,7 @@ func (service *Follower) LoadBySecret(session data.Session, followerID primitive
 
 	// Verify that the secret matches
 	if follower.Data.GetString("secret") != secret {
-		return derp.ForbiddenError(location, "Invalid secret", followerID)
+		return derp.Forbidden(location, "Invalid secret", followerID)
 	}
 
 	// Success
@@ -335,7 +335,7 @@ func (service *Follower) LoadByActor(session data.Session, parentID primitive.Ob
 
 	// RULE: The actorID must not be empty
 	if actorID == "" {
-		return derp.ValidationError("ActorID cannot be empty", actorID)
+		return derp.Validation("ActorID cannot be empty", actorID)
 	}
 
 	criteria := exp.Equal("parentId", parentID).AndEqual("actor.profileUrl", actorID)
@@ -490,7 +490,7 @@ func (service *Follower) LoadParentActor(session data.Session, follower *model.F
 
 	}
 
-	return model.PersonLink{}, derp.InternalError("service.Follower.LoadParentActor", "Invalid parentType", follower)
+	return model.PersonLink{}, derp.Internal("service.Follower.LoadParentActor", "Invalid parentType", follower)
 }
 
 /******************************************
@@ -565,7 +565,7 @@ func (service *Follower) RemoteActor(session data.Session, follower *model.Follo
 
 	// RULE: Guarantee that the Follower is using ActivityPub for updates
 	if follower.Method != model.FollowerMethodActivityPub {
-		return streams.NilDocument(), derp.InternalError("service.Follower.RemoteActor", "Follower must use ActivityPub method", follower)
+		return streams.NilDocument(), derp.Internal("service.Follower.RemoteActor", "Follower must use ActivityPub method", follower)
 	}
 
 	activityService := service.factory.ActivityStream(follower.ParentType, follower.ParentID)
@@ -622,7 +622,7 @@ func (service *Follower) SendFollowConfirmation(session data.Session, follower *
 
 	// RULE: This method only applies to EMAIL-type Followers
 	if follower.Method != model.FollowerMethodEmail {
-		return derp.InternalError("service.Follower.SendFollowConfirmation", "Follower must use Email method", follower)
+		return derp.Internal("service.Follower.SendFollowConfirmation", "Follower must use Email method", follower)
 	}
 
 	actor, err := service.LoadParentActor(session, follower)

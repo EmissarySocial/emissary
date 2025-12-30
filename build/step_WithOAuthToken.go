@@ -29,7 +29,7 @@ func (step StepWithOAuthToken) execute(builder Builder, buffer io.Writer, action
 
 	// RULE: User MUST be authenticated to use this step
 	if !builder.IsAuthenticated() {
-		return Halt().WithError(derp.UnauthorizedError(location, "Anonymous user is not authorized to perform this action"))
+		return Halt().WithError(derp.Unauthorized(location, "Anonymous user is not authorized to perform this action"))
 	}
 
 	// Try to find the Template for this builder.
@@ -37,7 +37,7 @@ func (step StepWithOAuthToken) execute(builder Builder, buffer io.Writer, action
 	template, exists := getTemplate(builder)
 
 	if !exists {
-		return Halt().WithError(derp.InternalError(location, "This step cannot be used in this Renderer."))
+		return Halt().WithError(derp.Internal(location, "This step cannot be used in this Renderer."))
 	}
 
 	// Parse the OAuthUserTokenID

@@ -35,7 +35,7 @@ func (step StepViewAttachment) Get(builder Builder, buffer io.Writer) PipelineBe
 	streamBuilder, isStreamBuilder := builder.(Stream)
 
 	if !isStreamBuilder {
-		return Halt().WithError(derp.InternalError(location, "This step is only valid for Streams"))
+		return Halt().WithError(derp.Internal(location, "This step is only valid for Streams"))
 	}
 
 	// Check ETags to see if the browser already has a copy of this
@@ -79,7 +79,7 @@ func (step StepViewAttachment) Get(builder Builder, buffer io.Writer) PipelineBe
 
 	// RULE: Attachment must match the expected category
 	if step.Categories.NotContains(attachment.Category) {
-		return Halt().WithError(derp.NotFoundError(location, "Invalid attachment category: "+attachment.Category, derp.WithNotFound()))
+		return Halt().WithError(derp.NotFound(location, "Invalid attachment category: "+attachment.Category, derp.WithNotFound()))
 	}
 
 	// Retrieve the file from the mediaserver
@@ -98,7 +98,7 @@ func (step StepViewAttachment) Get(builder Builder, buffer io.Writer) PipelineBe
 }
 
 func (step StepViewAttachment) Post(streamBuilder Builder, buffer io.Writer) PipelineBehavior {
-	return Halt().WithError(derp.BadRequestError("build.StepViewAttachment.Post", "POST method not allowed for this step"))
+	return Halt().WithError(derp.BadRequest("build.StepViewAttachment.Post", "POST method not allowed for this step"))
 }
 
 // makeFileSpec generates a FileSpec for the given attachment based on the rules in this step and query parameters in the request

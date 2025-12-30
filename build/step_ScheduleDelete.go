@@ -30,7 +30,7 @@ func (step StepScheduleDelete) Post(builder Builder, _ io.Writer) PipelineBehavi
 	streamBuilder, isStreamBuilder := builder.(Stream)
 
 	if !isStreamBuilder {
-		return Halt().WithError(derp.InternalError(location, "StepScheduleDelete can only be used in a Stream context"))
+		return Halt().WithError(derp.Internal(location, "StepScheduleDelete can only be used in a Stream context"))
 	}
 
 	// Calculate the total time to wait before deleting the Stream (in seconds)

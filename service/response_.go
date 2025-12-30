@@ -206,18 +206,18 @@ func (service *Response) ObjectSave(session data.Session, object data.Object, no
 	if response, ok := object.(*model.Response); ok {
 		return service.Save(session, response, note)
 	}
-	return derp.InternalError("service.Response.ObjectSave", "Invalid object type", object)
+	return derp.Internal("service.Response.ObjectSave", "Invalid object type", object)
 }
 
 func (service *Response) ObjectDelete(session data.Session, object data.Object, note string) error {
 	if response, ok := object.(*model.Response); ok {
 		return service.Delete(session, response, note)
 	}
-	return derp.InternalError("service.Response.ObjectDelete", "Invalid object type", object)
+	return derp.Internal("service.Response.ObjectDelete", "Invalid object type", object)
 }
 
 func (service *Response) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.UnauthorizedError("service.Response", "Not Authorized")
+	return derp.Unauthorized("service.Response", "Not Authorized")
 }
 
 func (service *Response) Schema() schema.Schema {

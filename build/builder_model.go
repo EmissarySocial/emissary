@@ -42,9 +42,9 @@ func NewModel(factory Factory, session data.Session, request *http.Request, resp
 		// traceInfo := common.TraceUserCan(actionID)
 
 		if common._authorization.IsAuthenticated() {
-			return Model{}, derp.ForbiddenError(location, "Forbidden", "User is authenticated, but this action is not allowed", object, actionID, traceInfo)
+			return Model{}, derp.Forbidden(location, "Forbidden", "User is authenticated, but this action is not allowed", object, actionID, traceInfo)
 		} else {
-			return Model{}, derp.UnauthorizedError(location, "Anonymous user is not authorized to perform this action", actionID, traceInfo)
+			return Model{}, derp.Unauthorized(location, "Anonymous user is not authorized to perform this action", actionID, traceInfo)
 		}
 	}
 
@@ -52,7 +52,7 @@ func NewModel(factory Factory, session data.Session, request *http.Request, resp
 	modelService := factory.ModelService(object)
 
 	if modelService == nil {
-		return Model{}, derp.InternalError(location, "Invalid model service", object)
+		return Model{}, derp.Internal(location, "Invalid model service", object)
 	}
 
 	// Return the Model builder
@@ -196,7 +196,7 @@ func (w Model) Identity(identityID primitive.ObjectID) (model.Identity, error) {
 
 	// User must be signed in to view Identities
 	if !w._authorization.IsAuthenticated() {
-		return model.Identity{}, derp.UnauthorizedError(location, "Anonymous user is not authorized to perform this action", identityID)
+		return model.Identity{}, derp.Unauthorized(location, "Anonymous user is not authorized to perform this action", identityID)
 	}
 
 	// Load the Identity from the database
@@ -220,7 +220,7 @@ func (w Model) CircleMembers() (QueryBuilder[model.Identity], error) {
 	circle, isCircle := w._object.(*model.Circle)
 
 	if !isCircle {
-		return QueryBuilder[model.Identity]{}, derp.InternalError(location, "Builder method `CircleMembers` can only be used within a `with-circle` action.")
+		return QueryBuilder[model.Identity]{}, derp.Internal(location, "Builder method `CircleMembers` can only be used within a `with-circle` action.")
 	}
 
 	// Define inbound parameters
@@ -257,7 +257,7 @@ func (w Model) setState(stateID string) error {
 		return nil
 	}
 
-	return derp.InternalError("build.Model.SetState", "Object does not implement model.StateSetter interface", w._object)
+	return derp.Internal("build.Model.SetState", "Object does not implement model.StateSetter interface", w._object)
 }
 
 func (w Model) clone(action string) (Builder, error) {

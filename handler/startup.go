@@ -17,7 +17,7 @@ func GetStartup(ctx *steranko.Context, factory *service.Factory, session data.Se
 
 	// Only domain owners can access admin pages
 	if !isOwner(ctx.Authorization()) {
-		return derp.UnauthorizedError(location, "Unauthorized")
+		return derp.Unauthorized(location, "Unauthorized")
 	}
 
 	// Collect parameters to build
@@ -54,7 +54,7 @@ func PostStartup(ctx *steranko.Context, factory *service.Factory, session data.S
 
 	// Only domain owners can access admin pages
 	if !isOwner(ctx.Authorization()) {
-		return derp.UnauthorizedError(location, "Unauthorized")
+		return derp.Unauthorized(location, "Unauthorized")
 	}
 
 	// Try to load the requested theme from the Theme Service
@@ -63,7 +63,7 @@ func PostStartup(ctx *steranko.Context, factory *service.Factory, session data.S
 	theme := themeService.GetTheme(themeID)
 
 	if theme.IsEmpty() {
-		return derp.NotFoundError("handler.PostStartup", "Theme not found", themeID)
+		return derp.NotFound("handler.PostStartup", "Theme not found", themeID)
 	}
 
 	// Load/Initialize the Domain value

@@ -38,7 +38,7 @@ func NewSearchTag(factory Factory, session data.Session, request *http.Request, 
 
 	// Verify that the user is a Domain Owner
 	if !common._authorization.DomainOwner {
-		return SearchTag{}, derp.ForbiddenError(location, "Must be domain owner to continue")
+		return SearchTag{}, derp.Forbidden(location, "Must be domain owner to continue")
 	}
 
 	// Return the SearchTag builder

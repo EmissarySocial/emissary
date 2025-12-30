@@ -26,7 +26,7 @@ func NewCommonWithTemplate(factory Factory, session data.Session, request *http.
 	action, ok := template.Action(actionID)
 
 	if !ok {
-		return CommonWithTemplate{}, derp.BadRequestError(location, "Action is not valid", actionID)
+		return CommonWithTemplate{}, derp.BadRequest(location, "Action is not valid", actionID)
 	}
 
 	// Create the CommonWithTemplate builder

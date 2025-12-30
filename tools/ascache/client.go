@@ -81,7 +81,7 @@ func (client *Client) Load(url string, options ...any) (streams.Document, error)
 	}
 
 	if session == nil {
-		return streams.NilDocument(), derp.InternalError(location, "Database session is nil.  This should never happen")
+		return streams.NilDocument(), derp.Internal(location, "Database session is nil.  This should never happen")
 	}
 
 	defer cancel()
@@ -167,7 +167,7 @@ func (client *Client) Delete(url string) error {
 	session, err := client.commonDatabase.Session(ctx)
 
 	if err != nil {
-		return derp.InternalError(location, "Unable to connect to ActivityStream cache")
+		return derp.Internal(location, "Unable to connect to ActivityStream cache")
 	}
 
 	collection := client.collection(session)
@@ -210,7 +210,7 @@ func (client *Client) session(ctx context.Context) (data.Session, error) {
 	const location = "ascache.Client.session"
 
 	if client.commonDatabase == nil {
-		return nil, derp.InternalError(location, "Common Database is not initialized")
+		return nil, derp.Internal(location, "Common Database is not initialized")
 	}
 
 	session, err := client.commonDatabase.Session(ctx)
@@ -236,7 +236,7 @@ func (client *Client) timeoutSession(seconds int) (data.Session, context.CancelF
 
 	if session == nil {
 		cancel()
-		return nil, nil, derp.InternalError(location, "Database session is nil.  This should never happen.")
+		return nil, nil, derp.Internal(location, "Database session is nil.  This should never happen.")
 	}
 
 	return session, cancel, nil

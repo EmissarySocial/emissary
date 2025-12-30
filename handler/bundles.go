@@ -33,7 +33,7 @@ func GetTemplateBundle(serverFactory *server.Factory) echo.HandlerFunc {
 		template, err := templateService.Load(templateID)
 
 		if err != nil {
-			return derp.NotFoundError("handler.GetTemplateBundle", "Template not found", templateID)
+			return derp.NotFound("handler.GetTemplateBundle", "Template not found", templateID)
 		}
 
 		return getBundle(template.Bundles, bundleID, ctx.Response())
@@ -51,7 +51,7 @@ func GetWidgetBundle(serverFactory *server.Factory) echo.HandlerFunc {
 		widget, ok := widgetService.Get(widgetID)
 
 		if !ok {
-			return derp.NotFoundError("handler.GetWidgetBundle", "Widget not found", widgetID)
+			return derp.NotFound("handler.GetWidgetBundle", "Widget not found", widgetID)
 		}
 
 		return getBundle(widget.Bundles, bundleID, ctx.Response())
@@ -63,7 +63,7 @@ func getBundle(bundles mapof.Object[model.Bundle], bundleID string, response *ec
 	bundle, ok := bundles[bundleID]
 
 	if !ok {
-		return derp.NotFoundError("handler.getBundle", "Bundle not found", bundleID)
+		return derp.NotFound("handler.getBundle", "Bundle not found", bundleID)
 	}
 
 	header := response.Header()

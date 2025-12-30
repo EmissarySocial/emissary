@@ -13,7 +13,7 @@ func GetMetadata(host string, url string, options ...remote.Option) (Metadata, e
 
 	// RULE: If we're running on a production host, then do not allow local clients
 	if !dt.IsLocalhost(host) && dt.IsLocalhost(url) {
-		return Metadata{}, derp.BadRequestError(location, "Invalid Client ID. Local clients can only be accessed on development instances", host, url)
+		return Metadata{}, derp.BadRequest(location, "Invalid Client ID. Local clients can only be accessed on development instances", host, url)
 	}
 
 	// Stage the HTTP request

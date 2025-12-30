@@ -90,7 +90,7 @@ func PostStripeConnectWebhook_Checkout(ctx *steranko.Context, factory *service.F
 
 	// RULE: Connection must be a STRIPE CONNECT account
 	if connection.ProviderID != model.ConnectionProviderStripeConnect {
-		return derp.NotImplementedError(location, "This Webhook handler is only valid for Stripe Connect accounts")
+		return derp.NotImplemented(location, "This Webhook handler is only valid for Stripe Connect accounts")
 	}
 
 	// Retrieve the webhook signing key from the Vault

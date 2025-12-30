@@ -177,18 +177,18 @@ func (service *Mention) ObjectSave(session data.Session, object data.Object, com
 	if mention, ok := object.(*model.Mention); ok {
 		return service.Save(session, mention, comment)
 	}
-	return derp.InternalError("service.Mention.ObjectSave", "Invalid Object Type", object)
+	return derp.Internal("service.Mention.ObjectSave", "Invalid Object Type", object)
 }
 
 func (service *Mention) ObjectDelete(session data.Session, object data.Object, comment string) error {
 	if mention, ok := object.(*model.Mention); ok {
 		return service.Delete(session, mention, comment)
 	}
-	return derp.InternalError("service.Mention.ObjectDelete", "Invalid Object Type", object)
+	return derp.Internal("service.Mention.ObjectDelete", "Invalid Object Type", object)
 }
 
 func (service *Mention) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.UnauthorizedError("service.Mention", "Not Authorized")
+	return derp.Unauthorized("service.Mention", "Not Authorized")
 }
 
 func (service *Mention) Schema() schema.Schema {
@@ -284,7 +284,7 @@ func (service *Mention) ParseURL(target string) (objectType string, token string
 	// RULE: If the target URL doesn't start with the service's host, then it
 	// doesn't belong on this server
 	if !strings.HasPrefix(target, service.host) {
-		return "", "", derp.NotFoundError(location, "Target URL is not on this server", target)
+		return "", "", derp.NotFound(location, "Target URL is not on this server", target)
 	}
 
 	// Parse the URL to ensure that it's valid
@@ -389,7 +389,7 @@ func (service *Mention) DiscoverEndpoint(url string) (string, error) {
 	result := linkTag.AttrOr("href", "")
 
 	if result == "" {
-		return "", derp.BadRequestError(location, "No Mention endpoint found", url)
+		return "", derp.BadRequest(location, "No Mention endpoint found", url)
 	}
 
 	return result, nil
@@ -435,7 +435,7 @@ func (service *Mention) Verify(source string, target string, buffer io.Writer) e
 	}
 
 	// Fall through means the link was not found.  Return an error.
-	return derp.NotFoundError(location, "Target link not found", source, target)
+	return derp.NotFound(location, "Target link not found", source, target)
 }
 
 // TODO: HIGH: This should use a common service to get URL data from Microformats, OpenGraph, JSON-LD, etc.

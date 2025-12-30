@@ -95,7 +95,7 @@ func PostOAuthAuthorization(ctx *steranko.Context, factory *service.Factory, ses
 		return postOAuthAuthorization_token(ctx, userToken, transaction)
 	}
 
-	return derp.BadRequestError(location, "Invalid response type", transaction.ResponseType)
+	return derp.BadRequest(location, "Invalid response type", transaction.ResponseType)
 }
 
 // postOAuthAuthorization_code handles `code` grant types used by server authentication flow

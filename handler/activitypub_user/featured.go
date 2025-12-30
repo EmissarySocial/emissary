@@ -15,7 +15,7 @@ func GetFeaturedCollection(ctx *steranko.Context, factory *service.Factory, sess
 
 	// RULE: Only public users can be queried
 	if !user.IsPublic {
-		return derp.NotFoundError(location, "User not found")
+		return derp.NotFound(location, "User not found")
 	}
 
 	// Fallthrough means this is a request for a specific page

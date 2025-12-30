@@ -23,7 +23,7 @@ func WithFactory(serverFactory ServerFactory, args mapof.Any, handler func(facto
 
 	if hostname == "" {
 		// If we don't have a host, we'll never be able to run this task, so hard fail
-		return queue.Failure(derp.InternalError(location, "Missing 'host' argument", args))
+		return queue.Failure(derp.Internal(location, "Missing 'host' argument", args))
 	}
 
 	// Load the factory
@@ -93,10 +93,7 @@ func WithSession(serverFactory ServerFactory, args mapof.Any, handler func(facto
 		})
 
 		if err != nil {
-			if queueResult, isQueueResult := result.(queue.Result); isQueueResult {
-				return queueResult
-			}
-			return queue.Failure(derp.Wrap(err, location, "Handler failed, did not return a queue.Result.  This should never happen."))
+			return queue.Error(derp.Wrap(err, location, "Error executing transaction."))
 		}
 
 		// Return the queue result
@@ -105,7 +102,7 @@ func WithSession(serverFactory ServerFactory, args mapof.Any, handler func(facto
 		}
 
 		// Guard against panics if developers do bad things.  This should never happen.
-		return queue.Failure(derp.InternalError(location, "Handler did not return a queue.Result.  This should never happen", result))
+		return queue.Failure(derp.Internal(location, "Handler did not return a queue.Result.  This should never happen", result))
 	})
 }
 

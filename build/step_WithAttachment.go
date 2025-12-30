@@ -32,7 +32,7 @@ func (step StepWithAttachment) execute(builder Builder, buffer io.Writer, action
 	template, exists := getTemplate(builder)
 
 	if !exists {
-		return Halt().WithError(derp.InternalError(location, "This step cannot be used in this Renderer."))
+		return Halt().WithError(derp.Internal(location, "This step cannot be used in this Renderer."))
 	}
 
 	// Get Object info from the parent builder
@@ -47,7 +47,7 @@ func (step StepWithAttachment) execute(builder Builder, buffer io.Writer, action
 	if token := builder.QueryParam("attachmentId"); isNewOrEmpty(token) {
 
 		if !builder.IsAuthenticated() {
-			return Halt().WithError(derp.ForbiddenError(location, "Anonymous user is not authorized to perform this action"))
+			return Halt().WithError(derp.Forbidden(location, "Anonymous user is not authorized to perform this action"))
 		}
 
 	} else if attachmentID, err := primitive.ObjectIDFromHex(token); err == nil {

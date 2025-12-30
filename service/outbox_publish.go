@@ -102,7 +102,7 @@ func (service *Outbox) Publish(session data.Session, actorType string, actorID p
 		// TODO: Can we move WebMentions into this too?
 
 		default:
-			derp.Report(derp.InternalError(location, "Unknown Follower Method.  This should never happen", follower))
+			derp.Report(derp.Internal(location, "Unknown Follower Method.  This should never happen", follower))
 		}
 	}
 
@@ -189,7 +189,7 @@ func (service *Outbox) getActor(session data.Session, actorType string, actorID 
 
 	}
 
-	return outbox.Actor{}, derp.InternalError("service.Outbox.getActor", "Unknown Actor Type", actorType)
+	return outbox.Actor{}, derp.Internal("service.Outbox.getActor", "Unknown Actor Type", actorType)
 }
 
 /******************************************

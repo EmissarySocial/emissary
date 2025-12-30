@@ -18,7 +18,7 @@ func (service *Import) OAuthExchange(session data.Session, record *model.Import,
 
 	// Validate the state across requests
 	if state != record.ImportID.Hex() {
-		return derp.BadRequestError(location, "OAuth State must match internal records")
+		return derp.BadRequest(location, "OAuth State must match internal records")
 	}
 
 	// Try to generate the OAuth token
@@ -36,7 +36,7 @@ func (service *Import) OAuthExchange(session data.Session, record *model.Import,
 
 	// Save the Import record
 	if service.Save(session, record, "OAuth Exchange") != nil {
-		return derp.InternalError(location, "Unable to save domain")
+		return derp.Internal(location, "Unable to save domain")
 	}
 
 	// Success!
@@ -51,7 +51,7 @@ func (service *Import) GetOAuthToken(session data.Session, record *model.Import)
 
 	// RULE: We must have an existing token to start
 	if record.OAuthToken == nil {
-		return nil, derp.BadRequestError(location, "No OAuth token found.  This should never happen.")
+		return nil, derp.BadRequest(location, "No OAuth token found.  This should never happen.")
 	}
 
 	// Use TokenSource to update tokens when they expire.

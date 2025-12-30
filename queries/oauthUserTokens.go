@@ -16,7 +16,7 @@ func OAuthUserTokens(session data.Session, userID primitive.ObjectID) (sliceof.M
 	collection := mongoCollection(session.Collection("OAuthUserToken"))
 
 	if collection == nil {
-		return nil, derp.InternalError(location, "Unable to connect to OAuthUserToken collection")
+		return nil, derp.Internal(location, "Unable to connect to OAuthUserToken collection")
 	}
 
 	// Build the Aggregate Pipeline

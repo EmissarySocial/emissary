@@ -193,18 +193,18 @@ func (service *Annotation) ObjectSave(session data.Session, object data.Object, 
 	if annotation, ok := object.(*model.Annotation); ok {
 		return service.Save(session, annotation, comment)
 	}
-	return derp.InternalError("service.Annotation.ObjectSave", "Invalid Object Type", object)
+	return derp.Internal("service.Annotation.ObjectSave", "Invalid Object Type", object)
 }
 
 func (service *Annotation) ObjectDelete(session data.Session, object data.Object, comment string) error {
 	if annotation, ok := object.(*model.Annotation); ok {
 		return service.Delete(session, annotation, comment)
 	}
-	return derp.InternalError("service.Annotation.ObjectDelete", "Invalid Object Type", object)
+	return derp.Internal("service.Annotation.ObjectDelete", "Invalid Object Type", object)
 }
 
 func (service *Annotation) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.UnauthorizedError("service.Annotation", "Not Authorized")
+	return derp.Unauthorized("service.Annotation", "Not Authorized")
 }
 
 func (service *Annotation) Schema() schema.Schema {
@@ -219,7 +219,7 @@ func (service *Annotation) QueryByUser(session data.Session, userID primitive.Ob
 
 	// RULE: Require a valid UserID
 	if userID.IsZero() {
-		return nil, derp.ValidationError("UserID cannot be zero")
+		return nil, derp.Validation("UserID cannot be zero")
 	}
 
 	// Query the database
@@ -232,12 +232,12 @@ func (service *Annotation) LoadByID(session data.Session, userID primitive.Objec
 
 	// RULE: Require a valid UserID
 	if userID.IsZero() {
-		return derp.ValidationError("UserID cannot be zero")
+		return derp.Validation("UserID cannot be zero")
 	}
 
 	// RULE: Require a valid AnnotationID
 	if annotationID.IsZero() {
-		return derp.ValidationError("AnnotationID cannot be zero")
+		return derp.Validation("AnnotationID cannot be zero")
 	}
 
 	// Query the database
@@ -249,19 +249,19 @@ func (service *Annotation) LoadByToken(session data.Session, userID primitive.Ob
 
 	// RULE: Require a valid UserID
 	if userID.IsZero() {
-		return derp.ValidationError("UserID cannot be zero")
+		return derp.Validation("UserID cannot be zero")
 	}
 
 	// RULE: Require a valid Token
 	if token == "" {
-		return derp.ValidationError("Token cannot be empty")
+		return derp.Validation("Token cannot be empty")
 	}
 
 	if annotationID, err := primitive.ObjectIDFromHex(token); err == nil {
 		return service.LoadByID(session, userID, annotationID, result)
 	}
 
-	return derp.ValidationError("Token is must be a valid ObjectID", token)
+	return derp.Validation("Token is must be a valid ObjectID", token)
 }
 
 // LoadByID loads a single model.Annotation object that matches the provided annotationID
@@ -269,12 +269,12 @@ func (service *Annotation) LoadByURL(session data.Session, userID primitive.Obje
 
 	// RULE: Require a valid UserID
 	if userID.IsZero() {
-		return derp.ValidationError("UserID cannot be zero")
+		return derp.Validation("UserID cannot be zero")
 	}
 
 	// RULE: Require a valid URL
 	if url == "" {
-		return derp.ValidationError("URL cannot be empty")
+		return derp.Validation("URL cannot be empty")
 	}
 
 	// Query the database

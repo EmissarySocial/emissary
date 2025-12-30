@@ -101,7 +101,7 @@ func GetCompleteRegistration(ctx *steranko.Context, factory *service.Factory, se
 	}
 
 	if !token.Valid {
-		return derp.BadRequestError(location, "Invalid JWT token")
+		return derp.BadRequest(location, "Invalid JWT token")
 	}
 
 	// Parse the Registration Transaction from the JWT token
@@ -157,11 +157,11 @@ func PostUpdateRegistration(ctx *steranko.Context, factory *service.Factory, ses
 	secret := domain.RegistrationData.GetString("secret")
 
 	if secret == "" {
-		return derp.NotFoundError(location, "Secret not found")
+		return derp.NotFound(location, "Secret not found")
 	}
 
 	if !txn.IsValid(secret) {
-		return derp.BadRequestError(location, "Invalid Registration Transaction", txn)
+		return derp.BadRequest(location, "Invalid Registration Transaction", txn)
 	}
 
 	// Update the User' registration

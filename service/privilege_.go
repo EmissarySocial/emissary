@@ -220,18 +220,18 @@ func (service *Privilege) ObjectSave(session data.Session, object data.Object, c
 	if privilege, ok := object.(*model.Privilege); ok {
 		return service.Save(session, privilege, comment)
 	}
-	return derp.InternalError("service.Privilege.ObjectSave", "Invalid Object Type", object)
+	return derp.Internal("service.Privilege.ObjectSave", "Invalid Object Type", object)
 }
 
 func (service *Privilege) ObjectDelete(session data.Session, object data.Object, comment string) error {
 	if privilege, ok := object.(*model.Privilege); ok {
 		return service.Delete(session, privilege, comment)
 	}
-	return derp.InternalError("service.Privilege.ObjectDelete", "Invalid Object Type", object)
+	return derp.Internal("service.Privilege.ObjectDelete", "Invalid Object Type", object)
 }
 
 func (service *Privilege) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.UnauthorizedError("service.Privilege.ObjectUserCan", "Not Authorized")
+	return derp.Unauthorized("service.Privilege.ObjectUserCan", "Not Authorized")
 }
 
 func (service *Privilege) Schema() schema.Schema {
@@ -253,12 +253,12 @@ func (service *Privilege) LoadByIdentity(session data.Session, identityID primit
 
 	// RULE: IdentityID must not be zero
 	if identityID.IsZero() {
-		return derp.InternalError(location, "IdentityID must be provided")
+		return derp.Internal(location, "IdentityID must be provided")
 	}
 
 	// RULE: PrivilegeID must not be zero
 	if privilegeID.IsZero() {
-		return derp.InternalError(location, "PrivilegeID must be provided")
+		return derp.Internal(location, "PrivilegeID must be provided")
 	}
 
 	criteria := exp.Equal("_id", privilegeID).AndEqual("identityId", identityID)
@@ -272,17 +272,17 @@ func (service *Privilege) LoadByIdentityAndCircle(session data.Session, userID p
 
 	// RULE: UserID must not be zero
 	if userID.IsZero() {
-		return derp.InternalError(location, "UserID must be provided")
+		return derp.Internal(location, "UserID must be provided")
 	}
 
 	// RULE: CircleID must not be zero
 	if identityID.IsZero() {
-		return derp.InternalError(location, "IdentityID must be provided")
+		return derp.Internal(location, "IdentityID must be provided")
 	}
 
 	// RULE: CircleID must not be zero
 	if circleID.IsZero() {
-		return derp.InternalError(location, "CircleID must be provided")
+		return derp.Internal(location, "CircleID must be provided")
 	}
 
 	criteria := exp.Equal("userId", userID).
@@ -299,7 +299,7 @@ func (service *Privilege) RangeByIdentity(session data.Session, identityID primi
 
 	// RULE: IdentityID must not be zero
 	if identityID.IsZero() {
-		return nil, derp.InternalError(location, "IdentityID must be provided")
+		return nil, derp.Internal(location, "IdentityID must be provided")
 	}
 
 	criteria := exp.Equal("identityId", identityID)
@@ -336,7 +336,7 @@ func (service *Privilege) RangeByCircle(session data.Session, circleID primitive
 
 	// RULE: CircleID must be provided
 	if circleID.IsZero() {
-		return nil, derp.InternalError(location, "No circleID provided")
+		return nil, derp.Internal(location, "No circleID provided")
 	}
 
 	criteria := exp.Equal("circleId", circleID)
@@ -350,7 +350,7 @@ func (service *Privilege) RangeByProducts(session data.Session, productIDs ...pr
 
 	// RULE: Must have at least one productIDs
 	if len(productIDs) == 0 {
-		return nil, derp.InternalError(location, "No productIDs provided")
+		return nil, derp.Internal(location, "No productIDs provided")
 	}
 
 	criteria := exp.In("productId", productIDs)
@@ -392,7 +392,7 @@ func (service *Privilege) QueryByIdentity(session data.Session, identityID primi
 
 	// RULE: IdentityID must be provided
 	if identityID.IsZero() {
-		return nil, derp.InternalError(location, "No identityID provided")
+		return nil, derp.Internal(location, "No identityID provided")
 	}
 
 	criteria := exp.Equal("identityId", identityID)
@@ -467,7 +467,7 @@ func (service *Privilege) maybeCreateIdentity(session data.Session, privilege *m
 
 	// RULE: IdentifierType MUST be present
 	if privilege.IdentifierValue == "" {
-		return derp.BadRequestError(location, "Privilege must have an IdentifierValue to create an Identity", privilege)
+		return derp.BadRequest(location, "Privilege must have an IdentifierValue to create an Identity", privilege)
 	}
 
 	// Try to guess the IdentifierType if it is not already set
@@ -543,12 +543,12 @@ func (service *Privilege) refreshIdentity(session data.Session, identity *model.
 
 	// RULE: NPE check
 	if identity == nil {
-		return derp.InternalError(location, "Identity cannot be nil.  This should never happen.")
+		return derp.Internal(location, "Identity cannot be nil.  This should never happen.")
 	}
 
 	// RULE: IdentityID must not be zero
 	if identity.IdentityID.IsZero() {
-		return derp.BadRequestError(location, "IdentityID cannot be empty.  This should never happen.", identity)
+		return derp.BadRequest(location, "IdentityID cannot be empty.  This should never happen.", identity)
 	}
 
 	//////////////////////////
@@ -654,17 +654,17 @@ func (service *Privilege) maybeSetIdentity(session data.Session, privilege *mode
 
 	// RULE: Privilege must not be nil
 	if privilege == nil {
-		return derp.BadRequestError(location, "Privilege cannot be nil. This should never happen.")
+		return derp.BadRequest(location, "Privilege cannot be nil. This should never happen.")
 	}
 
 	// RULE: Identity must not be nil
 	if identity == nil {
-		return derp.BadRequestError(location, "Identity cannot be nil. This should never happen.")
+		return derp.BadRequest(location, "Identity cannot be nil. This should never happen.")
 	}
 
 	// If the identifier does not match, then do not reassign (but this should never happen)
 	if identity.Identifier(privilege.IdentifierType) != privilege.IdentifierValue {
-		return derp.BadRequestError(location, "Privilege must match the identifier in the Identity. This shoulld never happen.", privilege.IdentifierType, privilege.IdentifierValue, identity)
+		return derp.BadRequest(location, "Privilege must match the identifier in the Identity. This shoulld never happen.", privilege.IdentifierType, privilege.IdentifierValue, identity)
 	}
 
 	// Make sure that the Identity includes a link to the Privilege
@@ -693,12 +693,12 @@ func (service *Privilege) maybeRemoveIdentity(session data.Session, privilege *m
 
 	// RULE: Privilege must not be nil
 	if privilege == nil {
-		return derp.BadRequestError(location, "Privilege cannot be nil")
+		return derp.BadRequest(location, "Privilege cannot be nil")
 	}
 
 	// RULE: Identity must not be nil
 	if identity == nil {
-		return derp.BadRequestError(location, "Identity cannot be nil. This should never happen")
+		return derp.BadRequest(location, "Identity cannot be nil. This should never happen")
 	}
 
 	// If the identifier matches, then this Privilege is still valid
@@ -730,11 +730,11 @@ func (service *Privilege) Cancel(session data.Session, privilege *model.Privileg
 	const location = "service.Privilege.Cancel"
 
 	if privilege.MerchantAccountID.IsZero() {
-		return derp.BadRequestError(location, "Privilege cannot be canceled without a valid MerchantAccountID")
+		return derp.BadRequest(location, "Privilege cannot be canceled without a valid MerchantAccountID")
 	}
 
 	if !privilege.IsRecurring() {
-		return derp.BadRequestError(location, "Privilege cannot be canceled if it is not a recurring charge.")
+		return derp.BadRequest(location, "Privilege cannot be canceled if it is not a recurring charge.")
 	}
 
 	if err := service.merchantAccountService.CancelPrivilege(session, privilege); err != nil {

@@ -22,7 +22,7 @@ func GetJSONLD(ctx *steranko.Context, factory *service.Factory, session data.Ses
 	permissions := permissionService.ParseHTTPSignature(session, ctx.Request()) // nolint:scopeguard
 
 	if !slice.ContainsAny(stream.DefaultAllow, permissions...) {
-		return derp.ForbiddenError(location, "You do not have permission to view this content")
+		return derp.Forbidden(location, "You do not have permission to view this content")
 	}
 
 	// If this Stream is not an Actor, then just return a standard JSON-LD response.

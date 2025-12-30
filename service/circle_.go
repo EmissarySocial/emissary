@@ -196,18 +196,18 @@ func (service *Circle) ObjectSave(session data.Session, object data.Object, comm
 	if circle, ok := object.(*model.Circle); ok {
 		return service.Save(session, circle, comment)
 	}
-	return derp.InternalError("service.Circle.ObjectSave", "Invalid Object Type", object)
+	return derp.Internal("service.Circle.ObjectSave", "Invalid Object Type", object)
 }
 
 func (service *Circle) ObjectDelete(session data.Session, object data.Object, comment string) error {
 	if circle, ok := object.(*model.Circle); ok {
 		return service.Delete(session, circle, comment)
 	}
-	return derp.InternalError("service.Circle.ObjectDelete", "Invalid Object Type", object)
+	return derp.Internal("service.Circle.ObjectDelete", "Invalid Object Type", object)
 }
 
 func (service *Circle) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.UnauthorizedError("service.Circle", "Not Authorized")
+	return derp.Unauthorized("service.Circle", "Not Authorized")
 }
 
 func (service *Circle) Schema() schema.Schema {
@@ -224,12 +224,12 @@ func (service *Circle) QueryByIDs(session data.Session, userID primitive.ObjectI
 
 	// RULE: Require a valid UserID
 	if userID.IsZero() {
-		return nil, derp.ValidationError("UserID cannot be zero")
+		return nil, derp.Validation("UserID cannot be zero")
 	}
 
 	// RULE: Require at least one CircleID
 	if len(circleIDs) == 0 {
-		return nil, derp.ValidationError("CircleIDs cannot be empty")
+		return nil, derp.Validation("CircleIDs cannot be empty")
 	}
 
 	criteria := exp.In("_id", circleIDs).AndEqual("userId", userID)
@@ -249,7 +249,7 @@ func (service *Circle) QueryByUser(session data.Session, userID primitive.Object
 
 	// RULE: Require a valid UserID
 	if userID.IsZero() {
-		return nil, derp.ValidationError("UserID cannot be zero")
+		return nil, derp.Validation("UserID cannot be zero")
 	}
 
 	criteria := exp.Equal("userId", userID)
@@ -261,7 +261,7 @@ func (service *Circle) QueryFeaturedByUser(session data.Session, userID primitiv
 
 	// RULE: Require a valid UserID
 	if userID.IsZero() {
-		return nil, derp.ValidationError("UserID cannot be zero")
+		return nil, derp.Validation("UserID cannot be zero")
 	}
 
 	criteria := exp.Equal("userId", userID).AndEqual("isFeatured", true)
@@ -273,12 +273,12 @@ func (service *Circle) LoadByID(session data.Session, userID primitive.ObjectID,
 
 	// RULE: Require a valid UserID
 	if userID.IsZero() {
-		return derp.ValidationError("UserID cannot be zero")
+		return derp.Validation("UserID cannot be zero")
 	}
 
 	// RULE: Require a valid CircleID
 	if circleID.IsZero() {
-		return derp.ValidationError("CircleID cannot be zero")
+		return derp.Validation("CircleID cannot be zero")
 	}
 
 	criteria := exp.Equal("_id", circleID).AndEqual("userId", userID)
@@ -289,12 +289,12 @@ func (service *Circle) LoadByProductID(session data.Session, userID primitive.Ob
 
 	// RULE: Require a valid UserID
 	if userID.IsZero() {
-		return derp.ValidationError("UserID cannot be zero")
+		return derp.Validation("UserID cannot be zero")
 	}
 
 	// RULE: Require a valid RemoteToken
 	if productID.IsZero() {
-		return derp.ValidationError("ProductID cannot be zero")
+		return derp.Validation("ProductID cannot be zero")
 	}
 
 	criteria := exp.Equal("userId", userID).AndEqual("productIds", productID)
@@ -347,7 +347,7 @@ func (service *Circle) ProductCount(session data.Session, userID primitive.Objec
 
 	// RULE: Require a valid UserID
 	if userID.IsZero() {
-		return 0, derp.ValidationError("UserID cannot be zero")
+		return 0, derp.Validation("UserID cannot be zero")
 	}
 
 	// Count the number of remote products for this user
@@ -371,7 +371,7 @@ func (service *Circle) AssignedProductIDs(session data.Session, userID primitive
 
 	// RULE: Require a valid UserID
 	if userID.IsZero() {
-		return nil, derp.ValidationError("UserID cannot be zero")
+		return nil, derp.Validation("UserID cannot be zero")
 	}
 
 	// Load all Circles for this User

@@ -12,6 +12,6 @@ import (
 func PostMedia(serverFactory *server.Factory) func(model.Authorization, txn.PostMedia) (object.MediaAttachment, error) {
 
 	return func(model.Authorization, txn.PostMedia) (object.MediaAttachment, error) {
-		return object.MediaAttachment{}, derp.ForbiddenError("handler.mastodon.PostMedia", "Media uploads are not supported")
+		return object.MediaAttachment{}, derp.Forbidden("handler.mastodon.PostMedia", "Media uploads are not supported")
 	}
 }

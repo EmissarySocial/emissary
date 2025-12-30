@@ -18,7 +18,7 @@ func GetResponseCollection(ctx *steranko.Context, factory *service.Factory, sess
 
 	// RULE: Only PUBLIC streams have /likes /dislikes and /mentions
 	if !stream.DefaultAllowAnonymous() {
-		return derp.UnauthorizedError(location, "Anonymous access not allowed")
+		return derp.Unauthorized(location, "Anonymous access not allowed")
 	}
 
 	// Parse the Response Type from the URL

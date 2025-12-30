@@ -209,18 +209,18 @@ func (service *Folder) ObjectSave(session data.Session, object data.Object, comm
 	if folder, ok := object.(*model.Folder); ok {
 		return service.Save(session, folder, comment)
 	}
-	return derp.InternalError("service.Folder.ObjectSave", "Invalid object type", object)
+	return derp.Internal("service.Folder.ObjectSave", "Invalid object type", object)
 }
 
 func (service *Folder) ObjectDelete(session data.Session, object data.Object, comment string) error {
 	if folder, ok := object.(*model.Folder); ok {
 		return service.Delete(session, folder, comment)
 	}
-	return derp.InternalError("service.Folder.ObjectDelete", "Invalid object type", object)
+	return derp.Internal("service.Folder.ObjectDelete", "Invalid object type", object)
 }
 
 func (service *Folder) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.UnauthorizedError("service.Folder", "Not Authorized")
+	return derp.Unauthorized("service.Folder", "Not Authorized")
 }
 
 func (service *Folder) Schema() schema.Schema {
@@ -278,7 +278,7 @@ func (service *Folder) LoadByToken(session data.Session, userID primitive.Object
 	folderID, err := primitive.ObjectIDFromHex(token)
 
 	if err != nil {
-		return derp.BadRequestError("service.Folder", "Invalid token", token)
+		return derp.BadRequest("service.Folder", "Invalid token", token)
 	}
 
 	return service.LoadByID(session, userID, folderID, result)
@@ -305,11 +305,11 @@ func (service *Folder) CalculateUnreadCount(session data.Session, userID primiti
 	const location = "service.Folder.CalculateUnreadCount"
 
 	if userID.IsZero() {
-		return derp.BadRequestError(location, "UserID cannot be empty", userID)
+		return derp.BadRequest(location, "UserID cannot be empty", userID)
 	}
 
 	if folderID.IsZero() {
-		return derp.BadRequestError(location, "FolderID cannot be empty", folderID)
+		return derp.BadRequest(location, "FolderID cannot be empty", folderID)
 	}
 
 	unreadCount, err := service.inboxService.CountUnreadMessages(session, userID, folderID)

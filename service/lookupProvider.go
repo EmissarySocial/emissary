@@ -172,7 +172,7 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 
 	// Fall through means one or more of the above tests failed.
 	// We couldn't find the template or dataset, so just return an empty group.
-	derp.Report(derp.InternalError("service.LookupProvider.Group", "Could not find template or dataset named '"+path+"'"))
+	derp.Report(derp.Internal("service.LookupProvider.Group", "Could not find template or dataset named '"+path+"'"))
 	return form.NewReadOnlyLookupGroup()
 }
 

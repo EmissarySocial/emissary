@@ -24,7 +24,7 @@ func (step StepSendEmail) Post(builder Builder, _ io.Writer) PipelineBehavior {
 	userBuilder, ok := builder.(User)
 
 	if !ok {
-		return Halt().WithError(derp.InternalError(location, "Invalid Builder", "Builder must be Admin/User"))
+		return Halt().WithError(derp.Internal(location, "Invalid Builder", "Builder must be Admin/User"))
 	}
 
 	// Send the designated email
@@ -34,7 +34,7 @@ func (step StepSendEmail) Post(builder Builder, _ io.Writer) PipelineBehavior {
 		builder.factory().User().SendPasswordResetEmail(builder.session(), userBuilder._user)
 
 	default:
-		return Halt().WithError(derp.InternalError(location, "Invalid email name", "Name must be 'welcome' or 'password-reset'"))
+		return Halt().WithError(derp.Internal(location, "Invalid email name", "Name must be 'welcome' or 'password-reset'"))
 	}
 
 	// Banana

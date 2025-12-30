@@ -118,7 +118,7 @@ func (service *JWT) ParseString(tokenString string) (*jwt.Token, error) {
 
 	// RULE: JWT token must not be empty
 	if tokenString == "" {
-		return nil, derp.BadRequestError(location, "JWT token cannot be empty")
+		return nil, derp.BadRequest(location, "JWT token cannot be empty")
 	}
 
 	// Try to parse the JWT token
@@ -148,7 +148,7 @@ func (service *JWT) collection(ctx context.Context) (data.Collection, error) {
 	}
 
 	if session == nil {
-		return nil, derp.InternalError(location, "Database session is nil. This should never happen.")
+		return nil, derp.Internal(location, "Database session is nil. This should never happen.")
 	}
 
 	return session.Collection("JWT"), nil
@@ -197,7 +197,7 @@ func (service *JWT) create(keyName string) ([]byte, error) {
 	}
 
 	if collection == nil {
-		return []byte{}, derp.InternalError(location, "JWT collection is nil. This should never happen.")
+		return []byte{}, derp.Internal(location, "JWT collection is nil. This should never happen.")
 	}
 
 	if err := collection.Save(&record, "New key created"); err != nil {

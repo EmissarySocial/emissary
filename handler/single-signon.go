@@ -17,14 +17,14 @@ func GetSingleSignOn(ctx *steranko.Context, factory *service.Factory, session da
 
 	// RULE: Guarantee that the SSO is active
 	if domain.Data.GetString("sso_active") != "true" {
-		return derp.NotFoundError(location, "Single Sign-On is not active")
+		return derp.NotFound(location, "Single Sign-On is not active")
 	}
 
 	// RULE: Guarantee that the SSO secret has been set
 	secret := domain.Data.GetString("sso_secret")
 
 	if secret == "" {
-		return derp.InternalError(location, "SSO secret key is not set")
+		return derp.Internal(location, "SSO secret key is not set")
 	}
 
 	// Parse the JWT Token
@@ -36,7 +36,7 @@ func GetSingleSignOn(ctx *steranko.Context, factory *service.Factory, session da
 	claims := jwt.MapClaims{}
 
 	if _, err := jwt.ParseWithClaims(tokenString, &claims, keyFunc, steranko.JWTValidMethods()); err != nil {
-		return derp.BadRequestError(location, "Invalid JWT token")
+		return derp.BadRequest(location, "Invalid JWT token")
 	}
 
 	// Extract User Information from the Token

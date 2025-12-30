@@ -145,7 +145,7 @@ func (storage FileStorage) load() (Config, error) {
 	}
 
 	if err := hjson.Unmarshal(data, &result); err != nil {
-		return Config{}, derp.InternalError("config.FileStorage.load", "Error unmarshaling configuration", derp.WithWrappedValue(err))
+		return Config{}, derp.Internal("config.FileStorage.load", "Error unmarshaling configuration", derp.WithWrappedValue(err))
 	}
 
 	result.Source = storage.source

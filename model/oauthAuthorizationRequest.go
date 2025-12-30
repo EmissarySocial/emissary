@@ -43,7 +43,7 @@ func (req *OAuthAuthorizationRequest) Validate(client OAuthClient) error {
 	const location = "model.OAuthAuthorizationRequest.Validate"
 
 	if len(client.RedirectURIs) == 0 {
-		return derp.InternalError(location, "Application must have at least one redirect_uri")
+		return derp.Internal(location, "Application must have at least one redirect_uri")
 	}
 
 	// RULE: If missing, use default value for RedirectURI
@@ -53,7 +53,7 @@ func (req *OAuthAuthorizationRequest) Validate(client OAuthClient) error {
 
 	// RULE: Verify that redirect URI is valid
 	if !slice.Contains(client.RedirectURIs, req.RedirectURI) {
-		return derp.BadRequestError(location, "Invalid redirect_uri", "provided: "+req.RedirectURI, "allowed: "+strings.Join(client.RedirectURIs, ","))
+		return derp.BadRequest(location, "Invalid redirect_uri", "provided: "+req.RedirectURI, "allowed: "+strings.Join(client.RedirectURIs, ","))
 	}
 
 	// RULE: If missing, use default value for Scope
@@ -65,7 +65,7 @@ func (req *OAuthAuthorizationRequest) Validate(client OAuthClient) error {
 	if client.Scopes.NotEmpty() {
 		for _, scope := range req.Scopes() {
 			if !slice.Contains(client.Scopes, scope) {
-				return derp.BadRequestError(location, "Invalid scope", "provided: "+scope, "allowed: "+strings.Join(client.Scopes, ","))
+				return derp.BadRequest(location, "Invalid scope", "provided: "+scope, "allowed: "+strings.Join(client.Scopes, ","))
 			}
 		}
 	}

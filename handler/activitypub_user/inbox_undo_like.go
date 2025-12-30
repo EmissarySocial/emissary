@@ -33,7 +33,7 @@ func undoResponse(context Context, activity streams.Document) error {
 
 	// RULE: ActivityPub type must match the received activity
 	if activity.Actor().ID() != originalActivity.Actor().ID() {
-		return derp.UnauthorizedError(location, "Actor undoing this activity must be the same as the original activity")
+		return derp.Unauthorized(location, "Actor undoing this activity must be the same as the original activity")
 	}
 
 	// Get/Generate the ID of the original activity

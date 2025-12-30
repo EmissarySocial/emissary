@@ -31,7 +31,7 @@ func (step StepMakeArchive) Post(builder Builder, _ io.Writer) PipelineBehavior 
 	streamBuilder, isStreamBuilder := builder.(Stream)
 
 	if !isStreamBuilder {
-		err := derp.BadRequestError(location, "The `export` step can only be called on a `Stream` builder")
+		err := derp.BadRequest(location, "The `export` step can only be called on a `Stream` builder")
 		return Halt().WithError(err)
 	}
 

@@ -48,17 +48,17 @@ func NewOutbox(factory Factory, session data.Session, request *http.Request, res
 
 	// Verify that the User's profile is visible
 	if !isUserVisible(&common._authorization, user) {
-		return Outbox{}, derp.NotFoundError(location, "User not found")
+		return Outbox{}, derp.NotFound(location, "User not found")
 	}
 
 	// Enforce user permissions on the requested action
 	if !common.UserCan(actionID) {
 		if common._authorization.IsAuthenticated() {
-			return Outbox{}, derp.ForbiddenError(location, "Forbidden (signed in as user)")
+			return Outbox{}, derp.Forbidden(location, "Forbidden (signed in as user)")
 		} else if common._authorization.IsIdentity() {
-			return Outbox{}, derp.ForbiddenError(location, "Forbidden (signed in as guest)")
+			return Outbox{}, derp.Forbidden(location, "Forbidden (signed in as guest)")
 		} else {
-			return Outbox{}, derp.UnauthorizedError(location, "Anonymous user is not authorized to perform this action", user.ProfileURL, actionID)
+			return Outbox{}, derp.Unauthorized(location, "Anonymous user is not authorized to perform this action", user.ProfileURL, actionID)
 		}
 	}
 

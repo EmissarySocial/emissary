@@ -12,13 +12,13 @@ import (
 func GetPoll(serverFactory *server.Factory) func(model.Authorization, txn.GetPoll) ([]object.Poll, error) {
 
 	return func(model.Authorization, txn.GetPoll) ([]object.Poll, error) {
-		return nil, derp.NotImplementedError("handler.mastodon.GetPoll")
+		return nil, derp.NotImplemented("handler.mastodon.GetPoll")
 	}
 }
 
 func PostPoll_Votes(serverFactory *server.Factory) func(model.Authorization, txn.PostPoll_Votes) ([]object.Poll, error) {
 
 	return func(model.Authorization, txn.PostPoll_Votes) ([]object.Poll, error) {
-		return nil, derp.NotImplementedError("handler.mastodon.PostPoll_Votes")
+		return nil, derp.NotImplemented("handler.mastodon.PostPoll_Votes")
 	}
 }

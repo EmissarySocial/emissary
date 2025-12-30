@@ -19,7 +19,7 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 	actor := template.Actor
 
 	if actor.IsNil() {
-		return derp.NotFoundError(location, "Actor not found")
+		return derp.NotFound(location, "Actor not found")
 	}
 
 	// Get an ActivityStream service for the Stream

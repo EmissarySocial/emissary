@@ -19,7 +19,7 @@ func GetFollowersCollection(ctx *steranko.Context, factory *service.Factory, ses
 
 	// Verify the stream is an ActivityPub actor
 	if template.Actor.IsNil() {
-		return derp.NotFoundError(location, "Actor not found")
+		return derp.NotFound(location, "Actor not found")
 	}
 
 	// If the request is for the collection itself, then return a summary and the URL of the first page

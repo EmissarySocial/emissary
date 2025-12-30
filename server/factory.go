@@ -208,7 +208,7 @@ func (factory *Factory) readConfig(config config.Config) {
 	// RULE: MUST be able to connect to the common database
 	if err := factory.refreshCommonDatabase(config.ActivityPubCache); err != nil {
 		message := "Halting. Common database not properly defined in configuration file."
-		derp.Report(derp.InternalError(location, message))
+		derp.Report(derp.Internal(location, message))
 		os.Exit(1)
 	}
 
@@ -379,12 +379,12 @@ func (factory *Factory) refreshCommonDatabase(connection mapof.String) error {
 
 	// RULE: Must have URI
 	if uri == "" {
-		return derp.InternalError(location, "Common database must have a URI")
+		return derp.Internal(location, "Common database must have a URI")
 	}
 
 	// RULE: Must have a database name
 	if database == "" {
-		return derp.InternalError(location, "Common database must have a database name")
+		return derp.Internal(location, "Common database must have a database name")
 	}
 
 	// Make a copy of the commonDatabase (pointer) so we can close it after we set up a new one
@@ -568,7 +568,7 @@ func (factory *Factory) FindDomain(domainID string) (config.Domain, error) {
 	}
 
 	// Not found, so return an error
-	return config.NewDomain(), derp.NotFoundError(location, "Unable to find Domain", domainID)
+	return config.NewDomain(), derp.NotFound(location, "Unable to find Domain", domainID)
 }
 
 // DeleteDomain removes a domain from the Factory
@@ -649,7 +649,7 @@ func (factory *Factory) ByHostname(hostname string) (*service.Factory, error) {
 	}
 
 	// Failure.
-	return nil, derp.MisdirectedRequestError(location, "Hostname is invalid", "hostname: "+hostname)
+	return nil, derp.MisdirectedRequest(location, "Hostname is invalid", "hostname: "+hostname)
 }
 
 // normalizeHostname removes inconsistencies in host names so that they
@@ -759,7 +759,7 @@ func (factory *Factory) Server(hostname string) (data.Server, error) {
 	}
 
 	// Failure.
-	return nil, derp.MisdirectedRequestError(location, "Hostname is invalid", "hostname: "+hostname)
+	return nil, derp.MisdirectedRequest(location, "Hostname is invalid", "hostname: "+hostname)
 
 }
 

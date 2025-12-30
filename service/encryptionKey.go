@@ -204,7 +204,7 @@ func (service *EncryptionKey) GetPublicKey(encryptionKey *model.EncryptionKey) (
 	}
 
 	if privateKey == nil {
-		return nil, derp.InternalError(location, "Private key cannot be nil")
+		return nil, derp.Internal(location, "Private key cannot be nil")
 	}
 
 	return &privateKey.PublicKey, nil
@@ -218,7 +218,7 @@ func (service *EncryptionKey) GetPrivateKey(encryptionKey *model.EncryptionKey) 
 	block, _ := pem.Decode([]byte(encryptionKey.PrivatePEM))
 
 	if block == nil {
-		return nil, derp.InternalError(location, "Unable to decode private key PEM", encryptionKey.EncryptionKeyID)
+		return nil, derp.Internal(location, "Unable to decode private key PEM", encryptionKey.EncryptionKeyID)
 	}
 
 	// Parse the key

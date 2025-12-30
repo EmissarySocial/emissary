@@ -56,7 +56,7 @@ func (service SterankoUserService) Load(username string, result steranko.User) e
 		return nil
 	}
 
-	return derp.InternalError(location, "Invalid result provided.  This should never happen")
+	return derp.Internal(location, "Invalid result provided.  This should never happen")
 }
 
 // Save inserts/updates a single User in the database
@@ -68,7 +68,7 @@ func (service SterankoUserService) Save(user steranko.User, comment string) erro
 		return service.userService.Save(service.session, user, comment)
 	}
 
-	return derp.InternalError(location, "Steranko User is not a valid object.  This should never happen", user)
+	return derp.Internal(location, "Steranko User is not a valid object.  This should never happen", user)
 }
 
 // Delete removes a single User from the database
@@ -80,7 +80,7 @@ func (service SterankoUserService) Delete(user steranko.User, comment string) er
 		return service.userService.Delete(service.session, user, comment)
 	}
 
-	return derp.InternalError(location, "Steranko User is not a valid object.  This should never happen", user)
+	return derp.Internal(location, "Steranko User is not a valid object.  This should never happen", user)
 }
 
 // RequestPasswordReset is not currently implemented in this service. (TODO)
@@ -92,7 +92,7 @@ func (service SterankoUserService) RequestPasswordReset(user steranko.User) erro
 		return service.domainEmail.SendPasswordReset(user)
 	}
 
-	return derp.InternalError(location, "Steranko User is not a valid object.  This should never happen", user)
+	return derp.Internal(location, "Steranko User is not a valid object.  This should never happen", user)
 }
 
 // NewClaims creates a new JWT claim object
@@ -108,7 +108,7 @@ func (service SterankoUserService) Claims(sterankoUser steranko.User) (jwt.Claim
 	user, isCorrectType := sterankoUser.(*model.User)
 
 	if !isCorrectType {
-		return nil, derp.InternalError(location, "Steranko User is not a valid object.  This should never happen", user)
+		return nil, derp.Internal(location, "Steranko User is not a valid object.  This should never happen", user)
 	}
 
 	// Look up the Identity for this User.  If missing, NBD..

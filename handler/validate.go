@@ -55,5 +55,5 @@ func GetValidateStreamToken(ctx *steranko.Context, factory *service.Factory, ses
 		}
 	*/
 
-	return derp.NotImplementedError("handler.GetValidateStreamToken")
+	return derp.NotImplemented("handler.GetValidateStreamToken")
 }

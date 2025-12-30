@@ -177,18 +177,18 @@ func (service *Product) ObjectSave(session data.Session, object data.Object, com
 	if product, ok := object.(*model.Product); ok {
 		return service.Save(session, product, comment)
 	}
-	return derp.InternalError("service.Product.ObjectSave", "Invalid Object Type", object)
+	return derp.Internal("service.Product.ObjectSave", "Invalid Object Type", object)
 }
 
 func (service *Product) ObjectDelete(session data.Session, object data.Object, comment string) error {
 	if product, ok := object.(*model.Product); ok {
 		return service.Delete(session, product, comment)
 	}
-	return derp.InternalError("service.Product.ObjectDelete", "Invalid Object Type", object)
+	return derp.Internal("service.Product.ObjectDelete", "Invalid Object Type", object)
 }
 
 func (service *Product) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.UnauthorizedError("service.Product", "Not Authorized")
+	return derp.Unauthorized("service.Product", "Not Authorized")
 }
 
 func (service *Product) Schema() schema.Schema {

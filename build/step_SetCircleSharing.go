@@ -33,7 +33,7 @@ func (step StepSetCircleSharing) Get(builder Builder, buffer io.Writer) Pipeline
 	streamBuilder, isStreamBuilder := builder.(Stream)
 
 	if !isStreamBuilder {
-		return Halt().WithError(derp.BadRequestError(location, "Builder is not a StreamBuilder"))
+		return Halt().WithError(derp.BadRequest(location, "Builder is not a StreamBuilder"))
 	}
 
 	// Calculate the value object for this step
@@ -88,7 +88,7 @@ func (step StepSetCircleSharing) Post(builder Builder, _ io.Writer) PipelineBeha
 	streamBuilder, isStreamBuilder := builder.(Stream)
 
 	if !isStreamBuilder {
-		return Halt().WithError(derp.BadRequestError(location, "Builder is not a StreamBuilder"))
+		return Halt().WithError(derp.BadRequest(location, "Builder is not a StreamBuilder"))
 	}
 
 	// Try to parse the form input

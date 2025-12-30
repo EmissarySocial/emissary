@@ -35,5 +35,5 @@ func Parse(request *http.Request) (url.Values, error) {
 	}
 
 	// Unrecognized content type
-	return url.Values{}, derp.BadRequestError(location, "Unsupported encoding", contentType)
+	return url.Values{}, derp.BadRequest(location, "Unsupported encoding", contentType)
 }

@@ -355,7 +355,7 @@ func (service *ActivityStream) GetRecipient(recipient string) (string, string, e
 	}
 
 	if !document.IsActor() {
-		return "", "", derp.NotFoundError(location, "Recipient is not an ActivityPub Actor", recipient)
+		return "", "", derp.NotFound(location, "Recipient is not an ActivityPub Actor", recipient)
 	}
 
 	// Successssssssss.
@@ -379,14 +379,14 @@ func (service *ActivityStream) SendMessage(session data.Session, args mapof.Any)
 	recipientID := args.GetString("to")
 
 	if recipientID == "" {
-		return derp.NotFoundError(location, "Recipient ID is required", recipientID)
+		return derp.NotFound(location, "Recipient ID is required", recipientID)
 	}
 
 	// Collect the message to be sent
 	message := args.GetMap("message")
 
 	if message.IsEmpty() {
-		return derp.NotFoundError(location, "Message is required", message)
+		return derp.NotFound(location, "Message is required", message)
 	}
 
 	// Find ActivityPub Actor
@@ -431,7 +431,7 @@ func (service *ActivityStream) PublicKeyFinder(keyID string) (string, error) {
 		}
 	}
 
-	return "", derp.NotFoundError(location, "Public Key not found", keyID)
+	return "", derp.NotFound(location, "Public Key not found", keyID)
 }
 
 // KeyPairFunc returns a function that will locate the public/private key pair
@@ -488,7 +488,7 @@ func (service *ActivityStream) documentIterator(ctx context.Context, criteria ex
 	}
 
 	if collection == nil {
-		return nil, derp.InternalError(location, "Collection cannot be nil. This should never happen.")
+		return nil, derp.Internal(location, "Collection cannot be nil. This should never happen.")
 	}
 
 	return collection.Iterator(criteria, options...)
@@ -501,7 +501,7 @@ func (service *ActivityStream) collection(ctx context.Context) (data.Collection,
 
 	// NILCHECK: commonDatabase must be populated
 	if service.commonDatabase == nil {
-		return nil, derp.InternalError(location, "Service not initialized")
+		return nil, derp.Internal(location, "Service not initialized")
 	}
 
 	// Connect to the database
@@ -513,7 +513,7 @@ func (service *ActivityStream) collection(ctx context.Context) (data.Collection,
 
 	// NILCHECK: session cannot be nil.
 	if session == nil {
-		return nil, derp.InternalError(location, "Database session is nil. This should never happen.")
+		return nil, derp.Internal(location, "Database session is nil. This should never happen.")
 	}
 
 	// Return the collection

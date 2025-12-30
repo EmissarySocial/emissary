@@ -53,9 +53,9 @@ func NewInbox(factory Factory, session data.Session, request *http.Request, resp
 	// Enforce user permissions on the requested action
 	if !common.UserCan(actionID) {
 		if common._authorization.IsAuthenticated() {
-			return Inbox{}, derp.ForbiddenError(location, "Forbidden", "User is authenticated, but this action is not allowed", actionID)
+			return Inbox{}, derp.Forbidden(location, "Forbidden", "User is authenticated, but this action is not allowed", actionID)
 		} else {
-			return Inbox{}, derp.UnauthorizedError(location, "Anonymous user is not authorized to perform this action", user.ProfileURL, actionID)
+			return Inbox{}, derp.Unauthorized(location, "Anonymous user is not authorized to perform this action", user.ProfileURL, actionID)
 		}
 	}
 
@@ -238,7 +238,7 @@ func (w Inbox) FollowingByFolder(token string) ([]model.FollowingSummary, error)
 	userID := w.AuthenticatedID()
 
 	if userID.IsZero() {
-		return nil, derp.UnauthorizedError("build.Inbox.FollowingByFolder", "Must be signed in to view following")
+		return nil, derp.Unauthorized("build.Inbox.FollowingByFolder", "Must be signed in to view following")
 	}
 
 	// Get the followingID from the token
@@ -302,7 +302,7 @@ func (w Inbox) Inbox() (QueryBuilder[model.Message], error) {
 
 	// Must be signed in to view inbox
 	if w.AuthenticatedID().IsZero() {
-		return QueryBuilder[model.Message]{}, derp.UnauthorizedError(location, "Must be signed in to view inbox")
+		return QueryBuilder[model.Message]{}, derp.Unauthorized(location, "Must be signed in to view inbox")
 	}
 
 	queryString := w._request.URL.Query()
@@ -351,7 +351,7 @@ func (w Inbox) Conversations() (QueryBuilder[model.Conversation], error) {
 
 	// Required that the user is signed in
 	if w.AuthenticatedID().IsZero() {
-		return QueryBuilder[model.Conversation]{}, derp.UnauthorizedError("build.Inbox.Conversations", "Must be signed in to view conversations")
+		return QueryBuilder[model.Conversation]{}, derp.Unauthorized("build.Inbox.Conversations", "Must be signed in to view conversations")
 	}
 
 	queryString := w._request.URL.Query()
@@ -399,7 +399,7 @@ func (w Inbox) Folders() (model.FolderList, error) {
 
 	// User must be authenticated to view any folders
 	if !w.IsAuthenticated() {
-		return result, derp.ForbiddenError("build.Inbox.Folders", "Not authenticated")
+		return result, derp.Forbidden("build.Inbox.Folders", "Not authenticated")
 	}
 
 	folderService := w._factory.Folder()
@@ -482,7 +482,7 @@ func (w Inbox) SubBuilder(object any) (Builder, error) {
 		result, err = NewStream(w._factory, w._session, w._request, w._response, w._template, &typed, w._actionID)
 
 	default:
-		result, err = nil, derp.InternalError("build.Common.SubBuilder", "Invalid object type", object)
+		result, err = nil, derp.Internal("build.Common.SubBuilder", "Invalid object type", object)
 	}
 
 	if err != nil {

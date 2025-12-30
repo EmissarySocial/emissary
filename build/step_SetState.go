@@ -32,5 +32,5 @@ func (step StepSetState) Post(builder Builder, _ io.Writer) PipelineBehavior {
 	}
 
 	// Failure (obv)
-	return Halt().WithError(derp.InternalError("build.stepSetState.Post", "Builder does not implement StateSetter interface"))
+	return Halt().WithError(derp.Internal("build.stepSetState.Post", "Builder does not implement StateSetter interface"))
 }

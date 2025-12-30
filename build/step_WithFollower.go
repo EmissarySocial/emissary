@@ -34,7 +34,7 @@ func (step StepWithFollower) execute(builder Builder, buffer io.Writer, actionMe
 	template, exists := getTemplate(builder)
 
 	if !exists {
-		return Halt().WithError(derp.InternalError(location, "This step cannot be used in this Renderer."))
+		return Halt().WithError(derp.Internal(location, "This step cannot be used in this Renderer."))
 	}
 
 	var userID primitive.ObjectID
@@ -45,7 +45,7 @@ func (step StepWithFollower) execute(builder Builder, buffer io.Writer, actionMe
 
 		// Must be an owner to use the admin route
 		if !builder.IsOwner() {
-			return Halt().WithError(derp.ForbiddenError(location, "User must be an owner to complete this action"))
+			return Halt().WithError(derp.Forbidden(location, "User must be an owner to complete this action"))
 		}
 
 		userID = primitive.NilObjectID
@@ -64,7 +64,7 @@ func (step StepWithFollower) execute(builder Builder, buffer io.Writer, actionMe
 	if token := builder.QueryParam("followerId"); isNewOrEmpty(token) {
 
 		if !builder.IsAuthenticated() {
-			return Halt().WithError(derp.ForbiddenError(location, "Anonymous user is not authorized to perform this action"))
+			return Halt().WithError(derp.Forbidden(location, "Anonymous user is not authorized to perform this action"))
 		}
 
 	} else {
@@ -113,6 +113,6 @@ func (step StepWithFollower) load(session data.Session, followerService *service
 	}
 
 	// Nope.  Not happening.
-	return derp.ForbiddenError(location, "Anonymous user is not authorized to perform this action")
+	return derp.Forbidden(location, "Anonymous user is not authorized to perform this action")
 
 }

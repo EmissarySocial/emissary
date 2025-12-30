@@ -219,5 +219,5 @@ func getSetupForm(name string) (form.Element, bool, error) {
 		}, false, nil
 	}
 
-	return form.Element{}, false, derp.BadRequestError("handler.getSetupForm", "Invalid form name", name)
+	return form.Element{}, false, derp.BadRequest("handler.getSetupForm", "Invalid form name", name)
 }

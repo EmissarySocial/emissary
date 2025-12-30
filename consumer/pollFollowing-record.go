@@ -30,7 +30,7 @@ func PollFollowing_Record(factory *service.Factory, session data.Session, user *
 	// Create a channel from this outbox...
 	outbox := actor.Outbox()
 	documentRangeFunc := collections.RangeDocuments(outbox) // start reading activities from the outbox
-	documentRangeFunc = ranges.Limit(60, documentRangeFunc) // Limit to last 60 activities
+	documentRangeFunc = ranges.Limit(24, documentRangeFunc) // Limit to last 24 activities
 	documentSlice := ranges.Slice(documentRangeFunc)        // Convert the iterator into a slice
 	documents := slices.Backward(documentSlice)             // Read documents from the slice (oldest to newest)
 

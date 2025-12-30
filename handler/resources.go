@@ -36,7 +36,7 @@ func GetTemplateResource(serverFactory *server.Factory) echo.HandlerFunc {
 		template, err := templateService.Load(templateID)
 
 		if err != nil {
-			return derp.NotFoundError("handler.GetTemplateResource", "Template not found", templateID)
+			return derp.NotFound("handler.GetTemplateResource", "Template not found", templateID)
 		}
 
 		return getResource(template.Resources, filename, ctx.Response())
@@ -54,7 +54,7 @@ func GetWidgetResource(serverFactory *server.Factory) echo.HandlerFunc {
 		widget, ok := widgetService.Get(widgetID)
 
 		if !ok {
-			return derp.NotFoundError("handler.GetWidgetResource", "Widget not found", widgetID)
+			return derp.NotFound("handler.GetWidgetResource", "Widget not found", widgetID)
 		}
 
 		return getResource(widget.Resources, filename, ctx.Response())
@@ -67,7 +67,7 @@ func getResource(filesystem fs.FS, filename string, response *echo.Response) err
 
 	// Guarantee that this filesystem is not empty
 	if filesystem == nil {
-		return derp.NotFoundError(location, "Resource not found", filename)
+		return derp.NotFound(location, "Resource not found", filename)
 	}
 
 	// Try to open the file from the filesystem

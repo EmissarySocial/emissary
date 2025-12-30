@@ -28,7 +28,7 @@ func (step StepSetThumbnail) Post(builder Builder, _ io.Writer) PipelineBehavior
 	attachments, err := factory.Attachment().QueryByObjectID(builder.session(), objectType, objectID)
 
 	if err != nil {
-		return Halt().WithError(derp.BadRequestError("build.StepSetThumbnail.Post", "Unable to list attachments"))
+		return Halt().WithError(derp.BadRequest("build.StepSetThumbnail.Post", "Unable to list attachments"))
 	}
 
 	// Scan all attachments and use the first one that is an image.
@@ -41,7 +41,7 @@ func (step StepSetThumbnail) Post(builder Builder, _ io.Writer) PipelineBehavior
 			// Special case for User objects (this should always be "iconId")
 			if objectType == "User" {
 				if err := schema.Set(object, step.Path, attachment.AttachmentID.Hex()); err != nil {
-					return Halt().WithError(derp.InternalError("build.StepSetThumbnail.Post", "Invalid path for non-user object (A)", step.Path))
+					return Halt().WithError(derp.Internal("build.StepSetThumbnail.Post", "Invalid path for non-user object (A)", step.Path))
 				}
 				return nil
 			}
@@ -51,7 +51,7 @@ func (step StepSetThumbnail) Post(builder Builder, _ io.Writer) PipelineBehavior
 			iconURL = iconURL + "/attachments/" + attachment.AttachmentID.Hex()
 
 			if err := schema.Set(object, step.Path, iconURL); err != nil {
-				return Halt().WithError(derp.InternalError("build.StepSetThumbnail.Post", "Invalid path for non-user object (B)", step.Path))
+				return Halt().WithError(derp.Internal("build.StepSetThumbnail.Post", "Invalid path for non-user object (B)", step.Path))
 			}
 			return nil
 		}

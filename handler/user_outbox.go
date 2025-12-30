@@ -28,7 +28,7 @@ func ForwardMeURLs(ctx *steranko.Context, factory *service.Factory, session data
 func HeadOutbox(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	if !isUserVisible(ctx, user) {
-		return derp.NotFoundError("handler.HeadOutbox", "User not found")
+		return derp.NotFound("handler.HeadOutbox", "User not found")
 	}
 
 	allowedContentTypes := []string{
@@ -119,7 +119,7 @@ func buildOutbox(ctx *steranko.Context, factory *service.Factory, session data.S
 	}
 
 	if !isUserVisible(ctx, user) {
-		return derp.NotFoundError("handler.buildOutbox", "User not found")
+		return derp.NotFound("handler.buildOutbox", "User not found")
 	}
 
 	// Try to load the User's Outbox
@@ -153,14 +153,14 @@ func getUserAttachment(ctx *steranko.Context, factory *service.Factory, user *mo
 	const location = "handler.outbox.getUserAttachment"
 
 	if !isUserVisible(ctx, user) {
-		return derp.NotFoundError(location, "User not found")
+		return derp.NotFound(location, "User not found")
 	}
 
 	// Get the icon/image value from the User
 	fieldValue, ok := user.GetStringOK(field)
 
 	if !ok {
-		return derp.InternalError(location, "Invalid attachment field.  This should never happen", field)
+		return derp.Internal(location, "Invalid attachment field.  This should never happen", field)
 	}
 
 	filespec.Filename = fieldValue
@@ -191,7 +191,7 @@ func profileUsername(context echo.Context) (string, error) {
 
 	// RULE: userID must not be empty
 	case "":
-		return "", derp.BadRequestError(location, "Missing UserID")
+		return "", derp.BadRequest(location, "Missing UserID")
 
 	// If userID is "me", then return the currently authenticated user's ID
 	case "me":
@@ -216,5 +216,5 @@ func authenticatedID(ctx echo.Context) (primitive.ObjectID, error) {
 		return authorization.UserID, nil
 	}
 
-	return primitive.NilObjectID, derp.UnauthorizedError("handler.profileUserID", "User is not authenticated")
+	return primitive.NilObjectID, derp.Unauthorized("handler.profileUserID", "User is not authenticated")
 }

@@ -67,7 +67,7 @@ func serverSentEvent(ctx *steranko.Context, factory *service.Factory, topic int)
 	f, ok := w.(http.Flusher)
 
 	if !ok {
-		return derp.InternalError(location, "Streaming Not Supported")
+		return derp.Internal(location, "Streaming Not Supported")
 	}
 
 	token := ctx.Param("objectId")

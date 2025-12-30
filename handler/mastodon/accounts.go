@@ -41,11 +41,11 @@ func PostAccount(serverFactory *server.Factory) func(model.Authorization, txn.Po
 
 		// Confirm that the domain is accepting new users
 		if !factory.Domain().HasRegistrationForm() {
-			return object.Token{}, derp.ForbiddenError(location, "Signup is not allowed on this domain")
+			return object.Token{}, derp.Forbidden(location, "Signup is not allowed on this domain")
 		}
 
 		if !t.Agreement {
-			return object.Token{}, derp.ForbiddenError(location, "You must agree to the terms of service")
+			return object.Token{}, derp.Forbidden(location, "You must agree to the terms of service")
 		}
 
 		// Create a new User account
@@ -497,7 +497,7 @@ func PostAccount_Pin(serverFactory *server.Factory) func(model.Authorization, tx
 	const location = "handler.mastodon_PostAccount_Pin"
 
 	return func(auth model.Authorization, t txn.PostAccount_Pin) (object.Relationship, error) {
-		return object.Relationship{}, derp.NotImplementedError(location)
+		return object.Relationship{}, derp.NotImplemented(location)
 	}
 }
 
@@ -506,7 +506,7 @@ func PostAccount_Unpin(serverFactory *server.Factory) func(model.Authorization, 
 	const location = "handler.mastodon_PostAccount_Unpin"
 
 	return func(auth model.Authorization, t txn.PostAccount_Unpin) (object.Relationship, error) {
-		return object.Relationship{}, derp.NotImplementedError(location)
+		return object.Relationship{}, derp.NotImplemented(location)
 	}
 }
 
@@ -515,7 +515,7 @@ func PostAccount_Note(serverFactory *server.Factory) func(model.Authorization, t
 	const location = "handler.mastodon_PostAccount_Note"
 
 	return func(auth model.Authorization, t txn.PostAccount_Note) (object.Relationship, error) {
-		return object.Relationship{}, derp.NotImplementedError(location)
+		return object.Relationship{}, derp.NotImplemented(location)
 	}
 }
 
@@ -524,7 +524,7 @@ func GetAccount_Relationships(serverFactory *server.Factory) func(model.Authoriz
 	const location = "handler.mastodon_GetAccount_Relationships"
 
 	return func(auth model.Authorization, t txn.GetAccount_Relationships) ([]object.Relationship, error) {
-		return nil, derp.NotImplementedError(location)
+		return nil, derp.NotImplemented(location)
 	}
 }
 
@@ -533,7 +533,7 @@ func GetAccount_FamiliarFollowers(serverFactory *server.Factory) func(model.Auth
 	const location = "handler.mastodon_GetAccount_FamiliarFollowers"
 
 	return func(auth model.Authorization, t txn.GetAccount_FamiliarFollowers) (object.FamiliarFollowers, error) {
-		return nil, derp.NotImplementedError(location)
+		return nil, derp.NotImplemented(location)
 	}
 }
 
@@ -543,7 +543,7 @@ func GetAccount_Search(serverFactory *server.Factory) func(model.Authorization, 
 	const location = "handler.mastodon_GetAccount_Search"
 
 	return func(auth model.Authorization, t txn.GetAccount_Search) ([]object.Account, toot.PageInfo, error) {
-		return nil, toot.PageInfo{}, derp.NotImplementedError(location)
+		return nil, toot.PageInfo{}, derp.NotImplemented(location)
 	}
 }
 
@@ -579,6 +579,6 @@ func GetAccount_Lookup(serverFactory *server.Factory) func(model.Authorization, 
 		}
 
 		// Success.
-		return result, derp.NotImplementedError(location)
+		return result, derp.NotImplemented(location)
 	}
 }

@@ -25,7 +25,7 @@ func (step StepWithChildren) Post(builder Builder, buffer io.Writer) PipelineBeh
 	streamBuilder, isStreamBuilder := builder.(Stream)
 
 	if !isStreamBuilder {
-		return Halt().WithError(derp.InternalError(location, "This step can only be used by Stream builders"))
+		return Halt().WithError(derp.Internal(location, "This step can only be used by Stream builders"))
 	}
 
 	children, err := factory.Stream().RangeByParent(builder.session(), streamBuilder._stream.ParentID)

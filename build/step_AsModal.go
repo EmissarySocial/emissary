@@ -48,7 +48,7 @@ func (step StepAsModal) Get(builder Builder, buffer io.Writer) PipelineBehavior 
 
 	// Otherwise, we can build the modal on a page background... IF we have a background view defined.
 	if step.Background == "" {
-		return Halt().WithError(derp.BadRequestError(location, "Cannot open this route directly."))
+		return Halt().WithError(derp.BadRequest(location, "Cannot open this route directly."))
 	}
 
 	// Full pages build the entire page, including the modal window

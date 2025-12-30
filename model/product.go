@@ -51,15 +51,15 @@ func (product *Product) Refresh(other Product) (bool, error) {
 	const location = "model.Product.Refresh"
 
 	if product.UserID != other.UserID {
-		return false, derp.BadRequestError(location, "UserID must match")
+		return false, derp.BadRequest(location, "UserID must match")
 	}
 
 	if product.MerchantAccountID != other.MerchantAccountID {
-		return false, derp.BadRequestError(location, "MerchantAccountID must match")
+		return false, derp.BadRequest(location, "MerchantAccountID must match")
 	}
 
 	if product.RemoteID != other.RemoteID {
-		return false, derp.BadRequestError(location, "RemoteID must match")
+		return false, derp.BadRequest(location, "RemoteID must match")
 	}
 
 	changed := false

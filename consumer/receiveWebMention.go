@@ -56,7 +56,7 @@ func ReceiveWebMention(factory *service.Factory, session data.Session, args mapo
 		objectID = user.UserID
 
 	default:
-		return queue.Error(derp.InternalError(location, "Unknown Mention Type.  This should never happen", objectType))
+		return queue.Error(derp.Internal(location, "Unknown Mention Type.  This should never happen", objectType))
 	}
 
 	// Check the database for an existing Mention record

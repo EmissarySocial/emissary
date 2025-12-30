@@ -26,7 +26,7 @@ func outbox_CreateKeyPackage(context Context, activity streams.Document) error {
 
 	// RULE: The object must be attributed to the actor
 	if object.AttributedTo().ID() != activity.Actor().ID() {
-		return derp.ForbiddenError(location, "KeyPackage must be attributed to the actor", activity.Value())
+		return derp.Forbidden(location, "KeyPackage must be attributed to the actor", activity.Value())
 	}
 
 	// Populate the new KeyPackage
@@ -63,7 +63,7 @@ func outbox_DeleteKeyPackage(context Context, activity streams.Document) error {
 
 	// RULE: The actor must own the keyPackage
 	if !strings.HasPrefix(object.ID(), actor.ID()) {
-		return derp.ForbiddenError(location, "KeyPackage must be owned by this actor")
+		return derp.Forbidden(location, "KeyPackage must be owned by this actor")
 	}
 
 	// Load the KeyPackage
@@ -76,7 +76,7 @@ func outbox_DeleteKeyPackage(context Context, activity streams.Document) error {
 
 	// RULE: The actor must own the keyPackage
 	if keyPackage.UserID != context.user.UserID {
-		return derp.ForbiddenError(location, "KeyPackage must be owned by this actor")
+		return derp.Forbidden(location, "KeyPackage must be owned by this actor")
 	}
 
 	// Delete the KeyPackage
@@ -110,12 +110,12 @@ func outbox_SetKeyPackageVisibility(context Context, activity streams.Document, 
 
 	// RULE: The actor must own the target (keyPackage collection)
 	if !strings.HasPrefix(target.ID(), actor.ID()) {
-		return derp.ForbiddenError(location, "Target collection must be owned by this actor")
+		return derp.Forbidden(location, "Target collection must be owned by this actor")
 	}
 
 	// RULE: The actor must own the keyPackage
 	if !strings.HasPrefix(object.ID(), actor.ID()) {
-		return derp.ForbiddenError(location, "KeyPackage must be owned by this actor")
+		return derp.Forbidden(location, "KeyPackage must be owned by this actor")
 	}
 
 	// Load the KeyPackage

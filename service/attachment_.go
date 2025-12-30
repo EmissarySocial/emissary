@@ -214,7 +214,7 @@ func (service *Attachment) ObjectSave(session data.Session, object data.Object, 
 	if attachment, ok := object.(*model.Attachment); ok {
 		return service.Save(session, attachment, note)
 	}
-	return derp.InternalError("service.Attachment.ObjectSave", "Invalid object type", object)
+	return derp.Internal("service.Attachment.ObjectSave", "Invalid object type", object)
 }
 
 // ObjectDelete removes an Attachment from the database (generically)
@@ -222,12 +222,12 @@ func (service *Attachment) ObjectDelete(session data.Session, object data.Object
 	if attachment, ok := object.(*model.Attachment); ok {
 		return service.Delete(session, attachment, note)
 	}
-	return derp.InternalError("service.Attachment.ObjectDelete", "Invalid object type", object)
+	return derp.Internal("service.Attachment.ObjectDelete", "Invalid object type", object)
 }
 
 // ObjectUserCan returns true if the current user has permission to perform the requested action on the provided Attachment
 func (service *Attachment) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.UnauthorizedError("service.Attachment.ObjectUserCan", "Not Authorized")
+	return derp.Unauthorized("service.Attachment.ObjectUserCan", "Not Authorized")
 }
 
 // Schema returns the schema that this service uses to validate Attachments
@@ -281,7 +281,7 @@ func (service *Attachment) LoadFirstByCategory(session data.Session, objectType 
 		return attachment, err
 	}
 
-	return model.Attachment{}, derp.NotFoundError(location, "No attachments found", objectType, objectID)
+	return model.Attachment{}, derp.NotFound(location, "No attachments found", objectType, objectID)
 }
 
 func (service *Attachment) LoadFirstByObjectID(session data.Session, objectType string, objectID primitive.ObjectID) (model.Attachment, error) {
@@ -302,7 +302,7 @@ func (service *Attachment) LoadFirstByObjectID(session data.Session, objectType 
 		return attachment, err
 	}
 
-	return model.Attachment{}, derp.NotFoundError(location, "No attachments found", objectType, objectID)
+	return model.Attachment{}, derp.NotFound(location, "No attachments found", objectType, objectID)
 }
 
 func (service *Attachment) LoadByID(session data.Session, objectType string, objectID primitive.ObjectID, attachmentID primitive.ObjectID, result *model.Attachment) error {

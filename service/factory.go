@@ -599,7 +599,7 @@ func (factory *Factory) Session(timeout time.Duration) (data.Session, context.Ca
 	session, err := factory.Server().Session(ctx)
 
 	if session == nil {
-		err = derp.InternalError("domain.Factory.Session", "Database session is nil")
+		err = derp.Internal("domain.Factory.Session", "Database session is nil")
 	}
 
 	return session, cancel, err
@@ -1127,7 +1127,7 @@ func (factory *Factory) Model(name string) (ModelService, error) {
 
 	}
 
-	return nil, derp.InternalError("domain.Factory.Model", "Unknown model", name)
+	return nil, derp.Internal("domain.Factory.Model", "Unknown model", name)
 }
 
 // ModelService returns the correct service to use for this particular Model object
@@ -1181,7 +1181,7 @@ func (factory *Factory) ModelService(object data.Object) ModelService {
 		return factory.Privilege()
 
 	default:
-		derp.Report(derp.InternalError("factory.ModelService", "Unrecognized object type", object))
+		derp.Report(derp.Internal("factory.ModelService", "Unrecognized object type", object))
 		return nil
 	}
 }

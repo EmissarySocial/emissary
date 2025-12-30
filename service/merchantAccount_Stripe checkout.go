@@ -118,12 +118,12 @@ func (service *MerchantAccount) stripe_getPrivilegeFromCheckoutResponse(session 
 
 	// RULE: transaction id must match the checkout session
 	if checkoutSession.ClientReferenceID != transactionID {
-		return model.Privilege{}, derp.BadRequestError(location, "Invalid Transaction ID", "The transaction ID does not match the checkout session")
+		return model.Privilege{}, derp.BadRequest(location, "Invalid Transaction ID", "The transaction ID does not match the checkout session")
 	}
 
 	// RULE: customer details must be present
 	if checkoutSession.CustomerDetails == nil {
-		return model.Privilege{}, derp.BadRequestError(location, "Invalid Checkout Session", "The checkout session does not contain customer details")
+		return model.Privilege{}, derp.BadRequest(location, "Invalid Checkout Session", "The checkout session does not contain customer details")
 	}
 
 	// Retrieve the Price/Product from the Stripe API

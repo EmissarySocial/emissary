@@ -133,7 +133,7 @@ func (service *Stream) publish_outbox_user(session data.Session, user *model.Use
 
 	// RULE: Do not allow empty Users
 	if user == nil {
-		return derp.InternalError(location, "User cannot be nil")
+		return derp.Internal(location, "User cannot be nil")
 	}
 
 	// RULE: Do not allow "new" Users

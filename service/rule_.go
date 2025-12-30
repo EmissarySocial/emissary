@@ -248,18 +248,18 @@ func (service *Rule) ObjectSave(session data.Session, object data.Object, commen
 	if rule, ok := object.(*model.Rule); ok {
 		return service.Save(session, rule, comment)
 	}
-	return derp.InternalError("service.Rule.ObjectSave", "Invalid Object Type", object)
+	return derp.Internal("service.Rule.ObjectSave", "Invalid Object Type", object)
 }
 
 func (service *Rule) ObjectDelete(session data.Session, object data.Object, comment string) error {
 	if rule, ok := object.(*model.Rule); ok {
 		return service.Delete(session, rule, comment)
 	}
-	return derp.InternalError("service.Rule.ObjectDelete", "Invalid Object Type", object)
+	return derp.Internal("service.Rule.ObjectDelete", "Invalid Object Type", object)
 }
 
 func (service *Rule) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.UnauthorizedError("service.Rule", "Not Authorized")
+	return derp.Unauthorized("service.Rule", "Not Authorized")
 }
 
 func (service *Rule) Schema() schema.Schema {
@@ -274,12 +274,12 @@ func (service *Rule) LoadByID(session data.Session, userID primitive.ObjectID, r
 
 	// RULE: UserID cannot be zero
 	if userID.IsZero() {
-		return derp.ValidationError("UserID cannot be zero")
+		return derp.Validation("UserID cannot be zero")
 	}
 
 	// RULE: RuleID cannot be zero
 	if ruleID.IsZero() {
-		return derp.ValidationError("RuleID cannot be zero")
+		return derp.Validation("RuleID cannot be zero")
 	}
 
 	criteria := exp.Equal("_id", ruleID).
@@ -292,7 +292,7 @@ func (service *Rule) LoadByToken(session data.Session, userID primitive.ObjectID
 
 	// RULE: UserID cannot be zero
 	if userID.IsZero() {
-		return derp.ValidationError("UserID cannot be zero")
+		return derp.Validation("UserID cannot be zero")
 	}
 
 	// RULE: token must be a valid ObjectID
@@ -312,17 +312,17 @@ func (service *Rule) LoadByTrigger(session data.Session, userID primitive.Object
 
 	// RULE: UserID cannot be zero
 	if userID.IsZero() {
-		return derp.ValidationError("UserID cannot be zero")
+		return derp.Validation("UserID cannot be zero")
 	}
 
 	// RULE: RuleType cannot be empty
 	if ruleType == "" {
-		return derp.ValidationError("RuleType cannot be empty")
+		return derp.Validation("RuleType cannot be empty")
 	}
 
 	// RULE: Trigger cannot be empty
 	if trigger == "" {
-		return derp.ValidationError("Trigger cannot be empty")
+		return derp.Validation("Trigger cannot be empty")
 	}
 
 	criteria := service.byUserID(userID).
@@ -337,22 +337,22 @@ func (service *Rule) LoadByFollowing(session data.Session, userID primitive.Obje
 
 	// RULE: UserID cannot be zero
 	if userID.IsZero() {
-		return derp.ValidationError("UserID cannot be zero")
+		return derp.Validation("UserID cannot be zero")
 	}
 
 	// RULE: FollowingID cannot be zero
 	if followingID.IsZero() {
-		return derp.ValidationError("FollowingID cannot be zero")
+		return derp.Validation("FollowingID cannot be zero")
 	}
 
 	// RULE: RuleType cannot be empty
 	if ruleType == "" {
-		return derp.ValidationError("RuleType cannot be empty")
+		return derp.Validation("RuleType cannot be empty")
 	}
 
 	// RULE: Trigger cannot be empty
 	if trigger == "" {
-		return derp.ValidationError("Trigger cannot be empty")
+		return derp.Validation("Trigger cannot be empty")
 	}
 
 	criteria := exp.Equal("userId", userID).
@@ -368,7 +368,7 @@ func (service *Rule) QueryPublic(session data.Session, userID primitive.ObjectID
 
 	// RULE: UserID cannot be zero
 	if userID.IsZero() {
-		return nil, derp.ValidationError("UserID cannot be zero")
+		return nil, derp.Validation("UserID cannot be zero")
 	}
 
 	criteria := service.byUserID(userID).

@@ -14,14 +14,14 @@ func SearchActivityStreamActors(collection data.Collection, text string) ([]mode
 
 	// NILCHECK: Collection cannot be nil
 	if collection == nil {
-		return nil, derp.InternalError(location, "Collection cannot be nil.  This should never happen.")
+		return nil, derp.Internal(location, "Collection cannot be nil.  This should never happen.")
 	}
 
 	// Get direct access to Mongo
 	mongoCollection := mongoCollection(collection)
 
 	if mongoCollection == nil {
-		return nil, derp.InternalError(location, "Collection is not a MongoDB collection")
+		return nil, derp.Internal(location, "Collection is not a MongoDB collection")
 	}
 
 	// Build the query pipeline

@@ -41,7 +41,7 @@ func (service *Permission) UserCan(session data.Session, authorization *model.Au
 	action, exists := template.Actions[actionID]
 
 	if !exists {
-		derp.Report(derp.InternalError(location, "Action not found in template", "ActionID: "+actionID, "TemplateID: "+template.TemplateID))
+		derp.Report(derp.Internal(location, "Action not found in template", "ActionID: "+actionID, "TemplateID: "+template.TemplateID))
 		return false, nil
 	}
 
@@ -255,12 +255,12 @@ func (service *Permission) hasPrivilege(session data.Session, authorization *mod
 
 // UserInGroup returns TRUE if the user is a member of the specified group
 func (service *Permission) UserInGroup(authorization *model.Authorization, groupToken string) (bool, error) {
-	return false, derp.NotImplementedError("service.Permission.UserInGroup", "UserInGroup is not implemented")
+	return false, derp.NotImplemented("service.Permission.UserInGroup", "UserInGroup is not implemented")
 }
 
 // AuthorInGroup returns TRUE if the Author/AttributedTo is a member of the specified group
 func (service *Permission) AuthorInGroup(accessLister model.AccessLister, groupToken string) (bool, error) {
-	return false, derp.NotImplementedError("service.Permission.AuthorInGroup", "AuthorInGroup is not implemented")
+	return false, derp.NotImplemented("service.Permission.AuthorInGroup", "AuthorInGroup is not implemented")
 }
 
 func (service *Permission) Permissions(authorization *model.Authorization, identity *model.Identity) model.Permissions {

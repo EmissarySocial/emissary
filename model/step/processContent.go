@@ -21,7 +21,7 @@ func NewProcessContent(stepInfo mapof.Any) (ProcessContent, error) {
 	format := stepInfo.GetString("format")
 
 	if allowed := (sliceof.String{"", "MARKDOWN", "EDITORJS", "HTML"}); allowed.NotContains(format) {
-		return ProcessContent{}, derp.ValidationError("Format must be one of [MARKDOWN, EDITORJS, HTML]")
+		return ProcessContent{}, derp.Validation("Format must be one of [MARKDOWN, EDITORJS, HTML]")
 	}
 
 	return ProcessContent{

@@ -114,7 +114,7 @@ func GetStatus(serverFactory *server.Factory) func(model.Authorization, txn.GetS
 		}
 
 		if !allowed {
-			return object.Status{}, derp.ForbiddenError(location, "User is not authorized to delete this stream")
+			return object.Status{}, derp.Forbidden(location, "User is not authorized to delete this stream")
 		}
 
 		// Return the value
@@ -136,7 +136,7 @@ func DeleteStatus(serverFactory *server.Factory) func(model.Authorization, txn.D
 		}
 
 		if !stream.IsMyself(authorization.UserID) {
-			return struct{}{}, derp.ForbiddenError(location, "User is not authorized to delete this stream")
+			return struct{}{}, derp.Forbidden(location, "User is not authorized to delete this stream")
 		}
 
 		// Get a database session for this request
@@ -311,7 +311,7 @@ func PostStatus_Unfavourite(serverFactory *server.Factory) func(model.Authorizat
 func PostStatus_Reblog(serverFactory *server.Factory) func(model.Authorization, txn.PostStatus_Reblog) (object.Status, error) {
 
 	return func(auth model.Authorization, t txn.PostStatus_Reblog) (object.Status, error) {
-		return object.Status{}, derp.NotImplementedError("handler.mastodon.PostStatus_Reblog")
+		return object.Status{}, derp.NotImplemented("handler.mastodon.PostStatus_Reblog")
 	}
 }
 
@@ -319,7 +319,7 @@ func PostStatus_Reblog(serverFactory *server.Factory) func(model.Authorization, 
 func PostStatus_Unreblog(serverFactory *server.Factory) func(model.Authorization, txn.PostStatus_Unreblog) (object.Status, error) {
 
 	return func(auth model.Authorization, t txn.PostStatus_Unreblog) (object.Status, error) {
-		return object.Status{}, derp.NotImplementedError("handler.mastodon.PostStatus_Unreblog")
+		return object.Status{}, derp.NotImplemented("handler.mastodon.PostStatus_Unreblog")
 	}
 }
 
@@ -327,7 +327,7 @@ func PostStatus_Unreblog(serverFactory *server.Factory) func(model.Authorization
 func PostStatus_Bookmark(serverFactory *server.Factory) func(model.Authorization, txn.PostStatus_Bookmark) (object.Status, error) {
 
 	return func(auth model.Authorization, t txn.PostStatus_Bookmark) (object.Status, error) {
-		return object.Status{}, derp.NotImplementedError("handler.mastodon.PostStatus_Bookmark")
+		return object.Status{}, derp.NotImplemented("handler.mastodon.PostStatus_Bookmark")
 	}
 }
 
@@ -335,7 +335,7 @@ func PostStatus_Bookmark(serverFactory *server.Factory) func(model.Authorization
 func PostStatus_Unbookmark(serverFactory *server.Factory) func(model.Authorization, txn.PostStatus_Unbookmark) (object.Status, error) {
 
 	return func(auth model.Authorization, t txn.PostStatus_Unbookmark) (object.Status, error) {
-		return object.Status{}, derp.NotImplementedError("handler.mastodon.PostStatus_Unbookmark")
+		return object.Status{}, derp.NotImplemented("handler.mastodon.PostStatus_Unbookmark")
 	}
 }
 
@@ -423,7 +423,7 @@ func PostStatus_Unmute(serverFactory *server.Factory) func(model.Authorization, 
 func PostStatus_Pin(serverFactory *server.Factory) func(model.Authorization, txn.PostStatus_Pin) (object.Status, error) {
 
 	return func(auth model.Authorization, t txn.PostStatus_Pin) (object.Status, error) {
-		return object.Status{}, derp.NotImplementedError("handler.mastodon.PostStatus_Pin")
+		return object.Status{}, derp.NotImplemented("handler.mastodon.PostStatus_Pin")
 	}
 }
 
@@ -431,7 +431,7 @@ func PostStatus_Pin(serverFactory *server.Factory) func(model.Authorization, txn
 func PostStatus_Unpin(serverFactory *server.Factory) func(model.Authorization, txn.PostStatus_Unpin) (object.Status, error) {
 
 	return func(auth model.Authorization, t txn.PostStatus_Unpin) (object.Status, error) {
-		return object.Status{}, derp.NotImplementedError("handler.mastodon.PostStatus_Unpin")
+		return object.Status{}, derp.NotImplemented("handler.mastodon.PostStatus_Unpin")
 	}
 }
 
@@ -468,7 +468,7 @@ func PutStatus(serverFactory *server.Factory) func(model.Authorization, txn.PutS
 
 		// Validate authorization
 		if !stream.IsMyself(auth.UserID) {
-			return object.Status{}, derp.UnauthorizedError(location, "User is not authorized to edit this stream", derp.WithForbidden())
+			return object.Status{}, derp.Unauthorized(location, "User is not authorized to edit this stream", derp.WithForbidden())
 		}
 
 		// Edit stream values

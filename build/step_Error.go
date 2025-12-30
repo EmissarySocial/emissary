@@ -12,9 +12,9 @@ type StepError struct {
 }
 
 func (step StepError) Get(builder Builder, buffer io.Writer) PipelineBehavior {
-	return Halt().WithError(derp.InternalError("build.StepError", "Unrecognized Pipeline Step", "This should never happen", builder.actionID(), builder.action(), builder.action().Steps, builder.object(), step.Original))
+	return Halt().WithError(derp.Internal("build.StepError", "Unrecognized Pipeline Step", "This should never happen", builder.actionID(), builder.action(), builder.action().Steps, builder.object(), step.Original))
 }
 
 func (step StepError) Post(builder Builder, _ io.Writer) PipelineBehavior {
-	return Halt().WithError(derp.InternalError("build.StepError", "Unrecognized Pipeline Step", "This should never happen", step.Original))
+	return Halt().WithError(derp.Internal("build.StepError", "Unrecognized Pipeline Step", "This should never happen", step.Original))
 }

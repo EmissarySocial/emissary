@@ -37,7 +37,7 @@ func NewWebhook(factory Factory, session data.Session, request *http.Request, re
 
 	// Verify that the webhook is a Domain Owner
 	if !common._authorization.DomainOwner {
-		return Webhook{}, derp.ForbiddenError(location, "Must be domain owner to continue")
+		return Webhook{}, derp.Forbidden(location, "Must be domain owner to continue")
 	}
 
 	// Return the Webhook builder

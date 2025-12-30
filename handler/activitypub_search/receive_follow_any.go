@@ -20,13 +20,13 @@ func init() {
 		actorURL := searchQueryService.ActivityPubURL(context.searchQuery.SearchQueryID) // nolint:scopeguard (readability)
 
 		if activity.Object().ID() != actorURL {
-			return derp.InternalError(location, "Invalid Search Query ID", actorURL, activity.Object().ID())
+			return derp.Internal(location, "Invalid Search Query ID", actorURL, activity.Object().ID())
 		}
 
 		// RULE: Do not allow new "Follows" of any blocked Actors
 		ruleFilter := context.factory.Rule().Filter(context.searchQuery.SearchQueryID, service.WithBlocksOnly()) // nolint:scopeguard
 		if ruleFilter.Disallow(context.session, &activity) {
-			return derp.ForbiddenError(location, "Blocked by rule", activity.Object().ID())
+			return derp.Forbidden(location, "Blocked by rule", activity.Object().ID())
 		}
 
 		// Try to look up the complete actor record from the activity

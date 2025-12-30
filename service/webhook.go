@@ -169,18 +169,18 @@ func (service *Webhook) ObjectSave(session data.Session, object data.Object, not
 	if user, ok := object.(*model.Webhook); ok {
 		return service.Save(session, user, note)
 	}
-	return derp.InternalError("service.Webhook.ObjectSave", "Invalid object type", object)
+	return derp.Internal("service.Webhook.ObjectSave", "Invalid object type", object)
 }
 
 func (service *Webhook) ObjectDelete(session data.Session, object data.Object, note string) error {
 	if user, ok := object.(*model.Webhook); ok {
 		return service.Delete(session, user, note)
 	}
-	return derp.InternalError("service.Webhook.ObjectDelete", "Invalid object type", object)
+	return derp.Internal("service.Webhook.ObjectDelete", "Invalid object type", object)
 }
 
 func (service *Webhook) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.UnauthorizedError("service.Webhook.ObjectUserCan", "Not Authorized")
+	return derp.Unauthorized("service.Webhook.ObjectUserCan", "Not Authorized")
 }
 
 func (service *Webhook) Schema() schema.Schema {

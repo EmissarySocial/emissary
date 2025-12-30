@@ -286,12 +286,12 @@ func GetList_Accounts(serverFactory *server.Factory) func(model.Authorization, t
 func PostList_Accounts(serverFactory *server.Factory) func(model.Authorization, txn.PostList_Accounts) (struct{}, error) {
 
 	return func(model.Authorization, txn.PostList_Accounts) (struct{}, error) {
-		return struct{}{}, derp.NotImplementedError("handler.mastodon.PostListAccounts")
+		return struct{}{}, derp.NotImplemented("handler.mastodon.PostListAccounts")
 	}
 }
 func DeleteList_Accounts(serverFactory *server.Factory) func(model.Authorization, txn.DeleteList_Accounts) (struct{}, error) {
 
 	return func(model.Authorization, txn.DeleteList_Accounts) (struct{}, error) {
-		return struct{}{}, derp.NotImplementedError("handler.mastodon.PostListAccounts")
+		return struct{}{}, derp.NotImplemented("handler.mastodon.PostListAccounts")
 	}
 }
