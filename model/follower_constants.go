@@ -15,14 +15,19 @@ const FollowerTypeStream = "Stream"
 // FollowerTypeUser represents a Follower that is following a User
 const FollowerTypeUser = "User"
 
+// ActorTypeApplication represents the domain service actor
 const ActorTypeApplication = "Application"
 
+// ActorTypeSearch represents a domain-level Search Query
 const ActorTypeSearchDomain = "SearchDomain"
 
+// ActorTypeSearchQuery represents a Search Query
 const ActorTypeSearchQuery = "Search"
 
+// ActorTypeStream represents a Stream actor
 const ActorTypeStream = "Stream"
 
+// ActorTypeUser represents a User
 const ActorTypeUser = "User"
 
 // FollowerMethodActivityPub represents a Follower subscription that
