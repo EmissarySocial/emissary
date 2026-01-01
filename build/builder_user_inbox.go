@@ -581,15 +581,6 @@ func (w Inbox) QueryByContext(contextID string, afterDate int64, maxRows int) (s
 	return result, err
 }
 
-/*
-func (w Inbox) QueryByContext_Tree(contextID string) (sliceof.Object[*treebuilder.Tree[model.DocumentLink]], error) {
-	activityService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
-	result, err := activityService.QueryByContext_Tree(w._request.Context(), contextID)
-
-	return result, err
-}
-*/
-
 func (w Inbox) RepliesBefore(url string, dateString string, maxRows int) sliceof.Object[streams.Document] {
 
 	done := make(channel.Done)
