@@ -7,23 +7,12 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	"github.com/benpate/hannibal/inbox"
 	"github.com/benpate/steranko"
 )
 
 func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.activitypub_user.PostInbox"
-
-	// Get ActivityStream service for this User
-	activityService := factory.ActivityStream(model.ActorTypeUser, user.UserID)
-
-	// Retrieve the activity from the request body
-	activity, err := inbox.ReceiveRequest(ctx.Request(), activityService.Client())
-
-	if err != nil {
-		return derp.Wrap(err, location, "Unable to parse ActivityPub request")
-	}
 
 	// Create a new Context
 	context := Context{
@@ -33,8 +22,11 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 		user:    user,
 	}
 
-	// Handle the ActivityPub request
-	if err := inboxRouter.Handle(context, activity); err != nil {
+	// Get ActivityStream service for this User
+	activityService := factory.ActivityStream(model.ActorTypeUser, user.UserID)
+
+	// Retrieve the activity from the request body
+	if err := inboxRouter.ReceiveAndHandle(context, ctx.Request(), activityService.Client()); err != nil {
 		return derp.Wrap(err, location, "Unable to handle ActivityPub request")
 	}
 
