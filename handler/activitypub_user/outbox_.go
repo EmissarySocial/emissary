@@ -9,13 +9,14 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	"github.com/benpate/hannibal/inbox"
+	"github.com/benpate/hannibal/router"
 	"github.com/benpate/hannibal/validator"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/steranko"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// GetOutboxCollection returns the User's outbox as an ActivityPub OrderedCollection
 func GetOutboxCollection(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.activitypub_user.GetOutboxCollection"
@@ -56,6 +57,7 @@ func GetOutboxCollection(ctx *steranko.Context, factory *service.Factory, sessio
 	return ctx.JSON(http.StatusOK, result)
 }
 
+// GetOutboxActivity returns a specific activity from the User's outbox
 func GetOutboxActivity(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.activitypub_user.GetOutboxCollection"
@@ -94,17 +96,6 @@ func PostOutbox(ctx *steranko.Context, factory *service.Factory, session data.Se
 	// Get ActivityStream service for this User
 	activityService := factory.ActivityStream(model.ActorTypeUser, user.UserID)
 
-	// Retrieve the activity from the request body
-	activity, err := inbox.ReceiveRequest(
-		ctx.Request(),
-		activityService.Client(),
-		inbox.WithValidators(validator.NewAlreadyValidated()), // Request is protected via Authentication middleware
-	)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Unable to parse ActivityPub request")
-	}
-
 	// Create a new Context
 	context := Context{
 		context: ctx,
@@ -113,21 +104,18 @@ func PostOutbox(ctx *steranko.Context, factory *service.Factory, session data.Se
 		user:    user,
 	}
 
-	// RULE: The actor must match the authenticated user
-	if activity.Actor().ID() != context.user.ActivityPubURL() {
-		return derp.Forbidden(
-			location,
-			"Actor must match authenticated user",
-			"actor: "+activity.Actor().ID(),
-			"user: "+context.user.ActivityPubURL(),
-		)
-	}
+	// Use custom validation because this route has already been validated,
+	// but we want to guarantee that the actor in the Activity matches the
+	// authenticated user.
+	matchActor := router.WithValidators(
+		validator.NewMatchActor(user.ActivityPubURL()),
+	)
 
-	// Handle the ActivityPub request
-	if err := outboxRouter.Handle(context, activity); err != nil {
-		return derp.ReportAndReturn(derp.Wrap(err, location, "Unable to handle ActivityPub request"))
+	// Retrieve the activity from the request body and route it to the correct handler
+	if err := outboxRouter.ReceiveAndHandle(context, ctx.Request(), activityService.Client(), matchActor); err != nil {
+		return derp.Wrap(err, location, "Unable to handle ActivityPub request")
 	}
 
 	// Handler writes its response directly to the context
-	return nil
+	return ctx.NoContent(http.StatusOK)
 }
