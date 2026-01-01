@@ -2,7 +2,6 @@ module github.com/EmissarySocial/emissary
 
 go 1.25.4
 
-
 require (
 	github.com/PuerkitoBio/goquery v1.11.0
 	github.com/aws/aws-sdk-go v1.55.8
@@ -46,7 +45,7 @@ require (
 	github.com/hairyhenderson/go-fsimpl v0.3.1
 	github.com/hjson/hjson-go/v4 v4.5.0
 	github.com/kr/jsonfeed v0.1.1
-	github.com/labstack/echo/v4 v4.14.0
+	github.com/labstack/echo/v4 v4.15.0
 	github.com/labstack/gommon v0.4.2
 	github.com/maypok86/otter v1.2.4
 	github.com/microcosm-cc/bluemonday v1.0.27
