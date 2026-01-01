@@ -73,6 +73,7 @@ type Factory struct {
 	oauthClient            OAuthClient
 	oauthUserToken         OAuthUserToken
 	outboxService          Outbox
+	outbox2Service         Outbox2
 	permissionService      Permission
 	productService         Product
 	providerService        Provider
@@ -155,6 +156,7 @@ func NewFactory(serverFactory ServerFactory, commonDatabase mongodb.Server, doma
 	factory.oauthClient = NewOAuthClient()
 	factory.oauthUserToken = NewOAuthUserToken()
 	factory.outboxService = NewOutbox(&factory)
+	factory.outbox2Service = NewOutbox2()
 	factory.permissionService = NewPermission(&factory)
 	factory.productService = NewProduct()
 	factory.providerService = NewProvider()
@@ -363,6 +365,13 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 			factory.Template(),
 			factory.User(),
 			factory.Email(),
+			factory.Queue(),
+			factory.Host(),
+		)
+
+		// Populate Outbox2 Service
+		factory.outbox2Service.Refresh(
+			factory.Follower(),
 			factory.Queue(),
 			factory.Host(),
 		)
@@ -763,6 +772,11 @@ func (factory *Factory) Mention() *Mention {
 	return &factory.mentionService
 }
 
+// MLSInbox returns a fully populated MLSInbox service
+func (factory *Factory) MLSInbox() MLSInbox {
+	return NewMLSInbox()
+}
+
 // OAuthClient returns a fully populated OAuthClient service
 func (factory *Factory) OAuthClient() *OAuthClient {
 	return &factory.oauthClient
@@ -776,6 +790,13 @@ func (factory *Factory) OAuthUserToken() *OAuthUserToken {
 // Outbox returns a fully populated Outbox service
 func (factory *Factory) Outbox() *Outbox {
 	return &factory.outboxService
+}
+
+// Outbox2 returns a fully populated Outbox2 service
+// This is a temporary name that will be merged into Outbox
+// one I know WTH I'm doing.
+func (factory *Factory) Outbox2() *Outbox2 {
+	return &factory.outbox2Service
 }
 
 // Rule returns a fully populated Rule service
@@ -801,6 +822,10 @@ func (factory *Factory) SearchQuery() *SearchQuery {
 // SearchTag returns a fully populated SearchTag service
 func (factory *Factory) SearchTag() *SearchTag {
 	return &factory.searchTagService
+}
+
+func (factory *Factory) SendLocator(session data.Session) SendLocator {
+	return NewSendLocator(factory, session)
 }
 
 // Stream returns a fully populated Stream service

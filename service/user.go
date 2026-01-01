@@ -417,9 +417,9 @@ func (service *User) ListByIdentities(session data.Session, identities []string)
 	return service.List(session, exp.In("identities", identities))
 }
 
-// ListByGroup returns all users that match a provided group name
-func (service *User) ListByGroup(session data.Session, group string) (data.Iterator, error) {
-	return service.List(session, exp.Equal("groupId", group))
+// RangeByGroup returns an iterator of all Users that match a provided groupID
+func (service *User) RangeByGroup(session data.Session, group primitive.ObjectID) (iter.Seq[model.User], error) {
+	return service.Range(session, exp.Equal("groupIds", group))
 }
 
 // LoadByID loads a single model.User object that matches the provided userID
