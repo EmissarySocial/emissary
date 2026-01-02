@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/turbine/queue"
@@ -19,6 +20,7 @@ import (
 // removed once this new service is fully functional.
 type Outbox2 struct {
 	followerService *Follower
+	locatorService  *Locator
 	queue           *queue.Queue
 	host            string
 }
@@ -33,10 +35,11 @@ func NewOutbox2() Outbox2 {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Outbox2) Refresh(followerService *Follower, queue *queue.Queue, host string) {
-	service.followerService = followerService
-	service.queue = queue
-	service.host = host
+func (service *Outbox2) Refresh(factory *Factory) {
+	service.followerService = factory.Follower()
+	service.locatorService = factory.Locator()
+	service.queue = factory.Queue()
+	service.host = factory.Hostname()
 }
 
 // Close stops any background processes controlled by this service
@@ -226,7 +229,39 @@ func (service *Outbox2) calcActivityURL(activity *model.Activity) string {
  * Custom Actions
  ******************************************/
 
-// Add creates a new Outbox activity for the specified actor
+// AddUserActivity creates a new Outbox activity for the specified user
+func (service *Outbox2) AddUserActivity(session data.Session, userID primitive.ObjectID, document streams.Document) error {
+
+	const location = "service.Outbox2.AddUserActivity"
+
+	activity := model.NewActivity()
+	activity.ActorType = model.ActorTypeUser
+	activity.ActorID = userID
+	activity.Object = document.Map()
+
+	// TODO: Rules here for public messages that we can map into streams
+
+	if err := service.Save(session, &activity, "Created Outbox activity"); err != nil {
+		return derp.Wrap(err, location, "Unable to save Outbox activity")
+	}
+
+	/* RESTORE THIS ONCE WE HAVE THE FACTORY SORTED
+
+	// Get a service for the "Locator" interface
+	sendLocator := context.factory.SendLocator(session)
+
+	// Send ActivityPub notifications to participants
+	sender := sender.New(sendLocator, service.queue.Queue())
+
+	if err := sender.Send(activity.Map()); err != nil {
+		return derp.Wrap(err, location, "Unable to send activity")
+	}
+	*/
+
+	return nil
+}
+
+// Add creates a new Outbox activity for any type of actor actor
 func (service *Outbox2) Add(session data.Session, actorType string, actorID primitive.ObjectID, object mapof.Any) error {
 
 	activity := model.NewActivity()
@@ -235,8 +270,4 @@ func (service *Outbox2) Add(session data.Session, actorType string, actorID prim
 	activity.Object = object
 
 	return service.Save(session, &activity, "Created Outbox activity")
-}
-
-func (service *Outbox2) AddUserActivity(session data.Session, userID primitive.ObjectID, object mapof.Any) error {
-	return service.Add(session, model.ActorTypeUser, userID, object)
 }

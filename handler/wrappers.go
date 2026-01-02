@@ -145,10 +145,14 @@ func WithFactory(serverFactory *server.Factory, fn WithFunc0) echo.HandlerFunc {
 			sterankoContext := factory.Steranko(session).Context(ctx)
 
 			// Execute the *actual* handler (success alleged)
-			return fn(sterankoContext, factory, session)
+			return fn(
+				sterankoContext,
+				factory,
+				session,
+			)
 		}
 
-		/////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////
 		// POST requests are wrapped in a MongoDB transaction
 
 		// WCreate a database transaction and wrap the callback function in it.

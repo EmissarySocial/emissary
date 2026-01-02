@@ -576,7 +576,7 @@ func (w Inbox) Message() model.Message {
 }
 
 func (w Inbox) QueryByContext(contextID string, afterDate int64, maxRows int) (sliceof.Object[streams.Document], error) {
-	activityService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
+	activityService := w._factory.ActivityStream()
 	result, err := activityService.QueryByContext(w._request.Context(), contextID, afterDate, maxRows)
 	return result, err
 }
@@ -586,7 +586,7 @@ func (w Inbox) RepliesBefore(url string, dateString string, maxRows int) sliceof
 	done := make(channel.Done)
 
 	// Get all ActivityStreams that reply to the provided URL
-	activityService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
+	activityService := w._factory.ActivityStream()
 	maxDate := convert.Int64Default(dateString, math.MaxInt)
 	replies := activityService.QueryRepliesBeforeDate(w._request.Context(), url, maxDate, done)
 
@@ -604,79 +604,16 @@ func (w Inbox) RepliesBefore(url string, dateString string, maxRows int) sliceof
 	return slice.Reverse(result)
 }
 
+// RepliesAfter returns replies to the specified URL after the specified date
 func (w Inbox) RepliesAfter(url string, dateString string, maxRows int) sliceof.Object[ascache.Value] {
-	activityService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
+	activityService := w._factory.ActivityStream()
 	minDate := convert.Int64(dateString)
 	return activityService.QueryRepliesAfterDate(w._request.Context(), url, minDate, int64(maxRows))
-
-	/*
-		done := make(channel.Done)
-
-		// Get all ActivityStreams that reply to the provided URL
-		activityService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
-		minDate := convert.Int64(dateString)
-		replies := activityService.QueryRepliesAfterDate(w._request.Context(), url, minDate, done)
-
-		// Filter replies based on rules
-		ruleService := w._factory.Rule()
-		ruleFilter := ruleService.Filter(w.AuthenticatedID())
-		filteredReplies := ruleFilter.Channel(replies)
-
-		// Limit to maximum number of replies
-		limitedReplies := channel.Limit(maxRows, filteredReplies, done)
-		result := channel.Slice(limitedReplies)
-
-		// Invictus
-		return result
-	*/
 }
 
-/*
-func (w Inbox) AnnouncesBefore(url string, dateString string, maxRows int) sliceof.Object[streams.Document] {
-
-	done := make(channel.Done)
-
-	// Get all ActivityStreams that announce the provided URL
-	activityService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
-	maxDate := convert.Int64Default(dateString, math.MaxInt64)
-	announces := activityService.QueryAnnouncesBeforeDate(w._request.Context(), url, maxDate, done)
-
-	// Filter replies based on rules
-	ruleService := w._factory.Rule()
-	ruleFilter := ruleService.Filter(w.AuthenticatedID())
-	filteredAnnounces := ruleFilter.Channel(announces)
-
-	// Limit to maximum number of replies
-	limitedAnnounces := channel.Limit(maxRows, filteredAnnounces, done)
-	result := channel.Slice(limitedAnnounces)
-
-	// Victory
-	return slice.Reverse(result)
-}
-
-func (w Inbox) LikesBefore(url string, dateString string, maxRows int) sliceof.Object[streams.Document] {
-
-	done := make(channel.Done)
-
-	// Get all ActivityStreams that announce the provided URL
-	activityService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
-	maxDate := convert.Int64Default(dateString, math.MaxInt64)
-	announces := activityService.QueryLikesBeforeDate(w._request.Context(), url, maxDate, done)
-
-	// Filter replies based on rules
-	ruleService := w._factory.Rule()
-	ruleFilter := ruleService.Filter(w.AuthenticatedID())
-	filteredLikes := ruleFilter.Channel(announces)
-
-	// Limit to maximum number of replies
-	limitedLikes := channel.Limit(maxRows, filteredLikes, done)
-	result := channel.Slice(limitedLikes)
-
-	// Success
-	return slice.Reverse(result)
-}
-*/
-
+// AmFollowing returns the Following record for the specified URL.
+// If the current user is not following the specified URL, then
+// an empty Following record is returned.
 func (w Inbox) AmFollowing(url string) model.Following {
 
 	// Get following service and new following record

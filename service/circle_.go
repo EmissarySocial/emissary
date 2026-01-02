@@ -32,9 +32,9 @@ func NewCircle() Circle {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Circle) Refresh(importItemService *ImportItem, privilegeService *Privilege) {
-	service.importItemService = importItemService
-	service.privilegeService = privilegeService
+func (service *Circle) Refresh(factory *Factory) {
+	service.importItemService = factory.ImportItem()
+	service.privilegeService = factory.Privilege()
 }
 
 // Close stops any background processes controlled by this service

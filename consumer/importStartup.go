@@ -13,7 +13,6 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/sherlock"
 	"github.com/benpate/turbine/queue"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func ImportStartup(factory *service.Factory, session data.Session, user *model.User, record *model.Import, args mapof.Any) queue.Result {
@@ -23,9 +22,8 @@ func ImportStartup(factory *service.Factory, session data.Session, user *model.U
 	importService := factory.Import()
 
 	// We'll need to authenticated using BEARER tokens (not HTTP signatures)
-	activityService := factory.ActivityStream(model.ActorTypeApplication, primitive.NilObjectID)
+	client := factory.ActivityStream().AppClient()
 	withBearerAuth := sherlock.WithRemoteOptions(options.BearerAuth(record.OAuthToken.AccessToken))
-	client := activityService.Client()
 
 	// Load the actor so we can make an import plan
 	actor, err := client.Load(record.SourceID, sherlock.AsActor(), ascache.WithWriteOnly(), withBearerAuth)

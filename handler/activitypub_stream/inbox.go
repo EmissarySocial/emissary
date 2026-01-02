@@ -22,7 +22,7 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 	}
 
 	// Get an ActivityStream service for the Stream
-	activityService := factory.ActivityStream(model.ActorTypeStream, stream.StreamID)
+	client := factory.ActivityStream().StreamClient(stream.StreamID)
 
 	// Create a new request context for the ActivityPub router
 	context := Context{
@@ -33,8 +33,8 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 	}
 
 	// Retrieve the activity from the request body
-	if err := streamRouter.ReceiveAndHandle(context, ctx.Request(), activityService.Client()); err != nil {
-		return derp.Wrap(err, location, "Error receiving ActivityPub request")
+	if err := streamRouter.ReceiveAndHandle(context, ctx.Request(), client); err != nil {
+		return derp.Wrap(err, location, "Unable to receive ActivityPub request")
 	}
 
 	// Send the response to the client

@@ -33,7 +33,7 @@ import (
 
 // User manages all interactions with the User collection
 type User struct {
-	factory           *Factory
+	activityService   *ActivityStream
 	attachmentService *Attachment
 	emailService      *DomainEmail
 	domainService     *Domain
@@ -55,10 +55,8 @@ type User struct {
 }
 
 // NewUser returns a fully populated User service
-func NewUser(factory *Factory) User {
-	return User{
-		factory: factory,
-	}
+func NewUser() User {
+	return User{}
 }
 
 /******************************************
@@ -66,50 +64,27 @@ func NewUser(factory *Factory) User {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *User) Refresh(
-	attachmentService *Attachment,
-	domainService *Domain,
-	emailService *DomainEmail,
-	folderService *Folder,
-	followerService *Follower,
-	followingService *Following,
-	inboxService *Inbox,
-	keyService *EncryptionKey,
-	outboxService *Outbox,
-	responseService *Response,
-	ruleService *Rule,
-	searchTagService *SearchTag,
-	streamService *Stream,
-	templateService *Template,
-	webhookService *Webhook,
-	queue *queue.Queue,
+func (service *User) Refresh(factory *Factory) {
 
-	sseUpdateChannel chan<- realtime.Message,
-	host string) {
+	service.activityService = factory.ActivityStream()
+	service.attachmentService = factory.Attachment()
+	service.domainService = factory.Domain()
+	service.emailService = factory.Email()
+	service.folderService = factory.Folder()
+	service.followerService = factory.Follower()
+	service.followingService = factory.Following()
+	service.inboxService = factory.Inbox()
+	service.keyService = factory.EncryptionKey()
+	service.outboxService = factory.Outbox()
+	service.responseService = factory.Response()
+	service.ruleService = factory.Rule()
+	service.streamService = factory.Stream()
+	service.templateService = factory.Template()
+	service.webhookService = factory.Webhook()
+	service.sseUpdateChannel = factory.SSEUpdateChannel()
+	service.queue = factory.Queue()
 
-	service.attachmentService = attachmentService
-	service.domainService = domainService
-	service.emailService = emailService
-	service.folderService = folderService
-	service.followerService = followerService
-	service.followingService = followingService
-	service.inboxService = inboxService
-	service.keyService = keyService
-	service.outboxService = outboxService
-	service.responseService = responseService
-	service.ruleService = ruleService
-	service.streamService = streamService
-	service.templateService = templateService
-	service.webhookService = webhookService
-	service.sseUpdateChannel = sseUpdateChannel
-	service.queue = queue
-
-	service.host = host
-}
-
-// Close stops any background processes controlled by this service
-func (service *User) Close() {
-
+	service.host = factory.Host()
 }
 
 // Hostname returns the domain-only name (no protocol)

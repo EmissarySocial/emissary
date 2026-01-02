@@ -24,24 +24,21 @@ const followingMimeStack = "application/activity+json; q=1.0, text/html; q=0.9, 
 
 // Following manages all interactions with the Following collection
 type Following struct {
-	factory           *Factory
+	activityService   *ActivityStream
+	folderService     *Folder
+	host              string
 	importItemService *ImportItem
+	inboxService      *Inbox
+	keyService        *EncryptionKey
+	sseUpdateChannel  chan<- realtime.Message
 	streamService     *Stream
 	userService       *User
-	inboxService      *Inbox
-	folderService     *Folder
-	keyService        *EncryptionKey
 	queue             *queue.Queue
-	sseUpdateChannel  chan<- realtime.Message
-	host              string
-	closed            chan bool
 }
 
 // NewFollowing returns a fully populated Following service.
-func NewFollowing(factory *Factory) Following {
-	return Following{
-		factory: factory,
-	}
+func NewFollowing() Following {
+	return Following{}
 }
 
 /******************************************
@@ -49,27 +46,24 @@ func NewFollowing(factory *Factory) Following {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Following) Refresh(folderService *Folder, keyService *EncryptionKey, importItemService *ImportItem, inboxService *Inbox, streamService *Stream, userService *User, queue *queue.Queue, sseUpdateChannel chan<- realtime.Message, host string) {
-	service.folderService = folderService
-	service.keyService = keyService
-	service.importItemService = importItemService
-	service.inboxService = inboxService
-	service.streamService = streamService
-	service.userService = userService
-	service.queue = queue
-	service.sseUpdateChannel = sseUpdateChannel
-	service.host = host
-}
-
-// Close stops the following service watcher
-func (service *Following) Close() {
-	close(service.closed)
+func (service *Following) Refresh(factory *Factory) {
+	service.activityService = factory.ActivityStream()
+	service.folderService = factory.Folder()
+	service.host = factory.Host()
+	service.importItemService = factory.ImportItem()
+	service.keyService = factory.EncryptionKey()
+	service.inboxService = factory.Inbox()
+	service.queue = factory.Queue()
+	service.sseUpdateChannel = factory.SSEUpdateChannel()
+	service.streamService = factory.Stream()
+	service.userService = factory.User()
 }
 
 /******************************************
  * Common Data Methods
  ******************************************/
 
+// collection returns the data collection for Following records
 func (service *Following) collection(session data.Session) data.Collection {
 	return session.Collection("Following")
 }
@@ -443,8 +437,7 @@ func (service *Following) GetFollowingID(session data.Session, userID primitive.
 	const location = "service.Following.IsFollowing"
 
 	// Load the ActivityStream document
-	activityService := service.factory.ActivityStream(model.ActorTypeUser, userID)
-	document, err := activityService.Client().Load(uri)
+	document, err := service.activityService.UserClient(userID).Load(uri)
 
 	if err != nil {
 		return "", derp.Wrap(err, location, "Unable to loadActivityStream document", uri)

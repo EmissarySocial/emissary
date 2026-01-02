@@ -22,19 +22,18 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/sherlock"
+	"github.com/benpate/turbine/queue"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // ActivityStream implements the Hannibal HTTP client interface, and provides a cache for ActivityStream documents.
 type ActivityStream struct {
-	commonDatabase data.Server   // Database connection for the commonDatabase
-	serverFactory  ServerFactory // SessionFactory that creates sessions in domain databases
-	factory        *Factory
+	commonDatabase data.Server
+	locatorService *Locator
 	hostname       string
+	queue          *queue.Queue
 	version        string
-
-	actorType string
-	actorID   primitive.ObjectID
+	newSession     func(time.Duration) (data.Session, context.CancelFunc, error)
 }
 
 /******************************************
@@ -42,31 +41,52 @@ type ActivityStream struct {
  ******************************************/
 
 // NewActivityStream creates a new ActivityStream service
-func NewActivityStream(serverFactory ServerFactory, commonDatabase data.Server, factory *Factory, hostname string, version string, actorType string, actorID primitive.ObjectID) ActivityStream {
-	return ActivityStream{
-		serverFactory:  serverFactory,
-		commonDatabase: commonDatabase,
-		factory:        factory,
-		hostname:       hostname,
-		version:        version,
-
-		actorType: actorType,
-		actorID:   actorID,
-	}
+func NewActivityStream() ActivityStream {
+	return ActivityStream{}
 }
 
-func (service *ActivityStream) Client() streams.Client {
-
-	// Final layer client looks up hashed values within documents
-	return ashash.New(service.CacheClient())
+// Refresh updates links to additional services that may not have been initialized when this service was created.
+func (service *ActivityStream) Refresh(factory *Factory) {
+	service.commonDatabase = factory.CommonDatabase()
+	service.locatorService = factory.Locator()
+	service.hostname = factory.Hostname()
+	service.version = factory.Version()
+	service.queue = factory.Queue()
+	service.newSession = factory.Session
 }
 
-func (service *ActivityStream) CacheClient() *ascache.Client {
+// AppClient returns a streams.Client that is configured for the Application actor.
+func (service *ActivityStream) AppClient() streams.Client {
+	return service.Client(model.ActorTypeApplication, primitive.NilObjectID)
+}
+
+// UserClient returns a streams.Client that is configured for the specified User actor.
+func (service *ActivityStream) UserClient(actorID primitive.ObjectID) streams.Client {
+	return service.Client(model.ActorTypeUser, actorID)
+}
+
+// SearchDomainClient returns a streams.Client that is configured for the specified SearchDomain actor.
+func (service *ActivityStream) SearchDomainClient() streams.Client {
+	return service.Client(model.ActorTypeSearchDomain, primitive.NilObjectID)
+}
+
+// SearchQueryClient returns a streams.Client that is configured for the specified SearchQuery actor.
+func (service *ActivityStream) SearchQueryClient(searchQueryID primitive.ObjectID) streams.Client {
+	return service.Client(model.ActorTypeSearchQuery, searchQueryID)
+}
+
+// StreamClient returns a streams.Client that is configured for the specified Stream actor.
+func (service *ActivityStream) StreamClient(streamID primitive.ObjectID) streams.Client {
+	return service.Client(model.ActorTypeStream, streamID)
+}
+
+// Client creates a new streams.Client that is configured for the specified actor type and ID.
+func (service *ActivityStream) Client(actorType string, actorID primitive.ObjectID) streams.Client {
 
 	// Build a new client stack
 	sherlockClient := sherlock.NewClient(
 		sherlock.WithUserAgent(service.hostname+" /Emissary@v"+service.version+" (https://emissary.social)"),
-		sherlock.WithKeyPairFunc(service.KeyPairFunc()),
+		sherlock.WithKeyPairFunc(service.KeyPairFunc(actorType, actorID)),
 	)
 
 	// enforce opinionated data formats
@@ -95,15 +115,17 @@ func (service *ActivityStream) CacheClient() *ascache.Client {
 	// cache data in MongoDB
 	cacheClient := ascache.New(
 		cacheRulesClient,
-		service.factory.Queue(),
+		service.queue,
 		service.commonDatabase,
-		service.actorType,
-		service.actorID,
+		actorType,
+		actorID,
 		service.hostname,
 		ascache.WithIgnoreHeaders(),
 	)
 
-	return cacheClient
+	hashClient := ashash.New(cacheClient)
+
+	return hashClient
 }
 
 /******************************************
@@ -112,12 +134,12 @@ func (service *ActivityStream) CacheClient() *ascache.Client {
 
 // Put adds a single document to the ActivityStream cache
 func (service *ActivityStream) Save(document streams.Document) error {
-	return service.Client().Save(document)
+	return service.AppClient().Save(document)
 }
 
 // Delete removes a single document from the database by its URL
 func (service *ActivityStream) Delete(url string) error {
-	return service.Client().Delete(url)
+	return service.AppClient().Delete(url)
 }
 
 /******************************************
@@ -155,6 +177,7 @@ func (service *ActivityStream) Range(ctx context.Context, criteria exp.Expressio
 	}
 }
 
+// QueryByContext returns a slice of streams.Document values that are associated with the specified context name.
 func (service *ActivityStream) QueryByContext(ctx context.Context, contextName string, afterDate int64, maxRows int) (sliceof.Object[streams.Document], error) {
 
 	// RULE: Do not query empty contexts
@@ -175,28 +198,7 @@ func (service *ActivityStream) QueryByContext(ctx context.Context, contextName s
 	return result, nil
 }
 
-/*
-func (service *ActivityStream) QueryByContext_Tree(ctx context.Context, contextName string) (sliceof.Object[*treebuilder.Tree[model.DocumentLink]], error) {
-
-	// RULE: Do not query empty contexts
-	if contextName == "" {
-		return sliceof.NewObject[*treebuilder.Tree[model.DocumentLink]](), nil
-	}
-
-	// Query the database
-	criteria := exp.Equal("object.context", contextName)
-	values := service.Range(ctx, criteria, option.SortAsc("object.published"))
-	treeInput := sliceof.NewObject[model.DocumentLink]()
-
-	// Map into model.DocumentLink records
-	for value := range values {
-		treeInput = append(treeInput, service.asDocumentLink(value))
-	}
-
-	return treebuilder.ParseAndFormat(treeInput), nil
-}
-*/
-
+// QueryActors returns a slice of ActorSummary values that match the provided query string.
 func (service *ActivityStream) QueryActors(queryString string) ([]model.ActorSummary, error) {
 
 	const location = "service.ActivityStream.QueryActors"
@@ -206,7 +208,7 @@ func (service *ActivityStream) QueryActors(queryString string) ([]model.ActorSum
 	if sherlock.IsValidAddress(queryString) {
 
 		// Try to load the actor directly from the Interwebs
-		if newActor, err := service.Client().Load(queryString, sherlock.AsActor()); err == nil {
+		if newActor, err := service.AppClient().Load(queryString, sherlock.AsActor()); err == nil {
 
 			// If this is a valid, but (previously) unknown actor, then add it to the results
 			// This will also automatically get cached/crawled for next time.
@@ -333,7 +335,7 @@ func (service *ActivityStream) queryByRelation(ctx context.Context, relationType
 					value.Object,
 					streams.WithHTTPHeader(value.HTTPHeader),
 					streams.WithMetadata(value.Metadata),
-					streams.WithClient(service.Client()),
+					streams.WithClient(service.AppClient()),
 				)
 			}
 		}
@@ -348,7 +350,7 @@ func (service *ActivityStream) GetRecipient(recipient string) (string, string, e
 	const location = "service.ActivityStream.GetRecipient"
 
 	// Try to load the recipient as a JSON-LD document
-	document, err := service.Client().Load(recipient, sherlock.AsActor())
+	document, err := service.AppClient().Load(recipient, sherlock.AsActor())
 
 	if err != nil {
 		return "", "", derp.Wrap(err, location, "Unable to load ActivityPub Actor", recipient)
@@ -390,8 +392,7 @@ func (service *ActivityStream) SendMessage(session data.Session, args mapof.Any)
 	}
 
 	// Find ActivityPub Actor
-	locatorService := service.factory.Locator()
-	actor, err := locatorService.GetActor(session, args.GetString("actorType"), args.GetString("actorID"))
+	actor, err := service.locatorService.GetActor(session, args.GetString("actorType"), args.GetString("actorID"))
 
 	if err != nil {
 		return derp.Wrap(err, location, "Unable to find ActivityPub Actor")
@@ -436,21 +437,13 @@ func (service *ActivityStream) PublicKeyFinder(keyID string) (string, error) {
 
 // KeyPairFunc returns a function that will locate the public/private key pair
 // for the specidied URL.  This can only be used for local URLs
-func (service *ActivityStream) KeyPairFunc() sherlock.KeyPairFunc {
+func (service *ActivityStream) KeyPairFunc(actorType string, actorID primitive.ObjectID) sherlock.KeyPairFunc {
 
 	const location = "service.ActivityStream.KeyPairFunc"
 
 	return func() (string, crypto.PrivateKey) {
 
-		// Get the Domain Factory
-		domainFactory, err := service.serverFactory.ByHostname(service.hostname)
-
-		if err != nil {
-			derp.Report(derp.Wrap(err, location, "Invalid hostname. No database found."))
-			return "", nil
-		}
-
-		session, cancel, err := domainFactory.Session(10 * time.Second)
+		session, cancel, err := service.newSession(10 * time.Second)
 		defer cancel()
 
 		if err != nil {
@@ -459,8 +452,7 @@ func (service *ActivityStream) KeyPairFunc() sherlock.KeyPairFunc {
 		}
 
 		// USE service.actorType and service.actorID to retrieve the required PEM keys.
-		locatorService := domainFactory.Locator()
-		publicKeyID, privateKey, err := locatorService.GetPrivateKey(session, service.actorType, service.actorID)
+		publicKeyID, privateKey, err := service.locatorService.GetPrivateKey(session, actorType, actorID)
 
 		if err != nil {
 			derp.Report(derp.Wrap(err, location, "Unable to retrieve private key"))

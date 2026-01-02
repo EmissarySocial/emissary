@@ -10,7 +10,7 @@ require (
 	github.com/benpate/data-mock v0.31.4
 	github.com/benpate/data-mongo v0.30.9
 	github.com/benpate/delta v0.0.1
-	github.com/benpate/derp v0.34.6
+	github.com/benpate/derp v0.35.0
 	github.com/benpate/digit v0.13.12
 	github.com/benpate/digital-dome v0.2.11
 	github.com/benpate/domain v0.2.11
@@ -18,13 +18,13 @@ require (
 	github.com/benpate/exp-builder v0.10.7
 	github.com/benpate/form v0.25.10
 	github.com/benpate/geo v0.0.3
-	github.com/benpate/hannibal v0.14.10
+	github.com/benpate/hannibal v0.15.0
 	github.com/benpate/html v0.16.15
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.15.13
 	github.com/benpate/re v0.3.5
 	github.com/benpate/remote v0.18.0
-	github.com/benpate/rosetta v0.25.27
+	github.com/benpate/rosetta v0.25.28
 	github.com/benpate/sherlock v0.8.18
 	github.com/benpate/sniff v0.1.0
 	github.com/benpate/steranko v0.22.8
@@ -45,7 +45,7 @@ require (
 	github.com/hairyhenderson/go-fsimpl v0.3.1
 	github.com/hjson/hjson-go/v4 v4.5.0
 	github.com/kr/jsonfeed v0.1.1
-	github.com/labstack/echo/v4 v4.14.0
+	github.com/labstack/echo/v4 v4.15.0
 	github.com/labstack/gommon v0.4.2
 	github.com/maypok86/otter v1.2.4
 	github.com/microcosm-cc/bluemonday v1.0.27

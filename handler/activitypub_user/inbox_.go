@@ -23,10 +23,10 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 	}
 
 	// Get ActivityStream service for this User
-	activityService := factory.ActivityStream(model.ActorTypeUser, user.UserID)
+	client := factory.ActivityStream().UserClient(user.UserID)
 
 	// Retrieve the activity from the request body
-	if err := inboxRouter.ReceiveAndHandle(context, ctx.Request(), activityService.Client()); err != nil {
+	if err := inboxRouter.ReceiveAndHandle(context, ctx.Request(), client); err != nil {
 		return derp.Wrap(err, location, "Unable to handle ActivityPub request")
 	}
 

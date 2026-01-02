@@ -3,12 +3,10 @@ package handler
 import (
 	"net/http"
 
-	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/steranko"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // GetAPIActors returns a list of actors that match the provided search criteria.
@@ -17,7 +15,7 @@ func GetAPIActors(ctx *steranko.Context, factory *service.Factory, session data.
 
 	const location = "handler.GetAPIActors"
 
-	activityService := factory.ActivityStream(model.ActorTypeApplication, primitive.NilObjectID)
+	activityService := factory.ActivityStream()
 
 	searchString := ctx.QueryParam("q")
 	actors, err := activityService.QueryActors(searchString)

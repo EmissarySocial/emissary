@@ -22,8 +22,7 @@ func ConnectPushService(factory *service.Factory, session data.Session, user *mo
 	if dt.IsLocalhost(factory.Host()) == dt.IsLocalhost(following.ProfileURL) {
 
 		// Load the Actor that we're trying to Follow
-		activityService := factory.ActivityStream(model.ActorTypeUser, user.UserID)
-		actor, err := activityService.Client().Load(following.URL, sherlock.AsActor())
+		actor, err := factory.ActivityStream().UserClient(user.UserID).Load(following.URL, sherlock.AsActor())
 
 		if err != nil {
 			return queue.Error(derp.Wrap(err, location, "Unable to load ActivityPub Actor", "url: "+following.URL))

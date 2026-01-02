@@ -49,11 +49,8 @@ func receiveLikeOrAnnounce(context Context, activity streams.Document) error {
 		return derp.Wrap(err, location, "Unable to load ActivityStream document", activity.Object().ID())
 	}
 
-	// Get an ActivityStream service for the User
-	activityService := context.factory.ActivityStream(model.ActorTypeUser, context.user.UserID)
-
-	// Add the Announce/Like/Dislike into the ActivityStream cache (for statistics)
-	if err := activityService.Save(activity); err != nil {
+	// Add the activity into the ActivityStream cache (for statistics)
+	if err := context.factory.ActivityStream().Save(activity); err != nil {
 		return derp.Wrap(err, location, "Unable to save activity", activity.ID())
 	}
 

@@ -2,7 +2,6 @@ package service
 
 import (
 	"iter"
-	"sync"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -19,7 +18,7 @@ import (
 
 // Outbox manages all Outbox records for a User.  This includes Outbox and Outbox
 type Outbox struct {
-	factory           *Factory
+	activityService   *ActivityStream
 	followerService   *Follower
 	identityService   *Identity
 	importItemService *ImportItem
@@ -28,17 +27,13 @@ type Outbox struct {
 	templateService   *Template
 	userService       *User
 	domainEmail       *DomainEmail
-	lock              *sync.Mutex
 	queue             *queue.Queue
 	host              string
 }
 
 // NewOutbox returns a fully populated Outbox service
-func NewOutbox(factory *Factory) Outbox {
-	return Outbox{
-		factory: factory,
-		lock:    &sync.Mutex{},
-	}
+func NewOutbox() Outbox {
+	return Outbox{}
 }
 
 /******************************************
@@ -46,17 +41,18 @@ func NewOutbox(factory *Factory) Outbox {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Outbox) Refresh(followerService *Follower, identityService *Identity, importItemService *ImportItem, ruleService *Rule, streamService *Stream, templateService *Template, userService *User, domainEmail *DomainEmail, queue *queue.Queue, host string) {
-	service.followerService = followerService
-	service.identityService = identityService
-	service.importItemService = importItemService
-	service.ruleService = ruleService
-	service.streamService = streamService
-	service.templateService = templateService
-	service.userService = userService
-	service.domainEmail = domainEmail
-	service.queue = queue
-	service.host = host
+func (service *Outbox) Refresh(factory *Factory) {
+	service.activityService = factory.ActivityStream()
+	service.followerService = factory.Follower()
+	service.identityService = factory.Identity()
+	service.importItemService = factory.ImportItem()
+	service.ruleService = factory.Rule()
+	service.streamService = factory.Stream()
+	service.templateService = factory.Template()
+	service.userService = factory.User()
+	service.domainEmail = factory.Email()
+	service.queue = factory.Queue()
+	service.host = factory.Host()
 }
 
 // Close stops any background processes controlled by this service
@@ -136,11 +132,15 @@ func (service *Outbox) Save(session data.Session, outboxMessage *model.OutboxMes
 }
 
 func (service *Outbox) cacheMessage(outboxMessage *model.OutboxMessage) {
-	time.Sleep(1 * time.Second)
-	activityService := service.factory.ActivityStream(outboxMessage.ActorType, outboxMessage.ActorID)
-	_, err := activityService.Client().Load(outboxMessage.ObjectID, ascache.WithWriteOnly())
-	derp.Report(err)
 
+	// Wait for things to settle.  IDK, man
+	time.Sleep(1 * time.Second)
+
+	client := service.activityService.Client(outboxMessage.ActorType, outboxMessage.ActorID)
+
+	if _, err := client.Load(outboxMessage.ObjectID, ascache.WithWriteOnly()); err != nil {
+		derp.Report(err)
+	}
 }
 
 /******************************************
@@ -182,8 +182,7 @@ func (service *Outbox) Delete(session data.Session, outboxMessage *model.OutboxM
 	}
 
 	// Delete the document from the cache
-	activityService := service.factory.ActivityStream(outboxMessage.ActorType, outboxMessage.ActorID)
-	if err := activityService.Delete(outboxMessage.ObjectID); err != nil {
+	if err := service.activityService.Delete(outboxMessage.ObjectID); err != nil {
 		return derp.Wrap(err, location, "Unable to delete ActivityStream", outboxMessage, note)
 	}
 

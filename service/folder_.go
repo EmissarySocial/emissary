@@ -26,8 +26,7 @@ type Folder struct {
 
 // NewFolder returns a fully populated Folder service
 func NewFolder() Folder {
-	service := Folder{}
-	return service
+	return Folder{}
 }
 
 /******************************************
@@ -35,12 +34,12 @@ func NewFolder() Folder {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Folder) Refresh(domainService *Domain, followingService *Following, importItemService *ImportItem, inboxService *Inbox, themeService *Theme) {
-	service.domainService = domainService
-	service.followingService = followingService
-	service.importItemService = importItemService
-	service.inboxService = inboxService
-	service.themeService = themeService
+func (service *Folder) Refresh(factory *Factory) {
+	service.domainService = factory.Domain()
+	service.followingService = factory.Following()
+	service.importItemService = factory.ImportItem()
+	service.inboxService = factory.Inbox()
+	service.themeService = factory.Theme()
 }
 
 // Close stops any background processes controlled by this service

@@ -24,7 +24,7 @@ type ServerFactory interface {
 type Factory interface {
 	// Model Services
 	Model(string) (service.ModelService, error)
-	ActivityStream(actorType string, actorID primitive.ObjectID) service.ActivityStream
+	ActivityStream() *service.ActivityStream
 	Annotation() *service.Annotation
 	Attachment() *service.Attachment
 	Circle() *service.Circle

@@ -3,7 +3,6 @@ package handler
 import (
 	"net/http"
 
-	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
@@ -11,7 +10,6 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/sherlock"
 	"github.com/benpate/steranko"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func GetIntentInfo(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
@@ -31,8 +29,8 @@ func GetIntentInfo(ctx *steranko.Context, factory *service.Factory, session data
 	}
 
 	// Look up the account via the ActivityService
-	activityService := factory.ActivityStream(model.ActorTypeApplication, primitive.NilObjectID)
-	actor, err := activityService.Client().Load(accountID, sherlock.AsActor())
+	client := factory.ActivityStream().AppClient()
+	actor, err := client.Load(accountID, sherlock.AsActor())
 
 	if err != nil {
 		return derp.Wrap(err, location, "Unable to load account from ActivityService")

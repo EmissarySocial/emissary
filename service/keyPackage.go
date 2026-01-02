@@ -30,8 +30,8 @@ func NewKeyPackage() KeyPackage {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *KeyPackage) Refresh(host string) {
-	service.host = host
+func (service *KeyPackage) Refresh(factory *Factory) {
+	service.host = factory.Host()
 }
 
 // Close stops any background processes controlled by this service

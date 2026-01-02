@@ -85,3 +85,35 @@ func TestParsePathErrors(t *testing.T) {
 		require.NotNil(t, err)
 	}
 }
+
+func TestParseFollowersURI(t *testing.T) {
+
+	host := "https://example.com"
+
+	{
+		userID := parseFollowersURI(host, "https://example.com/@123456789012345678901234/pub/followers")
+		expectedID, _ := primitive.ObjectIDFromHex("123456789012345678901234")
+		require.Equal(t, expectedID, userID)
+	}
+
+	{
+		userID := parseFollowersURI(host, "https://example.com/@123456789012345678901234/pub/followers/")
+		require.Zero(t, userID)
+	}
+
+	{
+		userID := parseFollowersURI(host, "https://example.com/@123456789012345678901234/invalid-other-path/")
+		require.Zero(t, userID)
+	}
+
+	{
+		userID := parseFollowersURI(host, "https://example.com/@not-a-valid-userid/pub/followers/")
+		require.Zero(t, userID)
+	}
+
+	{
+		userID := parseFollowersURI(host, "https://not-even-your-domain.bro")
+		require.Zero(t, userID)
+	}
+
+}

@@ -22,9 +22,9 @@ import (
 
 // SearchResult defines a service that manages all searchable pages in a domain.
 type SearchResult struct {
-	searchTagService *SearchTag
-	queue            *queue.Queue
 	hostname         string
+	queue            *queue.Queue
+	searchTagService *SearchTag
 }
 
 // NewSearchResult returns a fully initialized Search service
@@ -37,10 +37,10 @@ func NewSearchResult() SearchResult {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *SearchResult) Refresh(searchTagService *SearchTag, queue *queue.Queue, hostname string) {
-	service.searchTagService = searchTagService
-	service.queue = queue
-	service.hostname = hostname
+func (service *SearchResult) Refresh(factory *Factory) {
+	service.hostname = factory.Hostname()
+	service.queue = factory.Queue()
+	service.searchTagService = factory.SearchTag()
 }
 
 // Close stops any background processes controlled by this service

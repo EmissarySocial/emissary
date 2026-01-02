@@ -22,7 +22,7 @@ func outbox_MLS(context Context, activity streams.Document) error {
 	const location = "handler.activitypub_user.outbox_MLS"
 
 	// Save the activity in the user's outbox
-	if err := context.factory.Outbox2().AddUserActivity(context.session, context.user.UserID, activity.Map()); err != nil {
+	if err := context.factory.Outbox2().AddUserActivity(context.session, context.user.UserID, activity); err != nil {
 		return derp.Wrap(err, location, "Unable to save outbox activity")
 	}
 
@@ -31,7 +31,6 @@ func outbox_MLS(context Context, activity streams.Document) error {
 
 	// Send ActivityPub notifications to participants
 	sender := sender.New(sendLocator, context.factory.Queue())
-
 	if err := sender.Send(activity.Map()); err != nil {
 		return derp.Wrap(err, location, "Unable to send activity")
 	}

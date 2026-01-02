@@ -17,9 +17,9 @@ import (
 
 // Attachment manages all interactions with the Attachment collection
 type Attachment struct {
+	host              string
 	importItemService *ImportItem
 	mediaServer       mediaserver.MediaServer
-	host              string
 }
 
 // NewAttachment returns a fully populated Attachment service
@@ -32,10 +32,10 @@ func NewAttachment() Attachment {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Attachment) Refresh(importItemService *ImportItem, mediaServer mediaserver.MediaServer, host string) {
-	service.importItemService = importItemService
-	service.mediaServer = mediaServer
-	service.host = host
+func (service *Attachment) Refresh(factory *Factory) {
+	service.host = factory.Host()
+	service.importItemService = factory.ImportItem()
+	service.mediaServer = factory.MediaServer()
 }
 
 // Close stops any background processes controlled by this service

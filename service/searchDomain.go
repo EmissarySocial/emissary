@@ -17,20 +17,18 @@ import (
 
 // SearchDomain defines a service that manages the global domain search actor.
 type SearchDomain struct {
-	factory          *Factory
+	activityService  *ActivityStream
 	domainService    *Domain
 	followerService  *Follower
+	host             string
+	queue            *queue.Queue
 	ruleService      *Rule
 	searchTagService *SearchTag
-	queue            *queue.Queue
-	host             string
 }
 
 // NewSearchDomain returns a fully initialized SearchDomain service
-func NewSearchDomain(factory *Factory) SearchDomain {
-	return SearchDomain{
-		factory: factory,
-	}
+func NewSearchDomain() SearchDomain {
+	return SearchDomain{}
 }
 
 /******************************************
@@ -38,18 +36,14 @@ func NewSearchDomain(factory *Factory) SearchDomain {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *SearchDomain) Refresh(domainService *Domain, followerService *Follower, ruleService *Rule, searchTagService *SearchTag, queue *queue.Queue, host string) {
-	service.domainService = domainService
-	service.followerService = followerService
-	service.ruleService = ruleService
-	service.searchTagService = searchTagService
-	service.queue = queue
-	service.host = host
-}
-
-// Close stops any background processes controlled by this service
-func (service *SearchDomain) Close() {
-	// Nothin to do here.
+func (service *SearchDomain) Refresh(factory *Factory) {
+	service.activityService = factory.ActivityStream()
+	service.domainService = factory.Domain()
+	service.followerService = factory.Follower()
+	service.host = factory.Host()
+	service.queue = factory.Queue()
+	service.ruleService = factory.Rule()
+	service.searchTagService = factory.SearchTag()
 }
 
 /******************************************
@@ -109,14 +103,12 @@ func (service *SearchDomain) ActivityPubActor(session data.Session) (outbox.Acto
 		return outbox.Actor{}, derp.Wrap(err, location, "Error getting private key")
 	}
 
-	activityService := service.factory.ActivityStream(model.ActorTypeSearchDomain, primitive.NilObjectID)
-
 	// Return the ActivityPub Actor
 	actor := outbox.NewActor(
 		service.ActivityPubURL(),
 		privateKey,
 		outbox.WithFollowers(service.rangeActivityPubFollowers(session)),
-		outbox.WithClient(activityService.Client()),
+		outbox.WithClient(service.activityService.SearchDomainClient()),
 	)
 
 	return actor, nil

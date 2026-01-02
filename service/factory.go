@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"html/template"
 	"net/http"
 	"strings"
 	"time"
@@ -12,6 +13,7 @@ import (
 	"github.com/EmissarySocial/emissary/realtime"
 	"github.com/EmissarySocial/emissary/tools/camper"
 	"github.com/EmissarySocial/emissary/tools/httpcache"
+	"github.com/EmissarySocial/emissary/tools/templates"
 	"github.com/benpate/data"
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
@@ -53,6 +55,7 @@ type Factory struct {
 	exportCache         afero.Fs
 
 	// services (within this domain/factory)
+	activityStream         ActivityStream
 	annotationService      Annotation
 	attachmentService      Attachment
 	circleService          Circle
@@ -65,6 +68,8 @@ type Factory struct {
 	followingService       Following
 	groupService           Group
 	identityService        Identity
+	importService          Import
+	importItemService      ImportItem
 	inboxService           Inbox
 	keyPackageService      KeyPackage
 	locatorService         Locator
@@ -101,6 +106,7 @@ type Factory struct {
 // NewFactory creates a new factory tied to a MongoDB database
 func NewFactory(serverFactory ServerFactory, commonDatabase mongodb.Server, domain config.Domain, port string, contentService *Content, emailService *ServerEmail, jwtService *JWT, queue *queue.Queue, registrationService *Registration, templateService *Template, themeService *Theme, widgetService *Widget, attachmentOriginals afero.Fs, attachmentCache afero.Fs, exportCache afero.Fs, httpCache *httpcache.HTTPCache, workingDirectory *mediaserver.WorkingDirectory) (*Factory, error) {
 
+	const location = "domain.factory.NewFactory"
 	log.Info().Msg("Starting domain: " + domain.Hostname)
 
 	// Base Factory object
@@ -126,397 +132,138 @@ func NewFactory(serverFactory ServerFactory, commonDatabase mongodb.Server, doma
 
 	factory.config.Hostname = domain.Hostname
 
-	// Services are created empty, then populated in a second "Refresh" step later.  This
-	// servse two purposes:
-	//
-	// 1. It resolves the problem of circular dependencies
-	// 2. It allows us to load (and reload) service configuration separately, as config files are loaded and changed.
-
-	// Start the Realtime Broker
-	factory.realtimeBroker = realtime.NewBroker(factory.SSEUpdateChannel())
-
 	// Create empty service pointers.  These will be populated in the Refresh() step.
-	factory.annotationService = NewAnnotation(&factory)
+	// This is so we can:
+	// 1. resolve the problem of circular dependencies
+	// 2. reload service configurations separate from the services themselves.
+
+	factory.activityStream = NewActivityStream()
+	factory.annotationService = NewAnnotation()
 	factory.attachmentService = NewAttachment()
 	factory.circleService = NewCircle()
 	factory.connectionService = NewConnection()
-	factory.domainService = NewDomain(&factory)
-	factory.emailService = NewDomainEmail(&factory, emailService)
+	factory.domainService = NewDomain()
+	factory.emailService = NewDomainEmail()
 	factory.encryptionKeyService = NewEncryptionKey()
 	factory.folderService = NewFolder()
-	factory.followerService = NewFollower(&factory)
-	factory.followingService = NewFollowing(&factory)
+	factory.followerService = NewFollower()
+	factory.followingService = NewFollowing()
 	factory.groupService = NewGroup()
-	factory.identityService = NewIdentity(&factory)
+	factory.identityService = NewIdentity()
+	factory.importService = NewImport()
+	factory.importItemService = NewImportItem()
 	factory.inboxService = NewInbox()
 	factory.keyPackageService = NewKeyPackage()
 	factory.locatorService = NewLocator()
-	factory.mentionService = NewMention(&factory)
+	factory.mentionService = NewMention()
 	factory.merchantAccountService = NewMerchantAccount()
 	factory.oauthClient = NewOAuthClient()
 	factory.oauthUserToken = NewOAuthUserToken()
-	factory.outboxService = NewOutbox(&factory)
+	factory.outboxService = NewOutbox()
 	factory.outbox2Service = NewOutbox2()
-	factory.permissionService = NewPermission(&factory)
+	factory.permissionService = NewPermission()
 	factory.productService = NewProduct()
 	factory.providerService = NewProvider()
 	factory.responseService = NewResponse()
-	factory.ruleService = NewRule(&factory)
-	factory.searchDomainService = NewSearchDomain(&factory)
-	factory.searchQueryService = NewSearchQuery(&factory)
+	factory.realtimeBroker = realtime.NewBroker(factory.SSEUpdateChannel())
+	factory.ruleService = NewRule()
+	factory.searchDomainService = NewSearchDomain()
+	factory.searchQueryService = NewSearchQuery()
 	factory.searchResultService = NewSearchResult()
 	factory.searchTagService = NewSearchTag()
-	factory.streamService = NewStream(&factory)
+	factory.streamService = NewStream()
 	factory.streamArchiveService = NewStreamArchive()
 	factory.streamDraftService = NewStreamDraft()
 	factory.privilegeService = NewPrivilege()
-	factory.userService = NewUser(&factory)
-	factory.webhookService = NewWebhook(&factory)
+	factory.userService = NewUser()
+	factory.webhookService = NewWebhook()
 
 	// Refresh the configuration with values that (may) change during the lifetime of the factory
 	if err := factory.Refresh(domain, attachmentOriginals, attachmentCache); err != nil {
-		return nil, derp.Wrap(err, "domain.NewFactory", "Unable to create factory", domain)
+		return nil, derp.Wrap(err, location, "Unable to create factory", domain)
 	}
 
 	// Success!
 	return &factory, nil
 }
 
-func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.Fs, attachmentCache afero.Fs) error {
+func (factory *Factory) Refresh(newConfig config.Domain, attachmentOriginals afero.Fs, attachmentCache afero.Fs) error {
+
+	const location = "domain.factory.Refresh"
+
+	// Track changes for additional steps below
+	hasConfigChanged := factory.dbConfigChanged(newConfig) // nolint:scopeguard - this cached value is used below.
+
+	// Update the factory with the new configuration
+	factory.config = newConfig
 
 	// Update global pointers
 	factory.attachmentOriginals = attachmentOriginals
 	factory.attachmentCache = attachmentCache
 
-	// If the database connect string has changed, then update the database connection
-	if (factory.config.ConnectString != domain.ConnectString) || (factory.config.DatabaseName != domain.DatabaseName) {
+	// Refresh all services
+	factory.activityStream.Refresh(factory)
+	factory.annotationService.Refresh(factory)
+	factory.attachmentService.Refresh(factory)
+	factory.circleService.Refresh(factory)
+	factory.connectionService.Refresh(factory)
+	factory.domainService.Refresh(factory)
+	factory.emailService.Refresh(factory)
+	factory.encryptionKeyService.Refresh(factory)
+	factory.folderService.Refresh(factory)
+	factory.followerService.Refresh(factory)
+	factory.followingService.Refresh(factory)
+	factory.groupService.Refresh(factory)
+	factory.identityService.Refresh(factory)
+	factory.importService.Refresh(factory)
+	factory.importItemService.Refresh(factory)
+	factory.inboxService.Refresh(factory)
+	factory.keyPackageService.Refresh(factory)
+	factory.locatorService.Refresh(factory)
+	factory.mentionService.Refresh(factory)
+	factory.merchantAccountService.Refresh(factory)
+	factory.oauthClient.Refresh(factory)
+	factory.oauthUserToken.Refresh(factory)
+	factory.outboxService.Refresh(factory)
+	factory.outbox2Service.Refresh(factory)
+	factory.permissionService.Refresh(factory)
+	factory.productService.Refresh(factory)
+	factory.providerService.Refresh(factory)
+	factory.realtimeBroker.Refresh() ///
+	factory.responseService.Refresh(factory)
+	factory.ruleService.Refresh(factory)
+	factory.searchDomainService.Refresh(factory)
+	factory.searchQueryService.Refresh(factory)
+	factory.searchResultService.Refresh(factory)
+	factory.searchTagService.Refresh(factory)
+	factory.streamService.Refresh(factory)
+	factory.streamArchiveService.Refresh(factory)
+	factory.streamDraftService.Refresh(factory)
+	factory.privilegeService.Refresh(factory)
+	factory.userService.Refresh(factory)
+	factory.webhookService.Refresh(factory)
 
-		// If the connect string has not been changed, we don't need to (re-)connect to a database
-		if domain.ConnectString == "" {
-			factory.config = domain
-			return nil
-		}
+	// If the database connect string has changed,
+	// then reconnect to the new database
+	if hasConfigChanged {
 
-		// Fall through means we need to connect to the database
-		opt := options.Client()
+		// Use standard mongodb client options
+		opts := options.Client()
 
 		// Create a new server connection
-		server, err := mongodb.New(domain.ConnectString, domain.DatabaseName, opt)
+		server, err := mongodb.New(newConfig.ConnectString, newConfig.DatabaseName, opts)
 
 		if err != nil {
-			return derp.Wrap(err, "domain.factory.UpdateConfig", "Error connecting to MongoDB (Server)", domain)
+			return derp.Wrap(err, location, "Unable to connect to MongoDB (Server)", newConfig)
 		}
 
 		factory.server = server
 		refreshContext := factory.newRefreshContext()
 
-		// REFRESH CACHED SERVICES
-
-		// Populate the Annotation Service
-		factory.annotationService.Refresh(
-			factory.ImportItem(),
-		)
-
-		// Populate Attachment Service
-		factory.attachmentService.Refresh(
-			factory.ImportItem(),
-			factory.MediaServer(),
-			factory.Host(),
-		)
-
-		// Populate Circle Service
-		factory.circleService.Refresh(
-			factory.ImportItem(),
-			factory.Privilege(),
-		)
-
-		// Populate Connection Service
-		factory.connectionService.Refresh(
-			factory.Provider(),
-			domain.MasterKey,
-			factory.Host(),
-		)
-
-		// Populate Domain Service
-		factory.domainService.Refresh(
-			domain,
-			factory.Connection(),
-			factory.Provider(),
-			factory.Registration(),
-			factory.Theme(),
-			factory.User(),
-			FuncMap(factory.Icons()),
-			factory.Hostname(),
-		)
-
-		// Populate EncryptionKey Service
-		factory.encryptionKeyService.Refresh(
-			factory.Host(),
-		)
-
-		// Populate Folder Service
-		factory.folderService.Refresh(
-			factory.Domain(),
-			factory.Following(),
-			factory.ImportItem(),
-			factory.Inbox(),
-			factory.Theme(),
-		)
-
-		// Populate Follower Service
-		factory.followerService.Refresh(
-			factory.Email(),
-			factory.ImportItem(),
-			factory.Rule(),
-			factory.Stream(),
-			factory.User(),
-			factory.Queue(),
-			factory.Host(),
-		)
-
-		// Populate Following Service
-		factory.followingService.Refresh(
-			factory.Folder(),
-			factory.EncryptionKey(),
-			factory.ImportItem(),
-			factory.Inbox(),
-			factory.Stream(),
-			factory.User(),
-			factory.Queue(),
-			factory.SSEUpdateChannel(),
-			factory.Host(),
-		)
-
-		// Populate Group Service
-		factory.groupService.Refresh()
-
-		factory.identityService.Refresh(
-			factory.Email(),
-			factory.JWT(),
-			factory.Privilege(),
-			factory.Queue(),
-			factory.Host(),
-		)
-
-		// Populate Inbox Service
-		factory.inboxService.Refresh(
-			factory.ImportItem(),
-			factory.Folder(),
-			factory.Rule(),
-			factory.Host(),
-		)
-
-		// Populage KeyPackage Service
-		factory.keyPackageService.Refresh(
-			factory.Host(),
-		)
-
-		// Populate the Locator service
-		factory.locatorService.Refresh(
-			factory.Domain(),
-			factory.SearchDomain(),
-			factory.SearchQuery(),
-			factory.Stream(),
-			factory.User(),
-			factory.Host(),
-		)
-
-		// Populate Mention service
-		factory.mentionService.Refresh(
-			factory.Rule(),
-			factory.Host(),
-		)
-
-		// Populate MerchantAccount Service
-		factory.merchantAccountService.Refresh(
-			factory.Circle(),
-			factory.Connection(),
-			factory.Identity(),
-			factory.ImportItem(),
-			factory.JWT(),
-			factory.Privilege(),
-			factory.Product(),
-			factory.User(),
-			domain.MasterKey,
-			factory.Host(),
-		)
-
-		// Populate OAuthClient
-		factory.oauthClient.Refresh(
-			factory.OAuthUserToken(),
-			factory.ActivityStream(model.ActorTypeApplication, primitive.NilObjectID),
-			factory.Host(),
-		)
-
-		// Populate OAuthUserToken
-		factory.oauthUserToken.Refresh(
-			factory.OAuthClient(),
-			factory.JWT(),
-			factory.Host(),
-		)
-
-		// Populate Outbox Service
-		factory.outboxService.Refresh(
-			factory.Follower(),
-			factory.Identity(),
-			factory.ImportItem(),
-			factory.Rule(),
-			factory.Stream(),
-			factory.Template(),
-			factory.User(),
-			factory.Email(),
-			factory.Queue(),
-			factory.Host(),
-		)
-
-		// Populate Outbox2 Service
-		factory.outbox2Service.Refresh(
-			factory.Follower(),
-			factory.Queue(),
-			factory.Host(),
-		)
-
-		// Populate Permission Service
-		factory.permissionService.Refresh(
-			factory.Identity(),
-			factory.Privilege(),
-			factory.User(),
-		)
-
-		// Populate Product Service
-		factory.productService.Refresh(
-			factory.ImportItem(),
-			factory.MerchantAccount(),
-		)
-
-		// Populate RealtimeBroker Service
-		factory.realtimeBroker.Refresh()
-
-		// Populate the Response Service
-		factory.responseService.Refresh(
-			factory.ImportItem(),
-			factory.Inbox(),
-			factory.Outbox(),
-			factory.User(),
-			factory.Host(),
-		)
-
-		// Populate the Rule Service
-		factory.ruleService.Refresh(
-			factory.ImportItem(),
-			factory.Outbox(),
-			factory.User(),
-			factory.Queue(),
-			factory.Host(),
-		)
-
-		// Populate the SearchDomain Service
-		factory.searchDomainService.Refresh(
-			factory.Domain(),
-			factory.Follower(),
-			factory.Rule(),
-			factory.SearchTag(),
-			factory.Queue(),
-			factory.Host(),
-		)
-
-		// Populate the SearchQuery Service
-		factory.searchQueryService.Refresh(
-			factory.Domain(),
-			factory.Follower(),
-			factory.Rule(),
-			factory.SearchTag(),
-			factory.Queue(),
-			factory.Host(),
-		)
-
-		// Populate the Search Service
-		factory.searchResultService.Refresh(
-			factory.SearchTag(),
-			factory.Queue(),
-			factory.Hostname(),
-		)
-
-		// Populate the SearchTag Service
-		factory.searchTagService.Refresh(
-			factory.Host(),
-		)
-
-		// Populate Stream Service
-		factory.streamService.Refresh(
-			factory.Attachment(),
-			factory.Circle(),
-			factory.Content(),
-			factory.Domain(),
-			factory.StreamDraft(),
-			factory.Follower(),
-			factory.GeocodeAddress(),
-			factory.Import(),
-			factory.ImportItem(),
-			factory.EncryptionKey(),
-			factory.Mention(),
-			factory.Outbox(),
-			factory.Rule(),
-			factory.SearchTag(),
-			factory.Template(),
-			factory.User(),
-			factory.Webhook(),
-			factory.MediaServer(),
-			factory.Queue(),
-			factory.SSEUpdateChannel(),
-			factory.Host(),
-		)
-
-		// Populate StreamArchive Service
-		factory.streamArchiveService.Refresh(
-			factory.Stream(),
-			factory.Attachment(),
-			factory.MediaServer(),
-			factory.exportCache,
-			factory.Queue(),
-			factory.Host(),
-		)
-
-		// Populate StreamDraft Service
-		factory.streamDraftService.Refresh(
-			factory.Template(),
-			factory.Stream(),
-		)
-
-		// Populate Privilege Service
-		factory.privilegeService.Refresh(
-			factory.Circle(),
-			factory.Identity(),
-			factory.ImportItem(),
-			factory.MerchantAccount(),
-		)
-
-		// Populate User Service
-		factory.userService.Refresh(
-			factory.Attachment(),
-			factory.Domain(),
-			factory.Email(),
-			factory.Folder(),
-			factory.Follower(),
-			factory.Following(),
-			factory.Inbox(),
-			factory.EncryptionKey(),
-			factory.Outbox(),
-			factory.Response(),
-			factory.Rule(),
-			factory.SearchTag(),
-			factory.Stream(),
-			factory.Template(),
-			factory.Webhook(),
-			factory.Queue(),
-			factory.SSEUpdateChannel(),
-			factory.Host(),
-		)
-
-		// Populate Webhook Service
-		factory.webhookService.Refresh(
-			factory.Queue(),
-		)
+		// Start the domain service (load domain, upgrade collections, reindex collections)
+		if err := factory.domainService.Start(); err != nil {
+			return derp.Wrap(err, location, "Unable to start domain service", newConfig)
+		}
 
 		// REALTIME WATCHERS
 
@@ -530,33 +277,14 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 		go queries.WatchUsers(refreshContext, factory.server, factory.sseUpdateChannel)
 	}
 
-	// Re-Populate Email Service
-	// This is separate because it may change separately from the DNS
-	factory.emailService.Refresh(
-		domain,
-		factory.Domain(),
-	)
-
-	if err := factory.domainService.Start(); err != nil {
-		return derp.Wrap(err, "domain.NewFactory", "Error starting domain service", domain)
-	}
-
-	factory.config = domain
 	return nil
 }
 
 // Close disconnects any background processes before this factory is destroyed
 func (factory *Factory) Close() {
-
 	close(factory.sseUpdateChannel)
-
-	factory.domainService.Close()
 	factory.realtimeBroker.Close()
-	factory.streamService.Close()
-	factory.followingService.Close()
-	factory.followerService.Close()
 	factory.jwtService.Close()
-	factory.userService.Close()
 }
 
 /******************************************
@@ -603,6 +331,7 @@ func (factory *Factory) Server() mongodb.Server {
 	return factory.server
 }
 
+// Session returns a new data.Session using the primary database for this domain, using the specified timeout
 func (factory *Factory) Session(timeout time.Duration) (data.Session, context.CancelFunc, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	session, err := factory.Server().Session(ctx)
@@ -622,29 +351,9 @@ func (factory *Factory) WithTransaction(ctx context.Context, callback data.Trans
  * Domain Model Services
  ******************************************/
 
-func (factory *Factory) ActivityStream(actorType string, actorID primitive.ObjectID) ActivityStream {
-	return NewActivityStream(
-		factory.serverFactory,
-		factory.commonDatabase,
-		factory,
-		factory.Hostname(),
-		factory.Version(),
-		actorType,
-		actorID,
-	)
-}
-
-func (factory *Factory) ActivityStreamCrawler(actorType string, actorID primitive.ObjectID) ActivityStreamCrawler {
-
-	activityStreamService := factory.ActivityStream(actorType, actorID)
-
-	return NewActivityStreamCrawler(
-		activityStreamService.Client(),
-		factory.Queue(),
-		factory.Hostname(),
-		actorType,
-		actorID,
-	)
+// ActivityStream returns a fully populated ActivityStream service
+func (factory *Factory) ActivityStream() *ActivityStream {
+	return &factory.activityStream
 }
 
 // Annotation returns a fully populated Annotation service
@@ -735,21 +444,12 @@ func (factory *Factory) Identity() *Identity {
 
 // Import returns the Import service, which imports user records from other systems
 func (factory *Factory) Import() *Import {
-	result := NewImport(
-		factory.ActivityStream(model.ActorTypeApplication, primitive.NilObjectID),
-		factory.Attachment(),
-		factory.ImportItem(),
-		factory.ImportableLocator(),
-		factory.Queue(),
-		factory.Host(),
-	)
-	return &result
+	return &factory.importService
 }
 
 // Import returns the ImportItem service, which manages individual records to be imported
 func (factory *Factory) ImportItem() *ImportItem {
-	result := NewImportItem()
-	return &result
+	return &factory.importItemService
 }
 
 // Inbox returns a fully populated Inbox service
@@ -826,6 +526,10 @@ func (factory *Factory) SearchTag() *SearchTag {
 
 func (factory *Factory) SendLocator(session data.Session) SendLocator {
 	return NewSendLocator(factory, session)
+}
+
+func (factory *Factory) ServerEmail() *ServerEmail {
+	return factory.serverFactory.Email()
 }
 
 // Stream returns a fully populated Stream service
@@ -970,9 +674,9 @@ func (factory *Factory) Export() *Export {
 	return &result
 }
 
-// Key returns an instance of the Key Manager Service (KMS)
-func (factory *Factory) JWT() *JWT {
-	return factory.jwtService
+// FuncMap returns a template.FuncMap populated with functions for this domain
+func (factory *Factory) FuncMap() template.FuncMap {
+	return templates.FuncMap(factory.Icons())
 }
 
 // Icons returns the icon manager service, which manages
@@ -981,13 +685,24 @@ func (factory *Factory) Icons() icon.Provider {
 	return Icons{}
 }
 
+// JWT returns an instance of the JWT Key Manager Service
+func (factory *Factory) JWT() *JWT {
+	return factory.jwtService
+}
+
 // Locator returns the locator service, which locates records based on their URLs
 func (factory *Factory) Locator() *Locator {
 	return &factory.locatorService
 }
 
+// HTTPCache returns the HTTP Cache service for this domain
 func (factory *Factory) HTTPCache() *httpcache.HTTPCache {
 	return factory.httpCache
+}
+
+// MasterKey returns the master key for this domain
+func (factory *Factory) MasterKey() string {
+	return factory.config.MasterKey
 }
 
 // Queue returns the Queue service, which manages background jobs
@@ -1000,7 +715,7 @@ func (factory *Factory) Registration() *Registration {
 	return factory.registrationService
 }
 
-// Steranko returns a fully populated Steranko adapter for the User
+// Steranko returns a Steranko adapter for the provided database session
 func (factory *Factory) Steranko(session data.Session) *steranko.Steranko {
 
 	return steranko.New(
@@ -1010,7 +725,7 @@ func (factory *Factory) Steranko(session data.Session) *steranko.Steranko {
 	)
 }
 
-// LookupProvider returns a fully populated LookupProvider service
+// LookupProvider returns the LookupProvider service for this UserID
 func (factory *Factory) LookupProvider(request *http.Request, session data.Session, userID primitive.ObjectID) form.LookupProvider {
 	return NewLookupProvider(factory, request, session, userID)
 }
@@ -1029,31 +744,31 @@ func (factory *Factory) RSS() *RSS {
 	return NewRSS(factory.Stream(), factory.Host())
 }
 
-// Other libraries to make it here eventually...
-// Service APIs (like Twitter? Slack? Discord?, The FB?)
-
 /******************************************
  * Helper Utilities
  ******************************************/
 
+// ImportableLocator returns an ImportableLocator for this domain
 func (factory *Factory) ImportableLocator() ImportableLocator {
+
+	const location = "service.Factory.ImportableLocator"
 
 	return func(name string) (Importable, error) {
 
 		switch name {
 
-		/*
-			case "outbox":
-				return NilImporter(), nil
+		/* THESE TO BE ADDED ONCE WE HAVE OTHER SERVICES TO TEST WITH
+		case "outbox":
+			return NilImporter(), nil
 
-			case "content":
-				return NilImporter(), nil
+		case "content":
+			return NilImporter(), nil
 
-			case "following":
-				return NilImporter(), nil
+		case "following":
+			return NilImporter(), nil
 
-			case "blocked":
-				return NilImporter(), nil
+		case "blocked":
+			return NilImporter(), nil
 		*/
 
 		case "emissary:annotation":
@@ -1103,11 +818,14 @@ func (factory *Factory) ImportableLocator() ImportableLocator {
 
 		}
 
-		return nil, derp.Internal("service.Import.Importable", "Unrecognized service name. This should never happen", name)
+		return nil, derp.Internal(location, "Unrecognized service name. This should never happen", name)
 	}
 }
 
+// Model returns the ModelService that matches the provided name
 func (factory *Factory) Model(name string) (ModelService, error) {
+
+	const location = "domain.Factory.Model"
 
 	switch strings.ToLower(name) {
 
@@ -1152,7 +870,7 @@ func (factory *Factory) Model(name string) (ModelService, error) {
 
 	}
 
-	return nil, derp.Internal("domain.Factory.Model", "Unknown model", name)
+	return nil, derp.Internal(location, "Unknown model", name)
 }
 
 // ModelService returns the correct service to use for this particular Model object
@@ -1211,6 +929,7 @@ func (factory *Factory) ModelService(object data.Object) ModelService {
 	}
 }
 
+// Collections returns a list of all collection names used by this domain
 func (factory *Factory) Collections() []string {
 
 	return []string{
@@ -1249,6 +968,7 @@ func (factory *Factory) Collections() []string {
 	}
 }
 
+// newRefreshContext cancels any existing refresh context and returns a new one
 func (factory *Factory) newRefreshContext() context.Context {
 
 	if factory.refreshContext != nil {
@@ -1260,4 +980,28 @@ func (factory *Factory) newRefreshContext() context.Context {
 	factory.refreshContext = cancelFunction
 
 	return ctx
+}
+
+// dbConfigChanged returns TRUE if the database connection settings have changed
+func (factory *Factory) dbConfigChanged(newConfig config.Domain) bool {
+
+	// If we don't have a valid configuration yet, then nothing has changed
+	if newConfig.ConnectString == "" {
+		return false
+	}
+
+	if newConfig.DatabaseName == "" {
+		return false
+	}
+
+	// Otherwise, return TRUE if new values are different from current ones
+	if factory.config.ConnectString != newConfig.ConnectString {
+		return true
+	}
+
+	if factory.config.DatabaseName != newConfig.DatabaseName {
+		return true
+	}
+
+	return false
 }

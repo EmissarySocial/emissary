@@ -38,11 +38,11 @@ func NewInbox() Inbox {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Inbox) Refresh(importItemService *ImportItem, folderService *Folder, ruleService *Rule, host string) {
-	service.importItemService = importItemService
-	service.folderService = folderService
-	service.ruleService = ruleService
-	service.host = host
+func (service *Inbox) Refresh(factory *Factory) {
+	service.importItemService = factory.ImportItem()
+	service.folderService = factory.Folder()
+	service.ruleService = factory.Rule()
+	service.host = factory.Host()
 }
 
 // Close stops any background processes controlled by this service

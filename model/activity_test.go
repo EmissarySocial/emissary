@@ -13,8 +13,8 @@ func TestActivitySchema(t *testing.T) {
 
 	table := []tableTestItem{
 		{"activityId", "123456781234567812345678", nil},
-		{"ownerType", "User", nil},
-		{"ownerId", "876543218765432187654321", nil},
+		{"actorType", "User", nil},
+		{"actorId", "876543218765432187654321", nil},
 		{"recipients.0", "as:Public", nil},
 		{"object.to", "as:Public", nil},
 		{"object.id", "http://example.com/activities/1", nil},

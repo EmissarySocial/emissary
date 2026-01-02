@@ -12,20 +12,29 @@ import (
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/ranges"
 	"github.com/benpate/sherlock"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // SendLocator is a service that locates Actors and Recipients for outbound ActivityPub messages.
 type SendLocator struct {
-	factory *Factory
-	session data.Session
+	activityService      *ActivityStream
+	encryptionKeyService *EncryptionKey
+	followerService      *Follower
+	userService          *User
+	host                 string
+	session              data.Session
 }
 
 // NewSendLocator returns a fully initialized SendLocator service
 func NewSendLocator(factory *Factory, session data.Session) SendLocator {
 	return SendLocator{
-		factory: factory,
-		session: session,
+		activityService:      factory.ActivityStream(),
+		encryptionKeyService: factory.EncryptionKey(),
+		followerService:      factory.Follower(),
+		userService:          factory.User(),
+		host:                 factory.Host(),
+		session:              session,
 	}
 }
 
@@ -38,19 +47,19 @@ func (service SendLocator) Actor(url string) (sender.Actor, error) {
 	// Parse the userID from the provided URL
 	userID := service.ParseUserURI(url)
 
-	if !userID.IsZero() {
+	if userID.IsZero() {
 		return nil, derp.NotFound(location, "User not found", url)
 	}
 
 	// Load the User from the database
 	user := model.NewUser()
 
-	if err := service.factory.User().LoadByID(service.session, userID, &user); err != nil {
+	if err := service.userService.LoadByID(service.session, userID, &user); err != nil {
 		return nil, derp.Wrap(err, location, "Unable to load user", "userID", userID.Hex())
 	}
 
 	// Load the User's Encryption Key
-	encryptionKeyService := service.factory.EncryptionKey()
+	encryptionKeyService := service.encryptionKeyService
 	encryptionKey := model.NewEncryptionKey()
 
 	if err := encryptionKeyService.LoadByParentID(service.session, model.EncryptionKeyTypeUser, user.UserID, &encryptionKey); err != nil {
@@ -85,7 +94,7 @@ func (service SendLocator) Recipient(uri string) (iter.Seq[string], error) {
 	// }
 
 	// Special uri scheme for followers
-	if userID := service.ParseFollowersURI(uri); !userID.IsZero() {
+	if userID := parseFollowersURI(service.host, uri); !userID.IsZero() {
 		return service.resolveFollowers(userID)
 	}
 
@@ -95,8 +104,7 @@ func (service SendLocator) Recipient(uri string) (iter.Seq[string], error) {
 	}
 
 	// Otherwise, load the document at the provided URI/URL
-	activityStreamService := service.factory.ActivityStream(model.ActorTypeApplication, primitive.NilObjectID)
-	document, err := activityStreamService.Client().Load(uri)
+	document, err := service.activityService.AppClient().Load(uri)
 
 	if err != nil {
 		derp.Report(derp.Wrap(err, location, "Unable to load document for recipient", "uri", uri))
@@ -122,7 +130,7 @@ func (service SendLocator) Recipient(uri string) (iter.Seq[string], error) {
 func (service SendLocator) resolveFollowers(userID primitive.ObjectID) (iter.Seq[string], error) {
 
 	// Get all Followers for this User
-	followers := service.factory.Follower().RangeByUserID(service.session, userID)
+	followers := service.followerService.RangeByUserID(service.session, userID)
 
 	// Locate each Follower's inbox URL
 	inboxURLs := ranges.Map(followers, func(follower model.Follower) string {
@@ -147,7 +155,7 @@ func (service SendLocator) resolveGroup(token string) (iter.Seq[string], error) 
 	}
 
 	// Get all members of this Group
-	users, err := service.factory.User().RangeByGroup(service.session, groupID)
+	users, err := service.userService.RangeByGroup(service.session, groupID)
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Unable to retrieve group members")
@@ -188,8 +196,7 @@ func (service SendLocator) resolveInboxURL(actorID string) string {
 	const location = "sender.SendLocator.resolveInboxURL"
 
 	// Retrieve the Actor document from the ActivityPub client
-	activityStreamService := service.factory.ActivityStream(model.ActorTypeApplication, primitive.NilObjectID)
-	actor, err := activityStreamService.Client().Load(actorID, sherlock.AsActor())
+	actor, err := service.activityService.AppClient().Load(actorID, sherlock.AsActor())
 
 	if err != nil {
 		derp.Report(derp.Wrap(err, location, "Unable to load actor for inbox URL", "actorID", actorID))
@@ -209,46 +216,19 @@ func (service SendLocator) resolveInboxURL(actorID string) string {
 // It returns the userID if successful, or primitive.NilObjectID if not.
 func (service SendLocator) ParseUserURI(uri string) primitive.ObjectID {
 
-	if prefix := service.factory.Host() + "/@"; strings.HasPrefix(uri, prefix) {
-		token := strings.TrimPrefix(uri, prefix)
-		if userID, err := primitive.ObjectIDFromHex(token); err == nil {
-			return userID
-		}
-	}
-
-	// Nope
-	return primitive.NilObjectID
-}
-
-// ParseFollowersURI parses followers URIs in two formats:
-// 1) followers:<userID>
-// 2) https://<host>/@<userID>/pub/followers
-// It returns the userID if successful, or primitive.NilObjectID if not.
-func (service SendLocator) ParseFollowersURI(uri string) primitive.ObjectID {
-
-	// Shortcut followers: URI
-	if strings.HasPrefix(uri, "followers:") {
-
-		token := strings.TrimPrefix(uri, "followers:")
-		if userID, err := primitive.ObjectIDFromHex(token); err == nil {
-			return userID
-		}
-		return primitive.NilObjectID
-	}
-
-	// Long-form public URL
-	prefix := service.factory.Host() + "/@"
+	prefix := service.host + "/@"
+	spew.Dump(uri, prefix)
 
 	if strings.HasPrefix(uri, prefix) {
-		lastPart := strings.TrimPrefix(uri, prefix)
-		if strings.HasSuffix(lastPart, "/pub/followers") {
-			token := strings.TrimSuffix(uri, "/pub/followers")
-			if userID, err := primitive.ObjectIDFromHex(token); err == nil {
-				return userID
-			}
+		token := strings.TrimPrefix(uri, prefix)
+		spew.Dump(token)
+		if userID, err := primitive.ObjectIDFromHex(token); err == nil {
+			spew.Dump(userID)
+			return userID
 		}
 	}
 
 	// Nope
+	spew.Dump("nope")
 	return primitive.NilObjectID
 }

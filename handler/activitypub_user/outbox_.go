@@ -93,8 +93,8 @@ func PostOutbox(ctx *steranko.Context, factory *service.Factory, session data.Se
 
 	const location = "handler.activitypub_user.PostOutbox"
 
-	// Get ActivityStream service for this User
-	activityService := factory.ActivityStream(model.ActorTypeUser, user.UserID)
+	// Get ActivityStream client for this User
+	client := factory.ActivityStream().UserClient(user.UserID)
 
 	// Create a new Context
 	context := Context{
@@ -112,7 +112,7 @@ func PostOutbox(ctx *steranko.Context, factory *service.Factory, session data.Se
 	)
 
 	// Retrieve the activity from the request body and route it to the correct handler
-	if err := outboxRouter.ReceiveAndHandle(context, ctx.Request(), activityService.Client(), matchActor); err != nil {
+	if err := outboxRouter.ReceiveAndHandle(context, ctx.Request(), client, matchActor); err != nil {
 		return derp.Wrap(err, location, "Unable to handle ActivityPub request")
 	}
 

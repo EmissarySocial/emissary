@@ -80,11 +80,10 @@ func (service *Stream) publish_outbox(session data.Session, user *model.User, st
 	const location = "service.Stream.publish_outbox"
 
 	// Create the Activity to send to the User's Outbox
-	activityService := service.factory.ActivityStream(model.ActorTypeUser, user.UserID)
 	object := service.JSONLD(session, stream)
 
 	// Save the object to the ActivityStream cache
-	if err := activityService.Save(streams.NewDocument(object)); err != nil {
+	if err := service.activityService.Save(streams.NewDocument(object)); err != nil {
 		return derp.Wrap(err, location, "Unable to save object to ActivityStream cache", object)
 	}
 

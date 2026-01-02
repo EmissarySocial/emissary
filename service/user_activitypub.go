@@ -103,14 +103,12 @@ func (service *User) ActivityPubActor(session data.Session, userID primitive.Obj
 		return outbox.Actor{}, derp.Wrap(err, location, "Could not retrieve private key")
 	}
 
-	activityService := service.factory.ActivityStream(model.ActorTypeUser, userID)
-
 	// Return the ActivityPub Actor
 	actor := outbox.NewActor(
 		service.ActivityPubURL(userID),
 		privateKey,
 		outbox.WithFollowers(service.rangeActivityPubFollowers(session, userID)),
-		outbox.WithClient(activityService.Client()),
+		outbox.WithClient(service.activityService.UserClient(userID)),
 		// TODO: Restore Queue:: , outbox.WithQueue(service.queue))
 	)
 

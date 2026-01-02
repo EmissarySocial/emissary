@@ -642,7 +642,7 @@ func (w Stream) Mentions() ([]model.Mention, error) {
 }
 
 func (w Stream) RepliesAfter(dateString string, maxRows int) sliceof.Object[ascache.Value] {
-	activityStreamsService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
+	activityStreamsService := w._factory.ActivityStream()
 	minDate := convert.Int64(dateString)
 	return activityStreamsService.QueryRepliesAfterDate(w._request.Context(), w._stream.URL, minDate, int64(maxRows))
 }

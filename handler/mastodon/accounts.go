@@ -562,8 +562,8 @@ func GetAccount_Lookup(serverFactory *server.Factory) func(model.Authorization, 
 		}
 
 		// Load the Account as an ActivityStream
-		activityStreamsService := factory.ActivityStream(model.ActorTypeUser, auth.UserID)
-		document, err := activityStreamsService.Client().Load(t.Acct)
+		client := factory.ActivityStream().UserClient(auth.UserID)
+		document, err := client.Load(t.Acct)
 
 		if err != nil {
 			return object.Account{}, derp.Wrap(err, location, "Unable to load document")

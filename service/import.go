@@ -28,7 +28,7 @@ import (
 
 // Import service helps exports user data to another server
 type Import struct {
-	activityService   ActivityStream
+	activityService   *ActivityStream
 	attachmentService *Attachment
 	importItemService *ImportItem
 	locator           ImportableLocator
@@ -37,15 +37,18 @@ type Import struct {
 }
 
 // NewImport returns a fully populated Import service
-func NewImport(activityService ActivityStream, attachmentService *Attachment, importItemService *ImportItem, locator ImportableLocator, queue *queue.Queue, host string) Import {
-	return Import{
-		activityService:   activityService,
-		attachmentService: attachmentService,
-		importItemService: importItemService,
-		locator:           locator,
-		queue:             queue,
-		host:              host,
-	}
+func NewImport() Import {
+	return Import{}
+}
+
+// Refresh populates additional services that may not have been initialized when the Import service was created
+func (service *Import) Refresh(factory *Factory) {
+	service.activityService = factory.ActivityStream()
+	service.attachmentService = factory.Attachment()
+	service.importItemService = factory.ImportItem()
+	service.locator = factory.ImportableLocator()
+	service.queue = factory.Queue()
+	service.host = factory.Host()
 }
 
 /******************************************
@@ -317,7 +320,7 @@ func (service *Import) doAuthorize(record *model.Import) error {
 	var err error
 
 	// Find the remote actor identified as the Source account
-	client := service.activityService.Client()
+	client := service.activityService.AppClient()
 	actor, err := client.Load(record.SourceID, sherlock.AsActor())
 
 	if err != nil {

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"iter"
 	"time"
 
@@ -19,20 +20,18 @@ import (
 
 // Rule defines a service that manages all content rules created and imported by Users.
 type Rule struct {
-	factory           *Factory
 	importItemService *ImportItem
 	outboxService     *Outbox
 	userService       *User
 	host              string
+	newSession        func(timeout time.Duration) (data.Session, context.CancelFunc, error)
 
 	queue *queue.Queue
 }
 
 // NewRule returns a fully initialized Rule service
-func NewRule(factory *Factory) Rule {
-	return Rule{
-		factory: factory,
-	}
+func NewRule() Rule {
+	return Rule{}
 }
 
 /******************************************
@@ -40,12 +39,13 @@ func NewRule(factory *Factory) Rule {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Rule) Refresh(importItemService *ImportItem, outboxService *Outbox, userService *User, queue *queue.Queue, host string) {
-	service.importItemService = importItemService
-	service.outboxService = outboxService
-	service.userService = userService
-	service.queue = queue
-	service.host = host
+func (service *Rule) Refresh(factory *Factory) {
+	service.importItemService = factory.ImportItem()
+	service.outboxService = factory.Outbox()
+	service.userService = factory.User()
+	service.queue = factory.Queue()
+	service.host = factory.Host()
+	service.newSession = factory.Session
 }
 
 // Close stops any background processes controlled by this service

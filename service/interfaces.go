@@ -14,6 +14,7 @@ import (
 
 type ServerFactory interface {
 	ByHostname(hostname string) (*Factory, error)
+	Email() *ServerEmail
 }
 
 type DomainFactory interface {

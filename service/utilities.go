@@ -90,6 +90,37 @@ func textIndex(tokens ...string) sliceof.String {
 	return result
 }
 
+// parseFollowersURI parses followers URIs in two formats:
+// 1) followers:<userID>
+// 2) https://<host>/@<userID>/pub/followers
+// It returns the userID if successful, or primitive.NilObjectID if not.
+func parseFollowersURI(host string, uri string) primitive.ObjectID {
+
+	// Shortcut followers: URI
+	if strings.HasPrefix(uri, "followers:") {
+
+		token := strings.TrimPrefix(uri, "followers:")
+		if userID, err := primitive.ObjectIDFromHex(token); err == nil {
+			return userID
+		}
+		return primitive.NilObjectID
+	}
+
+	// Long-form public URL
+	if prefix := host + "/@"; strings.HasPrefix(uri, prefix) {
+		uri = strings.TrimPrefix(uri, prefix)
+		if strings.HasSuffix(uri, "/pub/followers") {
+			uri = strings.TrimSuffix(uri, "/pub/followers")
+			if userID, err := primitive.ObjectIDFromHex(uri); err == nil {
+				return userID
+			}
+		}
+	}
+
+	// Nope
+	return primitive.NilObjectID
+}
+
 func ParseProfileURL(value string) (urlValue *url.URL, userID primitive.ObjectID, objectType string, objectID primitive.ObjectID, err error) {
 
 	// Parse the value into a URL

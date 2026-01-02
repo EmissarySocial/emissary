@@ -10,26 +10,27 @@ import (
 	"github.com/benpate/derp"
 	dt "github.com/benpate/domain"
 	"github.com/benpate/hannibal/sigs"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// Permission service manages user permissions and privileges
 type Permission struct {
-	factory          *Factory
+	activityService  *ActivityStream
 	identityService  *Identity
 	privilegeService *Privilege
 	userService      *User
 }
 
-func NewPermission(factory *Factory) Permission {
-	return Permission{
-		factory: factory,
-	}
+// NewPermission returns a fully populated Permission service.
+func NewPermission() Permission {
+	return Permission{}
 }
 
-func (service *Permission) Refresh(identityService *Identity, privilegeService *Privilege, userService *User) {
-	service.identityService = identityService
-	service.privilegeService = privilegeService
-	service.userService = userService
+// Refresh updates links to additional services that may not have been initialized when this service was created.
+func (service *Permission) Refresh(factory *Factory) {
+	service.activityService = factory.ActivityStream()
+	service.identityService = factory.Identity()
+	service.privilegeService = factory.Privilege()
+	service.userService = factory.User()
 }
 
 // UserCan returns TRUE if this action is permitted on a stream (using the provided authorization)
@@ -334,8 +335,7 @@ func (service *Permission) getSignature(request *http.Request) (sigs.Signature, 
 	const location = "service.Permission.getSignature"
 
 	// First, try to verify the signature using the standard method
-	activityStream := service.factory.ActivityStream(model.ActorTypeApplication, primitive.NilObjectID)
-	signature, err := sigs.Verify(request, activityStream.PublicKeyFinder)
+	signature, err := sigs.Verify(request, service.activityService.PublicKeyFinder)
 
 	if err == nil {
 		return signature, nil

@@ -27,9 +27,9 @@ func NewStreamDraft() StreamDraft {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *StreamDraft) Refresh(templateService *Template, streamService *Stream) {
-	service.templateService = templateService
-	service.streamService = streamService
+func (service *StreamDraft) Refresh(factory *Factory) {
+	service.templateService = factory.Template()
+	service.streamService = factory.Stream()
 }
 
 // Close stops any background processes controlled by this service

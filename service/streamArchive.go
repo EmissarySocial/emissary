@@ -45,13 +45,13 @@ func NewStreamArchive() StreamArchive {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *StreamArchive) Refresh(streamService *Stream, attachmentService *Attachment, mediaserver mediaserver.MediaServer, exportCache afero.Fs, queue *queue.Queue, host string) {
-	service.streamService = streamService
-	service.attachmentService = attachmentService
-	service.mediaserver = mediaserver
-	service.exportCache = exportCache
-	service.queue = queue
-	service.host = host
+func (service *StreamArchive) Refresh(factory *Factory) {
+	service.streamService = factory.Stream()
+	service.attachmentService = factory.Attachment()
+	service.mediaserver = factory.MediaServer()
+	service.exportCache = factory.exportCache
+	service.queue = factory.Queue()
+	service.host = factory.Host()
 }
 
 // Close stops any background processes controlled by this service

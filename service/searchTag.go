@@ -33,8 +33,8 @@ func NewSearchTag() SearchTag {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *SearchTag) Refresh(host string) {
-	service.host = host
+func (service *SearchTag) Refresh(factory *Factory) {
+	service.host = factory.Hostname()
 }
 
 // Close stops any background processes controlled by this service

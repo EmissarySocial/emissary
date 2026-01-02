@@ -52,7 +52,7 @@ func UpgradeMongoDB(connectionString string, databaseName string, domain *model.
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(connectionString))
 
 	if err != nil {
-		return derp.Wrap(err, "data.mongodb.New", "Unable to create mongodb client")
+		return derp.Wrap(err, location, "Unable to create mongodb client")
 	}
 
 	session := client.Database(databaseName)

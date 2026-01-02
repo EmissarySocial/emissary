@@ -35,12 +35,12 @@ func NewResponse() Response {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Response) Refresh(importItemService *ImportItem, inboxService *Inbox, outboxService *Outbox, userService *User, host string) {
-	service.importItemService = importItemService
-	service.inboxService = inboxService
-	service.outboxService = outboxService
-	service.userService = userService
-	service.host = host
+func (service *Response) Refresh(factory *Factory) {
+	service.importItemService = factory.ImportItem()
+	service.inboxService = factory.Inbox()
+	service.outboxService = factory.Outbox()
+	service.userService = factory.User()
+	service.host = factory.Host()
 }
 
 // Close stops any background processes controlled by this service

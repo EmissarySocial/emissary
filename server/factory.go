@@ -18,6 +18,7 @@ import (
 	derpconsole "github.com/EmissarySocial/emissary/tools/derp-console"
 	derpmongo "github.com/EmissarySocial/emissary/tools/derp-mongo"
 	"github.com/EmissarySocial/emissary/tools/httpcache"
+	"github.com/EmissarySocial/emissary/tools/templates"
 	"github.com/benpate/data"
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
@@ -49,6 +50,7 @@ type Factory struct {
 	// Server-level services
 	contentService      service.Content
 	emailService        service.ServerEmail
+	iconService         service.Icons
 	jwtService          service.JWT
 	registrationService service.Registration
 	themeService        service.Theme
@@ -64,6 +66,7 @@ type Factory struct {
 	queue               *queue.Queue
 	digitalDome         dome.Dome
 
+	funcMap   template.FuncMap
 	domains   *xsync.Map[string, *service.Factory]
 	httpCache httpcache.HTTPCache
 	setup     bool // If TRUE, then the factory is in setup mode. This value cannot be changed
@@ -89,7 +92,11 @@ func NewFactory(commandLineArgs *config.CommandLineArgs, embeddedFiles embed.FS)
 		WithVariableTTL().
 		Build()
 
+	factory.funcMap = templates.FuncMap(factory.Icons())
+
 	factory.httpCache = httpcache.NewOtterCache(otterCache, httpcache.WithTTL(1*time.Minute))
+
+	factory.iconService = service.NewIcons()
 
 	// Global Registration Service
 	factory.registrationService = service.NewRegistration(factory.FuncMap())
@@ -134,9 +141,7 @@ func NewFactory(commandLineArgs *config.CommandLineArgs, embeddedFiles embed.FS)
 	)
 
 	factory.jwtService = service.NewJWT()
-
 	factory.queue = queue.New()
-
 	factory.workingDirectory = mediaserver.NewWorkingDirectory(os.TempDir(), 4*time.Minute, 10000)
 	factory.setup = commandLineArgs.Setup
 
@@ -700,12 +705,12 @@ func (factory *Factory) Widget() *service.Widget {
 
 // FuncMap returns the global funcMap (used by all templates)
 func (factory *Factory) FuncMap() template.FuncMap {
-	return service.FuncMap(factory.Icons())
+	return factory.funcMap
 }
 
 // Icons returns the global icon collection
 func (factory *Factory) Icons() icon.Provider {
-	return service.Icons{}
+	return factory.iconService
 }
 
 // Filesystem returns the global filesystem service
