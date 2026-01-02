@@ -12,6 +12,12 @@ type MainState = {
 
 export class Main {
 
+	private factory: ServiceFactory
+
+	constructor(factory:ServiceFactory) {
+		this.factory = factory
+	}
+
 	oninit(vnode: MainVnode) {
 		vnode.state.modal = ""
 	}
@@ -51,7 +57,11 @@ export class Main {
 					Here be details...
 				</div>
 
-				<NewConversation modal={vnode.state.modal} close={() => this.closeModal(vnode)}></NewConversation> 
+				<NewConversation 
+					factory={this.factory} 
+					modal={vnode.state.modal} 
+					close={() => this.closeModal(vnode)}>
+				</NewConversation> 
 
 			</div>
 		)

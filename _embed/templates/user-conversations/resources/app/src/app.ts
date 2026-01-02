@@ -11,11 +11,13 @@ class Application {
 
 	private async start(root:HTMLElement) {
 
+		// Create the service factory
 		var factory = new ServiceFactory()
 		await factory.start()
 
+		// Create and mount the main application
 		var viewContainer = new Main(factory)
-		m.mount(root, Main)
+		m.mount(root, viewContainer)
 	}
 }
 

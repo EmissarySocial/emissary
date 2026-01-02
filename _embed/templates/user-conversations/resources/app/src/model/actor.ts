@@ -5,10 +5,12 @@ import { type APCollection } from "./collection"
 // have many other options, but these are the ones we're
 // using in this app.
 export type APActor = {
-	actorId: string
+	id: string
 	name: string
 	username: string
 	icon: string
 	inbox: string
+	outbox: string
+	mlsInbox: string
 	keyPackages: string
 }

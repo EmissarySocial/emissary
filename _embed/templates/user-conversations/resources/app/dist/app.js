@@ -12182,7 +12182,16 @@
   // src/service/factory.ts
   var ServiceFactory = class {
     // All class #properties are PRIVATE
-    #actor = {};
+    #actor = {
+      id: "",
+      name: "",
+      icon: "",
+      username: "",
+      inbox: "",
+      mlsInbox: "",
+      outbox: "",
+      keyPackages: ""
+    };
     #activityPub;
     #keyPackage;
     constructor() {
@@ -12190,30 +12199,35 @@
       this.#keyPackage = new KeyPackageService(this.#activityPub);
     }
     async start() {
-      const actor = await this.loadActor();
+      const actor = await this.loadMyself();
       this.#actor = actor;
+      console.log(this.#actor);
       await this.#activityPub.start(actor.id);
       await this.#keyPackage.start(actor.id);
     }
-    async loadActor() {
+    async loadMyself() {
       const response = await fetch("http://localhost/@me", {
-        headers: [["Accept", "application/json"]],
-        credentials: "same-origin"
+        headers: [["Accept", "application/json"]]
       });
       const result = await response.json();
-      if (typeof result == "object") {
-        return result;
-      }
-      return {
-        id: "",
-        name: "",
-        inbox: "",
-        keyPackages: {
-          type: "Collection",
-          id: "",
-          items: []
+      return result;
+    }
+    async newConversation(to, message) {
+      const activity = {
+        "@context": "https://www.w3.org/ns/activitystreams",
+        "type": "Create",
+        "actor": this.#actor.id,
+        "to": to,
+        "object": {
+          "type": "Note",
+          "content": message
         }
       };
+      const response = await fetch(this.#actor.outbox, {
+        method: "POST",
+        headers: { "Content-Type": "application/activity+json" },
+        body: JSON.stringify(activity)
+      });
     }
   };
 
@@ -12437,12 +12451,13 @@
   var NewConversation = class {
     oninit(vnode) {
       vnode.state.actors = [];
+      vnode.state.message = "";
     }
     view(vnode) {
       if (vnode.attrs.modal != "NEW-CONVERSATION") {
         return null;
       }
-      return /* @__PURE__ */ (0, import_mithril4.default)(Modal, { close: vnode.attrs.close }, /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "layout layout-vertical" }, this.header(vnode), /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "layout-elements" }, /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "layout-element" }, /* @__PURE__ */ (0, import_mithril4.default)("label", { for: "" }, "Participants"), /* @__PURE__ */ (0, import_mithril4.default)(ActorSearch, { name: "actorIds", endpoint: "/.api/actors", onselect: (actors) => this.selectActors(vnode, actors) })), /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "layout-element" }, /* @__PURE__ */ (0, import_mithril4.default)("label", null, "Message"), /* @__PURE__ */ (0, import_mithril4.default)("textarea", { rows: "8" }), /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "text-sm text-gray" }, this.description(vnode))))), /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "margin-top" }, this.submitButton(vnode), /* @__PURE__ */ (0, import_mithril4.default)("button", { onclick: vnode.attrs.close, tabIndex: "0" }, "Close")));
+      return /* @__PURE__ */ (0, import_mithril4.default)(Modal, { close: vnode.attrs.close }, /* @__PURE__ */ (0, import_mithril4.default)("form", { onsubmit: (event) => this.onsubmit(event, vnode) }, /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "layout layout-vertical" }, this.header(vnode), /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "layout-elements" }, /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "layout-element" }, /* @__PURE__ */ (0, import_mithril4.default)("label", { for: "" }, "Participants"), /* @__PURE__ */ (0, import_mithril4.default)(ActorSearch, { name: "actorIds", endpoint: "/.api/actors", onselect: (actors) => this.selectActors(vnode, actors) })), /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "layout-element" }, /* @__PURE__ */ (0, import_mithril4.default)("label", null, "Message"), /* @__PURE__ */ (0, import_mithril4.default)("textarea", { rows: "8" }), /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "text-sm text-gray" }, this.description(vnode))))), /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "margin-top" }, this.submitButton(vnode), /* @__PURE__ */ (0, import_mithril4.default)("button", { onclick: vnode.attrs.close, tabIndex: "0" }, "Close"))));
     }
     header(vnode) {
       if (vnode.state.actors.length == 0) {
@@ -12467,7 +12482,7 @@
         return /* @__PURE__ */ (0, import_mithril4.default)("button", { class: "primary", disabled: true }, "Start a Conversation");
       }
       if (vnode.state.encrypted) {
-        return /* @__PURE__ */ (0, import_mithril4.default)("button", { class: "primary", tabindex: "0", onclick: (event) => this.onsubmit(vnode) }, /* @__PURE__ */ (0, import_mithril4.default)("i", { class: "bi bi-lock" }), " Send Encrypted");
+        return /* @__PURE__ */ (0, import_mithril4.default)("button", { class: "primary", tabindex: "0" }, /* @__PURE__ */ (0, import_mithril4.default)("i", { class: "bi bi-lock" }), " Send Encrypted");
       }
       return /* @__PURE__ */ (0, import_mithril4.default)("button", { class: "selected", disabled: true }, "Send Direct Message");
     }
@@ -12479,15 +12494,19 @@
         vnode.state.encrypted = true;
       }
     }
-    onsubmit(vnode) {
-      return () => {
-        vnode.attrs.close();
-      };
+    async onsubmit(event, vnode) {
+      const participants = vnode.state.actors.map((actor) => actor.id);
+      event.preventDefault();
+      event.stopPropagation();
+      await vnode.attrs.factory.newConversation(participants, vnode.state.message);
     }
   };
 
   // src/component/main.tsx
   var Main = class {
+    constructor(factory) {
+      this.factory = factory;
+    }
     oninit(vnode) {
       vnode.state.modal = "";
     }
@@ -12503,7 +12522,14 @@
         },
         /* @__PURE__ */ (0, import_mithril6.default)("div", { class: "circle width-32 flex-shrink-0 flex-center margin-none", style: "font-size:24px;background-color:var(--blue50);color:var(--white);" }, /* @__PURE__ */ (0, import_mithril6.default)("i", { class: "bi bi-plus" })),
         /* @__PURE__ */ (0, import_mithril6.default)("div", { class: "ellipsis-block", style: "max-height:3em;" }, "New Conversation")
-      ), /* @__PURE__ */ (0, import_mithril6.default)("div", { role: "button", class: "flex-row flex-align-center padding hover-trigger" }, /* @__PURE__ */ (0, import_mithril6.default)("img", { class: "circle width-32" }), /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "flex-grow nowrap ellipsis" }, "Direct Message 1"), /* @__PURE__ */ (0, import_mithril6.default)("button", { class: "text-xs hover-show" }, "\u22EF")), /* @__PURE__ */ (0, import_mithril6.default)("div", { role: "button", class: "flex-row flex-align-center padding hover-trigger" }, /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "width-32 circle flex-center" }, /* @__PURE__ */ (0, import_mithril6.default)("i", { class: "bi bi-lock-fill" })), /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "flex-grow nowrap ellipsis" }, "Encrypted Conversation"), /* @__PURE__ */ (0, import_mithril6.default)("button", { class: "text-xs hover-show" }, "\u22EF")), /* @__PURE__ */ (0, import_mithril6.default)("div", { role: "button", class: "flex-row flex-align-center padding hover-trigger" }, /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "width-32 circle flex-center" }, /* @__PURE__ */ (0, import_mithril6.default)("i", { class: "bi bi-lock-fill" })), /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "flex-grow nowrap ellipsis" }, "Encrypted Conversation"), /* @__PURE__ */ (0, import_mithril6.default)("button", { class: "text-xs hover-show" }, "\u22EF"))), /* @__PURE__ */ (0, import_mithril6.default)("div", { class: "width-75%" }, "Here be details..."), /* @__PURE__ */ (0, import_mithril6.default)(NewConversation, { modal: vnode.state.modal, close: () => this.closeModal(vnode) }));
+      ), /* @__PURE__ */ (0, import_mithril6.default)("div", { role: "button", class: "flex-row flex-align-center padding hover-trigger" }, /* @__PURE__ */ (0, import_mithril6.default)("img", { class: "circle width-32" }), /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "flex-grow nowrap ellipsis" }, "Direct Message 1"), /* @__PURE__ */ (0, import_mithril6.default)("button", { class: "text-xs hover-show" }, "\u22EF")), /* @__PURE__ */ (0, import_mithril6.default)("div", { role: "button", class: "flex-row flex-align-center padding hover-trigger" }, /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "width-32 circle flex-center" }, /* @__PURE__ */ (0, import_mithril6.default)("i", { class: "bi bi-lock-fill" })), /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "flex-grow nowrap ellipsis" }, "Encrypted Conversation"), /* @__PURE__ */ (0, import_mithril6.default)("button", { class: "text-xs hover-show" }, "\u22EF")), /* @__PURE__ */ (0, import_mithril6.default)("div", { role: "button", class: "flex-row flex-align-center padding hover-trigger" }, /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "width-32 circle flex-center" }, /* @__PURE__ */ (0, import_mithril6.default)("i", { class: "bi bi-lock-fill" })), /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "flex-grow nowrap ellipsis" }, "Encrypted Conversation"), /* @__PURE__ */ (0, import_mithril6.default)("button", { class: "text-xs hover-show" }, "\u22EF"))), /* @__PURE__ */ (0, import_mithril6.default)("div", { class: "width-75%" }, "Here be details..."), /* @__PURE__ */ (0, import_mithril6.default)(
+        NewConversation,
+        {
+          factory: this.factory,
+          modal: vnode.state.modal,
+          close: () => this.closeModal(vnode)
+        }
+      ));
     }
     // Global Modal Snowball
     closeModal(vnode) {
@@ -12524,7 +12550,7 @@
       var factory = new ServiceFactory();
       await factory.start();
       var viewContainer = new Main(factory);
-      import_mithril8.default.mount(root3, Main);
+      import_mithril8.default.mount(root3, viewContainer);
     }
   };
   var root2 = document.getElementById("mls");

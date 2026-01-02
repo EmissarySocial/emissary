@@ -5,7 +5,17 @@ import { type APActor } from "../model/actor"
 export class ServiceFactory {
 
 	// All class #properties are PRIVATE
-	#actor: APActor | {} = {}
+	#actor: APActor = {
+		id:"",
+		name:"",
+		icon:"",
+		username:"",
+		inbox:"",
+		mlsInbox:"",
+		outbox:"",
+		keyPackages:""
+	}
+
 	#activityPub: ActivityPubService
 	#keyPackage: KeyPackageService
 
@@ -15,35 +25,48 @@ export class ServiceFactory {
 	}
 
 	async start() {
-		const actor = await this.loadActor()
+		const actor = await this.loadMyself()
 		this.#actor = actor
+
+		console.log(this.#actor)
 
 		await this.#activityPub.start(actor.id)
 		await this.#keyPackage.start(actor.id)
 	}
 
-	async loadActor(): Promise<APActor> {
+	async loadMyself(): Promise<APActor> {
 
+		// Retrieve my actor info from the server
 		const response = await fetch("http://localhost/@me", {
 			headers: [["Accept", "application/json"]],
-			credentials: "same-origin",
 		})
 
+		// parse JSON
 		const result = await response.json()
 
-		if (typeof result == "object") {
-			return result
-		}
+		// this MUST be an Actor value
+		return result as APActor
+	}
 
-		return {
-			id:"",
-			name:"",
-			inbox:"",
-			keyPackages: {
-				type:"Collection",
-				id:"",
-				items:[]
+	async newConversation(to:string[], message:string) {
+
+		// Create an ActivityPub activity
+		const activity = {
+			"@context": "https://www.w3.org/ns/activitystreams",
+			"type": "Create",
+			"actor": this.#actor.id,
+			"to": to,
+			"object": {
+				"type":"Note",
+				"content": message,
 			}
 		}
+
+		// POST to the actor's outbox
+		const response = await fetch(this.#actor.outbox, {
+			method:"POST",
+			headers:{"Content-Type": "application/activity+json"},
+			body: JSON.stringify(activity),
+		})
 	}
 }
