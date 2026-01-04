@@ -10,7 +10,7 @@
  ******************************************/
 :root {
 	--rhythm: 8px;
-    --weight:200;
+    --weight:300;
 }
 
 @media (prefers-color-scheme:dark) {
@@ -27,17 +27,17 @@
 
 @media screen and (min-width:760px) {
 	:root {
-		--rhythm: 8px;
+		--rhythm: 9px;
 	}
 }
 @media screen and (min-width:1024px) {
 	:root {
-		--rhythm: 8px;
+		--rhythm: 9px;
 	}
 }
 @media screen and (min-width:1280px) {
 	:root {
-		--rhythm: 9px;
+		--rhythm: 10px;
 	}
 }
 
@@ -315,7 +315,7 @@ a:hover,
 }
 
 b, strong, .bold {
-	font-weight:calc(var(--weight) + 400);
+	font-weight:calc(var(--weight) + 300);
 }
 
 .extra-bold {
@@ -323,7 +323,7 @@ b, strong, .bold {
 }
 
 .text-thin {
-	font-weight:calc(var(--weight) - 200);
+	font-weight:calc(var(--weight) - 100);
 }
 
 i, em, .italics {
