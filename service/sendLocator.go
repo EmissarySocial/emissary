@@ -88,6 +88,11 @@ func (service SendLocator) Recipient(uri string) (iter.Seq[string], error) {
 
 	const location = "sender.SendLocator.Recipient"
 
+	// Skip empty URIs
+	if uri == "" {
+		return ranges.Empty[string](), nil
+	}
+
 	// TODO: Special uri scheme for circle members
 	// if strings.HasPrefix(uri, "circle:") {
 	//	return service.resolveCircle(uri)

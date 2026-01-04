@@ -12323,11 +12323,10 @@
       vnode.state.search = "";
       vnode.state.loading = false;
       vnode.state.options = [];
-      vnode.state.selected = [];
       vnode.state.highlightedOption = -1;
     }
     view(vnode) {
-      return /* @__PURE__ */ (0, import_mithril2.default)("div", { class: "autocomplete" }, /* @__PURE__ */ (0, import_mithril2.default)("div", { class: "input" }, vnode.state.selected.map((actor, index) => {
+      return /* @__PURE__ */ (0, import_mithril2.default)("div", { class: "autocomplete" }, /* @__PURE__ */ (0, import_mithril2.default)("div", { class: "input" }, vnode.attrs.value.map((actor, index) => {
         const isSecure = actor.keyPackages != "";
         return /* @__PURE__ */ (0, import_mithril2.default)("span", { class: isSecure ? "tag blue" : "tag gray" }, /* @__PURE__ */ (0, import_mithril2.default)("span", { style: "display:inline-flex; align-items:center; margin-right:8px;" }, /* @__PURE__ */ (0, import_mithril2.default)("img", { src: actor.icon, class: "circle", style: "height:1em; margin:0px 4px;" }), /* @__PURE__ */ (0, import_mithril2.default)("span", { class: "bold" }, actor.name), "\xA0", isSecure ? /* @__PURE__ */ (0, import_mithril2.default)("i", { class: "bi bi-lock-fill" }) : null), /* @__PURE__ */ (0, import_mithril2.default)("i", { class: "clickable bi bi-x-lg", onclick: () => this.removeActor(vnode, index) }));
       }), /* @__PURE__ */ (0, import_mithril2.default)(
@@ -12362,7 +12361,7 @@
             "aria-selected": index == vnode.state.highlightedOption ? "true" : null
           },
           /* @__PURE__ */ (0, import_mithril2.default)("div", { class: "width-32" }, /* @__PURE__ */ (0, import_mithril2.default)("img", { src: actor.icon, class: "width-32 circle" })),
-          /* @__PURE__ */ (0, import_mithril2.default)("div", null, /* @__PURE__ */ (0, import_mithril2.default)("div", null, actor.name, " \xA0", isSecure ? /* @__PURE__ */ (0, import_mithril2.default)("i", { class: "text-xs text-light-gray bi bi-lock-fill" }) : null), /* @__PURE__ */ (0, import_mithril2.default)("div", { class: "text-xs text-light-gray" }, actor.actorId))
+          /* @__PURE__ */ (0, import_mithril2.default)("div", null, /* @__PURE__ */ (0, import_mithril2.default)("div", null, actor.name, " \xA0", isSecure ? /* @__PURE__ */ (0, import_mithril2.default)("i", { class: "text-xs text-light-gray bi bi-lock-fill" }) : null), /* @__PURE__ */ (0, import_mithril2.default)("div", { class: "text-xs text-light-gray" }, actor.username))
         );
       }))) : null);
     }
@@ -12371,7 +12370,7 @@
         case "Backspace":
           const target = event.target;
           if (target?.selectionStart == 0) {
-            this.removeActor(vnode, vnode.state.selected.length - 1);
+            this.removeActor(vnode, vnode.attrs.value.length - 1);
             event.stopPropagation();
           }
           return;
@@ -12386,22 +12385,21 @@
           return;
       }
     }
+    // These event handlers prevent default behavior for certain control keys
     async onkeypress(event, vnode) {
       switch (keyCode(event)) {
         case "ArrowDown":
-          event.stopPropagation();
-          return;
         case "ArrowUp":
-          event.stopPropagation();
-          return;
         case "Enter":
           event.stopPropagation();
+          event.preventDefault();
           return;
         case "Escape":
           if (vnode.state.options.length > 0) {
             vnode.state.options = [];
-            event.stopPropagation();
           }
+          event.stopPropagation();
+          event.preventDefault();
           return;
       }
     }
@@ -12433,14 +12431,14 @@
       if (selected == null) {
         return;
       }
-      vnode.state.selected.push(selected);
+      vnode.attrs.value.push(selected);
       vnode.state.options = [];
       vnode.state.search = "";
-      vnode.attrs.onselect(vnode.state.selected);
+      vnode.attrs.onselect(vnode.attrs.value);
     }
     removeActor(vnode, index) {
-      vnode.state.selected.splice(index, 1);
-      vnode.attrs.onselect(vnode.state.selected);
+      vnode.attrs.value.splice(index, 1);
+      vnode.attrs.onselect(vnode.attrs.value);
       requestAnimationFrame(
         () => document.getElementById("idActorSearch")?.focus()
       );
@@ -12457,7 +12455,7 @@
       if (vnode.attrs.modal != "NEW-CONVERSATION") {
         return null;
       }
-      return /* @__PURE__ */ (0, import_mithril4.default)(Modal, { close: vnode.attrs.close }, /* @__PURE__ */ (0, import_mithril4.default)("form", { onsubmit: (event) => this.onsubmit(event, vnode) }, /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "layout layout-vertical" }, this.header(vnode), /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "layout-elements" }, /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "layout-element" }, /* @__PURE__ */ (0, import_mithril4.default)("label", { for: "" }, "Participants"), /* @__PURE__ */ (0, import_mithril4.default)(ActorSearch, { name: "actorIds", endpoint: "/.api/actors", onselect: (actors) => this.selectActors(vnode, actors) })), /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "layout-element" }, /* @__PURE__ */ (0, import_mithril4.default)("label", null, "Message"), /* @__PURE__ */ (0, import_mithril4.default)("textarea", { rows: "8" }), /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "text-sm text-gray" }, this.description(vnode))))), /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "margin-top" }, this.submitButton(vnode), /* @__PURE__ */ (0, import_mithril4.default)("button", { onclick: vnode.attrs.close, tabIndex: "0" }, "Close"))));
+      return /* @__PURE__ */ (0, import_mithril4.default)(Modal, { close: vnode.attrs.close }, /* @__PURE__ */ (0, import_mithril4.default)("form", { onsubmit: (event) => this.onsubmit(event, vnode) }, /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "layout layout-vertical" }, this.header(vnode), /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "layout-elements" }, /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "layout-element" }, /* @__PURE__ */ (0, import_mithril4.default)("label", { for: "" }, "Participants"), /* @__PURE__ */ (0, import_mithril4.default)(ActorSearch, { name: "actorIds", value: vnode.state.actors, endpoint: "/.api/actors", onselect: (actors) => this.selectActors(vnode, actors) })), /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "layout-element" }, /* @__PURE__ */ (0, import_mithril4.default)("label", null, "Message"), /* @__PURE__ */ (0, import_mithril4.default)("textarea", { rows: "8", onchange: (event) => this.setMessage(vnode, event) }), /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "text-sm text-gray" }, this.description(vnode))))), /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "margin-top" }, this.submitButton(vnode), /* @__PURE__ */ (0, import_mithril4.default)("button", { onclick: vnode.attrs.close, tabIndex: "0" }, "Close"))));
     }
     header(vnode) {
       if (vnode.state.actors.length == 0) {
@@ -12494,11 +12492,16 @@
         vnode.state.encrypted = true;
       }
     }
+    setMessage(vnode, event) {
+      const target = event.target;
+      vnode.state.message = target.value;
+    }
     async onsubmit(event, vnode) {
       const participants = vnode.state.actors.map((actor) => actor.id);
       event.preventDefault();
       event.stopPropagation();
       await vnode.attrs.factory.newConversation(participants, vnode.state.message);
+      vnode.attrs.close();
     }
   };
 

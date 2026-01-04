@@ -43,11 +43,11 @@ export class NewConversation {
 					<div class="layout-elements">
 						<div class="layout-element">
 							<label for="">Participants</label>
-							<ActorSearch name="actorIds" endpoint="/.api/actors" onselect={(actors:APActor[])=>this.selectActors(vnode, actors)}></ActorSearch>
+							<ActorSearch name="actorIds" value={vnode.state.actors} endpoint="/.api/actors" onselect={(actors:APActor[])=>this.selectActors(vnode, actors)}></ActorSearch>
 						</div>
 						<div class="layout-element">
 							<label>Message</label>
-							<textarea rows="8"></textarea>
+							<textarea rows="8" onchange={(event:Event)=>this.setMessage(vnode, event)}></textarea>
 							<div class="text-sm text-gray">{this.description(vnode)}</div>
 						</div>
 					</div>
@@ -97,7 +97,6 @@ export class NewConversation {
 		}
 
 		return <button class="selected" disabled>Send Direct Message</button>
-		// return <button class="selected" tabindex="0" onclick={(event:MouseEvent)=>this.onsubmit(vnode)}>Send Direct Message</button>
 	}
 
 	selectActors(vnode: NewConversationVnode, actors:APActor[]) {
@@ -108,6 +107,11 @@ export class NewConversation {
 		} else {
 			vnode.state.encrypted = true
 		}
+	}
+
+	setMessage(vnode:NewConversationVnode, event:Event) {
+		const target = event.target as HTMLTextAreaElement
+		vnode.state.message = target.value
 	}
 
 	async onsubmit(event:SubmitEvent, vnode: NewConversationVnode) {
@@ -122,6 +126,6 @@ export class NewConversation {
 		await vnode.attrs.factory.newConversation(participants, vnode.state.message)
 
 		// Done.
-		// vnode.attrs.close()
+		vnode.attrs.close()
 	}
 }

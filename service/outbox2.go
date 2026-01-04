@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/hannibal/sender"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
@@ -21,6 +22,7 @@ import (
 type Outbox2 struct {
 	followerService *Follower
 	locatorService  *Locator
+	newSendLocator  func(data.Session) SendLocator
 	queue           *queue.Queue
 	host            string
 }
@@ -40,6 +42,7 @@ func (service *Outbox2) Refresh(factory *Factory) {
 	service.locatorService = factory.Locator()
 	service.queue = factory.Queue()
 	service.host = factory.Hostname()
+	service.newSendLocator = factory.SendLocator
 }
 
 // Close stops any background processes controlled by this service
@@ -230,44 +233,51 @@ func (service *Outbox2) calcActivityURL(activity *model.Activity) string {
  ******************************************/
 
 // AddUserActivity creates a new Outbox activity for the specified user
-func (service *Outbox2) AddUserActivity(session data.Session, userID primitive.ObjectID, document streams.Document) error {
+func (service *Outbox2) AddUserActivity(session data.Session, userID primitive.ObjectID, activity streams.Document) error {
 
 	const location = "service.Outbox2.AddUserActivity"
 
-	activity := model.NewActivity()
-	activity.ActorType = model.ActorTypeUser
-	activity.ActorID = userID
-	activity.Object = document.Map()
+	//////////////////////////////////////////
+	// TODO: Later, we'll need to add rules
+	// for messages that we can map into streams
 
-	// TODO: Rules here for public messages that we can map into streams
+	// Create a new Outbox record
+	record := model.NewActivity()
+	record.ActorType = model.ActorTypeUser
+	record.ActorID = userID
 
-	if err := service.Save(session, &activity, "Created Outbox activity"); err != nil {
+	// Add default value for Activity ID
+	if activity.ID() == "" {
+		activity.SetID(service.calcActivityURL(&record))
+	}
+
+	// Add default value for Object ID
+	if activity.Object().ID() == "" {
+		activity.Object().SetID(record.ActivityID.Hex())
+	}
+
+	// Put the activity into the Outbox record
+	record.Object = activity.Map()
+
+	// Save the Outbox record
+	if err := service.Save(session, &record, "Created Outbox activity"); err != nil {
 		return derp.Wrap(err, location, "Unable to save Outbox activity")
 	}
 
-	/* RESTORE THIS ONCE WE HAVE THE FACTORY SORTED
+	// Get services to send message to recipient(s)
+	sendLocator := service.newSendLocator(session)
+	sender := sender.New(sendLocator, service.queue)
 
-	// Get a service for the "Locator" interface
-	sendLocator := context.factory.SendLocator(session)
-
-	// Send ActivityPub notifications to participants
-	sender := sender.New(sendLocator, service.queue.Queue())
-
+	// Send ActivityPub notifications to recipient(s)
 	if err := sender.Send(activity.Map()); err != nil {
 		return derp.Wrap(err, location, "Unable to send activity")
 	}
-	*/
 
+	// Righteous.
 	return nil
 }
 
 // Add creates a new Outbox activity for any type of actor actor
 func (service *Outbox2) Add(session data.Session, actorType string, actorID primitive.ObjectID, object mapof.Any) error {
-
-	activity := model.NewActivity()
-	activity.ActorType = actorType
-	activity.ActorID = actorID
-	activity.Object = object
-
-	return service.Save(session, &activity, "Created Outbox activity")
+	return derp.NotImplemented("service.Outbox2.Add", "May need to implement this when other actor types use Outbox2")
 }

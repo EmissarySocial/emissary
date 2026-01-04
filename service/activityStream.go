@@ -217,7 +217,7 @@ func (service *ActivityStream) QueryActors(queryString string) ([]model.ActorSum
 				Type:        newActor.Type(),
 				Name:        newActor.Name(),
 				Icon:        newActor.Icon().Href(),
-				Username:    newActor.PreferredUsername(),
+				Username:    newActor.UsernameOrID(),
 				KeyPackages: newActor.KeyPackages().ID(),
 			}}
 
@@ -235,12 +235,19 @@ func (service *ActivityStream) QueryActors(queryString string) ([]model.ActorSum
 		return nil, derp.Wrap(err, location, "Unable to connect to database")
 	}
 
+	// Get all matching actors from the database
 	result, err := queries.SearchActivityStreamActors(collection, queryString)
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Unable to query database")
 	}
 
+	// Calculate fully qualified usernames (ugly, but necessary)
+	for i := range result {
+		result[i].Username = result[i].UsernameOrID()
+	}
+
+	// Done? Done.
 	return result, nil
 }
 

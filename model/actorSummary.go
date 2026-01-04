@@ -6,12 +6,12 @@ import (
 
 // ActorSummary is a record returned by the ActivityStream directory
 type ActorSummary struct {
-	ID          string `json:"actorId"     bson:"id"`
-	Type        string `json:"type"        bson:"type"`
-	Name        string `json:"name"        bson:"name"`
-	Username    string `json:"username"    bson:"username"`
-	Icon        string `json:"icon"        bson:"icon"`
-	KeyPackages string `json:"keyPackages" bson:"keyPackages"`
+	ID          string `json:"id"                bson:"id"`
+	Type        string `json:"type"              bson:"type"`
+	Name        string `json:"name"              bson:"name"`
+	Username    string `json:"username"          bson:"username"`
+	Icon        string `json:"icon"              bson:"icon"`
+	KeyPackages string `json:"keyPackages"       bson:"keyPackages"`
 }
 
 // UsernameOrID returns the best identifier we can find for an Actor:

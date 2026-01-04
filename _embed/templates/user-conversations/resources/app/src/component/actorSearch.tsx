@@ -8,6 +8,7 @@ type ActorSearchVnode = VnodeDOM<ActorSearchArgs, ActorSearchState>
 
 interface ActorSearchArgs {
 	name: string
+	value: APActor[]
 	endpoint: string
 	onselect: (actors:APActor[]) => void
 }
@@ -16,7 +17,6 @@ interface ActorSearchState {
 	search: string
 	loading: boolean
 	options: APActor[]
-	selected: APActor[]
 	highlightedOption: number
 	encrypted: boolean
 }
@@ -27,7 +27,6 @@ export class ActorSearch {
 		vnode.state.search = ""
 		vnode.state.loading = false
 		vnode.state.options = []
-		vnode.state.selected = []
 		vnode.state.highlightedOption = -1
 	}
 
@@ -36,7 +35,7 @@ export class ActorSearch {
 		return (
 			<div class="autocomplete">
 				<div class="input">
-					{vnode.state.selected.map((actor, index) => {
+					{vnode.attrs.value.map((actor, index) => {
 						const isSecure = actor.keyPackages != ""
 						return <span class={isSecure ? "tag blue" : "tag gray"}>
 							<span style="display:inline-flex; align-items:center; margin-right:8px;">
@@ -86,7 +85,7 @@ export class ActorSearch {
 											{actor.name} &nbsp;
 											{ isSecure ? <i class="text-xs text-light-gray bi bi-lock-fill"></i> : null}
 										</div>
-										<div class="text-xs text-light-gray">{actor.actorId}</div>
+										<div class="text-xs text-light-gray">{actor.username}</div>
 									</div>
 								</div>
 							})}
@@ -105,7 +104,7 @@ export class ActorSearch {
 			const target = event.target as HTMLInputElement
 
 			if (target?.selectionStart == 0) {
-				this.removeActor(vnode, vnode.state.selected.length-1)
+				this.removeActor(vnode, vnode.attrs.value.length-1)
 				event.stopPropagation()
 			}
 			return
@@ -124,30 +123,26 @@ export class ActorSearch {
 		}
 	}
 
+	// These event handlers prevent default behavior for certain control keys
 	async onkeypress(event: KeyboardEvent, vnode: ActorSearchVnode) {
 
 		switch(keyCode(event)) {
 		
 		case "ArrowDown":
-			event.stopPropagation()
-			return
-
 		case "ArrowUp":
-			event.stopPropagation()
-			return
-
 		case "Enter":
 			event.stopPropagation()
+			event.preventDefault()
 			return
 
 		case "Escape":
 			if (vnode.state.options.length > 0) {
 				vnode.state.options = []
-				event.stopPropagation()
 			}
+			event.stopPropagation()
+			event.preventDefault()
 			return
 		}
-
 	}
 
 	async oninput(event: KeyboardEvent, vnode: ActorSearchVnode) {
@@ -185,15 +180,15 @@ export class ActorSearch {
 			return
 		}
 
-		vnode.state.selected.push(selected)
+		vnode.attrs.value.push(selected)
 		vnode.state.options = []
 		vnode.state.search = ""
-		vnode.attrs.onselect(vnode.state.selected)
+		vnode.attrs.onselect(vnode.attrs.value)
 	}
 
 	removeActor(vnode: ActorSearchVnode, index:number) {
-		vnode.state.selected.splice(index, 1)
-		vnode.attrs.onselect(vnode.state.selected)
+		vnode.attrs.value.splice(index, 1)
+		vnode.attrs.onselect(vnode.attrs.value)
 		requestAnimationFrame(() =>
 			document.getElementById("idActorSearch")?.focus()
 		)
