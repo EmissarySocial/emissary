@@ -8,15 +8,15 @@ import (
 )
 
 func init() {
-	inboxRouter.Add(vocab.ActivityTypeUndo, vocab.ActivityTypeFollow, undoFollow)
-	inboxRouter.Add(vocab.ActivityTypeDelete, vocab.ActivityTypeFollow, undoFollow)
+	inboxRouter.Add(vocab.ActivityTypeUndo, vocab.ActivityTypeFollow, inbox_UndoFollow)
+	inboxRouter.Add(vocab.ActivityTypeDelete, vocab.ActivityTypeFollow, inbox_UndoFollow)
 }
 
-// undoFollow handles "Undo/Follow" and "Delete/Follow" activitites, which means
+// inbox_UndoFollow handles "Undo/Follow" and "Delete/Follow" activitites, which means
 // that this code is called when a remote user unfollows an actor on this server.
-func undoFollow(context Context, activity streams.Document) error {
+func inbox_UndoFollow(context Context, activity streams.Document) error {
 
-	const location = "handler.activitypub_user.undoFollow"
+	const location = "handler.activitypub_user.inbox_UndoFollow"
 
 	// Try to load the existing follower record
 	followerService := context.factory.Follower()

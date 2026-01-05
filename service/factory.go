@@ -77,6 +77,7 @@ type Factory struct {
 	merchantAccountService MerchantAccount
 	oauthClient            OAuthClient
 	oauthUserToken         OAuthUserToken
+	objectService          Object
 	outboxService          Outbox
 	outbox2Service         Outbox2
 	permissionService      Permission
@@ -159,6 +160,7 @@ func NewFactory(serverFactory ServerFactory, commonDatabase mongodb.Server, doma
 	factory.merchantAccountService = NewMerchantAccount()
 	factory.oauthClient = NewOAuthClient()
 	factory.oauthUserToken = NewOAuthUserToken()
+	factory.objectService = NewObject()
 	factory.outboxService = NewOutbox()
 	factory.outbox2Service = NewOutbox2()
 	factory.permissionService = NewPermission()
@@ -224,6 +226,7 @@ func (factory *Factory) Refresh(newConfig config.Domain, attachmentOriginals afe
 	factory.merchantAccountService.Refresh(factory)
 	factory.oauthClient.Refresh(factory)
 	factory.oauthUserToken.Refresh(factory)
+	factory.objectService.Refresh(factory)
 	factory.outboxService.Refresh(factory)
 	factory.outbox2Service.Refresh(factory)
 	factory.permissionService.Refresh(factory)
@@ -485,6 +488,11 @@ func (factory *Factory) OAuthClient() *OAuthClient {
 // OAuthUserToken returns a fully populated OAuthUserToken service
 func (factory *Factory) OAuthUserToken() *OAuthUserToken {
 	return &factory.oauthUserToken
+}
+
+// Object returns a fully populated Object service
+func (factory *Factory) Object() *Object {
+	return &factory.objectService
 }
 
 // Outbox returns a fully populated Outbox service

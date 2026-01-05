@@ -8,20 +8,20 @@ import (
 )
 
 func init() {
-	inboxRouter.Add(vocab.ActivityTypeUndo, vocab.ActivityTypeLike, undoResponse)
-	inboxRouter.Add(vocab.ActivityTypeDelete, vocab.ActivityTypeLike, undoResponse)
+	inboxRouter.Add(vocab.ActivityTypeUndo, vocab.ActivityTypeLike, inboxUndoLike)
+	inboxRouter.Add(vocab.ActivityTypeDelete, vocab.ActivityTypeLike, inboxUndoLike)
 
-	inboxRouter.Add(vocab.ActivityTypeUndo, vocab.ActivityTypeDislike, undoResponse)
-	inboxRouter.Add(vocab.ActivityTypeDelete, vocab.ActivityTypeDislike, undoResponse)
+	inboxRouter.Add(vocab.ActivityTypeUndo, vocab.ActivityTypeDislike, inboxUndoLike)
+	inboxRouter.Add(vocab.ActivityTypeDelete, vocab.ActivityTypeDislike, inboxUndoLike)
 
-	inboxRouter.Add(vocab.ActivityTypeUndo, vocab.ActivityTypeAnnounce, undoResponse)
-	inboxRouter.Add(vocab.ActivityTypeDelete, vocab.ActivityTypeAnnounce, undoResponse)
+	inboxRouter.Add(vocab.ActivityTypeUndo, vocab.ActivityTypeAnnounce, inboxUndoLike)
+	inboxRouter.Add(vocab.ActivityTypeDelete, vocab.ActivityTypeAnnounce, inboxUndoLike)
 }
 
-// undoResponse handles the Undo/Delete actions on Like/Dislike/Announce records
-func undoResponse(context Context, activity streams.Document) error {
+// inboxUndoLike handles the Undo/Delete actions on Like/Dislike/Announce records
+func inboxUndoLike(context Context, activity streams.Document) error {
 
-	const location = "handler.activitypub_user.undoResponse"
+	const location = "handler.activitypub_user.inboxUndoLike"
 
 	// Try to parse the original Activity from the JSON-LD
 	originalActivity, err := activity.Object().Load() // The Object is the original Like/Dislike/Announce activity

@@ -425,11 +425,9 @@ func (factory *Factory) refreshQueue() {
 	// If there is already a queue in place, then close it before we open a new one
 	factory.queue.Stop()
 
-	// Removing consumers because they're F@#$ing up outbound HTTP signatures
-	consumer := consumer.New(factory)
-
-	options := []queue.QueueOption{
-		queue.WithConsumers(consumer.Run),
+	// Configure queue options, including task consumers
+	options := []queue.Option{
+		queue.WithConsumers(consumer.New(factory).Run),
 		queue.WithRunImmediatePriority(32),
 	}
 

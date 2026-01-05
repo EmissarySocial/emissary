@@ -12,6 +12,7 @@ import (
 // `inboxURL` the URL to deliver the message to
 // `actorType` the type of actor that is sending the message (User, Stream, Search)
 // `message` the ActivityPub message to send
+// TODO: This should be merged into Outbox:SendToSingleRecipient
 func SendActivityPubMessage(factory *service.Factory, session data.Session, args mapof.Any) queue.Result {
 
 	const location = "consumer.SendActivityPubMessage"

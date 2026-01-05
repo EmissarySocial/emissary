@@ -7,7 +7,7 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	dt "github.com/benpate/domain"
+	"github.com/benpate/hannibal/sender"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
 )
@@ -17,9 +17,8 @@ func WithFactory(serverFactory ServerFactory, args mapof.Any, handler func(facto
 
 	const location = "consumer.WithFactory"
 
-	// Get the host argument from the map
-	hostname := args.GetString("host")
-	hostname = dt.NameOnly(hostname)
+	// Get the host argument from the map (tries "host" first, then "actor")
+	hostname := getHostnameFromArgs(args)
 
 	if hostname == "" {
 		// If we don't have a host, we'll never be able to run this task, so hard fail
@@ -76,6 +75,22 @@ func WithImport(serverFactory ServerFactory, args mapof.Any, handler func(*servi
 		}
 
 		return handler(factory, session, user, &record, args)
+	})
+}
+
+// WithSender wraps a consumer function, providing a hannibale Sender service to the handler
+func WithSender(serverFactory ServerFactory, args mapof.Any, handler func(sender.Sender, mapof.Any) queue.Result) queue.Result {
+
+	return WithSession(serverFactory, args, func(factory *service.Factory, session data.Session, args mapof.Any) queue.Result {
+
+		// Create a new Sender
+		sender := sender.New(
+			factory.SendLocator(session),
+			factory.Queue(),
+		)
+
+		// Pass to the handler
+		return handler(sender, args)
 	})
 }
 

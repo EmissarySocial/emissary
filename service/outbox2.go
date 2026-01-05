@@ -9,8 +9,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/sender"
-	"github.com/benpate/hannibal/streams"
-	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/turbine/queue"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -20,11 +18,10 @@ import (
 // It is being built alongside the existing Outbox service, which will be
 // removed once this new service is fully functional.
 type Outbox2 struct {
-	followerService *Follower
-	locatorService  *Locator
-	newSendLocator  func(data.Session) SendLocator
-	queue           *queue.Queue
-	host            string
+	locator        *Locator
+	getSendLocator func(data.Session) SendLocator
+	queue          *queue.Queue
+	host           string
 }
 
 // NewOutbox2 returns a fully populated Outbox2 service
@@ -38,11 +35,10 @@ func NewOutbox2() Outbox2 {
 
 // Refresh updates any stateful data that is cached inside this service.
 func (service *Outbox2) Refresh(factory *Factory) {
-	service.followerService = factory.Follower()
-	service.locatorService = factory.Locator()
+	service.locator = factory.Locator()
 	service.queue = factory.Queue()
-	service.host = factory.Hostname()
-	service.newSendLocator = factory.SendLocator
+	service.host = factory.Host()
+	service.getSendLocator = factory.SendLocator
 }
 
 // Close stops any background processes controlled by this service
@@ -102,11 +98,23 @@ func (service *Outbox2) Save(session data.Session, activity *model.Activity, not
 
 	const location = "service.Outbox2.Save"
 
-	// Calculate the ActivityURL for this message
-	activity.URL = service.calcActivityURL(activity)
+	if activity.IsNew() {
 
-	// Calculate the list of unique recipients
-	activity.CalcRecipients()
+		// Calculate the ActivityURL for this message
+		activity.URL = service.locator.ActivityURL(activity.ActorType, activity.ActorID, activity.ActivityID)
+
+		// Calculate the list of unique recipients
+		activity.CalcRecipients()
+
+		// Get services to send message to recipient(s)
+		sendLocator := service.getSendLocator(session)
+		sender := sender.New(sendLocator, service.queue)
+
+		// Send ActivityPub notifications to recipient(s)
+		if err := sender.Send(activity.Object); err != nil {
+			return derp.Wrap(err, location, "Unable to send activity")
+		}
+	}
 
 	// Save the value to the database
 	if err := service.collection(session).Save(activity, note); err != nil {
@@ -204,80 +212,6 @@ func (service *Outbox2) DeleteByActor(session data.Session, actorType string, ac
 	return nil
 }
 
-func (service *Outbox2) calcActivityURL(activity *model.Activity) string {
-
-	switch activity.ActorType {
-
-	case model.ActorTypeApplication:
-		return service.host + "/@application/pub/outbox/" + activity.ActivityID.Hex()
-
-	case model.ActorTypeSearchDomain:
-		return service.host + "/@search/pub/outbox/" + activity.ActivityID.Hex()
-
-	case model.ActorTypeSearchQuery:
-		return service.host + "/@search_" + activity.ActorID.Hex() + "/pub/outbox/" + activity.ActivityID.Hex()
-
-	case model.ActorTypeStream:
-		return service.host + "/" + activity.ActorID.Hex() + "/pub/outbox/" + activity.ActivityID.Hex()
-
-	case model.ActorTypeUser:
-		return service.host + "/@" + activity.ActorID.Hex() + "/pub/outbox/" + activity.ActivityID.Hex()
-
-	default:
-		return ""
-	}
-}
-
 /******************************************
  * Custom Actions
  ******************************************/
-
-// AddUserActivity creates a new Outbox activity for the specified user
-func (service *Outbox2) AddUserActivity(session data.Session, userID primitive.ObjectID, activity streams.Document) error {
-
-	const location = "service.Outbox2.AddUserActivity"
-
-	//////////////////////////////////////////
-	// TODO: Later, we'll need to add rules
-	// for messages that we can map into streams
-
-	// Create a new Outbox record
-	record := model.NewActivity()
-	record.ActorType = model.ActorTypeUser
-	record.ActorID = userID
-
-	// Add default value for Activity ID
-	if activity.ID() == "" {
-		activity.SetID(service.calcActivityURL(&record))
-	}
-
-	// Add default value for Object ID
-	if activity.Object().ID() == "" {
-		activity.Object().SetID(record.ActivityID.Hex())
-	}
-
-	// Put the activity into the Outbox record
-	record.Object = activity.Map()
-
-	// Save the Outbox record
-	if err := service.Save(session, &record, "Created Outbox activity"); err != nil {
-		return derp.Wrap(err, location, "Unable to save Outbox activity")
-	}
-
-	// Get services to send message to recipient(s)
-	sendLocator := service.newSendLocator(session)
-	sender := sender.New(sendLocator, service.queue)
-
-	// Send ActivityPub notifications to recipient(s)
-	if err := sender.Send(activity.Map()); err != nil {
-		return derp.Wrap(err, location, "Unable to send activity")
-	}
-
-	// Righteous.
-	return nil
-}
-
-// Add creates a new Outbox activity for any type of actor actor
-func (service *Outbox2) Add(session data.Session, actorType string, actorID primitive.ObjectID, object mapof.Any) error {
-	return derp.NotImplemented("service.Outbox2.Add", "May need to implement this when other actor types use Outbox2")
-}

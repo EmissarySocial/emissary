@@ -2,6 +2,8 @@ package model
 
 import (
 	"github.com/benpate/data/journal"
+	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/mapof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -27,4 +29,16 @@ func NewMLSMessage() MLSMessage {
 // ID returns the string version of the MLSMessage's unique identifier
 func (m MLSMessage) ID() string {
 	return m.MLSMessageID.Hex()
+}
+
+func (m MLSMessage) GetJSONLD() mapof.Any {
+	return mapof.Any{
+		vocab.AtContext: []string{
+			vocab.ContextTypeActivityStreams,
+			vocab.ContextTypeSocialWebMLS,
+		},
+		vocab.PropertyType:     m.Type,
+		vocab.PropertyEncoding: vocab.EncodingTypeBase64,
+		vocab.PropertyContent:  m.Content,
+	}
 }

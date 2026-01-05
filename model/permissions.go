@@ -6,7 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// Permissions is a slice of ObjectIDs that represent the permissions granted to an OutboxMessage.
+// Permissions is a slice of ObjectIDs that represent the permissions required to access an OutboxMessage.
 type Permissions []primitive.ObjectID
 
 // NewPermissions returns fully initialized Permissions slice (with no permissions added)

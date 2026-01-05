@@ -9,7 +9,7 @@ import (
 func init() {
 	inboxRouter.Add(vocab.ActivityTypeDelete, vocab.ActorTypePerson, func(context Context, activity streams.Document) error {
 
-		const location = "handler.activityPub_user.receive_DeletePerson"
+		const location = "handler.activitypub_user.inbox_DeletePerson"
 
 		// RULE: Actors can only delete themselves, not other actors
 		if activity.Actor().ID() != activity.Object().ID() {

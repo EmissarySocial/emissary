@@ -9,18 +9,18 @@ import (
 )
 
 func init() {
-	inboxRouter.Add(vocab.ActivityTypeAnnounce, vocab.Any, receiveLikeOrAnnounce)
-	inboxRouter.Add(vocab.ActivityTypeLike, vocab.Any, receiveLikeOrAnnounce)
+	inboxRouter.Add(vocab.ActivityTypeAnnounce, vocab.Any, inbox_LikeOrAnnounce)
+	inboxRouter.Add(vocab.ActivityTypeLike, vocab.Any, inbox_LikeOrAnnounce)
 
 	// Removing Dislikes for now... Semantics on this are unclear, but Dislikes
 	// probably SHOULD NOT end up in a user's inbox.
-	// inboxRouter.Add(vocab.ActivityTypeDislike, vocab.Any, receiveLikeOrAnnounce)
+	// inboxRouter.Add(vocab.ActivityTypeDislike, vocab.Any, inbox_LikeOrAnnounce)
 }
 
-// receiveLikeOrAnnounce handles all Like Dislike activities
-func receiveLikeOrAnnounce(context Context, activity streams.Document) error {
+// inbox_LikeOrAnnounce handles all Like Dislike activities
+func inbox_LikeOrAnnounce(context Context, activity streams.Document) error {
 
-	const location = "handler.activitypub_user.receiveLikeOrAnnounce"
+	const location = "handler.activitypub_user.inbox_LikeOrAnnounce"
 
 	// RULE: If the Activity does not have an ID, then make a new "fake" one.
 	if activity.ID() == "" {

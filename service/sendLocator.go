@@ -12,7 +12,6 @@ import (
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/ranges"
 	"github.com/benpate/sherlock"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -59,15 +58,14 @@ func (service SendLocator) Actor(url string) (sender.Actor, error) {
 	}
 
 	// Load the User's Encryption Key
-	encryptionKeyService := service.encryptionKeyService
 	encryptionKey := model.NewEncryptionKey()
 
-	if err := encryptionKeyService.LoadByParentID(service.session, model.EncryptionKeyTypeUser, user.UserID, &encryptionKey); err != nil {
+	if err := service.encryptionKeyService.LoadByParentID(service.session, model.EncryptionKeyTypeUser, user.UserID, &encryptionKey); err != nil {
 		return nil, derp.Wrap(err, location, "Unable to load encryption key", "userID", user.UserID.Hex())
 	}
 
 	// Extract the Private Key
-	privateKey, err := encryptionKeyService.GetPrivateKey(&encryptionKey)
+	privateKey, err := service.encryptionKeyService.GetPrivateKey(&encryptionKey)
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Unable to extract private key", "userID", user.UserID.Hex())
@@ -222,18 +220,14 @@ func (service SendLocator) resolveInboxURL(actorID string) string {
 func (service SendLocator) ParseUserURI(uri string) primitive.ObjectID {
 
 	prefix := service.host + "/@"
-	spew.Dump(uri, prefix)
 
 	if strings.HasPrefix(uri, prefix) {
 		token := strings.TrimPrefix(uri, prefix)
-		spew.Dump(token)
 		if userID, err := primitive.ObjectIDFromHex(token); err == nil {
-			spew.Dump(userID)
 			return userID
 		}
 	}
 
 	// Nope
-	spew.Dump("nope")
 	return primitive.NilObjectID
 }

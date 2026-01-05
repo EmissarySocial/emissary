@@ -2,17 +2,24 @@ package service
 
 import (
 	"iter"
+	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/hannibal/collection"
+	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/ranges"
 	"github.com/benpate/rosetta/schema"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // MLSInbox manages all interactions with the MLSInbox collection
-type MLSInbox struct{}
+type MLSInbox struct {
+	host string
+}
 
 // NewMLSInbox returns a fully populated MLSInbox service
 func NewMLSInbox() MLSInbox {
@@ -24,8 +31,8 @@ func NewMLSInbox() MLSInbox {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *MLSInbox) Refresh() {
-
+func (service *MLSInbox) Refresh(factory *Factory) {
+	service.host = factory.Host()
 }
 
 // Close stops any background processes controlled by this service
@@ -123,3 +130,85 @@ func (service *MLSInbox) Schema() schema.Schema {
 /******************************************
  * Custom Queries
  ******************************************/
+
+func (service *MLSInbox) CountByUser(session data.Session, userID primitive.ObjectID) (int64, error) {
+	return service.Count(session, exp.Equal("userId", userID))
+}
+
+func (service *MLSInbox) RangeByUser(session data.Session, userID primitive.ObjectID, startAfter string) (iter.Seq[model.MLSMessage], error) {
+
+	// Build the base criteria
+	var criteria exp.Expression = exp.Equal("userId", userID)
+
+	// Add the "startAfter" criteria (if applicable)
+	if startAfterID := service.parseMessageID(startAfter, userID); !startAfterID.IsZero() {
+		criteria = criteria.AndGreaterThan("_id", startAfterID)
+	}
+
+	// Return the filtered range
+	return service.Range(session, criteria, option.SortAsc("_id"))
+}
+
+/******************************************
+ * Collection Interface
+ ******************************************/
+
+// CollectionID returns the identifier function for this collection
+func (service *MLSInbox) CollectionID(userID primitive.ObjectID) collection.IdentifierFunc {
+	return func() string {
+		return "https://emissary.social/@" + userID.Hex() + "/pub/mlsInbox"
+	}
+}
+
+// CollectionCount returns the counter function for this collection
+func (service *MLSInbox) CollectionCount(session data.Session, userID primitive.ObjectID) collection.CounterFunc {
+	return func() (int64, error) {
+		return service.CountByUser(session, userID)
+	}
+}
+
+// CollectionIterator returns the iterator function for this collection
+func (service *MLSInbox) CollectionIterator(session data.Session, userID primitive.ObjectID) collection.IteratorFunc {
+
+	const location = "service.MLSInbox.CollectionIterator"
+
+	return func(startAfter string) (iter.Seq[mapof.Any], error) {
+
+		result, err := service.RangeByUser(session, userID, startAfter)
+
+		if err != nil {
+			return nil, derp.Wrap(err, location, "Unable to create iterator", "userID", userID.Hex())
+		}
+
+		return ranges.Map(result, func(item model.MLSMessage) mapof.Any {
+			return item.GetJSONLD()
+		}), nil
+	}
+}
+
+// parseMessageID extracts the messageID from the provided URL
+func (service *MLSInbox) parseMessageID(url string, userID primitive.ObjectID) primitive.ObjectID {
+
+	if url == "" {
+		return primitive.NilObjectID
+	}
+
+	if url == "START" {
+		return primitive.NilObjectID
+	}
+
+	prefix := service.host + "/@" + userID.Hex() + "/pub/mlsInbox/"
+
+	if !strings.HasPrefix(url, prefix) {
+		return primitive.NilObjectID
+	}
+
+	messageIDHex := strings.TrimPrefix(url, prefix)
+	messageID, err := primitive.ObjectIDFromHex(messageIDHex)
+
+	if err != nil {
+		return primitive.NilObjectID
+	}
+
+	return messageID
+}

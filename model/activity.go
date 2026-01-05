@@ -9,7 +9,7 @@ import (
 )
 
 // Activity represents a single User action that is posted
-// to their `outbox`.  It corresponds to an ActivityPub Activity
+// to their outbox2.  It corresponds to an ActivityPub Activity
 // object. https://www.w3.org/TR/activitystreams-vocabulary/#activity-types
 type Activity struct {
 	ActivityID primitive.ObjectID `bson:"_id"`

@@ -380,6 +380,8 @@ func (service *ActivityStream) GetRecipient(recipient string) (string, string, e
 // `actorType` the type of actor that is sending the message (User, Stream, Search)
 // `actorID` unique ID of the actor (zero value for Search Actor)
 // `message` the ActivityPub message to send
+// TODO: This should be merged into Outbox:SendToSingleRecipient
+// deprecated: use Sender.SendToSingleRecipient instead
 func (service *ActivityStream) SendMessage(session data.Session, args mapof.Any) error {
 
 	const location = "service.ActivityStream.SendMessage"
