@@ -46,6 +46,10 @@ func init() {
 				document.SetProperty(vocab.AtContext, vocab.ContextTypeActivityStreams)
 			}
 
+			if document.Object().AtContext().IsNil() {
+				document.Object().SetProperty(vocab.AtContext, vocab.ContextTypeActivityStreams)
+			}
+
 			// Create an Object record from this Activity
 			object := model.NewObject()
 			object.UserID = userID
@@ -53,10 +57,6 @@ func init() {
 			object.Value.SetString(vocab.PropertyID, locatorService.ObjectURL(userID, object.ObjectID))
 			object.Value.SetString(vocab.PropertyAttributedTo, actorID)
 			object.Permissions = recipients
-
-			if object.Value.NotKeyExists(vocab.AtContext) {
-				object.Value.SetString(vocab.AtContext, vocab.ContextTypeActivityStreams)
-			}
 
 			if err := objectService.Save(session, &object, "Created via ActivityPub Outbox2"); err != nil {
 				return derp.Wrap(err, location, "Unable to save Object from activity", document)
