@@ -992,19 +992,19 @@
           }
         }
         redraw.sync = sync;
-        function mount(root3, component) {
+        function mount(root2, component) {
           if (component != null && component.view == null && typeof component !== "function") {
             throw new TypeError("m.mount expects a component, not a vnode.");
           }
-          var index = subscriptions.indexOf(root3);
+          var index = subscriptions.indexOf(root2);
           if (index >= 0) {
             subscriptions.splice(index, 2);
             if (index <= offset) offset -= 2;
-            render(root3, []);
+            render(root2, []);
           }
           if (component != null) {
-            subscriptions.push(root3, component);
-            render(root3, Vnode(component), redraw);
+            subscriptions.push(root2, component);
+            render(root2, Vnode(component), redraw);
           }
         }
         return { mount, redraw };
@@ -1222,8 +1222,8 @@
             function complete() {
               if (--count === 0 && typeof oncompletion === "function") oncompletion();
             }
-            return wrap3(promise);
-            function wrap3(promise2) {
+            return wrap(promise);
+            function wrap(promise2) {
               var then = promise2.then;
               promise2.constructor = PromiseProxy;
               promise2.then = function() {
@@ -1233,7 +1233,7 @@
                   complete();
                   if (count === 0) throw e;
                 });
-                return wrap3(next);
+                return wrap(next);
               };
               return promise2;
             }
@@ -1282,20 +1282,20 @@
           var cursor = data;
           if (key.indexOf("[") > -1) levels.pop();
           for (var j = 0; j < levels.length; j++) {
-            var level = levels[j], nextLevel = levels[j + 1];
+            var level2 = levels[j], nextLevel = levels[j + 1];
             var isNumber = nextLevel == "" || !isNaN(parseInt(nextLevel, 10));
-            if (level === "") {
+            if (level2 === "") {
               var key = levels.slice(0, j).join();
               if (counters[key] == null) {
                 counters[key] = Array.isArray(cursor) ? cursor.length : 0;
               }
-              level = counters[key]++;
-            } else if (level === "__proto__") break;
-            if (j === levels.length - 1) cursor[level] = value;
+              level2 = counters[key]++;
+            } else if (level2 === "__proto__") break;
+            if (j === levels.length - 1) cursor[level2] = value;
             else {
-              var desc = Object.getOwnPropertyDescriptor(cursor, level);
+              var desc = Object.getOwnPropertyDescriptor(cursor, level2);
               if (desc != null) desc = desc.value;
-              if (desc == null) cursor[level] = desc = isNumber ? [] : {};
+              if (desc == null) cursor[level2] = desc = isNumber ? [] : {};
               cursor = desc;
             }
           }
@@ -1484,8 +1484,8 @@
             setTimeout(resolveRoute);
           }
         }
-        function route(root3, defaultRoute, routes) {
-          if (!root3) throw new TypeError("DOM element being rendered to does not exist.");
+        function route(root2, defaultRoute, routes) {
+          if (!root2) throw new TypeError("DOM element being rendered to does not exist.");
           compiled = Object.keys(routes).map(function(route2) {
             if (route2[0] !== "/") throw new SyntaxError("Routes must start with a '/'.");
             if (/:([^\/\.-]+)(\.{3})?:/.test(route2)) {
@@ -1506,7 +1506,7 @@
               throw new ReferenceError("Default route doesn't match any known routes.");
             }
           }
-          dom = root3;
+          dom = root2;
           $window.addEventListener("popstate", fireAsync, false);
           ready = true;
           resolveRoute();
@@ -1620,17 +1620,15 @@
     }
   });
 
-  // node_modules/@noble/ciphers/utils.js
+  // node_modules/@noble/hashes/utils.js
   function isBytes2(a) {
     return a instanceof Uint8Array || ArrayBuffer.isView(a) && a.constructor.name === "Uint8Array";
   }
-  function abool(b) {
-    if (typeof b !== "boolean")
-      throw new Error(`boolean expected, not ${b}`);
-  }
-  function anumber2(n) {
-    if (!Number.isSafeInteger(n) || n < 0)
-      throw new Error("positive integer expected, got " + n);
+  function anumber2(n, title = "") {
+    if (!Number.isSafeInteger(n) || n < 0) {
+      const prefix = title && `"${title}" `;
+      throw new Error(`${prefix}expected integer >= 0, got ${n}`);
+    }
   }
   function abytes2(value, length, title = "") {
     const bytes = isBytes2(value);
@@ -1644,6 +1642,12 @@
     }
     return value;
   }
+  function ahash2(h) {
+    if (typeof h !== "function" || typeof h.create !== "function")
+      throw new Error("Hash must wrapped by utils.createHasher");
+    anumber2(h.outputLen);
+    anumber2(h.blockLen);
+  }
   function aexists2(instance, checkFinished = true) {
     if (instance.destroyed)
       throw new Error("Hash instance has been destroyed");
@@ -1651,10 +1655,10 @@
       throw new Error("Hash#digest() has already been called");
   }
   function aoutput2(out, instance) {
-    abytes2(out, void 0, "output");
+    abytes2(out, void 0, "digestInto() output");
     const min = instance.outputLen;
     if (out.length < min) {
-      throw new Error("digestInto() expects output buffer of length at least " + min);
+      throw new Error('"digestInto() output" expected to be of length >=' + min);
     }
   }
   function u32(arr) {
@@ -1666,880 +1670,6 @@
     }
   }
   function createView2(arr) {
-    return new DataView(arr.buffer, arr.byteOffset, arr.byteLength);
-  }
-  function checkOpts(defaults, opts) {
-    if (opts == null || typeof opts !== "object")
-      throw new Error("options must be defined");
-    const merged = Object.assign(defaults, opts);
-    return merged;
-  }
-  function equalBytes(a, b) {
-    if (a.length !== b.length)
-      return false;
-    let diff = 0;
-    for (let i = 0; i < a.length; i++)
-      diff |= a[i] ^ b[i];
-    return diff === 0;
-  }
-  function getOutput(expectedLength, out, onlyAligned = true) {
-    if (out === void 0)
-      return new Uint8Array(expectedLength);
-    if (out.length !== expectedLength)
-      throw new Error('"output" expected Uint8Array of length ' + expectedLength + ", got: " + out.length);
-    if (onlyAligned && !isAligned32(out))
-      throw new Error("invalid output, must be aligned");
-    return out;
-  }
-  function u64Lengths(dataLength, aadLength, isLE3) {
-    abool(isLE3);
-    const num = new Uint8Array(16);
-    const view = createView2(num);
-    view.setBigUint64(0, BigInt(aadLength), isLE3);
-    view.setBigUint64(8, BigInt(dataLength), isLE3);
-    return num;
-  }
-  function isAligned32(bytes) {
-    return bytes.byteOffset % 4 === 0;
-  }
-  function copyBytes2(bytes) {
-    return Uint8Array.from(bytes);
-  }
-  function randomBytes(bytesLength = 32) {
-    const cr = typeof globalThis === "object" ? globalThis.crypto : null;
-    if (typeof cr?.getRandomValues !== "function")
-      throw new Error("crypto.getRandomValues must be defined");
-    return cr.getRandomValues(new Uint8Array(bytesLength));
-  }
-  var isLE, wrapCipher;
-  var init_utils = __esm({
-    "node_modules/@noble/ciphers/utils.js"() {
-      isLE = /* @__PURE__ */ (() => new Uint8Array(new Uint32Array([287454020]).buffer)[0] === 68)();
-      wrapCipher = /* @__NO_SIDE_EFFECTS__ */ (params, constructor) => {
-        function wrappedCipher(key, ...args) {
-          abytes2(key, void 0, "key");
-          if (!isLE)
-            throw new Error("Non little-endian hardware is not yet supported");
-          if (params.nonceLength !== void 0) {
-            const nonce = args[0];
-            abytes2(nonce, params.varSizeNonce ? void 0 : params.nonceLength, "nonce");
-          }
-          const tagl = params.tagLength;
-          if (tagl && args[1] !== void 0)
-            abytes2(args[1], void 0, "AAD");
-          const cipher = constructor(key, ...args);
-          const checkOutput = (fnLength, output) => {
-            if (output !== void 0) {
-              if (fnLength !== 2)
-                throw new Error("cipher output not supported");
-              abytes2(output, void 0, "output");
-            }
-          };
-          let called = false;
-          const wrCipher = {
-            encrypt(data, output) {
-              if (called)
-                throw new Error("cannot encrypt() twice with same key + nonce");
-              called = true;
-              abytes2(data);
-              checkOutput(cipher.encrypt.length, output);
-              return cipher.encrypt(data, output);
-            },
-            decrypt(data, output) {
-              abytes2(data);
-              if (tagl && data.length < tagl)
-                throw new Error('"ciphertext" expected length bigger than tagLength=' + tagl);
-              checkOutput(cipher.decrypt.length, output);
-              return cipher.decrypt(data, output);
-            }
-          };
-          return wrCipher;
-        }
-        Object.assign(wrappedCipher, params);
-        return wrappedCipher;
-      };
-    }
-  });
-
-  // node_modules/@noble/ciphers/_arx.js
-  function rotl(a, b) {
-    return a << b | a >>> 32 - b;
-  }
-  function isAligned322(b) {
-    return b.byteOffset % 4 === 0;
-  }
-  function runCipher(core, sigma, key, nonce, data, output, counter, rounds) {
-    const len = data.length;
-    const block = new Uint8Array(BLOCK_LEN);
-    const b32 = u32(block);
-    const isAligned = isAligned322(data) && isAligned322(output);
-    const d32 = isAligned ? u32(data) : U32_EMPTY;
-    const o32 = isAligned ? u32(output) : U32_EMPTY;
-    for (let pos = 0; pos < len; counter++) {
-      core(sigma, key, nonce, b32, counter, rounds);
-      if (counter >= MAX_COUNTER)
-        throw new Error("arx: counter overflow");
-      const take = Math.min(BLOCK_LEN, len - pos);
-      if (isAligned && take === BLOCK_LEN) {
-        const pos32 = pos / 4;
-        if (pos % 4 !== 0)
-          throw new Error("arx: invalid block position");
-        for (let j = 0, posj; j < BLOCK_LEN32; j++) {
-          posj = pos32 + j;
-          o32[posj] = d32[posj] ^ b32[j];
-        }
-        pos += BLOCK_LEN;
-        continue;
-      }
-      for (let j = 0, posj; j < take; j++) {
-        posj = pos + j;
-        output[posj] = data[posj] ^ block[j];
-      }
-      pos += take;
-    }
-  }
-  function createCipher(core, opts) {
-    const { allowShortKeys, extendNonceFn, counterLength, counterRight, rounds } = checkOpts({ allowShortKeys: false, counterLength: 8, counterRight: false, rounds: 20 }, opts);
-    if (typeof core !== "function")
-      throw new Error("core must be a function");
-    anumber2(counterLength);
-    anumber2(rounds);
-    abool(counterRight);
-    abool(allowShortKeys);
-    return (key, nonce, data, output, counter = 0) => {
-      abytes2(key, void 0, "key");
-      abytes2(nonce, void 0, "nonce");
-      abytes2(data, void 0, "data");
-      const len = data.length;
-      if (output === void 0)
-        output = new Uint8Array(len);
-      abytes2(output, void 0, "output");
-      anumber2(counter);
-      if (counter < 0 || counter >= MAX_COUNTER)
-        throw new Error("arx: counter overflow");
-      if (output.length < len)
-        throw new Error(`arx: output (${output.length}) is shorter than data (${len})`);
-      const toClean = [];
-      let l = key.length;
-      let k;
-      let sigma;
-      if (l === 32) {
-        toClean.push(k = copyBytes2(key));
-        sigma = sigma32_32;
-      } else if (l === 16 && allowShortKeys) {
-        k = new Uint8Array(32);
-        k.set(key);
-        k.set(key, 16);
-        sigma = sigma16_32;
-        toClean.push(k);
-      } else {
-        abytes2(key, 32, "arx key");
-        throw new Error("invalid key size");
-      }
-      if (!isAligned322(nonce))
-        toClean.push(nonce = copyBytes2(nonce));
-      const k32 = u32(k);
-      if (extendNonceFn) {
-        if (nonce.length !== 24)
-          throw new Error(`arx: extended nonce must be 24 bytes`);
-        extendNonceFn(sigma, k32, u32(nonce.subarray(0, 16)), k32);
-        nonce = nonce.subarray(16);
-      }
-      const nonceNcLen = 16 - counterLength;
-      if (nonceNcLen !== nonce.length)
-        throw new Error(`arx: nonce must be ${nonceNcLen} or 16 bytes`);
-      if (nonceNcLen !== 12) {
-        const nc = new Uint8Array(12);
-        nc.set(nonce, counterRight ? 0 : 12 - nonce.length);
-        nonce = nc;
-        toClean.push(nonce);
-      }
-      const n32 = u32(nonce);
-      runCipher(core, sigma, k32, n32, data, output, counter, rounds);
-      clean2(...toClean);
-      return output;
-    };
-  }
-  var encodeStr, sigma16, sigma32, sigma16_32, sigma32_32, BLOCK_LEN, BLOCK_LEN32, MAX_COUNTER, U32_EMPTY, _XorStreamPRG, createPRG;
-  var init_arx = __esm({
-    "node_modules/@noble/ciphers/_arx.js"() {
-      init_utils();
-      encodeStr = (str) => Uint8Array.from(str.split(""), (c) => c.charCodeAt(0));
-      sigma16 = encodeStr("expand 16-byte k");
-      sigma32 = encodeStr("expand 32-byte k");
-      sigma16_32 = u32(sigma16);
-      sigma32_32 = u32(sigma32);
-      BLOCK_LEN = 64;
-      BLOCK_LEN32 = 16;
-      MAX_COUNTER = 2 ** 32 - 1;
-      U32_EMPTY = Uint32Array.of();
-      _XorStreamPRG = class __XorStreamPRG {
-        blockLen;
-        keyLen;
-        nonceLen;
-        state;
-        buf;
-        key;
-        nonce;
-        pos;
-        ctr;
-        cipher;
-        constructor(cipher, blockLen, keyLen, nonceLen, seed) {
-          this.cipher = cipher;
-          this.blockLen = blockLen;
-          this.keyLen = keyLen;
-          this.nonceLen = nonceLen;
-          this.state = new Uint8Array(this.keyLen + this.nonceLen);
-          this.reseed(seed);
-          this.ctr = 0;
-          this.pos = this.blockLen;
-          this.buf = new Uint8Array(this.blockLen);
-          this.key = this.state.subarray(0, this.keyLen);
-          this.nonce = this.state.subarray(this.keyLen);
-        }
-        reseed(seed) {
-          abytes2(seed);
-          if (!seed || seed.length === 0)
-            throw new Error("entropy required");
-          for (let i = 0; i < seed.length; i++)
-            this.state[i % this.state.length] ^= seed[i];
-          this.ctr = 0;
-          this.pos = this.blockLen;
-        }
-        addEntropy(seed) {
-          this.state.set(this.randomBytes(this.state.length));
-          this.reseed(seed);
-        }
-        randomBytes(len) {
-          anumber2(len);
-          if (len === 0)
-            return new Uint8Array(0);
-          const out = new Uint8Array(len);
-          let outPos = 0;
-          if (this.pos < this.blockLen) {
-            const take = Math.min(len, this.blockLen - this.pos);
-            out.set(this.buf.subarray(this.pos, this.pos + take), 0);
-            this.pos += take;
-            outPos += take;
-            if (outPos === len)
-              return out;
-          }
-          const blocks = Math.floor((len - outPos) / this.blockLen);
-          if (blocks > 0) {
-            const blockBytes = blocks * this.blockLen;
-            const b = out.subarray(outPos, outPos + blockBytes);
-            this.cipher(this.key, this.nonce, b, b, this.ctr);
-            this.ctr += blocks;
-            outPos += blockBytes;
-          }
-          const left2 = len - outPos;
-          if (left2 > 0) {
-            this.buf.fill(0);
-            this.cipher(this.key, this.nonce, this.buf, this.buf, this.ctr++);
-            out.set(this.buf.subarray(0, left2), outPos);
-            this.pos = left2;
-          }
-          return out;
-        }
-        clone() {
-          return new __XorStreamPRG(this.cipher, this.blockLen, this.keyLen, this.nonceLen, this.randomBytes(this.state.length));
-        }
-        clean() {
-          this.pos = 0;
-          this.ctr = 0;
-          this.buf.fill(0);
-          this.state.fill(0);
-        }
-      };
-      createPRG = (cipher, blockLen, keyLen, nonceLen) => {
-        return (seed = randomBytes(32)) => new _XorStreamPRG(cipher, blockLen, keyLen, nonceLen, seed);
-      };
-    }
-  });
-
-  // node_modules/@noble/ciphers/_poly1305.js
-  function u8to16(a, i) {
-    return a[i++] & 255 | (a[i++] & 255) << 8;
-  }
-  function wrapConstructorWithKey(hashCons) {
-    const hashC = (msg, key) => hashCons(key).update(msg).digest();
-    const tmp = hashCons(new Uint8Array(32));
-    hashC.outputLen = tmp.outputLen;
-    hashC.blockLen = tmp.blockLen;
-    hashC.create = (key) => hashCons(key);
-    return hashC;
-  }
-  var Poly1305, poly1305;
-  var init_poly1305 = __esm({
-    "node_modules/@noble/ciphers/_poly1305.js"() {
-      init_utils();
-      Poly1305 = class {
-        blockLen = 16;
-        outputLen = 16;
-        buffer = new Uint8Array(16);
-        r = new Uint16Array(10);
-        // Allocating 1 array with .subarray() here is slower than 3
-        h = new Uint16Array(10);
-        pad = new Uint16Array(8);
-        pos = 0;
-        finished = false;
-        // Can be speed-up using BigUint64Array, at the cost of complexity
-        constructor(key) {
-          key = copyBytes2(abytes2(key, 32, "key"));
-          const t0 = u8to16(key, 0);
-          const t1 = u8to16(key, 2);
-          const t2 = u8to16(key, 4);
-          const t3 = u8to16(key, 6);
-          const t4 = u8to16(key, 8);
-          const t5 = u8to16(key, 10);
-          const t6 = u8to16(key, 12);
-          const t7 = u8to16(key, 14);
-          this.r[0] = t0 & 8191;
-          this.r[1] = (t0 >>> 13 | t1 << 3) & 8191;
-          this.r[2] = (t1 >>> 10 | t2 << 6) & 7939;
-          this.r[3] = (t2 >>> 7 | t3 << 9) & 8191;
-          this.r[4] = (t3 >>> 4 | t4 << 12) & 255;
-          this.r[5] = t4 >>> 1 & 8190;
-          this.r[6] = (t4 >>> 14 | t5 << 2) & 8191;
-          this.r[7] = (t5 >>> 11 | t6 << 5) & 8065;
-          this.r[8] = (t6 >>> 8 | t7 << 8) & 8191;
-          this.r[9] = t7 >>> 5 & 127;
-          for (let i = 0; i < 8; i++)
-            this.pad[i] = u8to16(key, 16 + 2 * i);
-        }
-        process(data, offset, isLast = false) {
-          const hibit = isLast ? 0 : 1 << 11;
-          const { h, r } = this;
-          const r0 = r[0];
-          const r1 = r[1];
-          const r2 = r[2];
-          const r3 = r[3];
-          const r4 = r[4];
-          const r5 = r[5];
-          const r6 = r[6];
-          const r7 = r[7];
-          const r8 = r[8];
-          const r9 = r[9];
-          const t0 = u8to16(data, offset + 0);
-          const t1 = u8to16(data, offset + 2);
-          const t2 = u8to16(data, offset + 4);
-          const t3 = u8to16(data, offset + 6);
-          const t4 = u8to16(data, offset + 8);
-          const t5 = u8to16(data, offset + 10);
-          const t6 = u8to16(data, offset + 12);
-          const t7 = u8to16(data, offset + 14);
-          let h0 = h[0] + (t0 & 8191);
-          let h1 = h[1] + ((t0 >>> 13 | t1 << 3) & 8191);
-          let h2 = h[2] + ((t1 >>> 10 | t2 << 6) & 8191);
-          let h3 = h[3] + ((t2 >>> 7 | t3 << 9) & 8191);
-          let h4 = h[4] + ((t3 >>> 4 | t4 << 12) & 8191);
-          let h5 = h[5] + (t4 >>> 1 & 8191);
-          let h6 = h[6] + ((t4 >>> 14 | t5 << 2) & 8191);
-          let h7 = h[7] + ((t5 >>> 11 | t6 << 5) & 8191);
-          let h8 = h[8] + ((t6 >>> 8 | t7 << 8) & 8191);
-          let h9 = h[9] + (t7 >>> 5 | hibit);
-          let c = 0;
-          let d0 = c + h0 * r0 + h1 * (5 * r9) + h2 * (5 * r8) + h3 * (5 * r7) + h4 * (5 * r6);
-          c = d0 >>> 13;
-          d0 &= 8191;
-          d0 += h5 * (5 * r5) + h6 * (5 * r4) + h7 * (5 * r3) + h8 * (5 * r2) + h9 * (5 * r1);
-          c += d0 >>> 13;
-          d0 &= 8191;
-          let d1 = c + h0 * r1 + h1 * r0 + h2 * (5 * r9) + h3 * (5 * r8) + h4 * (5 * r7);
-          c = d1 >>> 13;
-          d1 &= 8191;
-          d1 += h5 * (5 * r6) + h6 * (5 * r5) + h7 * (5 * r4) + h8 * (5 * r3) + h9 * (5 * r2);
-          c += d1 >>> 13;
-          d1 &= 8191;
-          let d2 = c + h0 * r2 + h1 * r1 + h2 * r0 + h3 * (5 * r9) + h4 * (5 * r8);
-          c = d2 >>> 13;
-          d2 &= 8191;
-          d2 += h5 * (5 * r7) + h6 * (5 * r6) + h7 * (5 * r5) + h8 * (5 * r4) + h9 * (5 * r3);
-          c += d2 >>> 13;
-          d2 &= 8191;
-          let d3 = c + h0 * r3 + h1 * r2 + h2 * r1 + h3 * r0 + h4 * (5 * r9);
-          c = d3 >>> 13;
-          d3 &= 8191;
-          d3 += h5 * (5 * r8) + h6 * (5 * r7) + h7 * (5 * r6) + h8 * (5 * r5) + h9 * (5 * r4);
-          c += d3 >>> 13;
-          d3 &= 8191;
-          let d4 = c + h0 * r4 + h1 * r3 + h2 * r2 + h3 * r1 + h4 * r0;
-          c = d4 >>> 13;
-          d4 &= 8191;
-          d4 += h5 * (5 * r9) + h6 * (5 * r8) + h7 * (5 * r7) + h8 * (5 * r6) + h9 * (5 * r5);
-          c += d4 >>> 13;
-          d4 &= 8191;
-          let d5 = c + h0 * r5 + h1 * r4 + h2 * r3 + h3 * r2 + h4 * r1;
-          c = d5 >>> 13;
-          d5 &= 8191;
-          d5 += h5 * r0 + h6 * (5 * r9) + h7 * (5 * r8) + h8 * (5 * r7) + h9 * (5 * r6);
-          c += d5 >>> 13;
-          d5 &= 8191;
-          let d6 = c + h0 * r6 + h1 * r5 + h2 * r4 + h3 * r3 + h4 * r2;
-          c = d6 >>> 13;
-          d6 &= 8191;
-          d6 += h5 * r1 + h6 * r0 + h7 * (5 * r9) + h8 * (5 * r8) + h9 * (5 * r7);
-          c += d6 >>> 13;
-          d6 &= 8191;
-          let d7 = c + h0 * r7 + h1 * r6 + h2 * r5 + h3 * r4 + h4 * r3;
-          c = d7 >>> 13;
-          d7 &= 8191;
-          d7 += h5 * r2 + h6 * r1 + h7 * r0 + h8 * (5 * r9) + h9 * (5 * r8);
-          c += d7 >>> 13;
-          d7 &= 8191;
-          let d8 = c + h0 * r8 + h1 * r7 + h2 * r6 + h3 * r5 + h4 * r4;
-          c = d8 >>> 13;
-          d8 &= 8191;
-          d8 += h5 * r3 + h6 * r2 + h7 * r1 + h8 * r0 + h9 * (5 * r9);
-          c += d8 >>> 13;
-          d8 &= 8191;
-          let d9 = c + h0 * r9 + h1 * r8 + h2 * r7 + h3 * r6 + h4 * r5;
-          c = d9 >>> 13;
-          d9 &= 8191;
-          d9 += h5 * r4 + h6 * r3 + h7 * r2 + h8 * r1 + h9 * r0;
-          c += d9 >>> 13;
-          d9 &= 8191;
-          c = (c << 2) + c | 0;
-          c = c + d0 | 0;
-          d0 = c & 8191;
-          c = c >>> 13;
-          d1 += c;
-          h[0] = d0;
-          h[1] = d1;
-          h[2] = d2;
-          h[3] = d3;
-          h[4] = d4;
-          h[5] = d5;
-          h[6] = d6;
-          h[7] = d7;
-          h[8] = d8;
-          h[9] = d9;
-        }
-        finalize() {
-          const { h, pad } = this;
-          const g = new Uint16Array(10);
-          let c = h[1] >>> 13;
-          h[1] &= 8191;
-          for (let i = 2; i < 10; i++) {
-            h[i] += c;
-            c = h[i] >>> 13;
-            h[i] &= 8191;
-          }
-          h[0] += c * 5;
-          c = h[0] >>> 13;
-          h[0] &= 8191;
-          h[1] += c;
-          c = h[1] >>> 13;
-          h[1] &= 8191;
-          h[2] += c;
-          g[0] = h[0] + 5;
-          c = g[0] >>> 13;
-          g[0] &= 8191;
-          for (let i = 1; i < 10; i++) {
-            g[i] = h[i] + c;
-            c = g[i] >>> 13;
-            g[i] &= 8191;
-          }
-          g[9] -= 1 << 13;
-          let mask = (c ^ 1) - 1;
-          for (let i = 0; i < 10; i++)
-            g[i] &= mask;
-          mask = ~mask;
-          for (let i = 0; i < 10; i++)
-            h[i] = h[i] & mask | g[i];
-          h[0] = (h[0] | h[1] << 13) & 65535;
-          h[1] = (h[1] >>> 3 | h[2] << 10) & 65535;
-          h[2] = (h[2] >>> 6 | h[3] << 7) & 65535;
-          h[3] = (h[3] >>> 9 | h[4] << 4) & 65535;
-          h[4] = (h[4] >>> 12 | h[5] << 1 | h[6] << 14) & 65535;
-          h[5] = (h[6] >>> 2 | h[7] << 11) & 65535;
-          h[6] = (h[7] >>> 5 | h[8] << 8) & 65535;
-          h[7] = (h[8] >>> 8 | h[9] << 5) & 65535;
-          let f = h[0] + pad[0];
-          h[0] = f & 65535;
-          for (let i = 1; i < 8; i++) {
-            f = (h[i] + pad[i] | 0) + (f >>> 16) | 0;
-            h[i] = f & 65535;
-          }
-          clean2(g);
-        }
-        update(data) {
-          aexists2(this);
-          abytes2(data);
-          data = copyBytes2(data);
-          const { buffer, blockLen } = this;
-          const len = data.length;
-          for (let pos = 0; pos < len; ) {
-            const take = Math.min(blockLen - this.pos, len - pos);
-            if (take === blockLen) {
-              for (; blockLen <= len - pos; pos += blockLen)
-                this.process(data, pos);
-              continue;
-            }
-            buffer.set(data.subarray(pos, pos + take), this.pos);
-            this.pos += take;
-            pos += take;
-            if (this.pos === blockLen) {
-              this.process(buffer, 0, false);
-              this.pos = 0;
-            }
-          }
-          return this;
-        }
-        destroy() {
-          clean2(this.h, this.r, this.buffer, this.pad);
-        }
-        digestInto(out) {
-          aexists2(this);
-          aoutput2(out, this);
-          this.finished = true;
-          const { buffer, h } = this;
-          let { pos } = this;
-          if (pos) {
-            buffer[pos++] = 1;
-            for (; pos < 16; pos++)
-              buffer[pos] = 0;
-            this.process(buffer, 0, true);
-          }
-          this.finalize();
-          let opos = 0;
-          for (let i = 0; i < 8; i++) {
-            out[opos++] = h[i] >>> 0;
-            out[opos++] = h[i] >>> 8;
-          }
-          return out;
-        }
-        digest() {
-          const { buffer, outputLen } = this;
-          this.digestInto(buffer);
-          const res = buffer.slice(0, outputLen);
-          this.destroy();
-          return res;
-        }
-      };
-      poly1305 = /* @__PURE__ */ (() => wrapConstructorWithKey((key) => new Poly1305(key)))();
-    }
-  });
-
-  // node_modules/@noble/ciphers/chacha.js
-  var chacha_exports = {};
-  __export(chacha_exports, {
-    _poly1305_aead: () => _poly1305_aead,
-    chacha12: () => chacha12,
-    chacha20: () => chacha20,
-    chacha20orig: () => chacha20orig,
-    chacha20poly1305: () => chacha20poly1305,
-    chacha8: () => chacha8,
-    hchacha: () => hchacha,
-    rngChacha20: () => rngChacha20,
-    rngChacha8: () => rngChacha8,
-    xchacha20: () => xchacha20,
-    xchacha20poly1305: () => xchacha20poly1305
-  });
-  function chachaCore(s, k, n, out, cnt, rounds = 20) {
-    let y00 = s[0], y01 = s[1], y02 = s[2], y03 = s[3], y04 = k[0], y05 = k[1], y06 = k[2], y07 = k[3], y08 = k[4], y09 = k[5], y10 = k[6], y11 = k[7], y12 = cnt, y13 = n[0], y14 = n[1], y15 = n[2];
-    let x00 = y00, x01 = y01, x02 = y02, x03 = y03, x04 = y04, x05 = y05, x06 = y06, x07 = y07, x08 = y08, x09 = y09, x10 = y10, x11 = y11, x12 = y12, x13 = y13, x14 = y14, x15 = y15;
-    for (let r = 0; r < rounds; r += 2) {
-      x00 = x00 + x04 | 0;
-      x12 = rotl(x12 ^ x00, 16);
-      x08 = x08 + x12 | 0;
-      x04 = rotl(x04 ^ x08, 12);
-      x00 = x00 + x04 | 0;
-      x12 = rotl(x12 ^ x00, 8);
-      x08 = x08 + x12 | 0;
-      x04 = rotl(x04 ^ x08, 7);
-      x01 = x01 + x05 | 0;
-      x13 = rotl(x13 ^ x01, 16);
-      x09 = x09 + x13 | 0;
-      x05 = rotl(x05 ^ x09, 12);
-      x01 = x01 + x05 | 0;
-      x13 = rotl(x13 ^ x01, 8);
-      x09 = x09 + x13 | 0;
-      x05 = rotl(x05 ^ x09, 7);
-      x02 = x02 + x06 | 0;
-      x14 = rotl(x14 ^ x02, 16);
-      x10 = x10 + x14 | 0;
-      x06 = rotl(x06 ^ x10, 12);
-      x02 = x02 + x06 | 0;
-      x14 = rotl(x14 ^ x02, 8);
-      x10 = x10 + x14 | 0;
-      x06 = rotl(x06 ^ x10, 7);
-      x03 = x03 + x07 | 0;
-      x15 = rotl(x15 ^ x03, 16);
-      x11 = x11 + x15 | 0;
-      x07 = rotl(x07 ^ x11, 12);
-      x03 = x03 + x07 | 0;
-      x15 = rotl(x15 ^ x03, 8);
-      x11 = x11 + x15 | 0;
-      x07 = rotl(x07 ^ x11, 7);
-      x00 = x00 + x05 | 0;
-      x15 = rotl(x15 ^ x00, 16);
-      x10 = x10 + x15 | 0;
-      x05 = rotl(x05 ^ x10, 12);
-      x00 = x00 + x05 | 0;
-      x15 = rotl(x15 ^ x00, 8);
-      x10 = x10 + x15 | 0;
-      x05 = rotl(x05 ^ x10, 7);
-      x01 = x01 + x06 | 0;
-      x12 = rotl(x12 ^ x01, 16);
-      x11 = x11 + x12 | 0;
-      x06 = rotl(x06 ^ x11, 12);
-      x01 = x01 + x06 | 0;
-      x12 = rotl(x12 ^ x01, 8);
-      x11 = x11 + x12 | 0;
-      x06 = rotl(x06 ^ x11, 7);
-      x02 = x02 + x07 | 0;
-      x13 = rotl(x13 ^ x02, 16);
-      x08 = x08 + x13 | 0;
-      x07 = rotl(x07 ^ x08, 12);
-      x02 = x02 + x07 | 0;
-      x13 = rotl(x13 ^ x02, 8);
-      x08 = x08 + x13 | 0;
-      x07 = rotl(x07 ^ x08, 7);
-      x03 = x03 + x04 | 0;
-      x14 = rotl(x14 ^ x03, 16);
-      x09 = x09 + x14 | 0;
-      x04 = rotl(x04 ^ x09, 12);
-      x03 = x03 + x04 | 0;
-      x14 = rotl(x14 ^ x03, 8);
-      x09 = x09 + x14 | 0;
-      x04 = rotl(x04 ^ x09, 7);
-    }
-    let oi = 0;
-    out[oi++] = y00 + x00 | 0;
-    out[oi++] = y01 + x01 | 0;
-    out[oi++] = y02 + x02 | 0;
-    out[oi++] = y03 + x03 | 0;
-    out[oi++] = y04 + x04 | 0;
-    out[oi++] = y05 + x05 | 0;
-    out[oi++] = y06 + x06 | 0;
-    out[oi++] = y07 + x07 | 0;
-    out[oi++] = y08 + x08 | 0;
-    out[oi++] = y09 + x09 | 0;
-    out[oi++] = y10 + x10 | 0;
-    out[oi++] = y11 + x11 | 0;
-    out[oi++] = y12 + x12 | 0;
-    out[oi++] = y13 + x13 | 0;
-    out[oi++] = y14 + x14 | 0;
-    out[oi++] = y15 + x15 | 0;
-  }
-  function hchacha(s, k, i, out) {
-    let x00 = s[0], x01 = s[1], x02 = s[2], x03 = s[3], x04 = k[0], x05 = k[1], x06 = k[2], x07 = k[3], x08 = k[4], x09 = k[5], x10 = k[6], x11 = k[7], x12 = i[0], x13 = i[1], x14 = i[2], x15 = i[3];
-    for (let r = 0; r < 20; r += 2) {
-      x00 = x00 + x04 | 0;
-      x12 = rotl(x12 ^ x00, 16);
-      x08 = x08 + x12 | 0;
-      x04 = rotl(x04 ^ x08, 12);
-      x00 = x00 + x04 | 0;
-      x12 = rotl(x12 ^ x00, 8);
-      x08 = x08 + x12 | 0;
-      x04 = rotl(x04 ^ x08, 7);
-      x01 = x01 + x05 | 0;
-      x13 = rotl(x13 ^ x01, 16);
-      x09 = x09 + x13 | 0;
-      x05 = rotl(x05 ^ x09, 12);
-      x01 = x01 + x05 | 0;
-      x13 = rotl(x13 ^ x01, 8);
-      x09 = x09 + x13 | 0;
-      x05 = rotl(x05 ^ x09, 7);
-      x02 = x02 + x06 | 0;
-      x14 = rotl(x14 ^ x02, 16);
-      x10 = x10 + x14 | 0;
-      x06 = rotl(x06 ^ x10, 12);
-      x02 = x02 + x06 | 0;
-      x14 = rotl(x14 ^ x02, 8);
-      x10 = x10 + x14 | 0;
-      x06 = rotl(x06 ^ x10, 7);
-      x03 = x03 + x07 | 0;
-      x15 = rotl(x15 ^ x03, 16);
-      x11 = x11 + x15 | 0;
-      x07 = rotl(x07 ^ x11, 12);
-      x03 = x03 + x07 | 0;
-      x15 = rotl(x15 ^ x03, 8);
-      x11 = x11 + x15 | 0;
-      x07 = rotl(x07 ^ x11, 7);
-      x00 = x00 + x05 | 0;
-      x15 = rotl(x15 ^ x00, 16);
-      x10 = x10 + x15 | 0;
-      x05 = rotl(x05 ^ x10, 12);
-      x00 = x00 + x05 | 0;
-      x15 = rotl(x15 ^ x00, 8);
-      x10 = x10 + x15 | 0;
-      x05 = rotl(x05 ^ x10, 7);
-      x01 = x01 + x06 | 0;
-      x12 = rotl(x12 ^ x01, 16);
-      x11 = x11 + x12 | 0;
-      x06 = rotl(x06 ^ x11, 12);
-      x01 = x01 + x06 | 0;
-      x12 = rotl(x12 ^ x01, 8);
-      x11 = x11 + x12 | 0;
-      x06 = rotl(x06 ^ x11, 7);
-      x02 = x02 + x07 | 0;
-      x13 = rotl(x13 ^ x02, 16);
-      x08 = x08 + x13 | 0;
-      x07 = rotl(x07 ^ x08, 12);
-      x02 = x02 + x07 | 0;
-      x13 = rotl(x13 ^ x02, 8);
-      x08 = x08 + x13 | 0;
-      x07 = rotl(x07 ^ x08, 7);
-      x03 = x03 + x04 | 0;
-      x14 = rotl(x14 ^ x03, 16);
-      x09 = x09 + x14 | 0;
-      x04 = rotl(x04 ^ x09, 12);
-      x03 = x03 + x04 | 0;
-      x14 = rotl(x14 ^ x03, 8);
-      x09 = x09 + x14 | 0;
-      x04 = rotl(x04 ^ x09, 7);
-    }
-    let oi = 0;
-    out[oi++] = x00;
-    out[oi++] = x01;
-    out[oi++] = x02;
-    out[oi++] = x03;
-    out[oi++] = x12;
-    out[oi++] = x13;
-    out[oi++] = x14;
-    out[oi++] = x15;
-  }
-  function computeTag(fn, key, nonce, ciphertext, AAD) {
-    if (AAD !== void 0)
-      abytes2(AAD, void 0, "AAD");
-    const authKey = fn(key, nonce, ZEROS32);
-    const lengths = u64Lengths(ciphertext.length, AAD ? AAD.length : 0, true);
-    const h = poly1305.create(authKey);
-    if (AAD)
-      updatePadded(h, AAD);
-    updatePadded(h, ciphertext);
-    h.update(lengths);
-    const res = h.digest();
-    clean2(authKey, lengths);
-    return res;
-  }
-  var chacha20orig, chacha20, xchacha20, chacha8, chacha12, ZEROS16, updatePadded, ZEROS32, _poly1305_aead, chacha20poly1305, xchacha20poly1305, rngChacha20, rngChacha8;
-  var init_chacha = __esm({
-    "node_modules/@noble/ciphers/chacha.js"() {
-      init_arx();
-      init_poly1305();
-      init_utils();
-      chacha20orig = /* @__PURE__ */ createCipher(chachaCore, {
-        counterRight: false,
-        counterLength: 8,
-        allowShortKeys: true
-      });
-      chacha20 = /* @__PURE__ */ createCipher(chachaCore, {
-        counterRight: false,
-        counterLength: 4,
-        allowShortKeys: false
-      });
-      xchacha20 = /* @__PURE__ */ createCipher(chachaCore, {
-        counterRight: false,
-        counterLength: 8,
-        extendNonceFn: hchacha,
-        allowShortKeys: false
-      });
-      chacha8 = /* @__PURE__ */ createCipher(chachaCore, {
-        counterRight: false,
-        counterLength: 4,
-        rounds: 8
-      });
-      chacha12 = /* @__PURE__ */ createCipher(chachaCore, {
-        counterRight: false,
-        counterLength: 4,
-        rounds: 12
-      });
-      ZEROS16 = /* @__PURE__ */ new Uint8Array(16);
-      updatePadded = (h, msg) => {
-        h.update(msg);
-        const leftover = msg.length % 16;
-        if (leftover)
-          h.update(ZEROS16.subarray(leftover));
-      };
-      ZEROS32 = /* @__PURE__ */ new Uint8Array(32);
-      _poly1305_aead = (xorStream) => (key, nonce, AAD) => {
-        const tagLength = 16;
-        return {
-          encrypt(plaintext, output) {
-            const plength = plaintext.length;
-            output = getOutput(plength + tagLength, output, false);
-            output.set(plaintext);
-            const oPlain = output.subarray(0, -tagLength);
-            xorStream(key, nonce, oPlain, oPlain, 1);
-            const tag = computeTag(xorStream, key, nonce, oPlain, AAD);
-            output.set(tag, plength);
-            clean2(tag);
-            return output;
-          },
-          decrypt(ciphertext, output) {
-            output = getOutput(ciphertext.length - tagLength, output, false);
-            const data = ciphertext.subarray(0, -tagLength);
-            const passedTag = ciphertext.subarray(-tagLength);
-            const tag = computeTag(xorStream, key, nonce, data, AAD);
-            if (!equalBytes(passedTag, tag))
-              throw new Error("invalid tag");
-            output.set(ciphertext.subarray(0, -tagLength));
-            xorStream(key, nonce, output, output, 1);
-            clean2(tag);
-            return output;
-          }
-        };
-      };
-      chacha20poly1305 = /* @__PURE__ */ wrapCipher({ blockSize: 64, nonceLength: 12, tagLength: 16 }, _poly1305_aead(chacha20));
-      xchacha20poly1305 = /* @__PURE__ */ wrapCipher({ blockSize: 64, nonceLength: 24, tagLength: 16 }, _poly1305_aead(xchacha20));
-      rngChacha20 = /* @__PURE__ */ createPRG(chacha20orig, 64, 32, 8);
-      rngChacha8 = /* @__PURE__ */ createPRG(chacha8, 64, 32, 12);
-    }
-  });
-
-  // node_modules/@noble/hashes/utils.js
-  function isBytes3(a) {
-    return a instanceof Uint8Array || ArrayBuffer.isView(a) && a.constructor.name === "Uint8Array";
-  }
-  function anumber3(n, title = "") {
-    if (!Number.isSafeInteger(n) || n < 0) {
-      const prefix = title && `"${title}" `;
-      throw new Error(`${prefix}expected integer >= 0, got ${n}`);
-    }
-  }
-  function abytes3(value, length, title = "") {
-    const bytes = isBytes3(value);
-    const len = value?.length;
-    const needsLen = length !== void 0;
-    if (!bytes || needsLen && len !== length) {
-      const prefix = title && `"${title}" `;
-      const ofLen = needsLen ? ` of length ${length}` : "";
-      const got = bytes ? `length=${len}` : `type=${typeof value}`;
-      throw new Error(prefix + "expected Uint8Array" + ofLen + ", got " + got);
-    }
-    return value;
-  }
-  function ahash2(h) {
-    if (typeof h !== "function" || typeof h.create !== "function")
-      throw new Error("Hash must wrapped by utils.createHasher");
-    anumber3(h.outputLen);
-    anumber3(h.blockLen);
-  }
-  function aexists3(instance, checkFinished = true) {
-    if (instance.destroyed)
-      throw new Error("Hash instance has been destroyed");
-    if (checkFinished && instance.finished)
-      throw new Error("Hash#digest() has already been called");
-  }
-  function aoutput3(out, instance) {
-    abytes3(out, void 0, "digestInto() output");
-    const min = instance.outputLen;
-    if (out.length < min) {
-      throw new Error('"digestInto() output" expected to be of length >=' + min);
-    }
-  }
-  function u322(arr) {
-    return new Uint32Array(arr.buffer, arr.byteOffset, Math.floor(arr.byteLength / 4));
-  }
-  function clean3(...arrays) {
-    for (let i = 0; i < arrays.length; i++) {
-      arrays[i].fill(0);
-    }
-  }
-  function createView3(arr) {
     return new DataView(arr.buffer, arr.byteOffset, arr.byteLength);
   }
   function rotr2(word, shift) {
@@ -2554,8 +1684,8 @@
     }
     return arr;
   }
-  function bytesToHex2(bytes) {
-    abytes3(bytes);
+  function bytesToHex(bytes) {
+    abytes2(bytes);
     if (hasHexBuiltin)
       return bytes.toHex();
     let hex = "";
@@ -2594,11 +1724,11 @@
     }
     return array;
   }
-  function concatBytes2(...arrays) {
+  function concatBytes(...arrays) {
     let sum = 0;
     for (let i = 0; i < arrays.length; i++) {
       const a = arrays[i];
-      abytes3(a);
+      abytes2(a);
       sum += a.length;
     }
     const res = new Uint8Array(sum);
@@ -2618,17 +1748,17 @@
     Object.assign(hashC, info);
     return Object.freeze(hashC);
   }
-  function randomBytes2(bytesLength = 32) {
+  function randomBytes(bytesLength = 32) {
     const cr = typeof globalThis === "object" ? globalThis.crypto : null;
     if (typeof cr?.getRandomValues !== "function")
       throw new Error("crypto.getRandomValues must be defined");
     return cr.getRandomValues(new Uint8Array(bytesLength));
   }
-  var isLE2, swap32IfBE, hasHexBuiltin, hexes, asciis, oidNist2;
-  var init_utils2 = __esm({
+  var isLE, swap32IfBE, hasHexBuiltin, hexes, asciis, oidNist2;
+  var init_utils = __esm({
     "node_modules/@noble/hashes/utils.js"() {
-      isLE2 = /* @__PURE__ */ (() => new Uint8Array(new Uint32Array([287454020]).buffer)[0] === 68)();
-      swap32IfBE = isLE2 ? (u) => u : byteSwap32;
+      isLE = /* @__PURE__ */ (() => new Uint8Array(new Uint32Array([287454020]).buffer)[0] === 68)();
+      swap32IfBE = isLE ? (u) => u : byteSwap32;
       hasHexBuiltin = /* @__PURE__ */ (() => (
         // @ts-ignore
         typeof Uint8Array.from([]).toHex === "function" && typeof Uint8Array.fromHex === "function"
@@ -2651,7 +1781,7 @@
   var HashMD2, SHA256_IV2, SHA384_IV2, SHA512_IV2;
   var init_md = __esm({
     "node_modules/@noble/hashes/_md.js"() {
-      init_utils2();
+      init_utils();
       HashMD2 = class {
         blockLen;
         outputLen;
@@ -2670,17 +1800,17 @@
           this.padOffset = padOffset;
           this.isLE = isLE3;
           this.buffer = new Uint8Array(blockLen);
-          this.view = createView3(this.buffer);
+          this.view = createView2(this.buffer);
         }
         update(data) {
-          aexists3(this);
-          abytes3(data);
+          aexists2(this);
+          abytes2(data);
           const { view, buffer, blockLen } = this;
           const len = data.length;
           for (let pos = 0; pos < len; ) {
             const take = Math.min(blockLen - this.pos, len - pos);
             if (take === blockLen) {
-              const dataView = createView3(data);
+              const dataView = createView2(data);
               for (; blockLen <= len - pos; pos += blockLen)
                 this.process(dataView, pos);
               continue;
@@ -2698,13 +1828,13 @@
           return this;
         }
         digestInto(out) {
-          aexists3(this);
-          aoutput3(out, this);
+          aexists2(this);
+          aoutput2(out, this);
           this.finished = true;
           const { buffer, view, blockLen, isLE: isLE3 } = this;
           let { pos } = this;
           buffer[pos++] = 128;
-          clean3(this.buffer.subarray(pos));
+          clean2(this.buffer.subarray(pos));
           if (this.padOffset > blockLen - pos) {
             this.process(view, 0);
             pos = 0;
@@ -2713,7 +1843,7 @@
             buffer[i] = 0;
           view.setBigUint64(blockLen - 8, BigInt(this.length * 8), isLE3);
           this.process(view, 0);
-          const oview = createView3(out);
+          const oview = createView2(out);
           const len = this.outputLen;
           if (len % 4)
             throw new Error("_sha2: outputLen must be aligned to 32bit");
@@ -2846,7 +1976,7 @@
     "node_modules/@noble/hashes/sha2.js"() {
       init_md();
       init_u64();
-      init_utils2();
+      init_utils();
       SHA256_K = /* @__PURE__ */ Uint32Array.from([
         1116352408,
         1899447441,
@@ -2969,11 +2099,11 @@
           this.set(A, B, C, D, E, F, G, H);
         }
         roundClean() {
-          clean3(SHA256_W);
+          clean2(SHA256_W);
         }
         destroy() {
           this.set(0, 0, 0, 0, 0, 0, 0, 0);
-          clean3(this.buffer);
+          clean2(this.buffer);
         }
       };
       _SHA256 = class extends SHA2_32B {
@@ -3165,10 +2295,10 @@
           this.set(Ah, Al, Bh, Bl, Ch, Cl, Dh, Dl, Eh, El, Fh, Fl, Gh, Gl, Hh, Hl);
         }
         roundClean() {
-          clean3(SHA512_W_H, SHA512_W_L);
+          clean2(SHA512_W_H, SHA512_W_L);
         }
         destroy() {
-          clean3(this.buffer);
+          clean2(this.buffer);
           this.set(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
         }
       };
@@ -3230,7 +2360,7 @@
   });
 
   // node_modules/@noble/curves/utils.js
-  function abool2(value, title = "") {
+  function abool(value, title = "") {
     if (typeof value !== "boolean") {
       const prefix = title && `"${title}" `;
       throw new Error(prefix + "expected boolean, got type=" + typeof value);
@@ -3242,7 +2372,7 @@
       if (!isPosBig(n))
         throw new Error("positive bigint expected, got " + n);
     } else
-      anumber3(n);
+      anumber2(n);
     return n;
   }
   function asafenumber(value, title = "") {
@@ -3255,19 +2385,19 @@
     const hex = abignumber(num).toString(16);
     return hex.length & 1 ? "0" + hex : hex;
   }
-  function hexToNumber2(hex) {
+  function hexToNumber(hex) {
     if (typeof hex !== "string")
       throw new Error("hex string expected, got " + typeof hex);
     return hex === "" ? _0n2 : BigInt("0x" + hex);
   }
   function bytesToNumberBE(bytes) {
-    return hexToNumber2(bytesToHex2(bytes));
+    return hexToNumber(bytesToHex(bytes));
   }
   function bytesToNumberLE2(bytes) {
-    return hexToNumber2(bytesToHex2(copyBytes3(abytes3(bytes)).reverse()));
+    return hexToNumber(bytesToHex(copyBytes2(abytes2(bytes)).reverse()));
   }
-  function numberToBytesBE2(n, len) {
-    anumber3(len);
+  function numberToBytesBE(n, len) {
+    anumber2(len);
     n = abignumber(n);
     const res = hexToBytes2(n.toString(16).padStart(len * 2, "0"));
     if (res.length !== len)
@@ -3275,9 +2405,9 @@
     return res;
   }
   function numberToBytesLE2(n, len) {
-    return numberToBytesBE2(n, len).reverse();
+    return numberToBytesBE(n, len).reverse();
   }
-  function equalBytes2(a, b) {
+  function equalBytes(a, b) {
     if (a.length !== b.length)
       return false;
     let diff = 0;
@@ -3285,7 +2415,7 @@
       diff |= a[i] ^ b[i];
     return diff === 0;
   }
-  function copyBytes3(bytes) {
+  function copyBytes2(bytes) {
     return Uint8Array.from(bytes);
   }
   function asciiToBytes(ascii) {
@@ -3311,8 +2441,8 @@
     return len;
   }
   function createHmacDrbg(hashLen, qByteLen, hmacFn) {
-    anumber3(hashLen, "hashLen");
-    anumber3(qByteLen, "qByteLen");
+    anumber2(hashLen, "hashLen");
+    anumber2(qByteLen, "qByteLen");
     if (typeof hmacFn !== "function")
       throw new Error("hmacFn must be a function");
     const u8n = (len) => new Uint8Array(len);
@@ -3328,7 +2458,7 @@
       k.fill(0);
       i = 0;
     };
-    const h = (...msgs) => hmacFn(k, concatBytes2(v, ...msgs));
+    const h = (...msgs) => hmacFn(k, concatBytes(v, ...msgs));
     const reseed = (seed = NULL) => {
       k = h(byte0, seed);
       v = h();
@@ -3348,7 +2478,7 @@
         out.push(sl);
         len += v.length;
       }
-      return concatBytes2(...out);
+      return concatBytes(...out);
     };
     const genUntil = (seed, pred) => {
       reset();
@@ -3388,10 +2518,10 @@
     };
   }
   var _0n2, _1n2, isPosBig, bitMask, notImplemented;
-  var init_utils3 = __esm({
+  var init_utils2 = __esm({
     "node_modules/@noble/curves/utils.js"() {
-      init_utils2();
-      init_utils2();
+      init_utils();
+      init_utils();
       _0n2 = /* @__PURE__ */ BigInt(0);
       _1n2 = /* @__PURE__ */ BigInt(1);
       isPosBig = (n) => typeof n === "bigint" && _0n2 <= n;
@@ -3435,15 +2565,15 @@
       throw new Error("invert: does not exist");
     return mod2(x, modulo);
   }
-  function assertIsSquare(Fp3, root3, n) {
-    if (!Fp3.eql(Fp3.sqr(root3), n))
+  function assertIsSquare(Fp3, root2, n) {
+    if (!Fp3.eql(Fp3.sqr(root2), n))
       throw new Error("Cannot find square root");
   }
   function sqrt3mod4(Fp3, n) {
     const p1div4 = (Fp3.ORDER + _1n3) / _4n;
-    const root3 = Fp3.pow(n, p1div4);
-    assertIsSquare(Fp3, root3, n);
-    return root3;
+    const root2 = Fp3.pow(n, p1div4);
+    assertIsSquare(Fp3, root2, n);
+    return root2;
   }
   function sqrt5mod8(Fp3, n) {
     const p5div8 = (Fp3.ORDER - _5n) / _8n;
@@ -3451,9 +2581,9 @@
     const v = Fp3.pow(n2, p5div8);
     const nv = Fp3.mul(n, v);
     const i = Fp3.mul(Fp3.mul(nv, _2n2), v);
-    const root3 = Fp3.mul(nv, Fp3.sub(i, Fp3.ONE));
-    assertIsSquare(Fp3, root3, n);
-    return root3;
+    const root2 = Fp3.mul(nv, Fp3.sub(i, Fp3.ONE));
+    assertIsSquare(Fp3, root2, n);
+    return root2;
   }
   function sqrt9mod16(P) {
     const Fp_ = Field(P);
@@ -3472,9 +2602,9 @@
       tv1 = Fp3.cmov(tv1, tv2, e1);
       tv2 = Fp3.cmov(tv4, tv3, e2);
       const e3 = Fp3.eql(Fp3.sqr(tv2), n);
-      const root3 = Fp3.cmov(tv1, tv2, e3);
-      assertIsSquare(Fp3, root3, n);
-      return root3;
+      const root2 = Fp3.cmov(tv1, tv2, e3);
+      assertIsSquare(Fp3, root2, n);
+      return root2;
     };
   }
   function tonelliShanks(P) {
@@ -3594,7 +2724,7 @@
   }
   function nLength(n, nBitLength) {
     if (nBitLength !== void 0)
-      anumber3(nBitLength);
+      anumber2(nBitLength);
     const _nBitLength = nBitLength !== void 0 ? nBitLength : n.toString(2).length;
     const nByteLength = Math.ceil(_nBitLength / 8);
     return { nBitLength: _nBitLength, nByteLength };
@@ -3605,8 +2735,8 @@
   function FpSqrtEven(Fp3, elm) {
     if (!Fp3.isOdd)
       throw new Error("Field doesn't have isOdd");
-    const root3 = Fp3.sqrt(elm);
-    return Fp3.isOdd(root3) ? Fp3.neg(root3) : root3;
+    const root2 = Fp3.sqrt(elm);
+    return Fp3.isOdd(root2) ? Fp3.neg(root2) : root2;
   }
   function getFieldBytesLength(fieldOrder) {
     if (typeof fieldOrder !== "bigint")
@@ -3619,7 +2749,7 @@
     return length + Math.ceil(length / 2);
   }
   function mapHashToField(key, fieldOrder, isLE3 = false) {
-    abytes3(key);
+    abytes2(key);
     const len = key.length;
     const fieldLen = getFieldBytesLength(fieldOrder);
     const minLen = getMinHashLength(fieldOrder);
@@ -3627,12 +2757,12 @@
       throw new Error("expected " + minLen + "-1024 bytes of input, got " + len);
     const num = isLE3 ? bytesToNumberLE2(key) : bytesToNumberBE(key);
     const reduced = mod2(num, fieldOrder - _1n3) + _1n3;
-    return isLE3 ? numberToBytesLE2(reduced, fieldLen) : numberToBytesBE2(reduced, fieldLen);
+    return isLE3 ? numberToBytesLE2(reduced, fieldLen) : numberToBytesBE(reduced, fieldLen);
   }
   var _0n3, _1n3, _2n2, _3n, _4n, _5n, _7n, _8n, _9n, _16n, isNegativeLE, FIELD_FIELDS, _Field;
   var init_modular = __esm({
     "node_modules/@noble/curves/abstract/modular.js"() {
-      init_utils3();
+      init_utils2();
       _0n3 = /* @__PURE__ */ BigInt(0);
       _1n3 = /* @__PURE__ */ BigInt(1);
       _2n2 = /* @__PURE__ */ BigInt(2);
@@ -3764,10 +2894,10 @@
           return this._sqrt(this, num);
         }
         toBytes(num) {
-          return this.isLE ? numberToBytesLE2(num, this.BYTES) : numberToBytesBE2(num, this.BYTES);
+          return this.isLE ? numberToBytesLE2(num, this.BYTES) : numberToBytesBE(num, this.BYTES);
         }
         fromBytes(bytes, skipValidation = false) {
-          abytes3(bytes);
+          abytes2(bytes);
           const { _lengths: allowedLengths, BYTES, isLE: isLE3, ORDER, _mod: modFromBytes } = this;
           if (allowedLengths) {
             if (!allowedLengths.includes(bytes.length) || bytes.length > BYTES) {
@@ -3957,7 +3087,7 @@
   var _0n4, _1n4, pointPrecomputes, pointWindowSizes, wNAF;
   var init_curve = __esm({
     "node_modules/@noble/curves/abstract/curve.js"() {
-      init_utils3();
+      init_utils2();
       init_modular();
       _0n4 = /* @__PURE__ */ BigInt(0);
       _1n4 = /* @__PURE__ */ BigInt(1);
@@ -4201,9 +3331,9 @@
       static fromBytes(bytes, zip215 = false) {
         const len = Fp3.BYTES;
         const { a, d } = CURVE;
-        bytes = copyBytes3(abytes3(bytes, len, "point"));
-        abool2(zip215, "zip215");
-        const normed = copyBytes3(bytes);
+        bytes = copyBytes2(abytes2(bytes, len, "point"));
+        abool(zip215, "zip215");
+        const normed = copyBytes2(bytes);
         const lastByte = bytes[len - 1];
         normed[len - 1] = lastByte & ~128;
         const y = bytesToNumberLE2(normed);
@@ -4355,7 +3485,7 @@
         return bytes;
       }
       toHex() {
-        return bytesToHex2(this.toBytes());
+        return bytesToHex(this.toBytes());
       }
       toString() {
         return `<Point ${this.is0() ? "ZERO" : this.toHex()}>`;
@@ -4377,10 +3507,10 @@
     });
     const { prehash } = eddsaOpts;
     const { BASE, Fp: Fp3, Fn: Fn3 } = Point;
-    const randomBytes3 = eddsaOpts.randomBytes || randomBytes2;
+    const randomBytes3 = eddsaOpts.randomBytes || randomBytes;
     const adjustScalarBytes3 = eddsaOpts.adjustScalarBytes || ((bytes) => bytes);
     const domain = eddsaOpts.domain || ((data, ctx, phflag) => {
-      abool2(phflag, "phflag");
+      abool(phflag, "phflag");
       if (ctx.length || phflag)
         throw new Error("Contexts/pre-hash are not supported");
       return data;
@@ -4390,8 +3520,8 @@
     }
     function getPrivateScalar(key) {
       const len = lengths.secretKey;
-      abytes3(key, lengths.secretKey, "secretKey");
-      const hashed = abytes3(cHash(key), 2 * len, "hashedSecretKey");
+      abytes2(key, lengths.secretKey, "secretKey");
+      const hashed = abytes2(cHash(key), 2 * len, "hashedSecretKey");
       const head = adjustScalarBytes3(hashed.slice(0, len));
       const prefix = hashed.slice(len, 2 * len);
       const scalar = modN_LE(head);
@@ -4407,11 +3537,11 @@
       return getExtendedPublicKey(secretKey).pointBytes;
     }
     function hashDomainToScalar(context = Uint8Array.of(), ...msgs) {
-      const msg = concatBytes2(...msgs);
-      return modN_LE(cHash(domain(msg, abytes3(context, void 0, "context"), !!prehash)));
+      const msg = concatBytes(...msgs);
+      return modN_LE(cHash(domain(msg, abytes2(context, void 0, "context"), !!prehash)));
     }
     function sign(msg, secretKey, options = {}) {
-      msg = abytes3(msg, void 0, "message");
+      msg = abytes2(msg, void 0, "message");
       if (prehash)
         msg = prehash(msg);
       const { prefix, scalar, pointBytes } = getExtendedPublicKey(secretKey);
@@ -4421,18 +3551,18 @@
       const s = Fn3.create(r + k * scalar);
       if (!Fn3.isValid(s))
         throw new Error("sign failed: invalid s");
-      const rs = concatBytes2(R, Fn3.toBytes(s));
-      return abytes3(rs, lengths.signature, "result");
+      const rs = concatBytes(R, Fn3.toBytes(s));
+      return abytes2(rs, lengths.signature, "result");
     }
     const verifyOpts = { zip215: true };
     function verify(sig, msg, publicKey, options = verifyOpts) {
       const { context, zip215 } = options;
       const len = lengths.signature;
-      sig = abytes3(sig, len, "signature");
-      msg = abytes3(msg, void 0, "message");
-      publicKey = abytes3(publicKey, lengths.publicKey, "publicKey");
+      sig = abytes2(sig, len, "signature");
+      msg = abytes2(msg, void 0, "message");
+      publicKey = abytes2(publicKey, lengths.publicKey, "publicKey");
       if (zip215 !== void 0)
-        abool2(zip215, "zip215");
+        abool(zip215, "zip215");
       if (prehash)
         msg = prehash(msg);
       const mid = len / 2;
@@ -4460,10 +3590,10 @@
       seed: _size
     };
     function randomSecretKey(seed = randomBytes3(lengths.seed)) {
-      return abytes3(seed, lengths.seed, "seed");
+      return abytes2(seed, lengths.seed, "seed");
     }
     function isValidSecretKey(key) {
-      return isBytes3(key) && key.length === Fn3.BYTES;
+      return isBytes2(key) && key.length === Fn3.BYTES;
     }
     function isValidPublicKey(key, zip215) {
       try {
@@ -4497,7 +3627,7 @@
       },
       toMontgomerySecret(secretKey) {
         const size = lengths.secretKey;
-        abytes3(secretKey, size);
+        abytes2(secretKey, size);
         const hashed = cHash(secretKey.subarray(0, size));
         return adjustScalarBytes3(hashed).subarray(0, size);
       }
@@ -4515,7 +3645,7 @@
   var _0n5, _1n5, _2n3, _8n2, PrimeEdwardsPoint;
   var init_edwards = __esm({
     "node_modules/@noble/curves/abstract/edwards.js"() {
-      init_utils3();
+      init_utils2();
       init_curve();
       _0n5 = BigInt(0);
       _1n5 = BigInt(1);
@@ -4554,7 +3684,7 @@
           return this.ep.toAffine(invertedZ);
         }
         toHex() {
-          return bytesToHex2(this.toBytes());
+          return bytesToHex(this.toBytes());
         }
         toString() {
           return this.toHex();
@@ -4613,35 +3743,35 @@
     return arr;
   }
   function normDST(DST) {
-    if (!isBytes3(DST) && typeof DST !== "string")
+    if (!isBytes2(DST) && typeof DST !== "string")
       throw new Error("DST must be Uint8Array or ascii string");
     return typeof DST === "string" ? asciiToBytes(DST) : DST;
   }
   function expand_message_xmd(msg, DST, lenInBytes, H) {
-    abytes3(msg);
+    abytes2(msg);
     asafenumber(lenInBytes);
     DST = normDST(DST);
     if (DST.length > 255)
-      DST = H(concatBytes2(asciiToBytes("H2C-OVERSIZE-DST-"), DST));
+      DST = H(concatBytes(asciiToBytes("H2C-OVERSIZE-DST-"), DST));
     const { outputLen: b_in_bytes, blockLen: r_in_bytes } = H;
     const ell = Math.ceil(lenInBytes / b_in_bytes);
     if (lenInBytes > 65535 || ell > 255)
       throw new Error("expand_message_xmd: invalid lenInBytes");
-    const DST_prime = concatBytes2(DST, i2osp(DST.length, 1));
+    const DST_prime = concatBytes(DST, i2osp(DST.length, 1));
     const Z_pad = i2osp(0, r_in_bytes);
     const l_i_b_str = i2osp(lenInBytes, 2);
     const b = new Array(ell);
-    const b_0 = H(concatBytes2(Z_pad, msg, l_i_b_str, i2osp(0, 1), DST_prime));
-    b[0] = H(concatBytes2(b_0, i2osp(1, 1), DST_prime));
+    const b_0 = H(concatBytes(Z_pad, msg, l_i_b_str, i2osp(0, 1), DST_prime));
+    b[0] = H(concatBytes(b_0, i2osp(1, 1), DST_prime));
     for (let i = 1; i <= ell; i++) {
       const args = [strxor(b_0, b[i - 1]), i2osp(i + 1, 1), DST_prime];
-      b[i] = H(concatBytes2(...args));
+      b[i] = H(concatBytes(...args));
     }
-    const pseudo_random_bytes = concatBytes2(...b);
+    const pseudo_random_bytes = concatBytes(...b);
     return pseudo_random_bytes.slice(0, lenInBytes);
   }
   function expand_message_xof(msg, DST, lenInBytes, k, H) {
-    abytes3(msg);
+    abytes2(msg);
     asafenumber(lenInBytes);
     DST = normDST(DST);
     if (DST.length > 255) {
@@ -4661,7 +3791,7 @@
     });
     const { p, k, m: m6, hash, expand, DST } = options;
     asafenumber(hash.outputLen, "valid hash");
-    abytes3(msg);
+    abytes2(msg);
     asafenumber(count);
     const log2p = p.toString(2).length;
     const L = Math.ceil((log2p + k) / 8);
@@ -4744,7 +3874,7 @@
   var os2ip, _DST_scalar;
   var init_hash_to_curve = __esm({
     "node_modules/@noble/curves/abstract/hash-to-curve.js"() {
-      init_utils3();
+      init_utils2();
       init_modular();
       os2ip = bytesToNumberBE;
       _DST_scalar = asciiToBytes("HashToScalar-");
@@ -4765,7 +3895,7 @@
     const is25519 = type === "x25519";
     if (!is25519 && type !== "x448")
       throw new Error("invalid type");
-    const randomBytes_ = rand || randomBytes2;
+    const randomBytes_ = rand || randomBytes;
     const montgomeryBits = is25519 ? 255 : 448;
     const fieldLen = is25519 ? 32 : 56;
     const Gu = is25519 ? BigInt(9) : BigInt(5);
@@ -4779,13 +3909,13 @@
       return numberToBytesLE2(modP(u), fieldLen);
     }
     function decodeU(u) {
-      const _u = copyBytes3(abytes3(u, fieldLen, "uCoordinate"));
+      const _u = copyBytes2(abytes2(u, fieldLen, "uCoordinate"));
       if (is25519)
         _u[31] &= 127;
       return modP(bytesToNumberLE2(_u));
     }
     function decodeScalar(scalar) {
-      return bytesToNumberLE2(adjustScalarBytes3(copyBytes3(abytes3(scalar, fieldLen, "scalar"))));
+      return bytesToNumberLE2(adjustScalarBytes3(copyBytes2(abytes2(scalar, fieldLen, "scalar"))));
     }
     function scalarMult(scalar, u) {
       const pu = montgomeryLadder(decodeU(u), decodeScalar(scalar));
@@ -4847,7 +3977,7 @@
       seed: fieldLen
     };
     const randomSecretKey = (seed = randomBytes_(fieldLen)) => {
-      abytes3(seed, lengths.seed, "seed");
+      abytes2(seed, lengths.seed, "seed");
       return seed;
     };
     const utils = { randomSecretKey };
@@ -4865,7 +3995,7 @@
   var _0n6, _1n6, _2n4;
   var init_montgomery = __esm({
     "node_modules/@noble/curves/abstract/montgomery.js"() {
-      init_utils3();
+      init_utils2();
       init_curve();
       init_modular();
       _0n6 = BigInt(0);
@@ -4885,15 +4015,15 @@
     const { name, Point, hash } = opts;
     const { Fn: Fn3 } = Point;
     const hashToGroup = (msg, ctx) => opts.hashToGroup(msg, {
-      DST: concatBytes2(asciiToBytes("HashToGroup-"), ctx)
+      DST: concatBytes(asciiToBytes("HashToGroup-"), ctx)
     });
-    const hashToScalarPrefixed = (msg, ctx) => opts.hashToScalar(msg, { DST: concatBytes2(_DST_scalar, ctx) });
-    const randomScalar = (rng = randomBytes2) => {
+    const hashToScalarPrefixed = (msg, ctx) => opts.hashToScalar(msg, { DST: concatBytes(_DST_scalar, ctx) });
+    const randomScalar = (rng = randomBytes) => {
       const t = mapHashToField(rng(getMinHashLength(Fn3.ORDER)), Fn3.ORDER, Fn3.isLE);
       return Fn3.isLE ? bytesToNumberLE2(t) : bytesToNumberBE(t);
     };
     const msm = (points, scalars) => pippenger(Point, points, scalars);
-    const getCtx = (mode) => concatBytes2(asciiToBytes("OPRFV1-"), new Uint8Array([mode]), asciiToBytes("-" + name));
+    const getCtx = (mode) => concatBytes(asciiToBytes("OPRFV1-"), new Uint8Array([mode]), asciiToBytes("-" + name));
     const ctxOPRF = getCtx(0);
     const ctxVOPRF = getCtx(1);
     const ctxPOPRF = getCtx(2);
@@ -4901,20 +4031,20 @@
       const res = [];
       for (const a of args) {
         if (typeof a === "number")
-          res.push(numberToBytesBE2(a, 2));
+          res.push(numberToBytesBE(a, 2));
         else if (typeof a === "string")
           res.push(asciiToBytes(a));
         else {
-          abytes3(a);
-          res.push(numberToBytesBE2(a.length, 2), a);
+          abytes2(a);
+          res.push(numberToBytesBE(a.length, 2), a);
         }
       }
-      return concatBytes2(...res);
+      return concatBytes(...res);
     }
     const hashInput = (...bytes) => hash(encode2(...bytes, "Finalize"));
     function getTranscripts(B, C, D, ctx) {
       const Bm = B.toBytes();
-      const seed = hash(encode2(Bm, concatBytes2(asciiToBytes("Seed-"), ctx)));
+      const seed = hash(encode2(Bm, concatBytes(asciiToBytes("Seed-"), ctx)));
       const res = [];
       for (let i = 0; i < C.length; i++) {
         const Ci = C[i].toBytes();
@@ -4947,10 +4077,10 @@
       const t3 = M.multiply(r);
       const c = challengeTranscript(B, M, Z, t2, t3, ctx);
       const s = Fn3.sub(r, Fn3.mul(c, k));
-      return concatBytes2(...[c, s].map((i) => Fn3.toBytes(i)));
+      return concatBytes(...[c, s].map((i) => Fn3.toBytes(i)));
     }
     function verifyProof(ctx, B, C, D, proof) {
-      abytes3(proof, 2 * Fn3.BYTES);
+      abytes2(proof, 2 * Fn3.BYTES);
       const { M, Z } = computeComposites(B, C, D, ctx);
       const [c, s] = [proof.subarray(0, Fn3.BYTES), proof.subarray(Fn3.BYTES)].map((f) => Fn3.fromBytes(f));
       const t2 = Point.BASE.multiply(s).add(B.multiply(c));
@@ -4965,8 +4095,8 @@
       return { secretKey: Fn3.toBytes(skS), publicKey: pkS.toBytes() };
     }
     function deriveKeyPair(ctx, seed, info) {
-      const dst = concatBytes2(asciiToBytes("DeriveKeyPair"), ctx);
-      const msg = concatBytes2(seed, encode2(info), Uint8Array.of(0));
+      const dst = concatBytes(asciiToBytes("DeriveKeyPair"), ctx);
+      const msg = concatBytes(seed, encode2(info), Uint8Array.of(0));
       for (let counter = 0; counter <= 255; counter++) {
         msg[msg.length - 1] = counter;
         const skS = opts.hashToScalar(msg, { DST: dst });
@@ -4976,7 +4106,7 @@
       }
       throw new Error("Cannot derive key");
     }
-    function blind(ctx, input, rng = randomBytes2) {
+    function blind(ctx, input, rng = randomBytes) {
       const blind2 = randomScalar(rng);
       const inputPoint = hashToGroup(input, ctx);
       if (inputPoint.equals(Point.ZERO))
@@ -4995,7 +4125,7 @@
     const oprf = {
       generateKeyPair,
       deriveKeyPair: (seed, keyInfo) => deriveKeyPair(ctxOPRF, seed, keyInfo),
-      blind: (input, rng = randomBytes2) => blind(ctxOPRF, input, rng),
+      blind: (input, rng = randomBytes) => blind(ctxOPRF, input, rng),
       blindEvaluate(secretKey, blindedPoint) {
         const skS = Fn3.fromBytes(secretKey);
         const elm = Point.fromBytes(blindedPoint);
@@ -5012,8 +4142,8 @@
     const voprf = {
       generateKeyPair,
       deriveKeyPair: (seed, keyInfo) => deriveKeyPair(ctxVOPRF, seed, keyInfo),
-      blind: (input, rng = randomBytes2) => blind(ctxVOPRF, input, rng),
-      blindEvaluateBatch(secretKey, publicKey, blinded, rng = randomBytes2) {
+      blind: (input, rng = randomBytes) => blind(ctxVOPRF, input, rng),
+      blindEvaluateBatch(secretKey, publicKey, blinded, rng = randomBytes) {
         if (!Array.isArray(blinded))
           throw new Error("expected array");
         const skS = Fn3.fromBytes(secretKey);
@@ -5023,7 +4153,7 @@
         const proof = generateProof(ctxVOPRF, skS, pkS, blindedPoints, evaluated, rng);
         return { evaluated: evaluated.map((i) => i.toBytes()), proof };
       },
-      blindEvaluate(secretKey, publicKey, blinded, rng = randomBytes2) {
+      blindEvaluate(secretKey, publicKey, blinded, rng = randomBytes) {
         const res = this.blindEvaluateBatch(secretKey, publicKey, [blinded], rng);
         return { evaluated: res.evaluated[0], proof: res.proof };
       },
@@ -5047,7 +4177,7 @@
       return {
         generateKeyPair,
         deriveKeyPair: (seed, keyInfo) => deriveKeyPair(ctxPOPRF, seed, keyInfo),
-        blind(input, publicKey, rng = randomBytes2) {
+        blind(input, publicKey, rng = randomBytes) {
           const pkS = Point.fromBytes(publicKey);
           const tweakedKey = T.add(pkS);
           if (tweakedKey.equals(Point.ZERO))
@@ -5063,7 +4193,7 @@
             tweakedKey: tweakedKey.toBytes()
           };
         },
-        blindEvaluateBatch(secretKey, blinded, rng = randomBytes2) {
+        blindEvaluateBatch(secretKey, blinded, rng = randomBytes) {
           if (!Array.isArray(blinded))
             throw new Error("expected array");
           const skS = Fn3.fromBytes(secretKey);
@@ -5075,7 +4205,7 @@
           const proof = generateProof(ctxPOPRF, t, tweakedKey, evalPoints, blindedPoints, rng);
           return { evaluated: evalPoints.map((i) => i.toBytes()), proof };
         },
-        blindEvaluate(secretKey, blinded, rng = randomBytes2) {
+        blindEvaluate(secretKey, blinded, rng = randomBytes) {
           const res = this.blindEvaluateBatch(secretKey, [blinded], rng);
           return { evaluated: res.evaluated[0], proof: res.proof };
         },
@@ -5109,7 +4239,7 @@
   }
   var init_oprf = __esm({
     "node_modules/@noble/curves/abstract/oprf.js"() {
-      init_utils3();
+      init_utils2();
       init_curve();
       init_hash_to_curve();
       init_modular();
@@ -5161,14 +4291,14 @@
     let x = mod2(u * v3 * pow, P);
     const vx2 = mod2(v * x * x, P);
     const root1 = x;
-    const root22 = mod2(x * ED25519_SQRT_M1, P);
+    const root2 = mod2(x * ED25519_SQRT_M1, P);
     const useRoot1 = vx2 === u;
     const useRoot2 = vx2 === mod2(-u, P);
     const noRoot = vx2 === mod2(-u * ED25519_SQRT_M1, P);
     if (useRoot1)
       x = root1;
     if (useRoot2 || noRoot)
-      x = root22;
+      x = root2;
     if (isNegativeLE(x, P))
       x = mod2(-x, P);
     return { isValid: useRoot1 || useRoot2, value: x };
@@ -5176,7 +4306,7 @@
   function ed25519_domain(data, ctx, phflag) {
     if (ctx.length > 255)
       throw new Error("Context is too big");
-    return concatBytes2(asciiToBytes("SigEd25519 no Ed25519 collisions"), new Uint8Array([phflag ? 1 : 0, ctx.length]), ctx, data);
+    return concatBytes(asciiToBytes("SigEd25519 no Ed25519 collisions"), new Uint8Array([phflag ? 1 : 0, ctx.length]), ctx, data);
   }
   function ed(opts) {
     return eddsa(ed25519_Point, sha5122, Object.assign({ adjustScalarBytes }, opts));
@@ -5268,13 +4398,13 @@
   var init_ed25519 = __esm({
     "node_modules/@noble/curves/ed25519.js"() {
       init_sha2();
-      init_utils2();
+      init_utils();
       init_edwards();
       init_hash_to_curve();
       init_modular();
       init_montgomery();
       init_oprf();
-      init_utils3();
+      init_utils2();
       _0n7 = /* @__PURE__ */ BigInt(0);
       _1n7 = BigInt(1);
       _2n5 = BigInt(2);
@@ -5356,12 +4486,12 @@
           return new __RistrettoPoint(ep);
         }
         static fromBytes(bytes) {
-          abytes3(bytes, 32);
+          abytes2(bytes, 32);
           const { a, d } = ed25519_CURVE;
           const P = ed25519_CURVE_p;
           const mod3 = (n) => Fp.create(n);
           const s = bytes255ToNumberLE(bytes);
-          if (!equalBytes2(Fp.toBytes(s), bytes) || isNegativeLE(s, P))
+          if (!equalBytes(Fp.toBytes(s), bytes) || isNegativeLE(s, P))
             throw new Error("invalid ristretto255 encoding 1");
           const s2 = mod3(s * s);
           const u1 = mod3(_1n7 + a * s2);
@@ -5470,7 +4600,7 @@
          * It was later reused as a component in the newer `hash_to_ristretto255` function defined in RFC 9380.
          */
         deriveToCurve(bytes) {
-          abytes3(bytes, 64);
+          abytes2(bytes, 64);
           const r1 = bytes255ToNumberLE(bytes.subarray(0, 32));
           const R1 = calcElligatorRistrettoMap(r1);
           const r2 = bytes255ToNumberLE(bytes.subarray(32, 64));
@@ -5537,13 +4667,13 @@
       s[0] ^= SHA3_IOTA_H[round];
       s[1] ^= SHA3_IOTA_L[round];
     }
-    clean3(B);
+    clean2(B);
   }
   var _0n8, _1n8, _2n6, _7n2, _256n, _0x71n, SHA3_PI, SHA3_ROTL, _SHA3_IOTA, IOTAS, SHA3_IOTA_H, SHA3_IOTA_L, rotlH, rotlL, Keccak, genShake, shake256;
   var init_sha3 = __esm({
     "node_modules/@noble/hashes/sha3.js"() {
       init_u64();
-      init_utils2();
+      init_utils();
       _0n8 = BigInt(0);
       _1n8 = BigInt(1);
       _2n6 = BigInt(2);
@@ -5589,11 +4719,11 @@
           this.outputLen = outputLen;
           this.enableXOF = enableXOF;
           this.rounds = rounds;
-          anumber3(outputLen, "outputLen");
+          anumber2(outputLen, "outputLen");
           if (!(0 < blockLen && blockLen < 200))
             throw new Error("only keccak-f1600 function is supported");
           this.state = new Uint8Array(200);
-          this.state32 = u322(this.state);
+          this.state32 = u32(this.state);
         }
         clone() {
           return this._cloneInto();
@@ -5606,8 +4736,8 @@
           this.pos = 0;
         }
         update(data) {
-          aexists3(this);
-          abytes3(data);
+          aexists2(this);
+          abytes2(data);
           const { blockLen, state } = this;
           const len = data.length;
           for (let pos = 0; pos < len; ) {
@@ -5631,8 +4761,8 @@
           this.keccak();
         }
         writeInto(out) {
-          aexists3(this, false);
-          abytes3(out);
+          aexists2(this, false);
+          abytes2(out);
           this.finish();
           const bufferOut = this.state;
           const { blockLen } = this;
@@ -5652,11 +4782,11 @@
           return this.writeInto(out);
         }
         xof(bytes) {
-          anumber3(bytes);
+          anumber2(bytes);
           return this.xofInto(new Uint8Array(bytes));
         }
         digestInto(out) {
-          aoutput3(out, this);
+          aoutput2(out, this);
           if (this.finished)
             throw new Error("digest() was already called");
           this.writeInto(out);
@@ -5668,7 +4798,7 @@
         }
         destroy() {
           this.destroyed = true;
-          clean3(this.state);
+          clean2(this.state);
         }
         _cloneInto(to) {
           const { blockLen, suffix, outputLen, rounds, enableXOF } = this;
@@ -5730,15 +4860,15 @@
     const u2v = mod2(u * u * v, P);
     const u3v = mod2(u2v * u, P);
     const u5v3 = mod2(u3v * u2v * v, P);
-    const root3 = ed448_pow_Pminus3div4(u5v3);
-    const x = mod2(u3v * root3, P);
+    const root2 = ed448_pow_Pminus3div4(u5v3);
+    const x = mod2(u3v * root2, P);
     const x2 = mod2(x * x, P);
     return { isValid: mod2(x2 * v, P) === u, value: x };
   }
   function dom4(data, ctx, phflag) {
     if (ctx.length > 255)
       throw new Error("context must be smaller than 255, got: " + ctx.length);
-    return concatBytes2(asciiToBytes("SigEd448"), new Uint8Array([phflag ? 1 : 0, ctx.length]), ctx, data);
+    return concatBytes(asciiToBytes("SigEd448"), new Uint8Array([phflag ? 1 : 0, ctx.length]), ctx, data);
   }
   function ed4(opts) {
     return eddsa(ed448_Point, shake256_114, Object.assign({ adjustScalarBytes: adjustScalarBytes2, domain: dom4 }, opts));
@@ -5841,13 +4971,13 @@
   var init_ed448 = __esm({
     "node_modules/@noble/curves/ed448.js"() {
       init_sha3();
-      init_utils2();
+      init_utils();
       init_edwards();
       init_hash_to_curve();
       init_modular();
       init_montgomery();
       init_oprf();
-      init_utils3();
+      init_utils2();
       ed448_CURVE_p = BigInt("0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
       ed448_CURVE = /* @__PURE__ */ (() => ({
         p: ed448_CURVE_p,
@@ -5935,11 +5065,11 @@
           return new __DecafPoint(ep);
         }
         static fromBytes(bytes) {
-          abytes3(bytes, 56);
+          abytes2(bytes, 56);
           const { d, p: P } = ed448_CURVE;
           const mod3 = (n) => Fp448.create(n);
           const s = Fp448.fromBytes(bytes);
-          if (!equalBytes2(Fn448.toBytes(s), bytes) || isNegativeLE(s, P))
+          if (!equalBytes(Fn448.toBytes(s), bytes) || isNegativeLE(s, P))
             throw new Error("invalid decaf448 encoding 1");
           const s2 = mod3(s * s);
           const u1 = mod3(_1n9 + s2);
@@ -6022,7 +5152,7 @@
          * It was later reused as a component in the newer `hash_to_ristretto255` function defined in RFC 9380.
          */
         deriveToCurve(bytes) {
-          abytes3(bytes, 112);
+          abytes2(bytes, 112);
           const skipValidation = true;
           const r1 = Fp448.create(Fp448.fromBytes(bytes.subarray(0, 56), skipValidation));
           const R1 = calcElligatorDecafMap(r1);
@@ -6051,7 +5181,7 @@
   var _HMAC2, hmac2;
   var init_hmac = __esm({
     "node_modules/@noble/hashes/hmac.js"() {
-      init_utils2();
+      init_utils();
       _HMAC2 = class {
         oHash;
         iHash;
@@ -6061,7 +5191,7 @@
         destroyed = false;
         constructor(hash, key) {
           ahash2(hash);
-          abytes3(key, void 0, "key");
+          abytes2(key, void 0, "key");
           this.iHash = hash.create();
           if (typeof this.iHash.update !== "function")
             throw new Error("Expected instance of class which extends utils.Hash");
@@ -6077,16 +5207,16 @@
           for (let i = 0; i < pad.length; i++)
             pad[i] ^= 54 ^ 92;
           this.oHash.update(pad);
-          clean3(pad);
+          clean2(pad);
         }
         update(buf) {
-          aexists3(this);
+          aexists2(this);
           this.iHash.update(buf);
           return this;
         }
         digestInto(out) {
-          aexists3(this);
-          abytes3(out, this.outputLen, "output");
+          aexists2(this);
+          abytes2(out, this.outputLen, "output");
           this.finished = true;
           this.iHash.digestInto(out);
           this.oHash.update(out);
@@ -6153,8 +5283,8 @@
     for (let optName of Object.keys(def)) {
       optsn[optName] = opts[optName] === void 0 ? def[optName] : opts[optName];
     }
-    abool2(optsn.lowS, "lowS");
-    abool2(optsn.prehash, "prehash");
+    abool(optsn.lowS, "lowS");
+    abool(optsn.prehash, "prehash");
     if (optsn.format !== void 0)
       validateSigFormat(optsn.format);
     return optsn;
@@ -6186,17 +5316,17 @@
     function pointToBytes(_c, point, isCompressed) {
       const { x, y } = point.toAffine();
       const bx = Fp3.toBytes(x);
-      abool2(isCompressed, "isCompressed");
+      abool(isCompressed, "isCompressed");
       if (isCompressed) {
         assertCompressionIsSupported();
         const hasEvenY = !Fp3.isOdd(y);
-        return concatBytes2(pprefix(hasEvenY), bx);
+        return concatBytes(pprefix(hasEvenY), bx);
       } else {
-        return concatBytes2(Uint8Array.of(4), bx, Fp3.toBytes(y));
+        return concatBytes(Uint8Array.of(4), bx, Fp3.toBytes(y));
       }
     }
     function pointFromBytes(bytes) {
-      abytes3(bytes, void 0, "Point");
+      abytes2(bytes, void 0, "Point");
       const { publicKey: comp, publicKeyUncompressed: uncomp } = lengths;
       const length = bytes.length;
       const head = bytes[0];
@@ -6334,7 +5464,7 @@
         return new Point(x, y, Fp3.ONE);
       }
       static fromBytes(bytes) {
-        const P = Point.fromAffine(decodePoint(abytes3(bytes, void 0, "point")));
+        const P = Point.fromAffine(decodePoint(abytes2(bytes, void 0, "point")));
         P.assertValidity();
         return P;
       }
@@ -6498,15 +5628,15 @@
         if (!Fn3.isValidNot0(scalar))
           throw new Error("invalid scalar: out of range");
         let point, fake;
-        const mul = (n) => wnaf.cached(this, n, (p) => normalizeZ(Point, p));
+        const mul3 = (n) => wnaf.cached(this, n, (p) => normalizeZ(Point, p));
         if (endo2) {
           const { k1neg, k1, k2neg, k2 } = splitEndoScalarN(scalar);
-          const { p: k1p, f: k1f } = mul(k1);
-          const { p: k2p, f: k2f } = mul(k2);
+          const { p: k1p, f: k1f } = mul3(k1);
+          const { p: k2p, f: k2f } = mul3(k2);
           fake = k1f.add(k2f);
           point = finishEndo(endo2.beta, k1p, k2p, k1neg, k2neg);
         } else {
-          const { p, f } = mul(scalar);
+          const { p, f } = mul3(scalar);
           point = p;
           fake = f;
         }
@@ -6567,12 +5697,12 @@
         return this.multiplyUnsafe(cofactor).is0();
       }
       toBytes(isCompressed = true) {
-        abool2(isCompressed, "isCompressed");
+        abool(isCompressed, "isCompressed");
         this.assertValidity();
         return encodePoint(Point, this, isCompressed);
       }
       toHex(isCompressed = true) {
-        return bytesToHex2(this.toBytes(isCompressed));
+        return bytesToHex(this.toBytes(isCompressed));
       }
       toString() {
         return `<Point ${this.is0() ? "ZERO" : this.toHex()}>`;
@@ -6698,7 +5828,7 @@
   }
   function ecdh(Point, ecdhOpts = {}) {
     const { Fn: Fn3 } = Point;
-    const randomBytes_ = ecdhOpts.randomBytes || randomBytes2;
+    const randomBytes_ = ecdhOpts.randomBytes || randomBytes;
     const lengths = Object.assign(getWLengths(Point.Fp, Fn3), { seed: getMinHashLength(Fn3.ORDER) });
     function isValidSecretKey(secretKey) {
       try {
@@ -6722,18 +5852,18 @@
       }
     }
     function randomSecretKey(seed = randomBytes_(lengths.seed)) {
-      return mapHashToField(abytes3(seed, lengths.seed, "seed"), Fn3.ORDER);
+      return mapHashToField(abytes2(seed, lengths.seed, "seed"), Fn3.ORDER);
     }
     function getPublicKey(secretKey, isCompressed = true) {
       return Point.BASE.multiply(Fn3.fromBytes(secretKey)).toBytes(isCompressed);
     }
     function isProbPub(item) {
       const { secretKey, publicKey, publicKeyUncompressed } = lengths;
-      if (!isBytes3(item))
+      if (!isBytes2(item))
         return void 0;
       if ("_lengths" in Fn3 && Fn3._lengths || secretKey === publicKey)
         return void 0;
-      const l = abytes3(item, void 0, "key").length;
+      const l = abytes2(item, void 0, "key").length;
       return l === publicKey || l === publicKeyUncompressed;
     }
     function getSharedSecret(secretKeyA, publicKeyB, isCompressed = true) {
@@ -6763,7 +5893,7 @@
       bits2int_modN: "function"
     });
     ecdsaOpts = Object.assign({}, ecdsaOpts);
-    const randomBytes3 = ecdsaOpts.randomBytes || randomBytes2;
+    const randomBytes3 = ecdsaOpts.randomBytes || randomBytes;
     const hmac3 = ecdsaOpts.hmac || ((key, msg) => hmac2(hash, key, msg));
     const { Fp: Fp3, Fn: Fn3 } = Point;
     const { ORDER: CURVE_ORDER, BITS: fnBits } = Fn3;
@@ -6792,7 +5922,7 @@
       validateSigFormat(format);
       const size = lengths.signature;
       const sizer = format === "compact" ? size : format === "recovered" ? size + 1 : void 0;
-      return abytes3(bytes, sizer);
+      return abytes2(bytes, sizer);
     }
     class Signature {
       r;
@@ -6813,7 +5943,7 @@
         validateSigLength(bytes, format);
         let recid;
         if (format === "der") {
-          const { r: r2, s: s2 } = DER.toSig(abytes3(bytes));
+          const { r: r2, s: s2 } = DER.toSig(abytes2(bytes));
           return new Signature(r2, s2);
         }
         if (format === "recovered") {
@@ -6845,9 +5975,9 @@
         if (!Fp3.isValid(radj))
           throw new Error("invalid recovery id: sig.r+curve.n != R.x");
         const x = Fp3.toBytes(radj);
-        const R = Point.fromBytes(concatBytes2(pprefix((recovery & 1) === 0), x));
+        const R = Point.fromBytes(concatBytes(pprefix((recovery & 1) === 0), x));
         const ir = Fn3.inv(radj);
-        const h = bits2int_modN(abytes3(messageHash, void 0, "msgHash"));
+        const h = bits2int_modN(abytes2(messageHash, void 0, "msgHash"));
         const u1 = Fn3.create(-h * ir);
         const u2 = Fn3.create(s * ir);
         const Q = Point.BASE.multiplyUnsafe(u1).add(R.multiplyUnsafe(u2));
@@ -6869,12 +5999,12 @@
         const sb = Fn3.toBytes(s);
         if (format === "recovered") {
           assertSmallCofactor();
-          return concatBytes2(Uint8Array.of(this.assertRecovery()), rb, sb);
+          return concatBytes(Uint8Array.of(this.assertRecovery()), rb, sb);
         }
-        return concatBytes2(rb, sb);
+        return concatBytes(rb, sb);
       }
       toHex(format) {
-        return bytesToHex2(this.toBytes(format));
+        return bytesToHex(this.toBytes(format));
       }
     }
     const bits2int = ecdsaOpts.bits2int || function bits2int_def(bytes) {
@@ -6893,8 +6023,8 @@
       return Fn3.toBytes(num);
     }
     function validateMsgAndHash(message, prehash) {
-      abytes3(message, void 0, "message");
-      return prehash ? abytes3(hash(message), void 0, "prehashed message") : message;
+      abytes2(message, void 0, "message");
+      return prehash ? abytes2(hash(message), void 0, "prehashed message") : message;
     }
     function prepSig(message, secretKey, opts) {
       const { lowS, prehash, extraEntropy } = validateSigOpts(opts, defaultSigOpts);
@@ -6906,9 +6036,9 @@
       const seedArgs = [int2octets(d), int2octets(h1int)];
       if (extraEntropy != null && extraEntropy !== false) {
         const e = extraEntropy === true ? randomBytes3(lengths.secretKey) : extraEntropy;
-        seedArgs.push(abytes3(e, void 0, "extraEntropy"));
+        seedArgs.push(abytes2(e, void 0, "extraEntropy"));
       }
-      const seed = concatBytes2(...seedArgs);
+      const seed = concatBytes(...seedArgs);
       const m6 = h1int;
       function k2sig(kBytes) {
         const k = bits2int(kBytes);
@@ -6940,9 +6070,9 @@
     }
     function verify(signature, message, publicKey, opts = {}) {
       const { lowS, prehash, format } = validateSigOpts(opts, defaultSigOpts);
-      publicKey = abytes3(publicKey, void 0, "publicKey");
+      publicKey = abytes2(publicKey, void 0, "publicKey");
       message = validateMsgAndHash(message, prehash);
-      if (!isBytes3(signature)) {
+      if (!isBytes2(signature)) {
         const end = signature instanceof Signature ? ", use sig.toBytes()" : "";
         throw new Error("verify expects Uint8Array signature" + end);
       }
@@ -6989,8 +6119,8 @@
   var init_weierstrass = __esm({
     "node_modules/@noble/curves/abstract/weierstrass.js"() {
       init_hmac();
+      init_utils();
       init_utils2();
-      init_utils3();
       init_curve();
       init_modular();
       divNearest = (num, den) => (num + (num >= 0 ? den : -den) / _2n8) / den;
@@ -7081,7 +6211,7 @@
         },
         toSig(bytes) {
           const { Err: E, _int: int, _tlv: tlv } = DER;
-          const data = abytes3(bytes, void 0, "signature");
+          const data = abytes2(bytes, void 0, "signature");
           const { v: seqBytes, l: seqLeftBytes } = tlv.decode(48, data);
           if (seqLeftBytes.length)
             throw new E("invalid signature: left bytes after parsing");
@@ -7236,302 +6366,1256 @@
     }
   });
 
-  // src/app.ts
-  var import_mithril8 = __toESM(require_mithril(), 1);
-
-  // src/service/activityPub.ts
-  var ActivityPubService = class {
-    // All class #properties are PRIVATE
-    #actorID = "";
-    async start(actorID) {
-      this.#actorID = actorID;
-    }
-    async createObject(object) {
-      const [result, err] = await this.sendActivity({
-        "@context": "",
-        "id": "",
-        "type": "Create",
-        "actor": this.#actorID,
-        "object": object
-      });
-      return [result, err];
-    }
-    async deleteObject(objectId) {
-      const [_result, err] = await this.sendActivity({
-        "@context": "",
-        "id": "",
-        "type": "Delete",
-        "actor": this.#actorID,
-        "object": objectId
-      });
-      return err;
-    }
-    async sendActivity(activity) {
-      try {
-        const result = await fetch("http://localhost/@me/outbox", {
-          method: "POST",
-          body: JSON.stringify(activity),
-          credentials: "include"
-        });
-        const resultObject = await result.json();
-        return [resultObject, ""];
-      } catch (err) {
-        return [{}, String(err)];
-      }
-    }
-  };
-
-  // node_modules/idb/build/index.js
-  var instanceOfAny = (object, constructors) => constructors.some((c) => object instanceof c);
-  var idbProxyableTypes;
-  var cursorAdvanceMethods;
-  function getIdbProxyableTypes() {
-    return idbProxyableTypes || (idbProxyableTypes = [
-      IDBDatabase,
-      IDBObjectStore,
-      IDBIndex,
-      IDBCursor,
-      IDBTransaction
-    ]);
+  // node_modules/@noble/ciphers/utils.js
+  function isBytes3(a) {
+    return a instanceof Uint8Array || ArrayBuffer.isView(a) && a.constructor.name === "Uint8Array";
   }
-  function getCursorAdvanceMethods() {
-    return cursorAdvanceMethods || (cursorAdvanceMethods = [
-      IDBCursor.prototype.advance,
-      IDBCursor.prototype.continue,
-      IDBCursor.prototype.continuePrimaryKey
-    ]);
+  function abool2(b) {
+    if (typeof b !== "boolean")
+      throw new Error(`boolean expected, not ${b}`);
   }
-  var transactionDoneMap = /* @__PURE__ */ new WeakMap();
-  var transformCache = /* @__PURE__ */ new WeakMap();
-  var reverseTransformCache = /* @__PURE__ */ new WeakMap();
-  function promisifyRequest(request2) {
-    const promise = new Promise((resolve, reject) => {
-      const unlisten = () => {
-        request2.removeEventListener("success", success);
-        request2.removeEventListener("error", error);
-      };
-      const success = () => {
-        resolve(wrap(request2.result));
-        unlisten();
-      };
-      const error = () => {
-        reject(request2.error);
-        unlisten();
-      };
-      request2.addEventListener("success", success);
-      request2.addEventListener("error", error);
-    });
-    reverseTransformCache.set(promise, request2);
-    return promise;
+  function anumber3(n) {
+    if (!Number.isSafeInteger(n) || n < 0)
+      throw new Error("positive integer expected, got " + n);
   }
-  function cacheDonePromiseForTransaction(tx) {
-    if (transactionDoneMap.has(tx))
-      return;
-    const done = new Promise((resolve, reject) => {
-      const unlisten = () => {
-        tx.removeEventListener("complete", complete);
-        tx.removeEventListener("error", error);
-        tx.removeEventListener("abort", error);
-      };
-      const complete = () => {
-        resolve();
-        unlisten();
-      };
-      const error = () => {
-        reject(tx.error || new DOMException("AbortError", "AbortError"));
-        unlisten();
-      };
-      tx.addEventListener("complete", complete);
-      tx.addEventListener("error", error);
-      tx.addEventListener("abort", error);
-    });
-    transactionDoneMap.set(tx, done);
-  }
-  var idbProxyTraps = {
-    get(target, prop, receiver) {
-      if (target instanceof IDBTransaction) {
-        if (prop === "done")
-          return transactionDoneMap.get(target);
-        if (prop === "store") {
-          return receiver.objectStoreNames[1] ? void 0 : receiver.objectStore(receiver.objectStoreNames[0]);
-        }
-      }
-      return wrap(target[prop]);
-    },
-    set(target, prop, value) {
-      target[prop] = value;
-      return true;
-    },
-    has(target, prop) {
-      if (target instanceof IDBTransaction && (prop === "done" || prop === "store")) {
-        return true;
-      }
-      return prop in target;
+  function abytes3(value, length, title = "") {
+    const bytes = isBytes3(value);
+    const len = value?.length;
+    const needsLen = length !== void 0;
+    if (!bytes || needsLen && len !== length) {
+      const prefix = title && `"${title}" `;
+      const ofLen = needsLen ? ` of length ${length}` : "";
+      const got = bytes ? `length=${len}` : `type=${typeof value}`;
+      throw new Error(prefix + "expected Uint8Array" + ofLen + ", got " + got);
     }
-  };
-  function replaceTraps(callback) {
-    idbProxyTraps = callback(idbProxyTraps);
-  }
-  function wrapFunction(func) {
-    if (getCursorAdvanceMethods().includes(func)) {
-      return function(...args) {
-        func.apply(unwrap(this), args);
-        return wrap(this.request);
-      };
-    }
-    return function(...args) {
-      return wrap(func.apply(unwrap(this), args));
-    };
-  }
-  function transformCachableValue(value) {
-    if (typeof value === "function")
-      return wrapFunction(value);
-    if (value instanceof IDBTransaction)
-      cacheDonePromiseForTransaction(value);
-    if (instanceOfAny(value, getIdbProxyableTypes()))
-      return new Proxy(value, idbProxyTraps);
     return value;
   }
-  function wrap(value) {
-    if (value instanceof IDBRequest)
-      return promisifyRequest(value);
-    if (transformCache.has(value))
-      return transformCache.get(value);
-    const newValue = transformCachableValue(value);
-    if (newValue !== value) {
-      transformCache.set(value, newValue);
-      reverseTransformCache.set(newValue, value);
-    }
-    return newValue;
+  function aexists3(instance, checkFinished = true) {
+    if (instance.destroyed)
+      throw new Error("Hash instance has been destroyed");
+    if (checkFinished && instance.finished)
+      throw new Error("Hash#digest() has already been called");
   }
-  var unwrap = (value) => reverseTransformCache.get(value);
-  function openDB(name, version, { blocked, upgrade, blocking, terminated } = {}) {
-    const request2 = indexedDB.open(name, version);
-    const openPromise = wrap(request2);
-    if (upgrade) {
-      request2.addEventListener("upgradeneeded", (event) => {
-        upgrade(wrap(request2.result), event.oldVersion, event.newVersion, wrap(request2.transaction), event);
+  function aoutput3(out, instance) {
+    abytes3(out, void 0, "output");
+    const min = instance.outputLen;
+    if (out.length < min) {
+      throw new Error("digestInto() expects output buffer of length at least " + min);
+    }
+  }
+  function u8(arr) {
+    return new Uint8Array(arr.buffer, arr.byteOffset, arr.byteLength);
+  }
+  function u322(arr) {
+    return new Uint32Array(arr.buffer, arr.byteOffset, Math.floor(arr.byteLength / 4));
+  }
+  function clean3(...arrays) {
+    for (let i = 0; i < arrays.length; i++) {
+      arrays[i].fill(0);
+    }
+  }
+  function createView3(arr) {
+    return new DataView(arr.buffer, arr.byteOffset, arr.byteLength);
+  }
+  function checkOpts(defaults, opts) {
+    if (opts == null || typeof opts !== "object")
+      throw new Error("options must be defined");
+    const merged = Object.assign(defaults, opts);
+    return merged;
+  }
+  function equalBytes2(a, b) {
+    if (a.length !== b.length)
+      return false;
+    let diff = 0;
+    for (let i = 0; i < a.length; i++)
+      diff |= a[i] ^ b[i];
+    return diff === 0;
+  }
+  function getOutput(expectedLength, out, onlyAligned = true) {
+    if (out === void 0)
+      return new Uint8Array(expectedLength);
+    if (out.length !== expectedLength)
+      throw new Error('"output" expected Uint8Array of length ' + expectedLength + ", got: " + out.length);
+    if (onlyAligned && !isAligned32(out))
+      throw new Error("invalid output, must be aligned");
+    return out;
+  }
+  function u64Lengths(dataLength, aadLength, isLE3) {
+    abool2(isLE3);
+    const num = new Uint8Array(16);
+    const view = createView3(num);
+    view.setBigUint64(0, BigInt(aadLength), isLE3);
+    view.setBigUint64(8, BigInt(dataLength), isLE3);
+    return num;
+  }
+  function isAligned32(bytes) {
+    return bytes.byteOffset % 4 === 0;
+  }
+  function copyBytes3(bytes) {
+    return Uint8Array.from(bytes);
+  }
+  function randomBytes2(bytesLength = 32) {
+    const cr = typeof globalThis === "object" ? globalThis.crypto : null;
+    if (typeof cr?.getRandomValues !== "function")
+      throw new Error("crypto.getRandomValues must be defined");
+    return cr.getRandomValues(new Uint8Array(bytesLength));
+  }
+  var isLE2, wrapCipher;
+  var init_utils3 = __esm({
+    "node_modules/@noble/ciphers/utils.js"() {
+      isLE2 = /* @__PURE__ */ (() => new Uint8Array(new Uint32Array([287454020]).buffer)[0] === 68)();
+      wrapCipher = /* @__NO_SIDE_EFFECTS__ */ (params, constructor) => {
+        function wrappedCipher(key, ...args) {
+          abytes3(key, void 0, "key");
+          if (!isLE2)
+            throw new Error("Non little-endian hardware is not yet supported");
+          if (params.nonceLength !== void 0) {
+            const nonce = args[0];
+            abytes3(nonce, params.varSizeNonce ? void 0 : params.nonceLength, "nonce");
+          }
+          const tagl = params.tagLength;
+          if (tagl && args[1] !== void 0)
+            abytes3(args[1], void 0, "AAD");
+          const cipher = constructor(key, ...args);
+          const checkOutput = (fnLength, output) => {
+            if (output !== void 0) {
+              if (fnLength !== 2)
+                throw new Error("cipher output not supported");
+              abytes3(output, void 0, "output");
+            }
+          };
+          let called = false;
+          const wrCipher = {
+            encrypt(data, output) {
+              if (called)
+                throw new Error("cannot encrypt() twice with same key + nonce");
+              called = true;
+              abytes3(data);
+              checkOutput(cipher.encrypt.length, output);
+              return cipher.encrypt(data, output);
+            },
+            decrypt(data, output) {
+              abytes3(data);
+              if (tagl && data.length < tagl)
+                throw new Error('"ciphertext" expected length bigger than tagLength=' + tagl);
+              checkOutput(cipher.decrypt.length, output);
+              return cipher.decrypt(data, output);
+            }
+          };
+          return wrCipher;
+        }
+        Object.assign(wrappedCipher, params);
+        return wrappedCipher;
+      };
+    }
+  });
+
+  // node_modules/@noble/ciphers/_arx.js
+  function rotl(a, b) {
+    return a << b | a >>> 32 - b;
+  }
+  function isAligned322(b) {
+    return b.byteOffset % 4 === 0;
+  }
+  function runCipher(core, sigma, key, nonce, data, output, counter, rounds) {
+    const len = data.length;
+    const block = new Uint8Array(BLOCK_LEN);
+    const b32 = u322(block);
+    const isAligned = isAligned322(data) && isAligned322(output);
+    const d32 = isAligned ? u322(data) : U32_EMPTY;
+    const o32 = isAligned ? u322(output) : U32_EMPTY;
+    for (let pos = 0; pos < len; counter++) {
+      core(sigma, key, nonce, b32, counter, rounds);
+      if (counter >= MAX_COUNTER)
+        throw new Error("arx: counter overflow");
+      const take = Math.min(BLOCK_LEN, len - pos);
+      if (isAligned && take === BLOCK_LEN) {
+        const pos32 = pos / 4;
+        if (pos % 4 !== 0)
+          throw new Error("arx: invalid block position");
+        for (let j = 0, posj; j < BLOCK_LEN32; j++) {
+          posj = pos32 + j;
+          o32[posj] = d32[posj] ^ b32[j];
+        }
+        pos += BLOCK_LEN;
+        continue;
+      }
+      for (let j = 0, posj; j < take; j++) {
+        posj = pos + j;
+        output[posj] = data[posj] ^ block[j];
+      }
+      pos += take;
+    }
+  }
+  function createCipher(core, opts) {
+    const { allowShortKeys, extendNonceFn, counterLength, counterRight, rounds } = checkOpts({ allowShortKeys: false, counterLength: 8, counterRight: false, rounds: 20 }, opts);
+    if (typeof core !== "function")
+      throw new Error("core must be a function");
+    anumber3(counterLength);
+    anumber3(rounds);
+    abool2(counterRight);
+    abool2(allowShortKeys);
+    return (key, nonce, data, output, counter = 0) => {
+      abytes3(key, void 0, "key");
+      abytes3(nonce, void 0, "nonce");
+      abytes3(data, void 0, "data");
+      const len = data.length;
+      if (output === void 0)
+        output = new Uint8Array(len);
+      abytes3(output, void 0, "output");
+      anumber3(counter);
+      if (counter < 0 || counter >= MAX_COUNTER)
+        throw new Error("arx: counter overflow");
+      if (output.length < len)
+        throw new Error(`arx: output (${output.length}) is shorter than data (${len})`);
+      const toClean = [];
+      let l = key.length;
+      let k;
+      let sigma;
+      if (l === 32) {
+        toClean.push(k = copyBytes3(key));
+        sigma = sigma32_32;
+      } else if (l === 16 && allowShortKeys) {
+        k = new Uint8Array(32);
+        k.set(key);
+        k.set(key, 16);
+        sigma = sigma16_32;
+        toClean.push(k);
+      } else {
+        abytes3(key, 32, "arx key");
+        throw new Error("invalid key size");
+      }
+      if (!isAligned322(nonce))
+        toClean.push(nonce = copyBytes3(nonce));
+      const k32 = u322(k);
+      if (extendNonceFn) {
+        if (nonce.length !== 24)
+          throw new Error(`arx: extended nonce must be 24 bytes`);
+        extendNonceFn(sigma, k32, u322(nonce.subarray(0, 16)), k32);
+        nonce = nonce.subarray(16);
+      }
+      const nonceNcLen = 16 - counterLength;
+      if (nonceNcLen !== nonce.length)
+        throw new Error(`arx: nonce must be ${nonceNcLen} or 16 bytes`);
+      if (nonceNcLen !== 12) {
+        const nc = new Uint8Array(12);
+        nc.set(nonce, counterRight ? 0 : 12 - nonce.length);
+        nonce = nc;
+        toClean.push(nonce);
+      }
+      const n32 = u322(nonce);
+      runCipher(core, sigma, k32, n32, data, output, counter, rounds);
+      clean3(...toClean);
+      return output;
+    };
+  }
+  var encodeStr, sigma16, sigma32, sigma16_32, sigma32_32, BLOCK_LEN, BLOCK_LEN32, MAX_COUNTER, U32_EMPTY, _XorStreamPRG, createPRG;
+  var init_arx = __esm({
+    "node_modules/@noble/ciphers/_arx.js"() {
+      init_utils3();
+      encodeStr = (str) => Uint8Array.from(str.split(""), (c) => c.charCodeAt(0));
+      sigma16 = encodeStr("expand 16-byte k");
+      sigma32 = encodeStr("expand 32-byte k");
+      sigma16_32 = u322(sigma16);
+      sigma32_32 = u322(sigma32);
+      BLOCK_LEN = 64;
+      BLOCK_LEN32 = 16;
+      MAX_COUNTER = 2 ** 32 - 1;
+      U32_EMPTY = Uint32Array.of();
+      _XorStreamPRG = class __XorStreamPRG {
+        blockLen;
+        keyLen;
+        nonceLen;
+        state;
+        buf;
+        key;
+        nonce;
+        pos;
+        ctr;
+        cipher;
+        constructor(cipher, blockLen, keyLen, nonceLen, seed) {
+          this.cipher = cipher;
+          this.blockLen = blockLen;
+          this.keyLen = keyLen;
+          this.nonceLen = nonceLen;
+          this.state = new Uint8Array(this.keyLen + this.nonceLen);
+          this.reseed(seed);
+          this.ctr = 0;
+          this.pos = this.blockLen;
+          this.buf = new Uint8Array(this.blockLen);
+          this.key = this.state.subarray(0, this.keyLen);
+          this.nonce = this.state.subarray(this.keyLen);
+        }
+        reseed(seed) {
+          abytes3(seed);
+          if (!seed || seed.length === 0)
+            throw new Error("entropy required");
+          for (let i = 0; i < seed.length; i++)
+            this.state[i % this.state.length] ^= seed[i];
+          this.ctr = 0;
+          this.pos = this.blockLen;
+        }
+        addEntropy(seed) {
+          this.state.set(this.randomBytes(this.state.length));
+          this.reseed(seed);
+        }
+        randomBytes(len) {
+          anumber3(len);
+          if (len === 0)
+            return new Uint8Array(0);
+          const out = new Uint8Array(len);
+          let outPos = 0;
+          if (this.pos < this.blockLen) {
+            const take = Math.min(len, this.blockLen - this.pos);
+            out.set(this.buf.subarray(this.pos, this.pos + take), 0);
+            this.pos += take;
+            outPos += take;
+            if (outPos === len)
+              return out;
+          }
+          const blocks = Math.floor((len - outPos) / this.blockLen);
+          if (blocks > 0) {
+            const blockBytes = blocks * this.blockLen;
+            const b = out.subarray(outPos, outPos + blockBytes);
+            this.cipher(this.key, this.nonce, b, b, this.ctr);
+            this.ctr += blocks;
+            outPos += blockBytes;
+          }
+          const left2 = len - outPos;
+          if (left2 > 0) {
+            this.buf.fill(0);
+            this.cipher(this.key, this.nonce, this.buf, this.buf, this.ctr++);
+            out.set(this.buf.subarray(0, left2), outPos);
+            this.pos = left2;
+          }
+          return out;
+        }
+        clone() {
+          return new __XorStreamPRG(this.cipher, this.blockLen, this.keyLen, this.nonceLen, this.randomBytes(this.state.length));
+        }
+        clean() {
+          this.pos = 0;
+          this.ctr = 0;
+          this.buf.fill(0);
+          this.state.fill(0);
+        }
+      };
+      createPRG = (cipher, blockLen, keyLen, nonceLen) => {
+        return (seed = randomBytes2(32)) => new _XorStreamPRG(cipher, blockLen, keyLen, nonceLen, seed);
+      };
+    }
+  });
+
+  // node_modules/@noble/ciphers/_poly1305.js
+  function u8to16(a, i) {
+    return a[i++] & 255 | (a[i++] & 255) << 8;
+  }
+  function wrapConstructorWithKey2(hashCons) {
+    const hashC = (msg, key) => hashCons(key).update(msg).digest();
+    const tmp = hashCons(new Uint8Array(32));
+    hashC.outputLen = tmp.outputLen;
+    hashC.blockLen = tmp.blockLen;
+    hashC.create = (key) => hashCons(key);
+    return hashC;
+  }
+  var Poly1305, poly1305;
+  var init_poly1305 = __esm({
+    "node_modules/@noble/ciphers/_poly1305.js"() {
+      init_utils3();
+      Poly1305 = class {
+        blockLen = 16;
+        outputLen = 16;
+        buffer = new Uint8Array(16);
+        r = new Uint16Array(10);
+        // Allocating 1 array with .subarray() here is slower than 3
+        h = new Uint16Array(10);
+        pad = new Uint16Array(8);
+        pos = 0;
+        finished = false;
+        // Can be speed-up using BigUint64Array, at the cost of complexity
+        constructor(key) {
+          key = copyBytes3(abytes3(key, 32, "key"));
+          const t0 = u8to16(key, 0);
+          const t1 = u8to16(key, 2);
+          const t2 = u8to16(key, 4);
+          const t3 = u8to16(key, 6);
+          const t4 = u8to16(key, 8);
+          const t5 = u8to16(key, 10);
+          const t6 = u8to16(key, 12);
+          const t7 = u8to16(key, 14);
+          this.r[0] = t0 & 8191;
+          this.r[1] = (t0 >>> 13 | t1 << 3) & 8191;
+          this.r[2] = (t1 >>> 10 | t2 << 6) & 7939;
+          this.r[3] = (t2 >>> 7 | t3 << 9) & 8191;
+          this.r[4] = (t3 >>> 4 | t4 << 12) & 255;
+          this.r[5] = t4 >>> 1 & 8190;
+          this.r[6] = (t4 >>> 14 | t5 << 2) & 8191;
+          this.r[7] = (t5 >>> 11 | t6 << 5) & 8065;
+          this.r[8] = (t6 >>> 8 | t7 << 8) & 8191;
+          this.r[9] = t7 >>> 5 & 127;
+          for (let i = 0; i < 8; i++)
+            this.pad[i] = u8to16(key, 16 + 2 * i);
+        }
+        process(data, offset, isLast = false) {
+          const hibit = isLast ? 0 : 1 << 11;
+          const { h, r } = this;
+          const r0 = r[0];
+          const r1 = r[1];
+          const r2 = r[2];
+          const r3 = r[3];
+          const r4 = r[4];
+          const r5 = r[5];
+          const r6 = r[6];
+          const r7 = r[7];
+          const r8 = r[8];
+          const r9 = r[9];
+          const t0 = u8to16(data, offset + 0);
+          const t1 = u8to16(data, offset + 2);
+          const t2 = u8to16(data, offset + 4);
+          const t3 = u8to16(data, offset + 6);
+          const t4 = u8to16(data, offset + 8);
+          const t5 = u8to16(data, offset + 10);
+          const t6 = u8to16(data, offset + 12);
+          const t7 = u8to16(data, offset + 14);
+          let h0 = h[0] + (t0 & 8191);
+          let h1 = h[1] + ((t0 >>> 13 | t1 << 3) & 8191);
+          let h2 = h[2] + ((t1 >>> 10 | t2 << 6) & 8191);
+          let h3 = h[3] + ((t2 >>> 7 | t3 << 9) & 8191);
+          let h4 = h[4] + ((t3 >>> 4 | t4 << 12) & 8191);
+          let h5 = h[5] + (t4 >>> 1 & 8191);
+          let h6 = h[6] + ((t4 >>> 14 | t5 << 2) & 8191);
+          let h7 = h[7] + ((t5 >>> 11 | t6 << 5) & 8191);
+          let h8 = h[8] + ((t6 >>> 8 | t7 << 8) & 8191);
+          let h9 = h[9] + (t7 >>> 5 | hibit);
+          let c = 0;
+          let d0 = c + h0 * r0 + h1 * (5 * r9) + h2 * (5 * r8) + h3 * (5 * r7) + h4 * (5 * r6);
+          c = d0 >>> 13;
+          d0 &= 8191;
+          d0 += h5 * (5 * r5) + h6 * (5 * r4) + h7 * (5 * r3) + h8 * (5 * r2) + h9 * (5 * r1);
+          c += d0 >>> 13;
+          d0 &= 8191;
+          let d1 = c + h0 * r1 + h1 * r0 + h2 * (5 * r9) + h3 * (5 * r8) + h4 * (5 * r7);
+          c = d1 >>> 13;
+          d1 &= 8191;
+          d1 += h5 * (5 * r6) + h6 * (5 * r5) + h7 * (5 * r4) + h8 * (5 * r3) + h9 * (5 * r2);
+          c += d1 >>> 13;
+          d1 &= 8191;
+          let d2 = c + h0 * r2 + h1 * r1 + h2 * r0 + h3 * (5 * r9) + h4 * (5 * r8);
+          c = d2 >>> 13;
+          d2 &= 8191;
+          d2 += h5 * (5 * r7) + h6 * (5 * r6) + h7 * (5 * r5) + h8 * (5 * r4) + h9 * (5 * r3);
+          c += d2 >>> 13;
+          d2 &= 8191;
+          let d3 = c + h0 * r3 + h1 * r2 + h2 * r1 + h3 * r0 + h4 * (5 * r9);
+          c = d3 >>> 13;
+          d3 &= 8191;
+          d3 += h5 * (5 * r8) + h6 * (5 * r7) + h7 * (5 * r6) + h8 * (5 * r5) + h9 * (5 * r4);
+          c += d3 >>> 13;
+          d3 &= 8191;
+          let d4 = c + h0 * r4 + h1 * r3 + h2 * r2 + h3 * r1 + h4 * r0;
+          c = d4 >>> 13;
+          d4 &= 8191;
+          d4 += h5 * (5 * r9) + h6 * (5 * r8) + h7 * (5 * r7) + h8 * (5 * r6) + h9 * (5 * r5);
+          c += d4 >>> 13;
+          d4 &= 8191;
+          let d5 = c + h0 * r5 + h1 * r4 + h2 * r3 + h3 * r2 + h4 * r1;
+          c = d5 >>> 13;
+          d5 &= 8191;
+          d5 += h5 * r0 + h6 * (5 * r9) + h7 * (5 * r8) + h8 * (5 * r7) + h9 * (5 * r6);
+          c += d5 >>> 13;
+          d5 &= 8191;
+          let d6 = c + h0 * r6 + h1 * r5 + h2 * r4 + h3 * r3 + h4 * r2;
+          c = d6 >>> 13;
+          d6 &= 8191;
+          d6 += h5 * r1 + h6 * r0 + h7 * (5 * r9) + h8 * (5 * r8) + h9 * (5 * r7);
+          c += d6 >>> 13;
+          d6 &= 8191;
+          let d7 = c + h0 * r7 + h1 * r6 + h2 * r5 + h3 * r4 + h4 * r3;
+          c = d7 >>> 13;
+          d7 &= 8191;
+          d7 += h5 * r2 + h6 * r1 + h7 * r0 + h8 * (5 * r9) + h9 * (5 * r8);
+          c += d7 >>> 13;
+          d7 &= 8191;
+          let d8 = c + h0 * r8 + h1 * r7 + h2 * r6 + h3 * r5 + h4 * r4;
+          c = d8 >>> 13;
+          d8 &= 8191;
+          d8 += h5 * r3 + h6 * r2 + h7 * r1 + h8 * r0 + h9 * (5 * r9);
+          c += d8 >>> 13;
+          d8 &= 8191;
+          let d9 = c + h0 * r9 + h1 * r8 + h2 * r7 + h3 * r6 + h4 * r5;
+          c = d9 >>> 13;
+          d9 &= 8191;
+          d9 += h5 * r4 + h6 * r3 + h7 * r2 + h8 * r1 + h9 * r0;
+          c += d9 >>> 13;
+          d9 &= 8191;
+          c = (c << 2) + c | 0;
+          c = c + d0 | 0;
+          d0 = c & 8191;
+          c = c >>> 13;
+          d1 += c;
+          h[0] = d0;
+          h[1] = d1;
+          h[2] = d2;
+          h[3] = d3;
+          h[4] = d4;
+          h[5] = d5;
+          h[6] = d6;
+          h[7] = d7;
+          h[8] = d8;
+          h[9] = d9;
+        }
+        finalize() {
+          const { h, pad } = this;
+          const g = new Uint16Array(10);
+          let c = h[1] >>> 13;
+          h[1] &= 8191;
+          for (let i = 2; i < 10; i++) {
+            h[i] += c;
+            c = h[i] >>> 13;
+            h[i] &= 8191;
+          }
+          h[0] += c * 5;
+          c = h[0] >>> 13;
+          h[0] &= 8191;
+          h[1] += c;
+          c = h[1] >>> 13;
+          h[1] &= 8191;
+          h[2] += c;
+          g[0] = h[0] + 5;
+          c = g[0] >>> 13;
+          g[0] &= 8191;
+          for (let i = 1; i < 10; i++) {
+            g[i] = h[i] + c;
+            c = g[i] >>> 13;
+            g[i] &= 8191;
+          }
+          g[9] -= 1 << 13;
+          let mask = (c ^ 1) - 1;
+          for (let i = 0; i < 10; i++)
+            g[i] &= mask;
+          mask = ~mask;
+          for (let i = 0; i < 10; i++)
+            h[i] = h[i] & mask | g[i];
+          h[0] = (h[0] | h[1] << 13) & 65535;
+          h[1] = (h[1] >>> 3 | h[2] << 10) & 65535;
+          h[2] = (h[2] >>> 6 | h[3] << 7) & 65535;
+          h[3] = (h[3] >>> 9 | h[4] << 4) & 65535;
+          h[4] = (h[4] >>> 12 | h[5] << 1 | h[6] << 14) & 65535;
+          h[5] = (h[6] >>> 2 | h[7] << 11) & 65535;
+          h[6] = (h[7] >>> 5 | h[8] << 8) & 65535;
+          h[7] = (h[8] >>> 8 | h[9] << 5) & 65535;
+          let f = h[0] + pad[0];
+          h[0] = f & 65535;
+          for (let i = 1; i < 8; i++) {
+            f = (h[i] + pad[i] | 0) + (f >>> 16) | 0;
+            h[i] = f & 65535;
+          }
+          clean3(g);
+        }
+        update(data) {
+          aexists3(this);
+          abytes3(data);
+          data = copyBytes3(data);
+          const { buffer, blockLen } = this;
+          const len = data.length;
+          for (let pos = 0; pos < len; ) {
+            const take = Math.min(blockLen - this.pos, len - pos);
+            if (take === blockLen) {
+              for (; blockLen <= len - pos; pos += blockLen)
+                this.process(data, pos);
+              continue;
+            }
+            buffer.set(data.subarray(pos, pos + take), this.pos);
+            this.pos += take;
+            pos += take;
+            if (this.pos === blockLen) {
+              this.process(buffer, 0, false);
+              this.pos = 0;
+            }
+          }
+          return this;
+        }
+        destroy() {
+          clean3(this.h, this.r, this.buffer, this.pad);
+        }
+        digestInto(out) {
+          aexists3(this);
+          aoutput3(out, this);
+          this.finished = true;
+          const { buffer, h } = this;
+          let { pos } = this;
+          if (pos) {
+            buffer[pos++] = 1;
+            for (; pos < 16; pos++)
+              buffer[pos] = 0;
+            this.process(buffer, 0, true);
+          }
+          this.finalize();
+          let opos = 0;
+          for (let i = 0; i < 8; i++) {
+            out[opos++] = h[i] >>> 0;
+            out[opos++] = h[i] >>> 8;
+          }
+          return out;
+        }
+        digest() {
+          const { buffer, outputLen } = this;
+          this.digestInto(buffer);
+          const res = buffer.slice(0, outputLen);
+          this.destroy();
+          return res;
+        }
+      };
+      poly1305 = /* @__PURE__ */ (() => wrapConstructorWithKey2((key) => new Poly1305(key)))();
+    }
+  });
+
+  // node_modules/@noble/ciphers/chacha.js
+  var chacha_exports = {};
+  __export(chacha_exports, {
+    _poly1305_aead: () => _poly1305_aead,
+    chacha12: () => chacha12,
+    chacha20: () => chacha20,
+    chacha20orig: () => chacha20orig,
+    chacha20poly1305: () => chacha20poly1305,
+    chacha8: () => chacha8,
+    hchacha: () => hchacha,
+    rngChacha20: () => rngChacha20,
+    rngChacha8: () => rngChacha8,
+    xchacha20: () => xchacha20,
+    xchacha20poly1305: () => xchacha20poly1305
+  });
+  function chachaCore(s, k, n, out, cnt, rounds = 20) {
+    let y00 = s[0], y01 = s[1], y02 = s[2], y03 = s[3], y04 = k[0], y05 = k[1], y06 = k[2], y07 = k[3], y08 = k[4], y09 = k[5], y10 = k[6], y11 = k[7], y12 = cnt, y13 = n[0], y14 = n[1], y15 = n[2];
+    let x00 = y00, x01 = y01, x02 = y02, x03 = y03, x04 = y04, x05 = y05, x06 = y06, x07 = y07, x08 = y08, x09 = y09, x10 = y10, x11 = y11, x12 = y12, x13 = y13, x14 = y14, x15 = y15;
+    for (let r = 0; r < rounds; r += 2) {
+      x00 = x00 + x04 | 0;
+      x12 = rotl(x12 ^ x00, 16);
+      x08 = x08 + x12 | 0;
+      x04 = rotl(x04 ^ x08, 12);
+      x00 = x00 + x04 | 0;
+      x12 = rotl(x12 ^ x00, 8);
+      x08 = x08 + x12 | 0;
+      x04 = rotl(x04 ^ x08, 7);
+      x01 = x01 + x05 | 0;
+      x13 = rotl(x13 ^ x01, 16);
+      x09 = x09 + x13 | 0;
+      x05 = rotl(x05 ^ x09, 12);
+      x01 = x01 + x05 | 0;
+      x13 = rotl(x13 ^ x01, 8);
+      x09 = x09 + x13 | 0;
+      x05 = rotl(x05 ^ x09, 7);
+      x02 = x02 + x06 | 0;
+      x14 = rotl(x14 ^ x02, 16);
+      x10 = x10 + x14 | 0;
+      x06 = rotl(x06 ^ x10, 12);
+      x02 = x02 + x06 | 0;
+      x14 = rotl(x14 ^ x02, 8);
+      x10 = x10 + x14 | 0;
+      x06 = rotl(x06 ^ x10, 7);
+      x03 = x03 + x07 | 0;
+      x15 = rotl(x15 ^ x03, 16);
+      x11 = x11 + x15 | 0;
+      x07 = rotl(x07 ^ x11, 12);
+      x03 = x03 + x07 | 0;
+      x15 = rotl(x15 ^ x03, 8);
+      x11 = x11 + x15 | 0;
+      x07 = rotl(x07 ^ x11, 7);
+      x00 = x00 + x05 | 0;
+      x15 = rotl(x15 ^ x00, 16);
+      x10 = x10 + x15 | 0;
+      x05 = rotl(x05 ^ x10, 12);
+      x00 = x00 + x05 | 0;
+      x15 = rotl(x15 ^ x00, 8);
+      x10 = x10 + x15 | 0;
+      x05 = rotl(x05 ^ x10, 7);
+      x01 = x01 + x06 | 0;
+      x12 = rotl(x12 ^ x01, 16);
+      x11 = x11 + x12 | 0;
+      x06 = rotl(x06 ^ x11, 12);
+      x01 = x01 + x06 | 0;
+      x12 = rotl(x12 ^ x01, 8);
+      x11 = x11 + x12 | 0;
+      x06 = rotl(x06 ^ x11, 7);
+      x02 = x02 + x07 | 0;
+      x13 = rotl(x13 ^ x02, 16);
+      x08 = x08 + x13 | 0;
+      x07 = rotl(x07 ^ x08, 12);
+      x02 = x02 + x07 | 0;
+      x13 = rotl(x13 ^ x02, 8);
+      x08 = x08 + x13 | 0;
+      x07 = rotl(x07 ^ x08, 7);
+      x03 = x03 + x04 | 0;
+      x14 = rotl(x14 ^ x03, 16);
+      x09 = x09 + x14 | 0;
+      x04 = rotl(x04 ^ x09, 12);
+      x03 = x03 + x04 | 0;
+      x14 = rotl(x14 ^ x03, 8);
+      x09 = x09 + x14 | 0;
+      x04 = rotl(x04 ^ x09, 7);
+    }
+    let oi = 0;
+    out[oi++] = y00 + x00 | 0;
+    out[oi++] = y01 + x01 | 0;
+    out[oi++] = y02 + x02 | 0;
+    out[oi++] = y03 + x03 | 0;
+    out[oi++] = y04 + x04 | 0;
+    out[oi++] = y05 + x05 | 0;
+    out[oi++] = y06 + x06 | 0;
+    out[oi++] = y07 + x07 | 0;
+    out[oi++] = y08 + x08 | 0;
+    out[oi++] = y09 + x09 | 0;
+    out[oi++] = y10 + x10 | 0;
+    out[oi++] = y11 + x11 | 0;
+    out[oi++] = y12 + x12 | 0;
+    out[oi++] = y13 + x13 | 0;
+    out[oi++] = y14 + x14 | 0;
+    out[oi++] = y15 + x15 | 0;
+  }
+  function hchacha(s, k, i, out) {
+    let x00 = s[0], x01 = s[1], x02 = s[2], x03 = s[3], x04 = k[0], x05 = k[1], x06 = k[2], x07 = k[3], x08 = k[4], x09 = k[5], x10 = k[6], x11 = k[7], x12 = i[0], x13 = i[1], x14 = i[2], x15 = i[3];
+    for (let r = 0; r < 20; r += 2) {
+      x00 = x00 + x04 | 0;
+      x12 = rotl(x12 ^ x00, 16);
+      x08 = x08 + x12 | 0;
+      x04 = rotl(x04 ^ x08, 12);
+      x00 = x00 + x04 | 0;
+      x12 = rotl(x12 ^ x00, 8);
+      x08 = x08 + x12 | 0;
+      x04 = rotl(x04 ^ x08, 7);
+      x01 = x01 + x05 | 0;
+      x13 = rotl(x13 ^ x01, 16);
+      x09 = x09 + x13 | 0;
+      x05 = rotl(x05 ^ x09, 12);
+      x01 = x01 + x05 | 0;
+      x13 = rotl(x13 ^ x01, 8);
+      x09 = x09 + x13 | 0;
+      x05 = rotl(x05 ^ x09, 7);
+      x02 = x02 + x06 | 0;
+      x14 = rotl(x14 ^ x02, 16);
+      x10 = x10 + x14 | 0;
+      x06 = rotl(x06 ^ x10, 12);
+      x02 = x02 + x06 | 0;
+      x14 = rotl(x14 ^ x02, 8);
+      x10 = x10 + x14 | 0;
+      x06 = rotl(x06 ^ x10, 7);
+      x03 = x03 + x07 | 0;
+      x15 = rotl(x15 ^ x03, 16);
+      x11 = x11 + x15 | 0;
+      x07 = rotl(x07 ^ x11, 12);
+      x03 = x03 + x07 | 0;
+      x15 = rotl(x15 ^ x03, 8);
+      x11 = x11 + x15 | 0;
+      x07 = rotl(x07 ^ x11, 7);
+      x00 = x00 + x05 | 0;
+      x15 = rotl(x15 ^ x00, 16);
+      x10 = x10 + x15 | 0;
+      x05 = rotl(x05 ^ x10, 12);
+      x00 = x00 + x05 | 0;
+      x15 = rotl(x15 ^ x00, 8);
+      x10 = x10 + x15 | 0;
+      x05 = rotl(x05 ^ x10, 7);
+      x01 = x01 + x06 | 0;
+      x12 = rotl(x12 ^ x01, 16);
+      x11 = x11 + x12 | 0;
+      x06 = rotl(x06 ^ x11, 12);
+      x01 = x01 + x06 | 0;
+      x12 = rotl(x12 ^ x01, 8);
+      x11 = x11 + x12 | 0;
+      x06 = rotl(x06 ^ x11, 7);
+      x02 = x02 + x07 | 0;
+      x13 = rotl(x13 ^ x02, 16);
+      x08 = x08 + x13 | 0;
+      x07 = rotl(x07 ^ x08, 12);
+      x02 = x02 + x07 | 0;
+      x13 = rotl(x13 ^ x02, 8);
+      x08 = x08 + x13 | 0;
+      x07 = rotl(x07 ^ x08, 7);
+      x03 = x03 + x04 | 0;
+      x14 = rotl(x14 ^ x03, 16);
+      x09 = x09 + x14 | 0;
+      x04 = rotl(x04 ^ x09, 12);
+      x03 = x03 + x04 | 0;
+      x14 = rotl(x14 ^ x03, 8);
+      x09 = x09 + x14 | 0;
+      x04 = rotl(x04 ^ x09, 7);
+    }
+    let oi = 0;
+    out[oi++] = x00;
+    out[oi++] = x01;
+    out[oi++] = x02;
+    out[oi++] = x03;
+    out[oi++] = x12;
+    out[oi++] = x13;
+    out[oi++] = x14;
+    out[oi++] = x15;
+  }
+  function computeTag2(fn, key, nonce, ciphertext, AAD) {
+    if (AAD !== void 0)
+      abytes3(AAD, void 0, "AAD");
+    const authKey = fn(key, nonce, ZEROS322);
+    const lengths = u64Lengths(ciphertext.length, AAD ? AAD.length : 0, true);
+    const h = poly1305.create(authKey);
+    if (AAD)
+      updatePadded(h, AAD);
+    updatePadded(h, ciphertext);
+    h.update(lengths);
+    const res = h.digest();
+    clean3(authKey, lengths);
+    return res;
+  }
+  var chacha20orig, chacha20, xchacha20, chacha8, chacha12, ZEROS162, updatePadded, ZEROS322, _poly1305_aead, chacha20poly1305, xchacha20poly1305, rngChacha20, rngChacha8;
+  var init_chacha = __esm({
+    "node_modules/@noble/ciphers/chacha.js"() {
+      init_arx();
+      init_poly1305();
+      init_utils3();
+      chacha20orig = /* @__PURE__ */ createCipher(chachaCore, {
+        counterRight: false,
+        counterLength: 8,
+        allowShortKeys: true
+      });
+      chacha20 = /* @__PURE__ */ createCipher(chachaCore, {
+        counterRight: false,
+        counterLength: 4,
+        allowShortKeys: false
+      });
+      xchacha20 = /* @__PURE__ */ createCipher(chachaCore, {
+        counterRight: false,
+        counterLength: 8,
+        extendNonceFn: hchacha,
+        allowShortKeys: false
+      });
+      chacha8 = /* @__PURE__ */ createCipher(chachaCore, {
+        counterRight: false,
+        counterLength: 4,
+        rounds: 8
+      });
+      chacha12 = /* @__PURE__ */ createCipher(chachaCore, {
+        counterRight: false,
+        counterLength: 4,
+        rounds: 12
+      });
+      ZEROS162 = /* @__PURE__ */ new Uint8Array(16);
+      updatePadded = (h, msg) => {
+        h.update(msg);
+        const leftover = msg.length % 16;
+        if (leftover)
+          h.update(ZEROS162.subarray(leftover));
+      };
+      ZEROS322 = /* @__PURE__ */ new Uint8Array(32);
+      _poly1305_aead = (xorStream) => (key, nonce, AAD) => {
+        const tagLength = 16;
+        return {
+          encrypt(plaintext, output) {
+            const plength = plaintext.length;
+            output = getOutput(plength + tagLength, output, false);
+            output.set(plaintext);
+            const oPlain = output.subarray(0, -tagLength);
+            xorStream(key, nonce, oPlain, oPlain, 1);
+            const tag = computeTag2(xorStream, key, nonce, oPlain, AAD);
+            output.set(tag, plength);
+            clean3(tag);
+            return output;
+          },
+          decrypt(ciphertext, output) {
+            output = getOutput(ciphertext.length - tagLength, output, false);
+            const data = ciphertext.subarray(0, -tagLength);
+            const passedTag = ciphertext.subarray(-tagLength);
+            const tag = computeTag2(xorStream, key, nonce, data, AAD);
+            if (!equalBytes2(passedTag, tag))
+              throw new Error("invalid tag");
+            output.set(ciphertext.subarray(0, -tagLength));
+            xorStream(key, nonce, output, output, 1);
+            clean3(tag);
+            return output;
+          }
+        };
+      };
+      chacha20poly1305 = /* @__PURE__ */ wrapCipher({ blockSize: 64, nonceLength: 12, tagLength: 16 }, _poly1305_aead(chacha20));
+      xchacha20poly1305 = /* @__PURE__ */ wrapCipher({ blockSize: 64, nonceLength: 24, tagLength: 16 }, _poly1305_aead(xchacha20));
+      rngChacha20 = /* @__PURE__ */ createPRG(chacha20orig, 64, 32, 8);
+      rngChacha8 = /* @__PURE__ */ createPRG(chacha8, 64, 32, 12);
+    }
+  });
+
+  // src/app.tsx
+  var import_mithril8 = __toESM(require_mithril(), 1);
+
+  // src/view/main.tsx
+  var import_mithril6 = __toESM(require_mithril(), 1);
+  var import_mithril7 = __toESM(require_mithril(), 1);
+
+  // src/view/newConversation.tsx
+  var import_mithril4 = __toESM(require_mithril(), 1);
+
+  // src/activitypub/network.ts
+  async function load(value) {
+    if (typeof value != "string") {
+      return value;
+    }
+    const response = await fetch(value, {
+      headers: {
+        Accept: 'application/activity+json, application/ld+json; profile="https://www.w3.org/ns/activitystreams"'
+      }
+    });
+    if (!response.ok) {
+      throw new Error(`Unable to fetch ${value}: ${response.status} ${response.statusText}`);
+    }
+    return response.json();
+  }
+
+  // src/activitypub/actor.ts
+  async function loadActor(actorID) {
+    return await load(actorID);
+  }
+
+  // src/view/newConversation.tsx
+  var import_mithril5 = __toESM(require_mithril(), 1);
+
+  // src/view/modal.tsx
+  var import_mithril = __toESM(require_mithril(), 1);
+
+  // src/view/utils.ts
+  function keyCode(evt) {
+    var result = "";
+    if (window.navigator.userAgent.indexOf("Macintosh") >= 0) {
+      if (evt.metaKey) {
+        result += "Ctrl+";
+      }
+    } else {
+      if (evt.ctrlKey) {
+        result += "Ctrl+";
+      }
+    }
+    if (evt.shiftKey) {
+      result += "Shift+";
+    }
+    result += evt.key;
+    return result;
+  }
+  function getFocusElements(node) {
+    const focusElements = node.querySelectorAll("[tabIndex]");
+    if (focusElements.length == 0) {
+      return [void 0, void 0];
+    }
+    const firstElement = focusElements[0];
+    const lastElement = focusElements[focusElements.length - 1];
+    return [firstElement, lastElement];
+  }
+
+  // src/view/modal.tsx
+  var Modal = class {
+    oncreate(vnode) {
+      requestAnimationFrame(() => {
+        document.getElementById("modal")?.classList.add("ready");
+        const firstElement = vnode.dom.querySelector("[tabIndex]");
+        firstElement?.focus();
+        import_mithril.default.redraw();
       });
     }
-    if (blocked) {
-      request2.addEventListener("blocked", (event) => blocked(
-        // Casting due to https://github.com/microsoft/TypeScript-DOM-lib-generator/pull/1405
-        event.oldVersion,
-        event.newVersion,
-        event
-      ));
+    view(vnode) {
+      return /* @__PURE__ */ (0, import_mithril.default)("div", { id: "modal", onkeydown: (event) => this.onkeydown(event, vnode) }, /* @__PURE__ */ (0, import_mithril.default)("div", { id: "modal-underlay", onclick: vnode.attrs.close }), /* @__PURE__ */ (0, import_mithril.default)("div", { id: "modal-window" }, vnode.children));
     }
-    openPromise.then((db) => {
-      if (terminated)
-        db.addEventListener("close", () => terminated());
-      if (blocking) {
-        db.addEventListener("versionchange", (event) => blocking(event.oldVersion, event.newVersion, event));
+    onkeydown(event, vnode) {
+      switch (keyCode(event)) {
+        // Trap tab focus
+        case "Tab": {
+          const [firstElement, lastElement] = getFocusElements(vnode.dom);
+          if (document.activeElement == lastElement) {
+            firstElement?.focus();
+            event.stopPropagation();
+            event.preventDefault();
+          }
+          return;
+        }
+        // Trap tab focus
+        case "Shift+Tab": {
+          const [firstElement, lastElement] = getFocusElements(vnode.dom);
+          if (document.activeElement == firstElement) {
+            lastElement?.focus();
+            event.stopPropagation();
+            event.preventDefault();
+          }
+          return;
+        }
+        // Close modal window
+        case "Escape": {
+          vnode.attrs.close();
+          return;
+        }
       }
-    }).catch(() => {
-    });
-    return openPromise;
-  }
-  var readMethods = ["get", "getKey", "getAll", "getAllKeys", "count"];
-  var writeMethods = ["put", "add", "delete", "clear"];
-  var cachedMethods = /* @__PURE__ */ new Map();
-  function getMethod(target, prop) {
-    if (!(target instanceof IDBDatabase && !(prop in target) && typeof prop === "string")) {
-      return;
     }
-    if (cachedMethods.get(prop))
-      return cachedMethods.get(prop);
-    const targetFuncName = prop.replace(/FromIndex$/, "");
-    const useIndex = prop !== targetFuncName;
-    const isWrite = writeMethods.includes(targetFuncName);
-    if (
-      // Bail if the target doesn't exist on the target. Eg, getAll isn't in Edge.
-      !(targetFuncName in (useIndex ? IDBIndex : IDBObjectStore).prototype) || !(isWrite || readMethods.includes(targetFuncName))
-    ) {
-      return;
+    // TODO: Need handlers for TAB, SHIFT+TAB, ESCAPE
+  };
+
+  // src/view/actorSearch.tsx
+  var import_mithril2 = __toESM(require_mithril(), 1);
+  var import_mithril3 = __toESM(require_mithril(), 1);
+  var ActorSearch = class {
+    oninit(vnode) {
+      vnode.state.search = "";
+      vnode.state.loading = false;
+      vnode.state.options = [];
+      vnode.state.highlightedOption = -1;
     }
-    const method = async function(storeName, ...args) {
-      const tx = this.transaction(storeName, isWrite ? "readwrite" : "readonly");
-      let target2 = tx.store;
-      if (useIndex)
-        target2 = target2.index(args.shift());
-      return (await Promise.all([
-        target2[targetFuncName](...args),
-        isWrite && tx.done
-      ]))[0];
-    };
-    cachedMethods.set(prop, method);
-    return method;
-  }
-  replaceTraps((oldTraps) => ({
-    ...oldTraps,
-    get: (target, prop, receiver) => getMethod(target, prop) || oldTraps.get(target, prop, receiver),
-    has: (target, prop) => !!getMethod(target, prop) || oldTraps.has(target, prop)
-  }));
-  var advanceMethodProps = ["continue", "continuePrimaryKey", "advance"];
-  var methodMap = {};
-  var advanceResults = /* @__PURE__ */ new WeakMap();
-  var ittrProxiedCursorToOriginalProxy = /* @__PURE__ */ new WeakMap();
-  var cursorIteratorTraps = {
-    get(target, prop) {
-      if (!advanceMethodProps.includes(prop))
-        return target[prop];
-      let cachedFunc = methodMap[prop];
-      if (!cachedFunc) {
-        cachedFunc = methodMap[prop] = function(...args) {
-          advanceResults.set(this, ittrProxiedCursorToOriginalProxy.get(this)[prop](...args));
-        };
+    view(vnode) {
+      return /* @__PURE__ */ (0, import_mithril2.default)("div", { class: "autocomplete" }, /* @__PURE__ */ (0, import_mithril2.default)("div", { class: "input" }, vnode.attrs.value.map((actor, index) => {
+        const isSecure = actor.keyPackages != "";
+        return /* @__PURE__ */ (0, import_mithril2.default)("span", { class: isSecure ? "tag blue" : "tag gray" }, /* @__PURE__ */ (0, import_mithril2.default)("span", { style: "display:inline-flex; align-items:center; margin-right:8px;" }, /* @__PURE__ */ (0, import_mithril2.default)("img", { src: actor.icon, class: "circle", style: "height:1em; margin:0px 4px;" }), /* @__PURE__ */ (0, import_mithril2.default)("span", { class: "bold" }, actor.name), "\xA0", isSecure ? /* @__PURE__ */ (0, import_mithril2.default)("i", { class: "bi bi-lock-fill" }) : null), /* @__PURE__ */ (0, import_mithril2.default)("i", { class: "clickable bi bi-x-lg", onclick: () => this.removeActor(vnode, index) }));
+      }), /* @__PURE__ */ (0, import_mithril2.default)(
+        "input",
+        {
+          id: "idActorSearch",
+          name: vnode.attrs.name,
+          class: "padding-none",
+          style: "min-width:200px;",
+          value: vnode.state.search,
+          tabindex: "0",
+          onkeydown: async (event) => {
+            this.onkeydown(event, vnode);
+          },
+          onkeypress: async (event) => {
+            this.onkeypress(event, vnode);
+          },
+          oninput: async (event) => {
+            this.oninput(event, vnode);
+          },
+          onfocus: () => this.loadOptions(vnode),
+          onblur: () => this.onblur(vnode)
+        }
+      )), vnode.state.options.length ? /* @__PURE__ */ (0, import_mithril2.default)("div", { class: "options" }, /* @__PURE__ */ (0, import_mithril2.default)("div", { role: "menu", class: "menu" }, vnode.state.options.map((actor, index) => {
+        const isSecure = actor.keyPackages != "";
+        return /* @__PURE__ */ (0, import_mithril2.default)(
+          "div",
+          {
+            role: "menuitem",
+            class: "flex-row padding-xs",
+            onmousedown: () => this.selectActor(vnode, index),
+            "aria-selected": index == vnode.state.highlightedOption ? "true" : null
+          },
+          /* @__PURE__ */ (0, import_mithril2.default)("div", { class: "width-32" }, /* @__PURE__ */ (0, import_mithril2.default)("img", { src: actor.icon, class: "width-32 circle" })),
+          /* @__PURE__ */ (0, import_mithril2.default)("div", null, /* @__PURE__ */ (0, import_mithril2.default)("div", null, actor.name, " \xA0", isSecure ? /* @__PURE__ */ (0, import_mithril2.default)("i", { class: "text-xs text-light-gray bi bi-lock-fill" }) : null), /* @__PURE__ */ (0, import_mithril2.default)("div", { class: "text-xs text-light-gray" }, actor.username))
+        );
+      }))) : null);
+    }
+    async onkeydown(event, vnode) {
+      switch (keyCode(event)) {
+        case "Backspace":
+          const target = event.target;
+          if (target?.selectionStart == 0) {
+            this.removeActor(vnode, vnode.attrs.value.length - 1);
+            event.stopPropagation();
+          }
+          return;
+        case "ArrowDown":
+          vnode.state.highlightedOption = Math.min(vnode.state.highlightedOption + 1, vnode.state.options.length - 1);
+          return;
+        case "ArrowUp":
+          vnode.state.highlightedOption = Math.max(vnode.state.highlightedOption - 1, 0);
+          return;
+        case "Enter":
+          this.selectActor(vnode, vnode.state.highlightedOption);
+          return;
       }
-      return cachedFunc;
+    }
+    // These event handlers prevent default behavior for certain control keys
+    async onkeypress(event, vnode) {
+      switch (keyCode(event)) {
+        case "ArrowDown":
+        case "ArrowUp":
+        case "Enter":
+          event.stopPropagation();
+          event.preventDefault();
+          return;
+        case "Escape":
+          if (vnode.state.options.length > 0) {
+            vnode.state.options = [];
+          }
+          event.stopPropagation();
+          event.preventDefault();
+          return;
+      }
+    }
+    async oninput(event, vnode) {
+      const target = event.target;
+      vnode.state.search = target.value;
+      this.loadOptions(vnode);
+    }
+    async loadOptions(vnode) {
+      if (vnode.state.search == "") {
+        vnode.state.options = [];
+        vnode.state.highlightedOption = -1;
+        return;
+      }
+      vnode.state.loading = true;
+      vnode.state.options = await import_mithril2.default.request(vnode.attrs.endpoint + "?q=" + vnode.state.search);
+      vnode.state.loading = false;
+      vnode.state.highlightedOption = -1;
+    }
+    onblur(vnode) {
+      requestAnimationFrame(() => {
+        vnode.state.options = [];
+        vnode.state.highlightedOption = -1;
+        import_mithril2.default.redraw();
+      });
+    }
+    selectActor(vnode, index) {
+      const selected = vnode.state.options[index];
+      if (selected == null) {
+        return;
+      }
+      vnode.attrs.value.push(selected);
+      vnode.state.options = [];
+      vnode.state.search = "";
+      vnode.attrs.onselect(vnode.attrs.value);
+    }
+    removeActor(vnode, index) {
+      vnode.attrs.value.splice(index, 1);
+      vnode.attrs.onselect(vnode.attrs.value);
+      requestAnimationFrame(
+        () => document.getElementById("idActorSearch")?.focus()
+      );
     }
   };
-  async function* iterate(...args) {
-    let cursor = this;
-    if (!(cursor instanceof IDBCursor)) {
-      cursor = await cursor.openCursor(...args);
-    }
-    if (!cursor)
-      return;
-    cursor = cursor;
-    const proxiedCursor = new Proxy(cursor, cursorIteratorTraps);
-    ittrProxiedCursorToOriginalProxy.set(proxiedCursor, cursor);
-    reverseTransformCache.set(proxiedCursor, unwrap(cursor));
-    while (cursor) {
-      yield proxiedCursor;
-      cursor = await (advanceResults.get(proxiedCursor) || cursor.continue());
-      advanceResults.delete(proxiedCursor);
-    }
-  }
-  function isIteratorProp(target, prop) {
-    return prop === Symbol.asyncIterator && instanceOfAny(target, [IDBIndex, IDBObjectStore, IDBCursor]) || prop === "iterate" && instanceOfAny(target, [IDBIndex, IDBObjectStore]);
-  }
-  replaceTraps((oldTraps) => ({
-    ...oldTraps,
-    get(target, prop, receiver) {
-      if (isIteratorProp(target, prop))
-        return iterate;
-      return oldTraps.get(target, prop, receiver);
-    },
-    has(target, prop) {
-      return isIteratorProp(target, prop) || oldTraps.has(target, prop);
-    }
-  }));
 
-  // src/model/keyPackage.ts
-  function NewAPKeyPackage(actorID, publicPackage) {
-    return {
-      id: "",
-      // This will be appened by the server
-      // type: ["Object", "KeyPackage"],
-      type: "KeyPackage",
-      to: "as:Public",
-      attributedTo: actorID,
-      mediaType: "message/mls",
-      encoding: "base64",
-      summary: "",
-      generator: "Emissary MLS",
-      content: btoa(publicPackage.signature.toString())
-    };
-  }
+  // src/view/newConversation.tsx
+  var NewConversation = class {
+    //
+    oninit(vnode) {
+      vnode.state.actors = [];
+      vnode.state.message = "";
+    }
+    view(vnode) {
+      if (vnode.attrs.modal != "NEW-CONVERSATION") {
+        return null;
+      }
+      return /* @__PURE__ */ (0, import_mithril4.default)(Modal, { close: vnode.attrs.close }, /* @__PURE__ */ (0, import_mithril4.default)("form", { onsubmit: (event) => this.onsubmit(event, vnode) }, /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "layout layout-vertical" }, this.header(vnode), /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "layout-elements" }, /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "layout-element" }, /* @__PURE__ */ (0, import_mithril4.default)("label", { for: "" }, "Participants"), /* @__PURE__ */ (0, import_mithril4.default)(
+        ActorSearch,
+        {
+          name: "actorIds",
+          value: vnode.state.actors,
+          endpoint: "/.api/actors",
+          onselect: (actors) => this.selectActors(vnode, actors)
+        }
+      )), /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "layout-element" }, /* @__PURE__ */ (0, import_mithril4.default)("label", null, "Message"), /* @__PURE__ */ (0, import_mithril4.default)(
+        "textarea",
+        {
+          rows: "8",
+          onchange: (event) => this.setMessage(vnode, event)
+        }
+      ), /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "text-sm text-gray" }, this.description(vnode))))), /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "margin-top" }, this.submitButton(vnode), /* @__PURE__ */ (0, import_mithril4.default)("button", { onclick: vnode.attrs.close, tabIndex: "0" }, "Close"))));
+    }
+    header(vnode) {
+      if (vnode.state.actors.length == 0) {
+        return /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "layout-title" }, /* @__PURE__ */ (0, import_mithril4.default)("i", { class: "bi bi-plus" }), " Start a Conversation");
+      }
+      if (vnode.state.encrypted) {
+        return /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "layout-title" }, /* @__PURE__ */ (0, import_mithril4.default)("i", { class: "bi bi-shield-lock" }), " Encrypted Message");
+      }
+      return /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "layout-title" }, /* @__PURE__ */ (0, import_mithril4.default)("i", { class: "bi bi-envelope-open" }), " Direct Message");
+    }
+    description(vnode) {
+      if (vnode.state.actors.length == 0) {
+        return /* @__PURE__ */ (0, import_mithril4.default)("span", null);
+      }
+      if (vnode.state.encrypted) {
+        return /* @__PURE__ */ (0, import_mithril4.default)("div", null, "This will be encrypted before it leaves this device, and will not be readable by anyone other than the recipients.");
+      }
+      return /* @__PURE__ */ (0, import_mithril4.default)("div", null, /* @__PURE__ */ (0, import_mithril4.default)("i", { class: "bi bi-exclamation-triangle-fill" }), " One or more of your recipients cannot receive encrypted messages. Others on the Internet may be able to read this message.");
+    }
+    submitButton(vnode) {
+      if (vnode.state.actors.length == 0) {
+        return /* @__PURE__ */ (0, import_mithril4.default)("button", { class: "primary", disabled: true }, "Start a Conversation");
+      }
+      if (vnode.state.encrypted) {
+        return /* @__PURE__ */ (0, import_mithril4.default)("button", { class: "primary", tabindex: "0" }, /* @__PURE__ */ (0, import_mithril4.default)("i", { class: "bi bi-lock" }), " Send Encrypted");
+      }
+      return /* @__PURE__ */ (0, import_mithril4.default)("button", { class: "selected", disabled: true }, "Send Direct Message");
+    }
+    selectActors(vnode, actors) {
+      vnode.state.actors = actors;
+      if (actors.some((actor) => actor.keyPackages == "")) {
+        vnode.state.encrypted = false;
+      } else {
+        vnode.state.encrypted = true;
+      }
+    }
+    setMessage(vnode, event) {
+      const target = event.target;
+      vnode.state.message = target.value;
+    }
+    async onsubmit(event, vnode) {
+      const participants = vnode.state.actors.map((actor) => actor.id);
+      const controller = vnode.attrs.controller;
+      event.preventDefault();
+      event.stopPropagation();
+      if (vnode.state.encrypted) {
+        await controller.newGroupAndMessage(participants, vnode.state.message);
+        return this.close(vnode);
+      }
+      await controller.newConversation(participants, vnode.state.message);
+      return this.close(vnode);
+    }
+    close(vnode) {
+      vnode.state.actors = [];
+      vnode.state.message = "";
+      vnode.attrs.close();
+    }
+  };
+
+  // src/view/main.tsx
+  var Main = class {
+    oninit(vnode) {
+      vnode.state.modal = "";
+    }
+    view(vnode) {
+      return /* @__PURE__ */ (0, import_mithril6.default)("div", { class: "flex-row flex-grow" }, /* @__PURE__ */ (0, import_mithril6.default)(
+        "div",
+        {
+          class: "table no-top-border width-50% md:width-40% lg:width-30% flex-shrink-0 scroll-vertical",
+          style: "background-color:var(--gray10);"
+        },
+        /* @__PURE__ */ (0, import_mithril6.default)(
+          "div",
+          {
+            role: "button",
+            class: "link conversation-selector padding flex-row flex-align-center",
+            onclick: () => {
+              vnode.state.modal = "NEW-CONVERSATION";
+            }
+          },
+          /* @__PURE__ */ (0, import_mithril6.default)(
+            "div",
+            {
+              class: "circle width-32 flex-shrink-0 flex-center margin-none",
+              style: "font-size:24px;background-color:var(--blue50);color:var(--white);"
+            },
+            /* @__PURE__ */ (0, import_mithril6.default)("i", { class: "bi bi-plus" })
+          ),
+          /* @__PURE__ */ (0, import_mithril6.default)("div", { class: "ellipsis-block", style: "max-height:3em;" }, "New Conversation")
+        ),
+        /* @__PURE__ */ (0, import_mithril6.default)("div", { role: "button", class: "flex-row flex-align-center padding hover-trigger" }, /* @__PURE__ */ (0, import_mithril6.default)("img", { class: "circle width-32" }), /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "flex-grow nowrap ellipsis" }, "Direct Message 1"), /* @__PURE__ */ (0, import_mithril6.default)("button", { class: "text-xs hover-show" }, "\u22EF")),
+        /* @__PURE__ */ (0, import_mithril6.default)("div", { role: "button", class: "flex-row flex-align-center padding hover-trigger" }, /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "width-32 circle flex-center" }, /* @__PURE__ */ (0, import_mithril6.default)("i", { class: "bi bi-lock-fill" })), /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "flex-grow nowrap ellipsis" }, "Encrypted Conversation"), /* @__PURE__ */ (0, import_mithril6.default)("button", { class: "text-xs hover-show" }, "\u22EF")),
+        /* @__PURE__ */ (0, import_mithril6.default)("div", { role: "button", class: "flex-row flex-align-center padding hover-trigger" }, /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "width-32 circle flex-center" }, /* @__PURE__ */ (0, import_mithril6.default)("i", { class: "bi bi-lock-fill" })), /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "flex-grow nowrap ellipsis" }, "Encrypted Conversation"), /* @__PURE__ */ (0, import_mithril6.default)("button", { class: "text-xs hover-show" }, "\u22EF"))
+      ), /* @__PURE__ */ (0, import_mithril6.default)("div", { class: "width-75%" }, "Here be details..."), /* @__PURE__ */ (0, import_mithril6.default)(
+        NewConversation,
+        {
+          controller: vnode.attrs.controller,
+          modal: vnode.state.modal,
+          close: () => this.closeModal(vnode)
+        }
+      ));
+    }
+    // Global Modal Snowball
+    closeModal(vnode) {
+      document.getElementById("modal")?.classList.remove("ready");
+      window.setTimeout(() => {
+        vnode.state.modal = "";
+        import_mithril6.default.redraw();
+      }, 240);
+    }
+  };
 
   // node_modules/ts-mls/dist/codec/tlsEncoder.js
   function encode(enc) {
@@ -7765,11 +7849,20 @@
   var encodeDefaultExtensionType = encode(defaultExtensionTypeEncoder);
   var decodeDefaultExtensionType = mapDecoderOption(decodeUint16, enumNumberToKey(defaultExtensionTypes));
 
+  // node_modules/ts-mls/dist/incomingMessageAction.js
+  var acceptAll = () => "accept";
+
   // node_modules/ts-mls/dist/mlsError.js
   var MlsError = class extends Error {
     constructor(message) {
       super(message);
       this.name = "MlsError";
+    }
+  };
+  var ValidationError = class extends MlsError {
+    constructor(message) {
+      super(message);
+      this.name = "ValidationError";
     }
   };
   var CodecError = class extends MlsError {
@@ -7778,10 +7871,22 @@
       this.name = "CodecError";
     }
   };
+  var UsageError = class extends MlsError {
+    constructor(message) {
+      super(message);
+      this.name = "UsageError";
+    }
+  };
   var DependencyError = class extends MlsError {
     constructor(message) {
       super(message);
       this.name = "DependencyError";
+    }
+  };
+  var CryptoVerificationError = class extends MlsError {
+    constructor(message) {
+      super(message);
+      this.name = "CryptoVerificationError";
     }
   };
   var CryptoError = class extends MlsError {
@@ -7922,6 +8027,17 @@
     };
   }
 
+  // node_modules/ts-mls/dist/util/constantTimeCompare.js
+  function constantTimeEqual(a, b) {
+    if (a.length !== b.length)
+      return false;
+    let result = 0;
+    for (let i = 0; i < a.length; i++) {
+      result |= a[i] ^ b[i];
+    }
+    return result === 0;
+  }
+
   // node_modules/ts-mls/dist/extension.js
   var extensionTypeEncoder = (t) => typeof t === "number" ? uint16Encoder(t) : defaultExtensionTypeEncoder(t);
   var encodeExtensionType = encode(extensionTypeEncoder);
@@ -7929,6 +8045,23 @@
   var extensionEncoder = contramapBufferEncoders([extensionTypeEncoder, varLenDataEncoder], (e) => [e.extensionType, e.extensionData]);
   var encodeExtension = encode(extensionEncoder);
   var decodeExtension = mapDecoders([decodeExtensionType, decodeVarLenData], (extensionType, extensionData) => ({ extensionType, extensionData }));
+  function extensionEqual(a, b) {
+    return a.extensionType === b.extensionType && constantTimeEqual(a.extensionData, b.extensionData);
+  }
+  function extensionsEqual(a, b) {
+    if (a.length !== b.length)
+      return false;
+    return a.every((val, i) => extensionEqual(val, b[i]));
+  }
+  function extensionsSupportedByCapabilities(requiredExtensions, capabilities) {
+    return requiredExtensions.filter((ex) => !isDefaultExtension(ex.extensionType)).every((ex) => capabilities.extensions.includes(extensionTypeToNumber(ex.extensionType)));
+  }
+  function isDefaultExtension(t) {
+    return typeof t !== "number";
+  }
+  function extensionTypeToNumber(t) {
+    return typeof t === "number" ? t : defaultExtensionTypes[t];
+  }
 
   // node_modules/ts-mls/dist/credentialType.js
   var credentialTypes = {
@@ -7975,6 +8108,16 @@
   var externalSenderEncoder = contramapBufferEncoders([varLenDataEncoder, credentialEncoder], (e) => [e.signaturePublicKey, e.credential]);
   var encodeExternalSender = encode(externalSenderEncoder);
   var decodeExternalSender = mapDecoders([decodeVarLenData, decodeCredential], (signaturePublicKey, credential) => ({ signaturePublicKey, credential }));
+
+  // node_modules/ts-mls/dist/crypto/hash.js
+  function refhash(label, value, h) {
+    return h.digest(encodeRefHash(label, value));
+  }
+  function encodeRefHash(label, value) {
+    const labelBytes = new TextEncoder().encode(label);
+    const enc = composeBufferEncoders([varLenDataEncoder, varLenDataEncoder]);
+    return encode(enc)([labelBytes, value]);
+  }
 
   // node_modules/ts-mls/dist/codec/optional.js
   function optionalEncoder(encodeT) {
@@ -8240,6 +8383,12 @@
       content
     ]));
   }
+  async function verifyWithLabel(publicKey, label, content, signature, s) {
+    return s.verify(publicKey, encode(composeBufferEncoders([varLenDataEncoder, varLenDataEncoder]))([
+      new TextEncoder().encode(`MLS 1.0 ${label}`),
+      content
+    ]), signature);
+  }
 
   // node_modules/ts-mls/dist/protocolVersion.js
   var protocolVersions = {
@@ -8366,11 +8515,26 @@
   var decodeLeafNodeKeyPackage = mapDecoderOption(decodeLeafNode, (ln) => ln.leafNodeSource === "key_package" ? ln : void 0);
   var decodeLeafNodeCommit = mapDecoderOption(decodeLeafNode, (ln) => ln.leafNodeSource === "commit" ? ln : void 0);
   var decodeLeafNodeUpdate = mapDecoderOption(decodeLeafNode, (ln) => ln.leafNodeSource === "update" ? ln : void 0);
+  function toTbs(leafNode, groupId, leafIndex) {
+    return { ...leafNode, info: { leafNodeSource: leafNode.leafNodeSource, groupId, leafIndex } };
+  }
+  async function signLeafNodeCommit(tbs, signaturePrivateKey, sig) {
+    return {
+      ...tbs,
+      signature: await signWithLabel(signaturePrivateKey, "LeafNodeTBS", encode(leafNodeTBSEncoder)(tbs), sig)
+    };
+  }
   async function signLeafNodeKeyPackage(tbs, signaturePrivateKey, sig) {
     return {
       ...tbs,
       signature: await signWithLabel(signaturePrivateKey, "LeafNodeTBS", encode(leafNodeTBSEncoder)(tbs), sig)
     };
+  }
+  function verifyLeafNodeSignature(leaf, groupId, leafIndex, sig) {
+    return verifyWithLabel(leaf.signaturePublicKey, "LeafNodeTBS", encode(leafNodeTBSEncoder)(toTbs(leaf, groupId, leafIndex)), leaf.signature, sig);
+  }
+  function verifyLeafNodeSignatureKeyPackage(leaf, sig) {
+    return verifyWithLabel(leaf.signaturePublicKey, "LeafNodeTBS", encode(leafNodeTBSEncoder)({ ...leaf, info: { leafNodeSource: leaf.leafNodeSource } }), leaf.signature, sig);
   }
 
   // node_modules/ts-mls/dist/keyPackage.js
@@ -8404,6 +8568,12 @@
   async function signKeyPackage(tbs, signKey, s) {
     return { ...tbs, signature: await signWithLabel(signKey, "KeyPackageTBS", encode(keyPackageTBSEncoder)(tbs), s) };
   }
+  async function verifyKeyPackage(kp, s) {
+    return verifyWithLabel(kp.leafNode.signaturePublicKey, "KeyPackageTBS", encode(keyPackageTBSEncoder)(kp), kp.signature, s);
+  }
+  function makeKeyPackageRef(value, h) {
+    return refhash("MLS 1.0 KeyPackage Reference", encode(keyPackageEncoder)(value), h);
+  }
   async function generateKeyPackageWithKey(credential, capabilities, lifetime, extensions, signatrueKeyPair, cs, leafNodeExtensions) {
     const initKeys = await cs.hpke.generateKeyPair();
     const hpkeKeys = await cs.hpke.generateKeyPair();
@@ -8434,6 +8604,21 @@
   async function generateKeyPackage(credential, capabilities, lifetime, extensions, cs, leafNodeExtensions) {
     const sigKeys = await cs.signature.keygen();
     return generateKeyPackageWithKey(credential, capabilities, lifetime, extensions, sigKeys, cs, leafNodeExtensions);
+  }
+
+  // node_modules/ts-mls/dist/crypto/kdf.js
+  function expandWithLabel(secret, label, context, length, kdf) {
+    return kdf.expand(secret, encode(composeBufferEncoders([uint16Encoder, varLenDataEncoder, varLenDataEncoder]))([
+      length,
+      new TextEncoder().encode(`MLS 1.0 ${label}`),
+      context
+    ]), length);
+  }
+  async function deriveSecret(secret, label, kdf) {
+    return expandWithLabel(secret, label, new Uint8Array(), kdf.size, kdf);
+  }
+  async function deriveTreeSecret(secret, label, generation, length, kdf) {
+    return expandWithLabel(secret, label, encode(uint32Encoder)(generation), length, kdf);
   }
 
   // node_modules/ts-mls/dist/presharedkey.js
@@ -8486,6 +8671,10 @@
   var pskLabelEncoder = contramapBufferEncoders([pskIdEncoder, uint16Encoder, uint16Encoder], (label) => [label.id, label.index, label.count]);
   var encodePskLabel = encode(pskLabelEncoder);
   var decodePskLabel = mapDecoders([decodePskId, decodeUint16, decodeUint16], (id, index, count) => ({ id, index, count }));
+  async function updatePskSecret(secret, pskId, psk, index, count, impl) {
+    const zeroes = new Uint8Array(impl.kdf.size);
+    return impl.kdf.extract(await expandWithLabel(await impl.kdf.extract(zeroes, psk), "derived psk", encode(pskLabelEncoder)({ id: pskId, index, count }), impl.kdf.size, impl.kdf), secret);
+  }
 
   // node_modules/ts-mls/dist/proposal.js
   var addEncoder = contramapBufferEncoder(keyPackageEncoder, (a) => a.keyPackage);
@@ -8614,6 +8803,20 @@
     }
   });
 
+  // node_modules/ts-mls/dist/crypto/hpke.js
+  function encryptWithLabel(publicKey, label, context, plaintext, hpke) {
+    return hpke.seal(publicKey, plaintext, encode(composeBufferEncoders([varLenDataEncoder, varLenDataEncoder]))([
+      new TextEncoder().encode(`MLS 1.0 ${label}`),
+      context
+    ]), new Uint8Array());
+  }
+  function decryptWithLabel(privateKey, label, context, kemOutput, ciphertext, hpke) {
+    return hpke.open(privateKey, kemOutput, ciphertext, encode(composeBufferEncoders([varLenDataEncoder, varLenDataEncoder]))([
+      new TextEncoder().encode(`MLS 1.0 ${label}`),
+      context
+    ]));
+  }
+
   // node_modules/ts-mls/dist/groupContext.js
   var groupContextEncoder = contramapBufferEncoders([
     protocolVersionEncoder,
@@ -8650,6 +8853,15 @@
     confirmedTranscriptHash,
     extensions
   }));
+  async function extractEpochSecret(context, joinerSecret, kdf, pskSecret) {
+    const psk = pskSecret === void 0 ? new Uint8Array(kdf.size) : pskSecret;
+    const extracted = await kdf.extract(joinerSecret, psk);
+    return expandWithLabel(extracted, "epoch", encode(groupContextEncoder)(context), kdf.size, kdf);
+  }
+  async function extractJoinerSecret(context, previousInitSecret, commitSecret, kdf) {
+    const extracted = await kdf.extract(previousInitSecret, commitSecret);
+    return expandWithLabel(extracted, "joiner", encode(groupContextEncoder)(context), kdf.size, kdf);
+  }
 
   // node_modules/ts-mls/dist/nodeType.js
   var nodeTypes = {
@@ -8668,6 +8880,99 @@
     parentHash,
     unmergedLeaves
   }));
+
+  // node_modules/ts-mls/dist/treemath.js
+  function toNodeIndex(n) {
+    return n;
+  }
+  function toLeafIndex(n) {
+    return n;
+  }
+  function log2(x) {
+    if (x === 0)
+      return 0;
+    let k = 0;
+    while (x >> k > 0) {
+      k++;
+    }
+    return k - 1;
+  }
+  function level(nodeIndex) {
+    if ((nodeIndex & 1) === 0)
+      return 0;
+    let k = 0;
+    while ((nodeIndex >> k & 1) === 1) {
+      k++;
+    }
+    return k;
+  }
+  function isLeaf(nodeIndex) {
+    return nodeIndex % 2 == 0;
+  }
+  function leafToNodeIndex(leafIndex) {
+    return toNodeIndex(leafIndex * 2);
+  }
+  function nodeToLeafIndex(nodeIndex) {
+    return toLeafIndex(nodeIndex / 2);
+  }
+  function leafWidth(nodeWidth2) {
+    return nodeWidth2 == 0 ? 0 : (nodeWidth2 - 1) / 2 + 1;
+  }
+  function nodeWidth(leafWidth2) {
+    return leafWidth2 === 0 ? 0 : 2 * (leafWidth2 - 1) + 1;
+  }
+  function rootFromNodeWidth(nodeWidth2) {
+    return toNodeIndex((1 << log2(nodeWidth2)) - 1);
+  }
+  function root(leafWidth2) {
+    const w = nodeWidth(leafWidth2);
+    return rootFromNodeWidth(w);
+  }
+  function left(nodeIndex) {
+    const k = level(nodeIndex);
+    if (k === 0)
+      throw new InternalError("leaf node has no children");
+    return toNodeIndex(nodeIndex ^ 1 << k - 1);
+  }
+  function right(nodeIndex) {
+    const k = level(nodeIndex);
+    if (k === 0)
+      throw new InternalError("leaf node has no children");
+    return toNodeIndex(nodeIndex ^ 3 << k - 1);
+  }
+  function parent(nodeIndex, leafWidth2) {
+    if (nodeIndex === root(leafWidth2))
+      throw new InternalError("root node has no parent");
+    const k = level(nodeIndex);
+    const b = nodeIndex >> k + 1 & 1;
+    return toNodeIndex((nodeIndex | 1 << k) ^ b << k + 1);
+  }
+  function sibling(x, leafWidth2) {
+    const p = parent(x, leafWidth2);
+    return x < p ? right(p) : left(p);
+  }
+  function directPath(nodeIndex, leafWidth2) {
+    const r = root(leafWidth2);
+    if (nodeIndex === r)
+      return [];
+    const d = [];
+    while (nodeIndex !== r) {
+      nodeIndex = parent(nodeIndex, leafWidth2);
+      d.push(nodeIndex);
+    }
+    return d;
+  }
+  function copath(nodeIndex, leafWidth2) {
+    if (nodeIndex === root(leafWidth2))
+      return [];
+    const d = directPath(nodeIndex, leafWidth2);
+    d.unshift(nodeIndex);
+    d.pop();
+    return d.map((y) => sibling(y, leafWidth2));
+  }
+  function isAncestor(childNodeIndex, ancestor, nodeWidth2) {
+    return directPath(childNodeIndex, leafWidth(nodeWidth2)).includes(ancestor);
+  }
 
   // node_modules/ts-mls/dist/ratchetTree.js
   var nodeEncoder = (node) => {
@@ -8693,6 +8998,14 @@
         }));
     }
   });
+  function getHpkePublicKey(n) {
+    switch (n.nodeType) {
+      case "parent":
+        return n.parent.hpkePublicKey;
+      case "leaf":
+        return n.leaf.hpkePublicKey;
+    }
+  }
   function extendRatchetTree(tree) {
     const lastIndex = tree.length - 1;
     if (tree[lastIndex] === void 0) {
@@ -8722,6 +9035,172 @@
   var ratchetTreeEncoder = contramapBufferEncoder(varLenTypeEncoder(optionalEncoder(nodeEncoder)), stripBlankNodes);
   var encodeRatchetTree = encode(ratchetTreeEncoder);
   var decodeRatchetTree = mapDecoder(decodeVarLenType(decodeOptional(decodeNode)), extendRatchetTree);
+  function findBlankLeafNodeIndex(tree) {
+    const nodeIndex = tree.findIndex((node, nodeIndex2) => node === void 0 && isLeaf(toNodeIndex(nodeIndex2)));
+    if (nodeIndex < 0)
+      return void 0;
+    else
+      return toNodeIndex(nodeIndex);
+  }
+  function findBlankLeafNodeIndexOrExtend(tree) {
+    const blankLeaf = findBlankLeafNodeIndex(tree);
+    return blankLeaf === void 0 ? toNodeIndex(tree.length + 1) : blankLeaf;
+  }
+  function extendTree(tree, leafNode) {
+    const newRoot = void 0;
+    const insertedNodeIndex = toNodeIndex(tree.length + 1);
+    const newTree = [
+      ...tree,
+      newRoot,
+      { nodeType: "leaf", leaf: leafNode },
+      ...new Array(tree.length - 1)
+    ];
+    return [newTree, insertedNodeIndex];
+  }
+  function addLeafNode(tree, leafNode) {
+    const blankLeaf = findBlankLeafNodeIndex(tree);
+    if (blankLeaf === void 0) {
+      return extendTree(tree, leafNode);
+    }
+    const insertedLeafIndex = nodeToLeafIndex(blankLeaf);
+    const dp = directPath(blankLeaf, leafWidth(tree.length));
+    const copy = tree.slice();
+    for (const nodeIndex of dp) {
+      const node = tree[nodeIndex];
+      if (node !== void 0) {
+        const parentNode = node;
+        const updated = {
+          nodeType: "parent",
+          parent: { ...parentNode.parent, unmergedLeaves: [...parentNode.parent.unmergedLeaves, insertedLeafIndex] }
+        };
+        copy[nodeIndex] = updated;
+      }
+    }
+    copy[blankLeaf] = { nodeType: "leaf", leaf: leafNode };
+    return [copy, blankLeaf];
+  }
+  function updateLeafNode(tree, leafNode, leafIndex) {
+    const leafNodeIndex = leafToNodeIndex(leafIndex);
+    const pathToBlank = directPath(leafNodeIndex, leafWidth(tree.length));
+    const copy = tree.slice();
+    for (const nodeIndex of pathToBlank) {
+      const node = tree[nodeIndex];
+      if (node !== void 0) {
+        copy[nodeIndex] = void 0;
+      }
+    }
+    copy[leafNodeIndex] = { nodeType: "leaf", leaf: leafNode };
+    return copy;
+  }
+  function removeLeafNode(tree, removedLeafIndex) {
+    const leafNodeIndex = leafToNodeIndex(removedLeafIndex);
+    const pathToBlank = directPath(leafNodeIndex, leafWidth(tree.length));
+    const copy = tree.slice();
+    for (const nodeIndex of pathToBlank) {
+      const node = tree[nodeIndex];
+      if (node !== void 0) {
+        copy[nodeIndex] = void 0;
+      }
+    }
+    copy[leafNodeIndex] = void 0;
+    return condenseRatchetTreeAfterRemove(copy);
+  }
+  function condenseRatchetTreeAfterRemove(tree) {
+    return extendRatchetTree(stripBlankNodes(tree));
+  }
+  function resolution(tree, nodeIndex) {
+    const node = tree[nodeIndex];
+    if (node === void 0) {
+      if (isLeaf(nodeIndex)) {
+        return [];
+      }
+      const l = left(nodeIndex);
+      const r = right(nodeIndex);
+      const leftRes = resolution(tree, l);
+      const rightRes = resolution(tree, r);
+      return [...leftRes, ...rightRes];
+    }
+    if (isLeaf(nodeIndex)) {
+      return [nodeIndex];
+    }
+    const unmerged = node.nodeType === "parent" ? node.parent.unmergedLeaves : [];
+    return [nodeIndex, ...unmerged.map((u) => leafToNodeIndex(toLeafIndex(u)))];
+  }
+  function filteredDirectPath(leafIndex, tree) {
+    const leafNodeIndex = leafToNodeIndex(leafIndex);
+    const leafWidth2 = nodeToLeafIndex(toNodeIndex(tree.length));
+    const cp = copath(leafNodeIndex, leafWidth2);
+    return directPath(leafNodeIndex, leafWidth2).filter((_nodeIndex, n) => resolution(tree, cp[n]).length !== 0);
+  }
+  function filteredDirectPathAndCopathResolution(leafIndex, tree) {
+    const leafNodeIndex = leafToNodeIndex(leafIndex);
+    const lWidth = leafWidth(tree.length);
+    const cp = copath(leafNodeIndex, lWidth);
+    return directPath(leafNodeIndex, lWidth).reduce((acc, cur, n) => {
+      const r = resolution(tree, cp[n]);
+      if (r.length === 0)
+        return acc;
+      else
+        return [...acc, { nodeIndex: cur, resolution: r }];
+    }, []);
+  }
+  function removeLeaves(tree, leafIndices) {
+    const copy = tree.slice();
+    function shouldBeRemoved(leafIndex) {
+      return leafIndices.find((x) => leafIndex === x) !== void 0;
+    }
+    for (const [i, n] of tree.entries()) {
+      if (n !== void 0) {
+        const nodeIndex = toNodeIndex(i);
+        if (isLeaf(nodeIndex) && shouldBeRemoved(nodeToLeafIndex(nodeIndex))) {
+          copy[i] = void 0;
+        } else if (n.nodeType === "parent") {
+          copy[i] = {
+            ...n,
+            parent: { ...n.parent, unmergedLeaves: n.parent.unmergedLeaves.filter((l) => !shouldBeRemoved(l)) }
+          };
+        }
+      }
+    }
+    return condenseRatchetTreeAfterRemove(copy);
+  }
+  function traverseToRoot(tree, leafIndex, f) {
+    const rootIndex = root(leafWidth(tree.length));
+    let currentIndex = leafToNodeIndex(leafIndex);
+    while (currentIndex != rootIndex) {
+      currentIndex = parent(currentIndex, leafWidth(tree.length));
+      const currentNode = tree[currentIndex];
+      if (currentNode !== void 0) {
+        if (currentNode.nodeType === "leaf") {
+          throw new InternalError("Expected parent node");
+        }
+        const result = f(currentIndex, currentNode.parent);
+        if (result !== void 0) {
+          return [result, currentIndex];
+        }
+      }
+    }
+  }
+  function findFirstNonBlankAncestor(tree, nodeIndex) {
+    return traverseToRoot(tree, nodeToLeafIndex(nodeIndex), (nodeIndex2, _node) => nodeIndex2)?.[0] ?? root(leafWidth(tree.length));
+  }
+  function findLeafIndex(tree, leaf) {
+    const foundIndex = tree.findIndex((node, nodeIndex) => {
+      if (isLeaf(toNodeIndex(nodeIndex)) && node !== void 0) {
+        if (node.nodeType === "parent")
+          throw new InternalError("Found parent node in leaf node position");
+        return constantTimeEqual(encode(leafNodeEncoder)(node.leaf), encode(leafNodeEncoder)(leaf));
+      }
+      return false;
+    });
+    return foundIndex === -1 ? void 0 : nodeToLeafIndex(toNodeIndex(foundIndex));
+  }
+  function getSignaturePublicKeyFromLeafIndex(ratchetTree, leafIndex) {
+    const leafNode = ratchetTree[leafToNodeIndex(leafIndex)];
+    if (leafNode === void 0 || leafNode.nodeType === "parent")
+      throw new ValidationError("Unable to find leafnode for leafIndex");
+    return leafNode.leaf.signaturePublicKey;
+  }
 
   // node_modules/ts-mls/dist/treeHash.js
   var leafNodeHashInputEncoder = contramapBufferEncoders([nodeTypeEncoder, uint32Encoder, optionalEncoder(leafNodeEncoder)], (input) => [input.nodeType, input.leafIndex, input.leafNode]);
@@ -8756,6 +9235,35 @@
         return decodeParentNodeHashInput;
     }
   });
+  async function treeHashRoot(tree, h) {
+    return treeHash(tree, rootFromNodeWidth(tree.length), h);
+  }
+  async function treeHash(tree, subtreeIndex, h) {
+    if (isLeaf(subtreeIndex)) {
+      const leafNode = tree[subtreeIndex];
+      if (leafNode?.nodeType === "parent")
+        throw new InternalError("Somehow found parent node in leaf position");
+      const input = encode(leafNodeHashInputEncoder)({
+        nodeType: "leaf",
+        leafIndex: nodeToLeafIndex(subtreeIndex),
+        leafNode: leafNode?.leaf
+      });
+      return await h.digest(input);
+    } else {
+      const parentNode = tree[subtreeIndex];
+      if (parentNode?.nodeType === "leaf")
+        throw new InternalError("Somehow found leaf node in parent position");
+      const leftHash = await treeHash(tree, left(subtreeIndex), h);
+      const rightHash = await treeHash(tree, right(subtreeIndex), h);
+      const input = {
+        nodeType: "parent",
+        parentNode: parentNode?.parent,
+        leftHash,
+        rightHash
+      };
+      return await h.digest(encode(parentNodeHashInputEncoder)(input));
+    }
+  }
 
   // node_modules/ts-mls/dist/parentHash.js
   var parentHashInputEncoder = contramapBufferEncoders([varLenDataEncoder, varLenDataEncoder, varLenDataEncoder], (i) => [i.encryptionKey, i.parentHash, i.originalSiblingTreeHash]);
@@ -8765,6 +9273,93 @@
     parentHash,
     originalSiblingTreeHash
   }));
+  function validateParentHashCoverage(parentIndices, coverage) {
+    for (const index of parentIndices) {
+      if ((coverage[index] ?? 0) !== 1) {
+        return false;
+      }
+    }
+    return true;
+  }
+  async function verifyParentHashes(tree, h) {
+    const parentNodes = tree.reduce((acc, cur, index) => {
+      if (cur !== void 0 && cur.nodeType === "parent") {
+        return [...acc, index];
+      } else
+        return acc;
+    }, []);
+    if (parentNodes.length === 0)
+      return true;
+    const coverage = await parentHashCoverage(tree, h);
+    return validateParentHashCoverage(parentNodes, coverage);
+  }
+  function parentHashCoverage(tree, h) {
+    const leaves = tree.filter((_v, i) => isLeaf(toNodeIndex(i)));
+    return leaves.reduce(async (acc, leafNode, leafIndex) => {
+      if (leafNode === void 0)
+        return acc;
+      let currentIndex = leafToNodeIndex(toLeafIndex(leafIndex));
+      let updated = { ...await acc };
+      const rootIndex = root(leafWidth(tree.length));
+      while (currentIndex !== rootIndex) {
+        const currentNode = tree[currentIndex];
+        if (currentNode === void 0) {
+          continue;
+        }
+        const [parentHash, parentHashNodeIndex] = await calculateParentHash(tree, currentIndex, h);
+        if (parentHashNodeIndex === void 0) {
+          throw new InternalError("Reached root before completing parent hash coeverage");
+        }
+        const expectedParentHash = getParentHash(currentNode);
+        if (expectedParentHash !== void 0 && constantTimeEqual(parentHash, expectedParentHash)) {
+          const newCount = (updated[parentHashNodeIndex] ?? 0) + 1;
+          updated = { ...updated, [parentHashNodeIndex]: newCount };
+        } else {
+          break;
+        }
+        currentIndex = parentHashNodeIndex;
+      }
+      return updated;
+    }, Promise.resolve({}));
+  }
+  function getParentHash(node) {
+    if (node.nodeType === "parent")
+      return node.parent.parentHash;
+    else if (node.leaf.leafNodeSource === "commit")
+      return node.leaf.parentHash;
+  }
+  async function calculateParentHash(tree, nodeIndex, h) {
+    const rootIndex = root(leafWidth(tree.length));
+    if (nodeIndex === rootIndex) {
+      return [new Uint8Array(), void 0];
+    }
+    const parentNodeIndex = findFirstNonBlankAncestor(tree, nodeIndex);
+    const parentNode = tree[parentNodeIndex];
+    if (parentNodeIndex === rootIndex && parentNode === void 0) {
+      return [new Uint8Array(), parentNodeIndex];
+    }
+    const siblingIndex = nodeIndex < parentNodeIndex ? right(parentNodeIndex) : left(parentNodeIndex);
+    if (parentNode === void 0 || parentNode.nodeType === "leaf")
+      throw new InternalError("Expected non-blank parent Node");
+    const removedUnmerged = removeLeaves(tree, parentNode.parent.unmergedLeaves);
+    const originalSiblingTreeHash = await treeHash(removedUnmerged, siblingIndex, h);
+    const input = {
+      encryptionKey: parentNode.parent.hpkePublicKey,
+      parentHash: parentNode.parent.parentHash,
+      originalSiblingTreeHash
+    };
+    return [await h.digest(encode(parentHashInputEncoder)(input)), parentNodeIndex];
+  }
+
+  // node_modules/ts-mls/dist/util/array.js
+  function updateArray(tree, index, t) {
+    return [...tree.slice(0, index), t, ...tree.slice(index + 1)];
+  }
+  function arraysEqual(a, b) {
+    if (a.length !== b.length)
+      return false;
+    return a.every((val, index) => val === b[index]);
+  }
 
   // node_modules/ts-mls/dist/hpkeCiphertext.js
   var hpkeCiphertextEncoder = contramapBufferEncoders([varLenDataEncoder, varLenDataEncoder], (egs) => [egs.kemOutput, egs.ciphertext]);
@@ -8778,6 +9373,136 @@
   var updatePathEncoder = contramapBufferEncoders([leafNodeEncoder, varLenTypeEncoder(updatePathNodeEncoder)], (path) => [path.leafNode, path.nodes]);
   var encodeUpdatePath = encode(updatePathEncoder);
   var decodeUpdatePath = mapDecoders([decodeLeafNodeCommit, decodeVarLenType(decodeUpdatePathNode)], (leafNode, nodes) => ({ leafNode, nodes }));
+  async function createUpdatePath(originalTree, senderLeafIndex, groupContext, signaturePrivateKey, cs) {
+    const originalLeafNode = originalTree[leafToNodeIndex(senderLeafIndex)];
+    if (originalLeafNode === void 0 || originalLeafNode.nodeType === "parent")
+      throw new InternalError("Expected non-blank leaf node");
+    const pathSecret = cs.rng.randomBytes(cs.kdf.size);
+    const leafNodeSecret = await deriveSecret(pathSecret, "node", cs.kdf);
+    const leafKeypair = await cs.hpke.deriveKeyPair(leafNodeSecret);
+    const fdp = filteredDirectPathAndCopathResolution(senderLeafIndex, originalTree);
+    const [ps, updatedTree] = await applyInitialTreeUpdate(fdp, pathSecret, senderLeafIndex, originalTree, cs);
+    const treeWithHashes = await insertParentHashes(fdp, updatedTree, cs);
+    const leafParentHash = await calculateParentHash(treeWithHashes, leafToNodeIndex(senderLeafIndex), cs.hash);
+    const updatedLeafNodeTbs = {
+      leafNodeSource: "commit",
+      hpkePublicKey: await cs.hpke.exportPublicKey(leafKeypair.publicKey),
+      extensions: originalLeafNode.leaf.extensions,
+      capabilities: originalLeafNode.leaf.capabilities,
+      credential: originalLeafNode.leaf.credential,
+      signaturePublicKey: originalLeafNode.leaf.signaturePublicKey,
+      parentHash: leafParentHash[0],
+      info: { leafNodeSource: "commit", groupId: groupContext.groupId, leafIndex: senderLeafIndex }
+    };
+    const updatedLeafNode = await signLeafNodeCommit(updatedLeafNodeTbs, signaturePrivateKey, cs.signature);
+    const finalTree = updateArray(treeWithHashes, leafToNodeIndex(senderLeafIndex), {
+      nodeType: "leaf",
+      leaf: updatedLeafNode
+    });
+    const updatedTreeHash = await treeHashRoot(finalTree, cs.hash);
+    const updatedGroupContext = {
+      ...groupContext,
+      treeHash: updatedTreeHash,
+      epoch: groupContext.epoch + 1n
+    };
+    const pathSecrets = ps.slice(0, ps.length - 1).reverse();
+    const updatePathNodes = await Promise.all(pathSecrets.map(encryptSecretsForPath(originalTree, finalTree, updatedGroupContext, cs)));
+    const updatePath = { leafNode: updatedLeafNode, nodes: updatePathNodes };
+    return [finalTree, updatePath, pathSecrets, leafKeypair.privateKey];
+  }
+  function encryptSecretsForPath(originalTree, updatedTree, updatedGroupContext, cs) {
+    return async (pathSecret) => {
+      const key = getHpkePublicKey(updatedTree[pathSecret.nodeIndex]);
+      const res = {
+        hpkePublicKey: key,
+        encryptedPathSecret: await Promise.all(pathSecret.sendTo.map(async (nodeIndex) => {
+          const { ct, enc } = await encryptWithLabel(await cs.hpke.importPublicKey(getHpkePublicKey(originalTree[nodeIndex])), "UpdatePathNode", encode(groupContextEncoder)(updatedGroupContext), pathSecret.secret, cs.hpke);
+          return { ciphertext: ct, kemOutput: enc };
+        }))
+      };
+      return res;
+    };
+  }
+  async function insertParentHashes(fdp, updatedTree, cs) {
+    return await fdp.slice().reverse().reduce(async (treePromise, { nodeIndex }) => {
+      const tree = await treePromise;
+      const parentHash = await calculateParentHash(tree, nodeIndex, cs.hash);
+      const currentNode = tree[nodeIndex];
+      if (currentNode === void 0 || currentNode.nodeType === "leaf")
+        throw new InternalError("Expected non-blank parent node");
+      const updatedNode = { nodeType: "parent", parent: { ...currentNode.parent, parentHash: parentHash[0] } };
+      return updateArray(tree, nodeIndex, updatedNode);
+    }, Promise.resolve(updatedTree));
+  }
+  async function applyInitialTreeUpdate(fdp, pathSecret, senderLeafIndex, tree, cs) {
+    return await fdp.reduce(async (acc, { nodeIndex, resolution: resolution2 }) => {
+      const [pathSecrets, tree2] = await acc;
+      const lastPathSecret = pathSecrets[0];
+      const nextPathSecret = await deriveSecret(lastPathSecret.secret, "path", cs.kdf);
+      const nextNodeSecret = await deriveSecret(nextPathSecret, "node", cs.kdf);
+      const { publicKey } = await cs.hpke.deriveKeyPair(nextNodeSecret);
+      const updatedTree = updateArray(tree2, nodeIndex, {
+        nodeType: "parent",
+        parent: {
+          hpkePublicKey: await cs.hpke.exportPublicKey(publicKey),
+          parentHash: new Uint8Array(),
+          unmergedLeaves: []
+        }
+      });
+      return [[{ nodeIndex, secret: nextPathSecret, sendTo: resolution2 }, ...pathSecrets], updatedTree];
+    }, Promise.resolve([[{ secret: pathSecret, nodeIndex: leafToNodeIndex(senderLeafIndex), sendTo: [] }], tree]));
+  }
+  async function applyUpdatePath(tree, senderLeafIndex, path, h, isExternal = false) {
+    if (!isExternal) {
+      const leafToUpdate = tree[leafToNodeIndex(senderLeafIndex)];
+      if (leafToUpdate === void 0 || leafToUpdate.nodeType === "parent")
+        throw new InternalError("Leaf node not defined or is parent");
+      const leafNodePublicKeyNotNew = constantTimeEqual(leafToUpdate.leaf.hpkePublicKey, path.leafNode.hpkePublicKey);
+      if (leafNodePublicKeyNotNew)
+        throw new ValidationError("Public key in the LeafNode is the same as the committer's current leaf node");
+    }
+    const pathNodePublicKeysExistInTree = path.nodes.some((node) => tree.some((treeNode) => {
+      return treeNode?.nodeType === "parent" ? constantTimeEqual(treeNode.parent.hpkePublicKey, node.hpkePublicKey) : false;
+    }));
+    if (pathNodePublicKeysExistInTree)
+      throw new ValidationError("Public keys in the UpdatePath may not appear in a node of the new ratchet tree");
+    const copy = tree.slice();
+    copy[leafToNodeIndex(senderLeafIndex)] = { nodeType: "leaf", leaf: path.leafNode };
+    const reverseFilteredDirectPath = filteredDirectPath(senderLeafIndex, tree).reverse();
+    const reverseUpdatePath = path.nodes.slice().reverse();
+    if (reverseUpdatePath.length !== reverseFilteredDirectPath.length) {
+      throw new ValidationError("Invalid length of UpdatePath");
+    }
+    for (const [level2, nodeIndex] of reverseFilteredDirectPath.entries()) {
+      const parentHash = await calculateParentHash(copy, nodeIndex, h);
+      copy[nodeIndex] = {
+        nodeType: "parent",
+        parent: { hpkePublicKey: reverseUpdatePath[level2].hpkePublicKey, unmergedLeaves: [], parentHash: parentHash[0] }
+      };
+    }
+    const leafParentHash = await calculateParentHash(copy, leafToNodeIndex(senderLeafIndex), h);
+    if (!constantTimeEqual(leafParentHash[0], path.leafNode.parentHash))
+      throw new ValidationError("Parent hash did not match the UpdatePath");
+    return copy;
+  }
+  function firstCommonAncestor(tree, leafIndex, senderLeafIndex) {
+    const fdp = filteredDirectPathAndCopathResolution(senderLeafIndex, tree);
+    for (const { nodeIndex } of fdp) {
+      if (isAncestor(leafToNodeIndex(leafIndex), nodeIndex, tree.length)) {
+        return nodeIndex;
+      }
+    }
+    throw new ValidationError("Could not find common ancestor");
+  }
+  function firstMatchAncestor(tree, leafIndex, senderLeafIndex, path) {
+    const fdp = filteredDirectPathAndCopathResolution(senderLeafIndex, tree);
+    for (const [n, { nodeIndex, resolution: resolution2 }] of fdp.entries()) {
+      if (isAncestor(leafToNodeIndex(leafIndex), nodeIndex, tree.length)) {
+        return { nodeIndex, resolution: resolution2, updateNode: path.nodes[n] };
+      }
+    }
+    throw new ValidationError("Could not find common ancestor");
+  }
 
   // node_modules/ts-mls/dist/commit.js
   var commitEncoder = contramapBufferEncoders([varLenTypeEncoder(proposalOrRefEncoder), optionalEncoder(updatePathEncoder)], (commit) => [commit.proposals, commit.path]);
@@ -8850,6 +9575,9 @@
         }));
     }
   });
+  function getSenderLeafNodeIndex(sender) {
+    return sender.senderType === "member" ? sender.leafIndex : void 0;
+  }
   var reuseGuardEncoder = (g) => [
     4,
     (offset, buffer) => {
@@ -8875,6 +9603,19 @@
     epoch,
     contentType
   }));
+  function sampleCiphertext(cs, ciphertext) {
+    return ciphertext.length < cs.kdf.size ? ciphertext : ciphertext.subarray(0, cs.kdf.size);
+  }
+  async function expandSenderDataKey(cs, senderDataSecret, ciphertext) {
+    const ciphertextSample = sampleCiphertext(cs, ciphertext);
+    const keyLength = cs.hpke.keyLength;
+    return await expandWithLabel(senderDataSecret, "key", ciphertextSample, keyLength, cs.kdf);
+  }
+  async function expandSenderDataNonce(cs, senderDataSecret, ciphertext) {
+    const ciphertextSample = sampleCiphertext(cs, ciphertext);
+    const keyLength = cs.hpke.nonceLength;
+    return await expandWithLabel(senderDataSecret, "nonce", ciphertextSample, keyLength, cs.kdf);
+  }
 
   // node_modules/ts-mls/dist/framedContent.js
   var framedContentApplicationDataEncoder = contramapBufferEncoders([contentTypeEncoder, varLenDataEncoder], (f) => [f.contentType, f.applicationData]);
@@ -8910,6 +9651,9 @@
         return decodeFramedContentCommitData;
     }
   });
+  function toTbs2(content, wireformat, context) {
+    return { protocolVersion: context.version, wireformat, content, senderType: content.sender.senderType, context };
+  }
   var framedContentEncoder = contramapBufferEncoders([varLenDataEncoder, uint64Encoder, senderEncoder, varLenDataEncoder, framedContentInfoEncoder], (fc) => [fc.groupId, fc.epoch, fc.sender, fc.authenticatedData, fc]);
   var encodeFramedContent = encode(framedContentEncoder);
   var decodeFramedContent = mapDecoders([decodeVarLenData, decodeUint64, decodeSender, decodeVarLenData, decodeFramedContentInfo], (groupId, epoch, sender, authenticatedData, info) => ({
@@ -8963,6 +9707,43 @@
         }));
     }
   }
+  async function verifyFramedContentSignature(signKey, wireformat, content, auth, context, s) {
+    return verifyWithLabel(signKey, "FramedContentTBS", encode(framedContentTBSEncoder)(toTbs2(content, wireformat, context)), auth.signature, s);
+  }
+  function signFramedContentTBS(signKey, tbs, s) {
+    return signWithLabel(signKey, "FramedContentTBS", encode(framedContentTBSEncoder)(tbs), s);
+  }
+  async function signFramedContentApplicationOrProposal(signKey, tbs, cs) {
+    const signature = await signFramedContentTBS(signKey, tbs, cs.signature);
+    return {
+      contentType: tbs.content.contentType,
+      signature
+    };
+  }
+  function createConfirmationTag(confirmationKey, confirmedTranscriptHash, h) {
+    return h.mac(confirmationKey, confirmedTranscriptHash);
+  }
+  function verifyConfirmationTag(confirmationKey, tag, confirmedTranscriptHash, h) {
+    return h.verifyMac(confirmationKey, tag, confirmedTranscriptHash);
+  }
+  async function createContentCommitSignature(groupContext, wireformat, c, sender, authenticatedData, signKey, s) {
+    const tbs = {
+      protocolVersion: groupContext.version,
+      wireformat,
+      content: {
+        contentType: "commit",
+        commit: c,
+        groupId: groupContext.groupId,
+        epoch: groupContext.epoch,
+        sender,
+        authenticatedData
+      },
+      senderType: "member",
+      context: groupContext
+    };
+    const signature = await signFramedContentTBS(signKey, tbs, s);
+    return { framedContent: tbs.content, signature };
+  }
 
   // node_modules/ts-mls/dist/authenticatedContent.js
   var authenticatedContentEncoder = contramapBufferEncoders([wireformatEncoder, framedContentEncoder, framedContentAuthDataEncoder], (a) => [a.wireformat, a.content, a.auth]);
@@ -8978,6 +9759,15 @@
   }));
   var authenticatedContentTBMEncoder = contramapBufferEncoders([framedContentTBSEncoder, framedContentAuthDataEncoder], (t) => [t.contentTbs, t.auth]);
   var encodeAuthenticatedContentTBM = encode(authenticatedContentTBMEncoder);
+  function createMembershipTag(membershipKey, tbm, h) {
+    return h.mac(membershipKey, encode(authenticatedContentTBMEncoder)(tbm));
+  }
+  function verifyMembershipTag(membershipKey, tbm, tag, h) {
+    return h.verifyMac(membershipKey, tag, encode(authenticatedContentTBMEncoder)(tbm));
+  }
+  function makeProposalRef(proposal, h) {
+    return refhash("MLS 1.0 Proposal Reference", encode(authenticatedContentEncoder)(proposal), h);
+  }
 
   // node_modules/ts-mls/dist/publicMessage.js
   var publicMessageInfoEncoder = (info) => {
@@ -9011,11 +9801,131 @@
     content,
     auth
   })));
+  function findSignaturePublicKey(ratchetTree, groupContext, framedContent) {
+    switch (framedContent.sender.senderType) {
+      case "member":
+        return getSignaturePublicKeyFromLeafIndex(ratchetTree, toLeafIndex(framedContent.sender.leafIndex));
+      case "external": {
+        const sender = senderFromExtension(groupContext.extensions, framedContent.sender.senderIndex);
+        if (sender === void 0)
+          throw new ValidationError("Received external but no external_sender extension");
+        return sender.signaturePublicKey;
+      }
+      case "new_member_proposal":
+        if (framedContent.contentType !== "proposal")
+          throw new ValidationError("Received new_member_proposal but contentType is not proposal");
+        if (framedContent.proposal.proposalType !== "add")
+          throw new ValidationError("Received new_member_proposal but proposalType was not add");
+        return framedContent.proposal.add.keyPackage.leafNode.signaturePublicKey;
+      case "new_member_commit": {
+        if (framedContent.contentType !== "commit")
+          throw new ValidationError("Received new_member_commit but contentType is not commit");
+        if (framedContent.commit.path === void 0)
+          throw new ValidationError("Commit contains no update path");
+        return framedContent.commit.path.leafNode.signaturePublicKey;
+      }
+    }
+  }
+  function senderFromExtension(extensions, senderIndex) {
+    const externalSenderExtensions = extensions.filter((ex) => ex.extensionType === "external_senders");
+    const externalSenderExtension = externalSenderExtensions[senderIndex];
+    if (externalSenderExtension !== void 0) {
+      const externalSender = decodeExternalSender(externalSenderExtension.extensionData, 0);
+      if (externalSender === void 0)
+        throw new CodecError("Could not decode ExternalSender");
+      return externalSender[0];
+    }
+  }
+
+  // node_modules/ts-mls/dist/messageProtectionPublic.js
+  async function protectPublicMessage(membershipKey, groupContext, content, cs) {
+    if (content.content.contentType === "application")
+      throw new UsageError("Can't make an application message public");
+    if (content.content.sender.senderType == "member") {
+      const authenticatedContent = {
+        contentTbs: toTbs2(content.content, "mls_public_message", groupContext),
+        auth: content.auth
+      };
+      const tag = await createMembershipTag(membershipKey, authenticatedContent, cs.hash);
+      return {
+        content: content.content,
+        auth: content.auth,
+        senderType: "member",
+        membershipTag: tag
+      };
+    }
+    return {
+      content: content.content,
+      auth: content.auth,
+      senderType: content.content.sender.senderType
+    };
+  }
+  async function unprotectPublicMessage(membershipKey, groupContext, ratchetTree, msg, cs, overrideSignatureKey) {
+    if (msg.content.contentType === "application")
+      throw new UsageError("Can't make an application message public");
+    if (msg.senderType === "member") {
+      const authenticatedContent = {
+        contentTbs: toTbs2(msg.content, "mls_public_message", groupContext),
+        auth: msg.auth
+      };
+      if (!await verifyMembershipTag(membershipKey, authenticatedContent, msg.membershipTag, cs.hash))
+        throw new CryptoVerificationError("Could not verify membership");
+    }
+    const signaturePublicKey = overrideSignatureKey !== void 0 ? overrideSignatureKey : findSignaturePublicKey(ratchetTree, groupContext, msg.content);
+    const signatureValid = await verifyFramedContentSignature(signaturePublicKey, "mls_public_message", msg.content, msg.auth, groupContext, cs.signature);
+    if (!signatureValid)
+      throw new CryptoVerificationError("Signature invalid");
+    return {
+      wireformat: "mls_public_message",
+      content: msg.content,
+      auth: msg.auth
+    };
+  }
 
   // node_modules/ts-mls/dist/requiredCapabilities.js
   var requiredCapabilitiesEncoder = contramapBufferEncoders([varLenTypeEncoder(uint16Encoder), varLenTypeEncoder(uint16Encoder), varLenTypeEncoder(credentialTypeEncoder)], (rc) => [rc.extensionTypes, rc.proposalTypes, rc.credentialTypes]);
   var encodeRequiredCapabilities = encode(requiredCapabilitiesEncoder);
   var decodeRequiredCapabilities = mapDecoders([decodeVarLenType(decodeUint16), decodeVarLenType(decodeUint16), decodeVarLenType(decodeCredentialType)], (extensionTypes, proposalTypes, credentialTypes2) => ({ extensionTypes, proposalTypes, credentialTypes: credentialTypes2 }));
+
+  // node_modules/ts-mls/dist/authenticationService.js
+  var defaultAuthenticationService = {
+    async validateCredential(_credential, _signaturePublicKey) {
+      return true;
+    }
+  };
+
+  // node_modules/ts-mls/dist/paddingConfig.js
+  var defaultPaddingConfig = { kind: "padUntilLength", padUntilLength: 256 };
+  function byteLengthToPad(encodedLength, config) {
+    if (config.kind === "alwaysPad")
+      return config.paddingLength;
+    else
+      return encodedLength >= config.padUntilLength ? 0 : config.padUntilLength - encodedLength;
+  }
+
+  // node_modules/ts-mls/dist/keyPackageEqualityConfig.js
+  var defaultKeyPackageEqualityConfig = {
+    compareKeyPackages(a, b) {
+      return constantTimeEqual(a.leafNode.signaturePublicKey, b.leafNode.signaturePublicKey);
+    },
+    compareKeyPackageToLeafNode(a, b) {
+      return constantTimeEqual(a.leafNode.signaturePublicKey, b.signaturePublicKey);
+    }
+  };
+
+  // node_modules/ts-mls/dist/lifetimeConfig.js
+  var defaultLifetimeConfig = {
+    maximumTotalLifetime: 2628000n,
+    // 1 month
+    validateLifetimeOnReceive: false
+  };
+
+  // node_modules/ts-mls/dist/keyRetentionConfig.js
+  var defaultKeyRetentionConfig = {
+    retainKeysForGenerations: 10,
+    retainKeysForEpochs: 4,
+    maximumForwardRatchetSteps: 200
+  };
 
   // node_modules/ts-mls/dist/groupInfo.js
   var groupInfoTBSEncoder = contramapBufferEncoders([groupContextEncoder, varLenTypeEncoder(extensionEncoder), varLenDataEncoder, uint32Encoder], (g) => [g.groupContext, g.extensions, g.confirmationTag, g.signer]);
@@ -9032,6 +9942,205 @@
     ...tbs,
     signature
   }));
+  function ratchetTreeFromExtension(info) {
+    const treeExtension = info.extensions.find((ex) => ex.extensionType === "ratchet_tree");
+    if (treeExtension !== void 0) {
+      const tree = decodeRatchetTree(treeExtension.extensionData, 0);
+      if (tree === void 0)
+        throw new CodecError("Could not decode RatchetTree");
+      return tree[0];
+    }
+  }
+  async function signGroupInfo(tbs, privateKey, s) {
+    const signature = await signWithLabel(privateKey, "GroupInfoTBS", encode(groupInfoTBSEncoder)(tbs), s);
+    return { ...tbs, signature };
+  }
+  function verifyGroupInfoSignature(gi, publicKey, s) {
+    return verifyWithLabel(publicKey, "GroupInfoTBS", encode(groupInfoTBSEncoder)(gi), gi.signature, s);
+  }
+  async function verifyGroupInfoConfirmationTag(gi, joinerSecret, pskSecret, cs) {
+    const epochSecret = await extractEpochSecret(gi.groupContext, joinerSecret, cs.kdf, pskSecret);
+    const key = await deriveSecret(epochSecret, "confirm", cs.kdf);
+    return cs.hash.verifyMac(key, gi.confirmationTag, gi.groupContext.confirmedTranscriptHash);
+  }
+  async function extractWelcomeSecret(joinerSecret, pskSecret, kdf) {
+    return deriveSecret(await kdf.extract(joinerSecret, pskSecret), "welcome", kdf);
+  }
+
+  // node_modules/ts-mls/dist/keySchedule.js
+  async function deriveKeySchedule(joinerSecret, pskSecret, groupContext, kdf) {
+    const epochSecret = await extractEpochSecret(groupContext, joinerSecret, kdf, pskSecret);
+    return await initializeKeySchedule(epochSecret, kdf);
+  }
+  async function initializeKeySchedule(epochSecret, kdf) {
+    const newInitSecret = await deriveSecret(epochSecret, "init", kdf);
+    const senderDataSecret = await deriveSecret(epochSecret, "sender data", kdf);
+    const encryptionSecret = await deriveSecret(epochSecret, "encryption", kdf);
+    const exporterSecret = await deriveSecret(epochSecret, "exporter", kdf);
+    const externalSecret = await deriveSecret(epochSecret, "external", kdf);
+    const confirmationKey = await deriveSecret(epochSecret, "confirm", kdf);
+    const membershipKey = await deriveSecret(epochSecret, "membership", kdf);
+    const resumptionPsk = await deriveSecret(epochSecret, "resumption", kdf);
+    const epochAuthenticator = await deriveSecret(epochSecret, "authentication", kdf);
+    const newKeySchedule = {
+      epochSecret,
+      initSecret: newInitSecret,
+      senderDataSecret,
+      encryptionSecret,
+      exporterSecret,
+      externalSecret,
+      confirmationKey,
+      membershipKey,
+      resumptionPsk,
+      epochAuthenticator
+    };
+    return newKeySchedule;
+  }
+  async function initializeEpoch(initSecret, commitSecret, groupContext, pskSecret, kdf) {
+    const joinerSecret = await extractJoinerSecret(groupContext, initSecret, commitSecret, kdf);
+    const welcomeSecret = await extractWelcomeSecret(joinerSecret, pskSecret, kdf);
+    const newKeySchedule = await deriveKeySchedule(joinerSecret, pskSecret, groupContext, kdf);
+    return { welcomeSecret, joinerSecret, keySchedule: newKeySchedule };
+  }
+
+  // node_modules/ts-mls/dist/util/repeat.js
+  async function repeatAsync(fn, initial, times) {
+    let result = initial;
+    for (let i = 0; i < times; i++) {
+      result = await fn(result);
+    }
+    return result;
+  }
+
+  // node_modules/ts-mls/dist/secretTree.js
+  function scaffoldSecretTree(leafWidth2, encryptionSecret, kdf) {
+    const tree = new Array(nodeWidth(leafWidth2));
+    const rootIndex = root(leafWidth2);
+    const parentInhabited = updateArray(tree, rootIndex, encryptionSecret);
+    return deriveChildren(parentInhabited, rootIndex, kdf);
+  }
+  async function createSecretTree(leafWidth2, encryptionSecret, kdf) {
+    const tree = await scaffoldSecretTree(leafWidth2, encryptionSecret, kdf);
+    return await Promise.all(tree.map(async (secret) => {
+      const application = await createRatchetRoot(secret, "application", kdf);
+      const handshake = await createRatchetRoot(secret, "handshake", kdf);
+      return { handshake, application };
+    }));
+  }
+  async function deriveChildren(tree, nodeIndex, kdf) {
+    if (isLeaf(nodeIndex))
+      return tree;
+    const l = left(nodeIndex);
+    const r = right(nodeIndex);
+    const parentSecret = tree[nodeIndex];
+    if (parentSecret === void 0)
+      throw new InternalError("Bad node index for secret tree");
+    const leftSecret = await expandWithLabel(parentSecret, "tree", new TextEncoder().encode("left"), kdf.size, kdf);
+    const rightSecret = await expandWithLabel(parentSecret, "tree", new TextEncoder().encode("right"), kdf.size, kdf);
+    const currentTree = updateArray(updateArray(tree, l, leftSecret), r, rightSecret);
+    return deriveChildren(await deriveChildren(currentTree, l, kdf), r, kdf);
+  }
+  async function deriveNonce(secret, generation, cs) {
+    return await deriveTreeSecret(secret, "nonce", generation, cs.hpke.nonceLength, cs.kdf);
+  }
+  async function deriveKey(secret, generation, cs) {
+    return await deriveTreeSecret(secret, "key", generation, cs.hpke.keyLength, cs.kdf);
+  }
+  async function ratchetUntil(current, desiredGen, config, kdf) {
+    const generationDifference = desiredGen - current.generation;
+    if (generationDifference > config.maximumForwardRatchetSteps)
+      throw new ValidationError("Desired generation too far in the future");
+    return await repeatAsync(async (s) => {
+      const nextSecret = await deriveTreeSecret(s.secret, "secret", s.generation, kdf.size, kdf);
+      return {
+        secret: nextSecret,
+        generation: s.generation + 1,
+        unusedGenerations: updateUnusedGenerations(s, config.retainKeysForGenerations)
+      };
+    }, current, generationDifference);
+  }
+  function updateUnusedGenerations(s, retainGenerationsMax) {
+    const withNew = { ...s.unusedGenerations, [s.generation]: s.secret };
+    const generations = Object.keys(withNew);
+    const result = generations.length >= retainGenerationsMax ? removeOldGenerations(withNew, retainGenerationsMax) : withNew;
+    return result;
+  }
+  function removeOldGenerations(historicalReceiverData, max) {
+    const sortedGenerations = Object.keys(historicalReceiverData).map(Number).sort((a, b) => a < b ? -1 : 1);
+    return Object.fromEntries(sortedGenerations.slice(-max).map((generation) => [generation, historicalReceiverData[generation]]));
+  }
+  async function derivePrivateMessageNonce(secret, generation, reuseGuard, cs) {
+    const nonce = await deriveNonce(secret, generation, cs);
+    if (nonce.length >= 4 && reuseGuard.length >= 4) {
+      for (let i = 0; i < 4; i++) {
+        nonce[i] ^= reuseGuard[i];
+      }
+    } else
+      throw new ValidationError("Reuse guard or nonce incorrect length");
+    return nonce;
+  }
+  async function ratchetToGeneration(tree, senderData, contentType, config, cs) {
+    const index = leafToNodeIndex(toLeafIndex(senderData.leafIndex));
+    const node = tree[index];
+    if (node === void 0)
+      throw new InternalError("Bad node index for secret tree");
+    const ratchet = ratchetForContentType(node, contentType);
+    if (ratchet.generation > senderData.generation) {
+      const desired = ratchet.unusedGenerations[senderData.generation];
+      if (desired !== void 0) {
+        const { [senderData.generation]: _, ...removedDesiredGen } = ratchet.unusedGenerations;
+        const ratchetState = { ...ratchet, unusedGenerations: removedDesiredGen };
+        return await createRatchetResultWithSecret(node, index, desired, senderData.generation, senderData.reuseGuard, tree, contentType, cs, ratchetState);
+      }
+      throw new ValidationError("Desired gen in the past");
+    }
+    const currentSecret = await ratchetUntil(ratchetForContentType(node, contentType), senderData.generation, config, cs.kdf);
+    return createRatchetResult(node, index, currentSecret, senderData.reuseGuard, tree, contentType, cs);
+  }
+  async function consumeRatchet(tree, index, contentType, cs) {
+    const node = tree[index];
+    if (node === void 0)
+      throw new InternalError("Bad node index for secret tree");
+    const currentSecret = ratchetForContentType(node, contentType);
+    const reuseGuard = cs.rng.randomBytes(4);
+    return createRatchetResult(node, index, currentSecret, reuseGuard, tree, contentType, cs);
+  }
+  async function createRatchetResult(node, index, currentSecret, reuseGuard, tree, contentType, cs) {
+    const nextSecret = await deriveTreeSecret(currentSecret.secret, "secret", currentSecret.generation, cs.kdf.size, cs.kdf);
+    const ratchetState = { ...currentSecret, secret: nextSecret, generation: currentSecret.generation + 1 };
+    return await createRatchetResultWithSecret(node, index, currentSecret.secret, currentSecret.generation, reuseGuard, tree, contentType, cs, ratchetState);
+  }
+  async function createRatchetResultWithSecret(node, index, secret, generation, reuseGuard, tree, contentType, cs, ratchetState) {
+    const { nonce, key } = await createKeyAndNonce(secret, generation, reuseGuard, cs);
+    const newNode = contentType === "application" ? { ...node, application: ratchetState } : { ...node, handshake: ratchetState };
+    const newTree = updateArray(tree, index, newNode);
+    return {
+      generation,
+      reuseGuard,
+      nonce,
+      key,
+      newTree
+    };
+  }
+  async function createKeyAndNonce(secret, generation, reuseGuard, cs) {
+    const key = await deriveKey(secret, generation, cs);
+    const nonce = await derivePrivateMessageNonce(secret, generation, reuseGuard, cs);
+    return { nonce, key };
+  }
+  function ratchetForContentType(node, contentType) {
+    switch (contentType) {
+      case "application":
+        return node.application;
+      case "proposal":
+        return node.handshake;
+      case "commit":
+        return node.handshake;
+    }
+  }
+  async function createRatchetRoot(node, label, kdf) {
+    const secret = await expandWithLabel(node, label, new Uint8Array(), kdf.size, kdf);
+    return { secret, generation: 0, unusedGenerations: {} };
+  }
 
   // node_modules/ts-mls/dist/transcriptHash.js
   var confirmedTranscriptHashInputEncoder = contramapBufferEncoders([wireformatEncoder, framedContentEncoder, varLenDataEncoder], (input) => [input.wireformat, input.content, input.signature]);
@@ -9046,6 +10155,22 @@
     else
       return void 0;
   });
+  function createConfirmedHash(interimTranscriptHash, input, hash) {
+    const [len, write] = confirmedTranscriptHashInputEncoder(input);
+    const buf = new ArrayBuffer(interimTranscriptHash.byteLength + len);
+    const arr = new Uint8Array(buf);
+    arr.set(interimTranscriptHash, 0);
+    write(interimTranscriptHash.byteLength, buf);
+    return hash.digest(arr);
+  }
+  function createInterimHash(confirmedHash, confirmationTag, hash) {
+    const [len, write] = varLenDataEncoder(confirmationTag);
+    const buf = new ArrayBuffer(confirmedHash.byteLength + len);
+    const arr = new Uint8Array(buf);
+    arr.set(confirmedHash, 0);
+    write(confirmedHash.byteLength, buf);
+    return hash.digest(arr);
+  }
 
   // node_modules/ts-mls/dist/util/byteArray.js
   function bytesToArrayBuffer(b) {
@@ -9061,13 +10186,26 @@
       return ab;
     }
   }
-  function toBufferSource(b) {
-    if (b.buffer instanceof ArrayBuffer)
-      return b;
-    const ab = new ArrayBuffer(b.byteLength);
-    const arr = new Uint8Array(ab);
-    arr.set(b, 0);
-    return ab;
+  function bytesToBase64(bytes) {
+    if (typeof Buffer !== "undefined") {
+      return Buffer.from(bytes).toString("base64");
+    } else {
+      let binary = "";
+      bytes.forEach((b) => binary += String.fromCharCode(b));
+      return globalThis.btoa(binary);
+    }
+  }
+  function base64ToBytes(base64) {
+    if (typeof Buffer !== "undefined") {
+      return Uint8Array.from(Buffer.from(base64, "base64"));
+    } else {
+      const binary = globalThis.atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      return bytes;
+    }
   }
   function concatUint8Arrays(a, b) {
     const result = new Uint8Array(a.length + b.length);
@@ -9088,6 +10226,642 @@
   var welcomeEncoder = contramapBufferEncoders([ciphersuiteEncoder, varLenTypeEncoder(encryptedGroupSecretsEncoder), varLenDataEncoder], (welcome) => [welcome.cipherSuite, welcome.secrets, welcome.encryptedGroupInfo]);
   var encodeWelcome = encode(welcomeEncoder);
   var decodeWelcome = mapDecoders([decodeCiphersuite, decodeVarLenType(decodeEncryptedGroupSecrets), decodeVarLenData], (cipherSuite, secrets, encryptedGroupInfo) => ({ cipherSuite, secrets, encryptedGroupInfo }));
+  function welcomeNonce(welcomeSecret, cs) {
+    return expandWithLabel(welcomeSecret, "nonce", new Uint8Array(), cs.hpke.nonceLength, cs.kdf);
+  }
+  function welcomeKey(welcomeSecret, cs) {
+    return expandWithLabel(welcomeSecret, "key", new Uint8Array(), cs.hpke.keyLength, cs.kdf);
+  }
+  async function encryptGroupInfo(groupInfo, welcomeSecret, cs) {
+    const key = await welcomeKey(welcomeSecret, cs);
+    const nonce = await welcomeNonce(welcomeSecret, cs);
+    const encrypted = await cs.hpke.encryptAead(key, nonce, void 0, encode(groupInfoEncoder)(groupInfo));
+    return encrypted;
+  }
+  async function decryptGroupInfo(w, joinerSecret, pskSecret, cs) {
+    const welcomeSecret = await extractWelcomeSecret(joinerSecret, pskSecret, cs.kdf);
+    const key = await welcomeKey(welcomeSecret, cs);
+    const nonce = await welcomeNonce(welcomeSecret, cs);
+    const decrypted = await cs.hpke.decryptAead(key, nonce, void 0, w.encryptedGroupInfo);
+    const decoded = decodeGroupInfo(decrypted, 0);
+    return decoded?.[0];
+  }
+  function encryptGroupSecrets(initKey, encryptedGroupInfo, groupSecrets, hpke) {
+    return encryptWithLabel(initKey, "Welcome", encryptedGroupInfo, encode(groupSecretsEncoder)(groupSecrets), hpke);
+  }
+  async function decryptGroupSecrets(initPrivateKey, keyPackageRef, welcome, hpke) {
+    const secret = welcome.secrets.find((s) => constantTimeEqual(s.newMember, keyPackageRef));
+    if (secret === void 0)
+      throw new ValidationError("No matching secret found");
+    const decrypted = await decryptWithLabel(initPrivateKey, "Welcome", welcome.encryptedGroupInfo, secret.encryptedGroupSecrets.kemOutput, secret.encryptedGroupSecrets.ciphertext, hpke);
+    return decodeGroupSecrets(decrypted, 0)?.[0];
+  }
+
+  // node_modules/ts-mls/dist/pathSecrets.js
+  function pathToPathSecrets(pathSecrets) {
+    return pathSecrets.reduce((acc, cur) => ({
+      ...acc,
+      [cur.nodeIndex]: cur.secret
+    }), {});
+  }
+  async function pathToRoot(tree, nodeIndex, pathSecret, kdf) {
+    const rootIndex = root(leafWidth(tree.length));
+    let currentIndex = nodeIndex;
+    const pathSecrets = { [nodeIndex]: pathSecret };
+    while (currentIndex != rootIndex) {
+      const nextIndex = findFirstNonBlankAncestor(tree, currentIndex);
+      const nextSecret = await deriveSecret(pathSecrets[currentIndex], "path", kdf);
+      pathSecrets[nextIndex] = nextSecret;
+      currentIndex = nextIndex;
+    }
+    return pathSecrets;
+  }
+
+  // node_modules/ts-mls/dist/privateKeyPath.js
+  function mergePrivateKeyPaths(a, b) {
+    return { ...a, privateKeys: { ...a.privateKeys, ...b.privateKeys } };
+  }
+  function updateLeafKey(path, newKey) {
+    return { ...path, privateKeys: { ...path.privateKeys, [leafToNodeIndex(toLeafIndex(path.leafIndex))]: newKey } };
+  }
+  async function toPrivateKeyPath(pathSecrets, leafIndex, cs) {
+    const asArray = await Promise.all(Object.entries(pathSecrets).map(async ([nodeIndex, pathSecret]) => {
+      const nodeSecret = await deriveSecret(pathSecret, "node", cs.kdf);
+      const { privateKey } = await cs.hpke.deriveKeyPair(nodeSecret);
+      return [Number(nodeIndex), await cs.hpke.exportPrivateKey(privateKey)];
+    }));
+    const privateKeys = Object.fromEntries(asArray);
+    return { leafIndex, privateKeys };
+  }
+
+  // node_modules/ts-mls/dist/unappliedProposals.js
+  function addUnappliedProposal(ref, proposals, proposal, senderLeafIndex) {
+    const r = bytesToBase64(ref);
+    return {
+      ...proposals,
+      [r]: { proposal, senderLeafIndex }
+    };
+  }
+
+  // node_modules/ts-mls/dist/pskIndex.js
+  var emptyPskIndex = {
+    findPsk(_preSharedKeyId) {
+      return void 0;
+    }
+  };
+  async function accumulatePskSecret(groupedPsk, pskSearch, cs, zeroes) {
+    return groupedPsk.reduce(async (acc, cur, index) => {
+      const [previousSecret, ids] = await acc;
+      const psk = pskSearch.findPsk(cur);
+      if (psk === void 0)
+        throw new ValidationError("Could not find pskId referenced in proposal");
+      const pskSecret = await updatePskSecret(previousSecret, cur, psk, index, groupedPsk.length, cs);
+      return [pskSecret, [...ids, cur]];
+    }, Promise.resolve([zeroes, []]));
+  }
+
+  // node_modules/ts-mls/dist/util/addToMap.js
+  function addToMap(map, k, v) {
+    const copy = new Map(map);
+    copy.set(k, v);
+    return copy;
+  }
+
+  // node_modules/ts-mls/dist/clientConfig.js
+  var defaultClientConfig = {
+    keyRetentionConfig: defaultKeyRetentionConfig,
+    lifetimeConfig: defaultLifetimeConfig,
+    keyPackageEqualityConfig: defaultKeyPackageEqualityConfig,
+    paddingConfig: defaultPaddingConfig,
+    authService: defaultAuthenticationService
+  };
+
+  // node_modules/ts-mls/dist/clientState.js
+  function checkCanSendApplicationMessages(state) {
+    if (Object.keys(state.unappliedProposals).length !== 0)
+      throw new UsageError("Cannot send application message with unapplied proposals");
+    checkCanSendHandshakeMessages(state);
+  }
+  function checkCanSendHandshakeMessages(state) {
+    if (state.groupActiveState.kind === "suspendedPendingReinit")
+      throw new UsageError("Cannot send messages while Group is suspended pending reinit");
+    else if (state.groupActiveState.kind === "removedFromGroup")
+      throw new UsageError("Cannot send messages after being removed from group");
+  }
+  var emptyProposals = {
+    add: [],
+    update: [],
+    remove: [],
+    psk: [],
+    reinit: [],
+    external_init: [],
+    group_context_extensions: []
+  };
+  function flattenExtensions(groupContextExtensions) {
+    return groupContextExtensions.reduce((acc, { proposal }) => {
+      return [...acc, ...proposal.groupContextExtensions.extensions];
+    }, []);
+  }
+  async function validateProposals(p, committerLeafIndex, groupContext, config, authService, tree) {
+    const containsUpdateByCommitter = p.update.some((o) => o.senderLeafIndex !== void 0 && o.senderLeafIndex === committerLeafIndex);
+    if (containsUpdateByCommitter)
+      return new ValidationError("Commit cannot contain an update proposal sent by committer");
+    const containsRemoveOfCommitter = p.remove.some((o) => o.proposal.remove.removed === committerLeafIndex);
+    if (containsRemoveOfCommitter)
+      return new ValidationError("Commit cannot contain a remove proposal removing committer");
+    const multipleUpdateRemoveForSameLeaf = p.update.some(({ senderLeafIndex: a }, indexA) => p.update.some(({ senderLeafIndex: b }, indexB) => a === b && indexA !== indexB) || p.remove.some((r) => r.proposal.remove.removed === a)) || p.remove.some((a, indexA) => p.remove.some((b, indexB) => b.proposal.remove.removed === a.proposal.remove.removed && indexA !== indexB) || p.update.some(({ senderLeafIndex }) => a.proposal.remove.removed === senderLeafIndex));
+    if (multipleUpdateRemoveForSameLeaf)
+      return new ValidationError("Commit cannot contain multiple update and/or remove proposals that apply to the same leaf");
+    const multipleAddsContainSameKeypackage = p.add.some(({ proposal: a }, indexA) => p.add.some(({ proposal: b }, indexB) => config.compareKeyPackages(a.add.keyPackage, b.add.keyPackage) && indexA !== indexB));
+    if (multipleAddsContainSameKeypackage)
+      return new ValidationError("Commit cannot contain multiple Add proposals that contain KeyPackages that represent the same client");
+    const addsContainExistingKeypackage = p.add.some(({ proposal }) => tree.some((node, nodeIndex) => node !== void 0 && node.nodeType === "leaf" && config.compareKeyPackageToLeafNode(proposal.add.keyPackage, node.leaf) && p.remove.every((r) => r.proposal.remove.removed !== nodeToLeafIndex(toNodeIndex(nodeIndex)))));
+    if (addsContainExistingKeypackage)
+      return new ValidationError("Commit cannot contain an Add proposal for someone already in the group");
+    const everyLeafSupportsGroupExtensions = p.add.every(({ proposal }) => extensionsSupportedByCapabilities(groupContext.extensions, proposal.add.keyPackage.leafNode.capabilities));
+    if (!everyLeafSupportsGroupExtensions)
+      return new ValidationError("Added leaf node that doesn't support extension in GroupContext");
+    const multiplePskWithSamePskId = p.psk.some((a, indexA) => p.psk.some((b, indexB) => constantTimeEqual(encode(pskIdEncoder)(a.proposal.psk.preSharedKeyId), encode(pskIdEncoder)(b.proposal.psk.preSharedKeyId)) && indexA !== indexB));
+    if (multiplePskWithSamePskId)
+      return new ValidationError("Commit cannot contain PreSharedKey proposals that reference the same PreSharedKeyID");
+    const multipleGroupContextExtensions = p.group_context_extensions.length > 1;
+    if (multipleGroupContextExtensions)
+      return new ValidationError("Commit cannot contain multiple GroupContextExtensions proposals");
+    const allExtensions = flattenExtensions(p.group_context_extensions);
+    const requiredCapabilities = allExtensions.find((e) => e.extensionType === "required_capabilities");
+    if (requiredCapabilities !== void 0) {
+      const caps = decodeRequiredCapabilities(requiredCapabilities.extensionData, 0);
+      if (caps === void 0)
+        return new CodecError("Could not decode required_capabilities");
+      const everyLeafSupportsCapabilities = tree.filter((n) => n !== void 0 && n.nodeType === "leaf").every((l) => capabiltiesAreSupported(caps[0], l.leaf.capabilities));
+      if (!everyLeafSupportsCapabilities)
+        return new ValidationError("Not all members support required capabilities");
+      const allAdditionsSupportCapabilities = p.add.every((a) => capabiltiesAreSupported(caps[0], a.proposal.add.keyPackage.leafNode.capabilities));
+      if (!allAdditionsSupportCapabilities)
+        return new ValidationError("Commit contains add proposals of member without required capabilities");
+    }
+    return await validateExternalSenders(allExtensions, authService);
+  }
+  async function validateExternalSenders(extensions, authService) {
+    const externalSenders = extensions.filter((e) => e.extensionType === "external_senders");
+    for (const externalSender of externalSenders) {
+      const decoded = decodeExternalSender(externalSender.extensionData, 0);
+      if (decoded === void 0)
+        return new CodecError("Could not decode external_senders");
+      const validCredential = await authService.validateCredential(decoded[0].credential, decoded[0].signaturePublicKey);
+      if (!validCredential)
+        return new ValidationError("Could not validate external credential");
+    }
+  }
+  function capabiltiesAreSupported(caps, cs) {
+    return caps.credentialTypes.every((c) => cs.credentials.includes(c)) && caps.extensionTypes.every((e) => cs.extensions.includes(e)) && caps.proposalTypes.every((p) => cs.proposals.includes(p));
+  }
+  async function validateRatchetTree(tree, groupContext, config, authService, treeHash2, cs) {
+    const hpkeKeys = /* @__PURE__ */ new Set();
+    const signatureKeys = /* @__PURE__ */ new Set();
+    const credentialTypes2 = /* @__PURE__ */ new Set();
+    for (const [i, n] of tree.entries()) {
+      const nodeIndex = toNodeIndex(i);
+      if (n?.nodeType === "leaf") {
+        if (!isLeaf(nodeIndex))
+          return new ValidationError("Received Ratchet Tree is not structurally sound");
+        const hpkeKey = bytesToBase64(n.leaf.hpkePublicKey);
+        if (hpkeKeys.has(hpkeKey))
+          return new ValidationError("hpke keys not unique");
+        else
+          hpkeKeys.add(hpkeKey);
+        const signatureKey = bytesToBase64(n.leaf.signaturePublicKey);
+        if (signatureKeys.has(signatureKey))
+          return new ValidationError("signature keys not unique");
+        else
+          signatureKeys.add(signatureKey);
+        credentialTypes2.add(n.leaf.credential.credentialType);
+        const err = n.leaf.leafNodeSource === "key_package" ? await validateLeafNodeKeyPackage(n.leaf, groupContext, false, config, authService, cs.signature) : await validateLeafNodeUpdateOrCommit(n.leaf, nodeToLeafIndex(nodeIndex), groupContext, authService, cs.signature);
+        if (err !== void 0)
+          return err;
+      } else if (n?.nodeType === "parent") {
+        if (isLeaf(nodeIndex))
+          return new ValidationError("Received Ratchet Tree is not structurally sound");
+        const hpkeKey = bytesToBase64(n.parent.hpkePublicKey);
+        if (hpkeKeys.has(hpkeKey))
+          return new ValidationError("hpke keys not unique");
+        else
+          hpkeKeys.add(hpkeKey);
+        for (const unmergedLeaf of n.parent.unmergedLeaves) {
+          const leafIndex = toLeafIndex(unmergedLeaf);
+          const dp = directPath(leafToNodeIndex(leafIndex), leafWidth(tree.length));
+          const nodeIndex2 = leafToNodeIndex(leafIndex);
+          if (tree[nodeIndex2]?.nodeType !== "leaf" && !dp.includes(toNodeIndex(i)))
+            return new ValidationError("Unmerged leaf did not represent a non-blank descendant leaf node");
+          for (const parentIdx of dp) {
+            const dpNode = tree[parentIdx];
+            if (dpNode !== void 0) {
+              if (dpNode.nodeType !== "parent")
+                return new InternalError("Expected parent node");
+              if (!arraysEqual(dpNode.parent.unmergedLeaves, n.parent.unmergedLeaves))
+                return new ValidationError("non-blank intermediate node must list leaf node in its unmerged_leaves");
+            }
+          }
+        }
+      }
+    }
+    for (const n of tree) {
+      if (n?.nodeType === "leaf") {
+        for (const credentialType of credentialTypes2) {
+          if (!n.leaf.capabilities.credentials.includes(credentialType))
+            return new ValidationError("LeafNode has credential that is not supported by member of the group");
+        }
+      }
+    }
+    const parentHashesVerified = await verifyParentHashes(tree, cs.hash);
+    if (!parentHashesVerified)
+      return new CryptoVerificationError("Unable to verify parent hash");
+    if (!constantTimeEqual(treeHash2, await treeHashRoot(tree, cs.hash)))
+      return new ValidationError("Unable to verify tree hash");
+  }
+  async function validateLeafNodeUpdateOrCommit(leafNode, leafIndex, groupContext, authService, s) {
+    const signatureValid = await verifyLeafNodeSignature(leafNode, groupContext.groupId, leafIndex, s);
+    if (!signatureValid)
+      return new CryptoVerificationError("Could not verify leaf node signature");
+    const commonError = await validateLeafNodeCommon(leafNode, groupContext, authService);
+    if (commonError !== void 0)
+      return commonError;
+  }
+  function throwIfDefined(err) {
+    if (err !== void 0)
+      throw err;
+  }
+  async function validateLeafNodeCommon(leafNode, groupContext, authService) {
+    const credentialValid = await authService.validateCredential(leafNode.credential, leafNode.signaturePublicKey);
+    if (!credentialValid)
+      return new ValidationError("Could not validate credential");
+    const requiredCapabilities = groupContext.extensions.find((e) => e.extensionType === "required_capabilities");
+    if (requiredCapabilities !== void 0) {
+      const caps = decodeRequiredCapabilities(requiredCapabilities.extensionData, 0);
+      if (caps === void 0)
+        return new CodecError("Could not decode required_capabilities");
+      const leafSupportsCapabilities = capabiltiesAreSupported(caps[0], leafNode.capabilities);
+      if (!leafSupportsCapabilities)
+        return new ValidationError("LeafNode does not support required capabilities");
+    }
+    const extensionsSupported = extensionsSupportedByCapabilities(leafNode.extensions, leafNode.capabilities);
+    if (!extensionsSupported)
+      return new ValidationError("LeafNode contains extension not listed in capabilities");
+  }
+  async function validateLeafNodeKeyPackage(leafNode, groupContext, sentByClient, config, authService, s) {
+    const signatureValid = await verifyLeafNodeSignatureKeyPackage(leafNode, s);
+    if (!signatureValid)
+      return new CryptoVerificationError("Could not verify leaf node signature");
+    if (sentByClient || config.validateLifetimeOnReceive) {
+      if (leafNode.leafNodeSource === "key_package") {
+        const currentTime = BigInt(Math.floor(Date.now() / 1e3));
+        if (leafNode.lifetime.notBefore > currentTime || leafNode.lifetime.notAfter < currentTime)
+          return new ValidationError("Current time not within Lifetime");
+      }
+    }
+    const commonError = await validateLeafNodeCommon(leafNode, groupContext, authService);
+    if (commonError !== void 0)
+      return commonError;
+  }
+  async function validateLeafNodeCredentialAndKeyUniqueness(tree, leafNode, existingLeafIndex) {
+    const hpkeKeys = /* @__PURE__ */ new Set();
+    const signatureKeys = /* @__PURE__ */ new Set();
+    for (const [nodeIndex, node] of tree.entries()) {
+      if (node?.nodeType === "leaf") {
+        if (!node.leaf.capabilities.credentials.includes(leafNode.credential.credentialType)) {
+          return new ValidationError("LeafNode has credential that is not supported by member of the group");
+        }
+        const hpkeKey = bytesToBase64(node.leaf.hpkePublicKey);
+        if (hpkeKeys.has(hpkeKey))
+          return new ValidationError("hpke keys not unique");
+        else
+          hpkeKeys.add(hpkeKey);
+        const signatureKey = bytesToBase64(node.leaf.signaturePublicKey);
+        if (signatureKeys.has(signatureKey) && existingLeafIndex !== nodeToLeafIndex(toNodeIndex(nodeIndex)))
+          return new ValidationError("signature keys not unique");
+        else
+          signatureKeys.add(signatureKey);
+      } else if (node?.nodeType === "parent") {
+        const hpkeKey = bytesToBase64(node.parent.hpkePublicKey);
+        if (hpkeKeys.has(hpkeKey))
+          return new ValidationError("hpke keys not unique");
+        else
+          hpkeKeys.add(hpkeKey);
+      }
+    }
+  }
+  async function validateKeyPackage(kp, groupContext, tree, sentByClient, config, authService, s) {
+    if (kp.cipherSuite !== groupContext.cipherSuite)
+      return new ValidationError("Invalid CipherSuite");
+    if (kp.version !== groupContext.version)
+      return new ValidationError("Invalid mls version");
+    const leafNodeConsistentWithTree = await validateLeafNodeCredentialAndKeyUniqueness(tree, kp.leafNode);
+    if (leafNodeConsistentWithTree !== void 0)
+      return leafNodeConsistentWithTree;
+    const leafNodeError = await validateLeafNodeKeyPackage(kp.leafNode, groupContext, sentByClient, config, authService, s);
+    if (leafNodeError !== void 0)
+      return leafNodeError;
+    const signatureValid = await verifyKeyPackage(kp, s);
+    if (!signatureValid)
+      return new CryptoVerificationError("Invalid keypackage signature");
+    if (constantTimeEqual(kp.initKey, kp.leafNode.hpkePublicKey))
+      return new ValidationError("Cannot have identicial init and encryption keys");
+  }
+  function validateReinit(allProposals, reinit, gc) {
+    if (allProposals.length !== 1)
+      return new ValidationError("Reinit proposal needs to be commited by itself");
+    if (protocolVersions[reinit.version] < protocolVersions[gc.version])
+      return new ValidationError("A ReInit proposal cannot use a version less than the version for the current group");
+  }
+  function validateExternalInit(grouped) {
+    if (grouped.external_init.length > 1)
+      return new ValidationError("Cannot contain more than one external_init proposal");
+    if (grouped.remove.length > 1)
+      return new ValidationError("Cannot contain more than one remove proposal");
+    if (grouped.add.length > 0 || grouped.group_context_extensions.length > 0 || grouped.reinit.length > 0 || grouped.update.length > 0)
+      return new ValidationError("Invalid proposals");
+  }
+  function validateRemove(remove, tree) {
+    if (tree[leafToNodeIndex(toLeafIndex(remove.removed))] === void 0)
+      return new ValidationError("Tried to remove empty leaf node");
+  }
+  async function applyProposals(state, proposals, committerLeafIndex, pskSearch, sentByClient, cs) {
+    const allProposals = proposals.reduce((acc, cur) => {
+      if (cur.proposalOrRefType === "proposal")
+        return [...acc, { proposal: cur.proposal, senderLeafIndex: committerLeafIndex }];
+      const p = state.unappliedProposals[bytesToBase64(cur.reference)];
+      if (p === void 0)
+        throw new ValidationError("Could not find proposal with supplied reference");
+      return [...acc, p];
+    }, []);
+    const grouped = allProposals.reduce((acc, cur) => {
+      if (typeof cur.proposal.proposalType === "number")
+        return acc;
+      const proposal = acc[cur.proposal.proposalType] ?? [];
+      return { ...acc, [cur.proposal.proposalType]: [...proposal, cur] };
+    }, emptyProposals);
+    const zeroes = new Uint8Array(cs.kdf.size);
+    const isExternalInit = grouped.external_init.length > 0;
+    if (!isExternalInit) {
+      if (grouped.reinit.length > 0) {
+        const reinit = grouped.reinit.at(0).proposal.reinit;
+        throwIfDefined(validateReinit(allProposals, reinit, state.groupContext));
+        return {
+          tree: state.ratchetTree,
+          pskSecret: zeroes,
+          pskIds: [],
+          needsUpdatePath: false,
+          additionalResult: {
+            kind: "reinit",
+            reinit
+          },
+          selfRemoved: false,
+          allProposals
+        };
+      }
+      throwIfDefined(await validateProposals(grouped, committerLeafIndex, state.groupContext, state.clientConfig.keyPackageEqualityConfig, state.clientConfig.authService, state.ratchetTree));
+      const newExtensions = flattenExtensions(grouped.group_context_extensions);
+      const [mutatedTree, addedLeafNodes] = await applyTreeMutations(state.ratchetTree, grouped, state.groupContext, sentByClient, state.clientConfig.authService, state.clientConfig.lifetimeConfig, cs.signature);
+      const [updatedPskSecret, pskIds] = await accumulatePskSecret(grouped.psk.map((p) => p.proposal.psk.preSharedKeyId), pskSearch, cs, zeroes);
+      const selfRemoved = mutatedTree[leafToNodeIndex(toLeafIndex(state.privatePath.leafIndex))] === void 0;
+      const needsUpdatePath = allProposals.length === 0 || Object.values(grouped.update).length > 1 || Object.values(grouped.remove).length > 1;
+      return {
+        tree: mutatedTree,
+        pskSecret: updatedPskSecret,
+        additionalResult: {
+          kind: "memberCommit",
+          addedLeafNodes,
+          extensions: newExtensions
+        },
+        pskIds,
+        needsUpdatePath,
+        selfRemoved,
+        allProposals
+      };
+    } else {
+      throwIfDefined(validateExternalInit(grouped));
+      const treeAfterRemove = grouped.remove.reduce((acc, { proposal }) => {
+        return removeLeafNode(acc, toLeafIndex(proposal.remove.removed));
+      }, state.ratchetTree);
+      const zeroes2 = new Uint8Array(cs.kdf.size);
+      const [updatedPskSecret, pskIds] = await accumulatePskSecret(grouped.psk.map((p) => p.proposal.psk.preSharedKeyId), pskSearch, cs, zeroes2);
+      const initProposal = grouped.external_init.at(0);
+      const externalKeyPair = await cs.hpke.deriveKeyPair(state.keySchedule.externalSecret);
+      const externalInitSecret = await importSecret(await cs.hpke.exportPrivateKey(externalKeyPair.privateKey), initProposal.proposal.externalInit.kemOutput, cs);
+      return {
+        needsUpdatePath: true,
+        tree: treeAfterRemove,
+        pskSecret: updatedPskSecret,
+        pskIds,
+        additionalResult: {
+          kind: "externalCommit",
+          externalInitSecret,
+          newMemberLeafIndex: nodeToLeafIndex(findBlankLeafNodeIndexOrExtend(treeAfterRemove))
+        },
+        selfRemoved: false,
+        allProposals
+      };
+    }
+  }
+  function makePskIndex(state, externalPsks) {
+    return {
+      findPsk(preSharedKeyId) {
+        if (preSharedKeyId.psktype === "external") {
+          return externalPsks[bytesToBase64(preSharedKeyId.pskId)];
+        }
+        if (state !== void 0 && constantTimeEqual(preSharedKeyId.pskGroupId, state.groupContext.groupId)) {
+          if (preSharedKeyId.pskEpoch === state.groupContext.epoch)
+            return state.keySchedule.resumptionPsk;
+          else
+            return state.historicalReceiverData.get(preSharedKeyId.pskEpoch)?.resumptionPsk;
+        }
+      }
+    };
+  }
+  async function nextEpochContext(groupContext, wireformat, content, signature, updatedTreeHash, confirmationTag, h) {
+    const interimTranscriptHash = await createInterimHash(groupContext.confirmedTranscriptHash, confirmationTag, h);
+    const newConfirmedHash = await createConfirmedHash(interimTranscriptHash, { wireformat, content, signature }, h);
+    return {
+      ...groupContext,
+      epoch: groupContext.epoch + 1n,
+      treeHash: updatedTreeHash,
+      confirmedTranscriptHash: newConfirmedHash
+    };
+  }
+  async function joinGroup(welcome, keyPackage, privateKeys, pskSearch, cs, ratchetTree, resumingFromState, clientConfig = defaultClientConfig) {
+    const res = await joinGroupWithExtensions(welcome, keyPackage, privateKeys, pskSearch, cs, ratchetTree, resumingFromState, clientConfig);
+    return res[0];
+  }
+  async function joinGroupWithExtensions(welcome, keyPackage, privateKeys, pskSearch, cs, ratchetTree, resumingFromState, clientConfig = defaultClientConfig) {
+    const keyPackageRef = await makeKeyPackageRef(keyPackage, cs.hash);
+    const privKey = await cs.hpke.importPrivateKey(privateKeys.initPrivateKey);
+    const groupSecrets = await decryptGroupSecrets(privKey, keyPackageRef, welcome, cs.hpke);
+    if (groupSecrets === void 0)
+      throw new CodecError("Could not decode group secrets");
+    const zeroes = new Uint8Array(cs.kdf.size);
+    const [pskSecret, pskIds] = await accumulatePskSecret(groupSecrets.psks, pskSearch, cs, zeroes);
+    const gi = await decryptGroupInfo(welcome, groupSecrets.joinerSecret, pskSecret, cs);
+    if (gi === void 0)
+      throw new CodecError("Could not decode group info");
+    const resumptionPsk = pskIds.find((id) => id.psktype === "resumption");
+    if (resumptionPsk !== void 0) {
+      if (resumingFromState === void 0)
+        throw new ValidationError("No prior state passed for resumption");
+      if (resumptionPsk.pskEpoch !== resumingFromState.groupContext.epoch)
+        throw new ValidationError("Epoch mismatch");
+      if (!constantTimeEqual(resumptionPsk.pskGroupId, resumingFromState.groupContext.groupId))
+        throw new ValidationError("old groupId mismatch");
+      if (gi.groupContext.epoch !== 1n)
+        throw new ValidationError("Resumption must be started at epoch 1");
+      if (resumptionPsk.usage === "reinit") {
+        if (resumingFromState.groupActiveState.kind !== "suspendedPendingReinit")
+          throw new ValidationError("Found reinit psk but no old suspended clientState");
+        if (!constantTimeEqual(resumingFromState.groupActiveState.reinit.groupId, gi.groupContext.groupId))
+          throw new ValidationError("new groupId mismatch");
+        if (resumingFromState.groupActiveState.reinit.version !== gi.groupContext.version)
+          throw new ValidationError("Version mismatch");
+        if (resumingFromState.groupActiveState.reinit.cipherSuite !== gi.groupContext.cipherSuite)
+          throw new ValidationError("Ciphersuite mismatch");
+        if (!extensionsEqual(resumingFromState.groupActiveState.reinit.extensions, gi.groupContext.extensions))
+          throw new ValidationError("Extensions mismatch");
+      }
+    }
+    const allExtensionsSupported = extensionsSupportedByCapabilities(gi.groupContext.extensions, keyPackage.leafNode.capabilities);
+    if (!allExtensionsSupported)
+      throw new UsageError("client does not support every extension in the GroupContext");
+    const tree = ratchetTreeFromExtension(gi) ?? ratchetTree;
+    if (tree === void 0)
+      throw new UsageError("No RatchetTree passed and no ratchet_tree extension");
+    const signerNode = tree[leafToNodeIndex(toLeafIndex(gi.signer))];
+    if (signerNode === void 0) {
+      throw new ValidationError("Could not find signer leafNode");
+    }
+    if (signerNode.nodeType === "parent")
+      throw new ValidationError("Expected non blank leaf node");
+    const credentialVerified = await clientConfig.authService.validateCredential(signerNode.leaf.credential, signerNode.leaf.signaturePublicKey);
+    if (!credentialVerified)
+      throw new ValidationError("Could not validate credential");
+    const groupInfoSignatureVerified = await verifyGroupInfoSignature(gi, signerNode.leaf.signaturePublicKey, cs.signature);
+    if (!groupInfoSignatureVerified)
+      throw new CryptoVerificationError("Could not verify groupInfo signature");
+    if (gi.groupContext.cipherSuite !== keyPackage.cipherSuite)
+      throw new ValidationError("cipher suite in the GroupInfo does not match the cipher_suite in the KeyPackage");
+    throwIfDefined(await validateRatchetTree(tree, gi.groupContext, clientConfig.lifetimeConfig, clientConfig.authService, gi.groupContext.treeHash, cs));
+    const newLeaf = findLeafIndex(tree, keyPackage.leafNode);
+    if (newLeaf === void 0)
+      throw new ValidationError("Could not find own leaf when processing welcome");
+    const privateKeyPath = {
+      leafIndex: newLeaf,
+      privateKeys: { [leafToNodeIndex(newLeaf)]: privateKeys.hpkePrivateKey }
+    };
+    const ancestorNodeIndex = firstCommonAncestor(tree, newLeaf, toLeafIndex(gi.signer));
+    const updatedPkp = groupSecrets.pathSecret === void 0 ? privateKeyPath : mergePrivateKeyPaths(await toPrivateKeyPath(await pathToRoot(tree, ancestorNodeIndex, groupSecrets.pathSecret, cs.kdf), newLeaf, cs), privateKeyPath);
+    const keySchedule = await deriveKeySchedule(groupSecrets.joinerSecret, pskSecret, gi.groupContext, cs.kdf);
+    const confirmationTagVerified = await verifyGroupInfoConfirmationTag(gi, groupSecrets.joinerSecret, pskSecret, cs);
+    if (!confirmationTagVerified)
+      throw new CryptoVerificationError("Could not verify confirmation tag");
+    const secretTree = await createSecretTree(leafWidth(tree.length), keySchedule.encryptionSecret, cs.kdf);
+    return [
+      {
+        groupContext: gi.groupContext,
+        ratchetTree: tree,
+        privatePath: updatedPkp,
+        signaturePrivateKey: privateKeys.signaturePrivateKey,
+        confirmationTag: gi.confirmationTag,
+        unappliedProposals: {},
+        keySchedule,
+        secretTree,
+        historicalReceiverData: /* @__PURE__ */ new Map(),
+        groupActiveState: { kind: "active" },
+        clientConfig
+      },
+      gi.extensions
+    ];
+  }
+  async function createGroup(groupId, keyPackage, privateKeyPackage, extensions, cs, clientConfig = defaultClientConfig) {
+    const ratchetTree = [{ nodeType: "leaf", leaf: keyPackage.leafNode }];
+    const privatePath = {
+      leafIndex: 0,
+      privateKeys: { [0]: privateKeyPackage.hpkePrivateKey }
+    };
+    const confirmedTranscriptHash = new Uint8Array();
+    const groupContext = {
+      version: "mls10",
+      cipherSuite: cs.name,
+      epoch: 0n,
+      treeHash: await treeHashRoot(ratchetTree, cs.hash),
+      groupId,
+      extensions,
+      confirmedTranscriptHash
+    };
+    throwIfDefined(await validateExternalSenders(extensions, clientConfig.authService));
+    const epochSecret = cs.rng.randomBytes(cs.kdf.size);
+    const keySchedule = await initializeKeySchedule(epochSecret, cs.kdf);
+    const confirmationTag = await createConfirmationTag(keySchedule.confirmationKey, confirmedTranscriptHash, cs.hash);
+    const secretTree = await createSecretTree(1, keySchedule.encryptionSecret, cs.kdf);
+    return {
+      ratchetTree,
+      keySchedule,
+      secretTree,
+      privatePath,
+      signaturePrivateKey: privateKeyPackage.signaturePrivateKey,
+      unappliedProposals: {},
+      historicalReceiverData: /* @__PURE__ */ new Map(),
+      groupContext,
+      confirmationTag,
+      groupActiveState: { kind: "active" },
+      clientConfig
+    };
+  }
+  async function importSecret(privateKey, kemOutput, cs) {
+    return cs.hpke.importSecret(await cs.hpke.importPrivateKey(privateKey), new TextEncoder().encode("MLS 1.0 external init secret"), kemOutput, cs.kdf.size, new Uint8Array());
+  }
+  async function applyTreeMutations(ratchetTree, grouped, gc, sentByClient, authService, lifetimeConfig, s) {
+    const treeAfterUpdate = await grouped.update.reduce(async (acc, { senderLeafIndex, proposal }) => {
+      if (senderLeafIndex === void 0)
+        throw new InternalError("No sender index found for update proposal");
+      throwIfDefined(await validateLeafNodeUpdateOrCommit(proposal.update.leafNode, senderLeafIndex, gc, authService, s));
+      throwIfDefined(await validateLeafNodeCredentialAndKeyUniqueness(ratchetTree, proposal.update.leafNode, senderLeafIndex));
+      return updateLeafNode(await acc, proposal.update.leafNode, toLeafIndex(senderLeafIndex));
+    }, Promise.resolve(ratchetTree));
+    const treeAfterRemove = grouped.remove.reduce((acc, { proposal }) => {
+      throwIfDefined(validateRemove(proposal.remove, ratchetTree));
+      return removeLeafNode(acc, toLeafIndex(proposal.remove.removed));
+    }, treeAfterUpdate);
+    const [treeAfterAdd, addedLeafNodes] = await grouped.add.reduce(async (acc, { proposal }) => {
+      throwIfDefined(await validateKeyPackage(proposal.add.keyPackage, gc, ratchetTree, sentByClient, lifetimeConfig, authService, s));
+      const [tree, ws] = await acc;
+      const [updatedTree, leafNodeIndex] = addLeafNode(tree, proposal.add.keyPackage.leafNode);
+      return [
+        updatedTree,
+        [...ws, [nodeToLeafIndex(leafNodeIndex), proposal.add.keyPackage]]
+      ];
+    }, Promise.resolve([treeAfterRemove, []]));
+    return [treeAfterAdd, addedLeafNodes];
+  }
+  async function processProposal(state, content, proposal, h) {
+    const ref = await makeProposalRef(content, h);
+    return {
+      ...state,
+      unappliedProposals: addUnappliedProposal(ref, state.unappliedProposals, proposal, getSenderLeafNodeIndex(content.content.sender))
+    };
+  }
+  function addHistoricalReceiverData(state) {
+    const withNew = addToMap(state.historicalReceiverData, state.groupContext.epoch, {
+      secretTree: state.secretTree,
+      ratchetTree: state.ratchetTree,
+      senderDataSecret: state.keySchedule.senderDataSecret,
+      groupContext: state.groupContext,
+      resumptionPsk: state.keySchedule.resumptionPsk
+    });
+    const epochs = [...withNew.keys()];
+    const result = epochs.length >= state.clientConfig.keyRetentionConfig.retainKeysForEpochs ? removeOldHistoricalReceiverData(withNew, state.clientConfig.keyRetentionConfig.retainKeysForEpochs) : withNew;
+    return result;
+  }
+  function removeOldHistoricalReceiverData(historicalReceiverData, max) {
+    const sortedEpochs = [...historicalReceiverData.keys()].sort((a, b) => a < b ? -1 : 1);
+    return new Map(sortedEpochs.slice(-max).map((epoch) => [epoch, historicalReceiverData.get(epoch)]));
+  }
 
   // node_modules/ts-mls/dist/privateMessage.js
   var privateMessageEncoder = contramapBufferEncoders([varLenDataEncoder, uint64Encoder, contentTypeEncoder, varLenDataEncoder, varLenDataEncoder, varLenDataEncoder], (msg) => [msg.groupId, msg.epoch, msg.contentType, msg.authenticatedData, msg.encryptedSenderData, msg.ciphertext]);
@@ -9108,28 +10882,466 @@
     contentType,
     authenticatedData
   }));
-
-  // node_modules/ts-mls/dist/crypto/implementation/default/makeHashImpl.js
-  function makeHashImpl(sc, h) {
-    return {
-      async digest(data) {
-        const result = await sc.digest(h, toBufferSource(data));
-        return new Uint8Array(result);
-      },
-      async mac(key, data) {
-        const result = await sc.sign("HMAC", await importMacKey(key, h), toBufferSource(data));
-        return new Uint8Array(result);
-      },
-      async verifyMac(key, mac, data) {
-        return sc.verify("HMAC", await importMacKey(key, h), toBufferSource(mac), toBufferSource(data));
+  function decodePrivateMessageContent(contentType) {
+    switch (contentType) {
+      case "application":
+        return decoderWithPadding(mapDecoders([decodeVarLenData, decodeVarLenData], (applicationData, signature) => ({
+          contentType,
+          applicationData,
+          auth: { contentType, signature }
+        })));
+      case "proposal":
+        return decoderWithPadding(mapDecoders([decodeProposal, decodeVarLenData], (proposal, signature) => ({
+          contentType,
+          proposal,
+          auth: { contentType, signature }
+        })));
+      case "commit":
+        return decoderWithPadding(mapDecoders([decodeCommit, decodeVarLenData, decodeFramedContentAuthDataCommit], (commit, signature, auth) => ({
+          contentType,
+          commit,
+          auth: { ...auth, signature, contentType }
+        })));
+    }
+  }
+  function privateMessageContentEncoder(config) {
+    return (msg) => {
+      switch (msg.contentType) {
+        case "application":
+          return encoderWithPadding(contramapBufferEncoders([varLenDataEncoder, framedContentAuthDataEncoder], (m6) => [m6.applicationData, m6.auth]), config)(msg);
+        case "proposal":
+          return encoderWithPadding(contramapBufferEncoders([proposalEncoder, framedContentAuthDataEncoder], (m6) => [m6.proposal, m6.auth]), config)(msg);
+        case "commit":
+          return encoderWithPadding(contramapBufferEncoders([commitEncoder, framedContentAuthDataEncoder], (m6) => [m6.commit, m6.auth]), config)(msg);
       }
     };
   }
-  function importMacKey(rawKey, h) {
-    return crypto.subtle.importKey("raw", toBufferSource(rawKey), {
-      name: "HMAC",
-      hash: { name: h }
-    }, false, ["sign", "verify"]);
+  function encodePrivateMessageContent(config) {
+    return encode(privateMessageContentEncoder(config));
+  }
+  async function decryptSenderData(msg, senderDataSecret, cs) {
+    const key = await expandSenderDataKey(cs, senderDataSecret, msg.ciphertext);
+    const nonce = await expandSenderDataNonce(cs, senderDataSecret, msg.ciphertext);
+    const aad = {
+      groupId: msg.groupId,
+      epoch: msg.epoch,
+      contentType: msg.contentType
+    };
+    const decrypted = await cs.hpke.decryptAead(key, nonce, encode(senderDataAADEncoder)(aad), msg.encryptedSenderData);
+    return decodeSenderData(decrypted, 0)?.[0];
+  }
+  async function encryptSenderData(senderDataSecret, senderData, aad, ciphertext, cs) {
+    const key = await expandSenderDataKey(cs, senderDataSecret, ciphertext);
+    const nonce = await expandSenderDataNonce(cs, senderDataSecret, ciphertext);
+    return await cs.hpke.encryptAead(key, nonce, encode(senderDataAADEncoder)(aad), encode(senderDataEncoder)(senderData));
+  }
+  function toAuthenticatedContent(content, msg, senderLeafIndex) {
+    return {
+      wireformat: "mls_private_message",
+      content: {
+        groupId: msg.groupId,
+        epoch: msg.epoch,
+        sender: {
+          senderType: "member",
+          leafIndex: senderLeafIndex
+        },
+        authenticatedData: msg.authenticatedData,
+        ...content
+      },
+      auth: content.auth
+    };
+  }
+  function encoderWithPadding(encoder, config) {
+    return (t) => {
+      const [len, write] = encoder(t);
+      const totalLength = len + byteLengthToPad(len, config);
+      return [
+        totalLength,
+        (offset, buffer) => {
+          write(offset, buffer);
+        }
+      ];
+    };
+  }
+  function decoderWithPadding(decoder) {
+    return (bytes, offset) => {
+      const result = decoder(bytes, offset);
+      if (result === void 0)
+        return void 0;
+      const [decoded, innerOffset] = result;
+      const paddingBytes = bytes.subarray(offset + innerOffset, bytes.length);
+      const allZeroes = paddingBytes.every((byte) => byte === 0);
+      if (!allZeroes)
+        return void 0;
+      return [decoded, bytes.length];
+    };
+  }
+
+  // node_modules/ts-mls/dist/messageProtection.js
+  async function protectApplicationData(signKey, senderDataSecret, applicationData, authenticatedData, groupContext, secretTree, leafIndex, paddingConfig, cs) {
+    const tbs = {
+      protocolVersion: groupContext.version,
+      wireformat: "mls_private_message",
+      content: {
+        contentType: "application",
+        applicationData,
+        groupId: groupContext.groupId,
+        epoch: groupContext.epoch,
+        sender: {
+          senderType: "member",
+          leafIndex
+        },
+        authenticatedData
+      },
+      senderType: "member",
+      context: groupContext
+    };
+    const auth = await signFramedContentApplicationOrProposal(signKey, tbs, cs);
+    const content = {
+      ...tbs.content,
+      auth
+    };
+    const result = await protect(senderDataSecret, authenticatedData, groupContext, secretTree, content, leafIndex, paddingConfig, cs);
+    return { newSecretTree: result.tree, privateMessage: result.privateMessage };
+  }
+  async function protect(senderDataSecret, authenticatedData, groupContext, secretTree, content, leafIndex, config, cs) {
+    const node = secretTree[leafToNodeIndex(toLeafIndex(leafIndex))];
+    if (node === void 0)
+      throw new InternalError("Bad node index for secret tree");
+    const { newTree, generation, reuseGuard, nonce, key } = await consumeRatchet(secretTree, leafToNodeIndex(toLeafIndex(leafIndex)), content.contentType, cs);
+    const aad = {
+      groupId: groupContext.groupId,
+      epoch: groupContext.epoch,
+      contentType: content.contentType,
+      authenticatedData
+    };
+    const ciphertext = await cs.hpke.encryptAead(key, nonce, encode(privateContentAADEncoder)(aad), encodePrivateMessageContent(config)(content));
+    const senderData = {
+      leafIndex,
+      generation,
+      reuseGuard
+    };
+    const senderAad = {
+      groupId: groupContext.groupId,
+      epoch: groupContext.epoch,
+      contentType: content.contentType
+    };
+    const encryptedSenderData = await encryptSenderData(senderDataSecret, senderData, senderAad, ciphertext, cs);
+    return {
+      privateMessage: {
+        groupId: groupContext.groupId,
+        epoch: groupContext.epoch,
+        encryptedSenderData,
+        contentType: content.contentType,
+        authenticatedData,
+        ciphertext
+      },
+      tree: newTree
+    };
+  }
+  async function unprotectPrivateMessage(senderDataSecret, msg, secretTree, ratchetTree, groupContext, config, cs, overrideSignatureKey) {
+    const senderData = await decryptSenderData(msg, senderDataSecret, cs);
+    if (senderData === void 0)
+      throw new CodecError("Could not decode senderdata");
+    validateSenderData(senderData, ratchetTree);
+    const { key, nonce, newTree } = await ratchetToGeneration(secretTree, senderData, msg.contentType, config, cs);
+    const aad = {
+      groupId: msg.groupId,
+      epoch: msg.epoch,
+      contentType: msg.contentType,
+      authenticatedData: msg.authenticatedData
+    };
+    const decrypted = await cs.hpke.decryptAead(key, nonce, encode(privateContentAADEncoder)(aad), msg.ciphertext);
+    const pmc = decodePrivateMessageContent(msg.contentType)(decrypted, 0)?.[0];
+    if (pmc === void 0)
+      throw new CodecError("Could not decode PrivateMessageContent");
+    const content = toAuthenticatedContent(pmc, msg, senderData.leafIndex);
+    const signaturePublicKey = overrideSignatureKey !== void 0 ? overrideSignatureKey : getSignaturePublicKeyFromLeafIndex(ratchetTree, toLeafIndex(senderData.leafIndex));
+    const signatureValid = await verifyFramedContentSignature(signaturePublicKey, "mls_private_message", content.content, content.auth, groupContext, cs.signature);
+    if (!signatureValid)
+      throw new CryptoVerificationError("Signature invalid");
+    return { tree: newTree, content };
+  }
+  function validateSenderData(senderData, tree) {
+    if (tree[leafToNodeIndex(toLeafIndex(senderData.leafIndex))]?.nodeType !== "leaf")
+      return new ValidationError("SenderData did not point to a non-blank leaf node");
+  }
+
+  // node_modules/ts-mls/dist/createMessage.js
+  async function createApplicationMessage(state, message, cs, authenticatedData = new Uint8Array()) {
+    checkCanSendApplicationMessages(state);
+    const result = await protectApplicationData(state.signaturePrivateKey, state.keySchedule.senderDataSecret, message, authenticatedData, state.groupContext, state.secretTree, state.privatePath.leafIndex, state.clientConfig.paddingConfig, cs);
+    return { newState: { ...state, secretTree: result.newSecretTree }, privateMessage: result.privateMessage };
+  }
+
+  // node_modules/ts-mls/dist/createCommit.js
+  async function createCommit(context, options) {
+    const { state, pskIndex = makePskIndex(state, {}), cipherSuite } = context;
+    const { wireAsPublicMessage = false, extraProposals = [], ratchetTreeExtension = false, authenticatedData = new Uint8Array(), groupInfoExtensions = [] } = options ?? {};
+    checkCanSendHandshakeMessages(state);
+    const wireformat = wireAsPublicMessage ? "mls_public_message" : "mls_private_message";
+    const allProposals = bundleAllProposals(state, extraProposals);
+    const res = await applyProposals(state, allProposals, toLeafIndex(state.privatePath.leafIndex), pskIndex, true, cipherSuite);
+    if (res.additionalResult.kind === "externalCommit")
+      throw new UsageError("Cannot create externalCommit as a member");
+    const suspendedPendingReinit = res.additionalResult.kind === "reinit" ? res.additionalResult.reinit : void 0;
+    const [tree, updatePath, pathSecrets, newPrivateKey] = res.needsUpdatePath ? await createUpdatePath(res.tree, toLeafIndex(state.privatePath.leafIndex), state.groupContext, state.signaturePrivateKey, cipherSuite) : [res.tree, void 0, [], void 0];
+    const updatedExtensions = res.additionalResult.kind === "memberCommit" && res.additionalResult.extensions.length > 0 ? res.additionalResult.extensions : state.groupContext.extensions;
+    const groupContextWithExtensions = { ...state.groupContext, extensions: updatedExtensions };
+    const privateKeys = mergePrivateKeyPaths(newPrivateKey !== void 0 ? updateLeafKey(state.privatePath, await cipherSuite.hpke.exportPrivateKey(newPrivateKey)) : state.privatePath, await toPrivateKeyPath(pathToPathSecrets(pathSecrets), state.privatePath.leafIndex, cipherSuite));
+    const lastPathSecret = pathSecrets.at(-1);
+    const commitSecret = lastPathSecret === void 0 ? new Uint8Array(cipherSuite.kdf.size) : await deriveSecret(lastPathSecret.secret, "path", cipherSuite.kdf);
+    const { signature, framedContent } = await createContentCommitSignature(state.groupContext, wireformat, { proposals: allProposals, path: updatePath }, { senderType: "member", leafIndex: state.privatePath.leafIndex }, authenticatedData, state.signaturePrivateKey, cipherSuite.signature);
+    const treeHash2 = await treeHashRoot(tree, cipherSuite.hash);
+    const updatedGroupContext = await nextEpochContext(groupContextWithExtensions, wireformat, framedContent, signature, treeHash2, state.confirmationTag, cipherSuite.hash);
+    const epochSecrets = await initializeEpoch(state.keySchedule.initSecret, commitSecret, updatedGroupContext, res.pskSecret, cipherSuite.kdf);
+    const confirmationTag = await createConfirmationTag(epochSecrets.keySchedule.confirmationKey, updatedGroupContext.confirmedTranscriptHash, cipherSuite.hash);
+    const authData = {
+      contentType: framedContent.contentType,
+      signature,
+      confirmationTag
+    };
+    const [commit] = await protectCommit(wireAsPublicMessage, state, authenticatedData, framedContent, authData, cipherSuite);
+    const welcome = await createWelcome(ratchetTreeExtension, updatedGroupContext, confirmationTag, state, tree, cipherSuite, epochSecrets, res, pathSecrets, groupInfoExtensions);
+    const groupActiveState = res.selfRemoved ? { kind: "removedFromGroup" } : suspendedPendingReinit !== void 0 ? { kind: "suspendedPendingReinit", reinit: suspendedPendingReinit } : { kind: "active" };
+    const newState = {
+      groupContext: updatedGroupContext,
+      ratchetTree: tree,
+      secretTree: await createSecretTree(leafWidth(tree.length), epochSecrets.keySchedule.encryptionSecret, cipherSuite.kdf),
+      keySchedule: epochSecrets.keySchedule,
+      privatePath: privateKeys,
+      unappliedProposals: {},
+      historicalReceiverData: addHistoricalReceiverData(state),
+      confirmationTag,
+      signaturePrivateKey: state.signaturePrivateKey,
+      groupActiveState,
+      clientConfig: state.clientConfig
+    };
+    return { newState, welcome, commit };
+  }
+  function bundleAllProposals(state, extraProposals) {
+    const refs = Object.keys(state.unappliedProposals).map((p) => ({
+      proposalOrRefType: "reference",
+      reference: base64ToBytes(p)
+    }));
+    const proposals = extraProposals.map((p) => ({ proposalOrRefType: "proposal", proposal: p }));
+    return [...refs, ...proposals];
+  }
+  async function createWelcome(ratchetTreeExtension, groupContext, confirmationTag, state, tree, cs, epochSecrets, res, pathSecrets, extensions) {
+    const groupInfo = ratchetTreeExtension ? await createGroupInfoWithRatchetTree(groupContext, confirmationTag, state, tree, extensions, cs) : await createGroupInfo(groupContext, confirmationTag, state, extensions, cs);
+    const encryptedGroupInfo = await encryptGroupInfo(groupInfo, epochSecrets.welcomeSecret, cs);
+    const encryptedGroupSecrets = res.additionalResult.kind === "memberCommit" ? await Promise.all(res.additionalResult.addedLeafNodes.map(([leafNodeIndex, keyPackage]) => {
+      return createEncryptedGroupSecrets(tree, leafNodeIndex, state, pathSecrets, cs, keyPackage, encryptedGroupInfo, epochSecrets, res);
+    })) : [];
+    return encryptedGroupSecrets.length > 0 ? {
+      cipherSuite: groupContext.cipherSuite,
+      secrets: encryptedGroupSecrets,
+      encryptedGroupInfo
+    } : void 0;
+  }
+  async function createEncryptedGroupSecrets(tree, leafNodeIndex, state, pathSecrets, cs, keyPackage, encryptedGroupInfo, epochSecrets, res) {
+    const nodeIndex = firstCommonAncestor(tree, leafNodeIndex, toLeafIndex(state.privatePath.leafIndex));
+    const pathSecret = pathSecrets.find((ps) => ps.nodeIndex === nodeIndex);
+    const pk = await cs.hpke.importPublicKey(keyPackage.initKey);
+    const egs = await encryptGroupSecrets(pk, encryptedGroupInfo, { joinerSecret: epochSecrets.joinerSecret, pathSecret: pathSecret?.secret, psks: res.pskIds }, cs.hpke);
+    const ref = await makeKeyPackageRef(keyPackage, cs.hash);
+    return { newMember: ref, encryptedGroupSecrets: { kemOutput: egs.enc, ciphertext: egs.ct } };
+  }
+  async function createGroupInfo(groupContext, confirmationTag, state, extensions, cs) {
+    const groupInfoTbs = {
+      groupContext,
+      extensions,
+      confirmationTag,
+      signer: state.privatePath.leafIndex
+    };
+    return signGroupInfo(groupInfoTbs, state.signaturePrivateKey, cs.signature);
+  }
+  async function createGroupInfoWithRatchetTree(groupContext, confirmationTag, state, tree, extensions, cs) {
+    const encodedTree = encode(ratchetTreeEncoder)(tree);
+    const gi = await createGroupInfo(groupContext, confirmationTag, state, [...extensions, { extensionType: "ratchet_tree", extensionData: encodedTree }], cs);
+    return gi;
+  }
+  async function protectCommit(publicMessage, state, authenticatedData, content, authData, cs) {
+    const wireformat = publicMessage ? "mls_public_message" : "mls_private_message";
+    const authenticatedContent = {
+      wireformat,
+      content,
+      auth: authData
+    };
+    if (publicMessage) {
+      const msg = await protectPublicMessage(state.keySchedule.membershipKey, state.groupContext, authenticatedContent, cs);
+      return [{ version: "mls10", wireformat: "mls_public_message", publicMessage: msg }, state.secretTree];
+    } else {
+      const res = await protect(state.keySchedule.senderDataSecret, authenticatedData, state.groupContext, state.secretTree, { ...content, auth: authData }, state.privatePath.leafIndex, state.clientConfig.paddingConfig, cs);
+      return [{ version: "mls10", wireformat: "mls_private_message", privateMessage: res.privateMessage }, res.tree];
+    }
+  }
+  async function applyUpdatePathSecret(tree, privatePath, senderLeafIndex, gc, path, excludeNodes, cs) {
+    const { nodeIndex: ancestorNodeIndex, resolution: resolution2, updateNode } = firstMatchAncestor(tree, toLeafIndex(privatePath.leafIndex), senderLeafIndex, path);
+    for (const [i, nodeIndex] of filterNewLeaves(resolution2, excludeNodes).entries()) {
+      if (privatePath.privateKeys[nodeIndex] !== void 0) {
+        const key = await cs.hpke.importPrivateKey(privatePath.privateKeys[nodeIndex]);
+        const ct = updateNode.encryptedPathSecret[i];
+        const pathSecret = await decryptWithLabel(key, "UpdatePathNode", encode(groupContextEncoder)(gc), ct.kemOutput, ct.ciphertext, cs.hpke);
+        return { nodeIndex: ancestorNodeIndex, pathSecret };
+      }
+    }
+    throw new InternalError("No overlap between provided private keys and update path");
+  }
+  function filterNewLeaves(resolution2, excludeNodes) {
+    const set = new Set(excludeNodes);
+    return resolution2.filter((i) => !set.has(i));
+  }
+
+  // node_modules/ts-mls/dist/processMessages.js
+  async function processPrivateMessage(state, pm, pskSearch, cs, callback = acceptAll) {
+    if (pm.epoch < state.groupContext.epoch) {
+      const receiverData = state.historicalReceiverData.get(pm.epoch);
+      if (receiverData !== void 0) {
+        const result2 = await unprotectPrivateMessage(receiverData.senderDataSecret, pm, receiverData.secretTree, receiverData.ratchetTree, receiverData.groupContext, state.clientConfig.keyRetentionConfig, cs);
+        const newHistoricalReceiverData = addToMap(state.historicalReceiverData, pm.epoch, {
+          ...receiverData,
+          secretTree: result2.tree
+        });
+        const newState = { ...state, historicalReceiverData: newHistoricalReceiverData };
+        if (result2.content.content.contentType === "application") {
+          return { kind: "applicationMessage", message: result2.content.content.applicationData, newState };
+        } else {
+          throw new ValidationError("Cannot process commit or proposal from former epoch");
+        }
+      } else {
+        throw new ValidationError("Cannot process message, epoch too old");
+      }
+    }
+    const result = await unprotectPrivateMessage(state.keySchedule.senderDataSecret, pm, state.secretTree, state.ratchetTree, state.groupContext, state.clientConfig.keyRetentionConfig, cs);
+    const updatedState = { ...state, secretTree: result.tree };
+    if (result.content.content.contentType === "application") {
+      return { kind: "applicationMessage", message: result.content.content.applicationData, newState: updatedState };
+    } else if (result.content.content.contentType === "commit") {
+      const { newState, actionTaken } = await processCommit(updatedState, result.content, "mls_private_message", pskSearch, callback, cs);
+      return {
+        kind: "newState",
+        newState,
+        actionTaken
+      };
+    } else {
+      const action = callback({
+        kind: "proposal",
+        proposal: {
+          proposal: result.content.content.proposal,
+          senderLeafIndex: getSenderLeafNodeIndex(result.content.content.sender)
+        }
+      });
+      if (action === "reject")
+        return {
+          kind: "newState",
+          newState: updatedState,
+          actionTaken: action
+        };
+      else
+        return {
+          kind: "newState",
+          newState: await processProposal(updatedState, result.content, result.content.content.proposal, cs.hash),
+          actionTaken: action
+        };
+    }
+  }
+  async function processPublicMessage(state, pm, pskSearch, cs, callback = acceptAll) {
+    if (pm.content.epoch < state.groupContext.epoch)
+      throw new ValidationError("Cannot process message, epoch too old");
+    const content = await unprotectPublicMessage(state.keySchedule.membershipKey, state.groupContext, state.ratchetTree, pm, cs);
+    if (content.content.contentType === "proposal") {
+      const action = callback({
+        kind: "proposal",
+        proposal: { proposal: content.content.proposal, senderLeafIndex: getSenderLeafNodeIndex(content.content.sender) }
+      });
+      if (action === "reject")
+        return {
+          newState: state,
+          actionTaken: action
+        };
+      else
+        return {
+          newState: await processProposal(state, content, content.content.proposal, cs.hash),
+          actionTaken: action
+        };
+    } else {
+      return processCommit(state, content, "mls_public_message", pskSearch, callback, cs);
+    }
+  }
+  async function processCommit(state, content, wireformat, pskSearch, callback, cs) {
+    if (content.content.epoch !== state.groupContext.epoch)
+      throw new ValidationError("Could not validate epoch");
+    const senderLeafIndex = content.content.sender.senderType === "member" ? toLeafIndex(content.content.sender.leafIndex) : void 0;
+    const result = await applyProposals(state, content.content.commit.proposals, senderLeafIndex, pskSearch, false, cs);
+    const action = callback({ kind: "commit", proposals: result.allProposals });
+    if (action === "reject") {
+      return { newState: state, actionTaken: action };
+    }
+    if (content.content.commit.path !== void 0) {
+      const committerLeafIndex = senderLeafIndex ?? (result.additionalResult.kind === "externalCommit" ? result.additionalResult.newMemberLeafIndex : void 0);
+      if (committerLeafIndex === void 0)
+        throw new ValidationError("Cannot verify commit leaf node because no commiter leaf index found");
+      throwIfDefined(await validateLeafNodeUpdateOrCommit(content.content.commit.path.leafNode, committerLeafIndex, state.groupContext, state.clientConfig.authService, cs.signature));
+      throwIfDefined(await validateLeafNodeCredentialAndKeyUniqueness(result.tree, content.content.commit.path.leafNode, committerLeafIndex));
+    }
+    if (result.needsUpdatePath && content.content.commit.path === void 0)
+      throw new ValidationError("Update path is required");
+    const groupContextWithExtensions = result.additionalResult.kind === "memberCommit" && result.additionalResult.extensions.length > 0 ? { ...state.groupContext, extensions: result.additionalResult.extensions } : state.groupContext;
+    const [pkp, commitSecret, tree] = await applyTreeUpdate(content.content.commit.path, content.content.sender, result.tree, cs, state, groupContextWithExtensions, result.additionalResult.kind === "memberCommit" ? result.additionalResult.addedLeafNodes.map((l) => leafToNodeIndex(toLeafIndex(l[0]))) : [findBlankLeafNodeIndex(result.tree) ?? toNodeIndex(result.tree.length + 1)], cs.kdf);
+    const newTreeHash = await treeHashRoot(tree, cs.hash);
+    if (content.auth.contentType !== "commit")
+      throw new ValidationError("Received content as commit, but not auth");
+    const updatedGroupContext = await nextEpochContext(groupContextWithExtensions, wireformat, content.content, content.auth.signature, newTreeHash, state.confirmationTag, cs.hash);
+    const initSecret = result.additionalResult.kind === "externalCommit" ? result.additionalResult.externalInitSecret : state.keySchedule.initSecret;
+    const epochSecrets = await initializeEpoch(initSecret, commitSecret, updatedGroupContext, result.pskSecret, cs.kdf);
+    const confirmationTagValid = await verifyConfirmationTag(epochSecrets.keySchedule.confirmationKey, content.auth.confirmationTag, updatedGroupContext.confirmedTranscriptHash, cs.hash);
+    if (!confirmationTagValid)
+      throw new CryptoVerificationError("Could not verify confirmation tag");
+    const secretTree = await createSecretTree(leafWidth(tree.length), epochSecrets.keySchedule.encryptionSecret, cs.kdf);
+    const suspendedPendingReinit = result.additionalResult.kind === "reinit" ? result.additionalResult.reinit : void 0;
+    const groupActiveState = result.selfRemoved ? { kind: "removedFromGroup" } : suspendedPendingReinit !== void 0 ? { kind: "suspendedPendingReinit", reinit: suspendedPendingReinit } : { kind: "active" };
+    return {
+      newState: {
+        ...state,
+        secretTree,
+        ratchetTree: tree,
+        privatePath: pkp,
+        groupContext: updatedGroupContext,
+        keySchedule: epochSecrets.keySchedule,
+        confirmationTag: content.auth.confirmationTag,
+        historicalReceiverData: addHistoricalReceiverData(state),
+        unappliedProposals: {},
+        groupActiveState
+      },
+      actionTaken: action
+    };
+  }
+  async function applyTreeUpdate(path, sender, tree, cs, state, groupContext, excludeNodes, kdf) {
+    if (path === void 0)
+      return [state.privatePath, new Uint8Array(kdf.size), tree];
+    if (sender.senderType === "member") {
+      const updatedTree = await applyUpdatePath(tree, toLeafIndex(sender.leafIndex), path, cs.hash);
+      const [pkp, commitSecret] = await updatePrivateKeyPath(updatedTree, state, toLeafIndex(sender.leafIndex), { ...groupContext, treeHash: await treeHashRoot(updatedTree, cs.hash), epoch: groupContext.epoch + 1n }, path, excludeNodes, cs);
+      return [pkp, commitSecret, updatedTree];
+    } else {
+      const [treeWithLeafNode, leafNodeIndex] = addLeafNode(tree, path.leafNode);
+      const senderLeafIndex = nodeToLeafIndex(leafNodeIndex);
+      const updatedTree = await applyUpdatePath(treeWithLeafNode, senderLeafIndex, path, cs.hash, true);
+      const [pkp, commitSecret] = await updatePrivateKeyPath(updatedTree, state, senderLeafIndex, { ...groupContext, treeHash: await treeHashRoot(updatedTree, cs.hash), epoch: groupContext.epoch + 1n }, path, excludeNodes, cs);
+      return [pkp, commitSecret, updatedTree];
+    }
+  }
+  async function updatePrivateKeyPath(tree, state, leafNodeIndex, groupContext, path, excludeNodes, cs) {
+    const secret = await applyUpdatePathSecret(tree, state.privatePath, leafNodeIndex, groupContext, path, excludeNodes, cs);
+    const pathSecrets = await pathToRoot(tree, toNodeIndex(secret.nodeIndex), secret.pathSecret, cs.kdf);
+    const newPkp = mergePrivateKeyPaths(state.privatePath, await toPrivateKeyPath(pathSecrets, state.privatePath.leafIndex, cs));
+    const rootIndex = root(leafWidth(tree.length));
+    const rootSecret = pathSecrets[rootIndex];
+    if (rootSecret === void 0)
+      throw new InternalError("Could not find secret for root");
+    const commitSecret = await deriveSecret(rootSecret, "path", cs.kdf);
+    return [newPkp, commitSecret];
   }
 
   // node_modules/@hpke/common/esm/src/errors.js
@@ -11738,72 +13950,6 @@
     return concatUint8Arrays(new Uint8Array(lengthDifference), k);
   }
 
-  // node_modules/ts-mls/dist/crypto/implementation/default/makeAead.js
-  async function makeAead(aeadAlg) {
-    switch (aeadAlg) {
-      case "AES128GCM":
-        return [
-          {
-            encrypt(key, nonce, aad, plaintext) {
-              return encryptAesGcm(key, nonce, aad, plaintext);
-            },
-            decrypt(key, nonce, aad, ciphertext) {
-              return decryptAesGcm(key, nonce, aad, ciphertext);
-            }
-          },
-          new Aes128Gcm()
-        ];
-      case "AES256GCM":
-        return [
-          {
-            encrypt(key, nonce, aad, plaintext) {
-              return encryptAesGcm(key, nonce, aad, plaintext);
-            },
-            decrypt(key, nonce, aad, ciphertext) {
-              return decryptAesGcm(key, nonce, aad, ciphertext);
-            }
-          },
-          new Aes256Gcm()
-        ];
-      case "CHACHA20POLY1305":
-        try {
-          const { Chacha20Poly1305 } = await import("@hpke/chacha20poly1305");
-          const { chacha20poly1305: chacha20poly13052 } = await Promise.resolve().then(() => (init_chacha(), chacha_exports));
-          return [
-            {
-              async encrypt(key, nonce, aad, plaintext) {
-                return chacha20poly13052(key, nonce, aad).encrypt(plaintext);
-              },
-              async decrypt(key, nonce, aad, ciphertext) {
-                return chacha20poly13052(key, nonce, aad).decrypt(ciphertext);
-              }
-            },
-            new Chacha20Poly1305()
-          ];
-        } catch (err) {
-          throw new DependencyError("Optional dependency '@hpke/chacha20poly1305' is not installed. Please install it to use this feature.");
-        }
-    }
-  }
-  async function encryptAesGcm(key, nonce, aad, plaintext) {
-    const cryptoKey = await crypto.subtle.importKey("raw", toBufferSource(key), { name: "AES-GCM" }, false, ["encrypt"]);
-    const result = await crypto.subtle.encrypt({
-      name: "AES-GCM",
-      iv: toBufferSource(nonce),
-      additionalData: aad.length > 0 ? toBufferSource(aad) : void 0
-    }, cryptoKey, toBufferSource(plaintext));
-    return new Uint8Array(result);
-  }
-  async function decryptAesGcm(key, nonce, aad, ciphertext) {
-    const cryptoKey = await crypto.subtle.importKey("raw", toBufferSource(key), { name: "AES-GCM" }, false, ["decrypt"]);
-    const result = await crypto.subtle.decrypt({
-      name: "AES-GCM",
-      iv: toBufferSource(nonce),
-      additionalData: aad.length > 0 ? toBufferSource(aad) : void 0
-    }, cryptoKey, toBufferSource(ciphertext));
-    return new Uint8Array(result);
-  }
-
   // node_modules/ts-mls/dist/crypto/implementation/default/makeKdfImpl.js
   function makeKdfImpl(k) {
     return {
@@ -11871,17 +14017,6 @@
           throw new DependencyError("Optional dependency '@hpke/hybridkem-x-wing' is not installed. Please install it to use this feature.");
         }
     }
-  }
-
-  // node_modules/ts-mls/dist/crypto/implementation/default/makeHpke.js
-  async function makeHpke(hpkealg) {
-    const [aead, aeadInterface] = await makeAead(hpkealg.aead);
-    const cs = new CipherSuite({
-      kem: await makeDhKem(hpkealg.kem),
-      kdf: makeKdf(hpkealg.kdf),
-      aead: aeadInterface
-    });
-    return makeGenericHpke(hpkealg, aead, cs);
   }
 
   // node_modules/ts-mls/dist/crypto/implementation/default/rng.js
@@ -12005,25 +14140,534 @@
     }
   }
 
-  // node_modules/ts-mls/dist/crypto/implementation/default/provider.js
-  var defaultCryptoProvider = {
+  // node_modules/ts-mls/dist/crypto/implementation/noble/makeHashImpl.js
+  init_sha2();
+  init_hmac();
+  function makeHashImpl2(h) {
+    return {
+      async digest(data) {
+        switch (h) {
+          case "SHA-256":
+            return sha2562(data);
+          case "SHA-384":
+            return sha3842(data);
+          case "SHA-512":
+            return sha5122(data);
+          default:
+            throw new Error(`Unsupported hash algorithm: ${h}`);
+        }
+      },
+      async mac(key, data) {
+        switch (h) {
+          case "SHA-256":
+            return hmac2(sha2562, key, data);
+          case "SHA-384":
+            return hmac2(sha3842, key, data);
+          case "SHA-512":
+            return hmac2(sha5122, key, data);
+          default:
+            throw new Error(`Unsupported hash algorithm: ${h}`);
+        }
+      },
+      async verifyMac(key, mac, data) {
+        const expectedMac = await this.mac(key, data);
+        return mac.length === expectedMac.length && mac.every((byte, i) => byte === expectedMac[i]);
+      }
+    };
+  }
+
+  // node_modules/@noble/ciphers/_polyval.js
+  init_utils3();
+  var BLOCK_SIZE = 16;
+  var ZEROS16 = /* @__PURE__ */ new Uint8Array(16);
+  var ZEROS32 = u322(ZEROS16);
+  var POLY = 225;
+  var mul2 = (s0, s1, s2, s3) => {
+    const hiBit = s3 & 1;
+    return {
+      s3: s2 << 31 | s3 >>> 1,
+      s2: s1 << 31 | s2 >>> 1,
+      s1: s0 << 31 | s1 >>> 1,
+      s0: s0 >>> 1 ^ POLY << 24 & -(hiBit & 1)
+      // reduce % poly
+    };
+  };
+  var swapLE = (n) => (n >>> 0 & 255) << 24 | (n >>> 8 & 255) << 16 | (n >>> 16 & 255) << 8 | n >>> 24 & 255 | 0;
+  function _toGHASHKey(k) {
+    k.reverse();
+    const hiBit = k[15] & 1;
+    let carry = 0;
+    for (let i = 0; i < k.length; i++) {
+      const t = k[i];
+      k[i] = t >>> 1 | carry;
+      carry = (t & 1) << 7;
+    }
+    k[0] ^= -hiBit & 225;
+    return k;
+  }
+  var estimateWindow = (bytes) => {
+    if (bytes > 64 * 1024)
+      return 8;
+    if (bytes > 1024)
+      return 4;
+    return 2;
+  };
+  var GHASH = class {
+    blockLen = BLOCK_SIZE;
+    outputLen = BLOCK_SIZE;
+    s0 = 0;
+    s1 = 0;
+    s2 = 0;
+    s3 = 0;
+    finished = false;
+    t;
+    W;
+    windowSize;
+    // We select bits per window adaptively based on expectedLength
+    constructor(key, expectedLength) {
+      abytes3(key, 16, "key");
+      key = copyBytes3(key);
+      const kView = createView3(key);
+      let k0 = kView.getUint32(0, false);
+      let k1 = kView.getUint32(4, false);
+      let k2 = kView.getUint32(8, false);
+      let k3 = kView.getUint32(12, false);
+      const doubles = [];
+      for (let i = 0; i < 128; i++) {
+        doubles.push({ s0: swapLE(k0), s1: swapLE(k1), s2: swapLE(k2), s3: swapLE(k3) });
+        ({ s0: k0, s1: k1, s2: k2, s3: k3 } = mul2(k0, k1, k2, k3));
+      }
+      const W = estimateWindow(expectedLength || 1024);
+      if (![1, 2, 4, 8].includes(W))
+        throw new Error("ghash: invalid window size, expected 2, 4 or 8");
+      this.W = W;
+      const bits = 128;
+      const windows = bits / W;
+      const windowSize = this.windowSize = 2 ** W;
+      const items = [];
+      for (let w = 0; w < windows; w++) {
+        for (let byte = 0; byte < windowSize; byte++) {
+          let s0 = 0, s1 = 0, s2 = 0, s3 = 0;
+          for (let j = 0; j < W; j++) {
+            const bit = byte >>> W - j - 1 & 1;
+            if (!bit)
+              continue;
+            const { s0: d0, s1: d1, s2: d2, s3: d3 } = doubles[W * w + j];
+            s0 ^= d0, s1 ^= d1, s2 ^= d2, s3 ^= d3;
+          }
+          items.push({ s0, s1, s2, s3 });
+        }
+      }
+      this.t = items;
+    }
+    _updateBlock(s0, s1, s2, s3) {
+      s0 ^= this.s0, s1 ^= this.s1, s2 ^= this.s2, s3 ^= this.s3;
+      const { W, t, windowSize } = this;
+      let o0 = 0, o1 = 0, o2 = 0, o3 = 0;
+      const mask = (1 << W) - 1;
+      let w = 0;
+      for (const num of [s0, s1, s2, s3]) {
+        for (let bytePos = 0; bytePos < 4; bytePos++) {
+          const byte = num >>> 8 * bytePos & 255;
+          for (let bitPos = 8 / W - 1; bitPos >= 0; bitPos--) {
+            const bit = byte >>> W * bitPos & mask;
+            const { s0: e0, s1: e1, s2: e2, s3: e3 } = t[w * windowSize + bit];
+            o0 ^= e0, o1 ^= e1, o2 ^= e2, o3 ^= e3;
+            w += 1;
+          }
+        }
+      }
+      this.s0 = o0;
+      this.s1 = o1;
+      this.s2 = o2;
+      this.s3 = o3;
+    }
+    update(data) {
+      aexists3(this);
+      abytes3(data);
+      data = copyBytes3(data);
+      const b32 = u322(data);
+      const blocks = Math.floor(data.length / BLOCK_SIZE);
+      const left2 = data.length % BLOCK_SIZE;
+      for (let i = 0; i < blocks; i++) {
+        this._updateBlock(b32[i * 4 + 0], b32[i * 4 + 1], b32[i * 4 + 2], b32[i * 4 + 3]);
+      }
+      if (left2) {
+        ZEROS16.set(data.subarray(blocks * BLOCK_SIZE));
+        this._updateBlock(ZEROS32[0], ZEROS32[1], ZEROS32[2], ZEROS32[3]);
+        clean3(ZEROS32);
+      }
+      return this;
+    }
+    destroy() {
+      const { t } = this;
+      for (const elm of t) {
+        elm.s0 = 0, elm.s1 = 0, elm.s2 = 0, elm.s3 = 0;
+      }
+    }
+    digestInto(out) {
+      aexists3(this);
+      aoutput3(out, this);
+      this.finished = true;
+      const { s0, s1, s2, s3 } = this;
+      const o32 = u322(out);
+      o32[0] = s0;
+      o32[1] = s1;
+      o32[2] = s2;
+      o32[3] = s3;
+      return out;
+    }
+    digest() {
+      const res = new Uint8Array(BLOCK_SIZE);
+      this.digestInto(res);
+      this.destroy();
+      return res;
+    }
+  };
+  var Polyval = class extends GHASH {
+    constructor(key, expectedLength) {
+      abytes3(key);
+      const ghKey = _toGHASHKey(copyBytes3(key));
+      super(ghKey, expectedLength);
+      clean3(ghKey);
+    }
+    update(data) {
+      aexists3(this);
+      abytes3(data);
+      data = copyBytes3(data);
+      const b32 = u322(data);
+      const left2 = data.length % BLOCK_SIZE;
+      const blocks = Math.floor(data.length / BLOCK_SIZE);
+      for (let i = 0; i < blocks; i++) {
+        this._updateBlock(swapLE(b32[i * 4 + 3]), swapLE(b32[i * 4 + 2]), swapLE(b32[i * 4 + 1]), swapLE(b32[i * 4 + 0]));
+      }
+      if (left2) {
+        ZEROS16.set(data.subarray(blocks * BLOCK_SIZE));
+        this._updateBlock(swapLE(ZEROS32[3]), swapLE(ZEROS32[2]), swapLE(ZEROS32[1]), swapLE(ZEROS32[0]));
+        clean3(ZEROS32);
+      }
+      return this;
+    }
+    digestInto(out) {
+      aexists3(this);
+      aoutput3(out, this);
+      this.finished = true;
+      const { s0, s1, s2, s3 } = this;
+      const o32 = u322(out);
+      o32[0] = s0;
+      o32[1] = s1;
+      o32[2] = s2;
+      o32[3] = s3;
+      return out.reverse();
+    }
+  };
+  function wrapConstructorWithKey(hashCons) {
+    const hashC = (msg, key) => hashCons(key, msg.length).update(msg).digest();
+    const tmp = hashCons(new Uint8Array(16), 0);
+    hashC.outputLen = tmp.outputLen;
+    hashC.blockLen = tmp.blockLen;
+    hashC.create = (key, expectedLength) => hashCons(key, expectedLength);
+    return hashC;
+  }
+  var ghash = wrapConstructorWithKey((key, expectedLength) => new GHASH(key, expectedLength));
+  var polyval = wrapConstructorWithKey((key, expectedLength) => new Polyval(key, expectedLength));
+
+  // node_modules/@noble/ciphers/aes.js
+  init_utils3();
+  var BLOCK_SIZE2 = 16;
+  var BLOCK_SIZE32 = 4;
+  var EMPTY_BLOCK = /* @__PURE__ */ new Uint8Array(BLOCK_SIZE2);
+  var POLY2 = 283;
+  function validateKeyLength(key) {
+    if (![16, 24, 32].includes(key.length))
+      throw new Error('"aes key" expected Uint8Array of length 16/24/32, got length=' + key.length);
+  }
+  function mul22(n) {
+    return n << 1 ^ POLY2 & -(n >> 7);
+  }
+  function mul(a, b) {
+    let res = 0;
+    for (; b > 0; b >>= 1) {
+      res ^= a & -(b & 1);
+      a = mul22(a);
+    }
+    return res;
+  }
+  var sbox = /* @__PURE__ */ (() => {
+    const t = new Uint8Array(256);
+    for (let i = 0, x = 1; i < 256; i++, x ^= mul22(x))
+      t[i] = x;
+    const box = new Uint8Array(256);
+    box[0] = 99;
+    for (let i = 0; i < 255; i++) {
+      let x = t[255 - i];
+      x |= x << 8;
+      box[t[i]] = (x ^ x >> 4 ^ x >> 5 ^ x >> 6 ^ x >> 7 ^ 99) & 255;
+    }
+    clean3(t);
+    return box;
+  })();
+  var rotr32_8 = (n) => n << 24 | n >>> 8;
+  var rotl32_8 = (n) => n << 8 | n >>> 24;
+  function genTtable(sbox2, fn) {
+    if (sbox2.length !== 256)
+      throw new Error("Wrong sbox length");
+    const T0 = new Uint32Array(256).map((_, j) => fn(sbox2[j]));
+    const T1 = T0.map(rotl32_8);
+    const T2 = T1.map(rotl32_8);
+    const T3 = T2.map(rotl32_8);
+    const T01 = new Uint32Array(256 * 256);
+    const T23 = new Uint32Array(256 * 256);
+    const sbox22 = new Uint16Array(256 * 256);
+    for (let i = 0; i < 256; i++) {
+      for (let j = 0; j < 256; j++) {
+        const idx = i * 256 + j;
+        T01[idx] = T0[i] ^ T1[j];
+        T23[idx] = T2[i] ^ T3[j];
+        sbox22[idx] = sbox2[i] << 8 | sbox2[j];
+      }
+    }
+    return { sbox: sbox2, sbox2: sbox22, T0, T1, T2, T3, T01, T23 };
+  }
+  var tableEncoding = /* @__PURE__ */ genTtable(sbox, (s) => mul(s, 3) << 24 | s << 16 | s << 8 | mul(s, 2));
+  var xPowers = /* @__PURE__ */ (() => {
+    const p = new Uint8Array(16);
+    for (let i = 0, x = 1; i < 16; i++, x = mul22(x))
+      p[i] = x;
+    return p;
+  })();
+  function expandKeyLE(key) {
+    abytes3(key);
+    const len = key.length;
+    validateKeyLength(key);
+    const { sbox2 } = tableEncoding;
+    const toClean = [];
+    if (!isAligned32(key))
+      toClean.push(key = copyBytes3(key));
+    const k32 = u322(key);
+    const Nk = k32.length;
+    const subByte = (n) => applySbox(sbox2, n, n, n, n);
+    const xk = new Uint32Array(len + 28);
+    xk.set(k32);
+    for (let i = Nk; i < xk.length; i++) {
+      let t = xk[i - 1];
+      if (i % Nk === 0)
+        t = subByte(rotr32_8(t)) ^ xPowers[i / Nk - 1];
+      else if (Nk > 6 && i % Nk === 4)
+        t = subByte(t);
+      xk[i] = xk[i - Nk] ^ t;
+    }
+    clean3(...toClean);
+    return xk;
+  }
+  function apply0123(T01, T23, s0, s1, s2, s3) {
+    return T01[s0 << 8 & 65280 | s1 >>> 8 & 255] ^ T23[s2 >>> 8 & 65280 | s3 >>> 24 & 255];
+  }
+  function applySbox(sbox2, s0, s1, s2, s3) {
+    return sbox2[s0 & 255 | s1 & 65280] | sbox2[s2 >>> 16 & 255 | s3 >>> 16 & 65280] << 16;
+  }
+  function encrypt(xk, s0, s1, s2, s3) {
+    const { sbox2, T01, T23 } = tableEncoding;
+    let k = 0;
+    s0 ^= xk[k++], s1 ^= xk[k++], s2 ^= xk[k++], s3 ^= xk[k++];
+    const rounds = xk.length / 4 - 2;
+    for (let i = 0; i < rounds; i++) {
+      const t02 = xk[k++] ^ apply0123(T01, T23, s0, s1, s2, s3);
+      const t12 = xk[k++] ^ apply0123(T01, T23, s1, s2, s3, s0);
+      const t22 = xk[k++] ^ apply0123(T01, T23, s2, s3, s0, s1);
+      const t32 = xk[k++] ^ apply0123(T01, T23, s3, s0, s1, s2);
+      s0 = t02, s1 = t12, s2 = t22, s3 = t32;
+    }
+    const t0 = xk[k++] ^ applySbox(sbox2, s0, s1, s2, s3);
+    const t1 = xk[k++] ^ applySbox(sbox2, s1, s2, s3, s0);
+    const t2 = xk[k++] ^ applySbox(sbox2, s2, s3, s0, s1);
+    const t3 = xk[k++] ^ applySbox(sbox2, s3, s0, s1, s2);
+    return { s0: t0, s1: t1, s2: t2, s3: t3 };
+  }
+  function ctr32(xk, isLE3, nonce, src, dst) {
+    abytes3(nonce, BLOCK_SIZE2, "nonce");
+    abytes3(src);
+    dst = getOutput(src.length, dst);
+    const ctr = nonce;
+    const c32 = u322(ctr);
+    const view = createView3(ctr);
+    const src32 = u322(src);
+    const dst32 = u322(dst);
+    const ctrPos = isLE3 ? 0 : 12;
+    const srcLen = src.length;
+    let ctrNum = view.getUint32(ctrPos, isLE3);
+    let { s0, s1, s2, s3 } = encrypt(xk, c32[0], c32[1], c32[2], c32[3]);
+    for (let i = 0; i + 4 <= src32.length; i += 4) {
+      dst32[i + 0] = src32[i + 0] ^ s0;
+      dst32[i + 1] = src32[i + 1] ^ s1;
+      dst32[i + 2] = src32[i + 2] ^ s2;
+      dst32[i + 3] = src32[i + 3] ^ s3;
+      ctrNum = ctrNum + 1 >>> 0;
+      view.setUint32(ctrPos, ctrNum, isLE3);
+      ({ s0, s1, s2, s3 } = encrypt(xk, c32[0], c32[1], c32[2], c32[3]));
+    }
+    const start = BLOCK_SIZE2 * Math.floor(src32.length / BLOCK_SIZE32);
+    if (start < srcLen) {
+      const b32 = new Uint32Array([s0, s1, s2, s3]);
+      const buf = u8(b32);
+      for (let i = start, pos = 0; i < srcLen; i++, pos++)
+        dst[i] = src[i] ^ buf[pos];
+      clean3(b32);
+    }
+    return dst;
+  }
+  function computeTag(fn, isLE3, key, data, AAD) {
+    const aadLength = AAD ? AAD.length : 0;
+    const h = fn.create(key, data.length + aadLength);
+    if (AAD)
+      h.update(AAD);
+    const num = u64Lengths(8 * data.length, 8 * aadLength, isLE3);
+    h.update(data);
+    h.update(num);
+    const res = h.digest();
+    clean3(num);
+    return res;
+  }
+  var gcm = /* @__PURE__ */ wrapCipher({ blockSize: 16, nonceLength: 12, tagLength: 16, varSizeNonce: true }, function aesgcm(key, nonce, AAD) {
+    if (nonce.length < 8)
+      throw new Error("aes/gcm: invalid nonce length");
+    const tagLength = 16;
+    function _computeTag(authKey, tagMask, data) {
+      const tag = computeTag(ghash, false, authKey, data, AAD);
+      for (let i = 0; i < tagMask.length; i++)
+        tag[i] ^= tagMask[i];
+      return tag;
+    }
+    function deriveKeys() {
+      const xk = expandKeyLE(key);
+      const authKey = EMPTY_BLOCK.slice();
+      const counter = EMPTY_BLOCK.slice();
+      ctr32(xk, false, counter, counter, authKey);
+      if (nonce.length === 12) {
+        counter.set(nonce);
+      } else {
+        const nonceLen = EMPTY_BLOCK.slice();
+        const view = createView3(nonceLen);
+        view.setBigUint64(8, BigInt(nonce.length * 8), false);
+        const g = ghash.create(authKey).update(nonce).update(nonceLen);
+        g.digestInto(counter);
+        g.destroy();
+      }
+      const tagMask = ctr32(xk, false, counter, EMPTY_BLOCK);
+      return { xk, authKey, counter, tagMask };
+    }
+    return {
+      encrypt(plaintext) {
+        const { xk, authKey, counter, tagMask } = deriveKeys();
+        const out = new Uint8Array(plaintext.length + tagLength);
+        const toClean = [xk, authKey, counter, tagMask];
+        if (!isAligned32(plaintext))
+          toClean.push(plaintext = copyBytes3(plaintext));
+        ctr32(xk, false, counter, plaintext, out.subarray(0, plaintext.length));
+        const tag = _computeTag(authKey, tagMask, out.subarray(0, out.length - tagLength));
+        toClean.push(tag);
+        out.set(tag, plaintext.length);
+        clean3(...toClean);
+        return out;
+      },
+      decrypt(ciphertext) {
+        const { xk, authKey, counter, tagMask } = deriveKeys();
+        const toClean = [xk, authKey, tagMask, counter];
+        if (!isAligned32(ciphertext))
+          toClean.push(ciphertext = copyBytes3(ciphertext));
+        const data = ciphertext.subarray(0, -tagLength);
+        const passedTag = ciphertext.subarray(-tagLength);
+        const tag = _computeTag(authKey, tagMask, data);
+        toClean.push(tag);
+        if (!equalBytes2(tag, passedTag))
+          throw new Error("aes/gcm: invalid ghash tag");
+        const out = ctr32(xk, false, counter, data);
+        clean3(...toClean);
+        return out;
+      }
+    };
+  });
+
+  // node_modules/ts-mls/dist/crypto/implementation/noble/makeAead.js
+  async function makeAead2(aeadAlg) {
+    switch (aeadAlg) {
+      case "AES128GCM":
+        return [
+          {
+            encrypt(key, nonce, aad, plaintext) {
+              return encryptAesGcm(key, nonce, aad, plaintext);
+            },
+            decrypt(key, nonce, aad, ciphertext) {
+              return decryptAesGcm(key, nonce, aad, ciphertext);
+            }
+          },
+          new Aes128Gcm()
+        ];
+      case "AES256GCM":
+        return [
+          {
+            encrypt(key, nonce, aad, plaintext) {
+              return encryptAesGcm(key, nonce, aad, plaintext);
+            },
+            decrypt(key, nonce, aad, ciphertext) {
+              return decryptAesGcm(key, nonce, aad, ciphertext);
+            }
+          },
+          new Aes256Gcm()
+        ];
+      case "CHACHA20POLY1305":
+        try {
+          const { Chacha20Poly1305 } = await import("@hpke/chacha20poly1305");
+          const { chacha20poly1305: chacha20poly13052 } = await Promise.resolve().then(() => (init_chacha(), chacha_exports));
+          return [
+            {
+              async encrypt(key, nonce, aad, plaintext) {
+                return chacha20poly13052(key, nonce, aad).encrypt(plaintext);
+              },
+              async decrypt(key, nonce, aad, ciphertext) {
+                return chacha20poly13052(key, nonce, aad).decrypt(ciphertext);
+              }
+            },
+            new Chacha20Poly1305()
+          ];
+        } catch (err) {
+          throw new DependencyError("Optional dependency '@hpke/chacha20poly1305' is not installed. Please install it to use this feature.");
+        }
+    }
+  }
+  async function encryptAesGcm(key, nonce, aad, plaintext) {
+    const cipher = gcm(key, nonce, aad);
+    return cipher.encrypt(plaintext);
+  }
+  async function decryptAesGcm(key, nonce, aad, ciphertext) {
+    const cipher = gcm(key, nonce, aad);
+    return cipher.decrypt(ciphertext);
+  }
+
+  // node_modules/ts-mls/dist/crypto/implementation/noble/makeHpke.js
+  async function makeHpke2(hpkealg) {
+    const [aead, aeadInterface] = await makeAead2(hpkealg.aead);
+    const cs = new CipherSuite({
+      kem: await makeDhKem(hpkealg.kem),
+      kdf: makeKdf(hpkealg.kdf),
+      aead: aeadInterface
+    });
+    return makeGenericHpke(hpkealg, aead, cs);
+  }
+
+  // node_modules/ts-mls/dist/crypto/implementation/noble/provider.js
+  var nobleCryptoProvider = {
     async getCiphersuiteImpl(cs) {
-      const sc = crypto.subtle;
       return {
         kdf: makeKdfImpl(makeKdf(cs.hpke.kdf)),
-        hash: makeHashImpl(sc, cs.hash),
+        hash: makeHashImpl2(cs.hash),
         signature: await makeNobleSignatureImpl(cs.signature),
-        hpke: await makeHpke(cs.hpke),
+        hpke: await makeHpke2(cs.hpke),
         rng: defaultRng,
         name: cs.name
       };
     }
   };
-
-  // node_modules/ts-mls/dist/crypto/getCiphersuiteImpl.js
-  async function getCiphersuiteImpl(cs, provider = defaultCryptoProvider) {
-    return provider.getCiphersuiteImpl(cs);
-  }
 
   // node_modules/ts-mls/dist/message.js
   var mlsPublicMessageEncoder = contramapBufferEncoders([wireformatEncoder, publicMessageEncoder], (msg) => [msg.wireformat, msg.publicMessage]);
@@ -12120,453 +14764,528 @@
     });
   }
 
-  // src/service/keyPackage.ts
-  var KeyPackageService = class {
-    // All class #properties are PRIVATE
-    #activityPub;
-    #database;
-    #keyPackages = [];
-    #actorID = "";
-    constructor(activityPub) {
-      this.#activityPub = activityPub;
+  // src/MLS/MLSManager.tsx
+  function stripTrailingNulls(tree) {
+    let lastNonNull = tree.length - 1;
+    while (lastNonNull >= 0 && tree[lastNonNull] === null) {
+      lastNonNull--;
     }
-    async start(actorID) {
-      this.#actorID = actorID;
-      this.#database = await openDB("KeyPackage", 1, {
-        upgrade: (db, oldVersion, _newVersion, transaction2, event) => {
-          if (oldVersion == 0) {
-            var keyPackages = db.createObjectStore("KeyPackage");
-            keyPackages.createIndex("KeyPackage_id", ["id"]);
+    return tree.slice(0, lastNonNull + 1);
+  }
+  var MLSManager = class {
+    constructor(userId) {
+      this.cipherSuite = null;
+      this.initialized = false;
+      this.groups = /* @__PURE__ */ new Map();
+      this.keyPackage = null;
+      this.userId = userId;
+      this.credential = {
+        credentialType: "basic",
+        identity: new TextEncoder().encode(userId)
+      };
+    }
+    /**
+     * Initialize the MLS client with a ciphersuite
+     */
+    async initialize() {
+      if (this.initialized) {
+        return;
+      }
+      try {
+        const cipherSuiteName = "MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519";
+        const cs = getCiphersuiteFromName(cipherSuiteName);
+        this.cipherSuite = await nobleCryptoProvider.getCiphersuiteImpl(cs);
+        await this.generateKeyPackage();
+        this.initialized = true;
+      } catch (error) {
+        throw error;
+      }
+    }
+    /**
+     * Generate a new key package for joining groups
+     */
+    async generateKeyPackage() {
+      try {
+        const keyPackageResult = await generateKeyPackage(
+          this.credential,
+          defaultCapabilities(),
+          defaultLifetime,
+          [],
+          this.cipherSuite
+        );
+        this.keyPackage = {
+          ...keyPackageResult,
+          userId: this.userId
+        };
+        return this.keyPackage;
+      } catch (error) {
+        throw error;
+      }
+    }
+    /**
+     * Get the current key package
+     */
+    getKeyPackage() {
+      return this.keyPackage;
+    }
+    /**
+     * Create a new MLS group
+     */
+    async createGroup(groupId) {
+      this.ensureInitialized();
+      if (!this.keyPackage) {
+        throw new Error("No key package available. Call generateKeyPackage() first.");
+      }
+      if (this.keyPackage.privatePackage == void 0) {
+        throw new Error("No private key package available.");
+      }
+      const groupIdBytes = new TextEncoder().encode(groupId);
+      const groupState = await createGroup(
+        groupIdBytes,
+        this.keyPackage.publicPackage,
+        this.keyPackage.privatePackage,
+        [],
+        this.cipherSuite
+      );
+      this.groups.set(groupId, groupState);
+      const groupInfo = {
+        groupId: groupIdBytes,
+        members: [this.userId],
+        epoch: groupState.groupContext.epoch
+      };
+      return groupInfo;
+    }
+    /**
+     * Add members to an existing group
+     */
+    async addMembers(groupId, keyPackages) {
+      this.ensureInitialized();
+      const groupState = this.groups.get(groupId);
+      if (!groupState) {
+        throw new Error(`Group ${groupId} not found`);
+      }
+      const addProposals = keyPackages.map((kp) => ({
+        proposalType: "add",
+        add: {
+          keyPackage: kp.publicPackage
+        }
+      }));
+      const commitResult = await createCommit(
+        { state: groupState, cipherSuite: this.cipherSuite },
+        { extraProposals: addProposals }
+      );
+      this.groups.set(groupId, commitResult.newState);
+      if (!commitResult.welcome) {
+        throw new Error("No welcome message generated");
+      }
+      console.group("\u{1F50D} [MLS Debug] Commit Structure");
+      const ratchetTreeArray = Array.from(commitResult.newState.ratchetTree);
+      const strippedTree = stripTrailingNulls(ratchetTreeArray);
+      return {
+        welcome: commitResult.welcome,
+        ratchetTree: strippedTree,
+        commit: commitResult.commit
+      };
+    }
+    /**
+     * Process a Welcome message to join an MLS group
+     *
+     * RFC 9420 Compliance:
+     * - Interior null nodes represent blank parent nodes (unmerged positions)
+     * - These nulls are REQUIRED for proper binary tree structure
+     * - Trailing nulls are stripped by sender (per RFC 9420 requirement)
+     * - ratchetTree parameter is optional; ts-mls can extract from Welcome extension
+     *
+     * @param welcome - The Welcome message from group creator
+     * @param ratchetTree - Optional ratchet tree (normally provided out-of-band)
+     */
+    async processWelcome(welcome, ratchetTree) {
+      this.ensureInitialized();
+      if (!this.keyPackage) {
+        throw new Error("No key package available");
+      }
+      if (!this.keyPackage.privatePackage) {
+        throw new Error("No private key package available");
+      }
+      if (ratchetTree && Array.isArray(ratchetTree)) {
+        const nullCount = ratchetTree.filter((n) => n === null).length;
+        console.group("\u{1F50D} [MLS Debug] Ratchet Tree Structure");
+        ratchetTree.forEach((node, i) => {
+          if (node !== null) {
+            console.log({
+              index: i,
+              isObject: typeof node === "object",
+              hasNodeType: node && "nodeType" in node,
+              nodeType: node?.nodeType,
+              keys: node && typeof node === "object" ? Object.keys(node).slice(0, 5) : "n/a"
+            });
+          }
+        });
+        console.groupEnd();
+      }
+      const groupState = await joinGroup(
+        welcome,
+        this.keyPackage.publicPackage,
+        this.keyPackage.privatePackage,
+        emptyPskIndex,
+        this.cipherSuite,
+        ratchetTree
+        // Pass as-is - nulls are valid
+      );
+      const groupId = new TextDecoder().decode(groupState.groupContext.groupId);
+      this.groups.set(groupId, groupState);
+      const members = this.extractMembersFromState(groupState);
+      const groupInfo = {
+        groupId: groupState.groupContext.groupId,
+        members,
+        epoch: groupState.groupContext.epoch
+      };
+      return groupInfo;
+    }
+    /**
+     * Encrypt a message for a group
+     */
+    async encryptMessage(groupId, plaintext) {
+      this.ensureInitialized();
+      try {
+        const groupState = this.groups.get(groupId);
+        if (!groupState) {
+          throw new Error(`Group ${groupId} not found`);
+        }
+        const plaintextBytes = new TextEncoder().encode(plaintext);
+        const result = await createApplicationMessage(groupState, plaintextBytes, this.cipherSuite);
+        this.groups.set(groupId, result.newState);
+        const encoded = encodeMlsMessage({
+          privateMessage: result.privateMessage,
+          wireformat: "mls_private_message",
+          version: "mls10"
+        });
+        const envelope = {
+          groupId: new TextEncoder().encode(groupId),
+          ciphertext: encoded,
+          timestamp: Date.now()
+        };
+        return envelope;
+      } catch (error) {
+        throw error;
+      }
+    }
+    /**
+     * Decrypt a message from a group
+     */
+    async decryptMessage(envelope) {
+      this.ensureInitialized();
+      try {
+        const groupId = new TextDecoder().decode(envelope.groupId);
+        const groupState = this.groups.get(groupId);
+        if (!groupState) {
+          throw new Error(`Group ${groupId} not found`);
+        }
+        const decoded = decodeMlsMessage(envelope.ciphertext, 0);
+        if (!decoded) {
+          throw new Error("Failed to decode message");
+        }
+        const [decodedMessage] = decoded;
+        if (decodedMessage.wireformat !== "mls_private_message") {
+          throw new Error("Expected private message");
+        }
+        const result = await processPrivateMessage(
+          groupState,
+          decodedMessage.privateMessage,
+          emptyPskIndex,
+          this.cipherSuite
+        );
+        this.groups.set(groupId, result.newState);
+        if (result.kind !== "applicationMessage") {
+          throw new Error("Expected application message");
+        }
+        const plaintext = new TextDecoder().decode(result.message);
+        return plaintext;
+      } catch (error) {
+        throw error;
+      }
+    }
+    /**
+     * Update the group keys (key rotation)
+     */
+    async updateKey(groupId) {
+      this.ensureInitialized();
+      try {
+        const groupState = this.groups.get(groupId);
+        if (!groupState) {
+          throw new Error(`Group ${groupId} not found`);
+        }
+        const commitResult = await createCommit(
+          { state: groupState, cipherSuite: this.cipherSuite }
+          // {forcePathUpdate: true} removed because this option doesn't exist in ts-mls
+        );
+        this.groups.set(groupId, commitResult.newState);
+        return commitResult.commit;
+      } catch (error) {
+      }
+    }
+    /**
+     * Process a commit message (key rotation, member changes)
+     *
+     * RFC 9420 Section 12.1.8:
+     * - Update commits (key rotation) → PrivateMessage
+     * - Add/Remove commits → PublicMessage (for existing group members)
+     *
+     * This implementation handles both types based on wireformat.
+     */
+    async processCommit(groupId, commit) {
+      this.ensureInitialized();
+      try {
+        console.group("\u{1F50D} [MLS Debug] Full Commit Structure");
+        if (commit.publicMessage?.content) {
+          if (commit.publicMessage.content.proposals) {
+            commit.publicMessage.content.proposals.forEach((prop, i) => {
+              console.log({
+                index: i,
+                keys: Object.keys(prop),
+                full: prop
+              });
+            });
           }
         }
-      });
-      const transaction = this.#database.transaction("KeyPackage", "readwrite");
-      this.#keyPackages = await transaction.store.getAll();
-      if (this.#keyPackages.length == 0) {
-        this.createKeyPackage();
+        console.groupEnd();
+        const groupState = this.groups.get(groupId);
+        if (!groupState) {
+          throw new Error(`Group ${groupId} not found`);
+        }
+        let result;
+        if (commit.wireformat === "mls_public_message") {
+          result = await processPublicMessage(groupState, commit.publicMessage, emptyPskIndex, this.cipherSuite);
+        } else if (commit.wireformat === "mls_private_message") {
+          result = await processPrivateMessage(
+            groupState,
+            commit.privateMessage,
+            emptyPskIndex,
+            this.cipherSuite
+          );
+        } else {
+          throw new Error(`Unknown commit wireformat: ${commit.wireformat}`);
+        }
+        this.groups.set(groupId, result.newState);
+      } catch (error) {
+        console.error("Error processing commit:", error);
+        throw error;
       }
     }
-    // createKeyPackage creates a new KeyPackage and
-    // synchronizes it with the server.
-    async createKeyPackage() {
-      if (this.#database == void 0) {
-        return;
+    /**
+     * Remove members from a group
+     */
+    async removeMembers(groupId, memberIndices) {
+      this.ensureInitialized();
+      const groupState = this.groups.get(groupId);
+      if (!groupState) {
+        throw new Error(`Group ${groupId} not found`);
       }
-      const implementation = await getCiphersuiteImpl(getCiphersuiteFromName("MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519"));
-      const credential = {
-        credentialType: "basic",
-        identity: new TextEncoder().encode("alice")
-      };
-      var newPackage = await generateKeyPackage(
-        credential,
-        defaultCapabilities(),
-        defaultLifetime,
-        [],
-        implementation
+      const removeProposals = memberIndices.map((index) => ({
+        proposalType: "remove",
+        remove: {
+          removed: BigInt(index)
+        }
+      }));
+      const commitResult = await createCommit(
+        { state: groupState, cipherSuite: this.cipherSuite },
+        { extraProposals: removeProposals }
       );
-      var remotePackage = NewAPKeyPackage(this.#actorID, newPackage.publicPackage);
-      var [remotePackage, err] = await this.#activityPub.createObject(remotePackage);
-      if (err != "") {
-        console.log(err);
-        return;
+      this.groups.set(groupId, commitResult.newState);
+      const encodedCommit = encodeMlsMessage({
+        publicMessage: commitResult.publicMessage,
+        wireformat: "mls_public_message",
+        version: "mls10"
+      });
+      return encodedCommit;
+    }
+    /**
+     * Get list of groups
+     */
+    async getGroups() {
+      this.ensureInitialized();
+      return Array.from(this.groups.keys()).map((id) => new TextEncoder().encode(id));
+    }
+    /**
+     * Export group state for persistence
+     */
+    async exportGroupState(groupId) {
+      this.ensureInitialized();
+      try {
+        const groupState = this.groups.get(groupId);
+        if (!groupState) {
+          throw new Error(`Group ${groupId} not found`);
+        }
+        const exportData = {
+          groupId,
+          epoch: groupState.groupContext.epoch.toString(),
+          exported: Date.now()
+          // Add other serializable fields as needed
+        };
+      } catch (error) {
       }
-      const localPackage = {
-        id: remotePackage.id,
-        privatePackage: newPackage.privatePackage,
-        publicPackage: newPackage.publicPackage
+    }
+    /**
+     * Get user ID
+     */
+    getUserId() {
+      return this.userId;
+    }
+    /**
+     * Get group information
+     */
+    async getGroupKeyInfo(groupId) {
+      const groupState = this.groups.get(groupId);
+      if (!groupState) {
+        return null;
+      }
+      const members = this.extractMembersFromState(groupState);
+      return {
+        groupId,
+        epoch: groupState.groupContext.epoch.toString(),
+        members,
+        cipherSuite: "MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519",
+        treeHash: this.bytesToHex(groupState.groupContext.treeHash).substring(0, 16)
       };
-      this.#database.add("KeyPackage", localPackage, localPackage.id);
+    }
+    /**
+     * Clean up resources
+     */
+    async destroy() {
+      this.keyPackage = null;
+      this.initialized = false;
+    }
+    /**
+     * Extract member identities from group state
+     */
+    extractMembersFromState(state) {
+      const members = [];
+      for (let i = 0; i < state.ratchetTree.length; i++) {
+        const node = state.ratchetTree[i];
+        if (node && node.nodeType === "leaf" && node.leaf.credential) {
+          const identity = new TextDecoder().decode(node.leaf.credential.identity);
+          members.push(identity);
+        }
+      }
+      return members;
+    }
+    /**
+     * Convert bytes to hex string
+     */
+    bytesToHex(bytes) {
+      return Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+    }
+    /**
+     * Ensure the manager is initialized
+     */
+    ensureInitialized() {
+      if (!this.initialized) {
+        throw new Error("MLSManager not initialized. Call initialize() first.");
+      }
     }
   };
 
-  // src/service/factory.ts
-  var ServiceFactory = class {
-    // All class #properties are PRIVATE
-    #actor = {
-      id: "",
-      name: "",
-      icon: "",
-      username: "",
-      inbox: "",
-      mlsInbox: "",
-      outbox: "",
-      keyPackages: ""
-    };
-    #activityPub;
-    #keyPackage;
+  // src/activitypub/collection.ts
+  async function* rangeCollection(url) {
+    if (url == "") {
+      return;
+    }
+    const collection = await load(url);
+    rangeCollectionPage(collection);
+    var pageUrl = collection.first || collection.next;
+    while (pageUrl) {
+      const page = await load(pageUrl);
+      rangeCollectionPage(page);
+      pageUrl = page.next;
+    }
+  }
+  async function* rangeCollectionPage(collection) {
+    const items = collection.orderedItems || collection.items || [];
+    for (var item of items) {
+      if (typeof item === "string") {
+        item = await load(item);
+      }
+      yield item;
+    }
+  }
+
+  // src/activitypub/keyPackage.ts
+  async function getKeyPackages(recipients) {
+    var result = [];
+    for (const recipient of recipients) {
+      const keyPackages = await getKeyPackagesForActor(recipient);
+      for (const keyPackage of keyPackages) {
+        result.push(keyPackage);
+      }
+    }
+    return result;
+  }
+  async function getKeyPackagesForActor(actorID) {
+    console.log("Loading KeyPackages for actor", actorID);
+    const actor = await loadActor(actorID);
+    console.log(actor);
+    const rangeKeyPackages = rangeCollection(actor.keyPackages);
+    var result = [];
+    return result;
+  }
+
+  // src/app.tsx
+  var Controller3 = class {
+    #actorId;
+    #actor;
     constructor() {
-      this.#activityPub = new ActivityPubService();
-      this.#keyPackage = new KeyPackageService(this.#activityPub);
+      const root2 = document.getElementById("mls");
+      if (root2 == void 0) {
+        throw new Error("Can't mount Mithril app. Please verify that <div id=mls> exists.");
+      }
+      this.#actorId = root2.dataset["actor-id"] || "";
+      this.getActor();
     }
-    async start() {
-      const actor = await this.loadMyself();
-      this.#actor = actor;
-      console.log(this.#actor);
-      await this.#activityPub.start(actor.id);
-      await this.#keyPackage.start(actor.id);
+    view() {
+      return /* @__PURE__ */ (0, import_mithril8.default)(Main, { controller: this });
     }
-    async loadMyself() {
-      const response = await fetch("http://localhost/@me", {
-        headers: [["Accept", "application/json"]]
-      });
-      const result = await response.json();
-      return result;
+    async getActor() {
+      if (this.#actor != void 0) {
+        return this.#actor;
+      }
+      this.#actor = await loadActor(this.#actorId);
+      return this.#actor;
     }
+    // newGroupAndMessage creates a new MLS-encrypted
+    // group message with the specified recipients
+    async newGroupAndMessage(recipients, message) {
+      const actor = new MLSManager(this.#actorId);
+      const groupId = "1234567890";
+      await actor.initialize();
+      await actor.createGroup(groupId);
+      const keyPackages = await getKeyPackages(recipients);
+      const { welcome, ratchetTree, commit } = await actor.addMembers(groupId, keyPackages);
+      console.log("newGroupAndMessage", welcome, ratchetTree, commit);
+    }
+    // newConversation creates a new plaintext ActivityPub conversation
+    // with the specified recipients
     async newConversation(to, message) {
       const activity = {
         "@context": "https://www.w3.org/ns/activitystreams",
-        "type": "Create",
-        "actor": this.#actor.id,
-        "to": to,
-        "object": {
-          "type": "Note",
-          "content": message
+        type: "Create",
+        actor: this.#actorId,
+        to,
+        object: {
+          type: "Note",
+          content: message
         }
       };
-      const response = await fetch(this.#actor.outbox, {
+      const actor = await this.getActor();
+      const response = await fetch(actor.outbox, {
         method: "POST",
         headers: { "Content-Type": "application/activity+json" },
         body: JSON.stringify(activity)
       });
     }
   };
-
-  // src/component/main.tsx
-  var import_mithril6 = __toESM(require_mithril(), 1);
-  var import_mithril7 = __toESM(require_mithril(), 1);
-
-  // src/component/modal.tsx
-  var import_mithril = __toESM(require_mithril(), 1);
-
-  // src/component/utils.ts
-  function keyCode(evt) {
-    var result = "";
-    if (window.navigator.userAgent.indexOf("Macintosh") >= 0) {
-      if (evt.metaKey) {
-        result += "Ctrl+";
-      }
-    } else {
-      if (evt.ctrlKey) {
-        result += "Ctrl+";
-      }
-    }
-    if (evt.shiftKey) {
-      result += "Shift+";
-    }
-    result += evt.key;
-    return result;
-  }
-  function getFocusElements(node) {
-    const focusElements = node.querySelectorAll("[tabIndex]");
-    if (focusElements.length == 0) {
-      return [void 0, void 0];
-    }
-    const firstElement = focusElements[0];
-    const lastElement = focusElements[focusElements.length - 1];
-    return [firstElement, lastElement];
-  }
-
-  // src/component/modal.tsx
-  var Modal = class {
-    oncreate(vnode) {
-      requestAnimationFrame(() => {
-        document.getElementById("modal")?.classList.add("ready");
-        const firstElement = vnode.dom.querySelector("[tabIndex]");
-        firstElement?.focus();
-        import_mithril.default.redraw();
-      });
-    }
-    view(vnode) {
-      return /* @__PURE__ */ (0, import_mithril.default)("div", { id: "modal", onkeydown: (event) => this.onkeydown(event, vnode) }, /* @__PURE__ */ (0, import_mithril.default)("div", { id: "modal-underlay", onclick: vnode.attrs.close }), /* @__PURE__ */ (0, import_mithril.default)("div", { id: "modal-window" }, vnode.children));
-    }
-    onkeydown(event, vnode) {
-      switch (keyCode(event)) {
-        // Trap tab focus
-        case "Tab": {
-          const [firstElement, lastElement] = getFocusElements(vnode.dom);
-          if (document.activeElement == lastElement) {
-            firstElement?.focus();
-            event.stopPropagation();
-            event.preventDefault();
-          }
-          return;
-        }
-        // Trap tab focus
-        case "Shift+Tab": {
-          const [firstElement, lastElement] = getFocusElements(vnode.dom);
-          if (document.activeElement == firstElement) {
-            lastElement?.focus();
-            event.stopPropagation();
-            event.preventDefault();
-          }
-          return;
-        }
-        // Close modal window
-        case "Escape": {
-          vnode.attrs.close();
-          return;
-        }
-      }
-    }
-    // TODO: Need handlers for TAB, SHIFT+TAB, ESCAPE
-  };
-
-  // src/component/modal_newConversation.tsx
-  var import_mithril4 = __toESM(require_mithril(), 1);
-  var import_mithril5 = __toESM(require_mithril(), 1);
-
-  // src/component/actorSearch.tsx
-  var import_mithril2 = __toESM(require_mithril(), 1);
-  var import_mithril3 = __toESM(require_mithril(), 1);
-  var ActorSearch = class {
-    oninit(vnode) {
-      vnode.state.search = "";
-      vnode.state.loading = false;
-      vnode.state.options = [];
-      vnode.state.highlightedOption = -1;
-    }
-    view(vnode) {
-      return /* @__PURE__ */ (0, import_mithril2.default)("div", { class: "autocomplete" }, /* @__PURE__ */ (0, import_mithril2.default)("div", { class: "input" }, vnode.attrs.value.map((actor, index) => {
-        const isSecure = actor.keyPackages != "";
-        return /* @__PURE__ */ (0, import_mithril2.default)("span", { class: isSecure ? "tag blue" : "tag gray" }, /* @__PURE__ */ (0, import_mithril2.default)("span", { style: "display:inline-flex; align-items:center; margin-right:8px;" }, /* @__PURE__ */ (0, import_mithril2.default)("img", { src: actor.icon, class: "circle", style: "height:1em; margin:0px 4px;" }), /* @__PURE__ */ (0, import_mithril2.default)("span", { class: "bold" }, actor.name), "\xA0", isSecure ? /* @__PURE__ */ (0, import_mithril2.default)("i", { class: "bi bi-lock-fill" }) : null), /* @__PURE__ */ (0, import_mithril2.default)("i", { class: "clickable bi bi-x-lg", onclick: () => this.removeActor(vnode, index) }));
-      }), /* @__PURE__ */ (0, import_mithril2.default)(
-        "input",
-        {
-          id: "idActorSearch",
-          name: vnode.attrs.name,
-          class: "padding-none",
-          style: "min-width:200px;",
-          value: vnode.state.search,
-          tabindex: "0",
-          onkeydown: async (event) => {
-            this.onkeydown(event, vnode);
-          },
-          onkeypress: async (event) => {
-            this.onkeypress(event, vnode);
-          },
-          oninput: async (event) => {
-            this.oninput(event, vnode);
-          },
-          onfocus: () => this.loadOptions(vnode),
-          onblur: () => this.onblur(vnode)
-        }
-      )), vnode.state.options.length ? /* @__PURE__ */ (0, import_mithril2.default)("div", { class: "options" }, /* @__PURE__ */ (0, import_mithril2.default)("div", { role: "menu", class: "menu" }, vnode.state.options.map((actor, index) => {
-        const isSecure = actor.keyPackages != "";
-        return /* @__PURE__ */ (0, import_mithril2.default)(
-          "div",
-          {
-            role: "menuitem",
-            class: "flex-row padding-xs",
-            onmousedown: () => this.selectActor(vnode, index),
-            "aria-selected": index == vnode.state.highlightedOption ? "true" : null
-          },
-          /* @__PURE__ */ (0, import_mithril2.default)("div", { class: "width-32" }, /* @__PURE__ */ (0, import_mithril2.default)("img", { src: actor.icon, class: "width-32 circle" })),
-          /* @__PURE__ */ (0, import_mithril2.default)("div", null, /* @__PURE__ */ (0, import_mithril2.default)("div", null, actor.name, " \xA0", isSecure ? /* @__PURE__ */ (0, import_mithril2.default)("i", { class: "text-xs text-light-gray bi bi-lock-fill" }) : null), /* @__PURE__ */ (0, import_mithril2.default)("div", { class: "text-xs text-light-gray" }, actor.username))
-        );
-      }))) : null);
-    }
-    async onkeydown(event, vnode) {
-      switch (keyCode(event)) {
-        case "Backspace":
-          const target = event.target;
-          if (target?.selectionStart == 0) {
-            this.removeActor(vnode, vnode.attrs.value.length - 1);
-            event.stopPropagation();
-          }
-          return;
-        case "ArrowDown":
-          vnode.state.highlightedOption = Math.min(vnode.state.highlightedOption + 1, vnode.state.options.length - 1);
-          return;
-        case "ArrowUp":
-          vnode.state.highlightedOption = Math.max(vnode.state.highlightedOption - 1, 0);
-          return;
-        case "Enter":
-          this.selectActor(vnode, vnode.state.highlightedOption);
-          return;
-      }
-    }
-    // These event handlers prevent default behavior for certain control keys
-    async onkeypress(event, vnode) {
-      switch (keyCode(event)) {
-        case "ArrowDown":
-        case "ArrowUp":
-        case "Enter":
-          event.stopPropagation();
-          event.preventDefault();
-          return;
-        case "Escape":
-          if (vnode.state.options.length > 0) {
-            vnode.state.options = [];
-          }
-          event.stopPropagation();
-          event.preventDefault();
-          return;
-      }
-    }
-    async oninput(event, vnode) {
-      const target = event.target;
-      vnode.state.search = target.value;
-      this.loadOptions(vnode);
-    }
-    async loadOptions(vnode) {
-      if (vnode.state.search == "") {
-        vnode.state.options = [];
-        vnode.state.highlightedOption = -1;
-        return;
-      }
-      vnode.state.loading = true;
-      vnode.state.options = await import_mithril2.default.request(vnode.attrs.endpoint + "?q=" + vnode.state.search);
-      vnode.state.loading = false;
-      vnode.state.highlightedOption = -1;
-    }
-    onblur(vnode) {
-      requestAnimationFrame(() => {
-        vnode.state.options = [];
-        vnode.state.highlightedOption = -1;
-        import_mithril2.default.redraw();
-      });
-    }
-    selectActor(vnode, index) {
-      const selected = vnode.state.options[index];
-      if (selected == null) {
-        return;
-      }
-      vnode.attrs.value.push(selected);
-      vnode.state.options = [];
-      vnode.state.search = "";
-      vnode.attrs.onselect(vnode.attrs.value);
-    }
-    removeActor(vnode, index) {
-      vnode.attrs.value.splice(index, 1);
-      vnode.attrs.onselect(vnode.attrs.value);
-      requestAnimationFrame(
-        () => document.getElementById("idActorSearch")?.focus()
-      );
-    }
-  };
-
-  // src/component/modal_newConversation.tsx
-  var NewConversation = class {
-    oninit(vnode) {
-      vnode.state.actors = [];
-      vnode.state.message = "";
-    }
-    view(vnode) {
-      if (vnode.attrs.modal != "NEW-CONVERSATION") {
-        return null;
-      }
-      return /* @__PURE__ */ (0, import_mithril4.default)(Modal, { close: vnode.attrs.close }, /* @__PURE__ */ (0, import_mithril4.default)("form", { onsubmit: (event) => this.onsubmit(event, vnode) }, /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "layout layout-vertical" }, this.header(vnode), /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "layout-elements" }, /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "layout-element" }, /* @__PURE__ */ (0, import_mithril4.default)("label", { for: "" }, "Participants"), /* @__PURE__ */ (0, import_mithril4.default)(ActorSearch, { name: "actorIds", value: vnode.state.actors, endpoint: "/.api/actors", onselect: (actors) => this.selectActors(vnode, actors) })), /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "layout-element" }, /* @__PURE__ */ (0, import_mithril4.default)("label", null, "Message"), /* @__PURE__ */ (0, import_mithril4.default)("textarea", { rows: "8", onchange: (event) => this.setMessage(vnode, event) }), /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "text-sm text-gray" }, this.description(vnode))))), /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "margin-top" }, this.submitButton(vnode), /* @__PURE__ */ (0, import_mithril4.default)("button", { onclick: vnode.attrs.close, tabIndex: "0" }, "Close"))));
-    }
-    header(vnode) {
-      if (vnode.state.actors.length == 0) {
-        return /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "layout-title" }, /* @__PURE__ */ (0, import_mithril4.default)("i", { class: "bi bi-plus" }), " Start a Conversation");
-      }
-      if (vnode.state.encrypted) {
-        return /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "layout-title" }, /* @__PURE__ */ (0, import_mithril4.default)("i", { class: "bi bi-shield-lock" }), " Encrypted Message");
-      }
-      return /* @__PURE__ */ (0, import_mithril4.default)("div", { class: "layout-title" }, /* @__PURE__ */ (0, import_mithril4.default)("i", { class: "bi bi-envelope-open" }), " Direct Message");
-    }
-    description(vnode) {
-      if (vnode.state.actors.length == 0) {
-        return /* @__PURE__ */ (0, import_mithril4.default)("span", null);
-      }
-      if (vnode.state.encrypted) {
-        return /* @__PURE__ */ (0, import_mithril4.default)("div", null, "This will be encrypted before it leaves this device, and will not be readable by anyone other than the recipients.");
-      }
-      return /* @__PURE__ */ (0, import_mithril4.default)("div", null, /* @__PURE__ */ (0, import_mithril4.default)("i", { class: "bi bi-exclamation-triangle-fill" }), " One or more of your recipients cannot receive encrypted messages. Others on the Internet may be able to read this message.");
-    }
-    submitButton(vnode) {
-      if (vnode.state.actors.length == 0) {
-        return /* @__PURE__ */ (0, import_mithril4.default)("button", { class: "primary", disabled: true }, "Start a Conversation");
-      }
-      if (vnode.state.encrypted) {
-        return /* @__PURE__ */ (0, import_mithril4.default)("button", { class: "primary", tabindex: "0" }, /* @__PURE__ */ (0, import_mithril4.default)("i", { class: "bi bi-lock" }), " Send Encrypted");
-      }
-      return /* @__PURE__ */ (0, import_mithril4.default)("button", { class: "selected", disabled: true }, "Send Direct Message");
-    }
-    selectActors(vnode, actors) {
-      vnode.state.actors = actors;
-      if (actors.some((actor) => actor.keyPackages == "")) {
-        vnode.state.encrypted = false;
-      } else {
-        vnode.state.encrypted = true;
-      }
-    }
-    setMessage(vnode, event) {
-      const target = event.target;
-      vnode.state.message = target.value;
-    }
-    async onsubmit(event, vnode) {
-      const participants = vnode.state.actors.map((actor) => actor.id);
-      event.preventDefault();
-      event.stopPropagation();
-      await vnode.attrs.factory.newConversation(participants, vnode.state.message);
-      vnode.attrs.close();
-    }
-  };
-
-  // src/component/main.tsx
-  var Main = class {
-    constructor(factory) {
-      this.factory = factory;
-    }
-    oninit(vnode) {
-      vnode.state.modal = "";
-    }
-    view(vnode) {
-      return /* @__PURE__ */ (0, import_mithril6.default)("div", { class: "flex-row flex-grow" }, /* @__PURE__ */ (0, import_mithril6.default)("div", { class: "table no-top-border width-50% md:width-40% lg:width-30% flex-shrink-0 scroll-vertical", style: "background-color:var(--gray10);" }, /* @__PURE__ */ (0, import_mithril6.default)(
-        "div",
-        {
-          role: "button",
-          class: "link conversation-selector padding flex-row flex-align-center",
-          onclick: () => {
-            vnode.state.modal = "NEW-CONVERSATION";
-          }
-        },
-        /* @__PURE__ */ (0, import_mithril6.default)("div", { class: "circle width-32 flex-shrink-0 flex-center margin-none", style: "font-size:24px;background-color:var(--blue50);color:var(--white);" }, /* @__PURE__ */ (0, import_mithril6.default)("i", { class: "bi bi-plus" })),
-        /* @__PURE__ */ (0, import_mithril6.default)("div", { class: "ellipsis-block", style: "max-height:3em;" }, "New Conversation")
-      ), /* @__PURE__ */ (0, import_mithril6.default)("div", { role: "button", class: "flex-row flex-align-center padding hover-trigger" }, /* @__PURE__ */ (0, import_mithril6.default)("img", { class: "circle width-32" }), /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "flex-grow nowrap ellipsis" }, "Direct Message 1"), /* @__PURE__ */ (0, import_mithril6.default)("button", { class: "text-xs hover-show" }, "\u22EF")), /* @__PURE__ */ (0, import_mithril6.default)("div", { role: "button", class: "flex-row flex-align-center padding hover-trigger" }, /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "width-32 circle flex-center" }, /* @__PURE__ */ (0, import_mithril6.default)("i", { class: "bi bi-lock-fill" })), /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "flex-grow nowrap ellipsis" }, "Encrypted Conversation"), /* @__PURE__ */ (0, import_mithril6.default)("button", { class: "text-xs hover-show" }, "\u22EF")), /* @__PURE__ */ (0, import_mithril6.default)("div", { role: "button", class: "flex-row flex-align-center padding hover-trigger" }, /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "width-32 circle flex-center" }, /* @__PURE__ */ (0, import_mithril6.default)("i", { class: "bi bi-lock-fill" })), /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "flex-grow nowrap ellipsis" }, "Encrypted Conversation"), /* @__PURE__ */ (0, import_mithril6.default)("button", { class: "text-xs hover-show" }, "\u22EF"))), /* @__PURE__ */ (0, import_mithril6.default)("div", { class: "width-75%" }, "Here be details..."), /* @__PURE__ */ (0, import_mithril6.default)(
-        NewConversation,
-        {
-          factory: this.factory,
-          modal: vnode.state.modal,
-          close: () => this.closeModal(vnode)
-        }
-      ));
-    }
-    // Global Modal Snowball
-    closeModal(vnode) {
-      document.getElementById("modal")?.classList.remove("ready");
-      window.setTimeout(() => {
-        vnode.state.modal = "";
-        import_mithril6.default.redraw();
-      }, 240);
-    }
-  };
-
-  // src/app.ts
-  var Application = class {
-    constructor(root3) {
-      this.start(root3);
-    }
-    async start(root3) {
-      var factory = new ServiceFactory();
-      await factory.start();
-      var viewContainer = new Main(factory);
-      import_mithril8.default.mount(root3, viewContainer);
-    }
-  };
-  var root2 = document.getElementById("mls");
-  if (root2 != void 0) {
-    const app = new Application(root2);
-  } else {
-    console.log("Can't mount Mithril app. Please verify that <div id=mls> exists.");
-  }
+  import_mithril8.default.mount(document.getElementById("mls"), Controller3);
 })();
 /*! Bundled license information:
-
-@noble/ciphers/utils.js:
-  (*! noble-ciphers - MIT License (c) 2023 Paul Miller (paulmillr.com) *)
 
 @noble/hashes/utils.js:
   (*! noble-hashes - MIT License (c) 2022 Paul Miller (paulmillr.com) *)
@@ -12584,5 +15303,8 @@
 @hpke/common/esm/src/curve/modular.js:
 @hpke/common/esm/src/curve/montgomery.js:
   (*! noble-curves - MIT License (c) 2022 Paul Miller (paulmillr.com) *)
+
+@noble/ciphers/utils.js:
+  (*! noble-ciphers - MIT License (c) 2023 Paul Miller (paulmillr.com) *)
 */
 //# sourceMappingURL=app.js.map

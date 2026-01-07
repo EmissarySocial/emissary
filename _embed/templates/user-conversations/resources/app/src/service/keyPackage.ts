@@ -1,46 +1,40 @@
-import { openDB, deleteDB, wrap, unwrap, type IDBPDatabase, type IDBPObjectStore } from "idb";
-import { type APKeyPackage, type IDBKeyPackage, NewAPKeyPackage } from "../model/keyPackage"
+import {openDB, deleteDB, wrap, unwrap, type IDBPDatabase, type IDBPObjectStore} from "idb"
+import {type APKeyPackage, NewKeyPackage} from "../activitypub/keyPackage"
+import {type IDBMLSKeyPackage} from "../model/mlsKeyPackage"
+import {createObject} from "../activitypub/network"
 
-import { 
+import {
 	type Credential,
 	type KeyPackage,
 	type PrivateKeyPackage,
-
 	defaultCapabilities,
 	defaultLifetime,
-	generateKeyPackage, 
+	generateKeyPackage,
 	getCiphersuiteImpl,
-	getCiphersuiteFromName
+	getCiphersuiteFromName,
 } from "ts-mls"
-import type { ActivityPubService } from "./activityPub";
 
 // This is the KeyPackage service, that manages all interactions with KeyPackages in the
 // local indexedDB database
 export class KeyPackageService {
-
 	// All class #properties are PRIVATE
-	#activityPub: ActivityPubService
 	#database: IDBPDatabase | undefined
-	#keyPackages: IDBKeyPackage[] = []
+	#keyPackages: IDBMLSKeyPackage[] = []
 	#actorID: string = ""
 
-	constructor(activityPub: ActivityPubService) {
-		this.#activityPub = activityPub
-	}
+	constructor() {}
 
 	async start(actorID: string) {
-
 		this.#actorID = actorID
 
 		// Set up the database connection
 		this.#database = await openDB("KeyPackage", 1, {
 			upgrade: (db, oldVersion, _newVersion, transaction, event) => {
-
 				if (oldVersion == 0) {
 					var keyPackages = db.createObjectStore("KeyPackage")
 					keyPackages.createIndex("KeyPackage_id", ["id"])
 				}
-			}
+			},
 		})
 
 		// Load all KeyPackages from the IndexedDB
@@ -56,39 +50,39 @@ export class KeyPackageService {
 	// createKeyPackage creates a new KeyPackage and
 	// synchronizes it with the server.
 	private async createKeyPackage() {
-
 		if (this.#database == undefined) {
 			return
 		}
 
 		// Create a new KeyPackage
-		const implementation = await getCiphersuiteImpl(getCiphersuiteFromName("MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519"))
+		const implementation = await getCiphersuiteImpl(
+			getCiphersuiteFromName("MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519")
+		)
 
 		const credential: Credential = {
-			credentialType: "basic", 
+			credentialType: "basic",
 			identity: new TextEncoder().encode("alice"),
 		}
 
 		var newPackage = await generateKeyPackage(
-			credential, 
-			defaultCapabilities(), 
-			defaultLifetime, 
-			[], 
-			implementation,
+			credential,
+			defaultCapabilities(),
+			defaultLifetime,
+			[],
+			implementation
 		)
 
 		// Create a new KeyPackage and send it to the Server
-		var remotePackage = NewAPKeyPackage(this.#actorID, newPackage.publicPackage)
-		var [remotePackage, err] = await this.#activityPub.createObject(remotePackage)
+		const remotePackage = NewKeyPackage(this.#actorID, newPackage.publicPackage)
+		const remotePackageUrl = await createObject(remotePackage)
 
-		if (err != "") {
-			console.log(err)
-			return 
+		if (remotePackageUrl == "") {
+			throw new Error("Failed to create KeyPackage on server")
 		}
 
 		// Create a new LOCAL record for this KeyPackage
-		const localPackage: IDBKeyPackage = {
-			id: remotePackage.id,
+		const localPackage: IDBMLSKeyPackage = {
+			id: remotePackageUrl,
 			privatePackage: newPackage.privatePackage,
 			publicPackage: newPackage.publicPackage,
 		}

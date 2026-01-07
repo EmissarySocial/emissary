@@ -1,4 +1,4 @@
-import { type APCollection } from "./collection"
+import { load } from "./network"
 
 // APActor represents the actor format guaranteed
 // to be provided by the Emissary server. ActivityPub actors
@@ -14,3 +14,8 @@ export type APActor = {
 	mlsInbox: string
 	keyPackages: string
 }
+
+export async function loadActor(actorID: string): Promise<APActor> {
+	return await load(actorID) as APActor
+}
+

@@ -1,6 +1,6 @@
 import  m, { request } from "mithril";
 import { type Vnode, type VnodeDOM, type Component } from "mithril";
-import { type APActor } from "../model/actor"
+import { type APActor } from "../activitypub/actor"
 import { Modal } from "./modal"
 import { keyCode } from "./utils"
 

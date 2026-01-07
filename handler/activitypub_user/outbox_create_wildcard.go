@@ -76,7 +76,8 @@ func init() {
 			}
 
 			// Done.
-			return context.context.NoContent(http.StatusOK)
+			context.context.Response().Header().Set("Location", locatorService.ObjectURL(userID, object.ObjectID))
+			return context.context.NoContent(http.StatusCreated)
 		},
 	)
 }

@@ -164,6 +164,10 @@ func (w Inbox) UserID() string {
 	return w._user.UserID.Hex()
 }
 
+func (w Inbox) ActorURL() string {
+	return w.Host() + "/@" + w._user.UserID.Hex()
+}
+
 // Myself returns TRUE if the current user is viewing their own profile
 func (w Inbox) Myself() bool {
 	return w._authorization.UserID == w._user.UserID

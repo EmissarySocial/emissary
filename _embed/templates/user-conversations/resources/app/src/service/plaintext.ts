@@ -1,8 +1,9 @@
-import { ActivityPubService } from "./activityPub"
+import { ActivityPubService } from "../activitypub/network"
 import { KeyPackageService } from "./keyPackage"
-import { type APActor } from "../model/actor"
+import { type APActor } from "../activitypub/actor"
 
-export class ServiceFactory {
+// Plaintext service manages unencrypted conversations
+export class Plaintext {
 
 	// All class #properties are PRIVATE
 	#actor: APActor = {
@@ -48,7 +49,7 @@ export class ServiceFactory {
 		return result as APActor
 	}
 
-	async newConversation(to:string[], message:string) {
+	async create(to:string[], message:string) {
 
 		// Create an ActivityPub activity
 		const activity = {

@@ -4,25 +4,22 @@
 {{- $conversationID := .QueryParam "conversationId" -}}
 
 <div class="app" script="init send SelectNav(id:'inbox')">
-
-	<link rel="stylesheet" href="/.templates/user-inbox/stylesheet">
+	<link rel="stylesheet" href="/.templates/user-inbox/stylesheet" />
 
 	<!-- Sidebar Content -->
 	{{- template "sidebar" $folders -}}
 
-	<div id="mls" class="width-100% flex-row"></div>
-	
+	<div id="mls" class="width-100% flex-row" data-actor-id="{{.ActorURL}}"></div>
+
 	<style>
 		.conversation-item {
-			display:flex;
+			display: flex;
 			padding: calc(var(--rhythm) * 2);
-			margin:calc(var(--rhythm) * 2) 0px;
-			background-color:var(--gray10);
+			margin: calc(var(--rhythm) * 2) 0px;
+			background-color: var(--gray10);
 			border-radius: calc(var(--rhythm) * 2);
-
 		}
 	</style>
 
 	<script src="/.templates/user-conversations/resources/app/dist/app.js"></script>
-
 </div>

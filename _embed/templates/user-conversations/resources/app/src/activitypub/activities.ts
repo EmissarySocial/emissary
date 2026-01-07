@@ -8,7 +8,7 @@ import {
 
 // Activities are the top-level content in MLS messages
 // https://swicg.github.io/activitypub-e2ee/mls#activities
-export type Activity = {
+export type APActivity = {
 	context: any
 	type: "Create" | "Update" | "Delete" | "Like" | "Announce" | "Undo" | "Read" | "Listen" | "View" | "IntransitiveActivity"
 	id: string

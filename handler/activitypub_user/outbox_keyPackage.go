@@ -45,12 +45,8 @@ func outbox_CreateKeyPackage(context Context, activity streams.Document) error {
 	}
 
 	// Write the response to the context
-	if err := context.context.JSON(http.StatusCreated, keyPackageService.GetJSONLD(&keyPackage)); err != nil {
-		return derp.Wrap(err, location, "Unable to send response")
-	}
-
-	// Success
-	return nil
+	context.context.Response().Header().Set("Location", keyPackageService.ActivityPubURL(keyPackage.UserID, keyPackage.KeyPackageID))
+	return context.context.NoContent(http.StatusCreated)
 }
 
 // Locate and delete the KeyPackage referenced in the ActivityPub request
