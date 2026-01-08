@@ -7581,9 +7581,7 @@
           {
             role: "button",
             class: "link conversation-selector padding flex-row flex-align-center",
-            onclick: () => {
-              vnode.state.modal = "NEW-CONVERSATION";
-            }
+            onclick: () => vnode.state.modal = "NEW-CONVERSATION"
           },
           /* @__PURE__ */ (0, import_mithril6.default)(
             "div",

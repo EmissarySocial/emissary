@@ -27,9 +27,7 @@ export class Main {
 					<div
 						role="button"
 						class="link conversation-selector padding flex-row flex-align-center"
-						onclick={() => {
-							vnode.state.modal = "NEW-CONVERSATION"
-						}}>
+						onclick={() => (vnode.state.modal = "NEW-CONVERSATION")}>
 						<div
 							class="circle width-32 flex-shrink-0 flex-center margin-none"
 							style="font-size:24px;background-color:var(--blue50);color:var(--white);">

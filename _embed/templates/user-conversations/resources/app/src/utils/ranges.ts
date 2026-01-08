@@ -6,3 +6,12 @@ export function rangeToArray<T>(generator: Generator<T>): T[] {
 	}
 	return result
 }
+
+// rangeFirst returns the first value from a generator
+// or throws an error if the generator is empty
+export function rangeFirst<T>(generator: Generator<T>): T {
+	for (const value of generator) {
+		return value
+	}
+	throw new Error("Generator is empty")
+}
