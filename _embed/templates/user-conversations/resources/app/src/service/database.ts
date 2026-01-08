@@ -1,6 +1,7 @@
 import type {DBSchema, IDBPDatabase} from "idb/build/entry.js"
+import {openDB} from "idb"
 import {type DBGroup} from "../model/db-group"
-import {openDB, deleteDB, wrap, unwrap} from "idb"
+import {type DBMessage} from "../model/db-message"
 
 // Schema defines the layout of records stored in IndexedDB
 interface Schema extends DBSchema {
@@ -8,12 +9,17 @@ interface Schema extends DBSchema {
 		key: string
 		value: DBGroup
 	}
+	message: {
+		key: string
+		value: DBMessage
+	}
 }
 
 export async function NewDatabase(): Promise<IDBPDatabase<Schema>> {
 	return await openDB<Schema>("mls-database", undefined, {
 		upgrade(db) {
 			db.createObjectStore("group", {keyPath: "groupID"})
+			db.createObjectStore("message", {keyPath: "messageID"})
 		},
 	})
 }
@@ -37,5 +43,19 @@ export class Database {
 			throw new Error("Group not found: " + groupID)
 		}
 		return group
+	}
+
+	// saveMessage saves a message to the database
+	async saveMessage(message: DBMessage) {
+		await this.#db.put("message", message)
+	}
+
+	// loadMessage retrieves a message from the database
+	async loadMessage(messageID: string): Promise<DBMessage> {
+		const message = await this.#db.get("message", messageID)
+		if (message == undefined) {
+			throw new Error("Message not found: " + messageID)
+		}
+		return message
 	}
 }

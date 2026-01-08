@@ -1,5 +1,5 @@
 import {type MLSMessage} from "ts-mls/message.js"
-import {bytesToBase64, encodeMlsMessage, type Welcome} from "ts-mls"
+import {bytesToBase64, encodeMlsMessage, type PrivateMessage, type Welcome} from "ts-mls"
 
 // Delivery service sends messages via ActivityPub
 export class Delivery {
@@ -48,25 +48,6 @@ export class Delivery {
 		return response.json() as Promise<T>
 	}
 
-	// send POSTs an ActivityPub activity to the specified outbox
-	// and returns the Location header from the response
-	async send<T>(outbox: string, activity: T): Promise<string> {
-		//
-
-		// Send the Activity to the server
-		const response = await fetch(this.#outboxUrl, {
-			method: "POST",
-			body: JSON.stringify(activity),
-			credentials: "include",
-		})
-
-		if (!response.ok) {
-			throw new Error(`Failed to fetch ${this.#outboxUrl}: ${response.status} ${response.statusText}`)
-		}
-
-		return response.headers.get("Location") || ""
-	}
-
 	// sendCommit sends an MLS commit message to the specified recipients
 	async sendCommit(recipients: string[], commit: MLSMessage) {
 		const activity = {
@@ -109,5 +90,49 @@ export class Delivery {
 		}
 
 		await this.send(this.#outboxUrl, activity)
+	}
+
+	// sendPrivateMessage sends an MLS private message to the specified recipients
+	async sendPrivateMessage(recipients: string[], privateMessage: PrivateMessage) {
+		const activity = {
+			"@context": this.#context,
+			type: "Create",
+			actor: this.#actorId,
+			to: recipients,
+			object: {
+				type: "mls:PrivateMessage",
+				to: recipients,
+				mediaType: "message/mls",
+				encoding: "base64",
+				content: bytesToBase64(
+					encodeMlsMessage({
+						wireformat: "mls_private_message",
+						privateMessage: privateMessage,
+						version: "mls10",
+					})
+				),
+			},
+		}
+
+		await this.send(this.#outboxUrl, activity)
+	}
+
+	// send POSTs an ActivityPub activity to the specified outbox
+	// and returns the Location header from the response
+	async send<T>(outbox: string, activity: T): Promise<string> {
+		//
+
+		// Send the Activity to the server
+		const response = await fetch(this.#outboxUrl, {
+			method: "POST",
+			body: JSON.stringify(activity),
+			credentials: "include",
+		})
+
+		if (!response.ok) {
+			throw new Error(`Failed to fetch ${this.#outboxUrl}: ${response.status} ${response.statusText}`)
+		}
+
+		return response.headers.get("Location") || ""
 	}
 }

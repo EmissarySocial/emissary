@@ -19,17 +19,23 @@ import {type Credential} from "ts-mls"
 import {type Proposal} from "ts-mls"
 import {type PrivateKeyPackage} from "ts-mls"
 import {type KeyPackage} from "ts-mls"
-import {type MLSMessage} from "ts-mls/message.js"
+import type {MLSMessage} from "ts-mls/message.js"
 import {type Welcome} from "ts-mls"
 import {type PrivateMessage} from "ts-mls"
 import {type CiphersuiteImpl} from "ts-mls"
 import {stripTrailingNulls} from "./utils"
+import type {DBMessage} from "../model/db-message"
 
 // IDatabase wraps all of the methods that the MLS service
 // uses to store group state.
 interface IDatabase {
-	saveGroup(group: DBGroup): Promise<void>
+	// load methods
 	loadGroup(groupID: string): Promise<DBGroup>
+	loadMessage(messageID: string): Promise<DBMessage>
+
+	// save methods
+	saveGroup(group: DBGroup): Promise<void>
+	saveMessage(message: DBMessage): Promise<void>
 }
 
 // IDelivery wraps all of the methods that the MLS service
@@ -37,6 +43,7 @@ interface IDatabase {
 interface IDelivery {
 	sendWelcome(recipients: string[], welcome: Welcome): Promise<void>
 	sendCommit(recipients: string[], commit: MLSMessage): Promise<void>
+	sendPrivateMessage(recipients: string[], privateMessage: PrivateMessage): Promise<void>
 }
 
 // IDirectory wraps all of the methods that the MLS service
@@ -55,8 +62,6 @@ export class MLS {
 	// Internal State
 	#cipherSuite: CiphersuiteImpl
 	#credential: Credential
-	#groups: Map<string, ClientState> = new Map()
-	#initialized: boolean = false
 	#publicKeyPackage: KeyPackage
 	#privateKeyPackage: PrivateKeyPackage
 	#actor: APActor
@@ -176,6 +181,18 @@ export class MLS {
 			commit: commitResult.commit,
 		}
 		*/
+	}
+
+	public async sendGroupMessage(groupID: string, plaintext: string): Promise<void> {
+		const message: DBMessage = {
+			messageID: crypto.randomUUID(),
+			groupID: groupID,
+			senderID: this.#actor.id,
+			plaintext: plaintext,
+			ciphertext: new Uint8Array(),
+			createDate: Date.now(),
+		}
+		await this.#database.saveMessage(message)
 	}
 
 	public encryptMessage(): string {
