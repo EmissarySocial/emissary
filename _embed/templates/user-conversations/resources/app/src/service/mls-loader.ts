@@ -21,24 +21,25 @@ import {type Welcome} from "ts-mls"
 import {type PrivateMessage} from "ts-mls"
 import {type CiphersuiteImpl} from "ts-mls"
 
-import {type IDatabase} from "./interfaces"
-import {type IDelivery} from "./interfaces"
-import {type IDirectory} from "./interfaces"
+import type {APActor} from "../model/ap-actor"
+import type {Database} from "./database"
+import type {Delivery} from "./delivery"
+import type {Directory} from "./directory"
 import {MLS} from "./mls"
 
 // makeMLS initializes the MLS service and returns it once all dependencies have been loaded
-export async function makeMLSService(
-	database: IDatabase,
-	delivery: IDelivery,
-	directory: IDirectory,
-	userID: string
+export async function NewMLS(
+	database: Database,
+	delivery: Delivery,
+	directory: Directory,
+	actor: APActor
 ): Promise<MLS> {
 	//
 
 	// Create a credential for this User
 	const credential: Credential = {
 		credentialType: "basic",
-		identity: new TextEncoder().encode(userID),
+		identity: new TextEncoder().encode(actor.id),
 	}
 
 	// Use MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519 (ID: 1)
@@ -59,5 +60,5 @@ export async function makeMLSService(
 	const publicKeyPackage = keyPackageResult.publicPackage
 	const privateKeyPackage = keyPackageResult.privatePackage
 
-	return new MLS(database, delivery, directory, userID, credential, cipherSuite, publicKeyPackage, privateKeyPackage)
+	return new MLS(database, delivery, directory, actor, credential, cipherSuite, publicKeyPackage, privateKeyPackage)
 }

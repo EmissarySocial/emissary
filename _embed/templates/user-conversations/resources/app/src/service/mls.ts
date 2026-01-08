@@ -1,8 +1,5 @@
+import {type APActor} from "../model/ap-actor"
 import {type DBGroup} from "../model/db-group"
-import {type IDatabase} from "./interfaces"
-import {type IDelivery} from "./interfaces"
-import {type IDirectory} from "./interfaces"
-
 import {createApplicationMessage} from "ts-mls"
 import {createCommit} from "ts-mls"
 import {createGroup} from "ts-mls"
@@ -22,10 +19,31 @@ import {type Credential} from "ts-mls"
 import {type Proposal} from "ts-mls"
 import {type PrivateKeyPackage} from "ts-mls"
 import {type KeyPackage} from "ts-mls"
+import {type MLSMessage} from "ts-mls/message.js"
 import {type Welcome} from "ts-mls"
 import {type PrivateMessage} from "ts-mls"
 import {type CiphersuiteImpl} from "ts-mls"
 import {stripTrailingNulls} from "./utils"
+
+// IDatabase wraps all of the methods that the MLS service
+// uses to store group state.
+interface IDatabase {
+	saveGroup(group: DBGroup): Promise<void>
+	loadGroup(groupID: string): Promise<DBGroup>
+}
+
+// IDelivery wraps all of the methods that the MLS service
+// uses to send messages.
+interface IDelivery {
+	sendWelcome(recipients: string[], welcome: Welcome): Promise<void>
+	sendCommit(recipients: string[], commit: MLSMessage): Promise<void>
+}
+
+// IDirectory wraps all of the methods that the MLS service
+// uses to look up users' KeyPackages.
+interface IDirectory {
+	getKeyPackages(actorIDs: string[]): Promise<KeyPackage[]>
+}
 
 // MLS service encrypts/decrypts messages using the MLS protocol
 export class MLS {
@@ -41,13 +59,13 @@ export class MLS {
 	#initialized: boolean = false
 	#publicKeyPackage: KeyPackage
 	#privateKeyPackage: PrivateKeyPackage
-	#userId: string
+	#actor: APActor
 
 	constructor(
 		database: IDatabase,
 		delivery: IDelivery,
 		directory: IDirectory,
-		userId: string,
+		actor: APActor,
 		credential: Credential,
 		cipherSuite: CiphersuiteImpl,
 		publicKeyPackage: KeyPackage,
@@ -56,7 +74,7 @@ export class MLS {
 		this.#database = database
 		this.#delivery = delivery
 		this.#directory = directory
-		this.#userId = userId
+		this.#actor = actor
 		this.#credential = credential
 		this.#cipherSuite = cipherSuite
 		this.#publicKeyPackage = publicKeyPackage
@@ -80,7 +98,7 @@ export class MLS {
 		// Populate a DBGroup record
 		const result: DBGroup = {
 			groupID: groupID,
-			members: [this.#userId],
+			members: [this.#actor.id],
 			name: "New Group",
 			groupState: groupState,
 			createDate: Date.now(),
@@ -122,7 +140,7 @@ export class MLS {
 		// (async) Send commit to existing members
 		this.#delivery.sendCommit(currentMembers, commitResult.commit)
 
-		// (async) Send welcome to new members
+		// Send welcome to new members
 		this.#delivery.sendWelcome(newMembers, commitResult.welcome!)
 
 		// Update the group with new state and new list of members

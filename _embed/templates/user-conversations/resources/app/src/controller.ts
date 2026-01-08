@@ -44,10 +44,6 @@ export class Controller {
 		this.#mls = mls
 	}
 
-	view() {
-		return <Main controller={this} />
-	}
-
 	// newGroupAndMessage creates a new MLS-encrypted
 	// group message with the specified recipients
 	async newGroupAndMessage(recipients: string[], message: string) {
