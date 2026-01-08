@@ -1,6 +1,6 @@
 import m from "mithril"
 import {type Vnode} from "mithril"
-import {Controller} from "../app"
+import {Controller} from "../controller"
 import {NewConversation} from "./newConversation"
 
 type MainVnode = Vnode<MainAttrs, MainState>

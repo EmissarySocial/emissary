@@ -7249,7 +7249,7 @@
   // src/view/newConversation.tsx
   var import_mithril4 = __toESM(require_mithril(), 1);
 
-  // src/activitypub/network.ts
+  // src/z-activitypub/network.ts
   async function load(value) {
     if (typeof value != "string") {
       return value;
@@ -7265,7 +7265,7 @@
     return response.json();
   }
 
-  // src/activitypub/actor.ts
+  // src/z-activitypub/actor.ts
   async function loadActor(actorID) {
     return await load(actorID);
   }
@@ -7409,7 +7409,10 @@
           }
           return;
         case "ArrowDown":
-          vnode.state.highlightedOption = Math.min(vnode.state.highlightedOption + 1, vnode.state.options.length - 1);
+          vnode.state.highlightedOption = Math.min(
+            vnode.state.highlightedOption + 1,
+            vnode.state.options.length - 1
+          );
           return;
         case "ArrowUp":
           vnode.state.highlightedOption = Math.max(vnode.state.highlightedOption - 1, 0);
@@ -7473,9 +7476,7 @@
     removeActor(vnode, index) {
       vnode.attrs.value.splice(index, 1);
       vnode.attrs.onselect(vnode.attrs.value);
-      requestAnimationFrame(
-        () => document.getElementById("idActorSearch")?.focus()
-      );
+      requestAnimationFrame(() => document.getElementById("idActorSearch")?.focus());
     }
   };
 
@@ -14762,7 +14763,7 @@
     });
   }
 
-  // src/MLS/MLSManager.tsx
+  // src/z-MLS/MLSManager.tsx
   function stripTrailingNulls(tree) {
     let lastNonNull = tree.length - 1;
     while (lastNonNull >= 0 && tree[lastNonNull] === null) {
@@ -15183,7 +15184,7 @@
     }
   };
 
-  // src/activitypub/collection.ts
+  // src/z-activitypub/collection.ts
   async function* rangeCollection(url) {
     if (url == "") {
       return;
@@ -15207,7 +15208,7 @@
     }
   }
 
-  // src/activitypub/keyPackage.ts
+  // src/z-activitypub/keyPackage.ts
   async function getKeyPackages(recipients) {
     var result = [];
     for (const recipient of recipients) {

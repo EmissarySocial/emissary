@@ -1,8 +1,8 @@
-import  m, { request } from "mithril";
-import { type Vnode, type VnodeDOM, type Component } from "mithril";
-import { type APActor } from "../activitypub/actor"
-import { Modal } from "./modal"
-import { keyCode } from "./utils"
+import m, {request} from "mithril"
+import {type Vnode, type VnodeDOM, type Component} from "mithril"
+import {type APActor} from "../z-activitypub/actor"
+import {Modal} from "./modal"
+import {keyCode} from "./utils"
 
 type ActorSearchVnode = VnodeDOM<ActorSearchArgs, ActorSearchState>
 
@@ -10,7 +10,7 @@ interface ActorSearchArgs {
 	name: string
 	value: APActor[]
 	endpoint: string
-	onselect: (actors:APActor[]) => void
+	onselect: (actors: APActor[]) => void
 }
 
 interface ActorSearchState {
@@ -22,7 +22,6 @@ interface ActorSearchState {
 }
 
 export class ActorSearch {
-
 	oninit(vnode: ActorSearchVnode) {
 		vnode.state.search = ""
 		vnode.state.loading = false
@@ -31,117 +30,120 @@ export class ActorSearch {
 	}
 
 	view(vnode: ActorSearchVnode) {
-
 		return (
 			<div class="autocomplete">
 				<div class="input">
 					{vnode.attrs.value.map((actor, index) => {
 						const isSecure = actor.keyPackages != ""
-						return <span class={isSecure ? "tag blue" : "tag gray"}>
-							<span style="display:inline-flex; align-items:center; margin-right:8px;">
-								<img src={actor.icon} class="circle" style="height:1em; margin:0px 4px;"/>
-								<span class="bold">{actor.name}</span>
-								&nbsp;
-								{ isSecure ? <i class="bi bi-lock-fill"></i> : null}
+						return (
+							<span class={isSecure ? "tag blue" : "tag gray"}>
+								<span style="display:inline-flex; align-items:center; margin-right:8px;">
+									<img src={actor.icon} class="circle" style="height:1em; margin:0px 4px;" />
+									<span class="bold">{actor.name}</span>
+									&nbsp;
+									{isSecure ? <i class="bi bi-lock-fill"></i> : null}
+								</span>
+								<i class="clickable bi bi-x-lg" onclick={() => this.removeActor(vnode, index)}></i>
 							</span>
-							<i class="clickable bi bi-x-lg" onclick={()=> this.removeActor(vnode, index)}></i>
-						</span>
+						)
 					})}
-					<input 
+					<input
 						id="idActorSearch"
-						name={vnode.attrs.name} 
+						name={vnode.attrs.name}
 						class="padding-none"
 						style="min-width:200px;"
 						value={vnode.state.search}
 						tabindex="0"
-						onkeydown={async(event:KeyboardEvent)=>{
+						onkeydown={async (event: KeyboardEvent) => {
 							this.onkeydown(event, vnode)
 						}}
-						onkeypress={async(event:KeyboardEvent)=>{
+						onkeypress={async (event: KeyboardEvent) => {
 							this.onkeypress(event, vnode)
 						}}
-						oninput={async(event:KeyboardEvent)=>{
+						oninput={async (event: KeyboardEvent) => {
 							this.oninput(event, vnode)
 						}}
-						onfocus={()=>this.loadOptions(vnode)}
-						onblur={()=>this.onblur(vnode)}>
-					</input>
+						onfocus={() => this.loadOptions(vnode)}
+						onblur={() => this.onblur(vnode)}></input>
 				</div>
-				{ vnode.state.options.length ? 
+				{vnode.state.options.length ? (
 					<div class="options">
 						<div role="menu" class="menu">
 							{vnode.state.options.map((actor, index) => {
 								const isSecure = actor.keyPackages != ""
-								return <div
-									role="menuitem"
-									class="flex-row padding-xs"
-									onmousedown={()=>this.selectActor(vnode, index)}
-									aria-selected={(index == vnode.state.highlightedOption) ? "true" : null }>
-									<div class="width-32">
-										<img src={actor.icon} class="width-32 circle"/>
-									</div>
-									<div>
-										<div>
-											{actor.name} &nbsp;
-											{ isSecure ? <i class="text-xs text-light-gray bi bi-lock-fill"></i> : null}
+								return (
+									<div
+										role="menuitem"
+										class="flex-row padding-xs"
+										onmousedown={() => this.selectActor(vnode, index)}
+										aria-selected={index == vnode.state.highlightedOption ? "true" : null}>
+										<div class="width-32">
+											<img src={actor.icon} class="width-32 circle" />
 										</div>
-										<div class="text-xs text-light-gray">{actor.username}</div>
+										<div>
+											<div>
+												{actor.name} &nbsp;
+												{isSecure ? (
+													<i class="text-xs text-light-gray bi bi-lock-fill"></i>
+												) : null}
+											</div>
+											<div class="text-xs text-light-gray">{actor.username}</div>
+										</div>
 									</div>
-								</div>
+								)
 							})}
 						</div>
 					</div>
-				: null }
+				) : null}
 			</div>
 		)
 	}
 
 	async onkeydown(event: KeyboardEvent, vnode: ActorSearchVnode) {
+		switch (keyCode(event)) {
+			case "Backspace":
+				const target = event.target as HTMLInputElement
 
-		switch(keyCode(event)) {
-		
-		case "Backspace":
-			const target = event.target as HTMLInputElement
+				if (target?.selectionStart == 0) {
+					this.removeActor(vnode, vnode.attrs.value.length - 1)
+					event.stopPropagation()
+				}
+				return
 
-			if (target?.selectionStart == 0) {
-				this.removeActor(vnode, vnode.attrs.value.length-1)
-				event.stopPropagation()
-			}
-			return
+			case "ArrowDown":
+				vnode.state.highlightedOption = Math.min(
+					vnode.state.highlightedOption + 1,
+					vnode.state.options.length - 1
+				)
+				return
 
-		case "ArrowDown":
-			vnode.state.highlightedOption = Math.min(vnode.state.highlightedOption+1, vnode.state.options.length-1)
-			return
+			case "ArrowUp":
+				vnode.state.highlightedOption = Math.max(vnode.state.highlightedOption - 1, 0)
+				return
 
-		case "ArrowUp":
-			vnode.state.highlightedOption = Math.max(vnode.state.highlightedOption-1, 0)
-			return
-
-		case "Enter":
-			this.selectActor(vnode, vnode.state.highlightedOption)
-			return
+			case "Enter":
+				this.selectActor(vnode, vnode.state.highlightedOption)
+				return
 		}
 	}
 
 	// These event handlers prevent default behavior for certain control keys
 	async onkeypress(event: KeyboardEvent, vnode: ActorSearchVnode) {
+		switch (keyCode(event)) {
+			case "ArrowDown":
+			case "ArrowUp":
+			case "Enter":
+				event.stopPropagation()
+				event.preventDefault()
+				return
 
-		switch(keyCode(event)) {
-		
-		case "ArrowDown":
-		case "ArrowUp":
-		case "Enter":
-			event.stopPropagation()
-			event.preventDefault()
-			return
-
-		case "Escape":
-			if (vnode.state.options.length > 0) {
-				vnode.state.options = []
-			}
-			event.stopPropagation()
-			event.preventDefault()
-			return
+			case "Escape":
+				if (vnode.state.options.length > 0) {
+					vnode.state.options = []
+				}
+				event.stopPropagation()
+				event.preventDefault()
+				return
 		}
 	}
 
@@ -152,7 +154,6 @@ export class ActorSearch {
 	}
 
 	async loadOptions(vnode: ActorSearchVnode) {
-
 		if (vnode.state.search == "") {
 			vnode.state.options = []
 			vnode.state.highlightedOption = -1
@@ -166,14 +167,14 @@ export class ActorSearch {
 	}
 
 	onblur(vnode: ActorSearchVnode) {
-		requestAnimationFrame(()=> {
+		requestAnimationFrame(() => {
 			vnode.state.options = []
 			vnode.state.highlightedOption = -1
 			m.redraw()
 		})
 	}
 
-	selectActor(vnode: ActorSearchVnode, index:number) {
+	selectActor(vnode: ActorSearchVnode, index: number) {
 		const selected = vnode.state.options[index]
 
 		if (selected == null) {
@@ -186,11 +187,9 @@ export class ActorSearch {
 		vnode.attrs.onselect(vnode.attrs.value)
 	}
 
-	removeActor(vnode: ActorSearchVnode, index:number) {
+	removeActor(vnode: ActorSearchVnode, index: number) {
 		vnode.attrs.value.splice(index, 1)
 		vnode.attrs.onselect(vnode.attrs.value)
-		requestAnimationFrame(() =>
-			document.getElementById("idActorSearch")?.focus()
-		)
+		requestAnimationFrame(() => document.getElementById("idActorSearch")?.focus())
 	}
 }

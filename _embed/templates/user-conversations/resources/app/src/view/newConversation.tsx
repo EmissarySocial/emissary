@@ -1,6 +1,6 @@
 import m from "mithril"
 import {Controller} from "../app"
-import {type APActor} from "../activitypub/actor"
+import {type APActor} from "../z-activitypub/actor"
 import {type Vnode, type VnodeDOM, type Component} from "mithril"
 import {Modal} from "./modal"
 import {ActorSearch} from "./actorSearch"

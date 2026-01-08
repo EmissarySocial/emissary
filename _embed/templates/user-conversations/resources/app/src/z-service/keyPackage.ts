@@ -1,7 +1,7 @@
 import {openDB, deleteDB, wrap, unwrap, type IDBPDatabase, type IDBPObjectStore} from "idb"
-import {type APKeyPackage, NewKeyPackage} from "../activitypub/keyPackage"
-import {type IDBMLSKeyPackage} from "../model/mlsKeyPackage"
-import {createObject} from "../activitypub/network"
+import {type APKeyPackage, NewKeyPackage} from "../z-activitypub/keyPackage"
+import {type IDBMLSKeyPackage} from "../z-model/mlsKeyPackage"
+import {createObject} from "../z-activitypub/network"
 
 import {
 	type Credential,

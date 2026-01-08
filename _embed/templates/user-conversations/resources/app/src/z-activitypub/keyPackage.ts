@@ -2,7 +2,7 @@ import {type KeyPackage} from "ts-mls"
 import {decodeMlsMessage} from "ts-mls"
 import {loadActor} from "./actor"
 import {rangeCollection} from "./collection"
-import {type MLSKeyPackageBundle} from "../MLS/MLSManager"
+import {type MLSKeyPackageBundle} from "../z-MLS/MLSManager"
 
 // KeyPackage is the ActivityPub representation of a KeyPackage
 // https://swicg.github.io/activitypub-e2ee/mls#KeyPackage

@@ -1,0 +1,166 @@
+import {type DBGroup} from "../model/db-group"
+import {type IDatabase} from "./interfaces"
+import {type IDelivery} from "./interfaces"
+import {type IDirectory} from "./interfaces"
+
+import {createApplicationMessage} from "ts-mls"
+import {createCommit} from "ts-mls"
+import {createGroup} from "ts-mls"
+import {joinGroup} from "ts-mls"
+import {processPrivateMessage} from "ts-mls"
+import {processPublicMessage} from "ts-mls"
+import {getCiphersuiteFromName} from "ts-mls"
+import {generateKeyPackage} from "ts-mls"
+import {encodeMlsMessage} from "ts-mls"
+import {decodeMlsMessage} from "ts-mls"
+import {defaultCapabilities} from "ts-mls"
+import {defaultLifetime} from "ts-mls"
+import {emptyPskIndex} from "ts-mls"
+import {nobleCryptoProvider} from "ts-mls"
+import {type ClientState} from "ts-mls"
+import {type Credential} from "ts-mls"
+import {type Proposal} from "ts-mls"
+import {type PrivateKeyPackage} from "ts-mls"
+import {type KeyPackage} from "ts-mls"
+import {type Welcome} from "ts-mls"
+import {type PrivateMessage} from "ts-mls"
+import {type CiphersuiteImpl} from "ts-mls"
+import {stripTrailingNulls} from "./utils"
+
+// MLS service encrypts/decrypts messages using the MLS protocol
+export class MLS {
+	// Dependencies
+	#database: IDatabase
+	#delivery: IDelivery
+	#directory: IDirectory
+
+	// Internal State
+	#cipherSuite: CiphersuiteImpl
+	#credential: Credential
+	#groups: Map<string, ClientState> = new Map()
+	#initialized: boolean = false
+	#publicKeyPackage: KeyPackage
+	#privateKeyPackage: PrivateKeyPackage
+	#userId: string
+
+	constructor(
+		database: IDatabase,
+		delivery: IDelivery,
+		directory: IDirectory,
+		userId: string,
+		credential: Credential,
+		cipherSuite: CiphersuiteImpl,
+		publicKeyPackage: KeyPackage,
+		privateKeyPackage: PrivateKeyPackage
+	) {
+		this.#database = database
+		this.#delivery = delivery
+		this.#directory = directory
+		this.#userId = userId
+		this.#credential = credential
+		this.#cipherSuite = cipherSuite
+		this.#publicKeyPackage = publicKeyPackage
+		this.#privateKeyPackage = privateKeyPackage
+	}
+
+	// createGroup creates a new MLS group and saves it to the database
+	public async createGroup(): Promise<DBGroup> {
+		const groupID = crypto.randomUUID()
+		const groupIDBytes = new TextEncoder().encode(groupID)
+
+		// Create group using ts-mls
+		const groupState = await createGroup(
+			groupIDBytes,
+			this.#publicKeyPackage!,
+			this.#privateKeyPackage!,
+			[],
+			this.#cipherSuite!
+		)
+
+		// Populate a DBGroup record
+		const result: DBGroup = {
+			groupID: groupID,
+			members: [this.#userId],
+			name: "New Group",
+			groupState: groupState,
+			createDate: Date.now(),
+			updateDate: Date.now(),
+			readDate: Date.now(),
+		}
+
+		// Save the DBGroup
+		await this.#database.saveGroup(result)
+
+		// Success
+		return result
+	}
+
+	public async addGroupMembers(groupID: string, newMembers: string[]) {
+		//
+
+		// load the group from the database
+		const group = await this.#database.loadGroup(groupID)
+		const currentMembers = group.members
+
+		// Look up all KeyPackages for the new Members
+		const keyPackages = await this.#directory.getKeyPackages(newMembers)
+
+		// Create add proposals for each key package
+		const addProposals: Proposal[] = keyPackages.map((keyPackage) => ({
+			proposalType: "add",
+			add: {
+				keyPackage: keyPackage,
+			},
+		}))
+
+		// Create commit with add proposals
+		const commitResult = await createCommit(
+			{state: group.groupState, cipherSuite: this.#cipherSuite},
+			{extraProposals: addProposals}
+		)
+
+		// (async) Send commit to existing members
+		this.#delivery.sendCommit(currentMembers, commitResult.commit)
+
+		// (async) Send welcome to new members
+		this.#delivery.sendWelcome(newMembers, commitResult.welcome!)
+
+		// Update the group with new state and new list of members
+		group.groupState = commitResult.newState
+		group.members = currentMembers.concat(newMembers)
+		await this.#database.saveGroup(group)
+
+		/*
+		// Debug: Log the commit structure
+		console.group("🔍 [MLS Debug] Commit Structure")
+
+		// RFC 9420 Section 11.2: Commit Distribution
+		// ⚠️ IMPORTANT: The returned commit MUST be sent to all existing group members
+		// so they can process it with processCommit() to stay synchronized.
+		//
+		// Distribution flow:
+		// 1. Alice adds Bob: addMembers() returns { welcome, commit }
+		// 2. Alice sends welcome to Bob (new member)
+		// 3. Alice sends commit to existing members (Charlie, David, etc.)
+		// 4. All existing members call processCommit(commit) to update their state
+		//
+		// Without distributing the commit, existing members will remain at old epoch
+		// and won't be able to decrypt messages from the updated group.
+
+		// Convert ratchetTree to a real array (it's Uint8Array-like with numeric indices)
+		const ratchetTreeArray = Array.from(commitResult.newState.ratchetTree)
+		// RFC 9420: Strip trailing null nodes before transmission
+		const strippedTree = stripTrailingNulls(ratchetTreeArray)
+
+		return {
+			welcome: commitResult.welcome,
+			ratchetTree: strippedTree,
+			commit: commitResult.commit,
+		}
+		*/
+	}
+
+	public encryptMessage(): string {
+		return ""
+	}
+}

@@ -1,20 +1,19 @@
-import { ActivityPubService } from "../activitypub/network"
-import { KeyPackageService } from "./keyPackage"
-import { type APActor } from "../activitypub/actor"
+import {ActivityPubService} from "../z-activitypub/network"
+import {KeyPackageService} from "./keyPackage"
+import {type APActor} from "../z-activitypub/actor"
 
 // Plaintext service manages unencrypted conversations
 export class Plaintext {
-
 	// All class #properties are PRIVATE
 	#actor: APActor = {
-		id:"",
-		name:"",
-		icon:"",
-		username:"",
-		inbox:"",
-		mlsInbox:"",
-		outbox:"",
-		keyPackages:""
+		id: "",
+		name: "",
+		icon: "",
+		username: "",
+		inbox: "",
+		mlsInbox: "",
+		outbox: "",
+		keyPackages: "",
 	}
 
 	#activityPub: ActivityPubService
@@ -36,7 +35,6 @@ export class Plaintext {
 	}
 
 	async loadMyself(): Promise<APActor> {
-
 		// Retrieve my actor info from the server
 		const response = await fetch("http://localhost/@me", {
 			headers: [["Accept", "application/json"]],
@@ -49,24 +47,23 @@ export class Plaintext {
 		return result as APActor
 	}
 
-	async create(to:string[], message:string) {
-
+	async create(to: string[], message: string) {
 		// Create an ActivityPub activity
 		const activity = {
 			"@context": "https://www.w3.org/ns/activitystreams",
-			"type": "Create",
-			"actor": this.#actor.id,
-			"to": to,
-			"object": {
-				"type":"Note",
-				"content": message,
-			}
+			type: "Create",
+			actor: this.#actor.id,
+			to: to,
+			object: {
+				type: "Note",
+				content: message,
+			},
 		}
 
 		// POST to the actor's outbox
 		const response = await fetch(this.#actor.outbox, {
-			method:"POST",
-			headers:{"Content-Type": "application/activity+json"},
+			method: "POST",
+			headers: {"Content-Type": "application/activity+json"},
 			body: JSON.stringify(activity),
 		})
 	}
