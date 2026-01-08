@@ -3,5 +3,6 @@
 	"useTabs": true,
 	"semi": false,
 	"bracketSpacing": false,
-	"bracketSameLine": true
+	"bracketSameLine": true,
+	"htmlWhitespaceSensitivity": "strict"
 }
