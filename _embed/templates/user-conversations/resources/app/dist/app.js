@@ -13903,17 +13903,17 @@
      * @returns The parsed JSON response
      * @throws Error if the fetch fails
      */
-    async load(value) {
-      if (typeof value != "string") {
-        return value;
+    async load(url) {
+      if (typeof url != "string") {
+        return url;
       }
-      const response = await fetch(value, {
+      const response = await fetch(url, {
         headers: {
           Accept: 'application/activity+json, application/ld+json; profile="https://www.w3.org/ns/activitystreams"'
         }
       });
       if (!response.ok) {
-        throw new Error(`Unable to fetch ${value}: ${response.status} ${response.statusText}`);
+        throw new Error(`Unable to fetch ${url}: ${response.status} ${response.statusText}`);
       }
       return response.json();
     }
@@ -13983,13 +13983,13 @@
     // send POSTs an ActivityPub activity to the specified outbox
     // and returns the Location header from the response
     async send(outbox, activity) {
-      const response = await fetch(this.#outboxUrl, {
+      const response = await fetch(outbox, {
         method: "POST",
         body: JSON.stringify(activity),
         credentials: "include"
       });
       if (!response.ok) {
-        throw new Error(`Failed to fetch ${this.#outboxUrl}: ${response.status} ${response.statusText}`);
+        throw new Error(`Failed to POST ${outbox}: ${response.status} ${response.statusText}`);
       }
       return response.headers.get("Location") || "";
     }
@@ -14063,6 +14063,10 @@
       }
       return result;
     }
+    // createKeyPackage publishes a new KeyPackage to the User's outbox.
+    async createKeyPackage(keyPackage) {
+      return "";
+    }
   };
 
   // src/service/mls.ts
@@ -14073,16 +14077,14 @@
     #directory;
     // Internal State
     #cipherSuite;
-    #credential;
     #publicKeyPackage;
     #privateKeyPackage;
     #actor;
-    constructor(database, delivery, directory, actor, credential, cipherSuite, publicKeyPackage, privateKeyPackage) {
+    constructor(database, delivery, directory, actor, cipherSuite, publicKeyPackage, privateKeyPackage) {
       this.#database = database;
       this.#delivery = delivery;
       this.#directory = directory;
       this.#actor = actor;
-      this.#credential = credential;
       this.#cipherSuite = cipherSuite;
       this.#publicKeyPackage = publicKeyPackage;
       this.#privateKeyPackage = privateKeyPackage;
@@ -14164,7 +14166,7 @@
     );
     const publicKeyPackage = keyPackageResult.publicPackage;
     const privateKeyPackage = keyPackageResult.privatePackage;
-    return new MLS(database, delivery, directory, actor, credential, cipherSuite, publicKeyPackage, privateKeyPackage);
+    return new MLS(database, delivery, directory, actor, cipherSuite, publicKeyPackage, privateKeyPackage);
   }
 
   // src/controller.ts
@@ -14476,11 +14478,11 @@
       vnode.state.modal = "";
     }
     view(vnode) {
-      return /* @__PURE__ */ (0, import_mithril6.default)("div", { class: "flex-row flex-grow" }, /* @__PURE__ */ (0, import_mithril6.default)(
+      return /* @__PURE__ */ (0, import_mithril6.default)("div", { id: "conversations" }, /* @__PURE__ */ (0, import_mithril6.default)(
         "div",
         {
-          class: "table no-top-border width-50% md:width-40% lg:width-30% flex-shrink-0 scroll-vertical",
-          style: "background-color:var(--gray10);"
+          id: "conversation-list",
+          class: "table no-top-border width-50% md:width-40% lg:width-30% flex-shrink-0 scroll-vertical"
         },
         /* @__PURE__ */ (0, import_mithril6.default)(
           "div",
@@ -14499,10 +14501,10 @@
           ),
           /* @__PURE__ */ (0, import_mithril6.default)("div", { class: "ellipsis-block", style: "max-height:3em;" }, "New Conversation")
         ),
-        /* @__PURE__ */ (0, import_mithril6.default)("div", { role: "button", class: "flex-row flex-align-center padding hover-trigger" }, /* @__PURE__ */ (0, import_mithril6.default)("img", { class: "circle width-32" }), /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "flex-grow nowrap ellipsis" }, "Direct Message 1"), /* @__PURE__ */ (0, import_mithril6.default)("button", { class: "text-xs hover-show" }, "\u22EF")),
-        /* @__PURE__ */ (0, import_mithril6.default)("div", { role: "button", class: "flex-row flex-align-center padding hover-trigger" }, /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "width-32 circle flex-center" }, /* @__PURE__ */ (0, import_mithril6.default)("i", { class: "bi bi-lock-fill" })), /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "flex-grow nowrap ellipsis" }, "Encrypted Conversation"), /* @__PURE__ */ (0, import_mithril6.default)("button", { class: "text-xs hover-show" }, "\u22EF")),
-        /* @__PURE__ */ (0, import_mithril6.default)("div", { role: "button", class: "flex-row flex-align-center padding hover-trigger" }, /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "width-32 circle flex-center" }, /* @__PURE__ */ (0, import_mithril6.default)("i", { class: "bi bi-lock-fill" })), /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "flex-grow nowrap ellipsis" }, "Encrypted Conversation"), /* @__PURE__ */ (0, import_mithril6.default)("button", { class: "text-xs hover-show" }, "\u22EF"))
-      ), /* @__PURE__ */ (0, import_mithril6.default)("div", { class: "width-75%" }, "Here be details..."), /* @__PURE__ */ (0, import_mithril6.default)(
+        /* @__PURE__ */ (0, import_mithril6.default)("div", { role: "button", class: "flex-row flex-align-center padding hover-trigger" }, /* @__PURE__ */ (0, import_mithril6.default)("img", { class: "circle width-32" }), /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "flex-grow nowrap ellipsis" }, "Direct Message 1"), /* @__PURE__ */ (0, import_mithril6.default)("button", { class: "hover-show" }, "\u22EF")),
+        /* @__PURE__ */ (0, import_mithril6.default)("div", { role: "button", class: "flex-row flex-align-center padding hover-trigger" }, /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "width-32 circle flex-center" }, /* @__PURE__ */ (0, import_mithril6.default)("i", { class: "bi bi-lock-fill" })), /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "flex-grow nowrap ellipsis" }, "Encrypted Conversation"), /* @__PURE__ */ (0, import_mithril6.default)("button", { class: "hover-show" }, "\u22EF")),
+        /* @__PURE__ */ (0, import_mithril6.default)("div", { role: "button", class: "flex-row flex-align-center padding hover-trigger" }, /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "width-32 circle flex-center" }, /* @__PURE__ */ (0, import_mithril6.default)("i", { class: "bi bi-lock-fill" })), /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "flex-grow nowrap ellipsis" }, "Encrypted Conversation"), /* @__PURE__ */ (0, import_mithril6.default)("button", { class: "hover-show" }, "\u22EF"))
+      ), /* @__PURE__ */ (0, import_mithril6.default)("div", { id: "conversation-details", class: "width-75%" }, "Here be details..."), /* @__PURE__ */ (0, import_mithril6.default)(
         NewConversation,
         {
           controller: vnode.attrs.controller,

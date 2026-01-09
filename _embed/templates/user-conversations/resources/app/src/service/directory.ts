@@ -34,4 +34,9 @@ export class Directory {
 
 		return result
 	}
+
+	// createKeyPackage publishes a new KeyPackage to the User's outbox.
+	async createKeyPackage(keyPackage: APKeyPackage): Promise<string> {
+		return ""
+	}
 }

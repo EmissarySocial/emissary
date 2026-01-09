@@ -61,7 +61,6 @@ export class MLS {
 
 	// Internal State
 	#cipherSuite: CiphersuiteImpl
-	#credential: Credential
 	#publicKeyPackage: KeyPackage
 	#privateKeyPackage: PrivateKeyPackage
 	#actor: APActor
@@ -71,7 +70,6 @@ export class MLS {
 		delivery: IDelivery,
 		directory: IDirectory,
 		actor: APActor,
-		credential: Credential,
 		cipherSuite: CiphersuiteImpl,
 		publicKeyPackage: KeyPackage,
 		privateKeyPackage: PrivateKeyPackage
@@ -80,7 +78,6 @@ export class MLS {
 		this.#delivery = delivery
 		this.#directory = directory
 		this.#actor = actor
-		this.#credential = credential
 		this.#cipherSuite = cipherSuite
 		this.#publicKeyPackage = publicKeyPackage
 		this.#privateKeyPackage = privateKeyPackage

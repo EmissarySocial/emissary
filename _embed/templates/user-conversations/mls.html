@@ -12,6 +12,28 @@
 	<div id="mls" class="width-100% flex-row" data-actor-id="{{.ActorURL}}"></div>
 
 	<style>
+		#conversations {
+			
+			display:flex;
+			flex-grow:1;
+			width:100%;
+
+			#conversation-list {
+				flex-shrink:0;
+				font-size: 16px;
+				background-color: var(--gray10);
+
+				button {
+					font-size:12px;
+					padding: 6px;
+				}
+			}
+			
+			#conversation-details {
+
+			}
+		}
+
 		.conversation-item {
 			display: flex;
 			padding: calc(var(--rhythm) * 2);

@@ -60,5 +60,5 @@ export async function NewMLS(
 	const publicKeyPackage = keyPackageResult.publicPackage
 	const privateKeyPackage = keyPackageResult.privatePackage
 
-	return new MLS(database, delivery, directory, actor, credential, cipherSuite, publicKeyPackage, privateKeyPackage)
+	return new MLS(database, delivery, directory, actor, cipherSuite, publicKeyPackage, privateKeyPackage)
 }

@@ -20,10 +20,10 @@ export class Main {
 
 	view(vnode: MainVnode) {
 		return (
-			<div class="flex-row flex-grow">
+			<div id="conversations">
 				<div
-					class="table no-top-border width-50% md:width-40% lg:width-30% flex-shrink-0 scroll-vertical"
-					style="background-color:var(--gray10);">
+					id="conversation-list"
+					class="table no-top-border width-50% md:width-40% lg:width-30% flex-shrink-0 scroll-vertical">
 					<div
 						role="button"
 						class="link conversation-selector padding flex-row flex-align-center"
@@ -41,24 +41,26 @@ export class Main {
 					<div role="button" class="flex-row flex-align-center padding hover-trigger">
 						<img class="circle width-32" />
 						<span class="flex-grow nowrap ellipsis">Direct Message 1</span>
-						<button class="text-xs hover-show">&#8943;</button>
+						<button class="hover-show">&#8943;</button>
 					</div>
 					<div role="button" class="flex-row flex-align-center padding hover-trigger">
 						<span class="width-32 circle flex-center">
 							<i class="bi bi-lock-fill"></i>
 						</span>
 						<span class="flex-grow nowrap ellipsis">Encrypted Conversation</span>
-						<button class="text-xs hover-show">&#8943;</button>
+						<button class="hover-show">&#8943;</button>
 					</div>
 					<div role="button" class="flex-row flex-align-center padding hover-trigger">
 						<span class="width-32 circle flex-center">
 							<i class="bi bi-lock-fill"></i>
 						</span>
 						<span class="flex-grow nowrap ellipsis">Encrypted Conversation</span>
-						<button class="text-xs hover-show">&#8943;</button>
+						<button class="hover-show">&#8943;</button>
 					</div>
 				</div>
-				<div class="width-75%">Here be details...</div>
+				<div id="conversation-details" class="width-75%">
+					Here be details...
+				</div>
 
 				<NewConversation
 					controller={vnode.attrs.controller}

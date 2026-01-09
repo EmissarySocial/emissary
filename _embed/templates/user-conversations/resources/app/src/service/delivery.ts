@@ -26,23 +26,23 @@ export class Delivery {
 	 * @returns The parsed JSON response
 	 * @throws Error if the fetch fails
 	 */
-	async load<T>(value: string): Promise<T> {
+	async load<T>(url: string): Promise<T> {
 		//
 
 		// If the URL is already an object, return it directly
-		if (typeof value != "string") {
-			return value
+		if (typeof url != "string") {
+			return url
 		}
 
-		// Otherwise, the value is a URL, so load it from the network
-		const response = await fetch(value, {
+		// Otherwise, the url is a URL, so load it from the network
+		const response = await fetch(url, {
 			headers: {
 				Accept: 'application/activity+json, application/ld+json; profile="https://www.w3.org/ns/activitystreams"',
 			},
 		})
 
 		if (!response.ok) {
-			throw new Error(`Unable to fetch ${value}: ${response.status} ${response.statusText}`)
+			throw new Error(`Unable to fetch ${url}: ${response.status} ${response.statusText}`)
 		}
 
 		return response.json() as Promise<T>
@@ -123,14 +123,14 @@ export class Delivery {
 		//
 
 		// Send the Activity to the server
-		const response = await fetch(this.#outboxUrl, {
+		const response = await fetch(outbox, {
 			method: "POST",
 			body: JSON.stringify(activity),
 			credentials: "include",
 		})
 
 		if (!response.ok) {
-			throw new Error(`Failed to fetch ${this.#outboxUrl}: ${response.status} ${response.statusText}`)
+			throw new Error(`Failed to POST ${outbox}: ${response.status} ${response.statusText}`)
 		}
 
 		return response.headers.get("Location") || ""
