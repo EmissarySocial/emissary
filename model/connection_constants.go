@@ -54,7 +54,7 @@ const ConnectionProviderGiphy = "GIPHY"
 
 // ConnectionProviderStripe represents an API connection to the https://stripe.com service
 // for processing payments, using direct API keys.
-const ConnectionProviderStripe = "STRIPE"
+// const ConnectionProviderStripe = "STRIPE"
 
 // ConnectionProviderStripeConnect represents an API connection to the https://stripe.com service
 // for processing payments, using the Stripe Connect / OAuth authentication.

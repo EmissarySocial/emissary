@@ -41,14 +41,14 @@ func (connection Connection) LookupCode() form.LookupCode {
 
 	switch connection.ProviderID {
 
-	case ConnectionProviderStripe:
-		return form.LookupCode{
-			Group:       "MANUAL",
-			Value:       connection.ProviderID,
-			Label:       "Stripe",
-			Description: "Stripe is a sophisticated payment platform for techies. Manage your own Stripe API keys.",
-			Icon:        "/.templates/user-settings/resources/stripe.svg",
-		}
+	// case ConnectionProviderStripe:
+	//	return form.LookupCode{
+	//		Group:       "MANUAL",
+	//		Value:       connection.ProviderID,
+	//		Label:       "Stripe",
+	//		Description: "Stripe is a sophisticated payment platform for techies. Manage your own Stripe API keys.",
+	//		Icon:        "/.templates/user-settings/resources/stripe.svg",
+	//	}
 
 	case ConnectionProviderStripeConnect:
 		return form.LookupCode{

@@ -25,7 +25,7 @@ func ConnectionSchema() schema.Element {
 				ConnectionProviderGeocodeTiles,
 				ConnectionProviderGeocodeTimezone,
 				ConnectionProviderGiphy,
-				ConnectionProviderStripe,
+				// ConnectionProviderStripe,
 				ConnectionProviderStripeConnect,
 				ConnectionProviderUnsplash,
 			}},

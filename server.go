@@ -232,8 +232,9 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.ostatus/tunnel", handler.GetFollowingTunnel)
 	e.GET("/.searchTag/:searchTagId/attachments/:attachmentId", handler.WithFactory(factory, handler.GetSearchTagAttachment))
 	e.GET("/.sso", handler.WithDomain(factory, handler.GetSingleSignOn))
-	e.POST("/.stripe/webhook/signup", handler.WithDomain(factory, stripe.PostSignupWebhook))
-	e.POST("/.stripe/webhook/checkout", handler.WithMerchantAccount(factory, handler.PostStripeWebhook_Checkout))
+	// e.GET("/.stripe/connect", handler.WithAuthenticatedUser(factory, handler.GetStripe)) // Replaced with Stripe Connect
+	// e.POST("/.stripe/webhook/signup", handler.WithDomain(factory, stripe.PostSignupWebhook))
+	// e.POST("/.stripe/webhook/checkout", handler.WithMerchantAccount(factory, handler.PostStripeWebhook_Checkout))
 	e.GET("/.stripe-connect/connect", handler.WithAuthenticatedUser(factory, handler.GetStripeConnect))
 	e.POST("/.stripe-connect/webhook/signup", handler.WithDomain(factory, stripe.PostSignupWebhook))
 	e.POST("/.stripe-connect/webhook/checkout", handler.WithConnection(model.ConnectionProviderStripeConnect, factory, handler.PostStripeConnectWebhook_Checkout))
