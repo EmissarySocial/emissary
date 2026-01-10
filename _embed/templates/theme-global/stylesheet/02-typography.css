@@ -4,40 +4,39 @@
  * letters, and numbers.
  ******************************************/
 
-
- /******************************************
+/******************************************
  * Font Stack
  ******************************************/
 :root {
 	--rhythm: 8px;
-    --weight:300;
+	--weight: 300;
 }
 
-@media (prefers-color-scheme:dark) {
-    :root {
-        --weight:400;
-    }
+@media (prefers-color-scheme: dark) {
+	:root {
+		--weight: 400;
+	}
 }
 
-@media screen and (min-width:640px) {
+@media screen and (min-width: 640px) {
 	:root {
 		--rhythm: 8px;
 	}
 }
 
-@media screen and (min-width:760px) {
+@media screen and (min-width: 760px) {
 	:root {
-		--rhythm: 9px;
+		--rhythm: 8px;
 	}
 }
-@media screen and (min-width:1024px) {
+@media screen and (min-width: 1024px) {
 	:root {
-		--rhythm: 9px;
+		--rhythm: 8px;
 	}
 }
-@media screen and (min-width:1280px) {
+@media screen and (min-width: 1280px) {
 	:root {
-		--rhythm: 10px;
+		--rhythm: 9px;
 	}
 }
 
@@ -47,235 +46,280 @@
 		--weight: 400;
 	}
 }
-    
+
 html {
-    font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    font-weight:var(--weight);
-    font-size:calc(var(--rhythm) * 2);
-    line-height:calc(var(--rhythm) * 3);
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans",
+		"Helvetica Neue", sans-serif;
+	font-weight: var(--weight);
+	font-size: calc(var(--rhythm) * 2);
+	line-height: calc(var(--rhythm) * 3);
 }
- 
 
 /******************************************
  * Headings
  ******************************************/
 
 h1 {
-    font-weight:calc(var(--weight) + 200);
-    font-size:calc(var(--rhythm) * 5);
-    line-height:calc(var(--rhythm) * 6);
-    margin-top:calc(var(--rhythm) * 6);
-    margin-bottom:calc(var(--rhythm) * 2);
-    color:var(--heading-color);
+	font-weight: calc(var(--weight) + 200);
+	font-size: calc(var(--rhythm) * 5);
+	line-height: calc(var(--rhythm) * 6);
+	margin-top: calc(var(--rhythm) * 6);
+	margin-bottom: calc(var(--rhythm) * 2);
+	color: var(--heading-color);
 }
 
 h2 {
-    font-weight:calc(var(--weight) + 200);
-    font-size:calc(var(--rhythm) * 3);
-    line-height:calc(var(--rhythm) * 4);
-    margin-top:calc(var(--rhythm) * 4);
-    margin-bottom:calc(var(--rhythm) * 2);
-    color:var(--heading-color);
+	font-weight: calc(var(--weight) + 200);
+	font-size: calc(var(--rhythm) * 3);
+	line-height: calc(var(--rhythm) * 4);
+	margin-top: calc(var(--rhythm) * 4);
+	margin-bottom: calc(var(--rhythm) * 2);
+	color: var(--heading-color);
 }
 
 h3 {
-    font-weight:calc(var(--weight) + 300);
-    font-size:calc(var(--rhythm) * 2);
-    line-height:calc(var(--rhythm) * 3);
-    margin-top:calc(var(--rhythm) * 4);
-    margin-bottom:calc(var(--rhythm) * 0);
-    color:var(--heading-color);
+	font-weight: calc(var(--weight) + 300);
+	font-size: calc(var(--rhythm) * 2);
+	line-height: calc(var(--rhythm) * 3);
+	margin-top: calc(var(--rhythm) * 4);
+	margin-bottom: calc(var(--rhythm) * 0);
+	color: var(--heading-color);
 }
 
 h1:first-child,
 h2:first-child,
 h3:first-child {
-    margin-top:calc(var(--rhythm) * 1);
+	margin-top: calc(var(--rhythm) * 1);
 }
-
 
 /******************************************
  * Text Sizes
  ******************************************/
- 
+
 .text-3xl,
 .text-3xl p,
 .text-3xl input,
 .input.text-3xl {
-    font-size:calc(var(--rhythm) * 7 * 2/3);
-    line-height:calc(var(--rhythm) * 7);
-    margin-top:calc(var(--rhythm) * 3);
-    margin-bottom:calc(var(--rhythm) * 1);
-    font-weight:calc(var(--weight) + 100);
+	font-size: calc(var(--rhythm) * 7 * 2 / 3);
+	line-height: calc(var(--rhythm) * 7);
+	margin-top: calc(var(--rhythm) * 3);
+	margin-bottom: calc(var(--rhythm) * 1);
+	font-weight: calc(var(--weight) + 100);
 }
 
 .text-2xl,
 .text-2xl p,
 .text-2xl input,
 input.text-2xl {
-    font-size:calc(var(--rhythm) * 4);
-    line-height:calc(var(--rhythm) * 6);
-    margin-top:calc(var(--rhythm) * 3);
-    margin-bottom:calc(var(--rhythm) * 1);
-    font-weight:calc(var(--weight) + 100);
+	font-size: calc(var(--rhythm) * 4);
+	line-height: calc(var(--rhythm) * 6);
+	margin-top: calc(var(--rhythm) * 3);
+	margin-bottom: calc(var(--rhythm) * 1);
+	font-weight: calc(var(--weight) + 100);
 }
 
 .text-xl,
 .text-xl p,
 .text-xl input,
 input.text-xl {
-    font-size:calc(var(--rhythm) * 5 * 2/3);
-    line-height:calc(var(--rhythm) * 5);
-    margin-top:calc(var(--rhythm) * 2);
-    margin-bottom:calc(var(--rhythm) * 1);
-    font-weight:calc(var(--weight) + 100);
+	font-size: calc(var(--rhythm) * 5 * 2 / 3);
+	line-height: calc(var(--rhythm) * 5);
+	margin-top: calc(var(--rhythm) * 2);
+	margin-bottom: calc(var(--rhythm) * 1);
+	font-weight: calc(var(--weight) + 100);
 }
 
 .text-lg,
 .text-lg p,
 .text-lg input,
 input.text-lg {
-    font-size:calc(var(--rhythm) * 4 * 2/3);
-    line-height:calc(var(--rhythm) * 4);
-    margin-top:calc(var(--rhythm));
-    margin-bottom:calc(var(--rhythm) * 1);
-    font-weight:calc(var(--weight) - 100);
+	font-size: calc(var(--rhythm) * 4 * 2 / 3);
+	line-height: calc(var(--rhythm) * 4);
+	margin-top: calc(var(--rhythm));
+	margin-bottom: calc(var(--rhythm) * 1);
+	font-weight: calc(var(--weight) - 100);
 }
 
 p,
 .text-md,
 .text-md input,
 input.text-md {
-    font-size:calc(var(--rhythm) * 2);
-    line-height:calc(var(--rhythm) * 3);
-    margin-top: calc(var(--rhythm) * 0);
-    margin-bottom:calc(var(--rhythm) * 2);
+	font-size: calc(var(--rhythm) * 2);
+	line-height: calc(var(--rhythm) * 3);
+	margin-top: calc(var(--rhythm) * 0);
+	margin-bottom: calc(var(--rhythm) * 2);
 }
 
 .text-sm,
 .text-sm p {
-    font-size:calc(var(--rhythm) * 1.75);
-    line-height:calc(var(--rhythm) * 2.5);
-    margin-top:calc(var(--rhythm) * 0.5);
-    margin-bottom:calc(var(--rhythm) * 0.5);
+	font-size: calc(var(--rhythm) * 1.75);
+	line-height: calc(var(--rhythm) * 2.5);
+	margin-top: calc(var(--rhythm) * 0.5);
+	margin-bottom: calc(var(--rhythm) * 0.5);
 }
 
 .text-xs,
 .text-xs p {
-    font-size:calc(var(--rhythm) * 1.5);
-    line-height:calc(var(--rhythm) * 2);
-    margin-top: calc(var(--rhythm) * 0.5);
-    margin-bottom:calc(var(--rhythm) * 0.5);
+	font-size: calc(var(--rhythm) * 1.5);
+	line-height: calc(var(--rhythm) * 2);
+	margin-top: calc(var(--rhythm) * 0.5);
+	margin-bottom: calc(var(--rhythm) * 0.5);
 }
 
 /******************************************
  * Text Colors
  ******************************************/
 
-.text-white, .text-gray-00, .gray00 .white {color:var(--white);}
-.text-gray-01, .gray01 {color:var(--gray01);}
-.text-gray-02, .gray02 {color:var(--gray02);}
-.text-gray-03, .gray03 {color:var(--gray03);}
-.text-gray-04, .gray04 {color:var(--gray04);}
-.text-gray-05, .gray05 {color:var(--gray05);}
-.text-gray-10, .gray10 {color:var(--gray10);}
-.text-gray-20, .gray20 {color:var(--gray20);}
-.text-gray-30, .gray30 {color:var(--gray30);}
-.text-gray-40, .gray40 {color:var(--gray40);}
-.text-gray-50, .gray50 {color:var(--gray50);}
-.text-gray-60, .gray60 {color:var(--gray60);}
-.text-gray-70, .gray70 {color:var(--gray70);}
-.text-gray-80, .gray80 {color:var(--gray80);}
-.text-gray-90, .gray90 {color:var(--gray90);}
+.text-white,
+.text-gray-00,
+.gray00 .white {
+	color: var(--white);
+}
+.text-gray-01,
+.gray01 {
+	color: var(--gray01);
+}
+.text-gray-02,
+.gray02 {
+	color: var(--gray02);
+}
+.text-gray-03,
+.gray03 {
+	color: var(--gray03);
+}
+.text-gray-04,
+.gray04 {
+	color: var(--gray04);
+}
+.text-gray-05,
+.gray05 {
+	color: var(--gray05);
+}
+.text-gray-10,
+.gray10 {
+	color: var(--gray10);
+}
+.text-gray-20,
+.gray20 {
+	color: var(--gray20);
+}
+.text-gray-30,
+.gray30 {
+	color: var(--gray30);
+}
+.text-gray-40,
+.gray40 {
+	color: var(--gray40);
+}
+.text-gray-50,
+.gray50 {
+	color: var(--gray50);
+}
+.text-gray-60,
+.gray60 {
+	color: var(--gray60);
+}
+.text-gray-70,
+.gray70 {
+	color: var(--gray70);
+}
+.text-gray-80,
+.gray80 {
+	color: var(--gray80);
+}
+.text-gray-90,
+.gray90 {
+	color: var(--gray90);
+}
 
 .text-nocolor,
 .text-nocolor:hover {
-	color:var(--text-color);
+	color: var(--text-color);
 }
 
 .text-black {
-    color:var(--black);
-    text-decoration:none;
+	color: var(--black);
+	text-decoration: none;
 }
 
 .text-gray {
-    opacity:0.66;
+	opacity: 0.66;
 }
 
 .text-light-gray {
-    opacity:0.50;
+	opacity: 0.5;
 }
 
 .text-green {
-    color:var(--green70);
-    text-decoration:none;
+	color: var(--green70);
+	text-decoration: none;
 }
 
 a:hover .text-green,
 a.text-green:hover {
-    color:var(--green80);
+	color: var(--green80);
 }
 
 .text-red {
-    color:var(--red60);
-    text-decoration:none;
+	color: var(--red60);
+	text-decoration: none;
 }
 
 a:hover .text-red,
 a.text-red:hover {
-    color:var(--red50);
+	color: var(--red50);
 }
-
 
 /******************************************
  * Text Decoration
  ******************************************/
 
 .text-plain {
-    text-decoration:none;
+	text-decoration: none;
 }
 
 .text-underline {
-    text-decoration: underline;
+	text-decoration: underline;
 }
 
 .text-lowercase {
-    text-transform: lowercase;
+	text-transform: lowercase;
 }
 
 .text-uppercase {
-    text-transform: uppercase;
+	text-transform: uppercase;
 }
 
 .text-capitalize {
-    text-transform: capitalize;
+	text-transform: capitalize;
 }
-
 
 /******************************************
  * Text Modifiers - Code
  ******************************************/
 
-.monospace, code {
-    font-family:ui-monospace, "Menlo", "Monaco", "Cascadia Mono", "Segoe UI Mono", "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro", "Fira Mono", "Droid Sans Mono", "Courier New", monospace;
-    background-color:var(--gray10);
-    border:solid 1px var(--gray-20);
-    padding:5px 10px;
-    white-space:pre-wrap;
+.monospace,
+code {
+	font-family: ui-monospace, "Menlo", "Monaco", "Cascadia Mono", "Segoe UI Mono", "Roboto Mono", "Oxygen Mono",
+		"Ubuntu Monospace", "Source Code Pro", "Fira Mono", "Droid Sans Mono", "Courier New", monospace;
+	background-color: var(--gray10);
+	border: solid 1px var(--gray-20);
+	padding: 5px 10px;
+	white-space: pre-wrap;
 }
 
 pre code,
 code.block {
-    display:block;
-    tab-size:24px;
+	display: block;
+	tab-size: 24px;
 }
 
 code.inline {
-    display:inline;
+	display: inline;
 }
 
 .nowrap {
-    white-space: nowrap;
+	white-space: nowrap;
 }
 
 .noselect {
@@ -291,43 +335,49 @@ code.inline {
 }
 
 .wrap {
-    white-space: normal;
+	white-space: normal;
 }
-
 
 /******************************************
  * Links and Anchors
  ******************************************/
 
-a, .link {
-	color:var(--link-color);
-	text-decoration:none;
+a,
+.link {
+	color: var(--link-color);
+	text-decoration: none;
 }
 
 a:hover,
 .link:hover {
-	cursor:pointer;
-	color:var(--link-color-hover);
+	cursor: pointer;
+	color: var(--link-color-hover);
 }
 
-.clickable, [role="link"], [role="button"] {
-	cursor:pointer;
+.clickable,
+[role="link"],
+[role="button"] {
+	cursor: pointer;
 }
 
-b, strong, .bold {
-	font-weight:calc(var(--weight) + 300);
+b,
+strong,
+.bold {
+	font-weight: calc(var(--weight) + 300);
 }
 
 .extra-bold {
-	font-weight:calc(var(--weight) + 600);
+	font-weight: calc(var(--weight) + 600);
 }
 
 .text-thin {
-	font-weight:calc(var(--weight) - 100);
+	font-weight: calc(var(--weight) - 100);
 }
 
-i, em, .italics {
-	font-style:italic;
+i,
+em,
+.italics {
+	font-style: italic;
 }
 
 .line-through {
@@ -335,26 +385,25 @@ i, em, .italics {
 }
 
 p:last-child {
-    margin:0px;
+	margin: 0px;
 }
 
 .ellipsis {
-    text-overflow:ellipsis;
-    overflow:hidden;
-    white-space:nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
+	white-space: nowrap;
 }
 
 .ellipsis-block {
-    text-overflow:ellipsis; 
-    overflow:hidden; 
-	max-width:100%;
+	text-overflow: ellipsis;
+	overflow: hidden;
+	max-width: 100%;
 }
-
 
 /******************************************
  * Fonts
  ******************************************/
 
 .font-mono {
-	font-family: 'Nimbus Mono PS', 'Courier New', monospace;
+	font-family: "Nimbus Mono PS", "Courier New", monospace;
 }

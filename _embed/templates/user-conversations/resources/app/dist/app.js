@@ -13843,10 +13843,12 @@
   }
 
   // src/service/database.ts
-  async function NewDatabase() {
+  async function NewIndexedDB() {
     return await openDB("mls-database", void 0, {
-      upgrade(db) {
+      upgrade(db, oldVersion, newVersion) {
+        console.log("Upgrading database from version", oldVersion, "to:", newVersion);
         db.createObjectStore("group", { keyPath: "groupID" });
+        db.createObjectStore("keyPackage", { keyPath: "keyPackageID" });
         db.createObjectStore("message", { keyPath: "messageID" });
       }
     });
@@ -13856,6 +13858,9 @@
     constructor(db) {
       this.#db = db;
     }
+    /////////////////////////////////////////////
+    // Groups
+    /////////////////////////////////////////////
     // saveGroup saves a group to the database
     async saveGroup(group) {
       await this.#db.put("group", group);
@@ -13868,6 +13873,19 @@
       }
       return group;
     }
+    /////////////////////////////////////////////
+    // Private KeyPackage
+    /////////////////////////////////////////////
+    async loadKeyPackage() {
+      const keyPackage = await this.#db.get("keyPackage", "self");
+      return keyPackage;
+    }
+    async saveKeyPackage(keyPackage) {
+      await this.#db.put("keyPackage", keyPackage);
+    }
+    /////////////////////////////////////////////
+    // Messages
+    /////////////////////////////////////////////
     // saveMessage saves a message to the database
     async saveMessage(message) {
       await this.#db.put("message", message);
@@ -14109,9 +14127,13 @@
         updateDate: Date.now(),
         readDate: Date.now()
       };
+      console.log("mls.createGroup: Saving new group", result);
+      console.log(findNonSerializable(result, "root"));
       await this.#database.saveGroup(result);
       return result;
     }
+    // addGroupMembers updates the group state.  It sends a Commit
+    // message to existing members, and a Welcome message to new members,
     async addGroupMembers(groupID, newMembers) {
       const group = await this.#database.loadGroup(groupID);
       const currentMembers = group.members;
@@ -14147,26 +14169,77 @@
       return "";
     }
   };
+  function findNonSerializable(obj, path = "root") {
+    const issues = [];
+    if (obj === null || typeof obj !== "object") {
+      return issues;
+    }
+    for (const key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        const currentPath = `${path}.${key}`;
+        const value = obj[key];
+        if (typeof value === "function") {
+          issues.push(`${currentPath} is a function`);
+        } else if (value instanceof Node) {
+          issues.push(`${currentPath} is a DOM node`);
+        } else if (typeof value === "symbol") {
+          issues.push(`${currentPath} is a Symbol`);
+        } else if (value instanceof Promise) {
+          issues.push(`${currentPath} is a Promise`);
+        } else if (value instanceof RegExp) {
+          issues.push(`${currentPath} is a RegExp`);
+        } else if (value instanceof Blob) {
+          issues.push(`${currentPath} is a Blob`);
+        } else if (typeof value === "object") {
+          try {
+            structuredClone(value);
+          } catch (e) {
+            issues.push(`${currentPath} has circular reference or non-serializable content`);
+          }
+          issues.push(...findNonSerializable(value, currentPath));
+        }
+      }
+    }
+    return issues;
+  }
 
   // src/service/mls-loader.ts
   async function NewMLS(database, delivery, directory, actor) {
-    const credential = {
-      credentialType: "basic",
-      identity: new TextEncoder().encode(actor.id)
-    };
-    const cipherSuiteName = "MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519";
-    const cs = getCiphersuiteFromName(cipherSuiteName);
-    const cipherSuite = await nobleCryptoProvider.getCiphersuiteImpl(cs);
-    const keyPackageResult = await generateKeyPackage(
-      credential,
-      defaultCapabilities(),
-      defaultLifetime,
-      [],
-      cipherSuite
+    var keyPackage = await database.loadKeyPackage();
+    if (keyPackage == void 0) {
+      const credential = {
+        credentialType: "basic",
+        identity: new TextEncoder().encode(actor.id)
+      };
+      const cipherSuiteName = "MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519";
+      const keyPackageResult = await generateKeyPackage(
+        credential,
+        defaultCapabilities(),
+        defaultLifetime,
+        [],
+        await makeCipherSuite(cipherSuiteName)
+      );
+      keyPackage = {
+        keyPackageID: "self",
+        publicKeyPackage: keyPackageResult.publicPackage,
+        privateKeyPackage: keyPackageResult.privatePackage,
+        cipherSuiteName
+      };
+      await database.saveKeyPackage(keyPackage);
+    }
+    return new MLS(
+      database,
+      delivery,
+      directory,
+      actor,
+      await makeCipherSuite(keyPackage.cipherSuiteName),
+      keyPackage.publicKeyPackage,
+      keyPackage.privateKeyPackage
     );
-    const publicKeyPackage = keyPackageResult.publicPackage;
-    const privateKeyPackage = keyPackageResult.privatePackage;
-    return new MLS(database, delivery, directory, actor, cipherSuite, publicKeyPackage, privateKeyPackage);
+  }
+  async function makeCipherSuite(cipherSuiteName) {
+    const cs = getCiphersuiteFromName(cipherSuiteName);
+    return await nobleCryptoProvider.getCiphersuiteImpl(cs);
   }
 
   // src/controller.ts
@@ -14573,7 +14646,7 @@
       throw new Error(`Can't mount Mithril app. Please verify that <div id="mls"> exists.`);
     }
     const actor = await loadActivityStream(actorID);
-    const indexedDB2 = await NewDatabase();
+    const indexedDB2 = await NewIndexedDB();
     const database = new Database(indexedDB2);
     const delivery = new Delivery(actor.id, actor.outbox);
     const directory = new Directory();

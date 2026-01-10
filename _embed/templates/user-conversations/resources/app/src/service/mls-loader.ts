@@ -22,6 +22,7 @@ import {type PrivateMessage} from "ts-mls"
 import {type CiphersuiteImpl} from "ts-mls"
 
 import type {APActor} from "../model/ap-actor"
+import type {DBKeyPackage} from "../model/db-keypackage"
 import type {Database} from "./database"
 import type {Delivery} from "./delivery"
 import type {Directory} from "./directory"
@@ -36,29 +37,62 @@ export async function NewMLS(
 ): Promise<MLS> {
 	//
 
-	// Create a credential for this User
-	const credential: Credential = {
-		credentialType: "basic",
-		identity: new TextEncoder().encode(actor.id),
+	// Try to load the KeyPackage from the IndexedDB database
+	var keyPackage = await database.loadKeyPackage()
+
+	// Create a new KeyPackage if none exists
+	if (keyPackage == undefined) {
+		//
+
+		// Create a credential for this User
+		const credential: Credential = {
+			credentialType: "basic",
+			identity: new TextEncoder().encode(actor.id),
+		}
+
+		// Use MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519 (ID: 1)
+		// Using nobleCryptoProvider for compatibility (pure JS implementation)
+		const cipherSuiteName = "MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519"
+
+		// Generate initial key package for this user
+		const keyPackageResult = await generateKeyPackage(
+			credential,
+			defaultCapabilities(),
+			defaultLifetime,
+			[],
+			await makeCipherSuite(cipherSuiteName)
+		)
+
+		// Create DBKeyPackage object
+		keyPackage = {
+			keyPackageID: "self",
+			publicKeyPackage: keyPackageResult.publicPackage,
+			privateKeyPackage: keyPackageResult.privatePackage,
+			cipherSuiteName: cipherSuiteName,
+		}
+
+		// Save the KeyPackage to the database
+		await database.saveKeyPackage(keyPackage)
 	}
 
-	// Use MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519 (ID: 1)
-	// Using nobleCryptoProvider for compatibility (pure JS implementation)
-	const cipherSuiteName = "MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519"
-	const cs = getCiphersuiteFromName(cipherSuiteName)
-	const cipherSuite = await nobleCryptoProvider.getCiphersuiteImpl(cs)
-
-	// Generate initial key package for this user
-	const keyPackageResult = await generateKeyPackage(
-		credential,
-		defaultCapabilities(),
-		defaultLifetime,
-		[],
-		cipherSuite
+	// Create and return the MLS service
+	return new MLS(
+		database,
+		delivery,
+		directory,
+		actor,
+		await makeCipherSuite(keyPackage.cipherSuiteName),
+		keyPackage.publicKeyPackage,
+		keyPackage.privateKeyPackage
 	)
+}
 
-	const publicKeyPackage = keyPackageResult.publicPackage
-	const privateKeyPackage = keyPackageResult.privatePackage
-
-	return new MLS(database, delivery, directory, actor, cipherSuite, publicKeyPackage, privateKeyPackage)
+// Use MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519 (ID: 1)
+// Using nobleCryptoProvider for compatibility (pure JS implementation)
+// Other implementations can be added in the future.
+async function makeCipherSuite(
+	cipherSuiteName: "MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519"
+): Promise<CiphersuiteImpl> {
+	const cs = getCiphersuiteFromName(cipherSuiteName)
+	return await nobleCryptoProvider.getCiphersuiteImpl(cs)
 }

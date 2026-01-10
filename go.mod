@@ -2,6 +2,11 @@ module github.com/EmissarySocial/emissary
 
 go 1.25.4
 
+replace github.com/benpate/hannibal => ../../benpate/hannibal
+replace github.com/benpate/rosetta => ../../benpate/rosetta
+replace github.com/benpate/turbine => ../../benpate/turbine
+replace github.com/benpate/domain => ../../benpate/domain
+
 require (
 	github.com/PuerkitoBio/goquery v1.11.0
 	github.com/aws/aws-sdk-go v1.55.8

@@ -109,12 +109,17 @@ export class MLS {
 		}
 
 		// Save the DBGroup
+		console.log("mls.createGroup: Saving new group", result)
+		console.log(findNonSerializable(result, "root"))
+
 		await this.#database.saveGroup(result)
 
 		// Success
 		return result
 	}
 
+	// addGroupMembers updates the group state.  It sends a Commit
+	// message to existing members, and a Welcome message to new members,
 	public async addGroupMembers(groupID: string, newMembers: string[]) {
 		//
 
@@ -195,4 +200,46 @@ export class MLS {
 	public encryptMessage(): string {
 		return ""
 	}
+}
+
+// debugging
+function findNonSerializable(obj: any, path: string = "root"): string[] {
+	const issues: string[] = []
+
+	if (obj === null || typeof obj !== "object") {
+		return issues
+	}
+
+	for (const key in obj) {
+		if (obj.hasOwnProperty(key)) {
+			const currentPath = `${path}.${key}`
+			const value = obj[key]
+
+			if (typeof value === "function") {
+				issues.push(`${currentPath} is a function`)
+			} else if (value instanceof Node) {
+				issues.push(`${currentPath} is a DOM node`)
+			} else if (typeof value === "symbol") {
+				issues.push(`${currentPath} is a Symbol`)
+			} else if (value instanceof Promise) {
+				issues.push(`${currentPath} is a Promise`)
+			} else if (value instanceof RegExp) {
+				issues.push(`${currentPath} is a RegExp`)
+			} else if (value instanceof Blob) {
+				issues.push(`${currentPath} is a Blob`)
+			} else if (typeof value === "object") {
+				// Check for circular references
+				try {
+					structuredClone(value) // Modern way to test
+				} catch (e) {
+					issues.push(`${currentPath} has circular reference or non-serializable content`)
+				}
+
+				// Recursively check nested objects
+				issues.push(...findNonSerializable(value, currentPath))
+			}
+		}
+	}
+
+	return issues
 }

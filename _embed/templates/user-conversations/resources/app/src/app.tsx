@@ -1,7 +1,7 @@
 import m from "mithril"
 
 import {type APActor} from "./model/ap-actor"
-import {Database, NewDatabase} from "./service/database"
+import {Database, NewIndexedDB} from "./service/database"
 import {Delivery} from "./service/delivery"
 import {Directory} from "./service/directory"
 import {loadActivityStream} from "./service/network"
@@ -19,11 +19,13 @@ async function startup() {
 		throw new Error(`Can't mount Mithril app. Please verify that <div id="mls"> exists.`)
 	}
 
+	// TODO: Display a loading indicator while we fetch data
+
 	// Load the actor object from the network
 	const actor = (await loadActivityStream(actorID)) as APActor
 
 	// Build dependencies
-	const indexedDB = await NewDatabase()
+	const indexedDB = await NewIndexedDB()
 	const database = new Database(indexedDB)
 	const delivery = new Delivery(actor.id, actor.outbox)
 	const directory = new Directory()

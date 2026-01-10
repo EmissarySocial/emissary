@@ -2,6 +2,7 @@ import type {DBSchema, IDBPDatabase} from "idb/build/entry.js"
 import {openDB} from "idb"
 import {type DBGroup} from "../model/db-group"
 import {type DBMessage} from "../model/db-message"
+import type {DBKeyPackage} from "../model/db-keypackage"
 
 // Schema defines the layout of records stored in IndexedDB
 interface Schema extends DBSchema {
@@ -9,16 +10,24 @@ interface Schema extends DBSchema {
 		key: string
 		value: DBGroup
 	}
+
+	keyPackage: {
+		key: string
+		value: DBKeyPackage
+	}
+
 	message: {
 		key: string
 		value: DBMessage
 	}
 }
 
-export async function NewDatabase(): Promise<IDBPDatabase<Schema>> {
+export async function NewIndexedDB(): Promise<IDBPDatabase<Schema>> {
 	return await openDB<Schema>("mls-database", undefined, {
-		upgrade(db) {
+		upgrade(db, oldVersion, newVersion) {
+			console.log("Upgrading database from version", oldVersion, "to:", newVersion)
 			db.createObjectStore("group", {keyPath: "groupID"})
+			db.createObjectStore("keyPackage", {keyPath: "keyPackageID"})
 			db.createObjectStore("message", {keyPath: "messageID"})
 		},
 	})
@@ -30,6 +39,10 @@ export class Database {
 	constructor(db: IDBPDatabase<Schema>) {
 		this.#db = db
 	}
+
+	/////////////////////////////////////////////
+	// Groups
+	/////////////////////////////////////////////
 
 	// saveGroup saves a group to the database
 	async saveGroup(group: DBGroup) {
@@ -44,6 +57,23 @@ export class Database {
 		}
 		return group
 	}
+
+	/////////////////////////////////////////////
+	// Private KeyPackage
+	/////////////////////////////////////////////
+
+	async loadKeyPackage() {
+		const keyPackage = await this.#db.get("keyPackage", "self")
+		return keyPackage
+	}
+
+	async saveKeyPackage(keyPackage: DBKeyPackage) {
+		await this.#db.put("keyPackage", keyPackage)
+	}
+
+	/////////////////////////////////////////////
+	// Messages
+	/////////////////////////////////////////////
 
 	// saveMessage saves a message to the database
 	async saveMessage(message: DBMessage) {
