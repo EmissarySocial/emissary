@@ -1,22 +1,28 @@
 {{- $connections := . -}}
 
-<div class="cols-2-3">
-	{{- range $index, $connection := $connections -}}
-		{{- $token := lowerCase $connection.Value -}}
-		{{- if eq "OAUTH" $connection.Group -}}
-		<a href="/.{{$token}}/connect" class="clickable card padding hover-outline text-nocolor margin-bottom" role="button">
-			<div class="align-center margin-bottom flex-grow">
-				<img src="{{$connection.Icon}}" class="width-128 md:height-100%">
-			</div>
-			<div class="text-gray">{{$connection.Description}}</div>
-		</a>
-		{{- else -}}
-		<div hx-get="/@me/settings/merchantAccount-edit-{{$token}}" class="clickable card padding hover-outline text-nocolor margin-bottom" role="button">
-			<div class="align-center margin-bottom flex-grow">
-				<img src="{{$connection.Icon}}" class="width-128 md:height-100%">
-			</div>
-			<div class="text-gray">{{$connection.Description}}</div>
+<div class="cols-2-3 width-100%">
+	{{- range $index, $connection := $connections -}} {{- $token := lowerCase
+	$connection.Value -}} {{- if eq "OAUTH" $connection.Group -}}
+	<a
+		href="/.{{$token}}/connect"
+		class="clickable card padding hover-outline text-nocolor margin-bottom"
+		role="button"
+	>
+		<div class="align-center margin-bottom flex-grow">
+			<img src="{{$connection.Icon}}" class="width-128 md:height-100%" />
 		</div>
-		{{- end -}}
-	{{- end -}}
+		<div class="text-gray">{{$connection.Description}}</div>
+	</a>
+	{{- else -}}
+	<div
+		hx-get="/@me/settings/merchantAccount-edit-{{$token}}"
+		class="clickable card padding hover-outline text-nocolor margin-bottom"
+		role="button"
+	>
+		<div class="align-center margin-bottom flex-grow">
+			<img src="{{$connection.Icon}}" class="width-128 md:height-100%" />
+		</div>
+		<div class="text-gray">{{$connection.Description}}</div>
+	</div>
+	{{- end -}} {{- end -}}
 </div>
