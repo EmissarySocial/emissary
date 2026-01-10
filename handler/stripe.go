@@ -11,10 +11,11 @@ import (
 	"github.com/EmissarySocial/emissary/tools/stripeapi"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	"github.com/benpate/steranko"
 	"github.com/stripe/stripe-go/v78"
 	"github.com/stripe/stripe-go/v78/webhook"
 )
+
+/*
 
 // PostCheckoutWebhook processes inbound webhook events for a specific MerchantAccount
 func PostStripeWebhook_Checkout(ctx *steranko.Context, factory *service.Factory, session data.Session, merchantAccount *model.MerchantAccount) error {
@@ -50,7 +51,7 @@ func PostStripeWebhook_Checkout(ctx *steranko.Context, factory *service.Factory,
 	// Success. WebHook complete.
 	return ctx.NoContent(http.StatusOK)
 }
-
+*/
 // stripe_ProcessWebhook processes product webhook events from Stripe
 func stripe_ProcessWebhook(factory *service.Factory, session data.Session, request *http.Request, webhookSecret string, liveMode bool) error {
 

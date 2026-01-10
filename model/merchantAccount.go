@@ -94,8 +94,8 @@ func (merchantAccount MerchantAccount) Icon() string {
 	// case ConnectionProviderPayPal:
 	//	return "paypal"
 
-	case ConnectionProviderStripe:
-		return "stripe"
+	// case ConnectionProviderStripe:
+	//	return "stripe"
 
 	case ConnectionProviderStripeConnect:
 		return "stripe"
@@ -112,8 +112,8 @@ func (merchantAccount MerchantAccount) ProductURL() string {
 	// case ConnectionProviderPayPal:
 	//	return "https://www.paypal.com/business/products"
 
-	case ConnectionProviderStripe:
-		return "https://dashboard.stripe.com/products?active=true"
+	// case ConnectionProviderStripe:
+	//	return "https://dashboard.stripe.com/products?active=true"
 
 	case ConnectionProviderStripeConnect:
 		return "https://dashboard.stripe.com/products?active=true"
@@ -130,8 +130,8 @@ func (merchantAccount MerchantAccount) APIKeyURL() string {
 	// case ConnectionProviderPayPal:
 	//	return "https://www.paypal.com/business/keys"
 
-	case ConnectionProviderStripe:
-		return "https://dashboard.stripe.com/apikeys"
+	// case ConnectionProviderStripe:
+	//	return "https://dashboard.stripe.com/apikeys"
 
 	case ConnectionProviderStripeConnect:
 		return "https://dashboard.stripe.com/apikeys"
@@ -148,8 +148,8 @@ func (merchantAccount MerchantAccount) HelpURL() string {
 	// case ConnectionProviderPayPal:
 	//	return "https://emissary.dev/paypal"
 
-	case ConnectionProviderStripe:
-		return "https://emissary.dev/stripe"
+	// case ConnectionProviderStripe:
+	//	return "https://emissary.dev/stripe"
 
 	case ConnectionProviderStripeConnect:
 		return "https://emissary.dev/stripe"

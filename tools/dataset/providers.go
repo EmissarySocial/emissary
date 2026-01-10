@@ -58,13 +58,13 @@ func Providers() sliceof.Object[form.LookupCode] {
 			Description: "Look up local timezones for specific addresses",
 			Group:       "Mapping Services",
 		},
-		{
-			Value:       model.ConnectionProviderStripe,
-			Label:       "Stripe Payments",
-			Icon:        "stripe",
-			Description: "Users copy/paste API keys from their own Stripe Dashboard.",
-			Group:       "User Payments",
-		},
+		// {
+		//	Value:       model.ConnectionProviderStripe,
+		//	Label:       "Stripe Payments",
+		//	Icon:        "stripe",
+		//	Description: "Users copy/paste API keys from their own Stripe Dashboard.",
+		//	Group:       "User Payments",
+		// },
 		{
 			Value:       model.ConnectionProviderStripeConnect,
 			Label:       "Stripe Connect",

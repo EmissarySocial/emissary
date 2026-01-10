@@ -416,8 +416,8 @@ func (service *MerchantAccount) GetCheckoutURL(merchantAccount *model.MerchantAc
 	// case model.ConnectionProviderPayPal:
 	//	return service.paypal_getCheckoutURL(merchantAccount, remoteProductID, returnURL)
 
-	case model.ConnectionProviderStripe:
-		return service.stripe_getCheckoutURL(merchantAccount, product, returnURL)
+	// case model.ConnectionProviderStripe:
+	//	return service.stripe_getCheckoutURL(merchantAccount, product, returnURL)
 
 	case model.ConnectionProviderStripeConnect:
 		return service.stripe_getCheckoutURL(merchantAccount, product, returnURL)
@@ -438,8 +438,8 @@ func (service *MerchantAccount) ParseCheckoutResponse(session data.Session, merc
 	// case model.ConnectionProviderPayPal:
 	//	getter = service.paypal_getPrivilegeFromCheckoutResponse
 
-	case model.ConnectionProviderStripe:
-		getter = service.stripe_getPrivilegeFromCheckoutResponse
+	// case model.ConnectionProviderStripe:
+	//	getter = service.stripe_getPrivilegeFromCheckoutResponse
 
 	case model.ConnectionProviderStripeConnect:
 		getter = service.stripe_getPrivilegeFromCheckoutResponse
@@ -473,8 +473,8 @@ func (service *MerchantAccount) Connect(merchantAccount *model.MerchantAccount) 
 
 	switch merchantAccount.Type {
 
-	case model.ConnectionProviderStripe:
-		return service.stripe_Connect(merchantAccount)
+	//case model.ConnectionProviderStripe:
+	//	return service.stripe_Connect(merchantAccount)
 
 	case model.ConnectionProviderStripeConnect:
 		return service.stripeConnect_Connect(merchantAccount)
@@ -530,8 +530,8 @@ func (service *MerchantAccount) getRemoteProducts(merchantAccount *model.Merchan
 	// case model.ConnectionProviderPayPal:
 	//	return service.paypal_getProducts(merchantAccount, productIDs...)
 
-	case model.ConnectionProviderStripe:
-		return service.stripe_getPrices(merchantAccount, productIDs...)
+	// case model.ConnectionProviderStripe:
+	//	return service.stripe_getPrices(merchantAccount, productIDs...)
 
 	case model.ConnectionProviderStripeConnect:
 		return service.stripe_getPrices(merchantAccount, productIDs...)
@@ -552,8 +552,9 @@ func (service *MerchantAccount) CancelPrivilege(session data.Session, privilege 
 	}
 
 	switch merchantAccount.Type {
-	case model.ConnectionProviderStripe:
-		return service.stripe_CancelPrivilege(&merchantAccount, privilege)
+	
+	// case model.ConnectionProviderStripe:
+	//	return service.stripe_CancelPrivilege(&merchantAccount, privilege)
 
 	case model.ConnectionProviderStripeConnect:
 		return service.stripe_CancelPrivilege(&merchantAccount, privilege)

@@ -50,8 +50,8 @@ func (service *Provider) GetProvider(providerID string) (providers.Provider, boo
 	case model.ConnectionProviderGiphy:
 		return providers.NewGiphy(), true
 
-	case model.ConnectionProviderStripe:
-		return providers.NewStripe(), true
+	// case model.ConnectionProviderStripe:
+	//	return providers.NewStripe(), true
 
 	case model.ConnectionProviderStripeConnect:
 		return providers.NewStripeConnect(), true
