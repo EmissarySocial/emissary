@@ -4,6 +4,7 @@ import type {PrivateKeyPackage} from "ts-mls"
 
 export type DBKeyPackage = {
 	keyPackageID: string
+	clientName: string
 	publicKeyPackage: KeyPackage
 	privateKeyPackage: PrivateKeyPackage
 	cipherSuiteName: "MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519"

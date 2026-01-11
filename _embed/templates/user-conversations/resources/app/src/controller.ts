@@ -3,15 +3,15 @@ import m from "mithril"
 import {type KeyPackage, type Welcome} from "ts-mls"
 import {type MLSMessage} from "ts-mls/message.js"
 import {type APActor} from "./model/ap-actor"
-import {type DBGroup} from "./model/db-group"
+import {type Group} from "./model/group"
 import {MLS} from "./service/mls"
 import {Main} from "./view/main"
 
 // IDatabase wraps all of the methods that the MLS service
 // uses to store group state.
 interface IDatabase {
-	saveGroup(group: DBGroup): Promise<void>
-	loadGroup(groupID: string): Promise<DBGroup>
+	saveGroup(group: Group): Promise<void>
+	loadGroup(groupID: string): Promise<Group>
 }
 
 // IDelivery wraps all of the methods that the MLS service

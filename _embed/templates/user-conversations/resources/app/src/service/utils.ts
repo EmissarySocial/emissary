@@ -1,3 +1,7 @@
+import type {ClientConfig, ClientState} from "ts-mls"
+import {decodeGroupState} from "ts-mls/clientState.js"
+import {defaultClientConfig} from "ts-mls/clientConfig.js"
+
 // rangeToArray consumes all values from a generator and returns them as an array
 export function rangeToArray<T>(generator: Generator<T>): T[] {
 	var result = []

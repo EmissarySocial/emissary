@@ -8,6 +8,7 @@ import {loadActivityStream} from "./service/network"
 import {NewMLS} from "./service/mls-loader"
 import {Controller} from "./controller"
 import {Main} from "./view/main"
+import {defaultClientConfig} from "ts-mls/clientConfig.js"
 
 async function startup() {
 	// Collect arguments from the DOM
@@ -25,11 +26,12 @@ async function startup() {
 	const actor = (await loadActivityStream(actorID)) as APActor
 
 	// Build dependencies
+	const clientConfig = defaultClientConfig
 	const indexedDB = await NewIndexedDB()
-	const database = new Database(indexedDB)
+	const database = new Database(indexedDB, clientConfig)
 	const delivery = new Delivery(actor.id, actor.outbox)
 	const directory = new Directory()
-	const mls = await NewMLS(database, delivery, directory, actor)
+	const mls = await NewMLS(database, delivery, directory, actor, clientConfig)
 
 	// Build the controller
 	const controller = new Controller(actor, database, delivery, directory, mls)

@@ -1,11 +1,11 @@
 import {type ClientState} from "ts-mls"
 
-// DBGroup represents a group record in the indexedDB database
-export type DBGroup = {
+// Group represents a group record in memory
+export type Group = {
 	groupID: string
 	members: string[]
 	name: string
-	clientState: Uint8Array
+	clientState: ClientState
 	createDate: number
 	updateDate: number
 	readDate: number

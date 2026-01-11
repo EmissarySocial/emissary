@@ -20,6 +20,7 @@ import {type KeyPackage} from "ts-mls"
 import {type Welcome} from "ts-mls"
 import {type PrivateMessage} from "ts-mls"
 import {type CiphersuiteImpl} from "ts-mls"
+import {type ClientConfig} from "ts-mls"
 
 import type {APActor} from "../model/ap-actor"
 import type {DBKeyPackage} from "../model/db-keypackage"
@@ -33,12 +34,18 @@ export async function NewMLS(
 	database: Database,
 	delivery: Delivery,
 	directory: Directory,
-	actor: APActor
+	actor: APActor,
+	clientConfig: ClientConfig
 ): Promise<MLS> {
 	//
 
 	// Try to load the KeyPackage from the IndexedDB database
 	var keyPackage = await database.loadKeyPackage()
+
+	// Use MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519 (ID: 1)
+	// Using nobleCryptoProvider for compatibility (pure JS implementation)
+	const cipherSuiteName = "MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519"
+	const cipherSuite = await makeCipherSuite(cipherSuiteName)
 
 	// Create a new KeyPackage if none exists
 	if (keyPackage == undefined) {
@@ -50,22 +57,19 @@ export async function NewMLS(
 			identity: new TextEncoder().encode(actor.id),
 		}
 
-		// Use MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519 (ID: 1)
-		// Using nobleCryptoProvider for compatibility (pure JS implementation)
-		const cipherSuiteName = "MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519"
-
 		// Generate initial key package for this user
 		const keyPackageResult = await generateKeyPackage(
 			credential,
 			defaultCapabilities(),
 			defaultLifetime,
 			[],
-			await makeCipherSuite(cipherSuiteName)
+			cipherSuite
 		)
 
 		// Create DBKeyPackage object
 		keyPackage = {
 			keyPackageID: "self",
+			clientName: "Unnamed Client",
 			publicKeyPackage: keyPackageResult.publicPackage,
 			privateKeyPackage: keyPackageResult.privatePackage,
 			cipherSuiteName: cipherSuiteName,
@@ -81,7 +85,8 @@ export async function NewMLS(
 		delivery,
 		directory,
 		actor,
-		await makeCipherSuite(keyPackage.cipherSuiteName),
+		clientConfig,
+		cipherSuite,
 		keyPackage.publicKeyPackage,
 		keyPackage.privateKeyPackage
 	)

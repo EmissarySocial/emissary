@@ -1,5 +1,5 @@
 import {type APActor} from "../model/ap-actor"
-import {type DBGroup} from "../model/db-group"
+import {type Group} from "../model/group"
 import {createApplicationMessage} from "ts-mls"
 import {createCommit} from "ts-mls"
 import {createGroup} from "ts-mls"
@@ -14,6 +14,7 @@ import {defaultCapabilities} from "ts-mls"
 import {defaultLifetime} from "ts-mls"
 import {emptyPskIndex} from "ts-mls"
 import {nobleCryptoProvider} from "ts-mls"
+import {stripTrailingNulls} from "./utils"
 import {type ClientState} from "ts-mls"
 import {type Credential} from "ts-mls"
 import {type Proposal} from "ts-mls"
@@ -23,18 +24,18 @@ import type {MLSMessage} from "ts-mls/message.js"
 import {type Welcome} from "ts-mls"
 import {type PrivateMessage} from "ts-mls"
 import {type CiphersuiteImpl} from "ts-mls"
-import {stripTrailingNulls} from "./utils"
+import {type ClientConfig} from "ts-mls"
 import type {DBMessage} from "../model/db-message"
 
 // IDatabase wraps all of the methods that the MLS service
 // uses to store group state.
 interface IDatabase {
 	// load methods
-	loadGroup(groupID: string): Promise<DBGroup>
+	loadGroup(groupID: string): Promise<Group>
 	loadMessage(messageID: string): Promise<DBMessage>
 
 	// save methods
-	saveGroup(group: DBGroup): Promise<void>
+	saveGroup(group: Group): Promise<void>
 	saveMessage(message: DBMessage): Promise<void>
 }
 
@@ -58,6 +59,7 @@ export class MLS {
 	#database: IDatabase
 	#delivery: IDelivery
 	#directory: IDirectory
+	#clientConfig: ClientConfig
 
 	// Internal State
 	#cipherSuite: CiphersuiteImpl
@@ -70,6 +72,7 @@ export class MLS {
 		delivery: IDelivery,
 		directory: IDirectory,
 		actor: APActor,
+		clientConfig: ClientConfig,
 		cipherSuite: CiphersuiteImpl,
 		publicKeyPackage: KeyPackage,
 		privateKeyPackage: PrivateKeyPackage
@@ -77,6 +80,7 @@ export class MLS {
 		this.#database = database
 		this.#delivery = delivery
 		this.#directory = directory
+		this.#clientConfig = clientConfig
 		this.#actor = actor
 		this.#cipherSuite = cipherSuite
 		this.#publicKeyPackage = publicKeyPackage
@@ -84,34 +88,32 @@ export class MLS {
 	}
 
 	// createGroup creates a new MLS group and saves it to the database
-	public async createGroup(): Promise<DBGroup> {
+	public async createGroup(): Promise<Group> {
 		const groupID = crypto.randomUUID()
 		const groupIDBytes = new TextEncoder().encode(groupID)
 
 		// Create group using ts-mls
-		const groupState = await createGroup(
+		const clientState = await createGroup(
 			groupIDBytes,
 			this.#publicKeyPackage!,
 			this.#privateKeyPackage!,
 			[],
-			this.#cipherSuite!
+			this.#cipherSuite,
+			this.#clientConfig
 		)
 
-		// Populate a DBGroup record
-		const result: DBGroup = {
+		// Populate a Group record
+		const result: Group = {
 			groupID: groupID,
 			members: [this.#actor.id],
 			name: "New Group",
-			groupState: groupState,
+			clientState: clientState,
 			createDate: Date.now(),
 			updateDate: Date.now(),
 			readDate: Date.now(),
 		}
 
-		// Save the DBGroup
-		console.log("mls.createGroup: Saving new group", result)
-		console.log(findNonSerializable(result, "root"))
-
+		// Save the Group
 		await this.#database.saveGroup(result)
 
 		// Success
@@ -123,12 +125,16 @@ export class MLS {
 	public async addGroupMembers(groupID: string, newMembers: string[]) {
 		//
 
+		console.log("mls.addGroupMembers: Adding members", newMembers, "to group", groupID)
+
 		// load the group from the database
 		const group = await this.#database.loadGroup(groupID)
 		const currentMembers = group.members
 
 		// Look up all KeyPackages for the new Members
 		const keyPackages = await this.#directory.getKeyPackages(newMembers)
+
+		console.log("mls.addGroupMembers: KeyPackages", keyPackages)
 
 		// Create add proposals for each key package
 		const addProposals: Proposal[] = keyPackages.map((keyPackage) => ({
@@ -138,11 +144,15 @@ export class MLS {
 			},
 		}))
 
+		console.log("mls.addGroupMembers: Add Proposals", addProposals)
+
 		// Create commit with add proposals
 		const commitResult = await createCommit(
-			{state: group.groupState, cipherSuite: this.#cipherSuite},
+			{state: group.clientState, cipherSuite: this.#cipherSuite},
 			{extraProposals: addProposals}
 		)
+
+		console.log("mls.addGroupMembers: Commit Result", commitResult)
 
 		// (async) Send commit to existing members
 		this.#delivery.sendCommit(currentMembers, commitResult.commit)
@@ -151,38 +161,17 @@ export class MLS {
 		this.#delivery.sendWelcome(newMembers, commitResult.welcome!)
 
 		// Update the group with new state and new list of members
-		group.groupState = commitResult.newState
+		group.clientState = commitResult.newState
 		group.members = currentMembers.concat(newMembers)
 		await this.#database.saveGroup(group)
+		console.log(group)
 
-		/*
-		// Debug: Log the commit structure
-		console.group("🔍 [MLS Debug] Commit Structure")
-
-		// RFC 9420 Section 11.2: Commit Distribution
-		// ⚠️ IMPORTANT: The returned commit MUST be sent to all existing group members
-		// so they can process it with processCommit() to stay synchronized.
-		//
-		// Distribution flow:
-		// 1. Alice adds Bob: addMembers() returns { welcome, commit }
-		// 2. Alice sends welcome to Bob (new member)
-		// 3. Alice sends commit to existing members (Charlie, David, etc.)
-		// 4. All existing members call processCommit(commit) to update their state
-		//
-		// Without distributing the commit, existing members will remain at old epoch
-		// and won't be able to decrypt messages from the updated group.
-
+		// KEEPING THIS (DEAD?) CODE FOR NOW....
+		// How will we use this rachet tree info??
 		// Convert ratchetTree to a real array (it's Uint8Array-like with numeric indices)
-		const ratchetTreeArray = Array.from(commitResult.newState.ratchetTree)
+		// const ratchetTreeArray = Array.from(commitResult.newState.ratchetTree)
 		// RFC 9420: Strip trailing null nodes before transmission
-		const strippedTree = stripTrailingNulls(ratchetTreeArray)
-
-		return {
-			welcome: commitResult.welcome,
-			ratchetTree: strippedTree,
-			commit: commitResult.commit,
-		}
-		*/
+		// const strippedTree = stripTrailingNulls(ratchetTreeArray)
 	}
 
 	public async sendGroupMessage(groupID: string, plaintext: string): Promise<void> {

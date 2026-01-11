@@ -15,7 +15,7 @@
 		"@noble/hashes": "^2.0.1",
 		"idb": "^8.0.3",
 		"mithril": "^2.3.8",
-		"ts-mls": "^1.4.2"
+		"ts-mls": "^1.5.1"
 	},
 	"devDependencies": {
 		"@types/mithril": "^2.2.7",
