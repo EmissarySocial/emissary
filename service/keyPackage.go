@@ -11,6 +11,7 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -108,6 +109,62 @@ func (service *KeyPackage) Delete(session data.Session, keyPackage *model.KeyPac
 }
 
 /******************************************
+ * Model Service Methods
+ ******************************************/
+
+// ObjectType returns the type of object that this service manages
+func (service *KeyPackage) ObjectType() string {
+	return "KeyPackage"
+}
+
+// New returns a fully initialized model.KeyPackage as a data.Object.
+func (service *KeyPackage) ObjectNew() data.Object {
+	result := model.NewKeyPackage()
+	return &result
+}
+
+func (service *KeyPackage) ObjectID(object data.Object) primitive.ObjectID {
+
+	if keyPackage, ok := object.(*model.KeyPackage); ok {
+		return keyPackage.KeyPackageID
+	}
+
+	return primitive.NilObjectID
+}
+
+func (service *KeyPackage) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
+	return service.collection(session).Query(result, notDeleted(criteria), options...)
+}
+
+func (service *KeyPackage) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
+	result := model.NewKeyPackage()
+	err := service.Load(session, criteria, &result)
+	return &result, err
+}
+
+func (service *KeyPackage) ObjectSave(session data.Session, object data.Object, comment string) error {
+	if keyPackage, ok := object.(*model.KeyPackage); ok {
+		return service.Save(session, keyPackage, comment)
+	}
+	return derp.Internal("service.KeyPackage.ObjectSave", "Invalid Object Type", object)
+}
+
+func (service *KeyPackage) ObjectDelete(session data.Session, object data.Object, comment string) error {
+	if keyPackage, ok := object.(*model.KeyPackage); ok {
+		return service.Delete(session, keyPackage, comment)
+	}
+	return derp.Internal("service.KeyPackage.ObjectDelete", "Invalid Object Type", object)
+}
+
+func (service *KeyPackage) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
+	return derp.Unauthorized("service.KeyPackage", "Not Authorized")
+}
+
+func (service *KeyPackage) Schema() schema.Schema {
+	return schema.New(model.KeyPackageSchema())
+}
+
+/******************************************
  * Special Case Methods
  ******************************************/
 
@@ -126,6 +183,11 @@ func (service *KeyPackage) QueryIDOnly(session data.Session, criteria exp.Expres
 // RangeByUser returns an iterator containing all KeyPackages for the specified user
 func (service *KeyPackage) RangeByUser(session data.Session, userID primitive.ObjectID) (iter.Seq[model.KeyPackage], error) {
 	return service.Range(session, exp.Equal("userId", userID))
+}
+
+// QueryByUser returns a slice containing all KeyPackages for the specified user
+func (service *KeyPackage) QueryByUser(session data.Session, userID primitive.ObjectID) (sliceof.Object[model.KeyPackage], error) {
+	return service.Query(session, exp.Equal("userId", userID))
 }
 
 // QueryIDOnlyByUser returns an iterator containing all KeyPackages for the specified user

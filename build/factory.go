@@ -44,6 +44,7 @@ type Factory interface {
 	Import() *service.Import
 	ImportItem() *service.ImportItem
 	Inbox() *service.Inbox
+	KeyPackage() *service.KeyPackage
 	Mention() *service.Mention
 	MerchantAccount() *service.MerchantAccount
 	Outbox() *service.Outbox

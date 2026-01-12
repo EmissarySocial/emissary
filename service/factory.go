@@ -861,6 +861,9 @@ func (factory *Factory) Model(name string) (ModelService, error) {
 	case "identity":
 		return factory.Identity(), nil
 
+	case "keyPackage":
+		return factory.KeyPackage(), nil
+
 	case "merchantAccount":
 		return factory.MerchantAccount(), nil
 
@@ -910,6 +913,12 @@ func (factory *Factory) ModelService(object data.Object) ModelService {
 	case *model.Import:
 		return factory.Import()
 
+	case *model.ImportItem:
+		return factory.ImportItem()
+
+	case *model.KeyPackage:
+		return factory.KeyPackage()
+
 	case *model.MerchantAccount:
 		return factory.MerchantAccount()
 
@@ -955,6 +964,7 @@ func (factory *Factory) Collections() []string {
 		"Identity",
 		"Inbox",
 		"JWT",
+		// "KeyPackage",
 		"Mention",
 		"MerchantAccount",
 		"Rule",

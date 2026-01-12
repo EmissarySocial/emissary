@@ -122,9 +122,6 @@ func outbox_SetKeyPackageVisibility(context Context, activity streams.Document, 
 		return derp.Wrap(err, location, "Unable to load KeyPackage", "url", object.ID())
 	}
 
-	// Set the visibility
-	keyPackage.IsPublic = isPublic
-
 	// Save the KeyPackage to the database
 	if err := keyPackageService.Save(context.session, &keyPackage, "Published via ActivityPub API"); err != nil {
 		return derp.Wrap(err, location, "Unable to save KeyPackage")

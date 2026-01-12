@@ -12,9 +12,8 @@ type KeyPackage struct {
 	Encoding     string             `bson:"encoding"`
 	Content      string             `bson:"content"`
 	Generator    string             `bson:"generator"`
-	IsPublic     bool               `bson:"isPublic"`
 
-	journal.Journal `json:"-" bson:",inline"`
+	journal.Journal `bson:",inline"`
 }
 
 func NewKeyPackage() KeyPackage {
@@ -31,14 +30,36 @@ func (keyPackage *KeyPackage) ID() string {
 	return keyPackage.KeyPackageID.Hex()
 }
 
-/******************************
- * Other Data Accessors
- ******************************/
+/******************************************
+ * AccessLister Interface
+ ******************************************/
 
-func (keyPackage *KeyPackage) SetPublic() {
-	keyPackage.IsPublic = true
+// State returns the current state of this Stream.
+// It is part of the AccessLister interface
+func (keyPackage KeyPackage) State() string {
+	return "default"
 }
 
-func (keyPackage *KeyPackage) SetPrivate() {
-	keyPackage.IsPublic = false
+// IsAuthor returns TRUE if the provided UserID the author of this Stream
+// It is part of the AccessLister interface
+func (keyPackage KeyPackage) IsAuthor(userID primitive.ObjectID) bool {
+	return userID == keyPackage.UserID
+}
+
+// IsMyself returns TRUE if this object directly represents the provided UserID
+// It is part of the AccessLister interface
+func (keyPackage KeyPackage) IsMyself(_ primitive.ObjectID) bool {
+	return false
+}
+
+// RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.
+// It is part of the AccessLister interface
+func (keyPackage KeyPackage) RolesToGroupIDs(roles ...string) Permissions {
+	return defaultRolesToGroupIDs(keyPackage.UserID, roles...)
+}
+
+// RolesToPrivilegeIDs returns a slice of Privileges that grant access to any of the requested roles.
+// It is part of the AccessLister interface
+func (keyPackage KeyPackage) RolesToPrivilegeIDs(roleIDs ...string) Permissions {
+	return NewPermissions()
 }

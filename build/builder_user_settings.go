@@ -290,17 +290,26 @@ func (w Settings) FollowingByToken(followingToken string) (model.Following, erro
 	return following, nil
 }
 
+// OAuthClients returns all OAuthClients for the current user
 func (w Settings) OAuthClients() (sliceof.Object[model.OAuthClient], error) {
 	userID := w.AuthenticatedID()
 	oauthClientService := w._factory.OAuthClient()
 	return oauthClientService.QueryByUserID(w._session, userID)
 }
 
+// OAuthUserTokens returns all OAuthUserTokens for the current user
 func (w Settings) OAuthUserTokens() (sliceof.MapOfAny, error) {
 	userID := w.AuthenticatedID()
 	return queries.OAuthUserTokens(w._session, userID)
 }
 
+// KeyPackages returns all KeyPackages for the current user
+func (w Settings) KeyPackages() (sliceof.Object[model.KeyPackage], error) {
+	userID := w.AuthenticatedID()
+	return w._factory.KeyPackage().QueryByUser(w._session, userID)
+}
+
+// OAuthUserTokensForExports returns all OAuthUserTokens for the current user that have the ActivityPubPortability scope
 func (w Settings) OAuthUserTokensForExports() (sliceof.MapOfAny, error) {
 	userID := w.AuthenticatedID()
 	result, err := queries.OAuthUserTokens(w._session, userID)
@@ -317,6 +326,7 @@ func (w Settings) OAuthUserTokensForExports() (sliceof.MapOfAny, error) {
 	return result, nil
 }
 
+// Rules returns a QueryBuilder for Rules owned by the current user
 func (w Settings) Rules() QueryBuilder[model.Rule] {
 
 	expressionBuilder := builder.NewBuilder().
@@ -333,6 +343,7 @@ func (w Settings) Rules() QueryBuilder[model.Rule] {
 	return result
 }
 
+// RuleByToken returns the Rule with the specified token
 func (w Settings) RuleByToken(token string) model.Rule {
 	ruleService := w._factory.Rule()
 	rule := model.NewRule()
@@ -344,6 +355,7 @@ func (w Settings) RuleByToken(token string) model.Rule {
 	return rule
 }
 
+// Imports returns all Imports for the current user
 func (w Settings) Imports() (sliceof.Object[model.Import], error) {
 	importService := w._factory.Import()
 	return importService.QueryByUser(w._session, w.AuthenticatedID())
