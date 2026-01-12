@@ -1,6 +1,6 @@
 import m from "mithril"
-import {Controller} from "../app"
-import {type APActor} from "../z-activitypub/actor"
+import {Controller} from "../controller"
+import {type APActor} from "../model/ap-actor"
 import {type Vnode, type VnodeDOM, type Component} from "mithril"
 import {Modal} from "./modal"
 import {ActorSearch} from "./actorSearch"
@@ -25,6 +25,7 @@ export class NewConversation {
 	oninit(vnode: NewConversationVnode) {
 		vnode.state.actors = []
 		vnode.state.message = ""
+		vnode.state.encrypted = false
 	}
 
 	view(vnode: NewConversationVnode) {

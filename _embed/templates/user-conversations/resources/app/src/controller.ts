@@ -44,6 +44,10 @@ export class Controller {
 		this.#mls = mls
 	}
 
+	welcome_SkipKeys() {}
+
+	welcome_CreateKeys() {}
+
 	// newGroupAndMessage creates a new MLS-encrypted
 	// group message with the specified recipients
 	async newGroupAndMessage(recipients: string[], message: string) {

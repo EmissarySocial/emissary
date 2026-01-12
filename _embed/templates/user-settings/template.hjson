@@ -620,6 +620,23 @@
 			]
 		}
 
+		keyPackages: {
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
+		keyPackage-delete: {
+			roles:["self"]
+			steps:[
+				{do:"with-keypackage", steps:[
+					{do:"delete", title:"Delete this Key Package?", submit:"Delete Key Package"}
+					{do:"refresh-page"}
+				]}
+			]
+		}
+
 		links: {
 			roles:["self"]
 			steps:[

@@ -3,22 +3,22 @@ import {type Vnode} from "mithril"
 import {Controller} from "../controller"
 import {NewConversation} from "./modal-newConversation"
 
-type MainVnode = Vnode<MainAttrs, MainState>
+type IndexVnode = Vnode<IndexAttrs, IndexState>
 
-type MainAttrs = {
+type IndexAttrs = {
 	controller: Controller
 }
 
-type MainState = {
+type IndexState = {
 	modal: string
 }
 
-export class Main {
-	oninit(vnode: MainVnode) {
+export class Index {
+	oninit(vnode: IndexVnode) {
 		vnode.state.modal = ""
 	}
 
-	view(vnode: MainVnode) {
+	view(vnode: IndexVnode) {
 		return (
 			<div id="conversations">
 				<div
@@ -71,7 +71,7 @@ export class Main {
 	}
 
 	// Global Modal Snowball
-	closeModal(vnode: MainVnode) {
+	closeModal(vnode: IndexVnode) {
 		document.getElementById("modal")?.classList.remove("ready")
 
 		window.setTimeout(() => {

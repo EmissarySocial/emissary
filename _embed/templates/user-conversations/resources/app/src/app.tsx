@@ -8,6 +8,7 @@ import {loadActivityStream} from "./service/network"
 import {NewMLS} from "./service/mls-loader"
 import {Controller} from "./controller"
 import {Main} from "./view/main"
+import {Welcome} from "./view/welcome"
 import {defaultClientConfig} from "ts-mls/clientConfig.js"
 
 async function startup() {
@@ -37,7 +38,8 @@ async function startup() {
 	const controller = new Controller(actor, database, delivery, directory, mls)
 
 	// Pass the controller to the Main component and mount the main application
-	m.mount(root, {view: () => <Main controller={controller} />})
+	// m.mount(root, {view: () => <Main controller={controller} />})
+	m.mount(root, {view: () => <Welcome controller={controller} />})
 }
 
 // 3..2..1.. Go!
