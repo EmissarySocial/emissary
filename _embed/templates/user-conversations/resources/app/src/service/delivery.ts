@@ -1,5 +1,6 @@
 import {type MLSMessage} from "ts-mls/message.js"
 import {bytesToBase64, encodeMlsMessage, type PrivateMessage, type Welcome} from "ts-mls"
+import type {APKeyPackage} from "../z-activitypub/keyPackage"
 
 // Delivery service sends messages via ActivityPub
 export class Delivery {

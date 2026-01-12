@@ -2,7 +2,7 @@
 {{- $keyPackages := .KeyPackages -}}
 
 <div class="app" script="init send SelectNav(id:'settings')">
-	<title>Security | Encryption Keys</title>
+	<title>Security | Public Keys</title>
 
 	{{- if $isDesktop -}}
 		<div id="app-sidebar" class="expanded">
@@ -20,7 +20,7 @@
 				<a href="/@me/settings/visibility" hx-boost="true">Visibility</a>
 				<a href="/@me/settings/password" hx-boost="true">Change Password</a>
 				<a href="/@me/settings/oauth" hx-boost="true">Connected Clients</a>
-				<a href="/@me/settings/keyPackages" class="selected" hx-boost="true">Encryption Keys</a>
+				<a href="/@me/settings/keyPackages" class="selected" hx-boost="true">Public Keys</a>
 			</div>
 			<div class="right">
 				<a href="https://emissary.dev/user-profile" target="_blank" class="link">
@@ -31,17 +31,24 @@
 		</div>
 
 		<div class="card padding max-width-640 transition-main-card">
+
+			<div class="text-lg margin-bottom">
+				{{- if $keyPackages.IsEmpty -}}
+					You have <b>no public keys</b> on this server
+				{{- else if $keyPackages.IsLength 1 -}}
+					You have <b>1 public key</b> on this server
+				{{- else -}}
+					You have <b>{{$keyPackages.Length}} public keys</b> on this server
+				{{- end -}}
+			</div>
+
+			<div class="margin-vertical">
+				Encryption keys are created when you start using private messages on a new device (like a web browser or mobile phone).
+				Each client generates its own encryption keys, and publishes the <i>public</i> portions here.
+				The <i>private keys</i> are stored only on that device, and are never shared with anyone.
+			</div>
+
 			{{- if $keyPackages.IsEmpty -}}
-
-				<div class="text-lg margin-bottom">
-					You have <b>no encryption keys</b>
-				</div>
-
-				<div class="margin-vertical">
-					Encryption keys are created when you start using private messages on a new device (like a web browser or mobile phone).
-					Each client generates its own encryption keys, and publishes the <i>public</i> portions here.
-					The <i>private keys</i> are stored only on that device, and are never shared with anyone.
-				</div>
 
 				<div class="margin-vertical">
 					You can create new encryption keys by going to the "Conversations" section of your inbox.
@@ -52,13 +59,6 @@
 				</div>
 
 			{{- else -}}
-				<div class="margin-bottom">
-					{{- if $keyPackages.IsLength 1 -}}
-						There is <b>1 conversation key</b> for your profile
-					{{- else -}}
-						There are <b>{{$keyPackages.Length}} encryption keys</b> for your profile
-					{{- end -}}
-				</div>
 				
 				<table class="table">
 					{{- range $index, $keyPackage := $keyPackages -}}

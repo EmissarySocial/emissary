@@ -18,8 +18,8 @@ export type APKeyPackage = {
 	generator: string
 }
 
-// NewKeyPackage creates a fully initialized KeyPackage object
-export function NewKeyPackage(actorID: string, publicPackage: KeyPackage): APKeyPackage {
+// NewAPKeyPackage creates a fully initialized KeyPackage object
+export function NewAPKeyPackage(actorID: string, publicPackage: KeyPackage): APKeyPackage {
 	return {
 		id: "", // This will be appened by the server
 		type: "KeyPackage",

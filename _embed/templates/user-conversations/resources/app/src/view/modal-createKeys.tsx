@@ -125,8 +125,14 @@ export class CreateKeys {
 		vnode.state.passwordHint = input.value
 	}
 
-	onSubmit(event: SubmitEvent, vnode: CreateKeysVnode) {
+	async onSubmit(event: SubmitEvent, vnode: CreateKeysVnode) {
 		event.preventDefault()
+		await vnode.attrs.controller.createEncryptionKeys(
+			vnode.state.clientName,
+			vnode.state.password,
+			vnode.state.passwordHint
+		)
+		vnode.attrs.close()
 	}
 
 	close(vnode: CreateKeysVnode) {

@@ -43,20 +43,8 @@ export class Index {
 						<span class="flex-grow nowrap ellipsis">Direct Message 1</span>
 						<button class="hover-show">&#8943;</button>
 					</div>
-					<div role="button" class="flex-row flex-align-center padding hover-trigger">
-						<span class="width-32 circle flex-center">
-							<i class="bi bi-lock-fill"></i>
-						</span>
-						<span class="flex-grow nowrap ellipsis">Encrypted Conversation</span>
-						<button class="hover-show">&#8943;</button>
-					</div>
-					<div role="button" class="flex-row flex-align-center padding hover-trigger">
-						<span class="width-32 circle flex-center">
-							<i class="bi bi-lock-fill"></i>
-						</span>
-						<span class="flex-grow nowrap ellipsis">Encrypted Conversation</span>
-						<button class="hover-show">&#8943;</button>
-					</div>
+
+					{this.mockEncryptedConversations(vnode)}
 				</div>
 				<div id="conversation-details" class="width-75%">
 					Here be details...
@@ -68,6 +56,28 @@ export class Index {
 					close={() => this.closeModal(vnode)}></NewConversation>
 			</div>
 		)
+	}
+
+	mockEncryptedConversations(vnode: IndexVnode): JSX.Element[] {
+		if (vnode.attrs.controller.config.hasEncryptionKeys !== true) {
+			return []
+		}
+		return [
+			<div role="button" class="flex-row flex-align-center padding hover-trigger">
+				<span class="width-32 circle flex-center">
+					<i class="bi bi-lock-fill"></i>
+				</span>
+				<span class="flex-grow nowrap ellipsis">Encrypted Conversation</span>
+				<button class="hover-show">&#8943;</button>
+			</div>,
+			<div role="button" class="flex-row flex-align-center padding hover-trigger">
+				<span class="width-32 circle flex-center">
+					<i class="bi bi-lock-fill"></i>
+				</span>
+				<span class="flex-grow nowrap ellipsis">Encrypted Conversation</span>
+				<button class="hover-show">&#8943;</button>
+			</div>,
+		]
 	}
 
 	// Global Modal Snowball

@@ -1,15 +1,14 @@
 import m from "mithril"
 
+import {defaultClientConfig} from "ts-mls/clientConfig.js"
 import {type APActor} from "./model/ap-actor"
 import {Database, NewIndexedDB} from "./service/database"
 import {Delivery} from "./service/delivery"
 import {Directory} from "./service/directory"
 import {loadActivityStream} from "./service/network"
-import {NewMLS} from "./service/mls-loader"
+import {MLSFactory} from "./service/mls-factory"
 import {Controller} from "./controller"
 import {Main} from "./view/main"
-import {Welcome} from "./view/welcome"
-import {defaultClientConfig} from "ts-mls/clientConfig.js"
 
 async function startup() {
 	// Collect arguments from the DOM
@@ -21,8 +20,6 @@ async function startup() {
 		throw new Error(`Can't mount Mithril app. Please verify that <div id="mls"> exists.`)
 	}
 
-	// TODO: Display a loading indicator while we fetch data
-
 	// Load the actor object from the network
 	const actor = (await loadActivityStream(actorID)) as APActor
 
@@ -31,15 +28,14 @@ async function startup() {
 	const indexedDB = await NewIndexedDB()
 	const database = new Database(indexedDB, clientConfig)
 	const delivery = new Delivery(actor.id, actor.outbox)
-	const directory = new Directory()
-	const mls = await NewMLS(database, delivery, directory, actor, clientConfig)
+	const directory = new Directory(actor.id, actor.outbox)
 
 	// Build the controller
-	const controller = new Controller(actor, database, delivery, directory, mls)
+	const controller = new Controller(actor, database, delivery, directory, clientConfig)
 
 	// Pass the controller to the Main component and mount the main application
 	// m.mount(root, {view: () => <Main controller={controller} />})
-	m.mount(root, {view: () => <Welcome controller={controller} />})
+	m.mount(root, {view: () => <Main controller={controller} />})
 }
 
 // 3..2..1.. Go!

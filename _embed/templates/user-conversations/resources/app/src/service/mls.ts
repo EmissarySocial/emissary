@@ -1,21 +1,11 @@
 import {type APActor} from "../model/ap-actor"
 import {type Group} from "../model/group"
-import {createApplicationMessage} from "ts-mls"
-import {createCommit} from "ts-mls"
+import {createCommit, getCiphersuiteImpl} from "ts-mls"
 import {createGroup} from "ts-mls"
-import {joinGroup} from "ts-mls"
-import {processPrivateMessage} from "ts-mls"
-import {processPublicMessage} from "ts-mls"
 import {getCiphersuiteFromName} from "ts-mls"
 import {generateKeyPackage} from "ts-mls"
-import {encodeMlsMessage} from "ts-mls"
-import {decodeMlsMessage} from "ts-mls"
 import {defaultCapabilities} from "ts-mls"
 import {defaultLifetime} from "ts-mls"
-import {emptyPskIndex} from "ts-mls"
-import {nobleCryptoProvider} from "ts-mls"
-import {stripTrailingNulls} from "./utils"
-import {type ClientState} from "ts-mls"
 import {type Credential} from "ts-mls"
 import {type Proposal} from "ts-mls"
 import {type PrivateKeyPackage} from "ts-mls"
@@ -25,7 +15,10 @@ import {type Welcome} from "ts-mls"
 import {type PrivateMessage} from "ts-mls"
 import {type CiphersuiteImpl} from "ts-mls"
 import {type ClientConfig} from "ts-mls"
+
+import {type APKeyPackage, NewAPKeyPackage} from "../model/ap-keypackage"
 import type {DBMessage} from "../model/db-message"
+import type {DBKeyPackage} from "../model/db-keypackage"
 
 // IDatabase wraps all of the methods that the MLS service
 // uses to store group state.
@@ -37,6 +30,9 @@ interface IDatabase {
 	// save methods
 	saveGroup(group: Group): Promise<void>
 	saveMessage(message: DBMessage): Promise<void>
+
+	loadKeyPackage(): Promise<DBKeyPackage | undefined>
+	saveKeyPackage(keyPackage: DBKeyPackage): Promise<void>
 }
 
 // IDelivery wraps all of the methods that the MLS service
@@ -51,9 +47,14 @@ interface IDelivery {
 // uses to look up users' KeyPackages.
 interface IDirectory {
 	getKeyPackages(actorIDs: string[]): Promise<KeyPackage[]>
+	createKeyPackage(keyPackage: APKeyPackage): Promise<string>
 }
 
-// MLS service encrypts/decrypts messages using the MLS protocol
+const cipherSuiteName = "MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519"
+
+// MLS service encrypts/decrypts messages using the MLS protocol.
+// This is intended to be a reusable service that could be called
+// by any software component that needs to use MLS-encrypted messages.
 export class MLS {
 	// Dependencies
 	#database: IDatabase
@@ -71,16 +72,18 @@ export class MLS {
 		database: IDatabase,
 		delivery: IDelivery,
 		directory: IDirectory,
-		actor: APActor,
 		clientConfig: ClientConfig,
+
 		cipherSuite: CiphersuiteImpl,
 		publicKeyPackage: KeyPackage,
-		privateKeyPackage: PrivateKeyPackage
+		privateKeyPackage: PrivateKeyPackage,
+		actor: APActor
 	) {
 		this.#database = database
 		this.#delivery = delivery
 		this.#directory = directory
 		this.#clientConfig = clientConfig
+
 		this.#actor = actor
 		this.#cipherSuite = cipherSuite
 		this.#publicKeyPackage = publicKeyPackage
@@ -189,46 +192,4 @@ export class MLS {
 	public encryptMessage(): string {
 		return ""
 	}
-}
-
-// debugging
-function findNonSerializable(obj: any, path: string = "root"): string[] {
-	const issues: string[] = []
-
-	if (obj === null || typeof obj !== "object") {
-		return issues
-	}
-
-	for (const key in obj) {
-		if (obj.hasOwnProperty(key)) {
-			const currentPath = `${path}.${key}`
-			const value = obj[key]
-
-			if (typeof value === "function") {
-				issues.push(`${currentPath} is a function`)
-			} else if (value instanceof Node) {
-				issues.push(`${currentPath} is a DOM node`)
-			} else if (typeof value === "symbol") {
-				issues.push(`${currentPath} is a Symbol`)
-			} else if (value instanceof Promise) {
-				issues.push(`${currentPath} is a Promise`)
-			} else if (value instanceof RegExp) {
-				issues.push(`${currentPath} is a RegExp`)
-			} else if (value instanceof Blob) {
-				issues.push(`${currentPath} is a Blob`)
-			} else if (typeof value === "object") {
-				// Check for circular references
-				try {
-					structuredClone(value) // Modern way to test
-				} catch (e) {
-					issues.push(`${currentPath} has circular reference or non-serializable content`)
-				}
-
-				// Recursively check nested objects
-				issues.push(...findNonSerializable(value, currentPath))
-			}
-		}
-	}
-
-	return issues
 }

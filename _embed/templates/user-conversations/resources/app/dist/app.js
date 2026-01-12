@@ -1064,9 +1064,9 @@
         var path = template.slice(0, pathEnd);
         var query = {};
         Object.assign(query, params);
-        var resolved = path.replace(/:([^\/\.-]+)(\.{3})?/g, function(m9, key, variadic) {
+        var resolved = path.replace(/:([^\/\.-]+)(\.{3})?/g, function(m10, key, variadic) {
           delete query[key];
-          if (params[key] == null) return m9;
+          if (params[key] == null) return m10;
           return variadic ? params[key] : encodeURIComponent(String(params[key]));
         });
         var newQueryIndex = resolved.indexOf("?");
@@ -1343,8 +1343,8 @@
           // don't also accidentally escape `-` and make it harder to detect it to
           // ban it from template parameters.
           /:([^\/.-]+)(\.{3}|\.(?!\.)|-)?|[\\^$*+.()|\[\]{}]/g,
-          function(m9, key, extra) {
-            if (key == null) return "\\" + m9;
+          function(m10, key, extra) {
+            if (key == null) return "\\" + m10;
             keys.push({ k: key, r: extra === "..." });
             if (extra === "...") return "(.*)";
             if (extra === ".") return "([^/]+)\\.";
@@ -1597,26 +1597,26 @@
       var mountRedraw = require_mount_redraw2();
       var request2 = require_request2();
       var router = require_route();
-      var m9 = function m10() {
+      var m10 = function m11() {
         return hyperscript.apply(this, arguments);
       };
-      m9.m = hyperscript;
-      m9.trust = hyperscript.trust;
-      m9.fragment = hyperscript.fragment;
-      m9.Fragment = "[";
-      m9.mount = mountRedraw.mount;
-      m9.route = router;
-      m9.render = require_render2();
-      m9.redraw = mountRedraw.redraw;
-      m9.request = request2.request;
-      m9.parseQueryString = require_parse();
-      m9.buildQueryString = require_build();
-      m9.parsePathname = require_parse2();
-      m9.buildPathname = require_build2();
-      m9.vnode = require_vnode();
-      m9.censor = require_censor();
-      m9.domFor = require_domFor();
-      module.exports = m9;
+      m10.m = hyperscript;
+      m10.trust = hyperscript.trust;
+      m10.fragment = hyperscript.fragment;
+      m10.Fragment = "[";
+      m10.mount = mountRedraw.mount;
+      m10.route = router;
+      m10.render = require_render2();
+      m10.redraw = mountRedraw.redraw;
+      m10.request = request2.request;
+      m10.parseQueryString = require_parse();
+      m10.buildQueryString = require_build();
+      m10.parsePathname = require_parse2();
+      m10.buildPathname = require_build2();
+      m10.vnode = require_vnode();
+      m10.censor = require_censor();
+      m10.domFor = require_domFor();
+      module.exports = m10;
     }
   });
 
@@ -2556,9 +2556,9 @@
     while (a !== _0n3) {
       const q = b / a;
       const r = b % a;
-      const m9 = x - u * q;
+      const m10 = x - u * q;
       const n = y - v * q;
-      b = a, a = r, x = u, y = v, u = m9, v = n;
+      b = a, a = r, x = u, y = v, u = m10, v = n;
     }
     const gcd = b;
     if (gcd !== _1n3)
@@ -3789,13 +3789,13 @@
       k: "number",
       hash: "function"
     });
-    const { p, k, m: m9, hash, expand, DST } = options;
+    const { p, k, m: m10, hash, expand, DST } = options;
     asafenumber(hash.outputLen, "valid hash");
     abytes2(msg);
     asafenumber(count);
     const log2p = p.toString(2).length;
     const L = Math.ceil((log2p + k) / 8);
-    const len_in_bytes = count * m9 * L;
+    const len_in_bytes = count * m10 * L;
     let prb;
     if (expand === "xmd") {
       prb = expand_message_xmd(msg, DST, len_in_bytes, hash);
@@ -3808,9 +3808,9 @@
     }
     const u = new Array(count);
     for (let i = 0; i < count; i++) {
-      const e = new Array(m9);
-      for (let j = 0; j < m9; j++) {
-        const elm_offset = L * (j + i * m9);
+      const e = new Array(m10);
+      for (let j = 0; j < m10; j++) {
+        const elm_offset = L * (j + i * m10);
         const tv = prb.subarray(elm_offset, elm_offset + L);
         e[j] = mod2(os2ip(tv), p);
       }
@@ -4172,8 +4172,8 @@
       evaluate: (secretKey, input) => evaluate(ctxVOPRF, secretKey, input)
     };
     const poprf = (info) => {
-      const m9 = hashToScalarPrefixed(encode2("Info", info), ctxPOPRF);
-      const T = Point.BASE.multiply(m9);
+      const m10 = hashToScalarPrefixed(encode2("Info", info), ctxPOPRF);
+      const T = Point.BASE.multiply(m10);
       return {
         generateKeyPair,
         deriveKeyPair: (seed, keyInfo) => deriveKeyPair(ctxPOPRF, seed, keyInfo),
@@ -4197,7 +4197,7 @@
           if (!Array.isArray(blinded))
             throw new Error("expected array");
           const skS = Fn3.fromBytes(secretKey);
-          const t = Fn3.add(skS, m9);
+          const t = Fn3.add(skS, m10);
           const invT = Fn3.inv(t);
           const blindedPoints = blinded.map(Point.fromBytes);
           const evalPoints = blindedPoints.map((i) => i.multiply(invT));
@@ -4228,7 +4228,7 @@
           const inputPoint = hashToGroup(input, ctxPOPRF);
           if (inputPoint.equals(Point.ZERO))
             throw new Error("Input point at infinity");
-          const t = Fn3.add(skS, m9);
+          const t = Fn3.add(skS, m10);
           const invT = Fn3.inv(t);
           const unblinded = inputPoint.multiply(invT).toBytes();
           return hashInput(input, info, unblinded);
@@ -6039,7 +6039,7 @@
         seedArgs.push(abytes2(e, void 0, "extraEntropy"));
       }
       const seed = concatBytes(...seedArgs);
-      const m9 = h1int;
+      const m10 = h1int;
       function k2sig(kBytes) {
         const k = bits2int(kBytes);
         if (!Fn3.isValidNot0(k))
@@ -6049,7 +6049,7 @@
         const r = Fn3.create(q.x);
         if (r === _0n9)
           return;
-        const s = Fn3.create(ik * Fn3.create(m9 + r * d));
+        const s = Fn3.create(ik * Fn3.create(m10 + r * d));
         if (s === _0n9)
           return;
         let recovery = (q.x === r ? 0 : 2) | Number(q.y & _1n10);
@@ -6125,8 +6125,8 @@
       init_modular();
       divNearest = (num, den) => (num + (num >= 0 ? den : -den) / _2n8) / den;
       DERErr = class extends Error {
-        constructor(m9 = "") {
-          super(m9);
+        constructor(m10 = "") {
+          super(m10);
         }
       };
       DER = {
@@ -7240,7 +7240,67 @@
   });
 
   // src/app.tsx
-  var import_mithril12 = __toESM(require_mithril(), 1);
+  var import_mithril14 = __toESM(require_mithril(), 1);
+
+  // node_modules/ts-mls/dist/src/authenticationService.js
+  var defaultAuthenticationService = {
+    async validateCredential(_credential, _signaturePublicKey) {
+      return true;
+    }
+  };
+
+  // node_modules/ts-mls/dist/src/util/constantTimeCompare.js
+  function constantTimeEqual(a, b) {
+    if (a.length !== b.length)
+      return false;
+    let result = 0;
+    for (let i = 0; i < a.length; i++) {
+      result |= a[i] ^ b[i];
+    }
+    return result === 0;
+  }
+
+  // node_modules/ts-mls/dist/src/keyPackageEqualityConfig.js
+  var defaultKeyPackageEqualityConfig = {
+    compareKeyPackages(a, b) {
+      return constantTimeEqual(a.leafNode.signaturePublicKey, b.leafNode.signaturePublicKey);
+    },
+    compareKeyPackageToLeafNode(a, b) {
+      return constantTimeEqual(a.leafNode.signaturePublicKey, b.signaturePublicKey);
+    }
+  };
+
+  // node_modules/ts-mls/dist/src/keyRetentionConfig.js
+  var defaultKeyRetentionConfig = {
+    retainKeysForGenerations: 10,
+    retainKeysForEpochs: 4,
+    maximumForwardRatchetSteps: 200
+  };
+
+  // node_modules/ts-mls/dist/src/lifetimeConfig.js
+  var defaultLifetimeConfig = {
+    maximumTotalLifetime: 2628000n,
+    // 1 month
+    validateLifetimeOnReceive: false
+  };
+
+  // node_modules/ts-mls/dist/src/paddingConfig.js
+  var defaultPaddingConfig = { kind: "padUntilLength", padUntilLength: 256 };
+  function byteLengthToPad(encodedLength, config) {
+    if (config.kind === "alwaysPad")
+      return config.paddingLength;
+    else
+      return encodedLength >= config.padUntilLength ? 0 : config.padUntilLength - encodedLength;
+  }
+
+  // node_modules/ts-mls/dist/src/clientConfig.js
+  var defaultClientConfig = {
+    keyRetentionConfig: defaultKeyRetentionConfig,
+    lifetimeConfig: defaultLifetimeConfig,
+    keyPackageEqualityConfig: defaultKeyPackageEqualityConfig,
+    paddingConfig: defaultPaddingConfig,
+    authService: defaultAuthenticationService
+  };
 
   // node_modules/idb/build/index.js
   var instanceOfAny = (object, constructors) => constructors.some((c) => object instanceof c);
@@ -7476,6 +7536,20 @@
       return isIteratorProp(target, prop) || oldTraps.has(target, prop);
     }
   }));
+
+  // src/model/config.ts
+  var ConfigID = "config";
+  function NewConfig() {
+    return {
+      id: ConfigID,
+      ready: false,
+      welcome: false,
+      hasEncryptionKeys: false,
+      password: "",
+      passwordHint: "",
+      clientName: "Unknown Device"
+    };
+  }
 
   // node_modules/ts-mls/dist/src/codec/tlsEncoder.js
   function encode(enc) {
@@ -7968,17 +8042,6 @@
   }
   function decodeBigintMap(decodeValue) {
     return mapDecoder(decodeVarLenType(mapDecoders([decodeUint64, decodeValue], (key, value) => [key, value])), (entries) => new Map(entries));
-  }
-
-  // node_modules/ts-mls/dist/src/util/constantTimeCompare.js
-  function constantTimeEqual(a, b) {
-    if (a.length !== b.length)
-      return false;
-    let result = 0;
-    for (let i = 0; i < a.length; i++) {
-      result |= a[i] ^ b[i];
-    }
-    return result === 0;
   }
 
   // node_modules/ts-mls/dist/src/extension.js
@@ -9642,46 +9705,6 @@
   var encodeRequiredCapabilities = encode(requiredCapabilitiesEncoder);
   var decodeRequiredCapabilities = mapDecoders([decodeVarLenType(decodeUint16), decodeVarLenType(decodeUint16), decodeVarLenType(decodeCredentialType)], (extensionTypes, proposalTypes, credentialTypes2) => ({ extensionTypes, proposalTypes, credentialTypes: credentialTypes2 }));
 
-  // node_modules/ts-mls/dist/src/authenticationService.js
-  var defaultAuthenticationService = {
-    async validateCredential(_credential, _signaturePublicKey) {
-      return true;
-    }
-  };
-
-  // node_modules/ts-mls/dist/src/paddingConfig.js
-  var defaultPaddingConfig = { kind: "padUntilLength", padUntilLength: 256 };
-  function byteLengthToPad(encodedLength, config) {
-    if (config.kind === "alwaysPad")
-      return config.paddingLength;
-    else
-      return encodedLength >= config.padUntilLength ? 0 : config.padUntilLength - encodedLength;
-  }
-
-  // node_modules/ts-mls/dist/src/keyPackageEqualityConfig.js
-  var defaultKeyPackageEqualityConfig = {
-    compareKeyPackages(a, b) {
-      return constantTimeEqual(a.leafNode.signaturePublicKey, b.leafNode.signaturePublicKey);
-    },
-    compareKeyPackageToLeafNode(a, b) {
-      return constantTimeEqual(a.leafNode.signaturePublicKey, b.signaturePublicKey);
-    }
-  };
-
-  // node_modules/ts-mls/dist/src/lifetimeConfig.js
-  var defaultLifetimeConfig = {
-    maximumTotalLifetime: 2628000n,
-    // 1 month
-    validateLifetimeOnReceive: false
-  };
-
-  // node_modules/ts-mls/dist/src/keyRetentionConfig.js
-  var defaultKeyRetentionConfig = {
-    retainKeysForGenerations: 10,
-    retainKeysForEpochs: 4,
-    maximumForwardRatchetSteps: 200
-  };
-
   // node_modules/ts-mls/dist/src/groupInfo.js
   var groupInfoTBSEncoder = contramapBufferEncoders([groupContextEncoder, varLenTypeEncoder(extensionEncoder), varLenDataEncoder, uint32Encoder], (g) => [g.groupContext, g.extensions, g.confirmationTag, g.signer]);
   var encodeGroupInfoTBS = encode(groupInfoTBSEncoder);
@@ -10007,15 +10030,6 @@
     copy.set(k, v);
     return copy;
   }
-
-  // node_modules/ts-mls/dist/src/clientConfig.js
-  var defaultClientConfig = {
-    keyRetentionConfig: defaultKeyRetentionConfig,
-    lifetimeConfig: defaultLifetimeConfig,
-    keyPackageEqualityConfig: defaultKeyPackageEqualityConfig,
-    paddingConfig: defaultPaddingConfig,
-    authService: defaultAuthenticationService
-  };
 
   // node_modules/ts-mls/dist/src/codec/string.js
   var stringEncoder = contramapBufferEncoder(varLenDataEncoder, (s) => new TextEncoder().encode(s));
@@ -10491,11 +10505,11 @@
     return (msg) => {
       switch (msg.contentType) {
         case "application":
-          return encoderWithPadding(contramapBufferEncoders([varLenDataEncoder, framedContentAuthDataEncoder], (m9) => [m9.applicationData, m9.auth]), config)(msg);
+          return encoderWithPadding(contramapBufferEncoders([varLenDataEncoder, framedContentAuthDataEncoder], (m10) => [m10.applicationData, m10.auth]), config)(msg);
         case "proposal":
-          return encoderWithPadding(contramapBufferEncoders([proposalEncoder, framedContentAuthDataEncoder], (m9) => [m9.proposal, m9.auth]), config)(msg);
+          return encoderWithPadding(contramapBufferEncoders([proposalEncoder, framedContentAuthDataEncoder], (m10) => [m10.proposal, m10.auth]), config)(msg);
         case "commit":
-          return encoderWithPadding(contramapBufferEncoders([commitEncoder, framedContentAuthDataEncoder], (m9) => [m9.commit, m9.auth]), config)(msg);
+          return encoderWithPadding(contramapBufferEncoders([commitEncoder, framedContentAuthDataEncoder], (m10) => [m10.commit, m10.auth]), config)(msg);
       }
     };
   }
@@ -14224,8 +14238,9 @@
     return await openDB("mls-database", void 0, {
       upgrade(db, oldVersion, newVersion) {
         console.log("Upgrading database from version", oldVersion, "to:", newVersion);
+        db.createObjectStore("config", { keyPath: "id" });
         db.createObjectStore("group", { keyPath: "groupID" });
-        db.createObjectStore("keyPackage", { keyPath: "keyPackageID" });
+        db.createObjectStore("keyPackage", { keyPath: "id" });
         db.createObjectStore("message", { keyPath: "messageID" });
       }
     });
@@ -14236,6 +14251,24 @@
     constructor(db, clientConfig) {
       this.#db = db;
       this.#clientConfig = clientConfig;
+    }
+    /////////////////////////////////////////////
+    // Config
+    /////////////////////////////////////////////
+    // loadConfig retrieves the config record from the database
+    async loadConfig() {
+      var result = await this.#db.get("config", ConfigID);
+      if (result == void 0) {
+        result = NewConfig();
+      }
+      result.ready = true;
+      return result;
+    }
+    // saveConfig saves the config record to the database
+    async saveConfig(config) {
+      config.id = ConfigID;
+      config.ready = true;
+      await this.#db.put("config", config);
     }
     /////////////////////////////////////////////
     // Groups
@@ -14251,7 +14284,7 @@
         updateDate: group.updateDate,
         readDate: group.readDate
       };
-      const state = await this.#db.put("group", dbGroup);
+      await this.#db.put("group", dbGroup);
     }
     // loadGroup retrieves a group from the database
     async loadGroup(groupID) {
@@ -14422,6 +14455,21 @@
     }
   };
 
+  // src/model/ap-keypackage.ts
+  function NewAPKeyPackage(generator, actorID, publicPackage) {
+    return {
+      id: "",
+      // This will be appened by the server
+      type: "mls:KeyPackage",
+      to: "as:Public",
+      attributedTo: actorID,
+      mediaType: "message/mls",
+      encoding: "base64",
+      generator,
+      content: btoa(publicPackage.signature.toString())
+    };
+  }
+
   // src/service/network.ts
   async function loadActivityStream(url) {
     const headers = {
@@ -14469,7 +14517,14 @@
 
   // src/service/directory.ts
   var Directory = class {
-    //
+    #actorID;
+    // ID of the local actor
+    #outboxURL;
+    // Outbox URL of the local actor
+    constructor(actorID, outboxURL) {
+      this.#actorID = actorID;
+      this.#outboxURL = outboxURL;
+    }
     // getKeyPackage loads the KeyPackages published by a single actor
     async getKeyPackages(actorIDs) {
       var result = [];
@@ -14492,7 +14547,31 @@
     }
     // createKeyPackage publishes a new KeyPackage to the User's outbox.
     async createKeyPackage(keyPackage) {
-      return "";
+      return await this.createObject(keyPackage);
+    }
+    // createObject POSTs an ActivityPub object to the user's outbox
+    // and returns the Location header from the response
+    async createObject(object) {
+      return await this.send(this.#outboxURL, {
+        "@context": "https://www.w3.org/ns/activitystreams",
+        type: "Create",
+        actor: this.#actorID,
+        object
+      });
+    }
+    // send POSTs an ActivityPub activity to the specified outbox
+    // and returns the Location header from the response
+    async send(outbox, activity) {
+      const response = await fetch(outbox, {
+        method: "POST",
+        body: JSON.stringify(activity),
+        credentials: "include"
+      });
+      console.log("directory.send", response);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch ${outbox}: ${response.status} ${response.statusText}`);
+      }
+      return response.headers.get("Location") || "";
     }
   };
 
@@ -14508,7 +14587,7 @@
     #publicKeyPackage;
     #privateKeyPackage;
     #actor;
-    constructor(database, delivery, directory, actor, clientConfig, cipherSuite, publicKeyPackage, privateKeyPackage) {
+    constructor(database, delivery, directory, clientConfig, cipherSuite, publicKeyPackage, privateKeyPackage, actor) {
       this.#database = database;
       this.#delivery = delivery;
       this.#directory = directory;
@@ -14585,12 +14664,12 @@
     }
   };
 
-  // src/service/mls-loader.ts
-  async function NewMLS(database, delivery, directory, actor, clientConfig) {
-    var keyPackage = await database.loadKeyPackage();
+  // src/service/mls-factory.ts
+  async function MLSFactory(database, delivery, directory, actor, clientConfig, clientName) {
+    var dbKeyPackage = await database.loadKeyPackage();
     const cipherSuiteName = "MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519";
     const cipherSuite = await makeCipherSuite(cipherSuiteName);
-    if (keyPackage == void 0) {
+    if (dbKeyPackage == void 0) {
       const credential = {
         credentialType: "basic",
         identity: new TextEncoder().encode(actor.id)
@@ -14602,24 +14681,30 @@
         [],
         cipherSuite
       );
-      keyPackage = {
-        keyPackageID: "self",
-        clientName: "Unnamed Client",
+      const apKeyPackage = NewAPKeyPackage(clientName, actor.id, keyPackageResult.publicPackage);
+      const apKeyPackageURL = await directory.createKeyPackage(apKeyPackage);
+      if (apKeyPackageURL == "") {
+        throw new Error("Failed to create KeyPackage on server");
+      }
+      dbKeyPackage = {
+        id: "self",
+        keyPackageURL: apKeyPackageURL,
+        clientName,
         publicKeyPackage: keyPackageResult.publicPackage,
         privateKeyPackage: keyPackageResult.privatePackage,
         cipherSuiteName
       };
-      await database.saveKeyPackage(keyPackage);
+      await database.saveKeyPackage(dbKeyPackage);
     }
     return new MLS(
       database,
       delivery,
       directory,
-      actor,
       clientConfig,
       cipherSuite,
-      keyPackage.publicKeyPackage,
-      keyPackage.privateKeyPackage
+      dbKeyPackage.publicKeyPackage,
+      dbKeyPackage.privateKeyPackage,
+      actor
     );
   }
   async function makeCipherSuite(cipherSuiteName) {
@@ -14628,18 +14713,104 @@
   }
 
   // src/controller.ts
-  var import_mithril8 = __toESM(require_mithril(), 1);
+  var import_mithril = __toESM(require_mithril(), 1);
+  var Controller = class {
+    #actor;
+    #database;
+    #delivery;
+    #directory;
+    #mls;
+    // constructor initializes the Controller with its dependencies
+    constructor(actor, database, delivery, directory, clientConfig) {
+      this.#actor = actor;
+      this.#database = database;
+      this.#delivery = delivery;
+      this.#directory = directory;
+      this.clientConfig = clientConfig;
+      this.config = NewConfig();
+      this.loadConfig();
+    }
+    async loadConfig() {
+      this.config = await this.#database.loadConfig();
+      if (this.config.hasEncryptionKeys) {
+        this.startMLS();
+      }
+      import_mithril.default.redraw();
+    }
+    // skipEncryptionKeys is called when the user just wants to
+    // use "direct messages" and does not want to create encryption keys (yet)
+    async skipEncryptionKeys() {
+      this.config.welcome = true;
+      await this.#database.saveConfig(this.config);
+      import_mithril.default.redraw();
+    }
+    // createEncryptionKeys creates a new set of encryption keys
+    // for this user on this device
+    async createEncryptionKeys(clientName, password, passwordHint) {
+      this.config.ready = true;
+      this.config.welcome = true;
+      this.config.hasEncryptionKeys = true;
+      this.config.clientName = clientName;
+      this.config.password = password;
+      this.config.passwordHint = passwordHint;
+      await this.#database.saveConfig(this.config);
+      this.startMLS();
+      import_mithril.default.redraw();
+    }
+    // newGroupAndMessage creates a new MLS-encrypted
+    // group message with the specified recipients
+    async newGroupAndMessage(recipients, message) {
+      if (this.#mls == void 0) {
+        throw new Error("MLS service is not initialized");
+      }
+      const group = await this.#mls.createGroup();
+      await this.#mls.addGroupMembers(group.groupID, recipients);
+    }
+    // newConversation creates a new plaintext ActivityPub conversation
+    // with the specified recipients
+    async newConversation(to, message) {
+      const activity = {
+        "@context": "https://www.w3.org/ns/activitystreams",
+        type: "Create",
+        actor: this.#actor.id,
+        to,
+        object: {
+          type: "Note",
+          content: message
+        }
+      };
+      const response = await fetch(this.#actor.outbox, {
+        method: "POST",
+        headers: { "Content-Type": "application/activity+json" },
+        body: JSON.stringify(activity)
+      });
+    }
+    // startMLS initializes the MLS service IF the configuration includes encryption keys
+    async startMLS() {
+      if (this.config.hasEncryptionKeys == false) {
+        throw new Error("Cannot start MLS without encryption keys");
+      }
+      this.#mls = await MLSFactory(
+        this.#database,
+        this.#delivery,
+        this.#directory,
+        this.#actor,
+        this.clientConfig,
+        this.config.clientName
+      );
+    }
+  };
 
   // src/view/main.tsx
-  var import_mithril6 = __toESM(require_mithril(), 1);
-  var import_mithril7 = __toESM(require_mithril(), 1);
+  var import_mithril12 = __toESM(require_mithril(), 1);
+  var import_mithril13 = __toESM(require_mithril(), 1);
 
   // src/view/modal-newConversation.tsx
-  var import_mithril4 = __toESM(require_mithril(), 1);
   var import_mithril5 = __toESM(require_mithril(), 1);
+  var import_mithril6 = __toESM(require_mithril(), 1);
 
   // src/view/modal.tsx
-  var import_mithril = __toESM(require_mithril(), 1);
+  var import_mithril2 = __toESM(require_mithril(), 1);
 
   // src/view/utils.ts
   function keyCode(evt) {
@@ -14676,11 +14847,11 @@
         document.getElementById("modal")?.classList.add("ready");
         const firstElement = vnode.dom.querySelector("[tabIndex]");
         firstElement?.focus();
-        import_mithril.default.redraw();
+        import_mithril2.default.redraw();
       });
     }
     view(vnode) {
-      return /* @__PURE__ */ (0, import_mithril.default)("div", { id: "modal", onkeydown: (event) => this.onkeydown(event, vnode) }, /* @__PURE__ */ (0, import_mithril.default)("div", { id: "modal-underlay", onclick: vnode.attrs.close }), /* @__PURE__ */ (0, import_mithril.default)("div", { id: "modal-window" }, vnode.children));
+      return /* @__PURE__ */ (0, import_mithril2.default)("div", { id: "modal", onkeydown: (event) => this.onkeydown(event, vnode) }, /* @__PURE__ */ (0, import_mithril2.default)("div", { id: "modal-underlay", onclick: vnode.attrs.close }), /* @__PURE__ */ (0, import_mithril2.default)("div", { id: "modal-window" }, vnode.children));
     }
     onkeydown(event, vnode) {
       switch (keyCode(event)) {
@@ -14715,61 +14886,228 @@
   };
 
   // src/view/actorSearch.tsx
-  var import_mithril2 = __toESM(require_mithril(), 1);
   var import_mithril3 = __toESM(require_mithril(), 1);
-
-  // src/controller.ts
-  var Controller3 = class {
-    #actor;
-    #database;
-    #delivery;
-    #directory;
-    #mls;
-    // constructor initializes the Controller with its dependencies
-    constructor(actor, database, delivery, directory, mls) {
-      this.#actor = actor;
-      this.#database = database;
-      this.#delivery = delivery;
-      this.#directory = directory;
-      this.#mls = mls;
+  var import_mithril4 = __toESM(require_mithril(), 1);
+  var ActorSearch = class {
+    oninit(vnode) {
+      vnode.state.search = "";
+      vnode.state.loading = false;
+      vnode.state.options = [];
+      vnode.state.highlightedOption = -1;
     }
-    welcome_SkipKeys() {
-    }
-    welcome_CreateKeys() {
-    }
-    // newGroupAndMessage creates a new MLS-encrypted
-    // group message with the specified recipients
-    async newGroupAndMessage(recipients, message) {
-      const group = await this.#mls.createGroup();
-      await this.#mls.addGroupMembers(group.groupID, recipients);
-    }
-    // newConversation creates a new plaintext ActivityPub conversation
-    // with the specified recipients
-    async newConversation(to, message) {
-      const activity = {
-        "@context": "https://www.w3.org/ns/activitystreams",
-        type: "Create",
-        actor: this.#actor.id,
-        to,
-        object: {
-          type: "Note",
-          content: message
+    view(vnode) {
+      return /* @__PURE__ */ (0, import_mithril3.default)("div", { class: "autocomplete" }, /* @__PURE__ */ (0, import_mithril3.default)("div", { class: "input" }, vnode.attrs.value.map((actor, index) => {
+        const isSecure = actor.keyPackages != "";
+        return /* @__PURE__ */ (0, import_mithril3.default)("span", { class: isSecure ? "tag blue" : "tag gray" }, /* @__PURE__ */ (0, import_mithril3.default)("span", { style: "display:inline-flex; align-items:center; margin-right:8px;" }, /* @__PURE__ */ (0, import_mithril3.default)("img", { src: actor.icon, class: "circle", style: "height:1em; margin:0px 4px;" }), /* @__PURE__ */ (0, import_mithril3.default)("span", { class: "bold" }, actor.name), "\xA0", isSecure ? /* @__PURE__ */ (0, import_mithril3.default)("i", { class: "bi bi-lock-fill" }) : null), /* @__PURE__ */ (0, import_mithril3.default)("i", { class: "clickable bi bi-x-lg", onclick: () => this.removeActor(vnode, index) }));
+      }), /* @__PURE__ */ (0, import_mithril3.default)(
+        "input",
+        {
+          id: "idActorSearch",
+          name: vnode.attrs.name,
+          class: "padding-none",
+          style: "min-width:200px;",
+          value: vnode.state.search,
+          tabindex: "0",
+          onkeydown: async (event) => {
+            this.onkeydown(event, vnode);
+          },
+          onkeypress: async (event) => {
+            this.onkeypress(event, vnode);
+          },
+          oninput: async (event) => {
+            this.oninput(event, vnode);
+          },
+          onfocus: () => this.loadOptions(vnode),
+          onblur: () => this.onblur(vnode)
         }
-      };
-      const response = await fetch(this.#actor.outbox, {
-        method: "POST",
-        headers: { "Content-Type": "application/activity+json" },
-        body: JSON.stringify(activity)
+      )), vnode.state.options.length ? /* @__PURE__ */ (0, import_mithril3.default)("div", { class: "options" }, /* @__PURE__ */ (0, import_mithril3.default)("div", { role: "menu", class: "menu" }, vnode.state.options.map((actor, index) => {
+        const isSecure = actor.keyPackages != "";
+        return /* @__PURE__ */ (0, import_mithril3.default)(
+          "div",
+          {
+            role: "menuitem",
+            class: "flex-row padding-xs",
+            onmousedown: () => this.selectActor(vnode, index),
+            "aria-selected": index == vnode.state.highlightedOption ? "true" : null
+          },
+          /* @__PURE__ */ (0, import_mithril3.default)("div", { class: "width-32" }, /* @__PURE__ */ (0, import_mithril3.default)("img", { src: actor.icon, class: "width-32 circle" })),
+          /* @__PURE__ */ (0, import_mithril3.default)("div", null, /* @__PURE__ */ (0, import_mithril3.default)("div", null, actor.name, " \xA0", isSecure ? /* @__PURE__ */ (0, import_mithril3.default)("i", { class: "text-xs text-light-gray bi bi-lock-fill" }) : null), /* @__PURE__ */ (0, import_mithril3.default)("div", { class: "text-xs text-light-gray" }, actor.username))
+        );
+      }))) : null);
+    }
+    async onkeydown(event, vnode) {
+      switch (keyCode(event)) {
+        case "Backspace":
+          const target = event.target;
+          if (target?.selectionStart == 0) {
+            this.removeActor(vnode, vnode.attrs.value.length - 1);
+            event.stopPropagation();
+          }
+          return;
+        case "ArrowDown":
+          vnode.state.highlightedOption = Math.min(
+            vnode.state.highlightedOption + 1,
+            vnode.state.options.length - 1
+          );
+          return;
+        case "ArrowUp":
+          vnode.state.highlightedOption = Math.max(vnode.state.highlightedOption - 1, 0);
+          return;
+        case "Enter":
+          this.selectActor(vnode, vnode.state.highlightedOption);
+          return;
+      }
+    }
+    // These event handlers prevent default behavior for certain control keys
+    async onkeypress(event, vnode) {
+      switch (keyCode(event)) {
+        case "ArrowDown":
+        case "ArrowUp":
+        case "Enter":
+          event.stopPropagation();
+          event.preventDefault();
+          return;
+        case "Escape":
+          if (vnode.state.options.length > 0) {
+            vnode.state.options = [];
+          }
+          event.stopPropagation();
+          event.preventDefault();
+          return;
+      }
+    }
+    async oninput(event, vnode) {
+      const target = event.target;
+      vnode.state.search = target.value;
+      this.loadOptions(vnode);
+    }
+    async loadOptions(vnode) {
+      if (vnode.state.search == "") {
+        vnode.state.options = [];
+        vnode.state.highlightedOption = -1;
+        return;
+      }
+      vnode.state.loading = true;
+      vnode.state.options = await import_mithril3.default.request(vnode.attrs.endpoint + "?q=" + vnode.state.search);
+      vnode.state.loading = false;
+      vnode.state.highlightedOption = -1;
+    }
+    onblur(vnode) {
+      requestAnimationFrame(() => {
+        vnode.state.options = [];
+        vnode.state.highlightedOption = -1;
+        import_mithril3.default.redraw();
       });
+    }
+    selectActor(vnode, index) {
+      const selected = vnode.state.options[index];
+      if (selected == null) {
+        return;
+      }
+      vnode.attrs.value.push(selected);
+      vnode.state.options = [];
+      vnode.state.search = "";
+      vnode.attrs.onselect(vnode.attrs.value);
+    }
+    removeActor(vnode, index) {
+      vnode.attrs.value.splice(index, 1);
+      vnode.attrs.onselect(vnode.attrs.value);
+      requestAnimationFrame(() => document.getElementById("idActorSearch")?.focus());
+    }
+  };
+
+  // src/view/modal-newConversation.tsx
+  var NewConversation = class {
+    //
+    oninit(vnode) {
+      vnode.state.actors = [];
+      vnode.state.message = "";
+      vnode.state.encrypted = false;
+    }
+    view(vnode) {
+      if (vnode.attrs.modal != "NEW-CONVERSATION") {
+        return null;
+      }
+      return /* @__PURE__ */ (0, import_mithril5.default)(Modal, { close: vnode.attrs.close }, /* @__PURE__ */ (0, import_mithril5.default)("form", { onsubmit: (event) => this.onsubmit(event, vnode) }, /* @__PURE__ */ (0, import_mithril5.default)("div", { class: "layout layout-vertical" }, this.header(vnode), /* @__PURE__ */ (0, import_mithril5.default)("div", { class: "layout-elements" }, /* @__PURE__ */ (0, import_mithril5.default)("div", { class: "layout-element" }, /* @__PURE__ */ (0, import_mithril5.default)("label", { for: "" }, "Participants"), /* @__PURE__ */ (0, import_mithril5.default)(
+        ActorSearch,
+        {
+          name: "actorIds",
+          value: vnode.state.actors,
+          endpoint: "/.api/actors",
+          onselect: (actors) => this.selectActors(vnode, actors)
+        }
+      )), /* @__PURE__ */ (0, import_mithril5.default)("div", { class: "layout-element" }, /* @__PURE__ */ (0, import_mithril5.default)("label", null, "Message"), /* @__PURE__ */ (0, import_mithril5.default)(
+        "textarea",
+        {
+          rows: "8",
+          onchange: (event) => this.setMessage(vnode, event)
+        }
+      ), /* @__PURE__ */ (0, import_mithril5.default)("div", { class: "text-sm text-gray" }, this.description(vnode))))), /* @__PURE__ */ (0, import_mithril5.default)("div", { class: "margin-top" }, this.submitButton(vnode), /* @__PURE__ */ (0, import_mithril5.default)("button", { onclick: vnode.attrs.close, tabIndex: "0" }, "Close"))));
+    }
+    header(vnode) {
+      if (vnode.state.actors.length == 0) {
+        return /* @__PURE__ */ (0, import_mithril5.default)("div", { class: "layout-title" }, /* @__PURE__ */ (0, import_mithril5.default)("i", { class: "bi bi-plus" }), " Start a Conversation");
+      }
+      if (vnode.state.encrypted) {
+        return /* @__PURE__ */ (0, import_mithril5.default)("div", { class: "layout-title" }, /* @__PURE__ */ (0, import_mithril5.default)("i", { class: "bi bi-shield-lock" }), " Encrypted Message");
+      }
+      return /* @__PURE__ */ (0, import_mithril5.default)("div", { class: "layout-title" }, /* @__PURE__ */ (0, import_mithril5.default)("i", { class: "bi bi-envelope-open" }), " Direct Message");
+    }
+    description(vnode) {
+      if (vnode.state.actors.length == 0) {
+        return /* @__PURE__ */ (0, import_mithril5.default)("span", null);
+      }
+      if (vnode.state.encrypted) {
+        return /* @__PURE__ */ (0, import_mithril5.default)("div", null, "This will be encrypted before it leaves this device, and will not be readable by anyone other than the recipients.");
+      }
+      return /* @__PURE__ */ (0, import_mithril5.default)("div", null, /* @__PURE__ */ (0, import_mithril5.default)("i", { class: "bi bi-exclamation-triangle-fill" }), " One or more of your recipients cannot receive encrypted messages. Others on the Internet may be able to read this message.");
+    }
+    submitButton(vnode) {
+      if (vnode.state.actors.length == 0) {
+        return /* @__PURE__ */ (0, import_mithril5.default)("button", { class: "primary", disabled: true }, "Start a Conversation");
+      }
+      if (vnode.state.encrypted) {
+        return /* @__PURE__ */ (0, import_mithril5.default)("button", { class: "primary", tabindex: "0" }, /* @__PURE__ */ (0, import_mithril5.default)("i", { class: "bi bi-lock" }), " Send Encrypted");
+      }
+      return /* @__PURE__ */ (0, import_mithril5.default)("button", { class: "selected", disabled: true }, "Send Direct Message");
+    }
+    selectActors(vnode, actors) {
+      vnode.state.actors = actors;
+      if (actors.some((actor) => actor.keyPackages == "")) {
+        vnode.state.encrypted = false;
+      } else {
+        vnode.state.encrypted = true;
+      }
+    }
+    setMessage(vnode, event) {
+      const target = event.target;
+      vnode.state.message = target.value;
+    }
+    async onsubmit(event, vnode) {
+      const participants = vnode.state.actors.map((actor) => actor.id);
+      const controller = vnode.attrs.controller;
+      event.preventDefault();
+      event.stopPropagation();
+      if (vnode.state.encrypted) {
+        await controller.newGroupAndMessage(participants, vnode.state.message);
+        return this.close(vnode);
+      }
+      await controller.newConversation(participants, vnode.state.message);
+      return this.close(vnode);
+    }
+    close(vnode) {
+      vnode.state.actors = [];
+      vnode.state.message = "";
+      vnode.attrs.close();
     }
   };
 
   // src/view/welcome.tsx
-  var import_mithril11 = __toESM(require_mithril(), 1);
+  var import_mithril9 = __toESM(require_mithril(), 1);
 
   // src/view/modal-createKeys.tsx
-  var import_mithril9 = __toESM(require_mithril(), 1);
-  var import_mithril10 = __toESM(require_mithril(), 1);
+  var import_mithril7 = __toESM(require_mithril(), 1);
+  var import_mithril8 = __toESM(require_mithril(), 1);
   var CreateKeys = class {
     //
     oninit(vnode) {
@@ -14781,7 +15119,7 @@
       if (vnode.attrs.modal != "SETUP-KEYS") {
         return null;
       }
-      return /* @__PURE__ */ (0, import_mithril9.default)(Modal, { close: vnode.attrs.close }, /* @__PURE__ */ (0, import_mithril9.default)("form", { onsubmit: (event) => this.onSubmit(event, vnode) }, /* @__PURE__ */ (0, import_mithril9.default)("div", { class: "layout layout-vertical" }, /* @__PURE__ */ (0, import_mithril9.default)("h1", null, /* @__PURE__ */ (0, import_mithril9.default)("i", { class: "bi bi-key" }), " Encryption Keys"), /* @__PURE__ */ (0, import_mithril9.default)("div", { class: "margin-vertical" }, "Private Keys are stored only on this device and never shared with anyone. Choose a password to lock your private keys on this device."), /* @__PURE__ */ (0, import_mithril9.default)("div", { class: "margin-vertical" }, /* @__PURE__ */ (0, import_mithril9.default)("b", null, "BE CAREFUL!"), " If you lose this password, you will not be able to recover your private message history, so please store your password in a safe place, such as a password manager."), /* @__PURE__ */ (0, import_mithril9.default)("div", { class: "layout-elements" }, /* @__PURE__ */ (0, import_mithril9.default)("div", { class: "layout-element" }, /* @__PURE__ */ (0, import_mithril9.default)("label", { for: "password" }, "Conversation Password"), /* @__PURE__ */ (0, import_mithril9.default)(
+      return /* @__PURE__ */ (0, import_mithril7.default)(Modal, { close: vnode.attrs.close }, /* @__PURE__ */ (0, import_mithril7.default)("form", { onsubmit: (event) => this.onSubmit(event, vnode) }, /* @__PURE__ */ (0, import_mithril7.default)("div", { class: "layout layout-vertical" }, /* @__PURE__ */ (0, import_mithril7.default)("h1", null, /* @__PURE__ */ (0, import_mithril7.default)("i", { class: "bi bi-key" }), " Encryption Keys"), /* @__PURE__ */ (0, import_mithril7.default)("div", { class: "margin-vertical" }, "Private Keys are stored only on this device and never shared with anyone. Choose a password to lock your private keys on this device."), /* @__PURE__ */ (0, import_mithril7.default)("div", { class: "margin-vertical" }, /* @__PURE__ */ (0, import_mithril7.default)("b", null, "BE CAREFUL!"), " If you lose this password, you will not be able to recover your private message history, so please store your password in a safe place, such as a password manager."), /* @__PURE__ */ (0, import_mithril7.default)("div", { class: "layout-elements" }, /* @__PURE__ */ (0, import_mithril7.default)("div", { class: "layout-element" }, /* @__PURE__ */ (0, import_mithril7.default)("label", { for: "password" }, "Conversation Password"), /* @__PURE__ */ (0, import_mithril7.default)(
         "input",
         {
           type: "password",
@@ -14792,7 +15130,7 @@
           value: vnode.state.password,
           oninput: (event) => this.setPassword(vnode, event)
         }
-      ), /* @__PURE__ */ (0, import_mithril9.default)("div", { class: "text-sm text-gray" }, "Should be different from your account password (which is stored on your server). If you lose this password, you will lose your encrypted message history.")), /* @__PURE__ */ (0, import_mithril9.default)("div", { class: "layout-element" }, /* @__PURE__ */ (0, import_mithril9.default)("label", { for: "passwordHint" }, "Password Hint"), /* @__PURE__ */ (0, import_mithril9.default)(
+      ), /* @__PURE__ */ (0, import_mithril7.default)("div", { class: "text-sm text-gray" }, "Should be different from your account password (which is stored on your server). If you lose this password, you will lose your encrypted message history.")), /* @__PURE__ */ (0, import_mithril7.default)("div", { class: "layout-element" }, /* @__PURE__ */ (0, import_mithril7.default)("label", { for: "passwordHint" }, "Password Hint"), /* @__PURE__ */ (0, import_mithril7.default)(
         "input",
         {
           type: "text",
@@ -14801,7 +15139,7 @@
           value: vnode.state.passwordHint,
           oninput: (event) => this.setPasswordHint(vnode, event)
         }
-      ), /* @__PURE__ */ (0, import_mithril9.default)("div", { class: "text-sm text-gray" }, "(Optional) Helps you remember your password in case your forget it.")), /* @__PURE__ */ (0, import_mithril9.default)("div", { class: "layout-element" }, /* @__PURE__ */ (0, import_mithril9.default)("label", { for: "clientName" }, "Device Name"), /* @__PURE__ */ (0, import_mithril9.default)(
+      ), /* @__PURE__ */ (0, import_mithril7.default)("div", { class: "text-sm text-gray" }, "(Optional) Helps you remember your password in case your forget it.")), /* @__PURE__ */ (0, import_mithril7.default)("div", { class: "layout-element" }, /* @__PURE__ */ (0, import_mithril7.default)("label", { for: "clientName" }, "Device Name"), /* @__PURE__ */ (0, import_mithril7.default)(
         "input",
         {
           type: "text",
@@ -14814,7 +15152,7 @@
           required: "true",
           oninput: (event) => this.setClientName(vnode, event)
         }
-      ), /* @__PURE__ */ (0, import_mithril9.default)("div", { class: "text-sm text-gray" }, "Helps identify this device in the", " ", /* @__PURE__ */ (0, import_mithril9.default)("a", { href: "/@me/settings/keyPackages", target: "_blank" }, "key manager ", /* @__PURE__ */ (0, import_mithril9.default)("i", { class: "bi bi-box-arrow-up-right" })))))), /* @__PURE__ */ (0, import_mithril9.default)("div", { class: "margin-top" }, /* @__PURE__ */ (0, import_mithril9.default)("button", { class: "primary" }, "Create Encryption Keys"), /* @__PURE__ */ (0, import_mithril9.default)("button", { onclick: vnode.attrs.close, tabIndex: "0" }, "Close"))));
+      ), /* @__PURE__ */ (0, import_mithril7.default)("div", { class: "text-sm text-gray" }, "Helps identify this device in the", " ", /* @__PURE__ */ (0, import_mithril7.default)("a", { href: "/@me/settings/keyPackages", target: "_blank" }, "key manager ", /* @__PURE__ */ (0, import_mithril7.default)("i", { class: "bi bi-box-arrow-up-right" })))))), /* @__PURE__ */ (0, import_mithril7.default)("div", { class: "margin-top" }, /* @__PURE__ */ (0, import_mithril7.default)("button", { class: "primary" }, "Create Encryption Keys"), /* @__PURE__ */ (0, import_mithril7.default)("button", { onclick: vnode.attrs.close, tabIndex: "0" }, "Close"))));
     }
     setClientName(vnode, event) {
       const input = event.target;
@@ -14828,8 +15166,14 @@
       const input = event.target;
       vnode.state.passwordHint = input.value;
     }
-    onSubmit(event, vnode) {
+    async onSubmit(event, vnode) {
       event.preventDefault();
+      await vnode.attrs.controller.createEncryptionKeys(
+        vnode.state.clientName,
+        vnode.state.password,
+        vnode.state.passwordHint
+      );
+      vnode.attrs.close();
     }
     close(vnode) {
       vnode.attrs.close();
@@ -14872,7 +15216,7 @@
   // src/view/welcome.tsx
   var Welcome = class {
     view(vnode) {
-      return /* @__PURE__ */ (0, import_mithril11.default)("div", { class: "app-content" }, /* @__PURE__ */ (0, import_mithril11.default)("div", { class: "flex-row flex-align-center width-100%" }, /* @__PURE__ */ (0, import_mithril11.default)("div", { class: "text-xl bold flex-grow" }, /* @__PURE__ */ (0, import_mithril11.default)("i", { class: "bi bi-chat-fill" }), " Conversations"), /* @__PURE__ */ (0, import_mithril11.default)("div", { class: "nowrap" })), /* @__PURE__ */ (0, import_mithril11.default)("div", { class: "card padding max-width-640 margin-top" }, /* @__PURE__ */ (0, import_mithril11.default)("div", { class: "margin-bottom-lg" }, "Conversations collect all of your personal messages into a single place, including", " ", /* @__PURE__ */ (0, import_mithril11.default)("b", { class: "nowrap" }, "direct messages"), " (which can be read by server admins) and", " ", /* @__PURE__ */ (0, import_mithril11.default)("b", { class: "nowrap" }, "private messages"), ". (which are encrypted and cannot be read by others).", " ", /* @__PURE__ */ (0, import_mithril11.default)("a", { href: "https://emissary.dev/conversations", target: "_blank", class: "nowrap" }, "Learn More About Conversations ", /* @__PURE__ */ (0, import_mithril11.default)("i", { class: "bi bi-box-arrow-up-right" }))), /* @__PURE__ */ (0, import_mithril11.default)("div", { class: "flex-row flex-align-center margin-vertical" }, /* @__PURE__ */ (0, import_mithril11.default)("button", { class: "primary", onclick: () => vnode.state.modal = "SETUP-KEYS" }, "Create Encryption Keys"), /* @__PURE__ */ (0, import_mithril11.default)("div", null, "to participate in encrypted conversations.")), /* @__PURE__ */ (0, import_mithril11.default)("div", { class: "flex-row flex-align-center margin-vertical" }, /* @__PURE__ */ (0, import_mithril11.default)("button", { onclick: () => this.continueWithoutKeys(vnode) }, "Continue Without Keys\xA0"), /* @__PURE__ */ (0, import_mithril11.default)("div", null, "to send/receive unencrypted messages only."))), /* @__PURE__ */ (0, import_mithril11.default)(
+      return /* @__PURE__ */ (0, import_mithril9.default)("div", { class: "app-content" }, /* @__PURE__ */ (0, import_mithril9.default)("div", { class: "flex-row flex-align-center width-100%" }, /* @__PURE__ */ (0, import_mithril9.default)("div", { class: "text-xl bold flex-grow" }, /* @__PURE__ */ (0, import_mithril9.default)("i", { class: "bi bi-chat-fill" }), " Conversations"), /* @__PURE__ */ (0, import_mithril9.default)("div", { class: "nowrap" })), /* @__PURE__ */ (0, import_mithril9.default)("div", { class: "card padding max-width-640 margin-top" }, /* @__PURE__ */ (0, import_mithril9.default)("div", { class: "margin-bottom-lg" }, "Conversations collect all of your personal messages into a single place, including", " ", /* @__PURE__ */ (0, import_mithril9.default)("b", { class: "nowrap" }, "direct messages"), " (which can be read by server admins) and", " ", /* @__PURE__ */ (0, import_mithril9.default)("b", { class: "nowrap" }, "private messages"), ". (which are encrypted and cannot be read by others).", " ", /* @__PURE__ */ (0, import_mithril9.default)("a", { href: "https://emissary.dev/conversations", target: "_blank", class: "nowrap" }, "Learn More About Conversations ", /* @__PURE__ */ (0, import_mithril9.default)("i", { class: "bi bi-box-arrow-up-right" }))), /* @__PURE__ */ (0, import_mithril9.default)("div", { class: "flex-row flex-align-center margin-vertical" }, /* @__PURE__ */ (0, import_mithril9.default)("button", { class: "primary", onclick: () => vnode.state.modal = "SETUP-KEYS" }, "Create Encryption Keys"), /* @__PURE__ */ (0, import_mithril9.default)("div", null, "to participate in encrypted conversations.")), /* @__PURE__ */ (0, import_mithril9.default)("div", { class: "flex-row flex-align-center margin-vertical" }, /* @__PURE__ */ (0, import_mithril9.default)("button", { onclick: () => this.skipEncryptionKeys(vnode) }, "Continue Without Keys\xA0"), /* @__PURE__ */ (0, import_mithril9.default)("div", null, "to send/receive unencrypted messages only."))), /* @__PURE__ */ (0, import_mithril9.default)(
         CreateKeys,
         {
           controller: vnode.attrs.controller,
@@ -14881,17 +15225,95 @@
         }
       ));
     }
-    continueWithoutKeys(vnode) {
+    async skipEncryptionKeys(vnode) {
+      await vnode.attrs.controller.skipEncryptionKeys();
       this.closeModal(vnode);
-      window.location.href = "/@me/inbox";
     }
     // Global Modal Snowball
     closeModal(vnode) {
       document.getElementById("modal")?.classList.remove("ready");
       window.setTimeout(() => {
         vnode.state.modal = "";
-        import_mithril11.default.redraw();
+        import_mithril9.default.redraw();
       }, 240);
+    }
+  };
+
+  // src/view/index.tsx
+  var import_mithril10 = __toESM(require_mithril(), 1);
+  var import_mithril11 = __toESM(require_mithril(), 1);
+  var Index = class {
+    oninit(vnode) {
+      vnode.state.modal = "";
+    }
+    view(vnode) {
+      return /* @__PURE__ */ (0, import_mithril10.default)("div", { id: "conversations" }, /* @__PURE__ */ (0, import_mithril10.default)(
+        "div",
+        {
+          id: "conversation-list",
+          class: "table no-top-border width-50% md:width-40% lg:width-30% flex-shrink-0 scroll-vertical"
+        },
+        /* @__PURE__ */ (0, import_mithril10.default)(
+          "div",
+          {
+            role: "button",
+            class: "link conversation-selector padding flex-row flex-align-center",
+            onclick: () => vnode.state.modal = "NEW-CONVERSATION"
+          },
+          /* @__PURE__ */ (0, import_mithril10.default)(
+            "div",
+            {
+              class: "circle width-32 flex-shrink-0 flex-center margin-none",
+              style: "font-size:24px;background-color:var(--blue50);color:var(--white);"
+            },
+            /* @__PURE__ */ (0, import_mithril10.default)("i", { class: "bi bi-plus" })
+          ),
+          /* @__PURE__ */ (0, import_mithril10.default)("div", { class: "ellipsis-block", style: "max-height:3em;" }, "New Conversation")
+        ),
+        /* @__PURE__ */ (0, import_mithril10.default)("div", { role: "button", class: "flex-row flex-align-center padding hover-trigger" }, /* @__PURE__ */ (0, import_mithril10.default)("img", { class: "circle width-32" }), /* @__PURE__ */ (0, import_mithril10.default)("span", { class: "flex-grow nowrap ellipsis" }, "Direct Message 1"), /* @__PURE__ */ (0, import_mithril10.default)("button", { class: "hover-show" }, "\u22EF")),
+        this.mockEncryptedConversations(vnode)
+      ), /* @__PURE__ */ (0, import_mithril10.default)("div", { id: "conversation-details", class: "width-75%" }, "Here be details..."), /* @__PURE__ */ (0, import_mithril10.default)(
+        NewConversation,
+        {
+          controller: vnode.attrs.controller,
+          modal: vnode.state.modal,
+          close: () => this.closeModal(vnode)
+        }
+      ));
+    }
+    mockEncryptedConversations(vnode) {
+      if (vnode.attrs.controller.config.hasEncryptionKeys !== true) {
+        return [];
+      }
+      return [
+        /* @__PURE__ */ (0, import_mithril10.default)("div", { role: "button", class: "flex-row flex-align-center padding hover-trigger" }, /* @__PURE__ */ (0, import_mithril10.default)("span", { class: "width-32 circle flex-center" }, /* @__PURE__ */ (0, import_mithril10.default)("i", { class: "bi bi-lock-fill" })), /* @__PURE__ */ (0, import_mithril10.default)("span", { class: "flex-grow nowrap ellipsis" }, "Encrypted Conversation"), /* @__PURE__ */ (0, import_mithril10.default)("button", { class: "hover-show" }, "\u22EF")),
+        /* @__PURE__ */ (0, import_mithril10.default)("div", { role: "button", class: "flex-row flex-align-center padding hover-trigger" }, /* @__PURE__ */ (0, import_mithril10.default)("span", { class: "width-32 circle flex-center" }, /* @__PURE__ */ (0, import_mithril10.default)("i", { class: "bi bi-lock-fill" })), /* @__PURE__ */ (0, import_mithril10.default)("span", { class: "flex-grow nowrap ellipsis" }, "Encrypted Conversation"), /* @__PURE__ */ (0, import_mithril10.default)("button", { class: "hover-show" }, "\u22EF"))
+      ];
+    }
+    // Global Modal Snowball
+    closeModal(vnode) {
+      document.getElementById("modal")?.classList.remove("ready");
+      window.setTimeout(() => {
+        vnode.state.modal = "";
+        import_mithril10.default.redraw();
+      }, 240);
+    }
+  };
+
+  // src/view/main.tsx
+  var Main = class {
+    oninit(vnode) {
+      vnode.state.modal = "";
+    }
+    view(vnode) {
+      const controller = vnode.attrs.controller;
+      if (!controller.config.ready) {
+        return /* @__PURE__ */ (0, import_mithril12.default)("div", { class: "app-content" }, "Loading...");
+      }
+      if (!controller.config.welcome) {
+        return /* @__PURE__ */ (0, import_mithril12.default)(Welcome, { controller });
+      }
+      return /* @__PURE__ */ (0, import_mithril12.default)(Index, { controller });
     }
   };
 
@@ -14907,10 +15329,9 @@
     const indexedDB2 = await NewIndexedDB();
     const database = new Database(indexedDB2, clientConfig);
     const delivery = new Delivery(actor.id, actor.outbox);
-    const directory = new Directory();
-    const mls = await NewMLS(database, delivery, directory, actor, clientConfig);
-    const controller = new Controller3(actor, database, delivery, directory, mls);
-    import_mithril12.default.mount(root2, { view: () => /* @__PURE__ */ (0, import_mithril12.default)(Welcome, { controller }) });
+    const directory = new Directory(actor.id, actor.outbox);
+    const controller = new Controller(actor, database, delivery, directory, clientConfig);
+    import_mithril14.default.mount(root2, { view: () => /* @__PURE__ */ (0, import_mithril14.default)(Main, { controller }) });
   }
   startup();
 })();

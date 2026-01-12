@@ -3,7 +3,8 @@ import type {KeyPackage} from "ts-mls"
 import type {PrivateKeyPackage} from "ts-mls"
 
 export type DBKeyPackage = {
-	keyPackageID: string
+	id: string
+	keyPackageURL: string
 	clientName: string
 	publicKeyPackage: KeyPackage
 	privateKeyPackage: PrivateKeyPackage

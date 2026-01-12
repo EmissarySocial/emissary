@@ -2,6 +2,9 @@ import m from "mithril"
 import {type Vnode} from "mithril"
 import {Controller} from "../controller"
 import {NewConversation} from "./modal-newConversation"
+import type {Config} from "../model/config"
+import {Welcome} from "./welcome"
+import {Index} from "."
 
 type MainVnode = Vnode<MainAttrs, MainState>
 
@@ -11,6 +14,7 @@ type MainAttrs = {
 
 type MainState = {
 	modal: string
+	config: Config
 }
 
 export class Main {
@@ -19,64 +23,16 @@ export class Main {
 	}
 
 	view(vnode: MainVnode) {
-		return (
-			<div id="conversations">
-				<div
-					id="conversation-list"
-					class="table no-top-border width-50% md:width-40% lg:width-30% flex-shrink-0 scroll-vertical">
-					<div
-						role="button"
-						class="link conversation-selector padding flex-row flex-align-center"
-						onclick={() => (vnode.state.modal = "NEW-CONVERSATION")}>
-						<div
-							class="circle width-32 flex-shrink-0 flex-center margin-none"
-							style="font-size:24px;background-color:var(--blue50);color:var(--white);">
-							<i class="bi bi-plus"></i>
-						</div>
-						<div class="ellipsis-block" style="max-height:3em;">
-							New Conversation
-						</div>
-					</div>
+		const controller = vnode.attrs.controller
 
-					<div role="button" class="flex-row flex-align-center padding hover-trigger">
-						<img class="circle width-32" />
-						<span class="flex-grow nowrap ellipsis">Direct Message 1</span>
-						<button class="hover-show">&#8943;</button>
-					</div>
-					<div role="button" class="flex-row flex-align-center padding hover-trigger">
-						<span class="width-32 circle flex-center">
-							<i class="bi bi-lock-fill"></i>
-						</span>
-						<span class="flex-grow nowrap ellipsis">Encrypted Conversation</span>
-						<button class="hover-show">&#8943;</button>
-					</div>
-					<div role="button" class="flex-row flex-align-center padding hover-trigger">
-						<span class="width-32 circle flex-center">
-							<i class="bi bi-lock-fill"></i>
-						</span>
-						<span class="flex-grow nowrap ellipsis">Encrypted Conversation</span>
-						<button class="hover-show">&#8943;</button>
-					</div>
-				</div>
-				<div id="conversation-details" class="width-75%">
-					Here be details...
-				</div>
+		if (!controller.config.ready) {
+			return <div class="app-content">Loading...</div>
+		}
 
-				<NewConversation
-					controller={vnode.attrs.controller}
-					modal={vnode.state.modal}
-					close={() => this.closeModal(vnode)}></NewConversation>
-			</div>
-		)
-	}
+		if (!controller.config.welcome) {
+			return <Welcome controller={controller} />
+		}
 
-	// Global Modal Snowball
-	closeModal(vnode: MainVnode) {
-		document.getElementById("modal")?.classList.remove("ready")
-
-		window.setTimeout(() => {
-			vnode.state.modal = ""
-			m.redraw()
-		}, 240)
+		return <Index controller={controller} />
 	}
 }

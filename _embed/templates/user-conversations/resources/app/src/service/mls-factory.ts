@@ -1,46 +1,33 @@
-import {createApplicationMessage} from "ts-mls"
-import {createCommit} from "ts-mls"
-import {createGroup} from "ts-mls"
-import {joinGroup} from "ts-mls"
-import {processPrivateMessage} from "ts-mls"
-import {processPublicMessage} from "ts-mls"
-import {getCiphersuiteFromName} from "ts-mls"
+import {getCiphersuiteFromName, getCiphersuiteImpl} from "ts-mls"
 import {generateKeyPackage} from "ts-mls"
-import {encodeMlsMessage} from "ts-mls"
-import {decodeMlsMessage} from "ts-mls"
 import {defaultCapabilities} from "ts-mls"
 import {defaultLifetime} from "ts-mls"
-import {emptyPskIndex} from "ts-mls"
 import {nobleCryptoProvider} from "ts-mls"
-import {type ClientState} from "ts-mls"
 import {type Credential} from "ts-mls"
-import {type Proposal} from "ts-mls"
-import {type PrivateKeyPackage} from "ts-mls"
-import {type KeyPackage} from "ts-mls"
-import {type Welcome} from "ts-mls"
-import {type PrivateMessage} from "ts-mls"
 import {type CiphersuiteImpl} from "ts-mls"
 import {type ClientConfig} from "ts-mls"
 
 import type {APActor} from "../model/ap-actor"
-import type {DBKeyPackage} from "../model/db-keypackage"
 import type {Database} from "./database"
 import type {Delivery} from "./delivery"
 import type {Directory} from "./directory"
 import {MLS} from "./mls"
+import {NewAPKeyPackage} from "../model/ap-keypackage"
 
-// makeMLS initializes the MLS service and returns it once all dependencies have been loaded
-export async function NewMLS(
+// makeMLS loads the required dependencies for the MLS service,
+// and returns a fully populated MLS instance once everything is ready.
+export async function MLSFactory(
 	database: Database,
 	delivery: Delivery,
 	directory: Directory,
 	actor: APActor,
-	clientConfig: ClientConfig
+	clientConfig: ClientConfig,
+	clientName: string
 ): Promise<MLS> {
 	//
 
 	// Try to load the KeyPackage from the IndexedDB database
-	var keyPackage = await database.loadKeyPackage()
+	var dbKeyPackage = await database.loadKeyPackage()
 
 	// Use MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519 (ID: 1)
 	// Using nobleCryptoProvider for compatibility (pure JS implementation)
@@ -48,7 +35,7 @@ export async function NewMLS(
 	const cipherSuite = await makeCipherSuite(cipherSuiteName)
 
 	// Create a new KeyPackage if none exists
-	if (keyPackage == undefined) {
+	if (dbKeyPackage == undefined) {
 		//
 
 		// Create a credential for this User
@@ -66,17 +53,25 @@ export async function NewMLS(
 			cipherSuite
 		)
 
-		// Create DBKeyPackage object
-		keyPackage = {
-			keyPackageID: "self",
-			clientName: "Unnamed Client",
+		// Publish the KeyPackage to the server
+		const apKeyPackage = NewAPKeyPackage(clientName, actor.id, keyPackageResult.publicPackage)
+		const apKeyPackageURL = await directory.createKeyPackage(apKeyPackage)
+
+		if (apKeyPackageURL == "") {
+			throw new Error("Failed to create KeyPackage on server")
+		}
+
+		// Save the KeyPackage to the local database
+		dbKeyPackage = {
+			id: "self",
+			keyPackageURL: apKeyPackageURL,
+			clientName: clientName,
 			publicKeyPackage: keyPackageResult.publicPackage,
 			privateKeyPackage: keyPackageResult.privatePackage,
 			cipherSuiteName: cipherSuiteName,
 		}
 
-		// Save the KeyPackage to the database
-		await database.saveKeyPackage(keyPackage)
+		await database.saveKeyPackage(dbKeyPackage)
 	}
 
 	// Create and return the MLS service
@@ -84,11 +79,11 @@ export async function NewMLS(
 		database,
 		delivery,
 		directory,
-		actor,
 		clientConfig,
 		cipherSuite,
-		keyPackage.publicKeyPackage,
-		keyPackage.privateKeyPackage
+		dbKeyPackage.publicKeyPackage,
+		dbKeyPackage.privateKeyPackage,
+		actor
 	)
 }
 

@@ -1,5 +1,5 @@
 import {openDB, deleteDB, wrap, unwrap, type IDBPDatabase, type IDBPObjectStore} from "idb"
-import {type APKeyPackage, NewKeyPackage} from "../z-activitypub/keyPackage"
+import {type APKeyPackage, NewAPKeyPackage} from "../z-activitypub/keyPackage"
 import {type IDBMLSKeyPackage} from "../z-model/mlsKeyPackage"
 import {createObject} from "../z-activitypub/network"
 
@@ -73,7 +73,7 @@ export class KeyPackageService {
 		)
 
 		// Create a new KeyPackage and send it to the Server
-		const remotePackage = NewKeyPackage(this.#actorID, newPackage.publicPackage)
+		const remotePackage = NewAPKeyPackage(this.#actorID, newPackage.publicPackage)
 		const remotePackageUrl = await createObject(remotePackage)
 
 		if (remotePackageUrl == "") {

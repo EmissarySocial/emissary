@@ -1,5 +1,6 @@
 import type {DBSchema, IDBPDatabase} from "idb/build/entry.js"
 import {openDB} from "idb"
+import {ConfigID, NewConfig, type Config} from "../model/config"
 import {type Group} from "../model/group"
 import {type DBGroup} from "../model/db-group"
 import {type DBMessage} from "../model/db-message"
@@ -10,6 +11,10 @@ import {type ClientState} from "ts-mls"
 
 // Schema defines the layout of records stored in IndexedDB
 interface Schema extends DBSchema {
+	config: {
+		key: string
+		value: Config
+	}
 	group: {
 		key: string
 		value: DBGroup
@@ -30,8 +35,9 @@ export async function NewIndexedDB(): Promise<IDBPDatabase<Schema>> {
 	return await openDB<Schema>("mls-database", undefined, {
 		upgrade(db, oldVersion, newVersion) {
 			console.log("Upgrading database from version", oldVersion, "to:", newVersion)
+			db.createObjectStore("config", {keyPath: "id"})
 			db.createObjectStore("group", {keyPath: "groupID"})
-			db.createObjectStore("keyPackage", {keyPath: "keyPackageID"})
+			db.createObjectStore("keyPackage", {keyPath: "id"})
 			db.createObjectStore("message", {keyPath: "messageID"})
 		},
 	})
@@ -44,6 +50,29 @@ export class Database {
 	constructor(db: IDBPDatabase<Schema>, clientConfig: ClientConfig) {
 		this.#db = db
 		this.#clientConfig = clientConfig
+	}
+
+	/////////////////////////////////////////////
+	// Config
+	/////////////////////////////////////////////
+
+	// loadConfig retrieves the config record from the database
+	async loadConfig(): Promise<Config> {
+		var result = await this.#db.get("config", ConfigID)
+		if (result == undefined) {
+			result = NewConfig()
+		}
+
+		// Mark this configuration as "loaded from the db"
+		result.ready = true
+		return result
+	}
+
+	// saveConfig saves the config record to the database
+	async saveConfig(config: Config) {
+		config.id = ConfigID
+		config.ready = true
+		await this.#db.put("config", config)
 	}
 
 	/////////////////////////////////////////////
@@ -63,7 +92,7 @@ export class Database {
 			readDate: group.readDate,
 		}
 
-		const state = await this.#db.put("group", dbGroup)
+		await this.#db.put("group", dbGroup)
 	}
 
 	// loadGroup retrieves a group from the database

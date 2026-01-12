@@ -631,7 +631,7 @@
 			roles:["self"]
 			steps:[
 				{do:"with-keypackage", steps:[
-					{do:"delete", title:"Delete this Key Package?", submit:"Delete Key Package"}
+					{do:"delete", title:"Delete \"{{.Object.Generator}}\" Public Key?", message:"Deleting this key on this server will reset the encrypted messages on the device that created it.", submit:"Delete Public Key"}
 					{do:"refresh-page"}
 				]}
 			]
@@ -795,7 +795,9 @@
 				form:{
 					type:layout-vertical
 					children:[
-						{type:"password", path:"new_password", label:"Change Password", description:"At least 8 characters. Please use a Password Manager. (PRIVATE)"}
+						{type:"html", description:"<div class='text-lg bold'>Change Password</div>"}
+						{type:"password", path:"new_password", label:"Your New Password", description:"At least 8 characters. Please use a Password Manager. (PRIVATE)"}
+						{type:"password", path:"confirm_password", label:"Confirm New Password", description:"Re-enter to make sure you haven't mis-typed your password."}
 					]	
 				}}
 				{do:"set-password"}
@@ -976,12 +978,10 @@
 				form:{
 					type:layout-vertical
 					children:[
-						{type:"html", description:"<b>Make Your Profile Public?</b><br>When you enable this option, your profile will be visible to everyone on the Internet.  If you disable this option, others will not be able to see or interact with you here."}
+						{type:"html", description:"<div class='text-lg bold'>Public Profile</div>When you enable this option, your profile will be visible to everyone on the Internet.  If you disable this option, others will not be able to see or interact with you here."}
 						{type:"toggle", path:"isPublic", options:{true-text:"YES. Profile is visible to everyone", false-text:"NO. Profile is only visible to me."}}
-						{type:"html", description:"&nbsp;"}
-						{type:"html", description:"<b>Allow Search Engines to Index Your Profile?</b><br>When you enable this option, you are requesting that your profile be included in search results. If you disable this option, you are requesting that search engines do not index your profile. NOTE: Not all search engines will obey this request, so your profile may still show up on some search engines."}
+						{type:"html", description:"<div class='text-lg bold'>Index on Search Engines</div>When you enable this option, you are requesting that your profile be included in search results. If you disable this option, you are requesting that search engines do not index your profile. NOTE: Not all search engines will obey this request, so your profile may still show up on some search engines."}
 						{type:"toggle", path:"isIndexable", options:{true-text:"YES. Please index my profile", false-text:"NO. Please DO NOT index my profile."}}
-						{type:"html", description:"&nbsp;"}
 					]	
 				}}
 				{do:"save"}

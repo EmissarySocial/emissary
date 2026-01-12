@@ -38,7 +38,7 @@ export class Welcome {
 						<div>to participate in encrypted conversations.</div>
 					</div>
 					<div class="flex-row flex-align-center margin-vertical">
-						<button onclick={() => this.continueWithoutKeys(vnode)}>Continue Without Keys&nbsp;</button>
+						<button onclick={() => this.skipEncryptionKeys(vnode)}>Continue Without Keys&nbsp;</button>
 						<div>to send/receive unencrypted messages only.</div>
 					</div>
 				</div>
@@ -51,9 +51,9 @@ export class Welcome {
 		)
 	}
 
-	continueWithoutKeys(vnode: WelcomeVnode) {
+	async skipEncryptionKeys(vnode: WelcomeVnode) {
+		await vnode.attrs.controller.skipEncryptionKeys()
 		this.closeModal(vnode)
-		window.location.href = "/@me/inbox"
 	}
 
 	// Global Modal Snowball
