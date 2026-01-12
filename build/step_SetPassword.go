@@ -35,6 +35,13 @@ func (step StepSetPassword) Post(builder Builder, _ io.Writer) PipelineBehavior 
 		return Continue()
 	}
 
+	// RULE (Optional): If a confirmation password is provided, verify that it matches the new password
+	if confirmPassword := transaction.Get("confirm_password"); confirmPassword != "" {
+		if newPassword != confirmPassword {
+			return Halt().WithError(derp.Validation("New password must match the confirmation password"))
+		}
+	}
+
 	// RULE: Users must be signed in, and can only change their own passwords.
 	factory := builder.factory()
 	steranko := factory.Steranko(builder.session())
