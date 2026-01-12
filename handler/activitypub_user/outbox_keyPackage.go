@@ -86,16 +86,19 @@ func outbox_DeleteKeyPackage(context Context, activity streams.Document) error {
 
 // Add a KeyPackage to the user's collection (make it public)
 func outbox_AddKeyPackage(context Context, activity streams.Document) error {
-	return outbox_SetKeyPackageVisibility(context, activity, true)
+	return nil
+	// return outbox_SetKeyPackageVisibility(context, activity)
 }
 
 // Remove a KeyPackage from the user's collection (make it private)
 func outbox_RemoveKeyPackage(context Context, activity streams.Document) error {
-	return outbox_SetKeyPackageVisibility(context, activity, true)
+	return nil
+	// return outbox_SetKeyPackageVisibility(context, activity)
 }
 
+/*
 // Set the visibility of a KeyPackage in the user's collection
-func outbox_SetKeyPackageVisibility(context Context, activity streams.Document, isPublic bool) error {
+func outbox_SetKeyPackageVisibility(context Context, activity streams.Document) error {
 
 	const location = "handler.activitypub_user.outbox_AddKeyPackage"
 
@@ -130,3 +133,4 @@ func outbox_SetKeyPackageVisibility(context Context, activity streams.Document, 
 	// Yup.
 	return nil
 }
+*/
