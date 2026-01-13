@@ -235,7 +235,7 @@ func (service *ActivityStream) QueryActors(queryString string) ([]model.ActorSum
 		return nil, derp.Wrap(err, location, "Unable to connect to database")
 	}
 
-	// Get all matching actors from the database
+	// Get [top 6] matching actors from the database
 	result, err := queries.SearchActivityStreamActors(collection, queryString)
 
 	if err != nil {
