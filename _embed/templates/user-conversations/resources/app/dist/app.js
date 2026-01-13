@@ -7302,6 +7302,514 @@
     authService: defaultAuthenticationService
   };
 
+  // node_modules/ts-mls/dist/src/codec/tlsDecoder.js
+  function mapDecoder(dec, f) {
+    return (b, offset) => {
+      const x = dec(b, offset);
+      if (x !== void 0) {
+        const [t, l] = x;
+        return [f(t), l];
+      }
+    };
+  }
+  function mapDecodersOption(decoders, f) {
+    return (b, offset) => {
+      const initial = mapDecoders(decoders, f)(b, offset);
+      if (initial === void 0)
+        return void 0;
+      else {
+        const [r, len] = initial;
+        return r !== void 0 ? [r, len] : void 0;
+      }
+    };
+  }
+  function mapDecoders(decoders, f) {
+    return (b, offset) => {
+      const result = decoders.reduce((acc, decoder) => {
+        if (!acc)
+          return void 0;
+        const decoded = decoder(b, acc.offset);
+        if (!decoded)
+          return void 0;
+        const [value, length] = decoded;
+        return {
+          values: [...acc.values, value],
+          offset: acc.offset + length,
+          totalLength: acc.totalLength + length
+        };
+      }, { values: [], offset, totalLength: 0 });
+      if (!result)
+        return;
+      return [f(...result.values), result.totalLength];
+    };
+  }
+  function mapDecoderOption(dec, f) {
+    return (b, offset) => {
+      const x = dec(b, offset);
+      if (x !== void 0) {
+        const [t, l] = x;
+        const u = f(t);
+        return u !== void 0 ? [u, l] : void 0;
+      }
+    };
+  }
+  function flatMapDecoder(dec, f) {
+    return flatMapDecoderAndMap(dec, f, (_t, u) => u);
+  }
+  function orDecoder(decT, decU) {
+    return (b, offset) => {
+      const t = decT(b, offset);
+      return t ? t : decU(b, offset);
+    };
+  }
+  function flatMapDecoderAndMap(dec, f, g) {
+    return (b, offset) => {
+      const decodedT = dec(b, offset);
+      if (decodedT !== void 0) {
+        const [t, len] = decodedT;
+        const decoderU = f(t);
+        const decodedU = decoderU(b, offset + len);
+        if (decodedU !== void 0) {
+          const [u, len2] = decodedU;
+          return [g(t, u), len + len2];
+        }
+      }
+    };
+  }
+  function succeedDecoder(t) {
+    return () => [t, 0];
+  }
+  function failDecoder() {
+    return () => void 0;
+  }
+
+  // node_modules/ts-mls/dist/src/codec/tlsEncoder.js
+  function encode(enc) {
+    return (t) => {
+      const [len, write] = enc(t);
+      const buf = new ArrayBuffer(len);
+      write(0, buf);
+      return new Uint8Array(buf);
+    };
+  }
+  function contramapBufferEncoder(enc, f) {
+    return (u) => enc(f(u));
+  }
+  function contramapBufferEncoders(encoders, toTuple) {
+    return (value) => {
+      const values = toTuple(value);
+      let totalLength = 0;
+      let writeTotal = (_offset, _buffer) => {
+      };
+      for (let i = 0; i < encoders.length; i++) {
+        const [len, write] = encoders[i](values[i]);
+        const oldFunc = writeTotal;
+        const currentLen = totalLength;
+        writeTotal = (offset, buffer) => {
+          oldFunc(offset, buffer);
+          write(offset + currentLen, buffer);
+        };
+        totalLength += len;
+      }
+      return [totalLength, writeTotal];
+    };
+  }
+  function composeBufferEncoders(encoders) {
+    return (values) => contramapBufferEncoders(encoders, (t) => t)(values);
+  }
+  var encVoid = [0, () => {
+  }];
+
+  // node_modules/ts-mls/dist/src/mlsError.js
+  var MlsError = class extends Error {
+    constructor(message) {
+      super(message);
+      this.name = "MlsError";
+    }
+  };
+  var ValidationError = class extends MlsError {
+    constructor(message) {
+      super(message);
+      this.name = "ValidationError";
+    }
+  };
+  var CodecError = class extends MlsError {
+    constructor(message) {
+      super(message);
+      this.name = "CodecError";
+    }
+  };
+  var UsageError = class extends MlsError {
+    constructor(message) {
+      super(message);
+      this.name = "UsageError";
+    }
+  };
+  var DependencyError = class extends MlsError {
+    constructor(message) {
+      super(message);
+      this.name = "DependencyError";
+    }
+  };
+  var CryptoVerificationError = class extends MlsError {
+    constructor(message) {
+      super(message);
+      this.name = "CryptoVerificationError";
+    }
+  };
+  var CryptoError = class extends MlsError {
+    constructor(message) {
+      super(message);
+      this.name = "CryptoError";
+    }
+  };
+  var InternalError = class extends MlsError {
+    constructor(message) {
+      super(`This error should never occur, if you see this please submit a bug report. Message: ${message}`);
+      this.name = "InternalError";
+    }
+  };
+
+  // node_modules/ts-mls/dist/src/util/byteArray.js
+  function bytesToArrayBuffer(b) {
+    if (b.buffer instanceof ArrayBuffer) {
+      if (b.byteOffset === 0 && b.byteLength === b.buffer.byteLength) {
+        return b.buffer;
+      }
+      return b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength);
+    } else {
+      const ab = new ArrayBuffer(b.byteLength);
+      const arr = new Uint8Array(ab);
+      arr.set(b, 0);
+      return ab;
+    }
+  }
+  function toBufferSource(b) {
+    if (b.buffer instanceof ArrayBuffer)
+      return b;
+    const ab = new ArrayBuffer(b.byteLength);
+    const arr = new Uint8Array(ab);
+    arr.set(b, 0);
+    return ab;
+  }
+  function bytesToBase64(bytes) {
+    if (typeof Buffer !== "undefined") {
+      return Buffer.from(bytes).toString("base64");
+    } else {
+      let binary = "";
+      bytes.forEach((b) => binary += String.fromCharCode(b));
+      return globalThis.btoa(binary);
+    }
+  }
+  function base64ToBytes(base64) {
+    if (typeof Buffer !== "undefined") {
+      return Uint8Array.from(Buffer.from(base64, "base64"));
+    } else {
+      const binary = globalThis.atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      return bytes;
+    }
+  }
+  function concatUint8Arrays(a, b) {
+    const result = new Uint8Array(a.length + b.length);
+    result.set(a, 0);
+    result.set(b, a.length);
+    return result;
+  }
+
+  // node_modules/ts-mls/dist/src/codec/number.js
+  var uint8Encoder = (n) => [
+    1,
+    (offset, buffer) => {
+      const view = new DataView(buffer);
+      view.setUint8(offset, n);
+    }
+  ];
+  var encodeUint8 = encode(uint8Encoder);
+  var decodeUint8 = (b, offset) => {
+    const value = b.at(offset);
+    return value !== void 0 ? [value, 1] : void 0;
+  };
+  var uint16Encoder = (n) => [
+    2,
+    (offset, buffer) => {
+      const view = new DataView(buffer);
+      view.setUint16(offset, n);
+    }
+  ];
+  var encodeUint16 = encode(uint16Encoder);
+  var decodeUint16 = (b, offset) => {
+    const view = new DataView(b.buffer, b.byteOffset, b.byteLength);
+    try {
+      return [view.getUint16(offset), 2];
+    } catch (e) {
+      return void 0;
+    }
+  };
+  var uint32Encoder = (n) => [
+    4,
+    (offset, buffer) => {
+      const view = new DataView(buffer);
+      view.setUint32(offset, n);
+    }
+  ];
+  var encodeUint32 = encode(uint32Encoder);
+  var decodeUint32 = (b, offset) => {
+    const view = new DataView(b.buffer, b.byteOffset, b.byteLength);
+    try {
+      return [view.getUint32(offset), 4];
+    } catch (e) {
+      return void 0;
+    }
+  };
+  var uint64Encoder = (n) => [
+    8,
+    (offset, buffer) => {
+      const view = new DataView(buffer);
+      view.setBigUint64(offset, n);
+    }
+  ];
+  var encodeUint64 = encode(uint64Encoder);
+  var decodeUint64 = (b, offset) => {
+    const view = new DataView(b.buffer, b.byteOffset, b.byteLength);
+    try {
+      return [view.getBigUint64(offset), 8];
+    } catch (e) {
+      return void 0;
+    }
+  };
+
+  // node_modules/ts-mls/dist/src/codec/variableLength.js
+  var varLenDataEncoder = (data) => {
+    const [len, write] = lengthEncoder(data.length);
+    return [
+      len + data.length,
+      (offset, buffer) => {
+        write(offset, buffer);
+        const view = new Uint8Array(buffer);
+        view.set(data, offset + len);
+      }
+    ];
+  };
+  function lengthEncoder(len) {
+    if (len < 64) {
+      return [
+        1,
+        (offset, buffer) => {
+          const view = new DataView(buffer);
+          view.setUint8(offset, len & 63);
+        }
+      ];
+    } else if (len < 16384) {
+      return [
+        2,
+        (offset, buffer) => {
+          const view = new DataView(buffer);
+          view.setUint8(offset, len >> 8 & 63 | 64);
+          view.setUint8(offset + 1, len & 255);
+        }
+      ];
+    } else if (len < 1073741824) {
+      return [
+        4,
+        (offset, buffer) => {
+          const view = new DataView(buffer);
+          view.setUint8(offset, len >> 24 & 63 | 128);
+          view.setUint8(offset + 1, len >> 16 & 255);
+          view.setUint8(offset + 2, len >> 8 & 255);
+          view.setUint8(offset + 3, len & 255);
+        }
+      ];
+    } else {
+      throw new CodecError("Length too large to encode (max is 2^30 - 1)");
+    }
+  }
+  function determineLength(data, offset = 0) {
+    if (offset >= data.length) {
+      throw new CodecError("Offset beyond buffer");
+    }
+    const firstByte = data[offset];
+    const prefix = firstByte >> 6;
+    if (prefix === 0) {
+      return { length: firstByte & 63, lengthFieldSize: 1 };
+    } else if (prefix === 1) {
+      if (offset + 2 > data.length)
+        throw new CodecError("Incomplete 2-byte length");
+      return { length: (firstByte & 63) << 8 | data[offset + 1], lengthFieldSize: 2 };
+    } else if (prefix === 2) {
+      if (offset + 4 > data.length)
+        throw new CodecError("Incomplete 4-byte length");
+      return {
+        length: (firstByte & 63) << 24 | data[offset + 1] << 16 | data[offset + 2] << 8 | data[offset + 3],
+        lengthFieldSize: 4
+      };
+    } else {
+      throw new CodecError("8-byte length not supported in this implementation");
+    }
+  }
+  var decodeVarLenData = (buf, offset) => {
+    if (offset >= buf.length) {
+      throw new CodecError("Offset beyond buffer");
+    }
+    const { length, lengthFieldSize } = determineLength(buf, offset);
+    const totalBytes = lengthFieldSize + length;
+    if (offset + totalBytes > buf.length) {
+      throw new CodecError("Data length exceeds buffer");
+    }
+    const data = buf.subarray(offset + lengthFieldSize, offset + totalBytes);
+    return [data, totalBytes];
+  };
+  function varLenTypeEncoder(enc) {
+    return (data) => {
+      let totalLength = 0;
+      let writeTotal = (_offset, _buffer) => {
+      };
+      for (let i = 0; i < data.length; i++) {
+        const [len, write] = enc(data[i]);
+        const oldFunc = writeTotal;
+        const currentLen = totalLength;
+        writeTotal = (offset, buffer) => {
+          oldFunc(offset, buffer);
+          write(offset + currentLen, buffer);
+        };
+        totalLength += len;
+      }
+      const [headerLength, writeLength] = lengthEncoder(totalLength);
+      return [
+        headerLength + totalLength,
+        (offset, buffer) => {
+          writeLength(offset, buffer);
+          writeTotal(offset + headerLength, buffer);
+        }
+      ];
+    };
+  }
+  function decodeVarLenType(dec) {
+    return (b, offset) => {
+      const d = decodeVarLenData(b, offset);
+      if (d === void 0)
+        return;
+      const [totalBytes, totalLength] = d;
+      let cursor = 0;
+      const result = [];
+      while (cursor < totalBytes.length) {
+        const item = dec(totalBytes, cursor);
+        if (item === void 0)
+          return void 0;
+        const [value, len] = item;
+        result.push(value);
+        cursor += len;
+      }
+      return [result, totalLength];
+    };
+  }
+  function base64RecordEncoder(valueEncoder) {
+    const entryEncoder = contramapBufferEncoders([contramapBufferEncoder(varLenDataEncoder, base64ToBytes), valueEncoder], ([key, value]) => [key, value]);
+    return contramapBufferEncoders([varLenTypeEncoder(entryEncoder)], (record) => [Object.entries(record)]);
+  }
+  function decodeBase64Record(decodeValue) {
+    return mapDecoder(decodeVarLenType(mapDecoders([mapDecoder(decodeVarLenData, bytesToBase64), decodeValue], (key, value) => [key, value])), (entries) => {
+      const record = {};
+      for (const [key, value] of entries) {
+        record[key] = value;
+      }
+      return record;
+    });
+  }
+  function numberRecordEncoder(numberEncoder, valueEncoder) {
+    const entryEncoder = contramapBufferEncoders([numberEncoder, valueEncoder], ([key, value]) => [key, value]);
+    return contramapBufferEncoder(varLenTypeEncoder(entryEncoder), (record) => Object.entries(record).map(([key, value]) => [Number(key), value]));
+  }
+  function decodeNumberRecord(decodeNumber, decodeValue) {
+    return mapDecoder(decodeVarLenType(mapDecoders([decodeNumber, decodeValue], (key, value) => [key, value])), (entries) => {
+      const record = {};
+      for (const [key, value] of entries) {
+        record[key] = value;
+      }
+      return record;
+    });
+  }
+  function bigintMapEncoder(valueEncoder) {
+    const entryEncoder = contramapBufferEncoders([uint64Encoder, valueEncoder], ([key, value]) => [key, value]);
+    return contramapBufferEncoder(varLenTypeEncoder(entryEncoder), (map) => Array.from(map.entries()));
+  }
+  function decodeBigintMap(decodeValue) {
+    return mapDecoder(decodeVarLenType(mapDecoders([decodeUint64, decodeValue], (key, value) => [key, value])), (entries) => new Map(entries));
+  }
+
+  // node_modules/ts-mls/dist/src/util/enumHelpers.js
+  function enumNumberToKey(t) {
+    return (n) => Object.values(t).includes(n) ? reverseMap(t)[n] : void 0;
+  }
+  function reverseMap(obj) {
+    return Object.entries(obj).reduce((acc, [key, value]) => ({
+      ...acc,
+      [value]: key
+    }), {});
+  }
+  function openEnumNumberToKey(rec) {
+    return (n) => {
+      const decoded = enumNumberToKey(rec)(n);
+      if (decoded === void 0)
+        return n.toString();
+      else
+        return decoded;
+    };
+  }
+  function openEnumNumberEncoder(rec) {
+    return (s) => {
+      const x = rec[s];
+      if (x === void 0)
+        return Number(s);
+      else
+        return x;
+    };
+  }
+
+  // node_modules/ts-mls/dist/src/credentialType.js
+  var credentialTypes = {
+    basic: 1,
+    x509: 2
+  };
+  var credentialTypeEncoder = contramapBufferEncoder(uint16Encoder, openEnumNumberEncoder(credentialTypes));
+  var encodeCredentialType = encode(credentialTypeEncoder);
+  var decodeCredentialType = mapDecoderOption(decodeUint16, openEnumNumberToKey(credentialTypes));
+
+  // node_modules/ts-mls/dist/src/credential.js
+  var credentialBasicEncoder = contramapBufferEncoders([credentialTypeEncoder, varLenDataEncoder], (c) => [c.credentialType, c.identity]);
+  var encodeCredentialBasic = encode(credentialBasicEncoder);
+  var credentialX509Encoder = contramapBufferEncoders([credentialTypeEncoder, varLenTypeEncoder(varLenDataEncoder)], (c) => [c.credentialType, c.certificates]);
+  var encodeCredentialX509 = encode(credentialX509Encoder);
+  var credentialCustomEncoder = contramapBufferEncoders([credentialTypeEncoder, varLenDataEncoder], (c) => [c.credentialType, c.data]);
+  var encodeCredentialCustom = encode(credentialCustomEncoder);
+  var credentialEncoder = (c) => {
+    switch (c.credentialType) {
+      case "basic":
+        return credentialBasicEncoder(c);
+      case "x509":
+        return credentialX509Encoder(c);
+      default:
+        return credentialCustomEncoder(c);
+    }
+  };
+  var encodeCredential = encode(credentialEncoder);
+  var decodeCredentialBasic = mapDecoder(decodeVarLenData, (identity) => ({
+    credentialType: "basic",
+    identity
+  }));
+  var decodeCredentialX509 = mapDecoder(decodeVarLenType(decodeVarLenData), (certificates) => ({ credentialType: "x509", certificates }));
+  var decodeCredential = flatMapDecoder(decodeCredentialType, (credentialType) => {
+    switch (credentialType) {
+      case "basic":
+        return decodeCredentialBasic;
+      case "x509":
+        return decodeCredentialX509;
+    }
+  });
+
   // node_modules/idb/build/index.js
   var instanceOfAny = (object, constructors) => constructors.some((c) => object instanceof c);
   var idbProxyableTypes;
@@ -7551,215 +8059,6 @@
     };
   }
 
-  // node_modules/ts-mls/dist/src/codec/tlsEncoder.js
-  function encode(enc) {
-    return (t) => {
-      const [len, write] = enc(t);
-      const buf = new ArrayBuffer(len);
-      write(0, buf);
-      return new Uint8Array(buf);
-    };
-  }
-  function contramapBufferEncoder(enc, f) {
-    return (u) => enc(f(u));
-  }
-  function contramapBufferEncoders(encoders, toTuple) {
-    return (value) => {
-      const values = toTuple(value);
-      let totalLength = 0;
-      let writeTotal = (_offset, _buffer) => {
-      };
-      for (let i = 0; i < encoders.length; i++) {
-        const [len, write] = encoders[i](values[i]);
-        const oldFunc = writeTotal;
-        const currentLen = totalLength;
-        writeTotal = (offset, buffer) => {
-          oldFunc(offset, buffer);
-          write(offset + currentLen, buffer);
-        };
-        totalLength += len;
-      }
-      return [totalLength, writeTotal];
-    };
-  }
-  function composeBufferEncoders(encoders) {
-    return (values) => contramapBufferEncoders(encoders, (t) => t)(values);
-  }
-  var encVoid = [0, () => {
-  }];
-
-  // node_modules/ts-mls/dist/src/codec/number.js
-  var uint8Encoder = (n) => [
-    1,
-    (offset, buffer) => {
-      const view = new DataView(buffer);
-      view.setUint8(offset, n);
-    }
-  ];
-  var encodeUint8 = encode(uint8Encoder);
-  var decodeUint8 = (b, offset) => {
-    const value = b.at(offset);
-    return value !== void 0 ? [value, 1] : void 0;
-  };
-  var uint16Encoder = (n) => [
-    2,
-    (offset, buffer) => {
-      const view = new DataView(buffer);
-      view.setUint16(offset, n);
-    }
-  ];
-  var encodeUint16 = encode(uint16Encoder);
-  var decodeUint16 = (b, offset) => {
-    const view = new DataView(b.buffer, b.byteOffset, b.byteLength);
-    try {
-      return [view.getUint16(offset), 2];
-    } catch (e) {
-      return void 0;
-    }
-  };
-  var uint32Encoder = (n) => [
-    4,
-    (offset, buffer) => {
-      const view = new DataView(buffer);
-      view.setUint32(offset, n);
-    }
-  ];
-  var encodeUint32 = encode(uint32Encoder);
-  var decodeUint32 = (b, offset) => {
-    const view = new DataView(b.buffer, b.byteOffset, b.byteLength);
-    try {
-      return [view.getUint32(offset), 4];
-    } catch (e) {
-      return void 0;
-    }
-  };
-  var uint64Encoder = (n) => [
-    8,
-    (offset, buffer) => {
-      const view = new DataView(buffer);
-      view.setBigUint64(offset, n);
-    }
-  ];
-  var encodeUint64 = encode(uint64Encoder);
-  var decodeUint64 = (b, offset) => {
-    const view = new DataView(b.buffer, b.byteOffset, b.byteLength);
-    try {
-      return [view.getBigUint64(offset), 8];
-    } catch (e) {
-      return void 0;
-    }
-  };
-
-  // node_modules/ts-mls/dist/src/codec/tlsDecoder.js
-  function mapDecoder(dec, f) {
-    return (b, offset) => {
-      const x = dec(b, offset);
-      if (x !== void 0) {
-        const [t, l] = x;
-        return [f(t), l];
-      }
-    };
-  }
-  function mapDecodersOption(decoders, f) {
-    return (b, offset) => {
-      const initial = mapDecoders(decoders, f)(b, offset);
-      if (initial === void 0)
-        return void 0;
-      else {
-        const [r, len] = initial;
-        return r !== void 0 ? [r, len] : void 0;
-      }
-    };
-  }
-  function mapDecoders(decoders, f) {
-    return (b, offset) => {
-      const result = decoders.reduce((acc, decoder) => {
-        if (!acc)
-          return void 0;
-        const decoded = decoder(b, acc.offset);
-        if (!decoded)
-          return void 0;
-        const [value, length] = decoded;
-        return {
-          values: [...acc.values, value],
-          offset: acc.offset + length,
-          totalLength: acc.totalLength + length
-        };
-      }, { values: [], offset, totalLength: 0 });
-      if (!result)
-        return;
-      return [f(...result.values), result.totalLength];
-    };
-  }
-  function mapDecoderOption(dec, f) {
-    return (b, offset) => {
-      const x = dec(b, offset);
-      if (x !== void 0) {
-        const [t, l] = x;
-        const u = f(t);
-        return u !== void 0 ? [u, l] : void 0;
-      }
-    };
-  }
-  function flatMapDecoder(dec, f) {
-    return flatMapDecoderAndMap(dec, f, (_t, u) => u);
-  }
-  function orDecoder(decT, decU) {
-    return (b, offset) => {
-      const t = decT(b, offset);
-      return t ? t : decU(b, offset);
-    };
-  }
-  function flatMapDecoderAndMap(dec, f, g) {
-    return (b, offset) => {
-      const decodedT = dec(b, offset);
-      if (decodedT !== void 0) {
-        const [t, len] = decodedT;
-        const decoderU = f(t);
-        const decodedU = decoderU(b, offset + len);
-        if (decodedU !== void 0) {
-          const [u, len2] = decodedU;
-          return [g(t, u), len + len2];
-        }
-      }
-    };
-  }
-  function succeedDecoder(t) {
-    return () => [t, 0];
-  }
-  function failDecoder() {
-    return () => void 0;
-  }
-
-  // node_modules/ts-mls/dist/src/util/enumHelpers.js
-  function enumNumberToKey(t) {
-    return (n) => Object.values(t).includes(n) ? reverseMap(t)[n] : void 0;
-  }
-  function reverseMap(obj) {
-    return Object.entries(obj).reduce((acc, [key, value]) => ({
-      ...acc,
-      [value]: key
-    }), {});
-  }
-  function openEnumNumberToKey(rec) {
-    return (n) => {
-      const decoded = enumNumberToKey(rec)(n);
-      if (decoded === void 0)
-        return n.toString();
-      else
-        return decoded;
-    };
-  }
-  function openEnumNumberEncoder(rec) {
-    return (s) => {
-      const x = rec[s];
-      if (x === void 0)
-        return Number(s);
-      else
-        return x;
-    };
-  }
-
   // node_modules/ts-mls/dist/src/defaultProposalType.js
   var defaultProposalTypes = {
     add: 1,
@@ -7786,264 +8085,6 @@
   var encodeDefaultExtensionType = encode(defaultExtensionTypeEncoder);
   var decodeDefaultExtensionType = mapDecoderOption(decodeUint16, enumNumberToKey(defaultExtensionTypes));
 
-  // node_modules/ts-mls/dist/src/mlsError.js
-  var MlsError = class extends Error {
-    constructor(message) {
-      super(message);
-      this.name = "MlsError";
-    }
-  };
-  var ValidationError = class extends MlsError {
-    constructor(message) {
-      super(message);
-      this.name = "ValidationError";
-    }
-  };
-  var CodecError = class extends MlsError {
-    constructor(message) {
-      super(message);
-      this.name = "CodecError";
-    }
-  };
-  var UsageError = class extends MlsError {
-    constructor(message) {
-      super(message);
-      this.name = "UsageError";
-    }
-  };
-  var DependencyError = class extends MlsError {
-    constructor(message) {
-      super(message);
-      this.name = "DependencyError";
-    }
-  };
-  var CryptoVerificationError = class extends MlsError {
-    constructor(message) {
-      super(message);
-      this.name = "CryptoVerificationError";
-    }
-  };
-  var CryptoError = class extends MlsError {
-    constructor(message) {
-      super(message);
-      this.name = "CryptoError";
-    }
-  };
-  var InternalError = class extends MlsError {
-    constructor(message) {
-      super(`This error should never occur, if you see this please submit a bug report. Message: ${message}`);
-      this.name = "InternalError";
-    }
-  };
-
-  // node_modules/ts-mls/dist/src/util/byteArray.js
-  function bytesToArrayBuffer(b) {
-    if (b.buffer instanceof ArrayBuffer) {
-      if (b.byteOffset === 0 && b.byteLength === b.buffer.byteLength) {
-        return b.buffer;
-      }
-      return b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength);
-    } else {
-      const ab = new ArrayBuffer(b.byteLength);
-      const arr = new Uint8Array(ab);
-      arr.set(b, 0);
-      return ab;
-    }
-  }
-  function toBufferSource(b) {
-    if (b.buffer instanceof ArrayBuffer)
-      return b;
-    const ab = new ArrayBuffer(b.byteLength);
-    const arr = new Uint8Array(ab);
-    arr.set(b, 0);
-    return ab;
-  }
-  function bytesToBase64(bytes) {
-    if (typeof Buffer !== "undefined") {
-      return Buffer.from(bytes).toString("base64");
-    } else {
-      let binary = "";
-      bytes.forEach((b) => binary += String.fromCharCode(b));
-      return globalThis.btoa(binary);
-    }
-  }
-  function base64ToBytes(base64) {
-    if (typeof Buffer !== "undefined") {
-      return Uint8Array.from(Buffer.from(base64, "base64"));
-    } else {
-      const binary = globalThis.atob(base64);
-      const bytes = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i++) {
-        bytes[i] = binary.charCodeAt(i);
-      }
-      return bytes;
-    }
-  }
-  function concatUint8Arrays(a, b) {
-    const result = new Uint8Array(a.length + b.length);
-    result.set(a, 0);
-    result.set(b, a.length);
-    return result;
-  }
-
-  // node_modules/ts-mls/dist/src/codec/variableLength.js
-  var varLenDataEncoder = (data) => {
-    const [len, write] = lengthEncoder(data.length);
-    return [
-      len + data.length,
-      (offset, buffer) => {
-        write(offset, buffer);
-        const view = new Uint8Array(buffer);
-        view.set(data, offset + len);
-      }
-    ];
-  };
-  function lengthEncoder(len) {
-    if (len < 64) {
-      return [
-        1,
-        (offset, buffer) => {
-          const view = new DataView(buffer);
-          view.setUint8(offset, len & 63);
-        }
-      ];
-    } else if (len < 16384) {
-      return [
-        2,
-        (offset, buffer) => {
-          const view = new DataView(buffer);
-          view.setUint8(offset, len >> 8 & 63 | 64);
-          view.setUint8(offset + 1, len & 255);
-        }
-      ];
-    } else if (len < 1073741824) {
-      return [
-        4,
-        (offset, buffer) => {
-          const view = new DataView(buffer);
-          view.setUint8(offset, len >> 24 & 63 | 128);
-          view.setUint8(offset + 1, len >> 16 & 255);
-          view.setUint8(offset + 2, len >> 8 & 255);
-          view.setUint8(offset + 3, len & 255);
-        }
-      ];
-    } else {
-      throw new CodecError("Length too large to encode (max is 2^30 - 1)");
-    }
-  }
-  function determineLength(data, offset = 0) {
-    if (offset >= data.length) {
-      throw new CodecError("Offset beyond buffer");
-    }
-    const firstByte = data[offset];
-    const prefix = firstByte >> 6;
-    if (prefix === 0) {
-      return { length: firstByte & 63, lengthFieldSize: 1 };
-    } else if (prefix === 1) {
-      if (offset + 2 > data.length)
-        throw new CodecError("Incomplete 2-byte length");
-      return { length: (firstByte & 63) << 8 | data[offset + 1], lengthFieldSize: 2 };
-    } else if (prefix === 2) {
-      if (offset + 4 > data.length)
-        throw new CodecError("Incomplete 4-byte length");
-      return {
-        length: (firstByte & 63) << 24 | data[offset + 1] << 16 | data[offset + 2] << 8 | data[offset + 3],
-        lengthFieldSize: 4
-      };
-    } else {
-      throw new CodecError("8-byte length not supported in this implementation");
-    }
-  }
-  var decodeVarLenData = (buf, offset) => {
-    if (offset >= buf.length) {
-      throw new CodecError("Offset beyond buffer");
-    }
-    const { length, lengthFieldSize } = determineLength(buf, offset);
-    const totalBytes = lengthFieldSize + length;
-    if (offset + totalBytes > buf.length) {
-      throw new CodecError("Data length exceeds buffer");
-    }
-    const data = buf.subarray(offset + lengthFieldSize, offset + totalBytes);
-    return [data, totalBytes];
-  };
-  function varLenTypeEncoder(enc) {
-    return (data) => {
-      let totalLength = 0;
-      let writeTotal = (_offset, _buffer) => {
-      };
-      for (let i = 0; i < data.length; i++) {
-        const [len, write] = enc(data[i]);
-        const oldFunc = writeTotal;
-        const currentLen = totalLength;
-        writeTotal = (offset, buffer) => {
-          oldFunc(offset, buffer);
-          write(offset + currentLen, buffer);
-        };
-        totalLength += len;
-      }
-      const [headerLength, writeLength] = lengthEncoder(totalLength);
-      return [
-        headerLength + totalLength,
-        (offset, buffer) => {
-          writeLength(offset, buffer);
-          writeTotal(offset + headerLength, buffer);
-        }
-      ];
-    };
-  }
-  function decodeVarLenType(dec) {
-    return (b, offset) => {
-      const d = decodeVarLenData(b, offset);
-      if (d === void 0)
-        return;
-      const [totalBytes, totalLength] = d;
-      let cursor = 0;
-      const result = [];
-      while (cursor < totalBytes.length) {
-        const item = dec(totalBytes, cursor);
-        if (item === void 0)
-          return void 0;
-        const [value, len] = item;
-        result.push(value);
-        cursor += len;
-      }
-      return [result, totalLength];
-    };
-  }
-  function base64RecordEncoder(valueEncoder) {
-    const entryEncoder = contramapBufferEncoders([contramapBufferEncoder(varLenDataEncoder, base64ToBytes), valueEncoder], ([key, value]) => [key, value]);
-    return contramapBufferEncoders([varLenTypeEncoder(entryEncoder)], (record) => [Object.entries(record)]);
-  }
-  function decodeBase64Record(decodeValue) {
-    return mapDecoder(decodeVarLenType(mapDecoders([mapDecoder(decodeVarLenData, bytesToBase64), decodeValue], (key, value) => [key, value])), (entries) => {
-      const record = {};
-      for (const [key, value] of entries) {
-        record[key] = value;
-      }
-      return record;
-    });
-  }
-  function numberRecordEncoder(numberEncoder, valueEncoder) {
-    const entryEncoder = contramapBufferEncoders([numberEncoder, valueEncoder], ([key, value]) => [key, value]);
-    return contramapBufferEncoder(varLenTypeEncoder(entryEncoder), (record) => Object.entries(record).map(([key, value]) => [Number(key), value]));
-  }
-  function decodeNumberRecord(decodeNumber, decodeValue) {
-    return mapDecoder(decodeVarLenType(mapDecoders([decodeNumber, decodeValue], (key, value) => [key, value])), (entries) => {
-      const record = {};
-      for (const [key, value] of entries) {
-        record[key] = value;
-      }
-      return record;
-    });
-  }
-  function bigintMapEncoder(valueEncoder) {
-    const entryEncoder = contramapBufferEncoders([uint64Encoder, valueEncoder], ([key, value]) => [key, value]);
-    return contramapBufferEncoder(varLenTypeEncoder(entryEncoder), (map) => Array.from(map.entries()));
-  }
-  function decodeBigintMap(decodeValue) {
-    return mapDecoder(decodeVarLenType(mapDecoders([decodeUint64, decodeValue], (key, value) => [key, value])), (entries) => new Map(entries));
-  }
-
   // node_modules/ts-mls/dist/src/extension.js
   var extensionTypeEncoder = (t) => typeof t === "number" ? uint16Encoder(t) : defaultExtensionTypeEncoder(t);
   var encodeExtensionType = encode(extensionTypeEncoder);
@@ -8060,47 +8101,6 @@
   function extensionTypeToNumber(t) {
     return typeof t === "number" ? t : defaultExtensionTypes[t];
   }
-
-  // node_modules/ts-mls/dist/src/credentialType.js
-  var credentialTypes = {
-    basic: 1,
-    x509: 2
-  };
-  var credentialTypeEncoder = contramapBufferEncoder(uint16Encoder, openEnumNumberEncoder(credentialTypes));
-  var encodeCredentialType = encode(credentialTypeEncoder);
-  var decodeCredentialType = mapDecoderOption(decodeUint16, openEnumNumberToKey(credentialTypes));
-
-  // node_modules/ts-mls/dist/src/credential.js
-  var credentialBasicEncoder = contramapBufferEncoders([credentialTypeEncoder, varLenDataEncoder], (c) => [c.credentialType, c.identity]);
-  var encodeCredentialBasic = encode(credentialBasicEncoder);
-  var credentialX509Encoder = contramapBufferEncoders([credentialTypeEncoder, varLenTypeEncoder(varLenDataEncoder)], (c) => [c.credentialType, c.certificates]);
-  var encodeCredentialX509 = encode(credentialX509Encoder);
-  var credentialCustomEncoder = contramapBufferEncoders([credentialTypeEncoder, varLenDataEncoder], (c) => [c.credentialType, c.data]);
-  var encodeCredentialCustom = encode(credentialCustomEncoder);
-  var credentialEncoder = (c) => {
-    switch (c.credentialType) {
-      case "basic":
-        return credentialBasicEncoder(c);
-      case "x509":
-        return credentialX509Encoder(c);
-      default:
-        return credentialCustomEncoder(c);
-    }
-  };
-  var encodeCredential = encode(credentialEncoder);
-  var decodeCredentialBasic = mapDecoder(decodeVarLenData, (identity) => ({
-    credentialType: "basic",
-    identity
-  }));
-  var decodeCredentialX509 = mapDecoder(decodeVarLenType(decodeVarLenData), (certificates) => ({ credentialType: "x509", certificates }));
-  var decodeCredential = flatMapDecoder(decodeCredentialType, (credentialType) => {
-    switch (credentialType) {
-      case "basic":
-        return decodeCredentialBasic;
-      case "x509":
-        return decodeCredentialX509;
-    }
-  });
 
   // node_modules/ts-mls/dist/src/externalSender.js
   var externalSenderEncoder = contramapBufferEncoders([varLenDataEncoder, credentialEncoder], (e) => [e.signaturePublicKey, e.credential]);
@@ -14577,12 +14577,10 @@
 
   // src/service/mls.ts
   var MLS = class {
-    // Dependencies
     #database;
     #delivery;
     #directory;
     #clientConfig;
-    // Internal State
     #cipherSuite;
     #publicKeyPackage;
     #privateKeyPackage;
@@ -14666,21 +14664,41 @@
 
   // src/service/mls-factory.ts
   async function MLSFactory(database, delivery, directory, actor, clientConfig, clientName) {
-    var dbKeyPackage = await database.loadKeyPackage();
+    console.log("MLSFactory: Starting MLS Factory");
     const cipherSuiteName = "MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519";
-    const cipherSuite = await makeCipherSuite(cipherSuiteName);
+    const cipherSuite = await nobleCryptoProvider.getCiphersuiteImpl(getCiphersuiteFromName(cipherSuiteName));
+    console.log("MLSFactory: loaded cipher suite", cipherSuiteName);
+    var dbKeyPackage = await database.loadKeyPackage();
+    console.log("MLSFactory: loaded dbKeyPackage", dbKeyPackage);
     if (dbKeyPackage == void 0) {
-      const credential = {
-        credentialType: "basic",
-        identity: new TextEncoder().encode(actor.id)
-      };
-      const keyPackageResult = await generateKeyPackage(
-        credential,
-        defaultCapabilities(),
-        defaultLifetime,
-        [],
-        cipherSuite
-      );
+      try {
+        const cipherSuiteName2 = "MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519";
+        const cipherSuite2 = await nobleCryptoProvider.getCiphersuiteImpl(getCiphersuiteFromName(cipherSuiteName2));
+        const credential = {
+          credentialType: "basic",
+          identity: new TextEncoder().encode(actor.id)
+        };
+        console.log("Generating Key package for actor:", actor);
+        console.log(
+          "Ima break??",
+          generateKeyPackage,
+          credential,
+          defaultCapabilities,
+          defaultLifetime,
+          cipherSuite2
+        );
+        var keyPackageResult = await generateKeyPackage(
+          credential,
+          defaultCapabilities(),
+          defaultLifetime,
+          [],
+          cipherSuite2
+        );
+      } catch (error) {
+        console.error("Error generating KeyPackage:", error);
+        throw error;
+      }
+      console.log("Generated Key package", keyPackageResult);
       const apKeyPackage = NewAPKeyPackage(clientName, actor.id, keyPackageResult.publicPackage);
       const apKeyPackageURL = await directory.createKeyPackage(apKeyPackage);
       if (apKeyPackageURL == "") {
@@ -14707,10 +14725,6 @@
       actor
     );
   }
-  async function makeCipherSuite(cipherSuiteName) {
-    const cs = getCiphersuiteFromName(cipherSuiteName);
-    return await nobleCryptoProvider.getCiphersuiteImpl(cs);
-  }
 
   // src/controller.ts
   var import_mithril = __toESM(require_mithril(), 1);
@@ -14731,6 +14745,7 @@
       this.loadConfig();
     }
     async loadConfig() {
+      console.log("loadConfig");
       this.config = await this.#database.loadConfig();
       if (this.config.hasEncryptionKeys) {
         this.startMLS();
@@ -14787,6 +14802,7 @@
     }
     // startMLS initializes the MLS service IF the configuration includes encryption keys
     async startMLS() {
+      console.log("loadConfig");
       if (this.config.hasEncryptionKeys == false) {
         throw new Error("Cannot start MLS without encryption keys");
       }
@@ -14892,12 +14908,15 @@
     oninit(vnode) {
       vnode.state.search = "";
       vnode.state.loading = false;
-      vnode.state.options = [];
+      vnode.state.actors = [];
+      vnode.state.keyPackages = {};
       vnode.state.highlightedOption = -1;
     }
     view(vnode) {
+      console.log("view", vnode.state);
       return /* @__PURE__ */ (0, import_mithril3.default)("div", { class: "autocomplete" }, /* @__PURE__ */ (0, import_mithril3.default)("div", { class: "input" }, vnode.attrs.value.map((actor, index) => {
-        const isSecure = actor.keyPackages != "";
+        const keyPackageCount = vnode.state.keyPackages[actor.id];
+        const isSecure = keyPackageCount != void 0 && keyPackageCount > 0;
         return /* @__PURE__ */ (0, import_mithril3.default)("span", { class: isSecure ? "tag blue" : "tag gray" }, /* @__PURE__ */ (0, import_mithril3.default)("span", { style: "display:inline-flex; align-items:center; margin-right:8px;" }, /* @__PURE__ */ (0, import_mithril3.default)("img", { src: actor.icon, class: "circle", style: "height:1em; margin:0px 4px;" }), /* @__PURE__ */ (0, import_mithril3.default)("span", { class: "bold" }, actor.name), "\xA0", isSecure ? /* @__PURE__ */ (0, import_mithril3.default)("i", { class: "bi bi-lock-fill" }) : null), /* @__PURE__ */ (0, import_mithril3.default)("i", { class: "clickable bi bi-x-lg", onclick: () => this.removeActor(vnode, index) }));
       }), /* @__PURE__ */ (0, import_mithril3.default)(
         "input",
@@ -14920,8 +14939,9 @@
           onfocus: () => this.loadOptions(vnode),
           onblur: () => this.onblur(vnode)
         }
-      )), vnode.state.options.length ? /* @__PURE__ */ (0, import_mithril3.default)("div", { class: "options" }, /* @__PURE__ */ (0, import_mithril3.default)("div", { role: "menu", class: "menu" }, vnode.state.options.map((actor, index) => {
-        const isSecure = actor.keyPackages != "";
+      )), vnode.state.actors.length ? /* @__PURE__ */ (0, import_mithril3.default)("div", { class: "options" }, /* @__PURE__ */ (0, import_mithril3.default)("div", { role: "menu", class: "menu" }, vnode.state.actors.map((actor, index) => {
+        const keyPackageCount = vnode.state.keyPackages[actor.id];
+        const isSecure = keyPackageCount != void 0 && keyPackageCount > 0;
         return /* @__PURE__ */ (0, import_mithril3.default)(
           "div",
           {
@@ -14947,7 +14967,7 @@
         case "ArrowDown":
           vnode.state.highlightedOption = Math.min(
             vnode.state.highlightedOption + 1,
-            vnode.state.options.length - 1
+            vnode.state.actors.length - 1
           );
           return;
         case "ArrowUp":
@@ -14968,8 +14988,8 @@
           event.preventDefault();
           return;
         case "Escape":
-          if (vnode.state.options.length > 0) {
-            vnode.state.options = [];
+          if (vnode.state.actors.length > 0) {
+            vnode.state.actors = [];
           }
           event.stopPropagation();
           event.preventDefault();
@@ -14983,29 +15003,55 @@
     }
     async loadOptions(vnode) {
       if (vnode.state.search == "") {
-        vnode.state.options = [];
+        vnode.state.actors = [];
         vnode.state.highlightedOption = -1;
         return;
       }
       vnode.state.loading = true;
-      vnode.state.options = await import_mithril3.default.request(vnode.attrs.endpoint + "?q=" + vnode.state.search);
+      vnode.state.actors = await import_mithril3.default.request(vnode.attrs.endpoint + "?q=" + vnode.state.search);
       vnode.state.loading = false;
       vnode.state.highlightedOption = -1;
+      this.loadKeyPackages(vnode);
+    }
+    // (async) Maintains a cache that counts the keyPackages for each actor
+    loadKeyPackages(vnode) {
+      for (const actor of vnode.state.actors) {
+        console.log("loadKeyPackages", actor.id, vnode.state.keyPackages[actor.id]);
+        if (vnode.state.keyPackages[actor.id] == void 0) {
+          if (actor.keyPackages == null) {
+            continue;
+          }
+          if (actor.keyPackages == "") {
+            continue;
+          }
+          import_mithril3.default.request(
+            "/.api/collectionHeader?url=" + encodeURIComponent(actor.keyPackages)
+          ).then((header) => {
+            if (header != void 0) {
+              if (header.totalItems != void 0) {
+                console.log("loadKeyPackages: totalItems", header.totalItems);
+                vnode.state.keyPackages[actor.id] = header.totalItems;
+                import_mithril3.default.redraw();
+              }
+            }
+          });
+        }
+      }
     }
     onblur(vnode) {
       requestAnimationFrame(() => {
-        vnode.state.options = [];
+        vnode.state.actors = [];
         vnode.state.highlightedOption = -1;
         import_mithril3.default.redraw();
       });
     }
     selectActor(vnode, index) {
-      const selected = vnode.state.options[index];
+      const selected = vnode.state.actors[index];
       if (selected == null) {
         return;
       }
       vnode.attrs.value.push(selected);
-      vnode.state.options = [];
+      vnode.state.actors = [];
       vnode.state.search = "";
       vnode.attrs.onselect(vnode.attrs.value);
     }
@@ -15085,14 +15131,14 @@
     }
     async onsubmit(event, vnode) {
       const participants = vnode.state.actors.map((actor) => actor.id);
-      const controller = vnode.attrs.controller;
+      const controller2 = vnode.attrs.controller;
       event.preventDefault();
       event.stopPropagation();
       if (vnode.state.encrypted) {
-        await controller.newGroupAndMessage(participants, vnode.state.message);
+        await controller2.newGroupAndMessage(participants, vnode.state.message);
         return this.close(vnode);
       }
-      await controller.newConversation(participants, vnode.state.message);
+      await controller2.newConversation(participants, vnode.state.message);
       return this.close(vnode);
     }
     close(vnode) {
@@ -15306,18 +15352,19 @@
       vnode.state.modal = "";
     }
     view(vnode) {
-      const controller = vnode.attrs.controller;
-      if (!controller.config.ready) {
+      const controller2 = vnode.attrs.controller;
+      if (!controller2.config.ready) {
         return /* @__PURE__ */ (0, import_mithril12.default)("div", { class: "app-content" }, "Loading...");
       }
-      if (!controller.config.welcome) {
-        return /* @__PURE__ */ (0, import_mithril12.default)(Welcome, { controller });
+      if (!controller2.config.welcome) {
+        return /* @__PURE__ */ (0, import_mithril12.default)(Welcome, { controller: controller2 });
       }
-      return /* @__PURE__ */ (0, import_mithril12.default)(Index, { controller });
+      return /* @__PURE__ */ (0, import_mithril12.default)(Index, { controller: controller2 });
     }
   };
 
   // src/app.tsx
+  var controller;
   async function startup() {
     const root2 = document.getElementById("mls");
     const actorID = root2.dataset["actor-id"] || "";
@@ -15325,12 +15372,11 @@
       throw new Error(`Can't mount Mithril app. Please verify that <div id="mls"> exists.`);
     }
     const actor = await loadActivityStream(actorID);
-    const clientConfig = defaultClientConfig;
     const indexedDB2 = await NewIndexedDB();
-    const database = new Database(indexedDB2, clientConfig);
+    const database = new Database(indexedDB2, defaultClientConfig);
     const delivery = new Delivery(actor.id, actor.outbox);
     const directory = new Directory(actor.id, actor.outbox);
-    const controller = new Controller(actor, database, delivery, directory, clientConfig);
+    controller = new Controller(actor, database, delivery, directory, defaultClientConfig);
     import_mithril14.default.mount(root2, { view: () => /* @__PURE__ */ (0, import_mithril14.default)(Main, { controller }) });
   }
   startup();

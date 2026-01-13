@@ -2,11 +2,6 @@ import {type APActor} from "../model/ap-actor"
 import {type Group} from "../model/group"
 import {createCommit, getCiphersuiteImpl} from "ts-mls"
 import {createGroup} from "ts-mls"
-import {getCiphersuiteFromName} from "ts-mls"
-import {generateKeyPackage} from "ts-mls"
-import {defaultCapabilities} from "ts-mls"
-import {defaultLifetime} from "ts-mls"
-import {type Credential} from "ts-mls"
 import {type Proposal} from "ts-mls"
 import {type PrivateKeyPackage} from "ts-mls"
 import {type KeyPackage} from "ts-mls"
@@ -56,13 +51,10 @@ const cipherSuiteName = "MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519"
 // This is intended to be a reusable service that could be called
 // by any software component that needs to use MLS-encrypted messages.
 export class MLS {
-	// Dependencies
 	#database: IDatabase
 	#delivery: IDelivery
 	#directory: IDirectory
 	#clientConfig: ClientConfig
-
-	// Internal State
 	#cipherSuite: CiphersuiteImpl
 	#publicKeyPackage: KeyPackage
 	#privateKeyPackage: PrivateKeyPackage

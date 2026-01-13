@@ -41,6 +41,7 @@ export class Controller {
 	}
 
 	async loadConfig() {
+		console.log("loadConfig")
 		this.config = await this.#database.loadConfig()
 
 		if (this.config.hasEncryptionKeys) {
@@ -111,6 +112,7 @@ export class Controller {
 
 	// startMLS initializes the MLS service IF the configuration includes encryption keys
 	private async startMLS() {
+		console.log("loadConfig")
 		if (this.config.hasEncryptionKeys == false) {
 			throw new Error("Cannot start MLS without encryption keys")
 		}

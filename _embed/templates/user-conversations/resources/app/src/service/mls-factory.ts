@@ -1,4 +1,4 @@
-import {getCiphersuiteFromName, getCiphersuiteImpl} from "ts-mls"
+import {getCiphersuiteFromName, getCiphersuiteImpl, type KeyPackage, type PrivateKeyPackage} from "ts-mls"
 import {generateKeyPackage} from "ts-mls"
 import {defaultCapabilities} from "ts-mls"
 import {defaultLifetime} from "ts-mls"
@@ -26,32 +26,58 @@ export async function MLSFactory(
 ): Promise<MLS> {
 	//
 
-	// Try to load the KeyPackage from the IndexedDB database
-	var dbKeyPackage = await database.loadKeyPackage()
+	console.log("MLSFactory: Starting MLS Factory")
 
 	// Use MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519 (ID: 1)
 	// Using nobleCryptoProvider for compatibility (pure JS implementation)
 	const cipherSuiteName = "MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519"
-	const cipherSuite = await makeCipherSuite(cipherSuiteName)
+	const cipherSuite = await nobleCryptoProvider.getCiphersuiteImpl(getCiphersuiteFromName(cipherSuiteName))
+
+	console.log("MLSFactory: loaded cipher suite", cipherSuiteName)
+
+	// Try to load the KeyPackage from the IndexedDB database
+	var dbKeyPackage = await database.loadKeyPackage()
+
+	console.log("MLSFactory: loaded dbKeyPackage", dbKeyPackage)
 
 	// Create a new KeyPackage if none exists
 	if (dbKeyPackage == undefined) {
 		//
 
-		// Create a credential for this User
-		const credential: Credential = {
-			credentialType: "basic",
-			identity: new TextEncoder().encode(actor.id),
+		try {
+			const cipherSuiteName = "MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519"
+			const cipherSuite = await nobleCryptoProvider.getCiphersuiteImpl(getCiphersuiteFromName(cipherSuiteName))
+
+			// Create a credential for this User
+			const credential: Credential = {
+				credentialType: "basic",
+				identity: new TextEncoder().encode(actor.id),
+			}
+
+			console.log("Generating Key package for actor:", actor)
+
+			console.log(
+				"Ima break??",
+				generateKeyPackage,
+				credential,
+				defaultCapabilities,
+				defaultLifetime,
+				cipherSuite
+			)
+			// Generate initial key package for this user
+			var keyPackageResult = await generateKeyPackage(
+				credential,
+				defaultCapabilities(),
+				defaultLifetime,
+				[],
+				cipherSuite
+			)
+		} catch (error) {
+			console.error("Error generating KeyPackage:", error)
+			throw error
 		}
 
-		// Generate initial key package for this user
-		const keyPackageResult = await generateKeyPackage(
-			credential,
-			defaultCapabilities(),
-			defaultLifetime,
-			[],
-			cipherSuite
-		)
+		console.log("Generated Key package", keyPackageResult)
 
 		// Publish the KeyPackage to the server
 		const apKeyPackage = NewAPKeyPackage(clientName, actor.id, keyPackageResult.publicPackage)

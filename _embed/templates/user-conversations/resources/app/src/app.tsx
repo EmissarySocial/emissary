@@ -2,6 +2,7 @@ import m from "mithril"
 
 import {defaultClientConfig} from "ts-mls/clientConfig.js"
 import {type APActor} from "./model/ap-actor"
+import {type Credential} from "ts-mls/credential.js"
 import {Database, NewIndexedDB} from "./service/database"
 import {Delivery} from "./service/delivery"
 import {Directory} from "./service/directory"
@@ -9,6 +10,14 @@ import {loadActivityStream} from "./service/network"
 import {MLSFactory} from "./service/mls-factory"
 import {Controller} from "./controller"
 import {Main} from "./view/main"
+import {nobleCryptoProvider} from "ts-mls/crypto/implementation/noble/provider.js"
+import {getCiphersuiteFromName} from "ts-mls/crypto/ciphersuite.js"
+import {generateKeyPackage} from "ts-mls/keyPackage.js"
+import {defaultLifetime} from "ts-mls/lifetime.js"
+import {defaultCapabilities} from "ts-mls/defaultCapabilities.js"
+
+// Global controller instance
+var controller: Controller
 
 async function startup() {
 	// Collect arguments from the DOM
@@ -24,19 +33,45 @@ async function startup() {
 	const actor = (await loadActivityStream(actorID)) as APActor
 
 	// Build dependencies
-	const clientConfig = defaultClientConfig
 	const indexedDB = await NewIndexedDB()
-	const database = new Database(indexedDB, clientConfig)
+	const database = new Database(indexedDB, defaultClientConfig)
 	const delivery = new Delivery(actor.id, actor.outbox)
 	const directory = new Directory(actor.id, actor.outbox)
 
 	// Build the controller
-	const controller = new Controller(actor, database, delivery, directory, clientConfig)
+	controller = new Controller(actor, database, delivery, directory, defaultClientConfig)
 
 	// Pass the controller to the Main component and mount the main application
-	// m.mount(root, {view: () => <Main controller={controller} />})
 	m.mount(root, {view: () => <Main controller={controller} />})
+}
+
+async function test() {
+	try {
+		const cipherSuiteName = "MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519"
+		const cipherSuite = await nobleCryptoProvider.getCiphersuiteImpl(getCiphersuiteFromName(cipherSuiteName))
+
+		// Create a credential for this User
+		const credential: Credential = {
+			credentialType: "basic",
+			identity: new TextEncoder().encode("http://test.com/actor/1"),
+		}
+
+		console.log("Generating Key package")
+
+		// Generate initial key package for this user
+		var keyPackageResult = await generateKeyPackage(
+			credential,
+			defaultCapabilities(),
+			defaultLifetime,
+			[],
+			cipherSuite
+		)
+	} catch (error) {
+		console.error("Error generating KeyPackage:", error)
+		throw error
+	}
 }
 
 // 3..2..1.. Go!
 startup()
+// test()

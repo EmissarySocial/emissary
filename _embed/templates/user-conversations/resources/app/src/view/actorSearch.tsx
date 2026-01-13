@@ -1,8 +1,8 @@
 import m, {request} from "mithril"
 import {type Vnode, type VnodeDOM, type Component} from "mithril"
 import {type APActor} from "../z-activitypub/actor"
-import {Modal} from "./modal"
 import {keyCode} from "./utils"
+import {type APCollectionHeader} from "../model/ap-collection"
 
 type ActorSearchVnode = VnodeDOM<ActorSearchArgs, ActorSearchState>
 
@@ -16,7 +16,8 @@ interface ActorSearchArgs {
 interface ActorSearchState {
 	search: string
 	loading: boolean
-	options: APActor[]
+	actors: APActor[]
+	keyPackages: {[key: string]: number}
 	highlightedOption: number
 	encrypted: boolean
 }
@@ -25,16 +26,19 @@ export class ActorSearch {
 	oninit(vnode: ActorSearchVnode) {
 		vnode.state.search = ""
 		vnode.state.loading = false
-		vnode.state.options = []
+		vnode.state.actors = []
+		vnode.state.keyPackages = {}
 		vnode.state.highlightedOption = -1
 	}
 
 	view(vnode: ActorSearchVnode) {
+		console.log("view", vnode.state)
 		return (
 			<div class="autocomplete">
 				<div class="input">
 					{vnode.attrs.value.map((actor, index) => {
-						const isSecure = actor.keyPackages != ""
+						const keyPackageCount = vnode.state.keyPackages[actor.id]
+						const isSecure = keyPackageCount != undefined && keyPackageCount > 0
 						return (
 							<span class={isSecure ? "tag blue" : "tag gray"}>
 								<span style="display:inline-flex; align-items:center; margin-right:8px;">
@@ -66,11 +70,12 @@ export class ActorSearch {
 						onfocus={() => this.loadOptions(vnode)}
 						onblur={() => this.onblur(vnode)}></input>
 				</div>
-				{vnode.state.options.length ? (
+				{vnode.state.actors.length ? (
 					<div class="options">
 						<div role="menu" class="menu">
-							{vnode.state.options.map((actor, index) => {
-								const isSecure = actor.keyPackages != ""
+							{vnode.state.actors.map((actor, index) => {
+								const keyPackageCount = vnode.state.keyPackages[actor.id]
+								const isSecure = keyPackageCount != undefined && keyPackageCount > 0
 								return (
 									<div
 										role="menuitem"
@@ -113,7 +118,7 @@ export class ActorSearch {
 			case "ArrowDown":
 				vnode.state.highlightedOption = Math.min(
 					vnode.state.highlightedOption + 1,
-					vnode.state.options.length - 1
+					vnode.state.actors.length - 1
 				)
 				return
 
@@ -138,8 +143,8 @@ export class ActorSearch {
 				return
 
 			case "Escape":
-				if (vnode.state.options.length > 0) {
-					vnode.state.options = []
+				if (vnode.state.actors.length > 0) {
+					vnode.state.actors = []
 				}
 				event.stopPropagation()
 				event.preventDefault()
@@ -155,34 +160,64 @@ export class ActorSearch {
 
 	async loadOptions(vnode: ActorSearchVnode) {
 		if (vnode.state.search == "") {
-			vnode.state.options = []
+			vnode.state.actors = []
 			vnode.state.highlightedOption = -1
 			return
 		}
 
 		vnode.state.loading = true
-		vnode.state.options = await m.request(vnode.attrs.endpoint + "?q=" + vnode.state.search)
+		vnode.state.actors = await m.request(vnode.attrs.endpoint + "?q=" + vnode.state.search)
 		vnode.state.loading = false
 		vnode.state.highlightedOption = -1
+
+		this.loadKeyPackages(vnode)
+	}
+
+	// (async) Maintains a cache that counts the keyPackages for each actor
+	loadKeyPackages(vnode: ActorSearchVnode) {
+		for (const actor of vnode.state.actors) {
+			console.log("loadKeyPackages", actor.id, vnode.state.keyPackages[actor.id])
+			if (vnode.state.keyPackages[actor.id] == undefined) {
+				if (actor.keyPackages == null) {
+					continue
+				}
+
+				if (actor.keyPackages == "") {
+					continue
+				}
+
+				m.request<APCollectionHeader>(
+					"/.api/collectionHeader?url=" + encodeURIComponent(actor.keyPackages)
+				).then((header: APCollectionHeader) => {
+					if (header != undefined) {
+						if (header.totalItems != undefined) {
+							console.log("loadKeyPackages: totalItems", header.totalItems)
+							vnode.state.keyPackages[actor.id] = header.totalItems
+							m.redraw()
+						}
+					}
+				})
+			}
+		}
 	}
 
 	onblur(vnode: ActorSearchVnode) {
 		requestAnimationFrame(() => {
-			vnode.state.options = []
+			vnode.state.actors = []
 			vnode.state.highlightedOption = -1
 			m.redraw()
 		})
 	}
 
 	selectActor(vnode: ActorSearchVnode, index: number) {
-		const selected = vnode.state.options[index]
+		const selected = vnode.state.actors[index]
 
 		if (selected == null) {
 			return
 		}
 
 		vnode.attrs.value.push(selected)
-		vnode.state.options = []
+		vnode.state.actors = []
 		vnode.state.search = ""
 		vnode.attrs.onselect(vnode.attrs.value)
 	}
