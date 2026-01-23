@@ -22,7 +22,7 @@ export class Directory {
 		for (const actorID of actorIDs) {
 			console.log("getKeyPackages: Loading KeyPackages for: " + actorID)
 			const actor = (await loadActivityStream(actorID)) as APActor
-			console.log(actor)
+			console.log("actor:", actor)
 			const rangeKeyPackages = rangeCollection<APKeyPackage>(actor.keyPackages)
 
 			for await (const item of rangeKeyPackages) {

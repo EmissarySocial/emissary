@@ -45,33 +45,5 @@ async function startup() {
 	m.mount(root, {view: () => <Main controller={controller} />})
 }
 
-async function test() {
-	try {
-		const cipherSuiteName = "MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519"
-		const cipherSuite = await nobleCryptoProvider.getCiphersuiteImpl(getCiphersuiteFromName(cipherSuiteName))
-
-		// Create a credential for this User
-		const credential: Credential = {
-			credentialType: "basic",
-			identity: new TextEncoder().encode("http://test.com/actor/1"),
-		}
-
-		console.log("Generating Key package")
-
-		// Generate initial key package for this user
-		var keyPackageResult = await generateKeyPackage(
-			credential,
-			defaultCapabilities(),
-			defaultLifetime,
-			[],
-			cipherSuite
-		)
-	} catch (error) {
-		console.error("Error generating KeyPackage:", error)
-		throw error
-	}
-}
-
 // 3..2..1.. Go!
 startup()
-// test()

@@ -14486,11 +14486,19 @@
       return;
     }
     const collection = await loadActivityStream(url);
-    rangeCollectionPage(collection);
+    console.log("rangeCollection: loaded collection", collection);
+    if (collection.items || collection.orderedItems) {
+      for await (const item of rangeCollectionPage(collection)) {
+        yield item;
+      }
+      return;
+    }
     var pageUrl = collection.first || collection.next;
     while (pageUrl) {
       const page = await loadActivityStream(pageUrl);
-      rangeCollectionPage(page);
+      for await (const item of rangeCollectionPage(page)) {
+        yield item;
+      }
       pageUrl = page.next;
     }
   }
@@ -14531,7 +14539,7 @@
       for (const actorID of actorIDs) {
         console.log("getKeyPackages: Loading KeyPackages for: " + actorID);
         const actor = await loadActivityStream(actorID);
-        console.log(actor);
+        console.log("actor:", actor);
         const rangeKeyPackages = rangeCollection(actor.keyPackages);
         for await (const item of rangeKeyPackages) {
           console.log("KeyPackage item", item);

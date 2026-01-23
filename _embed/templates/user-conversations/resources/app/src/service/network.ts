@@ -36,15 +36,24 @@ export async function* rangeCollection<T>(url: string): AsyncGenerator<T> {
 	// Fetch the collection object
 	const collection = (await loadActivityStream(url)) as APCollection<T>
 
-	// Yield any items that appear directly on the collection
-	rangeCollectionPage<T>(collection)
+	console.log("rangeCollection: loaded collection", collection)
+
+	// If items are embedded directly in the page, then just return those
+	if (collection.items || collection.orderedItems) {
+		for await (const item of rangeCollectionPage<T>(collection)) {
+			yield item
+		}
+		return
+	}
 
 	// Iterate on CollectionPages, starting with the "first" page
 	var pageUrl = collection.first || collection.next
 
 	while (pageUrl) {
 		const page = (await loadActivityStream(pageUrl)) as APCollection<T>
-		rangeCollectionPage(page)
+		for await (const item of rangeCollectionPage<T>(page)) {
+			yield item
+		}
 
 		pageUrl = page.next
 	}
