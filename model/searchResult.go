@@ -12,23 +12,22 @@ import (
 
 // SearchResult represents a value in the search index
 type SearchResult struct {
-	SearchResultID primitive.ObjectID `bson:"_id"`                    // SearchResultID is the unique identifier for a SearchResult.
-	Type           string             `bson:"type"`                   // Type is the ActivityPub object type (Person, Article, etc)
-	URL            string             `bson:"url"`                    // URL is the URL of the SearchResult.
-	AttributedTo   string             `bson:"attributedTo,omitempty"` // AttributedTo is the name (or username) of the creator of this SearchResult.
-	Name           string             `bson:"name"`                   // Name is the name of the SearchResult.
-	Summary        string             `bson:"summary,omitempty"`      // Summary is a short description of the SearchResult.
-	IconURL        string             `bson:"iconUrl,omitempty"`      // IconURL is the URL of the icon for the SearchResult.
-	Date           time.Time          `bson:"date,omitempty"`         // Date is the datetime related to this SearchResult.
-	Location       geo.Point          `bson:"location,omitempty"`     // GeoJSON Point (longitude,latitude) related to this SearchResult
-	Tags           sliceof.String     `bson:"tags,omitempty"`         // Tags is a machine-readable list of tag values that are associated with this SearchResult.
-	Text           string             `bson:"text,omitempty"`         // Text is the searchable text of this SearchResult.  It is used to build the index value.
-	Index          sliceof.String     `bson:"index,omitempty"`        // Index is a list of words (encoded via metaphone) that are used to index this SearchResult.
-	ReIndexDate    int64              `bson:"reindexDate"`            // ReIndexDate is the date that this SearchResult should be reindexed.
-	Rank           int64              `bson:"rank"`                   // Rank is the rank of this SearchResult in the search index.
-	Shuffle        int64              `bson:"shuffle"`                // Shuffle is a random number used to shuffle the search results.
-	Local          bool               `bson:"local"`                  // Local is true if this SearchResult originates on the local server.  Only local SearchResults will be syndicated to external servers.
-
+	SearchResultID  primitive.ObjectID `json:"searchResultId"         bson:"_id"`                    // SearchResultID is the unique identifier for a SearchResult.
+	Type            string             `json:"type"                   bson:"type"`                   // Type is the ActivityPub object type (Person, Article, etc)
+	URL             string             `json:"url"                    bson:"url"`                    // URL is the URL of the SearchResult.
+	AttributedTo    string             `json:"attributedTo,omitempty" bson:"attributedTo,omitempty"` // AttributedTo is the name (or username) of the creator of this SearchResult.
+	Name            string             `json:"name"                   bson:"name"`                   // Name is the name of the SearchResult.
+	Summary         string             `json:"summary,omitempty"      bson:"summary,omitempty"`      // Summary is a short description of the SearchResult.
+	IconURL         string             `json:"iconUrl,omitempty"      bson:"iconUrl,omitempty"`      // IconURL is the URL of the icon for the SearchResult.
+	Date            time.Time          `json:"date,omitempty"         bson:"date,omitempty"`         // Date is the datetime related to this SearchResult.
+	Location        geo.Point          `json:"location,omitempty"     bson:"location,omitempty"`     // GeoJSON Point (longitude,latitude) related to this SearchResult
+	Tags            sliceof.String     `json:"tags,omitempty"         bson:"tags,omitempty"`         // Tags is a machine-readable list of tag values that are associated with this SearchResult.
+	Text            string             `json:"text,omitempty"         bson:"text,omitempty"`         // Text is the searchable text of this SearchResult.  It is used to build the index value.
+	Index           sliceof.String     `json:"index,omitempty"        bson:"index,omitempty"`        // Index is a list of words (encoded via metaphone) that are used to index this SearchResult.
+	ReIndexDate     int64              `json:"reindexDate"            bson:"reindexDate"`            // ReIndexDate is the date that this SearchResult should be reindexed.
+	Rank            int64              `json:"rank"                   bson:"rank"`                   // Rank is the rank of this SearchResult in the search index.
+	Shuffle         int64              `json:"shuffle"                bson:"shuffle"`                // Shuffle is a random number used to shuffle the search results.
+	Local           bool               `json:"local"                  bson:"local"`                  // Local is true if this SearchResult originates on the local server.  Only local SearchResults will be syndicated to external servers.
 	journal.Journal `json:"-" bson:",inline"`
 }
 

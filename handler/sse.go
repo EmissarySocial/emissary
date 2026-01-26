@@ -32,12 +32,7 @@ func ServerSentEvent_FollowingUpdated(ctx *steranko.Context, factory *service.Fa
 	return serverSentEvent(ctx, factory, realtime.TopicFollowingUpdated)
 }
 
-func ServerSentEvent_NewReplies(ctx *steranko.Context, factory *service.Factory, _ data.Session, user *model.User) error {
-
-	if user.UserID.Hex() != ctx.Param("objectId") {
-		return derp.Forbidden("handler.ServerSentEvent_FollowingUpdated", "You do not have permission to access this resource")
-	}
-
+func ServerSentEvent_NewReplies(ctx *steranko.Context, factory *service.Factory, _ data.Session) error {
 	return serverSentEvent(ctx, factory, realtime.TopicNewReplies)
 }
 
